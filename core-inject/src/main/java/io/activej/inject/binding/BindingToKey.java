@@ -11,7 +11,7 @@ public final class BindingToKey<T> extends Binding<T> {
 	private final Key<? extends T> key;
 
 	BindingToKey(Key<? extends T> key) {
-		super(Collections.singleton(Dependency.toKey(key)));
+		super(Collections.singleton(key));
 		this.key = key;
 	}
 

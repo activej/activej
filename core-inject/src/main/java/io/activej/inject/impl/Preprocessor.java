@@ -198,9 +198,8 @@ public final class Preprocessor {
 		resolvedBindings.put(key, transformed);
 
 		// and then recursively walk over its dependencies (so this is a recursive dfs after all)
-		for (Dependency d : transformed.getDependencies()) {
-			Key<?> dkey = d.getKey();
-			resolve(upper, localBindings, resolvedBindings, scope, dkey, localBindings.get(dkey), multibinder, transformer, generator);
+		for (Key<?> d : transformed.getDependencies()) {
+			resolve(upper, localBindings, resolvedBindings, scope, d, localBindings.get(d), multibinder, transformer, generator);
 		}
 
 		return transformed;
@@ -219,7 +218,7 @@ public final class Preprocessor {
 		Key<Object> instanceKey = key.getTypeParameter(0).qualified(key.getQualifier());
 		Binding<?> resolved = resolve(upper, localBindings, resolvedBindings, scope, instanceKey, localBindings.get(instanceKey), multibinder, transformer, generator);
 		if (resolved == null) return null;
-		return new Binding<InstanceProvider<?>>(singleton(Dependency.toKey(instanceKey))) {
+		return new Binding<InstanceProvider<?>>(singleton(instanceKey)) {
 			@Override
 			public CompiledBinding<InstanceProvider<?>> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 				return slot != null ?
@@ -304,8 +303,8 @@ public final class Preprocessor {
 
 		Map<? extends Key<?>, Set<Entry<Key<?>, Binding<?>>>> unsatisfied = bindings.get().entrySet().stream()
 				.flatMap(e -> e.getValue().getDependencies().stream()
-						.filter(dependency -> !known.contains(dependency.getKey()))
-						.map(dependency -> new DependencyToBinding(dependency.getKey(), e)))
+						.filter(dependency -> !known.contains(dependency))
+						.map(dependency -> new DependencyToBinding(dependency, e)))
 
 				.collect(toMultimap(dtb -> dtb.dependency, dtb -> dtb.keybinding));
 
@@ -395,9 +394,9 @@ public final class Preprocessor {
 		}
 		// standard dfs with visited (black) and visiting (grey) sets
 		if (visiting.add(key)) {
-			for (Dependency dependency : binding.getDependencies()) {
-				if (!visited.contains(dependency.getKey()) && dependency.getKey().getRawType() != InstanceProvider.class) {
-					collectCycles(bindings, visited, visiting, cycles, dependency.getKey());
+			for (Key<?> dependency : binding.getDependencies()) {
+				if (!visited.contains(dependency) && dependency.getRawType() != InstanceProvider.class) {
+					collectCycles(bindings, visited, visiting, cycles, dependency);
 				}
 			}
 			visiting.remove(key);
@@ -415,7 +414,7 @@ public final class Preprocessor {
 		while (!backtracked.next().equals(key)) {
 			skipped++;
 		}
-		Key<?>[] cycle = new Key[visiting.size() - skipped];
+		Key<?>[] cycle = new Key<?>[visiting.size() - skipped];
 		for (int i = 0; i < cycle.length - 1; i++) {
 			// no .hasNext check either because this happens exactly (size - previous .next calls - 1) times
 			cycle[i] = backtracked.next();

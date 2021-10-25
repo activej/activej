@@ -16,8 +16,8 @@
 
 package io.activej.inject.impl;
 
+import io.activej.inject.Key;
 import io.activej.inject.binding.Binding;
-import io.activej.inject.binding.Dependency;
 
 import java.util.Collection;
 import java.util.Set;
@@ -41,15 +41,15 @@ public final class BindingInitializer<T> {
 				}
 			});
 
-	private final Set<Dependency> dependencies;
+	private final Set<Key<?>> dependencies;
 	private final BindingInitializerCompiler<T> compiler;
 
-	private BindingInitializer(Set<Dependency> dependencies, BindingInitializerCompiler<T> compiler) {
+	private BindingInitializer(Set<Key<?>> dependencies, BindingInitializerCompiler<T> compiler) {
 		this.dependencies = dependencies;
 		this.compiler = compiler;
 	}
 
-	public Set<Dependency> getDependencies() {
+	public Set<Key<?>> getDependencies() {
 		return dependencies;
 	}
 
@@ -57,7 +57,7 @@ public final class BindingInitializer<T> {
 		return compiler;
 	}
 
-	public static <T> BindingInitializer<T> of(Set<Dependency> dependencies, BindingInitializerCompiler<T> bindingInitializerCompiler) {
+	public static <T> BindingInitializer<T> of(Set<Key<?>> dependencies, BindingInitializerCompiler<T> bindingInitializerCompiler) {
 		return new BindingInitializer<>(dependencies, bindingInitializerCompiler);
 	}
 

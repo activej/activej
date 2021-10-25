@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.function.Function;
 
 @SuppressWarnings({"unchecked", "rawtypes", "Convert2Lambda", "ArraysAsListWithZeroOrOneArgument"})
 class Bindings {
@@ -44,9 +45,9 @@ class Bindings {
 
 	public static class BindingToConstructorN<R> extends Binding<R> {
 		final ConstructorN<R> constructor;
-		final Dependency[] dependencies;
+		final Key<?>[] dependencies;
 
-		BindingToConstructorN(ConstructorN<R> constructor, Dependency[] dependencies) {
+		BindingToConstructorN(ConstructorN<R> constructor, Key<?>[] dependencies) {
 			super(new HashSet<>(Arrays.asList(dependencies)));
 			this.constructor = constructor;
 			this.dependencies = dependencies;
@@ -56,7 +57,7 @@ class Bindings {
 		public CompiledBinding<R> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 			final ConstructorN<R> constructor = this.constructor;
 			final CompiledBinding<?>[] bindings = Arrays.stream(dependencies)
-					.map(dependency -> compiledBindings.get(dependency.getKey()))
+					.map((Function<Key, CompiledBinding>) compiledBindings::get)
 					.toArray(CompiledBinding[]::new);
 			return slot != null ? threadsafe ? scope == 0 ?
 					new AbstractRootCompiledBinding<R>(slot) {
@@ -146,7 +147,7 @@ class Bindings {
 		final Key<T1> dependency1;
 
 		BindingToConstructor1(Constructor1<T1, R> constructor, Key<T1> dependency1) {
-			super(new HashSet<>(Arrays.asList(Dependency.toKey(dependency1))));
+			super(new HashSet<>(Arrays.asList(dependency1)));
 			this.constructor = constructor;
 			this.dependency1 = dependency1;
 		}
@@ -193,7 +194,7 @@ class Bindings {
 		final Key<T2> dependency2;
 
 		BindingToConstructor2(Key<T1> dependency1, Key<T2> dependency2, Constructor2<T1, T2, R> constructor) {
-			super(new HashSet<>(Arrays.asList(Dependency.toKey(dependency1), Dependency.toKey(dependency2))));
+			super(new HashSet<>(Arrays.asList(dependency1, dependency2)));
 			this.constructor = constructor;
 			this.dependency1 = dependency1;
 			this.dependency2 = dependency2;
@@ -247,7 +248,7 @@ class Bindings {
 		final Key<T3> dependency3;
 
 		BindingToConstructor3(Constructor3<T1, T2, T3, R> constructor, Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3) {
-			super(new HashSet<>(Arrays.asList(Dependency.toKey(dependency1), Dependency.toKey(dependency2), Dependency.toKey(dependency3))));
+			super(new HashSet<>(Arrays.asList(dependency1, dependency2, dependency3)));
 			this.dependency1 = dependency1;
 			this.dependency2 = dependency2;
 			this.dependency3 = dependency3;
@@ -308,7 +309,7 @@ class Bindings {
 		final Key<T4> dependency4;
 
 		BindingToConstructor4(Constructor4<T1, T2, T3, T4, R> constructor, Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4) {
-			super(new HashSet<>(Arrays.asList(Dependency.toKey(dependency1), Dependency.toKey(dependency2), Dependency.toKey(dependency3), Dependency.toKey(dependency4))));
+			super(new HashSet<>(Arrays.asList(dependency1, dependency2, dependency3, dependency4)));
 			this.constructor = constructor;
 			this.dependency1 = dependency1;
 			this.dependency2 = dependency2;
@@ -376,7 +377,7 @@ class Bindings {
 		final Key<T5> dependency5;
 
 		BindingToConstructor5(Constructor5<T1, T2, T3, T4, T5, R> constructor, Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4, Key<T5> dependency5) {
-			super(new HashSet<>(Arrays.asList(Dependency.toKey(dependency1), Dependency.toKey(dependency2), Dependency.toKey(dependency3), Dependency.toKey(dependency4), Dependency.toKey(dependency5))));
+			super(new HashSet<>(Arrays.asList(dependency1, dependency2, dependency3, dependency4, dependency5)));
 			this.constructor = constructor;
 			this.dependency1 = dependency1;
 			this.dependency2 = dependency2;
@@ -452,7 +453,7 @@ class Bindings {
 		final Key<T6> dependency6;
 
 		BindingToConstructor6(Constructor6<T1, T2, T3, T4, T5, T6, R> constructor, Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4, Key<T5> dependency5, Key<T6> dependency6) {
-			super(new HashSet<>(Arrays.asList(Dependency.toKey(dependency1), Dependency.toKey(dependency2), Dependency.toKey(dependency3), Dependency.toKey(dependency4), Dependency.toKey(dependency5), Dependency.toKey(dependency6))));
+			super(new HashSet<>(Arrays.asList(dependency1, dependency2, dependency3, dependency4, dependency5, dependency6)));
 			this.constructor = constructor;
 			this.dependency1 = dependency1;
 			this.dependency2 = dependency2;

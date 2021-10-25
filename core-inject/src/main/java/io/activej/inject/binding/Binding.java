@@ -31,6 +31,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.activej.inject.util.Utils.union;
@@ -40,23 +41,23 @@ import static java.util.stream.Collectors.toSet;
 /**
  * A binding is one of the main components of ActiveJ Inject.
  * It boils down to "introspectable function", since it only describes function to create an instance of T from an array of objects and
- * an array of its {@link Dependency dependencies} in known terms.
+ * an array of its {@link Key dependencies} in known terms.
  * <p>
  * Also it contains a set of {@link io.activej.inject.module.AbstractModule binding-DSL-like} static factory methods
  * as well as some functional transformations for the ease of creating immutable binding modifications.
  */
 @SuppressWarnings({"unused", "WeakerAccess", "Convert2Lambda", "rawtypes"})
 public abstract class Binding<T> {
-	private final Set<Dependency> dependencies;
+	private final Set<Key<?>> dependencies;
 	private BindingType type;
 
 	private @Nullable LocationInfo location;
 
-	protected Binding(@NotNull Set<Dependency> dependencies) {
+	protected Binding(@NotNull Set<Key<?>> dependencies) {
 		this(dependencies, BindingType.REGULAR, null);
 	}
 
-	protected Binding(@NotNull Set<Dependency> dependencies, BindingType type, @Nullable LocationInfo location) {
+	protected Binding(@NotNull Set<Key<?>> dependencies, BindingType type, @Nullable LocationInfo location) {
 		this.dependencies = dependencies;
 		this.type = type;
 		this.location = location;
@@ -77,15 +78,11 @@ public abstract class Binding<T> {
 	}
 
 	public static <R> Binding<R> to(@NotNull ConstructorN<R> constructor, Class<?>[] types) {
-		return Binding.to(constructor, Stream.of(types).map(Key::of).map(Dependency::toKey).toArray(Dependency[]::new));
-	}
-
-	public static <R> Binding<R> to(@NotNull ConstructorN<R> constructor, Key<?>[] keys) {
-		return Binding.to(constructor, Stream.of(keys).map(Dependency::toKey).toArray(Dependency[]::new));
+		return Binding.to(constructor, Stream.of(types).map(Key::of).toArray(Key<?>[]::new));
 	}
 
 	@SuppressWarnings("Duplicates")
-	public static <R> Binding<R> to(@NotNull ConstructorN<R> constructor, Dependency[] dependencies) {
+	public static <R> Binding<R> to(@NotNull ConstructorN<R> constructor, Key<?>[] dependencies) {
 		if (dependencies.length == 0) {
 			return to(constructor::create);
 		}
@@ -208,7 +205,7 @@ public abstract class Binding<T> {
 	public <R> Binding<R> mapInstance(@Nullable List<Key<?>> dependencies, @NotNull BiFunction<Object[], ? super @NotNull T, ? extends @NotNull R> fn) {
 		if (dependencies != null) {
 			Set<Key<?>> missing = dependencies.stream()
-					.filter(required -> this.dependencies.stream().noneMatch(existing -> existing.getKey().equals(required)))
+					.filter(required -> this.dependencies.stream().noneMatch(existing -> existing.equals(required)))
 					.collect(toSet());
 
 			if (!missing.isEmpty()) {
@@ -308,28 +305,25 @@ public abstract class Binding<T> {
 	}
 
 	public Binding<T> addDependencies(Class<?>... extraDependencies) {
-		return addDependencies(Stream.of(extraDependencies).map(Key::of).map(Dependency::toKey).toArray(Dependency[]::new));
+		return addDependencies(Stream.of(extraDependencies).map(Key::of).toArray(Key<?>[]::new));
 	}
 
 	public Binding<T> addDependencies(Key<?>... extraDependencies) {
-		return addDependencies(Stream.of(extraDependencies).map(Dependency::toKey).toArray(Dependency[]::new));
+		return addDependencies(Stream.of(extraDependencies).collect(Collectors.toSet()));
 	}
 
-	public Binding<T> addDependencies(Dependency... extraDependencies) {
-		return addDependencies(Stream.of(extraDependencies).collect(toSet()));
-	}
-
-	public Binding<T> addDependencies(@NotNull Set<Dependency> extraDependencies) {
+	public Binding<T> addDependencies(@NotNull Set<Key<?>> extraDependencies) {
 		return extraDependencies.isEmpty() ?
 				this :
 				new Binding<T>(union(this.dependencies, extraDependencies), this.type, this.location) {
 					@Override
 					public CompiledBinding<T> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 						CompiledBinding<T> compiledBinding = Binding.this.compile(compiledBindings, threadsafe, scope, slot);
-						CompiledBinding<?>[] compiledExtraBindings = extraDependencies.stream().map(d -> compiledBindings.get(d.getKey())).toArray(CompiledBinding[]::new);
+						CompiledBinding<?>[] compiledExtraBindings = extraDependencies.stream().map(compiledBindings::get).toArray(CompiledBinding[]::new);
 						return new CompiledBinding<T>() {
 							@Override
 							public T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+								//noinspection ForLoopReplaceableByForEach
 								for (int i = 0; i < compiledExtraBindings.length; i++) {
 									compiledExtraBindings[i].getInstance(scopedInstances, synchronizedScope);
 								}
@@ -372,16 +366,12 @@ public abstract class Binding<T> {
 
 	public abstract CompiledBinding<T> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot);
 
-	public @NotNull Set<Dependency> getDependencies() {
+	public @NotNull Set<Key<?>> getDependencies() {
 		return dependencies;
 	}
 
-	public @NotNull Set<Key<?>> getDependencyKeys() {
-		return dependencies.stream().map(Dependency::getKey).collect(toSet());
-	}
-
 	public boolean hasDependency(Key<?> dependency) {
-		return dependencies.stream().map(Dependency::getKey).anyMatch(Predicate.isEqual(dependency));
+		return dependencies.stream().anyMatch(Predicate.isEqual(dependency));
 	}
 
 	public BindingType getType() {
@@ -393,7 +383,7 @@ public abstract class Binding<T> {
 	}
 
 	public String getDisplayString() {
-		return dependencies.stream().map(Dependency::getDisplayString).collect(joining(", ", "[", "]"));
+		return dependencies.stream().map(Key::getDisplayString).collect(joining(", ", "[", "]"));
 	}
 
 	@Override

@@ -28,7 +28,6 @@ import io.activej.inject.Scope;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.ProvidesIntoSet;
 import io.activej.inject.binding.Binding;
-import io.activej.inject.binding.Dependency;
 import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.util.ScopedValue;
@@ -341,7 +340,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 		IdentityHashMap<Object, ServiceKey> workerInstanceToKey = new IdentityHashMap<>();
 		if (workerPools != null) {
 			for (WorkerPool pool : pools) {
-				Map<Key<?>, Set<ScopedValue<Dependency>>> scopeDependencies = getScopeDependencies(injector, pool.getScope());
+				Map<Key<?>, Set<ScopedValue<Key<?>>>> scopeDependencies = getScopeDependencies(injector, pool.getScope());
 				for (Map.Entry<Key<?>, WorkerPool.Instances<?>> entry : pool.peekInstances().entrySet()) {
 					Key<?> key = entry.getKey();
 					WorkerPool.Instances<?> workerInstances = entry.getValue();
@@ -355,8 +354,8 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 							scopeDependencies.get(key)
 									.stream()
 									.map(scopedDependency -> scopedDependency.isScoped() ?
-											new ServiceKey(scopedDependency.get().getKey(), pool) :
-											new ServiceKey(scopedDependency.get().getKey()))
+											new ServiceKey(scopedDependency.get(), pool) :
+											new ServiceKey(scopedDependency.get()))
 									.collect(toSet()));
 				}
 			}
@@ -376,7 +375,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 			instanceDependencies.put(serviceKey,
 					binding.getDependencies().stream()
 							.map(dependency -> {
-								Class<?> dependencyRawType = dependency.getKey().getRawType();
+								Class<?> dependencyRawType = dependency.getRawType();
 								boolean rawTypeMatches = dependencyRawType == WorkerPool.class || dependencyRawType == WorkerPools.class;
 								boolean instanceMatches = instance instanceof WorkerPool.Instances;
 
@@ -392,7 +391,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 								if (instanceMatches) {
 									logger.warn("Unsupported service {} at {} : dependency to WorkerPool or WorkerPools is expected", key, binding.getLocation());
 								}
-								return new ServiceKey(dependency.getKey());
+								return new ServiceKey(dependency);
 							})
 							.collect(toSet()));
 		}
@@ -400,15 +399,15 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 		doStart(serviceGraph, instances, instanceDependencies);
 	}
 
-	private Map<Key<?>, Set<ScopedValue<Dependency>>> getScopeDependencies(Injector injector, Scope scope) {
+	private Map<Key<?>, Set<ScopedValue<Key<?>>>> getScopeDependencies(Injector injector, Scope scope) {
 		Trie<Scope, Map<Key<?>, Binding<?>>> scopeBindings = injector.getBindingsTrie().getOrDefault(scope, emptyMap());
 		return scopeBindings.get()
 				.entrySet()
 				.stream()
 				.collect(toMap(Map.Entry::getKey,
 						entry -> entry.getValue().getDependencies().stream()
-								.map(dependencyKey ->
-										scopeBindings.get().containsKey(dependencyKey.getKey()) ?
+								.<ScopedValue<Key<?>>>map(dependencyKey ->
+										scopeBindings.get().containsKey(dependencyKey) ?
 												ScopedValue.of(scope, dependencyKey) :
 												ScopedValue.of(dependencyKey))
 								.collect(toSet())));

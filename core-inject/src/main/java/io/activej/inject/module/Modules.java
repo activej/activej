@@ -19,7 +19,10 @@ package io.activej.inject.module;
 import io.activej.inject.Key;
 import io.activej.inject.KeyPattern;
 import io.activej.inject.Scope;
-import io.activej.inject.binding.*;
+import io.activej.inject.binding.Binding;
+import io.activej.inject.binding.BindingGenerator;
+import io.activej.inject.binding.BindingTransformer;
+import io.activej.inject.binding.Multibinder;
 import io.activej.inject.impl.CompiledBinding;
 import io.activej.inject.impl.CompiledBindingLocator;
 import io.activej.inject.util.Trie;
@@ -140,7 +143,7 @@ public final class Modules {
 		Set<Key<?>> exports = union(upperExports, trie.get().keySet());
 		Set<Key<?>> imports = trie.get().values().stream()
 				.flatMap(bindings -> bindings.stream()
-						.flatMap(binding -> binding.getDependencies().stream().map(Dependency::getKey)))
+						.flatMap(binding -> binding.getDependencies().stream()))
 				.collect(toCollection(HashSet::new));
 		imports.removeAll(exports);
 		Map<Scope, Trie<Scope, Set<Key<?>>>> subMap = new HashMap<>();
@@ -222,17 +225,15 @@ public final class Modules {
 			}
 			boolean changed = false;
 			for (Binding<?> oldBinding : entry.getValue()) {
-				Set<Dependency> oldDependencies = oldBinding.getDependencies();
-				Set<Dependency> newDependencies = new HashSet<>(oldDependencies.size());
-				for (Dependency oldDependency : oldDependencies) {
-					Key<?> oldImportKey = oldDependency.getKey();
-					Scope[] importKeyPath = bindings.get(oldImportKey);
+				Set<Key<?>> oldDependencies = oldBinding.getDependencies();
+				Set<Key<?>> newDependencies = new HashSet<>(oldDependencies.size());
+				for (Key<?> oldDependency : oldDependencies) {
+					Scope[] importKeyPath = bindings.get(oldDependency);
 					Key<?> newImportKey = importKeyPath != null ?
-							exportsMapping.apply(importKeyPath, oldImportKey) :
-							importsMapping.apply(path, oldImportKey);
-					changed |= !oldImportKey.equals(newImportKey);
-					Dependency newDependency = new Dependency(newImportKey);
-					newDependencies.add(newDependency);
+							exportsMapping.apply(importKeyPath, oldDependency) :
+							importsMapping.apply(path, oldDependency);
+					changed |= !oldDependency.equals(newImportKey);
+					newDependencies.add(newImportKey);
 				}
 				Binding<?> newBinding = changed ?
 						new Binding<Object>(newDependencies) {

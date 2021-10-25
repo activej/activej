@@ -261,7 +261,7 @@ public final class ReflectionUtils {
 		field.setAccessible(true);
 		Key<Object> key = keyOf(container.getType(), field.getGenericType(), field);
 		return BindingInitializer.of(
-				singleton(Dependency.toKey(key)),
+				singleton(key),
 				compiledBindings -> {
 					CompiledBinding<Object> binding = compiledBindings.get(key);
 					//noinspection Convert2Lambda
@@ -286,12 +286,12 @@ public final class ReflectionUtils {
 	@SuppressWarnings("rawtypes")
 	public static <T> BindingInitializer<T> methodInjector(Key<T> container, Method method) {
 		method.setAccessible(true);
-		Dependency[] dependencies = toDependencies(container.getType(), method);
+		Key<?>[] dependencies = toDependencies(container.getType(), method);
 		return BindingInitializer.of(
 				Stream.of(dependencies).collect(toSet()),
 				compiledBindings -> {
 					CompiledBinding[] argBindings = Stream.of(dependencies)
-							.map(dependency -> compiledBindings.get(dependency.getKey()))
+							.map((Function<Key, CompiledBinding>) compiledBindings::get)
 							.toArray(CompiledBinding[]::new);
 					//noinspection Convert2Lambda
 					return new CompiledBindingInitializer<T>() {
@@ -313,16 +313,16 @@ public final class ReflectionUtils {
 				});
 	}
 
-	public static Dependency[] toDependencies(@Nullable Type container, Executable executable) {
+	public static Key<?>[] toDependencies(@Nullable Type container, Executable executable) {
 		Parameter[] parameters = executable.getParameters();
-		Dependency[] dependencies = new Dependency[parameters.length];
+		Key<?>[] dependencies = new Key<?>[parameters.length];
 		if (parameters.length == 0) {
 			return dependencies;
 		}
 
 		Type type = parameters[0].getParameterizedType();
 		Parameter parameter = parameters[0];
-		dependencies[0] = Dependency.toKey(keyOf(container, type, parameter));
+		dependencies[0] = keyOf(container, type, parameter);
 
 		Type[] genericParameterTypes = executable.getGenericParameterTypes();
 		boolean hasImplicitDependency = genericParameterTypes.length != parameters.length;
@@ -331,7 +331,7 @@ public final class ReflectionUtils {
 		for (int i = 1; i < dependencies.length; i++) {
 			type = genericParameterTypes[hasImplicitDependency ? i - 1 : i];
 			parameter = parameters[workaround ? i - 1 : i];
-			dependencies[i] = Dependency.toKey(keyOf(container, type, parameter));
+			dependencies[i] = keyOf(container, type, parameter);
 		}
 		return dependencies;
 	}
@@ -361,7 +361,7 @@ public final class ReflectionUtils {
 	public static <T> Binding<T> bindingFromConstructor(Key<T> key, Constructor<T> constructor) {
 		constructor.setAccessible(true);
 
-		Dependency[] dependencies = toDependencies(key.getType(), constructor);
+		Key<?>[] dependencies = toDependencies(key.getType(), constructor);
 
 		return Binding.to(
 				args -> {
@@ -507,13 +507,13 @@ public final class ReflectionUtils {
 			Type genericReturnType = method.getGenericReturnType();
 			Map<TypeVariable<?>, Type> mapping = TypeUtils.extractMatchingGenerics(genericReturnType, key.getType());
 
-			Dependency[] dependencies = Arrays.stream(method.getParameters())
+			Key<?>[] dependencies = Arrays.stream(method.getParameters())
 					.map(parameter -> {
 						Type type = Types.bind(parameter.getParameterizedType(), mapping);
 						Object q = qualifierOf(parameter);
-						return Dependency.toKey(Key.ofType(type, q));
+						return Key.ofType(type, q);
 					})
-					.toArray(Dependency[]::new);
+					.toArray(Key<?>[]::new);
 
 			Binding<Object> binding = Binding.to(
 					args -> {

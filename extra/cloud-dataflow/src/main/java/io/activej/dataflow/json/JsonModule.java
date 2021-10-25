@@ -41,7 +41,6 @@ import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.QualifierAnnotation;
 import io.activej.inject.binding.Binding;
-import io.activej.inject.binding.Dependency;
 import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
@@ -172,9 +171,9 @@ public final class JsonModule extends AbstractModule {
 							}
 						}
 						return combined;
-					}, new Dependency[]{
-							Dependency.toKey(Key.of(Injector.class)),
-							Dependency.toKey(new Key<OptionalDependency<SubtypeNameFactory>>() {})}
+					}, new Key<?>[]{
+							Key.of(Injector.class),
+							new Key<OptionalDependency<SubtypeNameFactory>>() {}}
 			);
 		});
 	}

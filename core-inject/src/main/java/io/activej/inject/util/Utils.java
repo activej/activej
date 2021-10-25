@@ -20,7 +20,10 @@ import io.activej.inject.InstanceProvider;
 import io.activej.inject.Key;
 import io.activej.inject.KeyPattern;
 import io.activej.inject.Scope;
-import io.activej.inject.binding.*;
+import io.activej.inject.binding.Binding;
+import io.activej.inject.binding.BindingType;
+import io.activej.inject.binding.DIException;
+import io.activej.inject.binding.Multibinder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -195,30 +198,28 @@ public final class Utils {
 
 		for (Entry<Key<?>, Binding<?>> entry : trie.get().entrySet()) {
 			String key = "\"" + scopePath + entry.getKey().toString().replace("\"", "\\\"") + "\"";
-			for (Dependency dependency : entry.getValue().getDependencies()) {
-				Key<?> depKey = dependency.getKey();
-
+			for (Key<?> dependency : entry.getValue().getDependencies()) {
 				Scope[] depScope = scope;
-				while (!known.contains(ScopedValue.of(depScope, depKey)) && depScope.length != 0) {
+				while (!known.contains(ScopedValue.of(depScope, dependency)) && depScope.length != 0) {
 					depScope = Arrays.copyOfRange(depScope, 0, depScope.length - 1);
 				}
 
 				if (depScope.length == 0) {
-					String dep = "\"" + getScopeId(depScope) + depKey.toString().replace("\"", "\\\"") + '"';
+					String dep = "\"" + getScopeId(depScope) + dependency.toString().replace("\"", "\\\"") + '"';
 
-					if (known.add(ScopedValue.of(depScope, depKey))) {
+					if (known.add(ScopedValue.of(depScope, dependency))) {
 						sb.append('\t')
 								.append(dep)
 								.append(" [label=\"")
-								.append(depKey.getDisplayString().replace("\"", "\\\""))
+								.append(dependency.getDisplayString().replace("\"", "\\\""))
 								.append("\" style=dashed, color=red];\n");
 					}
 					sb.append('\t').append(key).append(" -> ").append(dep);
 				} else {
-					sb.append('\t').append(key).append(" -> \"").append(getScopeId(depScope)).append(depKey.toString().replace("\"", "\\\"")).append('"');
+					sb.append('\t').append(key).append(" -> \"").append(getScopeId(depScope)).append(dependency.toString().replace("\"", "\\\"")).append('"');
 				}
 				sb.append(" [");
-				if (dependency.getKey().getRawType() == InstanceProvider.class) {
+				if (dependency.getRawType() == InstanceProvider.class) {
 					sb.append("color=gray");
 				}
 				sb.append("];\n");

@@ -20,7 +20,6 @@ import io.activej.inject.Injector;
 import io.activej.inject.InstanceInjector;
 import io.activej.inject.Key;
 import io.activej.inject.binding.Binding;
-import io.activej.inject.binding.Dependency;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.inject.module.Modules;
@@ -46,10 +45,10 @@ import static java.util.stream.Collectors.toSet;
 
 public class ActiveJRunner extends BlockJUnit4ClassRunner {
 	private final Set<FrameworkMethod> surroundings = new HashSet<>();
-	private final Set<Dependency> staticDependencies;
+	private final Set<Key<?>> staticDependencies;
 
 	private Module currentModule;
-	private Set<Dependency> currentDependencies;
+	private Set<Key<?>> currentDependencies;
 
 	protected Injector currentInjector;
 
@@ -174,7 +173,7 @@ public class ActiveJRunner extends BlockJUnit4ClassRunner {
 
 	protected Object[] getArgs(FrameworkMethod method) {
 		return Arrays.stream(ReflectionUtils.toDependencies(getTestClass().getJavaClass(), method.getMethod()))
-				.map(dependency -> currentInjector.getInstance(dependency.getKey()))
+				.map(dependency -> currentInjector.getInstance(dependency))
 				.toArray(Object[]::new);
 	}
 

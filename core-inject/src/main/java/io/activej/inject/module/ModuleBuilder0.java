@@ -19,7 +19,6 @@ package io.activej.inject.module;
 import io.activej.inject.Key;
 import io.activej.inject.Scope;
 import io.activej.inject.binding.Binding;
-import io.activej.inject.binding.Dependency;
 import io.activej.inject.util.Constructors.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -87,13 +86,6 @@ public interface ModuleBuilder0<T> extends ModuleBuilder {
 	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
 	 */
 	default ModuleBuilder1<T> to(@NotNull ConstructorN<? extends T> factory, Key<?>[] dependencies) {
-		return to(Binding.to(factory, dependencies));
-	}
-
-	/**
-	 * DSL shortcut for creating a binding and {@link #to(Binding) binding it} to a current key.
-	 */
-	default ModuleBuilder1<T> to(@NotNull ConstructorN<? extends T> factory, Dependency[] dependencies) {
 		return to(Binding.to(factory, dependencies));
 	}
 
