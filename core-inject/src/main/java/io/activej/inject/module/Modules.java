@@ -233,8 +233,7 @@ public final class Modules {
 					changed |= !oldImportKey.equals(newImportKey);
 					Dependency newDependency = new Dependency(
 							newImportKey,
-							oldDependency.isRequired(),
-							oldDependency.isImplicit());
+							oldDependency.isRequired());
 					newDependencies.add(newDependency);
 				}
 				Binding<?> newBinding = changed ?

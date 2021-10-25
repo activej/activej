@@ -16,6 +16,7 @@
 
 package io.activej.inject.util;
 
+import io.activej.inject.InstanceProvider;
 import io.activej.inject.Key;
 import io.activej.inject.KeyPattern;
 import io.activej.inject.Scope;
@@ -222,7 +223,7 @@ public final class Utils {
 				if (!dependency.isRequired()) {
 					sb.append("style=dashed,");
 				}
-				if (dependency.isImplicit()) {
+				if (dependency.getKey().getRawType() == InstanceProvider.class) {
 					sb.append("color=gray");
 				}
 				sb.append("];\n");

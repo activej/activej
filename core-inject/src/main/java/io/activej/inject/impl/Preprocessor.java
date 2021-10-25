@@ -219,7 +219,7 @@ public final class Preprocessor {
 		Key<Object> instanceKey = key.getTypeParameter(0).qualified(key.getQualifier());
 		Binding<?> resolved = resolve(upper, localBindings, resolvedBindings, scope, instanceKey, localBindings.get(instanceKey), multibinder, transformer, generator);
 		if (resolved == null) return null;
-		return new Binding<InstanceProvider<?>>(singleton(Dependency.implicit(instanceKey, true))) {
+		return new Binding<InstanceProvider<?>>(singleton(Dependency.toKey(instanceKey, true))) {
 			@Override
 			public CompiledBinding<InstanceProvider<?>> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 				return slot != null ?
@@ -396,7 +396,7 @@ public final class Preprocessor {
 		// standard dfs with visited (black) and visiting (grey) sets
 		if (visiting.add(key)) {
 			for (Dependency dependency : binding.getDependencies()) {
-				if (!(visited.contains(dependency.getKey()) || dependency.isImplicit())) {
+				if (!visited.contains(dependency.getKey()) && dependency.getKey().getRawType() != InstanceProvider.class) {
 					collectCycles(bindings, visited, visiting, cycles, dependency.getKey());
 				}
 			}
