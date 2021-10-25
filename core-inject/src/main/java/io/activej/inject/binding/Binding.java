@@ -181,7 +181,27 @@ public abstract class Binding<T> {
 	}
 
 	public <R> Binding<R> mapInstance(@NotNull Function<? super @NotNull T, ? extends @NotNull R> fn) {
-		return mapInstance(null, (args, instance) -> fn.apply(instance));
+		return new Binding<R>(dependencies, type, location) {
+			@Override
+			public CompiledBinding<R> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
+				CompiledBinding<T> originalBinding = Binding.this.compile(compiledBindings, threadsafe, scope, null);
+				return slot != null ?
+						new AbstractCompiledBinding<R>(scope, slot) {
+							@Override
+							protected R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+								T instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
+								return instance != null ? fn.apply(instance) : null;
+							}
+						} :
+						new CompiledBinding<R>() {
+							@Override
+							public R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+								T instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
+								return instance != null ? fn.apply(instance) : null;
+							}
+						};
+			}
+		};
 	}
 
 	@SuppressWarnings("Duplicates")
@@ -310,8 +330,8 @@ public abstract class Binding<T> {
 						return new CompiledBinding<T>() {
 							@Override
 							public T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-								for (CompiledBinding<?> compiledExtraBinding : compiledExtraBindings) {
-									compiledExtraBinding.getInstance(scopedInstances, synchronizedScope);
+								for (int i = 0; i < compiledExtraBindings.length; i++) {
+									compiledExtraBindings[i].getInstance(scopedInstances, synchronizedScope);
 								}
 								return compiledBinding.getInstance(scopedInstances, synchronizedScope);
 							}

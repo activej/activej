@@ -113,7 +113,7 @@ public final class Injector implements ResourceLocator {
 			UnaryOperator<CompiledBinding<?>> specializer = (UnaryOperator<CompiledBinding<?>>) specializerInstance;
 			Injector.bytecodePostprocessorFactory = () -> specializer;
 		} catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException | ClassNotFoundException | InstantiationException e) {
-			throw new IllegalStateException("Can not access ActiveJ Specializer", e);
+			throw new UnsupportedOperationException("Can not access ActiveJ Specializer", e);
 		}
 	}
 
