@@ -171,7 +171,7 @@ public abstract class Binding<T> {
 	}
 
 	public Binding<T> onInstance(@NotNull Consumer<? super @NotNull T> consumer) {
-		return mapInstance(null, (args, instance) -> {
+		return mapInstance(instance -> {
 			consumer.accept(instance);
 			return instance;
 		});
@@ -202,66 +202,46 @@ public abstract class Binding<T> {
 	}
 
 	@SuppressWarnings("Duplicates")
-	public <R> Binding<R> mapInstance(@Nullable List<Key<?>> dependencies, @NotNull BiFunction<Object[], ? super @NotNull T, ? extends @NotNull R> fn) {
-		if (dependencies != null) {
-			Set<Key<?>> missing = dependencies.stream()
-					.filter(required -> this.dependencies.stream().noneMatch(existing -> existing.equals(required)))
-					.collect(toSet());
+	public <R> Binding<R> mapInstance(@NotNull List<Key<?>> dependencies, @NotNull BiFunction<Object[], ? super @NotNull T, ? extends @NotNull R> fn) {
+		Set<Key<?>> missing = dependencies.stream()
+				.filter(required -> !this.dependencies.contains(required))
+				.collect(toSet());
 
-			if (!missing.isEmpty()) {
-				throw new DIException(missing.stream()
-						.map(Key::getDisplayString)
-						.collect(joining(", ", "Binding has no dependencies ", " required by mapInstance call")));
-			}
+		if (!missing.isEmpty()) {
+			throw new DIException(missing.stream()
+					.map(Key::getDisplayString)
+					.collect(joining(", ", "Binding has no dependencies ", " required by mapInstance call")));
 		}
 		return new Binding<R>(this.dependencies, this.type, this.location) {
 			@Override
 			public CompiledBinding<R> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 				final CompiledBinding<T> originalBinding = Binding.this.compile(compiledBindings, threadsafe, scope, null);
 				final CompiledBinding[] bindings =
-						dependencies != null ?
-								dependencies.stream().map(compiledBindings::get).toArray(CompiledBinding[]::new) :
-								null;
+						dependencies.stream().map(compiledBindings::get).toArray(CompiledBinding[]::new);
 
-				return bindings != null ?
-						slot != null ?
-								new AbstractCompiledBinding<R>(scope, slot) {
-									@Override
-									protected @Nullable R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-										Object[] args = new Object[bindings.length];
-										for (int i = 0; i < bindings.length; i++) {
-											args[i] = bindings[i].getInstance(scopedInstances, synchronizedScope);
-										}
-										T instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
-										return instance != null ? fn.apply(args, instance) : null;
-									}
-								} :
-								new CompiledBinding<R>() {
-									@Override
-									public @Nullable R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-										Object[] args = new Object[bindings.length];
-										for (int i = 0; i < bindings.length; i++) {
-											args[i] = bindings[i].getInstance(scopedInstances, synchronizedScope);
-										}
-										T instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
-										return instance != null ? fn.apply(args, instance) : null;
-									}
-								} :
-						slot != null ?
-								new AbstractCompiledBinding<R>(scope, slot) {
-									@Override
-									protected @Nullable R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-										T instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
-										return instance != null ? fn.apply(null, instance) : null;
-									}
-								} :
-								new CompiledBinding<R>() {
-									@Override
-									public @Nullable R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-										T instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
-										return instance != null ? fn.apply(null, instance) : null;
-									}
-								};
+				return slot != null ?
+						new AbstractCompiledBinding<R>(scope, slot) {
+							@Override
+							protected @Nullable R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+								Object[] args = new Object[bindings.length];
+								for (int i = 0; i < bindings.length; i++) {
+									args[i] = bindings[i].getInstance(scopedInstances, synchronizedScope);
+								}
+								T instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
+								return instance != null ? fn.apply(args, instance) : null;
+							}
+						} :
+						new CompiledBinding<R>() {
+							@Override
+							public @Nullable R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+								Object[] args = new Object[bindings.length];
+								for (int i = 0; i < bindings.length; i++) {
+									args[i] = bindings[i].getInstance(scopedInstances, synchronizedScope);
+								}
+								T instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
+								return instance != null ? fn.apply(args, instance) : null;
+							}
+						};
 			}
 		};
 	}
