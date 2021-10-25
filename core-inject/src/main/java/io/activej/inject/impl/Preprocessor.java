@@ -127,6 +127,11 @@ public final class Preprocessor {
 						binding = resolveInstanceInjector(key);
 					}
 
+					// try to resolve Key
+					if (binding == null && rawType == Key.class) {
+						binding = Binding.toInstance(key.getTypeParameter(0));
+					}
+
 					// fail fast because this generation was explicitly requested (though plain `bind(...)` call)
 					if (binding == null) {
 						throw new DIException("Refused to generate an explicitly requested binding for key " + key.getDisplayString());
@@ -161,6 +166,11 @@ public final class Preprocessor {
 			// try to resolve InstanceInjector
 			if (binding == null && rawType == InstanceInjector.class) {
 				binding = resolveInstanceInjector(key);
+			}
+
+			// try to resolve Key
+			if (binding == null && rawType == Key.class) {
+				binding = Binding.toInstance(key.getTypeParameter(0));
 			}
 
 			// if it was not resolved then it's simply unsatisfied and later will be checked

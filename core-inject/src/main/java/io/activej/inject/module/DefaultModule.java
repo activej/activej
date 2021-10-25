@@ -39,9 +39,6 @@ import static java.util.Collections.emptyMap;
  * <p>
  * The first one tries to generate a binding for any missing key by searching for {@link Inject} constructors.
  * <p>
- * The second one generates any Key&lt;SomeType&gt; instance for SomeType.
- * Its purpose is to get reified types from generics in templated providers.
- * <p>
  */
 public final class DefaultModule implements Module {
 	private static final Trie<Scope, Map<Key<?>, Set<Binding<?>>>> emptyTrie = Trie.leaf(new HashMap<>());
@@ -50,9 +47,6 @@ public final class DefaultModule implements Module {
 	static {
 		// generating bindings for classes that have @Inject constructors/factory methods
 		register(KeyPattern.of(Object.class), (bindings, scope, key) -> ReflectionUtils.generateImplicitBinding(key));
-
-		// generating dummy bindings for reified type requests (can be used in templated providers to get a Key<T> instance)
-		register(KeyPattern.of(Key.class), (bindings, scope, key) -> Binding.toInstance(key.getTypeParameter(0)));
 	}
 
 	public static synchronized <T> void register(KeyPattern<T> key, BindingGenerator<T> bindingGenerator) {

@@ -1299,4 +1299,14 @@ public final class TestDI {
 
 	}
 
+	@Test
+	public void implicitKey() {
+		Key<Key<String>> keyOfKeyOfString = new Key<Key<String>>() {};
+		Injector injector = Injector.of(ModuleBuilder.create()
+				.bind(keyOfKeyOfString)
+				.build());
+		Key<String> instance = injector.getInstance(keyOfKeyOfString);
+
+		assertEquals(String.class, instance.getType());
+	}
 }
