@@ -16,24 +16,22 @@
 
 package io.activej.inject.module;
 
-import io.activej.inject.*;
+import io.activej.inject.Key;
+import io.activej.inject.KeyPattern;
+import io.activej.inject.Scope;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.binding.Binding;
 import io.activej.inject.binding.BindingGenerator;
 import io.activej.inject.binding.BindingTransformer;
 import io.activej.inject.binding.Multibinder;
-import io.activej.inject.impl.*;
 import io.activej.inject.util.ReflectionUtils;
 import io.activej.inject.util.Trie;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReferenceArray;
 
-import static io.activej.inject.util.ReflectionUtils.generateInjectingInitializer;
 import static java.util.Collections.emptyMap;
 
 /**
@@ -44,9 +42,7 @@ import static java.util.Collections.emptyMap;
  * The second one generates any Key&lt;SomeType&gt; instance for SomeType.
  * Its purpose is to get reified types from generics in templated providers.
  * <p>
- * The last two generate appropriate instances for {@link InstanceProvider} and {@link InstanceInjector} requests.
  */
-@SuppressWarnings({"Convert2Lambda", "rawtypes"})
 public final class DefaultModule implements Module {
 	private static final Trie<Scope, Map<Key<?>, Set<Binding<?>>>> emptyTrie = Trie.leaf(new HashMap<>());
 	private static final Map<KeyPattern<?>, Set<BindingGenerator<?>>> generators = new HashMap<>();
@@ -57,35 +53,6 @@ public final class DefaultModule implements Module {
 
 		// generating dummy bindings for reified type requests (can be used in templated providers to get a Key<T> instance)
 		register(KeyPattern.of(Key.class), (bindings, scope, key) -> Binding.toInstance(key.getTypeParameter(0)));
-
-		// generating bindings for injector requests
-		register(KeyPattern.of(InstanceInjector.class),
-				(bindings, scope, key) -> {
-					Key<Object> instanceKey = key.getTypeParameter(0).qualified(key.getQualifier());
-					BindingInitializer<Object> bindingInitializer = generateInjectingInitializer(instanceKey);
-					return new Binding<InstanceInjector>(bindingInitializer.getDependencies()) {
-						@Override
-						public CompiledBinding<InstanceInjector> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int synchronizedScope, @Nullable Integer slot) {
-							return slot != null ?
-									new AbstractCompiledBinding<InstanceInjector>(synchronizedScope, slot) {
-										@Override
-										protected InstanceInjector doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-											CompiledBindingInitializer<Object> compiledBindingInitializer = bindingInitializer.getCompiler().compile(compiledBindings);
-											return new InstanceInjectorImpl<>(instanceKey, compiledBindingInitializer, scopedInstances, synchronizedScope);
-										}
-									} :
-									new CompiledBinding<InstanceInjector>() {
-										@Override
-										public InstanceInjector getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-											CompiledBindingInitializer<Object> compiledBindingInitializer = bindingInitializer.getCompiler().compile(compiledBindings);
-											// same as with instance providers
-											return new InstanceInjectorImpl<>(instanceKey, compiledBindingInitializer, scopedInstances, synchronizedScope);
-										}
-									};
-						}
-					};
-				}
-		);
 	}
 
 	public static synchronized <T> void register(KeyPattern<T> key, BindingGenerator<T> bindingGenerator) {
@@ -110,34 +77,5 @@ public final class DefaultModule implements Module {
 	@Override
 	public Map<Key<?>, Multibinder<?>> getMultibinders() {
 		return emptyMap();
-	}
-
-	public static class InstanceInjectorImpl<T> implements InstanceInjector<T> {
-		private final Key<T> key;
-		private final CompiledBindingInitializer<T> compiledBindingInitializer;
-		private final AtomicReferenceArray[] scopedInstances;
-		private final int synchronizedScope;
-
-		public InstanceInjectorImpl(Key<T> key, CompiledBindingInitializer<T> compiledBindingInitializer, AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-			this.key = key;
-			this.compiledBindingInitializer = compiledBindingInitializer;
-			this.scopedInstances = scopedInstances;
-			this.synchronizedScope = synchronizedScope;
-		}
-
-		@Override
-		public Key<T> key() {
-			return key;
-		}
-
-		@Override
-		public void injectInto(T existingInstance) {
-			compiledBindingInitializer.initInstance(existingInstance, scopedInstances, synchronizedScope);
-		}
-
-		@Override
-		public String toString() {
-			return "InstanceInjector<" + key.getDisplayString() + ">";
-		}
 	}
 }
