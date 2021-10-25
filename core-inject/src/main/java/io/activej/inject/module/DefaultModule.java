@@ -18,7 +18,10 @@ package io.activej.inject.module;
 
 import io.activej.inject.*;
 import io.activej.inject.annotation.Inject;
-import io.activej.inject.binding.*;
+import io.activej.inject.binding.Binding;
+import io.activej.inject.binding.BindingGenerator;
+import io.activej.inject.binding.BindingTransformer;
+import io.activej.inject.binding.Multibinder;
 import io.activej.inject.impl.*;
 import io.activej.inject.util.ReflectionUtils;
 import io.activej.inject.util.Trie;
@@ -32,7 +35,6 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 
 import static io.activej.inject.util.ReflectionUtils.generateInjectingInitializer;
 import static java.util.Collections.emptyMap;
-import static java.util.Collections.singleton;
 
 /**
  * This module provides a set of default generators.
@@ -55,45 +57,6 @@ public final class DefaultModule implements Module {
 
 		// generating dummy bindings for reified type requests (can be used in templated providers to get a Key<T> instance)
 		register(KeyPattern.of(Key.class), (bindings, scope, key) -> Binding.toInstance(key.getTypeParameter(0)));
-
-		// generating bindings for provider requests
-		register(KeyPattern.of(InstanceProvider.class),
-				(bindings, scope, key) -> {
-					Key<Object> instanceKey = key.getTypeParameter(0).qualified(key.getQualifier());
-					Binding<Object> instanceBinding = bindings.get(instanceKey);
-					if (instanceBinding == null) {
-						return null;
-					}
-					return new Binding<InstanceProvider>(singleton(Dependency.implicit(instanceKey, true))) {
-						@Override
-						public CompiledBinding<InstanceProvider> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
-							return slot != null ?
-									new AbstractCompiledBinding<InstanceProvider>(scope, slot) {
-										@Override
-										protected InstanceProvider doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-											CompiledBinding<Object> compiledBinding = compiledBindings.get(instanceKey);
-											// ^ this only gets already compiled binding, that's not a binding compilation after injector is compiled
-											return new InstanceProviderImpl<>(instanceKey, compiledBinding, scopedInstances, synchronizedScope);
-										}
-									} :
-									new CompiledBinding<InstanceProvider>() {
-										@Override
-										public InstanceProvider getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-
-											// transient bindings for instance provider are useless and nobody should make ones
-											// however, things like mapInstance create an intermediate transient compiled bindings of their peers
-											// usually they call getInstance just once and then cache the result of their computation (e.g. the result of mapping function)
-											//
-											// anyway all the above means that it's ok here to just get the compiled binding and to not care about caching it
-
-											CompiledBinding<Object> compiledBinding = compiledBindings.get(instanceKey);
-											return new InstanceProviderImpl<>(instanceKey, compiledBinding, scopedInstances, synchronizedScope);
-										}
-									};
-						}
-					};
-				}
-		);
 
 		// generating bindings for injector requests
 		register(KeyPattern.of(InstanceInjector.class),
@@ -147,35 +110,6 @@ public final class DefaultModule implements Module {
 	@Override
 	public Map<Key<?>, Multibinder<?>> getMultibinders() {
 		return emptyMap();
-	}
-
-	public static class InstanceProviderImpl<T> implements InstanceProvider<T> {
-		private final Key<T> key;
-		private final CompiledBinding<T> compiledBinding;
-		private final AtomicReferenceArray[] scopedInstances;
-		private final int synchronizedScope;
-
-		public InstanceProviderImpl(Key<T> key, CompiledBinding<T> compiledBinding, AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-			this.key = key;
-			this.compiledBinding = compiledBinding;
-			this.scopedInstances = scopedInstances;
-			this.synchronizedScope = synchronizedScope;
-		}
-
-		@Override
-		public Key<T> key() {
-			return key;
-		}
-
-		@Override
-		public T get() {
-			return compiledBinding.getInstance(scopedInstances, synchronizedScope);
-		}
-
-		@Override
-		public String toString() {
-			return "InstanceProvider<" + key.getDisplayString() + ">";
-		}
 	}
 
 	public static class InstanceInjectorImpl<T> implements InstanceInjector<T> {

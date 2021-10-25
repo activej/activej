@@ -21,6 +21,7 @@ import io.activej.inject.binding.*;
 import io.activej.inject.module.UniqueQualifierImpl;
 import io.activej.inject.util.Trie;
 import io.activej.inject.util.Utils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Modifier;
@@ -28,13 +29,13 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.stream.Stream;
 
 import static io.activej.inject.Scope.UNSCOPED;
 import static io.activej.inject.util.Utils.*;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.singletonList;
+import static java.util.Collections.*;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -112,7 +113,12 @@ public final class Preprocessor {
 
 					// try to resolve Optional
 					if (binding == null && key.getRawType() == OptionalDependency.class) {
-						binding =  resolveOptionalDependency(upper, localBindings, resolvedBindings, scope, key, multibinder, transformer, generator);
+						binding = resolveOptionalDependency(upper, localBindings, resolvedBindings, scope, key, multibinder, transformer, generator);
+					}
+
+					// try to resolve InstanceProvider
+					if (binding == null && key.getRawType() == InstanceProvider.class) {
+						binding = resolveInstanceProvider(upper, localBindings, resolvedBindings, scope, key, multibinder, transformer, generator);
 					}
 
 					// fail fast because this generation was explicitly requested (though plain `bind(...)` call)
@@ -141,7 +147,12 @@ public final class Preprocessor {
 				binding = resolveOptionalDependency(upper, localBindings, resolvedBindings, scope, key, multibinder, transformer, generator);
 			}
 
-			// if it was not generated then it's simply unsatisfied and later will be checked
+			// try to resolve InstanceProvider
+			if (binding == null && key.getRawType() == InstanceProvider.class) {
+				binding = resolveInstanceProvider(upper, localBindings, resolvedBindings, scope, key, multibinder, transformer, generator);
+			}
+
+			// if it was not resolved then it's simply unsatisfied and later will be checked
 			if (binding == null) {
 				return null;
 			}
@@ -163,13 +174,49 @@ public final class Preprocessor {
 		return transformed;
 	}
 
-	private static Binding<?> resolveOptionalDependency(Map<Key<?>, Binding<?>> upper, Map<Key<?>, Set<Binding<?>>> localBindings, Map<Key<?>, Binding<?>> resolvedBindings, Scope[] scope, Key<?> key, Multibinder<?> multibinder, BindingTransformer<?> transformer, BindingGenerator<?> generator) {
+	private static @NotNull Binding<?> resolveOptionalDependency(Map<Key<?>, Binding<?>> upper, Map<Key<?>, Set<Binding<?>>> localBindings, Map<Key<?>, Binding<?>> resolvedBindings, Scope[] scope, Key<?> key, Multibinder<?> multibinder, BindingTransformer<?> transformer, BindingGenerator<?> generator) {
 		Type typeArgument = ((ParameterizedType) key.getType()).getActualTypeArguments()[0];
 		key = Key.ofType(typeArgument, key.getQualifier());
 		Binding<?> resolved = resolve(upper, localBindings, resolvedBindings, scope, key, localBindings.get(key), multibinder, transformer, generator);
 		return resolved != null ?
 				resolved.mapInstance(OptionalDependency::of) :
 				Binding.toInstance(OptionalDependency.empty());
+	}
+
+	@SuppressWarnings({"rawtypes", "Convert2Lambda"})
+	private static @Nullable Binding<?> resolveInstanceProvider(Map<Key<?>, Binding<?>> upper, Map<Key<?>, Set<Binding<?>>> localBindings, Map<Key<?>, Binding<?>> resolvedBindings, Scope[] scope, Key<?> key, Multibinder<?> multibinder, BindingTransformer<?> transformer, BindingGenerator<?> generator) {
+		Type typeArgument = ((ParameterizedType) key.getType()).getActualTypeArguments()[0];
+		Key<Object> instanceKey = Key.ofType(typeArgument, key.getQualifier());
+		Binding<?> resolved = resolve(upper, localBindings, resolvedBindings, scope, instanceKey, localBindings.get(instanceKey), multibinder, transformer, generator);
+		if (resolved == null) return null;
+		return new Binding<InstanceProvider<?>>(singleton(Dependency.implicit(instanceKey, true))) {
+			@Override
+			public CompiledBinding<InstanceProvider<?>> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
+				return slot != null ?
+						new AbstractCompiledBinding<InstanceProvider<?>>(scope, slot) {
+							@Override
+							protected InstanceProvider<?> doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+								CompiledBinding<Object> compiledBinding = compiledBindings.get(instanceKey);
+								// ^ this only gets already compiled binding, that's not a binding compilation after injector is compiled
+								return new InstanceProviderImpl<>(instanceKey, compiledBinding, scopedInstances, synchronizedScope);
+							}
+						} :
+						new CompiledBinding<InstanceProvider<?>>() {
+							@Override
+							public InstanceProvider<?> getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+
+								// transient bindings for instance provider are useless and nobody should make ones
+								// however, things like mapInstance create an intermediate transient compiled bindings of their peers
+								// usually they call getInstance just once and then cache the result of their computation (e.g. the result of mapping function)
+								//
+								// anyway all the above means that it's ok here to just get the compiled binding and to not care about caching it
+
+								CompiledBinding<Object> compiledBinding = compiledBindings.get(instanceKey);
+								return new InstanceProviderImpl<>(instanceKey, compiledBinding, scopedInstances, synchronizedScope);
+							}
+						};
+			}
+		};
 	}
 
 	/**
@@ -372,4 +419,34 @@ public final class Preprocessor {
 				return "instance injectors cannot inject private keys (found private key " + priv.getDisplayString() + " " + Utils.getLocation(bindings.get().get(priv)) + ")";
 			}
 	);
+
+	@SuppressWarnings("rawtypes")
+	private static class InstanceProviderImpl<T> implements InstanceProvider<T> {
+		private final Key<T> key;
+		private final CompiledBinding<T> compiledBinding;
+		private final AtomicReferenceArray[] scopedInstances;
+		private final int synchronizedScope;
+
+		public InstanceProviderImpl(Key<T> key, CompiledBinding<T> compiledBinding, AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+			this.key = key;
+			this.compiledBinding = compiledBinding;
+			this.scopedInstances = scopedInstances;
+			this.synchronizedScope = synchronizedScope;
+		}
+
+		@Override
+		public Key<T> key() {
+			return key;
+		}
+
+		@Override
+		public T get() {
+			return compiledBinding.getInstance(scopedInstances, synchronizedScope);
+		}
+
+		@Override
+		public String toString() {
+			return "InstanceProvider<" + key.getDisplayString() + ">";
+		}
+	}
 }
