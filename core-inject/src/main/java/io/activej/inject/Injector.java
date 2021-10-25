@@ -20,7 +20,6 @@ import io.activej.inject.binding.*;
 import io.activej.inject.impl.CompiledBinding;
 import io.activej.inject.impl.CompiledBindingLocator;
 import io.activej.inject.impl.Preprocessor;
-import io.activej.inject.module.DefaultModule;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.Modules;
 import io.activej.inject.util.Trie;
@@ -140,15 +139,14 @@ public final class Injector implements ResourceLocator {
 	}
 
 	/**
-	 * This constructor combines given modules (along with a {@link DefaultModule})
-	 * and then {@link #compile(Injector, Module) compiles} them.
+	 * This constructor combines given modules and then {@link #compile(Injector, Module) compiles} them.
 	 */
 	public static Injector of(Module... modules) {
-		return compile(null, Modules.combine(Modules.combine(modules), new DefaultModule()));
+		return compile(null, Modules.combine(modules));
 	}
 
 	public static Injector of(@Nullable Injector parent, Module... modules) {
-		return compile(parent, Modules.combine(Modules.combine(modules), new DefaultModule()));
+		return compile(parent, Modules.combine(modules));
 	}
 
 	/**
