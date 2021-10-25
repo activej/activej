@@ -24,6 +24,7 @@ import io.activej.inject.util.Utils;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.Map.Entry;
@@ -108,6 +109,12 @@ public final class Preprocessor {
 				case 0:
 					// try to recursively generate a requested binding
 					binding = ((BindingGenerator<Object>) generator).generate(recursiveLocator, scope, (Key<Object>) key);
+
+					// try to resolve Optional
+					if (binding == null && key.getRawType() == OptionalDependency.class) {
+						binding =  resolveOptionalDependency(upper, localBindings, resolvedBindings, scope, key, multibinder, transformer, generator);
+					}
+
 					// fail fast because this generation was explicitly requested (though plain `bind(...)` call)
 					if (binding == null) {
 						throw new DIException("Refused to generate an explicitly requested binding for key " + key.getDisplayString());
@@ -129,6 +136,11 @@ public final class Preprocessor {
 			// try to generate it
 			binding = ((BindingGenerator<Object>) generator).generate(recursiveLocator, scope, (Key<Object>) key);
 
+			// try to resolve Optional
+			if (binding == null && key.getRawType() == OptionalDependency.class) {
+				binding = resolveOptionalDependency(upper, localBindings, resolvedBindings, scope, key, multibinder, transformer, generator);
+			}
+
 			// if it was not generated then it's simply unsatisfied and later will be checked
 			if (binding == null) {
 				return null;
@@ -149,6 +161,15 @@ public final class Preprocessor {
 		}
 
 		return transformed;
+	}
+
+	private static Binding<?> resolveOptionalDependency(Map<Key<?>, Binding<?>> upper, Map<Key<?>, Set<Binding<?>>> localBindings, Map<Key<?>, Binding<?>> resolvedBindings, Scope[] scope, Key<?> key, Multibinder<?> multibinder, BindingTransformer<?> transformer, BindingGenerator<?> generator) {
+		Type typeArgument = ((ParameterizedType) key.getType()).getActualTypeArguments()[0];
+		key = Key.ofType(typeArgument, key.getQualifier());
+		Binding<?> resolved = resolve(upper, localBindings, resolvedBindings, scope, key, localBindings.get(key), multibinder, transformer, generator);
+		return resolved != null ?
+				resolved.mapInstance(OptionalDependency::of) :
+				Binding.toInstance(OptionalDependency.empty());
 	}
 
 	/**
