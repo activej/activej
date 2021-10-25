@@ -19,12 +19,10 @@ package io.activej.inject.module;
 import io.activej.inject.Key;
 import io.activej.inject.KeyPattern;
 import io.activej.inject.Scope;
-import io.activej.inject.annotation.Inject;
 import io.activej.inject.binding.Binding;
 import io.activej.inject.binding.BindingGenerator;
 import io.activej.inject.binding.BindingTransformer;
 import io.activej.inject.binding.Multibinder;
-import io.activej.inject.util.ReflectionUtils;
 import io.activej.inject.util.Trie;
 
 import java.util.HashMap;
@@ -36,18 +34,10 @@ import static java.util.Collections.emptyMap;
 
 /**
  * This module provides a set of default generators.
- * <p>
- * The first one tries to generate a binding for any missing key by searching for {@link Inject} constructors.
- * <p>
  */
 public final class DefaultModule implements Module {
 	private static final Trie<Scope, Map<Key<?>, Set<Binding<?>>>> emptyTrie = Trie.leaf(new HashMap<>());
 	private static final Map<KeyPattern<?>, Set<BindingGenerator<?>>> generators = new HashMap<>();
-
-	static {
-		// generating bindings for classes that have @Inject constructors/factory methods
-		register(KeyPattern.of(Object.class), (bindings, scope, key) -> ReflectionUtils.generateImplicitBinding(key));
-	}
 
 	public static synchronized <T> void register(KeyPattern<T> key, BindingGenerator<T> bindingGenerator) {
 		generators.computeIfAbsent(key, $ -> new HashSet<>()).add(bindingGenerator);

@@ -1309,4 +1309,31 @@ public final class TestDI {
 
 		assertEquals(String.class, instance.getType());
 	}
+
+	@Test
+	public void injectClass() {
+		Key<TestClass> key = new Key<TestClass>() {};
+		String expected = "Hello, World";
+		Injector injector = Injector.of(ModuleBuilder.create()
+				.bind(String.class).to(() -> expected)
+				.bind(key)
+				.build());
+		TestClass instance = injector.getInstance(key);
+
+		assertEquals(expected, instance.getText());
+	}
+
+	public static final class TestClass {
+		private final String text;
+
+		@Inject
+		public TestClass(String text) {
+			this.text = text;
+		}
+
+		public String getText() {
+			return text;
+		}
+	}
+
 }

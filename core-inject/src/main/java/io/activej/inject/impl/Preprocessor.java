@@ -19,6 +19,7 @@ package io.activej.inject.impl;
 import io.activej.inject.*;
 import io.activej.inject.binding.*;
 import io.activej.inject.module.UniqueQualifierImpl;
+import io.activej.inject.util.ReflectionUtils;
 import io.activej.inject.util.Trie;
 import io.activej.inject.util.Utils;
 import org.jetbrains.annotations.NotNull;
@@ -132,6 +133,11 @@ public final class Preprocessor {
 						binding = Binding.toInstance(key.getTypeParameter(0));
 					}
 
+					// try to resolve bindings for classes that may have @Inject constructors/factory methods
+					if (binding == null) {
+						binding = ReflectionUtils.generateImplicitBinding(key);
+					}
+
 					// fail fast because this generation was explicitly requested (though plain `bind(...)` call)
 					if (binding == null) {
 						throw new DIException("Refused to generate an explicitly requested binding for key " + key.getDisplayString());
@@ -171,6 +177,11 @@ public final class Preprocessor {
 			// try to resolve Key
 			if (binding == null && rawType == Key.class) {
 				binding = Binding.toInstance(key.getTypeParameter(0));
+			}
+
+			// try to resolve bindings for classes that may have @Inject constructors/factory methods
+			if (binding == null) {
+				binding = ReflectionUtils.generateImplicitBinding(key);
 			}
 
 			// if it was not resolved then it's simply unsatisfied and later will be checked
