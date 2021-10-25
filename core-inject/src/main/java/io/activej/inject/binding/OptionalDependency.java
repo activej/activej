@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.NoSuchElementException;
+import java.util.function.Supplier;
 
 public final class OptionalDependency<T> {
 	private final @Nullable T value;
@@ -45,6 +46,14 @@ public final class OptionalDependency<T> {
 			throw new NoSuchElementException();
 		}
 		return value;
+	}
+
+	public T orElse(T other) {
+		return value != null ? value : other;
+	}
+
+	public T orElseGet(Supplier<? extends T> other) {
+		return value != null ? value : other.get();
 	}
 
 	@Override

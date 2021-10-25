@@ -287,10 +287,8 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 
 	@ProvidesIntoSet
 	LauncherService service(ServiceGraph serviceGraph, OptionalDependency<Set<Initializer<ServiceGraphModuleSettings>>> maybeInitializers) {
-		if (maybeInitializers.isPresent()) {
-			for (Initializer<ServiceGraphModuleSettings> initializer : maybeInitializers.get()) {
-				initializer.accept(this);
-			}
+		for (Initializer<ServiceGraphModuleSettings> initializer : maybeInitializers.orElse(emptySet())) {
+			initializer.accept(this);
 		}
 		return new LauncherService() {
 			@Override

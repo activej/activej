@@ -55,11 +55,7 @@ public class SimpleTcpServerLauncher extends Launcher {
 	public Eventloop eventloop(Config config, OptionalDependency<ThrottlingController> maybeThrottlingController) {
 		return Eventloop.create()
 				.withInitializer(ofEventloop(config.getChild("eventloop")))
-				.withInitializer(eventloop -> {
-					if (maybeThrottlingController.isPresent()) {
-						eventloop.withInspector(maybeThrottlingController.get());
-					}
-				});
+				.withInitializer(eventloop -> eventloop.withInspector(maybeThrottlingController.orElse(null)));
 	}
 
 	@Eager

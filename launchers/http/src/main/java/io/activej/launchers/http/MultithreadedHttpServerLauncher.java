@@ -69,11 +69,7 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 	Eventloop workerEventloop(Config config, OptionalDependency<ThrottlingController> maybeThrottlingController) {
 		return Eventloop.create()
 				.withInitializer(ofEventloop(config.getChild("eventloop.worker")))
-				.withInitializer(eventloop -> {
-					if (maybeThrottlingController.isPresent()) {
-						eventloop.withInspector(maybeThrottlingController.get());
-					}
-				});
+				.withInitializer(eventloop -> eventloop.withInspector(maybeThrottlingController.orElse(null)));
 	}
 
 	@Provides

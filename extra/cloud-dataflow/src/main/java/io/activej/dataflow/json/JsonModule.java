@@ -142,7 +142,7 @@ public final class JsonModule extends AbstractModule {
 			return Binding.to(args -> {
 						Injector injector = (Injector) args[0];
 						OptionalDependency<SubtypeNameFactory> maybeNames = (OptionalDependency<SubtypeNameFactory>) args[1];
-						SubtypeNameFactory names = maybeNames.isPresent() ? maybeNames.get() : $ -> null;
+						SubtypeNameFactory names = maybeNames.orElse($ -> null);
 
 						Set<Class<?>> subtypes = new HashSet<>();
 

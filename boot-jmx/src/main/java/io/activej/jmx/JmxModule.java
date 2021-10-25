@@ -52,6 +52,7 @@ import java.util.function.Supplier;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.jmx.JmxBeanSettings.defaultSettings;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
 import static java.util.Collections.newSetFromMap;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
@@ -197,10 +198,8 @@ public final class JmxModule extends AbstractModule implements WithInitializer<J
 
 	@ProvidesIntoSet
 	LauncherService service(Injector injector, JmxRegistry jmxRegistry, DynamicMBeanFactory mbeanFactory, OptionalDependency<Set<Initializer<JmxModule>>> maybeInitializers) {
-		if (maybeInitializers.isPresent()) {
-			for (Initializer<JmxModule> initializer : maybeInitializers.get()) {
-				initializer.accept(this);
-			}
+		for (Initializer<JmxModule> initializer : maybeInitializers.orElse(emptySet())) {
+			initializer.accept(this);
 		}
 		return new LauncherService() {
 			@Override

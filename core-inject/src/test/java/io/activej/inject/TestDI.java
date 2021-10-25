@@ -514,7 +514,7 @@ public final class TestDI {
 				.scan(new Object() {
 					@Provides
 					String string(Integer integer, OptionalDependency<Float> maybeFloat) {
-						return "str: " + integer + ", " + (maybeFloat.isPresent() ? maybeFloat.get() : null);
+						return "str: " + integer + ", " + maybeFloat.orElse(null);
 					}
 
 					@Provides
@@ -672,7 +672,7 @@ public final class TestDI {
 			@Inject
 			Injectable(String string, OptionalDependency<Integer> maybeInteger) {
 				this.string = string;
-				this.integer = maybeInteger.isPresent() ? maybeInteger.get() : null;
+				this.integer = maybeInteger.orElse(null);
 			}
 		}
 
