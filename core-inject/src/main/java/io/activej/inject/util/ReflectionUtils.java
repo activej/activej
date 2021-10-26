@@ -182,7 +182,7 @@ public final class ReflectionUtils {
 	public static <T> Binding<T> generateImplicitBinding(Key<T> key) {
 		Binding<T> binding = generateConstructorBinding(key);
 		return binding != null ?
-				binding.initializeWith(generateInjectingInitializer(key)) :
+				binding.initializeWith(generateInjectingInitializer(key)).as(SYNTHETIC) :
 				null;
 	}
 

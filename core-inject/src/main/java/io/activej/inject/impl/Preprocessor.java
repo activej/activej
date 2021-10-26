@@ -136,8 +136,7 @@ public final class Preprocessor {
 
 					// try to resolve bindings for classes that may have @Inject constructors/factory methods
 					if (binding == null) {
-						Binding<?> generated = ReflectionUtils.generateImplicitBinding(key);
-						binding = generated == null ? null : generated.as(SYNTHETIC);
+						binding = ReflectionUtils.generateImplicitBinding(key);
 					}
 
 					// fail fast because this generation was explicitly requested (though plain `bind(...)` call)
@@ -183,8 +182,7 @@ public final class Preprocessor {
 
 			// try to resolve bindings for classes that may have @Inject constructors/factory methods
 			if (binding == null) {
-				Binding<?> generated = ReflectionUtils.generateImplicitBinding(key);
-				binding = generated == null ? null : generated.as(SYNTHETIC);
+				binding = ReflectionUtils.generateImplicitBinding(key);
 			}
 
 			// if it was not resolved then it's simply unsatisfied and later will be checked
