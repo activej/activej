@@ -91,4 +91,21 @@ public class OptionalDependencyTest {
 		assertEquals("str_1", provider.get());
 		assertEquals("str_1", provider.get());
 	}
+
+	@Test
+	public void sameInstance() {
+		AtomicInteger created = new AtomicInteger();
+
+		Injector injector = Injector.of(
+				ModuleBuilder.create()
+						.bind(String.class).to(() -> "str_" + created.incrementAndGet())
+						.bindOptionalDependency(String.class)
+						.build());
+
+		String string = injector.getInstance(String.class);
+		OptionalDependency<String> stringOpt = injector.getInstance(new Key<OptionalDependency<String>>() {});
+
+		assertEquals("str_1", string);
+		assertEquals("str_1", stringOpt.get());
+	}
 }

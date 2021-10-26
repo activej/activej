@@ -205,12 +205,31 @@ public final class Preprocessor {
 		return transformed;
 	}
 
+	@SuppressWarnings({"rawtypes", "Convert2Lambda"})
 	private static @NotNull Binding<?> resolveOptionalDependency(Map<Key<?>, Binding<?>> upper, Map<Key<?>, Set<Binding<?>>> localBindings, Map<Key<?>, Binding<?>> resolvedBindings, Scope[] scope, Key<?> key, Multibinder<?> multibinder, BindingTransformer<?> transformer, BindingGenerator<?> generator) {
 		Key<?> instanceKey = key.getTypeParameter(0).qualified(key.getQualifier());
 		Binding<?> resolved = resolve(upper, localBindings, resolvedBindings, scope, instanceKey, localBindings.get(instanceKey), multibinder, transformer, generator);
-		return resolved != null ?
-				resolved.mapInstance(OptionalDependency::of) :
-				Binding.toInstance(OptionalDependency.empty());
+		if (resolved == null) return Binding.toInstance(OptionalDependency.empty());
+		return new Binding<OptionalDependency<?>>(singleton(instanceKey)) {
+			@Override
+			public CompiledBinding<OptionalDependency<?>> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
+				return slot != null ?
+						new AbstractCompiledBinding<OptionalDependency<?>>(scope, slot) {
+							@Override
+							protected @NotNull OptionalDependency<?> doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+								CompiledBinding<?> compiledBinding = compiledBindings.get(instanceKey);
+								return OptionalDependency.of(compiledBinding.getInstance(scopedInstances, synchronizedScope));
+							}
+						} :
+						new CompiledBinding<OptionalDependency<?>>() {
+							@Override
+							public @NotNull OptionalDependency<?> getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+								CompiledBinding<?> compiledBinding = compiledBindings.get(instanceKey);
+								return OptionalDependency.of(compiledBinding.getInstance(scopedInstances, synchronizedScope));
+							}
+						};
+			}
+		};
 	}
 
 	@SuppressWarnings({"rawtypes", "Convert2Lambda"})
