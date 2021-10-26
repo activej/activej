@@ -321,7 +321,7 @@ public abstract class Binding<T> {
 					@Override
 					public CompiledBinding<T> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 						final CompiledBinding<T> compiledBinding = Binding.this.compile(compiledBindings, threadsafe, scope, null);
-						final CompiledBindingInitializer<T> consumer = bindingInitializer.getCompiler().compile(compiledBindings);
+						final CompiledBindingInitializer<T> consumer = bindingInitializer.compile(compiledBindings);
 
 						return slot != null ?
 								new AbstractCompiledBinding<T>(scope, slot) {

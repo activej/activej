@@ -21,10 +21,7 @@ import io.activej.inject.KeyPattern;
 import io.activej.inject.Scope;
 import io.activej.inject.annotation.*;
 import io.activej.inject.binding.*;
-import io.activej.inject.impl.BindingInitializer;
-import io.activej.inject.impl.BindingLocator;
-import io.activej.inject.impl.CompiledBinding;
-import io.activej.inject.impl.CompiledBindingInitializer;
+import io.activej.inject.impl.*;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.inject.module.ModuleBuilder1;
@@ -260,54 +257,56 @@ public final class ReflectionUtils {
 	public static <T> BindingInitializer<T> fieldInjector(Key<T> container, Field field) {
 		field.setAccessible(true);
 		Key<Object> key = keyOf(container.getType(), field.getGenericType(), field);
-		return BindingInitializer.of(
-				singleton(key),
-				compiledBindings -> {
-					CompiledBinding<Object> binding = compiledBindings.get(key);
-					//noinspection Convert2Lambda
-					return new CompiledBindingInitializer<T>() {
-						@SuppressWarnings("rawtypes")
-						@Override
-						public void initInstance(T instance, AtomicReferenceArray[] instances, int synchronizedScope) {
-							Object arg = binding.getInstance(instances, synchronizedScope);
-							try {
-								field.set(instance, arg);
-							} catch (IllegalAccessException e) {
-								throw new DIException("Not allowed to set injectable field " + field, e);
-							}
+		return new BindingInitializer<T>(singleton(key)) {
+			@Override
+			public CompiledBindingInitializer<T> compile(CompiledBindingLocator compiledBindings) {
+				CompiledBinding<Object> binding = compiledBindings.get(key);
+				//noinspection Convert2Lambda
+				return new CompiledBindingInitializer<T>() {
+					@SuppressWarnings("rawtypes")
+					@Override
+					public void initInstance(T instance, AtomicReferenceArray[] instances, int synchronizedScope) {
+						Object arg = binding.getInstance(instances, synchronizedScope);
+						try {
+							field.set(instance, arg);
+						} catch (IllegalAccessException e) {
+							throw new DIException("Not allowed to set injectable field " + field, e);
 						}
-					};
-				});
+					}
+				};
+			}
+		};
 	}
 
 	@SuppressWarnings("rawtypes")
 	public static <T> BindingInitializer<T> methodInjector(Key<T> container, Method method) {
 		method.setAccessible(true);
 		Key<?>[] dependencies = toDependencies(container.getType(), method);
-		return BindingInitializer.of(
-				Stream.of(dependencies).collect(toSet()),
-				compiledBindings -> {
-					CompiledBinding[] argBindings = Stream.of(dependencies)
-							.map(compiledBindings::get)
-							.toArray(CompiledBinding[]::new);
-					//noinspection Convert2Lambda
-					return new CompiledBindingInitializer<T>() {
-						@Override
-						public void initInstance(T instance, AtomicReferenceArray[] instances, int synchronizedScope) {
-							Object[] args = new Object[argBindings.length];
-							for (int i = 0; i < argBindings.length; i++) {
-								args[i] = argBindings[i].getInstance(instances, synchronizedScope);
-							}
-							try {
-								method.invoke(instance, args);
-							} catch (IllegalAccessException e) {
-								throw new DIException("Not allowed to call injectable method " + method, e);
-							} catch (InvocationTargetException e) {
-								throw new DIException("Failed to call injectable method " + method, e.getCause());
-							}
+		return new BindingInitializer<T>(new HashSet<>(Arrays.asList(dependencies))) {
+			@Override
+			public CompiledBindingInitializer<T> compile(CompiledBindingLocator compiledBindings) {
+				CompiledBinding[] argBindings = Stream.of(dependencies)
+						.map(compiledBindings::get)
+						.toArray(CompiledBinding[]::new);
+				//noinspection Convert2Lambda
+				return new CompiledBindingInitializer<T>() {
+					@Override
+					public void initInstance(T instance, AtomicReferenceArray[] instances, int synchronizedScope) {
+						Object[] args = new Object[argBindings.length];
+						for (int i = 0; i < argBindings.length; i++) {
+							args[i] = argBindings[i].getInstance(instances, synchronizedScope);
 						}
-					};
-				});
+						try {
+							method.invoke(instance, args);
+						} catch (IllegalAccessException e) {
+							throw new DIException("Not allowed to call injectable method " + method, e);
+						} catch (InvocationTargetException e) {
+							throw new DIException("Failed to call injectable method " + method, e.getCause());
+						}
+					}
+				};
+			}
+		};
 	}
 
 	public static Key<?>[] toDependencies(@Nullable Type container, Executable executable) {

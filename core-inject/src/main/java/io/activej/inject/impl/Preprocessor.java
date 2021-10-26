@@ -279,14 +279,14 @@ public final class Preprocessor {
 						new AbstractCompiledBinding<InstanceInjector<?>>(synchronizedScope, slot) {
 							@Override
 							protected @NotNull InstanceInjector<?> doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-								CompiledBindingInitializer<Object> compiledBindingInitializer = bindingInitializer.getCompiler().compile(compiledBindings);
+								CompiledBindingInitializer<Object> compiledBindingInitializer = bindingInitializer.compile(compiledBindings);
 								return new InstanceInjectorImpl<>(instanceKey, compiledBindingInitializer, scopedInstances, synchronizedScope);
 							}
 						} :
 						new CompiledBinding<InstanceInjector<?>>() {
 							@Override
 							public @NotNull InstanceInjector<?> getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
-								CompiledBindingInitializer<Object> compiledBindingInitializer = bindingInitializer.getCompiler().compile(compiledBindings);
+								CompiledBindingInitializer<Object> compiledBindingInitializer = bindingInitializer.compile(compiledBindings);
 								// same as with instance providers
 								return new InstanceInjectorImpl<>(instanceKey, compiledBindingInitializer, scopedInstances, synchronizedScope);
 							}
