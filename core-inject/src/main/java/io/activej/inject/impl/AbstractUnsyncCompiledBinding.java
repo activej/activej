@@ -32,7 +32,7 @@ public abstract class AbstractUnsyncCompiledBinding<R> implements CompiledBindin
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public final R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+	public final @NotNull R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 		AtomicReferenceArray array = scopedInstances[scope];
 		R instance = (R) array.get(index);
 		if (instance != null) return instance;

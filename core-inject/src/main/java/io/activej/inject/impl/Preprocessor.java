@@ -224,7 +224,7 @@ public final class Preprocessor {
 				return slot != null ?
 						new AbstractCompiledBinding<InstanceProvider<?>>(scope, slot) {
 							@Override
-							protected InstanceProvider<?> doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							protected @NotNull InstanceProvider<?> doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								CompiledBinding<Object> compiledBinding = compiledBindings.get(instanceKey);
 								// ^ this only gets already compiled binding, that's not a binding compilation after injector is compiled
 								return new InstanceProviderImpl<>(instanceKey, compiledBinding, scopedInstances, synchronizedScope);
@@ -232,7 +232,7 @@ public final class Preprocessor {
 						} :
 						new CompiledBinding<InstanceProvider<?>>() {
 							@Override
-							public InstanceProvider<?> getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							public @NotNull InstanceProvider<?> getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 
 								// transient bindings for instance provider are useless and nobody should make ones
 								// however, things like mapInstance create an intermediate transient compiled bindings of their peers
@@ -258,14 +258,14 @@ public final class Preprocessor {
 				return slot != null ?
 						new AbstractCompiledBinding<InstanceInjector<?>>(synchronizedScope, slot) {
 							@Override
-							protected InstanceInjector<?> doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							protected @NotNull InstanceInjector<?> doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								CompiledBindingInitializer<Object> compiledBindingInitializer = bindingInitializer.getCompiler().compile(compiledBindings);
 								return new InstanceInjectorImpl<>(instanceKey, compiledBindingInitializer, scopedInstances, synchronizedScope);
 							}
 						} :
 						new CompiledBinding<InstanceInjector<?>>() {
 							@Override
-							public InstanceInjector<?> getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							public @NotNull InstanceInjector<?> getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								CompiledBindingInitializer<Object> compiledBindingInitializer = bindingInitializer.getCompiler().compile(compiledBindings);
 								// same as with instance providers
 								return new InstanceInjectorImpl<>(instanceKey, compiledBindingInitializer, scopedInstances, synchronizedScope);

@@ -244,7 +244,7 @@ public final class Injector implements ResourceLocator {
 					volatile Object instance;
 
 					@Override
-					public Object getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+					public @NotNull Object getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 						Object instance = this.instance;
 						if (instance != null) return instance;
 						this.instance = scopedInstances[scope].get(0);
@@ -253,7 +253,7 @@ public final class Injector implements ResourceLocator {
 				} :
 				new CompiledBinding<Object>() {
 					@Override
-					public Object getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+					public @NotNull Object getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 						return scopedInstances[scope].get(0);
 					}
 				}));
@@ -376,6 +376,7 @@ public final class Injector implements ResourceLocator {
 			throw DIException.cannotConstruct(key, null);
 		}
 		Object instance = binding.getInstance(scopeCaches, -1);
+		//noinspection ConstantConditions - still have to check
 		if (instance == null) {
 			throw DIException.cannotConstruct(key, scopeDataTree.get().bindings.get(key));
 		}

@@ -31,7 +31,7 @@ public abstract class AbstractRootCompiledBinding<R> implements CompiledBinding<
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public final R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+	public final @NotNull R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 		R localInstance = instance;
 		if (localInstance != null) return localInstance;
 		synchronized (this) {

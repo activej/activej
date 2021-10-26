@@ -28,14 +28,14 @@ class Bindings {
 			return slot != null ?
 					new CompiledBinding<T>() {
 						@Override
-						public T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+						public @NotNull T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							scopedInstances[scope].lazySet(slot, instance);
 							return instance;
 						}
 					} :
 					new CompiledBinding<T>() {
 						@Override
-						public T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+						public @NotNull T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return instance;
 						}
 					};
@@ -91,7 +91,7 @@ class Bindings {
 					} :
 					new CompiledBinding<R>() {
 						@Override
-						public R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+						public @NotNull R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							Object[] args = new Object[bindings.length];
 							for (int i = 0; i < bindings.length; i++) {
 								args[i] = bindings[i].getInstance(scopedInstances, synchronizedScope);
@@ -134,7 +134,7 @@ class Bindings {
 					} :
 					new CompiledBinding<R>() {
 						@Override
-						public R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+						public @NotNull R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create();
 						}
 					};
@@ -179,7 +179,7 @@ class Bindings {
 					} :
 					new CompiledBinding<R>() {
 						@Override
-						public R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+						public @NotNull R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
 									binding1.getInstance(scopedInstances, synchronizedScope));
 						}
@@ -231,7 +231,7 @@ class Bindings {
 					} :
 					new CompiledBinding<R>() {
 						@Override
-						public R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+						public @NotNull R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
 									binding1.getInstance(scopedInstances, synchronizedScope),
 									binding2.getInstance(scopedInstances, synchronizedScope));
@@ -290,7 +290,7 @@ class Bindings {
 					} :
 					new CompiledBinding<R>() {
 						@Override
-						public R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+						public @NotNull R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
 									binding1.getInstance(scopedInstances, synchronizedScope),
 									binding2.getInstance(scopedInstances, synchronizedScope),
@@ -356,7 +356,7 @@ class Bindings {
 					} :
 					new CompiledBinding<R>() {
 						@Override
-						public R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+						public @NotNull R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
 									binding1.getInstance(scopedInstances, synchronizedScope),
 									binding2.getInstance(scopedInstances, synchronizedScope),
@@ -430,7 +430,7 @@ class Bindings {
 					} :
 					new CompiledBinding<R>() {
 						@Override
-						public R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+						public @NotNull R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
 									binding1.getInstance(scopedInstances, synchronizedScope),
 									binding2.getInstance(scopedInstances, synchronizedScope),
@@ -510,7 +510,7 @@ class Bindings {
 					} :
 					new CompiledBinding<R>() {
 						@Override
-						public R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+						public @NotNull R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
 									binding1.getInstance(scopedInstances, synchronizedScope),
 									binding2.getInstance(scopedInstances, synchronizedScope),

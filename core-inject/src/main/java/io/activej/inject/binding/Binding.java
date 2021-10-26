@@ -185,16 +185,16 @@ public abstract class Binding<T> {
 				return slot != null ?
 						new AbstractCompiledBinding<R>(scope, slot) {
 							@Override
-							protected R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								T instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
-								return instance != null ? fn.apply(instance) : null;
+								return fn.apply(instance);
 							}
 						} :
 						new CompiledBinding<R>() {
 							@Override
-							public R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							public @NotNull R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								T instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
-								return instance != null ? fn.apply(instance) : null;
+								return fn.apply(instance);
 							}
 						};
 			}
@@ -222,24 +222,24 @@ public abstract class Binding<T> {
 				return slot != null ?
 						new AbstractCompiledBinding<R>(scope, slot) {
 							@Override
-							protected @Nullable R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								Object[] args = new Object[bindings.length];
 								for (int i = 0; i < bindings.length; i++) {
 									args[i] = bindings[i].getInstance(scopedInstances, synchronizedScope);
 								}
 								T instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
-								return instance != null ? fn.apply(args, instance) : null;
+								return fn.apply(args, instance);
 							}
 						} :
 						new CompiledBinding<R>() {
 							@Override
-							public @Nullable R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							public @NotNull R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								Object[] args = new Object[bindings.length];
 								for (int i = 0; i < bindings.length; i++) {
 									args[i] = bindings[i].getInstance(scopedInstances, synchronizedScope);
 								}
 								T instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
-								return instance != null ? fn.apply(args, instance) : null;
+								return fn.apply(args, instance);
 							}
 						};
 			}
@@ -273,7 +273,7 @@ public abstract class Binding<T> {
 						if (!key.equals(dependency)) return originalBinding;
 						return new CompiledBinding<Q>() {
 							@Override
-							public @Nullable Q getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							public @NotNull Q getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								Q instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
 								return (Q) fn.apply((K) instance);
 							}
@@ -302,7 +302,7 @@ public abstract class Binding<T> {
 						CompiledBinding<?>[] compiledExtraBindings = extraDependencies.stream().map(compiledBindings::get).toArray(CompiledBinding[]::new);
 						return new CompiledBinding<T>() {
 							@Override
-							public T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							public @NotNull T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								//noinspection ForLoopReplaceableByForEach
 								for (int i = 0; i < compiledExtraBindings.length; i++) {
 									compiledExtraBindings[i].getInstance(scopedInstances, synchronizedScope);
@@ -326,7 +326,7 @@ public abstract class Binding<T> {
 						return slot != null ?
 								new AbstractCompiledBinding<T>(scope, slot) {
 									@Override
-									protected T doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+									protected @NotNull T doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 										T instance = compiledBinding.getInstance(scopedInstances, synchronizedScope);
 										consumer.initInstance(instance, scopedInstances, synchronizedScope);
 										return instance;
@@ -334,7 +334,7 @@ public abstract class Binding<T> {
 								} :
 								new CompiledBinding<T>() {
 									@Override
-									public T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+									public @NotNull T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 										T instance = compiledBinding.getInstance(scopedInstances, synchronizedScope);
 										consumer.initInstance(instance, scopedInstances, synchronizedScope);
 										return instance;

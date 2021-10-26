@@ -270,9 +270,6 @@ public final class ReflectionUtils {
 						@Override
 						public void initInstance(T instance, AtomicReferenceArray[] instances, int synchronizedScope) {
 							Object arg = binding.getInstance(instances, synchronizedScope);
-							if (arg == null) {
-								return;
-							}
 							try {
 								field.set(instance, arg);
 							} catch (IllegalAccessException e) {
