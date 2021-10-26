@@ -34,5 +34,10 @@ public enum BindingType {
 	/**
 	 * Such binding behaves like eager singleton - instance is created and placed in the cache at the moment of injector creation
 	 */
-	EAGER
+	EAGER,
+
+	/**
+	 * Such binding was implicitly provided by a {@link io.activej.inject.impl.Preprocessor}
+	 */
+	SYNTHETIC
 }

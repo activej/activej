@@ -55,6 +55,7 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.difference;
 import static io.activej.common.Utils.intersection;
 import static io.activej.common.reflection.ReflectionUtils.isClassPresent;
+import static io.activej.inject.binding.BindingType.SYNTHETIC;
 import static io.activej.inject.binding.BindingType.TRANSIENT;
 import static io.activej.service.Utils.combineAll;
 import static io.activej.service.Utils.completedExceptionallyFuture;
@@ -368,8 +369,8 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 
 			if (binding == null || binding.getType() == TRANSIENT) continue;
 
-			if (key.getRawType() == OptionalDependency.class && binding.hasDependency(key.getTypeParameter(0).qualified(key.getQualifier()))) {
-				// implicit optional dependency
+			if (key.getRawType() == OptionalDependency.class && binding.getType() == SYNTHETIC) {
+				// exclude implicit optional dependency
 				excludedKeys.add(key);
 			}
 

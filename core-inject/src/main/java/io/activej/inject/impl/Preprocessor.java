@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.stream.Stream;
 
 import static io.activej.inject.Scope.UNSCOPED;
+import static io.activej.inject.binding.BindingType.SYNTHETIC;
 import static io.activej.inject.util.ReflectionUtils.generateInjectingInitializer;
 import static io.activej.inject.util.Utils.*;
 import static java.util.Arrays.asList;
@@ -130,12 +131,13 @@ public final class Preprocessor {
 
 					// try to resolve Key
 					if (binding == null && rawType == Key.class) {
-						binding = Binding.toInstance(key.getTypeParameter(0));
+						binding = Binding.toInstance(key.getTypeParameter(0)).as(SYNTHETIC);
 					}
 
 					// try to resolve bindings for classes that may have @Inject constructors/factory methods
 					if (binding == null) {
-						binding = ReflectionUtils.generateImplicitBinding(key);
+						Binding<?> generated = ReflectionUtils.generateImplicitBinding(key);
+						binding = generated == null ? null : generated.as(SYNTHETIC);
 					}
 
 					// fail fast because this generation was explicitly requested (though plain `bind(...)` call)
@@ -176,12 +178,13 @@ public final class Preprocessor {
 
 			// try to resolve Key
 			if (binding == null && rawType == Key.class) {
-				binding = Binding.toInstance(key.getTypeParameter(0));
+				binding = Binding.toInstance(key.getTypeParameter(0)).as(SYNTHETIC);
 			}
 
 			// try to resolve bindings for classes that may have @Inject constructors/factory methods
 			if (binding == null) {
-				binding = ReflectionUtils.generateImplicitBinding(key);
+				Binding<?> generated = ReflectionUtils.generateImplicitBinding(key);
+				binding = generated == null ? null : generated.as(SYNTHETIC);
 			}
 
 			// if it was not resolved then it's simply unsatisfied and later will be checked
@@ -210,7 +213,7 @@ public final class Preprocessor {
 		Key<?> instanceKey = key.getTypeParameter(0).qualified(key.getQualifier());
 		Binding<?> resolved = resolve(upper, localBindings, resolvedBindings, scope, instanceKey, localBindings.get(instanceKey), multibinder, transformer, generator);
 		if (resolved == null) return Binding.toInstance(OptionalDependency.empty());
-		return new Binding<OptionalDependency<?>>(singleton(instanceKey)) {
+		return new Binding<OptionalDependency<?>>(singleton(instanceKey), SYNTHETIC, null) {
 			@Override
 			public CompiledBinding<OptionalDependency<?>> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 				return slot != null ?
@@ -237,7 +240,7 @@ public final class Preprocessor {
 		Key<Object> instanceKey = key.getTypeParameter(0).qualified(key.getQualifier());
 		Binding<?> resolved = resolve(upper, localBindings, resolvedBindings, scope, instanceKey, localBindings.get(instanceKey), multibinder, transformer, generator);
 		if (resolved == null) return null;
-		return new Binding<InstanceProvider<?>>(singleton(instanceKey)) {
+		return new Binding<InstanceProvider<?>>(singleton(instanceKey), SYNTHETIC, null) {
 			@Override
 			public CompiledBinding<InstanceProvider<?>> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 				return slot != null ?
@@ -271,7 +274,7 @@ public final class Preprocessor {
 	private static @NotNull Binding<?> resolveInstanceInjector(Key<?> key) {
 		Key<Object> instanceKey = key.getTypeParameter(0).qualified(key.getQualifier());
 		BindingInitializer<Object> bindingInitializer = generateInjectingInitializer(instanceKey);
-		return new Binding<InstanceInjector<?>>(bindingInitializer.getDependencies()) {
+		return new Binding<InstanceInjector<?>>(bindingInitializer.getDependencies(), SYNTHETIC, null) {
 			@Override
 			public CompiledBinding<InstanceInjector<?>> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int synchronizedScope, @Nullable Integer slot) {
 				return slot != null ?
