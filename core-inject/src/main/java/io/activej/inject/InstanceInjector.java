@@ -21,8 +21,7 @@ package io.activej.inject;
  * fields and methods of some <b>already existing object</b>.
  * This is so-called 'post-injections' since such injections are not part of object creation.
  * <p>
- * It has a {@link io.activej.inject.module.DefaultModule default generator} and
- * can only be obtained by depending on it and then requesting it from the {@link Injector injector}.
+ * It can only be obtained by depending on it and then requesting it from the {@link Injector injector}.
  */
 public interface InstanceInjector<T> {
 	Key<T> key();
