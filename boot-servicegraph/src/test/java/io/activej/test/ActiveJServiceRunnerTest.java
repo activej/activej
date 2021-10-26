@@ -29,12 +29,14 @@ public class ActiveJServiceRunnerTest {
 
 		@Override
 		public CompletableFuture<?> start() {
+			assertFalse(starting);
 			this.starting = true;
 			return CompletableFuture.completedFuture(null);
 		}
 
 		@Override
 		public CompletableFuture<?> stop() {
+			assertFalse(stopped);
 			this.stopped = true;
 			return CompletableFuture.completedFuture(null);
 		}
@@ -115,7 +117,6 @@ public class ActiveJServiceRunnerTest {
 		}
 	}
 
-	@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 	public static class OptionalDependencyTestModule extends AbstractModule {
 		@Override
 		protected void configure() {
@@ -216,6 +217,82 @@ public class ActiveJServiceRunnerTest {
 			assertTrue(optional3.isPresent());
 			Service service3 = optional3.get();
 			assertTrue(service3 instanceof TestService);
+
+			assertTrue(((TestService) service3).starting);
+			assertTrue(((TestService) service3).stopped);
+		}
+	}
+
+	public static class OptionalDependencyTestModule2 extends AbstractModule {
+		@Override
+		protected void configure() {
+			install(ServiceGraphModule.create());
+		}
+
+		@Provides
+		@Named("service 1")
+		Service service1() {
+			return new TestService();
+		}
+
+		@Provides
+		@Named("service 2")
+		Service service2(@Named("service 1") OptionalDependency<Service> service1) {
+			return new TestService();
+		}
+
+		@Provides
+		@Eager
+		@Named("service 3")
+		Service service3(@Named("service 1") Service service1, @Named("service 2") OptionalDependency<Service> service2) {
+			return new TestService();
+		}
+	}
+
+	@RunWith(ActiveJServiceRunner.class)
+	public static class OptionalModulesTest2 {
+		private Service service1;
+		private Service service2;
+		private Service service3;
+
+		@Before
+		@UseModules({OptionalDependencyTestModule2.class})
+		public void before(@Named("service 1") Service service1, @Named("service 2") Service service2, @Named("service 3") Service service3) {
+			assertTrue(service1 instanceof TestService);
+			assertFalse(((TestService) service1).starting);
+			assertFalse(((TestService) service1).stopped);
+			this.service1 = service1;
+
+			assertTrue(service2 instanceof TestService);
+			assertFalse(((TestService) service2).starting);
+			assertFalse(((TestService) service2).stopped);
+			this.service2 = service2;
+
+			assertTrue(service3 instanceof TestService);
+			assertFalse(((TestService) service3).starting);
+			assertFalse(((TestService) service3).stopped);
+			this.service3 = service3;
+		}
+
+		@Test
+		public void test() {
+			assertTrue(((TestService) service1).starting);
+			assertFalse(((TestService) service1).stopped);
+
+			assertTrue(((TestService) service2).starting);
+			assertFalse(((TestService) service2).stopped);
+
+			assertTrue(((TestService) service2).starting);
+			assertFalse(((TestService) service2).stopped);
+		}
+
+		@After
+		public void after() {
+			assertTrue(((TestService) service1).starting);
+			assertTrue(((TestService) service1).stopped);
+
+			assertTrue(((TestService) service2).starting);
+			assertTrue(((TestService) service2).stopped);
 
 			assertTrue(((TestService) service3).starting);
 			assertTrue(((TestService) service3).stopped);

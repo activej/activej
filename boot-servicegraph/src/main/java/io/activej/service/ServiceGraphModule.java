@@ -368,6 +368,11 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 
 			if (binding == null || binding.getType() == TRANSIENT) continue;
 
+			if (key.getRawType() == OptionalDependency.class && binding.hasDependency(key.getTypeParameter(0).qualified(key.getQualifier()))) {
+				// implicit optional dependency
+				excludedKeys.add(key);
+			}
+
 			ServiceKey serviceKey = new ServiceKey(key);
 			instances.put(serviceKey, singletonList(instance));
 			instanceDependencies.put(serviceKey,
