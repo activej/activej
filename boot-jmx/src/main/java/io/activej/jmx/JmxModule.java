@@ -24,8 +24,11 @@ import io.activej.common.initializer.Initializer;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
+import io.activej.inject.Scope;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.ProvidesIntoSet;
+import io.activej.inject.binding.Binding;
+import io.activej.inject.binding.BindingType;
 import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.jmx.DynamicMBeanFactory.JmxCustomTypeAdapter;
@@ -36,9 +39,12 @@ import io.activej.trigger.Severity;
 import io.activej.trigger.Triggers.TriggerWithResult;
 import io.activej.worker.WorkerPool;
 import io.activej.worker.WorkerPools;
+import io.activej.worker.annotation.Worker;
+import org.jetbrains.annotations.Nullable;
 
 import javax.management.DynamicMBean;
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.time.Duration;
 import java.time.Instant;
@@ -50,6 +56,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Utils.nonNullElseGet;
 import static io.activej.jmx.JmxBeanSettings.defaultSettings;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
@@ -222,7 +229,7 @@ public final class JmxModule extends AbstractModule implements WithInitializer<J
 		// register global singletons
 		for (Object globalSingleton : globalSingletons) {
 			Key<?> globalKey = Key.of(globalSingleton.getClass());
-			jmxRegistry.registerSingleton(globalKey, globalSingleton, JmxBeanSettings.create().withCustomTypes(customTypes));
+			registerSingleton(jmxRegistry, globalSingleton, globalKey, injector, JmxBeanSettings.create().withCustomTypes(customTypes));
 		}
 
 		// register singletons
@@ -230,7 +237,7 @@ public final class JmxModule extends AbstractModule implements WithInitializer<J
 			Key<?> key = entry.getKey();
 			Object instance = entry.getValue();
 			if (instance == null || key.getRawType().isAnonymousClass()) continue;
-			jmxRegistry.registerSingleton(key, instance, ensureSettingsFor(key));
+			registerSingleton(jmxRegistry, instance, key, injector, null);
 
 			Type type = key.getType();
 			if (globalMBeans.containsKey(type)) {
@@ -246,12 +253,13 @@ public final class JmxModule extends AbstractModule implements WithInitializer<J
 					.filter(entry -> entry.getKey().getRawType().equals(WorkerPool.class))
 					.forEach(entry -> jmxRegistry.addWorkerPoolKey((WorkerPool) entry.getValue(), entry.getKey()));
 
+			Injector workerScopeInjector = injector.enterScope(Scope.of(Worker.class));
 			for (WorkerPool workerPool : workerPools.getWorkerPools()) {
 				for (Map.Entry<Key<?>, WorkerPool.Instances<?>> entry : workerPool.peekInstances().entrySet()) {
 					Key<?> key = entry.getKey();
 					WorkerPool.Instances<?> workerInstances = entry.getValue();
 					if (key.getRawType().isAnonymousClass()) continue;
-					jmxRegistry.registerWorkers(workerPool, key, workerInstances.getList(), ensureSettingsFor(key));
+					registerWorkers(jmxRegistry, workerPool, key, workerInstances.getList(), workerScopeInjector);
 
 					Type type = key.getType();
 					if (globalMBeans.containsKey(type)) {
@@ -267,8 +275,57 @@ public final class JmxModule extends AbstractModule implements WithInitializer<J
 			Key<?> key = globalMBeans.get(entry.getKey());
 			DynamicMBean globalMBean =
 					mbeanFactory.createDynamicMBean(new ArrayList<>(entry.getValue()), ensureSettingsFor(key), false);
-			jmxRegistry.registerSingleton(key, globalMBean, defaultSettings());
+			registerSingleton(jmxRegistry, globalMBean, key, injector, defaultSettings());
 		}
+	}
+
+	private void registerSingleton(JmxRegistry jmxRegistry, Object instance, Key<?> key, Injector injector, @Nullable JmxBeanSettings settings) {
+		Class<?> instanceClass = instance.getClass();
+		if (instanceClass == OptionalDependency.class) {
+			OptionalDependency<?> optional = (OptionalDependency<?>) instance;
+			Binding<?> binding = injector.getBinding(key);
+			if (!optional.isPresent() || binding == null || binding.getType() == BindingType.SYNTHETIC) {
+				return;
+			}
+			Type actualTypeArgument = ((ParameterizedType) key.getType()).getActualTypeArguments()[0];
+			Key<?> actualKey = Key.ofType(actualTypeArgument, key.getQualifier());
+			Object actualInstance = optional.get();
+			registerSingleton(jmxRegistry, actualInstance, actualKey, injector, settings);
+			return;
+		}
+
+		jmxRegistry.registerSingleton(key, instance, nonNullElseGet(settings, () -> ensureSettingsFor(key)));
+	}
+
+	private void registerWorkers(JmxRegistry jmxRegistry, WorkerPool workerPool, Key<?> key, List<?> workerInstances, Injector injector) {
+		if (workerInstances.size() == 0) {
+			return;
+		}
+		Class<?> instanceClass = workerInstances.get(0).getClass();
+		if (instanceClass == OptionalDependency.class) {
+			Binding<?> binding = injector.getBinding(key);
+			if (binding == null || binding.getType() == BindingType.SYNTHETIC) {
+				return;
+			}
+			List<Object> actualInstances = new ArrayList<>(workerInstances.size());
+			for (Object workerInstance : workerInstances) {
+				if (!(workerInstance instanceof OptionalDependency)) return;
+				OptionalDependency<?> optional = (OptionalDependency<?>) workerInstance;
+				if (!optional.isPresent()) {
+					JmxRegistry.logger.info("Pool of instances with key {} was not registered to jmx, " +
+							"because some instances were not present", key);
+					return;
+				}
+
+				actualInstances.add(optional.get());
+			}
+			Type actualTypeArgument = ((ParameterizedType) key.getType()).getActualTypeArguments()[0];
+			key = Key.ofType(actualTypeArgument, key.getQualifier());
+			registerWorkers(jmxRegistry, workerPool, key, actualInstances, injector);
+			return;
+		}
+
+		jmxRegistry.registerWorkers(workerPool, key, workerInstances, ensureSettingsFor(key));
 	}
 
 	private JmxBeanSettings ensureSettingsFor(Key<?> key) {
