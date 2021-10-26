@@ -20,9 +20,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 public final class OptionalDependency<T> {
+	private static final OptionalDependency<?> EMPTY = new OptionalDependency<>(null);
+
 	private final @Nullable T value;
 
 	private OptionalDependency(@Nullable T value) {
@@ -33,8 +36,9 @@ public final class OptionalDependency<T> {
 		return new OptionalDependency<>(value);
 	}
 
+	@SuppressWarnings("unchecked")
 	public static <T> OptionalDependency<T> empty() {
-		return new OptionalDependency<>(null);
+		return (OptionalDependency<T>) EMPTY;
 	}
 
 	public boolean isPresent() {
@@ -63,11 +67,18 @@ public final class OptionalDependency<T> {
 
 		OptionalDependency<?> that = (OptionalDependency<?>) o;
 
-		return value != null ? value.equals(that.value) : that.value == null;
+		return Objects.equals(value, that.value);
 	}
 
 	@Override
 	public int hashCode() {
-		return value != null ? value.hashCode() : 0;
+		return Objects.hashCode(value);
+	}
+
+	@Override
+	public String toString() {
+		return "OptionalDependency{" +
+				(value == null ? "empty" : "value=" + value) +
+				'}';
 	}
 }
