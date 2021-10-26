@@ -142,14 +142,14 @@ public final class Utils {
 	public static String makeGraphVizGraph(Trie<Scope, Map<Key<?>, Binding<?>>> trie) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("digraph {\n\trankdir=BT;\n");
-		Set<ScopedValue> known = new HashSet<>();
+		Set<ScopedKey> known = new HashSet<>();
 		writeNodes(UNSCOPED, trie, known, "", new int[]{0}, sb);
 		writeEdges(UNSCOPED, trie, known, sb);
 		sb.append("}\n");
 		return sb.toString();
 	}
 
-	private static void writeNodes(Scope[] scope, Trie<Scope, Map<Key<?>, Binding<?>>> trie, Set<ScopedValue> known, String indent, int[] scopeCount, StringBuilder sb) {
+	private static void writeNodes(Scope[] scope, Trie<Scope, Map<Key<?>, Binding<?>>> trie, Set<ScopedKey> known, String indent, int[] scopeCount, StringBuilder sb) {
 		if (scope != UNSCOPED) {
 			sb.append('\n').append(indent)
 					.append("subgraph cluster_").append(scopeCount[0]++).append(" {\n")
@@ -169,7 +169,7 @@ public final class Utils {
 			if (bindingInfo.getDependencies().isEmpty()) {
 				leafs.add(key);
 			}
-			known.add(ScopedValue.of(scope, key));
+			known.add(ScopedKey.of(scope, key));
 			sb.append(indent)
 					.append('\t')
 					.append('"').append(getScopeId(scope)).append(key.toString().replace("\"", "\\\"")).append('"')
@@ -193,21 +193,21 @@ public final class Utils {
 		}
 	}
 
-	private static void writeEdges(Scope[] scope, Trie<Scope, Map<Key<?>, Binding<?>>> trie, Set<ScopedValue> known, StringBuilder sb) {
+	private static void writeEdges(Scope[] scope, Trie<Scope, Map<Key<?>, Binding<?>>> trie, Set<ScopedKey> known, StringBuilder sb) {
 		String scopePath = getScopeId(scope);
 
 		for (Entry<Key<?>, Binding<?>> entry : trie.get().entrySet()) {
 			String key = "\"" + scopePath + entry.getKey().toString().replace("\"", "\\\"") + "\"";
 			for (Key<?> dependency : entry.getValue().getDependencies()) {
 				Scope[] depScope = scope;
-				while (!known.contains(ScopedValue.of(depScope, dependency)) && depScope.length != 0) {
+				while (!known.contains(ScopedKey.of(depScope, dependency)) && depScope.length != 0) {
 					depScope = Arrays.copyOfRange(depScope, 0, depScope.length - 1);
 				}
 
 				if (depScope.length == 0) {
 					String dep = "\"" + getScopeId(depScope) + dependency.toString().replace("\"", "\\\"") + '"';
 
-					if (known.add(ScopedValue.of(depScope, dependency))) {
+					if (known.add(ScopedKey.of(depScope, dependency))) {
 						sb.append('\t')
 								.append(dep)
 								.append(" [label=\"")

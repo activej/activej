@@ -28,25 +28,25 @@ import static io.activej.inject.util.Utils.getScopeDisplayString;
 /**
  * This is a simple generic POJO (or POGJO) for a {@link Key} with associated scope path.
  */
-public final class ScopedValue {
+public final class ScopedKey {
 	private final Scope[] scope;
 	private final Key<?> key;
 
-	private ScopedValue(Scope[] scope, Key<?> key) {
+	private ScopedKey(Scope[] scope, Key<?> key) {
 		this.scope = scope;
 		this.key = key;
 	}
 
-	public static ScopedValue of(@NotNull Key<?> key) {
-		return new ScopedValue(UNSCOPED, key);
+	public static ScopedKey of(@NotNull Key<?> key) {
+		return new ScopedKey(UNSCOPED, key);
 	}
 
-	public static ScopedValue of(@NotNull Scope scope, @NotNull Key<?> key) {
-		return new ScopedValue(new Scope[]{scope}, key);
+	public static ScopedKey of(@NotNull Scope scope, @NotNull Key<?> key) {
+		return new ScopedKey(new Scope[]{scope}, key);
 	}
 
-	public static ScopedValue of(Scope[] scope, @NotNull Key<?> key) {
-		return new ScopedValue(scope.length != 0 ? scope : UNSCOPED, key);
+	public static ScopedKey of(Scope[] scope, @NotNull Key<?> key) {
+		return new ScopedKey(scope.length != 0 ? scope : UNSCOPED, key);
 	}
 
 	public Scope[] getScope() {
@@ -74,7 +74,7 @@ public final class ScopedValue {
 		if (o == null || getClass() != o.getClass()) {
 			return false;
 		}
-		ScopedValue other = (ScopedValue) o;
+		ScopedKey other = (ScopedKey) o;
 		return Arrays.equals(scope, other.scope) && key.equals(other.key);
 
 	}

@@ -30,7 +30,7 @@ import io.activej.inject.annotation.ProvidesIntoSet;
 import io.activej.inject.binding.Binding;
 import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
-import io.activej.inject.util.ScopedValue;
+import io.activej.inject.util.ScopedKey;
 import io.activej.inject.util.Trie;
 import io.activej.launcher.LauncherService;
 import io.activej.net.EventloopServer;
@@ -339,7 +339,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 		IdentityHashMap<Object, ServiceKey> workerInstanceToKey = new IdentityHashMap<>();
 		if (workerPools != null) {
 			for (WorkerPool pool : pools) {
-				Map<Key<?>, Set<ScopedValue>> scopeDependencies = getScopeDependencies(injector, pool.getScope());
+				Map<Key<?>, Set<ScopedKey>> scopeDependencies = getScopeDependencies(injector, pool.getScope());
 				for (Map.Entry<Key<?>, WorkerPool.Instances<?>> entry : pool.peekInstances().entrySet()) {
 					Key<?> key = entry.getKey();
 					WorkerPool.Instances<?> workerInstances = entry.getValue();
@@ -403,7 +403,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 		doStart(serviceGraph, instances, instanceDependencies);
 	}
 
-	private Map<Key<?>, Set<ScopedValue>> getScopeDependencies(Injector injector, Scope scope) {
+	private Map<Key<?>, Set<ScopedKey>> getScopeDependencies(Injector injector, Scope scope) {
 		Trie<Scope, Map<Key<?>, Binding<?>>> scopeBindings = injector.getBindingsTrie().getOrDefault(scope, emptyMap());
 		return scopeBindings.get()
 				.entrySet()
@@ -412,8 +412,8 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 						entry -> entry.getValue().getDependencies().stream()
 								.map(dependencyKey ->
 										scopeBindings.get().containsKey(dependencyKey) ?
-												ScopedValue.of(scope, dependencyKey) :
-												ScopedValue.of(dependencyKey))
+												ScopedKey.of(scope, dependencyKey) :
+												ScopedKey.of(dependencyKey))
 								.collect(toSet())));
 	}
 
