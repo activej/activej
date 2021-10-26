@@ -339,7 +339,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 		IdentityHashMap<Object, ServiceKey> workerInstanceToKey = new IdentityHashMap<>();
 		if (workerPools != null) {
 			for (WorkerPool pool : pools) {
-				Map<Key<?>, Set<ScopedValue<? extends Key<?>>>> scopeDependencies = getScopeDependencies(injector, pool.getScope());
+				Map<Key<?>, Set<ScopedValue>> scopeDependencies = getScopeDependencies(injector, pool.getScope());
 				for (Map.Entry<Key<?>, WorkerPool.Instances<?>> entry : pool.peekInstances().entrySet()) {
 					Key<?> key = entry.getKey();
 					WorkerPool.Instances<?> workerInstances = entry.getValue();
@@ -353,8 +353,8 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 							scopeDependencies.get(key)
 									.stream()
 									.map(scopedDependency -> scopedDependency.isScoped() ?
-											new ServiceKey(scopedDependency.get(), pool) :
-											new ServiceKey(scopedDependency.get()))
+											new ServiceKey(scopedDependency.getKey(), pool) :
+											new ServiceKey(scopedDependency.getKey()))
 									.collect(toSet()));
 				}
 			}
@@ -403,7 +403,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 		doStart(serviceGraph, instances, instanceDependencies);
 	}
 
-	private Map<Key<?>, Set<ScopedValue<? extends Key<?>>>> getScopeDependencies(Injector injector, Scope scope) {
+	private Map<Key<?>, Set<ScopedValue>> getScopeDependencies(Injector injector, Scope scope) {
 		Trie<Scope, Map<Key<?>, Binding<?>>> scopeBindings = injector.getBindingsTrie().getOrDefault(scope, emptyMap());
 		return scopeBindings.get()
 				.entrySet()

@@ -142,14 +142,14 @@ public final class Utils {
 	public static String makeGraphVizGraph(Trie<Scope, Map<Key<?>, Binding<?>>> trie) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("digraph {\n\trankdir=BT;\n");
-		Set<ScopedValue<Key<?>>> known = new HashSet<>();
+		Set<ScopedValue> known = new HashSet<>();
 		writeNodes(UNSCOPED, trie, known, "", new int[]{0}, sb);
 		writeEdges(UNSCOPED, trie, known, sb);
 		sb.append("}\n");
 		return sb.toString();
 	}
 
-	private static void writeNodes(Scope[] scope, Trie<Scope, Map<Key<?>, Binding<?>>> trie, Set<ScopedValue<Key<?>>> known, String indent, int[] scopeCount, StringBuilder sb) {
+	private static void writeNodes(Scope[] scope, Trie<Scope, Map<Key<?>, Binding<?>>> trie, Set<ScopedValue> known, String indent, int[] scopeCount, StringBuilder sb) {
 		if (scope != UNSCOPED) {
 			sb.append('\n').append(indent)
 					.append("subgraph cluster_").append(scopeCount[0]++).append(" {\n")
@@ -193,7 +193,7 @@ public final class Utils {
 		}
 	}
 
-	private static void writeEdges(Scope[] scope, Trie<Scope, Map<Key<?>, Binding<?>>> trie, Set<ScopedValue<Key<?>>> known, StringBuilder sb) {
+	private static void writeEdges(Scope[] scope, Trie<Scope, Map<Key<?>, Binding<?>>> trie, Set<ScopedValue> known, StringBuilder sb) {
 		String scopePath = getScopeId(scope);
 
 		for (Entry<Key<?>, Binding<?>> entry : trie.get().entrySet()) {
