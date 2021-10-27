@@ -1,4 +1,4 @@
-package $
+package ${groupId};
 
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.config.Config;
