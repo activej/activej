@@ -37,8 +37,7 @@ import java.util.function.Function;
 import java.util.stream.Collector;
 
 import static io.activej.inject.Scope.UNSCOPED;
-import static io.activej.inject.binding.BindingType.EAGER;
-import static io.activej.inject.binding.BindingType.TRANSIENT;
+import static io.activej.inject.binding.BindingType.*;
 import static io.activej.types.IsAssignableUtils.isAssignable;
 import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.joining;
@@ -175,7 +174,13 @@ public final class Utils {
 					.append('"').append(getScopeId(scope)).append(key.toString().replace("\"", "\\\"")).append('"')
 					.append(" [label=\"").append(key.getDisplayString().replace("\"", "\\\""))
 					.append("\"")
-					.append(bindingInfo.getType() == TRANSIENT ? " style=dotted" : bindingInfo.getType() == EAGER ? " style=bold" : "")
+					.append(bindingInfo.getType() == TRANSIENT ?
+							" style=dotted" :
+							bindingInfo.getType() == EAGER ?
+									" style=bold" :
+									bindingInfo.getType() == SYNTHETIC ?
+											" style=dashed" :
+											"")
 					.append("];\n");
 		}
 
