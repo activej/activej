@@ -19,17 +19,16 @@
       <artifactId>activej-http</artifactId>
       <version>${project.version}</version>
     </dependency>
-<!--
-    <dependency>
-      <groupId>io.activej</groupId>
-      <artifactId>activej-specializer</artifactId>
-      <version>${project.version}</version>
-    </dependency>
--->
     <dependency>
       <groupId>io.activej</groupId>
       <artifactId>activej-launchers-common</artifactId>
       <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.activej</groupId>
+      <artifactId>activej-specializer</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 

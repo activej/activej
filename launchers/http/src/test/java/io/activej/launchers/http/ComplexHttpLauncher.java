@@ -4,6 +4,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.http.AsyncHttpServer;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
+import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.Scope;
 import io.activej.inject.annotation.Eager;
@@ -169,6 +170,8 @@ public final class ComplexHttpLauncher extends Launcher {
 	}
 
 	public static void main(String[] args) throws Exception {
+		Injector.useSpecializer();
+
 		new ComplexHttpLauncher().launch(args);
 	}
 }

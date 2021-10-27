@@ -96,7 +96,6 @@ public abstract class HttpServerLauncher extends Launcher {
 	}
 
 	public static void main(String[] args) throws Exception {
-//		Injector.useSpecializer();
 
 		Launcher launcher = new HttpServerLauncher() {
 			@Override

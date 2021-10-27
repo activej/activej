@@ -14,6 +14,7 @@ import io.activej.test.rules.ByteBufRule;
 import io.activej.worker.annotation.Worker;
 import io.activej.worker.annotation.WorkerId;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -35,6 +36,11 @@ public final class HttpWorkerServerTest {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	public int port;
+
+	@BeforeClass
+	public static void beforeClass() {
+		Injector.useSpecializer();
+	}
 
 	@Before
 	public void setUp() {
