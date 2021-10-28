@@ -13,7 +13,7 @@
 
   <name>ActiveJ : Boot</name>
   <description>
-    An intelligent way of booting complex applications and services according to their dependencies
+    Various tools for booting applications and services according to their dependencies.
   </description>
 
   <dependencies>

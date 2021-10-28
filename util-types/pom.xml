@@ -13,7 +13,7 @@
 
   <name>ActiveJ : Util : Types</name>
   <description>
-    Module containing various reflection and type utilities for ActiveJ project.
+    Various reflection and type utilities for ActiveJ project.
   </description>
 
   <build>

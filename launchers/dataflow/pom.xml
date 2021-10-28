@@ -13,6 +13,9 @@
   <artifactId>activej-launchers-dataflow</artifactId>
 
   <name>Launchers : Dataflow</name>
+  <description>
+    Common Dataflow launchers.
+  </description>
 
   <dependencies>
     <dependency>

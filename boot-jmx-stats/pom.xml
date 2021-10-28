@@ -12,6 +12,9 @@
   <artifactId>activej-jmx-stats</artifactId>
 
   <name>ActiveJ : Boot: JMX Stats</name>
+  <description>
+    Common JMX stats with built-in support for stats reduction.
+  </description>
 
   <dependencies>
     <dependency>

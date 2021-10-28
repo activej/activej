@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>benchmarks-promise</artifactId>
-  <name>Benchmarks : Promise</name>
+  <name>Benchmarks : Promises</name>
 
   <dependencies>
     <dependency>

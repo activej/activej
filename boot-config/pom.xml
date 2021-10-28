@@ -12,7 +12,9 @@
   <artifactId>activej-config</artifactId>
 
   <name>ActiveJ : Boot : Config</name>
-  <description>A useful extension for properties files</description>
+  <description>
+    A flexible configuration tree abstraction. Supports multiple configuration sources.
+  </description>
 
   <dependencies>
     <dependency>

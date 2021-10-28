@@ -13,7 +13,7 @@
 
   <name>ActiveJ : Net</name>
   <description>
-    Net module handles low-level asynchronous socket I/O (TCP/UDP).
+    A module for handling low-level asynchronous socket I/O (TCP/UDP).
     Provides tools for TCP/UDP servers creation.
   </description>
 

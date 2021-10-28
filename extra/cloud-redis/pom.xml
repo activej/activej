@@ -12,7 +12,6 @@
   <artifactId>activej-redis</artifactId>
 
   <name>ActiveJ : Redis Client</name>
-
   <description>
     Asynchronous lightweight high-performance Redis client with extendable API for Redis commands.
   </description>

@@ -12,6 +12,9 @@
   <artifactId>activej-launchers-fs</artifactId>
 
   <name>Launchers : FS</name>
+  <description>
+    Common ActiveJ FS launchers.
+  </description>
 
   <dependencies>
     <dependency>

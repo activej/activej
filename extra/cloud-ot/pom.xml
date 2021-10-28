@@ -13,7 +13,7 @@
 
   <name>ActiveJ : OT</name>
   <description>
-    Implementation of operational transformation technology which allows to build collaborative software systems.
+    Implementation of operational transformation technology. Allows building collaborative software systems.
   </description>
 
   <dependencies>

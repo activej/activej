@@ -12,6 +12,9 @@
   <artifactId>activej-jmxapi</artifactId>
 
   <name>ActiveJ : Boot: JMX API</name>
+  <description>
+    A JMX API that provides an easy way of adding JMX attributes/operations to components.
+  </description>
 
   <build>
     <plugins>

@@ -13,7 +13,7 @@
 
   <name>ActiveJ : FS</name>
   <description>
-    Provides tools for building efficient, scalable remote file servers.
+    Provides tools for building efficient, scalable local, remote or clustered file servers.
     It utilizes ActiveJ CSP for fast and reliable file transfer.
   </description>
 

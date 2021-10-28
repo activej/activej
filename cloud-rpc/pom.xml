@@ -13,7 +13,7 @@
 
   <name>ActiveJ : RPC</name>
   <description>
-    High-performance and fault-tolerant remote procedure call module for building distributed applications.
+    High-performance and fault-tolerant Remote Procedure Call module for building distributed applications.
     Provides a high-performance asynchronous binary RPC streaming protocol.
   </description>
 

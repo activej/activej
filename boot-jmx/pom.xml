@@ -12,6 +12,9 @@
   <artifactId>activej-jmx</artifactId>
 
   <name>ActiveJ : Boot : JMX</name>
+  <description>
+    Implementation of ActiveJ JMX API.
+  </description>
 
   <dependencies>
     <dependency>

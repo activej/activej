@@ -12,6 +12,9 @@
   <artifactId>activej-launchers-crdt</artifactId>
 
   <name>Launchers : CRDT</name>
+  <description>
+    Common CRDT launchers.
+  </description>
 
   <dependencies>
     <dependency>

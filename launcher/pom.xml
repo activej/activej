@@ -13,7 +13,8 @@
 
   <name>ActiveJ : Launcher</name>
   <description>
-    An intelligent way of launching complex applications and services according to their dependencies
+    An application launcher that controls a flow of provided components and services.
+    Implements inversion of control principle.
   </description>
 
   <dependencies>

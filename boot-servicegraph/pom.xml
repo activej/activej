@@ -12,7 +12,9 @@
   <artifactId>activej-servicegraph</artifactId>
 
   <name>ActiveJ : Boot : Service Graph</name>
-  <description>Starts/stops application services according to their dependency graph</description>
+  <description>
+    Starts/stops application services according to their dependency graph.
+  </description>
 
   <dependencies>
     <dependency>

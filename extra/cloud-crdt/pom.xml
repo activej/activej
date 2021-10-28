@@ -13,7 +13,7 @@
 
   <name>ActiveJ : CRDT</name>
   <description>
-    Conflict-free replicated data type implementation
+    Conflict-free replicated data type implementation.
   </description>
 
   <dependencies>

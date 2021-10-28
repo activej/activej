@@ -12,6 +12,9 @@
   <artifactId>activej-launchers-rpc</artifactId>
 
   <name>Launchers : RPC</name>
+  <description>
+    Common RPC launchers.
+  </description>
 
   <dependencies>
     <dependency>

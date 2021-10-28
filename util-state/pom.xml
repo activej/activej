@@ -12,6 +12,9 @@
   <artifactId>activej-state</artifactId>
 
   <name>ActiveJ : Util : State</name>
+  <description>
+    Utilities for managing complex data state.
+  </description>
 
   <dependencies>
     <dependency>

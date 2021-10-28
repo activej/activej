@@ -12,6 +12,9 @@
   <artifactId>activej-launchers-http</artifactId>
 
   <name>Launchers : HTTP</name>
+  <description>
+    Common HTTP launchers.
+  </description>
 
   <dependencies>
     <dependency>

@@ -14,7 +14,7 @@
 
   <name>Launchers</name>
   <description>
-    Package provides a set of predefined launchers for different services as HTTP servers, RPC endpoints, etc.
+    A set of predefined launchers for different services like HTTP servers, RPC endpoints, etc.
   </description>
 
   <modules>

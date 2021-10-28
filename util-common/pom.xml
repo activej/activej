@@ -13,7 +13,7 @@
 
   <name>ActiveJ : Util : Common</name>
   <description>
-    Module containing various general utilities for ActiveJ project.
+    Various general utilities for ActiveJ project.
   </description>
 
   <dependencies>

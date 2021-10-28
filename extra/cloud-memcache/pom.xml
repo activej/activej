@@ -13,7 +13,7 @@
 
   <name>ActiveJ : Memcache</name>
   <description>
-    Provides means for implementing memcached-like RPC messaging.
+    Various tools for implementing memcached-like RPC messaging.
   </description>
 
   <dependencies>

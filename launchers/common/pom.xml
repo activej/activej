@@ -12,6 +12,9 @@
   <artifactId>activej-launchers-common</artifactId>
 
   <name>Launchers : Common</name>
+  <description>
+    Common launcher components such as config converters, initializers and triggers.
+  </description>
 
   <dependencies>
     <dependency>

@@ -12,6 +12,9 @@
   <artifactId>activej-triggers</artifactId>
 
   <name>ActiveJ : Boot : Triggers</name>
+  <description>
+    JMX-based triggers to inform on critical events.
+  </description>
 
   <dependencies>
     <dependency>
