@@ -52,7 +52,7 @@ public final class ActiveFsGuiServlet implements WithInitializer<ActiveFsGuiServ
 	}
 
 	public static RoutingServlet create(ActiveFs fs) {
-		return create(fs, "Active FS");
+		return create(fs, "ActiveJ FS");
 	}
 
 	public static RoutingServlet create(ActiveFs fs, String title) {
