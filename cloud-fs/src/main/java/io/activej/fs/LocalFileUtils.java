@@ -146,6 +146,7 @@ public final class LocalFileUtils {
 		return FileMetadata.of(size, timestamp);
 	}
 
+	@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 	static String extractSubDir(String glob) {
 		StringBuilder sb = new StringBuilder();
 		String[] split = glob.split(SEPARATOR);
@@ -154,7 +155,7 @@ public final class LocalFileUtils {
 			if (isWildcard(part)) {
 				break;
 			}
-			sb.append(part).append(SEPARATOR);
+			sb.append(part + SEPARATOR);
 		}
 		return glob.substring(0, sb.length());
 	}

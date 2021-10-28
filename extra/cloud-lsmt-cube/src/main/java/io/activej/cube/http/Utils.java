@@ -39,11 +39,12 @@ class Utils {
 
 	private static final Pattern splitter = Pattern.compile(",");
 
+	@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 	static String formatOrderings(List<Ordering> orderings) {
 		StringBuilder sb = new StringBuilder();
 		boolean first = true;
 		for (Ordering ordering : orderings) {
-			sb.append(first ? "" : ",").append(ordering.getField()).append(":").append(ordering.isAsc() ? "ASC" : "DESC");
+			sb.append((first ? "" : ",") + ordering.getField() + ":" + (ordering.isAsc() ? "ASC" : "DESC"));
 			first = false;
 		}
 		return sb.toString();

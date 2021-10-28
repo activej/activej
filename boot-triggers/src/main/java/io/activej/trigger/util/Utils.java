@@ -35,6 +35,7 @@ public final class Utils {
 		return qualifier.toString();
 	}
 
+	@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 	public static String prettyPrintAnnotation(Annotation annotation) {
 		StringBuilder sb = new StringBuilder();
 		Method[] methods = annotation.annotationType().getDeclaredMethods();
@@ -50,7 +51,7 @@ public final class Utils {
 					if ("value".equals(methodName) && first) {
 						sb.append(valueStr);
 					} else {
-						sb.append(first ? "" : ",").append(methodName).append("=").append(valueStr);
+						sb.append((first ? "" : ",") + methodName + "=" + valueStr);
 					}
 					first = false;
 				} catch (ReflectiveOperationException ignored) {

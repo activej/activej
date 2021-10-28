@@ -67,7 +67,7 @@ public final class TestLocalBlockingFs {
 		Path d = storagePath.resolve("2/b/d.txt");
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < 1_000_000; i++) {
-			sb.append(i).append("\n");
+			sb.append(i + "\n");
 		}
 		Files.write(d, sb.toString().getBytes(UTF_8));
 

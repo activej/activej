@@ -152,6 +152,7 @@ public final class DataflowGraph {
 		return toGraphViz(false, maxPartitions);
 	}
 
+	@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 	public String toGraphViz(boolean streamLabels, int maxPartitions) {
 		StringBuilder sb = new StringBuilder("digraph {\n\n");
 
@@ -276,7 +277,7 @@ public final class DataflowGraph {
 		// draw the nodeStats that were never defined as points that still have connections
 		if (!notFound.isEmpty()) {
 			sb.append('\n');
-			notFound.forEach(id -> sb.append("  ").append(id).append(" [shape=point];\n"));
+			notFound.forEach(id -> sb.append("  " + id + " [shape=point];\n"));
 		}
 
 		sb.append("}");
@@ -284,12 +285,13 @@ public final class DataflowGraph {
 		return sb.toString();
 	}
 
+	@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		Map<Partition, List<Node>> map = getNodesByPartition();
 		for (Map.Entry<Partition, List<Node>> entry : map.entrySet()) {
-			sb.append("--- ").append(entry.getKey()).append("\n\n");
+			sb.append("--- " + entry.getKey() + "\n\n");
 			sb.append(toJson(listNodeCodec, entry.getValue()));
 			sb.append("\n\n");
 		}

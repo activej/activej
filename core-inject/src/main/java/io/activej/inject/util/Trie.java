@@ -148,6 +148,7 @@ public final class Trie<K, V> {
 		return prettyPrint(0);
 	}
 
+	@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 	private String prettyPrint(int indent) {
 		String indentStr = new String(new char[indent]).replace('\0', '\t');
 
@@ -157,7 +158,7 @@ public final class Trie<K, V> {
 				.append(") {");
 
 		if (!children.isEmpty()) {
-			sb.append('\n').append(indentStr);
+			sb.append('\n' + indentStr);
 			children.forEach((key, child) -> sb
 					.append(indentStr)
 					.append('\t')

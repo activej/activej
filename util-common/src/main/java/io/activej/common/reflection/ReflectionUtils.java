@@ -227,6 +227,7 @@ public final class ReflectionUtils {
 	 * If annotation has a single element with the name "value", string looks like this : "AnnotationName(someValue)"
 	 * If annotation has one or more custom elements, string looks like this : "(key1=value1,key2=value2)"
 	 */
+	@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 	public static String getAnnotationString(Annotation annotation) throws ReflectiveOperationException {
 		Class<? extends Annotation> annotationType = annotation.annotationType();
 		StringBuilder annotationString = new StringBuilder();
@@ -240,7 +241,7 @@ public final class ReflectionUtils {
 			// annotation with a single element which has a name "value"
 			annotationString.append(annotationType.getSimpleName());
 			Object value = fetchAnnotationElementValue(annotation, annotationElements[0]);
-			annotationString.append('(').append(value).append(')');
+			annotationString.append("(" + value + ")");
 			return annotationString.toString();
 		}
 		// annotation with one or more custom elements
@@ -249,7 +250,7 @@ public final class ReflectionUtils {
 			Object value = fetchAnnotationElementValue(annotation, annotationParameter);
 			String nameKey = annotationParameter.getName();
 			String nameValue = value.toString();
-			annotationString.append(nameKey).append('=').append(nameValue).append(',');
+			annotationString.append(nameKey + "=" + nameValue + ",");
 		}
 
 		assert annotationString.substring(annotationString.length() - 1).equals(",");

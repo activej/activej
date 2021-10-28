@@ -72,6 +72,7 @@ public final class QueryPlan {
 		return unmodifiableList(sequences);
 	}
 
+	@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -86,7 +87,7 @@ public final class QueryPlan {
 					.append(" (")
 					.append(sequences.get(i).chunks.size())
 					.append("). ")
-					.append(sequences.get(i)).append(' ');
+					.append(sequences.get(i) + " ");
 		}
 		return sb.toString();
 	}

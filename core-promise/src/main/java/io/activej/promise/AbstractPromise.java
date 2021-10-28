@@ -1797,6 +1797,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	private static final String INDENT = "\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*";
 	private static final Pattern PACKAGE_NAME_AND_LAMBDA_PART = Pattern.compile("^(?:" + INDENT + "\\.)*((?:" + INDENT + "?)\\$\\$Lambda\\$\\d+)/.*$");
 
+	@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 	private static <T> void appendChildren(StringBuilder sb, Callback<T> callback, String indent) {
 		if (callback == null) {
 			return;
@@ -1817,7 +1818,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 						.append(formatToString(callback))
 						.append(')');
 			} else {
-				sb.append(indent).append(callback);
+				sb.append(indent + callback);
 			}
 		}
 	}

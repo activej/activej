@@ -148,11 +148,12 @@ public final class Utils {
 		return sb.toString();
 	}
 
+	@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 	private static void writeNodes(Scope[] scope, Trie<Scope, Map<Key<?>, Binding<?>>> trie, Set<ScopedKey> known, String indent, int[] scopeCount, StringBuilder sb) {
 		if (scope != UNSCOPED) {
-			sb.append('\n').append(indent)
-					.append("subgraph cluster_").append(scopeCount[0]++).append(" {\n")
-					.append(indent).append("\tlabel=\"").append(scope[scope.length - 1].getDisplayString().replace("\"", "\\\"")).append("\"\n");
+			sb.append("\n" + indent)
+					.append("subgraph cluster_" + (scopeCount[0]++) + " {\n")
+					.append(indent + "\tlabel=\"" + scope[scope.length - 1].getDisplayString().replace("\"", "\\\"") + "\"\n");
 		}
 
 		for (Entry<Scope, Trie<Scope, Map<Key<?>, Binding<?>>>> entry : trie.getChildren().entrySet()) {
@@ -171,33 +172,35 @@ public final class Utils {
 			known.add(ScopedKey.of(scope, key));
 			sb.append(indent)
 					.append('\t')
-					.append('"').append(getScopeId(scope)).append(key.toString().replace("\"", "\\\"")).append('"')
-					.append(" [label=\"").append(key.getDisplayString().replace("\"", "\\\""))
-					.append("\"")
-					.append(bindingInfo.getType() == TRANSIENT ?
-							" style=dotted" :
-							bindingInfo.getType() == EAGER ?
-									" style=bold" :
-									bindingInfo.getType() == SYNTHETIC ?
-											" style=dashed" :
-											"")
-					.append("];\n");
+					.append('"' + getScopeId(scope) + key.toString().replace("\"", "\\\"") + '"')
+					.append(" [label=" +
+							'"' + key.getDisplayString().replace("\"", "\\\"") + '"')
+					.append(
+							bindingInfo.getType() == TRANSIENT ? " style=dotted" :
+									bindingInfo.getType() == EAGER ? " style=bold" :
+											bindingInfo.getType() == SYNTHETIC ? " style=dashed" :
+													"")
+					.append("];")
+					.append('\n');
 		}
 
 		if (!leafs.isEmpty()) {
 			sb.append(leafs.stream()
 					.map(key -> '"' + getScopeId(scope) + key.toString().replace("\"", "\\\"") + '"')
-					.collect(joining(" ", '\n' + indent + "\t{ rank=same; ", " }\n")));
+					.collect(joining(" ",
+							'\n' + indent + '\t' + "{ rank=same; ",
+							" }\n")));
 			if (scope == UNSCOPED) {
 				sb.append('\n');
 			}
 		}
 
 		if (scope != UNSCOPED) {
-			sb.append(indent).append("}\n\n");
+			sb.append(indent + "}\n\n");
 		}
 	}
 
+	@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 	private static void writeEdges(Scope[] scope, Trie<Scope, Map<Key<?>, Binding<?>>> trie, Set<ScopedKey> known, StringBuilder sb) {
 		String scopePath = getScopeId(scope);
 
@@ -209,20 +212,18 @@ public final class Utils {
 					depScope = Arrays.copyOfRange(depScope, 0, depScope.length - 1);
 				}
 
+				String dep = '"' + getScopeId(depScope) + dependency.toString().replace("\"", "\\\"") + '"';
 				if (depScope.length == 0) {
-					String dep = "\"" + getScopeId(depScope) + dependency.toString().replace("\"", "\\\"") + '"';
-
 					if (known.add(ScopedKey.of(depScope, dependency))) {
 						sb.append('\t')
 								.append(dep)
-								.append(" [label=\"")
-								.append(dependency.getDisplayString().replace("\"", "\\\""))
-								.append("\" style=dashed, color=red];\n");
+								.append(" [label=" +
+										'"' + dependency.getDisplayString().replace("\"", "\\\"") + '"')
+								.append(" style=dashed, color=red];")
+								.append('\n');
 					}
-					sb.append('\t').append(key).append(" -> ").append(dep);
-				} else {
-					sb.append('\t').append(key).append(" -> \"").append(getScopeId(depScope)).append(dependency.toString().replace("\"", "\\\"")).append('"');
 				}
+				sb.append('\t' + key + " -> " + dep);
 				sb.append(" [");
 				if (dependency.getRawType() == InstanceProvider.class) {
 					sb.append("color=gray");

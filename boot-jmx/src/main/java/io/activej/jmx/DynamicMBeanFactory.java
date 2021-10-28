@@ -974,11 +974,12 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			}
 		}
 
+		@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 		private static String prettyOperationName(String name, String[] argTypes) {
-			StringBuilder operationName = new StringBuilder(name).append('(');
+			StringBuilder operationName = new StringBuilder(name + "(");
 			if (argTypes.length > 0) {
 				for (int i = 0; i < argTypes.length - 1; i++) {
-					operationName.append(argTypes[i]).append(", ");
+					operationName.append(argTypes[i] + ", ");
 				}
 				operationName.append(argTypes[argTypes.length - 1]);
 			}

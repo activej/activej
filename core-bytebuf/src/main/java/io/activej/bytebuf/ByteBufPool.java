@@ -468,6 +468,7 @@ public final class ByteBufPool {
 			return stream(slabs).mapToInt(ByteBufConcurrentQueue::size).sum();
 		}
 
+		@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 		public String getPoolItemsString() {
 			StringBuilder sb = new StringBuilder();
 			for (int i = 0; i < ByteBufPool.NUMBER_OF_SLABS; ++i) {
@@ -475,8 +476,8 @@ public final class ByteBufPool {
 				int poolItems = slabs[i].size();
 				if (createdItems != poolItems) {
 					sb.append(String.format("Slab %d (%d) ", i, (1 << i)))
-							.append(" created: ").append(createdItems)
-							.append(" pool: ").append(poolItems).append("\n");
+							.append(" created: " + createdItems)
+							.append(" pool: " + poolItems + "\n");
 				}
 			}
 			return sb.toString();

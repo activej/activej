@@ -1156,38 +1156,39 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		this.idleInterval = idleInterval;
 	}
 
+	@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder("Eventloop");
 		if (threadName != null) {
-			sb.append('(').append(threadName).append(')');
+			sb.append("(" + threadName + ")");
 		}
-		sb.append("{loop=").append(loop);
+		sb.append("{loop=" + loop);
 
 		if (tick != 0) {
-			sb.append(", tick=").append(tick);
+			sb.append(", tick=" + tick);
 		}
 		if (selector != null && selector.isOpen()) {
 			int selectorKeys = selector.keys().size() - cancelledKeys;
 			if (selectorKeys != 0) {
-				sb.append(", selectorKeys=").append(selectorKeys);
+				sb.append(", selectorKeys=" + selectorKeys);
 			}
 		}
 		if (!localTasks.isEmpty()) {
-			sb.append(", localTasks=").append(localTasks.size());
+			sb.append(", localTasks=" + localTasks.size());
 		}
 		if (!scheduledTasks.isEmpty()) {
-			sb.append(", scheduledTasks=").append(scheduledTasks.size());
+			sb.append(", scheduledTasks=" + scheduledTasks.size());
 		}
 		if (!backgroundTasks.isEmpty()) {
-			sb.append(", backgroundTasks=").append(backgroundTasks.size());
+			sb.append(", backgroundTasks=" + backgroundTasks.size());
 		}
 		if (!concurrentTasks.isEmpty()) {
-			sb.append(", concurrentTasks=").append(concurrentTasks.size());
+			sb.append(", concurrentTasks=" + concurrentTasks.size());
 		}
 		int externalTasks = externalTasksCount.get();
 		if (externalTasks != 0) {
-			sb.append(", externalTasks=").append(externalTasks);
+			sb.append(", externalTasks=" + externalTasks);
 		}
 		return sb.append('}').toString();
 	}

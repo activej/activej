@@ -518,7 +518,7 @@ public final class PartitionedStreamTest {
 			} else {
 				nextNumber = RANDOM.nextInt(1000);
 			}
-			stringBuilder.append("Server").append(serverIdx).append(":").append(nextNumber);
+			stringBuilder.append("Server" + serverIdx + ":" + nextNumber);
 			if (i != nItems - 1) {
 				stringBuilder.append(',');
 			}

@@ -78,12 +78,14 @@ public abstract class Dataset<T> {
 		}
 	}
 
+	@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 	public final String toGraphViz() {
 		StringBuilder sb = new StringBuilder("digraph {\n  node[shape=rect]\n\n");
 		HashMap<Dataset<?>, String> ids = new HashMap<>();
 		writeDatasets(sb, ids, new HashSet<>(), new RefInt(0), this);
 		sb.append('\n');
-		ids.forEach((dataset, id) -> sb.append("  ").append(id).append(" [label=\"").append(dataset).append("\"]\n"));
+		ids.forEach((dataset, id) -> sb.append("  " + id +
+				" [label=" + '"' + dataset + '"' + "]\n"));
 		return sb.append('}').toString();
 	}
 }

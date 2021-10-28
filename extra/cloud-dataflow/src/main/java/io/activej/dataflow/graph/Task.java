@@ -182,6 +182,7 @@ public final class Task {
 		return taskId;
 	}
 
+	@SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 	@JmxAttribute
 	public String getGraphViz() {
 		Map<StreamId, Node> nodesByInput = new HashMap<>();
@@ -212,8 +213,8 @@ public final class Task {
 				if (target != null) {
 					// DOWNLOAD POINT HERE
 					String nodeId = "n" + node.getIndex();
-					sb.append("  ").append(nodeId).append(" [id=\"").append(nodeId).append("\", shape=point, xlabel=\"").append(input.getId()).append("\"]\n");
-					sb.append("  ").append(nodeId).append(" -> ").append(ids.computeIfAbsent(target, NODE_ID_FUNCTION)).append(" [style=dashed]\n");
+					sb.append("  " + nodeId + " [id=\"" + nodeId + "\", shape=point, xlabel=\"" + input.getId() + "\"]\n");
+					sb.append("  " + nodeId + " -> " + ids.computeIfAbsent(target, NODE_ID_FUNCTION) + " [style=dashed]\n");
 				}
 				continue;
 			} else if (node instanceof NodeUpload) {
@@ -223,18 +224,18 @@ public final class Task {
 			for (StreamId output : node.getOutputs()) {
 				Node target = nodesByInput.get(output);
 				if (target != null) {
-					sb.append("  ").append(nodeId).append(" -> ").append(ids.computeIfAbsent(target, NODE_ID_FUNCTION)).append('\n');
+					sb.append("  " + nodeId + " -> " + ids.computeIfAbsent(target, NODE_ID_FUNCTION) + "\n");
 					continue;
 				}
 				Node netTarget = nodesByInput.get(network.get(output));
 				if (netTarget != null) {
-					sb.append("  ").append(nodeId).append(" -> ").append(ids.computeIfAbsent(netTarget, NODE_ID_FUNCTION));
+					sb.append("  " + nodeId + " -> " + ids.computeIfAbsent(netTarget, NODE_ID_FUNCTION));
 				} else {
 					// UPLOAD POINT HERE
 					Node test = uploads.get(output);
 					String outputId = test != null ? "n" + test.getIndex() : "s" + output.getId();
-					sb.append("  ").append(outputId).append(" [id=\"").append(outputId).append("\", shape=point, xlabel=\"").append(output.getId()).append("\"]\n");
-					sb.append("  ").append(nodeId).append(" -> ").append(outputId);
+					sb.append("  " + outputId + " [id=\"" + outputId + "\", shape=point, xlabel=\"" + output.getId() + "\"]\n");
+					sb.append("  " + nodeId + " -> " + outputId);
 				}
 				sb.append(" [style=dashed]\n");
 			}
@@ -242,9 +243,9 @@ public final class Task {
 		sb.append('\n');
 		ids.forEach((node, id) -> {
 			String name = node.getClass().getSimpleName();
-			sb.append("  ").append(id)
-					.append(" [label=\"").append(name.startsWith("Node") ? name.substring(4) : name)
-					.append("\" id=").append(id);
+			sb.append("  " + id)
+					.append(" [label=\"" + (name.startsWith("Node") ? name.substring(4) : name))
+					.append("\" id=" + id);
 			Exception error = node.getError();
 			if (error != null) {
 				StringWriter str = new StringWriter();
