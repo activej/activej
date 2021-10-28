@@ -20,7 +20,7 @@ import io.activej.common.initializer.WithInitializer;
 import io.activej.http.CaseInsensitiveTokenMap.Token;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Array;
+import java.util.function.IntFunction;
 
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.common.Checks.checkArgument;
@@ -51,12 +51,11 @@ public final class CaseInsensitiveTokenMap<T extends Token> implements WithIniti
 	private final int maxProbings;
 	private final TokenFactory<T> factory;
 
-	CaseInsensitiveTokenMap(int slotsNumber, int maxProbings, Class<T> elementsType, TokenFactory<T> factory) {
+	CaseInsensitiveTokenMap(int slotsNumber, int maxProbings, TokenFactory<T> factory, IntFunction<T[]> arrayFactory) {
 		checkArgument(Integer.bitCount(slotsNumber) == 1);
 		this.maxProbings = maxProbings;
 		this.factory = factory;
-		//noinspection unchecked
-		this.tokens = (T[]) Array.newInstance(elementsType, slotsNumber);
+		this.tokens = arrayFactory.apply(slotsNumber);
 	}
 
 	/**

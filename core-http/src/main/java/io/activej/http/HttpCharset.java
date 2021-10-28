@@ -38,7 +38,7 @@ public final class HttpCharset extends Token {
 	private static final int SLOTS_NUMBER = ApplicationSettings.getInt(HttpCharset.class, "slotsNumber", 512);
 	private static final int MAX_PROBINGS = ApplicationSettings.getInt(HttpCharset.class, "maxProbings", 2);
 
-	private static final CaseInsensitiveTokenMap<HttpCharset> charsets = new CaseInsensitiveTokenMap<>(SLOTS_NUMBER, MAX_PROBINGS, HttpCharset.class, HttpCharset::new);
+	private static final CaseInsensitiveTokenMap<HttpCharset> charsets = new CaseInsensitiveTokenMap<>(SLOTS_NUMBER, MAX_PROBINGS, HttpCharset::new, HttpCharset[]::new);
 	private static final Map<Charset, HttpCharset> java2http = new HashMap<>();
 
 	public static final HttpCharset UTF_8 = register("utf-8", StandardCharsets.UTF_8);

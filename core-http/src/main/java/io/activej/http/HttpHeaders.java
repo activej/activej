@@ -27,7 +27,7 @@ public final class HttpHeaders {
 	private static final int SLOTS_NUMBER = ApplicationSettings.getInt(HttpHeaders.class, "slotsNumber", 512);
 	private static final int MAX_PROBINGS = ApplicationSettings.getInt(HttpHeaders.class, "maxProbings", 2);
 
-	private static final CaseInsensitiveTokenMap<HttpHeader> headers = new CaseInsensitiveTokenMap<>(SLOTS_NUMBER, MAX_PROBINGS, HttpHeader.class, HttpHeader::new);
+	private static final CaseInsensitiveTokenMap<HttpHeader> headers = new CaseInsensitiveTokenMap<>(SLOTS_NUMBER, MAX_PROBINGS, HttpHeader::new, HttpHeader[]::new);
 
 	public static final HttpHeader CACHE_CONTROL = headers.register("Cache-Control");
 	public static final HttpHeader CONTENT_LENGTH = headers.register("Content-Length");
