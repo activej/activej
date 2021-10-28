@@ -22,6 +22,7 @@
     <module>tutorials/react-integration-2</module>
     <module>tutorials/uikernel-integration</module>
     <module>tutorials/rpc-kv-storage</module>
+    <module>tutorials/native-image</module>
 
     <module>core/codegen</module>
     <module>core/bytebuf</module>

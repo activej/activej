@@ -1,0 +1,15 @@
+[
+  {
+    "name" : "HelloWorldHttpServer",
+    "allDeclaredMethods" : true
+  },
+  {
+    "name" : "io.activej.launchers.http.HttpServerLauncher",
+    "allDeclaredFields" : true,
+    "allDeclaredMethods" : true
+  },
+  {
+    "name" : "io.activej.service.ServiceGraphModule",
+    "allDeclaredMethods" : true
+  }
+]
