@@ -47,6 +47,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.rocksdb.*;
 
+import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.util.concurrent.Executor;
 
@@ -264,7 +265,7 @@ public final class CrdtStorageRocksDB<K extends Comparable<K>, S> implements Crd
 		});
 	}
 
-	public static class KeyComparator<K extends Comparable<K>> extends Comparator {
+	public static class KeyComparator<K extends Comparable<K>> extends org.rocksdb.AbstractComparator {
 		private final ComparatorOptions copt;
 		private final BinarySerializer<K> keySerializer;
 
@@ -284,9 +285,15 @@ public final class CrdtStorageRocksDB<K extends Comparable<K>, S> implements Crd
 		}
 
 		@Override
-		public int compare(Slice s1, Slice s2) {
-			return keySerializer.decode(s1.data(), 0)
-					.compareTo(keySerializer.decode(s2.data(), 0));
+		public int compare(ByteBuffer byteBuffer1, ByteBuffer byteBuffer2) {
+			byte[] bytes1 = new byte[byteBuffer1.remaining()];
+			byte[] bytes2 = new byte[byteBuffer2.remaining()];
+
+			byteBuffer1.get(bytes1);
+			byteBuffer2.get(bytes2);
+
+			return keySerializer.decode(bytes1, 0)
+					.compareTo(keySerializer.decode(bytes2, 0));
 		}
 
 		@Override
