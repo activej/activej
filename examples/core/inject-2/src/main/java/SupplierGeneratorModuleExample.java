@@ -9,16 +9,21 @@ import java.util.function.Supplier;
 /**
  * @since 3.0.0
  */
-//[START REGION_1]
 public class SupplierGeneratorModuleExample {
 	public static void main(String[] args) {
+		//[START REGION_1]
 		Injector injector = Injector.of(ModuleBuilder.create()
 				.install(new SupplierGeneratorModule())
 				.bind(String.class).toInstance("Hello, World")
 				.bind(new Key<Supplier<String>>() {})
+				.bind(new Key<Supplier<Integer>>() {})
 				.build());
-		Supplier<String> supplier = injector.getInstance(new Key<Supplier<String>>() {});
-		System.out.println(supplier.get());
+		Supplier<String> stringSupplier = injector.getInstance(new Key<Supplier<String>>() {});
+		System.out.println(stringSupplier.get()); // "Hello, World"
+
+		Supplier<Integer> integerSupplier = injector.getInstance(new Key<Supplier<Integer>>() {});
+		System.out.println(integerSupplier.get()); // "null"
+		//[END REGION_1]
 	}
 
 	/**
@@ -28,6 +33,7 @@ public class SupplierGeneratorModuleExample {
 	 * with the resulting supplier returning <code>null</code> if no binding for <code>T</code> was bound
 	 * or an instance of <code>T</code>, otherwise
 	 */
+	//[START REGION_2]
 	public static final class SupplierGeneratorModule extends AbstractModule {
 
 		@Override
@@ -40,6 +46,5 @@ public class SupplierGeneratorModuleExample {
 			});
 		}
 	}
-
+	//[END REGION_2]
 }
-//[END REGION_1]
