@@ -45,7 +45,6 @@ import org.slf4j.Logger;
 
 import javax.sql.DataSource;
 import java.io.Closeable;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.*;
@@ -60,7 +59,6 @@ import static io.activej.inject.binding.BindingType.TRANSIENT;
 import static io.activej.service.Utils.combineAll;
 import static io.activej.service.Utils.completedExceptionallyFuture;
 import static io.activej.service.adapter.ServiceAdapters.*;
-import static io.activej.types.Types.getRawType;
 import static java.lang.Thread.currentThread;
 import static java.util.Collections.*;
 import static java.util.concurrent.CompletableFuture.completedFuture;
@@ -526,7 +524,15 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 
 	@SuppressWarnings("unchecked")
 	private <T> @Nullable Service getServiceOrNull(IdentityHashMap<Object, CachedService> cache, Key<T> key, @NotNull T instance) {
-		CachedService service = cache.get(instance);
+		Object cacheKey = instance;
+		if (cacheKey instanceof OptionalDependency) {
+			OptionalDependency<?> optionalDependency = (OptionalDependency<?>) cacheKey;
+			if (!optionalDependency.isPresent()) {
+				return null;
+			}
+			cacheKey = optionalDependency.get();
+		}
+		CachedService service = cache.get(cacheKey);
 		if (service != null) {
 			return service;
 		}
@@ -534,30 +540,29 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 			return null;
 		}
 		ServiceAdapter<T> serviceAdapter = lookupAdapter(key, (Class<T>) instance.getClass());
-		if (serviceAdapter != null) {
-			service = new CachedService(new Service() {
-				@Override
-				public CompletableFuture<?> start() {
-					return serviceAdapter.start(instance, executor);
-				}
-
-				@Override
-				public CompletableFuture<?> stop() {
-					return serviceAdapter.stop(instance, executor);
-				}
-			});
-			cache.put(instance, service);
-			return service;
+		if (serviceAdapter == null) {
+			return null;
 		}
-		return null;
+		service = new CachedService(new Service() {
+			@Override
+			public CompletableFuture<?> start() {
+				return serviceAdapter.start(instance, executor);
+			}
+
+			@Override
+			public CompletableFuture<?> stop() {
+				return serviceAdapter.stop(instance, executor);
+			}
+		});
+		cache.put(cacheKey, service);
+		return service;
 	}
 
 	@SuppressWarnings("unchecked")
 	private <T> @Nullable ServiceAdapter<T> lookupAdapter(Key<T> key, Class<T> instanceClass) {
-		Type type = key.getType();
-		if (type instanceof ParameterizedType && ((ParameterizedType) type).getRawType() == OptionalDependency.class) {
-			Type actualTypeArgument = ((ParameterizedType) type).getActualTypeArguments()[0];
-			ServiceAdapter<?> serviceAdapter = doLookupAdapter(Key.ofType(actualTypeArgument, key.getQualifier()), getRawType(actualTypeArgument));
+		if (key.getRawType() == OptionalDependency.class) {
+			Key<Object> parameterKey = key.getTypeParameter(0).qualified(key.getQualifier());
+			ServiceAdapter<?> serviceAdapter = doLookupAdapter(parameterKey, parameterKey.getRawType());
 			if (serviceAdapter == null) return null;
 
 			return (ServiceAdapter<T>) ServiceAdapters.forOptionalDependency(serviceAdapter);
