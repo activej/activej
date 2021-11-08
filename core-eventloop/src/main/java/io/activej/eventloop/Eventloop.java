@@ -31,6 +31,7 @@ import io.activej.common.time.Stopwatch;
 import io.activej.eventloop.executor.EventloopExecutor;
 import io.activej.eventloop.inspector.EventloopInspector;
 import io.activej.eventloop.inspector.EventloopStats;
+import io.activej.eventloop.jmx.EventloopJmxBean;
 import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.eventloop.net.DatagramSocketSettings;
 import io.activej.eventloop.net.ServerSocketSettings;
@@ -179,25 +180,58 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		refreshTimestamp();
 	}
 
+	/**
+	 * Creates a new {@link Eventloop}
+	 *
+	 * @return a new instance of {@link Eventloop}
+	 */
 	public static Eventloop create() {
 		return create(CurrentTimeProvider.ofSystem());
 	}
 
+	/**
+	 * Creates a new {@link Eventloop} with a custom {@link CurrentTimeProvider}
+	 * <p>
+	 * Useful for tests when passed time should be precisely controlled
+	 *
+	 * @return a new instance of {@link Eventloop} with a custom {@link CurrentTimeProvider}
+	 */
 	public static Eventloop create(@NotNull CurrentTimeProvider currentTimeProvider) {
 		return new Eventloop(currentTimeProvider);
 	}
 
+	/**
+	 * Sets a thread name for this {@link Eventloop} thread
+	 *
+	 * @param threadName a thread name for this {@link Eventloop} thread
+	 * @return this {@link Eventloop}
+	 */
 	public @NotNull Eventloop withThreadName(@Nullable String threadName) {
 		this.threadName = threadName;
 		return this;
 	}
 
+	/**
+	 * Sets a thread priority for this {@link Eventloop} thread
+	 *
+	 * @param threadPriority a thread priority for this {@link Eventloop} thread
+	 * @return this {@link Eventloop}
+	 */
 	@SuppressWarnings("UnusedReturnValue")
 	public @NotNull Eventloop withThreadPriority(int threadPriority) {
 		this.threadPriority = threadPriority;
 		return this;
 	}
 
+	/**
+	 * Sets an {@link EventloopInspector} for this {@link Eventloop}
+	 * <p>
+	 * Inspector can be used to collect and process statistics of this {@link Eventloop}
+	 * (task execution time, business logic time, I/O key process time, etc.)
+	 *
+	 * @param inspector an inspector for this {@link Eventloop}
+	 * @return this {@link Eventloop}
+	 */
 	public @NotNull Eventloop withInspector(@Nullable EventloopInspector inspector) {
 		this.inspector = inspector;
 		return this;
@@ -208,6 +242,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * thread local error handler
 	 *
 	 * @param fatalErrorHandler a fatal error handler on an event loop level
+	 * @return this {@link Eventloop}
 	 */
 	public @NotNull Eventloop withEventloopFatalErrorHandler(@NotNull FatalErrorHandler fatalErrorHandler) {
 		this.eventloopFatalErrorHandler = fatalErrorHandler;
@@ -221,29 +256,66 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * It is usually the first handler to handle an error "nearer" to a throw site
 	 *
 	 * @param fatalErrorHandler a fatal error handler on a thread level
+	 * @return this {@link Eventloop}
 	 */
 	public @NotNull Eventloop withThreadFatalErrorHandler(@Nullable FatalErrorHandler fatalErrorHandler) {
 		this.threadFatalErrorHandler = fatalErrorHandler;
 		return this;
 	}
 
+	/**
+	 * Sets a custom {@link SelectorProvider} for this {@link Eventloop}
+	 * <p>
+	 * If no custom selector provider is set, a default selector provider from {@link SelectorProvider#provider()} will be used
+	 *
+	 * @param selectorProvider a custom selector provider
+	 * @return this {@link Eventloop}
+	 */
 	public @NotNull Eventloop withSelectorProvider(@Nullable SelectorProvider selectorProvider) {
 		this.selectorProvider = selectorProvider;
 		return this;
 	}
 
+	/**
+	 * Sets an idle interval for this {@link Eventloop}.
+	 * <p>
+	 * An idle interval is the time a {@link Selector} is blocked for when calling {@link Selector#select(long)}
+	 * <p>
+	 * An idle interval is only applicable when there are no active tasks in an {@link Eventloop}
+	 *
+	 * @param idleInterval an idle interval for the {@link Selector} to block for on {@link Selector#select(long)} calls
+	 * @return this {@link Eventloop}
+	 */
 	public @NotNull Eventloop withIdleInterval(@NotNull Duration idleInterval) {
 		this.idleInterval = idleInterval;
 		return this;
 	}
 
+	/**
+	 * Register this {@link Eventloop} to an inner {@link ThreadLocal}.
+	 * <p>
+	 * The registration also happens automatically when you call {@link Eventloop#run} but sometimes you need to execute
+	 * Eventloop-related code prior to calling {@link Eventloop#run}.
+	 * <p>
+	 * This method is useful for tests, for example, when you need to initialize a component in a context of an {@link Eventloop}
+	 * prior to {@link Eventloop#run} invocation.
+	 * <p>
+	 * This method should not be called after {@link Eventloop#run} has been invoked.
+	 *
+	 * @return this {@link Eventloop}
+	 */
 	public @NotNull Eventloop withCurrentThread() {
 		CURRENT_EVENTLOOP.set(this);
 		return this;
 	}
-
 	// endregion
 
+	/**
+	 * Returns this {@link Eventloop}'s {@link Selector}
+	 *
+	 * @return this {@link Eventloop}'s {@link Selector}
+	 * or {@code null} if no {@link Selector} has been opened yet, or it has already been closed
+	 */
 	public @Nullable Selector getSelector() {
 		return selector;
 	}
@@ -255,16 +327,41 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			"3) refactor application so it starts async operations within eventloop.run(), \n" +
 			"   i.e. by implementing EventloopService::start() {your code block} and using ServiceGraphModule";
 
+	/**
+	 * Returns an {@link Eventloop} associated with the current thread
+	 * (e.g. the {@link Eventloop} registered to an inner Eventloop ThreadLocal).
+	 *
+	 * @return an {@link Eventloop} associated with the current thread
+	 * @throws IllegalStateException when there are no Eventloop associated with the current thread
+	 */
 	public static @NotNull Eventloop getCurrentEventloop() {
 		Eventloop eventloop = CURRENT_EVENTLOOP.get();
 		if (eventloop != null) return eventloop;
 		throw new IllegalStateException(NO_CURRENT_EVENTLOOP_ERROR);
 	}
 
+	/**
+	 * Returns an {@link Eventloop} associated with the current thread
+	 * (e.g. the {@link Eventloop} registered to an inner Eventloop ThreadLocal)
+	 * or {@code null} if no {@link Eventloop} is associated with the current thread.
+	 *
+	 * @return an {@link Eventloop} associated with the current thread
+	 * or {@code null} if no {@link Eventloop} is associated with the current thread
+	 * @see #getCurrentEventloop()
+	 */
 	public static @Nullable Eventloop getCurrentEventloopOrNull() {
 		return CURRENT_EVENTLOOP.get();
 	}
 
+	/**
+	 * Initializes a piece of code in a context of another {@link Eventloop}.
+	 * <p>
+	 * This method is useful for when you need to initialize a piece of code with another {@link Eventloop} context
+	 * (an {@link Eventloop} that runs in some other thread).
+	 *
+	 * @param anotherEventloop an {@link Eventloop} in context of which a piece of code should be initialized
+	 * @param runnable         a piece of code to be initialized in a context of another {@link Eventloop}
+	 */
 	public static void initWithEventloop(@NotNull Eventloop anotherEventloop, @NotNull Runnable runnable) {
 		Eventloop eventloop = CURRENT_EVENTLOOP.get();
 		try {
@@ -275,6 +372,15 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		}
 	}
 
+	/**
+	 * Initializes a component in a context of another {@link Eventloop}.
+	 * <p>
+	 * This method is useful for when you need to initialize some component with another {@link Eventloop} context
+	 * (an {@link Eventloop} that runs in some other thread).
+	 *
+	 * @param anotherEventloop an {@link Eventloop} in context of which a piece of code should be initialized
+	 * @param callable         a supplier of a component to be initialized in a context of another {@link Eventloop}
+	 */
 	public static <T> T initWithEventloop(@NotNull Eventloop anotherEventloop, @NotNull Supplier<T> callable) {
 		Eventloop eventloop = CURRENT_EVENTLOOP.get();
 		try {
@@ -311,13 +417,24 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		}
 	}
 
-	public @Nullable Selector ensureSelector() {
+	/**
+	 * Ensures a {@link Selector} of this {@link Eventloop} is open
+	 *
+	 * @return an existing {@link Selector} or newly opened one
+	 */
+	public @NotNull Selector ensureSelector() {
 		if (selector == null) {
 			openSelector();
 		}
 		return selector;
 	}
 
+	/**
+	 * Closes a {@link SelectableChannel} associated with this {@link Eventloop} and cancels a {@link SelectionKey}
+	 *
+	 * @param channel a channel to be closed, may be {@code null}
+	 * @param key     a key to be cancelled, may be {@code null}
+	 */
 	public void closeChannel(@Nullable SelectableChannel channel, @Nullable SelectionKey key) {
 		checkArgument(channel != null || key == null, "Either channel or key should be not null");
 		if (channel == null || !channel.isOpen()) return;
@@ -331,6 +448,13 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		}
 	}
 
+	/**
+	 * Indicates whether this method was called from within an {@link Eventloop} thread
+	 * <p>
+	 * This method is useful for ensuring that some component is used within {@link Eventloop} context
+	 *
+	 * @return {@code true} if this method is called from within an {@link Eventloop} thread, {@code false} otherwise
+	 */
 	public boolean inEventloopThread() {
 		return eventloopThread == null || eventloopThread == Thread.currentThread();
 	}
@@ -351,6 +475,9 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		}
 	}
 
+	/**
+	 * Stops an execution of this {@link Eventloop}
+	 */
 	public void breakEventloop() {
 		breakEventloop = true;
 		if (breakEventloop && selector != null) {
@@ -367,6 +494,11 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 				|| keepAlive || (selector != null && selector.isOpen() && selector.keys().size() - cancelledKeys > 0);
 	}
 
+	/**
+	 * Returns this {@link Eventloop}'s thread
+	 *
+	 * @return an {@link Eventloop}'s thread
+	 */
 	public @Nullable Thread getEventloopThread() {
 		return eventloopThread;
 	}
@@ -836,24 +968,36 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	}
 
 	/**
-	 * Connects to given socket address asynchronously.
+	 * Asynchronously connects to a given socket address.
 	 *
 	 * @param address socketChannel's address
+	 * @param cb      a callback to be called when connection is successful
+	 *                or when {@link Eventloop} fails to connect to a given address
 	 */
 	public void connect(SocketAddress address, @NotNull Callback<SocketChannel> cb) {
 		connect(address, 0, cb);
 	}
 
+	/**
+	 * Asynchronously connects to a given socket address.
+	 *
+	 * @param address socketChannel's address
+	 * @param timeout a connection timeout, may be {@code null} indicating a default system connection timeout
+	 * @param cb      a callback to be called when connection is successful
+	 *                or when {@link Eventloop} fails to connect to a given address
+	 */
 	public void connect(SocketAddress address, @Nullable Duration timeout, @NotNull Callback<SocketChannel> cb) {
 		connect(address, timeout == null ? 0L : timeout.toMillis(), cb);
 	}
 
 	/**
-	 * Connects to given socket address asynchronously with a specified timeout value.
+	 * Asynchronously connects to a given socket address with a specified timeout value.
 	 * A timeout of zero is interpreted as a default system timeout
 	 *
 	 * @param address socketChannel's address
 	 * @param timeout the timeout value to be used in milliseconds, 0 as default system connection timeout
+	 * @param cb      a callback to be called when connection is successful
+	 *                or when {@link Eventloop} fails to connect to a given address
 	 */
 	public void connect(@NotNull SocketAddress address, long timeout, @NotNull Callback<SocketChannel> cb) {
 		if (CHECK) checkState(inEventloopThread(), "Not in eventloop thread");
@@ -900,6 +1044,14 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		}
 	}
 
+	/**
+	 * Returns a current tick of an {@link Eventloop}.
+	 * <p>
+	 * A tick can be seen as a unique identifier of current execution
+	 * (a number of loops executed combined with a current loop's executed task count)
+	 *
+	 * @return a current tick of an {@link Eventloop}.
+	 */
 	public long tick() {
 		if (CHECK) checkState(inEventloopThread(), "Not in eventloop thread");
 		return (long) loop << 32 | tick;
@@ -927,6 +1079,11 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		localTasks.addLast(runnable);
 	}
 
+	/**
+	 * Posts a new task to be executed at the start of the next execution loop
+	 *
+	 * @param runnable runnable of this task
+	 */
 	public void postNext(@NotNull @Async.Schedule Runnable runnable) {
 		if (CHECK) checkState(inEventloopThread(), "Not in eventloop thread");
 		nextTasks.add(runnable);
@@ -999,11 +1156,19 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		externalTasksCount.decrementAndGet();
 	}
 
+	/**
+	 * Refreshes a cached timestamp of this {@link Eventloop} and returns its value.
+	 *
+	 * @return a refreshed timestamp of this {@link Eventloop}
+	 */
 	public long refreshTimestampAndGet() {
 		refreshTimestamp();
 		return timestamp;
 	}
 
+	/**
+	 * Refreshes a cached timestamp of this {@link Eventloop}
+	 */
 	private void refreshTimestamp() {
 		timestamp = timeProvider.currentTimeMillis();
 	}
@@ -1016,6 +1181,13 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		return timestamp;
 	}
 
+	/**
+	 * Returns itself
+	 * <p>
+	 * This method is needed as {@link Eventloop} implements {@link EventloopJmxBean} interface
+	 *
+	 * @return this {@link Eventloop}
+	 */
 	@Override
 	public @NotNull Eventloop getEventloop() {
 		return this;
@@ -1044,6 +1216,13 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		return future;
 	}
 
+	/**
+	 * Submits {@code Runnable} to eventloop for execution
+	 * <p>{@code Runnable} is executed in the eventloop thread</p>
+	 *
+	 * @param computation to be executed
+	 * @return {@code CompletableFuture} that completes when runnable completes
+	 */
 	@Override
 	public <T> @NotNull CompletableFuture<T> submit(AsyncComputation<? extends T> computation) {
 		CompletableFuture<T> future = new CompletableFuture<>();
@@ -1097,6 +1276,12 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		}
 	}
 
+	/**
+	 * Logs a fatal error in a context of this {@link Eventloop}
+	 *
+	 * @param e       a fatal error to be logged
+	 * @param context a context of a fatal error to be logged, may be {@code null} if a context is meaningless or unknown
+	 */
 	public void logFatalError(@NotNull Throwable e, @Nullable Object context) {
 		if (e instanceof UncheckedException) {
 			e = e.getCause();
@@ -1124,10 +1309,22 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		return tick;
 	}
 
+	/**
+	 * Returns this {@link Eventloop} fatal error handler
+	 *
+	 * @return this {@link Eventloop} fatal error handler
+	 * @see #withEventloopFatalErrorHandler(FatalErrorHandler)
+	 */
 	public @NotNull FatalErrorHandler getEventloopFatalErrorHandler() {
 		return eventloopFatalErrorHandler;
 	}
 
+	/**
+	 * Returns a thread fatal error handler
+	 *
+	 * @return a thread fatal error handler
+	 * @see #withThreadFatalErrorHandler(FatalErrorHandler)
+	 */
 	public @Nullable FatalErrorHandler getThreadFatalErrorHandler() {
 		return threadFatalErrorHandler;
 	}
