@@ -557,11 +557,16 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 		Type type = key.getType();
 		if (type instanceof ParameterizedType && ((ParameterizedType) type).getRawType() == OptionalDependency.class) {
 			Type actualTypeArgument = ((ParameterizedType) type).getActualTypeArguments()[0];
-			ServiceAdapter<?> serviceAdapter = lookupAdapter(Key.ofType(actualTypeArgument, key.getQualifier()), getRawType(actualTypeArgument));
-			if (serviceAdapter != null) {
-				return (ServiceAdapter<T>) ServiceAdapters.forOptionalDependency(serviceAdapter);
-			}
+			ServiceAdapter<?> serviceAdapter = doLookupAdapter(Key.ofType(actualTypeArgument, key.getQualifier()), getRawType(actualTypeArgument));
+			if (serviceAdapter == null) return null;
+
+			return (ServiceAdapter<T>) ServiceAdapters.forOptionalDependency(serviceAdapter);
 		}
+		return doLookupAdapter(key, instanceClass);
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T> @Nullable ServiceAdapter<T> doLookupAdapter(Key<T> key, Class<T> instanceClass) {
 		ServiceAdapter<T> serviceAdapter = (ServiceAdapter<T>) keys.get(key);
 		if (serviceAdapter == null) {
 			List<Class<?>> foundRegisteredClasses = new ArrayList<>();

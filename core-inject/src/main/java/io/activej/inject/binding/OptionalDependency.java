@@ -33,6 +33,10 @@ public final class OptionalDependency<T> {
 	}
 
 	public static <T> OptionalDependency<T> of(@NotNull T value) {
+		if (value instanceof OptionalDependency) {
+			throw new IllegalArgumentException("Nested optional dependencies are not allowed");
+		}
+
 		return new OptionalDependency<>(value);
 	}
 

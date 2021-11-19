@@ -114,7 +114,7 @@ public final class Preprocessor {
 					// try to recursively generate a requested binding
 					binding = ((BindingGenerator<Object>) generator).generate(recursiveLocator, scope, (Key<Object>) key);
 
-					// try to resolve Optional
+					// try to resolve OptionalDependency
 					if (binding == null && rawType == OptionalDependency.class) {
 						binding = resolveOptionalDependency(upper, localBindings, resolvedBindings, scope, key, multibinder, transformer, generator);
 					}
@@ -160,7 +160,7 @@ public final class Preprocessor {
 			// try to generate it
 			binding = ((BindingGenerator<Object>) generator).generate(recursiveLocator, scope, (Key<Object>) key);
 
-			// try to resolve Optional
+			// try to resolve OptionalDependency
 			if (binding == null && rawType == OptionalDependency.class) {
 				binding = resolveOptionalDependency(upper, localBindings, resolvedBindings, scope, key, multibinder, transformer, generator);
 			}
@@ -209,6 +209,9 @@ public final class Preprocessor {
 	@SuppressWarnings({"rawtypes", "Convert2Lambda"})
 	private static @NotNull Binding<?> resolveOptionalDependency(Map<Key<?>, Binding<?>> upper, Map<Key<?>, Set<Binding<?>>> localBindings, Map<Key<?>, Binding<?>> resolvedBindings, Scope[] scope, Key<?> key, Multibinder<?> multibinder, BindingTransformer<?> transformer, BindingGenerator<?> generator) {
 		Key<?> instanceKey = key.getTypeParameter(0).qualified(key.getQualifier());
+		if (instanceKey.getRawType() == OptionalDependency.class) {
+			throw new DIException("Nested optional dependencies are not allowed");
+		}
 		Binding<?> resolved = resolve(upper, localBindings, resolvedBindings, scope, instanceKey, localBindings.get(instanceKey), multibinder, transformer, generator);
 		if (resolved == null) return Binding.toInstance(OptionalDependency.empty());
 		return new Binding<OptionalDependency<?>>(singleton(instanceKey), SYNTHETIC, null) {

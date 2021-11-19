@@ -24,7 +24,6 @@ import io.activej.common.initializer.Initializer;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
-import io.activej.inject.Scope;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.ProvidesIntoSet;
 import io.activej.inject.binding.Binding;
@@ -39,12 +38,10 @@ import io.activej.trigger.Severity;
 import io.activej.trigger.Triggers.TriggerWithResult;
 import io.activej.worker.WorkerPool;
 import io.activej.worker.WorkerPools;
-import io.activej.worker.annotation.Worker;
 import org.jetbrains.annotations.Nullable;
 
 import javax.management.DynamicMBean;
 import java.lang.management.ManagementFactory;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.time.Duration;
 import java.time.Instant;
@@ -56,7 +53,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Utils.nonNullElseGet;
 import static io.activej.jmx.JmxBeanSettings.defaultSettings;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
@@ -253,8 +249,10 @@ public final class JmxModule extends AbstractModule implements WithInitializer<J
 					.filter(entry -> entry.getKey().getRawType().equals(WorkerPool.class))
 					.forEach(entry -> jmxRegistry.addWorkerPoolKey((WorkerPool) entry.getValue(), entry.getKey()));
 
-			Injector workerScopeInjector = injector.enterScope(Scope.of(Worker.class));
 			for (WorkerPool workerPool : workerPools.getWorkerPools()) {
+				Injector[] scopeInjectors = workerPool.getScopeInjectors();
+				if (scopeInjectors.length == 0) continue;
+				Injector workerScopeInjector = scopeInjectors[0];
 				for (Map.Entry<Key<?>, WorkerPool.Instances<?>> entry : workerPool.peekInstances().entrySet()) {
 					Key<?> key = entry.getKey();
 					WorkerPool.Instances<?> workerInstances = entry.getValue();
@@ -280,36 +278,31 @@ public final class JmxModule extends AbstractModule implements WithInitializer<J
 	}
 
 	private void registerSingleton(JmxRegistry jmxRegistry, Object instance, Key<?> key, Injector injector, @Nullable JmxBeanSettings settings) {
-		Class<?> instanceClass = instance.getClass();
-		if (instanceClass == OptionalDependency.class) {
+		if (key.getRawType() == OptionalDependency.class) {
 			OptionalDependency<?> optional = (OptionalDependency<?>) instance;
-			Binding<?> binding = injector.getBinding(key);
-			if (!optional.isPresent() || binding == null || binding.getType() == BindingType.SYNTHETIC) {
-				return;
-			}
-			Type actualTypeArgument = ((ParameterizedType) key.getType()).getActualTypeArguments()[0];
-			Key<?> actualKey = Key.ofType(actualTypeArgument, key.getQualifier());
-			Object actualInstance = optional.get();
-			registerSingleton(jmxRegistry, actualInstance, actualKey, injector, settings);
-			return;
-		}
-
-		jmxRegistry.registerSingleton(key, instance, nonNullElseGet(settings, () -> ensureSettingsFor(key)));
-	}
-
-	private void registerWorkers(JmxRegistry jmxRegistry, WorkerPool workerPool, Key<?> key, List<?> workerInstances, Injector injector) {
-		if (workerInstances.size() == 0) {
-			return;
-		}
-		Class<?> instanceClass = workerInstances.get(0).getClass();
-		if (instanceClass == OptionalDependency.class) {
+			if (!optional.isPresent()) return;
 			Binding<?> binding = injector.getBinding(key);
 			if (binding == null || binding.getType() == BindingType.SYNTHETIC) {
 				return;
 			}
-			List<Object> actualInstances = new ArrayList<>(workerInstances.size());
+			key = key.getTypeParameter(0).qualified(key.getQualifier());
+			instance = optional.get();
+		}
+
+		jmxRegistry.registerSingleton(key, instance, settings != null ? settings : ensureSettingsFor(key));
+	}
+
+	private void registerWorkers(JmxRegistry jmxRegistry, WorkerPool workerPool, Key<?> key, List<?> workerInstances, Injector injector) {
+		int size = workerInstances.size();
+		if (size == 0) return;
+
+		if (key.getRawType() == OptionalDependency.class) {
+			Binding<?> binding = injector.getBinding(key);
+			if (binding == null || binding.getType() == BindingType.SYNTHETIC) {
+				return;
+			}
+			List<Object> instances = new ArrayList<>(size);
 			for (Object workerInstance : workerInstances) {
-				if (!(workerInstance instanceof OptionalDependency)) return;
 				OptionalDependency<?> optional = (OptionalDependency<?>) workerInstance;
 				if (!optional.isPresent()) {
 					JmxRegistry.logger.info("Pool of instances with key {} was not registered to jmx, " +
@@ -317,12 +310,10 @@ public final class JmxModule extends AbstractModule implements WithInitializer<J
 					return;
 				}
 
-				actualInstances.add(optional.get());
+				instances.add(optional.get());
 			}
-			Type actualTypeArgument = ((ParameterizedType) key.getType()).getActualTypeArguments()[0];
-			key = Key.ofType(actualTypeArgument, key.getQualifier());
-			registerWorkers(jmxRegistry, workerPool, key, actualInstances, injector);
-			return;
+			key = key.getTypeParameter(0).qualified(key.getQualifier());
+			workerInstances = instances;
 		}
 
 		jmxRegistry.registerWorkers(workerPool, key, workerInstances, ensureSettingsFor(key));

@@ -182,7 +182,7 @@ public final class TriggersModule extends AbstractModule implements TriggersModu
 	}
 
 	private void scanSingleton(Injector injector, Map<KeyWithWorkerData, List<TriggerRegistryRecord>> triggersMap, Key<?> key, Object instance) {
-		while (key.getRawType() == OptionalDependency.class) {
+		if (key.getRawType() == OptionalDependency.class) {
 			OptionalDependency<?> optional = (OptionalDependency<?>) instance;
 			if (!optional.isPresent()) return;
 
@@ -202,26 +202,23 @@ public final class TriggersModule extends AbstractModule implements TriggersModu
 	}
 
 	private void scanWorkers(WorkerPool workerPool, Map<KeyWithWorkerData, List<TriggerRegistryRecord>> triggersMap, Key<?> key, List<?> workerInstances) {
-		List<Object> instances = new ArrayList<>(workerInstances);
 		Injector injector = workerPool.getScopeInjectors()[0];
 
-		while (key.getRawType() == OptionalDependency.class) {
+		if (key.getRawType() == OptionalDependency.class) {
 			Binding<?> binding = injector.getBinding(key);
 			if (binding == null || binding.getType() == BindingType.SYNTHETIC) {
 				return;
 			}
-
-			key = key.getTypeParameter(0).qualified(key.getQualifier());
-			for (int i = 0; i < instances.size(); i++) {
-				Object instance = instances.get(i);
-				if (instance == null) continue;
-
-				instances.set(i, ((OptionalDependency<?>) instance).orElse(null));
+			List<Object> instances = new ArrayList<>(workerInstances.size());
+			for (Object workerInstance : workerInstances) {
+				instances.add(((OptionalDependency<?>) workerInstance).orElse(null));
 			}
+			key = key.getTypeParameter(0).qualified(key.getQualifier());
+			workerInstances = instances;
 		}
 
-		for (int i = 0; i < instances.size(); i++) {
-			Object instance = instances.get(i);
+		for (int i = 0; i < workerInstances.size(); i++) {
+			Object instance = workerInstances.get(i);
 			if (instance == null) continue;
 
 			KeyWithWorkerData internalKey = new KeyWithWorkerData(key, workerPool, i);
