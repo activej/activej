@@ -22,6 +22,8 @@ import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.ProvidesIntoSet;
+import io.activej.inject.binding.Binding;
+import io.activej.inject.binding.BindingType;
 import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.launcher.LauncherService;
@@ -154,30 +156,21 @@ public final class TriggersModule extends AbstractModule implements TriggersModu
 			Key<Object> key = (Key<Object>) entry.getKey();
 			Object instance = entry.getValue();
 			if (instance == null) continue;
-			KeyWithWorkerData internalKey = new KeyWithWorkerData(key);
-
-			scanHasTriggers(triggersMap, internalKey, instance);
-			scanClassSettings(triggersMap, internalKey, instance);
-			scanKeySettings(triggersMap, internalKey, instance);
+			scanSingleton(injector, triggersMap, key, instance);
 		}
 
 		// register workers
 		WorkerPools workerPools = injector.peekInstance(WorkerPools.class);
 		if (workerPools != null) {
 			for (WorkerPool workerPool : workerPools.getWorkerPools()) {
+				if (workerPool.getSize() == 0) continue;
+
 				for (Map.Entry<Key<?>, WorkerPool.Instances<?>> entry : workerPool.peekInstances().entrySet()) {
 					Key<?> key = entry.getKey();
-					WorkerPool.Instances<?> workerInstances = entry.getValue();
-					for (int i = 0; i < workerInstances.size(); i++) {
-						Object workerInstance = workerInstances.get(i);
-						KeyWithWorkerData k = new KeyWithWorkerData(key, workerPool, i);
+					List<?> instances = entry.getValue().getList();
 
-						scanHasTriggers(triggersMap, k, workerInstance);
-						scanClassSettings(triggersMap, k, workerInstance);
-						scanKeySettings(triggersMap, k, workerInstance);
-					}
+					scanWorkers(workerPool, triggersMap, key, instances);
 				}
-
 			}
 		}
 
@@ -185,6 +178,56 @@ public final class TriggersModule extends AbstractModule implements TriggersModu
 			for (TriggerRegistryRecord registryRecord : triggersMap.getOrDefault(keyWithWorkerData, emptyList())) {
 				triggers.addTrigger(registryRecord.severity, prettyPrintSimpleKeyName(keyWithWorkerData.getKey()), registryRecord.name, registryRecord.triggerFunction);
 			}
+		}
+	}
+
+	private void scanSingleton(Injector injector, Map<KeyWithWorkerData, List<TriggerRegistryRecord>> triggersMap, Key<?> key, Object instance) {
+		while (key.getRawType() == OptionalDependency.class) {
+			OptionalDependency<?> optional = (OptionalDependency<?>) instance;
+			if (!optional.isPresent()) return;
+
+			Binding<?> binding = injector.getBinding(key);
+			if (binding == null || binding.getType() == BindingType.SYNTHETIC) {
+				return;
+			}
+
+			instance = optional.get();
+			key = key.getTypeParameter(0).qualified(key.getQualifier());
+		}
+
+		KeyWithWorkerData internalKey = new KeyWithWorkerData(key);
+		scanHasTriggers(triggersMap, internalKey, instance);
+		scanClassSettings(triggersMap, internalKey, instance);
+		scanKeySettings(triggersMap, internalKey, instance);
+	}
+
+	private void scanWorkers(WorkerPool workerPool, Map<KeyWithWorkerData, List<TriggerRegistryRecord>> triggersMap, Key<?> key, List<?> workerInstances) {
+		List<Object> instances = new ArrayList<>(workerInstances);
+		Injector injector = workerPool.getScopeInjectors()[0];
+
+		while (key.getRawType() == OptionalDependency.class) {
+			Binding<?> binding = injector.getBinding(key);
+			if (binding == null || binding.getType() == BindingType.SYNTHETIC) {
+				return;
+			}
+
+			key = key.getTypeParameter(0).qualified(key.getQualifier());
+			for (int i = 0; i < instances.size(); i++) {
+				Object instance = instances.get(i);
+				if (instance == null) continue;
+
+				instances.set(i, ((OptionalDependency<?>) instance).orElse(null));
+			}
+		}
+
+		for (int i = 0; i < instances.size(); i++) {
+			Object instance = instances.get(i);
+			if (instance == null) continue;
+
+			KeyWithWorkerData internalKey = new KeyWithWorkerData(key, workerPool, i);
+			scanHasTriggers(triggersMap, internalKey, instance);
+			scanClassSettings(triggersMap, internalKey, instance);
+			scanKeySettings(triggersMap, internalKey, instance);
 		}
 	}
 
