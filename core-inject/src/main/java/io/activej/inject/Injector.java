@@ -458,6 +458,22 @@ public final class Injector implements ResourceLocator {
 		return getInstanceInjector(Key.of(type));
 	}
 
+	/**
+	 * A shortcut for <code>getInstance(new Key&lt;OptionalDependency&lt;T&gt;&gt;(){})</code>
+	 */
+	public <T> @NotNull OptionalDependency<T> getOptionalDependency(@NotNull Key<T> key) {
+		return getInstance(Key.ofType(parameterizedType(OptionalDependency.class, key.getType()), key.getQualifier()));
+	}
+
+	/**
+	 * A shortcut for <code>getOptionalDependency(Key.of(type))</code>
+	 *
+	 * @see #getOptionalDependency(Key)
+	 */
+	public <T> @NotNull OptionalDependency<T> getOptionalDependency(@NotNull Class<T> type) {
+		return getOptionalDependency(Key.of(type));
+	}
+
 	public void createEagerInstances() {
 		for (CompiledBinding<?> compiledBinding : scopeDataTree.get().eagerSingletons) {
 			compiledBinding.getInstance(scopeCaches, -1);
