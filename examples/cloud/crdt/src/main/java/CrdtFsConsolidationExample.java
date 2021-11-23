@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
@@ -31,14 +32,13 @@ public final class CrdtFsConsolidationExample {
 		return res;
 	}
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
 		Eventloop eventloop = Eventloop.create().withCurrentThread();
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 
 		//[START REGION_1]
 		// create our storage dir and an fs client which operates on that dir
 		Path storage = Files.createTempDirectory("storage");
-		Files.createDirectories(storage.resolve(LocalActiveFs.DEFAULT_TEMP_DIR));
 		LocalActiveFs fsClient = LocalActiveFs.create(eventloop, executor, storage);
 
 		// our item is a set of integers, so we create a CRDT function for it
@@ -55,30 +55,34 @@ public final class CrdtFsConsolidationExample {
 				CrdtStorageFs.create(eventloop, fsClient, serializer, crdtFunction);
 		//[END REGION_1]
 
-		//[START REGION_2]
-		// upload two streams of items to it in parallel
-		Promise<Void> firstUpload =
-				StreamSupplier.ofStream(Stream.of(
-						new CrdtData<>("1_test_1", TimestampContainer.now(setOf(1, 2, 3))),
-						new CrdtData<>("1_test_2", TimestampContainer.now(setOf(2, 3, 7))),
-						new CrdtData<>("1_test_3", TimestampContainer.now(setOf(78, 2, 3))),
-						new CrdtData<>("12_test_1", TimestampContainer.now(setOf(123, 124, 125))),
-						new CrdtData<>("12_test_2", TimestampContainer.now(setOf(12)))).sorted())
-						.streamTo(StreamConsumer.ofPromise(client.upload()));
+		// wait for LocalActiveFs instance to start
+		fsClient.start()
+				.then(() -> {
+					//[START REGION_2]
+					// then upload two streams of items to it in parallel
+					Promise<Void> firstUpload =
+							StreamSupplier.ofStream(Stream.of(
+											new CrdtData<>("1_test_1", TimestampContainer.now(setOf(1, 2, 3))),
+											new CrdtData<>("1_test_2", TimestampContainer.now(setOf(2, 3, 7))),
+											new CrdtData<>("1_test_3", TimestampContainer.now(setOf(78, 2, 3))),
+											new CrdtData<>("12_test_1", TimestampContainer.now(setOf(123, 124, 125))),
+											new CrdtData<>("12_test_2", TimestampContainer.now(setOf(12)))).sorted())
+									.streamTo(StreamConsumer.ofPromise(client.upload()));
 
-		Promise<Void> secondUpload =
-				StreamSupplier.ofStream(Stream.of(
-						new CrdtData<>("2_test_1", TimestampContainer.now(setOf(1, 2, 3))),
-						new CrdtData<>("2_test_2", TimestampContainer.now(setOf(2, 3, 4))),
-						new CrdtData<>("2_test_3", TimestampContainer.now(setOf(0, 1, 2))),
-						new CrdtData<>("12_test_1", TimestampContainer.now(setOf(123, 542, 125, 2))),
-						new CrdtData<>("12_test_2", TimestampContainer.now(setOf(12, 13)))).sorted())
-						.streamTo(StreamConsumer.ofPromise(client.upload()));
-		//[END REGION_2]
+					Promise<Void> secondUpload =
+							StreamSupplier.ofStream(Stream.of(
+											new CrdtData<>("2_test_1", TimestampContainer.now(setOf(1, 2, 3))),
+											new CrdtData<>("2_test_2", TimestampContainer.now(setOf(2, 3, 4))),
+											new CrdtData<>("2_test_3", TimestampContainer.now(setOf(0, 1, 2))),
+											new CrdtData<>("12_test_1", TimestampContainer.now(setOf(123, 542, 125, 2))),
+											new CrdtData<>("12_test_2", TimestampContainer.now(setOf(12, 13)))).sorted())
+									.streamTo(StreamConsumer.ofPromise(client.upload()));
+					//[END REGION_2]
 
-		//[START REGION_3]
-		// and wait for both of uploads to finish
-		Promises.all(firstUpload, secondUpload)
+					//[START REGION_3]
+					// and wait for both of uploads to finish
+					return Promises.all(firstUpload, secondUpload);
+				})
 				.whenComplete(() -> {
 
 					// all the operations are async, but we run them sequentially

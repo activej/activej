@@ -43,6 +43,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.*;
 import static io.activej.common.function.BiConsumerEx.uncheckedOf;
 import static io.activej.fs.LocalFileUtils.*;
@@ -79,6 +80,8 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	private Path tempDir;
 	private boolean fsyncUploads = DEFAULT_FSYNC_UPLOADS;
 	private boolean fsyncDirectories = DEFAULT_FSYNC_DIRECTORIES;
+
+	private boolean started;
 
 	CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
 
@@ -168,12 +171,14 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 
 	@Override
 	public OutputStream upload(@NotNull String name) throws IOException {
+		checkStarted();
 		Path tempPath = LocalFileUtils.createTempUploadFile(tempDir);
 		return new UploadOutputStream(tempPath, resolve(name), fsyncUploads, fsyncDirectories, this::doMove);
 	}
 
 	@Override
 	public OutputStream upload(@NotNull String name, long size) throws IOException {
+		checkStarted();
 		Path tempPath = LocalFileUtils.createTempUploadFile(tempDir);
 		return new UploadOutputStream(tempPath, resolve(name), fsyncUploads, fsyncDirectories, this::doMove) {
 			long totalSize;
@@ -192,6 +197,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 
 	@Override
 	public OutputStream append(@NotNull String name, long offset) throws IOException {
+		checkStarted();
 		checkArgument(offset >= 0, "Offset cannot be less than 0");
 
 		Path path = resolve(name);
@@ -225,6 +231,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 
 	@Override
 	public InputStream download(@NotNull String name, long offset, long limit) throws IOException {
+		checkStarted();
 		Path path = resolve(name);
 		if (!Files.exists(path)) {
 			throw new FileNotFoundException(name);
@@ -241,6 +248,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 
 	@Override
 	public void delete(@NotNull String name) throws IOException {
+		checkStarted();
 		Path path = resolve(name);
 		// cannot delete storage
 		if (path.equals(storage)) return;
@@ -250,28 +258,33 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 
 	@Override
 	public void copy(@NotNull String name, @NotNull String target) throws IOException {
+		checkStarted();
 		copyImpl(singletonMap(name, target));
 	}
 
 	@Override
 	public void copyAll(Map<String, String> sourceToTarget) throws IOException {
+		checkStarted();
 		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		copyImpl(sourceToTarget);
 	}
 
 	@Override
 	public void move(@NotNull String name, @NotNull String target) throws IOException {
+		checkStarted();
 		moveImpl(singletonMap(name, target));
 	}
 
 	@Override
 	public void moveAll(Map<String, String> sourceToTarget) throws IOException {
+		checkStarted();
 		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		moveImpl(sourceToTarget);
 	}
 
 	@Override
 	public Map<String, FileMetadata> list(@NotNull String glob) throws IOException {
+		checkStarted();
 		if (glob.isEmpty()) return emptyMap();
 
 		String subdir = extractSubDir(glob);
@@ -294,17 +307,20 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 
 	@Override
 	public @Nullable FileMetadata info(@NotNull String name) throws IOException {
+		checkStarted();
 		return toFileMetadata(resolve(name));
 	}
 
 	@Override
 	public void ping() {
 		// local fs is always available
+		checkStarted();
 	}
 
 	@Override
 	public void start() throws IOException {
 		LocalFileUtils.init(storage, tempDir, fsyncDirectories);
+		started = true;
 	}
 
 	@Override
@@ -422,5 +438,9 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 			afterCreation.run();
 			return null;
 		});
+	}
+
+	private void checkStarted() {
+		checkState(started, "LocalBlockingFs has not been started, call LocalBlockingFs#start first");
 	}
 }

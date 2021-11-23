@@ -37,7 +37,6 @@ import static io.activej.common.Utils.last;
 import static io.activej.common.Utils.setOf;
 import static io.activej.fs.LocalActiveFs.DEFAULT_TEMP_DIR;
 import static io.activej.fs.Utils.createEmptyDirectories;
-import static io.activej.fs.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -106,7 +105,7 @@ public final class TestLocalActiveFs {
 		}
 
 		client = LocalActiveFs.create(Eventloop.getCurrentEventloop(), newCachedThreadPool(), storagePath);
-		initTempDir(storagePath);
+		await(client.start());
 	}
 
 	@Test
@@ -346,7 +345,6 @@ public final class TestLocalActiveFs {
 		Map<String, FileMetadata> before = await(client.list("**"));
 
 		Path tempDir = storagePath.resolve(DEFAULT_TEMP_DIR);
-		Files.createDirectories(tempDir);
 		Files.write(tempDir.resolve("systemFile.txt"), "test data".getBytes());
 		Path folder = tempDir.resolve("folder");
 		Files.createDirectories(folder);

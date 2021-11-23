@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static io.activej.fs.Utils.initTempDir;
 import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 import static io.activej.promise.TestUtils.await;
@@ -72,8 +71,8 @@ public final class ClusterRepartitionControllerTest {
 		file.setLength(fileSize);
 		file.close();
 
-		initTempDir(localStorage);
 		LocalActiveFs localFsClient = LocalActiveFs.create(eventloop, executor, localStorage);
+		await(localFsClient.start());
 
 		Object localPartitionId = "local";
 		partitions.put(localPartitionId, localFsClient);
@@ -82,18 +81,21 @@ public final class ClusterRepartitionControllerTest {
 		Path regularPath = storage.resolve("regular");
 		Files.createDirectories(regularPath);
 		partitions.put("regular", RemoteActiveFs.create(eventloop, regularPartitionAddress));
-		initTempDir(regularPath);
 		LocalActiveFs localFs = LocalActiveFs.create(eventloop, executor, regularPath);
-		ActiveFsServer regularServer = ActiveFsServer.create(eventloop, localFs).withListenAddress(regularPartitionAddress);
-		regularServer.listen();
-		servers.add(regularServer);
+		await(localFs.start());
+
 
 		InetSocketAddress failingPartitionAddress = new InetSocketAddress("localhost", getFreePort());
 		Path failingPath = storage.resolve("failing");
 		Files.createDirectories(failingPath);
 		partitions.put("failing", RemoteActiveFs.create(eventloop, failingPartitionAddress));
-		initTempDir(failingPath);
 		LocalActiveFs peer = LocalActiveFs.create(eventloop, executor, failingPath);
+		await(peer.start());
+
+		ActiveFsServer regularServer = ActiveFsServer.create(eventloop, localFs).withListenAddress(regularPartitionAddress);
+		regularServer.listen();
+		servers.add(regularServer);
+
 		ActiveFsServer failingServer = ActiveFsServer.create(eventloop,
 				new ForwardingActiveFs(peer) {
 					@Override

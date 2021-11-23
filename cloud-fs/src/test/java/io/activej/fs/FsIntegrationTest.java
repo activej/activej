@@ -36,7 +36,6 @@ import java.util.stream.IntStream;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.Utils.setOf;
-import static io.activej.fs.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.getFreePort;
@@ -74,8 +73,8 @@ public final class FsIntegrationTest {
 		Executor executor = newCachedThreadPool();
 
 		storage = temporaryFolder.newFolder("server_storage").toPath();
-		initTempDir(storage);
 		LocalActiveFs localFs = LocalActiveFs.create(Eventloop.getCurrentEventloop(), executor, storage);
+		await(localFs.start());
 		server = ActiveFsServer.create(Eventloop.getCurrentEventloop(), localFs).withListenAddress(address);
 		server.listen();
 		fs = RemoteActiveFs.create(Eventloop.getCurrentEventloop(), address);

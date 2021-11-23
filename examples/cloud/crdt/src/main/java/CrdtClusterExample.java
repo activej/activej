@@ -9,7 +9,6 @@ import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.ActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -17,7 +16,9 @@ import io.activej.promise.Promises;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -37,11 +38,12 @@ public final class CrdtClusterExample {
 		// we create a list of 10 local partitions with string partition ids and string keys
 		// normally all of them would be network clients for remote partitions
 		Map<String, CrdtStorage<String, LWWSet<String>>> clients = new HashMap<>();
+		List<Promise<Void>> fsStartPromises = new ArrayList<>();
 		for (int i = 0; i < 10; i++) {
 			String id = "partition" + i;
-			Path storage = Files.createTempDirectory("storage_"+ id);
-			Files.createDirectories(storage.resolve(LocalActiveFs.DEFAULT_TEMP_DIR));
-			ActiveFs fs = LocalActiveFs.create(eventloop, executor, storage);
+			Path storage = Files.createTempDirectory("storage_" + id);
+			LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, storage);
+			fsStartPromises.add(fs.start());
 			clients.put(id, CrdtStorageFs.create(eventloop, fs, SERIALIZER));
 		}
 
@@ -95,12 +97,16 @@ public final class CrdtClusterExample {
 		//[END REGION_2]
 
 		//[START REGION_3]
-		// then upload these sets to both partition3 and partition6
-		Promise<Void> uploadTo3 = StreamSupplier.of(firstOn3, secondOn3).streamTo(StreamConsumer.ofPromise(partition3.upload()));
-		Promise<Void> uploadTo6 = StreamSupplier.of(firstOn6, secondOn6).streamTo(StreamConsumer.ofPromise(partition6.upload()));
+		// wait for LocalActiveFs instances to start
+		Promises.all(fsStartPromises)
+				.then(() -> {
+					// then upload these sets to both partition3 and partition6
+					Promise<Void> uploadTo3 = StreamSupplier.of(firstOn3, secondOn3).streamTo(StreamConsumer.ofPromise(partition3.upload()));
+					Promise<Void> uploadTo6 = StreamSupplier.of(firstOn6, secondOn6).streamTo(StreamConsumer.ofPromise(partition6.upload()));
 
-		// wait for both of uploads to finish
-		Promises.all(uploadTo3, uploadTo6)
+					// wait for both of uploads to finish
+					return Promises.all(uploadTo3, uploadTo6);
+				})
 				// and then download items from the cluster, and wait for result
 				.then(partitions::start)
 				.then(() -> cluster.download())
