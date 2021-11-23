@@ -17,7 +17,6 @@ import java.util.Arrays;
 import java.util.regex.Pattern;
 
 import static io.activej.common.Utils.mapOf;
-import static io.activej.fs.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -43,8 +42,9 @@ public final class ActiveFsAdaptersTest {
 	@Before
 	public void setup() throws IOException {
 		Path path = temporaryFolder.newFolder("test").toPath();
-		initTempDir(path);
-		local = LocalActiveFs.create(Eventloop.getCurrentEventloop(), newSingleThreadExecutor(), path);
+		LocalActiveFs localActiveFs = LocalActiveFs.create(Eventloop.getCurrentEventloop(), newSingleThreadExecutor(), path);
+		await(localActiveFs.start());
+		this.local = localActiveFs;
 	}
 
 	private void upload(ActiveFs fs, String filename) {

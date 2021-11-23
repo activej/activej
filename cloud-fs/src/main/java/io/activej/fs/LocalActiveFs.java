@@ -58,6 +58,7 @@ import java.util.stream.Collector;
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.*;
 import static io.activej.common.function.BiConsumerEx.uncheckedOf;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
@@ -106,6 +107,8 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private Path tempDir;
 	private boolean fsyncUploads = DEFAULT_FSYNC_UPLOADS;
 	private boolean fsyncDirectories = DEFAULT_FSYNC_DIRECTORIES;
+
+	private boolean started;
 
 	CurrentTimeProvider now;
 
@@ -225,18 +228,21 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
+		checkStarted();
 		return uploadImpl(name, identity())
 				.whenComplete(toLogger(logger, TRACE, "upload", name, this));
 	}
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
+		checkStarted();
 		return uploadImpl(name, ofFixedSize(size))
 				.whenComplete(toLogger(logger, TRACE, "upload", name, size, this));
 	}
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
+		checkStarted();
 		checkArgument(offset >= 0, "Offset cannot be less than 0");
 		return execute(
 				() -> {
@@ -275,6 +281,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	@Override
 	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
+		checkStarted();
 		checkArgument(offset >= 0, "offset < 0");
 		checkArgument(limit >= 0, "limit < 0");
 		return execute(
@@ -302,6 +309,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	@Override
 	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
+		checkStarted();
 		if (glob.isEmpty()) return Promise.of(emptyMap());
 
 		return execute(
@@ -330,6 +338,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	@Override
 	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
+		checkStarted();
 		return execute(() -> forEachPair(singletonMap(name, target), this::doCopy))
 				.then(translateScalarErrorsFn())
 				.whenComplete(toLogger(logger, TRACE, "copy", name, target, this))
@@ -338,6 +347,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	@Override
 	public Promise<Void> copyAll(Map<String, String> sourceToTarget) {
+		checkStarted();
 		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
@@ -348,6 +358,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	@Override
 	public Promise<Void> move(@NotNull String name, @NotNull String target) {
+		checkStarted();
 		return execute(() -> forEachPair(singletonMap(name, target), this::doMove))
 				.then(translateScalarErrorsFn())
 				.whenComplete(toLogger(logger, TRACE, "move", name, target, this))
@@ -356,6 +367,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	@Override
 	public Promise<Void> moveAll(Map<String, String> sourceToTarget) {
+		checkStarted();
 		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
@@ -366,6 +378,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	@Override
 	public Promise<Void> delete(@NotNull String name) {
+		checkStarted();
 		return execute(() -> deleteImpl(singleton(name)))
 				.then(translateScalarErrorsFn(name))
 				.whenComplete(toLogger(logger, TRACE, "delete", name, this))
@@ -374,6 +387,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	@Override
 	public Promise<Void> deleteAll(Set<String> toDelete) {
+		checkStarted();
 		if (toDelete.isEmpty()) return Promise.complete();
 
 		return execute(() -> deleteImpl(toDelete))
@@ -383,11 +397,13 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	@Override
 	public Promise<Void> ping() {
+		checkStarted();
 		return Promise.complete(); // local fs is always available
 	}
 
 	@Override
 	public Promise<@Nullable FileMetadata> info(@NotNull String name) {
+		checkStarted();
 		return execute(() -> toFileMetadata(resolve(name)))
 				.whenComplete(toLogger(logger, TRACE, "info", name, this))
 				.whenComplete(infoPromise.recordStats());
@@ -395,6 +411,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	@Override
 	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
+		checkStarted();
 		if (names.isEmpty()) return Promise.of(emptyMap());
 
 		return execute(
@@ -419,7 +436,8 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	@Override
 	public @NotNull Promise<Void> start() {
-		return execute(() -> LocalFileUtils.init(storage, tempDir, fsyncDirectories));
+		return execute(() -> LocalFileUtils.init(storage, tempDir, fsyncDirectories))
+				.whenResult(() -> started = true);
 	}
 
 	@Override
@@ -673,6 +691,10 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		} catch (ForbiddenPathException e) {
 			throw fsBatchException(file, e);
 		}
+	}
+
+	private void checkStarted() {
+		checkState(started, "LocalActiveFs has not been started, call LocalActiveFs#start first");
 	}
 
 	@FunctionalInterface

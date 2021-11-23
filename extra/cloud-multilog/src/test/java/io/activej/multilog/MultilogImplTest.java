@@ -72,11 +72,9 @@ public class MultilogImplTest {
 	@Test
 	public void testConsumer() {
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
-		Multilog<String> multilog = MultilogImpl.create(eventloop,
-				LocalActiveFs.create(eventloop, newSingleThreadExecutor(), temporaryFolder.getRoot().toPath()),
-				frameFormat,
-				BinarySerializers.UTF8_SERIALIZER,
-				NAME_PARTITION_REMAINDER_SEQ);
+		LocalActiveFs fs = LocalActiveFs.create(eventloop, newSingleThreadExecutor(), temporaryFolder.getRoot().toPath());
+		await(fs.start());
+		Multilog<String> multilog = MultilogImpl.create(eventloop, fs, frameFormat, BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ);
 		String testPartition = "testPartition";
 
 		List<String> values = asList("test1", "test2", "test3");
@@ -196,6 +194,8 @@ public class MultilogImplTest {
 
 		LocalActiveFs fs = LocalActiveFs.create(eventloop, newSingleThreadExecutor(), temporaryFolder.getRoot().toPath())
 				.withReaderBufferSize(MemSize.bytes(1));
+
+		await(fs.start());
 
 		Multilog<String> multilog = MultilogImpl.create(eventloop,
 				fs,

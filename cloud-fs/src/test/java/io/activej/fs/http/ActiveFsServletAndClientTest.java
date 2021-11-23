@@ -33,7 +33,6 @@ import java.util.Set;
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.Utils.setOf;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
-import static io.activej.fs.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -70,9 +69,10 @@ public final class ActiveFsServletAndClientTest {
 	public void setUp() throws Exception {
 		storage = tmpFolder.newFolder("storage").toPath();
 
-		initTempDir(storage);
-		AsyncServlet servlet = ActiveFsServlet.create(LocalActiveFs.create(getCurrentEventloop(), newSingleThreadExecutor(), storage));
-		fs = HttpActiveFs.create("http://localhost", StubHttpClient.of(servlet));
+		LocalActiveFs localFs = LocalActiveFs.create(getCurrentEventloop(), newSingleThreadExecutor(), storage);
+		await(localFs.start());
+		AsyncServlet servlet = ActiveFsServlet.create(localFs);
+		this.fs = HttpActiveFs.create("http://localhost", StubHttpClient.of(servlet));
 
 		initializeDirs();
 	}

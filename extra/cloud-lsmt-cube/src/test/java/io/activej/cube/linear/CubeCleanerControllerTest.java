@@ -61,8 +61,10 @@ public class CubeCleanerControllerTest {
 		eventloopThread.start();
 
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
+		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, aggregationsDir);
+		await(fs::start);
 		aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(),
-				LZ4FrameFormat.create(), LocalActiveFs.create(eventloop, executor, aggregationsDir));
+				LZ4FrameFormat.create(), fs);
 		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
 				.withDimension("adv", ofInt())

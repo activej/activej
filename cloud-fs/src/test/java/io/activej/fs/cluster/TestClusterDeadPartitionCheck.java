@@ -46,7 +46,6 @@ import static io.activej.common.Utils.first;
 import static io.activej.common.Utils.setOf;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.fs.LocalActiveFs.DEFAULT_TEMP_DIR;
-import static io.activej.fs.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.getFreePort;
@@ -168,23 +167,22 @@ public final class TestClusterDeadPartitionCheck {
 
 			Files.createDirectories(serverStorages[i]);
 
-			initTempDir(serverStorages[i]);
-
 			Eventloop serverEventloop = Eventloop.create().withEventloopFatalErrorHandler(rethrow());
 			serverEventloop.keepAlive(true);
 
 			LocalActiveFs localFs = LocalActiveFs.create(serverEventloop, executor, serverStorages[i]);
 			AbstractServer<?> server = factory.createServer(localFs, address);
-			CompletableFuture<Void> listenFuture = serverEventloop.submit(() -> {
+			CompletableFuture<Void> startFuture = serverEventloop.submit(() -> {
 				try {
 					server.listen();
+					return localFs.start();
 				} catch (IOException e) {
 					throw new AssertionError(e);
 				}
 			});
 			servers.add(server);
 			new Thread(serverEventloop).start();
-			listenFuture.get();
+			startFuture.get();
 		}
 
 		this.partitions = FsPartitions.create(eventloop, DiscoveryService.constant(partitions))

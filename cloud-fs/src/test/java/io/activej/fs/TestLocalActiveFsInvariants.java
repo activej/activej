@@ -87,11 +87,13 @@ public final class TestLocalActiveFsInvariants {
 		firstPath = tmpFolder.newFolder("first").toPath();
 		secondPath = tmpFolder.newFolder("second").toPath();
 
-		first = initializer.apply(LocalActiveFs.create(getCurrentEventloop(), newSingleThreadExecutor(), firstPath));
-		second = new DefaultActiveFs(initializer.apply(LocalActiveFs.create(getCurrentEventloop(), newSingleThreadExecutor(), secondPath)));
+		LocalActiveFs firstLocalFs = initializer.apply(LocalActiveFs.create(getCurrentEventloop(), newSingleThreadExecutor(), firstPath));
+		await(firstLocalFs.start());
+		first = firstLocalFs;
 
-		initTempDir(firstPath);
-		initTempDir(secondPath);
+		LocalActiveFs secondLocalFs = initializer.apply(LocalActiveFs.create(getCurrentEventloop(), newSingleThreadExecutor(), secondPath));
+		await(secondLocalFs.start());
+		second = new DefaultActiveFs(secondLocalFs);
 
 		initializeDirs(asList(
 				"file",

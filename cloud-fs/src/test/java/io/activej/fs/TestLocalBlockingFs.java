@@ -21,7 +21,8 @@ import java.util.stream.Stream;
 import static io.activej.common.Utils.last;
 import static io.activej.common.Utils.setOf;
 import static io.activej.fs.LocalBlockingFs.DEFAULT_TEMP_DIR;
-import static io.activej.fs.Utils.*;
+import static io.activej.fs.Utils.asString;
+import static io.activej.fs.Utils.createEmptyDirectories;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
@@ -68,7 +69,7 @@ public final class TestLocalBlockingFs {
 		Path d = storagePath.resolve("2/b/d.txt");
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < 1_000_000; i++) {
-			sb.append(i + "\n");
+			sb.append(i).append("\n");
 		}
 		Files.write(d, sb.toString().getBytes(UTF_8));
 
@@ -79,7 +80,7 @@ public final class TestLocalBlockingFs {
 		}
 
 		client = LocalBlockingFs.create(storagePath);
-		initTempDir(storagePath);
+		client.start();
 	}
 
 	@Test

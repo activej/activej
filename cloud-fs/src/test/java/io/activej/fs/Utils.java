@@ -18,7 +18,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Stream;
 
 import static io.activej.common.Utils.mapOf;
-import static io.activej.fs.LocalActiveFs.DEFAULT_TEMP_DIR;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -27,14 +26,6 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 public final class Utils {
-
-	public static void initTempDir(Path storage) {
-		try {
-			Files.createDirectories(storage.resolve(DEFAULT_TEMP_DIR));
-		} catch (IOException e) {
-			throw new AssertionError(e);
-		}
-	}
 
 	public static void assertBatchException(@NotNull Exception e, String name, Class<? extends FsScalarException> exceptionClass) {
 		assertBatchException(e, mapOf(name, exceptionClass));

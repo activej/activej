@@ -25,7 +25,6 @@ import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static io.activej.fs.Utils.initTempDir;
 import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
@@ -85,8 +84,8 @@ public final class ClusterRepartitionControllerStressTest {
 
 			partitions.put("server_" + i, RemoteActiveFs.create(eventloop, address));
 
-			initTempDir(serverStorages[i]);
 			LocalActiveFs localFs = LocalActiveFs.create(eventloop, executor, serverStorages[i]);
+			await(localFs.start());
 			ActiveFsServer server = ActiveFsServer.create(eventloop, localFs).withListenAddress(address);
 			server.listen();
 			servers.add(server);

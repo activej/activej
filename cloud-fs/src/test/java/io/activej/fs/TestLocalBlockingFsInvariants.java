@@ -61,11 +61,13 @@ public final class TestLocalBlockingFsInvariants {
 		firstPath = tmpFolder.newFolder("first").toPath();
 		secondPath = tmpFolder.newFolder("second").toPath();
 
-		first = initializer.apply(LocalBlockingFs.create(firstPath));
-		second = new DefaultBlockingFs(initializer.apply(LocalBlockingFs.create(secondPath)));
+		LocalBlockingFs firstLocalFs = LocalBlockingFs.create(firstPath);
+		firstLocalFs.start();
+		first = initializer.apply(firstLocalFs);
 
-		initTempDir(firstPath);
-		initTempDir(secondPath);
+		LocalBlockingFs secondLocalFs = initializer.apply(LocalBlockingFs.create(secondPath));
+		secondLocalFs.start();
+		second = new DefaultBlockingFs(secondLocalFs);
 
 		initializeDirs(asList(
 				"file",
