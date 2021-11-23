@@ -168,13 +168,13 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 
 	@Override
 	public OutputStream upload(@NotNull String name) throws IOException {
-		Path tempPath = Files.createTempFile(tempDir, "", "");
+		Path tempPath = LocalFileUtils.createTempUploadFile(tempDir);
 		return new UploadOutputStream(tempPath, resolve(name), fsyncUploads, fsyncDirectories, this::doMove);
 	}
 
 	@Override
 	public OutputStream upload(@NotNull String name, long size) throws IOException {
-		Path tempPath = Files.createTempFile(tempDir, "upload", "");
+		Path tempPath = LocalFileUtils.createTempUploadFile(tempDir);
 		return new UploadOutputStream(tempPath, resolve(name), fsyncUploads, fsyncDirectories, this::doMove) {
 			long totalSize;
 

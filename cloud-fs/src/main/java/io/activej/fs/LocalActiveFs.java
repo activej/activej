@@ -443,7 +443,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private Promise<ChannelConsumer<ByteBuf>> uploadImpl(String name, ChannelConsumerTransformer<ByteBuf, ChannelConsumer<ByteBuf>> transformer) {
 		return execute(
 				() -> {
-					Path tempPath = Files.createTempFile(tempDir, "upload", "");
+					Path tempPath = LocalFileUtils.createTempUploadFile(tempDir);
 					return new Tuple2<>(tempPath, FileChannel.open(tempPath, CREATE, WRITE));
 				})
 				.map(pathAndChannel -> {
@@ -600,6 +600,8 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 				throw new FileNotFoundException();
 			} else if (e instanceof GlobException) {
 				throw new MalformedGlobException(e.getMessage());
+			} else if (e instanceof ActiveFsStructureException){
+				throw new FsIOException(e.getMessage());
 			}
 			return execute(() -> {
 				if (name != null) {
@@ -629,6 +631,8 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 			throw fsBatchException(first, new PathContainsFileException());
 		} catch (NoSuchFileException e) {
 			throw fsBatchException(first, new FileNotFoundException());
+		} catch (ActiveFsStructureException e) {
+			throw new FsIOException(e.getMessage());
 		} catch (IOException e) {
 			checkIfExists(first);
 			checkIfDirectories(first, second);

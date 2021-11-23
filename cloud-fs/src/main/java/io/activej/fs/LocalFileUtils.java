@@ -17,6 +17,7 @@
 package io.activej.fs;
 
 import io.activej.common.time.CurrentTimeProvider;
+import io.activej.fs.exception.ActiveFsStructureException;
 import io.activej.fs.exception.ForbiddenPathException;
 import io.activej.fs.exception.GlobException;
 import org.jetbrains.annotations.Nullable;
@@ -126,6 +127,11 @@ public final class LocalFileUtils {
 			Path tempFile = tempDir.resolve("copy" + ThreadLocalRandom.current().nextLong());
 			try {
 				Files.copy(from, tempFile);
+			} catch (NoSuchFileException e) {
+				if (Files.exists(tempDir)) {
+					throw e;
+				}
+				throw new ActiveFsStructureException("Temporary directory " + tempDir + " not found");
 			} catch (FileAlreadyExistsException ignored) {
 				continue;
 			}
@@ -309,6 +315,17 @@ public final class LocalFileUtils {
 		try (FileChannel channel = FileChannel.open(path)) {
 			channel.force(true);
 		} catch (IOException ignored) {
+		}
+	}
+
+	static Path createTempUploadFile(Path tempDir) throws IOException {
+		try {
+			return Files.createTempFile(tempDir, "upload", "");
+		} catch (NoSuchFileException e) {
+			if (Files.exists(tempDir)) {
+				throw e;
+			}
+			throw new ActiveFsStructureException("Temporary directory " + tempDir + " not found");
 		}
 	}
 

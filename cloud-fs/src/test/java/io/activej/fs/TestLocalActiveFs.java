@@ -11,10 +11,7 @@ import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.exception.FileNotFoundException;
-import io.activej.fs.exception.IllegalOffsetException;
-import io.activej.fs.exception.IsADirectoryException;
-import io.activej.fs.exception.MalformedGlobException;
+import io.activej.fs.exception.*;
 import io.activej.promise.Promises;
 import io.activej.test.ExpectedException;
 import io.activej.test.rules.ByteBufRule;
@@ -510,4 +507,28 @@ public final class TestLocalActiveFs {
 		}
 	}
 
+	@Test
+	public void testCopyWithDeletedTempDir() throws IOException {
+		await(ChannelSupplier.of(wrapUtf8("Test content")).streamTo(client.upload("test.txt")));
+
+		Path tempDir = storagePath.resolve(DEFAULT_TEMP_DIR);
+		Files.delete(tempDir);
+
+		Exception e = awaitException(client.copy("test.txt", "test.txt.copy"));
+
+		assertThat(e, instanceOf(FsIOException.class));
+		assertEquals(e.getMessage(), "Temporary directory " + tempDir + " not found");
+	}
+
+	@Test
+	public void testUploadWithDeletedTempDir() throws IOException {
+		Path tempDir = storagePath.resolve(DEFAULT_TEMP_DIR);
+		Files.delete(tempDir);
+
+		Exception e = awaitException(ChannelSupplier.of(wrapUtf8("Test content"))
+				.streamTo(client.upload("test.txt")));
+
+		assertThat(e, instanceOf(FsIOException.class));
+		assertEquals(e.getMessage(), "Temporary directory " + tempDir + " not found");
+	}
 }
