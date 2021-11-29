@@ -20,6 +20,7 @@
     <module>tutorials/auth</module>
     <module>tutorials/react-integration</module>
     <module>tutorials/react-integration-2</module>
+    <module>tutorials/svelte-integration</module>
     <module>tutorials/uikernel-integration</module>
     <module>tutorials/rpc-kv-storage</module>
     <module>tutorials/native-image</module>
