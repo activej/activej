@@ -20,8 +20,8 @@ import io.activej.async.callback.Callback;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import org.jetbrains.annotations.NotNull;
 
+import java.net.InetSocketAddress;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static io.activej.common.Checks.checkArgument;
 
@@ -43,10 +43,12 @@ public class RpcStrategyRandomSampling implements RpcStrategy {
 	}
 
 	@Override
-	public DiscoveryService getDiscoveryService() {
-		return DiscoveryService.combined(strategyToWeight.keySet().stream()
-				.map(RpcStrategy::getDiscoveryService)
-				.collect(Collectors.toList()));
+	public Set<InetSocketAddress> getAddresses() {
+		HashSet<InetSocketAddress> result = new HashSet<>();
+		for (RpcStrategy strategy : strategyToWeight.keySet()) {
+			result.addAll(strategy.getAddresses());
+		}
+		return result;
 	}
 
 	@Override

@@ -11,6 +11,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -179,7 +180,7 @@ public class RpcStrategyFirstValidResultTest {
 
 	static final class RequestSenderOnResultWithNullStrategy implements RpcStrategy {
 		@Override
-		public DiscoveryService getDiscoveryService() {
+		public Set<InetSocketAddress> getAddresses() {
 			throw new UnsupportedOperationException();
 		}
 
@@ -197,7 +198,7 @@ public class RpcStrategyFirstValidResultTest {
 		}
 
 		@Override
-		public DiscoveryService getDiscoveryService() {
+		public Set<InetSocketAddress> getAddresses() {
 			throw new UnsupportedOperationException();
 		}
 

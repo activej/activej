@@ -21,7 +21,9 @@ import io.activej.rpc.client.RpcClientConnectionPool;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.Set;
 
 public final class RpcStrategyRoundRobin implements RpcStrategy {
 	private final RpcStrategyList list;
@@ -41,8 +43,8 @@ public final class RpcStrategyRoundRobin implements RpcStrategy {
 	}
 
 	@Override
-	public DiscoveryService getDiscoveryService() {
-		return list.getDiscoveryService();
+	public Set<InetSocketAddress> getAddresses() {
+		return list.getAddresses();
 	}
 
 	@Override

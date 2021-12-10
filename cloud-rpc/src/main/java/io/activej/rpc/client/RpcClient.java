@@ -41,7 +41,6 @@ import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
 import io.activej.rpc.client.jmx.RpcConnectStats;
 import io.activej.rpc.client.jmx.RpcRequestStats;
-import io.activej.rpc.client.sender.DiscoveryService;
 import io.activej.rpc.client.sender.RpcSender;
 import io.activej.rpc.client.sender.RpcStrategies;
 import io.activej.rpc.client.sender.RpcStrategy;
@@ -65,7 +64,6 @@ import java.util.concurrent.Executor;
 import static io.activej.async.callback.Callback.toAnotherEventloop;
 import static io.activej.common.Utils.nonNullElseGet;
 import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
-import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -109,7 +107,6 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	private RpcStrategy strategy = new NoServersStrategy();
 	private List<InetSocketAddress> addresses = new ArrayList<>();
 	private final Map<InetSocketAddress, RpcClientConnection> connections = new HashMap<>();
-	private Map<Object, InetSocketAddress> previouslyDiscovered;
 
 	private MemSize defaultPacketSize = DEFAULT_PACKET_SIZE;
 	private @Nullable FrameFormat frameFormat;
@@ -212,6 +209,15 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	 */
 	public RpcClient withStrategy(RpcStrategy requestSendingStrategy) {
 		this.strategy = requestSendingStrategy;
+		this.addresses = new ArrayList<>(strategy.getAddresses());
+
+		// jmx
+		for (InetSocketAddress address : this.addresses) {
+			if (!connectsStatsPerAddress.containsKey(address)) {
+				connectsStatsPerAddress.put(address, new RpcConnectStats(eventloop));
+			}
+		}
+
 		return this;
 	}
 
@@ -293,32 +299,16 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 
 		serializer = serializerBuilder.withSubclasses(RpcMessage.MESSAGE_TYPES, messageTypes).build(RpcMessage.class);
 
-		return Promise.<Map<Object, InetSocketAddress>>ofCallback(cb -> strategy.getDiscoveryService().discover(null, cb))
-				.map(result -> {
-					this.previouslyDiscovered = result;
-					Collection<InetSocketAddress> addresses = result.values();
-
-					this.addresses = new ArrayList<>(addresses);
-
-					for (InetSocketAddress address : addresses) {
-						if (!connectsStatsPerAddress.containsKey(address)) {
-							connectsStatsPerAddress.put(address, new RpcConnectStats(eventloop));
-						}
-					}
-
-					return addresses;
-				})
-				.then(addresses -> Promises.all(
-						addresses.stream()
-								.map(address -> {
-									logger.info("Connecting: {}", address);
-									return connect(address)
+		return Promises.all(
+				addresses.stream()
+						.map(address -> {
+							logger.info("Connecting: {}", address);
+							return connect(address)
 											.map(($, e) -> null);
-								}))
-						.then(() -> !forcedStart && requestSender instanceof NoSenderAvailable ?
-								Promise.ofException(START_EXCEPTION) :
-								Promise.complete()))
-				.whenResult(this::rediscover);
+						}))
+				.then(() -> !forcedStart && requestSender instanceof NoSenderAvailable ?
+						Promise.ofException(START_EXCEPTION) :
+						Promise.complete());
 	}
 
 	@Override
@@ -340,7 +330,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	private Promise<Void> connect(InetSocketAddress address) {
 		return AsyncTcpSocketNio.connect(address, connectTimeoutMillis, socketSettings)
 				.whenResult(asyncTcpSocketImpl -> {
-					if (stopPromise != null || !addresses.contains(address)) {
+					if (stopPromise != null) {
 						asyncTcpSocketImpl.close();
 						return;
 					}
@@ -383,10 +373,10 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	}
 
 	private void processClosedConnection(InetSocketAddress address) {
+		//jmx
+		connectsStatsPerAddress.get(address).recordFailedConnect();
+
 		if (stopPromise == null) {
-			if (!addresses.contains(address)) return;
-			//jmx
-			connectsStatsPerAddress.get(address).recordFailedConnect();
 			eventloop.delayBackground(reconnectIntervalMillis, () -> {
 				if (stopPromise == null) {
 					logger.info("Reconnecting: {}", address);
@@ -429,46 +419,6 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 		requestSender.sendRequest(request, cb);
 	}
 
-	private void rediscover() {
-		if (stopPromise != null) return;
-
-		strategy.getDiscoveryService().discover(previouslyDiscovered, (result, e) -> {
-			if (stopPromise != null) return;
-
-			if (e == null) {
-				updateAddresses(result);
-				rediscover();
-			} else {
-				logger.warn("Could not discover addresses", e);
-				eventloop.delayBackground(Duration.ofSeconds(1), this::rediscover);
-			}
-		});
-	}
-
-	private void updateAddresses(Map<Object, InetSocketAddress> newAddresses) {
-		this.previouslyDiscovered = newAddresses;
-		List<InetSocketAddress> previousAddresses = this.addresses;
-		this.addresses = new ArrayList<>(newAddresses.values());
-
-		boolean changed = false;
-		for (InetSocketAddress address : previousAddresses) {
-			if (!this.addresses.contains(address)) {
-				connections.remove(address).shutdown();
-				connectsStatsPerAddress.remove(address);
-				changed = true;
-			}
-		}
-		if (changed) {
-			requestSender = nonNullElseGet(strategy.createSender(pool), NoSenderAvailable::new);
-		}
-		for (InetSocketAddress address : this.addresses) {
-			if (!previousAddresses.contains(address)) {
-				connectsStatsPerAddress.put(address, new RpcConnectStats(eventloop));
-				connect(address);
-			}
-		}
-	}
-
 	public IRpcClient adaptToAnotherEventloop(Eventloop anotherEventloop) {
 		if (anotherEventloop == this.eventloop) {
 			return this;
@@ -507,8 +457,8 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 
 	private static final class NoServersStrategy implements RpcStrategy {
 		@Override
-		public DiscoveryService getDiscoveryService() {
-			return DiscoveryService.constant(emptyMap());
+		public Set<InetSocketAddress> getAddresses() {
+			return Collections.emptySet();
 		}
 
 		@Override

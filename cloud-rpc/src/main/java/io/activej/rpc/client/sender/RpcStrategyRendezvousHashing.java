@@ -27,7 +27,6 @@ import org.jetbrains.annotations.VisibleForTesting;
 
 import java.net.InetSocketAddress;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.first;
@@ -89,10 +88,12 @@ public final class RpcStrategyRendezvousHashing implements RpcStrategy {
 	}
 
 	@Override
-	public DiscoveryService getDiscoveryService() {
-		return DiscoveryService.combined(shards.values().stream()
-				.map(RpcStrategy::getDiscoveryService)
-				.collect(Collectors.toList()));
+	public Set<InetSocketAddress> getAddresses() {
+		HashSet<InetSocketAddress> result = new HashSet<>();
+		for (RpcStrategy strategy : shards.values()) {
+			result.addAll(strategy.getAddresses());
+		}
+		return result;
 	}
 
 	@Override
@@ -151,16 +152,7 @@ public final class RpcStrategyRendezvousHashing implements RpcStrategy {
 
 	}
 
-	public Map<Object, RpcStrategy> getShards() {
-		return Collections.unmodifiableMap(shards);
-	}
-
-	void setShards(Map<Object, RpcStrategy> shards) {
-		this.shards.clear();
-		this.shards.putAll(shards);
-	}
-
-	@VisibleForTesting
+	// visible for testing
 	static final class DefaultHashBucketFunction implements HashBucketFunction {
 		@Override
 		public int hash(Object shardId, int bucket) {
