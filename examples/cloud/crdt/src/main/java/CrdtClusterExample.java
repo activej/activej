@@ -1,9 +1,10 @@
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.primitives.LWWSet;
 import io.activej.crdt.storage.CrdtStorage;
-import io.activej.crdt.storage.cluster.CrdtPartitions;
 import io.activej.crdt.storage.cluster.CrdtStorageCluster;
 import io.activej.crdt.storage.cluster.DiscoveryService;
+import io.activej.crdt.storage.cluster.RendezvousPartitionings;
+import io.activej.crdt.storage.cluster.RendezvousPartitionings.Partitioning;
 import io.activej.crdt.storage.local.CrdtStorageFs;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.datastream.StreamConsumer;
@@ -53,10 +54,11 @@ public final class CrdtClusterExample {
 		// create a cluster with string keys, string partition ids,
 		// and with replication count of 5 meaning that uploading items to the
 		// cluster will make 5 copies of them across known partitions
-		DiscoveryService<String, LWWSet<String>, String> discoveryService = DiscoveryService.constant(clients);
-		CrdtPartitions<String, LWWSet<String>, String> partitions = CrdtPartitions.create(eventloop, discoveryService);
-		CrdtStorageCluster<String, LWWSet<String>, String> cluster = CrdtStorageCluster.create(partitions)
-				.withReplicationCount(5);
+		CrdtStorageCluster<String, LWWSet<String>, String> cluster = CrdtStorageCluster.create(
+				eventloop,
+				DiscoveryService.of(RendezvousPartitionings.create(clients)
+						.withPartitioning(Partitioning.create(clients.keySet())
+								.withReplicas(5))));
 
 		//[END REGION_1]
 		// Here we will prepopulate two partitions with some sets of items
@@ -107,7 +109,7 @@ public final class CrdtClusterExample {
 					return Promises.all(uploadTo3, uploadTo6);
 				})
 				// and then download items from the cluster, and wait for result
-				.then(partitions::start)
+				.then(cluster::start)
 				.then(() -> cluster.download())
 				// also collecting it to list
 				.then(StreamSupplier::toList)

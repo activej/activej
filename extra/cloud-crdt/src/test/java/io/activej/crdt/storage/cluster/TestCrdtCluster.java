@@ -5,6 +5,7 @@ import io.activej.crdt.CrdtServer;
 import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.cluster.RendezvousPartitionings.Partitioning;
 import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.crdt.util.TimestampContainer;
@@ -55,10 +56,11 @@ public final class TestCrdtCluster {
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
 			CrdtStorageMap<String, TimestampContainer<Integer>> storage = CrdtStorageMap.create(eventloop, TimestampContainer.createCrdtFunction(Integer::max));
 			InetSocketAddress address = new InetSocketAddress(getFreePort());
-			CrdtServer<String, TimestampContainer<Integer>> server = CrdtServer.create(eventloop, storage, serializer);
-			server.withListenAddresses(address).listen();
+			CrdtServer<String, TimestampContainer<Integer>> server = CrdtServer.create(eventloop, storage, serializer)
+					.withListenAddresses(address);
+			server.listen();
 			servers.add(server);
-			clients.put("server_" + i, CrdtStorageClient.create(eventloop, address, serializer).withConnectTimeout(Duration.ofSeconds(1)));
+			clients.put("server_" + i, CrdtStorageClient.create(eventloop, address, serializer));
 			remoteStorages.put("server_" + i, storage);
 		}
 		clients.put("dead_one", CrdtStorageClient.create(eventloop, new InetSocketAddress(5555), serializer).withConnectTimeout(Duration.ofSeconds(1)));
@@ -73,12 +75,18 @@ public final class TestCrdtCluster {
 		for (CrdtData<String, TimestampContainer<Integer>> datum : data) {
 			localStorage.put(datum);
 		}
-		DiscoveryService<String, TimestampContainer<Integer>, String> discoveryService = DiscoveryService.constant(clients);
-		CrdtPartitions<String, TimestampContainer<Integer>, String> partitions = CrdtPartitions.create(eventloop, discoveryService);
-		CrdtStorageCluster<String, TimestampContainer<Integer>, String> cluster = CrdtStorageCluster.create(partitions, TimestampContainer.createCrdtFunction(Integer::max))
-				.withReplicationCount(REPLICATION_COUNT);
+		CrdtStorageCluster<String, TimestampContainer<Integer>, String> cluster = CrdtStorageCluster.create(
+				eventloop,
+				DiscoveryService.of(
+						RendezvousPartitionings.create(clients)
+								.withPartitioning(
+										Partitioning.create(clients.keySet())
+												.withReplicas(REPLICATION_COUNT)
+												.withRepartition(true))
+				),
+				TimestampContainer.createCrdtFunction(Integer::max));
 
-		await(partitions.start()
+		await(cluster.start()
 				.then(() -> StreamSupplier.ofIterator(localStorage.iterator())
 						.streamTo(StreamConsumer.ofPromise(cluster.upload())))
 				.whenComplete(() -> servers.forEach(AbstractServer::close)));
@@ -130,12 +138,13 @@ public final class TestCrdtCluster {
 		clients.put("dead_three", CrdtStorageClient.create(eventloop, new InetSocketAddress(5557), serializer).withConnectTimeout(Duration.ofSeconds(1)));
 
 		CrdtStorageMap<String, TimestampContainer<Set<Integer>>> localStorage = CrdtStorageMap.create(eventloop, union);
-		DiscoveryService<String, TimestampContainer<Set<Integer>>, String> discoveryService = DiscoveryService.constant(clients);
-		CrdtPartitions<String, TimestampContainer<Set<Integer>>, String> partitions = CrdtPartitions.create(eventloop, discoveryService);
-		CrdtStorageCluster<String, TimestampContainer<Set<Integer>>, String> cluster = CrdtStorageCluster.create(partitions, union)
-				.withReplicationCount(REPLICATION_COUNT);
+		CrdtStorageCluster<String, TimestampContainer<Set<Integer>>, String> cluster = CrdtStorageCluster.create(eventloop,
+				DiscoveryService.of(
+						RendezvousPartitionings.create(clients)
+								.withPartitioning(Partitioning.create(clients.keySet()).withReplicas(REPLICATION_COUNT))),
+				union);
 
-		await(partitions.start()
+		await(cluster.start()
 				.then(() -> cluster.download())
 				.then(supplier -> supplier
 						.streamTo(StreamConsumer.ofConsumer(localStorage::put)))

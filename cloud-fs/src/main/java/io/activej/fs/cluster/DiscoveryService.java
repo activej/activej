@@ -16,9 +16,10 @@
 
 package io.activej.fs.cluster;
 
-import io.activej.async.callback.Callback;
+import io.activej.async.function.AsyncSupplier;
 import io.activej.fs.ActiveFs;
-import org.jetbrains.annotations.Nullable;
+import io.activej.promise.Promise;
+import io.activej.promise.SettablePromise;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -36,14 +37,8 @@ public interface DiscoveryService {
 	 * and is not the same as previous partitions, a callback will be completed
 	 * with new partitions as a result. A callback will also be completed if an error occurs.
 	 * <p>
-	 * If there are multiple {@code discover(...)} calls, the callbacks should be completed
-	 * in the order in which they were passed to the method
-	 *
-	 * @param previous previous partitions
-	 * @param cb       callback to be completed when a set of actual partitions in a cluster changes
-	 *                 or an error occurs
 	 */
-	void discover(@Nullable Map<Object, ActiveFs> previous, Callback<Map<Object, ActiveFs>> cb);
+	AsyncSupplier<Map<Object, ActiveFs>> supplier();
 
 	/**
 	 * A {@code DiscoveryService} that consists of given partitions that never change
@@ -53,9 +48,17 @@ public interface DiscoveryService {
 	 */
 	static DiscoveryService constant(Map<Object, ActiveFs> partitions) {
 		Map<Object, ActiveFs> constant = Collections.unmodifiableMap(new HashMap<>(partitions));
-		return (previous, cb) -> {
-			if (!constant.equals(previous)) {
-				cb.accept(constant, null);
+		return new DiscoveryService() {
+			@Override
+			public AsyncSupplier<Map<Object, ActiveFs>> supplier() {
+				return new AsyncSupplier<Map<Object, ActiveFs>>() {
+					int i = 0;
+
+					@Override
+					public Promise<Map<Object, ActiveFs>> get() {
+						return i++ == 0 ? Promise.of(constant) : new SettablePromise<>();
+					}
+				};
 			}
 		};
 	}

@@ -21,10 +21,10 @@ import io.activej.config.converter.ConfigConverters;
 import io.activej.crdt.CrdtServer;
 import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.storage.CrdtStorage;
-import io.activej.crdt.storage.cluster.CrdtPartitions;
 import io.activej.crdt.storage.cluster.CrdtRepartitionController;
 import io.activej.crdt.storage.cluster.CrdtStorageCluster;
 import io.activej.crdt.storage.cluster.DiscoveryService;
+import io.activej.crdt.storage.cluster.RendezvousPartitionings;
 import io.activej.crdt.storage.local.CrdtStorageFs;
 import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.eventloop.Eventloop;
@@ -101,20 +101,17 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 			partitions.put(entry.getKey(), CrdtStorageClient.create(eventloop, address, descriptor.getSerializer()));
 		}
 
-		return DiscoveryService.constant(partitions);
+		return DiscoveryService.of(
+				RendezvousPartitionings.create(partitions)
+						.withPartitioning(RendezvousPartitionings.Partitioning.create(partitions.keySet())
+								.withReplicas(config.get(ofInteger(), "crdt.cluster.replicationCount", 1))));
 	}
 
 	@Provides
-	CrdtPartitions<K, S, String> partitions(Eventloop eventloop, DiscoveryService<K, S, String> discoveryService) {
-		return CrdtPartitions.create(eventloop, discoveryService);
-	}
-
-	@Provides
-	CrdtStorageCluster<K, S, String> clusterCrdtClient(CrdtPartitions<K, S, String> partitions, CrdtDescriptor<K, S> descriptor, Config config) {
-		return CrdtStorageCluster.create(
-						partitions,
-						descriptor.getCrdtFunction())
-				.withReplicationCount(config.get(ofInteger(), "crdt.cluster.replicationCount", 1));
+	CrdtStorageCluster<K, S, String> clusterCrdtClient(Eventloop eventloop, DiscoveryService<K, S, String> discoveryService, CrdtDescriptor<K, S> descriptor, Config config) {
+		return CrdtStorageCluster.create(eventloop,
+						discoveryService,
+						descriptor.getCrdtFunction());
 	}
 
 	@Provides

@@ -27,10 +27,6 @@ public final class HashUtils {
 		return k;
 	}
 
-	public static int murmur3hash(int firstHash, int secondHash) {
-		return (int) murmur3hash(((long) firstHash << 32) | (secondHash & 0xFFFFFFFFL));
-	}
-
 	public static int murmur3hash(int k) {
 		return (int) murmur3hash((long) k);
 	}

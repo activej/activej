@@ -23,7 +23,6 @@ import io.activej.rpc.hash.HashBucketFunction;
 import io.activej.rpc.hash.HashFunction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.VisibleForTesting;
 
 import java.net.InetSocketAddress;
 import java.util.*;
@@ -34,7 +33,8 @@ import static io.activej.common.Utils.first;
 public final class RpcStrategyRendezvousHashing implements RpcStrategy {
 	private static final int MIN_SUB_STRATEGIES_FOR_CREATION_DEFAULT = 1;
 	private static final int DEFAULT_BUCKET_CAPACITY = 2048;
-	private static final HashBucketFunction DEFAULT_BUCKET_HASH_FUNCTION = new DefaultHashBucketFunction();
+	private static final HashBucketFunction DEFAULT_BUCKET_HASH_FUNCTION = (shardId, bucket) ->
+			(int) HashUtils.murmur3hash(((long) shardId.hashCode() << 32) | (bucket & 0xFFFFFFFFL));
 
 	private final Map<Object, RpcStrategy> shards;
 	private final HashFunction<?> hashFunction;
@@ -117,11 +117,11 @@ public final class RpcStrategyRendezvousHashing implements RpcStrategy {
 		RpcSender[] sendersBuckets = new RpcSender[buckets];
 		for (int n = 0; n < sendersBuckets.length; n++) {
 			RpcSender chosenSender = null;
-			int max = Integer.MIN_VALUE;
+			long max = Long.MIN_VALUE;
 			for (Map.Entry<Object, RpcSender> entry : shardsSenders.entrySet()) {
 				Object key = entry.getKey();
 				RpcSender sender = entry.getValue();
-				int hash = hashBucketFunction.hash(key, n);
+				long hash = hashBucketFunction.hash(key, n);
 				if (hash >= max) {
 					chosenSender = sender;
 					max = hash;
@@ -149,14 +149,6 @@ public final class RpcStrategyRendezvousHashing implements RpcStrategy {
 			RpcSender sender = hashBuckets[hash & (hashBuckets.length - 1)];
 			sender.sendRequest(request, timeout, cb);
 		}
-
 	}
 
-	// visible for testing
-	static final class DefaultHashBucketFunction implements HashBucketFunction {
-		@Override
-		public int hash(Object shardId, int bucket) {
-			return HashUtils.murmur3hash(shardId.hashCode(), bucket);
-		}
-	}
 }

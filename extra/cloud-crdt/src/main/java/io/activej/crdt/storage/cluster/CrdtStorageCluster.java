@@ -17,23 +17,20 @@
 package io.activej.crdt.storage.cluster;
 
 import io.activej.async.function.AsyncFunction;
+import io.activej.async.function.AsyncSupplier;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.async.service.EventloopService;
 import io.activej.common.collection.Try;
 import io.activej.common.initializer.WithInitializer;
-import io.activej.common.ref.RefInt;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtException;
-import io.activej.crdt.function.CrdtFilter;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.CrdtType;
 import io.activej.crdt.storage.CrdtStorage;
-import io.activej.crdt.util.RendezvousHashSharder;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamReducer;
 import io.activej.datastream.processor.StreamReducers.BinaryAccumulatorReducer;
-import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.datastream.processor.StreamSplitter;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStatsBasic;
@@ -42,35 +39,27 @@ import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
+import io.activej.jmx.stats.EventStats;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.promise.SettablePromise;
+import io.activej.promise.jmx.PromiseStats;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-
-import static io.activej.common.Checks.checkArgument;
-import static java.util.stream.Collectors.toList;
 
 @SuppressWarnings("rawtypes") // JMX
-public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comparable<P>> implements CrdtStorage<K, S>, WithInitializer<CrdtStorageCluster<K, S, P>>, EventloopService, EventloopJmxBeanWithStats {
-	private final CrdtPartitions<K, S, P> partitions;
+public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements CrdtStorage<K, S>, WithInitializer<CrdtStorageCluster<K, S, P>>, EventloopService, EventloopJmxBeanWithStats {
+	private final Eventloop eventloop;
+	private final DiscoveryService<K, S, P> discoveryService;
+	private final CrdtFunction<S> crdtFunction;
 
-	private final CrdtFunction<S> function;
-
-	/**
-	 * Maximum allowed number of dead partitions, if there are more dead partitions than this number,
-	 * the cluster is considered malformed.
-	 */
-	private int deadPartitionsThreshold = 0;
-
-	/**
-	 * Number of uploads that are initiated.
-	 */
-	private int replicationCount = 1;
-
-	private CrdtFilter<S> filter;
+	private DiscoveryService.Partitionings<K, S, P> currentPartitionings;
+	private boolean stopped;
 
 	// region JMX
 	private boolean detailedStats;
@@ -81,26 +70,33 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 	private final StreamStatsDetailed<CrdtData<K, S>> downloadStatsDetailed = StreamStats.detailed();
 	private final StreamStatsBasic<K> removeStats = StreamStats.basic();
 	private final StreamStatsDetailed<K> removeStatsDetailed = StreamStats.detailed();
+
+	private final EventStats repartitionCount = EventStats.create(Duration.ofMinutes(5));
+	private final PromiseStats repartitionPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final StreamStatsBasic<CrdtData<K, S>> repartitionStats = StreamStats.basic();
+	private final StreamStatsDetailed<CrdtData<K, S>> repartitionStatsDetailed = StreamStats.detailed();
+
 	// endregion
 
 	// region creators
-	private CrdtStorageCluster(CrdtPartitions<K, S, P> partitions, CrdtFunction<S> function) {
-		this.partitions = partitions;
-		this.function = function;
+	private CrdtStorageCluster(Eventloop eventloop, DiscoveryService<K, S, P> discoveryService, CrdtFunction<S> crdtFunction) {
+		this.eventloop = eventloop;
+		this.discoveryService = discoveryService;
+		this.crdtFunction = crdtFunction;
 	}
 
-	public static <K extends Comparable<K>, S, P extends Comparable<P>> CrdtStorageCluster<K, S, P> create(
-			CrdtPartitions<K, S, P> partitions, CrdtFunction<S> crdtFunction
+	public static <K extends Comparable<K>, S, P> CrdtStorageCluster<K, S, P> create(Eventloop eventloop,
+			DiscoveryService<K, S, P> discoveryService, CrdtFunction<S> crdtFunction) {
+		return new CrdtStorageCluster<>(eventloop, discoveryService, crdtFunction);
+	}
+
+	public static <K extends Comparable<K>, S extends CrdtType<S>, P> CrdtStorageCluster<K, S, P> create(Eventloop eventloop,
+			DiscoveryService<K, S, P> discoveryService
 	) {
-		return new CrdtStorageCluster<>(partitions, crdtFunction);
+		return create(eventloop, discoveryService, CrdtFunction.ofCrdtType());
 	}
 
-	public static <K extends Comparable<K>, S extends CrdtType<S>, P extends Comparable<P>> CrdtStorageCluster<K, S, P> create(
-			CrdtPartitions<K, S, P> partitions
-	) {
-		return new CrdtStorageCluster<>(partitions, CrdtFunction.ofCrdtType());
-	}
-
+/*
 	public CrdtStorageCluster<K, S, P> withReplicationCount(int replicationCount) {
 		checkArgument(1 <= replicationCount, "Replication count cannot be less than one");
 		this.deadPartitionsThreshold = replicationCount - 1;
@@ -108,238 +104,224 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 		this.partitions.setTopShards(replicationCount);
 		return this;
 	}
+*/
 
-	public CrdtStorageCluster<K, S, P> withFilter(CrdtFilter<S> filter) {
-		this.filter = filter;
-		return this;
-	}
-
-	/**
-	 * Sets the replication count as well as number of upload targets that determines the number of servers where CRDT data will be uploaded.
-	 */
-	@SuppressWarnings("UnusedReturnValue")
-	public CrdtStorageCluster<K, S, P> withPersistenceOptions(int deadPartitionsThreshold, int uploadTargets) {
-		checkArgument(0 <= deadPartitionsThreshold && deadPartitionsThreshold < partitions.getPartitions().size(),
-				"Dead partitions threshold cannot be less than zero or greater than number of partitions");
-		checkArgument(0 <= uploadTargets,
-				"Number of upload targets should not be less than zero");
-		checkArgument(uploadTargets <= partitions.getPartitions().size(),
-				"Number of upload targets should not exceed total number of partitions");
-		this.deadPartitionsThreshold = deadPartitionsThreshold;
-		this.replicationCount = uploadTargets;
-		this.partitions.setTopShards(uploadTargets);
-		return this;
-	}
 	// endregion
 
 	@Override
 	public @NotNull Eventloop getEventloop() {
-		return partitions.getEventloop();
+		return eventloop;
 	}
 
-	public CrdtPartitions<K, S, P> getPartitions() {
-		return partitions;
+	@Override
+	public @NotNull Promise<?> start() {
+		AsyncSupplier<DiscoveryService.Partitionings<K, S, P>> discoverySupplier = discoveryService.discover();
+		return discoverySupplier.get()
+				.then(result -> {
+					currentPartitionings = result;
+					return ping();
+				})
+				.whenResult(() -> Promises.repeat(() ->
+						discoverySupplier.get()
+								.whenResult(result -> currentPartitionings = result)
+								.map((result, e) -> {
+									if (stopped) return false;
+									if (e == null) {
+										currentPartitionings = result;
+									}
+									return true;
+								})
+				));
 	}
 
-	private <T extends AsyncCloseable> Promise<List<Container<T>>> connect(AsyncFunction<CrdtStorage<K, S>, T> method) {
-		return Promises.toList(
-						partitions.getAlivePartitions().entrySet().stream()
-								.map(entry ->
-										method.apply(entry.getValue())
-												.map(t -> new Container<>(entry.getKey(), t))
-												.whenException(err -> partitions.markDead(entry.getKey(), err))
-												.toTry()))
-				.map(this::checkStillNotDead)
-				.map(tries -> {
-					List<Container<T>> successes = tries.stream()
-							.filter(Try::isSuccess)
-							.map(Try::get)
-							.collect(toList());
-					if (successes.isEmpty()) {
-						throw new CrdtException("No successful connections");
-					}
-					return successes;
-				});
+	@Override
+	public @NotNull Promise<?> stop() {
+		this.stopped = true;
+		return Promise.complete();
+	}
+
+	public DiscoveryService.Partitionings<K, S, P> getCurrentPartitionings() {
+		return currentPartitionings;
 	}
 
 	@Override
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
-		return connect(CrdtStorage::upload)
-				.then(containers -> {
-					RendezvousHashSharder<P> sharder = partitions.getSharder();
+		DiscoveryService.Partitionings<K, S, P> partitionings = this.currentPartitionings;
+		return execute(partitionings.getPartitions(), CrdtStorage::upload)
+				.then(map -> {
+					List<P> alive = new ArrayList<>(map.keySet());
+					Sharder<K> sharder = partitionings.createSharder(alive);
+					if (sharder == null) {
+						throw new CrdtException("Incomplete cluster");
+					}
 					StreamSplitter<CrdtData<K, S>, CrdtData<K, S>> splitter = StreamSplitter.create(
 							(item, acceptors) -> {
-								for (int index : sharder.shard(item.getKey())) {
-									acceptors[index].accept(item);
+								int[] selected = sharder.shard(item.getKey());
+								//noinspection ForLoopReplaceableByForEach
+								for (int i = 0; i < selected.length; i++) {
+									acceptors[selected[i]].accept(item);
 								}
 							});
-					RefInt failedRef = tolerantSplit(containers, sharder, splitter);
+					for (P pid : alive) {
+						splitter.newOutput().streamTo(map.get(pid));
+					}
 					return Promise.of(splitter.getInput()
-							.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
-							.withAcknowledgement(ack -> ack
-									.mapException(e -> new CrdtException("Cluster 'upload' failed", e))
-									.whenResult($ -> containers.size() - failedRef.value < replicationCount, () -> {
-										throw new CrdtException("Failed to upload data to the required number of partitions");
-									})));
+							.transformWith(detailedStats ? uploadStatsDetailed : uploadStats));
 				});
 	}
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
-		return connect(storage -> storage.download(timestamp))
-				.map(containers -> {
+		return execute(currentPartitionings.getPartitions(), storage -> storage.download(timestamp))
+				.map(map -> {
 					StreamReducer<K, CrdtData<K, S>, CrdtData<K, S>> streamReducer = StreamReducer.create();
-					RefInt failedRef = tolerantReduce(containers, streamReducer);
+					for (P pid : map.keySet()) {
+						map.get(pid).streamTo(streamReducer.newInput(
+								CrdtData::getKey,
+								new BinaryAccumulatorReducer<K, CrdtData<K, S>>() {
+									@Override
+									protected CrdtData<K, S> combine(K key, CrdtData<K, S> nextValue, CrdtData<K, S> accumulator) {
+										return new CrdtData<>(key, crdtFunction.merge(accumulator.getState(), nextValue.getState()));
+									}
+								})
+						);
+					}
 					return streamReducer.getOutput()
-							.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
-							.withEndOfStream(eos -> eos
-									.mapException(e -> new CrdtException("Cluster 'download' failed", e))
-									.whenResult(() -> {
-										int deadBeforeDownload = partitions.getPartitions().size() - containers.size();
-										if (deadBeforeDownload + failedRef.get() >= replicationCount) {
-											throw new CrdtException("Failed to download from the required number of partitions");
-										}
-									}));
+							.transformWith(detailedStats ? downloadStatsDetailed : downloadStats);
 				});
 	}
 
 	@Override
 	public Promise<StreamConsumer<K>> remove() {
-		return connect(CrdtStorage::remove)
-				.map(containers -> {
-					RendezvousHashSharder<P> sharderAll = RendezvousHashSharder.create(containers.stream()
-							.map(container -> container.id)
-							.collect(Collectors.toSet()), containers.size());
-					StreamSplitter<K, K> splitter = StreamSplitter.create((item, acceptors) -> {
-						for (int index : sharderAll.shard(item)) {
-							acceptors[index].accept(item);
-						}
-					});
-					RefInt failedRef = tolerantSplit(containers, sharderAll, splitter);
+		DiscoveryService.Partitionings<K, S, P> partitionings = currentPartitionings;
+		return execute(partitionings.getPartitions(), CrdtStorage::remove)
+				.map(map -> {
+					List<P> alive = new ArrayList<>(map.keySet());
+					Sharder<K> sharder = partitionings.createSharder(alive);
+					if (sharder == null) {
+						throw new CrdtException("Incomplete cluster");
+					}
+					StreamSplitter<K, K> splitter = StreamSplitter.create(
+							(item, acceptors) -> {
+								int[] selected = sharder.shard(item);
+								//noinspection ForLoopReplaceableByForEach
+								for (int i = 0; i < selected.length; i++) {
+									acceptors[selected[i]].accept(item);
+								}
+							});
+					for (P pid : alive) {
+						splitter.newOutput().streamTo(map.get(pid));
+					}
 					return splitter.getInput()
-							.transformWith(detailedStats ? removeStatsDetailed : removeStats)
-							.withAcknowledgement(ack -> ack
-									.mapException(e -> new CrdtException("Cluster 'remove' failed", e))
-									.whenResult(() -> {
-										if (partitions.getPartitions().size() - containers.size() + failedRef.get() != 0) {
-											throw new CrdtException("Failed to remove items from all partitions");
-										}
-									}));
+							.transformWith(detailedStats ? removeStatsDetailed : removeStats);
+				});
+	}
+
+	public @NotNull Promise<Void> repartition(P sourcePartitionId) {
+		DiscoveryService.Partitionings<K, S, P> partitionings = this.currentPartitionings;
+		CrdtStorage<K, S> source = partitionings.getPartitions().get(sourcePartitionId);
+
+		class Tuple {
+			private final Try<StreamSupplier<CrdtData<K, S>>> downloader;
+			private final Try<StreamConsumer<K>> remover;
+			private final Map<P, StreamConsumer<CrdtData<K, S>>> uploaders;
+
+			public Tuple(Try<StreamSupplier<CrdtData<K, S>>> downloader, Try<StreamConsumer<K>> remover, Map<P, StreamConsumer<CrdtData<K, S>>> uploaders) {
+				this.downloader = downloader;
+				this.remover = remover;
+				this.uploaders = uploaders;
+			}
+		}
+
+		return Promises.toTuple(Tuple::new,
+						source.download().toTry(),
+						source.remove().toTry(),
+						execute(partitionings.getPartitions(), CrdtStorage::upload))
+				.then(tuple -> {
+
+					if (tuple.uploaders.isEmpty() || tuple.remover.isException() || tuple.downloader.isException()) {
+						CrdtException exception = new CrdtException("Repartition exceptions:");
+						tuple.downloader.consume(AsyncCloseable::close, exception::addSuppressed);
+						tuple.remover.consume(AsyncCloseable::close, exception::addSuppressed);
+						tuple.uploaders.values().forEach(AsyncCloseable::close);
+						return Promise.ofException(exception);
+					}
+
+					List<P> alive = new ArrayList<>(tuple.uploaders.keySet());
+					Sharder<K> sharder = partitionings.createSharder(alive);
+					if (sharder == null) {
+						throw new CrdtException("Incomplete cluster");
+					}
+					int sourceIdx = alive.indexOf(sourcePartitionId);
+					StreamSplitter<CrdtData<K, S>, ?> splitter = StreamSplitter.create(
+							(item, acceptors) -> {
+								boolean sourceInShards = false;
+								int[] shards = sharder.shard(item.getKey());
+								//noinspection ForLoopReplaceableByForEach
+								for (int i = 0; i < shards.length; i++) {
+									int idx = shards[i];
+									if (sourceIdx == idx) {
+										sourceInShards = true;
+									} else {
+										acceptors[idx].accept(item);
+									}
+								}
+								if (!sourceInShards) {
+									acceptors[acceptors.length - 1].accept(item.getKey());
+								}
+							});
+
+					StreamConsumer<CrdtData<K, S>> uploader = splitter.getInput()
+							.transformWith(detailedStats ? uploadStatsDetailed : uploadStats);
+					StreamConsumer<K> remover = tuple.remover.get()
+							.transformWith(detailedStats ? removeStatsDetailed : removeStats);
+					StreamSupplier<CrdtData<K, S>> downloader = tuple.downloader.get()
+							.transformWith(detailedStats ? downloadStatsDetailed : downloadStats);
+
+					for (P pid : alive) {
+						//noinspection unchecked
+						((StreamSupplier<CrdtData<K, S>>) splitter.newOutput())
+								.streamTo(tuple.uploaders.get(pid));
+					}
+
+					SettablePromise<Void> removerEos = new SettablePromise<>();
+					//noinspection unchecked
+					((StreamSupplier<K>) splitter.newOutput())
+							.withEndOfStream(eos -> removerEos)
+							.streamTo(remover.withAcknowledgement(ack -> downloader.getEndOfStream()));
+
+					return downloader.streamTo(uploader)
+							.whenResult(() -> removerEos.set(null))
+							.then(remover::getAcknowledgement);
 				});
 	}
 
 	@Override
 	public Promise<Void> ping() {
-		return Promise.complete();  // Promises.all(aliveClients.values().stream().map(CrdtClient::ping));
-	}
-
-	@Override
-	public @NotNull Promise<Void> start() {
-		return Promise.complete();
-	}
-
-	@Override
-	public @NotNull Promise<Void> stop() {
-		return Promise.complete();
-	}
-
-	private <T extends AsyncCloseable> List<Try<Container<T>>> checkStillNotDead(List<Try<Container<T>>> value) throws CrdtException {
-		Map<P, CrdtStorage<K, S>> deadPartitions = partitions.getDeadPartitions();
-		if (deadPartitions.size() > deadPartitionsThreshold) {
-			CrdtException exception = new CrdtException("There are more dead partitions than allowed(" +
-					deadPartitions.size() + " dead, threshold is " + deadPartitionsThreshold + "), aborting");
-			//noinspection ConstantConditions - a Try is successful
-			value.stream()
-					.filter(Try::isSuccess)
-					.map(Try::get)
-					.forEach(container -> container.value.closeEx(exception));
-			throw exception;
-		}
-		return value;
-	}
-
-	private <T> RefInt tolerantSplit(
-			List<Container<StreamConsumer<T>>> containers,
-			RendezvousHashSharder<P> sharder,
-			StreamSplitter<T, T> splitter
-	) {
-		RefInt failed = new RefInt(0);
-		for (Container<StreamConsumer<T>> container : containers) {
-			StreamSupplier<T> supplier = splitter.addOutput(splitter.new Output() {
-				@Override
-				protected void onError(Exception e) {
-					partitions.markDead(container.id, e);
-					sharder.recompute(partitions.getAlivePartitions().keySet());
-					if (++failed.value == containers.size()) {
-						splitter.getInput().closeEx(e);
-					} else {
-						complete();
-						sync();
+		DiscoveryService.Partitionings<K, S, P> partitionings = this.currentPartitionings;
+		return execute(partitionings.getPartitions(), CrdtStorage::ping)
+				.whenResult(map -> {
+					Sharder<K> sharder = partitionings.createSharder(new ArrayList<>(map.keySet()));
+					if (sharder == null) {
+						throw new CrdtException("Incomplete cluster");
 					}
-				}
-
-				@Override
-				protected boolean canProceed() {
-					return isReady() || isComplete();
-				}
-			});
-			supplier.streamTo(container.value);
-		}
-		return failed;
+				})
+				.toVoid();
 	}
 
-	private RefInt tolerantReduce(
-			List<Container<StreamSupplier<CrdtData<K, S>>>> containers,
-			StreamReducer<K, CrdtData<K, S>, CrdtData<K, S>> streamReducer
-	) {
-		RefInt failed = new RefInt(0);
-		for (Container<StreamSupplier<CrdtData<K, S>>> container : containers) {
-			Reducer<K, CrdtData<K, S>, CrdtData<K, S>, CrdtData<K, S>> reducer = filter == null ?
-					new BinaryAccumulatorReducer<>((a, b) -> new CrdtData<>(a.getKey(), function.merge(a.getState(), b.getState()))) :
-					new BinaryAccumulatorReducer<K, CrdtData<K, S>>((a, b) -> new CrdtData<>(a.getKey(), function.merge(a.getState(), b.getState()))) {
-						@Override
-						protected boolean filter(CrdtData<K, S> value) {
-							return filter.test(value.getState());
-						}
-					};
-
-			container.value.streamTo(streamReducer.addInput(
-					streamReducer.new SimpleInput<CrdtData<K, S>>(CrdtData::getKey, reducer) {
-						boolean awaiting;
-
-						@Override
-						protected void onError(Exception e) {
-							if (awaiting) {
-								advance();
-							}
-							closeInput();
-							partitions.markDead(container.id, e);
-							if (++failed.value == containers.size()) {
-								super.onError(e);
-							} else {
-								continueReduce();
-							}
-						}
-
-						@Override
-						protected int await() {
-							assert !awaiting;
-							awaiting = true;
-							return super.await();
-						}
-
-						@Override
-						protected int advance() {
-							assert awaiting;
-							awaiting = false;
-							return super.advance();
-						}
-					}));
-		}
-		return failed;
+	@NotNull
+	private <T> Promise<Map<P, T>> execute(Map<P, CrdtStorage<K, S>> partitions, AsyncFunction<CrdtStorage<K, S>, T> method) {
+		Map<P, T> map = new HashMap<>();
+		return Promises.all(
+						partitions.keySet().stream()
+								.map(partitionId -> method.apply(partitions.get(partitionId))
+										.map((t, e) -> e == null ? map.put(partitionId, t) : null)
+								))
+				.map($ -> map);
 	}
 
 	// region JMX
+/*
 	@JmxAttribute
 	public int getDeadPartitionsThreshold() {
 		return deadPartitionsThreshold;
@@ -364,6 +346,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P extends Comp
 	public CrdtPartitions getPartitionsJmx() {
 		return partitions;
 	}
+*/
 
 	@JmxAttribute
 	public boolean isDetailedStats() {

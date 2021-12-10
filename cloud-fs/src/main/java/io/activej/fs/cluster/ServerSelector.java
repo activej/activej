@@ -42,7 +42,8 @@ public interface ServerSelector {
 			}
 		}
 		return shards.stream()
-				.map(shard -> new ShardWithHash(shard, murmur3hash(fileName.hashCode(), shard.hashCode())))
+				.map(shard -> new ShardWithHash(shard,
+						(int) murmur3hash(((long) fileName.hashCode() << 32) | (shard.hashCode() & 0xFFFFFFFFL))))
 				.sorted(comparingInt(h -> h.hash))
 				.map(h -> h.shard)
 				.collect(toList());

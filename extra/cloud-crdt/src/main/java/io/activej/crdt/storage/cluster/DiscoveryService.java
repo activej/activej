@@ -16,26 +16,42 @@
 
 package io.activej.crdt.storage.cluster;
 
-import io.activej.async.callback.Callback;
+import io.activej.async.function.AsyncSupplier;
 import io.activej.crdt.storage.CrdtStorage;
+import io.activej.promise.Promise;
+import io.activej.promise.SettablePromise;
+import io.activej.rpc.client.sender.RpcStrategy;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
-public interface DiscoveryService<K extends Comparable<K>, S, P extends Comparable<P>> {
+public interface DiscoveryService<K extends Comparable<K>, S, P> {
 
-	void discover(
-			@Nullable Map<P, ? extends CrdtStorage<K, S>> previous,
-			Callback<Map<P, ? extends CrdtStorage<K, S>>> cb
-	);
+	AsyncSupplier<Partitionings<K, S, P>> discover();
 
-	static <K extends Comparable<K>, S, P extends Comparable<P>> DiscoveryService<K, S, P> constant(Map<P, ? extends CrdtStorage<K, S>> partitions) {
-		Map<P, ? extends CrdtStorage<K, S>> constant = Collections.unmodifiableMap(new HashMap<>(partitions));
-		return (previous, cb) -> {
-			if (!constant.equals(previous)) {
-				cb.accept(constant, null);
+	interface Partitionings<K extends Comparable<K>, S, P> {
+		Map<P, CrdtStorage<K, S>> getPartitions();
+
+		@Nullable Sharder<K> createSharder(List<P> alive);
+
+		RpcStrategy createRpcStrategy(Function<P, @NotNull RpcStrategy> rpcStrategyResolver, Function<Object, K> keyGetter);
+	}
+
+	static <K extends Comparable<K>, S, P> DiscoveryService<K, S, P> of(Partitionings<K, S, P> partitionings) {
+		return new DiscoveryService<K, S, P>() {
+			@Override
+			public AsyncSupplier<Partitionings<K, S, P>> discover() {
+				return new AsyncSupplier<Partitionings<K, S, P>>() {
+					int i = 0;
+
+					@Override
+					public Promise<Partitionings<K, S, P>> get() {
+						return i++ == 0 ? Promise.of(partitionings) : new SettablePromise<>();
+					}
+				};
 			}
 		};
 	}

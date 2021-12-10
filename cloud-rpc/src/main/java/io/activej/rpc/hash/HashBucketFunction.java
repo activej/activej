@@ -18,5 +18,5 @@ package io.activej.rpc.hash;
 
 @FunctionalInterface
 public interface HashBucketFunction {
-	int hash(Object shardId, int bucket);
+	long hash(Object shardId, int bucket);
 }
