@@ -103,7 +103,7 @@ public class TriggersModuleTest {
 				TriggersModule.create()
 		);
 
-		OptionalDependency<TestClass> optional = injector.getInstance(new Key<OptionalDependency<TestClass>>() {});
+		OptionalDependency<TestClass> optional = injector.getOptionalDependency(TestClass.class);
 		assertTrue(optional.isPresent());
 
 		for (LauncherService service : injector.getInstance(new Key<Set<LauncherService>>() {})) {
@@ -139,7 +139,7 @@ public class TriggersModuleTest {
 				TriggersModule.create()
 		);
 
-		OptionalDependency<TestClass> optional = injector.getInstance(new Key<OptionalDependency<TestClass>>() {});
+		OptionalDependency<TestClass> optional = injector.getOptionalDependency(TestClass.class);
 		assertTrue(optional.isPresent());
 
 		for (LauncherService service : injector.getInstance(new Key<Set<LauncherService>>() {})) {
@@ -170,7 +170,7 @@ public class TriggersModuleTest {
 				TriggersModule.create()
 		);
 
-		OptionalDependency<TestClass> optional = injector.getInstance(new Key<OptionalDependency<TestClass>>() {});
+		OptionalDependency<TestClass> optional = injector.getOptionalDependency(TestClass.class);
 		assertFalse(optional.isPresent());
 
 		for (LauncherService service : injector.getInstance(new Key<Set<LauncherService>>() {})) {

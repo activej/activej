@@ -21,7 +21,7 @@ public class OptionalDependencyTest {
 						.bindOptionalDependency(String.class)
 						.build());
 
-		OptionalDependency<String> optional = injector.getInstance(new Key<OptionalDependency<String>>() {});
+		OptionalDependency<String> optional = injector.getOptionalDependency(String.class);
 
 		assertTrue(optional.isPresent());
 
@@ -37,7 +37,7 @@ public class OptionalDependencyTest {
 						.bindOptionalDependency(String.class)
 						.build());
 
-		OptionalDependency<String> optional = injector.getInstance(new Key<OptionalDependency<String>>() {});
+		OptionalDependency<String> optional = injector.getOptionalDependency(String.class);
 
 		assertFalse(optional.isPresent());
 	}
@@ -51,7 +51,7 @@ public class OptionalDependencyTest {
 						.bindOptionalDependency(String.class)
 						.build());
 
-		OptionalDependency<String> optional = injector.getInstance(new Key<OptionalDependency<String>>() {});
+		OptionalDependency<String> optional = injector.getOptionalDependency(String.class);
 
 		assertTrue(optional.isPresent());
 		assertEquals("123", optional.get());
@@ -82,7 +82,7 @@ public class OptionalDependencyTest {
 						.bindOptionalDependency(new Key<InstanceProvider<String>>() {})
 						.build());
 
-		OptionalDependency<InstanceProvider<String>> optional = injector.getInstance(new Key<OptionalDependency<InstanceProvider<String>>>() {});
+		OptionalDependency<InstanceProvider<String>> optional = injector.getOptionalDependency(new Key<InstanceProvider<String>>() {});
 
 		assertTrue(optional.isPresent());
 
@@ -103,7 +103,7 @@ public class OptionalDependencyTest {
 						.build());
 
 		String string = injector.getInstance(String.class);
-		OptionalDependency<String> stringOpt = injector.getInstance(new Key<OptionalDependency<String>>() {});
+		OptionalDependency<String> stringOpt = injector.getOptionalDependency(String.class);
 
 		assertEquals("str_1", string);
 		assertEquals("str_1", stringOpt.get());
