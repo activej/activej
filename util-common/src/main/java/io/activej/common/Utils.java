@@ -181,7 +181,7 @@ public class Utils {
 	@SuppressWarnings("unchecked")
 	public static <T> Set<T> difference(Set<? extends T> a, Set<? extends T> b) {
 		if (b.isEmpty()) return (Set<T>) a;
-		return a.stream().filter(t -> !b.contains(t)).collect(toSet());
+		return a.stream().filter(not(b::contains)).collect(toSet());
 	}
 
 	/**

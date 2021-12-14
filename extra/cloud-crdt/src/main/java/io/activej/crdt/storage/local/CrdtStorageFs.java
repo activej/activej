@@ -58,6 +58,7 @@ import java.util.*;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
+import static io.activej.common.Utils.not;
 import static io.activej.csp.ChannelSupplier.ofPromise;
 import static io.activej.datastream.processor.StreamFilter.mapper;
 import static io.activej.fs.ActiveFsAdapters.subdirectory;
@@ -261,7 +262,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 				.then(list -> {
 					String name = namingStrategy.apply("bin");
 					List<String> files = list.keySet().stream()
-							.filter(fileName -> !blacklist.contains(fileName))
+							.filter(not(blacklist::contains))
 							.collect(toList());
 					String dump = String.join("\n", files);
 

@@ -135,13 +135,13 @@ public class OTLoadedGraph<K, D> {
 
 	public Set<K> getRoots() {
 		return Stream.concat(levels.keySet().stream(), parent2child.keySet().stream())
-				.filter(node -> !child2parent.containsKey(node))
+				.filter(not(child2parent::containsKey))
 				.collect(toSet());
 	}
 
 	public Set<K> getTips() {
 		return Stream.concat(levels.keySet().stream(), child2parent.keySet().stream())
-				.filter(node -> !parent2child.containsKey(node))
+				.filter(not(parent2child::containsKey))
 				.collect(toSet());
 	}
 

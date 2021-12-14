@@ -24,6 +24,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.stream.Stream;
 
+import static io.activej.common.Utils.not;
+
 public final class TPSet<E> implements Set<E>, CrdtMergable<TPSet<E>> {
 	private final GSet<E> adds;
 	private final GSet<E> removes;
@@ -51,7 +53,7 @@ public final class TPSet<E> implements Set<E>, CrdtMergable<TPSet<E>> {
 
 	@Override
 	public Stream<E> stream() {
-		return adds.stream().filter(item -> !removes.contains(item));
+		return adds.stream().filter(not(removes::contains));
 	}
 
 	@Override

@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static io.activej.common.Utils.not;
+
 public interface MeasuresValidator {
 
 	void validate(String aggregationId, List<String> measures) throws MalformedDataException;
@@ -38,7 +40,7 @@ public interface MeasuresValidator {
 			}
 			Set<String> allowedMeasures = aggregation.getMeasureTypes().keySet();
 			List<String> unknownMeasures = measures.stream()
-					.filter(measure -> !allowedMeasures.contains(measure))
+					.filter(not(allowedMeasures::contains))
 					.collect(Collectors.toList());
 			if (!unknownMeasures.isEmpty()) {
 				throw new MalformedDataException(String.format("Unknown measures %s in aggregation '%s'", unknownMeasures, aggregationId));

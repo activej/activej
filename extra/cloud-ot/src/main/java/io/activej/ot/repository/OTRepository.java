@@ -26,6 +26,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.stream.IntStream;
 
+import static io.activej.common.Utils.not;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.*;
@@ -50,7 +51,8 @@ public interface OTRepository<K, D> extends OTCommitFactory<K, D> {
 				.collect(toSet());
 		Set<K> heads = commits.stream()
 				.map(OTCommit::getId)
-				.filter(commit -> !parents.contains(commit)).collect(toSet());
+				.filter(not(parents::contains))
+				.collect(toSet());
 		return push(commits)
 				.then(() -> updateHeads(heads, parents));
 	}

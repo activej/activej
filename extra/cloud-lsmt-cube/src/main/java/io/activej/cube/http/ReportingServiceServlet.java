@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
+import static io.activej.common.Utils.not;
 import static io.activej.cube.Utils.fromJson;
 import static io.activej.cube.Utils.toJsonBuf;
 import static io.activej.cube.http.Utils.*;
@@ -137,7 +138,7 @@ public final class ReportingServiceServlet extends AsyncServletWithStats impleme
 	private static List<String> split(String input) {
 		return SPLITTER.splitAsStream(input)
 				.map(String::trim)
-				.filter(s -> !s.isEmpty())
+				.filter(not(String::isEmpty))
 				.collect(toList());
 	}
 
