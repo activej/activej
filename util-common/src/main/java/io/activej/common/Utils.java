@@ -89,6 +89,11 @@ public class Utils {
 		throw exceptionSupplier.get();
 	}
 
+	@SuppressWarnings("unchecked")
+	public static <T> Predicate<T> not(@NotNull Predicate<? super T> target) {
+		return (Predicate<T>) target.negate();
+	}
+
 	@Contract("_, _ -> null")
 	public static <V> @Nullable V nullify(@Nullable V value, @NotNull Runnable action) {
 		if (value != null) {
@@ -211,7 +216,10 @@ public class Utils {
 	public static <T> Set<T> union(Set<? extends T> a, Set<? extends T> b) {
 		if (a.isEmpty()) return (Set<T>) b;
 		if (b.isEmpty()) return (Set<T>) a;
-		return Stream.concat(a.stream(), b.stream()).collect(toCollection(() -> new HashSet<>(max(a.size(), b.size()))));
+		Set<T> result = new HashSet<>(max(a.size(), b.size()));
+		result.addAll(a);
+		result.addAll(b);
+		return result;
 	}
 
 	public static <T> T first(List<? extends T> list) {
