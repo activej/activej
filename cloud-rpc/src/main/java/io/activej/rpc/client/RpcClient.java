@@ -37,7 +37,6 @@ import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio.JmxInspector;
 import io.activej.promise.Promise;
-import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
 import io.activej.rpc.client.jmx.RpcConnectStats;
 import io.activej.rpc.client.jmx.RpcRequestStats;
@@ -64,6 +63,7 @@ import java.util.concurrent.Executor;
 import static io.activej.async.callback.Callback.toAnotherEventloop;
 import static io.activej.common.Utils.nonNullElseGet;
 import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -92,8 +92,10 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	public static final Duration DEFAULT_RECONNECT_INTERVAL = ApplicationSettings.getDuration(RpcClient.class, "reconnectInterval", Duration.ZERO);
 	public static final MemSize DEFAULT_PACKET_SIZE = ApplicationSettings.getMemSize(RpcClient.class, "packetSize", ChannelSerializer.DEFAULT_INITIAL_BUFFER_SIZE);
 
-	private static final RpcException START_EXCEPTION = new RpcException("Could not establish initial connection");
+	private static final RpcException CONNECTION_EXCEPTION = new RpcException("Could not establish connection");
+	private static final RpcException SET_STRATEGY_EXCEPTION = new RpcException("Could not change strategy");
 	private static final RpcException NO_SENDER_AVAILABLE_EXCEPTION = new RpcException("No senders available");
+	private static final RpcException CLIENT_IS_STOPPED = new RpcException("Client is stopped");
 
 	private Logger logger = getLogger(getClass());
 
@@ -105,8 +107,12 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	private Executor sslExecutor;
 
 	private RpcStrategy strategy = new NoServersStrategy();
-	private List<InetSocketAddress> addresses = new ArrayList<>();
+	private final Set<InetSocketAddress> pendingConnections = new HashSet<>();
 	private final Map<InetSocketAddress, RpcClientConnection> connections = new HashMap<>();
+
+	private RpcStrategy newStrategy;
+	private SettablePromise<Void> newStrategyPromise;
+	private final Set<InetSocketAddress> newConnections = new HashSet<>();
 
 	private MemSize defaultPacketSize = DEFAULT_PACKET_SIZE;
 	private @Nullable FrameFormat frameFormat;
@@ -116,8 +122,6 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	private List<Class<?>> messageTypes;
 	private long connectTimeoutMillis = DEFAULT_CONNECT_TIMEOUT.toMillis();
 	private long reconnectIntervalMillis = DEFAULT_RECONNECT_INTERVAL.toMillis();
-
-	private boolean forcedStart;
 
 	private ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 	private SerializerBuilder serializerBuilder = SerializerBuilder.create(DefiningClassLoader.create(classLoader));
@@ -208,15 +212,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	 * @return the RPC client, which sends requests according to given strategy
 	 */
 	public RpcClient withStrategy(RpcStrategy requestSendingStrategy) {
-		this.strategy = requestSendingStrategy;
-		this.addresses = new ArrayList<>(strategy.getAddresses());
-
-		// jmx
-		for (InetSocketAddress address : this.addresses) {
-			if (!connectsStatsPerAddress.containsKey(address)) {
-				connectsStatsPerAddress.put(address, new RpcConnectStats(eventloop));
-			}
-		}
+		this.newStrategy = requestSendingStrategy;
 
 		return this;
 	}
@@ -268,17 +264,6 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 		this.logger = logger;
 		return this;
 	}
-
-	/**
-	 * Starts client in case of absence of connections
-	 *
-	 * @return the RPC client, which starts regardless of connection
-	 * availability
-	 */
-	public RpcClient withForcedStart() {
-		this.forcedStart = true;
-		return this;
-	}
 	// endregion
 
 	public SocketSettings getSocketSettings() {
@@ -294,21 +279,45 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	public @NotNull Promise<Void> start() {
 		if (CHECK) Checks.checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
 		Checks.checkNotNull(messageTypes, "Message types must be specified");
-
 		Checks.checkState(stopPromise == null);
 
 		serializer = serializerBuilder.withSubclasses(RpcMessage.MESSAGE_TYPES, messageTypes).build(RpcMessage.class);
 
-		return Promises.all(
-				addresses.stream()
-						.map(address -> {
-							logger.info("Connecting: {}", address);
-							return connect(address)
-											.map(($, e) -> null);
-						}))
-				.then(() -> !forcedStart && requestSender instanceof NoSenderAvailable ?
-						Promise.ofException(START_EXCEPTION) :
-						Promise.complete());
+		return changeStrategy(newStrategy);
+	}
+
+	public Promise<Void> changeStrategy(RpcStrategy newStrategy) {
+		if (CHECK) Checks.checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+
+		if (stopPromise != null) {
+			return Promise.ofException(CLIENT_IS_STOPPED);
+		}
+
+		if (newStrategyPromise != null) {
+			SettablePromise<Void> promise = newStrategyPromise;
+			newStrategyPromise = null;
+			promise.setException(SET_STRATEGY_EXCEPTION);
+			if (newStrategyPromise != null) {
+				return Promise.ofException(SET_STRATEGY_EXCEPTION);
+			}
+		}
+
+		SettablePromise<Void> newStrategyPromise = new SettablePromise<>();
+		this.newStrategy = newStrategy;
+		this.newStrategyPromise = newStrategyPromise;
+
+		for (InetSocketAddress address : newStrategy.getAddresses()) {
+			if (connections.containsKey(address)) continue;
+			if (pendingConnections.contains(address)) continue;
+			pendingConnections.add(address);
+			newConnections.add(address);
+			logger.info("Connecting: {}", address);
+			connect(address);
+		}
+
+		updateStrategy();
+
+		return newStrategyPromise;
 	}
 
 	@Override
@@ -318,19 +327,23 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 
 		stopPromise = new SettablePromise<>();
 		if (connections.size() == 0) {
-			stopPromise.set(null);
+			onClientStop();
 			return stopPromise;
 		}
-		for (RpcClientConnection connection : connections.values()) {
+
+		pendingConnections.clear();
+		for (RpcClientConnection connection : new ArrayList<>(connections.values())) {
 			connection.shutdown();
 		}
+
 		return stopPromise;
 	}
 
-	private Promise<Void> connect(InetSocketAddress address) {
-		return AsyncTcpSocketNio.connect(address, connectTimeoutMillis, socketSettings)
+	private void connect(InetSocketAddress address) {
+		AsyncTcpSocketNio.connect(address, connectTimeoutMillis, socketSettings)
 				.whenResult(asyncTcpSocketImpl -> {
-					if (stopPromise != null) {
+					newConnections.remove(address);
+					if (!pendingConnections.contains(address) || stopPromise != null) {
 						asyncTcpSocketImpl.close();
 						return;
 					}
@@ -348,45 +361,100 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 					if (isMonitoring()) {
 						connection.startMonitoring();
 					}
-					connections.put(address, connection);
-					requestSender = nonNullElseGet(strategy.createSender(pool), NoSenderAvailable::new);
 
 					// jmx
-					connectsStatsPerAddress.get(address).recordSuccessfulConnect();
-
+					connectsStatsPerAddress.computeIfAbsent(address, $ -> new RpcConnectStats(eventloop)).recordSuccessfulConnect();
 					logger.info("Connection to {} established", address);
+
+					pendingConnections.remove(address);
+					connections.put(address, connection);
+					updateStrategy();
 				})
 				.whenException(e -> {
+					newConnections.remove(address);
 					logger.warn("Connection {} failed: {}", address, e);
-					if (stopPromise == null) {
-						processClosedConnection(address);
+					if (!pendingConnections.contains(address) || stopPromise != null) {
+						return;
 					}
-				})
-				.toVoid();
+					eventloop.delayBackground(reconnectIntervalMillis, () -> {
+						if (!pendingConnections.contains(address) || stopPromise != null) {
+							return;
+						}
+						logger.info("Reconnecting: {}", address);
+						connect(address);
+					});
+					updateStrategy();
+				});
 	}
 
-	void removeConnection(InetSocketAddress address) {
-		if (connections.remove(address) == null) return;
-		requestSender = nonNullElseGet(strategy.createSender(pool), NoSenderAvailable::new);
+	void onClosedConnection(InetSocketAddress address) {
+		if (connections.remove(address) == null) {
+			return;
+		}
 		logger.info("Connection closed: {}", address);
-		processClosedConnection(address);
-	}
-
-	private void processClosedConnection(InetSocketAddress address) {
-		//jmx
-		connectsStatsPerAddress.get(address).recordFailedConnect();
-
 		if (stopPromise == null) {
+			pendingConnections.add(address);
 			eventloop.delayBackground(reconnectIntervalMillis, () -> {
-				if (stopPromise == null) {
-					logger.info("Reconnecting: {}", address);
-					connect(address);
+				if (!pendingConnections.contains(address) || stopPromise != null) {
+					return;
 				}
+				logger.info("Reconnecting: {}", address);
+				connect(address);
 			});
 		} else {
 			if (connections.size() == 0) {
-				stopPromise.set(null);
+				onClientStop();
 			}
+		}
+		updateStrategy();
+	}
+
+	private void onClientStop() {
+		assert stopPromise != null;
+
+		if (newStrategyPromise != null) {
+			SettablePromise<Void> promise = this.newStrategyPromise;
+			this.newStrategyPromise = null;
+			promise.setException(CLIENT_IS_STOPPED);
+			assert this.newStrategyPromise == null;
+		}
+
+		stopPromise.set(null);
+	}
+
+	private void updateStrategy() {
+		if (stopPromise != null) {
+			return;
+		}
+		if (newStrategy != null && newConnections.isEmpty()) {
+			RpcStrategy newStrategy = this.newStrategy;
+			RpcSender newRequestSender = newStrategy.createSender(pool);
+			SettablePromise<Void> newStrategyPromise = this.newStrategyPromise;
+
+			this.newStrategy = null;
+			this.newStrategyPromise = null;
+
+			if (newRequestSender != null) {
+				this.strategy = newStrategy;
+				this.requestSender = newRequestSender;
+			}
+
+			Set<InetSocketAddress> strategyAddresses = this.strategy.getAddresses();
+			pendingConnections.retainAll(strategyAddresses);
+			new ArrayList<>(connections.keySet()).stream()
+					.filter(address -> !strategyAddresses.contains(address))
+					.map(connections::remove)
+					.collect(toList())
+					.forEach(RpcClientConnection::shutdown);
+
+			if (newRequestSender != null) {
+				newStrategyPromise.set(null);
+			} else {
+				newStrategyPromise.setException(CONNECTION_EXCEPTION);
+			}
+
+		} else {
+			requestSender = nonNullElseGet(strategy.createSender(pool), NoSenderAvailable::new);
 		}
 	}
 
@@ -458,7 +526,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	private static final class NoServersStrategy implements RpcStrategy {
 		@Override
 		public Set<InetSocketAddress> getAddresses() {
-			return Collections.emptySet();
+			return emptySet();
 		}
 
 		@Override
@@ -473,11 +541,8 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 			"(for example, responseTime and requestsStatsPerClass are collected only when monitoring is enabled) ]")
 	public void startMonitoring() {
 		monitoring = true;
-		for (InetSocketAddress address : addresses) {
-			RpcClientConnection connection = connections.get(address);
-			if (connection != null) {
-				connection.startMonitoring();
-			}
+		for (RpcClientConnection connection : connections.values()) {
+			connection.startMonitoring();
 		}
 	}
 
@@ -486,11 +551,8 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 			"(for example, responseTime and requestsStatsPerClass are collected only when monitoring is enabled) ]")
 	public void stopMonitoring() {
 		monitoring = false;
-		for (InetSocketAddress address : addresses) {
-			RpcClientConnection connection = connections.get(address);
-			if (connection != null) {
-				connection.stopMonitoring();
-			}
+		for (RpcClientConnection connection : connections.values()) {
+			connection.stopMonitoring();
 		}
 	}
 
