@@ -62,6 +62,7 @@ import java.util.concurrent.Executor;
 
 import static io.activej.async.callback.Callback.toAnotherEventloop;
 import static io.activej.common.Utils.nonNullElseGet;
+import static io.activej.common.Utils.not;
 import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
@@ -448,7 +449,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 			Set<InetSocketAddress> strategyAddresses = this.strategy.getAddresses();
 			pendingConnections.retainAll(strategyAddresses);
 			new ArrayList<>(connections.keySet()).stream()
-					.filter(address -> !strategyAddresses.contains(address))
+					.filter(not(strategyAddresses::contains))
 					.map(connections::remove)
 					.collect(toList())
 					.forEach(RpcClientConnection::shutdown);
