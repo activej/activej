@@ -95,15 +95,7 @@ public class Utils {
 	}
 
 	@Contract("_, _ -> null")
-	public static <V> @Nullable V nullify(@Nullable V value, @NotNull Runnable action) {
-		if (value != null) {
-			action.run();
-		}
-		return null;
-	}
-
-	@Contract("_, _ -> null")
-	public static <V> @Nullable V nullify(@Nullable V value, @NotNull Consumer<? super V> action) {
+	public static <V> @Nullable V nullify(@Nullable V value, @NotNull Consumer<? super @NotNull V> action) {
 		if (value != null) {
 			action.accept(value);
 		}
@@ -111,11 +103,25 @@ public class Utils {
 	}
 
 	@Contract("_, _, _ -> null")
-	public static <V, A> @Nullable V nullify(@Nullable V value, @NotNull BiConsumer<? super V, A> action, A actionArg) {
+	public static <V, A> @Nullable V nullify(@Nullable V value, @NotNull BiConsumer<? super @NotNull V, A> action, A actionArg) {
 		if (value != null) {
 			action.accept(value, actionArg);
 		}
 		return null;
+	}
+
+	public static <V> @Nullable V replace(@Nullable V value, @Nullable V newValue, @NotNull Consumer<? super @NotNull V> action) {
+		if (value != null && value != newValue) {
+			action.accept(value);
+		}
+		return newValue;
+	}
+
+	public static <V, A> @Nullable V replace(@Nullable V value, @Nullable V newValue, @NotNull BiConsumer<? super @NotNull V, A> action, A actionArg) {
+		if (value != null && value != newValue) {
+			action.accept(value, actionArg);
+		}
+		return newValue;
 	}
 
 	public static boolean arraysEquals(
