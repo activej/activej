@@ -20,12 +20,7 @@
     </dependency>
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-http</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.activej</groupId>
-      <artifactId>activej-launchers-http</artifactId>
+      <artifactId>activej-launcher</artifactId>
       <version>${project.version}</version>
     </dependency>
   </dependencies>

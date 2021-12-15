@@ -3,6 +3,7 @@ import io.activej.http.HttpResponse;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
 
+//[START EXAMPLE]
 public class HelloWorldHttpServer extends HttpServerLauncher {
 
 	@Provides
@@ -14,3 +15,5 @@ public class HelloWorldHttpServer extends HttpServerLauncher {
 		new HelloWorldHttpServer().launch(args);
 	}
 }
+//[END EXAMPLE]
+
