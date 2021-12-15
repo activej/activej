@@ -111,6 +111,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	private final Map<InetSocketAddress, RpcClientConnection> connections = new HashMap<>();
 
 	private RpcStrategy newStrategy;
+	private boolean newStrategyRetry;
 	private SettablePromise<Void> newStrategyPromise;
 	private final Set<InetSocketAddress> newConnections = new HashSet<>();
 
@@ -283,10 +284,10 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 
 		serializer = serializerBuilder.withSubclasses(RpcMessage.MESSAGE_TYPES, messageTypes).build(RpcMessage.class);
 
-		return changeStrategy(newStrategy);
+		return changeStrategy(newStrategy, false);
 	}
 
-	public Promise<Void> changeStrategy(RpcStrategy newStrategy) {
+	public Promise<Void> changeStrategy(RpcStrategy newStrategy, boolean retry) {
 		if (CHECK) Checks.checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
 
 		if (stopPromise != null) {
@@ -305,6 +306,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 		SettablePromise<Void> newStrategyPromise = new SettablePromise<>();
 		this.newStrategy = newStrategy;
 		this.newStrategyPromise = newStrategyPromise;
+		this.newStrategyRetry = retry;
 
 		for (InetSocketAddress address : newStrategy.getAddresses()) {
 			if (connections.containsKey(address)) continue;
@@ -430,6 +432,10 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 			RpcStrategy newStrategy = this.newStrategy;
 			RpcSender newRequestSender = newStrategy.createSender(pool);
 			SettablePromise<Void> newStrategyPromise = this.newStrategyPromise;
+
+			if (newRequestSender == null && newStrategyRetry) {
+				return;
+			}
 
 			this.newStrategy = null;
 			this.newStrategyPromise = null;
