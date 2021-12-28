@@ -24,7 +24,6 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.RpcStrategies;
 import io.activej.rpc.client.sender.RpcStrategy;
-import io.activej.rpc.client.sender.RpcStrategyList;
 import io.activej.rpc.hash.ShardingFunction;
 
 import java.net.InetSocketAddress;
@@ -36,6 +35,7 @@ import static io.activej.config.Config.ofSystemProperties;
 import static io.activej.config.converter.ConfigConverters.ofInetSocketAddress;
 import static io.activej.config.converter.ConfigConverters.ofList;
 import static io.activej.launchers.crdt.rpc.CrdtRpcServerModule.DEFAULT_PORT;
+import static io.activej.rpc.client.sender.RpcStrategies.servers;
 
 public class CrdtRpcClientModule extends AbstractModule {
 	public static final String PROPERTIES_FILE = "crdt-rpc-client.properties";
@@ -69,6 +69,6 @@ public class CrdtRpcClientModule extends AbstractModule {
 			return RpcStrategies.server(address);
 		}
 
-		return RpcStrategies.sharding(shardingFn.get(), RpcStrategyList.ofAddresses(addresses));
+		return RpcStrategies.sharding(shardingFn.get(), servers(addresses));
 	}
 }

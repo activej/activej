@@ -20,26 +20,29 @@ import io.activej.rpc.client.RpcClientConnectionPool;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
 public final class RpcStrategyFirstAvailable implements RpcStrategy {
-	private final RpcStrategyList list;
+	private final List<RpcStrategy> list;
 
-	private RpcStrategyFirstAvailable(RpcStrategyList list) {
+	private RpcStrategyFirstAvailable(List<RpcStrategy> list) {
 		this.list = list;
 	}
 
-	public static RpcStrategyFirstAvailable create(RpcStrategyList list) {return new RpcStrategyFirstAvailable(list);}
+	public static RpcStrategyFirstAvailable create(RpcStrategy... list) {return create(Arrays.asList(list));}
+
+	public static RpcStrategyFirstAvailable create(List<RpcStrategy> list) {return new RpcStrategyFirstAvailable(list);}
 
 	@Override
 	public Set<InetSocketAddress> getAddresses() {
-		return list.getAddresses();
+		return Utils.getAddresses(list);
 	}
 
 	@Override
 	public @Nullable RpcSender createSender(RpcClientConnectionPool pool) {
-		List<RpcSender> senders = list.listOfSenders(pool);
+		List<RpcSender> senders = Utils.listOfSenders(list, pool);
 		if (senders.isEmpty())
 			return null;
 		return senders.get(0);

@@ -27,20 +27,25 @@ import java.util.List;
 import java.util.Set;
 
 import static io.activej.rpc.client.sender.RpcStrategies.NO_SENDER_AVAILABLE_EXCEPTION;
+import static java.util.Arrays.asList;
 
 public final class RpcStrategySharding implements RpcStrategy {
-	private final RpcStrategyList list;
+	private final List<RpcStrategy> list;
 	private final ShardingFunction<?> shardingFunction;
 	private final int minActiveSubStrategies;
 
-	private RpcStrategySharding(@NotNull ShardingFunction<?> shardingFunction, @NotNull RpcStrategyList list, int minActiveSubStrategies) {
+	private RpcStrategySharding(@NotNull ShardingFunction<?> shardingFunction, @NotNull List<RpcStrategy> list, int minActiveSubStrategies) {
 		this.shardingFunction = shardingFunction;
 		this.list = list;
 		this.minActiveSubStrategies = minActiveSubStrategies;
 	}
 
-	public static RpcStrategySharding create(ShardingFunction<?> shardingFunction, RpcStrategyList list) {
+	public static RpcStrategySharding create(ShardingFunction<?> shardingFunction, @NotNull List<RpcStrategy> list) {
 		return new RpcStrategySharding(shardingFunction, list, 0);
+	}
+
+	public static RpcStrategySharding create(ShardingFunction<?> shardingFunction, RpcStrategy... list) {
+		return new RpcStrategySharding(shardingFunction, asList(list), 0);
 	}
 
 	public RpcStrategySharding withMinActiveSubStrategies(int minActiveSubStrategies) {
@@ -49,12 +54,12 @@ public final class RpcStrategySharding implements RpcStrategy {
 
 	@Override
 	public Set<InetSocketAddress> getAddresses() {
-		return list.getAddresses();
+		return Utils.getAddresses(list);
 	}
 
 	@Override
 	public @Nullable RpcSender createSender(RpcClientConnectionPool pool) {
-		List<RpcSender> subSenders = list.listOfNullableSenders(pool);
+		List<RpcSender> subSenders = Utils.listOfNullableSenders(list, pool);
 		int activeSenders = 0;
 		for (RpcSender subSender : subSenders) {
 			if (subSender != null) {

@@ -7,7 +7,6 @@ import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.rpc.client.sender.RpcStrategy;
-import io.activej.rpc.client.sender.RpcStrategyList;
 import io.activej.rpc.protocol.RpcException;
 import io.activej.rpc.server.RpcServer;
 import io.activej.test.rules.ActivePromisesRule;
@@ -18,6 +17,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
@@ -26,8 +26,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
-import static io.activej.rpc.client.sender.RpcStrategies.firstValidResult;
-import static io.activej.rpc.client.sender.RpcStrategies.roundRobin;
+import static io.activej.rpc.client.sender.RpcStrategies.*;
 import static io.activej.test.TestUtils.assertCompleteFn;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.*;
@@ -424,8 +423,8 @@ public final class RpcClientTest {
 		await(rpcClient::start);
 	}
 
-	private RpcStrategyList getAddresses(int... indexes) {
-		return RpcStrategyList.ofAddresses(Arrays.stream(indexes)
+	private List<RpcStrategy> getAddresses(int... indexes) {
+		return servers(Arrays.stream(indexes)
 				.mapToObj(servers::get)
 				.map(server -> server.getListenAddresses().get(0))
 				.collect(Collectors.toList()));
