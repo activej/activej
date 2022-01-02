@@ -380,8 +380,8 @@ public final class StringFormatUtils {
 			throw new MalformedDataException(nfe);
 		}
 
-		if (port <= 0 || port >= 65536) {
-			throw new MalformedDataException("Invalid address. Port is not in range (0, 65536) " + addressStr);
+		if (port < 0 || port >= 65536) {
+			throw new MalformedDataException("Invalid address. Port is not in range [0, 65536) " + addressStr);
 		}
 		if ("*".equals(addressStr)) {
 			return new InetSocketAddress(port);

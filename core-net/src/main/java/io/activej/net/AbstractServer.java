@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
@@ -52,7 +53,9 @@ import static io.activej.eventloop.net.ServerSocketSettings.DEFAULT_BACKLOG;
 import static io.activej.net.socket.tcp.AsyncTcpSocketNio.wrapChannel;
 import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapServerSocket;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -93,6 +96,7 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 
 	private boolean running = false;
 	private List<ServerSocketChannel> serverSocketChannels;
+	private List<ServerSocketChannel> sslServerSocketChannels;
 
 	// jmx
 	private static final Duration SMOOTHING_WINDOW = Duration.ofMinutes(1);
@@ -224,27 +228,32 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 		}
 		running = true;
 		onListen();
-		serverSocketChannels = new ArrayList<>();
 		if (listenAddresses != null && !listenAddresses.isEmpty()) {
-			listenAddresses(listenAddresses, false);
-			logger.info("Listening on {}: {}", listenAddresses, this);
+			serverSocketChannels = listenAddresses(listenAddresses, false);
+			if (logger.isInfoEnabled()) {
+				logger.info("Listening on {}: {}", getBoundAddresses(serverSocketChannels), this);
+			}
 		}
 		if (sslListenAddresses != null && !sslListenAddresses.isEmpty()) {
-			listenAddresses(sslListenAddresses, true);
-			logger.info("Listening with SSL on {}: {}", sslListenAddresses, this);
+			sslServerSocketChannels = listenAddresses(sslListenAddresses, true);
+			if (logger.isInfoEnabled()) {
+				logger.info("Listening with SSL on {}: {}", getBoundAddresses(sslServerSocketChannels), this);
+			}
 		}
 	}
 
-	private void listenAddresses(List<InetSocketAddress> addresses, boolean ssl) throws IOException {
+	private List<ServerSocketChannel> listenAddresses(List<InetSocketAddress> addresses, boolean ssl) throws IOException {
+		List<ServerSocketChannel> channels = new ArrayList<>(addresses.size());
 		for (InetSocketAddress address : addresses) {
 			try {
-				serverSocketChannels.add(eventloop.listen(address, serverSocketSettings, channel -> doAccept(channel, address, ssl)));
+				channels.add(eventloop.listen(address, serverSocketSettings, channel -> doAccept(channel, address, ssl)));
 			} catch (IOException e) {
 				logger.error("Can't listen on [" + address + "]: " + this, e);
 				close();
 				throw e;
 			}
 		}
+		return channels;
 	}
 
 	@Override
@@ -267,10 +276,15 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 	}
 
 	protected void closeServerSockets() {
-		if (serverSocketChannels == null || serverSocketChannels.isEmpty()) {
+		closeServerSockets(serverSocketChannels);
+		closeServerSockets(sslServerSocketChannels);
+	}
+
+	private void closeServerSockets(List<ServerSocketChannel> channels) {
+		if (channels == null || channels.isEmpty()) {
 			return;
 		}
-		for (Iterator<ServerSocketChannel> it = serverSocketChannels.iterator(); it.hasNext(); ) {
+		for (Iterator<ServerSocketChannel> it = channels.iterator(); it.hasNext(); ) {
 			ServerSocketChannel serverSocketChannel = it.next();
 			if (serverSocketChannel == null) {
 				continue;
@@ -363,6 +377,40 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 		return sslListenAddresses;
 	}
 
+	/**
+	 * The IP socket addresses {@code this} server is bound to after it started
+	 * listening. Use this method to get the actual port numbers in case any
+	 * {@link #getListenAddresses() listen address} uses port {@literal 0}.
+	 */
+	public List<InetSocketAddress> getBoundAddresses() {
+		return getBoundAddresses(serverSocketChannels);
+	}
+
+	/**
+	 * The IP socket addresses {@code this} server is bound to with SSL after it
+	 * started listening. Use this method to get the actual port numbers in case
+	 * any {@link #getSslListenAddresses() SSL listen address} uses port {@literal
+	 * 0}.
+	 */
+	public List<InetSocketAddress> getSslBoundAddresses() {
+		return getBoundAddresses(sslServerSocketChannels);
+	}
+
+	private List<InetSocketAddress> getBoundAddresses(List<ServerSocketChannel> channels) {
+		if (channels == null) {
+			return emptyList();
+		}
+		return channels.stream()
+				.map(ch -> {
+					try {
+						return (InetSocketAddress) ch.getLocalAddress();
+					} catch (IOException e) {
+						throw new UncheckedIOException(e);
+					}
+				})
+				.collect(toList());
+	}
+
 	public SocketSettings getSocketSettings() {
 		return socketSettings;
 	}
@@ -409,8 +457,3 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 	}
 
 }
-
-
-
-
-
