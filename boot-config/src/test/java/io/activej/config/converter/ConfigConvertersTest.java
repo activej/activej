@@ -128,15 +128,18 @@ public class ConfigConvertersTest {
 		map.put("key1", Config.ofValue("192.168.1.1:80"));
 		map.put("key2", Config.ofValue("250.200.100.50:10000"));
 		map.put("key3", Config.ofValue("1.0.0.0:65000"));
+		map.put("key4", Config.ofValue("127.0.0.1:0"));
 
 		Config root = Config.ofConfigs(map);
 
 		InetSocketAddress address1 = new InetSocketAddress(InetAddress.getByName("192.168.1.1"), 80);
 		InetSocketAddress address2 = new InetSocketAddress(InetAddress.getByName("250.200.100.50"), 10000);
 		InetSocketAddress address3 = new InetSocketAddress(InetAddress.getByName("1.0.0.0"), 65000);
+		InetSocketAddress address4 = new InetSocketAddress(InetAddress.getByName("127.0.0.1"), 0);
 		assertEquals(address1, inetSocketAddressConverter.get(root.getChild("key1")));
 		assertEquals(address2, inetSocketAddressConverter.get(root.getChild("key2")));
 		assertEquals(address3, inetSocketAddressConverter.get(root.getChild("key3")));
+		assertEquals(address4, inetSocketAddressConverter.get(root.getChild("key4")));
 	}
 
 	@Test

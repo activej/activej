@@ -324,8 +324,8 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 
 	public List<String> getHttpAddresses() {
 		return Stream.concat(
-				listenAddresses.stream().map(address -> format(address, false)),
-				sslListenAddresses.stream().map(address -> format(address, true))
+				getBoundAddresses().stream().map(address -> format(address, false)),
+				getSslBoundAddresses().stream().map(address -> format(address, true))
 		).collect(toList());
 	}
 
