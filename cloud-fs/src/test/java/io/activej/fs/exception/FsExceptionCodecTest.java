@@ -2,6 +2,8 @@ package io.activej.fs.exception;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.test.rules.ByteBufRule;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.util.Map;
@@ -13,6 +15,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public final class FsExceptionCodecTest {
+
+	@ClassRule
+	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	@Test
 	public void testFsException() {

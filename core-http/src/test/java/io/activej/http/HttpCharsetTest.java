@@ -1,6 +1,8 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.test.rules.ByteBufRule;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.nio.charset.Charset;
@@ -16,6 +18,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
 public class HttpCharsetTest {
+
+	@ClassRule
+	public static final ByteBufRule byteBufRule = new ByteBufRule();
+
 	@Test
 	public void testCharsetRender() {
 		String expected = "utf-8";

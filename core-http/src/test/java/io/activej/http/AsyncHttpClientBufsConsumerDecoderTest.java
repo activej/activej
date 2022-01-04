@@ -3,6 +3,7 @@ package io.activej.http;
 import io.activej.common.StringFormatUtils;
 import io.activej.dns.RemoteAsyncDnsClient;
 import io.activej.eventloop.Eventloop;
+import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -32,6 +33,9 @@ public class AsyncHttpClientBufsConsumerDecoderTest {
 
 	@ClassRule
 	public static EventloopRule eventloopRule = new EventloopRule();
+
+	@ClassRule
+	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	private static AsyncHttpClient client;
 
@@ -81,7 +85,6 @@ public class AsyncHttpClientBufsConsumerDecoderTest {
 	}
 
 	public void testUrl(String url) {
-		//noinspection Convert2MethodRef
 		String result = await(client.request(
 				HttpRequest.get(url)
 						.withHeader(HttpHeaders.USER_AGENT, "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1")

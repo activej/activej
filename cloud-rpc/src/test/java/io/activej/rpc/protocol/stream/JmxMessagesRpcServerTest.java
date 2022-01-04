@@ -5,6 +5,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.server.RpcServer;
+import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -28,6 +29,9 @@ public class JmxMessagesRpcServerTest {
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
+
+	@ClassRule
+	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();

@@ -28,6 +28,7 @@ import io.activej.inject.module.ModuleBuilder;
 import io.activej.promise.Promise;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
+import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.*;
@@ -37,10 +38,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -68,6 +66,9 @@ public class DataflowServerTest {
 	@ClassRule
 	public static final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
+	@ClassRule
+	public static final ByteBufRule byteBufRule = new ByteBufRule();
+
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
@@ -89,11 +90,15 @@ public class DataflowServerTest {
 	}
 
 	@After
-	public void tearDown() {
+	public void tearDown() throws InterruptedException, ExecutionException {
 		executor.shutdownNow();
 		sortingExecutor.shutdownNow();
+
 		serverLauncher1.shutdown();
+		serverLauncher1.getCompleteFuture().toCompletableFuture().get();
+
 		serverLauncher2.shutdown();
+		serverLauncher2.getCompleteFuture().toCompletableFuture().get();
 	}
 
 	@Test

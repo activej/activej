@@ -2,6 +2,8 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.test.rules.ByteBufRule;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
 
@@ -18,6 +20,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 public class HttpUtilsTest {
+
+	@ClassRule
+	public static final ByteBufRule byteBufRule = new ByteBufRule();
+
 	private static final Random RANDOM = new Random();
 
 	@Test

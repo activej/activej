@@ -11,7 +11,9 @@ import io.activej.inject.annotation.Provides;
 import io.activej.launchers.crdt.CrdtNodeLogicModule.Cluster;
 import io.activej.launchers.crdt.CrdtNodeLogicModule.InMemory;
 import io.activej.launchers.crdt.CrdtNodeLogicModule.Persistent;
+import io.activej.test.rules.ByteBufRule;
 import io.activej.types.TypeT;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.nio.file.Paths;
@@ -21,6 +23,10 @@ import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 public class CrdtNodeLauncherTest {
+
+	@ClassRule
+	public static final ByteBufRule byteBufRule = new ByteBufRule();
+
 	@Test
 	public void testInjector() {
 		new CrdtNodeLauncher<String, TimestampContainer<Integer>>() {
