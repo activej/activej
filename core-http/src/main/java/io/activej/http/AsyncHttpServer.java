@@ -35,7 +35,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.List;
 import java.util.stream.Stream;
@@ -312,20 +311,10 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 		}
 	}
 
-	private static String format(InetSocketAddress address, boolean ssl) {
-		return (ssl ? "https://" : "http://") +
-				("0.0.0.0".equals(address.getHostName())
-						? "localhost"
-						: address.getHostName()) +
-				(address.getPort() != (ssl ? 443 : 80) ?
-						":" + address.getPort()
-						: "") + "/";
-	}
-
 	public List<String> getHttpAddresses() {
 		return Stream.concat(
-				getBoundAddresses().stream().map(address -> format(address, false)),
-				getSslBoundAddresses().stream().map(address -> format(address, true))
+				getBoundAddresses().stream().map(address -> HttpUtils.formatUrl(address, false)),
+				getSslBoundAddresses().stream().map(address -> HttpUtils.formatUrl(address, true))
 		).collect(toList());
 	}
 

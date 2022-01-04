@@ -7,6 +7,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
 
+import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -83,6 +84,66 @@ public class HttpUtilsTest {
 		byte[] bytes = text.getBytes();
 		assertNegativeSizeException(() -> HttpUtils.trimAndDecodePositiveInt(bytes, 15, 3));
 		assertNegativeSizeException(() -> HttpUtils.trimAndDecodePositiveInt(bytes, 16, 2));
+	}
+
+	@Test
+	public void testFormatUrl() {
+		testFormatUrl(
+				new InetSocketAddress("localhost", 80),
+				"http://localhost/",
+				"https://localhost:80/");
+		testFormatUrl(
+				new InetSocketAddress("localhost", 443),
+				"http://localhost:443/",
+				"https://localhost/");
+		testFormatUrl(
+				new InetSocketAddress("localhost", 1337),
+				"http://localhost:1337/",
+				"https://localhost:1337/");
+
+		testFormatUrl(
+				new InetSocketAddress("0", 80),
+				"http://0.0.0.0/",
+				"https://0.0.0.0:80/");
+		testFormatUrl(
+				new InetSocketAddress("0", 443),
+				"http://0.0.0.0:443/",
+				"https://0.0.0.0/");
+		testFormatUrl(
+				new InetSocketAddress("0", 1337),
+				"http://0.0.0.0:1337/",
+				"https://0.0.0.0:1337/");
+
+		testFormatUrl(
+				new InetSocketAddress("::1", 80),
+				"http://localhost/",
+				"https://localhost:80/");
+		testFormatUrl(
+				new InetSocketAddress("::1", 443),
+				"http://localhost:443/",
+				"https://localhost/");
+		testFormatUrl(
+				new InetSocketAddress("::1", 1337),
+				"http://localhost:1337/",
+				"https://localhost:1337/");
+
+		testFormatUrl(
+				new InetSocketAddress("::", 80),
+				"http://[0:0:0:0:0:0:0:0]/",
+				"https://[0:0:0:0:0:0:0:0]:80/");
+		testFormatUrl(
+				new InetSocketAddress("::", 443),
+				"http://[0:0:0:0:0:0:0:0]:443/",
+				"https://[0:0:0:0:0:0:0:0]/");
+		testFormatUrl(
+				new InetSocketAddress("::", 1337),
+				"http://[0:0:0:0:0:0:0:0]:1337/",
+				"https://[0:0:0:0:0:0:0:0]:1337/");
+	}
+
+	private void testFormatUrl(InetSocketAddress address, String expectedUrl, String expectedSslUrl) {
+		assertEquals(expectedUrl, HttpUtils.formatUrl(address, false));
+		assertEquals(expectedSslUrl, HttpUtils.formatUrl(address, true));
 	}
 
 	// region helpers
