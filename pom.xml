@@ -302,6 +302,11 @@
           <systemPropertyVariables>
             <chk>on</chk>
             <AsyncTcpSocketNio.debugReadOffset>1</AsyncTcpSocketNio.debugReadOffset>
+            <ByteBufPool.stats>true</ByteBufPool.stats>
+            <ByteBufPool.registry>true</ByteBufPool.registry>
+            <ByteBufPool.minSize>0</ByteBufPool.minSize>
+            <ByteBufPool.maxSize>0</ByteBufPool.maxSize>
+            <ByteBufPool.clearOnRecycle>true</ByteBufPool.clearOnRecycle>
           </systemPropertyVariables>
         </configuration>
       </plugin>
