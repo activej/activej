@@ -23,6 +23,7 @@ import io.activej.eventloop.inspector.ThrottlingController;
 import io.activej.http.AsyncHttpServer;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
+import io.activej.http.HttpUtils;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.OptionalDependency;
@@ -116,10 +117,12 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 
 	@Override
 	protected void run() throws Exception {
-		logger.info("HTTP Server is listening on {}", Stream.concat(
-						primaryServer.getBoundAddresses().stream().map(address -> "http://" + ("0.0.0.0".equals(address.getHostName()) ? "localhost" : address.getHostName()) + (address.getPort() != 80 ? ":" + address.getPort() : "") + "/"),
-						primaryServer.getSslBoundAddresses().stream().map(address -> "https://" + ("0.0.0.0".equals(address.getHostName()) ? "localhost" : address.getHostName()) + (address.getPort() != 80 ? ":" + address.getPort() : "") + "/"))
-				.collect(joining(" ")));
+		if (logger.isInfoEnabled()) {
+			logger.info("HTTP Server is listening on {}", Stream.concat(
+							primaryServer.getBoundAddresses().stream().map(address -> HttpUtils.formatUrl(address, false)),
+							primaryServer.getSslBoundAddresses().stream().map(address -> HttpUtils.formatUrl(address, true)))
+					.collect(joining(" ")));
+		}
 		awaitShutdown();
 	}
 

@@ -21,6 +21,9 @@ import io.activej.common.exception.MalformedDataException;
 import io.activej.http.WebSocket.Frame.FrameType;
 import io.activej.http.WebSocket.Message.MessageType;
 import io.activej.http.WebSocketConstants.OpCode;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetSocketAddress;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.UnsupportedEncodingException;
@@ -368,6 +371,29 @@ public final class HttpUtils {
 				return "505. HTTP Version Not Supported";
 			default:
 				return code + ". Unknown HTTP code, returned from an error";
+		}
+	}
+
+	/**
+	 * Format an IPv4/IPv6 socket address as either HTTP or HTTPS URL.
+	 *
+	 * @return the URL
+	 */
+	public static String formatUrl(InetSocketAddress address, boolean ssl) {
+		return (ssl ? "https://" : "http://")
+				+ formatHost(address.getAddress())
+				+ (address.getPort() != (ssl ? 443 : 80) ? ":" + address.getPort() : "")
+				+ "/";
+	}
+
+	private static String formatHost(InetAddress address) {
+		String name = address.getHostName();
+		if (address instanceof Inet4Address) {
+			return name;
+		} else if (address instanceof Inet6Address && name.contains(":")) {
+			return "[" + name + "]";
+		} else {
+			return name;
 		}
 	}
 
