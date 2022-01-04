@@ -48,17 +48,12 @@ public interface DiscoveryService {
 	 */
 	static DiscoveryService constant(Map<Object, ActiveFs> partitions) {
 		Map<Object, ActiveFs> constant = Collections.unmodifiableMap(new HashMap<>(partitions));
-		return new DiscoveryService() {
-			@Override
-			public AsyncSupplier<Map<Object, ActiveFs>> supplier() {
-				return new AsyncSupplier<Map<Object, ActiveFs>>() {
-					int i = 0;
+		return () -> new AsyncSupplier<Map<Object, ActiveFs>>() {
+			int i = 0;
 
-					@Override
-					public Promise<Map<Object, ActiveFs>> get() {
-						return i++ == 0 ? Promise.of(constant) : new SettablePromise<>();
-					}
-				};
+			@Override
+			public Promise<Map<Object, ActiveFs>> get() {
+				return i++ == 0 ? Promise.of(constant) : new SettablePromise<>();
 			}
 		};
 	}

@@ -39,14 +39,11 @@ import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
-import io.activej.jmx.stats.EventStats;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
-import io.activej.promise.jmx.PromiseStats;
 import org.jetbrains.annotations.NotNull;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -70,12 +67,6 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 	private final StreamStatsDetailed<CrdtData<K, S>> downloadStatsDetailed = StreamStats.detailed();
 	private final StreamStatsBasic<K> removeStats = StreamStats.basic();
 	private final StreamStatsDetailed<K> removeStatsDetailed = StreamStats.detailed();
-
-	private final EventStats repartitionCount = EventStats.create(Duration.ofMinutes(5));
-	private final PromiseStats repartitionPromise = PromiseStats.create(Duration.ofMinutes(5));
-	private final StreamStatsBasic<CrdtData<K, S>> repartitionStats = StreamStats.basic();
-	private final StreamStatsDetailed<CrdtData<K, S>> repartitionStatsDetailed = StreamStats.detailed();
-
 	// endregion
 
 	// region creators
@@ -138,10 +129,6 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 	public @NotNull Promise<?> stop() {
 		this.stopped = true;
 		return Promise.complete();
-	}
-
-	public DiscoveryService.Partitionings<K, S, P> getCurrentPartitionings() {
-		return currentPartitionings;
 	}
 
 	@Override
@@ -233,7 +220,8 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 			}
 		}
 
-		return Promises.toTuple(Tuple::new,
+		//noinspection Convert2MethodRef - does not compile on Java 8
+		return Promises.toTuple((downloader, remover, uploaders) -> new Tuple(downloader, remover, uploaders),
 						source.download().toTry(),
 						source.remove().toTry(),
 						execute(partitionings.getPartitions(), CrdtStorage::upload))
@@ -393,14 +381,4 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 		return removeStatsDetailed;
 	}
 	// endregion
-
-	private final class Container<T extends AsyncCloseable> {
-		final P id;
-		final T value;
-
-		Container(P id, T value) {
-			this.id = id;
-			this.value = value;
-		}
-	}
 }

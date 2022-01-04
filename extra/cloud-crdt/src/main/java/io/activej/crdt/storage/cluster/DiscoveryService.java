@@ -41,17 +41,12 @@ public interface DiscoveryService<K extends Comparable<K>, S, P> {
 	}
 
 	static <K extends Comparable<K>, S, P> DiscoveryService<K, S, P> of(Partitionings<K, S, P> partitionings) {
-		return new DiscoveryService<K, S, P>() {
-			@Override
-			public AsyncSupplier<Partitionings<K, S, P>> discover() {
-				return new AsyncSupplier<Partitionings<K, S, P>>() {
-					int i = 0;
+		return () -> new AsyncSupplier<Partitionings<K, S, P>>() {
+			int i = 0;
 
-					@Override
-					public Promise<Partitionings<K, S, P>> get() {
-						return i++ == 0 ? Promise.of(partitionings) : new SettablePromise<>();
-					}
-				};
+			@Override
+			public Promise<Partitionings<K, S, P>> get() {
+				return i++ == 0 ? Promise.of(partitionings) : new SettablePromise<>();
 			}
 		};
 	}
