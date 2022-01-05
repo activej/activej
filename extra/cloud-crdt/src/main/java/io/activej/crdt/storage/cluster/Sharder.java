@@ -39,8 +39,8 @@ public interface Sharder<K> {
 					int[] selected = rendezvousSharder.buckets[bucket];
 					NEXT:
 					for (int idx : selected) {
-						for (int idx0 : buf) {
-							if (idx == idx0) continue NEXT;
+						for (int i = 0; i < pos; i++) {
+							if (idx == buf[i]) continue NEXT;
 						}
 						if (buf.length <= pos) buf = Arrays.copyOf(buf, buf.length * 2 + 1);
 						buf[pos++] = idx;
@@ -61,8 +61,8 @@ public interface Sharder<K> {
 						int[] selected = sharder.shard(key);
 						NEXT:
 						for (int idx : selected) {
-							for (int idx0 : buf) {
-								if (idx == idx0) continue NEXT;
+							for (int i = 0; i < pos; i++) {
+								if (idx == buf[i]) continue NEXT;
 							}
 							if (buf.length <= pos) {
 								buf = Arrays.copyOf(buf, buf.length + 1);
