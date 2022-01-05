@@ -6,6 +6,8 @@ import io.activej.test.rules.ByteBufRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import java.util.TreeMap;
+
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.http.HttpMethod.*;
 import static io.activej.http.WebSocketConstants.NOT_A_WEB_SOCKET_REQUEST;
@@ -373,4 +375,72 @@ public final class RoutingServletTest {
 		check(main.serve(HttpRequest.post(TEMPLATE + wsPath)), "", 404);
 	}
 
+	@Test
+	public void testPercentEncoding() throws Exception {
+		RoutingServlet router = RoutingServlet.create();
+
+		AsyncServlet servlet = request -> HttpResponse.ofCode(200).withBody("".getBytes(UTF_8));
+
+		router.map(GET, "/a%2fb", servlet);
+
+		assertThrows(
+				"Already mapped",
+				IllegalArgumentException.class,
+				() -> router.map(GET, "/a%2Fb", servlet)
+		);
+
+		check(router.serve(HttpRequest.get("http://some-test.com/a%2fb")), "", 200);
+		check(router.serve(HttpRequest.get("http://some-test.com/a%2Fb")), "", 200);
+		check(router.serve(HttpRequest.get("http://some-test.com/a/b")), "", 404);
+	}
+
+	@Test
+	public void testPercentEncodedParameters() throws Exception {
+		AsyncServlet printParameters = request -> {
+			String body = new TreeMap<>(request.getPathParameters()).toString();
+			ByteBuf bodyByteBuf = wrapUtf8(body);
+			return HttpResponse.ofCode(200).withBody(bodyByteBuf);
+		};
+
+		RoutingServlet main = RoutingServlet.create()
+				.map(GET, "/a/:val", printParameters);
+
+		check(main.serve(HttpRequest.get("http://example.com/a/1%2f")), "{val=1/}", 200);
+		check(main.serve(HttpRequest.get("http://example.com/a/1%2F")), "{val=1/}", 200);
+		check(main.serve(HttpRequest.get("http://example.com/a/1+")), "{val=1 }", 200);
+		check(main.serve(HttpRequest.get("http://example.com/a/1%252f")), "{val=1%2f}", 200);
+	}
+
+	@Test
+	public void testPercentEncodedParameterName() throws Exception {
+		AsyncServlet printParameters = request -> {
+			String body = new TreeMap<>(request.getPathParameters()).toString();
+			ByteBuf bodyByteBuf = wrapUtf8(body);
+			return HttpResponse.ofCode(200).withBody(bodyByteBuf);
+		};
+
+		RoutingServlet main = RoutingServlet.create()
+				.map(GET, "/a/:%2f", printParameters);
+
+		check(main.serve(HttpRequest.get("http://example.com/a/23")), "{%2f=23}", 200);
+	}
+
+	@Test
+	public void testBadPercentEncoding() {
+		RoutingServlet router = RoutingServlet.create();
+		AsyncServlet servlet = request -> HttpResponse.ofCode(200).withBody(new byte[0]);
+		RoutingServlet main = router.map(GET, "/a", servlet);
+
+		assertThrows(
+				"Path contains bad percent encoding",
+				HttpError.class,
+				() -> main.serve(HttpRequest.get("http://example.com/a%2"))
+		);
+
+		assertThrows(
+				"Path contains bad percent encoding",
+				IllegalArgumentException.class,
+				() -> router.map(GET, "/a%2", servlet)
+		);
+	}
 }

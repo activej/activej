@@ -175,7 +175,10 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 
 	private @Nullable Promise<HttpResponse> tryServe(HttpRequest request) throws Exception {
 		int introPosition = request.getPos();
-		String urlPart = request.pollUrlPart();
+		String urlPart = UrlParser.urlParse(request.pollUrlPart());
+		if (urlPart == null) {
+			throw HttpError.badRequest400("Path contains bad percent encoding");
+		}
 		Protocol protocol = request.getProtocol();
 		int ordinal = protocol == WS || protocol == WSS ? WS_ORDINAL : request.getMethod().ordinal();
 
@@ -230,6 +233,13 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 		String remainingPath = path;
 		while (true) {
 			String urlPart = remainingPath.substring(1, slash == -1 ? remainingPath.length() : slash);
+
+			if (!urlPart.startsWith(":")) {
+				urlPart = UrlParser.urlParse(urlPart);
+				if (urlPart == null) {
+					throw new IllegalArgumentException("Path contains bad percent encoding");
+				}
+			}
 
 			if (urlPart.isEmpty()) {
 				return sub;
