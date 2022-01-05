@@ -370,7 +370,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		if (pathParameters == null) {
 			pathParameters = new HashMap<>();
 		}
-		pathParameters.put(key, UrlParser.urlParse(value));
+		pathParameters.put(key, value);
 	}
 
 	@Override
