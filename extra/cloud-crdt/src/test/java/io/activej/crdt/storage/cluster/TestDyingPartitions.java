@@ -2,6 +2,7 @@ package io.activej.crdt.storage.cluster;
 
 import io.activej.async.process.AsyncCloseable;
 import io.activej.crdt.CrdtData;
+import io.activej.crdt.CrdtException;
 import io.activej.crdt.CrdtServer;
 import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.function.CrdtFunction;
@@ -16,9 +17,9 @@ import io.activej.eventloop.Eventloop;
 import io.activej.net.AbstractServer;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
@@ -26,13 +27,15 @@ import java.nio.channels.SelectionKey;
 import java.util.*;
 
 import static io.activej.promise.TestUtils.await;
+import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
 import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
 import static io.activej.test.TestUtils.getFreePort;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-@Ignore
 public final class TestDyingPartitions {
 	private static final int SERVER_COUNT = 5;
 	private static final int REPLICATION_COUNT = 3;
@@ -46,13 +49,11 @@ public final class TestDyingPartitions {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	private Map<Integer, AbstractServer<?>> servers;
-	private Map<Integer, CrdtStorageMap<String, TimestampContainer<Integer>>> storages;
 	private CrdtStorageCluster<String, TimestampContainer<Integer>, String> cluster;
 
 	@Before
 	public void setUp() throws Exception {
 		servers = new LinkedHashMap<>();
-		storages = new LinkedHashMap<>();
 
 		Map<String, CrdtStorage<String, TimestampContainer<Integer>>> clients = new HashMap<>();
 
@@ -65,7 +66,6 @@ public final class TestDyingPartitions {
 					.withListenAddresses(address);
 			server.listen();
 			assertNull(servers.put(port, server));
-			assertNull(storages.put(port, storage));
 			new Thread(eventloop).start();
 
 			clients.put("server_" + i, CrdtStorageClient.create(eventloop, address, SERIALIZER));
@@ -79,6 +79,11 @@ public final class TestDyingPartitions {
 		await(cluster.start());
 	}
 
+	@After
+	public void tearDown() {
+		shutdownAllEventloops();
+	}
+
 	@Test
 	public void testUploadWithDyingPartitions() {
 		List<CrdtData<String, TimestampContainer<Integer>>> data = new ArrayList<>();
@@ -86,19 +91,12 @@ public final class TestDyingPartitions {
 			data.add(new CrdtData<>(String.valueOf(i), TimestampContainer.now(i + 1)));
 		}
 
-		await(StreamSupplier.ofIterator(data.iterator())
+		Exception exception = awaitException(StreamSupplier.ofIterator(data.iterator())
 				.streamTo(StreamConsumer.ofPromise(cluster.upload()
 						.whenResult(this::shutdown2Servers))));
 
-//		assertEquals(2, cluster.getCurrentPartitionings().getDeadPartitions().size());
-
-		Set<CrdtData<String, TimestampContainer<Integer>>> result = new HashSet<>();
-		for (CrdtStorageMap<String, TimestampContainer<Integer>> storage : storages.values()) {
-			storage.iterator().forEachRemaining(result::add);
-		}
-
-		assertEquals(new HashSet<>(data), result);
-		shutdownAllEventloops();
+		assertThat(exception, instanceOf(CrdtException.class));
+		assertEquals("Upload failed", exception.getMessage());
 	}
 
 	@Test
@@ -111,12 +109,12 @@ public final class TestDyingPartitions {
 		await(StreamSupplier.ofIterator(data.iterator())
 				.streamTo(StreamConsumer.ofPromise(cluster.upload())));
 
-		List<CrdtData<String, TimestampContainer<Integer>>> downloaded = await(cluster.download()
+		Exception exception = awaitException(cluster.download()
 				.whenResult(this::shutdown2Servers)
 				.then(StreamSupplier::toList));
 
-		assertEquals(new HashSet<>(data), new HashSet<>(downloaded));
-		shutdownAllEventloops();
+		assertThat(exception, instanceOf(CrdtException.class));
+		assertEquals("Download failed", exception.getMessage());
 	}
 
 	@SuppressWarnings("ConstantConditions")
