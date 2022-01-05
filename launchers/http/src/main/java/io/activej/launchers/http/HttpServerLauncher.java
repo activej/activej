@@ -46,6 +46,7 @@ import static io.activej.launchers.initializers.Initializers.ofHttpServer;
  * @see Launcher
  */
 public abstract class HttpServerLauncher extends Launcher {
+	public static final String HOSTNAME = "localhost";
 	public static final int PORT = 8080;
 	public static final String PROPERTIES_FILE = "http-server.properties";
 
@@ -68,7 +69,7 @@ public abstract class HttpServerLauncher extends Launcher {
 	@Provides
 	Config config() {
 		return Config.create()
-				.with("http.listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(PORT)))
+				.with("http.listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(HOSTNAME, PORT)))
 				.overrideWith(ofClassPathProperties(PROPERTIES_FILE, true))
 				.overrideWith(ofSystemProperties("config"));
 	}

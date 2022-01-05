@@ -51,6 +51,7 @@ import static java.util.stream.Collectors.joining;
 
 @SuppressWarnings("WeakerAccess")
 public abstract class MultithreadedHttpServerLauncher extends Launcher {
+	public static final String HOSTNAME = "localhost";
 	public static final int PORT = 8080;
 	public static final int WORKERS = 4;
 
@@ -94,7 +95,7 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 	@Provides
 	Config config() {
 		return Config.create()
-				.with("http.listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(PORT)))
+				.with("http.listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(HOSTNAME, PORT)))
 				.with("workers", "" + WORKERS)
 				.overrideWith(ofClassPathProperties(PROPERTIES_FILE, true))
 				.overrideWith(ofSystemProperties("config"));
