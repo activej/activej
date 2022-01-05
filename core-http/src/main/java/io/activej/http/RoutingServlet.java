@@ -175,7 +175,7 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 
 	private @Nullable Promise<HttpResponse> tryServe(HttpRequest request) throws Exception {
 		int introPosition = request.getPos();
-		String urlPart = UrlParser.urlParse(request.pollUrlPart());
+		String urlPart = request.pollUrlPart();
 		if (urlPart == null) {
 			throw HttpError.badRequest400("Path contains bad percent encoding");
 		}

@@ -466,19 +466,17 @@ public final class UrlParser {
 		return new String(raw, pos, pathEnd - pos, CHARSET);
 	}
 
-	String pollUrlPart() {
+	@Nullable String pollUrlPart() {
 		if (pos < pathEnd) {
 			int start = pos + 1;
 			int nextSlash = indexOf(SLASH, start);
 			pos = nextSlash > pathEnd ? pathEnd : (short) nextSlash;
-			String part;
 			if (pos == -1) {
-				part = new String(raw, start, pathEnd - start, CHARSET);
 				pos = limit;
+				return urlParse(raw, start, pathEnd);
 			} else {
-				part = new String(raw, start, pos - start, CHARSET);
+				return urlParse(raw, start, pos);
 			}
-			return part;
 		} else {
 			return "";
 		}
