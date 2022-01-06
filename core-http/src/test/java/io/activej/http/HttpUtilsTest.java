@@ -9,16 +9,17 @@ import org.junit.function.ThrowingRunnable;
 
 import java.net.InetSocketAddress;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 import static io.activej.bytebuf.ByteBufStrings.decodeUtf8;
 import static io.activej.bytebuf.ByteBufStrings.encodePositiveInt;
 import static io.activej.http.HttpUtils.trimAndDecodePositiveInt;
+import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class HttpUtilsTest {
 
@@ -116,16 +117,16 @@ public class HttpUtilsTest {
 
 		testFormatUrl(
 				new InetSocketAddress("::1", 80),
-				"http://localhost/",
-				"https://localhost:80/");
+				asList("http://localhost/", "http://ip6-localhost/"),
+				asList("https://localhost:80/", "https://ip6-localhost:80/"));
 		testFormatUrl(
 				new InetSocketAddress("::1", 443),
-				"http://localhost:443/",
-				"https://localhost/");
+				asList("http://localhost:443/", "http://ip6-localhost:443/"),
+				asList("https://localhost/", "https://ip6-localhost/"));
 		testFormatUrl(
 				new InetSocketAddress("::1", 1337),
-				"http://localhost:1337/",
-				"https://localhost:1337/");
+				asList("http://localhost:1337/", "http://ip6-localhost:1337/"),
+				asList("https://localhost:1337/", "https://ip6-localhost:1337/"));
 
 		testFormatUrl(
 				new InetSocketAddress("::", 80),
@@ -144,6 +145,14 @@ public class HttpUtilsTest {
 	private void testFormatUrl(InetSocketAddress address, String expectedUrl, String expectedSslUrl) {
 		assertEquals(expectedUrl, HttpUtils.formatUrl(address, false));
 		assertEquals(expectedSslUrl, HttpUtils.formatUrl(address, true));
+	}
+
+	private void testFormatUrl(InetSocketAddress address, List<String> expectedUrls, List<String> expectedSslUrls) {
+		String url = HttpUtils.formatUrl(address, false);
+		assertTrue(expectedUrls.stream().map(url::equals).findAny().isPresent());
+
+		String sslUrl = HttpUtils.formatUrl(address, true);
+		assertTrue(expectedSslUrls.stream().map(sslUrl::equals).findAny().isPresent());
 	}
 
 	// region helpers
