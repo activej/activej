@@ -268,7 +268,6 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 					logger.info("started consolidating into {} from {}", name, files);
 
 					String metafile = namingStrategy.apply("dump");
-					//noinspection Convert2MethodRef
 					return consolidationFolderFs.upload(metafile)
 							.then(consumer ->
 									ChannelSupplier.of(ByteBuf.wrapForReading(dump.getBytes(UTF_8)))

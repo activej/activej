@@ -128,7 +128,6 @@ public final class TestGzipProcessorUtils {
 
 		server.listen();
 
-		//noinspection Convert2MethodRef
 		ByteBuf body = await(client.request(request)
 				.whenComplete(assertCompleteFn(response -> assertEquals("gzip", response.getHeader(CONTENT_ENCODING))))
 				.then(response -> response.loadBody(CHARACTERS_COUNT))

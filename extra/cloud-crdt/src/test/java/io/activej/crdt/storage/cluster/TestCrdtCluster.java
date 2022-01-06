@@ -95,7 +95,7 @@ public final class TestCrdtCluster {
 	}
 
 	@Test
-	@SuppressWarnings({"ConstantConditions", "Convert2MethodRef"})
+	@SuppressWarnings("ConstantConditions")
 	public void testDownload() throws IOException {
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
 

@@ -43,7 +43,6 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
-@SuppressWarnings("Convert2MethodRef")
 public final class AsyncHttpClientTest {
 	private static final byte[] HELLO_WORLD = encodeAscii("Hello, World!");
 
