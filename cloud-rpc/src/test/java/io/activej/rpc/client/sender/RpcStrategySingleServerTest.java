@@ -9,7 +9,6 @@ import org.junit.Test;
 import java.net.InetSocketAddress;
 
 import static io.activej.rpc.client.sender.Callbacks.assertNoCalls;
-import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.*;
 
 public class RpcStrategySingleServerTest {
@@ -20,7 +19,7 @@ public class RpcStrategySingleServerTest {
 
 	@Before
 	public void setUp() {
-		address = new InetSocketAddress(HOST, getFreePort());
+		address = new InetSocketAddress(HOST, 10000);
 	}
 
 	@Test

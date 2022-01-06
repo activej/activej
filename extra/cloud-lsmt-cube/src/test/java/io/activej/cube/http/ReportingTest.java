@@ -54,7 +54,6 @@ import static io.activej.cube.ReportType.DATA_WITH_TOTALS;
 import static io.activej.cube.http.ReportingTest.LogItem.*;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.test.TestUtils.getFreePort;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -68,7 +67,6 @@ public final class ReportingTest extends CubeTestBase {
 	private AsyncHttpServer cubeHttpServer;
 	private CubeHttpClient cubeHttpClient;
 	private Cube cube;
-	private int serverPort;
 
 	private static final Map<String, FieldType> DIMENSIONS_CUBE = entriesToMap(Stream.of(
 			new SimpleEntry<>("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
@@ -250,7 +248,6 @@ public final class ReportingTest extends CubeTestBase {
 
 	@Before
 	public void setUp() throws Exception {
-		serverPort = getFreePort();
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 
 		LocalActiveFs fs = LocalActiveFs.create(EVENTLOOP, EXECUTOR, aggregationsDir);
@@ -333,10 +330,13 @@ public final class ReportingTest extends CubeTestBase {
 		await(logCubeStateManager.sync());
 
 		cubeHttpServer = startHttpServer();
+		cubeHttpClient = createCubeHttpClient();
+	}
 
-		AsyncHttpClient httpClient = AsyncHttpClient.create(EVENTLOOP)
-				.withNoKeepAlive();
-		cubeHttpClient = CubeHttpClient.create(httpClient, "http://127.0.0.1:" + serverPort)
+	@NotNull
+	private CubeHttpClient createCubeHttpClient() {
+		AsyncHttpClient httpClient = AsyncHttpClient.create(EVENTLOOP).withNoKeepAlive();
+		return CubeHttpClient.create(httpClient, "http://127.0.0.1:" + first(cubeHttpServer.getBoundAddresses()).getPort())
 				.withAttribute("date", LocalDate.class)
 				.withAttribute("advertiser", int.class)
 				.withAttribute("campaign", int.class)
@@ -360,7 +360,7 @@ public final class ReportingTest extends CubeTestBase {
 
 	private AsyncHttpServer startHttpServer() {
 		AsyncHttpServer server = AsyncHttpServer.create(EVENTLOOP, ReportingServiceServlet.createRootServlet(EVENTLOOP, cube))
-				.withListenPort(serverPort)
+				.withListenPort(0)
 				.withAcceptOnce();
 		try {
 			server.listen();
@@ -437,7 +437,9 @@ public final class ReportingTest extends CubeTestBase {
 		assertEquals(38.0 / 500.0 * 100.0, totals1.get("ctr"), DELTA);
 		assertEquals(setOf("date"), new HashSet<>(queryResult1.getSortedBy()));
 
-		startHttpServer();
+		cubeHttpServer = startHttpServer();
+		cubeHttpClient = createCubeHttpClient();
+
 		QueryResult queryResult2 = await(cubeHttpClient.query(query));
 		List<Record> records2 = queryResult2.getRecords();
 		assertEquals(records1.size(), records2.size());

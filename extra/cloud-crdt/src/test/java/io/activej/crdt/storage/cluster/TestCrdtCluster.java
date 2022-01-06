@@ -24,11 +24,11 @@ import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.*;
 
+import static io.activej.common.Utils.first;
 import static io.activej.common.Utils.setOf;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
 import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
-import static io.activej.test.TestUtils.getFreePort;
 import static java.util.Collections.singleton;
 import static org.junit.Assert.assertEquals;
 
@@ -54,11 +54,10 @@ public final class TestCrdtCluster {
 		Map<String, CrdtStorageMap<String, TimestampContainer<Integer>>> remoteStorages = new LinkedHashMap<>();
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
 			CrdtStorageMap<String, TimestampContainer<Integer>> storage = CrdtStorageMap.create(eventloop, TimestampContainer.createCrdtFunction(Integer::max));
-			InetSocketAddress address = new InetSocketAddress(getFreePort());
 			CrdtServer<String, TimestampContainer<Integer>> server = CrdtServer.create(eventloop, storage, serializer);
-			server.withListenAddresses(address).listen();
+			server.withListenPort(0).listen();
 			servers.add(server);
-			clients.put("server_" + i, CrdtStorageClient.create(eventloop, address, serializer).withConnectTimeout(Duration.ofSeconds(1)));
+			clients.put("server_" + i, CrdtStorageClient.create(eventloop, first(server.getBoundAddresses()), serializer).withConnectTimeout(Duration.ofSeconds(1)));
 			remoteStorages.put("server_" + i, storage);
 		}
 		clients.put("dead_one", CrdtStorageClient.create(eventloop, new InetSocketAddress(5555), serializer).withConnectTimeout(Duration.ofSeconds(1)));
@@ -118,11 +117,10 @@ public final class TestCrdtCluster {
 			storage.put(key2, TimestampContainer.now(new HashSet<>(singleton(i / 2))));
 			storage.put(key3, TimestampContainer.now(new HashSet<>(singleton(123))));
 
-			InetSocketAddress address = new InetSocketAddress(getFreePort());
 			CrdtServer<String, TimestampContainer<Set<Integer>>> server = CrdtServer.create(eventloop, storage, serializer);
-			server.withListenAddresses(address).listen();
+			server.withListenPort(0).listen();
 			servers.add(server);
-			clients.put("server_" + i, CrdtStorageClient.create(eventloop, address, serializer).withConnectTimeout(Duration.ofSeconds(1)));
+			clients.put("server_" + i, CrdtStorageClient.create(eventloop, first(server.getBoundAddresses()), serializer).withConnectTimeout(Duration.ofSeconds(1)));
 		}
 
 		clients.put("dead_one", CrdtStorageClient.create(eventloop, new InetSocketAddress(5555), serializer).withConnectTimeout(Duration.ofSeconds(1)));

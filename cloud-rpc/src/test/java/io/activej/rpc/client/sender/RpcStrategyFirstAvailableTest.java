@@ -10,7 +10,6 @@ import java.net.InetSocketAddress;
 import static io.activej.rpc.client.sender.Callbacks.assertNoCalls;
 import static io.activej.rpc.client.sender.RpcStrategies.firstAvailable;
 import static io.activej.rpc.client.sender.RpcStrategies.servers;
-import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.*;
 
 public class RpcStrategyFirstAvailableTest {
@@ -23,9 +22,9 @@ public class RpcStrategyFirstAvailableTest {
 
 	@Before
 	public void setUp() {
-		address1 = new InetSocketAddress(HOST, getFreePort());
-		address2 = new InetSocketAddress(HOST, getFreePort());
-		address3 = new InetSocketAddress(HOST, getFreePort());
+		address1 = new InetSocketAddress(HOST, 10001);
+		address2 = new InetSocketAddress(HOST, 10002);
+		address3 = new InetSocketAddress(HOST, 10003);
 	}
 
 	@SuppressWarnings("ConstantConditions")

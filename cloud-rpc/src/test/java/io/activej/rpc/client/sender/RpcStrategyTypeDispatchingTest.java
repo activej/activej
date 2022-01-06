@@ -12,7 +12,6 @@ import java.util.concurrent.ExecutionException;
 
 import static io.activej.rpc.client.sender.Callbacks.*;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
-import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -28,10 +27,10 @@ public class RpcStrategyTypeDispatchingTest {
 
 	@Before
 	public void setUp() {
-		address1 = new InetSocketAddress(HOST, getFreePort());
-		address2 = new InetSocketAddress(HOST, getFreePort());
-		address3 = new InetSocketAddress(HOST, getFreePort());
-		address4 = new InetSocketAddress(HOST, getFreePort());
+		address1 = new InetSocketAddress(HOST, 10001);
+		address2 = new InetSocketAddress(HOST, 10002);
+		address3 = new InetSocketAddress(HOST, 10003);
+		address4 = new InetSocketAddress(HOST, 10004);
 	}
 
 	@Test

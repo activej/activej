@@ -6,7 +6,6 @@ import io.activej.dataflow.dataset.SortedDataset;
 import io.activej.dataflow.dataset.impl.DatasetConsumerOfId;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
-import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.json.JsonCodec;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
 import io.activej.datastream.StreamConsumerToList;
@@ -26,7 +25,6 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
-import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -39,9 +37,10 @@ import static io.activej.dataflow.helper.StreamMergeSorterStorageStub.FACTORY_ST
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.dataflow.json.JsonUtils.ofObject;
 import static io.activej.dataflow.stream.DataflowTest.createCommon;
+import static io.activej.dataflow.stream.DataflowTest.createGraph;
+import static io.activej.dataflow.stream.PartitionedStreamTest.toPartitions;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertCompleteFn;
-import static io.activej.test.TestUtils.getFreePort;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
@@ -59,17 +58,11 @@ public class PageRankTest {
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
-	private InetSocketAddress address1;
-	private InetSocketAddress address2;
-
 	private ExecutorService executor;
 	private ExecutorService sortingExecutor;
 
 	@Before
 	public void setUp() {
-		address1 = new InetSocketAddress(getFreePort());
-		address2 = new InetSocketAddress(getFreePort());
-
 		executor = Executors.newCachedThreadPool();
 		sortingExecutor = Executors.newCachedThreadPool();
 	}
@@ -242,8 +235,8 @@ public class PageRankTest {
 		return ranks;
 	}
 
-	private Module createModule(Partition... partitions) throws Exception {
-		return createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(partitions))
+	private Module createModule() throws Exception {
+		return createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath())
 				.bind(new Key<JsonCodec<PageKeyFunction>>() {}).toInstance(ofObject(PageKeyFunction::new))
 				.bind(new Key<JsonCodec<RankKeyFunction>>() {}).toInstance(ofObject(RankKeyFunction::new))
 				.bind(new Key<JsonCodec<RankAccumulatorKeyFunction>>() {}).toInstance(ofObject(RankAccumulatorKeyFunction::new))
@@ -255,13 +248,13 @@ public class PageRankTest {
 				.build();
 	}
 
-	public DataflowServer launchServer(InetSocketAddress address, Object items, Object result) throws Exception {
+	public DataflowServer launchServer(Object items, Object result) throws Exception {
 		Injector env = Injector.of(ModuleBuilder.create()
 				.install(createModule())
 				.bind(datasetId("items")).toInstance(items)
 				.bind(datasetId("result")).toInstance(result)
 				.build());
-		DataflowServer server = env.getInstance(DataflowServer.class).withListenAddress(address);
+		DataflowServer server = env.getInstance(DataflowServer.class).withListenPort(0);
 		server.listen();
 		return server;
 	}
@@ -287,20 +280,22 @@ public class PageRankTest {
 	}
 
 	@SuppressWarnings("unused") // For manual run
-	public void launchServers() throws Exception {
-		launchServer(address1, generatePages(100000), (Consumer<Rank>) $ -> {});
-		launchServer(address2, generatePages(90000), (Consumer<Rank>) $ -> {});
-		await();
+	public List<DataflowServer> launchServers() throws Exception {
+		DataflowServer server1 = launchServer(generatePages(100000), (Consumer<Rank>) $ -> {});
+		DataflowServer server2 = launchServer(generatePages(90000), (Consumer<Rank>) $ -> {});
+		return asList(server1, server2);
 	}
 
 	@SuppressWarnings("unused") // For manual run
 	public void postPageRankTask() throws Exception {
+		List<DataflowServer> dataflowServers = launchServers();
+
 		SortedDataset<Long, Page> sorted = sortedDatasetOfId("items", Page.class, Long.class, new PageKeyFunction(), new LongComparator());
 		SortedDataset<Long, Page> repartitioned = repartitionSort(sorted);
 		SortedDataset<Long, Rank> pageRanks = pageRank(repartitioned);
 
-		Injector env = Injector.of(createModule(new Partition(address1), new Partition(address2)));
-		DataflowGraph graph = env.getInstance(DataflowGraph.class);
+		Injector env = Injector.of(createModule());
+		DataflowGraph graph = createGraph(env, toPartitions(dataflowServers));
 		consumerOfId(pageRanks, "result").channels(DataflowContext.of(graph));
 
 		await(graph.execute());
@@ -308,24 +303,26 @@ public class PageRankTest {
 
 	@SuppressWarnings("unused") // For manual run
 	public void runDebugServer() throws Exception {
-		Injector env = Injector.of(createModule(new Partition(address1), new Partition(address2)));
+		launchServers();
+
+		Injector env = Injector.of(createModule());
 		env.getInstance(AsyncHttpServer.class).withListenPort(8080).listen();
 		await();
 	}
 
 	@Test
 	public void test() throws Exception {
-		Module common = createModule(new Partition(address1), new Partition(address2));
+		Module common = createModule();
 
 		StreamConsumerToList<Rank> result1 = StreamConsumerToList.create();
-		DataflowServer server1 = launchServer(address1, asList(
+		DataflowServer server1 = launchServer(asList(
 				new Page(1, new long[]{1, 2, 3}),
 				new Page(3, new long[]{1})), result1);
 
 		StreamConsumerToList<Rank> result2 = StreamConsumerToList.create();
-		DataflowServer server2 = launchServer(address2, singletonList(new Page(2, new long[]{1})), result2);
+		DataflowServer server2 = launchServer(singletonList(new Page(2, new long[]{1})), result2);
 
-		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
+		DataflowGraph graph = createGraph(Injector.of(common), toPartitions(asList(server1, server2)));
 
 		SortedDataset<Long, Page> pages = repartitionSort(sortedDatasetOfId("items",
 				Page.class, Long.class, new PageKeyFunction(), new LongComparator()));

@@ -18,6 +18,8 @@ package io.activej.dataflow.json;
 
 import com.dslplatform.json.*;
 import com.dslplatform.json.JsonReader.ReadObject;
+import io.activej.common.StringFormatUtils;
+import io.activej.common.exception.MalformedDataException;
 import io.activej.dataflow.command.*;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.TaskStatus;
@@ -50,9 +52,7 @@ import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.time.Instant;
 import java.util.*;
 import java.util.function.Function;
@@ -215,14 +215,9 @@ public final class JsonModule extends AbstractModule {
 	JsonCodec<InetSocketAddress> address() {
 		return JsonCodec.of(
 				reader -> {
-					String str = reader.readString();
-					String[] split = str.split(":");
-					if (split.length != 2) {
-						throw ParsingException.create("Address should be split with a single ':'", true);
-					}
 					try {
-						return new InetSocketAddress(InetAddress.getByName(split[0]), Integer.parseInt(split[1]));
-					} catch (UnknownHostException e) {
+						return StringFormatUtils.parseInetSocketAddress(reader.readString());
+					} catch (MalformedDataException e) {
 						throw ParsingException.create("Failed to create InetSocketAddress", e, true);
 					}
 				},

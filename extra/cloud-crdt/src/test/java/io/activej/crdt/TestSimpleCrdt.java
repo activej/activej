@@ -13,14 +13,13 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 
 import static io.activej.common.Checks.checkNotNull;
+import static io.activej.common.Utils.first;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
 import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
-import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.assertEquals;
 
 public final class TestSimpleCrdt {
@@ -44,10 +43,9 @@ public final class TestSimpleCrdt {
 		remoteStorage.put("only_remote", TimestampContainer.now(4));
 
 		server = CrdtServer.create(getCurrentEventloop(), remoteStorage, new CrdtDataSerializer<>(UTF8_SERIALIZER, TimestampContainer.createSerializer(INT_SERIALIZER)));
-		int port = getFreePort();
-		server.withListenAddress(new InetSocketAddress(port)).listen();
+		server.withListenPort(0).listen();
 
-		client = CrdtStorageClient.create(getCurrentEventloop(), new InetSocketAddress(port), new CrdtDataSerializer<>(UTF8_SERIALIZER, TimestampContainer.createSerializer(INT_SERIALIZER)));
+		client = CrdtStorageClient.create(getCurrentEventloop(), first(server.getBoundAddresses()), new CrdtDataSerializer<>(UTF8_SERIALIZER, TimestampContainer.createSerializer(INT_SERIALIZER)));
 	}
 
 	@Test

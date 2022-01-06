@@ -25,9 +25,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static io.activej.common.Utils.first;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static io.activej.test.TestUtils.getFreePort;
 import static java.lang.Math.min;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -52,17 +52,15 @@ public final class HttpStreamTest {
 			"In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium.";
 
 	private List<ByteBuf> expectedList;
-	private int port;
 
 	@Before
 	public void setUp() {
-		port = getFreePort();
 		expectedList = getBufsList(requestBody.getBytes());
 	}
 
 	@Test
 	public void testStreamUpload() throws IOException {
-		startTestServer(request -> request
+		int port = startTestServer(request -> request
 				.getBodyStream()
 				.async()
 				.toCollector(ByteBufs.collector())
@@ -81,7 +79,7 @@ public final class HttpStreamTest {
 
 	@Test
 	public void testStreamDownload() throws IOException {
-		startTestServer(request ->
+		int port = startTestServer(request ->
 				HttpResponse.ok200()
 						.withBodyStream(ChannelSupplier.ofList(expectedList)
 								.mapAsync(item -> Promises.delay(1L, item))));
@@ -97,7 +95,7 @@ public final class HttpStreamTest {
 
 	@Test
 	public void testLoopBack() throws IOException {
-		startTestServer(request -> request
+		int port = startTestServer(request -> request
 				.getBodyStream()
 				.async()
 				.toList()
@@ -118,7 +116,7 @@ public final class HttpStreamTest {
 	public void testCloseWithError() throws IOException {
 		String exceptionMessage = "Test Exception";
 
-		startTestServer(request -> Promise.ofException(new HttpError(432, exceptionMessage)));
+		int port = startTestServer(request -> Promise.ofException(new HttpError(432, exceptionMessage)));
 
 		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.ofList(expectedList);
 
@@ -132,7 +130,7 @@ public final class HttpStreamTest {
 
 	@Test
 	public void testChunkedEncodingMessage() throws IOException {
-		startTestServer(request -> request.loadBody().map(body -> HttpResponse.ok200().withBody(body.slice())));
+		int port = startTestServer(request -> request.loadBody().map(body -> HttpResponse.ok200().withBody(body.slice())));
 
 		String chunkedRequest =
 				"POST / HTTP/1.1" + CRLF +
@@ -160,7 +158,7 @@ public final class HttpStreamTest {
 
 	@Test
 	public void testMalformedChunkedEncodingMessage() throws IOException {
-		startTestServer(request -> request.loadBody().map(body -> HttpResponse.ok200().withBody(body.slice())));
+		int port = startTestServer(request -> request.loadBody().map(body -> HttpResponse.ok200().withBody(body.slice())));
 
 		String chunkedRequest =
 				"POST / HTTP/1.1" + CRLF +
@@ -186,7 +184,7 @@ public final class HttpStreamTest {
 
 	@Test
 	public void testTruncatedRequest() throws IOException {
-		startTestServer(request -> request.loadBody().map(body -> HttpResponse.ok200().withBody(body.slice())));
+		int port = startTestServer(request -> request.loadBody().map(body -> HttpResponse.ok200().withBody(body.slice())));
 
 		String chunkedRequest =
 				"POST / HTTP/1.1" + CRLF +
@@ -215,7 +213,7 @@ public final class HttpStreamTest {
 	public void testSendingErrors() throws IOException {
 		Exception exception = new Exception("Test Exception");
 
-		startTestServer(request -> request.loadBody().map(body -> HttpResponse.ok200().withBody(body.slice())));
+		int port = startTestServer(request -> request.loadBody().map(body -> HttpResponse.ok200().withBody(body.slice())));
 
 		Exception e = awaitException(
 				AsyncHttpClient.create(Eventloop.getCurrentEventloop())
@@ -229,11 +227,12 @@ public final class HttpStreamTest {
 		assertSame(exception, e.getCause());
 	}
 
-	private void startTestServer(AsyncServlet servlet) throws IOException {
-		AsyncHttpServer.create(Eventloop.getCurrentEventloop(), servlet)
-				.withListenPort(port)
-				.withAcceptOnce()
-				.listen();
+	private int startTestServer(AsyncServlet servlet) throws IOException {
+		AsyncHttpServer server = AsyncHttpServer.create(Eventloop.getCurrentEventloop(), servlet)
+				.withListenPort(0)
+				.withAcceptOnce();
+		server.listen();
+		return first(server.getBoundAddresses()).getPort();
 	}
 
 	private List<ByteBuf> getBufsList(byte[] array) {

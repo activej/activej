@@ -17,10 +17,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.activej.common.Utils.first;
 import static io.activej.http.HttpHeaderValue.*;
 import static io.activej.http.HttpHeaders.*;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.test.TestUtils.getFreePort;
 import static java.time.ZoneOffset.UTC;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
@@ -34,8 +34,6 @@ public final class HttpApiTest {
 
 	private AsyncHttpServer server;
 	private AsyncHttpClient client;
-
-	private int port;
 
 	// request
 	private final List<AcceptMediaType> requestAcceptContentTypes = new ArrayList<>();
@@ -59,13 +57,12 @@ public final class HttpApiTest {
 
 	@Before
 	public void setUp() {
-		port = getFreePort();
 		server = AsyncHttpServer.create(Eventloop.getCurrentEventloop(),
 				request -> {
 					testRequest(request);
 					return createResponse();
 				})
-				.withListenPort(port);
+				.withListenPort(0);
 
 		client = AsyncHttpClient.create(Eventloop.getCurrentEventloop());
 
@@ -95,7 +92,7 @@ public final class HttpApiTest {
 	@Test
 	public void test() throws IOException {
 		server.listen();
-		await(client.request(createRequest())
+		await(client.request(createRequest(first(server.getBoundAddresses()).getPort()))
 				.whenComplete((response, e) -> {
 					testResponse(response);
 					server.close();
@@ -113,7 +110,7 @@ public final class HttpApiTest {
 				.withCookies(responseCookies);
 	}
 
-	private HttpRequest createRequest() {
+	private HttpRequest createRequest(int port) {
 		return HttpRequest.get("http://127.0.0.1:" + port)
 				.withHeader(ACCEPT, ofAcceptMediaTypes(requestAcceptContentTypes))
 				.withHeader(ACCEPT_CHARSET, ofAcceptCharsets(requestAcceptCharsets))

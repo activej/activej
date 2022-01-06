@@ -31,12 +31,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
 
+import static io.activej.common.Utils.first;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.helper.StreamMergeSorterStorageStub.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.dataflow.json.JsonUtils.ofObject;
 import static io.activej.dataflow.stream.DataflowTest.createCommon;
-import static io.activej.dataflow.stream.DataflowTest.getFreeListenAddress;
+import static io.activej.dataflow.stream.DataflowTest.createGraph;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertCompleteFn;
 import static java.util.Arrays.asList;
@@ -104,11 +105,7 @@ public class MapReduceTest {
 
 	@Test
 	public void test() throws Exception {
-
-		InetSocketAddress address1 = getFreeListenAddress();
-		InetSocketAddress address2 = getFreeListenAddress();
-
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath())
 				.bind(new Key<JsonCodec<StringKeyFunction>>() {}).toInstance(ofObject(StringKeyFunction::new))
 				.bind(new Key<JsonCodec<StringMapFunction>>() {}).toInstance(ofObject(StringMapFunction::new))
 				.bind(new Key<JsonCodec<StringReducer>>() {}).toInstance(ofObject(StringReducer::new))
@@ -131,21 +128,24 @@ public class MapReduceTest {
 						"cat"))
 				.build();
 
-		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenAddress(address1);
-		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenAddress(address2);
+		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenPort(0);
+		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenPort(0);
 
 		server1.listen();
 		server2.listen();
 
+		InetSocketAddress address1 = first(server1.getBoundAddresses());
+		InetSocketAddress address2 = first(server2.getBoundAddresses());
+
 		Injector clientInjector = Injector.of(common);
 		DataflowClient client = clientInjector.getInstance(DataflowClient.class);
-		DataflowGraph graph = clientInjector.getInstance(DataflowGraph.class);
+		DataflowGraph graph = createGraph(clientInjector, asList(new Partition(address1), new Partition(address2)));
 
 		Dataset<String> items = datasetOfId("items", String.class);
 		Dataset<StringCount> mappedItems = map(items, new StringMapFunction(), StringCount.class);
 		Dataset<StringCount> reducedItems = sortReduceRepartitionReduce(mappedItems,
 				new StringReducer(), String.class, new StringKeyFunction(), Comparator.naturalOrder());
-		MergeCollector<String, StringCount> collector = new MergeCollector<>(reducedItems,client, new StringKeyFunction(), naturalOrder(), false);
+		MergeCollector<String, StringCount> collector = new MergeCollector<>(reducedItems, client, new StringKeyFunction(), naturalOrder(), false);
 		StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
 		StreamConsumerToList<StringCount> resultConsumer = StreamConsumerToList.create();
 

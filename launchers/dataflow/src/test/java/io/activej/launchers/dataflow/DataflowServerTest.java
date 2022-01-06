@@ -35,13 +35,12 @@ import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static io.activej.common.Utils.first;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
@@ -49,7 +48,6 @@ import static io.activej.dataflow.json.JsonUtils.ofObject;
 import static io.activej.launchers.dataflow.StreamMergeSorterStorageStub.FACTORY_STUB;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static io.activej.test.TestUtils.getFreePort;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
@@ -75,16 +73,11 @@ public class DataflowServerTest {
 	private ExecutorService executor;
 	private ExecutorService sortingExecutor;
 
-	private int port1;
-	private int port2;
-
 	private TestServerLauncher serverLauncher1;
 	private TestServerLauncher serverLauncher2;
 
 	@Before
 	public void setUp() {
-		port1 = getFreePort();
-		port2 = getFreePort();
 		executor = Executors.newSingleThreadExecutor();
 		sortingExecutor = Executors.newSingleThreadExecutor();
 	}
@@ -102,7 +95,7 @@ public class DataflowServerTest {
 	}
 
 	@Test
-	public void testMapReduceSimple() throws Exception {
+	public void testMapReduceSimple() {
 		launchServers(asList("dog", "cat", "horse", "cat"), asList("dog", "cat"), false);
 		List<StringCount> result = new ArrayList<>();
 		await(mapReduce(result));
@@ -111,7 +104,7 @@ public class DataflowServerTest {
 	}
 
 	@Test
-	public void testMapReduceBig() throws Exception {
+	public void testMapReduceBig() {
 		List<String> words1 = createStrings(100_000, 10_000);
 		List<String> words2 = createStrings(100_000, 10_000);
 		launchServers(words1, words2, false);
@@ -133,7 +126,7 @@ public class DataflowServerTest {
 	}
 
 	@Test
-	public void testMapReduceWithMalformedServer() throws Exception {
+	public void testMapReduceWithMalformedServer() {
 		launchServers(asList("dog", "cat", "horse", "cat"), asList("dog", "cat"), true);
 		Exception exception = awaitException(mapReduce(new ArrayList<>()));
 
@@ -141,7 +134,7 @@ public class DataflowServerTest {
 	}
 
 	@Test
-	public void testRepartitionAndSortSimple() throws Exception {
+	public void testRepartitionAndSortSimple() {
 		List<String> result1 = new ArrayList<>();
 		List<String> result2 = new ArrayList<>();
 		launchServers(asList("dog", "cat", "horse", "cat", "cow"), asList("dog", "cat", "cow"), result1, result2, false);
@@ -156,7 +149,7 @@ public class DataflowServerTest {
 	}
 
 	@Test
-	public void testRepartitionAndSortBig() throws Exception {
+	public void testRepartitionAndSortBig() {
 		List<String> result1 = new ArrayList<>();
 		List<String> result2 = new ArrayList<>();
 		List<String> words1 = createStrings(100_000, 10_000);
@@ -179,7 +172,7 @@ public class DataflowServerTest {
 	}
 
 	@Test
-	public void testRepartitionAndSortWithMalformedServer() throws Exception {
+	public void testRepartitionAndSortWithMalformedServer() {
 		launchServers(asList("dog", "cat", "horse", "cat", "cow"), asList("dog", "cat", "cow"), true);
 		Exception exception = awaitException(repartitionAndSort());
 
@@ -187,9 +180,9 @@ public class DataflowServerTest {
 	}
 
 	// region stubs & helpers
-	private Promise<Void> mapReduce(List<StringCount> result) throws IOException {
-		Partition partition1 = new Partition(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port1));
-		Partition partition2 = new Partition(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port2));
+	private Promise<Void> mapReduce(List<StringCount> result) {
+		Partition partition1 = new Partition(first(serverLauncher1.dataflowServer.getBoundAddresses()));
+		Partition partition2 = new Partition(first(serverLauncher2.dataflowServer.getBoundAddresses()));
 
 		Injector injector = Injector.of(createModule(asList(partition1, partition2)));
 
@@ -207,9 +200,9 @@ public class DataflowServerTest {
 				.whenException(resultConsumer::closeEx);
 	}
 
-	private Promise<Void> repartitionAndSort() throws IOException {
-		Partition partition1 = new Partition(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port1));
-		Partition partition2 = new Partition(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port2));
+	private Promise<Void> repartitionAndSort() {
+		Partition partition1 = new Partition(first(serverLauncher1.dataflowServer.getBoundAddresses()));
+		Partition partition2 = new Partition(first(serverLauncher2.dataflowServer.getBoundAddresses()));
 
 		Injector injector = Injector.of(createModule(asList(partition1, partition2)));
 
@@ -239,13 +232,13 @@ public class DataflowServerTest {
 	}
 
 	private void launchServers(List<String> server1Words, List<String> server2Words, List<String> server1Result, List<String> server2Result, boolean oneMalformed) {
-		serverLauncher1 = launchServer(port1, server1Words, server1Result, oneMalformed);
-		serverLauncher2 = launchServer(port2, server2Words, server2Result, false);
+		serverLauncher1 = launchServer(server1Words, server1Result, oneMalformed);
+		serverLauncher2 = launchServer(server2Words, server2Result, false);
 	}
 
-	private TestServerLauncher launchServer(int port, List<String> words, List<String> result, boolean malformed) {
+	private TestServerLauncher launchServer(List<String> words, List<String> result, boolean malformed) {
 		CountDownLatch latch = new CountDownLatch(1);
-		TestServerLauncher launcher = new TestServerLauncher(port, words, result, malformed, latch);
+		TestServerLauncher launcher = new TestServerLauncher(words, result, malformed, latch);
 		new Thread(() -> {
 			try {
 				launcher.launch(new String[0]);
@@ -364,14 +357,12 @@ public class DataflowServerTest {
 	}
 
 	private static final class TestServerLauncher extends DataflowServerLauncher {
-		private final int port;
 		private final List<String> words;
 		private final List<String> result;
 		private final boolean malformed;
 		private final CountDownLatch latch;
 
-		private TestServerLauncher(int port, List<String> words, List<String> result, boolean malformed, CountDownLatch latch) {
-			this.port = port;
+		private TestServerLauncher(List<String> words, List<String> result, boolean malformed, CountDownLatch latch) {
 			this.words = words;
 			this.result = result;
 			this.malformed = malformed;
@@ -383,7 +374,7 @@ public class DataflowServerTest {
 			return createModule(emptyList())
 					.overrideWith(ModuleBuilder.create()
 							.bind(datasetId(malformed ? "" : "items")).toInstance(words)
-							.bind(Config.class).toInstance(Config.create().with("dataflow.server.listenAddresses", String.valueOf(port)))
+							.bind(Config.class).toInstance(Config.create().with("dataflow.server.listenAddresses", "0"))
 							.bind(Eventloop.class).toInstance(Eventloop.create().withCurrentThread().withEventloopFatalErrorHandler(rethrow()))
 							.bind(Executor.class).toInstance(Executors.newSingleThreadExecutor())
 							.bind(datasetId("result")).toInstance(StreamConsumerToList.create(result))

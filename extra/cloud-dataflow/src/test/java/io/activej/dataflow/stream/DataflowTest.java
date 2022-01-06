@@ -40,9 +40,7 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.Executor;
@@ -52,13 +50,13 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static io.activej.common.Utils.concat;
+import static io.activej.common.Utils.first;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.helper.StreamMergeSorterStorageStub.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.dataflow.json.JsonUtils.ofObject;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertCompleteFn;
-import static io.activej.test.TestUtils.getFreePort;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
 import static org.junit.Assert.assertEquals;
@@ -96,10 +94,7 @@ public final class DataflowTest {
 	@Test
 	public void testForward() throws Exception {
 
-		InetSocketAddress address1 = getFreeListenAddress();
-		InetSocketAddress address2 = getFreeListenAddress();
-
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath())
 				.build();
 
 		StreamConsumerToList<TestItem> result1 = StreamConsumerToList.create();
@@ -124,13 +119,16 @@ public final class DataflowTest {
 				.bind(datasetId("result")).toInstance(result2)
 				.build();
 
-		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenAddress(address1);
-		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenAddress(address2);
+		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenPort(0);
+		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenPort(0);
 
 		server1.listen();
 		server2.listen();
 
-		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
+		InetSocketAddress address1 = first(server1.getBoundAddresses());
+		InetSocketAddress address2 = first(server2.getBoundAddresses());
+
+		DataflowGraph graph = createGraph(Injector.of(common), asList(new Partition(address1), new Partition(address2)));
 
 		Dataset<TestItem> items = datasetOfId("items", TestItem.class);
 		DatasetConsumerOfId<TestItem> consumerNode = consumerOfId(items, "result");
@@ -148,10 +146,7 @@ public final class DataflowTest {
 
 	@Test
 	public void testRepartitionAndSort() throws Exception {
-		InetSocketAddress address1 = getFreeListenAddress();
-		InetSocketAddress address2 = getFreeListenAddress();
-
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2))).build();
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath()).build();
 
 		StreamConsumerToList<TestItem> result1 = StreamConsumerToList.create();
 		StreamConsumerToList<TestItem> result2 = StreamConsumerToList.create();
@@ -176,13 +171,16 @@ public final class DataflowTest {
 				.bind(datasetId("result")).toInstance(result2)
 				.build();
 
-		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenAddress(address1);
-		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenAddress(address2);
+		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenPort(0);
+		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenPort(0);
 
 		server1.listen();
 		server2.listen();
 
-		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
+		InetSocketAddress address1 = first(server1.getBoundAddresses());
+		InetSocketAddress address2 = first(server2.getBoundAddresses());
+
+		DataflowGraph graph = createGraph(Injector.of(common), asList(new Partition(address1), new Partition(address2)));
 
 		SortedDataset<Long, TestItem> items = repartitionSort(sortedDatasetOfId("items",
 				TestItem.class, Long.class, new TestKeyFunction(), new TestComparator()));
@@ -213,15 +211,7 @@ public final class DataflowTest {
 
 	@Test
 	public void testRepartitionWithFurtherSort() throws Exception {
-		InetSocketAddress address1 = getFreeListenAddress();
-		InetSocketAddress address2 = getFreeListenAddress();
-		InetSocketAddress address3 = getFreeListenAddress();
-
-		Partition partition1 = new Partition(address1);
-		Partition partition2 = new Partition(address2);
-		Partition partition3 = new Partition(address3);
-
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(partition1, partition2, partition3))
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath())
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
@@ -263,15 +253,23 @@ public final class DataflowTest {
 				.bind(datasetId("result")).toInstance(result3)
 				.build();
 
-		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenAddress(address1);
-		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenAddress(address2);
-		DataflowServer server3 = Injector.of(serverModule3).getInstance(DataflowServer.class).withListenAddress(address3);
+		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenPort(0);
+		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenPort(0);
+		DataflowServer server3 = Injector.of(serverModule3).getInstance(DataflowServer.class).withListenPort(0);
 
 		server1.listen();
 		server2.listen();
 		server3.listen();
 
-		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
+		InetSocketAddress address1 = first(server1.getBoundAddresses());
+		InetSocketAddress address2 = first(server2.getBoundAddresses());
+		InetSocketAddress address3 = first(server3.getBoundAddresses());
+
+		Partition partition1 = new Partition(address1);
+		Partition partition2 = new Partition(address2);
+		Partition partition3 = new Partition(address3);
+
+		DataflowGraph graph = createGraph(Injector.of(common), asList(partition1, partition2, partition3));
 
 		Dataset<TestItem> items = localSort(
 				repartition(
@@ -308,10 +306,7 @@ public final class DataflowTest {
 
 	@Test
 	public void testFilter() throws Exception {
-		InetSocketAddress address1 = getFreeListenAddress();
-		InetSocketAddress address2 = getFreeListenAddress();
-
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath())
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
@@ -340,13 +335,16 @@ public final class DataflowTest {
 				.bind(datasetId("result")).toInstance(result2)
 				.build();
 
-		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenAddress(address1);
-		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenAddress(address2);
+		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenPort(0);
+		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenPort(0);
 
 		server1.listen();
 		server2.listen();
 
-		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
+		InetSocketAddress address1 = first(server1.getBoundAddresses());
+		InetSocketAddress address2 = first(server2.getBoundAddresses());
+
+		DataflowGraph graph = createGraph(Injector.of(common), asList(new Partition(address1), new Partition(address2)));
 
 		Dataset<TestItem> filterDataset = filter(datasetOfId("items", TestItem.class), new TestPredicate());
 		LocallySortedDataset<Long, TestItem> sortedDataset = localSort(filterDataset, long.class, new TestKeyFunction(), new TestComparator());
@@ -367,10 +365,7 @@ public final class DataflowTest {
 	public void testCollector() throws Exception {
 		StreamConsumerToList<TestItem> resultConsumer = StreamConsumerToList.create();
 
-		InetSocketAddress address1 = getFreeListenAddress();
-		InetSocketAddress address2 = getFreeListenAddress();
-
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath())
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
@@ -394,15 +389,18 @@ public final class DataflowTest {
 						new TestItem(10)))
 				.build();
 
-		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenAddress(address1);
-		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenAddress(address2);
+		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenPort(0);
+		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenPort(0);
 
 		server1.listen();
 		server2.listen();
 
+		InetSocketAddress address1 = first(server1.getBoundAddresses());
+		InetSocketAddress address2 = first(server2.getBoundAddresses());
+
 		Injector clientInjector = Injector.of(common);
 		DataflowClient client = clientInjector.getInstance(DataflowClient.class);
-		DataflowGraph graph = clientInjector.getInstance(DataflowGraph.class);
+		DataflowGraph graph = createGraph(clientInjector, asList(new Partition(address1), new Partition(address2)));
 
 		Dataset<TestItem> filterDataset = filter(datasetOfId("items", TestItem.class), new TestPredicate());
 		LocallySortedDataset<Long, TestItem> sortedDataset = localSort(filterDataset, long.class, new TestKeyFunction(), new TestComparator());
@@ -469,7 +467,7 @@ public final class DataflowTest {
 		}
 	}
 
-	static ModuleBuilder createCommon(Executor executor, Executor sortingExecutor, Path secondaryPath, List<Partition> graphPartitions) {
+	static ModuleBuilder createCommon(Executor executor, Executor sortingExecutor, Path secondaryPath) {
 		return ModuleBuilder.create()
 				.install(DataflowModule.create())
 				.bind(Executor.class, SortingExecutor.class).toInstance(sortingExecutor)
@@ -487,19 +485,14 @@ public final class DataflowTest {
 					}
 
 					@Provides
-					DataflowGraph graph(DataflowClient client, JsonCodec<List<Node>> nodesCodec) {
-						return new DataflowGraph(client, graphPartitions, nodesCodec);
-					}
-
-					@Provides
 					AsyncHttpClient httpClient(Eventloop eventloop) {
 						return AsyncHttpClient.create(eventloop);
 					}
 
 					@Provides
 					AsyncHttpServer debugServer(Eventloop eventloop, Executor executor, ByteBufsCodec<DataflowResponse, DataflowCommand> codec, Injector env,
-							JsonCodec<Map<Long, List<@Nullable TaskStatus>>> taskListJsonCodec) {
-						return AsyncHttpServer.create(eventloop, new DataflowDebugServlet(graphPartitions, executor, codec, env, taskListJsonCodec));
+							JsonCodec<Map<Long, List<@Nullable TaskStatus>>> taskListJsonCodec, DataflowServer dataflowServer) {
+						return AsyncHttpServer.create(eventloop, new DataflowDebugServlet(dataflowServer, executor, codec, env, taskListJsonCodec));
 					}
 				})
 				.bind(new Key<JsonCodec<TestComparator>>() {}).toInstance(ofObject(TestComparator::new))
@@ -507,12 +500,10 @@ public final class DataflowTest {
 				.bind(new Key<JsonCodec<TestPredicate>>() {}).toInstance(ofObject(TestPredicate::new));
 	}
 
-	static InetSocketAddress getFreeListenAddress() {
-		try {
-			return new InetSocketAddress(InetAddress.getByName("127.0.0.1"), getFreePort());
-		} catch (UnknownHostException ignored) {
-			throw new AssertionError();
-		}
+	static DataflowGraph createGraph(Injector injector, List<Partition> partitions) {
+		DataflowClient dataflowClient = injector.getInstance(DataflowClient.class);
+		JsonCodec<List<Node>> codec = injector.getInstance(new Key<JsonCodec<List<Node>>>() {});
+		return new DataflowGraph(dataflowClient, partitions, codec);
 	}
 
 	private static <T> boolean isSorted(Collection<T> collection, Comparator<T> comparator) {

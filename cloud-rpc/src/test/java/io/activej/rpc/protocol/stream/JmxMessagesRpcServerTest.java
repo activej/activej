@@ -14,13 +14,12 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 
+import static io.activej.common.Utils.first;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.rpc.client.RpcClient.DEFAULT_PACKET_SIZE;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static io.activej.rpc.server.RpcServer.DEFAULT_INITIAL_BUFFER_SIZE;
-import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -36,18 +35,16 @@ public class JmxMessagesRpcServerTest {
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
-	private int listenPort;
 	private RpcServer server;
 
 	@Before
 	public void setup() throws IOException {
-		listenPort = getFreePort();
 		server = RpcServer.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(String.class)
 				.withStreamProtocol(DEFAULT_INITIAL_BUFFER_SIZE, FRAME_FORMAT)
 				.withHandler(String.class, request ->
 						Promise.of("Hello, " + request + "!"))
-				.withListenPort(listenPort)
+				.withListenPort(0)
 				.withAcceptOnce();
 		server.listen();
 	}
@@ -57,7 +54,7 @@ public class JmxMessagesRpcServerTest {
 		RpcClient client = RpcClient.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(String.class)
 				.withStreamProtocol(DEFAULT_PACKET_SIZE, FRAME_FORMAT)
-				.withStrategy(server(new InetSocketAddress("localhost", listenPort)));
+				.withStrategy(server(first(server.getBoundAddresses())));
 		await(client.start().whenResult(() ->
 				client.sendRequest("msg", 1000)
 						.whenComplete(client::stop)));
@@ -68,7 +65,7 @@ public class JmxMessagesRpcServerTest {
 	public void testWithProtocolError() {
 		RpcClient client = RpcClient.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(String.class)
-				.withStrategy(server(new InetSocketAddress("localhost", listenPort)));
+				.withStrategy(server(first(server.getBoundAddresses())));
 		await(client.start()
 				.whenResult(() -> client.sendRequest("msg", 10000)
 						.whenComplete(client::stop)));
@@ -79,7 +76,7 @@ public class JmxMessagesRpcServerTest {
 	public void testWithProtocolError2() {
 		RpcClient client = RpcClient.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(String.class)
-				.withStrategy(server(new InetSocketAddress("localhost", listenPort)));
+				.withStrategy(server(first(server.getBoundAddresses())));
 		await(client.start()
 				.whenResult(() -> client.sendRequest("Message larger than LZ4 header", 1000)
 						.whenComplete(client::stop)));

@@ -20,9 +20,9 @@ import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.dataflow.DataflowException;
+import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.command.*;
 import io.activej.dataflow.command.DataflowResponsePartitionData.TaskDesc;
-import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.TaskStatus;
 import io.activej.dataflow.json.JsonCodec;
 import io.activej.dataflow.stats.NodeStat;
@@ -41,6 +41,7 @@ import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.Executor;
 
+import static io.activej.common.Utils.concat;
 import static io.activej.dataflow.json.JsonUtils.codec;
 import static io.activej.dataflow.json.JsonUtils.toJson;
 import static io.activej.http.HttpMethod.GET;
@@ -53,9 +54,11 @@ public final class DataflowDebugServlet implements AsyncServlet {
 	private final AsyncServlet servlet;
 	private final ByteBufsCodec<DataflowResponse, DataflowCommand> codec;
 
-	public DataflowDebugServlet(List<Partition> partitions, Executor executor, ByteBufsCodec<DataflowResponse, DataflowCommand> codec, ResourceLocator env,
+	public DataflowDebugServlet(DataflowServer dataflowServer, Executor executor, ByteBufsCodec<DataflowResponse, DataflowCommand> codec, ResourceLocator env,
 			JsonCodec<Map<Long, List<@Nullable TaskStatus>>> taskListCodec) {
 		this.codec = codec;
+
+		List<InetSocketAddress> addresses = concat(dataflowServer.getBoundAddresses(), dataflowServer.getSslBoundAddresses());
 
 		JsonCodec<ReducedTaskData> reducedTaskDataCodec = env.getInstance(codec(ReducedTaskData.class));
 		JsonCodec<LocalTaskData> localTaskDataCodec = env.getInstance(codec(LocalTaskData.class));
@@ -64,11 +67,11 @@ public final class DataflowDebugServlet implements AsyncServlet {
 				.map("/*", StaticServlet.ofClassPath(executor, "debug").withIndexHtml())
 				.map("/api/*", RoutingServlet.create()
 						.map(GET, "/partitions", request -> ok200()
-								.withJson(partitions.stream()
-										.map(p -> "\"" + p.getAddress().getAddress().getHostAddress() + ":" + p.getAddress().getPort() + "\"")
+								.withJson(addresses.stream()
+										.map(address -> "\"" + address.getAddress().getHostAddress() + ":" + address.getPort() + "\"")
 										.collect(joining(",", "[", "]"))))
 						.map(GET, "/tasks", request ->
-								Promises.toList(partitions.stream().map(p -> getPartitionData(p.getAddress())))
+								Promises.toList(addresses.stream().map(this::getPartitionData))
 										.map(partitionStats -> {
 											Map<Long, List<@Nullable TaskStatus>> tasks = new HashMap<>();
 											for (int i = 0; i < partitionStats.size(); i++) {
@@ -83,7 +86,7 @@ public final class DataflowDebugServlet implements AsyncServlet {
 										}))
 						.map(GET, "/tasks/:taskID", request -> {
 							long id = getTaskId(request);
-							return Promises.toList(partitions.stream().map(p -> getTask(p.getAddress(), id)).collect(toList()))
+							return Promises.toList(addresses.stream().map(address -> getTask(address, id)).collect(toList()))
 									.map(localStats -> {
 										List<@Nullable TaskStatus> statuses = Arrays.asList(new TaskStatus[localStats.size()]);
 
@@ -117,13 +120,13 @@ public final class DataflowDebugServlet implements AsyncServlet {
 						.map(GET, "/tasks/:taskID/:index", request -> {
 							long id = getTaskId(request);
 							String indexParam = request.getPathParameter("index");
-							Partition partition;
+							InetSocketAddress address;
 							try {
-								partition = partitions.get(Integer.parseInt(indexParam));
+								address = addresses.get(Integer.parseInt(indexParam));
 							} catch (NumberFormatException | IndexOutOfBoundsException e) {
 								throw HttpError.ofCode(400, "Bad index");
 							}
-							return getTask(partition.getAddress(), id)
+							return getTask(address, id)
 									.map(task -> ok200()
 											.withJson(toJson(localTaskDataCodec,
 													new LocalTaskData(task.getStatus(), task.getGraphViz(), task.getNodes(), task.getStartTime(), task.getFinishTime(), task.getErrorString()))));

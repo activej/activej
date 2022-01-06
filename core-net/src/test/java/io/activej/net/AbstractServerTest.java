@@ -13,14 +13,16 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.BindException;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 
+import static io.activej.common.Utils.first;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -35,11 +37,10 @@ public final class AbstractServerTest {
 	@Test
 	public void testTimeouts() throws IOException {
 		String message = "Hello!";
-		InetSocketAddress address = new InetSocketAddress("localhost", getFreePort());
 		SocketSettings settings = SocketSettings.create().withImplReadTimeout(Duration.ofMillis(100000L)).withImplWriteTimeout(Duration.ofMillis(100000L));
 
 		RefLong delay = new RefLong(5);
-		SimpleServer.create(socket -> Promises.repeat(
+		SimpleServer server = SimpleServer.create(socket -> Promises.repeat(
 						() -> socket.read()
 								.whenResult(buf ->
 										getCurrentEventloop().delay(delay.inc(),
@@ -51,11 +52,11 @@ public final class AbstractServerTest {
 														})))
 								.map(Objects::nonNull)))
 				.withSocketSettings(settings)
-				.withListenAddress(address)
-				.withAcceptOnce()
-				.listen();
+				.withListenPort(0)
+				.withAcceptOnce();
+		server.listen();
 
-		ByteBuf response = sendMessage(address, message);
+		ByteBuf response = sendMessage(first(server.getBoundAddresses()), message);
 		assertEquals(message, response.asString(UTF_8));
 	}
 
@@ -105,7 +106,7 @@ public final class AbstractServerTest {
 												})
 										)
 										.map(Objects::nonNull)))
-				.withListenAddress(address)
+				.withListenAddresses(address)
 				.withAcceptOnce();
 	}
 
@@ -124,4 +125,28 @@ public final class AbstractServerTest {
 								})
 								.whenComplete(socket::close)));
 	}
+
+	private static int getFreePort() {
+		int port = 1024;
+		while (++port < 65536) {
+			if (!probeBindAddress(new InetSocketAddress(port))) continue;
+			if (!probeBindAddress(new InetSocketAddress("localhost", port))) continue;
+			if (!probeBindAddress(new InetSocketAddress("127.0.0.1", port))) continue;
+			return port;
+		}
+		throw new AssertionError();
+	}
+
+	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
+	private static boolean probeBindAddress(InetSocketAddress inetSocketAddress) {
+		try (ServerSocket s = new ServerSocket()) {
+			s.bind(inetSocketAddress);
+		} catch (BindException e) {
+			return false;
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		return true;
+	}
+
 }

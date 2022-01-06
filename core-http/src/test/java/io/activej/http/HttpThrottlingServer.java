@@ -9,13 +9,11 @@ import java.util.Random;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
-import static io.activej.test.TestUtils.getFreePort;
 
 public class HttpThrottlingServer {
 	private static final Random rand = new Random();
 	private static final int defaultLoadBusinessLogic = 0; // without load on the business logic
 	private static final String TEST_RESPONSE = "Hello, World!";
-	public static final int SERVER_PORT = getFreePort();
 
 	static class ServerOptions {
 		private final int loadBusinessLogic;
@@ -66,7 +64,7 @@ public class HttpThrottlingServer {
 	private static AsyncHttpServer buildHttpServer(Eventloop eventloop, int loadBusinessLogic) {
 //		final ByteBufPool byteBufferPool = new ByteBufPool(16, 65536);
 		AsyncServlet servlet = request -> longBusinessLogic(TEST_RESPONSE, loadBusinessLogic);
-		return AsyncHttpServer.create(eventloop, servlet).withListenPort(SERVER_PORT);
+		return AsyncHttpServer.create(eventloop, servlet).withListenPort(0);
 	}
 
 	@SuppressWarnings("SameParameterValue")
@@ -86,10 +84,6 @@ public class HttpThrottlingServer {
 
 	public void start() throws Exception {
 		server.listen();
-	}
-
-	public void stop() {
-		server.close();
 	}
 
 	public static void info(ServerOptions options) {

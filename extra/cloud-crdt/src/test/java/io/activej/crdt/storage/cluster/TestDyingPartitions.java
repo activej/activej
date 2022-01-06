@@ -19,16 +19,14 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.util.*;
 
+import static io.activej.common.Utils.first;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
 import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
-import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 public final class TestDyingPartitions {
 	private static final int SERVER_COUNT = 5;
@@ -42,29 +40,27 @@ public final class TestDyingPartitions {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
-	private Map<Integer, AbstractServer<?>> servers;
-	private Map<Integer, CrdtStorageMap<String, TimestampContainer<Integer>>> storages;
+	private List<AbstractServer<?>> servers;
+	private List<CrdtStorageMap<String, TimestampContainer<Integer>>> storages;
 	private CrdtStorageCluster<String, TimestampContainer<Integer>, String> cluster;
 
 	@Before
 	public void setUp() throws Exception {
-		servers = new LinkedHashMap<>();
-		storages = new LinkedHashMap<>();
+		servers = new ArrayList<>();
+		storages = new ArrayList<>();
 
 		Map<String, CrdtStorage<String, TimestampContainer<Integer>>> clients = new HashMap<>();
 
 		for (int i = 0; i < SERVER_COUNT; i++) {
-			int port = getFreePort();
 			Eventloop eventloop = Eventloop.create();
 			CrdtStorageMap<String, TimestampContainer<Integer>> storage = CrdtStorageMap.create(eventloop, CRDT_FUNCTION);
-			InetSocketAddress address = new InetSocketAddress(port);
 			CrdtServer<String, TimestampContainer<Integer>> server = CrdtServer.create(eventloop, storage, SERIALIZER);
-			server.withListenAddresses(address).listen();
-			assertNull(servers.put(port, server));
-			assertNull(storages.put(port, storage));
+			server.withListenPort(0).listen();
+			servers.add(server);
+			storages.add(storage);
 			new Thread(eventloop).start();
 
-			clients.put("server_" + i, CrdtStorageClient.create(eventloop, address, SERIALIZER));
+			clients.put("server_" + i, CrdtStorageClient.create(eventloop, first(server.getBoundAddresses()), SERIALIZER));
 		}
 
 		DiscoveryService<String, TimestampContainer<Integer>, String> discoveryService = DiscoveryService.constant(clients);
@@ -88,7 +84,7 @@ public final class TestDyingPartitions {
 		assertEquals(2, cluster.getPartitions().getDeadPartitions().size());
 
 		Set<CrdtData<String, TimestampContainer<Integer>>> result = new HashSet<>();
-		for (CrdtStorageMap<String, TimestampContainer<Integer>> storage : storages.values()) {
+		for (CrdtStorageMap<String, TimestampContainer<Integer>> storage : storages) {
 			storage.iterator().forEachRemaining(result::add);
 		}
 
@@ -116,7 +112,7 @@ public final class TestDyingPartitions {
 
 	@SuppressWarnings("ConstantConditions")
 	private void shutdown2Servers() {
-		Iterator<AbstractServer<?>> serverIterator = servers.values().iterator();
+		Iterator<AbstractServer<?>> serverIterator = servers.iterator();
 		for (int i = 0; i < 2; i++) {
 			AbstractServer<?> server = serverIterator.next();
 			Eventloop eventloop = server.getEventloop();
@@ -132,7 +128,7 @@ public final class TestDyingPartitions {
 	}
 
 	private void shutdownAllEventloops() {
-		for (AbstractServer<?> server : servers.values()) {
+		for (AbstractServer<?> server : servers) {
 			Eventloop eventloop = server.getEventloop();
 			eventloop.execute(() -> {
 				server.close();

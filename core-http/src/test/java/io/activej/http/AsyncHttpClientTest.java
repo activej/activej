@@ -15,14 +15,12 @@ import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.time.Duration;
@@ -32,10 +30,12 @@ import java.util.concurrent.Executors;
 import java.util.stream.IntStream;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
+import static io.activej.common.Utils.first;
 import static io.activej.https.SslUtils.createTestSslContext;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static io.activej.test.TestUtils.*;
+import static io.activej.test.TestUtils.assertCompleteFn;
+import static io.activej.test.TestUtils.assertingFn;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -52,31 +52,25 @@ public final class AsyncHttpClientTest {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
-	private int port;
-
-	public void startServer() throws IOException {
-		AsyncHttpServer.create(Eventloop.getCurrentEventloop(),
-				request -> HttpResponse.ok200()
-						.withBodyStream(ChannelSupplier.ofStream(
-								IntStream.range(0, HELLO_WORLD.length)
-										.mapToObj(idx -> {
-											ByteBuf buf = ByteBufPool.allocate(1);
-											buf.put(HELLO_WORLD[idx]);
-											return buf;
-										}))))
-				.withListenPort(port)
-				.withAcceptOnce()
-				.listen();
-	}
-
-	@Before
-	public void setUp() {
-		port = getFreePort();
+	public int startServer() throws IOException {
+		AsyncHttpServer server = AsyncHttpServer.create(Eventloop.getCurrentEventloop(),
+						request -> HttpResponse.ok200()
+								.withBodyStream(ChannelSupplier.ofStream(
+										IntStream.range(0, HELLO_WORLD.length)
+												.mapToObj(idx -> {
+													ByteBuf buf = ByteBufPool.allocate(1);
+													buf.put(HELLO_WORLD[idx]);
+													return buf;
+												}))))
+				.withListenPort(0)
+				.withAcceptOnce();
+		server.listen();
+		return first(server.getBoundAddresses()).getPort();
 	}
 
 	@Test
 	public void testAsyncClient() throws Exception {
-		startServer();
+		int port = startServer();
 
 		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop());
 		await(client.request(HttpRequest.get("http://127.0.0.1:" + port))
@@ -96,7 +90,7 @@ public final class AsyncHttpClientTest {
 
 	@Test
 	public void testBigHttpMessage() throws IOException {
-		startServer();
+		int port = startServer();
 
 		int maxBodySize = HELLO_WORLD.length - 1;
 
@@ -108,17 +102,17 @@ public final class AsyncHttpClientTest {
 
 	@Test
 	public void testEmptyLineResponse() throws IOException {
-		SimpleServer.create(socket ->
-				socket.read()
-						.whenResult(ByteBuf::recycle)
-						.then(() -> socket.write(wrapAscii("\r\n")))
-						.whenComplete(socket::close))
-				.withListenPort(port)
-				.withAcceptOnce()
-				.listen();
+		SimpleServer server = SimpleServer.create(socket ->
+						socket.read()
+								.whenResult(ByteBuf::recycle)
+								.then(() -> socket.write(wrapAscii("\r\n")))
+								.whenComplete(socket::close))
+				.withListenPort(0)
+				.withAcceptOnce();
+		server.listen();
 
 		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop());
-		Exception e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + port))
+		Exception e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + first(server.getBoundAddresses()).getPort()))
 				.then(response -> response.loadBody()));
 
 		assertThat(e, instanceOf(MalformedHttpException.class));
@@ -131,8 +125,8 @@ public final class AsyncHttpClientTest {
 		List<SettablePromise<HttpResponse>> responses = new ArrayList<>();
 
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
-				request -> Promise.ofCallback(responses::add))
-				.withListenPort(port);
+						request -> Promise.ofCallback(responses::add))
+				.withListenPort(0);
 
 		server.listen();
 
@@ -143,12 +137,13 @@ public final class AsyncHttpClientTest {
 				.withReadWriteTimeout(Duration.ofMillis(20))
 				.withInspector(inspector);
 
+		int port = first(server.getBoundAddresses()).getPort();
 		Exception e = awaitException(Promises.all(
-				httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)),
-				httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)),
-				httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)),
-				httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)),
-				httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)))
+						httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)),
+						httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)),
+						httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)),
+						httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)),
+						httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)))
 				.whenComplete(() -> {
 					server.close();
 					responses.forEach(response -> response.set(HttpResponse.ok200()));
@@ -173,9 +168,9 @@ public final class AsyncHttpClientTest {
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
 
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
-				request -> HttpResponse.ok200())
+						request -> HttpResponse.ok200())
 				.withAcceptOnce()
-				.withListenPort(port);
+				.withListenPort(0);
 
 		server.listen();
 
@@ -183,7 +178,7 @@ public final class AsyncHttpClientTest {
 		AsyncHttpClient httpClient = AsyncHttpClient.create(eventloop)
 				.withInspector(inspector);
 
-		Promise<HttpResponse> requestPromise = httpClient.request(HttpRequest.get("http://127.0.0.1:" + port));
+		Promise<HttpResponse> requestPromise = httpClient.request(HttpRequest.get("http://127.0.0.1:" + first(server.getBoundAddresses()).getPort()));
 		assertEquals(1, inspector.getActiveRequests());
 		await(requestPromise);
 		assertEquals(0, inspector.getActiveRequests());
@@ -235,7 +230,7 @@ public final class AsyncHttpClientTest {
 
 	@Test
 	public void testAsyncPipelining() throws IOException {
-		ServerSocket listener = new ServerSocket(port);
+		ServerSocket listener = new ServerSocket(0);
 		Ref<Socket> socketRef = new Ref<>();
 		new Thread(() -> {
 			while (Thread.currentThread().isAlive()) {
@@ -258,10 +253,11 @@ public final class AsyncHttpClientTest {
 		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop())
 				.withKeepAliveTimeout(Duration.ofSeconds(30));
 
+		String url = "http://127.0.0.1:" + listener.getLocalPort();
 		int code = await(client
-				.request(HttpRequest.get("http://127.0.0.1:" + port))
+				.request(HttpRequest.get(url))
 				.then(response -> response.loadBody().async()
-						.then(() -> client.request(HttpRequest.get("http://127.0.0.1:" + port)))
+						.then(() -> client.request(HttpRequest.get(url)))
 						.then(res -> {
 							assertFalse(res.isRecycled());
 							return res.loadBody()
@@ -288,20 +284,20 @@ public final class AsyncHttpClientTest {
 
 	@Test
 	public void testActiveConnectionsCountWithFailingServer() throws IOException {
-		SimpleServer.create(socket ->
-				socket.read()
-						.whenResult(ByteBuf::recycle)
-						.then(() -> socket.write(wrapAscii("\r\n")))
-						.whenComplete(socket::close))
-				.withListenPort(port)
-				.withAcceptOnce()
-				.listen();
+		SimpleServer server = SimpleServer.create(socket ->
+						socket.read()
+								.whenResult(ByteBuf::recycle)
+								.then(() -> socket.write(wrapAscii("\r\n")))
+								.whenComplete(socket::close))
+				.withListenPort(0)
+				.withAcceptOnce();
+		server.listen();
 
 		JmxInspector inspector = new JmxInspector();
 		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop())
 				.withInspector(inspector);
 
-		Exception e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + port))
+		Exception e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + first(server.getBoundAddresses()).getPort()))
 				.then(response -> response.loadBody()));
 
 		assertThat(e, instanceOf(MalformedHttpException.class));
@@ -323,21 +319,27 @@ public final class AsyncHttpClientTest {
 
 	private Promise<HttpResponse> customResponse(ByteBuf rawResponse, boolean ssl) throws IOException {
 		SimpleServer server = SimpleServer.create(asyncTcpSocket ->
-				BinaryChannelSupplier.of(ChannelSupplier.ofSocket(asyncTcpSocket))
-						.decode(REQUEST_DECODER)
-						.whenResult(ByteBuf::recycle)
-						.then(() -> asyncTcpSocket.write(rawResponse))
-						.whenResult(asyncTcpSocket::close))
+						BinaryChannelSupplier.of(ChannelSupplier.ofSocket(asyncTcpSocket))
+								.decode(REQUEST_DECODER)
+								.whenResult(ByteBuf::recycle)
+								.then(() -> asyncTcpSocket.write(rawResponse))
+								.whenResult(asyncTcpSocket::close))
 				.withAcceptOnce();
 		if (ssl) {
-			server.withSslListenAddress(createTestSslContext(), Executors.newSingleThreadExecutor(), new InetSocketAddress(port));
+			server.withSslListenPort(createTestSslContext(), Executors.newSingleThreadExecutor(), 0);
 		} else {
-			server.withListenAddress(new InetSocketAddress(port));
+			server.withListenPort(0);
 		}
 		server.listen();
+		String url;
+		if (ssl) {
+			url = "https://127.0.0.1:" + first(server.getSslBoundAddresses()).getPort();
+		} else {
+			url = "http://127.0.0.1:" + first(server.getBoundAddresses()).getPort();
+		}
 		return AsyncHttpClient.create(Eventloop.getCurrentEventloop())
 				.withSslEnabled(createTestSslContext(), Executors.newSingleThreadExecutor())
-				.request(HttpRequest.get("http" + (ssl ? "s" : "") + "://127.0.0.1:" + port));
+				.request(HttpRequest.get(url));
 	}
 
 }

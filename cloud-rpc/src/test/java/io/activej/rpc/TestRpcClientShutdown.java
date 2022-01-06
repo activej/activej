@@ -11,20 +11,18 @@ import io.activej.test.ExpectedException;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import static io.activej.common.Utils.first;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
-import static io.activej.test.TestUtils.getFreePort;
 import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
@@ -39,13 +37,6 @@ public final class TestRpcClientShutdown {
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
-	private int port;
-
-	@Before
-	public void setUp() {
-		port = getFreePort();
-	}
-
 	@Test
 	public void testServerOnClientShutdown() throws IOException {
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
@@ -59,13 +50,14 @@ public final class TestRpcClientShutdown {
 							Thread.sleep(100);
 							return new Response();
 						}))
-				.withListenPort(port);
+				.withListenPort(0);
+
+		rpcServer.listen();
 
 		RpcClient rpcClient = RpcClient.create(eventloop)
 				.withMessageTypes(messageTypes)
-				.withStrategy(server(new InetSocketAddress(port)));
+				.withStrategy(server(first(rpcServer.getBoundAddresses())));
 
-		rpcServer.listen();
 
 		Exception exception = awaitException(rpcClient.start()
 				.then(() -> Promises.all(

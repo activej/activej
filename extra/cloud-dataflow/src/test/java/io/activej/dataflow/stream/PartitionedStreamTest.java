@@ -76,7 +76,6 @@ import static io.activej.dataflow.json.JsonUtils.ofObject;
 import static io.activej.datastream.StreamSupplier.ofChannelSupplier;
 import static io.activej.datastream.processor.StreamReducers.mergeReducer;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.stream.Collectors.*;
@@ -407,7 +406,7 @@ public final class PartitionedStreamTest {
 	}
 
 	private static ActiveFs createClient(Eventloop eventloop, AsyncHttpServer server) {
-		int port = server.getListenAddresses().get(0).getPort();
+		int port = server.getBoundAddresses().get(0).getPort();
 		return HttpActiveFs.create("http://localhost:" + port, AsyncHttpClient.create(eventloop));
 	}
 
@@ -487,7 +486,7 @@ public final class PartitionedStreamTest {
 			servers.add(server);
 		}
 		for (AsyncHttpServer server : servers) {
-			listen(server.withListenPort(getFreePort()));
+			listen(server.withListenPort(0));
 		}
 		return servers;
 	}
@@ -502,7 +501,7 @@ public final class PartitionedStreamTest {
 			servers.add(server);
 		}
 		for (AsyncHttpServer server : servers) {
-			listen(server.withListenPort(getFreePort()));
+			listen(server.withListenPort(0));
 		}
 		return servers;
 	}
@@ -533,7 +532,7 @@ public final class PartitionedStreamTest {
 		for (int i = 0; i < nPartitions; i++) {
 			Injector injector = Injector.of(serverModule);
 			DataflowServer server = injector.getInstance(DataflowServer.class);
-			server.withListenPort(getFreePort());
+			server.withListenPort(0);
 			listen(server);
 			servers.add(server);
 		}
@@ -557,9 +556,9 @@ public final class PartitionedStreamTest {
 		}
 	}
 
-	private static List<Partition> toPartitions(List<DataflowServer> servers) {
+	static List<Partition> toPartitions(List<DataflowServer> servers) {
 		return servers.stream()
-				.map(AbstractServer::getListenAddresses)
+				.map(AbstractServer::getBoundAddresses)
 				.flatMap(Collection::stream)
 				.map(Partition::new)
 				.collect(toList());

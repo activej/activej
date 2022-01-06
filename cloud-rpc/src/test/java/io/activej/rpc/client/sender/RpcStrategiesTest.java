@@ -13,7 +13,6 @@ import java.util.List;
 import static io.activej.rpc.client.sender.Callbacks.assertNoCalls;
 import static io.activej.rpc.client.sender.Callbacks.ignore;
 import static io.activej.rpc.client.sender.RpcStrategies.*;
-import static io.activej.test.TestUtils.getFreePort;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
@@ -30,11 +29,11 @@ public class RpcStrategiesTest {
 
 	@Before
 	public void setUp() {
-		address1 = new InetSocketAddress(HOST, getFreePort());
-		address2 = new InetSocketAddress(HOST, getFreePort());
-		address3 = new InetSocketAddress(HOST, getFreePort());
-		address4 = new InetSocketAddress(HOST, getFreePort());
-		address5 = new InetSocketAddress(HOST, getFreePort());
+		address1 = new InetSocketAddress(HOST, 10001);
+		address2 = new InetSocketAddress(HOST, 10002);
+		address3 = new InetSocketAddress(HOST, 10003);
+		address4 = new InetSocketAddress(HOST, 10004);
+		address5 = new InetSocketAddress(HOST, 10005);
 	}
 
 	@Test

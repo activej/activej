@@ -13,22 +13,17 @@ import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.*;
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutionException;
 
+import static io.activej.common.Utils.first;
 import static io.activej.rpc.client.sender.RpcStrategies.*;
-import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.assertEquals;
 
 public final class RpcBlockingTest {
 	private static final int TIMEOUT = 1500;
 
 	private Thread thread;
-
-	private int port1;
-	private int port2;
-	private int port3;
 
 	private RpcServer serverOne;
 	private RpcServer serverTwo;
@@ -45,31 +40,27 @@ public final class RpcBlockingTest {
 
 	@Before
 	public void setUp() throws Exception {
-		port1 = getFreePort();
-		port2 = getFreePort();
-		port3 = getFreePort();
-
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
 
 		serverOne = RpcServer.create(eventloop)
 				.withMessageTypes(HelloRequest.class, HelloResponse.class)
 				.withHandler(HelloRequest.class,
 						helloServiceRequestHandler(new HelloServiceImplOne()))
-				.withListenPort(port1);
+				.withListenPort(0);
 		serverOne.listen();
 
 		serverTwo = RpcServer.create(eventloop)
 				.withMessageTypes(HelloRequest.class, HelloResponse.class)
 				.withHandler(HelloRequest.class,
 						helloServiceRequestHandler(new HelloServiceImplTwo()))
-				.withListenPort(port2);
+				.withListenPort(0);
 		serverTwo.listen();
 
 		serverThree = RpcServer.create(eventloop)
 				.withMessageTypes(HelloRequest.class, HelloResponse.class)
 				.withHandler(HelloRequest.class,
 						helloServiceRequestHandler(new HelloServiceImplThree()))
-				.withListenPort(port3);
+				.withListenPort(0);
 		serverThree.listen();
 
 		thread = new Thread(eventloop);
@@ -83,9 +74,9 @@ public final class RpcBlockingTest {
 
 	@Test
 	public void testBlockingCall() throws Exception {
-		InetSocketAddress address1 = new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port1);
-		InetSocketAddress address2 = new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port2);
-		InetSocketAddress address3 = new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port3);
+		InetSocketAddress address1 = first(serverOne.getBoundAddresses());
+		InetSocketAddress address2 = first(serverTwo.getBoundAddresses());
+		InetSocketAddress address3 = first(serverThree.getBoundAddresses());
 
 		ShardingFunction<HelloRequest> shardingFunction = item -> {
 			int shard = 0;

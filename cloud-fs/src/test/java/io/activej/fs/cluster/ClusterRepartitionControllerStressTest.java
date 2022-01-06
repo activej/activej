@@ -17,7 +17,6 @@ import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -25,9 +24,9 @@ import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import static io.activej.common.Utils.first;
 import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.test.TestUtils.getFreePort;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -76,19 +75,17 @@ public final class ClusterRepartitionControllerStressTest {
 		partitions.put(localPartitionId, localFsClient);
 
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
-			InetSocketAddress address = new InetSocketAddress("localhost", getFreePort());
-
 			serverStorages[i] = storage.resolve("storage_" + i);
 
 			Files.createDirectories(serverStorages[i]);
 
-			partitions.put("server_" + i, RemoteActiveFs.create(eventloop, address));
 
 			LocalActiveFs localFs = LocalActiveFs.create(eventloop, executor, serverStorages[i]);
 			await(localFs.start());
-			ActiveFsServer server = ActiveFsServer.create(eventloop, localFs).withListenAddress(address);
+			ActiveFsServer server = ActiveFsServer.create(eventloop, localFs).withListenPort(0);
 			server.listen();
 			servers.add(server);
+			partitions.put("server_" + i, RemoteActiveFs.create(eventloop, first(server.getBoundAddresses())));
 		}
 
 		this.partitions = FsPartitions.create(eventloop, DiscoveryService.constant(partitions))

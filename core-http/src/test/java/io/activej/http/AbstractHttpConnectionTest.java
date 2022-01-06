@@ -35,11 +35,11 @@ import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
+import static io.activej.common.Utils.first;
 import static io.activej.http.HttpHeaders.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.assertCompleteFn;
-import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -63,13 +63,8 @@ public final class AbstractHttpConnectionTest {
 
 	private AsyncHttpClient client;
 
-	private int port;
-	private String url;
-
 	@Before
 	public void setUp() {
-		port = getFreePort();
-		url = "http://127.0.0.1:" + port;
 		client = AsyncHttpClient.create(Eventloop.getCurrentEventloop()).withInspector(new AsyncHttpClient.JmxInspector());
 	}
 
@@ -80,11 +75,11 @@ public final class AbstractHttpConnectionTest {
 						.withHeader(DATE, "Mon, 27 Jul 2009 12:28:53 GMT")
 						.withHeader(CONTENT_TYPE, "text/\n          html")
 						.withBody(wrapAscii("  <html>\n<body>\n<h1>Hello, World!</h1>\n</body>\n</html>")))
-				.withListenPort(port)
+				.withListenPort(0)
 				.withAcceptOnce();
 		server.listen();
 
-		await(client.request(HttpRequest.get(url))
+		await(client.request(HttpRequest.get("http://127.0.0.1:" + first(server.getBoundAddresses()).getPort()))
 				.then(response -> response.loadBody()
 						.whenComplete(TestUtils.assertCompleteFn(body -> {
 							assertEquals("text/           html", response.getHeader(CONTENT_TYPE));
@@ -98,12 +93,12 @@ public final class AbstractHttpConnectionTest {
 				request -> HttpResponse.ok200()
 						.withBodyGzipCompression()
 						.withBody(encodeAscii("Test message")))
-				.withListenPort(port)
+				.withListenPort(0)
 				.withAcceptOnce();
 
 		server.listen();
 
-		await(client.request(HttpRequest.get(url)
+		await(client.request(HttpRequest.get("http://127.0.0.1:" + first(server.getBoundAddresses()).getPort())
 				.withHeader(ACCEPT_ENCODING, "gzip"))
 				.then(response -> response.loadBody()
 						.whenComplete(TestUtils.assertCompleteFn(body -> {
@@ -118,7 +113,7 @@ public final class AbstractHttpConnectionTest {
 		client.withMaxKeepAliveRequests(5);
 
 		AsyncHttpServer server = AsyncHttpServer.create(Eventloop.getCurrentEventloop(), request -> HttpResponse.ok200())
-				.withListenPort(port);
+				.withListenPort(0);
 		server.listen();
 
 		assertNotNull(client.getStats());
@@ -130,7 +125,7 @@ public final class AbstractHttpConnectionTest {
 		client.withKeepAliveTimeout(Duration.ofSeconds(1));
 
 		AsyncHttpServer server = AsyncHttpServer.create(Eventloop.getCurrentEventloop(), request -> HttpResponse.ok200())
-				.withListenPort(port)
+				.withListenPort(0)
 				.withMaxKeepAliveRequests(5);
 		server.listen();
 
@@ -143,10 +138,11 @@ public final class AbstractHttpConnectionTest {
 		client.withKeepAliveTimeout(Duration.ofSeconds(30));
 
 		AsyncHttpServer server = AsyncHttpServer.create(Eventloop.getCurrentEventloop(), request -> HttpResponse.ok200())
-				.withListenPort(port)
+				.withListenPort(0)
 				.withKeepAliveTimeout(Duration.ZERO);
 		server.listen();
 
+		String url = "http://127.0.0.1:" + first(server.getBoundAddresses()).getPort();
 		int code = await(client.request(HttpRequest.get(url))
 				.then(response -> {
 					assertEquals(200, response.getCode());
@@ -196,10 +192,10 @@ public final class AbstractHttpConnectionTest {
 				request ->  HttpResponse.ok200()
 								.withHeader(CONTENT_LENGTH, String.valueOf(size))
 								.withBodyStream(request.getBodyStream()))
-				.withListenPort(port);
+				.withListenPort(0);
 		server.listen();
 
-		HttpRequest request = HttpRequest.post("http://127.0.0.1:" + port)
+		HttpRequest request = HttpRequest.post("http://127.0.0.1:" + first(server.getBoundAddresses()).getPort())
 				.withHeader(CONTENT_LENGTH, String.valueOf(size))
 				.withBodyStream(ChannelSupplier.ofStream(Stream.generate(() -> {
 					int length = 1_000_000;
@@ -234,11 +230,11 @@ public final class AbstractHttpConnectionTest {
 							.withBodyStream(ChannelSupplier.of(expected.slice()));
 				})
 				.withAcceptOnce()
-				.withListenPort(port);
+				.withListenPort(0);
 
 		server.listen();
 
-		ByteBuf result = await(AsyncHttpClient.create(Eventloop.getCurrentEventloop()).request(HttpRequest.get("http://127.0.0.1:" + port))
+		ByteBuf result = await(AsyncHttpClient.create(Eventloop.getCurrentEventloop()).request(HttpRequest.get("http://127.0.0.1:" + first(server.getBoundAddresses()).getPort()))
 				.then(response -> response.getBodyStream().toCollector(ByteBufs.collector()))
 				.whenComplete(server::close));
 		assertArrayEquals(expected.asArray(), result.asArray());
@@ -296,12 +292,12 @@ public final class AbstractHttpConnectionTest {
 
 		AsyncHttpServer.JmxInspector inspector = new AsyncHttpServer.JmxInspector();
 		AsyncHttpServer server = AsyncHttpServer.create(Eventloop.getCurrentEventloop(), request -> HttpResponse.ok200())
-				.withListenPort(port)
+				.withListenPort(0)
 				.withInspector(inspector)
 				.withAcceptOnce(true);
 		server.listen();
 
-		awaitException(client.request(HttpRequest.get(url + '/' + new String(chars))));
+		awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + first(server.getBoundAddresses()).getPort() + '/' + new String(chars))));
 
 		ExceptionStats httpErrors = inspector.getHttpErrors();
 		assertEquals(1, httpErrors.getTotal());
@@ -320,7 +316,7 @@ public final class AbstractHttpConnectionTest {
 						request -> HttpResponse.ok200()
 								.withBodyStream(ChannelSupplier.of(ByteBuf.wrapForReading(HELLO_WORLD))))
 				.withInspector(serverInspector)
-				.withListenPort(port);
+				.withListenPort(0);
 
 		server.listen();
 
@@ -334,7 +330,7 @@ public final class AbstractHttpConnectionTest {
 		assertEquals(0, server.getConnectionsKeepAliveCount());
 		assertEquals(0, serverInspector.getTotalConnections().getTotalCount());
 
-		String url = "http://127.0.0.1:" + port;
+		String url = "http://127.0.0.1:" + first(server.getBoundAddresses()).getPort();
 		await(client.request(HttpRequest.get(url))
 				.then(ensureHelloWorldAsyncFn())
 				.whenResult(() -> {
@@ -367,7 +363,7 @@ public final class AbstractHttpConnectionTest {
 								.map($ -> HttpResponse.ok200()
 										.withBody(ByteBuf.wrapForReading(HELLO_WORLD))))
 				.withInspector(serverInspector)
-				.withListenPort(port);
+				.withListenPort(0);
 
 		server.listen();
 
@@ -381,7 +377,7 @@ public final class AbstractHttpConnectionTest {
 		assertEquals(0, server.getConnectionsKeepAliveCount());
 		assertEquals(0, serverInspector.getTotalConnections().getTotalCount());
 
-		String url = "http://127.0.0.1:" + port;
+		String url = "http://127.0.0.1:" + first(server.getBoundAddresses()).getPort();
 		await(client.request(HttpRequest.get(url)
 						.withBodyStream(ChannelSupplier.of(ByteBuf.wrapForReading(HELLO_WORLD))))
 				.then(ensureHelloWorldAsyncFn())
@@ -423,7 +419,7 @@ public final class AbstractHttpConnectionTest {
 										responseDecorator.accept(response);
 										return response;
 									})
-							.withListenPort(port)
+							.withListenPort(0)
 							.withAcceptOnce(true);
 
 					try {
@@ -432,7 +428,7 @@ public final class AbstractHttpConnectionTest {
 						throw new AssertionError(e);
 					}
 
-					HttpRequest request = HttpRequest.post(url);
+					HttpRequest request = HttpRequest.post("http://127.0.0.1:" + first(server.getBoundAddresses()).getPort());
 					messageDecorators.get(i).accept(request);
 
 					String responseText = await(client.request(request)
@@ -444,7 +440,6 @@ public final class AbstractHttpConnectionTest {
 					System.out.println("Error while testing request decorator #" + i + " with response decorator #" + j);
 					throw e;
 				}
-				resetPort();
 			}
 		}
 	}
@@ -460,11 +455,11 @@ public final class AbstractHttpConnectionTest {
 							decorator.accept(httpResponse);
 							return httpResponse;
 						}))
-				.withListenPort(port)
+				.withListenPort(0)
 				.withSocketSettings(socketSettings);
 		server.listen();
 
-		HttpRequest request = HttpRequest.post("http://127.0.0.1:" + port)
+		HttpRequest request = HttpRequest.post("http://127.0.0.1:" + first(server.getBoundAddresses()).getPort())
 				.withBodyStream(ChannelSupplier.ofStream(Stream.generate(() -> {
 					byte[] temp = new byte[1];
 					RANDOM.nextBytes(temp);
@@ -482,7 +477,7 @@ public final class AbstractHttpConnectionTest {
 		assertArrayEquals(expected.asArray(), result.asArray());
 	}
 
-	private Promise<HttpResponse> checkRequest(String expectedHeader, int expectedConnectionCount, EventStats connectionCount) {
+	private Promise<HttpResponse> checkRequest(String url, String expectedHeader, int expectedConnectionCount, EventStats connectionCount) {
 		return client.request(HttpRequest.get(url))
 				.then((response, e) -> {
 					if (e != null) throw new AssertionError(e);
@@ -495,15 +490,16 @@ public final class AbstractHttpConnectionTest {
 
 	@SuppressWarnings("SameParameterValue")
 	private void checkMaxKeepAlive(int maxKeepAlive, AsyncHttpServer server, EventStats connectionCount) {
+		String url = "http://127.0.0.1:" + first(server.getBoundAddresses()).getPort();
 		await(Promises.sequence(
 				IntStream.range(0, maxKeepAlive - 1)
 						.mapToObj($ ->
-								() -> checkRequest("keep-alive", 1, connectionCount)
+								() -> checkRequest(url, "keep-alive", 1, connectionCount)
 										.then(AbstractHttpConnectionTest::post)
 										.toVoid()))
-				.then(() -> checkRequest("close", 1, connectionCount))
+				.then(() -> checkRequest(url, "close", 1, connectionCount))
 				.then(AbstractHttpConnectionTest::post)
-				.then(() -> checkRequest("keep-alive", 2, connectionCount))
+				.then(() -> checkRequest(url, "keep-alive", 2, connectionCount))
 				.then(AbstractHttpConnectionTest::post)
 				.whenComplete(server::close));
 	}
@@ -512,10 +508,5 @@ public final class AbstractHttpConnectionTest {
 		SettablePromise<T> cb = new SettablePromise<>();
 		Eventloop.getCurrentEventloop().post(() -> cb.set(value));
 		return cb;
-	}
-
-	private void resetPort() {
-		port = getFreePort();
-		url = "http://127.0.0.1:" + port;
 	}
 }

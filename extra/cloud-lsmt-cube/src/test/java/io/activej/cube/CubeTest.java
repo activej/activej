@@ -35,10 +35,10 @@ import static io.activej.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.codegen.DefiningClassLoader.create;
+import static io.activej.common.Utils.first;
 import static io.activej.common.Utils.keysToMap;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.test.TestUtils.getFreePort;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -67,11 +67,9 @@ public final class CubeTest {
 
 	private AggregationChunkStorage<Long> chunkStorage;
 	private Cube cube;
-	private int listenPort;
 
 	@Before
 	public void setUp() throws Exception {
-		listenPort = getFreePort();
 		LocalActiveFs fs = LocalActiveFs.create(Eventloop.getCurrentEventloop(), executor, temporaryFolder.newFolder().toPath());
 		await(fs.start());
 		chunkStorage = ActiveFsChunkStorage.create(Eventloop.getCurrentEventloop(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, fs);
@@ -132,7 +130,7 @@ public final class CubeTest {
 		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, serverStorage);
 		await(fs.start());
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop, ActiveFsServlet.create(fs))
-				.withListenPort(listenPort);
+				.withListenPort(0);
 		server.listen();
 		return server;
 	}
@@ -141,27 +139,24 @@ public final class CubeTest {
 	public void testRemoteFsAggregationStorage() throws Exception {
 
 		Path serverStorage = temporaryFolder.newFolder("storage").toPath();
-		AsyncHttpServer server1 = startServer(executor, serverStorage);
+		AsyncHttpServer server = startServer(executor, serverStorage);
 		AsyncHttpClient httpClient = AsyncHttpClient.create(Eventloop.getCurrentEventloop());
-		HttpActiveFs storage = HttpActiveFs.create("http://localhost:" + listenPort, httpClient);
+		HttpActiveFs storage = HttpActiveFs.create("http://localhost:" + first(server.getBoundAddresses()).getPort(), httpClient);
 		AggregationChunkStorage<Long> chunkStorage = ActiveFsChunkStorage.create(Eventloop.getCurrentEventloop(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, storage);
 		Cube cube = newCube(executor, classLoader, chunkStorage);
 
 		List<DataItemResult> expected = singletonList(new DataItemResult(1, 3, 10, 30, 20));
 
-		await(
+		List<DataItemResult> list = await(
 				Promises.all(consume(cube, chunkStorage, new DataItem1(1, 2, 10, 20), new DataItem1(1, 3, 10, 20)),
-						consume(cube, chunkStorage, new DataItem2(1, 3, 10, 20), new DataItem2(1, 4, 10, 20)))
-						.whenComplete(server1::close)
+								consume(cube, chunkStorage, new DataItem2(1, 3, 10, 20), new DataItem2(1, 4, 10, 20)))
+						.then(() -> cube.queryRawStream(
+										asList("key1", "key2"), asList("metric1", "metric2", "metric3"),
+										and(eq("key1", 1), eq("key2", 3)),
+										DataItemResult.class, classLoader)
+								.toList())
+						.whenComplete(server::close)
 		);
-		AsyncHttpServer server2 = startServer(executor, serverStorage);
-
-		List<DataItemResult> list = await(cube.queryRawStream(
-				asList("key1", "key2"), asList("metric1", "metric2", "metric3"),
-				and(eq("key1", 1), eq("key2", 3)),
-				DataItemResult.class, classLoader)
-				.toList()
-				.whenComplete(server2::close));
 
 		assertEquals(expected, list);
 	}

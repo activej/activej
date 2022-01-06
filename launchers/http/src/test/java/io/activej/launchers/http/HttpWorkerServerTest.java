@@ -13,7 +13,6 @@ import io.activej.service.ServiceGraph;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.worker.annotation.Worker;
 import io.activej.worker.annotation.WorkerId;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -26,8 +25,8 @@ import java.util.LinkedHashSet;
 
 import static io.activej.bytebuf.ByteBufStrings.decodeAscii;
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
+import static io.activej.common.Utils.first;
 import static io.activej.config.converter.ConfigConverters.ofInetSocketAddress;
-import static io.activej.test.TestUtils.getFreePort;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
@@ -35,16 +34,9 @@ public final class HttpWorkerServerTest {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
-	public int port;
-
 	@BeforeClass
 	public static void beforeClass() {
 		Injector.useSpecializer();
-	}
-
-	@Before
-	public void setUp() {
-		port = getFreePort();
 	}
 
 	@Test
@@ -64,19 +56,19 @@ public final class HttpWorkerServerTest {
 					@Provides
 					Config config() {
 						return Config.create()
-								.with("http.listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(port)));
+								.with("http.listenAddresses", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(0)));
 					}
 				};
 			}
 		};
 		Injector injector = launcher.createInjector(new String[]{});
-		injector.getInstance(PrimaryServer.class);
+		PrimaryServer primaryServer = injector.getInstance(PrimaryServer.class);
 
 		ServiceGraph serviceGraph = injector.getInstance(ServiceGraph.class);
 		try (Socket socket0 = new Socket(); Socket socket1 = new Socket()) {
 			serviceGraph.startFuture().get();
 
-			InetSocketAddress localhost = new InetSocketAddress("localhost", port);
+			InetSocketAddress localhost = first(primaryServer.getBoundAddresses());
 			socket0.connect(localhost);
 			socket1.connect(localhost);
 

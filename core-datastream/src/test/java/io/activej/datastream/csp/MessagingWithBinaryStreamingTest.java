@@ -14,20 +14,18 @@ import io.activej.test.TestUtils;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.LongStream;
 
+import static io.activej.common.Utils.first;
 import static io.activej.csp.binary.ByteBufsDecoder.ofNullTerminatedBytes;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.serializer.BinarySerializers.LONG_SERIALIZER;
-import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
@@ -55,9 +53,6 @@ public final class MessagingWithBinaryStreamingTest {
 	@Rule
 	public final ActivePromisesRule activePromisesRule = new ActivePromisesRule();
 
-	private int listenPort;
-	private InetSocketAddress address;
-
 	private static void pong(Messaging<Integer, Integer> messaging) {
 		messaging.receive()
 				.thenIfElse(Objects::nonNull,
@@ -84,21 +79,15 @@ public final class MessagingWithBinaryStreamingTest {
 				.whenException(e -> messaging.close());
 	}
 
-	@Before
-	public void setUp() {
-		listenPort = getFreePort();
-		address = new InetSocketAddress("localhost", listenPort);
-	}
-
 	@Test
 	public void testPing() throws Exception {
-		SimpleServer.create(socket ->
+		SimpleServer server = SimpleServer.create(socket ->
 						pong(MessagingWithBinaryStreaming.create(socket, INTEGER_SERIALIZER)))
-				.withListenPort(listenPort)
-				.withAcceptOnce()
-				.listen();
+				.withListenPort(0)
+				.withAcceptOnce();
+		server.listen();
 
-		await(AsyncTcpSocketNio.connect(address)
+		await(AsyncTcpSocketNio.connect(first(server.getBoundAddresses()))
 				.whenComplete(TestUtils.assertCompleteFn(socket -> ping(3, MessagingWithBinaryStreaming.create(socket, INTEGER_SERIALIZER)))));
 	}
 
@@ -106,7 +95,7 @@ public final class MessagingWithBinaryStreamingTest {
 	public void testMessagingDownload() throws Exception {
 		List<Long> source = LongStream.range(0, 100).boxed().collect(toList());
 
-		SimpleServer.create(
+		SimpleServer server = SimpleServer.create(
 						socket -> {
 							MessagingWithBinaryStreaming<String, String> messaging =
 									MessagingWithBinaryStreaming.create(socket, STRING_SERIALIZER);
@@ -120,11 +109,11 @@ public final class MessagingWithBinaryStreamingTest {
 												.streamTo(messaging.sendBinaryStream());
 									});
 						})
-				.withListenPort(listenPort)
-				.withAcceptOnce()
-				.listen();
+				.withListenPort(0)
+				.withAcceptOnce();
+		server.listen();
 
-		List<Long> list = await(AsyncTcpSocketNio.connect(address)
+		List<Long> list = await(AsyncTcpSocketNio.connect(first(server.getBoundAddresses()))
 				.then(socket -> {
 					MessagingWithBinaryStreaming<String, String> messaging =
 							MessagingWithBinaryStreaming.create(socket, STRING_SERIALIZER);
@@ -145,7 +134,7 @@ public final class MessagingWithBinaryStreamingTest {
 
 		ByteBufsCodec<String, String> serializer = STRING_SERIALIZER;
 
-		SimpleServer.create(
+		SimpleServer server = SimpleServer.create(
 						socket -> {
 							MessagingWithBinaryStreaming<String, String> messaging =
 									MessagingWithBinaryStreaming.create(socket, serializer);
@@ -160,11 +149,11 @@ public final class MessagingWithBinaryStreamingTest {
 															messaging.sendEndOfStream().map($2 -> list)))
 									.whenComplete(TestUtils.assertCompleteFn(list -> assertEquals(source, list)));
 						})
-				.withListenPort(listenPort)
-				.withAcceptOnce()
-				.listen();
+				.withListenPort(0)
+				.withAcceptOnce();
+		server.listen();
 
-		await(AsyncTcpSocketNio.connect(address)
+		await(AsyncTcpSocketNio.connect(first(server.getBoundAddresses()))
 				.whenResult(socket -> {
 					MessagingWithBinaryStreaming<String, String> messaging =
 							MessagingWithBinaryStreaming.create(socket, serializer);
@@ -184,7 +173,7 @@ public final class MessagingWithBinaryStreamingTest {
 
 		ByteBufsCodec<String, String> serializer = STRING_SERIALIZER;
 
-		SimpleServer.create(
+		SimpleServer server = SimpleServer.create(
 						socket -> {
 							MessagingWithBinaryStreaming<String, String> messaging = MessagingWithBinaryStreaming.create(socket, serializer);
 
@@ -200,11 +189,11 @@ public final class MessagingWithBinaryStreamingTest {
 																	.map($ -> list)))
 									.whenComplete(TestUtils.assertCompleteFn(list -> assertEquals(source, list)));
 						})
-				.withListenPort(listenPort)
-				.withAcceptOnce()
-				.listen();
+				.withListenPort(0)
+				.withAcceptOnce();
+		server.listen();
 
-		String msg = await(AsyncTcpSocketNio.connect(address)
+		String msg = await(AsyncTcpSocketNio.connect(first(server.getBoundAddresses()))
 				.then(socket -> {
 					MessagingWithBinaryStreaming<String, String> messaging =
 							MessagingWithBinaryStreaming.create(socket, serializer);
@@ -225,7 +214,7 @@ public final class MessagingWithBinaryStreamingTest {
 	public void testGsonMessagingUpload() throws Exception {
 		List<Long> source = LongStream.range(0, 100).boxed().collect(toList());
 
-		SimpleServer.create(
+		SimpleServer server = SimpleServer.create(
 						socket -> {
 							MessagingWithBinaryStreaming<String, String> messaging =
 									MessagingWithBinaryStreaming.create(socket, STRING_SERIALIZER);
@@ -239,11 +228,11 @@ public final class MessagingWithBinaryStreamingTest {
 													.toList())
 									.whenComplete(TestUtils.assertCompleteFn(list -> assertEquals(source, list)));
 						})
-				.withListenPort(listenPort)
-				.withAcceptOnce()
-				.listen();
+				.withListenPort(0)
+				.withAcceptOnce();
+		server.listen();
 
-		await(AsyncTcpSocketNio.connect(address)
+		await(AsyncTcpSocketNio.connect(first(server.getBoundAddresses()))
 				.whenResult(socket -> {
 					MessagingWithBinaryStreaming<String, String> messaging =
 							MessagingWithBinaryStreaming.create(socket, STRING_SERIALIZER);

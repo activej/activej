@@ -24,10 +24,10 @@ import java.util.Random;
 import java.util.concurrent.ExecutionException;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
+import static io.activej.common.Utils.first;
 import static io.activej.http.TestUtils.readFully;
 import static io.activej.http.TestUtils.toByteArray;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.test.TestUtils.getFreePort;
 import static java.lang.Math.min;
 import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -42,19 +42,17 @@ public final class AsyncHttpServerTest {
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
 	private Eventloop eventloop;
-	private int port;
 
 	@Before
 	public void setUp() {
 		eventloop = Eventloop.getCurrentEventloop();
-		port = getFreePort();
 	}
 
 	public AsyncHttpServer blockingHttpServer() {
 		return AsyncHttpServer.create(eventloop,
 						request ->
 								HttpResponse.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())))
-				.withListenPort(port);
+				.withListenPort(0);
 	}
 
 	public AsyncHttpServer asyncHttpServer() {
@@ -62,7 +60,7 @@ public final class AsyncHttpServerTest {
 						request ->
 								Promise.ofCallback(cb -> cb.post(
 										HttpResponse.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery())))))
-				.withListenPort(port);
+				.withListenPort(0);
 	}
 
 	static final Random RANDOM = new Random();
@@ -71,7 +69,7 @@ public final class AsyncHttpServerTest {
 		return AsyncHttpServer.create(eventloop,
 						request -> Promises.delay(RANDOM.nextInt(3),
 								HttpResponse.ok200().withBody(encodeAscii(request.getUrl().getPathAndQuery()))))
-				.withListenPort(port);
+				.withListenPort(0);
 	}
 
 	public static void writeByRandomParts(Socket socket, String string) throws IOException {
@@ -105,7 +103,7 @@ public final class AsyncHttpServerTest {
 
 		Socket socket = new Socket();
 		socket.setTcpNoDelay(true);
-		socket.connect(new InetSocketAddress("localhost", port));
+		socket.connect(first(server.getBoundAddresses()));
 
 		for (int i = 0; i < 200; i++) {
 			writeByRandomParts(socket, "GET /abc HTTP/1.0\r\nHost: localhost\r\nConnection: keep-alive\r\n\r\n");
@@ -121,7 +119,6 @@ public final class AsyncHttpServerTest {
 
 		server.closeFuture().get();
 		thread.join();
-		resetPort();
 	}
 
 	@Test
@@ -138,7 +135,7 @@ public final class AsyncHttpServerTest {
 
 		Socket socket = new Socket();
 		socket.setTcpNoDelay(true);
-		socket.connect(new InetSocketAddress("localhost", port));
+		socket.connect(first(server.getBoundAddresses()));
 
 		for (int i = 0; i < 200; i++) {
 			writeByRandomParts(socket, "GET /abc HTTP/1.1\r\nHost: localhost\r\n\r\n");
@@ -154,7 +151,6 @@ public final class AsyncHttpServerTest {
 
 		server.closeFuture().get();
 		thread.join();
-		resetPort();
 	}
 
 	@Test
@@ -166,7 +162,7 @@ public final class AsyncHttpServerTest {
 
 		Socket socket = new Socket();
 
-		socket.connect(new InetSocketAddress("localhost", port));
+		socket.connect(first(server.getBoundAddresses()));
 		writeByRandomParts(socket, "GET /abc HTTP1.1\r\nHost: localhost\r\n");
 		socket.close();
 
@@ -179,13 +175,13 @@ public final class AsyncHttpServerTest {
 		SettablePromise<Exception> exceptionPromise = new SettablePromise<>();
 		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.of(() -> Promise.of(wrapAscii("Hello")), exceptionPromise::set);
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop, req -> HttpResponse.ok200().withBodyStream(supplier))
-				.withListenPort(port)
+				.withListenPort(0)
 				.withAcceptOnce();
 		server.listen();
 		new Thread(() -> {
 			try {
 				Socket socket = new Socket();
-				socket.connect(new InetSocketAddress("localhost", port));
+				socket.connect(first(server.getBoundAddresses()));
 				writeByRandomParts(socket, "GET /abc HTTP/1.1\r\nHost: localhost\r\n\r\n");
 				socket.close();
 			} catch (IOException e) {
@@ -199,14 +195,14 @@ public final class AsyncHttpServerTest {
 	@Test
 	public void testNoKeepAlive_Http_1_0() throws Exception {
 		AsyncHttpServer server = blockingHttpServer();
-		server.withListenPort(port);
+		server.withListenPort(0);
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
 
 		Socket socket = new Socket();
 
-		socket.connect(new InetSocketAddress("localhost", port));
+		socket.connect(first(server.getBoundAddresses()));
 		writeByRandomParts(socket, "GET /abc HTTP/1.0\r\nHost: localhost\r\n\r\n");
 		readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 4\r\n\r\n/abc");
 		assertEquals(0, toByteArray(socket.getInputStream()).length);
@@ -219,14 +215,14 @@ public final class AsyncHttpServerTest {
 	@Test
 	public void testNoKeepAlive_Http_1_1() throws Exception {
 		AsyncHttpServer server = blockingHttpServer();
-		server.withListenPort(port);
+		server.withListenPort(0);
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
 
 		Socket socket = new Socket();
 
-		socket.connect(new InetSocketAddress("localhost", port));
+		socket.connect(first(server.getBoundAddresses()));
 		writeByRandomParts(socket, "GET /abc HTTP/1.1\r\nConnection: close\r\nHost: localhost\r\n\r\n");
 		readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 4\r\n\r\n/abc");
 		assertEquals(0, toByteArray(socket.getInputStream()).length);
@@ -244,13 +240,13 @@ public final class AsyncHttpServerTest {
 	}
 
 	private void doTestPipelining(AsyncHttpServer server) throws Exception {
-		server.withListenPort(port);
+		server.withListenPort(0);
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
 
 		Socket socket = new Socket();
-		socket.connect(new InetSocketAddress("localhost", port));
+		socket.connect(first(server.getBoundAddresses()));
 
 		for (int i = 0; i < 100; i++) {
 			writeByRandomParts(socket, "" +
@@ -281,29 +277,31 @@ public final class AsyncHttpServerTest {
 
 		server.closeFuture().get();
 		thread.join();
-		resetPort();
 	}
 
 	@Test
 	public void testBigHttpMessage() throws Exception {
+		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
+						req -> HttpResponse.ok200()
+								.withBody(encodeAscii(req.getUrl().getPathAndQuery())))
+				.withListenPort(0);
+		server.listen();
+
+		InetSocketAddress address = first(server.getBoundAddresses());
+
 		byte[] body = encodeAscii("Test big HTTP message body");
-		HttpRequest request = HttpRequest.post("http://127.0.0.1:" + port)
+		HttpRequest request = HttpRequest.post("http://127.0.0.1:" + address.getPort())
 				.withBody(body);
 
 		ByteBuf buf = ByteBufPool.allocate(request.estimateSize() + body.length);
 		request.writeTo(buf);
 		buf.put(body);
 
-		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
-						req -> HttpResponse.ok200()
-								.withBody(encodeAscii(req.getUrl().getPathAndQuery())))
-				.withListenPort(port);
-		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
 
 		try (Socket socket = new Socket()) {
-			socket.connect(new InetSocketAddress("localhost", port));
+			socket.connect(address);
 			socket.getOutputStream().write(buf.array(), buf.head(), buf.readRemaining());
 			buf.recycle();
 //			Thread.sleep(100);
@@ -320,7 +318,7 @@ public final class AsyncHttpServerTest {
 	public void testExpectContinue() throws Exception {
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
 						request -> request.loadBody().map(body -> HttpResponse.ok200().withBody(body.slice())))
-				.withListenPort(port);
+				.withListenPort(0);
 
 		server.listen();
 		Thread thread = new Thread(eventloop);
@@ -328,7 +326,7 @@ public final class AsyncHttpServerTest {
 
 		Socket socket = new Socket();
 		socket.setTcpNoDelay(true);
-		socket.connect(new InetSocketAddress("localhost", port));
+		socket.connect(first(server.getBoundAddresses()));
 
 		writeByRandomParts(socket, "POST /abc HTTP/1.0\r\nHost: localhost\r\nContent-Length: 5\r\nExpect: 100-continue\r\n\r\n");
 		readAndAssert(socket.getInputStream(), "HTTP/1.1 100 Continue\r\n\r\n");
@@ -352,14 +350,14 @@ public final class AsyncHttpServerTest {
 							shutdownAllChannels();
 							return HttpResponse.ok200();
 						})
-				.withListenPort(port)
+				.withListenPort(0)
 				.withAcceptOnce(true);
 
 		server.listen();
 
 		Thread thread = new Thread(() -> {
 			try (Socket socket = new Socket()) {
-				socket.connect(new InetSocketAddress("localhost", port));
+				socket.connect(first(server.getBoundAddresses()));
 				ByteBuf buf = ByteBuf.wrapForReading(encodeAscii("GET /  HTTP/1.1\r\nHost: localhost\r\n" +
 						"Connection: close\r\nContent-Length: 10\r\n\r\ntest"));
 				socket.getOutputStream().write(buf.array(), buf.head(), buf.readRemaining());
@@ -389,14 +387,14 @@ public final class AsyncHttpServerTest {
 
 							return Promise.of(HttpResponse.ok200().withBody(encodeAscii(sb.toString())));
 						}));
-		server.withListenPort(port);
+		server.withListenPort(0);
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
 
 		Socket socket = new Socket();
 
-		socket.connect(new InetSocketAddress("localhost", port));
+		socket.connect(first(server.getBoundAddresses()));
 		writeByRandomParts(socket, "POST / HTTP/1.1\r\n" +
 				"Host: localhost\r\n" +
 				"Connection: close\r\n" +
@@ -428,14 +426,14 @@ public final class AsyncHttpServerTest {
 							assertEquals("localhost", request.getHeader(HttpHeaders.HOST));
 							return HttpResponse.ofCode(400);
 						}));
-		server.withListenPort(port);
+		server.withListenPort(0);
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
 
 		Socket socket = new Socket();
 
-		socket.connect(new InetSocketAddress("localhost", port));
+		socket.connect(first(server.getBoundAddresses()));
 		writeByRandomParts(socket, "POST / HTTP/1.1\r\n" +
 				"Host: localhost\r\n" +
 				"Connection: close\r\n" +
@@ -459,9 +457,5 @@ public final class AsyncHttpServerTest {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-	}
-
-	private void resetPort() {
-		port = getFreePort();
 	}
 }

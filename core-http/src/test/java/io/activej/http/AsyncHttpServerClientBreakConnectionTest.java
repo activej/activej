@@ -12,8 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
+import static io.activej.common.Utils.first;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 
@@ -29,22 +29,20 @@ public class AsyncHttpServerClientBreakConnectionTest {
 	private final Eventloop eventloop = Eventloop.getCurrentEventloop();
 	private AsyncHttpServer server;
 	private AsyncHttpClient client;
-	private int freePort;
 
 	@Before
 	public void init() throws IOException {
-		freePort = getFreePort();
 		server = AsyncHttpServer.create(eventloop,
-				request -> {
-					logger.info("Closing server...");
-					eventloop.post(() ->
-							server.close().whenComplete(() -> logger.info("Server Closed")));
-					return Promises.delay(100L,
-							HttpResponse.ok200()
-									.withBody("Hello World".getBytes())
-					);
-				})
-				.withListenPort(freePort)
+						request -> {
+							logger.info("Closing server...");
+							eventloop.post(() ->
+									server.close().whenComplete(() -> logger.info("Server Closed")));
+							return Promises.delay(100L,
+									HttpResponse.ok200()
+											.withBody("Hello World".getBytes())
+							);
+						})
+				.withListenPort(0)
 				.withAcceptOnce();
 
 		client = AsyncHttpClient.create(eventloop);
@@ -54,7 +52,7 @@ public class AsyncHttpServerClientBreakConnectionTest {
 	@Test
 	public void testBreakConnection() {
 		String result = await(client.request(
-						HttpRequest.post("http://127.0.0.1:" + freePort)
+						HttpRequest.post("http://127.0.0.1:" + first(server.getBoundAddresses()).getPort())
 								.withBody("Hello World".getBytes()))
 				.then(response ->
 						response.loadBody()

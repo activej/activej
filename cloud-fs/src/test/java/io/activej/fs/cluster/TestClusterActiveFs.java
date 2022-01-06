@@ -31,12 +31,10 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.IntStream;
 
-import static io.activej.common.Utils.keysToMap;
-import static io.activej.common.Utils.union;
+import static io.activej.common.Utils.*;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.readAllBytes;
 import static java.util.concurrent.Executors.newCachedThreadPool;
@@ -81,10 +79,6 @@ public final class TestClusterActiveFs {
 		AsyncHttpClient httpClient = AsyncHttpClient.create(eventloop);
 
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
-			int port = getFreePort();
-
-			partitions.put("server_" + i, HttpActiveFs.create("http://localhost:" + port, httpClient));
-
 			Path path = Paths.get(tmpFolder.newFolder("storage_" + i).toURI());
 			serverStorages.add(path);
 			Files.createDirectories(path);
@@ -94,7 +88,7 @@ public final class TestClusterActiveFs {
 			LocalActiveFs localClient = LocalActiveFs.create(serverEventloop, executor, path);
 			serverEventloop.submit(localClient::start);
 			AsyncHttpServer server = AsyncHttpServer.create(serverEventloop, ActiveFsServlet.create(localClient))
-					.withListenPort(port);
+					.withListenPort(0);
 			CompletableFuture<Void> listenFuture = serverEventloop.submit(() -> {
 				try {
 					server.listen();
@@ -105,6 +99,7 @@ public final class TestClusterActiveFs {
 			servers.add(server);
 			new Thread(serverEventloop).start();
 			listenFuture.get();
+			partitions.put("server_" + i, HttpActiveFs.create("http://localhost:" + first(server.getBoundAddresses()).getPort(), httpClient));
 		}
 
 		partitions.put("dead_one", HttpActiveFs.create("http://localhost:" + 5555, httpClient));

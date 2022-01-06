@@ -7,7 +7,6 @@ import io.activej.eventloop.Eventloop;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -26,13 +25,13 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
+import static io.activej.common.Utils.first;
 import static io.activej.http.GzipProcessorUtils.fromGzip;
 import static io.activej.http.GzipProcessorUtils.toGzip;
 import static io.activej.http.HttpHeaders.ACCEPT_ENCODING;
 import static io.activej.http.HttpHeaders.CONTENT_ENCODING;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertCompleteFn;
-import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.fail;
@@ -40,8 +39,6 @@ import static junit.framework.TestCase.fail;
 @RunWith(Parameterized.class)
 public final class TestGzipProcessorUtils {
 	public static final int CHARACTERS_COUNT = 10_000_000;
-
-	private int port;
 
 	@Parameters
 	public static List<String> testData() {
@@ -63,11 +60,6 @@ public final class TestGzipProcessorUtils {
 
 	@Rule
 	public final ActivePromisesRule activePromisesRule = new ActivePromisesRule();
-
-	@Before
-	public void setUp() {
-		port = getFreePort();
-	}
 
 	@Test
 	public void testEncodeDecode() throws MalformedHttpException {
@@ -117,16 +109,16 @@ public final class TestGzipProcessorUtils {
 											.withBodyGzipCompression()
 											.withBody(ByteBufStrings.wrapAscii(receivedData));
 								}))
-				.withListenPort(port);
+				.withListenPort(0);
 
 		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop());
 
-		HttpRequest request = HttpRequest.get("http://127.0.0.1:" + port)
+		server.listen();
+
+		HttpRequest request = HttpRequest.get("http://127.0.0.1:" + first(server.getBoundAddresses()).getPort())
 				.withHeader(ACCEPT_ENCODING, "gzip")
 				.withBodyGzipCompression()
 				.withBody(wrapUtf8(text));
-
-		server.listen();
 
 		ByteBuf body = await(client.request(request)
 				.whenComplete(assertCompleteFn(response -> assertEquals("gzip", response.getHeader(CONTENT_ENCODING))))

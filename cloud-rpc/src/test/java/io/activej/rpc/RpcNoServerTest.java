@@ -12,23 +12,24 @@ import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
+import static io.activej.common.Utils.first;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
-import static io.activej.test.TestUtils.getFreePort;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public final class RpcNoServerTest {
 	@ClassRule
@@ -86,47 +87,43 @@ public final class RpcNoServerTest {
 					}
 					return "Hello, " + name + "!";
 				}))
-				.withListenPort(port);
+				.withListenPort(0);
 	}
 
 	private static final int TIMEOUT = 1500;
 
-	private int port;
-
-	@Before
-	public void setUp() {
-		port = getFreePort();
-	}
-
 	@Test
 	public void testRpcClientStopBug1() throws Exception {
-		doTest(true);
+		doTest(false);
 	}
 
 	@Test
 	public void testRpcClientStopBug2() throws Exception {
-		doTest(false);
+		doTest(true);
 	}
 
-	private void doTest(boolean startServerAfterConnectTimeout) throws UnknownHostException, InterruptedException {
+	private void doTest(boolean stopServerAfterConnectTimeout) throws InterruptedException, ExecutionException {
 		Eventloop eventloopServer = Eventloop.create().withEventloopFatalErrorHandler(rethrow());
 		RpcServer server = createServer(eventloopServer);
-		eventloopServer.submit(() -> {
+		CompletableFuture<Void> listenFuture = eventloopServer.submit(() -> {
 			try {
 				server.listen();
 			} catch (IOException ignore) {
 			}
 		});
 		Thread serverThread = new Thread(eventloopServer);
-		if (!startServerAfterConnectTimeout) {
-			serverThread.start();
+		serverThread.start();
+		listenFuture.get();
+		InetSocketAddress address = first(server.getBoundAddresses());
+		if (stopServerAfterConnectTimeout) {
+			eventloopServer.submit(server::close).get();
 		}
 
 		Eventloop eventloopClient = Eventloop.getCurrentEventloop();
 
 		RpcClient rpcClient = RpcClient.create(eventloopClient)
 				.withMessageTypes(HelloRequest.class, HelloResponse.class)
-				.withStrategy(server(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port)))
+				.withStrategy(server(address))
 				.withConnectTimeout(Duration.ofMillis(TIMEOUT));
 
 		try {
@@ -134,16 +131,14 @@ public final class RpcNoServerTest {
 					.async()
 					.whenComplete(($, e) -> {
 						if (e != null) {
+							assertTrue(stopServerAfterConnectTimeout);
 							System.err.println(e.getMessage());
 							assertThat(e, instanceOf(RpcException.class));
+						} else {
+							assertFalse(stopServerAfterConnectTimeout);
 						}
 					})
 					.then(($1, $2) -> rpcClient.stop())
-					.whenComplete(() -> {
-						if (startServerAfterConnectTimeout) {
-							serverThread.start();
-						}
-					})
 					.whenComplete(() -> System.err.println("Eventloop: " + eventloopClient))
 			);
 		} finally {

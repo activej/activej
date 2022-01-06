@@ -48,7 +48,6 @@ import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.fs.LocalActiveFs.DEFAULT_TEMP_DIR;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.stream.Collectors.toList;
@@ -86,14 +85,14 @@ public final class TestClusterDeadPartitionCheck {
 				new Object[]{
 						new ClientServerFactory() {
 							@Override
-							public ActiveFs createClient(Eventloop eventloop, InetSocketAddress address) {
-								return RemoteActiveFs.create(eventloop, address);
+							public ActiveFs createClient(Eventloop eventloop, int port) {
+								return RemoteActiveFs.create(eventloop, new InetSocketAddress(port));
 							}
 
 							@Override
-							public AbstractServer<?> createServer(LocalActiveFs localFs, InetSocketAddress address) {
+							public AbstractServer<?> createServer(LocalActiveFs localFs) {
 								return ActiveFsServer.create(localFs.getEventloop(), localFs)
-										.withListenAddress(address);
+										.withListenPort(0);
 							}
 
 							@Override
@@ -120,15 +119,15 @@ public final class TestClusterDeadPartitionCheck {
 				new Object[]{
 						new ClientServerFactory() {
 							@Override
-							public ActiveFs createClient(Eventloop eventloop, InetSocketAddress address) {
-								return HttpActiveFs.create("http://localhost:" + address.getPort(), AsyncHttpClient.create(eventloop));
+							public ActiveFs createClient(Eventloop eventloop, int port) {
+								return HttpActiveFs.create("http://localhost:" + port, AsyncHttpClient.create(eventloop));
 							}
 
 							@Override
-							public AbstractServer<?> createServer(LocalActiveFs localFs, InetSocketAddress address) {
+							public AbstractServer<?> createServer(LocalActiveFs localFs) {
 								return AsyncHttpServer.create(localFs.getEventloop(), ActiveFsServlet.create(localFs))
 										.withReadWriteTimeout(Duration.ZERO, Duration.ZERO)
-										.withListenAddress(address);
+										.withListenPort(0);
 							}
 
 							@Override
@@ -160,9 +159,6 @@ public final class TestClusterDeadPartitionCheck {
 		Path storage = tmpFolder.newFolder().toPath();
 
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
-			InetSocketAddress address = new InetSocketAddress("localhost", getFreePort());
-			partitions.put(i, factory.createClient(eventloop, address));
-
 			serverStorages[i] = storage.resolve("storage_" + i);
 
 			Files.createDirectories(serverStorages[i]);
@@ -171,7 +167,7 @@ public final class TestClusterDeadPartitionCheck {
 			serverEventloop.keepAlive(true);
 
 			LocalActiveFs localFs = LocalActiveFs.create(serverEventloop, executor, serverStorages[i]);
-			AbstractServer<?> server = factory.createServer(localFs, address);
+			AbstractServer<?> server = factory.createServer(localFs);
 			CompletableFuture<Void> startFuture = serverEventloop.submit(() -> {
 				try {
 					server.listen();
@@ -183,6 +179,7 @@ public final class TestClusterDeadPartitionCheck {
 			servers.add(server);
 			new Thread(serverEventloop).start();
 			startFuture.get();
+			partitions.put(i, factory.createClient(eventloop, first(server.getBoundAddresses()).getPort()));
 		}
 
 		this.partitions = FsPartitions.create(eventloop, DiscoveryService.constant(partitions))
@@ -325,9 +322,9 @@ public final class TestClusterDeadPartitionCheck {
 	}
 
 	private interface ClientServerFactory {
-		ActiveFs createClient(Eventloop eventloop, InetSocketAddress address);
+		ActiveFs createClient(Eventloop eventloop, int port);
 
-		AbstractServer<?> createServer(LocalActiveFs localFs, InetSocketAddress address);
+		AbstractServer<?> createServer(LocalActiveFs localFs);
 
 		void closeServer(AbstractServer<?> server) throws IOException;
 	}

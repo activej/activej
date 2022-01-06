@@ -15,15 +15,13 @@ import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.*;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static io.activej.common.Utils.first;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static io.activej.test.TestUtils.assertCompleteFn;
-import static io.activej.test.TestUtils.getFreePort;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -41,6 +39,8 @@ public final class RpcHelloWorldTest {
 
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
+
+	private Eventloop eventloop;
 
 	private interface HelloService {
 		String hello(String name) throws Exception;
@@ -76,7 +76,7 @@ public final class RpcHelloWorldTest {
 		};
 	}
 
-	private static RpcServer createServer(Eventloop eventloop) {
+	private RpcServer createServer() {
 		return RpcServer.create(eventloop)
 				.withMessageTypes(HelloRequest.class, HelloResponse.class)
 				.withHandler(HelloRequest.class, helloServiceRequestHandler(name -> {
@@ -85,18 +85,16 @@ public final class RpcHelloWorldTest {
 					}
 					return "Hello, " + name + "!";
 				}))
-				.withListenPort(port);
+				.withListenPort(0);
 	}
 
-	private static class BlockingHelloClient implements HelloService, AutoCloseable {
-		private final Eventloop eventloop;
+	private class BlockingHelloClient implements HelloService, AutoCloseable {
 		private final RpcClient rpcClient;
 
-		public BlockingHelloClient(Eventloop eventloop) throws Exception {
-			this.eventloop = eventloop;
+		public BlockingHelloClient() throws Exception {
 			this.rpcClient = RpcClient.create(eventloop)
 					.withMessageTypes(HelloRequest.class, HelloResponse.class)
-					.withStrategy(server(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port)));
+					.withStrategy(server(first(server.getBoundAddresses())));
 
 			rpcClient.startFuture().get();
 		}
@@ -122,21 +120,19 @@ public final class RpcHelloWorldTest {
 	}
 
 	private static final int TIMEOUT = 1500;
-	private static int port;
 	private RpcServer server;
 
 	@Before
 	public void setUp() throws Exception {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
-		port = getFreePort();
-		server = createServer(eventloop);
+		eventloop = Eventloop.getCurrentEventloop();
+		server = createServer();
 		server.listen();
 		new Thread(eventloop).start();
 	}
 
 	@Test
 	public void testBlockingCall() throws Exception {
-		try (BlockingHelloClient client = new BlockingHelloClient(Eventloop.getCurrentEventloop())) {
+		try (BlockingHelloClient client = new BlockingHelloClient()) {
 			for (int i = 0; i < 100; i++) {
 				assertEquals("Hello, World!", client.hello("World"));
 			}
@@ -149,11 +145,11 @@ public final class RpcHelloWorldTest {
 	public void testAsyncCall() throws Exception {
 		int requestCount = 10;
 
-		try (BlockingHelloClient client = new BlockingHelloClient(Eventloop.getCurrentEventloop())) {
+		try (BlockingHelloClient client = new BlockingHelloClient()) {
 			CountDownLatch latch = new CountDownLatch(requestCount);
 			for (int i = 0; i < requestCount; i++) {
 				String name = "World" + i;
-				client.eventloop.execute(() -> client.rpcClient.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT)
+				eventloop.execute(() -> client.rpcClient.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT)
 						.whenComplete(latch::countDown)
 						.whenComplete(assertCompleteFn(response -> assertEquals("Hello, " + name + "!", response.message))));
 			}
@@ -165,8 +161,8 @@ public final class RpcHelloWorldTest {
 
 	@Test
 	public void testBlocking2Clients() throws Exception {
-		try (BlockingHelloClient client1 = new BlockingHelloClient(Eventloop.getCurrentEventloop());
-			 BlockingHelloClient client2 = new BlockingHelloClient(Eventloop.getCurrentEventloop())) {
+		try (BlockingHelloClient client1 = new BlockingHelloClient();
+			 BlockingHelloClient client2 = new BlockingHelloClient()) {
 			assertEquals("Hello, John!", client2.hello("John"));
 			assertEquals("Hello, World!", client1.hello("World"));
 		} finally {
@@ -176,7 +172,7 @@ public final class RpcHelloWorldTest {
 
 	@Test
 	public void testBlockingRpcException() throws Exception {
-		try (BlockingHelloClient client = new BlockingHelloClient(Eventloop.getCurrentEventloop())) {
+		try (BlockingHelloClient client = new BlockingHelloClient()) {
 			client.hello("--");
 			fail("Exception expected");
 		} catch (RpcRemoteException e) {
@@ -190,17 +186,17 @@ public final class RpcHelloWorldTest {
 	public void testAsync2Clients() throws Exception {
 		int requestCount = 10;
 
-		try (BlockingHelloClient client1 = new BlockingHelloClient(Eventloop.getCurrentEventloop());
-			 BlockingHelloClient client2 = new BlockingHelloClient(Eventloop.getCurrentEventloop())) {
+		try (BlockingHelloClient client1 = new BlockingHelloClient();
+			 BlockingHelloClient client2 = new BlockingHelloClient()) {
 			CountDownLatch latch = new CountDownLatch(2 * requestCount);
 
 			for (int i = 0; i < requestCount; i++) {
 				String name = "world" + i;
-				client1.eventloop.execute(() ->
+				eventloop.execute(() ->
 						client1.rpcClient.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT)
 								.whenComplete(latch::countDown)
 								.whenComplete(assertCompleteFn(response -> assertEquals("Hello, " + name + "!", response.message))));
-				client2.eventloop.execute(() ->
+				eventloop.execute(() ->
 						client2.rpcClient.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT)
 								.whenComplete(latch::countDown)
 								.whenComplete(assertCompleteFn(response -> assertEquals("Hello, " + name + "!", response.message))));
@@ -216,14 +212,14 @@ public final class RpcHelloWorldTest {
 	public void testRejectedRequests() throws Exception {
 		int count = 1_000_000;
 
-		try (BlockingHelloClient client = new BlockingHelloClient(Eventloop.getCurrentEventloop())) {
+		try (BlockingHelloClient client = new BlockingHelloClient()) {
 			for (int t = 0; t < 10; t++) {
 				AtomicInteger success = new AtomicInteger(0);
 				AtomicInteger error = new AtomicInteger(0);
 				CountDownLatch latch = new CountDownLatch(count);
 				Stopwatch stopwatch = Stopwatch.createStarted();
 				for (int i = 0; i < count; i++) {
-					client.eventloop.execute(() ->
+					eventloop.execute(() ->
 							client.rpcClient.<HelloRequest, HelloResponse>sendRequest(new HelloRequest("benchmark"), TIMEOUT)
 									.whenComplete(($, e) -> {
 										latch.countDown();

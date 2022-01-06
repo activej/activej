@@ -11,18 +11,17 @@ import org.junit.Test;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.LinkedHashSet;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
+import static io.activej.common.Utils.first;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.http.TestUtils.readFully;
 import static io.activej.http.TestUtils.toByteArray;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertingFn;
-import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
@@ -37,8 +36,6 @@ public final class HttpTolerantApplicationTest {
 
 	@Test
 	public void testTolerantServer() throws Exception {
-		int port = getFreePort();
-
 		Eventloop eventloop = Eventloop.create().withEventloopFatalErrorHandler(rethrow());
 
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
@@ -47,7 +44,7 @@ public final class HttpTolerantApplicationTest {
 								eventloop.post(() -> cb.set(
 										HttpResponse.ok200()
 												.withBody(encodeAscii(request.getUrl().getPathAndQuery()))))))
-				.withListenPort(port);
+				.withListenPort(0);
 
 		server.listen();
 
@@ -56,7 +53,7 @@ public final class HttpTolerantApplicationTest {
 
 		Socket socket = new Socket();
 
-		socket.connect(new InetSocketAddress("localhost", port));
+		socket.connect(first(server.getBoundAddresses()));
 		write(socket, "GET /abc  HTTP/1.1\nHost: \tlocalhost\n\n");
 		readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 4\r\n\r\n/abc");
 		write(socket, "GET /abc  HTTP/1.0\nHost: \tlocalhost \t \nConnection: keep-alive\n\n");
@@ -72,9 +69,7 @@ public final class HttpTolerantApplicationTest {
 
 	@Test
 	public void testTolerantClient() throws Exception {
-		int port = getFreePort();
-
-		ServerSocket listener = new ServerSocket(port);
+		ServerSocket listener = new ServerSocket(0);
 		String text = "/abc";
 		new Thread(() -> {
 			while (Thread.currentThread().isAlive()) {
@@ -93,7 +88,7 @@ public final class HttpTolerantApplicationTest {
 				.start();
 
 		String header = await(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
-				.request(HttpRequest.get("http://127.0.0.1:" + port))
+				.request(HttpRequest.get("http://127.0.0.1:" + listener.getLocalPort()))
 				.then(response -> response.loadBody()
 						.whenResult(body -> assertEquals(text, body.getString(UTF_8)))
 						.map($ -> response.getHeader(HttpHeaders.CONTENT_TYPE))

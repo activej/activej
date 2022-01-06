@@ -28,7 +28,6 @@ import io.activej.worker.annotation.WorkerId;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import java.net.InetSocketAddress;
 
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -89,7 +88,7 @@ public final class ComplexHttpLauncher extends Launcher {
 	@Named("First")
 	PrimaryServer server1(Eventloop eventloop, @Named("First") WorkerPool.Instances<AsyncHttpServer> serverInstances) {
 		return PrimaryServer.create(eventloop, serverInstances)
-				.withListenAddress(new InetSocketAddress(SERVER_ONE_PORT));
+				.withListenPort(SERVER_ONE_PORT);
 	}
 
 	@Provides
@@ -97,7 +96,7 @@ public final class ComplexHttpLauncher extends Launcher {
 	@Named("Second")
 	PrimaryServer server2(@Named("Second") Eventloop eventloop, @Named("Second") WorkerPool.Instances<AsyncHttpServer> serverInstances) {
 		return PrimaryServer.create(eventloop, serverInstances)
-				.withListenAddress(new InetSocketAddress(SERVER_TWO_PORT));
+				.withListenPort(SERVER_TWO_PORT);
 	}
 
 	@Provides
@@ -105,7 +104,7 @@ public final class ComplexHttpLauncher extends Launcher {
 	@Named("Third")
 	PrimaryServer server3(@Named("Third") Eventloop eventloop, @Named("Third") WorkerPool.Instances<AsyncHttpServer> serverInstances) {
 		return PrimaryServer.create(eventloop, serverInstances)
-				.withListenAddress(new InetSocketAddress(SERVER_THREE_PORT));
+				.withListenPort(SERVER_THREE_PORT);
 	}
 	// endregion
 

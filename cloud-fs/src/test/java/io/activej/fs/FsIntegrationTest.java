@@ -26,7 +26,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -35,10 +34,10 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
+import static io.activej.common.Utils.first;
 import static io.activej.common.Utils.setOf;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.Executors.newCachedThreadPool;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -69,15 +68,14 @@ public final class FsIntegrationTest {
 
 	@Before
 	public void setup() throws IOException {
-		InetSocketAddress address = new InetSocketAddress("localhost", getFreePort());
 		Executor executor = newCachedThreadPool();
 
 		storage = temporaryFolder.newFolder("server_storage").toPath();
 		LocalActiveFs localFs = LocalActiveFs.create(Eventloop.getCurrentEventloop(), executor, storage);
 		await(localFs.start());
-		server = ActiveFsServer.create(Eventloop.getCurrentEventloop(), localFs).withListenAddress(address);
+		server = ActiveFsServer.create(Eventloop.getCurrentEventloop(), localFs).withListenPort(0);
 		server.listen();
-		fs = RemoteActiveFs.create(Eventloop.getCurrentEventloop(), address);
+		fs = RemoteActiveFs.create(Eventloop.getCurrentEventloop(), first(server.getBoundAddresses()));
 	}
 
 	@Test

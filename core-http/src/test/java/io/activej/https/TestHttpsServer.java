@@ -15,14 +15,12 @@ import java.security.SecureRandom;
 import java.util.concurrent.Executor;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapAscii;
+import static io.activej.common.Utils.first;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.https.SslUtils.*;
-import static io.activej.test.TestUtils.getFreePort;
 import static java.util.concurrent.Executors.newCachedThreadPool;
 
 public class TestHttpsServer {
-	private static final int PORT = getFreePort();
-
 	static {
 		Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
 		root.setLevel(Level.TRACE);
@@ -39,12 +37,12 @@ public class TestHttpsServer {
 		TrustManager[] trustManagers = createTrustManagers(new File("./src/test/resources/truststore.jks"), "testtest");
 
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop, bobServlet)
-				.withSslListenPort(createSslContext("TLSv1", keyManagers, trustManagers, new SecureRandom()), executor, PORT)
-				.withListenPort(getFreePort());
-
-		System.out.println("https://127.0.0.1:" + PORT);
+				.withSslListenPort(createSslContext("TLSv1", keyManagers, trustManagers, new SecureRandom()), executor, 0)
+				.withListenPort(0);
 
 		server.listen();
 		eventloop.run();
+
+		System.out.println("https://127.0.0.1:" + first(server.getBoundAddresses()).getPort());
 	}
 }

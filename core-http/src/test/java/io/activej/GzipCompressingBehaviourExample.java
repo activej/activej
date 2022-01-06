@@ -9,7 +9,6 @@ import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.http.HttpHeaders.ACCEPT_ENCODING;
 import static io.activej.http.HttpMethod.GET;
-import static io.activej.test.TestUtils.getFreePort;
 
 public final class GzipCompressingBehaviourExample {
 	public static void main(String[] args) throws IOException {
@@ -22,7 +21,7 @@ public final class GzipCompressingBehaviourExample {
 				.map(GET, "/nogzip/",
 						request -> HttpResponse.ok200().withBody(encodeAscii("Hello!")));
 
-		AsyncHttpServer server = AsyncHttpServer.create(eventloop, servlet).withListenPort(getFreePort());
+		AsyncHttpServer server = AsyncHttpServer.create(eventloop, servlet).withListenPort(0);
 
 		server.listen();
 		eventloop.run();

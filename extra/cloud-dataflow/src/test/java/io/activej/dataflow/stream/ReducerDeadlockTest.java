@@ -19,20 +19,19 @@ import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static io.activej.common.Utils.first;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.dataflow.stream.DataflowTest.createCommon;
+import static io.activej.dataflow.stream.DataflowTest.createGraph;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertCompleteFn;
-import static io.activej.test.TestUtils.getFreePort;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertNotEquals;
 
@@ -64,11 +63,7 @@ public class ReducerDeadlockTest {
 
 	@Test
 	public void test() throws IOException {
-
-		InetSocketAddress address1 = getFreeListenAddress();
-		InetSocketAddress address2 = getFreeListenAddress();
-
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath())
 				.build();
 
 		StreamConsumerToList<TestItem> result1 = StreamConsumerToList.create();
@@ -96,13 +91,16 @@ public class ReducerDeadlockTest {
 				.bind(datasetId("result")).toInstance(result2)
 				.build();
 
-		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenAddress(address1);
-		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenAddress(address2);
+		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenPort(0);
+		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenPort(0);
 
 		server1.listen();
 		server2.listen();
 
-		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
+		InetSocketAddress address1 = first(server1.getBoundAddresses());
+		InetSocketAddress address2 = first(server2.getBoundAddresses());
+
+		DataflowGraph graph = createGraph(Injector.of(common), asList(new Partition(address1), new Partition(address2)));
 
 		SortedDataset<Long, TestItem> items = repartitionSort(sortedDatasetOfId("items",
 				TestItem.class, Long.class, new TestKeyFunction(), new TestComparator()));
@@ -120,9 +118,5 @@ public class ReducerDeadlockTest {
 		// the sharder nonce is random, so with an *effectively zero* chance these assertions may fail
 		assertNotEquals(result1.getList(), list1);
 		assertNotEquals(result2.getList(), list2);
-	}
-
-	static InetSocketAddress getFreeListenAddress() throws UnknownHostException {
-		return new InetSocketAddress(InetAddress.getByName("127.0.0.1"), getFreePort());
 	}
 }

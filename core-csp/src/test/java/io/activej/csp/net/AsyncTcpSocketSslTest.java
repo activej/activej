@@ -38,10 +38,10 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapAscii;
+import static io.activej.common.Utils.first;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.assertCompleteFn;
-import static io.activej.test.TestUtils.getFreePort;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
@@ -81,19 +81,17 @@ public final class AsyncTcpSocketSslTest {
 	private Executor executor;
 	private SSLContext sslContext;
 	private StringBuilder sentData;
-	private InetSocketAddress address;
 
 	@Before
 	public void setUp() throws Exception {
 		executor = Executors.newSingleThreadExecutor();
 		sslContext = createSslContext();
 		sentData = new StringBuilder();
-		address = new InetSocketAddress("localhost", getFreePort());
 	}
 
 	@Test
 	public void testWrite() throws IOException {
-		startServer(sslContext, sslSocket -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(sslSocket))
+		InetSocketAddress address = startServer(sslContext, sslSocket -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(sslSocket))
 				.decode(DECODER)
 				.whenComplete(sslSocket::close)
 				.whenComplete(assertCompleteFn(result -> assertEquals(TEST_STRING, result))));
@@ -107,7 +105,7 @@ public final class AsyncTcpSocketSslTest {
 
 	@Test
 	public void testRead() throws IOException {
-		startServer(sslContext, sslSocket ->
+		InetSocketAddress address = startServer(sslContext, sslSocket ->
 				sslSocket.write(wrapAscii(TEST_STRING))
 						.whenComplete(assertCompleteFn()));
 
@@ -122,7 +120,7 @@ public final class AsyncTcpSocketSslTest {
 
 	@Test
 	public void testLoopBack() throws IOException {
-		startServer(sslContext, serverSsl -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(serverSsl))
+		InetSocketAddress address = startServer(sslContext, serverSsl -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(serverSsl))
 				.decode(DECODER)
 				.then(result -> serverSsl.write(wrapAscii(result)))
 				.whenComplete(serverSsl::close)
@@ -144,7 +142,7 @@ public final class AsyncTcpSocketSslTest {
 		int halfLength = TEST_STRING.length() / 2;
 		String TEST_STRING_PART_1 = TEST_STRING.substring(0, halfLength);
 		String TEST_STRING_PART_2 = TEST_STRING.substring(halfLength);
-		startServer(sslContext, serverSsl -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(serverSsl))
+		InetSocketAddress address = startServer(sslContext, serverSsl -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(serverSsl))
 				.decode(DECODER)
 				.then(result -> serverSsl.write(wrapAscii(result)))
 				.whenComplete(serverSsl::close)
@@ -165,7 +163,7 @@ public final class AsyncTcpSocketSslTest {
 
 	@Test
 	public void sendsLargeAmountOfDataFromClientToServer() throws IOException {
-		startServer(sslContext, serverSsl -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(serverSsl))
+		InetSocketAddress address = startServer(sslContext, serverSsl -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(serverSsl))
 				.decode(DECODER_LARGE)
 				.whenComplete(serverSsl::close)
 				.whenComplete(assertCompleteFn(result -> assertEquals(result, sentData.toString()))));
@@ -179,7 +177,7 @@ public final class AsyncTcpSocketSslTest {
 
 	@Test
 	public void sendsLargeAmountOfDataFromServerToClient() throws IOException {
-		startServer(sslContext, serverSsl ->
+		InetSocketAddress address = startServer(sslContext, serverSsl ->
 				sendData(serverSsl)
 						.whenComplete(serverSsl::close)
 						.whenComplete(assertCompleteFn()));
@@ -195,7 +193,7 @@ public final class AsyncTcpSocketSslTest {
 
 	@Test
 	public void testCloseAndOperationAfterClose() throws IOException {
-		startServer(sslContext, socket ->
+		InetSocketAddress address = startServer(sslContext, socket ->
 				socket.write(wrapAscii("He"))
 						.whenComplete(socket::close)
 						.then(() -> socket.write(wrapAscii("ello")))
@@ -214,7 +212,7 @@ public final class AsyncTcpSocketSslTest {
 
 	@Test
 	public void testPeerClosingDuringHandshake() throws IOException {
-		ServerSocket listener = new ServerSocket(address.getPort());
+		ServerSocket listener = new ServerSocket(0);
 		Thread serverThread = new Thread(() -> {
 			try (Socket ignored = listener.accept()) {
 				listener.close();
@@ -225,7 +223,7 @@ public final class AsyncTcpSocketSslTest {
 
 		serverThread.start();
 
-		Exception exception = awaitException(AsyncTcpSocketNio.connect(address)
+		Exception exception = awaitException(AsyncTcpSocketNio.connect(new InetSocketAddress(listener.getLocalPort()))
 				.whenResult(asyncTcpSocket -> {
 					try {
 						// noinspection ConstantConditions - Imitating a suddenly closed channel
@@ -239,11 +237,12 @@ public final class AsyncTcpSocketSslTest {
 		assertThat(exception, instanceOf(AsyncCloseException.class));
 	}
 
-	void startServer(SSLContext sslContext, Consumer<AsyncTcpSocket> logic) throws IOException {
-		SimpleServer.create(logic)
-				.withSslListenAddress(sslContext, Executors.newSingleThreadExecutor(), address)
-				.withAcceptOnce()
-				.listen();
+	private static InetSocketAddress startServer(SSLContext sslContext, Consumer<AsyncTcpSocket> logic) throws IOException {
+		SimpleServer server = SimpleServer.create(logic)
+				.withSslListenPort(sslContext, Executors.newSingleThreadExecutor(), 0)
+				.withAcceptOnce();
+		server.listen();
+		return first(server.getSslBoundAddresses());
 	}
 
 	static SSLContext createSslContext() throws Exception {

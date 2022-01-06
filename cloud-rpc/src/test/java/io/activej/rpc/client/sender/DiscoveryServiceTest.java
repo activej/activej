@@ -18,7 +18,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
-import static io.activej.test.TestUtils.getFreePort;
+import static io.activej.common.Utils.first;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -47,7 +47,6 @@ public final class DiscoveryServiceTest {
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
 
 		for (int i = 0; i < NUMBER_OF_SERVERS; i++) {
-			int port = getFreePort();
 			String serverId = "server_" + i;
 
 			RpcServer server = RpcServer.create(eventloop)
@@ -56,11 +55,11 @@ public final class DiscoveryServiceTest {
 						serverStorages.computeIfAbsent(serverId, $ -> new ArrayList<>()).add(request.data);
 						return Promise.of(new VoidResponse());
 					})
-					.withListenPort(port);
+					.withListenPort(0);
 
-			ports[i] = port;
 			servers.put(serverId, server);
 			server.listen();
+			ports[i] = first(server.getBoundAddresses()).getPort();
 		}
 
 		thread = new Thread(eventloop);
