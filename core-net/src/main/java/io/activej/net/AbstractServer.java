@@ -452,6 +452,8 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 		return getClass().getSimpleName() + '{' +
 				(listenAddresses.isEmpty() ? "" : "listenAddresses=" + listenAddresses) +
 				(sslListenAddresses.isEmpty() ? "" : ", sslListenAddresses=" + sslListenAddresses) +
+				(serverSocketChannels == null ? "" : "boundAddresses=" + getBoundAddresses()) +
+				(sslServerSocketChannels == null ? "" : "sslBoundAddresses=" + getSslBoundAddresses()) +
 				(acceptOnce ? ", acceptOnce" : "") +
 				'}';
 	}
