@@ -23,7 +23,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * HTTP client example.
  * You can launch HttpServerExample to test this.
  */
-@SuppressWarnings("Convert2MethodRef")
 public final class HttpClientExample extends Launcher {
 	@Inject
 	AsyncHttpClient httpClient;

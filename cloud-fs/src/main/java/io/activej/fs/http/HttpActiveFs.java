@@ -106,7 +106,6 @@ public final class HttpActiveFs implements ActiveFs, WithInitializer<HttpActiveF
 
 	@Override
 	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
-		//noinspection Convert2MethodRef
 		return client.request(
 						HttpRequest.get(
 								url + UrlBuilder.relative()
@@ -120,7 +119,6 @@ public final class HttpActiveFs implements ActiveFs, WithInitializer<HttpActiveF
 
 	@Override
 	public Promise<@Nullable FileMetadata> info(@NotNull String name) {
-		//noinspection Convert2MethodRef
 		return client.request(
 						HttpRequest.get(
 								url + UrlBuilder.relative()
@@ -134,7 +132,6 @@ public final class HttpActiveFs implements ActiveFs, WithInitializer<HttpActiveF
 
 	@Override
 	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
-		//noinspection Convert2MethodRef
 		return client.request(
 						HttpRequest.get(
 										url + UrlBuilder.relative()

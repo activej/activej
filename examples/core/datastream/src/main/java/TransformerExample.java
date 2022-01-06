@@ -8,7 +8,6 @@ import static io.activej.common.exception.FatalErrorHandler.rethrow;
  * Example of creating custom StreamTransformer, which takes strings from input stream
  * and transforms strings to their length if particular length is less than MAX_LENGTH
  */
-@SuppressWarnings("Convert2MethodRef")
 public final class TransformerExample implements StreamTransformer<String, Integer> {
 	private static final int MAX_LENGTH = 10;
 

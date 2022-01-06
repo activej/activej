@@ -435,7 +435,6 @@ public final class AbstractHttpConnectionTest {
 					HttpRequest request = HttpRequest.post(url);
 					messageDecorators.get(i).accept(request);
 
-					//noinspection Convert2MethodRef
 					String responseText = await(client.request(request)
 							.then(response -> response.loadBody())
 							.map(buf -> buf.getString(UTF_8)));

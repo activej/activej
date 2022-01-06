@@ -12,7 +12,6 @@ import static io.activej.common.exception.FatalErrorHandler.rethrow;
 /**
  * Example of some simple builtin stream nodes.
  */
-@SuppressWarnings("Convert2MethodRef")
 public final class BuiltinNodesExample {
 	//[START REGION_1]
 	private static void filter() {
