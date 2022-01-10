@@ -100,26 +100,28 @@ public final class RendezvousHashSharder<K, P> implements Sharder<K>, WithInitia
 		return new RendezvousHashSharder<>(buckets, keyHashFn);
 	}
 
-	public static int[][] combineBuckets(List<int[][]> shardersBucketsList) {
-		int[][] buckets = new int[shardersBucketsList.get(0).length][];
+	static <K, P> Sharder<K> unionOf(List<RendezvousHashSharder<K, P>> sharders) {
+		if (sharders.isEmpty()) return Sharder.none();
+		if (sharders.size() == 1) return sharders.get(0);
+		int[][] buckets = new int[sharders.get(0).buckets.length][];
+		ToIntFunction<K> keyHashFn = sharders.get(0).keyHashFn;
 		int[] buf = new int[0];
 		for (int bucket = 0; bucket < buckets.length; bucket++) {
 			int pos = 0;
-			for (int[][] sharderBucket : shardersBucketsList) {
-				int[] selected = sharderBucket[bucket];
+			for (RendezvousHashSharder<K, ?> sharder : sharders) {
+				int[] selected = sharder.buckets[bucket];
 				NEXT:
 				for (int idx : selected) {
-					for (int idx0 : buf) {
-						if (idx == idx0) continue NEXT;
+					for (int i = 0; i < pos; i++) {
+						if (idx == buf[i]) continue NEXT;
 					}
 					if (buf.length <= pos) buf = Arrays.copyOf(buf, buf.length * 2 + 1);
 					buf[pos++] = idx;
 				}
 			}
 			buckets[bucket] = Arrays.copyOf(buf, pos);
-			Arrays.sort(buckets[bucket]);
 		}
-		return buckets;
+		return new RendezvousHashSharder<>(buckets, keyHashFn);
 	}
 
 	@FunctionalInterface

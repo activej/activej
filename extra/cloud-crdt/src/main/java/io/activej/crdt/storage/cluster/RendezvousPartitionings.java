@@ -66,7 +66,7 @@ public final class RendezvousPartitionings<K extends Comparable<K>, S, P> implem
 					partitioning.getSet(), alive, partitioning.getReplicas(), partitioning.isRepartition());
 			sharders.add(sharder);
 		}
-		return Sharder.unionOf(sharders);
+		return RendezvousHashSharder.unionOf(sharders);
 	}
 
 	@Override
