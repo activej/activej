@@ -1,5 +1,6 @@
 package adder;
 
+import io.activej.async.service.EventloopTaskScheduler;
 import io.activej.common.initializer.Initializer;
 import io.activej.config.Config;
 import io.activej.crdt.function.CrdtFunction;
@@ -8,22 +9,30 @@ import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.wal.WriteAheadLog;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.Key;
+import io.activej.inject.annotation.Eager;
+import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.ProvidesIntoSet;
 import io.activej.inject.module.AbstractModule;
 import io.activej.rpc.server.RpcRequestHandler;
 import io.activej.service.ServiceGraphModuleSettings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 
 import static adder.AdderCommands.*;
 import static io.activej.common.Utils.mapOf;
 
-public class AdderServerModule extends AbstractModule {
+public final class AdderServerModule extends AbstractModule {
+	private static final Logger logger = LoggerFactory.getLogger(AdderServerModule.class);
 
 	@Override
 	protected void configure() {
+		install(new ClusterStorageModule());
+
 		install(new InMemoryStorageModule());
 //		install(new PersistentStorageModule());
 	}
@@ -49,6 +58,8 @@ public class AdderServerModule extends AbstractModule {
 		return mapOf(
 				AddRequest.class, (RpcRequestHandler<AddRequest, AddResponse>) request -> {
 					long userId = request.getUserId();
+					logger.info("Received 'Add' request for user {}", userId);
+
 					return seqExecutor.execute(userId, () -> map.get(userId)
 							.then(state -> {
 								float newSum = request.getDelta() +
@@ -61,11 +72,15 @@ public class AdderServerModule extends AbstractModule {
 										.map($ -> AddResponse.INSTANCE);
 							}));
 				},
-				GetRequest.class, (RpcRequestHandler<GetRequest, GetResponse>) request ->
-						map.get(request.getUserId())
-								.mapIfNonNull(SimpleSumsCrdtState::value)
-								.mapIfNull(() -> 0f)
-								.map(GetResponse::new)
+				GetRequest.class, (RpcRequestHandler<GetRequest, GetResponse>) request -> {
+					long userId = request.getUserId();
+					logger.info("Received 'Get' request for user {}", userId);
+
+					return map.get(userId)
+							.mapIfNonNull(SimpleSumsCrdtState::value)
+							.mapIfNull(() -> 0f)
+							.map(GetResponse::new);
+				}
 		);
 	}
 
@@ -93,5 +108,13 @@ public class AdderServerModule extends AbstractModule {
 	Initializer<ServiceGraphModuleSettings> configureServiceGraph() {
 		// add logical dependency so that service graph starts CrdtMap only after it has started the WriteAheadLog
 		return settings -> settings.addDependency(new Key<CrdtMap<Long, SimpleSumsCrdtState>>() {}, new Key<WriteAheadLog<Long, DetailedSumsCrdtState>>() {});
+	}
+
+	@Provides
+	@Eager
+	@Named("Map refresh")
+	EventloopTaskScheduler mapRefresh(Eventloop eventloop, CrdtMap<Long, SimpleSumsCrdtState> map){
+		return EventloopTaskScheduler.create(eventloop, map::refresh)
+				.withInterval(Duration.ofSeconds(10));
 	}
 }

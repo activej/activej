@@ -11,6 +11,7 @@ import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -55,6 +56,10 @@ public class AdderCrdtMap implements CrdtMap<Long, SimpleSumsCrdtState>, Eventlo
 	@Override
 	public @NotNull Promise<?> stop() {
 		return Promise.complete();
+	}
+
+	public Map<Long, SimpleSumsCrdtState> getMap() {
+		return Collections.unmodifiableMap(map);
 	}
 
 	private Promise<Void> doRefresh(CrdtStorage<Long, DetailedSumsCrdtState> storage) {

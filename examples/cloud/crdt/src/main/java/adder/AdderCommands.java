@@ -9,7 +9,7 @@ import static io.activej.common.Checks.checkArgument;
 public class AdderCommands {
 	public static final boolean CHECK = Checks.isEnabled(AdderCommands.class);
 
-	public static final class AddRequest {
+	public static final class AddRequest implements HasUserId {
 		private final long userId;
 		private final float delta;
 
@@ -37,7 +37,7 @@ public class AdderCommands {
 		INSTANCE
 	}
 
-	public static final class GetRequest {
+	public static final class GetRequest implements HasUserId {
 		private final long userId;
 
 		public GetRequest(@Deserialize("userId") long userId) {
@@ -61,5 +61,9 @@ public class AdderCommands {
 		public float getSum() {
 			return sum;
 		}
+	}
+
+	public interface HasUserId {
+		long getUserId();
 	}
 }

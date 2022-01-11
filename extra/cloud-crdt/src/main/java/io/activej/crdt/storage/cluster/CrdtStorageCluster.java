@@ -114,7 +114,6 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 				})
 				.whenResult(() -> Promises.repeat(() ->
 						discoverySupplier.get()
-								.whenResult(result -> currentPartitionings = result)
 								.map((result, e) -> {
 									if (stopped) return false;
 									if (e == null) {
