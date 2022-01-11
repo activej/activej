@@ -22,6 +22,8 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -31,6 +33,7 @@ import java.util.function.Consumer;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.http.Protocol.WS;
 import static io.activej.http.Protocol.WSS;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * This servlet allows building complex servlet trees, routing requests between them by the HTTP paths.
@@ -235,10 +238,7 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 			String urlPart = remainingPath.substring(1, slash == -1 ? remainingPath.length() : slash);
 
 			if (!urlPart.startsWith(":")) {
-				urlPart = UrlParser.urlParse(urlPart);
-				if (urlPart == null) {
-					throw new IllegalArgumentException("Path contains bad percent encoding");
-				}
+				urlPart = decodePattern(urlPart);
 			}
 
 			if (urlPart.isEmpty()) {
@@ -300,6 +300,16 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 			return maybeResult;
 		}
 		return servlets[ANY_HTTP_ORDINAL];
+	}
+
+	private static String decodePattern(String pattern) {
+		try {
+			return URLDecoder.decode(pattern, UTF_8.name());
+		} catch (UnsupportedEncodingException e) {
+			throw new AssertionError();
+		} catch (IllegalArgumentException e){
+			throw new IllegalArgumentException("Pattern contains bad percent encoding", e);
+		}
 	}
 
 	@FunctionalInterface

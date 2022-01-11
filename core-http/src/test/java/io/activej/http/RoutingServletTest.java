@@ -383,15 +383,41 @@ public final class RoutingServletTest {
 
 		router.map(GET, "/a%2fb", servlet);
 
-		assertThrows(
-				"Already mapped",
-				IllegalArgumentException.class,
-				() -> router.map(GET, "/a%2Fb", servlet)
-		);
+		try {
+			router.map(GET, "/a%2Fb", servlet);
+			fail();
+		} catch (IllegalArgumentException e) {
+			assertEquals("Already mapped", e.getMessage());
+		}
 
 		check(router.serve(HttpRequest.get("http://some-test.com/a%2fb")), "", 200);
 		check(router.serve(HttpRequest.get("http://some-test.com/a%2Fb")), "", 200);
 		check(router.serve(HttpRequest.get("http://some-test.com/a/b")), "", 404);
+	}
+
+	@Test
+	public void testPercentEncodingCyrillic() throws Exception {
+		RoutingServlet router = RoutingServlet.create();
+
+		AsyncServlet servlet = request -> HttpResponse.ofCode(200).withBody("".getBytes(UTF_8));
+
+		router.map(GET, "/абв", servlet);
+
+		try {
+			router.map(GET, "/%D0%B0%D0%B1%D0%B2", servlet);
+			fail();
+		} catch (IllegalArgumentException e) {
+			assertEquals("Already mapped", e.getMessage());
+		}
+
+		check(router.serve(HttpRequest.get("http://some-test.com/%d0%b0%d0%b1%d0%b2")), "", 200);
+		check(router.serve(HttpRequest.get("http://some-test.com/%D0%b0%d0%b1%d0%b2")), "", 200);
+		check(router.serve(HttpRequest.get("http://some-test.com/%D0%B0%d0%b1%d0%b2")), "", 200);
+		check(router.serve(HttpRequest.get("http://some-test.com/%D0%B0%D0%b1%d0%b2")), "", 200);
+		check(router.serve(HttpRequest.get("http://some-test.com/%D0%B0%D0%B1%d0%b2")), "", 200);
+		check(router.serve(HttpRequest.get("http://some-test.com/%D0%B0%D0%B1%D0%b2")), "", 200);
+		check(router.serve(HttpRequest.get("http://some-test.com/%D0%B0%D0%B1%D0%B2")), "", 200);
+		check(router.serve(HttpRequest.get("http://some-test.com/абв")), "", 404);
 	}
 
 	@Test
@@ -426,21 +452,23 @@ public final class RoutingServletTest {
 	}
 
 	@Test
-	public void testBadPercentEncoding() {
+	public void testBadPercentEncoding() throws Exception {
 		RoutingServlet router = RoutingServlet.create();
 		AsyncServlet servlet = request -> HttpResponse.ofCode(200).withBody(new byte[0]);
 		RoutingServlet main = router.map(GET, "/a", servlet);
 
-		assertThrows(
-				"Path contains bad percent encoding",
-				HttpError.class,
-				() -> main.serve(HttpRequest.get("http://example.com/a%2"))
-		);
+		try {
+			main.serve(HttpRequest.get("http://example.com/a%2"));
+			fail();
+		} catch (HttpError e){
+			assertEquals("HTTP code 400: Path contains bad percent encoding", e.getMessage());
+		}
 
-		assertThrows(
-				"Path contains bad percent encoding",
-				IllegalArgumentException.class,
-				() -> router.map(GET, "/a%2", servlet)
-		);
+		try {
+			router.map(GET, "/a%2", servlet);
+			fail();
+		} catch (IllegalArgumentException e){
+			assertEquals("Pattern contains bad percent encoding", e.getMessage());
+		}
 	}
 }
