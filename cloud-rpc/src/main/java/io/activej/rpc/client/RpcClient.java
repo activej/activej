@@ -111,7 +111,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	private final Set<InetSocketAddress> pendingConnections = new HashSet<>();
 	private final Map<InetSocketAddress, RpcClientConnection> connections = new HashMap<>();
 
-	private RpcStrategy newStrategy;
+	private RpcStrategy newStrategy = strategy;
 	private boolean newStrategyRetry;
 	private SettablePromise<Void> newStrategyPromise;
 	private final Set<InetSocketAddress> newConnections = new HashSet<>();
