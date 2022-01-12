@@ -153,11 +153,6 @@
         <version>0.7.3</version>
       </dependency>
       <dependency>
-        <groupId>org.rocksdb</groupId>
-        <artifactId>rocksdbjni</artifactId>
-        <version>6.25.3</version>
-      </dependency>
-      <dependency>
         <groupId>ai.grakn</groupId>
         <artifactId>redis-mock</artifactId>
         <version>0.1.6</version>

@@ -9,7 +9,6 @@ import io.activej.crdt.storage.cluster.RendezvousPartitionings;
 import io.activej.crdt.storage.cluster.RendezvousPartitionings.Partitioning;
 import io.activej.crdt.storage.local.CrdtStorageFs;
 import io.activej.crdt.storage.local.CrdtStorageMap;
-import io.activej.crdt.storage.local.CrdtStorageRocksDB;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.crdt.util.TimestampContainer;
 import io.activej.datastream.StreamConsumer;
@@ -27,8 +26,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
-import org.rocksdb.Options;
-import org.rocksdb.RocksDB;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -86,16 +83,6 @@ public class CrdtStorageAPITest {
 							LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, testFolder);
 							await(fs.start());
 							return CrdtStorageFs.create(eventloop, fs, SERIALIZER, CRDT_FUNCTION);
-						}
-				},
-				new Object[]{
-						"RocksDBCrdtClient",
-						(ICrdtClientFactory) (executor, testFolder) -> {
-							Options options = new Options()
-									.setCreateIfMissing(true)
-									.setComparator(new CrdtStorageRocksDB.KeyComparator<>(UTF8_SERIALIZER));
-							RocksDB rocksdb = RocksDB.open(options, testFolder.resolve("rocksdb").toString());
-							return CrdtStorageRocksDB.create(Eventloop.getCurrentEventloop(), executor, rocksdb, SERIALIZER, CRDT_FUNCTION);
 						}
 				},
 				new Object[]{
