@@ -1,6 +1,5 @@
 package adder;
 
-import discovery.ConfigDiscoveryService;
 import io.activej.async.service.EventloopTaskScheduler;
 import io.activej.config.Config;
 import io.activej.crdt.CrdtServer;
@@ -9,6 +8,7 @@ import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.storage.cluster.CrdtRepartitionController;
 import io.activej.crdt.storage.cluster.CrdtStorageCluster;
 import io.activej.crdt.storage.cluster.DiscoveryService;
+import io.activej.crdt.storage.cluster.SimplePartitionId;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.Key;
@@ -18,10 +18,9 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 
 import java.time.Duration;
-import java.util.List;
 
-import static io.activej.common.Checks.checkArgument;
-import static io.activej.config.converter.ConfigConverters.*;
+import static io.activej.launchers.crdt.ConfigConverters.ofDiscoveryService;
+import static io.activej.launchers.crdt.ConfigConverters.ofSimplePartitionId;
 import static io.activej.serializer.BinarySerializers.LONG_SERIALIZER;
 
 public final class ClusterStorageModule extends AbstractModule {
@@ -29,7 +28,7 @@ public final class ClusterStorageModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		bind(new Key<CrdtStorage<Long, DetailedSumsCrdtState>>() {})
-				.to(new Key<CrdtStorageCluster<Long, DetailedSumsCrdtState, String>>() {});
+				.to(new Key<CrdtStorageCluster<Long, DetailedSumsCrdtState, SimplePartitionId>>() {});
 	}
 
 	@Provides
@@ -38,9 +37,9 @@ public final class ClusterStorageModule extends AbstractModule {
 	}
 
 	@Provides
-	CrdtStorageCluster<Long, DetailedSumsCrdtState, String> clusterStorage(
+	CrdtStorageCluster<Long, DetailedSumsCrdtState, SimplePartitionId> clusterStorage(
 			Eventloop eventloop,
-			DiscoveryService<Long, DetailedSumsCrdtState, String> discoveryService,
+			DiscoveryService<Long, DetailedSumsCrdtState, SimplePartitionId> discoveryService,
 			CrdtFunction<DetailedSumsCrdtState> crdtFunction
 	) {
 		return CrdtStorageCluster.create(eventloop, discoveryService, crdtFunction);
@@ -50,56 +49,43 @@ public final class ClusterStorageModule extends AbstractModule {
 	@Eager
 	CrdtServer<Long, DetailedSumsCrdtState> crdtServer(
 			Eventloop eventloop,
+			SimplePartitionId partitionId,
 			@Local CrdtStorage<Long, DetailedSumsCrdtState> localStorage,
 			CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer,
 			Config config
 	) {
 		return CrdtServer.create(eventloop, localStorage, serializer)
-				.withListenAddress(config.get(ofInetSocketAddress(), "crdt.listenAddresses"));
+				.withListenPort(partitionId.getCrdtPort());
 	}
 
 	@Provides
-	DiscoveryService<Long, DetailedSumsCrdtState, String> discoveryService(
+	DiscoveryService<Long, DetailedSumsCrdtState, SimplePartitionId> discoveryService(
 			Eventloop eventloop,
 			CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer,
+			SimplePartitionId localId,
 			@Local CrdtStorage<Long, DetailedSumsCrdtState> localStorage,
 			Config config
 	) {
-		return ConfigDiscoveryService.create(eventloop, localStorage, serializer, config.getChild("crdt.cluster"));
+		return config.get(ofDiscoveryService(eventloop, serializer, localId, localStorage), "crdt.cluster");
 	}
 
 	@Provides
-	@Local
-	String localId(Config config) {
-		List<String> addresses = config.getChild("crdt.cluster").get(ofList(ofString()), "addresses");
-
-		for (String addressString : addresses) {
-			int splitIdx = addressString.lastIndexOf('=');
-			checkArgument(splitIdx != -1, "Wrong address format");
-
-			String id = addressString.substring(0, splitIdx);
-			String address = addressString.substring(splitIdx + 1);
-
-			if (address.equals("local")) {
-				return id;
-			}
-		}
-
-		throw new IllegalStateException("No 'local' address is found in config");
+	SimplePartitionId localId(Config config) {
+		return config.get(ofSimplePartitionId(), "crdt.cluster.localPartition");
 	}
 
 	@Provides
-	CrdtRepartitionController<Long, DetailedSumsCrdtState, String> repartitionController(
-			CrdtStorageCluster<Long, DetailedSumsCrdtState, String> cluster,
-			@Local String localId
+	CrdtRepartitionController<Long, DetailedSumsCrdtState, SimplePartitionId> repartitionController(
+			CrdtStorageCluster<Long, DetailedSumsCrdtState, SimplePartitionId> cluster,
+			SimplePartitionId partitionId
 	) {
-		return CrdtRepartitionController.create(cluster, localId);
+		return CrdtRepartitionController.create(cluster, partitionId);
 	}
 
 	@Provides
 	@Eager
 	@Named("Repartition")
-	EventloopTaskScheduler repartitionController(Eventloop eventloop, CrdtRepartitionController<Long, DetailedSumsCrdtState, String> repartitionController) {
+	EventloopTaskScheduler repartitionController(Eventloop eventloop, CrdtRepartitionController<Long, DetailedSumsCrdtState, SimplePartitionId> repartitionController) {
 		return EventloopTaskScheduler.create(eventloop, repartitionController::repartition)
 				.withInterval(Duration.ofSeconds(10));
 	}

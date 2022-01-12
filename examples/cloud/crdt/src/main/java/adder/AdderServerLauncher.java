@@ -8,8 +8,10 @@ import io.activej.async.service.EventloopTaskScheduler;
 import io.activej.config.ConfigModule;
 import io.activej.crdt.hash.CrdtMap;
 import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.cluster.SimplePartitionId;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
+import io.activej.inject.Key;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
@@ -17,6 +19,7 @@ import io.activej.inject.module.Module;
 import io.activej.inject.module.Modules;
 import io.activej.launcher.Launcher;
 import io.activej.launchers.crdt.rpc.CrdtRpcServerModule;
+import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraphModule;
 
 import java.time.Duration;
@@ -25,6 +28,7 @@ import java.util.stream.Collectors;
 
 import static io.activej.common.Checks.checkState;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.unmodifiableList;
 
 public final class AdderServerLauncher extends Launcher {
@@ -40,6 +44,14 @@ public final class AdderServerLauncher extends Launcher {
 				ConfigModule.create()
 						.withEffectiveConfigLogger(),
 				new CrdtRpcServerModule<Long, DetailedSumsCrdtState>() {
+					@Override
+					protected void configure() {
+						transform(RpcServer.class, (bindings, scope, key, binding) ->
+								binding.addDependencies(SimplePartitionId.class)
+										.mapInstance(singletonList(Key.of(SimplePartitionId.class)), (objects, server) ->
+												server.withListenPort(((SimplePartitionId) objects[0]).getRpcPort())));
+					}
+
 					@Override
 					protected List<Class<?>> getMessageTypes() {
 						return MESSAGE_TYPES;

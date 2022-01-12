@@ -28,7 +28,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 
-public final class CrdtRepartitionController<K extends Comparable<K>, S, P extends Comparable<P>> implements EventloopJmxBeanWithStats, WithInitializer<CrdtRepartitionController<K, S, P>> {
+public final class CrdtRepartitionController<K extends Comparable<K>, S, P> implements EventloopJmxBeanWithStats, WithInitializer<CrdtRepartitionController<K, S, P>> {
 	private final P localPartitionId;
 	private final CrdtStorageCluster<K, S, P> cluster;
 
@@ -39,7 +39,7 @@ public final class CrdtRepartitionController<K extends Comparable<K>, S, P exten
 		this.localPartitionId = localPartitionId;
 	}
 
-	public static <K extends Comparable<K>, S, P extends Comparable<P>> CrdtRepartitionController<K, S, P> create(
+	public static <K extends Comparable<K>, S, P> CrdtRepartitionController<K, S, P> create(
 			CrdtStorageCluster<K, S, P> cluster, P localPartitionId) {
 		return new CrdtRepartitionController<>(cluster, localPartitionId);
 	}

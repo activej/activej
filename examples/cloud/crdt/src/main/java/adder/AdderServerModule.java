@@ -2,10 +2,10 @@ package adder;
 
 import io.activej.async.service.EventloopTaskScheduler;
 import io.activej.common.initializer.Initializer;
-import io.activej.config.Config;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.hash.CrdtMap;
 import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.cluster.SimplePartitionId;
 import io.activej.crdt.wal.WriteAheadLog;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.Key;
@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.Map;
-import java.util.UUID;
 
 import static adder.AdderCommands.*;
 import static io.activej.common.Utils.mapOf;
@@ -38,19 +37,13 @@ public final class AdderServerModule extends AbstractModule {
 	}
 
 	@Provides
-	@ServerId
-	String serverId(Config config) {
-		return config.get("serverId", UUID.randomUUID().toString());
-	}
-
-	@Provides
 	IdSequentialExecutor<Long> sequentialExecutor() {
 		return new IdSequentialExecutor<>();
 	}
 
 	@Provides
 	Map<Class<?>, RpcRequestHandler<?, ?>> handlers(
-			@ServerId String serverId,
+			SimplePartitionId partitionId,
 			CrdtMap<Long, SimpleSumsCrdtState> map,
 			WriteAheadLog<Long, DetailedSumsCrdtState> writeAheadLog,
 			IdSequentialExecutor<Long> seqExecutor
@@ -67,7 +60,7 @@ public final class AdderServerModule extends AbstractModule {
 												0 :
 												state.getLocalSum());
 
-								return writeAheadLog.put(userId, DetailedSumsCrdtState.of(serverId, newSum))
+								return writeAheadLog.put(userId, DetailedSumsCrdtState.of(partitionId.getId(), newSum))
 										.then(() -> map.put(userId, SimpleSumsCrdtState.of(newSum)))
 										.map($ -> AddResponse.INSTANCE);
 							}));
@@ -85,8 +78,8 @@ public final class AdderServerModule extends AbstractModule {
 	}
 
 	@Provides
-	CrdtMap<Long, SimpleSumsCrdtState> map(Eventloop eventloop, @ServerId String serverId, CrdtStorage<Long, DetailedSumsCrdtState> storage) {
-		return new AdderCrdtMap(eventloop, serverId, storage);
+	CrdtMap<Long, SimpleSumsCrdtState> map(Eventloop eventloop, SimplePartitionId partitionId, CrdtStorage<Long, DetailedSumsCrdtState> storage) {
+		return new AdderCrdtMap(eventloop, partitionId.getId(), storage);
 	}
 
 	@Provides

@@ -34,7 +34,7 @@ public abstract class SimpleConfigConverter<T> implements ConfigConverter<T> {
 		return value == null || value.trim().isEmpty() ? defaultValue : fromString(value);
 	}
 
-	protected abstract T fromString(@Nullable String string);
+	protected abstract T fromString(String string);
 
 	protected abstract String toString(T value);
 }

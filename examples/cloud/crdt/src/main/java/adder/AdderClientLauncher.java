@@ -2,11 +2,11 @@ package adder;
 
 import adder.AdderCommands.AddRequest;
 import adder.AdderCommands.HasUserId;
-import discovery.ConfigDiscoveryService;
 import discovery.RpcStrategyService;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import io.activej.crdt.storage.cluster.DiscoveryService;
+import io.activej.crdt.storage.cluster.SimplePartitionId;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
@@ -14,25 +14,15 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
 import io.activej.launchers.crdt.rpc.CrdtRpcClientLauncher;
 import io.activej.rpc.client.RpcClient;
-import io.activej.rpc.client.sender.RpcStrategies;
-import io.activej.rpc.client.sender.RpcStrategy;
 
-import java.net.InetSocketAddress;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
-import java.util.function.Function;
 
 import static adder.AdderCommands.GetRequest;
 import static adder.AdderCommands.GetResponse;
 import static adder.AdderServerLauncher.MESSAGE_TYPES;
-import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Checks.checkNotNull;
-import static io.activej.common.StringFormatUtils.parseInetSocketAddress;
-import static io.activej.config.converter.ConfigConverters.ofList;
-import static io.activej.config.converter.ConfigConverters.ofString;
-import static java.util.Collections.emptyList;
+import static io.activej.launchers.crdt.ConfigConverters.ofDiscoveryService;
+import static io.activej.rpc.client.sender.RpcStrategies.server;
 
 public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 	@Inject
@@ -50,7 +40,7 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 	protected Module getOverrideModule() {
 		return new AbstractModule() {
 			@Provides
-			RpcClient client(Eventloop eventloop, RpcStrategyService<Long, DetailedSumsCrdtState, String> strategyService, List<Class<?>> messageTypes) {
+			RpcClient client(Eventloop eventloop, RpcStrategyService<Long, DetailedSumsCrdtState, SimplePartitionId> strategyService, List<Class<?>> messageTypes) {
 				RpcClient rpcClient = RpcClient.create(eventloop)
 						.withMessageTypes(messageTypes);
 				strategyService.setRpcClient(rpcClient);
@@ -60,40 +50,16 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 	}
 
 	@Provides
-	DiscoveryService<Long, DetailedSumsCrdtState, String> discoveryService(Eventloop eventloop, Config config) {
-		return ConfigDiscoveryService.createForRpcStrategy(eventloop, config.getChild("crdt.cluster"));
+	DiscoveryService<Long, DetailedSumsCrdtState, SimplePartitionId> discoveryService(Eventloop eventloop, Config config) {
+		return config.get(ofDiscoveryService(), "crdt.cluster");
 	}
 
 	@Provides
-	RpcStrategyService<Long, DetailedSumsCrdtState, String> rpcStrategyService(
+	RpcStrategyService<Long, DetailedSumsCrdtState, SimplePartitionId> rpcStrategyService(
 			Eventloop eventloop,
-			DiscoveryService<Long, DetailedSumsCrdtState, String> discoveryService,
-			Function<String, RpcStrategy> strategyResolver
+			DiscoveryService<Long, DetailedSumsCrdtState, SimplePartitionId> discoveryService
 	) {
-		return RpcStrategyService.create(eventloop, discoveryService, strategyResolver, AdderClientLauncher::extractKey);
-	}
-
-	@Provides
-	Function<String, RpcStrategy> strategyResolver(Config config) {
-		List<String> addressStrings = config.get(ofList(ofString()), "rpc.addresses", emptyList());
-		Map<String, RpcStrategy> strategies = new HashMap<>();
-
-		for (String addressString : addressStrings) {
-			int splitIdx = addressString.lastIndexOf('=');
-			checkArgument(splitIdx != -1, "Wrong address format");
-
-			String id = addressString.substring(0, splitIdx);
-			String address = addressString.substring(splitIdx + 1);
-
-			try {
-				InetSocketAddress socketAddress = parseInetSocketAddress(address);
-				strategies.put(id, RpcStrategies.server(socketAddress));
-			} catch (MalformedDataException e) {
-				throw new IllegalArgumentException(e);
-			}
-		}
-
-		return id -> checkNotNull(strategies.get(id));
+		return RpcStrategyService.create(eventloop, discoveryService, partitionId -> server(partitionId.getRpcAddress()), AdderClientLauncher::extractKey);
 	}
 
 	@Override
