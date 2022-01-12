@@ -169,10 +169,10 @@ public final class UrlParser {
 				port = colon != -1 && colon < hostPortEnd ? (short) (colon + 1) : -1;
 			}
 
-			if (port != -1) {
+			if (has(port)) {
 				portValue = parsePort(hostPortEnd);
 			} else {
-				if (host != -1) {
+				if (has(host)) {
 					portValue = protocol.isSecure() ? 443 : 80;
 				}
 			}
@@ -239,7 +239,7 @@ public final class UrlParser {
 
 	// getters
 	public boolean isRelativePath() {
-		return host == -1;
+		return no(host);
 	}
 
 	public Protocol getProtocol() {
@@ -251,18 +251,18 @@ public final class UrlParser {
 	}
 
 	public @Nullable String getHostAndPort() {
-		if (host == -1) {
+		if (no(host)) {
 			return null;
 		}
-		int end = path != -1 ? path : query != -1 ? query - 1 : fragment != -1 ? fragment - 1 : limit;
+		int end = has(path) ? path : has(query) ? query - 1 : has(fragment) ? fragment - 1 : limit;
 		return new String(raw, host, end - host, CHARSET);
 	}
 
 	public @Nullable String getHost() {
-		if (host == -1) {
+		if (no(host)) {
 			return null;
 		}
-		int end = port != -1 ? port - 1 : path != -1 ? path : query != -1 ? query - 1 : fragment != -1 ? fragment - 1 : limit;
+		int end = has(port) ? port - 1 : has(path) ? path : has(query) ? query - 1 : has(fragment) ? fragment - 1 : limit;
 		return new String(raw, host, end - host, CHARSET);
 	}
 
@@ -271,36 +271,36 @@ public final class UrlParser {
 	}
 
 	public @NotNull String getPathAndQuery() {
-		if (path == -1) {
-			if (query == -1)
+		if (no(path)) {
+			if (no(query))
 				return "/";
 			else {
-				int queryEnd = fragment == -1 ? limit : fragment - 1;
+				int queryEnd = no(fragment) ? limit : fragment - 1;
 				return new String(raw, query, queryEnd - query, CHARSET);
 			}
 		} else {
-			int queryEnd = fragment == -1 ? limit : fragment - 1;
+			int queryEnd = no(fragment) ? limit : fragment - 1;
 			return new String(raw, path, queryEnd - path, CHARSET);
 		}
 	}
 
 	public @NotNull String getPath() {
-		if (path == -1) {
+		if (no(path)) {
 			return "/";
 		}
 		return new String(raw, path, pathEnd - path, CHARSET);
 	}
 
 	public @NotNull String getQuery() {
-		if (query == -1) {
+		if (no(query)) {
 			return "";
 		}
-		int queryEnd = fragment == -1 ? limit : fragment - 1;
+		int queryEnd = no(fragment) ? limit : fragment - 1;
 		return new String(raw, query, queryEnd - query, CHARSET);
 	}
 
 	public @NotNull String getFragment() {
-		if (fragment == -1) {
+		if (no(fragment)) {
 			return "";
 		}
 		return new String(raw, fragment, limit - fragment, CHARSET);
@@ -308,22 +308,22 @@ public final class UrlParser {
 
 	int getPathAndQueryLength() {
 		int len = 0;
-		len += path == -1 ? 1 : pathEnd - path;
-		len += query == -1 ? 0 : (fragment == -1 ? limit : fragment - 1) - query + 1;
+		len += no(path) ? 1 : pathEnd - path;
+		len += no(query) ? 0 : (no(fragment) ? limit : fragment - 1) - query + 1;
 		return len;
 	}
 
 	void writePathAndQuery(@NotNull ByteBuf buf) {
-		if (path == -1) {
+		if (no(path)) {
 			buf.put(SLASH);
 		} else {
 			for (int i = path; i < pathEnd; i++) {
 				buf.put(raw[i]);
 			}
 		}
-		if (query != -1) {
+		if (has(query)) {
 			buf.put(QUESTION_MARK);
-			int queryEnd = fragment == -1 ? limit : fragment - 1;
+			int queryEnd = no(fragment) ? limit : fragment - 1;
 			for (int i = query; i < queryEnd; i++) {
 				buf.put(raw[i]);
 			}
@@ -332,7 +332,7 @@ public final class UrlParser {
 
 	// work with parameters
 	public @Nullable String getQueryParameter(@NotNull String key) {
-		if (query == -1) {
+		if (no(query)) {
 			return null;
 		}
 		if (queryPositions == null) {
@@ -342,7 +342,7 @@ public final class UrlParser {
 	}
 
 	public @NotNull List<String> getQueryParameters(@NotNull String key) {
-		if (query == -1) {
+		if (no(query)) {
 			return emptyList();
 		}
 		if (queryPositions == null) {
@@ -352,7 +352,7 @@ public final class UrlParser {
 	}
 
 	public @NotNull Iterable<QueryParameter> getQueryParametersIterable() {
-		if (query == -1) {
+		if (no(query)) {
 			return emptyList();
 		}
 		if (queryPositions == null) {
@@ -370,7 +370,7 @@ public final class UrlParser {
 	}
 
 	void parseQueryParameters() {
-		int queryEnd = fragment == -1 ? limit : fragment - 1;
+		int queryEnd = no(fragment) ? limit : fragment - 1;
 		queryPositions = parseQueryParameters(queryEnd);
 	}
 
@@ -380,7 +380,7 @@ public final class UrlParser {
 		if (query == end)
 			return NO_PARAMETERS;
 		assert limit >= end;
-		assert query != -1;
+		assert has(query);
 
 		int[] positions = new int[8];
 
@@ -460,7 +460,7 @@ public final class UrlParser {
 
 	// work with path
 	@NotNull String getPartialPath() {
-		if (pos == -1 || pos > pathEnd) {
+		if (no(pos) || pos > pathEnd) {
 			return "/";
 		}
 		return new String(raw, pos, pathEnd - pos, CHARSET);
@@ -471,7 +471,7 @@ public final class UrlParser {
 			int start = pos + 1;
 			int nextSlash = indexOf(SLASH, start);
 			pos = nextSlash > pathEnd ? pathEnd : (short) nextSlash;
-			if (pos == -1) {
+			if (no(pos)) {
 				pos = limit;
 				return urlParse(raw, start, pathEnd);
 			} else {
@@ -627,6 +627,14 @@ public final class UrlParser {
 			}
 		}
 		return -1;
+	}
+
+	private static boolean has(short v) {
+		return v >= 0;
+	}
+
+	private static boolean no(short v) {
+		return v < 0;
 	}
 
 	@Override
