@@ -262,7 +262,7 @@ public final class UrlParser {
 		if (host == -1) {
 			return null;
 		}
-		int end = port != -1 ? port - 1 : path != -1 ? path : query != -1 ? query - 1 : limit;
+		int end = port != -1 ? port - 1 : path != -1 ? path : query != -1 ? query - 1 : fragment != -1 ? fragment - 1 : limit;
 		return new String(raw, host, end - host, CHARSET);
 	}
 

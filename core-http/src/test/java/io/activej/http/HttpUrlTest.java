@@ -409,4 +409,13 @@ public final class HttpUrlTest {
 	public void testEmptyHost3() {
 		assertThrows(IllegalArgumentException.class, () -> UrlParser.of("http://?test=':80'"));
 	}
+
+	@Test
+	public void testHostFollowedByFragment() {
+		UrlParser url = UrlParser.of("http://www.test.com#fragment");
+		assertEquals(HTTP, url.getProtocol());
+		assertEquals("www.test.com", url.getHost());
+		assertEquals("fragment", url.getFragment());
+	}
+
 }
