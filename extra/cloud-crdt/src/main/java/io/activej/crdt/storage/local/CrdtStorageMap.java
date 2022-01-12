@@ -24,6 +24,7 @@ import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.CrdtType;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.datastream.StreamConsumer;
+import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStatsBasic;
@@ -95,7 +96,9 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 
 	@Override
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
-		return Promise.of(StreamConsumer.ofConsumer(this::doPut)
+		StreamConsumerToList<CrdtData<K, S>> consumer = StreamConsumerToList.create();
+		return Promise.of(consumer.withAcknowledgement(ack -> ack
+						.whenResult(() -> consumer.getList().forEach(this::doPut)))
 				.transformWith(detailedStats ? uploadStatsDetailed : uploadStats));
 	}
 
@@ -107,7 +110,9 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 
 	@Override
 	public Promise<StreamConsumer<K>> remove() {
-		return Promise.of(StreamConsumer.<K>ofConsumer(map::remove)
+		StreamConsumerToList<K> consumer = StreamConsumerToList.create();
+		return Promise.of(consumer.withAcknowledgement(ack -> ack
+						.whenResult(() -> consumer.getList().forEach(map::remove)))
 				.transformWith(detailedStats ? removeStatsDetailed : removeStats));
 	}
 
