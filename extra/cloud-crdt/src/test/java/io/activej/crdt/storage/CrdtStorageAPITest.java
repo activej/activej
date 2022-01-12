@@ -2,7 +2,13 @@ package io.activej.crdt.storage;
 
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
+import io.activej.crdt.storage.cluster.CrdtStorageCluster;
+import io.activej.crdt.storage.cluster.DiscoveryService;
+import io.activej.crdt.storage.cluster.DiscoveryService.Partitionings;
+import io.activej.crdt.storage.cluster.RendezvousPartitionings;
+import io.activej.crdt.storage.cluster.RendezvousPartitionings.Partitioning;
 import io.activej.crdt.storage.local.CrdtStorageFs;
+import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.crdt.storage.local.CrdtStorageRocksDB;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.crdt.util.TimestampContainer;
@@ -26,9 +32,7 @@ import org.rocksdb.RocksDB;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -39,7 +43,8 @@ import static org.junit.Assert.assertEquals;
 
 @RunWith(Parameterized.class)
 public class CrdtStorageAPITest {
-	private static final CrdtDataSerializer<String, TimestampContainer<Integer>> serializer = new CrdtDataSerializer<>(UTF8_SERIALIZER, TimestampContainer.createSerializer(INT_SERIALIZER));
+	private static final CrdtDataSerializer<String, TimestampContainer<Integer>> SERIALIZER = new CrdtDataSerializer<>(UTF8_SERIALIZER, TimestampContainer.createSerializer(INT_SERIALIZER));
+	private static final CrdtFunction<TimestampContainer<Integer>> CRDT_FUNCTION = TimestampContainer.createCrdtFunction(Integer::max);
 
 	@Rule
 	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -54,7 +59,7 @@ public class CrdtStorageAPITest {
 	public String testName;
 
 	@Parameter(1)
-	public ICrdtClientFactory<String, TimestampContainer<Integer>> clientFactory;
+	public ICrdtClientFactory clientFactory;
 
 	private CrdtStorage<String, TimestampContainer<Integer>> client;
 
@@ -62,13 +67,13 @@ public class CrdtStorageAPITest {
 	public void setup() throws Exception {
 		Path folder = temporaryFolder.newFolder().toPath();
 		Files.createDirectories(folder);
-		client = clientFactory.create(Executors.newSingleThreadExecutor(), folder, TimestampContainer.createCrdtFunction(Integer::max));
+		client = clientFactory.create(Executors.newSingleThreadExecutor(), folder);
 	}
 
 	@FunctionalInterface
-	private interface ICrdtClientFactory<K extends Comparable<K>, S> {
+	private interface ICrdtClientFactory {
 
-		CrdtStorage<K, S> create(Executor executor, Path testFolder, CrdtFunction<S> crdtFunction) throws Exception;
+		CrdtStorage<String, TimestampContainer<Integer>> create(Executor executor, Path testFolder) throws Exception;
 	}
 
 	@Parameters(name = "{0}")
@@ -76,21 +81,55 @@ public class CrdtStorageAPITest {
 		return Arrays.asList(
 				new Object[]{
 						"FsCrdtClient",
-						(ICrdtClientFactory<String, TimestampContainer<Integer>>) (executor, testFolder, crdtFunction) -> {
+						(ICrdtClientFactory) (executor, testFolder) -> {
 							Eventloop eventloop = Eventloop.getCurrentEventloop();
 							LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, testFolder);
 							await(fs.start());
-							return CrdtStorageFs.create(eventloop, fs, serializer, crdtFunction);
+							return CrdtStorageFs.create(eventloop, fs, SERIALIZER, CRDT_FUNCTION);
 						}
 				},
 				new Object[]{
 						"RocksDBCrdtClient",
-						(ICrdtClientFactory<String, TimestampContainer<Integer>>) (executor, testFolder, crdtFunction) -> {
+						(ICrdtClientFactory) (executor, testFolder) -> {
 							Options options = new Options()
 									.setCreateIfMissing(true)
 									.setComparator(new CrdtStorageRocksDB.KeyComparator<>(UTF8_SERIALIZER));
 							RocksDB rocksdb = RocksDB.open(options, testFolder.resolve("rocksdb").toString());
-							return CrdtStorageRocksDB.create(Eventloop.getCurrentEventloop(), executor, rocksdb, serializer, crdtFunction);
+							return CrdtStorageRocksDB.create(Eventloop.getCurrentEventloop(), executor, rocksdb, SERIALIZER, CRDT_FUNCTION);
+						}
+				},
+				new Object[]{
+						"CrdtStorageMap",
+						(ICrdtClientFactory) (executor, testFolder) ->
+								CrdtStorageMap.create(Eventloop.getCurrentEventloop(), CRDT_FUNCTION)
+				},
+				new Object[]{
+						"CrdtStorageCluster",
+						(ICrdtClientFactory) (executor, testFolder) -> {
+							Eventloop eventloop = Eventloop.getCurrentEventloop();
+							Map<Integer, CrdtStorage<String, TimestampContainer<Integer>>> map = new HashMap<>();
+
+							int i = 0;
+							Set<Integer> partitions = new HashSet<>();
+							for (; i < 10; i++) {
+								map.put(i, CrdtStorageMap.create(eventloop, CRDT_FUNCTION));
+								partitions.add(i);
+							}
+							Partitioning<Integer> partitioning1 = Partitioning.create(partitions, 3, true, true);
+
+							partitions = new HashSet<>();
+							for (; i < 20; i++) {
+								map.put(i, CrdtStorageMap.create(eventloop, CRDT_FUNCTION));
+								partitions.add(i);
+							}
+							Partitioning<Integer> partitioning2 = Partitioning.create(partitions, 4, false, true);
+
+							Partitionings<String, TimestampContainer<Integer>, Integer> partitionings = RendezvousPartitionings.create(map, partitioning1, partitioning2);
+							DiscoveryService<String, TimestampContainer<Integer>, Integer> discoveryService = DiscoveryService.of(partitionings);
+							CrdtStorageCluster<String, TimestampContainer<Integer>, Integer> storageCluster = CrdtStorageCluster.create(eventloop, discoveryService, CRDT_FUNCTION);
+
+							await(storageCluster.start());
+							return storageCluster;
 						}
 				}
 		);
