@@ -2,7 +2,6 @@ package adder;
 
 import adder.AdderCommands.AddRequest;
 import adder.AdderCommands.HasUserId;
-import discovery.RpcStrategyService;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import io.activej.crdt.storage.cluster.DiscoveryService;
@@ -13,6 +12,7 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
 import io.activej.launchers.crdt.rpc.CrdtRpcClientLauncher;
+import io.activej.launchers.crdt.rpc.CrdtRpcStrategyService;
 import io.activej.rpc.client.RpcClient;
 
 import java.util.List;
@@ -40,7 +40,7 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 	protected Module getOverrideModule() {
 		return new AbstractModule() {
 			@Provides
-			RpcClient client(Eventloop eventloop, RpcStrategyService<Long, DetailedSumsCrdtState, SimplePartitionId> strategyService, List<Class<?>> messageTypes) {
+			RpcClient client(Eventloop eventloop, CrdtRpcStrategyService<Long, DetailedSumsCrdtState, SimplePartitionId> strategyService, List<Class<?>> messageTypes) {
 				RpcClient rpcClient = RpcClient.create(eventloop)
 						.withMessageTypes(messageTypes);
 				strategyService.setRpcClient(rpcClient);
@@ -55,11 +55,11 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 	}
 
 	@Provides
-	RpcStrategyService<Long, DetailedSumsCrdtState, SimplePartitionId> rpcStrategyService(
+	CrdtRpcStrategyService<Long, DetailedSumsCrdtState, SimplePartitionId> rpcStrategyService(
 			Eventloop eventloop,
 			DiscoveryService<Long, DetailedSumsCrdtState, SimplePartitionId> discoveryService
 	) {
-		return RpcStrategyService.create(eventloop, discoveryService, partitionId -> server(partitionId.getRpcAddress()), AdderClientLauncher::extractKey);
+		return CrdtRpcStrategyService.create(eventloop, discoveryService, partitionId -> server(partitionId.getRpcAddress()), AdderClientLauncher::extractKey);
 	}
 
 	@Override
