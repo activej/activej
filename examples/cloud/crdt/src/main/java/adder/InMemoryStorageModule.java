@@ -8,6 +8,7 @@ import io.activej.crdt.wal.WriteAheadLog;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
+import io.activej.launchers.crdt.Local;
 
 public final class InMemoryStorageModule extends AbstractModule {
 

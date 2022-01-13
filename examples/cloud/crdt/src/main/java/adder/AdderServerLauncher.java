@@ -18,6 +18,7 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.Modules;
 import io.activej.launcher.Launcher;
+import io.activej.launchers.crdt.Local;
 import io.activej.launchers.crdt.rpc.CrdtRpcServerModule;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraphModule;

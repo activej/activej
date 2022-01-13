@@ -17,6 +17,7 @@ import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
+import io.activej.launchers.crdt.Local;
 
 import java.nio.file.Path;
 import java.time.Duration;
