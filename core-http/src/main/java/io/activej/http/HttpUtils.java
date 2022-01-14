@@ -21,22 +21,19 @@ import io.activej.common.exception.MalformedDataException;
 import io.activej.http.WebSocket.Frame.FrameType;
 import io.activej.http.WebSocket.Message.MessageType;
 import io.activej.http.WebSocketConstants.OpCode;
-import java.net.Inet4Address;
-import java.net.Inet6Address;
-import java.net.InetSocketAddress;
+import io.activej.net.AbstractServer;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.UnsupportedEncodingException;
-import java.net.InetAddress;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.nio.charset.CharacterCodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Stream;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.http.HttpHeaders.HOST;
@@ -46,6 +43,7 @@ import static io.activej.http.WebSocketConstants.MAGIC_STRING;
 import static io.activej.http.WebSocketConstants.OpCode.*;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.toList;
 
 /**
  * Util for working with {@link HttpRequest}
@@ -384,6 +382,13 @@ public final class HttpUtils {
 				+ formatHost(address.getAddress())
 				+ (address.getPort() != (ssl ? 443 : 80) ? ":" + address.getPort() : "")
 				+ "/";
+	}
+
+	public static List<String> getHttpAddresses(AbstractServer<?> server) {
+		return Stream.concat(
+				server.getBoundAddresses().stream().map(address -> HttpUtils.formatUrl(address, false)),
+				server.getSslBoundAddresses().stream().map(address -> HttpUtils.formatUrl(address, true))
+		).collect(toList());
 	}
 
 	private static String formatHost(InetAddress address) {
