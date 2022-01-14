@@ -16,7 +16,7 @@ public final class InMemoryStorageModule extends AbstractModule {
 	WriteAheadLog<Long, DetailedSumsCrdtState> writeAheadLog(
 			Eventloop eventloop,
 			CrdtFunction<DetailedSumsCrdtState> function,
-			@Local CrdtStorage<Long, DetailedSumsCrdtState> storage
+			CrdtStorage<Long, DetailedSumsCrdtState> storage
 	) {
 		return InMemoryWriteAheadLog.create(eventloop, function, storage);
 	}
