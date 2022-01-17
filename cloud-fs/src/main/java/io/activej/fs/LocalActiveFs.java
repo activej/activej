@@ -272,7 +272,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 					}
 					return writer
 							.withAcknowledgement(ack -> ack
-									.then(translateScalarErrorsFn(name))
+									.then(translateScalarErrorsFn())
 									.whenComplete(appendFinishPromise.recordStats())
 									.whenComplete(toLogger(logger, TRACE, "onAppendComplete", name, offset, this)));
 				})
@@ -479,7 +479,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 											tryFsync(target.getParent());
 										}
 									}))
-									.then(translateScalarErrorsFn(name))
+									.then(translateScalarErrorsFn())
 									.whenException(() -> execute(() -> Files.deleteIfExists(pathAndChannel.getValue1())))
 									.whenComplete(uploadFinishPromise.recordStats())
 									.whenComplete(toLogger(logger, TRACE, "onUploadComplete", name, this)));
