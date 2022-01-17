@@ -2,9 +2,9 @@ package io.activej.crdt.storage.cluster;
 
 import io.activej.common.HashUtils;
 import io.activej.crdt.storage.CrdtStorage;
-import io.activej.rpc.client.sender.RpcStrategies;
 import io.activej.rpc.client.sender.RpcStrategy;
 import io.activej.rpc.client.sender.RpcStrategyRendezvousHashing;
+import io.activej.rpc.client.sender.RpcStrategySharding;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -96,7 +96,7 @@ public final class RendezvousPartitionings<K extends Comparable<K>, S, P> implem
 			rendezvousHashings.add(rendezvousHashing);
 		}
 
-		return RpcStrategies.sharding(
+		return RpcStrategySharding.create(
 				new ToIntFunction<Object>() {
 					final int count = rendezvousHashings.size();
 
@@ -104,8 +104,7 @@ public final class RendezvousPartitionings<K extends Comparable<K>, S, P> implem
 					public int applyAsInt(Object item) {
 						return keyGetter.apply(item).hashCode() % count;
 					}
-				},
-				rendezvousHashings);
+				}, rendezvousHashings);
 	}
 
 	public static final class Partitioning<P> {

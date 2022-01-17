@@ -9,7 +9,6 @@ import org.junit.Test;
 import java.net.InetSocketAddress;
 
 import static io.activej.rpc.client.sender.Callbacks.assertNoCalls;
-import static io.activej.rpc.client.sender.RpcStrategies.rendezvousHashing;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.*;
@@ -42,7 +41,7 @@ public class RpcStrategyRendezvousHashingTest {
 		RpcStrategySingleServer server1 = server(address1);
 		RpcStrategySingleServer server2 = server(address2);
 		RpcStrategySingleServer server3 = server(address3);
-		RpcStrategy rendezvousHashing = rendezvousHashing(RpcMessageDataStubWithKey::getKey)
+		RpcStrategy rendezvousHashing = RpcStrategyRendezvousHashing.create(RpcMessageDataStubWithKey::getKey)
 				.withShard(shardId1, server1)
 				.withShard(shardId2, server2)
 				.withShard(shardId3, server3);
@@ -87,7 +86,7 @@ public class RpcStrategyRendezvousHashingTest {
 		RpcStrategySingleServer server1 = server(address1);
 		RpcStrategySingleServer server2 = server(address2);
 		RpcStrategySingleServer server3 = server(address3);
-		RpcStrategy rendezvousHashing = rendezvousHashing(RpcMessageDataStubWithKey::getKey)
+		RpcStrategy rendezvousHashing = RpcStrategyRendezvousHashing.create(RpcMessageDataStubWithKey::getKey)
 				.withShard(shardId1, server1)
 				.withShard(shardId2, server2)
 				.withShard(shardId3, server3);
@@ -107,7 +106,7 @@ public class RpcStrategyRendezvousHashingTest {
 		RpcStrategySingleServer server1 = server(address1);
 		RpcStrategySingleServer server2 = server(address2);
 		RpcStrategySingleServer server3 = server(address3);
-		RpcStrategy rendezvousHashing = RpcStrategies.rendezvousHashing(RpcMessageDataStubWithKey::getKey)
+		RpcStrategy rendezvousHashing = RpcStrategyRendezvousHashing.create(RpcMessageDataStubWithKey::getKey)
 				.withShard(shardId1, server1)
 				.withShard(shardId2, server2)
 				.withShard(shardId3, server3);
@@ -120,7 +119,7 @@ public class RpcStrategyRendezvousHashingTest {
 	@Test
 	public void itShouldNotBeCreatedWhenNoSendersWereAdded() {
 		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
-		RpcStrategy rendezvousHashing = rendezvousHashing(RpcMessageDataStubWithKey::getKey);
+		RpcStrategy rendezvousHashing = RpcStrategyRendezvousHashing.create(RpcMessageDataStubWithKey::getKey);
 
 		assertNull(rendezvousHashing.createSender(pool));
 	}
@@ -137,7 +136,7 @@ public class RpcStrategyRendezvousHashingTest {
 		RpcStrategySingleServer server1 = server(address1);
 		RpcStrategySingleServer server2 = server(address2);
 		RpcStrategySingleServer server3 = server(address3);
-		RpcStrategy rendezvousHashing = rendezvousHashing(RpcMessageDataStubWithKey::getKey)
+		RpcStrategy rendezvousHashing = RpcStrategyRendezvousHashing.create(RpcMessageDataStubWithKey::getKey)
 				.withMinActiveShards(4)
 				.withShard(shardId1, server1)
 				.withShard(shardId2, server2)
@@ -164,7 +163,7 @@ public class RpcStrategyRendezvousHashingTest {
 		RpcStrategySingleServer server1 = server(address1);
 		RpcStrategySingleServer server2 = server(address2);
 		RpcStrategySingleServer server3 = server(address3);
-		RpcStrategy rendezvousHashing = rendezvousHashing(RpcMessageDataStubWithKey::getKey)
+		RpcStrategy rendezvousHashing = RpcStrategyRendezvousHashing.create(RpcMessageDataStubWithKey::getKey)
 				.withMinActiveShards(4)
 				.withShard(shardId1, server1)
 				.withShard(shardId2, server2)

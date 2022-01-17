@@ -9,7 +9,8 @@ import org.junit.Test;
 import java.net.InetSocketAddress;
 
 import static io.activej.rpc.client.sender.Callbacks.assertNoCalls;
-import static io.activej.rpc.client.sender.RpcStrategies.*;
+import static io.activej.rpc.client.sender.RpcStrategies.server;
+import static io.activej.rpc.client.sender.RpcStrategies.servers;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.*;
 
@@ -42,7 +43,7 @@ public class RpcStrategyRoundRobinTest {
 		RpcStrategy server1 = server(address1);
 		RpcStrategy server2 = server(address2);
 		RpcStrategy server3 = server(address3);
-		RpcStrategy roundRobin = roundRobin(server1, server2, server3);
+		RpcStrategy roundRobin = RpcStrategyRoundRobin.create(server1, server2, server3);
 		RpcSender senderRoundRobin;
 		int timeout = 50;
 		Object data = new RpcMessageDataStub();
@@ -67,7 +68,7 @@ public class RpcStrategyRoundRobinTest {
 		RpcSenderStub connection1 = new RpcSenderStub();
 		RpcSenderStub connection2 = new RpcSenderStub();
 		RpcSenderStub connection4 = new RpcSenderStub();
-		RpcStrategy roundRobinStrategy = roundRobin(servers(address1, address2, address3, address4, address5));
+		RpcStrategy roundRobinStrategy = RpcStrategyRoundRobin.create(servers(address1, address2, address3, address4, address5));
 		RpcSender senderRoundRobin;
 		int timeout = 50;
 		Object data = new RpcMessageDataStub();
@@ -102,7 +103,7 @@ public class RpcStrategyRoundRobinTest {
 	public void itShouldNotBeCreatedWhenThereAreNoActiveSubSenders() {
 		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
 		// no connections were added to pool
-		RpcStrategy roundRobin = roundRobin(servers(address1, address2, address3));
+		RpcStrategy roundRobin = RpcStrategyRoundRobin.create(servers(address1, address2, address3));
 
 		assertNull(roundRobin.createSender(pool));
 	}
@@ -113,7 +114,7 @@ public class RpcStrategyRoundRobinTest {
 		RpcSenderStub connection1 = new RpcSenderStub();
 		RpcSenderStub connection2 = new RpcSenderStub();
 		RpcSenderStub connection3 = new RpcSenderStub();
-		RpcStrategy roundRobin = roundRobin(servers(address1, address2, address3))
+		RpcStrategy roundRobin = RpcStrategyRoundRobin.create(servers(address1, address2, address3))
 				.withMinActiveSubStrategies(4);
 
 		pool.put(address1, connection1);
@@ -128,7 +129,7 @@ public class RpcStrategyRoundRobinTest {
 		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
 		RpcSenderStub connection1 = new RpcSenderStub();
 		RpcSenderStub connection2 = new RpcSenderStub();
-		RpcStrategy roundRobin = roundRobin(servers(address1, address2, address3))
+		RpcStrategy roundRobin = RpcStrategyRoundRobin.create(servers(address1, address2, address3))
 				.withMinActiveSubStrategies(3);
 
 		pool.put(address1, connection1);

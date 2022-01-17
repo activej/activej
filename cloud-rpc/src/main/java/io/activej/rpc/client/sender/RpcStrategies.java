@@ -21,7 +21,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.net.InetSocketAddress;
 import java.util.List;
-import java.util.function.ToIntFunction;
 
 import static io.activej.common.Checks.checkArgument;
 import static java.util.Arrays.asList;
@@ -54,48 +53,5 @@ public final class RpcStrategies {
 				.collect(toList());
 	}
 
-	public static RpcStrategyFirstAvailable firstAvailable(RpcStrategy... senders) {
-		return RpcStrategyFirstAvailable.create(senders);
-	}
-
-	public static RpcStrategyFirstAvailable firstAvailable(List<RpcStrategy> list) {
-		return RpcStrategyFirstAvailable.create(list);
-	}
-
-	public static RpcStrategyFirstValidResult firstValidResult(RpcStrategy... senders) {
-		return RpcStrategyFirstValidResult.create(senders);
-	}
-
-	public static RpcStrategyFirstValidResult firstValidResult(List<RpcStrategy> list) {
-		return RpcStrategyFirstValidResult.create(list);
-	}
-
-	public static RpcStrategyRoundRobin roundRobin(RpcStrategy... senders) {
-		return RpcStrategyRoundRobin.create(senders);
-	}
-
-	public static RpcStrategyRoundRobin roundRobin(List<RpcStrategy> list) {
-		return RpcStrategyRoundRobin.create(list);
-	}
-
-	public static <T> RpcStrategySharding sharding(ToIntFunction<T> hashFunction, RpcStrategy... senders) {
-		return RpcStrategySharding.create(hashFunction, senders);
-	}
-
-	public static <T> RpcStrategySharding sharding(@NotNull ToIntFunction<T> shardingFunction, @NotNull List<RpcStrategy> list) {
-		return RpcStrategySharding.create(shardingFunction, list);
-	}
-
-	public static <T> RpcStrategyRendezvousHashing rendezvousHashing(@NotNull ToIntFunction<T> hashFunction) {
-		return RpcStrategyRendezvousHashing.create(hashFunction);
-	}
-
-	public static RpcStrategyTypeDispatching typeDispatching() {
-		return RpcStrategyTypeDispatching.create();
-	}
-
-	public static RpcStrategyRandomSampling randomSampling() {
-		return RpcStrategyRandomSampling.create();
-	}
 }
 
