@@ -3,7 +3,6 @@ package io.activej.rpc.client.sender;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.rpc.client.RpcClient;
-import io.activej.rpc.hash.ShardingFunction;
 import io.activej.rpc.server.RpcRequestHandler;
 import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.annotations.Deserialize;
@@ -87,20 +86,21 @@ public final class RpcBlockingTest {
 		InetSocketAddress address2 = new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port2);
 		InetSocketAddress address3 = new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port3);
 
-		ShardingFunction<HelloRequest> shardingFunction = item -> {
-			int shard = 0;
-			if (item.name.startsWith("S")) {
-				shard = 1;
-			}
-			return shard;
-		};
-
 		RpcClient client = RpcClient.create(Eventloop.getCurrentEventloop())
 				.withMessageTypes(HelloRequest.class, HelloResponse.class)
 				.withStrategy(
 						roundRobin(
 								server(address1),
-								sharding(shardingFunction, server(address2), server(address3)).withMinActiveSubStrategies(2)));
+								sharding((HelloRequest item) -> {
+											int shard = 0;
+											if (item.name.startsWith("S")) {
+												shard = 1;
+											}
+											return shard;
+										},
+										server(address2),
+										server(address3))
+										.withMinActiveSubStrategies(2)));
 
 		client.startFuture().get();
 
@@ -147,8 +147,8 @@ public final class RpcBlockingTest {
 	private static String blockingRequest(RpcClient rpcClient, String name) throws Exception {
 		try {
 			return rpcClient.getEventloop().submit(
-					() -> rpcClient
-							.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT))
+							() -> rpcClient
+									.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT))
 					.get()
 					.message;
 		} catch (ExecutionException e) {

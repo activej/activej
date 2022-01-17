@@ -19,13 +19,13 @@ package io.activej.rpc.client.sender;
 import io.activej.async.callback.Callback;
 import io.activej.common.HashUtils;
 import io.activej.rpc.client.RpcClientConnectionPool;
-import io.activej.rpc.hash.HashBucketFunction;
-import io.activej.rpc.hash.HashFunction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.function.ToIntFunction;
+import java.util.function.ToLongBiFunction;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.first;
@@ -33,17 +33,17 @@ import static io.activej.common.Utils.first;
 public final class RpcStrategyRendezvousHashing implements RpcStrategy {
 	private static final int MIN_SUB_STRATEGIES_FOR_CREATION_DEFAULT = 1;
 	private static final int DEFAULT_BUCKET_CAPACITY = 2048;
-	private static final HashBucketFunction DEFAULT_BUCKET_HASH_FUNCTION = (shardId, bucket) ->
-			(int) HashUtils.murmur3hash(((long) shardId.hashCode() << 32) | (bucket & 0xFFFFFFFFL));
+	private static final ToLongBiFunction<Object, Integer> DEFAULT_BUCKET_HASH_FUNCTION = (shardId, bucketN) ->
+			(int) HashUtils.murmur3hash(((long) shardId.hashCode() << 32) | (bucketN & 0xFFFFFFFFL));
 
 	private final Map<Object, RpcStrategy> shards;
-	private final HashFunction<?> hashFunction;
+	private final ToIntFunction<?> hashFunction;
 	private final int minShards;
-	private final HashBucketFunction hashBucketFunction;
+	private final ToLongBiFunction<?, Integer> hashBucketFunction;
 	private final int buckets;
 
-	private RpcStrategyRendezvousHashing(@NotNull HashFunction<?> hashFunction, int minShards,
-			@NotNull HashBucketFunction hashBucketFunction, int buckets,
+	private RpcStrategyRendezvousHashing(@NotNull ToIntFunction<?> hashFunction, int minShards,
+			ToLongBiFunction<?, Integer> hashBucketFunction, int buckets,
 			Map<Object, RpcStrategy> shards) {
 		this.hashFunction = hashFunction;
 		this.minShards = minShards;
@@ -52,7 +52,7 @@ public final class RpcStrategyRendezvousHashing implements RpcStrategy {
 		this.shards = shards;
 	}
 
-	public static RpcStrategyRendezvousHashing create(HashFunction<?> hashFunction) {
+	public static <T> RpcStrategyRendezvousHashing create(ToIntFunction<T> hashFunction) {
 		return new RpcStrategyRendezvousHashing(hashFunction, MIN_SUB_STRATEGIES_FOR_CREATION_DEFAULT,
 				DEFAULT_BUCKET_HASH_FUNCTION, DEFAULT_BUCKET_CAPACITY, new HashMap<>());
 	}
@@ -62,7 +62,7 @@ public final class RpcStrategyRendezvousHashing implements RpcStrategy {
 		return new RpcStrategyRendezvousHashing(hashFunction, minShards, hashBucketFunction, buckets, shards);
 	}
 
-	public RpcStrategyRendezvousHashing withHashBucketFunction(HashBucketFunction hashBucketFunction) {
+	public RpcStrategyRendezvousHashing withHashBucketFunction(ToLongBiFunction<?, Integer> hashBucketFunction) {
 		return new RpcStrategyRendezvousHashing(hashFunction, minShards, hashBucketFunction, buckets, shards);
 	}
 
@@ -121,7 +121,8 @@ public final class RpcStrategyRendezvousHashing implements RpcStrategy {
 			for (Map.Entry<Object, RpcSender> entry : shardsSenders.entrySet()) {
 				Object key = entry.getKey();
 				RpcSender sender = entry.getValue();
-				long hash = hashBucketFunction.hash(key, n);
+				//noinspection unchecked
+				long hash = ((ToLongBiFunction<Object, Integer>) hashBucketFunction).applyAsLong(key, n);
 				if (hash >= max) {
 					chosenSender = sender;
 					max = hash;
@@ -134,18 +135,18 @@ public final class RpcStrategyRendezvousHashing implements RpcStrategy {
 	}
 
 	static final class Sender implements RpcSender {
-		private final HashFunction<?> hashFunction;
+		private final ToIntFunction<Object> hashFunction;
 		private final RpcSender[] hashBuckets;
 
-		Sender(@NotNull HashFunction<?> hashFunction, RpcSender[] hashBuckets) {
-			this.hashFunction = hashFunction;
+		Sender(@NotNull ToIntFunction<?> hashFunction, RpcSender[] hashBuckets) {
+			//noinspection unchecked
+			this.hashFunction = (ToIntFunction<Object>) hashFunction;
 			this.hashBuckets = hashBuckets;
 		}
 
-		@SuppressWarnings("unchecked")
 		@Override
 		public <I, O> void sendRequest(I request, int timeout, @NotNull Callback<O> cb) {
-			int hash = ((HashFunction<Object>) hashFunction).hashCode(request);
+			int hash = hashFunction.applyAsInt(request);
 			RpcSender sender = hashBuckets[hash & (hashBuckets.length - 1)];
 			sender.sendRequest(request, timeout, cb);
 		}

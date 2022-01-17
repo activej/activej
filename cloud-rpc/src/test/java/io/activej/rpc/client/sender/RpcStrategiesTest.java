@@ -2,8 +2,6 @@ package io.activej.rpc.client.sender;
 
 import io.activej.rpc.client.sender.helper.RpcClientConnectionPoolStub;
 import io.activej.rpc.client.sender.helper.RpcSenderStub;
-import io.activej.rpc.hash.HashFunction;
-import io.activej.rpc.hash.ShardingFunction;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -111,8 +109,7 @@ public class RpcStrategiesTest {
 		pool.put(address4, connection4);
 		pool.put(address5, connection5);
 		int shardsCount = 2;
-		ShardingFunction<Integer> shardingFunction = item -> item % shardsCount;
-		RpcStrategy strategy = sharding(shardingFunction,
+		RpcStrategy strategy = sharding((Integer item) -> item % shardsCount,
 				firstValidResult(servers(address1, address2)),
 				firstValidResult(servers(address3, address4, address5)));
 
@@ -142,8 +139,7 @@ public class RpcStrategiesTest {
 		RpcSenderStub connection3 = new RpcSenderStub();
 		RpcSenderStub connection4 = new RpcSenderStub();
 		RpcSenderStub connection5 = new RpcSenderStub();
-		HashFunction<Integer> hashFunction = item -> item;
-		RpcStrategy strategy = rendezvousHashing(hashFunction)
+		RpcStrategy strategy = rendezvousHashing((Integer item) -> item)
 				.withShard(1, firstAvailable(servers(address1, address2)))
 				.withShard(2, firstAvailable(servers(address3, address4)))
 				.withShard(3, server(address5));

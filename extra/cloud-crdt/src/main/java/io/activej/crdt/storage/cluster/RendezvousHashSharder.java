@@ -17,13 +17,13 @@
 package io.activej.crdt.storage.cluster;
 
 import io.activej.common.ApplicationSettings;
-import io.activej.common.HashUtils;
 import io.activej.common.initializer.WithInitializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.ToIntFunction;
+import java.util.function.ToLongBiFunction;
 
 import static io.activej.common.Checks.checkArgument;
 
@@ -43,7 +43,7 @@ public final class RendezvousHashSharder<K, P> implements Sharder<K>, WithInitia
 	}
 
 	public static <K extends Comparable<K>, P> RendezvousHashSharder<K, P> create(
-			HashBucketFunction<P> bucketHashFn, ToIntFunction<K> keyHashFn,
+			ToLongBiFunction<P, Integer> bucketHashFn, ToIntFunction<K> keyHashFn,
 			Set<P> partitions, List<P> partitionsAlive, int shards, boolean repartition) {
 		Map<P, Integer> partitionsAliveMap = new HashMap<>();
 		for (P pid : partitionsAlive) {
@@ -77,7 +77,7 @@ public final class RendezvousHashSharder<K, P> implements Sharder<K>, WithInitia
 
 		for (int bucket = 0; bucket < buckets.length; bucket++) {
 			for (ObjWithIndex obj : toSort) {
-				obj.hash = bucketHashFn.hash(obj.partitionId, bucket);
+				obj.hash = bucketHashFn.applyAsLong(obj.partitionId, bucket);
 			}
 
 			Arrays.sort(toSort, Comparator.comparingLong(ObjWithIndex::getHash).reversed());
@@ -122,19 +122,6 @@ public final class RendezvousHashSharder<K, P> implements Sharder<K>, WithInitia
 			buckets[bucket] = Arrays.copyOf(buf, pos);
 		}
 		return new RendezvousHashSharder<>(buckets, keyHashFn);
-	}
-
-	@FunctionalInterface
-	public interface HashBucketFunction<P> {
-		long hash(P shardId, int bucket);
-
-		static <P> HashBucketFunction<P> create() {
-			return create(Object::hashCode);
-		}
-
-		static <P> HashBucketFunction<P> create(ToIntFunction<P> partitionHashFn) {
-			return (pid, bucket) -> HashUtils.murmur3hash(((long) partitionHashFn.applyAsInt(pid) << 32) | (bucket & 0xFFFFFFFFL));
-		}
 	}
 
 	@Override

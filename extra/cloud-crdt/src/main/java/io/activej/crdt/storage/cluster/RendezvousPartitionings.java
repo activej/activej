@@ -1,27 +1,28 @@
 package io.activej.crdt.storage.cluster;
 
+import io.activej.common.HashUtils;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.rpc.client.sender.RpcStrategies;
 import io.activej.rpc.client.sender.RpcStrategy;
 import io.activej.rpc.client.sender.RpcStrategyRendezvousHashing;
-import io.activej.rpc.hash.ShardingFunction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
+import java.util.function.ToLongBiFunction;
 
 import static io.activej.crdt.storage.cluster.RendezvousHashSharder.NUMBER_OF_BUCKETS;
 
 public final class RendezvousPartitionings<K extends Comparable<K>, S, P> implements DiscoveryService.Partitionings<K, S, P> {
 	private final Map<P, CrdtStorage<K, S>> partitions;
 	private final List<Partitioning<P>> partitionings;
-	private final RendezvousHashSharder.HashBucketFunction<P> hashBucketFn;
+	private final ToLongBiFunction<P, Integer> hashBucketFn;
 	private final ToIntFunction<K> hashFn;
 
 	@SuppressWarnings("unchecked")
-	private RendezvousPartitionings(Map<P, ? extends CrdtStorage<K, S>> partitions, List<? extends Partitioning<P>> partitionings, RendezvousHashSharder.HashBucketFunction<P> hashBucketFn, ToIntFunction<K> hashFn) {
+	private RendezvousPartitionings(Map<P, ? extends CrdtStorage<K, S>> partitions, List<? extends Partitioning<P>> partitionings, ToLongBiFunction<P, Integer> hashBucketFn, ToIntFunction<K> hashFn) {
 		this.partitions = (Map<P, CrdtStorage<K, S>>) partitions;
 		this.partitionings = (List<Partitioning<P>>) partitionings;
 		this.hashBucketFn = hashBucketFn;
@@ -36,7 +37,16 @@ public final class RendezvousPartitionings<K extends Comparable<K>, S, P> implem
 
 	public static <K extends Comparable<K>, S, P> RendezvousPartitionings<K, S, P> create(Map<P, ? extends CrdtStorage<K, S>> partitions,
 			List<Partitioning<P>> partitionings) {
-		return new RendezvousPartitionings<>(partitions, partitionings, RendezvousHashSharder.HashBucketFunction.create(), Objects::hashCode);
+		return new RendezvousPartitionings<>(partitions, partitionings,
+				defaultHashBucketFn(), Objects::hashCode);
+	}
+
+	public static <P> ToLongBiFunction<P, Integer> defaultHashBucketFn() {
+		return defaultHashBucketFn(Object::hashCode);
+	}
+
+	public static <P> ToLongBiFunction<P, Integer> defaultHashBucketFn(ToIntFunction<P> partitionHashCode) {
+		return (pid, bucket) -> HashUtils.murmur3hash(((long) partitionHashCode.applyAsInt(pid) << 32) | (bucket & 0xFFFFFFFFL));
 	}
 
 	public RendezvousPartitionings<K, S, P> withPartitioning(Partitioning<P> partitioning) {
@@ -45,7 +55,7 @@ public final class RendezvousPartitionings<K extends Comparable<K>, S, P> implem
 		return new RendezvousPartitionings<>(partitions, partitionings, hashBucketFn, hashFn);
 	}
 
-	public RendezvousPartitionings<K, S, P> withHashBucketFn(RendezvousHashSharder.HashBucketFunction<P> hashBucketFn) {
+	public RendezvousPartitionings<K, S, P> withHashBucketFn(ToLongBiFunction<P, Integer> hashBucketFn) {
 		return new RendezvousPartitionings<>(partitions, partitionings, hashBucketFn, hashFn);
 	}
 
@@ -71,7 +81,7 @@ public final class RendezvousPartitionings<K extends Comparable<K>, S, P> implem
 
 	@Override
 	public RpcStrategy createRpcStrategy(
-			Function<P, @NotNull RpcStrategy> rpcStrategyResolver, Function<Object, K> keyGetter) {
+			Function<P, @NotNull RpcStrategy> rpcStrategyProvider, Function<Object, K> keyGetter) {
 
 		List<RpcStrategy> rendezvousHashings = new ArrayList<>();
 		for (Partitioning<P> partitioning : partitionings) {
@@ -79,19 +89,19 @@ public final class RendezvousPartitionings<K extends Comparable<K>, S, P> implem
 			RpcStrategyRendezvousHashing rendezvousHashing = RpcStrategyRendezvousHashing.create(req ->
 							hashFn.applyAsInt(keyGetter.apply(req)))
 					.withHashBuckets(NUMBER_OF_BUCKETS)
-					.withHashBucketFunction((shardId, bucket) -> hashBucketFn.hash((P) shardId, bucket));
+					.withHashBucketFunction(hashBucketFn);
 			for (P pid : partitioning.set) {
-				rendezvousHashing.withShard(pid, rpcStrategyResolver.apply(pid));
+				rendezvousHashing.withShard(pid, rpcStrategyProvider.apply(pid));
 			}
 			rendezvousHashings.add(rendezvousHashing);
 		}
 
 		return RpcStrategies.sharding(
-				new ShardingFunction<Object>() {
+				new ToIntFunction<Object>() {
 					final int count = rendezvousHashings.size();
 
 					@Override
-					public int getShard(Object item) {
+					public int applyAsInt(Object item) {
 						return keyGetter.apply(item).hashCode() % count;
 					}
 				},

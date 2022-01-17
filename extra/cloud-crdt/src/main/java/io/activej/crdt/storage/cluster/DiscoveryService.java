@@ -37,7 +37,7 @@ public interface DiscoveryService<K extends Comparable<K>, S, P> {
 
 		@Nullable Sharder<K> createSharder(List<P> alive);
 
-		RpcStrategy createRpcStrategy(Function<P, @NotNull RpcStrategy> rpcStrategyResolver, Function<Object, K> keyGetter);
+		RpcStrategy createRpcStrategy(Function<P, @NotNull RpcStrategy> rpcStrategyProvider, Function<Object, K> keyGetter);
 	}
 
 	static <K extends Comparable<K>, S, P> DiscoveryService<K, S, P> of(Partitionings<K, S, P> partitionings) {

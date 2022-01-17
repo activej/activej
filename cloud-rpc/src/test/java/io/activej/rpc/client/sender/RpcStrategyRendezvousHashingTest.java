@@ -2,9 +2,7 @@ package io.activej.rpc.client.sender;
 
 import io.activej.rpc.client.sender.helper.RpcClientConnectionPoolStub;
 import io.activej.rpc.client.sender.helper.RpcMessageDataStubWithKey;
-import io.activej.rpc.client.sender.helper.RpcMessageDataStubWithKeyHashFunction;
 import io.activej.rpc.client.sender.helper.RpcSenderStub;
-import io.activej.rpc.hash.HashFunction;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -41,11 +39,10 @@ public class RpcStrategyRendezvousHashingTest {
 		int shardId1 = 1;
 		int shardId2 = 2;
 		int shardId3 = 3;
-		HashFunction<Object> hashFunction = new RpcMessageDataStubWithKeyHashFunction();
 		RpcStrategySingleServer server1 = server(address1);
 		RpcStrategySingleServer server2 = server(address2);
 		RpcStrategySingleServer server3 = server(address3);
-		RpcStrategy rendezvousHashing = rendezvousHashing(hashFunction)
+		RpcStrategy rendezvousHashing = rendezvousHashing(RpcMessageDataStubWithKey::getKey)
 				.withShard(shardId1, server1)
 				.withShard(shardId2, server2)
 				.withShard(shardId3, server3);
@@ -87,11 +84,10 @@ public class RpcStrategyRendezvousHashingTest {
 		int shardId1 = 1;
 		int shardId2 = 2;
 		int shardId3 = 3;
-		HashFunction<Object> hashFunction = new RpcMessageDataStubWithKeyHashFunction();
 		RpcStrategySingleServer server1 = server(address1);
 		RpcStrategySingleServer server2 = server(address2);
 		RpcStrategySingleServer server3 = server(address3);
-		RpcStrategy rendezvousHashing = rendezvousHashing(hashFunction)
+		RpcStrategy rendezvousHashing = rendezvousHashing(RpcMessageDataStubWithKey::getKey)
 				.withShard(shardId1, server1)
 				.withShard(shardId2, server2)
 				.withShard(shardId3, server3);
@@ -108,11 +104,10 @@ public class RpcStrategyRendezvousHashingTest {
 		int shardId1 = 1;
 		int shardId2 = 2;
 		int shardId3 = 3;
-		HashFunction<Object> hashFunction = new RpcMessageDataStubWithKeyHashFunction();
 		RpcStrategySingleServer server1 = server(address1);
 		RpcStrategySingleServer server2 = server(address2);
 		RpcStrategySingleServer server3 = server(address3);
-		RpcStrategy rendezvousHashing = rendezvousHashing(hashFunction)
+		RpcStrategy rendezvousHashing = RpcStrategies.rendezvousHashing(RpcMessageDataStubWithKey::getKey)
 				.withShard(shardId1, server1)
 				.withShard(shardId2, server2)
 				.withShard(shardId3, server3);
@@ -125,8 +120,7 @@ public class RpcStrategyRendezvousHashingTest {
 	@Test
 	public void itShouldNotBeCreatedWhenNoSendersWereAdded() {
 		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
-		HashFunction<Object> hashFunction = new RpcMessageDataStubWithKeyHashFunction();
-		RpcStrategy rendezvousHashing = rendezvousHashing(hashFunction);
+		RpcStrategy rendezvousHashing = rendezvousHashing(RpcMessageDataStubWithKey::getKey);
 
 		assertNull(rendezvousHashing.createSender(pool));
 	}
@@ -140,11 +134,10 @@ public class RpcStrategyRendezvousHashingTest {
 		int shardId1 = 1;
 		int shardId2 = 2;
 		int shardId3 = 3;
-		HashFunction<Object> hashFunction = new RpcMessageDataStubWithKeyHashFunction();
 		RpcStrategySingleServer server1 = server(address1);
 		RpcStrategySingleServer server2 = server(address2);
 		RpcStrategySingleServer server3 = server(address3);
-		RpcStrategy rendezvousHashing = rendezvousHashing(hashFunction)
+		RpcStrategy rendezvousHashing = rendezvousHashing(RpcMessageDataStubWithKey::getKey)
 				.withMinActiveShards(4)
 				.withShard(shardId1, server1)
 				.withShard(shardId2, server2)
@@ -168,11 +161,10 @@ public class RpcStrategyRendezvousHashingTest {
 		int shardId1 = 1;
 		int shardId2 = 2;
 		int shardId3 = 3;
-		HashFunction<Object> hashFunction = new RpcMessageDataStubWithKeyHashFunction();
 		RpcStrategySingleServer server1 = server(address1);
 		RpcStrategySingleServer server2 = server(address2);
 		RpcStrategySingleServer server3 = server(address3);
-		RpcStrategy rendezvousHashing = rendezvousHashing(hashFunction)
+		RpcStrategy rendezvousHashing = rendezvousHashing(RpcMessageDataStubWithKey::getKey)
 				.withMinActiveShards(4)
 				.withShard(shardId1, server1)
 				.withShard(shardId2, server2)

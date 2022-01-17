@@ -18,33 +18,33 @@ package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
 import io.activej.rpc.client.RpcClientConnectionPool;
-import io.activej.rpc.hash.ShardingFunction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Set;
+import java.util.function.ToIntFunction;
 
 import static io.activej.rpc.client.sender.RpcStrategies.NO_SENDER_AVAILABLE_EXCEPTION;
 import static java.util.Arrays.asList;
 
 public final class RpcStrategySharding implements RpcStrategy {
 	private final List<RpcStrategy> list;
-	private final ShardingFunction<?> shardingFunction;
+	private final ToIntFunction<?> shardingFunction;
 	private final int minActiveSubStrategies;
 
-	private RpcStrategySharding(@NotNull ShardingFunction<?> shardingFunction, @NotNull List<RpcStrategy> list, int minActiveSubStrategies) {
+	private RpcStrategySharding(@NotNull ToIntFunction<?> shardingFunction, @NotNull List<RpcStrategy> list, int minActiveSubStrategies) {
 		this.shardingFunction = shardingFunction;
 		this.list = list;
 		this.minActiveSubStrategies = minActiveSubStrategies;
 	}
 
-	public static RpcStrategySharding create(ShardingFunction<?> shardingFunction, @NotNull List<RpcStrategy> list) {
+	public static <T> RpcStrategySharding create(ToIntFunction<T> shardingFunction, @NotNull List<RpcStrategy> list) {
 		return new RpcStrategySharding(shardingFunction, list, 0);
 	}
 
-	public static RpcStrategySharding create(ShardingFunction<?> shardingFunction, RpcStrategy... list) {
+	public static <T> RpcStrategySharding create(ToIntFunction<T> shardingFunction, RpcStrategy... list) {
 		return new RpcStrategySharding(shardingFunction, asList(list), 0);
 	}
 
@@ -76,19 +76,19 @@ public final class RpcStrategySharding implements RpcStrategy {
 	}
 
 	private static final class Sender implements RpcSender {
-		private final ShardingFunction<?> shardingFunction;
+		private final ToIntFunction<Object> shardingFunction;
 		private final RpcSender[] subSenders;
 
-		Sender(@NotNull ShardingFunction<?> shardingFunction, @NotNull List<RpcSender> senders) {
+		Sender(@NotNull ToIntFunction<?> shardingFunction, @NotNull List<RpcSender> senders) {
 			assert !senders.isEmpty();
-			this.shardingFunction = shardingFunction;
+			//noinspection unchecked
+			this.shardingFunction = (ToIntFunction<Object>) shardingFunction;
 			this.subSenders = senders.toArray(new RpcSender[0]);
 		}
 
-		@SuppressWarnings("unchecked")
 		@Override
 		public <I, O> void sendRequest(I request, int timeout, @NotNull Callback<O> cb) {
-			int shardIndex = ((ShardingFunction<Object>) shardingFunction).getShard(request);
+			int shardIndex = shardingFunction.applyAsInt(request);
 			RpcSender sender = subSenders[shardIndex];
 			if (sender != null) {
 				sender.sendRequest(request, timeout, cb);

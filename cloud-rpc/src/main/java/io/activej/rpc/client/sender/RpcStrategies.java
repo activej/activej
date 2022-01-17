@@ -16,13 +16,12 @@
 
 package io.activej.rpc.client.sender;
 
-import io.activej.rpc.hash.HashFunction;
-import io.activej.rpc.hash.ShardingFunction;
 import io.activej.rpc.protocol.RpcException;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.function.ToIntFunction;
 
 import static io.activej.common.Checks.checkArgument;
 import static java.util.Arrays.asList;
@@ -79,15 +78,15 @@ public final class RpcStrategies {
 		return RpcStrategyRoundRobin.create(list);
 	}
 
-	public static RpcStrategySharding sharding(ShardingFunction<?> hashFunction, RpcStrategy... senders) {
+	public static <T> RpcStrategySharding sharding(ToIntFunction<T> hashFunction, RpcStrategy... senders) {
 		return RpcStrategySharding.create(hashFunction, senders);
 	}
 
-	public static RpcStrategySharding sharding(@NotNull ShardingFunction<?> hashFunction, @NotNull List<RpcStrategy> list) {
-		return RpcStrategySharding.create(hashFunction, list);
+	public static <T> RpcStrategySharding sharding(@NotNull ToIntFunction<T> shardingFunction, @NotNull List<RpcStrategy> list) {
+		return RpcStrategySharding.create(shardingFunction, list);
 	}
 
-	public static RpcStrategyRendezvousHashing rendezvousHashing(@NotNull HashFunction<?> hashFunction) {
+	public static <T> RpcStrategyRendezvousHashing rendezvousHashing(@NotNull ToIntFunction<T> hashFunction) {
 		return RpcStrategyRendezvousHashing.create(hashFunction);
 	}
 

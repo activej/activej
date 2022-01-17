@@ -16,7 +16,6 @@
 
 package io.activej.memcache.protocol;
 
-import io.activej.rpc.hash.HashFunction;
 import io.activej.rpc.protocol.RpcMandatoryData;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
@@ -24,12 +23,13 @@ import io.activej.serializer.annotations.SerializeNullable;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.ToIntFunction;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 
 public class MemcacheRpcMessage {
-	public static final HashFunction<Object> HASH_FUNCTION =
+	public static final ToIntFunction<Object> HASH_FUNCTION =
 			item -> {
 				if (item instanceof GetRequest) {
 					GetRequest request = (GetRequest) item;

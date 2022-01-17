@@ -23,7 +23,6 @@ import io.activej.config.converter.SimpleConfigConverter;
 import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.storage.cluster.DiscoveryService;
-import io.activej.crdt.storage.cluster.RendezvousHashSharder.HashBucketFunction;
 import io.activej.crdt.storage.cluster.RendezvousPartitionings;
 import io.activej.crdt.storage.cluster.RendezvousPartitionings.Partitioning;
 import io.activej.crdt.storage.cluster.SimplePartitionId;
@@ -37,10 +36,12 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
+import java.util.function.ToLongBiFunction;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.difference;
 import static io.activej.config.converter.ConfigConverters.*;
+import static io.activej.crdt.storage.cluster.RendezvousPartitionings.defaultHashBucketFn;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
@@ -95,7 +96,7 @@ public final class ConfigConverters {
 			@NotNull ConfigConverter<P> partitionIdConverter,
 			@NotNull Function<P, CrdtStorage<K, S>> storageFactory,
 			@NotNull ToIntFunction<K> hashFn,
-			@NotNull HashBucketFunction<P> hashBucketFn
+			@NotNull ToLongBiFunction<P, Integer> hashBucketFn
 	) {
 		return createOfDiscoveryService(partitionIdConverter, hashFn, hashBucketFn, storageFactory);
 	}
@@ -107,7 +108,7 @@ public final class ConfigConverters {
 			@NotNull CrdtStorage<K, S> localStorage,
 			@NotNull ToIntFunction<K> hashFn
 	) {
-		return createOfDiscoveryService(ofSimplePartitionId(), hashFn, HashBucketFunction.create(value -> value.getId().hashCode()),
+		return createOfDiscoveryService(ofSimplePartitionId(), hashFn, defaultHashBucketFn(value -> value.getId().hashCode()),
 				partitionId ->
 						localId.equals(partitionId) ?
 								localStorage :
@@ -132,22 +133,23 @@ public final class ConfigConverters {
 	public static <K extends Comparable<K>, S, P> ConfigConverter<DiscoveryService<K, S, P>> ofDiscoveryService(
 			@NotNull ConfigConverter<P> partitionIdConverter,
 			@NotNull ToIntFunction<K> hashFn,
-			@NotNull HashBucketFunction<P> hashBucketFn
+			@NotNull ToLongBiFunction<P, Integer> hashBucketFn
 	) {
 		return createOfDiscoveryService(partitionIdConverter, hashFn, hashBucketFn, null);
 	}
 
 	/**
-	 * @see #ofDiscoveryService(ConfigConverter, ToIntFunction, HashBucketFunction)
+	 * @see #ofDiscoveryService(ConfigConverter, ToIntFunction, ToLongBiFunction)
 	 */
 	public static <K extends Comparable<K>, S> ConfigConverter<DiscoveryService<K, S, SimplePartitionId>> ofDiscoveryService(
 			@NotNull ToIntFunction<K> hashFn
 	) {
-		return ofDiscoveryService(ofSimplePartitionId(), hashFn, HashBucketFunction.create(partitionId -> partitionId.getId().hashCode()));
+		return ofDiscoveryService(ofSimplePartitionId(), hashFn,
+				defaultHashBucketFn(partitionId -> partitionId.getId().hashCode()));
 	}
 
 	/**
-	 * @see #ofDiscoveryService(ConfigConverter, ToIntFunction, HashBucketFunction)
+	 * @see #ofDiscoveryService(ConfigConverter, ToIntFunction, ToLongBiFunction)
 	 */
 	public static <K extends Comparable<K>, S> ConfigConverter<DiscoveryService<K, S, SimplePartitionId>> ofDiscoveryService() {
 		return ofDiscoveryService(Objects::hashCode);
@@ -156,7 +158,7 @@ public final class ConfigConverters {
 	private static <S, K extends Comparable<K>, P> ConfigConverter<DiscoveryService<K, S, P>> createOfDiscoveryService(
 			@NotNull ConfigConverter<P> partitionIdConverter,
 			@NotNull ToIntFunction<K> hashFn,
-			@NotNull HashBucketFunction<P> hashBucketFn,
+			@NotNull ToLongBiFunction<P, Integer> hashBucketFn,
 			@Nullable Function<P, CrdtStorage<K, S>> storageFactory
 	) {
 		return new ConfigConverter<DiscoveryService<K, S, P>>() {
@@ -207,7 +209,7 @@ public final class ConfigConverters {
 			List<Partitioning<P>> partitionings,
 			Map<P, CrdtStorage<K, S>> partitions,
 			ToIntFunction<K> hashFn,
-			HashBucketFunction<P> hashBucketFn
+			ToLongBiFunction<P, Integer> hashBucketFn
 	) {
 		RendezvousPartitionings<K, S, P> rendezvousPartitionings = RendezvousPartitionings.create(partitions)
 				.withHashBucketFn(hashBucketFn)
