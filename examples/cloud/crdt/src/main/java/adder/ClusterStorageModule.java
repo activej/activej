@@ -5,10 +5,7 @@ import io.activej.config.Config;
 import io.activej.crdt.CrdtServer;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.CrdtStorage;
-import io.activej.crdt.storage.cluster.CrdtRepartitionController;
-import io.activej.crdt.storage.cluster.CrdtStorageCluster;
-import io.activej.crdt.storage.cluster.DiscoveryService;
-import io.activej.crdt.storage.cluster.SimplePartitionId;
+import io.activej.crdt.storage.cluster.*;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.Key;
@@ -16,11 +13,11 @@ import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
+import io.activej.launchers.crdt.ConfigConverters;
 import io.activej.launchers.crdt.Local;
 
 import java.time.Duration;
 
-import static io.activej.launchers.crdt.ConfigConverters.ofDiscoveryService;
 import static io.activej.launchers.crdt.ConfigConverters.ofSimplePartitionId;
 import static io.activej.serializer.BinarySerializers.LONG_SERIALIZER;
 
@@ -67,7 +64,8 @@ public final class ClusterStorageModule extends AbstractModule {
 			@Local CrdtStorage<Long, DetailedSumsCrdtState> localStorage,
 			Config config
 	) {
-		return config.get(ofDiscoveryService(eventloop, serializer, localId, localStorage), "crdt.cluster");
+		RendezvousPartitionings<Long, DetailedSumsCrdtState, SimplePartitionId> partitionings = config.get(ConfigConverters.ofRendezvousPartitionings(eventloop, serializer, localId, localStorage), "crdt.cluster");
+		return DiscoveryService.of(partitionings);
 	}
 
 	@Provides

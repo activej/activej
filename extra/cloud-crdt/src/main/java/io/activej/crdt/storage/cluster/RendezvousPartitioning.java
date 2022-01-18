@@ -1,8 +1,10 @@
 package io.activej.crdt.storage.cluster;
 
+import io.activej.common.initializer.WithInitializer;
+
 import java.util.Set;
 
-public final class RendezvousPartitioning<P> {
+public final class RendezvousPartitioning<P> implements WithInitializer<RendezvousPartitioning<P>> {
 	private final Set<P> partitions;
 	private final int replicas;
 	private final boolean repartition;

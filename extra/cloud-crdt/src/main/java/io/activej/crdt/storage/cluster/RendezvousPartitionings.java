@@ -1,6 +1,7 @@
 package io.activej.crdt.storage.cluster;
 
 import io.activej.common.HashUtils;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.rpc.client.sender.RpcStrategy;
 import io.activej.rpc.client.sender.RpcStrategyRendezvousHashing;
@@ -15,7 +16,7 @@ import java.util.function.ToLongBiFunction;
 
 import static io.activej.crdt.storage.cluster.RendezvousHashSharder.NUMBER_OF_BUCKETS;
 
-public final class RendezvousPartitionings<K extends Comparable<K>, S, P> implements DiscoveryService.Partitionings<K, S, P> {
+public final class RendezvousPartitionings<K extends Comparable<K>, S, P> implements DiscoveryService.Partitionings<K, S, P>, WithInitializer<RendezvousPartitionings<K, S, P>> {
 	private final Map<P, CrdtStorage<K, S>> partitions;
 	private final List<RendezvousPartitioning<P>> partitionings;
 	private final ToLongBiFunction<P, Integer> hashBucketFn;
