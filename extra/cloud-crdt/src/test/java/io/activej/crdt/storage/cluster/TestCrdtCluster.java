@@ -5,7 +5,6 @@ import io.activej.crdt.CrdtServer;
 import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.CrdtStorage;
-import io.activej.crdt.storage.cluster.RendezvousPartitionings.Partitioning;
 import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.crdt.util.TimestampContainer;
@@ -80,7 +79,7 @@ public final class TestCrdtCluster {
 				DiscoveryService.of(
 						RendezvousPartitionings.create(clients)
 								.withPartitioning(
-										Partitioning.create(clients.keySet())
+										RendezvousPartitioning.create(clients.keySet())
 												.withReplicas(REPLICATION_COUNT)
 												.withRepartition(true))
 				),
@@ -141,7 +140,7 @@ public final class TestCrdtCluster {
 		CrdtStorageCluster<String, TimestampContainer<Set<Integer>>, String> cluster = CrdtStorageCluster.create(eventloop,
 				DiscoveryService.of(
 						RendezvousPartitionings.create(clients)
-								.withPartitioning(Partitioning.create(clients.keySet()).withReplicas(REPLICATION_COUNT))),
+								.withPartitioning(RendezvousPartitioning.create(clients.keySet()).withReplicas(REPLICATION_COUNT))),
 				union);
 
 		await(cluster.start()

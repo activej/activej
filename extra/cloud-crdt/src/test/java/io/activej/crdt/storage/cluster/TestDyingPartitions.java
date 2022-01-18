@@ -7,7 +7,6 @@ import io.activej.crdt.CrdtServer;
 import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.CrdtStorage;
-import io.activej.crdt.storage.cluster.RendezvousPartitionings.Partitioning;
 import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.crdt.util.TimestampContainer;
@@ -74,7 +73,7 @@ public final class TestDyingPartitions {
 		cluster = CrdtStorageCluster.create(Eventloop.getCurrentEventloop(),
 				DiscoveryService.of(
 						RendezvousPartitionings.create(clients)
-								.withPartitioning(Partitioning.create(clients.keySet()).withReplicas(REPLICATION_COUNT).withRepartition(true))),
+								.withPartitioning(RendezvousPartitioning.create(clients.keySet()).withReplicas(REPLICATION_COUNT).withRepartition(true))),
 				CRDT_FUNCTION);
 		await(cluster.start());
 	}

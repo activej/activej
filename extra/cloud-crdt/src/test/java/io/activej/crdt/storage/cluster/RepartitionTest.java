@@ -47,7 +47,7 @@ public final class RepartitionTest {
 		CrdtStorageCluster<String, TimestampContainer<Integer>, String> cluster = CrdtStorageCluster.create(Eventloop.getCurrentEventloop(),
 				DiscoveryService.of(
 						RendezvousPartitionings.create(clients)
-								.withPartitioning(RendezvousPartitionings.Partitioning.create(clients.keySet()).withReplicas(replicationCount))),
+								.withPartitioning(RendezvousPartitioning.create(clients.keySet()).withReplicas(replicationCount))),
 				crdtFunction);
 		await(cluster.start());
 

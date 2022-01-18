@@ -23,8 +23,8 @@ import io.activej.config.converter.SimpleConfigConverter;
 import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.storage.cluster.DiscoveryService;
+import io.activej.crdt.storage.cluster.RendezvousPartitioning;
 import io.activej.crdt.storage.cluster.RendezvousPartitionings;
-import io.activej.crdt.storage.cluster.RendezvousPartitionings.Partitioning;
 import io.activej.crdt.storage.cluster.SimplePartitionId;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.eventloop.Eventloop;
@@ -66,10 +66,10 @@ public final class ConfigConverters {
 		};
 	}
 
-	public static <P> ConfigConverter<Partitioning<P>> ofPartitioning(ConfigConverter<P> partitionIdConverter) {
-		return new ConfigConverter<Partitioning<P>>() {
+	public static <P> ConfigConverter<RendezvousPartitioning<P>> ofPartitioning(ConfigConverter<P> partitionIdConverter) {
+		return new ConfigConverter<RendezvousPartitioning<P>>() {
 			@Override
-			public @NotNull Partitioning<P> get(Config config) {
+			public @NotNull RendezvousPartitioning<P> get(Config config) {
 				Set<P> ids = new HashSet<>(config.get(ofList(partitionIdConverter), "ids"));
 				checkArgument(!ids.isEmpty(), "Empty partitioning ids");
 
@@ -77,12 +77,12 @@ public final class ConfigConverters {
 				boolean repartition = config.get(ofBoolean(), "repartition", false);
 				boolean active = config.get(ofBoolean(), "active", false);
 
-				return Partitioning.create(ids, replicas, repartition, active);
+				return RendezvousPartitioning.create(ids, replicas, repartition, active);
 			}
 
 			@Override
 			@Contract("_, !null -> !null")
-			public @Nullable Partitioning<P> get(Config config, @Nullable Partitioning<P> defaultValue) {
+			public @Nullable RendezvousPartitioning<P> get(Config config, @Nullable RendezvousPartitioning<P> defaultValue) {
 				if (config.isEmpty()) {
 					return defaultValue;
 				} else {
@@ -166,7 +166,7 @@ public final class ConfigConverters {
 			public @NotNull DiscoveryService<K, S, P> get(Config config) {
 				Collection<Config> partitioningsConfig = config.getChild("partitionings").getChildren().values();
 
-				List<Partitioning<P>> partitionings = new ArrayList<>();
+				List<RendezvousPartitioning<P>> partitionings = new ArrayList<>();
 				for (Config partitioning : partitioningsConfig) {
 					partitionings.add(ofPartitioning(partitionIdConverter).get(partitioning));
 				}
@@ -177,7 +177,7 @@ public final class ConfigConverters {
 				}
 
 				Set<P> allIds = partitionings.stream()
-						.map(Partitioning::getSet)
+						.map(RendezvousPartitioning::getPartitions)
 						.flatMap(Collection::stream)
 						.collect(toSet());
 
@@ -206,7 +206,7 @@ public final class ConfigConverters {
 	}
 
 	private static <K extends Comparable<K>, S, P> DiscoveryService<K, S, P> toDiscoveryService(
-			List<Partitioning<P>> partitionings,
+			List<RendezvousPartitioning<P>> partitionings,
 			Map<P, CrdtStorage<K, S>> partitions,
 			ToIntFunction<K> hashFn,
 			ToLongBiFunction<P, Integer> hashBucketFn
@@ -214,7 +214,7 @@ public final class ConfigConverters {
 		RendezvousPartitionings<K, S, P> rendezvousPartitionings = RendezvousPartitionings.create(partitions)
 				.withHashBucketFn(hashBucketFn)
 				.withHashFn(hashFn);
-		for (Partitioning<P> partitioning : partitionings) {
+		for (RendezvousPartitioning<P> partitioning : partitionings) {
 			rendezvousPartitionings = rendezvousPartitionings.withPartitioning(partitioning);
 		}
 

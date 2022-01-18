@@ -7,7 +7,6 @@ import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.GCounterInt;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.storage.cluster.DiscoveryService.Partitionings;
-import io.activej.crdt.storage.cluster.RendezvousPartitionings.Partitioning;
 import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.eventloop.Eventloop;
 import io.activej.rpc.client.RpcClientConnectionPool;
@@ -75,7 +74,7 @@ public class ClusterRpcStrategyTest {
 				.collect(toMap(Function.identity(), $ -> CrdtStorageMap.create(eventloop, CRDT_FUNCTION)));
 
 		Partitionings<Integer, GCounterInt, String> partitionings = RendezvousPartitionings.create(crdtStorages)
-				.withPartitioning(Partitioning.create(crdtStorages.keySet(), 2, true, false));
+				.withPartitioning(RendezvousPartitioning.create(crdtStorages.keySet(), 2, true, false));
 
 		List<String> alivePartitions = new ArrayList<>(Utils.difference(crdtStorages.keySet(), singleton("two")));
 
@@ -98,7 +97,7 @@ public class ClusterRpcStrategyTest {
 				.collect(toMap(Function.identity(), $ -> CrdtStorageMap.create(eventloop, CRDT_FUNCTION)));
 
 		Partitionings<Integer, GCounterInt, String> partitionings = RendezvousPartitionings.create(crdtStorages)
-				.withPartitioning(Partitioning.create(crdtStorages.keySet(), 2, true, true));
+				.withPartitioning(RendezvousPartitioning.create(crdtStorages.keySet(), 2, true, true));
 
 		List<String> alivePartitions = new ArrayList<>(Utils.difference(crdtStorages.keySet(), singleton("two")));
 
@@ -153,8 +152,8 @@ public class ClusterRpcStrategyTest {
 				.collect(toMap(Function.identity(), $ -> CrdtStorageMap.create(eventloop, CRDT_FUNCTION)));
 
 		Partitionings<Integer, GCounterInt, String> partitionings = RendezvousPartitionings.create(crdtStorages)
-				.withPartitioning(Partitioning.create(PARTITION_ADDRESS_MAP_1.keySet(), 2, true, true))
-				.withPartitioning(Partitioning.create(PARTITION_ADDRESS_MAP_2.keySet(), 2, true, true));
+				.withPartitioning(RendezvousPartitioning.create(PARTITION_ADDRESS_MAP_1.keySet(), 2, true, true))
+				.withPartitioning(RendezvousPartitioning.create(PARTITION_ADDRESS_MAP_2.keySet(), 2, true, true));
 
 		List<String> alivePartitions = new ArrayList<>(Utils.difference(crdtStorages.keySet(), setOf("two", "seven", "nine")));
 

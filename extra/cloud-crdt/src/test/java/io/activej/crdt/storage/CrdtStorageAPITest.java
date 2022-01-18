@@ -5,8 +5,8 @@ import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.cluster.CrdtStorageCluster;
 import io.activej.crdt.storage.cluster.DiscoveryService;
 import io.activej.crdt.storage.cluster.DiscoveryService.Partitionings;
+import io.activej.crdt.storage.cluster.RendezvousPartitioning;
 import io.activej.crdt.storage.cluster.RendezvousPartitionings;
-import io.activej.crdt.storage.cluster.RendezvousPartitionings.Partitioning;
 import io.activej.crdt.storage.local.CrdtStorageFs;
 import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.crdt.util.CrdtDataSerializer;
@@ -105,14 +105,14 @@ public class CrdtStorageAPITest {
 								map.put(i, CrdtStorageMap.create(eventloop, CRDT_FUNCTION));
 								partitions.add(i);
 							}
-							Partitioning<Integer> partitioning1 = Partitioning.create(partitions, 3, true, true);
+							RendezvousPartitioning<Integer> partitioning1 = RendezvousPartitioning.create(partitions, 3, true, true);
 
 							partitions = new HashSet<>();
 							for (; i < 20; i++) {
 								map.put(i, CrdtStorageMap.create(eventloop, CRDT_FUNCTION));
 								partitions.add(i);
 							}
-							Partitioning<Integer> partitioning2 = Partitioning.create(partitions, 4, false, true);
+							RendezvousPartitioning<Integer> partitioning2 = RendezvousPartitioning.create(partitions, 4, false, true);
 
 							Partitionings<String, TimestampContainer<Integer>, Integer> partitionings = RendezvousPartitionings.create(map, partitioning1, partitioning2);
 							DiscoveryService<String, TimestampContainer<Integer>, Integer> discoveryService = DiscoveryService.of(partitionings);

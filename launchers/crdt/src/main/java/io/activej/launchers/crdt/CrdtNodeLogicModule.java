@@ -21,10 +21,7 @@ import io.activej.config.converter.ConfigConverters;
 import io.activej.crdt.CrdtServer;
 import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.storage.CrdtStorage;
-import io.activej.crdt.storage.cluster.CrdtRepartitionController;
-import io.activej.crdt.storage.cluster.CrdtStorageCluster;
-import io.activej.crdt.storage.cluster.DiscoveryService;
-import io.activej.crdt.storage.cluster.RendezvousPartitionings;
+import io.activej.crdt.storage.cluster.*;
 import io.activej.crdt.storage.local.CrdtStorageFs;
 import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.eventloop.Eventloop;
@@ -103,7 +100,7 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 
 		return DiscoveryService.of(
 				RendezvousPartitionings.create(partitions)
-						.withPartitioning(RendezvousPartitionings.Partitioning.create(partitions.keySet())
+						.withPartitioning(RendezvousPartitioning.create(partitions.keySet())
 								.withReplicas(config.get(ofInteger(), "crdt.cluster.replicationCount", 1))));
 	}
 

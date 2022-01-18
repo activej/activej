@@ -3,8 +3,8 @@ import io.activej.crdt.primitives.LWWSet;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.storage.cluster.CrdtStorageCluster;
 import io.activej.crdt.storage.cluster.DiscoveryService;
+import io.activej.crdt.storage.cluster.RendezvousPartitioning;
 import io.activej.crdt.storage.cluster.RendezvousPartitionings;
-import io.activej.crdt.storage.cluster.RendezvousPartitionings.Partitioning;
 import io.activej.crdt.storage.local.CrdtStorageFs;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.datastream.StreamConsumer;
@@ -57,7 +57,7 @@ public final class CrdtClusterExample {
 		CrdtStorageCluster<String, LWWSet<String>, String> cluster = CrdtStorageCluster.create(
 				eventloop,
 				DiscoveryService.of(RendezvousPartitionings.create(clients)
-						.withPartitioning(Partitioning.create(clients.keySet())
+						.withPartitioning(RendezvousPartitioning.create(clients.keySet())
 								.withReplicas(5))));
 
 		//[END REGION_1]
