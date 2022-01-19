@@ -135,7 +135,7 @@ public final class ConfigConverters {
 
 			@Override
 			protected String toString(SimplePartitionId simplePartitionId) {
-				return simplePartitionId.asString();
+				return simplePartitionId.toString();
 			}
 		};
 	}

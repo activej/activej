@@ -56,9 +56,10 @@ public final class CrdtClusterExample {
 		// cluster will make 5 copies of them across known partitions
 		CrdtStorageCluster<String, LWWSet<String>, String> cluster = CrdtStorageCluster.create(
 				eventloop,
-				DiscoveryService.of(RendezvousPartitionings.create()
+				DiscoveryService.of(RendezvousPartitionings.<String>create()
 						.withPartitioning(RendezvousPartitioning.create(clients.keySet())
-								.withReplicas(5))));
+								.withReplicas(5))),
+				clients::get);
 
 		//[END REGION_1]
 		// Here we will prepopulate two partitions with some sets of items

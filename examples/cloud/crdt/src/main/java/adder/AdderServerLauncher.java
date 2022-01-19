@@ -50,7 +50,7 @@ public final class AdderServerLauncher extends Launcher {
 						transform(RpcServer.class, (bindings, scope, key, binding) ->
 								binding.addDependencies(SimplePartitionId.class)
 										.mapInstance(singletonList(Key.of(SimplePartitionId.class)), (objects, server) ->
-												server.withListenPort(((SimplePartitionId) objects[0]).getRpcPort())));
+												server.withListenAddress(((SimplePartitionId) objects[0]).getRpcAddress())));
 					}
 
 					@Override

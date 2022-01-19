@@ -40,7 +40,7 @@ public interface DiscoveryService<P> {
 		<K extends Comparable<K>> RpcStrategy createRpcStrategy(Function<P, @NotNull RpcStrategy> provider, Function<Object, K> keyGetter);
 	}
 
-	static <K extends Comparable<K>, S, P> DiscoveryService<P> of(Partitionings<P> partitionings) {
+	static <P> DiscoveryService<P> of(Partitionings<P> partitionings) {
 		return () -> new AsyncSupplier<Partitionings<P>>() {
 			int i = 0;
 

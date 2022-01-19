@@ -17,93 +17,55 @@
 package io.activej.crdt.storage.cluster;
 
 import io.activej.common.exception.MalformedDataException;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
+
+import static io.activej.common.StringFormatUtils.parseInetSocketAddress;
 
 public final class SimplePartitionId {
 	private final String id;
-	private final InetAddress host;
-	private final int crdtPort;
-	private final int rpcPort;
+	private final @Nullable InetSocketAddress crdtAddress;
+	private final @Nullable InetSocketAddress rpcAddress;
 
-	public SimplePartitionId(String id, InetAddress host, int crdtPort, int rpcPort) {
+	private SimplePartitionId(String id, @Nullable InetSocketAddress crdtAddress, @Nullable InetSocketAddress rpcAddress) {
 		this.id = id;
-		this.host = host;
-		this.crdtPort = crdtPort;
-		this.rpcPort = rpcPort;
+		this.crdtAddress = crdtAddress;
+		this.rpcAddress = rpcAddress;
+	}
+
+	public static SimplePartitionId of(String id, @Nullable InetSocketAddress crdt, @Nullable InetSocketAddress rpc) {
+		return new SimplePartitionId(id, crdt, rpc);
+	}
+
+	public static SimplePartitionId ofCrdtAddress(@NotNull String id, @NotNull InetSocketAddress crdtAddress) {
+		return new SimplePartitionId(id, crdtAddress, null);
+	}
+
+	public static SimplePartitionId ofRpcAddress(@NotNull String id, @NotNull InetSocketAddress rpcAddress) {
+		return new SimplePartitionId(id, null, rpcAddress);
 	}
 
 	public static SimplePartitionId parseString(String string) throws MalformedDataException {
-		String[] split = string.split(":");
-		int length = split.length;
-		if (length < 4) {
-			throw new MalformedDataException("Partitions ID is expected to contain 4 components");
-		}
+		String[] split = string.split("\\|");
+		String id = split[0];
+		InetSocketAddress crdtAddress = split.length >= 1 && !split[1].trim().isEmpty() ? parseInetSocketAddress(split[1]) : null;
+		InetSocketAddress rpcAddress = split.length >= 2 && !split[2].trim().isEmpty() ? parseInetSocketAddress(split[2]) : null;
 
-		int rpcPort = parsePort(split[length - 1]);
-		int crdtPort = parsePort(split[length - 2]);
-
-		InetAddress host;
-		try {
-			host = InetAddress.getByName(split[length - 3]);
-		} catch (UnknownHostException e) {
-			throw new MalformedDataException("Could not parse host value", e);
-		}
-
-		String id;
-		if (length == 4) {
-			id = split[0];
-		} else {
-			id = "";
-			for (int i = 0; i < length - 3; i++) {
-				//noinspection StringConcatenationInLoop - rare case
-				id += split[i];
-			}
-		}
-
-		return new SimplePartitionId(id, host, crdtPort, rpcPort);
-	}
-
-	public String asString() {
-		return id + ':' + host.getHostAddress() + ':' + crdtPort + ':' + rpcPort;
+		return new SimplePartitionId(id, crdtAddress, rpcAddress);
 	}
 
 	public String getId() {
 		return id;
 	}
 
-	public InetAddress getHost() {
-		return host;
-	}
-
-	public int getCrdtPort() {
-		return crdtPort;
-	}
-
-	public int getRpcPort() {
-		return rpcPort;
-	}
-
 	public InetSocketAddress getCrdtAddress() {
-		return new InetSocketAddress(host, crdtPort);
+		return crdtAddress;
 	}
 
 	public InetSocketAddress getRpcAddress() {
-		return new InetSocketAddress(host, rpcPort);
-	}
-
-	private static int parsePort(String portString) throws MalformedDataException {
-		try {
-			int port = Integer.parseInt(portString);
-			if (port <= 0 || port >= 65536) {
-				throw new MalformedDataException("Invalid port value. Port is not in range (0, 65536) " + port);
-			}
-			return port;
-		} catch (NumberFormatException e) {
-			throw new MalformedDataException("Could not parse port value", e);
-		}
+		return rpcAddress;
 	}
 
 	@Override
@@ -121,6 +83,6 @@ public final class SimplePartitionId {
 
 	@Override
 	public String toString() {
-		return '[' + id + ':' + host + ':' + crdtPort + ':' + rpcPort + ']';
+		return id + '|' + (crdtAddress != null ? crdtAddress : "") + '|' + (rpcAddress != null ? rpcAddress : "");
 	}
 }

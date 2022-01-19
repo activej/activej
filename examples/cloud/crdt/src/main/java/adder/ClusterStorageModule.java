@@ -3,6 +3,7 @@ package adder;
 import io.activej.async.service.EventloopTaskScheduler;
 import io.activej.config.Config;
 import io.activej.crdt.CrdtServer;
+import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.storage.cluster.*;
@@ -38,9 +39,13 @@ public final class ClusterStorageModule extends AbstractModule {
 	CrdtStorageCluster<Long, DetailedSumsCrdtState, SimplePartitionId> clusterStorage(
 			Eventloop eventloop,
 			DiscoveryService<SimplePartitionId> discoveryService,
+			CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer,
 			CrdtFunction<DetailedSumsCrdtState> crdtFunction
 	) {
-		return CrdtStorageCluster.create(eventloop, discoveryService, crdtFunction);
+		return CrdtStorageCluster.create(eventloop, discoveryService,
+				partitionId ->
+						CrdtStorageClient.create(eventloop, partitionId.getCrdtAddress(), serializer), // FIXME
+				crdtFunction);
 	}
 
 	@Provides
@@ -53,7 +58,7 @@ public final class ClusterStorageModule extends AbstractModule {
 			Config config
 	) {
 		return CrdtServer.create(eventloop, localStorage, serializer)
-				.withListenPort(partitionId.getCrdtPort());
+				.withListenAddress(partitionId.getCrdtAddress());
 	}
 
 	@Provides
