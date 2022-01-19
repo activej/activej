@@ -36,50 +36,6 @@ import static io.activej.config.converter.ConfigConverters.*;
 
 public final class ConfigConverters {
 
-	public static ConfigConverter<SimplePartitionId> ofSimplePartitionId() {
-		return new SimpleConfigConverter<SimplePartitionId>() {
-			@Override
-			protected SimplePartitionId fromString(String string) {
-				try {
-					return SimplePartitionId.parseString(string);
-				} catch (MalformedDataException e) {
-					throw new IllegalArgumentException(e);
-				}
-			}
-
-			@Override
-			protected String toString(SimplePartitionId simplePartitionId) {
-				return simplePartitionId.asString();
-			}
-		};
-	}
-
-	public static <P> ConfigConverter<RendezvousPartitioning<P>> ofPartitioning(ConfigConverter<P> partitionIdConverter) {
-		return new ConfigConverter<RendezvousPartitioning<P>>() {
-			@Override
-			public @NotNull RendezvousPartitioning<P> get(Config config) {
-				Set<P> ids = new HashSet<>(config.get(ofList(partitionIdConverter), "ids"));
-				checkArgument(!ids.isEmpty(), "Empty partitioning ids");
-
-				int replicas = config.get(ofInteger(), "replicas", 1);
-				boolean repartition = config.get(ofBoolean(), "repartition", false);
-				boolean active = config.get(ofBoolean(), "active", false);
-
-				return RendezvousPartitioning.create(ids, replicas, repartition, active);
-			}
-
-			@Override
-			@Contract("_, !null -> !null")
-			public @Nullable RendezvousPartitioning<P> get(Config config, @Nullable RendezvousPartitioning<P> defaultValue) {
-				if (config.isEmpty()) {
-					return defaultValue;
-				} else {
-					return get(config);
-				}
-			}
-		};
-	}
-
 	/**
 	 * @see #ofRendezvousPartitionings(ConfigConverter, ToIntFunction)
 	 */
@@ -136,6 +92,50 @@ public final class ConfigConverters {
 				} else {
 					return get(config);
 				}
+			}
+		};
+	}
+
+	public static <P> ConfigConverter<RendezvousPartitioning<P>> ofPartitioning(ConfigConverter<P> partitionIdConverter) {
+		return new ConfigConverter<RendezvousPartitioning<P>>() {
+			@Override
+			public @NotNull RendezvousPartitioning<P> get(Config config) {
+				Set<P> ids = new HashSet<>(config.get(ofList(partitionIdConverter), "ids"));
+				checkArgument(!ids.isEmpty(), "Empty partitioning ids");
+
+				int replicas = config.get(ofInteger(), "replicas", 1);
+				boolean repartition = config.get(ofBoolean(), "repartition", false);
+				boolean active = config.get(ofBoolean(), "active", false);
+
+				return RendezvousPartitioning.create(ids, replicas, repartition, active);
+			}
+
+			@Override
+			@Contract("_, !null -> !null")
+			public @Nullable RendezvousPartitioning<P> get(Config config, @Nullable RendezvousPartitioning<P> defaultValue) {
+				if (config.isEmpty()) {
+					return defaultValue;
+				} else {
+					return get(config);
+				}
+			}
+		};
+	}
+
+	public static ConfigConverter<SimplePartitionId> ofSimplePartitionId() {
+		return new SimpleConfigConverter<SimplePartitionId>() {
+			@Override
+			protected SimplePartitionId fromString(String string) {
+				try {
+					return SimplePartitionId.parseString(string);
+				} catch (MalformedDataException e) {
+					throw new IllegalArgumentException(e);
+				}
+			}
+
+			@Override
+			protected String toString(SimplePartitionId simplePartitionId) {
+				return simplePartitionId.asString();
 			}
 		};
 	}
