@@ -25,27 +25,27 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
-public interface DiscoveryService<K extends Comparable<K>, S, P> {
+public interface DiscoveryService<P> {
 
-	AsyncSupplier<Partitionings<K, S, P>> discover();
+	AsyncSupplier<Partitionings<P>> discover();
 
-	interface Partitionings<K extends Comparable<K>, S, P> {
-		Map<P, CrdtStorage<K, S>> getPartitions();
+	interface Partitionings<P> {
+		Set<P> getPartitions();
 
-		@Nullable Sharder<K> createSharder(List<P> alive);
+		<K extends Comparable<K>, S> @Nullable Sharder<K> createSharder(Function<P, CrdtStorage<K, S>> provider, List<P> alive);
 
-		RpcStrategy createRpcStrategy(Function<P, @NotNull RpcStrategy> rpcStrategyProvider, Function<Object, K> keyGetter);
+		<K extends Comparable<K>> RpcStrategy createRpcStrategy(Function<P, @NotNull RpcStrategy> provider, Function<Object, K> keyGetter);
 	}
 
-	static <K extends Comparable<K>, S, P> DiscoveryService<K, S, P> of(Partitionings<K, S, P> partitionings) {
-		return () -> new AsyncSupplier<Partitionings<K, S, P>>() {
+	static <K extends Comparable<K>, S, P> DiscoveryService<P> of(Partitionings<P> partitionings) {
+		return () -> new AsyncSupplier<Partitionings<P>>() {
 			int i = 0;
 
 			@Override
-			public Promise<Partitionings<K, S, P>> get() {
+			public Promise<Partitionings<P>> get() {
 				return i++ == 0 ? Promise.of(partitionings) : new SettablePromise<>();
 			}
 		};

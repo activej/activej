@@ -77,12 +77,13 @@ public final class TestCrdtCluster {
 		CrdtStorageCluster<String, TimestampContainer<Integer>, String> cluster = CrdtStorageCluster.create(
 				eventloop,
 				DiscoveryService.of(
-						RendezvousPartitionings.create(clients)
+						RendezvousPartitionings.<String>create()
 								.withPartitioning(
 										RendezvousPartitioning.create(clients.keySet())
 												.withReplicas(REPLICATION_COUNT)
 												.withRepartition(true))
 				),
+				clients::get,
 				TimestampContainer.createCrdtFunction(Integer::max));
 
 		await(cluster.start()
@@ -139,8 +140,9 @@ public final class TestCrdtCluster {
 		CrdtStorageMap<String, TimestampContainer<Set<Integer>>> localStorage = CrdtStorageMap.create(eventloop, union);
 		CrdtStorageCluster<String, TimestampContainer<Set<Integer>>, String> cluster = CrdtStorageCluster.create(eventloop,
 				DiscoveryService.of(
-						RendezvousPartitionings.create(clients)
+						RendezvousPartitionings.<String>create()
 								.withPartitioning(RendezvousPartitioning.create(clients.keySet()).withReplicas(REPLICATION_COUNT))),
+				clients::get,
 				union);
 
 		await(cluster.start()

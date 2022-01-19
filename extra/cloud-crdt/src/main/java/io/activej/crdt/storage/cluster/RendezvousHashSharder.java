@@ -23,7 +23,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.ToIntFunction;
-import java.util.function.ToLongBiFunction;
 
 import static io.activej.common.Checks.checkArgument;
 
@@ -43,7 +42,7 @@ public final class RendezvousHashSharder<K, P> implements Sharder<K>, WithInitia
 	}
 
 	public static <K extends Comparable<K>, P> RendezvousHashSharder<K, P> create(
-			ToLongBiFunction<P, Integer> bucketHashFn, ToIntFunction<K> keyHashFn,
+			ToIntFunction<K> keyHashFn,
 			Set<P> partitions, List<P> partitionsAlive, int shards, boolean repartition) {
 		Map<P, Integer> partitionsAliveMap = new HashMap<>();
 		for (P pid : partitionsAlive) {
@@ -77,7 +76,7 @@ public final class RendezvousHashSharder<K, P> implements Sharder<K>, WithInitia
 
 		for (int bucket = 0; bucket < buckets.length; bucket++) {
 			for (ObjWithIndex obj : toSort) {
-				obj.hash = bucketHashFn.applyAsLong(obj.partitionId, bucket);
+				obj.hash = RendezvousPartitionings.hashBucket(obj.partitionId, bucket);
 			}
 
 			Arrays.sort(toSort, Comparator.comparingLong(ObjWithIndex::getHash).reversed());

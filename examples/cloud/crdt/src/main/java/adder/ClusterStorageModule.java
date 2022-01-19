@@ -37,7 +37,7 @@ public final class ClusterStorageModule extends AbstractModule {
 	@Provides
 	CrdtStorageCluster<Long, DetailedSumsCrdtState, SimplePartitionId> clusterStorage(
 			Eventloop eventloop,
-			DiscoveryService<Long, DetailedSumsCrdtState, SimplePartitionId> discoveryService,
+			DiscoveryService<SimplePartitionId> discoveryService,
 			CrdtFunction<DetailedSumsCrdtState> crdtFunction
 	) {
 		return CrdtStorageCluster.create(eventloop, discoveryService, crdtFunction);
@@ -57,14 +57,14 @@ public final class ClusterStorageModule extends AbstractModule {
 	}
 
 	@Provides
-	DiscoveryService<Long, DetailedSumsCrdtState, SimplePartitionId> discoveryService(
+	DiscoveryService<SimplePartitionId> discoveryService(
 			Eventloop eventloop,
 			CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer,
 			SimplePartitionId localId,
 			@Local CrdtStorage<Long, DetailedSumsCrdtState> localStorage,
 			Config config
 	) {
-		RendezvousPartitionings<Long, DetailedSumsCrdtState, SimplePartitionId> partitionings = config.get(ConfigConverters.ofRendezvousPartitionings(eventloop, serializer, localId, localStorage), "crdt.cluster");
+		RendezvousPartitionings<SimplePartitionId> partitionings = config.get(ConfigConverters.ofRendezvousPartitionings(eventloop, serializer, localId, localStorage), "crdt.cluster");
 		return DiscoveryService.of(partitionings);
 	}
 

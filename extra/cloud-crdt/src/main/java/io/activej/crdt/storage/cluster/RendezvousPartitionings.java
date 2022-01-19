@@ -12,68 +12,57 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
-import java.util.function.ToLongBiFunction;
 
 import static io.activej.crdt.storage.cluster.RendezvousHashSharder.NUMBER_OF_BUCKETS;
+import static java.util.stream.Collectors.toSet;
 
-public final class RendezvousPartitionings<K extends Comparable<K>, S, P> implements DiscoveryService.Partitionings<K, S, P>, WithInitializer<RendezvousPartitionings<K, S, P>> {
-	private final Map<P, CrdtStorage<K, S>> partitions;
+public final class RendezvousPartitionings<P> implements DiscoveryService.Partitionings<P>, WithInitializer<RendezvousPartitionings<P>> {
 	private final List<RendezvousPartitioning<P>> partitionings;
-	private final ToLongBiFunction<P, Integer> hashBucketFn;
-	private final ToIntFunction<K> hashFn;
+	private final ToIntFunction<?> hashFn;
 
 	@SuppressWarnings("unchecked")
-	private RendezvousPartitionings(Map<P, ? extends CrdtStorage<K, S>> partitions, List<? extends RendezvousPartitioning<P>> partitionings, ToLongBiFunction<P, Integer> hashBucketFn, ToIntFunction<K> hashFn) {
-		this.partitions = (Map<P, CrdtStorage<K, S>>) partitions;
+	private RendezvousPartitionings(List<? extends RendezvousPartitioning<P>> partitionings, ToIntFunction<?> hashFn) {
 		this.partitionings = (List<RendezvousPartitioning<P>>) partitionings;
-		this.hashBucketFn = hashBucketFn;
 		this.hashFn = hashFn;
 	}
 
 	@SafeVarargs
-	public static <K extends Comparable<K>, S, P> RendezvousPartitionings<K, S, P> create(Map<P, ? extends CrdtStorage<K, S>> partitions,
-			RendezvousPartitioning<P>... partitionings) {
-		return create(partitions, Arrays.asList(partitionings));
+	public static <P> RendezvousPartitionings<P> create(RendezvousPartitioning<P>... partitionings) {
+		return create(Arrays.asList(partitionings));
 	}
 
-	public static <K extends Comparable<K>, S, P> RendezvousPartitionings<K, S, P> create(Map<P, ? extends CrdtStorage<K, S>> partitions,
-			List<RendezvousPartitioning<P>> partitionings) {
-		return new RendezvousPartitionings<>(partitions, partitionings,
-				defaultHashBucketFn(), Objects::hashCode);
+	public static <P> RendezvousPartitionings<P> create(List<RendezvousPartitioning<P>> partitionings) {
+		return new RendezvousPartitionings<>(partitionings,
+				Objects::hashCode);
 	}
 
-	public static <P> ToLongBiFunction<P, Integer> defaultHashBucketFn() {
-		return defaultHashBucketFn(Object::hashCode);
+	public static <P> long hashBucket(P pid, int bucket) {
+		return HashUtils.murmur3hash(((long) pid.hashCode() << 32) | (bucket & 0xFFFFFFFFL));
 	}
 
-	public static <P> ToLongBiFunction<P, Integer> defaultHashBucketFn(ToIntFunction<P> partitionHashCode) {
-		return (pid, bucket) -> HashUtils.murmur3hash(((long) partitionHashCode.applyAsInt(pid) << 32) | (bucket & 0xFFFFFFFFL));
-	}
-
-	public RendezvousPartitionings<K, S, P> withPartitioning(RendezvousPartitioning<P> partitioning) {
+	public RendezvousPartitionings<P> withPartitioning(RendezvousPartitioning<P> partitioning) {
 		List<RendezvousPartitioning<P>> partitionings = new ArrayList<>(this.partitionings);
 		partitionings.add(partitioning);
-		return new RendezvousPartitionings<>(partitions, partitionings, hashBucketFn, hashFn);
+		return new RendezvousPartitionings<>(partitionings, hashFn);
 	}
 
-	public RendezvousPartitionings<K, S, P> withHashBucketFn(ToLongBiFunction<P, Integer> hashBucketFn) {
-		return new RendezvousPartitionings<>(partitions, partitionings, hashBucketFn, hashFn);
-	}
-
-	public RendezvousPartitionings<K, S, P> withHashFn(ToIntFunction<K> hashFn) {
-		return new RendezvousPartitionings<>(partitions, partitionings, hashBucketFn, hashFn);
+	public <K extends Comparable<K>> RendezvousPartitionings<P> withHashFn(ToIntFunction<K> hashFn) {
+		return new RendezvousPartitionings<>(partitionings, hashFn);
 	}
 
 	@Override
-	public Map<P, CrdtStorage<K, S>> getPartitions() {
-		return partitions;
+	public Set<P> getPartitions() {
+		return partitionings.stream().flatMap(p -> p.getPartitions().stream()).collect(toSet());
 	}
 
 	@Override
-	public @Nullable Sharder<K> createSharder(List<P> alive) {
+	public <K extends Comparable<K>, S> @Nullable Sharder<K> createSharder(Function<P, CrdtStorage<K, S>> provider,
+			List<P> alive) {
 		List<RendezvousHashSharder<K, P>> sharders = new ArrayList<>();
 		for (RendezvousPartitioning<P> partitioning : partitionings) {
-			RendezvousHashSharder<K, P> sharder = RendezvousHashSharder.create(hashBucketFn, hashFn,
+			//noinspection unchecked
+			RendezvousHashSharder<K, P> sharder = RendezvousHashSharder.create(
+					((ToIntFunction<K>) hashFn),
 					partitioning.getPartitions(), alive, partitioning.getReplicas(), partitioning.isRepartition());
 			sharders.add(sharder);
 		}
@@ -81,18 +70,19 @@ public final class RendezvousPartitionings<K extends Comparable<K>, S, P> implem
 	}
 
 	@Override
-	public RpcStrategy createRpcStrategy(
-			Function<P, @NotNull RpcStrategy> rpcStrategyProvider, Function<Object, K> keyGetter) {
+	public <K extends Comparable<K>> RpcStrategy createRpcStrategy(Function<P, @NotNull RpcStrategy> provider,
+			Function<Object, K> keyGetter) {
 
 		List<RpcStrategy> rendezvousHashings = new ArrayList<>();
 		for (RendezvousPartitioning<P> partitioning : partitionings) {
 			if (!partitioning.isActive()) continue;
+			//noinspection unchecked
 			RpcStrategyRendezvousHashing rendezvousHashing = RpcStrategyRendezvousHashing.create(req ->
-							hashFn.applyAsInt(keyGetter.apply(req)))
+							((ToIntFunction<K>) hashFn).applyAsInt(keyGetter.apply(req)))
 					.withHashBuckets(NUMBER_OF_BUCKETS)
-					.withHashBucketFunction(hashBucketFn);
+					.withHashBucketFunction(RendezvousPartitionings::hashBucket);
 			for (P pid : partitioning.getPartitions()) {
-				rendezvousHashing.withShard(pid, rpcStrategyProvider.apply(pid));
+				rendezvousHashing.withShard(pid, provider.apply(pid));
 			}
 			rendezvousHashings.add(rendezvousHashing);
 		}

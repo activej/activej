@@ -72,8 +72,9 @@ public final class TestDyingPartitions {
 
 		cluster = CrdtStorageCluster.create(Eventloop.getCurrentEventloop(),
 				DiscoveryService.of(
-						RendezvousPartitionings.create(clients)
+						RendezvousPartitionings.<String>create()
 								.withPartitioning(RendezvousPartitioning.create(clients.keySet()).withReplicas(REPLICATION_COUNT).withRepartition(true))),
+				clients::get,
 				CRDT_FUNCTION);
 		await(cluster.start());
 	}

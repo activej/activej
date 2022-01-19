@@ -10,7 +10,6 @@ import java.util.stream.IntStream;
 
 import static io.activej.common.Utils.keysToMap;
 import static io.activej.common.Utils.listOf;
-import static io.activej.crdt.storage.cluster.RendezvousPartitionings.defaultHashBucketFn;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -25,7 +24,7 @@ public class RendezvousHashSharderTest {
 				s -> index.value++);
 		Set<String> alive = new HashSet<>(partitionsWithIndexes.keySet());
 		RendezvousHashSharder<Integer, String> sharder1 = RendezvousHashSharder.create(
-				defaultHashBucketFn(), Object::hashCode,
+				Object::hashCode,
 				partitionsWithIndexes.keySet(), new ArrayList<>(alive), 3, false);
 
 		Map<Integer, Set<Integer>> sharded1 = new HashMap<>();
@@ -44,7 +43,7 @@ public class RendezvousHashSharderTest {
 		int fiveId = partitionsWithIndexes.remove("five");
 
 		RendezvousHashSharder<Integer, String> sharder2 = RendezvousHashSharder.create(
-				defaultHashBucketFn(), Object::hashCode,
+				Object::hashCode,
 				partitionsWithIndexes.keySet(), new ArrayList<>(alive), 3, false);
 
 		Map<Integer, Set<Integer>> sharded2 = new HashMap<>();
@@ -72,7 +71,7 @@ public class RendezvousHashSharderTest {
 		alive.remove("four");
 
 		RendezvousHashSharder<Integer, String> sharder3 = RendezvousHashSharder.create(
-				defaultHashBucketFn(), Object::hashCode,
+				Object::hashCode,
 				partitionsWithIndexes.keySet(), new ArrayList<>(alive), 3, true);
 
 		List<int[]> shards3 = IntStream.range(0, 100)

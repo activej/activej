@@ -51,15 +51,15 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 	}
 
 	@Provides
-	DiscoveryService<Long, DetailedSumsCrdtState, SimplePartitionId> discoveryService(Eventloop eventloop, Config config) {
-		RendezvousPartitionings<Long, DetailedSumsCrdtState, SimplePartitionId> partitionings = config.get(ofRendezvousPartitionings(), "crdt.cluster");
+	DiscoveryService<SimplePartitionId> discoveryService(Eventloop eventloop, Config config) {
+		RendezvousPartitionings<SimplePartitionId> partitionings = config.get(ofRendezvousPartitionings(), "crdt.cluster");
 		return DiscoveryService.of(partitionings);
 	}
 
 	@Provides
 	CrdtRpcStrategyService<Long, DetailedSumsCrdtState, SimplePartitionId> rpcStrategyService(
 			Eventloop eventloop,
-			DiscoveryService<Long, DetailedSumsCrdtState, SimplePartitionId> discoveryService
+			DiscoveryService<SimplePartitionId> discoveryService
 	) {
 		return CrdtRpcStrategyService.create(eventloop, discoveryService, partitionId -> server(partitionId.getRpcAddress()), AdderClientLauncher::extractKey);
 	}

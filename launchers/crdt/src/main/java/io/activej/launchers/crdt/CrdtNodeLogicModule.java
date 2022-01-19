@@ -82,7 +82,7 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 	}
 
 	@Provides
-	DiscoveryService<K, S, String> discoveryService(CrdtStorageMap<K, S> localClient, CrdtDescriptor<K, S> descriptor, Config config) {
+	Map<String, CrdtStorage<K, S>> partitions(CrdtStorageMap<K, S> localClient, CrdtDescriptor<K, S> descriptor, Config config) {
 		config = config.getChild("crdt.cluster");
 
 		Eventloop eventloop = localClient.getEventloop();
@@ -98,17 +98,25 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 			partitions.put(entry.getKey(), CrdtStorageClient.create(eventloop, address, descriptor.getSerializer()));
 		}
 
+		return partitions;
+	}
+
+	@Provides
+	DiscoveryService<String> discoveryService(Map<String, CrdtStorage<K, S>> partitions, CrdtDescriptor<K, S> descriptor, Config config) {
+		config = config.getChild("crdt.cluster");
+
 		return DiscoveryService.of(
-				RendezvousPartitionings.create(partitions)
+				RendezvousPartitionings.<String>create()
 						.withPartitioning(RendezvousPartitioning.create(partitions.keySet())
 								.withReplicas(config.get(ofInteger(), "crdt.cluster.replicationCount", 1))));
 	}
 
 	@Provides
-	CrdtStorageCluster<K, S, String> clusterCrdtClient(Eventloop eventloop, DiscoveryService<K, S, String> discoveryService, CrdtDescriptor<K, S> descriptor, Config config) {
+	CrdtStorageCluster<K, S, String> clusterCrdtClient(Eventloop eventloop, DiscoveryService<String> discoveryService, Map<String, CrdtStorage<K, S>> partitions, CrdtDescriptor<K, S> descriptor, Config config) {
 		return CrdtStorageCluster.create(eventloop,
-						discoveryService,
-						descriptor.getCrdtFunction());
+				discoveryService,
+				partitions::get,
+				descriptor.getCrdtFunction());
 	}
 
 	@Provides

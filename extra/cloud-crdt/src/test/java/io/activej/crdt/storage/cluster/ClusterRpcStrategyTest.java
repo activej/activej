@@ -73,7 +73,7 @@ public class ClusterRpcStrategyTest {
 		Map<String, CrdtStorage<Integer, GCounterInt>> crdtStorages = PARTITION_ADDRESS_MAP_1.keySet().stream()
 				.collect(toMap(Function.identity(), $ -> CrdtStorageMap.create(eventloop, CRDT_FUNCTION)));
 
-		Partitionings<Integer, GCounterInt, String> partitionings = RendezvousPartitionings.create(crdtStorages)
+		Partitionings<String> partitionings = RendezvousPartitionings.<String>create()
 				.withPartitioning(RendezvousPartitioning.create(crdtStorages.keySet(), 2, true, false));
 
 		List<String> alivePartitions = new ArrayList<>(Utils.difference(crdtStorages.keySet(), singleton("two")));
@@ -96,7 +96,7 @@ public class ClusterRpcStrategyTest {
 		Map<String, CrdtStorage<Integer, GCounterInt>> crdtStorages = PARTITION_ADDRESS_MAP_1.keySet().stream()
 				.collect(toMap(Function.identity(), $ -> CrdtStorageMap.create(eventloop, CRDT_FUNCTION)));
 
-		Partitionings<Integer, GCounterInt, String> partitionings = RendezvousPartitionings.create(crdtStorages)
+		Partitionings<String> partitionings = RendezvousPartitionings.<String>create()
 				.withPartitioning(RendezvousPartitioning.create(crdtStorages.keySet(), 2, true, true));
 
 		List<String> alivePartitions = new ArrayList<>(Utils.difference(crdtStorages.keySet(), singleton("two")));
@@ -111,7 +111,7 @@ public class ClusterRpcStrategyTest {
 		RpcSender sender = rpcStrategy.createSender(poolStub);
 		assertNotNull(sender);
 
-		Sharder<Integer> sharder = partitionings.createSharder(alivePartitions);
+		Sharder<Integer> sharder = partitionings.createSharder(crdtStorages::get, alivePartitions);
 		assertNotNull(sharder);
 
 		Map<InetSocketAddress, String> address2Partition = PARTITION_ADDRESS_MAP_1.entrySet()
@@ -151,7 +151,7 @@ public class ClusterRpcStrategyTest {
 				.stream()
 				.collect(toMap(Function.identity(), $ -> CrdtStorageMap.create(eventloop, CRDT_FUNCTION)));
 
-		Partitionings<Integer, GCounterInt, String> partitionings = RendezvousPartitionings.create(crdtStorages)
+		Partitionings<String> partitionings = RendezvousPartitionings.<String>create()
 				.withPartitioning(RendezvousPartitioning.create(PARTITION_ADDRESS_MAP_1.keySet(), 2, true, true))
 				.withPartitioning(RendezvousPartitioning.create(PARTITION_ADDRESS_MAP_2.keySet(), 2, true, true));
 
@@ -175,7 +175,7 @@ public class ClusterRpcStrategyTest {
 		RpcSender sender = rpcStrategy.createSender(poolStub);
 		assertNotNull(sender);
 
-		Sharder<Integer> sharder = partitionings.createSharder(alivePartitions);
+		Sharder<Integer> sharder = partitionings.createSharder(crdtStorages::get, alivePartitions);
 		assertNotNull(sharder);
 
 		for (int i = 0; i < 1000; i++) {

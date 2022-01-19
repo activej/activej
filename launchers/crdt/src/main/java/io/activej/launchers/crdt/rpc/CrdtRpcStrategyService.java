@@ -33,7 +33,7 @@ import static io.activej.common.Checks.checkState;
 
 public final class CrdtRpcStrategyService<K extends Comparable<K>, S, P> implements EventloopService {
 	private final Eventloop eventloop;
-	private final DiscoveryService<K, S, P> discoveryService;
+	private final DiscoveryService<P> discoveryService;
 	private final Function<P, RpcStrategy> strategyResolver;
 	private final Function<Object, K> keyGetter;
 
@@ -41,7 +41,7 @@ public final class CrdtRpcStrategyService<K extends Comparable<K>, S, P> impleme
 
 	private boolean stopped;
 
-	private CrdtRpcStrategyService(Eventloop eventloop, DiscoveryService<K, S, P> discoveryService,
+	private CrdtRpcStrategyService(Eventloop eventloop, DiscoveryService<P> discoveryService,
 			Function<P, RpcStrategy> strategyResolver, Function<Object, K> keyGetter) {
 		this.eventloop = eventloop;
 		this.discoveryService = discoveryService;
@@ -49,7 +49,7 @@ public final class CrdtRpcStrategyService<K extends Comparable<K>, S, P> impleme
 		this.keyGetter = keyGetter;
 	}
 
-	public static <K extends Comparable<K>, S, P> CrdtRpcStrategyService<K, S, P> create(Eventloop eventloop, DiscoveryService<K, S, P> discoveryService,
+	public static <K extends Comparable<K>, S, P> CrdtRpcStrategyService<K, S, P> create(Eventloop eventloop, DiscoveryService<P> discoveryService,
 			Function<P, RpcStrategy> strategyResolver, Function<Object, K> keyGetter) {
 		return new CrdtRpcStrategyService<>(eventloop, discoveryService, strategyResolver, keyGetter);
 	}
@@ -69,7 +69,7 @@ public final class CrdtRpcStrategyService<K extends Comparable<K>, S, P> impleme
 	public @NotNull Promise<?> start() {
 		checkNotNull(rpcClient);
 
-		AsyncSupplier<DiscoveryService.Partitionings<K, S, P>> discoverySupplier = discoveryService.discover();
+		AsyncSupplier<DiscoveryService.Partitionings<P>> discoverySupplier = discoveryService.discover();
 		return discoverySupplier.get()
 				.whenResult(partitionings -> {
 					RpcStrategy rpcStrategy = partitionings.createRpcStrategy(strategyResolver, keyGetter);

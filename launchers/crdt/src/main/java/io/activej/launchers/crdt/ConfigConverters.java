@@ -40,8 +40,6 @@ import java.util.function.ToLongBiFunction;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.difference;
 import static io.activej.config.converter.ConfigConverters.*;
-import static io.activej.crdt.storage.cluster.RendezvousPartitionings.defaultHashBucketFn;
-import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 
@@ -91,30 +89,30 @@ public final class ConfigConverters {
 		};
 	}
 
-	public static <K extends Comparable<K>, S, P> ConfigConverter<RendezvousPartitionings<K, S, P>> ofRendezvousPartitionings(
+	public static <K extends Comparable<K>, S, P> ConfigConverter<RendezvousPartitionings<P>> ofRendezvousPartitionings(
 			@NotNull ConfigConverter<P> partitionIdConverter,
 			@NotNull Function<P, CrdtStorage<K, S>> storageFactory,
 			@NotNull ToIntFunction<K> hashFn,
 			@NotNull ToLongBiFunction<P, Integer> hashBucketFn
 	) {
-		return makeRendezvousPartitionings(partitionIdConverter, hashFn, hashBucketFn, storageFactory);
+		return makeRendezvousPartitionings(partitionIdConverter, hashFn, storageFactory);
 	}
 
-	public static <K extends Comparable<K>, S> ConfigConverter<RendezvousPartitionings<K, S, SimplePartitionId>> ofRendezvousPartitionings(
+	public static <K extends Comparable<K>, S> ConfigConverter<RendezvousPartitionings<SimplePartitionId>> ofRendezvousPartitionings(
 			@NotNull Eventloop eventloop,
 			@NotNull CrdtDataSerializer<K, S> serializer,
 			@NotNull SimplePartitionId localId,
 			@NotNull CrdtStorage<K, S> localStorage,
 			@NotNull ToIntFunction<K> hashFn
 	) {
-		return makeRendezvousPartitionings(ofSimplePartitionId(), hashFn, defaultHashBucketFn(value -> value.getId().hashCode()),
+		return makeRendezvousPartitionings(ofSimplePartitionId(), hashFn,
 				partitionId ->
 						localId.equals(partitionId) ?
 								localStorage :
 								CrdtStorageClient.create(eventloop, partitionId.getCrdtAddress(), serializer));
 	}
 
-	public static <K extends Comparable<K>, S> ConfigConverter<RendezvousPartitionings<K, S, SimplePartitionId>> ofRendezvousPartitionings(
+	public static <K extends Comparable<K>, S> ConfigConverter<RendezvousPartitionings<SimplePartitionId>> ofRendezvousPartitionings(
 			@NotNull Eventloop eventloop,
 			@NotNull CrdtDataSerializer<K, S> serializer,
 			@NotNull SimplePartitionId localId,
@@ -129,41 +127,39 @@ public final class ConfigConverters {
 	 *
 	 * @return a config converter for {@link RendezvousPartitionings}
 	 */
-	public static <K extends Comparable<K>, S, P> ConfigConverter<RendezvousPartitionings<K, S, P>> ofRendezvousPartitionings(
+	public static <K extends Comparable<K>, S, P> ConfigConverter<RendezvousPartitionings<P>> ofRendezvousPartitionings(
 			@NotNull ConfigConverter<P> partitionIdConverter,
-			@NotNull ToIntFunction<K> hashFn,
-			@NotNull ToLongBiFunction<P, Integer> hashBucketFn
-	) {
-		return makeRendezvousPartitionings(partitionIdConverter, hashFn, hashBucketFn, null);
-	}
-
-	/**
-	 * @see #ofRendezvousPartitionings(ConfigConverter, ToIntFunction, ToLongBiFunction)
-	 * @return
-	 */
-	public static <K extends Comparable<K>, S> ConfigConverter<RendezvousPartitionings<K, S, SimplePartitionId>> ofRendezvousPartitionings(
 			@NotNull ToIntFunction<K> hashFn
 	) {
-		return ofRendezvousPartitionings(ofSimplePartitionId(), hashFn,
-				defaultHashBucketFn(partitionId -> partitionId.getId().hashCode()));
+		return makeRendezvousPartitionings(partitionIdConverter, hashFn, null);
 	}
 
 	/**
-	 * @see #ofRendezvousPartitionings(ConfigConverter, ToIntFunction, ToLongBiFunction)
+	 * @see #ofRendezvousPartitionings(ConfigConverter, ToIntFunction)
+	 * @return
 	 */
-	public static <K extends Comparable<K>, S> ConfigConverter<RendezvousPartitionings<K, S, SimplePartitionId>> ofRendezvousPartitionings() {
+	public static <K extends Comparable<K>, S> ConfigConverter<RendezvousPartitionings<SimplePartitionId>> ofRendezvousPartitionings(
+			@NotNull ToIntFunction<K> hashFn
+	) {
+		return ofRendezvousPartitionings(ofSimplePartitionId(), hashFn
+		);
+	}
+
+	/**
+	 * @see #ofRendezvousPartitionings(ConfigConverter, ToIntFunction)
+	 */
+	public static <K extends Comparable<K>, S> ConfigConverter<RendezvousPartitionings<SimplePartitionId>> ofRendezvousPartitionings() {
 		return ofRendezvousPartitionings(Objects::hashCode);
 	}
 
-	private static <S, K extends Comparable<K>, P> ConfigConverter<RendezvousPartitionings<K,S,P>> makeRendezvousPartitionings(
+	private static <S, K extends Comparable<K>, P> ConfigConverter<RendezvousPartitionings<P>> makeRendezvousPartitionings(
 			@NotNull ConfigConverter<P> partitionIdConverter,
 			@NotNull ToIntFunction<K> hashFn,
-			@NotNull ToLongBiFunction<P, Integer> hashBucketFn,
 			@Nullable Function<P, CrdtStorage<K, S>> storageFactory
 	) {
-		return new ConfigConverter<RendezvousPartitionings<K,S,P>>() {
+		return new ConfigConverter<RendezvousPartitionings<P>>() {
 			@Override
-			public @NotNull RendezvousPartitionings<K, S, P> get(Config config) {
+			public @NotNull RendezvousPartitionings<P> get(Config config) {
 				Collection<Config> partitioningsConfig = config.getChild("partitionings").getChildren().values();
 
 				List<RendezvousPartitioning<P>> partitionings = new ArrayList<>();
@@ -173,7 +169,8 @@ public final class ConfigConverters {
 
 				if (storageFactory == null) {
 					// Discovery service for RPC strategies
-					return makeRendezvousPartitionings(partitionings, emptyMap(), hashFn, hashBucketFn);
+					return RendezvousPartitionings.create(partitionings)
+							.withHashFn(hashFn);
 				}
 
 				Set<P> allIds = partitionings.stream()
@@ -190,12 +187,13 @@ public final class ConfigConverters {
 				Set<P> danglingAddresses = difference(storages.keySet(), allIds);
 				checkArgument(danglingAddresses.isEmpty(), "There are dangling addresses: " + danglingAddresses);
 
-				return makeRendezvousPartitionings(partitionings, storages, hashFn, hashBucketFn);
+				return RendezvousPartitionings.create(partitionings)
+						.withHashFn(hashFn);
 			}
 
 			@Override
 			@Contract("_, !null -> !null")
-			public RendezvousPartitionings<K, S, P> get(Config config, @Nullable RendezvousPartitionings<K, S, P> defaultValue) {
+			public RendezvousPartitionings<P> get(Config config, @Nullable RendezvousPartitionings<P> defaultValue) {
 				if (config.isEmpty()) {
 					return defaultValue;
 				} else {
@@ -204,23 +202,6 @@ public final class ConfigConverters {
 			}
 		};
 	}
-
-	private static <K extends Comparable<K>, S, P> RendezvousPartitionings<K, S, P> makeRendezvousPartitionings(
-			List<RendezvousPartitioning<P>> partitionings,
-			Map<P, CrdtStorage<K, S>> partitions,
-			ToIntFunction<K> hashFn,
-			ToLongBiFunction<P, Integer> hashBucketFn
-	) {
-		RendezvousPartitionings<K, S, P> rendezvousPartitionings = RendezvousPartitionings.create(partitions)
-				.withHashBucketFn(hashBucketFn)
-				.withHashFn(hashFn);
-		for (RendezvousPartitioning<P> partitioning : partitionings) {
-			rendezvousPartitionings = rendezvousPartitionings.withPartitioning(partitioning);
-		}
-
-		return rendezvousPartitionings;
-	}
-
 
 }
 

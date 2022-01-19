@@ -21,7 +21,6 @@ import io.activej.common.exception.MalformedDataException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.util.Objects;
 
 public final class SimplePartitionId {
 	private final String id;
@@ -112,12 +111,12 @@ public final class SimplePartitionId {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		SimplePartitionId that = (SimplePartitionId) o;
-		return crdtPort == that.crdtPort && rpcPort == that.rpcPort && id.equals(that.id) && host.equals(that.host);
+		return id.equals(that.id);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, host, crdtPort, rpcPort);
+		return id.hashCode();
 	}
 
 	@Override

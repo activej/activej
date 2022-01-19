@@ -44,18 +44,19 @@ import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
+
+import static io.activej.common.Checks.checkArgument;
 
 @SuppressWarnings("rawtypes") // JMX
 public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements CrdtStorage<K, S>, WithInitializer<CrdtStorageCluster<K, S, P>>, EventloopService, EventloopJmxBeanWithStats {
 	private final Eventloop eventloop;
-	private final DiscoveryService<K, S, P> discoveryService;
+	private final DiscoveryService<P> discoveryService;
 	private final CrdtFunction<S> crdtFunction;
+	private final Function<P, CrdtStorage<K, S>> provider;
 
-	private DiscoveryService.Partitionings<K, S, P> currentPartitionings;
+	private DiscoveryService.Partitionings<P> currentPartitionings;
 	private boolean stopped;
 
 	// region JMX
@@ -70,21 +71,23 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 	// endregion
 
 	// region creators
-	private CrdtStorageCluster(Eventloop eventloop, DiscoveryService<K, S, P> discoveryService, CrdtFunction<S> crdtFunction) {
+	private CrdtStorageCluster(Eventloop eventloop, DiscoveryService<P> discoveryService, Function<P, CrdtStorage<K, S>> provider, CrdtFunction<S> crdtFunction) {
 		this.eventloop = eventloop;
 		this.discoveryService = discoveryService;
 		this.crdtFunction = crdtFunction;
+		this.provider = provider;
 	}
 
 	public static <K extends Comparable<K>, S, P> CrdtStorageCluster<K, S, P> create(Eventloop eventloop,
-			DiscoveryService<K, S, P> discoveryService, CrdtFunction<S> crdtFunction) {
-		return new CrdtStorageCluster<>(eventloop, discoveryService, crdtFunction);
+			DiscoveryService<P> discoveryService, Function<P, CrdtStorage<K, S>> provider,
+			CrdtFunction<S> crdtFunction) {
+		return new CrdtStorageCluster<>(eventloop, discoveryService, provider, crdtFunction);
 	}
 
 	public static <K extends Comparable<K>, S extends CrdtType<S>, P> CrdtStorageCluster<K, S, P> create(Eventloop eventloop,
-			DiscoveryService<K, S, P> discoveryService
+			DiscoveryService<P> discoveryService, Function<P, CrdtStorage<K, S>> provider
 	) {
-		return create(eventloop, discoveryService, CrdtFunction.ofCrdtType());
+		return create(eventloop, discoveryService, provider, CrdtFunction.ofCrdtType());
 	}
 
 /*
@@ -106,7 +109,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 
 	@Override
 	public @NotNull Promise<?> start() {
-		AsyncSupplier<DiscoveryService.Partitionings<K, S, P>> discoverySupplier = discoveryService.discover();
+		AsyncSupplier<DiscoveryService.Partitionings<P>> discoverySupplier = discoveryService.discover();
 		return discoverySupplier.get()
 				.then(result -> {
 					currentPartitionings = result;
@@ -132,11 +135,11 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 
 	@Override
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
-		DiscoveryService.Partitionings<K, S, P> partitionings = this.currentPartitionings;
+		DiscoveryService.Partitionings<P> partitionings = this.currentPartitionings;
 		return execute(partitionings.getPartitions(), CrdtStorage::upload)
 				.then(map -> {
 					List<P> alive = new ArrayList<>(map.keySet());
-					Sharder<K> sharder = partitionings.createSharder(alive);
+					Sharder<K> sharder = partitionings.createSharder(provider, alive);
 					if (sharder == null) {
 						throw new CrdtException("Incomplete cluster");
 					}
@@ -179,11 +182,11 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 
 	@Override
 	public Promise<StreamConsumer<K>> remove() {
-		DiscoveryService.Partitionings<K, S, P> partitionings = currentPartitionings;
+		DiscoveryService.Partitionings<P> partitionings = currentPartitionings;
 		return execute(partitionings.getPartitions(), CrdtStorage::remove)
 				.map(map -> {
 					List<P> alive = new ArrayList<>(map.keySet());
-					Sharder<K> sharder = partitionings.createSharder(alive);
+					Sharder<K> sharder = partitionings.createSharder(provider, alive);
 					if (sharder == null) {
 						throw new CrdtException("Incomplete cluster");
 					}
@@ -204,8 +207,9 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 	}
 
 	public @NotNull Promise<Void> repartition(P sourcePartitionId) {
-		DiscoveryService.Partitionings<K, S, P> partitionings = this.currentPartitionings;
-		CrdtStorage<K, S> source = partitionings.getPartitions().get(sourcePartitionId);
+		DiscoveryService.Partitionings<P> partitionings = this.currentPartitionings;
+		checkArgument(partitionings.getPartitions().contains(sourcePartitionId));
+		CrdtStorage<K, S> source = provider.apply(sourcePartitionId);
 
 		class Tuple {
 			private final Try<StreamSupplier<CrdtData<K, S>>> downloader;
@@ -235,7 +239,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 					}
 
 					List<P> alive = new ArrayList<>(tuple.uploaders.keySet());
-					Sharder<K> sharder = partitionings.createSharder(alive);
+					Sharder<K> sharder = partitionings.createSharder(provider, alive);
 					if (sharder == null) {
 						throw new CrdtException("Incomplete cluster");
 					}
@@ -285,10 +289,10 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 
 	@Override
 	public Promise<Void> ping() {
-		DiscoveryService.Partitionings<K, S, P> partitionings = this.currentPartitionings;
+		DiscoveryService.Partitionings<P> partitionings = this.currentPartitionings;
 		return execute(partitionings.getPartitions(), CrdtStorage::ping)
 				.whenResult(map -> {
-					Sharder<K> sharder = partitionings.createSharder(new ArrayList<>(map.keySet()));
+					Sharder<K> sharder = partitionings.createSharder(provider, new ArrayList<>(map.keySet()));
 					if (sharder == null) {
 						throw new CrdtException("Incomplete cluster");
 					}
@@ -297,11 +301,11 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 	}
 
 	@NotNull
-	private <T> Promise<Map<P, T>> execute(Map<P, CrdtStorage<K, S>> partitions, AsyncFunction<CrdtStorage<K, S>, T> method) {
+	private <T> Promise<Map<P, T>> execute(Set<P> partitions, AsyncFunction<CrdtStorage<K, S>, T> method) {
 		Map<P, T> map = new HashMap<>();
 		return Promises.all(
-						partitions.keySet().stream()
-								.map(partitionId -> method.apply(partitions.get(partitionId))
+						partitions.stream()
+								.map(partitionId -> method.apply(provider.apply(partitionId))
 										.map((t, e) -> e == null ? map.put(partitionId, t) : null)
 								))
 				.map($ -> map);

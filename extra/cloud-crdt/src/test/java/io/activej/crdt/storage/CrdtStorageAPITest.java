@@ -114,9 +114,9 @@ public class CrdtStorageAPITest {
 							}
 							RendezvousPartitioning<Integer> partitioning2 = RendezvousPartitioning.create(partitions, 4, false, true);
 
-							Partitionings<String, TimestampContainer<Integer>, Integer> partitionings = RendezvousPartitionings.create(map, partitioning1, partitioning2);
-							DiscoveryService<String, TimestampContainer<Integer>, Integer> discoveryService = DiscoveryService.of(partitionings);
-							CrdtStorageCluster<String, TimestampContainer<Integer>, Integer> storageCluster = CrdtStorageCluster.create(eventloop, discoveryService, CRDT_FUNCTION);
+							Partitionings<Integer> partitionings = RendezvousPartitionings.create(partitioning1, partitioning2);
+							DiscoveryService<Integer> discoveryService = DiscoveryService.of(partitionings);
+							CrdtStorageCluster<String, TimestampContainer<Integer>, Integer> storageCluster = CrdtStorageCluster.create(eventloop, discoveryService, map::get, CRDT_FUNCTION);
 
 							await(storageCluster.start());
 							return storageCluster;
