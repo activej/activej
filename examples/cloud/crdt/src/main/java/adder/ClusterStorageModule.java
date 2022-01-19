@@ -64,7 +64,7 @@ public final class ClusterStorageModule extends AbstractModule {
 			@Local CrdtStorage<Long, DetailedSumsCrdtState> localStorage,
 			Config config
 	) {
-		RendezvousPartitionings<SimplePartitionId> partitionings = config.get(ConfigConverters.ofRendezvousPartitionings(eventloop, serializer, localId, localStorage), "crdt.cluster");
+		RendezvousPartitionings<SimplePartitionId> partitionings = config.get(ConfigConverters.ofRendezvousPartitionings(), "crdt.cluster");
 		return DiscoveryService.of(partitionings);
 	}
 
