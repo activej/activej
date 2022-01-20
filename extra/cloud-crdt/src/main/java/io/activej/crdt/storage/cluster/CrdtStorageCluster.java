@@ -24,6 +24,7 @@ import io.activej.common.collection.Try;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtException;
+import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.CrdtType;
 import io.activej.crdt.storage.CrdtStorage;
@@ -47,12 +48,15 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.function.Function;
 
+import static java.util.stream.Collectors.toMap;
+
 @SuppressWarnings("rawtypes") // JMX
 public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements CrdtStorage<K, S>, WithInitializer<CrdtStorageCluster<K, S, P>>, EventloopService, EventloopJmxBeanWithStats {
 	private final Eventloop eventloop;
 	private final DiscoveryService<P> discoveryService;
 	private final CrdtFunction<S> crdtFunction;
 	private final Function<P, CrdtStorage<K, S>> provider;
+	private final Map<P, CrdtStorage<K, S>> crdtStorages = new LinkedHashMap<>();
 
 	private DiscoveryService.Partitionings<P> currentPartitionings;
 	private boolean stopped;
@@ -73,7 +77,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 		this.eventloop = eventloop;
 		this.discoveryService = discoveryService;
 		this.crdtFunction = crdtFunction;
-		this.provider = provider;
+		this.provider = cachedProvider(provider);
 	}
 
 	public static <K extends Comparable<K>, S, P> CrdtStorageCluster<K, S, P> create(Eventloop eventloop,
@@ -308,6 +312,10 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 				.map($ -> map);
 	}
 
+	private Function<P, CrdtStorage<K, S>> cachedProvider(Function<P, CrdtStorage<K, S>> function) {
+		return id -> crdtStorages.computeIfAbsent(id, function);
+	}
+
 	// region JMX
 /*
 	@JmxAttribute
@@ -379,6 +387,13 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 	@JmxAttribute
 	public StreamStatsDetailed getRemoveStatsDetailed() {
 		return removeStatsDetailed;
+	}
+
+	@JmxAttribute
+	public Map<P, CrdtStorageClient> getCrdtStorageClients() {
+		return crdtStorages.entrySet().stream()
+				.filter(entry -> entry.getValue() instanceof CrdtStorageClient)
+				.collect(toMap(Map.Entry::getKey, e -> (CrdtStorageClient) e.getValue()));
 	}
 	// endregion
 }
