@@ -47,8 +47,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.function.Function;
 
-import static io.activej.common.Checks.checkArgument;
-
 @SuppressWarnings("rawtypes") // JMX
 public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements CrdtStorage<K, S>, WithInitializer<CrdtStorageCluster<K, S, P>>, EventloopService, EventloopJmxBeanWithStats {
 	private final Eventloop eventloop;
@@ -208,7 +206,6 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 
 	public @NotNull Promise<Void> repartition(P sourcePartitionId) {
 		DiscoveryService.Partitionings<P> partitionings = this.currentPartitionings;
-		checkArgument(partitionings.getPartitions().contains(sourcePartitionId));
 		CrdtStorage<K, S> source = provider.apply(sourcePartitionId);
 
 		class Tuple {

@@ -1,6 +1,5 @@
 package io.activej.crdt.storage.cluster;
 
-import io.activej.common.HashUtils;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.rpc.client.sender.RpcStrategy;
@@ -34,10 +33,6 @@ public final class RendezvousPartitionings<P> implements DiscoveryService.Partit
 	public static <P> RendezvousPartitionings<P> create(List<RendezvousPartitioning<P>> partitionings) {
 		return new RendezvousPartitionings<>(partitionings,
 				Objects::hashCode);
-	}
-
-	public static <P> long hashBucket(P pid, int bucket) {
-		return HashUtils.murmur3hash(((long) pid.hashCode() << 32) | (bucket & 0xFFFFFFFFL));
 	}
 
 	public RendezvousPartitionings<P> withPartitioning(RendezvousPartitioning<P> partitioning) {
@@ -80,7 +75,7 @@ public final class RendezvousPartitionings<P> implements DiscoveryService.Partit
 			RpcStrategyRendezvousHashing rendezvousHashing = RpcStrategyRendezvousHashing.create(req ->
 							((ToIntFunction<K>) hashFn).applyAsInt(keyGetter.apply(req)))
 					.withHashBuckets(NUMBER_OF_BUCKETS)
-					.withHashBucketFunction(RendezvousPartitionings::hashBucket);
+					.withHashBucketFunction(RendezvousHashSharder::hashBucket);
 			for (P pid : partitioning.getPartitions()) {
 				rendezvousHashing.withShard(pid, provider.apply(pid));
 			}

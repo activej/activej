@@ -17,6 +17,7 @@
 package io.activej.crdt.storage.cluster;
 
 import io.activej.common.ApplicationSettings;
+import io.activej.common.HashUtils;
 import io.activej.common.initializer.WithInitializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -76,7 +77,7 @@ public final class RendezvousHashSharder<K, P> implements Sharder<K>, WithInitia
 
 		for (int bucket = 0; bucket < buckets.length; bucket++) {
 			for (ObjWithIndex obj : toSort) {
-				obj.hash = RendezvousPartitionings.hashBucket(obj.partitionId, bucket);
+				obj.hash = hashBucket(obj.partitionId, bucket);
 			}
 
 			Arrays.sort(toSort, Comparator.comparingLong(ObjWithIndex::getHash).reversed());
@@ -128,4 +129,7 @@ public final class RendezvousHashSharder<K, P> implements Sharder<K>, WithInitia
 		return buckets[keyHashFn.applyAsInt(key) & (NUMBER_OF_BUCKETS - 1)];
 	}
 
+	public static <P> long hashBucket(P pid, int bucket) {
+		return HashUtils.murmur3hash(((long) pid.hashCode() << 32) | (bucket & 0xFFFFFFFFL));
+	}
 }

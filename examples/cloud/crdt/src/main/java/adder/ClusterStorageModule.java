@@ -40,11 +40,14 @@ public final class ClusterStorageModule extends AbstractModule {
 			Eventloop eventloop,
 			DiscoveryService<SimplePartitionId> discoveryService,
 			CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer,
-			CrdtFunction<DetailedSumsCrdtState> crdtFunction
+			CrdtFunction<DetailedSumsCrdtState> crdtFunction,
+			SimplePartitionId localPartitionId,
+			@Local CrdtStorage<Long, DetailedSumsCrdtState> localCrdtStorage
 	) {
 		return CrdtStorageCluster.create(eventloop, discoveryService,
-				partitionId ->
-						CrdtStorageClient.create(eventloop, partitionId.getCrdtAddress(), serializer), // FIXME
+				partitionId -> partitionId.equals(localPartitionId) ?
+						localCrdtStorage :
+						CrdtStorageClient.create(eventloop, partitionId.getCrdtAddress(), serializer),
 				crdtFunction);
 	}
 
