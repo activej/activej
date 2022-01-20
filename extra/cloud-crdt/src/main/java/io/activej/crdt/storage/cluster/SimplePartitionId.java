@@ -49,9 +49,12 @@ public final class SimplePartitionId {
 
 	public static SimplePartitionId parseString(String string) throws MalformedDataException {
 		String[] split = string.split("\\|");
+		if (split.length > 3) {
+			throw new MalformedDataException("");
+		}
 		String id = split[0];
-		InetSocketAddress crdtAddress = split.length >= 1 && !split[1].trim().isEmpty() ? parseInetSocketAddress(split[1]) : null;
-		InetSocketAddress rpcAddress = split.length >= 2 && !split[2].trim().isEmpty() ? parseInetSocketAddress(split[2]) : null;
+		InetSocketAddress crdtAddress = split.length > 1 && !split[1].trim().isEmpty() ? parseInetSocketAddress(split[1]) : null;
+		InetSocketAddress rpcAddress = split.length > 2 && !split[2].trim().isEmpty() ? parseInetSocketAddress(split[2]) : null;
 
 		return new SimplePartitionId(id, crdtAddress, rpcAddress);
 	}
@@ -60,12 +63,20 @@ public final class SimplePartitionId {
 		return id;
 	}
 
+	@SuppressWarnings("NullableProblems")
 	public InetSocketAddress getCrdtAddress() {
 		return crdtAddress;
 	}
 
+	@SuppressWarnings("NullableProblems")
 	public InetSocketAddress getRpcAddress() {
 		return rpcAddress;
+	}
+
+	private static String addressToString(@Nullable InetSocketAddress address) {
+		return address == null ?
+				"" :
+				address.getAddress().getHostAddress() + ":" + address.getPort();
 	}
 
 	@Override
@@ -83,6 +94,6 @@ public final class SimplePartitionId {
 
 	@Override
 	public String toString() {
-		return id + '|' + (crdtAddress != null ? crdtAddress : "") + '|' + (rpcAddress != null ? rpcAddress : "");
+		return id + '|' + addressToString(crdtAddress) + '|' + addressToString(rpcAddress);
 	}
 }
