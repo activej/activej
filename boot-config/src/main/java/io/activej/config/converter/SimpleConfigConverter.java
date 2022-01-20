@@ -16,9 +16,12 @@
 
 package io.activej.config.converter;
 
+import io.activej.common.function.FunctionEx;
 import io.activej.config.Config;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.function.Function;
 
 import static io.activej.common.Checks.checkNotNull;
 
@@ -37,4 +40,22 @@ public abstract class SimpleConfigConverter<T> implements ConfigConverter<T> {
 	protected abstract T fromString(String string);
 
 	protected abstract String toString(T value);
+
+	public static <T> SimpleConfigConverter<T> of(FunctionEx<String, T> fromStringFn, Function<T, String> toStringFn) {
+		return new SimpleConfigConverter<T>() {
+			@Override
+			protected T fromString(String string) {
+				try {
+					return fromStringFn.apply(string);
+				} catch (Exception e) {
+					throw new IllegalArgumentException(e);
+				}
+			}
+
+			@Override
+			protected String toString(T value) {
+				return toStringFn.apply(value);
+			}
+		};
+	}
 }

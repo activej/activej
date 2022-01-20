@@ -16,7 +16,6 @@
 
 package io.activej.launchers.crdt;
 
-import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import io.activej.config.converter.ConfigConverter;
 import io.activej.config.converter.SimpleConfigConverter;
@@ -44,7 +43,6 @@ public final class ConfigConverters {
 	}
 
 	/**
-	 * @return
 	 * @see #ofRendezvousPartitionings(ConfigConverter, ToIntFunction)
 	 */
 	public static <K extends Comparable<K>> ConfigConverter<RendezvousPartitionings<SimplePartitionId>> ofRendezvousPartitionings(
@@ -123,21 +121,7 @@ public final class ConfigConverters {
 	}
 
 	public static ConfigConverter<SimplePartitionId> ofSimplePartitionId() {
-		return new SimpleConfigConverter<SimplePartitionId>() {
-			@Override
-			protected SimplePartitionId fromString(String string) {
-				try {
-					return SimplePartitionId.parseString(string);
-				} catch (MalformedDataException e) {
-					throw new IllegalArgumentException(e);
-				}
-			}
-
-			@Override
-			protected String toString(SimplePartitionId simplePartitionId) {
-				return simplePartitionId.toString();
-			}
-		};
+		return SimpleConfigConverter.of(SimplePartitionId::parseString, SimplePartitionId::toString);
 	}
 
 }

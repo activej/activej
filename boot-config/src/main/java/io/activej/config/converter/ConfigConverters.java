@@ -20,7 +20,6 @@ import io.activej.async.service.EventloopTaskScheduler.Schedule;
 import io.activej.common.MemSize;
 import io.activej.common.StringFormatUtils;
 import io.activej.common.exception.FatalErrorHandler;
-import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;
@@ -32,7 +31,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.*;
@@ -45,7 +43,6 @@ import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
-import static io.activej.common.StringFormatUtils.parseInetSocketAddress;
 import static io.activej.common.Utils.not;
 import static io.activej.common.exception.FatalErrorHandler.*;
 import static io.activej.eventloop.inspector.ThrottlingController.INITIAL_KEYS_PER_SECOND;
@@ -60,59 +57,19 @@ import static java.util.stream.Collectors.toList;
 public final class ConfigConverters {
 
 	public static ConfigConverter<LocalDate> ofLocalDate() {
-		return new SimpleConfigConverter<LocalDate>() {
-			@Override
-			protected LocalDate fromString(String string) {
-				return LocalDate.parse(string);
-			}
-
-			@Override
-			protected String toString(LocalDate value) {
-				return value.toString();
-			}
-		};
+		return SimpleConfigConverter.of(LocalDate::parse, LocalDate::toString);
 	}
 
 	public static ConfigConverter<LocalTime> ofLocalTime() {
-		return new SimpleConfigConverter<LocalTime>() {
-			@Override
-			protected LocalTime fromString(String string) {
-				return LocalTime.parse(string);
-			}
-
-			@Override
-			protected String toString(LocalTime value) {
-				return value.toString();
-			}
-		};
+		return SimpleConfigConverter.of(LocalTime::parse, LocalTime::toString);
 	}
 
 	public static ConfigConverter<LocalDateTime> ofLocalDateTime() {
-		return new SimpleConfigConverter<LocalDateTime>() {
-			@Override
-			protected LocalDateTime fromString(String string) {
-				return StringFormatUtils.parseLocalDateTime(string);
-			}
-
-			@Override
-			protected String toString(LocalDateTime value) {
-				return StringFormatUtils.formatLocalDateTime(value);
-			}
-		};
+		return SimpleConfigConverter.of(StringFormatUtils::parseLocalDateTime, StringFormatUtils::formatLocalDateTime);
 	}
 
 	public static ConfigConverter<Period> ofPeriod() {
-		return new SimpleConfigConverter<Period>() {
-			@Override
-			protected Period fromString(String string) {
-				return StringFormatUtils.parsePeriod(string);
-			}
-
-			@Override
-			protected String toString(Period value) {
-				return StringFormatUtils.formatPeriod(value);
-			}
-		};
+		return SimpleConfigConverter.of(StringFormatUtils::parsePeriod, StringFormatUtils::formatPeriod);
 	}
 
 	/**
@@ -123,17 +80,7 @@ public final class ConfigConverters {
 	}
 
 	public static ConfigConverter<Duration> ofDuration() {
-		return new SimpleConfigConverter<Duration>() {
-			@Override
-			protected Duration fromString(String string) {
-				return StringFormatUtils.parseDuration(string);
-			}
-
-			@Override
-			protected String toString(Duration value) {
-				return StringFormatUtils.formatDuration(value);
-			}
-		};
+		return SimpleConfigConverter.of(StringFormatUtils::parseDuration, StringFormatUtils::formatDuration);
 	}
 
 	/**
@@ -144,17 +91,7 @@ public final class ConfigConverters {
 	}
 
 	public static ConfigConverter<Instant> ofInstant() {
-		return new SimpleConfigConverter<Instant>() {
-			@Override
-			protected Instant fromString(String string) {
-				return StringFormatUtils.parseInstant(string);
-			}
-
-			@Override
-			protected String toString(Instant value) {
-				return StringFormatUtils.formatInstant(value);
-			}
-		};
+		return SimpleConfigConverter.of(StringFormatUtils::parseInstant, StringFormatUtils::formatInstant);
 	}
 
 	/**
@@ -179,186 +116,54 @@ public final class ConfigConverters {
 	}
 
 	public static ConfigConverter<Byte> ofByte() {
-		return new SimpleConfigConverter<Byte>() {
-			@Override
-			protected Byte fromString(String string) {
-				return Byte.valueOf(string);
-			}
-
-			@Override
-			protected String toString(Byte value) {
-				return Byte.toString(value);
-			}
-		};
+		return SimpleConfigConverter.of(Byte::valueOf, aByte -> Byte.toString(aByte));
 	}
 
 	public static ConfigConverter<Integer> ofInteger() {
-		return new SimpleConfigConverter<Integer>() {
-			@Override
-			protected Integer fromString(String string) {
-				return Integer.valueOf(string);
-			}
-
-			@Override
-			protected String toString(Integer value) {
-				return Integer.toString(value);
-			}
-		};
+		return SimpleConfigConverter.of(Integer::valueOf, anInteger -> Integer.toString(anInteger));
 	}
 
 	public static ConfigConverter<Long> ofLong() {
-		return new SimpleConfigConverter<Long>() {
-			@Override
-			public Long fromString(String string) {
-				return Long.parseLong(string);
-			}
-
-			@Override
-			public String toString(Long value) {
-				return Long.toString(value);
-			}
-		};
+		return SimpleConfigConverter.of(Long::valueOf, aLong -> Long.toString(aLong));
 	}
 
 	public static ConfigConverter<Float> ofFloat() {
-		return new SimpleConfigConverter<Float>() {
-			@Override
-			public Float fromString(String string) {
-				return Float.parseFloat(string);
-			}
-
-			@Override
-			public String toString(Float value) {
-				return Float.toString(value);
-			}
-		};
+		return SimpleConfigConverter.of(Float::valueOf, aFloat -> Float.toString(aFloat));
 	}
 
 	public static ConfigConverter<Double> ofDouble() {
-		return new SimpleConfigConverter<Double>() {
-			@Override
-			public Double fromString(String string) {
-				return Double.parseDouble(string);
-			}
-
-			@Override
-			public String toString(Double value) {
-				return Double.toString(value);
-			}
-		};
+		return SimpleConfigConverter.of(Double::valueOf, aDouble -> Double.toString(aDouble));
 	}
 
 	public static ConfigConverter<Boolean> ofBoolean() {
-		return new SimpleConfigConverter<Boolean>() {
-			@Override
-			public Boolean fromString(String string) {
-				return Boolean.parseBoolean(string);
-			}
-
-			@Override
-			public String toString(Boolean value) {
-				return Boolean.toString(value);
-			}
-		};
+		return SimpleConfigConverter.of(Boolean::valueOf, aBoolean -> Boolean.toString(aBoolean));
 	}
 
 	public static <E extends Enum<E>> SimpleConfigConverter<E> ofEnum(Class<E> enumClass) {
-		Class<E> enumClass1 = enumClass;
-		return new SimpleConfigConverter<E>() {
-			private final Class<E> enumClass = enumClass1;
-
-			@Override
-			public E fromString(String string) {
-				return Enum.valueOf(enumClass, string);
-			}
-
-			@Override
-			public String toString(E value) {
-				return value.name();
-			}
-		};
+		return SimpleConfigConverter.of(string -> Enum.valueOf(enumClass, string), Enum::name);
 	}
 
 	public static ConfigConverter<Class<?>> ofClass() {
-		return new SimpleConfigConverter<Class<?>>() {
-			@Override
-			public Class<?> fromString(String string) {
-				try {
-					return Class.forName(string);
-				} catch (ClassNotFoundException e) {
-					throw new IllegalArgumentException(e);
-				}
-			}
-
-			@Override
-			public String toString(Class<?> value) {
-				return value.getName();
-			}
-		};
+		return SimpleConfigConverter.of(Class::forName, Class::getName);
 	}
 
 	public static ConfigConverter<InetAddress> ofInetAddress() {
-		return new SimpleConfigConverter<InetAddress>() {
-			@Override
-			public InetAddress fromString(String address) {
-				try {
-					return InetAddress.getByName(address);
-				} catch (UnknownHostException e) {
-					throw new IllegalArgumentException(e);
-				}
-			}
-
-			@Override
-			public String toString(InetAddress value) {
-				return value.getHostAddress();
-			}
-		};
+		return SimpleConfigConverter.of(InetAddress::getByName, InetAddress::getHostAddress);
 	}
 
 	public static ConfigConverter<InetSocketAddress> ofInetSocketAddress() {
-		return new SimpleConfigConverter<InetSocketAddress>() {
-			@Override
-			public InetSocketAddress fromString(String addressPort) {
-				try {
-					return parseInetSocketAddress(addressPort);
-				} catch (MalformedDataException e) {
-					throw new IllegalArgumentException(e);
-				}
-			}
-
-			@Override
-			public String toString(InetSocketAddress value) {
-				return value.getAddress().getHostAddress() + ":" + value.getPort();
-			}
-		};
+		return SimpleConfigConverter.of(
+				StringFormatUtils::parseInetSocketAddress,
+				value -> value.getAddress().getHostAddress() + ":" + value.getPort()
+		);
 	}
 
 	public static ConfigConverter<Path> ofPath() {
-		return new SimpleConfigConverter<Path>() {
-			@Override
-			protected Path fromString(String string) {
-				return Paths.get(string);
-			}
-
-			@Override
-			protected String toString(Path value) {
-				return value.toAbsolutePath().normalize().toString();
-			}
-		};
+		return SimpleConfigConverter.of(Paths::get, value -> value.toAbsolutePath().normalize().toString());
 	}
 
 	public static ConfigConverter<MemSize> ofMemSize() {
-		return new SimpleConfigConverter<MemSize>() {
-			@Override
-			public MemSize fromString(String string) {
-				return MemSize.valueOf(string);
-			}
-
-			@Override
-			public String toString(MemSize value) {
-				return value.format();
-			}
-		};
+		return SimpleConfigConverter.of(MemSize::valueOf, MemSize::format);
 	}
 
 	/**
