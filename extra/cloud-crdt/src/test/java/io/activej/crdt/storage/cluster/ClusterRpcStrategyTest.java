@@ -1,11 +1,13 @@
 package io.activej.crdt.storage.cluster;
 
 import io.activej.async.callback.Callback;
+import io.activej.common.ref.Ref;
 import io.activej.common.ref.RefBoolean;
 import io.activej.crdt.storage.cluster.DiscoveryService.Partitionings;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import io.activej.rpc.client.sender.RpcSender;
 import io.activej.rpc.client.sender.RpcStrategy;
+import io.activej.rpc.protocol.RpcException;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -18,6 +20,8 @@ import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
 public class ClusterRpcStrategyTest {
@@ -63,7 +67,7 @@ public class ClusterRpcStrategyTest {
 	}
 
 	@Test
-	public void testRpcStrategyActive() {
+	public void testRpcStrategyActive() throws Exception {
 		Set<String> partitionIds = PARTITION_ADDRESS_MAP_1.keySet();
 
 		Partitionings<String> partitionings = RendezvousPartitionings.<String>create()
@@ -114,7 +118,70 @@ public class ClusterRpcStrategyTest {
 	}
 
 	@Test
-	public void testRpcStrategyMultipleActive() {
+	public void testRpcStrategyNoRepartition() {
+		Set<String> partitionIds = PARTITION_ADDRESS_MAP_1.keySet();
+
+		Partitionings<String> partitionings = RendezvousPartitionings.<String>create()
+				.withPartitioning(RendezvousPartitioning.create(partitionIds, 1, false, true));
+
+		List<String> alivePartitions = new ArrayList<>(difference(partitionIds, singleton("two")));
+
+		RpcClientConnectionPoolStub poolStub = new RpcClientConnectionPoolStub();
+		for (String alivePartition : alivePartitions) {
+			poolStub.put(PARTITION_ADDRESS_MAP_1.get(alivePartition), new RpcSenderStub());
+		}
+
+		RpcStrategy rpcStrategy = partitionings.createRpcStrategy(partition -> server(PARTITION_ADDRESS_MAP_1.get(partition)), KEY_GETTER);
+
+		RpcSender sender = rpcStrategy.createSender(poolStub);
+		assertNotNull(sender);
+
+		Sharder<Integer> sharder = partitionings.createSharder(alivePartitions);
+		assertNotNull(sharder);
+
+		Map<InetSocketAddress, String> address2Partition = PARTITION_ADDRESS_MAP_1.entrySet()
+				.stream()
+				.collect(toMap(Map.Entry::getValue, Map.Entry::getKey));
+
+		for (int i = 0; i < 1000; i++) {
+			int[] partitionsIndexes = sharder.shard(i);
+			Set<String> partitions = Arrays.stream(partitionsIndexes)
+					.mapToObj(alivePartitions::get)
+					.collect(toSet());
+
+			try {
+				sendRequest(sender, i);
+				if (partitions.isEmpty()){
+					fail();
+				}
+			} catch (Exception e){
+				assertThat(e, instanceOf(RpcException.class));
+				assertEquals("No sender for request: " + i, e.getMessage());
+				continue;
+			}
+
+			//noinspection ConstantConditions
+			assertFalse(partitions.isEmpty());
+
+			boolean asserted = false;
+			for (Map.Entry<InetSocketAddress, RpcSender> entry : poolStub.connections.entrySet()) {
+				RpcSenderStub rpcSender = (RpcSenderStub) entry.getValue();
+				Integer count = rpcSender.counters.get(i);
+				if (count == null) continue;
+
+				assertEquals(1, count.intValue());
+				String partition = address2Partition.get(entry.getKey());
+				assertTrue(partitions.contains(partition));
+				assertFalse(asserted);
+				asserted = true;
+			}
+
+			assertTrue(asserted);
+		}
+	}
+
+	@Test
+	public void testRpcStrategyMultipleActive() throws Exception {
 		Set<String> partitionIds = union(PARTITION_ADDRESS_MAP_1.keySet(), PARTITION_ADDRESS_MAP_2.keySet());
 
 		Partitionings<String> partitionings = RendezvousPartitionings.<String>create()
@@ -169,14 +236,19 @@ public class ClusterRpcStrategyTest {
 		}
 	}
 
-	private static void sendRequest(RpcSender sender, int request) {
+	private static void sendRequest(RpcSender sender, int request) throws Exception {
 		RefBoolean sent = new RefBoolean(false);
+		Ref<Exception> exceptionRef = new Ref<>(null);
 		sender.sendRequest(request, (result, e) -> {
 			assertNull(result);
-			assertNull(e);
+			exceptionRef.set(e);
 
 			sent.set(true);
 		});
+		Exception exception = exceptionRef.get();
+		if (exception != null) {
+			throw exception;
+		}
 		assertTrue(sent.get());
 	}
 
