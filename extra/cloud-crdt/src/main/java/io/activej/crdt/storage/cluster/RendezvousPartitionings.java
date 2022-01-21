@@ -1,7 +1,6 @@
 package io.activej.crdt.storage.cluster;
 
 import io.activej.common.initializer.WithInitializer;
-import io.activej.crdt.storage.CrdtStorage;
 import io.activej.rpc.client.sender.RpcStrategy;
 import io.activej.rpc.client.sender.RpcStrategyRendezvousHashing;
 import io.activej.rpc.client.sender.RpcStrategySharding;
@@ -51,8 +50,7 @@ public final class RendezvousPartitionings<P> implements DiscoveryService.Partit
 	}
 
 	@Override
-	public <K extends Comparable<K>, S> @Nullable Sharder<K> createSharder(Function<P, CrdtStorage<K, S>> provider,
-			List<P> alive) {
+	public <K extends Comparable<K>> @Nullable Sharder<K> createSharder(List<P> alive) {
 		List<RendezvousHashSharder<K, P>> sharders = new ArrayList<>();
 		for (RendezvousPartitioning<P> partitioning : partitionings) {
 			//noinspection unchecked

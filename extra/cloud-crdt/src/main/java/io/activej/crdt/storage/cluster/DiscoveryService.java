@@ -17,7 +17,6 @@
 package io.activej.crdt.storage.cluster;
 
 import io.activej.async.function.AsyncSupplier;
-import io.activej.crdt.storage.CrdtStorage;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.rpc.client.sender.RpcStrategy;
@@ -35,7 +34,7 @@ public interface DiscoveryService<P> {
 	interface Partitionings<P> {
 		Set<P> getPartitions();
 
-		<K extends Comparable<K>, S> @Nullable Sharder<K> createSharder(Function<P, CrdtStorage<K, S>> provider, List<P> alive);
+		<K extends Comparable<K>> @Nullable Sharder<K> createSharder(List<P> alive);
 
 		<K extends Comparable<K>> RpcStrategy createRpcStrategy(Function<P, @NotNull RpcStrategy> provider, Function<Object, K> keyGetter);
 	}

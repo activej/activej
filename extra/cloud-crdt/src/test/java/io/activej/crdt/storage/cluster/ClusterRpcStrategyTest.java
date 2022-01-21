@@ -1,22 +1,12 @@
 package io.activej.crdt.storage.cluster;
 
 import io.activej.async.callback.Callback;
-import io.activej.common.Utils;
 import io.activej.common.ref.RefBoolean;
-import io.activej.crdt.function.CrdtFunction;
-import io.activej.crdt.primitives.GCounterInt;
-import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.storage.cluster.DiscoveryService.Partitionings;
-import io.activej.crdt.storage.local.CrdtStorageMap;
-import io.activej.eventloop.Eventloop;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import io.activej.rpc.client.sender.RpcSender;
-import io.activej.rpc.client.sender.RpcStrategies;
 import io.activej.rpc.client.sender.RpcStrategy;
-import io.activej.test.rules.EventloopRule;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
@@ -24,27 +14,13 @@ import java.util.*;
 import java.util.function.Function;
 
 import static io.activej.common.Utils.*;
+import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
 public class ClusterRpcStrategyTest {
-
-	@ClassRule
-	public static final EventloopRule eventloopRule = new EventloopRule();
-
-	public static final CrdtFunction<GCounterInt> CRDT_FUNCTION = new CrdtFunction<GCounterInt>() {
-		@Override
-		public GCounterInt merge(GCounterInt first, GCounterInt second) {
-			return first.merge(second);
-		}
-
-		@Override
-		public @Nullable GCounterInt extract(GCounterInt state, long timestamp) {
-			return null;
-		}
-	};
 
 	private static final Map<String, InetSocketAddress> PARTITION_ADDRESS_MAP_1 = mapOf(
 			"one", new InetSocketAddress(9001),
@@ -68,17 +44,14 @@ public class ClusterRpcStrategyTest {
 
 	@Test
 	public void testRpcStrategyNoActive() {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
-
-		Map<String, CrdtStorage<Integer, GCounterInt>> crdtStorages = PARTITION_ADDRESS_MAP_1.keySet().stream()
-				.collect(toMap(Function.identity(), $ -> CrdtStorageMap.create(eventloop, CRDT_FUNCTION)));
+		Set<String> crdtStorages = PARTITION_ADDRESS_MAP_1.keySet();
 
 		Partitionings<String> partitionings = RendezvousPartitionings.<String>create()
-				.withPartitioning(RendezvousPartitioning.create(crdtStorages.keySet(), 2, true, false));
+				.withPartitioning(RendezvousPartitioning.create(crdtStorages, 2, true, false));
 
-		List<String> alivePartitions = new ArrayList<>(Utils.difference(crdtStorages.keySet(), singleton("two")));
+		List<String> alivePartitions = new ArrayList<>(difference(crdtStorages, singleton("two")));
 
-		RpcStrategy rpcStrategy = partitionings.createRpcStrategy(partition -> RpcStrategies.server(PARTITION_ADDRESS_MAP_1.get(partition)), KEY_GETTER);
+		RpcStrategy rpcStrategy = partitionings.createRpcStrategy(partition -> server(PARTITION_ADDRESS_MAP_1.get(partition)), KEY_GETTER);
 
 		RpcClientConnectionPoolStub poolStub = new RpcClientConnectionPoolStub();
 		for (String alivePartition : alivePartitions) {
@@ -91,27 +64,24 @@ public class ClusterRpcStrategyTest {
 
 	@Test
 	public void testRpcStrategyActive() {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
-
-		Map<String, CrdtStorage<Integer, GCounterInt>> crdtStorages = PARTITION_ADDRESS_MAP_1.keySet().stream()
-				.collect(toMap(Function.identity(), $ -> CrdtStorageMap.create(eventloop, CRDT_FUNCTION)));
+		Set<String> partitionIds = PARTITION_ADDRESS_MAP_1.keySet();
 
 		Partitionings<String> partitionings = RendezvousPartitionings.<String>create()
-				.withPartitioning(RendezvousPartitioning.create(crdtStorages.keySet(), 2, true, true));
+				.withPartitioning(RendezvousPartitioning.create(partitionIds, 2, true, true));
 
-		List<String> alivePartitions = new ArrayList<>(Utils.difference(crdtStorages.keySet(), singleton("two")));
+		List<String> alivePartitions = new ArrayList<>(difference(partitionIds, singleton("two")));
 
 		RpcClientConnectionPoolStub poolStub = new RpcClientConnectionPoolStub();
 		for (String alivePartition : alivePartitions) {
 			poolStub.put(PARTITION_ADDRESS_MAP_1.get(alivePartition), new RpcSenderStub());
 		}
 
-		RpcStrategy rpcStrategy = partitionings.createRpcStrategy(partition -> RpcStrategies.server(PARTITION_ADDRESS_MAP_1.get(partition)), KEY_GETTER);
+		RpcStrategy rpcStrategy = partitionings.createRpcStrategy(partition -> server(PARTITION_ADDRESS_MAP_1.get(partition)), KEY_GETTER);
 
 		RpcSender sender = rpcStrategy.createSender(poolStub);
 		assertNotNull(sender);
 
-		Sharder<Integer> sharder = partitionings.createSharder(crdtStorages::get, alivePartitions);
+		Sharder<Integer> sharder = partitionings.createSharder(alivePartitions);
 		assertNotNull(sharder);
 
 		Map<InetSocketAddress, String> address2Partition = PARTITION_ADDRESS_MAP_1.entrySet()
@@ -145,17 +115,13 @@ public class ClusterRpcStrategyTest {
 
 	@Test
 	public void testRpcStrategyMultipleActive() {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
-
-		Map<String, CrdtStorage<Integer, GCounterInt>> crdtStorages = union(PARTITION_ADDRESS_MAP_1.keySet(), PARTITION_ADDRESS_MAP_2.keySet())
-				.stream()
-				.collect(toMap(Function.identity(), $ -> CrdtStorageMap.create(eventloop, CRDT_FUNCTION)));
+		Set<String> partitionIds = union(PARTITION_ADDRESS_MAP_1.keySet(), PARTITION_ADDRESS_MAP_2.keySet());
 
 		Partitionings<String> partitionings = RendezvousPartitionings.<String>create()
 				.withPartitioning(RendezvousPartitioning.create(PARTITION_ADDRESS_MAP_1.keySet(), 2, true, true))
 				.withPartitioning(RendezvousPartitioning.create(PARTITION_ADDRESS_MAP_2.keySet(), 2, true, true));
 
-		List<String> alivePartitions = new ArrayList<>(Utils.difference(crdtStorages.keySet(), setOf("two", "seven", "nine")));
+		List<String> alivePartitions = new ArrayList<>(difference(partitionIds, setOf("two", "seven", "nine")));
 
 		Map<String, InetSocketAddress> partition2Address = new HashMap<>();
 		partition2Address.putAll(PARTITION_ADDRESS_MAP_1);
@@ -170,12 +136,12 @@ public class ClusterRpcStrategyTest {
 			poolStub.put(partition2Address.get(alivePartition), new RpcSenderStub());
 		}
 
-		RpcStrategy rpcStrategy = partitionings.createRpcStrategy(partition -> RpcStrategies.server(partition2Address.get(partition)), KEY_GETTER);
+		RpcStrategy rpcStrategy = partitionings.createRpcStrategy(partition -> server(partition2Address.get(partition)), KEY_GETTER);
 
 		RpcSender sender = rpcStrategy.createSender(poolStub);
 		assertNotNull(sender);
 
-		Sharder<Integer> sharder = partitionings.createSharder(crdtStorages::get, alivePartitions);
+		Sharder<Integer> sharder = partitionings.createSharder(alivePartitions);
 		assertNotNull(sharder);
 
 		for (int i = 0; i < 1000; i++) {
