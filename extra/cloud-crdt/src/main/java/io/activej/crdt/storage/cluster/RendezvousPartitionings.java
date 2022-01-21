@@ -77,6 +77,9 @@ public final class RendezvousPartitionings<P> implements DiscoveryService.Partit
 			for (P pid : partitioning.getPartitions()) {
 				rendezvousHashing.withShard(pid, provider.apply(pid));
 			}
+			if (!partitioning.isRepartition()) {
+				rendezvousHashing = rendezvousHashing.withStrictShards(partitioning.getReplicas());
+			}
 			rendezvousHashings.add(rendezvousHashing);
 		}
 
