@@ -2784,6 +2784,45 @@ public class BinarySerializerTest {
 		assertEquals(stringHolder.string, decoded.string);
 	}
 
+	@Test
+	public void abstractSubclass() {
+		SerializerBuilder serializerBuilder = SerializerBuilder.create()
+				.withSubclasses(Object.class, singletonList(AbstractClass.class));
+
+		try {
+			serializerBuilder.build(Object.class);
+			fail();
+		} catch (IllegalArgumentException e){
+			assertEquals("A subclass should not be an abstract class: " + AbstractClass.class, e.getMessage());
+		}
+	}
+
+	@Test
+	public void interfaceSubclass() {
+		SerializerBuilder serializerBuilder = SerializerBuilder.create()
+				.withSubclasses(Object.class, singletonList(Interface.class));
+
+		try {
+			serializerBuilder.build(Object.class);
+			fail();
+		} catch (IllegalArgumentException e){
+			assertEquals("A subclass should not be an interface: " + Interface.class, e.getMessage());
+		}
+	}
+
+	@Test
+	public void annotationSubclass() {
+		SerializerBuilder serializerBuilder = SerializerBuilder.create()
+				.withSubclasses(Object.class, singletonList(Annotation.class));
+
+		try {
+			serializerBuilder.build(Object.class);
+			fail();
+		} catch (IllegalArgumentException e){
+			assertEquals("A subclass should not be an interface: " + Annotation.class, e.getMessage());
+		}
+	}
+
 	public static final class StringHolderSerializerDef extends AbstractSerializerDef {
 
 		@Override
@@ -2821,5 +2860,12 @@ public class BinarySerializerTest {
 		public String getString() {
 			return string;
 		}
+	}
+
+	public static abstract class AbstractClass {}
+
+	public interface Interface {}
+
+	public @interface Annotation {
 	}
 }
