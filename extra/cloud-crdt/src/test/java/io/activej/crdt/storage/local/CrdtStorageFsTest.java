@@ -68,6 +68,12 @@ public final class CrdtStorageFsTest {
 	}
 
 	@Test
+	public void testEmptyConsolidation() {
+		await(client.consolidate());
+		assertTrue(await(fsClient.list("**")).isEmpty());
+	}
+
+	@Test
 	public void testConsolidation() {
 		await(StreamSupplier.ofStream(Stream.of(
 						new CrdtData<>("1_test_1", TimestampContainer.now(setOf(1, 2, 3))),

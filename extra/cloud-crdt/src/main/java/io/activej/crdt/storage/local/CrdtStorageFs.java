@@ -16,6 +16,7 @@
 
 package io.activej.crdt.storage.local;
 
+import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
@@ -57,6 +58,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
@@ -173,22 +175,12 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 
 	@Override
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
-		SettablePromise<ChannelConsumer<ByteBuf>> consumerPromise = new SettablePromise<>();
-		NonEmptyFilter<CrdtData<K, S>> nonEmptyFilter = new NonEmptyFilter<>(() -> fs.upload(namingStrategy.apply("bin"))
-				.mapException(e -> new CrdtException("Failed to upload CRDT data to file", e))
-				.whenComplete(consumerPromise::accept));
-
-		return Promise.of(StreamConsumer.<CrdtData<K, S>>ofSupplier(supplier -> supplier
-						.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
-						.transformWith(nonEmptyFilter)
-						.transformWith(ChannelSerializer.create(serializer))
-						.withEndOfStream(eos -> eos
-								.whenComplete(() -> {
-									if (nonEmptyFilter.isEmpty()) {
-										consumerPromise.set(ChannelConsumers.recycling());
-									}
-								}))
-						.streamTo(consumerPromise))
+		return Promise.of(this.<CrdtData<K, S>>uploadNonEmpty(() ->
+								fs.upload(namingStrategy.apply("bin"))
+										.mapException(e1 -> new CrdtException("Failed to upload CRDT data to file", e1)),
+						supplier -> supplier
+								.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
+								.transformWith(ChannelSerializer.create(serializer)))
 				.withAcknowledgement(ack -> ack
 						.mapException(e -> new CrdtException("Error while uploading CRDT data to file", e))));
 	}
@@ -232,22 +224,13 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 
 	@Override
 	public Promise<StreamConsumer<K>> remove() {
-		SettablePromise<ChannelConsumer<ByteBuf>> consumerPromise = new SettablePromise<>();
-		NonEmptyFilter<K> nonEmptyFilter = new NonEmptyFilter<>(() -> tombstoneFolderFs.upload(namingStrategy.apply("tomb"))
-				.mapException(e -> new CrdtException("Failed to remove CRDT data", e))
-				.whenComplete(consumerPromise::accept));
-
-		return Promise.of(StreamConsumer.<K>ofSupplier(supplier -> supplier
-						.transformWith(detailedStats ? removeStatsDetailed : removeStats)
-						.transformWith(nonEmptyFilter)
-						.transformWith(ChannelSerializer.create(serializer.getKeySerializer()))
-						.withEndOfStream(eos -> eos
-								.whenComplete(() -> {
-									if (nonEmptyFilter.isEmpty()) {
-										consumerPromise.set(ChannelConsumers.recycling());
-									}
-								}))
-						.streamTo(consumerPromise))
+		return Promise.of(this.<K>uploadNonEmpty(() ->
+								tombstoneFolderFs.upload(namingStrategy.apply("tomb"))
+										.mapException(e -> new CrdtException("Failed to remove CRDT data", e)),
+						supplier -> supplier
+								.transformWith(detailedStats ? removeStatsDetailed : removeStats)
+								.transformWith(ChannelSerializer.create(serializer.getKeySerializer()))
+				)
 				.withAcknowledgement(ack -> ack
 						.mapException(e -> new CrdtException("Error while removing CRDT data", e))));
 	}
@@ -297,8 +280,8 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 											.streamTo(consumer))
 							.then(() -> download())
 							.then(producer -> producer
-									.transformWith(ChannelSerializer.create(serializer))
-									.streamTo(ChannelConsumer.ofPromise(fs.upload(name))))
+									.streamTo(uploadNonEmpty(() -> fs.upload(name),
+											supplier -> supplier.transformWith(ChannelSerializer.create(serializer)))))
 							.then(() -> tombstoneFolderFs.list("*")
 									.map(fileMap -> tombstoneFolderFs.deleteAll(fileMap.keySet()))
 							)
@@ -307,6 +290,21 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 				})
 				.mapException(e -> new CrdtException("Consolidation failed", e))
 				.whenComplete(consolidationStats.recordStats());
+	}
+
+	private <T> StreamConsumer<T> uploadNonEmpty(AsyncSupplier<ChannelConsumer<ByteBuf>> consumerFn, Function<StreamSupplier<T>, ChannelSupplier<ByteBuf>> mapping) {
+		SettablePromise<ChannelConsumer<ByteBuf>> consumerPromise = new SettablePromise<>();
+		NonEmptyFilter<T> nonEmptyFilter = new NonEmptyFilter<>(() -> consumerFn.get()
+				.whenComplete(consumerPromise::accept));
+
+		return StreamConsumer.ofSupplier(supplier -> mapping.apply(supplier.transformWith(nonEmptyFilter))
+				.withEndOfStream(eos -> eos
+						.whenComplete(() -> {
+							if (nonEmptyFilter.isEmpty()) {
+								consumerPromise.set(ChannelConsumers.recycling());
+							}
+						}))
+				.streamTo(consumerPromise));
 	}
 
 	static class CrdtReducingData<K extends Comparable<K>, S> {
