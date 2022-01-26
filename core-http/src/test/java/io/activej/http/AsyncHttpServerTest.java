@@ -451,6 +451,82 @@ public final class AsyncHttpServerTest {
 		thread.join();
 	}
 
+	@Test
+	public void testMalformedRequests() throws IOException, ExecutionException, InterruptedException {
+		AsyncHttpServer server = AsyncHttpServer.create(eventloop, $ -> {
+			throw new IllegalArgumentException("Should not be called");
+		});
+		server.withListenPort(port);
+		server.listen();
+		Thread thread = new Thread(eventloop);
+		thread.start();
+
+		// malformed first line
+		doTestMalformedRequest("GET /malformed uri HTTP/1.1\r\n" +
+				"Host: localhost\r\n" +
+				"Connection: keep-alive\r\n\r\n");
+
+		// malformed header
+		doTestMalformedRequest("GET / HTTP/1.1\r\n" +
+				"Host: localhost\r\n" +
+				"Connection: keep-alive\r\n" +
+				"Content-Length: error\r\n\r\n");
+
+		// pipeline malformed first request
+		doTestMalformedRequest("GET /malformed uri HTTP/1.1\r\n" +
+				"Host: localhost\r\n" +
+				"Connection: keep-alive\r\n\r\n" +
+
+				"GET / HTTP/1.1\r\n" +
+				"Host: localhost\r\n" +
+				"Connection: keep-alive\r\n\r\n"
+		);
+
+
+		server.closeFuture().get();
+		thread.join();
+	}
+
+	@Test
+	public void testMalformedSecondRequestPipelined() throws IOException, ExecutionException, InterruptedException {
+		AsyncHttpServer server = AsyncHttpServer.create(eventloop, $ -> HttpResponse.ok200()
+				.withPlainText("Hello, world!"));
+		server.withListenPort(port);
+		server.listen();
+		Thread thread = new Thread(eventloop);
+		thread.start();
+
+		Socket socket = new Socket();
+
+		socket.connect(new InetSocketAddress("localhost", port));
+		writeByRandomParts(socket, "GET / HTTP/1.1\r\n" +
+				"Host: localhost\r\n" +
+				"Connection: keep-alive\r\n\r\n" +
+
+				"GET /malformed uri HTTP/1.1\r\n" +
+				"Host: localhost\r\n" +
+				"Connection: keep-alive\r\n\r\n");
+		socket.shutdownOutput();
+
+		assertEquals(0, toByteArray(socket.getInputStream()).length);
+		socket.close();
+
+		server.closeFuture().get();
+		thread.join();
+	}
+
+	private void doTestMalformedRequest(String string) throws IOException {
+		Socket socket = new Socket();
+
+		socket.connect(new InetSocketAddress("localhost", port));
+		writeByRandomParts(socket, string);
+		socket.shutdownOutput();
+
+		readAndAssert(socket.getInputStream(), "HTTP/1.1 400 Bad Request\r\n" +
+				"Connection: close\r\n\r\n");
+		socket.close();
+	}
+
 	private void shutdownAllChannels() {
 		try {
 			Selector selector = eventloop.getSelector();

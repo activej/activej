@@ -89,6 +89,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 	private static final byte[] EXPECT_100_CONTINUE = encodeAscii("100-continue");
 	private static final byte[] EXPECT_RESPONSE_CONTINUE = encodeAscii("HTTP/1.1 100 Continue\r\n\r\n");
+	private static final byte[] MALFORMED_HTTP_RESPONSE = encodeAscii("HTTP/1.1 400 Bad Request\r\nConnection: close\r\n\r\n");
 
 	/**
 	 * Creates a new instance of HttpServerConnection
@@ -149,6 +150,18 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		if (inspector != null) {
 			inspector.onHttpError(this, e);
 		}
+	}
+
+	@Override
+	protected void onMalformedHttpException(@NotNull MalformedHttpException e) {
+		if (writeBuf != null) {
+			// connection is in pipeline mode, just close
+			closeEx(e);
+			return;
+		}
+
+		socket.write(ByteBuf.wrapForReading(MALFORMED_HTTP_RESPONSE))
+				.whenComplete(() -> closeEx(e));
 	}
 
 	/**

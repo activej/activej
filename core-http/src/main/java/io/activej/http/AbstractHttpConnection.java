@@ -137,6 +137,8 @@ public abstract class AbstractHttpConnection {
 
 	protected abstract void onClosedWithError(@NotNull Exception e);
 
+	protected abstract void onMalformedHttpException(@NotNull MalformedHttpException e);
+
 	public final boolean isClosed() {
 		return flags < 0;
 	}
@@ -226,7 +228,7 @@ public abstract class AbstractHttpConnection {
 		try {
 			readMessage();
 		} catch (MalformedHttpException e) {
-			closeEx(e);
+			onMalformedHttpException(e);
 		}
 	}
 
@@ -592,7 +594,7 @@ public abstract class AbstractHttpConnection {
 					try {
 						thenRun();
 					} catch (MalformedHttpException e1) {
-						closeEx(e1);
+						onMalformedHttpException(e1);
 					}
 				} else {
 					close();
