@@ -17,14 +17,19 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.Method;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
+import static io.activej.codegen.expression.Expressions.property;
+import static io.activej.codegen.expression.Expressions.self;
 import static io.activej.codegen.util.Utils.isPrimitiveType;
 import static io.activej.codegen.util.Utils.wrap;
 import static org.objectweb.asm.Type.getType;
@@ -36,14 +41,24 @@ import static org.objectweb.asm.commons.Method.getMethod;
 public final class ExpressionToString implements Expression {
 	private String begin = "{";
 	private String end = "}";
-	private String separator = " ";
+	private @Nullable String nameSeparator = ": ";
+	private String valueSeparator = ", ";
 	private final Map<Object, Expression> arguments = new LinkedHashMap<>();
 
-	ExpressionToString() {
+	private ExpressionToString() {
 	}
 
 	public static ExpressionToString create() {
 		return new ExpressionToString();
+	}
+
+	public static ExpressionToString create(String begin, String end, @Nullable String nameSeparator, String valueSeparator) {
+		ExpressionToString expression = new ExpressionToString();
+		expression.begin = begin;
+		expression.end = end;
+		expression.nameSeparator = nameSeparator;
+		expression.valueSeparator = valueSeparator;
+		return expression;
 	}
 
 	public ExpressionToString with(String label, Expression expression) {
@@ -56,22 +71,20 @@ public final class ExpressionToString implements Expression {
 		return this;
 	}
 
-	public ExpressionToString withSeparator(String separator) {
-		this.separator = separator;
+	public ExpressionToString withField(String field) {
+		this.arguments.put(field, property(self(), field));
 		return this;
 	}
 
-	public ExpressionToString withQuotes(String begin, String end) {
-		this.begin = begin;
-		this.end = end;
+	public ExpressionToString withFields(List<String> fields) {
+		for (String field : fields) {
+			withField(field);
+		}
 		return this;
 	}
 
-	public ExpressionToString withQuotes(String begin, String end, String separator) {
-		this.begin = begin;
-		this.end = end;
-		this.separator = separator;
-		return this;
+	public ExpressionToString withFields(String... fields) {
+		return withFields(Arrays.asList(fields));
 	}
 
 	@Override
@@ -85,10 +98,12 @@ public final class ExpressionToString implements Expression {
 		boolean first = true;
 
 		for (Map.Entry<Object, Expression> entry : arguments.entrySet()) {
-			String str = first ? begin : separator;
+			String str = first ? begin : valueSeparator;
 			first = false;
 			if (entry.getKey() instanceof String) {
-				str += entry.getKey();
+				if (nameSeparator != null) {
+					str += entry.getKey() + nameSeparator;
+				}
 			}
 			if (!str.isEmpty()) {
 				g.dup();

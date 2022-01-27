@@ -18,6 +18,7 @@ package io.activej.codegen.util;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -54,11 +55,17 @@ public final class Primitives {
 		return PRIMITIVE.keySet();
 	}
 
+	public static boolean isPrimitiveType(@NotNull Type type) {
+		//noinspection SuspiciousMethodCalls
+		return PRIMITIVE.containsKey(type);
+	}
+
 	public static Set<Class<?>> allWrapperTypes() {
 		return WRAPPER.keySet();
 	}
 
-	public static boolean isWrapperType(@NotNull Class<?> type) {
+	public static boolean isWrapperType(@NotNull Type type) {
+		//noinspection SuspiciousMethodCalls
 		return WRAPPER.containsKey(type);
 	}
 

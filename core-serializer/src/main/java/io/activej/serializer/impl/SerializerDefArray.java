@@ -86,7 +86,7 @@ public final class SerializerDefArray extends AbstractSerializerDef implements S
 						writeVarInt(buf, pos, length),
 						writeBytes(buf, pos, castedValue));
 			} else {
-				return ifThenElse(isNull(value),
+				return ifNull(value,
 						writeByte(buf, pos, value((byte) 0)),
 						sequence(
 								writeVarInt(buf, pos, inc(length)),
@@ -104,7 +104,7 @@ public final class SerializerDefArray extends AbstractSerializerDef implements S
 						writeVarInt(buf, pos, size),
 						writeCollection);
 			} else {
-				return ifThenElse(isNull(value),
+				return ifNull(value,
 						writeByte(buf, pos, value((byte) 0)),
 						sequence(
 								writeVarInt(buf, pos, inc(size)),
@@ -122,7 +122,7 @@ public final class SerializerDefArray extends AbstractSerializerDef implements S
 									array -> sequence(
 											readBytes(in, array),
 											array)) :
-							ifThenElse(cmpEq(len, value(0)),
+							ifEq(len, value(0),
 									nullRef(type),
 									let(arrayNew(type, dec(len)),
 											array -> sequence(
@@ -133,7 +133,7 @@ public final class SerializerDefArray extends AbstractSerializerDef implements S
 		return let(readVarInt(in),
 				len -> !nullable ?
 						doDecode(staticDecoders, in, version, compatibilityLevel, len) :
-						ifThenElse(cmpEq(len, value(0)),
+						ifEq(len, value(0),
 								nullRef(type),
 								let(dec(len),
 										len0 -> doDecode(staticDecoders, in, version, compatibilityLevel, len0))));

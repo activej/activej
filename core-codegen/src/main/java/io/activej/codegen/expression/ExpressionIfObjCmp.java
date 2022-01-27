@@ -33,16 +33,20 @@ import static org.objectweb.asm.Type.INT_TYPE;
 /**
  * Defines methods for comparing functions
  */
-final class ExpressionCmp implements Expression {
+final class ExpressionIfObjCmp implements Expression {
 	private final Expression left;
 	private final Expression right;
 	private final CompareOperation operation;
+	private final Expression expressionTrue;
+	private final Expression expressionFalse;
 
 	// region builders
-	ExpressionCmp(CompareOperation operation, Expression left, Expression right) {
+	ExpressionIfObjCmp(CompareOperation operation, Expression left, Expression right, Expression expressionTrue, Expression expressionFalse) {
 		this.left = left;
 		this.right = right;
 		this.operation = operation;
+		this.expressionTrue = expressionTrue;
+		this.expressionFalse = expressionFalse;
 	}
 	// endregion
 
@@ -60,32 +64,25 @@ final class ExpressionCmp implements Expression {
 		if (isPrimitiveType(leftType)) {
 			g.ifCmp(leftType, operation.opCode, labelTrue);
 		} else {
-			if (operation == EQ || operation == NE) {
+			if (operation == REF_EQ || operation == REF_NE) {
+				g.ifCmp(leftType, operation.opCode, labelTrue);
+			} else if (operation == EQ || operation == NE) {
 				g.invokeVirtual(leftType, new Method("equals", BOOLEAN_TYPE, new Type[]{Type.getType(Object.class)}));
-				g.push(operation == EQ);
-				g.ifCmp(BOOLEAN_TYPE, GeneratorAdapter.EQ, labelTrue);
+				g.ifZCmp(operation == EQ ? GeneratorAdapter.NE : GeneratorAdapter.EQ, labelTrue);
 			} else {
 				g.invokeVirtual(leftType, new Method("compareTo", INT_TYPE, new Type[]{Type.getType(Object.class)}));
-				if (operation == LT) {
-					g.ifZCmp(GeneratorAdapter.LT, labelTrue);
-				} else if (operation == GT) {
-					g.ifZCmp(GeneratorAdapter.GT, labelTrue);
-				} else if (operation == LE) {
-					g.ifZCmp(GeneratorAdapter.LE, labelTrue);
-				} else if (operation == GE) {
-					g.ifZCmp(GeneratorAdapter.GE, labelTrue);
-				}
+				g.ifZCmp(operation.opCode, labelTrue);
 			}
 		}
 
-		g.push(false);
+		expressionFalse.load(ctx);
 		g.goTo(labelExit);
 
 		g.mark(labelTrue);
-		g.push(true);
+		Type type = expressionTrue.load(ctx);
 
 		g.mark(labelExit);
 
-		return BOOLEAN_TYPE;
+		return type;
 	}
 }

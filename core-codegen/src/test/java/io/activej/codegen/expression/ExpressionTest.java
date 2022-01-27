@@ -4,7 +4,6 @@ import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.operation.ArithmeticOperation;
-import io.activej.codegen.operation.CompareOperation;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
@@ -14,8 +13,8 @@ import java.io.IOException;
 import java.util.*;
 
 import static io.activej.codegen.TestUtils.assertStaticConstantsCleared;
-import static io.activej.codegen.expression.ExpressionComparator.leftProperty;
-import static io.activej.codegen.expression.ExpressionComparator.rightProperty;
+import static io.activej.codegen.expression.ExpressionCompare.leftProperty;
+import static io.activej.codegen.expression.ExpressionCompare.rightProperty;
 import static io.activej.codegen.expression.Expressions.*;
 import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -177,9 +176,11 @@ public class ExpressionTest {
 				.withField("x", int.class)
 				.withField("y", Long.class)
 				.withMethod("compare", int.class, asList(TestPojo.class, TestPojo.class),
-						compare(TestPojo.class, "property1", "property2"))
+						ExpressionCompare.create()
+								.with(leftProperty(TestPojo.class, "property1"), rightProperty(TestPojo.class, "property1"))
+								.with(leftProperty(TestPojo.class, "property2"), rightProperty(TestPojo.class, "property2")))
 				.withMethod("int compareTo(io.activej.codegen.expression.ExpressionTest$Test)",
-						compareToImpl("x"))
+						comparableImpl("x"))
 				.withMethod("equals",
 						equalsImpl("x"))
 				.withMethod("setXY", sequence(
@@ -188,7 +189,9 @@ public class ExpressionTest {
 				.withMethod("test",
 						add(arg(0), value(1L)))
 				.withMethod("hash",
-						hash(property(arg(0), "property1"), property(arg(0), "property2")))
+						ExpressionHashCode.create()
+								.with(property(arg(0), "property1"))
+								.with(property(arg(0), "property2")))
 				.withMethod("property1",
 						property(arg(0), "property1"))
 				.withMethod("setter", sequence(
@@ -205,18 +208,18 @@ public class ExpressionTest {
 				.withMethod("getY",
 						property(self(), "y"))
 				.withMethod("allEqual",
-						and(cmpEq(arg(0), arg(1)), cmpEq(arg(0), arg(2))))
+						and(isEq(arg(0), arg(1)), isEq(arg(0), arg(2))))
 				.withMethod("anyEqual",
-						or(cmpEq(arg(0), arg(1)), cmpEq(arg(0), arg(2))))
+						or(isEq(arg(0), arg(1)), isEq(arg(0), arg(2))))
 				.withMethod("setPojoproperty1",
 						call(arg(0), "setproperty1", arg(1)))
 				.withMethod("getPojoproperty1",
 						call(arg(0), "getproperty1"))
 				.withMethod("toString",
 						ExpressionToString.create()
-								.withQuotes("{", "}", ", ")
-								.with(property(self(), "x"))
-								.with("labelY: ", property(self(), "y")))
+								.withField("x")
+								.with(value("test"))
+								.with("labelY", property(self(), "y")))
 				.defineClass(CLASS_LOADER);
 		Test test = testClass.getDeclaredConstructor().newInstance();
 
@@ -259,21 +262,21 @@ public class ExpressionTest {
 		test1.setPojoproperty1(testPojo, 2);
 		assertEquals(2, test1.getPojoproperty1(testPojo));
 
-		assertEquals("{1, labelY: 10}", test1.toString());
+		assertEquals("{x: 1, test, labelY: 10}", test1.toString());
 	}
 
 	@org.junit.Test
 	public void test2() throws ReflectiveOperationException {
 		Class<Test2> testClass = ClassBuilder.create(Test2.class)
 				.withMethod("hash",
-						hash(
-								property(arg(0), "property1"),
-								property(arg(0), "property2"),
-								property(arg(0), "property3"),
-								property(arg(0), "property4"),
-								property(arg(0), "property5"),
-								property(arg(0), "property6"),
-								property(arg(0), "property7")))
+						ExpressionHashCode.create()
+								.with(property(arg(0), "property1"))
+								.with(property(arg(0), "property2"))
+								.with(property(arg(0), "property3"))
+								.with(property(arg(0), "property4"))
+								.with(property(arg(0), "property5"))
+								.with(property(arg(0), "property6"))
+								.with(property(arg(0), "property7")))
 				.defineClass(CLASS_LOADER);
 
 		Test2 test = testClass.getDeclaredConstructor().newInstance();
@@ -287,7 +290,9 @@ public class ExpressionTest {
 	public void testComparator() {
 		Comparator<TestPojo> comparator = ClassBuilder.create(Comparator.class)
 				.withMethod("compare",
-						compare(TestPojo.class, "property1", "property2"))
+						ExpressionCompare.create()
+								.with(leftProperty(TestPojo.class, "property1"), rightProperty(TestPojo.class, "property1"))
+								.with(leftProperty(TestPojo.class, "property2"), rightProperty(TestPojo.class, "property2")))
 				.defineClassAndCreateInstance(CLASS_LOADER);
 		assertEquals(0, comparator.compare(new TestPojo(1, 10), new TestPojo(1, 10)));
 	}
@@ -629,10 +634,10 @@ public class ExpressionTest {
 	@org.junit.Test
 	public void testCompare() throws ReflectiveOperationException {
 		Class<TestCompare> test1 = ClassBuilder.create(TestCompare.class)
-				.withMethod("compareObjectLE", cmp(CompareOperation.LE, arg(0), arg(1)))
-				.withMethod("comparePrimitiveLE", cmp(CompareOperation.LE, arg(0), arg(1)))
-				.withMethod("compareObjectEQ", cmp(CompareOperation.EQ, arg(0), arg(1)))
-				.withMethod("compareObjectNE", cmp(CompareOperation.NE, arg(0), arg(1)))
+				.withMethod("compareObjectLE", isLe(arg(0), arg(1)))
+				.withMethod("comparePrimitiveLE", isLe(arg(0), arg(1)))
+				.withMethod("compareObjectEQ", isEq(arg(0), arg(1)))
+				.withMethod("compareObjectNE", isNe(arg(0), arg(1)))
 				.defineClass(CLASS_LOADER);
 
 		TestCompare testCompare = test1.getDeclaredConstructor().newInstance();
@@ -720,7 +725,7 @@ public class ExpressionTest {
 	@org.junit.Test
 	public void testComparatorNullable() {
 		Comparator<StringHolder> generatedComparator = ClassBuilder.create(Comparator.class)
-				.withMethod("compare", ExpressionComparator.create()
+				.withMethod("compare", ExpressionCompare.create()
 						.with(leftProperty(StringHolder.class, "string1"), rightProperty(StringHolder.class, "string1"), true)
 						.with(leftProperty(StringHolder.class, "string2"), rightProperty(StringHolder.class, "string2"), true))
 				.defineClassAndCreateInstance(CLASS_LOADER);
@@ -802,7 +807,6 @@ public class ExpressionTest {
 				.withMethod("b", nullRef(Integer.class))
 				.withMethod("toString",
 						ExpressionToString.create()
-								.withQuotes("{", "}", ", ")
 								.with(call(self(), "b")))
 				.defineClassAndCreateInstance(CLASS_LOADER);
 
@@ -817,7 +821,6 @@ public class ExpressionTest {
 				.withMethod("b", nullRef(Integer.class))
 				.withMethod("toString",
 						ExpressionToString.create()
-								.withQuotes("{", "}", ", ")
 								.with(call(self(), "b")))
 				.defineClassAndCreateInstance(DefiningClassLoader.create()
 						.withDebugOutputDir(dir.toPath()));

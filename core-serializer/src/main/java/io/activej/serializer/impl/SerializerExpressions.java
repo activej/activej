@@ -132,7 +132,7 @@ public final class SerializerExpressions {
 	}
 
 	public static Expression ensureRemaining(Expression buf, Variable pos, Expression size, Expression next) {
-		return ifThenElse(cmpGt(add(pos, size), length(buf)),
+		return ifGt(add(pos, size), length(buf),
 				throwException(ArrayIndexOutOfBoundsException.class),
 				next);
 	}

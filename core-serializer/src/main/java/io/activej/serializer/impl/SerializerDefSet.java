@@ -45,9 +45,9 @@ public final class SerializerDefSet extends SerializerDefRegularCollection {
 
 	@Override
 	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
-		return ifThenElse(cmpEq(length, value(0)),
+		return ifEq(length, value(0),
 				staticCall(Collections.class, "emptySet"),
-				ifThenElse(cmpEq(length, value(1)),
+				ifEq(length, value(1),
 						staticCall(Collections.class, "singleton", valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel)),
 						super.doDecode(staticDecoders, in, version, compatibilityLevel, length)));
 	}

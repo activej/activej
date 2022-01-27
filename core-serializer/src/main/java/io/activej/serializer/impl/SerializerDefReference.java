@@ -73,7 +73,7 @@ public final class SerializerDefReference extends AbstractSerializerDef implemen
 	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		return let(cast(call(staticField(SerializerDefReference.class, "MAP_ENCODE"), "get"), IdentityHashMap.class),
 				map -> let(call(map, "get", value),
-						index -> ifThenElse(isNull(index),
+						index -> ifNull(index,
 								sequence(
 										call(map, "put", value, cast(add(call(map, "size"), value(1)), Integer.class)),
 										writeByte(buf, pos, value((byte) 0)),
@@ -88,7 +88,7 @@ public final class SerializerDefReference extends AbstractSerializerDef implemen
 				map -> let(readVarInt(in),
 						index -> {
 							UnaryOperator<Expression> instanceInitializer = instance -> call(map, "put", cast(add(call(map, "size"), value(1)), Integer.class), instance);
-							return ifThenElse(cmpEq(index, value(0)),
+							return ifEq(index, value(0),
 									serializer instanceof SerializerDefClass ?
 											((SerializerDefClass) serializer).decoder(staticDecoders, in, version, compatibilityLevel, instanceInitializer) :
 											let(serializer.decoder(staticDecoders, in, version, compatibilityLevel),

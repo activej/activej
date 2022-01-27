@@ -485,7 +485,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-			return E.alwaysFalse();
+			return E.value(false);
 		}
 
 		@Override
@@ -517,7 +517,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-			return E.alwaysTrue();
+			return E.value(true);
 		}
 
 		@Override
@@ -640,7 +640,7 @@ public class AggregationPredicates {
 					isNull(property, fields.get(key)) :
 					E.and(
 							isNotNull(property, fields.get(key)),
-							E.cmpEq(property, E.value(internalValue)));
+							E.isEq(property, E.value(internalValue)));
 		}
 
 		@Override
@@ -708,7 +708,7 @@ public class AggregationPredicates {
 					isNotNull(property, fieldType) :
 					E.or(
 							isNull(property, fieldType),
-							E.cmpNe(property, E.value(internalValue)));
+							E.isNe(property, E.value(internalValue)));
 		}
 
 		@Override
@@ -772,7 +772,7 @@ public class AggregationPredicates {
 			Variable property = E.property(record, key.replace('.', '$'));
 			return E.and(
 					isNotNull(property, fields.get(key)),
-					E.cmpLe(property, E.value(toInternalValue(fields, key, value))));
+					E.isLe(property, E.value(toInternalValue(fields, key, value))));
 		}
 
 		@Override
@@ -835,7 +835,7 @@ public class AggregationPredicates {
 		public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
 			Variable property = E.property(record, key.replace('.', '$'));
 			return E.and(isNotNull(property, fields.get(key)),
-					E.cmpLt(property, E.value(toInternalValue(fields, key, value))));
+					E.isLt(property, E.value(toInternalValue(fields, key, value))));
 		}
 
 		@Override
@@ -898,7 +898,7 @@ public class AggregationPredicates {
 		public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
 			Variable property = E.property(record, key.replace('.', '$'));
 			return E.and(isNotNull(property, fields.get(key)),
-					E.cmpGe(property, E.value(toInternalValue(fields, key, value))));
+					E.isGe(property, E.value(toInternalValue(fields, key, value))));
 		}
 
 		@Override
@@ -961,7 +961,7 @@ public class AggregationPredicates {
 		public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
 			Variable property = E.property(record, key.replace('.', '$'));
 			return E.and(isNotNull(property, fields.get(key)),
-					E.cmpGt(property, E.value(toInternalValue(fields, key, value))));
+					E.isGt(property, E.value(toInternalValue(fields, key, value))));
 		}
 
 		@Override
@@ -1016,7 +1016,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-			return fields.containsKey(key) ? E.alwaysTrue() : E.alwaysFalse();
+			return fields.containsKey(key) ? E.value(true) : E.value(false);
 		}
 
 		@Override
@@ -1083,7 +1083,7 @@ public class AggregationPredicates {
 			Variable value = E.property(record, key.replace('.', '$'));
 			return E.and(
 					isNotNull(value, fields.get(key)),
-					E.cmpNe(
+					E.isNe(
 							E.value(false),
 							E.call(E.call(E.value(regexp), "matcher", toStringValue(fields, key, value)), "matches")));
 		}
@@ -1151,7 +1151,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-			return E.cmpNe(
+			return E.isNe(
 					E.value(false),
 					E.call(E.value(values), "contains",
 							E.cast(E.property(record, key.replace('.', '$')), Object.class)));
@@ -1227,8 +1227,8 @@ public class AggregationPredicates {
 		public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
 			Variable property = E.property(record, key.replace('.', '$'));
 			return E.and(isNotNull(property, fields.get(key)),
-					E.cmpGe(property, E.value(toInternalValue(fields, key, from))),
-					E.cmpLe(property, E.value(toInternalValue(fields, key, to))));
+					E.isGe(property, E.value(toInternalValue(fields, key, from))),
+					E.isLe(property, E.value(toInternalValue(fields, key, to))));
 		}
 
 		@Override
@@ -1572,11 +1572,11 @@ public class AggregationPredicates {
 	}
 
 	private static Expression isNotNull(Expression field, FieldType fieldType) {
-		return fieldType != null && fieldType.getInternalDataType().isPrimitive() ? E.alwaysTrue() : E.isNotNull(field);
+		return fieldType != null && fieldType.getInternalDataType().isPrimitive() ? E.value(true) : E.isNotNull(field);
 	}
 
 	private static Expression isNull(Expression field, FieldType fieldType) {
-		return fieldType != null && fieldType.getInternalDataType().isPrimitive() ? E.alwaysFalse() : E.isNull(field);
+		return fieldType != null && fieldType.getInternalDataType().isPrimitive() ? E.value(false) : E.isNull(field);
 	}
 
 	@SuppressWarnings("unchecked")

@@ -654,12 +654,12 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 						listKey.add(value((byte) version));
 						listValue.add(call(self(), "decodeVersion" + version, arg(0)));
 					}
-					return switchByKey(arg(1), listKey, listValue,
-							throwException(CorruptedDataException.class,
-									concat(
-											value("Unsupported version: "), arg(1),
-											value(", supported versions: " + decodeVersions))
-							));
+					Expression result = throwException(CorruptedDataException.class,
+							concat(value("Unsupported version: "), arg(1), value(", supported versions: " + decodeVersions)));
+					for (int i = listKey.size() - 1; i >= 0; i--) {
+						result = ifEq(arg(1), listKey.get(i), listValue.get(i), result);
+					}
+					return result;
 				}));
 
 		for (int i = decodeVersions.size() - 2; i >= 0; i--) {
@@ -687,7 +687,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 						compatibilityLevel) :
 
 				let(readByte(in),
-						version -> ifThenElse(cmpEq(version, value((byte) (int) latestVersion)),
+						version -> ifEq(version, value((byte) (int) latestVersion),
 								serializer.decoder(
 										staticDecoders,
 										in,

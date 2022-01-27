@@ -61,7 +61,7 @@ public final class SerializerDefBoolean extends SerializerDefPrimitive implement
 	protected Expression doSerialize(Expression byteArray, Variable off, Expression value, CompatibilityLevel compatibilityLevel) {
 		return !nullable ?
 				writeByte(byteArray, off, value) :
-				ifThenElse(isNull(value),
+				ifNull(value,
 						writeByte(byteArray, off, value(NULLABLE_NULL)),
 						writeByte(byteArray, off, bitOr(cast(call(value, "booleanValue"), byte.class), value(0b10))));
 	}
@@ -71,7 +71,7 @@ public final class SerializerDefBoolean extends SerializerDefPrimitive implement
 		return let(readByte(in), aByte ->
 				!nullable ?
 						cast(aByte, boolean.class) :
-						ifThenElse(cmpEq(aByte, value(NULLABLE_NULL)),
+						ifEq(aByte, value(NULLABLE_NULL),
 								nullRef(Boolean.class),
 								cast(bitAnd(aByte, value(1)), Boolean.class)
 						));

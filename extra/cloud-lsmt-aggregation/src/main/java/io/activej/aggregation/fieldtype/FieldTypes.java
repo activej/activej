@@ -97,7 +97,6 @@ public final class FieldTypes {
 		return serializer;
 	}
 
-
 	public static <T> FieldType<Set<T>> ofSet(FieldType<T> fieldType) {
 		SerializerDef itemSerializer = fieldType.getSerializer();
 		if (itemSerializer instanceof SerializerDefPrimitive) {
@@ -165,4 +164,5 @@ public final class FieldTypes {
 		}
 
 	}
+
 }

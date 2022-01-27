@@ -20,7 +20,6 @@ import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.ExpressionComparator;
 import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.expression.Variable;
 import io.activej.codegen.util.WithInitializer;
@@ -30,11 +29,10 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Type;
 import java.util.*;
 
-import static io.activej.codegen.expression.ExpressionComparator.leftProperty;
-import static io.activej.codegen.expression.ExpressionComparator.rightProperty;
 import static io.activej.codegen.expression.Expressions.*;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toSet;
 
 @SuppressWarnings({"unused", "ArraysAsListWithZeroOrOneArgument"})
 public final class RecordScheme implements WithInitializer<RecordScheme> {
@@ -207,7 +205,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 	}
 
 	private synchronized void doEnsureBuild() {
-		Collection<String> hashCodeEqualsFields;
+		List<String> hashCodeEqualsFields;
 		if (this.hashCodeEqualsFields != null) {
 			Set<String> missing = getMissingFields(this.hashCodeEqualsFields);
 			if (!missing.isEmpty()) {
@@ -215,7 +213,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 			}
 			hashCodeEqualsFields = this.hashCodeEqualsFields;
 		} else {
-			hashCodeEqualsFields = fieldTypes.keySet();
+			hashCodeEqualsFields = new ArrayList<>(fieldTypes.keySet());
 		}
 
 		generatedClass = classLoader.ensureClass(
@@ -223,10 +221,8 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 				() -> ClassBuilder.create(Record.class)
 						.withConstructor(asList(RecordScheme.class),
 								superConstructor(arg(0)))
-						.withMethod("hashCode",
-								hash(hashCodeEqualsFields.stream().map(this::getClassField).map(f -> Expressions.property(self(), f)).collect(toList())))
-						.withMethod("equals",
-								equalsImpl(hashCodeEqualsFields.stream().map(this::getClassField).collect(toList())))
+						.withMethod("hashCode", hashCodeImpl(hashCodeEqualsFields))
+						.withMethod("equals", equalsImpl(hashCodeEqualsFields))
 						.withInitializer(b -> {
 							for (Map.Entry<String, Type> entry : fieldTypes.entrySet()) {
 								Type type = entry.getValue();
@@ -288,15 +284,9 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 				throw new IllegalStateException("Missing some fields to be compared: " + missing);
 			}
 
-			ExpressionComparator expressionComparator = ExpressionComparator.create();
-			for (String comparedField : comparedFields) {
-				String classField = classFields.get(comparedField);
-				expressionComparator.with(leftProperty(generatedClass, classField), rightProperty(generatedClass, classField));
-			}
-
 			//noinspection unchecked
 			comparator = ClassBuilder.create(Comparator.class)
-					.withMethod("compare", expressionComparator)
+					.withMethod("compare", comparatorImpl(generatedClass, comparedFields))
 					.defineClassAndCreateInstance(classLoader);
 		}
 

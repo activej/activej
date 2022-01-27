@@ -73,7 +73,7 @@ public final class SerializerDefByteBuffer extends AbstractSerializerDef impleme
 										writeVarInt(buf, pos, remaining),
 										writeBytes(buf, pos, call(buffer, "array"), call(buffer, "position"), remaining)));
 					} else {
-						return ifThenElse(isNull(buffer),
+						return ifNull(buffer,
 								writeByte(buf, pos, value((byte) 0)),
 								let(call(buffer, "remaining"), remaining ->
 										sequence(
@@ -96,7 +96,7 @@ public final class SerializerDefByteBuffer extends AbstractSerializerDef impleme
 														readBytes(in, array),
 														staticCall(ByteBuffer.class, "wrap", array)));
 							} else {
-								return ifThenElse(cmpEq(length, value(0)),
+								return ifEq(length, value(0),
 										nullRef(ByteBuffer.class),
 										let(
 												arrayNew(byte[].class, dec(length)),
@@ -113,7 +113,7 @@ public final class SerializerDefByteBuffer extends AbstractSerializerDef impleme
 												move(in, length),
 												buf));
 							} else {
-								return ifThenElse(cmpEq(length, value(0)),
+								return ifEq(length, value(0),
 										nullRef(ByteBuffer.class),
 										let(staticCall(ByteBuffer.class, "wrap", array(in), pos(in), dec(length)),
 												result -> sequence(

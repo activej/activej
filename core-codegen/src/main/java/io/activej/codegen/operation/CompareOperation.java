@@ -21,6 +21,8 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 public enum CompareOperation {
 	EQ(GeneratorAdapter.EQ, "=="),
 	NE(GeneratorAdapter.NE, "!="),
+	REF_EQ(GeneratorAdapter.EQ, "==="),
+	REF_NE(GeneratorAdapter.NE, "!=="),
 	LT(GeneratorAdapter.LT, "<"),
 	GT(GeneratorAdapter.GT, ">"),
 	LE(GeneratorAdapter.LE, "<="),

@@ -17,41 +17,43 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import io.activej.codegen.operation.CompareOperation;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
-final class ExpressionIf implements Expression {
-	private final Expression condition;
-	private final Expression left;
-	private final Expression right;
+final class ExpressionIfZCmp implements Expression {
+	private final Expression value;
+	private final CompareOperation operation;
+	private final Expression expressionTrue;
+	private final Expression expressionFalse;
 
-	ExpressionIf(@NotNull Expression condition, @NotNull Expression left, @NotNull Expression right) {
-		this.condition = condition;
-		this.left = left;
-		this.right = right;
+	ExpressionIfZCmp(Expression value, CompareOperation operation, @NotNull Expression expressionTrue, @NotNull Expression expressionFalse) {
+		this.value = value;
+		this.operation = operation;
+		this.expressionTrue = expressionTrue;
+		this.expressionFalse = expressionFalse;
 	}
 
 	@Override
 	public Type load(Context ctx) {
+		GeneratorAdapter g = ctx.getGeneratorAdapter();
+
 		Label labelTrue = new Label();
 		Label labelExit = new Label();
 
-		GeneratorAdapter g = ctx.getGeneratorAdapter();
-		Type conditionType = condition.load(ctx);
-		g.push(true);
+		value.load(ctx);
+		g.ifZCmp(operation.opCode, labelTrue);
 
-		g.ifCmp(conditionType, GeneratorAdapter.EQ, labelTrue);
-
-		right.load(ctx);
-
+		expressionFalse.load(ctx);
 		g.goTo(labelExit);
 
 		g.mark(labelTrue);
-		Type leftType = left.load(ctx);
+		Type type = expressionTrue.load(ctx);
 
 		g.mark(labelExit);
-		return leftType;
+
+		return type;
 	}
 }

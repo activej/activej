@@ -34,15 +34,15 @@ import static org.objectweb.asm.commons.GeneratorAdapter.NE;
 /**
  * Defines methods to compare some fields
  */
-public final class ExpressionComparator implements Expression {
-	private final List<ComparablePair> pairs = new ArrayList<>();
+public final class ExpressionCompare implements Expression {
+	private final List<Pair> pairs = new ArrayList<>();
 
-	private static final class ComparablePair {
+	private static final class Pair {
 		private final Expression left;
 		private final Expression right;
 		private final boolean nullable;
 
-		private ComparablePair(Expression left, Expression right, boolean nullable) {
+		private Pair(Expression left, Expression right, boolean nullable) {
 			this.left = left;
 			this.right = right;
 			this.nullable = nullable;
@@ -53,7 +53,7 @@ public final class ExpressionComparator implements Expression {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
 
-			ComparablePair that = (ComparablePair) o;
+			Pair that = (Pair) o;
 
 			if (nullable != that.nullable) return false;
 			if (!left.equals(that.left)) return false;
@@ -70,19 +70,19 @@ public final class ExpressionComparator implements Expression {
 		}
 	}
 
-	private ExpressionComparator() {
+	private ExpressionCompare() {
 	}
 
-	public static ExpressionComparator create() {
-		return new ExpressionComparator();
+	public static ExpressionCompare create() {
+		return new ExpressionCompare();
 	}
 
-	public ExpressionComparator with(Expression left, Expression right) {
+	public ExpressionCompare with(Expression left, Expression right) {
 		return with(left, right, false);
 	}
 
-	public ExpressionComparator with(Expression left, Expression right, boolean nullable) {
-		this.pairs.add(new ComparablePair(left, right, nullable));
+	public ExpressionCompare with(Expression left, Expression right, boolean nullable) {
+		this.pairs.add(new Pair(left, right, nullable));
 		return this;
 	}
 
@@ -108,7 +108,7 @@ public final class ExpressionComparator implements Expression {
 
 		Label labelReturn = new Label();
 
-		for (ComparablePair pair : pairs) {
+		for (Pair pair : pairs) {
 			Type leftPropertyType = pair.left.load(ctx);
 			Type rightPropertyType = pair.right.load(ctx);
 

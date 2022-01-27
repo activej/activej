@@ -20,6 +20,7 @@ import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.CompatibilityLevel;
+import io.activej.serializer.CorruptedDataException;
 import io.activej.serializer.SerializerDef;
 import org.jetbrains.annotations.NotNull;
 
@@ -30,10 +31,9 @@ import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 import static io.activej.serializer.impl.SerializerExpressions.readByte;
 import static io.activej.serializer.impl.SerializerExpressions.writeByte;
-import static io.activej.serializer.util.Utils.get;
-import static org.objectweb.asm.Type.getType;
 
 public final class SerializerDefSubclass extends AbstractSerializerDef implements SerializerDefWithNullable {
+	private static final int LOOKUP_SWITCH_THRESHOLD = 10;
 	private final Class<?> dataType;
 	private final LinkedHashMap<Class<?>, SerializerDef> subclassSerializers;
 	private final boolean nullable;
@@ -86,12 +86,12 @@ public final class SerializerDefSubclass extends AbstractSerializerDef implement
 	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		int subClassIndex = (nullable && startIndex == 0 ? 1 : startIndex);
 
-		List<Expression> listKey = new ArrayList<>();
-		List<Expression> listValue = new ArrayList<>();
+		List<Class<?>> subclasses = new ArrayList<>();
+		List<Expression> subclassWriters = new ArrayList<>();
 		for (Map.Entry<Class<?>, SerializerDef> entry : subclassSerializers.entrySet()) {
 			SerializerDef subclassSerializer = entry.getValue();
-			listKey.add(cast(value(getType(entry.getKey())), Object.class));
-			listValue.add(sequence(
+			subclasses.add(entry.getKey());
+			subclassWriters.add(sequence(
 					writeByte(buf, pos, value((byte) subClassIndex)),
 					subclassSerializer.defineEncoder(staticEncoders, buf, pos, cast(value, subclassSerializer.getEncodeType()), version, compatibilityLevel)
 			));
@@ -101,29 +101,52 @@ public final class SerializerDefSubclass extends AbstractSerializerDef implement
 				subClassIndex++;
 			}
 		}
+
+		Expression writer = let(call(value, "getClass"), clazz -> {
+			Expression unexpected = throwException(IllegalArgumentException.class, value("Unexpected subclass"));
+
+			if (subclasses.size() >= LOOKUP_SWITCH_THRESHOLD) {
+				Map<Integer, Expression> cases = new HashMap<>();
+				for (int i = 0; i < subclasses.size(); i++) {
+					cases.put(System.identityHashCode(subclasses.get(i)), subclassWriters.get(i));
+				}
+				if (cases.size() == subclasses.size()) {
+					return tableSwitch(staticCall(System.class, "identityHashCode", clazz), cases, unexpected);
+				}
+			}
+
+			Expression result = unexpected;
+			for (int i = subclasses.size() - 1; i >= 0; i--) {
+				result = ifRefNe(clazz, value(subclasses.get(i)), result, subclassWriters.get(i));
+			}
+			return result;
+		});
+
 		if (nullable) {
-			return ifThenElse(isNotNull(value),
-					switchByKey(call(value, "getClass"), listKey, listValue),
-					writeByte(buf, pos, value((byte) 0)));
+			return ifNonNull(value, writer, writeByte(buf, pos, value((byte) 0)));
 		} else {
-			return switchByKey(call(value, "getClass"), listKey, listValue);
+			return writer;
 		}
 	}
 
 	@Override
 	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		return let(startIndex != 0 ? sub(readByte(in), value(startIndex)) : cast(readByte(in), int.class),
-				idx -> cast(
-						switchByIndex(idx,
-								get(() -> {
-									List<Expression> versions = new ArrayList<>();
-									for (SerializerDef subclassSerializer : subclassSerializers.values()) {
-										versions.add(cast(subclassSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), dataType));
-									}
-									if (nullable) versions.add(-startIndex, nullRef(getDecodeType()));
-									return versions;
-								})),
-						dataType));
+				idx -> {
+					List<Expression> subclasses = new ArrayList<>();
+					for (SerializerDef subclassSerializer : subclassSerializers.values()) {
+						subclasses.add(cast(subclassSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel), dataType));
+					}
+					if (nullable) subclasses.add(-startIndex, nullRef(getDecodeType()));
+					Map<Integer, Expression> cases = new HashMap<>();
+					for (int i = 0; i < subclasses.size(); i++) {
+						cases.put(i, subclasses.get(i));
+					}
+					return cast(
+							tableSwitch(idx, cases,
+									throwException(CorruptedDataException.class, value("Unsupported subclass"))),
+							dataType);
+				});
 	}
 
 	private static void checkSubclasses(Set<Class<?>> subclasses) {

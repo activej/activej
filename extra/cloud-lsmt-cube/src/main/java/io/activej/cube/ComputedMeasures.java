@@ -116,7 +116,7 @@ public class ComputedMeasures {
 			@Override
 			public Expression getExpression(Expression record, Map<String, Measure> storedMeasures) {
 				Expression value2 = E.cast(measure2.getExpression(record, storedMeasures), double.class);
-				return E.ifThenElse(E.cmpNe(value2, E.value(0.0)),
+				return E.ifNe(value2, E.value(0.0),
 						E.div(measure1.getExpression(record, storedMeasures), value2),
 						E.value(0.0));
 			}
@@ -144,7 +144,7 @@ public class ComputedMeasures {
 				return E.let(
 						E.cast(measure.getExpression(record, storedMeasures), double.class),
 						value ->
-								E.ifThenElse(E.cmpLe(value, E.value(0.0d)),
+								E.ifLe(value, E.value(0.0d),
 										E.value(0.0d),
 										E.staticCall(Math.class, "sqrt", value)));
 			}

@@ -17,29 +17,50 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
-final class ExpressionBooleanNot implements Expression {
-	private final Expression expression;
+import static io.activej.codegen.util.Utils.isPrimitiveType;
 
-	public ExpressionBooleanNot(Expression expression) {
+final class ExpressionIfNonNull implements Expression {
+	private final Expression expression;
+	private final Expression expressionTrue;
+	private final Expression expressionFalse;
+
+	ExpressionIfNonNull(@NotNull Expression expression, Expression expressionTrue, Expression expressionFalse) {
 		this.expression = expression;
+		this.expressionTrue = expressionTrue;
+		this.expressionFalse = expressionFalse;
 	}
 
 	@Override
 	public Type load(Context ctx) {
 		GeneratorAdapter g = ctx.getGeneratorAdapter();
-		Label labelFalse = g.newLabel();
-		Label labelExit = g.newLabel();
-		expression.load(ctx);
-		g.ifZCmp(GeneratorAdapter.EQ, labelFalse);
-		g.push(false);
+
+		Label labelTrue = new Label();
+		Label labelExit = new Label();
+
+		Type argType = expression.load(ctx);
+		if (isPrimitiveType(argType)) {
+			if (argType.getSize() == 1)
+				g.pop();
+			if (argType.getSize() == 2)
+				g.pop2();
+			return expressionTrue.load(ctx);
+		}
+
+		g.ifNonNull(labelTrue);
+
+		expressionFalse.load(ctx);
 		g.goTo(labelExit);
-		g.visitLabel(labelFalse);
-		g.push(true);
-		g.visitLabel(labelExit);
-		return Type.BOOLEAN_TYPE;
+
+		g.mark(labelTrue);
+		Type type = expressionTrue.load(ctx);
+
+		g.mark(labelExit);
+
+		return type;
 	}
 }
