@@ -40,6 +40,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -89,6 +90,9 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 
 		void onHttpError(HttpServerConnection connection, Exception e);
 
+		default void onMalformedHttpRequest(HttpServerConnection connection, MalformedHttpException e, byte[] malformedRequestBytes) {
+		}
+
 		void onDisconnect(HttpServerConnection connection);
 	}
 
@@ -100,6 +104,7 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 		private final EventStats totalResponses = EventStats.create(SMOOTHING_WINDOW);
 		private final EventStats httpTimeouts = EventStats.create(SMOOTHING_WINDOW);
 		private final ExceptionStats httpErrors = ExceptionStats.create();
+		private final ExceptionStats malformedHttpExceptions = ExceptionStats.create();
 		private final ExceptionStats servletExceptions = ExceptionStats.create();
 		private long activeConnections;
 
@@ -134,6 +139,12 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 		}
 
 		@Override
+		public void onMalformedHttpRequest(HttpServerConnection connection, MalformedHttpException e, byte[] malformedRequestBytes) {
+			String requestString = new String(malformedRequestBytes, 0, malformedRequestBytes.length, ISO_8859_1);
+			malformedHttpExceptions.recordException(e, requestString);
+		}
+
+		@Override
 		public void onDisconnect(HttpServerConnection connection) {
 			activeConnections--;
 		}
@@ -162,6 +173,11 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 				"Responses were not sent for this requests")
 		public ExceptionStats getHttpErrors() {
 			return httpErrors;
+		}
+
+		@JmxAttribute
+		public ExceptionStats getMalformedHttpExceptions() {
+			return malformedHttpExceptions;
 		}
 
 		@JmxAttribute(description = "Number of requests which were valid according to http protocol, " +

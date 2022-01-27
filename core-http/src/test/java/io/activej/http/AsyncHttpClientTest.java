@@ -9,6 +9,7 @@ import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.binary.ByteBufsDecoder;
 import io.activej.eventloop.Eventloop;
 import io.activej.http.AsyncHttpClient.JmxInspector;
+import io.activej.jmx.stats.ExceptionStats;
 import io.activej.net.SimpleServer;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -40,8 +41,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.*;
 
 @SuppressWarnings("Convert2MethodRef")
 public final class AsyncHttpClientTest {
@@ -289,10 +289,11 @@ public final class AsyncHttpClientTest {
 
 	@Test
 	public void testActiveConnectionsCountWithFailingServer() throws IOException {
+		String serverResponse = "\r\n";
 		SimpleServer.create(socket ->
 				socket.read()
 						.whenResult(ByteBuf::recycle)
-						.then(() -> socket.write(wrapAscii("\r\n")))
+						.then(() -> socket.write(wrapAscii(serverResponse)))
 						.whenComplete(socket::close))
 				.withListenPort(port)
 				.withAcceptOnce()
@@ -308,6 +309,14 @@ public final class AsyncHttpClientTest {
 		assertThat(e, instanceOf(MalformedHttpException.class));
 
 		assertEquals(0, inspector.getActiveConnections());
+
+		ExceptionStats malformedHttpExceptions = inspector.getMalformedHttpExceptions();
+		assertEquals(1, malformedHttpExceptions.getTotal());
+		assertEquals("Invalid response", malformedHttpExceptions.getLastMessage());
+		String context = (String) malformedHttpExceptions.getContext();
+		assertNotNull(context);
+		assertFalse(context.isEmpty());
+		assertTrue(serverResponse.startsWith(context));
 	}
 
 	private static final ByteBufsDecoder<ByteBuf> REQUEST_DECODER = bufs -> {

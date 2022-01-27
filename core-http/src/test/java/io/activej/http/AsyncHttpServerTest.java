@@ -4,6 +4,8 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.csp.ChannelSupplier;
 import io.activej.eventloop.Eventloop;
+import io.activej.http.AsyncHttpServer.JmxInspector;
+import io.activej.jmx.stats.ExceptionStats;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
@@ -446,36 +448,95 @@ public final class AsyncHttpServerTest {
 	}
 
 	@Test
-	public void testMalformedRequests() throws IOException, ExecutionException, InterruptedException {
+	public void testMalformedUri() throws IOException, ExecutionException, InterruptedException {
+		JmxInspector inspector = new JmxInspector();
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop, $ -> {
-			throw new IllegalArgumentException("Should not be called");
-		});
-		server.withListenPort(port);
+					throw new IllegalArgumentException("Should not be called");
+				})
+				.withListenPort(port)
+				.withInspector(inspector);
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
 
-		// malformed first line
-		doTestMalformedRequest("GET /malformed uri HTTP/1.1\r\n" +
+		String malformedUriRequest = "GET /malformed uri HTTP/1.1\r\n" +
 				"Host: localhost\r\n" +
-				"Connection: keep-alive\r\n\r\n");
+				"Connection: keep-alive\r\n\r\n";
+		doTestMalformedRequest(malformedUriRequest);
+
+		ExceptionStats malformedHttpExceptions = inspector.getMalformedHttpExceptions();
+		assertEquals(1, malformedHttpExceptions.getTotal());
+		assertEquals("Unsupported HTTP version", malformedHttpExceptions.getLastMessage());
+		String context = (String) malformedHttpExceptions.getContext();
+		assertNotNull(context);
+		assertFalse(context.isEmpty());
+		assertTrue(malformedUriRequest.startsWith(context));
+
+		server.closeFuture().get();
+		thread.join();
+	}
+
+	@Test
+	public void testMalformedHeaders() throws IOException, ExecutionException, InterruptedException {
+		JmxInspector inspector = new JmxInspector();
+		AsyncHttpServer server = AsyncHttpServer.create(eventloop, $ -> {
+					throw new IllegalArgumentException("Should not be called");
+				})
+				.withListenPort(port)
+				.withInspector(inspector);
+		server.listen();
+		Thread thread = new Thread(eventloop);
+		thread.start();
+
 
 		// malformed header
-		doTestMalformedRequest("GET / HTTP/1.1\r\n" +
+		String malformedHeaderRequest = "GET / HTTP/1.1\r\n" +
 				"Host: localhost\r\n" +
 				"Connection: keep-alive\r\n" +
-				"Content-Length: error\r\n\r\n");
+				"Content-Length: error\r\n\r\n";
+		doTestMalformedRequest(malformedHeaderRequest);
+
+		ExceptionStats malformedHttpExceptions = inspector.getMalformedHttpExceptions();
+		assertEquals(1, malformedHttpExceptions.getTotal());
+		assertEquals("Not a decimal value: error", malformedHttpExceptions.getLastMessage());
+		String context = (String) malformedHttpExceptions.getContext();
+		assertNotNull(context);
+		assertFalse(context.isEmpty());
+		assertTrue(malformedHeaderRequest.startsWith(context));
+
+		server.closeFuture().get();
+		thread.join();
+	}
+
+	@Test
+	public void testMalformedFirstRequestPipelined() throws IOException, ExecutionException, InterruptedException {
+		JmxInspector inspector = new JmxInspector();
+		AsyncHttpServer server = AsyncHttpServer.create(eventloop, $ -> {
+					throw new IllegalArgumentException("Should not be called");
+				})
+				.withListenPort(port)
+				.withInspector(inspector);
+		server.listen();
+		Thread thread = new Thread(eventloop);
+		thread.start();
 
 		// pipeline malformed first request
-		doTestMalformedRequest("GET /malformed uri HTTP/1.1\r\n" +
+		String malformedPipelinedRequest = "GET /malformed uri HTTP/1.1\r\n" +
 				"Host: localhost\r\n" +
 				"Connection: keep-alive\r\n\r\n" +
 
 				"GET / HTTP/1.1\r\n" +
 				"Host: localhost\r\n" +
-				"Connection: keep-alive\r\n\r\n"
-		);
+				"Connection: keep-alive\r\n\r\n";
+		doTestMalformedRequest(malformedPipelinedRequest);
 
+		ExceptionStats malformedHttpExceptions = inspector.getMalformedHttpExceptions();
+		assertEquals(1, malformedHttpExceptions.getTotal());
+		assertEquals("Unsupported HTTP version", malformedHttpExceptions.getLastMessage());
+		String context = (String) malformedHttpExceptions.getContext();
+		assertNotNull(context);
+		assertFalse(context.isEmpty());
+		assertTrue(malformedPipelinedRequest.startsWith(context));
 
 		server.closeFuture().get();
 		thread.join();
@@ -483,22 +544,25 @@ public final class AsyncHttpServerTest {
 
 	@Test
 	public void testMalformedSecondRequestPipelined() throws IOException, ExecutionException, InterruptedException {
+		JmxInspector inspector = new JmxInspector();
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop, $ -> HttpResponse.ok200()
-				.withPlainText("Hello, world!"));
-		server.withListenPort(port);
+						.withPlainText("Hello, world!"))
+				.withListenPort(port)
+				.withInspector(inspector);
 		server.listen();
 		Thread thread = new Thread(eventloop);
 		thread.start();
 
+		String normalPipelinedrequest = "GET / HTTP/1.1\r\n" +
+				"Host: localhost\r\n" +
+				"Connection: keep-alive\r\n\r\n";
+		String malformedPipelinedRequest = "GET /malformed uri HTTP/1.1\r\n" +
+				"Host: localhost\r\n" +
+				"Connection: keep-alive\r\n\r\n";
+
 		try (Socket socket = new Socket()) {
 			socket.connect(new InetSocketAddress("localhost", port));
-			writeByRandomParts(socket, "GET / HTTP/1.1\r\n" +
-					"Host: localhost\r\n" +
-					"Connection: keep-alive\r\n\r\n" +
-
-					"GET /malformed uri HTTP/1.1\r\n" +
-					"Host: localhost\r\n" +
-					"Connection: keep-alive\r\n\r\n");
+			writeByRandomParts(socket, normalPipelinedrequest + malformedPipelinedRequest);
 			socket.shutdownOutput();
 
 			readAndAssert(socket.getInputStream(),
@@ -513,8 +577,18 @@ public final class AsyncHttpServerTest {
 							"Connection: close\r\n" +
 							"Content-Length: 0\r\n" +
 							"\r\n");
+
+
 			assertEquals(0, toByteArray(socket.getInputStream()).length);
 		}
+
+		ExceptionStats malformedHttpExceptions = inspector.getMalformedHttpExceptions();
+		assertEquals(1, malformedHttpExceptions.getTotal());
+		assertEquals("Unsupported HTTP version", malformedHttpExceptions.getLastMessage());
+		String context = (String) malformedHttpExceptions.getContext();
+		assertNotNull(context);
+		assertFalse(context.isEmpty());
+		assertTrue(malformedPipelinedRequest.startsWith(context));
 
 		server.closeFuture().get();
 		thread.join();
