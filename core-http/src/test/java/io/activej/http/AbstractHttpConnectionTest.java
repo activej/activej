@@ -300,12 +300,9 @@ public final class AbstractHttpConnectionTest {
 				.withAcceptOnce(true);
 		server.listen();
 
-		String response = await(client.request(HttpRequest.get(url + '/' + new String(chars)))
-				.whenResult(resp -> assertEquals(400, resp.getCode()))
-				.then(httpResponse -> httpResponse.loadBody())
-				.map(body -> body.asString(UTF_8)));
+		HttpResponse response = await(client.request(HttpRequest.get(url + '/' + new String(chars))));
 
-		assertTrue(response.isEmpty());
+		assertEquals(400, response.getCode());
 
 		ExceptionStats httpErrors = inspector.getHttpErrors();
 		assertEquals(1, httpErrors.getTotal());
