@@ -154,8 +154,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 	@Override
 	protected void onMalformedHttpException(@NotNull MalformedHttpException e) {
-		ensureWriteBuffer(MALFORMED_HTTP_RESPONSE.length);
-		//noinspection ConstantConditions - ensured above
+		writeBuf = ensureWriteBuffer(MALFORMED_HTTP_RESPONSE.length);
 		this.writeBuf.put(MALFORMED_HTTP_RESPONSE);
 		ByteBuf writeBuf = this.writeBuf;
 		this.writeBuf = null;
@@ -293,8 +292,6 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		}
 	}
 
-	@SuppressWarnings("ConstantConditions")
-		// writeBuf is ensured before accessing
 	boolean renderHttpResponse(HttpMessage httpMessage) {
 		if (httpMessage.body != null) {
 			ByteBuf body = httpMessage.body;
@@ -302,7 +299,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			if ((httpMessage.flags & HttpMessage.USE_GZIP) == 0) {
 				httpMessage.addHeader(CONTENT_LENGTH, ofDecimal(body.readRemaining()));
 				int messageSize = httpMessage.estimateSize() + body.readRemaining();
-				ensureWriteBuffer(messageSize);
+				writeBuf = ensureWriteBuffer(messageSize);
 				httpMessage.writeTo(writeBuf);
 				writeBuf.put(body);
 				body.recycle();
@@ -311,7 +308,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 				httpMessage.addHeader(CONTENT_ENCODING, ofBytes(CONTENT_ENCODING_GZIP));
 				httpMessage.addHeader(CONTENT_LENGTH, ofDecimal(gzippedBody.readRemaining()));
 				int messageSize = httpMessage.estimateSize() + gzippedBody.readRemaining();
-				ensureWriteBuffer(messageSize);
+				writeBuf = ensureWriteBuffer(messageSize);
 				httpMessage.writeTo(writeBuf);
 				writeBuf.put(gzippedBody);
 				gzippedBody.recycle();
@@ -323,7 +320,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			if (httpMessage.isContentLengthExpected()) {
 				httpMessage.addHeader(CONTENT_LENGTH, ofDecimal(0));
 			}
-			ensureWriteBuffer(httpMessage.estimateSize());
+			writeBuf = ensureWriteBuffer(httpMessage.estimateSize());
 			httpMessage.writeTo(writeBuf);
 			return true;
 		}
@@ -331,12 +328,10 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		return false;
 	}
 
-	private void ensureWriteBuffer(int messageSize) {
-		if (writeBuf == null) {
-			writeBuf = ByteBufPool.allocate(Math.max(messageSize, INITIAL_WRITE_BUFFER_SIZE));
-		} else {
-			writeBuf = ByteBufPool.ensureWriteRemaining(writeBuf, messageSize);
-		}
+	private ByteBuf ensureWriteBuffer(int messageSize) {
+		return writeBuf == null ?
+				ByteBufPool.allocate(Math.max(messageSize, INITIAL_WRITE_BUFFER_SIZE)) :
+				ByteBufPool.ensureWriteRemaining(writeBuf, messageSize);
 	}
 
 	@Override
