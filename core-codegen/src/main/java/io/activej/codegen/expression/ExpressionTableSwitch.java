@@ -57,12 +57,13 @@ class ExpressionTableSwitch implements Expression {
 				int idx = Arrays.binarySearch(keys, key);
 				Type type = matchExpressions[idx].load(ctx);
 				g.goTo(end);
-				returnTypeRef.type = type;
+				returnTypeRef.type = ctx.unifyTypes(returnTypeRef.type, type);
 			}
 
 			@Override
 			public void generateDefault() {
-				returnTypeRef.type = defaultExpression.load(ctx);
+				Type type = defaultExpression.load(ctx);
+				returnTypeRef.type = ctx.unifyTypes(returnTypeRef.type, type);
 			}
 		});
 

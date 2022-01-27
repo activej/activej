@@ -142,50 +142,78 @@ public final class Context {
 		return varLocal;
 	}
 
+	public @Nullable Type unifyTypes(@Nullable Type type1, @Nullable Type type2) {
+		if (type1 == null) return type2;
+		if (type2 == null) return type1;
+		int sort1 = type1.getSort();
+		int sort2 = type2.getSort();
+		if (sort1 == ARRAY && sort2 == ARRAY) {
+			if (type1.equals(type2))
+				return type1;
+		}
+		if (sort1 == OBJECT && sort2 == OBJECT) {
+			if (type1.equals(type2))
+				return type1;
+			Class<?> class1 = toJavaType(type1);
+			Class<?> class2 = toJavaType(type2);
+			if (class1.isAssignableFrom(class2)) {
+				return type1;
+			}
+			if (class2.isAssignableFrom(class1)) {
+				return type2;
+			}
+		}
+		if (sort1 == sort2) {
+			return type1;
+		}
+		throw new IllegalArgumentException();
+	}
+
 	public Class<?> toJavaType(Type type) {
 		if (type.equals(getSelfType()))
 			throw new IllegalArgumentException();
 		int sort = type.getSort();
-		if (sort == BOOLEAN)
-			return boolean.class;
-		if (sort == CHAR)
-			return char.class;
-		if (sort == BYTE)
-			return byte.class;
-		if (sort == SHORT)
-			return short.class;
-		if (sort == INT)
-			return int.class;
-		if (sort == FLOAT)
-			return float.class;
-		if (sort == LONG)
-			return long.class;
-		if (sort == DOUBLE)
-			return double.class;
-		if (sort == VOID)
-			return void.class;
-		if (sort == OBJECT) {
-			try {
-				return classLoader.loadClass(type.getClassName());
-			} catch (ClassNotFoundException e) {
-				throw new IllegalArgumentException(format("No class %s in class loader", type.getClassName()), e);
-			}
-		}
-		if (sort == ARRAY) {
-			Class<?> result;
-			if (type.equals(getType(Object[].class))) {
-				result = Object[].class;
-			} else {
-				String className = type.getDescriptor().replace('/', '.');
+		switch (sort) {
+			case BOOLEAN:
+				return boolean.class;
+			case CHAR:
+				return char.class;
+			case BYTE:
+				return byte.class;
+			case SHORT:
+				return short.class;
+			case INT:
+				return int.class;
+			case FLOAT:
+				return float.class;
+			case LONG:
+				return long.class;
+			case DOUBLE:
+				return double.class;
+			case VOID:
+				return void.class;
+			case OBJECT:
 				try {
-					result = Class.forName(className);
+					return classLoader.loadClass(type.getClassName());
 				} catch (ClassNotFoundException e) {
-					throw new IllegalArgumentException(format("No class %s in Class.forName", className), e);
+					throw new IllegalArgumentException(format("No class %s in class loader", type.getClassName()), e);
 				}
-			}
-			return result;
+			case ARRAY:
+				Class<?> result;
+				if (type.equals(getType(Object[].class))) {
+					result = Object[].class;
+				} else {
+					String className = type.getDescriptor().replace('/', '.');
+					try {
+						result = Class.forName(className);
+					} catch (ClassNotFoundException e) {
+						throw new IllegalArgumentException(format("No class %s in Class.forName", className), e);
+					}
+				}
+				return result;
+			default:
+				throw new IllegalArgumentException(format("No Java type for %s", type.getClassName()));
 		}
-		throw new IllegalArgumentException(format("No Java type for %s", type.getClassName()));
 	}
 
 	public void cast(Type typeFrom, Type typeTo) {

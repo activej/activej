@@ -19,8 +19,6 @@ package io.activej.codegen.expression;
 import io.activej.codegen.Context;
 import org.objectweb.asm.Type;
 
-import static org.objectweb.asm.Type.VOID_TYPE;
-
 final class ExpressionThrow implements Expression {
 	private final Expression exceptionExpression;
 
@@ -32,6 +30,6 @@ final class ExpressionThrow implements Expression {
 	public Type load(Context ctx) {
 		exceptionExpression.load(ctx);
 		ctx.getGeneratorAdapter().throwException();
-		return VOID_TYPE;
+		return null;
 	}
 }

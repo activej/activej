@@ -467,9 +467,7 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 
 				Expression expression = this.methods.get(m);
 				Type type = expression.load(ctx);
-				if (type == VOID_TYPE && m.getReturnType() != VOID_TYPE) {
-					// must be an exception
-				} else {
+				if (type != null) {
 					ctx.cast(type, m.getReturnType());
 					g.returnValue();
 				}
@@ -484,9 +482,7 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 
 				Expression expression = this.staticMethods.get(m);
 				Type type = expression.load(ctx);
-				if (type == VOID_TYPE && m.getReturnType() != VOID_TYPE) {
-					// must be an exception
-				} else {
+				if (type != null) {
 					ctx.cast(type, m.getReturnType());
 					g.returnValue();
 				}

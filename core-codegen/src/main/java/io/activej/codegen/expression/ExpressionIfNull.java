@@ -53,14 +53,14 @@ final class ExpressionIfNull implements Expression {
 
 		g.ifNull(labelTrue);
 
-		expressionFalse.load(ctx);
+		Type typeFalse = expressionFalse.load(ctx);
 		g.goTo(labelExit);
 
 		g.mark(labelTrue);
-		Type type = expressionTrue.load(ctx);
+		Type typeTrue = expressionTrue.load(ctx);
 
 		g.mark(labelExit);
 
-		return type;
+		return ctx.unifyTypes(typeFalse, typeTrue);
 	}
 }

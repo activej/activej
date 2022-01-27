@@ -46,14 +46,14 @@ final class ExpressionIfZCmp implements Expression {
 		value.load(ctx);
 		g.ifZCmp(operation.opCode, labelTrue);
 
-		expressionFalse.load(ctx);
+		Type typeFalse = expressionFalse.load(ctx);
 		g.goTo(labelExit);
 
 		g.mark(labelTrue);
-		Type type = expressionTrue.load(ctx);
+		Type typeTrue = expressionTrue.load(ctx);
 
 		g.mark(labelExit);
 
-		return type;
+		return ctx.unifyTypes(typeFalse, typeTrue);
 	}
 }
