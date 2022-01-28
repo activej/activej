@@ -28,6 +28,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static java.util.Arrays.asList;
@@ -205,7 +206,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 	}
 
 	private synchronized void doEnsureBuild() {
-		List<String> hashCodeEqualsFields;
+		Collection<String> hashCodeEqualsFields;
 		if (this.hashCodeEqualsFields != null) {
 			Set<String> missing = getMissingFields(this.hashCodeEqualsFields);
 			if (!missing.isEmpty()) {
@@ -213,16 +214,19 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 			}
 			hashCodeEqualsFields = this.hashCodeEqualsFields;
 		} else {
-			hashCodeEqualsFields = new ArrayList<>(fieldTypes.keySet());
+			hashCodeEqualsFields = fieldTypes.keySet();
 		}
+		List<String> hashCodeEqualsClassFields = hashCodeEqualsFields.stream()
+				.map(this::getClassField)
+				.collect(Collectors.toList());
 
 		generatedClass = classLoader.ensureClass(
 				ClassKey.of(Record.class, this),
 				() -> ClassBuilder.create(Record.class)
 						.withConstructor(asList(RecordScheme.class),
 								superConstructor(arg(0)))
-						.withMethod("hashCode", hashCodeImpl(hashCodeEqualsFields))
-						.withMethod("equals", equalsImpl(hashCodeEqualsFields))
+						.withMethod("hashCode", hashCodeImpl(hashCodeEqualsClassFields))
+						.withMethod("equals", equalsImpl(hashCodeEqualsClassFields))
 						.withInitializer(b -> {
 							for (Map.Entry<String, Type> entry : fieldTypes.entrySet()) {
 								Type type = entry.getValue();
@@ -284,9 +288,13 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 				throw new IllegalStateException("Missing some fields to be compared: " + missing);
 			}
 
+			List<String> comparedClassFields = comparedFields.stream()
+					.map(this::getClassField)
+					.collect(Collectors.toList());
+
 			//noinspection unchecked
 			comparator = ClassBuilder.create(Comparator.class)
-					.withMethod("compare", comparatorImpl(generatedClass, comparedFields))
+					.withMethod("compare", comparatorImpl(generatedClass, comparedClassFields))
 					.defineClassAndCreateInstance(classLoader);
 		}
 
