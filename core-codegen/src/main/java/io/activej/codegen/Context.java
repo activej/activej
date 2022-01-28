@@ -279,7 +279,7 @@ public final class Context {
 			Type targetTypePrimitive = isPrimitiveType(typeTo) ? typeTo : unwrap(typeTo);
 
 			if (isWrapperType(typeFrom)) {
-				g.invokeVirtual(typeFrom, toPrimitive(typeTo));
+				g.invokeVirtual(typeFrom, unwrapToPrimitive(targetTypePrimitive));
 				return;
 			}
 
