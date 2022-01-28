@@ -130,6 +130,9 @@ public final class Context {
 		VarLocal varLocal = varLocals.get(key);
 		if (varLocal == null) {
 			Type type = expression.load(this);
+			if (type == null) {
+				throw new IllegalArgumentException("Cannot assign a 'throw' expression to a local variable");
+			}
 			if (type == Type.VOID_TYPE) {
 				varLocal = VarLocal.VAR_LOCAL_VOID;
 			} else {
@@ -302,10 +305,17 @@ public final class Context {
 
 	public Type invoke(Expression owner, String methodName, List<Expression> arguments) {
 		Type ownerType = owner.load(this);
+		if (ownerType == null) {
+			throw new IllegalArgumentException("Cannot invoke a method on a 'throw' expression");
+		}
 		Type[] argumentTypes = new Type[arguments.size()];
 		for (int i = 0; i < arguments.size(); i++) {
 			Expression argument = arguments.get(i);
-			argumentTypes[i] = argument.load(this);
+			Type argumentType = argument.load(this);
+			if (argumentType == null) {
+				throw new IllegalArgumentException("Cannot invoke a method on with a 'throw' expression as an argument");
+			}
+			argumentTypes[i] = argumentType;
 		}
 		return invoke(ownerType, methodName, argumentTypes);
 	}
@@ -352,7 +362,11 @@ public final class Context {
 		Type[] argumentTypes = new Type[arguments.size()];
 		for (int i = 0; i < arguments.size(); i++) {
 			Expression argument = arguments.get(i);
-			argumentTypes[i] = argument.load(this);
+			Type argumentType = argument.load(this);
+			if (argumentType == null) {
+				throw new IllegalArgumentException("Cannot invoke a static method on with a 'throw' expression as an argument");
+			}
+			argumentTypes[i] = argumentType;
 		}
 		return invokeStatic(ownerType, methodName, argumentTypes);
 	}
@@ -391,7 +405,11 @@ public final class Context {
 
 		Type[] argumentTypes = new Type[arguments.size()];
 		for (int i = 0; i < arguments.size(); i++) {
-			argumentTypes[i] = arguments.get(i).load(this);
+			Type argumentType = arguments.get(i).load(this);
+			if (argumentType == null) {
+				throw new IllegalArgumentException("Cannot invoke a constructor with a 'throw' expression as an argument");
+			}
+			argumentTypes[i] = argumentType;
 		}
 		return invokeConstructor(ownerType, argumentTypes);
 	}
@@ -416,7 +434,11 @@ public final class Context {
 		g.loadThis();
 		Type[] argumentTypes = new Type[arguments.size()];
 		for (int i = 0; i < arguments.size(); i++) {
-			argumentTypes[i] = arguments.get(i).load(this);
+			Type argumentType = arguments.get(i).load(this);
+			if (argumentType == null) {
+				throw new IllegalArgumentException("Cannot invoke a constructor with a 'throw' expression as an argument");
+			}
+			argumentTypes[i] = argumentType;
 		}
 		Class<?>[] argumentClasses = Stream.of(argumentTypes).map(this::toJavaType).toArray(Class[]::new);
 		Method foundMethod = findMethod(
@@ -446,7 +468,11 @@ public final class Context {
 		g.loadThis();
 		Type[] argumentTypes = new Type[arguments.size()];
 		for (int i = 0; i < arguments.size(); i++) {
-			argumentTypes[i] = arguments.get(i).load(this);
+			Type argumentType = arguments.get(i).load(this);
+			if (argumentType == null) {
+				throw new IllegalArgumentException("Cannot invoke a 'super' method with a 'throw' expression as an argument");
+			}
+			argumentTypes[i] = argumentType;
 		}
 		Class<?>[] argumentClasses = Stream.of(argumentTypes).map(this::toJavaType).toArray(Class[]::new);
 		Method foundMethod = findMethod(

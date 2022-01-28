@@ -33,8 +33,13 @@ final class ExpressionArrayGet implements Expression {
 	public Type load(Context ctx) {
 		GeneratorAdapter g = ctx.getGeneratorAdapter();
 		Type arrayType = array.load(ctx);
+		if (arrayType == null) {
+			throw new IllegalArgumentException("Cannot access a 'throw' expression as an array");
+		}
 		Type type = Type.getType(arrayType.getDescriptor().substring(1));
-		index.load(ctx);
+		if (index.load(ctx) == null) {
+			throw new IllegalArgumentException("Cannot use a 'throw' expression as an index of an array");
+		}
 		g.arrayLoad(type);
 		return type;
 	}

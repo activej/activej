@@ -43,6 +43,9 @@ final class ExpressionIfNull implements Expression {
 		Label labelExit = new Label();
 
 		Type argType = expression.load(ctx);
+		if (argType == null) {
+			throw new IllegalArgumentException("Cannot check a nullability of a `throw` expression");
+		}
 		if (isPrimitiveType(argType)) {
 			if (argType.getSize() == 1)
 				g.pop();

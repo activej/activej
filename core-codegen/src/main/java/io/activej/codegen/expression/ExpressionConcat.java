@@ -30,7 +30,7 @@ import static org.objectweb.asm.Type.getType;
 import static org.objectweb.asm.commons.Method.getMethod;
 
 /**
- * Defines methods which allow to concat strings
+ * Defines methods which allow to concat arguments into a string
  */
 public final class ExpressionConcat implements Expression {
 	private final List<Expression> arguments;
@@ -54,6 +54,9 @@ public final class ExpressionConcat implements Expression {
 		for (Expression expression : arguments) {
 			g.dup();
 			Type type = expression.load(ctx);
+			if (type == null) {
+				throw new IllegalArgumentException("Cannot concatenate a 'throw' expression");
+			}
 			if (isPrimitiveType(type)) {
 				g.invokeStatic(wrap(type), new Method("toString", getType(String.class), new Type[]{type}));
 			} else {

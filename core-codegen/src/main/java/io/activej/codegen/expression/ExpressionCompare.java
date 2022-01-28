@@ -111,6 +111,9 @@ public final class ExpressionCompare implements Expression {
 		for (Pair pair : pairs) {
 			Type leftPropertyType = pair.left.load(ctx);
 			Type rightPropertyType = pair.right.load(ctx);
+			if (leftPropertyType == null || rightPropertyType == null) {
+				throw new IllegalArgumentException("Cannot compare 'throw' expressions");
+			}
 
 			if (!leftPropertyType.equals(rightPropertyType))
 				throw new IllegalArgumentException("Types of compared values should match");

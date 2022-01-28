@@ -83,6 +83,9 @@ public final class ExpressionHashCode implements Expression {
 			}
 
 			Type fieldType = argument.load(ctx);
+			if (fieldType == null) {
+				throw new IllegalArgumentException("Cannot calculate hash code of a 'throw' expression");
+			}
 
 			if (isPrimitiveType(fieldType)) {
 				if (fieldType.getSort() == Type.LONG) {

@@ -43,6 +43,9 @@ final class ExpressionCast implements Expression {
 		Type targetType = this.targetType == SELF_TYPE ? ctx.getSelfType() : this.targetType;
 
 		Type sourceType = expression.load(ctx);
+		if (sourceType == null) {
+			throw new IllegalArgumentException("Cannot cast a 'throw' expression");
+		}
 		if (!targetType.equals(OBJECT_TYPE) || isPrimitiveType(sourceType)) {
 			ctx.cast(sourceType, targetType);
 		}

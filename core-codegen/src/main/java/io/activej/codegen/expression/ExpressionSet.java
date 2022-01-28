@@ -35,6 +35,9 @@ final class ExpressionSet implements Expression {
 	public Type load(Context ctx) {
 		Object storeContext = to.beginStore(ctx);
 		Type type = from.load(ctx);
+		if (type == null) {
+			throw new IllegalArgumentException("Cannot assign a 'throw' expression to a field");
+		}
 		to.store(ctx, storeContext, type);
 		return Type.VOID_TYPE;
 	}

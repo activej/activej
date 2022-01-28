@@ -72,11 +72,18 @@ final class ExpressionArithmeticOp implements Expression {
 	public Type load(Context ctx) {
 		GeneratorAdapter g = ctx.getGeneratorAdapter();
 		Type leftType = left.load(ctx);
+		if (leftType == null) {
+			throw new IllegalArgumentException("Cannot " + op + " a 'throw' expression");
+		}
 		if (isWrapperType(leftType)) {
 			leftType = unwrap(leftType);
 			g.unbox(leftType);
 		}
 		Type rightType = right.load(ctx);
+		if (rightType == null) {
+			throw new IllegalArgumentException("Cannot " + op + " a 'throw' expression");
+
+		}
 		if (isWrapperType(rightType)) {
 			rightType = unwrap(rightType);
 			g.unbox(rightType);

@@ -46,10 +46,12 @@ final class ExpressionLoop implements Expression {
 		g.ifCmp(BOOLEAN_TYPE, GeneratorAdapter.EQ, labelExit);
 
 		Type bodyType = body.load(ctx);
-		if (bodyType.getSize() == 1)
-			g.pop();
-		if (bodyType.getSize() == 2)
-			g.pop2();
+		if (bodyType != null) {
+			if (bodyType.getSize() == 1)
+				g.pop();
+			if (bodyType.getSize() == 2)
+				g.pop2();
+		}
 
 		g.goTo(labelLoop);
 		g.mark(labelExit);

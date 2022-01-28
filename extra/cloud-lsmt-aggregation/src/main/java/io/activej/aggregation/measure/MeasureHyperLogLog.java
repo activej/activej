@@ -93,7 +93,13 @@ public final class MeasureHyperLogLog extends Measure implements WithInitializer
 		public Type load(Context ctx) {
 			GeneratorAdapter g = ctx.getGeneratorAdapter();
 			Type accumulatorType = accumulator.load(ctx);
+			if (accumulatorType == null) {
+				throw new IllegalArgumentException("Cannot use a 'throw' expression as an accumulator");
+			}
 			Type valueType = value.load(ctx);
+			if (valueType == null) {
+				throw new IllegalArgumentException("Cannot use a 'throw' expression as a value");
+			}
 			String methodName;
 			Type methodParameterType;
 			if (valueType == LONG_TYPE || valueType.getClassName().equals(Long.class.getName())) {

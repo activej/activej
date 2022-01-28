@@ -44,10 +44,14 @@ final class ExpressionIterate implements Expression {
 		Label labelExit = new Label();
 
 		VarLocal to = ctx.newLocal(INT_TYPE);
-		this.to.load(ctx);
+		if (this.to.load(ctx) == null) {
+			throw new IllegalArgumentException("Cannot iterate to a 'throw' expression");
+		}
 		to.store(ctx);
 
-		from.load(ctx);
+		if (from.load(ctx) == null) {
+			throw new IllegalArgumentException("Cannot iterate starting from a 'throw' expression");
+		}
 		VarLocal it = ctx.newLocal(INT_TYPE);
 		it.store(ctx);
 
@@ -59,10 +63,12 @@ final class ExpressionIterate implements Expression {
 		g.ifCmp(INT_TYPE, GeneratorAdapter.GE, labelExit);
 
 		Type forType = forVar.apply(it).load(ctx);
-		if (forType.getSize() == 1)
-			g.pop();
-		if (forType.getSize() == 2)
-			g.pop2();
+		if (forType != null) {
+			if (forType.getSize() == 1)
+				g.pop();
+			if (forType.getSize() == 2)
+				g.pop2();
+		}
 
 		it.load(ctx);
 		g.push(1);

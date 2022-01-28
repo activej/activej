@@ -17,6 +17,7 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 
 /**
@@ -27,7 +28,7 @@ public interface Expression {
 	 * Processes data and returns its type
 	 *
 	 * @param ctx information about a dynamic class
-	 * @return type of the processes data
+	 * @return type of the processes data or {@code null} if expression throws an exception
 	 */
-	Type load(Context ctx);
+	@Nullable Type load(Context ctx);
 }

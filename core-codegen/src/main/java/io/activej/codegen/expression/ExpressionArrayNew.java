@@ -36,7 +36,10 @@ final class ExpressionArrayNew implements Expression {
 	@Override
 	public Type load(Context ctx) {
 		GeneratorAdapter g = ctx.getGeneratorAdapter();
-		length.load(ctx);
+		Type lengthType = length.load(ctx);
+		if (lengthType == null) {
+			throw new IllegalArgumentException("Cannot use a 'throw' expression as the size of an array");
+		}
 		g.newArray(getType(getType(type).getDescriptor().substring(1)));
 		return getType(type);
 	}

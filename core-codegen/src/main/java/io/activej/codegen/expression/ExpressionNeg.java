@@ -37,6 +37,9 @@ final class ExpressionNeg implements Expression {
 	public Type load(Context ctx) {
 		GeneratorAdapter g = ctx.getGeneratorAdapter();
 		Type argType = arg.load(ctx);
+		if (argType == null) {
+			throw new IllegalArgumentException("Cannot negate a 'throw' expression");
+		}
 		int argSort = argType.getSort();
 
 		if (argSort == Type.DOUBLE || argSort == Type.FLOAT || argSort == Type.LONG || argSort == Type.INT) {

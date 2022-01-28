@@ -114,6 +114,9 @@ public final class ExpressionToString implements Expression {
 
 			g.dup();
 			Type type = entry.getValue().load(ctx);
+			if (type == null) {
+				throw new IllegalArgumentException("Cannot get a string out of a 'throw' exception");
+			}
 			if (isPrimitiveType(type)) {
 				g.invokeStatic(wrap(type), new Method("toString", getType(String.class), new Type[]{type}));
 			} else {

@@ -43,7 +43,9 @@ final class ExpressionIfZCmp implements Expression {
 		Label labelTrue = new Label();
 		Label labelExit = new Label();
 
-		value.load(ctx);
+		if (value.load(ctx) == null) {
+			throw new IllegalArgumentException("Cannot compare a 'throw' expression");
+		}
 		g.ifZCmp(operation.opCode, labelTrue);
 
 		Type typeFalse = expressionFalse.load(ctx);

@@ -433,8 +433,11 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 
 			GeneratorAdapter g = new GeneratorAdapter(ACC_PUBLIC, method, null, null, cw);
 			Context ctx = new Context(classLoader, this, g, classType, method);
-			ctx.cast(entry.getValue().load(ctx), method.getReturnType());
-			g.returnValue();
+			Type type = entry.getValue().load(ctx);
+			if (type != null) {
+				ctx.cast(type, method.getReturnType());
+				g.returnValue();
+			}
 
 			g.endMethod();
 		}

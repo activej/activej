@@ -51,12 +51,19 @@ final class Property implements Variable {
 	@Override
 	public Type load(Context ctx) {
 		Type ownerType = owner.load(ctx);
+		if (ownerType == null) {
+			throw new IllegalArgumentException("Cannot get a property of a 'throw' expression");
+		}
 		return loadPropertyOrGetter(ctx, ownerType, property);
 	}
 
 	@Override
 	public Object beginStore(Context ctx) {
-		return owner.load(ctx);
+		Type ownerType = owner.load(ctx);
+		if (ownerType == null) {
+			throw new IllegalArgumentException("Cannot set a 'throw' expression as a property");
+		}
+		return ownerType;
 	}
 
 	@Override

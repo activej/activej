@@ -23,8 +23,6 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.Method;
 
-import java.util.Objects;
-
 import static io.activej.codegen.operation.CompareOperation.*;
 import static io.activej.codegen.util.Utils.isPrimitiveType;
 import static org.objectweb.asm.Type.BOOLEAN_TYPE;
@@ -58,7 +56,9 @@ final class ExpressionIfObjCmp implements Expression {
 
 		Type leftType = left.load(ctx);
 		Type rightType = right.load(ctx);
-		if (!Objects.equals(leftType, rightType))
+		if (leftType == null || rightType == null)
+			throw new IllegalArgumentException("Cannot compare 'throw' expression");
+		if (!leftType.equals(rightType))
 			throw new IllegalArgumentException("Types of compared values should match");
 
 		if (isPrimitiveType(leftType)) {

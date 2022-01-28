@@ -10,6 +10,7 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 import static io.activej.codegen.TestUtils.assertStaticConstantsCleared;
@@ -1066,5 +1067,129 @@ public class ExpressionTest {
 		String expected = "" + aByte + anInt + space + aLong + aChar + anObject + testPojo;
 		String actual = testConcat.concat(aByte, anInt, space, aLong, aChar, anObject, testPojo);
 		assertEquals(expected, actual);
+	}
+
+	@org.junit.Test
+	public void testSequenceWithThrow() {
+		TestSeq testSeq = ClassBuilder.create(TestSeq.class)
+				.withMethod("seq", sequence(throwException(RuntimeException.class, "test")))
+				.defineClassAndCreateInstance(CLASS_LOADER);
+
+		Ref ref = new Ref();
+		try {
+			testSeq.seq(ref);
+		} catch (RuntimeException e) {
+			assertEquals("test", e.getMessage());
+		}
+		assertNull(ref.value);
+	}
+
+	@org.junit.Test
+	public void testSequenceWithThrowAndRef() {
+		TestSeq testSeq = ClassBuilder.create(TestSeq.class)
+				.withMethod("seq", sequence(
+						set(property(arg(0), "value"), value(1)),
+						set(property(arg(0), "value"), value(2)),
+						throwException(RuntimeException.class, "test")))
+				.defineClassAndCreateInstance(CLASS_LOADER);
+
+		Ref ref = new Ref();
+		try {
+			testSeq.seq(ref);
+		} catch (RuntimeException e) {
+			assertEquals("test", e.getMessage());
+		}
+		assertEquals(2, ref.value);
+	}
+
+	@org.junit.Test
+	public void testIterateWithThrow() {
+		TestIterate testIterate = ClassBuilder.create(TestIterate.class)
+				.withMethod("iterate", iterate(
+						value(0),
+						value(10),
+						$ -> throwException(RuntimeException.class, "test")))
+				.defineClassAndCreateInstance(CLASS_LOADER);
+
+		Ref ref = new Ref();
+		try {
+			testIterate.iterate(ref);
+		} catch (RuntimeException e) {
+			assertEquals("test", e.getMessage());
+		}
+		assertNull(ref.value);
+	}
+
+	@org.junit.Test
+	public void testIterateWithThrowAndRef() {
+		TestIterate testIterate = ClassBuilder.create(TestIterate.class)
+				.withMethod("iterate", iterate(
+						value(0),
+						value(10),
+						idx -> ifEq(
+								idx, value(5),
+								throwException(RuntimeException.class, "test"),
+								set(property(arg(0), "value"), idx)
+						)))
+				.defineClassAndCreateInstance(CLASS_LOADER);
+
+		Ref ref = new Ref();
+		try {
+			testIterate.iterate(ref);
+		} catch (RuntimeException e) {
+			assertEquals("test", e.getMessage());
+		}
+		assertEquals(4, ref.value);
+	}
+
+	@org.junit.Test
+	public void testConstructorWithThrow() throws NoSuchMethodException, IllegalAccessException, InstantiationException {
+		Class<TestIterate> testIterateCls = ClassBuilder.create(TestIterate.class)
+				.withConstructor(asList(Ref.class), throwException(RuntimeException.class, "test"))
+				.withMethod("iterate", throwException(new AssertionError()))
+				.defineClass(CLASS_LOADER);
+
+		Ref ref = new Ref();
+		try {
+			testIterateCls.getConstructor(Ref.class).newInstance(ref);
+		} catch (InvocationTargetException e) {
+			Throwable cause = e.getCause();
+			assertSame(RuntimeException.class, cause.getClass());
+			assertEquals("test", cause.getMessage());
+		}
+		assertNull(ref.value);
+	}
+
+	@org.junit.Test
+	public void testConstructorWithThrowAndRef() throws NoSuchMethodException, IllegalAccessException, InstantiationException {
+		Class<TestIterate> testIterateCls = ClassBuilder.create(TestIterate.class)
+				.withConstructor(asList(Ref.class), sequence(
+						set(property(arg(0), "value"), value(100)),
+						throwException(RuntimeException.class, "test"))
+				)
+				.withMethod("iterate", throwException(new AssertionError()))
+				.defineClass(CLASS_LOADER);
+
+		Ref ref = new Ref();
+		try {
+			testIterateCls.getConstructor(Ref.class).newInstance(ref);
+		} catch (InvocationTargetException e) {
+			Throwable cause = e.getCause();
+			assertSame(RuntimeException.class, cause.getClass());
+			assertEquals("test", cause.getMessage());
+		}
+		assertEquals(100, ref.value);
+	}
+
+	public static class Ref {
+		public Object value;
+	}
+
+	public interface TestSeq {
+		void seq(Ref ref);
+	}
+
+	public interface TestIterate {
+		void iterate(Ref ref);
 	}
 }

@@ -43,6 +43,9 @@ final class ExpressionSequence implements Expression {
 			Expression expression = expressions.get(i);
 			type = expression.load(ctx);
 			if (i != expressions.size() - 1) {
+				if (type == null) {
+					throw new IllegalArgumentException("There are additional expressions in a sequence after a 'throw' exception");
+				}
 				if (type.getSize() == 1)
 					g.pop();
 				if (type.getSize() == 2)
