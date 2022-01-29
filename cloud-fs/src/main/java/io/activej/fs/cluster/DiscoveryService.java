@@ -21,8 +21,6 @@ import io.activej.fs.ActiveFs;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -47,7 +45,7 @@ public interface DiscoveryService {
 	 * @return a constant discovery service
 	 */
 	static DiscoveryService constant(Map<Object, ActiveFs> partitions) {
-		Map<Object, ActiveFs> constant = Collections.unmodifiableMap(new HashMap<>(partitions));
+		Map<Object, ActiveFs> constant = Map.copyOf(partitions);
 		return () -> new AsyncSupplier<Map<Object, ActiveFs>>() {
 			int i = 0;
 
