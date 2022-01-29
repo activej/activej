@@ -774,7 +774,9 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 			throw new IllegalArgumentException("Class should not be local");
 
 		SerializerDefClass serializer = SerializerDefClass.create(rawClass);
-		if (!rawClass.isInterface()) {
+		if (rawClass.getAnnotation(SerializeRecord.class) != null) {
+			scanRecord(ctx, serializer);
+		} else if (!rawClass.isInterface()) {
 			scanClass(ctx, serializer);
 		} else {
 			scanInterface(ctx, serializer);
@@ -793,12 +795,12 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		}
 
 		List<FoundSerializer> foundSerializers = new ArrayList<>();
+		scanConstructors(ctx, serializer);
+		scanStaticFactoryMethods(ctx, serializer);
+		scanSetters(ctx, serializer);
 		scanFields(ctx, bindings, foundSerializers);
 		scanGetters(ctx, bindings, foundSerializers);
 		addMethodsAndGettersToClass(ctx, serializer, foundSerializers);
-		scanSetters(ctx, serializer);
-		scanFactories(ctx, serializer);
-		scanConstructors(ctx, serializer);
 		if (!Modifier.isAbstract(ctx.getRawType().getModifiers())) {
 			serializer.addMatchingSetters();
 		}
@@ -814,6 +816,33 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		for (AnnotatedType superInterface : ctx.getRawType().getAnnotatedInterfaces()) {
 			scanInterface(ctx.push(bind(superInterface, bindings)), serializer);
 		}
+	}
+
+	private void scanRecord(Context<SerializerDef> ctx, SerializerDefClass serializer) {
+		Function<TypeVariable<?>, AnnotatedType> bindings = getTypeBindings(ctx.getAnnotatedType())::get;
+		List<FoundSerializer> foundSerializers = new ArrayList<>();
+
+		Class<?> rawType = ctx.getRawType();
+		int order = 1;
+		for (RecordComponent recordComponent : rawType.getRecordComponents()) {
+			String name = recordComponent.getName();
+
+			Method method;
+			try {
+				method = rawType.getMethod(name);
+			} catch (NoSuchMethodException e) {
+				throw new IllegalArgumentException(e);
+			}
+			FoundSerializer foundSerializer = new FoundSerializer(method, order++, Serialize.DEFAULT_VERSION, Serialize.DEFAULT_VERSION);
+			foundSerializer.serializer = ctx.scan(bind(
+					annotationsCompatibilityMode ?
+							annotateWithTypePath(recordComponent.getGenericType(), recordComponent.getAnnotations()) :
+							recordComponent.getAnnotatedType(),
+					bindings));
+			foundSerializers.add(foundSerializer);
+		}
+		serializer.setConstructor(rawType.getConstructors()[0], Arrays.stream(rawType.getRecordComponents()).map(RecordComponent::getName).toList());
+		addMethodsAndGettersToClass(ctx, serializer, foundSerializers);
 	}
 
 	private void addMethodsAndGettersToClass(Context<SerializerDef> ctx, SerializerDefClass serializer, List<FoundSerializer> foundSerializers) {
@@ -924,7 +953,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		}
 	}
 
-	private void scanFactories(Context<SerializerDef> ctx, SerializerDefClass serializer) {
+	private void scanStaticFactoryMethods(Context<SerializerDef> ctx, SerializerDefClass serializer) {
 		Class<?> factoryClassType = ctx.getRawType();
 		for (Method factory : factoryClassType.getDeclaredMethods()) {
 			if (ctx.getRawType() != factory.getReturnType()) {
@@ -941,7 +970,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 					}
 				}
 				if (fields.size() == factory.getParameterTypes().length) {
-					serializer.setFactory(factory, fields);
+					serializer.setStaticFactoryMethod(factory, fields);
 				} else {
 					if (!fields.isEmpty())
 						throw new IllegalArgumentException(format("@Deserialize is not fully specified for %s", fields));

@@ -86,8 +86,8 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 
 	private Constructor<?> constructor;
 	private List<String> constructorParams;
-	private Method factory;
-	private List<String> factoryParams;
+	private Method staticFactoryMethod;
+	private List<String> staticFactoryMethodParams;
 	private final Map<Method, List<String>> setters = new LinkedHashMap<>();
 
 	private SerializerDefClass(Class<?> encodeType, Class<?> decodeType) {
@@ -116,19 +116,19 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 		setters.put(method, fields);
 	}
 
-	public void setFactory(@NotNull Method methodFactory, @NotNull List<String> fields) {
+	public void setStaticFactoryMethod(@NotNull Method staticFactoryMethod, @NotNull List<String> fields) {
 		if (decodeType.isInterface())
 			throw new IllegalStateException("Class should either implement an interface or be an interface");
-		if (this.factory != null)
-			throw new IllegalArgumentException(format("Factory is already set: %s", this.factory));
-		if (isPrivate(methodFactory.getModifiers()))
-			throw new IllegalArgumentException(format("Factory cannot be private: %s", methodFactory));
-		if (!isStatic(methodFactory.getModifiers()))
-			throw new IllegalArgumentException(format("Factory must be static: %s", methodFactory));
-		if (methodFactory.getGenericParameterTypes().length != fields.size())
+		if (this.staticFactoryMethod != null)
+			throw new IllegalArgumentException(format("Factory is already set: %s", this.staticFactoryMethod));
+		if (isPrivate(staticFactoryMethod.getModifiers()))
+			throw new IllegalArgumentException(format("Factory cannot be private: %s", staticFactoryMethod));
+		if (!isStatic(staticFactoryMethod.getModifiers()))
+			throw new IllegalArgumentException(format("Factory must be static: %s", staticFactoryMethod));
+		if (staticFactoryMethod.getGenericParameterTypes().length != fields.size())
 			throw new IllegalArgumentException("Number of arguments of a method should match a size of list of fields");
-		this.factory = methodFactory;
-		this.factoryParams = fields;
+		this.staticFactoryMethod = staticFactoryMethod;
+		this.staticFactoryMethodParams = fields;
 	}
 
 	public void setConstructor(@NotNull Constructor<?> constructor, @NotNull List<String> fields) {
@@ -181,8 +181,8 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 		if (constructorParams != null) {
 			usedFields.addAll(constructorParams);
 		}
-		if (factoryParams != null) {
-			usedFields.addAll(factoryParams);
+		if (staticFactoryMethodParams != null) {
+			usedFields.addAll(staticFactoryMethodParams);
 		}
 		for (List<String> list : setters.values()) {
 			usedFields.addAll(list);
@@ -286,7 +286,7 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 		if (decodeType.isInterface()) {
 			return deserializeInterface(staticDecoders, in, version, compatibilityLevel);
 		}
-		if (constructor == null && factory == null && setters.isEmpty()) {
+		if (constructor == null && staticFactoryMethod == null && setters.isEmpty()) {
 			return deserializeClassSimple(staticDecoders, in, version, compatibilityLevel, instanceInitializer);
 		}
 
@@ -308,7 +308,7 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 						map.put(entry.getKey(), fieldValues.get(i++));
 					}
 
-					return let(factory == null ?
+					return let(staticFactoryMethod == null ?
 									callConstructor(decodeType, map, version) :
 									callFactoryMethod(map, version),
 							instance -> sequence(seq -> {
@@ -362,20 +362,20 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 	}
 
 	private Expression callFactoryMethod(Map<String, Expression> map, int version) {
-		Expression[] param = new Expression[factoryParams.size()];
-		Class<?>[] parameterTypes = factory.getParameterTypes();
-		for (int i = 0; i < factoryParams.size(); i++) {
-			String fieldName = factoryParams.get(i);
+		Expression[] param = new Expression[staticFactoryMethodParams.size()];
+		Class<?>[] parameterTypes = staticFactoryMethod.getParameterTypes();
+		for (int i = 0; i < staticFactoryMethodParams.size(); i++) {
+			String fieldName = staticFactoryMethodParams.get(i);
 			FieldDef fieldDef = fields.get(fieldName);
 			if (fieldDef == null)
-				throw new NullPointerException(format("Field '%s' is not found in '%s'", fieldName, factory));
+				throw new NullPointerException(format("Field '%s' is not found in '%s'", fieldName, staticFactoryMethod));
 			if (fieldDef.hasVersion(version)) {
 				param[i] = cast(map.get(fieldName), parameterTypes[i]);
 			} else {
 				param[i] = cast(pushDefaultValue(fieldDef.getAsmType()), parameterTypes[i]);
 			}
 		}
-		return staticCall(factory.getDeclaringClass(), factory.getName(), param);
+		return staticCall(staticFactoryMethod.getDeclaringClass(), staticFactoryMethod.getName(), param);
 	}
 
 	private Expression callConstructor(Class<?> targetType, Map<String, Expression> map, int version) {

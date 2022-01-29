@@ -29,7 +29,7 @@ public final class Utils {
 		return doTest(testData, serializer, serializer);
 	}
 
-	public static <T> T doTest(T testData, BinarySerializer<T> serializer, BinarySerializer<T> deserializer) {
+	public static <T, R> R doTest(T testData, BinarySerializer<T> serializer, BinarySerializer<R> deserializer) {
 		byte[] array = new byte[1000];
 		serializer.encode(array, 0, testData);
 		return deserializer.decode(array, 0);
