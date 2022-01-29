@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static io.activej.aggregation.AggregationPredicates.not;
 import static io.activej.aggregation.AggregationPredicates.*;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.*;
@@ -126,14 +127,11 @@ public final class ReportingTest extends CubeTestBase {
 
 		@Override
 		public @Nullable String resolveAttributes(Integer key) {
-			switch (key) {
-				case 1:
-					return "first";
-				case 3:
-					return "third";
-				default:
-					return null;
-			}
+			return switch (key) {
+				case 1 -> "first";
+				case 3 -> "third";
+				default -> null;
+			};
 		}
 	}
 

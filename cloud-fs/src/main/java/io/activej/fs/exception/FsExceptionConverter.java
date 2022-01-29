@@ -57,40 +57,19 @@ public abstract class FsExceptionConverter {
 		} else {
 			if (!key.equals(MESSAGE)) throw reader.newParseError("Expected key '" + MESSAGE + '\'');
 			String message = reader.readString();
-			switch (type) {
-				case "FsException":
-					exception = new FsException(message, false);
-					break;
-				case "FileNotFoundException":
-					exception = new FileNotFoundException(message, false);
-					break;
-				case "ForbiddenPathException":
-					exception = new ForbiddenPathException(message, false);
-					break;
-				case "FsIOException":
-					exception = new FsIOException(message, false);
-					break;
-				case "FsScalarException":
-					exception = new FsScalarException(message, false);
-					break;
-				case "FsStateException":
-					exception = new FsStateException(message, false);
-					break;
-				case "IllegalOffsetException":
-					exception = new IllegalOffsetException(message, false);
-					break;
-				case "IsADirectoryException":
-					exception = new IsADirectoryException(message, false);
-					break;
-				case "MalformedGlobException":
-					exception = new MalformedGlobException(message, false);
-					break;
-				case "PathContainsFileException":
-					exception = new PathContainsFileException(message, false);
-					break;
-				default:
-					throw ParsingException.create("Unknown type: " + type, true);
-			}
+			exception = switch (type) {
+				case "FsException" -> new FsException(message, false);
+				case "FileNotFoundException" -> new FileNotFoundException(message, false);
+				case "ForbiddenPathException" -> new ForbiddenPathException(message, false);
+				case "FsIOException" -> new FsIOException(message, false);
+				case "FsScalarException" -> new FsScalarException(message, false);
+				case "FsStateException" -> new FsStateException(message, false);
+				case "IllegalOffsetException" -> new IllegalOffsetException(message, false);
+				case "IsADirectoryException" -> new IsADirectoryException(message, false);
+				case "MalformedGlobException" -> new MalformedGlobException(message, false);
+				case "PathContainsFileException" -> new PathContainsFileException(message, false);
+				default -> throw ParsingException.create("Unknown type: " + type, true);
+			};
 		}
 		reader.endObject();
 		reader.endObject();

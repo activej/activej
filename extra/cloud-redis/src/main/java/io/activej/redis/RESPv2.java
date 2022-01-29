@@ -147,20 +147,14 @@ public final class RESPv2 {
 	public @Nullable Object readObject() throws MalformedDataException {
 		if (!canRead()) throw NEED_MORE_DATA;
 
-		switch (array[head++]) {
-			case STRING_MARKER:
-				return decodeString();
-			case ERROR_MARKER:
-				return serverError();
-			case LONG_MARKER:
-				return decodeLong();
-			case BYTES_MARKER:
-				return decodeBytes();
-			case ARRAY_MARKER:
-				return decodeArray();
-			default:
-				throw new MalformedDataException("Unknown RESP data type: " + array[head - 1]);
-		}
+		return switch (array[head++]) {
+			case STRING_MARKER -> decodeString();
+			case ERROR_MARKER -> serverError();
+			case LONG_MARKER -> decodeLong();
+			case BYTES_MARKER -> decodeBytes();
+			case ARRAY_MARKER -> decodeArray();
+			default -> throw new MalformedDataException("Unknown RESP data type: " + array[head - 1]);
+		};
 	}
 
 	/**
@@ -170,21 +164,11 @@ public final class RESPv2 {
 		if (!canRead()) throw NEED_MORE_DATA;
 
 		switch (array[head++]) {
-			case STRING_MARKER:
-			case ERROR_MARKER:
-				skipString();
-				break;
-			case LONG_MARKER:
-				skipLong();
-				break;
-			case BYTES_MARKER:
-				skipBytes();
-				break;
-			case ARRAY_MARKER:
-				skipArray();
-				break;
-			default:
-				throw new MalformedDataException("Unknown RESP data type: " + array[head - 1]);
+			case STRING_MARKER, ERROR_MARKER -> skipString();
+			case LONG_MARKER -> skipLong();
+			case BYTES_MARKER -> skipBytes();
+			case ARRAY_MARKER -> skipArray();
+			default -> throw new MalformedDataException("Unknown RESP data type: " + array[head - 1]);
 		}
 	}
 
@@ -459,20 +443,14 @@ public final class RESPv2 {
 	}
 
 	private static String getDataType(byte firstByte) {
-		switch (firstByte) {
-			case STRING_MARKER:
-				return "Simple String";
-			case ERROR_MARKER:
-				return "Error";
-			case LONG_MARKER:
-				return "Integer";
-			case BYTES_MARKER:
-				return "Bulk String";
-			case ARRAY_MARKER:
-				return "Array";
-			default:
-				return String.format("Unknown first byte: 0x%02X", firstByte);
-		}
+		return switch (firstByte) {
+			case STRING_MARKER -> "Simple String";
+			case ERROR_MARKER -> "Error";
+			case LONG_MARKER -> "Integer";
+			case BYTES_MARKER -> "Bulk String";
+			case ARRAY_MARKER -> "Array";
+			default -> String.format("Unknown first byte: 0x%02X", firstByte);
+		};
 	}
 
 	private ServerError serverError() throws MalformedDataException {

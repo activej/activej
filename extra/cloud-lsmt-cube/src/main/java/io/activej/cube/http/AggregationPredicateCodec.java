@@ -245,33 +245,19 @@ final class AggregationPredicateCodec implements JsonCodec<AggregationPredicate>
 			Object value = codec.read(reader);
 			AggregationPredicate comparisonPredicate;
 			switch (operator) {
-				case EMPTY_STRING:
-				case EQ_SIGN:
-					comparisonPredicate = eq(field, value);
-					break;
-				case NOT_EQ_SIGN:
-					comparisonPredicate = notEq(field, value);
-					break;
-				case GE_SIGN:
-					comparisonPredicate = ge(field, (Comparable<?>) value);
-					break;
-				case GT_SIGN:
-					comparisonPredicate = gt(field, (Comparable<?>) value);
-					break;
-				case LE_SIGN:
-					comparisonPredicate = le(field, (Comparable<?>) value);
-					break;
-				case LT_SIGN:
-					comparisonPredicate = lt(field, (Comparable<?>) value);
-					break;
-				case IN_SIGN:
+				case EMPTY_STRING, EQ_SIGN -> comparisonPredicate = eq(field, value);
+				case NOT_EQ_SIGN -> comparisonPredicate = notEq(field, value);
+				case GE_SIGN -> comparisonPredicate = ge(field, (Comparable<?>) value);
+				case GT_SIGN -> comparisonPredicate = gt(field, (Comparable<?>) value);
+				case LE_SIGN -> comparisonPredicate = le(field, (Comparable<?>) value);
+				case LT_SIGN -> comparisonPredicate = lt(field, (Comparable<?>) value);
+				case IN_SIGN -> {
 					if (value == null) {
 						throw ParsingException.create("Arguments of " + IN_SIGN + " cannot be null", true);
 					}
 					comparisonPredicate = in(field, (Set<?>) value);
-					break;
-				default:
-					throw ParsingException.create("Could not read predicate", true);
+				}
+				default -> throw ParsingException.create("Could not read predicate", true);
 			}
 			predicates.add(comparisonPredicate);
 			byte nextToken = reader.getNextToken();
@@ -294,61 +280,29 @@ final class AggregationPredicateCodec implements JsonCodec<AggregationPredicate>
 			AggregationPredicate result;
 			byte next = reader.getNextToken();
 			if (next != COMMA) {
-				switch (type) {
-					case TRUE:
-						result = alwaysTrue();
-						break;
-					case FALSE:
-						result = alwaysFalse();
-						break;
-					default:
-						throw reader.newParseError("Unknown predicate type " + type);
-				}
+				result = switch (type) {
+					case TRUE -> alwaysTrue();
+					case FALSE -> alwaysFalse();
+					default -> throw reader.newParseError("Unknown predicate type " + type);
+				};
 			} else {
 				reader.getNextToken();
-				switch (type) {
-					case EQ:
-						result = readEq(reader);
-						break;
-					case NOT_EQ:
-						result = readNotEq(reader);
-						break;
-					case GE:
-						result = readGe(reader);
-						break;
-					case GT:
-						result = readGt(reader);
-						break;
-					case LE:
-						result = readLe(reader);
-						break;
-					case LT:
-						result = readLt(reader);
-						break;
-					case IN:
-						result = readIn(reader);
-						break;
-					case BETWEEN:
-						result = readBetween(reader);
-						break;
-					case REGEXP:
-						result = readRegexp(reader);
-						break;
-					case AND:
-						result = readAnd(reader);
-						break;
-					case OR:
-						result = readOr(reader);
-						break;
-					case NOT:
-						result = readNot(reader);
-						break;
-					case HAS:
-						result = readHas(reader);
-						break;
-					default:
-						throw reader.newParseError("Unknown predicate type " + type);
-				}
+				result = switch (type) {
+					case EQ -> readEq(reader);
+					case NOT_EQ -> readNotEq(reader);
+					case GE -> readGe(reader);
+					case GT -> readGt(reader);
+					case LE -> readLe(reader);
+					case LT -> readLt(reader);
+					case IN -> readIn(reader);
+					case BETWEEN -> readBetween(reader);
+					case REGEXP -> readRegexp(reader);
+					case AND -> readAnd(reader);
+					case OR -> readOr(reader);
+					case NOT -> readNot(reader);
+					case HAS -> readHas(reader);
+					default -> throw reader.newParseError("Unknown predicate type " + type);
+				};
 			}
 			reader.checkArrayEnd();
 			return result;

@@ -102,7 +102,7 @@ final class QueryResultCodec implements JsonCodec<QueryResult>, WithInitializer<
 			reader.getNextToken();
 			String field = reader.readKey();
 			switch (field) {
-				case METADATA_FIELD:
+				case METADATA_FIELD -> {
 					if (reader.last() != OBJECT_START) throw reader.newParseError("Expected '{'");
 					reader.getNextToken();
 					String attrFieldsKey = reader.readKey();
@@ -112,7 +112,6 @@ final class QueryResultCodec implements JsonCodec<QueryResult>, WithInitializer<
 					attributes.addAll(readStrings(reader));
 					reader.comma();
 					reader.getNextToken();
-
 					String measuresField = reader.readKey();
 					if (!measuresField.equals(MEASURES_FIELD)) {
 						throw reader.newParseError("Key " + MEASURES_FIELD + " is expected");
@@ -120,30 +119,23 @@ final class QueryResultCodec implements JsonCodec<QueryResult>, WithInitializer<
 					measures.addAll(readStrings(reader));
 					reader.endObject();
 					recordScheme = recordScheme(attributes, measures);
-					break;
-				case SORTED_BY_FIELD:
-					sortedBy = readStrings(reader);
-					break;
-				case RECORDS_FIELD:
+				}
+				case SORTED_BY_FIELD -> sortedBy = readStrings(reader);
+				case RECORDS_FIELD -> {
 					if (recordScheme == null) {
 						throw reader.newParseError('\'' + METADATA_FIELD + "' field should go before '" + RECORDS_FIELD + "' field");
 					}
 					records = readRecords(reader, recordScheme);
-					break;
-				case COUNT_FIELD:
-					totalCount = NumberConverter.deserializeInt(reader);
-					break;
-				case FILTER_ATTRIBUTES_FIELD:
-					filterAttributes = readFilterAttributes(reader);
-					break;
-				case TOTALS_FIELD:
-					if (recordScheme == null){
+				}
+				case COUNT_FIELD -> totalCount = NumberConverter.deserializeInt(reader);
+				case FILTER_ATTRIBUTES_FIELD -> filterAttributes = readFilterAttributes(reader);
+				case TOTALS_FIELD -> {
+					if (recordScheme == null) {
 						throw reader.newParseError('\'' + METADATA_FIELD + "' field should go before '" + TOTALS_FIELD + "' field");
 					}
 					totals = readTotals(reader, recordScheme);
-					break;
-				default:
-					throw reader.newParseError("Unknown field: " + field);
+				}
+				default -> throw reader.newParseError("Unknown field: " + field);
 			}
 			byte nextToken = reader.getNextToken();
 			if (nextToken == OBJECT_END) {

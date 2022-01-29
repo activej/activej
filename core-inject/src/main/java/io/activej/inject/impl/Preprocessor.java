@@ -110,7 +110,7 @@ public final class Preprocessor {
 		Class<?> rawType = key.getRawType();
 		if (bindingSet != null) {
 			switch (bindingSet.size()) {
-				case 0:
+				case 0 -> {
 					// try to recursively generate a requested binding
 					binding = ((BindingGenerator<Object>) generator).generate(recursiveLocator, scope, (Key<Object>) key);
 
@@ -143,13 +143,11 @@ public final class Preprocessor {
 					if (binding == null) {
 						throw new DIException("Refused to generate an explicitly requested binding for key " + key.getDisplayString());
 					}
-					break;
-				case 1:
-					binding = bindingSet.iterator().next();
-					break;
-				default:
-					//noinspection rawtypes
-					binding = ((Multibinder) multibinder).multibind(key, bindingSet);
+				}
+				case 1 -> binding = bindingSet.iterator().next();
+				default ->
+						//noinspection rawtypes
+						binding = ((Multibinder) multibinder).multibind(key, bindingSet);
 			}
 		} else { // or if it was never bound
 			// first check if it was already resolved in upper scope

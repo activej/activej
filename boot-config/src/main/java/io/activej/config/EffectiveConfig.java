@@ -26,7 +26,6 @@ import java.util.*;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.config.Config.concatPath;
 import static java.lang.Math.min;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.*;
 
 public final class EffectiveConfig implements Config {
@@ -138,7 +137,7 @@ public final class EffectiveConfig implements Config {
 	public void saveEffectiveConfigTo(Path outputPath) {
 		try {
 			String renderedConfig = renderEffectiveConfig();
-			Files.write(outputPath, renderedConfig.getBytes(UTF_8), CREATE, WRITE, TRUNCATE_EXISTING);
+			Files.writeString(outputPath, renderedConfig, CREATE, WRITE, TRUNCATE_EXISTING);
 		} catch (IOException e) {
 			throw new RuntimeException("Failed to serialize effective config as properties file", e);
 		}
@@ -207,39 +206,36 @@ public final class EffectiveConfig implements Config {
 				continue;
 			}
 			switch (c) {
-				case ' ':
+				case ' ' -> {
 					if (i == 0 || escapeKey)
 						sb.append('\\');
 					sb.append(' ');
-					break;
-				case '\t':
+				}
+				case '\t' -> {
 					sb.append('\\');
 					sb.append('t');
-					break;
-				case '\n':
+				}
+				case '\n' -> {
 					sb.append('\\');
 					sb.append('n');
-					break;
-				case '\r':
+				}
+				case '\r' -> {
 					sb.append('\\');
 					sb.append('r');
-					break;
-				case '\f':
+				}
+				case '\f' -> {
 					sb.append('\\');
 					sb.append('f');
-					break;
-				case '=':
-				case ':':
+				}
+				case '=', ':' -> {
 					if (escapeKey) sb.append('\\');
 					sb.append(c);
-					break;
-				case '#':
-				case '!':
+				}
+				case '#', '!' -> {
 					if (escapeKey && i == 0) sb.append('\\');
 					sb.append(c);
-					break;
-				default:
-					sb.append(c);
+				}
+				default -> sb.append(c);
 			}
 		}
 		return sb.toString();

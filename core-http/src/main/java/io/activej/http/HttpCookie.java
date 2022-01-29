@@ -395,52 +395,45 @@ public final class HttpCookie {
 	}
 
 	private static AvHandler getCookieHandler(int hash) {
-		switch (hash) {
-			case EXPIRES_HC:
-				return new AvHandler() {
-					@Override
-					protected void handle(HttpCookie cookie, byte[] bytes, int start, int end) throws MalformedHttpException {
-						cookie.setExpirationDate(decodeExpirationDate(bytes, start));
-					}
-				};
-			case MAX_AGE_HC:
-				return new AvHandler() {
-					@Override
-					protected void handle(HttpCookie cookie, byte[] bytes, int start, int end) throws MalformedHttpException {
-						cookie.setMaxAge(decodeMaxAge(bytes, start, end));
-					}
-				};
-			case DOMAIN_HC:
-				return new AvHandler() {
-					@Override
-					protected void handle(HttpCookie cookie, byte[] bytes, int start, int end) {
-						cookie.setDomain(decodeAscii(bytes, start, end - start));
-					}
-				};
-			case PATH_HC:
-				return new AvHandler() {
-					@Override
-					protected void handle(HttpCookie cookie, byte[] bytes, int start, int end) {
-						cookie.setPath(decodeAscii(bytes, start, end - start));
-					}
-				};
-			case SECURE_HC:
-				return new AvHandler() {
-					@Override
-					protected void handle(HttpCookie cookie, byte[] bytes, int start, int end) {
-						cookie.setSecure(true);
-					}
-				};
-			case HTTP_ONLY_HC:
-				return new AvHandler() {
-					@Override
-					protected void handle(HttpCookie cookie, byte[] bytes, int start, int end) {
-						cookie.setHttpOnly(true);
-					}
-				};
-			default:
-				return null;
-		}
+		return switch (hash) {
+			case EXPIRES_HC -> new AvHandler() {
+				@Override
+				protected void handle(HttpCookie cookie, byte[] bytes, int start, int end) throws MalformedHttpException {
+					cookie.setExpirationDate(decodeExpirationDate(bytes, start));
+				}
+			};
+			case MAX_AGE_HC -> new AvHandler() {
+				@Override
+				protected void handle(HttpCookie cookie, byte[] bytes, int start, int end) throws MalformedHttpException {
+					cookie.setMaxAge(decodeMaxAge(bytes, start, end));
+				}
+			};
+			case DOMAIN_HC -> new AvHandler() {
+				@Override
+				protected void handle(HttpCookie cookie, byte[] bytes, int start, int end) {
+					cookie.setDomain(decodeAscii(bytes, start, end - start));
+				}
+			};
+			case PATH_HC -> new AvHandler() {
+				@Override
+				protected void handle(HttpCookie cookie, byte[] bytes, int start, int end) {
+					cookie.setPath(decodeAscii(bytes, start, end - start));
+				}
+			};
+			case SECURE_HC -> new AvHandler() {
+				@Override
+				protected void handle(HttpCookie cookie, byte[] bytes, int start, int end) {
+					cookie.setSecure(true);
+				}
+			};
+			case HTTP_ONLY_HC -> new AvHandler() {
+				@Override
+				protected void handle(HttpCookie cookie, byte[] bytes, int start, int end) {
+					cookie.setHttpOnly(true);
+				}
+			};
+			default -> null;
+		};
 	}
 
 	private static Instant decodeExpirationDate(byte[] bytes, int start) throws MalformedHttpException {

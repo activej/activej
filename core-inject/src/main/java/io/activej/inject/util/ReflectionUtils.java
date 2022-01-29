@@ -148,14 +148,11 @@ public final class ReflectionUtils {
 			}
 			throw new DIException("Cannot have both @Scoped and a scope annotation on " + annotatedElement);
 		}
-		switch (scopes.size()) {
-			case 0:
-				return Scope.UNSCOPED;
-			case 1:
-				return new Scope[]{Scope.of(scopes.iterator().next())};
-			default:
-				throw new DIException("More than one scope annotation on " + annotatedElement);
-		}
+		return switch (scopes.size()) {
+			case 0 -> Scope.UNSCOPED;
+			case 1 -> new Scope[]{Scope.of(scopes.iterator().next())};
+			default -> throw new DIException("More than one scope annotation on " + annotatedElement);
+		};
 	}
 
 	public static <T extends AnnotatedElement & Member> List<T> getAnnotatedElements(Class<?> cls,

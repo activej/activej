@@ -381,18 +381,13 @@ public final class ConfigConverters {
 		return new ConfigConverter<Schedule>() {
 			@Override
 			public @NotNull Schedule get(Config config) {
-				switch (config.get("type")) {
-					case "immediate":
-						return Schedule.immediate();
-					case "delay":
-						return Schedule.ofDelay(config.get(ofDuration(), "value"));
-					case "interval":
-						return Schedule.ofInterval(config.get(ofDuration(), "value"));
-					case "period":
-						return Schedule.ofPeriod(config.get(ofDuration(), "value"));
-					default:
-						throw new IllegalArgumentException("No eventloop task schedule type named " + config.getValue() + " exists!");
-				}
+				return switch (config.get("type")) {
+					case "immediate" -> Schedule.immediate();
+					case "delay" -> Schedule.ofDelay(config.get(ofDuration(), "value"));
+					case "interval" -> Schedule.ofInterval(config.get(ofDuration(), "value"));
+					case "period" -> Schedule.ofPeriod(config.get(ofDuration(), "value"));
+					default -> throw new IllegalArgumentException("No eventloop task schedule type named " + config.getValue() + " exists!");
+				};
 			}
 
 			@Override
@@ -413,21 +408,13 @@ public final class ConfigConverters {
 				if (!config.hasValue() || config.getValue().equals("no")) {
 					return RetryPolicy.noRetry();
 				}
-				RetryPolicy retryPolicy;
-				switch (config.getValue()) {
-					case "immediate":
-						retryPolicy = RetryPolicy.immediateRetry();
-						break;
-					case "fixedDelay":
-						retryPolicy = RetryPolicy.fixedDelay(config.get(ofDuration(), "delay").toMillis());
-						break;
-					case "exponentialBackoff":
-						retryPolicy = RetryPolicy.exponentialBackoff(config.get(ofDuration(), "initialDelay").toMillis(),
-								config.get(ofDuration(), "maxDelay").toMillis(), config.get(ofDouble(), "exponent", 2.0));
-						break;
-					default:
-						throw new IllegalArgumentException("No retry policy named " + config.getValue() + " exists!");
-				}
+				RetryPolicy retryPolicy = switch (config.getValue()) {
+					case "immediate" -> RetryPolicy.immediateRetry();
+					case "fixedDelay" -> RetryPolicy.fixedDelay(config.get(ofDuration(), "delay").toMillis());
+					case "exponentialBackoff" -> RetryPolicy.exponentialBackoff(config.get(ofDuration(), "initialDelay").toMillis(),
+							config.get(ofDuration(), "maxDelay").toMillis(), config.get(ofDouble(), "exponent", 2.0));
+					default -> throw new IllegalArgumentException("No retry policy named " + config.getValue() + " exists!");
+				};
 				int maxRetryCount = config.get(ofInteger(), "maxRetryCount", Integer.MAX_VALUE);
 				if (maxRetryCount != Integer.MAX_VALUE) {
 					retryPolicy = retryPolicy.withMaxTotalRetryCount(maxRetryCount);

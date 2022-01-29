@@ -239,14 +239,11 @@ public final class DnsProtocol {
 		 * Returns record type based on its code or <code>null</code> if code is invalid.
 		 */
 		static @Nullable RecordType fromCode(short code) {
-			switch (code) {
-				case 0x0001:
-					return A;
-				case 0x001C:
-					return AAAA;
-				default:
-					return null;
-			}
+			return switch (code) {
+				case 0x0001 -> A;
+				case 0x001C -> AAAA;
+				default -> null;
+			};
 		}
 	}
 

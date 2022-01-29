@@ -457,29 +457,18 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 	}
 
 	private Expression pushDefaultValue(Type type) {
-		switch (type.getSort()) {
-			case BOOLEAN:
-				return value(false);
-			case CHAR:
-				return value((char) 0);
-			case BYTE:
-				return value((byte) 0);
-			case SHORT:
-				return value((short) 0);
-			case INT:
-				return value(0);
-			case Type.LONG:
-				return value(0L);
-			case Type.FLOAT:
-				return value(0f);
-			case Type.DOUBLE:
-				return value(0d);
-			case ARRAY:
-			case OBJECT:
-				return nullRef(type);
-			default:
-				throw new IllegalArgumentException("Unsupported type " + type);
-		}
+		return switch (type.getSort()) {
+			case BOOLEAN -> value(false);
+			case CHAR -> value((char) 0);
+			case BYTE -> value((byte) 0);
+			case SHORT -> value((short) 0);
+			case INT -> value(0);
+			case Type.LONG -> value(0L);
+			case Type.FLOAT -> value(0f);
+			case Type.DOUBLE -> value(0d);
+			case ARRAY, OBJECT -> nullRef(type);
+			default -> throw new IllegalArgumentException("Unsupported type " + type);
+		};
 	}
 
 	@Override

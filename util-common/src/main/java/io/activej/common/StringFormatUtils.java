@@ -63,18 +63,13 @@ public final class StringFormatUtils {
 		if (unit == MemSize.TB) {
 			return "Tb";
 		} else {
-			switch ((int) unit) {
-				case (int) MemSize.GB:
-					return "Gb";
-				case (int) MemSize.MB:
-					return "Mb";
-				case (int) MemSize.KB:
-					return "Kb";
-				case 1:
-					return "";
-				default:
-					throw new IllegalArgumentException("Wrong unit");
-			}
+			return switch ((int) unit) {
+				case (int) MemSize.GB -> "Gb";
+				case (int) MemSize.MB -> "Mb";
+				case (int) MemSize.KB -> "Kb";
+				case 1 -> "";
+				default -> throw new IllegalArgumentException("Wrong unit");
+			};
 		}
 	}
 
@@ -121,26 +116,23 @@ public final class StringFormatUtils {
 
 			double fractional = (double) numerator / denominator;
 			switch (unit) {
-				case "tb":
+				case "tb" -> {
 					result += memsize * MemSize.TB;
 					result += round(MemSize.TB * fractional);
-					break;
-				case "gb":
+				}
+				case "gb" -> {
 					result += memsize * MemSize.GB;
 					result += round(MemSize.GB * fractional);
-					break;
-				case "mb":
+				}
+				case "mb" -> {
 					result += memsize * MemSize.MB;
 					result += round(MemSize.MB * fractional);
-					break;
-				case "kb":
+				}
+				case "kb" -> {
 					result += memsize * MemSize.KB;
 					result += round(MemSize.KB * fractional);
-					break;
-				case "b":
-				case "":
-					result += memsize;
-					break;
+				}
+				case "b", "" -> result += memsize;
 			}
 		}
 		return MemSize.of(result);
@@ -229,29 +221,27 @@ public final class StringFormatUtils {
 
 			double fractional = (double) numerator / denominator;
 			switch (unit) {
-				case "days":
+				case "days" -> {
 					days = (int) result;
 					doubleSeconds += SECONDS_PER_DAY * fractional;
-					break;
-				case "hours":
+				}
+				case "hours" -> {
 					hours += (int) result;
 					doubleSeconds += SECONDS_PER_HOUR * fractional;
-					break;
-				case "minutes":
+				}
+				case "minutes" -> {
 					minutes += (int) result;
 					doubleSeconds += SECONDS_PER_MINUTE * fractional;
-					break;
-				case "seconds":
+				}
+				case "seconds" -> {
 					seconds += (int) result;
 					doubleSeconds += fractional;
-					break;
-				case "millis":
+				}
+				case "millis" -> {
 					millis += result;
 					doubleSeconds += fractional / MILLIS_IN_SECOND;
-					break;
-				case "nanos":
-					nanos += result;
-					break;
+				}
+				case "nanos" -> nanos += result;
 			}
 		}
 
@@ -319,15 +309,9 @@ public final class StringFormatUtils {
 			}
 			int result = Integer.parseInt(matcher.group("time"));
 			switch (unit) {
-				case "years":
-					years = result;
-					break;
-				case "months":
-					months = result;
-					break;
-				case "days":
-					days = result;
-					break;
+				case "years" -> years = result;
+				case "months" -> months = result;
+				case "days" -> days = result;
 			}
 		}
 		return Period.of(years, months, days);

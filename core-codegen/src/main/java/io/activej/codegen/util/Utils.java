@@ -72,51 +72,32 @@ public final class Utils {
 	}
 
 	public static Method unwrapToPrimitive(Type primitiveType) {
-		switch (primitiveType.getSort()) {
-			case BOOLEAN:
-				return getMethod("boolean booleanValue()");
-			case CHAR:
-				return getMethod("char charValue()");
-			case BYTE:
-				return getMethod("byte byteValue()");
-			case SHORT:
-				return getMethod("short shortValue()");
-			case INT:
-				return getMethod("int intValue()");
-			case FLOAT:
-				return getMethod("float floatValue()");
-			case LONG:
-				return getMethod("long longValue()");
-			case DOUBLE:
-				return getMethod("double doubleValue()");
-			default:
-				throw new IllegalArgumentException(format("No primitive value method for %s ", primitiveType.getClassName()));
-		}
+		return switch (primitiveType.getSort()) {
+			case BOOLEAN -> getMethod("boolean booleanValue()");
+			case CHAR -> getMethod("char charValue()");
+			case BYTE -> getMethod("byte byteValue()");
+			case SHORT -> getMethod("short shortValue()");
+			case INT -> getMethod("int intValue()");
+			case FLOAT -> getMethod("float floatValue()");
+			case LONG -> getMethod("long longValue()");
+			case DOUBLE -> getMethod("double doubleValue()");
+			default -> throw new IllegalArgumentException(format("No primitive value method for %s ", primitiveType.getClassName()));
+		};
 	}
 
 	public static Type wrap(Type type) {
-		switch (type.getSort()) {
-			case BOOLEAN:
-				return WRAPPED_BOOLEAN_TYPE;
-			case CHAR:
-				return WRAPPED_CHAR_TYPE;
-			case BYTE:
-				return WRAPPED_BYTE_TYPE;
-			case SHORT:
-				return WRAPPED_SHORT_TYPE;
-			case INT:
-				return WRAPPED_INT_TYPE;
-			case FLOAT:
-				return WRAPPED_FLOAT_TYPE;
-			case LONG:
-				return WRAPPED_LONG_TYPE;
-			case DOUBLE:
-				return WRAPPED_DOUBLE_TYPE;
-			case VOID:
-				return WRAPPED_VOID_TYPE;
-			default:
-				throw new IllegalArgumentException(format("%s is not primitive", type.getClassName()));
-		}
+		return switch (type.getSort()) {
+			case BOOLEAN -> WRAPPED_BOOLEAN_TYPE;
+			case CHAR -> WRAPPED_CHAR_TYPE;
+			case BYTE -> WRAPPED_BYTE_TYPE;
+			case SHORT -> WRAPPED_SHORT_TYPE;
+			case INT -> WRAPPED_INT_TYPE;
+			case FLOAT -> WRAPPED_FLOAT_TYPE;
+			case LONG -> WRAPPED_LONG_TYPE;
+			case DOUBLE -> WRAPPED_DOUBLE_TYPE;
+			case VOID -> WRAPPED_VOID_TYPE;
+			default -> throw new IllegalArgumentException(format("%s is not primitive", type.getClassName()));
+		};
 	}
 
 	public static Type unwrap(@NotNull Type type) {

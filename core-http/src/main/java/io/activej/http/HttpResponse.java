@@ -373,192 +373,71 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 	private static void writeCodeMessage(@NotNull ByteBuf buf, int code) {
 		byte[] result;
 		switch (code) {
-			case 100:
-				result = CODE_100_BYTES;
-				break;
-			case 101:
-				result = CODE_101_BYTES;
-				break;
-			case 102:
-				result = CODE_102_BYTES;
-				break;
-			case 103:
-				result = CODE_103_BYTES;
-				break;
-			case 200:
-				result = CODE_200_BYTES;
-				break;
-			case 201:
-				result = CODE_201_BYTES;
-				break;
-			case 202:
-				result = CODE_202_BYTES;
-				break;
-			case 203:
-				result = CODE_203_BYTES;
-				break;
-			case 204:
-				result = CODE_204_BYTES;
-				break;
-			case 205:
-				result = CODE_205_BYTES;
-				break;
-			case 206:
-				result = CODE_206_BYTES;
-				break;
-			case 207:
-				result = CODE_207_BYTES;
-				break;
-			case 208:
-				result = CODE_208_BYTES;
-				break;
-			case 226:
-				result = CODE_226_BYTES;
-				break;
-			case 300:
-				result = CODE_300_BYTES;
-				break;
-			case 301:
-				result = CODE_301_BYTES;
-				break;
-			case 302:
-				result = CODE_302_BYTES;
-				break;
-			case 303:
-				result = CODE_303_BYTES;
-				break;
-			case 304:
-				result = CODE_304_BYTES;
-				break;
-			case 305:
-				result = CODE_305_BYTES;
-				break;
-			case 307:
-				result = CODE_307_BYTES;
-				break;
-			case 308:
-				result = CODE_308_BYTES;
-				break;
-			case 400:
-				result = CODE_400_BYTES;
-				break;
-			case 401:
-				result = CODE_401_BYTES;
-				break;
-			case 402:
-				result = CODE_402_BYTES;
-				break;
-			case 403:
-				result = CODE_403_BYTES;
-				break;
-			case 404:
-				result = CODE_404_BYTES;
-				break;
-			case 405:
-				result = CODE_405_BYTES;
-				break;
-			case 406:
-				result = CODE_406_BYTES;
-				break;
-			case 407:
-				result = CODE_407_BYTES;
-				break;
-			case 408:
-				result = CODE_408_BYTES;
-				break;
-			case 409:
-				result = CODE_409_BYTES;
-				break;
-			case 410:
-				result = CODE_410_BYTES;
-				break;
-			case 411:
-				result = CODE_411_BYTES;
-				break;
-			case 412:
-				result = CODE_412_BYTES;
-				break;
-			case 413:
-				result = CODE_413_BYTES;
-				break;
-			case 414:
-				result = CODE_414_BYTES;
-				break;
-			case 415:
-				result = CODE_415_BYTES;
-				break;
-			case 416:
-				result = CODE_416_BYTES;
-				break;
-			case 417:
-				result = CODE_417_BYTES;
-				break;
-			case 421:
-				result = CODE_421_BYTES;
-				break;
-			case 422:
-				result = CODE_422_BYTES;
-				break;
-			case 423:
-				result = CODE_423_BYTES;
-				break;
-			case 424:
-				result = CODE_424_BYTES;
-				break;
-			case 425:
-				result = CODE_425_BYTES;
-				break;
-			case 426:
-				result = CODE_426_BYTES;
-				break;
-			case 428:
-				result = CODE_428_BYTES;
-				break;
-			case 429:
-				result = CODE_429_BYTES;
-				break;
-			case 431:
-				result = CODE_431_BYTES;
-				break;
-			case 451:
-				result = CODE_451_BYTES;
-				break;
-			case 500:
-				result = CODE_500_BYTES;
-				break;
-			case 501:
-				result = CODE_501_BYTES;
-				break;
-			case 502:
-				result = CODE_502_BYTES;
-				break;
-			case 503:
-				result = CODE_503_BYTES;
-				break;
-			case 504:
-				result = CODE_504_BYTES;
-				break;
-			case 505:
-				result = CODE_505_BYTES;
-				break;
-			case 506:
-				result = CODE_506_BYTES;
-				break;
-			case 507:
-				result = CODE_507_BYTES;
-				break;
-			case 508:
-				result = CODE_508_BYTES;
-				break;
-			case 510:
-				result = CODE_510_BYTES;
-				break;
-			case 511:
-				result = CODE_511_BYTES;
-				break;
-			default:
+			case 100 -> result = CODE_100_BYTES;
+			case 101 -> result = CODE_101_BYTES;
+			case 102 -> result = CODE_102_BYTES;
+			case 103 -> result = CODE_103_BYTES;
+			case 200 -> result = CODE_200_BYTES;
+			case 201 -> result = CODE_201_BYTES;
+			case 202 -> result = CODE_202_BYTES;
+			case 203 -> result = CODE_203_BYTES;
+			case 204 -> result = CODE_204_BYTES;
+			case 205 -> result = CODE_205_BYTES;
+			case 206 -> result = CODE_206_BYTES;
+			case 207 -> result = CODE_207_BYTES;
+			case 208 -> result = CODE_208_BYTES;
+			case 226 -> result = CODE_226_BYTES;
+			case 300 -> result = CODE_300_BYTES;
+			case 301 -> result = CODE_301_BYTES;
+			case 302 -> result = CODE_302_BYTES;
+			case 303 -> result = CODE_303_BYTES;
+			case 304 -> result = CODE_304_BYTES;
+			case 305 -> result = CODE_305_BYTES;
+			case 307 -> result = CODE_307_BYTES;
+			case 308 -> result = CODE_308_BYTES;
+			case 400 -> result = CODE_400_BYTES;
+			case 401 -> result = CODE_401_BYTES;
+			case 402 -> result = CODE_402_BYTES;
+			case 403 -> result = CODE_403_BYTES;
+			case 404 -> result = CODE_404_BYTES;
+			case 405 -> result = CODE_405_BYTES;
+			case 406 -> result = CODE_406_BYTES;
+			case 407 -> result = CODE_407_BYTES;
+			case 408 -> result = CODE_408_BYTES;
+			case 409 -> result = CODE_409_BYTES;
+			case 410 -> result = CODE_410_BYTES;
+			case 411 -> result = CODE_411_BYTES;
+			case 412 -> result = CODE_412_BYTES;
+			case 413 -> result = CODE_413_BYTES;
+			case 414 -> result = CODE_414_BYTES;
+			case 415 -> result = CODE_415_BYTES;
+			case 416 -> result = CODE_416_BYTES;
+			case 417 -> result = CODE_417_BYTES;
+			case 421 -> result = CODE_421_BYTES;
+			case 422 -> result = CODE_422_BYTES;
+			case 423 -> result = CODE_423_BYTES;
+			case 424 -> result = CODE_424_BYTES;
+			case 425 -> result = CODE_425_BYTES;
+			case 426 -> result = CODE_426_BYTES;
+			case 428 -> result = CODE_428_BYTES;
+			case 429 -> result = CODE_429_BYTES;
+			case 431 -> result = CODE_431_BYTES;
+			case 451 -> result = CODE_451_BYTES;
+			case 500 -> result = CODE_500_BYTES;
+			case 501 -> result = CODE_501_BYTES;
+			case 502 -> result = CODE_502_BYTES;
+			case 503 -> result = CODE_503_BYTES;
+			case 504 -> result = CODE_504_BYTES;
+			case 505 -> result = CODE_505_BYTES;
+			case 506 -> result = CODE_506_BYTES;
+			case 507 -> result = CODE_507_BYTES;
+			case 508 -> result = CODE_508_BYTES;
+			case 510 -> result = CODE_510_BYTES;
+			case 511 -> result = CODE_511_BYTES;
+			default -> {
 				writeCodeMessage2(buf, code);
 				return;
+			}
 		}
 		buf.put(result);
 	}
