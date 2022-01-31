@@ -13,7 +13,6 @@ import java.util.*;
 import java.util.function.Consumer;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Utils.listOf;
 import static io.activej.common.Utils.nonNullElse;
 import static io.activej.ot.OTAlgorithms.loadForMerge;
 import static io.activej.ot.utils.Utils.add;
@@ -85,8 +84,8 @@ public class OTMergeAlgorithmTest {
 		doTest(Set.of("A", "B"), g -> {
 			g.add("A", "B", add(1));
 		}, (graph, merge) -> {
-			assertEquals(listOf(add(1)), merge.get("A"));
-			assertEquals(listOf(), merge.get("B"));
+			assertEquals(List.of(add(1)), merge.get("A"));
+			assertEquals(List.of(), merge.get("B"));
 		});
 	}
 
@@ -97,8 +96,8 @@ public class OTMergeAlgorithmTest {
 			g.add("A", "T", add(10));
 			g.add("T", "B", add(1));
 		}, (graph, merge) -> {
-			assertEquals(listOf(add(11)), merge.get("A"));
-			assertEquals(listOf(), merge.get("B"));
+			assertEquals(List.of(add(11)), merge.get("A"));
+			assertEquals(List.of(), merge.get("B"));
 		});
 	}
 
@@ -111,8 +110,8 @@ public class OTMergeAlgorithmTest {
 			g.add("B", "D", add(10));
 			g.add("C", "E", add(1000));
 		}, (graph, merge) -> {
-			assertEquals(listOf(add(1100)), merge.get("D"));
-			assertEquals(listOf(add(11)), merge.get("E"));
+			assertEquals(List.of(add(1100)), merge.get("D"));
+			assertEquals(List.of(add(11)), merge.get("E"));
 		});
 	}
 
@@ -125,10 +124,10 @@ public class OTMergeAlgorithmTest {
 			g.add("B", "D", add(-5));
 			g.add("C", "E", add(10));
 		}, (graph, merge) -> {
-			assertEquals(listOf(add(-5)), merge.get("E"));
-			assertEquals(listOf(add(13)), merge.get("D"));
-			assertEquals(listOf(add(6)), merge.get("A"));
-			assertEquals(listOf(add(8)), merge.get("B"));
+			assertEquals(List.of(add(-5)), merge.get("E"));
+			assertEquals(List.of(add(13)), merge.get("D"));
+			assertEquals(List.of(add(6)), merge.get("A"));
+			assertEquals(List.of(add(8)), merge.get("B"));
 		});
 	}
 
@@ -140,9 +139,9 @@ public class OTMergeAlgorithmTest {
 			g.add("*", "B", add(10));
 			g.add("*", "C", add(100));
 		}, (graph, merge) -> {
-			assertEquals(listOf(add(110)), merge.get("A"));
-			assertEquals(listOf(add(101)), merge.get("B"));
-			assertEquals(listOf(add(11)), merge.get("C"));
+			assertEquals(List.of(add(110)), merge.get("A"));
+			assertEquals(List.of(add(101)), merge.get("B"));
+			assertEquals(List.of(add(11)), merge.get("C"));
 		});
 	}
 
@@ -155,9 +154,9 @@ public class OTMergeAlgorithmTest {
 			g.add("B", "D", add(1));
 			g.add("B", "E", add(30));
 		}, (graph, merge) -> {
-			assertEquals(listOf(add(40)), merge.get("C"));
-			assertEquals(listOf(add(33)), merge.get("D"));
-			assertEquals(listOf(add(4)), merge.get("E"));
+			assertEquals(List.of(add(40)), merge.get("C"));
+			assertEquals(List.of(add(33)), merge.get("D"));
+			assertEquals(List.of(add(4)), merge.get("E"));
 		});
 	}
 
@@ -170,8 +169,8 @@ public class OTMergeAlgorithmTest {
 			g.add("B", "C", add(1));
 			g.add("B", "D", add(1));
 		}, (graph, merge) -> {
-			assertEquals(listOf(), merge.get("C"));
-			assertEquals(listOf(), merge.get("D"));
+			assertEquals(List.of(), merge.get("C"));
+			assertEquals(List.of(), merge.get("D"));
 		});
 	}
 
@@ -189,9 +188,9 @@ public class OTMergeAlgorithmTest {
 			g.add("C", "E", add(3));
 			g.add("C", "F", add(3));
 		}, (graph, merge) -> {
-			assertEquals(listOf(), merge.get("D"));
-			assertEquals(listOf(), merge.get("E"));
-			assertEquals(listOf(), merge.get("F"));
+			assertEquals(List.of(), merge.get("D"));
+			assertEquals(List.of(), merge.get("E"));
+			assertEquals(List.of(), merge.get("F"));
 		});
 	}
 
@@ -207,8 +206,8 @@ public class OTMergeAlgorithmTest {
 			g.add("C", "F", add(101));
 			g.add("D", "F", add(11));
 		}, (graph, merge) -> {
-			assertEquals(listOf(add(100)), merge.get("E"));
-			assertEquals(listOf(), merge.get("F"));
+			assertEquals(List.of(add(100)), merge.get("E"));
+			assertEquals(List.of(), merge.get("F"));
 		});
 	}
 
@@ -227,8 +226,8 @@ public class OTMergeAlgorithmTest {
 			g.add("E", "J", add(1013));
 			g.add("F", "J", add(113));
 		}, (graph, merge) -> {
-			assertEquals(listOf(add(1000)), merge.get("G"));
-			assertEquals(listOf(add(1)), merge.get("J"));
+			assertEquals(List.of(add(1000)), merge.get("G"));
+			assertEquals(List.of(add(1)), merge.get("J"));
 		});
 	}
 
@@ -244,9 +243,9 @@ public class OTMergeAlgorithmTest {
 			g.add("C", "F", add(10));
 			g.add("D", "G", add(100));
 		}, (graph, merge) -> {
-			assertEquals(listOf(add(110)), merge.get("E"));
-			assertEquals(listOf(add(101)), merge.get("F"));
-			assertEquals(listOf(add(11)), merge.get("G"));
+			assertEquals(List.of(add(110)), merge.get("E"));
+			assertEquals(List.of(add(101)), merge.get("F"));
+			assertEquals(List.of(add(11)), merge.get("G"));
 		});
 	}
 
@@ -267,8 +266,8 @@ public class OTMergeAlgorithmTest {
 			g.add("G", "I", add(-10));
 			g.add("H", "J", add(-100));
 		}, (graph, merge) -> {
-			assertEquals(listOf(add(900)), merge.get("I"));
-			assertEquals(listOf(add(-9)), merge.get("J"));
+			assertEquals(List.of(add(900)), merge.get("I"));
+			assertEquals(List.of(add(-9)), merge.get("J"));
 		});
 	}
 
@@ -285,8 +284,8 @@ public class OTMergeAlgorithmTest {
 			g.add("D", "G", add(103));
 			g.add("E", "G", add(1));
 		}, (graph, merge) -> {
-			assertEquals(listOf(add(3)), merge.get("F"));
-			assertEquals(listOf(add(2)), merge.get("G"));
+			assertEquals(List.of(add(3)), merge.get("F"));
+			assertEquals(List.of(add(2)), merge.get("G"));
 		});
 	}
 
@@ -300,9 +299,9 @@ public class OTMergeAlgorithmTest {
 			g.add("B", "E", add(30));
 			g.add("D", "F", add(5));
 		}, (graph, merge) -> {
-			assertEquals(listOf(add(45)), merge.get("C"));
-			assertEquals(listOf(add(33)), merge.get("F"));
-			assertEquals(listOf(add(9)), merge.get("E"));
+			assertEquals(List.of(add(45)), merge.get("C"));
+			assertEquals(List.of(add(33)), merge.get("F"));
+			assertEquals(List.of(add(9)), merge.get("E"));
 		});
 	}
 

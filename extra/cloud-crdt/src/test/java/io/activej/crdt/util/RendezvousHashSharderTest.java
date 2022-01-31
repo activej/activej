@@ -5,11 +5,10 @@ import io.activej.crdt.storage.cluster.RendezvousHashSharder;
 import org.junit.Test;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static io.activej.common.Utils.keysToMap;
-import static io.activej.common.Utils.listOf;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -20,7 +19,7 @@ public class RendezvousHashSharderTest {
 	public void testSharder() {
 		RefInt index = new RefInt(0);
 		Map<String, Integer> partitionsWithIndexes = keysToMap(
-				listOf("one", "two", "three", "four", "five").stream(),
+				Stream.of("one", "two", "three", "four", "five"),
 				s -> index.value++);
 		Set<String> alive = new HashSet<>(partitionsWithIndexes.keySet());
 		RendezvousHashSharder<Integer> sharder1 = RendezvousHashSharder.create(
@@ -75,8 +74,7 @@ public class RendezvousHashSharderTest {
 				partitionsWithIndexes.keySet(), new ArrayList<>(alive), 3, true);
 
 		List<int[]> shards3 = IntStream.range(0, 100)
-				.mapToObj(sharder3::shard)
-				.collect(Collectors.toList());
+				.mapToObj(sharder3::shard).toList();
 		int[] first = shards3.get(0);
 		assertTrue(shards3.stream().allMatch(ints -> Arrays.equals(first, ints)));
 	}

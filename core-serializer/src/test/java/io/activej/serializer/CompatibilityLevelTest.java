@@ -16,10 +16,8 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import static io.activej.common.Utils.listOf;
 import static io.activej.common.Utils.mapOf;
 import static io.activej.serializer.Utils.DEFINING_CLASS_LOADER;
-import static java.util.Collections.unmodifiableCollection;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.core.IsEqual.equalTo;
@@ -81,7 +79,7 @@ public class CompatibilityLevelTest {
 		TestNullables nullables = new TestNullables();
 		nullables.notNullArray = new String[]{"test1", "test2"};
 		nullables.notNullByteBuffer = ByteBuffer.wrap("test".getBytes(StandardCharsets.UTF_8));
-		nullables.notNullCollection = unmodifiableCollection(listOf("test1", "test2"));
+		nullables.notNullCollection = List.of("test1", "test2");
 		nullables.notNullEnum = TestEnum.ONE;
 		nullables.notNullList = Arrays.asList("test1", "test2");
 		nullables.notNullMap = mapOf(1, "test1", 2, "test2");

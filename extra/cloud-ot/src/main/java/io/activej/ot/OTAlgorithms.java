@@ -396,8 +396,8 @@ public final class OTAlgorithms {
 		public void onStart(@NotNull Collection<OTCommit<K, D>> queue) {
 			for (OTCommit<K, D> headCommit : queue) {
 				K head = headCommit.getId();
-				head2roots.put(head, new HashSet<>(listOf(head)));
-				root2heads.put(head, new HashSet<>(listOf(head)));
+				head2roots.put(head, new HashSet<>(List.of(head)));
+				root2heads.put(head, new HashSet<>(List.of(head)));
 			}
 		}
 

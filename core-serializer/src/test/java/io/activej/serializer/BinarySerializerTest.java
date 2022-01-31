@@ -17,7 +17,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.common.Utils.listOf;
 import static io.activej.common.Utils.mapOf;
 import static io.activej.serializer.BinarySerializerTest.TestEnum.*;
 import static io.activej.serializer.StringFormat.*;
@@ -2361,12 +2360,12 @@ public class BinarySerializerTest {
 
 	@Test
 	public void testLists() {
-		List<String> regular = listOf("a", "b", "c");
-		List<String> regularNullable = listOf("d", "e", "f");
-		List<String> regularEmpty = listOf();
-		List<String> regularEmptyNullable = listOf();
-		List<String> regularSingle = listOf("g");
-		List<String> regularSingleNullable = listOf("h");
+		List<String> regular = List.of("a", "b", "c");
+		List<String> regularNullable = List.of("d", "e", "f");
+		List<String> regularEmpty = List.of();
+		List<String> regularEmptyNullable = List.of();
+		List<String> regularSingle = List.of("g");
+		List<String> regularSingleNullable = List.of("h");
 
 		ArrayList<String> array = new ArrayList<>();
 		array.add("i");

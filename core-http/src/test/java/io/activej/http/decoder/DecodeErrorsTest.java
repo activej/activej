@@ -6,20 +6,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static io.activej.common.Utils.listOf;
 import static org.junit.Assert.*;
 
 public class DecodeErrorsTest {
 	@Test
 	public void testMergeWithTheSame() {
 		DecodeErrors tree = DecodeErrors.create();
-		tree.with(listOf(DecodeError.of("test1"),
+		tree.with(List.of(DecodeError.of("test1"),
 				DecodeError.of("test2"),
 				DecodeError.of("test3"),
 				DecodeError.of("test4")));
 
 		DecodeErrors tree2 = DecodeErrors.create();
-		tree.with(listOf(DecodeError.of("test11"),
+		tree.with(List.of(DecodeError.of("test11"),
 				DecodeError.of("test22"),
 				DecodeError.of("test33"),
 				DecodeError.of("test44")));

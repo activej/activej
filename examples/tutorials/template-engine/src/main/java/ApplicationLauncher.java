@@ -10,9 +10,11 @@ import io.activej.launcher.Launcher;
 import io.activej.launchers.http.HttpServerLauncher;
 import io.activej.promise.Promise;
 
+import java.util.List;
 import java.util.Map;
 
-import static io.activej.common.Utils.*;
+import static io.activej.common.Utils.mapOf;
+import static io.activej.common.Utils.nonNullElse;
 import static io.activej.http.HttpHeaders.REFERER;
 import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpMethod.POST;
@@ -80,7 +82,7 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 							String option1 = params.get("option1");
 							String option2 = params.get("option2");
 
-							int id = pollDao.add(new PollDao.Poll(title, message, listOf(option1, option2)));
+							int id = pollDao.add(new PollDao.Poll(title, message, List.of(option1, option2)));
 							return HttpResponse.redirect302("poll/" + id);
 						}))
 				.map(POST, "/delete", request -> request.loadBody()

@@ -226,37 +226,6 @@ public class Utils {
 		}
 	}
 
-	/**
-	 * Returns an empty {@link List}
-	 *
-	 * @see #listOf(Object[])
-	 */
-	public static <T> List<T> listOf() {
-		return emptyList();
-	}
-
-	/**
-	 * Returns a {@link List} of a provided element
-	 *
-	 * @see #listOf(Object[])
-	 */
-	public static <T> List<T> listOf(T value) {
-		return singletonList(value);
-	}
-
-	/**
-	 * Returns a {@link List} of provided elements
-	 * <p>
-	 * No guarantee on a mutability of a resulting list is made,
-	 * so list should be considered unmodifiable
-	 * <p>
-	 * This is a simple alternative to Java 9's {@code List#of} method
-	 */
-	@SuppressWarnings("unchecked")
-	public static <T> List<T> listOf(T... items) {
-		return asList(items);
-	}
-
 	@SuppressWarnings("unchecked")
 	public static <T> Iterator<T> iteratorOf() {
 		return (Iterator<T>) EMPTY_ITERATOR;
