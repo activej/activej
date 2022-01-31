@@ -32,7 +32,6 @@ import static io.activej.inject.module.Modules.combine;
 import static io.activej.inject.module.Modules.override;
 import static io.activej.inject.util.Utils.printGraphVizGraph;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
@@ -1159,7 +1158,7 @@ public final class TestDI {
 					.scan(new Object() {
 						@Provides
 						<T> Set<T> set(T t) {
-							return singleton(t);
+							return Set.of(t);
 						}
 					})
 					.build());
@@ -1177,7 +1176,7 @@ public final class TestDI {
 						@Provides
 						@Transient
 						<T> Set<T> set(T t) {
-							return singleton(t);
+							return Set.of(t);
 						}
 					})
 					.build());
@@ -1194,7 +1193,7 @@ public final class TestDI {
 					.scan(new Object() {
 						@Provides
 						<T> Set<T> set(T t) {
-							return singleton(t);
+							return Set.of(t);
 						}
 					})
 					.build());
@@ -1228,17 +1227,17 @@ public final class TestDI {
 	@Test
 	public void partiallyTransientMultibind() {
 		AtomicInteger mut = new AtomicInteger();
-		Constructor0<Set<String>> constructor = () -> singleton("str_" + mut.incrementAndGet());
+		Constructor0<Set<String>> constructor = () -> Set.of("str_" + mut.incrementAndGet());
 
 		Key<Set<String>> setKey = new Key<>() {};
 		Key<Set<String>> setKeyNt = setKey.qualified("nt");
 
 		Injector injector = Injector.of(ModuleBuilder.create()
 				.bind(setKey).to(constructor).asTransient()
-				.bind(setKey).toInstance(singleton("other one"))
+				.bind(setKey).toInstance(Set.of("other one"))
 
 				.bind(setKeyNt).to(constructor)
-				.bind(setKeyNt).toInstance(singleton("other one"))
+				.bind(setKeyNt).toInstance(Set.of("other one"))
 
 				.bind(new Key<Set<String>>() {})
 
@@ -1272,8 +1271,8 @@ public final class TestDI {
 						.build(),
 				Key.of(String.class, "exported"));
 
-		assertEquals(singleton(Key.of(String.class, "exported")), module.getExports().get());
-		assertEquals(singleton(Key.of(Integer.class, "imported")), module.getImports().get());
+		assertEquals(Set.of(Key.of(String.class, "exported")), module.getExports().get());
+		assertEquals(Set.of(Key.of(Integer.class, "imported")), module.getImports().get());
 
 		{
 			Injector injector = Injector.of(

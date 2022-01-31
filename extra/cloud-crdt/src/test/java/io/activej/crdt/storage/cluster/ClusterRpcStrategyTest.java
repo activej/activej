@@ -17,7 +17,6 @@ import java.util.function.Function;
 import static io.activej.common.Utils.difference;
 import static io.activej.common.Utils.union;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
-import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -54,7 +53,7 @@ public class ClusterRpcStrategyTest {
 				.withPartitionGroup(RendezvousPartitionGroup.create(crdtStorages, 2, true, false))
 				.withRpcProvider(p -> server(PARTITION_ADDRESS_MAP_1.get(p)));
 
-		List<String> alivePartitions = new ArrayList<>(difference(crdtStorages, singleton("two")));
+		List<String> alivePartitions = new ArrayList<>(difference(crdtStorages, Set.of("two")));
 
 		RpcStrategy rpcStrategy = partitionScheme.createRpcStrategy(KEY_GETTER);
 
@@ -75,7 +74,7 @@ public class ClusterRpcStrategyTest {
 				.withPartitionGroup(RendezvousPartitionGroup.create(partitionIds, 2, true, true))
 				.withRpcProvider(p -> server(PARTITION_ADDRESS_MAP_1.get(p)));
 
-		List<String> alivePartitions = new ArrayList<>(difference(partitionIds, singleton("two")));
+		List<String> alivePartitions = new ArrayList<>(difference(partitionIds, Set.of("two")));
 
 		RpcClientConnectionPoolStub poolStub = new RpcClientConnectionPoolStub();
 		for (String alivePartition : alivePartitions) {
@@ -127,7 +126,7 @@ public class ClusterRpcStrategyTest {
 				.withPartitionGroup(RendezvousPartitionGroup.create(partitionIds, 1, false, true))
 				.withRpcProvider(p -> server(PARTITION_ADDRESS_MAP_1.get(p)));
 
-		List<String> alivePartitions = new ArrayList<>(difference(partitionIds, singleton("two")));
+		List<String> alivePartitions = new ArrayList<>(difference(partitionIds, Set.of("two")));
 
 		RpcClientConnectionPoolStub poolStub = new RpcClientConnectionPoolStub();
 		for (String alivePartition : alivePartitions) {

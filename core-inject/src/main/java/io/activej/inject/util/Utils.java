@@ -39,7 +39,6 @@ import java.util.stream.Collector;
 import static io.activej.inject.Scope.UNSCOPED;
 import static io.activej.inject.binding.BindingType.*;
 import static io.activej.types.IsAssignableUtils.isAssignable;
-import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
 
@@ -102,7 +101,7 @@ public final class Utils {
 
 	public static <T, K, V> Collector<T, ?, Map<K, Set<V>>> toMultimap(Function<? super T, ? extends K> keyMapper,
 			Function<? super T, ? extends V> valueMapper) {
-		return toMap(keyMapper, t -> singleton(valueMapper.apply(t)), Utils::union);
+		return toMap(keyMapper, t -> Set.of(valueMapper.apply(t)), Utils::union);
 	}
 
 	public static <K, V> Map<K, V> squash(Map<K, Set<V>> multimap, BiFunction<K, Set<V>, V> squasher) {

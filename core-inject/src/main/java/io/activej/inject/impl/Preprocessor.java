@@ -37,7 +37,6 @@ import static io.activej.inject.binding.BindingType.SYNTHETIC;
 import static io.activej.inject.util.ReflectionUtils.generateInjectingInitializer;
 import static io.activej.inject.util.Utils.*;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -212,7 +211,7 @@ public final class Preprocessor {
 		}
 		Binding<?> resolved = resolve(upper, localBindings, resolvedBindings, scope, instanceKey, localBindings.get(instanceKey), multibinder, transformer, generator);
 		if (resolved == null) return Binding.toInstance(OptionalDependency.empty());
-		return new Binding<OptionalDependency<?>>(singleton(instanceKey), SYNTHETIC, null) {
+		return new Binding<OptionalDependency<?>>(Set.of(instanceKey), SYNTHETIC, null) {
 			@Override
 			public CompiledBinding<OptionalDependency<?>> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 				return slot != null ?
@@ -239,7 +238,7 @@ public final class Preprocessor {
 		Key<Object> instanceKey = key.getTypeParameter(0).qualified(key.getQualifier());
 		Binding<?> resolved = resolve(upper, localBindings, resolvedBindings, scope, instanceKey, localBindings.get(instanceKey), multibinder, transformer, generator);
 		if (resolved == null) return null;
-		return new Binding<InstanceProvider<?>>(singleton(instanceKey), SYNTHETIC, null) {
+		return new Binding<InstanceProvider<?>>(Set.of(instanceKey), SYNTHETIC, null) {
 			@Override
 			public CompiledBinding<InstanceProvider<?>> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 				return slot != null ?

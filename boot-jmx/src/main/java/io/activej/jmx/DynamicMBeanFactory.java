@@ -55,7 +55,6 @@ import static io.activej.jmx.Utils.findAdapterClass;
 import static io.activej.jmx.stats.StatsUtils.isJmxStats;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
@@ -793,7 +792,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 		public Object getAttribute(String attribute) throws MBeanException {
 			Object value;
 			try {
-				value = rootNode.aggregateAttributes(singleton(attribute), beans).get(attribute);
+				value = rootNode.aggregateAttributes(Set.of(attribute), beans).get(attribute);
 			} catch (Exception e) {
 				logger.error("Failed to fetch attribute '{}' from beans {}", attribute, beans, e);
 				propagate(e);
@@ -936,7 +935,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 
 		private Object invokeNode(String name, AttributeNode node) throws MBeanException {
 			try {
-				return node.aggregateAttributes(singleton(name), beans).get(name);
+				return node.aggregateAttributes(Set.of(name), beans).get(name);
 			} catch (Throwable e) {
 				logger.error("Failed to fetch attribute '{}' from beans {}", name, beans, e);
 				propagate(e);

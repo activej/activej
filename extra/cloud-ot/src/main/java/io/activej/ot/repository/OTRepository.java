@@ -27,7 +27,6 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 import static io.activej.common.Utils.not;
-import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.*;
 
 public interface OTRepository<K, D> extends OTCommitFactory<K, D> {
@@ -41,7 +40,7 @@ public interface OTRepository<K, D> extends OTCommitFactory<K, D> {
 
 	default Promise<Void> pushAndUpdateHead(OTCommit<K, D> commit) {
 		return push(commit)
-				.then(() -> updateHeads(singleton(commit.getId()), commit.getParentIds()));
+				.then(() -> updateHeads(Set.of(commit.getId()), commit.getParentIds()));
 	}
 
 	default Promise<Void> pushAndUpdateHeads(Collection<OTCommit<K, D>> commits) {

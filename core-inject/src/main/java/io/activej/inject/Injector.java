@@ -46,7 +46,6 @@ import static io.activej.inject.binding.Multibinders.errorOnDuplicate;
 import static io.activej.inject.util.Utils.getScopeDisplayString;
 import static io.activej.inject.util.Utils.next;
 import static io.activej.types.Types.parameterizedType;
-import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toMap;
 
 /**
@@ -153,7 +152,7 @@ public final class Injector implements ResourceLocator {
 	 */
 	public static Injector of(@NotNull Trie<Scope, Map<Key<?>, Binding<?>>> bindings) {
 		return compile(null, UNSCOPED,
-				bindings.map(map -> map.entrySet().stream().collect(toMap(Entry::getKey, entry -> singleton(entry.getValue())))),
+				bindings.map(map -> map.entrySet().stream().collect(toMap(Entry::getKey, entry -> Set.of(entry.getValue())))),
 				errorOnDuplicate(),
 				identity(),
 				refusing());

@@ -17,7 +17,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.Month;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import static io.activej.aggregation.AggregationPredicates.gt;
 import static io.activej.aggregation.PrimaryKey.ofArray;
@@ -171,7 +174,7 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 		long chunkId = ++this.chunkId;
 		stateManager.add(LogDiff.forCurrentPosition(
 				CubeDiff.of(Map.of(
-						aggregationId, AggregationDiff.of(Collections.singleton(
+						aggregationId, AggregationDiff.of(Set.of(
 								AggregationChunk.create(
 										chunkId,
 										cube.getAggregation(aggregationId).getMeasures(),

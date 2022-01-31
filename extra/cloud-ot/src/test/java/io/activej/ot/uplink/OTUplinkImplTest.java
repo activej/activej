@@ -14,6 +14,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import static io.activej.ot.OTCommit.ofRoot;
@@ -21,7 +22,6 @@ import static io.activej.ot.utils.Utils.add;
 import static io.activej.ot.utils.Utils.createTestOp;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static java.util.Collections.singleton;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
@@ -224,7 +224,7 @@ public class OTUplinkImplTest {
 	private void resetRepo(@Nullable Consumer<OTGraphBuilder<Integer, TestOp>> builder) {
 		// Initializing repo
 		REPOSITORY.reset();
-		REPOSITORY.doPushAndUpdateHeads(singleton(ofRoot(0)));
+		REPOSITORY.doPushAndUpdateHeads(Set.of(ofRoot(0)));
 		await(REPOSITORY.saveSnapshot(0, List.of()));
 
 		if (builder != null) {

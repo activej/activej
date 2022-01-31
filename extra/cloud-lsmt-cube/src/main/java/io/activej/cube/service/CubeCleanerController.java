@@ -52,7 +52,6 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Utils.union;
 import static io.activej.cube.Utils.chunksInDiffs;
 import static io.activej.ot.OTAlgorithms.*;
-import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toSet;
 
 public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanWithStats, WithInitializer<CubeCleanerController<K, D, C>> {
@@ -172,7 +171,7 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanWit
 		//noinspection OptionalGetWithoutIsPresent
 		return checkout(repository, otSystem, checkpointNode)
 				.then(checkpointDiffs -> repository.saveSnapshot(checkpointNode, checkpointDiffs)
-						.then(() -> findSnapshot(singleton(checkpointNode), extraSnapshotsCount))
+						.then(() -> findSnapshot(Set.of(checkpointNode), extraSnapshotsCount))
 						.thenIfElse(Optional::isPresent,
 								lastSnapshot -> Promises.toTuple(Tuple::new,
 												collectRequiredChunks(checkpointNode),

@@ -58,7 +58,6 @@ import static io.activej.cube.linear.Utils.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.util.Collections.nCopies;
-import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
@@ -144,7 +143,7 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 									ResultSet resultSet = ps.executeQuery();
 									resultSet.next();
 									if (!resultSet.getBoolean(1)) {
-										throw new StateFarAheadException(0L, singleton(revision));
+										throw new StateFarAheadException(0L, Set.of(revision));
 									}
 								}
 

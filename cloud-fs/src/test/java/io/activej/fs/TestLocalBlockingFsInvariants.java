@@ -22,7 +22,6 @@ import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
-import static java.util.Collections.singleton;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
@@ -387,7 +386,7 @@ public final class TestLocalBlockingFsInvariants {
 
 	@Test
 	public void deleteAllSingleFile() {
-		both(client -> client.deleteAll(singleton("file")));
+		both(client -> client.deleteAll(Set.of("file")));
 
 		bothPaths(path -> assertThat(listPaths(path), not(contains(Paths.get("file")))));
 		assertFilesAreSame(firstPath, secondPath);
@@ -404,7 +403,7 @@ public final class TestLocalBlockingFsInvariants {
 	@Test
 	public void deleteAllSingleDirectory() {
 		List<Path> before = listPaths(firstPath);
-		both(client -> assertException(DirectoryNotEmptyException.class, () -> client.deleteAll(singleton("directory"))));
+		both(client -> assertException(DirectoryNotEmptyException.class, () -> client.deleteAll(Set.of("directory"))));
 
 		assertEquals(before, listPaths(firstPath));
 		assertFilesAreSame(firstPath, secondPath);
@@ -874,7 +873,7 @@ public final class TestLocalBlockingFsInvariants {
 	@Test
 	public void infoAllSingle() {
 		both(client -> {
-			Map<String, FileMetadata> result = client.infoAll(singleton("file"));
+			Map<String, FileMetadata> result = client.infoAll(Set.of("file"));
 			assertEquals(1, result.size());
 			assertEquals("file", first(result.keySet()));
 		});

@@ -25,7 +25,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 import static java.util.Collections.emptySet;
-import static java.util.Collections.singleton;
 
 public class ComputedMeasures {
 	private static final class E extends Expressions {}
@@ -233,7 +232,7 @@ public class ComputedMeasures {
 
 		@Override
 		public Set<String> getMeasureDependencies() {
-			return singleton(measureId);
+			return Set.of(measureId);
 		}
 
 		@Override

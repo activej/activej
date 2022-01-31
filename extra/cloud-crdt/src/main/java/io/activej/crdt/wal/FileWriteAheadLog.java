@@ -54,6 +54,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.stream.Stream;
@@ -65,7 +66,6 @@ import static io.activej.crdt.util.Utils.deleteWalFiles;
 import static io.activej.crdt.util.Utils.getWalFiles;
 import static io.activej.crdt.wal.FileWriteAheadLog.FlushMode.*;
 import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
-import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toList;
 
 public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAheadLog<K, S>, EventloopService,
@@ -184,7 +184,7 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAhead
 		stopping = true;
 		if (flushRequired) return flush();
 
-		return deleteWalFiles(executor, singleton(consumer.walFile));
+		return deleteWalFiles(executor, Set.of(consumer.walFile));
 	}
 
 	private @Nullable WalConsumer createConsumer() {

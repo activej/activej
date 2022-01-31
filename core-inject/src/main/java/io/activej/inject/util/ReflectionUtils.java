@@ -41,7 +41,6 @@ import static io.activej.inject.Qualifiers.uniqueQualifier;
 import static io.activej.inject.binding.BindingType.*;
 import static io.activej.inject.util.Utils.isMarker;
 import static io.activej.types.Types.parameterizedType;
-import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
@@ -266,7 +265,7 @@ public final class ReflectionUtils {
 	public static <T> BindingInitializer<T> fieldInjector(Key<T> container, Field field) {
 		field.setAccessible(true);
 		Key<Object> key = keyOf(container.getType(), field.getGenericType(), field);
-		return new BindingInitializer<T>(singleton(key)) {
+		return new BindingInitializer<T>(Set.of(key)) {
 			@Override
 			public CompiledBindingInitializer<T> compile(CompiledBindingLocator compiledBindings) {
 				CompiledBinding<Object> binding = compiledBindings.get(key);
@@ -449,7 +448,7 @@ public final class ReflectionUtils {
 
 				Key<Set<Object>> setKey = Key.ofType(parameterizedType(Set.class, type), qualifierOf(method));
 
-				Binding<Set<Object>> binding = Binding.to(Collections::singleton, key);
+				Binding<Set<Object>> binding = Binding.to(Set::of, key);
 
 				if (module != null) {
 					binding.at(LocationInfo.from(module, method));

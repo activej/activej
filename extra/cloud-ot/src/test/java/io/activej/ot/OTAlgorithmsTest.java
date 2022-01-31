@@ -20,7 +20,6 @@ import static io.activej.ot.utils.Utils.add;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singleton;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
@@ -59,7 +58,7 @@ public class OTAlgorithmsTest {
 		Integer id2 = await(REPOSITORY.createCommitId());
 		await(REPOSITORY.pushAndUpdateHead(OTCommit.ofCommit(0, id2, id1, List.of(), id1)));
 
-		Exception exception = awaitException(findParent(REPOSITORY, TEST_OP, singleton(id2), DiffsReducer.toVoid(),
+		Exception exception = awaitException(findParent(REPOSITORY, TEST_OP, Set.of(id2), DiffsReducer.toVoid(),
 				commit -> REPOSITORY.loadSnapshot(commit.getId())
 						.map(Optional::isPresent)));
 		assertThat(exception, instanceOf(GraphExhaustedException.class));

@@ -13,7 +13,6 @@ import java.lang.reflect.Type;
 import java.util.*;
 
 import static io.activej.jmx.helper.Utils.nameToAttribute;
-import static java.util.Collections.singleton;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -25,7 +24,7 @@ public class DynamicMBeanFactorySettingsTest {
 	// region included optionals
 	@Test
 	public void includesOptionalAttributes_thatAreSpecifiedInSettings() {
-		JmxBeanSettings settings = JmxBeanSettings.of(singleton("stats_text"), NO_MODIFIERS, NO_CUSTOM_TYPES);
+		JmxBeanSettings settings = JmxBeanSettings.of(Set.of("stats_text"), NO_MODIFIERS, NO_CUSTOM_TYPES);
 		DynamicMBean mbean = DynamicMBeanFactory.create()
 				.createDynamicMBean(List.of(new MBeanStubOne()), settings, false);
 

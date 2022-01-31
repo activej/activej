@@ -35,7 +35,6 @@ import static io.activej.aggregation.measure.Measures.*;
 import static io.activej.common.Utils.first;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.promise.TestUtils.await;
-import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 
@@ -138,7 +137,7 @@ public class AddedMeasuresTest {
 		cube.apply(diff);
 
 		CubeDiff cubeDiff = await(cube.consolidate(Aggregation::consolidateHotSegment));
-		assertEquals(singleton("test"), cubeDiff.keySet());
+		assertEquals(Set.of("test"), cubeDiff.keySet());
 		AggregationDiff aggregationDiff = cubeDiff.get("test");
 
 		Set<Object> addedIds = aggregationDiff.getAddedChunks().stream()
@@ -147,7 +146,7 @@ public class AddedMeasuresTest {
 		Set<Object> removedIds = aggregationDiff.getRemovedChunks().stream()
 				.map(AggregationChunk::getChunkId)
 				.collect(toSet());
-		assertEquals(singleton(5L), addedIds);
+		assertEquals(Set.of(5L), addedIds);
 		assertEquals(Set.of(1L, 2L, 3L, 4L), removedIds);
 
 		List<String> addedMeasures = first(aggregationDiff.getAddedChunks()).getMeasures();

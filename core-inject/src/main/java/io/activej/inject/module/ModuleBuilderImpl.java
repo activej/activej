@@ -155,7 +155,7 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
 	public <S, E extends S> ModuleBuilder bindIntoSet(Key<S> setOf, Binding<E> binding) {
 		completePreviousStep();
 		Key<Set<S>> set = Key.ofType(parameterizedType(Set.class, setOf.getType()), setOf.getQualifier());
-		addBinding(new BindingDesc(set, binding.mapInstance(Collections::singleton)));
+		addBinding(new BindingDesc(set, binding.mapInstance(Set::of)));
 		multibinders.put(set, Multibinders.toSet());
 		return this;
 	}

@@ -66,7 +66,6 @@ import static io.activej.fs.LocalFileUtils.*;
 import static io.activej.fs.util.RemoteFsUtils.fsBatchException;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 import static java.nio.file.StandardOpenOption.*;
-import static java.util.Collections.singleton;
 
 /**
  * An implementation of {@link ActiveFs} which operates on a real underlying filesystem, no networking involved.
@@ -379,7 +378,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@Override
 	public Promise<Void> delete(@NotNull String name) {
 		checkStarted();
-		return execute(() -> deleteImpl(singleton(name)))
+		return execute(() -> deleteImpl(Set.of(name)))
 				.then(translateScalarErrorsFn(name))
 				.whenComplete(toLogger(logger, TRACE, "delete", name, this))
 				.whenComplete(deletePromise.recordStats());

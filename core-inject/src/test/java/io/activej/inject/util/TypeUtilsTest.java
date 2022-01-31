@@ -13,7 +13,6 @@ import java.lang.reflect.Type;
 import java.util.*;
 
 import static io.activej.inject.util.TypeUtils.simplifyType;
-import static java.util.Collections.singleton;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
@@ -151,7 +150,7 @@ public class TypeUtilsTest {
 		Set<? extends String> stringsExtends = injector.getInstance(new Key<Set<? extends String>>() {});
 		Set<? super String> stringsSuper = injector.getInstance(new Key<Set<? super String>>() {});
 
-		assertEquals(singleton(aString), strings);
+		assertEquals(Set.of(aString), strings);
 		assertSame(strings, stringsExtends);
 		assertSame(strings, stringsSuper);
 
@@ -159,7 +158,7 @@ public class TypeUtilsTest {
 		Set<? extends Integer> integersExtends = injector.getInstance(new Key<Set<? extends Integer>>() {});
 		Set<? super Integer> integersSuper = injector.getInstance(new Key<Set<? super Integer>>() {});
 
-		assertEquals(singleton(anInteger), integers);
+		assertEquals(Set.of(anInteger), integers);
 		assertSame(integers, integersExtends);
 		assertSame(integers, integersSuper);
 
@@ -167,7 +166,7 @@ public class TypeUtilsTest {
 		Set<? extends Double> doublesExtends = injector.getInstance(new Key<Set<? extends Double>>() {});
 		Set<? super Double> doublesSuper = injector.getInstance(new Key<Set<? super Double>>() {});
 
-		assertEquals(singleton(aDouble), doubles);
+		assertEquals(Set.of(aDouble), doubles);
 		assertSame(doubles, doublesExtends);
 		assertSame(doubles, doublesSuper);
 
@@ -175,7 +174,7 @@ public class TypeUtilsTest {
 		Set<? extends Long> longsExtends = injector.getInstance(new Key<Set<? extends Long>>() {});
 		Set<? super Long> longsSuper = injector.getInstance(new Key<Set<? super Long>>() {});
 
-		assertEquals(singleton(aLong), longs);
+		assertEquals(Set.of(aLong), longs);
 		assertSame(longs, longsExtends);
 		assertSame(longs, longsSuper);
 
@@ -240,8 +239,8 @@ public class TypeUtilsTest {
 			bind(Key.ofType(Types.parameterizedType(List.class, aKey.getType()))).to(List::of, aKey);
 			bind(Key.ofType(Types.parameterizedType(List.class, bKey.getType()))).to(List::of, bKey);
 
-			bind(Key.ofType(Types.parameterizedType(Queue.class, extendsAKey.getType()))).to(a -> new ArrayDeque<>(singleton(a)), extendsAKey);
-			bind(Key.ofType(Types.parameterizedType(Queue.class, extendsBKey.getType()))).to(b -> new ArrayDeque<>(singleton(b)), extendsBKey);
+			bind(Key.ofType(Types.parameterizedType(Queue.class, extendsAKey.getType()))).to(a -> new ArrayDeque<>(Set.of(a)), extendsAKey);
+			bind(Key.ofType(Types.parameterizedType(Queue.class, extendsBKey.getType()))).to(b -> new ArrayDeque<>(Set.of(b)), extendsBKey);
 
 			bind(Key.ofType(Types.parameterizedType(Optional.class, superAKey.getType()))).to(Optional::of, superAKey);
 			bind(Key.ofType(Types.parameterizedType(Optional.class, superBKey.getType()))).to(Optional::of, superBKey);
@@ -249,12 +248,12 @@ public class TypeUtilsTest {
 
 		@Provides
 		Set<? extends A> genericSetA(A element) {
-			return singleton(element);
+			return Set.of(element);
 		}
 
 		@Provides
 		Set<? super B> genericSetB(B element) {
-			return singleton(element);
+			return Set.of(element);
 		}
 	}
 

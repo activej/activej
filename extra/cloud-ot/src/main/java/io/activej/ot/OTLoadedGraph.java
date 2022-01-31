@@ -27,7 +27,6 @@ import java.util.stream.Stream;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.*;
-import static java.util.Collections.singleton;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.*;
 
@@ -248,7 +247,7 @@ public class OTLoadedGraph<K, D> {
 		K pivotNode = min.get();
 
 		Map<K, List<? extends D>> pivotNodeParents = getParents(pivotNode);
-		Set<K> recursiveMergeNodes = union(pivotNodeParents.keySet(), difference(nodes, singleton(pivotNode)));
+		Set<K> recursiveMergeNodes = union(pivotNodeParents.keySet(), difference(nodes, Set.of(pivotNode)));
 		K mergeNode = doMerge(excludeParents(recursiveMergeNodes));
 		K parentNode = first(pivotNodeParents.keySet());
 		List<? extends D> parentToPivotNode = pivotNodeParents.get(parentNode);

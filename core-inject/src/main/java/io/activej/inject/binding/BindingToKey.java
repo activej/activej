@@ -5,13 +5,13 @@ import io.activej.inject.impl.CompiledBinding;
 import io.activej.inject.impl.CompiledBindingLocator;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
+import java.util.Set;
 
 public final class BindingToKey<T> extends Binding<T> {
 	private final Key<? extends T> key;
 
 	BindingToKey(Key<? extends T> key) {
-		super(Collections.singleton(key));
+		super(Set.of(key));
 		this.key = key;
 	}
 

@@ -27,7 +27,6 @@ import static io.activej.ot.utils.Utils.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singleton;
 import static org.junit.Assert.*;
 
 @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
@@ -210,7 +209,7 @@ public class OTStateManagerTest {
 		assertFalse(stateManager.hasPendingCommits());
 
 		Set<Integer> heads = await(repository.getHeads());
-		assertEquals(singleton(1), heads);
+		assertEquals(Set.of(1), heads);
 		assertEquals(101, testOpState.getValue());
 	}
 
@@ -247,7 +246,7 @@ public class OTStateManagerTest {
 		assertFalse(stateManager.hasPendingCommits());
 
 		Set<Integer> heads = await(repository.getHeads());
-		assertEquals(singleton(3), heads);
+		assertEquals(Set.of(3), heads);
 		assertEquals(131, testOpState.getValue());
 	}
 
@@ -285,7 +284,7 @@ public class OTStateManagerTest {
 		assertFalse(stateManager.hasPendingCommits());
 
 		Set<Integer> heads = await(repository.getHeads());
-		assertEquals(singleton(5), heads);
+		assertEquals(Set.of(5), heads);
 		assertEquals(131, testOpState.getValue());
 	}
 

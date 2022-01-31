@@ -20,7 +20,6 @@ import java.util.stream.Stream;
 
 import static banner.BannerCommands.*;
 import static banner.BannerServerLauncher.MESSAGE_TYPES;
-import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toList;
 
 public final class BannerClientLauncher extends CrdtRpcClientLauncher {
@@ -63,7 +62,7 @@ public final class BannerClientLauncher extends CrdtRpcClientLauncher {
 								.map(userId -> {
 									int bannerId = RANDOM.nextInt(BANNER_SIZE) + 1;
 									return client.sendRequest(new PutRequest(userId, GSet.of(bannerId)))
-											.whenResult(() -> controlMap.merge(userId, singleton(bannerId), Utils::union));
+											.whenResult(() -> controlMap.merge(userId, Set.of(bannerId), Utils::union));
 								}))
 								.map($ -> i + 1),
 						i -> i == BANNER_SIZE / 2

@@ -20,7 +20,6 @@ import io.activej.rpc.client.RpcClientConnectionPool;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.InetSocketAddress;
-import java.util.Collections;
 import java.util.Set;
 
 public final class RpcStrategySingleServer implements RpcStrategy {
@@ -37,7 +36,7 @@ public final class RpcStrategySingleServer implements RpcStrategy {
 
 	@Override
 	public Set<InetSocketAddress> getAddresses() {
-		return Collections.singleton(address);
+		return Set.of(address);
 	}
 
 	@Override

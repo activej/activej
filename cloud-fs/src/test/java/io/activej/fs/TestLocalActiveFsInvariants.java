@@ -41,7 +41,6 @@ import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
-import static java.util.Collections.singleton;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -386,7 +385,7 @@ public final class TestLocalActiveFsInvariants {
 
 	@Test
 	public void deleteAllSingleFile() {
-		both(client -> await(client.deleteAll(singleton("file"))));
+		both(client -> await(client.deleteAll(Set.of("file"))));
 
 		bothPaths(path -> assertThat(listPaths(path), not(contains(Paths.get("file")))));
 		assertFilesAreSame(firstPath, secondPath);
@@ -404,7 +403,7 @@ public final class TestLocalActiveFsInvariants {
 	public void deleteAllSingleDirectory() {
 		List<Path> before = listPaths(firstPath);
 		both(client -> {
-			Exception exception = awaitException(client.deleteAll(singleton("directory")));
+			Exception exception = awaitException(client.deleteAll(Set.of("directory")));
 			assertBatchException(exception, Map.of("directory", IsADirectoryException.class));
 		});
 
@@ -857,7 +856,7 @@ public final class TestLocalActiveFsInvariants {
 	@Test
 	public void infoAllSingle() {
 		both(client -> {
-			Map<String, FileMetadata> result = await(client.infoAll(singleton("file")));
+			Map<String, FileMetadata> result = await(client.infoAll(Set.of("file")));
 			assertEquals(1, result.size());
 			assertEquals("file", first(result.keySet()));
 		});

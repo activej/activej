@@ -1490,8 +1490,8 @@ public class BinarySerializerTest {
 		Set<TestEnum> setNullable = Set.of(TWO, THREE);
 		Set<TestEnum> setEmpty = emptySet();
 		Set<TestEnum> setEmptyNullable = emptySet();
-		Set<TestEnum> setSingle = singleton(ONE);
-		Set<TestEnum> setSingleNullable = singleton(TWO);
+		Set<TestEnum> setSingle = Set.of(ONE);
+		Set<TestEnum> setSingleNullable = Set.of(TWO);
 
 		EnumSet<TestEnum> enumSet = EnumSet.of(ONE, TWO);
 		EnumSet<TestEnum> enumSetNullable = EnumSet.of(TWO, THREE);

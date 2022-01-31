@@ -204,7 +204,7 @@ public final class OTAlgorithms {
 
 	public static <K, D> Promise<K> mergeAndUpdateHeads(OTRepository<K, D> repository, OTSystem<D> system, Set<K> heads) {
 		return mergeAndPush(repository, system, heads)
-				.then(mergeId -> repository.updateHeads(difference(singleton(mergeId), heads), difference(heads, singleton(mergeId)))
+				.then(mergeId -> repository.updateHeads(difference(Set.of(mergeId), heads), difference(heads, Set.of(mergeId)))
 						.map($ -> mergeId))
 				.whenComplete(toLogger(logger, thisMethod()));
 	}
@@ -368,7 +368,7 @@ public final class OTAlgorithms {
 		Ref<List<D>> cachedSnapshotRef = new Ref<>();
 		return repository.getHeads()
 				.then(heads ->
-						findParent(repository, system, union(heads, singleton(commitId)), DiffsReducer.toVoid(),
+						findParent(repository, system, union(heads, Set.of(commitId)), DiffsReducer.toVoid(),
 								commit -> repository.loadSnapshot(commit.getId())
 										.map(maybeSnapshot -> (cachedSnapshotRef.value = maybeSnapshot.orElse(null)) != null))
 								.then(findResult -> diff(repository, system, findResult.commit, commitId)
@@ -410,7 +410,7 @@ public final class OTAlgorithms {
 			for (K affectedHead : affectedHeads) {
 				head2roots.get(affectedHead).remove(node);
 			}
-			for (K parent : commit.isRoot() ? singleton(node) : parents.keySet()) {
+			for (K parent : commit.isRoot() ? Set.of(node) : parents.keySet()) {
 				Set<K> parentRoots = graph.findRoots(parent);
 				for (K affectedHead : affectedHeads) {
 					head2roots.computeIfAbsent(affectedHead, $ -> new HashSet<>()).addAll(parentRoots);
