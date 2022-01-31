@@ -24,7 +24,8 @@ import java.lang.annotation.*;
 @Target({
 		ElementType.FIELD,
 		ElementType.METHOD,
-		ElementType.TYPE_USE})
+		ElementType.TYPE_USE,
+		ElementType.RECORD_COMPONENT})
 @Repeatable(SerializeClasses.class)
 public @interface SerializeClass {
 	Class<? extends SerializerDef> value() default SerializerDef.class;

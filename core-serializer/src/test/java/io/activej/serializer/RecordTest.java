@@ -8,7 +8,11 @@ import io.activej.types.TypeT;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.List;
+
+import static io.activej.serializer.Utils.DEFINING_CLASS_LOADER;
 import static io.activej.serializer.Utils.doTest;
+import static java.util.Arrays.asList;
 
 public class RecordTest {
 
@@ -95,6 +99,73 @@ public class RecordTest {
 			NestedRecord nestedRecord1 = new NestedRecord(null);
 			NestedRecord nestedRecord2 = doTest(NestedRecord.class, nestedRecord1);
 			Assert.assertEquals(nestedRecord1, nestedRecord2);
+		}
+	}
+
+	@Test
+	public void testRecordAnnotationCompatibilityMode() {
+		BinarySerializer<Record> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
+				.withAnnotationCompatibilityMode()
+				.build(Record.class);
+		{
+			Record record1 = new Record("abc", 1);
+			Record record2 = doTest(record1, serializer);
+			Assert.assertEquals(record1, record2);
+		}
+		{
+			Record record1 = new Record(null, 1);
+			Record record2 = doTest(record1, serializer);
+			Assert.assertEquals(record1, record2);
+		}
+	}
+
+	@SerializeRecord
+	public record RecordWithNestedNullables(@SerializeNullable List<@SerializeNullable String> list, int n) {}
+
+	@SerializeRecord
+	public record RecordWithNestedPathNullables(
+			@SerializeNullable
+			@SerializeNullable(path = {0}) List<String> list,
+			int n) {}
+
+	@Test
+	public void testRecordsNestedNullable() {
+		{
+			RecordWithNestedNullables record1 = new RecordWithNestedNullables(asList("abc", "xyz"), 1);
+			RecordWithNestedNullables record2 = doTest(RecordWithNestedNullables.class, record1);
+			Assert.assertEquals(record1, record2);
+		}
+		{
+			RecordWithNestedNullables record1 = new RecordWithNestedNullables(asList("abc", null), 1);
+			RecordWithNestedNullables record2 = doTest(RecordWithNestedNullables.class, record1);
+			Assert.assertEquals(record1, record2);
+		}
+		{
+			RecordWithNestedNullables record1 = new RecordWithNestedNullables(null, 1);
+			RecordWithNestedNullables record2 = doTest(RecordWithNestedNullables.class, record1);
+			Assert.assertEquals(record1, record2);
+		}
+	}
+
+	@Test
+	public void testRecordNestedNullableAnnotationCompatibilityMode() {
+		BinarySerializer<RecordWithNestedPathNullables> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
+				.withAnnotationCompatibilityMode()
+				.build(RecordWithNestedPathNullables.class);
+		{
+			RecordWithNestedPathNullables record1 = new RecordWithNestedPathNullables(asList("abc", "xyz"), 1);
+			RecordWithNestedPathNullables record2 = doTest(record1, serializer);
+			Assert.assertEquals(record1, record2);
+		}
+		{
+			RecordWithNestedPathNullables record1 = new RecordWithNestedPathNullables(asList("abc", null), 1);
+			RecordWithNestedPathNullables record2 = doTest(record1, serializer);
+			Assert.assertEquals(record1, record2);
+		}
+		{
+			RecordWithNestedPathNullables record1 = new RecordWithNestedPathNullables(null, 1);
+			RecordWithNestedPathNullables record2 = doTest(record1, serializer);
+			Assert.assertEquals(record1, record2);
 		}
 	}
 }
