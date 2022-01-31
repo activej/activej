@@ -1310,7 +1310,7 @@ public final class TestDI {
 	}
 
 	@Test
-	public void injectSingleInjectConstructorClass() {
+	public void singleInjectConstructor() {
 		Key<SingleInjectConstructor> key = new Key<>() {};
 		String expected = "Hello, World";
 		Injector injector = Injector.of(ModuleBuilder.create()
@@ -1323,12 +1323,10 @@ public final class TestDI {
 	}
 
 	@Test
-	public void injectMultipleInjectConstructorClass() {
-		Key<MultipleInjectConstructors> key = new Key<>() {};
-		String expected = "Hello, World";
+	public void multipleInjectConstructors() {
 		Module module = ModuleBuilder.create()
-				.bind(String.class).to(() -> expected)
-				.bind(key)
+				.bind(String.class).to(() -> "Hello, World")
+				.bind(new Key<MultipleInjectConstructors>() {})
 				.build();
 
 		try {
@@ -1341,33 +1339,64 @@ public final class TestDI {
 	}
 
 	@Test
-	public void injectSingleConstructorInjectClass() {
-		Key<SingleConstructorInjectClass> key = new Key<>() {};
+	public void singleConstructorInjectClass() {
+		Key<SingleConstructorInject> key = new Key<>() {};
 		String expected = "Hello, World";
 		Injector injector = Injector.of(ModuleBuilder.create()
 				.bind(String.class).to(() -> expected)
 				.bind(key)
 				.build());
-		SingleConstructorInjectClass instance = injector.getInstance(key);
+		SingleConstructorInject instance = injector.getInstance(key);
 
 		assertEquals(expected, instance.getText());
 	}
 
 	@Test
-	public void injectMultipleConstructorsInjectClass() {
-		Key<MultipleConstructorsInjectClass> key = new Key<>() {};
-		String expected = "Hello, World";
+	public void multipleConstructorsInject() {
 		Module module = ModuleBuilder.create()
-				.bind(String.class).to(() -> expected)
-				.bind(key)
+				.bind(String.class).to(() -> "Hello, World")
+				.bind(MultipleConstructorsInject.class)
 				.build();
 
 		try {
 			Injector.of(module);
 			fail();
 		} catch (DIException e) {
-			assertEquals("Failed to generate implicit binding for MultipleConstructorsInjectClass, " +
+			assertEquals("Failed to generate implicit binding for MultipleConstructorsInject, " +
 							"inject annotation on class with multiple constructors",
+					e.getMessage());
+		}
+	}
+
+	@Test
+	public void injectInterface() {
+		Module module = ModuleBuilder.create()
+				.bind(new Key<InjectInterface>() {})
+				.build();
+
+		try {
+			Injector.of(module);
+			fail();
+		} catch (DIException e) {
+			assertEquals("Failed to generate implicit binding for InjectInterface, " +
+							"inject annotation on interface",
+					e.getMessage());
+		}
+	}
+
+	@Test
+	public void constructorAndFactoryInject() {
+		Module module = ModuleBuilder.create()
+				.bind(String.class).to(() -> "Hello, World")
+				.bind(ConstructorAndFactoryInject.class)
+				.build();
+
+		try {
+			Injector.of(module);
+			fail();
+		} catch (DIException e) {
+			assertEquals("Failed to generate implicit binding for ConstructorAndFactoryInject, " +
+							"inject annotation on class with factory method",
 					e.getMessage());
 		}
 	}
@@ -1404,10 +1433,10 @@ public final class TestDI {
 	}
 
 	@Inject
-	public static final class SingleConstructorInjectClass {
+	public static final class SingleConstructorInject {
 		private final String text;
 
-		public SingleConstructorInjectClass(String text) {
+		public SingleConstructorInject(String text) {
 			this.text = text;
 		}
 
@@ -1417,15 +1446,36 @@ public final class TestDI {
 	}
 
 	@Inject
-	public static final class MultipleConstructorsInjectClass {
+	public static final class MultipleConstructorsInject {
 		private final String text;
 
-		public MultipleConstructorsInjectClass(String text) {
+		public MultipleConstructorsInject(String text) {
 			this.text = text;
 		}
 
-		public MultipleConstructorsInjectClass() {
+		public MultipleConstructorsInject() {
 			this.text = "test";
+		}
+
+		public String getText() {
+			return text;
+		}
+	}
+
+	@Inject
+	public interface InjectInterface {
+	}
+
+	@Inject
+	public static final class ConstructorAndFactoryInject {
+		private final String text;
+
+		public ConstructorAndFactoryInject(String text) {
+			this.text = text;
+		}
+
+		public static ConstructorAndFactoryInject of(String text) {
+			return new ConstructorAndFactoryInject(text);
 		}
 
 		public String getText() {

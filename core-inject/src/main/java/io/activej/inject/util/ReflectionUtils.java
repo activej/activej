@@ -188,30 +188,42 @@ public final class ReflectionUtils {
 		Class<?> cls = key.getRawType();
 
 		Inject classInjectAnnotation = cls.getAnnotation(Inject.class);
-		Set<Constructor<?>> injectConstructors = Arrays.stream(cls.getDeclaredConstructors())
-				.filter(c -> c.isAnnotationPresent(Inject.class))
-				.collect(toSet());
-		Set<Method> factoryMethods = Arrays.stream(cls.getDeclaredMethods())
-				.filter(method -> method.isAnnotationPresent(Inject.class)
-						&& method.getReturnType() == cls
-						&& Modifier.isStatic(method.getModifiers()))
-				.collect(toSet());
+		Set<Constructor<?>> injectConstructors = new HashSet<>();
+		Set<Constructor<?>> constructors = new HashSet<>();
+		for (Constructor<?> c : cls.getDeclaredConstructors()) {
+			if (c.isAnnotationPresent(Inject.class)) {
+				injectConstructors.add(c);
+			}
+			constructors.add(c);
+		}
+
+		Set<Method> injectFactoryMethods = new HashSet<>();
+		Set<Method> factoryMethods = new HashSet<>();
+
+		for (Method method : cls.getDeclaredMethods()) {
+			if (method.getReturnType() == cls
+					&& Modifier.isStatic(method.getModifiers())) {
+				if (method.isAnnotationPresent(Inject.class)){
+					injectFactoryMethods.add(method);
+				}
+				factoryMethods.add(method);
+			}
+		}
 
 		if (classInjectAnnotation != null) {
 			if (!injectConstructors.isEmpty()) {
 				throw failedImplicitBinding(key, "inject annotation on class with inject constructor");
 			}
 			if (!factoryMethods.isEmpty()) {
-				throw failedImplicitBinding(key, "inject annotation on class with inject factory method");
+				throw failedImplicitBinding(key, "inject annotation on class with factory method");
 			}
-			Constructor<?>[] declaredConstructors = cls.getDeclaredConstructors();
-			if (declaredConstructors.length == 0) {
+			if (constructors.size() == 0) {
 				throw failedImplicitBinding(key, "inject annotation on interface");
 			}
-			if (declaredConstructors.length > 1) {
+			if (constructors.size() > 1) {
 				throw failedImplicitBinding(key, "inject annotation on class with multiple constructors");
 			}
-			Constructor<T> declaredConstructor = (Constructor<T>) declaredConstructors[0];
+			Constructor<T> declaredConstructor = (Constructor<T>) constructors.iterator().next();
 
 			Class<?> enclosingClass = cls.getEnclosingClass();
 			if (enclosingClass != null && !Modifier.isStatic(cls.getModifiers()) && declaredConstructor.getParameterCount() != 1) {
@@ -223,17 +235,17 @@ public final class ReflectionUtils {
 			if (injectConstructors.size() > 1) {
 				throw failedImplicitBinding(key, "more than one inject constructor");
 			}
-			if (!factoryMethods.isEmpty()) {
+			if (!injectFactoryMethods.isEmpty()) {
 				throw failedImplicitBinding(key, "both inject constructor and inject factory method are present");
 			}
 			return bindingFromConstructor(key, (Constructor<T>) injectConstructors.iterator().next());
 		}
 
-		if (!factoryMethods.isEmpty()) {
-			if (factoryMethods.size() > 1) {
+		if (!injectFactoryMethods.isEmpty()) {
+			if (injectFactoryMethods.size() > 1) {
 				throw failedImplicitBinding(key, "more than one inject factory method");
 			}
-			return bindingFromMethod(null, factoryMethods.iterator().next());
+			return bindingFromMethod(null, injectFactoryMethods.iterator().next());
 		}
 		return null;
 	}
