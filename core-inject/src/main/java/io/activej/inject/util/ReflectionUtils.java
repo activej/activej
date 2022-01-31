@@ -204,35 +204,35 @@ public final class ReflectionUtils {
 			if (!factoryMethods.isEmpty()) {
 				throw failedImplicitBinding(key, "inject annotation on class with inject factory method");
 			}
+			Constructor<?>[] declaredConstructors = cls.getDeclaredConstructors();
+			if (declaredConstructors.length == 0) {
+				throw failedImplicitBinding(key, "inject annotation on interface");
+			}
+			if (declaredConstructors.length > 1) {
+				throw failedImplicitBinding(key, "inject annotation on class with multiple constructors");
+			}
+			Constructor<T> declaredConstructor = (Constructor<T>) declaredConstructors[0];
+
 			Class<?> enclosingClass = cls.getEnclosingClass();
-			if (enclosingClass != null && !Modifier.isStatic(cls.getModifiers())) {
-				try {
-					return bindingFromConstructor(key, (Constructor<T>) cls.getDeclaredConstructor(enclosingClass));
-				} catch (NoSuchMethodException e) {
-					throw failedImplicitBinding(key, "inject annotation on local class that closes over outside variables and/or has no default constructor");
-				}
+			if (enclosingClass != null && !Modifier.isStatic(cls.getModifiers()) && declaredConstructor.getParameterCount() != 1) {
+				throw failedImplicitBinding(key, "inject annotation on local class that closes over outside variables and/or has no default constructor");
 			}
-			try {
-				return bindingFromConstructor(key, (Constructor<T>) cls.getDeclaredConstructor());
-			} catch (NoSuchMethodException e) {
-				throw failedImplicitBinding(key, "inject annotation on class with no default constructor");
-			}
-		} else {
+			return bindingFromConstructor(key, declaredConstructor);
+		}
+		if (!injectConstructors.isEmpty()) {
 			if (injectConstructors.size() > 1) {
 				throw failedImplicitBinding(key, "more than one inject constructor");
 			}
-			if (!injectConstructors.isEmpty()) {
-				if (!factoryMethods.isEmpty()) {
-					throw failedImplicitBinding(key, "both inject constructor and inject factory method are present");
-				}
-				return bindingFromConstructor(key, (Constructor<T>) injectConstructors.iterator().next());
+			if (!factoryMethods.isEmpty()) {
+				throw failedImplicitBinding(key, "both inject constructor and inject factory method are present");
 			}
+			return bindingFromConstructor(key, (Constructor<T>) injectConstructors.iterator().next());
 		}
 
-		if (factoryMethods.size() > 1) {
-			throw failedImplicitBinding(key, "more than one inject factory method");
-		}
 		if (!factoryMethods.isEmpty()) {
+			if (factoryMethods.size() > 1) {
+				throw failedImplicitBinding(key, "more than one inject factory method");
+			}
 			return bindingFromMethod(null, factoryMethods.iterator().next());
 		}
 		return null;
