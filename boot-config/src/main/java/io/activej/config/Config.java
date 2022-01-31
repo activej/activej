@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.nonNullElse;
 import static io.activej.common.Utils.nonNullOrException;
-import static java.util.Collections.*;
+import static java.util.Collections.unmodifiableMap;
 
 /**
  * Interface for interaction with configs.
@@ -63,7 +63,7 @@ public interface Config {
 
 		@Override
 		public Map<String, Config> getChildren() {
-			return emptyMap();
+			return Map.of();
 		}
 	};
 
@@ -473,7 +473,7 @@ public interface Config {
 
 			@Override
 			public Map<String, Config> getChildren() {
-				return emptyMap();
+				return Map.of();
 			}
 		});
 	}
@@ -494,7 +494,7 @@ public interface Config {
 			if (key.isEmpty()) {
 				continue;
 			}
-			Map<String, Config> map = singletonMap(key, config);
+			Map<String, Config> map = Map.of(key, config);
 			config = new Config() {
 				@Override
 				public @Nullable String getValue(@Nullable String defaultValue) {

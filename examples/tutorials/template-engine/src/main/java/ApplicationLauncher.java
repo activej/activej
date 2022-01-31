@@ -13,12 +13,10 @@ import io.activej.promise.Promise;
 import java.util.List;
 import java.util.Map;
 
-import static io.activej.common.Utils.mapOf;
 import static io.activej.common.Utils.nonNullElse;
 import static io.activej.http.HttpHeaders.REFERER;
 import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpMethod.POST;
-import static java.util.Collections.emptyMap;
 
 //[START REGION_1]
 public final class ApplicationLauncher extends HttpServerLauncher {
@@ -44,19 +42,19 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 
 		return RoutingServlet.create()
 				.map(GET, "/", request -> HttpResponse.ok200()
-						.withBody(applyTemplate(listPolls, mapOf("polls", pollDao.findAll().entrySet()))))
+						.withBody(applyTemplate(listPolls, Map.of("polls", pollDao.findAll().entrySet()))))
 				//[END REGION_2]
 				//[START REGION_3]
 				.map(GET, "/poll/:id", request -> {
 					int id = Integer.parseInt(request.getPathParameter("id"));
 					return HttpResponse.ok200()
-							.withBody(applyTemplate(singlePollView, mapOf("id", id, "poll", pollDao.find(id))));
+							.withBody(applyTemplate(singlePollView, Map.of("id", id, "poll", pollDao.find(id))));
 				})
 				//[END REGION_3]
 				//[START REGION_4]
 				.map(GET, "/create", request ->
 						HttpResponse.ok200()
-								.withBody(applyTemplate(singlePollCreate, emptyMap())))
+								.withBody(applyTemplate(singlePollCreate, Map.of())))
 				.map(POST, "/vote", request -> request.loadBody()
 						.then(() -> {
 							Map<String, String> params = request.getPostParameters();

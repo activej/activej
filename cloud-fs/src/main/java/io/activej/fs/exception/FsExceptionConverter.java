@@ -23,7 +23,6 @@ import com.dslplatform.json.ParsingException;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -100,7 +99,7 @@ public abstract class FsExceptionConverter {
 
 	private static Map<String, FsScalarException> readExceptions(JsonReader<?> reader) throws IOException {
 		if (reader.last() != OBJECT_START) throw reader.newParseError("Expected '{'");
-		if (reader.getNextToken() == OBJECT_END) return Collections.emptyMap();
+		if (reader.getNextToken() == OBJECT_END) return Map.of();
 		Map<String, FsScalarException> res = new LinkedHashMap<>();
 		String key = reader.readKey();
 		res.put(key, readScalarException(reader));

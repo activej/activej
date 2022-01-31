@@ -28,10 +28,9 @@ import java.util.regex.Pattern;
 
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.first;
-import static io.activej.common.Utils.mapOf;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
+import static java.util.Collections.singletonMap;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class AggregationPredicates {
@@ -481,7 +480,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return emptyMap();
+			return Map.of();
 		}
 
 		@Override
@@ -513,7 +512,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return emptyMap();
+			return Map.of();
 		}
 
 		@Override
@@ -571,7 +570,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return emptyMap();
+			return Map.of();
 		}
 
 		@Override
@@ -630,7 +629,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return mapOf(key, value);
+			return singletonMap(key, value);
 		}
 
 		@Override
@@ -697,7 +696,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return emptyMap();
+			return Map.of();
 		}
 
 		@Override
@@ -765,7 +764,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return emptyMap();
+			return Map.of();
 		}
 
 		@Override
@@ -829,7 +828,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return emptyMap();
+			return Map.of();
 		}
 
 		@Override
@@ -892,7 +891,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return emptyMap();
+			return Map.of();
 		}
 
 		@Override
@@ -955,7 +954,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return emptyMap();
+			return Map.of();
 		}
 
 		@Override
@@ -1012,7 +1011,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return emptyMap();
+			return Map.of();
 		}
 
 		@Override
@@ -1076,7 +1075,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return emptyMap();
+			return Map.of();
 		}
 
 		@Override
@@ -1147,7 +1146,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return emptyMap();
+			return Map.of();
 		}
 
 		@Override
@@ -1221,7 +1220,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return emptyMap();
+			return Map.of();
 		}
 
 		@Override
@@ -1412,7 +1411,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return emptyMap();
+			return Map.of();
 		}
 
 		@Override

@@ -60,9 +60,9 @@ abstract class AbstractAttributeNodeForLeaf implements AttributeNode {
 	@Override
 	public final Map<String, Map<String, String>> getDescriptions() {
 		if (description != null) {
-			return singletonMap(name, singletonMap(name, description));
+			return Map.of(name, singletonMap(name, description));
 		} else {
-			return singletonMap(name, Collections.emptyMap());
+			return Map.of(name, Map.of());
 		}
 	}
 
@@ -76,7 +76,7 @@ abstract class AbstractAttributeNodeForLeaf implements AttributeNode {
 			return singletonMap(attrName, null);
 		}
 
-		return Collections.singletonMap(name, aggregateAttribute(attrName, sources));
+		return singletonMap(name, aggregateAttribute(attrName, sources));
 	}
 
 	/**

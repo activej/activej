@@ -85,7 +85,7 @@ public class OTLoadedGraph<K, D> {
 	private Function<D, String> diffToString = Objects::toString;
 
 	public void addNode(K node, long level) {
-		addNode(node, level, emptyMap());
+		addNode(node, level, Map.of());
 	}
 
 	public void addNode(K child, long level, Map<K, List<D>> parents) {
@@ -99,8 +99,8 @@ public class OTLoadedGraph<K, D> {
 	}
 
 	public void removeNode(K node) {
-		Set<K> parents = new HashSet<>(child2parent.getOrDefault(node, emptyMap()).keySet());
-		Set<K> children = new HashSet<>(parent2child.getOrDefault(node, emptyMap()).keySet());
+		Set<K> parents = new HashSet<>(child2parent.getOrDefault(node, Map.of()).keySet());
+		Set<K> children = new HashSet<>(parent2child.getOrDefault(node, Map.of()).keySet());
 		parents.forEach(parent -> parent2child.get(parent).remove(node));
 		children.forEach(child -> child2parent.get(child).remove(node));
 		child2parent.remove(node);

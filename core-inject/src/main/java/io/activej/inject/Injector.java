@@ -46,7 +46,6 @@ import static io.activej.inject.binding.Multibinders.errorOnDuplicate;
 import static io.activej.inject.util.Utils.getScopeDisplayString;
 import static io.activej.inject.util.Utils.next;
 import static io.activej.types.Types.parameterizedType;
-import static java.util.Collections.emptyMap;
 import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toMap;
 
@@ -207,7 +206,7 @@ public final class Injector implements ResourceLocator {
 				parent != null ? parent.scopeCaches.length : 0,
 				scope,
 				bindings,
-				parent != null ? parent.localCompiledBindings : emptyMap()
+				parent != null ? parent.localCompiledBindings : Map.of()
 		);
 		return new Injector(parent, scopeDataTree);
 	}

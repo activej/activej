@@ -23,8 +23,8 @@ import static org.junit.Assert.assertTrue;
 
 public class DynamicMBeanFactorySettingsTest {
 	private static final Set<String> NO_BEANS = Collections.emptySet();
-	private static final Map<String, AttributeModifier<?>> NO_MODIFIERS = Collections.emptyMap();
-	private static final Map<Type, JmxCustomTypeAdapter<?>> NO_CUSTOM_TYPES = Collections.emptyMap();
+	private static final Map<String, AttributeModifier<?>> NO_MODIFIERS = Map.of();
+	private static final Map<Type, JmxCustomTypeAdapter<?>> NO_CUSTOM_TYPES = Map.of();
 
 	// region included optionals
 	@Test

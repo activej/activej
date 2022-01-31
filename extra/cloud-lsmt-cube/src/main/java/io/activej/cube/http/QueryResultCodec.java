@@ -209,7 +209,7 @@ final class QueryResultCodec implements JsonCodec<QueryResult>, WithInitializer<
 
 	private Map<String, Object> readFilterAttributes(JsonReader<?> reader) throws IOException {
 		if (reader.last() != OBJECT_START) throw reader.newParseError("Expected '{'");
-		if (reader.getNextToken() == OBJECT_END) return Collections.emptyMap();
+		if (reader.getNextToken() == OBJECT_END) return Map.of();
 		Map<String, Object> result = new LinkedHashMap<>();
 		String key = reader.readKey();
 		Object value = attributeCodecs.get(key).read(reader);

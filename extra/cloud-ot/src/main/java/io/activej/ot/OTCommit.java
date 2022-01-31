@@ -30,8 +30,6 @@ import java.util.function.ToLongFunction;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.entriesToMap;
 import static io.activej.common.Utils.keysToMap;
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.singletonMap;
 
 public final class OTCommit<K, D> {
 	public static final int INITIAL_EPOCH = 0;
@@ -53,7 +51,7 @@ public final class OTCommit<K, D> {
 	}
 
 	public static <K, D> OTCommit<K, D> ofRoot(@NotNull K id) {
-		return new OTCommit<>(INITIAL_EPOCH, id, emptyMap());
+		return new OTCommit<>(INITIAL_EPOCH, id, Map.of());
 	}
 
 	public static <K, D> OTCommit<K, D> of(int epoch, @NotNull K id, @NotNull Map<K, DiffsWithLevel<D>> parents) {
@@ -65,7 +63,7 @@ public final class OTCommit<K, D> {
 	}
 
 	public static <K, D> OTCommit<K, D> ofCommit(int epoch, @NotNull K id, @NotNull K parent, @NotNull DiffsWithLevel<D> diffs) {
-		return new OTCommit<>(epoch, id, singletonMap(parent, diffs));
+		return new OTCommit<>(epoch, id, Map.of(parent, diffs));
 	}
 
 	public static <K, D> OTCommit<K, D> ofCommit(int epoch, K id, K parent, List<D> diffs, long level) {

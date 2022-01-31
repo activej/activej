@@ -14,7 +14,8 @@ import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.function.Function;
 
-import static io.activej.common.Utils.*;
+import static io.activej.common.Utils.difference;
+import static io.activej.common.Utils.union;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toMap;
@@ -25,14 +26,14 @@ import static org.junit.Assert.*;
 
 public class ClusterRpcStrategyTest {
 
-	private static final Map<String, InetSocketAddress> PARTITION_ADDRESS_MAP_1 = mapOf(
+	private static final Map<String, InetSocketAddress> PARTITION_ADDRESS_MAP_1 = Map.of(
 			"one", new InetSocketAddress(9001),
 			"two", new InetSocketAddress(9002),
 			"three", new InetSocketAddress(9003),
 			"four", new InetSocketAddress(9004)
 	);
 
-	private static final Map<String, InetSocketAddress> PARTITION_ADDRESS_MAP_2 = mapOf(
+	private static final Map<String, InetSocketAddress> PARTITION_ADDRESS_MAP_2 = Map.of(
 			"five", new InetSocketAddress(9005),
 			"six", new InetSocketAddress(9006),
 			"seven", new InetSocketAddress(9007),

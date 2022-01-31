@@ -47,7 +47,7 @@ public final class JmxBeanSettings implements WithInitializer<JmxBeanSettings> {
 	}
 
 	public static JmxBeanSettings defaultSettings() {
-		return new JmxBeanSettings(Collections.emptySet(), Collections.emptyMap(), Collections.emptyMap());
+		return new JmxBeanSettings(Collections.emptySet(), Map.of(), Map.of());
 	}
 
 	public void merge(JmxBeanSettings otherSettings) {

@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 import static io.activej.http.Protocol.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static java.util.Collections.singletonMap;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -377,7 +376,7 @@ public final class HttpUrlTest {
 
 	@Test
 	public void testEmptyValueBeforeAmpersandWithSeparator() {
-		Map<String, String> map = singletonMap("key", "");
+		Map<String, String> map = Map.of("key", "");
 		UrlParser url = UrlParser.of("http://abc.com/?key=&");
 		assertEquals(map, url.getQueryParameters());
 		for (String key : map.keySet()) {

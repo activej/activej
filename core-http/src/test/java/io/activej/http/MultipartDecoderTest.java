@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static io.activej.common.Utils.mapOf;
 import static io.activej.promise.TestUtils.await;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
@@ -82,9 +81,10 @@ public final class MultipartDecoderTest {
 				"Also here we had a wild CRLF se\r\nquence appear\n" +
 				"And the second line, huh\n", res);
 		assertEquals(asList(
-				mapOf("content-disposition", "form-data; name=\"file\"; filename=\"test.txt\"",
+                Map.of(
+						"content-disposition", "form-data; name=\"file\"; filename=\"test.txt\"",
 						"content-type", "text/plain"),
-				mapOf("content-disposition", "form-data; name=\"file\"; filename=\"test.txt\"",
+				Map.of("content-disposition", "form-data; name=\"file\"; filename=\"test.txt\"",
 						"content-type", "text/plain",
 						"test-extra-header", "one",
 						"test-extra-header-2", "two")

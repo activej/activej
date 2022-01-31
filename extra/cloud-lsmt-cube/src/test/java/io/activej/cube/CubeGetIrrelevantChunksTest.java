@@ -17,16 +17,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.Month;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import static io.activej.aggregation.AggregationPredicates.gt;
 import static io.activej.aggregation.PrimaryKey.ofArray;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
-import static io.activej.common.Utils.mapOf;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.promise.TestUtils.await;
 import static java.util.stream.Collectors.toSet;
@@ -173,16 +169,16 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 
 	private long addChunk(String aggregationId, PrimaryKey minKey, PrimaryKey maxKey) {
 		long chunkId = ++this.chunkId;
-		stateManager.add(LogDiff.forCurrentPosition(CubeDiff.of(mapOf(
-				aggregationId,
-				AggregationDiff.of(Collections.singleton(AggregationChunk.create(
-						chunkId,
-						cube.getAggregation(aggregationId).getMeasures(),
-						minKey,
-						maxKey,
-						1
-				))))
-		)));
+		stateManager.add(LogDiff.forCurrentPosition(
+				CubeDiff.of(Map.of(
+						aggregationId, AggregationDiff.of(Collections.singleton(
+								AggregationChunk.create(
+										chunkId,
+										cube.getAggregation(aggregationId).getMeasures(),
+										minKey,
+										maxKey,
+										1))))
+				)));
 		return chunkId;
 	}
 

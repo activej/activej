@@ -63,7 +63,8 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.*;
 import static io.activej.datastream.processor.StreamSupplierTransformer.identity;
 import static java.lang.Math.min;
-import static java.util.Collections.*;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singletonList;
 import static java.util.Comparator.comparing;
 import static java.util.function.Predicate.isEqual;
 import static java.util.stream.Collectors.toList;
@@ -224,7 +225,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 			List<String> keys, List<String> measures,
 			DefiningClassLoader classLoader) {
 		return Utils.aggregationReducer(structure, inputClass, outputClass,
-				keys, measures, emptyMap(), classLoader);
+				keys, measures, Map.of(), classLoader);
 	}
 
 	/**

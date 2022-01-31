@@ -32,7 +32,8 @@ import static io.activej.inject.module.Modules.combine;
 import static io.activej.inject.module.Modules.override;
 import static io.activej.inject.util.Utils.printGraphVizGraph;
 import static java.util.Arrays.asList;
-import static java.util.Collections.*;
+import static java.util.Collections.singleton;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
@@ -721,17 +722,17 @@ public final class TestDI {
 
 					@Provides
 					Map<String, Integer> firstOne() {
-						return singletonMap("first", 1);
+						return Map.of("first", 1);
 					}
 
 					@Provides
 					Map<String, Integer> second(Integer integer) {
-						return singletonMap("second", integer);
+						return Map.of("second", integer);
 					}
 
 					@Provides
 					Map<String, Integer> thirdTwo() {
-						return singletonMap("third", 2);
+						return Map.of("third", 2);
 					}
 				})
 				.build());

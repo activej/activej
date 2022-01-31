@@ -23,7 +23,6 @@ import org.jetbrains.annotations.Nullable;
 import javax.management.openmbean.*;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +55,7 @@ final class AttributeNodeForThrowable extends AbstractAttributeNodeForLeaf {
 
 	@Override
 	public Map<String, OpenType<?>> getOpenTypes() {
-		return Collections.singletonMap(name, compositeType);
+		return Map.of(name, compositeType);
 	}
 
 	@Override

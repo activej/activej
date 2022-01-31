@@ -15,7 +15,6 @@ import io.activej.launchers.http.HttpServerLauncher;
 
 import java.util.Map;
 
-import static io.activej.common.Utils.mapOf;
 import static io.activej.http.HttpMethod.POST;
 import static io.activej.http.decoder.Decoders.ofPost;
 
@@ -59,9 +58,8 @@ public final class HttpDecoderExample extends HttpServerLauncher {
 	AsyncServlet mainServlet(ContactDAO contactDAO) {
 		Mustache contactListView = new DefaultMustacheFactory().compile("static/contactList.html");
 		return RoutingServlet.create()
-				.map("/", request ->
-						HttpResponse.ok200()
-								.withBody(applyTemplate(contactListView, mapOf("contacts", contactDAO.list()))))
+				.map("/", request -> HttpResponse.ok200()
+                        .withBody(applyTemplate(contactListView, Map.of("contacts", contactDAO.list()))))
 				.map(POST, "/add", request -> request.loadBody()
 						.map($ -> {
 							//[START REGION_3]
@@ -70,7 +68,7 @@ public final class HttpDecoderExample extends HttpServerLauncher {
 							if (decodedUser.isLeft()) {
 								contactDAO.add(decodedUser.getLeft());
 							}
-							Map<String, Object> scopes = mapOf("contacts", contactDAO.list());
+                            Map<String, Object> scopes = Map.of("contacts", contactDAO.list());
 							if (decodedUser.isRight()) {
 								//noinspection ConstantConditions - is 'right', hence not 'null'
 								scopes.put("errors", decodedUser.getRight().toMap(SEPARATOR));

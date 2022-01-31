@@ -66,7 +66,7 @@ import static io.activej.fs.LocalFileUtils.*;
 import static io.activej.fs.util.RemoteFsUtils.fsBatchException;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 import static java.nio.file.StandardOpenOption.*;
-import static java.util.Collections.*;
+import static java.util.Collections.singleton;
 
 /**
  * An implementation of {@link ActiveFs} which operates on a real underlying filesystem, no networking involved.
@@ -310,7 +310,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@Override
 	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
 		checkStarted();
-		if (glob.isEmpty()) return Promise.of(emptyMap());
+		if (glob.isEmpty()) return Promise.of(Map.of());
 
 		return execute(
 				() -> {
@@ -339,7 +339,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@Override
 	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
 		checkStarted();
-		return execute(() -> forEachPair(singletonMap(name, target), this::doCopy))
+		return execute(() -> forEachPair(Map.of(name, target), this::doCopy))
 				.then(translateScalarErrorsFn())
 				.whenComplete(toLogger(logger, TRACE, "copy", name, target, this))
 				.whenComplete(copyPromise.recordStats());
@@ -359,7 +359,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@Override
 	public Promise<Void> move(@NotNull String name, @NotNull String target) {
 		checkStarted();
-		return execute(() -> forEachPair(singletonMap(name, target), this::doMove))
+		return execute(() -> forEachPair(Map.of(name, target), this::doMove))
 				.then(translateScalarErrorsFn())
 				.whenComplete(toLogger(logger, TRACE, "move", name, target, this))
 				.whenComplete(movePromise.recordStats());
@@ -412,7 +412,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@Override
 	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
 		checkStarted();
-		if (names.isEmpty()) return Promise.of(emptyMap());
+		if (names.isEmpty()) return Promise.of(Map.of());
 
 		return execute(
 				() -> {

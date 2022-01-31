@@ -21,7 +21,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -35,7 +34,7 @@ public final class UpdateResponse<K, R extends AbstractRecord<K>> {
 	}
 
 	public static <K, R extends AbstractRecord<K>> UpdateResponse<K, R> of(List<R> changes) {
-		return new UpdateResponse<>(changes, Collections.emptyMap());
+		return new UpdateResponse<>(changes, Map.of());
 	}
 
 	public static <K, R extends AbstractRecord<K>> UpdateResponse<K, R> of(List<R> changes, Map<K, Map<String, List<String>>> errors) {

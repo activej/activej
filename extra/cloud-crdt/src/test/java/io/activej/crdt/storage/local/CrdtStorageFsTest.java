@@ -21,7 +21,8 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
-import static io.activej.common.Utils.*;
+import static io.activej.common.Utils.first;
+import static io.activej.common.Utils.transformMap;
 import static io.activej.crdt.function.CrdtFunction.ignoringTimestamp;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.serializer.BinarySerializers.*;
@@ -173,7 +174,7 @@ public final class CrdtStorageFsTest {
 	public void pickFilesForConsolidation() {
 		testPickFilesForConsolidation(
 				Set.of("a", "c", "e"),
-				mapOf(
+				Map.of(
 						"a", 12,
 						"b", 120,
 						"c", 53,
@@ -182,14 +183,14 @@ public final class CrdtStorageFsTest {
 		);
 		testPickFilesForConsolidation(
 				Set.of("a", "c"),
-				mapOf(
+				Map.of(
 						"a", 120,
 						"b", 12,
 						"c", 530
 				));
 		testPickFilesForConsolidation(
 				Set.of("b", "d"),
-				mapOf(
+				Map.of(
 						"a", 120,
 						"b", 12,
 						"c", 530,
@@ -197,7 +198,7 @@ public final class CrdtStorageFsTest {
 				));
 		testPickFilesForConsolidation(
 				emptySet(),
-				mapOf(
+				Map.of(
 						"a", 120,
 						"b", 12,
 						"c", 5,

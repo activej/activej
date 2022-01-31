@@ -45,7 +45,6 @@ import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpMethod.*;
 import static io.activej.http.Protocol.WS;
 import static io.activej.http.Protocol.WSS;
-import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 
 /**
@@ -288,7 +287,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		return postParameters =
 				containsPostParameters() ?
 						UrlParser.parseQueryIntoMap(body.array(), body.head(), body.tail()) :
-						emptyMap();
+						Map.of();
 	}
 
 	public boolean containsPostParameters() {
@@ -311,7 +310,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 
 	public @NotNull Map<String, String> getPathParameters() {
 		if (CHECK) checkState(!isRecycled());
-		return pathParameters != null ? pathParameters : emptyMap();
+		return pathParameters != null ? pathParameters : Map.of();
 	}
 
 	public @NotNull String getPathParameter(@NotNull String key) {

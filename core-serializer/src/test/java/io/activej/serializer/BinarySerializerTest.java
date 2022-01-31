@@ -17,7 +17,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.common.Utils.mapOf;
 import static io.activej.serializer.BinarySerializerTest.TestEnum.*;
 import static io.activej.serializer.StringFormat.*;
 import static io.activej.serializer.Utils.*;
@@ -1631,12 +1630,17 @@ public class BinarySerializerTest {
 
 	@Test
 	public void testEnumMap() {
-		Map<TestEnum, String> map = mapOf(ONE, "one", TWO, "two");
-		Map<TestEnum, String> mapNullable = mapOf(TWO, "two", THREE, "three");
-		Map<TestEnum, String> mapEmpty = emptyMap();
-		Map<TestEnum, String> mapEmptyNullable = emptyMap();
-		Map<TestEnum, String> mapSingle = singletonMap(ONE, "one");
-		Map<TestEnum, String> mapSingleNullable = singletonMap(TWO, "two");
+		Map<TestEnum, String> map = Map.of(
+				ONE, "one",
+				TWO, "two");
+		Map<TestEnum, String> mapNullable = Map.of(
+				TWO, "two",
+				THREE, "three");
+		Map<TestEnum, String> mapEmpty = Map.of();
+		Map<TestEnum, String> mapEmptyNullable = Map.of();
+		Map<TestEnum, String> mapSingle = Map.of(
+				ONE, "one");
+		Map<TestEnum, String> mapSingleNullable = Map.of(TWO, "two");
 
 		EnumMap<TestEnum, String> enumMap = new EnumMap<>(TestEnum.class);
 		enumMap.put(ONE, "one");
@@ -2440,18 +2444,20 @@ public class BinarySerializerTest {
 
 	@Test
 	public void testMaps() {
-		Map<Integer, String> regular = mapOf(
+		Map<Integer, String> regular = Map.of(
 				1, "a",
 				2, "b",
 				3, "c");
-		Map<Integer, String> regularNullable = mapOf(
+		Map<Integer, String> regularNullable = Map.of(
 				4, "d",
 				5, "e",
 				6, "f");
-		Map<Integer, String> regularEmpty = mapOf();
-		Map<Integer, String> regularEmptyNullable = mapOf();
-		Map<Integer, String> regularSingle = mapOf(7, "g");
-		Map<Integer, String> regularSingleNullable = mapOf(8, "h");
+		Map<Integer, String> regularEmpty = Map.of();
+		Map<Integer, String> regularEmptyNullable = Map.of();
+		Map<Integer, String> regularSingle = Map.of(
+				7, "g");
+		Map<Integer, String> regularSingleNullable = Map.of(
+				8, "h");
 
 		HashMap<Integer, String> hash = new HashMap<>();
 		hash.put(9, "i");

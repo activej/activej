@@ -54,7 +54,6 @@ import static io.activej.common.Utils.transformIterator;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 import static io.activej.promise.Promises.first;
-import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -250,7 +249,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 
 	@Override
 	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
-		if (names.isEmpty()) return Promise.of(emptyMap());
+		if (names.isEmpty()) return Promise.of(Map.of());
 
 		return broadcast(fs -> fs.infoAll(names))
 				.map(filterErrorsFn())

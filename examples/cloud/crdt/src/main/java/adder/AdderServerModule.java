@@ -23,7 +23,6 @@ import java.time.Duration;
 import java.util.Map;
 
 import static adder.AdderCommands.*;
-import static io.activej.common.Utils.mapOf;
 
 public final class AdderServerModule extends AbstractModule {
 	private static final Logger logger = LoggerFactory.getLogger(AdderServerModule.class);
@@ -48,7 +47,7 @@ public final class AdderServerModule extends AbstractModule {
 			WriteAheadLog<Long, DetailedSumsCrdtState> writeAheadLog,
 			IdSequentialExecutor<Long> seqExecutor
 	) {
-		return mapOf(
+		return Map.of(
 				AddRequest.class, (RpcRequestHandler<AddRequest, AddResponse>) request -> {
 					long userId = request.getUserId();
 					logger.info("Received 'Add' request for user {}", userId);

@@ -16,7 +16,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import static io.activej.common.Utils.mapOf;
 import static io.activej.serializer.Utils.DEFINING_CLASS_LOADER;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
@@ -82,7 +81,10 @@ public class CompatibilityLevelTest {
 		nullables.notNullCollection = List.of("test1", "test2");
 		nullables.notNullEnum = TestEnum.ONE;
 		nullables.notNullList = Arrays.asList("test1", "test2");
-		nullables.notNullMap = mapOf(1, "test1", 2, "test2");
+		nullables.notNullMap = new LinkedHashMap<>();
+		nullables.notNullMap.put(1, "test1");
+		nullables.notNullMap.put(2, "test2");
+
 		nullables.notNullSet = new LinkedHashSet<>(Arrays.asList("test1", "test2"));
 		nullables.notNullSubclass = 12345;
 

@@ -30,7 +30,6 @@ import java.util.*;
 
 import static io.activej.inject.binding.BindingType.TRANSIENT;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyMap;
 
 public final class WorkerPool {
 	private final int id;
@@ -77,7 +76,7 @@ public final class WorkerPool {
 		this.scopeInjectors = new Injector[workers];
 
 		Trie<Scope, Map<Key<?>, Binding<?>>> subtrie = injector.getBindingsTrie().get(scope);
-		this.scopeBindings = subtrie != null ? subtrie.get() : emptyMap();
+		this.scopeBindings = subtrie != null ? subtrie.get() : Map.of();
 
 		for (int i = 0; i < workers; i++) {
 			scopeInjectors[i] = injector.enterScope(scope);

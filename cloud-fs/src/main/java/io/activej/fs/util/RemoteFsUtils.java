@@ -50,8 +50,6 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-import static io.activej.common.Utils.mapOf;
-
 public final class RemoteFsUtils {
 	private static final Pattern ANY_GLOB_METACHARS = Pattern.compile("[*?{}\\[\\]\\\\]");
 	private static final Pattern UNESCAPED_GLOB_METACHARS = Pattern.compile("(?<!\\\\)(?:\\\\\\\\)*[*?{}\\[\\]]");
@@ -125,7 +123,7 @@ public final class RemoteFsUtils {
 	}
 
 	public static FsBatchException fsBatchException(String name, FsScalarException exception) {
-		return new FsBatchException(mapOf(name, exception));
+        return new FsBatchException(Map.of(name, exception));
 	}
 
 	public static void reduceErrors(List<Try<Void>> tries, Iterator<String> sources) throws Exception {

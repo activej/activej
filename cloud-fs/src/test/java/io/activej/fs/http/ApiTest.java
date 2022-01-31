@@ -2,7 +2,6 @@ package io.activej.fs.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufStrings;
-import io.activej.common.Utils;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.fs.ActiveFs;
@@ -92,12 +91,11 @@ public final class ApiTest {
 
 	@Test
 	public void moveAll() {
-		Map<String, String> sourceToTarget = Utils.mapOf(
+		Map<String, String> sourceToTarget = Map.of(
 				"file1.txt", "newFile1.txt",
 				"file2.txt", "newFile2.txt",
 				"file3.txt", "newFile3.txt",
-				"file4.txt", "newFile4.txt"
-		);
+				"file4.txt", "newFile4.txt");
 		doTest(client.moveAll(sourceToTarget), sourceToTarget);
 	}
 
@@ -108,12 +106,11 @@ public final class ApiTest {
 
 	@Test
 	public void copyAll() {
-		Map<String, String> sourceToTarget = Utils.mapOf(
+		Map<String, String> sourceToTarget = Map.of(
 				"file1.txt", "newFile1.txt",
 				"file2.txt", "newFile2.txt",
 				"file3.txt", "newFile3.txt",
-				"file4.txt", "newFile4.txt"
-		);
+				"file4.txt", "newFile4.txt");
 		doTest(client.copyAll(sourceToTarget), sourceToTarget);
 	}
 
@@ -237,11 +234,12 @@ public final class ApiTest {
 
 			@Override
 			public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
-				return resultOf(Utils.mapOf(
-						"test1", FileMetadata.of(100, 10),
-						"test2", FileMetadata.of(200, 20),
-						"test3", FileMetadata.of(300, 30)
-				), glob);
+				return resultOf(
+						Map.of(
+								"test1", FileMetadata.of(100, 10),
+								"test2", FileMetadata.of(200, 20),
+								"test3", FileMetadata.of(300, 30)),
+						glob);
 			}
 
 			@Override

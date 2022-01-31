@@ -11,7 +11,6 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.activej.common.Utils.first;
-import static java.util.Collections.singletonMap;
 
 /**
  * A registry of known {@link Recycler}s
@@ -104,7 +103,7 @@ public class Recyclers {
 
 	private static @NotNull Map<Class<?>, Recycler<?>> doLookup(@NotNull Class<?> type) {
 		@Nullable Recycler<?> recycler = REGISTRY.get(type);
-		if (recycler != null) return singletonMap(type, recycler);
+		if (recycler != null) return Map.of(type, recycler);
 		Map<Class<?>, Recycler<?>> map = new HashMap<>();
 		@Nullable Class<?> superclass = type.getSuperclass();
 		if (superclass != null) {

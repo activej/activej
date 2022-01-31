@@ -32,7 +32,6 @@ import java.util.*;
 
 import static com.dslplatform.json.JsonWriter.*;
 import static com.dslplatform.json.NumberConverter.serialize;
-import static java.util.Collections.emptyMap;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 public final class LogDiffCodec<D> implements ReadObject<LogDiff<D>>, WriteObject<LogDiff<D>>, WithInitializer<LogDiffCodec<D>> {
@@ -66,7 +65,7 @@ public final class LogDiffCodec<D> implements ReadObject<LogDiff<D>>, WriteObjec
 		Map<String, LogPositionDiff> positions = readValue(reader, POSITIONS, $ -> {
 			if (reader.last() != ARRAY_START) throw reader.newParseError("Expected '['");
 			if (reader.getNextToken() == ARRAY_END) {
-				return emptyMap();
+				return Map.of();
 			}
 			Map<String, LogPositionDiff> map = new LinkedHashMap<>();
 			Iterator<Map.Entry<String, LogPositionDiff>> iterator = reader.iterateOver((ReadObject) r -> {

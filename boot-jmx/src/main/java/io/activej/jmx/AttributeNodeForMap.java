@@ -102,7 +102,7 @@ final class AttributeNodeForMap extends AbstractAttributeNodeForLeaf {
 
 	@Override
 	public Map<String, OpenType<?>> getOpenTypes() {
-		return Collections.singletonMap(name, tabularType);
+		return Map.of(name, tabularType);
 	}
 
 	@Override

@@ -14,9 +14,9 @@ import org.junit.rules.TemporaryFolder;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.regex.Pattern;
 
-import static io.activej.common.Utils.mapOf;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -94,7 +94,7 @@ public final class ActiveFsAdaptersTest {
 		ActiveFs second = ActiveFsAdapters.subdirectory(local, "second");
 		ActiveFs third = ActiveFsAdapters.subdirectory(local, "third");
 
-		ActiveFs mounted = ActiveFsAdapters.mount(root, mapOf(
+        ActiveFs mounted = ActiveFsAdapters.mount(root, Map.of(
 				"hello", first,
 				"test/inner", second,
 				"last", third));

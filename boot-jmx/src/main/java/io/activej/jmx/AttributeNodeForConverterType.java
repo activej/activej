@@ -80,7 +80,7 @@ public class AttributeNodeForConverterType<T> extends AbstractAttributeNodeForLe
 
 	@Override
 	public Map<String, OpenType<?>> getOpenTypes() {
-		return Collections.singletonMap(name, SimpleType.STRING);
+		return Map.of(name, SimpleType.STRING);
 	}
 
 	@Override

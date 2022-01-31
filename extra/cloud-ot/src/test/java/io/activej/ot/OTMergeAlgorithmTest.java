@@ -9,7 +9,10 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import static io.activej.common.Checks.checkArgument;
@@ -36,7 +39,7 @@ public class OTMergeAlgorithmTest {
 		Map<String, Long> levels = new HashMap<>();
 		for (String commitId : graph.getTips()) {
 			Utils.calcLevels(commitId, levels,
-					parentId -> nonNullElse(graph.getParents(parentId), Collections.<String, List<TestOp>>emptyMap()).keySet());
+					parentId -> nonNullElse(graph.getParents(parentId), Map.<String, List<TestOp>>of()).keySet());
 		}
 		levels.forEach(graph::setLevel);
 

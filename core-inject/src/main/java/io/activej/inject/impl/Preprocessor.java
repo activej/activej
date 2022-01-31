@@ -37,7 +37,8 @@ import static io.activej.inject.binding.BindingType.SYNTHETIC;
 import static io.activej.inject.util.ReflectionUtils.generateInjectingInitializer;
 import static io.activej.inject.util.Utils.*;
 import static java.util.Arrays.asList;
-import static java.util.Collections.*;
+import static java.util.Collections.singleton;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -64,7 +65,7 @@ public final class Preprocessor {
 			BindingGenerator<?> generator
 	) {
 		Trie<Scope, Map<Key<?>, Binding<?>>> reduced = Trie.leaf(new HashMap<>());
-		reduce(UNSCOPED, emptyMap(), bindings, reduced, multibinder, transformer, generator);
+		reduce(UNSCOPED, Map.of(), bindings, reduced, multibinder, transformer, generator);
 		return reduced;
 	}
 

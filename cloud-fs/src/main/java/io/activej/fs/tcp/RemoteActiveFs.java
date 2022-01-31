@@ -59,7 +59,6 @@ import static io.activej.csp.binary.Utils.nullTerminated;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.util.RemoteFsUtils.fromJson;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
-import static java.util.Collections.emptyMap;
 
 /**
  * A client to the remote {@link ActiveFsServer}.
@@ -309,7 +308,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 
 	@Override
 	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
-		if (names.isEmpty()) return Promise.of(emptyMap());
+		if (names.isEmpty()) return Promise.of(Map.of());
 
 		return simpleCommand(new InfoAll(names), InfoAllFinished.class, InfoAllFinished::getMetadataMap)
 				.whenComplete(toLogger(logger, "infoAll", names, this))

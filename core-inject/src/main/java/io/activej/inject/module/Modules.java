@@ -39,7 +39,6 @@ import static io.activej.inject.Qualifiers.uniqueQualifier;
 import static io.activej.inject.Scope.UNSCOPED;
 import static io.activej.inject.util.Utils.*;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toCollection;
 
@@ -47,7 +46,7 @@ import static java.util.stream.Collectors.toCollection;
  * This class contains a set of utilities for working with {@link Module modules}.
  */
 public final class Modules {
-	static final Module EMPTY = new SimpleModule(Trie.leaf(emptyMap()), emptyMap(), emptyMap(), emptyMap());
+	static final Module EMPTY = new SimpleModule(Trie.leaf(Map.of()), Map.of(), Map.of(), Map.of());
 
 	/**
 	 * Combines multiple modules into one.
@@ -166,7 +165,7 @@ public final class Modules {
 			BiFunction<Scope[], Key<?>, Key<?>> exportsMapping,
 			BiFunction<Scope[], Key<?>, Key<?>> importsMapping) {
 		return new SimpleModule(
-				remap(exportsMapping, importsMapping, UNSCOPED, module.getBindings(), emptyMap()),
+				remap(exportsMapping, importsMapping, UNSCOPED, module.getBindings(), Map.of()),
 				module.getBindingTransformers(),
 				module.getBindingGenerators(),
 				module.getMultibinders());
@@ -207,7 +206,7 @@ public final class Modules {
 			}
 			return result;
 		};
-		return remap(remapping, (path, key) -> key, UNSCOPED, trie, emptyMap());
+		return remap(remapping, (path, key) -> key, UNSCOPED, trie, Map.of());
 	}
 
 	private static Trie<Scope, Map<Key<?>, Set<Binding<?>>>> remap(BiFunction<Scope[], Key<?>, Key<?>> exportsMapping, BiFunction<Scope[], Key<?>, Key<?>> importsMapping,

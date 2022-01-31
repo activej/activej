@@ -49,8 +49,6 @@ import static io.activej.common.Utils.noMergeFunction;
 import static io.activej.common.function.BiConsumerEx.uncheckedOf;
 import static io.activej.fs.LocalFileUtils.*;
 import static java.nio.file.StandardOpenOption.*;
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.singletonMap;
 
 public final class LocalBlockingFs implements BlockingFs, BlockingService, ConcurrentJmxBean, WithInitializer<LocalBlockingFs> {
 	private static final Logger logger = LoggerFactory.getLogger(LocalBlockingFs.class);
@@ -260,7 +258,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	@Override
 	public void copy(@NotNull String name, @NotNull String target) throws IOException {
 		checkStarted();
-		copyImpl(singletonMap(name, target));
+		copyImpl(Map.of(name, target));
 	}
 
 	@Override
@@ -273,7 +271,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	@Override
 	public void move(@NotNull String name, @NotNull String target) throws IOException {
 		checkStarted();
-		moveImpl(singletonMap(name, target));
+		moveImpl(Map.of(name, target));
 	}
 
 	@Override
@@ -286,7 +284,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	@Override
 	public Map<String, FileMetadata> list(@NotNull String glob) throws IOException {
 		checkStarted();
-		if (glob.isEmpty()) return emptyMap();
+		if (glob.isEmpty()) return Map.of();
 
 		String subdir = extractSubDir(glob);
 		Path subdirectory = resolve(subdir);

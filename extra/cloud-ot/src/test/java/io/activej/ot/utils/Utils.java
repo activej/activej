@@ -22,7 +22,7 @@ import static io.activej.common.Utils.difference;
 import static io.activej.common.Utils.first;
 import static io.activej.ot.TransformResult.*;
 import static java.util.Arrays.asList;
-import static java.util.Collections.*;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
@@ -162,13 +162,13 @@ public class Utils {
 				graph.keySet());
 		HashMap<K, Long> levels = new HashMap<>();
 		for (K head : heads) {
-			calcLevels(head, levels, id -> graph.getOrDefault(id, emptyMap()).keySet());
+			calcLevels(head, levels, id -> graph.getOrDefault(id, Map.of()).keySet());
 		}
 		if (withRoots) {
 			if (roots.size() == 1) {
-				graph.put(first(roots), emptyMap()); // true root
+				graph.put(first(roots), Map.of()); // true root
 			} else {
-				roots.forEach(root -> graph.put(root, singletonMap((K) INVALID_KEY, emptyList()))); // intermediate node
+				roots.forEach(root -> graph.put(root, Map.of((K) INVALID_KEY, emptyList()))); // intermediate node
 			}
 		}
 		return graph.entrySet()

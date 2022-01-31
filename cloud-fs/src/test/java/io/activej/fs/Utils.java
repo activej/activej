@@ -19,7 +19,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
-import static io.activej.common.Utils.mapOf;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -29,7 +28,7 @@ import static org.junit.Assert.*;
 public final class Utils {
 
 	public static void assertBatchException(@NotNull Exception e, String name, Class<? extends FsScalarException> exceptionClass) {
-		assertBatchException(e, mapOf(name, exceptionClass));
+        assertBatchException(e, Map.of(name, exceptionClass));
 	}
 
 	public static void assertBatchException(@NotNull Exception e, Map<String, Class<? extends FsScalarException>> exceptionClasses) {

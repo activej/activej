@@ -4,7 +4,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -57,7 +60,7 @@ public class AnnotatedTypes {
 	public static Map<TypeVariable<?>, AnnotatedType> getTypeBindings(AnnotatedType type) {
 		Class<?> typeClazz = getRawType(type);
 		AnnotatedType[] typeArguments = getTypeArguments(type);
-		if (typeArguments.length == 0) return Collections.emptyMap();
+		if (typeArguments.length == 0) return Map.of();
 		Map<TypeVariable<?>, AnnotatedType> map = new LinkedHashMap<>();
 		TypeVariable<?>[] typeVariables = typeClazz.getTypeParameters();
 		for (int i = 0; i < typeVariables.length; i++) {

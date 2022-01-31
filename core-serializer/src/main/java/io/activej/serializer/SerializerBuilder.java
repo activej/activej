@@ -276,7 +276,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 
 	@SuppressWarnings("ForLoopReplaceableByForEach")
 	private <A extends Annotation> boolean hasAnnotation(Class<A> type, Annotation[] annotations) {
-		Map<Class<? extends Annotation>, Function<? extends Annotation, ? extends Annotation>> aliasesMap = annotationAliases.getOrDefault(type, emptyMap());
+		Map<Class<? extends Annotation>, Function<? extends Annotation, ? extends Annotation>> aliasesMap = annotationAliases.getOrDefault(type, Map.of());
 		for (int i = 0; i < annotations.length; i++) {
 			Class<? extends Annotation> annotationType = annotations[i].annotationType();
 			if (annotationType == type || aliasesMap.containsKey(annotationType)) {

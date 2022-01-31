@@ -56,7 +56,6 @@ import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
@@ -78,7 +77,7 @@ public final class ReportingTest extends CubeTestBase {
 			new SimpleEntry<>("site", ofString())));
 
 	private static final Map<String, FieldType> DIMENSIONS_DATE_AGGREGATION =
-			singletonMap("date", ofLocalDate(LocalDate.parse("2000-01-01")));
+			Map.of("date", ofLocalDate(LocalDate.parse("2000-01-01")));
 
 	private static final Map<String, FieldType> DIMENSIONS_ADVERTISERS_AGGREGATION = entriesToMap(Stream.of(
 			new SimpleEntry<>("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
@@ -115,7 +114,7 @@ public final class ReportingTest extends CubeTestBase {
 
 		@Override
 		public Map<String, Class<?>> getAttributeTypes() {
-			return singletonMap("name", String.class);
+			return Map.of("name", String.class);
 		}
 
 		@Override

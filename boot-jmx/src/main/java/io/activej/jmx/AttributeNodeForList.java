@@ -89,7 +89,7 @@ final class AttributeNodeForList extends AbstractAttributeNodeForLeaf {
 
 	@Override
 	public Map<String, OpenType<?>> getOpenTypes() {
-		return Collections.singletonMap(name, arrayType);
+		return Map.of(name, arrayType);
 	}
 
 	@Override

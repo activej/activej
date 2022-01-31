@@ -30,7 +30,6 @@ import java.util.Properties;
 import java.util.function.Function;
 
 import static io.activej.common.Checks.checkState;
-import static java.util.Collections.emptyMap;
 
 /**
  * A class for initializing runtime constants
@@ -98,7 +97,7 @@ public final class ApplicationSettings {
 
 		firstLookupDone = true;
 		//noinspection unchecked
-		T customSetting = (T) customSettings.getOrDefault(type, emptyMap()).get(name);
+		T customSetting = (T) customSettings.getOrDefault(type, Map.of()).get(name);
 		if (customSetting != null) {
 			return customSetting;
 		}

@@ -32,7 +32,6 @@ import java.util.Objects;
 
 import static io.activej.common.Checks.checkArgument;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.toList;
 
 @SuppressWarnings("rawtypes")
@@ -52,7 +51,7 @@ final class AttributeNodeForSimpleType extends AbstractAttributeNodeForLeaf {
 
 	@Override
 	public Map<String, OpenType<?>> getOpenTypes() {
-		return singletonMap(name, simpleTypeOf(type));
+		return Map.of(name, simpleTypeOf(type));
 	}
 
 	@Override

@@ -70,7 +70,7 @@ public final class JmxRegistry implements JmxRegistryMXBean, WithInitializer<Jmx
 	}
 
 	public static JmxRegistry create(MBeanServer mbs, DynamicMBeanFactory mbeanFactory) {
-		return new JmxRegistry(mbs, mbeanFactory, Collections.emptyMap());
+		return new JmxRegistry(mbs, mbeanFactory, Map.of());
 	}
 
 	public static JmxRegistry create(MBeanServer mbs,

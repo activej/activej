@@ -8,8 +8,8 @@ import io.activej.record.RecordScheme;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.Map;
 
-import static io.activej.common.Utils.mapOf;
 import static io.activej.cube.ReportType.DATA_WITH_TOTALS;
 import static io.activej.cube.Utils.fromJson;
 import static io.activej.cube.Utils.toJson;
@@ -20,10 +20,12 @@ public class QueryResultCodecTest {
 
 	@Test
 	public void test() throws MalformedDataException {
-		QueryResultCodec codec = QueryResultCodec.create(DefiningClassLoader.create(),
-				mapOf("campaign", int.class,
+        QueryResultCodec codec = QueryResultCodec.create(DefiningClassLoader.create(),
+                Map.of(
+						"campaign", int.class,
 						"site", String.class),
-				mapOf("impressions", long.class,
+                Map.of(
+						"impressions", long.class,
 						"clicks", long.class));
 
 		RecordScheme recordScheme = RecordScheme.create()
@@ -49,14 +51,15 @@ public class QueryResultCodecTest {
 		totals.set("clicks", 5555L);
 		totals.set("impressions", 66756L);
 
-		QueryResult queryResult = QueryResult.create(recordScheme,
+        QueryResult queryResult = QueryResult.create(recordScheme,
 				asList("campaign", "site"),
 				asList("clicks", "impressions"),
 				asList("campaign", "clicks"),
 				asList(record1, record2),
 				totals,
 				123,
-				mapOf("campaign", 555,
+                Map.of(
+						"campaign", 555,
 						"site", "filtered"),
 				DATA_WITH_TOTALS
 		);

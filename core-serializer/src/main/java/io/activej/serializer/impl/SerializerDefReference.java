@@ -30,7 +30,6 @@ import java.util.function.UnaryOperator;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.impl.SerializerExpressions.*;
-import static java.util.Collections.singletonMap;
 
 public final class SerializerDefReference extends AbstractSerializerDef implements SerializerDef {
 	public static final ThreadLocal<IdentityHashMap<Object, Integer>> MAP_ENCODE = ThreadLocal.withInitial(IdentityHashMap::new);
@@ -59,13 +58,13 @@ public final class SerializerDefReference extends AbstractSerializerDef implemen
 
 	@Override
 	public Map<Object, Expression> getEncoderFinalizer() {
-		return singletonMap(SerializerDefReference.class,
+		return Map.of(SerializerDefReference.class,
 				call(cast(call(staticField(SerializerDefReference.class, "MAP_ENCODE"), "get"), IdentityHashMap.class), "clear"));
 	}
 
 	@Override
 	public Map<Object, Expression> getDecoderFinalizer() {
-		return singletonMap(SerializerDefReference.class,
+		return Map.of(SerializerDefReference.class,
 				call(cast(call(staticField(SerializerDefReference.class, "MAP_DECODE"), "get"), HashMap.class), "clear"));
 	}
 

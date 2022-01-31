@@ -16,6 +16,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -27,7 +28,6 @@ import static io.activej.aggregation.util.Utils.*;
 import static io.activej.common.Utils.keysToMap;
 import static io.activej.promise.TestUtils.await;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonMap;
 import static org.junit.Assert.assertEquals;
 
 @SuppressWarnings({"Duplicates", "unchecked", "ArraysAsListWithZeroOrOneArgument", "rawtypes"})
@@ -87,7 +87,7 @@ public class AggregationGroupReducerTest {
 				asList("word"), classLoader);
 
 		Aggregate<InvertedIndexRecord, Object> aggregate = createPreaggregator(structure, inputClass, aggregationClass,
-				singletonMap("word", "word"), singletonMap("documents", "documentId"), classLoader);
+				Map.of("word", "word"), Map.of("documents", "documentId"), classLoader);
 
 		int aggregationChunkSize = 2;
 

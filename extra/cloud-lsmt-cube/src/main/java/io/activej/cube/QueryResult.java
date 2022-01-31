@@ -61,7 +61,7 @@ public final class QueryResult implements WithInitializer<QueryResult> {
 	public static QueryResult createForMetadata(RecordScheme recordScheme, List<String> attributes,
 			List<String> measures) {
 		return create(recordScheme, attributes, measures, Collections.emptyList(), Collections.emptyList(), recordScheme.record(), 0,
-				Collections.emptyMap(), ReportType.METADATA);
+				Map.of(), ReportType.METADATA);
 	}
 
 	public static QueryResult createForData(RecordScheme recordScheme, List<Record> records, List<String> attributes,

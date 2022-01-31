@@ -28,7 +28,8 @@ import java.util.stream.StreamSupport;
 
 import static java.lang.Math.max;
 import static java.util.Arrays.asList;
-import static java.util.Collections.*;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.*;
 
 /**
@@ -79,7 +80,7 @@ public class Utils {
 	}
 
 	public static <K, V> Map<K, V> nonNullElseEmpty(@Nullable Map<K, V> map) {
-		return nonNullElse(map, emptyMap());
+		return nonNullElse(map, Map.of());
 	}
 
 	public static <T, E extends Throwable> @NotNull T nonNullOrException(@Nullable T value, Supplier<@NotNull E> exceptionSupplier) throws E {
@@ -329,117 +330,6 @@ public class Utils {
 				return next;
 			}
 		};
-	}
-
-	/**
-	 * Returns an empty {@link Map}
-	 * <p>
-	 * No guarantee on a mutability of a resulting map is made,
-	 * so map should be considered unmodifiable
-	 * <p>
-	 * This is a simple alternative to Java 9's {@code Map#of} method
-	 */
-	public static <K, V> Map<K, V> mapOf() {
-		return new LinkedHashMap<>();
-	}
-
-	/**
-	 * Returns a {@link Map} of provided key and value
-	 * <p>
-	 * No guarantee on a mutability of a resulting map is made,
-	 * so map should be considered unmodifiable
-	 * <p>
-	 * This is a simple alternative to Java 9's {@code Map#of} method
-	 */
-	public static <K, V> Map<K, V> mapOf(K key1, V value1) {
-		Map<K, V> map = new LinkedHashMap<>();
-		map.put(key1, value1);
-		return map;
-	}
-
-	/**
-	 * Returns a {@link Map} of provided keys and values
-	 * <p>
-	 * No guarantee on a mutability of a resulting map is made,
-	 * so map should be considered unmodifiable
-	 * <p>
-	 * This is a simple alternative to Java 9's {@code Map#of} method
-	 */
-	public static <K, V> Map<K, V> mapOf(K key1, V value1, K key2, V value2) {
-		Map<K, V> map = new LinkedHashMap<>();
-		map.put(key1, value1);
-		map.put(key2, value2);
-		return map;
-	}
-
-	/**
-	 * Returns a {@link Map} of provided keys and values
-	 * <p>
-	 * No guarantee on a mutability of a resulting map is made,
-	 * so map should be considered unmodifiable
-	 * <p>
-	 * This is a simple alternative to Java 9's {@code Map#of} method
-	 */
-	public static <K, V> Map<K, V> mapOf(K key1, V value1, K key2, V value2, K key3, V value3) {
-		Map<K, V> map = new LinkedHashMap<>();
-		map.put(key1, value1);
-		map.put(key2, value2);
-		map.put(key3, value3);
-		return map;
-	}
-
-	/**
-	 * Returns a {@link Map} of provided keys and values
-	 * <p>
-	 * No guarantee on a mutability of a resulting map is made,
-	 * so map should be considered unmodifiable
-	 * <p>
-	 * This is a simple alternative to Java 9's {@code Map#of} method
-	 */
-	public static <K, V> Map<K, V> mapOf(K key1, V value1, K key2, V value2, K key3, V value3, K key4, V value4) {
-		Map<K, V> map = new LinkedHashMap<>();
-		map.put(key1, value1);
-		map.put(key2, value2);
-		map.put(key3, value3);
-		map.put(key4, value4);
-		return map;
-	}
-
-	/**
-	 * Returns a {@link Map} of provided keys and values
-	 * <p>
-	 * No guarantee on a mutability of a resulting map is made,
-	 * so map should be considered unmodifiable
-	 * <p>
-	 * This is a simple alternative to Java 9's {@code Map#of} method
-	 */
-	public static <K, V> Map<K, V> mapOf(K key1, V value1, K key2, V value2, K key3, V value3, K key4, V value4, K key5, V value5) {
-		Map<K, V> map = new LinkedHashMap<>();
-		map.put(key1, value1);
-		map.put(key2, value2);
-		map.put(key3, value3);
-		map.put(key4, value4);
-		map.put(key5, value5);
-		return map;
-	}
-
-	/**
-	 * Returns a {@link Map} of provided keys and values
-	 * <p>
-	 * No guarantee on a mutability of a resulting map is made,
-	 * so map should be considered unmodifiable
-	 * <p>
-	 * This is a simple alternative to Java 9's {@code Map#of} method
-	 */
-	public static <K, V> Map<K, V> mapOf(K key1, V value1, K key2, V value2, K key3, V value3, K key4, V value4, K key5, V value5, K key6, V value6) {
-		Map<K, V> map = new LinkedHashMap<>();
-		map.put(key1, value1);
-		map.put(key2, value2);
-		map.put(key3, value3);
-		map.put(key4, value4);
-		map.put(key5, value5);
-		map.put(key6, value6);
-		return map;
 	}
 
 	public static boolean isBijection(Map<?, ?> map) {

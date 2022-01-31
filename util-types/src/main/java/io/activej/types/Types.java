@@ -12,7 +12,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import static io.activej.types.IsAssignableUtils.isAssignable;
-import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.joining;
 
 /**
@@ -94,7 +93,7 @@ public class Types {
 	 */
 	public static Map<TypeVariable<?>, Type> getTypeBindings(Type type) {
 		Type[] typeArguments = getActualTypeArguments(type);
-		if (typeArguments.length == 0) return emptyMap();
+		if (typeArguments.length == 0) return Map.of();
 		TypeVariable<?>[] typeVariables = getRawType(type).getTypeParameters();
 		Map<TypeVariable<?>, Type> map = new HashMap<>();
 		for (int i = 0; i < typeVariables.length; i++) {
