@@ -15,7 +15,6 @@ import org.junit.Test;
 import java.util.*;
 
 import static io.activej.common.Utils.last;
-import static io.activej.common.Utils.setOf;
 import static io.activej.ot.OTAlgorithms.*;
 import static io.activej.ot.utils.Utils.add;
 import static io.activej.promise.TestUtils.await;
@@ -98,7 +97,7 @@ public class OTAlgorithmsTest {
 			g.add(6, 7, add(1));
 		});
 
-		Map<Integer, List<TestOp>> result = await(reduceEdges(REPOSITORY, TEST_OP, setOf(5, 7), 0, DiffsReducer.toList()));
+		Map<Integer, List<TestOp>> result = await(reduceEdges(REPOSITORY, TEST_OP, Set.of(5, 7), 0, DiffsReducer.toList()));
 
 		assertEquals(1, applyToState(result.get(5)));
 		assertEquals(5, applyToState(result.get(7)));
@@ -115,7 +114,7 @@ public class OTAlgorithmsTest {
 			g.add(2, 5, add(-1));
 		});
 
-		Map<Integer, List<TestOp>> result = await(reduceEdges(REPOSITORY, TEST_OP, setOf(3, 4, 5), 0, DiffsReducer.toList()));
+		Map<Integer, List<TestOp>> result = await(reduceEdges(REPOSITORY, TEST_OP, Set.of(3, 4, 5), 0, DiffsReducer.toList()));
 
 		assertEquals(2, applyToState(result.get(3)));
 		assertEquals(0, applyToState(result.get(4)));

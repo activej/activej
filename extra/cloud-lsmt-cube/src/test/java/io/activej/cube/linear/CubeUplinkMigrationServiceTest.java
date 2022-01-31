@@ -27,6 +27,7 @@ import org.junit.Test;
 
 import javax.sql.DataSource;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -111,14 +112,8 @@ public final class CubeUplinkMigrationServiceTest {
 						singletonList(
 								CubeDiff.of(
 										mapOf(
-												"campaign", AggregationDiff.of(setOf(
-														AggregationChunk.create(1L, asList("clicks", "impressions"), PrimaryKey.ofArray(12), PrimaryKey.ofArray(34), 10),
-														AggregationChunk.create(2L, singletonList("impressions"), PrimaryKey.ofArray(123), PrimaryKey.ofArray(345), 20)
-												)),
-												"advertiser-campaign", AggregationDiff.of(setOf(
-														AggregationChunk.create(3L, asList("clicks", "impressions", "revenue"), PrimaryKey.ofArray(15, 654), PrimaryKey.ofArray(35, 76763), 1234),
-														AggregationChunk.create(4L, singletonList("conversions"), PrimaryKey.ofArray(12, 23), PrimaryKey.ofArray(124, 543), 22)
-												))
+												"campaign", AggregationDiff.of(Set.of(AggregationChunk.create(1L, asList("clicks", "impressions"), PrimaryKey.ofArray(12), PrimaryKey.ofArray(34), 10), AggregationChunk.create(2L, singletonList("impressions"), PrimaryKey.ofArray(123), PrimaryKey.ofArray(345), 20))),
+												"advertiser-campaign", AggregationDiff.of(Set.of(AggregationChunk.create(3L, asList("clicks", "impressions", "revenue"), PrimaryKey.ofArray(15, 654), PrimaryKey.ofArray(35, 76763), 1234), AggregationChunk.create(4L, singletonList("conversions"), PrimaryKey.ofArray(12, 23), PrimaryKey.ofArray(124, 543), 22)))
 										)
 								)
 						)
@@ -139,15 +134,9 @@ public final class CubeUplinkMigrationServiceTest {
 								CubeDiff.of(
 										mapOf(
 												"campaign", AggregationDiff.of(
-														setOf(
-																AggregationChunk.create(5L, singletonList("clicks"), PrimaryKey.ofArray(12453), PrimaryKey.ofArray(12453121), 23523),
-																AggregationChunk.create(6L, asList("impressions", "clicks", "conversions", "revenue"), PrimaryKey.ofArray(1113), PrimaryKey.ofArray(34512412), 52350)
-														),
-														setOf(AggregationChunk.create(1L, asList("clicks", "impressions"), PrimaryKey.ofArray(12), PrimaryKey.ofArray(34), 10))),
-												"advertiser-campaign", AggregationDiff.of(setOf(
-														AggregationChunk.create(7L, asList("clicks", "revenue"), PrimaryKey.ofArray(1125, 53), PrimaryKey.ofArray(1422142, 653), 122134),
-														AggregationChunk.create(8L, asList("conversions", "impressions"), PrimaryKey.ofArray(44, 52), PrimaryKey.ofArray(124124, 122), 65472)
-												))
+														Set.of(AggregationChunk.create(5L, singletonList("clicks"), PrimaryKey.ofArray(12453), PrimaryKey.ofArray(12453121), 23523), AggregationChunk.create(6L, asList("impressions", "clicks", "conversions", "revenue"), PrimaryKey.ofArray(1113), PrimaryKey.ofArray(34512412), 52350)),
+														Set.of(AggregationChunk.create(1L, asList("clicks", "impressions"), PrimaryKey.ofArray(12), PrimaryKey.ofArray(34), 10))),
+												"advertiser-campaign", AggregationDiff.of(Set.of(AggregationChunk.create(7L, asList("clicks", "revenue"), PrimaryKey.ofArray(1125, 53), PrimaryKey.ofArray(1422142, 653), 122134), AggregationChunk.create(8L, asList("conversions", "impressions"), PrimaryKey.ofArray(44, 52), PrimaryKey.ofArray(124124, 122), 65472)))
 										)
 								)
 						)

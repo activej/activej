@@ -43,7 +43,6 @@ import java.util.concurrent.TimeUnit;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.Utils.first;
-import static io.activej.common.Utils.setOf;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.fs.LocalActiveFs.DEFAULT_TEMP_DIR;
 import static io.activej.promise.TestUtils.await;
@@ -205,12 +204,12 @@ public final class TestClusterDeadPartitionCheck {
 
 		setAliveNodes(0, 1, 2, 6, 8, 9);
 		await(fs.ping());
-		assertEquals(setOf(0, 1, 2, 6, 8, 9), partitions.getAlivePartitions().keySet());
+		assertEquals(Set.of(0, 1, 2, 6, 8, 9), partitions.getAlivePartitions().keySet());
 	}
 
 	@Test
 	public void testServersFailOnStreamingUpload() {
-		Set<Integer> toBeAlive = setOf(1, 3);
+		Set<Integer> toBeAlive = Set.of(1, 3);
 		String filename = "test";
 		Exception exception = awaitException(fs.upload(filename)
 				.whenComplete(TestUtils.assertCompleteFn($ -> assertEquals(CLIENT_SERVER_PAIRS, partitions.getAlivePartitions().size())))

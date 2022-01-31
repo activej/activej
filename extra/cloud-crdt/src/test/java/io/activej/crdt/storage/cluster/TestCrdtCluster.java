@@ -23,7 +23,6 @@ import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.*;
 
-import static io.activej.common.Utils.setOf;
 import static io.activej.crdt.function.CrdtFunction.ignoringTimestamp;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
@@ -152,8 +151,8 @@ public final class TestCrdtCluster {
 						.streamTo(StreamConsumer.ofConsumer(localStorage::put)))
 				.whenComplete(() -> servers.forEach(AbstractServer::close)));
 
-		assertEquals(setOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), localStorage.get(key1));
-		assertEquals(setOf(0, 1, 2, 3, 4), localStorage.get(key2));
-		assertEquals(setOf(123), localStorage.get(key3));
+		assertEquals(Set.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), localStorage.get(key1));
+		assertEquals(Set.of(0, 1, 2, 3, 4), localStorage.get(key2));
+		assertEquals(Set.of(123), localStorage.get(key3));
 	}
 }

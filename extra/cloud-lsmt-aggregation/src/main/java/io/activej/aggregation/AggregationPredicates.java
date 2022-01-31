@@ -27,7 +27,8 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.Utils.*;
+import static io.activej.common.Utils.first;
+import static io.activej.common.Utils.mapOf;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
@@ -624,7 +625,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return setOf(key);
+			return Set.of(key);
 		}
 
 		@Override
@@ -691,7 +692,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return setOf(key);
+			return Set.of(key);
 		}
 
 		@Override
@@ -759,7 +760,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return setOf(key);
+			return Set.of(key);
 		}
 
 		@Override
@@ -823,7 +824,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return setOf(key);
+			return Set.of(key);
 		}
 
 		@Override
@@ -886,7 +887,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return setOf(key);
+			return Set.of(key);
 		}
 
 		@Override
@@ -949,7 +950,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return setOf(key);
+			return Set.of(key);
 		}
 
 		@Override
@@ -1006,7 +1007,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return setOf(key);
+			return Set.of(key);
 		}
 
 		@Override
@@ -1070,7 +1071,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return setOf(key);
+			return Set.of(key);
 		}
 
 		@Override
@@ -1141,7 +1142,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return setOf(key);
+			return Set.of(key);
 		}
 
 		@Override
@@ -1215,7 +1216,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return setOf(key);
+			return Set.of(key);
 		}
 
 		@Override

@@ -36,17 +36,15 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.AbstractMap.SimpleEntry;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static io.activej.aggregation.AggregationPredicates.not;
 import static io.activej.aggregation.AggregationPredicates.*;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.*;
-import static io.activej.common.Utils.*;
+import static io.activej.common.Utils.concat;
+import static io.activej.common.Utils.entriesToMap;
 import static io.activej.cube.ComputedMeasures.*;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.CubeQuery.Ordering.asc;
@@ -387,8 +385,8 @@ public final class ReportingTest extends CubeTestBase {
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(2, records.size());
-		assertEquals(setOf("date"), new HashSet<>(queryResult.getAttributes()));
-		assertEquals(setOf("impressions", "clicks", "ctr", "revenue"), new HashSet<>(queryResult.getMeasures()));
+		assertEquals(Set.of("date"), new HashSet<>(queryResult.getAttributes()));
+		assertEquals(Set.of("impressions", "clicks", "ctr", "revenue"), new HashSet<>(queryResult.getMeasures()));
 		assertEquals(LocalDate.parse("2000-01-03"), records.get(0).get("date"));
 		assertEquals(5, (long) records.get(0).get("clicks"));
 		assertEquals(65, (long) records.get(0).get("impressions"));
@@ -402,7 +400,7 @@ public final class ReportingTest extends CubeTestBase {
 		assertEquals(38, (long) totals.get("clicks"));
 		assertEquals(500, (long) totals.get("impressions"));
 		assertEquals(38.0 / 500.0 * 100.0, totals.get("ctr"), DELTA);
-		assertEquals(setOf("date"), new HashSet<>(queryResult.getSortedBy()));
+		assertEquals(Set.of("date"), new HashSet<>(queryResult.getSortedBy()));
 	}
 
 	@Test
@@ -418,8 +416,8 @@ public final class ReportingTest extends CubeTestBase {
 
 		List<Record> records1 = queryResult1.getRecords();
 		assertEquals(2, records1.size());
-		assertEquals(setOf("date"), new HashSet<>(queryResult1.getAttributes()));
-		assertEquals(setOf("impressions", "clicks", "ctr", "revenue"), new HashSet<>(queryResult1.getMeasures()));
+		assertEquals(Set.of("date"), new HashSet<>(queryResult1.getAttributes()));
+		assertEquals(Set.of("impressions", "clicks", "ctr", "revenue"), new HashSet<>(queryResult1.getMeasures()));
 		assertEquals(LocalDate.parse("2000-01-03"), records1.get(0).get("date"));
 		assertEquals(5, (long) records1.get(0).get("clicks"));
 		assertEquals(65, (long) records1.get(0).get("impressions"));
@@ -433,7 +431,7 @@ public final class ReportingTest extends CubeTestBase {
 		assertEquals(38, (long) totals1.get("clicks"));
 		assertEquals(500, (long) totals1.get("impressions"));
 		assertEquals(38.0 / 500.0 * 100.0, totals1.get("ctr"), DELTA);
-		assertEquals(setOf("date"), new HashSet<>(queryResult1.getSortedBy()));
+		assertEquals(Set.of("date"), new HashSet<>(queryResult1.getSortedBy()));
 
 		startHttpServer();
 		QueryResult queryResult2 = await(cubeHttpClient.query(query));
@@ -470,8 +468,8 @@ public final class ReportingTest extends CubeTestBase {
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(2, records.size());
-		assertEquals(setOf("date"), new HashSet<>(queryResult.getAttributes()));
-		assertEquals(setOf("impressions", "clicks", "ctr", "revenue"), new HashSet<>(queryResult.getMeasures()));
+		assertEquals(Set.of("date"), new HashSet<>(queryResult.getAttributes()));
+		assertEquals(Set.of("impressions", "clicks", "ctr", "revenue"), new HashSet<>(queryResult.getMeasures()));
 		assertEquals(LocalDate.parse("2000-01-03"), records.get(0).get("date"));
 		assertEquals(5, (long) records.get(0).get("clicks"));
 		assertEquals(65, (long) records.get(0).get("impressions"));
@@ -485,7 +483,7 @@ public final class ReportingTest extends CubeTestBase {
 		assertEquals(38, (long) totals.get("clicks"));
 		assertEquals(500, (long) totals.get("impressions"));
 		assertEquals(38.0 / 500.0 * 100.0, totals.get("ctr"), DELTA);
-		assertEquals(setOf("date"), new HashSet<>(queryResult.getSortedBy()));
+		assertEquals(Set.of("date"), new HashSet<>(queryResult.getSortedBy()));
 	}
 
 	@Test
@@ -504,8 +502,8 @@ public final class ReportingTest extends CubeTestBase {
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(2, records.size());
-		assertEquals(setOf("date"), new HashSet<>(queryResult.getAttributes()));
-		assertEquals(setOf("impressions", "clicks", "ctr", "revenue"), new HashSet<>(queryResult.getMeasures()));
+		assertEquals(Set.of("date"), new HashSet<>(queryResult.getAttributes()));
+		assertEquals(Set.of("impressions", "clicks", "ctr", "revenue"), new HashSet<>(queryResult.getMeasures()));
 		assertEquals(LocalDate.parse("2000-01-03"), records.get(0).get("date"));
 		assertEquals(2, (long) records.get(0).get("clicks"));
 		assertEquals(15, (long) records.get(0).get("impressions"));
@@ -519,7 +517,7 @@ public final class ReportingTest extends CubeTestBase {
 		assertEquals(35, (long) totals.get("impressions"));
 		assertEquals(5, (long) totals.get("clicks"));
 		assertEquals(5.0 / 35.0 * 100.0, totals.get("ctr"), DELTA);
-		assertEquals(setOf("ctr"), new HashSet<>(queryResult.getSortedBy()));
+		assertEquals(Set.of("ctr"), new HashSet<>(queryResult.getSortedBy()));
 	}
 
 	@Test
@@ -565,8 +563,8 @@ public final class ReportingTest extends CubeTestBase {
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(3, records.size());
-		assertEquals(setOf("date", "advertiser", "advertiser.name"), new HashSet<>(queryResult.getAttributes()));
-		assertEquals(setOf("impressions"), new HashSet<>(queryResult.getMeasures()));
+		assertEquals(Set.of("date", "advertiser", "advertiser.name"), new HashSet<>(queryResult.getAttributes()));
+		assertEquals(Set.of("impressions"), new HashSet<>(queryResult.getMeasures()));
 
 		assertEquals(LocalDate.parse("2000-01-02"), records.get(0).get("date"));
 		assertEquals(2, (int) records.get(0).get("advertiser"));
@@ -586,7 +584,7 @@ public final class ReportingTest extends CubeTestBase {
 		Record totals = queryResult.getTotals();
 		// totals evaluated before applying having predicate
 		assertEquals(245, (long) totals.get("impressions"));
-		assertEquals(setOf("date", "advertiser.name"), new HashSet<>(queryResult.getSortedBy()));
+		assertEquals(Set.of("date", "advertiser.name"), new HashSet<>(queryResult.getSortedBy()));
 	}
 
 	@Test
@@ -670,7 +668,7 @@ public final class ReportingTest extends CubeTestBase {
 		QueryResult queryResult = await(cubeHttpClient.query(query));
 
 		List<Record> records = queryResult.getRecords();
-		assertEquals(setOf("eventCount", "minRevenue", "maxRevenue", "uniqueUserIdsCount", "uniqueUserPercent", "clicks"),
+		assertEquals(Set.of("eventCount", "minRevenue", "maxRevenue", "uniqueUserIdsCount", "uniqueUserPercent", "clicks"),
 				new HashSet<>(queryResult.getMeasures()));
 		assertEquals(3, records.size());
 

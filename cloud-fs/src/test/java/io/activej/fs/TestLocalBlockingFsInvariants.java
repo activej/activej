@@ -12,13 +12,11 @@ import org.junit.runners.Parameterized;
 
 import java.io.*;
 import java.nio.file.*;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.UnaryOperator;
 
-import static io.activej.common.Utils.*;
+import static io.activej.common.Utils.first;
+import static io.activej.common.Utils.mapOf;
 import static io.activej.fs.Utils.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.CREATE;
@@ -397,7 +395,7 @@ public final class TestLocalBlockingFsInvariants {
 
 	@Test
 	public void deleteAllMultipleFiles() {
-		both(client -> client.deleteAll(setOf("file", "file2")));
+		both(client -> client.deleteAll(Set.of("file", "file2")));
 
 		bothPaths(path -> assertThat(listPaths(path), not(contains(Paths.get("file"), Paths.get("file2")))));
 		assertFilesAreSame(firstPath, secondPath);
@@ -415,7 +413,7 @@ public final class TestLocalBlockingFsInvariants {
 	@Test
 	public void deleteAllMultipleDirectories() {
 		List<Path> before = listPaths(firstPath);
-		both(client -> assertException(DirectoryNotEmptyException.class, () -> client.deleteAll(setOf("directory", "directory2"))));
+		both(client -> assertException(DirectoryNotEmptyException.class, () -> client.deleteAll(Set.of("directory", "directory2"))));
 
 		assertEquals(before, listPaths(firstPath));
 		assertFilesAreSame(firstPath, secondPath);
@@ -423,13 +421,13 @@ public final class TestLocalBlockingFsInvariants {
 
 	@Test
 	public void deleteAllFilesAndDirectories() {
-		both(client -> assertException(DirectoryNotEmptyException.class, () -> client.deleteAll(setOf("file", "directory"))));
+		both(client -> assertException(DirectoryNotEmptyException.class, () -> client.deleteAll(Set.of("file", "directory"))));
 		assertFilesAreSame(firstPath, secondPath);
 	}
 
 	@Test
 	public void deleteAllWithNonExisting() {
-		both(client -> client.deleteAll(setOf("file", "nonexistent")));
+		both(client -> client.deleteAll(Set.of("file", "nonexistent")));
 
 		bothPaths(path -> assertThat(listPaths(path), not(contains(Paths.get("file")))));
 		assertFilesAreSame(firstPath, secondPath);
@@ -437,7 +435,7 @@ public final class TestLocalBlockingFsInvariants {
 
 	@Test
 	public void deleteAllWithRoot() {
-		both(client -> client.deleteAll(setOf("file", "")));
+		both(client -> client.deleteAll(Set.of("file", "")));
 		assertFilesAreSame(firstPath, secondPath);
 	}
 
@@ -445,7 +443,7 @@ public final class TestLocalBlockingFsInvariants {
 	public void deleteAllWithFileOutsideRoot() {
 		both(client -> {
 			try {
-				client.deleteAll(setOf("file", ".."));
+				client.deleteAll(Set.of("file", ".."));
 				fail();
 			} catch (FileSystemException e) {
 				assertThat(e.getMessage(), containsString("Path '..' is forbidden"));
@@ -457,10 +455,10 @@ public final class TestLocalBlockingFsInvariants {
 	@Test
 	public void deleteAllIsIdempotent() {
 		both(client -> {
-			client.deleteAll(setOf("file", "file2"));
-			client.deleteAll(setOf("file", "file2"));
-			client.deleteAll(setOf("file", "file2"));
-			client.deleteAll(setOf("file", "file2"));
+			client.deleteAll(Set.of("file", "file2"));
+			client.deleteAll(Set.of("file", "file2"));
+			client.deleteAll(Set.of("file", "file2"));
+			client.deleteAll(Set.of("file", "file2"));
 		});
 
 		bothPaths(path -> assertThat(listPaths(path), not(contains(Paths.get("file"), Paths.get("file2")))));
@@ -876,16 +874,16 @@ public final class TestLocalBlockingFsInvariants {
 	@Test
 	public void infoAllMultiple() {
 		both(client -> {
-			Map<String, FileMetadata> result = client.infoAll(setOf("file", "file2"));
+			Map<String, FileMetadata> result = client.infoAll(Set.of("file", "file2"));
 			assertEquals(2, result.size());
-			assertEquals(setOf("file", "file2"), result.keySet());
+			assertEquals(Set.of("file", "file2"), result.keySet());
 		});
 	}
 
 	@Test
 	public void infoAllMultipleWithMissing() {
 		both(client -> {
-			Map<String, FileMetadata> result = client.infoAll(setOf("file", "nonexistent"));
+			Map<String, FileMetadata> result = client.infoAll(Set.of("file", "nonexistent"));
 			assertEquals(1, result.size());
 			assertEquals("file", first(result.keySet()));
 		});
@@ -894,7 +892,7 @@ public final class TestLocalBlockingFsInvariants {
 	@Test
 	public void infoAllWithAllMissing() {
 		both(client -> {
-			Map<String, FileMetadata> result = client.infoAll(setOf("nonexistent", "nonexistent2"));
+			Map<String, FileMetadata> result = client.infoAll(Set.of("nonexistent", "nonexistent2"));
 			assertEquals(0, result.size());
 		});
 	}

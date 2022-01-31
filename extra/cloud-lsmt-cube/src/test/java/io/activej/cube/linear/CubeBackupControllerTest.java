@@ -43,7 +43,6 @@ import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.Utils.mapOf;
-import static io.activej.common.Utils.setOf;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.test.TestUtils.dataSource;
@@ -121,8 +120,8 @@ public class CubeBackupControllerTest {
 								"b", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("b", 1123), 1000))
 						),
 						CubeDiff.of(mapOf(
-								"pub", AggregationDiff.of(setOf(chunk(12), chunk(123), chunk(500))),
-								"adv", AggregationDiff.of(setOf(chunk(10), chunk(1), chunk(44)))
+								"pub", AggregationDiff.of(Set.of(chunk(12), chunk(123), chunk(500))),
+								"adv", AggregationDiff.of(Set.of(chunk(10), chunk(1), chunk(44)))
 						))
 				));
 		await(() -> uplink.push(new UplinkProtoCommit(0, diffs1)));
@@ -135,8 +134,8 @@ public class CubeBackupControllerTest {
 								"c", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("c", 555), 12))
 						),
 						CubeDiff.of(mapOf(
-								"pub", AggregationDiff.of(setOf(chunk(43)), setOf(chunk(500))),
-								"adv", AggregationDiff.of(setOf(chunk(512), chunk(786)), setOf(chunk(44)))
+								"pub", AggregationDiff.of(Set.of(chunk(43)), Set.of(chunk(500))),
+								"adv", AggregationDiff.of(Set.of(chunk(512), chunk(786)), Set.of(chunk(44)))
 						))
 				));
 		await(() -> uplink.push(new UplinkProtoCommit(1, diffs2)));
@@ -148,7 +147,7 @@ public class CubeBackupControllerTest {
 								"d", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("d", 541), 5235))
 						),
 						CubeDiff.of(mapOf(
-								"pub", AggregationDiff.of(setOf(chunk(4566)), setOf(chunk(12)))
+								"pub", AggregationDiff.of(Set.of(chunk(4566)), Set.of(chunk(12)))
 						))
 				));
 		await(() -> uplink.push(new UplinkProtoCommit(2, diffs3)));
@@ -164,20 +163,20 @@ public class CubeBackupControllerTest {
 		assertChunkIds(0, emptySet());
 		assertPositions(0, emptyMap());
 
-		assertChunkIds(1, setOf(1L, 10L, 12L, 44L, 123L, 500L));
+		assertChunkIds(1, Set.of(1L, 10L, 12L, 44L, 123L, 500L));
 		assertPositions(1, mapOf(
 				"a", LogPosition.create(new LogFile("a", 12), 100),
 				"b", LogPosition.create(new LogFile("b", 1123), 1000)
 		));
 
-		assertChunkIds(2, setOf(1L, 10L, 12L, 43L, 123L, 512L, 786L));
+		assertChunkIds(2, Set.of(1L, 10L, 12L, 43L, 123L, 512L, 786L));
 		assertPositions(2, mapOf(
 				"a", LogPosition.create(new LogFile("a", 12), 100),
 				"b", LogPosition.create(new LogFile("b2", 9), 2341),
 				"c", LogPosition.create(new LogFile("c", 555), 12)
 		));
 
-		assertChunkIds(3, setOf(1L, 10L, 43L, 123L, 512L, 786L, 4566L));
+		assertChunkIds(3, Set.of(1L, 10L, 43L, 123L, 512L, 786L, 4566L));
 		assertPositions(3, mapOf(
 				"a", LogPosition.create(new LogFile("a", 12), 100),
 				"b", LogPosition.create(new LogFile("b2", 9), 2341),

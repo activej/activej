@@ -21,7 +21,6 @@ import org.junit.Test;
 import java.util.*;
 import java.util.stream.IntStream;
 
-import static io.activej.common.Utils.setOf;
 import static io.activej.promise.TestUtils.await;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
@@ -71,7 +70,7 @@ public final class ApiTest {
 
 	@Test
 	public void infoAll() {
-		Set<String> names = setOf("file1.txt", "file2.txt", "file3.txt", "file4.txt");
+		Set<String> names = Set.of("file1.txt", "file2.txt", "file3.txt", "file4.txt");
 		doTest(client.infoAll(names), names);
 	}
 
@@ -82,7 +81,7 @@ public final class ApiTest {
 
 	@Test
 	public void deleteAll() {
-		Set<String> toDelete = setOf("file1.txt", "file2.txt", "file3.txt");
+		Set<String> toDelete = Set.of("file1.txt", "file2.txt", "file3.txt");
 		doTest(client.deleteAll(toDelete), toDelete);
 	}
 

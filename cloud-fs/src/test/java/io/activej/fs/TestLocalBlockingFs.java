@@ -19,7 +19,6 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static io.activej.common.Utils.last;
-import static io.activej.common.Utils.setOf;
 import static io.activej.fs.LocalBlockingFs.DEFAULT_TEMP_DIR;
 import static io.activej.fs.Utils.asString;
 import static io.activej.fs.Utils.createEmptyDirectories;
@@ -239,13 +238,7 @@ public final class TestLocalBlockingFs {
 
 	@Test
 	public void testListFiles() throws IOException {
-		Set<String> expected = setOf(
-				"1/a.txt",
-				"1/b.txt",
-				"2/3/a.txt",
-				"2/b/d.txt",
-				"2/b/e.txt"
-		);
+		Set<String> expected = Set.of("1/a.txt", "1/b.txt", "2/3/a.txt", "2/b/d.txt", "2/b/e.txt");
 
 		Map<String, FileMetadata> actual = client.list("**");
 
@@ -254,11 +247,7 @@ public final class TestLocalBlockingFs {
 
 	@Test
 	public void testGlobListFiles() throws IOException {
-		Set<String> expected = setOf(
-				"2/3/a.txt",
-				"2/b/d.txt",
-				"2/b/e.txt"
-		);
+		Set<String> expected = Set.of("2/3/a.txt", "2/b/d.txt", "2/b/e.txt");
 
 		Map<String, FileMetadata> actual = client.list("2/*/*.txt");
 

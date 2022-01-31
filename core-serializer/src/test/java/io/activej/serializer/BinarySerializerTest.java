@@ -17,7 +17,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.common.Utils.*;
+import static io.activej.common.Utils.listOf;
+import static io.activej.common.Utils.mapOf;
 import static io.activej.serializer.BinarySerializerTest.TestEnum.*;
 import static io.activej.serializer.StringFormat.*;
 import static io.activej.serializer.Utils.*;
@@ -1487,8 +1488,8 @@ public class BinarySerializerTest {
 
 	@Test
 	public void testEnumSet() {
-		Set<TestEnum> set = setOf(ONE, TWO);
-		Set<TestEnum> setNullable = setOf(TWO, THREE);
+		Set<TestEnum> set = Set.of(ONE, TWO);
+		Set<TestEnum> setNullable = Set.of(TWO, THREE);
 		Set<TestEnum> setEmpty = emptySet();
 		Set<TestEnum> setEmptyNullable = emptySet();
 		Set<TestEnum> setSingle = singleton(ONE);
@@ -2280,12 +2281,12 @@ public class BinarySerializerTest {
 
 	@Test
 	public void testSets() {
-		Set<String> regular = setOf("a", "b", "c");
-		Set<String> regularNullable = setOf("d", "e", "f");
-		Set<String> regularEmpty = setOf();
-		Set<String> regularEmptyNullable = setOf();
-		Set<String> regularSingle = setOf("g");
-		Set<String> regularSingleNullable = setOf("h");
+		Set<String> regular = Set.of("a", "b", "c");
+		Set<String> regularNullable = Set.of("d", "e", "f");
+		Set<String> regularEmpty = Set.of();
+		Set<String> regularEmptyNullable = Set.of();
+		Set<String> regularSingle = Set.of("g");
+		Set<String> regularSingleNullable = Set.of("h");
 
 		HashSet<String> hash = new HashSet<>();
 		hash.add("i");

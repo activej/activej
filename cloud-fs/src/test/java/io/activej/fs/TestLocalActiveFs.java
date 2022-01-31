@@ -34,7 +34,6 @@ import java.util.stream.Stream;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.Utils.last;
-import static io.activej.common.Utils.setOf;
 import static io.activej.fs.LocalActiveFs.DEFAULT_TEMP_DIR;
 import static io.activej.fs.Utils.createEmptyDirectories;
 import static io.activej.promise.TestUtils.await;
@@ -268,13 +267,7 @@ public final class TestLocalActiveFs {
 
 	@Test
 	public void testListFiles() {
-		Set<String> expected = setOf(
-				"1/a.txt",
-				"1/b.txt",
-				"2/3/a.txt",
-				"2/b/d.txt",
-				"2/b/e.txt"
-		);
+		Set<String> expected = Set.of("1/a.txt", "1/b.txt", "2/3/a.txt", "2/b/d.txt", "2/b/e.txt");
 
 		Map<String, FileMetadata> actual = await(client.list("**"));
 
@@ -283,11 +276,7 @@ public final class TestLocalActiveFs {
 
 	@Test
 	public void testGlobListFiles() {
-		Set<String> expected = setOf(
-				"2/3/a.txt",
-				"2/b/d.txt",
-				"2/b/e.txt"
-		);
+		Set<String> expected = Set.of("2/3/a.txt", "2/b/d.txt", "2/b/e.txt");
 
 		Map<String, FileMetadata> actual = await(client.list("2/*/*.txt"));
 

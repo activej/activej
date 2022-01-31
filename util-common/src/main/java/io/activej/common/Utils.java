@@ -155,28 +155,6 @@ public class Utils {
 	}
 
 	/**
-	 * Returns a {@link Set} of a provided element
-	 *
-	 * @see #setOf(Object[])
-	 */
-	public static <T> Set<T> setOf(T item) {
-		return singleton(item);
-	}
-
-	/**
-	 * Returns a {@link Set} of provided elements
-	 * <p>
-	 * No guarantee on a mutability of a resulting set is made,
-	 * so set should be considered unmodifiable
-	 * <p>
-	 * This is a simple alternative to Java 9's {@code Set#of} method
-	 */
-	@SafeVarargs
-	public static <T> Set<T> setOf(T... items) {
-		return new LinkedHashSet<>(asList(items));
-	}
-
-	/**
 	 * Returns a difference of two sets
 	 * <p>
 	 * No guarantee on a mutability of a resulting set is made,

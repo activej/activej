@@ -11,7 +11,6 @@ import java.net.InetSocketAddress;
 import java.util.*;
 
 import static io.activej.common.Utils.mapOf;
-import static io.activej.common.Utils.setOf;
 import static io.activej.launchers.crdt.ConfigConverters.*;
 import static org.junit.Assert.*;
 
@@ -78,7 +77,7 @@ public class ConfigConverterTest {
 
 		RendezvousPartitionGroup<PartitionId> partitionGroup = converter.get(config);
 
-		Set<PartitionId> expectedPartitionIds = setOf(
+		Set<PartitionId> expectedPartitionIds = Set.of(
 				PartitionId.of("testA",
 						new InetSocketAddress("101.101.101.101", 9000),
 						new InetSocketAddress("101.101.101.101", 9001)
@@ -130,7 +129,7 @@ public class ConfigConverterTest {
 		RendezvousPartitionScheme<PartitionId> partitionScheme = converter.get(config);
 		Set<PartitionId> partitions = partitionScheme.getPartitions();
 
-		Set<PartitionId> expectedPartitionIds = setOf(
+		Set<PartitionId> expectedPartitionIds = Set.of(
 				PartitionId.of("testA",
 						new InetSocketAddress("101.101.101.101", 9000),
 						new InetSocketAddress("101.101.101.101", 9001)

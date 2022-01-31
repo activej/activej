@@ -195,7 +195,7 @@ public class ClusterRpcStrategyTest {
 				.withPartitionGroup(RendezvousPartitionGroup.create(PARTITION_ADDRESS_MAP_2.keySet(), 2, true, true))
 				.withRpcProvider(p -> server(partition2Address.get(p)));
 
-		List<String> alivePartitions = new ArrayList<>(difference(partitionIds, setOf("two", "seven", "nine")));
+		List<String> alivePartitions = new ArrayList<>(difference(partitionIds, Set.of("two", "seven", "nine")));
 
 		Map<InetSocketAddress, String> address2Partitions = partition2Address.entrySet()
 				.stream()

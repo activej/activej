@@ -10,7 +10,6 @@ import org.junit.Test;
 
 import java.util.Set;
 
-import static io.activej.common.Utils.setOf;
 import static io.activej.ot.OTAlgorithms.loadGraph;
 import static io.activej.ot.OTCommit.ofRoot;
 import static io.activej.ot.utils.Utils.add;
@@ -48,8 +47,8 @@ public class OTLoadedGraphTest {
 		Set<Integer> heads = await(repository.getHeads());
 		OTLoadedGraph<Integer, TestOp> graph = await(loadGraph(repository, SYSTEM, heads));
 
-		assertEquals(setOf(7), graph.getTips());
-		assertEquals(setOf(0), graph.getRoots());
+		assertEquals(Set.of(7), graph.getTips());
+		assertEquals(Set.of(0), graph.getRoots());
 	}
 
 	@Test
@@ -68,8 +67,8 @@ public class OTLoadedGraphTest {
 		Set<Integer> heads = await(repository.getHeads());
 		OTLoadedGraph<Integer, TestOp> graph = await(loadGraph(repository, SYSTEM, heads));
 
-		assertEquals(setOf(4, 7), graph.getTips());
-		assertEquals(setOf(0), graph.getRoots());
+		assertEquals(Set.of(4, 7), graph.getTips());
+		assertEquals(Set.of(0), graph.getRoots());
 	}
 
 	@Test
@@ -87,13 +86,13 @@ public class OTLoadedGraphTest {
 		Set<Integer> heads = await(repository.getHeads());
 		OTLoadedGraph<Integer, TestOp> graph = await(loadGraph(repository, SYSTEM, heads));
 
-		assertEquals(setOf(7), graph.getTips());
+		assertEquals(Set.of(7), graph.getTips());
 
 		repository.addGraph(g -> g.add(7, 8, add(8)));
 
 		heads = await(repository.getHeads());
 		await(loadGraph(repository, SYSTEM, heads, graph));
 
-		assertEquals(setOf(8), graph.getTips());
+		assertEquals(Set.of(8), graph.getTips());
 	}
 }

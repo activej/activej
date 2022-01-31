@@ -33,7 +33,6 @@ import static io.activej.aggregation.fieldtype.FieldTypes.ofDouble;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.aggregation.measure.Measures.*;
 import static io.activej.common.Utils.first;
-import static io.activej.common.Utils.setOf;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.promise.TestUtils.await;
 import static java.util.Collections.singleton;
@@ -149,10 +148,10 @@ public class AddedMeasuresTest {
 				.map(AggregationChunk::getChunkId)
 				.collect(toSet());
 		assertEquals(singleton(5L), addedIds);
-		assertEquals(setOf(1L, 2L, 3L, 4L), removedIds);
+		assertEquals(Set.of(1L, 2L, 3L, 4L), removedIds);
 
 		List<String> addedMeasures = first(aggregationDiff.getAddedChunks()).getMeasures();
-		Set<String> expectedMeasures = setOf("eventCount", "sumRevenue", "minRevenue", "maxRevenue", "uniqueUserIds", "estimatedUniqueUserIdCount");
+		Set<String> expectedMeasures = Set.of("eventCount", "sumRevenue", "minRevenue", "maxRevenue", "uniqueUserIds", "estimatedUniqueUserIdCount");
 		assertEquals(expectedMeasures, new HashSet<>(addedMeasures));
 	}
 

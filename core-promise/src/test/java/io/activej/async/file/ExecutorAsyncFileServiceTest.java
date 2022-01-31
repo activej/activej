@@ -10,11 +10,11 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static io.activej.common.Utils.setOf;
 import static io.activej.promise.TestUtils.await;
 import static java.nio.file.StandardOpenOption.READ;
 import static java.nio.file.StandardOpenOption.WRITE;
@@ -34,7 +34,7 @@ public final class ExecutorAsyncFileServiceTest {
 	@Test
 	public void testRead() throws IOException {
 		Path srcPath = Paths.get("test_data/test.txt");
-		FileChannel channel = FileChannel.open(srcPath, setOf(READ));
+		FileChannel channel = FileChannel.open(srcPath, Set.of(READ));
 
 		byte[] result = new byte[20];
 		await(Promises.all(IntStream.range(0, 100)
@@ -56,7 +56,7 @@ public final class ExecutorAsyncFileServiceTest {
 	@Test
 	public void testWrite() throws IOException {
 		Path srcPath = Paths.get("test_data/test.txt");
-		FileChannel channel = FileChannel.open(srcPath, setOf(READ, WRITE));
+		FileChannel channel = FileChannel.open(srcPath, Set.of(READ, WRITE));
 		byte[] array = "Hello world!!!!!".getBytes();
 
 		await(Promises.all(IntStream.range(0, 1000)

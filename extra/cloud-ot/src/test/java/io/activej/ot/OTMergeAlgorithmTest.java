@@ -13,7 +13,8 @@ import java.util.*;
 import java.util.function.Consumer;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Utils.*;
+import static io.activej.common.Utils.listOf;
+import static io.activej.common.Utils.nonNullElse;
 import static io.activej.ot.OTAlgorithms.loadForMerge;
 import static io.activej.ot.utils.Utils.add;
 import static io.activej.ot.utils.Utils.createTestOp;
@@ -81,7 +82,7 @@ public class OTMergeAlgorithmTest {
 	@Test
 	// Merge one node should return empty merge
 	public void test1() throws Exception {
-		doTest(setOf("A", "B"), g -> {
+		doTest(Set.of("A", "B"), g -> {
 			g.add("A", "B", add(1));
 		}, (graph, merge) -> {
 			assertEquals(listOf(add(1)), merge.get("A"));
@@ -92,7 +93,7 @@ public class OTMergeAlgorithmTest {
 	@Test
 	// Merge already merged line
 	public void test2() throws Exception {
-		doTest(setOf("A", "B"), g -> {
+		doTest(Set.of("A", "B"), g -> {
 			g.add("A", "T", add(10));
 			g.add("T", "B", add(1));
 		}, (graph, merge) -> {
@@ -104,7 +105,7 @@ public class OTMergeAlgorithmTest {
 	@Test
 	// Merge V form tree
 	public void test3() throws Exception {
-		doTest(setOf("D", "E"), g -> {
+		doTest(Set.of("D", "E"), g -> {
 			g.add("A", "B", add(1));
 			g.add("A", "C", add(100));
 			g.add("B", "D", add(10));
@@ -118,7 +119,7 @@ public class OTMergeAlgorithmTest {
 	@Test
 	// Merge A, B nodes and D, E subnodes
 	public void test4() throws Exception {
-		doTest(setOf("A", "B", "D", "E"), g -> {
+		doTest(Set.of("A", "B", "D", "E"), g -> {
 			g.add("A", "C", add(1));
 			g.add("B", "C", add(3));
 			g.add("B", "D", add(-5));
@@ -134,7 +135,7 @@ public class OTMergeAlgorithmTest {
 	@Test
 	// Merge triple form tree
 	public void test5() throws Exception {
-		doTest(setOf("A", "B", "C"), g -> {
+		doTest(Set.of("A", "B", "C"), g -> {
 			g.add("*", "A", add(1));
 			g.add("*", "B", add(10));
 			g.add("*", "C", add(100));
@@ -148,7 +149,7 @@ public class OTMergeAlgorithmTest {
 	@Test
 	// Merge W form graph
 	public void test6() throws Exception {
-		doTest(setOf("C", "D", "E"), g -> {
+		doTest(Set.of("C", "D", "E"), g -> {
 			g.add("A", "C", add(3));
 			g.add("A", "D", add(10));
 			g.add("B", "D", add(1));
@@ -163,7 +164,7 @@ public class OTMergeAlgorithmTest {
 	@Test
 	// Merge equal merges of two nodes
 	public void test7() throws Exception {
-		doTest(setOf("C", "D"), g -> {
+		doTest(Set.of("C", "D"), g -> {
 			g.add("A", "C", add(2));
 			g.add("A", "D", add(2));
 			g.add("B", "C", add(1));
@@ -177,7 +178,7 @@ public class OTMergeAlgorithmTest {
 	@Test
 	// Merge three equal merges on three nodes
 	public void test7a() throws Exception {
-		doTest(setOf("D", "E", "F"), g -> {
+		doTest(Set.of("D", "E", "F"), g -> {
 			g.add("A", "D", add(5));
 			g.add("A", "E", add(5));
 			g.add("A", "F", add(5));
@@ -197,7 +198,7 @@ public class OTMergeAlgorithmTest {
 	@Test
 	// Merge full merge and submerge
 	public void test8() throws Exception {
-		doTest(setOf("E", "F"), g -> {
+		doTest(Set.of("E", "F"), g -> {
 			g.add("A", "C", add(10));
 			g.add("A", "D", add(100));
 			g.add("B", "E", add(10));
@@ -214,7 +215,7 @@ public class OTMergeAlgorithmTest {
 	@Test
 	// Merge two submerges
 	public void test9() throws Exception {
-		doTest(setOf("G", "J"), g -> {
+		doTest(Set.of("G", "J"), g -> {
 			g.add("A", "C", add(1));
 			g.add("A", "D", add(10));
 			g.add("B", "E", add(100));
@@ -234,7 +235,7 @@ public class OTMergeAlgorithmTest {
 	@Test
 	// Merge having equal merges parents
 	public void test10() throws Exception {
-		doTest(setOf("E", "F", "G"), g -> {
+		doTest(Set.of("E", "F", "G"), g -> {
 			g.add("A", "C", add(3));
 			g.add("A", "D", add(3));
 			g.add("B", "C", add(2));
@@ -252,7 +253,7 @@ public class OTMergeAlgorithmTest {
 	@Test
 	// Merge having equal merges parents
 	public void test11() throws Exception {
-		doTest(setOf("I", "J"), g -> {
+		doTest(Set.of("I", "J"), g -> {
 			g.add("A", "C", add(1));
 			g.add("A", "D", add(10));
 			g.add("B", "E", add(100));
@@ -274,7 +275,7 @@ public class OTMergeAlgorithmTest {
 	@Test
 	// Merge of merges should check operations
 	public void test12() throws Exception {
-		doTest(setOf("F", "G"), g -> {
+		doTest(Set.of("F", "G"), g -> {
 			g.add("A", "D", add(1));
 			g.add("A", "B", add(100));
 			g.add("B", "C", add(2));
@@ -292,7 +293,7 @@ public class OTMergeAlgorithmTest {
 	@Test
 	// Should merge in different order
 	public void test13() throws Exception {
-		doTest(setOf("F", "C", "E"), g -> {
+		doTest(Set.of("F", "C", "E"), g -> {
 			g.add("A", "C", add(3));
 			g.add("A", "D", add(10));
 			g.add("B", "D", add(1));
@@ -307,7 +308,7 @@ public class OTMergeAlgorithmTest {
 
 	@Test
 	public void test14() throws Exception {
-		doTest(setOf("X", "Y", "Z"), g -> {
+		doTest(Set.of("X", "Y", "Z"), g -> {
 			g.add("A", "X", add(1));
 			g.add("A", "Z", add(2));
 			g.add("B", "X", add(1));
@@ -322,7 +323,7 @@ public class OTMergeAlgorithmTest {
 
 	@Test
 	public void test15() throws Exception {
-		doTest(setOf("X", "Z"), g -> {
+		doTest(Set.of("X", "Z"), g -> {
 			g.add("A", "U", add(10));
 			g.add("A", "Z", add(2));
 			g.add("B", "X", add(1));
@@ -337,7 +338,7 @@ public class OTMergeAlgorithmTest {
 
 	@Test
 	public void test16() throws Exception {
-		doTest(setOf("X", "Y"), g -> {
+		doTest(Set.of("X", "Y"), g -> {
 			g.add("A", "U", add(10));
 			g.add("A", "Y", add(2));
 			g.add("B", "X", add(1));

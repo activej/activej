@@ -44,7 +44,8 @@ import java.util.stream.Collector;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.Utils.*;
+import static io.activej.common.Utils.isBijection;
+import static io.activej.common.Utils.noMergeFunction;
 import static io.activej.common.function.BiConsumerEx.uncheckedOf;
 import static io.activej.fs.LocalFileUtils.*;
 import static java.nio.file.StandardOpenOption.*;
@@ -59,8 +60,8 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	public static final boolean DEFAULT_FSYNC_DIRECTORIES = ApplicationSettings.getBoolean(LocalBlockingFs.class, "fsyncDirectories", false);
 	public static final boolean DEFAULT_FSYNC_APPENDS = ApplicationSettings.getBoolean(LocalBlockingFs.class, "fsyncAppends", false);
 
-	private static final Set<StandardOpenOption> DEFAULT_APPEND_OPTIONS = setOf(WRITE);
-	private static final Set<StandardOpenOption> DEFAULT_APPEND_NEW_OPTIONS = setOf(WRITE, CREATE);
+	private static final Set<StandardOpenOption> DEFAULT_APPEND_OPTIONS = Set.of(WRITE);
+	private static final Set<StandardOpenOption> DEFAULT_APPEND_NEW_OPTIONS = Set.of(WRITE, CREATE);
 
 	private static final char SEPARATOR_CHAR = SEPARATOR.charAt(0);
 	private static final Function<String, String> toLocalName = File.separatorChar == SEPARATOR_CHAR ?

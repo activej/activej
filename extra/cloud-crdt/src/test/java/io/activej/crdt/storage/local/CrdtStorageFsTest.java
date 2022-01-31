@@ -76,29 +76,29 @@ public final class CrdtStorageFsTest {
 		long timestamp = Eventloop.getCurrentEventloop().currentTimeMillis();
 
 		List<CrdtData<String, Set<Integer>>> expected = Arrays.asList(
-				new CrdtData<>("12_test_1", timestamp, setOf(123, 124, 125, 2, 542)),
-				new CrdtData<>("12_test_2", timestamp, setOf(12, 13)),
-				new CrdtData<>("1_test_1", timestamp, setOf(1, 2, 3)),
-				new CrdtData<>("1_test_2", timestamp, setOf(2, 3, 7)),
-				new CrdtData<>("1_test_3", timestamp, setOf(78, 2, 3)),
-				new CrdtData<>("2_test_1", timestamp, setOf(1, 2, 3)),
-				new CrdtData<>("2_test_2", timestamp, setOf(2, 3, 4)),
-				new CrdtData<>("2_test_3", timestamp, setOf(0, 1, 2))
+				new CrdtData<>("12_test_1", timestamp, Set.of(123, 124, 125, 2, 542)),
+				new CrdtData<>("12_test_2", timestamp, Set.of(12, 13)),
+				new CrdtData<>("1_test_1", timestamp, Set.of(1, 2, 3)),
+				new CrdtData<>("1_test_2", timestamp, Set.of(2, 3, 7)),
+				new CrdtData<>("1_test_3", timestamp, Set.of(78, 2, 3)),
+				new CrdtData<>("2_test_1", timestamp, Set.of(1, 2, 3)),
+				new CrdtData<>("2_test_2", timestamp, Set.of(2, 3, 4)),
+				new CrdtData<>("2_test_3", timestamp, Set.of(0, 1, 2))
 		);
 
 		await(StreamSupplier.ofStream(Stream.of(
-						new CrdtData<>("1_test_1", timestamp, setOf(1, 2, 3)),
-						new CrdtData<>("1_test_2", timestamp, setOf(2, 3, 7)),
-						new CrdtData<>("1_test_3", timestamp, setOf(78, 2, 3)),
-						new CrdtData<>("12_test_1", timestamp, setOf(123, 124, 125)),
-						new CrdtData<>("12_test_2", timestamp, setOf(12))).sorted())
+						new CrdtData<>("1_test_1", timestamp, Set.of(1, 2, 3)),
+						new CrdtData<>("1_test_2", timestamp, Set.of(2, 3, 7)),
+						new CrdtData<>("1_test_3", timestamp, Set.of(78, 2, 3)),
+						new CrdtData<>("12_test_1", timestamp, Set.of(123, 124, 125)),
+						new CrdtData<>("12_test_2", timestamp, Set.of(12))).sorted())
 				.streamTo(client.upload()));
 		await(StreamSupplier.ofStream(Stream.of(
-						new CrdtData<>("2_test_1", timestamp, setOf(1, 2, 3)),
-						new CrdtData<>("2_test_2", timestamp, setOf(2, 3, 4)),
-						new CrdtData<>("2_test_3", timestamp, setOf(0, 1, 2)),
-						new CrdtData<>("12_test_1", timestamp, setOf(123, 542, 125, 2)),
-						new CrdtData<>("12_test_2", timestamp, setOf(12, 13))).sorted())
+						new CrdtData<>("2_test_1", timestamp, Set.of(1, 2, 3)),
+						new CrdtData<>("2_test_2", timestamp, Set.of(2, 3, 4)),
+						new CrdtData<>("2_test_3", timestamp, Set.of(0, 1, 2)),
+						new CrdtData<>("12_test_1", timestamp, Set.of(123, 542, 125, 2)),
+						new CrdtData<>("12_test_2", timestamp, Set.of(12, 13))).sorted())
 				.streamTo(client.upload()));
 
 		Map<String, FileMetadata> filesBefore = await(fsClient.list("**"));
@@ -122,26 +122,26 @@ public final class CrdtStorageFsTest {
 	@Test
 	public void testTombstoneConsolidation() {
 		List<CrdtData<String, Set<Integer>>> expected = Arrays.asList(
-				new CrdtData<>("a", 100, setOf(1, 2, 3)),
-				new CrdtData<>("b", 300, setOf(5, 6, 7)),
-				new CrdtData<>("c", 400, setOf(78, 2, 3))
+				new CrdtData<>("a", 100, Set.of(1, 2, 3)),
+				new CrdtData<>("b", 300, Set.of(5, 6, 7)),
+				new CrdtData<>("c", 400, Set.of(78, 2, 3))
 		);
 
 		await(StreamSupplier.of(
-				new CrdtData<>("a", 100, setOf(1, 2, 3)),
-				new CrdtData<>("b", 200, setOf(2, 3, 7))
+				new CrdtData<>("a", 100, Set.of(1, 2, 3)),
+				new CrdtData<>("b", 200, Set.of(2, 3, 7))
 		).streamTo(client.upload()));
 		await(StreamSupplier.of(
-				new CrdtData<>("b", 300, setOf(5, 6, 7)),
-				new CrdtData<>("c", 400, setOf(78, 2, 3))
+				new CrdtData<>("b", 300, Set.of(5, 6, 7)),
+				new CrdtData<>("c", 400, Set.of(78, 2, 3))
 		).streamTo(client.upload()));
 		await(StreamSupplier.of(
-				new CrdtData<>("c", 100, setOf(123, 124, 125, 3)),
-				new CrdtData<>("d", 500, setOf(12))
+				new CrdtData<>("c", 100, Set.of(123, 124, 125, 3)),
+				new CrdtData<>("d", 500, Set.of(12))
 		).streamTo(client.upload()));
 		await(StreamSupplier.of(
-				new CrdtData<>("d", 600, setOf(56, 76)),
-				new CrdtData<>("e", 300, setOf(124))
+				new CrdtData<>("d", 600, Set.of(56, 76)),
+				new CrdtData<>("e", 300, Set.of(124))
 		).streamTo(client.upload()));
 
 		await(StreamSupplier.ofStream(Stream.of(new CrdtTombstone<>("a", 50))).streamTo(client.remove()));
@@ -172,7 +172,7 @@ public final class CrdtStorageFsTest {
 	@Test
 	public void pickFilesForConsolidation() {
 		testPickFilesForConsolidation(
-				setOf("a", "c", "e"),
+				Set.of("a", "c", "e"),
 				mapOf(
 						"a", 12,
 						"b", 120,
@@ -181,14 +181,14 @@ public final class CrdtStorageFsTest {
 						"e", 97)
 		);
 		testPickFilesForConsolidation(
-				setOf("a", "c"),
+				Set.of("a", "c"),
 				mapOf(
 						"a", 120,
 						"b", 12,
 						"c", 530
 				));
 		testPickFilesForConsolidation(
-				setOf("b", "d"),
+				Set.of("b", "d"),
 				mapOf(
 						"a", 120,
 						"b", 12,

@@ -27,14 +27,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
-import static io.activej.common.Utils.*;
+import static io.activej.common.Utils.first;
+import static io.activej.common.Utils.mapOf;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.fs.Utils.*;
 import static io.activej.promise.TestUtils.await;
@@ -396,7 +394,7 @@ public final class TestLocalActiveFsInvariants {
 
 	@Test
 	public void deleteAllMultipleFiles() {
-		both(client -> await(client.deleteAll(setOf("file", "file2"))));
+		both(client -> await(client.deleteAll(Set.of("file", "file2"))));
 
 		bothPaths(path -> assertThat(listPaths(path), not(contains(Paths.get("file"), Paths.get("file2")))));
 		assertFilesAreSame(firstPath, secondPath);
@@ -418,8 +416,11 @@ public final class TestLocalActiveFsInvariants {
 	public void deleteAllMultipleDirectories() {
 		List<Path> before = listPaths(firstPath);
 		both(client -> {
-			Exception exception = awaitException(client.deleteAll(setOf("directory", "directory2")));
-			assertBatchException(exception, mapOf("directory", IsADirectoryException.class));
+			Exception exception = awaitException(client.deleteAll(Set.of("directory", "directory2")));
+			assertBatchException(exception, 1, 2, (name, e) -> {
+				assertTrue(name.startsWith("directory"));
+				assertThat(e, instanceOf(IsADirectoryException.class));
+			});
 		});
 
 		assertEquals(before, listPaths(firstPath));
@@ -429,15 +430,15 @@ public final class TestLocalActiveFsInvariants {
 	@Test
 	public void deleteAllFilesAndDirectories() {
 		both(client -> {
-			Exception exception = awaitException(client.deleteAll(setOf("file", "directory")));
+			Exception exception = awaitException(client.deleteAll(Set.of("file", "directory")));
 			assertBatchException(exception, mapOf("directory", IsADirectoryException.class));
 		});
-		assertFilesAreSame(firstPath, secondPath);
+		assertFilesAreSame(firstPath, secondPath, Set.of("file"));
 	}
 
 	@Test
 	public void deleteAllWithNonExisting() {
-		both(client -> await(client.deleteAll(setOf("file", "nonexistent"))));
+		both(client -> await(client.deleteAll(Set.of("file", "nonexistent"))));
 
 		bothPaths(path -> assertThat(listPaths(path), not(contains(Paths.get("file")))));
 		assertFilesAreSame(firstPath, secondPath);
@@ -445,26 +446,26 @@ public final class TestLocalActiveFsInvariants {
 
 	@Test
 	public void deleteAllWithRoot() {
-		both(client -> await(client.deleteAll(setOf("file", ""))));
+		both(client -> await(client.deleteAll(Set.of("file", ""))));
 		assertFilesAreSame(firstPath, secondPath);
 	}
 
 	@Test
 	public void deleteAllWithFileOutsideRoot() {
 		both(client -> {
-			Exception exception = awaitException(client.deleteAll(setOf("file", "..")));
+			Exception exception = awaitException(client.deleteAll(Set.of("file", "..")));
 			assertBatchException(exception, mapOf("..", ForbiddenPathException.class));
 		});
-		assertFilesAreSame(firstPath, secondPath);
+		assertFilesAreSame(firstPath, secondPath, Set.of("file"));
 	}
 
 	@Test
 	public void deleteAllIsIdempotent() {
 		both(client -> {
-			await(client.deleteAll(setOf("file", "file2")));
-			await(client.deleteAll(setOf("file", "file2")));
-			await(client.deleteAll(setOf("file", "file2")));
-			await(client.deleteAll(setOf("file", "file2")));
+			await(client.deleteAll(Set.of("file", "file2")));
+			await(client.deleteAll(Set.of("file", "file2")));
+			await(client.deleteAll(Set.of("file", "file2")));
+			await(client.deleteAll(Set.of("file", "file2")));
 		});
 
 		bothPaths(path -> assertThat(listPaths(path), not(contains(Paths.get("file"), Paths.get("file2")))));
@@ -919,16 +920,16 @@ public final class TestLocalActiveFsInvariants {
 	@Test
 	public void infoAllMultiple() {
 		both(client -> {
-			Map<String, FileMetadata> result = await(client.infoAll(setOf("file", "file2")));
+			Map<String, FileMetadata> result = await(client.infoAll(Set.of("file", "file2")));
 			assertEquals(2, result.size());
-			assertEquals(setOf("file", "file2"), result.keySet());
+			assertEquals(Set.of("file", "file2"), result.keySet());
 		});
 	}
 
 	@Test
 	public void infoAllMultipleWithMissing() {
 		both(client -> {
-			Map<String, FileMetadata> result = await(client.infoAll(setOf("file", "nonexistent")));
+			Map<String, FileMetadata> result = await(client.infoAll(Set.of("file", "nonexistent")));
 			assertEquals(1, result.size());
 			assertEquals("file", first(result.keySet()));
 		});
@@ -937,7 +938,7 @@ public final class TestLocalActiveFsInvariants {
 	@Test
 	public void infoAllWithAllMissing() {
 		both(client -> {
-			Map<String, FileMetadata> result = await(client.infoAll(setOf("nonexistent", "nonexistent2")));
+			Map<String, FileMetadata> result = await(client.infoAll(Set.of("nonexistent", "nonexistent2")));
 			assertEquals(0, result.size());
 		});
 	}
