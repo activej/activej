@@ -775,6 +775,10 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 
 		SerializerDefClass serializer = SerializerDefClass.create(rawClass);
 		if (rawClass.getAnnotation(SerializeRecord.class) != null) {
+			if (!rawClass.isRecord()) {
+				throw new IllegalArgumentException("Non-record type '" + rawClass.getName() +
+						"' annotated with @SerializeRecord annotation");
+			}
 			scanRecord(ctx, serializer);
 		} else if (!rawClass.isInterface()) {
 			scanClass(ctx, serializer);
