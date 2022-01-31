@@ -66,7 +66,7 @@ public final class OTStateManager<K, D> implements EventloopService, WithInitial
 	private long originLevel;
 
 	private List<D> workingDiffs = new ArrayList<>();
-	private List<D> originDiffs = new ArrayList<>();
+	private List<D> originDiffs = List.of();
 
 	private @Nullable Object pendingProtoCommit;
 	private @Nullable List<D> pendingProtoCommitDiffs;
@@ -255,7 +255,7 @@ public final class OTStateManager<K, D> implements EventloopService, WithInitial
 
 		commitId = originCommitId;
 		level = originLevel;
-		originDiffs.clear();
+		originDiffs = List.of();
 	}
 
 	private @NotNull Promise<Void> commit() {
@@ -303,7 +303,7 @@ public final class OTStateManager<K, D> implements EventloopService, WithInitial
 	void resetOrigin() {
 		originCommitId = commitId;
 		originLevel = level;
-		originDiffs.clear();
+		originDiffs = List.of();
 	}
 
 	public void add(@NotNull D diff) {

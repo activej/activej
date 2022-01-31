@@ -22,7 +22,6 @@ import static io.activej.common.Utils.difference;
 import static io.activej.common.Utils.first;
 import static io.activej.ot.TransformResult.*;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
@@ -168,7 +167,7 @@ public class Utils {
 			if (roots.size() == 1) {
 				graph.put(first(roots), Map.of()); // true root
 			} else {
-				roots.forEach(root -> graph.put(root, Map.of((K) INVALID_KEY, emptyList()))); // intermediate node
+				roots.forEach(root -> graph.put(root, Map.of((K) INVALID_KEY, List.of()))); // intermediate node
 			}
 		}
 		return graph.entrySet()

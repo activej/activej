@@ -23,7 +23,6 @@ import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.node.NodeConsumerOfId;
 
-import java.util.Collections;
 import java.util.List;
 
 public final class DatasetConsumerOfId<T> extends Dataset<T> {
@@ -48,6 +47,6 @@ public final class DatasetConsumerOfId<T> extends Dataset<T> {
 			NodeConsumerOfId<T> node = new NodeConsumerOfId<>(index, id, i, streamIdsSize, streamId);
 			graph.addNode(partition, node);
 		}
-		return Collections.emptyList();
+		return List.of();
 	}
 }

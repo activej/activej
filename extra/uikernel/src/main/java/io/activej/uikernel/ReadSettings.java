@@ -77,7 +77,7 @@ public final class ReadSettings<K> {
 		if (fieldsParameter != null && !fieldsParameter.isEmpty()) {
 			fields = fromJson(gson, fieldsParameter, LIST_STRING_TYPE_TOKEN);
 		} else {
-			fields = Collections.emptyList();
+			fields = List.of();
 		}
 
 		String offsetParameter = request.getQueryParameter("offset");

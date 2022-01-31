@@ -20,7 +20,6 @@ import static io.activej.config.ConfigTestUtils.assertIllegalArgument;
 import static io.activej.config.ConfigTestUtils.assertNotPresent;
 import static io.activej.config.converter.ConfigConverters.*;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static org.junit.Assert.*;
 
 public class ConfigConvertersTest {
@@ -147,7 +146,7 @@ public class ConfigConvertersTest {
 		ConfigConverter<List<Integer>> listConverter = ConfigConverters.ofList(ConfigConverters.ofInteger(), ",");
 
 		assertEquals(asList(1, 5, 10), listConverter.get(Config.ofValue("1, 5,   10   ")));
-		assertEquals(emptyList(), listConverter.get(Config.ofValue("")));
+		assertEquals(List.of(), listConverter.get(Config.ofValue("")));
 		assertEquals(asList(1, 2, 3), listConverter.get(Config.EMPTY, asList(1, 2, 3)));
 		assertNotPresent(() -> listConverter.get(Config.EMPTY));
 	}

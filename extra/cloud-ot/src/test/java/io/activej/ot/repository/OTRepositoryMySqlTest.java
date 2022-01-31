@@ -34,7 +34,6 @@ import static io.activej.ot.utils.Utils.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.dataSource;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
@@ -305,7 +304,7 @@ public class OTRepositoryMySqlTest {
 					g.add(5, 6, add(1));
 					g.add(5, 7, add(1));
 				}))));
-		await(repository.saveSnapshot(1L, emptyList()));
+		await(repository.saveSnapshot(1L, List.of()));
 
 		List<TestOp> diffs = await(checkout(repository, SYSTEM, 5L));
 

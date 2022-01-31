@@ -20,7 +20,6 @@ import static io.activej.ot.utils.TestSetName.setName;
 import static io.activej.ot.utils.Utils.add;
 import static io.activej.ot.utils.Utils.set;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.*;
 
@@ -108,15 +107,15 @@ public final class MergedOTSystemTest {
 	@Test
 	public void testTransform() throws TransformException {
 		List<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> left = asList(
-				new Tuple3<>(asList(add(12), add(13), add(-2)), emptyList(), emptyList()),
-				new Tuple3<>(emptyList(), asList(set(0, 10), set(10, 14)), emptyList()),
-				new Tuple3<>(emptyList(), emptyList(), asList(setName("", "left1"), setName("left1", "left2"))),
+				new Tuple3<>(asList(add(12), add(13), add(-2)), List.of(), List.of()),
+				new Tuple3<>(List.of(), asList(set(0, 10), set(10, 14)), List.of()),
+				new Tuple3<>(List.of(), List.of(), asList(setName("", "left1"), setName("left1", "left2"))),
 				new Tuple3<>(asList(add(100), add(23)), asList(set(14, 50), set(50, 3)), asList(setName("left2", "left3"), setName("left3", "left4")))
 		);
 		List<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> right = asList(
-				new Tuple3<>(emptyList(), asList(set(0, 3), set(3, 13)), emptyList()),
-				new Tuple3<>(emptyList(), emptyList(), asList(setName("", "right1"), setName("right1", "right2"))),
-				new Tuple3<>(asList(add(-4), add(43)), emptyList(), emptyList()),
+				new Tuple3<>(List.of(), asList(set(0, 3), set(3, 13)), List.of()),
+				new Tuple3<>(List.of(), List.of(), asList(setName("", "right1"), setName("right1", "right2"))),
+				new Tuple3<>(asList(add(-4), add(43)), List.of(), List.of()),
 				new Tuple3<>(asList(add(1000), add(-123)), asList(set(13, 11), set(11, 22)), asList(setName("right2", "right3"), setName("right3", "right4")))
 		);
 
@@ -145,25 +144,25 @@ public final class MergedOTSystemTest {
 	@Test
 	public void testTransformWithEmptyDiffs() throws TransformException {
 		List<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> diffs = asList(
-				new Tuple3<>(asList(add(12), add(13), add(-2)), emptyList(), emptyList()),
-				new Tuple3<>(emptyList(), asList(set(0, 10), set(10, 14)), emptyList())
+				new Tuple3<>(asList(add(12), add(13), add(-2)), List.of(), List.of()),
+				new Tuple3<>(List.of(), asList(set(0, 10), set(10, 14)), List.of())
 		);
 
-		TransformResult<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> transform1 = MERGED.transform(diffs, emptyList());
+		TransformResult<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> transform1 = MERGED.transform(diffs, List.of());
 		assertTrue(transform1.left.isEmpty());
 
-		TransformResult<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> transform2 = MERGED.transform(emptyList(), emptyList());
+		TransformResult<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> transform2 = MERGED.transform(List.of(), List.of());
 		assertTrue(transform2.left.isEmpty());
 		assertTrue(transform2.right.isEmpty());
 	}
 
 	@Test
 	public void testSquashWithEmptyDiffs() {
-		List<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> squashed = MERGED.squash(emptyList());
+		List<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> squashed = MERGED.squash(List.of());
 		assertTrue(squashed.isEmpty());
 
 		List<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> diffs = singletonList(
-				new Tuple3<>(asList(add(12), add(13), add(-2)), emptyList(), emptyList())
+				new Tuple3<>(asList(add(12), add(13), add(-2)), List.of(), List.of())
 		);
 		List<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> inverted = MERGED.invert(diffs);
 
@@ -172,7 +171,7 @@ public final class MergedOTSystemTest {
 
 	@Test
 	public void testInvertWithEmptyDiffs() {
-		List<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> invert = MERGED.invert(emptyList());
+		List<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> invert = MERGED.invert(List.of());
 		assertTrue(invert.isEmpty());
 	}
 
@@ -219,9 +218,9 @@ public final class MergedOTSystemTest {
 
 	private static Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>> ops(@Nullable TestAdd add, @Nullable TestSet set,
 			@Nullable TestSetName setName) {
-		List<TestAdd> testAdds = add == null ? emptyList() : singletonList(add);
-		List<TestSet> testSets = set == null ? emptyList() : singletonList(set);
-		List<TestSetName> testSetNames = setName == null ? emptyList() : singletonList(setName);
+		List<TestAdd> testAdds = add == null ? List.of() : singletonList(add);
+		List<TestSet> testSets = set == null ? List.of() : singletonList(set);
+		List<TestSetName> testSetNames = setName == null ? List.of() : singletonList(setName);
 		return new Tuple3<>(testAdds, testSets, testSetNames);
 	}
 

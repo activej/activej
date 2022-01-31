@@ -54,7 +54,8 @@ import static java.lang.String.format;
 import static java.lang.System.identityHashCode;
 import static java.lang.reflect.Modifier.*;
 import static java.util.Arrays.asList;
-import static java.util.Collections.*;
+import static java.util.Collections.newSetFromMap;
+import static java.util.Collections.singletonList;
 import static java.util.Comparator.naturalOrder;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.groupingBy;
@@ -212,8 +213,8 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 				} else {
 					LinkedHashMap<Class<?>, SerializerDef> map = new LinkedHashMap<>();
 					LinkedHashSet<Class<?>> subclassesSet = new LinkedHashSet<>(asList(annotationClass.subclasses()));
-					subclassesSet.addAll(extraSubclassesMap.getOrDefault(rawClass, emptyList()));
-					subclassesSet.addAll(extraSubclassesMap.getOrDefault(annotationClass.subclassesId(), emptyList()));
+					subclassesSet.addAll(extraSubclassesMap.getOrDefault(rawClass, List.of()));
+					subclassesSet.addAll(extraSubclassesMap.getOrDefault(annotationClass.subclassesId(), List.of()));
 					for (Class<?> subclass : subclassesSet) {
 						map.put(subclass, ctx.scan(subclass));
 					}

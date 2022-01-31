@@ -22,7 +22,6 @@ import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
 import java.util.List;
 
 public final class ReadResponse<K, R extends AbstractRecord<K>> {
@@ -39,7 +38,7 @@ public final class ReadResponse<K, R extends AbstractRecord<K>> {
 	}
 
 	public static <K, R extends AbstractRecord<K>> ReadResponse<K, R> of(List<R> records, int count) {
-		return new ReadResponse<>(records, count, Collections.emptyList(), null);
+		return new ReadResponse<>(records, count, List.of(), null);
 	}
 
 	public static <K, R extends AbstractRecord<K>> ReadResponse<K, R> of(List<R> records, int count, List<R> extra) {

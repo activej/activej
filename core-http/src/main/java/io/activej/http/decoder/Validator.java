@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import static io.activej.common.Utils.concat;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 /**
@@ -63,7 +62,7 @@ public interface Validator<T> {
 	}
 
 	static <T> Validator<T> alwaysOk() {
-		return value -> emptyList();
+		return value -> List.of();
 	}
 
 	/**
@@ -103,7 +102,7 @@ public interface Validator<T> {
 	 */
 	static <T> Validator<T> of(Predicate<T> predicate, String template) {
 		return value -> predicate.test(value) ?
-				emptyList() :
+				List.of() :
 				singletonList(DecodeError.of(template, value));
 	}
 }

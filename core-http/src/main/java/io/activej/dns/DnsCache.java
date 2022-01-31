@@ -299,7 +299,7 @@ public final class DnsCache implements WithInitializer<DnsCache> {
 
 		Collection<InetAddress> getIps() {
 			if (result.response == null || result.response.getRecord() == null)
-				return Collections.emptyList();
+				return List.of();
 			return Arrays.asList(result.response.getRecord().getIps());
 		}
 
@@ -341,13 +341,13 @@ public final class DnsCache implements WithInitializer<DnsCache> {
 				.filter(e -> e.getKey().getDomainName().equalsIgnoreCase(domain))
 				.findFirst()
 				.map(e -> new RecordFormatter(e.getKey().getDomainName(), e.getValue()).formatMultiline())
-				.orElse(Collections.emptyList());
+				.orElse(List.of());
 	}
 
 	@JmxOperation
 	public List<String> getDomainRecords() {
 		if (cache.isEmpty())
-			return Collections.emptyList();
+			return List.of();
 
 		List<String> lines = new ArrayList<>(cache.size());
 		lines.add("DomainName;Status;IP;MinTtlSeconds;SecondsToSoftExpiration;SecondsToHardExpiration");

@@ -39,7 +39,6 @@ import static io.activej.codegen.DefiningClassLoader.createInstance;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.codegen.util.Utils.getStringSetting;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
@@ -159,7 +158,7 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 	 * @see #withConstructor(List, Expression)
 	 */
 	public ClassBuilder<T> withConstructor(Expression expression) {
-		return withConstructor(emptyList(), expression);
+		return withConstructor(List.of(), expression);
 	}
 
 	/**

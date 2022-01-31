@@ -21,7 +21,6 @@ import io.activej.common.initializer.WithInitializer;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -60,7 +59,7 @@ public final class QueryResult implements WithInitializer<QueryResult> {
 
 	public static QueryResult createForMetadata(RecordScheme recordScheme, List<String> attributes,
 			List<String> measures) {
-		return create(recordScheme, attributes, measures, Collections.emptyList(), Collections.emptyList(), recordScheme.record(), 0,
+		return create(recordScheme, attributes, measures, List.of(), List.of(), recordScheme.record(), 0,
 				Map.of(), ReportType.METADATA);
 	}
 

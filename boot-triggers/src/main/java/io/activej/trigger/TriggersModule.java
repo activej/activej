@@ -38,7 +38,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static io.activej.trigger.util.Utils.prettyPrintSimpleKeyName;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
@@ -175,7 +174,7 @@ public final class TriggersModule extends AbstractModule implements TriggersModu
 		}
 
 		for (KeyWithWorkerData keyWithWorkerData : triggersMap.keySet()) {
-			for (TriggerRegistryRecord registryRecord : triggersMap.getOrDefault(keyWithWorkerData, emptyList())) {
+			for (TriggerRegistryRecord registryRecord : triggersMap.getOrDefault(keyWithWorkerData, List.of())) {
 				triggers.addTrigger(registryRecord.severity, prettyPrintSimpleKeyName(keyWithWorkerData.getKey()), registryRecord.name, registryRecord.triggerFunction);
 			}
 		}

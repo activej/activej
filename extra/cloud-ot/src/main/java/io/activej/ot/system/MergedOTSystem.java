@@ -24,7 +24,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.function.Function;
 
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
@@ -135,7 +134,7 @@ public final class MergedOTSystem<D, D1, D2> implements OTSystem<D> {
 	@Override
 	public List<D> squash(List<? extends D> ops) {
 		if (ops.isEmpty()) {
-			return emptyList();
+			return List.of();
 		}
 		List<D1> squashed1 = otSystem1.squash(collect(ops, getter1));
 		List<D2> squashed2 = otSystem2.squash(collect(ops, getter2));
@@ -161,7 +160,7 @@ public final class MergedOTSystem<D, D1, D2> implements OTSystem<D> {
 	@Override
 	public <O extends D> List<D> invert(List<O> ops) {
 		if (ops.isEmpty()) {
-			return emptyList();
+			return List.of();
 		}
 		List<D1> inverted1 = otSystem1.invert(collect(ops, getter1));
 		List<D2> inverted2 = otSystem2.invert(collect(ops, getter2));
@@ -177,24 +176,24 @@ public final class MergedOTSystem<D, D1, D2> implements OTSystem<D> {
 
 	private static <D, D1, D2> @NotNull List<D> combineLists2(List<D1> list1, List<D2> list2, TupleConstructor2<List<D1>, List<D2>, D> constructor) {
 		return list1.isEmpty() && list2.isEmpty() ?
-				emptyList() :
+				List.of() :
 				singletonList(constructor.create(list1, list2));
 	}
 
 	private static <D, D1, D2, D3> @NotNull List<D> combineLists3(List<D1> list1, List<D2> list2, List<D3> list3, TupleConstructor3<List<D1>, List<D2>, List<D3>, D> constructor) {
 		return list1.isEmpty() && list2.isEmpty() && list3.isEmpty() ?
-				emptyList() :
+				List.of() :
 				singletonList(constructor.create(list1, list2, list3));
 	}
 
 	private static <D1, D2> Tuple2<List<D1>, List<D2>> extractTuple2(List<Tuple2<List<D1>, List<D2>>> tuples) {
 		assert tuples.size() < 2;
-		return tuples.isEmpty() ? new Tuple2<>(emptyList(), emptyList()) : tuples.get(0);
+		return tuples.isEmpty() ? new Tuple2<>(List.of(), List.of()) : tuples.get(0);
 	}
 
 	private static <D1, D2, D3> Tuple3<List<D1>, List<D2>, List<D3>> extractTuple3(List<Tuple3<List<D1>, List<D2>, List<D3>>> tuples) {
 		assert tuples.size() < 2;
-		return tuples.isEmpty() ? new Tuple3<>(emptyList(), emptyList(), emptyList()) : tuples.get(0);
+		return tuples.isEmpty() ? new Tuple3<>(List.of(), List.of(), List.of()) : tuples.get(0);
 	}
 
 }

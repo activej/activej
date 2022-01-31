@@ -376,7 +376,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 	}
 
 	private static <T> FunctionEx<List<Try<T>>, List<T>> filterErrorsFn() {
-		return filterErrorsFn(Collections::emptyList);
+		return filterErrorsFn(List::of);
 	}
 
 	private static <T> FunctionEx<List<Try<T>>, List<T>> filterErrorsFn(SupplierEx<List<T>> fallback) {

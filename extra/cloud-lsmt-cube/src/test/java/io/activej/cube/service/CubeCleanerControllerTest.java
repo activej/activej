@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -41,7 +42,6 @@ import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.dataSource;
-import static java.util.Collections.emptyList;
 
 public class CubeCleanerControllerTest {
 	private static final OTSystem<LogDiff<CubeDiff>> OT_SYSTEM = LogOT.createLogOT(CubeOT.createCubeOT());
@@ -117,17 +117,17 @@ public class CubeCleanerControllerTest {
 		await(repository.push(OTCommit.ofRoot(id1)));                          // 1N
 
 		Long id2 = await(repository.createCommitId());
-		await(repository.push(OTCommit.ofCommit(0, id2, id1, emptyList(), id1))); // 2N
+		await(repository.push(OTCommit.ofCommit(0, id2, id1, List.of(), id1))); // 2N
 
 		Long id3 = await(repository.createCommitId());
-		await(repository.push(OTCommit.ofCommit(0, id3, id2, emptyList(), id2))); // 3N
+		await(repository.push(OTCommit.ofCommit(0, id3, id2, List.of(), id2))); // 3N
 
 		Long id4 = await(repository.createCommitId());
-		await(repository.push(OTCommit.ofCommit(0, id4, id3, emptyList(), id3)));
-		await(repository.saveSnapshot(id4, emptyList()));                      // 4S
+		await(repository.push(OTCommit.ofCommit(0, id4, id3, List.of(), id3)));
+		await(repository.saveSnapshot(id4, List.of()));                      // 4S
 
 		Long id5 = await(repository.createCommitId());
-		await(repository.pushAndUpdateHead(OTCommit.ofCommit(0, id5, id4, emptyList(), id4))); // 5N
+		await(repository.pushAndUpdateHead(OTCommit.ofCommit(0, id5, id4, List.of(), id4))); // 5N
 	}
 
 }

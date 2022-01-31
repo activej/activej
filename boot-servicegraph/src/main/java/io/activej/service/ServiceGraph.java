@@ -42,7 +42,8 @@ import static io.activej.inject.util.Utils.union;
 import static io.activej.service.Utils.combineAll;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
-import static java.util.Collections.*;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singletonList;
 import static java.util.Comparator.comparingLong;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.joining;
@@ -461,7 +462,7 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 	}
 
 	private static final class SlowestChain {
-		static final SlowestChain EMPTY = new SlowestChain(emptyList(), 0);
+		static final SlowestChain EMPTY = new SlowestChain(List.of(), 0);
 
 		final List<Key> path;
 		final long sum;

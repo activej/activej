@@ -13,10 +13,10 @@ import io.activej.ot.OTStateManager;
 import io.activej.ot.repository.OTRepositoryMySql;
 import org.junit.function.ThrowingRunnable;
 
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import static io.activej.promise.TestUtils.await;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toSet;
 
 public final class TestUtils {
@@ -35,7 +35,7 @@ public final class TestUtils {
 		});
 		Long id = await(repository.createCommitId());
 		await(repository.pushAndUpdateHead(OTCommit.ofRoot(id)));
-		await(repository.saveSnapshot(id, emptyList()));
+		await(repository.saveSnapshot(id, List.of()));
 	}
 
 	public static <T> void runProcessLogs(AggregationChunkStorage<Long> aggregationChunkStorage, OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager, LogOTProcessor<T, CubeDiff> logOTProcessor) {

@@ -630,7 +630,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 
 	@JmxAttribute
 	public List<String> getUnresponsiveServers() {
-		if (stopPromise != null) return Collections.emptyList();
+		if (stopPromise != null) return List.of();
 
 		return connectsStatsPerAddress.entrySet().stream()
 				.filter(entry -> !entry.getValue().isConnected())

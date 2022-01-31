@@ -44,7 +44,6 @@ import java.util.List;
 import java.util.Map;
 
 import static io.activej.async.function.AsyncSuppliers.reuse;
-import static java.util.Collections.emptyList;
 
 /**
  * Processes logs. Creates new aggregation logs and persists to {@link LogDataConsumer} .
@@ -107,7 +106,7 @@ public final class LogOTProcessor<T, D> implements EventloopService, EventloopJm
 	}
 
 	private @NotNull Promise<LogDiff<D>> doProcessLog() {
-		if (!enabled) return Promise.of(LogDiff.of(Map.of(), emptyList()));
+		if (!enabled) return Promise.of(LogDiff.of(Map.of(), List.of()));
 		logger.trace("processLog_gotPositions called. Positions: {}", state.getPositions());
 
 		StreamSupplierWithResult<T, Map<String, LogPositionDiff>> supplier = getSupplier();

@@ -34,7 +34,8 @@ import java.util.stream.Stream;
 import static io.activej.aggregation.AggregationPredicates.toRangeScan;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.intersection;
-import static java.util.Collections.*;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.unmodifiableMap;
 
 /**
  * Represents aggregation metadata. Chunks are stored in an index (represented by an array of {@link RangeTree}) for efficient search.
@@ -170,7 +171,7 @@ public final class AggregationState implements OTState<AggregationDiff> {
 			if (chunksAndStrategy.chunks.size() >= minChunks)
 				return new PickedChunks(chunksAndStrategy.strategy, entry.getValue(), chunksAndStrategy.chunks);
 		}
-		return new PickedChunks(PickingStrategy.MIN_KEY, null, emptyList());
+		return new PickedChunks(PickingStrategy.MIN_KEY, null, List.of());
 	}
 
 	private static ChunksAndStrategy findChunksWithMinKeyOrSizeFixStrategy(RangeTree<PrimaryKey, AggregationChunk> tree,
@@ -197,7 +198,7 @@ public final class AggregationState implements OTState<AggregationDiff> {
 		}
 
 		if (tailMap == null)
-			return new ChunksAndStrategy(PickingStrategy.SIZE_FIX, emptyList());
+			return new ChunksAndStrategy(PickingStrategy.SIZE_FIX, List.of());
 
 		Set<AggregationChunk> chunks = new HashSet<>();
 		for (Map.Entry<PrimaryKey, Segment<AggregationChunk>> segmentEntry : tailMap.entrySet()) {
@@ -213,7 +214,7 @@ public final class AggregationState implements OTState<AggregationDiff> {
 			if (result.get(0).getCount() > optimalChunkSize)
 				return new ChunksAndStrategy(PickingStrategy.SIZE_FIX, result);
 			else
-				return new ChunksAndStrategy(PickingStrategy.SIZE_FIX, emptyList());
+				return new ChunksAndStrategy(PickingStrategy.SIZE_FIX, List.of());
 		}
 
 		return new ChunksAndStrategy(PickingStrategy.SIZE_FIX, result);
@@ -483,7 +484,7 @@ public final class AggregationState implements OTState<AggregationDiff> {
 	public List<AggregationChunk> findChunks(AggregationPredicate predicate, List<String> fields) {
 		RangeScan rangeScan = toRangeScan(predicate, aggregation.getKeys(), aggregation.getKeyTypes());
 		if (rangeScan.isNoScan())
-			return emptyList();
+			return List.of();
 
 		Set<String> requestedFields = new HashSet<>(fields);
 		List<AggregationChunk> chunks = new ArrayList<>();

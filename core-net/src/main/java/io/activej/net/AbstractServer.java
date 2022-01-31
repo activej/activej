@@ -53,7 +53,6 @@ import static io.activej.eventloop.net.ServerSocketSettings.DEFAULT_BACKLOG;
 import static io.activej.net.socket.tcp.AsyncTcpSocketNio.wrapChannel;
 import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapServerSocket;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -398,7 +397,7 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 
 	private List<InetSocketAddress> getBoundAddresses(List<ServerSocketChannel> channels) {
 		if (channels == null) {
-			return emptyList();
+			return List.of();
 		}
 		return channels.stream()
 				.map(ch -> {

@@ -24,8 +24,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.Collection;
-
-import static java.util.Collections.emptyList;
+import java.util.List;
 
 /**
  * Defines a node in a single server.
@@ -48,7 +47,7 @@ public interface Node {
 	 * @return ids of inputs of this node
 	 */
 	default Collection<StreamId> getInputs() {
-		return emptyList();
+		return List.of();
 	}
 
 	/**
@@ -57,7 +56,7 @@ public interface Node {
 	 * @return ids of outputs of this node
 	 */
 	default Collection<StreamId> getOutputs() {
-		return emptyList();
+		return List.of();
 	}
 
 	/**

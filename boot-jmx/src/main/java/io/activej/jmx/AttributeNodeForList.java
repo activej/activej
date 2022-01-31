@@ -27,7 +27,6 @@ import java.util.*;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.first;
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 final class AttributeNodeForList extends AbstractAttributeNodeForLeaf {
@@ -146,7 +145,7 @@ final class AttributeNodeForList extends AbstractAttributeNodeForLeaf {
 	@SuppressWarnings("unchecked")
 	public List<JmxRefreshable> getAllRefreshables(@NotNull Object source) {
 		if (!isListOfJmxRefreshables) {
-			return emptyList();
+			return List.of();
 		}
 
 		List<JmxRefreshable> listRef = (List<JmxRefreshable>) fetcher.fetchFrom(source);

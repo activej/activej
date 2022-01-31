@@ -25,7 +25,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 import static io.activej.common.Utils.concat;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
 
@@ -150,13 +149,13 @@ public final class OTSystemImpl<D> implements OTSystem<D>, WithInitializer<OTSys
 	private TransformResult<D> resolveConflicts(List<? extends D> leftDiffs, List<? extends D> rightDiffs, TransformResult<D> transform) {
 		if (transform.resolution == ConflictResolution.LEFT) {
 			return TransformResult.of(transform.resolution,
-					emptyList(),
+					List.of(),
 					squash(concat(invert(rightDiffs).stream(), leftDiffs.stream()).collect(toList())));
 		}
 		if (transform.resolution == ConflictResolution.RIGHT) {
 			return TransformResult.of(transform.resolution,
 					squash(concat(invert(leftDiffs).stream(), rightDiffs.stream()).collect(toList())),
-					emptyList());
+					List.of());
 		}
 		throw new AssertionError();
 	}
@@ -197,7 +196,7 @@ public final class OTSystemImpl<D> implements OTSystem<D>, WithInitializer<OTSys
 		List<D> result = new ArrayList<>();
 		Iterator<D> it = ((List<D>) ops).iterator();
 		if (!it.hasNext())
-			return emptyList();
+			return List.of();
 		D cur = it.next();
 		while (it.hasNext()) {
 			D next = it.next();

@@ -266,7 +266,7 @@ public final class OTAlgorithms {
 	}
 
 	public static <K, D> Promise<List<D>> diff(OTRepository<K, D> repository, OTSystem<D> system, K node1, K node2) {
-		if (node1.equals(node2)) return Promise.of(emptyList());
+		if (node1.equals(node2)) return Promise.of(List.of());
 
 		Set<K> startCut = Set.of(node1, node2);
 		return reduce(repository, system, startCut, new FindAnyCommonParentReducer<>(DiffsReducer.toList()))

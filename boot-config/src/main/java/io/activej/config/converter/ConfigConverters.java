@@ -48,7 +48,6 @@ import static io.activej.common.exception.FatalErrorHandler.*;
 import static io.activej.eventloop.inspector.ThrottlingController.INITIAL_KEYS_PER_SECOND;
 import static io.activej.eventloop.inspector.ThrottlingController.INITIAL_THROTTLING;
 import static io.activej.eventloop.net.ServerSocketSettings.DEFAULT_BACKLOG;
-import static java.util.Collections.emptyList;
 import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -329,14 +328,14 @@ public final class ConfigConverters {
 					case "rethrowOn":
 						return rethrowOn(
 								toThrowablePredicate(
-										config.get(OF_CLASSES, "whitelist", emptyList()),
-										config.get(OF_CLASSES, "blacklist", emptyList())
+										config.get(OF_CLASSES, "whitelist", List.of()),
+										config.get(OF_CLASSES, "blacklist", List.of())
 								));
 					case "haltOn":
 						return haltOn(
 								toThrowablePredicate(
-										config.get(OF_CLASSES, "whitelist", emptyList()),
-										config.get(OF_CLASSES, "blacklist", emptyList())
+										config.get(OF_CLASSES, "whitelist", List.of()),
+										config.get(OF_CLASSES, "blacklist", List.of())
 								));
 					case "logging":
 						return logging();

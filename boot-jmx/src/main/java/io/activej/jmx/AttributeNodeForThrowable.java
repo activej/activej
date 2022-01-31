@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 
 final class AttributeNodeForThrowable extends AbstractAttributeNodeForLeaf {
 	private static final String THROWABLE_TYPE_KEY = "type";
@@ -99,7 +98,7 @@ final class AttributeNodeForThrowable extends AbstractAttributeNodeForLeaf {
 
 	@Override
 	public List<JmxRefreshable> getAllRefreshables(@NotNull Object source) {
-		return emptyList();
+		return List.of();
 	}
 
 	@Override

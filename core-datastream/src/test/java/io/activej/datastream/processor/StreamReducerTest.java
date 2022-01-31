@@ -11,6 +11,7 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import java.util.List;
 import java.util.Objects;
 
 import static io.activej.datastream.TestStreamTransformers.decorate;
@@ -20,7 +21,6 @@ import static io.activej.datastream.processor.StreamReducers.deduplicateReducer;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.function.Function.identity;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
@@ -46,7 +46,7 @@ public class StreamReducerTest {
 								.transformWith(randomlySuspending()))
 		);
 
-		assertEquals(emptyList(), consumer.getList());
+		assertEquals(List.of(), consumer.getList());
 		assertEndOfStream(source);
 		assertEndOfStream(streamReducer.getOutput());
 		assertConsumersEndOfStream(streamReducer.getInputs());

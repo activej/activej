@@ -18,7 +18,6 @@ package io.activej.ot;
 
 import java.util.List;
 
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 public class TransformResult<D> {
@@ -39,7 +38,7 @@ public class TransformResult<D> {
 	}
 
 	public static <D> TransformResult<D> empty() {
-		return new TransformResult<>(null, emptyList(), emptyList());
+		return new TransformResult<>(null, List.of(), List.of());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -57,19 +56,19 @@ public class TransformResult<D> {
 	}
 
 	public static <D> TransformResult<D> left(D left) {
-		return of(singletonList(left), emptyList());
+		return of(singletonList(left), List.of());
 	}
 
 	public static <D> TransformResult<D> left(List<? extends D> left) {
-		return of(left, emptyList());
+		return of(left, List.of());
 	}
 
 	public static <D> TransformResult<D> right(D right) {
-		return of(emptyList(), singletonList(right));
+		return of(List.of(), singletonList(right));
 	}
 
 	public static <D> TransformResult<D> right(List<? extends D> right) {
-		return of(emptyList(), right);
+		return of(List.of(), right);
 	}
 
 	public boolean hasConflict() {

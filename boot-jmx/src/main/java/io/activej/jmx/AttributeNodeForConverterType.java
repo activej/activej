@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 import javax.management.openmbean.OpenType;
 import javax.management.openmbean.SimpleType;
 import java.lang.reflect.Method;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -85,7 +84,7 @@ public class AttributeNodeForConverterType<T> extends AbstractAttributeNodeForLe
 
 	@Override
 	public List<JmxRefreshable> getAllRefreshables(@NotNull Object source) {
-		return Collections.emptyList();
+		return List.of();
 	}
 
 	@Override

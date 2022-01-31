@@ -23,7 +23,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.function.BiFunction;
 
-import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 
@@ -104,7 +103,7 @@ public final class DecodeErrors implements WithInitializer<DecodeErrors> {
 	}
 
 	public @NotNull List<DecodeError> getErrors() {
-		return errors != null ? errors : emptyList();
+		return errors != null ? errors : List.of();
 	}
 
 	public @NotNull Set<String> getChildren() {

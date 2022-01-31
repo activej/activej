@@ -7,7 +7,7 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import java.util.Collections;
+import java.util.List;
 
 import static io.activej.datastream.TestStreamTransformers.*;
 import static io.activej.datastream.TestUtils.*;
@@ -27,7 +27,7 @@ public class StreamMergerTest {
 
 	@Test
 	public void testDeduplicate() {
-		StreamSupplier<Integer> source0 = StreamSupplier.ofIterable(Collections.emptyList());
+		StreamSupplier<Integer> source0 = StreamSupplier.ofIterable(List.of());
 		StreamSupplier<Integer> source1 = StreamSupplier.of(3, 7);
 		StreamSupplier<Integer> source2 = StreamSupplier.of(3, 4, 6);
 
@@ -56,7 +56,7 @@ public class StreamMergerTest {
 
 	@Test
 	public void testDuplicate() {
-		StreamSupplier<Integer> source0 = StreamSupplier.ofIterable(Collections.emptyList());
+		StreamSupplier<Integer> source0 = StreamSupplier.ofIterable(List.of());
 		StreamSupplier<Integer> source1 = StreamSupplier.of(3, 7);
 		StreamSupplier<Integer> source2 = StreamSupplier.of(3, 4, 6);
 

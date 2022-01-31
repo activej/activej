@@ -21,11 +21,10 @@ import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public final class DeleteResponse {
-	private static final DeleteResponse OK = new DeleteResponse(Collections.emptyList());
+	private static final DeleteResponse OK = new DeleteResponse(List.of());
 
 	private final List<String> errors;
 

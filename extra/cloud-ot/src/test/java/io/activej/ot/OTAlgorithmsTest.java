@@ -20,7 +20,8 @@ import static io.activej.ot.utils.Utils.add;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.util.Arrays.asList;
-import static java.util.Collections.*;
+import static java.util.Collections.singleton;
+import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
@@ -45,7 +46,7 @@ public class OTAlgorithmsTest {
 		Integer id1 = await(REPOSITORY.createCommitId());
 		await(REPOSITORY.pushAndUpdateHead(OTCommit.ofRoot(id1)));
 		Integer id2 = await(REPOSITORY.createCommitId());
-		await(REPOSITORY.pushAndUpdateHead(OTCommit.ofCommit(0, id2, id1, emptyList(), id1)));
+		await(REPOSITORY.pushAndUpdateHead(OTCommit.ofCommit(0, id2, id1, List.of(), id1)));
 
 		Exception exception = awaitException(checkout(REPOSITORY, TEST_OP, id2));
 		assertThat(exception, instanceOf(GraphExhaustedException.class));
@@ -57,7 +58,7 @@ public class OTAlgorithmsTest {
 		Integer id1 = await(REPOSITORY.createCommitId());
 		await(REPOSITORY.pushAndUpdateHead(OTCommit.ofRoot(id1)));
 		Integer id2 = await(REPOSITORY.createCommitId());
-		await(REPOSITORY.pushAndUpdateHead(OTCommit.ofCommit(0, id2, id1, emptyList(), id1)));
+		await(REPOSITORY.pushAndUpdateHead(OTCommit.ofCommit(0, id2, id1, List.of(), id1)));
 
 		Exception exception = awaitException(findParent(REPOSITORY, TEST_OP, singleton(id2), DiffsReducer.toVoid(),
 				commit -> REPOSITORY.loadSnapshot(commit.getId())
@@ -168,7 +169,7 @@ public class OTAlgorithmsTest {
 		assertEquals(applyToState(asList(add(+3))), applyToState(diff)); // +3
 
 		diff = await(diff(REPOSITORY, TEST_OP, 5, 5));
-		assertEquals(emptyList(), diff); // 0
+		assertEquals(List.of(), diff); // 0
 
 		graph2();
 		diff = await(diff(REPOSITORY, TEST_OP, 6, 3));
@@ -178,7 +179,7 @@ public class OTAlgorithmsTest {
 		assertEquals(applyToState(asList(add(5))), applyToState(diff)); // +1, +1, +1, +1, +1
 
 		diff = await(diff(REPOSITORY, TEST_OP, 4, 5));
-		assertEquals(applyToState(emptyList()), applyToState(diff)); // +1, -1
+		assertEquals(applyToState(List.of()), applyToState(diff)); // +1, -1
 
 		diff = await(diff(REPOSITORY, TEST_OP, 3, 2));
 		assertEquals(applyToState(asList(add(-1))), applyToState(diff)); // -1

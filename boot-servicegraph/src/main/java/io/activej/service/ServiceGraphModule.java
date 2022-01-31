@@ -60,7 +60,8 @@ import static io.activej.service.Utils.combineAll;
 import static io.activej.service.Utils.completedExceptionallyFuture;
 import static io.activej.service.adapter.ServiceAdapters.*;
 import static java.lang.Thread.currentThread;
-import static java.util.Collections.*;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singletonList;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.stream.Collectors.*;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -330,7 +331,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 		logger.trace("Initializing ServiceGraph ...");
 
 		WorkerPools workerPools = injector.peekInstance(WorkerPools.class);
-		List<WorkerPool> pools = workerPools != null ? workerPools.getWorkerPools() : emptyList();
+		List<WorkerPool> pools = workerPools != null ? workerPools.getWorkerPools() : List.of();
 		Map<ServiceKey, List<?>> instances = new HashMap<>();
 		Map<ServiceKey, Set<ServiceKey>> instanceDependencies = new HashMap<>();
 

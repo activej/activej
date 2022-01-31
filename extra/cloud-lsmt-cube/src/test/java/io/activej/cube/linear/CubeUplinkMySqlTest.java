@@ -41,7 +41,8 @@ import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.dataSource;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Collections.*;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
@@ -424,38 +425,42 @@ public class CubeUplinkMySqlTest {
 	*/
 	public void fetchPositionDiffs() throws SQLException {
 		List<LogDiff<CubeDiff>> diffsRev1 = singletonList(LogDiff.of(Map.of(
-				"a", new LogPositionDiff(
-						LogPosition.initial(),
-						LogPosition.create(new LogFile("a", 0), 101)),
-				"b", new LogPositionDiff(
-						LogPosition.initial(),
-						LogPosition.create(new LogFile("b", 0), 102)), "c", new LogPositionDiff(
-						LogPosition.initial(),
-						LogPosition.create(new LogFile("c", 0), 103))), emptyList()
+						"a", new LogPositionDiff(
+								LogPosition.initial(),
+								LogPosition.create(new LogFile("a", 0), 101)),
+						"b", new LogPositionDiff(
+								LogPosition.initial(),
+								LogPosition.create(new LogFile("b", 0), 102)), "c", new LogPositionDiff(
+								LogPosition.initial(),
+								LogPosition.create(new LogFile("c", 0), 103))),
+				List.of()
 		));
 		await(uplink.push(await(uplink.createProtoCommit(0L, diffsRev1, 0))));
 
 		List<LogDiff<CubeDiff>> diffsRev2 = singletonList(LogDiff.of(Map.of(
-				"a", new LogPositionDiff(
-						LogPosition.create(new LogFile("a", 0), 101),
-						LogPosition.create(new LogFile("a", 0), 201)),
-				"b", new LogPositionDiff(
-						LogPosition.create(new LogFile("b", 0), 102),
-						LogPosition.create(new LogFile("b", 0), 202))), emptyList()
+						"a", new LogPositionDiff(
+								LogPosition.create(new LogFile("a", 0), 101),
+								LogPosition.create(new LogFile("a", 0), 201)),
+						"b", new LogPositionDiff(
+								LogPosition.create(new LogFile("b", 0), 102),
+								LogPosition.create(new LogFile("b", 0), 202))),
+				List.of()
 		));
 		await(uplink.push(await(uplink.createProtoCommit(1L, diffsRev2, 1))));
 
 		List<LogDiff<CubeDiff>> diffsRev3 = singletonList(LogDiff.of(Map.of(
-				"a", new LogPositionDiff(
-						LogPosition.create(new LogFile("a", 0), 201),
-						LogPosition.create(new LogFile("a", 0), 301))), emptyList()
+						"a", new LogPositionDiff(
+								LogPosition.create(new LogFile("a", 0), 201),
+								LogPosition.create(new LogFile("a", 0), 301))),
+				List.of()
 		));
 		await(uplink.push(await(uplink.createProtoCommit(2L, diffsRev3, 2))));
 
 		List<LogDiff<CubeDiff>> diffsRev4 = singletonList(LogDiff.of(Map.of(
-				"a", new LogPositionDiff(
-						LogPosition.create(new LogFile("a", 0), 301),
-						LogPosition.create(new LogFile("a", 0), 401))), emptyList()
+						"a", new LogPositionDiff(
+								LogPosition.create(new LogFile("a", 0), 301),
+								LogPosition.create(new LogFile("a", 0), 401))),
+				List.of()
 		));
 		await(uplink.push(await(uplink.createProtoCommit(3L, diffsRev4, 3))));
 

@@ -222,7 +222,7 @@ final class AttributeNodeForPojo implements AttributeNode {
 		Object pojo = fetcher.fetchFrom(source);
 
 		if (pojo == null) {
-			return Collections.emptyList();
+			return List.of();
 		}
 
 		if (pojo instanceof JmxRefreshable) {

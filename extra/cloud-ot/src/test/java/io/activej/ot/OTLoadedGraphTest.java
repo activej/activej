@@ -8,6 +8,7 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import java.util.List;
 import java.util.Set;
 
 import static io.activej.ot.OTAlgorithms.loadGraph;
@@ -15,7 +16,6 @@ import static io.activej.ot.OTCommit.ofRoot;
 import static io.activej.ot.utils.Utils.add;
 import static io.activej.ot.utils.Utils.createTestOp;
 import static io.activej.promise.TestUtils.await;
-import static java.util.Collections.emptyList;
 import static org.junit.Assert.assertEquals;
 
 public class OTLoadedGraphTest {
@@ -29,7 +29,7 @@ public class OTLoadedGraphTest {
 	@Before
 	public void setUp() {
 		repository = OTRepositoryStub.create();
-		await(repository.pushAndUpdateHead(ofRoot(0)), repository.saveSnapshot(0, emptyList()));
+		await(repository.pushAndUpdateHead(ofRoot(0)), repository.saveSnapshot(0, List.of()));
 	}
 
 	@Test

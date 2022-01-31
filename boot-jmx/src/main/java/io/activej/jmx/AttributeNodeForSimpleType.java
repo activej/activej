@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import static io.activej.common.Checks.checkArgument;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 @SuppressWarnings("rawtypes")
@@ -68,7 +67,7 @@ final class AttributeNodeForSimpleType extends AbstractAttributeNodeForLeaf {
 
 	@Override
 	public List<JmxRefreshable> getAllRefreshables(@NotNull Object source) {
-		return emptyList();
+		return List.of();
 	}
 
 	@Override

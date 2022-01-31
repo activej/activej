@@ -632,7 +632,7 @@ public final class TestDI {
 /*
 			@Provides
 			<T extends Number> List<T> generator(T instance, List<C> object) {
-				return object.isEmpty() ? emptyList() : singletonList(instance);
+				return object.isEmpty() ? List.of() : singletonList(instance);
 			}
 */
 

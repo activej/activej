@@ -40,7 +40,6 @@ import static io.activej.fs.ActiveFs.SEPARATOR;
 import static io.activej.fs.util.RemoteFsUtils.isWildcard;
 import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 public final class LocalFileUtils {
@@ -178,7 +177,7 @@ public final class LocalFileUtils {
 		if (subglob.isEmpty()) {
 			return Files.isRegularFile(subdirectory) ?
 					singletonList(subdirectory) :
-					emptyList();
+					List.of();
 		}
 
 		// common route

@@ -46,7 +46,6 @@ import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static io.activej.promise.PromisePredicates.isResult;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 /**
@@ -418,7 +417,7 @@ public final class Promises {
 	 */
 	@Contract(pure = true)
 	public static <T> @NotNull Promise<List<T>> toList() {
-		return Promise.of(emptyList());
+		return Promise.of(List.of());
 	}
 
 	/**
@@ -453,7 +452,7 @@ public final class Promises {
 	@Contract(pure = true)
 	public static <T> @NotNull Promise<List<T>> toList(@NotNull List<? extends Promise<? extends T>> promises) {
 		int size = promises.size();
-		if (size == 0) return Promise.of(Collections.emptyList());
+		if (size == 0) return Promise.of(List.of());
 		if (size == 1) return promises.get(0).map(Collections::singletonList);
 		if (size == 2) return promises.get(0).combine(promises.get(1), Arrays::asList);
 		return toListImpl(promises.iterator(), promises.size(), true);

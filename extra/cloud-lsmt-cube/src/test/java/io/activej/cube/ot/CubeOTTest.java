@@ -17,7 +17,10 @@ import org.hamcrest.collection.IsEmptyCollection;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 import static io.activej.aggregation.PrimaryKey.ofArray;
 import static io.activej.cube.TestUtils.STUB_CUBE_STATE;
@@ -41,7 +44,7 @@ public class CubeOTTest {
 	}
 
 	private static CubeDiff cubeDiff(AggregationChunk... added) {
-		return cubeDiff(asList(added), Collections.emptyList());
+		return cubeDiff(asList(added), List.of());
 	}
 
 	private static CubeDiff cubeDiff(List<AggregationChunk> added, List<AggregationChunk> removed) {
