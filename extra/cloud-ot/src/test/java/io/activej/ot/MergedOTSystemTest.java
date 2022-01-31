@@ -20,7 +20,6 @@ import static io.activej.ot.utils.TestSetName.setName;
 import static io.activej.ot.utils.Utils.add;
 import static io.activej.ot.utils.Utils.set;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static org.junit.Assert.*;
 
 public final class MergedOTSystemTest {
@@ -86,7 +85,7 @@ public final class MergedOTSystemTest {
 		state2.init();
 		List<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> squashed = MERGED.squash(ops);
 
-		assertEquals(singletonList(ops(add(8), set(0, 123), setName("", "test3"))), squashed);
+		assertEquals(List.of(ops(add(8), set(0, 123), setName("", "test3"))), squashed);
 
 		System.out.println(squashed);
 		squashed.forEach(state2::apply);
@@ -101,7 +100,7 @@ public final class MergedOTSystemTest {
 				ops(null, null, setName("aa", "aaa"))
 		);
 		List<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> squashed = MERGED.squash(ops);
-		assertEquals(singletonList(ops(null, null, setName("", "aaa"))), squashed);
+		assertEquals(List.of(ops(null, null, setName("", "aaa"))), squashed);
 	}
 
 	@Test
@@ -161,7 +160,7 @@ public final class MergedOTSystemTest {
 		List<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> squashed = MERGED.squash(List.of());
 		assertTrue(squashed.isEmpty());
 
-		List<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> diffs = singletonList(
+		List<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> diffs = List.of(
 				new Tuple3<>(asList(add(12), add(13), add(-2)), List.of(), List.of())
 		);
 		List<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> inverted = MERGED.invert(diffs);
@@ -179,7 +178,7 @@ public final class MergedOTSystemTest {
 	private static OTSystem<TestAdd> createAddIntSystem() {
 		return OTSystemImpl.<TestAdd>create()
 				.withEmptyPredicate(TestAdd.class, op -> op.getDelta() == 0)
-				.withInvertFunction(TestAdd.class, op -> singletonList(add(-op.getDelta())))
+				.withInvertFunction(TestAdd.class, op -> List.of(add(-op.getDelta())))
 				.withSquashFunction(TestAdd.class, TestAdd.class, (first, second) -> add(first.getDelta() + second.getDelta()))
 				.withTransformFunction(TestAdd.class, TestAdd.class, (left, right) -> TransformResult.of(right, left));
 	}
@@ -187,7 +186,7 @@ public final class MergedOTSystemTest {
 	private static OTSystem<TestSet> createTestSetSystem() {
 		return OTSystemImpl.<TestSet>create()
 				.withEmptyPredicate(TestSet.class, op -> op.getPrev() == op.getNext())
-				.withInvertFunction(TestSet.class, op -> singletonList(set(op.getNext(), op.getPrev())))
+				.withInvertFunction(TestSet.class, op -> List.of(set(op.getNext(), op.getPrev())))
 				.withSquashFunction(TestSet.class, TestSet.class, (first, second) -> set(first.getPrev(), second.getNext()))
 				.withTransformFunction(TestSet.class, TestSet.class, (left, right) -> {
 					if (left.getNext() > right.getNext()) return right(set(right.getNext(), left.getNext()));
@@ -199,7 +198,7 @@ public final class MergedOTSystemTest {
 	private static OTSystem<TestSetName> createTestSetNameSystem() {
 		return OTSystemImpl.<TestSetName>create()
 				.withEmptyPredicate(TestSetName.class, op -> op.getPrev().equals(op.getNext()))
-				.withInvertFunction(TestSetName.class, op -> singletonList(setName(op.getNext(), op.getPrev())))
+				.withInvertFunction(TestSetName.class, op -> List.of(setName(op.getNext(), op.getPrev())))
 				.withSquashFunction(TestSetName.class, TestSetName.class, (first, second) -> setName(first.getPrev(), second.getNext()))
 				.withTransformFunction(TestSetName.class, TestSetName.class, (left, right) -> {
 					if (left.getNext().compareTo(right.getNext()) > 0)
@@ -218,9 +217,9 @@ public final class MergedOTSystemTest {
 
 	private static Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>> ops(@Nullable TestAdd add, @Nullable TestSet set,
 			@Nullable TestSetName setName) {
-		List<TestAdd> testAdds = add == null ? List.of() : singletonList(add);
-		List<TestSet> testSets = set == null ? List.of() : singletonList(set);
-		List<TestSetName> testSetNames = setName == null ? List.of() : singletonList(setName);
+		List<TestAdd> testAdds = add == null ? List.of() : asList(add);
+		List<TestSet> testSets = set == null ? List.of() : asList(set);
+		List<TestSetName> testSetNames = setName == null ? List.of() : asList(setName);
 		return new Tuple3<>(testAdds, testSets, testSetNames);
 	}
 

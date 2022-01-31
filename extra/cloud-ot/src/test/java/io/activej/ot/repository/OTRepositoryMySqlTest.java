@@ -34,7 +34,6 @@ import static io.activej.ot.utils.Utils.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.dataSource;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 
@@ -120,7 +119,7 @@ public class OTRepositoryMySqlTest {
 
 		Long id = await(repository.createCommitId());
 
-		await(repository.pushAndUpdateHead(ofCommit(0, id, rootId, singletonList(new TestSet(0, 5)), id)));
+		await(repository.pushAndUpdateHead(ofCommit(0, id, rootId, List.of(new TestSet(0, 5)), id)));
 
 		Set<Long> heads = await(repository.getHeads());
 		assertEquals(1, heads.size());

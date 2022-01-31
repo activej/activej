@@ -8,8 +8,8 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 import static io.activej.http.HttpHeaders.HOST;
 import static io.activej.http.HttpHeaders.of;
@@ -43,7 +43,7 @@ public final class HttpMessageTest {
 		assertHttpMessageEquals("HTTP/1.1 502 Bad Gateway\r\nContent-Length: 11\r\n\r\n" +
 				"Bad Gateway", HttpResponse.ofCode(502).withBody("Bad Gateway".getBytes(StandardCharsets.UTF_8)));
 		assertHttpMessageEquals("HTTP/1.1 200 OK\r\nSet-Cookie: cookie1=value1\r\nContent-Length: 0\r\n\r\n",
-				HttpResponse.ofCode(200).withCookies(Collections.singletonList(HttpCookie.of("cookie1", "value1"))));
+				HttpResponse.ofCode(200).withCookies(List.of(HttpCookie.of("cookie1", "value1"))));
 		assertHttpMessageEquals("HTTP/1.1 200 OK\r\nSet-Cookie: cookie1=value1\r\nSet-Cookie: cookie2=value2\r\nContent-Length: 0\r\n\r\n",
 				HttpResponse.ofCode(200).withCookies(asList(HttpCookie.of("cookie1", "value1"), HttpCookie.of("cookie2", "value2"))));
 		assertHttpMessageEquals("HTTP/1.1 200 OK\r\nSet-Cookie: cookie1=value1\r\nSet-Cookie: cookie2=value2\r\nContent-Length: 0\r\n\r\n",

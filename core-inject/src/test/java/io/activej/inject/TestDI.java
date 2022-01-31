@@ -33,7 +33,6 @@ import static io.activej.inject.module.Modules.override;
 import static io.activej.inject.util.Utils.printGraphVizGraph;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
@@ -558,12 +557,12 @@ public final class TestDI {
 
 					@ProvidesIntoSet
 					List<String> stringsB1(Integer integer) {
-						return singletonList("str1: " + integer);
+						return List.of("str1: " + integer);
 					}
 
 					@ProvidesIntoSet
 					List<String> stringsB2(Integer integer) {
-						return singletonList("str2: " + integer);
+						return List.of("str2: " + integer);
 					}
 
 				})
@@ -578,7 +577,7 @@ public final class TestDI {
 		Key<Set<List<String>>> key = new Key<>() {};
 		Set<List<String>> instance2 = injector.getInstance(key);
 
-		Set<List<String>> expected2 = Stream.of(singletonList("str1: 42"), singletonList("str2: 42")).collect(toSet());
+		Set<List<String>> expected2 = Stream.of(List.of("str1: 42"), List.of("str2: 42")).collect(toSet());
 
 		assertEquals(expected2, instance2);
 	}

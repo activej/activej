@@ -27,7 +27,6 @@ import java.util.Collection;
 import java.util.List;
 
 import static io.activej.dataflow.dataset.DatasetUtils.repartitionAndReduce;
-import static java.util.Collections.singletonList;
 
 public final class DatasetRepartitionReduce<K, I, O> extends Dataset<O> {
 	private final LocallySortedDataset<K, I> input;
@@ -57,6 +56,6 @@ public final class DatasetRepartitionReduce<K, I, O> extends Dataset<O> {
 
 	@Override
 	public Collection<Dataset<?>> getBases() {
-		return singletonList(input);
+		return List.of(input);
 	}
 }

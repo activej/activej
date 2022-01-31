@@ -25,8 +25,6 @@ import javax.management.openmbean.OpenType;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static java.util.Collections.singletonList;
-
 @SuppressWarnings("rawtypes")
 final class AttributeNodeForPojo implements AttributeNode {
 	private static final char ATTRIBUTE_NAME_SEPARATOR = '_';
@@ -145,7 +143,7 @@ final class AttributeNodeForPojo implements AttributeNode {
 			subsources = fetchInnerPojos(notNullSources);
 		} else {
 			Object reduced = reducer.reduce(fetchInnerPojos(sources));
-			subsources = singletonList(reduced);
+			subsources = List.of(reduced);
 		}
 
 		Map<String, Object> aggregatedAttrs = new HashMap<>();
@@ -226,7 +224,7 @@ final class AttributeNodeForPojo implements AttributeNode {
 		}
 
 		if (pojo instanceof JmxRefreshable) {
-			return singletonList((JmxRefreshable) pojo);
+			return List.of((JmxRefreshable) pojo);
 		}
 		List<JmxRefreshable> allJmxRefreshables = new ArrayList<>();
 		for (AttributeNode attributeNode : subNodes) {

@@ -94,7 +94,6 @@ import static io.activej.cube.Utils.createResultClass;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static java.util.Collections.sort;
 import static java.util.stream.Collectors.toList;
 
@@ -517,7 +516,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 	public <T> LogDataConsumer<T, CubeDiff> logStreamConsumer(Class<T> inputClass, Map<String, String> dimensionFields, Map<String, String> measureFields,
 			AggregationPredicate predicate) {
 		return () -> consume(inputClass, dimensionFields, measureFields, predicate)
-				.transformResult(result -> result.map(Collections::singletonList));
+				.transformResult(result -> result.map(cubeDiff -> List.of(cubeDiff)));
 	}
 
 	public <T> StreamConsumerWithResult<T, CubeDiff> consume(Class<T> inputClass) {
@@ -612,7 +611,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(Predicate.class, inputClass, predicate),
 				() -> ClassBuilder.create(Predicate.class)
-						.withMethod("test", boolean.class, singletonList(Object.class),
+						.withMethod("test", boolean.class, List.of(Object.class),
 								predicate.createPredicate(cast(arg(0), inputClass), keyTypes))
 		);
 	}
@@ -1158,7 +1157,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 			}
 
 			Ref<Object> attributesRef = new Ref<>();
-			return resolverContainer.resolver.resolveAttributes(singletonList(key),
+			return resolverContainer.resolver.resolveAttributes(List.of((Object) key),
 							result1 -> (Object[]) result1,
 							(result12, attributes) -> attributesRef.value = attributes)
 					.whenResult(() -> {

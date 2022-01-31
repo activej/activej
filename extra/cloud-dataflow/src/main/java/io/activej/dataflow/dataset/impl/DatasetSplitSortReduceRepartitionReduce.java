@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.function.Function;
 
 import static io.activej.dataflow.dataset.DatasetUtils.generateIndexes;
-import static java.util.Collections.singletonList;
 
 public final class DatasetSplitSortReduceRepartitionReduce<K, I, O, A> extends Dataset<O> {
 	private final Dataset<I> input;
@@ -119,6 +118,6 @@ public final class DatasetSplitSortReduceRepartitionReduce<K, I, O, A> extends D
 
 	@Override
 	public Collection<Dataset<?>> getBases() {
-		return singletonList(input);
+		return List.of(input);
 	}
 }

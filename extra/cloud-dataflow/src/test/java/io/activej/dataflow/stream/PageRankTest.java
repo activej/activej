@@ -43,7 +43,6 @@ import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertCompleteFn;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 
 public class PageRankTest {
@@ -323,7 +322,7 @@ public class PageRankTest {
 				new Page(3, new long[]{1})), result1);
 
 		StreamConsumerToList<Rank> result2 = StreamConsumerToList.create();
-		DataflowServer server2 = launchServer(address2, singletonList(new Page(2, new long[]{1})), result2);
+		DataflowServer server2 = launchServer(address2, List.of(new Page(2, new long[]{1})), result2);
 
 		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
 

@@ -24,13 +24,8 @@ import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.processor.StreamReducer;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
-
-import static java.util.Collections.singletonList;
 
 /**
  * Represents a node, which performs 'reduce' operations on a list of input streams, based on a logic, defined by key comparator, key function and reducer for each input.
@@ -92,7 +87,7 @@ public final class NodeReduce<K, O, A> extends AbstractNode {
 
 	@Override
 	public Collection<StreamId> getOutputs() {
-		return singletonList(output);
+		return List.of(output);
 	}
 
 	@SuppressWarnings("unchecked")

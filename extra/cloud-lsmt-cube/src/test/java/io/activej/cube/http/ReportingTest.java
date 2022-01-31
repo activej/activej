@@ -55,7 +55,6 @@ import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
@@ -295,7 +294,7 @@ public final class ReportingTest extends CubeTestBase {
 				multilog,
 				new LogItemSplitter(cube),
 				"testlog",
-				singletonList("partitionA"),
+				List.of("partitionA"),
 				cubeDiffLogOTState);
 
 		// checkout first (root) revision
@@ -650,8 +649,8 @@ public final class ReportingTest extends CubeTestBase {
 		List<Record> records = queryResult.getRecords();
 		assertEquals(2, records.size());
 		assertEquals(asList("advertiser.name", "clicks"), records.get(0).getScheme().getFields());
-		assertEquals(singletonList("advertiser.name"), queryResult.getAttributes());
-		assertEquals(singletonList("clicks"), queryResult.getMeasures());
+		assertEquals(List.of("advertiser.name"), queryResult.getAttributes());
+		assertEquals(List.of("clicks"), queryResult.getMeasures());
 		assertEquals("first", records.get(0).get("advertiser.name"));
 		assertNull(records.get(1).get("advertiser.name"));
 	}
@@ -864,7 +863,7 @@ public final class ReportingTest extends CubeTestBase {
 		List<String> measures = asList("clicks", "impressions", "revenue", "errors");
 		List<String> requestMeasures = new ArrayList<>(measures);
 		requestMeasures.add(3, "nonexistentMeasure");
-		List<String> dateDimension = singletonList("date");
+		List<String> dateDimension = List.of("date");
 		CubeQuery queryDate = CubeQuery.create()
 				.withAttributes(dateDimension)
 				.withMeasures(requestMeasures)

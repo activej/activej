@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 
 import static io.activej.common.Utils.union;
-import static java.util.Collections.singletonList;
 
 public class CubeOT {
 	public static OTSystem<CubeDiff> createCubeOT() {
@@ -62,7 +61,7 @@ public class CubeOT {
 					return TransformResult.of(CubeDiff.of(newOpsLeft), CubeDiff.of(newOpsRight));
 				})
 				.withEmptyPredicate(CubeDiff.class, CubeDiff::isEmpty)
-				.withInvertFunction(CubeDiff.class, commit -> singletonList(commit.inverse()))
+				.withInvertFunction(CubeDiff.class, commit -> List.of(commit.inverse()))
 				.withSquashFunction(CubeDiff.class, CubeDiff.class, (commit1, commit2) -> {
 					Map<String, AggregationDiff> newOps = new LinkedHashMap<>();
 					for (String aggregation : union(commit1.keySet(), commit2.keySet())) {

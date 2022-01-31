@@ -56,7 +56,6 @@ import static io.activej.jmx.stats.StatsUtils.isJmxStats;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
@@ -820,7 +819,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			for (Object bean : beans) {
 				adapter.execute(bean, () -> {
 					try {
-						rootNode.setAttribute(attrName, attrValue, singletonList(bean));
+						rootNode.setAttribute(attrName, attrValue, List.of(bean));
 						latch.countDown();
 					} catch (Exception e) {
 						logger.error("Failed to set attribute '{}' of {} with value '{}'", attrName, bean, attrValue, e);

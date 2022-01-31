@@ -28,7 +28,6 @@ import java.util.stream.Stream;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.*;
 import static java.util.Collections.singleton;
-import static java.util.Collections.singletonList;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.*;
 
@@ -175,7 +174,7 @@ public class OTLoadedGraph<K, D> {
 	public Set<K> findRoots(K node) {
 		Set<K> result = new HashSet<>();
 		Set<K> visited = new HashSet<>();
-		ArrayList<K> queue = new ArrayList<>(singletonList(node));
+		ArrayList<K> queue = new ArrayList<>(List.of(node));
 		while (!queue.isEmpty()) {
 			K node1 = queue.remove(queue.size() - 1);
 			if (!visited.add(node1)) continue;

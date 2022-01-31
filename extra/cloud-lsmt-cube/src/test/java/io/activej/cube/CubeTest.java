@@ -40,7 +40,6 @@ import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toSet;
@@ -111,7 +110,7 @@ public final class CubeTest {
 
 	@Test
 	public void testQuery1() {
-		List<DataItemResult> expected = singletonList(new DataItemResult(1, 3, 10, 30, 20));
+		List<DataItemResult> expected = List.of(new DataItemResult(1, 3, 10, 30, 20));
 
 		await(
 				consume(cube, chunkStorage, new DataItem1(1, 2, 10, 20), new DataItem1(1, 3, 10, 20)),
@@ -147,7 +146,7 @@ public final class CubeTest {
 		AggregationChunkStorage<Long> chunkStorage = ActiveFsChunkStorage.create(Eventloop.getCurrentEventloop(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, storage);
 		Cube cube = newCube(executor, classLoader, chunkStorage);
 
-		List<DataItemResult> expected = singletonList(new DataItemResult(1, 3, 10, 30, 20));
+		List<DataItemResult> expected = List.of(new DataItemResult(1, 3, 10, 30, 20));
 
 		await(
 				Promises.all(consume(cube, chunkStorage, new DataItem1(1, 2, 10, 20), new DataItem1(1, 3, 10, 20)),
@@ -249,7 +248,7 @@ public final class CubeTest {
 	public void testBetweenTransformation() {
 		cube = newSophisticatedCube(executor, classLoader, chunkStorage);
 
-		List<DataItemResult3> expected = singletonList(new DataItemResult3(5, 77, 50, 20, 56, 0, 88, 98));
+		List<DataItemResult3> expected = List.of(new DataItemResult3(5, 77, 50, 20, 56, 0, 88, 98));
 
 		await(
 				consume(cube, chunkStorage,
@@ -287,7 +286,7 @@ public final class CubeTest {
 		);
 		// SELECT key1, SUM(metric1), SUM(metric2), SUM(metric3) FROM detailedAggregation WHERE key1 = 1 AND key2 = 3 GROUP BY key1
 
-		List<DataItemResult2> list = await(cube.queryRawStream(singletonList("key2"), asList("metric1", "metric2", "metric3"),
+		List<DataItemResult2> list = await(cube.queryRawStream(List.of("key2"), asList("metric1", "metric2", "metric3"),
 				alwaysTrue(),
 				DataItemResult2.class, classLoader
 		).toList());
@@ -297,7 +296,7 @@ public final class CubeTest {
 
 	@Test
 	public void testQuery2() {
-		List<DataItemResult> expected = singletonList(new DataItemResult(1, 3, 10, 30, 20));
+		List<DataItemResult> expected = List.of(new DataItemResult(1, 3, 10, 30, 20));
 
 		await(
 				consume(cube, chunkStorage, new DataItem1(1, 2, 10, 20), new DataItem1(1, 3, 10, 20)),
@@ -316,7 +315,7 @@ public final class CubeTest {
 
 	@Test
 	public void testConsolidate() {
-		List<DataItemResult> expected = singletonList(new DataItemResult(1, 4, 0, 30, 60));
+		List<DataItemResult> expected = List.of(new DataItemResult(1, 4, 0, 30, 60));
 
 		await(
 				consume(cube, chunkStorage, new DataItem1(1, 2, 10, 20), new DataItem1(1, 3, 10, 20)),

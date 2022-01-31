@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 
 import static io.activej.http.Protocol.*;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -389,7 +388,7 @@ public final class HttpUrlTest {
 		UrlParser url = UrlParser.of("http://www.test.com/test?a=1&&b=12+45%20%20%20&c=2&d=abc&&x#fragment");
 		assertEquals("1", url.getQueryParameter("a"));
 		assertEquals("12 45   ", url.getQueryParameters().get("b"));
-		assertEquals(singletonList("2"), url.getQueryParameters("c"));
+		assertEquals(List.of("2"), url.getQueryParameters("c"));
 		assertEquals("abc", url.getQueryParameter("d"));
 		assertEquals("", url.getQueryParameter("x"));
 	}

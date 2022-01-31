@@ -22,8 +22,6 @@ import io.activej.common.function.FunctionEx;
 import java.util.List;
 import java.util.function.Function;
 
-import static java.util.Collections.singletonList;
-
 /**
  * An enhanced mapping function which can return a list of errors for given input object.
  * This can be used to both map and put additional constraints on the decoded object from HTTP decoder.
@@ -43,7 +41,7 @@ public interface Mapper<T, V> {
 			try {
 				return Either.left(fn.apply(value));
 			} catch (Exception ex) {
-				return Either.right(singletonList(DecodeError.of(message, value)));
+				return Either.right(List.of(DecodeError.of(message, value)));
 			}
 		};
 	}

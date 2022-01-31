@@ -14,7 +14,6 @@ import java.util.*;
 
 import static io.activej.inject.util.TypeUtils.simplifyType;
 import static java.util.Collections.singleton;
-import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
@@ -182,16 +181,16 @@ public class TypeUtilsTest {
 
 		{
 			List<String> stringsList = injector.getInstance(new Key<List<String>>() {});
-			assertEquals(singletonList(aString), stringsList);
+			assertEquals(List.of(aString), stringsList);
 
 			List<Integer> integersList = injector.getInstance(new Key<List<Integer>>() {});
-			assertEquals(singletonList(anInteger), integersList);
+			assertEquals(List.of(anInteger), integersList);
 
 			List<Double> doublesList = injector.getInstance(new Key<List<Double>>() {});
-			assertEquals(singletonList(aDouble), doublesList);
+			assertEquals(List.of(aDouble), doublesList);
 
 			List<Long> longsList = injector.getInstance(new Key<List<Long>>() {});
-			assertEquals(singletonList(aLong), longsList);
+			assertEquals(List.of(aLong), longsList);
 		}
 
 		{
@@ -238,8 +237,8 @@ public class TypeUtilsTest {
 
 		@Override
 		protected void configure() {
-			bind(Key.ofType(Types.parameterizedType(List.class, aKey.getType()))).to(Collections::singletonList, aKey);
-			bind(Key.ofType(Types.parameterizedType(List.class, bKey.getType()))).to(Collections::singletonList, bKey);
+			bind(Key.ofType(Types.parameterizedType(List.class, aKey.getType()))).to(List::of, aKey);
+			bind(Key.ofType(Types.parameterizedType(List.class, bKey.getType()))).to(List::of, bKey);
 
 			bind(Key.ofType(Types.parameterizedType(Queue.class, extendsAKey.getType()))).to(a -> new ArrayDeque<>(singleton(a)), extendsAKey);
 			bind(Key.ofType(Types.parameterizedType(Queue.class, extendsBKey.getType()))).to(b -> new ArrayDeque<>(singleton(b)), extendsBKey);

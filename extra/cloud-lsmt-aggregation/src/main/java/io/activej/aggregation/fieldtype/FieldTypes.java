@@ -28,13 +28,13 @@ import io.activej.types.Types;
 
 import java.lang.reflect.Type;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 import static io.activej.aggregation.fieldtype.JsonCodecs.*;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.StringFormat.UTF8;
 import static java.time.temporal.ChronoUnit.DAYS;
-import static java.util.Collections.singletonList;
 
 public final class FieldTypes {
 
@@ -90,7 +90,7 @@ public final class FieldTypes {
 			serializer.addGetter(HyperLogLog.class.getMethod("getRegisters"),
 					new SerializerDefArray(new SerializerDefByte(false), byte[].class), -1, -1);
 			serializer.setConstructor(HyperLogLog.class.getConstructor(byte[].class),
-					singletonList("registers"));
+					List.of("registers"));
 		} catch (NoSuchMethodException ignored) {
 			throw new RuntimeException("Unable to construct SerializerDef for HyperLogLog");
 		}

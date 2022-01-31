@@ -22,12 +22,14 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.management.openmbean.*;
 import java.lang.reflect.Array;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.first;
 import static java.lang.String.format;
-import static java.util.Collections.singletonList;
 
 final class AttributeNodeForList extends AbstractAttributeNodeForLeaf {
 	private final AttributeNode subNode;
@@ -101,7 +103,7 @@ final class AttributeNodeForList extends AbstractAttributeNodeForLeaf {
 				List<?> list = new ArrayList<>(currentList);
 				for (Object element : list) {
 					Map<String, Object> attributesFromElement =
-							subNode.aggregateAttributes(visibleSubAttrs, singletonList(element));
+							subNode.aggregateAttributes(visibleSubAttrs, List.of(element));
 
 					attributesFromAllElements.add(attributesFromElement);
 				}
@@ -149,7 +151,7 @@ final class AttributeNodeForList extends AbstractAttributeNodeForLeaf {
 		}
 
 		List<JmxRefreshable> listRef = (List<JmxRefreshable>) fetcher.fetchFrom(source);
-		return Collections.singletonList(timestamp -> {
+		return List.of(timestamp -> {
 			for (JmxRefreshable jmxRefreshableElement : listRef) {
 				jmxRefreshableElement.refresh(timestamp);
 			}

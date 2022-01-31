@@ -29,8 +29,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
-import static java.util.Collections.singletonList;
-
 public final class DatasetLocalSortReduce<K, I, O> extends LocallySortedDataset<K, O> {
 	private final LocallySortedDataset<K, I> input;
 	private final Reducer<K, I, O, ?> reducer;
@@ -60,6 +58,6 @@ public final class DatasetLocalSortReduce<K, I, O> extends LocallySortedDataset<
 
 	@Override
 	public Collection<Dataset<?>> getBases() {
-		return singletonList(input);
+		return List.of(input);
 	}
 }

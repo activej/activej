@@ -25,7 +25,6 @@ import java.util.Map;
 import static io.activej.aggregation.PrimaryKey.ofArray;
 import static io.activej.cube.TestUtils.STUB_CUBE_STATE;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -110,7 +109,7 @@ public class CubeOTTest {
 						"test", toPosition),
 				positions);
 
-		List<LogDiff<CubeDiff>> inverted = logSystem.invert(singletonList(logDiff));
+		List<LogDiff<CubeDiff>> inverted = logSystem.invert(List.of(logDiff));
 		for (LogDiff<CubeDiff> invertedDiff : inverted) {
 			state.apply(invertedDiff);
 		}

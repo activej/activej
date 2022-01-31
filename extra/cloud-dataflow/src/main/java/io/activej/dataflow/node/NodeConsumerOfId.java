@@ -9,9 +9,8 @@ import io.activej.dataflow.graph.Task;
 import io.activej.datastream.StreamConsumer;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Consumer;
-
-import static java.util.Collections.singletonList;
 
 /**
  * Represents a node, which sends data items to a consumer specified by 'id'.
@@ -43,7 +42,7 @@ public final class NodeConsumerOfId<T> extends AbstractNode {
 
 	@Override
 	public Collection<StreamId> getInputs() {
-		return singletonList(input);
+		return List.of(input);
 	}
 
 	@SuppressWarnings("unchecked")

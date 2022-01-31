@@ -38,7 +38,6 @@ import static io.activej.inject.util.ReflectionUtils.generateInjectingInitialize
 import static io.activej.inject.util.Utils.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -460,7 +459,7 @@ public final class Preprocessor {
 		@Nullable String getHintFor(Entry<Key<?>, Binding<?>> keybind, Key<?> missing, Set<Key<?>> upperKnown, Trie<Scope, Map<Key<?>, Binding<?>>> bindings);
 	}
 
-	private static final List<MissingKeyHint> missingKeyHints = singletonList(
+	private static final List<MissingKeyHint> missingKeyHints = List.of(
 			(missing, upperKnown, bindings) -> {
 				if (missing.getRawType() != InstanceProvider.class) {
 					return null;

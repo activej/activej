@@ -24,8 +24,6 @@ import io.activej.datastream.processor.StreamUnion;
 import java.util.Collection;
 import java.util.List;
 
-import static java.util.Collections.singletonList;
-
 @CompiledJson
 public final class NodeUnion<T> extends AbstractNode {
 	private final List<StreamId> inputs;
@@ -43,7 +41,7 @@ public final class NodeUnion<T> extends AbstractNode {
 
 	@Override
 	public Collection<StreamId> getOutputs() {
-		return singletonList(output);
+		return List.of(output);
 	}
 
 	@Override

@@ -28,7 +28,6 @@ import java.util.Collection;
 import java.util.List;
 
 import static io.activej.dataflow.dataset.DatasetUtils.repartitionAndSort;
-import static java.util.Collections.singletonList;
 
 public final class DatasetRepartitionAndSort<K, T> extends SortedDataset<K, T> {
 	private final LocallySortedDataset<K, T> input;
@@ -54,6 +53,6 @@ public final class DatasetRepartitionAndSort<K, T> extends SortedDataset<K, T> {
 
 	@Override
 	public Collection<Dataset<?>> getBases() {
-		return singletonList(input);
+		return List.of(input);
 	}
 }

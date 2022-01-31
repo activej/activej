@@ -8,6 +8,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
@@ -15,7 +16,6 @@ import static io.activej.aggregation.AggregationPredicates.*;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.codegen.expression.Expressions.arg;
 import static io.activej.codegen.expression.Expressions.cast;
-import static java.util.Collections.singletonList;
 import static org.junit.Assert.*;
 
 public class PredicatesTest {
@@ -716,7 +716,7 @@ public class PredicatesTest {
 	private boolean matches(Record record, String field, String pattern) {
 		AggregationPredicate aggregationPredicate = AggregationPredicates.regexp(field, pattern);
 		return ClassBuilder.create(Predicate.class)
-				.withMethod("test", boolean.class, singletonList(Object.class),
+				.withMethod("test", boolean.class, List.of(Object.class),
 						aggregationPredicate.createPredicate(cast(arg(0), Record.class), Record.FIELD_TYPES))
 				.defineClassAndCreateInstance(CLASS_LOADER)
 				.test(record);

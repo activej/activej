@@ -26,10 +26,9 @@ import io.activej.promise.Promise;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
-
-import static java.util.Collections.singletonList;
 
 /**
  * Represents a node, which performs sorting of a data stream, based on key function and key comparator.
@@ -71,12 +70,12 @@ public final class NodeSort<K, T> extends AbstractNode {
 
 	@Override
 	public Collection<StreamId> getInputs() {
-		return singletonList(input);
+		return List.of(input);
 	}
 
 	@Override
 	public Collection<StreamId> getOutputs() {
-		return singletonList(output);
+		return List.of(output);
 	}
 
 	@Override

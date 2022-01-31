@@ -25,10 +25,9 @@ import io.activej.datastream.StreamSupplier;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-
-import static java.util.Collections.singletonList;
 
 /**
  * Represents a node, which produces items as an iterable stream.
@@ -56,7 +55,7 @@ public final class NodeSupplierOfId<T> extends AbstractNode {
 
 	@Override
 	public Collection<StreamId> getOutputs() {
-		return singletonList(output);
+		return List.of(output);
 	}
 
 	@SuppressWarnings("unchecked")

@@ -26,8 +26,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
-import static java.util.Collections.singletonList;
-
 public final class DatasetAlreadySorted<K, T> extends SortedDataset<K, T> {
 	private final Dataset<T> dataset;
 
@@ -43,6 +41,6 @@ public final class DatasetAlreadySorted<K, T> extends SortedDataset<K, T> {
 
 	@Override
 	public Collection<Dataset<?>> getBases() {
-		return singletonList(dataset);
+		return List.of(dataset);
 	}
 }

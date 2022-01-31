@@ -23,8 +23,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import static java.util.Collections.singletonList;
-
 public class LogDiff<D> {
 	private final Map<String, LogPositionDiff> positions;
 	private final List<D> diffs;
@@ -39,7 +37,7 @@ public class LogDiff<D> {
 	}
 
 	public static <D> LogDiff<D> of(Map<String, LogPositionDiff> positions, D diff) {
-		return of(positions, singletonList(diff));
+		return of(positions, List.of(diff));
 	}
 
 	public static <D> LogDiff<D> forCurrentPosition(List<D> diffs) {
@@ -47,7 +45,7 @@ public class LogDiff<D> {
 	}
 
 	public static <D> LogDiff<D> forCurrentPosition(D diff) {
-		return forCurrentPosition(singletonList(diff));
+		return forCurrentPosition(List.of(diff));
 	}
 
 	public Map<String, LogPositionDiff> getPositions() {

@@ -43,7 +43,6 @@ import static io.activej.service.Utils.combineAll;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
-import static java.util.Collections.singletonList;
 import static java.util.Comparator.comparingLong;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.joining;
@@ -260,7 +259,7 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 	}
 
 	public void add(Key key, Key first, Key... rest) {
-		add(key, concat(singletonList(first), asList(rest)));
+		add(key, concat(List.of(first), asList(rest)));
 	}
 
 	public synchronized boolean isStarted() {
@@ -473,11 +472,11 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 		}
 
 		SlowestChain concat(Key key, long time) {
-			return new SlowestChain(io.activej.common.Utils.concat(path, singletonList(key)), sum + time);
+			return new SlowestChain(io.activej.common.Utils.concat(path, List.of(key)), sum + time);
 		}
 
 		static SlowestChain of(Key key, long keyValue) {
-			return new SlowestChain(singletonList(key), keyValue);
+			return new SlowestChain(List.of(key), keyValue);
 		}
 	}
 

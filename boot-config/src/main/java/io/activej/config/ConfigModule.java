@@ -30,6 +30,7 @@ import java.io.Writer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.CompletionStage;
@@ -38,7 +39,6 @@ import java.util.function.Consumer;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
-import static java.util.Collections.singletonList;
 
 /**
  * Supplies config to your application, looks after usage of config, prevents usage of config in any part of lifecycle except for startup.
@@ -130,7 +130,7 @@ public final class ConfigModule extends AbstractModule implements WithInitialize
 			Key<CompletionStage<Void>> completionStageKey = new Key<CompletionStage<Void>>(OnStart.class) {};
 			return binding
 					.addDependencies(completionStageKey)
-					.mapInstance(singletonList(completionStageKey), (args, config) -> {
+					.mapInstance(List.of(completionStageKey), (args, config) -> {
 						CompletionStage<Void> onStart = (CompletionStage<Void>) args[0];
 						AtomicBoolean started = new AtomicBoolean();
 						ProtectedConfig protectedConfig = new ProtectedConfig(ConfigWithFullPath.wrap(config), started);

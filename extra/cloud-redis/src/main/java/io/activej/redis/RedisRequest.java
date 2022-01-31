@@ -18,7 +18,6 @@ package io.activej.redis;
 
 import io.activej.common.Checks;
 
-import java.util.Collections;
 import java.util.List;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
@@ -57,7 +56,7 @@ public abstract class RedisRequest {
 		return new RedisRequest() {
 			@Override
 			public int write(byte[] array, int offset) throws ArrayIndexOutOfBoundsException {
-				return writeRequest(Collections.singletonList(cmd), array, offset);
+				return writeRequest(List.of(cmd), array, offset);
 			}
 		};
 	}

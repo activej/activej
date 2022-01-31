@@ -21,7 +21,6 @@ import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
-import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
@@ -125,35 +124,35 @@ public class OTAlgorithmsTest {
 	@Test
 	public void testCheckoutSnapshotInAnotherBranch() {
 		graph1();
-		doTestCheckoutGraph1(5, singletonList(add(6)));
+		doTestCheckoutGraph1(5, List.of(add(6)));
 	}
 
 	@Test
 	public void testCheckoutSnapshotInSameBranch() {
 		graph1();
-		doTestCheckoutGraph1(7, singletonList(add(8)));
+		doTestCheckoutGraph1(7, List.of(add(8)));
 	}
 
 	@Test
 	public void testCheckoutSnapshotInCommonBranch() {
 		graph1();
-		doTestCheckoutGraph1(2, singletonList(add(2)));
+		doTestCheckoutGraph1(2, List.of(add(2)));
 	}
 
 	@Test
 	public void testCheckoutSnapshotIsRoot() {
 		graph1();
-		doTestCheckoutGraph1(0, singletonList(add(0)));
+		doTestCheckoutGraph1(0, List.of(add(0)));
 		graph2();
-		doTestCheckoutGraph2(0, singletonList(add(0)));
+		doTestCheckoutGraph2(0, List.of(add(0)));
 	}
 
 	@Test
 	public void testCheckoutSnapshotIsCheckoutCommit() {
 		graph1();
-		doTestCheckoutGraph1(9, singletonList(add(16)));
+		doTestCheckoutGraph1(9, List.of(add(16)));
 		graph2();
-		doTestCheckoutGraph2(2, singletonList(add(2)));
+		doTestCheckoutGraph2(2, List.of(add(2)));
 	}
 
 	@Test

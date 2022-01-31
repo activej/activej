@@ -46,7 +46,6 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.nonNullElseEmpty;
 import static io.activej.promise.Promises.sequence;
-import static java.util.Collections.singletonList;
 
 public final class OTStateManager<K, D> implements EventloopService, WithInitializer<OTStateManager<K, D>> {
 	private static final Logger logger = LoggerFactory.getLogger(OTStateManager.class);
@@ -308,7 +307,7 @@ public final class OTStateManager<K, D> implements EventloopService, WithInitial
 
 	public void add(@NotNull D diff) {
 		checkState(isValid());
-		addAll(singletonList(diff));
+		addAll(List.of(diff));
 	}
 
 	public void addAll(@NotNull List<? extends D> diffs) {

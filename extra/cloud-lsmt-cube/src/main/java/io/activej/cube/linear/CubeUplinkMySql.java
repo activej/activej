@@ -57,7 +57,8 @@ import static io.activej.cube.Utils.toJson;
 import static io.activej.cube.linear.Utils.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
-import static java.util.Collections.*;
+import static java.util.Collections.nCopies;
+import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
@@ -471,10 +472,10 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 			if (positions.isEmpty()) {
 				logDiffs = List.of();
 			} else {
-				logDiffs = singletonList(LogDiff.of(positions, List.of()));
+				logDiffs = List.of(LogDiff.of(positions, List.of()));
 			}
 		} else {
-			logDiffs = singletonList(LogDiff.of(positions, cubeDiff));
+			logDiffs = List.of(LogDiff.of(positions, cubeDiff));
 		}
 		return logDiffs;
 	}

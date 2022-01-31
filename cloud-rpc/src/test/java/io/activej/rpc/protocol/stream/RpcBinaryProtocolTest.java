@@ -31,7 +31,6 @@ import java.util.stream.IntStream;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static io.activej.test.TestUtils.getFreePort;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -84,7 +83,7 @@ public final class RpcBinaryProtocolTest {
 	@Test
 	public void testCompression() {
 		BinarySerializer<RpcMessage> binarySerializer = SerializerBuilder.create()
-				.withSubclasses(RpcMessage.MESSAGE_TYPES, singletonList(String.class))
+				.withSubclasses(RpcMessage.MESSAGE_TYPES, List.of(String.class))
 				.build(RpcMessage.class);
 
 		int countRequests = 10;

@@ -297,7 +297,7 @@ public class BinarySerializerTest {
 		testData1.nestedList = asList(new TestDataNested(1), new TestDataNested(2));
 		testData1.nestedListList = asList(
 				asList(new TestDataNested(20), new TestDataNested(21)),
-				singletonList(new TestDataNested(22)));
+				List.of(new TestDataNested(22)));
 
 		TestDataComplex testData2 = doTest(TestDataComplex.class, testData1);
 
@@ -2793,7 +2793,7 @@ public class BinarySerializerTest {
 	@Test
 	public void abstractSubclass() {
 		SerializerBuilder serializerBuilder = SerializerBuilder.create()
-				.withSubclasses(Object.class, singletonList(AbstractClass.class));
+				.withSubclasses(Object.class, List.of(AbstractClass.class));
 
 		try {
 			serializerBuilder.build(Object.class);
@@ -2806,7 +2806,7 @@ public class BinarySerializerTest {
 	@Test
 	public void interfaceSubclass() {
 		SerializerBuilder serializerBuilder = SerializerBuilder.create()
-				.withSubclasses(Object.class, singletonList(Interface.class));
+				.withSubclasses(Object.class, List.of(Interface.class));
 
 		try {
 			serializerBuilder.build(Object.class);
@@ -2819,7 +2819,7 @@ public class BinarySerializerTest {
 	@Test
 	public void annotationSubclass() {
 		SerializerBuilder serializerBuilder = SerializerBuilder.create()
-				.withSubclasses(Object.class, singletonList(Annotation.class));
+				.withSubclasses(Object.class, List.of(Annotation.class));
 
 		try {
 			serializerBuilder.build(Object.class);

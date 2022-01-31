@@ -33,7 +33,6 @@ import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.promise.TestUtils.await;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 
@@ -92,7 +91,7 @@ public class StringDimensionTest {
 				.streamTo(consumerToList));
 
 		List<DataItemResultString> actual = consumerToList.getList();
-		List<DataItemResultString> expected = singletonList(new DataItemResultString("str2", 3, 10, 30, 20));
+		List<DataItemResultString> expected = List.of(new DataItemResultString("str2", 3, 10, 30, 20));
 
 		assertEquals(expected, actual);
 	}

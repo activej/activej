@@ -45,7 +45,6 @@ import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpMethod.*;
 import static io.activej.http.Protocol.WS;
 import static io.activej.http.Protocol.WSS;
-import static java.util.Collections.singletonList;
 
 /**
  * Represents the HTTP request which {@link AsyncHttpClient} sends to
@@ -166,7 +165,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	@Override
 	public void addCookie(@NotNull HttpCookie cookie) {
 		if (CHECK) checkState(!isRecycled());
-		addCookies(singletonList(cookie));
+		addCookies(List.of(cookie));
 	}
 
 	@Contract(pure = true)

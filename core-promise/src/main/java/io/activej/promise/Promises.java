@@ -35,7 +35,10 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Array;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 import java.util.function.*;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
@@ -46,7 +49,6 @@ import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static io.activej.promise.PromisePredicates.isResult;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 
 /**
  * Allows managing multiple {@link Promise}s.
@@ -357,7 +359,7 @@ public final class Promises {
 
 	@Contract(pure = true)
 	public static <T> @NotNull Promise<T> any(@NotNull BiPredicate<? super T, Exception> predicate, @NotNull Promise<? extends T> promise1) {
-		return any(predicate, singletonList(promise1));
+		return any(predicate, List.of(promise1));
 	}
 
 	@Contract(pure = true)
@@ -426,7 +428,7 @@ public final class Promises {
 	 */
 	@Contract(pure = true)
 	public static <T> @NotNull Promise<List<T>> toList(@NotNull Promise<? extends T> promise1) {
-		return promise1.map(Collections::singletonList);
+		return promise1.map(t -> List.of(t));
 	}
 
 	/**
@@ -453,7 +455,7 @@ public final class Promises {
 	public static <T> @NotNull Promise<List<T>> toList(@NotNull List<? extends Promise<? extends T>> promises) {
 		int size = promises.size();
 		if (size == 0) return Promise.of(List.of());
-		if (size == 1) return promises.get(0).map(Collections::singletonList);
+		if (size == 1) return promises.get(0).map(t -> List.of(t));
 		if (size == 2) return promises.get(0).combine(promises.get(1), Arrays::asList);
 		return toListImpl(promises.iterator(), promises.size(), true);
 	}

@@ -29,7 +29,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import static io.activej.common.HashUtils.murmur3hash;
-import static java.util.Collections.singletonList;
 
 /**
  * Represents a node, which splits (duplicates) data items from a single input to many outputs.
@@ -76,7 +75,7 @@ public final class NodeShard<K, T> extends AbstractNode {
 
 	@Override
 	public Collection<StreamId> getInputs() {
-		return singletonList(input);
+		return List.of(input);
 	}
 
 	@Override

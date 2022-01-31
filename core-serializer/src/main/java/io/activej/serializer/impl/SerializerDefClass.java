@@ -35,7 +35,6 @@ import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.util.Utils.get;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.*;
-import static java.util.Collections.singletonList;
 import static org.objectweb.asm.Type.*;
 
 public final class SerializerDefClass extends AbstractSerializerDef {
@@ -198,7 +197,7 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 			try {
 				Method setter = decodeType.getMethod(setterName, getter.getReturnType());
 				if (!isPrivate(setter.getModifiers())) {
-					addSetter(setter, singletonList(fieldName));
+					addSetter(setter, List.of(fieldName));
 				}
 			} catch (NoSuchMethodException e) {
 				throw new RuntimeException(e);

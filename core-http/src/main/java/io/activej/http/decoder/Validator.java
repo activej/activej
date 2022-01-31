@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import static io.activej.common.Utils.concat;
-import static java.util.Collections.singletonList;
 
 /**
  * An enhanced predicate which can return a list of errors for given input object.
@@ -103,6 +102,6 @@ public interface Validator<T> {
 	static <T> Validator<T> of(Predicate<T> predicate, String template) {
 		return value -> predicate.test(value) ?
 				List.of() :
-				singletonList(DecodeError.of(template, value));
+				List.of(DecodeError.of(template, value));
 	}
 }

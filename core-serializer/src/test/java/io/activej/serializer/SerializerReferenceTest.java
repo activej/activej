@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 
 import static io.activej.serializer.Utils.doTest;
-import static java.util.Collections.singletonList;
 import static org.junit.Assert.*;
 
 public class SerializerReferenceTest {
@@ -110,8 +109,8 @@ public class SerializerReferenceTest {
 
 		Node node1 = new Node();
 		Node node2 = new Node();
-		node1.nodes = singletonList(node2);
-		node2.nodes = singletonList(node1);
+		node1.nodes = List.of(node2);
+		node2.nodes = List.of(node1);
 		container.node = node1;
 
 		Container container1 = doTest(Container.class, container);

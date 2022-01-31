@@ -40,7 +40,6 @@ import static io.activej.fs.ActiveFs.SEPARATOR;
 import static io.activej.fs.util.RemoteFsUtils.isWildcard;
 import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
-import static java.util.Collections.singletonList;
 
 public final class LocalFileUtils {
 	private static final Logger logger = LoggerFactory.getLogger(LocalFileUtils.class);
@@ -176,7 +175,7 @@ public final class LocalFileUtils {
 		// optimization for single-file requests
 		if (subglob.isEmpty()) {
 			return Files.isRegularFile(subdirectory) ?
-					singletonList(subdirectory) :
+					List.of(subdirectory) :
 					List.of();
 		}
 

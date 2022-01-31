@@ -21,7 +21,6 @@ import static io.activej.ot.OTAlgorithms.mergeAndUpdateHeads;
 import static io.activej.ot.utils.Utils.*;
 import static io.activej.promise.TestUtils.await;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -62,7 +61,7 @@ public final class OTSystemTest {
 		List<TestOp> result = SYSTEM.squash(arg);
 		System.out.println(result);
 
-		assertEquals(singletonList(set(0, 13)), result);
+		assertEquals(List.of(set(0, 13)), result);
 	}
 
 	@Test

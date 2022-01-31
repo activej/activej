@@ -21,14 +21,12 @@ import io.activej.ot.exception.TransformException;
 
 import java.util.List;
 
-import static java.util.Collections.singletonList;
-
 public interface OTSystem<D> {
 
 	TransformResult<D> transform(List<? extends D> leftDiffs, List<? extends D> rightDiffs) throws TransformException;
 
 	default TransformResult<D> transform(D leftDiff, D rightDiff) throws TransformException {
-		return transform(singletonList(leftDiff), singletonList(rightDiff));
+		return transform(List.of(leftDiff), List.of(rightDiff));
 	}
 
 	List<D> squash(List<? extends D> ops);

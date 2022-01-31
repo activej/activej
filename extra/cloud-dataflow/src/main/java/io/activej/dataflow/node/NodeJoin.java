@@ -23,10 +23,10 @@ import io.activej.datastream.processor.StreamJoin.Joiner;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
 import java.util.function.Function;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 
 /**
  * Represents a node, which joins two internalConsumers streams (left and right) into one, based on logic, defined by key functions and joiner.
@@ -71,7 +71,7 @@ public final class NodeJoin<K, L, R, V> extends AbstractNode {
 
 	@Override
 	public Collection<StreamId> getOutputs() {
-		return singletonList(output);
+		return List.of(output);
 	}
 
 	@Override

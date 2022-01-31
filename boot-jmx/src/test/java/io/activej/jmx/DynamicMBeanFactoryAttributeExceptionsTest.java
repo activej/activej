@@ -9,7 +9,6 @@ import java.util.List;
 
 import static io.activej.jmx.JmxBeanSettings.defaultSettings;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static org.junit.Assert.*;
 
 public class DynamicMBeanFactoryAttributeExceptionsTest {
@@ -33,7 +32,7 @@ public class DynamicMBeanFactoryAttributeExceptionsTest {
 	@Test
 	public void jmxStatsAttributeCannotBeInterface() {
 		DynamicMBeanFactory dynamicMBeanFactory = DynamicMBeanFactory.create();
-		List<MBeanWithInterfaceAsJmxStatsAttributes> beans = singletonList(new MBeanWithInterfaceAsJmxStatsAttributes());
+		List<MBeanWithInterfaceAsJmxStatsAttributes> beans = List.of(new MBeanWithInterfaceAsJmxStatsAttributes());
 
 		try {
 			dynamicMBeanFactory.createDynamicMBean(beans, SETTINGS, false);
@@ -50,7 +49,7 @@ public class DynamicMBeanFactoryAttributeExceptionsTest {
 	@Test
 	public void jmxStatsAttributeCannotBeAbstractClass() {
 		DynamicMBeanFactory dynamicMBeanFactory = DynamicMBeanFactory.create();
-		List<MBeanWithAbstractClassAsJmxStatsAttributes> beans = singletonList(new MBeanWithAbstractClassAsJmxStatsAttributes());
+		List<MBeanWithAbstractClassAsJmxStatsAttributes> beans = List.of(new MBeanWithAbstractClassAsJmxStatsAttributes());
 
 		try {
 			dynamicMBeanFactory.createDynamicMBean(beans, SETTINGS, false);
@@ -67,7 +66,7 @@ public class DynamicMBeanFactoryAttributeExceptionsTest {
 	@Test
 	public void jmxStatsAttributesClassMustHavePublicNoArgConstructor() {
 		DynamicMBeanFactory dynamicMBeanFactory = DynamicMBeanFactory.create();
-		List<MBeanWithJmxStatsClassWhichDoesntHavePublicNoArgConstructor> beans = singletonList(new MBeanWithJmxStatsClassWhichDoesntHavePublicNoArgConstructor());
+		List<MBeanWithJmxStatsClassWhichDoesntHavePublicNoArgConstructor> beans = List.of(new MBeanWithJmxStatsClassWhichDoesntHavePublicNoArgConstructor());
 
 		try {
 			dynamicMBeanFactory.createDynamicMBean(beans, SETTINGS, false);

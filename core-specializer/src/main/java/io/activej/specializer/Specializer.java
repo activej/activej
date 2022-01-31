@@ -37,7 +37,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static io.activej.specializer.Utils.*;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.objectweb.asm.Opcodes.*;
@@ -105,7 +104,7 @@ public final class Specializer {
 		Class<?> specializedClass;
 		Object specializedInstance;
 
-		final List<Specialization> relatedSpecializations = new ArrayList<>(singletonList(this));
+		final List<Specialization> relatedSpecializations = new ArrayList<>(List.of(this));
 
 		final Map<java.lang.reflect.Field, String> specializedFields = new LinkedHashMap<>();
 		final Map<java.lang.reflect.Method, String> specializedMethods = new LinkedHashMap<>();

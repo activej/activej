@@ -55,7 +55,6 @@ import static java.lang.System.identityHashCode;
 import static java.lang.reflect.Modifier.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.newSetFromMap;
-import static java.util.Collections.singletonList;
 import static java.util.Comparator.naturalOrder;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.groupingBy;
@@ -635,7 +634,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		StaticDecoders staticDecoders = staticDecoders(classBuilder);
 
 		Integer latestVersion = decodeVersions.isEmpty() ? null : decodeVersions.get(decodeVersions.size() - 1);
-		classBuilder.withMethod("decode", Object.class, singletonList(BinaryInput.class), methodBody(
+		classBuilder.withMethod("decode", Object.class, List.of(BinaryInput.class), methodBody(
 				decoderInitializers, decoderFinalizers,
 				decodeImpl(serializer, latestVersion, staticDecoders, arg(0))));
 
@@ -665,7 +664,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 
 		for (int i = decodeVersions.size() - 2; i >= 0; i--) {
 			int version = decodeVersions.get(i);
-			classBuilder.withMethod("decodeVersion" + version, serializer.getDecodeType(), singletonList(BinaryInput.class),
+			classBuilder.withMethod("decodeVersion" + version, serializer.getDecodeType(), List.of(BinaryInput.class),
 					sequence(serializer.defineDecoder(staticDecoders,
 							arg(0), version, compatibilityLevel)));
 		}
@@ -739,7 +738,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 						if (defined.values().stream().noneMatch(methodName::equals)) break;
 					}
 					defined.put(key, methodName);
-					classBuilder.withStaticMethod(methodName, valueClazz, singletonList(BinaryInput.class),
+					classBuilder.withStaticMethod(methodName, valueClazz, List.of(BinaryInput.class),
 							serializerDef.decoder(this, IN, version, compatibilityLevel));
 				}
 				return staticCallSelf(methodName, in);

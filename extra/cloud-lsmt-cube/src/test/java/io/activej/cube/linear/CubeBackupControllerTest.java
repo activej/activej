@@ -46,13 +46,12 @@ import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.test.TestUtils.dataSource;
 import static java.util.Collections.emptySet;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
 public class CubeBackupControllerTest {
 
-	private static final List<String> MEASURES = singletonList("pubRequests");
+	private static final List<String> MEASURES = List.of("pubRequests");
 	private static final PrimaryKey MIN_KEY = PrimaryKey.ofArray(100);
 	private static final PrimaryKey MAX_KEY = PrimaryKey.ofArray(300);
 	private static final int COUNT = 12345;
@@ -113,7 +112,7 @@ public class CubeBackupControllerTest {
 
 	@Test
 	public void backup() throws CubeException {
-		List<LogDiff<CubeDiff>> diffs1 = singletonList(
+		List<LogDiff<CubeDiff>> diffs1 = List.of(
 				LogDiff.of(Map.of(
 								"a", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("a", 12), 100)),
 								"b", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("b", 1123), 1000))),
@@ -124,7 +123,7 @@ public class CubeBackupControllerTest {
 		await(() -> uplink.push(new UplinkProtoCommit(0, diffs1)));
 		uploadStubChunks(diffs1);
 
-		List<LogDiff<CubeDiff>> diffs2 = singletonList(
+		List<LogDiff<CubeDiff>> diffs2 = List.of(
 				LogDiff.of(Map.of(
 								"b", new LogPositionDiff(LogPosition.create(new LogFile("b", 1123), 1000), LogPosition.create(new LogFile("b2", 9), 2341)),
 								"c", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("c", 555), 12))),
@@ -135,7 +134,7 @@ public class CubeBackupControllerTest {
 		await(() -> uplink.push(new UplinkProtoCommit(1, diffs2)));
 		uploadStubChunks(diffs2);
 
-		List<LogDiff<CubeDiff>> diffs3 = singletonList(
+		List<LogDiff<CubeDiff>> diffs3 = List.of(
 				LogDiff.of(Map.of(
 								"d", new LogPositionDiff(LogPosition.initial(), LogPosition.create(new LogFile("d", 541), 5235))),
 						CubeDiff.of(Map.of(

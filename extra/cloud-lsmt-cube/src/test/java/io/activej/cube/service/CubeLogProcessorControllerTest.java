@@ -33,6 +33,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
@@ -42,7 +43,6 @@ import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
@@ -98,7 +98,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 				multilog,
 				cube.logStreamConsumer(LogItem.class),
 				"test",
-				singletonList("partitionA"),
+				List.of("partitionA"),
 				logState);
 
 		controller = CubeLogProcessorController.create(
@@ -106,7 +106,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 				logState,
 				stateManager,
 				aggregationChunkStorage,
-				singletonList(logProcessor));
+				List.of(logProcessor));
 
 
 		await(stateManager.checkout());

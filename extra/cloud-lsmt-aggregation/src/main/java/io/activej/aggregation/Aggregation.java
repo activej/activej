@@ -64,7 +64,6 @@ import static io.activej.common.Utils.*;
 import static io.activej.datastream.processor.StreamSupplierTransformer.identity;
 import static java.lang.Math.min;
 import static java.util.Collections.emptySet;
-import static java.util.Collections.singletonList;
 import static java.util.Comparator.comparing;
 import static java.util.function.Predicate.isEqual;
 import static java.util.stream.Collectors.toList;
@@ -522,7 +521,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(Predicate.class, chunkRecordClass, where),
 				() -> ClassBuilder.create(Predicate.class)
-						.withMethod("test", boolean.class, singletonList(Object.class),
+						.withMethod("test", boolean.class, List.of(Object.class),
 								where.createPredicate(cast(arg(0), chunkRecordClass), getKeyTypes()))
 		);
 	}

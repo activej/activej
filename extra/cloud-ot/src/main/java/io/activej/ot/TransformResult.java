@@ -18,8 +18,6 @@ package io.activej.ot;
 
 import java.util.List;
 
-import static java.util.Collections.singletonList;
-
 public class TransformResult<D> {
 	public enum ConflictResolution {LEFT, RIGHT}
 
@@ -52,11 +50,11 @@ public class TransformResult<D> {
 	}
 
 	public static <D> TransformResult<D> of(D left, D right) {
-		return of(singletonList(left), singletonList(right));
+		return of(List.of(left), List.of(right));
 	}
 
 	public static <D> TransformResult<D> left(D left) {
-		return of(singletonList(left), List.of());
+		return of(List.of(left), List.of());
 	}
 
 	public static <D> TransformResult<D> left(List<? extends D> left) {
@@ -64,7 +62,7 @@ public class TransformResult<D> {
 	}
 
 	public static <D> TransformResult<D> right(D right) {
-		return of(List.of(), singletonList(right));
+		return of(List.of(), List.of(right));
 	}
 
 	public static <D> TransformResult<D> right(List<? extends D> right) {
