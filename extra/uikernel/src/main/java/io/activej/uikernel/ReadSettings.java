@@ -125,7 +125,7 @@ public final class ReadSettings<K> {
 		if (extraParameter != null && !extraParameter.isEmpty()) {
 			extra = fromJson(gson, extraParameter, new TypeToken<LinkedHashSet<K>>() {}.getType());
 		} else {
-			extra = Collections.emptySet();
+			extra = Set.of();
 		}
 
 		return new ReadSettings<>(fields, offset, limit, filters, sort, extra);

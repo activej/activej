@@ -5,8 +5,6 @@ import io.activej.codegen.expression.Expression;
 import java.util.Map;
 import java.util.Set;
 
-import static java.util.Collections.emptySet;
-
 public abstract class AbstractSerializerDef implements SerializerDef {
 	@Override
 	public void accept(Visitor visitor) {
@@ -14,7 +12,7 @@ public abstract class AbstractSerializerDef implements SerializerDef {
 
 	@Override
 	public Set<Integer> getVersions() {
-		return emptySet();
+		return Set.of();
 	}
 
 	@Override

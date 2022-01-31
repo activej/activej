@@ -63,7 +63,6 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.*;
 import static io.activej.datastream.processor.StreamSupplierTransformer.identity;
 import static java.lang.Math.min;
-import static java.util.Collections.emptySet;
 import static java.util.Comparator.comparing;
 import static java.util.function.Predicate.isEqual;
 import static java.util.stream.Collectors.toList;
@@ -532,7 +531,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 	}
 
 	public Promise<AggregationDiff> consolidateMinKey() {
-		return consolidateMinKey(emptySet());
+		return consolidateMinKey(Set.of());
 	}
 
 	public Promise<AggregationDiff> consolidateMinKey(Set<Object> lockedChunkIds) {
@@ -540,7 +539,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 	}
 
 	public Promise<AggregationDiff> consolidateHotSegment() {
-		return consolidateHotSegment(emptySet());
+		return consolidateHotSegment(Set.of());
 	}
 
 	public Promise<AggregationDiff> consolidateHotSegment(Set<Object> lockedChunkIds) {

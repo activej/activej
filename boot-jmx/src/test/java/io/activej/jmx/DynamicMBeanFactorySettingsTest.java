@@ -10,14 +10,17 @@ import javax.management.DynamicMBean;
 import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanInfo;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static io.activej.jmx.helper.Utils.nameToAttribute;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class DynamicMBeanFactorySettingsTest {
-	private static final Set<String> NO_BEANS = Collections.emptySet();
+	private static final Set<String> NO_BEANS = Set.of();
 	private static final Map<String, AttributeModifier<?>> NO_MODIFIERS = Map.of();
 	private static final Map<Type, JmxCustomTypeAdapter<?>> NO_CUSTOM_TYPES = Map.of();
 

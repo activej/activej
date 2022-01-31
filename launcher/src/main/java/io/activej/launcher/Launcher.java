@@ -39,7 +39,6 @@ import java.util.concurrent.*;
 
 import static io.activej.inject.util.Utils.makeGraphVizGraph;
 import static io.activej.types.Types.parameterizedType;
-import static java.util.Collections.emptySet;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toSet;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -146,7 +145,7 @@ public abstract class Launcher {
 			injector.createEagerInstances();
 			logger0.info("Created eager singletons");
 
-			Set<LauncherService> services = injector.getInstanceOr(new Key<Set<LauncherService>>() {}, emptySet());
+			Set<LauncherService> services = injector.getInstanceOr(new Key<Set<LauncherService>>() {}, Set.of());
 			Set<LauncherService> startedServices = new HashSet<>();
 
 			logger0.info("Post-injected instances: {}", postInjectInstances(injector));
@@ -212,7 +211,7 @@ public abstract class Launcher {
 
 	@SuppressWarnings("unchecked")
 	private Set<Key<?>> postInjectInstances(Injector injector) {
-		Set<InstanceInjector<?>> postInjectors = injector.getInstanceOr(INSTANCE_INJECTORS_KEY, emptySet());
+		Set<InstanceInjector<?>> postInjectors = injector.getInstanceOr(INSTANCE_INJECTORS_KEY, Set.of());
 		for (InstanceInjector<?> instanceInjector : postInjectors) {
 			Object instance = injector.peekInstance(instanceInjector.key());
 			if (instance != null) {

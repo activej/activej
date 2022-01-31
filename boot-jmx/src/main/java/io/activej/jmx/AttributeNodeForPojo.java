@@ -79,7 +79,7 @@ final class AttributeNodeForPojo implements AttributeNode {
 	@Override
 	public Set<String> getVisibleAttributes() {
 		if (!visible) {
-			return Collections.emptySet();
+			return Set.of();
 		} else {
 			Set<String> allVisibleAttrs = new HashSet<>();
 			for (AttributeNode subNode : subNodes) {

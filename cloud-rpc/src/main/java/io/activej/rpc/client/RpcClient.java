@@ -64,7 +64,6 @@ import static io.activej.async.callback.Callback.toAnotherEventloop;
 import static io.activej.common.Utils.nonNullElseGet;
 import static io.activej.common.Utils.not;
 import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
-import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -533,7 +532,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	private static final class NoServersStrategy implements RpcStrategy {
 		@Override
 		public Set<InetSocketAddress> getAddresses() {
-			return emptySet();
+			return Set.of();
 		}
 
 		@Override

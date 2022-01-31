@@ -19,7 +19,6 @@ package io.activej.jmx;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,7 +52,7 @@ abstract class AbstractAttributeNodeForLeaf implements AttributeNode {
 
 	@Override
 	public final Set<String> getVisibleAttributes() {
-		return visible ? Set.of(name) : Collections.emptySet();
+		return visible ? Set.of(name) : Set.of();
 	}
 
 	@Override

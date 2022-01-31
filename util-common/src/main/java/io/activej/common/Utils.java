@@ -28,7 +28,6 @@ import java.util.stream.StreamSupport;
 
 import static java.lang.Math.max;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.*;
 
 /**
@@ -71,7 +70,7 @@ public class Utils {
 	}
 
 	public static <T> Set<T> nonNullElseEmpty(@Nullable Set<T> set) {
-		return nonNullElse(set, emptySet());
+		return nonNullElse(set, Set.of());
 	}
 
 	public static <T> List<T> nonNullElseEmpty(@Nullable List<T> list) {

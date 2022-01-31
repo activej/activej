@@ -28,7 +28,6 @@ import java.util.Set;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 import static io.activej.serializer.impl.SerializerExpressions.*;
-import static java.util.Collections.emptySet;
 
 public final class SerializerDefByteBuffer extends AbstractSerializerDef implements SerializerDefWithNullable {
 	private final boolean wrapped;
@@ -54,7 +53,7 @@ public final class SerializerDefByteBuffer extends AbstractSerializerDef impleme
 
 	@Override
 	public Set<Integer> getVersions() {
-		return emptySet();
+		return Set.of();
 	}
 
 	@Override

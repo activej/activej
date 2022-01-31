@@ -24,8 +24,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-import static java.util.Collections.emptySet;
-
 public class ComputedMeasures {
 	private static final class E extends Expressions {}
 
@@ -198,7 +196,7 @@ public class ComputedMeasures {
 
 		@Override
 		public Set<String> getMeasureDependencies() {
-			return emptySet();
+			return Set.of();
 		}
 
 		@Override

@@ -20,7 +20,10 @@ import io.activej.common.initializer.WithInitializer;
 import io.activej.jmx.DynamicMBeanFactory.JmxCustomTypeAdapter;
 
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import static io.activej.common.Checks.checkArgument;
 
@@ -47,7 +50,7 @@ public final class JmxBeanSettings implements WithInitializer<JmxBeanSettings> {
 	}
 
 	public static JmxBeanSettings defaultSettings() {
-		return new JmxBeanSettings(Collections.emptySet(), Map.of(), Map.of());
+		return new JmxBeanSettings(Set.of(), Map.of(), Map.of());
 	}
 
 	public void merge(JmxBeanSettings otherSettings) {

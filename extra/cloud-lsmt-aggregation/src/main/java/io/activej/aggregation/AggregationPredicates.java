@@ -29,7 +29,6 @@ import java.util.regex.Pattern;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.first;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonMap;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
@@ -475,7 +474,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return emptySet();
+			return Set.of();
 		}
 
 		@Override
@@ -507,7 +506,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return emptySet();
+			return Set.of();
 		}
 
 		@Override

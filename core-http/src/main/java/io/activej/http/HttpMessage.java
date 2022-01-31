@@ -35,7 +35,6 @@ import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nullify;
 import static io.activej.csp.ChannelConsumers.recycling;
-import static java.util.Collections.emptySet;
 
 /**
  * Represents any HTTP message. Its internal byte buffers will be automatically recycled in HTTP client or HTTP server.
@@ -394,7 +393,7 @@ public abstract class HttpMessage {
 	 * Retrieves a set of all attachment keys for this HttpMessage
 	 */
 	public Set<Object> getAttachmentKeys() {
-		return attachments != null ? attachments.keySet() : emptySet();
+		return attachments != null ? attachments.keySet() : Set.of();
 	}
 
 	/**

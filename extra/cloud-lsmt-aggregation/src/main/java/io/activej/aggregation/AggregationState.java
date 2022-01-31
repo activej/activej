@@ -34,7 +34,6 @@ import java.util.stream.Stream;
 import static io.activej.aggregation.AggregationPredicates.toRangeScan;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.intersection;
-import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableMap;
 
 /**
@@ -142,7 +141,7 @@ public final class AggregationState implements OTState<AggregationDiff> {
 	}
 
 	public List<AggregationChunk> findChunksGroupWithMostOverlaps() {
-		return findChunksGroupWithMostOverlaps(prefixRanges[aggregation.getKeys().size()], emptySet());
+		return findChunksGroupWithMostOverlaps(prefixRanges[aggregation.getKeys().size()], Set.of());
 	}
 
 	private static List<AggregationChunk> findChunksGroupWithMostOverlaps(RangeTree<PrimaryKey, AggregationChunk> tree, Set<Object> lockedChunkIds) {
@@ -293,7 +292,7 @@ public final class AggregationState implements OTState<AggregationDiff> {
 	}
 
 	public List<AggregationChunk> findChunksForConsolidationMinKey(int maxChunks, int optimalChunkSize) {
-		return findChunksForConsolidationMinKey(maxChunks, optimalChunkSize, emptySet());
+		return findChunksForConsolidationMinKey(maxChunks, optimalChunkSize, Set.of());
 	}
 
 	public List<AggregationChunk> findChunksForConsolidationMinKey(int maxChunks, int optimalChunkSize, Set<Object> lockedChunkIds) {
@@ -309,7 +308,7 @@ public final class AggregationState implements OTState<AggregationDiff> {
 	}
 
 	public List<AggregationChunk> findChunksForConsolidationHotSegment(int maxChunks) {
-		return findChunksForConsolidationHotSegment(maxChunks, emptySet());
+		return findChunksForConsolidationHotSegment(maxChunks, Set.of());
 	}
 
 	public List<AggregationChunk> findChunksForConsolidationHotSegment(int maxChunks, Set<Object> lockedChunkIds) {

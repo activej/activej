@@ -40,7 +40,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -377,7 +376,7 @@ public final class TestLocalActiveFsInvariants {
 	@Test
 	public void deleteAllEmpty() {
 		List<Path> before = listPaths(firstPath);
-		both(client -> await(client.deleteAll(emptySet())));
+		both(client -> await(client.deleteAll(Set.of())));
 
 		assertEquals(before, listPaths(firstPath));
 		assertFilesAreSame(firstPath, secondPath);
@@ -848,7 +847,7 @@ public final class TestLocalActiveFsInvariants {
 	@Test
 	public void infoAllEmpty() {
 		both(client -> {
-			Map<String, FileMetadata> result = await(client.infoAll(emptySet()));
+			Map<String, FileMetadata> result = await(client.infoAll(Set.of()));
 			assertTrue(result.isEmpty());
 		});
 	}

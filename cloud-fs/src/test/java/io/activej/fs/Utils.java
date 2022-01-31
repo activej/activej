@@ -19,7 +19,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
-import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
@@ -104,7 +103,7 @@ public final class Utils {
 	}
 
 	public static void assertFilesAreSame(Path firstPath, Path secondPath) {
-		assertFilesAreSame(firstPath, secondPath, emptySet());
+		assertFilesAreSame(firstPath, secondPath, Set.of());
 	}
 
 	public static void assertFilesAreSame(Path firstPath, Path secondPath, Set<String> except) {
@@ -126,7 +125,7 @@ public final class Utils {
 	}
 
 	public static List<Path> listPaths(Path directoryPath) {
-		return listPaths(directoryPath, emptySet());
+		return listPaths(directoryPath, Set.of());
 	}
 
 	public static List<Path> listPaths(Path directoryPath, Set<String> except) {

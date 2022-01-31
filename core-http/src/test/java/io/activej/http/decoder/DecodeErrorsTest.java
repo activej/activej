@@ -2,9 +2,9 @@ package io.activej.http.decoder;
 
 import org.junit.Test;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -32,7 +32,7 @@ public class DecodeErrorsTest {
 		DecodeErrors tree = DecodeErrors.of("Test");
 		assertTrue(tree.hasErrors());
 
-		assertEquals(Collections.emptySet(), tree.getChildren());
+		assertEquals(Set.of(), tree.getChildren());
 		assertEquals(1, tree.toMap().size());
 		assertNull(tree.getChild("$"));
 		assertEquals(1, tree.toMap().size());

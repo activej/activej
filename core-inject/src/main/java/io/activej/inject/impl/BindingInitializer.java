@@ -25,7 +25,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toSet;
 
 /**
@@ -34,7 +33,7 @@ import static java.util.stream.Collectors.toSet;
  */
 @SuppressWarnings({"rawtypes", "Convert2Lambda"})
 public abstract class BindingInitializer<T> {
-	private static final BindingInitializer<?> NOOP = new BindingInitializer<Object>(emptySet()) {
+	private static final BindingInitializer<?> NOOP = new BindingInitializer<Object>(Set.of()) {
 		@Override
 		public CompiledBindingInitializer<Object> compile(CompiledBindingLocator compiledBindings) {
 			return new CompiledBindingInitializer<Object>() {

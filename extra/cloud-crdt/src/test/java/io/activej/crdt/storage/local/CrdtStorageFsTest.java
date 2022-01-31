@@ -26,7 +26,6 @@ import static io.activej.common.Utils.transformMap;
 import static io.activej.crdt.function.CrdtFunction.ignoringTimestamp;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.serializer.BinarySerializers.*;
-import static java.util.Collections.emptySet;
 import static org.junit.Assert.*;
 
 public final class CrdtStorageFsTest {
@@ -197,7 +196,7 @@ public final class CrdtStorageFsTest {
 						"d", 43
 				));
 		testPickFilesForConsolidation(
-				emptySet(),
+				Set.of(),
 				Map.of(
 						"a", 120,
 						"b", 12,

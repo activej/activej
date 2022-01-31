@@ -39,7 +39,6 @@ import static io.activej.inject.Qualifiers.uniqueQualifier;
 import static io.activej.inject.Scope.UNSCOPED;
 import static io.activej.inject.util.Utils.*;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toCollection;
 
 /**
@@ -135,7 +134,7 @@ public final class Modules {
 	}
 
 	public static Trie<Scope, Set<Key<?>>> getImports(Trie<Scope, Map<Key<?>, Set<Binding<?>>>> trie) {
-		return getImports(trie, emptySet());
+		return getImports(trie, Set.of());
 	}
 
 	private static Trie<Scope, Set<Key<?>>> getImports(Trie<Scope, Map<Key<?>, Set<Binding<?>>>> trie, Set<Key<?>> upperExports) {

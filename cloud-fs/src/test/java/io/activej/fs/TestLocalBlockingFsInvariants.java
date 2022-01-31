@@ -21,7 +21,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
@@ -378,7 +377,7 @@ public final class TestLocalBlockingFsInvariants {
 	@Test
 	public void deleteAllEmpty() {
 		List<Path> before = listPaths(firstPath);
-		both(client -> client.deleteAll(emptySet()));
+		both(client -> client.deleteAll(Set.of()));
 
 		assertEquals(before, listPaths(firstPath));
 		assertFilesAreSame(firstPath, secondPath);
@@ -867,7 +866,7 @@ public final class TestLocalBlockingFsInvariants {
 	// region infoAll
 	@Test
 	public void infoAllEmpty() {
-		both(client -> assertTrue(client.infoAll(emptySet()).isEmpty()));
+		both(client -> assertTrue(client.infoAll(Set.of()).isEmpty()));
 	}
 
 	@Test

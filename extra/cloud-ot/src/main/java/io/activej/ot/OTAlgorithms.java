@@ -493,7 +493,7 @@ public final class OTAlgorithms {
 									});
 
 						})
-						.then(() -> to.updateHeads(heads, emptySet())));
+						.then(() -> to.updateHeads(heads, Set.of())));
 	}
 
 }

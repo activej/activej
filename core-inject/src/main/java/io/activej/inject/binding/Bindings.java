@@ -7,8 +7,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 @SuppressWarnings({"unchecked", "rawtypes", "Convert2Lambda", "ArraysAsListWithZeroOrOneArgument"})
@@ -18,7 +18,7 @@ class Bindings {
 		final T instance;
 
 		BindingToInstance(T instance) {
-			super(Collections.emptySet());
+			super(Set.of());
 			this.instance = instance;
 		}
 
@@ -106,7 +106,7 @@ class Bindings {
 		final Constructor0<R> constructor;
 
 		BindingToConstructor0(Constructor0<R> constructor) {
-			super(Collections.emptySet());
+			super(Set.of());
 			this.constructor = constructor;
 		}
 

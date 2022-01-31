@@ -231,7 +231,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 
 	@VisibleForTesting
 	static Set<String> pickFilesForConsolidation(Map<String, FileMetadata> files) {
-		if (files.isEmpty()) return Collections.emptySet();
+		if (files.isEmpty()) return Set.of();
 
 		Map<Integer, Set<String>> groups = new TreeMap<>();
 		for (Map.Entry<String, FileMetadata> entry : files.entrySet()) {
@@ -239,7 +239,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 			groups.computeIfAbsent(groupIdx, k -> new HashSet<>()).add(entry.getKey());
 		}
 
-		Set<String> groupToConsolidate = Collections.emptySet();
+		Set<String> groupToConsolidate = Set.of();
 
 		for (Set<String> group : groups.values()) {
 			int groupSize = group.size();

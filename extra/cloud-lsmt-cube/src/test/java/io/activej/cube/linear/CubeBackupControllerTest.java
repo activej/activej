@@ -45,7 +45,6 @@ import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.test.TestUtils.dataSource;
-import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
@@ -150,7 +149,7 @@ public class CubeBackupControllerTest {
 
 		assertBackups(0, 1, 2, 3);
 
-		assertChunkIds(0, emptySet());
+		assertChunkIds(0, Set.of());
 		assertPositions(0, Map.of());
 
 		assertChunkIds(1, Set.of(1L, 10L, 12L, 44L, 123L, 500L));

@@ -42,7 +42,6 @@ import static io.activej.inject.util.Utils.union;
 import static io.activej.service.Utils.combineAll;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
 import static java.util.Comparator.comparingLong;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.joining;
@@ -334,7 +333,7 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 			return future;
 		}
 
-		Set<Key> dependencies = (start ? forwards : backwards).getOrDefault(node, emptySet());
+		Set<Key> dependencies = (start ? forwards : backwards).getOrDefault(node, Set.of());
 
 		if (logger.isTraceEnabled()) {
 			logger.trace("{} : processing {}", keyToString(node), dependencies);
@@ -398,9 +397,9 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 	}
 
 	private void removeIntermediateOneWay(Key vertex, Map<Key, Set<Key>> forwards, Map<Key, Set<Key>> backwards) {
-		for (Key backward : backwards.getOrDefault(vertex, emptySet())) {
+		for (Key backward : backwards.getOrDefault(vertex, Set.of())) {
 			removeValue(forwards, backward, vertex);
-			for (Key forward : forwards.getOrDefault(vertex, emptySet())) {
+			for (Key forward : forwards.getOrDefault(vertex, Set.of())) {
 				if (!forward.equals(backward)) {
 					forwards.computeIfAbsent(backward, o -> new HashSet<>()).add(forward);
 				}
@@ -436,7 +435,7 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 		List<Key> path = new ArrayList<>();
 		next:
 		while (true) {
-			for (Key node : path.isEmpty() ? services.keySet() : forwards.getOrDefault(path.get(path.size() - 1), emptySet())) {
+			for (Key node : path.isEmpty() ? services.keySet() : forwards.getOrDefault(path.get(path.size() - 1), Set.of())) {
 				int loopIndex = path.indexOf(node);
 				if (loopIndex != -1) {
 					if (logger.isWarnEnabled()) {

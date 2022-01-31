@@ -19,7 +19,6 @@ package io.activej.aggregation;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.promise.Promise;
 
-import java.util.Collections;
 import java.util.Set;
 
 public final class ChunkLockerNoOp<C> implements ChunkLocker<C>, WithInitializer<ChunkLockerNoOp<C>> {
@@ -43,6 +42,6 @@ public final class ChunkLockerNoOp<C> implements ChunkLocker<C>, WithInitializer
 
 	@Override
 	public Promise<Set<C>> getLockedChunks() {
-		return Promise.of(Collections.emptySet());
+		return Promise.of(Set.of());
 	}
 }

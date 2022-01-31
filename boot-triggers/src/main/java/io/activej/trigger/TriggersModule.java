@@ -38,7 +38,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static io.activej.trigger.util.Utils.prettyPrintSimpleKeyName;
-import static java.util.Collections.emptySet;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 @SuppressWarnings("unused")
@@ -129,7 +128,7 @@ public final class TriggersModule extends AbstractModule implements TriggersModu
 
 	@ProvidesIntoSet
 	LauncherService service(Injector injector, Triggers triggers, OptionalDependency<Set<Initializer<TriggersModuleSettings>>> initializers) {
-		for (Initializer<TriggersModuleSettings> initializer : initializers.orElse(emptySet())) {
+		for (Initializer<TriggersModuleSettings> initializer : initializers.orElse(Set.of())) {
 			initializer.accept(this);
 		}
 		return new LauncherService() {
@@ -264,7 +263,7 @@ public final class TriggersModule extends AbstractModule implements TriggersModu
 	@SuppressWarnings({"unchecked", "RedundantCast"})
 	private void scanKeySettings(Map<KeyWithWorkerData, List<TriggerRegistryRecord>> triggers, KeyWithWorkerData internalKey, Object instance) {
 		Key<Object> key = (Key<Object>) internalKey.getKey();
-		for (TriggerConfig<?> config : keySettings.getOrDefault(key, emptySet())) {
+		for (TriggerConfig<?> config : keySettings.getOrDefault(key, Set.of())) {
 			triggers.computeIfAbsent(internalKey, $ -> new ArrayList<>())
 					.add(new TriggerRegistryRecord(config.severity, config.name, () ->
 							((TriggerConfig<Object>) config).triggerFunction.apply(instance)));

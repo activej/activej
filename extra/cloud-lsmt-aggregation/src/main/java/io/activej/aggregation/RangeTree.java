@@ -20,7 +20,8 @@ import io.activej.common.initializer.WithInitializer;
 
 import java.util.*;
 
-import static java.util.Collections.*;
+import static java.util.Collections.unmodifiableSet;
+import static java.util.Collections.unmodifiableSortedMap;
 
 public final class RangeTree<K, V> implements WithInitializer<RangeTree<K, V>> {
 
@@ -106,7 +107,7 @@ public final class RangeTree<K, V> implements WithInitializer<RangeTree<K, V>> {
 		while (it.hasNext()) {
 			Segment<V> segment = it.next();
 			removed |= segment.set.remove(value);
-			if (segment.closing.isEmpty() && segment.set.equals(prev != null ? prev.set : emptySet())) {
+			if (segment.closing.isEmpty() && segment.set.equals(prev != null ? prev.set : Set.of())) {
 				it.remove();
 			} else {
 				prev = segment;
