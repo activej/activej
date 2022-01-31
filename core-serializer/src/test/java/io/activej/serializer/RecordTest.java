@@ -73,4 +73,28 @@ public class RecordTest {
 		}
 	}
 
+	@SerializeRecord
+	public record NestedRecord(@SerializeNullable Record record) {
+	}
+
+	@Test
+	public void testNestedRecords() {
+		{
+			Record record = new Record("abc", 1);
+			NestedRecord nestedRecord1 = new NestedRecord(record);
+			NestedRecord nestedRecord2 = doTest(NestedRecord.class, nestedRecord1);
+			Assert.assertEquals(nestedRecord1, nestedRecord2);
+		}
+		{
+			Record record = new Record(null, 1);
+			NestedRecord nestedRecord1 = new NestedRecord(record);
+			NestedRecord nestedRecord2 = doTest(NestedRecord.class, nestedRecord1);
+			Assert.assertEquals(nestedRecord1, nestedRecord2);
+		}
+		{
+			NestedRecord nestedRecord1 = new NestedRecord(null);
+			NestedRecord nestedRecord2 = doTest(NestedRecord.class, nestedRecord1);
+			Assert.assertEquals(nestedRecord1, nestedRecord2);
+		}
+	}
 }
