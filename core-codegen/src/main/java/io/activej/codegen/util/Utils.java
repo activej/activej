@@ -63,7 +63,7 @@ public final class Utils {
 	}
 
 	public static boolean isPrimitiveType(Type type) {
-		return type.getSort() <= DOUBLE;
+		return type.getSort() > VOID && type.getSort() <= DOUBLE;
 	}
 
 	public static boolean isWrapperType(Type type) {
@@ -124,7 +124,7 @@ public final class Utils {
 			throw new IllegalArgumentException("Cannot unwrap type that is not an object reference");
 		@Nullable Type reference = WRAPPER_TO_PRIMITIVE.get(type.getClassName());
 		if (reference == null)
-			throw new NullPointerException();
+			throw new IllegalArgumentException("Not a wrapper type: " + type.getClassName());
 		return reference;
 	}
 

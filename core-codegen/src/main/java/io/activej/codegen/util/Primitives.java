@@ -40,7 +40,6 @@ public final class Primitives {
 		add(primToWrap, wrapToPrim, Long.TYPE, Long.class);
 		add(primToWrap, wrapToPrim, Float.TYPE, Float.class);
 		add(primToWrap, wrapToPrim, Double.TYPE, Double.class);
-		add(primToWrap, wrapToPrim, Void.TYPE, Void.class);
 
 		PRIMITIVE = Collections.unmodifiableMap(primToWrap);
 		WRAPPER = Collections.unmodifiableMap(wrapToPrim);
