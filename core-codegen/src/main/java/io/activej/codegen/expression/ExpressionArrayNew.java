@@ -20,6 +20,8 @@ import io.activej.codegen.Context;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static io.activej.codegen.util.TypeChecks.isWidenedToInt;
 import static org.objectweb.asm.Type.getType;
 
 final class ExpressionArrayNew implements Expression {
@@ -37,9 +39,7 @@ final class ExpressionArrayNew implements Expression {
 	public Type load(Context ctx) {
 		GeneratorAdapter g = ctx.getGeneratorAdapter();
 		Type lengthType = length.load(ctx);
-		if (lengthType == null) {
-			throw new IllegalArgumentException("Cannot use a 'throw' expression as the size of an array");
-		}
+		checkType(lengthType, isWidenedToInt());
 		g.newArray(getType(getType(type).getDescriptor().substring(1)));
 		return getType(type);
 	}

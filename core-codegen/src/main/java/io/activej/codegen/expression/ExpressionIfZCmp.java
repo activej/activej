@@ -23,6 +23,10 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static org.objectweb.asm.Type.BOOLEAN;
+import static org.objectweb.asm.Type.INT;
+
 final class ExpressionIfZCmp implements Expression {
 	private final Expression value;
 	private final CompareOperation operation;
@@ -43,9 +47,9 @@ final class ExpressionIfZCmp implements Expression {
 		Label labelTrue = new Label();
 		Label labelExit = new Label();
 
-		if (value.load(ctx) == null) {
-			throw new IllegalArgumentException("Cannot compare a 'throw' expression");
-		}
+		Type valueType = value.load(ctx);
+		checkType(valueType, type -> type != null && (type.getSort() >= BOOLEAN && type.getSort() <= INT));
+
 		g.ifZCmp(operation.opCode, labelTrue);
 
 		Type typeFalse = expressionFalse.load(ctx);

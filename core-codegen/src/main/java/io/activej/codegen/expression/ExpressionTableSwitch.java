@@ -24,7 +24,8 @@ import org.objectweb.asm.commons.TableSwitchGenerator;
 
 import java.util.Arrays;
 
-import static org.objectweb.asm.Type.INT_TYPE;
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static io.activej.codegen.util.TypeChecks.isWidenedToInt;
 
 class ExpressionTableSwitch implements Expression {
 	private final Expression value;
@@ -44,7 +45,7 @@ class ExpressionTableSwitch implements Expression {
 		GeneratorAdapter g = ctx.getGeneratorAdapter();
 
 		Type keyType = this.value.load(ctx);
-		if (keyType != INT_TYPE) throw new IllegalArgumentException("Key expression must be int " + keyType);
+		checkType(keyType, isWidenedToInt());
 
 		class TypeRef {
 			Type type;

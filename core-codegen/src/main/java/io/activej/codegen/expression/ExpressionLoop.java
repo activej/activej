@@ -21,6 +21,8 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static io.activej.codegen.util.TypeChecks.is;
 import static org.objectweb.asm.Type.BOOLEAN_TYPE;
 
 final class ExpressionLoop implements Expression {
@@ -41,7 +43,8 @@ final class ExpressionLoop implements Expression {
 		g.mark(labelLoop);
 
 		Type conditionType = condition.load(ctx);
-		if (conditionType != BOOLEAN_TYPE) throw new IllegalArgumentException("Condition must return boolean");
+		checkType(conditionType, is(BOOLEAN_TYPE));
+
 		g.push(false);
 		g.ifCmp(BOOLEAN_TYPE, GeneratorAdapter.EQ, labelExit);
 

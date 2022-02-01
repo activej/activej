@@ -22,6 +22,8 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static io.activej.codegen.util.TypeChecks.isAssignable;
 import static io.activej.codegen.util.Utils.isPrimitiveType;
 
 final class ExpressionIfNonNull implements Expression {
@@ -43,9 +45,8 @@ final class ExpressionIfNonNull implements Expression {
 		Label labelExit = new Label();
 
 		Type argType = expression.load(ctx);
-		if (argType == null) {
-			throw new IllegalArgumentException("Cannot check a nullability of a `throw` expression");
-		}
+		checkType(argType, isAssignable());
+
 		if (isPrimitiveType(argType)) {
 			if (argType.getSize() == 1)
 				g.pop();

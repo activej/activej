@@ -19,6 +19,9 @@ package io.activej.codegen.expression;
 import io.activej.codegen.Context;
 import org.objectweb.asm.Type;
 
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static io.activej.codegen.util.TypeChecks.isObject;
+
 final class ExpressionThrow implements Expression {
 	private final Expression exceptionExpression;
 
@@ -28,7 +31,9 @@ final class ExpressionThrow implements Expression {
 
 	@Override
 	public Type load(Context ctx) {
-		exceptionExpression.load(ctx);
+		Type exceptionType = exceptionExpression.load(ctx);
+		checkType(exceptionType, isObject());
+
 		ctx.getGeneratorAdapter().throwException();
 		return null;
 	}

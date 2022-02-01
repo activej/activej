@@ -21,7 +21,7 @@ import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
-import static org.objectweb.asm.Type.ARRAY;
+import static io.activej.codegen.util.TypeChecks.*;
 import static org.objectweb.asm.Type.getType;
 
 final class ExpressionArraySet implements Expression {
@@ -40,19 +40,14 @@ final class ExpressionArraySet implements Expression {
 		GeneratorAdapter g = ctx.getGeneratorAdapter();
 
 		Type arrayType = array.load(ctx);
-		if (arrayType == null) {
-			throw new IllegalArgumentException("Cannot access a 'throw' expression as an array");
-		}
-		if (arrayType.getSort() != ARRAY) {
-			throw new IllegalArgumentException("Not an array: " + arrayType.getClassName());
-		}
+		checkType(arrayType, isArray());
 
-		if (position.load(ctx) == null) {
-			throw new IllegalArgumentException("Cannot use a 'throw' expression as an index of an array");
-		}
-		if (newElement.load(ctx) == null) {
-			throw new IllegalArgumentException("Cannot set a 'throw' expression to an array");
-		}
+		Type positionType = position.load(ctx);
+		checkType(positionType, isWidenedToInt());
+
+		Type newElementType = newElement.load(ctx);
+		checkType(newElementType, isAssignable());
+
 		g.arrayStore(getType(arrayType.getDescriptor().substring(1)));
 		return Type.VOID_TYPE;
 	}

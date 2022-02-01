@@ -27,6 +27,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static io.activej.codegen.util.TypeChecks.isObject;
 import static io.activej.codegen.util.Utils.exceptionInGeneratedClass;
 import static io.activej.codegen.util.Utils.invokeVirtualOrInterface;
 import static java.lang.Character.toUpperCase;
@@ -51,18 +53,16 @@ final class Property implements Variable {
 	@Override
 	public Type load(Context ctx) {
 		Type ownerType = owner.load(ctx);
-		if (ownerType == null) {
-			throw new IllegalArgumentException("Cannot get a property of a 'throw' expression");
-		}
+		checkType(ownerType, isObject());
+
 		return loadPropertyOrGetter(ctx, ownerType, property);
 	}
 
 	@Override
 	public Object beginStore(Context ctx) {
 		Type ownerType = owner.load(ctx);
-		if (ownerType == null) {
-			throw new IllegalArgumentException("Cannot set a 'throw' expression as a property");
-		}
+		checkType(ownerType, isObject());
+
 		return ownerType;
 	}
 

@@ -22,6 +22,8 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 
 import java.util.List;
 
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static io.activej.codegen.util.TypeChecks.isNotThrow;
 import static org.objectweb.asm.Type.VOID_TYPE;
 
 /**
@@ -43,9 +45,8 @@ final class ExpressionSequence implements Expression {
 			Expression expression = expressions.get(i);
 			type = expression.load(ctx);
 			if (i != expressions.size() - 1) {
-				if (type == null) {
-					throw new IllegalArgumentException("There are additional expressions in a sequence after a 'throw' exception");
-				}
+				checkType(type, isNotThrow(), "There are additional expressions in a sequence after a 'throw' exception");
+
 				if (type.getSize() == 1)
 					g.pop();
 				if (type.getSize() == 2)

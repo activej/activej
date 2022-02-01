@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static io.activej.codegen.util.TypeChecks.isAssignable;
 import static io.activej.codegen.util.Utils.isPrimitiveType;
 import static io.activej.codegen.util.Utils.wrap;
 import static org.objectweb.asm.Type.INT_TYPE;
@@ -89,10 +91,10 @@ public final class ExpressionEquals implements Expression {
 
 		for (Pair pair : pairs) {
 			Type leftPropertyType = pair.left.load(ctx);
+			checkType(leftPropertyType, isAssignable());
+
 			Type rightPropertyType = pair.right.load(ctx);
-			if (leftPropertyType == null || rightPropertyType == null) {
-				throw new IllegalArgumentException("Cannot compare 'throw' expressions");
-			}
+			checkType(rightPropertyType, isAssignable());
 
 			if (!leftPropertyType.equals(rightPropertyType))
 				throw new IllegalArgumentException("Types of compared values should match");

@@ -20,6 +20,8 @@ import io.activej.codegen.Context;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static io.activej.codegen.util.TypeChecks.isAssignable;
 import static io.activej.codegen.util.Utils.isPrimitiveType;
 import static org.objectweb.asm.Type.getType;
 import static org.objectweb.asm.commons.InstructionAdapter.OBJECT_TYPE;
@@ -43,9 +45,7 @@ final class ExpressionCast implements Expression {
 		Type targetType = this.targetType == SELF_TYPE ? ctx.getSelfType() : this.targetType;
 
 		Type sourceType = expression.load(ctx);
-		if (sourceType == null) {
-			throw new IllegalArgumentException("Cannot cast a 'throw' expression");
-		}
+		checkType(sourceType, isAssignable());
 		if (!targetType.equals(OBJECT_TYPE) || isPrimitiveType(sourceType)) {
 			ctx.cast(sourceType, targetType);
 		}

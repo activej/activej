@@ -21,8 +21,8 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
-import static io.activej.codegen.util.Utils.exceptionInGeneratedClass;
-import static java.lang.String.format;
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static io.activej.codegen.util.TypeChecks.isPrimitive;
 import static org.objectweb.asm.Type.BOOLEAN_TYPE;
 import static org.objectweb.asm.Type.INT_TYPE;
 
@@ -37,9 +37,8 @@ final class ExpressionNeg implements Expression {
 	public Type load(Context ctx) {
 		GeneratorAdapter g = ctx.getGeneratorAdapter();
 		Type argType = arg.load(ctx);
-		if (argType == null) {
-			throw new IllegalArgumentException("Cannot negate a 'throw' expression");
-		}
+		checkType(argType, isPrimitive());
+
 		int argSort = argType.getSort();
 
 		if (argSort == Type.DOUBLE || argSort == Type.FLOAT || argSort == Type.LONG || argSort == Type.INT) {
@@ -52,24 +51,19 @@ final class ExpressionNeg implements Expression {
 			return argType;
 		}
 
-		if (argSort == Type.BOOLEAN) {
-			Label labelTrue = new Label();
-			Label labelExit = new Label();
-			g.push(true);
-			g.ifCmp(BOOLEAN_TYPE, GeneratorAdapter.EQ, labelTrue);
-			g.push(true);
-			g.goTo(labelExit);
+		assert argSort == Type.BOOLEAN;
 
-			g.mark(labelTrue);
-			g.push(false);
+		Label labelTrue = new Label();
+		Label labelExit = new Label();
+		g.push(true);
+		g.ifCmp(BOOLEAN_TYPE, GeneratorAdapter.EQ, labelTrue);
+		g.push(true);
+		g.goTo(labelExit);
 
-			g.mark(labelExit);
-			return INT_TYPE;
-		}
+		g.mark(labelTrue);
+		g.push(false);
 
-		throw new RuntimeException(format("%s is not primitive. %s",
-				ctx.toJavaType(argType),
-				exceptionInGeneratedClass(ctx))
-		);
+		g.mark(labelExit);
+		return INT_TYPE;
 	}
 }

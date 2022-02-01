@@ -20,6 +20,8 @@ import io.activej.codegen.Context;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
+import static io.activej.codegen.util.TypeChecks.*;
+
 final class ExpressionArrayGet implements Expression {
 	private final Expression array;
 	private final Expression index;
@@ -32,14 +34,16 @@ final class ExpressionArrayGet implements Expression {
 	@Override
 	public Type load(Context ctx) {
 		GeneratorAdapter g = ctx.getGeneratorAdapter();
+
 		Type arrayType = array.load(ctx);
-		if (arrayType == null) {
-			throw new IllegalArgumentException("Cannot access a 'throw' expression as an array");
-		}
+		checkType(arrayType, isArray());
+
 		Type type = Type.getType(arrayType.getDescriptor().substring(1));
-		if (index.load(ctx) == null) {
-			throw new IllegalArgumentException("Cannot use a 'throw' expression as an index of an array");
-		}
+		checkType(type, isAssignable());
+
+		Type indexType = index.load(ctx);
+		checkType(indexType, isWidenedToInt());
+
 		g.arrayLoad(type);
 		return type;
 	}

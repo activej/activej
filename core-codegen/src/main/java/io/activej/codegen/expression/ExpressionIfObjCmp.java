@@ -24,6 +24,8 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.Method;
 
 import static io.activej.codegen.operation.CompareOperation.*;
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static io.activej.codegen.util.TypeChecks.isAssignable;
 import static io.activej.codegen.util.Utils.isPrimitiveType;
 import static org.objectweb.asm.Type.BOOLEAN_TYPE;
 import static org.objectweb.asm.Type.INT_TYPE;
@@ -55,9 +57,11 @@ final class ExpressionIfObjCmp implements Expression {
 		Label labelExit = new Label();
 
 		Type leftType = left.load(ctx);
+		checkType(leftType, isAssignable());
+
 		Type rightType = right.load(ctx);
-		if (leftType == null || rightType == null)
-			throw new IllegalArgumentException("Cannot compare 'throw' expression");
+		checkType(rightType, isAssignable());
+
 		if (!leftType.equals(rightType))
 			throw new IllegalArgumentException("Types of compared values should match");
 

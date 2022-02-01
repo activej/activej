@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static io.activej.codegen.util.TypeChecks.isAssignable;
 import static io.activej.codegen.util.Utils.isPrimitiveType;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.INT_TYPE;
@@ -83,9 +85,7 @@ public final class ExpressionHashCode implements Expression {
 			}
 
 			Type fieldType = argument.load(ctx);
-			if (fieldType == null) {
-				throw new IllegalArgumentException("Cannot calculate hash code of a 'throw' expression");
-			}
+			checkType(fieldType, isAssignable());
 
 			if (isPrimitiveType(fieldType)) {
 				if (fieldType.getSort() == Type.LONG) {

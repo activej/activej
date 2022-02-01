@@ -30,6 +30,8 @@ import java.util.Map;
 
 import static io.activej.codegen.expression.Expressions.property;
 import static io.activej.codegen.expression.Expressions.self;
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static io.activej.codegen.util.TypeChecks.isAssignable;
 import static io.activej.codegen.util.Utils.isPrimitiveType;
 import static io.activej.codegen.util.Utils.wrap;
 import static org.objectweb.asm.Type.getType;
@@ -114,9 +116,8 @@ public final class ExpressionToString implements Expression {
 
 			g.dup();
 			Type type = entry.getValue().load(ctx);
-			if (type == null) {
-				throw new IllegalArgumentException("Cannot get a string out of a 'throw' exception");
-			}
+			checkType(type, isAssignable());
+
 			if (isPrimitiveType(type)) {
 				g.invokeStatic(wrap(type), new Method("toString", getType(String.class), new Type[]{type}));
 			} else {

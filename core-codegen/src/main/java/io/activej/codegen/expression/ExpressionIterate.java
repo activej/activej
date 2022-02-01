@@ -23,6 +23,8 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 
 import java.util.function.UnaryOperator;
 
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static io.activej.codegen.util.TypeChecks.isWidenedToInt;
 import static org.objectweb.asm.Type.INT_TYPE;
 import static org.objectweb.asm.Type.VOID_TYPE;
 
@@ -44,14 +46,14 @@ final class ExpressionIterate implements Expression {
 		Label labelExit = new Label();
 
 		VarLocal to = ctx.newLocal(INT_TYPE);
-		if (this.to.load(ctx) == null) {
-			throw new IllegalArgumentException("Cannot iterate to a 'throw' expression");
-		}
+		Type toType = this.to.load(ctx);
+		checkType(toType, isWidenedToInt());
+
 		to.store(ctx);
 
-		if (from.load(ctx) == null) {
-			throw new IllegalArgumentException("Cannot iterate starting from a 'throw' expression");
-		}
+		Type fromType = from.load(ctx);
+		checkType(fromType, isWidenedToInt());
+
 		VarLocal it = ctx.newLocal(INT_TYPE);
 		it.store(ctx);
 
