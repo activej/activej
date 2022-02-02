@@ -18,6 +18,7 @@ package io.activej.codegen;
 
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.VarLocal;
+import io.activej.codegen.util.TypeChecks;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -30,6 +31,8 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static io.activej.codegen.util.TypeChecks.isNotThrow;
 import static io.activej.codegen.util.Utils.*;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.isStatic;
@@ -129,9 +132,8 @@ public final class Context {
 		VarLocal varLocal = varLocals.get(key);
 		if (varLocal == null) {
 			Type type = expression.load(this);
-			if (type == null) {
-				throw new IllegalArgumentException("Cannot assign a 'throw' expression to a local variable");
-			}
+			checkType(type, isNotThrow());
+
 			if (type == Type.VOID_TYPE) {
 				varLocal = VarLocal.VAR_LOCAL_VOID;
 			} else {
@@ -304,16 +306,13 @@ public final class Context {
 
 	public Type invoke(Expression owner, String methodName, List<Expression> arguments) {
 		Type ownerType = owner.load(this);
-		if (ownerType == null) {
-			throw new IllegalArgumentException("Cannot invoke a method on a 'throw' expression");
-		}
+		checkType(ownerType, TypeChecks.isAssignable());
+
 		Type[] argumentTypes = new Type[arguments.size()];
 		for (int i = 0; i < arguments.size(); i++) {
 			Expression argument = arguments.get(i);
 			Type argumentType = argument.load(this);
-			if (argumentType == null) {
-				throw new IllegalArgumentException("Cannot invoke a method on with a 'throw' expression as an argument");
-			}
+			checkType(argumentType, TypeChecks.isAssignable());
 			argumentTypes[i] = argumentType;
 		}
 		return invoke(ownerType, methodName, argumentTypes);
@@ -362,9 +361,7 @@ public final class Context {
 		for (int i = 0; i < arguments.size(); i++) {
 			Expression argument = arguments.get(i);
 			Type argumentType = argument.load(this);
-			if (argumentType == null) {
-				throw new IllegalArgumentException("Cannot invoke a static method on with a 'throw' expression as an argument");
-			}
+			checkType(argumentType, TypeChecks.isAssignable());
 			argumentTypes[i] = argumentType;
 		}
 		return invokeStatic(ownerType, methodName, argumentTypes);
@@ -405,9 +402,7 @@ public final class Context {
 		Type[] argumentTypes = new Type[arguments.size()];
 		for (int i = 0; i < arguments.size(); i++) {
 			Type argumentType = arguments.get(i).load(this);
-			if (argumentType == null) {
-				throw new IllegalArgumentException("Cannot invoke a constructor with a 'throw' expression as an argument");
-			}
+			checkType(argumentType, TypeChecks.isAssignable());
 			argumentTypes[i] = argumentType;
 		}
 		return invokeConstructor(ownerType, argumentTypes);
@@ -434,9 +429,7 @@ public final class Context {
 		Type[] argumentTypes = new Type[arguments.size()];
 		for (int i = 0; i < arguments.size(); i++) {
 			Type argumentType = arguments.get(i).load(this);
-			if (argumentType == null) {
-				throw new IllegalArgumentException("Cannot invoke a constructor with a 'throw' expression as an argument");
-			}
+			checkType(argumentType, TypeChecks.isAssignable());
 			argumentTypes[i] = argumentType;
 		}
 		Class<?>[] argumentClasses = Stream.of(argumentTypes).map(this::toJavaType).toArray(Class[]::new);
@@ -468,9 +461,7 @@ public final class Context {
 		Type[] argumentTypes = new Type[arguments.size()];
 		for (int i = 0; i < arguments.size(); i++) {
 			Type argumentType = arguments.get(i).load(this);
-			if (argumentType == null) {
-				throw new IllegalArgumentException("Cannot invoke a 'super' method with a 'throw' expression as an argument");
-			}
+			checkType(argumentType, TypeChecks.isAssignable());
 			argumentTypes[i] = argumentType;
 		}
 		Class<?>[] argumentClasses = Stream.of(argumentTypes).map(this::toJavaType).toArray(Class[]::new);
