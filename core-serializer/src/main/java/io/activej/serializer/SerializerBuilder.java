@@ -18,7 +18,6 @@ package io.activej.serializer;
 
 import io.activej.codegen.BytecodeStorage;
 import io.activej.codegen.ClassBuilder;
-import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
@@ -470,19 +469,14 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 	/**
 	 * Builds a {@link BinarySerializer} out of {@code this} {@link SerializerBuilder}.
 	 * <p>
-	 * If {@link #classLoader} has already defined the serializer class, the class would be taken from
-	 * the class loader's cache.
 	 *
 	 * @param type a type data that would be serialized
 	 * @return a generated {@link BinarySerializer}
 	 */
 	public <T> BinarySerializer<T> build(AnnotatedType type) {
-		return classLoader.ensureClassAndCreateInstance(
-				ClassKey.of(BinarySerializer.class, type),
-				() -> {
-					SerializerDef serializer = registry.scanner(new HashMap<>()).scan(type);
-					return toClassBuilder(serializer);
-				});
+		SerializerDef serializer = registry.scanner(new HashMap<>()).scan(type);
+		ClassBuilder<BinarySerializer<T>> classBuilder = toClassBuilder(serializer);
+		return classBuilder.defineClassAndCreateInstance(classLoader);
 	}
 
 	/**
