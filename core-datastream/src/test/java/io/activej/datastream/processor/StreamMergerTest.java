@@ -15,7 +15,6 @@ import static io.activej.datastream.processor.StreamReducers.deduplicateReducer;
 import static io.activej.datastream.processor.StreamReducers.mergeReducer;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
@@ -44,7 +43,7 @@ public class StreamMergerTest {
 						.streamTo(consumer.transformWith(randomlySuspending()))
 		);
 
-		assertEquals(asList(3, 4, 6, 7), consumer.getList());
+		assertEquals(List.of(3, 4, 6, 7), consumer.getList());
 
 		assertEndOfStream(source0);
 		assertEndOfStream(source1);
@@ -72,7 +71,7 @@ public class StreamMergerTest {
 						.streamTo(consumer.transformWith(randomlySuspending()))
 		);
 
-		assertEquals(asList(3, 3, 4, 6, 7), consumer.getList());
+		assertEquals(List.of(3, 3, 4, 6, 7), consumer.getList());
 
 		assertEndOfStream(source0);
 		assertEndOfStream(source1);
@@ -91,12 +90,12 @@ public class StreamMergerTest {
 		DataItem1 d4 = new DataItem1(1, 5, 1, 5);
 
 		StreamSupplier<DataItem1> source1 = StreamSupplier.ofIterable(
-				asList(d0, //DataItem1(0,1,1,1)
+				List.of(d0, //DataItem1(0,1,1,1)
 						d1, //DataItem1(0,2,1,2)
 						d2  //DataItem1(0,6,1,3)
 				));
 		StreamSupplier<DataItem1> source2 = StreamSupplier.ofIterable(
-				asList(d3,//DataItem1(1,1,1,4)
+				List.of(d3,//DataItem1(1,1,1,4)
 						d4 //DataItem1(1,5,1,5)
 				));
 
@@ -111,7 +110,7 @@ public class StreamMergerTest {
 						.streamTo(consumer.transformWith(oneByOne()))
 		);
 
-		assertEquals(asList(d0, //DataItem1(0,1,1,1)
+		assertEquals(List.of(d0, //DataItem1(0,1,1,1)
 				d3, //DataItem1(1,1,1,4)
 				d1, //DataItem1(0,2,1,2)
 				d4, //DataItem1(1,5,1,5)

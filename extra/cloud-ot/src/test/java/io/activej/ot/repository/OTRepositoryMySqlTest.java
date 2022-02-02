@@ -159,7 +159,7 @@ public class OTRepositoryMySqlTest {
 	//	@Test
 //	public void testMergeSnapshotOnMergeNodes() throws ExecutionException, InterruptedException {
 //		final GraphBuilder<Long, TestOp> graphBuilder = new GraphBuilder<>(repository);
-//		final CompletableFuture<Void> graphFuture = graphBuilder.buildGraph(asList(
+//		final CompletableFuture<Void> graphFuture = graphBuilder.buildGraph(List.of(
 //				edge(1, 2, add(1)),
 //				edge(1, 3, add(1)),
 //				edge(1, 4, add(1)),

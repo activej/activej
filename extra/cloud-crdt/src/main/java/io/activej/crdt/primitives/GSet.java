@@ -36,7 +36,7 @@ public final class GSet<E> implements Set<E>, CrdtMergable<GSet<E>> {
 
 	@SafeVarargs
 	public static <T> GSet<T> of(T... items) {
-		return of(Arrays.asList(items));
+		return of(List.of(items));
 	}
 
 	public static <T> GSet<T> of(Collection<T> collection) {

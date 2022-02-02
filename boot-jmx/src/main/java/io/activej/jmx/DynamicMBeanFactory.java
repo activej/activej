@@ -54,7 +54,6 @@ import static io.activej.common.reflection.ReflectionUtils.*;
 import static io.activej.jmx.Utils.findAdapterClass;
 import static io.activej.jmx.stats.StatsUtils.isJmxStats;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
@@ -191,7 +190,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			String[] includedOptionalAttrs, @Nullable Method getter,
 			Map<Type, JmxCustomTypeAdapter<?>> customTypes) {
 
-		Set<String> includedOptionals = new HashSet<>(asList(includedOptionalAttrs));
+		Set<String> includedOptionals = new HashSet<>(List.of(includedOptionalAttrs));
 		List<AttributeDescriptor> attrDescriptors = fetchAttributeDescriptors(clazz, customTypes);
 		List<AttributeNode> attrNodes = new ArrayList<>();
 		for (AttributeDescriptor descriptor : attrDescriptors) {
@@ -849,7 +848,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 		@Override
 		public AttributeList getAttributes(String[] attributes) {
 			AttributeList attrList = new AttributeList();
-			Set<String> attrNames = new HashSet<>(Arrays.asList(attributes));
+			Set<String> attrNames = Set.of(attributes);
 			try {
 				Map<String, Object> aggregatedAttrs = rootNode.aggregateAttributes(attrNames, beans);
 				for (Map.Entry<String, Object> entry : aggregatedAttrs.entrySet()) {

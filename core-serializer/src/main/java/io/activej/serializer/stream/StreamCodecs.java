@@ -351,7 +351,7 @@ public final class StreamCodecs {
 					array[i] = itemCodecFn.apply(i).decode(input);
 				}
 				//noinspection unchecked
-				return (List<T>) asList(array);
+				return (List<T>) List.of(array);
 			}
 		};
 	}

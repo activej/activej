@@ -7,7 +7,6 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static io.activej.promise.TestUtils.await;
@@ -32,7 +31,7 @@ public class StreamSuppliersTest {
 				})
 				.streamTo(StreamConsumerToList.create(actual)));
 
-		assertEquals(Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10), actual);
+		assertEquals(List.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10), actual);
 	}
 
 	@Test

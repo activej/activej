@@ -30,7 +30,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import static io.activej.common.Checks.checkArgument;
-import static java.util.Arrays.asList;
 
 public class FrameFormats {
 
@@ -44,7 +43,7 @@ public class FrameFormats {
 	 * @return a compound frame format that consists of several other frame formats
 	 */
 	public static FrameFormat compound(FrameFormat mainFormat, FrameFormat... otherFormats) {
-		return new Compound(mainFormat, asList(otherFormats));
+		return new Compound(mainFormat, List.of(otherFormats));
 	}
 
 	/**

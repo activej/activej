@@ -33,7 +33,6 @@ import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.codegen.util.Utils.*;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.isStatic;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 import static org.objectweb.asm.Type.*;
@@ -300,7 +299,7 @@ public final class Context {
 	}
 
 	public Type invoke(Expression owner, String methodName, Expression... arguments) {
-		return invoke(owner, methodName, asList(arguments));
+		return invoke(owner, methodName, List.of(arguments));
 	}
 
 	public Type invoke(Expression owner, String methodName, List<Expression> arguments) {
@@ -355,7 +354,7 @@ public final class Context {
 	}
 
 	public Type invokeStatic(Type ownerType, String methodName, Expression... arguments) {
-		return invokeStatic(ownerType, methodName, asList(arguments));
+		return invokeStatic(ownerType, methodName, List.of(arguments));
 	}
 
 	public Type invokeStatic(Type ownerType, String methodName, List<Expression> arguments) {
@@ -396,7 +395,7 @@ public final class Context {
 	}
 
 	public Type invokeConstructor(Type ownerType, Expression... arguments) {
-		return invokeConstructor(ownerType, asList(arguments));
+		return invokeConstructor(ownerType, List.of(arguments));
 	}
 
 	public Type invokeConstructor(Type ownerType, List<Expression> arguments) {
@@ -461,7 +460,7 @@ public final class Context {
 	}
 
 	public Type invokeSuperMethod(String methodName, Expression[] arguments) {
-		return invokeSuperMethod(methodName, Arrays.asList(arguments));
+		return invokeSuperMethod(methodName, List.of(arguments));
 	}
 
 	public Type invokeSuperMethod(String methodName, List<Expression> arguments) {

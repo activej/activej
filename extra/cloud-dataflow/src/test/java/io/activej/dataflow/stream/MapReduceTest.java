@@ -26,6 +26,7 @@ import org.junit.rules.TemporaryFolder;
 import java.net.InetSocketAddress;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -39,7 +40,6 @@ import static io.activej.dataflow.stream.DataflowTest.createCommon;
 import static io.activej.dataflow.stream.DataflowTest.getFreeListenAddress;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertCompleteFn;
-import static java.util.Arrays.asList;
 import static java.util.Comparator.naturalOrder;
 import static org.junit.Assert.assertEquals;
 
@@ -108,7 +108,7 @@ public class MapReduceTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), List.of(new Partition(address1), new Partition(address2)))
 				.bind(new Key<JsonCodec<StringKeyFunction>>() {}).toInstance(ofObject(StringKeyFunction::new))
 				.bind(new Key<JsonCodec<StringMapFunction>>() {}).toInstance(ofObject(StringMapFunction::new))
 				.bind(new Key<JsonCodec<StringReducer>>() {}).toInstance(ofObject(StringReducer::new))
@@ -117,7 +117,7 @@ public class MapReduceTest {
 
 		Module serverModule1 = ModuleBuilder.create()
 				.install(common)
-				.bind(datasetId("items")).toInstance(asList(
+				.bind(datasetId("items")).toInstance(List.of(
 						"dog",
 						"cat",
 						"horse",
@@ -126,7 +126,7 @@ public class MapReduceTest {
 
 		Module serverModule2 = ModuleBuilder.create()
 				.install(common)
-				.bind(datasetId("items")).toInstance(asList(
+				.bind(datasetId("items")).toInstance(List.of(
 						"dog",
 						"cat"))
 				.build();
@@ -159,7 +159,7 @@ public class MapReduceTest {
 
 		System.out.println(resultConsumer.getList());
 
-		assertEquals(new HashSet<>(asList(
+		assertEquals(new HashSet<>(List.of(
 				new StringCount("cat", 3),
 				new StringCount("dog", 2),
 				new StringCount("horse", 1))), new HashSet<>(resultConsumer.getList()));

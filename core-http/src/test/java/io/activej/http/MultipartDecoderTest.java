@@ -18,7 +18,6 @@ import java.util.Map;
 
 import static io.activej.promise.TestUtils.await;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.mapping;
 import static org.junit.Assert.assertEquals;
@@ -80,7 +79,7 @@ public final class MultipartDecoderTest {
 		assertEquals("This is some bytes of data to be extracted from the multipart form\r\n" +
 				"Also here we had a wild CRLF se\r\nquence appear\n" +
 				"And the second line, huh\n", res);
-		assertEquals(asList(
+		assertEquals(List.of(
                 Map.of(
 						"content-disposition", "form-data; name=\"file\"; filename=\"test.txt\"",
 						"content-type", "text/plain"),

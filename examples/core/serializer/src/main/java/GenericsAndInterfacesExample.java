@@ -10,7 +10,7 @@ public final class GenericsAndInterfacesExample {
 	public static void main(String[] args) {
 		//[START REGION_4]
 		Developer developer = new Developer();
-		developer.setSkills(Arrays.asList(
+		developer.setSkills(List.of(
 				new Skill<>(1, "Java"),
 				new Skill<>(2, "ActiveJ")));
 

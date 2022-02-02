@@ -8,14 +8,13 @@ import java.util.List;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapAscii;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.asList;
 
 //[START EXAMPLE]
 public final class ByteBufsDecoderExample {
 	public static void main(String[] args) {
 		Eventloop eventloop = Eventloop.create().withCurrentThread();
 
-		List<ByteBuf> letters = asList(wrapAscii("H"), wrapAscii("e"), wrapAscii("l"), wrapAscii("l"), wrapAscii("o"));
+		List<ByteBuf> letters = List.of(wrapAscii("H"), wrapAscii("e"), wrapAscii("l"), wrapAscii("l"), wrapAscii("o"));
 		ByteBufsDecoder<String> decoder = bufs -> {
 			if (!bufs.hasRemainingBytes(5)) {
 				System.out.println("Not enough bytes to decode message");

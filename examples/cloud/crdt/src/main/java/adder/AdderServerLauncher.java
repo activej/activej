@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static io.activej.common.Checks.checkState;
-import static java.util.Arrays.asList;
-import static java.util.Collections.unmodifiableList;
 
 public final class AdderServerLauncher extends Launcher {
 	public static final List<Class<?>> MESSAGE_TYPES = List.of(GetRequest.class, GetResponse.class, AddRequest.class, AddResponse.class);

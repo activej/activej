@@ -5,8 +5,6 @@ import io.activej.aggregation.annotation.Measures;
 
 import java.util.List;
 
-import static java.util.Arrays.asList;
-
 public class DataItem3 {
 	@Key
 	public int key1;
@@ -37,7 +35,7 @@ public class DataItem3 {
 		this.metric2 = metric2;
 	}
 
-	public static final List<String> DIMENSIONS = asList("key1", "key2", "key3", "key4", "key5");
+	public static final List<String> DIMENSIONS = List.of("key1", "key2", "key3", "key4", "key5");
 
-	public static final List<String> METRICS = asList("metric1", "metric2");
+	public static final List<String> METRICS = List.of("metric1", "metric2");
 }

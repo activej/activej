@@ -13,7 +13,6 @@ import java.util.Map;
 import static io.activej.cube.ReportType.DATA_WITH_TOTALS;
 import static io.activej.cube.Utils.fromJson;
 import static io.activej.cube.Utils.toJson;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
 public class QueryResultCodecTest {
@@ -52,10 +51,10 @@ public class QueryResultCodecTest {
 		totals.set("impressions", 66756L);
 
         QueryResult queryResult = QueryResult.create(recordScheme,
-				asList("campaign", "site"),
-				asList("clicks", "impressions"),
-				asList("campaign", "clicks"),
-				asList(record1, record2),
+				List.of("campaign", "site"),
+				List.of("clicks", "impressions"),
+				List.of("campaign", "clicks"),
+				List.of(record1, record2),
 				totals,
 				123,
                 Map.of(

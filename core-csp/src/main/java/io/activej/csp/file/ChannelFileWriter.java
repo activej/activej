@@ -30,7 +30,7 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
-import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.Executor;
 
 import static io.activej.common.Checks.checkArgument;
@@ -72,7 +72,7 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> im
 	}
 
 	public static Promise<ChannelFileWriter> open(Executor executor, Path path, OpenOption... openOptions) {
-		checkArgument(Arrays.asList(openOptions).contains(WRITE), "'WRITE' option is not present");
+		checkArgument(List.of(openOptions).contains(WRITE), "'WRITE' option is not present");
 		return Promise.ofBlocking(executor, () -> FileChannel.open(path, openOptions))
 				.map(channel -> create(executor, channel));
 	}
@@ -82,7 +82,7 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> im
 	}
 
 	public static ChannelFileWriter openBlocking(Executor executor, Path path, OpenOption... openOptions) throws IOException {
-		checkArgument(Arrays.asList(openOptions).contains(WRITE), "'WRITE' option is not present");
+		checkArgument(List.of(openOptions).contains(WRITE), "'WRITE' option is not present");
 		FileChannel channel = FileChannel.open(path, openOptions);
 		return create(executor, channel);
 	}

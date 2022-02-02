@@ -38,7 +38,6 @@ import java.util.function.UnaryOperator;
 import static io.activej.inject.Qualifiers.uniqueQualifier;
 import static io.activej.inject.Scope.UNSCOPED;
 import static io.activej.inject.util.Utils.*;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toCollection;
 
 /**
@@ -75,7 +74,7 @@ public final class Modules {
 	 * @see #combine(Collection)
 	 */
 	public static Module combine(Module... modules) {
-		return modules.length == 0 ? Module.empty() : modules.length == 1 ? modules[0] : combine(asList(modules));
+		return modules.length == 0 ? Module.empty() : modules.length == 1 ? modules[0] : combine(List.of(modules));
 	}
 
 	/**
@@ -91,7 +90,7 @@ public final class Modules {
 	 * @see #override(List) (Collection)
 	 */
 	public static Module override(Module... modules) {
-		return override(asList(modules));
+		return override(List.of(modules));
 	}
 
 	/**
@@ -171,7 +170,7 @@ public final class Modules {
 	}
 
 	public static Module restrict(Module module, Key<?>... exports) {
-		return restrict(module, new HashSet<>(asList(exports)));
+		return restrict(module, new HashSet<>(List.of(exports)));
 	}
 
 	public static Module restrict(Module module, Set<Key<?>> exports) {
@@ -197,7 +196,7 @@ public final class Modules {
 			if (exportsPredicate.test(path, key)) {
 				return key;
 			}
-			Map<Key<?>, Key<?>> mapping = exportsMappings.computeIfAbsent(asList(path), $ -> new HashMap<>());
+			Map<Key<?>, Key<?>> mapping = exportsMappings.computeIfAbsent(List.of(path), $ -> new HashMap<>());
 			Key<?> result = mapping.get(key);
 			if (result == null) {
 				result = Key.ofType(key.getType(), uniqueQualifier(key.getQualifier()));

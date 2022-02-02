@@ -9,7 +9,7 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import java.util.Arrays;
+import java.util.List;
 
 import static io.activej.datastream.TestStreamTransformers.decorate;
 import static io.activej.datastream.TestStreamTransformers.randomlySuspending;
@@ -17,7 +17,6 @@ import static io.activej.datastream.TestUtils.assertClosedWithError;
 import static io.activej.datastream.TestUtils.assertEndOfStream;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
@@ -35,7 +34,7 @@ public class StreamFilterTest {
 		await(supplier.transformWith(filter)
 				.streamTo(consumer.transformWith(randomlySuspending())));
 
-		assertEquals(asList(1, 3, 5), consumer.getList());
+		assertEquals(List.of(1, 3, 5), consumer.getList());
 		assertEndOfStream(supplier);
 		assertEndOfStream(filter);
 		assertEndOfStream(consumer);
@@ -55,7 +54,7 @@ public class StreamFilterTest {
 
 		assertSame(exception, e);
 
-		assertEquals(asList(2, 4), consumer.getList());
+		assertEquals(List.of(2, 4), consumer.getList());
 		assertClosedWithError(source);
 		assertClosedWithError(consumer);
 		assertClosedWithError(streamFilter);
@@ -65,7 +64,7 @@ public class StreamFilterTest {
 	public void testSupplierDisconnectWithError() {
 		ExpectedException exception = new ExpectedException("Test Exception");
 		StreamSupplier<Integer> source = StreamSupplier.concat(
-				StreamSupplier.ofIterable(Arrays.asList(1, 2, 3, 4, 5, 6)),
+				StreamSupplier.ofIterable(List.of(1, 2, 3, 4, 5, 6)),
 				StreamSupplier.closingWithError(exception));
 
 		StreamFilter<Integer, Integer> streamFilter = StreamFilter.create(input -> input % 2 != 1);
@@ -94,7 +93,7 @@ public class StreamFilterTest {
 
 		await(supplier.streamTo(transformedConsumer));
 
-		assertEquals(asList(1, 3, 5), consumer.getList());
+		assertEquals(List.of(1, 3, 5), consumer.getList());
 		assertEndOfStream(supplier);
 		assertEndOfStream(filter);
 	}

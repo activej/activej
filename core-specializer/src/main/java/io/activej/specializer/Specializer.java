@@ -180,7 +180,7 @@ public final class Specializer {
 		byte[] defineNewClass() {
 			Set<Class<?>> interfaces = new HashSet<>();
 			for (Class<?> clazz = instance.getClass(); clazz != Object.class; clazz = clazz.getSuperclass()) {
-				interfaces.addAll(Arrays.asList(clazz.getInterfaces()));
+				interfaces.addAll(List.of(clazz.getInterfaces()));
 			}
 
 			ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
@@ -581,7 +581,7 @@ public final class Specializer {
 						Objects.equals(originalMethod.getName(), method.getName()) &&
 						Objects.equals(
 								Arrays.stream(originalMethod.getParameters()).map(p -> getType(p.getType())).collect(toList()),
-								Arrays.asList(method.getArgumentTypes())) &&
+								List.of(method.getArgumentTypes())) &&
 						originalMethod.getDeclaringClass().isAssignableFrom(owner) &&
 						(result == null ||
 								result.getDeclaringClass().isAssignableFrom(originalMethod.getDeclaringClass()))) {

@@ -48,7 +48,6 @@ import java.util.*;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
-import static java.util.Arrays.asList;
 
 /**
  * An RPC server that works asynchronously. This server uses fast serializers
@@ -139,7 +138,7 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 	 * @return server instance capable for handling provided message types
 	 */
 	public RpcServer withMessageTypes(Class<?>... messageTypes) {
-		return withMessageTypes(asList(messageTypes));
+		return withMessageTypes(List.of(messageTypes));
 	}
 
 	/**

@@ -20,7 +20,6 @@ import static io.activej.datastream.TestUtils.assertClosedWithError;
 import static io.activej.datastream.TestUtils.assertEndOfStream;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
@@ -68,7 +67,7 @@ public class StreamJoinTest {
 						consumer.transformWith(oneByOne()))
 		);
 
-		assertEquals(asList(
+		assertEquals(List.of(
 				new DataItemMasterDetail(10, 10, "masterA", "detailX"),
 				new DataItemMasterDetail(20, 10, "masterB", "detailX"),
 				new DataItemMasterDetail(25, 15, "masterB+", null),

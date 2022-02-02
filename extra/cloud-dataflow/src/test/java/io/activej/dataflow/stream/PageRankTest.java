@@ -42,7 +42,6 @@ import static io.activej.dataflow.stream.DataflowTest.createCommon;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertCompleteFn;
 import static io.activej.test.TestUtils.getFreePort;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
 public class PageRankTest {
@@ -242,7 +241,7 @@ public class PageRankTest {
 	}
 
 	private Module createModule(Partition... partitions) throws Exception {
-		return createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(partitions))
+		return createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), List.of(partitions))
 				.bind(new Key<JsonCodec<PageKeyFunction>>() {}).toInstance(ofObject(PageKeyFunction::new))
 				.bind(new Key<JsonCodec<RankKeyFunction>>() {}).toInstance(ofObject(RankKeyFunction::new))
 				.bind(new Key<JsonCodec<RankAccumulatorKeyFunction>>() {}).toInstance(ofObject(RankAccumulatorKeyFunction::new))
@@ -317,7 +316,7 @@ public class PageRankTest {
 		Module common = createModule(new Partition(address1), new Partition(address2));
 
 		StreamConsumerToList<Rank> result1 = StreamConsumerToList.create();
-		DataflowServer server1 = launchServer(address1, asList(
+		DataflowServer server1 = launchServer(address1, List.of(
 				new Page(1, new long[]{1, 2, 3}),
 				new Page(3, new long[]{1})), result1);
 
@@ -346,6 +345,6 @@ public class PageRankTest {
 		result.addAll(result2.getList());
 		result.sort(Comparator.comparingLong(rank -> rank.pageId));
 
-		assertEquals(asList(new Rank(1, 1.7861), new Rank(2, 0.6069), new Rank(3, 0.6069)), result);
+		assertEquals(List.of(new Rank(1, 1.7861), new Rank(2, 0.6069), new Rank(3, 0.6069)), result);
 	}
 }

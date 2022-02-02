@@ -27,7 +27,6 @@ import java.util.Set;
 import java.util.function.ToIntFunction;
 
 import static io.activej.rpc.client.sender.RpcStrategies.NO_SENDER_AVAILABLE_EXCEPTION;
-import static java.util.Arrays.asList;
 
 public final class RpcStrategySharding implements RpcStrategy {
 	private final List<RpcStrategy> list;
@@ -45,7 +44,7 @@ public final class RpcStrategySharding implements RpcStrategy {
 	}
 
 	public static <T> RpcStrategySharding create(ToIntFunction<T> shardingFunction, RpcStrategy... list) {
-		return new RpcStrategySharding(shardingFunction, asList(list), 0);
+		return new RpcStrategySharding(shardingFunction, List.of(list), 0);
 	}
 
 	public RpcStrategySharding withMinActiveSubStrategies(int minActiveSubStrategies) {

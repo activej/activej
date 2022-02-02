@@ -27,10 +27,9 @@ import static io.activej.aggregation.measure.Measures.union;
 import static io.activej.aggregation.util.Utils.*;
 import static io.activej.common.Utils.keysToMap;
 import static io.activej.promise.TestUtils.await;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
-@SuppressWarnings({"Duplicates", "unchecked", "ArraysAsListWithZeroOrOneArgument", "rawtypes"})
+@SuppressWarnings({"Duplicates", "unchecked", "rawtypes"})
 public class AggregationGroupReducerTest {
 
 	@ClassRule
@@ -81,10 +80,10 @@ public class AggregationGroupReducerTest {
 		Class<Comparable> keyClass = createKeyClass(
 				keysToMap(Stream.of("word"), structure.getKeyTypes()::get),
 				classLoader);
-		Class<InvertedIndexRecord> aggregationClass = createRecordClass(structure, asList("word"), asList("documents"), classLoader);
+		Class<InvertedIndexRecord> aggregationClass = createRecordClass(structure, List.of("word"), List.of("documents"), classLoader);
 
 		Function<InvertedIndexRecord, Comparable> keyFunction = createKeyFunction(inputClass, keyClass,
-				asList("word"), classLoader);
+				List.of("word"), classLoader);
 
 		Aggregate<InvertedIndexRecord, Object> aggregate = createPreaggregator(structure, inputClass, aggregationClass,
 				Map.of("word", "word"), Map.of("documents", "documentId"), classLoader);
@@ -103,7 +102,7 @@ public class AggregationGroupReducerTest {
 				new InvertedIndexRecord("brown", 10));
 
 		AggregationGroupReducer<Long, InvertedIndexRecord, Comparable> groupReducer = new AggregationGroupReducer<>(aggregationChunkStorage,
-				structure, asList("documents"),
+				structure, List.of("documents"),
 				aggregationClass, singlePartition(), keyFunction, aggregate, aggregationChunkSize, classLoader);
 
 		await(supplier.streamTo(groupReducer));

@@ -17,12 +17,10 @@ import static io.activej.codegen.TestUtils.assertStaticConstantsCleared;
 import static io.activej.codegen.expression.ExpressionCompare.leftProperty;
 import static io.activej.codegen.expression.ExpressionCompare.rightProperty;
 import static io.activej.codegen.expression.Expressions.*;
-import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
-@SuppressWarnings({"ArraysAsListWithZeroOrOneArgument"})
 public class ExpressionTest {
 	public static final DefiningClassLoader CLASS_LOADER = DefiningClassLoader.create();
 
@@ -176,7 +174,7 @@ public class ExpressionTest {
 		Class<Test> testClass = ClassBuilder.create(Test.class)
 				.withField("x", int.class)
 				.withField("y", Long.class)
-				.withMethod("compare", int.class, asList(TestPojo.class, TestPojo.class),
+				.withMethod("compare", int.class, List.of(TestPojo.class, TestPojo.class),
 						ExpressionCompare.create()
 								.with(leftProperty(TestPojo.class, "property1"), rightProperty(TestPojo.class, "property1"))
 								.with(leftProperty(TestPojo.class, "property2"), rightProperty(TestPojo.class, "property2")))
@@ -473,12 +471,12 @@ public class ExpressionTest {
 		TestCall testCall = ClassBuilder.create(TestCall.class)
 				.withMethod("callOther1", call(self(), "method", arg(0)))
 				.withMethod("callOther2", call(self(), "method"))
-				.withMethod("method", int.class, asList(int.class), arg(0))
-				.withMethod("method", long.class, asList(), value(-1L))
-				.withMethod("callStatic1", int.class, asList(int.class, int.class), staticCallSelf("method", arg(0), arg(1)))
-				.withMethod("callStatic2", long.class, asList(long.class), staticCallSelf("method", arg(0)))
-				.withStaticMethod("method", int.class, asList(int.class, int.class), arg(1))
-				.withStaticMethod("method", long.class, asList(long.class), arg(0))
+				.withMethod("method", int.class, List.of(int.class), arg(0))
+				.withMethod("method", long.class, List.of(), value(-1L))
+				.withMethod("callStatic1", int.class, List.of(int.class, int.class), staticCallSelf("method", arg(0), arg(1)))
+				.withMethod("callStatic2", long.class, List.of(long.class), staticCallSelf("method", arg(0)))
+				.withStaticMethod("method", int.class, List.of(int.class, int.class), arg(1))
+				.withStaticMethod("method", long.class, List.of(long.class), arg(0))
 				.defineClassAndCreateInstance(CLASS_LOADER);
 
 		assertEquals(100, testCall.callOther1(100));
@@ -524,7 +522,7 @@ public class ExpressionTest {
 
 	@org.junit.Test
 	public void testIterator() {
-		List<Integer> listFrom = asList(1, 1, 2, 3, 5, 8);
+		List<Integer> listFrom = List.of(1, 1, 2, 3, 5, 8);
 		List<Integer> listTo1 = new ArrayList<>();
 		List<Integer> listTo2 = new ArrayList<>();
 
@@ -1145,7 +1143,7 @@ public class ExpressionTest {
 	@org.junit.Test
 	public void testConstructorWithThrow() throws NoSuchMethodException, IllegalAccessException, InstantiationException {
 		Class<TestIterate> testIterateCls = ClassBuilder.create(TestIterate.class)
-				.withConstructor(asList(Ref.class), throwException(RuntimeException.class, "test"))
+				.withConstructor(List.of(Ref.class), throwException(RuntimeException.class, "test"))
 				.withMethod("iterate", throwException(new AssertionError()))
 				.defineClass(CLASS_LOADER);
 
@@ -1163,7 +1161,7 @@ public class ExpressionTest {
 	@org.junit.Test
 	public void testConstructorWithThrowAndRef() throws NoSuchMethodException, IllegalAccessException, InstantiationException {
 		Class<TestIterate> testIterateCls = ClassBuilder.create(TestIterate.class)
-				.withConstructor(asList(Ref.class), sequence(
+				.withConstructor(List.of(Ref.class), sequence(
 						set(property(arg(0), "value"), value(100)),
 						throwException(RuntimeException.class, "test"))
 				)

@@ -89,7 +89,7 @@ public final class RpcStrategyRendezvousHashing implements RpcStrategy, WithInit
 	}
 
 	public RpcStrategyRendezvousHashing withShards(InetSocketAddress... addresses) {
-		return withShards(Arrays.asList(addresses));
+		return withShards(List.of(addresses));
 	}
 
 	public RpcStrategyRendezvousHashing withShards(List<InetSocketAddress> addresses) {

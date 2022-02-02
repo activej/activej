@@ -32,7 +32,6 @@ import java.util.stream.Stream;
 import static io.activej.codegen.expression.ExpressionCast.SELF_TYPE;
 import static io.activej.codegen.expression.ExpressionCompare.*;
 import static io.activej.codegen.operation.CompareOperation.*;
-import static java.util.Arrays.asList;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static org.objectweb.asm.Type.getType;
@@ -66,7 +65,7 @@ public class Expressions {
 	 * @see #sequence(List)
 	 */
 	public static Expression sequence(Expression... parts) {
-		return new ExpressionSequence(asList(parts));
+		return new ExpressionSequence(List.of(parts));
 	}
 
 	/**
@@ -147,7 +146,7 @@ public class Expressions {
 	 * @see #let(List, Function)
 	 */
 	public static Expression let(Expression[] expressions, Function<Variable[], Expression> fn) {
-		return let(asList(expressions), variables -> fn.apply(variables.toArray(new Variable[0])));
+		return let(List.of(expressions), variables -> fn.apply(variables.toArray(new Variable[0])));
 	}
 
 	/**
@@ -341,7 +340,7 @@ public class Expressions {
 	 * @see #and(List)
 	 */
 	public static Expression and(Expression... predicates) {
-		return and(asList(predicates));
+		return and(List.of(predicates));
 	}
 
 	/**
@@ -352,7 +351,7 @@ public class Expressions {
 	 * @return an expression that represents a result of logical 'AND'
 	 */
 	public static Expression and(Expression predicate1, Expression predicate2) {
-		return and(asList(predicate1, predicate2));
+		return and(List.of(predicate1, predicate2));
 	}
 
 	/**
@@ -376,7 +375,7 @@ public class Expressions {
 	 * @see #or(List)
 	 */
 	public static ExpressionBooleanOr or(Expression... predicates) {
-		return or(asList(predicates));
+		return or(List.of(predicates));
 	}
 
 	/**
@@ -387,7 +386,7 @@ public class Expressions {
 	 * @return an expression that represents a result of logical 'OR'
 	 */
 	public static ExpressionBooleanOr or(Expression predicate1, Expression predicate2) {
-		return or(asList(predicate1, predicate2));
+		return or(List.of(predicate1, predicate2));
 	}
 
 	public static Expression tableSwitch(Expression key, Map<Integer, Expression> cases, Expression defaultExpression) {
@@ -616,11 +615,11 @@ public class Expressions {
 	 * @return new instance of the ExpressionConstructor
 	 */
 	public static Expression constructor(Class<?> type, Expression... fields) {
-		return new ExpressionConstructor(type, asList(fields));
+		return new ExpressionConstructor(type, List.of(fields));
 	}
 
 	public static Expression superConstructor(Expression... fields) {
-		return new ExpressionSuperConstructor(asList(fields));
+		return new ExpressionSuperConstructor(List.of(fields));
 	}
 
 	public static Expression callSuper(String methodName, Expression... arguments) {
@@ -705,11 +704,11 @@ public class Expressions {
 	}
 
 	public static Expression staticCall(Class<?> owner, String method, Expression... arguments) {
-		return new ExpressionStaticCall(owner, method, asList(arguments));
+		return new ExpressionStaticCall(owner, method, List.of(arguments));
 	}
 
 	public static Expression staticCallSelf(String method, Expression... arguments) {
-		return new ExpressionStaticCallSelf(method, asList(arguments));
+		return new ExpressionStaticCallSelf(method, List.of(arguments));
 	}
 
 	public static Expression arrayGet(Expression array, Expression index) {
@@ -821,7 +820,7 @@ public class Expressions {
 	 * @see #concat(List)
 	 */
 	public static Expression concat(Expression... arguments) {
-		return concat(asList(arguments));
+		return concat(List.of(arguments));
 	}
 
 	public static Expression hashCode(Expression value) {
@@ -856,7 +855,7 @@ public class Expressions {
 	}
 
 	public static Expression equalsImpl(String... fields) {
-		return equalsImpl(asList(fields));
+		return equalsImpl(List.of(fields));
 	}
 
 	public static Expression toStringImpl(List<String> fields) {
@@ -868,7 +867,7 @@ public class Expressions {
 	}
 
 	public static Expression toStringImpl(String... fields) {
-		return toStringImpl(asList(fields));
+		return toStringImpl(List.of(fields));
 	}
 
 	public static Expression comparableImpl(List<String> fields) {
@@ -880,7 +879,7 @@ public class Expressions {
 	}
 
 	public static Expression comparableImpl(String... fields) {
-		return comparableImpl(asList(fields));
+		return comparableImpl(List.of(fields));
 	}
 
 	public static Expression comparatorImpl(Class<?> type, List<String> fields) {

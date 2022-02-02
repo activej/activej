@@ -25,8 +25,8 @@ import io.activej.inject.binding.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -58,7 +58,7 @@ public interface ModuleBuilder {
 	 * @see #install(Collection)
 	 */
 	default ModuleBuilder install(Module... modules) {
-		return install(Arrays.asList(modules));
+		return install(List.of(modules));
 	}
 
 	/**

@@ -25,7 +25,6 @@ import java.util.concurrent.Executors;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static io.activej.test.TestUtils.getFreePort;
-import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 
@@ -50,7 +49,7 @@ public final class TestRpcClientShutdown {
 	public void testServerOnClientShutdown() throws IOException {
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
 		Executor executor = Executors.newSingleThreadExecutor();
-		List<Class<?>> messageTypes = asList(Request.class, Response.class);
+		List<Class<?>> messageTypes = List.of(Request.class, Response.class);
 
 		RpcServer rpcServer = RpcServer.create(eventloop)
 				.withMessageTypes(messageTypes)

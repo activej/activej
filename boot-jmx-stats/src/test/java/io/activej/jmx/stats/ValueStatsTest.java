@@ -11,11 +11,9 @@ import java.util.Random;
 
 import static io.activej.jmx.stats.JmxHistogram.POWERS_OF_TWO;
 import static java.lang.Math.*;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-@SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
 public class ValueStatsTest {
 	private static final Duration SMOOTHING_WINDOW = Duration.ofMinutes(1);
 	private static final int ONE_SECOND_IN_MILLIS = 1000;
@@ -174,7 +172,7 @@ public class ValueStatsTest {
 			stats.recordValue(1);
 		}
 
-		List<String> expected = asList(
+		List<String> expected = List.of(
 				"( -∞,   5)  :  14",
 				"[  5,  15)  :   3",
 				"[ 15, 500)  :   0",
@@ -192,7 +190,7 @@ public class ValueStatsTest {
 
 		stats.recordValue(23);
 
-		List<String> expected = asList(
+		List<String> expected = List.of(
 				"[10, 15)  :  2",
 				"[15, 20)  :  0",
 				"[20, 25)  :  1"
@@ -206,7 +204,7 @@ public class ValueStatsTest {
 
 		stats.recordValue(17);
 
-		List<String> expected = asList(
+		List<String> expected = List.of(
 				"[15, 500)  :  1"
 		);
 		assertEquals(expected, stats.getHistogram());
@@ -218,7 +216,7 @@ public class ValueStatsTest {
 
 		stats.recordValue(600);
 
-		List<String> expected = asList(
+		List<String> expected = List.of(
 				"[500, +∞)  :  1"
 		);
 		assertEquals(expected, stats.getHistogram());
@@ -230,7 +228,7 @@ public class ValueStatsTest {
 
 		stats.recordValue(-10);
 
-		List<String> expected = asList(
+		List<String> expected = List.of(
 				"(-∞,  5)  :  1"
 		);
 		assertEquals(expected, stats.getHistogram());
@@ -261,7 +259,7 @@ public class ValueStatsTest {
 		accumulator.add(stats_1);
 		accumulator.add(stats_2);
 
-		List<String> expected = asList(
+		List<String> expected = List.of(
 				"(-∞,  5)  :  3",
 				"[ 5, 10)  :  1",
 				"[10, 15)  :  0",
@@ -285,7 +283,7 @@ public class ValueStatsTest {
 
 		stats.recordValue(7);
 
-		List<String> expected = asList(
+		List<String> expected = List.of(
 				"(-∞,  0)  :  1",
 				"[ 0,  1)  :  2",
 				"[ 1,  2)  :  0",
@@ -301,7 +299,7 @@ public class ValueStatsTest {
 
 		stats.recordValue(Integer.MAX_VALUE);
 
-		List<String> expected = asList(
+		List<String> expected = List.of(
 				"[         0,          1)  :  0",
 				"[         1,          2)  :  0",
 				"[         2,          4)  :  0",

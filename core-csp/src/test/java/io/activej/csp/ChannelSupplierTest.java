@@ -21,7 +21,6 @@ import static io.activej.csp.ChannelSuppliers.inputStreamAsChannelSupplier;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.asList;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -36,7 +35,7 @@ public class ChannelSupplierTest {
 
 	@Test
 	public void testToCollector() {
-		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.ofList(asList(
+		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.ofList(List.of(
 				ByteBuf.wrapForReading("Test1".getBytes(UTF_8)),
 				ByteBuf.wrapForReading("Test2".getBytes(UTF_8)),
 				ByteBuf.wrapForReading("Test3".getBytes(UTF_8)),

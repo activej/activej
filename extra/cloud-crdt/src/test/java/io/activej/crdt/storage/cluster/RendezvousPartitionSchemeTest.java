@@ -4,7 +4,6 @@ import io.activej.crdt.storage.cluster.DiscoveryService.PartitionScheme;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -35,7 +34,7 @@ public class RendezvousPartitionSchemeTest {
 						.withActive(false))
 				.withPartitionIdGetter(PartitionId::getId);
 
-		List<PartitionId> alive = Arrays.asList(
+		List<PartitionId> alive = List.of(
 				PartitionId.of("a", new InetSocketAddress(9001), new InetSocketAddress(8001)),
 				PartitionId.of("b", new InetSocketAddress(9002), new InetSocketAddress(8002)),
 				PartitionId.of("c", new InetSocketAddress(9003), new InetSocketAddress(8003)),

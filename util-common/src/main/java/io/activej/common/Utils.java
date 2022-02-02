@@ -27,7 +27,6 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static java.lang.Math.max;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.*;
 
 /**
@@ -150,7 +149,7 @@ public class Utils {
 		Object[] objects = new Object[list1.size() + list2.size()];
 		System.arraycopy(list1.toArray(), 0, objects, 0, list1.size());
 		System.arraycopy(list2.toArray(), 0, objects, list1.size(), list2.size());
-		return (List<D>) asList(objects);
+		return (List<D>) List.of(objects);
 	}
 
 	/**

@@ -14,7 +14,6 @@ import java.util.List;
 import static io.activej.http.HttpHeaders.HOST;
 import static io.activej.http.HttpHeaders.of;
 import static io.activej.http.HttpMethod.*;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -27,7 +26,7 @@ public final class HttpMessageTest {
 		assertNotNull(buf);
 		String actual = ByteBufStrings.asAscii(buf);
 
-		assertEquals(new LinkedHashSet<>(asList(expected.split("\r\n"))), new LinkedHashSet<>(asList(actual.split("\r\n"))));
+		assertEquals(new LinkedHashSet<>(List.of(expected.split("\r\n"))), new LinkedHashSet<>(List.of(actual.split("\r\n"))));
 		message.recycle();
 	}
 
@@ -45,9 +44,9 @@ public final class HttpMessageTest {
 		assertHttpMessageEquals("HTTP/1.1 200 OK\r\nSet-Cookie: cookie1=value1\r\nContent-Length: 0\r\n\r\n",
 				HttpResponse.ofCode(200).withCookies(List.of(HttpCookie.of("cookie1", "value1"))));
 		assertHttpMessageEquals("HTTP/1.1 200 OK\r\nSet-Cookie: cookie1=value1\r\nSet-Cookie: cookie2=value2\r\nContent-Length: 0\r\n\r\n",
-				HttpResponse.ofCode(200).withCookies(asList(HttpCookie.of("cookie1", "value1"), HttpCookie.of("cookie2", "value2"))));
+				HttpResponse.ofCode(200).withCookies(List.of(HttpCookie.of("cookie1", "value1"), HttpCookie.of("cookie2", "value2"))));
 		assertHttpMessageEquals("HTTP/1.1 200 OK\r\nSet-Cookie: cookie1=value1\r\nSet-Cookie: cookie2=value2\r\nContent-Length: 0\r\n\r\n",
-				HttpResponse.ofCode(200).withCookies(asList(HttpCookie.of("cookie1", "value1"), HttpCookie.of("cookie2", "value2"))));
+				HttpResponse.ofCode(200).withCookies(List.of(HttpCookie.of("cookie1", "value1"), HttpCookie.of("cookie2", "value2"))));
 	}
 
 	@Test
@@ -56,7 +55,7 @@ public final class HttpMessageTest {
 		assertHttpMessageEquals("POST /index.html HTTP/1.1\r\nHost: test.com\r\nContent-Length: 0\r\n\r\n", HttpRequest.post("http://test.com/index.html"));
 		assertHttpMessageEquals("CONNECT /index.html HTTP/1.1\r\nHost: test.com\r\n\r\n", HttpRequest.of(HttpMethod.CONNECT, "http://test.com/index.html"));
 		assertHttpMessageEquals("GET /index.html HTTP/1.1\r\nHost: test.com\r\nCookie: cookie1=value1\r\n\r\n", HttpRequest.get("http://test.com/index.html").withCookie(HttpCookie.of("cookie1", "value1")));
-		assertHttpMessageEquals("GET /index.html HTTP/1.1\r\nHost: test.com\r\nCookie: cookie1=value1; cookie2=value2\r\n\r\n", HttpRequest.get("http://test.com/index.html").withCookies(asList(HttpCookie.of("cookie1", "value1"), HttpCookie.of("cookie2", "value2"))));
+		assertHttpMessageEquals("GET /index.html HTTP/1.1\r\nHost: test.com\r\nCookie: cookie1=value1; cookie2=value2\r\n\r\n", HttpRequest.get("http://test.com/index.html").withCookies(List.of(HttpCookie.of("cookie1", "value1"), HttpCookie.of("cookie2", "value2"))));
 
 		HttpRequest request = HttpRequest.post("http://test.com/index.html");
 		ByteBuf buf = ByteBufPool.allocate(100);

@@ -22,16 +22,12 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Duration;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 
 import static io.activej.common.Utils.first;
 import static io.activej.common.reflection.ReflectionUtils.isSimpleType;
 import static java.lang.System.identityHashCode;
-import static java.util.Arrays.asList;
 
 public final class StatsUtils {
 	public static boolean isJmxStats(Class<?> cls) {
@@ -100,7 +96,7 @@ public final class StatsUtils {
 				continue;
 			}
 
-			if (!VISITED.get().add(asList(identityHashCode(instance), method))) {
+			if (!VISITED.get().add(List.of(identityHashCode(instance), method))) {
 				continue;
 			}
 

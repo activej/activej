@@ -27,7 +27,6 @@ import static io.activej.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofString;
 import static io.activej.aggregation.measure.Measures.union;
 import static io.activej.promise.TestUtils.await;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 
@@ -132,7 +131,7 @@ public class InvertedIndexTest {
 		List<InvertedIndexQueryResult> list = await(aggregation.query(query, InvertedIndexQueryResult.class, DefiningClassLoader.create(classLoader))
 				.toList());
 
-		List<InvertedIndexQueryResult> expectedResult = asList(
+		List<InvertedIndexQueryResult> expectedResult = List.of(
 				new InvertedIndexQueryResult("brown", Set.of(2, 3, 10)),
 				new InvertedIndexQueryResult("dog", Set.of(1)),
 				new InvertedIndexQueryResult("fox", Set.of(1, 3, 4)),

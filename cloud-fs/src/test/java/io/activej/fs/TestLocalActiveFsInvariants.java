@@ -27,7 +27,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
@@ -39,7 +42,6 @@ import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
-import static java.util.Arrays.asList;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -91,7 +93,7 @@ public final class TestLocalActiveFsInvariants {
 		await(secondLocalFs.start());
 		second = new DefaultActiveFs(secondLocalFs);
 
-		initializeDirs(asList(
+		initializeDirs(List.of(
 				"file",
 				"file2",
 				"directory/subdir/file3.txt",
@@ -102,7 +104,7 @@ public final class TestLocalActiveFsInvariants {
 
 	@Parameters(name = "{0}")
 	public static Collection<Object[]> getParameters() {
-		return Arrays.asList(
+		return List.of(
 				new Object[]{
 						"Regular",
 						(UnaryOperator<LocalActiveFs>) fs -> fs},

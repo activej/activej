@@ -80,7 +80,7 @@ public final class TestClusterDeadPartitionCheck {
 
 	@Parameters(name = "{0}")
 	public static Collection<Object[]> getParameters() {
-		return Arrays.asList(
+		return List.of(
 				// tcp
 				new Object[]{
 						new ClientServerFactory() {

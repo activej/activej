@@ -29,8 +29,6 @@ import java.util.Deque;
 import java.util.List;
 import java.util.function.Function;
 
-import static java.util.Arrays.asList;
-
 /**
  * Represents an object which has left and right consumers and one supplier. After receiving data
  * it can join it, or either does an inner-join or a left join. It works similar to joins from SQL.
@@ -258,7 +256,7 @@ public final class StreamJoin<K, L, R, V> implements HasStreamInputs, HasStreamO
 
 	@Override
 	public List<? extends StreamConsumer<?>> getInputs() {
-		return asList(left, right);
+		return List.of(left, right);
 	}
 
 	@Override

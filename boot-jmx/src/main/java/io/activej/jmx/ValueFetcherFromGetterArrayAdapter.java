@@ -24,8 +24,6 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.util.Arrays.asList;
-
 final class ValueFetcherFromGetterArrayAdapter implements ValueFetcher {
 	private final Method getter;
 
@@ -40,7 +38,7 @@ final class ValueFetcherFromGetterArrayAdapter implements ValueFetcher {
 			if (arr.getClass().getComponentType().isPrimitive()) {
 				return wrapPrimitives(arr);
 			}
-			return asList((Object[]) arr);
+			return List.of((Object[]) arr);
 		} catch (IllegalAccessException | InvocationTargetException e) {
 			throw new RuntimeException(e);
 		}

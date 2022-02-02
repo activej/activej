@@ -31,7 +31,7 @@ public class ComputedMeasures {
 		protected final Set<ComputedMeasure> dependencies;
 
 		protected AbstractComputedMeasure(ComputedMeasure... dependencies) {
-			this.dependencies = new LinkedHashSet<>(Arrays.asList(dependencies));
+			this.dependencies = new LinkedHashSet<>(List.of(dependencies));
 		}
 
 		@Override

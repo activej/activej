@@ -23,7 +23,6 @@ import io.activej.common.ref.RefBoolean;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
@@ -109,7 +108,7 @@ public final class AsyncPredicates {
 	@SafeVarargs
 	public static <T> @NotNull AsyncPredicate<T> and(AsyncPredicate<? super T>... predicates) {
 		//noinspection RedundantCast
-		return and(((List<AsyncPredicate<? super T>>) Arrays.asList(predicates)));
+		return and(((List<AsyncPredicate<? super T>>) List.of(predicates)));
 	}
 
 	/**
@@ -175,6 +174,6 @@ public final class AsyncPredicates {
 	@SafeVarargs
 	public static <T> @NotNull AsyncPredicate<T> or(AsyncPredicate<? super T>... predicates) {
 		//noinspection RedundantCast
-		return or(((List<AsyncPredicate<? super T>>) Arrays.asList(predicates)));
+		return or(((List<AsyncPredicate<? super T>>) List.of(predicates)));
 	}
 }

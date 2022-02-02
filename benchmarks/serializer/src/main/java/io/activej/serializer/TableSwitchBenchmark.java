@@ -15,6 +15,7 @@ import org.openjdk.jmh.runner.options.TimeValue;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -52,7 +53,7 @@ public class TableSwitchBenchmark {
 			.defineClassAndCreateInstance(DefiningClassLoader.create());
 
 	private static final Test test2 = ClassBuilder.create(Test.class)
-			.withMethod("test", String.class, Arrays.asList(int.class),
+			.withMethod("test", String.class, List.of(int.class),
 					get(() -> {
 						Map<Integer, Expression> cases = new HashMap<>();
 						for (int i = 0; i < keys.length; i++) {

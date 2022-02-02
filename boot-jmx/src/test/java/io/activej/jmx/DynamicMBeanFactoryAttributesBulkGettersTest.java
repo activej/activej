@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 
 import static io.activej.jmx.JmxBeanSettings.defaultSettings;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -25,7 +24,7 @@ public class DynamicMBeanFactoryAttributesBulkGettersTest {
 		Map<String, MBeanAttributeInfo> attrs = Utils.nameToAttribute(mbean.getMBeanInfo().getAttributes());
 
 		String[] expectedAttrNames = {"text", "value", "number"};
-		assertEquals(new HashSet<>(asList(expectedAttrNames)), attrs.keySet());
+		assertEquals(new HashSet<>(List.of(expectedAttrNames)), attrs.keySet());
 
 		AttributeList fetchedAttrs = mbean.getAttributes(expectedAttrNames);
 		assertEquals(2, fetchedAttrs.size());

@@ -31,11 +31,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
-@SuppressWarnings({"unused", "ArraysAsListWithZeroOrOneArgument"})
+@SuppressWarnings("unused")
 public final class RecordScheme implements WithInitializer<RecordScheme> {
 	private RecordFactory factory;
 
@@ -87,7 +86,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 	}
 
 	public RecordScheme withHashCodeEqualsFields(String... hashCodeEqualsFields) {
-		return withHashCodeEqualsFields(asList(hashCodeEqualsFields));
+		return withHashCodeEqualsFields(List.of(hashCodeEqualsFields));
 	}
 
 	public RecordScheme withComparator(List<String> comparedFields) {
@@ -98,7 +97,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 	}
 
 	public RecordScheme withComparator(String... comparedFields) {
-		return withComparator(asList(comparedFields));
+		return withComparator(List.of(comparedFields));
 	}
 
 	public void addField(@NotNull String field, @NotNull Type type) {
@@ -223,7 +222,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 		generatedClass = classLoader.ensureClass(
 				ClassKey.of(Record.class, this),
 				() -> ClassBuilder.create(Record.class)
-						.withConstructor(asList(RecordScheme.class),
+						.withConstructor(List.of(RecordScheme.class),
 								superConstructor(arg(0)))
 						.withMethod("hashCode", hashCodeImpl(hashCodeEqualsClassFields))
 						.withMethod("equals", equalsImpl(hashCodeEqualsClassFields))
@@ -302,7 +301,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 				ClassKey.of(RecordFactory.class, this),
 				() -> ClassBuilder.create(RecordFactory.class)
 						.withStaticFinalField("SCHEME", RecordScheme.class, value(this))
-						.withMethod("create", Record.class, asList(),
+						.withMethod("create", Record.class, List.of(),
 								constructor(generatedClass, staticField("SCHEME"))));
 	}
 

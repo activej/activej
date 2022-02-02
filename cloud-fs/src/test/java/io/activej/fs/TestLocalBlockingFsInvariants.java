@@ -12,7 +12,10 @@ import org.junit.runners.Parameterized;
 
 import java.io.*;
 import java.nio.file.*;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import static io.activej.common.Utils.first;
@@ -20,7 +23,6 @@ import static io.activej.fs.Utils.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
-import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
@@ -65,7 +67,7 @@ public final class TestLocalBlockingFsInvariants {
 		secondLocalFs.start();
 		second = new DefaultBlockingFs(secondLocalFs);
 
-		initializeDirs(asList(
+		initializeDirs(List.of(
 				"file",
 				"file2",
 				"directory/subdir/file3.txt",
@@ -76,7 +78,7 @@ public final class TestLocalBlockingFsInvariants {
 
 	@Parameterized.Parameters(name = "{0}")
 	public static Collection<Object[]> getParameters() {
-		return Arrays.asList(
+		return List.of(
 				new Object[]{
 						"Regular",
 						(UnaryOperator<LocalBlockingFs>) fs -> fs},

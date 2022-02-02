@@ -151,7 +151,7 @@ public abstract class HttpMessage {
 
 	public void addCookies(HttpCookie... cookies) {
 		if (CHECK) checkState(!isRecycled());
-		addCookies(Arrays.asList(cookies));
+		addCookies(List.of(cookies));
 	}
 
 	public abstract void addCookies(@NotNull List<HttpCookie> cookies);

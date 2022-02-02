@@ -131,7 +131,7 @@ public class RecordTest {
 	@Test
 	public void testRecordsNestedNullable() {
 		{
-			RecordWithNestedNullables record1 = new RecordWithNestedNullables(asList("abc", "xyz"), 1);
+			RecordWithNestedNullables record1 = new RecordWithNestedNullables(List.of("abc", "xyz"), 1);
 			RecordWithNestedNullables record2 = doTest(RecordWithNestedNullables.class, record1);
 			Assert.assertEquals(record1, record2);
 		}
@@ -153,7 +153,7 @@ public class RecordTest {
 				.withAnnotationCompatibilityMode()
 				.build(RecordWithNestedPathNullables.class);
 		{
-			RecordWithNestedPathNullables record1 = new RecordWithNestedPathNullables(asList("abc", "xyz"), 1);
+			RecordWithNestedPathNullables record1 = new RecordWithNestedPathNullables(List.of("abc", "xyz"), 1);
 			RecordWithNestedPathNullables record2 = doTest(record1, serializer);
 			Assert.assertEquals(record1, record2);
 		}

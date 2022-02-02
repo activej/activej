@@ -54,7 +54,6 @@ import static io.activej.cube.http.ReportingTest.LogItem.*;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
@@ -300,14 +299,14 @@ public final class ReportingTest extends CubeTestBase {
 		// checkout first (root) revision
 		await(logCubeStateManager.checkout());
 
-		List<LogItem> logItemsForAdvertisersAggregations = asList(
+		List<LogItem> logItemsForAdvertisersAggregations = List.of(
 				new LogItem(1, 1, 1, 1, 20, 3, 1, 0.12, 2, 2, EXCLUDE_AFFILIATE, EXCLUDE_SITE),
 				new LogItem(1, 2, 2, 2, 100, 5, 0, 0.36, 10, 0, EXCLUDE_AFFILIATE, EXCLUDE_SITE),
 				new LogItem(1, 3, 3, 3, 80, 5, 0, 0.60, 1, 8, EXCLUDE_AFFILIATE, EXCLUDE_SITE),
 				new LogItem(2, 1, 1, 1, 15, 2, 0, 0.22, 1, 3, EXCLUDE_AFFILIATE, EXCLUDE_SITE),
 				new LogItem(3, 1, 1, 1, 30, 5, 2, 0.30, 3, 4, EXCLUDE_AFFILIATE, EXCLUDE_SITE));
 
-		List<LogItem> logItemsForAffiliatesAggregation = asList(
+		List<LogItem> logItemsForAffiliatesAggregation = List.of(
 				new LogItem(1, EXCLUDE_ADVERTISER, EXCLUDE_CAMPAIGN, EXCLUDE_BANNER, 10, 3, 1, 0.12, 0, 2, 1, "site3.com"),
 				new LogItem(1, EXCLUDE_ADVERTISER, EXCLUDE_CAMPAIGN, EXCLUDE_BANNER, 15, 2, 0, 0.22, 0, 3, 2, "site3.com"),
 				new LogItem(1, EXCLUDE_ADVERTISER, EXCLUDE_CAMPAIGN, EXCLUDE_BANNER, 30, 5, 2, 0.30, 0, 4, 2, "site3.com"),
@@ -648,7 +647,7 @@ public final class ReportingTest extends CubeTestBase {
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(2, records.size());
-		assertEquals(asList("advertiser.name", "clicks"), records.get(0).getScheme().getFields());
+		assertEquals(List.of("advertiser.name", "clicks"), records.get(0).getScheme().getFields());
 		assertEquals(List.of("advertiser.name"), queryResult.getAttributes());
 		assertEquals(List.of("clicks"), queryResult.getMeasures());
 		assertEquals("first", records.get(0).get("advertiser.name"));
@@ -730,17 +729,17 @@ public final class ReportingTest extends CubeTestBase {
 		CubeQuery queryWithPredicateIn = CubeQuery.create()
 				.withAttributes("advertiser")
 				.withWhere(and(
-						in("advertiser", asList(1, 2)),
+						in("advertiser", List.of(1, 2)),
 						notEq("advertiser", EXCLUDE_ADVERTISER),
 						notEq("banner", EXCLUDE_BANNER),
 						notEq("campaign", EXCLUDE_CAMPAIGN)))
 				.withMeasures("clicks", "ctr", "conversions")
 				.withReportType(DATA_WITH_TOTALS)
-				.withHaving(in("advertiser", asList(1, 2)));
+				.withHaving(in("advertiser", List.of(1, 2)));
 
 		QueryResult in = await(cubeHttpClient.query(queryWithPredicateIn));
 
-		List<String> expectedRecordFields = asList("advertiser", "clicks", "ctr", "conversions");
+		List<String> expectedRecordFields = List.of("advertiser", "clicks", "ctr", "conversions");
 		assertEquals(expectedRecordFields.size(), in.getRecordScheme().getFields().size());
 		assertEquals(2, in.getTotalCount());
 
@@ -771,7 +770,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withReportType(ReportType.METADATA);
 
 		QueryResult metadata = await(cubeHttpClient.query(queryAffectingNonCompatibleAggregations));
-		List<String> expectedMeasures = asList("impressions", "clicks");
+		List<String> expectedMeasures = List.of("impressions", "clicks");
 		assertEquals(expectedMeasures, metadata.getMeasures());
 	}
 
@@ -797,7 +796,7 @@ public final class ReportingTest extends CubeTestBase {
 	public void testAdvertisersAggregationTotals() {
 		CubeQuery queryAdvertisers = CubeQuery.create()
 				.withAttributes("date", "advertiser")
-				.withMeasures(asList("clicks", "impressions", "revenue", "errors"))
+				.withMeasures(List.of("clicks", "impressions", "revenue", "errors"))
 				.withWhere(and(notEq("advertiser", EXCLUDE_ADVERTISER), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER),
 						between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02"))))
 				.withReportType(DATA_WITH_TOTALS);
@@ -819,7 +818,7 @@ public final class ReportingTest extends CubeTestBase {
 	public void testAffiliatesAggregationTotals() {
 		CubeQuery queryAffiliates = CubeQuery.create()
 				.withAttributes("date", "affiliate")
-				.withMeasures(asList("clicks", "impressions", "revenue", "errors"))
+				.withMeasures(List.of("clicks", "impressions", "revenue", "errors"))
 				.withWhere(and(notEq("affiliate", 0), notEq("site", EXCLUDE_SITE),
 						between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02"))))
 				.withReportType(DATA_WITH_TOTALS);
@@ -841,7 +840,7 @@ public final class ReportingTest extends CubeTestBase {
 	public void testDailyAggregationTotals() {
 		CubeQuery queryDate = CubeQuery.create()
 				.withAttributes("date")
-				.withMeasures(asList("clicks", "impressions", "revenue", "errors"))
+				.withMeasures(List.of("clicks", "impressions", "revenue", "errors"))
 				.withWhere(between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02")))
 				.withReportType(DATA_WITH_TOTALS);
 
@@ -860,7 +859,7 @@ public final class ReportingTest extends CubeTestBase {
 
 	@Test
 	public void testResultContainsTotals_whenDataWithTotalsRequested() {
-		List<String> measures = asList("clicks", "impressions", "revenue", "errors");
+		List<String> measures = List.of("clicks", "impressions", "revenue", "errors");
 		List<String> requestMeasures = new ArrayList<>(measures);
 		requestMeasures.add(3, "nonexistentMeasure");
 		List<String> dateDimension = List.of("date");
@@ -888,7 +887,7 @@ public final class ReportingTest extends CubeTestBase {
 
 	@Test
 	public void testResultContainsTotalsAndMetadata_whenTotalsAndMetadataRequested() {
-		List<String> measures = asList("clicks", "impressions", "revenue", "errors");
+		List<String> measures = List.of("clicks", "impressions", "revenue", "errors");
 		List<String> requestMeasures = new ArrayList<>(measures);
 		requestMeasures.add("unexpected");
 		CubeQuery queryDate = CubeQuery.create()

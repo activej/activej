@@ -23,7 +23,6 @@ import java.net.InetSocketAddress;
 import java.util.List;
 
 import static io.activej.common.Checks.checkArgument;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -43,7 +42,7 @@ public final class RpcStrategies {
 	}
 
 	public static List<RpcStrategy> servers(InetSocketAddress... addresses) {
-		return servers(asList(addresses));
+		return servers(List.of(addresses));
 	}
 
 	public static List<RpcStrategy> servers(List<InetSocketAddress> addresses) {

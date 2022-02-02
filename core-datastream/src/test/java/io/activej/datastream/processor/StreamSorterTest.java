@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -35,7 +34,6 @@ import static io.activej.datastream.processor.FailingStreamSorterStorageStub.STO
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.*;
 
 public final class StreamSorterTest {
@@ -75,10 +73,10 @@ public final class StreamSorterTest {
 //		storage.readStream(2).streamTo(consumer2.with(TestStreamConsumers.randomlySuspending()));
 		Eventloop.getCurrentEventloop().run();
 
-		assertEquals(asList(1, 2, 3, 4, 5, 6, 7), consumer1.getList());
-//		assertEquals(asList(111), consumer2.getList());
+		assertEquals(List.of(1, 2, 3, 4, 5, 6, 7), consumer1.getList());
+//		assertEquals(List.of(111), consumer2.getList());
 
-		storage.cleanup(Arrays.asList(1, 2));
+		storage.cleanup(List.of(1, 2));
 	}
 
 	@Test
@@ -94,7 +92,7 @@ public final class StreamSorterTest {
 		await(source.transformWith(sorter)
 				.streamTo(consumerToList.transformWith(randomlySuspending())));
 
-		assertEquals(asList(1, 2, 3, 4, 5), consumerToList.getList());
+		assertEquals(List.of(1, 2, 3, 4, 5), consumerToList.getList());
 		assertEndOfStream(source, consumerToList);
 		assertEndOfStream(sorter);
 	}
@@ -221,7 +219,7 @@ public final class StreamSorterTest {
 			await(streamPromise);
 			assertEndOfStream(sorter);
 			assertEndOfStream(supplier, consumerToList);
-			assertEquals(asList(1, 2, 3, 4, 5), consumerToList.getList());
+			assertEquals(List.of(1, 2, 3, 4, 5), consumerToList.getList());
 		});
 	}
 

@@ -15,6 +15,7 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
@@ -24,7 +25,6 @@ import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertingFn;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
 public final class HttpTolerantApplicationTest {
@@ -113,6 +113,6 @@ public final class HttpTolerantApplicationTest {
 		byte[] bytes = new byte[expected.length()];
 		readFully(is, bytes);
 		String actual = decodeAscii(bytes);
-		assertEquals(new LinkedHashSet<>(asList(expected.split("\r\n"))), new LinkedHashSet<>(asList(actual.split("\r\n"))));
+		assertEquals(new LinkedHashSet<>(List.of(expected.split("\r\n"))), new LinkedHashSet<>(List.of(actual.split("\r\n"))));
 	}
 }

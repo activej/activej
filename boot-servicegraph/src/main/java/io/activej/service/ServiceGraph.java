@@ -41,7 +41,6 @@ import static io.activej.inject.util.Utils.getDisplayString;
 import static io.activej.inject.util.Utils.union;
 import static io.activej.service.Utils.combineAll;
 import static java.lang.System.currentTimeMillis;
-import static java.util.Arrays.asList;
 import static java.util.Comparator.comparingLong;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.joining;
@@ -247,7 +246,7 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 		if (service != null) {
 			services.put(key, service);
 		}
-		add(key, asList(dependencies));
+		add(key, List.of(dependencies));
 	}
 
 	public void add(Key key, Collection<Key> dependencies) {
@@ -258,7 +257,7 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 	}
 
 	public void add(Key key, Key first, Key... rest) {
-		add(key, concat(List.of(first), asList(rest)));
+		add(key, concat(List.of(first), List.of(rest)));
 	}
 
 	public synchronized boolean isStarted() {

@@ -6,8 +6,6 @@ import io.activej.serializer.annotations.SerializeClass;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.util.Arrays.asList;
-
 public final class SerializeSubclassesExample {
 
 	//[START HOLDER]
@@ -19,12 +17,12 @@ public final class SerializeSubclassesExample {
 
 	//[START MAIN]
 	public static void main(String[] arg) {
-		List<Object> list1 = asList(123, 456L, "text", false, "content", true);
+		List<Object> list1 = List.of(123, 456L, "text", false, "content", true);
 		serializeList(list1, Integer.class, Long.class, String.class, Boolean.class);
 
 		System.out.println();
 
-		List<Object> list2 = asList((byte) 1, 12.34, 4353.323f, 'X');
+		List<Object> list2 = List.of((byte) 1, 12.34, 4353.323f, 'X');
 		serializeList(list2, Byte.class, Double.class, Float.class, String.class, Character.class);
 	}
 	//[END MAIN]
@@ -36,7 +34,7 @@ public final class SerializeSubclassesExample {
 		holder.list.addAll(list);
 
 		BinarySerializer<ListHolder> serializer = SerializerBuilder.create()
-				.withSubclasses("list", asList(subClasses))
+				.withSubclasses("list", List.of(subClasses))
 				.build(ListHolder.class);
 
 		byte[] buffer = new byte[1024];

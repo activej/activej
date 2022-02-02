@@ -7,7 +7,6 @@ import java.lang.reflect.Type;
 import java.util.List;
 
 import static io.activej.types.Types.parameterizedType;
-import static java.util.Arrays.asList;
 
 /**
  * A Key class is a type token by itself, so you can construct complex keys with long generics nicely.
@@ -22,7 +21,7 @@ public final class TypeTokenExample {
 			@Override
 			protected void configure() {
 				bind(String.class).toInstance("hello");
-				bind(new Key<List<String>>() {}).to(s -> asList(s, s, s), String.class);
+				bind(new Key<List<String>>() {}).to(s -> List.of(s, s, s), String.class);
 			}
 		});
 

@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import static java.util.Arrays.asList;
-
 public class TestPubRequest {
 	private final static Random rand = new Random();
 
@@ -68,7 +66,7 @@ public class TestPubRequest {
 		return "TestPubRequest{timestamp=" + timestamp + ", pub=" + pub + ", advRequests=" + advRequests + '}';
 	}
 
-	public static final List<String> DIMENSIONS = asList("adv", "pub");
+	public static final List<String> DIMENSIONS = List.of("adv", "pub");
 
-	public static final List<String> METRICS = asList("advRequests", "pubRequests");
+	public static final List<String> METRICS = List.of("advRequests", "pubRequests");
 }

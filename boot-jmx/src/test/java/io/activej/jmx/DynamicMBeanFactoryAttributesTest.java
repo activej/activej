@@ -17,7 +17,6 @@ import java.util.*;
 
 import static io.activej.jmx.JmxBeanSettings.defaultSettings;
 import static io.activej.jmx.helper.Utils.nameToAttribute;
-import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
@@ -98,7 +97,7 @@ public class DynamicMBeanFactoryAttributesTest {
 
 	@Test
 	public void concatenatesListAttributesFromDifferentMBeans() throws Exception {
-		MBeanWithListAttr mBeanWithListAttr_1 = new MBeanWithListAttr(asList("a", "b"));
+		MBeanWithListAttr mBeanWithListAttr_1 = new MBeanWithListAttr(List.of("a", "b"));
 		MBeanWithListAttr mBeanWithListAttr_2 = new MBeanWithListAttr(new ArrayList<>());
 		MBeanWithListAttr mBeanWithListAttr_3 = new MBeanWithListAttr(List.of("w"));
 
@@ -287,7 +286,7 @@ public class DynamicMBeanFactoryAttributesTest {
 	// region helper methods
 	public static DynamicMBean createDynamicMBeanFor(Object... objects) {
 		return DynamicMBeanFactory.create()
-				.createDynamicMBean(asList(objects), defaultSettings(), false);
+				.createDynamicMBean(List.of(objects), defaultSettings(), false);
 	}
 
 	public static Object[] keyForTabularData(String key) {

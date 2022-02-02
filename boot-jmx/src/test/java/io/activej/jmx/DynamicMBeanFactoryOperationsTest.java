@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 
 import static io.activej.jmx.JmxBeanSettings.defaultSettings;
-import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
@@ -82,7 +81,7 @@ public final class DynamicMBeanFactoryOperationsTest {
 		BeanStubWithOperations bean_1 = new BeanStubWithOperations();
 		BeanStubWithOperations bean_2 = new BeanStubWithOperations();
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(asList(bean_1, bean_2), defaultSettings(), false);
+				.createDynamicMBean(List.of(bean_1, bean_2), defaultSettings(), false);
 
 		// set manually init value for second bean to be different from first
 		bean_2.inc();
@@ -140,7 +139,7 @@ public final class DynamicMBeanFactoryOperationsTest {
 		MBeanWithOperationThatReturnsValue mbeanOpWithValue_1 = new MBeanWithOperationThatReturnsValue();
 		MBeanWithOperationThatReturnsValue mbeanOpWithValue_2 = new MBeanWithOperationThatReturnsValue();
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(asList(mbeanOpWithValue_1, mbeanOpWithValue_2), defaultSettings(), false);
+				.createDynamicMBean(List.of(mbeanOpWithValue_1, mbeanOpWithValue_2), defaultSettings(), false);
 
 		assertNull(mbean.invoke("sum", new Object[]{7, 8}, new String[]{"int", "int"}));
 	}

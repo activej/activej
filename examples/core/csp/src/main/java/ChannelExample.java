@@ -5,8 +5,6 @@ import io.activej.eventloop.Eventloop;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static java.util.Arrays.asList;
-
 public final class ChannelExample {
 	//[START REGION_1]
 	private static void supplierOfValues() {
@@ -41,7 +39,7 @@ public final class ChannelExample {
 	public static void main(String[] args) {
 		Eventloop eventloop = Eventloop.create().withCurrentThread();
 		supplierOfValues();
-		supplierOfList(asList("One", "Two", "Three"));
+		supplierOfList(List.of("One", "Two", "Three"));
 		map();
 		toCollector();
 		filter();

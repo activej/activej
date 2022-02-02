@@ -41,7 +41,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
-import static java.util.Arrays.asList;
 
 /**
  * This interface represents supplier of {@link Promise} of data that should be used serially
@@ -124,7 +123,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 */
 	@SafeVarargs
 	static <T> ChannelSupplier<T> of(T... values) {
-		return ofList(asList(values));
+		return ofList(List.of(values));
 	}
 
 	/**

@@ -9,12 +9,13 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import java.util.List;
+
 import static io.activej.datastream.TestStreamTransformers.decorate;
 import static io.activej.datastream.TestStreamTransformers.oneByOne;
 import static io.activej.datastream.TestUtils.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
@@ -41,8 +42,8 @@ public class StreamSplitterTest {
 				streamConcat.newOutput().streamTo(consumerToList2.transformWith(oneByOne()))
 		);
 
-		assertEquals(asList(1, 2, 3), consumerToList1.getList());
-		assertEquals(asList(1, 2, 3), consumerToList2.getList());
+		assertEquals(List.of(1, 2, 3), consumerToList1.getList());
+		assertEquals(List.of(1, 2, 3), consumerToList2.getList());
 		assertEndOfStream(source);
 		assertEndOfStream(streamConcat.getInput());
 		assertSuppliersEndOfStream(streamConcat.getOutputs());

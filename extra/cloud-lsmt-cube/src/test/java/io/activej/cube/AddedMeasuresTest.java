@@ -25,7 +25,10 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -167,7 +170,7 @@ public class AddedMeasuresTest {
 				.withAggregation(basicConfig.withMeasures("uniqueUserIds", "estimatedUniqueUserIdCount"))
 				.withInitializer(c -> initialDiffs.forEach(c::apply));
 
-		List<String> measures = Arrays.asList("eventCount", "estimatedUniqueUserIdCount");
+		List<String> measures = List.of("eventCount", "estimatedUniqueUserIdCount");
 		QueryResult queryResult = await(cube.query(CubeQuery.create()
 				.withMeasures(measures)));
 
@@ -203,7 +206,7 @@ public class AddedMeasuresTest {
 		await(aggregationChunkStorage.finish(diff.addedChunks().map(id -> (long) id).collect(toSet())));
 		cube.apply(diff);
 
-		List<String> measures = Arrays.asList("eventCount", "customRevenue", "estimatedUniqueUserIdCount");
+		List<String> measures = List.of("eventCount", "customRevenue", "estimatedUniqueUserIdCount");
 		QueryResult queryResult = await(cube.query(CubeQuery.create()
 				.withMeasures(measures)));
 

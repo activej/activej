@@ -238,7 +238,7 @@ public interface StreamSupplier<T> extends AsyncCloseable {
 	 */
 	@SafeVarargs
 	static <T> StreamSupplier<T> concat(StreamSupplier<T>... suppliers) {
-		return concat(asList(suppliers));
+		return concat(List.of(suppliers));
 	}
 
 	/**

@@ -10,7 +10,8 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-import static java.util.Arrays.asList;
+import java.util.List;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -55,7 +56,7 @@ public final class RpcMessageSerializeTest {
 		TestRpcMessageData messageData1 = new TestRpcMessageData("TestMessageData");
 		RpcMessage message1 = RpcMessage.of(1, messageData1);
 		BinarySerializer<RpcMessage> serializer = SerializerBuilder.create()
-				.withSubclasses(RpcMessage.MESSAGE_TYPES, asList(TestRpcMessageData.class, TestRpcMessageData2.class))
+				.withSubclasses(RpcMessage.MESSAGE_TYPES, List.of(TestRpcMessageData.class, TestRpcMessageData2.class))
 				.build(RpcMessage.class);
 
 		byte[] buf = new byte[1000];

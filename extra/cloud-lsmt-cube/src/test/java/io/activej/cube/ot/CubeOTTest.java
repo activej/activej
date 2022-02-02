@@ -24,7 +24,6 @@ import java.util.Map;
 
 import static io.activej.aggregation.PrimaryKey.ofArray;
 import static io.activej.cube.TestUtils.STUB_CUBE_STATE;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -43,7 +42,7 @@ public class CubeOTTest {
 	}
 
 	private static CubeDiff cubeDiff(AggregationChunk... added) {
-		return cubeDiff(asList(added), List.of());
+		return cubeDiff(List.of(added), List.of());
 	}
 
 	private static CubeDiff cubeDiff(List<AggregationChunk> added, List<AggregationChunk> removed) {
@@ -66,7 +65,7 @@ public class CubeOTTest {
 	@Test
 	public void test() throws TransformException {
 		LogFile logFile = new LogFile("file", 1);
-		List<String> fields = asList("field1", "field2");
+		List<String> fields = List.of("field1", "field2");
 		LogDiff<CubeDiff> changesLeft = LogDiff.of(Map.of(
 						"clicks", positionDiff(logFile, 0, 10)),
 				cubeDiff(chunk(fields, ofArray("str", 10), ofArray("str", 20), 15)));

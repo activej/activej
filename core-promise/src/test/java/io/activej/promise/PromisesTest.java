@@ -20,7 +20,6 @@ import static io.activej.promise.Promises.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.time.Duration.ofMillis;
-import static java.util.Arrays.asList;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertNull;
@@ -67,13 +66,13 @@ public final class PromisesTest {
 
 	@Test
 	public void listToListTest() {
-		List<Integer> list = await(toList(asList(Promise.of(321), Promise.of(322), Promise.of(323))));
+		List<Integer> list = await(toList(List.of(Promise.of(321), Promise.of(322), Promise.of(323))));
 		assertEquals(3, list.size());
 	}
 
 	@Test
 	public void toListPreservesOrder() {
-		List<Integer> list = await(toList(asList(
+		List<Integer> list = await(toList(List.of(
 				delay(20)
 						.map($ -> 1)
 						.whenResult(() -> System.out.println("First promise finished")),
@@ -135,7 +134,7 @@ public final class PromisesTest {
 
 	@Test
 	public void listToArrayDoubleTest() {
-		Integer[] array = await(toArray(Integer.class, asList(Promise.of(321), Promise.of(322), Promise.of(323))));
+		Integer[] array = await(toArray(Integer.class, List.of(Promise.of(321), Promise.of(322), Promise.of(323))));
 		assertEquals(3, array.length);
 		assertEquals(Integer.valueOf(321), array[0]);
 		assertEquals(Integer.valueOf(322), array[1]);
@@ -267,7 +266,7 @@ public final class PromisesTest {
 
 	@Test
 	public void testRunSequence() {
-		List<Integer> list = asList(1, 2, 3, 4, 5, 6, 7);
+		List<Integer> list = List.of(1, 2, 3, 4, 5, 6, 7);
 		await(sequence(list.stream()
 				.map(n ->
 						() -> getPromise(n).toVoid())));
@@ -275,7 +274,7 @@ public final class PromisesTest {
 
 	@Test
 	public void testRunSequenceWithSorted() {
-		List<Integer> list = asList(1, 2, 3, 4, 5, 6, 7);
+		List<Integer> list = List.of(1, 2, 3, 4, 5, 6, 7);
 		await(sequence(list.stream()
 				.sorted(Comparator.naturalOrder())
 				.map(n ->
@@ -323,9 +322,9 @@ public final class PromisesTest {
 		for (int maxCalls = 2; maxCalls < 5; maxCalls++) {
 			int finalMaxCalls = maxCalls;
 			doTestCompletingIterator(cb -> cb.set(1), () -> Promise.of(2), it ->
-					assertEquals(asList(1, 2), await(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
+					assertEquals(List.of(1, 2), await(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
 			doTestCompletingIterator(cb -> cb.set(1), () -> Promise.of(2).async(), it ->
-					assertEquals(asList(1, 2), await(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
+					assertEquals(List.of(1, 2), await(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
 			doTestCompletingIterator(cb -> cb.setException(e), () -> Promise.of(2), it ->
 					assertSame(e, awaitException(reduce(new ArrayList<Integer>(), ArrayList::add, o -> o, finalMaxCalls, it))));
 			doTestCompletingIterator(cb -> cb.setException(e), () -> Promise.of(2).async(), it ->

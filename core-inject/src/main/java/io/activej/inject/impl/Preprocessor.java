@@ -36,7 +36,6 @@ import static io.activej.inject.Scope.UNSCOPED;
 import static io.activej.inject.binding.BindingType.SYNTHETIC;
 import static io.activej.inject.util.ReflectionUtils.generateInjectingInitializer;
 import static io.activej.inject.util.Utils.*;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -467,7 +466,7 @@ public final class Preprocessor {
 			}
 	);
 
-	private static final List<ErrorHint> errorHints = asList(
+	private static final List<ErrorHint> errorHints = List.of(
 			(keybind, missing, upperKnown, bindings) -> {
 				Class<?> rawType = keybind.getKey().getRawType();
 				if (Modifier.isStatic(rawType.getModifiers()) || !missing.getRawType().equals(rawType.getEnclosingClass())) {

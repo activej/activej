@@ -300,7 +300,7 @@ public final class DnsCache implements WithInitializer<DnsCache> {
 		Collection<InetAddress> getIps() {
 			if (result.response == null || result.response.getRecord() == null)
 				return List.of();
-			return Arrays.asList(result.response.getRecord().getIps());
+			return List.of(result.response.getRecord().getIps());
 		}
 
 		int getMinTtlSeconds() {

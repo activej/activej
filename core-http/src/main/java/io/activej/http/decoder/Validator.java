@@ -16,7 +16,6 @@
 
 package io.activej.http.decoder;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -69,7 +68,7 @@ public interface Validator<T> {
 	 */
 	@SafeVarargs
 	static <T> Validator<T> sequence(Validator<T>... validators) {
-		return sequence(Arrays.asList(validators));
+		return sequence(List.of(validators));
 	}
 
 	/**
@@ -85,7 +84,7 @@ public interface Validator<T> {
 	 */
 	@SafeVarargs
 	static <T> Validator<T> of(Validator<T>... validators) {
-		return of(Arrays.asList(validators));
+		return of(List.of(validators));
 	}
 
 	/**

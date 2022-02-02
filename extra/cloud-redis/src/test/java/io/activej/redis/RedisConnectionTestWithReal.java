@@ -16,7 +16,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.redis.RedisResponse.*;
 import static io.activej.redis.TestUtils.assertDeepEquals;
-import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
@@ -315,7 +314,7 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 		io.activej.promise.TestUtils.await(client.connect()
 				.then(connection -> connection.multi()
 						.then(() -> {
-							List<Promise<?>> promiseList = asList(
+							List<Promise<?>> promiseList = List.of(
 									connection.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),
 									connection.cmd(RedisRequest.of("SET", "x", "value"), OK),
 									connection.cmd(RedisRequest.of("GET", "x"), BYTES_ISO_8859_1),

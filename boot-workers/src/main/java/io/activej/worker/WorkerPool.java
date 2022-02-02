@@ -29,7 +29,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 import static io.activej.inject.binding.BindingType.TRANSIENT;
-import static java.util.Arrays.asList;
 
 public final class WorkerPool {
 	private final int id;
@@ -45,7 +44,7 @@ public final class WorkerPool {
 
 		private Instances(Object[] instances) {
 			this.instances = instances;
-			this.list = (List<T>) asList(instances);
+			this.list = (List<T>) List.of(instances);
 		}
 
 		public Object[] getArray() {

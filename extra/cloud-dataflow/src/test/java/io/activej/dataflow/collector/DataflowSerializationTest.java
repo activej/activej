@@ -21,7 +21,6 @@ import org.junit.Test;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
@@ -83,7 +82,7 @@ public class DataflowSerializationTest {
 
 		NodeReduce<Integer, Integer, Integer> reducer = new NodeReduce<>(0, new TestComparator());
 		reducer.addInput(new StreamId(), new TestIdentityFunction<>(), new TestReducer());
-		List<Node> nodes = Arrays.asList(
+		List<Node> nodes = List.of(
 				reducer,
 				new NodeMap<>(1, new TestFunction(), new StreamId(1)),
 				new NodeUpload<>(2, Integer.class, new StreamId(Long.MAX_VALUE)),

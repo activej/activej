@@ -18,7 +18,6 @@ import static io.activej.datastream.TestUtils.assertClosedWithError;
 import static io.activej.datastream.TestUtils.assertEndOfStream;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
@@ -35,7 +34,7 @@ public class StreamMapperTest {
 		await(supplier.transformWith(mapper)
 				.streamTo(consumer.transformWith(oneByOne())));
 
-		assertEquals(asList(1, 4, 9), consumer.getList());
+		assertEquals(List.of(1, 4, 9), consumer.getList());
 
 		assertEndOfStream(supplier);
 		assertEndOfStream(mapper);
@@ -57,7 +56,7 @@ public class StreamMapperTest {
 								item -> item == 2 * 2 ? Promise.ofException(exception) : Promise.of(item))))));
 
 		assertSame(exception, e);
-		assertEquals(asList(1, 4), list);
+		assertEquals(List.of(1, 4), list);
 
 		assertClosedWithError(source1);
 		assertClosedWithError(consumer);
@@ -80,7 +79,7 @@ public class StreamMapperTest {
 				.streamTo(consumer));
 
 		assertSame(exception, e);
-		assertEquals(asList(1, 4, 9, 16, 25, 36), consumer.getList());
+		assertEquals(List.of(1, 4, 9, 16, 25, 36), consumer.getList());
 
 		assertClosedWithError(consumer);
 		assertClosedWithError(mapper);
@@ -98,7 +97,7 @@ public class StreamMapperTest {
 
 		await(supplier.streamTo(mappedConsumer));
 
-		assertEquals(asList(1, 4, 9), consumer.getList());
+		assertEquals(List.of(1, 4, 9), consumer.getList());
 
 		assertEndOfStream(supplier);
 		assertEndOfStream(mapper);
@@ -116,7 +115,7 @@ public class StreamMapperTest {
 		await(supplier.transformWith(squareMapper).transformWith(doubleMapper)
 				.streamTo(consumer.transformWith(mul10Mapper).transformWith(randomlySuspending())));
 
-		assertEquals(asList(20, 80, 180, 320, 500, 720), consumer.getList());
+		assertEquals(List.of(20, 80, 180, 320, 500, 720), consumer.getList());
 
 		assertEndOfStream(supplier);
 		assertEndOfStream(squareMapper);

@@ -59,7 +59,6 @@ import static io.activej.dataflow.json.JsonUtils.ofObject;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertCompleteFn;
 import static io.activej.test.TestUtils.getFreePort;
-import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -99,7 +98,7 @@ public final class DataflowTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), List.of(new Partition(address1), new Partition(address2)))
 				.build();
 
 		StreamConsumerToList<TestItem> result1 = StreamConsumerToList.create();
@@ -107,7 +106,7 @@ public final class DataflowTest {
 
 		Module serverModule1 = ModuleBuilder.create()
 				.install(common)
-				.bind(datasetId("items")).toInstance(asList(
+				.bind(datasetId("items")).toInstance(List.of(
 						new TestItem(1),
 						new TestItem(3),
 						new TestItem(5)))
@@ -116,7 +115,7 @@ public final class DataflowTest {
 
 		Module serverModule2 = ModuleBuilder.create()
 				.install(common)
-				.bind(datasetId("items")).toInstance(asList(
+				.bind(datasetId("items")).toInstance(List.of(
 						new TestItem(2),
 						new TestItem(4),
 						new TestItem(6)
@@ -142,8 +141,8 @@ public final class DataflowTest {
 					server2.close();
 				})));
 
-		assertEquals(asList(new TestItem(1), new TestItem(3), new TestItem(5)), result1.getList());
-		assertEquals(asList(new TestItem(2), new TestItem(4), new TestItem(6)), result2.getList());
+		assertEquals(List.of(new TestItem(1), new TestItem(3), new TestItem(5)), result1.getList());
+		assertEquals(List.of(new TestItem(2), new TestItem(4), new TestItem(6)), result2.getList());
 	}
 
 	@Test
@@ -151,14 +150,14 @@ public final class DataflowTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2))).build();
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), List.of(new Partition(address1), new Partition(address2))).build();
 
 		StreamConsumerToList<TestItem> result1 = StreamConsumerToList.create();
 		StreamConsumerToList<TestItem> result2 = StreamConsumerToList.create();
 
 		Module serverModule1 = ModuleBuilder.create()
 				.install(common)
-				.bind(datasetId("items")).toInstance(asList(
+				.bind(datasetId("items")).toInstance(List.of(
 						new TestItem(1),
 						new TestItem(2),
 						new TestItem(3),
@@ -170,7 +169,7 @@ public final class DataflowTest {
 
 		Module serverModule2 = ModuleBuilder.create()
 				.install(common)
-				.bind(datasetId("items")).toInstance(asList(
+				.bind(datasetId("items")).toInstance(List.of(
 						new TestItem(1),
 						new TestItem(6)))
 				.bind(datasetId("result")).toInstance(result2)
@@ -200,7 +199,7 @@ public final class DataflowTest {
 		results.addAll(result2.getList());
 		results.sort(Comparator.comparingLong(item -> item.value));
 
-		assertEquals(asList(
+		assertEquals(List.of(
 				new TestItem(1),
 				new TestItem(1),
 				new TestItem(2),
@@ -221,7 +220,7 @@ public final class DataflowTest {
 		Partition partition2 = new Partition(address2);
 		Partition partition3 = new Partition(address3);
 
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(partition1, partition2, partition3))
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), List.of(partition1, partition2, partition3))
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
@@ -229,7 +228,7 @@ public final class DataflowTest {
 		StreamConsumerToList<TestItem> result2 = StreamConsumerToList.create();
 		StreamConsumerToList<TestItem> result3 = StreamConsumerToList.create();
 
-		List<TestItem> list1 = asList(
+		List<TestItem> list1 = List.of(
 				new TestItem(15),
 				new TestItem(12),
 				new TestItem(13),
@@ -242,7 +241,7 @@ public final class DataflowTest {
 				.bind(datasetId("result")).toInstance(result1)
 				.build();
 
-		List<TestItem> list2 = asList(
+		List<TestItem> list2 = List.of(
 				new TestItem(21),
 				new TestItem(26));
 		Module serverModule2 = ModuleBuilder.create()
@@ -251,7 +250,7 @@ public final class DataflowTest {
 				.bind(datasetId("result")).toInstance(result2)
 				.build();
 
-		List<TestItem> list3 = asList(
+		List<TestItem> list3 = List.of(
 				new TestItem(33),
 				new TestItem(35),
 				new TestItem(31),
@@ -277,7 +276,7 @@ public final class DataflowTest {
 				repartition(
 						datasetOfId("items", TestItem.class),
 						new TestKeyFunction(),
-						asList(partition2, partition3)
+						List.of(partition2, partition3)
 				),
 				Long.class,
 				new TestKeyFunction(),
@@ -311,7 +310,7 @@ public final class DataflowTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), List.of(new Partition(address1), new Partition(address2)))
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
@@ -320,7 +319,7 @@ public final class DataflowTest {
 
 		Module serverModule1 = ModuleBuilder.create()
 				.install(common)
-				.bind(datasetId("items")).toInstance(asList(
+				.bind(datasetId("items")).toInstance(List.of(
 						new TestItem(6),
 						new TestItem(4),
 						new TestItem(2),
@@ -331,7 +330,7 @@ public final class DataflowTest {
 
 		Module serverModule2 = ModuleBuilder.create()
 				.install(common)
-				.bind(datasetId("items")).toInstance(asList(
+				.bind(datasetId("items")).toInstance(List.of(
 						new TestItem(7),
 						new TestItem(7),
 						new TestItem(8),
@@ -359,8 +358,8 @@ public final class DataflowTest {
 					server2.close();
 				})));
 
-		assertEquals(asList(new TestItem(2), new TestItem(4), new TestItem(6)), result1.getList());
-		assertEquals(asList(new TestItem(2), new TestItem(8)), result2.getList());
+		assertEquals(List.of(new TestItem(2), new TestItem(4), new TestItem(6)), result1.getList());
+		assertEquals(List.of(new TestItem(2), new TestItem(8)), result2.getList());
 	}
 
 	@Test
@@ -370,13 +369,13 @@ public final class DataflowTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), List.of(new Partition(address1), new Partition(address2)))
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
 		Module serverModule1 = ModuleBuilder.create()
 				.install(common)
-				.bind(datasetId("items")).toInstance(asList(
+				.bind(datasetId("items")).toInstance(List.of(
 						new TestItem(1),
 						new TestItem(2),
 						new TestItem(3),
@@ -386,7 +385,7 @@ public final class DataflowTest {
 
 		Module serverModule2 = ModuleBuilder.create()
 				.install(common)
-				.bind(datasetId("items")).toInstance(asList(
+				.bind(datasetId("items")).toInstance(List.of(
 						new TestItem(6),
 						new TestItem(7),
 						new TestItem(8),
@@ -418,7 +417,7 @@ public final class DataflowTest {
 					server2.close();
 				})));
 
-		assertEquals(asList(new TestItem(2), new TestItem(4), new TestItem(6), new TestItem(8), new TestItem(10)), resultConsumer.getList());
+		assertEquals(List.of(new TestItem(2), new TestItem(4), new TestItem(6), new TestItem(8), new TestItem(10)), resultConsumer.getList());
 	}
 
 	public static final class TestItem {

@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toSet;
 
 /**
@@ -59,7 +58,7 @@ public abstract class BindingInitializer<T> {
 
 	@SafeVarargs
 	public static <T> BindingInitializer<T> combine(BindingInitializer<T>... bindingInitializers) {
-		return combine(asList(bindingInitializers));
+		return combine(List.of(bindingInitializers));
 	}
 
 	@SuppressWarnings("unchecked")

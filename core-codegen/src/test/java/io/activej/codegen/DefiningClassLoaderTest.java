@@ -11,8 +11,8 @@ import org.junit.runners.Parameterized.Parameters;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Supplier;
 
 import static io.activej.codegen.expression.Expressions.value;
@@ -35,7 +35,7 @@ public class DefiningClassLoaderTest {
 
 	@Parameters(name = "{0}")
 	public static Collection<Object[]> getParameters() {
-		return Arrays.asList(
+		return List.of(
 				new Object[]{"No bytecode storage", (Supplier<DefiningClassLoader>) DefiningClassLoader::create},
 				new Object[]{"File bytecode storage", (Supplier<DefiningClassLoader>) () -> {
 					try {

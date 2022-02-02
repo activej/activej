@@ -10,7 +10,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -29,7 +28,7 @@ public final class RendezvousPartitionScheme<P> implements PartitionScheme<P>, W
 
 	@SafeVarargs
 	public static <P> RendezvousPartitionScheme<P> create(RendezvousPartitionGroup<P>... partitionGroups) {
-		return create(Arrays.asList(partitionGroups));
+		return create(List.of(partitionGroups));
 	}
 
 	public static <P> RendezvousPartitionScheme<P> create(List<RendezvousPartitionGroup<P>> partitionGroups) {

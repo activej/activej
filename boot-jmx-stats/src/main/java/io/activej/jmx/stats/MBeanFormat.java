@@ -23,7 +23,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.List;
 
 import static java.lang.System.currentTimeMillis;
@@ -60,6 +59,6 @@ public final class MBeanFormat {
 		if (multiline == null) return null;
 		return multiline.isEmpty() ?
 				null :
-				Arrays.asList(multiline.split("\n"));
+				List.of(multiline.split("\n"));
 	}
 }

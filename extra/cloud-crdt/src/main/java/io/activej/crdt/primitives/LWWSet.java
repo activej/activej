@@ -47,7 +47,7 @@ public final class LWWSet<E> implements Set<E>, CrdtType<LWWSet<E>> {
 	@SafeVarargs
 	public static <T> LWWSet<T> of(T... items) {
 		LWWSet<T> set = new LWWSet<>();
-		set.addAll(Arrays.asList(items));
+		set.addAll(List.of(items));
 		return set;
 	}
 

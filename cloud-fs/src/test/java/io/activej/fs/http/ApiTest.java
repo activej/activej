@@ -22,7 +22,6 @@ import java.util.stream.IntStream;
 
 import static io.activej.promise.TestUtils.await;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -188,7 +187,7 @@ public final class ApiTest {
 			<T> Promise<T> resultOf(@Nullable T result, Object... args) {
 				params.clear();
 				params.add(result);
-				params.addAll(asList(args));
+				params.addAll(List.of(args));
 				return Promise.of(result);
 			}
 

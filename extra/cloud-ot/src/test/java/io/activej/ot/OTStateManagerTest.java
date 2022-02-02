@@ -26,10 +26,8 @@ import static io.activej.ot.OTCommit.ofRoot;
 import static io.activej.ot.utils.Utils.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.*;
 
-@SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
 public class OTStateManagerTest {
 	private static final ExpectedException FAILED = new ExpectedException();
 	private static final OTSystem<TestOp> SYSTEM = createTestOp();
@@ -81,7 +79,7 @@ public class OTStateManagerTest {
 	@Test
 	public void testSyncFullHistory() {
 		for (int i = 1; i <= 5; i++) {
-			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, asList(add(1)), i + 1L));
+			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, List.of(add(1)), i + 1L));
 		}
 
 		assertEquals(0, testOpState.getValue());
@@ -94,7 +92,7 @@ public class OTStateManagerTest {
 	public void testApplyDiffBeforeSync() {
 		repository.revisionIdSupplier = () -> 11;
 		for (int i = 1; i <= 10; i++) {
-			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, asList(add(1)), i + 1L));
+			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, List.of(add(1)), i + 1L));
 		}
 
 		assertEquals(0, testOpState.getValue());
@@ -108,7 +106,7 @@ public class OTStateManagerTest {
 	@Test
 	public void testMultipleSyncs() {
 		for (int i = 1; i <= 20; i++) {
-			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, asList(add(1)), i + 1L));
+			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, List.of(add(1)), i + 1L));
 			if (i == 5 || i == 15) {
 				await(stateManager.sync());
 			}
@@ -122,7 +120,7 @@ public class OTStateManagerTest {
 
 	@Test
 	public void testMultibinders() {
-		repository.addGraph(g -> g.add(0, 1, asList(add(5))));
+		repository.addGraph(g -> g.add(0, 1, List.of(add(5))));
 
 		assertEquals(0, testOpState.getValue());
 
@@ -252,7 +250,7 @@ public class OTStateManagerTest {
 
 	@Test
 	public void testSyncAfterFailedPush() {
-		repository.revisionIdSupplier = asList(3, 4, 5).iterator()::next;
+		repository.revisionIdSupplier = List.of(3, 4, 5).iterator()::next;
 		OTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> uplink = new OTUplinkDecorator(OTStateManagerTest.this.uplink) {
 			@Override
 			public Promise<FetchData<Integer, TestOp>> push(OTCommit<Integer, TestOp> protoCommit) {
@@ -291,7 +289,7 @@ public class OTStateManagerTest {
 	@Test
 	public void fetchSimple() {
 		for (int i = 1; i <= 3; i++) {
-			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, asList(add(1)), i + 1L));
+			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, List.of(add(1)), i + 1L));
 		}
 		await(stateManager.sync());
 
@@ -302,7 +300,7 @@ public class OTStateManagerTest {
 		assertSame(stateManager.getCommitId(), stateManager.getOriginCommitId());
 
 		for (int i = 4; i <= 10; i++) {
-			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, asList(add(1)), i + 1L));
+			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, List.of(add(1)), i + 1L));
 		}
 		assertTrue(await(stateManager.fetch()));
 
@@ -319,9 +317,9 @@ public class OTStateManagerTest {
 
 	@Test
 	public void fetchWithWorkingDiffs() {
-		repository.revisionIdSupplier = asList(11, 16).iterator()::next;
+		repository.revisionIdSupplier = List.of(11, 16).iterator()::next;
 		for (int i = 1; i <= 3; i++) {
-			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, asList(add(1)), i + 1L));
+			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, List.of(add(1)), i + 1L));
 		}
 		await(stateManager.sync());
 
@@ -330,7 +328,7 @@ public class OTStateManagerTest {
 		assertSame(stateManager.getCommitId(), stateManager.getOriginCommitId());
 
 		for (int i = 4; i <= 10; i++) {
-			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, asList(add(1)), i + 1L));
+			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, List.of(add(1)), i + 1L));
 		}
 		stateManager.add(add(-5));
 		assertEquals(-2, testOpState.getValue());
@@ -347,7 +345,7 @@ public class OTStateManagerTest {
 		assertSame(stateManager.getCommitId(), stateManager.getOriginCommitId());
 
 		for (int i = 12; i <= 15; i++) {
-			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, asList(add(1)), i + 1L));
+			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, List.of(add(1)), i + 1L));
 		}
 		assertTrue(await(stateManager.fetch()));
 
@@ -368,9 +366,9 @@ public class OTStateManagerTest {
 
 	@Test
 	public void fetchWithBranching() {
-		repository.revisionIdSupplier = asList(17, 18).iterator()::next;
+		repository.revisionIdSupplier = List.of(17, 18).iterator()::next;
 		for (int i = 1; i <= 3; i++) {
-			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, asList(add(1)), i + 1L));
+			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, List.of(add(1)), i + 1L));
 		}
 		await(stateManager.sync());
 
@@ -382,15 +380,15 @@ public class OTStateManagerTest {
 		assertEquals(103, testOpState.getValue());
 
 		for (int i = 4; i <= 10; i++) {
-			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, asList(add(1)), i + 1L));
+			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, List.of(add(1)), i + 1L));
 		}
 
 		assertTrue(await(stateManager.fetch()));
 		assertEquals(Integer.valueOf(10), stateManager.getOriginCommitId());
 
-		repository.doPushAndUpdateHead(ofCommit(0, 11, 3, asList(add(10)), 5));
+		repository.doPushAndUpdateHead(ofCommit(0, 11, 3, List.of(add(10)), 5));
 		for (int i = 12; i <= 16; i++) {
-			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, asList(add(10)), i - 6));
+			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, List.of(add(10)), i - 6));
 		}
 		assertFalse(await(stateManager.fetch()));
 		assertEquals(Integer.valueOf(10), stateManager.getOriginCommitId());
@@ -404,7 +402,7 @@ public class OTStateManagerTest {
 
 	@Test
 	public void fetchWithPendingCommit() {
-		repository.revisionIdSupplier = asList(1, 6).iterator()::next;
+		repository.revisionIdSupplier = List.of(1, 6).iterator()::next;
 		OTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> uplink = new OTUplinkDecorator(OTStateManagerTest.this.uplink) {
 			@Override
 			public Promise<FetchData<Integer, TestOp>> push(OTCommit<Integer, TestOp> protoCommit) {
@@ -421,9 +419,9 @@ public class OTStateManagerTest {
 
 		assertFalse(await(stateManager.fetch()));
 
-		repository.doPushAndUpdateHead(ofCommit(0, 2, 0, asList(add(10)), 2));
+		repository.doPushAndUpdateHead(ofCommit(0, 2, 0, List.of(add(10)), 2));
 		for (int i = 3; i <= 5; i++) {
-			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, asList(add(10)), i));
+			repository.doPushAndUpdateHead(ofCommit(0, i, i - 1, List.of(add(10)), i));
 		}
 		assertFalse(await(stateManager.fetch()));
 

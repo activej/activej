@@ -27,8 +27,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static java.util.Arrays.asList;
-
 final class AttributeNodeForThrowable extends AbstractAttributeNodeForLeaf {
 	private static final String THROWABLE_TYPE_KEY = "type";
 	private static final String THROWABLE_MESSAGE_KEY = "message";
@@ -88,7 +86,7 @@ final class AttributeNodeForThrowable extends AbstractAttributeNodeForLeaf {
 		String msg = e.getMessage();
 		StringWriter stringWriter = new StringWriter();
 		e.printStackTrace(new PrintWriter(stringWriter));
-		List<String> stackTrace = asList(stringWriter.toString().split("\n"));
+		List<String> stackTrace = List.of(stringWriter.toString().split("\n"));
 		Map<String, Object> nameToValue = new HashMap<>();
 		nameToValue.put(THROWABLE_TYPE_KEY, type);
 		nameToValue.put(THROWABLE_MESSAGE_KEY, msg);

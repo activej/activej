@@ -25,7 +25,6 @@ import io.activej.dataflow.node.NodeJoin;
 import io.activej.datastream.processor.StreamJoin.Joiner;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -73,6 +72,6 @@ public final class DatasetJoin<K, L, R, V> extends SortedDataset<K, V> {
 
 	@Override
 	public Collection<Dataset<?>> getBases() {
-		return Arrays.asList(left, right);
+		return List.of(left, right);
 	}
 }

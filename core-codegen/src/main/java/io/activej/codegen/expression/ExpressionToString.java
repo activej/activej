@@ -23,7 +23,6 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.Method;
 
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,7 +85,7 @@ public final class ExpressionToString implements Expression {
 	}
 
 	public ExpressionToString withFields(String... fields) {
-		return withFields(Arrays.asList(fields));
+		return withFields(List.of(fields));
 	}
 
 	@Override

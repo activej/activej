@@ -39,7 +39,6 @@ import static io.activej.common.Utils.keysToMap;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
-import static java.util.Arrays.asList;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toSet;
@@ -117,8 +116,8 @@ public final class CubeTest {
 				consume(cube, chunkStorage, new DataItem2(1, 3, 10, 20), new DataItem2(1, 4, 10, 20))
 		);
 		List<DataItemResult> list = await(cube.queryRawStream(
-				asList("key1", "key2"),
-				asList("metric1", "metric2", "metric3"),
+				List.of("key1", "key2"),
+				List.of("metric1", "metric2", "metric3"),
 				and(eq("key1", 1), eq("key2", 3)),
 				DataItemResult.class, classLoader)
 				.toList());
@@ -156,7 +155,7 @@ public final class CubeTest {
 		AsyncHttpServer server2 = startServer(executor, serverStorage);
 
 		List<DataItemResult> list = await(cube.queryRawStream(
-				asList("key1", "key2"), asList("metric1", "metric2", "metric3"),
+				List.of("key1", "key2"), List.of("metric1", "metric2", "metric3"),
 				and(eq("key1", 1), eq("key2", 3)),
 				DataItemResult.class, classLoader)
 				.toList()
@@ -167,7 +166,7 @@ public final class CubeTest {
 
 	@Test
 	public void testOrdering() {
-		List<DataItemResult> expected = asList(
+		List<DataItemResult> expected = List.of(
 				new DataItemResult(1, 2, 30, 37, 42), // metric2 =  37
 				new DataItemResult(1, 3, 44, 43, 5),  // metric2 =  43
 				new DataItemResult(1, 4, 23, 161, 42) // metric2 = 161
@@ -178,8 +177,8 @@ public final class CubeTest {
 				consume(cube, chunkStorage, new DataItem2(1, 3, 15, 5), new DataItem2(1, 4, 55, 20), new DataItem2(1, 2, 12, 42), new DataItem2(1, 4, 58, 22))
 		);
 		List<DataItemResult> list = await(cube.queryRawStream(
-				asList("key1", "key2"),
-				asList("metric1", "metric2", "metric3"),
+				List.of("key1", "key2"),
+				List.of("metric1", "metric2", "metric3"),
 				alwaysTrue(),
 				DataItemResult.class, classLoader
 		).toList());
@@ -189,7 +188,7 @@ public final class CubeTest {
 
 	@Test
 	public void testMultipleOrdering() {
-		List<DataItemResult> expected = asList(
+		List<DataItemResult> expected = List.of(
 				new DataItemResult(1, 3, 30, 25, 0),  // metric1 = 30, metric2 = 25
 				new DataItemResult(1, 4, 40, 10, 0),  // metric1 = 40, metric2 = 10
 				new DataItemResult(1, 5, 23, 48, 0),  // metric1 = 23, metric2 = 48
@@ -206,8 +205,8 @@ public final class CubeTest {
 		);
 
 		List<DataItemResult> list = await(cube.queryRawStream(
-				asList("key1", "key2"),
-				asList("metric1", "metric2", "metric3"),
+				List.of("key1", "key2"),
+				List.of("metric1", "metric2", "metric3"),
 				alwaysTrue(),
 				DataItemResult.class, classLoader
 		).toList());
@@ -217,7 +216,7 @@ public final class CubeTest {
 
 	@Test
 	public void testBetweenPredicate() {
-		List<DataItemResult> expected = asList(
+		List<DataItemResult> expected = List.of(
 				new DataItemResult(5, 77, 0, 88, 98),
 				new DataItemResult(5, 99, 40, 36, 0),
 				new DataItemResult(8, 42, 0, 33, 17)
@@ -235,8 +234,8 @@ public final class CubeTest {
 		);
 
 		List<DataItemResult> list = await(cube.queryRawStream(
-				asList("key1", "key2"),
-				asList("metric1", "metric2", "metric3"),
+				List.of("key1", "key2"),
+				List.of("metric1", "metric2", "metric3"),
 				and(between("key1", 5, 10), between("key2", 40, 1000)),
 				DataItemResult.class, classLoader
 		).toList());
@@ -262,8 +261,8 @@ public final class CubeTest {
 		);
 
 		List<DataItemResult3> list = await(cube.queryRawStream(
-				asList("key1", "key2", "key3", "key4", "key5"),
-				asList("metric1", "metric2", "metric3"),
+				List.of("key1", "key2", "key3", "key4", "key5"),
+				List.of("metric1", "metric2", "metric3"),
 				and(eq("key1", 5), between("key2", 75, 99), between("key3", 35, 50), eq("key4", 20), eq("key5", 56)),
 				DataItemResult3.class, classLoader
 		).toList());
@@ -273,7 +272,7 @@ public final class CubeTest {
 
 	@Test
 	public void testGrouping() {
-		List<DataItemResult2> expected = asList(
+		List<DataItemResult2> expected = List.of(
 				new DataItemResult2(1, 150, 230, 75),
 				new DataItemResult2(2, 25, 45, 0),
 				new DataItemResult2(3, 10, 40, 10),
@@ -286,7 +285,7 @@ public final class CubeTest {
 		);
 		// SELECT key1, SUM(metric1), SUM(metric2), SUM(metric3) FROM detailedAggregation WHERE key1 = 1 AND key2 = 3 GROUP BY key1
 
-		List<DataItemResult2> list = await(cube.queryRawStream(List.of("key2"), asList("metric1", "metric2", "metric3"),
+		List<DataItemResult2> list = await(cube.queryRawStream(List.of("key2"), List.of("metric1", "metric2", "metric3"),
 				alwaysTrue(),
 				DataItemResult2.class, classLoader
 		).toList());
@@ -305,7 +304,7 @@ public final class CubeTest {
 				consume(cube, chunkStorage, new DataItem2(1, 4, 10, 20), new DataItem2(1, 5, 100, 200))
 		);
 
-		List<DataItemResult> list = await(cube.queryRawStream(asList("key1", "key2"), asList("metric1", "metric2", "metric3"),
+		List<DataItemResult> list = await(cube.queryRawStream(List.of("key1", "key2"), List.of("metric1", "metric2", "metric3"),
 				and(eq("key1", 1), eq("key2", 3)),
 				DataItemResult.class, classLoader
 		).toList());
@@ -331,8 +330,8 @@ public final class CubeTest {
 		assertFalse(diff.isEmpty());
 
 		List<DataItemResult> list = await(cube.queryRawStream(
-				asList("key1", "key2"),
-				asList("metric1", "metric2", "metric3"),
+				List.of("key1", "key2"),
+				List.of("metric1", "metric2", "metric3"),
 				and(eq("key1", 1), eq("key2", 4)),
 				DataItemResult.class, classLoader
 		).toList());

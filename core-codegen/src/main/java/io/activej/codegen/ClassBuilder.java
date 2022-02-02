@@ -38,7 +38,6 @@ import java.util.stream.Stream;
 import static io.activej.codegen.DefiningClassLoader.createInstance;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.codegen.util.Utils.getStringSetting;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
@@ -114,7 +113,7 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 	 * @param interfaces     additional interfaces for the class to implement
 	 */
 	public static <T> ClassBuilder<T> create(Class<T> implementation, Class<?>... interfaces) {
-		return create(implementation, asList(interfaces));
+		return create(implementation, List.of(interfaces));
 	}
 
 	/**
@@ -227,12 +226,12 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 
 		Method foundMethod = null;
 		List<List<java.lang.reflect.Method>> listOfMethods = new ArrayList<>();
-		listOfMethods.add(asList(Object.class.getMethods()));
-		listOfMethods.add(asList(superclass.getMethods()));
-		listOfMethods.add(asList(superclass.getDeclaredMethods()));
+		listOfMethods.add(List.of(Object.class.getMethods()));
+		listOfMethods.add(List.of(superclass.getMethods()));
+		listOfMethods.add(List.of(superclass.getDeclaredMethods()));
 		for (Class<?> type : interfaces) {
-			listOfMethods.add(asList(type.getMethods()));
-			listOfMethods.add(asList(type.getDeclaredMethods()));
+			listOfMethods.add(List.of(type.getMethods()));
+			listOfMethods.add(List.of(type.getDeclaredMethods()));
 		}
 		for (List<java.lang.reflect.Method> list : listOfMethods) {
 			for (java.lang.reflect.Method m : list) {

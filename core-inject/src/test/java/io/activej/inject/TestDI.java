@@ -31,7 +31,6 @@ import static io.activej.inject.binding.Multibinders.combinedMultibinder;
 import static io.activej.inject.module.Modules.combine;
 import static io.activej.inject.module.Modules.override;
 import static io.activej.inject.util.Utils.printGraphVizGraph;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
@@ -647,7 +646,7 @@ public final class TestDI {
 				super.configure();
 				bind(Integer.class).toInstance(42);
 				bind(Integer.class, "namedGeneric").toInstance(-42);
-				bind(new Key<List<Integer>>() {}).toInstance(asList(1, 2, 3));
+				bind(new Key<List<Integer>>() {}).toInstance(List.of(1, 2, 3));
 //				bind(new Key<List<Long>>() {});
 //				bind(Long.class).toInstance(-42L);
 			}

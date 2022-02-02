@@ -19,7 +19,6 @@ import java.util.Random;
 
 import static io.activej.serializer.Utils.AT_LEAST_JAVA_9;
 import static io.activej.serializer.Utils.DEFINING_CLASS_LOADER;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
@@ -38,7 +37,7 @@ public class SerializerBuilder2Test {
 
 	private static SerializerBuilder createBuilder() {
 		return SerializerBuilder.create(DEFINING_CLASS_LOADER)
-				.withSubclasses("extraSubclasses1", asList(Integer.class, String.class));
+				.withSubclasses("extraSubclasses1", List.of(Integer.class, String.class));
 	}
 
 	public static class TestDataScalars {

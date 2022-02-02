@@ -30,8 +30,8 @@ import org.jetbrains.annotations.Nullable;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
@@ -103,7 +103,7 @@ public final class StaticServlet implements AsyncServlet, WithInitializer<Static
 	}
 
 	public StaticServlet withIndexResources(String... indexResources) {
-		this.indexResources.addAll(Arrays.asList(indexResources));
+		this.indexResources.addAll(List.of(indexResources));
 		return this;
 	}
 

@@ -20,7 +20,6 @@ import static io.activej.datastream.TestUtils.*;
 import static io.activej.datastream.processor.StreamReducers.deduplicateReducer;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
@@ -82,7 +81,7 @@ public class StreamReducerTest {
 						.streamTo(consumer.transformWith(randomlySuspending()))
 		);
 
-		assertEquals(asList(1, 2, 3, 4, 5, 6, 7), consumer.getList());
+		assertEquals(List.of(1, 2, 3, 4, 5, 6, 7), consumer.getList());
 		assertEndOfStream(source0);
 		assertEndOfStream(source1);
 		assertEndOfStream(source2);
@@ -354,7 +353,7 @@ public class StreamReducerTest {
 				streamReducer.getOutput().streamTo(consumer.transformWith(randomlySuspending()))
 		);
 
-		assertEquals(asList(
+		assertEquals(List.of(
 				new KeyValueResult(1, 10.0, 10.0, 0.0),
 				new KeyValueResult(2, 0.0, 10.0, 20.0),
 				new KeyValueResult(3, 30.0, 40.0, 20.0)),
@@ -384,7 +383,7 @@ public class StreamReducerTest {
 						.streamTo(consumer.transformWith(randomlySuspending()))
 		);
 
-		assertEquals(asList(
+		assertEquals(List.of(
 				new KeyValueResult(1, 10.0, 10.0, 0.0),
 				new KeyValueResult(2, 0.0, 10.0, 20.0),
 				new KeyValueResult(3, 30.0, 40.0, 20.0)),

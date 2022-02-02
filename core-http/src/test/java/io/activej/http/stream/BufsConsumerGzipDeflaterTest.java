@@ -19,7 +19,6 @@ import java.util.zip.GZIPOutputStream;
 
 import static io.activej.http.GzipProcessorUtils.toGzip;
 import static io.activej.promise.TestUtils.await;
-import static java.util.Arrays.asList;
 
 public final class BufsConsumerGzipDeflaterTest {
 
@@ -121,7 +120,7 @@ public final class BufsConsumerGzipDeflaterTest {
 		ByteBuf gzipped = toGzip(fullBuf);
 		consumer.setExpectedBuf(gzipped);
 
-		list.addAll(asList(buf1, buf2, buf3, buf4, buf5, buf6));
+		list.addAll(List.of(buf1, buf2, buf3, buf4, buf5, buf6));
 
 		doTest();
 	}

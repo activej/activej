@@ -6,7 +6,6 @@ import org.junit.Test;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -50,7 +49,7 @@ public class StreamCodecsTest {
 	@Test
 	public void ofList() {
 		StreamCodec<List<String>> codec = StreamCodecs.ofList(StreamCodecs.ofString());
-		List<String> strings = Arrays.asList("a", "b", "c");
+		List<String> strings = List.of("a", "b", "c");
 		List<String> result = doTest(codec, strings);
 
 		assertEquals(strings, result);
@@ -64,7 +63,7 @@ public class StreamCodecsTest {
 			case 2 -> StreamCodecs.ofBoolean();
 			default -> throw new AssertionError();
 		});
-		List<Object> objects = Arrays.asList(0, "x", true, 12, "y", false, 34, "11241");
+		List<Object> objects = List.of(0, "x", true, 12, "y", false, 34, "11241");
 		List<Object> result = doTest(codec, objects);
 
 		assertEquals(objects, result);
@@ -128,7 +127,7 @@ public class StreamCodecsTest {
 	@Test
 	public void ofVarIntArrayList() {
 		StreamCodec<List<int[]>> codec = StreamCodecs.ofList(StreamCodecs.ofVarIntArray());
-		List<int[]> expected = Arrays.asList(
+		List<int[]> expected = List.of(
 				new int[]{-1, -2, -3},
 				new int[]{1, 2, 3},
 				new int[]{-1, 0, 1},
@@ -146,7 +145,7 @@ public class StreamCodecsTest {
 	@Test
 	public void ofVarLongArrayList() {
 		StreamCodec<List<long[]>> codec = StreamCodecs.ofList(StreamCodecs.ofVarLongArray());
-		List<long[]> expected = Arrays.asList(
+		List<long[]> expected = List.of(
 				new long[]{-1, -2, -3},
 				new long[]{1, 2, 3},
 				new long[]{-1, 0, 1},

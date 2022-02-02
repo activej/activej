@@ -15,7 +15,6 @@ import java.util.Map;
 
 import static io.activej.jmx.JmxBeanSettings.defaultSettings;
 import static io.activej.jmx.helper.Utils.nameToAttribute;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -37,7 +36,7 @@ public class DynamicMBeanFactoryAttributesHidingTest {
 	public void omitsPojoAttributesInWorkersIfAllWorkersReturnNull() {
 		MBeanStubOne mbean_1 = new MBeanStubOne(null);
 		MBeanStubOne mbean_2 = new MBeanStubOne(null);
-		List<MBeanStubOne> workersWithNullPojo = asList(mbean_1, mbean_2);
+		List<MBeanStubOne> workersWithNullPojo = List.of(mbean_1, mbean_2);
 		DynamicMBean mbean = DynamicMBeanFactory.create()
 				.createDynamicMBean(workersWithNullPojo, defaultSettings(), false);
 
@@ -51,7 +50,7 @@ public class DynamicMBeanFactoryAttributesHidingTest {
 	public void doesNotOmitPojoAttributesInWorkersIfAtLeastOneWorkerReturnsNonNull() {
 		MBeanStubOne mbean_1 = new MBeanStubOne(null);
 		MBeanStubOne mbean_2 = new MBeanStubOne(new PojoStub());
-		List<MBeanStubOne> workersWithNullPojo = asList(mbean_1, mbean_2);
+		List<MBeanStubOne> workersWithNullPojo = List.of(mbean_1, mbean_2);
 		DynamicMBean mbean = DynamicMBeanFactory.create()
 				.createDynamicMBean(workersWithNullPojo, defaultSettings(), false);
 
@@ -107,7 +106,7 @@ public class DynamicMBeanFactoryAttributesHidingTest {
 	public void omitsJmxStatsAttributesInWorkersIfAllWorkersReturnNull() {
 		MBeanStubTwo mbean_1 = new MBeanStubTwo(null);
 		MBeanStubTwo mbean_2 = new MBeanStubTwo(null);
-		List<MBeanStubTwo> workersWithNullPojo = asList(mbean_1, mbean_2);
+		List<MBeanStubTwo> workersWithNullPojo = List.of(mbean_1, mbean_2);
 		DynamicMBean mbean = DynamicMBeanFactory.create()
 				.createDynamicMBean(workersWithNullPojo, defaultSettings(), false);
 
@@ -121,7 +120,7 @@ public class DynamicMBeanFactoryAttributesHidingTest {
 	public void doesNotOmitJmxStatsAttributesInWorkersIfAtLeastOneWorkerReturnsNonNull() {
 		MBeanStubTwo mbean_1 = new MBeanStubTwo(null);
 		MBeanStubTwo mbean_2 = new MBeanStubTwo(new JmxStatsStub());
-		List<MBeanStubTwo> workersWithNullPojo = asList(mbean_1, mbean_2);
+		List<MBeanStubTwo> workersWithNullPojo = List.of(mbean_1, mbean_2);
 		DynamicMBean mbean = DynamicMBeanFactory.create()
 				.createDynamicMBean(workersWithNullPojo, defaultSettings(), false);
 

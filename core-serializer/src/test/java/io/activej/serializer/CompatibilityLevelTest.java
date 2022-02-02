@@ -80,12 +80,12 @@ public class CompatibilityLevelTest {
 		nullables.notNullByteBuffer = ByteBuffer.wrap("test".getBytes(StandardCharsets.UTF_8));
 		nullables.notNullCollection = List.of("test1", "test2");
 		nullables.notNullEnum = TestEnum.ONE;
-		nullables.notNullList = Arrays.asList("test1", "test2");
+		nullables.notNullList = List.of("test1", "test2");
 		nullables.notNullMap = new LinkedHashMap<>();
 		nullables.notNullMap.put(1, "test1");
 		nullables.notNullMap.put(2, "test2");
 
-		nullables.notNullSet = new LinkedHashSet<>(Arrays.asList("test1", "test2"));
+		nullables.notNullSet = new LinkedHashSet<>(List.of("test1", "test2"));
 		nullables.notNullSubclass = 12345;
 
 		return doTestPreload(TestNullables.class, nullables, compatibilityLevel, "nullables");

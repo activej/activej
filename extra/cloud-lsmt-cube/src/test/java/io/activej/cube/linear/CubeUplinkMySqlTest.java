@@ -49,7 +49,7 @@ import static org.junit.Assert.assertTrue;
 public class CubeUplinkMySqlTest {
 	public static final Random RANDOM = ThreadLocalRandom.current();
 
-	private static final List<String> MEASURES = Arrays.asList("a", "b", "c", "d");
+	private static final List<String> MEASURES = List.of("a", "b", "c", "d");
 	private static final PrimaryKey MIN_KEY = PrimaryKey.ofArray("100", "200");
 	private static final PrimaryKey MAX_KEY = PrimaryKey.ofArray("300", "400");
 	private static final int COUNT = 12345;
@@ -68,7 +68,7 @@ public class CubeUplinkMySqlTest {
 
 		JsonCodec<PrimaryKey> primaryKeyCodec = JsonCodec.of(
 				jsonReader -> PrimaryKey.ofArray(jsonReader.readArray(StringConverter.READER, new String[0])),
-				(jsonWriter, primaryKey) -> jsonWriter.serialize((List) Arrays.asList(primaryKey.getArray()), StringConverter.WRITER)
+				(jsonWriter, primaryKey) -> jsonWriter.serialize((List) List.of(primaryKey.getArray()), StringConverter.WRITER)
 		);
 
 		PrimaryKeyCodecs codecs = PrimaryKeyCodecs.ofLookUp($ -> primaryKeyCodec);
@@ -144,7 +144,7 @@ public class CubeUplinkMySqlTest {
 
 	@Test
 	public void chunkRemovalSameCommit() {
-		List<LogDiff<CubeDiff>> diffs = Arrays.asList(
+		List<LogDiff<CubeDiff>> diffs = List.of(
 				LogDiff.forCurrentPosition(CubeDiff.of(Map.of(
 						"test", AggregationDiff.of(Set.of(chunk(10)))))),
 				LogDiff.forCurrentPosition(CubeDiff.of(Map.of(

@@ -211,7 +211,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 					}
 				} else {
 					LinkedHashMap<Class<?>, SerializerDef> map = new LinkedHashMap<>();
-					LinkedHashSet<Class<?>> subclassesSet = new LinkedHashSet<>(asList(annotationClass.subclasses()));
+					LinkedHashSet<Class<?>> subclassesSet = new LinkedHashSet<>(List.of(annotationClass.subclasses()));
 					subclassesSet.addAll(extraSubclassesMap.getOrDefault(rawClass, List.of()));
 					subclassesSet.addAll(extraSubclassesMap.getOrDefault(annotationClass.subclassesId(), List.of()));
 					for (Class<?> subclass : subclassesSet) {
@@ -600,12 +600,12 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 			List<Expression> encoderInitializers, List<Expression> encoderFinalizers) {
 		StaticEncoders staticEncoders = staticEncoders(classBuilder);
 
-		classBuilder.withMethod("encode", int.class, asList(byte[].class, int.class, Object.class), methodBody(
+		classBuilder.withMethod("encode", int.class, List.of(byte[].class, int.class, Object.class), methodBody(
 				encoderInitializers, encoderFinalizers,
 				let(cast(arg(2), serializer.getEncodeType()), data ->
 						encoderImpl(serializer, encodeVersion, staticEncoders, arg(0), arg(1), data))));
 
-		classBuilder.withMethod("encode", void.class, asList(BinaryOutput.class, Object.class), methodBody(
+		classBuilder.withMethod("encode", void.class, List.of(BinaryOutput.class, Object.class), methodBody(
 				encoderInitializers, encoderFinalizers,
 				let(call(arg(0), "array"), buf ->
 						let(call(arg(0), "pos"), pos ->
@@ -638,14 +638,14 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 				decoderInitializers, decoderFinalizers,
 				decodeImpl(serializer, latestVersion, staticDecoders, arg(0))));
 
-		classBuilder.withMethod("decode", Object.class, asList(byte[].class, int.class), methodBody(
+		classBuilder.withMethod("decode", Object.class, List.of(byte[].class, int.class), methodBody(
 				decoderInitializers, decoderFinalizers,
 				let(constructor(BinaryInput.class, arg(0), arg(1)), in ->
 						decodeImpl(serializer, latestVersion, staticDecoders, in))));
 
 		classBuilder.withMethod("decodeEarlierVersions",
 				serializer.getDecodeType(),
-				asList(BinaryInput.class, byte.class),
+				List.of(BinaryInput.class, byte.class),
 				get(() -> {
 					List<Expression> listKey = new ArrayList<>();
 					List<Expression> listValue = new ArrayList<>();
@@ -702,7 +702,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 
 			@Override
 			public Expression define(SerializerDef serializerDef, Class<?> valueClazz, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-				List<?> key = asList(identityHashCode(serializerDef), version, compatibilityLevel);
+				List<?> key = List.of(identityHashCode(serializerDef), version, compatibilityLevel);
 				String methodName = defined.get(key);
 				if (methodName == null) {
 					for (int i = 1; ; i++) {
@@ -712,7 +712,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 						if (defined.values().stream().noneMatch(methodName::equals)) break;
 					}
 					defined.put(key, methodName);
-					classBuilder.withStaticMethod(methodName, int.class, asList(byte[].class, int.class, valueClazz), sequence(
+					classBuilder.withStaticMethod(methodName, int.class, List.of(byte[].class, int.class, valueClazz), sequence(
 							serializerDef.encoder(this, BUF, POS, VALUE, version, compatibilityLevel),
 							POS));
 				}
@@ -727,7 +727,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 
 			@Override
 			public Expression define(SerializerDef serializerDef, Class<?> valueClazz, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-				List<?> key = asList(identityHashCode(serializerDef), version, compatibilityLevel);
+				List<?> key = List.of(identityHashCode(serializerDef), version, compatibilityLevel);
 				String methodName = defined.get(key);
 				if (methodName == null) {
 					for (int i = 1; ; i++) {
@@ -1094,7 +1094,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 
 		SerializeProfiles profiles = getAnnotation(SerializeProfiles.class, annotations);
 		if (profiles != null) {
-			if (!asList(profiles.value()).contains(profile == null ? "" : profile)) {
+			if (!List.of(profiles.value()).contains(profile == null ? "" : profile)) {
 				return null;
 			}
 			int addedProfile = getProfileVersion(profiles.value(), profiles.added());

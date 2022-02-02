@@ -8,7 +8,6 @@ import org.junit.Test;
 import java.util.List;
 
 import static io.activej.jmx.JmxBeanSettings.defaultSettings;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.*;
 
 public class DynamicMBeanFactoryAttributeExceptionsTest {
@@ -18,7 +17,7 @@ public class DynamicMBeanFactoryAttributeExceptionsTest {
 	@Test
 	public void concurrentJmxBeansAreNotAllowedToBeInPool() {
 		DynamicMBeanFactory dynamicMBeanFactory = DynamicMBeanFactory.create();
-		List<ConcurrentJmxBeanWithSingleIntAttr> beans = asList(new ConcurrentJmxBeanWithSingleIntAttr(), new ConcurrentJmxBeanWithSingleIntAttr());
+		List<ConcurrentJmxBeanWithSingleIntAttr> beans = List.of(new ConcurrentJmxBeanWithSingleIntAttr(), new ConcurrentJmxBeanWithSingleIntAttr());
 
 		try {
 			dynamicMBeanFactory.createDynamicMBean(beans, SETTINGS, false);

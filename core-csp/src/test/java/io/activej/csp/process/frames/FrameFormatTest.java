@@ -62,7 +62,7 @@ public class FrameFormatTest {
 
 	@Parameters(name = "{0}")
 	public static Collection<Object[]> getParameters() {
-		return Arrays.asList(
+		return List.of(
 				new Object[]{"LZ4 format", LZ4FrameFormat.create(), false, true},
 				new Object[]{"Legacy LZ4 format", LZ4LegacyFrameFormat.create(), false, true},
 
@@ -249,7 +249,7 @@ public class FrameFormatTest {
 	private static FrameFormat testCompound(FrameFormat mainFormat, FrameFormat... formats) {
 		List<FrameFormat> allFormats = new ArrayList<>();
 		allFormats.add(mainFormat);
-		allFormats.addAll(Arrays.asList(formats));
+		allFormats.addAll(List.of(formats));
 
 		FrameFormat compound = compound(mainFormat, formats);
 		return new FrameFormat() {

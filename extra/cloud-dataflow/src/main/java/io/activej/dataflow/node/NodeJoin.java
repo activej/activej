@@ -26,8 +26,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
-import static java.util.Arrays.asList;
-
 /**
  * Represents a node, which joins two internalConsumers streams (left and right) into one, based on logic, defined by key functions and joiner.
  *
@@ -66,7 +64,7 @@ public final class NodeJoin<K, L, R, V> extends AbstractNode {
 
 	@Override
 	public Collection<StreamId> getInputs() {
-		return asList(left, right);
+		return List.of(left, right);
 	}
 
 	@Override

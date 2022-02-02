@@ -17,7 +17,10 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
@@ -75,7 +78,7 @@ public final class CrdtStorageFsTest {
 	public void testConsolidation() {
 		long timestamp = Eventloop.getCurrentEventloop().currentTimeMillis();
 
-		List<CrdtData<String, Set<Integer>>> expected = Arrays.asList(
+		List<CrdtData<String, Set<Integer>>> expected = List.of(
 				new CrdtData<>("12_test_1", timestamp, Set.of(123, 124, 125, 2, 542)),
 				new CrdtData<>("12_test_2", timestamp, Set.of(12, 13)),
 				new CrdtData<>("1_test_1", timestamp, Set.of(1, 2, 3)),
@@ -121,7 +124,7 @@ public final class CrdtStorageFsTest {
 
 	@Test
 	public void testTombstoneConsolidation() {
-		List<CrdtData<String, Set<Integer>>> expected = Arrays.asList(
+		List<CrdtData<String, Set<Integer>>> expected = List.of(
 				new CrdtData<>("a", 100, Set.of(1, 2, 3)),
 				new CrdtData<>("b", 300, Set.of(5, 6, 7)),
 				new CrdtData<>("c", 400, Set.of(78, 2, 3))

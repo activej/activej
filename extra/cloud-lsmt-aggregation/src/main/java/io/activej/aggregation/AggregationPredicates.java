@@ -28,7 +28,6 @@ import java.util.regex.Pattern;
 
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.first;
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
@@ -1464,7 +1463,7 @@ public class AggregationPredicates {
 	}
 
 	public static AggregationPredicate and(AggregationPredicate... predicates) {
-		return and(asList(predicates));
+		return and(List.of(predicates));
 	}
 
 	public static AggregationPredicate or(List<AggregationPredicate> predicates) {
@@ -1472,7 +1471,7 @@ public class AggregationPredicates {
 	}
 
 	public static AggregationPredicate or(AggregationPredicate... predicates) {
-		return or(asList(predicates));
+		return or(List.of(predicates));
 	}
 
 	public static AggregationPredicate eq(String key, @Nullable Object value) {
@@ -1510,7 +1509,7 @@ public class AggregationPredicates {
 
 	@SuppressWarnings("unchecked")
 	public static AggregationPredicate in(String key, Comparable... values) {
-		return values.length == 1 ? new PredicateEq(key, values[0]) : new PredicateIn(key, new TreeSet(asList(values)));
+		return values.length == 1 ? new PredicateEq(key, values[0]) : new PredicateIn(key, new TreeSet(List.of(values)));
 	}
 
 	public static AggregationPredicate regexp(String key, @Language("RegExp") String pattern) {

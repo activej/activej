@@ -93,7 +93,6 @@ import static io.activej.common.Utils.*;
 import static io.activej.cube.Utils.createResultClass;
 import static java.lang.Math.min;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 import static java.util.Collections.sort;
 import static java.util.stream.Collectors.toList;
 
@@ -198,7 +197,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		String attributeName = attribute.substring(pos + 1);
 		checkArgument(resolver.getAttributeTypes().containsKey(attributeName), "Resolver does not support %s", attribute);
 		List<String> dimensions = getAllParents(dimension);
-		checkArgument(dimensions.size() == resolver.getKeyTypes().length, "Parent dimensions: %s, key types: %s", dimensions, asList(resolver.getKeyTypes()));
+		checkArgument(dimensions.size() == resolver.getKeyTypes().length, "Parent dimensions: %s, key types: %s", dimensions, List.of(resolver.getKeyTypes()));
 		for (int i = 0; i < dimensions.size(); i++) {
 			String d = dimensions.get(i);
 			checkArgument(((Class<?>) dimensionTypes.get(d).getInternalDataType()).equals(resolver.getKeyTypes()[i]), "Dimension type mismatch for %s", d);
@@ -284,7 +283,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		}
 
 		public AggregationConfig withDimensions(String... dimensions) {
-			return withDimensions(asList(dimensions));
+			return withDimensions(List.of(dimensions));
 		}
 
 		public AggregationConfig withMeasures(Collection<String> measures) {
@@ -293,7 +292,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		}
 
 		public AggregationConfig withMeasures(String... measures) {
-			return withMeasures(asList(measures));
+			return withMeasures(List.of(measures));
 		}
 
 		public AggregationConfig withPredicate(AggregationPredicate predicate) {
@@ -307,7 +306,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		}
 
 		public AggregationConfig withPartitioningKey(String... partitioningKey) {
-			this.partitioningKey.addAll(asList(partitioningKey));
+			this.partitioningKey.addAll(List.of(partitioningKey));
 			return this;
 		}
 

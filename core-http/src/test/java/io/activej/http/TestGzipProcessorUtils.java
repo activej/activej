@@ -19,7 +19,6 @@ import org.junit.runners.Parameterized.Parameters;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.zip.GZIPInputStream;
@@ -45,7 +44,7 @@ public final class TestGzipProcessorUtils {
 
 	@Parameters
 	public static List<String> testData() {
-		return Arrays.asList(
+		return List.of(
 				"",
 				"I grant! I've never seen a goddess go. My mistress, when she walks, treads on the ground",
 				generateLargeText()

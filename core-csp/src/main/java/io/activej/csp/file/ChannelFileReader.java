@@ -35,7 +35,7 @@ import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
-import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.Executor;
 
 import static io.activej.common.Checks.checkArgument;
@@ -76,7 +76,7 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> im
 	}
 
 	public static Promise<ChannelFileReader> open(Executor executor, Path path, OpenOption... openOptions) {
-		checkArgument(Arrays.asList(openOptions).contains(READ), "'READ' option is not present");
+		checkArgument(List.of(openOptions).contains(READ), "'READ' option is not present");
 		return Promise.ofBlocking(executor,
 						() -> {
 							if (Files.isDirectory(path)) throw new FileSystemException(path.toString(), null, "Is a directory");
@@ -90,7 +90,7 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> im
 	}
 
 	public static ChannelFileReader openBlocking(Executor executor, Path path, OpenOption... openOptions) throws IOException {
-		checkArgument(Arrays.asList(openOptions).contains(READ), "'READ' option is not present");
+		checkArgument(List.of(openOptions).contains(READ), "'READ' option is not present");
 		if (Files.isDirectory(path)) throw new FileSystemException(path.toString(), null, "Is a directory");
 		FileChannel channel = FileChannel.open(path, openOptions);
 		return create(executor, channel);

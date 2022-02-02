@@ -20,7 +20,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
 import java.util.List;
 
 public final class DeleteResponse {
@@ -37,7 +36,7 @@ public final class DeleteResponse {
 	}
 
 	public static DeleteResponse of(String... errors) {
-		return new DeleteResponse(Arrays.asList(errors));
+		return new DeleteResponse(List.of(errors));
 	}
 
 	public static DeleteResponse of(List<String> errors) {
