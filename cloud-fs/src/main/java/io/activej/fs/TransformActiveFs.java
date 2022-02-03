@@ -30,7 +30,6 @@ import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.AbstractMap.SimpleEntry;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -217,7 +216,7 @@ final class TransformActiveFs implements ActiveFs {
 	private FunctionEx<Map<String, FileMetadata>, Map<String, FileMetadata>> transformMap(Predicate<String> postPredicate) {
 		return map -> map.entrySet().stream()
 				.map(entry -> from.apply(entry.getKey())
-						.map(mappedName -> new SimpleEntry<>(mappedName, entry.getValue())))
+						.map(mappedName -> Map.entry(mappedName, entry.getValue())))
 				.filter(entry -> entry.isPresent() && postPredicate.test(entry.get().getKey()))
 				.map(Optional::get)
 				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));

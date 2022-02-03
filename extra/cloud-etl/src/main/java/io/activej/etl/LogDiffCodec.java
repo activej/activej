@@ -27,7 +27,6 @@ import io.activej.ot.repository.JsonIndentUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.*;
 
 import static com.dslplatform.json.JsonWriter.*;
@@ -76,7 +75,7 @@ public final class LogDiffCodec<D> implements ReadObject<LogDiff<D>>, WriteObjec
 				reader.comma();
 				LogPosition to = readValue(reader, TO, LOG_POSITION_FORMAT);
 				reader.endObject();
-				return new SimpleEntry<>(log, new LogPositionDiff(from, to));
+				return Map.entry(log, new LogPositionDiff(from, to));
 			});
 			while (iterator.hasNext()) {
 				Map.Entry<String, LogPositionDiff> entry = iterator.next();

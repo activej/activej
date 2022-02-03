@@ -35,7 +35,6 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -67,37 +66,37 @@ public final class ReportingTest extends CubeTestBase {
 	private int serverPort;
 
 	private static final Map<String, FieldType> DIMENSIONS_CUBE = entriesToMap(Stream.of(
-			new SimpleEntry<>("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
-			new SimpleEntry<>("advertiser", ofInt()),
-			new SimpleEntry<>("campaign", ofInt()),
-			new SimpleEntry<>("banner", ofInt()),
-			new SimpleEntry<>("affiliate", ofInt()),
-			new SimpleEntry<>("site", ofString())));
+			Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
+			Map.entry("advertiser", ofInt()),
+			Map.entry("campaign", ofInt()),
+			Map.entry("banner", ofInt()),
+			Map.entry("affiliate", ofInt()),
+			Map.entry("site", ofString())));
 
 	private static final Map<String, FieldType> DIMENSIONS_DATE_AGGREGATION =
 			Map.of("date", ofLocalDate(LocalDate.parse("2000-01-01")));
 
 	private static final Map<String, FieldType> DIMENSIONS_ADVERTISERS_AGGREGATION = entriesToMap(Stream.of(
-			new SimpleEntry<>("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
-			new SimpleEntry<>("advertiser", ofInt()),
-			new SimpleEntry<>("campaign", ofInt()),
-			new SimpleEntry<>("banner", ofInt())));
+			Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
+			Map.entry("advertiser", ofInt()),
+			Map.entry("campaign", ofInt()),
+			Map.entry("banner", ofInt())));
 
 	private static final Map<String, FieldType> DIMENSIONS_AFFILIATES_AGGREGATION = entriesToMap(Stream.of(
-			new SimpleEntry<>("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
-			new SimpleEntry<>("affiliate", ofInt()),
-			new SimpleEntry<>("site", ofString())));
+			Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
+			Map.entry("affiliate", ofInt()),
+			Map.entry("site", ofString())));
 
 	private static final Map<String, Measure> MEASURES = entriesToMap(Stream.of(
-			new SimpleEntry<>("impressions", sum(ofLong())),
-			new SimpleEntry<>("clicks", sum(ofLong())),
-			new SimpleEntry<>("conversions", sum(ofLong())),
-			new SimpleEntry<>("revenue", sum(ofDouble())),
-			new SimpleEntry<>("eventCount", count(ofInt())),
-			new SimpleEntry<>("minRevenue", min(ofDouble())),
-			new SimpleEntry<>("maxRevenue", max(ofDouble())),
-			new SimpleEntry<>("uniqueUserIdsCount", hyperLogLog(1024)),
-			new SimpleEntry<>("errors", sum(ofLong()))));
+			Map.entry("impressions", sum(ofLong())),
+			Map.entry("clicks", sum(ofLong())),
+			Map.entry("conversions", sum(ofLong())),
+			Map.entry("revenue", sum(ofDouble())),
+			Map.entry("eventCount", count(ofInt())),
+			Map.entry("minRevenue", min(ofDouble())),
+			Map.entry("maxRevenue", max(ofDouble())),
+			Map.entry("uniqueUserIdsCount", hyperLogLog(1024)),
+			Map.entry("errors", sum(ofLong()))));
 
 	private static class AdvertiserResolver extends AbstractAttributeResolver<Integer, String> {
 		@Override
