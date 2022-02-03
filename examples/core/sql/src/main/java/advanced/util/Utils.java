@@ -4,7 +4,6 @@ import org.jooq.DSLContext;
 import org.jooq.Table;
 
 import javax.sql.DataSource;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.*;
@@ -76,14 +75,7 @@ public final class Utils {
 				.getResourceAsStream(initScript)
 		) {
 			assert stream != null;
-
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			byte[] buffer = new byte[4096];
-			int size;
-			while ((size = stream.read(buffer)) != -1) {
-				baos.write(buffer, 0, size);
-			}
-			return baos.toByteArray();
+			return stream.readAllBytes();
 		}
 	}
 }

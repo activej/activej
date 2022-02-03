@@ -9,7 +9,6 @@ import io.activej.test.rules.ClassBuilderConstantsRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -123,13 +122,7 @@ public class CompatibilityLevelTest {
 	private static byte[] download(String filename) {
 		try (InputStream stream = CompatibilityLevelTest.class.getResourceAsStream("/compatibility/" + filename)) {
 			assert stream != null;
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			byte[] buffer = new byte[1024];
-			int size;
-			while ((size = stream.read(buffer)) != -1) {
-				baos.write(buffer, 0, size);
-			}
-			return baos.toByteArray();
+			return stream.readAllBytes();
 		} catch (IOException e) {
 			throw new AssertionError(e);
 		}

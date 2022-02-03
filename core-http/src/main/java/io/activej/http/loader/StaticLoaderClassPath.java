@@ -20,7 +20,6 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.JarURLConnection;
@@ -97,15 +96,8 @@ class StaticLoaderClassPath implements StaticLoader {
 	}
 
 	private byte[] loadResource(URLConnection connection) throws IOException {
-		// reading file as resource
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		byte[] buffer = new byte[8192];
-		int size;
 		try (InputStream stream = connection.getInputStream()) {
-			while ((size = stream.read(buffer)) != -1) {
-				out.write(buffer, 0, size);
-			}
+			return stream.readAllBytes();
 		}
-		return out.toByteArray();
 	}
 }

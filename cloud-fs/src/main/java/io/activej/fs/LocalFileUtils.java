@@ -25,8 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -48,13 +46,6 @@ public final class LocalFileUtils {
 		createDirectories(tempDir, fsyncDirectories);
 		if (!tempDir.startsWith(storage)) {
 			createDirectories(storage, fsyncDirectories);
-		}
-	}
-
-	static void copy(InputStream from, OutputStream to) throws IOException {
-		byte[] buf = new byte[16384];
-		for (int n; (n = from.read(buf)) != -1; ) {
-			to.write(buf, 0, n);
 		}
 	}
 

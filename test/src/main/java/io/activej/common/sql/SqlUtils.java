@@ -17,13 +17,11 @@
 package io.activej.common.sql;
 
 import javax.sql.DataSource;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Objects;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -48,13 +46,8 @@ public class SqlUtils {
 
 	private static byte[] loadResource(String name) throws IOException {
 		try (InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(name)) {
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			byte[] buffer = new byte[4096];
-			int size;
-			while ((size = Objects.requireNonNull(stream).read(buffer)) != -1) {
-				baos.write(buffer, 0, size);
-			}
-			return baos.toByteArray();
+			assert stream != null;
+			return stream.readAllBytes();
 		}
 	}
 

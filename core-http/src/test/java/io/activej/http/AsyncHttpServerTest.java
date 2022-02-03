@@ -25,8 +25,8 @@ import java.util.Random;
 import java.util.concurrent.ExecutionException;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
+import static io.activej.http.TestUtils.assertEmpty;
 import static io.activej.http.TestUtils.readFully;
-import static io.activej.http.TestUtils.toByteArray;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.lang.Math.min;
@@ -134,7 +134,7 @@ public final class AsyncHttpServerTest {
 				\r
 				/abc"""); // ?
 
-		assertEquals(0, toByteArray(socket.getInputStream()).length);
+		assertEmpty(socket.getInputStream());
 		assertTrue(socket.isClosed());
 		socket.close();
 
@@ -186,7 +186,7 @@ public final class AsyncHttpServerTest {
 				\r
 				/abc"""); // ?
 
-		assertEquals(0, toByteArray(socket.getInputStream()).length);
+		assertEmpty(socket.getInputStream());
 		assertTrue(socket.isClosed());
 		socket.close();
 
@@ -263,7 +263,7 @@ public final class AsyncHttpServerTest {
 				Content-Length: 4\r
 				\r
 				/abc""");
-		assertEquals(0, toByteArray(socket.getInputStream()).length);
+		assertEmpty(socket.getInputStream());
 		socket.close();
 
 		server.closeFuture().get();
@@ -293,7 +293,7 @@ public final class AsyncHttpServerTest {
 				Content-Length: 4\r
 				\r
 				/abc""");
-		assertEquals(0, toByteArray(socket.getInputStream()).length);
+		assertEmpty(socket.getInputStream());
 		socket.close();
 
 		server.closeFuture().get();
@@ -433,7 +433,7 @@ public final class AsyncHttpServerTest {
 				\r
 				abcde""");
 
-		assertEquals(0, toByteArray(socket.getInputStream()).length);
+		assertEmpty(socket.getInputStream());
 		assertTrue(socket.isClosed());
 		socket.close();
 
@@ -514,7 +514,7 @@ public final class AsyncHttpServerTest {
 				Content-Length: 28\r
 				\r
 				field1=value1;field2=value2;""");
-		assertEquals(0, toByteArray(socket.getInputStream()).length);
+		assertEmpty(socket.getInputStream());
 		socket.close();
 
 		server.closeFuture().get();
@@ -552,7 +552,7 @@ public final class AsyncHttpServerTest {
 				field1=value1&field2=value2""");
 		socket.shutdownOutput();
 
-		assertEquals(0, toByteArray(socket.getInputStream()).length);
+		assertEmpty(socket.getInputStream());
 		socket.close();
 
 		server.closeFuture().get();

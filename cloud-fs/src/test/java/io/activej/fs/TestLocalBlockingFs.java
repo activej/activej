@@ -88,7 +88,7 @@ public final class TestLocalBlockingFs {
 
 		try (InputStream inputStream = new FileInputStream(path.toFile());
 				OutputStream outputStream = client.upload("1/c.txt")) {
-			LocalFileUtils.copy(inputStream, outputStream);
+			inputStream.transferTo(outputStream);
 		}
 
 		assertArrayEquals(Files.readAllBytes(path), Files.readAllBytes(storagePath.resolve("1/c.txt")));
@@ -173,7 +173,7 @@ public final class TestLocalBlockingFs {
 
 		try (InputStream inputStream = client.download("2/b/d.txt");
 				OutputStream outputStream = new FileOutputStream(outputFile.toFile())) {
-			LocalFileUtils.copy(inputStream, outputStream);
+			inputStream.transferTo(outputStream);
 		}
 
 		assertArrayEquals(Files.readAllBytes(storagePath.resolve("2/b/d.txt")), Files.readAllBytes(outputFile));
@@ -527,7 +527,7 @@ public final class TestLocalBlockingFs {
 	public void testCopyWithDeletedTempDir() throws IOException {
 		try (InputStream inputStream = new ByteArrayInputStream("Test content".getBytes(UTF_8));
 		     OutputStream outputStream = client.upload("test.txt")) {
-			LocalFileUtils.copy(inputStream, outputStream);
+			inputStream.transferTo(outputStream);
 		}
 
 		Path tempDir = storagePath.resolve(LocalActiveFs.DEFAULT_TEMP_DIR);
@@ -548,7 +548,7 @@ public final class TestLocalBlockingFs {
 
 		try (InputStream inputStream = new ByteArrayInputStream("Test content".getBytes(UTF_8));
 		     OutputStream outputStream = client.upload("test.txt")) {
-			LocalFileUtils.copy(inputStream, outputStream);
+			inputStream.transferTo(outputStream);
 			fail();
 		} catch (ActiveFsStructureException e){
 			assertEquals(e.getMessage(), "Temporary directory " + tempDir + " not found");

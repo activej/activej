@@ -20,8 +20,8 @@ import java.util.List;
 import static io.activej.bytebuf.ByteBufStrings.decodeAscii;
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
+import static io.activej.http.TestUtils.assertEmpty;
 import static io.activej.http.TestUtils.readFully;
-import static io.activej.http.TestUtils.toByteArray;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
@@ -115,7 +115,7 @@ public final class SimpleProxyServerTest {
 		echoServer.closeFuture().get();
 		proxyServer.closeFuture().get();
 
-		assertEquals(0, toByteArray(socket.getInputStream()).length);
+		assertEmpty(socket.getInputStream());
 		socket.close();
 
 		echoServerThread.join();

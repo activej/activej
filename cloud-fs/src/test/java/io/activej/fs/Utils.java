@@ -5,7 +5,6 @@ import io.activej.fs.exception.FsBatchException;
 import io.activej.fs.exception.FsScalarException;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -19,6 +18,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
@@ -82,10 +82,7 @@ public final class Utils {
 	}
 
 	public static String asString(InputStream inputStream) throws IOException {
-		try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-			LocalFileUtils.copy(inputStream, outputStream);
-			return outputStream.toString();
-		}
+		return new String(inputStream.readAllBytes(), UTF_8);
 	}
 
 	public static void assertFileEquals(Path firstPath, Path secondPath, String first, String second) {

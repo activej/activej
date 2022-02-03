@@ -19,8 +19,8 @@ import java.util.List;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
+import static io.activej.http.TestUtils.assertEmpty;
 import static io.activej.http.TestUtils.readFully;
-import static io.activej.http.TestUtils.toByteArray;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertingFn;
 import static io.activej.test.TestUtils.getFreePort;
@@ -42,11 +42,11 @@ public final class HttpTolerantApplicationTest {
 		Eventloop eventloop = Eventloop.create().withEventloopFatalErrorHandler(rethrow());
 
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
-				request ->
-						Promise.ofCallback(cb ->
-								eventloop.post(() -> cb.set(
-										HttpResponse.ok200()
-												.withBody(encodeAscii(request.getUrl().getPathAndQuery()))))))
+						request ->
+								Promise.ofCallback(cb ->
+										eventloop.post(() -> cb.set(
+												HttpResponse.ok200()
+														.withBody(encodeAscii(request.getUrl().getPathAndQuery()))))))
 				.withListenPort(port);
 
 		server.listen();
@@ -91,7 +91,7 @@ public final class HttpTolerantApplicationTest {
 				Content-Length: 4\r
 				\r
 				/abc""");
-		assertEquals(0, toByteArray(socket.getInputStream()).length);
+		assertEmpty(socket.getInputStream());
 		socket.close();
 
 		server.closeFuture().get();
