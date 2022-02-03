@@ -404,14 +404,14 @@ public class Expressions {
 	/**
 	 * Unifies passed arithmetic types as one. Arithmetic types are all primitive types, excluding {@code boolean.class}
 	 * A unified type represents a result type after applying arithmetic operations on given types
-	 * as per <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-4.html">Java Language Specification</a>
+	 * as per <a href="https://docs.oracle.com/javase/specs/jls/se17/html/jls-4.html">Java Language Specification</a>
 	 * <p>
 	 * Rules are:
 	 * <ul>
 	 *     <li>If there is {@code double.class} among types, unified type is  {@code double.class}</li>
 	 *     <li>Else, if there is {@code float.class} among types, unified type is  {@code float.class}</li>
 	 *     <li>Else, if there is {@code long.class} among types, unified type is  {@code long.class}</li>
-	 *     <li>Else, unified type is  {@code int.class}</li>
+	 *     <li>Else, unified type is {@code int.class}</li>
 	 * </ul>
 	 *
 	 * @param types arithmetic types to be unified

@@ -248,7 +248,7 @@ public final class TestLocalBlockingFsInvariants {
 	public void moveUpdatesTimestamp() {
 		both(client -> {
 			FileMetadata oldMeta = client.info("file");
-			Thread.sleep(getDelay(oldMeta.getTimestamp()));
+			Thread.sleep(10);
 			client.move("file", "newFile");
 			FileMetadata newMeta = client.info("newFile");
 
@@ -354,7 +354,7 @@ public final class TestLocalBlockingFsInvariants {
 	public void copyUpdatesTimestamp() {
 		both(fs -> {
 			FileMetadata oldMeta = fs.info("file");
-			Thread.sleep(getDelay(oldMeta.getTimestamp()));
+			Thread.sleep(10);
 			fs.copy("file", "newFile");
 			FileMetadata newMeta = fs.info("newFile");
 
@@ -624,7 +624,7 @@ public final class TestLocalBlockingFsInvariants {
 			FileMetadata oldMeta1 = client.info("file");
 			FileMetadata oldMeta2 = client.info("file2");
 
-			Thread.sleep(getDelay(oldMeta1.getTimestamp()));
+			Thread.sleep(10);
 
 			client.copyAll(Map.of(
 					"file", "newFile",
@@ -808,7 +808,7 @@ public final class TestLocalBlockingFsInvariants {
 			FileMetadata oldMeta1 = client.info("file");
 			FileMetadata oldMeta2 = client.info("file2");
 
-			Thread.sleep(getDelay(oldMeta1.getTimestamp()));
+			Thread.sleep(10);
 
 			client.moveAll(Map.of(
 					"file", "newFile",

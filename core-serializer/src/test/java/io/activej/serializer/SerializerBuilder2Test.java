@@ -18,11 +18,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 
-import static io.activej.serializer.Utils.AT_LEAST_JAVA_9;
 import static io.activej.serializer.Utils.DEFINING_CLASS_LOADER;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeTrue;
 
 public class SerializerBuilder2Test {
 	@Rule
@@ -78,7 +76,6 @@ public class SerializerBuilder2Test {
 			assertEquals(testData1, testData2);
 		}
 
-		assumeTrue("Prior to Java 9, some complex annotation paths are not picked up by JVM", AT_LEAST_JAVA_9);
 		{
 			List<Integer> testData1 = Arrays.asList(1, 2, null, 3);
 			List<Integer> testData2 = doTest(new TypeT<@NotNull List<@SerializeNullable Integer>>() {}, testData1);
@@ -126,7 +123,6 @@ public class SerializerBuilder2Test {
 			assertArrayEquals(testData1, testData2);
 		}
 
-		assumeTrue("Prior to Java 9, some complex annotation paths are not picked up by JVM", AT_LEAST_JAVA_9);
 		{
 			Integer[] testData1 = new Integer[]{1, 2, null, 3};
 			Integer[] testData2 = doTest(new TypeT<@SerializeNullable @SerializeVarLength Integer @NotNull []>() {}, testData1);
@@ -152,7 +148,6 @@ public class SerializerBuilder2Test {
 			assertEquals(testData1, testData2);
 		}
 
-		assumeTrue("Prior to Java 9, some complex annotation paths are not picked up by JVM", AT_LEAST_JAVA_9);
 		{
 			TestEnum1 testData1 = null;
 			TestEnum1 testData2 = doTest(new TypeT<@SerializeNullable TestEnum1>() {}, testData1);
@@ -162,8 +157,6 @@ public class SerializerBuilder2Test {
 
 	@Test
 	public void testSubclasses() {
-		assumeTrue("Prior to Java 9, some complex annotation paths are not picked up by JVM", AT_LEAST_JAVA_9);
-
 		{
 			Object testData1 = 1;
 			Object testData2 = doTest(new TypeT<@SerializeClass(subclasses = {String.class, Integer.class}) Object>() {}, testData1);
@@ -238,7 +231,6 @@ public class SerializerBuilder2Test {
 			assertEquals(testData1, testData2);
 		}
 
-		assumeTrue("Prior to Java 9, some complex annotation paths are not picked up by JVM", AT_LEAST_JAVA_9);
 		{
 			TestNode testData1 = null;
 			TestNode testData2 = doTest(new TypeT<@SerializeNullable TestNode>() {}, testData1);

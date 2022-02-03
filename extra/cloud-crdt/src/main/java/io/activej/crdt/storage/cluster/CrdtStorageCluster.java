@@ -230,8 +230,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 			}
 		}
 
-		//noinspection Convert2MethodRef - does not compile on Java 8
-		return Promises.toTuple((downloader, remover, uploaders) -> new Tuple(downloader, remover, uploaders),
+		return Promises.toTuple(Tuple::new,
 						source.download().toTry(),
 						source.remove().toTry(),
 						execute(partitionScheme, CrdtStorage::upload))

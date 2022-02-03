@@ -330,11 +330,9 @@ public final class ReflectionUtils {
 
 		Type[] genericParameterTypes = executable.getGenericParameterTypes();
 		boolean hasImplicitDependency = genericParameterTypes.length != parameters.length;
-		// an actual JDK bug (fixed in Java 9)
-		boolean workaround = parameters[0].getDeclaringExecutable().getParameterAnnotations().length != parameters.length;
 		for (int i = 1; i < dependencies.length; i++) {
 			type = genericParameterTypes[hasImplicitDependency ? i - 1 : i];
-			parameter = parameters[workaround ? i - 1 : i];
+			parameter = parameters[i];
 			dependencies[i] = keyOf(container, type, parameter);
 		}
 		return dependencies;

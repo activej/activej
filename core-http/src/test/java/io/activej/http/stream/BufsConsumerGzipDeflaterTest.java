@@ -139,13 +139,7 @@ public final class BufsConsumerGzipDeflaterTest {
 					gzip.finish();
 				}
 			}
-			byte[] bytes = baos.toByteArray();
-			if (bytes[9] == 0) {
-				// incorrect OS header flag in pre JDK 16
-				// https://bugs.openjdk.java.net/browse/JDK-8244706
-				bytes[9] = (byte) 0xff;
-			}
-			return bytes;
+			return baos.toByteArray();
 		} catch (IOException e) {
 			throw new AssertionError(e);
 		}

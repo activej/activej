@@ -53,7 +53,6 @@ import static io.activej.types.AnnotatedTypes.*;
 import static java.lang.String.format;
 import static java.lang.System.identityHashCode;
 import static java.lang.reflect.Modifier.*;
-import static java.util.Arrays.asList;
 import static java.util.Collections.newSetFromMap;
 import static java.util.Comparator.naturalOrder;
 import static java.util.Objects.requireNonNull;
@@ -322,8 +321,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 	 * In previous ActiveJ versions serializer annotations had to be placed directly on fields/getters.
 	 * To specify a concrete annotated type a {@code path} attribute was used. Now it is possible to
 	 * annotate types directly. However, for compatibility with classes annotated using a {@code path} attribute
-	 * or when using older versions of Java that may fail resolving type use annotations, this compatibility mode
-	 * can be enabled
+	 * this compatibility mode can be enabled
 	 */
 	public SerializerBuilder withAnnotationCompatibilityMode(boolean annotationsCompatibilityMode) {
 		this.annotationsCompatibilityMode = annotationsCompatibilityMode;

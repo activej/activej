@@ -254,7 +254,7 @@ public final class TestLocalActiveFsInvariants {
 	public void moveUpdatesTimestamp() {
 		both(client -> {
 			FileMetadata oldMeta = await(client.info("file"));
-			await(Promises.delay(getDelay(oldMeta.getTimestamp())));
+			await(Promises.delay(10));
 			await(client.move("file", "newFile"));
 			FileMetadata newMeta = await(client.info("newFile"));
 
@@ -353,7 +353,7 @@ public final class TestLocalActiveFsInvariants {
 	public void copyUpdatesTimestamp() {
 		both(fs -> {
 			FileMetadata oldMeta = await(fs.info("file"));
-			await(Promises.delay(getDelay(oldMeta.getTimestamp())));
+			await(Promises.delay(10));
 			await(fs.copy("file", "newFile"));
 			FileMetadata newMeta = await(fs.info("newFile"));
 
@@ -621,7 +621,7 @@ public final class TestLocalActiveFsInvariants {
 			FileMetadata oldMeta1 = await(client.info("file"));
 			FileMetadata oldMeta2 = await(client.info("file2"));
 
-			await(Promises.delay(getDelay(oldMeta1.getTimestamp())));
+			await(Promises.delay(10));
 
 			await(client.copyAll(Map.of("file", "newFile", "file2", "newFile2")));
 
@@ -795,7 +795,7 @@ public final class TestLocalActiveFsInvariants {
 			FileMetadata oldMeta1 = await(client.info("file"));
 			FileMetadata oldMeta2 = await(client.info("file2"));
 
-			await(Promises.delay(getDelay(oldMeta1.getTimestamp())));
+			await(Promises.delay(10));
 
 			await(client.moveAll(Map.of("file", "newFile", "file2", "newFile2")));
 

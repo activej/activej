@@ -28,10 +28,6 @@ import java.lang.reflect.Type;
  * Usage example:
  * <p>
  * {@code Type listOfStringsType = new TypeT<List<String>>(){}.getType()}
- * <p>
- * <b>Note that Java 8 does not seem to resolve annotations on annotated types correctly.
- * If you need to use {@link TypeT} with annotated type while on Java 8, you can use
- * {@link TypeT#ofAnnotatedType(AnnotatedType)} method instead of {@link TypeT} constructor</b>
  *
  * @param <T> actual type
  */

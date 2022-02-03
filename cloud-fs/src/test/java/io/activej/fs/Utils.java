@@ -88,11 +88,6 @@ public final class Utils {
 		}
 	}
 
-	// In older JDK versions Files::getLastModifiedTime returns time in SECONDS resolution
-	public static long getDelay(long timestamp) {
-		return timestamp % 1000 == 0 ? 1000 : 10;
-	}
-
 	public static void assertFileEquals(Path firstPath, Path secondPath, String first, String second) {
 		try {
 			assertArrayEquals(Files.readAllBytes(firstPath.resolve(first)), Files.readAllBytes(firstPath.resolve(second)));
