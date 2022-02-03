@@ -61,30 +61,11 @@ import static java.util.stream.Collectors.toMap;
  */
 @SuppressWarnings({"unused", "WeakerAccess", "rawtypes"})
 public final class Injector implements ResourceLocator {
-	private static final class ScopeLocalData {
-		final Scope[] scope;
-		final Map<Key<?>, Binding<?>> bindings;
-		final Map<Key<?>, CompiledBinding<?>> compiledBindings;
-		final Map<Key<?>, Integer> slotMapping;
-		final int slots;
-
-		final CompiledBinding<?>[] eagerSingletons;
-
-		private ScopeLocalData(
-				Scope[] scope,
-				Map<Key<?>, Binding<?>> bindings,
-				Map<Key<?>, CompiledBinding<?>> compiledBindings,
-				Map<Key<?>, Integer> slotMapping,
-				int slots,
-				CompiledBinding<?>[] eagerSingletons
-		) {
-			this.scope = scope;
-			this.bindings = bindings;
-			this.compiledBindings = compiledBindings;
-			this.slotMapping = slotMapping;
-			this.slots = slots;
-			this.eagerSingletons = eagerSingletons;
-		}
+	private record ScopeLocalData(Scope[] scope,
+	                              Map<Key<?>, Binding<?>> bindings,
+	                              Map<Key<?>, CompiledBinding<?>> compiledBindings,
+	                              Map<Key<?>, Integer> slotMapping, int slots,
+	                              CompiledBinding<?>[] eagerSingletons) {
 	}
 
 	final @Nullable Injector parent;

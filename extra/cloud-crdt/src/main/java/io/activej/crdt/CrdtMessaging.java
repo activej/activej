@@ -38,21 +38,7 @@ public final class CrdtMessaging {
 		PING
 	}
 
-	public static final class Download implements CrdtMessage {
-		private final long token;
-
-		public Download(long token) {
-			this.token = token;
-		}
-
-		public long getToken() {
-			return token;
-		}
-
-		@Override
-		public String toString() {
-			return "Download{token=" + token + '}';
-		}
+	public record Download(long token) implements CrdtMessage {
 	}
 
 	@CompiledJson
@@ -63,21 +49,7 @@ public final class CrdtMessaging {
 		DOWNLOAD_STARTED
 	}
 
-	public static final class ServerError implements CrdtResponse {
-		private final String msg;
-
-		public ServerError(String msg) {
-			this.msg = msg;
-		}
-
-		public String getMsg() {
-			return msg;
-		}
-
-		@Override
-		public String toString() {
-			return "ServerError{msg=" + msg + '}';
-		}
+	public record ServerError(String msg) implements CrdtResponse {
 	}
 
 	@SuppressWarnings("unused")

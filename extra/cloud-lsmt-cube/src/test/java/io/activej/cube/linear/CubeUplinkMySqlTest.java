@@ -602,8 +602,8 @@ public class CubeUplinkMySqlTest {
 			String partition = entry.getKey();
 			SimplePositionDiff simplePositionDiff = expected.get(partition);
 			LogPositionDiff actualPositionDiff = entry.getValue();
-			LogPosition actualFrom = actualPositionDiff.from;
-			LogPosition actualTo = actualPositionDiff.to;
+			LogPosition actualFrom = actualPositionDiff.from();
+			LogPosition actualTo = actualPositionDiff.to();
 
 			assertEquals(simplePositionDiff.to, actualTo.getPosition());
 
@@ -700,7 +700,7 @@ public class CubeUplinkMySqlTest {
 		@Override
 		public void apply(LogDiff<CubeDiff> op) {
 			for (Map.Entry<String, LogPositionDiff> entry : op.getPositions().entrySet()) {
-				positions.put(entry.getKey(), entry.getValue().to);
+				positions.put(entry.getKey(), entry.getValue().to());
 			}
 			for (CubeDiff diff : op.getDiffs()) {
 				for (Map.Entry<String, AggregationDiff> entry : diff.entrySet()) {

@@ -33,6 +33,7 @@ public class RecordTest {
 		}
 	}
 
+	@SuppressWarnings("ClassCanBeRecord")
 	public static final class CompatiblePojo {
 		private final String s;
 		private final int n;

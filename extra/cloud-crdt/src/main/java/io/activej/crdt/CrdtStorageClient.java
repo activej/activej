@@ -155,7 +155,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 								return;
 							}
 							if (response.getClass() == ServerError.class) {
-								throw new CrdtException(((ServerError) response).getMsg());
+								throw new CrdtException(((ServerError) response).msg());
 							}
 							throw new CrdtException("Received message " + response + " instead of " + DOWNLOAD_STARTED);
 						})
@@ -219,7 +219,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 				return;
 			}
 			if (response instanceof ServerError) {
-				throw new CrdtException(((ServerError) response).getMsg());
+				throw new CrdtException(((ServerError) response).msg());
 			}
 			throw new CrdtException("Received message " + response + " instead of " + expected);
 		};

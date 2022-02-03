@@ -39,38 +39,7 @@ import static org.objectweb.asm.commons.GeneratorAdapter.NE;
 public final class ExpressionCompare implements Expression {
 	private final List<Pair> pairs = new ArrayList<>();
 
-	private static final class Pair {
-		private final Expression left;
-		private final Expression right;
-		private final boolean nullable;
-
-		private Pair(Expression left, Expression right, boolean nullable) {
-			this.left = left;
-			this.right = right;
-			this.nullable = nullable;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-
-			Pair that = (Pair) o;
-
-			if (nullable != that.nullable) return false;
-			if (!left.equals(that.left)) return false;
-			return right.equals(that.right);
-
-		}
-
-		@Override
-		public int hashCode() {
-			int result = left.hashCode();
-			result = 31 * result + right.hashCode();
-			result = 31 * result + (nullable ? 1 : 0);
-			return result;
-		}
-	}
+	private record Pair(Expression left, Expression right, boolean nullable) {}
 
 	private ExpressionCompare() {
 	}

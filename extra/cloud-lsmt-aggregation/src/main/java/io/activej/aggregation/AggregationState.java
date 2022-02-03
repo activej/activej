@@ -226,28 +226,12 @@ public final class AggregationState implements OTState<AggregationDiff> {
 		SIZE_FIX
 	}
 
-	private static class PickedChunks {
-		private final PickingStrategy strategy;
-		private final @Nullable RangeTree<PrimaryKey, AggregationChunk> partitionTree;
-		private final List<AggregationChunk> chunks;
-
-		public PickedChunks(PickingStrategy strategy, @Nullable RangeTree<PrimaryKey, AggregationChunk> partitionTree,
-				List<AggregationChunk> chunks) {
-			this.strategy = strategy;
-			this.partitionTree = partitionTree;
-			this.chunks = chunks;
-		}
+	private record PickedChunks(PickingStrategy strategy,
+	                            @Nullable RangeTree<PrimaryKey, AggregationChunk> partitionTree,
+	                            List<AggregationChunk> chunks) {
 	}
 
-	private static class ChunksAndStrategy {
-		private final PickingStrategy strategy;
-		private final List<AggregationChunk> chunks;
-
-		public ChunksAndStrategy(PickingStrategy strategy, List<AggregationChunk> chunks) {
-			this.strategy = strategy;
-			this.chunks = chunks;
-		}
-	}
+	private record ChunksAndStrategy(PickingStrategy strategy, List<AggregationChunk> chunks) {}
 
 	@VisibleForTesting
 	@Nullable SortedMap<PrimaryKey, RangeTree<PrimaryKey, AggregationChunk>> groupByPartition(int partitioningKeyLength) {
@@ -432,19 +416,10 @@ public final class AggregationState implements OTState<AggregationDiff> {
 		return infos;
 	}
 
-	public static class ConsolidationDebugInfo {
-		public final PrimaryKey key;
-		public final Set<AggregationChunk> segmentSet;
-		public final Set<AggregationChunk> segmentClosingSet;
-		public final int overlaps;
-
-		public ConsolidationDebugInfo(PrimaryKey key, Set<AggregationChunk> segmentSet,
-				Set<AggregationChunk> segmentClosingSet, int overlaps) {
-			this.key = key;
-			this.segmentSet = segmentSet;
-			this.segmentClosingSet = segmentClosingSet;
-			this.overlaps = overlaps;
-		}
+	public record ConsolidationDebugInfo(PrimaryKey key,
+	                                     Set<AggregationChunk> segmentSet,
+	                                     Set<AggregationChunk> segmentClosingSet,
+	                                     int overlaps) {
 	}
 
 	@VisibleForTesting

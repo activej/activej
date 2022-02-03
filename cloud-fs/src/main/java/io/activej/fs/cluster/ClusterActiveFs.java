@@ -401,15 +401,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 		return broadcast(($, fs) -> action.apply(fs), $ -> {});
 	}
 
-	private static class Container<T> {
-		final Object id;
-		final T value;
-
-		Container(Object id, T value) {
-			this.id = id;
-			this.value = value;
-		}
-	}
+	private record Container<T>(Object id, T value) {}
 
 	// region JMX
 	@JmxAttribute

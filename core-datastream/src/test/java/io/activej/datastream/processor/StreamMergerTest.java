@@ -104,8 +104,8 @@ public class StreamMergerTest {
 		StreamConsumerToList<DataItem1> consumer = StreamConsumerToList.create();
 
 		await(
-				source1.streamTo(merger.newInput(input -> input.key2, mergeReducer())),
-				source2.streamTo(merger.newInput(input -> input.key2, mergeReducer())),
+				source1.streamTo(merger.newInput(DataItem1::key2, mergeReducer())),
+				source2.streamTo(merger.newInput(DataItem1::key2, mergeReducer())),
 				merger.getOutput()
 						.streamTo(consumer.transformWith(oneByOne()))
 		);

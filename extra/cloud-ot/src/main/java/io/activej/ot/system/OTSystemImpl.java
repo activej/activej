@@ -49,32 +49,7 @@ public final class OTSystemImpl<D> implements OTSystem<D>, WithInitializer<OTSys
 		boolean isEmpty(OP op);
 	}
 
-	private static class KeyPair<O> {
-		public final Class<? extends O> left;
-		public final Class<? extends O> right;
-
-		public KeyPair(Class<? extends O> left, Class<? extends O> right) {
-			this.left = left;
-			this.right = right;
-		}
-
-		@SuppressWarnings({"EqualsWhichDoesntCheckParameterClass", "RedundantIfStatement"})
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			KeyPair<?> key = (KeyPair<?>) o;
-			if (!left.equals(key.left)) return false;
-			if (!right.equals(key.right)) return false;
-			return true;
-		}
-
-		@Override
-		public int hashCode() {
-			int result = left.hashCode();
-			result = 31 * result + right.hashCode();
-			return result;
-		}
-	}
+	private record KeyPair<O>(Class<? extends O> left, Class<? extends O> right) {}
 
 	private final Map<KeyPair<D>, TransformFunction<D, ?, ?>> transformers = new HashMap<>();
 	private final Map<KeyPair<D>, SquashFunction<D, ?, ?>> squashers = new HashMap<>();

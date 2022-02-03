@@ -111,12 +111,12 @@ public final class LogDiffCodec<D> implements ReadObject<LogDiff<D>>, WriteObjec
 
 			writer.writeString(FROM);
 			writer.writeByte(SEMI);
-			LOG_POSITION_FORMAT.write(writer, entry.getValue().from);
+			LOG_POSITION_FORMAT.write(writer, entry.getValue().from());
 			writer.writeByte(COMMA);
 
 			writer.writeString(TO);
 			writer.writeByte(SEMI);
-			LOG_POSITION_FORMAT.write(writer, entry.getValue().to);
+			LOG_POSITION_FORMAT.write(writer, entry.getValue().to());
 
 			writer.writeByte(OBJECT_END);
 		});

@@ -458,16 +458,8 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 		return null;
 	}
 
-	private static final class SlowestChain {
+	private record SlowestChain(List<Key> path, long sum) {
 		static final SlowestChain EMPTY = new SlowestChain(List.of(), 0);
-
-		final List<Key> path;
-		final long sum;
-
-		private SlowestChain(List<Key> path, long sum) {
-			this.path = path;
-			this.sum = sum;
-		}
 
 		SlowestChain concat(Key key, long time) {
 			return new SlowestChain(io.activej.common.Utils.concat(path, List.of(key)), sum + time);

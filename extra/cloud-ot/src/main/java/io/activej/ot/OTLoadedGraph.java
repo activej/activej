@@ -44,12 +44,7 @@ public class OTLoadedGraph<K, D> {
 		this.diffToString = nonNullElse(diffToString, this.diffToString);
 	}
 
-	private static final class MergeNode {
-		final long n;
-
-		private MergeNode(long n) {
-			this.n = n;
-		}
+	private record MergeNode(long n) {
 
 		@Override
 		public String toString() {

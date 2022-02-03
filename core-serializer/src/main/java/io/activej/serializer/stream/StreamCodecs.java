@@ -396,15 +396,7 @@ public final class StreamCodecs {
 	}
 
 	public static class SubtypeBuilder<T> {
-		private static final class SubclassEntry<T> {
-			final byte idx;
-			final StreamCodec<T> codec;
-
-			private SubclassEntry(byte idx, StreamCodec<T> codec) {
-				this.idx = idx;
-				this.codec = codec;
-			}
-		}
+		private record SubclassEntry<T>(byte idx, StreamCodec<T> codec) {}
 
 		private final Map<Class<?>, SubclassEntry<? extends T>> encoders = new HashMap<>();
 		private final List<StreamDecoder<? extends T>> decoders = new ArrayList<>();

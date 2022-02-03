@@ -61,15 +61,15 @@ public final class LogOTState<D> implements OTState<LogDiff<D>>, WithInitializer
 
 			LogPosition previous = positions.get(key);
 			if (previous != null) {
-				checkState(diff.from.equals(previous), "'From' position should equal previous 'To' position");
+				checkState(diff.from().equals(previous), "'From' position should equal previous 'To' position");
 			} else {
-				checkState(diff.from.isInitial(), "Adding new log that does not start from initial position");
+				checkState(diff.from().isInitial(), "Adding new log that does not start from initial position");
 			}
 
-			if (diff.to.isInitial()) {
+			if (diff.to().isInitial()) {
 				positions.remove(key);
 			} else {
-				positions.put(key, diff.to);
+				positions.put(key, diff.to());
 			}
 		}
 		for (D d : op.getDiffs()) {

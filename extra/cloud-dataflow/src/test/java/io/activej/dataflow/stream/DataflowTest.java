@@ -31,8 +31,7 @@ import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
-import io.activej.serializer.annotations.Deserialize;
-import io.activej.serializer.annotations.Serialize;
+import io.activej.serializer.annotations.SerializeRecord;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
@@ -420,32 +419,8 @@ public final class DataflowTest {
 		assertEquals(List.of(new TestItem(2), new TestItem(4), new TestItem(6), new TestItem(8), new TestItem(10)), resultConsumer.getList());
 	}
 
-	public static final class TestItem {
-		@Serialize
-		public final long value;
-
-		public TestItem(@Deserialize("value") long value) {
-			this.value = value;
-		}
-
-		@Override
-		public String toString() {
-			return "TestItem{value=" + value + '}';
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			TestItem other = (TestItem) o;
-			return value == other.value;
-		}
-
-		@Override
-		public int hashCode() {
-			return (int) (value ^ (value >>> 32));
-		}
-	}
+	@SerializeRecord
+	public record TestItem(long value) {}
 
 	public static class TestComparator implements Comparator<Long> {
 		@Override

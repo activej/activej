@@ -39,17 +39,7 @@ import static org.objectweb.asm.commons.GeneratorAdapter.NE;
 public final class ExpressionEquals implements Expression {
 	private final List<Pair> pairs = new ArrayList<>();
 
-	private static final class Pair {
-		private final Expression left;
-		private final Expression right;
-		private final boolean nullable;
-
-		private Pair(Expression left, Expression right, boolean nullable) {
-			this.left = left;
-			this.right = right;
-			this.nullable = nullable;
-		}
-	}
+	private record Pair(Expression left, Expression right, boolean nullable) {}
 
 	private ExpressionEquals() {
 	}

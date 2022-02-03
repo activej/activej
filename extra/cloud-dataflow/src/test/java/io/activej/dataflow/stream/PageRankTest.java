@@ -18,8 +18,8 @@ import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
-import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
+import io.activej.serializer.annotations.SerializeRecord;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
@@ -27,7 +27,10 @@ import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 import java.net.InetSocketAddress;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
@@ -78,27 +81,14 @@ public class PageRankTest {
 		sortingExecutor.shutdownNow();
 	}
 
-	public static class Page {
-		@Serialize
-		public final long pageId;
-		@Serialize
-		public final long[] links;
-
-		public Page(@Deserialize("pageId") long pageId, @Deserialize("links") long[] links) {
-			this.pageId = pageId;
-			this.links = links;
-		}
+	@SerializeRecord
+	public record Page(long pageId, long[] links) {
 
 		public void disperse(Rank rank, StreamDataAcceptor<Rank> cb) {
 			for (long link : links) {
 				Rank newRank = new Rank(link, rank.value / links.length);
 				cb.accept(newRank);
 			}
-		}
-
-		@Override
-		public String toString() {
-			return "Page{pageId=" + pageId + ", links=" + Arrays.toString(links) + '}';
 		}
 	}
 
@@ -109,33 +99,14 @@ public class PageRankTest {
 		}
 	}
 
-	public static class Rank {
-		@Serialize
-		public final long pageId;
-		@Serialize
-		public final double value;
-
-		public Rank(@Deserialize("pageId") long pageId, @Deserialize("value") double value) {
-			this.pageId = pageId;
-			this.value = value;
-		}
-
-		@Override
-		public String toString() {
-			return "Rank{pageId=" + pageId + ", value=" + value + '}';
-		}
-
+	@SerializeRecord
+	public record Rank(long pageId, double value) {
 		@SuppressWarnings({"SimplifiableIfStatement", "EqualsWhichDoesntCheckParameterClass"})
 		@Override
 		public boolean equals(Object o) {
 			Rank rank = (Rank) o;
 			if (pageId != rank.pageId) return false;
 			return Math.abs(rank.value - value) < 0.001;
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(pageId, value);
 		}
 	}
 

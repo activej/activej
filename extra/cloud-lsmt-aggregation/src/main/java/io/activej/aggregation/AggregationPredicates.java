@@ -34,33 +34,8 @@ import static java.util.Collections.singletonMap;
 public class AggregationPredicates {
 	private static final class E extends Expressions {}
 
-	private static class PredicateSimplifierKey<L extends AggregationPredicate, R extends AggregationPredicate> {
-		private final Class<L> leftType;
-		private final Class<R> rightType;
-
-		private PredicateSimplifierKey(Class<L> leftType, Class<R> rightType) {
-			this.leftType = leftType;
-			this.rightType = rightType;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-
-			PredicateSimplifierKey that = (PredicateSimplifierKey) o;
-
-			if (!leftType.equals(that.leftType)) return false;
-			return rightType.equals(that.rightType);
-
-		}
-
-		@Override
-		public int hashCode() {
-			int result = leftType.hashCode();
-			result = 31 * result + rightType.hashCode();
-			return result;
-		}
+	private record PredicateSimplifierKey<L extends AggregationPredicate, R extends AggregationPredicate>(
+			Class<L> leftType, Class<R> rightType) {
 	}
 
 	@FunctionalInterface

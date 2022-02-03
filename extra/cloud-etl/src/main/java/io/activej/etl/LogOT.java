@@ -50,7 +50,7 @@ public class LogOT {
 					for (String log : intersection) {
 						LogPositionDiff leftPosition = left.getPositions().get(log);
 						LogPositionDiff rightPosition = right.getPositions().get(log);
-						checkArgument(leftPosition.from.equals(rightPosition.from),
+						checkArgument(leftPosition.from().equals(rightPosition.from()),
 								"'From' values should be equal for left and right log positions");
 						comparison += leftPosition.compareTo(rightPosition);
 					}
@@ -65,9 +65,9 @@ public class LogOT {
 						LogPositionDiff positionDiff1 = positions.get(log);
 						LogPositionDiff positionDiff2 = entry.getValue();
 						if (positionDiff1 != null) {
-							checkState(positionDiff1.to.equals(positionDiff2.from),
+							checkState(positionDiff1.to().equals(positionDiff2.from()),
 									"'To' value of the first log position should be equal to 'From' value of the second log position");
-							positionDiff2 = new LogPositionDiff(positionDiff1.from, positionDiff2.to);
+							positionDiff2 = new LogPositionDiff(positionDiff1.from(), positionDiff2.to());
 						}
 						if (!positionDiff2.isEmpty()) {
 							positions.put(log, positionDiff2);

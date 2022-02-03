@@ -21,32 +21,8 @@ import io.activej.crdt.util.CrdtDataSerializer;
 
 import java.lang.reflect.Type;
 
-public final class CrdtDescriptor<K extends Comparable<K>, S> {
-	private final CrdtFunction<S> crdtFunction;
-	private final CrdtDataSerializer<K, S> serializer;
-	private final Type keyManifest;
-	private final Type stateManifest;
-
-	public CrdtDescriptor(CrdtFunction<S> crdtFunction, CrdtDataSerializer<K, S> serializer, Type keyManifest, Type stateManifest) {
-		this.crdtFunction = crdtFunction;
-		this.serializer = serializer;
-		this.keyManifest = keyManifest;
-		this.stateManifest = stateManifest;
-	}
-
-	public CrdtFunction<S> getCrdtFunction() {
-		return crdtFunction;
-	}
-
-	public CrdtDataSerializer<K, S> getSerializer() {
-		return serializer;
-	}
-
-	public Type getKeyManifest() {
-		return keyManifest;
-	}
-
-	public Type getStateManifest() {
-		return stateManifest;
-	}
+public record CrdtDescriptor<K extends Comparable<K>, S>(CrdtFunction<S> crdtFunction,
+                                                         CrdtDataSerializer<K, S> serializer,
+                                                         Type keyManifest,
+                                                         Type stateManifest) {
 }

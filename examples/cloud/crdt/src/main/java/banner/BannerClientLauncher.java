@@ -72,7 +72,7 @@ public final class BannerClientLauncher extends CrdtRpcClientLauncher {
 	private @NotNull Set<Integer> fetchBannerIds(long randomUserId) throws Exception {
 		Set<Integer> fetchedBanners = eventloop.submit(() ->
 				client.<GetRequest, GetResponse>sendRequest(new GetRequest(randomUserId))
-						.map(GetResponse::getBannerIds)
+						.map(GetResponse::bannerIds)
 		).get();
 
 		System.out.println("Fetched banners for user ID [" + randomUserId + "]: " + fetchedBanners);

@@ -74,8 +74,8 @@ public final class UserDaoSql implements UserDao {
 				try (PreparedStatement statement = connection.prepareStatement(
 						"INSERT INTO user(first_name, last_name) VALUES(?, ?)")) {
 
-					statement.setString(1, user.getFirstName());
-					statement.setString(2, user.getLastName());
+					statement.setString(1, user.firstName());
+					statement.setString(2, user.lastName());
 
 					statement.executeUpdate();
 				}
@@ -90,8 +90,8 @@ public final class UserDaoSql implements UserDao {
 				try (PreparedStatement statement = connection.prepareStatement(
 						"UPDATE user SET first_name=?, last_name=? WHERE id=?")) {
 
-					statement.setString(1, newUser.getFirstName());
-					statement.setString(2, newUser.getLastName());
+					statement.setString(1, newUser.firstName());
+					statement.setString(2, newUser.lastName());
 					statement.setLong(3, id);
 
 					return statement.executeUpdate() != 0;

@@ -61,11 +61,11 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 				.map(POST, "/", request -> request.loadBody()
 						.map(body -> {
 							try {
-								K key = fromJson(descriptor.getKeyManifest(), body);
+								K key = fromJson(descriptor.keyManifest(), body);
 								S state = client.get(key);
 								if (state != null) {
 									return HttpResponse.ok200()
-											.withBody(toJson(descriptor.getStateManifest(), state));
+											.withBody(toJson(descriptor.stateManifest(), state));
 								}
 								return HttpResponse.ofCode(404)
 										.withBody(("Key '" + key + "' not found").getBytes(UTF_8));
@@ -85,7 +85,7 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 				.map(DELETE, "/", request -> request.loadBody()
 						.map(body -> {
 							try {
-								K key = fromJson(descriptor.getKeyManifest(), body);
+								K key = fromJson(descriptor.keyManifest(), body);
 								if (client.remove(key)) {
 									return HttpResponse.ok200();
 								}

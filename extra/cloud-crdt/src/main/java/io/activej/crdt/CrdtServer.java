@@ -99,7 +99,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer
 								.whenResult(messaging::close);
 					}
 					if (msg instanceof Download) {
-						return storage.download(((Download) msg).getToken())
+						return storage.download(((Download) msg).token())
 								.whenResult(() -> messaging.send(DOWNLOAD_STARTED))
 								.then(supplier -> supplier
 										.transformWith(ChannelSerializer.create(serializer))

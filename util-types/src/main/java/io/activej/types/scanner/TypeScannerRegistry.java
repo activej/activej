@@ -255,15 +255,7 @@ public final class TypeScannerRegistry<R> {
 	private @Nullable Mapping<R> mappingFn = null;
 	private final List<MappingEntry<R>> entries = new ArrayList<>();
 
-	private static final class MappingEntry<R> {
-		final Type type;
-		final Mapping<R> fn;
-
-		private MappingEntry(Type type, Mapping<R> fn) {
-			this.type = type;
-			this.fn = fn;
-		}
-	}
+	private record MappingEntry<R>(Type type, Mapping<R> fn) {}
 
 	private TypeScannerRegistry() {
 	}

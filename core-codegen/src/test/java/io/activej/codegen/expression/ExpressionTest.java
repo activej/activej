@@ -72,56 +72,8 @@ public class ExpressionTest {
 		}
 	}
 
-	public static class TestPojo2 {
-		public final String property1;
-		public final int property2;
-		public final long property3;
-		public final float property4;
-		public final int property5;
-		public final double property6;
-		public final String property7;
-
-		public TestPojo2(String property1, int property2, long property3, float property4, int property5, double property6, String property7) {
-			this.property1 = property1;
-			this.property2 = property2;
-			this.property3 = property3;
-			this.property4 = property4;
-			this.property5 = property5;
-			this.property6 = property6;
-			this.property7 = property7;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-
-			TestPojo2 testPojo2 = (TestPojo2) o;
-
-			if (property2 != testPojo2.property2) return false;
-			if (property3 != testPojo2.property3) return false;
-			if (Float.compare(testPojo2.property4, property4) != 0) return false;
-			if (property5 != testPojo2.property5) return false;
-			if (Double.compare(testPojo2.property6, property6) != 0) return false;
-			if (!Objects.equals(property1, testPojo2.property1)) return false;
-			return Objects.equals(property7, testPojo2.property7);
-
-		}
-
-		@Override
-		public int hashCode() {
-			int result;
-			long temp;
-			result = property1 != null ? property1.hashCode() : 0;
-			result = 31 * result + property2;
-			result = 31 * result + (int) (property3 ^ (property3 >>> 32));
-			result = 31 * result + (property4 != 0.0f ? Float.floatToIntBits(property4) : 0);
-			result = 31 * result + property5;
-			temp = Double.doubleToLongBits(property6);
-			result = 31 * result + (int) (temp ^ (temp >>> 32));
-			result = 31 * result + (property7 != null ? property7.hashCode() : 0);
-			return result;
-		}
+	public record TestPojo2(String property1, int property2, long property3, float property4, int property5,
+	                        double property6, String property7) {
 	}
 
 	public interface Test2 {
@@ -646,37 +598,7 @@ public class ExpressionTest {
 		assertTrue(testCompare.compareObjectNE(5, -5));
 	}
 
-	public static class StringHolder {
-		public final String string1;
-		public final String string2;
-
-		public StringHolder(String string1, String string2) {
-			this.string1 = string1;
-			this.string2 = string2;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			StringHolder that = (StringHolder) o;
-			return Objects.equals(string1, that.string1) &&
-					Objects.equals(string2, that.string2);
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(string1, string2);
-		}
-
-		@Override
-		public String toString() {
-			return "StringHolder{" +
-					"string1='" + string1 + '\'' +
-					", string2='" + string2 + '\'' +
-					'}';
-		}
-	}
+	public record StringHolder(String string1, String string2) {}
 
 	public static class StringHolderComparator implements Comparator<StringHolder> {
 		public int compare(StringHolder var1, StringHolder var2) {

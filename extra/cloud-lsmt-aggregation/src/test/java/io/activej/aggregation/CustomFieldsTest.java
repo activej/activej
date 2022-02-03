@@ -47,23 +47,9 @@ public class CustomFieldsTest {
 	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	@Measures("eventCount")
-	public static class EventRecord {
-		// dimensions
-		@Key
-		public final int siteId;
-
-		// measures
-		@Measures({"sumRevenue", "minRevenue", "maxRevenue"})
-		public final double revenue;
-
-		@Measures({"uniqueUserIds", "estimatedUniqueUserIdCount"})
-		public final long userId;
-
-		public EventRecord(int siteId, double revenue, long userId) {
-			this.siteId = siteId;
-			this.revenue = revenue;
-			this.userId = userId;
-		}
+	public record EventRecord(@Key int siteId,
+	                          @Measures({"sumRevenue", "minRevenue", "maxRevenue"}) double revenue,
+	                          @Measures({"uniqueUserIds", "estimatedUniqueUserIdCount"}) long userId) {
 	}
 
 	public static class QueryResult {

@@ -2,14 +2,7 @@ package adder;
 
 import io.activej.crdt.primitives.CrdtMergable;
 
-public final class SimpleSumsCrdtState implements CrdtMergable<SimpleSumsCrdtState> {
-	private final float localSum;
-	private final float otherSum;
-
-	private SimpleSumsCrdtState(float localSum, float otherSum) {
-		this.localSum = localSum;
-		this.otherSum = otherSum;
-	}
+public record SimpleSumsCrdtState(float localSum, float otherSum) implements CrdtMergable<SimpleSumsCrdtState> {
 
 	public static SimpleSumsCrdtState of(float localSum) {
 		return new SimpleSumsCrdtState(localSum, 0);
@@ -21,14 +14,6 @@ public final class SimpleSumsCrdtState implements CrdtMergable<SimpleSumsCrdtSta
 
 	public float value() {
 		return localSum + otherSum;
-	}
-
-	public float getLocalSum() {
-		return localSum;
-	}
-
-	public float getOtherSum() {
-		return otherSum;
 	}
 
 	@Override

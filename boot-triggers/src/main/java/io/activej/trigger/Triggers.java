@@ -49,29 +49,7 @@ public final class Triggers implements ConcurrentJmxBean, WithInitializer<Trigge
 		return new Triggers();
 	}
 
-	private static final class TriggerKey {
-		private final String component;
-		private final String name;
-
-		private TriggerKey(String component, String name) {
-			this.component = component;
-			this.name = name;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			TriggerKey that = (TriggerKey) o;
-			return Objects.equals(component, that.component) &&
-					Objects.equals(name, that.name);
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(component, name);
-		}
-	}
+	private record TriggerKey(String component, String name) {}
 
 	private final Map<Trigger, TriggerResult> suppressedResults = new LinkedHashMap<>();
 	private final Map<Trigger, TriggerResult> cachedResults = new LinkedHashMap<>();

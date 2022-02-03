@@ -57,21 +57,9 @@ public final class ScopeExample {
 	@interface HttpScope {
 	}
 
-	static class HttpRequest {
-		final String ping;
+	record HttpRequest(String ping) {}
 
-		HttpRequest(String ping) {
-			this.ping = ping;
-		}
-	}
-
-	static class HttpResponse {
-		final String pong;
-
-		HttpResponse(String pong) {
-			this.pong = pong;
-		}
-	}
+	record HttpResponse(String pong) {}
 
 	static class HttpModule extends AbstractModule {
 

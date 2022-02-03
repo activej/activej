@@ -292,17 +292,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 		};
 	}
 
-	static class CrdtReducingData<K extends Comparable<K>, S> {
-		final K key;
-		final @Nullable S state;
-		final long timestamp;
-
-		CrdtReducingData(K key, @Nullable S state, long timestamp) {
-			this.key = key;
-			this.state = state;
-			this.timestamp = timestamp;
-		}
-
+	record CrdtReducingData<K extends Comparable<K>, S>(K key, @Nullable S state, long timestamp) {
 		static <K extends Comparable<K>, S> CrdtReducingData<K, S> ofData(CrdtData<K, S> data) {
 			return new CrdtReducingData<>(data.getKey(), data.getState(), data.getTimestamp());
 		}
@@ -325,15 +315,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 		}
 	}
 
-	static class CrdtEntry<S> {
-		final S state;
-		final long timestamp;
-
-		CrdtEntry(S state, long timestamp) {
-			this.state = state;
-			this.timestamp = timestamp;
-		}
-	}
+	record CrdtEntry<S>(S state, long timestamp) {}
 
 	class CrdtReducer implements StreamReducers.Reducer<K, CrdtReducingData<K, S>, CrdtReducingData<K, S>, CrdtAccumulator<S>> {
 		final boolean includeTombstones;

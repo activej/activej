@@ -2,8 +2,7 @@ package io.activej.rpc.protocol;
 
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerBuilder;
-import io.activej.serializer.annotations.Deserialize;
-import io.activej.serializer.annotations.Serialize;
+import io.activej.serializer.annotations.SerializeRecord;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import org.junit.ClassRule;
@@ -17,33 +16,11 @@ import static org.junit.Assert.assertTrue;
 
 public final class RpcMessageSerializeTest {
 
-	public static class TestRpcMessageData {
-		private final String s;
+	@SerializeRecord
+	public record TestRpcMessageData(String s) {}
 
-		public TestRpcMessageData(@Deserialize("s") String s) {
-			this.s = s;
-		}
-
-		@Serialize
-		public String getS() {
-			return s;
-		}
-
-	}
-
-	public static class TestRpcMessageData2 {
-		private final int i;
-
-		public TestRpcMessageData2(@Deserialize("i") int i) {
-			this.i = i;
-		}
-
-		@Serialize
-		public int getI() {
-			return i;
-		}
-
-	}
+	@SerializeRecord
+	public record TestRpcMessageData2(int i) {}
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
@@ -65,6 +42,6 @@ public final class RpcMessageSerializeTest {
 		assertEquals(message1.getCookie(), message2.getCookie());
 		assertTrue(message2.getData() instanceof TestRpcMessageData);
 		TestRpcMessageData messageData2 = (TestRpcMessageData) message2.getData();
-		assertEquals(messageData1.getS(), messageData2.getS());
+		assertEquals(messageData1.s, messageData2.s);
 	}
 }

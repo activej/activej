@@ -24,40 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class CubeClassLoaderCache implements CubeClassLoaderCacheMBean, WithInitializer<CubeClassLoaderCache> {
-	static final class Key {
-		final Set<String> attributes;
-		final Set<String> measures;
-		final Set<String> filterDimensions;
-
-		Key(Set<String> attributes, Set<String> measures, Set<String> filterDimensions) {
-			this.attributes = attributes;
-			this.measures = measures;
-			this.filterDimensions = filterDimensions;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			Key that = (Key) o;
-			return attributes.equals(that.attributes) &&
-					measures.equals(that.measures) &&
-					filterDimensions.equals(that.filterDimensions);
-		}
-
-		@Override
-		public int hashCode() {
-			int result = attributes.hashCode();
-			result = 31 * result + measures.hashCode();
-			result = 31 * result + filterDimensions.hashCode();
-			return result;
-		}
-
-		@Override
-		public String toString() {
-			return "{" + attributes + ", " + measures + ", " + filterDimensions + '}';
-		}
-	}
+	record Key(Set<String> attributes, Set<String> measures, Set<String> filterDimensions) {}
 
 	private final DefiningClassLoader rootClassLoader;
 	private final LinkedHashMap<Key, DefiningClassLoader> cache = new LinkedHashMap<>(16, 0.75f, false) {

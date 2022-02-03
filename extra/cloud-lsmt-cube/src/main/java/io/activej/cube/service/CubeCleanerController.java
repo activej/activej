@@ -157,15 +157,7 @@ public final class CubeCleanerController<K, D, C> implements EventloopJmxBeanWit
 				.whenComplete(toLogger(logger, thisMethod(), frozenCut));
 	}
 
-	private static class Tuple<K, D, C> {
-		final Set<C> collectedChunks;
-		final OTCommit<K, D> lastSnapshot;
-
-		Tuple(Set<C> collectedChunks, OTCommit<K, D> lastSnapshot) {
-			this.collectedChunks = collectedChunks;
-			this.lastSnapshot = lastSnapshot;
-		}
-	}
+	private record Tuple<K, D, C>(Set<C> collectedChunks, OTCommit<K, D> lastSnapshot) {}
 
 	private Promise<Void> trySaveSnapshotAndCleanupChunks(K checkpointNode) {
 		//noinspection OptionalGetWithoutIsPresent

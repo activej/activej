@@ -219,39 +219,13 @@ public class AddedMeasuresTest {
 	}
 
 	@Measures("eventCount")
-	public static class EventRecord {
-		// dimensions
-		@Key
-		public final int siteId;
-
-		// measures
-		@Measures({"sumRevenue", "minRevenue", "maxRevenue"})
-		public final double revenue;
-
-		public EventRecord(int siteId, double revenue) {
-			this.siteId = siteId;
-			this.revenue = revenue;
-		}
+	public record EventRecord(@Key int siteId,
+	                          @Measures({"sumRevenue", "minRevenue", "maxRevenue"}) double revenue) {
 	}
 
 	@Measures("eventCount")
-	public static class EventRecord2 {
-		// dimensions
-		@Key
-		public final int siteId;
-
-		// measures
-		@Measures({"sumRevenue", "minRevenue", "maxRevenue"})
-		public final double revenue;
-
-		// added measures
-		@Measures({"uniqueUserIds", "estimatedUniqueUserIdCount"})
-		public final long userId;
-
-		public EventRecord2(int siteId, double revenue, long userId) {
-			this.siteId = siteId;
-			this.revenue = revenue;
-			this.userId = userId;
-		}
+	public record EventRecord2(@Key int siteId,
+	                           @Measures({"sumRevenue", "minRevenue", "maxRevenue"}) double revenue,
+	                           @Measures({"uniqueUserIds", "estimatedUniqueUserIdCount"}) long userId) {
 	}
 }

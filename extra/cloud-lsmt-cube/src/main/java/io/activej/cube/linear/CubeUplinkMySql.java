@@ -536,7 +536,7 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 		Map<String, LogPosition> result = new HashMap<>();
 		for (LogDiff<CubeDiff> logDiff : diffsList) {
 			for (Map.Entry<String, LogPositionDiff> entry : logDiff.getPositions().entrySet()) {
-				result.put(entry.getKey(), entry.getValue().to);
+				result.put(entry.getKey(), entry.getValue().to());
 			}
 		}
 		return result;

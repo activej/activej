@@ -194,10 +194,10 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 		List<AttributeDescriptor> attrDescriptors = fetchAttributeDescriptors(clazz, customTypes);
 		List<AttributeNode> attrNodes = new ArrayList<>();
 		for (AttributeDescriptor descriptor : attrDescriptors) {
-			checkNotNull(descriptor.getGetter(), "@JmxAttribute \"%s\" does not have getter", descriptor.getName());
+			checkNotNull(descriptor.getter(), "@JmxAttribute \"%s\" does not have getter", descriptor.name());
 
 			String attrName;
-			Method attrGetter = descriptor.getGetter();
+			Method attrGetter = descriptor.getter();
 			JmxAttribute attrAnnotation = attrGetter.getAnnotation(JmxAttribute.class);
 			String attrAnnotationName = attrAnnotation.name();
 			if (attrAnnotationName.equals(JmxAttribute.USE_GETTER_NAME)) {
@@ -216,7 +216,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			includedOptionals.remove(attrName);
 
 			Type type = attrGetter.getGenericReturnType();
-			Method attrSetter = descriptor.getSetter();
+			Method attrSetter = descriptor.setter();
 			AttributeNode attrNode = createAttributeNodeFor(attrName, attrDescription, type, included,
 					attrAnnotation, attrGetter, attrSetter, beanClass,
 					customTypes);
@@ -270,12 +270,12 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 		if (nameToAttr.containsKey(name)) {
 			AttributeDescriptor previousDescriptor = nameToAttr.get(name);
 
-			checkArgument(previousDescriptor.getGetter() == null,
+			checkArgument(previousDescriptor.getter() == null,
 					"More than one getter with name \"%s\"", getter.getName());
-			checkArgument(previousDescriptor.getType().equals(attrType),
+			checkArgument(previousDescriptor.type().equals(attrType),
 					"Getter with name \"%s\" has different type than appropriate setter", getter.getName());
 
-			nameToAttr.put(name, new AttributeDescriptor(name, attrType, getter, previousDescriptor.getSetter()));
+			nameToAttr.put(name, new AttributeDescriptor(name, attrType, getter, previousDescriptor.setter()));
 		} else {
 			nameToAttr.put(name, new AttributeDescriptor(name, attrType, getter, null));
 		}
@@ -291,13 +291,13 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 		if (nameToAttr.containsKey(name)) {
 			AttributeDescriptor previousDescriptor = nameToAttr.get(name);
 
-			checkArgument(previousDescriptor.getSetter() == null,
+			checkArgument(previousDescriptor.setter() == null,
 					"More than one setter with name \"%s\"", setter.getName());
-			checkArgument(previousDescriptor.getType().equals(attrType),
+			checkArgument(previousDescriptor.type().equals(attrType),
 					"Setter with name \"%s\" has different type than appropriate getter", setter.getName());
 
 			nameToAttr.put(name, new AttributeDescriptor(
-					name, attrType, previousDescriptor.getGetter(), setter));
+					name, attrType, previousDescriptor.getter(), setter));
 		} else {
 			nameToAttr.put(name, new AttributeDescriptor(name, attrType, null, setter));
 		}
@@ -703,49 +703,9 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 	// endregion
 
 	// region helper classes
-	private static final class AttributeDescriptor {
-		private final String name;
-		private final Type type;
-		private final Method getter;
-		private final Method setter;
+	private record AttributeDescriptor(String name, Type type, Method getter, Method setter) {}
 
-		public AttributeDescriptor(String name, Type type, @Nullable Method getter, @Nullable Method setter) {
-			this.name = name;
-			this.type = type;
-			this.getter = getter;
-			this.setter = setter;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public Type getType() {
-			return type;
-		}
-
-		public @Nullable Method getGetter() {
-			return getter;
-		}
-
-		public @Nullable Method getSetter() {
-			return setter;
-		}
-	}
-
-	private static final class OperationKey {
-		private final String name;
-		private final String[] argTypes;
-
-		public OperationKey(@NotNull String name, String[] argTypes) {
-			this.name = name;
-			this.argTypes = argTypes;
-		}
-
-		public String getName() {
-			return name;
-		}
-
+	private record OperationKey(String name, String[] argTypes) {
 		@Override
 		public boolean equals(Object o) {
 			if (this == o) return true;
