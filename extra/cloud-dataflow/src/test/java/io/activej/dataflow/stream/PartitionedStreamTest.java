@@ -523,7 +523,7 @@ public final class PartitionedStreamTest {
 			}
 		}
 		Path path = serverFsPath.resolve(SOURCE_FILENAME);
-		Files.write(path, stringBuilder.toString().getBytes(UTF_8));
+		Files.writeString(path, stringBuilder.toString());
 	}
 
 	private List<DataflowServer> launchDataflowServers(int nPartitions) {

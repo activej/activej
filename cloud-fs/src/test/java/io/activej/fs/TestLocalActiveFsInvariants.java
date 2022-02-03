@@ -39,7 +39,6 @@ import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.fs.Utils.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -120,7 +119,7 @@ public final class TestLocalActiveFsInvariants {
 			for (String path : paths) {
 				Path file = firstPath.resolve(path);
 				Files.createDirectories(file.getParent());
-				Files.write(file, String.format("This is contents of file %s", file).getBytes(UTF_8), CREATE, TRUNCATE_EXISTING);
+				Files.writeString(file, String.format("This is contents of file %s", file), CREATE, TRUNCATE_EXISTING);
 
 				Path copyOfFile = secondPath.resolve(path);
 				Files.createDirectories(copyOfFile.getParent());

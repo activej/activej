@@ -20,7 +20,6 @@ import java.util.function.UnaryOperator;
 
 import static io.activej.common.Utils.first;
 import static io.activej.fs.Utils.*;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -94,7 +93,7 @@ public final class TestLocalBlockingFsInvariants {
 			for (String path : paths) {
 				Path file = firstPath.resolve(path);
 				Files.createDirectories(file.getParent());
-				Files.write(file, String.format("This is contents of file %s", file).getBytes(UTF_8), CREATE, TRUNCATE_EXISTING);
+				Files.writeString(file, String.format("This is contents of file %s", file), CREATE, TRUNCATE_EXISTING);
 
 				Path copyOfFile = secondPath.resolve(path);
 				Files.createDirectories(copyOfFile.getParent());
