@@ -224,7 +224,7 @@ public final class TestClusterDeadPartitionCheck {
 												assertTrue(files.size() <= 1);
 												return files.stream();
 											})
-											.collect(toList());
+											.toList();
 
 									// temporary files are created
 									assertEquals(fs.getUploadTargetsMax(), allFiles.size());

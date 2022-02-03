@@ -22,7 +22,6 @@ import io.activej.cube.Cube;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static io.activej.common.Utils.not;
 
@@ -41,7 +40,7 @@ public interface MeasuresValidator {
 			Set<String> allowedMeasures = aggregation.getMeasureTypes().keySet();
 			List<String> unknownMeasures = measures.stream()
 					.filter(not(allowedMeasures::contains))
-					.collect(Collectors.toList());
+					.toList();
 			if (!unknownMeasures.isEmpty()) {
 				throw new MalformedDataException(String.format("Unknown measures %s in aggregation '%s'", unknownMeasures, aggregationId));
 			}

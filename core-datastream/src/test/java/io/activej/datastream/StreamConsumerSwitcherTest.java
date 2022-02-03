@@ -18,7 +18,6 @@ import static io.activej.datastream.TestUtils.assertClosedWithError;
 import static io.activej.datastream.TestUtils.assertEndOfStream;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.*;
 
 public class StreamConsumerSwitcherTest {
@@ -30,7 +29,7 @@ public class StreamConsumerSwitcherTest {
 	public void testSwitching() {
 		List<StreamConsumerToList<Integer>> consumers = IntStream.range(0, 10)
 				.mapToObj($ -> StreamConsumerToList.<Integer>create())
-				.collect(toList());
+				.toList();
 		StreamConsumerSwitcher<Integer> switcher = StreamConsumerSwitcher.create();
 
 		AbstractStreamSupplier<Integer> streamSupplier = new AbstractStreamSupplier<>() {

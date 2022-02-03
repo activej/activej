@@ -20,7 +20,6 @@ import java.util.stream.Stream;
 
 import static banner.BannerCommands.*;
 import static banner.BannerServerLauncher.MESSAGE_TYPES;
-import static java.util.stream.Collectors.toList;
 
 public final class BannerClientLauncher extends CrdtRpcClientLauncher {
 	public static final int USER_IDS_SIZE = 100;
@@ -30,7 +29,7 @@ public final class BannerClientLauncher extends CrdtRpcClientLauncher {
 	private static final List<Long> USER_IDS = Stream.generate(() -> RANDOM.nextLong(10L * USER_IDS_SIZE))
 			.distinct()
 			.limit(USER_IDS_SIZE)
-			.collect(toList());
+			.toList();
 
 	private final Map<Long, Set<Integer>> controlMap = new TreeMap<>();
 

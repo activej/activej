@@ -246,7 +246,7 @@ final class AttributeNodeForPojo implements AttributeNode {
 
 	@Override
 	public void setAttribute(@NotNull String attrName, @NotNull Object value, @NotNull List<?> targets) throws SetterException {
-		List<?> notNullTargets = targets.stream().filter(Objects::nonNull).collect(Collectors.toList());
+		List<?> notNullTargets = targets.stream().filter(Objects::nonNull).toList();
 		if (notNullTargets.isEmpty()) {
 			return;
 		}

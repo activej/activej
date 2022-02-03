@@ -27,7 +27,6 @@ import java.util.List;
 
 import static java.lang.System.currentTimeMillis;
 import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
 
 public final class MBeanFormat {
 
@@ -48,7 +47,7 @@ public final class MBeanFormat {
 
 	public static String formatListAsMultilineString(@Nullable List<?> list) {
 		if (list == null || list.isEmpty()) return "";
-		List<String> strings = list.stream().map(Object::toString).collect(toList());
+		List<String> strings = list.stream().map(Object::toString).toList();
 		return (strings.stream().anyMatch(s -> s.contains("\n")) ?
 				strings.stream().map(s -> s + "\n") :
 				strings.stream())

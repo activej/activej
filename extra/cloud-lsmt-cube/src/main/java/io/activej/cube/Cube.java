@@ -703,14 +703,14 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 			Collection<String> storedMeasures,
 			AggregationPredicate where) {
 		where = where.simplify();
-		List<String> allDimensions = Stream.concat(dimensions.stream(), where.getDimensions().stream()).collect(toList());
+		List<String> allDimensions = Stream.concat(dimensions.stream(), where.getDimensions().stream()).toList();
 
 		List<AggregationContainer> compatibleAggregations = new ArrayList<>();
 		for (AggregationContainer aggregationContainer : aggregations.values()) {
 			List<String> keys = aggregationContainer.aggregation.getKeys();
 			if (!keys.containsAll(allDimensions)) continue;
 
-			List<String> compatibleMeasures = storedMeasures.stream().filter(aggregationContainer.measures::contains).collect(toList());
+			List<String> compatibleMeasures = storedMeasures.stream().filter(aggregationContainer.measures::contains).toList();
 			if (compatibleMeasures.isEmpty()) continue;
 			AggregationPredicate intersection = AggregationPredicates.and(where, aggregationContainer.predicate).simplify();
 

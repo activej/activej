@@ -386,7 +386,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 				return successes;
 			}
 
-			List<Exception> exceptions = tries.stream().filter(Try::isException).map(Try::getException).collect(toList());
+			List<Exception> exceptions = tries.stream().filter(Try::isException).map(Try::getException).toList();
 			if (!exceptions.isEmpty()) {
 				Exception exception = exceptions.get(0);
 				if (exceptions.stream().skip(1).allMatch(e -> e == exception)) {

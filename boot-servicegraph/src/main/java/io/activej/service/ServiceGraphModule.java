@@ -445,7 +445,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 
 			Set<Key<?>> added = addedDependencies.getOrDefault(key, Set.of());
 			for (Key<?> k : added) {
-				List<ServiceKey> found = instances.keySet().stream().filter(s -> s.getKey().equals(k)).collect(toList());
+				List<ServiceKey> found = instances.keySet().stream().filter(s -> s.getKey().equals(k)).toList();
 				if (found.isEmpty()) {
 					throw new IllegalArgumentException("Did not find an instance for the added dependency " + key.getDisplayString());
 				}
