@@ -81,7 +81,7 @@ public final class DebugStacktraceRenderer {
 		StringWriter writer = new StringWriter();
 		e.printStackTrace(new PrintWriter(writer));
 		Matcher matcher = STACK_TRACE_ELEMENT.matcher(writer.toString());
-		StringBuffer stacktrace = new StringBuffer();
+		StringBuilder stacktrace = new StringBuilder();
 		while (matcher.find()) {
 			String cls = matcher.group(2);
 			String quotedFile = Matcher.quoteReplacement(cls.substring(0, cls.length() - 1).replace('.', '/').replaceAll("\\$.*(?:\\.|$)", ""));
