@@ -12,7 +12,6 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static io.activej.crdt.function.CrdtFunction.ignoringTimestamp;
@@ -39,8 +38,7 @@ public final class RepartitionTest {
 		String localPartitionId = "client_0";
 		long now = Eventloop.getCurrentEventloop().currentTimeMillis();
 		List<CrdtData<String, Integer>> data = IntStream.range(1, 100)
-				.mapToObj(i -> new CrdtData<>("test" + i, now, i))
-				.collect(Collectors.toList());
+				.mapToObj(i -> new CrdtData<>("test" + i, now, i)).toList();
 		await(StreamSupplier.ofIterator(data.iterator())
 				.streamTo(StreamConsumer.ofPromise(clients.get(localPartitionId).upload())));
 
@@ -60,7 +58,7 @@ public final class RepartitionTest {
 		clients.values().forEach(v -> v.iterator()
 				.forEachRemaining(x -> result.compute(x, ($, count) -> count == null ? 1 : (count + 1))));
 
-		assertEquals(new HashSet<>(data), result.keySet());
+		assertEquals(Set.copyOf(data), result.keySet());
 		for (Integer count : result.values()) {
 			assertEquals(replicationCount, count.intValue());
 		}

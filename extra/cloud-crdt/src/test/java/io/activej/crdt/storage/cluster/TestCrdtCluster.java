@@ -95,7 +95,7 @@ public final class TestCrdtCluster {
 		remoteStorages.values().forEach(v -> v.iterator()
 				.forEachRemaining(x -> result.compute(x, ($, count) -> count == null ? 1 : (count + 1))));
 
-		assertEquals(new HashSet<>(data), result.keySet());
+		assertEquals(Set.copyOf(data), result.keySet());
 		for (Integer count : result.values()) {
 			assertEquals(REPLICATION_COUNT, count.intValue());
 		}
@@ -121,9 +121,9 @@ public final class TestCrdtCluster {
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
 			CrdtStorageMap<String, Set<Integer>> storage = CrdtStorageMap.create(eventloop, union);
 
-			storage.put(key1, new HashSet<>(Set.of(i)));
-			storage.put(key2, new HashSet<>(Set.of(i / 2)));
-			storage.put(key3, new HashSet<>(Set.of(123)));
+			storage.put(key1, Set.of(i));
+			storage.put(key2, Set.of(i / 2));
+			storage.put(key3, Set.of(123));
 
 			InetSocketAddress address = new InetSocketAddress(getFreePort());
 			CrdtServer<String, Set<Integer>> server = CrdtServer.create(eventloop, storage, serializer);

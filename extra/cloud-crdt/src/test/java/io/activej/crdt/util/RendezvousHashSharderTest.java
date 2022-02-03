@@ -36,7 +36,7 @@ public class RendezvousHashSharderTest {
 				.flatMap(Collection::stream)
 				.collect(toSet());
 
-		assertEquals(new HashSet<>(partitionsWithIndexes.values()), allSharded);
+		assertEquals(Set.copyOf(partitionsWithIndexes.values()), allSharded);
 
 		alive.remove("five");
 		int fiveId = partitionsWithIndexes.remove("five");
@@ -65,7 +65,7 @@ public class RendezvousHashSharderTest {
 				.flatMap(Collection::stream)
 				.collect(toSet());
 
-		assertEquals(new HashSet<>(partitionsWithIndexes.values()), allSharded);
+		assertEquals(Set.copyOf(partitionsWithIndexes.values()), allSharded);
 
 		alive.remove("four");
 

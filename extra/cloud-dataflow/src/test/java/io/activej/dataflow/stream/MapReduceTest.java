@@ -24,10 +24,7 @@ import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 import java.net.InetSocketAddress;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
@@ -159,10 +156,10 @@ public class MapReduceTest {
 
 		System.out.println(resultConsumer.getList());
 
-		assertEquals(new HashSet<>(List.of(
+		assertEquals(Set.of(
 				new StringCount("cat", 3),
 				new StringCount("dog", 2),
-				new StringCount("horse", 1))), new HashSet<>(resultConsumer.getList()));
+				new StringCount("horse", 1)), new HashSet<>(resultConsumer.getList()));
 	}
 
 	public static class StringReducer extends ReducerToAccumulator<String, StringCount, StringCount> {

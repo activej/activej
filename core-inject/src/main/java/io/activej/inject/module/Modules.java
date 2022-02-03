@@ -170,7 +170,7 @@ public final class Modules {
 	}
 
 	public static Module restrict(Module module, Key<?>... exports) {
-		return restrict(module, new HashSet<>(List.of(exports)));
+		return restrict(module, Set.of(exports));
 	}
 
 	public static Module restrict(Module module, Set<Key<?>> exports) {
