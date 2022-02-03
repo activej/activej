@@ -85,10 +85,30 @@ public final class SimpleProxyServerTest {
 		socket.connect(new InetSocketAddress("localhost", proxyServerPort));
 		OutputStream stream = socket.getOutputStream();
 
-		stream.write(encodeAscii("GET /abc HTTP/1.1\r\nHost: localhost\r\nConnection: keep-alive\n\r\n"));
-		readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 15\r\n\r\nFORWARDED: /abc");
-		stream.write(encodeAscii("GET /hello HTTP/1.1\r\nHost: localhost\r\nConnection: close\n\r\n"));
-		readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 17\r\n\r\nFORWARDED: /hello");
+		stream.write(encodeAscii("""
+				GET /abc HTTP/1.1\r
+				Host: localhost\r
+				Connection: keep-alive
+				\r
+				"""));
+		readAndAssert(socket.getInputStream(), """
+				HTTP/1.1 200 OK\r
+				Connection: keep-alive\r
+				Content-Length: 15\r
+				\r
+				FORWARDED: /abc""");
+		stream.write(encodeAscii("""
+				GET /hello HTTP/1.1\r
+				Host: localhost\r
+				Connection: close
+				\r
+				"""));
+		readAndAssert(socket.getInputStream(), """
+				HTTP/1.1 200 OK\r
+				Connection: close\r
+				Content-Length: 17\r
+				\r
+				FORWARDED: /hello""");
 
 		httpClient.getEventloop().execute(httpClient::stop);
 

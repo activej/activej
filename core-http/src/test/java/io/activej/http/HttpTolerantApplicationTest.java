@@ -57,12 +57,40 @@ public final class HttpTolerantApplicationTest {
 		Socket socket = new Socket();
 
 		socket.connect(new InetSocketAddress("localhost", port));
-		write(socket, "GET /abc  HTTP/1.1\nHost: \tlocalhost\n\n");
-		readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 4\r\n\r\n/abc");
-		write(socket, "GET /abc  HTTP/1.0\nHost: \tlocalhost \t \nConnection: keep-alive\n\n");
-		readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 4\r\n\r\n/abc");
-		write(socket, "GET /abc  HTTP/1.0\nHost: \tlocalhost \t \n\n");
-		readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 4\r\n\r\n/abc");
+		write(socket, """
+				GET /abc  HTTP/1.1
+				Host: \tlocalhost
+
+				""");
+		readAndAssert(socket.getInputStream(), """
+				HTTP/1.1 200 OK\r
+				Connection: keep-alive\r
+				Content-Length: 4\r
+				\r
+				/abc""");
+		write(socket, """
+				GET /abc  HTTP/1.0
+				Cost: \tlocalhost \t\s
+				Connection: keep-alive
+
+				""");
+		readAndAssert(socket.getInputStream(), """
+				HTTP/1.1 200 OK\r
+				Connection: keep-alive\r
+				Content-Length: 4\r
+				\r
+				/abc""");
+		write(socket, """
+				GET /abc  HTTP/1.0
+				Cost: \tlocalhost \t\s
+
+				""");
+		readAndAssert(socket.getInputStream(), """
+				HTTP/1.1 200 OK\r
+				Connection: close\r
+				Content-Length: 4\r
+				\r
+				/abc""");
 		assertEquals(0, toByteArray(socket.getInputStream()).length);
 		socket.close();
 

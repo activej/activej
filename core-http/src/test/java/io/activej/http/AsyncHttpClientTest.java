@@ -56,14 +56,14 @@ public final class AsyncHttpClientTest {
 
 	public void startServer() throws IOException {
 		AsyncHttpServer.create(Eventloop.getCurrentEventloop(),
-				request -> HttpResponse.ok200()
-						.withBodyStream(ChannelSupplier.ofStream(
-								IntStream.range(0, HELLO_WORLD.length)
-										.mapToObj(idx -> {
-											ByteBuf buf = ByteBufPool.allocate(1);
-											buf.put(HELLO_WORLD[idx]);
-											return buf;
-										}))))
+						request -> HttpResponse.ok200()
+								.withBodyStream(ChannelSupplier.ofStream(
+										IntStream.range(0, HELLO_WORLD.length)
+												.mapToObj(idx -> {
+													ByteBuf buf = ByteBufPool.allocate(1);
+													buf.put(HELLO_WORLD[idx]);
+													return buf;
+												}))))
 				.withListenPort(port)
 				.withAcceptOnce()
 				.listen();
@@ -109,10 +109,10 @@ public final class AsyncHttpClientTest {
 	@Test
 	public void testEmptyLineResponse() throws IOException {
 		SimpleServer.create(socket ->
-				socket.read()
-						.whenResult(ByteBuf::recycle)
-						.then(() -> socket.write(wrapAscii("\r\n")))
-						.whenComplete(socket::close))
+						socket.read()
+								.whenResult(ByteBuf::recycle)
+								.then(() -> socket.write(wrapAscii("\r\n")))
+								.whenComplete(socket::close))
 				.withListenPort(port)
 				.withAcceptOnce()
 				.listen();
@@ -131,7 +131,7 @@ public final class AsyncHttpClientTest {
 		List<SettablePromise<HttpResponse>> responses = new ArrayList<>();
 
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
-				request -> Promise.ofCallback(responses::add))
+						request -> Promise.ofCallback(responses::add))
 				.withListenPort(port);
 
 		server.listen();
@@ -144,11 +144,11 @@ public final class AsyncHttpClientTest {
 				.withInspector(inspector);
 
 		Exception e = awaitException(Promises.all(
-				httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)),
-				httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)),
-				httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)),
-				httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)),
-				httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)))
+						httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)),
+						httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)),
+						httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)),
+						httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)),
+						httpClient.request(HttpRequest.get("http://127.0.0.1:" + port)))
 				.whenComplete(() -> {
 					server.close();
 					responses.forEach(response -> response.set(HttpResponse.ok200()));
@@ -173,7 +173,7 @@ public final class AsyncHttpClientTest {
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
 
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
-				request -> HttpResponse.ok200())
+						request -> HttpResponse.ok200())
 				.withAcceptOnce()
 				.withListenPort(port);
 
@@ -212,8 +212,11 @@ public final class AsyncHttpClientTest {
 	@Test
 	public void testClientNoContentLengthGzipped() throws Exception {
 		String text = "content";
-		ByteBuf headLines = ByteBuf.wrapForReading(encodeAscii("HTTP/1.1 200 OK\r\n" +
-				"Content-Encoding: gzip\r\n\r\n"));
+		ByteBuf headLines = ByteBuf.wrapForReading(encodeAscii("""
+				HTTP/1.1 200 OK\r
+				Content-Encoding: gzip\r
+				\r
+				"""));
 
 		String responseText = await(customResponse(ByteBufPool.append(headLines, GzipProcessorUtils.toGzip(wrapAscii(text))), false)
 				.then(response -> response.loadBody())
@@ -224,8 +227,11 @@ public final class AsyncHttpClientTest {
 	@Test
 	public void testClientNoContentLengthGzippedSSL() throws Exception {
 		String text = "content";
-		ByteBuf headLines = ByteBuf.wrapForReading(encodeAscii("HTTP/1.1 200 OK\r\n" +
-				"Content-Encoding: gzip\r\n\r\n"));
+		ByteBuf headLines = ByteBuf.wrapForReading(encodeAscii("""
+				HTTP/1.1 200 OK\r
+				Content-Encoding: gzip\r
+				\r
+				"""));
 
 		String responseText = await(customResponse(ByteBufPool.append(headLines, GzipProcessorUtils.toGzip(wrapAscii(text))), true)
 				.then(response -> response.loadBody())
@@ -247,8 +253,14 @@ public final class AsyncHttpClientTest {
 					//noinspection StatementWithEmptyBody
 					while (b != -1 && !(((b = in.read()) == CR || b == LF) && (b = in.read()) == LF)) {
 					}
-					ByteBuf buf = ByteBuf.wrapForReading(encodeAscii("HTTP/1.1 200 OK\nContent-Length:  4\n\ntest" +
-							"HTTP/1.1 200 OK\nContent-Length:  4\n\ntest"));
+					ByteBuf buf = ByteBuf.wrapForReading(encodeAscii("""
+							HTTP/1.1 200 OK
+							Content-Length:  4
+
+							testHTTP/1.1 200 OK
+							Content-Length:  4
+
+							test"""));
 					socket.getOutputStream().write(buf.array(), buf.head(), buf.readRemaining());
 				} catch (IOException ignored) {
 				}
@@ -281,18 +293,21 @@ public final class AsyncHttpClientTest {
 
 	@Test
 	public void testResponseWithoutReasonPhrase() throws IOException {
-		ByteBuf req = ByteBuf.wrapForReading(encodeAscii("HTTP/1.1 200\n" +
-				"Content-Length: 0\r\n\r\n"));
+		ByteBuf req = ByteBuf.wrapForReading(encodeAscii("""
+				HTTP/1.1 200
+				Content-Length: 0\r
+				\r
+				"""));
 		assertEquals((Integer) 200, await(customResponse(req, false).map(HttpResponse::getCode)));
 	}
 
 	@Test
 	public void testActiveConnectionsCountWithFailingServer() throws IOException {
 		SimpleServer.create(socket ->
-				socket.read()
-						.whenResult(ByteBuf::recycle)
-						.then(() -> socket.write(wrapAscii("\r\n")))
-						.whenComplete(socket::close))
+						socket.read()
+								.whenResult(ByteBuf::recycle)
+								.then(() -> socket.write(wrapAscii("\r\n")))
+								.whenComplete(socket::close))
 				.withListenPort(port)
 				.withAcceptOnce()
 				.listen();
@@ -323,11 +338,11 @@ public final class AsyncHttpClientTest {
 
 	private Promise<HttpResponse> customResponse(ByteBuf rawResponse, boolean ssl) throws IOException {
 		SimpleServer server = SimpleServer.create(asyncTcpSocket ->
-				BinaryChannelSupplier.of(ChannelSupplier.ofSocket(asyncTcpSocket))
-						.decode(REQUEST_DECODER)
-						.whenResult(ByteBuf::recycle)
-						.then(() -> asyncTcpSocket.write(rawResponse))
-						.whenResult(asyncTcpSocket::close))
+						BinaryChannelSupplier.of(ChannelSupplier.ofSocket(asyncTcpSocket))
+								.decode(REQUEST_DECODER)
+								.whenResult(ByteBuf::recycle)
+								.then(() -> asyncTcpSocket.write(rawResponse))
+								.whenResult(asyncTcpSocket::close))
 				.withAcceptOnce();
 		if (ssl) {
 			server.withSslListenAddress(createTestSslContext(), Executors.newSingleThreadExecutor(), new InetSocketAddress(port));

@@ -54,8 +54,12 @@ public final class AdderServerLauncher extends Launcher {
 		return EventloopTaskScheduler.create(eventloop, () -> storage.download()
 						.then(StreamSupplier::toList)
 						.whenResult(crdtData -> {
-							logger.info("\nLocal storage data: \n{}" +
-											"\nLocal map data: \n{}",
+							logger.info("""
+
+											Local storage data:\s
+											{}
+											Local map data:\s
+											{}""",
 									crdtData.stream()
 											.map(data -> data.getKey() + ": " + data.getState().getSum())
 											.collect(Collectors.joining("\n")),

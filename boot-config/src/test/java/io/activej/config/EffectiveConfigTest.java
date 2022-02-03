@@ -86,11 +86,12 @@ public class EffectiveConfigTest {
 
 	@Test
 	public void testWorksWithDefaultNulls() {
-		String expected
-				= "# a.a.a = \n"
-				+ "## a.a.b = value1\n"
-				+ "a.a.c = value2\n"
-				+ "## a.b.a = value3\n";
+		String expected = """
+				# a.a.a =\s
+				## a.a.b = value1
+				a.a.c = value2
+				## a.b.a = value3
+				""";
 
 		EffectiveConfig config = EffectiveConfig.wrap(
 				Config.create()

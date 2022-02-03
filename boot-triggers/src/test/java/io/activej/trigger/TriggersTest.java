@@ -170,9 +170,10 @@ public class TriggersTest {
 		triggers.suppressTriggersBySignature("HIGH : @Named(\"CubeFetchScheduler\") EventloopTaskScheduler : delay");
 		triggers.suppressTriggersBySignature("HIGH : @Named(\"CubeFetchScheduler\") EventloopTaskScheduler : error");
 
-		assertEquals("HIGH : @CubeThread Eventloop : fatalErrors\n" +
-						"HIGH : @Named(\"CubeFetchScheduler\") EventloopTaskScheduler : delay\n" +
-						"HIGH : @Named(\"CubeFetchScheduler\") EventloopTaskScheduler : error",
+		assertEquals("""
+						HIGH : @CubeThread Eventloop : fatalErrors
+						HIGH : @Named("CubeFetchScheduler") EventloopTaskScheduler : delay
+						HIGH : @Named("CubeFetchScheduler") EventloopTaskScheduler : error""",
 				triggers.getMultilineSuppressedResults());
 
 		String resultsAfterSuppression = triggers.getMultilineResults();

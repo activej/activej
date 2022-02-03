@@ -76,9 +76,12 @@ public final class MultipartDecoderTest {
 					return "";
 				}, joining())));
 
-		assertEquals("This is some bytes of data to be extracted from the multipart form\r\n" +
-				"Also here we had a wild CRLF se\r\nquence appear\n" +
-				"And the second line, huh\n", res);
+		assertEquals("""
+				This is some bytes of data to be extracted from the multipart form\r
+				Also here we had a wild CRLF se\r
+				quence appear
+				And the second line, huh
+				""", res);
 		assertEquals(List.of(
                 Map.of(
 						"content-disposition", "form-data; name=\"file\"; filename=\"test.txt\"",
