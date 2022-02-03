@@ -65,23 +65,19 @@ public final class TypeUtils {
 		}
 		dejaVu.put(strict, pattern);
 		try {
-			if (pattern instanceof WildcardType) {
-				WildcardType wildcard = (WildcardType) pattern;
+			if (pattern instanceof WildcardType wildcard) {
 				return Arrays.stream(wildcard.getUpperBounds()).allMatch(bound -> isInheritedFrom(strict, bound, dejaVu))
 						&& Arrays.stream(wildcard.getLowerBounds()).allMatch(bound -> isInheritedFrom(bound, strict, dejaVu));
 			}
-			if (pattern instanceof TypeVariable) {
-				TypeVariable<?> typevar = (TypeVariable<?>) pattern;
+			if (pattern instanceof TypeVariable<?> typevar) {
 				return Arrays.stream(typevar.getBounds()).allMatch(bound -> isInheritedFrom(strict, bound, dejaVu));
 			}
 			if (strict instanceof GenericArrayType && pattern instanceof GenericArrayType) {
 				return matches(((GenericArrayType) strict).getGenericComponentType(), ((GenericArrayType) pattern).getGenericComponentType(), dejaVu);
 			}
-			if (!(strict instanceof ParameterizedType) || !(pattern instanceof ParameterizedType)) {
+			if (!(strict instanceof ParameterizedType parameterizedStrict) || !(pattern instanceof ParameterizedType parameterizedPattern)) {
 				return false;
 			}
-			ParameterizedType parameterizedStrict = (ParameterizedType) strict;
-			ParameterizedType parameterizedPattern = (ParameterizedType) pattern;
 
 			if (parameterizedPattern.getOwnerType() != null) {
 				if (parameterizedStrict.getOwnerType() == null) {
@@ -118,10 +114,9 @@ public final class TypeUtils {
 		if (type instanceof GenericArrayType) {
 			return contains(((GenericArrayType) type).getGenericComponentType(), sub);
 		}
-		if (!(type instanceof ParameterizedType)) {
+		if (!(type instanceof ParameterizedType parameterized)) {
 			return false;
 		}
-		ParameterizedType parameterized = (ParameterizedType) type;
 		if (contains(parameterized.getRawType(), sub)) {
 			return true;
 		}
@@ -154,11 +149,9 @@ public final class TypeUtils {
 			extractMatchingGenerics(((GenericArrayType) pattern).getGenericComponentType(), ((GenericArrayType) real).getGenericComponentType(), result);
 			return;
 		}
-		if (!(pattern instanceof ParameterizedType) || !(real instanceof ParameterizedType)) {
+		if (!(pattern instanceof ParameterizedType parameterizedPattern) || !(real instanceof ParameterizedType parameterizedReal)) {
 			return;
 		}
-		ParameterizedType parameterizedPattern = (ParameterizedType) pattern;
-		ParameterizedType parameterizedReal = (ParameterizedType) real;
 		if (!parameterizedPattern.getRawType().equals(parameterizedReal.getRawType())) {
 			return;
 		}
@@ -193,8 +186,7 @@ public final class TypeUtils {
 			return original;
 		}
 
-		if (original instanceof ParameterizedType) {
-			ParameterizedType parameterizedType = (ParameterizedType) original;
+		if (original instanceof ParameterizedType parameterizedType) {
 			Type[] typeArguments = parameterizedType.getActualTypeArguments();
 			Type[] repackedTypeArguments = simplifyTypes(typeArguments);
 			if (typeArguments != repackedTypeArguments) {
@@ -211,8 +203,7 @@ public final class TypeUtils {
 			throw new IllegalArgumentException("Key should not contain a type variable: " + original);
 		}
 
-		if (original instanceof WildcardType) {
-			WildcardType wildcardType = (WildcardType) original;
+		if (original instanceof WildcardType wildcardType) {
 			Type[] upperBounds = wildcardType.getUpperBounds();
 			if (upperBounds.length == 1) {
 				Type upperBound = upperBounds[0];

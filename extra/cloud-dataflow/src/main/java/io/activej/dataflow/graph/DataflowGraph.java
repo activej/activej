@@ -166,8 +166,7 @@ public final class DataflowGraph {
 
 		// collect network streams and populate the nodesByInput lookup map
 		for (Node node : nodePartitions.keySet()) {
-			if (node instanceof NodeDownload) {
-				NodeDownload<?> download = (NodeDownload<?>) node;
+			if (node instanceof NodeDownload<?> download) {
 				network.put(download.getStreamId(), download.getOutput());
 			} else if (node instanceof NodeUpload) {
 				uploads.add((NodeUpload<?>) node);

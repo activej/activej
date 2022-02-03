@@ -264,8 +264,7 @@ public final class ReflectionUtils {
 		List<Method> filtered = new ArrayList<>();
 		for (Method method : annotation.annotationType().getDeclaredMethods()) {
 			Object elementValue = fetchAnnotationElementValue(annotation, method);
-			if (elementValue instanceof String) {
-				String stringValue = (String) elementValue;
+			if (elementValue instanceof String stringValue) {
 				if (stringValue.length() == 0) {
 					// skip this element, because it is empty string
 					continue;

@@ -141,10 +141,9 @@ public abstract class Key<T> {
 		if (this == o) {
 			return true;
 		}
-		if (!(o instanceof Key)) {
+		if (!(o instanceof Key<?> that)) {
 			return false;
 		}
-		Key<?> that = (Key<?>) o;
 		return type.equals(that.type) && Objects.equals(qualifier, that.qualifier);
 	}
 

@@ -28,11 +28,9 @@ import java.util.function.ToIntFunction;
 public class MemcacheRpcMessage {
 	public static final ToIntFunction<Object> HASH_FUNCTION =
 			item -> {
-				if (item instanceof GetRequest) {
-					GetRequest request = (GetRequest) item;
+				if (item instanceof GetRequest request) {
 					return Arrays.hashCode(request.getKey());
-				} else if (item instanceof PutRequest) {
-					PutRequest request = (PutRequest) item;
+				} else if (item instanceof PutRequest request) {
 					return Arrays.hashCode(request.getKey());
 				}
 				throw new IllegalArgumentException("Unknown request type " + item);

@@ -136,8 +136,7 @@ final class AttributeNodeForList extends AbstractAttributeNodeForLeaf {
 		if (openType instanceof SimpleType || openType instanceof TabularType) {
 			checkArgument(attributes.size() == 1, "Only one attribute should be present");
 			return first(attributes.values());
-		} else if (openType instanceof CompositeType) {
-			CompositeType compositeType = (CompositeType) openType;
+		} else if (openType instanceof CompositeType compositeType) {
 			return new CompositeDataSupport(compositeType, attributes);
 		}
 		throw new RuntimeException("There is no support for " + openType);

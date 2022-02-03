@@ -101,12 +101,11 @@ public class Utils {
 						writer.writeByte(SEMI);
 						serialize(((TestAdd) value).getDelta(), writer);
 						writer.writeByte(OBJECT_END);
-					} else if (value instanceof TestSet) {
+					} else if (value instanceof TestSet set) {
 						writer.writeByte(OBJECT_START);
 						writer.writeString("set");
 						writer.writeByte(SEMI);
 						writer.writeByte(ARRAY_START);
-						TestSet set = (TestSet) value;
 						serialize(set.getPrev(), writer);
 						writer.writeByte(COMMA);
 						serialize(set.getNext(), writer);

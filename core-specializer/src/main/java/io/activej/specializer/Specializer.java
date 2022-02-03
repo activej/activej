@@ -317,13 +317,11 @@ public final class Specializer {
 				insn = methodNode.instructions.get(i);
 				int opcode = insn.getOpcode();
 
-				if (insn instanceof JumpInsnNode) {
-					JumpInsnNode insnJump = (JumpInsnNode) insn;
+				if (insn instanceof JumpInsnNode insnJump) {
 					localRemappingsByLabel.put(insnJump.label, new HashMap<>(localsRemapping));
 				}
 
-				if (insn instanceof LabelNode) {
-					LabelNode insnLabel = (LabelNode) insn;
+				if (insn instanceof LabelNode insnLabel) {
 					methodNode.tryCatchBlocks.stream()
 							.filter(block -> block.end == insnLabel)
 							.findFirst()
@@ -331,8 +329,7 @@ public final class Specializer {
 									localRemappingsByLabel.put(block.handler, new HashMap<>(localsRemapping)));
 				}
 
-				if (insn instanceof LabelNode) {
-					LabelNode insnLabel = (LabelNode) insn;
+				if (insn instanceof LabelNode insnLabel) {
 					if (localRemappingsByLabel.containsKey(insnLabel)) {
 						localsRemapping.clear();
 						localsRemapping.putAll(localRemappingsByLabel.get(insnLabel));
@@ -341,8 +338,7 @@ public final class Specializer {
 					continue;
 				}
 
-				if (insn instanceof FrameNode) {
-					FrameNode insnFrame = (FrameNode) insn;
+				if (insn instanceof FrameNode insnFrame) {
 					for (Integer k : new ArrayList<>(localsRemapping.keySet())) {
 						if (k >= insnFrame.local.size()) {
 							localsRemapping.remove(k);

@@ -519,8 +519,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			ValueFetcher fetcher,
 			Type listElementType, Class<?> beanClass,
 			Map<Type, JmxCustomTypeAdapter<?>> customTypes) {
-		if (listElementType instanceof Class<?>) {
-			Class<?> listElementClass = (Class<?>) listElementType;
+		if (listElementType instanceof Class<?> listElementClass) {
 			boolean isListOfJmxRefreshable = JmxRefreshable.class.isAssignableFrom(listElementClass);
 			return new AttributeNodeForList(
 					attrName,
@@ -556,8 +555,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			Map<Type, JmxCustomTypeAdapter<?>> customTypes) {
 		boolean isMapOfJmxRefreshable = false;
 		AttributeNode node;
-		if (valueType instanceof Class<?>) {
-			Class<?> valueClass = (Class<?>) valueType;
+		if (valueType instanceof Class<?> valueClass) {
 			isMapOfJmxRefreshable = JmxRefreshable.class.isAssignableFrom(valueClass);
 			node = createAttributeNodeFor("", attrDescription, valueType, true, null, null, null, beanClass, customTypes);
 		} else if (valueType instanceof ParameterizedType) {
@@ -752,9 +750,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 		@Override
 		public boolean equals(Object o) {
 			if (this == o) return true;
-			if (!(o instanceof OperationKey)) return false;
-
-			OperationKey that = (OperationKey) o;
+			if (!(o instanceof OperationKey that)) return false;
 
 			if (!name.equals(that.name)) return false;
 
@@ -798,8 +794,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 				throw new AssertionError("Never reached");
 			}
 
-			if (value instanceof Throwable) {
-				Throwable throwable = (Throwable) value;
+			if (value instanceof Throwable throwable) {
 				logger.error("Failed to fetch attribute '{}' from beans {}", attribute, beans, throwable);
 				propagate(throwable);
 			}
@@ -837,8 +832,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			Exception e = exceptionRef.get();
 			if (e != null) {
 				Exception actualException = e;
-				if (e instanceof SetterException) {
-					SetterException setterException = (SetterException) e;
+				if (e instanceof SetterException setterException) {
 					actualException = setterException.getCausedException();
 				}
 				propagate(actualException);

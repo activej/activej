@@ -259,8 +259,7 @@ public final class Utils {
 			//noinspection unchecked
 			return getDisplayString((Class<? extends Annotation>) object, null);
 		}
-		if (object instanceof Annotation) {
-			Annotation annotation = (Annotation) object;
+		if (object instanceof Annotation annotation) {
 			return getDisplayString(annotation.annotationType(), annotation);
 		}
 		return object.toString();

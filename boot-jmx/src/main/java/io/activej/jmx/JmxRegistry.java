@@ -367,8 +367,7 @@ public final class JmxRegistry implements JmxRegistryMXBean, WithInitializer<Jmx
 		}
 
 		Type type = key.getType();
-		if (type instanceof ParameterizedType) {
-			ParameterizedType pType = (ParameterizedType) type;
+		if (type instanceof ParameterizedType pType) {
 			Type[] genericArgs = pType.getActualTypeArguments();
 			List<String> genericParams = new ArrayList<>();
 			for (Type genericArg : genericArgs) {
@@ -413,8 +412,7 @@ public final class JmxRegistry implements JmxRegistryMXBean, WithInitializer<Jmx
 		Object qualifier = protoObjectName.getQualifier();
 		if (qualifier != null) {
 			String qualifierString = null;
-			if (qualifier instanceof Class) {
-				Class<?> qualifierClass = (Class<?>) qualifier;
+			if (qualifier instanceof Class<?> qualifierClass) {
 				if (qualifierClass.isAnnotation()) {
 					qualifierString = qualifierClass.getSimpleName();
 				}

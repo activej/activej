@@ -46,9 +46,8 @@ public final class DatasetIdImpl implements DatasetId {
 
 	@Override
 	public boolean equals(Object o) {
-		if (!(o instanceof DatasetId)) return false;
+		if (!(o instanceof DatasetId other)) return false;
 
-		DatasetId other = (DatasetId) o;
 		return value.equals(other.value());
 	}
 

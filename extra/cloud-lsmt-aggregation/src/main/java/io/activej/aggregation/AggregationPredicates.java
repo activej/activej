@@ -1600,16 +1600,14 @@ public class AggregationPredicates {
 		for (String key : primaryKey) {
 			for (int j = 0; j < conjunctions.size(); j++) {
 				AggregationPredicate conjunction = conjunctions.get(j);
-				if (conjunction instanceof PredicateEq && ((PredicateEq) conjunction).key.equals(key)) {
+				if (conjunction instanceof PredicateEq eq && ((PredicateEq) conjunction).key.equals(key)) {
 					conjunctions.remove(j);
-					PredicateEq eq = (PredicateEq) conjunction;
 					from.add(toInternalValue(fields, eq.key, eq.value));
 					to.add(toInternalValue(fields, eq.key, eq.value));
 					continue L;
 				}
-				if (conjunction instanceof PredicateBetween && ((PredicateBetween) conjunction).key.equals(key)) {
+				if (conjunction instanceof PredicateBetween between && ((PredicateBetween) conjunction).key.equals(key)) {
 					conjunctions.remove(j);
-					PredicateBetween between = (PredicateBetween) conjunction;
 					from.add(toInternalValue(fields, between.key, between.from));
 					to.add(toInternalValue(fields, between.key, between.to));
 					break L;

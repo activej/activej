@@ -48,8 +48,7 @@ public final class HttpHeader extends Token {
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
-		if (!(o instanceof HttpHeader)) return false;
-		HttpHeader that = (HttpHeader) o;
+		if (!(o instanceof HttpHeader that)) return false;
 
 		if (length != that.length) return false;
 		for (int i = 0; i < length; i++) {

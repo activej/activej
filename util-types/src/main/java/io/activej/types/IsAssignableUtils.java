@@ -31,8 +31,7 @@ public class IsAssignableUtils {
 	private static boolean isAssignable(Type to, Type from, boolean strict) {
 		if (to instanceof WildcardType || from instanceof WildcardType) {
 			Type[] toUppers, toLowers;
-			if (to instanceof WildcardType) {
-				WildcardType wildcardTo = (WildcardType) to;
+			if (to instanceof WildcardType wildcardTo) {
 				toUppers = wildcardTo.getUpperBounds();
 				toLowers = wildcardTo.getLowerBounds();
 			} else {
@@ -41,8 +40,7 @@ public class IsAssignableUtils {
 			}
 
 			Type[] fromUppers, fromLowers;
-			if (from instanceof WildcardType) {
-				WildcardType wildcardTo = (WildcardType) from;
+			if (from instanceof WildcardType wildcardTo) {
 				fromUppers = wildcardTo.getUpperBounds();
 				fromLowers = wildcardTo.getLowerBounds();
 			} else {

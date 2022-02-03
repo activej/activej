@@ -192,8 +192,7 @@ public final class Task {
 		Map<Node, String> ids = new LinkedHashMap<>();
 
 		for (Node node : nodes) {
-			if (node instanceof NodeDownload) {
-				NodeDownload<?> download = (NodeDownload<?>) node;
+			if (node instanceof NodeDownload<?> download) {
 				network.put(download.getStreamId(), download.getOutput());
 			} else if (node instanceof NodeUpload) {
 				uploads.put(((NodeUpload<?>) node).getStreamId(), node);

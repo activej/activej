@@ -397,9 +397,7 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 		@Override
 		public boolean equals(Object o) {
 			if (this == o) return true;
-			if (!(o instanceof StackTrace)) return false;
-
-			StackTrace that = (StackTrace) o;
+			if (!(o instanceof StackTrace that)) return false;
 
 			return Arrays.equals(stackTraceElements, that.stackTraceElements);
 		}

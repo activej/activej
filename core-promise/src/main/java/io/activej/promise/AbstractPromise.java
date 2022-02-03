@@ -1802,8 +1802,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		if (callback == null) {
 			return;
 		}
-		if (callback instanceof CallbackList) {
-			CallbackList<? super T> callbackList = (CallbackList<? super T>) callback;
+		if (callback instanceof CallbackList<? super T> callbackList) {
 			for (int i = 0; i < callbackList.index; i++) {
 				appendChildren(sb, callbackList.callbacks[i], indent);
 			}

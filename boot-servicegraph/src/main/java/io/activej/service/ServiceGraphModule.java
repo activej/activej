@@ -524,8 +524,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 	@SuppressWarnings("unchecked")
 	private <T> @Nullable Service getServiceOrNull(IdentityHashMap<Object, CachedService> cache, Key<T> key, @NotNull T instance) {
 		Object cacheKey = instance;
-		if (cacheKey instanceof OptionalDependency) {
-			OptionalDependency<?> optionalDependency = (OptionalDependency<?>) cacheKey;
+		if (cacheKey instanceof OptionalDependency<?> optionalDependency) {
 			if (!optionalDependency.isPresent()) {
 				return null;
 			}

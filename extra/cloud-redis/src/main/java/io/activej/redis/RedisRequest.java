@@ -140,11 +140,9 @@ public abstract class RedisRequest {
 
 	private static int writeArgument(byte[] array, int offset, Object arg) {
 		array[offset++] = BYTES_MARKER;
-		if (arg instanceof String) {
-			String str = (String) arg;
+		if (arg instanceof String str) {
 			offset = writeString(array, offset, str);
-		} else if (arg instanceof byte[]) {
-			byte[] bytes = (byte[]) arg;
+		} else if (arg instanceof byte[] bytes) {
 			offset = writeBytes(array, offset, bytes);
 		} else {
 			throw new IllegalArgumentException();

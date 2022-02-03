@@ -83,8 +83,7 @@ public class MapReduceTest {
 		@Override
 		public boolean equals(Object o) {
 			if (this == o) return true;
-			if (!(o instanceof StringCount)) return false;
-			StringCount that = (StringCount) o;
+			if (!(o instanceof StringCount that)) return false;
 			return s.equals(that.s) && count == that.count;
 		}
 
