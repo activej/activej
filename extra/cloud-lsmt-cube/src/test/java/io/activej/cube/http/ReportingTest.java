@@ -217,7 +217,7 @@ public final class ReportingTest extends CubeTestBase {
 
 		@Override
 		protected StreamDataAcceptor<LogItem> createSplitter(@NotNull Context ctx) {
-			return new StreamDataAcceptor<LogItem>() {
+			return new StreamDataAcceptor<>() {
 				private final StreamDataAcceptor<LogItem> dateAggregator = ctx.addOutput(
 						cube.logStreamConsumer(
 								LogItem.class,

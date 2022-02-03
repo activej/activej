@@ -214,14 +214,14 @@ public final class Preprocessor {
 			@Override
 			public CompiledBinding<OptionalDependency<?>> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 				return slot != null ?
-						new AbstractCompiledBinding<OptionalDependency<?>>(scope, slot) {
+						new AbstractCompiledBinding<>(scope, slot) {
 							@Override
 							protected @NotNull OptionalDependency<?> doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								CompiledBinding<?> compiledBinding = compiledBindings.get(instanceKey);
 								return OptionalDependency.of(compiledBinding.getInstance(scopedInstances, synchronizedScope));
 							}
 						} :
-						new CompiledBinding<OptionalDependency<?>>() {
+						new CompiledBinding<>() {
 							@Override
 							public @NotNull OptionalDependency<?> getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								CompiledBinding<?> compiledBinding = compiledBindings.get(instanceKey);
@@ -241,7 +241,7 @@ public final class Preprocessor {
 			@Override
 			public CompiledBinding<InstanceProvider<?>> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 				return slot != null ?
-						new AbstractCompiledBinding<InstanceProvider<?>>(scope, slot) {
+						new AbstractCompiledBinding<>(scope, slot) {
 							@Override
 							protected @NotNull InstanceProvider<?> doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								CompiledBinding<Object> compiledBinding = compiledBindings.get(instanceKey);
@@ -249,7 +249,7 @@ public final class Preprocessor {
 								return new InstanceProviderImpl<>(instanceKey, compiledBinding, scopedInstances, synchronizedScope);
 							}
 						} :
-						new CompiledBinding<InstanceProvider<?>>() {
+						new CompiledBinding<>() {
 							@Override
 							public @NotNull InstanceProvider<?> getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 
@@ -275,14 +275,14 @@ public final class Preprocessor {
 			@Override
 			public CompiledBinding<InstanceInjector<?>> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int synchronizedScope, @Nullable Integer slot) {
 				return slot != null ?
-						new AbstractCompiledBinding<InstanceInjector<?>>(synchronizedScope, slot) {
+						new AbstractCompiledBinding<>(synchronizedScope, slot) {
 							@Override
 							protected @NotNull InstanceInjector<?> doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								CompiledBindingInitializer<Object> compiledBindingInitializer = bindingInitializer.compile(compiledBindings);
 								return new InstanceInjectorImpl<>(instanceKey, compiledBindingInitializer, scopedInstances, synchronizedScope);
 							}
 						} :
-						new CompiledBinding<InstanceInjector<?>>() {
+						new CompiledBinding<>() {
 							@Override
 							public @NotNull InstanceInjector<?> getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								CompiledBindingInitializer<Object> compiledBindingInitializer = bindingInitializer.compile(compiledBindings);

@@ -444,7 +444,7 @@ public final class PartitionedStreamTest {
 
 	private Map<Partition, List<String>> collectToMap(boolean sorted) {
 		Injector injector = Injector.of(createClientModule());
-		JsonCodec<List<Node>> nodesCodec = injector.getInstance(new Key<JsonCodec<List<Node>>>() {});
+		JsonCodec<List<Node>> nodesCodec = injector.getInstance(new Key<>() {});
 		DataflowClient client = injector.getInstance(DataflowClient.class);
 		DataflowGraph graph = new DataflowGraph(client, toPartitions(dataflowServers), nodesCodec);
 		Dataset<String> compoundDataset = datasetOfId(sorted ? "sorted data source" : "data source", String.class);
@@ -458,7 +458,7 @@ public final class PartitionedStreamTest {
 
 	private void filterOddAndPropagateToTarget() {
 		Injector injector = Injector.of(createClientModule());
-		JsonCodec<List<Node>> nodesCodec = injector.getInstance(new Key<JsonCodec<List<Node>>>() {});
+		JsonCodec<List<Node>> nodesCodec = injector.getInstance(new Key<>() {});
 		DataflowClient client = injector.getInstance(DataflowClient.class);
 		DataflowGraph graph = new DataflowGraph(client, toPartitions(dataflowServers), nodesCodec);
 		Dataset<String> compoundDataset = datasetOfId("data source", String.class);

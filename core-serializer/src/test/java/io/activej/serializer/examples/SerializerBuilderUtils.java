@@ -17,7 +17,7 @@ public class SerializerBuilderUtils {
 			byte.class, short.class, int.class, long.class, float.class, double.class, char.class, Object.class
 	);
 
-	private static final Map<String, String> collectionImplSuffix = new HashMap<String, String>() {{
+	private static final Map<String, String> collectionImplSuffix = new HashMap<>() {{
 		put("Set", "HashSet");
 		put("IndexedContainer", "ArrayList");
 	}};

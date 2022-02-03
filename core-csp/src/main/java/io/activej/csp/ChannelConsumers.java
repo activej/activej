@@ -103,7 +103,7 @@ public final class ChannelConsumers {
 	 * @return a {@link ChannelConsumer<ByteBuf>} out ouf an {@link OutputStream}
 	 */
 	public static ChannelConsumer<ByteBuf> outputStreamAsChannelConsumer(Executor executor, OutputStream outputStream) {
-		return new AbstractChannelConsumer<ByteBuf>() {
+		return new AbstractChannelConsumer<>() {
 			@Override
 			protected Promise<Void> doAccept(@Nullable ByteBuf buf) {
 				return Promise.ofBlocking(executor, () -> {

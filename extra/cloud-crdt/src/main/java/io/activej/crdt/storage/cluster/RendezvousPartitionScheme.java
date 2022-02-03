@@ -117,7 +117,7 @@ public final class RendezvousPartitionScheme<P> implements PartitionScheme<P>, W
 		}
 
 		return RpcStrategySharding.create(
-				new ToIntFunction<Object>() {
+				new ToIntFunction<>() {
 					final int count = rendezvousHashings.size();
 
 					@Override

@@ -127,7 +127,7 @@ public final class ConfigModule extends AbstractModule implements WithInitialize
 	@Override
 	protected void configure() {
 		transform(KeyPattern.of(Config.class, null), (bindings, scope, key, binding) -> {
-			Key<CompletionStage<Void>> completionStageKey = new Key<CompletionStage<Void>>(OnStart.class) {};
+			Key<CompletionStage<Void>> completionStageKey = new Key<>(OnStart.class) {};
 			return binding
 					.addDependencies(completionStageKey)
 					.mapInstance(List.of(completionStageKey), (args, config) -> {

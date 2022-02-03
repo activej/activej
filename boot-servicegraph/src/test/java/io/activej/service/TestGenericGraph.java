@@ -27,6 +27,7 @@ public class TestGenericGraph {
 	public static class TestModule extends AbstractModule {
 		@Override
 		protected void configure() {
+			//noinspection Convert2Diamond - compilation issue
 			install(ServiceGraphModule.create()
 					.register(Pojo.class, new SimpleServiceAdapter<Pojo>(false, false) {
 						@Override

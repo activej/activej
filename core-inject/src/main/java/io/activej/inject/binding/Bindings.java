@@ -25,14 +25,14 @@ class Bindings {
 		public CompiledBinding<T> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 			final T instance = this.instance;
 			return slot != null ?
-					new CompiledBinding<T>() {
+					new CompiledBinding<>() {
 						@Override
 						public @NotNull T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							scopedInstances[scope].lazySet(slot, instance);
 							return instance;
 						}
 					} :
-					new CompiledBinding<T>() {
+					new CompiledBinding<>() {
 						@Override
 						public @NotNull T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return instance;
@@ -58,7 +58,7 @@ class Bindings {
 					.map(compiledBindings::get)
 					.toArray(CompiledBinding[]::new);
 			return slot != null ? threadsafe ? scope == 0 ?
-					new AbstractRootCompiledBinding<R>(slot) {
+					new AbstractRootCompiledBinding<>(slot) {
 						@Override
 						protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							Object[] args = new Object[bindings.length];
@@ -68,7 +68,7 @@ class Bindings {
 							return constructor.create(args);
 						}
 					} :
-					new AbstractCompiledBinding<R>(scope, slot) {
+					new AbstractCompiledBinding<>(scope, slot) {
 						@Override
 						protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							Object[] args = new Object[bindings.length];
@@ -78,7 +78,7 @@ class Bindings {
 							return constructor.create(args);
 						}
 					} :
-					new AbstractUnsyncCompiledBinding<R>(scope, slot) {
+					new AbstractUnsyncCompiledBinding<>(scope, slot) {
 						@Override
 						protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							Object[] args = new Object[bindings.length];
@@ -88,7 +88,7 @@ class Bindings {
 							return constructor.create(args);
 						}
 					} :
-					new CompiledBinding<R>() {
+					new CompiledBinding<>() {
 						@Override
 						public @NotNull R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							Object[] args = new Object[bindings.length];
@@ -113,25 +113,25 @@ class Bindings {
 		public CompiledBinding<R> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 			final Constructor0<R> constructor = this.constructor;
 			return slot != null ? threadsafe ? scope == 0 ?
-					new AbstractRootCompiledBinding<R>(slot) {
+					new AbstractRootCompiledBinding<>(slot) {
 						@Override
 						protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create();
 						}
 					} :
-					new AbstractCompiledBinding<R>(scope, slot) {
+					new AbstractCompiledBinding<>(scope, slot) {
 						@Override
 						protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create();
 						}
 					} :
-					new AbstractUnsyncCompiledBinding<R>(scope, slot) {
+					new AbstractUnsyncCompiledBinding<>(scope, slot) {
 						@Override
 						protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create();
 						}
 					} :
-					new CompiledBinding<R>() {
+					new CompiledBinding<>() {
 						@Override
 						public @NotNull R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create();
@@ -155,28 +155,28 @@ class Bindings {
 			final Constructor1<T1, R> constructor = this.constructor;
 			final CompiledBinding<T1> binding1 = compiledBindings.get(dependency1);
 			return slot != null ? threadsafe ? scope == 0 ?
-					new AbstractRootCompiledBinding<R>(slot) {
+					new AbstractRootCompiledBinding<>(slot) {
 						@Override
 						protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
 									binding1.getInstance(scopedInstances, synchronizedScope));
 						}
 					} :
-					new AbstractCompiledBinding<R>(scope, slot) {
+					new AbstractCompiledBinding<>(scope, slot) {
 						@Override
 						protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
 									binding1.getInstance(scopedInstances, synchronizedScope));
 						}
 					} :
-					new AbstractUnsyncCompiledBinding<R>(scope, slot) {
+					new AbstractUnsyncCompiledBinding<>(scope, slot) {
 						@Override
 						protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
 									binding1.getInstance(scopedInstances, synchronizedScope));
 						}
 					} :
-					new CompiledBinding<R>() {
+					new CompiledBinding<>() {
 						@Override
 						public @NotNull R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
@@ -204,7 +204,7 @@ class Bindings {
 			final CompiledBinding<T1> binding1 = compiledBindings.get(dependency1);
 			final CompiledBinding<T2> binding2 = compiledBindings.get(dependency2);
 			return slot != null ? threadsafe ? scope == 0 ?
-					new AbstractRootCompiledBinding<R>(slot) {
+					new AbstractRootCompiledBinding<>(slot) {
 						@Override
 						protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
@@ -212,7 +212,7 @@ class Bindings {
 									binding2.getInstance(scopedInstances, synchronizedScope));
 						}
 					} :
-					new AbstractCompiledBinding<R>(scope, slot) {
+					new AbstractCompiledBinding<>(scope, slot) {
 						@Override
 						protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
@@ -220,7 +220,7 @@ class Bindings {
 									binding2.getInstance(scopedInstances, synchronizedScope));
 						}
 					} :
-					new AbstractUnsyncCompiledBinding<R>(scope, slot) {
+					new AbstractUnsyncCompiledBinding<>(scope, slot) {
 						@Override
 						protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
@@ -228,7 +228,7 @@ class Bindings {
 									binding2.getInstance(scopedInstances, synchronizedScope));
 						}
 					} :
-					new CompiledBinding<R>() {
+					new CompiledBinding<>() {
 						@Override
 						public @NotNull R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
@@ -260,7 +260,7 @@ class Bindings {
 			final CompiledBinding<T2> binding2 = compiledBindings.get(dependency2);
 			final CompiledBinding<T3> binding3 = compiledBindings.get(dependency3);
 			return slot != null ? threadsafe ? scope == 0 ?
-					new AbstractRootCompiledBinding<R>(slot) {
+					new AbstractRootCompiledBinding<>(slot) {
 						@Override
 						protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
@@ -269,7 +269,7 @@ class Bindings {
 									binding3.getInstance(scopedInstances, synchronizedScope));
 						}
 					} :
-					new AbstractCompiledBinding<R>(scope, slot) {
+					new AbstractCompiledBinding<>(scope, slot) {
 						@Override
 						protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
@@ -278,7 +278,7 @@ class Bindings {
 									binding3.getInstance(scopedInstances, synchronizedScope));
 						}
 					} :
-					new AbstractUnsyncCompiledBinding<R>(scope, slot) {
+					new AbstractUnsyncCompiledBinding<>(scope, slot) {
 						@Override
 						protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
@@ -287,7 +287,7 @@ class Bindings {
 									binding3.getInstance(scopedInstances, synchronizedScope));
 						}
 					} :
-					new CompiledBinding<R>() {
+					new CompiledBinding<>() {
 						@Override
 						public @NotNull R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
@@ -323,7 +323,7 @@ class Bindings {
 			final CompiledBinding<T3> binding3 = compiledBindings.get(dependency3);
 			final CompiledBinding<T4> binding4 = compiledBindings.get(dependency4);
 			return slot != null ? threadsafe ? scope == 0 ?
-					new AbstractRootCompiledBinding<R>(slot) {
+					new AbstractRootCompiledBinding<>(slot) {
 						@Override
 						protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
@@ -333,7 +333,7 @@ class Bindings {
 									binding4.getInstance(scopedInstances, synchronizedScope));
 						}
 					} :
-					new AbstractCompiledBinding<R>(scope, slot) {
+					new AbstractCompiledBinding<>(scope, slot) {
 						@Override
 						protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
@@ -343,7 +343,7 @@ class Bindings {
 									binding4.getInstance(scopedInstances, synchronizedScope));
 						}
 					} :
-					new AbstractUnsyncCompiledBinding<R>(scope, slot) {
+					new AbstractUnsyncCompiledBinding<>(scope, slot) {
 						@Override
 						protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
@@ -353,7 +353,7 @@ class Bindings {
 									binding4.getInstance(scopedInstances, synchronizedScope));
 						}
 					} :
-					new CompiledBinding<R>() {
+					new CompiledBinding<>() {
 						@Override
 						public @NotNull R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
@@ -393,7 +393,7 @@ class Bindings {
 			final CompiledBinding<T4> binding4 = compiledBindings.get(dependency4);
 			final CompiledBinding<T5> binding5 = compiledBindings.get(dependency5);
 			return slot != null ? threadsafe ? scope == 0 ?
-					new AbstractRootCompiledBinding<R>(slot) {
+					new AbstractRootCompiledBinding<>(slot) {
 
 						@Override
 						protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
@@ -405,7 +405,7 @@ class Bindings {
 									binding5.getInstance(scopedInstances, synchronizedScope));
 						}
 					} :
-					new AbstractCompiledBinding<R>(scope, slot) {
+					new AbstractCompiledBinding<>(scope, slot) {
 						@Override
 						protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
@@ -416,7 +416,7 @@ class Bindings {
 									binding5.getInstance(scopedInstances, synchronizedScope));
 						}
 					} :
-					new AbstractUnsyncCompiledBinding<R>(scope, slot) {
+					new AbstractUnsyncCompiledBinding<>(scope, slot) {
 						@Override
 						protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
@@ -427,7 +427,7 @@ class Bindings {
 									binding5.getInstance(scopedInstances, synchronizedScope));
 						}
 					} :
-					new CompiledBinding<R>() {
+					new CompiledBinding<>() {
 						@Override
 						public @NotNull R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
@@ -471,7 +471,7 @@ class Bindings {
 			final CompiledBinding<T5> binding5 = compiledBindings.get(dependency5);
 			final CompiledBinding<T6> binding6 = compiledBindings.get(dependency6);
 			return slot != null ? threadsafe ? scope == 0 ?
-					new AbstractRootCompiledBinding<R>(slot) {
+					new AbstractRootCompiledBinding<>(slot) {
 						@Override
 						protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
@@ -483,7 +483,7 @@ class Bindings {
 									binding6.getInstance(scopedInstances, synchronizedScope));
 						}
 					} :
-					new AbstractCompiledBinding<R>(scope, slot) {
+					new AbstractCompiledBinding<>(scope, slot) {
 						@Override
 						protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
@@ -495,7 +495,7 @@ class Bindings {
 									binding6.getInstance(scopedInstances, synchronizedScope));
 						}
 					} :
-					new AbstractUnsyncCompiledBinding<R>(scope, slot) {
+					new AbstractUnsyncCompiledBinding<>(scope, slot) {
 						@Override
 						protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(
@@ -507,7 +507,7 @@ class Bindings {
 									binding6.getInstance(scopedInstances, synchronizedScope));
 						}
 					} :
-					new CompiledBinding<R>() {
+					new CompiledBinding<>() {
 						@Override
 						public @NotNull R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 							return constructor.create(

@@ -18,7 +18,6 @@ import java.util.function.Function;
 import java.util.function.IntFunction;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static java.util.Arrays.asList;
 
 @SuppressWarnings("ForLoopReplaceableByForEach")
 public final class StreamCodecs {
@@ -27,7 +26,7 @@ public final class StreamCodecs {
 	public static final DefiningClassLoader CLASS_LOADER = DefiningClassLoader.create();
 
 	public static StreamCodec<Void> ofVoid() {
-		return new StreamCodec<Void>() {
+		return new StreamCodec<>() {
 			@Override
 			public void encode(StreamOutput output, Void item) {
 			}
@@ -101,7 +100,7 @@ public final class StreamCodecs {
 	}
 
 	public static StreamCodec<byte[]> ofByteArray() {
-		return new StreamCodec<byte[]>() {
+		return new StreamCodec<>() {
 			@Override
 			public void encode(StreamOutput output, byte[] item) throws IOException {
 				output.writeVarLong(item.length);
@@ -163,7 +162,7 @@ public final class StreamCodecs {
 	}
 
 	public static StreamCodec<int[]> ofVarIntArray() {
-		return new StreamCodec<int[]>() {
+		return new StreamCodec<>() {
 			@Override
 			public void encode(StreamOutput output, int[] array) throws IOException {
 				output.ensure((array.length + 1) * 5);
@@ -197,7 +196,7 @@ public final class StreamCodecs {
 	}
 
 	public static StreamCodec<long[]> ofVarLongArray() {
-		return new StreamCodec<long[]>() {
+		return new StreamCodec<>() {
 			@Override
 			public void encode(StreamOutput output, long[] array) throws IOException {
 				output.ensure((array.length + 1) * 10);
@@ -235,7 +234,7 @@ public final class StreamCodecs {
 	}
 
 	public static <T> StreamCodec<T[]> ofArray(IntFunction<? extends StreamCodec<? extends T>> itemCodecFn, IntFunction<T[]> factory) {
-		return new StreamCodec<T[]>() {
+		return new StreamCodec<>() {
 			@Override
 			public void encode(StreamOutput output, T[] list) throws IOException {
 				output.writeVarInt(list.length);
@@ -259,7 +258,7 @@ public final class StreamCodecs {
 	}
 
 	public static <E extends Enum<E>> StreamCodec<E> ofEnum(Class<E> enumType) {
-		return new StreamCodec<E>() {
+		return new StreamCodec<>() {
 			@Override
 			public void encode(StreamOutput output, E value) throws IOException {
 				output.writeVarInt(value.ordinal());
@@ -273,7 +272,7 @@ public final class StreamCodecs {
 	}
 
 	public static <T> StreamCodec<Optional<T>> ofOptional(StreamCodec<T> codec) {
-		return new StreamCodec<Optional<T>>() {
+		return new StreamCodec<>() {
 			@Override
 			public void encode(StreamOutput output, Optional<T> item) throws IOException {
 				if (!item.isPresent()) {
@@ -293,7 +292,7 @@ public final class StreamCodecs {
 	}
 
 	public static <T, C extends Collection<T>> StreamCodec<C> ofCollection(StreamCodec<T> itemCodec, IntFunction<C> factory) {
-		return new StreamCodec<C>() {
+		return new StreamCodec<>() {
 			@Override
 			public void encode(StreamOutput output, C c) throws IOException {
 				output.writeVarInt(c.size());
@@ -332,7 +331,7 @@ public final class StreamCodecs {
 	}
 
 	public static <T> StreamCodec<List<T>> ofList(IntFunction<? extends StreamCodec<? extends T>> itemCodecFn) {
-		return new StreamCodec<List<T>>() {
+		return new StreamCodec<>() {
 			@Override
 			public void encode(StreamOutput output, List<T> list) throws IOException {
 				output.writeVarInt(list.size());
@@ -370,7 +369,7 @@ public final class StreamCodecs {
 	}
 
 	public static <K, V, M extends Map<K, V>> StreamCodec<M> ofMap(StreamCodec<K> keyCodec, Function<? super K, ? extends StreamCodec<? extends V>> valueCodecFn, IntFunction<M> factory) {
-		return new StreamCodec<M>() {
+		return new StreamCodec<>() {
 			@Override
 			public void encode(StreamOutput output, M map) throws IOException {
 				output.writeVarInt(map.size());
@@ -420,7 +419,7 @@ public final class StreamCodecs {
 		public StreamCodec<T> build() {
 			if (encoders.isEmpty()) throw new IllegalStateException("No subtype codec has been specified");
 
-			return new StreamCodec<T>() {
+			return new StreamCodec<>() {
 				@Override
 				public void encode(StreamOutput output, T item) throws IOException {
 					Class<?> type = item.getClass();
@@ -451,7 +450,7 @@ public final class StreamCodecs {
 	}
 
 	public static <T> StreamCodec<@Nullable T> ofNullable(StreamCodec<@NotNull T> codec) {
-		return new StreamCodec<T>() {
+		return new StreamCodec<>() {
 			@Override
 			public void encode(StreamOutput output, @Nullable T item) throws IOException {
 				if (item == null) {
@@ -471,7 +470,7 @@ public final class StreamCodecs {
 	}
 
 	public static <T, R> StreamCodec<R> transform(StreamCodec<T> codec, Function<T, ? extends R> reader, Function<R, T> writer) {
-		return new StreamCodec<R>() {
+		return new StreamCodec<>() {
 			@Override
 			public void encode(StreamOutput output, R value) throws IOException {
 				T result = writer.apply(value);
@@ -487,7 +486,7 @@ public final class StreamCodecs {
 	}
 
 	public static <T> StreamCodec<T> singleton(T instance) {
-		return new StreamCodec<T>() {
+		return new StreamCodec<>() {
 			@Override
 			public void encode(StreamOutput output, T item) {
 			}

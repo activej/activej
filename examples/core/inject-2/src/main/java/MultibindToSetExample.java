@@ -3,7 +3,6 @@ import io.activej.inject.Key;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -11,7 +10,7 @@ import java.util.Set;
 public final class MultibindToSetExample {
 	public static void main(String[] args) {
 		//[START MODULES]
-		Key<Set<Integer>> setKey = new Key<Set<Integer>>() {};
+		Key<Set<Integer>> setKey = new Key<>() {};
 
 		Module module1 = ModuleBuilder.create()
 				.bind(setKey).toInstance(new HashSet<>(List.of(1, 2, 3)))

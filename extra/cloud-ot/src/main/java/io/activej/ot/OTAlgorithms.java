@@ -43,7 +43,8 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.*;
 import static io.activej.ot.reducers.GraphReducer.Result.*;
 import static io.activej.promise.Promises.toList;
-import static java.util.Collections.*;
+import static java.util.Collections.reverseOrder;
+import static java.util.Collections.unmodifiableCollection;
 import static java.util.Comparator.comparingLong;
 import static java.util.stream.Collectors.toSet;
 
@@ -156,7 +157,7 @@ public final class OTAlgorithms {
 	public static <K, D, A> Promise<FindResult<K, A>> findParent(OTRepository<K, D> repository, OTSystem<D> system,
 			Set<K> startNodes, DiffsReducer<A, D> diffsReducer, AsyncPredicate<OTCommit<K, D>> matchPredicate) {
 		return reduce(repository, system, startNodes,
-				new AbstractGraphReducer<K, D, A, FindResult<K, A>>(diffsReducer) {
+				new AbstractGraphReducer<>(diffsReducer) {
 					int epoch;
 
 					@Override
@@ -235,7 +236,7 @@ public final class OTAlgorithms {
 	public static <K, D> Promise<Set<K>> findCut(OTRepository<K, D> repository, OTSystem<D> system, Set<K> startNodes,
 			Predicate<Collection<OTCommit<K, D>>> matchPredicate) {
 		return reduce(repository, system, startNodes,
-				new GraphReducer<K, D, Set<K>>() {
+				new GraphReducer<>() {
 					private Collection<OTCommit<K, D>> queue;
 
 					@Override
@@ -339,7 +340,7 @@ public final class OTAlgorithms {
 
 	public static <K, D, A> Promise<Map<K, A>> reduceEdges(OTRepository<K, D> repository, OTSystem<D> system, Set<K> heads, K parentNode,
 			DiffsReducer<A, D> diffAccumulator) {
-		return reduce(repository, system, heads, new AbstractGraphReducer<K, D, A, Map<K, A>>(diffAccumulator) {
+		return reduce(repository, system, heads, new AbstractGraphReducer<>(diffAccumulator) {
 			@Override
 			protected @NotNull Promise<Optional<Map<K, A>>> tryGetResult(OTCommit<K, D> commit, Map<K, Map<K, A>> accumulators, Map<K, OTCommit<K, D>> headCommits) {
 				if (accumulators.containsKey(parentNode)) {

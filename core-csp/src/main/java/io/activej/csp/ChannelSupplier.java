@@ -78,7 +78,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 * @return ChannelSupplier which wraps {@code AsyncSupplier}
 	 */
 	static <T> ChannelSupplier<T> of(AsyncSupplier<T> supplier, @Nullable AsyncCloseable closeable) {
-		return new AbstractChannelSupplier<T>(closeable) {
+		return new AbstractChannelSupplier<>(closeable) {
 			@Override
 			protected Promise<T> doGet() {
 				return supplier.get();
@@ -187,7 +187,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 */
 	static <T> ChannelSupplier<T> ofPromise(Promise<? extends ChannelSupplier<T>> promise) {
 		if (promise.isResult()) return promise.getResult();
-		return new AbstractChannelSupplier<T>() {
+		return new AbstractChannelSupplier<>() {
 			ChannelSupplier<T> supplier;
 			Exception exception;
 
@@ -213,7 +213,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 		if (Eventloop.getCurrentEventloop() == anotherEventloop) {
 			return anotherEventloopSupplier;
 		}
-		return new AbstractChannelSupplier<T>() {
+		return new AbstractChannelSupplier<>() {
 			@Override
 			protected Promise<T> doGet() {
 				SettablePromise<T> promise = new SettablePromise<>();
@@ -247,7 +247,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 * the {@code provider}
 	 */
 	static <T> ChannelSupplier<T> ofLazyProvider(Supplier<? extends ChannelSupplier<T>> provider) {
-		return new AbstractChannelSupplier<T>() {
+		return new AbstractChannelSupplier<>() {
 			private ChannelSupplier<T> supplier;
 
 			@Override
@@ -281,7 +281,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 * complete asynchronously.
 	 */
 	default ChannelSupplier<T> async() {
-		return new AbstractChannelSupplier<T>(this) {
+		return new AbstractChannelSupplier<>(this) {
 			@Override
 			protected Promise<T> doGet() {
 				return ChannelSupplier.this.get().async();
@@ -295,7 +295,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 * executed by the provided {@code asyncExecutor}.
 	 */
 	default ChannelSupplier<T> withExecutor(AsyncExecutor asyncExecutor) {
-		return new AbstractChannelSupplier<T>(this) {
+		return new AbstractChannelSupplier<>(this) {
 			@Override
 			protected Promise<T> doGet() {
 				return asyncExecutor.execute(ChannelSupplier.this::get);
@@ -309,7 +309,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 * successfully, the result is accepted by the provided {@code fn}.
 	 */
 	default ChannelSupplier<T> peek(Consumer<? super T> fn) {
-		return new AbstractChannelSupplier<T>(this) {
+		return new AbstractChannelSupplier<>(this) {
 			@Override
 			protected Promise<T> doGet() {
 				return ChannelSupplier.this.get()
@@ -324,7 +324,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 * applies provided {@code fn} to the result.
 	 */
 	default <V> ChannelSupplier<V> map(FunctionEx<? super @NotNull T, ? extends V> fn) {
-		return new AbstractChannelSupplier<V>(this) {
+		return new AbstractChannelSupplier<>(this) {
 			@Override
 			protected Promise<V> doGet() {
 				return ChannelSupplier.this.get()
@@ -347,7 +347,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 * to its Promise asynchronously.
 	 */
 	default <V> ChannelSupplier<V> mapAsync(Function<? super @NotNull T, Promise<V>> fn) {
-		return new AbstractChannelSupplier<V>(this) {
+		return new AbstractChannelSupplier<>(this) {
 			@Override
 			protected Promise<V> doGet() {
 				return ChannelSupplier.this.get()
@@ -362,7 +362,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 * match(es) the predicate, leaving only those value(s) which pass the test.
 	 */
 	default ChannelSupplier<T> filter(Predicate<? super T> predicate) {
-		return new AbstractChannelSupplier<T>(this) {
+		return new AbstractChannelSupplier<>(this) {
 			@Override
 			protected Promise<T> doGet() {
 				while (true) {
@@ -391,7 +391,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 * {@code predicate test}, consequent {@code get} operations will return {@code null}.
 	 */
 	default ChannelSupplier<T> until(Predicate<? super T> predicate) {
-		return new AbstractChannelSupplier<T>(this) {
+		return new AbstractChannelSupplier<>(this) {
 			boolean stop = false;
 
 			@Override
@@ -417,7 +417,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 * completed Promise (in case of exception, with {@code null} result value).
 	 */
 	default ChannelSupplier<T> lenient() {
-		return new AbstractChannelSupplier<T>(this) {
+		return new AbstractChannelSupplier<>(this) {
 			@Override
 			protected Promise<T> doGet() {
 				return ChannelSupplier.this.get()
@@ -462,7 +462,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	default ChannelSupplier<T> withEndOfStream(UnaryOperator<Promise<Void>> fn) {
 		SettablePromise<Void> endOfStream = new SettablePromise<>();
 		Promise<Void> newEndOfStream = fn.apply(endOfStream);
-		return new AbstractChannelSupplier<T>(this) {
+		return new AbstractChannelSupplier<>(this) {
 			@SuppressWarnings("unchecked")
 			@Override
 			protected Promise<T> doGet() {

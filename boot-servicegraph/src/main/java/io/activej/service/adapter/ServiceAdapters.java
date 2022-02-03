@@ -86,7 +86,7 @@ public final class ServiceAdapters {
 	}
 
 	public static ServiceAdapter<Service> forService() {
-		return new ServiceAdapter<Service>() {
+		return new ServiceAdapter<>() {
 			@Override
 			public CompletableFuture<?> start(Service instance, Executor executor) {
 				return instance.start();
@@ -104,7 +104,7 @@ public final class ServiceAdapters {
 	 * executor.
 	 */
 	public static ServiceAdapter<BlockingService> forBlockingService() {
-		return new SimpleServiceAdapter<BlockingService>() {
+		return new SimpleServiceAdapter<>() {
 			@Override
 			protected void start(BlockingService instance) throws Exception {
 				instance.start();
@@ -118,7 +118,7 @@ public final class ServiceAdapters {
 	}
 
 	public static <T> ServiceAdapter<OptionalDependency<T>> forOptionalDependency(ServiceAdapter<T> adapter) {
-		return new ServiceAdapter<OptionalDependency<T>>() {
+		return new ServiceAdapter<>() {
 			@Override
 			public CompletableFuture<?> start(OptionalDependency<T> optional, Executor executor) {
 				if (optional.isPresent()) {
@@ -143,7 +143,7 @@ public final class ServiceAdapters {
 	 * Returns factory which transforms Timer to CompletableFuture. On start it does nothing, on stop it cancel timer.
 	 */
 	public static ServiceAdapter<Timer> forTimer() {
-		return new SimpleServiceAdapter<Timer>(false, false) {
+		return new SimpleServiceAdapter<>(false, false) {
 			@Override
 			protected void start(Timer instance) {
 			}
@@ -159,7 +159,7 @@ public final class ServiceAdapters {
 	 * Returns factory which transforms ExecutorService to CompletableFuture. On starting it doing nothing, on stopping it shuts down ExecutorService.
 	 */
 	public static ServiceAdapter<ExecutorService> forExecutorService() {
-		return new SimpleServiceAdapter<ExecutorService>(false, true) {
+		return new SimpleServiceAdapter<>(false, true) {
 			@Override
 			protected void start(ExecutorService instance) {
 			}
@@ -181,7 +181,7 @@ public final class ServiceAdapters {
 	 * Returns factory which transforms Closeable object to CompletableFuture. On starting it doing nothing, on stopping it close Closeable.
 	 */
 	public static ServiceAdapter<Closeable> forCloseable() {
-		return new SimpleServiceAdapter<Closeable>(false, true) {
+		return new SimpleServiceAdapter<>(false, true) {
 			@Override
 			protected void start(Closeable instance) {
 			}
@@ -197,7 +197,7 @@ public final class ServiceAdapters {
 	 * Returns factory which transforms DataSource object to CompletableFuture. On start it checks connecting , on stop it closes DataSource.
 	 */
 	public static ServiceAdapter<DataSource> forDataSource() {
-		return new SimpleServiceAdapter<DataSource>(true, false) {
+		return new SimpleServiceAdapter<>(true, false) {
 			@Override
 			protected void start(DataSource instance) throws Exception {
 				Connection connection = instance.getConnection();
@@ -211,7 +211,7 @@ public final class ServiceAdapters {
 	}
 
 	public static ServiceAdapter<EventloopService> forEventloopService() {
-		return new ServiceAdapter<EventloopService>() {
+		return new ServiceAdapter<>() {
 			@Override
 			public CompletableFuture<?> start(EventloopService instance, Executor executor) {
 				CompletableFuture<Object> future = new CompletableFuture<>();
@@ -245,7 +245,7 @@ public final class ServiceAdapters {
 	}
 
 	public static ServiceAdapter<EventloopServer> forEventloopServer() {
-		return new ServiceAdapter<EventloopServer>() {
+		return new ServiceAdapter<>() {
 			@Override
 			public CompletableFuture<?> start(EventloopServer instance, Executor executor) {
 				CompletableFuture<?> future = new CompletableFuture<>();
@@ -272,7 +272,7 @@ public final class ServiceAdapters {
 	}
 
 	public static ServiceAdapter<Eventloop> forEventloop(ThreadFactory threadFactory) {
-		return new ServiceAdapter<Eventloop>() {
+		return new ServiceAdapter<>() {
 			@Override
 			public CompletableFuture<?> start(Eventloop eventloop, Executor executor) {
 				CompletableFuture<?> future = new CompletableFuture<>();
@@ -330,7 +330,7 @@ public final class ServiceAdapters {
 	}
 
 	public static ServiceAdapter<BlockingSocketServer> forBlockingSocketServer() {
-		return new ServiceAdapters.SimpleServiceAdapter<BlockingSocketServer>() {
+		return new ServiceAdapters.SimpleServiceAdapter<>() {
 			@Override
 			protected void start(BlockingSocketServer instance) throws Exception {
 				instance.start();
@@ -344,7 +344,7 @@ public final class ServiceAdapters {
 	}
 
 	public static <T> ServiceAdapter<T> immediateServiceAdapter() {
-		return new SimpleServiceAdapter<T>(false, false) {
+		return new SimpleServiceAdapter<>(false, false) {
 			@Override
 			protected void start(T instance) {
 			}
@@ -373,7 +373,7 @@ public final class ServiceAdapters {
 
 	public static <T> ServiceAdapter<T> combinedAdapter(List<? extends ServiceAdapter<? super T>> startOrder,
 			List<? extends ServiceAdapter<? super T>> stopOrder) {
-		return new ServiceAdapter<T>() {
+		return new ServiceAdapter<>() {
 			@SuppressWarnings("unchecked")
 			private void doAction(T instance, Executor executor,
 					Iterator<? extends ServiceAdapter<? super T>> iterator, CompletableFuture<?> future,

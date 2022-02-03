@@ -215,7 +215,7 @@ public final class DynamicMBeanFactoryOperationsTest {
 
 	// custom matchers
 	public static <T> Matcher<Map<T, ?>> hasKey(T key) {
-		return new BaseMatcher<Map<T, ?>>() {
+		return new BaseMatcher<>() {
 
 			@Override
 			public void describeTo(Description description) {
@@ -235,7 +235,7 @@ public final class DynamicMBeanFactoryOperationsTest {
 	}
 
 	public static Matcher<MBeanOperationInfo> hasParameter(String name, String type) {
-		return new BaseMatcher<MBeanOperationInfo>() {
+		return new BaseMatcher<>() {
 			@Override
 			public boolean matches(Object item) {
 				if (item == null) {
@@ -258,7 +258,7 @@ public final class DynamicMBeanFactoryOperationsTest {
 	}
 
 	public static Matcher<MBeanOperationInfo> hasReturnType(String type) {
-		return new BaseMatcher<MBeanOperationInfo>() {
+		return new BaseMatcher<>() {
 			@Override
 			public boolean matches(Object item) {
 				if (item == null) {

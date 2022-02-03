@@ -269,7 +269,7 @@ public final class ChannelSuppliers {
 	 * which returns an {@link Iterator} of a <V> type. Then provides this value to ChannelSupplier of <V>.
 	 */
 	public static <T, V> ChannelSupplier<V> remap(ChannelSupplier<T> supplier, Function<? super T, ? extends Iterator<? extends V>> fn) {
-		return new AbstractChannelSupplier<V>(supplier) {
+		return new AbstractChannelSupplier<>(supplier) {
 			Iterator<? extends V> iterator = iteratorOf();
 			boolean endOfStream;
 
@@ -341,7 +341,7 @@ public final class ChannelSuppliers {
 	 * @return a {@link ChannelSupplier<ByteBuf>} out ouf an {@link InputStream}
 	 */
 	public static ChannelSupplier<ByteBuf> inputStreamAsChannelSupplier(Executor executor, int bufSize, InputStream inputStream) {
-		return new AbstractChannelSupplier<ByteBuf>() {
+		return new AbstractChannelSupplier<>() {
 			@Override
 			protected Promise<ByteBuf> doGet() {
 				return Promise.ofBlocking(executor, () -> {

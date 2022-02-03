@@ -286,7 +286,7 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAhead
 	}
 
 	private final class WalConsumer {
-		private final AbstractStreamSupplier<CrdtData<K, S>> internalSupplier = new AbstractStreamSupplier<CrdtData<K, S>>() {
+		private final AbstractStreamSupplier<CrdtData<K, S>> internalSupplier = new AbstractStreamSupplier<>() {
 			@Override
 			protected void onStarted() {
 				resume();

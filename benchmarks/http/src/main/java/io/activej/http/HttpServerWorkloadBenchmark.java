@@ -147,7 +147,7 @@ public class HttpServerWorkloadBenchmark extends Launcher {
 	private Promise<Long> roundGet() {
 		SettablePromise<Long> promise = new SettablePromise<>();
 
-		Callback<HttpResponse> callback = new Callback<HttpResponse>() {
+		Callback<HttpResponse> callback = new Callback<>() {
 			@Override
 			public void accept(HttpResponse result, @Nullable Exception e) {
 				completed++;

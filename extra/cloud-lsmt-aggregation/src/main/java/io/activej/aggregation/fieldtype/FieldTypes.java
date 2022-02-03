@@ -39,7 +39,7 @@ import static java.time.temporal.ChronoUnit.DAYS;
 public final class FieldTypes {
 
 	public static FieldType<Byte> ofByte() {
-		return new FieldType<Byte>(byte.class, new SerializerDefByte(false), BYTE_CODEC) {
+		return new FieldType<>(byte.class, new SerializerDefByte(false), BYTE_CODEC) {
 			@Override
 			public Expression toStringValue(Expression value) {
 				return Expressions.staticCall(Byte.class, "toString", value);
@@ -48,7 +48,7 @@ public final class FieldTypes {
 	}
 
 	public static FieldType<Short> ofShort() {
-		return new FieldType<Short>(short.class, new SerializerDefShort(false), SHORT_CODEC) {
+		return new FieldType<>(short.class, new SerializerDefShort(false), SHORT_CODEC) {
 			@Override
 			public Expression toStringValue(Expression value) {
 				return Expressions.staticCall(Short.class, "toString", value);
@@ -120,7 +120,7 @@ public final class FieldTypes {
 	}
 
 	public static FieldType<String> ofString(StringFormat format) {
-		return new FieldType<String>(String.class, new SerializerDefString(format), STRING_CODEC) {
+		return new FieldType<>(String.class, new SerializerDefString(format), STRING_CODEC) {
 			@Override
 			public Expression toStringValue(Expression value) {
 				return value;

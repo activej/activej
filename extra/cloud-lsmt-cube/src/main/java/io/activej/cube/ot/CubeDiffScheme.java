@@ -35,7 +35,7 @@ public interface CubeDiffScheme<D> {
 	}
 
 	static CubeDiffScheme<LogDiff<CubeDiff>> ofLogDiffs() {
-		return new CubeDiffScheme<LogDiff<CubeDiff>>() {
+		return new CubeDiffScheme<>() {
 			@Override
 			public LogDiff<CubeDiff> wrap(CubeDiff cubeDiff) {
 				return LogDiff.forCurrentPosition(cubeDiff);
@@ -49,7 +49,7 @@ public interface CubeDiffScheme<D> {
 	}
 
 	static CubeDiffScheme<CubeDiff> ofCubeDiffs() {
-		return new CubeDiffScheme<CubeDiff>() {
+		return new CubeDiffScheme<>() {
 			@Override
 			public CubeDiff wrap(CubeDiff cubeDiff) {
 				return cubeDiff;

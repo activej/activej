@@ -83,7 +83,7 @@ public final class AdderServerModule extends AbstractModule {
 
 	@Provides
 	CrdtFunction<DetailedSumsCrdtState> function() {
-		return new CrdtFunction<DetailedSumsCrdtState>() {
+		return new CrdtFunction<>() {
 			@Override
 			public DetailedSumsCrdtState merge(DetailedSumsCrdtState first, long firstTimestamp, DetailedSumsCrdtState second, long secondTimestamp) {
 				return first.merge(second);

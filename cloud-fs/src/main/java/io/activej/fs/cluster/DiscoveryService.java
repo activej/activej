@@ -46,7 +46,7 @@ public interface DiscoveryService {
 	 */
 	static DiscoveryService constant(Map<Object, ActiveFs> partitions) {
 		Map<Object, ActiveFs> constant = Map.copyOf(partitions);
-		return () -> new AsyncSupplier<Map<Object, ActiveFs>>() {
+		return () -> new AsyncSupplier<>() {
 			int i = 0;
 
 			@Override

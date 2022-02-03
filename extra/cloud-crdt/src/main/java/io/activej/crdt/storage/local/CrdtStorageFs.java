@@ -273,7 +273,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 	private static <K extends Comparable<K>, S> BinarySerializer<CrdtReducingData<K, S>> createSerializer(CrdtDataSerializer<K, S> serializer) {
 		BinarySerializer<K> keySerializer = serializer.getKeySerializer();
 		BinarySerializer<@Nullable S> stateSerializer = BinarySerializers.ofNullable(serializer.getStateSerializer());
-		return new BinarySerializer<CrdtReducingData<K, S>>() {
+		return new BinarySerializer<>() {
 			@Override
 			public void encode(BinaryOutput out, CrdtReducingData<K, S> item) {
 				keySerializer.encode(out, item.key);

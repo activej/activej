@@ -89,7 +89,7 @@ public class DataflowSerializationTest {
 				new NodeDownload<>(3, Integer.class, new InetSocketAddress(InetAddress.getByName("127.0.0.1"), 1571), new StreamId(Long.MAX_VALUE))
 		);
 
-		JsonCodec<DataflowCommand> commandCodec = Injector.of(serialization).getInstance(new Key<JsonCodec<DataflowCommand>>() {});
+		JsonCodec<DataflowCommand> commandCodec = Injector.of(serialization).getInstance(new Key<>() {});
 
 		String str = toJson(commandCodec, new DataflowCommandExecute(123, nodes));
 		System.out.println(str);

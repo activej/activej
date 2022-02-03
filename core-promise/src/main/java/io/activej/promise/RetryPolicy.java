@@ -143,7 +143,7 @@ public interface RetryPolicy<S> {
 	}
 
 	default RetryPolicy<Tuple2<RefInt, S>> withMaxTotalRetryCount(int maxRetryCount) {
-		return new DelegatingRetryPolicy<RefInt, S>(this) {
+		return new DelegatingRetryPolicy<>(this) {
 			@Override
 			protected RefInt doCreateRetryState() {
 				return new RefInt(0);

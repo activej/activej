@@ -78,7 +78,7 @@ final class HttpHeadersMultimap<K, V> {
 	}
 
 	public Collection<Map.Entry<K, V>> getEntries() {
-		return new AbstractCollection<Map.Entry<K, V>>() {
+		return new AbstractCollection<>() {
 			@Override
 			public int size() {
 				return size;
@@ -86,12 +86,12 @@ final class HttpHeadersMultimap<K, V> {
 
 			@Override
 			public @NotNull Iterator<Map.Entry<K, V>> iterator() {
-				return new Iterator<Map.Entry<K, V>>() {
+				return new Iterator<>() {
 					int i = 0;
 					@Nullable K k;
 					@Nullable V v;
 
-					{ advance();}
+					{advance();}
 
 					@SuppressWarnings("unchecked")
 					private void advance() {

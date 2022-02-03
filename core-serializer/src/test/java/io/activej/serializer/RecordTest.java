@@ -67,12 +67,14 @@ public class RecordTest {
 	public void testGenericRecord() {
 		{
 			var record1 = new GenericRecord<String>("abc", 1);
-			var record2 = doTest(record1, SerializerBuilder.create().build(new TypeT<GenericRecord<String>>() {}));
+			BinarySerializer<GenericRecord<String>> serializer = SerializerBuilder.create().build(new TypeT<>() {});
+			var record2 = doTest(record1, serializer);
 			Assert.assertEquals(record1, record2);
 		}
 		{
 			var record1 = new GenericRecord<String>(null, 1);
-			var record2 = doTest(record1, SerializerBuilder.create().build(new TypeT<GenericRecord<String>>() {}));
+			BinarySerializer<GenericRecord<String>> serializer = SerializerBuilder.create().build(new TypeT<>() {});
+			var record2 = doTest(record1, serializer);
 			Assert.assertEquals(record1, record2);
 		}
 	}

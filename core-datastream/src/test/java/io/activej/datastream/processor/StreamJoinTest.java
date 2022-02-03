@@ -45,7 +45,7 @@ public class StreamJoinTest {
 				StreamJoin.create(Integer::compareTo,
 						input -> input.detailId,
 						input -> input.id,
-						new ValueJoiner<Integer, DataItemMaster, DataItemDetail, DataItemMasterDetail>() {
+						new ValueJoiner<>() {
 							@Override
 							public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
 								return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);
@@ -98,7 +98,7 @@ public class StreamJoinTest {
 				StreamJoin.create(Integer::compareTo,
 						input -> input.detailId,
 						input -> input.id,
-						new ValueJoiner<Integer, DataItemMaster, DataItemDetail, DataItemMasterDetail>() {
+						new ValueJoiner<>() {
 							@Override
 							public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
 								return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);
@@ -151,7 +151,7 @@ public class StreamJoinTest {
 				StreamJoin.create(Integer::compareTo,
 						input -> input.detailId,
 						input -> input.id,
-						new ValueJoiner<Integer, DataItemMaster, DataItemDetail, DataItemMasterDetail>() {
+						new ValueJoiner<>() {
 							@Override
 							public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
 								return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);

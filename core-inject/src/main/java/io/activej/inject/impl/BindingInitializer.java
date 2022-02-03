@@ -32,10 +32,10 @@ import static java.util.stream.Collectors.toSet;
  */
 @SuppressWarnings({"rawtypes", "Convert2Lambda"})
 public abstract class BindingInitializer<T> {
-	private static final BindingInitializer<?> NOOP = new BindingInitializer<Object>(Set.of()) {
+	private static final BindingInitializer<?> NOOP = new BindingInitializer<>(Set.of()) {
 		@Override
 		public CompiledBindingInitializer<Object> compile(CompiledBindingLocator compiledBindings) {
-			return new CompiledBindingInitializer<Object>() {
+			return new CompiledBindingInitializer<>() {
 				@Override
 				public void initInstance(Object instance, AtomicReferenceArray[] instances, int synchronizedScope) {
 					// noop
@@ -63,14 +63,14 @@ public abstract class BindingInitializer<T> {
 
 	@SuppressWarnings("unchecked")
 	public static <T> BindingInitializer<T> combine(List<BindingInitializer<T>> bindingInitializers) {
-		return new BindingInitializer<T>(bindingInitializers.stream().map(BindingInitializer::getDependencies).flatMap(Collection::stream).collect(toSet())) {
+		return new BindingInitializer<>(bindingInitializers.stream().map(BindingInitializer::getDependencies).flatMap(Collection::stream).collect(toSet())) {
 			@Override
 			public CompiledBindingInitializer<T> compile(CompiledBindingLocator compiledBindings) {
 				CompiledBindingInitializer<T>[] initializers = bindingInitializers.stream()
 						.filter(bindingInitializer -> bindingInitializer != NOOP)
 						.map(bindingInitializer -> bindingInitializer.compile(compiledBindings))
 						.toArray(CompiledBindingInitializer[]::new);
-				if (initializers.length == 0) return new CompiledBindingInitializer<T>() {
+				if (initializers.length == 0) return new CompiledBindingInitializer<>() {
 					@Override
 					public void initInstance(T instance, AtomicReferenceArray[] instances, int synchronizedScope) {
 						// noop
@@ -80,7 +80,7 @@ public abstract class BindingInitializer<T> {
 				if (initializers.length == 2) {
 					CompiledBindingInitializer<T> initializer0 = initializers[0];
 					CompiledBindingInitializer<T> initializer1 = initializers[1];
-					return new CompiledBindingInitializer<T>() {
+					return new CompiledBindingInitializer<>() {
 						@Override
 						public void initInstance(T instance, AtomicReferenceArray[] instances, int synchronizedScope) {
 							initializer0.initInstance(instance, instances, synchronizedScope);
@@ -88,7 +88,7 @@ public abstract class BindingInitializer<T> {
 						}
 					};
 				}
-				return new CompiledBindingInitializer<T>() {
+				return new CompiledBindingInitializer<>() {
 					@Override
 					public void initInstance(T instance, AtomicReferenceArray[] instances, int synchronizedScope) {
 						//noinspection ForLoopReplaceableByForEach

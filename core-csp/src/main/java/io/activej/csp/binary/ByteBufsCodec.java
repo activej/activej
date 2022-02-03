@@ -31,7 +31,7 @@ public interface ByteBufsCodec<I, O> {
 	@Nullable I tryDecode(ByteBufs bufs) throws MalformedDataException;
 
 	default <I1, O1> @NotNull ByteBufsCodec<I1, O1> andThen(DecoderFunction<? super I, ? extends I1> decoder, Function<? super O1, ? extends O> encoder) {
-		return new ByteBufsCodec<I1, O1>() {
+		return new ByteBufsCodec<>() {
 			@Override
 			public ByteBuf encode(O1 item) {
 				return ByteBufsCodec.this.encode(encoder.apply(item));
@@ -47,7 +47,7 @@ public interface ByteBufsCodec<I, O> {
 	}
 
 	static @NotNull ByteBufsCodec<ByteBuf, ByteBuf> ofDelimiter(ByteBufsDecoder<ByteBuf> delimiterIn, UnaryOperator<ByteBuf> delimiterOut) {
-		return new ByteBufsCodec<ByteBuf, ByteBuf>() {
+		return new ByteBufsCodec<>() {
 			@Override
 			public ByteBuf encode(ByteBuf buf) {
 				return delimiterOut.apply(buf);

@@ -69,7 +69,7 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 	private final BinarySerializerLocator serializers;
 
 	private final Map<Long, Task> runningTasks = new HashMap<>();
-	private final Map<Long, Task> lastTasks = new LinkedHashMap<Long, Task>() {
+	private final Map<Long, Task> lastTasks = new LinkedHashMap<>() {
 		@Override
 		protected boolean removeEldestEntry(Map.Entry eldest) {
 			return size() > MAX_LAST_RAN_TASKS;

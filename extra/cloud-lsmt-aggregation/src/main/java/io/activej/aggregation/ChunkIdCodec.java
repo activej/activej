@@ -31,7 +31,7 @@ public interface ChunkIdCodec<C> extends JsonCodec<C> {
 	C fromFileName(String chunkFileName) throws MalformedDataException;
 
 	static ChunkIdCodec<Long> ofLong() {
-		return new ChunkIdCodec<Long>() {
+		return new ChunkIdCodec<>() {
 			@Override
 			public String toFileName(Long chunkId) {
 				return chunkId.toString();
@@ -59,7 +59,7 @@ public interface ChunkIdCodec<C> extends JsonCodec<C> {
 	}
 
 	static ChunkIdCodec<String> ofString() {
-		return new ChunkIdCodec<String>() {
+		return new ChunkIdCodec<>() {
 			@Override
 			public String toFileName(String chunkId) {
 				return chunkId;

@@ -286,7 +286,7 @@ public final class TestClusterDeadPartitionCheck {
 	private static Set<Path> listAllFiles(Path dir) {
 		Set<Path> files = new HashSet<>();
 		try {
-			Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
+			Files.walkFileTree(dir, new SimpleFileVisitor<>() {
 				@Override
 				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
 					files.add(file);

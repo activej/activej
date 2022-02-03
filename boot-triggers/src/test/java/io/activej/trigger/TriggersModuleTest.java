@@ -211,7 +211,7 @@ public class TriggersModuleTest {
 				TriggersModule.create()
 		);
 		Instances<OptionalDependency<TestClass>> firstPoolInstances = injector.getInstance(Key.of(WorkerPool.class, "first"))
-				.getInstances(new Key<OptionalDependency<TestClass>>() {});
+				.getInstances(new Key<>() {});
 
 		assertEquals(firstPoolSize, firstPoolInstances.size());
 		for (OptionalDependency<TestClass> optional : firstPoolInstances) {
@@ -219,7 +219,7 @@ public class TriggersModuleTest {
 		}
 
 		Instances<OptionalDependency<TestClass>> secondPoolInstances = injector.getInstance(Key.of(WorkerPool.class, "second"))
-				.getInstances(new Key<OptionalDependency<TestClass>>() {});
+				.getInstances(new Key<>() {});
 
 		assertEquals(secondPoolSize, secondPoolInstances.size());
 		for (OptionalDependency<TestClass> optional : secondPoolInstances) {
@@ -275,7 +275,7 @@ public class TriggersModuleTest {
 				TriggersModule.create()
 		);
 		Instances<OptionalDependency<TestClass>> firstPoolInstances = injector.getInstance(Key.of(WorkerPool.class, "first"))
-				.getInstances(new Key<OptionalDependency<TestClass>>() {});
+				.getInstances(new Key<>() {});
 
 		assertEquals(firstPoolSize, firstPoolInstances.size());
 		for (OptionalDependency<TestClass> optional : firstPoolInstances) {
@@ -283,7 +283,7 @@ public class TriggersModuleTest {
 		}
 
 		Instances<OptionalDependency<TestClass>> secondPoolInstances = injector.getInstance(Key.of(WorkerPool.class, "second"))
-				.getInstances(new Key<OptionalDependency<TestClass>>() {});
+				.getInstances(new Key<>() {});
 
 		assertEquals(secondPoolSize, secondPoolInstances.size());
 		for (OptionalDependency<TestClass> optional : secondPoolInstances) {

@@ -491,7 +491,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 			List<AggregationChunk> individualChunks, Class<T> sequenceClass,
 			DefiningClassLoader queryClassLoader) {
 		Iterator<AggregationChunk> chunkIterator = individualChunks.iterator();
-		return StreamSupplier.concat(new Iterator<StreamSupplier<T>>() {
+		return StreamSupplier.concat(new Iterator<>() {
 			@Override
 			public boolean hasNext() {
 				return chunkIterator.hasNext();

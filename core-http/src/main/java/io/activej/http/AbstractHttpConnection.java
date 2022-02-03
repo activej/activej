@@ -626,7 +626,7 @@ public abstract class AbstractHttpConnection {
 	}
 
 	protected final ChannelSupplier<ByteBuf> sanitize(ChannelSupplier<ByteBuf> bodyStream) {
-		return new AbstractChannelSupplier<ByteBuf>(bodyStream) {
+		return new AbstractChannelSupplier<>(bodyStream) {
 			@Override
 			protected Promise<ByteBuf> doGet() {
 				if (closeException != null) {

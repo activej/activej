@@ -58,7 +58,7 @@ public final class CrdtDataSerializer<K extends Comparable<K>, S> implements Bin
 	}
 
 	private static <K extends Comparable<K> >BinarySerializer<CrdtTombstone<K>> createTombstoneSerializer(BinarySerializer<K> keySerializer) {
-		return new BinarySerializer<CrdtTombstone<K>>() {
+		return new BinarySerializer<>() {
 			@Override
 			public void encode(BinaryOutput out, CrdtTombstone<K> item) {
 				keySerializer.encode(out, item.getKey());

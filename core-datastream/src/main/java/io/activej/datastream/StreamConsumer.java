@@ -156,7 +156,7 @@ public interface StreamConsumer<T> extends AsyncCloseable {
 		Promise<Void> acknowledgement = getAcknowledgement();
 		Promise<Void> newAcknowledgement = fn.apply(acknowledgement);
 		if (acknowledgement == newAcknowledgement) return this;
-		return new ForwardingStreamConsumer<T>(this) {
+		return new ForwardingStreamConsumer<>(this) {
 			@Override
 			public Promise<Void> getAcknowledgement() {
 				return newAcknowledgement;

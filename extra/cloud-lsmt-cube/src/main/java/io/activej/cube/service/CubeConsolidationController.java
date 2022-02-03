@@ -56,9 +56,7 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 
 	private static final ChunkLocker<Object> NOOP_CHUNK_LOCKER = ChunkLockerNoOp.create();
 
-	public static final Supplier<AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>>> DEFAULT_LOCKER_STRATEGY = new Supplier<AsyncBiFunction<Aggregation,
-			Set<Object>,
-			List<AggregationChunk>>>() {
+	public static final Supplier<AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>>> DEFAULT_LOCKER_STRATEGY = new Supplier<>() {
 		private boolean hotSegment = false;
 
 		@Override

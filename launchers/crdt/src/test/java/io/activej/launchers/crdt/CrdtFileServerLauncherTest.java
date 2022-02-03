@@ -20,7 +20,7 @@ public class CrdtFileServerLauncherTest {
 		new CrdtFileServerLauncher<String, Integer>() {
 			@Override
 			protected CrdtFileServerLogicModule<String, Integer> getBusinessLogicModule() {
-				return new CrdtFileServerLogicModule<String, Integer>() {};
+				return new CrdtFileServerLogicModule<>() {};
 			}
 
 			@Provides

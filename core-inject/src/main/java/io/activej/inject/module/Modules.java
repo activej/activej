@@ -233,7 +233,7 @@ public final class Modules {
 					newDependencies.add(newImportKey);
 				}
 				Binding<?> newBinding = changed ?
-						new Binding<Object>(newDependencies) {
+						new Binding<>(newDependencies) {
 							@Override
 							public CompiledBinding<Object> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 								//noinspection unchecked

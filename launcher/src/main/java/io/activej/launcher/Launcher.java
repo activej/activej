@@ -79,7 +79,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 @SuppressWarnings({"WeakerAccess", "RedundantThrows", "unused"})
 @JmxBean(ConcurrentJmxBeanAdapter.class)
 public abstract class Launcher {
-	public static final Key<Set<InstanceInjector<?>>> INSTANCE_INJECTORS_KEY = new Key<Set<InstanceInjector<?>>>() {};
+	public static final Key<Set<InstanceInjector<?>>> INSTANCE_INJECTORS_KEY = new Key<>() {};
 
 	protected final Logger logger = getLogger(getClass());
 	protected final Logger logger0 = getLogger(getClass().getName() + ".0");
@@ -145,7 +145,7 @@ public abstract class Launcher {
 			injector.createEagerInstances();
 			logger0.info("Created eager singletons");
 
-			Set<LauncherService> services = injector.getInstanceOr(new Key<Set<LauncherService>>() {}, Set.of());
+			Set<LauncherService> services = injector.getInstanceOr(new Key<>() {}, Set.of());
 			Set<LauncherService> startedServices = new HashSet<>();
 
 			logger0.info("Post-injected instances: {}", postInjectInstances(injector));
@@ -278,7 +278,7 @@ public abstract class Launcher {
 	@SuppressWarnings("unchecked")
 	private Module getInternalModule() {
 		Class<Launcher> launcherClass = (Class<Launcher>) getClass();
-		Key<CompletionStage<Void>> completionStageKey = new Key<CompletionStage<Void>>() {};
+		Key<CompletionStage<Void>> completionStageKey = new Key<>() {};
 
 		return ModuleBuilder.create()
 				.bind(String[].class, Args.class).toInstance(args)

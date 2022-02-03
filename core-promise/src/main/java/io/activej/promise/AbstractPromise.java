@@ -187,7 +187,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
+		NextPromise<T, U> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
@@ -226,7 +226,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
+		NextPromise<T, U> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
@@ -265,7 +265,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
@@ -304,7 +304,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
@@ -343,7 +343,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
+		NextPromise<T, U> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
@@ -380,7 +380,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
+		NextPromise<T, U> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, Exception e) {
 				U newResult;
@@ -413,7 +413,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
+		NextPromise<T, U> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, Exception e) {
 				U newResult;
@@ -446,7 +446,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
@@ -484,7 +484,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
@@ -522,7 +522,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
@@ -558,7 +558,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
+		NextPromise<T, U> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
@@ -595,7 +595,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
+		NextPromise<T, U> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
@@ -634,7 +634,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
+		NextPromise<T, U> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
@@ -673,7 +673,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
@@ -716,7 +716,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
@@ -759,7 +759,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
+		NextPromise<T, U> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
@@ -800,7 +800,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
+		NextPromise<T, U> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
@@ -845,7 +845,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, U> resultPromise = new NextPromise<T, U>() {
+		NextPromise<T, U> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
@@ -893,7 +893,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				try {
@@ -936,7 +936,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				try {
@@ -982,7 +982,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				try {
@@ -1017,7 +1017,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			}
 			return this;
 		}
-		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				try {
@@ -1054,7 +1054,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			}
 			return this;
 		}
-		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				try {
@@ -1091,7 +1091,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			}
 			return this;
 		}
-		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				try {
@@ -1126,7 +1126,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			}
 			return this;
 		}
-		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
@@ -1165,7 +1165,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				try {
@@ -1202,7 +1202,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			}
 			return this;
 		}
-		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
@@ -1241,7 +1241,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				try {
@@ -1278,7 +1278,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			}
 			return this;
 		}
-		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
@@ -1317,7 +1317,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				try {
@@ -1354,7 +1354,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result1, @Nullable Exception e) {
 				try {
@@ -1391,7 +1391,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			}
 			return this;
 		}
-		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
@@ -1430,7 +1430,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				try {
@@ -1467,7 +1467,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 				return Promise.ofException(ex);
 			}
 		}
-		NextPromise<T, T> resultPromise = new NextPromise<T, T>() {
+		NextPromise<T, T> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				try {
@@ -1688,7 +1688,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		if (isComplete()) {
 			return Promise.of(isResult() ? Try.of(result) : Try.ofException(exception));
 		}
-		NextPromise<T, Try<T>> resultPromise = new NextPromise<T, Try<T>>() {
+		NextPromise<T, Try<T>> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
@@ -1712,7 +1712,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		if (isComplete()) {
 			return isResult() ? Promise.complete() : (Promise<Void>) this;
 		}
-		NextPromise<T, Void> resultPromise = new NextPromise<T, Void>() {
+		NextPromise<T, Void> resultPromise = new NextPromise<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {
@@ -1752,7 +1752,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			}
 		}
 		CompletableFuture<T> future = new CompletableFuture<>();
-		subscribe(new SimpleCallback<T>() {
+		subscribe(new SimpleCallback<>() {
 			@Override
 			public void accept(T result, @Nullable Exception e) {
 				if (e == null) {

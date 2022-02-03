@@ -374,7 +374,7 @@ public final class PromisesTest {
 				}).iterator();
 
 		// completion inside Iterator::next
-		Iterator<Promise<T>> iteratorNext = new Iterator<Promise<T>>() {
+		Iterator<Promise<T>> iteratorNext = new Iterator<>() {
 			SettablePromise<T> settablePromise;
 
 			@Override

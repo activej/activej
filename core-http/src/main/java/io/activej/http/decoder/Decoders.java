@@ -38,7 +38,7 @@ public final class Decoders {
 			@NotNull Mapper<String, T> fn,
 			@NotNull BiFunction<HttpRequest, String, String> paramSupplier,
 			String message) {
-		return new AbstractDecoder<T>(paramName) {
+		return new AbstractDecoder<>(paramName) {
 			@Override
 			public Either<T, DecodeErrors> decode(@NotNull HttpRequest request) {
 				String str = paramSupplier.apply(request, paramName);
@@ -54,7 +54,7 @@ public final class Decoders {
 			@NotNull Mapper<String, T> fn,
 			@NotNull BiFunction<HttpRequest, String, String> paramSupplier,
 			@Nullable T defaultValue) {
-		return new AbstractDecoder<T>(paramName) {
+		return new AbstractDecoder<>(paramName) {
 			@Override
 			public Either<T, DecodeErrors> decode(@NotNull HttpRequest request) {
 				String str = paramSupplier.apply(request, paramName);

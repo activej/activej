@@ -33,7 +33,7 @@ public class StreamConsumerSwitcherTest {
 				.collect(toList());
 		StreamConsumerSwitcher<Integer> switcher = StreamConsumerSwitcher.create();
 
-		AbstractStreamSupplier<Integer> streamSupplier = new AbstractStreamSupplier<Integer>() {
+		AbstractStreamSupplier<Integer> streamSupplier = new AbstractStreamSupplier<>() {
 			final RefInt refInt = new RefInt(0);
 			final Iterator<StreamConsumerToList<Integer>> iterator = consumers.iterator();
 
@@ -79,7 +79,7 @@ public class StreamConsumerSwitcherTest {
 		StreamConsumer<Integer> consumerClosed = StreamConsumer.closingWithError(expectedException);
 		StreamConsumerToList<Integer> consumer2 = StreamConsumerToList.create();
 
-		AbstractStreamSupplier<Integer> streamSupplier = new AbstractStreamSupplier<Integer>() {
+		AbstractStreamSupplier<Integer> streamSupplier = new AbstractStreamSupplier<>() {
 			final RefInt refInt = new RefInt(0);
 
 			@Override
@@ -93,9 +93,9 @@ public class StreamConsumerSwitcherTest {
 					send(refInt.inc());
 					int number = refInt.get();
 					if (number % 10 == 0) {
-						if (number == 10){
+						if (number == 10) {
 							switcher.switchTo(consumerClosed.transformWith(randomlySuspending()));
-						} else if (number == 20){
+						} else if (number == 20) {
 							switcher.switchTo(consumer2.transformWith(randomlySuspending()));
 						} else {
 							break;
@@ -170,7 +170,7 @@ public class StreamConsumerSwitcherTest {
 				StreamConsumer.ofPromise(Promises.delay(Duration.ofMillis(1), StreamConsumerToList.create(list2))));
 		StreamConsumerSwitcher<Integer> switcher = StreamConsumerSwitcher.create();
 
-		AbstractStreamSupplier<Integer> streamSupplier = new AbstractStreamSupplier<Integer>() {
+		AbstractStreamSupplier<Integer> streamSupplier = new AbstractStreamSupplier<>() {
 			final RefInt refInt = new RefInt(0);
 			final Iterator<StreamConsumer<Integer>> iterator = consumers.iterator();
 

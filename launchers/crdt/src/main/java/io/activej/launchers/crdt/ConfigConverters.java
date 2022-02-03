@@ -43,7 +43,7 @@ public final class ConfigConverters {
 	public static <P> ConfigConverter<RendezvousPartitionScheme<P>> ofRendezvousPartitionScheme(
 			@NotNull ConfigConverter<P> partitionIdConverter
 	) {
-		return new ConfigConverter<RendezvousPartitionScheme<P>>() {
+		return new ConfigConverter<>() {
 			@Override
 			public @NotNull RendezvousPartitionScheme<P> get(Config config) {
 				Collection<Config> partitionGroupsConfig = config.getChild("partitionGroup").getChildren().values();
@@ -69,7 +69,7 @@ public final class ConfigConverters {
 	}
 
 	public static <P> ConfigConverter<RendezvousPartitionGroup<P>> ofPartitionGroup(ConfigConverter<P> partitionIdConverter) {
-		return new ConfigConverter<RendezvousPartitionGroup<P>>() {
+		return new ConfigConverter<>() {
 			@Override
 			public @NotNull RendezvousPartitionGroup<P> get(Config config) {
 				Set<P> ids = new HashSet<>(config.get(ofList(partitionIdConverter), "ids"));

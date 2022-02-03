@@ -238,7 +238,7 @@ public final class Injector implements ResourceLocator {
 
 		Map<Key<?>, CompiledBinding<?>> compiledBindings = new HashMap<>();
 		compiledBindings.put(Key.of(Injector.class), postprocessor.apply(scope == 0 ?
-				new CompiledBinding<Object>() {
+				new CompiledBinding<>() {
 					volatile Object instance;
 
 					@Override
@@ -249,7 +249,7 @@ public final class Injector implements ResourceLocator {
 						return this.instance;
 					}
 				} :
-				new CompiledBinding<Object>() {
+				new CompiledBinding<>() {
 					@Override
 					public @NotNull Object getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 						return scopedInstances[scope].get(0);

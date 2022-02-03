@@ -60,7 +60,7 @@ public class CubeClassLoaderCache implements CubeClassLoaderCacheMBean, WithInit
 	}
 
 	private final DefiningClassLoader rootClassLoader;
-	private final LinkedHashMap<Key, DefiningClassLoader> cache = new LinkedHashMap<Key, DefiningClassLoader>(16, 0.75f, false) {
+	private final LinkedHashMap<Key, DefiningClassLoader> cache = new LinkedHashMap<>(16, 0.75f, false) {
 		@Override
 		protected boolean removeEldestEntry(Map.Entry<Key, DefiningClassLoader> eldest) {
 			return size() > targetCacheKeys;

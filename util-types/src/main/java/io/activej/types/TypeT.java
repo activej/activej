@@ -58,7 +58,7 @@ public abstract class TypeT<T> {
 	 * Constructs a new {@link TypeT} out of given {@link AnnotatedType}
 	 */
 	public static <T> @NotNull TypeT<T> ofAnnotatedType(@NotNull AnnotatedType annotatedType) {
-		return new TypeT<T>(annotatedType) {};
+		return new TypeT<>(annotatedType) {};
 	}
 
 	private static @NotNull AnnotatedType getSuperclassTypeParameter(@NotNull Class<?> subclass) {

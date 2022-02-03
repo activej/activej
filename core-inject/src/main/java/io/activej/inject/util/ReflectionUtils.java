@@ -265,12 +265,12 @@ public final class ReflectionUtils {
 	public static <T> BindingInitializer<T> fieldInjector(Key<T> container, Field field) {
 		field.setAccessible(true);
 		Key<Object> key = keyOf(container.getType(), field.getGenericType(), field);
-		return new BindingInitializer<T>(Set.of(key)) {
+		return new BindingInitializer<>(Set.of(key)) {
 			@Override
 			public CompiledBindingInitializer<T> compile(CompiledBindingLocator compiledBindings) {
 				CompiledBinding<Object> binding = compiledBindings.get(key);
 				//noinspection Convert2Lambda
-				return new CompiledBindingInitializer<T>() {
+				return new CompiledBindingInitializer<>() {
 					@SuppressWarnings("rawtypes")
 					@Override
 					public void initInstance(T instance, AtomicReferenceArray[] instances, int synchronizedScope) {
@@ -290,14 +290,14 @@ public final class ReflectionUtils {
 	public static <T> BindingInitializer<T> methodInjector(Key<T> container, Method method) {
 		method.setAccessible(true);
 		Key<?>[] dependencies = toDependencies(container.getType(), method);
-		return new BindingInitializer<T>(Set.of(dependencies)) {
+		return new BindingInitializer<>(Set.of(dependencies)) {
 			@Override
 			public CompiledBindingInitializer<T> compile(CompiledBindingLocator compiledBindings) {
 				CompiledBinding[] argBindings = Stream.of(dependencies)
 						.map(compiledBindings::get)
 						.toArray(CompiledBinding[]::new);
 				//noinspection Convert2Lambda
-				return new CompiledBindingInitializer<T>() {
+				return new CompiledBindingInitializer<>() {
 					@Override
 					public void initInstance(T instance, AtomicReferenceArray[] instances, int synchronizedScope) {
 						Object[] args = new Object[argBindings.length];

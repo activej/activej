@@ -67,7 +67,7 @@ public class LogDataConsumerSplitterTest {
 
 	@Test(expected = IllegalStateException.class)
 	public void testIncorrectImplementation() {
-		LogDataConsumerSplitter<Integer, Integer> splitter = new LogDataConsumerSplitter<Integer, Integer>() {
+		LogDataConsumerSplitter<Integer, Integer> splitter = new LogDataConsumerSplitter<>() {
 			@Override
 			protected StreamDataAcceptor<Integer> createSplitter(@NotNull Context ctx) {
 				return item -> {};

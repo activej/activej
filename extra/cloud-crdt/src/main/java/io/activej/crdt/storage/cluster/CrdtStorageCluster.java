@@ -167,7 +167,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 					for (P partitionId : map.keySet()) {
 						map.get(partitionId).streamTo(streamReducer.newInput(
 								CrdtData::getKey,
-								new BinaryAccumulatorReducer<K, CrdtData<K, S>>() {
+								new BinaryAccumulatorReducer<>() {
 									@Override
 									protected CrdtData<K, S> combine(K key, CrdtData<K, S> nextValue, CrdtData<K, S> accumulator) {
 										long timestamp = Math.max(nextValue.getTimestamp(), accumulator.getTimestamp());

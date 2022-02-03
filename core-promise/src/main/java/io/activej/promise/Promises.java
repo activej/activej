@@ -75,7 +75,7 @@ public final class Promises {
 	public static <T> @NotNull Promise<T> timeout(long delay, @NotNull Promise<T> promise) {
 		if (promise.isComplete()) return promise;
 		if (delay <= 0) return Promise.ofException(new AsyncTimeoutException("Promise timeout"));
-		return promise.next(new NextPromise<T, T>() {
+		return promise.next(new NextPromise<>() {
 			@Nullable ScheduledRunnable schedule = getCurrentEventloop().delay(delay,
 					wrapContext(this, () -> {
 						promise.whenResult(Recyclers::recycle);

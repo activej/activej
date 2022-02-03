@@ -216,7 +216,7 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 	}
 
 	private ChannelSupplier<Frame> sanitize(ChannelSupplier<Frame> supplier) {
-		return new AbstractChannelSupplier<Frame>(supplier) {
+		return new AbstractChannelSupplier<>(supplier) {
 			@Override
 			protected Promise<Frame> doGet() {
 				return sanitize(supplier.get());
@@ -230,7 +230,7 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 	}
 
 	private ChannelConsumer<Frame> sanitize(ChannelConsumer<Frame> consumer) {
-		return new AbstractChannelConsumer<Frame>(consumer) {
+		return new AbstractChannelConsumer<>(consumer) {
 			@Override
 			protected Promise<Void> doAccept(@Nullable Frame value) {
 				return sanitize(consumer.accept(value));

@@ -29,7 +29,7 @@ public final class TypeTokenExample {
 		System.out.println(injector.getInstance(key));
 
 		Key<?> complex = Key.ofType(parameterizedType(List.class, parameterizedType(List.class, String.class)));
-		Key<List<List<String>>> subclassedButTypesafe = new Key<List<List<String>>>() {};
+		Key<List<List<String>>> subclassedButTypesafe = new Key<>() {};
 		System.out.println("complex == subclassedButTypesafe = " + complex.equals(subclassedButTypesafe));
 	}
 }

@@ -30,7 +30,7 @@ public final class AsyncSuppliers {
 
 	@Contract(pure = true)
 	public static <T> @NotNull AsyncSupplier<T> reuse(@NotNull AsyncSupplier<? extends T> actual) {
-		return new AsyncSupplier<T>() {
+		return new AsyncSupplier<>() {
 			@Nullable Promise<T> runningPromise;
 
 			@SuppressWarnings("unchecked")

@@ -71,7 +71,7 @@ public final class LocalFileUtils {
 	}
 
 	static void tryDelete(Path target) throws IOException {
-		Files.walkFileTree(target, new SimpleFileVisitor<Path>() {
+		Files.walkFileTree(target, new SimpleFileVisitor<>() {
 			@Override
 			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 				if (target.equals(file)) {
@@ -198,7 +198,7 @@ public final class LocalFileUtils {
 		}
 		String[] parts;
 		if (glob == null || (parts = glob.split(SEPARATOR))[0].contains("**")) {
-			Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
+			Files.walkFileTree(dir, new SimpleFileVisitor<>() {
 
 				@Override
 				public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
@@ -236,7 +236,7 @@ public final class LocalFileUtils {
 			matchers[i] = getPathMatcher(fs, part);
 		}
 
-		Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
+		Files.walkFileTree(dir, new SimpleFileVisitor<>() {
 			@Override
 			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 				walker.accept(file);

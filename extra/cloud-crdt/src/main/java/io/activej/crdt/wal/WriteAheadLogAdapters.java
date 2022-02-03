@@ -25,7 +25,7 @@ public final class WriteAheadLogAdapters {
 	public static <K extends Comparable<K>, S> WriteAheadLog<K, S> flushOnUpdatesCount(WriteAheadLog<K, S> original, int updatesCount) {
 		checkArgument(updatesCount > 0);
 
-		return new ForwardingWriteAheadLog<K, S>(original) {
+		return new ForwardingWriteAheadLog<>(original) {
 			private int count;
 
 			@Override

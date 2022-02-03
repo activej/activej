@@ -57,7 +57,7 @@ public class FileWriteAheadLogTest {
 	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	private final CrdtDataSerializer<Long, GSet<Integer>> serializer = new CrdtDataSerializer<>(LONG_SERIALIZER, new GSet.Serializer<>(INT_SERIALIZER));
-	private final CrdtFunction<GSet<Integer>> function = new CrdtFunction<GSet<Integer>>() {
+	private final CrdtFunction<GSet<Integer>> function = new CrdtFunction<>() {
 		@Override
 		public GSet<Integer> merge(GSet<Integer> first, long firstTimestamp, GSet<Integer> second, long secondTimestamp) {
 			return first.merge(second);

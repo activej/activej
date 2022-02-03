@@ -172,7 +172,7 @@ public class StreamReducerTest {
 			this.metric1 = metric1;
 		}
 
-		public static final ReducerToAccumulator<Integer, KeyValue1, KeyValueResult> REDUCER_TO_ACCUMULATOR = new ReducerToAccumulator<Integer, KeyValue1, KeyValueResult>() {
+		public static final ReducerToAccumulator<Integer, KeyValue1, KeyValueResult> REDUCER_TO_ACCUMULATOR = new ReducerToAccumulator<>() {
 			@Override
 			public KeyValueResult createAccumulator(Integer key) {
 				return new KeyValueResult(key, 0.0, 0.0, 0.0);
@@ -185,7 +185,7 @@ public class StreamReducerTest {
 			}
 		};
 
-		public static final Reducer<Integer, KeyValue1, KeyValueResult, KeyValueResult> REDUCER = new Reducer<Integer, KeyValue1, KeyValueResult, KeyValueResult>() {
+		public static final Reducer<Integer, KeyValue1, KeyValueResult, KeyValueResult> REDUCER = new Reducer<>() {
 			@Override
 			public KeyValueResult onFirstItem(StreamDataAcceptor<KeyValueResult> stream, Integer key, KeyValue1 firstValue) {
 				return new KeyValueResult(key, firstValue.metric1, 0.0, 0.0);
@@ -214,7 +214,7 @@ public class StreamReducerTest {
 			this.metric2 = metric2;
 		}
 
-		public static final ReducerToAccumulator<Integer, KeyValue2, KeyValueResult> REDUCER_TO_ACCUMULATOR = new ReducerToAccumulator<Integer, KeyValue2, KeyValueResult>() {
+		public static final ReducerToAccumulator<Integer, KeyValue2, KeyValueResult> REDUCER_TO_ACCUMULATOR = new ReducerToAccumulator<>() {
 			@Override
 			public KeyValueResult createAccumulator(Integer key) {
 				return new KeyValueResult(key, 0.0, 0.0, 0.0);
@@ -227,7 +227,7 @@ public class StreamReducerTest {
 			}
 		};
 
-		public static final Reducer<Integer, KeyValue2, KeyValueResult, KeyValueResult> REDUCER = new Reducer<Integer, KeyValue2, KeyValueResult, KeyValueResult>() {
+		public static final Reducer<Integer, KeyValue2, KeyValueResult, KeyValueResult> REDUCER = new Reducer<>() {
 			@Override
 			public KeyValueResult onFirstItem(StreamDataAcceptor<KeyValueResult> stream, Integer key, KeyValue2 firstValue) {
 				return new KeyValueResult(key, 0.0, firstValue.metric2, 0.0);
@@ -257,7 +257,7 @@ public class StreamReducerTest {
 			this.metric3 = metric3;
 		}
 
-		public static final ReducerToAccumulator<Integer, KeyValue3, KeyValueResult> REDUCER_TO_ACCUMULATOR = new ReducerToAccumulator<Integer, KeyValue3, KeyValueResult>() {
+		public static final ReducerToAccumulator<Integer, KeyValue3, KeyValueResult> REDUCER_TO_ACCUMULATOR = new ReducerToAccumulator<>() {
 			@Override
 			public KeyValueResult createAccumulator(Integer key) {
 				return new KeyValueResult(key, 0.0, 0.0, 0.0);
@@ -271,7 +271,7 @@ public class StreamReducerTest {
 			}
 		};
 
-		public static final Reducer<Integer, KeyValue3, KeyValueResult, KeyValueResult> REDUCER = new Reducer<Integer, KeyValue3, KeyValueResult, KeyValueResult>() {
+		public static final Reducer<Integer, KeyValue3, KeyValueResult, KeyValueResult> REDUCER = new Reducer<>() {
 			@Override
 			public KeyValueResult onFirstItem(StreamDataAcceptor<KeyValueResult> stream, Integer key, KeyValue3 firstValue) {
 				return new KeyValueResult(key, 0.0, firstValue.metric2, firstValue.metric3);

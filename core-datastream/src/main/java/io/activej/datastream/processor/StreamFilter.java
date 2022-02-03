@@ -42,16 +42,16 @@ public abstract class StreamFilter<I, O> implements StreamTransformer<I, O> {
 	}
 
 	public static <T> StreamFilter<T, T> create(Predicate<T> predicate) {
-		return new StreamFilter<T, T>() {
+		return new StreamFilter<>() {
 			@Override
 			protected @NotNull StreamDataAcceptor<T> onResumed(@NotNull StreamDataAcceptor<T> output) {
-				return item -> { if (predicate.test(item)) output.accept(item);};
+				return item -> {if (predicate.test(item)) output.accept(item);};
 			}
 		};
 	}
 
 	public static <I, O> StreamFilter<I, O> mapper(Function<I, O> function) {
-		return new StreamFilter<I, O>() {
+		return new StreamFilter<>() {
 			@Override
 			protected @NotNull StreamDataAcceptor<I> onResumed(@NotNull StreamDataAcceptor<O> output) {
 				return item -> output.accept(function.apply(item));

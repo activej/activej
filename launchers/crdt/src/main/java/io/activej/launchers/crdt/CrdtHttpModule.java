@@ -38,7 +38,7 @@ import static io.activej.launchers.initializers.Initializers.ofHttpServer;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends AbstractModule {
-	private final TypeT<CrdtData<K, S>> crdtDataManifest = new TypeT<CrdtData<K, S>>() {};
+	private final TypeT<CrdtData<K, S>> crdtDataManifest = new TypeT<>() {};
 
 	@Provides
 	AsyncHttpServer server(Eventloop eventloop, AsyncServlet servlet, Config config) {

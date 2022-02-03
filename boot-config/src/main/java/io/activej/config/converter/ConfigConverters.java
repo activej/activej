@@ -101,7 +101,7 @@ public final class ConfigConverters {
 	}
 
 	public static ConfigConverter<String> ofString() {
-		return new ConfigConverter<String>() {
+		return new ConfigConverter<>() {
 			@Override
 			public String get(Config config, String defaultValue) {
 				return config.getValue(defaultValue);
@@ -180,7 +180,7 @@ public final class ConfigConverters {
 	}
 
 	public static <T> ConfigConverter<List<T>> ofList(ConfigConverter<T> elementConverter, CharSequence separators) {
-		return new SimpleConfigConverter<List<T>>() {
+		return new SimpleConfigConverter<>() {
 			private final Pattern pattern = compile(separators.chars()
 					.mapToObj(c -> "\\" + (char) c)
 					.collect(joining("", "[", "]")));
@@ -215,7 +215,7 @@ public final class ConfigConverters {
 
 	// compound
 	public static ConfigConverter<ServerSocketSettings> ofServerSocketSettings() {
-		return new ComplexConfigConverter<ServerSocketSettings>(ServerSocketSettings.create(DEFAULT_BACKLOG)) {
+		return new ComplexConfigConverter<>(ServerSocketSettings.create(DEFAULT_BACKLOG)) {
 			@Override
 			protected ServerSocketSettings provide(Config config, ServerSocketSettings defaultValue) {
 				return Function.<ServerSocketSettings>identity()
@@ -236,7 +236,7 @@ public final class ConfigConverters {
 	}
 
 	public static ConfigConverter<SocketSettings> ofSocketSettings() {
-		return new ComplexConfigConverter<SocketSettings>(SocketSettings.create()) {
+		return new ComplexConfigConverter<>(SocketSettings.create()) {
 			@Override
 			protected SocketSettings provide(Config config, SocketSettings defaultValue) {
 				return Function.<SocketSettings>identity()
@@ -281,7 +281,7 @@ public final class ConfigConverters {
 	}
 
 	public static ConfigConverter<DatagramSocketSettings> ofDatagramSocketSettings() {
-		return new ComplexConfigConverter<DatagramSocketSettings>(DatagramSocketSettings.create()) {
+		return new ComplexConfigConverter<>(DatagramSocketSettings.create()) {
 			@Override
 			protected DatagramSocketSettings provide(Config config, DatagramSocketSettings defaultValue) {
 				return Function.<DatagramSocketSettings>identity()
@@ -309,7 +309,7 @@ public final class ConfigConverters {
 	public static final ConfigConverter<List<Class<?>>> OF_CLASSES = ofList(ofClass());
 
 	public static ConfigConverter<FatalErrorHandler> ofFatalErrorHandler() {
-		return new ConfigConverter<FatalErrorHandler>() {
+		return new ConfigConverter<>() {
 			@Override
 			public @NotNull FatalErrorHandler get(Config config) {
 				switch (config.getValue()) {
@@ -377,7 +377,7 @@ public final class ConfigConverters {
 	}
 
 	public static ConfigConverter<Schedule> ofEventloopTaskSchedule() {
-		return new ConfigConverter<Schedule>() {
+		return new ConfigConverter<>() {
 			@Override
 			public @NotNull Schedule get(Config config) {
 				return switch (config.get("type")) {
@@ -401,7 +401,7 @@ public final class ConfigConverters {
 
 	@SuppressWarnings("rawtypes")
 	public static ConfigConverter<RetryPolicy> ofRetryPolicy() {
-		return new ConfigConverter<RetryPolicy>() {
+		return new ConfigConverter<>() {
 			@Override
 			public @NotNull RetryPolicy get(Config config) {
 				if (!config.hasValue() || config.getValue().equals("no")) {
@@ -437,7 +437,7 @@ public final class ConfigConverters {
 	}
 
 	public static ConfigConverter<ThrottlingController> ofThrottlingController() {
-		return new ComplexConfigConverter<ThrottlingController>(ThrottlingController.create()) {
+		return new ComplexConfigConverter<>(ThrottlingController.create()) {
 			@Override
 			protected ThrottlingController provide(Config config, ThrottlingController defaultValue) {
 				return ThrottlingController.create()
@@ -483,7 +483,7 @@ public final class ConfigConverters {
 	}
 
 	public static ConfigConverter<ExecutorService> ofExecutor() {
-		return new ConfigConverter<ExecutorService>() {
+		return new ConfigConverter<>() {
 			@Override
 			public @NotNull ExecutorService get(Config config) {
 				return getExecutor(config);

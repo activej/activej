@@ -53,7 +53,7 @@ public interface Decoder<T> {
 	String getId();
 
 	default Decoder<T> withId(String id) {
-		return new Decoder<T>() {
+		return new Decoder<>() {
 			@Override
 			public Either<T, DecodeErrors> decode(@NotNull HttpRequest request) {
 				return Decoder.this.decode(request);
@@ -71,7 +71,7 @@ public interface Decoder<T> {
 	 * If mapped returns an errors, then the returned decoder fails with that error.
 	 */
 	default <V> Decoder<V> map(Mapper<T, V> fn) {
-		return new AbstractDecoder<V>(getId()) {
+		return new AbstractDecoder<>(getId()) {
 			@Override
 			public Either<V, DecodeErrors> decode(@NotNull HttpRequest request) {
 				return Decoder.this.decode(request)
@@ -92,7 +92,7 @@ public interface Decoder<T> {
 	 * then the returned decoder fails with these errors.
 	 */
 	default Decoder<T> validate(Validator<T> validator) {
-		return new AbstractDecoder<T>(getId()) {
+		return new AbstractDecoder<>(getId()) {
 			@Override
 			public Either<T, DecodeErrors> decode(@NotNull HttpRequest request) {
 				Either<T, DecodeErrors> decodedValue = Decoder.this.decode(request);
@@ -109,7 +109,7 @@ public interface Decoder<T> {
 	 * with the supplied mapper.
 	 */
 	static <V> @NotNull Decoder<V> create(Mapper<Object[], V> fn, Decoder<?>... decoders) {
-		return new AbstractDecoder<V>("") {
+		return new AbstractDecoder<>("") {
 			@Override
 			public Either<V, DecodeErrors> decode(@NotNull HttpRequest request) {
 				Object[] args = new Object[decoders.length];

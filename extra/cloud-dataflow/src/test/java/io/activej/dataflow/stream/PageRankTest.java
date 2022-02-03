@@ -265,7 +265,7 @@ public class PageRankTest {
 	}
 
 	private static Iterable<Page> generatePages(int number) {
-		return () -> new Iterator<Page>() {
+		return () -> new Iterator<>() {
 			int i = 0;
 
 			@Override

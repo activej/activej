@@ -18,10 +18,10 @@ public class SupplierGeneratorModuleExample {
 				.bind(new Key<Supplier<String>>() {})
 				.bind(new Key<Supplier<Integer>>() {})
 				.build());
-		Supplier<String> stringSupplier = injector.getInstance(new Key<Supplier<String>>() {});
+		Supplier<String> stringSupplier = injector.getInstance(new Key<>() {});
 		System.out.println(stringSupplier.get()); // "Hello, World"
 
-		Supplier<Integer> integerSupplier = injector.getInstance(new Key<Supplier<Integer>>() {});
+		Supplier<Integer> integerSupplier = injector.getInstance(new Key<>() {});
 		System.out.println(integerSupplier.get()); // "null"
 		//[END REGION_1]
 	}

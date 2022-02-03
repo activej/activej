@@ -46,7 +46,7 @@ public final class TestUtils {
 		await(logCubeStateManager.sync());
 	}
 
-	public static final OTState<CubeDiff> STUB_CUBE_STATE = new OTState<CubeDiff>() {
+	public static final OTState<CubeDiff> STUB_CUBE_STATE = new OTState<>() {
 		@Override
 		public void init() {
 		}

@@ -70,7 +70,7 @@ class JsonCodecs {
 	);
 
 	static <T> JsonCodec<Set<T>> ofSet(JsonCodec<T> codec) {
-		return new JsonCodec<Set<T>>() {
+		return new JsonCodec<>() {
 			@Override
 			public Set<T> read(@NotNull JsonReader reader) throws IOException {
 				return ((JsonReader<?>) reader).readSet(codec);
