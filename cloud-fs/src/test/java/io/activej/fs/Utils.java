@@ -27,7 +27,7 @@ import static org.junit.Assert.*;
 public final class Utils {
 
 	public static void assertBatchException(@NotNull Exception e, String name, Class<? extends FsScalarException> exceptionClass) {
-        assertBatchException(e, Map.of(name, exceptionClass));
+		assertBatchException(e, Map.of(name, exceptionClass));
 	}
 
 	public static void assertBatchException(@NotNull Exception e, Map<String, Class<? extends FsScalarException>> exceptionClasses) {
@@ -90,8 +90,8 @@ public final class Utils {
 
 	public static void assertFileEquals(Path firstPath, Path secondPath, String first, String second) {
 		try {
-			assertArrayEquals(Files.readAllBytes(firstPath.resolve(first)), Files.readAllBytes(firstPath.resolve(second)));
-			assertArrayEquals(Files.readAllBytes(secondPath.resolve(first)), Files.readAllBytes(secondPath.resolve(second)));
+			assertEquals(-1, Files.mismatch(firstPath.resolve(first), firstPath.resolve(second)));
+			assertEquals(-1, Files.mismatch(secondPath.resolve(first), secondPath.resolve(second)));
 		} catch (IOException e) {
 			throw new AssertionError(e);
 		}
