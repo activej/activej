@@ -110,7 +110,6 @@ public final class Stopwatch {
 			case MINUTES -> "min";
 			case HOURS -> "h";
 			case DAYS -> "d";
-			default -> throw new AssertionError();
 		};
 	}
 }

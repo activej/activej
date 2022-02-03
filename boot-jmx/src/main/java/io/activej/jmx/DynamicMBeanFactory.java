@@ -427,17 +427,16 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 		return jmxStats;
 	}
 
-	@SuppressWarnings("unchecked")
 	private static JmxReducer<?> fetchReducerFrom(@Nullable Method getter) throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
 		if (getter == null) {
 			return DEFAULT_REDUCER;
 		}
 		JmxAttribute attrAnnotation = getter.getAnnotation(JmxAttribute.class);
-		Class<?> reducerClass = attrAnnotation.reducer();
+		Class<? extends JmxReducer> reducerClass = attrAnnotation.reducer();
 		if (reducerClass == DEFAULT_REDUCER.getClass()) {
 			return DEFAULT_REDUCER;
 		}
-		return ((Class<? extends JmxReducer<?>>) reducerClass).getDeclaredConstructor().newInstance();
+		return reducerClass.getDeclaredConstructor().newInstance();
 	}
 
 	private static void checkJmxStatsAreValid(Class<?> returnClass, Class<?> beanClass, @Nullable Method getter) {

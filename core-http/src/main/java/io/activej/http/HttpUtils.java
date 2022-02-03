@@ -417,7 +417,6 @@ public final class HttpUtils {
 			case TEXT -> OP_TEXT;
 			case BINARY -> OP_BINARY;
 			case CONTINUATION -> OP_CONTINUATION;
-			default -> throw new AssertionError();
 		};
 	}
 

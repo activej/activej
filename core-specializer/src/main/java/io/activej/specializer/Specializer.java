@@ -362,7 +362,6 @@ public final class Specializer {
 							break;
 						}
 						g.loadLocal(localsRemapping.get(insnVar.var));
-						break;
 					}
 					case IALOAD, LALOAD, FALOAD, DALOAD, AALOAD, BALOAD, CALOAD, SALOAD -> g.visitInsn(opcode);
 					case ISTORE, LSTORE, FSTORE, DSTORE, ASTORE -> {
@@ -389,7 +388,6 @@ public final class Specializer {
 							localsRemapping.put(var, newLocal);
 							g.storeLocal(newLocal);
 						}
-						break;
 					}
 					case IASTORE, LASTORE, FASTORE, DASTORE, AASTORE, BASTORE, CASTORE, SASTORE -> g.visitInsn(opcode);
 					case POP, POP2, DUP, DUP_X1, DUP_X2, DUP2, DUP2_X1, DUP2_X2 -> g.visitInsn(opcode);
@@ -402,14 +400,12 @@ public final class Specializer {
 							break;
 						}
 						g.iinc(localsRemapping.get(insnInc.var), insnInc.incr);
-						break;
 					}
 					case I2L, I2F, I2D, L2I, L2F, L2D, F2I, F2L, F2D, D2I, D2L, D2F, I2B, I2C, I2S -> g.visitInsn(opcode);
 					case IFEQ, IFNE, IFLT, IFGE, IFGT, IFLE, IF_ICMPEQ, IF_ICMPNE, IF_ICMPLT, IF_ICMPGE, IF_ICMPGT, IF_ICMPLE, IF_ACMPEQ, IF_ACMPNE, GOTO, IFNULL, IFNONNULL -> g.visitJumpInsn(opcode, ((JumpInsnNode) insn).label.getLabel());
 					case GETSTATIC, PUTSTATIC -> {
 						FieldInsnNode insnField = (FieldInsnNode) insn;
 						g.visitFieldInsn(opcode, insnField.owner, insnField.name, insnField.desc);
-						break;
 					}
 					case GETFIELD -> {
 						FieldInsnNode insnField = (FieldInsnNode) insn;
@@ -419,7 +415,6 @@ public final class Specializer {
 										.map(lookupField ->
 												() -> g.getStatic(s.specializedType, lookupField, getType(insnField.desc))),
 								() -> g.visitFieldInsn(GETFIELD, insnField.owner, insnField.name, insnField.desc));
-						break;
 					}
 					case PUTFIELD -> {
 						FieldInsnNode insnField = (FieldInsnNode) insn;
@@ -429,12 +424,10 @@ public final class Specializer {
 										.map(lookupField ->
 												() -> g.putStatic(s.specializedType, lookupField, getType(insnField.desc))),
 								() -> g.visitFieldInsn(PUTFIELD, insnField.owner, insnField.name, insnField.desc));
-						break;
 					}
 					case INVOKESTATIC -> {
 						MethodInsnNode insnMethod = (MethodInsnNode) insn;
 						g.visitMethodInsn(INVOKESTATIC, insnMethod.owner, insnMethod.name, insnMethod.desc, false);
-						break;
 					}
 					case INVOKEINTERFACE, INVOKEVIRTUAL -> {
 						MethodInsnNode insnMethod = (MethodInsnNode) insn;
@@ -452,7 +445,6 @@ public final class Specializer {
 									}
 
 								});
-						break;
 					}
 					case INVOKESPECIAL -> {
 						MethodInsnNode insnMethod = (MethodInsnNode) insn;
@@ -482,12 +474,10 @@ public final class Specializer {
 								new Method(
 										name,
 										method.getDescriptor()));
-						break;
 					}
 					case INVOKEDYNAMIC -> {
 						InvokeDynamicInsnNode insnInvokeDynamic = (InvokeDynamicInsnNode) insn;
 						g.visitInvokeDynamicInsn(insnInvokeDynamic.name, insnInvokeDynamic.desc, insnInvokeDynamic.bsm, insnInvokeDynamic.bsmArgs);
-						break;
 					}
 					case NEW, NEWARRAY, ANEWARRAY -> g.visitTypeInsn(opcode, ((TypeInsnNode) insn).desc);
 					case ARRAYLENGTH -> g.visitInsn(opcode);
