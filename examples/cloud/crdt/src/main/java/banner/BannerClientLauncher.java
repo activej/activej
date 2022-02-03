@@ -86,7 +86,7 @@ public final class BannerClientLauncher extends CrdtRpcClientLauncher {
 		int seenBannerId = fetchedBanners.stream()
 				.skip(RANDOM.nextInt(fetchedBanners.size()))
 				.findFirst()
-				.orElseThrow(AssertionError::new);
+				.orElseThrow();
 		CompletableFuture<Boolean> shouldBeSeenFuture = eventloop.submit(() ->
 				client.sendRequest(new IsBannerSeenRequest(randomUserId, seenBannerId)));
 		System.out.println("Should be seen. Has banner with id '" + seenBannerId + "' been seen? : " + shouldBeSeenFuture.get());
