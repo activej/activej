@@ -25,7 +25,6 @@ import io.activej.jmx.stats.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -384,27 +383,6 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 		@JmxAttribute(extraSubAttributes = "histogram")
 		public ValueStats getOneKeyTime() {
 			return oneKeyTime;
-		}
-	}
-
-	private static final class StackTrace {
-		private final StackTraceElement[] stackTraceElements;
-
-		public StackTrace(StackTraceElement[] stackTraceElements) {
-			this.stackTraceElements = stackTraceElements;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (!(o instanceof StackTrace that)) return false;
-
-			return Arrays.equals(stackTraceElements, that.stackTraceElements);
-		}
-
-		@Override
-		public int hashCode() {
-			return stackTraceElements != null ? Arrays.hashCode(stackTraceElements) : 0;
 		}
 	}
 

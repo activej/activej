@@ -26,6 +26,7 @@ import io.activej.inject.util.Trie;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.StackWalker.StackFrame;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.UnaryOperator;
@@ -45,26 +46,25 @@ public abstract class AbstractModule implements Module {
 
 	private @Nullable ModuleBuilder builder;
 
-	private final @Nullable StackTraceElement location;
+	private final @Nullable StackFrame location;
 
 	protected AbstractModule() {
-		StackTraceElement[] trace = Thread.currentThread().getStackTrace();
-		StackTraceElement found = null;
 		Class<?> cls = getClass();
-		for (int i = 2; i < trace.length; i++) {
-			StackTraceElement element = trace[i];
-			try {
-				String className = element.getClassName();
-				Class<?> traceCls = Class.forName(className);
-				if (!traceCls.isAssignableFrom(cls) && !className.startsWith("sun.reflect") && !className.startsWith("java.lang")) {
-					found = element;
-					break;
-				}
-			} catch (ClassNotFoundException ignored) {
-				break;
-			}
-		}
-		this.location = found;
+		this.location = StackWalker.getInstance().walk(frames -> frames.skip(1)
+				.filter(stackFrame -> {
+					try {
+						String className = stackFrame.getClassName();
+						Class<?> traceCls = Class.forName(className);
+						if (!traceCls.isAssignableFrom(cls) && !className.startsWith("sun.reflect") && !className.startsWith("java.lang")) {
+							return true;
+						}
+					} catch (ClassNotFoundException ignored) {
+						return false;
+					}
+					return false;
+				})
+				.findFirst()
+				.orElse(null));
 		this.builder = new ModuleBuilderImpl<>(getName(), location);
 	}
 

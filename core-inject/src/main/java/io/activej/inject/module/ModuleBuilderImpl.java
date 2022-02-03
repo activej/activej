@@ -25,6 +25,7 @@ import io.activej.inject.util.Trie;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.StackWalker.StackFrame;
 import java.lang.annotation.Annotation;
 import java.util.*;
 import java.util.stream.Stream;
@@ -44,17 +45,18 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
 	private @Nullable BindingDesc current = null;
 
 	private final String name;
-	private final @Nullable StackTraceElement location;
+	private final @Nullable StackFrame location;
 
 	ModuleBuilderImpl() {
 		// builder module is (and should be) never instantiated directly,
 		// only by Module.create() and AbstractModule actually
-		StackTraceElement[] trace = Thread.currentThread().getStackTrace();
-		location = trace.length >= 3 ? trace[3] : null;
+		location = StackWalker.getInstance().walk(frames -> frames.skip(2)
+				.findFirst()
+				.orElse(null));
 		name = getClass().getName();
 	}
 
-	ModuleBuilderImpl(String name, @Nullable StackTraceElement location) {
+	ModuleBuilderImpl(String name, @Nullable StackFrame location) {
 		this.name = name;
 		this.location = location;
 	}

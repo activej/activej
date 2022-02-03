@@ -98,12 +98,11 @@ public class LogUtils {
 	}
 
 	public static String thisMethod() {
-		try {
-			StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
-			return stackTraceElement.getMethodName();
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		return StackWalker.getInstance()
+				.walk(frames -> frames.skip(1)
+						.findFirst()
+						.orElseThrow()
+						.getMethodName());
 	}
 
 	public static <T> BiConsumerEx<T, Exception> toLogger(Logger logger,

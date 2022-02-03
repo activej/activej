@@ -21,6 +21,7 @@ import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.StackWalker.StackFrame;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -29,7 +30,6 @@ import static io.activej.common.Checks.checkArgument;
 import static java.lang.Integer.numberOfLeadingZeros;
 import static java.lang.Math.max;
 import static java.lang.System.currentTimeMillis;
-import static java.lang.Thread.currentThread;
 import static java.util.Arrays.stream;
 import static java.util.Comparator.comparingLong;
 import static java.util.stream.Collectors.toList;
@@ -119,9 +119,9 @@ public final class ByteBufPool {
 		final int size;
 		final long timestamp;
 		final Thread thread;
-		final StackTraceElement[] stackTrace;
+		final List<StackFrame> stackTrace;
 
-		Entry(int size, long timestamp, Thread thread, StackTraceElement[] stackTrace) {
+		Entry(int size, long timestamp, Thread thread, List<StackFrame> stackTrace) {
 			this.size = size;
 			this.timestamp = timestamp;
 			this.thread = thread;
@@ -145,7 +145,7 @@ public final class ByteBufPool {
 		}
 
 		public List<String> getStackTrace() {
-			return Arrays.stream(stackTrace).map(StackTraceElement::toString).collect(toList());
+			return stackTrace.stream().map(Object::toString).toList();
 		}
 
 		@Override
@@ -154,7 +154,7 @@ public final class ByteBufPool {
 					"size=" + size +
 					", timestamp=" + timestamp +
 					", thread=" + thread +
-					", stackTrace=" + Arrays.toString(stackTrace) +
+					", stackTrace=" + stackTrace +
 					'}';
 		}
 	}
@@ -245,10 +245,8 @@ public final class ByteBufPool {
 	}
 
 	private static Entry buildRegistryEntry(@NotNull ByteBuf buf) {
-		Thread thread = currentThread();
-		StackTraceElement[] stackTrace = thread.getStackTrace();
-		return new Entry(buf.array.length, currentTimeMillis(), thread,
-				Arrays.copyOfRange(stackTrace, 4, stackTrace.length));
+		return new Entry(buf.array.length, currentTimeMillis(), Thread.currentThread(),
+				StackWalker.getInstance().walk(frames -> frames.skip(3).toList()));
 	}
 
 	static AssertionError onByteBufRecycled(@NotNull ByteBuf buf) {
@@ -545,7 +543,7 @@ public final class ByteBufPool {
 						(STATS ? reused[idx] : "-") + "," +
 						count + "," +
 						slabSize * count / 1024;
-				if (USE_WATCHDOG){
+				if (USE_WATCHDOG) {
 					SlabStats slabStat = slabStats[idx];
 					slabInfo += "," + slab.realMin.get() + "," +
 							String.format("%.1f", slabStat.estimatedMin) + "," +
