@@ -60,7 +60,7 @@ public abstract class AbstractBytecodeStorage implements BytecodeStorage {
 	public final Optional<byte[]> loadBytecode(String className) {
 		try {
 			Optional<InputStream> maybeInputStream = getInputStream(className);
-			if (!maybeInputStream.isPresent()) return Optional.empty();
+			if (maybeInputStream.isEmpty()) return Optional.empty();
 
 			try (InputStream stream = maybeInputStream.get()) {
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -81,7 +81,7 @@ public abstract class AbstractBytecodeStorage implements BytecodeStorage {
 	public final void saveBytecode(String className, byte[] bytecode) {
 		try {
 			Optional<OutputStream> maybeOutputStream = getOutputStream(className);
-			if (!maybeOutputStream.isPresent()) return;
+			if (maybeOutputStream.isEmpty()) return;
 
 			try (OutputStream outputStream = maybeOutputStream.get()) {
 				outputStream.write(bytecode);

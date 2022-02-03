@@ -61,7 +61,7 @@ final class TransformActiveFs implements ActiveFs {
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
 		Optional<String> transformed = into.apply(name);
-		if (!transformed.isPresent()) {
+		if (transformed.isEmpty()) {
 			return Promise.ofException(new ForbiddenPathException());
 		}
 		return parent.upload(transformed.get());
@@ -70,7 +70,7 @@ final class TransformActiveFs implements ActiveFs {
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
 		Optional<String> transformed = into.apply(name);
-		if (!transformed.isPresent()) {
+		if (transformed.isEmpty()) {
 			return Promise.ofException(new ForbiddenPathException());
 		}
 		return parent.upload(transformed.get(), size);
@@ -79,7 +79,7 @@ final class TransformActiveFs implements ActiveFs {
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
 		Optional<String> transformed = into.apply(name);
-		if (!transformed.isPresent()) {
+		if (transformed.isEmpty()) {
 			return Promise.ofException(new ForbiddenPathException());
 		}
 		return parent.append(transformed.get(), offset);
@@ -88,7 +88,7 @@ final class TransformActiveFs implements ActiveFs {
 	@Override
 	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
 		Optional<String> transformed = into.apply(name);
-		if (!transformed.isPresent()) {
+		if (transformed.isEmpty()) {
 			return Promise.ofException(new ForbiddenPathException());
 		}
 		return parent.download(transformed.get(), offset, limit);
@@ -163,7 +163,7 @@ final class TransformActiveFs implements ActiveFs {
 	@Override
 	public Promise<Void> delete(@NotNull String name) {
 		Optional<String> transformed = into.apply(name);
-		if (!transformed.isPresent()) {
+		if (transformed.isEmpty()) {
 			return Promise.complete();
 		}
 		return parent.delete(transformed.get());
@@ -180,11 +180,11 @@ final class TransformActiveFs implements ActiveFs {
 
 	private Promise<Void> transfer(String source, String target, AsyncBiConsumer<String, String> action) {
 		Optional<String> transformed = into.apply(source);
-		if (!transformed.isPresent()) {
+		if (transformed.isEmpty()) {
 			return Promise.ofException(new ForbiddenPathException("Path '" + source + "' is forbidden"));
 		}
 		Optional<String> transformedNew = into.apply(target);
-		if (!transformedNew.isPresent()) {
+		if (transformedNew.isEmpty()) {
 			return Promise.ofException(new ForbiddenPathException("Path '" + target + "' is forbidden"));
 		}
 		return action.accept(transformed.get(), transformedNew.get());
@@ -196,13 +196,13 @@ final class TransformActiveFs implements ActiveFs {
 		for (Map.Entry<String, String> entry : sourceToTarget.entrySet()) {
 			String source = entry.getKey();
 			Optional<String> transformed = into.apply(source);
-			if (!transformed.isPresent()) {
+			if (transformed.isEmpty()) {
 				exceptions.put(source, new ForbiddenPathException("Path '" + source + "' is forbidden"));
 				continue;
 			}
 			String target = entry.getValue();
 			Optional<String> transformedNew = into.apply(target);
-			if (!transformedNew.isPresent()) {
+			if (transformedNew.isEmpty()) {
 				exceptions.put(source, new ForbiddenPathException("Path '" + target + "' is forbidden"));
 				continue;
 			}

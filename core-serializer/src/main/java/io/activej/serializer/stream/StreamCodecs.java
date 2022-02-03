@@ -275,7 +275,7 @@ public final class StreamCodecs {
 		return new StreamCodec<>() {
 			@Override
 			public void encode(StreamOutput output, Optional<T> item) throws IOException {
-				if (!item.isPresent()) {
+				if (item.isEmpty()) {
 					output.writeByte((byte) 0);
 				} else {
 					output.writeByte((byte) 1);

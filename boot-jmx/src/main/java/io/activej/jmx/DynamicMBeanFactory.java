@@ -442,7 +442,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 
 	private static void checkJmxStatsAreValid(Class<?> returnClass, Class<?> beanClass, @Nullable Method getter) {
 		if (JmxRefreshableStats.class.isAssignableFrom(returnClass) &&
-				!findAdapterClass(beanClass).filter(JmxBeanAdapterWithRefresh.class::isAssignableFrom).isPresent()
+				findAdapterClass(beanClass).filter(JmxBeanAdapterWithRefresh.class::isAssignableFrom).isEmpty()
 		) {
 			logger.warn("JmxRefreshableStats won't be refreshed when Bean adapter does not implement JmxBeanAdapterWithRefresh. " +
 					"MBean class: {}", beanClass.getName());

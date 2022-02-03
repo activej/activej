@@ -528,7 +528,7 @@ public final class Specializer {
 			for (Specialization s : relatedSpecializations) {
 				if (!ownerClazz.isAssignableFrom(s.instance.getClass())) continue;
 				Optional<Runnable> staticCall = staticCallSupplier.apply(s);
-				if (!staticCall.isPresent()) continue;
+				if (staticCall.isEmpty()) continue;
 
 				Label labelNext = g.newLabel();
 
