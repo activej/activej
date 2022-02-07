@@ -15,7 +15,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
@@ -32,12 +31,12 @@ public final class CrdtFsConsolidationExample {
 		return res;
 	}
 
-	public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
+	public static void main(String[] args) throws IOException {
 		Eventloop eventloop = Eventloop.create().withCurrentThread();
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 
 		//[START REGION_1]
-		// create our storage dir and an fs client which operates on that dir
+		// create our storage dir and an FS client which operates on that dir
 		Path storage = Files.createTempDirectory("storage");
 		LocalActiveFs fsClient = LocalActiveFs.create(eventloop, executor, storage);
 

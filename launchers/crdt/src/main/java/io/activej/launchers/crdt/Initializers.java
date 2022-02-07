@@ -20,17 +20,11 @@ import io.activej.common.initializer.Initializer;
 import io.activej.config.Config;
 import io.activej.crdt.storage.local.CrdtStorageFs;
 
-import java.time.Duration;
-
-import static io.activej.config.converter.ConfigConverters.ofDuration;
-
 public final class Initializers {
 
 	public static <K extends Comparable<K>, S> Initializer<CrdtStorageFs<K, S>> ofFsCrdtClient(Config config) {
 		return fsCrdtClient ->
-				fsCrdtClient.withConsolidationFolder(config.get("metafolder.consolidation", ".consolidation"))
-						.withTombstoneFolder(config.get("metafolder.tombstones", ".tombstones"))
-						.withConsolidationMargin(config.get(ofDuration(), "consolidationMargin", Duration.ofMinutes(30)));
+				fsCrdtClient.withTombstoneFolder(config.get("metafolder.tombstones", ".tombstones"));
 	}
 
 }

@@ -19,15 +19,16 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
-import static io.activej.common.Utils.first;
-import static io.activej.common.Utils.setOf;
+import static io.activej.common.Utils.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.serializer.BinarySerializers.*;
+import static java.util.Collections.emptySet;
 import static org.junit.Assert.*;
 
 public final class CrdtStorageFsTest {
@@ -93,18 +94,91 @@ public final class CrdtStorageFsTest {
 		Map<String, FileMetadata> listBefore = await(fsClient.list("**"));
 		System.out.println(listBefore);
 		assertEquals(2, listBefore.size());
-		long maxTimestamp = listBefore.values().stream()
-				.mapToLong(FileMetadata::getTimestamp)
-				.max()
-				.orElseThrow(AssertionError::new);
 
 		await(client.consolidate());
 
 		Map<String, FileMetadata> listAfter = await(fsClient.list("**"));
 		System.out.println(listAfter);
 		assertEquals(1, listAfter.size());
-		assertTrue(first(listAfter.values()).getTimestamp() >= maxTimestamp);
 		assertFalse(listBefore.containsKey(first(listAfter.keySet())));
+	}
+
+	@Test
+	public void testTombstoneConsolidation() {
+		await(StreamSupplier.ofStream(Stream.of(
+						new CrdtData<>("a", TimestampContainer.now(setOf(1, 2, 3))),
+						new CrdtData<>("b", TimestampContainer.now(setOf(2, 3, 7))),
+						new CrdtData<>("c", TimestampContainer.now(setOf(78, 2, 3))),
+						new CrdtData<>("d", TimestampContainer.now(setOf(123, 124, 125))),
+						new CrdtData<>("e", TimestampContainer.now(setOf(12)))).sorted())
+				.streamTo(StreamConsumer.ofPromise(client.upload())));
+		await(StreamSupplier.ofStream(Stream.of("a")).streamTo(StreamConsumer.ofPromise(client.remove())));
+		await(StreamSupplier.ofStream(Stream.of("b")).streamTo(StreamConsumer.ofPromise(client.remove())));
+		await(StreamSupplier.ofStream(Stream.of("c")).streamTo(StreamConsumer.ofPromise(client.remove())));
+		await(StreamSupplier.ofStream(Stream.of("d")).streamTo(StreamConsumer.ofPromise(client.remove())));
+
+		List<CrdtData<String, TimestampContainer<Set<Integer>>>> downloadedBefore = await(client.download().then(StreamSupplier::toList));
+		assertEquals(1, downloadedBefore.size());
+		assertEquals("e", downloadedBefore.get(0).getKey());
+
+		Map<String, FileMetadata> tombstonesBefore = await(fsClient.list(".tombstones/**"));
+		System.out.println(tombstonesBefore);
+		assertEquals(4, tombstonesBefore.size());
+
+		await(client.consolidate());
+
+		Map<String, FileMetadata> tombstonesAfter = await(fsClient.list(".tombstones/**"));
+		System.out.println(tombstonesAfter);
+		assertEquals(1, tombstonesAfter.size());
+		String consolidatedTombstone = first(tombstonesAfter.keySet());
+		assertFalse(tombstonesBefore.containsKey(consolidatedTombstone));
+
+		List<CrdtData<String, TimestampContainer<Set<Integer>>>> downloadedAfter = await(client.download().then(StreamSupplier::toList));
+		assertEquals(1, downloadedAfter.size());
+		assertEquals("e", downloadedAfter.get(0).getKey());
+	}
+
+	@Test
+	public void pickFilesForConsolidation() {
+		testPickFilesForConsolidation(
+				setOf("a", "c", "e"),
+				mapOf(
+						"a", 12,
+						"b", 120,
+						"c", 53,
+						"d", 348,
+						"e", 97)
+				);
+		testPickFilesForConsolidation(
+				setOf("a", "c"),
+				mapOf(
+						"a", 120,
+						"b", 12,
+						"c", 530
+				));
+		testPickFilesForConsolidation(
+				setOf("b", "d"),
+				mapOf(
+						"a", 120,
+						"b", 12,
+						"c", 530,
+						"d", 43
+				));
+		testPickFilesForConsolidation(
+				emptySet(),
+				mapOf(
+						"a", 120,
+						"b", 12,
+						"c", 5,
+						"d", 4345
+				));
+	}
+
+	private static void testPickFilesForConsolidation(Set<String> expected, Map<String, Integer> fileToSizeMap) {
+		Map<String, FileMetadata> files = transformMap(fileToSizeMap, size -> FileMetadata.of(size, 0));
+		Map<String, FileMetadata> filesForConsolidation = CrdtStorageFs.pickFilesForConsolidation(files);
+
+		assertEquals(expected, filesForConsolidation.keySet());
 	}
 
 	private static Set<Integer> union(Set<Integer> first, Set<Integer> second) {

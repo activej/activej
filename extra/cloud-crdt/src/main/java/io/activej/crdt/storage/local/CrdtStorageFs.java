@@ -16,10 +16,12 @@
 
 package io.activej.crdt.storage.local;
 
+import io.activej.async.function.AsyncRunnable;
+import io.activej.async.function.AsyncRunnables;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufs;
+import io.activej.common.Utils;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtException;
@@ -45,14 +47,15 @@ import io.activej.datastream.stats.StreamStatsDetailed;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.fs.ActiveFs;
+import io.activej.fs.FileMetadata;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
-import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
 import io.activej.promise.jmx.PromiseStats;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,14 +65,11 @@ import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
-import static io.activej.common.Utils.not;
 import static io.activej.csp.ChannelSupplier.ofPromise;
 import static io.activej.datastream.processor.StreamFilter.mapper;
 import static io.activej.fs.ActiveFsAdapters.subdirectory;
 import static io.activej.promise.Promises.all;
 import static io.activej.promise.Promises.toTuple;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
 
 @SuppressWarnings("rawtypes")
@@ -83,14 +83,14 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 	private final CrdtDataSerializer<K, S> serializer;
 
 	private UnaryOperator<String> namingStrategy = ext -> UUID.randomUUID() + "." + ext;
-	private Duration consolidationMargin = Duration.ofMinutes(30);
 
-	private ActiveFs consolidationFolderFs;
 	private ActiveFs tombstoneFolderFs;
 	private CrdtFilter<S> filter = $ -> true;
 
 	// region JMX
 	private boolean detailedStats;
+
+	private final AsyncRunnable consolidate = AsyncRunnables.reuse(this::doConsolidate);
 
 	private final StreamStatsBasic<CrdtData<K, S>> uploadStats = StreamStats.basic();
 	private final StreamStatsDetailed<CrdtData<K, S>> uploadStatsDetailed = StreamStats.detailed();
@@ -106,13 +106,12 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 	private CrdtStorageFs(
 			Eventloop eventloop,
 			ActiveFs fs,
-			ActiveFs consolidationFolderFs, ActiveFs tombstoneFolderFs, CrdtDataSerializer<K, S> serializer, CrdtFunction<S> function
+			ActiveFs tombstoneFolderFs, CrdtDataSerializer<K, S> serializer, CrdtFunction<S> function
 	) {
 		this.eventloop = eventloop;
 		this.fs = fs;
 		this.function = function;
 		this.serializer = serializer;
-		this.consolidationFolderFs = consolidationFolderFs;
 		this.tombstoneFolderFs = tombstoneFolderFs;
 	}
 
@@ -121,20 +120,14 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 			CrdtDataSerializer<K, S> serializer,
 			CrdtFunction<S> function
 	) {
-		return new CrdtStorageFs<>(eventloop, fs, subdirectory(fs, ".consolidation"), subdirectory(fs, ".tombstones"), serializer, function);
+		return new CrdtStorageFs<>(eventloop, fs, subdirectory(fs, ".tombstones"), serializer, function);
 	}
 
 	public static <K extends Comparable<K>, S extends CrdtType<S>> CrdtStorageFs<K, S> create(
 			Eventloop eventloop, ActiveFs fs,
 			CrdtDataSerializer<K, S> serializer
 	) {
-		return new CrdtStorageFs<>(eventloop, fs, subdirectory(fs, ".consolidation"), subdirectory(fs, ".tombstones"), serializer, CrdtFunction.ofCrdtType());
-	}
-
-	@SuppressWarnings("UnusedReturnValue")
-	public CrdtStorageFs<K, S> withConsolidationMargin(Duration consolidationMargin) {
-		this.consolidationMargin = consolidationMargin;
-		return this;
+		return new CrdtStorageFs<>(eventloop, fs, subdirectory(fs, ".tombstones"), serializer, CrdtFunction.ofCrdtType());
 	}
 
 	public CrdtStorageFs<K, S> withNamingStrategy(UnaryOperator<String> namingStrategy) {
@@ -142,18 +135,8 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 		return this;
 	}
 
-	public CrdtStorageFs<K, S> withConsolidationFolder(String subdirectory) {
-		consolidationFolderFs = subdirectory(fs, subdirectory);
-		return this;
-	}
-
 	public CrdtStorageFs<K, S> withTombstoneFolder(String subdirectory) {
 		tombstoneFolderFs = subdirectory(fs, subdirectory);
-		return this;
-	}
-
-	public CrdtStorageFs<K, S> withConsolidationFolderClient(ActiveFs consolidationFolderFs) {
-		this.consolidationFolderFs = consolidationFolderFs;
 		return this;
 	}
 
@@ -188,38 +171,43 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
 		return toTuple(fs.list("*"), tombstoneFolderFs.list("*"))
-				.map(f -> {
-					StreamReducer<K, CrdtData<K, S>, CrdtAccumulator<S>> reducer = StreamReducer.create();
-
-					Stream<Promise<Void>> files = f.getValue1().entrySet()
-							.stream()
-							.filter(e -> timestamp == 0 || e.getValue().getTimestamp() >= timestamp)
-							.map(entry -> ofPromise(fs.download(entry.getKey()))
-									.transformWith(ChannelDeserializer.create(serializer))
-									.transformWith(mapper(data -> {
-										S partial = function.extract(data.getState(), timestamp);
-										return partial != null ? new CrdtReducingData<>(data.getKey(), partial, entry.getValue().getTimestamp()) : null;
-									}))
-									.transformWith(StreamFilter.create(Objects::nonNull))
-									.streamTo(reducer.newInput(x -> x.key, new CrdtReducer())));
-
-					Stream<Promise<Void>> tombstones = f.getValue2().entrySet()
-							.stream()
-							.filter(e -> timestamp == 0 || e.getValue().getTimestamp() >= timestamp)
-							.map(entry -> ofPromise(tombstoneFolderFs.download(entry.getKey()))
-									.transformWith(ChannelDeserializer.create(serializer.getKeySerializer()))
-									.transformWith(mapper(key -> new CrdtReducingData<>(key, (S) null, entry.getValue().getTimestamp())))
-									.streamTo(reducer.newInput(x -> x.key, new CrdtReducer())));
-
-					//noinspection ResultOfMethodCallIgnored
-					all(concat(files, tombstones));
-
-					return reducer.getOutput()
-							.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
-							.withEndOfStream(eos -> eos
-									.mapException(e -> new CrdtException("Error while downloading CRDT data", e)));
-				})
+				.map(tuple -> doDownload(tuple.getValue1(), tuple.getValue2(), timestamp, true))
 				.mapException(e -> new CrdtException("Failed to download CRDT data", e));
+	}
+
+	private StreamSupplier<CrdtData<K, S>> doDownload(Map<String, FileMetadata> filesMap, Map<String, FileMetadata> tombstones1, long timestamp, boolean stats) {
+		StreamReducer<K, CrdtData<K, S>, CrdtAccumulator<S>> reducer = StreamReducer.create();
+
+		Stream<Promise<Void>> files = filesMap.entrySet()
+				.stream()
+				.filter(e -> timestamp == 0 || e.getValue().getTimestamp() >= timestamp)
+				.map(entry -> ofPromise(fs.download(entry.getKey()))
+						.transformWith(ChannelDeserializer.create(serializer))
+						.transformWith(mapper(data -> {
+							S partial = function.extract(data.getState(), timestamp);
+							return partial != null ? new CrdtReducingData<>(data.getKey(), partial, entry.getValue().getTimestamp()) : null;
+						}))
+						.transformWith(StreamFilter.create(Objects::nonNull))
+						.streamTo(reducer.newInput(x -> x.key, new CrdtReducer())));
+
+		Stream<Promise<Void>> tombstones = tombstones1.entrySet()
+				.stream()
+				.filter(e -> timestamp == 0 || e.getValue().getTimestamp() >= timestamp)
+				.map(entry -> ofPromise(tombstoneFolderFs.download(entry.getKey()))
+						.transformWith(ChannelDeserializer.create(serializer.getKeySerializer()))
+						.transformWith(mapper(key -> new CrdtReducingData<>(key, (S) null, entry.getValue().getTimestamp())))
+						.streamTo(reducer.newInput(x -> x.key, new CrdtReducer())));
+
+		//noinspection ResultOfMethodCallIgnored
+		all(concat(files, tombstones));
+
+		StreamSupplier<CrdtData<K, S>> output = reducer.getOutput();
+		if (stats) {
+			output = output.transformWith(detailedStats ? downloadStatsDetailed : downloadStats);
+		}
+		return output
+				.withEndOfStream(eos -> eos
+						.mapException(e -> new CrdtException("Error while downloading CRDT data", e)));
 	}
 
 	@Override
@@ -252,44 +240,86 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 	}
 
 	public Promise<Void> consolidate() {
-		long barrier = eventloop.currentInstant().minus(consolidationMargin).toEpochMilli();
-		Set<String> blacklist = new HashSet<>();
+		return consolidate.run()
+				.whenComplete(consolidationStats.recordStats());
+	}
 
-		return consolidationFolderFs.list("*")
-				.then(list ->
-						Promises.all(list.entrySet().stream()
-								.filter(entry -> entry.getValue().getTimestamp() > barrier)
-								.map(entry -> ChannelSupplier.ofPromise(consolidationFolderFs.download(entry.getKey()))
-										.toCollector(ByteBufs.collector())
-										.whenResult(byteBuf -> blacklist.addAll(Arrays.asList(byteBuf.asString(UTF_8).split("\n"))))
-										.toVoid())))
-				.then(() -> fs.list("*"))
-				.then(list -> {
+	private Promise<Void> doConsolidate() {
+		return consolidateFiles()
+				.then(this::consolidateTombstones);
+	}
+
+	private Promise<Void> consolidateFiles() {
+		return fs.list("*")
+				.map(CrdtStorageFs::pickFilesForConsolidation)
+				.then(filesMap -> {
+					if (filesMap.isEmpty()) {
+						logger.info("No files to consolidate");
+						return Promise.complete();
+					}
+
 					String name = namingStrategy.apply("bin");
-					List<String> files = list.keySet().stream()
-							.filter(not(blacklist::contains))
-							.collect(toList());
-					String dump = String.join("\n", files);
+					Set<String> filesToConsolidate = filesMap.keySet();
 
-					logger.info("started consolidating into {} from {}", name, files);
+					logger.info("Started consolidating files into {} from {}", name, filesToConsolidate);
 
-					String metafile = namingStrategy.apply("dump");
-					return consolidationFolderFs.upload(metafile)
-							.then(consumer ->
-									ChannelSupplier.of(ByteBuf.wrapForReading(dump.getBytes(UTF_8)))
-											.streamTo(consumer))
-							.then(() -> download())
-							.then(producer -> producer
+					return tombstoneFolderFs.list("*")
+							.then(tombstoneMap -> doDownload(filesMap, tombstoneMap, 0, false)
 									.streamTo(uploadNonEmpty(() -> fs.upload(name),
 											supplier -> supplier.transformWith(ChannelSerializer.create(serializer)))))
-							.then(() -> tombstoneFolderFs.list("*")
-									.map(fileMap -> tombstoneFolderFs.deleteAll(fileMap.keySet()))
-							)
-							.then(() -> consolidationFolderFs.delete(metafile))
-							.then(() -> fs.deleteAll(new HashSet<>(files)));
+							.then(() -> fs.deleteAll(filesToConsolidate));
 				})
-				.mapException(e -> new CrdtException("Consolidation failed", e))
-				.whenComplete(consolidationStats.recordStats());
+				.mapException(e -> new CrdtException("Files consolidation failed", e));
+	}
+
+	private Promise<Void> consolidateTombstones() {
+		return tombstoneFolderFs.list("*")
+				.map(CrdtStorageFs::pickFilesForConsolidation)
+				.then(tombstoneMap -> {
+					if (tombstoneMap.isEmpty()) {
+						logger.info("No tombstones to consolidate");
+						return Promise.complete();
+					}
+
+					StreamReducer<K, K, Void> reducer = StreamReducer.create();
+
+					String name = namingStrategy.apply("tomb");
+					Set<String> tombstonesToConsolidate = tombstoneMap.keySet();
+
+					logger.info("Started consolidating tombstones into {} from {}", name, tombstonesToConsolidate);
+
+					tombstonesToConsolidate.forEach(tombstone -> ofPromise(tombstoneFolderFs.download(tombstone))
+							.transformWith(ChannelDeserializer.create(serializer.getKeySerializer()))
+							.streamTo(reducer.newInput(Function.identity(), StreamReducers.deduplicateReducer())));
+
+					return reducer.getOutput()
+							.transformWith(ChannelSerializer.create(serializer.getKeySerializer()))
+							.streamTo(tombstoneFolderFs.upload(name))
+							.then(() -> tombstoneFolderFs.deleteAll(tombstonesToConsolidate));
+				})
+				.mapException(e -> new CrdtException("Tombstones consolidation failed", e));
+	}
+
+	@VisibleForTesting
+	static Map<String, FileMetadata> pickFilesForConsolidation(Map<String, FileMetadata> files) {
+		if (files.isEmpty()) return files;
+
+		Map<Integer, List<Map.Entry<String, FileMetadata>>> groups = new TreeMap<>();
+		for (Map.Entry<String, FileMetadata> entry : files.entrySet()) {
+			int groupIdx = (int) Math.log10(entry.getValue().getSize());
+			groups.computeIfAbsent(groupIdx, k -> new ArrayList<>()).add(entry);
+		}
+
+		List<Map.Entry<String, FileMetadata>> groupToConsolidate = Collections.emptyList();
+
+		for (List<Map.Entry<String, FileMetadata>> group : groups.values()) {
+			int groupSize = group.size();
+			if (groupSize > 1 && groupSize > groupToConsolidate.size()) {
+				groupToConsolidate = group;
+			}
+		}
+
+		return Utils.entriesToMap(groupToConsolidate.stream());
 	}
 
 	private <T> StreamConsumer<T> uploadNonEmpty(AsyncSupplier<ChannelConsumer<ByteBuf>> consumerFn, Function<StreamSupplier<T>, ChannelSupplier<ByteBuf>> mapping) {
