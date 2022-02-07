@@ -5,13 +5,14 @@ import adder.AdderCommands.HasUserId;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import io.activej.crdt.storage.cluster.DiscoveryService;
-import io.activej.crdt.storage.cluster.RendezvousPartitionings;
+import io.activej.crdt.storage.cluster.RendezvousPartitionScheme;
 import io.activej.crdt.storage.cluster.SimplePartitionId;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
+import io.activej.launchers.crdt.ConfigConverters;
 import io.activej.launchers.crdt.rpc.CrdtRpcClientLauncher;
 import io.activej.launchers.crdt.rpc.CrdtRpcStrategyService;
 import io.activej.rpc.client.RpcClient;
@@ -22,7 +23,6 @@ import java.util.Scanner;
 import static adder.AdderCommands.GetRequest;
 import static adder.AdderCommands.GetResponse;
 import static adder.AdderServerLauncher.MESSAGE_TYPES;
-import static io.activej.launchers.crdt.ConfigConverters.ofRendezvousPartitionings;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
 
 public final class AdderClientLauncher extends CrdtRpcClientLauncher {
@@ -52,8 +52,8 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 
 	@Provides
 	DiscoveryService<SimplePartitionId> discoveryService(Eventloop eventloop, Config config) {
-		RendezvousPartitionings<SimplePartitionId> partitionings = config.get(ofRendezvousPartitionings(), "crdt.cluster");
-		return DiscoveryService.of(partitionings);
+		RendezvousPartitionScheme<SimplePartitionId> partitionScheme = config.get(ConfigConverters.ofRendezvousPartitionScheme(), "crdt.cluster");
+		return DiscoveryService.of(partitionScheme);
 	}
 
 	@Provides

@@ -69,17 +69,17 @@ public final class CrdtRpcStrategyService<K extends Comparable<K>, S, P> impleme
 	public @NotNull Promise<?> start() {
 		checkNotNull(rpcClient);
 
-		AsyncSupplier<DiscoveryService.Partitionings<P>> discoverySupplier = discoveryService.discover();
+		AsyncSupplier<DiscoveryService.PartitionScheme<P>> discoverySupplier = discoveryService.discover();
 		return discoverySupplier.get()
-				.whenResult(partitionings -> {
-					RpcStrategy rpcStrategy = partitionings.createRpcStrategy(strategyResolver, keyGetter);
+				.whenResult(partitionScheme -> {
+					RpcStrategy rpcStrategy = partitionScheme.createRpcStrategy(strategyResolver, keyGetter);
 					rpcClient.withStrategy(rpcStrategy);
 					Promises.repeat(() ->
 							discoverySupplier.get()
-									.map((newPartitionings, e) -> {
+									.map((newPartitionScheme, e) -> {
 										if (stopped) return false;
 										if (e == null) {
-											RpcStrategy newRpcStrategy = newPartitionings.createRpcStrategy(strategyResolver, keyGetter);
+											RpcStrategy newRpcStrategy = newPartitionScheme.createRpcStrategy(strategyResolver, keyGetter);
 											rpcClient.changeStrategy(newRpcStrategy, true);
 										}
 										return true;

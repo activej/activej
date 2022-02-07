@@ -2,8 +2,8 @@ package io.activej.launchers.crdt;
 
 import io.activej.config.Config;
 import io.activej.config.converter.ConfigConverter;
-import io.activej.crdt.storage.cluster.RendezvousPartitioning;
-import io.activej.crdt.storage.cluster.RendezvousPartitionings;
+import io.activej.crdt.storage.cluster.RendezvousPartitionGroup;
+import io.activej.crdt.storage.cluster.RendezvousPartitionScheme;
 import io.activej.crdt.storage.cluster.SimplePartitionId;
 import org.junit.Test;
 
@@ -63,7 +63,7 @@ public class ConfigConverterTest {
 	}
 
 	@Test
-	public void ofSimplePartitioningTest() {
+	public void ofSimplePartitionGroupTest() {
 		Map<String, String> properties = mapOf(
 				"ids", "testA|101.101.101.101:9000|101.101.101.101:9001," +
 						"testB|102.102.102.102:9000|102.102.102.102:9001," +
@@ -74,9 +74,9 @@ public class ConfigConverterTest {
 				"active", "true"
 		);
 		Config config = Config.ofMap(properties);
-		ConfigConverter<RendezvousPartitioning<SimplePartitionId>> converter = ofPartitioning(ofSimplePartitionId());
+		ConfigConverter<RendezvousPartitionGroup<SimplePartitionId>> converter = ofPartitionGroup(ofSimplePartitionId());
 
-		RendezvousPartitioning<SimplePartitionId> partitioning = converter.get(config);
+		RendezvousPartitionGroup<SimplePartitionId> partitionGroup = converter.get(config);
 
 		Set<SimplePartitionId> expectedPartitionIds = setOf(
 				SimplePartitionId.of("testA",
@@ -97,38 +97,38 @@ public class ConfigConverterTest {
 				)
 		);
 
-		assertSetsFullyEquals(expectedPartitionIds, partitioning.getPartitions());
-		assertEquals(2, partitioning.getReplicas());
-		assertTrue(partitioning.isActive());
-		assertTrue(partitioning.isRepartition());
+		assertSetsFullyEquals(expectedPartitionIds, partitionGroup.getPartitions());
+		assertEquals(2, partitionGroup.getReplicas());
+		assertTrue(partitionGroup.isActive());
+		assertTrue(partitionGroup.isRepartition());
 	}
 
 	@Test
-	public void ofSimplePartitioningsTest() {
+	public void ofSimplePartitionSchemeTest() {
 		Map<String, String> properties = new HashMap<>();
 
-		properties.put("partitionings.1.ids", "" +
+		properties.put("partitionGroup.1.ids", "" +
 				"testA|101.101.101.101:9000|101.101.101.101:9001," +
 				"testB|102.102.102.102:9000|102.102.102.102:9001," +
 				"testC|103.103.103.103:9000|103.103.103.103:9001," +
 				"testD|104.104.104.104:9000|104.104.104.104:9001");
-		properties.put("partitionings.1.replicas", "3");
-		properties.put("partitionings.1.repartition", "true");
-		properties.put("partitionings.1.active", "true");
+		properties.put("partitionGroup.1.replicas", "3");
+		properties.put("partitionGroup.1.repartition", "true");
+		properties.put("partitionGroup.1.active", "true");
 
-		properties.put("partitionings.2.ids", "" +
+		properties.put("partitionGroup.2.ids", "" +
 				"testE|105.105.105.105:9000|105.105.105.105:9001," +
 				"testF|106.106.106.106:9000|106.106.106.106:9001," +
 				"testG|107.107.107.107:9000|107.107.107.107:9001");
-		properties.put("partitionings.2.replicas", "2");
-		properties.put("partitionings.2.repartition", "false");
-		properties.put("partitionings.2.active", "false");
+		properties.put("partitionGroup.2.replicas", "2");
+		properties.put("partitionGroup.2.repartition", "false");
+		properties.put("partitionGroup.2.active", "false");
 
 		Config config = Config.ofMap(properties);
-		ConfigConverter<RendezvousPartitionings<SimplePartitionId>> converter = ofRendezvousPartitionings();
+		ConfigConverter<RendezvousPartitionScheme<SimplePartitionId>> converter = ofRendezvousPartitionScheme();
 
-		RendezvousPartitionings<SimplePartitionId> partitionings = converter.get(config);
-		Set<SimplePartitionId> partitions = partitionings.getPartitions();
+		RendezvousPartitionScheme<SimplePartitionId> partitionScheme = converter.get(config);
+		Set<SimplePartitionId> partitions = partitionScheme.getPartitions();
 
 		Set<SimplePartitionId> expectedPartitionIds = setOf(
 				SimplePartitionId.of("testA",

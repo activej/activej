@@ -29,9 +29,9 @@ import java.util.function.Function;
 
 public interface DiscoveryService<P> {
 
-	AsyncSupplier<Partitionings<P>> discover();
+	AsyncSupplier<PartitionScheme<P>> discover();
 
-	interface Partitionings<P> {
+	interface PartitionScheme<P> {
 		Set<P> getPartitions();
 
 		<K extends Comparable<K>> @Nullable Sharder<K> createSharder(List<P> alive);
@@ -39,13 +39,13 @@ public interface DiscoveryService<P> {
 		<K extends Comparable<K>> RpcStrategy createRpcStrategy(Function<P, @NotNull RpcStrategy> provider, Function<Object, K> keyGetter);
 	}
 
-	static <P> DiscoveryService<P> of(Partitionings<P> partitionings) {
-		return () -> new AsyncSupplier<Partitionings<P>>() {
+	static <P> DiscoveryService<P> of(PartitionScheme<P> partitionScheme) {
+		return () -> new AsyncSupplier<PartitionScheme<P>>() {
 			int i = 0;
 
 			@Override
-			public Promise<Partitionings<P>> get() {
-				return i++ == 0 ? Promise.of(partitionings) : new SettablePromise<>();
+			public Promise<PartitionScheme<P>> get() {
+				return i++ == 0 ? Promise.of(partitionScheme) : new SettablePromise<>();
 			}
 		};
 	}

@@ -58,7 +58,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 	private final Function<P, CrdtStorage<K, S>> provider;
 	private final Map<P, CrdtStorage<K, S>> crdtStorages = new LinkedHashMap<>();
 
-	private DiscoveryService.Partitionings<P> currentPartitionings;
+	private DiscoveryService.PartitionScheme<P> currentPartitionScheme;
 	private boolean stopped;
 
 	// region JMX
@@ -111,10 +111,10 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 
 	@Override
 	public @NotNull Promise<?> start() {
-		AsyncSupplier<DiscoveryService.Partitionings<P>> discoverySupplier = discoveryService.discover();
+		AsyncSupplier<DiscoveryService.PartitionScheme<P>> discoverySupplier = discoveryService.discover();
 		return discoverySupplier.get()
 				.then(result -> {
-					currentPartitionings = result;
+					currentPartitionScheme = result;
 					return ping();
 				})
 				.whenResult(() -> Promises.repeat(() ->
@@ -122,7 +122,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 								.map((result, e) -> {
 									if (stopped) return false;
 									if (e == null) {
-										currentPartitionings = result;
+										currentPartitionScheme = result;
 									}
 									return true;
 								})
@@ -137,11 +137,11 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 
 	@Override
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
-		DiscoveryService.Partitionings<P> partitionings = this.currentPartitionings;
-		return execute(partitionings.getPartitions(), CrdtStorage::upload)
+		DiscoveryService.PartitionScheme<P> partitionScheme = this.currentPartitionScheme;
+		return execute(partitionScheme.getPartitions(), CrdtStorage::upload)
 				.then(map -> {
 					List<P> alive = new ArrayList<>(map.keySet());
-					Sharder<K> sharder = partitionings.createSharder(alive);
+					Sharder<K> sharder = partitionScheme.createSharder(alive);
 					if (sharder == null) {
 						throw new CrdtException("Incomplete cluster");
 					}
@@ -163,7 +163,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
-		return execute(currentPartitionings.getPartitions(), storage -> storage.download(timestamp))
+		return execute(currentPartitionScheme.getPartitions(), storage -> storage.download(timestamp))
 				.map(map -> {
 					StreamReducer<K, CrdtData<K, S>, CrdtData<K, S>> streamReducer = StreamReducer.create();
 					for (P pid : map.keySet()) {
@@ -184,11 +184,11 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 
 	@Override
 	public Promise<StreamConsumer<K>> remove() {
-		DiscoveryService.Partitionings<P> partitionings = currentPartitionings;
-		return execute(partitionings.getPartitions(), CrdtStorage::remove)
+		DiscoveryService.PartitionScheme<P> partitionScheme = currentPartitionScheme;
+		return execute(partitionScheme.getPartitions(), CrdtStorage::remove)
 				.map(map -> {
 					List<P> alive = new ArrayList<>(map.keySet());
-					Sharder<K> sharder = partitionings.createSharder(alive);
+					Sharder<K> sharder = partitionScheme.createSharder(alive);
 					if (sharder == null) {
 						throw new CrdtException("Incomplete cluster");
 					}
@@ -209,7 +209,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 	}
 
 	public @NotNull Promise<Void> repartition(P sourcePartitionId) {
-		DiscoveryService.Partitionings<P> partitionings = this.currentPartitionings;
+		DiscoveryService.PartitionScheme<P> partitionScheme = this.currentPartitionScheme;
 		CrdtStorage<K, S> source = provider.apply(sourcePartitionId);
 
 		class Tuple {
@@ -228,7 +228,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 		return Promises.toTuple((downloader, remover, uploaders) -> new Tuple(downloader, remover, uploaders),
 						source.download().toTry(),
 						source.remove().toTry(),
-						execute(partitionings.getPartitions(), CrdtStorage::upload))
+						execute(partitionScheme.getPartitions(), CrdtStorage::upload))
 				.then(tuple -> {
 
 					if (tuple.uploaders.isEmpty() || tuple.remover.isException() || tuple.downloader.isException()) {
@@ -240,7 +240,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 					}
 
 					List<P> alive = new ArrayList<>(tuple.uploaders.keySet());
-					Sharder<K> sharder = partitionings.createSharder(alive);
+					Sharder<K> sharder = partitionScheme.createSharder(alive);
 					if (sharder == null) {
 						throw new CrdtException("Incomplete cluster");
 					}
@@ -290,10 +290,10 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 
 	@Override
 	public Promise<Void> ping() {
-		DiscoveryService.Partitionings<P> partitionings = this.currentPartitionings;
-		return execute(partitionings.getPartitions(), CrdtStorage::ping)
+		DiscoveryService.PartitionScheme<P> partitionScheme = this.currentPartitionScheme;
+		return execute(partitionScheme.getPartitions(), CrdtStorage::ping)
 				.whenResult(map -> {
-					Sharder<K> sharder = partitionings.createSharder(new ArrayList<>(map.keySet()));
+					Sharder<K> sharder = partitionScheme.createSharder(new ArrayList<>(map.keySet()));
 					if (sharder == null) {
 						throw new CrdtException("Incomplete cluster");
 					}

@@ -19,8 +19,8 @@ package io.activej.launchers.crdt;
 import io.activej.config.Config;
 import io.activej.config.converter.ConfigConverter;
 import io.activej.config.converter.SimpleConfigConverter;
-import io.activej.crdt.storage.cluster.RendezvousPartitioning;
-import io.activej.crdt.storage.cluster.RendezvousPartitionings;
+import io.activej.crdt.storage.cluster.RendezvousPartitionGroup;
+import io.activej.crdt.storage.cluster.RendezvousPartitionScheme;
 import io.activej.crdt.storage.cluster.SimplePartitionId;
 import io.activej.rpc.client.sender.RpcStrategy;
 import org.jetbrains.annotations.Contract;
@@ -36,55 +36,55 @@ import static io.activej.config.converter.ConfigConverters.*;
 public final class ConfigConverters {
 
 	/**
-	 * @see #ofRendezvousPartitionings(ConfigConverter, ToIntFunction)
+	 * @see #ofRendezvousPartitionScheme(ConfigConverter, ToIntFunction)
 	 */
-	public static ConfigConverter<RendezvousPartitionings<SimplePartitionId>> ofRendezvousPartitionings() {
-		return ofRendezvousPartitionings(Objects::hashCode);
+	public static ConfigConverter<RendezvousPartitionScheme<SimplePartitionId>> ofRendezvousPartitionScheme() {
+		return ofRendezvousPartitionScheme(Objects::hashCode);
 	}
 
 	/**
-	 * @see #ofRendezvousPartitionings(ConfigConverter, ToIntFunction)
+	 * @see #ofRendezvousPartitionScheme(ConfigConverter, ToIntFunction)
 	 */
-	public static <K extends Comparable<K>> ConfigConverter<RendezvousPartitionings<SimplePartitionId>> ofRendezvousPartitionings(
+	public static <K extends Comparable<K>> ConfigConverter<RendezvousPartitionScheme<SimplePartitionId>> ofRendezvousPartitionScheme(
 			@NotNull ToIntFunction<K> hashFn
 	) {
-		return ofRendezvousPartitionings(ofSimplePartitionId(), hashFn);
+		return ofRendezvousPartitionScheme(ofSimplePartitionId(), hashFn);
 	}
 
 	/**
-	 * Config converter to create a {@link RendezvousPartitionings} out of a {@link Config}
+	 * Config converter to create a {@link RendezvousPartitionScheme} out of a {@link Config}
 	 * that is useful for creating {@link RpcStrategy} on a client side
 	 *
-	 * @return a config converter for {@link RendezvousPartitionings}
+	 * @return a config converter for {@link RendezvousPartitionScheme}
 	 */
-	public static <K extends Comparable<K>, P> ConfigConverter<RendezvousPartitionings<P>> ofRendezvousPartitionings(
+	public static <K extends Comparable<K>, P> ConfigConverter<RendezvousPartitionScheme<P>> ofRendezvousPartitionScheme(
 			@NotNull ConfigConverter<P> partitionIdConverter,
 			@NotNull ToIntFunction<K> hashFn
 	) {
-		return makeRendezvousPartitionings(partitionIdConverter, hashFn);
+		return makeRendezvousPartitionScheme(partitionIdConverter, hashFn);
 	}
 
-	private static <K extends Comparable<K>, P> ConfigConverter<RendezvousPartitionings<P>> makeRendezvousPartitionings(
+	private static <K extends Comparable<K>, P> ConfigConverter<RendezvousPartitionScheme<P>> makeRendezvousPartitionScheme(
 			@NotNull ConfigConverter<P> partitionIdConverter,
 			@NotNull ToIntFunction<K> hashFn
 	) {
-		return new ConfigConverter<RendezvousPartitionings<P>>() {
+		return new ConfigConverter<RendezvousPartitionScheme<P>>() {
 			@Override
-			public @NotNull RendezvousPartitionings<P> get(Config config) {
-				Collection<Config> partitioningsConfig = config.getChild("partitionings").getChildren().values();
+			public @NotNull RendezvousPartitionScheme<P> get(Config config) {
+				Collection<Config> partitionGroupsConfig = config.getChild("partitionGroup").getChildren().values();
 
-				List<RendezvousPartitioning<P>> partitionings = new ArrayList<>();
-				for (Config partitioning : partitioningsConfig) {
-					partitionings.add(ofPartitioning(partitionIdConverter).get(partitioning));
+				List<RendezvousPartitionGroup<P>> partitionGroups = new ArrayList<>();
+				for (Config partitionGroupConfig : partitionGroupsConfig) {
+					partitionGroups.add(ofPartitionGroup(partitionIdConverter).get(partitionGroupConfig));
 				}
 
-				return RendezvousPartitionings.create(partitionings)
+				return RendezvousPartitionScheme.create(partitionGroups)
 						.withHashFn(hashFn);
 			}
 
 			@Override
 			@Contract("_, !null -> !null")
-			public RendezvousPartitionings<P> get(Config config, @Nullable RendezvousPartitionings<P> defaultValue) {
+			public RendezvousPartitionScheme<P> get(Config config, @Nullable RendezvousPartitionScheme<P> defaultValue) {
 				if (config.isEmpty()) {
 					return defaultValue;
 				} else {
@@ -94,23 +94,23 @@ public final class ConfigConverters {
 		};
 	}
 
-	public static <P> ConfigConverter<RendezvousPartitioning<P>> ofPartitioning(ConfigConverter<P> partitionIdConverter) {
-		return new ConfigConverter<RendezvousPartitioning<P>>() {
+	public static <P> ConfigConverter<RendezvousPartitionGroup<P>> ofPartitionGroup(ConfigConverter<P> partitionIdConverter) {
+		return new ConfigConverter<RendezvousPartitionGroup<P>>() {
 			@Override
-			public @NotNull RendezvousPartitioning<P> get(Config config) {
+			public @NotNull RendezvousPartitionGroup<P> get(Config config) {
 				Set<P> ids = new HashSet<>(config.get(ofList(partitionIdConverter), "ids"));
-				checkArgument(!ids.isEmpty(), "Empty partitioning ids");
+				checkArgument(!ids.isEmpty(), "Empty partition ids");
 
 				int replicas = config.get(ofInteger(), "replicas", 1);
 				boolean repartition = config.get(ofBoolean(), "repartition", false);
 				boolean active = config.get(ofBoolean(), "active", false);
 
-				return RendezvousPartitioning.create(ids, replicas, repartition, active);
+				return RendezvousPartitionGroup.create(ids, replicas, repartition, active);
 			}
 
 			@Override
 			@Contract("_, !null -> !null")
-			public @Nullable RendezvousPartitioning<P> get(Config config, @Nullable RendezvousPartitioning<P> defaultValue) {
+			public @Nullable RendezvousPartitionGroup<P> get(Config config, @Nullable RendezvousPartitionGroup<P> defaultValue) {
 				if (config.isEmpty()) {
 					return defaultValue;
 				} else {

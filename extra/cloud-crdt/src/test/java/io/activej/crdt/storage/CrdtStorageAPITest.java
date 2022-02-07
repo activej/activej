@@ -4,9 +4,9 @@ import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.cluster.CrdtStorageCluster;
 import io.activej.crdt.storage.cluster.DiscoveryService;
-import io.activej.crdt.storage.cluster.DiscoveryService.Partitionings;
-import io.activej.crdt.storage.cluster.RendezvousPartitioning;
-import io.activej.crdt.storage.cluster.RendezvousPartitionings;
+import io.activej.crdt.storage.cluster.DiscoveryService.PartitionScheme;
+import io.activej.crdt.storage.cluster.RendezvousPartitionGroup;
+import io.activej.crdt.storage.cluster.RendezvousPartitionScheme;
 import io.activej.crdt.storage.local.CrdtStorageFs;
 import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.crdt.util.CrdtDataSerializer;
@@ -105,17 +105,17 @@ public class CrdtStorageAPITest {
 								map.put(i, CrdtStorageMap.create(eventloop, CRDT_FUNCTION));
 								partitions.add(i);
 							}
-							RendezvousPartitioning<Integer> partitioning1 = RendezvousPartitioning.create(partitions, 3, true, true);
+							RendezvousPartitionGroup<Integer> partitionGroup1 = RendezvousPartitionGroup.create(partitions, 3, true, true);
 
 							partitions = new HashSet<>();
 							for (; i < 20; i++) {
 								map.put(i, CrdtStorageMap.create(eventloop, CRDT_FUNCTION));
 								partitions.add(i);
 							}
-							RendezvousPartitioning<Integer> partitioning2 = RendezvousPartitioning.create(partitions, 4, false, true);
+							RendezvousPartitionGroup<Integer> partitionGroup2 = RendezvousPartitionGroup.create(partitions, 4, false, true);
 
-							Partitionings<Integer> partitionings = RendezvousPartitionings.create(partitioning1, partitioning2);
-							DiscoveryService<Integer> discoveryService = DiscoveryService.of(partitionings);
+							PartitionScheme<Integer> partitionScheme = RendezvousPartitionScheme.create(partitionGroup1, partitionGroup2);
+							DiscoveryService<Integer> discoveryService = DiscoveryService.of(partitionScheme);
 							CrdtStorageCluster<String, TimestampContainer<Integer>, Integer> storageCluster = CrdtStorageCluster.create(eventloop, discoveryService, map::get, CRDT_FUNCTION);
 
 							await(storageCluster.start());

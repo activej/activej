@@ -106,8 +106,8 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 		config = config.getChild("crdt.cluster");
 
 		return DiscoveryService.of(
-				RendezvousPartitionings.<String>create()
-						.withPartitioning(RendezvousPartitioning.create(partitions.keySet())
+				RendezvousPartitionScheme.<String>create()
+						.withPartitionGroup(RendezvousPartitionGroup.create(partitions.keySet())
 								.withReplicas(config.get(ofInteger(), "crdt.cluster.replicationCount", 1))));
 	}
 

@@ -3,7 +3,7 @@ package io.activej.crdt.storage.cluster;
 import io.activej.async.callback.Callback;
 import io.activej.common.ref.Ref;
 import io.activej.common.ref.RefBoolean;
-import io.activej.crdt.storage.cluster.DiscoveryService.Partitionings;
+import io.activej.crdt.storage.cluster.DiscoveryService.PartitionScheme;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import io.activej.rpc.client.sender.RpcSender;
 import io.activej.rpc.client.sender.RpcStrategy;
@@ -50,12 +50,12 @@ public class ClusterRpcStrategyTest {
 	public void testRpcStrategyNoActive() {
 		Set<String> crdtStorages = PARTITION_ADDRESS_MAP_1.keySet();
 
-		Partitionings<String> partitionings = RendezvousPartitionings.<String>create()
-				.withPartitioning(RendezvousPartitioning.create(crdtStorages, 2, true, false));
+		PartitionScheme<String> partitionScheme = RendezvousPartitionScheme.<String>create()
+				.withPartitionGroup(RendezvousPartitionGroup.create(crdtStorages, 2, true, false));
 
 		List<String> alivePartitions = new ArrayList<>(difference(crdtStorages, singleton("two")));
 
-		RpcStrategy rpcStrategy = partitionings.createRpcStrategy(partition -> server(PARTITION_ADDRESS_MAP_1.get(partition)), KEY_GETTER);
+		RpcStrategy rpcStrategy = partitionScheme.createRpcStrategy(partition -> server(PARTITION_ADDRESS_MAP_1.get(partition)), KEY_GETTER);
 
 		RpcClientConnectionPoolStub poolStub = new RpcClientConnectionPoolStub();
 		for (String alivePartition : alivePartitions) {
@@ -70,8 +70,8 @@ public class ClusterRpcStrategyTest {
 	public void testRpcStrategyActive() throws Exception {
 		Set<String> partitionIds = PARTITION_ADDRESS_MAP_1.keySet();
 
-		Partitionings<String> partitionings = RendezvousPartitionings.<String>create()
-				.withPartitioning(RendezvousPartitioning.create(partitionIds, 2, true, true));
+		PartitionScheme<String> partitionScheme = RendezvousPartitionScheme.<String>create()
+				.withPartitionGroup(RendezvousPartitionGroup.create(partitionIds, 2, true, true));
 
 		List<String> alivePartitions = new ArrayList<>(difference(partitionIds, singleton("two")));
 
@@ -80,12 +80,12 @@ public class ClusterRpcStrategyTest {
 			poolStub.put(PARTITION_ADDRESS_MAP_1.get(alivePartition), new RpcSenderStub());
 		}
 
-		RpcStrategy rpcStrategy = partitionings.createRpcStrategy(partition -> server(PARTITION_ADDRESS_MAP_1.get(partition)), KEY_GETTER);
+		RpcStrategy rpcStrategy = partitionScheme.createRpcStrategy(partition -> server(PARTITION_ADDRESS_MAP_1.get(partition)), KEY_GETTER);
 
 		RpcSender sender = rpcStrategy.createSender(poolStub);
 		assertNotNull(sender);
 
-		Sharder<Integer> sharder = partitionings.createSharder(alivePartitions);
+		Sharder<Integer> sharder = partitionScheme.createSharder(alivePartitions);
 		assertNotNull(sharder);
 
 		Map<InetSocketAddress, String> address2Partition = PARTITION_ADDRESS_MAP_1.entrySet()
@@ -121,8 +121,8 @@ public class ClusterRpcStrategyTest {
 	public void testRpcStrategyNoRepartition() {
 		Set<String> partitionIds = PARTITION_ADDRESS_MAP_1.keySet();
 
-		Partitionings<String> partitionings = RendezvousPartitionings.<String>create()
-				.withPartitioning(RendezvousPartitioning.create(partitionIds, 1, false, true));
+		PartitionScheme<String> partitionScheme = RendezvousPartitionScheme.<String>create()
+				.withPartitionGroup(RendezvousPartitionGroup.create(partitionIds, 1, false, true));
 
 		List<String> alivePartitions = new ArrayList<>(difference(partitionIds, singleton("two")));
 
@@ -131,12 +131,12 @@ public class ClusterRpcStrategyTest {
 			poolStub.put(PARTITION_ADDRESS_MAP_1.get(alivePartition), new RpcSenderStub());
 		}
 
-		RpcStrategy rpcStrategy = partitionings.createRpcStrategy(partition -> server(PARTITION_ADDRESS_MAP_1.get(partition)), KEY_GETTER);
+		RpcStrategy rpcStrategy = partitionScheme.createRpcStrategy(partition -> server(PARTITION_ADDRESS_MAP_1.get(partition)), KEY_GETTER);
 
 		RpcSender sender = rpcStrategy.createSender(poolStub);
 		assertNotNull(sender);
 
-		Sharder<Integer> sharder = partitionings.createSharder(alivePartitions);
+		Sharder<Integer> sharder = partitionScheme.createSharder(alivePartitions);
 		assertNotNull(sharder);
 
 		Map<InetSocketAddress, String> address2Partition = PARTITION_ADDRESS_MAP_1.entrySet()
@@ -184,9 +184,9 @@ public class ClusterRpcStrategyTest {
 	public void testRpcStrategyMultipleActive() throws Exception {
 		Set<String> partitionIds = union(PARTITION_ADDRESS_MAP_1.keySet(), PARTITION_ADDRESS_MAP_2.keySet());
 
-		Partitionings<String> partitionings = RendezvousPartitionings.<String>create()
-				.withPartitioning(RendezvousPartitioning.create(PARTITION_ADDRESS_MAP_1.keySet(), 2, true, true))
-				.withPartitioning(RendezvousPartitioning.create(PARTITION_ADDRESS_MAP_2.keySet(), 2, true, true));
+		PartitionScheme<String> partitionScheme = RendezvousPartitionScheme.<String>create()
+				.withPartitionGroup(RendezvousPartitionGroup.create(PARTITION_ADDRESS_MAP_1.keySet(), 2, true, true))
+				.withPartitionGroup(RendezvousPartitionGroup.create(PARTITION_ADDRESS_MAP_2.keySet(), 2, true, true));
 
 		List<String> alivePartitions = new ArrayList<>(difference(partitionIds, setOf("two", "seven", "nine")));
 
@@ -203,12 +203,12 @@ public class ClusterRpcStrategyTest {
 			poolStub.put(partition2Address.get(alivePartition), new RpcSenderStub());
 		}
 
-		RpcStrategy rpcStrategy = partitionings.createRpcStrategy(partition -> server(partition2Address.get(partition)), KEY_GETTER);
+		RpcStrategy rpcStrategy = partitionScheme.createRpcStrategy(partition -> server(partition2Address.get(partition)), KEY_GETTER);
 
 		RpcSender sender = rpcStrategy.createSender(poolStub);
 		assertNotNull(sender);
 
-		Sharder<Integer> sharder = partitionings.createSharder(alivePartitions);
+		Sharder<Integer> sharder = partitionScheme.createSharder(alivePartitions);
 		assertNotNull(sharder);
 
 		for (int i = 0; i < 1000; i++) {

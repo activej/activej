@@ -14,49 +14,49 @@ import java.util.function.ToIntFunction;
 import static io.activej.crdt.storage.cluster.RendezvousHashSharder.NUMBER_OF_BUCKETS;
 import static java.util.stream.Collectors.toSet;
 
-public final class RendezvousPartitionings<P> implements DiscoveryService.Partitionings<P>, WithInitializer<RendezvousPartitionings<P>> {
-	private final List<RendezvousPartitioning<P>> partitionings;
+public final class RendezvousPartitionScheme<P> implements DiscoveryService.PartitionScheme<P>, WithInitializer<RendezvousPartitionScheme<P>> {
+	private final List<RendezvousPartitionGroup<P>> partitionGroups;
 	private final ToIntFunction<?> hashFn;
 
 	@SuppressWarnings("unchecked")
-	private RendezvousPartitionings(List<? extends RendezvousPartitioning<P>> partitionings, ToIntFunction<?> hashFn) {
-		this.partitionings = (List<RendezvousPartitioning<P>>) partitionings;
+	private RendezvousPartitionScheme(List<? extends RendezvousPartitionGroup<P>> partitionGroups, ToIntFunction<?> hashFn) {
+		this.partitionGroups = (List<RendezvousPartitionGroup<P>>) partitionGroups;
 		this.hashFn = hashFn;
 	}
 
 	@SafeVarargs
-	public static <P> RendezvousPartitionings<P> create(RendezvousPartitioning<P>... partitionings) {
-		return create(Arrays.asList(partitionings));
+	public static <P> RendezvousPartitionScheme<P> create(RendezvousPartitionGroup<P>... partitionGroups) {
+		return create(Arrays.asList(partitionGroups));
 	}
 
-	public static <P> RendezvousPartitionings<P> create(List<RendezvousPartitioning<P>> partitionings) {
-		return new RendezvousPartitionings<>(partitionings,
+	public static <P> RendezvousPartitionScheme<P> create(List<RendezvousPartitionGroup<P>> partitionGroups) {
+		return new RendezvousPartitionScheme<>(partitionGroups,
 				Objects::hashCode);
 	}
 
-	public RendezvousPartitionings<P> withPartitioning(RendezvousPartitioning<P> partitioning) {
-		List<RendezvousPartitioning<P>> partitionings = new ArrayList<>(this.partitionings);
-		partitionings.add(partitioning);
-		return new RendezvousPartitionings<>(partitionings, hashFn);
+	public RendezvousPartitionScheme<P> withPartitionGroup(RendezvousPartitionGroup<P> partitionGroup) {
+		List<RendezvousPartitionGroup<P>> partitionGroups = new ArrayList<>(this.partitionGroups);
+		partitionGroups.add(partitionGroup);
+		return new RendezvousPartitionScheme<>(partitionGroups, hashFn);
 	}
 
-	public <K extends Comparable<K>> RendezvousPartitionings<P> withHashFn(ToIntFunction<K> hashFn) {
-		return new RendezvousPartitionings<>(partitionings, hashFn);
+	public <K extends Comparable<K>> RendezvousPartitionScheme<P> withHashFn(ToIntFunction<K> hashFn) {
+		return new RendezvousPartitionScheme<>(partitionGroups, hashFn);
 	}
 
 	@Override
 	public Set<P> getPartitions() {
-		return partitionings.stream().flatMap(p -> p.getPartitions().stream()).collect(toSet());
+		return partitionGroups.stream().flatMap(p -> p.getPartitions().stream()).collect(toSet());
 	}
 
 	@Override
 	public <K extends Comparable<K>> @Nullable Sharder<K> createSharder(List<P> alive) {
 		List<RendezvousHashSharder<K, P>> sharders = new ArrayList<>();
-		for (RendezvousPartitioning<P> partitioning : partitionings) {
+		for (RendezvousPartitionGroup<P> partitionGroup : partitionGroups) {
 			//noinspection unchecked
 			RendezvousHashSharder<K, P> sharder = RendezvousHashSharder.create(
 					((ToIntFunction<K>) hashFn),
-					partitioning.getPartitions(), alive, partitioning.getReplicas(), partitioning.isRepartition());
+					partitionGroup.getPartitions(), alive, partitionGroup.getReplicas(), partitionGroup.isRepartition());
 			sharders.add(sharder);
 		}
 		return RendezvousHashSharder.unionOf(sharders);
@@ -67,18 +67,18 @@ public final class RendezvousPartitionings<P> implements DiscoveryService.Partit
 			Function<Object, K> keyGetter) {
 
 		List<RpcStrategy> rendezvousHashings = new ArrayList<>();
-		for (RendezvousPartitioning<P> partitioning : partitionings) {
-			if (!partitioning.isActive()) continue;
+		for (RendezvousPartitionGroup<P> partitionGroup : partitionGroups) {
+			if (!partitionGroup.isActive()) continue;
 			//noinspection unchecked
 			RpcStrategyRendezvousHashing rendezvousHashing = RpcStrategyRendezvousHashing.create(req ->
 							((ToIntFunction<K>) hashFn).applyAsInt(keyGetter.apply(req)))
 					.withHashBuckets(NUMBER_OF_BUCKETS)
 					.withHashBucketFunction(RendezvousHashSharder::hashBucket);
-			for (P pid : partitioning.getPartitions()) {
+			for (P pid : partitionGroup.getPartitions()) {
 				rendezvousHashing.withShard(pid, provider.apply(pid));
 			}
-			if (!partitioning.isRepartition()) {
-				rendezvousHashing = rendezvousHashing.withStrictShards(partitioning.getReplicas());
+			if (!partitionGroup.isRepartition()) {
+				rendezvousHashing = rendezvousHashing.withStrictShards(partitionGroup.getReplicas());
 			}
 			rendezvousHashings.add(rendezvousHashing);
 		}
