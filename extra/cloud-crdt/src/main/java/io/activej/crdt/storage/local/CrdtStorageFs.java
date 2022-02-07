@@ -48,9 +48,11 @@ import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
+import io.activej.fs.exception.FileNotFoundException;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
+import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
 import io.activej.promise.jmx.PromiseStats;
 import org.jetbrains.annotations.NotNull;
@@ -63,14 +65,12 @@ import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
-import java.util.stream.Stream;
 
 import static io.activej.csp.ChannelSupplier.ofPromise;
 import static io.activej.datastream.processor.StreamFilter.mapper;
 import static io.activej.fs.ActiveFsAdapters.subdirectory;
 import static io.activej.promise.Promises.all;
 import static io.activej.promise.Promises.toTuple;
-import static java.util.stream.Stream.concat;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStorage<K, S>,
@@ -170,44 +170,43 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
-		return toTuple(fs.list("*"), tombstoneFolderFs.list("*"))
-				.map(tuple -> doDownload(tuple.getValue1(), tuple.getValue2(), timestamp, true))
+		return Promises.retry(($, e) -> !(e instanceof FileNotFoundException),
+						() -> toTuple(fs.list("*"), tombstoneFolderFs.list("*"))
+								.then(tuple -> doDownload(tuple.getValue1(), tuple.getValue2(), timestamp))
+								.map(supplier -> supplier.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)))
 				.mapException(e -> new CrdtException("Failed to download CRDT data", e));
 	}
 
-	private StreamSupplier<CrdtData<K, S>> doDownload(Map<String, FileMetadata> filesMap, Map<String, FileMetadata> tombstones1, long timestamp, boolean stats) {
-		StreamReducer<K, CrdtData<K, S>, CrdtAccumulator<S>> reducer = StreamReducer.create();
+	private Promise<StreamSupplier<CrdtData<K, S>>> doDownload(Map<String, FileMetadata> files, Map<String, FileMetadata> tombstones, long timestamp) {
+		return Promises.toList(files.entrySet()
+						.stream()
+						.filter(e -> timestamp == 0 || e.getValue().getTimestamp() >= timestamp)
+						.map(entry -> fs.download(entry.getKey())
+								.map(supplier -> supplier
+										.transformWith(ChannelDeserializer.create(serializer))
+										.transformWith(mapper(data -> {
+											S partial = function.extract(data.getState(), timestamp);
+											return partial != null ? new CrdtReducingData<>(data.getKey(), partial, entry.getValue().getTimestamp()) : null;
+										}))
+										.transformWith(StreamFilter.create(Objects::nonNull)))))
+				.combine(Promises.toList(tombstones.entrySet()
+								.stream()
+								.filter(e -> timestamp == 0 || e.getValue().getTimestamp() >= timestamp)
+								.map(entry -> tombstoneFolderFs.download(entry.getKey())
+										.map(supplier -> supplier
+												.transformWith(ChannelDeserializer.create(serializer.getKeySerializer()))
+												.transformWith(mapper(key -> new CrdtReducingData<>(key, (S) null, entry.getValue().getTimestamp())))))),
+						Utils::concat)
+				.map(suppliers -> {
+					StreamReducer<K, CrdtData<K, S>, CrdtAccumulator<S>> reducer = StreamReducer.create();
 
-		Stream<Promise<Void>> files = filesMap.entrySet()
-				.stream()
-				.filter(e -> timestamp == 0 || e.getValue().getTimestamp() >= timestamp)
-				.map(entry -> ofPromise(fs.download(entry.getKey()))
-						.transformWith(ChannelDeserializer.create(serializer))
-						.transformWith(mapper(data -> {
-							S partial = function.extract(data.getState(), timestamp);
-							return partial != null ? new CrdtReducingData<>(data.getKey(), partial, entry.getValue().getTimestamp()) : null;
-						}))
-						.transformWith(StreamFilter.create(Objects::nonNull))
-						.streamTo(reducer.newInput(x -> x.key, new CrdtReducer())));
+					suppliers.forEach(supplier -> supplier.streamTo(reducer.newInput(x -> x.key, new CrdtReducer())));
 
-		Stream<Promise<Void>> tombstones = tombstones1.entrySet()
-				.stream()
-				.filter(e -> timestamp == 0 || e.getValue().getTimestamp() >= timestamp)
-				.map(entry -> ofPromise(tombstoneFolderFs.download(entry.getKey()))
-						.transformWith(ChannelDeserializer.create(serializer.getKeySerializer()))
-						.transformWith(mapper(key -> new CrdtReducingData<>(key, (S) null, entry.getValue().getTimestamp())))
-						.streamTo(reducer.newInput(x -> x.key, new CrdtReducer())));
+					return reducer.getOutput()
+							.withEndOfStream(eos -> eos
+									.mapException(e -> new CrdtException("Error while downloading CRDT data", e)));
 
-		//noinspection ResultOfMethodCallIgnored
-		all(concat(files, tombstones));
-
-		StreamSupplier<CrdtData<K, S>> output = reducer.getOutput();
-		if (stats) {
-			output = output.transformWith(detailedStats ? downloadStatsDetailed : downloadStats);
-		}
-		return output
-				.withEndOfStream(eos -> eos
-						.mapException(e -> new CrdtException("Error while downloading CRDT data", e)));
+				});
 	}
 
 	@Override
@@ -264,9 +263,9 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 					logger.info("Started consolidating files into {} from {}", name, filesToConsolidate);
 
 					return tombstoneFolderFs.list("*")
-							.then(tombstoneMap -> doDownload(filesMap, tombstoneMap, 0, false)
-									.streamTo(uploadNonEmpty(() -> fs.upload(name),
-											supplier -> supplier.transformWith(ChannelSerializer.create(serializer)))))
+							.then(tombstoneMap -> doDownload(filesMap, tombstoneMap, 0))
+							.then(crdtSupplier -> crdtSupplier.streamTo(uploadNonEmpty(() -> fs.upload(name),
+									supplier -> supplier.transformWith(ChannelSerializer.create(serializer)))))
 							.then(() -> fs.deleteAll(filesToConsolidate));
 				})
 				.mapException(e -> new CrdtException("Files consolidation failed", e));
