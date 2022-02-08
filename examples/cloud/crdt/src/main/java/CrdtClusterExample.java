@@ -78,11 +78,11 @@ public final class CrdtClusterExample {
 
 		//[START REGION_2]
 		// sets on partition3
-		CrdtData<String, LWWSet<String>> firstOn3 = new CrdtData<>("first", LWWSet.of("#1", "#2", "#3", "#4"));
-		CrdtData<String, LWWSet<String>> secondOn3 = new CrdtData<>("second", LWWSet.of("#3", "#4", "#5", "#6"));
+		CrdtData<String, LWWSet<String>> firstOn3 = new CrdtData<>("first", System.currentTimeMillis(), LWWSet.of("#1", "#2", "#3", "#4"));
+		CrdtData<String, LWWSet<String>> secondOn3 = new CrdtData<>("second", System.currentTimeMillis(), LWWSet.of("#3", "#4", "#5", "#6"));
 
 		// sets on partition6
-		CrdtData<String, LWWSet<String>> firstOn6 = new CrdtData<>("first", LWWSet.of("#3", "#4", "#5", "#6"));
+		CrdtData<String, LWWSet<String>> firstOn6 = new CrdtData<>("first", System.currentTimeMillis(), LWWSet.of("#3", "#4", "#5", "#6"));
 
 		// current implementation of LWWSet depends on system time
 		// so to make the below removes with a higher timestamp, we wait for just a bit
@@ -95,7 +95,7 @@ public final class CrdtClusterExample {
 		LWWSet<String> set = LWWSet.of("#2", "#4");
 		set.remove("#5");
 		set.remove("#6");
-		CrdtData<String, LWWSet<String>> secondOn6 = new CrdtData<>("second", set);
+		CrdtData<String, LWWSet<String>> secondOn6 = new CrdtData<>("second", System.currentTimeMillis(), set);
 		//[END REGION_2]
 
 		//[START REGION_3]

@@ -25,6 +25,7 @@ import io.activej.common.initializer.WithInitializer;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtException;
 import io.activej.crdt.CrdtStorageClient;
+import io.activej.crdt.CrdtTombstone;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.CrdtType;
 import io.activej.crdt.storage.CrdtStorage;
@@ -68,8 +69,8 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 	private final StreamStatsDetailed<CrdtData<K, S>> uploadStatsDetailed = StreamStats.detailed();
 	private final StreamStatsBasic<CrdtData<K, S>> downloadStats = StreamStats.basic();
 	private final StreamStatsDetailed<CrdtData<K, S>> downloadStatsDetailed = StreamStats.detailed();
-	private final StreamStatsBasic<K> removeStats = StreamStats.basic();
-	private final StreamStatsDetailed<K> removeStatsDetailed = StreamStats.detailed();
+	private final StreamStatsBasic<CrdtTombstone<K>> removeStats = StreamStats.basic();
+	private final StreamStatsDetailed<CrdtTombstone<K>> removeStatsDetailed = StreamStats.detailed();
 	// endregion
 
 	// region creators
@@ -172,7 +173,9 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 								new BinaryAccumulatorReducer<K, CrdtData<K, S>>() {
 									@Override
 									protected CrdtData<K, S> combine(K key, CrdtData<K, S> nextValue, CrdtData<K, S> accumulator) {
-										return new CrdtData<>(key, crdtFunction.merge(accumulator.getState(), nextValue.getState()));
+										long timestamp = Math.max(nextValue.getTimestamp(), accumulator.getTimestamp());
+										S merged = crdtFunction.merge(accumulator.getState(), accumulator.getTimestamp(), nextValue.getState(), nextValue.getTimestamp());
+										return new CrdtData<>(key, timestamp, merged);
 									}
 								})
 						);
@@ -183,7 +186,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 	}
 
 	@Override
-	public Promise<StreamConsumer<K>> remove() {
+	public Promise<StreamConsumer<CrdtTombstone<K>>> remove() {
 		DiscoveryService.PartitionScheme<P> partitionScheme = currentPartitionScheme;
 		return execute(partitionScheme.getPartitions(), CrdtStorage::remove)
 				.map(map -> {
@@ -192,9 +195,9 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 					if (sharder == null) {
 						throw new CrdtException("Incomplete cluster");
 					}
-					StreamSplitter<K, K> splitter = StreamSplitter.create(
+					StreamSplitter<CrdtTombstone<K>, CrdtTombstone<K>> splitter = StreamSplitter.create(
 							(item, acceptors) -> {
-								int[] selected = sharder.shard(item);
+								int[] selected = sharder.shard(item.getKey());
 								//noinspection ForLoopReplaceableByForEach
 								for (int i = 0; i < selected.length; i++) {
 									acceptors[selected[i]].accept(item);
@@ -214,10 +217,10 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 
 		class Tuple {
 			private final Try<StreamSupplier<CrdtData<K, S>>> downloader;
-			private final Try<StreamConsumer<K>> remover;
+			private final Try<StreamConsumer<CrdtTombstone<K>>> remover;
 			private final Map<P, StreamConsumer<CrdtData<K, S>>> uploaders;
 
-			public Tuple(Try<StreamSupplier<CrdtData<K, S>>> downloader, Try<StreamConsumer<K>> remover, Map<P, StreamConsumer<CrdtData<K, S>>> uploaders) {
+			public Tuple(Try<StreamSupplier<CrdtData<K, S>>> downloader, Try<StreamConsumer<CrdtTombstone<K>>> remover, Map<P, StreamConsumer<CrdtData<K, S>>> uploaders) {
 				this.downloader = downloader;
 				this.remover = remover;
 				this.uploaders = uploaders;
@@ -259,13 +262,13 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 									}
 								}
 								if (!sourceInShards) {
-									acceptors[acceptors.length - 1].accept(item.getKey());
+									acceptors[acceptors.length - 1].accept(new CrdtTombstone<>(item.getKey(), item.getTimestamp()));
 								}
 							});
 
 					StreamConsumer<CrdtData<K, S>> uploader = splitter.getInput()
 							.transformWith(detailedStats ? uploadStatsDetailed : uploadStats);
-					StreamConsumer<K> remover = tuple.remover.get()
+					StreamConsumer<CrdtTombstone<K>> remover = tuple.remover.get()
 							.transformWith(detailedStats ? removeStatsDetailed : removeStats);
 					StreamSupplier<CrdtData<K, S>> downloader = tuple.downloader.get()
 							.transformWith(detailedStats ? downloadStatsDetailed : downloadStats);
@@ -278,7 +281,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 
 					SettablePromise<Void> removerEos = new SettablePromise<>();
 					//noinspection unchecked
-					((StreamSupplier<K>) splitter.newOutput())
+					((StreamSupplier<CrdtTombstone<K>>) splitter.newOutput())
 							.withEndOfStream(eos -> removerEos)
 							.streamTo(remover.withAcknowledgement(ack -> downloader.getEndOfStream()));
 

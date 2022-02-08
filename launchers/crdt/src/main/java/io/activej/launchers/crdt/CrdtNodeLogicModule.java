@@ -46,7 +46,6 @@ import java.util.Map;
 
 import static io.activej.common.Checks.checkState;
 import static io.activej.config.converter.ConfigConverters.ofInteger;
-import static io.activej.launchers.crdt.Initializers.ofFsCrdtClient;
 import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
 import static io.activej.launchers.initializers.Initializers.ofEventloop;
 
@@ -76,9 +75,8 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 	}
 
 	@Provides
-	CrdtStorageFs<K, S> fsCrdtClient(Eventloop eventloop, Config config, ActiveFs activeFs, CrdtDescriptor<K, S> descriptor) {
-		return CrdtStorageFs.create(eventloop, activeFs, descriptor.getSerializer(), descriptor.getCrdtFunction())
-				.withInitializer(ofFsCrdtClient(config));
+	CrdtStorageFs<K, S> fsCrdtClient(Eventloop eventloop, ActiveFs activeFs, CrdtDescriptor<K, S> descriptor) {
+		return CrdtStorageFs.create(eventloop, activeFs, descriptor.getSerializer(), descriptor.getCrdtFunction());
 	}
 
 	@Provides

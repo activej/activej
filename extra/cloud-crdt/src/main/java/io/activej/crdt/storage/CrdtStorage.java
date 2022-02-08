@@ -17,6 +17,7 @@
 package io.activej.crdt.storage;
 
 import io.activej.crdt.CrdtData;
+import io.activej.crdt.CrdtTombstone;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
@@ -60,7 +61,7 @@ public interface CrdtStorage<K extends Comparable<K>, S> {
 	 *
 	 * @return stage of stream consumer of keys
 	 */
-	Promise<StreamConsumer<K>> remove();
+	Promise<StreamConsumer<CrdtTombstone<K>>> remove();
 
 	/**
 	 * Marker that this client is functional (server is up, there are enough nodes in cluster etc.)

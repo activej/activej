@@ -16,22 +16,16 @@
 
 package io.activej.crdt;
 
-public final class CrdtData<K extends Comparable<K>, S> extends CrdtEntity<K> {
+public final class CrdtTombstone<K extends Comparable<K>> extends CrdtEntity<K> {
 	private final long timestamp;
-	private final S state;
 
-	public CrdtData(K key, long timestamp, S state) {
+	public CrdtTombstone(K key, long timestamp) {
 		super(key);
 		this.timestamp = timestamp;
-		this.state = state;
 	}
 
 	public long getTimestamp() {
 		return timestamp;
-	}
-
-	public S getState() {
-		return state;
 	}
 
 	@Override
@@ -43,21 +37,18 @@ public final class CrdtData<K extends Comparable<K>, S> extends CrdtEntity<K> {
 			return false;
 		}
 
-		CrdtData<?, ?> crdtData = (CrdtData<?, ?>) o;
+		CrdtTombstone<?> crdtData = (CrdtTombstone<?>) o;
 
-		return key.equals(crdtData.key) && state.equals(crdtData.state) && timestamp == crdtData.timestamp;
+		return key.equals(crdtData.key) && timestamp == crdtData.timestamp;
 	}
 
 	@Override
 	public int hashCode() {
-		int result = key.hashCode();
-		result = 31 * result + (int) (timestamp ^ (timestamp >>> 32));
-		result = 31 * result + state.hashCode();
-		return result;
+		return 31 * key.hashCode() + Long.hashCode(timestamp);
 	}
 
 	@Override
 	public String toString() {
-		return "CrdtData{key=" + key + ", timestamp=" + timestamp + ", state=" + state + '}';
+		return "CrdtTombstone{key=" + key + ", timestamp=" + timestamp + '}';
 	}
 }

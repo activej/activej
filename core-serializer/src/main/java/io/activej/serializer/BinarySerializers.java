@@ -17,6 +17,7 @@
 package io.activej.serializer;
 
 import io.activej.serializer.util.BinaryOutputUtils;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -253,7 +254,7 @@ public final class BinarySerializers {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> BinarySerializer<T> ofNullable(BinarySerializer<T> codec) {
+	public static <T> BinarySerializer<@Nullable T> ofNullable(BinarySerializer<T> codec) {
 		if (codec == UTF8_SERIALIZER) {
 			return (BinarySerializer<T>) new BinarySerializer<String>() {
 				@Override

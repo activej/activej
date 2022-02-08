@@ -17,8 +17,8 @@
 package io.activej.launchers.crdt;
 
 import io.activej.config.Config;
+import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.util.CrdtDataSerializer;
-import io.activej.crdt.util.TimestampContainer;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.LocalActiveFs;
@@ -28,7 +28,6 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
-import io.activej.types.TypeT;
 
 import java.util.concurrent.Executor;
 
@@ -38,26 +37,25 @@ import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
 import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
-public final class CrdtNodeExample extends CrdtNodeLauncher<String, TimestampContainer<Integer>> {
+public final class CrdtNodeExample extends CrdtNodeLauncher<String, Integer> {
 	@Inject
 	AsyncHttpServer httpServer;
 
 	@Override
-	protected CrdtNodeLogicModule<String, TimestampContainer<Integer>> getBusinessLogicModule() {
-		return new CrdtNodeLogicModule<String, TimestampContainer<Integer>>() {
+	protected CrdtNodeLogicModule<String, Integer> getBusinessLogicModule() {
+		return new CrdtNodeLogicModule<String, Integer>() {
 			@Override
 			protected void configure() {
-				install(new CrdtHttpModule<String, TimestampContainer<Integer>>() {});
+				install(new CrdtHttpModule<String, Integer>() {});
 			}
 
 			@Provides
-			CrdtDescriptor<String, TimestampContainer<Integer>> descriptor() {
+			CrdtDescriptor<String, Integer> descriptor() {
 				return new CrdtDescriptor<>(
-						TimestampContainer.createCrdtFunction(Integer::max),
-						new CrdtDataSerializer<>(UTF8_SERIALIZER,
-								TimestampContainer.createSerializer(INT_SERIALIZER)),
+						CrdtFunction.ignoringTimestamp(Integer::max),
+						new CrdtDataSerializer<>(UTF8_SERIALIZER, INT_SERIALIZER),
 						String.class,
-						new TypeT<TimestampContainer<Integer>>() {}.getType());
+						Integer.class);
 			}
 
 			@Provides

@@ -22,6 +22,7 @@ import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.initializer.WithInitializer;
+import io.activej.common.time.CurrentTimeProvider;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.csp.ChannelConsumer;
@@ -92,6 +93,8 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAhead
 	private boolean flushRequired;
 	private boolean scanLostFiles = true;
 
+	private CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
+
 	// region JMX
 	private final PromiseStats putPromise = PromiseStats.create(SMOOTHING_WINDOW);
 	private final PromiseStats flushPromise = PromiseStats.create(SMOOTHING_WINDOW);
@@ -138,6 +141,11 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAhead
 		return new FileWriteAheadLog<>(eventloop, executor, path, serializer, flushMode, null);
 	}
 
+	public FileWriteAheadLog<K, S> withCurrentTimeProvider(CurrentTimeProvider now) {
+		this.now = now;
+		return this;
+	}
+
 	public FlushMode getFlushMode() {
 		return flushMode;
 	}
@@ -148,7 +156,7 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAhead
 		totalPuts.recordEvent();
 
 		flushRequired = true;
-		return consumer.accept(new CrdtData<>(key, value))
+		return consumer.accept(new CrdtData<>(key, now.currentTimeMillis(), value))
 				.whenComplete(putPromise.recordStats());
 	}
 

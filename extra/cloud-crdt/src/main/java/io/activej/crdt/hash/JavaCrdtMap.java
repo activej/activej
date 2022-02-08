@@ -19,7 +19,6 @@ package io.activej.crdt.hash;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncRunnables;
 import io.activej.async.service.EventloopService;
-import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.datastream.StreamConsumer;
 import io.activej.eventloop.Eventloop;
@@ -29,24 +28,25 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.BinaryOperator;
 
 public class JavaCrdtMap<K extends Comparable<K>, S> implements CrdtMap<K, S>, EventloopService {
 	private final Map<K, S> map = new TreeMap<>();
 
 	private final Eventloop eventloop;
-	private final CrdtFunction<S> crdtFunction;
+	private final BinaryOperator<S> mergeFn;
 
 	private final AsyncRunnable refresh;
 
-	public JavaCrdtMap(Eventloop eventloop, CrdtFunction<S> crdtFunction) {
+	public JavaCrdtMap(Eventloop eventloop, BinaryOperator<S> mergeFn) {
 		this.eventloop = eventloop;
-		this.crdtFunction = crdtFunction;
+		this.mergeFn = mergeFn;
 		this.refresh = Promise::complete;
 	}
 
-	public JavaCrdtMap(Eventloop eventloop, CrdtFunction<S> crdtFunction, @NotNull CrdtStorage<K, S> storage) {
+	public JavaCrdtMap(Eventloop eventloop, BinaryOperator<S> mergeFn, @NotNull CrdtStorage<K, S> storage) {
 		this.eventloop = eventloop;
-		this.crdtFunction = crdtFunction;
+		this.mergeFn = mergeFn;
 		this.refresh = AsyncRunnables.reuse(() -> doRefresh(storage));
 	}
 
@@ -62,7 +62,7 @@ public class JavaCrdtMap<K extends Comparable<K>, S> implements CrdtMap<K, S>, E
 
 	@Override
 	public Promise<@Nullable S> put(K key, S value) {
-		return Promise.of(map.merge(key, value, crdtFunction::merge));
+		return Promise.of(map.merge(key, value, mergeFn));
 	}
 
 	@Override

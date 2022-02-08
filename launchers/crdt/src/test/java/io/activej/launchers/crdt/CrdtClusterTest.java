@@ -4,7 +4,6 @@ import io.activej.config.Config;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.util.CrdtDataSerializer;
-import io.activej.crdt.util.TimestampContainer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
@@ -34,6 +33,7 @@ import java.util.stream.IntStream;
 
 import static io.activej.config.converter.ConfigConverters.ofExecutor;
 import static io.activej.config.converter.ConfigConverters.ofPath;
+import static io.activej.crdt.function.CrdtFunction.ignoringTimestamp;
 import static io.activej.crdt.util.Utils.toJson;
 import static io.activej.http.HttpMethod.PUT;
 import static io.activej.promise.TestUtils.await;
@@ -52,7 +52,7 @@ public final class CrdtClusterTest {
 	@Rule
 	public final ActivePromisesRule activePromisesRule = new ActivePromisesRule();
 
-	static class TestNodeLauncher extends CrdtNodeLauncher<String, TimestampContainer<Integer>> {
+	static class TestNodeLauncher extends CrdtNodeLauncher<String, Integer> {
 		private final Config config;
 
 		public TestNodeLauncher(Config config) {
@@ -70,21 +70,20 @@ public final class CrdtClusterTest {
 		}
 
 		@Override
-		protected CrdtNodeLogicModule<String, TimestampContainer<Integer>> getBusinessLogicModule() {
-			return new CrdtNodeLogicModule<String, TimestampContainer<Integer>>() {
+		protected CrdtNodeLogicModule<String, Integer> getBusinessLogicModule() {
+			return new CrdtNodeLogicModule<String, Integer>() {
 				@Override
 				protected void configure() {
-					install(new CrdtHttpModule<String, TimestampContainer<Integer>>() {});
+					install(new CrdtHttpModule<String, Integer>() {});
 				}
 
 				@Provides
-				CrdtDescriptor<String, TimestampContainer<Integer>> descriptor() {
+				CrdtDescriptor<String, Integer> descriptor() {
 					return new CrdtDescriptor<>(
-							TimestampContainer.createCrdtFunction(Integer::max),
-							new CrdtDataSerializer<>(UTF8_SERIALIZER,
-									TimestampContainer.createSerializer(INT_SERIALIZER)),
+							ignoringTimestamp(Integer::max),
+							new CrdtDataSerializer<>(UTF8_SERIALIZER, INT_SERIALIZER),
 							String.class,
-							new TypeT<TimestampContainer<Integer>>() {}.getType());
+							Integer.class);
 				}
 
 				@Provides
@@ -130,10 +129,10 @@ public final class CrdtClusterTest {
 
 	@Test
 	public void startFileServer() throws Exception {
-		new CrdtFileServerLauncher<String, TimestampContainer<Integer>>() {
+		new CrdtFileServerLauncher<String, Integer>() {
 			@Override
-			protected CrdtFileServerLogicModule<String, TimestampContainer<Integer>> getBusinessLogicModule() {
-				return new CrdtFileServerLogicModule<String, TimestampContainer<Integer>>() {};
+			protected CrdtFileServerLogicModule<String, Integer> getBusinessLogicModule() {
+				return new CrdtFileServerLogicModule<String, Integer>() {};
 			}
 
 			@Override
@@ -149,13 +148,12 @@ public final class CrdtClusterTest {
 			}
 
 			@Provides
-			CrdtDescriptor<String, TimestampContainer<Integer>> descriptor() {
+			CrdtDescriptor<String, Integer> descriptor() {
 				return new CrdtDescriptor<>(
-						TimestampContainer.createCrdtFunction(Integer::max),
-						new CrdtDataSerializer<>(UTF8_SERIALIZER,
-								TimestampContainer.createSerializer(INT_SERIALIZER)),
+						ignoringTimestamp(Integer::max),
+						new CrdtDataSerializer<>(UTF8_SERIALIZER, INT_SERIALIZER),
 						String.class,
-						new TypeT<TimestampContainer<Integer>>() {}.getType());
+						Integer.class);
 			}
 		}.launch(new String[0]);
 	}
@@ -171,7 +169,11 @@ public final class CrdtClusterTest {
 		Promises.sequence(IntStream.range(0, 1_000_000)
 						.mapToObj(i ->
 								() -> client.request(HttpRequest.of(PUT, "http://127.0.0.1:7000")
-												.withBody(toJson(manifest, new CrdtData<>("value_" + i, i))))
+												.withBody(toJson(manifest, new CrdtData<>(
+														"value_" + i,
+														Eventloop.getCurrentEventloop().currentTimeMillis(),
+														i
+												))))
 										.toVoid()))
 				.whenException(Exception::printStackTrace)
 				.whenComplete(uploadStat.recordStats())
@@ -192,7 +194,7 @@ public final class CrdtClusterTest {
 		PromiseStats uploadStat = PromiseStats.create(Duration.ofSeconds(5));
 
 		StreamSupplier.ofStream(IntStream.range(0, 1000000)
-						.mapToObj(i -> new CrdtData<>("value_" + i, i))).streamTo(StreamConsumer.ofPromise(client.upload()))
+						.mapToObj(i -> new CrdtData<>("value_" + i, Eventloop.getCurrentEventloop().currentTimeMillis(), i))).streamTo(StreamConsumer.ofPromise(client.upload()))
 				.whenComplete(uploadStat.recordStats())
 				.whenComplete(assertCompleteFn($ -> {
 					System.out.println(uploadStat);

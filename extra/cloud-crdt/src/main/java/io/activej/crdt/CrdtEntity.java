@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 
-package io.activej.launchers.crdt;
+package io.activej.crdt;
 
-import io.activej.common.initializer.Initializer;
-import io.activej.config.Config;
-import io.activej.crdt.storage.local.CrdtStorageFs;
+public abstract class CrdtEntity<K extends Comparable<K>> implements Comparable<CrdtEntity<K>> {
+	protected final K key;
 
-public final class Initializers {
-
-	public static <K extends Comparable<K>, S> Initializer<CrdtStorageFs<K, S>> ofFsCrdtClient(Config config) {
-		return fsCrdtClient ->
-				fsCrdtClient.withTombstoneFolder(config.get("metafolder.tombstones", ".tombstones"));
+	protected CrdtEntity(K key) {
+		this.key = key;
 	}
 
+	public K getKey() {
+		return key;
+	}
+
+	@Override
+	public int compareTo(CrdtEntity<K> o) {
+		return key.compareTo(o.key);
+	}
 }

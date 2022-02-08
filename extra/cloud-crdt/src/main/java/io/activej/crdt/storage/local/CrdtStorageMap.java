@@ -18,7 +18,10 @@ package io.activej.crdt.storage.local;
 
 import io.activej.async.service.EventloopService;
 import io.activej.common.initializer.WithInitializer;
+import io.activej.common.time.CurrentTimeProvider;
 import io.activej.crdt.CrdtData;
+import io.activej.crdt.CrdtException;
+import io.activej.crdt.CrdtTombstone;
 import io.activej.crdt.function.CrdtFilter;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.CrdtType;
@@ -41,7 +44,6 @@ import org.jetbrains.annotations.Nullable;
 import java.time.Duration;
 import java.util.Iterator;
 import java.util.NavigableMap;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.Stream;
 
@@ -53,8 +55,11 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 	private final CrdtFunction<S> function;
 
 	private final NavigableMap<K, CrdtData<K, S>> map = new ConcurrentSkipListMap<>();
+	private final NavigableMap<K, CrdtTombstone<K>> tombstones = new ConcurrentSkipListMap<>();
 
 	private CrdtFilter<S> filter = $ -> true;
+
+	private CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
 
 	// region JMX
 	private boolean detailedStats;
@@ -63,8 +68,8 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 	private final StreamStatsDetailed<CrdtData<K, S>> uploadStatsDetailed = StreamStats.detailed();
 	private final StreamStatsBasic<CrdtData<K, S>> downloadStats = StreamStats.basic();
 	private final StreamStatsDetailed<CrdtData<K, S>> downloadStatsDetailed = StreamStats.detailed();
-	private final StreamStatsBasic<K> removeStats = StreamStats.basic();
-	private final StreamStatsDetailed<K> removeStatsDetailed = StreamStats.detailed();
+	private final StreamStatsBasic<CrdtTombstone<K>> removeStats = StreamStats.basic();
+	private final StreamStatsDetailed<CrdtTombstone<K>> removeStatsDetailed = StreamStats.detailed();
 
 	private final EventStats singlePuts = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final EventStats singleGets = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
@@ -89,6 +94,11 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 		return this;
 	}
 
+	public CrdtStorageMap<K, S> withCurrentTimeProvide(CurrentTimeProvider now) {
+		this.now = now;
+		return this;
+	}
+
 	@Override
 	public @NotNull Eventloop getEventloop() {
 		return eventloop;
@@ -98,21 +108,25 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
 		StreamConsumerToList<CrdtData<K, S>> consumer = StreamConsumerToList.create();
 		return Promise.of(consumer.withAcknowledgement(ack -> ack
-						.whenResult(() -> consumer.getList().forEach(this::doPut)))
+						.whenResult(() -> consumer.getList().forEach(this::doPut))
+						.mapException(e -> new CrdtException("Error while uploading CRDT data", e)))
 				.transformWith(detailedStats ? uploadStatsDetailed : uploadStats));
 	}
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
 		return Promise.of(StreamSupplier.ofStream(extract(timestamp))
-				.transformWith(detailedStats ? downloadStatsDetailed : downloadStats));
+				.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
+				.withEndOfStream(eos -> eos
+						.mapException(e -> new CrdtException("Error while downloading CRDT data", e))));
 	}
 
 	@Override
-	public Promise<StreamConsumer<K>> remove() {
-		StreamConsumerToList<K> consumer = StreamConsumerToList.create();
+	public Promise<StreamConsumer<CrdtTombstone<K>>> remove() {
+		StreamConsumerToList<CrdtTombstone<K>> consumer = StreamConsumerToList.create();
 		return Promise.of(consumer.withAcknowledgement(ack -> ack
-						.whenResult(() -> consumer.getList().forEach(map::remove)))
+						.whenResult(() -> consumer.getList().forEach(this::doRemove))
+						.mapException(e -> new CrdtException("Error while removing CRDT data", e)))
 				.transformWith(detailedStats ? removeStatsDetailed : removeStats));
 	}
 
@@ -132,28 +146,42 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 	}
 
 	private Stream<CrdtData<K, S>> extract(long timestamp) {
-		Stream<CrdtData<K, S>> stream = map.values().stream();
-		if (timestamp == 0) {
-			return stream;
-		}
-		return stream
-				.map(data -> {
-					S partial = function.extract(data.getState(), timestamp);
-					return partial != null ? new CrdtData<>(data.getKey(), partial) : null;
-				})
-				.filter(Objects::nonNull);
+		return map.values().stream()
+				.filter(data -> data.getTimestamp() >= timestamp);
 	}
 
 	private void doPut(CrdtData<K, S> data) {
 		K key = data.getKey();
+
+		CrdtTombstone<K> tombstone = tombstones.get(key);
+		if (tombstone != null) {
+			if (tombstone.getTimestamp() >= data.getTimestamp()) return;
+			tombstones.remove(key);
+		}
+
 		map.merge(key, data, (a, b) -> {
-			S merged = function.merge(a.getState(), b.getState());
-			return filter.test(merged) ? new CrdtData<>(key, merged) : null;
+			S merged = function.merge(a.getState(), a.getTimestamp(), b.getState(), b.getTimestamp());
+			long timestamp = Math.max(a.getTimestamp(), b.getTimestamp());
+			return filter.test(merged) ? new CrdtData<>(key, timestamp, merged) : null;
 		});
 	}
 
+	private boolean doRemove(CrdtTombstone<K> tombstone) {
+		K key = tombstone.getKey();
+
+		CrdtData<K, S> data = map.get(key);
+		boolean removed = data != null;
+		if (removed) {
+			if (data.getTimestamp() > tombstone.getTimestamp()) return false;
+			map.remove(key);
+		}
+
+		tombstones.merge(key, tombstone, (a, b) -> new CrdtTombstone<>(key, Math.max(a.getTimestamp(), b.getTimestamp())));
+		return true;
+	}
+
 	public void put(K key, S state) {
-		put(new CrdtData<>(key, state));
+		put(new CrdtData<>(key, now.currentTimeMillis(), state));
 	}
 
 	public void put(CrdtData<K, S> data) {
@@ -168,8 +196,12 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 	}
 
 	public boolean remove(K key) {
+		return remove(new CrdtTombstone<>(key, now.currentTimeMillis()));
+	}
+
+	public boolean remove(CrdtTombstone<K> tombstone) {
 		singleRemoves.recordEvent();
-		return map.remove(key) != null;
+		return doRemove(tombstone);
 	}
 
 	public Iterator<CrdtData<K, S>> iterator(long timestamp) {

@@ -1,10 +1,9 @@
 package io.activej.crdt.storage.local;
 
 import io.activej.crdt.CrdtData;
+import io.activej.crdt.CrdtTombstone;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.util.CrdtDataSerializer;
-import io.activej.crdt.util.TimestampContainer;
-import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.FileMetadata;
@@ -18,22 +17,20 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
 import static io.activej.common.Utils.*;
+import static io.activej.crdt.function.CrdtFunction.ignoringTimestamp;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.serializer.BinarySerializers.*;
 import static java.util.Collections.emptySet;
 import static org.junit.Assert.*;
 
 public final class CrdtStorageFsTest {
-	private static final CrdtFunction<TimestampContainer<Set<Integer>>> CRDT_FUNCTION = TimestampContainer.createCrdtFunction(CrdtStorageFsTest::union);
-	private static final CrdtDataSerializer<String, TimestampContainer<Set<Integer>>> SERIALIZER = new CrdtDataSerializer<>(UTF8_SERIALIZER, TimestampContainer.createSerializer(ofSet(INT_SERIALIZER)));
+	private static final CrdtFunction<Set<Integer>> CRDT_FUNCTION = ignoringTimestamp(CrdtStorageFsTest::union);
+	private static final CrdtDataSerializer<String, Set<Integer>> SERIALIZER = new CrdtDataSerializer<>(UTF8_SERIALIZER, ofSet(INT_SERIALIZER));
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -45,7 +42,7 @@ public final class CrdtStorageFsTest {
 	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	private LocalActiveFs fsClient;
-	private CrdtStorageFs<String, TimestampContainer<Set<Integer>>> client;
+	private CrdtStorageFs<String, Set<Integer>> client;
 
 	@Before
 	public void setup() throws IOException {
@@ -58,13 +55,13 @@ public final class CrdtStorageFsTest {
 
 	@Test
 	public void testEmptyUpload() {
-		await(StreamSupplier.<CrdtData<String, TimestampContainer<Set<Integer>>>>of().streamTo(StreamConsumer.ofPromise(client.upload())));
+		await(StreamSupplier.<CrdtData<String, Set<Integer>>>of().streamTo(client.upload()));
 		assertTrue(await(fsClient.list("**")).isEmpty());
 	}
 
 	@Test
 	public void testEmptyRemove() {
-		await(StreamSupplier.<String>of().streamTo(StreamConsumer.ofPromise(client.remove())));
+		await(StreamSupplier.<CrdtTombstone<String>>of().streamTo(client.remove()));
 		assertTrue(await(fsClient.list("**")).isEmpty());
 	}
 
@@ -76,66 +73,100 @@ public final class CrdtStorageFsTest {
 
 	@Test
 	public void testConsolidation() {
-		await(StreamSupplier.ofStream(Stream.of(
-						new CrdtData<>("1_test_1", TimestampContainer.now(setOf(1, 2, 3))),
-						new CrdtData<>("1_test_2", TimestampContainer.now(setOf(2, 3, 7))),
-						new CrdtData<>("1_test_3", TimestampContainer.now(setOf(78, 2, 3))),
-						new CrdtData<>("12_test_1", TimestampContainer.now(setOf(123, 124, 125))),
-						new CrdtData<>("12_test_2", TimestampContainer.now(setOf(12)))).sorted())
-				.streamTo(StreamConsumer.ofPromise(client.upload())));
-		await(StreamSupplier.ofStream(Stream.of(
-						new CrdtData<>("2_test_1", TimestampContainer.now(setOf(1, 2, 3))),
-						new CrdtData<>("2_test_2", TimestampContainer.now(setOf(2, 3, 4))),
-						new CrdtData<>("2_test_3", TimestampContainer.now(setOf(0, 1, 2))),
-						new CrdtData<>("12_test_1", TimestampContainer.now(setOf(123, 542, 125, 2))),
-						new CrdtData<>("12_test_2", TimestampContainer.now(setOf(12, 13)))).sorted())
-				.streamTo(StreamConsumer.ofPromise(client.upload())));
+		long timestamp = Eventloop.getCurrentEventloop().currentTimeMillis();
 
-		Map<String, FileMetadata> listBefore = await(fsClient.list("**"));
-		System.out.println(listBefore);
-		assertEquals(2, listBefore.size());
+		List<CrdtData<String, Set<Integer>>> expected = Arrays.asList(
+				new CrdtData<>("12_test_1", timestamp, setOf(123, 124, 125, 2, 542)),
+				new CrdtData<>("12_test_2", timestamp, setOf(12, 13)),
+				new CrdtData<>("1_test_1", timestamp, setOf(1, 2, 3)),
+				new CrdtData<>("1_test_2", timestamp, setOf(2, 3, 7)),
+				new CrdtData<>("1_test_3", timestamp, setOf(78, 2, 3)),
+				new CrdtData<>("2_test_1", timestamp, setOf(1, 2, 3)),
+				new CrdtData<>("2_test_2", timestamp, setOf(2, 3, 4)),
+				new CrdtData<>("2_test_3", timestamp, setOf(0, 1, 2))
+		);
+
+		await(StreamSupplier.ofStream(Stream.of(
+						new CrdtData<>("1_test_1", timestamp, setOf(1, 2, 3)),
+						new CrdtData<>("1_test_2", timestamp, setOf(2, 3, 7)),
+						new CrdtData<>("1_test_3", timestamp, setOf(78, 2, 3)),
+						new CrdtData<>("12_test_1", timestamp, setOf(123, 124, 125)),
+						new CrdtData<>("12_test_2", timestamp, setOf(12))).sorted())
+				.streamTo(client.upload()));
+		await(StreamSupplier.ofStream(Stream.of(
+						new CrdtData<>("2_test_1", timestamp, setOf(1, 2, 3)),
+						new CrdtData<>("2_test_2", timestamp, setOf(2, 3, 4)),
+						new CrdtData<>("2_test_3", timestamp, setOf(0, 1, 2)),
+						new CrdtData<>("12_test_1", timestamp, setOf(123, 542, 125, 2)),
+						new CrdtData<>("12_test_2", timestamp, setOf(12, 13))).sorted())
+				.streamTo(client.upload()));
+
+		Map<String, FileMetadata> filesBefore = await(fsClient.list("**"));
+		System.out.println(filesBefore);
+		assertEquals(2, filesBefore.size());
+
+		List<CrdtData<String, Set<Integer>>> downloadedBefore = await(client.download().then(StreamSupplier::toList));
+		assertEquals(expected, downloadedBefore);
 
 		await(client.consolidate());
 
-		Map<String, FileMetadata> listAfter = await(fsClient.list("**"));
-		System.out.println(listAfter);
-		assertEquals(1, listAfter.size());
-		assertFalse(listBefore.containsKey(first(listAfter.keySet())));
+		Map<String, FileMetadata> filesAfter = await(fsClient.list("**"));
+		System.out.println(filesAfter);
+		assertEquals(1, filesAfter.size());
+		assertFalse(filesBefore.containsKey(first(filesAfter.keySet())));
+
+		List<CrdtData<String, Set<Integer>>> downloadedAfter = await(client.download().then(StreamSupplier::toList));
+		assertEquals(expected, downloadedAfter);
 	}
 
 	@Test
 	public void testTombstoneConsolidation() {
-		await(StreamSupplier.ofStream(Stream.of(
-						new CrdtData<>("a", TimestampContainer.now(setOf(1, 2, 3))),
-						new CrdtData<>("b", TimestampContainer.now(setOf(2, 3, 7))),
-						new CrdtData<>("c", TimestampContainer.now(setOf(78, 2, 3))),
-						new CrdtData<>("d", TimestampContainer.now(setOf(123, 124, 125))),
-						new CrdtData<>("e", TimestampContainer.now(setOf(12)))).sorted())
-				.streamTo(StreamConsumer.ofPromise(client.upload())));
-		await(StreamSupplier.ofStream(Stream.of("a")).streamTo(StreamConsumer.ofPromise(client.remove())));
-		await(StreamSupplier.ofStream(Stream.of("b")).streamTo(StreamConsumer.ofPromise(client.remove())));
-		await(StreamSupplier.ofStream(Stream.of("c")).streamTo(StreamConsumer.ofPromise(client.remove())));
-		await(StreamSupplier.ofStream(Stream.of("d")).streamTo(StreamConsumer.ofPromise(client.remove())));
+		List<CrdtData<String, Set<Integer>>> expected = Arrays.asList(
+				new CrdtData<>("a", 100, setOf(1, 2, 3)),
+				new CrdtData<>("b", 300, setOf(5, 6, 7)),
+				new CrdtData<>("c", 400, setOf(78, 2, 3))
+		);
 
-		List<CrdtData<String, TimestampContainer<Set<Integer>>>> downloadedBefore = await(client.download().then(StreamSupplier::toList));
-		assertEquals(1, downloadedBefore.size());
-		assertEquals("e", downloadedBefore.get(0).getKey());
+		await(StreamSupplier.of(
+				new CrdtData<>("a", 100, setOf(1, 2, 3)),
+				new CrdtData<>("b", 200, setOf(2, 3, 7))
+		).streamTo(client.upload()));
+		await(StreamSupplier.of(
+				new CrdtData<>("b", 300, setOf(5, 6, 7)),
+				new CrdtData<>("c", 400, setOf(78, 2, 3))
+		).streamTo(client.upload()));
+		await(StreamSupplier.of(
+				new CrdtData<>("c", 100, setOf(123, 124, 125, 3)),
+				new CrdtData<>("d", 500, setOf(12))
+		).streamTo(client.upload()));
+		await(StreamSupplier.of(
+				new CrdtData<>("d", 600, setOf(56, 76)),
+				new CrdtData<>("e", 300, setOf(124))
+		).streamTo(client.upload()));
 
-		Map<String, FileMetadata> tombstonesBefore = await(fsClient.list(".tombstones/**"));
-		System.out.println(tombstonesBefore);
-		assertEquals(4, tombstonesBefore.size());
+		await(StreamSupplier.ofStream(Stream.of(new CrdtTombstone<>("a", 50))).streamTo(client.remove()));
+		await(StreamSupplier.ofStream(Stream.of(new CrdtTombstone<>("b", 250))).streamTo(client.remove()));
+		await(StreamSupplier.ofStream(Stream.of(new CrdtTombstone<>("c", 300))).streamTo(client.remove()));
+		await(StreamSupplier.ofStream(Stream.of(new CrdtTombstone<>("d", 600))).streamTo(client.remove()));
+		await(StreamSupplier.ofStream(Stream.of(new CrdtTombstone<>("e", 400))).streamTo(client.remove()));
+
+		Map<String, FileMetadata> filesBefore = await(fsClient.list("**"));
+		System.out.println(filesBefore);
+		assertEquals(9, filesBefore.size());
+
+		List<CrdtData<String, Set<Integer>>> downloadedBefore = await(client.download().then(StreamSupplier::toList));
+		assertEquals(expected, downloadedBefore);
 
 		await(client.consolidate());
 
-		Map<String, FileMetadata> tombstonesAfter = await(fsClient.list(".tombstones/**"));
-		System.out.println(tombstonesAfter);
-		assertEquals(1, tombstonesAfter.size());
-		String consolidatedTombstone = first(tombstonesAfter.keySet());
-		assertFalse(tombstonesBefore.containsKey(consolidatedTombstone));
+		Map<String, FileMetadata> filesAfter = await(fsClient.list("**"));
+		System.out.println(filesAfter);
+		assertEquals(1, filesAfter.size());
+		String consolidated = first(filesAfter.keySet());
+		assertFalse(filesBefore.containsKey(consolidated));
 
-		List<CrdtData<String, TimestampContainer<Set<Integer>>>> downloadedAfter = await(client.download().then(StreamSupplier::toList));
-		assertEquals(1, downloadedAfter.size());
-		assertEquals("e", downloadedAfter.get(0).getKey());
+		List<CrdtData<String, Set<Integer>>> downloadedAfter = await(client.download().then(StreamSupplier::toList));
+		assertEquals(expected, downloadedAfter);
 	}
 
 	@Test
@@ -148,7 +179,7 @@ public final class CrdtStorageFsTest {
 						"c", 53,
 						"d", 348,
 						"e", 97)
-				);
+		);
 		testPickFilesForConsolidation(
 				setOf("a", "c"),
 				mapOf(
@@ -176,9 +207,9 @@ public final class CrdtStorageFsTest {
 
 	private static void testPickFilesForConsolidation(Set<String> expected, Map<String, Integer> fileToSizeMap) {
 		Map<String, FileMetadata> files = transformMap(fileToSizeMap, size -> FileMetadata.of(size, 0));
-		Map<String, FileMetadata> filesForConsolidation = CrdtStorageFs.pickFilesForConsolidation(files);
+		Set<String> filesForConsolidation = CrdtStorageFs.pickFilesForConsolidation(files);
 
-		assertEquals(expected, filesForConsolidation.keySet());
+		assertEquals(expected, filesForConsolidation);
 	}
 
 	private static Set<Integer> union(Set<Integer> first, Set<Integer> second) {
