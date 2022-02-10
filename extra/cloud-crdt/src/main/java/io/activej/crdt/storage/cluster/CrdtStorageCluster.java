@@ -71,6 +71,11 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 	private final StreamStatsDetailed<CrdtData<K, S>> downloadStatsDetailed = StreamStats.detailed();
 	private final StreamStatsBasic<CrdtTombstone<K>> removeStats = StreamStats.basic();
 	private final StreamStatsDetailed<CrdtTombstone<K>> removeStatsDetailed = StreamStats.detailed();
+
+	private final StreamStatsBasic<CrdtData<K, S>> repartitionUploadStats = StreamStats.basic();
+	private final StreamStatsDetailed<CrdtData<K, S>> repartitionUploadStatsDetailed = StreamStats.detailed();
+	private final StreamStatsBasic<CrdtTombstone<K>> repartitionRemoveStats = StreamStats.basic();
+	private final StreamStatsDetailed<CrdtTombstone<K>> repartitionRemoveStatsDetailed = StreamStats.detailed();
 	// endregion
 
 	// region creators
@@ -287,16 +292,15 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 								}
 							});
 
-					StreamConsumer<CrdtData<K, S>> uploader = splitter.getInput()
-							.transformWith(detailedStats ? uploadStatsDetailed : uploadStats);
+					StreamConsumer<CrdtData<K, S>> uploader = splitter.getInput();
+					StreamSupplier<CrdtData<K, S>> downloader = tuple.downloader.get();
 					StreamConsumer<CrdtTombstone<K>> remover = tuple.remover.get()
-							.transformWith(detailedStats ? removeStatsDetailed : removeStats);
-					StreamSupplier<CrdtData<K, S>> downloader = tuple.downloader.get()
-							.transformWith(detailedStats ? downloadStatsDetailed : downloadStats);
+							.transformWith(detailedStats ? repartitionRemoveStatsDetailed : repartitionRemoveStats);
 
 					for (P pid : alive) {
 						//noinspection unchecked
 						((StreamSupplier<CrdtData<K, S>>) splitter.newOutput())
+								.transformWith(detailedStats ? repartitionUploadStatsDetailed : repartitionUploadStats)
 								.streamTo(tuple.uploaders.get(pid));
 					}
 
@@ -411,6 +415,26 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 	@JmxAttribute
 	public StreamStatsDetailed getRemoveStatsDetailed() {
 		return removeStatsDetailed;
+	}
+
+	@JmxAttribute
+	public StreamStatsBasic<CrdtData<K, S>> getRepartitionUploadStats() {
+		return repartitionUploadStats;
+	}
+
+	@JmxAttribute
+	public StreamStatsDetailed<CrdtData<K, S>> getRepartitionUploadStatsDetailed() {
+		return repartitionUploadStatsDetailed;
+	}
+
+	@JmxAttribute
+	public StreamStatsBasic<CrdtTombstone<K>> getRepartitionRemoveStats() {
+		return repartitionRemoveStats;
+	}
+
+	@JmxAttribute
+	public StreamStatsDetailed<CrdtTombstone<K>> getRepartitionRemoveStatsDetailed() {
+		return repartitionRemoveStatsDetailed;
 	}
 
 	@JmxAttribute
