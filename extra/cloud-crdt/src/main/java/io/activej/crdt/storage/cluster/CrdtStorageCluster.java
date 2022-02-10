@@ -225,6 +225,12 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 				this.remover = remover;
 				this.uploaders = uploaders;
 			}
+
+			private void close() {
+				downloader.ifSuccess(AsyncCloseable::close);
+				remover.ifSuccess(AsyncCloseable::close);
+				uploaders.values().forEach(AsyncCloseable::close);
+			}
 		}
 
 		//noinspection Convert2MethodRef - does not compile on Java 8
@@ -232,22 +238,37 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 						source.download().toTry(),
 						source.remove().toTry(),
 						execute(partitionScheme.getPartitions(), CrdtStorage::upload))
-				.then(tuple -> {
-
-					if (tuple.uploaders.isEmpty() || tuple.remover.isException() || tuple.downloader.isException()) {
-						CrdtException exception = new CrdtException("Repartition exceptions:");
-						tuple.downloader.consume(AsyncCloseable::close, exception::addSuppressed);
-						tuple.remover.consume(AsyncCloseable::close, exception::addSuppressed);
-						tuple.uploaders.values().forEach(AsyncCloseable::close);
-						return Promise.ofException(exception);
+				.whenResult(tuple -> {
+					if (!tuple.uploaders.containsKey(sourcePartitionId)) {
+						tuple.close();
+						throw new CrdtException("Could not upload to local storage");
 					}
-
+					if (tuple.uploaders.size() == 1) {
+						tuple.close();
+						throw new CrdtException("Nowhere to upload");
+					}
+					if (tuple.downloader.isException()) {
+						tuple.close();
+						Exception e = tuple.downloader.getException();
+						throw new CrdtException("Could not download local data", e);
+					}
+					if (tuple.remover.isException()) {
+						tuple.close();
+						Exception e = tuple.remover.getException();
+						throw new CrdtException("Could not remove local data", e);
+					}
+				})
+				.then(tuple -> {
 					List<P> alive = new ArrayList<>(tuple.uploaders.keySet());
 					Sharder<K> sharder = partitionScheme.createSharder(alive);
 					if (sharder == null) {
-						throw new CrdtException("Incomplete cluster");
+						tuple.close();
+						return Promise.ofException(new CrdtException("Incomplete cluster"));
 					}
+
 					int sourceIdx = alive.indexOf(sourcePartitionId);
+					assert sourceIdx != -1;
+
 					StreamSplitter<CrdtData<K, S>, ?> splitter = StreamSplitter.create(
 							(item, acceptors) -> {
 								boolean sourceInShards = false;
