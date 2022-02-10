@@ -261,7 +261,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 										acceptors[idx].accept(item);
 									}
 								}
-								if (!sourceInShards) {
+								if (!sourceInShards && shards.length != 0) {
 									acceptors[acceptors.length - 1].accept(new CrdtTombstone<>(item.getKey(), item.getTimestamp()));
 								}
 							});
