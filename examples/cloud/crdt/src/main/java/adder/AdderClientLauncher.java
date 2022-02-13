@@ -5,14 +5,11 @@ import adder.AdderCommands.HasUserId;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import io.activej.crdt.storage.cluster.DiscoveryService;
-import io.activej.crdt.storage.cluster.RendezvousPartitionScheme;
-import io.activej.crdt.storage.cluster.SimplePartitionId;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
-import io.activej.launchers.crdt.ConfigConverters;
 import io.activej.launchers.crdt.rpc.CrdtRpcClientLauncher;
 import io.activej.launchers.crdt.rpc.CrdtRpcStrategyService;
 import io.activej.rpc.client.RpcClient;
@@ -23,6 +20,8 @@ import java.util.Scanner;
 import static adder.AdderCommands.GetRequest;
 import static adder.AdderCommands.GetResponse;
 import static adder.AdderServerLauncher.MESSAGE_TYPES;
+import static io.activej.launchers.crdt.ConfigConverters.ofPartitionId;
+import static io.activej.launchers.crdt.ConfigConverters.ofRendezvousPartitionScheme;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
 
 public final class AdderClientLauncher extends CrdtRpcClientLauncher {
@@ -41,7 +40,7 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 	protected Module getOverrideModule() {
 		return new AbstractModule() {
 			@Provides
-			RpcClient client(Eventloop eventloop, CrdtRpcStrategyService<Long, DetailedSumsCrdtState, SimplePartitionId> strategyService, List<Class<?>> messageTypes) {
+			RpcClient client(Eventloop eventloop, CrdtRpcStrategyService<Long> strategyService, List<Class<?>> messageTypes) {
 				RpcClient rpcClient = RpcClient.create(eventloop)
 						.withMessageTypes(messageTypes);
 				strategyService.setRpcClient(rpcClient);
@@ -51,16 +50,16 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 	}
 
 	@Provides
-	DiscoveryService<SimplePartitionId> discoveryService(Eventloop eventloop, Config config) {
-		RendezvousPartitionScheme<SimplePartitionId> partitionScheme = config.get(ConfigConverters.ofRendezvousPartitionScheme(), "crdt.cluster");
-		return DiscoveryService.of(partitionScheme);
+	DiscoveryService discoveryService(Config config) {
+		return DiscoveryService.of(config.get(ofRendezvousPartitionScheme(ofPartitionId()), "crdt.cluster"));
 	}
 
 	@Provides
-	CrdtRpcStrategyService<Long, DetailedSumsCrdtState, SimplePartitionId> rpcStrategyService(
+	CrdtRpcStrategyService<Long> rpcStrategyService(
 			Eventloop eventloop,
-			DiscoveryService<SimplePartitionId> discoveryService
+			DiscoveryService discoveryService
 	) {
+		//noinspection ConstantConditions
 		return CrdtRpcStrategyService.create(eventloop, discoveryService, partitionId -> server(partitionId.getRpcAddress()), AdderClientLauncher::extractKey);
 	}
 

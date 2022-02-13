@@ -18,6 +18,7 @@ package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
 import io.activej.common.HashUtils;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import io.activej.rpc.protocol.RpcException;
 import org.jetbrains.annotations.NotNull;
@@ -29,54 +30,57 @@ import java.util.function.ToIntFunction;
 import java.util.function.ToLongBiFunction;
 
 import static io.activej.common.Checks.checkArgument;
+import static java.lang.Math.min;
 
-public final class RpcStrategyRendezvousHashing implements RpcStrategy {
-	private static final int MIN_SUB_STRATEGIES_FOR_CREATION_DEFAULT = 1;
-	private static final int DEFAULT_STRICT_SHARDS = 0;
+public final class RpcStrategyRendezvousHashing implements RpcStrategy, WithInitializer<RpcStrategyRendezvousHashing> {
 	private static final int DEFAULT_BUCKET_CAPACITY = 2048;
-	private static final ToLongBiFunction<Object, Integer> DEFAULT_BUCKET_HASH_FUNCTION = (shardId, bucketN) ->
+	private static final ToLongBiFunction<Object, Integer> DEFAULT_HASH_BUCKET_FN = (shardId, bucketN) ->
 			(int) HashUtils.murmur3hash(((long) shardId.hashCode() << 32) | (bucketN & 0xFFFFFFFFL));
+	private static final int DEFAULT_MIN_ACTIVE_SHARDS = 1;
+	private static final int DEFAULT_MAX_RESHARDINGS = Integer.MAX_VALUE;
 
-	private final Map<Object, RpcStrategy> shards;
-	private final ToIntFunction<?> hashFunction;
-	private final int minShards;
-	private final int strictShards;
-	private final ToLongBiFunction<Object, Integer> hashBucketFunction;
-	private final int buckets;
+	private final Map<Object, RpcStrategy> shards = new HashMap<>();
+	private final ToIntFunction<?> hashFn;
+	private ToLongBiFunction<Object, Integer> hashBucketFn = DEFAULT_HASH_BUCKET_FN;
+	private int buckets = DEFAULT_BUCKET_CAPACITY;
+	private int minActiveShards = DEFAULT_MIN_ACTIVE_SHARDS;
+	private int reshardings = DEFAULT_MAX_RESHARDINGS;
 
-	private RpcStrategyRendezvousHashing(@NotNull ToIntFunction<?> hashFunction, int minShards,
-			int strictShards, ToLongBiFunction<Object, Integer> hashBucketFunction, int buckets,
-			Map<Object, RpcStrategy> shards) {
-		this.hashFunction = hashFunction;
-		this.minShards = minShards;
-		this.strictShards = strictShards;
-		this.hashBucketFunction = hashBucketFunction;
+	public interface Predicate {
+		boolean isAlive(int activeShards, int activeBuckets);
+	}
+
+	private RpcStrategyRendezvousHashing(@NotNull ToIntFunction<?> hashFn,
+			ToLongBiFunction<Object, Integer> hashBucketFn) {
+		this.hashFn = hashFn;
+		this.hashBucketFn = hashBucketFn;
 		this.buckets = buckets;
-		this.shards = shards;
 	}
 
 	public static <T> RpcStrategyRendezvousHashing create(ToIntFunction<T> hashFunction) {
-		return new RpcStrategyRendezvousHashing(hashFunction, MIN_SUB_STRATEGIES_FOR_CREATION_DEFAULT,
-				DEFAULT_STRICT_SHARDS, DEFAULT_BUCKET_HASH_FUNCTION, DEFAULT_BUCKET_CAPACITY, new HashMap<>());
+		return new RpcStrategyRendezvousHashing(hashFunction,
+				DEFAULT_HASH_BUCKET_FN);
 	}
 
-	public RpcStrategyRendezvousHashing withMinActiveShards(int minShards) {
-		checkArgument(minShards > 0, "minSubStrategiesForCreation must be greater than 0");
-		return new RpcStrategyRendezvousHashing(hashFunction, minShards, strictShards, hashBucketFunction, buckets, shards);
+	public RpcStrategyRendezvousHashing withHashBucketFn(ToLongBiFunction<Object, Integer> hashBucketFn) {
+		this.hashBucketFn = hashBucketFn;
+		return this;
 	}
 
-	public RpcStrategyRendezvousHashing withStrictShards(int strictShards) {
-		checkArgument(strictShards > 0, "strictShards must be greater than 0");
-		return new RpcStrategyRendezvousHashing(hashFunction, minShards, strictShards, hashBucketFunction, buckets, shards);
+	public RpcStrategyRendezvousHashing withBuckets(int buckets) {
+		checkArgument((buckets & (buckets - 1)) == 0);
+		this.buckets = buckets;
+		return this;
 	}
 
-	public RpcStrategyRendezvousHashing withHashBucketFunction(ToLongBiFunction<Object, Integer> hashBucketFunction) {
-		return new RpcStrategyRendezvousHashing(hashFunction, minShards, strictShards, hashBucketFunction, buckets, shards);
+	public RpcStrategyRendezvousHashing withMinActiveShards(int minActiveShards) {
+		this.minActiveShards = minActiveShards;
+		return this;
 	}
 
-	public RpcStrategyRendezvousHashing withHashBuckets(int buckets) {
-		checkArgument((buckets & (buckets - 1)) == 0, "Buckets number must be a power-of-two, got %d", buckets);
-		return new RpcStrategyRendezvousHashing(hashFunction, minShards, strictShards, hashBucketFunction, buckets, shards);
+	public RpcStrategyRendezvousHashing withReshardings(int reshardings) {
+		this.reshardings = reshardings;
+		return this;
 	}
 
 	public RpcStrategyRendezvousHashing withShard(Object shardId, @NotNull RpcStrategy strategy) {
@@ -106,19 +110,19 @@ public final class RpcStrategyRendezvousHashing implements RpcStrategy {
 
 	@Override
 	public @Nullable RpcSender createSender(RpcClientConnectionPool pool) {
-		int nonNullSenders = 0;
 		Map<Object, RpcSender> shardsSenders = new HashMap<>();
+		int activeShards = 0;
 		for (Map.Entry<Object, RpcStrategy> entry : shards.entrySet()) {
 			Object shardId = entry.getKey();
 			RpcStrategy strategy = entry.getValue();
 			RpcSender sender = strategy.createSender(pool);
 			if (sender != null) {
-				nonNullSenders++;
+				activeShards++;
 			}
 			shardsSenders.put(shardId, sender);
 		}
 
-		if (nonNullSenders < minShards) {
+		if (activeShards < minActiveShards) {
 			return null;
 		}
 
@@ -140,25 +144,20 @@ public final class RpcStrategyRendezvousHashing implements RpcStrategy {
 			}
 		}
 
-		int allShardsLength = shardsSenders.size();
-		ShardIdAndSender[] toSort = new ShardIdAndSender[allShardsLength];
+		ShardIdAndSender[] toSort = new ShardIdAndSender[shards.size()];
 		int i = 0;
 		for (Map.Entry<Object, RpcSender> entry : shardsSenders.entrySet()) {
 			toSort[i++] = new ShardIdAndSender(entry.getKey(), entry.getValue());
 		}
 
-		int limit = strictShards == 0 ?
-				allShardsLength :
-				Math.min(allShardsLength, strictShards);
-
 		for (int bucket = 0; bucket < sendersBuckets.length; bucket++) {
 			for (ShardIdAndSender obj : toSort) {
-				obj.hash = hashBucketFunction.applyAsLong(obj.shardId, bucket);
+				obj.hash = hashBucketFn.applyAsLong(obj.shardId, bucket);
 			}
 
 			Arrays.sort(toSort, Comparator.comparingLong(ShardIdAndSender::getHash).reversed());
 
-			for (int j = 0; j < limit; j++) {
+			for (int j = 0; j < min(shards.size(), reshardings); j++) {
 				RpcSender rpcSender = toSort[j].rpcSender;
 				if (rpcSender != null) {
 					sendersBuckets[bucket] = rpcSender;
@@ -166,7 +165,8 @@ public final class RpcStrategyRendezvousHashing implements RpcStrategy {
 				}
 			}
 		}
-		return new Sender(hashFunction, sendersBuckets);
+
+		return new Sender(hashFn, sendersBuckets);
 	}
 
 	static final class Sender implements RpcSender {

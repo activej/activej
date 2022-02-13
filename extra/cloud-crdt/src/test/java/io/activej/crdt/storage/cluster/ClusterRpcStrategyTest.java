@@ -3,7 +3,6 @@ package io.activej.crdt.storage.cluster;
 import io.activej.async.callback.Callback;
 import io.activej.common.ref.Ref;
 import io.activej.common.ref.RefBoolean;
-import io.activej.crdt.storage.cluster.DiscoveryService.PartitionScheme;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import io.activej.rpc.client.sender.RpcSender;
 import io.activej.rpc.client.sender.RpcStrategy;
@@ -50,12 +49,13 @@ public class ClusterRpcStrategyTest {
 	public void testRpcStrategyNoActive() {
 		Set<String> crdtStorages = PARTITION_ADDRESS_MAP_1.keySet();
 
-		PartitionScheme<String> partitionScheme = RendezvousPartitionScheme.<String>create()
-				.withPartitionGroup(RendezvousPartitionGroup.create(crdtStorages, 2, true, false));
+		RendezvousPartitionScheme<String> partitionScheme = RendezvousPartitionScheme.<String>create()
+				.withPartitionGroup(RendezvousPartitionGroup.create(crdtStorages, 2, true, false))
+				.withRpcProvider(p -> server(PARTITION_ADDRESS_MAP_1.get(p)));
 
 		List<String> alivePartitions = new ArrayList<>(difference(crdtStorages, singleton("two")));
 
-		RpcStrategy rpcStrategy = partitionScheme.createRpcStrategy(partition -> server(PARTITION_ADDRESS_MAP_1.get(partition)), KEY_GETTER);
+		RpcStrategy rpcStrategy = partitionScheme.createRpcStrategy(KEY_GETTER);
 
 		RpcClientConnectionPoolStub poolStub = new RpcClientConnectionPoolStub();
 		for (String alivePartition : alivePartitions) {
@@ -70,8 +70,9 @@ public class ClusterRpcStrategyTest {
 	public void testRpcStrategyActive() throws Exception {
 		Set<String> partitionIds = PARTITION_ADDRESS_MAP_1.keySet();
 
-		PartitionScheme<String> partitionScheme = RendezvousPartitionScheme.<String>create()
-				.withPartitionGroup(RendezvousPartitionGroup.create(partitionIds, 2, true, true));
+		RendezvousPartitionScheme<String> partitionScheme = RendezvousPartitionScheme.<String>create()
+				.withPartitionGroup(RendezvousPartitionGroup.create(partitionIds, 2, true, true))
+				.withRpcProvider(p -> server(PARTITION_ADDRESS_MAP_1.get(p)));
 
 		List<String> alivePartitions = new ArrayList<>(difference(partitionIds, singleton("two")));
 
@@ -80,7 +81,7 @@ public class ClusterRpcStrategyTest {
 			poolStub.put(PARTITION_ADDRESS_MAP_1.get(alivePartition), new RpcSenderStub());
 		}
 
-		RpcStrategy rpcStrategy = partitionScheme.createRpcStrategy(partition -> server(PARTITION_ADDRESS_MAP_1.get(partition)), KEY_GETTER);
+		RpcStrategy rpcStrategy = partitionScheme.createRpcStrategy(KEY_GETTER);
 
 		RpcSender sender = rpcStrategy.createSender(poolStub);
 		assertNotNull(sender);
@@ -121,8 +122,9 @@ public class ClusterRpcStrategyTest {
 	public void testRpcStrategyNoRepartition() {
 		Set<String> partitionIds = PARTITION_ADDRESS_MAP_1.keySet();
 
-		PartitionScheme<String> partitionScheme = RendezvousPartitionScheme.<String>create()
-				.withPartitionGroup(RendezvousPartitionGroup.create(partitionIds, 1, false, true));
+		RendezvousPartitionScheme<String> partitionScheme = RendezvousPartitionScheme.<String>create()
+				.withPartitionGroup(RendezvousPartitionGroup.create(partitionIds, 1, false, true))
+				.withRpcProvider(p -> server(PARTITION_ADDRESS_MAP_1.get(p)));
 
 		List<String> alivePartitions = new ArrayList<>(difference(partitionIds, singleton("two")));
 
@@ -131,7 +133,7 @@ public class ClusterRpcStrategyTest {
 			poolStub.put(PARTITION_ADDRESS_MAP_1.get(alivePartition), new RpcSenderStub());
 		}
 
-		RpcStrategy rpcStrategy = partitionScheme.createRpcStrategy(partition -> server(PARTITION_ADDRESS_MAP_1.get(partition)), KEY_GETTER);
+		RpcStrategy rpcStrategy = partitionScheme.createRpcStrategy(KEY_GETTER);
 
 		RpcSender sender = rpcStrategy.createSender(poolStub);
 		assertNotNull(sender);
@@ -151,10 +153,10 @@ public class ClusterRpcStrategyTest {
 
 			try {
 				sendRequest(sender, i);
-				if (partitions.isEmpty()){
+				if (partitions.isEmpty()) {
 					fail();
 				}
-			} catch (Exception e){
+			} catch (Exception e) {
 				assertThat(e, instanceOf(RpcException.class));
 				assertEquals("No sender for request: " + i, e.getMessage());
 				continue;
@@ -184,15 +186,16 @@ public class ClusterRpcStrategyTest {
 	public void testRpcStrategyMultipleActive() throws Exception {
 		Set<String> partitionIds = union(PARTITION_ADDRESS_MAP_1.keySet(), PARTITION_ADDRESS_MAP_2.keySet());
 
-		PartitionScheme<String> partitionScheme = RendezvousPartitionScheme.<String>create()
-				.withPartitionGroup(RendezvousPartitionGroup.create(PARTITION_ADDRESS_MAP_1.keySet(), 2, true, true))
-				.withPartitionGroup(RendezvousPartitionGroup.create(PARTITION_ADDRESS_MAP_2.keySet(), 2, true, true));
-
-		List<String> alivePartitions = new ArrayList<>(difference(partitionIds, setOf("two", "seven", "nine")));
-
 		Map<String, InetSocketAddress> partition2Address = new HashMap<>();
 		partition2Address.putAll(PARTITION_ADDRESS_MAP_1);
 		partition2Address.putAll(PARTITION_ADDRESS_MAP_2);
+
+		RendezvousPartitionScheme<String> partitionScheme = RendezvousPartitionScheme.<String>create()
+				.withPartitionGroup(RendezvousPartitionGroup.create(PARTITION_ADDRESS_MAP_1.keySet(), 2, true, true))
+				.withPartitionGroup(RendezvousPartitionGroup.create(PARTITION_ADDRESS_MAP_2.keySet(), 2, true, true))
+				.withRpcProvider(p -> server(partition2Address.get(p)));
+
+		List<String> alivePartitions = new ArrayList<>(difference(partitionIds, setOf("two", "seven", "nine")));
 
 		Map<InetSocketAddress, String> address2Partitions = partition2Address.entrySet()
 				.stream()
@@ -203,7 +206,7 @@ public class ClusterRpcStrategyTest {
 			poolStub.put(partition2Address.get(alivePartition), new RpcSenderStub());
 		}
 
-		RpcStrategy rpcStrategy = partitionScheme.createRpcStrategy(partition -> server(partition2Address.get(partition)), KEY_GETTER);
+		RpcStrategy rpcStrategy = partitionScheme.createRpcStrategy(KEY_GETTER);
 
 		RpcSender sender = rpcStrategy.createSender(poolStub);
 		assertNotNull(sender);
@@ -264,7 +267,6 @@ public class ClusterRpcStrategyTest {
 			return connections.get(address);
 		}
 	}
-
 
 	private static final class RpcSenderStub implements RpcSender {
 		private final Map<Integer, Integer> counters = new HashMap<>();

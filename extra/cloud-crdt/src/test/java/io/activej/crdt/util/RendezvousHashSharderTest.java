@@ -23,7 +23,7 @@ public class RendezvousHashSharderTest {
 				listOf("one", "two", "three", "four", "five").stream(),
 				s -> index.value++);
 		Set<String> alive = new HashSet<>(partitionsWithIndexes.keySet());
-		RendezvousHashSharder<Integer, String> sharder1 = RendezvousHashSharder.create(
+		RendezvousHashSharder<Integer> sharder1 = RendezvousHashSharder.create(
 				Object::hashCode,
 				partitionsWithIndexes.keySet(), new ArrayList<>(alive), 3, false);
 
@@ -42,7 +42,7 @@ public class RendezvousHashSharderTest {
 		alive.remove("five");
 		int fiveId = partitionsWithIndexes.remove("five");
 
-		RendezvousHashSharder<Integer, String> sharder2 = RendezvousHashSharder.create(
+		RendezvousHashSharder<Integer> sharder2 = RendezvousHashSharder.create(
 				Object::hashCode,
 				partitionsWithIndexes.keySet(), new ArrayList<>(alive), 3, false);
 
@@ -70,7 +70,7 @@ public class RendezvousHashSharderTest {
 
 		alive.remove("four");
 
-		RendezvousHashSharder<Integer, String> sharder3 = RendezvousHashSharder.create(
+		RendezvousHashSharder<Integer> sharder3 = RendezvousHashSharder.create(
 				Object::hashCode,
 				partitionsWithIndexes.keySet(), new ArrayList<>(alive), 3, true);
 

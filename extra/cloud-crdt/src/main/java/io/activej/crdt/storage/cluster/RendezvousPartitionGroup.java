@@ -5,44 +5,47 @@ import io.activej.common.initializer.WithInitializer;
 import java.util.Set;
 
 public final class RendezvousPartitionGroup<P> implements WithInitializer<RendezvousPartitionGroup<P>> {
-	private final Set<P> partitions;
-	private final int replicas;
-	private final boolean repartition;
-	private final boolean active;
+	private final Set<P> partitionIds;
+	private int replicaCount;
+	private boolean repartition;
+	private boolean active;
 
-	private RendezvousPartitionGroup(Set<P> partitions, int replicas, boolean repartition, boolean active) {
-		this.partitions = partitions;
-		this.replicas = replicas;
+	private RendezvousPartitionGroup(Set<P> partitionIds, int replicaCount, boolean repartition, boolean active) {
+		this.partitionIds = partitionIds;
+		this.replicaCount = replicaCount;
 		this.repartition = repartition;
 		this.active = active;
 	}
 
-	public static <P> RendezvousPartitionGroup<P> create(Set<P> set, int replicas, boolean repartition, boolean active) {
-		return new RendezvousPartitionGroup<>(set, replicas, repartition, active);
+	public static <P> RendezvousPartitionGroup<P> create(Set<P> serverIds, int replicas, boolean repartition, boolean active) {
+		return new RendezvousPartitionGroup(serverIds, replicas, repartition, active);
 	}
 
-	public static <P> RendezvousPartitionGroup<P> create(Set<P> set) {
-		return new RendezvousPartitionGroup<>(set, 1, false, true);
+	public static <P> RendezvousPartitionGroup<P> create(Set<P> serverIds) {
+		return new RendezvousPartitionGroup(serverIds, 1, false, true);
 	}
 
-	public RendezvousPartitionGroup<P> withReplicas(int replicas) {
-		return new RendezvousPartitionGroup<>(partitions, replicas, repartition, active);
+	public RendezvousPartitionGroup<P> withReplicas(int replicaCount) {
+		this.replicaCount = replicaCount;
+		return this;
 	}
 
 	public RendezvousPartitionGroup<P> withRepartition(boolean repartition) {
-		return new RendezvousPartitionGroup<>(partitions, replicas, repartition, active);
+		this.repartition = repartition;
+		return this;
 	}
 
 	public RendezvousPartitionGroup<P> withActive(boolean active) {
-		return new RendezvousPartitionGroup<>(partitions, replicas, repartition, active);
+		this.active = active;
+		return this;
 	}
 
-	public Set<P> getPartitions() {
-		return partitions;
+	public Set<P> getPartitionIds() {
+		return partitionIds;
 	}
 
-	public int getReplicas() {
-		return replicas;
+	public int getReplicaCount() {
+		return replicaCount;
 	}
 
 	public boolean isRepartition() {

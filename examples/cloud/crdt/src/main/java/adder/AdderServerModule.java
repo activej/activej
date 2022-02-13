@@ -5,7 +5,7 @@ import io.activej.common.initializer.Initializer;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.hash.CrdtMap;
 import io.activej.crdt.storage.CrdtStorage;
-import io.activej.crdt.storage.cluster.SimplePartitionId;
+import io.activej.crdt.storage.cluster.PartitionId;
 import io.activej.crdt.wal.WriteAheadLog;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.Key;
@@ -43,7 +43,7 @@ public final class AdderServerModule extends AbstractModule {
 
 	@Provides
 	Map<Class<?>, RpcRequestHandler<?, ?>> handlers(
-			SimplePartitionId partitionId,
+			PartitionId partitionId,
 			CrdtMap<Long, SimpleSumsCrdtState> map,
 			WriteAheadLog<Long, DetailedSumsCrdtState> writeAheadLog,
 			IdSequentialExecutor<Long> seqExecutor
@@ -60,7 +60,7 @@ public final class AdderServerModule extends AbstractModule {
 												0 :
 												state.getLocalSum());
 
-								return writeAheadLog.put(userId, DetailedSumsCrdtState.of(partitionId.getId(), newSum))
+								return writeAheadLog.put(userId, DetailedSumsCrdtState.of(partitionId.toString(), newSum))
 										.then(() -> map.put(userId, SimpleSumsCrdtState.of(newSum)))
 										.map($ -> AddResponse.INSTANCE);
 							}));
@@ -78,8 +78,8 @@ public final class AdderServerModule extends AbstractModule {
 	}
 
 	@Provides
-	CrdtMap<Long, SimpleSumsCrdtState> map(Eventloop eventloop, SimplePartitionId partitionId, CrdtStorage<Long, DetailedSumsCrdtState> storage) {
-		return new AdderCrdtMap(eventloop, partitionId.getId(), storage);
+	CrdtMap<Long, SimpleSumsCrdtState> map(Eventloop eventloop, PartitionId partitionId, CrdtStorage<Long, DetailedSumsCrdtState> storage) {
+		return new AdderCrdtMap(eventloop, partitionId.toString(), storage);
 	}
 
 	@Provides
@@ -106,7 +106,7 @@ public final class AdderServerModule extends AbstractModule {
 	@Provides
 	@Eager
 	@Named("Map refresh")
-	EventloopTaskScheduler mapRefresh(Eventloop eventloop, CrdtMap<Long, SimpleSumsCrdtState> map){
+	EventloopTaskScheduler mapRefresh(Eventloop eventloop, CrdtMap<Long, SimpleSumsCrdtState> map) {
 		return EventloopTaskScheduler.create(eventloop, map::refresh)
 				.withInterval(Duration.ofSeconds(10));
 	}

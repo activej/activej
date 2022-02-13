@@ -21,6 +21,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.client.sender.RpcStrategies;
 import io.activej.rpc.client.sender.RpcStrategy;
 
 import java.net.InetSocketAddress;
@@ -52,5 +53,10 @@ public class CrdtRpcClientModule extends AbstractModule {
 		return RpcClient.create(eventloop)
 				.withMessageTypes(messageTypes)
 				.withStrategy(strategy);
+	}
+
+	@Provides
+	RpcStrategy strategy(Config config) {
+		return RpcStrategies.server(config.get(ofInetSocketAddress(), "address"));
 	}
 }

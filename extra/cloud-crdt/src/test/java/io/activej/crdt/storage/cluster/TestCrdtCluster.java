@@ -83,8 +83,8 @@ public final class TestCrdtCluster {
 										RendezvousPartitionGroup.create(clients.keySet())
 												.withReplicas(REPLICATION_COUNT)
 												.withRepartition(true))
+								.withCrdtProvider(clients::get)
 				),
-				clients::get,
 				ignoringTimestamp(Integer::max));
 
 		await(cluster.start()
@@ -142,8 +142,8 @@ public final class TestCrdtCluster {
 		CrdtStorageCluster<String, Set<Integer>, String> cluster = CrdtStorageCluster.create(eventloop,
 				DiscoveryService.of(
 						RendezvousPartitionScheme.<String>create()
-								.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet()).withReplicas(REPLICATION_COUNT))),
-				clients::get,
+								.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet()).withReplicas(REPLICATION_COUNT))
+								.withCrdtProvider(clients::get)),
 				union);
 
 		await(cluster.start()

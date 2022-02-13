@@ -19,37 +19,22 @@ package io.activej.launchers.crdt;
 import io.activej.config.Config;
 import io.activej.config.converter.ConfigConverter;
 import io.activej.config.converter.SimpleConfigConverter;
+import io.activej.crdt.storage.cluster.PartitionId;
 import io.activej.crdt.storage.cluster.RendezvousPartitionGroup;
 import io.activej.crdt.storage.cluster.RendezvousPartitionScheme;
-import io.activej.crdt.storage.cluster.SimplePartitionId;
 import io.activej.rpc.client.sender.RpcStrategy;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.function.ToIntFunction;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.config.converter.ConfigConverters.*;
 
 public final class ConfigConverters {
 
-	/**
-	 * @see #ofRendezvousPartitionScheme(ConfigConverter, ToIntFunction)
-	 */
-	public static ConfigConverter<RendezvousPartitionScheme<SimplePartitionId>> ofRendezvousPartitionScheme() {
-		return ofRendezvousPartitionScheme(Objects::hashCode);
-	}
-
-	/**
-	 * @see #ofRendezvousPartitionScheme(ConfigConverter, ToIntFunction)
-	 */
-	public static <K extends Comparable<K>> ConfigConverter<RendezvousPartitionScheme<SimplePartitionId>> ofRendezvousPartitionScheme(
-			@NotNull ToIntFunction<K> hashFn
-	) {
-		return ofRendezvousPartitionScheme(ofSimplePartitionId(), hashFn);
-	}
+	public static final String PARTITION_ID_DELIMITER = "#";
 
 	/**
 	 * Config converter to create a {@link RendezvousPartitionScheme} out of a {@link Config}
@@ -58,15 +43,7 @@ public final class ConfigConverters {
 	 * @return a config converter for {@link RendezvousPartitionScheme}
 	 */
 	public static <K extends Comparable<K>, P> ConfigConverter<RendezvousPartitionScheme<P>> ofRendezvousPartitionScheme(
-			@NotNull ConfigConverter<P> partitionIdConverter,
-			@NotNull ToIntFunction<K> hashFn
-	) {
-		return makeRendezvousPartitionScheme(partitionIdConverter, hashFn);
-	}
-
-	private static <K extends Comparable<K>, P> ConfigConverter<RendezvousPartitionScheme<P>> makeRendezvousPartitionScheme(
-			@NotNull ConfigConverter<P> partitionIdConverter,
-			@NotNull ToIntFunction<K> hashFn
+			@NotNull ConfigConverter<P> partitionIdConverter
 	) {
 		return new ConfigConverter<RendezvousPartitionScheme<P>>() {
 			@Override
@@ -78,13 +55,12 @@ public final class ConfigConverters {
 					partitionGroups.add(ofPartitionGroup(partitionIdConverter).get(partitionGroupConfig));
 				}
 
-				return RendezvousPartitionScheme.create(partitionGroups)
-						.withHashFn(hashFn);
+				return RendezvousPartitionScheme.create(partitionGroups);
 			}
 
 			@Override
 			@Contract("_, !null -> !null")
-			public RendezvousPartitionScheme<P> get(Config config, @Nullable RendezvousPartitionScheme<P> defaultValue) {
+			public RendezvousPartitionScheme<P> get(Config config, @Nullable RendezvousPartitionScheme defaultValue) {
 				if (config.isEmpty()) {
 					return defaultValue;
 				} else {
@@ -120,8 +96,8 @@ public final class ConfigConverters {
 		};
 	}
 
-	public static ConfigConverter<SimplePartitionId> ofSimplePartitionId() {
-		return SimpleConfigConverter.of(SimplePartitionId::parseString, SimplePartitionId::toString);
+	public static ConfigConverter<PartitionId> ofPartitionId() {
+		return SimpleConfigConverter.of(PartitionId::parseString, PartitionId::toString);
 	}
 
 }

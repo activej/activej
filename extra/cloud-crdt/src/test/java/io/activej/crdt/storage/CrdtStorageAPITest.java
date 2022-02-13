@@ -5,7 +5,6 @@ import io.activej.crdt.CrdtTombstone;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.cluster.CrdtStorageCluster;
 import io.activej.crdt.storage.cluster.DiscoveryService;
-import io.activej.crdt.storage.cluster.DiscoveryService.PartitionScheme;
 import io.activej.crdt.storage.cluster.RendezvousPartitionGroup;
 import io.activej.crdt.storage.cluster.RendezvousPartitionScheme;
 import io.activej.crdt.storage.local.CrdtStorageFs;
@@ -72,7 +71,6 @@ public class CrdtStorageAPITest {
 
 	@FunctionalInterface
 	private interface ICrdtClientFactory {
-
 		CrdtStorage<String, Integer> create(Executor executor, Path testFolder) throws Exception;
 	}
 
@@ -114,9 +112,10 @@ public class CrdtStorageAPITest {
 							}
 							RendezvousPartitionGroup<Integer> partitionGroup2 = RendezvousPartitionGroup.create(partitions, 4, false, true);
 
-							PartitionScheme<Integer> partitionScheme = RendezvousPartitionScheme.create(partitionGroup1, partitionGroup2);
+							RendezvousPartitionScheme<Integer> partitionScheme = RendezvousPartitionScheme.<Integer>create(partitionGroup1, partitionGroup2)
+									.withCrdtProvider(map::get);
 							DiscoveryService<Integer> discoveryService = DiscoveryService.of(partitionScheme);
-							CrdtStorageCluster<String, Integer, Integer> storageCluster = CrdtStorageCluster.create(eventloop, discoveryService, map::get, CRDT_FUNCTION);
+							CrdtStorageCluster<String, Integer, Integer> storageCluster = CrdtStorageCluster.create(eventloop, discoveryService, CRDT_FUNCTION);
 
 							await(storageCluster.start());
 							return storageCluster;
@@ -127,51 +126,56 @@ public class CrdtStorageAPITest {
 
 	@Test
 	public void testUploadDownload() {
-		List<CrdtData<String, Integer>> expected = Arrays.asList(
-				new CrdtData<>("test_0", 123, 0),
-				new CrdtData<>("test_1", 123, 345),
-				new CrdtData<>("test_2", 123, 44),
-				new CrdtData<>("test_3", 123, 74),
-				new CrdtData<>("test_4", 123, -28)
-		);
 
 		await(StreamSupplier.of(
-				new CrdtData<>("test_1", 123, 344),
-				new CrdtData<>("test_2", 123, 24),
-				new CrdtData<>("test_3", 123, -8)).streamTo(StreamConsumer.ofPromise(client.upload())));
+						new CrdtData<>("test_1", 123, 344),
+						new CrdtData<>("test_2", 123, 24),
+						new CrdtData<>("test_3", 123, -8))
+				.streamTo(StreamConsumer.ofPromise(client.upload())));
 		await(StreamSupplier.of(
-				new CrdtData<>("test_2", 123, 44),
-				new CrdtData<>("test_3", 123, 74),
-				new CrdtData<>("test_4", 123, -28)).streamTo(StreamConsumer.ofPromise(client.upload())));
+						new CrdtData<>("test_2", 123, 44),
+						new CrdtData<>("test_3", 123, 74),
+						new CrdtData<>("test_4", 123, -28))
+				.streamTo(StreamConsumer.ofPromise(client.upload())));
 		await(StreamSupplier.of(
-				new CrdtData<>("test_0", 123, 0),
-				new CrdtData<>("test_1", 123, 345),
-				new CrdtData<>("test_2", 123, -28)).streamTo(StreamConsumer.ofPromise(client.upload())));
+						new CrdtData<>("test_0", 123, 0),
+						new CrdtData<>("test_1", 123, 345),
+						new CrdtData<>("test_2", 123, -28))
+				.streamTo(StreamConsumer.ofPromise(client.upload())));
 
 		List<CrdtData<String, Integer>> list = await(await(client.download()).toList());
 		System.out.println(list);
-		assertEquals(expected, list);
+		assertEquals(Arrays.asList(
+						new CrdtData<>("test_0", 123, 0),
+						new CrdtData<>("test_1", 123, 345),
+						new CrdtData<>("test_2", 123, 44),
+						new CrdtData<>("test_3", 123, 74),
+						new CrdtData<>("test_4", 123, -28)),
+				list);
 	}
 
 	@Test
 	public void testRemove() {
-		List<CrdtData<String, Integer>> expected = Arrays.asList(
-				new CrdtData<>("test_1", 123, 2),
-				new CrdtData<>("test_3", 123, 4)
-		);
 		await(StreamSupplier.of(
-				new CrdtData<>("test_1", 123, 1),
-				new CrdtData<>("test_2", 123, 2),
-				new CrdtData<>("test_3", 123, 4)).streamTo(client.upload()));
+						new CrdtData<>("test_1", 123, 1),
+						new CrdtData<>("test_2", 123, 2),
+						new CrdtData<>("test_3", 123, 4))
+				.streamTo(client.upload()));
 		await(StreamSupplier.of(
-				new CrdtData<>("test_1", 123, 2),
-				new CrdtData<>("test_2", 123, 3),
-				new CrdtData<>("test_3", 123, 2)).streamTo(client.upload()));
-		await(StreamSupplier.of(new CrdtTombstone<>("test_2", 124)).streamTo(StreamConsumer.ofPromise(client.remove())));
+						new CrdtData<>("test_1", 123, 2),
+						new CrdtData<>("test_2", 123, 3),
+						new CrdtData<>("test_3", 123, 2))
+				.streamTo(client.upload()));
+		await(StreamSupplier.of(
+						new CrdtTombstone<>("test_2", 124))
+				.streamTo(StreamConsumer.ofPromise(client.remove())));
 
 		List<CrdtData<String, Integer>> list = await(await(client.download()).toList());
 		System.out.println(list);
-		assertEquals(expected, list);
+		assertEquals(Arrays.asList(
+						new CrdtData<>("test_1", 123, 2),
+						new CrdtData<>("test_3", 123, 4)),
+				list);
 	}
 
 	@Test
@@ -180,17 +184,18 @@ public class CrdtStorageAPITest {
 				new CrdtData<>("test_1", 123, 344),
 				new CrdtData<>("test_2", 123, 44),
 				new CrdtData<>("test_3", 123, 74),
-				new CrdtData<>("test_4", 123, -28)
-		);
+				new CrdtData<>("test_4", 123, -28));
 
 		await(StreamSupplier.of(
-				new CrdtData<>("test_1", 123, 344),
-				new CrdtData<>("test_2", 123, 24),
-				new CrdtData<>("test_3", 123, -8)).streamTo(StreamConsumer.ofPromise(client.upload())));
+						new CrdtData<>("test_1", 123, 344),
+						new CrdtData<>("test_2", 123, 24),
+						new CrdtData<>("test_3", 123, -8))
+				.streamTo(StreamConsumer.ofPromise(client.upload())));
 		await(StreamSupplier.of(
-				new CrdtData<>("test_2", 123, 44),
-				new CrdtData<>("test_3", 123, 74),
-				new CrdtData<>("test_4", 123, -28)).streamTo(StreamConsumer.ofPromise(client.upload())));
+						new CrdtData<>("test_2", 123, 44),
+						new CrdtData<>("test_3", 123, 74),
+						new CrdtData<>("test_4", 123, -28))
+				.streamTo(StreamConsumer.ofPromise(client.upload())));
 
 		awaitException(StreamSupplier.concat(
 						StreamSupplier.of(
@@ -210,16 +215,18 @@ public class CrdtStorageAPITest {
 		List<CrdtData<String, Integer>> expected = Arrays.asList(
 				new CrdtData<>("test_1", 123, 344),
 				new CrdtData<>("test_2", 123, 24),
-				new CrdtData<>("test_3", 123, -8)
-		);
+				new CrdtData<>("test_3", 123, -8));
 
 		await(StreamSupplier.of(
-				new CrdtData<>("test_1", 123, 344),
-				new CrdtData<>("test_2", 123, 24),
-				new CrdtData<>("test_3", 123, -8)).streamTo(StreamConsumer.ofPromise(client.upload())));
+						new CrdtData<>("test_1", 123, 344),
+						new CrdtData<>("test_2", 123, 24),
+						new CrdtData<>("test_3", 123, -8))
+				.streamTo(StreamConsumer.ofPromise(client.upload())));
 
 		awaitException(StreamSupplier.concat(
-						StreamSupplier.of(new CrdtTombstone<>("test_1", 124), new CrdtTombstone<>("test_2", 124)),
+						StreamSupplier.of(
+								new CrdtTombstone<>("test_1", 124),
+								new CrdtTombstone<>("test_2", 124)),
 						StreamSupplier.closingWithError(new ExpectedException()))
 				.streamTo(StreamConsumer.ofPromise(client.remove())));
 

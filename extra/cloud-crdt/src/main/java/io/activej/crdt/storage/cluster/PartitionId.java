@@ -21,33 +21,38 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
+import java.util.Objects;
 
 import static io.activej.common.StringFormatUtils.parseInetSocketAddress;
 
-public final class SimplePartitionId {
+public final class PartitionId {
 	private final String id;
 	private final @Nullable InetSocketAddress crdtAddress;
 	private final @Nullable InetSocketAddress rpcAddress;
 
-	private SimplePartitionId(String id, @Nullable InetSocketAddress crdtAddress, @Nullable InetSocketAddress rpcAddress) {
+	private PartitionId(String id, @Nullable InetSocketAddress crdtAddress, @Nullable InetSocketAddress rpcAddress) {
 		this.id = id;
 		this.crdtAddress = crdtAddress;
 		this.rpcAddress = rpcAddress;
 	}
 
-	public static SimplePartitionId of(String id, @Nullable InetSocketAddress crdt, @Nullable InetSocketAddress rpc) {
-		return new SimplePartitionId(id, crdt, rpc);
+	public static PartitionId of(String id) {
+		return new PartitionId(id, null, null);
 	}
 
-	public static SimplePartitionId ofCrdtAddress(@NotNull String id, @NotNull InetSocketAddress crdtAddress) {
-		return new SimplePartitionId(id, crdtAddress, null);
+	public static PartitionId of(String id, @Nullable InetSocketAddress crdt, @Nullable InetSocketAddress rpc) {
+		return new PartitionId(id, crdt, rpc);
 	}
 
-	public static SimplePartitionId ofRpcAddress(@NotNull String id, @NotNull InetSocketAddress rpcAddress) {
-		return new SimplePartitionId(id, null, rpcAddress);
+	public static PartitionId ofCrdtAddress(@NotNull String id, @NotNull InetSocketAddress crdtAddress) {
+		return new PartitionId(id, crdtAddress, null);
 	}
 
-	public static SimplePartitionId parseString(String string) throws MalformedDataException {
+	public static PartitionId ofRpcAddress(@NotNull String id, @NotNull InetSocketAddress rpcAddress) {
+		return new PartitionId(id, null, rpcAddress);
+	}
+
+	public static PartitionId parseString(String string) throws MalformedDataException {
 		String[] split = string.split("\\|");
 		if (split.length > 3) {
 			throw new MalformedDataException("");
@@ -56,7 +61,7 @@ public final class SimplePartitionId {
 		InetSocketAddress crdtAddress = split.length > 1 && !split[1].trim().isEmpty() ? parseInetSocketAddress(split[1]) : null;
 		InetSocketAddress rpcAddress = split.length > 2 && !split[2].trim().isEmpty() ? parseInetSocketAddress(split[2]) : null;
 
-		return new SimplePartitionId(id, crdtAddress, rpcAddress);
+		return new PartitionId(id, crdtAddress, rpcAddress);
 	}
 
 	public String getId() {
@@ -83,13 +88,13 @@ public final class SimplePartitionId {
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
-		SimplePartitionId that = (SimplePartitionId) o;
-		return id.equals(that.id);
+		PartitionId pid = (PartitionId) o;
+		return Objects.equals(id, pid.id) && Objects.equals(crdtAddress, pid.crdtAddress) && Objects.equals(rpcAddress, pid.rpcAddress);
 	}
 
 	@Override
 	public int hashCode() {
-		return id.hashCode();
+		return Objects.hash(id, crdtAddress, rpcAddress);
 	}
 
 	@Override

@@ -1,4 +1,5 @@
 import io.activej.crdt.CrdtData;
+import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.LWWSet;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.storage.cluster.CrdtStorageCluster;
@@ -54,12 +55,12 @@ public final class CrdtClusterExample {
 		// create a cluster with string keys, string partition ids,
 		// and with replication count of 5 meaning that uploading items to the
 		// cluster will make 5 copies of them across known partitions
-		CrdtStorageCluster<String, LWWSet<String>, String> cluster = CrdtStorageCluster.create(
+		CrdtStorageCluster<String, LWWSet<String>, String> cluster = CrdtStorageCluster.<String, LWWSet<String>, String>create(
 				eventloop,
 				DiscoveryService.of(RendezvousPartitionScheme.<String>create()
-						.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet())
+						.withPartitionGroup(RendezvousPartitionGroup.<String>create(clients.keySet())
 								.withReplicas(5))),
-				clients::get);
+				CrdtFunction.ofCrdtType());
 
 		//[END REGION_1]
 		// Here we will prepopulate two partitions with some sets of items

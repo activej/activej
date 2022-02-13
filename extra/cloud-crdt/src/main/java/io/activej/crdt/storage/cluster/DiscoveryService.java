@@ -17,10 +17,10 @@
 package io.activej.crdt.storage.cluster;
 
 import io.activej.async.function.AsyncSupplier;
+import io.activej.crdt.storage.CrdtStorage;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.rpc.client.sender.RpcStrategy;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -34,9 +34,13 @@ public interface DiscoveryService<P> {
 	interface PartitionScheme<P> {
 		Set<P> getPartitions();
 
+		CrdtStorage<?, ?> provideCrdtConnection(P partition);
+
+		RpcStrategy provideRpcConnection(P partition);
+
 		<K extends Comparable<K>> @Nullable Sharder<K> createSharder(List<P> alive);
 
-		<K extends Comparable<K>> RpcStrategy createRpcStrategy(Function<P, @NotNull RpcStrategy> provider, Function<Object, K> keyGetter);
+		<K extends Comparable<K>> RpcStrategy createRpcStrategy(Function<Object, K> keyGetter);
 	}
 
 	static <P> DiscoveryService<P> of(PartitionScheme<P> partitionScheme) {

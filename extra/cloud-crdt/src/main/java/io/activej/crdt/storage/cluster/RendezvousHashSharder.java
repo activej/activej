@@ -27,7 +27,7 @@ import java.util.function.ToIntFunction;
 
 import static io.activej.common.Checks.checkArgument;
 
-public final class RendezvousHashSharder<K, P> implements Sharder<K>, WithInitializer<RendezvousHashSharder<K, P>> {
+public final class RendezvousHashSharder<K> implements Sharder<K>, WithInitializer<RendezvousHashSharder<K>> {
 	public static final int NUMBER_OF_BUCKETS = ApplicationSettings.getInt(RendezvousHashSharder.class, "numberOfBuckets", 512);
 
 	static {
@@ -42,12 +42,12 @@ public final class RendezvousHashSharder<K, P> implements Sharder<K>, WithInitia
 		this.keyHashFn = keyHashFn;
 	}
 
-	public static <K extends Comparable<K>, P> RendezvousHashSharder<K, P> create(
+	public static <K extends Comparable<K>, P> RendezvousHashSharder<K> create(
 			ToIntFunction<K> keyHashFn,
 			Set<P> partitions, List<P> partitionsAlive, int shards, boolean repartition) {
 		Map<P, Integer> partitionsAliveMap = new HashMap<>();
-		for (P pid : partitionsAlive) {
-			partitionsAliveMap.put(pid, partitionsAliveMap.size());
+		for (P partitionId : partitionsAlive) {
+			partitionsAliveMap.put(partitionId, partitionsAliveMap.size());
 		}
 
 		int[][] buckets = new int[NUMBER_OF_BUCKETS][];
@@ -70,8 +70,8 @@ public final class RendezvousHashSharder<K, P> implements Sharder<K>, WithInitia
 
 		ObjWithIndex[] toSort = new ObjWithIndex[partitions.size()];
 		int i = 0;
-		for (P pid : partitions) {
-			toSort[i++] = new ObjWithIndex(pid, partitionsAliveMap.get(pid));
+		for (P partitionId : partitions) {
+			toSort[i++] = new ObjWithIndex(partitionId, partitionsAliveMap.get(partitionId));
 		}
 		int[] buf = new int[partitions.size()];
 
@@ -100,7 +100,7 @@ public final class RendezvousHashSharder<K, P> implements Sharder<K>, WithInitia
 		return new RendezvousHashSharder<>(buckets, keyHashFn);
 	}
 
-	static <K, P> Sharder<K> unionOf(List<RendezvousHashSharder<K, P>> sharders) {
+	static <K> Sharder<K> unionOf(List<RendezvousHashSharder<K>> sharders) {
 		if (sharders.isEmpty()) return Sharder.none();
 		if (sharders.size() == 1) return sharders.get(0);
 		int[][] buckets = new int[sharders.get(0).buckets.length][];
@@ -108,7 +108,7 @@ public final class RendezvousHashSharder<K, P> implements Sharder<K>, WithInitia
 		int[] buf = new int[0];
 		for (int bucket = 0; bucket < buckets.length; bucket++) {
 			int pos = 0;
-			for (RendezvousHashSharder<K, ?> sharder : sharders) {
+			for (RendezvousHashSharder<K> sharder : sharders) {
 				int[] selected = sharder.buckets[bucket];
 				NEXT:
 				for (int idx : selected) {
@@ -129,7 +129,7 @@ public final class RendezvousHashSharder<K, P> implements Sharder<K>, WithInitia
 		return buckets[keyHashFn.applyAsInt(key) & (NUMBER_OF_BUCKETS - 1)];
 	}
 
-	public static <P> long hashBucket(P pid, int bucket) {
-		return HashUtils.murmur3hash(((long) pid.hashCode() << 32) | (bucket & 0xFFFFFFFFL));
+	public static <P> long hashBucket(P partitionId, int bucket) {
+		return HashUtils.murmur3hash(((long) partitionId.hashCode() << 32) | (bucket & 0xFFFFFFFFL));
 	}
 }

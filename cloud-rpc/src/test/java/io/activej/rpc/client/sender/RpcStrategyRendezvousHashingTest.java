@@ -178,5 +178,4 @@ public class RpcStrategyRendezvousHashingTest {
 		assertNull(server3.createSender(pool));
 		assertNull(rendezvousHashing.createSender(pool));
 	}
-
 }

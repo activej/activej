@@ -8,7 +8,7 @@ import io.activej.async.service.EventloopTaskScheduler;
 import io.activej.config.ConfigModule;
 import io.activej.crdt.hash.CrdtMap;
 import io.activej.crdt.storage.CrdtStorage;
-import io.activej.crdt.storage.cluster.SimplePartitionId;
+import io.activej.crdt.storage.cluster.PartitionId;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.Key;
@@ -48,9 +48,9 @@ public final class AdderServerLauncher extends Launcher {
 					@Override
 					protected void configure() {
 						transform(RpcServer.class, (bindings, scope, key, binding) ->
-								binding.addDependencies(SimplePartitionId.class)
-										.mapInstance(singletonList(Key.of(SimplePartitionId.class)), (objects, server) ->
-												server.withListenAddress(((SimplePartitionId) objects[0]).getRpcAddress())));
+								binding.addDependencies(PartitionId.class)
+										.mapInstance(singletonList(Key.of(PartitionId.class)), (objects, server) ->
+												server.withListenAddress(((PartitionId) objects[0]).getRpcAddress())));
 					}
 
 					@Override
