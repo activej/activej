@@ -58,7 +58,7 @@ public final class CrdtClusterExample {
 		CrdtStorageCluster<String, LWWSet<String>, String> cluster = CrdtStorageCluster.<String, LWWSet<String>, String>create(
 				eventloop,
 				DiscoveryService.of(RendezvousPartitionScheme.<String>create()
-						.withPartitionGroup(RendezvousPartitionGroup.<String>create(clients.keySet())
+						.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet())
 								.withReplicas(5))),
 				CrdtFunction.ofCrdtType());
 

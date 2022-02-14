@@ -37,6 +37,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 
 import static io.activej.launchers.crdt.ConfigConverters.ofPartitionId;
 import static io.activej.launchers.crdt.ConfigConverters.ofRendezvousPartitionScheme;
@@ -55,8 +56,13 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 				.to(Key.ofType(Types.parameterizedType(CrdtStorageMap.class, typeArguments)));
 		bind(Key.ofType(supertype, Persistent.class))
 				.to(Key.ofType(Types.parameterizedType(CrdtStorageFs.class, typeArguments)));
-		bind(Key.ofType(supertype, Cluster.class))
-				.to(Key.ofType(Types.parameterizedType(CrdtStorageCluster.class, typeArguments)));
+
+
+		Type[] clusterStorageTypes = Arrays.copyOf(typeArguments, 3);
+		clusterStorageTypes[2] = PartitionId.class;
+
+		bind((Key<?>) Key.ofType(supertype, Cluster.class))
+				.to(Key.ofType(Types.parameterizedType(CrdtStorageCluster.class, clusterStorageTypes)));
 	}
 
 	@Provides
@@ -86,7 +92,7 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 	@Provides
 	CrdtStorageCluster<K, S, PartitionId> clusterCrdtClient(
 			Eventloop eventloop,
-			DiscoveryService discoveryService,
+			DiscoveryService<PartitionId> discoveryService,
 			CrdtDescriptor<K, S> descriptor,
 			PartitionId localPartitionId,
 			CrdtStorageMap<K, S> localClient

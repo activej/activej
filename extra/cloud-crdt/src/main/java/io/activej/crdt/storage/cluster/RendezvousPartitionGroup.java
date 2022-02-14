@@ -18,11 +18,11 @@ public final class RendezvousPartitionGroup<P> implements WithInitializer<Rendez
 	}
 
 	public static <P> RendezvousPartitionGroup<P> create(Set<P> serverIds, int replicas, boolean repartition, boolean active) {
-		return new RendezvousPartitionGroup(serverIds, replicas, repartition, active);
+		return new RendezvousPartitionGroup<>(serverIds, replicas, repartition, active);
 	}
 
 	public static <P> RendezvousPartitionGroup<P> create(Set<P> serverIds) {
-		return new RendezvousPartitionGroup(serverIds, 1, false, true);
+		return new RendezvousPartitionGroup<>(serverIds, 1, false, true);
 	}
 
 	public RendezvousPartitionGroup<P> withReplicas(int replicaCount) {

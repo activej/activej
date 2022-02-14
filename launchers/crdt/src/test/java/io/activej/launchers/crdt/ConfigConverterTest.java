@@ -22,7 +22,7 @@ public class ConfigConverterTest {
 				"partition1", "testA",
 				"partition2", "testB|255.255.255.255:9000",
 				"partition3", "testC||255.255.255.255:9001",
-				"partition4", "testD|255.255.255.255:9000|255.255.255.255:9001",
+				"partition4", "testD|127.0.0.1:9000|127.0.0.1:9001",
 				"localPartition", "testD|localhost:9000|localhost:9001"
 		);
 		Config config = Config.ofMap(properties);
@@ -48,8 +48,8 @@ public class ConfigConverterTest {
 
 		PartitionId partitionId4 = config.get(converter, "partition4");
 		PartitionId expected4 = PartitionId.of("testD",
-				new InetSocketAddress("255.255.255.255", 9000),
-				new InetSocketAddress("255.255.255.255", 9001)
+				new InetSocketAddress("127.0.0.1", 9000),
+				new InetSocketAddress("127.0.0.1", 9001)
 		);
 		assertPartitionsFullyEquals(expected4, partitionId4);
 

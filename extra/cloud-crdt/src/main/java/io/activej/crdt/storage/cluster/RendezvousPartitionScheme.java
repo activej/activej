@@ -22,10 +22,12 @@ import static java.util.stream.Collectors.toSet;
 public final class RendezvousPartitionScheme<P> implements PartitionScheme<P>, WithInitializer<RendezvousPartitionScheme<P>> {
 	private final List<RendezvousPartitionGroup<P>> partitionGroups = new ArrayList<>();
 	private ToIntFunction<?> keyHashFn = Object::hashCode;
+	@SuppressWarnings("unchecked")
 	private Function<P, Object> partitionIdGetter = (Function<P, Object>) Function.identity();
 	private Function<P, @NotNull RpcStrategy> rpcProvider;
 	private Function<P, @NotNull CrdtStorage<?, ?>> crdtProvider;
 
+	@SafeVarargs
 	public static <P> RendezvousPartitionScheme<P> create(RendezvousPartitionGroup<P>... partitionGroups) {
 		return create(Arrays.asList(partitionGroups));
 	}
@@ -82,7 +84,7 @@ public final class RendezvousPartitionScheme<P> implements PartitionScheme<P>, W
 		List<RendezvousHashSharder<K>> sharders = new ArrayList<>();
 		for (RendezvousPartitionGroup<P> partitionGroup : partitionGroups) {
 			//noinspection unchecked
-			RendezvousHashSharder<K> sharder = RendezvousHashSharder.<K, P>create(
+			RendezvousHashSharder<K> sharder = RendezvousHashSharder.create(
 					((ToIntFunction<K>) keyHashFn),
 					p -> partitionIdGetter.apply(p).hashCode(),
 					partitionGroup.getPartitionIds(),

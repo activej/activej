@@ -334,6 +334,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 	}
 
 	private CrdtStorage<K, S> cacheSource(PartitionScheme<P> partitionScheme, P sourcePartitionId) {
+		//noinspection unchecked
 		return crdtStorages.computeIfAbsent(sourcePartitionId,
 				(Function) (Function<P, CrdtStorage<?, ?>>) partitionScheme::provideCrdtConnection);
 	}

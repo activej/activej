@@ -19,6 +19,7 @@ import io.activej.launchers.crdt.Local;
 import java.time.Duration;
 
 import static io.activej.launchers.crdt.ConfigConverters.ofPartitionId;
+import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
 import static io.activej.serializer.BinarySerializers.LONG_SERIALIZER;
 
 public final class ClusterStorageModule extends AbstractModule {
@@ -37,7 +38,7 @@ public final class ClusterStorageModule extends AbstractModule {
 	@Provides
 	CrdtStorageCluster<Long, DetailedSumsCrdtState, PartitionId> clusterStorage(
 			Eventloop eventloop,
-			DiscoveryService discoveryService,
+			DiscoveryService<PartitionId> discoveryService,
 //			CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer,
 			CrdtFunction<DetailedSumsCrdtState> crdtFunction
 //			SimplePartitionId localPartitionId,
@@ -56,18 +57,17 @@ public final class ClusterStorageModule extends AbstractModule {
 	@Eager
 	CrdtServer<Long, DetailedSumsCrdtState> crdtServer(
 			Eventloop eventloop,
-			PartitionId partitionId,
 			@Local CrdtStorage<Long, DetailedSumsCrdtState> localStorage,
 			CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer,
 			Config config
 	) {
 		return CrdtServer.create(eventloop, localStorage, serializer)
-				.withListenAddress(partitionId.getCrdtAddress());
+				.withInitializer(ofAbstractServer(config.getChild("crdt.server")));
 	}
 
 	@Provides
-	DiscoveryService discoveryService(Config config) {
-		RendezvousPartitionScheme partitionScheme = config.get(ConfigConverters.ofRendezvousPartitionScheme(ofPartitionId()), "crdt.cluster");
+	DiscoveryService<PartitionId> discoveryService(Config config) {
+		RendezvousPartitionScheme<PartitionId> partitionScheme = config.get(ConfigConverters.ofRendezvousPartitionScheme(ofPartitionId()), "crdt.cluster");
 		return DiscoveryService.of(partitionScheme);
 	}
 
