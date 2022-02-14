@@ -12,16 +12,6 @@ public class PartitionIdTest {
 	private static final String HOSTNAME = "255.255.255.255";
 
 	@Test
-	public void testLocalEquality() {
-		String id = "test";
-		PartitionId localPartitionId = PartitionId.of(id, null, null);
-		PartitionId partitionId = PartitionId.of(id, address(9000), address(9001));
-
-		assertEquals(localPartitionId, partitionId);
-		assertEquals(localPartitionId.hashCode(), partitionId.hashCode());
-	}
-
-	@Test
 	public void testParse() {
 		doTestParse("test||", PartitionId.of("test", null, null));
 		doTestParse("test|255.255.255.255:9000|", PartitionId.ofCrdtAddress("test", address(9000)));
