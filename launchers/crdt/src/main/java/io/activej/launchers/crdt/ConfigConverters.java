@@ -34,15 +34,13 @@ import static io.activej.config.converter.ConfigConverters.*;
 
 public final class ConfigConverters {
 
-	public static final String PARTITION_ID_DELIMITER = "#";
-
 	/**
 	 * Config converter to create a {@link RendezvousPartitionScheme} out of a {@link Config}
 	 * that is useful for creating {@link RpcStrategy} on a client side
 	 *
 	 * @return a config converter for {@link RendezvousPartitionScheme}
 	 */
-	public static <K extends Comparable<K>, P> ConfigConverter<RendezvousPartitionScheme<P>> ofRendezvousPartitionScheme(
+	public static <P> ConfigConverter<RendezvousPartitionScheme<P>> ofRendezvousPartitionScheme(
 			@NotNull ConfigConverter<P> partitionIdConverter
 	) {
 		return new ConfigConverter<RendezvousPartitionScheme<P>>() {
@@ -60,7 +58,7 @@ public final class ConfigConverters {
 
 			@Override
 			@Contract("_, !null -> !null")
-			public RendezvousPartitionScheme<P> get(Config config, @Nullable RendezvousPartitionScheme defaultValue) {
+			public RendezvousPartitionScheme<P> get(Config config, @Nullable RendezvousPartitionScheme<P> defaultValue) {
 				if (config.isEmpty()) {
 					return defaultValue;
 				} else {

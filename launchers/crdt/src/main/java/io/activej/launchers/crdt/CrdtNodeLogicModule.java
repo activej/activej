@@ -18,6 +18,7 @@ package io.activej.launchers.crdt;
 
 import io.activej.config.Config;
 import io.activej.crdt.CrdtServer;
+import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.storage.cluster.*;
 import io.activej.crdt.storage.local.CrdtStorageFs;
@@ -37,8 +38,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.net.InetSocketAddress;
 import java.util.Arrays;
 
+import static io.activej.common.Checks.checkNotNull;
 import static io.activej.launchers.crdt.ConfigConverters.ofPartitionId;
 import static io.activej.launchers.crdt.ConfigConverters.ofRendezvousPartitionScheme;
 import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
@@ -76,12 +79,23 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 	}
 
 	@Provides
-	DiscoveryService<PartitionId> discoveryService(Config config) {
-		RendezvousPartitionScheme<PartitionId> scheme = config.get(ofRendezvousPartitionScheme(ofPartitionId()), "crdt.cluster");
-		return DiscoveryService.of(scheme
-//				.withCrdtProvider(p -> )
+	DiscoveryService<PartitionId> discoveryService(
+			Eventloop eventloop,
+			PartitionId localPartitionId,
+			CrdtStorageMap<K, S> localCrdtStorage,
+			CrdtDescriptor<K, S> descriptor,
+			Config config
+	) {
+		RendezvousPartitionScheme<PartitionId> scheme = config.get(ofRendezvousPartitionScheme(ofPartitionId()), "crdt.cluster")
 				.withPartitionIdGetter(PartitionId::getId)
-		);
+				.withCrdtProvider(partitionId -> {
+					if (partitionId.equals(localPartitionId)) return localCrdtStorage;
+
+					InetSocketAddress crdtAddress = checkNotNull(partitionId.getCrdtAddress());
+					return CrdtStorageClient.create(eventloop, crdtAddress, descriptor.getSerializer());
+				});
+
+		return DiscoveryService.of(scheme);
 	}
 
 	@Provides
@@ -93,16 +107,9 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 	CrdtStorageCluster<K, S, PartitionId> clusterCrdtClient(
 			Eventloop eventloop,
 			DiscoveryService<PartitionId> discoveryService,
-			CrdtDescriptor<K, S> descriptor,
-			PartitionId localPartitionId,
-			CrdtStorageMap<K, S> localClient
+			CrdtDescriptor<K, S> descriptor
 	) {
-		return CrdtStorageCluster.create(eventloop,
-				discoveryService
-/*				partitionId -> partitionId.equals(localPartitionId) ?
-						localClient :
-						CrdtStorageClient.create(eventloop, partitionId.getCrdtAddress(), descriptor.getSerializer())*/,
-				descriptor.getCrdtFunction());
+		return CrdtStorageCluster.create(eventloop, discoveryService, descriptor.getCrdtFunction());
 	}
 
 	@Provides

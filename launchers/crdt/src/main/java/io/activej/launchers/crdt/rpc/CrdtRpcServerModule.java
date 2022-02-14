@@ -62,7 +62,7 @@ public abstract class CrdtRpcServerModule<K extends Comparable<K>, S> extends Ab
 	@SuppressWarnings("unchecked")
 	RpcServer server(Eventloop eventloop, Map<Class<?>, RpcRequestHandler<?, ?>> handlers, Config config) {
 		RpcServer server = RpcServer.create(eventloop)
-				.withListenAddress(config.get(ofInetSocketAddress(), "listenAddresses"))
+				.withListenAddress(config.get(ofInetSocketAddress(), "rpc.server.listenAddresses"))
 				.withMessageTypes(getMessageTypes());
 		for (Map.Entry<Class<?>, RpcRequestHandler<?, ?>> entry : handlers.entrySet()) {
 			server.withHandler((Class<Object>) entry.getKey(), (RpcRequestHandler<Object, Object>) entry.getValue());
