@@ -88,7 +88,7 @@ public final class StreamSplitter<I, O> implements HasStreamInput<I>, HasStreamO
 	}
 
 	private void start() {
-		if (outputs.isEmpty()){
+		if (outputs.isEmpty()) {
 			input.acknowledge();
 			return;
 		}
@@ -127,7 +127,7 @@ public final class StreamSplitter<I, O> implements HasStreamInput<I>, HasStreamO
 
 		@Override
 		protected void onSuspended() {
-			dataAcceptors[index] = getDataAcceptor();
+			dataAcceptors[index] = getBufferedDataAcceptor();
 			sync();
 		}
 
