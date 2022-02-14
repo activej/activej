@@ -43,7 +43,7 @@ public final class RendezvousHashSharder<K> implements Sharder<K>, WithInitializ
 	}
 
 	public static <K extends Comparable<K>, P> RendezvousHashSharder<K> create(
-			ToIntFunction<K> keyHashFn,
+			ToIntFunction<K> keyHashFn, ToIntFunction<P> partitionIdHashCode,
 			Set<P> partitions, List<P> partitionsAlive, int shards, boolean repartition) {
 		Map<P, Integer> partitionsAliveMap = new HashMap<>();
 		for (P partitionId : partitionsAlive) {
@@ -77,7 +77,7 @@ public final class RendezvousHashSharder<K> implements Sharder<K>, WithInitializ
 
 		for (int bucket = 0; bucket < buckets.length; bucket++) {
 			for (ObjWithIndex obj : toSort) {
-				obj.hash = hashBucket(obj.partitionId, bucket);
+				obj.hash = hashBucket(partitionIdHashCode.applyAsInt(obj.partitionId), bucket);
 			}
 
 			Arrays.sort(toSort, Comparator.comparingLong(ObjWithIndex::getHash).reversed());
@@ -129,7 +129,7 @@ public final class RendezvousHashSharder<K> implements Sharder<K>, WithInitializ
 		return buckets[keyHashFn.applyAsInt(key) & (NUMBER_OF_BUCKETS - 1)];
 	}
 
-	public static <P> long hashBucket(P partitionId, int bucket) {
-		return HashUtils.murmur3hash(((long) partitionId.hashCode() << 32) | (bucket & 0xFFFFFFFFL));
+	public static long hashBucket(int partitionHash, int bucket) {
+		return HashUtils.murmur3hash(((long) partitionHash << 32) | (bucket & 0xFFFFFFFFL));
 	}
 }

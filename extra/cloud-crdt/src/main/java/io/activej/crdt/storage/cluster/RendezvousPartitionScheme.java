@@ -17,7 +17,6 @@ import java.util.function.Function;
 import java.util.function.ToIntFunction;
 
 import static io.activej.crdt.storage.cluster.RendezvousHashSharder.NUMBER_OF_BUCKETS;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 public final class RendezvousPartitionScheme<P> implements PartitionScheme<P>, WithInitializer<RendezvousPartitionScheme<P>> {
@@ -83,10 +82,11 @@ public final class RendezvousPartitionScheme<P> implements PartitionScheme<P>, W
 		List<RendezvousHashSharder<K>> sharders = new ArrayList<>();
 		for (RendezvousPartitionGroup<P> partitionGroup : partitionGroups) {
 			//noinspection unchecked
-			RendezvousHashSharder<K> sharder = RendezvousHashSharder.<K, Object>create(
+			RendezvousHashSharder<K> sharder = RendezvousHashSharder.<K, P>create(
 					((ToIntFunction<K>) keyHashFn),
-					partitionGroup.getPartitionIds().stream().map(partitionIdGetter).collect(toSet()),
-					alive.stream().map(partitionIdGetter).collect(toList()),
+					p -> partitionIdGetter.apply(p).hashCode(),
+					partitionGroup.getPartitionIds(),
+					alive,
 					partitionGroup.getReplicaCount(), partitionGroup.isRepartition());
 			sharders.add(sharder);
 		}
@@ -104,10 +104,10 @@ public final class RendezvousPartitionScheme<P> implements PartitionScheme<P>, W
 					RpcStrategyRendezvousHashing.create(req ->
 									((ToIntFunction<K>) keyHashFn).applyAsInt(keyGetter.apply(req)))
 							.withBuckets(NUMBER_OF_BUCKETS)
-							.withHashBucketFn(RendezvousHashSharder::hashBucket)
+							.withHashBucketFn((p, bucket) -> RendezvousHashSharder.hashBucket(partitionIdGetter.apply((P) p).hashCode(), bucket))
 							.withInitializer(rendezvousHashing -> {
 								for (P partitionId : partitionGroup.getPartitionIds()) {
-									rendezvousHashing.withShard(partitionIdGetter.apply(partitionId), provideRpcConnection(partitionId));
+									rendezvousHashing.withShard(partitionId, provideRpcConnection(partitionId));
 								}
 								if (!partitionGroup.isRepartition()) {
 									rendezvousHashing.withReshardings(partitionGroup.getReplicaCount());
