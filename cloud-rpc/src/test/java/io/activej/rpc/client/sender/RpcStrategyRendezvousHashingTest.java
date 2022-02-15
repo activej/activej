@@ -178,4 +178,59 @@ public class RpcStrategyRendezvousHashingTest {
 		assertNull(server3.createSender(pool));
 		assertNull(rendezvousHashing.createSender(pool));
 	}
+
+	@Test
+	public void itShouldNotBeCreatedWhenThereAreNotEnoughActiveSubSenders2() {
+		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
+		RpcSenderStub connection1 = new RpcSenderStub();
+		RpcSenderStub connection2 = new RpcSenderStub();
+		int shardId1 = 1;
+		int shardId2 = 2;
+		int shardId3 = 3;
+		RpcStrategySingleServer server1 = server(address1);
+		RpcStrategySingleServer server2 = server(address2);
+		RpcStrategySingleServer server3 = server(address3);
+		RpcStrategy rendezvousHashing = RpcStrategyRendezvousHashing.create(RpcMessageDataStubWithKey::getKey)
+				.withMaxInactiveShards(0)
+				.withShard(shardId1, server1)
+				.withShard(shardId2, server2)
+				.withShard(shardId3, server3);
+
+		pool.put(address1, connection1);
+		pool.put(address2, connection2);
+		// we don't add connection3
+
+		assertNotNull(server1.createSender(pool));
+		assertNotNull(server2.createSender(pool));
+		assertNull(server3.createSender(pool));
+		assertNull(rendezvousHashing.createSender(pool));
+	}
+
+	@Test
+	public void itShouldNotBeCreatedWhenThereAreNotEnoughActiveSubSenders3() {
+		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
+		RpcSenderStub connection1 = new RpcSenderStub();
+		RpcSenderStub connection2 = new RpcSenderStub();
+		int shardId1 = 1;
+		int shardId2 = 2;
+		int shardId3 = 3;
+		RpcStrategySingleServer server1 = server(address1);
+		RpcStrategySingleServer server2 = server(address2);
+		RpcStrategySingleServer server3 = server(address3);
+		RpcStrategy rendezvousHashing = RpcStrategyRendezvousHashing.create(RpcMessageDataStubWithKey::getKey)
+				.withMaxEmptyBuckets(0)
+				.withShard(shardId1, server1)
+				.withShard(shardId2, server2)
+				.withShard(shardId3, server3)
+				.withReshardings(1);
+
+		pool.put(address1, connection1);
+		pool.put(address2, connection2);
+		// we don't add connection3
+
+		assertNotNull(server1.createSender(pool));
+		assertNotNull(server2.createSender(pool));
+		assertNull(server3.createSender(pool));
+		assertNull(rendezvousHashing.createSender(pool));
+	}
 }

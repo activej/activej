@@ -107,6 +107,7 @@ public final class RendezvousPartitionScheme<P> implements PartitionScheme<P>, W
 									((ToIntFunction<K>) keyHashFn).applyAsInt(keyGetter.apply(req)))
 							.withBuckets(NUMBER_OF_BUCKETS)
 							.withHashBucketFn((p, bucket) -> RendezvousHashSharder.hashBucket(partitionIdGetter.apply((P) p).hashCode(), bucket))
+							.withMinActiveShards(1)
 							.withInitializer(rendezvousHashing -> {
 								for (P partitionId : partitionGroup.getPartitionIds()) {
 									rendezvousHashing.withShard(partitionId, provideRpcConnection(partitionId));
