@@ -21,7 +21,10 @@ import io.activej.rpc.client.RpcClientConnectionPool;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.net.InetSocketAddress;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 public final class RpcStrategyFirstValidResult implements RpcStrategy {
 	@FunctionalInterface
@@ -31,19 +34,23 @@ public final class RpcStrategyFirstValidResult implements RpcStrategy {
 
 	private static final ResultValidator<?> DEFAULT_RESULT_VALIDATOR = new DefaultResultValidator<>();
 
-	private final RpcStrategyList list;
+	private final List<RpcStrategy> list;
 
 	private final ResultValidator<?> resultValidator;
 	private final @Nullable Exception noValidResultException;
 
-	private RpcStrategyFirstValidResult(RpcStrategyList list, ResultValidator<?> resultValidator,
+	private RpcStrategyFirstValidResult(List<RpcStrategy> list, ResultValidator<?> resultValidator,
 			@Nullable Exception noValidResultException) {
 		this.list = list;
 		this.resultValidator = resultValidator;
 		this.noValidResultException = noValidResultException;
 	}
 
-	public static RpcStrategyFirstValidResult create(RpcStrategyList list) {
+	public static RpcStrategyFirstValidResult create(RpcStrategy... list) {
+		return create(Arrays.asList(list));
+	}
+
+	public static RpcStrategyFirstValidResult create(List<RpcStrategy> list) {
 		return new RpcStrategyFirstValidResult(list, DEFAULT_RESULT_VALIDATOR, null);
 	}
 
@@ -56,13 +63,13 @@ public final class RpcStrategyFirstValidResult implements RpcStrategy {
 	}
 
 	@Override
-	public DiscoveryService getDiscoveryService() {
-		return list.getDiscoveryService();
+	public Set<InetSocketAddress> getAddresses() {
+		return Utils.getAddresses(list);
 	}
 
 	@Override
 	public @Nullable RpcSender createSender(RpcClientConnectionPool pool) {
-		List<RpcSender> senders = list.listOfSenders(pool);
+		List<RpcSender> senders = Utils.listOfSenders(list, pool);
 		if (senders.isEmpty())
 			return null;
 		return new Sender(senders, resultValidator, noValidResultException);

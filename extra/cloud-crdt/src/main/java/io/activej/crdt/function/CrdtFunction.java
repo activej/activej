@@ -19,13 +19,16 @@ package io.activej.crdt.function;
 import io.activej.crdt.primitives.CrdtType;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
+
 public interface CrdtFunction<S> {
 
 	/**
 	 * This method should combine two given CRDT values together,
 	 * not violating any of the CRDT conditions.
 	 */
-	S merge(S first, S second);
+	S merge(S first, long firstTimestamp, S second, long secondTimestamp);
 
 	/**
 	 * Extract partial CRDT state from given state, which contains only the
@@ -55,13 +58,31 @@ public interface CrdtFunction<S> {
 	static <S extends CrdtType<S>> CrdtFunction<S> ofCrdtType() {
 		return new CrdtFunction<S>() {
 			@Override
-			public S merge(S first, S second) {
+			public S merge(S first, long firstTimestamp, S second, long secondTimestamp) {
 				return first.merge(second);
 			}
 
 			@Override
 			public @Nullable S extract(S state, long timestamp) {
 				return state.extract(timestamp);
+			}
+		};
+	}
+
+	static <S> CrdtFunction<S> ignoringTimestamp(BinaryOperator<S> mergeOperator) {
+		return ignoringTimestamp(mergeOperator, (s, $) -> s);
+	}
+
+	static <S> CrdtFunction<S> ignoringTimestamp(BinaryOperator<S> mergeOperator, BiFunction<S, Long, S> extractFn) {
+		return new CrdtFunction<S>() {
+			@Override
+			public S merge(S first, long firstTimestamp, S second, long secondTimestamp) {
+				return mergeOperator.apply(first, second);
+			}
+
+			@Override
+			public @Nullable S extract(S state, long timestamp) {
+				return extractFn.apply(state, timestamp);
 			}
 		};
 	}

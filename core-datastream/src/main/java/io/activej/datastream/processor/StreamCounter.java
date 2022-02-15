@@ -14,9 +14,30 @@
  * limitations under the License.
  */
 
-package io.activej.rpc.hash;
+package io.activej.datastream.processor;
 
-@FunctionalInterface
-public interface HashFunction<T> {
-	int hashCode(T item);
+import io.activej.datastream.StreamDataAcceptor;
+import org.jetbrains.annotations.NotNull;
+
+public final class StreamCounter<T> extends StreamFilter<T, T> {
+	private long itemCount;
+
+	private StreamCounter() {
+	}
+
+	public static <T> StreamCounter<T> create() {
+		return new StreamCounter<>();
+	}
+
+	@Override
+	protected @NotNull StreamDataAcceptor<T> onResumed(@NotNull StreamDataAcceptor<T> output) {
+		return item -> {
+			itemCount++;
+			output.accept(item);
+		};
+	}
+
+	public long getItemCount() {
+		return itemCount;
+	}
 }

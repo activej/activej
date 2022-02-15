@@ -18,8 +18,6 @@ package io.activej.datastream.processor;
 
 import io.activej.datastream.StreamDataAcceptor;
 
-import java.util.function.BinaryOperator;
-
 /**
  * Static utility methods pertaining to {@link Reducer}.
  * Contains primary ready for use reducers.
@@ -442,7 +440,7 @@ public final class StreamReducers {
 	 * @param <K> type of keys
 	 * @param <T> type of input and output data
 	 */
-	public static class DeduplicateReducer<K, T> implements Reducer<K, T, T, Void> {
+	public static final class DeduplicateReducer<K, T> implements Reducer<K, T, T, Void> {
 		/**
 		 * On first item with new key it streams it
 		 *
@@ -472,7 +470,7 @@ public final class StreamReducers {
 	 * @param <K> type of keys
 	 * @param <T> type of input and output data
 	 */
-	public static class MergeReducer<K, T> implements Reducer<K, T, T, Void> {
+	public static final class MergeReducer<K, T> implements Reducer<K, T, T, Void> {
 		@Override
 		public Void onFirstItem(StreamDataAcceptor<T> stream, K key, T firstValue) {
 			stream.accept(firstValue);
@@ -490,17 +488,7 @@ public final class StreamReducers {
 		}
 	}
 
-	public static class BinaryAccumulatorReducer<K, T> implements Reducer<K, T, T, T> {
-		private final BinaryOperator<T> combiner;
-
-		public BinaryAccumulatorReducer(BinaryOperator<T> combiner) {
-			this.combiner = combiner;
-		}
-
-		protected boolean filter(T value) {
-			return true;
-		}
-
+	public static abstract class BinaryAccumulatorReducer<K, T> implements Reducer<K, T, T, T> {
 		@Override
 		public T onFirstItem(StreamDataAcceptor<T> stream, K key, T firstValue) {
 			return firstValue;
@@ -508,14 +496,14 @@ public final class StreamReducers {
 
 		@Override
 		public T onNextItem(StreamDataAcceptor<T> stream, K key, T nextValue, T accumulator) {
-			return combiner.apply(accumulator, nextValue);
+			return combine(key, nextValue, accumulator);
 		}
+
+		protected abstract T combine(K key, T nextValue, T accumulator);
 
 		@Override
 		public void onComplete(StreamDataAcceptor<T> stream, K key, T accumulator) {
-			if (filter(accumulator)) {
-				stream.accept(accumulator);
-			}
+			stream.accept(accumulator);
 		}
 	}
 }

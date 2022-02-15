@@ -18,6 +18,7 @@ package io.activej.crdt.wal;
 
 import io.activej.async.service.EventloopService;
 import io.activej.common.initializer.WithInitializer;
+import io.activej.common.time.CurrentTimeProvider;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.CrdtType;
@@ -39,11 +40,13 @@ public class InMemoryWriteAheadLog<K extends Comparable<K>, S> implements WriteA
 		WithInitializer<InMemoryWriteAheadLog<K, S>> {
 	private static final Logger logger = LoggerFactory.getLogger(InMemoryWriteAheadLog.class);
 
-	private Map<K, S> map = new TreeMap<>();
+	private Map<K, CrdtData<K, S>> map = new TreeMap<>();
 
 	private final Eventloop eventloop;
 	private final CrdtFunction<S> function;
 	private final CrdtStorage<K, S> storage;
+
+	private CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
 
 	private InMemoryWriteAheadLog(Eventloop eventloop, CrdtFunction<S> function, CrdtStorage<K, S> storage) {
 		this.eventloop = eventloop;
@@ -59,12 +62,17 @@ public class InMemoryWriteAheadLog<K extends Comparable<K>, S> implements WriteA
 		return new InMemoryWriteAheadLog<>(eventloop, CrdtFunction.ofCrdtType(), storage);
 	}
 
+	public InMemoryWriteAheadLog<K, S> withCurrentTimeProvider(CurrentTimeProvider now) {
+		this.now = now;
+		return this;
+	}
+
 	@Override
 	public Promise<Void> put(K key, S value) {
 		if (logger.isTraceEnabled()) {
 			logger.trace("{} value for key {}", map.containsKey(key) ? "Merging" : "Putting new", key);
 		}
-		map.merge(key, value, function::merge);
+		doPut(key, new CrdtData<>(key, now.currentTimeMillis(), value));
 		return Promise.complete();
 	}
 
@@ -75,14 +83,13 @@ public class InMemoryWriteAheadLog<K extends Comparable<K>, S> implements WriteA
 			return Promise.complete();
 		}
 
-		Map<K, S> map = this.map;
+		Map<K, CrdtData<K, S>> map = this.map;
 		this.map = new TreeMap<>();
 
 		return storage.upload()
-				.then(consumer -> StreamSupplier.ofStream(map.entrySet().stream()
-								.map(entry -> new CrdtData<>(entry.getKey(), entry.getValue())))
+				.then(consumer -> StreamSupplier.ofIterable(map.values())
 						.streamTo(consumer))
-				.whenException(e -> map.forEach(this::put))
+				.whenException(e -> map.forEach(this::doPut))
 				.whenComplete(toLogger(logger, INFO, INFO, "flush", map.size()));
 	}
 
@@ -99,5 +106,13 @@ public class InMemoryWriteAheadLog<K extends Comparable<K>, S> implements WriteA
 	@Override
 	public @NotNull Promise<?> stop() {
 		return flush();
+	}
+
+	private void doPut(K key, CrdtData<K, S> value) {
+		map.merge(key, value, (a, b) -> {
+			long timestamp = Math.max(a.getTimestamp(), b.getTimestamp());
+			S merged = function.merge(a.getState(), a.getTimestamp(), b.getState(), b.getTimestamp());
+			return new CrdtData<>(key, timestamp, merged);
+		});
 	}
 }

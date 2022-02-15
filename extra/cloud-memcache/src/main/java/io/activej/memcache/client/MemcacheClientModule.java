@@ -24,6 +24,7 @@ import io.activej.memcache.protocol.MemcacheRpcMessage;
 import io.activej.memcache.protocol.MemcacheRpcMessage.Slice;
 import io.activej.memcache.protocol.SerializerDefSlice;
 import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.client.sender.RpcStrategyRendezvousHashing;
 import io.activej.serializer.SerializerBuilder;
 
 import java.time.Duration;
@@ -33,20 +34,20 @@ import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.launchers.initializers.ConfigConverters.ofFrameFormat;
 import static io.activej.memcache.protocol.MemcacheRpcMessage.HASH_FUNCTION;
 import static io.activej.rpc.client.RpcClient.DEFAULT_SOCKET_SETTINGS;
-import static io.activej.rpc.client.sender.RpcStrategies.rendezvousHashing;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public class MemcacheClientModule extends AbstractModule {
 	private MemcacheClientModule() {}
 
-	public static MemcacheClientModule create() { return new MemcacheClientModule(); }
+	public static MemcacheClientModule create() {return new MemcacheClientModule();}
 
 	@Provides
 	RpcClient rpcClient(Eventloop eventloop, Config config) {
 		return RpcClient.create(eventloop)
-				.withStrategy(rendezvousHashing(HASH_FUNCTION)
-						.withMinActiveShards(config.get(ofInteger(), "client.minAliveConnections", 1))
-						.withShards(config.get(ofList(ofInetSocketAddress()), "client.addresses")))
+				.withStrategy(
+						RpcStrategyRendezvousHashing.create(HASH_FUNCTION)
+								.withMinActiveShards(config.get(ofInteger(), "client.minAliveConnections", 1))
+								.withShards(config.get(ofList(ofInetSocketAddress()), "client.addresses")))
 				.withMessageTypes(MemcacheRpcMessage.MESSAGE_TYPES)
 				.withSerializerBuilder(SerializerBuilder.create()
 						.with(Slice.class, ctx -> new SerializerDefSlice()))

@@ -13,6 +13,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.List;
 
+import static io.activej.common.Utils.not;
 import static io.activej.dataflow.json.JsonUtils.codec;
 import static io.activej.dataflow.json.JsonUtils.ofObject;
 import static java.util.stream.Collectors.toList;
@@ -48,7 +49,7 @@ public final class DataflowServerLauncherExample extends DataflowServerLauncher 
 		String file = args.length > 1 ? args[1] : "words1.txt";
 		return new BufferedReader(new InputStreamReader(getClass().getResourceAsStream(file)))
 				.lines()
-				.filter(s -> !s.isEmpty())
+				.filter(not(String::isEmpty))
 				.collect(toList());
 	}
 

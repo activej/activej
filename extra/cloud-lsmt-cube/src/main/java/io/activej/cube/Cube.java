@@ -688,7 +688,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 			Function<S, K> keyFunction = io.activej.aggregation.util.Utils.createKeyFunction(aggregationClass, resultKeyClass, dimensions, queryClassLoader);
 
 			Map<String, Measure> extraFields = keysToMap(allMeasures.stream()
-					.filter(s -> !compatibleMeasures.contains(s)), measures::get);
+					.filter(io.activej.common.Utils.not(compatibleMeasures::contains)), measures::get);
 			Reducer<K, S, T, A> reducer = aggregationReducer(aggregationContainer.aggregation.getStructure(), aggregationClass, resultClass,
 					dimensions, compatibleMeasures, extraFields, queryClassLoader);
 

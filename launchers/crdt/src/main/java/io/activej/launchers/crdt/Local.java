@@ -14,9 +14,18 @@
  * limitations under the License.
  */
 
-package io.activej.rpc.hash;
+package io.activej.launchers.crdt;
 
-@FunctionalInterface
-public interface HashBucketFunction {
-	int hash(Object shardId, int bucket);
+import io.activej.inject.annotation.QualifierAnnotation;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+@QualifierAnnotation
+@Target({PARAMETER, METHOD, TYPE_USE})
+@Retention(RUNTIME)
+public @interface Local {
 }

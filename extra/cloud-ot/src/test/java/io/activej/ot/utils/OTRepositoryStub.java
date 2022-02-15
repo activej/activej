@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static io.activej.common.Checks.checkNotNull;
+import static io.activej.common.Utils.not;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toSet;
 
@@ -147,7 +148,7 @@ public final class OTRepositoryStub<K, D> implements OTRepository<K, D> {
 				.collect(toSet());
 		Set<K> heads = commits.stream()
 				.map(OTCommit::getId)
-				.filter(id -> !parents.contains(id))
+				.filter(not(parents::contains))
 				.collect(toSet());
 		updateHeads(heads, parents);
 	}

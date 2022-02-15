@@ -29,6 +29,12 @@
       <optional>true</optional>
     </dependency>
     <dependency>
+      <groupId>io.activej</groupId>
+      <artifactId>activej-rpc</artifactId>
+      <version>${project.version}</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
       <groupId>org.lz4</groupId>
       <artifactId>lz4-java</artifactId>
       <optional>true</optional>
@@ -45,11 +51,6 @@
       <artifactId>activej-test</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.rocksdb</groupId>
-      <artifactId>rocksdbjni</artifactId>
     </dependency>
   </dependencies>
 

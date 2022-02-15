@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
-package io.activej.rpc.hash;
+package io.activej.crdt;
 
-/**
- * Sharder interface determines to which shard item will be sent
- */
-@FunctionalInterface
-public interface ShardingFunction<T> {
-	/**
-	 * Determines to which shard {@code item} will be sent
-	 *
-	 * @param item data to be sent
-	 * @return shard number
-	 */
-	int getShard(T item);
+public abstract class CrdtEntity<K extends Comparable<K>> implements Comparable<CrdtEntity<K>> {
+	protected final K key;
+
+	protected CrdtEntity(K key) {
+		this.key = key;
+	}
+
+	public K getKey() {
+		return key;
+	}
+
+	@Override
+	public int compareTo(CrdtEntity<K> o) {
+		return key.compareTo(o.key);
+	}
 }

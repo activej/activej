@@ -112,7 +112,7 @@ public final class ClusterRepartitionControllerTest {
 		FsPartitions fsPartitions = FsPartitions.create(eventloop, discoveryService)
 				.withServerSelector(RENDEZVOUS_HASH_SHARDER);
 
-		Promise<Map<Object, ActiveFs>> discoverPromise = Promise.ofCallback(cb -> discoveryService.discover(null, cb));
+		Promise<Map<Object, ActiveFs>> discoverPromise = discoveryService.supplier().get();
 		Map<Object, ActiveFs> discovered = discoverPromise.getResult();
 
 		ClusterRepartitionController controller = ClusterRepartitionController.create(localPartitionId, fsPartitions)

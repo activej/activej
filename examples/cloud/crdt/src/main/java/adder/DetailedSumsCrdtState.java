@@ -30,7 +30,7 @@ public final class DetailedSumsCrdtState implements CrdtMergable<DetailedSumsCrd
 	}
 
 	public float getSumFor(String serverId) {
-		return sums.get(serverId);
+		return sums.getOrDefault(serverId, 0f);
 	}
 
 	public float getSumExcept(String serverId) {
@@ -40,6 +40,12 @@ public final class DetailedSumsCrdtState implements CrdtMergable<DetailedSumsCrd
 			sum += entry.getValue();
 		}
 		return sum;
+	}
+
+	public float getSum() {
+		return (float) sums.values().stream()
+				.mapToDouble(Float::doubleValue)
+				.sum();
 	}
 
 	@Override

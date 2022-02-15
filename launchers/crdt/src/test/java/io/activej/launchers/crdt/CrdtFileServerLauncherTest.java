@@ -1,10 +1,9 @@
 package io.activej.launchers.crdt;
 
+import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.util.CrdtDataSerializer;
-import io.activej.crdt.util.TimestampContainer;
 import io.activej.inject.annotation.Provides;
 import io.activej.test.rules.ByteBufRule;
-import io.activej.types.TypeT;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -18,20 +17,20 @@ public class CrdtFileServerLauncherTest {
 
 	@Test
 	public void testInjector() {
-		new CrdtFileServerLauncher<String, TimestampContainer<Integer>>() {
+		new CrdtFileServerLauncher<String, Integer>() {
 			@Override
-			protected CrdtFileServerLogicModule<String, TimestampContainer<Integer>> getBusinessLogicModule() {
-				return new CrdtFileServerLogicModule<String, TimestampContainer<Integer>>() {};
+			protected CrdtFileServerLogicModule<String, Integer> getBusinessLogicModule() {
+				return new CrdtFileServerLogicModule<String, Integer>() {};
 			}
 
 			@Provides
-			CrdtDescriptor<String, TimestampContainer<Integer>> descriptor() {
+			CrdtDescriptor<String, Integer> descriptor() {
 				return new CrdtDescriptor<>(
-						TimestampContainer.createCrdtFunction(Integer::max),
-						new CrdtDataSerializer<>(UTF8_SERIALIZER,
-								TimestampContainer.createSerializer(INT_SERIALIZER)),
+						CrdtFunction.ignoringTimestamp(Integer::max),
+						new CrdtDataSerializer<>(UTF8_SERIALIZER, INT_SERIALIZER),
 						String.class,
-						new TypeT<TimestampContainer<Integer>>() {}.getType());
+						Integer.class
+				);
 			}
 		}.testInjector();
 	}

@@ -18,53 +18,35 @@ package io.activej.rpc.client.sender;
 
 import io.activej.rpc.client.RpcClientConnectionPool;
 
-import java.util.Collections;
+import java.net.InetSocketAddress;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
-class RpcStrategyListFinal implements RpcStrategyList {
-	private final List<? extends RpcStrategy> strategies;
+public final class Utils {
 
-	RpcStrategyListFinal(List<? extends RpcStrategy> strategies) {
-		this.strategies = strategies;
-	}
-
-	@Override
-	public List<RpcSender> listOfSenders(RpcClientConnectionPool pool) {
+	public static List<RpcSender> listOfSenders(List<RpcStrategy> strategies, RpcClientConnectionPool pool) {
 		return strategies.stream()
 				.map(strategy -> strategy.createSender(pool))
 				.filter(Objects::nonNull)
 				.collect(toList());
 	}
 
-	@Override
-	public List<RpcSender> listOfNullableSenders(RpcClientConnectionPool pool) {
+	public static List<RpcSender> listOfNullableSenders(List<RpcStrategy> strategies, RpcClientConnectionPool pool) {
 		return strategies.stream()
 				.map(strategy -> strategy.createSender(pool))
 				.collect(toList());
 	}
 
-	@Override
-	public DiscoveryService getDiscoveryService() {
-		return DiscoveryService.combined(strategies.stream()
-				.map(RpcStrategy::getDiscoveryService)
-				.collect(Collectors.toList()));
+	public static Set<InetSocketAddress> getAddresses(Collection<RpcStrategy> strategies) {
+		return strategies.stream()
+				.map(RpcStrategy::getAddresses)
+				.flatMap(Collection::stream)
+				.collect(toSet());
 	}
 
-	@Override
-	public int size() {
-		return strategies.size();
-	}
-
-	@Override
-	public RpcStrategy get(int index) {
-		return strategies.get(index);
-	}
-
-	public List<RpcStrategy> getStrategies() {
-		return Collections.unmodifiableList(strategies);
-	}
 }

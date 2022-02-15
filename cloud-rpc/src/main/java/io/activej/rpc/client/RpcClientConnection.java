@@ -235,7 +235,7 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 
 	private void processControlMessage(RpcControlMessage controlMessage) {
 		if (controlMessage == RpcControlMessage.CLOSE) {
-			rpcClient.removeConnection(address);
+			rpcClient.onClosedConnection(address);
 			serverClosing = true;
 			if (activeRequests.size() == 0) {
 				shutdown();
@@ -319,7 +319,7 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 		if (isClosed()) return;
 		downstreamDataAcceptor = null;
 		closed = true;
-		rpcClient.removeConnection(address);
+		rpcClient.onClosedConnection(address);
 
 		while (!activeRequests.isEmpty()) {
 			for (Integer cookie : new HashSet<>(activeRequests.keySet())) {

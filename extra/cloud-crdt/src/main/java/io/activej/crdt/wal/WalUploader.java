@@ -243,7 +243,6 @@ public final class WalUploader<K extends Comparable<K>, S> implements EventloopJ
 	// endregion
 
 	private final class WalReducer implements StreamReducers.Reducer<K, CrdtData<K, S>, CrdtData<K, S>, CrdtData<K, S>> {
-
 		@Override
 		public CrdtData<K, S> onFirstItem(StreamDataAcceptor<CrdtData<K, S>> stream, K key, CrdtData<K, S> firstValue) {
 			return firstValue;
@@ -251,7 +250,9 @@ public final class WalUploader<K extends Comparable<K>, S> implements EventloopJ
 
 		@Override
 		public CrdtData<K, S> onNextItem(StreamDataAcceptor<CrdtData<K, S>> stream, K key, CrdtData<K, S> nextValue, CrdtData<K, S> accumulator) {
-			return new CrdtData<>(key, function.merge(accumulator.getState(), nextValue.getState()));
+			long timestamp = Math.max(accumulator.getTimestamp(), nextValue.getTimestamp());
+			S merged = function.merge(accumulator.getState(), accumulator.getTimestamp(), nextValue.getState(), nextValue.getTimestamp());
+			return new CrdtData<>(key, timestamp, merged);
 		}
 
 		@Override

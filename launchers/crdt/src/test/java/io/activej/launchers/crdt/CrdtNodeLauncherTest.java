@@ -1,8 +1,8 @@
 package io.activej.launchers.crdt;
 
+import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
-import io.activej.crdt.util.TimestampContainer;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.LocalActiveFs;
@@ -12,7 +12,6 @@ import io.activej.launchers.crdt.CrdtNodeLogicModule.Cluster;
 import io.activej.launchers.crdt.CrdtNodeLogicModule.InMemory;
 import io.activej.launchers.crdt.CrdtNodeLogicModule.Persistent;
 import io.activej.test.rules.ByteBufRule;
-import io.activej.types.TypeT;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -29,31 +28,30 @@ public class CrdtNodeLauncherTest {
 
 	@Test
 	public void testInjector() {
-		new CrdtNodeLauncher<String, TimestampContainer<Integer>>() {
+		new CrdtNodeLauncher<String, Integer>() {
 
 			@Inject
 			@InMemory
-			CrdtStorage<String, TimestampContainer<Integer>> inMemory;
+			CrdtStorage<String, Integer> inMemory;
 
 			@Inject
 			@Persistent
-			CrdtStorage<String, TimestampContainer<Integer>> persistent;
+			CrdtStorage<String, Integer> persistent;
 
 			@Inject
 			@Cluster
-			CrdtStorage<String, TimestampContainer<Integer>> cluster;
+			CrdtStorage<String, Integer> cluster;
 
 			@Override
-			protected CrdtNodeLogicModule<String, TimestampContainer<Integer>> getBusinessLogicModule() {
-				return new CrdtNodeLogicModule<String, TimestampContainer<Integer>>() {
+			protected CrdtNodeLogicModule<String, Integer> getBusinessLogicModule() {
+				return new CrdtNodeLogicModule<String, Integer>() {
 					@Provides
-					CrdtDescriptor<String, TimestampContainer<Integer>> descriptor() {
+					CrdtDescriptor<String, Integer> descriptor() {
 						return new CrdtDescriptor<>(
-								TimestampContainer.createCrdtFunction(Integer::max),
-								new CrdtDataSerializer<>(UTF8_SERIALIZER,
-										TimestampContainer.createSerializer(INT_SERIALIZER)),
+								CrdtFunction.ignoringTimestamp(Integer::max),
+								new CrdtDataSerializer<>(UTF8_SERIALIZER, INT_SERIALIZER),
 								String.class,
-								new TypeT<TimestampContainer<Integer>>() {}.getType());
+								Integer.class);
 					}
 
 					@Provides

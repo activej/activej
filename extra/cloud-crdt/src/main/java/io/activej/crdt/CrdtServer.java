@@ -52,14 +52,14 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer
 
 	private final CrdtStorage<K, S> storage;
 	private final CrdtDataSerializer<K, S> serializer;
-	private final BinarySerializer<K> keySerializer;
+	private final BinarySerializer<CrdtTombstone<K>> tombstoneSerializer;
 
 	private CrdtServer(Eventloop eventloop, CrdtStorage<K, S> storage, CrdtDataSerializer<K, S> serializer) {
 		super(eventloop);
 		this.storage = storage;
 		this.serializer = serializer;
 
-		keySerializer = serializer.getKeySerializer();
+		tombstoneSerializer = serializer.getTombstoneSerializer();
 	}
 
 	public static <K extends Comparable<K>, S> CrdtServer<K, S> create(Eventloop eventloop, CrdtStorage<K, S> storage, CrdtDataSerializer<K, S> serializer) {
@@ -87,7 +87,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer
 					}
 					if (msg == CrdtMessages.REMOVE) {
 						return messaging.receiveBinaryStream()
-								.transformWith(ChannelDeserializer.create(keySerializer))
+								.transformWith(ChannelDeserializer.create(tombstoneSerializer))
 								.streamTo(StreamConsumer.ofPromise(storage.remove()))
 								.then(() -> messaging.send(CrdtResponses.REMOVE_FINISHED))
 								.then(messaging::sendEndOfStream)

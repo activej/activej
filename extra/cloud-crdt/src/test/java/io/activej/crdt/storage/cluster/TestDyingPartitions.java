@@ -2,19 +2,20 @@ package io.activej.crdt.storage.cluster;
 
 import io.activej.async.process.AsyncCloseable;
 import io.activej.crdt.CrdtData;
+import io.activej.crdt.CrdtException;
 import io.activej.crdt.CrdtServer;
 import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.crdt.util.CrdtDataSerializer;
-import io.activej.crdt.util.TimestampContainer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.net.AbstractServer;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -23,18 +24,22 @@ import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.util.*;
 
+import static io.activej.crdt.function.CrdtFunction.ignoringTimestamp;
 import static io.activej.promise.TestUtils.await;
+import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
 import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
 import static io.activej.test.TestUtils.getFreePort;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 public final class TestDyingPartitions {
 	private static final int SERVER_COUNT = 5;
 	private static final int REPLICATION_COUNT = 3;
-	private static final CrdtFunction<TimestampContainer<Integer>> CRDT_FUNCTION = TimestampContainer.createCrdtFunction(Integer::max);
-	private static final CrdtDataSerializer<String, TimestampContainer<Integer>> SERIALIZER = new CrdtDataSerializer<>(UTF8_SERIALIZER, TimestampContainer.createSerializer(INT_SERIALIZER));
+	private static final CrdtFunction<Integer> CRDT_FUNCTION = ignoringTimestamp(Integer::max);
+	private static final CrdtDataSerializer<String, Integer> SERIALIZER = new CrdtDataSerializer<>(UTF8_SERIALIZER, INT_SERIALIZER);
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -43,75 +48,75 @@ public final class TestDyingPartitions {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	private Map<Integer, AbstractServer<?>> servers;
-	private Map<Integer, CrdtStorageMap<String, TimestampContainer<Integer>>> storages;
-	private CrdtStorageCluster<String, TimestampContainer<Integer>, String> cluster;
+	private CrdtStorageCluster<String, Integer, String> cluster;
 
 	@Before
 	public void setUp() throws Exception {
 		servers = new LinkedHashMap<>();
-		storages = new LinkedHashMap<>();
 
-		Map<String, CrdtStorage<String, TimestampContainer<Integer>>> clients = new HashMap<>();
+		Map<String, CrdtStorage<String, Integer>> clients = new HashMap<>();
 
 		for (int i = 0; i < SERVER_COUNT; i++) {
 			int port = getFreePort();
 			Eventloop eventloop = Eventloop.create();
-			CrdtStorageMap<String, TimestampContainer<Integer>> storage = CrdtStorageMap.create(eventloop, CRDT_FUNCTION);
+			CrdtStorageMap<String, Integer> storage = CrdtStorageMap.create(eventloop, CRDT_FUNCTION);
 			InetSocketAddress address = new InetSocketAddress(port);
-			CrdtServer<String, TimestampContainer<Integer>> server = CrdtServer.create(eventloop, storage, SERIALIZER);
-			server.withListenAddresses(address).listen();
+			CrdtServer<String, Integer> server = CrdtServer.create(eventloop, storage, SERIALIZER)
+					.withListenAddresses(address);
+			server.listen();
 			assertNull(servers.put(port, server));
-			assertNull(storages.put(port, storage));
 			new Thread(eventloop).start();
 
 			clients.put("server_" + i, CrdtStorageClient.create(eventloop, address, SERIALIZER));
 		}
 
-		DiscoveryService<String, TimestampContainer<Integer>, String> discoveryService = DiscoveryService.constant(clients);
-		CrdtPartitions<String, TimestampContainer<Integer>, String> partitions = CrdtPartitions.create(Eventloop.getCurrentEventloop(), discoveryService);
-		await(partitions.start());
-		cluster = CrdtStorageCluster.create(partitions, CRDT_FUNCTION)
-				.withReplicationCount(REPLICATION_COUNT);
+		cluster = CrdtStorageCluster.create(Eventloop.getCurrentEventloop(),
+				DiscoveryService.of(
+						RendezvousPartitionScheme.<String>create()
+								.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet()).withReplicas(REPLICATION_COUNT).withRepartition(true))
+								.withCrdtProvider(clients::get)),
+				CRDT_FUNCTION);
+		await(cluster.start());
 	}
 
-	@Test
-	public void testUploadWithDyingPartitions() {
-		List<CrdtData<String, TimestampContainer<Integer>>> data = new ArrayList<>();
-		for (int i = 0; i < 100_000; i++) {
-			data.add(new CrdtData<>(String.valueOf(i), TimestampContainer.now(i + 1)));
-		}
-
-		await(StreamSupplier.ofIterator(data.iterator())
-				.streamTo(StreamConsumer.ofPromise(cluster.upload()
-						.whenResult(this::shutdown2Servers))));
-
-		assertEquals(2, cluster.getPartitions().getDeadPartitions().size());
-
-		Set<CrdtData<String, TimestampContainer<Integer>>> result = new HashSet<>();
-		for (CrdtStorageMap<String, TimestampContainer<Integer>> storage : storages.values()) {
-			storage.iterator().forEachRemaining(result::add);
-		}
-
-		assertEquals(new HashSet<>(data), result);
+	@After
+	public void tearDown() {
 		shutdownAllEventloops();
 	}
 
 	@Test
+	public void testUploadWithDyingPartitions() {
+		List<CrdtData<String, Integer>> data = new ArrayList<>();
+		long now = Eventloop.getCurrentEventloop().currentTimeMillis();
+		for (int i = 0; i < 100_000; i++) {
+			data.add(new CrdtData<>(String.valueOf(i), now, i + 1));
+		}
+
+		Exception exception = awaitException(StreamSupplier.ofIterator(data.iterator())
+				.streamTo(StreamConsumer.ofPromise(cluster.upload()
+						.whenResult(this::shutdown2Servers))));
+
+		assertThat(exception, instanceOf(CrdtException.class));
+		assertEquals("Upload failed", exception.getMessage());
+	}
+
+	@Test
 	public void testDownloadWithDyingPartitions() {
-		List<CrdtData<String, TimestampContainer<Integer>>> data = new ArrayList<>();
+		List<CrdtData<String, Integer>> data = new ArrayList<>();
+		long now = Eventloop.getCurrentEventloop().currentTimeMillis();
 		for (int i = 0; i < 500_000; i++) {
-			data.add(new CrdtData<>(String.valueOf(i), TimestampContainer.now(i + 1)));
+			data.add(new CrdtData<>(String.valueOf(i), now, i + 1));
 		}
 
 		await(StreamSupplier.ofIterator(data.iterator())
 				.streamTo(StreamConsumer.ofPromise(cluster.upload())));
 
-		List<CrdtData<String, TimestampContainer<Integer>>> downloaded = await(cluster.download()
+		Exception exception = awaitException(cluster.download()
 				.whenResult(this::shutdown2Servers)
 				.then(StreamSupplier::toList));
 
-		assertEquals(new HashSet<>(data), new HashSet<>(downloaded));
-		shutdownAllEventloops();
+		assertThat(exception, instanceOf(CrdtException.class));
+		assertEquals("Download failed", exception.getMessage());
 	}
 
 	@SuppressWarnings("ConstantConditions")

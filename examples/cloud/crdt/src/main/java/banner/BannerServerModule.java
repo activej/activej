@@ -48,15 +48,15 @@ public class BannerServerModule extends AbstractModule {
 	}
 
 	@Provides
-	CrdtMap<Long, GSet<Integer>> map(Eventloop eventloop, CrdtFunction<GSet<Integer>> function, CrdtStorage<Long, GSet<Integer>> storage) {
-		return new JavaCrdtMap<>(eventloop, function, storage);
+	CrdtMap<Long, GSet<Integer>> map(Eventloop eventloop, CrdtStorage<Long, GSet<Integer>> storage) {
+		return new JavaCrdtMap<>(eventloop, GSet::merge, storage);
 	}
 
 	@Provides
 	CrdtFunction<GSet<Integer>> function() {
 		return new CrdtFunction<GSet<Integer>>() {
 			@Override
-			public GSet<Integer> merge(GSet<Integer> first, GSet<Integer> second) {
+			public GSet<Integer> merge(GSet<Integer> first, long firstTimestamp, GSet<Integer> second, long secondTimestamp) {
 				return first.merge(second);
 			}
 

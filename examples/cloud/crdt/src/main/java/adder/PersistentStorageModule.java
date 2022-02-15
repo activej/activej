@@ -17,6 +17,7 @@ import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
+import io.activej.launchers.crdt.Local;
 
 import java.nio.file.Path;
 import java.time.Duration;
@@ -26,13 +27,12 @@ import java.util.concurrent.Executors;
 import static io.activej.async.service.EventloopTaskScheduler.Schedule.ofInterval;
 import static io.activej.config.converter.ConfigConverters.ofEventloopTaskSchedule;
 import static io.activej.config.converter.ConfigConverters.ofPath;
-import static io.activej.serializer.BinarySerializers.LONG_SERIALIZER;
 
 public final class PersistentStorageModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		bind(new Key<CrdtStorage<Long, DetailedSumsCrdtState>>() {})
+		bind(new Key<CrdtStorage<Long, DetailedSumsCrdtState>>(Local.class) {})
 				.to(new Key<CrdtStorageFs<Long, DetailedSumsCrdtState>>() {});
 	}
 
@@ -82,17 +82,12 @@ public final class PersistentStorageModule extends AbstractModule {
 	}
 
 	@Provides
-	CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer() {
-		return new CrdtDataSerializer<>(LONG_SERIALIZER, DetailedSumsCrdtState.SERIALIZER);
-	}
-
-	@Provides
 	@Named("consolidate")
 	@Eager
 	EventloopTaskScheduler consolidateScheduler(Eventloop eventloop, CrdtStorageFs<Long, DetailedSumsCrdtState> storageFs, Config config) {
 		return EventloopTaskScheduler.create(eventloop, storageFs::consolidate)
 				.withSchedule(config.get(ofEventloopTaskSchedule(), "consolidate.schedule", ofInterval(Duration.ofMinutes(3))))
-				.withInitialDelay(Duration.ofMinutes(3));
+				.withInitialDelay(Duration.ofSeconds(10));
 	}
 
 }

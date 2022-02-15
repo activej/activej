@@ -21,18 +21,25 @@ import io.activej.rpc.client.RpcClientConnectionPool;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.net.InetSocketAddress;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 public final class RpcStrategyRoundRobin implements RpcStrategy {
-	private final RpcStrategyList list;
+	private final List<RpcStrategy> list;
 	private final int minActiveSubStrategies;
 
-	private RpcStrategyRoundRobin(RpcStrategyList list, int minActiveSubStrategies) {
+	private RpcStrategyRoundRobin(List<RpcStrategy> list, int minActiveSubStrategies) {
 		this.list = list;
 		this.minActiveSubStrategies = minActiveSubStrategies;
 	}
 
-	public static RpcStrategyRoundRobin create(RpcStrategyList list) {
+	public static RpcStrategyRoundRobin create(RpcStrategy... list) {
+		return create(Arrays.asList(list));
+	}
+
+	public static RpcStrategyRoundRobin create(List<RpcStrategy> list) {
 		return new RpcStrategyRoundRobin(list, 0);
 	}
 
@@ -41,13 +48,13 @@ public final class RpcStrategyRoundRobin implements RpcStrategy {
 	}
 
 	@Override
-	public DiscoveryService getDiscoveryService() {
-		return list.getDiscoveryService();
+	public Set<InetSocketAddress> getAddresses() {
+		return Utils.getAddresses(list);
 	}
 
 	@Override
 	public @Nullable RpcSender createSender(RpcClientConnectionPool pool) {
-		List<RpcSender> subSenders = list.listOfSenders(pool);
+		List<RpcSender> subSenders = Utils.listOfSenders(list, pool);
 		if (subSenders.size() < minActiveSubStrategies)
 			return null;
 		if (subSenders.isEmpty())

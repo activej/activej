@@ -1,9 +1,11 @@
 import io.activej.crdt.CrdtData;
+import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.LWWSet;
 import io.activej.crdt.storage.CrdtStorage;
-import io.activej.crdt.storage.cluster.CrdtPartitions;
 import io.activej.crdt.storage.cluster.CrdtStorageCluster;
 import io.activej.crdt.storage.cluster.DiscoveryService;
+import io.activej.crdt.storage.cluster.RendezvousPartitionGroup;
+import io.activej.crdt.storage.cluster.RendezvousPartitionScheme;
 import io.activej.crdt.storage.local.CrdtStorageFs;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.datastream.StreamConsumer;
@@ -53,10 +55,12 @@ public final class CrdtClusterExample {
 		// create a cluster with string keys, string partition ids,
 		// and with replication count of 5 meaning that uploading items to the
 		// cluster will make 5 copies of them across known partitions
-		DiscoveryService<String, LWWSet<String>, String> discoveryService = DiscoveryService.constant(clients);
-		CrdtPartitions<String, LWWSet<String>, String> partitions = CrdtPartitions.create(eventloop, discoveryService);
-		CrdtStorageCluster<String, LWWSet<String>, String> cluster = CrdtStorageCluster.create(partitions)
-				.withReplicationCount(5);
+		CrdtStorageCluster<String, LWWSet<String>, String> cluster = CrdtStorageCluster.<String, LWWSet<String>, String>create(
+				eventloop,
+				DiscoveryService.of(RendezvousPartitionScheme.<String>create()
+						.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet())
+								.withReplicas(5))),
+				CrdtFunction.ofCrdtType());
 
 		//[END REGION_1]
 		// Here we will prepopulate two partitions with some sets of items
@@ -75,11 +79,11 @@ public final class CrdtClusterExample {
 
 		//[START REGION_2]
 		// sets on partition3
-		CrdtData<String, LWWSet<String>> firstOn3 = new CrdtData<>("first", LWWSet.of("#1", "#2", "#3", "#4"));
-		CrdtData<String, LWWSet<String>> secondOn3 = new CrdtData<>("second", LWWSet.of("#3", "#4", "#5", "#6"));
+		CrdtData<String, LWWSet<String>> firstOn3 = new CrdtData<>("first", System.currentTimeMillis(), LWWSet.of("#1", "#2", "#3", "#4"));
+		CrdtData<String, LWWSet<String>> secondOn3 = new CrdtData<>("second", System.currentTimeMillis(), LWWSet.of("#3", "#4", "#5", "#6"));
 
 		// sets on partition6
-		CrdtData<String, LWWSet<String>> firstOn6 = new CrdtData<>("first", LWWSet.of("#3", "#4", "#5", "#6"));
+		CrdtData<String, LWWSet<String>> firstOn6 = new CrdtData<>("first", System.currentTimeMillis(), LWWSet.of("#3", "#4", "#5", "#6"));
 
 		// current implementation of LWWSet depends on system time
 		// so to make the below removes with a higher timestamp, we wait for just a bit
@@ -92,7 +96,7 @@ public final class CrdtClusterExample {
 		LWWSet<String> set = LWWSet.of("#2", "#4");
 		set.remove("#5");
 		set.remove("#6");
-		CrdtData<String, LWWSet<String>> secondOn6 = new CrdtData<>("second", set);
+		CrdtData<String, LWWSet<String>> secondOn6 = new CrdtData<>("second", System.currentTimeMillis(), set);
 		//[END REGION_2]
 
 		//[START REGION_3]
@@ -107,7 +111,7 @@ public final class CrdtClusterExample {
 					return Promises.all(uploadTo3, uploadTo6);
 				})
 				// and then download items from the cluster, and wait for result
-				.then(partitions::start)
+				.then(cluster::start)
 				.then(() -> cluster.download())
 				// also collecting it to list
 				.then(StreamSupplier::toList)

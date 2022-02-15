@@ -74,7 +74,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	private final Eventloop eventloop;
 	private final InetSocketAddress address;
 	private final CrdtDataSerializer<K, S> serializer;
-	private final BinarySerializer<K> keySerializer;
+	private final BinarySerializer<CrdtTombstone<K>> tombstoneSerializer;
 
 	private long connectTimeoutMillis = DEFAULT_CONNECT_TIMEOUT.toMillis();
 	private SocketSettings socketSettings = DEFAULT_SOCKET_SETTINGS;
@@ -86,8 +86,8 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	private final StreamStatsDetailed<CrdtData<K, S>> uploadStatsDetailed = StreamStats.detailed();
 	private final StreamStatsBasic<CrdtData<K, S>> downloadStats = StreamStats.basic();
 	private final StreamStatsDetailed<CrdtData<K, S>> downloadStatsDetailed = StreamStats.detailed();
-	private final StreamStatsBasic<K> removeStats = StreamStats.basic();
-	private final StreamStatsDetailed<K> removeStatsDetailed = StreamStats.detailed();
+	private final StreamStatsBasic<CrdtTombstone<K>> removeStats = StreamStats.basic();
+	private final StreamStatsDetailed<CrdtTombstone<K>> removeStatsDetailed = StreamStats.detailed();
 	// endregion
 
 	//region creators
@@ -96,7 +96,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 		this.address = address;
 		this.serializer = serializer;
 
-		keySerializer = serializer.getKeySerializer();
+		tombstoneSerializer = serializer.getTombstoneSerializer();
 	}
 
 	public static <K extends Comparable<K>, S> CrdtStorageClient<K, S> create(Eventloop eventloop, InetSocketAddress address, CrdtDataSerializer<K, S> serializer) {
@@ -171,7 +171,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	}
 
 	@Override
-	public Promise<StreamConsumer<K>> remove() {
+	public Promise<StreamConsumer<CrdtTombstone<K>>> remove() {
 		return connect()
 				.then(messaging -> messaging.send(CrdtMessages.REMOVE)
 						.mapException(e -> new CrdtException("Failed to send 'Remove' message", e))
@@ -181,9 +181,9 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 											.then(messaging::receive)
 											.whenResult(simpleHandlerFn(REMOVE_FINISHED))
 											.toVoid());
-							return StreamConsumer.<K>ofSupplier(supplier ->
+							return StreamConsumer.<CrdtTombstone<K>>ofSupplier(supplier ->
 											supplier.transformWith(detailedStats ? removeStatsDetailed : removeStats)
-													.transformWith(ChannelSerializer.create(keySerializer))
+													.transformWith(ChannelSerializer.create(tombstoneSerializer))
 													.streamTo(consumer))
 									.withAcknowledgement(ack -> ack
 											.mapException(e -> new CrdtException("Remove operation failed", e)));

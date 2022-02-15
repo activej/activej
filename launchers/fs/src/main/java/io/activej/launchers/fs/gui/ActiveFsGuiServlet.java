@@ -35,6 +35,7 @@ import io.activej.promise.Promise;
 import java.util.*;
 
 import static io.activej.common.Utils.mapOf;
+import static io.activej.common.Utils.not;
 import static io.activej.fs.http.FsCommand.DOWNLOAD;
 import static io.activej.fs.http.FsCommand.UPLOAD;
 import static io.activej.http.ContentTypes.HTML_UTF_8;
@@ -136,7 +137,7 @@ public final class ActiveFsGuiServlet implements WithInitializer<ActiveFsGuiServ
 		Ref<String> fullPath = new Ref<>("");
 		return Arrays.stream(dir.split("/+"))
 				.map(String::trim)
-				.filter(s -> !s.isEmpty())
+				.filter(not(String::isEmpty))
 				.map(pathPart -> new Dir(pathPart, fullPath.value += (fullPath.value.isEmpty() ? "" : '/') + pathPart))
 				.collect(toList());
 	}

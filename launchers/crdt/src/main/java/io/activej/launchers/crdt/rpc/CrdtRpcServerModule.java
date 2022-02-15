@@ -21,6 +21,7 @@ import io.activej.config.Config;
 import io.activej.crdt.wal.WriteAheadLog;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Eager;
+import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.rpc.server.RpcRequestHandler;
@@ -61,7 +62,7 @@ public abstract class CrdtRpcServerModule<K extends Comparable<K>, S> extends Ab
 	@SuppressWarnings("unchecked")
 	RpcServer server(Eventloop eventloop, Map<Class<?>, RpcRequestHandler<?, ?>> handlers, Config config) {
 		RpcServer server = RpcServer.create(eventloop)
-				.withListenAddress(config.get(ofInetSocketAddress(), "listenAddresses"))
+				.withListenAddress(config.get(ofInetSocketAddress(), "rpc.server.listenAddresses"))
 				.withMessageTypes(getMessageTypes());
 		for (Map.Entry<Class<?>, RpcRequestHandler<?, ?>> entry : handlers.entrySet()) {
 			server.withHandler((Class<Object>) entry.getKey(), (RpcRequestHandler<Object, Object>) entry.getValue());
@@ -71,6 +72,7 @@ public abstract class CrdtRpcServerModule<K extends Comparable<K>, S> extends Ab
 
 	@Provides
 	@Eager
+	@Named("WAL flush")
 	EventloopTaskScheduler walFlushScheduler(Eventloop eventloop, WriteAheadLog<K, S> wal, Config config) {
 		return EventloopTaskScheduler.create(eventloop, wal::flush)
 				.withSchedule(config.get(ofEventloopTaskSchedule(), "flush.schedule", ofInterval(Duration.ofMinutes(1))))

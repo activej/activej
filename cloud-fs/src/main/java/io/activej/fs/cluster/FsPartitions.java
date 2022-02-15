@@ -18,6 +18,7 @@ package io.activej.fs.cluster;
 
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncRunnables;
+import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.EventloopService;
 import io.activej.common.function.ConsumerEx;
 import io.activej.common.initializer.WithInitializer;
@@ -200,18 +201,14 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 
 	@Override
 	public @NotNull Promise<?> start() {
-		return Promise.ofCallback(cb ->
-						discoveryService.discover(null, (result, e) -> {
-							if (e == null) {
-								this.partitions.putAll(result);
-								this.alivePartitions.putAll(result);
-								checkAllPartitions()
-										.run(cb);
-							} else {
-								cb.setException(e);
-							}
-						}))
-				.whenResult(this::rediscover);
+		AsyncSupplier<Map<Object, ActiveFs>> discoverySupplier = discoveryService.supplier();
+		return discoverySupplier.get()
+				.whenResult(result -> {
+					this.partitions.putAll(result);
+					this.alivePartitions.putAll(result);
+					checkAllPartitions()
+							.whenComplete(() -> rediscover(discoverySupplier));
+				});
 	}
 
 	@Override
@@ -224,17 +221,17 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 		return "FsPartitions{partitions=" + partitions + ", deadPartitions=" + deadPartitions + '}';
 	}
 
-	private void rediscover() {
-		discoveryService.discover(partitions, (result, e) -> {
-			if (e == null) {
-				updatePartitions(result);
-				checkAllPartitions()
-						.whenResult(this::rediscover);
-			} else {
-				logger.warn("Could not discover partitions", e);
-				eventloop.delayBackground(Duration.ofSeconds(1), this::rediscover);
-			}
-		});
+	private void rediscover(AsyncSupplier<Map<Object, ActiveFs>> discoverySupplier) {
+		discoverySupplier.get()
+				.whenResult(result -> {
+					updatePartitions(result);
+					checkAllPartitions()
+							.whenComplete(() -> rediscover(discoverySupplier));
+				})
+				.whenException(e -> {
+					logger.warn("Could not discover partitions", e);
+					eventloop.delayBackground(Duration.ofSeconds(1), () -> rediscover(discoverySupplier));
+				});
 	}
 
 	private void updatePartitions(Map<Object, ActiveFs> newPartitions) {

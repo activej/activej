@@ -172,7 +172,7 @@ public final class Try<T> {
 	 * Returns a result of this {@link Try}, possibly {@code null}
 	 */
 	@Contract(pure = true)
-	public @Nullable T get() {
+	public T get() {
 		return result;
 	}
 

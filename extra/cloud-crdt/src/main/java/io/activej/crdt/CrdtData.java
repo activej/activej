@@ -16,26 +16,22 @@
 
 package io.activej.crdt;
 
-public final class CrdtData<K extends Comparable<K>, S> implements Comparable<CrdtData<K, S>> {
-	private final K key;
+public final class CrdtData<K extends Comparable<K>, S> extends CrdtEntity<K> {
+	private final long timestamp;
 	private final S state;
 
-	public CrdtData(K key, S state) {
-		this.key = key;
+	public CrdtData(K key, long timestamp, S state) {
+		super(key);
+		this.timestamp = timestamp;
 		this.state = state;
 	}
 
-	public K getKey() {
-		return key;
+	public long getTimestamp() {
+		return timestamp;
 	}
 
 	public S getState() {
 		return state;
-	}
-
-	@Override
-	public int compareTo(CrdtData<K, S> o) {
-		return key.compareTo(o.key);
 	}
 
 	@Override
@@ -49,16 +45,19 @@ public final class CrdtData<K extends Comparable<K>, S> implements Comparable<Cr
 
 		CrdtData<?, ?> crdtData = (CrdtData<?, ?>) o;
 
-		return key.equals(crdtData.key) && state.equals(crdtData.state);
+		return key.equals(crdtData.key) && state.equals(crdtData.state) && timestamp == crdtData.timestamp;
 	}
 
 	@Override
 	public int hashCode() {
-		return 31 * key.hashCode() + state.hashCode();
+		int result = key.hashCode();
+		result = 31 * result + (int) (timestamp ^ (timestamp >>> 32));
+		result = 31 * result + state.hashCode();
+		return result;
 	}
 
 	@Override
 	public String toString() {
-		return "CrdtData{key=" + key + ", state=" + state + '}';
+		return "CrdtData{key=" + key + ", timestamp=" + timestamp + ", state=" + state + '}';
 	}
 }

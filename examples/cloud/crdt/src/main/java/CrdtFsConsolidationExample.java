@@ -2,7 +2,6 @@ import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.local.CrdtStorageFs;
 import io.activej.crdt.util.CrdtDataSerializer;
-import io.activej.crdt.util.TimestampContainer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
@@ -15,7 +14,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
@@ -32,26 +30,26 @@ public final class CrdtFsConsolidationExample {
 		return res;
 	}
 
-	public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
+	public static void main(String[] args) throws IOException {
 		Eventloop eventloop = Eventloop.create().withCurrentThread();
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 
 		//[START REGION_1]
-		// create our storage dir and an fs client which operates on that dir
+		// create our storage dir and an FS client which operates on that dir
 		Path storage = Files.createTempDirectory("storage");
 		LocalActiveFs fsClient = LocalActiveFs.create(eventloop, executor, storage);
 
 		// our item is a set of integers, so we create a CRDT function for it
 		// also each CRDT item needs to have a timestamp, so we wrap the sets
 		// and the function using the TimestampContainer
-		CrdtFunction<TimestampContainer<Set<Integer>>> crdtFunction = TimestampContainer.createCrdtFunction(CrdtFsConsolidationExample::union);
+		CrdtFunction<Set<Integer>> crdtFunction = CrdtFunction.ignoringTimestamp(CrdtFsConsolidationExample::union);
 
 		// same with serializer for the timestamp container of the set of integers
-		CrdtDataSerializer<String, TimestampContainer<Set<Integer>>> serializer =
-				new CrdtDataSerializer<>(UTF8_SERIALIZER, TimestampContainer.createSerializer(ofSet(INT_SERIALIZER)));
+		CrdtDataSerializer<String, Set<Integer>> serializer =
+				new CrdtDataSerializer<>(UTF8_SERIALIZER, ofSet(INT_SERIALIZER));
 
 		// create an FS-based CRDT client
-		CrdtStorageFs<String, TimestampContainer<Set<Integer>>> client =
+		CrdtStorageFs<String, Set<Integer>> client =
 				CrdtStorageFs.create(eventloop, fsClient, serializer, crdtFunction);
 		//[END REGION_1]
 
@@ -60,22 +58,24 @@ public final class CrdtFsConsolidationExample {
 				.then(() -> {
 					//[START REGION_2]
 					// then upload two streams of items to it in parallel
+					long timestamp = Eventloop.getCurrentEventloop().currentTimeMillis();
 					Promise<Void> firstUpload =
 							StreamSupplier.ofStream(Stream.of(
-											new CrdtData<>("1_test_1", TimestampContainer.now(setOf(1, 2, 3))),
-											new CrdtData<>("1_test_2", TimestampContainer.now(setOf(2, 3, 7))),
-											new CrdtData<>("1_test_3", TimestampContainer.now(setOf(78, 2, 3))),
-											new CrdtData<>("12_test_1", TimestampContainer.now(setOf(123, 124, 125))),
-											new CrdtData<>("12_test_2", TimestampContainer.now(setOf(12)))).sorted())
+											new CrdtData<>("1_test_1", timestamp, setOf(1, 2, 3)),
+											new CrdtData<>("1_test_2", timestamp, setOf(2, 3, 7)),
+											new CrdtData<>("1_test_3", timestamp, setOf(78, 2, 3)),
+											new CrdtData<>("12_test_1", timestamp, setOf(123, 124, 125)),
+											new CrdtData<>("12_test_2", timestamp, setOf(12))).sorted())
 									.streamTo(StreamConsumer.ofPromise(client.upload()));
 
+					timestamp += 100;
 					Promise<Void> secondUpload =
 							StreamSupplier.ofStream(Stream.of(
-											new CrdtData<>("2_test_1", TimestampContainer.now(setOf(1, 2, 3))),
-											new CrdtData<>("2_test_2", TimestampContainer.now(setOf(2, 3, 4))),
-											new CrdtData<>("2_test_3", TimestampContainer.now(setOf(0, 1, 2))),
-											new CrdtData<>("12_test_1", TimestampContainer.now(setOf(123, 542, 125, 2))),
-											new CrdtData<>("12_test_2", TimestampContainer.now(setOf(12, 13)))).sorted())
+											new CrdtData<>("2_test_1", timestamp, setOf(1, 2, 3)),
+											new CrdtData<>("2_test_2", timestamp, setOf(2, 3, 4)),
+											new CrdtData<>("2_test_3", timestamp, setOf(0, 1, 2)),
+											new CrdtData<>("12_test_1", timestamp, setOf(123, 542, 125, 2)),
+											new CrdtData<>("12_test_2", timestamp, setOf(12, 13))).sorted())
 									.streamTo(StreamConsumer.ofPromise(client.upload()));
 					//[END REGION_2]
 

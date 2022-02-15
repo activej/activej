@@ -1,25 +1,31 @@
 package adder;
 
 import adder.AdderCommands.AddRequest;
+import adder.AdderCommands.HasUserId;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
+import io.activej.crdt.storage.cluster.DiscoveryService;
+import io.activej.crdt.storage.cluster.PartitionId;
+import io.activej.crdt.storage.cluster.RendezvousPartitionScheme;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
+import io.activej.inject.module.AbstractModule;
+import io.activej.inject.module.Module;
 import io.activej.launchers.crdt.rpc.CrdtRpcClientLauncher;
+import io.activej.launchers.crdt.rpc.CrdtRpcStrategyService;
 import io.activej.rpc.client.RpcClient;
-import io.activej.rpc.hash.ShardingFunction;
 
-import java.net.InetSocketAddress;
-import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
 import static adder.AdderCommands.GetRequest;
 import static adder.AdderCommands.GetResponse;
 import static adder.AdderServerLauncher.MESSAGE_TYPES;
-import static io.activej.config.converter.ConfigConverters.ofInetSocketAddress;
-import static io.activej.config.converter.ConfigConverters.ofList;
+import static io.activej.common.Checks.checkNotNull;
+import static io.activej.launchers.crdt.ConfigConverters.ofPartitionId;
+import static io.activej.launchers.crdt.ConfigConverters.ofRendezvousPartitionScheme;
+import static io.activej.rpc.client.sender.RpcStrategies.server;
 
 public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 	@Inject
@@ -33,23 +39,35 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 		return MESSAGE_TYPES;
 	}
 
-	@Provides
-	ShardingFunction<?> shardingFunction(Config config) {
-		List<InetSocketAddress> addresses = config.get(ofList(ofInetSocketAddress()), "addresses", Collections.emptyList());
-		if (addresses.isEmpty()) {
-			return $ -> {
-				throw new IllegalStateException();
-			};
-		}
-
-		int shardsCount = addresses.size();
-		return item -> {
-			if (item instanceof AddRequest) {
-				return (int) (((AddRequest) item).getUserId() % shardsCount);
+	@Override
+	protected Module getOverrideModule() {
+		return new AbstractModule() {
+			@Provides
+			RpcClient client(Eventloop eventloop, CrdtRpcStrategyService<Long> strategyService, List<Class<?>> messageTypes) {
+				RpcClient rpcClient = RpcClient.create(eventloop)
+						.withMessageTypes(messageTypes);
+				strategyService.setRpcClient(rpcClient);
+				return rpcClient;
 			}
-			assert item instanceof GetRequest;
-			return (int) (((GetRequest) item).getUserId() % shardsCount);
 		};
+	}
+
+	@Provides
+	DiscoveryService<PartitionId> discoveryService(Config config) {
+		RendezvousPartitionScheme<PartitionId> scheme = config.get(ofRendezvousPartitionScheme(ofPartitionId()), "crdt.cluster")
+				.withPartitionIdGetter(PartitionId::getId)
+				.withRpcProvider(partitionId -> server(checkNotNull(partitionId.getRpcAddress())));
+
+		return DiscoveryService.of(scheme);
+	}
+
+	@Provides
+	CrdtRpcStrategyService<Long> rpcStrategyService(
+			Eventloop eventloop,
+			DiscoveryService<PartitionId> discoveryService
+	) {
+		//noinspection ConstantConditions
+		return CrdtRpcStrategyService.create(eventloop, discoveryService, partitionId -> server(partitionId.getRpcAddress()), AdderClientLauncher::extractKey);
 	}
 
 	@Override
@@ -91,6 +109,11 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 				logger.warn("Invalid input: {}", e.getMessage());
 			}
 		}
+	}
+
+	private static long extractKey(Object request) {
+		if (request instanceof HasUserId) return ((HasUserId) request).getUserId();
+		throw new IllegalArgumentException();
 	}
 
 	public static void main(String[] args) throws Exception {
