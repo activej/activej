@@ -413,22 +413,22 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 	}
 
 	@JmxAttribute
-	public StreamStatsBasic<CrdtData<K, S>> getRepartitionUploadStats() {
+	public StreamStatsBasic getRepartitionUploadStats() {
 		return repartitionUploadStats;
 	}
 
 	@JmxAttribute
-	public StreamStatsDetailed<CrdtData<K, S>> getRepartitionUploadStatsDetailed() {
+	public StreamStatsDetailed getRepartitionUploadStatsDetailed() {
 		return repartitionUploadStatsDetailed;
 	}
 
 	@JmxAttribute
-	public StreamStatsBasic<CrdtTombstone<K>> getRepartitionRemoveStats() {
+	public StreamStatsBasic getRepartitionRemoveStats() {
 		return repartitionRemoveStats;
 	}
 
 	@JmxAttribute
-	public StreamStatsDetailed<CrdtTombstone<K>> getRepartitionRemoveStatsDetailed() {
+	public StreamStatsDetailed getRepartitionRemoveStatsDetailed() {
 		return repartitionRemoveStatsDetailed;
 	}
 
