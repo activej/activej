@@ -16,6 +16,8 @@
 
 package io.activej.crdt.wal;
 
+import io.activej.async.function.AsyncRunnable;
+import io.activej.async.function.AsyncRunnables;
 import io.activej.async.service.EventloopService;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.time.CurrentTimeProvider;
@@ -45,6 +47,8 @@ public class InMemoryWriteAheadLog<K extends Comparable<K>, S> implements WriteA
 	private final Eventloop eventloop;
 	private final CrdtFunction<S> function;
 	private final CrdtStorage<K, S> storage;
+
+	private final AsyncRunnable flush = AsyncRunnables.coalesce(this::doFlush);
 
 	private CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
 
@@ -78,6 +82,10 @@ public class InMemoryWriteAheadLog<K extends Comparable<K>, S> implements WriteA
 
 	@Override
 	public Promise<Void> flush() {
+		return flush.run();
+	}
+
+	private Promise<Void> doFlush() {
 		if (map.isEmpty()) {
 			logger.info("Nothing to flush");
 			return Promise.complete();

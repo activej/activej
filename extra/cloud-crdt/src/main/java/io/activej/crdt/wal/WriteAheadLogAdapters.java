@@ -31,13 +31,13 @@ public final class WriteAheadLogAdapters {
 			@Override
 			public Promise<Void> put(K key, S value) {
 				return super.put(key, value)
-						.then(() -> {
-							if (++count == updatesCount) {
-								count = 0;
-								return flush();
-							}
-							return Promise.complete();
-						});
+						.whenResult($ -> ++count == updatesCount, this::flush);
+			}
+
+			@Override
+			public Promise<Void> flush() {
+				count = 0;
+				return super.flush();
 			}
 		};
 	}
