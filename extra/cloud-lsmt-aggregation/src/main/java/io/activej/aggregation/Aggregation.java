@@ -684,6 +684,6 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 
 	@Override
 	public String toString() {
-		return "{" + getKeyTypes().keySet() + " " + getMeasureTypes().keySet() + '}';
+		return "{" + getKeyTypes().keySet() + " " + getMeasures() + '}';
 	}
 }
