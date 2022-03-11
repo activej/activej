@@ -24,6 +24,7 @@ import com.dslplatform.json.runtime.Settings;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.promise.Promise;
+import io.activej.types.TypeT;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -76,7 +77,14 @@ public final class Utils {
 	}
 
 	public static <T> T fromJson(@NotNull Type manifest, @NotNull ByteBuf buf) throws MalformedDataException {
-		byte[] bytes = buf.getArray();
+		return fromJson(manifest, buf.getArray());
+	}
+
+	public static <T> T fromJson(@NotNull TypeT<T> typeT, byte[] bytes) throws MalformedDataException {
+		return fromJson(typeT.getType(), bytes);
+	}
+
+	public static <T> T fromJson(@NotNull Type manifest, byte[] bytes) throws MalformedDataException {
 		try {
 			//noinspection unchecked
 			JsonReader.ReadObject<T> readObject = (JsonReader.ReadObject<T>) DSL_JSON.tryFindReader(manifest);

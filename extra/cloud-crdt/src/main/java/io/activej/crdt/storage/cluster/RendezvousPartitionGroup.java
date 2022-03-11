@@ -1,5 +1,7 @@
 package io.activej.crdt.storage.cluster;
 
+import com.dslplatform.json.CompiledJson;
+import com.dslplatform.json.JsonAttribute;
 import io.activej.common.initializer.WithInitializer;
 
 import java.util.Set;
@@ -10,7 +12,8 @@ public final class RendezvousPartitionGroup<P> implements WithInitializer<Rendez
 	private boolean repartition;
 	private boolean active;
 
-	private RendezvousPartitionGroup(Set<P> partitionIds, int replicaCount, boolean repartition, boolean active) {
+	@CompiledJson
+	RendezvousPartitionGroup(Set<P> partitionIds, int replicaCount, boolean repartition, boolean active) {
 		this.partitionIds = partitionIds;
 		this.replicaCount = replicaCount;
 		this.repartition = repartition;
@@ -40,6 +43,7 @@ public final class RendezvousPartitionGroup<P> implements WithInitializer<Rendez
 		return this;
 	}
 
+	@JsonAttribute(name = "ids")
 	public Set<P> getPartitionIds() {
 		return partitionIds;
 	}
