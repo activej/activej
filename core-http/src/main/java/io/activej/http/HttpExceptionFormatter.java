@@ -28,7 +28,7 @@ import static io.activej.http.HttpHeaders.*;
  */
 @FunctionalInterface
 public interface HttpExceptionFormatter {
-	String ACTIVEJ_VERSION = "5.1.1-SNAPSHOT";
+	String ACTIVEJ_VERSION = "5.1.2-SNAPSHOT";
 
 	@Language("HTML")
 	String HTTP_ERROR_HTML = "<!doctype html>" +
