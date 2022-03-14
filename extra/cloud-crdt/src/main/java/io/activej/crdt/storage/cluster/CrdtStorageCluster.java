@@ -266,10 +266,12 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 					int sourceIdx = alive.indexOf(sourcePartitionId);
 					assert sourceIdx != -1;
 
+					long now = eventloop.currentTimeMillis();
 					StreamSplitter<CrdtData<K, S>, ?> splitter = StreamSplitter.create(
 							(item, acceptors) -> {
 								boolean sourceInShards = false;
 								int[] shards = sharder.shard(item.getKey());
+								item = new CrdtData<>(item.getKey(), now, item.getState());
 								//noinspection ForLoopReplaceableByForEach
 								for (int i = 0; i < shards.length; i++) {
 									int idx = shards[i];

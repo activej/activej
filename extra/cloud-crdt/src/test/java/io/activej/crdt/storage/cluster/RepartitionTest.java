@@ -1,6 +1,7 @@
 package io.activej.crdt.storage.cluster;
 
 import io.activej.crdt.CrdtData;
+import io.activej.crdt.CrdtEntity;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.datastream.StreamConsumer;
@@ -11,12 +12,16 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 import static io.activej.crdt.function.CrdtFunction.ignoringTimestamp;
 import static io.activej.promise.TestUtils.await;
+import static java.util.stream.Collectors.toMap;
 import static org.junit.Assert.assertEquals;
 
 public final class RepartitionTest {
@@ -29,23 +34,23 @@ public final class RepartitionTest {
 
 	@Test
 	public void test() {
-		CrdtFunction<Integer> crdtFunction = ignoringTimestamp(Integer::max);
+		CrdtFunction<Long> crdtFunction = ignoringTimestamp(Long::max);
 
-		Map<String, CrdtStorageMap<String, Integer>> clients = new LinkedHashMap<>();
+		Map<String, CrdtStorageMap<String, Long>> clients = new LinkedHashMap<>();
 		for (int i = 0; i < 10; i++) {
-			CrdtStorageMap<String, Integer> client = CrdtStorageMap.create(Eventloop.getCurrentEventloop(), crdtFunction);
+			CrdtStorageMap<String, Long> client = CrdtStorageMap.create(Eventloop.getCurrentEventloop(), crdtFunction);
 			clients.put("client_" + i, client);
 		}
 		String localPartitionId = "client_0";
 		long now = Eventloop.getCurrentEventloop().currentTimeMillis();
-		List<CrdtData<String, Integer>> data = IntStream.range(1, 100)
+		List<CrdtData<String, Long>> data = LongStream.range(1, 100)
 				.mapToObj(i -> new CrdtData<>("test" + i, now, i))
 				.collect(Collectors.toList());
 		await(StreamSupplier.ofIterator(data.iterator())
 				.streamTo(StreamConsumer.ofPromise(clients.get(localPartitionId).upload())));
 
 		int replicationCount = 3;
-		CrdtStorageCluster<String, Integer, String> cluster = CrdtStorageCluster.create(Eventloop.getCurrentEventloop(),
+		CrdtStorageCluster<String, Long, String> cluster = CrdtStorageCluster.create(Eventloop.getCurrentEventloop(),
 				DiscoveryService.of(
 						RendezvousPartitionScheme.<String>create()
 								.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet()).withReplicas(replicationCount))
@@ -55,13 +60,24 @@ public final class RepartitionTest {
 
 		await(CrdtRepartitionController.create(cluster, localPartitionId).repartition());
 
-		Map<CrdtData<String, Integer>, Integer> result = new HashMap<>();
+		Map<String, Integer> counts = new HashMap<>();
+		Map<String, Long> states = new HashMap<>();
 
 		clients.values().forEach(v -> v.iterator()
-				.forEachRemaining(x -> result.compute(x, ($, count) -> count == null ? 1 : (count + 1))));
+				.forEachRemaining(x -> {
+					counts.compute(x.getKey(), ($, count) -> count == null ? 1 : (count + 1));
+					states.compute(x.getKey(), ($, state) -> {
+						if (state != null) {
+							assertEquals(state, x.getState());
+						}
+						return x.getState();
+					});
+				}));
 
-		assertEquals(new HashSet<>(data), result.keySet());
-		for (Integer count : result.values()) {
+		Map<String, Long> expectedStates = data.stream().collect(toMap(CrdtEntity::getKey, CrdtData::getState));
+		assertEquals(expectedStates, states);
+
+		for (Integer count : counts.values()) {
 			assertEquals(replicationCount, count.intValue());
 		}
 	}
