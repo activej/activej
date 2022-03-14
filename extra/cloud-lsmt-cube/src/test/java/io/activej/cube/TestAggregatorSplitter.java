@@ -2,6 +2,7 @@ package io.activej.cube;
 
 import io.activej.cube.bean.TestPubRequest;
 import io.activej.cube.bean.TestPubRequest.TestAdvRequest;
+import io.activej.cube.bean.TestPubRequest.TestEnum;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.etl.LogDataConsumerSplitter;
@@ -28,6 +29,7 @@ public class TestAggregatorSplitter extends LogDataConsumerSplitter<TestPubReque
 		public int date;
 		public int hourOfDay;
 		public int pub;
+		public TestEnum testEnum;
 
 		public final long pubRequests = 1;
 
@@ -41,7 +43,7 @@ public class TestAggregatorSplitter extends LogDataConsumerSplitter<TestPubReque
 		}
 	}
 
-	private static final Set<String> PUB_DIMENSIONS = Stream.of("date", "hourOfDay", "pub").collect(toSet());
+	private static final Set<String> PUB_DIMENSIONS = Stream.of("date", "hourOfDay", "pub", "testEnum").collect(toSet());
 	private static final Set<String> PUB_METRICS = singleton("pubRequests");
 	private static final Set<String> ADV_DIMENSIONS = union(PUB_DIMENSIONS, singleton("adv"));
 	private static final Set<String> ADV_METRICS = singleton("advRequests");
