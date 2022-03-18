@@ -22,6 +22,7 @@ import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
 import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public final class TestSimpleCrdt {
 	private CrdtStorageMap<String, Integer> remoteStorage;
@@ -91,5 +92,21 @@ public final class TestSimpleCrdt {
 		assertEquals(2, checkNotNull(localStorage.get("mx")).intValue());
 		assertEquals(5, checkNotNull(localStorage.get("test")).intValue());
 		assertEquals(35, checkNotNull(localStorage.get("only_remote")).intValue());
+	}
+
+	@Test
+	public void testTake() {
+		CrdtStorageMap<String, Integer> localStorage = CrdtStorageMap.create(getCurrentEventloop(), ignoringTimestamp(Integer::max));
+
+		await(client.take().then(supplier -> supplier
+				.streamTo(StreamConsumer.ofConsumer(localStorage::put))
+				.then(() -> client.download().then(StreamSupplier::toList)
+						.whenResult(afterTake -> assertTrue(afterTake.isEmpty())))
+				.whenComplete(server::close)));
+
+		assertEquals(2, checkNotNull(localStorage.get("mx")).intValue());
+		assertEquals(5, checkNotNull(localStorage.get("test")).intValue());
+		assertEquals(35, checkNotNull(localStorage.get("only_remote")).intValue());
+
 	}
 }

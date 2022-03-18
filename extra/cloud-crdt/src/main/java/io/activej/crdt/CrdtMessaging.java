@@ -35,7 +35,9 @@ public final class CrdtMessaging {
 	public enum CrdtMessages implements CrdtMessage {
 		UPLOAD,
 		REMOVE,
-		PING
+		PING,
+		TAKE,
+		TAKE_FINISHED
 	}
 
 	public static final class Download implements CrdtMessage {
@@ -60,7 +62,8 @@ public final class CrdtMessaging {
 		UPLOAD_FINISHED,
 		REMOVE_FINISHED,
 		PONG,
-		DOWNLOAD_STARTED
+		DOWNLOAD_STARTED,
+		TAKE_STARTED
 	}
 
 	public static final class ServerError implements CrdtResponse {

@@ -68,6 +68,8 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 	private final StreamStatsDetailed<CrdtData<K, S>> uploadStatsDetailed = StreamStats.detailed();
 	private final StreamStatsBasic<CrdtData<K, S>> downloadStats = StreamStats.basic();
 	private final StreamStatsDetailed<CrdtData<K, S>> downloadStatsDetailed = StreamStats.detailed();
+	private final StreamStatsBasic<CrdtData<K, S>> takeStats = StreamStats.basic();
+	private final StreamStatsDetailed<CrdtData<K, S>> takeStatsDetailed = StreamStats.detailed();
 	private final StreamStatsBasic<CrdtTombstone<K>> removeStats = StreamStats.basic();
 	private final StreamStatsDetailed<CrdtTombstone<K>> removeStatsDetailed = StreamStats.detailed();
 
@@ -161,25 +163,15 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
-		return execute(currentPartitionScheme, storage -> storage.download(timestamp))
-				.map(map -> {
-					StreamReducer<K, CrdtData<K, S>, CrdtData<K, S>> streamReducer = StreamReducer.create();
-					for (P partitionId : map.keySet()) {
-						map.get(partitionId).streamTo(streamReducer.newInput(
-								CrdtData::getKey,
-								new BinaryAccumulatorReducer<K, CrdtData<K, S>>() {
-									@Override
-									protected CrdtData<K, S> combine(K key, CrdtData<K, S> nextValue, CrdtData<K, S> accumulator) {
-										long timestamp = Math.max(nextValue.getTimestamp(), accumulator.getTimestamp());
-										S merged = crdtFunction.merge(accumulator.getState(), accumulator.getTimestamp(), nextValue.getState(), nextValue.getTimestamp());
-										return new CrdtData<>(key, timestamp, merged);
-									}
-								})
-						);
-					}
-					return streamReducer.getOutput()
-							.transformWith(detailedStats ? downloadStatsDetailed : downloadStats);
-				});
+		return getData(storage -> storage.download(timestamp))
+				.map(supplier -> supplier.transformWith(detailedStats ? downloadStatsDetailed : downloadStats));
+	}
+
+	@Override
+	public Promise<StreamSupplier<CrdtData<K, S>>> take() {
+		return getData(CrdtStorage::take)
+				.map(supplier -> supplier.transformWith(detailedStats ? takeStatsDetailed : takeStats));
+
 	}
 
 	@Override
@@ -335,6 +327,27 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 				.map($ -> map);
 	}
 
+	private Promise<StreamSupplier<CrdtData<K, S>>> getData(AsyncFunction<CrdtStorage<K, S>, StreamSupplier<CrdtData<K, S>>> method) {
+		return execute(currentPartitionScheme, method)
+				.map(map -> {
+					StreamReducer<K, CrdtData<K, S>, CrdtData<K, S>> streamReducer = StreamReducer.create();
+					for (P partitionId : map.keySet()) {
+						map.get(partitionId).streamTo(streamReducer.newInput(
+								CrdtData::getKey,
+								new BinaryAccumulatorReducer<K, CrdtData<K, S>>() {
+									@Override
+									protected CrdtData<K, S> combine(K key, CrdtData<K, S> nextValue, CrdtData<K, S> accumulator) {
+										long timestamp = Math.max(nextValue.getTimestamp(), accumulator.getTimestamp());
+										S merged = crdtFunction.merge(accumulator.getState(), accumulator.getTimestamp(), nextValue.getState(), nextValue.getTimestamp());
+										return new CrdtData<>(key, timestamp, merged);
+									}
+								})
+						);
+					}
+					return streamReducer.getOutput();
+				});
+	}
+
 	private CrdtStorage<K, S> cacheSource(PartitionScheme<P> partitionScheme, P sourcePartitionId) {
 		//noinspection unchecked
 		return crdtStorages.computeIfAbsent(sourcePartitionId,
@@ -402,6 +415,16 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 	@JmxAttribute
 	public StreamStatsDetailed getDownloadStatsDetailed() {
 		return downloadStatsDetailed;
+	}
+
+	@JmxAttribute
+	public StreamStatsBasic getTakeStats() {
+		return takeStats;
+	}
+
+	@JmxAttribute
+	public StreamStatsDetailed getTakeStatsDetailed() {
+		return takeStatsDetailed;
 	}
 
 	@JmxAttribute

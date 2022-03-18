@@ -43,9 +43,12 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.NavigableMap;
-import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.TreeMap;
 import java.util.stream.Stream;
+
+import static io.activej.common.Utils.nullify;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtStorage<K, S>, WithInitializer<CrdtStorageMap<K, S>>, EventloopService, EventloopJmxBeanWithStats {
@@ -54,8 +57,11 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 	private final Eventloop eventloop;
 	private final CrdtFunction<S> function;
 
-	private final NavigableMap<K, CrdtData<K, S>> map = new ConcurrentSkipListMap<>();
-	private final NavigableMap<K, CrdtTombstone<K>> tombstones = new ConcurrentSkipListMap<>();
+	private final NavigableMap<K, CrdtData<K, S>> map = new TreeMap<>();
+	private final NavigableMap<K, CrdtTombstone<K>> tombstones = new TreeMap<>();
+
+	private NavigableMap<K, CrdtData<K, S>> takenMap;
+	private NavigableMap<K, CrdtTombstone<K>> takenTombstones;
 
 	private CrdtFilter<S> filter = $ -> true;
 
@@ -68,6 +74,8 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 	private final StreamStatsDetailed<CrdtData<K, S>> uploadStatsDetailed = StreamStats.detailed();
 	private final StreamStatsBasic<CrdtData<K, S>> downloadStats = StreamStats.basic();
 	private final StreamStatsDetailed<CrdtData<K, S>> downloadStatsDetailed = StreamStats.detailed();
+	private final StreamStatsBasic<CrdtData<K, S>> takeStats = StreamStats.basic();
+	private final StreamStatsDetailed<CrdtData<K, S>> takeStatsDetailed = StreamStats.detailed();
 	private final StreamStatsBasic<CrdtTombstone<K>> removeStats = StreamStats.basic();
 	private final StreamStatsDetailed<CrdtTombstone<K>> removeStatsDetailed = StreamStats.detailed();
 
@@ -122,6 +130,32 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 	}
 
 	@Override
+	public Promise<StreamSupplier<CrdtData<K, S>>> take() {
+		if (takenMap != null) {
+			assert takenTombstones != null;
+			return Promise.ofException(new CrdtException("Data is already being taken"));
+		}
+		takenMap = new TreeMap<>(map);
+		takenTombstones = new TreeMap<>(tombstones);
+		map.clear();
+		tombstones.clear();
+
+		return Promise.of(StreamSupplier.ofIterable(takenMap.values())
+				.transformWith(detailedStats ? takeStatsDetailed : takeStats)
+				.withEndOfStream(eos -> eos
+						.whenResult(() -> {
+							takenMap = null;
+							takenTombstones = null;
+						})
+						.mapException(e -> {
+							takenMap = nullify(takenMap, map -> map.values().forEach(this::doPut));
+							takenTombstones = nullify(takenTombstones, map -> map.values().forEach(this::doRemove));
+
+							return new CrdtException("Error while downloading CRDT data", e);
+						})));
+	}
+
+	@Override
 	public Promise<StreamConsumer<CrdtTombstone<K>>> remove() {
 		StreamConsumerToList<CrdtTombstone<K>> consumer = StreamConsumerToList.create();
 		return Promise.of(consumer.withAcknowledgement(ack -> ack
@@ -146,8 +180,41 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 	}
 
 	private Stream<CrdtData<K, S>> extract(long timestamp) {
+		Map<K, CrdtData<K, S>> map;
+		if (takenMap == null) {
+			map = this.map;
+		} else {
+			map = new TreeMap<>();
+			doMerge(map, this.map);
+			doMerge(map, this.takenMap);
+		}
+
 		return map.values().stream()
 				.filter(data -> data.getTimestamp() >= timestamp);
+	}
+
+	private void doMerge(Map<K, CrdtData<K, S>> to, Map<K, CrdtData<K, S>> from) {
+		assert takenTombstones != null;
+
+		for (Map.Entry<K, CrdtData<K, S>> entry : from.entrySet()) {
+			K key = entry.getKey();
+			CrdtData<K, S> data = entry.getValue();
+
+			CrdtTombstone<K> tombstone = tombstones.get(key);
+			if (tombstone != null && tombstone.getTimestamp() >= data.getTimestamp()) {
+				continue;
+			}
+
+			CrdtTombstone<K> takenTombstone = takenTombstones.get(key);
+			if (takenTombstone != null && takenTombstone.getTimestamp() >= data.getTimestamp()) {
+				continue;
+			}
+
+			to.merge(key, data, (data1, data2) -> {
+				if (data1.getTimestamp() > data2.getTimestamp()) return data1;
+				return data2;
+			});
+		}
 	}
 
 	private void doPut(CrdtData<K, S> data) {
@@ -269,6 +336,16 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 	@JmxAttribute
 	public StreamStatsDetailed getDownloadStatsDetailed() {
 		return downloadStatsDetailed;
+	}
+
+	@JmxAttribute
+	public StreamStatsBasic getTakeStats() {
+		return takeStats;
+	}
+
+	@JmxAttribute
+	public StreamStatsDetailed getTakeStatsDetailed() {
+		return takeStatsDetailed;
 	}
 
 	@JmxAttribute

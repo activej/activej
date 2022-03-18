@@ -26,13 +26,14 @@ import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.eventloop.Eventloop;
 import io.activej.net.AbstractServer;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.promise.Promise;
 import io.activej.serializer.BinarySerializer;
 
 import java.net.InetAddress;
 
 import static io.activej.crdt.CrdtMessaging.*;
-import static io.activej.crdt.CrdtMessaging.CrdtResponses.DOWNLOAD_STARTED;
-import static io.activej.crdt.CrdtMessaging.CrdtResponses.PONG;
+import static io.activej.crdt.CrdtMessaging.CrdtMessages.TAKE_FINISHED;
+import static io.activej.crdt.CrdtMessaging.CrdtResponses.*;
 import static io.activej.crdt.util.Utils.fromJson;
 import static io.activej.crdt.util.Utils.toJson;
 import static io.activej.csp.binary.Utils.nullTerminated;
@@ -80,7 +81,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer
 						return messaging.receiveBinaryStream()
 								.transformWith(ChannelDeserializer.create(serializer))
 								.streamTo(StreamConsumer.ofPromise(storage.upload()))
-								.then(() -> messaging.send(CrdtResponses.UPLOAD_FINISHED))
+								.then(() -> messaging.send(UPLOAD_FINISHED))
 								.then(messaging::sendEndOfStream)
 								.whenResult(messaging::close);
 
@@ -89,7 +90,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer
 						return messaging.receiveBinaryStream()
 								.transformWith(ChannelDeserializer.create(tombstoneSerializer))
 								.streamTo(StreamConsumer.ofPromise(storage.remove()))
-								.then(() -> messaging.send(CrdtResponses.REMOVE_FINISHED))
+								.then(() -> messaging.send(REMOVE_FINISHED))
 								.then(messaging::sendEndOfStream)
 								.whenResult(messaging::close);
 					}
@@ -97,6 +98,21 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer
 						return messaging.send(PONG)
 								.then(messaging::sendEndOfStream)
 								.whenResult(messaging::close);
+					}
+					if (msg == CrdtMessages.TAKE) {
+						return storage.take()
+								.whenResult(() -> messaging.send(TAKE_STARTED))
+								.then(supplier -> supplier
+										.transformWith(ChannelSerializer.create(serializer))
+										.streamTo(messaging.sendBinaryStream()
+												.withAcknowledgement(ack -> ack
+														.then(() -> messaging.receive()
+																.then(takeAck -> {
+																	if (takeAck != TAKE_FINISHED) {
+																		return Promise.ofException(new CrdtException("Received message " + takeAck + " instead of " + TAKE_FINISHED));
+																	}
+																	return Promise.complete();
+																})))));
 					}
 					if (msg instanceof Download) {
 						return storage.download(((Download) msg).getToken())

@@ -47,7 +47,7 @@ import java.net.InetSocketAddress;
 import java.time.Duration;
 
 import static io.activej.crdt.CrdtMessaging.*;
-import static io.activej.crdt.CrdtMessaging.CrdtMessages.PING;
+import static io.activej.crdt.CrdtMessaging.CrdtMessages.*;
 import static io.activej.crdt.CrdtMessaging.CrdtResponses.*;
 import static io.activej.crdt.util.Utils.fromJson;
 import static io.activej.crdt.util.Utils.toJson;
@@ -86,6 +86,8 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	private final StreamStatsDetailed<CrdtData<K, S>> uploadStatsDetailed = StreamStats.detailed();
 	private final StreamStatsBasic<CrdtData<K, S>> downloadStats = StreamStats.basic();
 	private final StreamStatsDetailed<CrdtData<K, S>> downloadStatsDetailed = StreamStats.detailed();
+	private final StreamStatsBasic<CrdtData<K, S>> takeStats = StreamStats.basic();
+	private final StreamStatsDetailed<CrdtData<K, S>> takeStatsDetailed = StreamStats.detailed();
 	private final StreamStatsBasic<CrdtTombstone<K>> removeStats = StreamStats.basic();
 	private final StreamStatsDetailed<CrdtTombstone<K>> removeStatsDetailed = StreamStats.detailed();
 	// endregion
@@ -166,6 +168,34 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 										.withEndOfStream(eos -> eos
 												.then(messaging::sendEndOfStream)
 												.mapException(e -> new CrdtException("Download failed", e))
+												.whenResult(messaging::close)
+												.whenException(messaging::closeEx))));
+	}
+
+	@Override
+	public Promise<StreamSupplier<CrdtData<K, S>>> take() {
+		return connect()
+				.then(messaging -> messaging.send(TAKE)
+						.mapException(e -> new CrdtException("Failed to send 'Take' message", e))
+						.then(() -> messaging.receive()
+								.mapException(e -> new CrdtException("Failed to receive response", e)))
+						.whenResult(response -> {
+							if (response == TAKE_STARTED) {
+								return;
+							}
+							if (response.getClass() == ServerError.class) {
+								throw new CrdtException(((ServerError) response).getMsg());
+							}
+							throw new CrdtException("Received message " + response + " instead of " + TAKE_STARTED);
+						})
+						.map($ ->
+								messaging.receiveBinaryStream()
+										.transformWith(ChannelDeserializer.create(serializer))
+										.transformWith(detailedStats ? takeStatsDetailed : takeStats)
+										.withEndOfStream(eos -> eos
+												.then(() -> messaging.send(TAKE_FINISHED))
+												.then(messaging::sendEndOfStream)
+												.mapException(e -> new CrdtException("Take failed", e))
 												.whenResult(messaging::close)
 												.whenException(messaging::closeEx))));
 	}
@@ -260,6 +290,16 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	@JmxAttribute
 	public StreamStatsDetailed getDownloadStatsDetailed() {
 		return downloadStatsDetailed;
+	}
+
+	@JmxAttribute
+	public StreamStatsBasic getTakeStats() {
+		return takeStats;
+	}
+
+	@JmxAttribute
+	public StreamStatsDetailed getTakeStatsDetailed() {
+		return takeStatsDetailed;
 	}
 
 	@JmxAttribute

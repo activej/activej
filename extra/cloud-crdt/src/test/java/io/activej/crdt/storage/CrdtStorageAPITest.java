@@ -39,6 +39,7 @@ import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
 import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
 public class CrdtStorageAPITest {
@@ -126,7 +127,6 @@ public class CrdtStorageAPITest {
 
 	@Test
 	public void testUploadDownload() {
-
 		await(StreamSupplier.of(
 						new CrdtData<>("test_1", 123, 344),
 						new CrdtData<>("test_2", 123, 24),
@@ -234,4 +234,66 @@ public class CrdtStorageAPITest {
 		System.out.println(list);
 		assertEquals(expected, list);
 	}
+
+	@Test
+	public void testUploadTake() {
+		await(StreamSupplier.of(
+						new CrdtData<>("test_1", 123, 1),
+						new CrdtData<>("test_2", 123, 2),
+						new CrdtData<>("test_3", 123, 4))
+				.streamTo(client.upload()));
+		await(StreamSupplier.of(
+						new CrdtData<>("test_1", 123, 2),
+						new CrdtData<>("test_2", 123, 3),
+						new CrdtData<>("test_3", 123, 2))
+				.streamTo(client.upload()));
+		await(StreamSupplier.of(
+						new CrdtTombstone<>("test_2", 124))
+				.streamTo(StreamConsumer.ofPromise(client.remove())));
+
+		List<CrdtData<String, Integer>> list = await(await(client.take()).toList());
+		assertEquals(Arrays.asList(
+						new CrdtData<>("test_1", 123, 2),
+						new CrdtData<>("test_3", 123, 4)),
+				list);
+
+		assertTrue(await(await(client.download()).toList()).isEmpty());
+	}
+
+	@Test
+	public void testUploadTakeWithAdditionalData() {
+		await(StreamSupplier.of(
+						new CrdtData<>("test_1", 123, 1),
+						new CrdtData<>("test_2", 123, 2),
+						new CrdtData<>("test_3", 123, 4))
+				.streamTo(client.upload()));
+		await(StreamSupplier.of(
+						new CrdtData<>("test_1", 123, 2),
+						new CrdtData<>("test_2", 123, 3),
+						new CrdtData<>("test_3", 123, 2))
+				.streamTo(client.upload()));
+		await(StreamSupplier.of(
+						new CrdtTombstone<>("test_2", 124))
+				.streamTo(StreamConsumer.ofPromise(client.remove())));
+
+		StreamSupplier<CrdtData<String, Integer>> takeSupplier = await(client.take());
+
+		await(StreamSupplier.of(
+						new CrdtData<>("test_1", 234, 10),
+						new CrdtData<>("test_4", 234, 20))
+				.streamTo(client.upload()));
+
+		List<CrdtData<String, Integer>> taken = await(takeSupplier.toList());
+		assertEquals(Arrays.asList(
+						new CrdtData<>("test_1", 123, 2),
+						new CrdtData<>("test_3", 123, 4)),
+				taken);
+
+		List<CrdtData<String, Integer>> afterTake = await(await(client.download()).toList());
+		assertEquals(Arrays.asList(
+						new CrdtData<>("test_1", 234, 10),
+						new CrdtData<>("test_4", 234, 20)),
+				afterTake);
+	}
+
 }

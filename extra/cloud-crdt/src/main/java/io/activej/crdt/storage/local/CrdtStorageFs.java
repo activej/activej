@@ -65,6 +65,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static io.activej.common.Utils.entriesToMap;
 import static io.activej.crdt.util.CrdtDataSerializer.TIMESTAMP_SERIALIZER;
 
 @SuppressWarnings("rawtypes")
@@ -79,6 +80,8 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 	private final CrdtFunction<S> function;
 	private final BinarySerializer<CrdtReducingData<K, S>> serializer;
 
+	private @Nullable Set<String> taken;
+
 	private Supplier<String> namingStrategy = () -> UUID.randomUUID().toString();
 
 	private CrdtFilter<S> filter = $ -> true;
@@ -92,6 +95,8 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 	private final StreamStatsDetailed<CrdtData<K, S>> uploadStatsDetailed = StreamStats.detailed();
 	private final StreamStatsBasic<CrdtData<K, S>> downloadStats = StreamStats.basic();
 	private final StreamStatsDetailed<CrdtData<K, S>> downloadStatsDetailed = StreamStats.detailed();
+	private final StreamStatsBasic<CrdtData<K, S>> takeStats = StreamStats.basic();
+	private final StreamStatsDetailed<CrdtData<K, S>> takeStatsDetailed = StreamStats.detailed();
 	private final StreamStatsBasic<CrdtTombstone<K>> removeStats = StreamStats.basic();
 	private final StreamStatsDetailed<CrdtTombstone<K>> removeStatsDetailed = StreamStats.detailed();
 
@@ -161,6 +166,26 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 				.mapException(e -> new CrdtException("Failed to download CRDT data", e));
 	}
 
+	@Override
+	public Promise<StreamSupplier<CrdtData<K, S>>> take() {
+		if (taken != null) {
+			return Promise.ofException(new CrdtException("Data is already being taken"));
+		}
+		taken = new HashSet<>();
+		return Promises.retry(($, e) -> !(e instanceof FileNotFoundException),
+						() -> fs.list("*")
+								.whenResult(fileMap -> taken.addAll(fileMap.keySet()))
+								.then(fileMap -> doDownload(fileMap.keySet(), 0, false)
+										.whenException(e -> taken = null)
+										.map(supplier -> supplier
+												.transformWith(StreamFilter.mapper(reducingData -> new CrdtData<>(reducingData.key, reducingData.timestamp, reducingData.state)))
+												.transformWith(detailedStats ? takeStatsDetailed : takeStats)
+												.withEndOfStream(eos -> eos
+														.then(() -> fs.deleteAll(fileMap.keySet()))
+														.whenComplete(() -> taken = null)))))
+				.mapException(e -> new CrdtException("Failed to take CRDT data", e));
+	}
+
 	private Promise<StreamSupplier<CrdtReducingData<K, S>>> doDownload(Set<String> files, long timestamp, boolean includeTombstones) {
 		return Promises.toList(files.stream()
 						.map(fileName -> fs.download(fileName)
@@ -211,6 +236,9 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 
 	private Promise<Void> doConsolidate() {
 		return fs.list("*")
+				.map(fileMap -> taken == null ?
+						fileMap :
+						entriesToMap(fileMap.entrySet().stream().filter(entry -> !taken.contains(entry.getKey()))))
 				.map(CrdtStorageFs::pickFilesForConsolidation)
 				.then(filesToConsolidate -> {
 					if (filesToConsolidate.isEmpty()) {
@@ -439,6 +467,16 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 	@JmxAttribute
 	public StreamStatsDetailed getDownloadStatsDetailed() {
 		return downloadStatsDetailed;
+	}
+
+	@JmxAttribute
+	public StreamStatsBasic getTakeStats() {
+		return takeStats;
+	}
+
+	@JmxAttribute
+	public StreamStatsDetailed getTakeStatsDetailed() {
+		return takeStatsDetailed;
 	}
 
 	@JmxAttribute

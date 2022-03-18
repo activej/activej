@@ -32,41 +32,50 @@ import io.activej.promise.Promise;
 public interface CrdtStorage<K extends Comparable<K>, S> {
 
 	/**
-	 * Returns a consumer of key-state pairs to be added to the CRDT storage.
+	 * Returns a promise of a stream consumer of key-state pairs to be added to the CRDT storage.
 	 *
-	 * @return stage of stream consumer of key-state pairs.
+	 * @return a promise of a stream consumer of key-state pairs.
 	 */
 	Promise<StreamConsumer<CrdtData<K, S>>> upload();
 
 	/**
-	 * Returns a producer if all key-state pairs in the CRDT storage that were put AFTER given timestamp was received.
+	 * Returns a promise of a stream supplier of all key-state pairs in the CRDT storage that were put AFTER given timestamp was received.
 	 * Pairs are sorted by key.
 	 *
-	 * @return stage of stream producer of key-state pairs
+	 * @return a promise of a stream supplier of key-state pairs
 	 */
 	Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp);
 
 	/**
 	 * Same as above, but downloads all possible key-state pairs.
 	 *
-	 * @return stage of stream producer of key-state pairs
+	 * @return a promise of a stream consumer of all possible key-state pairs
 	 */
 	default Promise<StreamSupplier<CrdtData<K, S>>> download() {
 		return download(0);
 	}
 
 	/**
-	 * Returns a consumer of keys to be removed from the CRDT storage.
+	 * Returns a promise of a "destroying" stream supplier of all key-state pairs in the CRDT storage.
+	 * Pairs are sorted by key. After stream supplier is finished, all the returned key-state pairs
+	 * are removed from the CRDT storage.
+	 *
+	 * @return a promise of a "destroying" stream supplier of all possible key-state pairs
+	 */
+	Promise<StreamSupplier<CrdtData<K, S>>> take();
+
+	/**
+	 * Returns a promise of a stream consumer of tombstones (keyus to be removed from the CRDT storage).
 	 * This operation is not persistent and not guaranteed.
 	 *
-	 * @return stage of stream consumer of keys
+	 * @return a promise of a stream consumer of tombstones
 	 */
 	Promise<StreamConsumer<CrdtTombstone<K>>> remove();
 
 	/**
 	 * Marker that this client is functional (server is up, there are enough nodes in cluster etc.)
 	 *
-	 * @return stage that succeeds if this client is up
+	 * @return promise that succeeds if this client is up
 	 */
 	Promise<Void> ping();
 }
