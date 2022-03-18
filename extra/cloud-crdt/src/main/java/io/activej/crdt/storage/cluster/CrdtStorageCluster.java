@@ -43,7 +43,6 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
-import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -75,8 +74,6 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 
 	private final StreamStatsBasic<CrdtData<K, S>> repartitionUploadStats = StreamStats.basic();
 	private final StreamStatsDetailed<CrdtData<K, S>> repartitionUploadStatsDetailed = StreamStats.detailed();
-	private final StreamStatsBasic<CrdtTombstone<K>> repartitionRemoveStats = StreamStats.basic();
-	private final StreamStatsDetailed<CrdtTombstone<K>> repartitionRemoveStatsDetailed = StreamStats.detailed();
 	// endregion
 
 	// region creators
@@ -206,26 +203,22 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 
 		class Tuple {
 			private final Try<StreamSupplier<CrdtData<K, S>>> downloader;
-			private final Try<StreamConsumer<CrdtTombstone<K>>> remover;
 			private final Map<P, StreamConsumer<CrdtData<K, S>>> uploaders;
 
-			public Tuple(Try<StreamSupplier<CrdtData<K, S>>> downloader, Try<StreamConsumer<CrdtTombstone<K>>> remover, Map<P, StreamConsumer<CrdtData<K, S>>> uploaders) {
+			public Tuple(Try<StreamSupplier<CrdtData<K, S>>> downloader, Map<P, StreamConsumer<CrdtData<K, S>>> uploaders) {
 				this.downloader = downloader;
-				this.remover = remover;
 				this.uploaders = uploaders;
 			}
 
 			private void close() {
 				downloader.ifSuccess(AsyncCloseable::close);
-				remover.ifSuccess(AsyncCloseable::close);
 				uploaders.values().forEach(AsyncCloseable::close);
 			}
 		}
 
 		//noinspection Convert2MethodRef - does not compile on Java 8
-		return Promises.toTuple((downloader, remover, uploaders) -> new Tuple(downloader, remover, uploaders),
-						source.download().toTry(),
-						source.remove().toTry(),
+		return Promises.toTuple((downloader, uploaders) -> new Tuple(downloader, uploaders),
+						source.take().toTry(),
 						execute(partitionScheme, CrdtStorage::upload))
 				.whenResult(tuple -> {
 					if (!tuple.uploaders.containsKey(sourcePartitionId)) {
@@ -241,11 +234,6 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 						Exception e = tuple.downloader.getException();
 						throw new CrdtException("Could not download local data", e);
 					}
-					if (tuple.remover.isException()) {
-						tuple.close();
-						Exception e = tuple.remover.getException();
-						throw new CrdtException("Could not remove local data", e);
-					}
 				})
 				.then(tuple -> {
 					List<P> alive = new ArrayList<>(tuple.uploaders.keySet());
@@ -255,33 +243,15 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 						return Promise.ofException(new CrdtException("Incomplete cluster"));
 					}
 
-					int sourceIdx = alive.indexOf(sourcePartitionId);
-					assert sourceIdx != -1;
-
-					long now = eventloop.currentTimeMillis();
 					StreamSplitter<CrdtData<K, S>, ?> splitter = StreamSplitter.create(
 							(item, acceptors) -> {
-								boolean sourceInShards = false;
-								int[] shards = sharder.shard(item.getKey());
-								item = new CrdtData<>(item.getKey(), now, item.getState());
-								//noinspection ForLoopReplaceableByForEach
-								for (int i = 0; i < shards.length; i++) {
-									int idx = shards[i];
-									if (sourceIdx == idx) {
-										sourceInShards = true;
-									} else {
-										acceptors[idx].accept(item);
-									}
-								}
-								if (!sourceInShards && shards.length != 0) {
-									acceptors[acceptors.length - 1].accept(new CrdtTombstone<>(item.getKey(), item.getTimestamp()));
+								for (int idx : sharder.shard(item.getKey())) {
+									acceptors[idx].accept(item);
 								}
 							});
 
 					StreamConsumer<CrdtData<K, S>> uploader = splitter.getInput();
 					StreamSupplier<CrdtData<K, S>> downloader = tuple.downloader.get();
-					StreamConsumer<CrdtTombstone<K>> remover = tuple.remover.get()
-							.transformWith(detailedStats ? repartitionRemoveStatsDetailed : repartitionRemoveStats);
 
 					for (P partitionId : alive) {
 						//noinspection unchecked
@@ -290,15 +260,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 								.streamTo(tuple.uploaders.get(partitionId));
 					}
 
-					SettablePromise<Void> removerEos = new SettablePromise<>();
-					//noinspection unchecked
-					((StreamSupplier<CrdtTombstone<K>>) splitter.newOutput())
-							.withEndOfStream(eos -> removerEos)
-							.streamTo(remover.withAcknowledgement(ack -> downloader.getEndOfStream()));
-
-					return downloader.streamTo(uploader)
-							.whenResult(() -> removerEos.set(null))
-							.then(remover::getAcknowledgement);
+					return downloader.streamTo(uploader);
 				});
 	}
 
@@ -445,16 +407,6 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 	@JmxAttribute
 	public StreamStatsDetailed getRepartitionUploadStatsDetailed() {
 		return repartitionUploadStatsDetailed;
-	}
-
-	@JmxAttribute
-	public StreamStatsBasic getRepartitionRemoveStats() {
-		return repartitionRemoveStats;
-	}
-
-	@JmxAttribute
-	public StreamStatsDetailed getRepartitionRemoveStatsDetailed() {
-		return repartitionRemoveStatsDetailed;
 	}
 
 	@JmxAttribute
