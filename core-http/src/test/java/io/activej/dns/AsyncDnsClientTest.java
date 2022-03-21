@@ -96,4 +96,13 @@ public final class AsyncDnsClientTest {
 		assertEquals(NAME_ERROR, e.getResult().getErrorCode());
 	}
 
+	@Test
+	public void testDnsLabelSize() {
+		AsyncDnsClient dnsClient = RemoteAsyncDnsClient.create(Eventloop.getCurrentEventloop());
+
+		String domainName = "example.huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label.com";
+		IllegalArgumentException e = awaitException(dnsClient.resolve4(domainName));
+		assertEquals("Label size cannot exceed 63 octets", e.getMessage());
+	}
+
 }
