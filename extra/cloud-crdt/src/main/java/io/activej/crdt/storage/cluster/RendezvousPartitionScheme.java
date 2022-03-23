@@ -8,6 +8,7 @@ import io.activej.rpc.client.sender.RpcStrategyRendezvousHashing;
 import io.activej.rpc.client.sender.RpcStrategySharding;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -129,4 +130,8 @@ public final class RendezvousPartitionScheme<P> implements PartitionScheme<P>, W
 				rendezvousHashings);
 	}
 
+	@VisibleForTesting
+	List<RendezvousPartitionGroup<P>> getPartitionGroups() {
+		return partitionGroups;
+	}
 }
