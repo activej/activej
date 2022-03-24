@@ -168,11 +168,7 @@ public class FileDiscoveryServiceTest {
 
 		Thread.sleep(200);
 
-		Promise<PartitionScheme<PartitionId>> nextSchemePromise = supplier.get();
-
-		assertFalse(nextSchemePromise.isComplete());
-
-		PartitionScheme<PartitionId> nextScheme = await(nextSchemePromise);
+		PartitionScheme<PartitionId> nextScheme = await(supplier.get());
 		assertTestPartitions1(nextScheme);
 	}
 
@@ -193,11 +189,7 @@ public class FileDiscoveryServiceTest {
 
 		Thread.sleep(200);
 
-		Promise<PartitionScheme<PartitionId>> nextSchemePromise = supplier.get();
-
-		assertFalse(nextSchemePromise.isComplete());
-
-		PartitionScheme<PartitionId> nextScheme = await(nextSchemePromise);
+		PartitionScheme<PartitionId> nextScheme = await(supplier.get());
 		assertTestPartitions3(nextScheme);
 	}
 

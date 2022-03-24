@@ -18,25 +18,28 @@ package io.activej.crdt.storage.cluster;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.crdt.storage.CrdtStorage;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.rpc.client.sender.RpcStrategy;
 import io.activej.types.TypeT;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static io.activej.crdt.util.Utils.fromJson;
 import static java.nio.file.StandardWatchEventKinds.*;
 
 public final class FileDiscoveryService implements DiscoveryService<PartitionId> {
-	private static final SettablePromise<PartitionScheme<PartitionId>> UPDATE_HAPPENED = new SettablePromise<>();
 	private static final SettablePromise<PartitionScheme<PartitionId>> UPDATE_CONSUMED = new SettablePromise<>();
 	private static final TypeT<List<RendezvousPartitionGroup<PartitionId>>> PARTITION_GROUPS_TYPE = new TypeT<List<RendezvousPartitionGroup<PartitionId>>>() {};
 
@@ -44,7 +47,8 @@ public final class FileDiscoveryService implements DiscoveryService<PartitionId>
 	private final WatchService watchService;
 	private final Path pathToFile;
 
-	private Executor executor = ForkJoinPool.commonPool();
+	private @Nullable Function<PartitionId, @NotNull RpcStrategy> rpcProvider;
+	private @Nullable Function<PartitionId, @NotNull CrdtStorage<?, ?>> crdtProvider;
 
 	private FileDiscoveryService(Eventloop eventloop, WatchService watchService, Path pathToFile) {
 		this.eventloop = eventloop;
@@ -64,8 +68,13 @@ public final class FileDiscoveryService implements DiscoveryService<PartitionId>
 		return create(eventloop, watchService, pathToFile);
 	}
 
-	public FileDiscoveryService withExecutor(Executor executor) {
-		this.executor = executor;
+	public FileDiscoveryService withCrdtProvider(Function<PartitionId, CrdtStorage<?, ?>> crdtProvider) {
+		this.crdtProvider = crdtProvider;
+		return this;
+	}
+
+	public FileDiscoveryService withRpcProvider(Function<PartitionId, RpcStrategy> rpcProvider) {
+		this.rpcProvider = rpcProvider;
 		return this;
 	}
 
@@ -78,7 +87,7 @@ public final class FileDiscoveryService implements DiscoveryService<PartitionId>
 		}
 
 		return new AsyncSupplier<PartitionScheme<PartitionId>>() {
-			final AtomicReference<SettablePromise<PartitionScheme<PartitionId>>> cbRef = new AtomicReference<>(UPDATE_HAPPENED);
+			final AtomicReference<SettablePromise<PartitionScheme<PartitionId>>> cbRef = new AtomicReference<>(UPDATE_CONSUMED);
 			final Thread watchThread;
 
 			{
@@ -90,7 +99,7 @@ public final class FileDiscoveryService implements DiscoveryService<PartitionId>
 			@Override
 			public Promise<PartitionScheme<PartitionId>> get() {
 				SettablePromise<PartitionScheme<PartitionId>> cb = cbRef.get();
-				if (cb != UPDATE_HAPPENED && cb != UPDATE_CONSUMED) {
+				if (cb != UPDATE_CONSUMED && !cb.isComplete()) {
 					return Promise.ofException(new IOException("Previous completable future has not been completed yet"));
 				}
 
@@ -99,21 +108,22 @@ public final class FileDiscoveryService implements DiscoveryService<PartitionId>
 						return Promise.ofException(new IOException("Watch service has been closed"));
 					}
 
-					if (cbRef.compareAndSet(UPDATE_HAPPENED, UPDATE_CONSUMED)) {
-						return Promise.ofBlocking(executor, () -> {
-							byte[] bytes = Files.readAllBytes(pathToFile);
-							return parseScheme(bytes);
-						});
+					if (cb == UPDATE_CONSUMED) {
+						SettablePromise<PartitionScheme<PartitionId>> newCb = new SettablePromise<>();
+						if (cbRef.compareAndSet(UPDATE_CONSUMED, newCb)) {
+							eventloop.startExternalTask();
+							return newCb;
+						}
+						cb = cbRef.get();
+						continue;
 					}
 
-					SettablePromise<PartitionScheme<PartitionId>> newCb = new SettablePromise<>();
-					if (cbRef.compareAndSet(UPDATE_CONSUMED, newCb)) {
-						return newCb;
-					}
+					return cbRef.getAndSet(UPDATE_CONSUMED);
 				}
 			}
 
 			private void watch() {
+				onChange(); // Initial
 				try {
 					while (true) {
 						WatchKey key = watchService.poll(100, TimeUnit.MILLISECONDS);
@@ -143,38 +153,53 @@ public final class FileDiscoveryService implements DiscoveryService<PartitionId>
 
 
 			private void onChange() {
-				if (cbRef.get() == UPDATE_HAPPENED) {
-					return;
-				}
-
-				if (cbRef.compareAndSet(UPDATE_CONSUMED, UPDATE_HAPPENED)) {
-					return;
-				}
-
-				SettablePromise<PartitionScheme<PartitionId>> cb = cbRef.getAndSet(UPDATE_CONSUMED);
-				assert cb != UPDATE_HAPPENED && cb != UPDATE_CONSUMED;
+				PartitionScheme<PartitionId> partitionScheme;
 				try {
 					byte[] content = Files.readAllBytes(pathToFile);
-					cb.set(parseScheme(content));
+					partitionScheme = parseScheme(content);
 				} catch (IOException | MalformedDataException e) {
 					onError(e);
+					return;
 				}
+
+				completeCb(cb -> cb.set(partitionScheme));
 			}
 
 			private void onError(Exception e) {
-				SettablePromise<PartitionScheme<PartitionId>> cb = cbRef.get();
-				if (cb == UPDATE_HAPPENED || cb == UPDATE_CONSUMED) {
+				completeCb(cb -> cb.setException(e));
+			}
+
+			private void completeCb(Consumer<SettablePromise<PartitionScheme<PartitionId>>> consumer) {
+				while (true) {
+					SettablePromise<PartitionScheme<PartitionId>> cb = cbRef.get();
+					if (cb == UPDATE_CONSUMED || cb.isComplete()) {
+						SettablePromise<PartitionScheme<PartitionId>> newCb = new SettablePromise<>();
+						consumer.accept(newCb);
+						if (cbRef.compareAndSet(cb, newCb)) {
+							return;
+						}
+						continue;
+					}
+
+					SettablePromise<PartitionScheme<PartitionId>> prevCb = cbRef.getAndSet(UPDATE_CONSUMED);
+					assert !prevCb.isComplete();
+
+					eventloop.execute(() -> consumer.accept(prevCb));
+					eventloop.completeExternalTask();
 					return;
 				}
-
-				cbRef.set(UPDATE_CONSUMED);
-				eventloop.execute(() -> cb.setException(e));
 			}
 		};
 	}
 
-	private static RendezvousPartitionScheme<PartitionId> parseScheme(byte[] bytes) throws MalformedDataException {
+	private RendezvousPartitionScheme<PartitionId> parseScheme(byte[] bytes) throws MalformedDataException {
 		List<RendezvousPartitionGroup<PartitionId>> partitionGroups = fromJson(PARTITION_GROUPS_TYPE, bytes);
-		return RendezvousPartitionScheme.create(partitionGroups);
+		RendezvousPartitionScheme<PartitionId> scheme = RendezvousPartitionScheme.create(partitionGroups)
+				.withPartitionIdGetter(PartitionId::getId);
+
+		if (rpcProvider != null) scheme.withRpcProvider(rpcProvider);
+		if (crdtProvider != null) scheme.withCrdtProvider(crdtProvider);
+
+		return scheme;
 	}
 }
