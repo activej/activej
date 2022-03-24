@@ -5,8 +5,8 @@ import adder.AdderCommands.HasUserId;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import io.activej.crdt.storage.cluster.DiscoveryService;
+import io.activej.crdt.storage.cluster.FileDiscoveryService;
 import io.activej.crdt.storage.cluster.PartitionId;
-import io.activej.crdt.storage.cluster.RendezvousPartitionScheme;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
@@ -16,15 +16,17 @@ import io.activej.launchers.crdt.rpc.CrdtRpcClientLauncher;
 import io.activej.launchers.crdt.rpc.CrdtRpcStrategyService;
 import io.activej.rpc.client.RpcClient;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Scanner;
 
 import static adder.AdderCommands.GetRequest;
 import static adder.AdderCommands.GetResponse;
 import static adder.AdderServerLauncher.MESSAGE_TYPES;
+import static adder.ClusterStorageModule.DEFAULT_PARTITIONS_FILE;
 import static io.activej.common.Checks.checkNotNull;
-import static io.activej.launchers.crdt.ConfigConverters.ofPartitionId;
-import static io.activej.launchers.crdt.ConfigConverters.ofRendezvousPartitionScheme;
+import static io.activej.config.converter.ConfigConverters.ofPath;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
 
 public final class AdderClientLauncher extends CrdtRpcClientLauncher {
@@ -53,12 +55,10 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 	}
 
 	@Provides
-	DiscoveryService<PartitionId> discoveryService(Config config) {
-		RendezvousPartitionScheme<PartitionId> scheme = config.get(ofRendezvousPartitionScheme(ofPartitionId()), "crdt.cluster")
-				.withPartitionIdGetter(PartitionId::getId)
+	DiscoveryService<PartitionId> discoveryServiceDiscoveryService(Eventloop eventloop, Config config) throws IOException {
+		Path pathToFile = config.get(ofPath(), "crdt.cluster.partitionFile", DEFAULT_PARTITIONS_FILE);
+		return FileDiscoveryService.create(eventloop, pathToFile)
 				.withRpcProvider(partitionId -> server(checkNotNull(partitionId.getRpcAddress())));
-
-		return DiscoveryService.of(scheme);
 	}
 
 	@Provides

@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "type": "array",
+  "items": {
+    "$ref": "#/definitions/PartitionGroup"
+  },
+  "definitions": {
+    "PartitionGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PartitionId"
+          }
+        },
+        "replicaCount": {
+          "type": "integer"
+        },
+        "repartition": {
+          "type": "boolean"
+        },
+        "active": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "active",
+        "ids",
+        "repartition",
+        "replicaCount"
+      ],
+      "title": "PartitionGroup"
+    },
+    "PartitionId": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "crdtAddress": {
+          "type": "string"
+        },
+        "rpcAddress": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "crdtAddress",
+        "id",
+        "rpcAddress"
+      ],
+      "title": "PartitionId"
+    }
+  },
+  "examples": [
+    [
+      {
+        "ids": [
+          {
+            "id": "a",
+            "crdtAddress": "localhost:9001",
+            "rpcAddress": "localhost:9051"
+          },
+          {
+            "id": "b",
+            "crdtAddress": "localhost:9002",
+            "rpcAddress": "localhost:9052"
+          }
+        ],
+        "replicaCount": 1,
+        "repartition": false,
+        "active": true
+      },
+      {
+        "ids": [
+          {
+            "id": "c",
+            "crdtAddress": "localhost:9003",
+            "rpcAddress": "localhost:9053"
+          },
+          {
+            "id": "d",
+            "crdtAddress": "localhost:9004",
+            "rpcAddress": "localhost:9054"
+          },
+          {
+            "id": "e",
+            "crdtAddress": "localhost:9005",
+            "rpcAddress": "localhost:905"
+          }
+        ],
+        "replicaCount": 2,
+        "repartition": false,
+        "active": false
+      }
+    ]
+  ]
+}

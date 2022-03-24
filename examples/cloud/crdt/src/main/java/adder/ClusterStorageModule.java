@@ -16,16 +16,20 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.launchers.crdt.Local;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 
 import static io.activej.common.Checks.checkNotNull;
+import static io.activej.config.converter.ConfigConverters.ofPath;
 import static io.activej.launchers.crdt.ConfigConverters.ofPartitionId;
-import static io.activej.launchers.crdt.ConfigConverters.ofRendezvousPartitionScheme;
 import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
 import static io.activej.serializer.BinarySerializers.LONG_SERIALIZER;
 
 public final class ClusterStorageModule extends AbstractModule {
+	public static final Path DEFAULT_PARTITIONS_FILE = Paths.get("adder-partitions.json");
 
 	@Override
 	protected void configure() {
@@ -42,18 +46,9 @@ public final class ClusterStorageModule extends AbstractModule {
 	CrdtStorageCluster<Long, DetailedSumsCrdtState, PartitionId> clusterStorage(
 			Eventloop eventloop,
 			DiscoveryService<PartitionId> discoveryService,
-//			CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer,
 			CrdtFunction<DetailedSumsCrdtState> crdtFunction
-//			SimplePartitionId localPartitionId,
-//			@Local CrdtStorage<Long, DetailedSumsCrdtState> localCrdtStorage
 	) {
-		return CrdtStorageCluster.create(eventloop, discoveryService,
-/*
-				partitionId -> partitionId.equals(localPartitionId) ?
-						localCrdtStorage :
-						CrdtStorageClient.create(eventloop, ((SimpleServerId) partitionId.getServerId()).getCrdtAddress(), serializer),
-*/
-				crdtFunction);
+		return CrdtStorageCluster.create(eventloop, discoveryService, crdtFunction);
 	}
 
 	@Provides
@@ -75,17 +70,15 @@ public final class ClusterStorageModule extends AbstractModule {
 			@Local CrdtStorage<Long, DetailedSumsCrdtState> localStorage,
 			CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer,
 			Config config
-	) {
-		RendezvousPartitionScheme<PartitionId> scheme = config.get(ofRendezvousPartitionScheme(ofPartitionId()), "crdt.cluster")
-				.withPartitionIdGetter(PartitionId::getId)
+	) throws IOException {
+		Path pathToFile = config.get(ofPath(), "crdt.cluster.partitionFile", DEFAULT_PARTITIONS_FILE);
+		return FileDiscoveryService.create(eventloop, pathToFile)
 				.withCrdtProvider(partitionId -> {
 					if (partitionId.equals(localPartitionId)) return localStorage;
 
 					InetSocketAddress crdtAddress = checkNotNull(partitionId.getCrdtAddress());
 					return CrdtStorageClient.create(eventloop, crdtAddress, serializer);
 				});
-
-		return DiscoveryService.of(scheme);
 	}
 
 	@Provides
