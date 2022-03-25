@@ -2,6 +2,7 @@ package adder;
 
 import io.activej.async.service.EventloopTaskScheduler;
 import io.activej.config.Config;
+import io.activej.crdt.CrdtException;
 import io.activej.crdt.CrdtServer;
 import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.function.CrdtFunction;
@@ -16,7 +17,6 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.launchers.crdt.Local;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -70,7 +70,7 @@ public final class ClusterStorageModule extends AbstractModule {
 			@Local CrdtStorage<Long, DetailedSumsCrdtState> localStorage,
 			CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer,
 			Config config
-	) throws IOException {
+	) throws CrdtException {
 		Path pathToFile = config.get(ofPath(), "crdt.cluster.partitionFile", DEFAULT_PARTITIONS_FILE);
 		return FileDiscoveryService.create(eventloop, pathToFile)
 				.withCrdtProvider(partitionId -> {

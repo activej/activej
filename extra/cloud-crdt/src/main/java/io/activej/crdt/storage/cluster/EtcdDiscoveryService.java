@@ -25,96 +25,88 @@ import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.rpc.client.sender.RpcStrategy;
 import io.activej.types.TypeT;
+import io.etcd.jetcd.ByteSequence;
+import io.etcd.jetcd.Client;
+import io.etcd.jetcd.KV;
+import io.etcd.jetcd.KeyValue;
+import io.etcd.jetcd.Watch.Watcher;
+import io.etcd.jetcd.watch.WatchEvent;
+import io.etcd.jetcd.watch.WatchResponse;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.nio.file.*;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static io.activej.crdt.util.Utils.fromJson;
-import static java.nio.file.StandardWatchEventKinds.*;
+import static io.etcd.jetcd.watch.WatchEvent.EventType.DELETE;
+import static io.etcd.jetcd.watch.WatchEvent.EventType.PUT;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
-public final class FileDiscoveryService implements DiscoveryService<PartitionId> {
+public final class EtcdDiscoveryService implements DiscoveryService<PartitionId> {
 	private static final SettablePromise<PartitionScheme<PartitionId>> UPDATE_CONSUMED = new SettablePromise<>();
 	private static final TypeT<List<RendezvousPartitionGroup<PartitionId>>> PARTITION_GROUPS_TYPE = new TypeT<List<RendezvousPartitionGroup<PartitionId>>>() {};
 
 	private final Eventloop eventloop;
-	private final WatchService watchService;
-	private final Path pathToFile;
+	private final Client client;
+	private final String key;
 
 	private @Nullable Function<PartitionId, @NotNull RpcStrategy> rpcProvider;
 	private @Nullable Function<PartitionId, @NotNull CrdtStorage<?, ?>> crdtProvider;
 
-	private FileDiscoveryService(Eventloop eventloop, WatchService watchService, Path pathToFile) {
+	private EtcdDiscoveryService(Eventloop eventloop, Client client, String key) {
 		this.eventloop = eventloop;
-		this.watchService = watchService;
-		this.pathToFile = pathToFile;
+		this.client = client;
+		this.key = key;
 	}
 
-	public static FileDiscoveryService create(Eventloop eventloop, WatchService watchService, Path pathToFile) throws CrdtException {
-		if (!Files.isRegularFile(pathToFile)) {
-			throw new CrdtException("Not a regular file: " + pathToFile);
-		}
-		return new FileDiscoveryService(eventloop, watchService, pathToFile);
+	public static EtcdDiscoveryService create(Eventloop eventloop, Client client, String key) {
+		return new EtcdDiscoveryService(eventloop, client, key);
 	}
 
-	public static FileDiscoveryService create(Eventloop eventloop, Path pathToFile) throws CrdtException {
-		WatchService watchService;
-		try {
-			watchService = pathToFile.getFileSystem().newWatchService();
-		} catch (IOException e) {
-			throw new CrdtException("Could not create a watch service", e);
-		}
-		return create(eventloop, watchService, pathToFile);
-	}
-
-	public FileDiscoveryService withCrdtProvider(Function<PartitionId, CrdtStorage<?, ?>> crdtProvider) {
+	public EtcdDiscoveryService withCrdtProvider(Function<PartitionId, CrdtStorage<?, ?>> crdtProvider) {
 		this.crdtProvider = crdtProvider;
 		return this;
 	}
 
-	public FileDiscoveryService withRpcProvider(Function<PartitionId, RpcStrategy> rpcProvider) {
+	public EtcdDiscoveryService withRpcProvider(Function<PartitionId, RpcStrategy> rpcProvider) {
 		this.rpcProvider = rpcProvider;
 		return this;
 	}
 
 	@Override
 	public AsyncSupplier<PartitionScheme<PartitionId>> discover() {
-		try {
-			pathToFile.getParent().register(watchService, ENTRY_CREATE, ENTRY_MODIFY, ENTRY_DELETE);
-		} catch (IOException e) {
-			CrdtException exception = new CrdtException("Could not register a path to the watch service", e);
-			return () -> Promise.ofException(exception);
-		}
-
 		return new AsyncSupplier<PartitionScheme<PartitionId>>() {
 			final AtomicReference<SettablePromise<PartitionScheme<PartitionId>>> cbRef = new AtomicReference<>(UPDATE_CONSUMED);
-			final Thread watchThread;
-
-			{
-				watchThread = new Thread(this::watch);
-				watchThread.setDaemon(true);
-				watchThread.start();
-			}
+			@Nullable Watcher watcher;
 
 			@Override
 			public Promise<PartitionScheme<PartitionId>> get() {
+				if (watcher == null) {
+					ByteSequence bsKey = ByteSequence.from(key, UTF_8);
+					watcher = client.getWatchClient().watch(bsKey, this::onResponse, this::onError);
+					KV kvClient = client.getKVClient();
+					return Promise.ofCompletionStage(kvClient.get(bsKey))
+							.whenComplete(kvClient::close)
+							.then(getResponse -> {
+								List<KeyValue> kvs = getResponse.getKvs();
+								if (kvs.isEmpty()) return get();
+
+								if (kvs.size() > 1)
+									return Promise.ofException(new CrdtException("Expected a single key"));
+
+								return Promise.of(parseScheme(kvs.get(0).getValue()));
+							});
+				}
+
 				SettablePromise<PartitionScheme<PartitionId>> cb = cbRef.get();
 				if (cb != UPDATE_CONSUMED && !cb.isComplete()) {
 					return Promise.ofException(new CrdtException("Previous promise has not been completed yet"));
 				}
 
 				while (true) {
-					if (!watchThread.isAlive()) {
-						return Promise.ofException(new CrdtException("Watch service has been closed"));
-					}
-
 					if (cb == UPDATE_CONSUMED) {
 						SettablePromise<PartitionScheme<PartitionId>> newCb = new SettablePromise<>();
 						if (cbRef.compareAndSet(UPDATE_CONSUMED, newCb)) {
@@ -129,53 +121,42 @@ public final class FileDiscoveryService implements DiscoveryService<PartitionId>
 				}
 			}
 
-			private void watch() {
-				onChange(); // Initial
-				try {
-					while (true) {
-						WatchKey key = watchService.poll(100, TimeUnit.MILLISECONDS);
-						if (key == null) continue;
-						for (WatchEvent<?> event : key.pollEvents()) {
-							if (pathToFile.equals(pathToFile.resolveSibling(((Path) event.context())))) {
-								WatchEvent.Kind<?> kind = event.kind();
-								if (kind == ENTRY_CREATE || kind == ENTRY_MODIFY) {
-									onChange();
-								} else if (kind == ENTRY_DELETE) {
-									onError(new FileNotFoundException(pathToFile.toString()));
-								}
-							}
-						}
-						if (!key.reset()) {
-							onError(new CrdtException("Watch key is no longer valid"));
-							return;
-						}
-					}
-				} catch (ClosedWatchServiceException e) {
-					onError(e);
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
-					onError(e);
-				}
-			}
+			private void onResponse(WatchResponse watchResponse) {
+				List<WatchEvent> events = watchResponse.getEvents();
+				if (events.isEmpty()) return;
 
-			private void onChange() {
-				PartitionScheme<PartitionId> partitionScheme;
-				try {
-					byte[] content = Files.readAllBytes(pathToFile);
-					partitionScheme = parseScheme(content);
-				} catch (IOException e) {
-					onError(new CrdtException("Could not read from file", e));
+				ByteSequence bs = null;
+				for (WatchEvent event : events) {
+					if (event.getEventType() == PUT) {
+						bs = event.getKeyValue().getValue();
+					} else if (event.getEventType() == DELETE) {
+						bs = null;
+					} else {
+						onError(new CrdtException("Unknown event occurred: " + event.getEventType()));
+						return;
+					}
+				}
+				if (bs == null) {
+					onError(new CrdtException("Watched key was deleted"));
 					return;
+				}
+
+				try {
+					PartitionScheme<PartitionId> partitionScheme = parseScheme(bs);
+					completeCb(cb -> cb.set(partitionScheme));
 				} catch (MalformedDataException e) {
 					onError(new CrdtException("Could not parse file content", e));
-					return;
 				}
-
-				completeCb(cb -> cb.set(partitionScheme));
 			}
 
-			private void onError(Exception e) {
-				completeCb(cb -> cb.setException(e));
+			private void onError(Throwable error) {
+				Exception exception;
+				if (error instanceof Exception) {
+					exception = (Exception) error;
+				} else {
+					exception = new RuntimeException("Fatal error", error);
+				}
+				completeCb(cb -> cb.setException(exception));
 			}
 
 			private void completeCb(Consumer<SettablePromise<PartitionScheme<PartitionId>>> consumer) {
@@ -201,8 +182,8 @@ public final class FileDiscoveryService implements DiscoveryService<PartitionId>
 		};
 	}
 
-	private RendezvousPartitionScheme<PartitionId> parseScheme(byte[] bytes) throws MalformedDataException {
-		List<RendezvousPartitionGroup<PartitionId>> partitionGroups = fromJson(PARTITION_GROUPS_TYPE, bytes);
+	private RendezvousPartitionScheme<PartitionId> parseScheme(ByteSequence bs) throws MalformedDataException {
+		List<RendezvousPartitionGroup<PartitionId>> partitionGroups = fromJson(PARTITION_GROUPS_TYPE, bs.getBytes());
 		RendezvousPartitionScheme<PartitionId> scheme = RendezvousPartitionScheme.create(partitionGroups)
 				.withPartitionIdGetter(PartitionId::getId);
 

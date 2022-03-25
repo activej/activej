@@ -4,6 +4,7 @@ import adder.AdderCommands.AddRequest;
 import adder.AdderCommands.HasUserId;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
+import io.activej.crdt.CrdtException;
 import io.activej.crdt.storage.cluster.DiscoveryService;
 import io.activej.crdt.storage.cluster.FileDiscoveryService;
 import io.activej.crdt.storage.cluster.PartitionId;
@@ -16,7 +17,6 @@ import io.activej.launchers.crdt.rpc.CrdtRpcClientLauncher;
 import io.activej.launchers.crdt.rpc.CrdtRpcStrategyService;
 import io.activej.rpc.client.RpcClient;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Scanner;
@@ -55,7 +55,7 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 	}
 
 	@Provides
-	DiscoveryService<PartitionId> discoveryServiceDiscoveryService(Eventloop eventloop, Config config) throws IOException {
+	DiscoveryService<PartitionId> discoveryServiceDiscoveryService(Eventloop eventloop, Config config) throws CrdtException {
 		Path pathToFile = config.get(ofPath(), "crdt.cluster.partitionFile", DEFAULT_PARTITIONS_FILE);
 		return FileDiscoveryService.create(eventloop, pathToFile)
 				.withRpcProvider(partitionId -> server(checkNotNull(partitionId.getRpcAddress())));

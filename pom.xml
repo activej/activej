@@ -93,6 +93,11 @@
         <version>4.13.2</version>
       </dependency>
       <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-engine</artifactId>
+        <version>5.8.2</version>
+      </dependency>
+      <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
         <version>1.7.32</version>
@@ -162,6 +167,16 @@
         <artifactId>annotations</artifactId>
         <version>22.0.0</version>
       </dependency>
+      <dependency>
+        <groupId>io.etcd</groupId>
+        <artifactId>jetcd-core</artifactId>
+        <version>0.7.0</version>
+      </dependency>
+      <dependency>
+        <groupId>io.etcd</groupId>
+        <artifactId>jetcd-test</artifactId>
+        <version>0.7.0</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -180,6 +195,11 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
