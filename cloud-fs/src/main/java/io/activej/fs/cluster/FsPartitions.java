@@ -201,7 +201,7 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 
 	@Override
 	public @NotNull Promise<?> start() {
-		AsyncSupplier<Map<Object, ActiveFs>> discoverySupplier = discoveryService.supplier();
+		AsyncSupplier<Map<Object, ActiveFs>> discoverySupplier = discoveryService.discover();
 		return discoverySupplier.get()
 				.whenResult(result -> {
 					this.partitions.putAll(result);

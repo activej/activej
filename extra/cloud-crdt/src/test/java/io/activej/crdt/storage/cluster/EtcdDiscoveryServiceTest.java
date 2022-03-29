@@ -4,6 +4,7 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.common.time.Stopwatch;
 import io.activej.crdt.storage.cluster.DiscoveryService.PartitionScheme;
 import io.activej.eventloop.Eventloop;
+import io.activej.fs.cluster.EtcdWatchService;
 import io.activej.promise.Promise;
 import io.activej.test.rules.EventloopRule;
 import io.etcd.jetcd.ByteSequence;
@@ -11,7 +12,10 @@ import io.etcd.jetcd.Client;
 import io.etcd.jetcd.KV;
 import io.etcd.jetcd.launcher.EtcdCluster;
 import io.etcd.jetcd.test.EtcdClusterExtension;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Test;
 
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -23,7 +27,6 @@ import static io.activej.promise.TestUtils.await;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.*;
 
-@Ignore
 public class EtcdDiscoveryServiceTest {
 
 	@ClassRule
@@ -129,7 +132,8 @@ public class EtcdDiscoveryServiceTest {
 		bs = ByteSequence.from(key, UTF_8);
 		etcdClient = Client.builder().target("cluster://" + etcdCluster.clusterName()).build();
 		putValue("[]".getBytes(UTF_8));
-		discoveryService = EtcdDiscoveryService.create(Eventloop.getCurrentEventloop(), etcdClient, key);
+		EtcdWatchService watchService = EtcdWatchService.create(Eventloop.getCurrentEventloop(), etcdClient, key);
+		discoveryService = EtcdDiscoveryService.create(watchService);
 	}
 
 	@After

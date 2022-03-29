@@ -42,6 +42,7 @@
     <dependency>
       <groupId>io.etcd</groupId>
       <artifactId>jetcd-core</artifactId>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>io.activej</groupId>

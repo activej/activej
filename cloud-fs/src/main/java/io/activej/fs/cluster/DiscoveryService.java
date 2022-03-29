@@ -38,7 +38,7 @@ public interface DiscoveryService {
 	 * with new partitions as a result. A callback will also be completed if an error occurs.
 	 * <p>
 	 */
-	AsyncSupplier<Map<Object, ActiveFs>> supplier();
+	AsyncSupplier<Map<Object, ActiveFs>> discover();
 
 	/**
 	 * A {@code DiscoveryService} that consists of given partitions that never change

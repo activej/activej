@@ -182,6 +182,14 @@ public final class RemoteFsUtils {
 
 	public static <T> T fromJson(@NotNull Type manifest, @NotNull ByteBuf buf) throws MalformedDataException {
 		byte[] bytes = buf.getArray();
+		return fromJson(manifest, bytes);
+	}
+
+	public static <T> T fromJson(@NotNull TypeT<T> type, byte @NotNull [] bytes) throws MalformedDataException {
+		return fromJson(type.getType(), bytes);
+	}
+
+	public static <T> T fromJson(@NotNull Type manifest, byte[] bytes) throws MalformedDataException {
 		try {
 			//noinspection unchecked
 			JsonReader.ReadObject<T> readObject = (JsonReader.ReadObject<T>) DSL_JSON.tryFindReader(manifest);
