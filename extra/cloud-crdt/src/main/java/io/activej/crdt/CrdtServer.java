@@ -16,6 +16,14 @@
 
 package io.activej.crdt;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+import io.activej.bytebuf.ByteBuf;
+import io.activej.common.exception.MalformedDataException;
+import io.activej.crdt.CrdtMessagingProto.CrdtMessage;
+import io.activej.crdt.CrdtMessagingProto.CrdtMessage.CrdtMessages;
+import io.activej.crdt.CrdtMessagingProto.CrdtResponse;
+import io.activej.crdt.CrdtMessagingProto.CrdtResponse.CrdtResponses;
+import io.activej.crdt.CrdtMessagingProto.CrdtResponse.ServerError;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.csp.binary.ByteBufsCodec;
@@ -31,11 +39,8 @@ import io.activej.serializer.BinarySerializer;
 
 import java.net.InetAddress;
 
-import static io.activej.crdt.CrdtMessaging.*;
-import static io.activej.crdt.CrdtMessaging.CrdtMessages.TAKE_FINISHED;
-import static io.activej.crdt.CrdtMessaging.CrdtResponses.*;
-import static io.activej.crdt.util.Utils.fromJson;
-import static io.activej.crdt.util.Utils.toJson;
+import static io.activej.crdt.CrdtMessagingProto.CrdtMessage.CrdtMessages.TAKE_FINISHED;
+import static io.activej.crdt.CrdtMessagingProto.CrdtResponse.CrdtResponses.*;
 import static io.activej.csp.binary.Utils.nullTerminated;
 
 public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer<CrdtServer<K, S>> {
@@ -44,12 +49,12 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer
 					.andThen(
 							value -> {
 								try {
-									return fromJson(CrdtMessage.class, value);
-								} finally {
-									value.recycle();
+									return CrdtMessage.parseFrom(value.asArray());
+								} catch (InvalidProtocolBufferException e) {
+									throw new MalformedDataException(e);
 								}
 							},
-							crdtResponse -> toJson(CrdtResponse.class, crdtResponse));
+							crdtResponse -> ByteBuf.wrapForReading(crdtResponse.toByteArray()));
 
 	private final CrdtStorage<K, S> storage;
 	private final CrdtDataSerializer<K, S> serializer;
@@ -77,57 +82,72 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer
 				MessagingWithBinaryStreaming.create(socket, SERIALIZER);
 		messaging.receive()
 				.then(msg -> {
-					if (msg == CrdtMessages.UPLOAD) {
+					if (msg.hasDownload()) {
+						return storage.download((msg.getDownload()).getToken())
+								.whenResult(() -> messaging.send(response(DOWNLOAD_STARTED)))
+								.then(supplier -> supplier
+										.transformWith(ChannelSerializer.create(serializer))
+										.streamTo(messaging.sendBinaryStream()));
+					}
+					if (!msg.hasMessages()) {
+						throw new IllegalArgumentException("Empty message");
+					}
+					CrdtMessages messages = msg.getMessages();
+					if (messages == CrdtMessages.UPLOAD) {
 						return messaging.receiveBinaryStream()
 								.transformWith(ChannelDeserializer.create(serializer))
 								.streamTo(StreamConsumer.ofPromise(storage.upload()))
-								.then(() -> messaging.send(UPLOAD_FINISHED))
+								.then(() -> messaging.send(response(UPLOAD_FINISHED)))
 								.then(messaging::sendEndOfStream)
 								.whenResult(messaging::close);
 
 					}
-					if (msg == CrdtMessages.REMOVE) {
+					if (messages == CrdtMessages.REMOVE) {
 						return messaging.receiveBinaryStream()
 								.transformWith(ChannelDeserializer.create(tombstoneSerializer))
 								.streamTo(StreamConsumer.ofPromise(storage.remove()))
-								.then(() -> messaging.send(REMOVE_FINISHED))
+								.then(() -> messaging.send(response(REMOVE_FINISHED)))
 								.then(messaging::sendEndOfStream)
 								.whenResult(messaging::close);
 					}
-					if (msg == CrdtMessages.PING) {
-						return messaging.send(PONG)
+					if (messages == CrdtMessages.PING) {
+						return messaging.send(response(PONG))
 								.then(messaging::sendEndOfStream)
 								.whenResult(messaging::close);
 					}
-					if (msg == CrdtMessages.TAKE) {
+					if (messages == CrdtMessages.TAKE) {
 						return storage.take()
-								.whenResult(() -> messaging.send(TAKE_STARTED))
+								.whenResult(() -> messaging.send(response(TAKE_STARTED)))
 								.then(supplier -> supplier
 										.transformWith(ChannelSerializer.create(serializer))
 										.streamTo(messaging.sendBinaryStream()
 												.withAcknowledgement(ack -> ack
 														.then(() -> messaging.receive()
 																.then(takeAck -> {
-																	if (takeAck != TAKE_FINISHED) {
+																	if (!takeAck.hasMessages() && takeAck.getMessages() != TAKE_FINISHED) {
 																		return Promise.ofException(new CrdtException("Received message " + takeAck + " instead of " + TAKE_FINISHED));
 																	}
 																	return Promise.complete();
 																})))));
 					}
-					if (msg instanceof Download) {
-						return storage.download(((Download) msg).getToken())
-								.whenResult(() -> messaging.send(DOWNLOAD_STARTED))
-								.then(supplier -> supplier
-										.transformWith(ChannelSerializer.create(serializer))
-										.streamTo(messaging.sendBinaryStream()));
-					}
 					throw new IllegalArgumentException("Message type was added, but no handling code for it");
 				})
 				.whenException(e -> {
 					logger.warn("got an error while handling message {}", this, e);
-					messaging.send(new ServerError(e.getClass().getSimpleName() + ": " + e.getMessage()))
+					messaging.send(errorResponse(e))
 							.then(messaging::sendEndOfStream)
 							.whenResult(messaging::close);
 				});
+	}
+
+	private static CrdtResponse response(CrdtResponses responses) {
+		return CrdtResponse.newBuilder().setResponses(responses).build();
+	}
+
+	private static CrdtResponse errorResponse(Exception exception) {
+		return CrdtResponse.newBuilder()
+				.setError(ServerError.newBuilder()
+						.setMessage(exception.getClass().getSimpleName() + ": " + exception.getMessage()))
+				.build();
 	}
 }

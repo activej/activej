@@ -53,6 +53,11 @@ public final class TestSimpleCrdt {
 	}
 
 	@Test
+	public void testPing() {
+		await(client.ping().whenComplete(server::close));
+	}
+
+	@Test
 	public void testUpload() {
 		CrdtStorageMap<String, Integer> localStorage = CrdtStorageMap.create(getCurrentEventloop(), ignoringTimestamp(Integer::max));
 		localStorage.put("mx", 22);
