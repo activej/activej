@@ -16,18 +16,17 @@
 
 package io.activej.crdt;
 
-import com.google.protobuf.InvalidProtocolBufferException;
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
-import io.activej.common.exception.MalformedDataException;
 import io.activej.common.function.ConsumerEx;
 import io.activej.common.initializer.WithInitializer;
-import io.activej.crdt.CrdtMessagingProto.CrdtMessage.CrdtMessages;
-import io.activej.crdt.CrdtMessagingProto.CrdtMessage.Download;
-import io.activej.crdt.CrdtMessagingProto.CrdtResponse.CrdtResponses;
+import io.activej.crdt.CrdtMessagingProto.CrdtRequest;
+import io.activej.crdt.CrdtMessagingProto.CrdtRequest.*;
+import io.activej.crdt.CrdtMessagingProto.CrdtResponse.ResponseCase;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
+import io.activej.crdt.util.Utils;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
@@ -51,11 +50,9 @@ import org.jetbrains.annotations.NotNull;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 
-import static io.activej.crdt.CrdtMessagingProto.CrdtMessage;
-import static io.activej.crdt.CrdtMessagingProto.CrdtMessage.CrdtMessages.*;
+import static io.activej.crdt.CrdtMessagingProto.CrdtRequest.RequestCase.*;
 import static io.activej.crdt.CrdtMessagingProto.CrdtResponse;
-import static io.activej.crdt.CrdtMessagingProto.CrdtResponse.CrdtResponses.*;
-import static io.activej.csp.binary.Utils.nullTerminated;
+import static io.activej.crdt.CrdtMessagingProto.CrdtResponse.ResponseCase.*;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtStorageClient<K extends Comparable<K>, S> implements CrdtStorage<K, S>, EventloopService,
@@ -63,17 +60,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(CrdtStorageClient.class, "connectTimeout", Duration.ZERO);
 
-	private static final ByteBufsCodec<CrdtResponse, CrdtMessage> SERIALIZER =
-			nullTerminated()
-					.andThen(
-							value -> {
-								try {
-									return CrdtResponse.parseFrom(value.asArray());
-								} catch (InvalidProtocolBufferException e) {
-									throw new MalformedDataException(e);
-								}
-							},
-							crdtMessage -> ByteBuf.wrapForReading(crdtMessage.toByteArray()));
+	private static final ByteBufsCodec<CrdtResponse, CrdtRequest> SERIALIZER = Utils.codec(CrdtResponse.parser());
 
 	private final Eventloop eventloop;
 	private final InetSocketAddress address;
@@ -138,7 +125,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 							ChannelConsumer<ByteBuf> consumer = messaging.sendBinaryStream()
 									.withAcknowledgement(ack -> ack
 											.then(messaging::receive)
-											.whenResult(simpleHandlerFn(UPLOAD_FINISHED))
+											.whenResult(simpleHandlerFn(UPLOAD_ACK))
 											.toVoid());
 							return StreamConsumer.<CrdtData<K, S>>ofSupplier(supplier ->
 											supplier.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
@@ -181,7 +168,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 										.transformWith(ChannelDeserializer.create(serializer))
 										.transformWith(detailedStats ? takeStatsDetailed : takeStats)
 										.withEndOfStream(eos -> eos
-												.then(() -> messaging.send(message(TAKE_FINISHED)))
+												.then(() -> messaging.send(message(TAKE_ACK)))
 												.then(messaging::sendEndOfStream)
 												.mapException(e -> new CrdtException("Take failed", e))
 												.whenResult(messaging::close)
@@ -197,7 +184,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 							ChannelConsumer<ByteBuf> consumer = messaging.sendBinaryStream()
 									.withAcknowledgement(ack -> ack
 											.then(messaging::receive)
-											.whenResult(simpleHandlerFn(REMOVE_FINISHED))
+											.whenResult(simpleHandlerFn(REMOVE_ACK))
 											.toVoid());
 							return StreamConsumer.<CrdtTombstone<K>>ofSupplier(supplier ->
 											supplier.transformWith(detailedStats ? removeStatsDetailed : removeStats)
@@ -231,32 +218,48 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 		return Promise.complete();
 	}
 
-	private ConsumerEx<CrdtResponse> simpleHandlerFn(CrdtResponses expected) {
+	private ConsumerEx<CrdtResponse> simpleHandlerFn(ResponseCase responseCase) {
 		return response -> {
-			if (response.hasError()) {
-				throw new CrdtException((response.getError()).getMessage());
+			if (response.hasServerError()) {
+				throw new CrdtException((response.getServerError()).getMessage());
 			}
-			if (!response.hasResponses()) {
+			ResponseCase actualCase = response.getResponseCase();
+			if (actualCase == RESPONSE_NOT_SET) {
 				throw new CrdtException("Received empty message");
 			}
-			if (response.getResponses() != expected) {
-				throw new CrdtException("Received message " + response.getResponses() + " instead of " + expected);
+			if (actualCase != responseCase) {
+				throw new CrdtException("Received message " + actualCase + " instead of " + responseCase);
 			}
 		};
 	}
 
-	private Promise<MessagingWithBinaryStreaming<CrdtResponse, CrdtMessage>> connect() {
+	private Promise<MessagingWithBinaryStreaming<CrdtResponse, CrdtRequest>> connect() {
 		return AsyncTcpSocketNio.connect(address, connectTimeoutMillis, socketSettings)
 				.map(socket -> MessagingWithBinaryStreaming.create(socket, SERIALIZER))
 				.mapException(e -> new CrdtException("Failed to connect to " + address, e));
 	}
 
-	private static CrdtMessagingProto.CrdtMessage message(CrdtMessages messages) {
-		return CrdtMessage.newBuilder().setMessages(messages).build();
+	private static CrdtRequest message(RequestCase requestCase) {
+		CrdtRequest.Builder builder = CrdtRequest.newBuilder();
+		switch (requestCase) {
+			case UPLOAD:
+				return builder.setUpload(Upload.newBuilder()).build();
+			case REMOVE:
+				return builder.setRemove(Remove.newBuilder()).build();
+			case PING:
+				return builder.setPing(Ping.newBuilder()).build();
+			case TAKE:
+				return builder.setTake(Take.newBuilder()).build();
+			case TAKE_ACK:
+				return builder.setTakeAck(TakeAck.newBuilder()).build();
+			default:
+				throw new AssertionError();
+		}
+
 	}
 
-	private static CrdtMessagingProto.CrdtMessage downloadMessage(long timestamp) {
-		return CrdtMessage.newBuilder()
+	private static CrdtRequest downloadMessage(long timestamp) {
+		return CrdtRequest.newBuilder()
 				.setDownload(Download.newBuilder()
 						.setToken(timestamp))
 				.build();

@@ -3,14 +3,11 @@ package io.activej.crdt.storage.cluster;
 import com.dslplatform.json.JsonConverter;
 import com.dslplatform.json.JsonReader;
 import com.dslplatform.json.JsonWriter;
-import io.activej.bytebuf.ByteBuf;
 import io.activej.common.StringFormatUtils;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.crdt.util.Utils;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
 
 @SuppressWarnings("unused")
 @JsonConverter(target = InetSocketAddress.class)
@@ -37,12 +34,5 @@ public abstract class InetSocketAddressConverter {
 			return;
 		}
 		writer.writeString(value.getAddress().getHostAddress() + ":" + value.getPort());
-	}
-
-	public static void main(String[] args) throws MalformedDataException {
-		ByteBuf byteBuf = Utils.toJson(InetSocketAddress.class, new InetSocketAddress("www.google.com", 8080));
-		System.out.println(byteBuf.getString(StandardCharsets.UTF_8));
-		InetSocketAddress o = Utils.fromJson(InetSocketAddress.class, byteBuf);
-		System.out.println(o);
 	}
 }

@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package crdt;
+
+option java_multiple_files = false;
+option java_package = "io.activej.crdt";
+option java_outer_classname = "CrdtMessagingProto";
+
+message CrdtRequest {
+  message Upload {
+  }
+
+  message Remove {
+  }
+
+  message Ping {
+  }
+
+  message Take {
+  }
+
+  message TakeAck {
+  }
+
+  message Download {
+    int64 token = 1;
+  }
+
+  oneof request {
+    Upload upload = 1;
+    Remove remove = 2;
+    Ping ping = 3;
+    Take take = 4;
+    TakeAck take_ack = 5;
+    Download download = 6;
+  }
+}
+
+message CrdtResponse {
+  message UploadAck {
+  }
+
+  message RemoveAck {
+  }
+
+  message Pong {
+  }
+
+  message DownloadStarted {
+  }
+
+  message TakeStarted {
+  }
+
+  message ServerError {
+    string message = 1;
+  }
+
+  oneof response {
+    UploadAck upload_ack = 1;
+    RemoveAck remove_ack = 2;
+    Pong pong = 3;
+    DownloadStarted download_started = 4;
+    TakeStarted take_started = 5;
+    ServerError server_error = 6;
+  }
+}
