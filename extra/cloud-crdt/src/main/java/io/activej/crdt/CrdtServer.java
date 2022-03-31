@@ -36,7 +36,7 @@ import java.net.InetAddress;
 
 import static io.activej.crdt.CrdtMessagingProto.CrdtRequest.RequestCase.TAKE_ACK;
 import static io.activej.crdt.CrdtMessagingProto.CrdtResponse.ResponseCase.*;
-import static io.activej.crdt.util.Utils.codec;
+import static io.activej.fs.util.ProtobufUtils.codec;
 
 public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer<CrdtServer<K, S>> {
 	private static final ByteBufsCodec<CrdtRequest, CrdtResponse> SERIALIZER = codec(CrdtRequest.parser());

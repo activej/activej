@@ -118,7 +118,6 @@ public final class RemoteFsUtils {
 
 	/*
 		Casting received errors before sending to remote peer
-		ActiveFs.class is used as a component to hide implementation details from peer
 	 */
 	public static FsException castError(Exception e) {
 		return e instanceof FsException ? (FsException) e : new FsIOException("Unknown error");

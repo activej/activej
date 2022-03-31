@@ -21,21 +21,14 @@ import com.dslplatform.json.JsonReader;
 import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.ParsingException;
 import com.dslplatform.json.runtime.Settings;
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.Message;
-import com.google.protobuf.Parser;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.promise.Promise;
 import io.activej.types.TypeT;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -113,58 +106,4 @@ public final class Utils {
 		}
 	}
 	// endregion
-
-	public static <I extends Message, O extends Message> ByteBufsCodec<I, O> codec(Parser<I> inputParser) {
-		return new ByteBufsCodec<I, O>() {
-			@Override
-			public ByteBuf encode(O item) {
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				try {
-					item.writeDelimitedTo(baos);
-				} catch (IOException e) {
-					throw new AssertionError(e);
-				}
-				return ByteBuf.wrapForReading(baos.toByteArray());
-			}
-
-			@Override
-			public @Nullable I tryDecode(ByteBufs bufs) throws MalformedDataException {
-				try {
-					return inputParser.parseDelimitedFrom(asInputStream(bufs));
-				} catch (InvalidProtocolBufferException e) {
-					IOException ioException = e.unwrapIOException();
-					if (ioException != e) {
-						assert ioException == NEED_MORE_DATA_EXCEPTION;
-						return null;
-					}
-					throw new MalformedDataException(e);
-				}
-			}
-		};
-	}
-
-	private static InputStream asInputStream(ByteBufs bufs) {
-		return new InputStream() {
-			@Override
-			public int read() throws IOException {
-				if (bufs.isEmpty()) throw NEED_MORE_DATA_EXCEPTION;
-				return bufs.getByte();
-			}
-
-			@Override
-			public int read(byte @NotNull [] b, int off, int len) throws IOException {
-				if (bufs.isEmpty()) throw NEED_MORE_DATA_EXCEPTION;
-				return bufs.drainTo(b, off, len);
-			}
-		};
-	}
-
-	private static final NeedMoreDataException NEED_MORE_DATA_EXCEPTION = new NeedMoreDataException();
-
-	private static final class NeedMoreDataException extends IOException {
-		@Override
-		public synchronized Throwable fillInStackTrace() {
-			return this;
-		}
-	}
 }
