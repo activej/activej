@@ -22,7 +22,6 @@ import io.activej.common.ref.RefInt;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowClient.Session;
 import io.activej.dataflow.DataflowException;
-import io.activej.dataflow.json.JsonCodec;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.NodeDownload;
 import io.activej.dataflow.node.NodeUpload;
@@ -33,7 +32,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static io.activej.dataflow.json.JsonUtils.toJson;
 import static java.util.stream.Collectors.*;
 
 /**
@@ -45,12 +43,10 @@ public final class DataflowGraph {
 
 	private final DataflowClient client;
 	private final List<Partition> availablePartitions;
-	private final JsonCodec<List<Node>> listNodeCodec;
 
-	public DataflowGraph(DataflowClient client, List<Partition> availablePartitions, JsonCodec<List<Node>> listNodeCodec) {
+	public DataflowGraph(DataflowClient client, List<Partition> availablePartitions) {
 		this.client = client;
 		this.availablePartitions = availablePartitions;
-		this.listNodeCodec = listNodeCodec;
 	}
 
 	public List<Partition> getAvailablePartitions() {
@@ -292,7 +288,7 @@ public final class DataflowGraph {
 		Map<Partition, List<Node>> map = getNodesByPartition();
 		for (Map.Entry<Partition, List<Node>> entry : map.entrySet()) {
 			sb.append("--- " + entry.getKey() + "\n\n");
-			sb.append(toJson(listNodeCodec, entry.getValue()));
+//			sb.append(toJson(listNodeCodec, entry.getValue()));
 			sb.append("\n\n");
 		}
 		return sb.toString();

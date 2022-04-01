@@ -16,22 +16,17 @@
 
 package io.activej.dataflow.inject;
 
-import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufPool;
 import io.activej.csp.binary.ByteBufsCodec;
-import io.activej.dataflow.json.JsonCodec;
-import io.activej.dataflow.json.JsonModule;
-import io.activej.dataflow.json.JsonModule.Subtypes;
+import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
+import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
+import io.activej.dataflow.protobuf.ProtobufFunctionModule;
+import io.activej.dataflow.protobuf.ProtobufUtils;
 import io.activej.dataflow.stats.BinaryNodeStat;
 import io.activej.dataflow.stats.StatReducer;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
-
-import static io.activej.csp.binary.ByteBufsDecoder.ofNullTerminatedBytes;
-import static io.activej.dataflow.json.JsonUtils.fromJson;
-import static io.activej.dataflow.json.JsonUtils.toJsonBuf;
 
 public final class DataflowModule extends AbstractModule {
 	private DataflowModule() {
@@ -43,7 +38,7 @@ public final class DataflowModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		install(JsonModule.create());
+		install(ProtobufFunctionModule.create());
 		install(DatasetIdModule.create());
 		install(BinarySerializerModule.create());
 
@@ -51,11 +46,12 @@ public final class DataflowModule extends AbstractModule {
 	}
 
 	@Provides
-	<I, O> ByteBufsCodec<I, O> byteBufsCodec(@Subtypes JsonCodec<I> inputCodec, @Subtypes JsonCodec<O> outputCodec) {
-		return ByteBufsCodec.ofDelimiter(ofNullTerminatedBytes(), buf -> {
-			ByteBuf buf1 = ByteBufPool.ensureWriteRemaining(buf, 1);
-			buf1.put((byte) 0);
-			return buf1;
-		}).andThen(buf -> fromJson(inputCodec, buf), item -> toJsonBuf(outputCodec, item));
+	ByteBufsCodec<DataflowResponse, DataflowRequest> responseRequestCodec() {
+		return ProtobufUtils.codec(DataflowResponse.parser());
+	}
+
+	@Provides
+	ByteBufsCodec<DataflowRequest, DataflowResponse> requestResponseCodec() {
+		return ProtobufUtils.codec(DataflowRequest.parser());
 	}
 }

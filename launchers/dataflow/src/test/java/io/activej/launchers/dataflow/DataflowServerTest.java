@@ -4,8 +4,6 @@ import io.activej.config.Config;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.collector.Collector;
-import io.activej.dataflow.command.DataflowCommand;
-import io.activej.dataflow.command.DataflowResponse;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.impl.DatasetConsumerOfId;
 import io.activej.dataflow.graph.DataflowContext;
@@ -13,9 +11,10 @@ import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator;
 import io.activej.dataflow.inject.DataflowModule;
-import io.activej.dataflow.json.JsonCodec;
-import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
+import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
+import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
+import io.activej.dataflow.protobuf.FunctionSerializer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamReducers.ReducerToAccumulator;
@@ -26,6 +25,7 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.promise.Promise;
+import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
 import io.activej.test.rules.ByteBufRule;
@@ -45,7 +45,7 @@ import java.util.stream.Stream;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
-import static io.activej.dataflow.json.JsonUtils.ofObject;
+import static io.activej.dataflow.protobuf.ProtobufUtils.ofObject;
 import static io.activej.launchers.dataflow.StreamMergeSorterStorageStub.FACTORY_STUB;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -344,20 +344,20 @@ public class DataflowServerTest {
 	public static Module createModule(List<Partition> partitions) {
 		return ModuleBuilder.create()
 				.install(DataflowModule.create())
-				.bind(new Key<JsonCodec<TestKeyFunction>>() {}).toInstance(ofObject(TestKeyFunction::new))
-				.bind(new Key<JsonCodec<TestMapFunction>>() {}).toInstance(ofObject(TestMapFunction::new))
-				.bind(new Key<JsonCodec<TestComparator>>() {}).toInstance(ofObject(TestComparator::new))
-				.bind(new Key<JsonCodec<TestReducer>>() {}).toInstance(ofObject(TestReducer::new))
-				.bind(new Key<JsonCodec<StringFunction>>() {}).toInstance(ofObject(StringFunction::new))
+				.bind(new Key<BinarySerializer<TestKeyFunction>>() {}).toInstance(ofObject(TestKeyFunction::new))
+				.bind(new Key<BinarySerializer<TestMapFunction>>() {}).toInstance(ofObject(TestMapFunction::new))
+				.bind(new Key<BinarySerializer<TestComparator>>() {}).toInstance(ofObject(TestComparator::new))
+				.bind(new Key<BinarySerializer<TestReducer>>() {}).toInstance(ofObject(TestReducer::new))
+				.bind(new Key<BinarySerializer<StringFunction>>() {}).toInstance(ofObject(StringFunction::new))
 				.scan(new Object() {
 					@Provides
-					DataflowClient client(ByteBufsCodec<DataflowResponse, DataflowCommand> codec, BinarySerializerLocator serializers) throws IOException {
-						return new DataflowClient(Executors.newSingleThreadExecutor(), temporaryFolder.newFolder().toPath(), codec, serializers);
+					DataflowClient client(ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator serializers, FunctionSerializer functionSerializer) throws IOException {
+						return new DataflowClient(Executors.newSingleThreadExecutor(), temporaryFolder.newFolder().toPath(), codec, serializers, functionSerializer);
 					}
 
 					@Provides
-					DataflowGraph graph(DataflowClient client, JsonCodec<List<Node>> nodesCodec) {
-						return new DataflowGraph(client, partitions, nodesCodec);
+					DataflowGraph graph(DataflowClient client) {
+						return new DataflowGraph(client, partitions);
 					}
 				})
 				.build();

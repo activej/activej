@@ -21,11 +21,12 @@ import io.activej.config.ConfigModule;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowServer;
-import io.activej.dataflow.command.DataflowCommand;
-import io.activej.dataflow.command.DataflowResponse;
 import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator;
 import io.activej.dataflow.inject.DataflowModule;
 import io.activej.dataflow.inject.SortingExecutor;
+import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
+import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
+import io.activej.dataflow.protobuf.FunctionSerializer;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;
 import io.activej.inject.Injector;
@@ -72,16 +73,16 @@ public abstract class DataflowServerLauncher extends Launcher {
 	}
 
 	@Provides
-	DataflowServer server(Eventloop eventloop, Config config, ByteBufsCodec<DataflowCommand, DataflowResponse> codec, BinarySerializerLocator serializers, Injector environment) {
-		return new DataflowServer(eventloop, codec, serializers, environment)
+	DataflowServer server(Eventloop eventloop, Config config, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator serializers, Injector environment, FunctionSerializer functionSerializer) {
+		return new DataflowServer(eventloop, codec, serializers, environment, functionSerializer)
 				.withInitializer(ofAbstractServer(config.getChild("dataflow.server")))
 				.withInitializer(s -> s.withSocketSettings(s.getSocketSettings().withTcpNoDelay(true)));
 	}
 
 	@Provides
 	@Eager
-	DataflowClient client(Executor executor, Config config, ByteBufsCodec<DataflowResponse, DataflowCommand> codec, BinarySerializerLocator serializers) {
-		return new DataflowClient(executor, config.get(ofPath(), "dataflow.secondaryBufferPath"), codec, serializers);
+	DataflowClient client(Executor executor, Config config, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator serializers, FunctionSerializer functionSerializer) {
+		return new DataflowClient(executor, config.get(ofPath(), "dataflow.secondaryBufferPath"), codec, serializers, functionSerializer);
 	}
 
 	@Provides

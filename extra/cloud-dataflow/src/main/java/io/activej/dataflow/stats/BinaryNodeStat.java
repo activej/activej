@@ -1,6 +1,5 @@
 package io.activej.dataflow.stats;
 
-import com.dslplatform.json.CompiledJson;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -8,7 +7,6 @@ import io.activej.csp.dsl.ChannelTransformer;
 
 import java.util.Objects;
 
-@CompiledJson
 public class BinaryNodeStat extends NodeStat implements ChannelTransformer<ByteBuf, ByteBuf> {
 	public static final StatReducer<BinaryNodeStat> REDUCER =
 			stats -> {

@@ -13,8 +13,6 @@ import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.dsl.ChannelSupplierTransformer;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowServer;
-import io.activej.dataflow.command.DataflowCommand;
-import io.activej.dataflow.command.DataflowResponse;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
@@ -23,10 +21,11 @@ import io.activej.dataflow.helper.PartitionedCollector;
 import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator;
 import io.activej.dataflow.inject.DataflowModule;
 import io.activej.dataflow.inject.DatasetId;
-import io.activej.dataflow.json.JsonCodec;
-import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.PartitionedStreamConsumerFactory;
 import io.activej.dataflow.node.PartitionedStreamSupplierFactory;
+import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
+import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
+import io.activej.dataflow.protobuf.FunctionSerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
@@ -41,7 +40,6 @@ import io.activej.fs.http.HttpActiveFs;
 import io.activej.http.AsyncHttpClient;
 import io.activej.http.AsyncHttpServer;
 import io.activej.inject.Injector;
-import io.activej.inject.Key;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
@@ -50,6 +48,7 @@ import io.activej.inject.module.Modules;
 import io.activej.net.AbstractServer;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.serializer.BinarySerializer;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
@@ -72,7 +71,7 @@ import static io.activej.common.Utils.first;
 import static io.activej.common.Utils.setOf;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.dataflow.dataset.Datasets.*;
-import static io.activej.dataflow.json.JsonUtils.ofObject;
+import static io.activej.dataflow.protobuf.ProtobufUtils.ofObject;
 import static io.activej.datastream.StreamSupplier.ofChannelSupplier;
 import static io.activej.datastream.processor.StreamReducers.mergeReducer;
 import static io.activej.promise.TestUtils.await;
@@ -299,8 +298,8 @@ public final class PartitionedStreamTest {
 					}
 
 					@Provides
-					DataflowServer server(Eventloop eventloop, ByteBufsCodec<DataflowCommand, DataflowResponse> codec, BinarySerializerLocator locator, Injector injector) {
-						return new DataflowServer(eventloop, codec, locator, injector);
+					DataflowServer server(Eventloop eventloop, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator locator, Injector injector, FunctionSerializer functionSerializer) {
+						return new DataflowServer(eventloop, codec, locator, injector, functionSerializer);
 					}
 
 					@Provides
@@ -364,7 +363,7 @@ public final class PartitionedStreamTest {
 					}
 
 					@Provides
-					JsonCodec<IsEven> isEvenCodec() {
+					BinarySerializer<IsEven> isEvenCodec() {
 						return ofObject(IsEven::new);
 					}
 				}
@@ -381,8 +380,8 @@ public final class PartitionedStreamTest {
 					}
 
 					@Provides
-					DataflowClient client(Executor executor, ByteBufsCodec<DataflowResponse, DataflowCommand> codec, BinarySerializerLocator locator) throws IOException {
-						return new DataflowClient(executor, Files.createTempDirectory("").toAbsolutePath(), codec, locator);
+					DataflowClient client(Executor executor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator locator, FunctionSerializer functionSerializer) throws IOException {
+						return new DataflowClient(executor, Files.createTempDirectory("").toAbsolutePath(), codec, locator, functionSerializer);
 					}
 
 					@Provides
@@ -391,7 +390,7 @@ public final class PartitionedStreamTest {
 					}
 
 					@Provides
-					JsonCodec<IsEven> isEvenCodec() {
+					BinarySerializer<IsEven> isEvenCodec() {
 						return ofObject(IsEven::new);
 					}
 				}
@@ -445,9 +444,8 @@ public final class PartitionedStreamTest {
 
 	private Map<Partition, List<String>> collectToMap(boolean sorted) {
 		Injector injector = Injector.of(createClientModule());
-		JsonCodec<List<Node>> nodesCodec = injector.getInstance(new Key<JsonCodec<List<Node>>>() {});
 		DataflowClient client = injector.getInstance(DataflowClient.class);
-		DataflowGraph graph = new DataflowGraph(client, toPartitions(dataflowServers), nodesCodec);
+		DataflowGraph graph = new DataflowGraph(client, toPartitions(dataflowServers));
 		Dataset<String> compoundDataset = datasetOfId(sorted ? "sorted data source" : "data source", String.class);
 
 		PartitionedCollector<String> collector = new PartitionedCollector<>(compoundDataset, client);
@@ -459,9 +457,8 @@ public final class PartitionedStreamTest {
 
 	private void filterOddAndPropagateToTarget() {
 		Injector injector = Injector.of(createClientModule());
-		JsonCodec<List<Node>> nodesCodec = injector.getInstance(new Key<JsonCodec<List<Node>>>() {});
 		DataflowClient client = injector.getInstance(DataflowClient.class);
-		DataflowGraph graph = new DataflowGraph(client, toPartitions(dataflowServers), nodesCodec);
+		DataflowGraph graph = new DataflowGraph(client, toPartitions(dataflowServers));
 		Dataset<String> compoundDataset = datasetOfId("data source", String.class);
 		Dataset<String> filteredDataset = filter(compoundDataset, new IsEven());
 		Dataset<String> consumerDataset = consumerOfId(filteredDataset, "data target");

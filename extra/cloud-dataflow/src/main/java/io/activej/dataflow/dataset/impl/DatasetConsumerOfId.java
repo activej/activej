@@ -45,7 +45,7 @@ public final class DatasetConsumerOfId<T> extends Dataset<T> {
 		for (int i = 0, streamIdsSize = streamIds.size(); i < streamIdsSize; i++) {
 			StreamId streamId = streamIds.get(i);
 			Partition partition = graph.getPartition(streamId);
-			NodeConsumerOfId<T> node = new NodeConsumerOfId<>(index, id, i, streamIdsSize, streamId);
+			NodeConsumerOfId<T> node = new NodeConsumerOfId<T>(index, id, i, streamIdsSize, streamId);
 			graph.addNode(partition, node);
 		}
 		return Collections.emptyList();

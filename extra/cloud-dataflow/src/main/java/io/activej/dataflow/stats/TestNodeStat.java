@@ -1,8 +1,5 @@
 package io.activej.dataflow.stats;
 
-import com.dslplatform.json.CompiledJson;
-
-@CompiledJson
 public class TestNodeStat extends NodeStat {
 
 	private final int nodeIndex;

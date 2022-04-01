@@ -1,0 +1,142 @@
+syntax = "proto3";
+
+package dataflow;
+
+option java_multiple_files = false;
+option java_package = "io.activej.dataflow.proto";
+option java_outer_classname = "NodeProto";
+
+import "stream_id.proto";
+
+message Node {
+  message ConsumerOfId {
+    int32 index = 1;
+    string id = 2;
+    int32 partition_index = 3;
+    int32 max_partitions = 4;
+    StreamId input = 5;
+  }
+
+  message Download {
+    message Address {
+      string host = 1;
+      int32 port = 2;
+    }
+
+    int32 index = 1;
+    string type = 2;
+    Address address = 3;
+    StreamId input = 4;
+    StreamId output = 5;
+  }
+
+  message Filter {
+    int32 index = 1;
+    bytes predicate = 2;
+    StreamId input = 3;
+    StreamId output = 4;
+  }
+
+  message Join {
+    int32 index = 1;
+    StreamId left = 2;
+    StreamId right = 3;
+    StreamId output = 4;
+    bytes comparator = 5;
+    bytes left_key_function = 6;
+    bytes right_key_function = 7;
+    bytes joiner = 8;
+  }
+
+  message Map {
+    int32 index = 1;
+    bytes function = 2;
+    StreamId input = 3;
+    StreamId output = 4;
+  }
+
+  message Merge {
+    int32 index = 1;
+    bytes key_function = 2;
+    bytes key_comparator = 3;
+    bool deduplicate = 4;
+    repeated StreamId inputs = 5;
+    StreamId output = 6;
+  }
+
+  message Reduce {
+    message Input {
+      bytes reducer = 1;
+      bytes key_function = 2;
+    }
+
+    int32 index = 1;
+    bytes key_comparator = 2;
+    map<int64, Input> inputs = 3;
+    StreamId output = 4;
+  }
+
+  message ReduceSimple {
+    int32 index = 1;
+    bytes key_function = 2;
+    bytes key_comparator = 3;
+    bytes reducer = 4;
+    repeated StreamId inputs = 5;
+    StreamId output = 6;
+  }
+
+  message Shard {
+    int32 index = 1;
+    bytes key_function = 2;
+    StreamId input = 3;
+    repeated StreamId outputs = 4;
+    int32 nonce = 5;
+  }
+
+  message Sort {
+    int32 index = 1;
+    string type = 2;
+    bytes key_function = 3;
+    bytes key_comparator = 4;
+    bool deduplicate = 5;
+    int32 items_in_memory_size = 6;
+    StreamId input = 7;
+    StreamId output = 8;
+  }
+
+  message SupplierOfId {
+    int32 index = 1;
+    string id = 2;
+    int32 partition_index = 3;
+    int32 max_partitions = 4;
+    StreamId output = 5;
+  }
+
+  message Union {
+    int32 index = 1;
+    repeated StreamId inputs = 2;
+    StreamId output = 3;
+  }
+
+  message Upload {
+    int32 index = 1;
+    string type = 2;
+    StreamId stream_id = 3;
+  }
+
+  oneof node {
+    ConsumerOfId consumer_of_id = 1;
+    Download download = 2;
+    Filter filter = 3;
+    Join join = 4;
+    Map map = 5;
+    Merge merge = 6;
+    Reduce reduce = 7;
+    ReduceSimple reduce_simple = 8;
+    Shard shard = 9;
+    Sort sort = 10;
+    SupplierOfId supplier_of_id = 11;
+    Union union = 12;
+    Upload upload = 13;
+  }
+}

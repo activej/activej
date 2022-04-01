@@ -20,11 +20,14 @@ import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.dataflow.DataflowException;
-import io.activej.dataflow.command.*;
-import io.activej.dataflow.command.DataflowResponsePartitionData.TaskDesc;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.TaskStatus;
-import io.activej.dataflow.json.JsonCodec;
+import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
+import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.GetTasks.TaskId;
+import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
+import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.PartitionData;
+import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.PartitionData.TaskDesc;
+import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.TaskData;
 import io.activej.dataflow.stats.NodeStat;
 import io.activej.dataflow.stats.StatReducer;
 import io.activej.http.*;
@@ -41,8 +44,7 @@ import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.Executor;
 
-import static io.activej.dataflow.json.JsonUtils.codec;
-import static io.activej.dataflow.json.JsonUtils.toJson;
+import static io.activej.dataflow.protobuf.ProtobufUtils.convert;
 import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpResponse.ok200;
 import static io.activej.types.Types.parameterizedType;
@@ -51,14 +53,10 @@ import static java.util.stream.Collectors.toList;
 
 public final class DataflowDebugServlet implements AsyncServlet {
 	private final AsyncServlet servlet;
-	private final ByteBufsCodec<DataflowResponse, DataflowCommand> codec;
+	private final ByteBufsCodec<DataflowResponse, DataflowRequest> codec;
 
-	public DataflowDebugServlet(List<Partition> partitions, Executor executor, ByteBufsCodec<DataflowResponse, DataflowCommand> codec, ResourceLocator env,
-			JsonCodec<Map<Long, List<@Nullable TaskStatus>>> taskListCodec) {
+	public DataflowDebugServlet(List<Partition> partitions, Executor executor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, ResourceLocator env) {
 		this.codec = codec;
-
-		JsonCodec<ReducedTaskData> reducedTaskDataCodec = env.getInstance(codec(ReducedTaskData.class));
-		JsonCodec<LocalTaskData> localTaskDataCodec = env.getInstance(codec(LocalTaskData.class));
 
 		this.servlet = RoutingServlet.create()
 				.map("/*", StaticServlet.ofClassPath(executor, "debug").withIndexHtml())
@@ -72,14 +70,14 @@ public final class DataflowDebugServlet implements AsyncServlet {
 										.map(partitionStats -> {
 											Map<Long, List<@Nullable TaskStatus>> tasks = new HashMap<>();
 											for (int i = 0; i < partitionStats.size(); i++) {
-												DataflowResponsePartitionData partitionStat = partitionStats.get(i);
-												for (TaskDesc taskDesc : partitionStat.getLast()) {
+												PartitionData partitionStat = partitionStats.get(i);
+												for (TaskDesc taskDesc : partitionStat.getLastList()) {
 													tasks.computeIfAbsent(taskDesc.getId(), $ -> Arrays.asList(new TaskStatus[partitionStats.size()]))
-															.set(i, taskDesc.getStatus());
+															.set(i, convert(taskDesc.getStatus()));
 												}
 											}
-											return ok200()
-													.withJson(toJson(taskListCodec, tasks));
+											return ok200();
+//													.withJson(toJson(taskListCodec, tasks));
 										}))
 						.map(GET, "/tasks/:taskID", request -> {
 							long id = getTaskId(request);
@@ -90,16 +88,16 @@ public final class DataflowDebugServlet implements AsyncServlet {
 										Map<Integer, List<@Nullable NodeStat>> nodeStats = new HashMap<>();
 
 										for (int i = 0; i < localStats.size(); i++) {
-											DataflowResponseTaskData localTaskData = localStats.get(i);
+											TaskData localTaskData = localStats.get(i);
 											if (localTaskData == null) {
 												continue;
 											}
-											statuses.set(i, localTaskData.getStatus());
+											statuses.set(i, convert(localTaskData.getStatus()));
 											int finalI = i;
-											localTaskData.getNodes()
+											localTaskData.getNodesMap()
 													.forEach((index, nodeStat) ->
 															nodeStats.computeIfAbsent(index, $ -> Arrays.asList(new NodeStat[localStats.size()]))
-																	.set(finalI, nodeStat));
+																	.set(finalI, convert(nodeStat)));
 										}
 
 										Map<Integer, @Nullable NodeStat> reduced = nodeStats.entrySet().stream()
@@ -111,7 +109,8 @@ public final class DataflowDebugServlet implements AsyncServlet {
 												}, HashMap::putAll);
 
 										ReducedTaskData taskData = new ReducedTaskData(statuses, localStats.get(0).getGraphViz(), reduced);
-										return ok200().withJson(toJson(reducedTaskDataCodec, taskData));
+										return ok200();
+//												.withJson(toJson(reducedTaskDataCodec, taskData));
 									});
 						})
 						.map(GET, "/tasks/:taskID/:index", request -> {
@@ -124,9 +123,9 @@ public final class DataflowDebugServlet implements AsyncServlet {
 								throw HttpError.ofCode(400, "Bad index");
 							}
 							return getTask(partition.getAddress(), id)
-									.map(task -> ok200()
-											.withJson(toJson(localTaskDataCodec,
-													new LocalTaskData(task.getStatus(), task.getGraphViz(), task.getNodes(), task.getStartTime(), task.getFinishTime(), task.getErrorString()))));
+									.map(task -> ok200());
+//											.withJson(toJson(localTaskDataCodec,
+//													new LocalTaskData(task.getStatus(), task.getGraphViz(), task.getNodes(), task.getStartTime(), task.getFinishTime(), task.getErrorString()))));
 						}));
 	}
 
@@ -151,38 +150,42 @@ public final class DataflowDebugServlet implements AsyncServlet {
 		}
 	}
 
-	private Promise<DataflowResponsePartitionData> getPartitionData(InetSocketAddress address) {
+	private Promise<PartitionData> getPartitionData(InetSocketAddress address) {
 		return AsyncTcpSocketNio.connect(address)
 				.then(socket -> {
-					Messaging<DataflowResponse, DataflowCommand> messaging = MessagingWithBinaryStreaming.create(socket, codec);
-					return messaging.send(new DataflowCommandGetTasks(null))
+					Messaging<DataflowResponse, DataflowRequest> messaging = MessagingWithBinaryStreaming.create(socket, codec);
+					return messaging.send(getTasks(null))
 							.then($ -> messaging.receive())
 							.map(response -> {
 								messaging.close();
-								if (response instanceof DataflowResponsePartitionData) {
-									return (DataflowResponsePartitionData) response;
-								} else if (response instanceof DataflowResponseResult) {
-									throw new DataflowException("Error on remote server " + address + ": " + ((DataflowResponseResult) response).getError());
+								switch (response.getResponseCase()) {
+									case PARTITION_DATA:
+										return response.getPartitionData();
+									case RESULT:
+										throw new DataflowException("Error on remote server " + address + ": " + response.getResult().getError().getError());
+									default:
+										throw new DataflowException("Bad response from server");
 								}
-								throw new DataflowException("Bad response from server");
 							});
 				});
 	}
 
-	private Promise<DataflowResponseTaskData> getTask(InetSocketAddress address, long taskId) {
+	private Promise<TaskData> getTask(InetSocketAddress address, long taskId) {
 		return AsyncTcpSocketNio.connect(address)
 				.then(socket -> {
-					Messaging<DataflowResponse, DataflowCommand> messaging = MessagingWithBinaryStreaming.create(socket, codec);
-					return messaging.send(new DataflowCommandGetTasks(taskId))
+					Messaging<DataflowResponse, DataflowRequest> messaging = MessagingWithBinaryStreaming.create(socket, codec);
+					return messaging.send(getTasks(taskId))
 							.then($ -> messaging.receive())
 							.map(response -> {
 								messaging.close();
-								if (response instanceof DataflowResponseTaskData) {
-									return (DataflowResponseTaskData) response;
-								} else if (response instanceof DataflowResponseResult) {
-									throw new DataflowException("Error on remote server " + address + ": " + ((DataflowResponseResult) response).getError());
+								switch (response.getResponseCase()) {
+									case TASK_DATA:
+										return response.getTaskData();
+									case RESULT:
+										throw new DataflowException("Error on remote server " + address + ": " + response.getResult().getError().getError());
+									default:
+										throw new DataflowException("Bad response from server");
 								}
-								throw new DataflowException("Bad response from server");
 							});
 				});
 	}
@@ -191,4 +194,18 @@ public final class DataflowDebugServlet implements AsyncServlet {
 	public @NotNull Promisable<HttpResponse> serve(@NotNull HttpRequest request) throws Exception {
 		return servlet.serve(request);
 	}
+
+	private static DataflowRequest getTasks(@Nullable Long taskId) {
+		TaskId.Builder taskIdBuilder = TaskId.newBuilder();
+		if (taskId == null) {
+			taskIdBuilder.setTaskIdIsNull(true);
+		} else {
+			taskIdBuilder.setTaskId(taskId);
+		}
+		return DataflowRequest.newBuilder()
+				.setGetTasks(DataflowRequest.GetTasks.newBuilder()
+						.setTaskId(taskIdBuilder))
+				.build();
+	}
+
 }

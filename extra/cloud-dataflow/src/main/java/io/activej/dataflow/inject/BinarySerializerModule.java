@@ -17,7 +17,6 @@
 package io.activej.dataflow.inject;
 
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
@@ -56,11 +55,6 @@ public final class BinarySerializerModule extends AbstractModule {
 	@Provides
 	BinarySerializerLocator serializerLocator() {
 		return locator;
-	}
-
-	@Provides
-	<T> BinarySerializer<T> serializer(Key<T> t) {
-		return locator.get(t.getRawType());
 	}
 
 	public static final class BinarySerializerLocator {

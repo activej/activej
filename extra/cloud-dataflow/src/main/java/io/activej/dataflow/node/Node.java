@@ -18,7 +18,6 @@ package io.activej.dataflow.node;
 
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
-import io.activej.dataflow.json.JsonModule.Subtypes;
 import io.activej.dataflow.stats.NodeStat;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,7 +29,6 @@ import static java.util.Collections.emptyList;
 /**
  * Defines a node in a single server.
  */
-@Subtypes
 public interface Node {
 	/**
 	 * Returns an index of this node in the task.

@@ -1,37 +1,26 @@
 package io.activej.dataflow.collector;
 
-import io.activej.bytebuf.ByteBufStrings;
+import com.google.protobuf.ByteString;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.dataflow.command.DataflowCommand;
-import io.activej.dataflow.command.DataflowCommandExecute;
-import io.activej.dataflow.graph.StreamId;
-import io.activej.dataflow.json.JsonCodec;
-import io.activej.dataflow.json.JsonModule;
-import io.activej.dataflow.node.*;
+import io.activej.dataflow.protobuf.FunctionSerializer;
+import io.activej.dataflow.protobuf.ProtobufFunctionModule;
 import io.activej.datastream.StreamDataAcceptor;
+import io.activej.datastream.processor.StreamJoin.Joiner;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
-import io.activej.test.rules.ByteBufRule;
-import org.junit.ClassRule;
+import io.activej.serializer.BinarySerializer;
 import org.junit.Test;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
-import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
-import static io.activej.dataflow.json.JsonUtils.*;
+import static io.activej.dataflow.protobuf.ProtobufUtils.ofObject;
 
 public class DataflowSerializationTest {
-
-	@ClassRule
-	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	public static class TestComparator implements Comparator<Integer> {
 		@Override
@@ -55,6 +44,24 @@ public class DataflowSerializationTest {
 		public void onComplete(StreamDataAcceptor<Integer> stream, Integer key, Integer accumulator) {}
 	}
 
+	private static class TestJoiner implements Joiner<Integer, Integer, Integer, Integer> {
+
+		@Override
+		public void onInnerJoin(Integer key, Integer left, Integer right, StreamDataAcceptor<Integer> output) {
+		}
+
+		@Override
+		public void onLeftJoin(Integer key, Integer left, StreamDataAcceptor<Integer> output) {
+		}
+	}
+
+	private static class TestPredicate implements Predicate<Integer> {
+		@Override
+		public boolean test(Integer integer) {
+			return false;
+		}
+	}
+
 	private static class TestFunction implements Function<String, String> {
 		@Override
 		public String apply(String input) {
@@ -71,30 +78,38 @@ public class DataflowSerializationTest {
 
 	@SuppressWarnings("rawtypes")
 	@Test
-	public void test2() throws UnknownHostException, MalformedDataException {
-
+	public void test2() throws MalformedDataException {
 		Module serialization = ModuleBuilder.create()
-				.install(JsonModule.create())
-				.bind(new Key<JsonCodec<TestComparator>>() {}).toInstance(ofObject(TestComparator::new))
-				.bind(new Key<JsonCodec<TestFunction>>() {}).toInstance(ofObject(TestFunction::new))
-				.bind(new Key<JsonCodec<TestIdentityFunction>>() {}).toInstance(ofObject(TestIdentityFunction::new))
-				.bind(new Key<JsonCodec<TestReducer>>() {}).toInstance(ofObject(TestReducer::new))
+				.install(ProtobufFunctionModule.create())
+				.bind(new Key<BinarySerializer<TestComparator>>() {}).toInstance(ofObject(TestComparator::new))
+				.bind(new Key<BinarySerializer<TestFunction>>() {}).toInstance(ofObject(TestFunction::new))
+				.bind(new Key<BinarySerializer<TestIdentityFunction>>() {}).toInstance(ofObject(TestIdentityFunction::new))
+				.bind(new Key<BinarySerializer<TestReducer>>() {}).toInstance(ofObject(TestReducer::new))
+				.bind(new Key<BinarySerializer<TestJoiner>>() {}).toInstance(ofObject(TestJoiner::new))
+				.bind(new Key<BinarySerializer<TestPredicate>>() {}).toInstance(ofObject(TestPredicate::new))
 				.build();
 
-		NodeReduce<Integer, Integer, Integer> reducer = new NodeReduce<>(0, new TestComparator());
-		reducer.addInput(new StreamId(), new TestIdentityFunction<>(), new TestReducer());
-		List<Node> nodes = Arrays.asList(
-				reducer,
-				new NodeMap<>(1, new TestFunction(), new StreamId(1)),
-				new NodeUpload<>(2, Integer.class, new StreamId(Long.MAX_VALUE)),
-				new NodeDownload<>(3, Integer.class, new InetSocketAddress(InetAddress.getByName("127.0.0.1"), 1571), new StreamId(Long.MAX_VALUE))
-		);
+		FunctionSerializer functionSerializer = Injector.of(serialization).getInstance(FunctionSerializer.class);
 
-		JsonCodec<DataflowCommand> commandCodec = Injector.of(serialization).getInstance(new Key<JsonCodec<DataflowCommand>>() {});
+		ByteString comparatorByteString = functionSerializer.serializeComparator(new TestComparator());
+		ByteString functionByteString = functionSerializer.serializeFunction(new TestFunction());
+		ByteString identityFunctionByteString = functionSerializer.serializeFunction(new TestIdentityFunction<>());
+		ByteString reducerByteString = functionSerializer.serializeReducer(new TestReducer());
+		ByteString joinerByteString = functionSerializer.serializeJoiner(new TestJoiner());
+		ByteString predicateByteString = functionSerializer.serializePredicate(new TestPredicate());
 
-		String str = toJson(commandCodec, new DataflowCommandExecute(123, nodes));
-		System.out.println(str);
+		System.out.println(comparatorByteString);
+		System.out.println(functionByteString);
+		System.out.println(identityFunctionByteString);
+		System.out.println(reducerByteString);
+		System.out.println(joinerByteString);
+		System.out.println(predicateByteString);
 
-		System.out.println(fromJson(commandCodec, ByteBufStrings.wrapUtf8(str)));
+		System.out.println(functionSerializer.deserializeComparator(comparatorByteString));
+		System.out.println(functionSerializer.deserializeFunction(functionByteString));
+		System.out.println(functionSerializer.deserializeFunction(identityFunctionByteString));
+		System.out.println(functionSerializer.deserializeReducer(reducerByteString));
+		System.out.println(functionSerializer.deserializeJoiner(joinerByteString));
+		System.out.println(functionSerializer.deserializePredicate(predicateByteString));
 	}
 }

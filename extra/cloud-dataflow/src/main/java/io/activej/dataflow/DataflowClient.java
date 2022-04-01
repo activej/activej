@@ -23,10 +23,12 @@ import io.activej.csp.dsl.ChannelTransformer;
 import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.csp.queue.*;
-import io.activej.dataflow.command.*;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator;
 import io.activej.dataflow.node.Node;
+import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
+import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
+import io.activej.dataflow.protobuf.FunctionSerializer;
 import io.activej.datastream.AbstractStreamConsumer;
 import io.activej.datastream.AbstractStreamSupplier;
 import io.activej.datastream.StreamDataAcceptor;
@@ -41,12 +43,12 @@ import org.slf4j.Logger;
 
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static io.activej.dataflow.protobuf.ProtobufUtils.convert;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -61,18 +63,20 @@ public final class DataflowClient {
 	private final Executor executor;
 	private final Path secondaryPath;
 
-	private final ByteBufsCodec<DataflowResponse, DataflowCommand> codec;
+	private final ByteBufsCodec<DataflowResponse, DataflowRequest> codec;
 	private final BinarySerializerLocator serializers;
+	private final FunctionSerializer functionSerializer;
 
 	private final AtomicInteger secondaryId = new AtomicInteger(ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE));
 
 	private int bufferMinSize, bufferMaxSize;
 
-	public DataflowClient(Executor executor, Path secondaryPath, ByteBufsCodec<DataflowResponse, DataflowCommand> codec, BinarySerializerLocator serializers) {
+	public DataflowClient(Executor executor, Path secondaryPath, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator serializers, FunctionSerializer functionSerializer) {
 		this.executor = executor;
 		this.secondaryPath = secondaryPath;
 		this.codec = codec;
 		this.serializers = serializers;
+		this.functionSerializer = functionSerializer;
 	}
 
 	public DataflowClient withBufferSizes(int bufferMinSize, int bufferMaxSize) {
@@ -85,8 +89,8 @@ public final class DataflowClient {
 		return StreamSupplier.ofPromise(AsyncTcpSocketNio.connect(address, 0, socketSettings)
 				.mapException(e -> new DataflowException("Failed to connect to " + address, e))
 				.then(socket -> {
-					Messaging<DataflowResponse, DataflowCommand> messaging = MessagingWithBinaryStreaming.create(socket, codec);
-					return messaging.send(new DataflowCommandDownload(streamId))
+					Messaging<DataflowResponse, DataflowRequest> messaging = MessagingWithBinaryStreaming.create(socket, codec);
+					return messaging.send(downloadRequest(streamId))
 							.mapException(e -> new DataflowException("Failed to download from " + address, e))
 							.map($ -> {
 								ChannelQueue<ByteBuf> primaryBuffer =
@@ -175,7 +179,7 @@ public final class DataflowClient {
 
 	public class Session implements AsyncCloseable {
 		private final InetSocketAddress address;
-		private final Messaging<DataflowResponse, DataflowCommand> messaging;
+		private final Messaging<DataflowResponse, DataflowRequest> messaging;
 
 		private Session(InetSocketAddress address, AsyncTcpSocketNio socket) {
 			this.address = address;
@@ -183,18 +187,23 @@ public final class DataflowClient {
 		}
 
 		public Promise<Void> execute(long taskId, Collection<Node> nodes) {
-			return messaging.send(new DataflowCommandExecute(taskId, new ArrayList<>(nodes)))
+			return messaging.send(executeRequest(taskId, nodes))
 					.mapException(e -> new DataflowException("Failed to send command to " + address, e))
 					.then(() -> messaging.receive()
 							.mapException(e -> new DataflowException("Failed to receive response from " + address, e)))
 					.whenResult(response -> {
 						messaging.close();
-						if (!(response instanceof DataflowResponseResult)) {
-							throw new DataflowException("Bad response from server");
-						}
-						String error = ((DataflowResponseResult) response).getError();
-						if (error != null) {
-							throw new DataflowException("Error on remote server " + address + ": " + error);
+						switch (response.getResponseCase()) {
+							case RESULT:
+								DataflowResponse.Error error = response.getResult().getError();
+								if (!error.getErrorIsNull()) {
+									throw new DataflowException("Error on remote server " + address + ": " + error.getError());
+								}
+								break;
+							case RESPONSE_NOT_SET:
+								throw new DataflowException("Server did not set a response");
+							default:
+								throw new DataflowException("Bad response from server");
 						}
 					})
 					.toVoid();
@@ -210,5 +219,20 @@ public final class DataflowClient {
 		return AsyncTcpSocketNio.connect(address, 0, socketSettings)
 				.map(socket -> new Session(address, socket))
 				.mapException(e -> new DataflowException("Could not connect to " + address, e));
+	}
+
+	private static DataflowRequest downloadRequest(StreamId streamId) {
+		return DataflowRequest.newBuilder()
+				.setDownload(DataflowRequest.Download.newBuilder()
+						.setStreamId(convert(streamId)))
+				.build();
+	}
+
+	private DataflowRequest executeRequest(long taskId, Collection<Node> nodes) {
+		return DataflowRequest.newBuilder()
+				.setExecute(DataflowRequest.Execute.newBuilder()
+						.setTaskId(taskId)
+						.addAllNodes(convert(nodes, functionSerializer)))
+				.build();
 	}
 }

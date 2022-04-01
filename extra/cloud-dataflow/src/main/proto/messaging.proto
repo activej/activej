@@ -1,0 +1,90 @@
+syntax = "proto3";
+
+package dataflow;
+
+option java_multiple_files = false;
+option java_package = "io.activej.dataflow.proto";
+option java_outer_classname = "DataflowMessagingProto";
+
+import "stream_id.proto";
+import "node.proto";
+import "node_stat.proto";
+
+message DataflowRequest {
+  message Download {
+    StreamId stream_id = 1;
+  }
+
+  message Execute {
+    int64 task_id = 1;
+    repeated Node nodes = 2;
+  }
+
+  message GetTasks {
+    message TaskId {
+      bool task_id_is_null = 1;
+      int64 task_id = 2;
+    }
+
+    TaskId task_id = 1;
+  }
+
+  oneof request {
+    Download download = 1;
+    Execute execute = 2;
+    GetTasks get_tasks = 3;
+  }
+}
+
+message DataflowResponse {
+  enum TaskStatus {
+    TASK_STATUS_NOT_SET = 0;
+    RUNNING = 1;
+    COMPLETED = 2;
+    FAILED = 3;
+    CANCELLED = 4;
+  }
+
+  message PartitionData {
+    message TaskDesc {
+      int64 id = 1;
+      TaskStatus status = 2;
+    }
+
+    int32 running = 1;
+    int32 succeeded = 2;
+    int32 failed = 3;
+    int32 cancelled = 4;
+    repeated TaskDesc last = 5;
+  }
+
+  message Error {
+    bool error_is_null = 1;
+    string error = 2;
+  }
+
+  message Instant {
+    bool instant_is_null = 1;
+    int64 timestamp = 2;
+  }
+
+  message Result {
+    Error error = 1;
+  }
+
+  message TaskData {
+    TaskStatus status = 1;
+    Instant start_time = 2;
+    Instant finish_time = 3;
+    Error error = 4;
+    map<int32, NodeStat> nodes = 5;
+    string graph_viz = 6;
+  }
+
+  oneof response {
+    PartitionData partition_data = 1;
+    Result result = 2;
+    TaskData task_data = 3;
+  }
+
+}

@@ -6,7 +6,6 @@ import io.activej.dataflow.collector.MergeCollector;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
-import io.activej.dataflow.json.JsonCodec;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
@@ -15,6 +14,7 @@ import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
+import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
 import io.activej.test.rules.ByteBufRule;
@@ -34,7 +34,7 @@ import java.util.function.Function;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.helper.StreamMergeSorterStorageStub.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
-import static io.activej.dataflow.json.JsonUtils.ofObject;
+import static io.activej.dataflow.protobuf.ProtobufUtils.ofObject;
 import static io.activej.dataflow.stream.DataflowTest.createCommon;
 import static io.activej.dataflow.stream.DataflowTest.getFreeListenAddress;
 import static io.activej.promise.TestUtils.await;
@@ -109,9 +109,9 @@ public class MapReduceTest {
 		InetSocketAddress address2 = getFreeListenAddress();
 
 		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
-				.bind(new Key<JsonCodec<StringKeyFunction>>() {}).toInstance(ofObject(StringKeyFunction::new))
-				.bind(new Key<JsonCodec<StringMapFunction>>() {}).toInstance(ofObject(StringMapFunction::new))
-				.bind(new Key<JsonCodec<StringReducer>>() {}).toInstance(ofObject(StringReducer::new))
+				.bind(new Key<BinarySerializer<StringKeyFunction>>() {}).toInstance(ofObject(StringKeyFunction::new))
+				.bind(new Key<BinarySerializer<StringMapFunction>>() {}).toInstance(ofObject(StringMapFunction::new))
+				.bind(new Key<BinarySerializer<StringReducer>>() {}).toInstance(ofObject(StringReducer::new))
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
