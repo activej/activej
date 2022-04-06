@@ -364,6 +364,34 @@ public final class ByteBufs implements Recyclable {
 		return maxSize - s;
 	}
 
+	public int peekTo(int offset, byte[] dest, int destOffset, int maxSize) {
+		int s = maxSize;
+		int first = this.first;
+		while (offset > 0 && first != last) {
+			int readRemaining = bufs[first].readRemaining();
+			if (offset < readRemaining) {
+				break;
+			}
+			offset -= readRemaining;
+			first = next(first);
+		}
+		while (first != this.last) {
+			ByteBuf buf = bufs[first];
+			int remaining = buf.readRemaining() - offset;
+			if (s < remaining) {
+				arraycopy(buf.array(), buf.head() + offset, dest, destOffset, s);
+				return maxSize;
+			} else {
+				arraycopy(buf.array(), buf.head() + offset, dest, destOffset, remaining);
+				first = next(first);
+				s -= remaining;
+				destOffset += remaining;
+				offset = 0;
+			}
+		}
+		return maxSize - s;
+	}
+
 	/**
 	 * Returns the number of ByteBufs in this queue.
 	 */
