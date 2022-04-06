@@ -48,31 +48,17 @@ public final class ProtobufUtils {
 			@Override
 			public @Nullable I tryDecode(ByteBufs bufs) throws MalformedDataException {
 				try {
-					return inputParser.parseDelimitedFrom(asInputStream(bufs));
+					PeekingInputStream peekingInputStream = new PeekingInputStream(bufs);
+					I result = inputParser.parseDelimitedFrom(peekingInputStream);
+					bufs.skip(peekingInputStream.offset);
+					return result;
 				} catch (InvalidProtocolBufferException e) {
 					IOException ioException = e.unwrapIOException();
-					if (ioException != e) {
-						assert ioException == NEED_MORE_DATA_EXCEPTION;
+					if (ioException == NEED_MORE_DATA_EXCEPTION) {
 						return null;
 					}
 					throw new MalformedDataException(e);
 				}
-			}
-		};
-	}
-
-	private static InputStream asInputStream(ByteBufs bufs) {
-		return new InputStream() {
-			@Override
-			public int read() throws IOException {
-				if (bufs.isEmpty()) throw NEED_MORE_DATA_EXCEPTION;
-				return bufs.getByte();
-			}
-
-			@Override
-			public int read(byte @NotNull [] b, int off, int len) throws IOException {
-				if (bufs.isEmpty()) throw NEED_MORE_DATA_EXCEPTION;
-				return bufs.drainTo(b, off, len);
 			}
 		};
 	}
@@ -83,6 +69,31 @@ public final class ProtobufUtils {
 		@Override
 		public synchronized Throwable fillInStackTrace() {
 			return this;
+		}
+	}
+
+	private static class PeekingInputStream extends InputStream {
+		private final ByteBufs bufs;
+		int offset;
+
+		public PeekingInputStream(ByteBufs bufs) {
+			this.bufs = bufs;
+			offset = 0;
+		}
+
+		@Override
+		public int read() throws IOException {
+			if (!bufs.hasRemainingBytes(offset + 1)) throw NEED_MORE_DATA_EXCEPTION;
+			return bufs.peekByte(offset++);
+		}
+
+		@Override
+		public int read(byte @NotNull [] b, int off, int len) throws IOException {
+			if (!bufs.hasRemainingBytes(offset + 1)) throw NEED_MORE_DATA_EXCEPTION;
+
+			int peeked = bufs.peekTo(this.offset, b, off, len);
+			this.offset += peeked;
+			return peeked;
 		}
 	}
 }
