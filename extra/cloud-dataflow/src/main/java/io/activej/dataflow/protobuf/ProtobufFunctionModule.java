@@ -39,7 +39,6 @@ import java.util.function.Predicate;
 
 import static io.activej.dataflow.protobuf.ProtobufUtils.ofObject;
 
-@SuppressWarnings({"rawtypes", "unchecked"})
 public final class ProtobufFunctionModule extends AbstractModule {
 
 	private ProtobufFunctionModule() {
@@ -67,77 +66,75 @@ public final class ProtobufFunctionModule extends AbstractModule {
 	}
 
 	@Provides
-	BinarySerializer<DeduplicateReducer> mergeDistinctReducer() {
+	BinarySerializer<DeduplicateReducer<?, ?>> mergeDistinctReducer() {
 		return ofObject(DeduplicateReducer::new);
 	}
 
 	@Provides
-	BinarySerializer<MergeReducer> mergeSortReducer() {
+	BinarySerializer<MergeReducer<?, ?>> mergeSortReducer() {
 		return ofObject(MergeReducer::new);
 	}
 
 	@Provides
-	BinarySerializer<InputToAccumulator> inputToAccumulator(OptionalDependency<BinarySerializer<ReducerToResult>> optionalReducerToResultSerializer) {
-		BinarySerializer<ReducerToResult> reducerToResultSerializer = optionalReducerToResultSerializer.get();
-		return new BinarySerializer<InputToAccumulator>() {
+	BinarySerializer<InputToAccumulator<?, ?, ?, ?>> inputToAccumulator(OptionalDependency<BinarySerializer<ReducerToResult<?, ?, ?, ?>>> optionalReducerToResultSerializer) {
+		BinarySerializer<ReducerToResult<?, ?, ?, ?>> reducerToResultSerializer = optionalReducerToResultSerializer.get();
+		return new BinarySerializer<InputToAccumulator<?, ?, ?, ?>>() {
 			@Override
-			public void encode(BinaryOutput out, InputToAccumulator item) {
+			public void encode(BinaryOutput out, InputToAccumulator<?, ?, ?, ?> item) {
 				reducerToResultSerializer.encode(out, item.getReducerToResult());
 			}
 
 			@Override
-			public InputToAccumulator decode(BinaryInput in) throws CorruptedDataException {
-				return new InputToAccumulator(reducerToResultSerializer.decode(in));
+			public InputToAccumulator<?, ?, ?, ?> decode(BinaryInput in) throws CorruptedDataException {
+				return new InputToAccumulator<>(reducerToResultSerializer.decode(in));
 			}
 		};
 	}
 
 	@Provides
-	BinarySerializer<InputToOutput> inputToOutput(OptionalDependency<BinarySerializer<ReducerToResult>> optionalReducerToResultSerializer) {
-		BinarySerializer<ReducerToResult> reducerToResultSerializer = optionalReducerToResultSerializer.get();
-		return new BinarySerializer<InputToOutput>() {
+	BinarySerializer<InputToOutput<?, ?, ?, ?>> inputToOutput(OptionalDependency<BinarySerializer<ReducerToResult<?, ?, ?, ?>>> optionalReducerToResultSerializer) {
+		BinarySerializer<ReducerToResult<?, ?, ?, ?>> reducerToResultSerializer = optionalReducerToResultSerializer.get();
+		return new BinarySerializer<InputToOutput<?, ?, ?, ?>>() {
 			@Override
-			public void encode(BinaryOutput out, InputToOutput item) {
+			public void encode(BinaryOutput out, InputToOutput<?, ?, ?, ?> item) {
 				reducerToResultSerializer.encode(out, item.getReducerToResult());
 			}
 
 			@Override
-			public InputToOutput decode(BinaryInput in) throws CorruptedDataException {
-				return new InputToOutput(reducerToResultSerializer.decode(in));
+			public InputToOutput<?, ?, ?, ?> decode(BinaryInput in) throws CorruptedDataException {
+				return new InputToOutput<>(reducerToResultSerializer.decode(in));
 			}
 		};
 	}
 
 	@Provides
-	BinarySerializer<AccumulatorToAccumulator> accumulatorToAccumulator(OptionalDependency<BinarySerializer<ReducerToResult>> optionalReducerToResultSerializer) {
-		BinarySerializer<ReducerToResult> reducerToResultSerializer = optionalReducerToResultSerializer.get();
-		return new BinarySerializer<AccumulatorToAccumulator>() {
-
+	BinarySerializer<AccumulatorToAccumulator<?, ?, ?, ?>> accumulatorToAccumulator(OptionalDependency<BinarySerializer<ReducerToResult<?, ?, ?, ?>>> optionalReducerToResultSerializer) {
+		BinarySerializer<ReducerToResult<?, ?, ?, ?>> reducerToResultSerializer = optionalReducerToResultSerializer.get();
+		return new BinarySerializer<AccumulatorToAccumulator<?, ?, ?, ?>>() {
 			@Override
-			public void encode(BinaryOutput out, AccumulatorToAccumulator item) {
+			public void encode(BinaryOutput out, AccumulatorToAccumulator<?, ?, ?, ?> item) {
 				reducerToResultSerializer.encode(out, item.getReducerToResult());
 			}
 
 			@Override
-			public AccumulatorToAccumulator decode(BinaryInput in) throws CorruptedDataException {
-				return new AccumulatorToAccumulator(reducerToResultSerializer.decode(in));
+			public AccumulatorToAccumulator<?, ?, ?, ?> decode(BinaryInput in) throws CorruptedDataException {
+				return new AccumulatorToAccumulator<>(reducerToResultSerializer.decode(in));
 			}
 		};
 	}
 
 	@Provides
-	BinarySerializer<AccumulatorToOutput> accumulatorToOutput(OptionalDependency<BinarySerializer<ReducerToResult>> optionalReducerToResultSerializer) {
-		BinarySerializer<ReducerToResult> reducerToResultSerializer = optionalReducerToResultSerializer.get();
-		return new BinarySerializer<AccumulatorToOutput>() {
-
+	BinarySerializer<AccumulatorToOutput<?, ?, ?, ?>> accumulatorToOutput(OptionalDependency<BinarySerializer<ReducerToResult<?, ?, ?, ?>>> optionalReducerToResultSerializer) {
+		BinarySerializer<ReducerToResult<?, ?, ?, ?>> reducerToResultSerializer = optionalReducerToResultSerializer.get();
+		return new BinarySerializer<AccumulatorToOutput<?, ?, ?, ?>>() {
 			@Override
-			public void encode(BinaryOutput out, AccumulatorToOutput item) {
+			public void encode(BinaryOutput out, AccumulatorToOutput<?, ?, ?, ?> item) {
 				reducerToResultSerializer.encode(out, item.getReducerToResult());
 			}
 
 			@Override
-			public AccumulatorToOutput decode(BinaryInput in) throws CorruptedDataException {
-				return new AccumulatorToOutput(reducerToResultSerializer.decode(in));
+			public AccumulatorToOutput<?, ?, ?, ?> decode(BinaryInput in) throws CorruptedDataException {
+				return new AccumulatorToOutput<>(reducerToResultSerializer.decode(in));
 			}
 		};
 	}

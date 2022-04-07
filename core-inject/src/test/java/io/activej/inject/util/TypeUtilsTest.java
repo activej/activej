@@ -103,6 +103,18 @@ public class TypeUtilsTest {
 		}
 
 		{
+			Type type = new TypeT<TestClass<?, ?, ?, ?, ?, ?, ?, ?, ?>>() {}.getType();
+			Type expected = TestClass.class;
+			assertEquals(expected, simplifyType(type));
+		}
+
+		{
+			Type type = new TypeT<TestClass<?, ?, ?, Object, ?, ?, ?, ?, ?>>() {}.getType();
+			Type expected = TestClass.class;
+			assertEquals(expected, simplifyType(type));
+		}
+
+		{
 			//noinspection TypeParameterExplicitlyExtendsObject
 			Type type = new TypeT<TestClass<
 					Integer,

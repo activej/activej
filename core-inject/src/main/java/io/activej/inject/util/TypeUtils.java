@@ -197,6 +197,11 @@ public final class TypeUtils {
 			ParameterizedType parameterizedType = (ParameterizedType) original;
 			Type[] typeArguments = parameterizedType.getActualTypeArguments();
 			Type[] repackedTypeArguments = simplifyTypes(typeArguments);
+
+			if (isAllObjects(repackedTypeArguments)) {
+				return parameterizedType.getRawType();
+			}
+
 			if (typeArguments != repackedTypeArguments) {
 				return Types.parameterizedType(
 						parameterizedType.getOwnerType(),
@@ -251,5 +256,12 @@ public final class TypeUtils {
 			}
 		}
 		return original;
+	}
+
+	private static boolean isAllObjects(Type[] types) {
+		for (Type type : types) {
+			if (type != Object.class) return false;
+		}
+		return true;
 	}
 }
