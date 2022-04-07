@@ -60,7 +60,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.TaskStatus.RUNNING;
 import static java.util.stream.Collectors.toList;
 
 public final class ProtobufUtils {
@@ -350,7 +349,7 @@ public final class ProtobufUtils {
 	public static DataflowResponse.TaskStatus convert(TaskStatus status) {
 		switch (status) {
 			case RUNNING:
-				return RUNNING;
+				return DataflowResponse.TaskStatus.RUNNING;
 			case COMPLETED:
 				return DataflowResponse.TaskStatus.COMPLETED;
 			case FAILED:

@@ -7,9 +7,14 @@ import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
+import io.activej.dataflow.protobuf.FunctionSubtypeSerializer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.datastream.processor.StreamReducers.ReducerToAccumulator;
+import io.activej.datastream.processor.StreamReducers.ReducerToResult;
+import io.activej.datastream.processor.StreamReducers.ReducerToResult.AccumulatorToOutput;
+import io.activej.datastream.processor.StreamReducers.ReducerToResult.InputToAccumulator;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.module.Module;
@@ -109,9 +114,7 @@ public class MapReduceTest {
 		InetSocketAddress address2 = getFreeListenAddress();
 
 		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
-				.bind(new Key<BinarySerializer<StringKeyFunction>>() {}).toInstance(ofObject(StringKeyFunction::new))
-				.bind(new Key<BinarySerializer<StringMapFunction>>() {}).toInstance(ofObject(StringMapFunction::new))
-				.bind(new Key<BinarySerializer<StringReducer>>() {}).toInstance(ofObject(StringReducer::new))
+				.install(createSerializersModule())
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
@@ -145,7 +148,7 @@ public class MapReduceTest {
 		Dataset<StringCount> mappedItems = map(items, new StringMapFunction(), StringCount.class);
 		Dataset<StringCount> reducedItems = sortReduceRepartitionReduce(mappedItems,
 				new StringReducer(), String.class, new StringKeyFunction(), Comparator.naturalOrder());
-		MergeCollector<String, StringCount> collector = new MergeCollector<>(reducedItems,client, new StringKeyFunction(), naturalOrder(), false);
+		MergeCollector<String, StringCount> collector = new MergeCollector<>(reducedItems, client, new StringKeyFunction(), naturalOrder(), false);
 		StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
 		StreamConsumerToList<StringCount> resultConsumer = StreamConsumerToList.create();
 
@@ -196,5 +199,27 @@ public class MapReduceTest {
 		public String apply(StringCount stringCount) {
 			return stringCount.s;
 		}
+	}
+
+	@SuppressWarnings({"rawtypes", "NullableProblems", "unchecked"})
+	private static Module createSerializersModule() {
+		return ModuleBuilder.create()
+				.bind(new Key<BinarySerializer<Function<?, ?>>>() {}).to(() -> {
+					FunctionSubtypeSerializer<Function<?, ?>> serializer = FunctionSubtypeSerializer.create();
+					serializer.setSubtypeCodec(StringKeyFunction.class, ofObject(StringKeyFunction::new));
+					serializer.setSubtypeCodec(StringMapFunction.class, ofObject(StringMapFunction::new));
+					return serializer;
+				})
+				.bind(new Key<BinarySerializer<Comparator<?>>>() {}).toInstance(ofObject(Comparator::naturalOrder))
+				.bind(new Key<BinarySerializer<Reducer<?, ?, ?, ?>>>() {}).to((inputToAccumulator, accumulatorToOutput) -> {
+							FunctionSubtypeSerializer<Reducer> serializer = FunctionSubtypeSerializer.create();
+							serializer.setSubtypeCodec(InputToAccumulator.class, inputToAccumulator);
+							serializer.setSubtypeCodec(AccumulatorToOutput.class, accumulatorToOutput);
+							return ((BinarySerializer) serializer);
+						},
+						new Key<BinarySerializer<InputToAccumulator>>() {},
+						new Key<BinarySerializer<AccumulatorToOutput>>() {})
+				.bind(new Key<BinarySerializer<ReducerToResult>>() {}).toInstance(ofObject(StringReducer::new))
+				.build();
 	}
 }

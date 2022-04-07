@@ -3,6 +3,7 @@ package io.activej.dataflow.collector;
 import com.google.protobuf.ByteString;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.dataflow.protobuf.FunctionSerializer;
+import io.activej.dataflow.protobuf.FunctionSubtypeSerializer;
 import io.activej.dataflow.protobuf.ProtobufFunctionModule;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.processor.StreamJoin.Joiner;
@@ -76,17 +77,25 @@ public class DataflowSerializationTest {
 		}
 	}
 
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({"rawtypes", "unchecked"})
 	@Test
-	public void test2() throws MalformedDataException {
+	public void test() throws MalformedDataException {
+		Key<BinarySerializer<TestFunction>> testFunctionSerializerKey = new Key<BinarySerializer<TestFunction>>() {};
+		Key<BinarySerializer<TestIdentityFunction>> testIdentityFunctionSerializerKey = new Key<BinarySerializer<TestIdentityFunction>>() {};
 		Module serialization = ModuleBuilder.create()
 				.install(ProtobufFunctionModule.create())
-				.bind(new Key<BinarySerializer<TestComparator>>() {}).toInstance(ofObject(TestComparator::new))
-				.bind(new Key<BinarySerializer<TestFunction>>() {}).toInstance(ofObject(TestFunction::new))
-				.bind(new Key<BinarySerializer<TestIdentityFunction>>() {}).toInstance(ofObject(TestIdentityFunction::new))
-				.bind(new Key<BinarySerializer<TestReducer>>() {}).toInstance(ofObject(TestReducer::new))
-				.bind(new Key<BinarySerializer<TestJoiner>>() {}).toInstance(ofObject(TestJoiner::new))
-				.bind(new Key<BinarySerializer<TestPredicate>>() {}).toInstance(ofObject(TestPredicate::new))
+				.bind(new Key<BinarySerializer<Comparator<?>>>() {}).toInstance(ofObject(TestComparator::new))
+				.bind(new Key<BinarySerializer<Reducer<?, ?, ?, ?>>>() {}).toInstance(ofObject(TestReducer::new))
+				.bind(new Key<BinarySerializer<Joiner<?, ?, ?, ?>>>() {}).toInstance(ofObject(TestJoiner::new))
+				.bind(new Key<BinarySerializer<Predicate<?>>>() {}).toInstance(ofObject(TestPredicate::new))
+				.bind(testFunctionSerializerKey).toInstance(ofObject(TestFunction::new))
+				.bind(testIdentityFunctionSerializerKey).toInstance(ofObject(TestIdentityFunction::new))
+				.bind(new Key<BinarySerializer<Function<?, ?>>>() {}).to((testFunctionSerializer, testIdentityFunctionSerializer) -> {
+					FunctionSubtypeSerializer<Function> functionSubtypeSerializer = FunctionSubtypeSerializer.create();
+					functionSubtypeSerializer.setSubtypeCodec(TestFunction.class, testFunctionSerializer);
+					functionSubtypeSerializer.setSubtypeCodec(TestIdentityFunction.class, testIdentityFunctionSerializer);
+					return ((BinarySerializer<Function<?,?>>) ((BinarySerializer) functionSubtypeSerializer));
+				}, testFunctionSerializerKey, testIdentityFunctionSerializerKey)
 				.build();
 
 		FunctionSerializer functionSerializer = Injector.of(serialization).getInstance(FunctionSerializer.class);

@@ -16,41 +16,31 @@
 
 package io.activej.dataflow.protobuf;
 
-import io.activej.datastream.processor.StreamJoin;
-import io.activej.datastream.processor.StreamReducers;
+import io.activej.datastream.processor.StreamJoin.Joiner;
 import io.activej.datastream.processor.StreamReducers.DeduplicateReducer;
 import io.activej.datastream.processor.StreamReducers.MergeReducer;
+import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult.AccumulatorToAccumulator;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult.AccumulatorToOutput;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult.InputToAccumulator;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult.InputToOutput;
-import io.activej.inject.Injector;
-import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
-import io.activej.inject.binding.Binding;
 import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.BinaryOutput;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.CorruptedDataException;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static io.activej.dataflow.protobuf.ProtobufUtils.ofObject;
-import static io.activej.types.Types.parameterizedType;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public final class ProtobufFunctionModule extends AbstractModule {
-
-	private static final Comparator<?> NATURAL_ORDER = Comparator.naturalOrder();
-	private static final Class<?> NATURAL_ORDER_CLASS = NATURAL_ORDER.getClass();
 
 	private ProtobufFunctionModule() {
 	}
@@ -59,70 +49,21 @@ public final class ProtobufFunctionModule extends AbstractModule {
 		return new ProtobufFunctionModule();
 	}
 
-	public interface FunctionNameFactory {
-		@Nullable String getName(Class<?> functionType);
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	protected void configure() {
-		bind(Key.ofType(parameterizedType(BinarySerializer.class, NATURAL_ORDER_CLASS)))
-				.toInstance(ofObject(() -> NATURAL_ORDER));
-
-		generate(BinarySerializer.class, (bindings, scope, key) -> {
-			Class<Object> type = key.getTypeParameter(0).getRawType();
-			return Binding.to(args -> {
-						Injector injector = (Injector) args[0];
-						FunctionNameFactory names = ((OptionalDependency<FunctionNameFactory>) args[1]).orElse($ -> null);
-
-						Set<Class<?>> subtypes = new HashSet<>();
-
-						Injector i = injector;
-						while (i != null) {
-							for (Key<?> k : i.getBindings().keySet()) {
-								if (k.getRawType() != BinarySerializer.class) {
-									continue;
-								}
-								Class<?> subtype = k.getTypeParameter(0).getRawType();
-								if (type != subtype && type.isAssignableFrom(subtype)) {
-									subtypes.add(subtype);
-								}
-							}
-							i = i.getParent();
-						}
-
-						FunctionSubtypeSerializer<Object> subtypeSerializer = FunctionSubtypeSerializer.create();
-						for (Class<?> subtype : subtypes) {
-							BinarySerializer<?> codec = injector.getInstance(Key.ofType(parameterizedType(BinarySerializer.class, subtype)));
-							String name = names.getName(subtype);
-							if (name != null) {
-								subtypeSerializer.setSubtypeCodec(subtype, name, codec);
-							} else {
-								subtypeSerializer.setSubtypeCodec(subtype, codec);
-							}
-						}
-						return subtypeSerializer;
-					}, new Key<?>[]{
-							Key.of(Injector.class),
-							new Key<OptionalDependency<FunctionNameFactory>>() {}}
-			);
-		});
-	}
-
 	@Provides
 	FunctionSerializer serializer(
-			BinarySerializer<Function<?, ?>> functionSerializer,
-			BinarySerializer<Predicate<?>> predicateSerializer,
-			BinarySerializer<Comparator<?>> comparatorSerializer,
-			BinarySerializer<StreamReducers.Reducer<?, ?, ?, ?>> reducerSerializer,
-			BinarySerializer<StreamJoin.Joiner<?, ?, ?, ?>> joinerSerializer
+			OptionalDependency<BinarySerializer<Function<?, ?>>> functionSerializer,
+			OptionalDependency<BinarySerializer<Predicate<?>>> predicateSerializer,
+			OptionalDependency<BinarySerializer<Comparator<?>>> comparatorSerializer,
+			OptionalDependency<BinarySerializer<Reducer<?, ?, ?, ?>>> reducerSerializer,
+			OptionalDependency<BinarySerializer<Joiner<?, ?, ?, ?>>> joinerSerializer
 	) {
-		return new FunctionSerializer(functionSerializer, predicateSerializer, comparatorSerializer, reducerSerializer, joinerSerializer);
-	}
-
-	@Provides
-	FunctionNameFactory functionNameFactory() {
-		return subtype -> subtype == NATURAL_ORDER_CLASS ? "Comparator.naturalOrder" : null;
+		FunctionSerializer serializer = new FunctionSerializer();
+		if (functionSerializer.isPresent()) serializer.setFunctionSerializer(functionSerializer.get());
+		if (predicateSerializer.isPresent()) serializer.setPredicateSerializer(predicateSerializer.get());
+		if (comparatorSerializer.isPresent()) serializer.setComparatorSerializer(comparatorSerializer.get());
+		if (reducerSerializer.isPresent()) serializer.setReducerSerializer(reducerSerializer.get());
+		if (joinerSerializer.isPresent()) serializer.setJoinerSerializer(joinerSerializer.get());
+		return serializer;
 	}
 
 	@Provides
@@ -136,7 +77,8 @@ public final class ProtobufFunctionModule extends AbstractModule {
 	}
 
 	@Provides
-	BinarySerializer<InputToAccumulator> inputToAccumulator(BinarySerializer<ReducerToResult> reducerToResultSerializer) {
+	BinarySerializer<InputToAccumulator> inputToAccumulator(OptionalDependency<BinarySerializer<ReducerToResult>> optionalReducerToResultSerializer) {
+		BinarySerializer<ReducerToResult> reducerToResultSerializer = optionalReducerToResultSerializer.get();
 		return new BinarySerializer<InputToAccumulator>() {
 			@Override
 			public void encode(BinaryOutput out, InputToAccumulator item) {
@@ -151,7 +93,8 @@ public final class ProtobufFunctionModule extends AbstractModule {
 	}
 
 	@Provides
-	BinarySerializer<InputToOutput> inputToOutput(BinarySerializer<ReducerToResult> reducerToResultSerializer) {
+	BinarySerializer<InputToOutput> inputToOutput(OptionalDependency<BinarySerializer<ReducerToResult>> optionalReducerToResultSerializer) {
+		BinarySerializer<ReducerToResult> reducerToResultSerializer = optionalReducerToResultSerializer.get();
 		return new BinarySerializer<InputToOutput>() {
 			@Override
 			public void encode(BinaryOutput out, InputToOutput item) {
@@ -166,8 +109,10 @@ public final class ProtobufFunctionModule extends AbstractModule {
 	}
 
 	@Provides
-	BinarySerializer<AccumulatorToAccumulator> accumulatorToAccumulator(BinarySerializer<ReducerToResult> reducerToResultSerializer) {
+	BinarySerializer<AccumulatorToAccumulator> accumulatorToAccumulator(OptionalDependency<BinarySerializer<ReducerToResult>> optionalReducerToResultSerializer) {
+		BinarySerializer<ReducerToResult> reducerToResultSerializer = optionalReducerToResultSerializer.get();
 		return new BinarySerializer<AccumulatorToAccumulator>() {
+
 			@Override
 			public void encode(BinaryOutput out, AccumulatorToAccumulator item) {
 				reducerToResultSerializer.encode(out, item.getReducerToResult());
@@ -181,8 +126,10 @@ public final class ProtobufFunctionModule extends AbstractModule {
 	}
 
 	@Provides
-	BinarySerializer<AccumulatorToOutput> accumulatorToOutput(BinarySerializer<ReducerToResult> reducerToResultSerializer) {
+	BinarySerializer<AccumulatorToOutput> accumulatorToOutput(OptionalDependency<BinarySerializer<ReducerToResult>> optionalReducerToResultSerializer) {
+		BinarySerializer<ReducerToResult> reducerToResultSerializer = optionalReducerToResultSerializer.get();
 		return new BinarySerializer<AccumulatorToOutput>() {
+
 			@Override
 			public void encode(BinaryOutput out, AccumulatorToOutput item) {
 				reducerToResultSerializer.encode(out, item.getReducerToResult());

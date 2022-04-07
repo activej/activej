@@ -21,6 +21,8 @@ import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
 import io.activej.dataflow.protobuf.FunctionSerializer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.processor.StreamReducers;
+import io.activej.datastream.processor.StreamReducers.MergeReducer;
 import io.activej.eventloop.Eventloop;
 import io.activej.http.AsyncHttpClient;
 import io.activej.http.AsyncHttpServer;
@@ -35,6 +37,7 @@ import io.activej.serializer.annotations.Serialize;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
+import io.activej.types.Types;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
@@ -98,6 +101,7 @@ public final class DataflowTest {
 		InetSocketAddress address2 = getFreeListenAddress();
 
 		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
+				.install(createSerializersModule())
 				.build();
 
 		StreamConsumerToList<TestItem> result1 = StreamConsumerToList.create();
@@ -149,7 +153,10 @@ public final class DataflowTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2))).build();
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
+				.install(createSerializersModule())
+				.bind(new Key<BinarySerializer<StreamReducers.Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(BinarySerializer.class, MergeReducer.class)))
+				.build();
 
 		StreamConsumerToList<TestItem> result1 = StreamConsumerToList.create();
 		StreamConsumerToList<TestItem> result2 = StreamConsumerToList.create();
@@ -220,6 +227,7 @@ public final class DataflowTest {
 		Partition partition3 = new Partition(address3);
 
 		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(partition1, partition2, partition3))
+				.install(createSerializersModule())
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
@@ -310,6 +318,7 @@ public final class DataflowTest {
 		InetSocketAddress address2 = getFreeListenAddress();
 
 		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
+				.install(createSerializersModule())
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
@@ -369,6 +378,7 @@ public final class DataflowTest {
 		InetSocketAddress address2 = getFreeListenAddress();
 
 		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
+				.install(createSerializersModule())
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
@@ -498,10 +508,7 @@ public final class DataflowTest {
 					AsyncHttpServer debugServer(Eventloop eventloop, Executor executor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, Injector env) {
 						return AsyncHttpServer.create(eventloop, new DataflowDebugServlet(graphPartitions, executor, codec, env));
 					}
-				})
-				.bind(new Key<BinarySerializer<TestComparator>>() {}).toInstance(ofObject(TestComparator::new))
-				.bind(new Key<BinarySerializer<TestKeyFunction>>() {}).toInstance(ofObject(TestKeyFunction::new))
-				.bind(new Key<BinarySerializer<TestPredicate>>() {}).toInstance(ofObject(TestPredicate::new));
+				});
 	}
 
 	static InetSocketAddress getFreeListenAddress() {
@@ -524,5 +531,13 @@ public final class DataflowTest {
 			current = next;
 		}
 		return true;
+	}
+
+	private static Module createSerializersModule() {
+		return ModuleBuilder.create()
+				.bind(new Key<BinarySerializer<Comparator<?>>>() {}).toInstance(ofObject(TestComparator::new))
+				.bind(new Key<BinarySerializer<Function<?, ?>>>() {}).toInstance(ofObject(TestKeyFunction::new))
+				.bind(new Key<BinarySerializer<Predicate<?>>>() {}).toInstance(ofObject(TestPredicate::new))
+				.build();
 	}
 }

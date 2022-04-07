@@ -93,7 +93,9 @@ public final class NodeShard<K, T> extends AbstractNode {
 		int partitions = outputs.size();
 		int bits = partitions - 1;
 		BiConsumer<T, StreamDataAcceptor<T>[]> splitter = (partitions & bits) == 0 ?
-				(item, acceptors) -> acceptors[murmur3hash(keyFunction.apply(item).hashCode() + nonce) & bits].accept(item) :
+				(item, acceptors) -> {
+					acceptors[murmur3hash(keyFunction.apply(item).hashCode() + nonce) & bits].accept(item);
+				} :
 				(item, acceptors) -> {
 					int hash = murmur3hash(keyFunction.apply(item).hashCode() + nonce);
 					int hashAbs = hash < 0 ? hash == Integer.MIN_VALUE ? Integer.MAX_VALUE : -hash : hash;

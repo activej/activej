@@ -1,22 +1,16 @@
-import dto.CreateStringCountFunction;
-import dto.ExtractStringFunction;
-import dto.StringCountReducer;
 import io.activej.config.Config;
 import io.activej.dataflow.inject.DatasetId;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
-import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.launchers.dataflow.DataflowServerLauncher;
-import io.activej.serializer.BinarySerializer;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.List;
 
 import static io.activej.common.Utils.not;
-import static io.activej.dataflow.protobuf.ProtobufUtils.ofObject;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
@@ -32,9 +26,7 @@ public final class DataflowServerLauncherExample extends DataflowServerLauncher 
 	@Override
 	protected Module getOverrideModule() {
 		return ModuleBuilder.create()
-				.bind(new Key<BinarySerializer<CreateStringCountFunction>>() {}).toInstance(ofObject(CreateStringCountFunction::new))
-				.bind(new Key<BinarySerializer<ExtractStringFunction>>() {}).toInstance(ofObject(ExtractStringFunction::new))
-				.bind(new Key<BinarySerializer<StringCountReducer>>() {}).toInstance(ofObject(StringCountReducer::new))
+				.install(new DataflowSerializersModule())
 
 				.bind(StreamSorterStorageFactory.class).toInstance(StreamMergeSorterStorageStub.FACTORY_STUB)
 

@@ -10,11 +10,16 @@ import io.activej.dataflow.stream.DataflowTest.TestComparator;
 import io.activej.dataflow.stream.DataflowTest.TestItem;
 import io.activej.dataflow.stream.DataflowTest.TestKeyFunction;
 import io.activej.datastream.StreamConsumerToList;
+import io.activej.datastream.processor.StreamReducers.MergeReducer;
+import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.inject.Injector;
+import io.activej.inject.Key;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
+import io.activej.serializer.BinarySerializer;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
+import io.activej.types.Types;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
@@ -23,12 +28,15 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
+import static io.activej.dataflow.protobuf.ProtobufUtils.ofObject;
 import static io.activej.dataflow.stream.DataflowTest.createCommon;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertCompleteFn;
@@ -69,6 +77,9 @@ public class ReducerDeadlockTest {
 		InetSocketAddress address2 = getFreeListenAddress();
 
 		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
+				.bind(new Key<BinarySerializer<Function<?, ?>>>() {}).toInstance(ofObject(TestKeyFunction::new))
+				.bind(new Key<BinarySerializer<Comparator<?>>>() {}).toInstance(ofObject(TestComparator::new))
+				.bind(new Key<BinarySerializer<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(BinarySerializer.class, MergeReducer.class)))
 				.build();
 
 		StreamConsumerToList<TestItem> result1 = StreamConsumerToList.create();

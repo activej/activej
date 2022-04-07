@@ -15,9 +15,15 @@ import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
 import io.activej.dataflow.protobuf.FunctionSerializer;
+import io.activej.dataflow.protobuf.FunctionSubtypeSerializer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.processor.StreamReducers.MergeReducer;
+import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.datastream.processor.StreamReducers.ReducerToAccumulator;
+import io.activej.datastream.processor.StreamReducers.ReducerToResult;
+import io.activej.datastream.processor.StreamReducers.ReducerToResult.AccumulatorToOutput;
+import io.activej.datastream.processor.StreamReducers.ReducerToResult.InputToAccumulator;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
@@ -341,14 +347,33 @@ public class DataflowServerTest {
 		}
 	}
 
+	@SuppressWarnings({"rawtypes", "unchecked"})
 	public static Module createModule(List<Partition> partitions) {
 		return ModuleBuilder.create()
 				.install(DataflowModule.create())
-				.bind(new Key<BinarySerializer<TestKeyFunction>>() {}).toInstance(ofObject(TestKeyFunction::new))
-				.bind(new Key<BinarySerializer<TestMapFunction>>() {}).toInstance(ofObject(TestMapFunction::new))
-				.bind(new Key<BinarySerializer<TestComparator>>() {}).toInstance(ofObject(TestComparator::new))
-				.bind(new Key<BinarySerializer<TestReducer>>() {}).toInstance(ofObject(TestReducer::new))
-				.bind(new Key<BinarySerializer<StringFunction>>() {}).toInstance(ofObject(StringFunction::new))
+				.bind(new Key<BinarySerializer<Function<?, ?>>>() {}).to(() -> {
+					FunctionSubtypeSerializer<Function<?, ?>> serializer = FunctionSubtypeSerializer.create();
+
+					serializer.setSubtypeCodec(TestKeyFunction.class, ofObject(TestKeyFunction::new));
+					serializer.setSubtypeCodec(TestMapFunction.class, ofObject(TestMapFunction::new));
+					serializer.setSubtypeCodec(StringFunction.class, ofObject(StringFunction::new));
+
+					return serializer;
+				})
+				.bind(new Key<BinarySerializer<Comparator<?>>>() {}).toInstance(ofObject(TestComparator::new))
+				.bind(new Key<BinarySerializer<ReducerToResult>>() {}).toInstance(ofObject(TestReducer::new))
+				.bind(new Key<BinarySerializer<Reducer<?, ?, ?, ?>>>() {}).to((inputToAccumulatorSerializer, accumulatorToOutputSerializer, mergeReducerSerializer) -> {
+							FunctionSubtypeSerializer<Reducer> serializer = FunctionSubtypeSerializer.create();
+
+							serializer.setSubtypeCodec(InputToAccumulator.class, inputToAccumulatorSerializer);
+							serializer.setSubtypeCodec(AccumulatorToOutput.class, accumulatorToOutputSerializer);
+							serializer.setSubtypeCodec(MergeReducer.class, mergeReducerSerializer);
+
+							return ((BinarySerializer) serializer);
+						},
+						new Key<BinarySerializer<InputToAccumulator>>() {},
+						new Key<BinarySerializer<AccumulatorToOutput>>() {},
+						new Key<BinarySerializer<MergeReducer>>() {})
 				.scan(new Object() {
 					@Provides
 					DataflowClient client(ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator serializers, FunctionSerializer functionSerializer) throws IOException {

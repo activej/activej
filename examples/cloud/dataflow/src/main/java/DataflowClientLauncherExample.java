@@ -11,15 +11,12 @@ import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
-import io.activej.inject.Key;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.launchers.dataflow.DataflowClientLauncher;
-import io.activej.serializer.BinarySerializer;
 
 import static io.activej.dataflow.dataset.Datasets.*;
-import static io.activej.dataflow.protobuf.ProtobufUtils.ofObject;
 import static java.util.Comparator.naturalOrder;
 
 /**
@@ -41,9 +38,7 @@ public final class DataflowClientLauncherExample extends DataflowClientLauncher 
 	@Override
 	protected Module getOverrideModule() {
 		return ModuleBuilder.create()
-				.bind(new Key<BinarySerializer<CreateStringCountFunction>>() {}).toInstance(ofObject(CreateStringCountFunction::new))
-				.bind(new Key<BinarySerializer<ExtractStringFunction>>() {}).toInstance(ofObject(ExtractStringFunction::new))
-				.bind(new Key<BinarySerializer<StringCountReducer>>() {}).toInstance(ofObject(StringCountReducer::new))
+				.install(new DataflowSerializersModule())
 
 				.bind(StreamSorterStorageFactory.class).toInstance(StreamMergeSorterStorageStub.FACTORY_STUB)
 

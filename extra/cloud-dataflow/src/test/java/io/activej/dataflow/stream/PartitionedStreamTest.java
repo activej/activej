@@ -82,6 +82,7 @@ import static java.util.stream.Collectors.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+@SuppressWarnings("rawtypes")
 public final class PartitionedStreamTest {
 	private static final String SOURCE_FILENAME = "data.txt";
 	private static final String TARGET_FILENAME = "result.txt";
@@ -291,6 +292,7 @@ public final class PartitionedStreamTest {
 	private Module createServerModule() {
 		return Modules.combine(
 				DataflowModule.create(),
+				createSerializersModule(),
 				new AbstractModule() {
 					@Provides
 					Eventloop eventloop() {
@@ -362,10 +364,6 @@ public final class PartitionedStreamTest {
 						};
 					}
 
-					@Provides
-					BinarySerializer<IsEven> isEvenCodec() {
-						return ofObject(IsEven::new);
-					}
 				}
 		);
 	}
@@ -373,6 +371,7 @@ public final class PartitionedStreamTest {
 	private static Module createClientModule() {
 		return Modules.combine(
 				DataflowModule.create(),
+				createSerializersModule(),
 				new AbstractModule() {
 					@Provides
 					Eventloop eventloop() {
@@ -388,13 +387,17 @@ public final class PartitionedStreamTest {
 					Executor executor() {
 						return newSingleThreadExecutor();
 					}
-
-					@Provides
-					BinarySerializer<IsEven> isEvenCodec() {
-						return ofObject(IsEven::new);
-					}
 				}
 		);
+	}
+
+	private static Module createSerializersModule() {
+		return new AbstractModule() {
+			@Provides
+			BinarySerializer<Predicate<?>> isEvenCodec() {
+				return ofObject(IsEven::new);
+			}
+		};
 	}
 	// endregion
 
