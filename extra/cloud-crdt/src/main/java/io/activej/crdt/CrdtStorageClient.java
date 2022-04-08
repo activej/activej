@@ -23,6 +23,7 @@ import io.activej.common.function.ConsumerEx;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.crdt.CrdtMessagingProto.CrdtRequest;
 import io.activej.crdt.CrdtMessagingProto.CrdtRequest.*;
+import io.activej.crdt.CrdtMessagingProto.CrdtResponse.Handshake.NotOk;
 import io.activej.crdt.CrdtMessagingProto.CrdtResponse.ResponseCase;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
@@ -119,6 +120,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	@Override
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
 		return connect()
+				.then(CrdtStorageClient::performHandshake)
 				.then(messaging -> messaging.send(request(UPLOAD))
 						.mapException(e -> new CrdtException("Failed to send 'Upload' request", e))
 						.map($ -> {
@@ -139,6 +141,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
 		return connect()
+				.then(CrdtStorageClient::performHandshake)
 				.then(messaging -> messaging.send(downloadRequest(timestamp))
 						.mapException(e -> new CrdtException("Failed to send 'Download' request", e))
 						.then(() -> messaging.receive()
@@ -158,6 +161,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> take() {
 		return connect()
+				.then(CrdtStorageClient::performHandshake)
 				.then(messaging -> messaging.send(request(TAKE))
 						.mapException(e -> new CrdtException("Failed to send 'Take' request", e))
 						.then(() -> messaging.receive()
@@ -178,6 +182,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	@Override
 	public Promise<StreamConsumer<CrdtTombstone<K>>> remove() {
 		return connect()
+				.then(CrdtStorageClient::performHandshake)
 				.then(messaging -> messaging.send(request(REMOVE))
 						.mapException(e -> new CrdtException("Failed to send 'Remove' request", e))
 						.map($ -> {
@@ -198,6 +203,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	@Override
 	public Promise<Void> ping() {
 		return connect()
+				.then(CrdtStorageClient::performHandshake)
 				.then(messaging -> messaging.send(request(PING))
 						.mapException(e -> new CrdtException("Failed to send 'Ping'", e))
 						.then(() -> messaging.receive()
@@ -256,6 +262,26 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 				throw new AssertionError();
 		}
 
+	}
+
+	private static Promise<MessagingWithBinaryStreaming<CrdtResponse, CrdtRequest>> performHandshake(MessagingWithBinaryStreaming<CrdtResponse, CrdtRequest> messaging) {
+		return messaging.send(CrdtRequest.newBuilder().setHandshake(CrdtRequest.Handshake.newBuilder().setVersion(CrdtServer.VERSION)).build())
+				.then(messaging::receive)
+				.map(handshakeResponse -> {
+					if (!handshakeResponse.hasHandshake()) {
+						if (handshakeResponse.hasServerError()) {
+							throw new CrdtException(handshakeResponse.getServerError().getMessage());
+						}
+						throw new CrdtException("Handshake response expected, got " + handshakeResponse.getResponseCase());
+					}
+					CrdtResponse.Handshake handshake = handshakeResponse.getHandshake();
+					if (handshake.hasNotOk()) {
+						NotOk notOk = handshake.getNotOk();
+						throw new CrdtException(String.format("Handshake failed: %s. Minimal allowed version: %s",
+								notOk.getMessage(), notOk.hasMinimalVersion() ? notOk.getMinimalVersion() : "unspecified"));
+					}
+					return messaging;
+				});
 	}
 
 	private static CrdtRequest downloadRequest(long timestamp) {

@@ -28,6 +28,7 @@ import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
+import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.Handshake.NotOk;
 import io.activej.dataflow.protobuf.FunctionSerializer;
 import io.activej.datastream.AbstractStreamConsumer;
 import io.activej.datastream.AbstractStreamSupplier;
@@ -90,8 +91,9 @@ public final class DataflowClient {
 				.mapException(e -> new DataflowException("Failed to connect to " + address, e))
 				.then(socket -> {
 					Messaging<DataflowResponse, DataflowRequest> messaging = MessagingWithBinaryStreaming.create(socket, codec);
-					return messaging.send(downloadRequest(streamId))
-							.mapException(e -> new DataflowException("Failed to download from " + address, e))
+					return performHandshake(messaging)
+							.then(() -> messaging.send(downloadRequest(streamId))
+									.mapException(e -> new DataflowException("Failed to download from " + address, e)))
 							.map($ -> {
 								ChannelQueue<ByteBuf> primaryBuffer =
 										bufferMinSize == 0 && bufferMaxSize == 0 ?
@@ -187,8 +189,9 @@ public final class DataflowClient {
 		}
 
 		public Promise<Void> execute(long taskId, Collection<Node> nodes) {
-			return messaging.send(executeRequest(taskId, nodes))
-					.mapException(e -> new DataflowException("Failed to send command to " + address, e))
+			return performHandshake(messaging)
+					.then(() -> messaging.send(executeRequest(taskId, nodes))
+							.mapException(e -> new DataflowException("Failed to send command to " + address, e)))
 					.then(() -> messaging.receive()
 							.mapException(e -> new DataflowException("Failed to receive response from " + address, e)))
 					.whenResult(response -> {
@@ -234,5 +237,22 @@ public final class DataflowClient {
 						.setTaskId(taskId)
 						.addAllNodes(convert(nodes, functionSerializer)))
 				.build();
+	}
+
+	public static Promise<Void> performHandshake(Messaging<DataflowResponse, DataflowRequest> messaging) {
+		return messaging.send(DataflowRequest.newBuilder().setHandshake(DataflowRequest.Handshake.newBuilder().setVersion(DataflowServer.VERSION)).build())
+				.then(messaging::receive)
+				.whenResult(handshakeResponse -> {
+					if (!handshakeResponse.hasHandshake()) {
+						throw new DataflowException("Handshake response expected, got " + handshakeResponse.getResponseCase());
+					}
+					DataflowResponse.Handshake handshake = handshakeResponse.getHandshake();
+					if (handshake.hasNotOk()) {
+						NotOk notOk = handshake.getNotOk();
+						throw new DataflowException(String.format("Handshake failed: %s. Minimal allowed version: %s",
+								notOk.getMessage(), notOk.hasMinimalVersion() ? notOk.getMinimalVersion() : "unspecified"));
+					}
+				})
+				.toVoid();
 	}
 }

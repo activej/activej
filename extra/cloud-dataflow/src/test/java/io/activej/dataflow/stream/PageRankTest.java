@@ -354,14 +354,14 @@ public class PageRankTest {
 	private static Module createSerializersModule() {
 		return ModuleBuilder.create()
 				.bind(new Key<BinarySerializer<Function<?, ?>>>() {}).to(() -> {
-							FunctionSubtypeSerializer<Function<?, ?>> serializer = FunctionSubtypeSerializer.create();
+					FunctionSubtypeSerializer<Function<?, ?>> serializer = FunctionSubtypeSerializer.create();
 
-							serializer.setSubtypeCodec(PageKeyFunction.class, ofObject(PageKeyFunction::new));
-							serializer.setSubtypeCodec(RankKeyFunction.class, ofObject(RankKeyFunction::new));
-							serializer.setSubtypeCodec(RankAccumulatorKeyFunction.class, ofObject(RankAccumulatorKeyFunction::new));
-							serializer.setSubtypeCodec(PageToRankFunction.class, ofObject(PageToRankFunction::new));
+					serializer.setSubtypeCodec(PageKeyFunction.class, ofObject(PageKeyFunction::new));
+					serializer.setSubtypeCodec(RankKeyFunction.class, ofObject(RankKeyFunction::new));
+					serializer.setSubtypeCodec(RankAccumulatorKeyFunction.class, ofObject(RankAccumulatorKeyFunction::new));
+					serializer.setSubtypeCodec(PageToRankFunction.class, ofObject(PageToRankFunction::new));
 
-							return serializer;
+					return serializer;
 				})
 				.bind(new Key<BinarySerializer<Comparator<?>>>() {}).toInstance(ofObject(LongComparator::new))
 				.bind(new Key<BinarySerializer<ReducerToResult>>() {}).toInstance(ofObject(RankAccumulatorReducer::new))
@@ -373,7 +373,7 @@ public class PageRankTest {
 							serializer.setSubtypeCodec(InputToAccumulator.class, inputToAccumulatorSerializer);
 							serializer.setSubtypeCodec(AccumulatorToOutput.class, accumulatorToOutputSerializer);
 
-							return (BinarySerializer<Reducer<?,?,?,?>>) (BinarySerializer) serializer;
+							return (BinarySerializer<Reducer<?, ?, ?, ?>>) (BinarySerializer) serializer;
 						},
 						new Key<BinarySerializer<MergeReducer>>() {},
 						new Key<BinarySerializer<InputToAccumulator>>() {},

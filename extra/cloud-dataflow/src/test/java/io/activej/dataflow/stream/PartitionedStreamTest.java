@@ -301,7 +301,7 @@ public final class PartitionedStreamTest {
 
 					@Provides
 					DataflowServer server(Eventloop eventloop, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator locator, Injector injector, FunctionSerializer functionSerializer) {
-						return new DataflowServer(eventloop, codec, locator, injector, functionSerializer);
+						return DataflowServer.create(eventloop, codec, locator, injector, functionSerializer);
 					}
 
 					@Provides

@@ -74,7 +74,7 @@ public abstract class DataflowServerLauncher extends Launcher {
 
 	@Provides
 	DataflowServer server(Eventloop eventloop, Config config, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator serializers, Injector environment, FunctionSerializer functionSerializer) {
-		return new DataflowServer(eventloop, codec, serializers, environment, functionSerializer)
+		return DataflowServer.create(eventloop, codec, serializers, environment, functionSerializer)
 				.withInitializer(ofAbstractServer(config.getChild("dataflow.server")))
 				.withInitializer(s -> s.withSocketSettings(s.getSocketSettings().withTcpNoDelay(true)));
 	}

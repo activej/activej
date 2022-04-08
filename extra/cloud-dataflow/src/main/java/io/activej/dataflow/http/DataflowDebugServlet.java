@@ -19,6 +19,7 @@ package io.activej.dataflow.http;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
+import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowException;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.TaskStatus;
@@ -154,8 +155,9 @@ public final class DataflowDebugServlet implements AsyncServlet {
 		return AsyncTcpSocketNio.connect(address)
 				.then(socket -> {
 					Messaging<DataflowResponse, DataflowRequest> messaging = MessagingWithBinaryStreaming.create(socket, codec);
-					return messaging.send(getTasks(null))
-							.then($ -> messaging.receive())
+					return DataflowClient.performHandshake(messaging)
+							.then(() -> messaging.send(getTasks(null)))
+							.then(messaging::receive)
 							.map(response -> {
 								messaging.close();
 								switch (response.getResponseCase()) {
@@ -174,7 +176,8 @@ public final class DataflowDebugServlet implements AsyncServlet {
 		return AsyncTcpSocketNio.connect(address)
 				.then(socket -> {
 					Messaging<DataflowResponse, DataflowRequest> messaging = MessagingWithBinaryStreaming.create(socket, codec);
-					return messaging.send(getTasks(taskId))
+					return DataflowClient.performHandshake(messaging)
+							.then(() -> messaging.send(getTasks(taskId)))
 							.then($ -> messaging.receive())
 							.map(response -> {
 								messaging.close();

@@ -6,6 +6,11 @@ option java_multiple_files = false;
 option java_package = "io.activej.fs.tcp";
 option java_outer_classname = "FsMessagingProto";
 
+message Version {
+  int32 major = 1;
+  int32 minor = 2;
+}
+
 message FsRequest {
   message Upload {
     string name = 1;
@@ -64,20 +69,25 @@ message FsRequest {
   message Ping {
   }
 
+  message Handshake {
+    Version version = 1;
+  }
+
   oneof request {
-    Upload upload = 1;
-    Append append = 2;
-    Download download = 3;
-    Copy copy = 4;
-    CopyAll copy_all = 5;
-    Move move = 6;
-    MoveAll move_all = 7;
-    Delete delete = 8;
-    DeleteAll delete_all = 9;
-    List list = 10;
-    Info info = 11;
-    InfoAll info_all = 12;
-    Ping ping = 13;
+    Handshake handshake = 1;
+    Upload upload = 2;
+    Append append = 3;
+    Download download = 4;
+    Copy copy = 5;
+    CopyAll copy_all = 6;
+    Move move = 7;
+    MoveAll move_all = 8;
+    Delete delete = 9;
+    DeleteAll delete_all = 10;
+    List list = 11;
+    Info info = 12;
+    InfoAll info_all = 13;
+    Ping ping = 14;
   }
 }
 
@@ -215,8 +225,20 @@ message FsResponse {
     }
   }
 
+  message Handshake {
+    message Ok {}
+    message NotOk {
+      Version minimalVersion = 1;
+      string message = 2;
+    }
+    oneof result {
+      Ok ok = 1;
+      NotOk not_ok = 2;
+    }
+  }
+
   oneof response {
-    ServerError server_error = 1;
+    Handshake handshake = 1;
     UploadAck upload_ack = 2;
     UploadFinished upload_finished = 3;
     AppendAck append_ack = 4;
@@ -232,5 +254,6 @@ message FsResponse {
     DeleteFinished delete_finished = 14;
     DeleteAllFinished delete_all_finished = 15;
     Pong pong = 16;
+    ServerError server_error = 17;
   }
 }

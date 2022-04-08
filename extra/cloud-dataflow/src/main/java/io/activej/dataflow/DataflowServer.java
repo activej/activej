@@ -38,8 +38,10 @@ import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.Execute;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.GetTasks;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.GetTasks.TaskId;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
+import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.Handshake.Ok;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.PartitionData.TaskDesc;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.TaskData;
+import io.activej.dataflow.proto.DataflowMessagingProto.Version;
 import io.activej.dataflow.protobuf.FunctionSerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.csp.ChannelSerializer;
@@ -49,6 +51,7 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.net.AbstractServer;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.Nullable;
 
@@ -57,6 +60,7 @@ import java.io.StringWriter;
 import java.net.InetAddress;
 import java.time.Duration;
 import java.util.*;
+import java.util.function.Function;
 
 import static io.activej.dataflow.protobuf.ProtobufUtils.convert;
 import static io.activej.dataflow.protobuf.ProtobufUtils.error;
@@ -67,6 +71,8 @@ import static java.util.stream.Collectors.toMap;
  * Server for processing JSON commands.
  */
 public final class DataflowServer extends AbstractServer<DataflowServer> {
+	public static final Version VERSION = Version.newBuilder().setMajor(1).setMinor(0).build();
+
 	private static final int MAX_LAST_RAN_TASKS = ApplicationSettings.getInt(DataflowServer.class, "maxLastRanTasks", 1000);
 
 	private final Map<StreamId, ChannelQueue<ByteBuf>> pendingStreams = new HashMap<>();
@@ -85,13 +91,25 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 	};
 
 	private int succeededTasks = 0, canceledTasks = 0, failedTasks = 0;
+	private Function<DataflowRequest.Handshake, DataflowResponse.Handshake> handshakeHandler = $ -> DataflowResponse.Handshake.newBuilder()
+			.setOk(Ok.newBuilder().build())
+			.build();
 
-	public DataflowServer(Eventloop eventloop, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator serializers, ResourceLocator environment, FunctionSerializer functionSerializer) {
+	private DataflowServer(Eventloop eventloop, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator serializers, ResourceLocator environment, FunctionSerializer functionSerializer) {
 		super(eventloop);
 		this.codec = codec;
 		this.serializers = serializers;
 		this.environment = environment;
 		this.functionSerializer = functionSerializer;
+	}
+
+	public static DataflowServer create(Eventloop eventloop, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator serializers, ResourceLocator environment, FunctionSerializer functionSerializer) {
+		return new DataflowServer(eventloop, codec, serializers, environment, functionSerializer);
+	}
+
+	public DataflowServer withHandshakeHandler(Function<DataflowRequest.Handshake, DataflowResponse.Handshake> handshakeHandler) {
+		this.handshakeHandler = handshakeHandler;
+		return this;
 	}
 
 	private void sendResponse(Messaging<DataflowRequest, DataflowResponse> messaging, @Nullable Exception exception) {
@@ -138,6 +156,16 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
 		Messaging<DataflowRequest, DataflowResponse> messaging = MessagingWithBinaryStreaming.create(socket, codec);
 		messaging.receive()
+				.then(handshakeMsg -> {
+					if (!handshakeMsg.hasHandshake()) {
+						return Promise.ofException(new DataflowException("Handshake expected"));
+					}
+					DataflowResponse handshakeResponse = DataflowResponse.newBuilder()
+							.setHandshake(handshakeHandler.apply(handshakeMsg.getHandshake()))
+							.build();
+					return messaging.send(handshakeResponse);
+				})
+				.then(messaging::receive)
 				.whenResult(msg -> {
 					if (msg != null) {
 						doRead(messaging, msg);
@@ -163,6 +191,8 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 			case GET_TASKS:
 				handleGetTasks(messaging, request.getGetTasks());
 				return;
+			case HANDSHAKE:
+				throw new DataflowException("Handshake was already performed");
 			default:
 				logger.error("missing handler for {}", request.getRequestCase());
 				messaging.close();

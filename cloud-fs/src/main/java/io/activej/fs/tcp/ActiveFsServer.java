@@ -28,7 +28,9 @@ import io.activej.fs.tcp.FsMessagingProto.FsRequest;
 import io.activej.fs.tcp.FsMessagingProto.FsRequest.*;
 import io.activej.fs.tcp.FsMessagingProto.FsResponse;
 import io.activej.fs.tcp.FsMessagingProto.FsResponse.*;
+import io.activej.fs.tcp.FsMessagingProto.FsResponse.Handshake.Ok;
 import io.activej.fs.tcp.FsMessagingProto.FsResponse.ServerError.OneOfFsScalarExceptions;
+import io.activej.fs.tcp.FsMessagingProto.Version;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.net.AbstractServer;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
@@ -59,12 +61,19 @@ import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
  * <b>This server should not be launched as a publicly available server, it is meant for private networks.</b>
  */
 public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
+	public static final Version VERSION = Version.newBuilder().setMajor(1).setMinor(0).build();
+
 	private static final ByteBufsCodec<FsRequest, FsResponse> SERIALIZER = codec(FsRequest.parser());
 
 	private final ActiveFs fs;
 
+	private Function<FsRequest.Handshake, FsResponse.Handshake> handshakeHandler = $ -> FsResponse.Handshake.newBuilder()
+			.setOk(Ok.newBuilder())
+			.build();
+
 	// region JMX
 	private final PromiseStats handleRequestPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats handshakePromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats uploadBeginPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats uploadFinishPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats appendBeginPromise = PromiseStats.create(Duration.ofMinutes(5));
@@ -92,6 +101,11 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 		return new ActiveFsServer(eventloop, fs);
 	}
 
+	public ActiveFsServer withHandshakeHandler(Function<FsRequest.Handshake, FsResponse.Handshake> handshakeHandler){
+		this.handshakeHandler = handshakeHandler;
+		return this;
+	}
+
 	public ActiveFs getFs() {
 		return fs;
 	}
@@ -101,39 +115,48 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 		MessagingWithBinaryStreaming<FsRequest, FsResponse> messaging =
 				MessagingWithBinaryStreaming.create(socket, SERIALIZER);
 		messaging.receive()
-				.then(msg -> {
-					switch (msg.getRequestCase()) {
-						case UPLOAD:
-							return handleUpload(messaging, msg.getUpload());
-						case APPEND:
-							return handleAppend(messaging, msg.getAppend());
-						case DOWNLOAD:
-							return handleDownload(messaging, msg.getDownload());
-						case COPY:
-							return handleCopy(messaging, msg.getCopy());
-						case COPY_ALL:
-							return handleCopyAll(messaging, msg.getCopyAll());
-						case MOVE:
-							return handleMove(messaging, msg.getMove());
-						case MOVE_ALL:
-							return handleMoveAll(messaging, msg.getMoveAll());
-						case DELETE:
-							return handleDelete(messaging, msg.getDelete());
-						case DELETE_ALL:
-							return handleDeleteAll(messaging, msg.getDeleteAll());
-						case LIST:
-							return handleList(messaging, msg.getList());
-						case INFO:
-							return handleInfo(messaging, msg.getInfo());
-						case INFO_ALL:
-							return handleInfoAll(messaging, msg.getInfoAll());
-						case PING:
-							return handlePing(messaging);
-						case REQUEST_NOT_SET:
-							return Promise.ofException(new FsException("Request was not set"));
-						default:
-							return Promise.ofException(new FsException("Received unknown request: " + msg.getRequestCase()));
+				.then(handshakeMsg -> {
+					if (!handshakeMsg.hasHandshake()) {
+						return Promise.ofException(new FsException("Handshake expected"));
 					}
+					return handleHandshake(messaging, handshakeMsg.getHandshake())
+							.then(() -> messaging.receive()
+									.then(msg -> {
+										switch (msg.getRequestCase()) {
+											case UPLOAD:
+												return handleUpload(messaging, msg.getUpload());
+											case APPEND:
+												return handleAppend(messaging, msg.getAppend());
+											case DOWNLOAD:
+												return handleDownload(messaging, msg.getDownload());
+											case COPY:
+												return handleCopy(messaging, msg.getCopy());
+											case COPY_ALL:
+												return handleCopyAll(messaging, msg.getCopyAll());
+											case MOVE:
+												return handleMove(messaging, msg.getMove());
+											case MOVE_ALL:
+												return handleMoveAll(messaging, msg.getMoveAll());
+											case DELETE:
+												return handleDelete(messaging, msg.getDelete());
+											case DELETE_ALL:
+												return handleDeleteAll(messaging, msg.getDeleteAll());
+											case LIST:
+												return handleList(messaging, msg.getList());
+											case INFO:
+												return handleInfo(messaging, msg.getInfo());
+											case INFO_ALL:
+												return handleInfoAll(messaging, msg.getInfoAll());
+											case PING:
+												return handlePing(messaging);
+											case HANDSHAKE:
+												return Promise.ofException(new FsException("Handshake was already performed"));
+											case REQUEST_NOT_SET:
+												return Promise.ofException(new FsException("Request was not set"));
+											default:
+												return Promise.ofException(new FsException("Received unknown request: " + msg.getRequestCase()));
+										}
+									}));
 				})
 				.whenComplete(handleRequestPromise.recordStats())
 				.whenException(e -> {
@@ -142,6 +165,12 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 							.then(messaging::sendEndOfStream)
 							.whenResult(messaging::close);
 				});
+	}
+
+	private Promise<Void> handleHandshake(Messaging<FsRequest, FsResponse> messaging, FsRequest.Handshake handshake) {
+		return messaging.send(FsResponse.newBuilder().setHandshake(handshakeHandler.apply(handshake)).build())
+				.whenComplete(handshakePromise.recordStats())
+				.whenComplete(toLogger(logger, TRACE, "handshake", handshake, this));
 	}
 
 	private Promise<Void> handleUpload(Messaging<FsRequest, FsResponse> messaging, Upload upload) {
@@ -470,6 +499,11 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 	@JmxAttribute
 	public PromiseStats getHandleRequestPromise() {
 		return handleRequestPromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getHandshakePromise() {
+		return handshakePromise;
 	}
 	// endregion
 }

@@ -10,6 +10,11 @@ import "stream_id.proto";
 import "node.proto";
 import "node_stat.proto";
 
+message Version {
+  int32 major = 1;
+  int32 minor = 2;
+}
+
 message DataflowRequest {
   message Download {
     StreamId stream_id = 1;
@@ -29,10 +34,15 @@ message DataflowRequest {
     TaskId task_id = 1;
   }
 
+  message Handshake {
+    Version version = 1;
+  }
+
   oneof request {
-    Download download = 1;
-    Execute execute = 2;
-    GetTasks get_tasks = 3;
+    Handshake handshake = 1;
+    Download download = 2;
+    Execute execute = 3;
+    GetTasks get_tasks = 4;
   }
 }
 
@@ -81,10 +91,23 @@ message DataflowResponse {
     string graph_viz = 6;
   }
 
+  message Handshake {
+    message Ok {}
+    message NotOk {
+      Version minimalVersion = 1;
+      string message = 2;
+    }
+    oneof result {
+      Ok ok = 1;
+      NotOk not_ok = 2;
+    }
+  }
+
   oneof response {
-    PartitionData partition_data = 1;
-    Result result = 2;
-    TaskData task_data = 3;
+    Handshake handshake = 1;
+    PartitionData partition_data = 2;
+    Result result = 3;
+    TaskData task_data = 4;
   }
 
 }

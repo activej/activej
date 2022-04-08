@@ -28,6 +28,7 @@ import io.activej.common.ref.RefLong;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.ByteBufsCodec;
+import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
@@ -91,6 +92,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 
 	//region JMX
 	private final PromiseStats connectPromise = PromiseStats.create(Duration.ofMinutes(5));
+	private final PromiseStats handshakePromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats uploadStartPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats uploadFinishPromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats appendStartPromise = PromiseStats.create(Duration.ofMinutes(5));
@@ -138,6 +140,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
 		return connectForStreaming(address)
+				.then(this::performHandshake)
 				.then(messaging -> doUpload(messaging, name, null))
 				.whenComplete(uploadStartPromise.recordStats())
 				.whenComplete(toLogger(logger, "upload", name, this));
@@ -146,12 +149,13 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
 		return connect(address)
+				.then(this::performHandshake)
 				.then(messaging -> doUpload(messaging, name, size))
 				.whenComplete(uploadStartPromise.recordStats())
 				.whenComplete(toLogger(logger, "upload", name, size, this));
 	}
 
-	private @NotNull Promise<ChannelConsumer<ByteBuf>> doUpload(MessagingWithBinaryStreaming<FsResponse, FsRequest> messaging, @NotNull String name, @Nullable Long size) {
+	private @NotNull Promise<ChannelConsumer<ByteBuf>> doUpload(Messaging<FsResponse, FsRequest> messaging, @NotNull String name, @Nullable Long size) {
 		return messaging.send(uploadRequest(name, size))
 				.then(messaging::receive)
 				.whenResult(validateFn(UPLOAD_ACK))
@@ -177,6 +181,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
 		return connect(address)
+				.then(this::performHandshake)
 				.then(messaging ->
 						messaging.send(appendRequest(name, offset))
 								.then(messaging::receive)
@@ -201,6 +206,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 		checkArgument(limit >= 0, "Data limit must be greater than or equal to zero");
 
 		return connect(address)
+				.then(this::performHandshake)
 				.then(messaging ->
 						messaging.send(downloadRequest(name, offset, limit))
 								.then(messaging::receive)
@@ -336,6 +342,28 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 				.whenComplete(connectPromise.recordStats());
 	}
 
+	private Promise<Messaging<FsResponse, FsRequest>> performHandshake(Messaging<FsResponse, FsRequest> messaging) {
+		return messaging.send(FsRequest.newBuilder().setHandshake(FsRequest.Handshake.newBuilder().setVersion(ActiveFsServer.VERSION)).build())
+				.then(messaging::receive)
+				.map(handshakeResponse -> {
+					if (!handshakeResponse.hasHandshake()) {
+						if (handshakeResponse.hasServerError()) {
+							throw unwindProtobufException(handshakeResponse.getServerError());
+						}
+						throw new FsException("Handshake response expected, got " + handshakeResponse.getResponseCase());
+					}
+					FsResponse.Handshake handshake = handshakeResponse.getHandshake();
+					if (handshake.hasNotOk()) {
+						FsResponse.Handshake.NotOk notOk = handshake.getNotOk();
+						throw new FsException(String.format("Handshake failed: %s. Minimal allowed version: %s",
+								notOk.getMessage(), notOk.hasMinimalVersion() ? notOk.getMinimalVersion() : "unspecified"));
+					}
+					return messaging;
+				})
+				.whenComplete(toLogger(logger, "handshake", this))
+				.whenComplete(handshakePromise.recordStats());
+	}
+
 	private static ConsumerEx<FsResponse> validateFn(ResponseCase expectedCase) {
 		return msg -> {
 			ResponseCase actualCase = msg.getResponseCase();
@@ -353,6 +381,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 
 	private <T> Promise<T> simpleCommand(FsRequest command, ResponseCase responseCase, FunctionEx<FsResponse, T> answerExtractor) {
 		return connect(address)
+				.then(this::performHandshake)
 				.then(messaging ->
 						messaging.send(command)
 								.then(messaging::receive)
@@ -540,6 +569,11 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 	@JmxAttribute
 	public PromiseStats getDeleteAllPromise() {
 		return deleteAllPromise;
+	}
+
+	@JmxAttribute
+	public PromiseStats getHandshakePromise() {
+		return handshakePromise;
 	}
 	//endregion
 }

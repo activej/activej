@@ -486,7 +486,7 @@ public final class DataflowTest {
 				.scan(new Object() {
 					@Provides
 					DataflowServer server(Eventloop eventloop, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerModule.BinarySerializerLocator serializers, FunctionSerializer functionSerializer, Injector environment) {
-						return new DataflowServer(eventloop, codec, serializers, environment, functionSerializer);
+						return DataflowServer.create(eventloop, codec, serializers, environment, functionSerializer);
 					}
 
 					@Provides
