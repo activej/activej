@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.dataflow.protobuf;
+package io.activej.dataflow.proto;
 
 import com.google.protobuf.ByteString;
 import io.activej.common.exception.MalformedDataException;

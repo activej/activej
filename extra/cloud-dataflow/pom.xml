@@ -96,7 +96,7 @@
               <outputTargets>
                 <outputTarget>
                   <type>java</type>
-                  <outputDirectory>${project.build.directory}/generated-sources/proto</outputDirectory>
+                  <outputDirectory>${project.build.sourceDirectory}</outputDirectory>
                 </outputTarget>
               </outputTargets>
             </configuration>

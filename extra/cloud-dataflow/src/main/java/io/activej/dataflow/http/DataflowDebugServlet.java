@@ -50,7 +50,7 @@ import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
-import static io.activej.dataflow.protobuf.ProtobufUtils.convert;
+import static io.activej.dataflow.proto.ProtobufUtils.convert;
 import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpResponse.ok200;
 import static io.activej.types.Types.parameterizedType;

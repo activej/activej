@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.dataflow.protobuf;
+package io.activej.dataflow.proto;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;

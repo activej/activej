@@ -2,9 +2,9 @@ package io.activej.dataflow.collector;
 
 import com.google.protobuf.ByteString;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.dataflow.protobuf.FunctionSerializer;
-import io.activej.dataflow.protobuf.FunctionSubtypeSerializer;
-import io.activej.dataflow.protobuf.ProtobufFunctionModule;
+import io.activej.dataflow.proto.FunctionSerializer;
+import io.activej.dataflow.proto.FunctionSubtypeSerializer;
+import io.activej.dataflow.proto.ProtobufFunctionModule;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.processor.StreamJoin.Joiner;
 import io.activej.datastream.processor.StreamReducers.Reducer;
@@ -19,7 +19,7 @@ import java.util.Comparator;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static io.activej.dataflow.protobuf.ProtobufUtils.ofObject;
+import static io.activej.dataflow.proto.ProtobufUtils.ofObject;
 
 public class DataflowSerializationTest {
 

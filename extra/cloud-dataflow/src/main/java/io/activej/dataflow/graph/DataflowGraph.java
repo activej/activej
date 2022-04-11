@@ -38,6 +38,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static io.activej.dataflow.proto.ProtobufUtils.convert;
 import static java.util.stream.Collectors.*;
 
 /**
