@@ -122,7 +122,7 @@
                 <div>Statuses: {overviewData.statuses}</div>
                 <Graph graphviz={overviewData.graph}
                        index={selectedPartition}
-                       nodeStats="{Object.fromEntries(overviewData.nodeStats)}"/>
+                       nodeStats="{overviewData.reducedNodeStats}"/>
             {:else}
                 <div>waiting for task data...</div>
             {/if}
@@ -142,7 +142,7 @@
                 {/if}
                 <Graph graphviz={taskData.graph}
                        index={selectedPartition}
-                       nodeStats="{Object.fromEntries(taskData.nodeStats)}"/>
+                       nodeStats="{taskData.nodeStats}"/>
             {:else}
                 <div>waiting for task data...</div>
             {/if}

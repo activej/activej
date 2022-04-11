@@ -21,7 +21,7 @@
             for (const partition of await fetch('/api/partitions').then(r => r.json())) {
                 partitions = [...partitions, partition];
             }
-            for (const [id, statuses] of await fetch('/api/tasks').then(r => r.json())) {
+            for (const id of Object.keys(await fetch('/api/tasks').then(r => r.json()))) {
                 tasks = [...tasks, {id}];
             }
         } finally {

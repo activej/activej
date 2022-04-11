@@ -72,9 +72,9 @@
 
     function updateModalArgs() {
         for (const modal of modals) {
-            const [type, args] = Object.entries(nodeStats[modal.nodeIndex]).pop();
-            args.$type = type; // keep the hack there
-            modal.args = args;
+            const stats = nodeStats[modal.nodeIndex];
+            stats.$type = stats.$type.startsWith(".") ? stats.$type.substring(1) : stats.$type;
+            modal.args = stats;
         }
         modals = modals;
     }
@@ -118,13 +118,11 @@
         if (!stats) {
             return; // no stats for this node
         }
-        // if there is a stat, it *must* be in the form {"type": {...args}}
-        const [type, args] = Object.entries(stats).pop();
-        args.$type = type; // small hack so that the type is in args too (mostly for fallback)
+        stats.$type = stats.$type.startsWith(".") ? stats.$type.substring(1) : stats.$type;
         // there needs to be a component stats/statType.svelte or it will just show args (and type) as json
-        const component = await import(`./stats/${type}.svelte`).then(it => it.default, () => FallbackStat);
+        const component = await import(`./stats/${stats.$type}.svelte`).then(it => it.default, () => FallbackStat);
 
-        const modal = {x: rx - x - mOffX, y: ry - y - mOffY, args, component, nodeName, nodeIndex};
+        const modal = {x: rx - x - mOffX, y: ry - y - mOffY, args: stats, component, nodeName, nodeIndex};
         modalMap.set(nodeIndex, modal);
         modals = [...modals, modal];
     }

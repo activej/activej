@@ -16,6 +16,10 @@
 
 package io.activej.dataflow.http;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
@@ -44,12 +48,12 @@ import org.jetbrains.annotations.Nullable;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.Executor;
+import java.util.stream.Collectors;
 
 import static io.activej.dataflow.protobuf.ProtobufUtils.convert;
 import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpResponse.ok200;
 import static io.activej.types.Types.parameterizedType;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 public final class DataflowDebugServlet implements AsyncServlet {
@@ -59,13 +63,16 @@ public final class DataflowDebugServlet implements AsyncServlet {
 	public DataflowDebugServlet(List<Partition> partitions, Executor executor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, ResourceLocator env) {
 		this.codec = codec;
 
+		ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+		objectMapper.configure(SerializationFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS, false);
+
 		this.servlet = RoutingServlet.create()
 				.map("/*", StaticServlet.ofClassPath(executor, "debug").withIndexHtml())
 				.map("/api/*", RoutingServlet.create()
 						.map(GET, "/partitions", request -> ok200()
-								.withJson(partitions.stream()
-										.map(p -> "\"" + p.getAddress().getAddress().getHostAddress() + ":" + p.getAddress().getPort() + "\"")
-										.collect(joining(",", "[", "]"))))
+								.withJson(objectMapper.writeValueAsString(partitions.stream()
+										.map(Partition::getAddress)
+										.collect(Collectors.toList()))))
 						.map(GET, "/tasks", request ->
 								Promises.toList(partitions.stream().map(p -> getPartitionData(p.getAddress())))
 										.map(partitionStats -> {
@@ -77,8 +84,8 @@ public final class DataflowDebugServlet implements AsyncServlet {
 															.set(i, convert(taskDesc.getStatus()));
 												}
 											}
-											return ok200();
-//													.withJson(toJson(taskListCodec, tasks));
+											return ok200()
+													.withJson(objectMapper.writeValueAsString(tasks));
 										}))
 						.map(GET, "/tasks/:taskID", request -> {
 							long id = getTaskId(request);
@@ -110,8 +117,8 @@ public final class DataflowDebugServlet implements AsyncServlet {
 												}, HashMap::putAll);
 
 										ReducedTaskData taskData = new ReducedTaskData(statuses, localStats.get(0).getGraphViz(), reduced);
-										return ok200();
-//												.withJson(toJson(reducedTaskDataCodec, taskData));
+										return ok200()
+												.withJson(objectMapper.writeValueAsString(taskData));
 									});
 						})
 						.map(GET, "/tasks/:taskID/:index", request -> {
@@ -124,10 +131,19 @@ public final class DataflowDebugServlet implements AsyncServlet {
 								throw HttpError.ofCode(400, "Bad index");
 							}
 							return getTask(partition.getAddress(), id)
-									.map(task -> ok200());
-//											.withJson(toJson(localTaskDataCodec,
-//													new LocalTaskData(task.getStatus(), task.getGraphViz(), task.getNodes(), task.getStartTime(), task.getFinishTime(), task.getErrorString()))));
+									.map(task -> ok200()
+											.withJson(objectMapper.writeValueAsString(new LocalTaskData(convert(task.getStatus()), task.getGraphViz(),
+													task.getNodesMap().entrySet().stream()
+															.collect(Collectors.toMap(Map.Entry::getKey, e -> convert(e.getValue()))),
+													convert(task.getStartTime()),
+													convert(task.getFinishTime()),
+													convert(task.getError())))));
 						}));
+	}
+
+	public static void main(String[] args) throws JsonProcessingException {
+		ObjectMapper mapper = new ObjectMapper();
+		System.out.println(mapper.writeValueAsString(new Partition(new InetSocketAddress("sss", 123))));
 	}
 
 	private static @Nullable NodeStat reduce(List<NodeStat> stats, ResourceLocator env) {

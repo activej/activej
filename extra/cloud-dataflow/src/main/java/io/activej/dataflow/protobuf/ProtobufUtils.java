@@ -386,6 +386,10 @@ public final class ProtobufUtils {
 		return builder.build();
 	}
 
+	public static @Nullable Instant convert(DataflowResponse.Instant instant) {
+		return instant.getInstantIsNull() ? null : Instant.ofEpochMilli(instant.getTimestamp());
+	}
+
 	public static DataflowResponse.Error error(@Nullable String error) {
 		DataflowResponse.Error.Builder builder = DataflowResponse.Error.newBuilder();
 		if (error == null) {
@@ -394,6 +398,10 @@ public final class ProtobufUtils {
 			builder.setError(error);
 		}
 		return builder.build();
+	}
+
+	public static @Nullable String convert(DataflowResponse.Error error) {
+		return error.getErrorIsNull() ? null : error.getError();
 	}
 
 	public static NodeStatProto.NodeStat convert(NodeStat nodeStat) {
