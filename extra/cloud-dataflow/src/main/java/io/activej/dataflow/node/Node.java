@@ -16,6 +16,7 @@
 
 package io.activej.dataflow.node;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.stats.NodeStat;
@@ -29,6 +30,7 @@ import static java.util.Collections.emptyList;
 /**
  * Defines a node in a single server.
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS, include = JsonTypeInfo.As.WRAPPER_OBJECT)
 public interface Node {
 	/**
 	 * Returns an index of this node in the task.

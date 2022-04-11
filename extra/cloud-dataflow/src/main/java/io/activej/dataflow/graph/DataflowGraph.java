@@ -16,6 +16,12 @@
 
 package io.activej.dataflow.graph;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.common.collection.Try;
 import io.activej.common.ref.RefInt;
@@ -38,6 +44,11 @@ import static java.util.stream.Collectors.*;
  * Represents a graph of partitions, nodeStats and streams in datagraph system.
  */
 public final class DataflowGraph {
+	private final ObjectWriter objectWriter = new ObjectMapper()
+			.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+			.writerFor(new TypeReference<List<Node>>() {})
+			.with(new DefaultPrettyPrinter("%n"));
+
 	private final Map<Node, Partition> nodePartitions = new LinkedHashMap<>();
 	private final Map<StreamId, Node> streams = new LinkedHashMap<>();
 
@@ -288,7 +299,13 @@ public final class DataflowGraph {
 		Map<Partition, List<Node>> map = getNodesByPartition();
 		for (Map.Entry<Partition, List<Node>> entry : map.entrySet()) {
 			sb.append("--- " + entry.getKey() + "\n\n");
-//			sb.append(toJson(listNodeCodec, entry.getValue()));
+			String nodes;
+			try {
+				nodes = objectWriter.writeValueAsString(entry.getValue());
+			} catch (JsonProcessingException e) {
+				nodes = "<UNKNOWN>";
+			}
+			sb.append(nodes);
 			sb.append("\n\n");
 		}
 		return sb.toString();
