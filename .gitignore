@@ -13,4 +13,3 @@ node_modules
 package-lock.json
 *.class
 tmp/
-*Proto.java
