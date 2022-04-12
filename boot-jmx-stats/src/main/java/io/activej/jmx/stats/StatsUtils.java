@@ -79,10 +79,19 @@ public final class StatsUtils {
 	}
 
 	private static final ThreadLocal<Set<Object>> VISITED = ThreadLocal.withInitial(HashSet::new);
+	private static final ThreadLocal<Integer> RECURSION_LEVEL = ThreadLocal.withInitial(() -> 0);
 
 	private static void visitFields(Object instance, Predicate<Object> action) {
-		doVisitFields(instance, action);
-		VISITED.get().clear();
+		RECURSION_LEVEL.set(RECURSION_LEVEL.get() + 1);
+		try {
+			doVisitFields(instance, action);
+		} finally {
+			Integer oldRecursionLevel = RECURSION_LEVEL.get();
+			RECURSION_LEVEL.set(oldRecursionLevel - 1);
+			if (oldRecursionLevel == 1) {
+				VISITED.get().clear();
+			}
+		}
 	}
 
 	private static void doVisitFields(Object instance, Predicate<Object> action) {
