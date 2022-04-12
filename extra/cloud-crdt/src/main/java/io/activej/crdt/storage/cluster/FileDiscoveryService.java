@@ -58,8 +58,11 @@ public final class FileDiscoveryService implements DiscoveryService<PartitionId>
 	}
 
 	public static FileDiscoveryService create(Eventloop eventloop, WatchService watchService, Path pathToFile) throws CrdtException {
-		if (!Files.isRegularFile(pathToFile)) {
-			throw new CrdtException("Not a regular file: " + pathToFile);
+		if (!Files.exists(pathToFile)) {
+			throw new CrdtException("File does not exist: " + pathToFile);
+		}
+		if (Files.isDirectory(pathToFile)) {
+			throw new CrdtException("File is a directory: " + pathToFile);
 		}
 		return new FileDiscoveryService(eventloop, watchService, pathToFile);
 	}
