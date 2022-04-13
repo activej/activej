@@ -82,6 +82,8 @@ public final class RendezvousPartitionScheme<P> implements PartitionScheme<P>, W
 
 	@Override
 	public <K extends Comparable<K>> @Nullable Sharder<K> createSharder(List<P> alive) {
+		if (alive.isEmpty()) return null;
+
 		List<RendezvousHashSharder<K>> sharders = new ArrayList<>();
 		for (RendezvousPartitionGroup<P> partitionGroup : partitionGroups) {
 			//noinspection unchecked
