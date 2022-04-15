@@ -19,7 +19,6 @@ package io.activej.launchers.crdt.rpc;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.EventloopService;
 import io.activej.crdt.storage.cluster.DiscoveryService;
-import io.activej.crdt.storage.cluster.PartitionId;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -34,25 +33,27 @@ import static io.activej.common.Checks.checkState;
 
 public final class CrdtRpcStrategyService<K extends Comparable<K>> implements EventloopService {
 	private final Eventloop eventloop;
-	private final DiscoveryService discoveryService;
-	private final Function<PartitionId, RpcStrategy> strategyResolver;
+	private final DiscoveryService<?> discoveryService;
 	private final Function<Object, K> keyGetter;
 
 	private RpcClient rpcClient;
+	private Function<RpcStrategy, RpcStrategy> strategyMapFn = Function.identity();
 
 	private boolean stopped;
 
-	private CrdtRpcStrategyService(Eventloop eventloop, DiscoveryService discoveryService,
-			Function<PartitionId, RpcStrategy> strategyResolver, Function<Object, K> keyGetter) {
+	private CrdtRpcStrategyService(Eventloop eventloop, DiscoveryService<?> discoveryService, Function<Object, K> keyGetter) {
 		this.eventloop = eventloop;
 		this.discoveryService = discoveryService;
-		this.strategyResolver = strategyResolver;
 		this.keyGetter = keyGetter;
 	}
 
-	public static <K extends Comparable<K>> CrdtRpcStrategyService<K> create(Eventloop eventloop, DiscoveryService discoveryService,
-			Function<PartitionId, RpcStrategy> strategyResolver, Function<Object, K> keyGetter) {
-		return new CrdtRpcStrategyService<>(eventloop, discoveryService, strategyResolver, keyGetter);
+	public static <K extends Comparable<K>> CrdtRpcStrategyService<K> create(Eventloop eventloop, DiscoveryService<?> discoveryService, Function<Object, K> keyGetter) {
+		return new CrdtRpcStrategyService<>(eventloop, discoveryService, keyGetter);
+	}
+
+	public CrdtRpcStrategyService<K> withStrategyMapping(Function<RpcStrategy, RpcStrategy> strategyMapFn) {
+		this.strategyMapFn = strategyMapFn;
+		return this;
 	}
 
 	public void setRpcClient(RpcClient rpcClient) {
@@ -70,18 +71,18 @@ public final class CrdtRpcStrategyService<K extends Comparable<K>> implements Ev
 	public @NotNull Promise<?> start() {
 		checkNotNull(rpcClient);
 
-		AsyncSupplier<DiscoveryService.PartitionScheme> discoverySupplier = discoveryService.discover();
+		AsyncSupplier<? extends DiscoveryService.PartitionScheme<?>> discoverySupplier = discoveryService.discover();
 		return discoverySupplier.get()
 				.whenResult(partitionScheme -> {
 					RpcStrategy rpcStrategy = partitionScheme.createRpcStrategy(keyGetter);
-					rpcClient.withStrategy(rpcStrategy);
+					rpcClient.withStrategy(strategyMapFn.apply(rpcStrategy));
 					Promises.repeat(() ->
 							discoverySupplier.get()
 									.map((newPartitionScheme, e) -> {
 										if (stopped) return false;
 										if (e == null) {
 											RpcStrategy newRpcStrategy = newPartitionScheme.createRpcStrategy(keyGetter);
-											rpcClient.changeStrategy(newRpcStrategy, true);
+											rpcClient.changeStrategy(strategyMapFn.apply(newRpcStrategy), true);
 										}
 										return true;
 									})

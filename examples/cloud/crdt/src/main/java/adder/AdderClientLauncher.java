@@ -66,8 +66,7 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 			Eventloop eventloop,
 			DiscoveryService<PartitionId> discoveryService
 	) {
-		//noinspection ConstantConditions
-		return CrdtRpcStrategyService.create(eventloop, discoveryService, partitionId -> server(partitionId.getRpcAddress()), AdderClientLauncher::extractKey);
+		return CrdtRpcStrategyService.create(eventloop, discoveryService, AdderClientLauncher::extractKey);
 	}
 
 	@Override
