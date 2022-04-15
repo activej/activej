@@ -362,11 +362,21 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 	@JmxOperation
 	public void startDetailedMonitoring() {
 		detailedStats = true;
+		for (CrdtStorage<K, S> storage : crdtStorages.values()) {
+			if (storage instanceof CrdtStorageClient){
+				((CrdtStorageClient<K, S>) storage).startDetailedMonitoring();
+			}
+		}
 	}
 
 	@JmxOperation
 	public void stopDetailedMonitoring() {
 		detailedStats = false;
+		for (CrdtStorage<K, S> storage : crdtStorages.values()) {
+			if (storage instanceof CrdtStorageClient){
+				((CrdtStorageClient<K, S>) storage).stopDetailedMonitoring();
+			}
+		}
 	}
 
 	@JmxAttribute
