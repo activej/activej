@@ -2,8 +2,10 @@ package io.activej.crdt.storage.cluster;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.crdt.storage.cluster.DiscoveryService.PartitionScheme;
+import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
+import io.activej.promise.Promises;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -15,11 +17,15 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.WatchService;
+import java.time.Duration;
 import java.util.List;
 
 import static io.activej.common.Utils.setOf;
+import static io.activej.crdt.function.CrdtFunction.ignoringTimestamp;
 import static io.activej.promise.TestUtils.await;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
 public class FileDiscoveryServiceTest {
@@ -32,6 +38,7 @@ public class FileDiscoveryServiceTest {
 
 	private Path file;
 	private FileDiscoveryService discoveryService;
+	private WatchService watchService;
 
 	private static final byte[] TEST_PARTITIONS_1 = ("[" +
 			"    {" +
@@ -112,11 +119,32 @@ public class FileDiscoveryServiceTest {
 			"    }" +
 			"]").getBytes(UTF_8);
 
+	private static final byte[] TEST_PARTITIONS_4 = ("[" +
+			"    {" +
+			"        \"ids\": [" +
+			"            {" +
+			"                \"id\": \"a\"," +
+			"                \"crdtAddress\": \"localhost:9001\"," +
+			"                \"rpcAddress\": \"localhost:9051\"" +
+			"            }," +
+			"            {" +
+			"                \"id\": \"d\"," +
+			"                \"crdtAddress\": \"localhost:9004\"," +
+			"                \"rpcAddress\": \"localhost:9054\"" +
+			"            }" +
+			"        ]," +
+			"        \"replicaCount\": 1," +
+			"        \"repartition\": false," +
+			"        \"active\": true" +
+			"    }" +
+			"]").getBytes(UTF_8);
+
 	@Before
 	public void setUp() throws Exception {
 		file = temporaryFolder.newFile().toPath();
 		Files.write(file, "[]".getBytes(UTF_8));
-		discoveryService = FileDiscoveryService.create(Eventloop.getCurrentEventloop(), file);
+		watchService = file.getFileSystem().newWatchService();
+		discoveryService = FileDiscoveryService.create(Eventloop.getCurrentEventloop(), watchService, file);
 	}
 
 	@Test
@@ -191,6 +219,31 @@ public class FileDiscoveryServiceTest {
 
 		PartitionScheme<PartitionId> nextScheme = await(supplier.get());
 		assertTestPartitions3(nextScheme);
+	}
+
+	@Test
+	public void testPartitionChange() throws IOException {
+		discoveryService.withCrdtProvider(partitionId -> CrdtStorageMap.create(Eventloop.getCurrentEventloop()));
+
+		Files.write(file, TEST_PARTITIONS_1);
+
+		CrdtStorageCluster<String, Integer, PartitionId> cluster = CrdtStorageCluster.create(Eventloop.getCurrentEventloop(), discoveryService, ignoringTimestamp(Integer::max));
+
+		await(cluster.start()
+				.whenResult(() -> assertEquals(setOf("a", "b", "c"), cluster.getCrdtStorages().keySet()
+						.stream()
+						.map(PartitionId::getId)
+						.collect(toSet())))
+				.whenResult(() -> Files.write(file, TEST_PARTITIONS_4))
+				.then(() -> Promises.delay(Duration.ofMillis(200)))
+				.whenResult(() -> assertEquals(setOf("a", "d"), cluster.getCrdtStorages().keySet()
+						.stream()
+						.map(PartitionId::getId)
+						.collect(toSet())))
+				.then(() -> {
+					watchService.close();
+					return cluster.stop();
+				}));
 	}
 
 	private void assertTestPartitions1(PartitionScheme<PartitionId> partitionScheme) {

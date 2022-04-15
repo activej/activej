@@ -44,6 +44,7 @@ import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.*;
 import java.util.function.Function;
@@ -111,7 +112,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 		AsyncSupplier<PartitionScheme<P>> discoverySupplier = discoveryService.discover();
 		return discoverySupplier.get()
 				.then(result -> {
-					currentPartitionScheme = result;
+					updatePartitionScheme(result);
 					return ping();
 				})
 				.whenResult(() -> Promises.repeat(() ->
@@ -119,7 +120,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 								.map((result, e) -> {
 									if (stopped) return false;
 									if (e == null) {
-										currentPartitionScheme = result;
+										updatePartitionScheme(result);
 									}
 									return true;
 								})
@@ -199,7 +200,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 
 	public @NotNull Promise<Void> repartition(P sourcePartitionId) {
 		PartitionScheme<P> partitionScheme = this.currentPartitionScheme;
-		CrdtStorage<K, S> source = cacheSource(partitionScheme, sourcePartitionId);
+		CrdtStorage<K, S> source = crdtStorages.get(sourcePartitionId);
 
 		class Tuple {
 			private final Try<StreamSupplier<CrdtData<K, S>>> downloader;
@@ -283,7 +284,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 		Map<P, T> map = new HashMap<>();
 		return Promises.all(
 						partitions.stream()
-								.map(partitionId -> method.apply(cacheSource(partitionScheme, partitionId))
+								.map(partitionId -> method.apply(crdtStorages.get(partitionId))
 										.map((t, e) -> e == null ? map.put(partitionId, t) : null)
 								))
 				.map($ -> map);
@@ -310,10 +311,19 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 				});
 	}
 
-	private CrdtStorage<K, S> cacheSource(PartitionScheme<P> partitionScheme, P sourcePartitionId) {
-		//noinspection unchecked
-		return crdtStorages.computeIfAbsent(sourcePartitionId,
-				(Function) (Function<P, CrdtStorage<?, ?>>) partitionScheme::provideCrdtConnection);
+	private void updatePartitionScheme(PartitionScheme<P> partitionScheme) {
+		this.currentPartitionScheme = partitionScheme;
+		crdtStorages.keySet().retainAll(partitionScheme.getPartitions());
+		for (P partition : partitionScheme.getPartitions()) {
+			//noinspection unchecked
+			crdtStorages.computeIfAbsent(partition,
+					(Function) (Function<P, CrdtStorage<?, ?>>) partitionScheme::provideCrdtConnection);
+		}
+	}
+
+	@VisibleForTesting
+	Map<P, CrdtStorage<K, S>> getCrdtStorages() {
+		return crdtStorages;
 	}
 
 	// region JMX
