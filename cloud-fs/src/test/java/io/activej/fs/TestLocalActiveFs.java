@@ -25,6 +25,7 @@ import org.junit.rules.TemporaryFolder;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -528,5 +529,29 @@ public final class TestLocalActiveFs {
 
 		assertThat(e, instanceOf(FsIOException.class));
 		assertEquals(e.getMessage(), "Temporary directory " + tempDir + " not found");
+	}
+
+	@Test
+	public void testRelativePaths() {
+		Set<String> expected = setOf(
+				"1/a.txt",
+				"1/b.txt",
+				"2/3/a.txt",
+				"2/b/d.txt",
+				"2/b/e.txt"
+		);
+
+		Path current = Paths.get(".");
+		Path relativePath = current.toAbsolutePath().relativize(storagePath);
+		relativePath = relativePath.getParent().resolve(".").resolve(relativePath.getFileName());
+
+		assertFalse(relativePath.isAbsolute());
+
+		client = LocalActiveFs.create(Eventloop.getCurrentEventloop(), newCachedThreadPool(), relativePath);
+		await(client.start());
+
+		Map<String, FileMetadata> actual = await(client.list("**"));
+
+		assertEquals(expected, actual.keySet());
 	}
 }
