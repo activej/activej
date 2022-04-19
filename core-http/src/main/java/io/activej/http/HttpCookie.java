@@ -17,6 +17,9 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.bytebuf.ByteBufStrings;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -25,6 +28,7 @@ import java.util.Objects;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.http.HttpUtils.*;
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * This class represents an abstraction for HTTP Cookie with fast parsing algorithms.
@@ -46,6 +50,11 @@ public final class HttpCookie {
 	private static final int SECURE_HC = -18770248;
 	private static final byte[] SECURE = encodeAscii("Secure");
 	private static final int HTTP_ONLY_HC = -1939729611;
+	private static final byte[] SAME_SITE = encodeAscii("SameSite");
+	private static final int SAME_SITE_HC = 158165934;
+	private static final int SAME_SITE_LAX_HC = 105954;
+	private static final int SAME_SITE_STRICT_HC = -920615382;
+	private static final int SAME_SITE_NONE_HC = 3357401;
 
 	// RFC 6265
 	//
@@ -73,6 +82,7 @@ public final class HttpCookie {
 	private String path = "";
 	private boolean secure;
 	private boolean httpOnly;
+	private @Nullable SameSite sameSite;
 	private String extension;
 
 	// region builders
@@ -139,6 +149,11 @@ public final class HttpCookie {
 
 	public HttpCookie withHttpOnly(boolean httpOnly) {
 		setHttpOnly(httpOnly);
+		return this;
+	}
+
+	public HttpCookie withSameSite(@NotNull SameSite sameSite) {
+		setSameSite(sameSite);
 		return this;
 	}
 
@@ -211,6 +226,14 @@ public final class HttpCookie {
 
 	public void setHttpOnly(boolean httpOnly) {
 		this.httpOnly = httpOnly;
+	}
+
+	public @Nullable SameSite getSameSite() {
+		return sameSite;
+	}
+
+	public void setSameSite(@NotNull SameSite sameSite) {
+		this.sameSite = sameSite;
 	}
 
 	public String getExtension() {
@@ -386,6 +409,17 @@ public final class HttpCookie {
 				container[pos++] = httpOnlyByte;
 			}
 		}
+		if (sameSite != null) {
+			container[pos++] = SEMICOLON;
+			container[pos++] = SP;
+			for (byte sameSiteByte : SAME_SITE) {
+				container[pos++] = sameSiteByte;
+			}
+			container[pos++] = EQUALS;
+			for (byte sameSiteValueByte : sameSite.bytes) {
+				container[pos++] = sameSiteValueByte;
+			}
+		}
 		if (extension != null) {
 			container[pos++] = SEMICOLON;
 			container[pos++] = SP;
@@ -438,6 +472,26 @@ public final class HttpCookie {
 						cookie.setHttpOnly(true);
 					}
 				};
+			case SAME_SITE_HC:
+				return new AvHandler() {
+					@Override
+					protected void handle(HttpCookie cookie, byte[] bytes, int start, int end) throws MalformedHttpException {
+						int sameSiteHc = ByteBufStrings.hashCode(bytes, start, end - start);
+						switch (sameSiteHc) {
+							case SAME_SITE_LAX_HC:
+								cookie.setSameSite(SameSite.LAX);
+								break;
+							case SAME_SITE_STRICT_HC:
+								cookie.setSameSite(SameSite.STRICT);
+								break;
+							case SAME_SITE_NONE_HC:
+								cookie.setSameSite(SameSite.NONE);
+								break;
+							default:
+								throw new MalformedHttpException("Unknown SameSite value: " + new String(bytes, start, end - start, ISO_8859_1));
+						}
+					}
+				};
 			default:
 				return null;
 		}
@@ -483,4 +537,16 @@ public final class HttpCookie {
 				", value='" + value + '\'' + '}';
 	}
 	// endregion
+
+	public enum SameSite {
+		LAX(encodeAscii("Lax")),
+		STRICT(encodeAscii("Strict")),
+		NONE(encodeAscii("None"));
+
+		private final byte[] bytes;
+
+		SameSite(byte[] bytes) {
+			this.bytes = bytes;
+		}
+	}
 }
