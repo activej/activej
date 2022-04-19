@@ -117,6 +117,10 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 		return eventloop;
 	}
 
+	public InetSocketAddress getAddress() {
+		return address;
+	}
+
 	@Override
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
 		return connect()
