@@ -4,7 +4,7 @@
 
   <groupId>io.activej</groupId>
   <artifactId>tutorial-uikernel-integration</artifactId>
-  <version>5.1.2-SNAPSHOT</version>
+  <version>5.2-SNAPSHOT</version>
 
   <name>Tutorials : UIKernel-Integration</name>
 
