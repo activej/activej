@@ -37,7 +37,6 @@ import java.util.zip.Checksum;
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.http.HttpHeaders.*;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.assertCompleteFn;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -76,10 +75,10 @@ public final class AbstractHttpConnectionTest {
 	@Test
 	public void testMultiLineHeader() throws Exception {
 		AsyncHttpServer server = AsyncHttpServer.create(Eventloop.getCurrentEventloop(),
-				request -> HttpResponse.ok200()
-						.withHeader(DATE, "Mon, 27 Jul 2009 12:28:53 GMT")
-						.withHeader(CONTENT_TYPE, "text/\n          html")
-						.withBody(wrapAscii("  <html>\n<body>\n<h1>Hello, World!</h1>\n</body>\n</html>")))
+						request -> HttpResponse.ok200()
+								.withHeader(DATE, "Mon, 27 Jul 2009 12:28:53 GMT")
+								.withHeader(CONTENT_TYPE, "text/\n          html")
+								.withBody(wrapAscii("  <html>\n<body>\n<h1>Hello, World!</h1>\n</body>\n</html>")))
 				.withListenPort(port)
 				.withAcceptOnce();
 		server.listen();
@@ -95,16 +94,16 @@ public final class AbstractHttpConnectionTest {
 	@Test
 	public void testGzipCompression() throws Exception {
 		AsyncHttpServer server = AsyncHttpServer.create(Eventloop.getCurrentEventloop(),
-				request -> HttpResponse.ok200()
-						.withBodyGzipCompression()
-						.withBody(encodeAscii("Test message")))
+						request -> HttpResponse.ok200()
+								.withBodyGzipCompression()
+								.withBody(encodeAscii("Test message")))
 				.withListenPort(port)
 				.withAcceptOnce();
 
 		server.listen();
 
 		await(client.request(HttpRequest.get(url)
-				.withHeader(ACCEPT_ENCODING, "gzip"))
+						.withHeader(ACCEPT_ENCODING, "gzip"))
 				.then(response -> response.loadBody()
 						.whenComplete(TestUtils.assertCompleteFn(body -> {
 							assertEquals("Test message", body.getString(UTF_8));
@@ -193,7 +192,7 @@ public final class AbstractHttpConnectionTest {
 		long size = 3_000_000_000L;
 
 		AsyncHttpServer server = AsyncHttpServer.create(Eventloop.getCurrentEventloop(),
-				request ->  HttpResponse.ok200()
+						request -> HttpResponse.ok200()
 								.withHeader(CONTENT_LENGTH, String.valueOf(size))
 								.withBodyStream(request.getBodyStream()))
 				.withListenPort(port);
@@ -225,14 +224,14 @@ public final class AbstractHttpConnectionTest {
 		int size = 1_000_000;
 		ByteBuf expected = ByteBufPool.allocate(size);
 		AsyncHttpServer server = AsyncHttpServer.create(Eventloop.getCurrentEventloop(),
-				request -> {
-					byte[] bytes = new byte[size];
-					RANDOM.nextBytes(bytes);
-					expected.put(bytes);
-					return HttpResponse.ok200()
-							.withBodyGzipCompression()
-							.withBodyStream(ChannelSupplier.of(expected.slice()));
-				})
+						request -> {
+							byte[] bytes = new byte[size];
+							RANDOM.nextBytes(bytes);
+							expected.put(bytes);
+							return HttpResponse.ok200()
+									.withBodyGzipCompression()
+									.withBodyStream(ChannelSupplier.of(expected.slice()));
+						})
 				.withAcceptOnce()
 				.withListenPort(port);
 
@@ -301,7 +300,9 @@ public final class AbstractHttpConnectionTest {
 				.withAcceptOnce(true);
 		server.listen();
 
-		awaitException(client.request(HttpRequest.get(url + '/' + new String(chars))));
+		HttpResponse response = await(client.request(HttpRequest.get(url + '/' + new String(chars))));
+
+		assertEquals(400, response.getCode());
 
 		ExceptionStats httpErrors = inspector.getHttpErrors();
 		assertEquals(1, httpErrors.getTotal());
@@ -452,14 +453,14 @@ public final class AbstractHttpConnectionTest {
 	private void doTestHugeStreams(AsyncHttpClient client, SocketSettings socketSettings, int size, Consumer<HttpMessage> decorator) throws IOException {
 		ByteBuf expected = ByteBufPool.allocate(size);
 		AsyncHttpServer server = AsyncHttpServer.create(Eventloop.getCurrentEventloop(),
-				request -> request.loadBody()
-						.map(body -> {
-							HttpResponse httpResponse = HttpResponse.ok200()
-									.withBodyStream(request.getBodyStream()
-											.transformWith(ChannelByteChunker.create(MemSize.of(1), MemSize.of(1))));
-							decorator.accept(httpResponse);
-							return httpResponse;
-						}))
+						request -> request.loadBody()
+								.map(body -> {
+									HttpResponse httpResponse = HttpResponse.ok200()
+											.withBodyStream(request.getBodyStream()
+													.transformWith(ChannelByteChunker.create(MemSize.of(1), MemSize.of(1))));
+									decorator.accept(httpResponse);
+									return httpResponse;
+								}))
 				.withListenPort(port)
 				.withSocketSettings(socketSettings);
 		server.listen();
@@ -496,11 +497,11 @@ public final class AbstractHttpConnectionTest {
 	@SuppressWarnings("SameParameterValue")
 	private void checkMaxKeepAlive(int maxKeepAlive, AsyncHttpServer server, EventStats connectionCount) {
 		await(Promises.sequence(
-				IntStream.range(0, maxKeepAlive - 1)
-						.mapToObj($ ->
-								() -> checkRequest("keep-alive", 1, connectionCount)
-										.then(AbstractHttpConnectionTest::post)
-										.toVoid()))
+						IntStream.range(0, maxKeepAlive - 1)
+								.mapToObj($ ->
+										() -> checkRequest("keep-alive", 1, connectionCount)
+												.then(AbstractHttpConnectionTest::post)
+												.toVoid()))
 				.then(() -> checkRequest("close", 1, connectionCount))
 				.then(AbstractHttpConnectionTest::post)
 				.then(() -> checkRequest("keep-alive", 2, connectionCount))
@@ -508,7 +509,7 @@ public final class AbstractHttpConnectionTest {
 				.whenComplete(server::close));
 	}
 
-	private static <T> Promise<T> post(T value){
+	private static <T> Promise<T> post(T value) {
 		SettablePromise<T> cb = new SettablePromise<>();
 		Eventloop.getCurrentEventloop().post(() -> cb.set(value));
 		return cb;

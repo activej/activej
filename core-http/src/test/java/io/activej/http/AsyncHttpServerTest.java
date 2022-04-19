@@ -4,6 +4,8 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.csp.ChannelSupplier;
 import io.activej.eventloop.Eventloop;
+import io.activej.http.AsyncHttpServer.JmxInspector;
+import io.activej.jmx.stats.ExceptionStats;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
@@ -103,21 +105,21 @@ public final class AsyncHttpServerTest {
 		Thread thread = new Thread(eventloop);
 		thread.start();
 
-		Socket socket = new Socket();
-		socket.setTcpNoDelay(true);
-		socket.connect(new InetSocketAddress("localhost", port));
+		try (Socket socket = new Socket()) {
+			socket.setTcpNoDelay(true);
+			socket.connect(new InetSocketAddress("localhost", port));
 
-		for (int i = 0; i < 200; i++) {
-			writeByRandomParts(socket, "GET /abc HTTP/1.0\r\nHost: localhost\r\nConnection: keep-alive\r\n\r\n");
-			readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 4\r\n\r\n/abc");
+			for (int i = 0; i < 200; i++) {
+				writeByRandomParts(socket, "GET /abc HTTP/1.0\r\nHost: localhost\r\nConnection: keep-alive\r\n\r\n");
+				readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 4\r\n\r\n/abc");
+			}
+
+			writeByRandomParts(socket, "GET /abc HTTP/1.0\r\nHost: localhost\r\n\r\n");
+			readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 4\r\n\r\n/abc"); // ?
+
+			assertEquals(0, toByteArray(socket.getInputStream()).length);
+			assertTrue(socket.isClosed());
 		}
-
-		writeByRandomParts(socket, "GET /abc HTTP/1.0\r\nHost: localhost\r\n\r\n");
-		readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 4\r\n\r\n/abc"); // ?
-
-		assertEquals(0, toByteArray(socket.getInputStream()).length);
-		assertTrue(socket.isClosed());
-		socket.close();
 
 		server.closeFuture().get();
 		thread.join();
@@ -136,21 +138,21 @@ public final class AsyncHttpServerTest {
 		Thread thread = new Thread(eventloop);
 		thread.start();
 
-		Socket socket = new Socket();
-		socket.setTcpNoDelay(true);
-		socket.connect(new InetSocketAddress("localhost", port));
+		try (Socket socket = new Socket()) {
+			socket.setTcpNoDelay(true);
+			socket.connect(new InetSocketAddress("localhost", port));
 
-		for (int i = 0; i < 200; i++) {
-			writeByRandomParts(socket, "GET /abc HTTP/1.1\r\nHost: localhost\r\n\r\n");
-			readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 4\r\n\r\n/abc");
+			for (int i = 0; i < 200; i++) {
+				writeByRandomParts(socket, "GET /abc HTTP/1.1\r\nHost: localhost\r\n\r\n");
+				readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 4\r\n\r\n/abc");
+			}
+
+			writeByRandomParts(socket, "GET /abc HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n");
+			readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 4\r\n\r\n/abc"); // ?
+
+			assertEquals(0, toByteArray(socket.getInputStream()).length);
+			assertTrue(socket.isClosed());
 		}
-
-		writeByRandomParts(socket, "GET /abc HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n");
-		readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 4\r\n\r\n/abc"); // ?
-
-		assertEquals(0, toByteArray(socket.getInputStream()).length);
-		assertTrue(socket.isClosed());
-		socket.close();
 
 		server.closeFuture().get();
 		thread.join();
@@ -164,11 +166,10 @@ public final class AsyncHttpServerTest {
 		Thread thread = new Thread(eventloop);
 		thread.start();
 
-		Socket socket = new Socket();
-
-		socket.connect(new InetSocketAddress("localhost", port));
-		writeByRandomParts(socket, "GET /abc HTTP1.1\r\nHost: localhost\r\n");
-		socket.close();
+		try (Socket socket = new Socket()) {
+			socket.connect(new InetSocketAddress("localhost", port));
+			writeByRandomParts(socket, "GET /abc HTTP1.1\r\nHost: localhost\r\n");
+		}
 
 		server.closeFuture().get();
 		thread.join();
@@ -183,11 +184,9 @@ public final class AsyncHttpServerTest {
 				.withAcceptOnce();
 		server.listen();
 		new Thread(() -> {
-			try {
-				Socket socket = new Socket();
+			try (Socket socket = new Socket()) {
 				socket.connect(new InetSocketAddress("localhost", port));
 				writeByRandomParts(socket, "GET /abc HTTP/1.1\r\nHost: localhost\r\n\r\n");
-				socket.close();
 			} catch (IOException e) {
 				throw new AssertionError(e);
 			}
@@ -204,13 +203,12 @@ public final class AsyncHttpServerTest {
 		Thread thread = new Thread(eventloop);
 		thread.start();
 
-		Socket socket = new Socket();
-
-		socket.connect(new InetSocketAddress("localhost", port));
-		writeByRandomParts(socket, "GET /abc HTTP/1.0\r\nHost: localhost\r\n\r\n");
-		readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 4\r\n\r\n/abc");
-		assertEquals(0, toByteArray(socket.getInputStream()).length);
-		socket.close();
+		try (Socket socket = new Socket()) {
+			socket.connect(new InetSocketAddress("localhost", port));
+			writeByRandomParts(socket, "GET /abc HTTP/1.0\r\nHost: localhost\r\n\r\n");
+			readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 4\r\n\r\n/abc");
+			assertEquals(0, toByteArray(socket.getInputStream()).length);
+		}
 
 		server.closeFuture().get();
 		thread.join();
@@ -224,13 +222,12 @@ public final class AsyncHttpServerTest {
 		Thread thread = new Thread(eventloop);
 		thread.start();
 
-		Socket socket = new Socket();
-
-		socket.connect(new InetSocketAddress("localhost", port));
-		writeByRandomParts(socket, "GET /abc HTTP/1.1\r\nConnection: close\r\nHost: localhost\r\n\r\n");
-		readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 4\r\n\r\n/abc");
-		assertEquals(0, toByteArray(socket.getInputStream()).length);
-		socket.close();
+		try (Socket socket = new Socket()) {
+			socket.connect(new InetSocketAddress("localhost", port));
+			writeByRandomParts(socket, "GET /abc HTTP/1.1\r\nConnection: close\r\nHost: localhost\r\n\r\n");
+			readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 4\r\n\r\n/abc");
+			assertEquals(0, toByteArray(socket.getInputStream()).length);
+		}
 
 		server.closeFuture().get();
 		thread.join();
@@ -249,34 +246,35 @@ public final class AsyncHttpServerTest {
 		Thread thread = new Thread(eventloop);
 		thread.start();
 
-		Socket socket = new Socket();
-		socket.connect(new InetSocketAddress("localhost", port));
+		try (Socket socket = new Socket()) {
+			socket.connect(new InetSocketAddress("localhost", port));
 
-		for (int i = 0; i < 100; i++) {
-			writeByRandomParts(socket, "" +
-					"GET /abc HTTP/1.1\r\nConnection: Keep-Alive\r\nHost: localhost\r\n\r\n" +
-					"GET /123456 HTTP/1.1\r\nHost: localhost\r\n\r\n" +
+			for (int i = 0; i < 100; i++) {
+				writeByRandomParts(socket, "" +
+						"GET /abc HTTP/1.1\r\nConnection: Keep-Alive\r\nHost: localhost\r\n\r\n" +
+						"GET /123456 HTTP/1.1\r\nHost: localhost\r\n\r\n" +
 
-					"POST /post1 HTTP/1.1\r\n" +
-					"Host: localhost\r\n" +
-					"Content-Length: 8\r\n" +
-					"Content-Type: application/json\r\n\r\n" +
-					"{\"at\":2}" +
+						"POST /post1 HTTP/1.1\r\n" +
+						"Host: localhost\r\n" +
+						"Content-Length: 8\r\n" +
+						"Content-Type: application/json\r\n\r\n" +
+						"{\"at\":2}" +
 
-					"POST /post2 HTTP/1.1\r\n" +
-					"Host: localhost\r\n" +
-					"Content-Length: 8\r\n" +
-					"Content-Type: application/json\r\n\r\n" +
-					"{\"at\":2}" +
+						"POST /post2 HTTP/1.1\r\n" +
+						"Host: localhost\r\n" +
+						"Content-Length: 8\r\n" +
+						"Content-Type: application/json\r\n\r\n" +
+						"{\"at\":2}" +
 
-					"");
-		}
+						"");
+			}
 
-		for (int i = 0; i < 100; i++) {
-			readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 4\r\n\r\n/abc");
-			readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 7\r\n\r\n/123456");
-			readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 6\r\n\r\n/post1");
-			readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 6\r\n\r\n/post2");
+			for (int i = 0; i < 100; i++) {
+				readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 4\r\n\r\n/abc");
+				readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 7\r\n\r\n/123456");
+				readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 6\r\n\r\n/post1");
+				readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 6\r\n\r\n/post2");
+			}
 		}
 
 		server.closeFuture().get();
@@ -326,19 +324,19 @@ public final class AsyncHttpServerTest {
 		Thread thread = new Thread(eventloop);
 		thread.start();
 
-		Socket socket = new Socket();
-		socket.setTcpNoDelay(true);
-		socket.connect(new InetSocketAddress("localhost", port));
+		try (Socket socket = new Socket()) {
+			socket.setTcpNoDelay(true);
+			socket.connect(new InetSocketAddress("localhost", port));
 
-		writeByRandomParts(socket, "POST /abc HTTP/1.0\r\nHost: localhost\r\nContent-Length: 5\r\nExpect: 100-continue\r\n\r\n");
-		readAndAssert(socket.getInputStream(), "HTTP/1.1 100 Continue\r\n\r\n");
+			writeByRandomParts(socket, "POST /abc HTTP/1.0\r\nHost: localhost\r\nContent-Length: 5\r\nExpect: 100-continue\r\n\r\n");
+			readAndAssert(socket.getInputStream(), "HTTP/1.1 100 Continue\r\n\r\n");
 
-		writeByRandomParts(socket, "abcde");
-		readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 5\r\n\r\nabcde");
+			writeByRandomParts(socket, "abcde");
+			readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 5\r\n\r\nabcde");
 
-		assertEquals(0, toByteArray(socket.getInputStream()).length);
-		assertTrue(socket.isClosed());
-		socket.close();
+			assertEquals(0, toByteArray(socket.getInputStream()).length);
+			assertTrue(socket.isClosed());
+		}
 
 		server.closeFuture().get();
 		thread.join();
@@ -394,22 +392,21 @@ public final class AsyncHttpServerTest {
 		Thread thread = new Thread(eventloop);
 		thread.start();
 
-		Socket socket = new Socket();
+		try (Socket socket = new Socket()) {
+			socket.connect(new InetSocketAddress("localhost", port));
+			writeByRandomParts(socket, "POST / HTTP/1.1\r\n" +
+					"Host: localhost\r\n" +
+					"Connection: close\r\n" +
+					"Content-Type: application/x-www-form-urlencoded\r\n" +
+					"Content-Length: 27\r\n\r\n" +
+					"field1=value1&field2=value2");
 
-		socket.connect(new InetSocketAddress("localhost", port));
-		writeByRandomParts(socket, "POST / HTTP/1.1\r\n" +
-				"Host: localhost\r\n" +
-				"Connection: close\r\n" +
-				"Content-Type: application/x-www-form-urlencoded\r\n" +
-				"Content-Length: 27\r\n\r\n" +
-				"field1=value1&field2=value2");
-
-		readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\n" +
-				"Connection: close\r\n" +
-				"Content-Length: 28\r\n\r\n" +
-				"field1=value1;field2=value2;");
-		assertEquals(0, toByteArray(socket.getInputStream()).length);
-		socket.close();
+			readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\n" +
+					"Connection: close\r\n" +
+					"Content-Length: 28\r\n\r\n" +
+					"field1=value1;field2=value2;");
+			assertEquals(0, toByteArray(socket.getInputStream()).length);
+		}
 
 		server.closeFuture().get();
 		thread.join();
@@ -433,22 +430,181 @@ public final class AsyncHttpServerTest {
 		Thread thread = new Thread(eventloop);
 		thread.start();
 
-		Socket socket = new Socket();
+		try (Socket socket = new Socket()) {
+			socket.connect(new InetSocketAddress("localhost", port));
+			writeByRandomParts(socket, "POST / HTTP/1.1\r\n" +
+					"Host: localhost\r\n" +
+					"Connection: close\r\n" +
+					"Content-Type: application/x-www-form-urlencoded\r\n" +
+					"Content-Length: 100\r\n\r\n" +
+					"field1=value1&field2=value2");
+			socket.shutdownOutput();
 
-		socket.connect(new InetSocketAddress("localhost", port));
-		writeByRandomParts(socket, "POST / HTTP/1.1\r\n" +
-				"Host: localhost\r\n" +
-				"Connection: close\r\n" +
-				"Content-Type: application/x-www-form-urlencoded\r\n" +
-				"Content-Length: 100\r\n\r\n" +
-				"field1=value1&field2=value2");
-		socket.shutdownOutput();
-
-		assertEquals(0, toByteArray(socket.getInputStream()).length);
-		socket.close();
+			assertEquals(0, toByteArray(socket.getInputStream()).length);
+		}
 
 		server.closeFuture().get();
 		thread.join();
+	}
+
+	@Test
+	public void testMalformedUri() throws IOException, ExecutionException, InterruptedException {
+		JmxInspector inspector = new JmxInspector();
+		AsyncHttpServer server = AsyncHttpServer.create(eventloop, $ -> {
+					throw new IllegalArgumentException("Should not be called");
+				})
+				.withListenPort(port)
+				.withInspector(inspector);
+		server.listen();
+		Thread thread = new Thread(eventloop);
+		thread.start();
+
+		String malformedUriRequest = "GET /malformed uri HTTP/1.1\r\n" +
+				"Host: localhost\r\n" +
+				"Connection: keep-alive\r\n\r\n";
+		doTestMalformedRequest(malformedUriRequest);
+
+		ExceptionStats malformedHttpExceptions = inspector.getMalformedHttpExceptions();
+		assertEquals(1, malformedHttpExceptions.getTotal());
+		assertEquals("Unsupported HTTP version", malformedHttpExceptions.getLastMessage());
+		String context = (String) malformedHttpExceptions.getContext();
+		assertNotNull(context);
+		assertFalse(context.isEmpty());
+		assertTrue(malformedUriRequest.startsWith(context));
+
+		server.closeFuture().get();
+		thread.join();
+	}
+
+	@Test
+	public void testMalformedHeaders() throws IOException, ExecutionException, InterruptedException {
+		JmxInspector inspector = new JmxInspector();
+		AsyncHttpServer server = AsyncHttpServer.create(eventloop, $ -> {
+					throw new IllegalArgumentException("Should not be called");
+				})
+				.withListenPort(port)
+				.withInspector(inspector);
+		server.listen();
+		Thread thread = new Thread(eventloop);
+		thread.start();
+
+
+		// malformed header
+		String malformedHeaderRequest = "GET / HTTP/1.1\r\n" +
+				"Host: localhost\r\n" +
+				"Connection: keep-alive\r\n" +
+				"Content-Length: error\r\n\r\n";
+		doTestMalformedRequest(malformedHeaderRequest);
+
+		ExceptionStats malformedHttpExceptions = inspector.getMalformedHttpExceptions();
+		assertEquals(1, malformedHttpExceptions.getTotal());
+		assertEquals("Not a decimal value: error", malformedHttpExceptions.getLastMessage());
+		String context = (String) malformedHttpExceptions.getContext();
+		assertNotNull(context);
+		assertFalse(context.isEmpty());
+		assertTrue(malformedHeaderRequest.startsWith(context));
+
+		server.closeFuture().get();
+		thread.join();
+	}
+
+	@Test
+	public void testMalformedFirstRequestPipelined() throws IOException, ExecutionException, InterruptedException {
+		JmxInspector inspector = new JmxInspector();
+		AsyncHttpServer server = AsyncHttpServer.create(eventloop, $ -> {
+					throw new IllegalArgumentException("Should not be called");
+				})
+				.withListenPort(port)
+				.withInspector(inspector);
+		server.listen();
+		Thread thread = new Thread(eventloop);
+		thread.start();
+
+		// pipeline malformed first request
+		String malformedPipelinedRequest = "GET /malformed uri HTTP/1.1\r\n" +
+				"Host: localhost\r\n" +
+				"Connection: keep-alive\r\n\r\n" +
+
+				"GET / HTTP/1.1\r\n" +
+				"Host: localhost\r\n" +
+				"Connection: keep-alive\r\n\r\n";
+		doTestMalformedRequest(malformedPipelinedRequest);
+
+		ExceptionStats malformedHttpExceptions = inspector.getMalformedHttpExceptions();
+		assertEquals(1, malformedHttpExceptions.getTotal());
+		assertEquals("Unsupported HTTP version", malformedHttpExceptions.getLastMessage());
+		String context = (String) malformedHttpExceptions.getContext();
+		assertNotNull(context);
+		assertFalse(context.isEmpty());
+		assertTrue(malformedPipelinedRequest.startsWith(context));
+
+		server.closeFuture().get();
+		thread.join();
+	}
+
+	@Test
+	public void testMalformedSecondRequestPipelined() throws IOException, ExecutionException, InterruptedException {
+		JmxInspector inspector = new JmxInspector();
+		AsyncHttpServer server = AsyncHttpServer.create(eventloop, $ -> HttpResponse.ok200()
+						.withPlainText("Hello, world!"))
+				.withListenPort(port)
+				.withInspector(inspector);
+		server.listen();
+		Thread thread = new Thread(eventloop);
+		thread.start();
+
+		String normalPipelinedrequest = "GET / HTTP/1.1\r\n" +
+				"Host: localhost\r\n" +
+				"Connection: keep-alive\r\n\r\n";
+		String malformedPipelinedRequest = "GET /malformed uri HTTP/1.1\r\n" +
+				"Host: localhost\r\n" +
+				"Connection: keep-alive\r\n\r\n";
+
+		try (Socket socket = new Socket()) {
+			socket.connect(new InetSocketAddress("localhost", port));
+			writeByRandomParts(socket, normalPipelinedrequest + malformedPipelinedRequest);
+			socket.shutdownOutput();
+
+			readAndAssert(socket.getInputStream(),
+					"HTTP/1.1 200 OK\r\n" +
+							"Connection: keep-alive\r\n" +
+							"Content-Type: text/plain; charset=utf-8\r\n" +
+							"Content-Length: 13\r\n" +
+							"\r\n" +
+							"Hello, world!" +
+
+							"HTTP/1.1 400 Bad Request\r\n" +
+							"Connection: close\r\n" +
+							"Content-Length: 0\r\n" +
+							"\r\n");
+
+
+			assertEquals(0, toByteArray(socket.getInputStream()).length);
+		}
+
+		ExceptionStats malformedHttpExceptions = inspector.getMalformedHttpExceptions();
+		assertEquals(1, malformedHttpExceptions.getTotal());
+		assertEquals("Unsupported HTTP version", malformedHttpExceptions.getLastMessage());
+		String context = (String) malformedHttpExceptions.getContext();
+		assertNotNull(context);
+		assertFalse(context.isEmpty());
+		assertTrue(malformedPipelinedRequest.startsWith(context));
+
+		server.closeFuture().get();
+		thread.join();
+	}
+
+	private void doTestMalformedRequest(String string) throws IOException {
+		try (Socket socket = new Socket()) {
+			socket.connect(new InetSocketAddress("localhost", port));
+			writeByRandomParts(socket, string);
+			socket.shutdownOutput();
+
+			readAndAssert(socket.getInputStream(), "HTTP/1.1 400 Bad Request\r\n" +
+					"Connection: close\r\n" +
+					"Content-Length: 0\r\n" +
+					"\r\n");
+		}
 	}
 
 	private void shutdownAllChannels() {

@@ -11,6 +11,7 @@ import java.io.*;
 import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -566,4 +567,27 @@ public final class TestLocalBlockingFs {
 		}
 	}
 
+	@Test
+	public void testRelativePaths() throws IOException {
+		Set<String> expected = setOf(
+				"1/a.txt",
+				"1/b.txt",
+				"2/3/a.txt",
+				"2/b/d.txt",
+				"2/b/e.txt"
+		);
+
+		Path current = Paths.get(".");
+		Path relativePath = current.toAbsolutePath().relativize(storagePath);
+		relativePath = relativePath.getParent().resolve(".").resolve(relativePath.getFileName());
+
+		assertFalse(relativePath.isAbsolute());
+
+		client = LocalBlockingFs.create(relativePath);
+		client.start();
+
+		Map<String, FileMetadata> actual = client.list("**");
+
+		assertEquals(expected, actual.keySet());
+	}
 }

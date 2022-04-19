@@ -2,6 +2,7 @@ package io.activej.cube;
 
 import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.aggregation.AggregationChunkStorage;
+import io.activej.aggregation.AggregationPredicates;
 import io.activej.aggregation.ChunkIdCodec;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.LZ4FrameFormat;
@@ -26,8 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static io.activej.aggregation.AggregationPredicates.alwaysTrue;
-import static io.activej.aggregation.fieldtype.FieldTypes.ofInt;
-import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
+import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.TestUtils.runProcessLogs;
@@ -51,9 +51,13 @@ public final class LogToCubeTest extends CubeTestBase {
 		Cube cube = Cube.create(EVENTLOOP, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
 				.withDimension("adv", ofInt())
+				.withDimension("testEnum", ofEnum(TestPubRequest.TestEnum.class))
 				.withMeasure("pubRequests", sum(ofLong()))
 				.withMeasure("advRequests", sum(ofLong()))
-				.withAggregation(id("pub").withDimensions("pub").withMeasures("pubRequests"))
+				.withAggregation(id("pub").withDimensions("pub", "testEnum").withMeasures("pubRequests")
+//						.withPredicate(AggregationPredicates.notEq("testEnum", null)) // ok
+						.withPredicate(AggregationPredicates.has("testEnum")) // fail
+				)
 				.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests"));
 
 		OTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);

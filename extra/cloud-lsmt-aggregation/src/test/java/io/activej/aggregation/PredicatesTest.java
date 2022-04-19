@@ -71,6 +71,8 @@ public class PredicatesTest {
 		assertEquals(expected, predicate.simplify());
 	}
 
+	enum TestEnum {ONE, TWO, THREE}
+
 	@Test
 	public void testBetweenPredicateAndPredicateNotEq() {
 		AggregationPredicate predicate;
@@ -85,6 +87,9 @@ public class PredicatesTest {
 
 		predicate = and(notEq("x", 12), between("x", 5, 10));
 		assertEquals(between("x", 5, 10), predicate.simplify());
+
+		predicate = and(has("TestEnum"), between("TestEnum", TestEnum.ONE, TestEnum.THREE));
+		assertEquals(between("TestEnum", TestEnum.ONE, TestEnum.THREE), predicate.simplify());
 	}
 
 	@Test

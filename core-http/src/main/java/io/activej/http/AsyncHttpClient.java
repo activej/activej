@@ -62,6 +62,7 @@ import static io.activej.http.HttpUtils.translateToHttpException;
 import static io.activej.http.Protocol.*;
 import static io.activej.jmx.stats.MBeanFormat.formatListAsMultilineString;
 import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -132,6 +133,9 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 
 		void onHttpError(HttpClientConnection connection, Exception e);
 
+		default void onMalformedHttpResponse(HttpClientConnection connection, MalformedHttpException e, byte[] malformedResponseBytes) {
+		}
+
 		void onDisconnect(HttpClientConnection connection);
 	}
 
@@ -146,6 +150,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		private long responses;
 		private final EventStats httpTimeouts = EventStats.create(SMOOTHING_WINDOW);
 		private final ExceptionStats httpErrors = ExceptionStats.create();
+		private final ExceptionStats malformedHttpExceptions = ExceptionStats.create();
 		private long responsesErrors;
 		private final EventStats sslErrors = EventStats.create(SMOOTHING_WINDOW);
 		private long activeConnections;
@@ -206,6 +211,12 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		}
 
 		@Override
+		public void onMalformedHttpResponse(HttpClientConnection connection, MalformedHttpException e, byte[] malformedResponseBytes) {
+			String responseString = new String(malformedResponseBytes, 0, malformedResponseBytes.length, ISO_8859_1);
+			malformedHttpExceptions.recordException(e, responseString);
+		}
+
+		@Override
 		public void onDisconnect(HttpClientConnection connection) {
 			activeConnections--;
 		}
@@ -238,6 +249,11 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		@JmxAttribute
 		public ExceptionStats getHttpErrors() {
 			return httpErrors;
+		}
+
+		@JmxAttribute
+		public ExceptionStats getMalformedHttpExceptions() {
+			return malformedHttpExceptions;
 		}
 
 		@JmxAttribute(reducer = JmxReducerSum.class)

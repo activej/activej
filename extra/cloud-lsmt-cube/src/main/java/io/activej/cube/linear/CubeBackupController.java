@@ -199,8 +199,7 @@ public final class CubeBackupController implements ConcurrentJmxBean, WithInitia
 
 		backupDbException = null;
 
-		logger.trace("Database is backed up on revision {} " +
-				"Waiting for chunks to back up prior to commit", revisionId);
+		logger.trace("Database is backed up on revision {} ", revisionId);
 	}
 
 	private Set<Long> getChunksToBackup(Connection connection, long revisionId) throws CubeException {

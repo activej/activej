@@ -11,6 +11,8 @@ import static java.util.Arrays.asList;
 public class TestPubRequest {
 	private final static Random rand = new Random();
 
+	public enum TestEnum { ONE, TWO}
+
 	public static class TestAdvRequest {
 		@Serialize
 		public int adv;

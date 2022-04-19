@@ -97,7 +97,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	}
 
 	public static LocalBlockingFs create(Path storageDir) {
-		return new LocalBlockingFs(storageDir);
+		return new LocalBlockingFs(storageDir.normalize());
 	}
 
 	/**

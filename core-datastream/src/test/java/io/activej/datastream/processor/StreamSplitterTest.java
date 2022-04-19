@@ -1,13 +1,18 @@
 package io.activej.datastream.processor;
 
+import io.activej.datastream.AbstractStreamConsumer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.StreamSupplier;
+import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.test.ExpectedException;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static io.activej.datastream.TestStreamTransformers.decorate;
 import static io.activej.datastream.TestStreamTransformers.oneByOne;
@@ -137,5 +142,52 @@ public class StreamSplitterTest {
 				});
 
 		await(StreamSupplier.of(1, 2, 3, 4).streamTo(splitter.getInput()));
+	}
+
+	@Test
+	public void testSuspendSideEffect() {
+		StreamSupplier<Integer> source = StreamSupplier.of(1, 2, 3);
+		StreamSplitter<Integer, Integer> splitter = StreamSplitter.create(
+				(item, acceptors) -> {
+					for (StreamDataAcceptor<Integer> acceptor : acceptors) {
+						acceptor.accept(item);
+					}
+				});
+
+		List<Integer> list = new ArrayList<>();
+		AbstractStreamConsumer<Integer> consumer = new AbstractStreamConsumer<Integer>() {
+			@Override
+			protected void onStarted() {
+				resume(list::add);
+			}
+
+			@Override
+			protected void onEndOfStream() {
+				acknowledge();
+			}
+		};
+
+		await(
+				source.streamTo(splitter.getInput()),
+				splitter.newOutput().streamTo(new AbstractStreamConsumer<Integer>() {
+					@Override
+					protected void onStarted() {
+						resume(item -> {
+							if (item == 2) {
+								consumer.suspend();
+								Eventloop.getCurrentEventloop().post(() -> consumer.resume(list::add));
+							}
+						});
+					}
+
+					@Override
+					protected void onEndOfStream() {
+						acknowledge();
+					}
+				}),
+				splitter.newOutput().streamTo(consumer)
+		);
+
+		assertEquals(asList(1, 2, 3), list);
 	}
 }

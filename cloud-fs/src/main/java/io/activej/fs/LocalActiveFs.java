@@ -146,7 +146,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	}
 
 	public static LocalActiveFs create(Eventloop eventloop, Executor executor, Path storageDir) {
-		return new LocalActiveFs(eventloop, storageDir, executor);
+		return new LocalActiveFs(eventloop, storageDir.normalize(), executor);
 	}
 
 	/**
@@ -618,7 +618,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 				throw new FileNotFoundException();
 			} else if (e instanceof GlobException) {
 				throw new MalformedGlobException(e.getMessage());
-			} else if (e instanceof ActiveFsStructureException){
+			} else if (e instanceof ActiveFsStructureException) {
 				throw new FsIOException(e.getMessage());
 			}
 			return execute(() -> {

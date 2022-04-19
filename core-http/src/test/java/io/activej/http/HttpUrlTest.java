@@ -170,6 +170,21 @@ public final class HttpUrlTest {
 	}
 
 	@Test
+	public void testPollUrlPartWithPercentEncoding() {
+		UrlParser uri = UrlParser.of("http://example.com/a%2f/b%2F");
+		assertEquals("a/", uri.pollUrlPart());
+		assertEquals("/b%2F", uri.getPartialPath());
+		assertEquals("b/", uri.pollUrlPart());
+		assertEquals("", uri.pollUrlPart());
+	}
+
+	@Test
+	public void testPollUrlPartWithBadPercentEncoding() {
+		UrlParser uri = UrlParser.of("http://example.com/a%2");
+		assertNull("a/", uri.pollUrlPart());
+	}
+
+	@Test
 	public void testPollUrlPartWithNotUrlEncodedQuery() throws MalformedHttpException {
 		UrlParser url = UrlParser.parse("/category/url?url=http://example.com");
 		assertEquals("category", url.pollUrlPart());
@@ -394,4 +409,13 @@ public final class HttpUrlTest {
 	public void testEmptyHost3() {
 		assertThrows(IllegalArgumentException.class, () -> UrlParser.of("http://?test=':80'"));
 	}
+
+	@Test
+	public void testHostFollowedByFragment() {
+		UrlParser url = UrlParser.of("http://www.test.com#fragment");
+		assertEquals(HTTP, url.getProtocol());
+		assertEquals("www.test.com", url.getHost());
+		assertEquals("fragment", url.getFragment());
+	}
+
 }

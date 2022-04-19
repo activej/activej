@@ -137,6 +137,15 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	}
 
 	@Override
+	protected void onMalformedHttpException(@NotNull MalformedHttpException e) {
+		if (inspector != null) {
+			inspector.onMalformedHttpResponse(this, e, readBuf.getArray());
+		}
+
+		closeEx(e);
+	}
+
+	@Override
 	protected void onStartLine(byte[] line, int pos, int limit) throws MalformedHttpException {
 		//noinspection PointlessArithmeticExpression
 		boolean http1x = line[pos + 0] == 'H' && line[pos + 1] == 'T' && line[pos + 2] == 'T' && line[pos + 3] == 'P' && line[pos + 4] == '/' && line[pos + 5] == '1';

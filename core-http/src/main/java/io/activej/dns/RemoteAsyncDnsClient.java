@@ -164,6 +164,19 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 			logger.trace("{} already contained an IP address within itself", query);
 			return Promise.of(fromQuery);
 		}
+
+		int labelSize = 0;
+		String domainName = query.getDomainName();
+		for (int i = 0; i < domainName.length(); i++) {
+			if (domainName.charAt(i) == '.') {
+				labelSize = 0;
+			} else if (++labelSize > 63) {
+				// Domain Implementation and Specification - Size limits
+				// https://www.ietf.org/rfc/rfc1035.html#section-2.3.4
+				return Promise.ofException(new IllegalArgumentException("Label size cannot exceed 63 octets"));
+			}
+		}
+
 		// ignore the result because sooner or later it will be sent and just completed
 		// here we use that transactions map because it easily could go completely out of order, and we should be ok with that
 		return getSocket()

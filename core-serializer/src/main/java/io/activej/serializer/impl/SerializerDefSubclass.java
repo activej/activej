@@ -23,10 +23,8 @@ import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.Modifier;
+import java.util.*;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
@@ -42,6 +40,8 @@ public final class SerializerDefSubclass extends AbstractSerializerDef implement
 	private final int startIndex;
 
 	public SerializerDefSubclass(@NotNull Class<?> dataType, LinkedHashMap<Class<?>, SerializerDef> subclassSerializers, int startIndex) {
+		checkSubclasses(subclassSerializers.keySet());
+
 		this.startIndex = startIndex;
 		this.dataType = dataType;
 		this.subclassSerializers = new LinkedHashMap<>(subclassSerializers);
@@ -49,6 +49,8 @@ public final class SerializerDefSubclass extends AbstractSerializerDef implement
 	}
 
 	private SerializerDefSubclass(@NotNull Class<?> dataType, LinkedHashMap<Class<?>, SerializerDef> subclassSerializers, boolean nullable, int startIndex) {
+		checkSubclasses(subclassSerializers.keySet());
+
 		this.startIndex = startIndex;
 		this.dataType = dataType;
 		this.subclassSerializers = new LinkedHashMap<>(subclassSerializers);
@@ -124,4 +126,12 @@ public final class SerializerDefSubclass extends AbstractSerializerDef implement
 						dataType));
 	}
 
+	private static void checkSubclasses(Set<Class<?>> subclasses) {
+		for (Class<?> subclass : subclasses) {
+			if (Modifier.isAbstract(subclass.getModifiers())) {
+				throw new IllegalArgumentException("A subclass should not be an " +
+						(subclass.isInterface() ? "interface" : "abstract class") + ": " + subclass);
+			}
+		}
+	}
 }

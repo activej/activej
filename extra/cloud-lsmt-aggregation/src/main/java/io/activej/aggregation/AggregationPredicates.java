@@ -1016,7 +1016,10 @@ public class AggregationPredicates {
 
 		@Override
 		public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-			return fields.containsKey(key) ? E.alwaysTrue() : E.alwaysFalse();
+			if (!fields.containsKey(key)) return E.alwaysFalse();
+			Variable property = E.property(record, key.replace('.', '$'));
+			FieldType fieldType = fields.get(key);
+			return isNotNull(property, fieldType);
 		}
 
 		@Override
