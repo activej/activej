@@ -118,7 +118,8 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 				.with(Integer.class, ctx -> new SerializerDefInt(true))
 				.with(Long.class, ctx -> new SerializerDefLong(true))
 				.with(Float.class, ctx -> new SerializerDefFloat(true))
-				.with(Double.class, ctx -> new SerializerDefDouble(true));
+				.with(Double.class, ctx -> new SerializerDefDouble(true))
+				.with(Void.class, ctx -> new SerializerDefVoid());
 
 		for (Type type : new Type[]{
 				boolean[].class, char[].class, byte[].class, short[].class, int[].class, long[].class, float[].class, double[].class,

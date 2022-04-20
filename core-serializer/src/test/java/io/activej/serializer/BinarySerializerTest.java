@@ -69,6 +69,8 @@ public class BinarySerializerTest {
 		public long lVar;
 
 		@Serialize
+		public Void aVoid;
+		@Serialize
 		public Boolean zBoxed;
 		@Serialize
 		public Character cBoxed;
@@ -148,6 +150,7 @@ public class BinarySerializerTest {
 		assertEquals(testData1.iVar, testData2.iVar);
 		assertEquals(testData1.lVar, testData2.lVar);
 
+		assertNull(testData2.aVoid);
 		assertEquals(testData1.zBoxed, testData2.zBoxed);
 		assertEquals(testData1.cBoxed, testData2.cBoxed);
 		assertEquals(testData1.bBoxed, testData2.bBoxed);
