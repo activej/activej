@@ -67,7 +67,7 @@ public final class RpcServerConnection implements RpcStream.Listener, JmxRefresh
 
 	@SuppressWarnings("unchecked")
 	private Promise<Object> serve(Object request) {
-		RpcRequestHandler<Object, Object> requestHandler = (RpcRequestHandler<Object, Object>) handlers.get(request.getClass());
+		RpcRequestHandler<Object, Object> requestHandler = (RpcRequestHandler<Object, Object>) handlers.get(request == null ? Void.class : request.getClass());
 		if (requestHandler == null) {
 			return Promise.ofException(new MalformedDataException("Failed to process request " + request));
 		}

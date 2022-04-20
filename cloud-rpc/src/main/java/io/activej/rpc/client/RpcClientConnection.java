@@ -187,7 +187,7 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 	}
 
 	private <I, O> Callback<O> doJmxMonitoring(I request, int timeout, @NotNull Callback<O> cb) {
-		RpcRequestStats requestStatsPerClass = rpcClient.ensureRequestStatsPerClass(request.getClass());
+		RpcRequestStats requestStatsPerClass = rpcClient.ensureRequestStatsPerClass(request == null ? Void.class : request.getClass());
 		requestStatsPerClass.getTotalRequests().recordEvent();
 		return new JmxConnectionMonitoringResultCallback<>(requestStatsPerClass, cb, timeout);
 	}
@@ -203,19 +203,24 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 
 	@Override
 	public void accept(RpcMessage message) {
-		if (message.getData().getClass() == RpcRemoteException.class) {
-			processErrorMessage(message);
-		} else if (message.getData().getClass() == RpcControlMessage.class) {
-			processControlMessage((RpcControlMessage) message.getData());
-		} else {
-			@SuppressWarnings("unchecked")
-			Callback<Object> cb = (Callback<Object>) activeRequests.remove(message.getCookie());
-			if (cb == null) return;
-
-			cb.accept(message.getData(), null);
-			if (serverClosing && activeRequests.size() == 0) {
-				shutdown();
+		Object data = message.getData();
+		if (data != null) {
+			if (data.getClass() == RpcRemoteException.class) {
+				processErrorMessage(message);
+				return;
 			}
+			if (data.getClass() == RpcControlMessage.class) {
+				processControlMessage((RpcControlMessage) data);
+				return;
+			}
+		}
+		@SuppressWarnings("unchecked")
+		Callback<Object> cb = (Callback<Object>) activeRequests.remove(message.getCookie());
+		if (cb == null) return;
+
+		cb.accept(data, null);
+		if (serverClosing && activeRequests.size() == 0) {
+			shutdown();
 		}
 	}
 
