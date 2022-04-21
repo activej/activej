@@ -10,13 +10,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
 
+import static io.activej.common.Utils.difference;
 import static io.activej.crdt.storage.cluster.RendezvousHashSharder.NUMBER_OF_BUCKETS;
 import static java.util.stream.Collectors.toSet;
 
@@ -82,10 +80,16 @@ public final class RendezvousPartitionScheme<P> implements PartitionScheme<P>, W
 
 	@Override
 	public <K extends Comparable<K>> @Nullable Sharder<K> createSharder(List<P> alive) {
-		if (alive.isEmpty()) return null;
-
+		Set<P> aliveSet = new HashSet<>(alive);
 		List<RendezvousHashSharder<K>> sharders = new ArrayList<>();
 		for (RendezvousPartitionGroup<P> partitionGroup : partitionGroups) {
+			int deadPartitions = difference(partitionGroup.getPartitionIds(), aliveSet).size();
+
+			if (partitionGroup.isRepartition()) {
+				int aliveSize = partitionGroup.getPartitionIds().size() - deadPartitions;
+				if (aliveSize < partitionGroup.getReplicaCount()) return null;
+			} else if (deadPartitions != 0) return null;
+
 			//noinspection unchecked
 			RendezvousHashSharder<K> sharder = RendezvousHashSharder.create(
 					((ToIntFunction<K>) keyHashFn),
@@ -130,6 +134,18 @@ public final class RendezvousPartitionScheme<P> implements PartitionScheme<P>, W
 					}
 				},
 				rendezvousHashings);
+	}
+
+	@Override
+	public boolean isReadValid(Collection<P> alive) {
+		Set<P> aliveSet = new HashSet<>(alive);
+		for (RendezvousPartitionGroup<P> partitionGroup : partitionGroups) {
+			int deadPartitions = difference(partitionGroup.getPartitionIds(), aliveSet).size();
+			if (deadPartitions < partitionGroup.getReplicaCount()) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@VisibleForTesting

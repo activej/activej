@@ -169,7 +169,6 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 	public Promise<StreamSupplier<CrdtData<K, S>>> take() {
 		return getData(CrdtStorage::take)
 				.map(supplier -> supplier.transformWith(detailedStats ? takeStatsDetailed : takeStats));
-
 	}
 
 	@Override
@@ -291,8 +290,12 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 	}
 
 	private Promise<StreamSupplier<CrdtData<K, S>>> getData(AsyncFunction<CrdtStorage<K, S>, StreamSupplier<CrdtData<K, S>>> method) {
-		return execute(currentPartitionScheme, method)
+		PartitionScheme<P> partitionScheme = currentPartitionScheme;
+		return execute(partitionScheme, method)
 				.map(map -> {
+					if (!partitionScheme.isReadValid(map.keySet())) {
+						throw new CrdtException("Incomplete cluster");
+					}
 					StreamReducer<K, CrdtData<K, S>, CrdtData<K, S>> streamReducer = StreamReducer.create();
 					for (P partitionId : map.keySet()) {
 						map.get(partitionId).streamTo(streamReducer.newInput(

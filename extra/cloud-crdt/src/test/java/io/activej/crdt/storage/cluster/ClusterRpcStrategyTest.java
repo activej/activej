@@ -6,7 +6,6 @@ import io.activej.common.ref.RefBoolean;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import io.activej.rpc.client.sender.RpcSender;
 import io.activej.rpc.client.sender.RpcStrategy;
-import io.activej.rpc.protocol.RpcException;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -19,8 +18,6 @@ import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
 public class ClusterRpcStrategyTest {
@@ -119,14 +116,14 @@ public class ClusterRpcStrategyTest {
 	}
 
 	@Test
-	public void testRpcStrategyNoRepartition() {
+	public void testRpcStrategyNoRepartition() throws Exception {
 		Set<String> partitionIds = PARTITION_ADDRESS_MAP_1.keySet();
 
 		RendezvousPartitionScheme<String> partitionScheme = RendezvousPartitionScheme.<String>create()
 				.withPartitionGroup(RendezvousPartitionGroup.create(partitionIds, 1, false, true))
 				.withRpcProvider(p -> server(PARTITION_ADDRESS_MAP_1.get(p)));
 
-		List<String> alivePartitions = new ArrayList<>(difference(partitionIds, singleton("two")));
+		List<String> alivePartitions = new ArrayList<>(partitionIds);
 
 		RpcClientConnectionPoolStub poolStub = new RpcClientConnectionPoolStub();
 		for (String alivePartition : alivePartitions) {
@@ -151,15 +148,9 @@ public class ClusterRpcStrategyTest {
 					.mapToObj(alivePartitions::get)
 					.collect(toSet());
 
-			try {
-				sendRequest(sender, i);
-				if (partitions.isEmpty()) {
-					fail();
-				}
-			} catch (Exception e) {
-				assertThat(e, instanceOf(RpcException.class));
-				assertEquals("No sender for request: " + i, e.getMessage());
-				continue;
+			sendRequest(sender, i);
+			if (partitions.isEmpty()) {
+				fail();
 			}
 
 			//noinspection ConstantConditions

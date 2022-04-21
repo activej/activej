@@ -142,7 +142,7 @@ public final class TestCrdtCluster {
 		CrdtStorageCluster<String, Set<Integer>, String> cluster = CrdtStorageCluster.create(eventloop,
 				DiscoveryService.of(
 						RendezvousPartitionScheme.<String>create()
-								.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet()).withReplicas(REPLICATION_COUNT))
+								.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet()).withReplicas(REPLICATION_COUNT).withRepartition(true))
 								.withCrdtProvider(clients::get)),
 				union);
 

@@ -23,6 +23,7 @@ import io.activej.promise.SettablePromise;
 import io.activej.rpc.client.sender.RpcStrategy;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -41,6 +42,8 @@ public interface DiscoveryService<P> {
 		<K extends Comparable<K>> @Nullable Sharder<K> createSharder(List<P> alive);
 
 		<K extends Comparable<K>> RpcStrategy createRpcStrategy(Function<Object, K> keyGetter);
+
+		boolean isReadValid(Collection<P> alive);
 	}
 
 	static <P> DiscoveryService<P> of(PartitionScheme<P> partitionScheme) {
