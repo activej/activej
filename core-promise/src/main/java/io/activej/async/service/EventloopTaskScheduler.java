@@ -54,6 +54,13 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 
 	private long lastStartTime;
 	private long lastCompleteTime;
+
+	@Override
+	public void resetStats() {
+		EventloopJmxBeanWithStats.super.resetStats();
+		lastException = null;
+	}
+
 	private @Nullable Exception lastException;
 	private int errorCount;
 
