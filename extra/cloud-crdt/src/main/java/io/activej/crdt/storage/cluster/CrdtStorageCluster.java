@@ -59,6 +59,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 	private final Map<P, CrdtStorage<K, S>> crdtStorages = new LinkedHashMap<>();
 
 	private PartitionScheme<P> currentPartitionScheme;
+	private boolean forceStart;
 	private boolean stopped;
 
 	// region JMX
@@ -90,6 +91,11 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 		return new CrdtStorageCluster<>(eventloop, discoveryService, crdtFunction);
 	}
 
+	public CrdtStorageCluster<K, S, P> withForceStart(boolean forceStart) {
+		this.forceStart = forceStart;
+		return this;
+	}
+
 /*
 	public CrdtStorageCluster<K, S, P> withReplicationCount(int replicationCount) {
 		checkArgument(1 <= replicationCount, "Replication count cannot be less than one");
@@ -113,7 +119,13 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 		return discoverySupplier.get()
 				.then(result -> {
 					updatePartitionScheme(result);
-					return ping();
+					return ping()
+							.then((v, e) -> {
+								if (e instanceof CrdtException && forceStart) {
+									return Promise.complete();
+								}
+								return Promise.of(v, e);
+							});
 				})
 				.whenResult(() -> Promises.repeat(() ->
 						discoverySupplier.get()
@@ -366,7 +378,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 	public void startDetailedMonitoring() {
 		detailedStats = true;
 		for (CrdtStorage<K, S> storage : crdtStorages.values()) {
-			if (storage instanceof CrdtStorageClient){
+			if (storage instanceof CrdtStorageClient) {
 				((CrdtStorageClient<K, S>) storage).startDetailedMonitoring();
 			}
 		}
@@ -376,7 +388,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 	public void stopDetailedMonitoring() {
 		detailedStats = false;
 		for (CrdtStorage<K, S> storage : crdtStorages.values()) {
-			if (storage instanceof CrdtStorageClient){
+			if (storage instanceof CrdtStorageClient) {
 				((CrdtStorageClient<K, S>) storage).stopDetailedMonitoring();
 			}
 		}
