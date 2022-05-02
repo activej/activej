@@ -50,43 +50,39 @@ public final class ContentType {
 	}
 
 	static ContentType decode(byte[] bytes, int pos, int length) throws MalformedHttpException {
-		try {
-			// parsing media type
-			int end = pos + length;
+		// parsing media type
+		int end = pos + length;
 
-			pos = skipSpaces(bytes, pos, end);
-			int start = pos;
-			int hashCodeCI = 0;
-			while (pos < end && bytes[pos] != ';') {
-				byte b = bytes[pos++];
-				hashCodeCI += (b | 0x20);
-			}
-			MediaType type = MediaTypes.of(hashCodeCI, bytes, start, pos - start);
-			pos++;
-
-			// parsing parameters if any (interested in 'charset' only)
-			HttpCharset charset = null;
-			if (pos < end) {
-				pos = skipSpaces(bytes, pos, end);
-				start = pos;
-				while (pos < end) {
-					if (bytes[pos] == '=' && ByteBufStrings.equalsLowerCaseAscii(CHARSET_KEY, bytes, start, pos - start)) {
-						pos++;
-						start = pos;
-						while (pos < end && bytes[pos] != ';') {
-							pos++;
-						}
-						charset = HttpCharset.decode(bytes, start, pos - start);
-					} else if (bytes[pos] == ';' && pos + 1 < end) {
-						start = skipSpaces(bytes, pos + 1, end);
-					}
-					pos++;
-				}
-			}
-			return lookup(type, charset);
-		} catch (RuntimeException e) {
-			throw new MalformedHttpException("Failed to decode content-type", e);
+		pos = skipSpaces(bytes, pos, end);
+		int start = pos;
+		int hashCodeCI = 0;
+		while (pos < end && bytes[pos] != ';') {
+			byte b = bytes[pos++];
+			hashCodeCI += (b | 0x20);
 		}
+		MediaType type = MediaTypes.of(hashCodeCI, bytes, start, pos - start);
+		pos++;
+
+		// parsing parameters if any (interested in 'charset' only)
+		HttpCharset charset = null;
+		if (pos < end) {
+			pos = skipSpaces(bytes, pos, end);
+			start = pos;
+			while (pos < end) {
+				if (bytes[pos] == '=' && ByteBufStrings.equalsLowerCaseAscii(CHARSET_KEY, bytes, start, pos - start)) {
+					pos++;
+					start = pos;
+					while (pos < end && bytes[pos] != ';') {
+						pos++;
+					}
+					charset = HttpCharset.decode(bytes, start, pos - start);
+				} else if (bytes[pos] == ';' && pos + 1 < end) {
+					start = skipSpaces(bytes, pos + 1, end);
+				}
+				pos++;
+			}
+		}
+		return lookup(type, charset);
 	}
 
 	static void render(ContentType type, ByteBuf buf) {

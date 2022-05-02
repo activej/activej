@@ -246,43 +246,39 @@ public final class HttpCookie {
 	// endregion
 
 	static void decodeFull(byte[] bytes, int pos, int end, List<HttpCookie> cookies) throws MalformedHttpException {
-		try {
-			HttpCookie cookie = new HttpCookie("", "", "/");
-			while (pos < end) {
-				pos = skipSpaces(bytes, pos, end);
-				int keyStart = pos;
-				while (pos < end && bytes[pos] != ';') {
-					pos++;
-				}
-				int valueEnd = pos;
-				int equalSign = -1;
-				for (int i = keyStart; i < valueEnd; i++) {
-					if (bytes[i] == '=') {
-						equalSign = i;
-						break;
-					}
-				}
-				AvHandler handler = getCookieHandler(hashCodeLowerCaseAscii
-						(bytes, keyStart, (equalSign == -1 ? valueEnd : equalSign) - keyStart));
-				if (equalSign == -1 && handler == null) {
-					cookie.setExtension(decodeAscii(bytes, keyStart, valueEnd - keyStart));
-				} else if (handler == null) {
-					String key = decodeAscii(bytes, keyStart, equalSign - keyStart);
-					String value;
-					if (bytes[equalSign + 1] == '\"' && bytes[valueEnd - 1] == '\"') {
-						value = decodeAscii(bytes, equalSign + 2, valueEnd - equalSign - 3);
-					} else {
-						value = decodeAscii(bytes, equalSign + 1, valueEnd - equalSign - 1);
-					}
-					cookie = new HttpCookie(key, value, "/");
-					cookies.add(cookie);
-				} else {
-					handler.handle(cookie, bytes, equalSign + 1, valueEnd);
-				}
-				pos = valueEnd + 1;
+		HttpCookie cookie = new HttpCookie("", "", "/");
+		while (pos < end) {
+			pos = skipSpaces(bytes, pos, end);
+			int keyStart = pos;
+			while (pos < end && bytes[pos] != ';') {
+				pos++;
 			}
-		} catch (RuntimeException e) {
-			throw new MalformedHttpException("Failed to decode cookies", e);
+			int valueEnd = pos;
+			int equalSign = -1;
+			for (int i = keyStart; i < valueEnd; i++) {
+				if (bytes[i] == '=') {
+					equalSign = i;
+					break;
+				}
+			}
+			AvHandler handler = getCookieHandler(hashCodeLowerCaseAscii
+					(bytes, keyStart, (equalSign == -1 ? valueEnd : equalSign) - keyStart));
+			if (equalSign == -1 && handler == null) {
+				cookie.setExtension(decodeAscii(bytes, keyStart, valueEnd - keyStart));
+			} else if (handler == null) {
+				String key = decodeAscii(bytes, keyStart, equalSign - keyStart);
+				String value;
+				if (bytes[equalSign + 1] == '\"' && bytes[valueEnd - 1] == '\"') {
+					value = decodeAscii(bytes, equalSign + 2, valueEnd - equalSign - 3);
+				} else {
+					value = decodeAscii(bytes, equalSign + 1, valueEnd - equalSign - 1);
+				}
+				cookie = new HttpCookie(key, value, "/");
+				cookies.add(cookie);
+			} else {
+				handler.handle(cookie, bytes, equalSign + 1, valueEnd);
+			}
+			pos = valueEnd + 1;
 		}
 	}
 
@@ -310,41 +306,37 @@ public final class HttpCookie {
 	}
 
 	static void decodeSimple(byte[] bytes, int pos, int end, List<HttpCookie> cookies) throws MalformedHttpException {
-		try {
-			while (pos < end) {
-				pos = skipSpaces(bytes, pos, end);
-				int keyStart = pos;
-				while (pos < end && !(bytes[pos] == ';' || bytes[pos] == ',')) {
-					pos++;
-				}
-				int valueEnd = pos;
-				int equalSign = -1;
-				for (int i = keyStart; i < valueEnd; i++) {
-					if (bytes[i] == '=') {
-						equalSign = i;
-						break;
-					}
-				}
-
-				if (equalSign == -1) {
-					String key = decodeAscii(bytes, keyStart, valueEnd - keyStart);
-					cookies.add(new HttpCookie(key, null));
-				} else {
-					String key = decodeAscii(bytes, keyStart, equalSign - keyStart);
-					String value;
-					if (bytes[equalSign + 1] == '\"' && bytes[valueEnd - 1] == '\"') {
-						value = decodeAscii(bytes, equalSign + 2, valueEnd - equalSign - 3);
-					} else {
-						value = decodeAscii(bytes, equalSign + 1, valueEnd - equalSign - 1);
-					}
-
-					cookies.add(new HttpCookie(key, value));
-				}
-
-				pos = valueEnd + 1;
+		while (pos < end) {
+			pos = skipSpaces(bytes, pos, end);
+			int keyStart = pos;
+			while (pos < end && !(bytes[pos] == ';' || bytes[pos] == ',')) {
+				pos++;
 			}
-		} catch (RuntimeException e) {
-			throw new MalformedHttpException("Failed to decode cookies", e);
+			int valueEnd = pos;
+			int equalSign = -1;
+			for (int i = keyStart; i < valueEnd; i++) {
+				if (bytes[i] == '=') {
+					equalSign = i;
+					break;
+				}
+			}
+
+			if (equalSign == -1) {
+				String key = decodeAscii(bytes, keyStart, valueEnd - keyStart);
+				cookies.add(new HttpCookie(key, null));
+			} else {
+				String key = decodeAscii(bytes, keyStart, equalSign - keyStart);
+				String value;
+				if (bytes[equalSign + 1] == '\"' && bytes[valueEnd - 1] == '\"') {
+					value = decodeAscii(bytes, equalSign + 2, valueEnd - equalSign - 3);
+				} else {
+					value = decodeAscii(bytes, equalSign + 1, valueEnd - equalSign - 1);
+				}
+
+				cookies.add(new HttpCookie(key, value));
+			}
+
+			pos = valueEnd + 1;
 		}
 	}
 
@@ -498,7 +490,14 @@ public final class HttpCookie {
 	}
 
 	private static Instant decodeExpirationDate(byte[] bytes, int start) throws MalformedHttpException {
-		return Instant.ofEpochSecond(HttpDate.decode(bytes, start));
+		long second;
+		try {
+			second = HttpDate.decode(bytes, start);
+		} catch (RuntimeException e) {
+			throw new MalformedHttpException("Failed to decode date", e);
+		}
+
+		return Instant.ofEpochSecond(second);
 	}
 
 	private static Duration decodeMaxAge(byte[] bytes, int start, int end) throws MalformedHttpException {

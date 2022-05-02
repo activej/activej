@@ -70,48 +70,44 @@ public final class AcceptCharset {
 	}
 
 	static void decode(byte[] bytes, int pos, int len, List<AcceptCharset> list) throws MalformedHttpException {
-		try {
-			int end = pos + len;
+		int end = pos + len;
 
-			while (pos < end) {
-				// parsing charset
-				pos = skipSpaces(bytes, pos, end);
-				int start = pos;
-				while (pos < end && !(bytes[pos] == ';' || bytes[pos] == ',')) {
-					pos++;
-				}
-				HttpCharset charset = HttpCharset.decode(bytes, start, pos - start);
+		while (pos < end) {
+			// parsing charset
+			pos = skipSpaces(bytes, pos, end);
+			int start = pos;
+			while (pos < end && !(bytes[pos] == ';' || bytes[pos] == ',')) {
+				pos++;
+			}
+			HttpCharset charset = HttpCharset.decode(bytes, start, pos - start);
 
-				if (pos < end) {
-					if (bytes[pos++] == ',') {
-						list.add(AcceptCharset.of(charset));
-					} else {
-						int q = DEFAULT_Q;
-						pos = skipSpaces(bytes, pos, end);
-						start = pos;
-						while (pos < end && bytes[pos] != ',') {
-							if (bytes[pos] == '=' && equalsLowerCaseAscii(Q_KEY, bytes, start, pos - start)) {
-								start = ++pos;
-								while (pos < end && !(bytes[pos] == ';' || bytes[pos] == ',')) {
-									pos++;
-								}
-								q = decodeQ(bytes, start, pos - start);
-								pos--;
-							} else if (bytes[pos] == ';') {
-								pos = skipSpaces(bytes, pos + 1, end);
-								start = pos;
+			if (pos < end) {
+				if (bytes[pos++] == ',') {
+					list.add(AcceptCharset.of(charset));
+				} else {
+					int q = DEFAULT_Q;
+					pos = skipSpaces(bytes, pos, end);
+					start = pos;
+					while (pos < end && bytes[pos] != ',') {
+						if (bytes[pos] == '=' && equalsLowerCaseAscii(Q_KEY, bytes, start, pos - start)) {
+							start = ++pos;
+							while (pos < end && !(bytes[pos] == ';' || bytes[pos] == ',')) {
+								pos++;
 							}
-							pos++;
+							q = decodeQ(bytes, start, pos - start);
+							pos--;
+						} else if (bytes[pos] == ';') {
+							pos = skipSpaces(bytes, pos + 1, end);
+							start = pos;
 						}
-						list.add(AcceptCharset.of(charset, q));
 						pos++;
 					}
-				} else {
-					list.add(AcceptCharset.of(charset));
+					list.add(AcceptCharset.of(charset, q));
+					pos++;
 				}
+			} else {
+				list.add(AcceptCharset.of(charset));
 			}
-		} catch (RuntimeException e) {
-			throw new MalformedHttpException("Failed to decode accept-charset", e);
 		}
 	}
 
