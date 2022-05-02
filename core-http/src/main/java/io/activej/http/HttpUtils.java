@@ -185,6 +185,9 @@ public final class HttpUtils {
 	}
 
 	public static int decodeQ(byte[] bytes, int pos, int length) throws MalformedHttpException {
+		if (length == 0) {
+			return 100;
+		}
 		if (bytes[pos] == '1') {
 			return 100;
 		} else if (bytes[pos] == '0') {

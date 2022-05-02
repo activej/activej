@@ -77,6 +77,20 @@ public class ContentTypeTest {
 	}
 
 	@Test
+	public void testAcceptContentTypeMissingQ() throws MalformedHttpException {
+		byte[] acceptCts = encodeAscii("text/html;q=, " +
+				"application/xhtml+xml; method=get; q=; bool=true," +
+				"application/xml;q=");
+		List<AcceptMediaType> result = new ArrayList<>();
+		AcceptMediaType.decode(acceptCts, 0, acceptCts.length, result);
+		List<AcceptMediaType> expected = new ArrayList<>();
+		expected.add(AcceptMediaType.of(HTML, 100));
+		expected.add(AcceptMediaType.of(XHTML_APP, 100));
+		expected.add(AcceptMediaType.of(XML_APP, 100));
+		assertEquals(expected.toString(), result.toString());
+	}
+
+	@Test
 	public void testRenderMime() {
 		String expected = "application/json";
 		ByteBuf buf = ByteBuf.wrapForWriting(new byte[expected.length()]);
