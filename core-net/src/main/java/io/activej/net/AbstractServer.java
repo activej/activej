@@ -449,13 +449,34 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + '{' +
-				(listenAddresses.isEmpty() ? "" : "listenAddresses=" + listenAddresses) +
-				(sslListenAddresses.isEmpty() ? "" : ", sslListenAddresses=" + sslListenAddresses) +
-				(serverSocketChannels == null ? "" : "boundAddresses=" + getBoundAddresses()) +
-				(sslServerSocketChannels == null ? "" : "sslBoundAddresses=" + getSslBoundAddresses()) +
-				(acceptOnce ? ", acceptOnce" : "") +
-				'}';
+		StringBuilder sb = new StringBuilder(getClass().getSimpleName());
+		sb.append('{');
+
+		boolean first = true;
+		if (!listenAddresses.isEmpty()) {
+			sb.append("listenAddresses=").append(listenAddresses);
+			first = false;
+		}
+
+		if (!sslListenAddresses.isEmpty()) {
+			sb.append(first ? "" : ", ").append("sslListenAddresses=").append(sslListenAddresses);
+			first = false;
+		}
+
+		if (serverSocketChannels != null) {
+			sb.append(first ? "" : ", ").append("boundAddresses=").append(getBoundAddresses());
+			first = false;
+		}
+		if (sslServerSocketChannels != null) {
+			sb.append(first ? "" : ", ").append("sslBoundAddresses=").append(getSslBoundAddresses());
+			first = false;
+		}
+		if (acceptOnce) {
+			sb.append(first ? "" : ", ").append("acceptOnce");
+		}
+		sb.append('}');
+
+		return sb.toString();
 	}
 
 }
