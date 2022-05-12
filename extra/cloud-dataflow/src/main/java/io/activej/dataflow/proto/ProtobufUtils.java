@@ -62,7 +62,7 @@ import static java.util.stream.Collectors.toList;
 public final class ProtobufUtils {
 
 	public static <I extends Message, O extends Message> ByteBufsCodec<I, O> codec(Parser<I> inputParser) {
-		return new ByteBufsCodec<I, O>() {
+		return new ByteBufsCodec<>() {
 			@Override
 			public ByteBuf encode(O item) {
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -425,7 +425,7 @@ public final class ProtobufUtils {
 	}
 
 	public static <T> BinarySerializer<T> ofObject(Constructors.Constructor0<T> constructor) {
-		return new BinarySerializer<T>() {
+		return new BinarySerializer<>() {
 			@Override
 			public void encode(BinaryOutput out, T item) {
 			}

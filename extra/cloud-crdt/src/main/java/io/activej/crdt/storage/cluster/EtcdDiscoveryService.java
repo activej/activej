@@ -32,7 +32,7 @@ import java.util.function.Function;
 import static io.activej.crdt.util.Utils.fromJson;
 
 public final class EtcdDiscoveryService implements DiscoveryService<PartitionId> {
-	private static final TypeT<List<RendezvousPartitionGroup<PartitionId>>> PARTITION_GROUPS_TYPE = new TypeT<List<RendezvousPartitionGroup<PartitionId>>>() {};
+	private static final TypeT<List<RendezvousPartitionGroup<PartitionId>>> PARTITION_GROUPS_TYPE = new TypeT<>() {};
 
 	private final EtcdWatchService watchService;
 

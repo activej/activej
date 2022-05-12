@@ -33,7 +33,7 @@ import java.io.InputStream;
 public final class ProtobufUtils {
 
 	public static <I extends Message, O extends Message> ByteBufsCodec<I, O> codec(Parser<I> inputParser) {
-		return new ByteBufsCodec<I, O>() {
+		return new ByteBufsCodec<>() {
 			@Override
 			public ByteBuf encode(O item) {
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();

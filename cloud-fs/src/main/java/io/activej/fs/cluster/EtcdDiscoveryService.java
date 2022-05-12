@@ -31,7 +31,7 @@ import java.util.function.Function;
 import static io.activej.fs.util.RemoteFsUtils.fromJson;
 
 public final class EtcdDiscoveryService implements DiscoveryService {
-	private final TypeT<Set<String>> PARTITION_IDS_TYPE_T = new TypeT<Set<String>>() {};
+	private final TypeT<Set<String>> PARTITION_IDS_TYPE_T = new TypeT<>() {};
 
 	private final EtcdWatchService watchService;
 	private final Function<String, @NotNull ActiveFs> activeFsProvider;

@@ -80,8 +80,8 @@ public class DataflowSerializationTest {
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	@Test
 	public void test() throws MalformedDataException {
-		Key<BinarySerializer<TestFunction>> testFunctionSerializerKey = new Key<BinarySerializer<TestFunction>>() {};
-		Key<BinarySerializer<TestIdentityFunction>> testIdentityFunctionSerializerKey = new Key<BinarySerializer<TestIdentityFunction>>() {};
+		Key<BinarySerializer<TestFunction>> testFunctionSerializerKey = new Key<>() {};
+		Key<BinarySerializer<TestIdentityFunction>> testIdentityFunctionSerializerKey = new Key<>() {};
 		Module serialization = ModuleBuilder.create()
 				.install(ProtobufFunctionModule.create())
 				.bind(new Key<BinarySerializer<Comparator<?>>>() {}).toInstance(ofObject(TestComparator::new))

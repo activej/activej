@@ -42,7 +42,7 @@ import static java.nio.file.StandardWatchEventKinds.*;
 
 public final class FileDiscoveryService implements DiscoveryService<PartitionId> {
 	private static final SettablePromise<PartitionScheme<PartitionId>> UPDATE_CONSUMED = new SettablePromise<>();
-	private static final TypeT<List<RendezvousPartitionGroup<PartitionId>>> PARTITION_GROUPS_TYPE = new TypeT<List<RendezvousPartitionGroup<PartitionId>>>() {};
+	private static final TypeT<List<RendezvousPartitionGroup<PartitionId>>> PARTITION_GROUPS_TYPE = new TypeT<>() {};
 
 	private final Eventloop eventloop;
 	private final WatchService watchService;
@@ -96,7 +96,7 @@ public final class FileDiscoveryService implements DiscoveryService<PartitionId>
 			return () -> Promise.ofException(exception);
 		}
 
-		return new AsyncSupplier<PartitionScheme<PartitionId>>() {
+		return new AsyncSupplier<>() {
 			final AtomicReference<SettablePromise<PartitionScheme<PartitionId>>> cbRef = new AtomicReference<>(UPDATE_CONSUMED);
 			final Thread watchThread;
 

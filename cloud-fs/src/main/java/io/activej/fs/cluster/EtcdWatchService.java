@@ -56,7 +56,7 @@ public final class EtcdWatchService {
 	}
 
 	public AsyncSupplier<byte[]> watch() {
-		return new AsyncSupplier<byte[]>() {
+		return new AsyncSupplier<>() {
 			final AtomicReference<SettablePromise<byte[]>> cbRef = new AtomicReference<>(UPDATE_CONSUMED);
 			@Nullable Watcher watcher;
 

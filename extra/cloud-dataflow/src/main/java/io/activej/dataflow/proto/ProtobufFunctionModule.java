@@ -78,7 +78,7 @@ public final class ProtobufFunctionModule extends AbstractModule {
 	@Provides
 	BinarySerializer<InputToAccumulator<?, ?, ?, ?>> inputToAccumulator(OptionalDependency<BinarySerializer<ReducerToResult<?, ?, ?, ?>>> optionalReducerToResultSerializer) {
 		BinarySerializer<ReducerToResult<?, ?, ?, ?>> reducerToResultSerializer = optionalReducerToResultSerializer.get();
-		return new BinarySerializer<InputToAccumulator<?, ?, ?, ?>>() {
+		return new BinarySerializer<>() {
 			@Override
 			public void encode(BinaryOutput out, InputToAccumulator<?, ?, ?, ?> item) {
 				reducerToResultSerializer.encode(out, item.getReducerToResult());
@@ -94,7 +94,7 @@ public final class ProtobufFunctionModule extends AbstractModule {
 	@Provides
 	BinarySerializer<InputToOutput<?, ?, ?, ?>> inputToOutput(OptionalDependency<BinarySerializer<ReducerToResult<?, ?, ?, ?>>> optionalReducerToResultSerializer) {
 		BinarySerializer<ReducerToResult<?, ?, ?, ?>> reducerToResultSerializer = optionalReducerToResultSerializer.get();
-		return new BinarySerializer<InputToOutput<?, ?, ?, ?>>() {
+		return new BinarySerializer<>() {
 			@Override
 			public void encode(BinaryOutput out, InputToOutput<?, ?, ?, ?> item) {
 				reducerToResultSerializer.encode(out, item.getReducerToResult());
@@ -110,7 +110,7 @@ public final class ProtobufFunctionModule extends AbstractModule {
 	@Provides
 	BinarySerializer<AccumulatorToAccumulator<?, ?, ?, ?>> accumulatorToAccumulator(OptionalDependency<BinarySerializer<ReducerToResult<?, ?, ?, ?>>> optionalReducerToResultSerializer) {
 		BinarySerializer<ReducerToResult<?, ?, ?, ?>> reducerToResultSerializer = optionalReducerToResultSerializer.get();
-		return new BinarySerializer<AccumulatorToAccumulator<?, ?, ?, ?>>() {
+		return new BinarySerializer<>() {
 			@Override
 			public void encode(BinaryOutput out, AccumulatorToAccumulator<?, ?, ?, ?> item) {
 				reducerToResultSerializer.encode(out, item.getReducerToResult());
@@ -126,7 +126,7 @@ public final class ProtobufFunctionModule extends AbstractModule {
 	@Provides
 	BinarySerializer<AccumulatorToOutput<?, ?, ?, ?>> accumulatorToOutput(OptionalDependency<BinarySerializer<ReducerToResult<?, ?, ?, ?>>> optionalReducerToResultSerializer) {
 		BinarySerializer<ReducerToResult<?, ?, ?, ?>> reducerToResultSerializer = optionalReducerToResultSerializer.get();
-		return new BinarySerializer<AccumulatorToOutput<?, ?, ?, ?>>() {
+		return new BinarySerializer<>() {
 			@Override
 			public void encode(BinaryOutput out, AccumulatorToOutput<?, ?, ?, ?> item) {
 				reducerToResultSerializer.encode(out, item.getReducerToResult());
