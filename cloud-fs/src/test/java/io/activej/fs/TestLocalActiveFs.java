@@ -116,7 +116,7 @@ public final class TestLocalActiveFs {
 				.then(consumer -> ChannelFileReader.open(newCachedThreadPool(), path)
 						.then(file -> file.withBufferSize(MemSize.of(2)).streamTo(consumer))));
 
-		assertArrayEquals(Files.readAllBytes(path), Files.readAllBytes(storagePath.resolve("1/c.txt")));
+		assertEquals(-1, Files.mismatch(path, storagePath.resolve("1/c.txt")));
 	}
 
 	@Test
@@ -167,8 +167,8 @@ public final class TestLocalActiveFs {
 		ChannelConsumer<ByteBuf> consumer = await(client.upload(filename));
 
 		Exception exception = awaitException(ChannelSuppliers.concat(
-				ChannelSupplier.of(wrapUtf8("some"), wrapUtf8("test"), wrapUtf8("data")),
-				ChannelSupplier.ofException(expectedException))
+						ChannelSupplier.of(wrapUtf8("some"), wrapUtf8("test"), wrapUtf8("data")),
+						ChannelSupplier.ofException(expectedException))
 				.streamTo(consumer));
 
 		assertSame(expectedException, exception);
@@ -213,7 +213,7 @@ public final class TestLocalActiveFs {
 		ChannelSupplier<ByteBuf> supplier = await(client.download("2/b/d.txt"));
 		await(supplier.streamTo(ChannelFileWriter.open(newCachedThreadPool(), outputFile)));
 
-		assertArrayEquals(Files.readAllBytes(storagePath.resolve("2/b/d.txt")), Files.readAllBytes(outputFile));
+		assertEquals(-1, Files.mismatch(storagePath.resolve("2/b/d.txt"), outputFile));
 	}
 
 	@Test

@@ -88,11 +88,11 @@ public final class TestLocalBlockingFs {
 		Path path = clientPath.resolve("c.txt");
 
 		try (InputStream inputStream = new FileInputStream(path.toFile());
-				OutputStream outputStream = client.upload("1/c.txt")) {
+			 OutputStream outputStream = client.upload("1/c.txt")) {
 			inputStream.transferTo(outputStream);
 		}
 
-		assertArrayEquals(Files.readAllBytes(path), Files.readAllBytes(storagePath.resolve("1/c.txt")));
+		assertEquals(-1, Files.mismatch(path, storagePath.resolve("1/c.txt")));
 	}
 
 	@Test(expected = DirectoryNotEmptyException.class)
@@ -173,11 +173,11 @@ public final class TestLocalBlockingFs {
 		Path outputFile = clientPath.resolve("d.txt");
 
 		try (InputStream inputStream = client.download("2/b/d.txt");
-				OutputStream outputStream = new FileOutputStream(outputFile.toFile())) {
+			 OutputStream outputStream = new FileOutputStream(outputFile.toFile())) {
 			inputStream.transferTo(outputStream);
 		}
 
-		assertArrayEquals(Files.readAllBytes(storagePath.resolve("2/b/d.txt")), Files.readAllBytes(outputFile));
+		assertEquals(-1, Files.mismatch(storagePath.resolve("2/b/d.txt"), outputFile));
 	}
 
 	@Test
@@ -334,7 +334,7 @@ public final class TestLocalBlockingFs {
 		}
 
 		try (InputStream inputStreamFirst = client.download("first");
-				InputStream inputStreamSecond = client.download("second")) {
+			 InputStream inputStreamSecond = client.download("second")) {
 			assertEquals("testfirst", asString(inputStreamFirst));
 			assertEquals("test", asString(inputStreamSecond));
 		}
@@ -344,7 +344,7 @@ public final class TestLocalBlockingFs {
 		}
 
 		try (InputStream inputStreamFirst = client.download("first");
-				InputStream inputStreamSecond = client.download("second")) {
+			 InputStream inputStreamSecond = client.download("second")) {
 			assertEquals("testfirst", asString(inputStreamFirst));
 			assertEquals("testsecond", asString(inputStreamSecond));
 		}
@@ -365,7 +365,7 @@ public final class TestLocalBlockingFs {
 		}
 
 		try (InputStream inputStreamFirst = client.download("first");
-				InputStream inputStreamSecond = client.download("second")) {
+			 InputStream inputStreamSecond = client.download("second")) {
 			assertEquals("testfirst", asString(inputStreamFirst));
 			assertEquals("testfirst", asString(inputStreamSecond));
 		}
@@ -375,7 +375,7 @@ public final class TestLocalBlockingFs {
 		}
 
 		try (InputStream inputStreamFirst = client.download("first");
-				InputStream inputStreamSecond = client.download("second")) {
+			 InputStream inputStreamSecond = client.download("second")) {
 			assertEquals("testfirstsecond", asString(inputStreamFirst));
 			assertEquals("testfirstsecond", asString(inputStreamSecond));
 		}
@@ -512,7 +512,7 @@ public final class TestLocalBlockingFs {
 	@Test
 	public void testUploadWithSizeCloseIdempotence() throws IOException {
 		OutputStream outputStream = client.upload("somefile", 5);
-		outputStream.write(new byte[]{1,2,3,4,5});
+		outputStream.write(new byte[]{1, 2, 3, 4, 5});
 		outputStream.close();
 		outputStream.close();
 	}
@@ -527,7 +527,7 @@ public final class TestLocalBlockingFs {
 	@Test
 	public void testCopyWithDeletedTempDir() throws IOException {
 		try (InputStream inputStream = new ByteArrayInputStream("Test content".getBytes(UTF_8));
-		     OutputStream outputStream = client.upload("test.txt")) {
+			 OutputStream outputStream = client.upload("test.txt")) {
 			inputStream.transferTo(outputStream);
 		}
 
@@ -548,10 +548,10 @@ public final class TestLocalBlockingFs {
 		Files.delete(tempDir);
 
 		try (InputStream inputStream = new ByteArrayInputStream("Test content".getBytes(UTF_8));
-		     OutputStream outputStream = client.upload("test.txt")) {
+			 OutputStream outputStream = client.upload("test.txt")) {
 			inputStream.transferTo(outputStream);
 			fail();
-		} catch (ActiveFsStructureException e){
+		} catch (ActiveFsStructureException e) {
 			assertEquals(e.getMessage(), "Temporary directory " + tempDir + " not found");
 		}
 	}
