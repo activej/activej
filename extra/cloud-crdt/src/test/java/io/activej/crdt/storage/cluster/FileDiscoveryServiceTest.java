@@ -142,7 +142,7 @@ public class FileDiscoveryServiceTest {
 	@Before
 	public void setUp() throws Exception {
 		file = temporaryFolder.newFile().toPath();
-		Files.write(file, "[]".getBytes(UTF_8));
+		Files.writeString(file, "[]");
 		watchService = file.getFileSystem().newWatchService();
 		discoveryService = FileDiscoveryService.create(Eventloop.getCurrentEventloop(), watchService, file);
 	}
