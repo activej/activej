@@ -252,7 +252,7 @@ public class CrdtStorageAPITest {
 				.streamTo(StreamConsumer.ofPromise(client.remove())));
 
 		List<CrdtData<String, Integer>> list = await(await(client.take()).toList());
-		assertEquals(Arrays.asList(
+		assertEquals(List.of(
 						new CrdtData<>("test_1", 123, 2),
 						new CrdtData<>("test_3", 123, 4)),
 				list);
@@ -284,13 +284,13 @@ public class CrdtStorageAPITest {
 				.streamTo(client.upload()));
 
 		List<CrdtData<String, Integer>> taken = await(takeSupplier.toList());
-		assertEquals(Arrays.asList(
+		assertEquals(List.of(
 						new CrdtData<>("test_1", 123, 2),
 						new CrdtData<>("test_3", 123, 4)),
 				taken);
 
 		List<CrdtData<String, Integer>> afterTake = await(await(client.download()).toList());
-		assertEquals(Arrays.asList(
+		assertEquals(List.of(
 						new CrdtData<>("test_1", 234, 10),
 						new CrdtData<>("test_4", 234, 20)),
 				afterTake);
