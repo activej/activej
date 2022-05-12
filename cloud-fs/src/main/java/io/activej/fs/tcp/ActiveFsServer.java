@@ -101,7 +101,7 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 		return new ActiveFsServer(eventloop, fs);
 	}
 
-	public ActiveFsServer withHandshakeHandler(Function<FsRequest.Handshake, FsResponse.Handshake> handshakeHandler){
+	public ActiveFsServer withHandshakeHandler(Function<FsRequest.Handshake, FsResponse.Handshake> handshakeHandler) {
 		this.handshakeHandler = handshakeHandler;
 		return this;
 	}
@@ -121,41 +121,24 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 					}
 					return handleHandshake(messaging, handshakeMsg.getHandshake())
 							.then(() -> messaging.receive()
-									.then(msg -> {
-										switch (msg.getRequestCase()) {
-											case UPLOAD:
-												return handleUpload(messaging, msg.getUpload());
-											case APPEND:
-												return handleAppend(messaging, msg.getAppend());
-											case DOWNLOAD:
-												return handleDownload(messaging, msg.getDownload());
-											case COPY:
-												return handleCopy(messaging, msg.getCopy());
-											case COPY_ALL:
-												return handleCopyAll(messaging, msg.getCopyAll());
-											case MOVE:
-												return handleMove(messaging, msg.getMove());
-											case MOVE_ALL:
-												return handleMoveAll(messaging, msg.getMoveAll());
-											case DELETE:
-												return handleDelete(messaging, msg.getDelete());
-											case DELETE_ALL:
-												return handleDeleteAll(messaging, msg.getDeleteAll());
-											case LIST:
-												return handleList(messaging, msg.getList());
-											case INFO:
-												return handleInfo(messaging, msg.getInfo());
-											case INFO_ALL:
-												return handleInfoAll(messaging, msg.getInfoAll());
-											case PING:
-												return handlePing(messaging);
-											case HANDSHAKE:
-												return Promise.ofException(new FsException("Handshake was already performed"));
-											case REQUEST_NOT_SET:
-												return Promise.ofException(new FsException("Request was not set"));
-											default:
-												return Promise.ofException(new FsException("Received unknown request: " + msg.getRequestCase()));
-										}
+									.then(msg -> switch (msg.getRequestCase()) {
+										case UPLOAD -> handleUpload(messaging, msg.getUpload());
+										case APPEND -> handleAppend(messaging, msg.getAppend());
+										case DOWNLOAD -> handleDownload(messaging, msg.getDownload());
+										case COPY -> handleCopy(messaging, msg.getCopy());
+										case COPY_ALL -> handleCopyAll(messaging, msg.getCopyAll());
+										case MOVE -> handleMove(messaging, msg.getMove());
+										case MOVE_ALL -> handleMoveAll(messaging, msg.getMoveAll());
+										case DELETE -> handleDelete(messaging, msg.getDelete());
+										case DELETE_ALL -> handleDeleteAll(messaging, msg.getDeleteAll());
+										case LIST -> handleList(messaging, msg.getList());
+										case INFO -> handleInfo(messaging, msg.getInfo());
+										case INFO_ALL -> handleInfoAll(messaging, msg.getInfoAll());
+										case PING -> handlePing(messaging);
+										case HANDSHAKE ->
+												Promise.ofException(new FsException("Handshake was already performed"));
+										case REQUEST_NOT_SET ->
+												Promise.ofException(new FsException("Request was not set"));
 									}));
 				})
 				.whenComplete(handleRequestPromise.recordStats())
@@ -282,38 +265,23 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 
 	private static FsResponse response(ResponseCase responseCase) {
 		FsResponse.Builder builder = FsResponse.newBuilder();
-		switch (responseCase) {
-			case UPLOAD_ACK:
-				return builder.setUploadAck(UploadAck.newBuilder()).build();
-			case UPLOAD_FINISHED:
-				return builder.setUploadFinished(UploadFinished.newBuilder()).build();
-			case APPEND_ACK:
-				return builder.setAppendAck(AppendAck.newBuilder()).build();
-			case APPEND_FINISHED:
-				return builder.setAppendFinished(AppendFinished.newBuilder()).build();
-			case COPY_FINISHED:
-				return builder.setCopyFinished(CopyFinished.newBuilder()).build();
-			case COPY_ALL_FINISHED:
-				return builder.setCopyAllFinished(CopyAllFinished.newBuilder()).build();
-			case MOVE_FINISHED:
-				return builder.setMoveFinished(MoveFinished.newBuilder()).build();
-			case MOVE_ALL_FINISHED:
-				return builder.setMoveAllFinished(MoveAllFinished.newBuilder()).build();
-			case LIST_FINISHED:
-				return builder.setListFinished(ListFinished.newBuilder()).build();
-			case INFO_FINISHED:
-				return builder.setInfoFinished(InfoFinished.newBuilder()).build();
-			case INFO_ALL_FINISHED:
-				return builder.setInfoAllFinished(InfoAllFinished.newBuilder()).build();
-			case DELETE_FINISHED:
-				return builder.setDeleteFinished(DeleteFinished.newBuilder()).build();
-			case DELETE_ALL_FINISHED:
-				return builder.setDeleteAllFinished(DeleteAllFinished.newBuilder()).build();
-			case PONG:
-				return builder.setPong(Pong.newBuilder()).build();
-			default:
-				throw new AssertionError();
-		}
+		return switch (responseCase) {
+			case UPLOAD_ACK -> builder.setUploadAck(UploadAck.newBuilder()).build();
+			case UPLOAD_FINISHED -> builder.setUploadFinished(UploadFinished.newBuilder()).build();
+			case APPEND_ACK -> builder.setAppendAck(AppendAck.newBuilder()).build();
+			case APPEND_FINISHED -> builder.setAppendFinished(AppendFinished.newBuilder()).build();
+			case COPY_FINISHED -> builder.setCopyFinished(CopyFinished.newBuilder()).build();
+			case COPY_ALL_FINISHED -> builder.setCopyAllFinished(CopyAllFinished.newBuilder()).build();
+			case MOVE_FINISHED -> builder.setMoveFinished(MoveFinished.newBuilder()).build();
+			case MOVE_ALL_FINISHED -> builder.setMoveAllFinished(MoveAllFinished.newBuilder()).build();
+			case LIST_FINISHED -> builder.setListFinished(ListFinished.newBuilder()).build();
+			case INFO_FINISHED -> builder.setInfoFinished(InfoFinished.newBuilder()).build();
+			case INFO_ALL_FINISHED -> builder.setInfoAllFinished(InfoAllFinished.newBuilder()).build();
+			case DELETE_FINISHED -> builder.setDeleteFinished(DeleteFinished.newBuilder()).build();
+			case DELETE_ALL_FINISHED -> builder.setDeleteAllFinished(DeleteAllFinished.newBuilder()).build();
+			case PONG -> builder.setPong(Pong.newBuilder()).build();
+			default -> throw new AssertionError();
+		};
 	}
 
 	private static FsResponse downloadSize(long fixedSize) {

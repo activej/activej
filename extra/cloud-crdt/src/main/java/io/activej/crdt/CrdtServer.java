@@ -122,25 +122,18 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer
 					}
 					return handshake(messaging, handshakeMsg.getHandshake())
 							.then(messaging::receive)
-							.then(msg -> {
-								switch (msg.getRequestCase()) {
-									case DOWNLOAD:
-										return download(messaging, msg.getDownload());
-									case UPLOAD:
-										return upload(messaging, msg.getUpload());
-									case REMOVE:
-										return remove(messaging, msg.getRemove());
-									case PING:
-										return ping(messaging, msg.getPing());
-									case TAKE:
-										return take(messaging, msg.getTake());
-									case HANDSHAKE:
-										return Promise.ofException(new CrdtException("Handshake was already performed"));
-									case REQUEST_NOT_SET:
-										return Promise.ofException(new CrdtException("Request was not set"));
-									default:
-										return Promise.ofException(new CrdtException("Unknown message type: " + msg.getRequestCase()));
-								}
+							.then(msg -> switch (msg.getRequestCase()) {
+								case DOWNLOAD -> download(messaging, msg.getDownload());
+								case UPLOAD -> upload(messaging, msg.getUpload());
+								case REMOVE -> remove(messaging, msg.getRemove());
+								case PING -> ping(messaging, msg.getPing());
+								case TAKE -> take(messaging, msg.getTake());
+								case HANDSHAKE ->
+										Promise.ofException(new CrdtException("Handshake was already performed"));
+								case REQUEST_NOT_SET ->
+										Promise.ofException(new CrdtException("Request was not set"));
+								default ->
+										Promise.ofException(new CrdtException("Unknown message type: " + msg.getRequestCase()));
 							});
 				})
 				.whenException(e -> {
@@ -229,20 +222,14 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer
 
 	private static CrdtResponse response(ResponseCase responseCase) {
 		CrdtResponse.Builder builder = CrdtResponse.newBuilder();
-		switch (responseCase) {
-			case UPLOAD_ACK:
-				return builder.setUploadAck(UploadAck.newBuilder()).build();
-			case REMOVE_ACK:
-				return builder.setRemoveAck(RemoveAck.newBuilder()).build();
-			case PONG:
-				return builder.setPong(Pong.newBuilder()).build();
-			case DOWNLOAD_STARTED:
-				return builder.setDownloadStarted(DownloadStarted.newBuilder()).build();
-			case TAKE_STARTED:
-				return builder.setTakeStarted(TakeStarted.newBuilder()).build();
-			default:
-				throw new AssertionError();
-		}
+		return switch (responseCase) {
+			case UPLOAD_ACK -> builder.setUploadAck(UploadAck.newBuilder()).build();
+			case REMOVE_ACK -> builder.setRemoveAck(RemoveAck.newBuilder()).build();
+			case PONG -> builder.setPong(Pong.newBuilder()).build();
+			case DOWNLOAD_STARTED -> builder.setDownloadStarted(DownloadStarted.newBuilder()).build();
+			case TAKE_STARTED -> builder.setTakeStarted(TakeStarted.newBuilder()).build();
+			default -> throw new AssertionError();
+		};
 	}
 
 	private static CrdtResponse errorResponse(Exception exception) {

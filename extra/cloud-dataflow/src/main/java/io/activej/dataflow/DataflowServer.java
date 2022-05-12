@@ -182,20 +182,14 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 
 	private void doRead(Messaging<DataflowRequest, DataflowResponse> messaging, DataflowRequest request) throws DataflowException {
 		switch (request.getRequestCase()) {
-			case DOWNLOAD:
-				handleDownload(messaging, request.getDownload());
-				return;
-			case EXECUTE:
-				handleExecute(messaging, request.getExecute());
-				return;
-			case GET_TASKS:
-				handleGetTasks(messaging, request.getGetTasks());
-				return;
-			case HANDSHAKE:
-				throw new DataflowException("Handshake was already performed");
-			default:
+			case DOWNLOAD -> handleDownload(messaging, request.getDownload());
+			case EXECUTE -> handleExecute(messaging, request.getExecute());
+			case GET_TASKS -> handleGetTasks(messaging, request.getGetTasks());
+			case HANDSHAKE -> throw new DataflowException("Handshake was already performed");
+			default -> {
 				logger.error("missing handler for {}", request.getRequestCase());
 				messaging.close();
+			}
 		}
 	}
 

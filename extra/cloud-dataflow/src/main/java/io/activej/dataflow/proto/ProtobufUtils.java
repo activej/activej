@@ -28,14 +28,11 @@ import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.TaskStatus;
 import io.activej.dataflow.node.*;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
-import io.activej.dataflow.proto.NodeProto;
 import io.activej.dataflow.proto.NodeProto.Node.*;
 import io.activej.dataflow.proto.NodeProto.Node.Download.Address;
 import io.activej.dataflow.proto.NodeProto.Node.Reduce.Input;
-import io.activej.dataflow.proto.NodeStatProto;
 import io.activej.dataflow.proto.NodeStatProto.NodeStat.Binary;
 import io.activej.dataflow.proto.NodeStatProto.NodeStat.Test;
-import io.activej.dataflow.proto.StreamIdProto;
 import io.activej.dataflow.stats.BinaryNodeStat;
 import io.activej.dataflow.stats.NodeStat;
 import io.activej.dataflow.stats.TestNodeStat;
@@ -274,60 +271,72 @@ public final class ProtobufUtils {
 	public static Node convert(NodeProto.Node node, FunctionSerializer functionSerializer) throws DataflowException {
 		try {
 			switch (node.getNodeCase()) {
-				case CONSUMER_OF_ID:
+				case CONSUMER_OF_ID -> {
 					ConsumerOfId coi = node.getConsumerOfId();
 					return new NodeConsumerOfId<>(coi.getIndex(), coi.getId(), coi.getPartitionIndex(), coi.getMaxPartitions(), convert(coi.getInput()));
-				case DOWNLOAD:
+				}
+				case DOWNLOAD -> {
 					Download download = node.getDownload();
 					Address address = download.getAddress();
 					return new NodeDownload<>(download.getIndex(), getType(download.getType()), new InetSocketAddress(address.getHost(), address.getPort()), convert(download.getInput()), convert(download.getOutput()));
-				case FILTER:
+				}
+				case FILTER -> {
 					Filter filter = node.getFilter();
 					return new NodeFilter<>(filter.getIndex(), functionSerializer.deserializePredicate(filter.getPredicate()), convert(filter.getInput()), convert(filter.getOutput()));
-				case JOIN:
+				}
+				case JOIN -> {
 					Join join = node.getJoin();
 					Comparator joinComparator = functionSerializer.deserializeComparator(join.getComparator());
 					Function leftKeyFunction = functionSerializer.deserializeFunction(join.getLeftKeyFunction());
 					Function rightKeyFunction = functionSerializer.deserializeFunction(join.getRightKeyFunction());
 					Joiner joiner = functionSerializer.deserializeJoiner(join.getJoiner());
 					return new NodeJoin<>(join.getIndex(), convert(join.getLeft()), convert(join.getRight()), convert(join.getOutput()), joinComparator, leftKeyFunction, rightKeyFunction, joiner);
-				case MAP:
+				}
+				case MAP -> {
 					NodeProto.Node.Map map = node.getMap();
 					return new NodeMap<>(map.getIndex(), functionSerializer.deserializeFunction(map.getFunction()), convert(map.getInput()), convert(map.getOutput()));
-				case MERGE:
-					NodeProto.Node.Merge merge = node.getMerge();
+				}
+				case MERGE -> {
+					Merge merge = node.getMerge();
 					Function function = functionSerializer.deserializeFunction(merge.getKeyFunction());
 					Comparator mergeComparator = functionSerializer.deserializeComparator(merge.getKeyComparator());
 					return new NodeMerge<>(merge.getIndex(), function, mergeComparator, merge.getDeduplicate(), convertProtoIds(merge.getInputsList()), convert(merge.getOutput()));
-				case REDUCE:
+				}
+				case REDUCE -> {
 					Reduce reduce = node.getReduce();
 					Comparator reduceComparator = functionSerializer.deserializeComparator(reduce.getKeyComparator());
 					return new NodeReduce<>(reduce.getIndex(), reduceComparator, convertInputs(functionSerializer, reduce.getInputsMap()), convert(reduce.getOutput()));
-				case REDUCE_SIMPLE:
+				}
+				case REDUCE_SIMPLE -> {
 					ReduceSimple reduceSimple = node.getReduceSimple();
 					Function keyFunction = functionSerializer.deserializeFunction(reduceSimple.getKeyFunction());
 					Comparator keyComparator = functionSerializer.deserializeComparator(reduceSimple.getKeyComparator());
 					Reducer reducer = functionSerializer.deserializeReducer(reduceSimple.getReducer());
 					return new NodeReduceSimple<>(reduceSimple.getIndex(), keyFunction, keyComparator, reducer, convertProtoIds(reduceSimple.getInputsList()), convert(reduceSimple.getOutput()));
-				case SHARD:
+				}
+				case SHARD -> {
 					Shard shard = node.getShard();
 					return new NodeShard<>(shard.getIndex(), functionSerializer.deserializeFunction(shard.getKeyFunction()), convert(shard.getInput()), convertProtoIds(shard.getOutputsList()), shard.getNonce());
-				case SORT:
+				}
+				case SORT -> {
 					Sort sort = node.getSort();
 					Function sortFunction = functionSerializer.deserializeFunction(sort.getKeyFunction());
 					Comparator sortComparator = functionSerializer.deserializeComparator(sort.getKeyComparator());
 					return new NodeSort<>(sort.getIndex(), getType(sort.getType()), sortFunction, sortComparator, sort.getDeduplicate(), sort.getItemsInMemorySize(), convert(sort.getInput()), convert(sort.getOutput()));
-				case SUPPLIER_OF_ID:
+				}
+				case SUPPLIER_OF_ID -> {
 					SupplierOfId sid = node.getSupplierOfId();
 					return new NodeSupplierOfId<>(sid.getIndex(), sid.getId(), sid.getPartitionIndex(), sid.getMaxPartitions(), convert(sid.getOutput()));
-				case UNION:
+				}
+				case UNION -> {
 					Union union = node.getUnion();
 					return new NodeUnion<>(union.getIndex(), convertProtoIds(union.getInputsList()), convert(union.getOutput()));
-				case UPLOAD:
+				}
+				case UPLOAD -> {
 					Upload upload = node.getUpload();
 					return new NodeUpload<>(upload.getIndex(), getType(upload.getType()), convert(upload.getStreamId()));
-				default:
-					throw new DataflowException("Node was not set");
+				}
+				default -> throw new DataflowException("Node was not set");
 			}
 		} catch (MalformedDataException e) {
 			throw new DataflowException(e);
@@ -347,33 +356,22 @@ public final class ProtobufUtils {
 	}
 
 	public static DataflowResponse.TaskStatus convert(TaskStatus status) {
-		switch (status) {
-			case RUNNING:
-				return DataflowResponse.TaskStatus.RUNNING;
-			case COMPLETED:
-				return DataflowResponse.TaskStatus.COMPLETED;
-			case FAILED:
-				return DataflowResponse.TaskStatus.FAILED;
-			case CANCELED:
-				return DataflowResponse.TaskStatus.CANCELLED;
-			default:
-				return DataflowResponse.TaskStatus.TASK_STATUS_NOT_SET;
-		}
+		return switch (status) {
+			case RUNNING -> DataflowResponse.TaskStatus.RUNNING;
+			case COMPLETED -> DataflowResponse.TaskStatus.COMPLETED;
+			case FAILED -> DataflowResponse.TaskStatus.FAILED;
+			case CANCELED -> DataflowResponse.TaskStatus.CANCELLED;
+		};
 	}
 
 	public static TaskStatus convert(DataflowResponse.TaskStatus status) {
-		switch (status) {
-			case RUNNING:
-				return TaskStatus.RUNNING;
-			case COMPLETED:
-				return TaskStatus.COMPLETED;
-			case FAILED:
-				return TaskStatus.FAILED;
-			case CANCELLED:
-				return TaskStatus.CANCELED;
-			default:
-				throw new AssertionError();
-		}
+		return switch (status) {
+			case RUNNING -> TaskStatus.RUNNING;
+			case COMPLETED -> TaskStatus.COMPLETED;
+			case FAILED -> TaskStatus.FAILED;
+			case CANCELLED -> TaskStatus.CANCELED;
+			default -> throw new AssertionError();
+		};
 	}
 
 	public static DataflowResponse.Instant convert(@Nullable Instant instant) {
@@ -419,14 +417,11 @@ public final class ProtobufUtils {
 	}
 
 	public static NodeStat convert(NodeStatProto.NodeStat nodeStat) {
-		switch (nodeStat.getNodeStatCase()) {
-			case BINARY:
-				return new BinaryNodeStat(nodeStat.getBinary().getBytes());
-			case TEST:
-				return new TestNodeStat(nodeStat.getTest().getNodeIndex());
-			default:
-				throw new AssertionError();
-		}
+		return switch (nodeStat.getNodeStatCase()) {
+			case BINARY -> new BinaryNodeStat(nodeStat.getBinary().getBytes());
+			case TEST -> new TestNodeStat(nodeStat.getTest().getNodeIndex());
+			default -> throw new AssertionError();
+		};
 	}
 
 	public static <T> BinarySerializer<T> ofObject(Constructors.Constructor0<T> constructor) {

@@ -197,16 +197,14 @@ public final class DataflowClient {
 					.whenResult(response -> {
 						messaging.close();
 						switch (response.getResponseCase()) {
-							case RESULT:
+							case RESULT -> {
 								DataflowResponse.Error error = response.getResult().getError();
 								if (!error.getErrorIsNull()) {
 									throw new DataflowException("Error on remote server " + address + ": " + error.getError());
 								}
-								break;
-							case RESPONSE_NOT_SET:
-								throw new DataflowException("Server did not set a response");
-							default:
-								throw new DataflowException("Bad response from server");
+							}
+							case RESPONSE_NOT_SET -> throw new DataflowException("Server did not set a response");
+							default -> throw new DataflowException("Bad response from server");
 						}
 					})
 					.toVoid();

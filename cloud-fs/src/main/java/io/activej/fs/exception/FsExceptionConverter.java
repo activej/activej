@@ -147,30 +147,21 @@ public abstract class FsExceptionConverter {
 				serverError.getFsBatchException().getExceptionsMap()
 						.forEach((fileName, oneOfFsScalarExceptions) -> {
 							switch (oneOfFsScalarExceptions.getExceptionCase()) {
-								case FS_SCALAR_EXCEPTION:
-									exceptions.put(fileName, new FsScalarException(oneOfFsScalarExceptions.getFsScalarException().getMessage(), false));
-									break;
-								case PATH_CONTAINS_FILE_EXCEPTION:
-									exceptions.put(fileName, new PathContainsFileException(oneOfFsScalarExceptions.getPathContainsFileException().getMessage(), false));
-									break;
-								case ILLEGAL_OFFSET_EXCEPTION:
-									exceptions.put(fileName, new IllegalOffsetException(oneOfFsScalarExceptions.getIllegalOffsetException().getMessage(), false));
-									break;
-								case FILE_NOT_FOUND_EXCEPTION:
-									exceptions.put(fileName, new FileNotFoundException(oneOfFsScalarExceptions.getFileNotFoundException().getMessage(), false));
-									break;
-								case FORBIDDEN_PATH_EXCEPTION:
-									exceptions.put(fileName, new ForbiddenPathException(oneOfFsScalarExceptions.getForbiddenPathException().getMessage(), false));
-									break;
-								case MALFORMED_GLOB_EXCEPTION:
-									exceptions.put(fileName, new MalformedGlobException(oneOfFsScalarExceptions.getMalformedGlobException().getMessage(), false));
-									break;
-								case IS_A_DIRECTORY_EXCEPTION:
-									exceptions.put(fileName, new IsADirectoryException(oneOfFsScalarExceptions.getIsADirectoryException().getMessage(), false));
-									break;
-								default:
-									exceptions.put(fileName, new FsScalarException("Unknown exception", false));
-									break;
+								case FS_SCALAR_EXCEPTION ->
+										exceptions.put(fileName, new FsScalarException(oneOfFsScalarExceptions.getFsScalarException().getMessage(), false));
+								case PATH_CONTAINS_FILE_EXCEPTION ->
+										exceptions.put(fileName, new PathContainsFileException(oneOfFsScalarExceptions.getPathContainsFileException().getMessage(), false));
+								case ILLEGAL_OFFSET_EXCEPTION ->
+										exceptions.put(fileName, new IllegalOffsetException(oneOfFsScalarExceptions.getIllegalOffsetException().getMessage(), false));
+								case FILE_NOT_FOUND_EXCEPTION ->
+										exceptions.put(fileName, new FileNotFoundException(oneOfFsScalarExceptions.getFileNotFoundException().getMessage(), false));
+								case FORBIDDEN_PATH_EXCEPTION ->
+										exceptions.put(fileName, new ForbiddenPathException(oneOfFsScalarExceptions.getForbiddenPathException().getMessage(), false));
+								case MALFORMED_GLOB_EXCEPTION ->
+										exceptions.put(fileName, new MalformedGlobException(oneOfFsScalarExceptions.getMalformedGlobException().getMessage(), false));
+								case IS_A_DIRECTORY_EXCEPTION ->
+										exceptions.put(fileName, new IsADirectoryException(oneOfFsScalarExceptions.getIsADirectoryException().getMessage(), false));
+								default -> exceptions.put(fileName, new FsScalarException("Unknown exception", false));
 							}
 						});
 				return new FsBatchException(exceptions, false);

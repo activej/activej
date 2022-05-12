@@ -176,14 +176,12 @@ public final class DataflowDebugServlet implements AsyncServlet {
 							.then(messaging::receive)
 							.map(response -> {
 								messaging.close();
-								switch (response.getResponseCase()) {
-									case PARTITION_DATA:
-										return response.getPartitionData();
-									case RESULT:
-										throw new DataflowException("Error on remote server " + address + ": " + response.getResult().getError().getError());
-									default:
-										throw new DataflowException("Bad response from server");
-								}
+								return switch (response.getResponseCase()) {
+									case PARTITION_DATA -> response.getPartitionData();
+									case RESULT ->
+											throw new DataflowException("Error on remote server " + address + ": " + response.getResult().getError().getError());
+									default -> throw new DataflowException("Bad response from server");
+								};
 							});
 				});
 	}
@@ -197,14 +195,12 @@ public final class DataflowDebugServlet implements AsyncServlet {
 							.then($ -> messaging.receive())
 							.map(response -> {
 								messaging.close();
-								switch (response.getResponseCase()) {
-									case TASK_DATA:
-										return response.getTaskData();
-									case RESULT:
-										throw new DataflowException("Error on remote server " + address + ": " + response.getResult().getError().getError());
-									default:
-										throw new DataflowException("Bad response from server");
-								}
+								return switch (response.getResponseCase()) {
+									case TASK_DATA -> response.getTaskData();
+									case RESULT ->
+											throw new DataflowException("Error on remote server " + address + ": " + response.getResult().getError().getError());
+									default -> throw new DataflowException("Bad response from server");
+								};
 							});
 				});
 	}

@@ -251,20 +251,14 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 
 	private static CrdtRequest request(RequestCase requestCase) {
 		CrdtRequest.Builder builder = CrdtRequest.newBuilder();
-		switch (requestCase) {
-			case UPLOAD:
-				return builder.setUpload(Upload.newBuilder()).build();
-			case REMOVE:
-				return builder.setRemove(Remove.newBuilder()).build();
-			case PING:
-				return builder.setPing(Ping.newBuilder()).build();
-			case TAKE:
-				return builder.setTake(Take.newBuilder()).build();
-			case TAKE_ACK:
-				return builder.setTakeAck(TakeAck.newBuilder()).build();
-			default:
-				throw new AssertionError();
-		}
+		return switch (requestCase) {
+			case UPLOAD -> builder.setUpload(Upload.newBuilder()).build();
+			case REMOVE -> builder.setRemove(Remove.newBuilder()).build();
+			case PING -> builder.setPing(Ping.newBuilder()).build();
+			case TAKE -> builder.setTake(Take.newBuilder()).build();
+			case TAKE_ACK -> builder.setTakeAck(TakeAck.newBuilder()).build();
+			default -> throw new AssertionError();
+		};
 
 	}
 
