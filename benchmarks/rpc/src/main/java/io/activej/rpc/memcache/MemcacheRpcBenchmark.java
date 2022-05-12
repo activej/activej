@@ -145,7 +145,7 @@ public class MemcacheRpcBenchmark extends Launcher {
 	private Promise<Long> roundPut() {
 		SettablePromise<Long> promise = new SettablePromise<>();
 
-		Callback<Void> callback = new Callback<Void>() {
+		Callback<Void> callback = new Callback<>() {
 			@Override
 			public void accept(Void result, @Nullable Exception e) {
 				completed++;
@@ -184,7 +184,7 @@ public class MemcacheRpcBenchmark extends Launcher {
 	private Promise<Long> roundGet() {
 		SettablePromise<Long> promise = new SettablePromise<>();
 
-		Callback<Slice> callback = new Callback<Slice>() {
+		Callback<Slice> callback = new Callback<>() {
 			@Override
 			public void accept(Slice result, @Nullable Exception e) {
 				completed++;

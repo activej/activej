@@ -19,7 +19,6 @@ import java.util.zip.GZIPOutputStream;
 
 import static io.activej.http.GzipProcessorUtils.toGzip;
 import static io.activej.promise.TestUtils.await;
-import static java.util.Arrays.asList;
 
 public final class BufsConsumerGzipDeflaterTest {
 
@@ -121,7 +120,7 @@ public final class BufsConsumerGzipDeflaterTest {
 		ByteBuf gzipped = toGzip(fullBuf);
 		consumer.setExpectedBuf(gzipped);
 
-		list.addAll(asList(buf1, buf2, buf3, buf4, buf5, buf6));
+		list.addAll(List.of(buf1, buf2, buf3, buf4, buf5, buf6));
 
 		doTest();
 	}
@@ -140,13 +139,7 @@ public final class BufsConsumerGzipDeflaterTest {
 					gzip.finish();
 				}
 			}
-			byte[] bytes = baos.toByteArray();
-			if (bytes[9] == 0) {
-				// incorrect OS header flag in pre JDK 16
-				// https://bugs.openjdk.java.net/browse/JDK-8244706
-				bytes[9] = (byte) 0xff;
-			}
-			return bytes;
+			return baos.toByteArray();
 		} catch (IOException e) {
 			throw new AssertionError(e);
 		}

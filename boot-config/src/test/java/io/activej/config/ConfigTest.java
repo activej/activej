@@ -6,8 +6,8 @@ import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
-import static io.activej.common.Utils.setOf;
 import static io.activej.config.Config.THIS;
 import static io.activej.config.ConfigTestUtils.assertIllegalArgument;
 import static junit.framework.TestCase.assertEquals;
@@ -47,8 +47,8 @@ public class ConfigTest {
 				.with("b", "b")
 				.with("a.b", "ab");
 		Config config = config1.combineWith(config2);
-		assertEquals(setOf("a", "b"), config.getChildren().keySet());
-		assertEquals(setOf("a", "b"), config.getChildren().get("a").getChildren().keySet());
+		assertEquals(Set.of("a", "b"), config.getChildren().keySet());
+		assertEquals(Set.of("a", "b"), config.getChildren().get("a").getChildren().keySet());
 		assertEquals("a", config.get("a"));
 		assertEquals("b", config.get("b"));
 		assertEquals("aa", config.get("a.a"));

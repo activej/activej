@@ -10,7 +10,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.time.LocalDate;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -21,63 +20,61 @@ import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.*;
 import static io.activej.common.Utils.entriesToMap;
 import static io.activej.cube.Cube.AggregationConfig.id;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Stream.of;
 import static org.junit.Assert.*;
 
 @SuppressWarnings("rawtypes")
 public class TestCompatibleAggregations {
 	private static final Map<String, String> DATA_ITEM_DIMENSIONS = entriesToMap(of(
-			new SimpleEntry<>("date", "date"),
-			new SimpleEntry<>("advertiser", "advertiser"),
-			new SimpleEntry<>("campaign", "campaign"),
-			new SimpleEntry<>("banner", "banner"),
-			new SimpleEntry<>("affiliate", "affiliate"),
-			new SimpleEntry<>("site", "site"),
-			new SimpleEntry<>("placement", "placement")));
+			Map.entry("date", "date"),
+			Map.entry("advertiser", "advertiser"),
+			Map.entry("campaign", "campaign"),
+			Map.entry("banner", "banner"),
+			Map.entry("affiliate", "affiliate"),
+			Map.entry("site", "site"),
+			Map.entry("placement", "placement")));
 
 	private static final Map<String, String> DATA_ITEM_MEASURES = entriesToMap(of(
-			new SimpleEntry<>("eventCount", "null"),
-			new SimpleEntry<>("minRevenue", "revenue"),
-			new SimpleEntry<>("maxRevenue", "revenue"),
-			new SimpleEntry<>("revenue", "revenue"),
-			new SimpleEntry<>("impressions", "impressions"),
-			new SimpleEntry<>("clicks", "clicks"),
-			new SimpleEntry<>("conversions", "conversions"),
-			new SimpleEntry<>("uniqueUserIdsCount", "userId"),
-			new SimpleEntry<>("errors", "errors")));
+			Map.entry("eventCount", "null"),
+			Map.entry("minRevenue", "revenue"),
+			Map.entry("maxRevenue", "revenue"),
+			Map.entry("revenue", "revenue"),
+			Map.entry("impressions", "impressions"),
+			Map.entry("clicks", "clicks"),
+			Map.entry("conversions", "conversions"),
+			Map.entry("uniqueUserIdsCount", "userId"),
+			Map.entry("errors", "errors")));
 
 	private static final Map<String, FieldType> DIMENSIONS_DAILY_AGGREGATION = entriesToMap(of(
-			new SimpleEntry<>("date", ofLocalDate(LocalDate.parse("2000-01-01")))));
+			Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01")))));
 
 	private static final Map<String, FieldType> DIMENSIONS_ADVERTISERS_AGGREGATION = entriesToMap(of(
-			new SimpleEntry<>("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
-			new SimpleEntry<>("advertiser", ofInt()),
-			new SimpleEntry<>("campaign", ofInt()),
-			new SimpleEntry<>("banner", ofInt())));
+			Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
+			Map.entry("advertiser", ofInt()),
+			Map.entry("campaign", ofInt()),
+			Map.entry("banner", ofInt())));
 
 	private static final Map<String, FieldType> DIMENSIONS_AFFILIATES_AGGREGATION = entriesToMap(of(
-			new SimpleEntry<>("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
-			new SimpleEntry<>("affiliate", ofInt()),
-			new SimpleEntry<>("site", ofString())));
+			Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
+			Map.entry("affiliate", ofInt()),
+			Map.entry("site", ofString())));
 
 	private static final Map<String, FieldType> DIMENSIONS_DETAILED_AFFILIATES_AGGREGATION = entriesToMap(of(
-			new SimpleEntry<>("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
-			new SimpleEntry<>("affiliate", ofInt()),
-			new SimpleEntry<>("site", ofString()),
-			new SimpleEntry<>("placement", ofInt())));
+			Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
+			Map.entry("affiliate", ofInt()),
+			Map.entry("site", ofString()),
+			Map.entry("placement", ofInt())));
 
 	private static final Map<String, Measure> MEASURES = entriesToMap(of(
-			new SimpleEntry<>("impressions", sum(ofLong())),
-			new SimpleEntry<>("clicks", sum(ofLong())),
-			new SimpleEntry<>("conversions", sum(ofLong())),
-			new SimpleEntry<>("revenue", sum(ofDouble())),
-			new SimpleEntry<>("eventCount", count(ofInt())),
-			new SimpleEntry<>("minRevenue", min(ofDouble())),
-			new SimpleEntry<>("maxRevenue", max(ofDouble())),
-			new SimpleEntry<>("uniqueUserIdsCount", hyperLogLog(1024)),
-			new SimpleEntry<>("errors", sum(ofLong()))));
+			Map.entry("impressions", sum(ofLong())),
+			Map.entry("clicks", sum(ofLong())),
+			Map.entry("conversions", sum(ofLong())),
+			Map.entry("revenue", sum(ofDouble())),
+			Map.entry("eventCount", count(ofInt())),
+			Map.entry("minRevenue", min(ofDouble())),
+			Map.entry("maxRevenue", max(ofDouble())),
+			Map.entry("uniqueUserIdsCount", hyperLogLog(1024)),
+			Map.entry("errors", sum(ofLong()))));
 
 	private static final AggregationPredicate DAILY_AGGREGATION_PREDICATE = alwaysTrue();
 	private static final AggregationConfig DAILY_AGGREGATION = id("daily")
@@ -134,7 +131,7 @@ public class TestCompatibleAggregations {
 					DIMENSIONS_ADVERTISERS_AGGREGATION.forEach(cube::addDimension);
 					DIMENSIONS_AFFILIATES_AGGREGATION.forEach(cube::addDimension);
 
-					asList(DAILY_AGGREGATION, ADVERTISERS_AGGREGATION, AFFILIATES_AGGREGATION).forEach(cube::addAggregation);
+					List.of(DAILY_AGGREGATION, ADVERTISERS_AGGREGATION, AFFILIATES_AGGREGATION).forEach(cube::addAggregation);
 				});
 
 		cubeWithDetailedAggregation = new Cube(null, null, null, null)
@@ -145,7 +142,7 @@ public class TestCompatibleAggregations {
 					DIMENSIONS_AFFILIATES_AGGREGATION.forEach(cube::addDimension);
 					DIMENSIONS_DETAILED_AFFILIATES_AGGREGATION.forEach(cube::addDimension);
 
-					asList(DAILY_AGGREGATION, ADVERTISERS_AGGREGATION, AFFILIATES_AGGREGATION).forEach(cube::addAggregation);
+					List.of(DAILY_AGGREGATION, ADVERTISERS_AGGREGATION, AFFILIATES_AGGREGATION).forEach(cube::addAggregation);
 				})
 				.withAggregation(DETAILED_AFFILIATES_AGGREGATION)
 				.withAggregation(LIMITED_DATES_AGGREGATION.withPredicate(LIMITED_DATES_AGGREGATION_PREDICATE));
@@ -226,7 +223,7 @@ public class TestCompatibleAggregations {
 		AggregationPredicate whereQueryPredicate = alwaysTrue();
 
 		List<AggregationContainer> actualAggregations = cube.getCompatibleAggregationsForQuery(
-				singletonList("date"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
+				List.of("date"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
 		Aggregation expected = cube.getAggregation(DAILY_AGGREGATION.getId());
 
@@ -242,7 +239,7 @@ public class TestCompatibleAggregations {
 				not(eq("banner", EXCLUDE_BANNER)));
 
 		List<AggregationContainer> actualAggregations = cube.getCompatibleAggregationsForQuery(
-				asList("advertiser", "campaign", "banner"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
+				List.of("advertiser", "campaign", "banner"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
 		Aggregation expected = cube.getAggregation(ADVERTISERS_AGGREGATION.getId());
 
@@ -255,7 +252,7 @@ public class TestCompatibleAggregations {
 		AggregationPredicate whereQueryPredicate = and(not(eq("affiliate", EXCLUDE_AFFILIATE)), not(eq("site", EXCLUDE_SITE)));
 
 		List<AggregationContainer> actualAggregations = cube.getCompatibleAggregationsForQuery(
-				asList("affiliate", "site"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
+				List.of("affiliate", "site"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
 		Aggregation expected = cube.getAggregation(AFFILIATES_AGGREGATION.getId());
 
@@ -272,7 +269,7 @@ public class TestCompatibleAggregations {
 
 		List<AggregationContainer> actualAggregations =
 				cubeWithDetailedAggregation.getCompatibleAggregationsForQuery(
-						asList("affiliate", "site", "placement"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
+						List.of("affiliate", "site", "placement"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
 		Aggregation expected = cubeWithDetailedAggregation.getAggregation(DETAILED_AFFILIATES_AGGREGATION.getId());
 
@@ -286,7 +283,7 @@ public class TestCompatibleAggregations {
 
 		List<AggregationContainer> actualAggregations =
 				cubeWithDetailedAggregation.getCompatibleAggregationsForQuery(
-						asList("affiliate", "site", "placement"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
+						List.of("affiliate", "site", "placement"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
 		Aggregation expected = cubeWithDetailedAggregation.getAggregation(DETAILED_AFFILIATES_AGGREGATION.getId());
 
@@ -300,7 +297,7 @@ public class TestCompatibleAggregations {
 
 		List<AggregationContainer> actualAggregations =
 				cubeWithDetailedAggregation.getCompatibleAggregationsForQuery(
-						singletonList("date"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
+						List.of("date"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
 		Aggregation expected = cubeWithDetailedAggregation.getAggregation(DAILY_AGGREGATION.getId());
 		Aggregation expected2 = cubeWithDetailedAggregation.getAggregation(LIMITED_DATES_AGGREGATION.getId());
@@ -318,7 +315,7 @@ public class TestCompatibleAggregations {
 
 		List<AggregationContainer> actualAggregations =
 				cubeWithDetailedAggregation.getCompatibleAggregationsForQuery(
-						singletonList("date"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
+						List.of("date"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
 		Aggregation expected = cubeWithDetailedAggregation.getAggregation(ADVERTISERS_AGGREGATION.getId());
 
@@ -332,7 +329,7 @@ public class TestCompatibleAggregations {
 
 		List<AggregationContainer> actualAggregations =
 				cubeWithDetailedAggregation.getCompatibleAggregationsForQuery(
-						singletonList("date"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
+						List.of("date"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
 		Aggregation expected = cubeWithDetailedAggregation.getAggregation(DAILY_AGGREGATION.getId());
 		Aggregation expected2 = cubeWithDetailedAggregation.getAggregation(LIMITED_DATES_AGGREGATION.getId());

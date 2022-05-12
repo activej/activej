@@ -54,9 +54,6 @@ import static io.activej.common.reflection.ReflectionUtils.*;
 import static io.activej.jmx.Utils.findAdapterClass;
 import static io.activej.jmx.stats.StatsUtils.isJmxStats;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singleton;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
@@ -193,14 +190,14 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			String[] includedOptionalAttrs, @Nullable Method getter,
 			Map<Type, JmxCustomTypeAdapter<?>> customTypes) {
 
-		Set<String> includedOptionals = new HashSet<>(asList(includedOptionalAttrs));
+		Set<String> includedOptionals = new HashSet<>(List.of(includedOptionalAttrs));
 		List<AttributeDescriptor> attrDescriptors = fetchAttributeDescriptors(clazz, customTypes);
 		List<AttributeNode> attrNodes = new ArrayList<>();
 		for (AttributeDescriptor descriptor : attrDescriptors) {
-			checkNotNull(descriptor.getGetter(), "@JmxAttribute \"%s\" does not have getter", descriptor.getName());
+			checkNotNull(descriptor.getter(), "@JmxAttribute \"%s\" does not have getter", descriptor.name());
 
 			String attrName;
-			Method attrGetter = descriptor.getGetter();
+			Method attrGetter = descriptor.getter();
 			JmxAttribute attrAnnotation = attrGetter.getAnnotation(JmxAttribute.class);
 			String attrAnnotationName = attrAnnotation.name();
 			if (attrAnnotationName.equals(JmxAttribute.USE_GETTER_NAME)) {
@@ -219,7 +216,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			includedOptionals.remove(attrName);
 
 			Type type = attrGetter.getGenericReturnType();
-			Method attrSetter = descriptor.getSetter();
+			Method attrSetter = descriptor.setter();
 			AttributeNode attrNode = createAttributeNodeFor(attrName, attrDescription, type, included,
 					attrAnnotation, attrGetter, attrSetter, beanClass,
 					customTypes);
@@ -273,12 +270,12 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 		if (nameToAttr.containsKey(name)) {
 			AttributeDescriptor previousDescriptor = nameToAttr.get(name);
 
-			checkArgument(previousDescriptor.getGetter() == null,
+			checkArgument(previousDescriptor.getter() == null,
 					"More than one getter with name \"%s\"", getter.getName());
-			checkArgument(previousDescriptor.getType().equals(attrType),
+			checkArgument(previousDescriptor.type().equals(attrType),
 					"Getter with name \"%s\" has different type than appropriate setter", getter.getName());
 
-			nameToAttr.put(name, new AttributeDescriptor(name, attrType, getter, previousDescriptor.getSetter()));
+			nameToAttr.put(name, new AttributeDescriptor(name, attrType, getter, previousDescriptor.setter()));
 		} else {
 			nameToAttr.put(name, new AttributeDescriptor(name, attrType, getter, null));
 		}
@@ -294,13 +291,13 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 		if (nameToAttr.containsKey(name)) {
 			AttributeDescriptor previousDescriptor = nameToAttr.get(name);
 
-			checkArgument(previousDescriptor.getSetter() == null,
+			checkArgument(previousDescriptor.setter() == null,
 					"More than one setter with name \"%s\"", setter.getName());
-			checkArgument(previousDescriptor.getType().equals(attrType),
+			checkArgument(previousDescriptor.type().equals(attrType),
 					"Setter with name \"%s\" has different type than appropriate getter", setter.getName());
 
 			nameToAttr.put(name, new AttributeDescriptor(
-					name, attrType, previousDescriptor.getGetter(), setter));
+					name, attrType, previousDescriptor.getter(), setter));
 		} else {
 			nameToAttr.put(name, new AttributeDescriptor(name, attrType, null, setter));
 		}
@@ -430,22 +427,21 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 		return jmxStats;
 	}
 
-	@SuppressWarnings("unchecked")
 	private static JmxReducer<?> fetchReducerFrom(@Nullable Method getter) throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
 		if (getter == null) {
 			return DEFAULT_REDUCER;
 		}
 		JmxAttribute attrAnnotation = getter.getAnnotation(JmxAttribute.class);
-		Class<?> reducerClass = attrAnnotation.reducer();
+		Class<? extends JmxReducer> reducerClass = attrAnnotation.reducer();
 		if (reducerClass == DEFAULT_REDUCER.getClass()) {
 			return DEFAULT_REDUCER;
 		}
-		return ((Class<? extends JmxReducer<?>>) reducerClass).getDeclaredConstructor().newInstance();
+		return reducerClass.getDeclaredConstructor().newInstance();
 	}
 
 	private static void checkJmxStatsAreValid(Class<?> returnClass, Class<?> beanClass, @Nullable Method getter) {
 		if (JmxRefreshableStats.class.isAssignableFrom(returnClass) &&
-				!findAdapterClass(beanClass).filter(JmxBeanAdapterWithRefresh.class::isAssignableFrom).isPresent()
+				findAdapterClass(beanClass).filter(JmxBeanAdapterWithRefresh.class::isAssignableFrom).isEmpty()
 		) {
 			logger.warn("JmxRefreshableStats won't be refreshed when Bean adapter does not implement JmxBeanAdapterWithRefresh. " +
 					"MBean class: {}", beanClass.getName());
@@ -522,8 +518,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			ValueFetcher fetcher,
 			Type listElementType, Class<?> beanClass,
 			Map<Type, JmxCustomTypeAdapter<?>> customTypes) {
-		if (listElementType instanceof Class<?>) {
-			Class<?> listElementClass = (Class<?>) listElementType;
+		if (listElementType instanceof Class<?> listElementClass) {
 			boolean isListOfJmxRefreshable = JmxRefreshable.class.isAssignableFrom(listElementClass);
 			return new AttributeNodeForList(
 					attrName,
@@ -559,8 +554,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			Map<Type, JmxCustomTypeAdapter<?>> customTypes) {
 		boolean isMapOfJmxRefreshable = false;
 		AttributeNode node;
-		if (valueType instanceof Class<?>) {
-			Class<?> valueClass = (Class<?>) valueType;
+		if (valueType instanceof Class<?> valueClass) {
 			isMapOfJmxRefreshable = JmxRefreshable.class.isAssignableFrom(valueClass);
 			node = createAttributeNodeFor("", attrDescription, valueType, true, null, null, null, beanClass, customTypes);
 		} else if (valueType instanceof ParameterizedType) {
@@ -709,55 +703,13 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 	// endregion
 
 	// region helper classes
-	private static final class AttributeDescriptor {
-		private final String name;
-		private final Type type;
-		private final Method getter;
-		private final Method setter;
+	private record AttributeDescriptor(String name, Type type, Method getter, Method setter) {}
 
-		public AttributeDescriptor(String name, Type type, @Nullable Method getter, @Nullable Method setter) {
-			this.name = name;
-			this.type = type;
-			this.getter = getter;
-			this.setter = setter;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public Type getType() {
-			return type;
-		}
-
-		public @Nullable Method getGetter() {
-			return getter;
-		}
-
-		public @Nullable Method getSetter() {
-			return setter;
-		}
-	}
-
-	private static final class OperationKey {
-		private final String name;
-		private final String[] argTypes;
-
-		public OperationKey(@NotNull String name, String[] argTypes) {
-			this.name = name;
-			this.argTypes = argTypes;
-		}
-
-		public String getName() {
-			return name;
-		}
-
+	private record OperationKey(String name, String[] argTypes) {
 		@Override
 		public boolean equals(Object o) {
 			if (this == o) return true;
-			if (!(o instanceof OperationKey)) return false;
-
-			OperationKey that = (OperationKey) o;
+			if (!(o instanceof OperationKey that)) return false;
 
 			if (!name.equals(that.name)) return false;
 
@@ -794,15 +746,14 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 		public Object getAttribute(String attribute) throws MBeanException {
 			Object value;
 			try {
-				value = rootNode.aggregateAttributes(singleton(attribute), beans).get(attribute);
+				value = rootNode.aggregateAttributes(Set.of(attribute), beans).get(attribute);
 			} catch (Exception e) {
 				logger.error("Failed to fetch attribute '{}' from beans {}", attribute, beans, e);
 				propagate(e);
 				throw new AssertionError("Never reached");
 			}
 
-			if (value instanceof Throwable) {
-				Throwable throwable = (Throwable) value;
+			if (value instanceof Throwable throwable) {
 				logger.error("Failed to fetch attribute '{}' from beans {}", attribute, beans, throwable);
 				propagate(throwable);
 			}
@@ -820,7 +771,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			for (Object bean : beans) {
 				adapter.execute(bean, () -> {
 					try {
-						rootNode.setAttribute(attrName, attrValue, singletonList(bean));
+						rootNode.setAttribute(attrName, attrValue, List.of(bean));
 						latch.countDown();
 					} catch (Exception e) {
 						logger.error("Failed to set attribute '{}' of {} with value '{}'", attrName, bean, attrValue, e);
@@ -840,8 +791,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			Exception e = exceptionRef.get();
 			if (e != null) {
 				Exception actualException = e;
-				if (e instanceof SetterException) {
-					SetterException setterException = (SetterException) e;
+				if (e instanceof SetterException setterException) {
 					actualException = setterException.getCausedException();
 				}
 				propagate(actualException);
@@ -851,7 +801,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 		@Override
 		public AttributeList getAttributes(String[] attributes) {
 			AttributeList attrList = new AttributeList();
-			Set<String> attrNames = new HashSet<>(Arrays.asList(attributes));
+			Set<String> attrNames = Set.of(attributes);
 			try {
 				Map<String, Object> aggregatedAttrs = rootNode.aggregateAttributes(attrNames, beans);
 				for (Map.Entry<String, Object> entry : aggregatedAttrs.entrySet()) {
@@ -937,7 +887,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 
 		private Object invokeNode(String name, AttributeNode node) throws MBeanException {
 			try {
-				return node.aggregateAttributes(singleton(name), beans).get(name);
+				return node.aggregateAttributes(Set.of(name), beans).get(name);
 			} catch (Throwable e) {
 				logger.error("Failed to fetch attribute '{}' from beans {}", name, beans, e);
 				propagate(e);

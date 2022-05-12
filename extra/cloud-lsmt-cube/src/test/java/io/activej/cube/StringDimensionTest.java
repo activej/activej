@@ -32,8 +32,6 @@ import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.promise.TestUtils.await;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 
@@ -86,13 +84,13 @@ public class StringDimensionTest {
 		cube.apply(consumer2Result);
 
 		StreamConsumerToList<DataItemResultString> consumerToList = StreamConsumerToList.create();
-		await(cube.queryRawStream(asList("key1", "key2"), asList("metric1", "metric2", "metric3"),
+		await(cube.queryRawStream(List.of("key1", "key2"), List.of("metric1", "metric2", "metric3"),
 				and(eq("key1", "str2"), eq("key2", 3)),
 				DataItemResultString.class, DefiningClassLoader.create(classLoader))
 				.streamTo(consumerToList));
 
 		List<DataItemResultString> actual = consumerToList.getList();
-		List<DataItemResultString> expected = singletonList(new DataItemResultString("str2", 3, 10, 30, 20));
+		List<DataItemResultString> expected = List.of(new DataItemResultString("str2", 3, 10, 30, 20));
 
 		assertEquals(expected, actual);
 	}

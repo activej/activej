@@ -48,7 +48,6 @@ import static io.activej.common.exception.FatalErrorHandler.*;
 import static io.activej.eventloop.inspector.ThrottlingController.INITIAL_KEYS_PER_SECOND;
 import static io.activej.eventloop.inspector.ThrottlingController.INITIAL_THROTTLING;
 import static io.activej.eventloop.net.ServerSocketSettings.DEFAULT_BACKLOG;
-import static java.util.Collections.emptyList;
 import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -102,7 +101,7 @@ public final class ConfigConverters {
 	}
 
 	public static ConfigConverter<String> ofString() {
-		return new ConfigConverter<String>() {
+		return new ConfigConverter<>() {
 			@Override
 			public String get(Config config, String defaultValue) {
 				return config.getValue(defaultValue);
@@ -181,7 +180,7 @@ public final class ConfigConverters {
 	}
 
 	public static <T> ConfigConverter<List<T>> ofList(ConfigConverter<T> elementConverter, CharSequence separators) {
-		return new SimpleConfigConverter<List<T>>() {
+		return new SimpleConfigConverter<>() {
 			private final Pattern pattern = compile(separators.chars()
 					.mapToObj(c -> "\\" + (char) c)
 					.collect(joining("", "[", "]")));
@@ -216,7 +215,7 @@ public final class ConfigConverters {
 
 	// compound
 	public static ConfigConverter<ServerSocketSettings> ofServerSocketSettings() {
-		return new ComplexConfigConverter<ServerSocketSettings>(ServerSocketSettings.create(DEFAULT_BACKLOG)) {
+		return new ComplexConfigConverter<>(ServerSocketSettings.create(DEFAULT_BACKLOG)) {
 			@Override
 			protected ServerSocketSettings provide(Config config, ServerSocketSettings defaultValue) {
 				return Function.<ServerSocketSettings>identity()
@@ -237,7 +236,7 @@ public final class ConfigConverters {
 	}
 
 	public static ConfigConverter<SocketSettings> ofSocketSettings() {
-		return new ComplexConfigConverter<SocketSettings>(SocketSettings.create()) {
+		return new ComplexConfigConverter<>(SocketSettings.create()) {
 			@Override
 			protected SocketSettings provide(Config config, SocketSettings defaultValue) {
 				return Function.<SocketSettings>identity()
@@ -282,7 +281,7 @@ public final class ConfigConverters {
 	}
 
 	public static ConfigConverter<DatagramSocketSettings> ofDatagramSocketSettings() {
-		return new ComplexConfigConverter<DatagramSocketSettings>(DatagramSocketSettings.create()) {
+		return new ComplexConfigConverter<>(DatagramSocketSettings.create()) {
 			@Override
 			protected DatagramSocketSettings provide(Config config, DatagramSocketSettings defaultValue) {
 				return Function.<DatagramSocketSettings>identity()
@@ -310,7 +309,7 @@ public final class ConfigConverters {
 	public static final ConfigConverter<List<Class<?>>> OF_CLASSES = ofList(ofClass());
 
 	public static ConfigConverter<FatalErrorHandler> ofFatalErrorHandler() {
-		return new ConfigConverter<FatalErrorHandler>() {
+		return new ConfigConverter<>() {
 			@Override
 			public @NotNull FatalErrorHandler get(Config config) {
 				switch (config.getValue()) {
@@ -329,14 +328,14 @@ public final class ConfigConverters {
 					case "rethrowOn":
 						return rethrowOn(
 								toThrowablePredicate(
-										config.get(OF_CLASSES, "whitelist", emptyList()),
-										config.get(OF_CLASSES, "blacklist", emptyList())
+										config.get(OF_CLASSES, "whitelist", List.of()),
+										config.get(OF_CLASSES, "blacklist", List.of())
 								));
 					case "haltOn":
 						return haltOn(
 								toThrowablePredicate(
-										config.get(OF_CLASSES, "whitelist", emptyList()),
-										config.get(OF_CLASSES, "blacklist", emptyList())
+										config.get(OF_CLASSES, "whitelist", List.of()),
+										config.get(OF_CLASSES, "blacklist", List.of())
 								));
 					case "logging":
 						return logging();
@@ -378,21 +377,16 @@ public final class ConfigConverters {
 	}
 
 	public static ConfigConverter<Schedule> ofEventloopTaskSchedule() {
-		return new ConfigConverter<Schedule>() {
+		return new ConfigConverter<>() {
 			@Override
 			public @NotNull Schedule get(Config config) {
-				switch (config.get("type")) {
-					case "immediate":
-						return Schedule.immediate();
-					case "delay":
-						return Schedule.ofDelay(config.get(ofDuration(), "value"));
-					case "interval":
-						return Schedule.ofInterval(config.get(ofDuration(), "value"));
-					case "period":
-						return Schedule.ofPeriod(config.get(ofDuration(), "value"));
-					default:
-						throw new IllegalArgumentException("No eventloop task schedule type named " + config.getValue() + " exists!");
-				}
+				return switch (config.get("type")) {
+					case "immediate" -> Schedule.immediate();
+					case "delay" -> Schedule.ofDelay(config.get(ofDuration(), "value"));
+					case "interval" -> Schedule.ofInterval(config.get(ofDuration(), "value"));
+					case "period" -> Schedule.ofPeriod(config.get(ofDuration(), "value"));
+					default -> throw new IllegalArgumentException("No eventloop task schedule type named " + config.getValue() + " exists!");
+				};
 			}
 
 			@Override
@@ -407,27 +401,19 @@ public final class ConfigConverters {
 
 	@SuppressWarnings("rawtypes")
 	public static ConfigConverter<RetryPolicy> ofRetryPolicy() {
-		return new ConfigConverter<RetryPolicy>() {
+		return new ConfigConverter<>() {
 			@Override
 			public @NotNull RetryPolicy get(Config config) {
 				if (!config.hasValue() || config.getValue().equals("no")) {
 					return RetryPolicy.noRetry();
 				}
-				RetryPolicy retryPolicy;
-				switch (config.getValue()) {
-					case "immediate":
-						retryPolicy = RetryPolicy.immediateRetry();
-						break;
-					case "fixedDelay":
-						retryPolicy = RetryPolicy.fixedDelay(config.get(ofDuration(), "delay").toMillis());
-						break;
-					case "exponentialBackoff":
-						retryPolicy = RetryPolicy.exponentialBackoff(config.get(ofDuration(), "initialDelay").toMillis(),
-								config.get(ofDuration(), "maxDelay").toMillis(), config.get(ofDouble(), "exponent", 2.0));
-						break;
-					default:
-						throw new IllegalArgumentException("No retry policy named " + config.getValue() + " exists!");
-				}
+				RetryPolicy retryPolicy = switch (config.getValue()) {
+					case "immediate" -> RetryPolicy.immediateRetry();
+					case "fixedDelay" -> RetryPolicy.fixedDelay(config.get(ofDuration(), "delay").toMillis());
+					case "exponentialBackoff" -> RetryPolicy.exponentialBackoff(config.get(ofDuration(), "initialDelay").toMillis(),
+							config.get(ofDuration(), "maxDelay").toMillis(), config.get(ofDouble(), "exponent", 2.0));
+					default -> throw new IllegalArgumentException("No retry policy named " + config.getValue() + " exists!");
+				};
 				int maxRetryCount = config.get(ofInteger(), "maxRetryCount", Integer.MAX_VALUE);
 				if (maxRetryCount != Integer.MAX_VALUE) {
 					retryPolicy = retryPolicy.withMaxTotalRetryCount(maxRetryCount);
@@ -451,7 +437,7 @@ public final class ConfigConverters {
 	}
 
 	public static ConfigConverter<ThrottlingController> ofThrottlingController() {
-		return new ComplexConfigConverter<ThrottlingController>(ThrottlingController.create()) {
+		return new ComplexConfigConverter<>(ThrottlingController.create()) {
 			@Override
 			protected ThrottlingController provide(Config config, ThrottlingController defaultValue) {
 				return ThrottlingController.create()
@@ -497,7 +483,7 @@ public final class ConfigConverters {
 	}
 
 	public static ConfigConverter<ExecutorService> ofExecutor() {
-		return new ConfigConverter<ExecutorService>() {
+		return new ConfigConverter<>() {
 			@Override
 			public @NotNull ExecutorService get(Config config) {
 				return getExecutor(config);

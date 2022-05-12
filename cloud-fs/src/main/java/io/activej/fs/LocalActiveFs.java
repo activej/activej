@@ -66,7 +66,6 @@ import static io.activej.fs.LocalFileUtils.*;
 import static io.activej.fs.util.RemoteFsUtils.fsBatchException;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 import static java.nio.file.StandardOpenOption.*;
-import static java.util.Collections.*;
 
 /**
  * An implementation of {@link ActiveFs} which operates on a real underlying filesystem, no networking involved.
@@ -83,8 +82,8 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	public static final boolean DEFAULT_FSYNC_DIRECTORIES = ApplicationSettings.getBoolean(LocalActiveFs.class, "fsyncDirectories", false);
 	public static final boolean DEFAULT_FSYNC_APPENDS = ApplicationSettings.getBoolean(LocalActiveFs.class, "fsyncAppends", false);
 
-	private static final Set<StandardOpenOption> DEFAULT_APPEND_OPTIONS = setOf(WRITE);
-	private static final Set<StandardOpenOption> DEFAULT_APPEND_NEW_OPTIONS = setOf(WRITE, CREATE);
+	private static final Set<StandardOpenOption> DEFAULT_APPEND_OPTIONS = Set.of(WRITE);
+	private static final Set<StandardOpenOption> DEFAULT_APPEND_NEW_OPTIONS = Set.of(WRITE, CREATE);
 
 	private static final char SEPARATOR_CHAR = SEPARATOR.charAt(0);
 	private static final Function<String, String> toLocalName = File.separatorChar == SEPARATOR_CHAR ?
@@ -310,7 +309,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@Override
 	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
 		checkStarted();
-		if (glob.isEmpty()) return Promise.of(emptyMap());
+		if (glob.isEmpty()) return Promise.of(Map.of());
 
 		return execute(
 				() -> {
@@ -339,7 +338,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@Override
 	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
 		checkStarted();
-		return execute(() -> forEachPair(singletonMap(name, target), this::doCopy))
+		return execute(() -> forEachPair(Map.of(name, target), this::doCopy))
 				.then(translateScalarErrorsFn())
 				.whenComplete(toLogger(logger, TRACE, "copy", name, target, this))
 				.whenComplete(copyPromise.recordStats());
@@ -359,7 +358,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@Override
 	public Promise<Void> move(@NotNull String name, @NotNull String target) {
 		checkStarted();
-		return execute(() -> forEachPair(singletonMap(name, target), this::doMove))
+		return execute(() -> forEachPair(Map.of(name, target), this::doMove))
 				.then(translateScalarErrorsFn())
 				.whenComplete(toLogger(logger, TRACE, "move", name, target, this))
 				.whenComplete(movePromise.recordStats());
@@ -379,7 +378,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@Override
 	public Promise<Void> delete(@NotNull String name) {
 		checkStarted();
-		return execute(() -> deleteImpl(singleton(name)))
+		return execute(() -> deleteImpl(Set.of(name)))
 				.then(translateScalarErrorsFn(name))
 				.whenComplete(toLogger(logger, TRACE, "delete", name, this))
 				.whenComplete(deletePromise.recordStats());
@@ -412,7 +411,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	@Override
 	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
 		checkStarted();
-		if (names.isEmpty()) return Promise.of(emptyMap());
+		if (names.isEmpty()) return Promise.of(Map.of());
 
 		return execute(
 				() -> {

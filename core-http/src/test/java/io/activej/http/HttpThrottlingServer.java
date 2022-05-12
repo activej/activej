@@ -33,13 +33,11 @@ public class HttpThrottlingServer {
 			int loadBusinessLogic = defaultLoadBusinessLogic;
 			for (int i = defaultLoadBusinessLogic; i < args.length; i++) {
 				switch (args[i]) {
-					case "-l":
-						loadBusinessLogic = Integer.parseInt(args[++i]);
-						break;
-					case "-?":
-					case "-h":
+					case "-l" -> loadBusinessLogic = Integer.parseInt(args[++i]);
+					case "-?", "-h" -> {
 						usage();
 						return null;
+					}
 				}
 			}
 			return new ServerOptions(loadBusinessLogic);

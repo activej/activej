@@ -4,25 +4,23 @@ import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.operation.ArithmeticOperation;
-import io.activej.codegen.operation.CompareOperation;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 import static io.activej.codegen.TestUtils.assertStaticConstantsCleared;
-import static io.activej.codegen.expression.ExpressionComparator.leftProperty;
-import static io.activej.codegen.expression.ExpressionComparator.rightProperty;
+import static io.activej.codegen.expression.ExpressionCompare.leftProperty;
+import static io.activej.codegen.expression.ExpressionCompare.rightProperty;
 import static io.activej.codegen.expression.Expressions.*;
-import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
-@SuppressWarnings({"ArraysAsListWithZeroOrOneArgument"})
 public class ExpressionTest {
 	public static final DefiningClassLoader CLASS_LOADER = DefiningClassLoader.create();
 
@@ -74,56 +72,8 @@ public class ExpressionTest {
 		}
 	}
 
-	public static class TestPojo2 {
-		public final String property1;
-		public final int property2;
-		public final long property3;
-		public final float property4;
-		public final int property5;
-		public final double property6;
-		public final String property7;
-
-		public TestPojo2(String property1, int property2, long property3, float property4, int property5, double property6, String property7) {
-			this.property1 = property1;
-			this.property2 = property2;
-			this.property3 = property3;
-			this.property4 = property4;
-			this.property5 = property5;
-			this.property6 = property6;
-			this.property7 = property7;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-
-			TestPojo2 testPojo2 = (TestPojo2) o;
-
-			if (property2 != testPojo2.property2) return false;
-			if (property3 != testPojo2.property3) return false;
-			if (Float.compare(testPojo2.property4, property4) != 0) return false;
-			if (property5 != testPojo2.property5) return false;
-			if (Double.compare(testPojo2.property6, property6) != 0) return false;
-			if (!Objects.equals(property1, testPojo2.property1)) return false;
-			return Objects.equals(property7, testPojo2.property7);
-
-		}
-
-		@Override
-		public int hashCode() {
-			int result;
-			long temp;
-			result = property1 != null ? property1.hashCode() : 0;
-			result = 31 * result + property2;
-			result = 31 * result + (int) (property3 ^ (property3 >>> 32));
-			result = 31 * result + (property4 != 0.0f ? Float.floatToIntBits(property4) : 0);
-			result = 31 * result + property5;
-			temp = Double.doubleToLongBits(property6);
-			result = 31 * result + (int) (temp ^ (temp >>> 32));
-			result = 31 * result + (property7 != null ? property7.hashCode() : 0);
-			return result;
-		}
+	public record TestPojo2(String property1, int property2, long property3, float property4, int property5,
+	                        double property6, String property7) {
 	}
 
 	public interface Test2 {
@@ -176,10 +126,12 @@ public class ExpressionTest {
 		Class<Test> testClass = ClassBuilder.create(Test.class)
 				.withField("x", int.class)
 				.withField("y", Long.class)
-				.withMethod("compare", int.class, asList(TestPojo.class, TestPojo.class),
-						compare(TestPojo.class, "property1", "property2"))
+				.withMethod("compare", int.class, List.of(TestPojo.class, TestPojo.class),
+						ExpressionCompare.create()
+								.with(leftProperty(TestPojo.class, "property1"), rightProperty(TestPojo.class, "property1"))
+								.with(leftProperty(TestPojo.class, "property2"), rightProperty(TestPojo.class, "property2")))
 				.withMethod("int compareTo(io.activej.codegen.expression.ExpressionTest$Test)",
-						compareToImpl("x"))
+						comparableImpl("x"))
 				.withMethod("equals",
 						equalsImpl("x"))
 				.withMethod("setXY", sequence(
@@ -188,7 +140,9 @@ public class ExpressionTest {
 				.withMethod("test",
 						add(arg(0), value(1L)))
 				.withMethod("hash",
-						hash(property(arg(0), "property1"), property(arg(0), "property2")))
+						ExpressionHashCode.create()
+								.with(property(arg(0), "property1"))
+								.with(property(arg(0), "property2")))
 				.withMethod("property1",
 						property(arg(0), "property1"))
 				.withMethod("setter", sequence(
@@ -205,18 +159,18 @@ public class ExpressionTest {
 				.withMethod("getY",
 						property(self(), "y"))
 				.withMethod("allEqual",
-						and(cmpEq(arg(0), arg(1)), cmpEq(arg(0), arg(2))))
+						and(isEq(arg(0), arg(1)), isEq(arg(0), arg(2))))
 				.withMethod("anyEqual",
-						or(cmpEq(arg(0), arg(1)), cmpEq(arg(0), arg(2))))
+						or(isEq(arg(0), arg(1)), isEq(arg(0), arg(2))))
 				.withMethod("setPojoproperty1",
 						call(arg(0), "setproperty1", arg(1)))
 				.withMethod("getPojoproperty1",
 						call(arg(0), "getproperty1"))
 				.withMethod("toString",
 						ExpressionToString.create()
-								.withQuotes("{", "}", ", ")
-								.with(property(self(), "x"))
-								.with("labelY: ", property(self(), "y")))
+								.withField("x")
+								.with(value("test"))
+								.with("labelY", property(self(), "y")))
 				.defineClass(CLASS_LOADER);
 		Test test = testClass.getDeclaredConstructor().newInstance();
 
@@ -259,21 +213,21 @@ public class ExpressionTest {
 		test1.setPojoproperty1(testPojo, 2);
 		assertEquals(2, test1.getPojoproperty1(testPojo));
 
-		assertEquals("{1, labelY: 10}", test1.toString());
+		assertEquals("{x: 1, test, labelY: 10}", test1.toString());
 	}
 
 	@org.junit.Test
 	public void test2() throws ReflectiveOperationException {
 		Class<Test2> testClass = ClassBuilder.create(Test2.class)
 				.withMethod("hash",
-						hash(
-								property(arg(0), "property1"),
-								property(arg(0), "property2"),
-								property(arg(0), "property3"),
-								property(arg(0), "property4"),
-								property(arg(0), "property5"),
-								property(arg(0), "property6"),
-								property(arg(0), "property7")))
+						ExpressionHashCode.create()
+								.with(property(arg(0), "property1"))
+								.with(property(arg(0), "property2"))
+								.with(property(arg(0), "property3"))
+								.with(property(arg(0), "property4"))
+								.with(property(arg(0), "property5"))
+								.with(property(arg(0), "property6"))
+								.with(property(arg(0), "property7")))
 				.defineClass(CLASS_LOADER);
 
 		Test2 test = testClass.getDeclaredConstructor().newInstance();
@@ -287,7 +241,9 @@ public class ExpressionTest {
 	public void testComparator() {
 		Comparator<TestPojo> comparator = ClassBuilder.create(Comparator.class)
 				.withMethod("compare",
-						compare(TestPojo.class, "property1", "property2"))
+						ExpressionCompare.create()
+								.with(leftProperty(TestPojo.class, "property1"), rightProperty(TestPojo.class, "property1"))
+								.with(leftProperty(TestPojo.class, "property2"), rightProperty(TestPojo.class, "property2")))
 				.defineClassAndCreateInstance(CLASS_LOADER);
 		assertEquals(0, comparator.compare(new TestPojo(1, 10), new TestPojo(1, 10)));
 	}
@@ -467,12 +423,12 @@ public class ExpressionTest {
 		TestCall testCall = ClassBuilder.create(TestCall.class)
 				.withMethod("callOther1", call(self(), "method", arg(0)))
 				.withMethod("callOther2", call(self(), "method"))
-				.withMethod("method", int.class, asList(int.class), arg(0))
-				.withMethod("method", long.class, asList(), value(-1L))
-				.withMethod("callStatic1", int.class, asList(int.class, int.class), staticCallSelf("method", arg(0), arg(1)))
-				.withMethod("callStatic2", long.class, asList(long.class), staticCallSelf("method", arg(0)))
-				.withStaticMethod("method", int.class, asList(int.class, int.class), arg(1))
-				.withStaticMethod("method", long.class, asList(long.class), arg(0))
+				.withMethod("method", int.class, List.of(int.class), arg(0))
+				.withMethod("method", long.class, List.of(), value(-1L))
+				.withMethod("callStatic1", int.class, List.of(int.class, int.class), staticCallSelf("method", arg(0), arg(1)))
+				.withMethod("callStatic2", long.class, List.of(long.class), staticCallSelf("method", arg(0)))
+				.withStaticMethod("method", int.class, List.of(int.class, int.class), arg(1))
+				.withStaticMethod("method", long.class, List.of(long.class), arg(0))
 				.defineClassAndCreateInstance(CLASS_LOADER);
 
 		assertEquals(100, testCall.callOther1(100));
@@ -518,7 +474,7 @@ public class ExpressionTest {
 
 	@org.junit.Test
 	public void testIterator() {
-		List<Integer> listFrom = asList(1, 1, 2, 3, 5, 8);
+		List<Integer> listFrom = List.of(1, 1, 2, 3, 5, 8);
 		List<Integer> listTo1 = new ArrayList<>();
 		List<Integer> listTo2 = new ArrayList<>();
 
@@ -629,10 +585,10 @@ public class ExpressionTest {
 	@org.junit.Test
 	public void testCompare() throws ReflectiveOperationException {
 		Class<TestCompare> test1 = ClassBuilder.create(TestCompare.class)
-				.withMethod("compareObjectLE", cmp(CompareOperation.LE, arg(0), arg(1)))
-				.withMethod("comparePrimitiveLE", cmp(CompareOperation.LE, arg(0), arg(1)))
-				.withMethod("compareObjectEQ", cmp(CompareOperation.EQ, arg(0), arg(1)))
-				.withMethod("compareObjectNE", cmp(CompareOperation.NE, arg(0), arg(1)))
+				.withMethod("compareObjectLE", isLe(arg(0), arg(1)))
+				.withMethod("comparePrimitiveLE", isLe(arg(0), arg(1)))
+				.withMethod("compareObjectEQ", isEq(arg(0), arg(1)))
+				.withMethod("compareObjectNE", isNe(arg(0), arg(1)))
 				.defineClass(CLASS_LOADER);
 
 		TestCompare testCompare = test1.getDeclaredConstructor().newInstance();
@@ -642,37 +598,7 @@ public class ExpressionTest {
 		assertTrue(testCompare.compareObjectNE(5, -5));
 	}
 
-	public static class StringHolder {
-		public final String string1;
-		public final String string2;
-
-		public StringHolder(String string1, String string2) {
-			this.string1 = string1;
-			this.string2 = string2;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			StringHolder that = (StringHolder) o;
-			return Objects.equals(string1, that.string1) &&
-					Objects.equals(string2, that.string2);
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(string1, string2);
-		}
-
-		@Override
-		public String toString() {
-			return "StringHolder{" +
-					"string1='" + string1 + '\'' +
-					", string2='" + string2 + '\'' +
-					'}';
-		}
-	}
+	public record StringHolder(String string1, String string2) {}
 
 	public static class StringHolderComparator implements Comparator<StringHolder> {
 		public int compare(StringHolder var1, StringHolder var2) {
@@ -720,7 +646,7 @@ public class ExpressionTest {
 	@org.junit.Test
 	public void testComparatorNullable() {
 		Comparator<StringHolder> generatedComparator = ClassBuilder.create(Comparator.class)
-				.withMethod("compare", ExpressionComparator.create()
+				.withMethod("compare", ExpressionCompare.create()
 						.with(leftProperty(StringHolder.class, "string1"), rightProperty(StringHolder.class, "string1"), true)
 						.with(leftProperty(StringHolder.class, "string2"), rightProperty(StringHolder.class, "string2"), true))
 				.defineClassAndCreateInstance(CLASS_LOADER);
@@ -802,7 +728,6 @@ public class ExpressionTest {
 				.withMethod("b", nullRef(Integer.class))
 				.withMethod("toString",
 						ExpressionToString.create()
-								.withQuotes("{", "}", ", ")
 								.with(call(self(), "b")))
 				.defineClassAndCreateInstance(CLASS_LOADER);
 
@@ -817,7 +742,6 @@ public class ExpressionTest {
 				.withMethod("b", nullRef(Integer.class))
 				.withMethod("toString",
 						ExpressionToString.create()
-								.withQuotes("{", "}", ", ")
 								.with(call(self(), "b")))
 				.defineClassAndCreateInstance(DefiningClassLoader.create()
 						.withDebugOutputDir(dir.toPath()));
@@ -1063,5 +987,129 @@ public class ExpressionTest {
 		String expected = "" + aByte + anInt + space + aLong + aChar + anObject + testPojo;
 		String actual = testConcat.concat(aByte, anInt, space, aLong, aChar, anObject, testPojo);
 		assertEquals(expected, actual);
+	}
+
+	@org.junit.Test
+	public void testSequenceWithThrow() {
+		TestSeq testSeq = ClassBuilder.create(TestSeq.class)
+				.withMethod("seq", sequence(throwException(RuntimeException.class, "test")))
+				.defineClassAndCreateInstance(CLASS_LOADER);
+
+		Ref ref = new Ref();
+		try {
+			testSeq.seq(ref);
+		} catch (RuntimeException e) {
+			assertEquals("test", e.getMessage());
+		}
+		assertNull(ref.value);
+	}
+
+	@org.junit.Test
+	public void testSequenceWithThrowAndRef() {
+		TestSeq testSeq = ClassBuilder.create(TestSeq.class)
+				.withMethod("seq", sequence(
+						set(property(arg(0), "value"), value(1)),
+						set(property(arg(0), "value"), value(2)),
+						throwException(RuntimeException.class, "test")))
+				.defineClassAndCreateInstance(CLASS_LOADER);
+
+		Ref ref = new Ref();
+		try {
+			testSeq.seq(ref);
+		} catch (RuntimeException e) {
+			assertEquals("test", e.getMessage());
+		}
+		assertEquals(2, ref.value);
+	}
+
+	@org.junit.Test
+	public void testIterateWithThrow() {
+		TestIterate testIterate = ClassBuilder.create(TestIterate.class)
+				.withMethod("iterate", iterate(
+						value(0),
+						value(10),
+						$ -> throwException(RuntimeException.class, "test")))
+				.defineClassAndCreateInstance(CLASS_LOADER);
+
+		Ref ref = new Ref();
+		try {
+			testIterate.iterate(ref);
+		} catch (RuntimeException e) {
+			assertEquals("test", e.getMessage());
+		}
+		assertNull(ref.value);
+	}
+
+	@org.junit.Test
+	public void testIterateWithThrowAndRef() {
+		TestIterate testIterate = ClassBuilder.create(TestIterate.class)
+				.withMethod("iterate", iterate(
+						value(0),
+						value(10),
+						idx -> ifEq(
+								idx, value(5),
+								throwException(RuntimeException.class, "test"),
+								set(property(arg(0), "value"), idx)
+						)))
+				.defineClassAndCreateInstance(CLASS_LOADER);
+
+		Ref ref = new Ref();
+		try {
+			testIterate.iterate(ref);
+		} catch (RuntimeException e) {
+			assertEquals("test", e.getMessage());
+		}
+		assertEquals(4, ref.value);
+	}
+
+	@org.junit.Test
+	public void testConstructorWithThrow() throws NoSuchMethodException, IllegalAccessException, InstantiationException {
+		Class<TestIterate> testIterateCls = ClassBuilder.create(TestIterate.class)
+				.withConstructor(List.of(Ref.class), throwException(RuntimeException.class, "test"))
+				.withMethod("iterate", throwException(new AssertionError()))
+				.defineClass(CLASS_LOADER);
+
+		Ref ref = new Ref();
+		try {
+			testIterateCls.getConstructor(Ref.class).newInstance(ref);
+		} catch (InvocationTargetException e) {
+			Throwable cause = e.getCause();
+			assertSame(RuntimeException.class, cause.getClass());
+			assertEquals("test", cause.getMessage());
+		}
+		assertNull(ref.value);
+	}
+
+	@org.junit.Test
+	public void testConstructorWithThrowAndRef() throws NoSuchMethodException, IllegalAccessException, InstantiationException {
+		Class<TestIterate> testIterateCls = ClassBuilder.create(TestIterate.class)
+				.withConstructor(List.of(Ref.class), sequence(
+						set(property(arg(0), "value"), value(100)),
+						throwException(RuntimeException.class, "test"))
+				)
+				.withMethod("iterate", throwException(new AssertionError()))
+				.defineClass(CLASS_LOADER);
+
+		Ref ref = new Ref();
+		try {
+			testIterateCls.getConstructor(Ref.class).newInstance(ref);
+		} catch (InvocationTargetException e) {
+			Throwable cause = e.getCause();
+			assertSame(RuntimeException.class, cause.getClass());
+			assertEquals("test", cause.getMessage());
+		}
+		assertEquals(100, ref.value);
+	}
+
+	public static class Ref {
+		public Object value;
+	}
+
+	public interface TestSeq {
+		void seq(Ref ref);
+	}
+
+	public interface TestIterate {
+		void iterate(Ref ref);
 	}
 }

@@ -36,7 +36,6 @@ import static io.activej.common.Utils.isBijection;
 import static io.activej.common.Utils.transformIterator;
 import static io.activej.fs.util.RemoteFsUtils.escapeGlob;
 import static io.activej.fs.util.RemoteFsUtils.reduceErrors;
-import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toSet;
 
 /**
@@ -277,7 +276,7 @@ public interface ActiveFs {
 	 * Map contains metadata for existing files only
 	 */
 	default Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
-		if (names.isEmpty()) return Promise.of(emptyMap());
+		if (names.isEmpty()) return Promise.of(Map.of());
 
 		Map<String, FileMetadata> result = new HashMap<>();
 		return Promises.all(names.stream()

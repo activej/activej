@@ -4,19 +4,21 @@ import io.activej.aggregation.AggregationPredicate;
 import io.activej.common.exception.MalformedDataException;
 import org.junit.Test;
 
+import java.util.Map;
 import java.util.Objects;
 
 import static io.activej.aggregation.AggregationPredicates.*;
-import static io.activej.common.Utils.mapOf;
 import static io.activej.cube.Utils.fromJson;
 import static io.activej.cube.Utils.toJson;
 
 public class AggregationPredicateCodecTest {
 	private static final AggregationPredicateCodec CODEC = AggregationPredicateCodec.create(
-			mapOf("campaign", int.class,
+			Map.of(
+					"campaign", int.class,
 					"site", String.class,
 					"hourOfDay", int.class),
-			mapOf("eventCount", int.class,
+            Map.of(
+					"eventCount", int.class,
 					"ctr", double.class)
 	);
 

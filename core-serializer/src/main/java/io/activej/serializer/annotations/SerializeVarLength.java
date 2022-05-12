@@ -22,7 +22,8 @@ import java.lang.annotation.*;
 @Target({
 		ElementType.FIELD,
 		ElementType.METHOD,
-		ElementType.TYPE_USE})
+		ElementType.TYPE_USE,
+		ElementType.RECORD_COMPONENT})
 @Repeatable(SerializeVarLengths.class)
 public @interface SerializeVarLength {
 	int[] path() default {};

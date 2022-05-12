@@ -8,12 +8,13 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import java.util.List;
+
 import static io.activej.datastream.TestStreamTransformers.randomlySuspending;
 import static io.activej.datastream.TestUtils.assertClosedWithError;
 import static io.activej.datastream.TestUtils.assertEndOfStream;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
@@ -32,7 +33,7 @@ public class StreamSupplierOfPromiseTest {
 
 		assertEndOfStream(supplier, consumer);
 		assertEndOfStream(delayedSupplier);
-		assertEquals(asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), consumer.getList());
+		assertEquals(List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), consumer.getList());
 	}
 
 	@Test

@@ -46,20 +46,12 @@ public final class RpcStrategyRendezvousHashing implements RpcStrategy, WithInit
 	private int minActiveShards = DEFAULT_MIN_ACTIVE_SHARDS;
 	private int reshardings = DEFAULT_MAX_RESHARDINGS;
 
-	public interface Predicate {
-		boolean isAlive(int activeShards, int activeBuckets);
-	}
-
-	private RpcStrategyRendezvousHashing(@NotNull ToIntFunction<?> hashFn,
-			ToLongBiFunction<Object, Integer> hashBucketFn) {
+	private RpcStrategyRendezvousHashing(@NotNull ToIntFunction<?> hashFn) {
 		this.hashFn = hashFn;
-		this.hashBucketFn = hashBucketFn;
-		this.buckets = buckets;
 	}
 
 	public static <T> RpcStrategyRendezvousHashing create(ToIntFunction<T> hashFunction) {
-		return new RpcStrategyRendezvousHashing(hashFunction,
-				DEFAULT_HASH_BUCKET_FN);
+		return new RpcStrategyRendezvousHashing(hashFunction);
 	}
 
 	public RpcStrategyRendezvousHashing withHashBucketFn(ToLongBiFunction<Object, Integer> hashBucketFn) {
@@ -89,7 +81,7 @@ public final class RpcStrategyRendezvousHashing implements RpcStrategy, WithInit
 	}
 
 	public RpcStrategyRendezvousHashing withShards(InetSocketAddress... addresses) {
-		return withShards(Arrays.asList(addresses));
+		return withShards(List.of(addresses));
 	}
 
 	public RpcStrategyRendezvousHashing withShards(List<InetSocketAddress> addresses) {

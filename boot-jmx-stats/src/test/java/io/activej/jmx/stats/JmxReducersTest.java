@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.activej.jmx.api.attribute.JmxReducers.*;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -17,7 +16,7 @@ public class JmxReducersTest {
 	public void distinctReducerReturnsCommonValueIfAllValuesAreSame() {
 		JmxReducerDistinct reducer = new JmxReducerDistinct();
 
-		List<String> input = asList("data", "data", "data");
+		List<String> input = List.of("data", "data", "data");
 
 		assertEquals("data", reducer.reduce(input));
 	}
@@ -26,7 +25,7 @@ public class JmxReducersTest {
 	public void distinctReducerReturnsNullIfThereAreAtLeastTwoDifferentValuesInInputList() {
 		JmxReducerDistinct reducer = new JmxReducerDistinct();
 
-		List<String> input = asList("data", "non-data", "data");
+		List<String> input = List.of("data", "non-data", "data");
 
 		assertNull(reducer.reduce(input));
 	}

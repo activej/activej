@@ -23,7 +23,6 @@ import io.activej.serializer.SerializerBuilder;
 import org.junit.Test;
 
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.List;
 
 import static io.activej.aggregation.AggregationPredicates.alwaysTrue;
@@ -33,10 +32,8 @@ import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.TestUtils.runProcessLogs;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
-@SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
 public final class LogToCubeTest extends CubeTestBase {
 
 	@Test
@@ -62,7 +59,7 @@ public final class LogToCubeTest extends CubeTestBase {
 
 		OTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
-		List<TestAdvResult> expected = asList(new TestAdvResult(10, 2), new TestAdvResult(20, 1), new TestAdvResult(30, 1));
+		List<TestAdvResult> expected = List.of(new TestAdvResult(10, 2), new TestAdvResult(20, 1), new TestAdvResult(30, 1));
 
 		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cube);
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(EVENTLOOP, LOG_OT, uplink, cubeDiffLogOTState);
@@ -78,22 +75,22 @@ public final class LogToCubeTest extends CubeTestBase {
 				multilog,
 				new TestAggregatorSplitter(cube), // TestAggregatorSplitter.create(EVENTLOOP, cube),
 				"testlog",
-				asList("partitionA"),
+				List.of("partitionA"),
 				cubeDiffLogOTState);
 
 		StreamSupplier<TestPubRequest> supplier = StreamSupplier.of(
-				new TestPubRequest(1000, 1, asList(new TestAdvRequest(10))),
-				new TestPubRequest(1001, 2, asList(new TestAdvRequest(10), new TestAdvRequest(20))),
-				new TestPubRequest(1002, 1, asList(new TestAdvRequest(30))),
-				new TestPubRequest(1002, 2, Arrays.asList()));
+				new TestPubRequest(1000, 1, List.of(new TestAdvRequest(10))),
+				new TestPubRequest(1001, 2, List.of(new TestAdvRequest(10), new TestAdvRequest(20))),
+				new TestPubRequest(1002, 1, List.of(new TestAdvRequest(30))),
+				new TestPubRequest(1002, 2, List.of()));
 
 		await(supplier.streamTo(StreamConsumer.ofPromise(multilog.write("partitionA"))));
 		await(logCubeStateManager.checkout());
 		runProcessLogs(aggregationChunkStorage, logCubeStateManager, logOTProcessor);
 
 		List<TestAdvResult> list = await(cube.queryRawStream(
-						asList("adv"),
-						asList("advRequests"),
+						List.of("adv"),
+						List.of("advRequests"),
 						alwaysTrue(),
 						TestAdvResult.class, CLASS_LOADER)
 				.toList());

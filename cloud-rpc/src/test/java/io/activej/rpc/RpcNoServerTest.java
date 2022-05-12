@@ -6,8 +6,7 @@ import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.protocol.RpcException;
 import io.activej.rpc.server.RpcRequestHandler;
 import io.activej.rpc.server.RpcServer;
-import io.activej.serializer.annotations.Deserialize;
-import io.activej.serializer.annotations.Serialize;
+import io.activej.serializer.annotations.SerializeRecord;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
@@ -47,23 +46,11 @@ public final class RpcNoServerTest {
 		String hello(String name) throws Exception;
 	}
 
-	protected static class HelloRequest {
-		@Serialize
-		public final String name;
+	@SerializeRecord
+	public record HelloRequest(String name) {}
 
-		public HelloRequest(@Deserialize("name") String name) {
-			this.name = name;
-		}
-	}
-
-	protected static class HelloResponse {
-		@Serialize
-		public final String message;
-
-		public HelloResponse(@Deserialize("message") String message) {
-			this.message = message;
-		}
-	}
+	@SerializeRecord
+	public record HelloResponse(String message) {}
 
 	private static RpcRequestHandler<HelloRequest, HelloResponse> helloServiceRequestHandler(HelloService helloService) {
 		return request -> {

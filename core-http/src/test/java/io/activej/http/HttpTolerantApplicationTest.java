@@ -15,16 +15,16 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
+import static io.activej.http.TestUtils.assertEmpty;
 import static io.activej.http.TestUtils.readFully;
-import static io.activej.http.TestUtils.toByteArray;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertingFn;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
 public final class HttpTolerantApplicationTest {
@@ -42,11 +42,11 @@ public final class HttpTolerantApplicationTest {
 		Eventloop eventloop = Eventloop.create().withEventloopFatalErrorHandler(rethrow());
 
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
-				request ->
-						Promise.ofCallback(cb ->
-								eventloop.post(() -> cb.set(
-										HttpResponse.ok200()
-												.withBody(encodeAscii(request.getUrl().getPathAndQuery()))))))
+						request ->
+								Promise.ofCallback(cb ->
+										eventloop.post(() -> cb.set(
+												HttpResponse.ok200()
+														.withBody(encodeAscii(request.getUrl().getPathAndQuery()))))))
 				.withListenPort(port);
 
 		server.listen();
@@ -57,13 +57,41 @@ public final class HttpTolerantApplicationTest {
 		Socket socket = new Socket();
 
 		socket.connect(new InetSocketAddress("localhost", port));
-		write(socket, "GET /abc  HTTP/1.1\nHost: \tlocalhost\n\n");
-		readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 4\r\n\r\n/abc");
-		write(socket, "GET /abc  HTTP/1.0\nHost: \tlocalhost \t \nConnection: keep-alive\n\n");
-		readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 4\r\n\r\n/abc");
-		write(socket, "GET /abc  HTTP/1.0\nHost: \tlocalhost \t \n\n");
-		readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 4\r\n\r\n/abc");
-		assertEquals(0, toByteArray(socket.getInputStream()).length);
+		write(socket, """
+				GET /abc  HTTP/1.1
+				Host: \tlocalhost
+
+				""");
+		readAndAssert(socket.getInputStream(), """
+				HTTP/1.1 200 OK\r
+				Connection: keep-alive\r
+				Content-Length: 4\r
+				\r
+				/abc""");
+		write(socket, """
+				GET /abc  HTTP/1.0
+				Cost: \tlocalhost \t\s
+				Connection: keep-alive
+
+				""");
+		readAndAssert(socket.getInputStream(), """
+				HTTP/1.1 200 OK\r
+				Connection: keep-alive\r
+				Content-Length: 4\r
+				\r
+				/abc""");
+		write(socket, """
+				GET /abc  HTTP/1.0
+				Cost: \tlocalhost \t\s
+
+				""");
+		readAndAssert(socket.getInputStream(), """
+				HTTP/1.1 200 OK\r
+				Connection: close\r
+				Content-Length: 4\r
+				\r
+				/abc""");
+		assertEmpty(socket.getInputStream());
 		socket.close();
 
 		server.closeFuture().get();
@@ -113,6 +141,6 @@ public final class HttpTolerantApplicationTest {
 		byte[] bytes = new byte[expected.length()];
 		readFully(is, bytes);
 		String actual = decodeAscii(bytes);
-		assertEquals(new LinkedHashSet<>(asList(expected.split("\r\n"))), new LinkedHashSet<>(asList(actual.split("\r\n"))));
+		assertEquals(new LinkedHashSet<>(List.of(expected.split("\r\n"))), new LinkedHashSet<>(List.of(actual.split("\r\n"))));
 	}
 }

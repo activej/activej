@@ -18,8 +18,6 @@ import static io.activej.datastream.TestUtils.assertClosedWithError;
 import static io.activej.datastream.TestUtils.assertEndOfStream;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.*;
 
 public class StreamConsumerSwitcherTest {
@@ -31,10 +29,10 @@ public class StreamConsumerSwitcherTest {
 	public void testSwitching() {
 		List<StreamConsumerToList<Integer>> consumers = IntStream.range(0, 10)
 				.mapToObj($ -> StreamConsumerToList.<Integer>create())
-				.collect(toList());
+				.toList();
 		StreamConsumerSwitcher<Integer> switcher = StreamConsumerSwitcher.create();
 
-		AbstractStreamSupplier<Integer> streamSupplier = new AbstractStreamSupplier<Integer>() {
+		AbstractStreamSupplier<Integer> streamSupplier = new AbstractStreamSupplier<>() {
 			final RefInt refInt = new RefInt(0);
 			final Iterator<StreamConsumerToList<Integer>> iterator = consumers.iterator();
 
@@ -66,7 +64,7 @@ public class StreamConsumerSwitcherTest {
 
 		assertEndOfStream(streamSupplier, switcher);
 		consumers.forEach(consumer -> {
-			assertEquals(asList(1,2,3,4,5,6,7,8,9,10), consumer.getList());
+			assertEquals(List.of(1,2,3,4,5,6,7,8,9,10), consumer.getList());
 			assertEndOfStream(consumer);
 		});
 	}
@@ -80,7 +78,7 @@ public class StreamConsumerSwitcherTest {
 		StreamConsumer<Integer> consumerClosed = StreamConsumer.closingWithError(expectedException);
 		StreamConsumerToList<Integer> consumer2 = StreamConsumerToList.create();
 
-		AbstractStreamSupplier<Integer> streamSupplier = new AbstractStreamSupplier<Integer>() {
+		AbstractStreamSupplier<Integer> streamSupplier = new AbstractStreamSupplier<>() {
 			final RefInt refInt = new RefInt(0);
 
 			@Override
@@ -94,9 +92,9 @@ public class StreamConsumerSwitcherTest {
 					send(refInt.inc());
 					int number = refInt.get();
 					if (number % 10 == 0) {
-						if (number == 10){
+						if (number == 10) {
 							switcher.switchTo(consumerClosed.transformWith(randomlySuspending()));
-						} else if (number == 20){
+						} else if (number == 20) {
 							switcher.switchTo(consumer2.transformWith(randomlySuspending()));
 						} else {
 							break;
@@ -115,7 +113,7 @@ public class StreamConsumerSwitcherTest {
 		assertClosedWithError(expectedException, streamSupplier, switcher);
 
 //		assertClosedWithError(consumer1);
-		assertEquals(asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), consumer1.getList());
+		assertEquals(List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), consumer1.getList());
 
 		assertClosedWithError(expectedException, consumerClosed);
 		assertFalse(consumer2.isStarted());
@@ -133,7 +131,7 @@ public class StreamConsumerSwitcherTest {
 		assertEndOfStream(switcher);
 		assertEndOfStream(consumer);
 
-		assertEquals(asList(1, 2, 3, 4), consumer.getList());
+		assertEquals(List.of(1, 2, 3, 4), consumer.getList());
 	}
 
 	@Test
@@ -160,18 +158,18 @@ public class StreamConsumerSwitcherTest {
 		assertEndOfStream(switcher);
 		assertEndOfStream(consumer);
 
-		assertEquals(asList(1, 2, 3, 4), consumer.getList());
+		assertEquals(List.of(1, 2, 3, 4), consumer.getList());
 	}
 
 	@Test
 	public void testSwitchingToSlowConsumer() {
 		ArrayList<Integer> list1 = new ArrayList<>();
 		ArrayList<Integer> list2 = new ArrayList<>();
-		List<StreamConsumer<Integer>> consumers = asList(StreamConsumerToList.create(list1),
+		List<StreamConsumer<Integer>> consumers = List.of(StreamConsumerToList.create(list1),
 				StreamConsumer.ofPromise(Promises.delay(Duration.ofMillis(1), StreamConsumerToList.create(list2))));
 		StreamConsumerSwitcher<Integer> switcher = StreamConsumerSwitcher.create();
 
-		AbstractStreamSupplier<Integer> streamSupplier = new AbstractStreamSupplier<Integer>() {
+		AbstractStreamSupplier<Integer> streamSupplier = new AbstractStreamSupplier<>() {
 			final RefInt refInt = new RefInt(0);
 			final Iterator<StreamConsumer<Integer>> iterator = consumers.iterator();
 
@@ -203,7 +201,7 @@ public class StreamConsumerSwitcherTest {
 
 		assertEndOfStream(streamSupplier, switcher);
 
-		List<Integer> expected = asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+		List<Integer> expected = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 		assertEquals(expected, list1);
 		assertEquals(expected, list2);
 	}

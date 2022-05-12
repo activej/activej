@@ -23,7 +23,6 @@ import io.activej.cube.linear.CubeBackupController.ChunksBackupService;
 import io.activej.cube.linear.CubeCleanerController.ChunksCleanerService;
 
 import javax.sql.DataSource;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
@@ -41,13 +40,7 @@ final class Utils {
 	static byte[] loadResource(String name) throws IOException {
 		try (InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(name)) {
 			assert stream != null;
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			byte[] buffer = new byte[4096];
-			int size;
-			while ((size = stream.read(buffer)) != -1) {
-				baos.write(buffer, 0, size);
-			}
-			return baos.toByteArray();
+			return stream.readAllBytes();
 		}
 	}
 

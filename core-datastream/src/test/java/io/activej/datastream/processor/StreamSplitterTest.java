@@ -19,7 +19,6 @@ import static io.activej.datastream.TestStreamTransformers.oneByOne;
 import static io.activej.datastream.TestUtils.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
@@ -46,8 +45,8 @@ public class StreamSplitterTest {
 				streamConcat.newOutput().streamTo(consumerToList2.transformWith(oneByOne()))
 		);
 
-		assertEquals(asList(1, 2, 3), consumerToList1.getList());
-		assertEquals(asList(1, 2, 3), consumerToList2.getList());
+		assertEquals(List.of(1, 2, 3), consumerToList1.getList());
+		assertEquals(List.of(1, 2, 3), consumerToList2.getList());
 		assertEndOfStream(source);
 		assertEndOfStream(streamConcat.getInput());
 		assertSuppliersEndOfStream(streamConcat.getOutputs());
@@ -155,7 +154,7 @@ public class StreamSplitterTest {
 				});
 
 		List<Integer> list = new ArrayList<>();
-		AbstractStreamConsumer<Integer> consumer = new AbstractStreamConsumer<Integer>() {
+		AbstractStreamConsumer<Integer> consumer = new AbstractStreamConsumer<>() {
 			@Override
 			protected void onStarted() {
 				resume(list::add);
@@ -169,7 +168,7 @@ public class StreamSplitterTest {
 
 		await(
 				source.streamTo(splitter.getInput()),
-				splitter.newOutput().streamTo(new AbstractStreamConsumer<Integer>() {
+				splitter.newOutput().streamTo(new AbstractStreamConsumer<>() {
 					@Override
 					protected void onStarted() {
 						resume(item -> {
@@ -188,6 +187,6 @@ public class StreamSplitterTest {
 				splitter.newOutput().streamTo(consumer)
 		);
 
-		assertEquals(asList(1, 2, 3), list);
+		assertEquals(List.of(1, 2, 3), list);
 	}
 }

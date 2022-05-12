@@ -27,7 +27,10 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.config.converter.ConfigConverters.*;
@@ -43,7 +46,7 @@ public final class ConfigConverters {
 	public static <P> ConfigConverter<RendezvousPartitionScheme<P>> ofRendezvousPartitionScheme(
 			@NotNull ConfigConverter<P> partitionIdConverter
 	) {
-		return new ConfigConverter<RendezvousPartitionScheme<P>>() {
+		return new ConfigConverter<>() {
 			@Override
 			public @NotNull RendezvousPartitionScheme<P> get(Config config) {
 				Collection<Config> partitionGroupsConfig = config.getChild("partitionGroup").getChildren().values();
@@ -69,10 +72,10 @@ public final class ConfigConverters {
 	}
 
 	public static <P> ConfigConverter<RendezvousPartitionGroup<P>> ofPartitionGroup(ConfigConverter<P> partitionIdConverter) {
-		return new ConfigConverter<RendezvousPartitionGroup<P>>() {
+		return new ConfigConverter<>() {
 			@Override
 			public @NotNull RendezvousPartitionGroup<P> get(Config config) {
-				Set<P> ids = new HashSet<>(config.get(ofList(partitionIdConverter), "ids"));
+				Set<P> ids = Set.copyOf(config.get(ofList(partitionIdConverter), "ids"));
 				checkArgument(!ids.isEmpty(), "Empty partition ids");
 
 				int replicas = config.get(ofInteger(), "replicas", 1);

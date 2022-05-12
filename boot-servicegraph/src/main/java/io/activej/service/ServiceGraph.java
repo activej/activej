@@ -41,8 +41,6 @@ import static io.activej.inject.util.Utils.getDisplayString;
 import static io.activej.inject.util.Utils.union;
 import static io.activej.service.Utils.combineAll;
 import static java.lang.System.currentTimeMillis;
-import static java.util.Arrays.asList;
-import static java.util.Collections.*;
 import static java.util.Comparator.comparingLong;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.joining;
@@ -248,7 +246,7 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 		if (service != null) {
 			services.put(key, service);
 		}
-		add(key, asList(dependencies));
+		add(key, List.of(dependencies));
 	}
 
 	public void add(Key key, Collection<Key> dependencies) {
@@ -259,7 +257,7 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 	}
 
 	public void add(Key key, Key first, Key... rest) {
-		add(key, concat(singletonList(first), asList(rest)));
+		add(key, concat(List.of(first), List.of(rest)));
 	}
 
 	public synchronized boolean isStarted() {
@@ -334,7 +332,7 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 			return future;
 		}
 
-		Set<Key> dependencies = (start ? forwards : backwards).getOrDefault(node, emptySet());
+		Set<Key> dependencies = (start ? forwards : backwards).getOrDefault(node, Set.of());
 
 		if (logger.isTraceEnabled()) {
 			logger.trace("{} : processing {}", keyToString(node), dependencies);
@@ -398,9 +396,9 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 	}
 
 	private void removeIntermediateOneWay(Key vertex, Map<Key, Set<Key>> forwards, Map<Key, Set<Key>> backwards) {
-		for (Key backward : backwards.getOrDefault(vertex, emptySet())) {
+		for (Key backward : backwards.getOrDefault(vertex, Set.of())) {
 			removeValue(forwards, backward, vertex);
-			for (Key forward : forwards.getOrDefault(vertex, emptySet())) {
+			for (Key forward : forwards.getOrDefault(vertex, Set.of())) {
 				if (!forward.equals(backward)) {
 					forwards.computeIfAbsent(backward, o -> new HashSet<>()).add(forward);
 				}
@@ -436,7 +434,7 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 		List<Key> path = new ArrayList<>();
 		next:
 		while (true) {
-			for (Key node : path.isEmpty() ? services.keySet() : forwards.getOrDefault(path.get(path.size() - 1), emptySet())) {
+			for (Key node : path.isEmpty() ? services.keySet() : forwards.getOrDefault(path.get(path.size() - 1), Set.of())) {
 				int loopIndex = path.indexOf(node);
 				if (loopIndex != -1) {
 					if (logger.isWarnEnabled()) {
@@ -460,23 +458,15 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 		return null;
 	}
 
-	private static final class SlowestChain {
-		static final SlowestChain EMPTY = new SlowestChain(emptyList(), 0);
-
-		final List<Key> path;
-		final long sum;
-
-		private SlowestChain(List<Key> path, long sum) {
-			this.path = path;
-			this.sum = sum;
-		}
+	private record SlowestChain(List<Key> path, long sum) {
+		static final SlowestChain EMPTY = new SlowestChain(List.of(), 0);
 
 		SlowestChain concat(Key key, long time) {
-			return new SlowestChain(io.activej.common.Utils.concat(path, singletonList(key)), sum + time);
+			return new SlowestChain(io.activej.common.Utils.concat(path, List.of(key)), sum + time);
 		}
 
 		static SlowestChain of(Key key, long keyValue) {
-			return new SlowestChain(singletonList(key), keyValue);
+			return new SlowestChain(List.of(key), keyValue);
 		}
 	}
 

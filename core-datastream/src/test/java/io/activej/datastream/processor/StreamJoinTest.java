@@ -12,7 +12,6 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import static io.activej.datastream.TestStreamTransformers.decorate;
 import static io.activej.datastream.TestStreamTransformers.oneByOne;
@@ -20,7 +19,6 @@ import static io.activej.datastream.TestUtils.assertClosedWithError;
 import static io.activej.datastream.TestUtils.assertEndOfStream;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
@@ -46,7 +44,7 @@ public class StreamJoinTest {
 				StreamJoin.create(Integer::compareTo,
 						input -> input.detailId,
 						input -> input.id,
-						new ValueJoiner<Integer, DataItemMaster, DataItemDetail, DataItemMasterDetail>() {
+						new ValueJoiner<>() {
 							@Override
 							public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
 								return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);
@@ -68,7 +66,7 @@ public class StreamJoinTest {
 						consumer.transformWith(oneByOne()))
 		);
 
-		assertEquals(asList(
+		assertEquals(List.of(
 				new DataItemMasterDetail(10, 10, "masterA", "detailX"),
 				new DataItemMasterDetail(20, 10, "masterB", "detailX"),
 				new DataItemMasterDetail(25, 15, "masterB+", null),
@@ -99,7 +97,7 @@ public class StreamJoinTest {
 				StreamJoin.create(Integer::compareTo,
 						input -> input.detailId,
 						input -> input.id,
-						new ValueJoiner<Integer, DataItemMaster, DataItemDetail, DataItemMasterDetail>() {
+						new ValueJoiner<>() {
 							@Override
 							public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
 								return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);
@@ -152,7 +150,7 @@ public class StreamJoinTest {
 				StreamJoin.create(Integer::compareTo,
 						input -> input.detailId,
 						input -> input.id,
-						new ValueJoiner<Integer, DataItemMaster, DataItemDetail, DataItemMasterDetail>() {
+						new ValueJoiner<>() {
 							@Override
 							public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
 								return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);
@@ -180,82 +178,9 @@ public class StreamJoinTest {
 		assertClosedWithError(source2);
 	}
 
-	private static final class DataItemMaster {
-		final int id;
-		final int detailId;
-		final String master;
+	private record DataItemMaster(int id, int detailId, String master) {}
 
-		private DataItemMaster(int id, int detailId, String master) {
-			this.id = id;
-			this.detailId = detailId;
-			this.master = master;
-		}
+	private record DataItemDetail(int id, String detail) {}
 
-		@Override
-		public String toString() {
-			return "DataItemMaster{" +
-					"id=" + id +
-					", detailId=" + detailId +
-					", master='" + master + '\'' +
-					'}';
-		}
-	}
-
-	private static final class DataItemDetail {
-		final int id;
-		final String detail;
-
-		private DataItemDetail(int id, String detail) {
-			this.id = id;
-			this.detail = detail;
-		}
-
-		@Override
-		public String toString() {
-			return "DataItemDetail{" +
-					"id=" + id +
-					", detail='" + detail + '\'' +
-					'}';
-		}
-	}
-
-	private static final class DataItemMasterDetail {
-		final int id;
-		final int detailId;
-		final String master;
-		final String detail;
-
-		private DataItemMasterDetail(int id, int detailId, String master, String detail) {
-			this.id = id;
-			this.detailId = detailId;
-			this.master = master;
-			this.detail = detail;
-		}
-
-		@Override
-		@SuppressWarnings({"EqualsWhichDoesntCheckParameterClass", "RedundantIfStatement"})
-		public boolean equals(Object o) {
-			DataItemMasterDetail that = (DataItemMasterDetail) o;
-			if (id != that.id) return false;
-			if (detailId != that.detailId) return false;
-			if (!Objects.equals(detail, that.detail)) return false;
-			if (!Objects.equals(master, that.master)) return false;
-			return true;
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(id, detailId, master, detail);
-		}
-
-		@Override
-		public String toString() {
-			return "DataItemMasterDetail{" +
-					"id=" + id +
-					", detailId=" + detailId +
-					", master='" + master + '\'' +
-					", detail='" + detail + '\'' +
-					'}';
-		}
-	}
+	private record DataItemMasterDetail(int id, int detailId, String master, String detail) {}
 }

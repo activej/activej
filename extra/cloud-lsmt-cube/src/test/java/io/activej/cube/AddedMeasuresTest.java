@@ -25,7 +25,10 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -33,10 +36,8 @@ import static io.activej.aggregation.fieldtype.FieldTypes.ofDouble;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.aggregation.measure.Measures.*;
 import static io.activej.common.Utils.first;
-import static io.activej.common.Utils.setOf;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.promise.TestUtils.await;
-import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 
@@ -139,7 +140,7 @@ public class AddedMeasuresTest {
 		cube.apply(diff);
 
 		CubeDiff cubeDiff = await(cube.consolidate(Aggregation::consolidateHotSegment));
-		assertEquals(singleton("test"), cubeDiff.keySet());
+		assertEquals(Set.of("test"), cubeDiff.keySet());
 		AggregationDiff aggregationDiff = cubeDiff.get("test");
 
 		Set<Object> addedIds = aggregationDiff.getAddedChunks().stream()
@@ -148,11 +149,11 @@ public class AddedMeasuresTest {
 		Set<Object> removedIds = aggregationDiff.getRemovedChunks().stream()
 				.map(AggregationChunk::getChunkId)
 				.collect(toSet());
-		assertEquals(singleton(5L), addedIds);
-		assertEquals(setOf(1L, 2L, 3L, 4L), removedIds);
+		assertEquals(Set.of(5L), addedIds);
+		assertEquals(Set.of(1L, 2L, 3L, 4L), removedIds);
 
 		List<String> addedMeasures = first(aggregationDiff.getAddedChunks()).getMeasures();
-		Set<String> expectedMeasures = setOf("eventCount", "sumRevenue", "minRevenue", "maxRevenue", "uniqueUserIds", "estimatedUniqueUserIdCount");
+		Set<String> expectedMeasures = Set.of("eventCount", "sumRevenue", "minRevenue", "maxRevenue", "uniqueUserIds", "estimatedUniqueUserIdCount");
 		assertEquals(expectedMeasures, new HashSet<>(addedMeasures));
 	}
 
@@ -169,7 +170,7 @@ public class AddedMeasuresTest {
 				.withAggregation(basicConfig.withMeasures("uniqueUserIds", "estimatedUniqueUserIdCount"))
 				.withInitializer(c -> initialDiffs.forEach(c::apply));
 
-		List<String> measures = Arrays.asList("eventCount", "estimatedUniqueUserIdCount");
+		List<String> measures = List.of("eventCount", "estimatedUniqueUserIdCount");
 		QueryResult queryResult = await(cube.query(CubeQuery.create()
 				.withMeasures(measures)));
 
@@ -205,7 +206,7 @@ public class AddedMeasuresTest {
 		await(aggregationChunkStorage.finish(diff.addedChunks().map(id -> (long) id).collect(toSet())));
 		cube.apply(diff);
 
-		List<String> measures = Arrays.asList("eventCount", "customRevenue", "estimatedUniqueUserIdCount");
+		List<String> measures = List.of("eventCount", "customRevenue", "estimatedUniqueUserIdCount");
 		QueryResult queryResult = await(cube.query(CubeQuery.create()
 				.withMeasures(measures)));
 
@@ -218,39 +219,13 @@ public class AddedMeasuresTest {
 	}
 
 	@Measures("eventCount")
-	public static class EventRecord {
-		// dimensions
-		@Key
-		public final int siteId;
-
-		// measures
-		@Measures({"sumRevenue", "minRevenue", "maxRevenue"})
-		public final double revenue;
-
-		public EventRecord(int siteId, double revenue) {
-			this.siteId = siteId;
-			this.revenue = revenue;
-		}
+	public record EventRecord(@Key int siteId,
+	                          @Measures({"sumRevenue", "minRevenue", "maxRevenue"}) double revenue) {
 	}
 
 	@Measures("eventCount")
-	public static class EventRecord2 {
-		// dimensions
-		@Key
-		public final int siteId;
-
-		// measures
-		@Measures({"sumRevenue", "minRevenue", "maxRevenue"})
-		public final double revenue;
-
-		// added measures
-		@Measures({"uniqueUserIds", "estimatedUniqueUserIdCount"})
-		public final long userId;
-
-		public EventRecord2(int siteId, double revenue, long userId) {
-			this.siteId = siteId;
-			this.revenue = revenue;
-			this.userId = userId;
-		}
+	public record EventRecord2(@Key int siteId,
+	                           @Measures({"sumRevenue", "minRevenue", "maxRevenue"}) double revenue,
+	                           @Measures({"uniqueUserIds", "estimatedUniqueUserIdCount"}) long userId) {
 	}
 }

@@ -41,7 +41,6 @@ import static io.activej.inject.Qualifiers.uniqueQualifier;
 import static io.activej.inject.binding.BindingType.*;
 import static io.activej.inject.util.Utils.isMarker;
 import static io.activej.types.Types.parameterizedType;
-import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
@@ -148,14 +147,11 @@ public final class ReflectionUtils {
 			}
 			throw new DIException("Cannot have both @Scoped and a scope annotation on " + annotatedElement);
 		}
-		switch (scopes.size()) {
-			case 0:
-				return Scope.UNSCOPED;
-			case 1:
-				return new Scope[]{Scope.of(scopes.iterator().next())};
-			default:
-				throw new DIException("More than one scope annotation on " + annotatedElement);
-		}
+		return switch (scopes.size()) {
+			case 0 -> Scope.UNSCOPED;
+			case 1 -> new Scope[]{Scope.of(scopes.iterator().next())};
+			default -> throw new DIException("More than one scope annotation on " + annotatedElement);
+		};
 	}
 
 	public static <T extends AnnotatedElement & Member> List<T> getAnnotatedElements(Class<?> cls,
@@ -188,52 +184,64 @@ public final class ReflectionUtils {
 		Class<?> cls = key.getRawType();
 
 		Inject classInjectAnnotation = cls.getAnnotation(Inject.class);
-		Set<Constructor<?>> injectConstructors = Arrays.stream(cls.getDeclaredConstructors())
-				.filter(c -> c.isAnnotationPresent(Inject.class))
-				.collect(toSet());
-		Set<Method> factoryMethods = Arrays.stream(cls.getDeclaredMethods())
-				.filter(method -> method.isAnnotationPresent(Inject.class)
-						&& method.getReturnType() == cls
-						&& Modifier.isStatic(method.getModifiers()))
-				.collect(toSet());
+		Set<Constructor<?>> injectConstructors = new HashSet<>();
+		Set<Constructor<?>> constructors = new HashSet<>();
+		for (Constructor<?> c : cls.getDeclaredConstructors()) {
+			if (c.isAnnotationPresent(Inject.class)) {
+				injectConstructors.add(c);
+			}
+			constructors.add(c);
+		}
+
+		Set<Method> injectFactoryMethods = new HashSet<>();
+		Set<Method> factoryMethods = new HashSet<>();
+
+		for (Method method : cls.getDeclaredMethods()) {
+			if (method.getReturnType() == cls
+					&& Modifier.isStatic(method.getModifiers())) {
+				if (method.isAnnotationPresent(Inject.class)) {
+					injectFactoryMethods.add(method);
+				}
+				factoryMethods.add(method);
+			}
+		}
 
 		if (classInjectAnnotation != null) {
 			if (!injectConstructors.isEmpty()) {
 				throw failedImplicitBinding(key, "inject annotation on class with inject constructor");
 			}
 			if (!factoryMethods.isEmpty()) {
-				throw failedImplicitBinding(key, "inject annotation on class with inject factory method");
+				throw failedImplicitBinding(key, "inject annotation on class with factory method");
 			}
+			if (constructors.size() == 0) {
+				throw failedImplicitBinding(key, "inject annotation on interface");
+			}
+			if (constructors.size() > 1) {
+				throw failedImplicitBinding(key, "inject annotation on class with multiple constructors");
+			}
+			Constructor<T> declaredConstructor = (Constructor<T>) constructors.iterator().next();
+
 			Class<?> enclosingClass = cls.getEnclosingClass();
-			if (enclosingClass != null && !Modifier.isStatic(cls.getModifiers())) {
-				try {
-					return bindingFromConstructor(key, (Constructor<T>) cls.getDeclaredConstructor(enclosingClass));
-				} catch (NoSuchMethodException e) {
-					throw failedImplicitBinding(key, "inject annotation on local class that closes over outside variables and/or has no default constructor");
-				}
+			if (enclosingClass != null && !Modifier.isStatic(cls.getModifiers()) && declaredConstructor.getParameterCount() != 1) {
+				throw failedImplicitBinding(key, "inject annotation on local class that closes over outside variables and/or has no default constructor");
 			}
-			try {
-				return bindingFromConstructor(key, (Constructor<T>) cls.getDeclaredConstructor());
-			} catch (NoSuchMethodException e) {
-				throw failedImplicitBinding(key, "inject annotation on class with no default constructor");
-			}
-		} else {
+			return bindingFromConstructor(key, declaredConstructor);
+		}
+		if (!injectConstructors.isEmpty()) {
 			if (injectConstructors.size() > 1) {
 				throw failedImplicitBinding(key, "more than one inject constructor");
 			}
-			if (!injectConstructors.isEmpty()) {
-				if (!factoryMethods.isEmpty()) {
-					throw failedImplicitBinding(key, "both inject constructor and inject factory method are present");
-				}
-				return bindingFromConstructor(key, (Constructor<T>) injectConstructors.iterator().next());
+			if (!injectFactoryMethods.isEmpty()) {
+				throw failedImplicitBinding(key, "both inject constructor and inject factory method are present");
 			}
+			return bindingFromConstructor(key, (Constructor<T>) injectConstructors.iterator().next());
 		}
 
-		if (factoryMethods.size() > 1) {
-			throw failedImplicitBinding(key, "more than one inject factory method");
-		}
-		if (!factoryMethods.isEmpty()) {
-			return bindingFromMethod(null, factoryMethods.iterator().next());
+		if (!injectFactoryMethods.isEmpty()) {
+			if (injectFactoryMethods.size() > 1) {
+				throw failedImplicitBinding(key, "more than one inject factory method");
+			}
+			return bindingFromMethod(null, injectFactoryMethods.iterator().next());
 		}
 		return null;
 	}
@@ -257,12 +265,12 @@ public final class ReflectionUtils {
 	public static <T> BindingInitializer<T> fieldInjector(Key<T> container, Field field) {
 		field.setAccessible(true);
 		Key<Object> key = keyOf(container.getType(), field.getGenericType(), field);
-		return new BindingInitializer<T>(singleton(key)) {
+		return new BindingInitializer<>(Set.of(key)) {
 			@Override
 			public CompiledBindingInitializer<T> compile(CompiledBindingLocator compiledBindings) {
 				CompiledBinding<Object> binding = compiledBindings.get(key);
 				//noinspection Convert2Lambda
-				return new CompiledBindingInitializer<T>() {
+				return new CompiledBindingInitializer<>() {
 					@SuppressWarnings("rawtypes")
 					@Override
 					public void initInstance(T instance, AtomicReferenceArray[] instances, int synchronizedScope) {
@@ -282,14 +290,14 @@ public final class ReflectionUtils {
 	public static <T> BindingInitializer<T> methodInjector(Key<T> container, Method method) {
 		method.setAccessible(true);
 		Key<?>[] dependencies = toDependencies(container.getType(), method);
-		return new BindingInitializer<T>(new HashSet<>(Arrays.asList(dependencies))) {
+		return new BindingInitializer<>(Set.of(dependencies)) {
 			@Override
 			public CompiledBindingInitializer<T> compile(CompiledBindingLocator compiledBindings) {
 				CompiledBinding[] argBindings = Stream.of(dependencies)
 						.map(compiledBindings::get)
 						.toArray(CompiledBinding[]::new);
 				//noinspection Convert2Lambda
-				return new CompiledBindingInitializer<T>() {
+				return new CompiledBindingInitializer<>() {
 					@Override
 					public void initInstance(T instance, AtomicReferenceArray[] instances, int synchronizedScope) {
 						Object[] args = new Object[argBindings.length];
@@ -322,11 +330,9 @@ public final class ReflectionUtils {
 
 		Type[] genericParameterTypes = executable.getGenericParameterTypes();
 		boolean hasImplicitDependency = genericParameterTypes.length != parameters.length;
-		// an actual JDK bug (fixed in Java 9)
-		boolean workaround = parameters[0].getDeclaringExecutable().getParameterAnnotations().length != parameters.length;
 		for (int i = 1; i < dependencies.length; i++) {
 			type = genericParameterTypes[hasImplicitDependency ? i - 1 : i];
-			parameter = parameters[workaround ? i - 1 : i];
+			parameter = parameters[i];
 			dependencies[i] = keyOf(container, type, parameter);
 		}
 		return dependencies;
@@ -440,7 +446,7 @@ public final class ReflectionUtils {
 
 				Key<Set<Object>> setKey = Key.ofType(parameterizedType(Set.class, type), qualifierOf(method));
 
-				Binding<Set<Object>> binding = Binding.to(Collections::singleton, key);
+				Binding<Set<Object>> binding = Binding.to(Set::of, key);
 
 				if (module != null) {
 					binding.at(LocationInfo.from(module, method));

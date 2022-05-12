@@ -9,7 +9,7 @@ import java.util.Map;
 public final class MultibindToMapExample {
 	public static void main(String[] args) {
 		//[START MODULES]
-		Key<Map<Integer, String>> mapKey = new Key<Map<Integer, String>>() {};
+		Key<Map<Integer, String>> mapKey = new Key<>() {};
 
 		Module module1 = ModuleBuilder.create()
 				.bind(mapKey).to(() -> {

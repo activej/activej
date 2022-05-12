@@ -54,7 +54,7 @@ public final class Multibinders {
 	@SuppressWarnings("rawtypes")
 	public static <T> Multibinder<T> ofReducer(BiFunction<Key<T>, Stream<T>, T> reducerFunction) {
 		return (key, bindings) ->
-				new Binding<T>(bindings.stream().map(Binding::getDependencies).flatMap(Collection::stream).collect(Collectors.toSet())) {
+				new Binding<>(bindings.stream().map(Binding::getDependencies).flatMap(Collection::stream).collect(Collectors.toSet())) {
 					@Override
 					public CompiledBinding<T> compile(CompiledBindingLocator compiledBindingsLocator, boolean threadsafe, int scope, @Nullable Integer slot) {
 						final CompiledBinding[] compiledBindings = bindings.stream()
@@ -63,7 +63,7 @@ public final class Multibinders {
 
 						//noinspection Convert2Lambda
 						return slot == null || bindings.stream().anyMatch(b -> b.getType() == TRANSIENT) ?
-								new CompiledBinding<T>() {
+								new CompiledBinding<>() {
 									@SuppressWarnings("unchecked")
 									@Override
 									public @NotNull T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
@@ -71,7 +71,7 @@ public final class Multibinders {
 												.map(binding -> (T) binding.getInstance(scopedInstances, synchronizedScope)));
 									}
 								} :
-								new AbstractCompiledBinding<T>(scope, slot) {
+								new AbstractCompiledBinding<>(scope, slot) {
 									@SuppressWarnings("unchecked")
 									@Override
 									protected @NotNull T doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {

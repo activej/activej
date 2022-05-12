@@ -23,13 +23,9 @@ import org.jetbrains.annotations.Nullable;
 import javax.management.openmbean.*;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 
 final class AttributeNodeForThrowable extends AbstractAttributeNodeForLeaf {
 	private static final String THROWABLE_TYPE_KEY = "type";
@@ -56,7 +52,7 @@ final class AttributeNodeForThrowable extends AbstractAttributeNodeForLeaf {
 
 	@Override
 	public Map<String, OpenType<?>> getOpenTypes() {
-		return Collections.singletonMap(name, compositeType);
+		return Map.of(name, compositeType);
 	}
 
 	@Override
@@ -90,7 +86,7 @@ final class AttributeNodeForThrowable extends AbstractAttributeNodeForLeaf {
 		String msg = e.getMessage();
 		StringWriter stringWriter = new StringWriter();
 		e.printStackTrace(new PrintWriter(stringWriter));
-		List<String> stackTrace = asList(stringWriter.toString().split("\n"));
+		List<String> stackTrace = List.of(stringWriter.toString().split("\n"));
 		Map<String, Object> nameToValue = new HashMap<>();
 		nameToValue.put(THROWABLE_TYPE_KEY, type);
 		nameToValue.put(THROWABLE_MESSAGE_KEY, msg);
@@ -100,7 +96,7 @@ final class AttributeNodeForThrowable extends AbstractAttributeNodeForLeaf {
 
 	@Override
 	public List<JmxRefreshable> getAllRefreshables(@NotNull Object source) {
-		return emptyList();
+		return List.of();
 	}
 
 	@Override

@@ -8,9 +8,9 @@ import org.junit.Test;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
@@ -61,7 +61,7 @@ public final class StreamInputOutputTest {
 		int nearMaxSize = (1 << 28) // StreamOutput.MAX_SIZE
 				- 4 // encoded size of an array
 				- 1;
-		for (byte[] array : asList(new byte[1024], new byte[32 * 1024], new byte[10 * 1024 * 1024], new byte[nearMaxSize])) {
+		for (byte[] array : List.of(new byte[1024], new byte[32 * 1024], new byte[10 * 1024 * 1024], new byte[nearMaxSize])) {
 			BinarySerializer<byte[]> serializer = BinarySerializers.BYTES_SERIALIZER;
 			StreamCodec<byte[]> codec = StreamCodec.ofBinarySerializer(serializer);
 			ThreadLocalRandom.current().nextBytes(array);

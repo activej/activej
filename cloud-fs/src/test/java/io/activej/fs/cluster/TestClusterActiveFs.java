@@ -135,7 +135,7 @@ public final class TestClusterActiveFs {
 		for (Path path : serverStorages) {
 			Path resultPath = path.resolve(resultFile);
 			if (Files.exists(resultPath)) {
-				assertEquals(new String(readAllBytes(resultPath), UTF_8), content);
+				assertEquals(Files.readString(resultPath), content);
 				uploaded++;
 			}
 		}
@@ -149,12 +149,12 @@ public final class TestClusterActiveFs {
 		String file = "the_file.txt";
 		String content = "another test content of the file";
 
-		Files.write(serverStorages.get(numOfServer).resolve(file), content.getBytes(UTF_8));
+		Files.writeString(serverStorages.get(numOfServer).resolve(file), content);
 
 		await(ChannelSupplier.ofPromise(client.download(file))
 				.streamTo(ChannelFileWriter.open(newCachedThreadPool(), clientStorage.resolve(file))));
 
-		assertEquals(new String(readAllBytes(clientStorage.resolve(file)), UTF_8), content);
+		assertEquals(Files.readString(clientStorage.resolve(file)), content);
 	}
 
 	@Test
@@ -184,10 +184,10 @@ public final class TestClusterActiveFs {
 				ChannelSupplier.of(data.slice())
 						.streamTo(ChannelConsumer.ofPromise(client.upload(f))))));
 
-		assertEquals(new String(readAllBytes(serverStorages.get(1).resolve("file_1.txt")), UTF_8), content);
-		assertEquals(new String(readAllBytes(serverStorages.get(2).resolve("file_2.txt")), UTF_8), content);
-		assertEquals(new String(readAllBytes(serverStorages.get(3).resolve("file_3.txt")), UTF_8), content);
-		assertEquals(new String(readAllBytes(serverStorages.get(0).resolve("other.txt")), UTF_8), content);
+		assertEquals(Files.readString(serverStorages.get(1).resolve("file_1.txt")), content);
+		assertEquals(Files.readString(serverStorages.get(2).resolve("file_2.txt")), content);
+		assertEquals(Files.readString(serverStorages.get(3).resolve("file_3.txt")), content);
+		assertEquals(Files.readString(serverStorages.get(0).resolve("other.txt")), content);
 	}
 
 	@Test
@@ -246,7 +246,7 @@ public final class TestClusterActiveFs {
 		Collections.shuffle(paths);
 
 		for (Path path : paths.subList(0, REPLICATION_COUNT)) {
-			Files.write(path.resolve(source), content.getBytes(UTF_8));
+			Files.writeString(path.resolve(source), content);
 		}
 
 		await(client.copy(source, target));
@@ -277,7 +277,7 @@ public final class TestClusterActiveFs {
 		Collections.shuffle(paths);
 
 		for (Path path : paths.subList(0, numOfServers)) {
-			Files.write(path.resolve(source), content.getBytes(UTF_8));
+			Files.writeString(path.resolve(source), content);
 		}
 
 		await(client.copy(source, target));
@@ -326,7 +326,7 @@ public final class TestClusterActiveFs {
 
 			String content = contentPrefix + source;
 			for (Path path : paths.subList(0, numberOfServers)) {
-				Files.write(path.resolve(source), content.getBytes(UTF_8));
+				Files.writeString(path.resolve(source), content);
 			}
 		}
 
@@ -361,7 +361,7 @@ public final class TestClusterActiveFs {
 
 			String content = contentPrefix + source;
 			for (Path path : paths.subList(0, REPLICATION_COUNT)) {
-				Files.write(path.resolve(source), content.getBytes(UTF_8));
+				Files.writeString(path.resolve(source), content);
 			}
 		}
 
@@ -406,7 +406,7 @@ public final class TestClusterActiveFs {
 
 			String content = contentPrefix + source;
 			for (Path path : paths.subList(0, numberOfServers)) {
-				Files.write(path.resolve(source), content.getBytes(UTF_8));
+				Files.writeString(path.resolve(source), content);
 			}
 		}
 
@@ -441,7 +441,7 @@ public final class TestClusterActiveFs {
 
 			String content = contentPrefix + source;
 			for (Path path : paths.subList(0, REPLICATION_COUNT)) {
-				Files.write(path.resolve(source), content.getBytes(UTF_8));
+				Files.writeString(path.resolve(source), content);
 			}
 		}
 
@@ -466,7 +466,7 @@ public final class TestClusterActiveFs {
 
 			String content = contentPrefix + name;
 			for (Path path : paths.subList(0, ThreadLocalRandom.current().nextInt(3) + 1)) {
-				Files.write(path.resolve(name), content.getBytes(UTF_8));
+				Files.writeString(path.resolve(name), content);
 			}
 		}
 
@@ -492,7 +492,7 @@ public final class TestClusterActiveFs {
 
 			String content = contentPrefix + name;
 			for (Path path : paths.subList(0, ThreadLocalRandom.current().nextInt(3) + 1)) {
-				Files.write(path.resolve(name), content.getBytes(UTF_8));
+				Files.writeString(path.resolve(name), content);
 			}
 		}
 
@@ -543,7 +543,7 @@ public final class TestClusterActiveFs {
 
 			String content = contentPrefix + source;
 			for (Path path : paths.subList(0, REPLICATION_COUNT)) {
-				Files.write(path.resolve(source), content.getBytes(UTF_8));
+				Files.writeString(path.resolve(source), content);
 			}
 		}
 

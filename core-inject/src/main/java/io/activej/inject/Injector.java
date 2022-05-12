@@ -46,8 +46,6 @@ import static io.activej.inject.binding.Multibinders.errorOnDuplicate;
 import static io.activej.inject.util.Utils.getScopeDisplayString;
 import static io.activej.inject.util.Utils.next;
 import static io.activej.types.Types.parameterizedType;
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toMap;
 
 /**
@@ -63,30 +61,11 @@ import static java.util.stream.Collectors.toMap;
  */
 @SuppressWarnings({"unused", "WeakerAccess", "rawtypes"})
 public final class Injector implements ResourceLocator {
-	private static final class ScopeLocalData {
-		final Scope[] scope;
-		final Map<Key<?>, Binding<?>> bindings;
-		final Map<Key<?>, CompiledBinding<?>> compiledBindings;
-		final Map<Key<?>, Integer> slotMapping;
-		final int slots;
-
-		final CompiledBinding<?>[] eagerSingletons;
-
-		private ScopeLocalData(
-				Scope[] scope,
-				Map<Key<?>, Binding<?>> bindings,
-				Map<Key<?>, CompiledBinding<?>> compiledBindings,
-				Map<Key<?>, Integer> slotMapping,
-				int slots,
-				CompiledBinding<?>[] eagerSingletons
-		) {
-			this.scope = scope;
-			this.bindings = bindings;
-			this.compiledBindings = compiledBindings;
-			this.slotMapping = slotMapping;
-			this.slots = slots;
-			this.eagerSingletons = eagerSingletons;
-		}
+	private record ScopeLocalData(Scope[] scope,
+	                              Map<Key<?>, Binding<?>> bindings,
+	                              Map<Key<?>, CompiledBinding<?>> compiledBindings,
+	                              Map<Key<?>, Integer> slotMapping, int slots,
+	                              CompiledBinding<?>[] eagerSingletons) {
 	}
 
 	final @Nullable Injector parent;
@@ -154,7 +133,7 @@ public final class Injector implements ResourceLocator {
 	 */
 	public static Injector of(@NotNull Trie<Scope, Map<Key<?>, Binding<?>>> bindings) {
 		return compile(null, UNSCOPED,
-				bindings.map(map -> map.entrySet().stream().collect(toMap(Entry::getKey, entry -> singleton(entry.getValue())))),
+				bindings.map(map -> map.entrySet().stream().collect(toMap(Entry::getKey, entry -> Set.of(entry.getValue())))),
 				errorOnDuplicate(),
 				identity(),
 				refusing());
@@ -207,7 +186,7 @@ public final class Injector implements ResourceLocator {
 				parent != null ? parent.scopeCaches.length : 0,
 				scope,
 				bindings,
-				parent != null ? parent.localCompiledBindings : emptyMap()
+				parent != null ? parent.localCompiledBindings : Map.of()
 		);
 		return new Injector(parent, scopeDataTree);
 	}
@@ -240,7 +219,7 @@ public final class Injector implements ResourceLocator {
 
 		Map<Key<?>, CompiledBinding<?>> compiledBindings = new HashMap<>();
 		compiledBindings.put(Key.of(Injector.class), postprocessor.apply(scope == 0 ?
-				new CompiledBinding<Object>() {
+				new CompiledBinding<>() {
 					volatile Object instance;
 
 					@Override
@@ -251,7 +230,7 @@ public final class Injector implements ResourceLocator {
 						return this.instance;
 					}
 				} :
-				new CompiledBinding<Object>() {
+				new CompiledBinding<>() {
 					@Override
 					public @NotNull Object getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 						return scopedInstances[scope].get(0);

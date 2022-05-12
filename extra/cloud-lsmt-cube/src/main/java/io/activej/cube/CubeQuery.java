@@ -25,8 +25,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import static java.util.Arrays.asList;
-
 public final class CubeQuery implements WithInitializer<CubeQuery> {
 	private Set<String> attributes = new LinkedHashSet<>();
 	private Set<String> measures = new LinkedHashSet<>();
@@ -51,7 +49,7 @@ public final class CubeQuery implements WithInitializer<CubeQuery> {
 	}
 
 	public CubeQuery withMeasures(String... measures) {
-		return withMeasures(asList(measures));
+		return withMeasures(List.of(measures));
 	}
 
 	public CubeQuery withAttributes(List<String> attributes) {
@@ -60,7 +58,7 @@ public final class CubeQuery implements WithInitializer<CubeQuery> {
 	}
 
 	public CubeQuery withAttributes(String... attributes) {
-		return withAttributes(asList(attributes));
+		return withAttributes(List.of(attributes));
 	}
 
 	public CubeQuery withWhere(AggregationPredicate where) {
@@ -89,7 +87,7 @@ public final class CubeQuery implements WithInitializer<CubeQuery> {
 	}
 
 	public CubeQuery withOrderings(Ordering... orderings) {
-		return withOrderings(asList(orderings));
+		return withOrderings(List.of(orderings));
 	}
 
 	@SuppressWarnings("UnusedReturnValue")

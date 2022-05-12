@@ -8,6 +8,8 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import java.util.List;
+
 import static io.activej.datastream.StreamSupplier.closingWithError;
 import static io.activej.datastream.TestStreamTransformers.decorate;
 import static io.activej.datastream.TestStreamTransformers.randomlySuspending;
@@ -15,7 +17,6 @@ import static io.activej.datastream.TestUtils.assertClosedWithError;
 import static io.activej.datastream.TestUtils.assertEndOfStream;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
@@ -32,7 +33,7 @@ public class StreamBufferTest {
 		StreamBuffer<Integer> buffer = StreamBuffer.create(0, 1);
 		await(supplier.transformWith(buffer).streamTo(consumer.transformWith(randomlySuspending())));
 
-		assertEquals(asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), consumer.getList());
+		assertEquals(List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), consumer.getList());
 		assertEndOfStream(supplier, consumer);
 		assertEndOfStream(buffer);
 	}
@@ -45,7 +46,7 @@ public class StreamBufferTest {
 		StreamBuffer<Integer> buffer = StreamBuffer.create(1, 2);
 		await(supplier.transformWith(buffer).streamTo(consumer.transformWith(randomlySuspending())));
 
-		assertEquals(asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), consumer.getList());
+		assertEquals(List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), consumer.getList());
 		assertEndOfStream(supplier, consumer);
 		assertEndOfStream(buffer);
 	}
@@ -58,7 +59,7 @@ public class StreamBufferTest {
 		StreamBuffer<Integer> buffer = StreamBuffer.create(1, 2);
 		await(supplier.streamTo(consumer.transformWith(buffer).transformWith(randomlySuspending())));
 
-		assertEquals(asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), consumer.getList());
+		assertEquals(List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), consumer.getList());
 		assertEndOfStream(supplier, consumer);
 		assertEndOfStream(buffer);
 	}
@@ -77,7 +78,7 @@ public class StreamBufferTest {
 		Exception exception = awaitException(supplier.streamTo(consumer.transformWith(buffer).transformWith(randomlySuspending())));
 		assertSame(expectedException, exception);
 
-		assertEquals(asList(1, 2, 3, 4, 5), consumer.getList());
+		assertEquals(List.of(1, 2, 3, 4, 5), consumer.getList());
 		assertClosedWithError(expectedException, supplier, consumer);
 		assertClosedWithError(expectedException, buffer);
 	}
@@ -96,7 +97,7 @@ public class StreamBufferTest {
 				.transformWith(randomlySuspending())));
 		assertSame(expectedException, exception);
 
-		assertEquals(asList(1, 2, 3, 4, 5), consumer.getList());
+		assertEquals(List.of(1, 2, 3, 4, 5), consumer.getList());
 		assertClosedWithError(expectedException, supplier, consumer);
 		assertClosedWithError(expectedException, buffer);
 	}

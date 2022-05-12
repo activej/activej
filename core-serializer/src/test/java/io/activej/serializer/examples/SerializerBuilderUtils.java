@@ -11,14 +11,13 @@ import java.util.Map;
 
 import static java.lang.Character.toUpperCase;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 
 public class SerializerBuilderUtils {
-	public static final List<Class<?>> TYPES = asList(
+	public static final List<Class<?>> TYPES = List.of(
 			byte.class, short.class, int.class, long.class, float.class, double.class, char.class, Object.class
 	);
 
-	private static final Map<String, String> collectionImplSuffix = new HashMap<String, String>() {{
+	private static final Map<String, String> collectionImplSuffix = new HashMap<>() {{
 		put("Set", "HashSet");
 		put("IndexedContainer", "ArrayList");
 	}};

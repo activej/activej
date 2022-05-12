@@ -27,7 +27,6 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map.Entry;
@@ -36,7 +35,6 @@ import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.Utils.first;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
-import static java.util.Arrays.asList;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -63,7 +61,7 @@ public class MultilogImplTest {
 
 	@Parameters(name = "{0}")
 	public static Collection<Object[]> getParameters() {
-		return Arrays.asList(
+		return List.of(
 				new Object[]{"LZ4 format", LZ4FrameFormat.create(), 8},
 				new Object[]{"Legacy LZ4 format", LZ4LegacyFrameFormat.create(), 21}
 		);
@@ -77,7 +75,7 @@ public class MultilogImplTest {
 		Multilog<String> multilog = MultilogImpl.create(eventloop, fs, frameFormat, BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ);
 		String testPartition = "testPartition";
 
-		List<String> values = asList("test1", "test2", "test3");
+		List<String> values = List.of("test1", "test2", "test3");
 
 		await(StreamSupplier.ofIterable(values)
 				.streamTo(StreamConsumer.ofPromise(multilog.write(testPartition))));
@@ -99,7 +97,7 @@ public class MultilogImplTest {
 
 		String partition = "partition";
 
-		List<String> values = asList("test1", "test2", "test3");
+		List<String> values = List.of("test1", "test2", "test3");
 
 		await(StreamSupplier.ofIterable(values).streamTo(multilog.write(partition)));
 
@@ -131,7 +129,7 @@ public class MultilogImplTest {
 		String partition1 = "partition1";
 		String partition2 = "partition2";
 
-		List<String> values = asList("test1", "test2", "test3");
+		List<String> values = List.of("test1", "test2", "test3");
 
 		await(StreamSupplier.ofIterable(values).streamTo(multilog.write(partition1)));
 		await(StreamSupplier.ofIterable(values).streamTo(multilog.write(partition2)));
@@ -169,7 +167,7 @@ public class MultilogImplTest {
 
 		String partition = "partition";
 
-		List<String> values = asList("test1", "test2", "test3");
+		List<String> values = List.of("test1", "test2", "test3");
 
 		await(StreamSupplier.ofIterable(values).streamTo(multilog.write(partition)));
 
@@ -206,7 +204,7 @@ public class MultilogImplTest {
 
 		String testPartition = "partition";
 
-		List<String> values = asList("test1", "test2", "test3");
+		List<String> values = List.of("test1", "test2", "test3");
 
 		await(StreamSupplier.ofIterable(values)
 				.streamTo(StreamConsumer.ofPromise(multilog.write(testPartition))));

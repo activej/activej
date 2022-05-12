@@ -18,13 +18,10 @@ package io.activej.etl;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
-
-import static java.util.Collections.singletonList;
 
 public class LogDiff<D> {
 	private final Map<String, LogPositionDiff> positions;
@@ -40,15 +37,15 @@ public class LogDiff<D> {
 	}
 
 	public static <D> LogDiff<D> of(Map<String, LogPositionDiff> positions, D diff) {
-		return of(positions, singletonList(diff));
+		return of(positions, List.of(diff));
 	}
 
 	public static <D> LogDiff<D> forCurrentPosition(List<D> diffs) {
-		return of(Collections.emptyMap(), diffs);
+		return of(Map.of(), diffs);
 	}
 
 	public static <D> LogDiff<D> forCurrentPosition(D diff) {
-		return forCurrentPosition(singletonList(diff));
+		return forCurrentPosition(List.of(diff));
 	}
 
 	public Map<String, LogPositionDiff> getPositions() {

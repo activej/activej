@@ -13,7 +13,6 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static io.activej.common.Utils.keysToMap;
-import static java.util.Collections.singleton;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toSet;
 
@@ -44,9 +43,9 @@ public class TestAggregatorSplitter extends LogDataConsumerSplitter<TestPubReque
 	}
 
 	private static final Set<String> PUB_DIMENSIONS = Stream.of("date", "hourOfDay", "pub", "testEnum").collect(toSet());
-	private static final Set<String> PUB_METRICS = singleton("pubRequests");
-	private static final Set<String> ADV_DIMENSIONS = union(PUB_DIMENSIONS, singleton("adv"));
-	private static final Set<String> ADV_METRICS = singleton("advRequests");
+	private static final Set<String> PUB_METRICS = Set.of("pubRequests");
+	private static final Set<String> ADV_DIMENSIONS = union(PUB_DIMENSIONS, Set.of("adv"));
+	private static final Set<String> ADV_METRICS = Set.of("advRequests");
 
 	@SuppressWarnings("SameParameterValue")
 	private static <T> Set<T> union(Set<T> a, Set<T> b) {
@@ -57,7 +56,7 @@ public class TestAggregatorSplitter extends LogDataConsumerSplitter<TestPubReque
 
 	@Override
 	protected StreamDataAcceptor<TestPubRequest> createSplitter(@NotNull Context ctx) {
-		return new StreamDataAcceptor<TestPubRequest>() {
+		return new StreamDataAcceptor<>() {
 			private final AggregationItem outputItem = new AggregationItem();
 
 			private final StreamDataAcceptor<AggregationItem> pubAggregator = ctx.addOutput(

@@ -27,7 +27,6 @@ import java.util.stream.Stream;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.*;
-import static java.util.Collections.*;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.*;
 
@@ -45,12 +44,7 @@ public class OTLoadedGraph<K, D> {
 		this.diffToString = nonNullElse(diffToString, this.diffToString);
 	}
 
-	private static final class MergeNode {
-		final long n;
-
-		private MergeNode(long n) {
-			this.n = n;
-		}
+	private record MergeNode(long n) {
 
 		@Override
 		public String toString() {
@@ -85,7 +79,7 @@ public class OTLoadedGraph<K, D> {
 	private Function<D, String> diffToString = Objects::toString;
 
 	public void addNode(K node, long level) {
-		addNode(node, level, emptyMap());
+		addNode(node, level, Map.of());
 	}
 
 	public void addNode(K child, long level, Map<K, List<D>> parents) {
@@ -99,8 +93,8 @@ public class OTLoadedGraph<K, D> {
 	}
 
 	public void removeNode(K node) {
-		Set<K> parents = new HashSet<>(child2parent.getOrDefault(node, emptyMap()).keySet());
-		Set<K> children = new HashSet<>(parent2child.getOrDefault(node, emptyMap()).keySet());
+		Set<K> parents = new HashSet<>(child2parent.getOrDefault(node, Map.of()).keySet());
+		Set<K> children = new HashSet<>(parent2child.getOrDefault(node, Map.of()).keySet());
 		parents.forEach(parent -> parent2child.get(parent).remove(node));
 		children.forEach(child -> child2parent.get(child).remove(node));
 		child2parent.remove(node);
@@ -146,12 +140,12 @@ public class OTLoadedGraph<K, D> {
 	}
 
 	public List<D> findParent(K parent, K child) {
-		if (child.equals(parent)) return emptyList();
+		if (child.equals(parent)) return List.of();
 		Set<K> visited = new HashSet<>();
 		PriorityQueue<K> queue = new PriorityQueue<>(this::compareNodes);
 		queue.add(child);
 		Map<K, List<D>> result = new HashMap<>();
-		result.put(child, emptyList());
+		result.put(child, List.of());
 		while (!queue.isEmpty()) {
 			K node = queue.poll();
 			List<D> node2child = result.remove(node);
@@ -174,7 +168,7 @@ public class OTLoadedGraph<K, D> {
 	public Set<K> findRoots(K node) {
 		Set<K> result = new HashSet<>();
 		Set<K> visited = new HashSet<>();
-		ArrayList<K> queue = new ArrayList<>(singletonList(node));
+		ArrayList<K> queue = new ArrayList<>(List.of(node));
 		while (!queue.isEmpty()) {
 			K node1 = queue.remove(queue.size() - 1);
 			if (!visited.add(node1)) continue;
@@ -214,7 +208,7 @@ public class OTLoadedGraph<K, D> {
 		queue.add(mergeNode);
 		Map<K, List<D>> paths = new HashMap<>();
 		Map<K, List<D>> result = new HashMap<>();
-		paths.put(mergeNode, emptyList());
+		paths.put(mergeNode, List.of());
 		Set<K> visited = new HashSet<>();
 		while (!queue.isEmpty()) {
 			K node = queue.poll();
@@ -248,7 +242,7 @@ public class OTLoadedGraph<K, D> {
 		K pivotNode = min.get();
 
 		Map<K, List<? extends D>> pivotNodeParents = getParents(pivotNode);
-		Set<K> recursiveMergeNodes = union(pivotNodeParents.keySet(), difference(nodes, singleton(pivotNode)));
+		Set<K> recursiveMergeNodes = union(pivotNodeParents.keySet(), difference(nodes, Set.of(pivotNode)));
 		K mergeNode = doMerge(excludeParents(recursiveMergeNodes));
 		K parentNode = first(pivotNodeParents.keySet());
 		List<? extends D> parentToPivotNode = pivotNodeParents.get(parentNode);
@@ -256,7 +250,7 @@ public class OTLoadedGraph<K, D> {
 
 		if (pivotNodeParents.size() > 1) {
 			K resultNode = (K) new MergeNode(mergeId.incrementAndGet());
-			addEdge(mergeNode, resultNode, emptyList());
+			addEdge(mergeNode, resultNode, List.of());
 			addEdge(pivotNode, resultNode,
 					otSystem.squash(concat(otSystem.invert(parentToPivotNode), parentToMergeNode)));
 			return resultNode;

@@ -19,10 +19,10 @@ import org.junit.Test;
 
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static io.activej.common.Utils.setOf;
 import static io.activej.promise.TestUtils.await;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.*;
@@ -218,7 +218,7 @@ public class EtcdDiscoveryServiceTest {
 		assertEquals(2, group1.getReplicaCount());
 		assertTrue(group1.isRepartition());
 		assertTrue(group1.isActive());
-		assertEquals(setOf(
+		assertEquals(Set.of(
 				PartitionId.of("a", new InetSocketAddress("localhost", 9001), new InetSocketAddress("localhost", 9051)),
 				PartitionId.of("b", new InetSocketAddress("localhost", 9002), new InetSocketAddress("localhost", 9052))
 		), group1.getPartitionIds());
@@ -227,7 +227,7 @@ public class EtcdDiscoveryServiceTest {
 		assertEquals(1, group2.getReplicaCount());
 		assertFalse(group2.isRepartition());
 		assertFalse(group2.isActive());
-		assertEquals(setOf(
+		assertEquals(Set.of(
 				PartitionId.of("c", new InetSocketAddress("localhost", 9003), new InetSocketAddress("localhost", 9053))
 		), group2.getPartitionIds());
 	}
@@ -239,7 +239,7 @@ public class EtcdDiscoveryServiceTest {
 		assertEquals(1, group1.getReplicaCount());
 		assertTrue(group1.isRepartition());
 		assertTrue(group1.isActive());
-		assertEquals(setOf(
+		assertEquals(Set.of(
 				PartitionId.of("a", new InetSocketAddress("localhost", 9001), new InetSocketAddress("localhost", 9051))
 		), group1.getPartitionIds());
 
@@ -247,7 +247,7 @@ public class EtcdDiscoveryServiceTest {
 		assertEquals(1, group2.getReplicaCount());
 		assertFalse(group2.isRepartition());
 		assertFalse(group2.isActive());
-		assertEquals(setOf(
+		assertEquals(Set.of(
 				PartitionId.of("b", new InetSocketAddress("localhost", 9002), new InetSocketAddress("localhost", 9052))
 		), group2.getPartitionIds());
 	}
@@ -259,7 +259,7 @@ public class EtcdDiscoveryServiceTest {
 		assertEquals(1, group1.getReplicaCount());
 		assertFalse(group1.isRepartition());
 		assertTrue(group1.isActive());
-		assertEquals(setOf(
+		assertEquals(Set.of(
 				PartitionId.of("a", new InetSocketAddress("localhost", 9001), new InetSocketAddress("localhost", 9051)),
 				PartitionId.of("b", new InetSocketAddress("localhost", 9002), new InetSocketAddress("localhost", 9052))
 		), group1.getPartitionIds());

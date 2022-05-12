@@ -38,7 +38,7 @@ import static io.activej.dns.DnsCache.*;
 public final class ConfigConverters {
 
 	public static ConfigConverter<DnsCache> ofDnsCache(Eventloop eventloop) {
-		return new ConfigConverter<DnsCache>() {
+		return new ConfigConverter<>() {
 			@Override
 			public @NotNull DnsCache get(Config config) {
 				Duration errorCacheExpiration = config.get(ofDuration(), "errorCacheExpiration", DEFAULT_ERROR_CACHE_EXPIRATION);
@@ -65,7 +65,7 @@ public final class ConfigConverters {
 	}
 
 	public static ConfigConverter<FrameFormat> ofFrameFormat() {
-		return new ConfigConverter<FrameFormat>() {
+		return new ConfigConverter<>() {
 			@Override
 			public @NotNull FrameFormat get(Config config) {
 				return doGet(config, config.getValue());

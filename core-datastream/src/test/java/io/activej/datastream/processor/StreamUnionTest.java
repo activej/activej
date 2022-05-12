@@ -9,7 +9,6 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -17,7 +16,6 @@ import static io.activej.datastream.TestStreamTransformers.*;
 import static io.activej.datastream.TestUtils.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
@@ -55,7 +53,7 @@ public class StreamUnionTest {
 
 		List<Integer> result = consumer.getList();
 		Collections.sort(result);
-		assertEquals(asList(1, 2, 3, 4, 5, 6), result);
+		assertEquals(List.of(1, 2, 3, 4, 5, 6), result);
 
 		assertEndOfStream(source0);
 		assertEndOfStream(source1);
@@ -92,7 +90,7 @@ public class StreamUnionTest {
 		);
 
 		assertSame(exception, e);
-		assertEquals(Arrays.asList(1, 2, 3), consumer.getList());
+		assertEquals(List.of(1, 2, 3), consumer.getList());
 		assertClosedWithError(source0);
 		assertClosedWithError(source1);
 		assertClosedWithError(source2);
@@ -109,11 +107,11 @@ public class StreamUnionTest {
 		ExpectedException exception = new ExpectedException("Test Exception");
 
 		StreamSupplier<Integer> source0 = StreamSupplier.concat(
-				StreamSupplier.ofIterable(Arrays.asList(1, 2)),
+				StreamSupplier.ofIterable(List.of(1, 2)),
 				StreamSupplier.closingWithError(exception)
 		);
 		StreamSupplier<Integer> source1 = StreamSupplier.concat(
-				StreamSupplier.ofIterable(Arrays.asList(7, 8, 9)),
+				StreamSupplier.ofIterable(List.of(7, 8, 9)),
 				StreamSupplier.closingWithError(exception)
 		);
 

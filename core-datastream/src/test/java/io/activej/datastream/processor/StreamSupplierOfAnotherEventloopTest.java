@@ -10,6 +10,7 @@ import io.activej.test.ExpectedException;
 import io.activej.test.rules.EventloopRule;
 import org.junit.*;
 
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
@@ -22,7 +23,6 @@ import static io.activej.datastream.TestUtils.assertClosedWithError;
 import static io.activej.datastream.TestUtils.assertEndOfStream;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
@@ -57,7 +57,7 @@ public class StreamSupplierOfAnotherEventloopTest {
 
 		await(supplier.streamTo(consumer.transformWith(randomlySuspending())));
 
-		assertEquals(asList(1, 2, 3, 4, 5), consumer.getList());
+		assertEquals(List.of(1, 2, 3, 4, 5), consumer.getList());
 		assertEndOfStream(supplier, consumer);
 		anotherEventloop.submit(() -> assertEndOfStream(anotherEventloopSupplier)).get();
 	}

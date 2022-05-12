@@ -294,8 +294,8 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
+          <source>17</source>
+          <target>17</target>
           <compilerArgs>
             <arg>-Adsljson.generatedmarker</arg>
           </compilerArgs>
@@ -393,7 +393,7 @@
                   <goal>jar</goal>
                 </goals>
                 <configuration>
-                  <source>8</source>
+                  <source>17</source>
                   <doclint>none</doclint>
                   <sourcepath>src/main/java</sourcepath>
                 </configuration>

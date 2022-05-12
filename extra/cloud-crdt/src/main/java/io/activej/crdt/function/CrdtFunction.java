@@ -56,7 +56,7 @@ public interface CrdtFunction<S> {
 	@Nullable S extract(S state, long timestamp);
 
 	static <S extends CrdtType<S>> CrdtFunction<S> ofCrdtType() {
-		return new CrdtFunction<S>() {
+		return new CrdtFunction<>() {
 			@Override
 			public S merge(S first, long firstTimestamp, S second, long secondTimestamp) {
 				return first.merge(second);
@@ -74,7 +74,7 @@ public interface CrdtFunction<S> {
 	}
 
 	static <S> CrdtFunction<S> ignoringTimestamp(BinaryOperator<S> mergeOperator, BiFunction<S, Long, S> extractFn) {
-		return new CrdtFunction<S>() {
+		return new CrdtFunction<>() {
 			@Override
 			public S merge(S first, long firstTimestamp, S second, long secondTimestamp) {
 				return mergeOperator.apply(first, second);

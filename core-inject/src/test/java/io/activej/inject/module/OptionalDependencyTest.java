@@ -82,7 +82,7 @@ public class OptionalDependencyTest {
 						.bindOptionalDependency(new Key<InstanceProvider<String>>() {})
 						.build());
 
-		OptionalDependency<InstanceProvider<String>> optional = injector.getOptionalDependency(new Key<InstanceProvider<String>>() {});
+		OptionalDependency<InstanceProvider<String>> optional = injector.getOptionalDependency(new Key<>() {});
 
 		assertTrue(optional.isPresent());
 

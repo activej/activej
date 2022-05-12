@@ -23,7 +23,6 @@ import io.activej.common.ref.RefBoolean;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
@@ -109,7 +108,7 @@ public final class AsyncBiPredicates {
 	@SafeVarargs
 	public static <T, U> @NotNull AsyncBiPredicate<T, U> and(AsyncBiPredicate<? super T, ? super U>... predicates) {
 		//noinspection RedundantCast
-		return and(((List<AsyncBiPredicate<? super T, ? super U>>) Arrays.asList(predicates)));
+		return and(((List<AsyncBiPredicate<? super T, ? super U>>) List.of(predicates)));
 	}
 
 	/**
@@ -176,6 +175,6 @@ public final class AsyncBiPredicates {
 	@SafeVarargs
 	public static <T, U> @NotNull AsyncBiPredicate<T, U> or(AsyncBiPredicate<? super T, ? super U>... predicates) {
 		//noinspection RedundantCast
-		return or(((List<AsyncBiPredicate<? super T, ? super U>>) Arrays.asList(predicates)));
+		return or(((List<AsyncBiPredicate<? super T, ? super U>>) List.of(predicates)));
 	}
 }

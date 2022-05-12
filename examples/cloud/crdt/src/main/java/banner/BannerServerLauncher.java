@@ -10,15 +10,11 @@ import io.activej.service.ServiceGraphModule;
 
 import java.util.List;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.unmodifiableList;
-
 public final class BannerServerLauncher extends Launcher {
-	public static final List<Class<?>> MESSAGE_TYPES = unmodifiableList(asList(
+	public static final List<Class<?>> MESSAGE_TYPES = List.of(
 			BannerCommands.GetRequest.class, BannerCommands.GetResponse.class,
 			BannerCommands.PutRequest.class, BannerCommands.PutResponse.class,
-			BannerCommands.IsBannerSeenRequest.class, Boolean.class
-	));
+			BannerCommands.IsBannerSeenRequest.class, Boolean.class);
 
 	@Override
 	protected Module getModule() {

@@ -20,7 +20,6 @@ import io.activej.rpc.client.RpcClientConnectionPool;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -31,7 +30,7 @@ public final class RpcStrategyFirstAvailable implements RpcStrategy {
 		this.list = list;
 	}
 
-	public static RpcStrategyFirstAvailable create(RpcStrategy... list) {return create(Arrays.asList(list));}
+	public static RpcStrategyFirstAvailable create(RpcStrategy... list) {return create(List.of(list));}
 
 	public static RpcStrategyFirstAvailable create(List<RpcStrategy> list) {return new RpcStrategyFirstAvailable(list);}
 

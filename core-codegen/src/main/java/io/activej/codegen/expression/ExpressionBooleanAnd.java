@@ -23,6 +23,8 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 
 import java.util.List;
 
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static io.activej.codegen.util.TypeChecks.is;
 import static org.objectweb.asm.Type.BOOLEAN_TYPE;
 
 /**
@@ -42,8 +44,7 @@ final class ExpressionBooleanAnd implements Expression {
 		Label labelFalse = new Label();
 		for (Expression predicate : expressions) {
 			Type type = predicate.load(ctx);
-			if (type != BOOLEAN_TYPE)
-				throw new IllegalArgumentException();
+			checkType(type, is(BOOLEAN_TYPE));
 			g.ifZCmp(GeneratorAdapter.EQ, labelFalse);
 		}
 		g.push(true);

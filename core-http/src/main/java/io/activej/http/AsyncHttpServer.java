@@ -37,10 +37,8 @@ import org.jetbrains.annotations.Nullable;
 import java.net.InetAddress;
 import java.time.Duration;
 import java.util.List;
-import java.util.stream.Stream;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
-import static java.util.stream.Collectors.toList;
 
 /**
  * This is an implementation of the asynchronous HTTP server on top of {@link Eventloop}.
@@ -328,10 +326,7 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 	}
 
 	public List<String> getHttpAddresses() {
-		return Stream.concat(
-				getBoundAddresses().stream().map(address -> HttpUtils.formatUrl(address, false)),
-				getSslBoundAddresses().stream().map(address -> HttpUtils.formatUrl(address, true))
-		).collect(toList());
+		return HttpUtils.getHttpAddresses(this);
 	}
 
 	@JmxAttribute(description = "current number of connections", reducer = JmxReducerSum.class)

@@ -36,8 +36,6 @@ import static io.activej.inject.Scope.UNSCOPED;
 import static io.activej.inject.binding.BindingType.SYNTHETIC;
 import static io.activej.inject.util.ReflectionUtils.generateInjectingInitializer;
 import static io.activej.inject.util.Utils.*;
-import static java.util.Arrays.asList;
-import static java.util.Collections.*;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -64,7 +62,7 @@ public final class Preprocessor {
 			BindingGenerator<?> generator
 	) {
 		Trie<Scope, Map<Key<?>, Binding<?>>> reduced = Trie.leaf(new HashMap<>());
-		reduce(UNSCOPED, emptyMap(), bindings, reduced, multibinder, transformer, generator);
+		reduce(UNSCOPED, Map.of(), bindings, reduced, multibinder, transformer, generator);
 		return reduced;
 	}
 
@@ -110,7 +108,7 @@ public final class Preprocessor {
 		Class<?> rawType = key.getRawType();
 		if (bindingSet != null) {
 			switch (bindingSet.size()) {
-				case 0:
+				case 0 -> {
 					// try to recursively generate a requested binding
 					binding = ((BindingGenerator<Object>) generator).generate(recursiveLocator, scope, (Key<Object>) key);
 
@@ -143,13 +141,11 @@ public final class Preprocessor {
 					if (binding == null) {
 						throw new DIException("Refused to generate an explicitly requested binding for key " + key.getDisplayString());
 					}
-					break;
-				case 1:
-					binding = bindingSet.iterator().next();
-					break;
-				default:
-					//noinspection rawtypes
-					binding = ((Multibinder) multibinder).multibind(key, bindingSet);
+				}
+				case 1 -> binding = bindingSet.iterator().next();
+				default ->
+						//noinspection rawtypes
+						binding = ((Multibinder) multibinder).multibind(key, bindingSet);
 			}
 		} else { // or if it was never bound
 			// first check if it was already resolved in upper scope
@@ -214,18 +210,18 @@ public final class Preprocessor {
 		}
 		Binding<?> resolved = resolve(upper, localBindings, resolvedBindings, scope, instanceKey, localBindings.get(instanceKey), multibinder, transformer, generator);
 		if (resolved == null) return Binding.toInstance(OptionalDependency.empty());
-		return new Binding<OptionalDependency<?>>(singleton(instanceKey), SYNTHETIC, null) {
+		return new Binding<OptionalDependency<?>>(Set.of(instanceKey), SYNTHETIC, null) {
 			@Override
 			public CompiledBinding<OptionalDependency<?>> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 				return slot != null ?
-						new AbstractCompiledBinding<OptionalDependency<?>>(scope, slot) {
+						new AbstractCompiledBinding<>(scope, slot) {
 							@Override
 							protected @NotNull OptionalDependency<?> doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								CompiledBinding<?> compiledBinding = compiledBindings.get(instanceKey);
 								return OptionalDependency.of(compiledBinding.getInstance(scopedInstances, synchronizedScope));
 							}
 						} :
-						new CompiledBinding<OptionalDependency<?>>() {
+						new CompiledBinding<>() {
 							@Override
 							public @NotNull OptionalDependency<?> getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								CompiledBinding<?> compiledBinding = compiledBindings.get(instanceKey);
@@ -241,11 +237,11 @@ public final class Preprocessor {
 		Key<Object> instanceKey = key.getTypeParameter(0).qualified(key.getQualifier());
 		Binding<?> resolved = resolve(upper, localBindings, resolvedBindings, scope, instanceKey, localBindings.get(instanceKey), multibinder, transformer, generator);
 		if (resolved == null) return null;
-		return new Binding<InstanceProvider<?>>(singleton(instanceKey), SYNTHETIC, null) {
+		return new Binding<InstanceProvider<?>>(Set.of(instanceKey), SYNTHETIC, null) {
 			@Override
 			public CompiledBinding<InstanceProvider<?>> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 				return slot != null ?
-						new AbstractCompiledBinding<InstanceProvider<?>>(scope, slot) {
+						new AbstractCompiledBinding<>(scope, slot) {
 							@Override
 							protected @NotNull InstanceProvider<?> doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								CompiledBinding<Object> compiledBinding = compiledBindings.get(instanceKey);
@@ -253,7 +249,7 @@ public final class Preprocessor {
 								return new InstanceProviderImpl<>(instanceKey, compiledBinding, scopedInstances, synchronizedScope);
 							}
 						} :
-						new CompiledBinding<InstanceProvider<?>>() {
+						new CompiledBinding<>() {
 							@Override
 							public @NotNull InstanceProvider<?> getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 
@@ -279,14 +275,14 @@ public final class Preprocessor {
 			@Override
 			public CompiledBinding<InstanceInjector<?>> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int synchronizedScope, @Nullable Integer slot) {
 				return slot != null ?
-						new AbstractCompiledBinding<InstanceInjector<?>>(synchronizedScope, slot) {
+						new AbstractCompiledBinding<>(synchronizedScope, slot) {
 							@Override
 							protected @NotNull InstanceInjector<?> doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								CompiledBindingInitializer<Object> compiledBindingInitializer = bindingInitializer.compile(compiledBindings);
 								return new InstanceInjectorImpl<>(instanceKey, compiledBindingInitializer, scopedInstances, synchronizedScope);
 							}
 						} :
-						new CompiledBinding<InstanceInjector<?>>() {
+						new CompiledBinding<>() {
 							@Override
 							public @NotNull InstanceInjector<?> getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								CompiledBindingInitializer<Object> compiledBindingInitializer = bindingInitializer.compile(compiledBindings);
@@ -461,7 +457,7 @@ public final class Preprocessor {
 		@Nullable String getHintFor(Entry<Key<?>, Binding<?>> keybind, Key<?> missing, Set<Key<?>> upperKnown, Trie<Scope, Map<Key<?>, Binding<?>>> bindings);
 	}
 
-	private static final List<MissingKeyHint> missingKeyHints = singletonList(
+	private static final List<MissingKeyHint> missingKeyHints = List.of(
 			(missing, upperKnown, bindings) -> {
 				if (missing.getRawType() != InstanceProvider.class) {
 					return null;
@@ -470,7 +466,7 @@ public final class Preprocessor {
 			}
 	);
 
-	private static final List<ErrorHint> errorHints = asList(
+	private static final List<ErrorHint> errorHints = List.of(
 			(keybind, missing, upperKnown, bindings) -> {
 				Class<?> rawType = keybind.getKey().getRawType();
 				if (Modifier.isStatic(rawType.getModifiers()) || !missing.getRawType().equals(rawType.getEnclosingClass())) {

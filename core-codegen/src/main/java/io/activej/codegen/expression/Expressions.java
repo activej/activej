@@ -21,19 +21,18 @@ import io.activej.codegen.operation.CompareOperation;
 import org.objectweb.asm.Type;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static io.activej.codegen.expression.ExpressionCast.SELF_TYPE;
-import static io.activej.codegen.expression.ExpressionComparator.*;
-import static java.util.Arrays.asList;
+import static io.activej.codegen.expression.ExpressionCompare.*;
+import static io.activej.codegen.operation.CompareOperation.*;
+import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static org.objectweb.asm.Type.getType;
 
@@ -66,7 +65,7 @@ public class Expressions {
 	 * @see #sequence(List)
 	 */
 	public static Expression sequence(Expression... parts) {
-		return new ExpressionSequence(asList(parts));
+		return new ExpressionSequence(List.of(parts));
 	}
 
 	/**
@@ -147,7 +146,7 @@ public class Expressions {
 	 * @see #let(List, Function)
 	 */
 	public static Expression let(Expression[] expressions, Function<Variable[], Expression> fn) {
-		return let(asList(expressions), variables -> fn.apply(variables.toArray(new Variable[0])));
+		return let(List.of(expressions), variables -> fn.apply(variables.toArray(new Variable[0])));
 	}
 
 	/**
@@ -234,38 +233,12 @@ public class Expressions {
 	}
 
 	/**
-	 * An expression that represents boolean {@code false} value
-	 */
-	public static Expression alwaysFalse() {
-		return value(false);
-	}
-
-	/**
-	 * An expression that represents boolean {@code true} value
-	 */
-	public static Expression alwaysTrue() {
-		return value(true);
-	}
-
-	/**
 	 * An expression that represents boolean negation
 	 *
 	 * @param expression an expression that is being negated
 	 */
 	public static Expression not(Expression expression) {
-		return new ExpressionBooleanNot(expression);
-	}
-
-	/**
-	 * Compares arguments using given compare operation
-	 *
-	 * @param eq    compare operation which will be used for the arguments
-	 * @param left  first argument which will be compared
-	 * @param right second argument which will be compared
-	 * @return an expression that represents comparison
-	 */
-	public static Expression cmp(CompareOperation eq, Expression left, Expression right) {
-		return new ExpressionCmp(eq, left, right);
+		return ifElse(expression, value(false), value(true));
 	}
 
 	/**
@@ -275,52 +248,8 @@ public class Expressions {
 	 * @param right second argument which will be compared
 	 * @return an expression that represents comparison
 	 */
-	public static Expression cmpEq(Expression left, Expression right) {
-		return cmp(CompareOperation.EQ, left, right);
-	}
-
-	/**
-	 * Compares two arguments for whether the first argument is greater than  or equal to the second argument
-	 *
-	 * @param left  first argument which will be compared
-	 * @param right second argument which will be compared
-	 * @return an expression that represents comparison
-	 */
-	public static Expression cmpGe(Expression left, Expression right) {
-		return cmp(CompareOperation.GE, left, right);
-	}
-
-	/**
-	 * Compares two arguments for whether the first argument is less than or equal to the second argument
-	 *
-	 * @param left  first argument which will be compared
-	 * @param right second argument which will be compared
-	 * @return an expression that represents comparison
-	 */
-	public static Expression cmpLe(Expression left, Expression right) {
-		return cmp(CompareOperation.LE, left, right);
-	}
-
-	/**
-	 * Compares two arguments for whether the first argument is less than the second argument
-	 *
-	 * @param left  first argument which will be compared
-	 * @param right second argument which will be compared
-	 * @return an expression that represents comparison
-	 */
-	public static Expression cmpLt(Expression left, Expression right) {
-		return cmp(CompareOperation.LT, left, right);
-	}
-
-	/**
-	 * Compares two arguments for whether the first argument is greater than the second argument
-	 *
-	 * @param left  first argument which will be compared
-	 * @param right second argument which will be compared
-	 * @return an expression that represents comparison
-	 */
-	public static Expression cmpGt(Expression left, Expression right) {
-		return cmp(CompareOperation.GT, left, right);
+	public static Expression isEq(Expression left, Expression right) {
+		return isCmp(EQ, left, right);
 	}
 
 	/**
@@ -330,8 +259,64 @@ public class Expressions {
 	 * @param right second argument which will be compared
 	 * @return an expression that represents comparison
 	 */
-	public static Expression cmpNe(Expression left, Expression right) {
-		return cmp(CompareOperation.NE, left, right);
+	public static Expression isNe(Expression left, Expression right) {
+		return isCmp(NE, left, right);
+	}
+
+	public static Expression isRefEq(Expression left, Expression right) {
+		return isCmp(REF_EQ, left, right);
+	}
+
+	public static Expression isRefNe(Expression left, Expression right) {
+		return isCmp(REF_NE, left, right);
+	}
+
+	/**
+	 * Compares two arguments for whether the first argument is greater than  or equal to the second argument
+	 *
+	 * @param left  first argument which will be compared
+	 * @param right second argument which will be compared
+	 * @return an expression that represents comparison
+	 */
+	public static Expression isGe(Expression left, Expression right) {
+		return isCmp(GE, left, right);
+	}
+
+	/**
+	 * Compares two arguments for whether the first argument is less than or equal to the second argument
+	 *
+	 * @param left  first argument which will be compared
+	 * @param right second argument which will be compared
+	 * @return an expression that represents comparison
+	 */
+	public static Expression isLe(Expression left, Expression right) {
+		return isCmp(LE, left, right);
+	}
+
+	/**
+	 * Compares two arguments for whether the first argument is less than the second argument
+	 *
+	 * @param left  first argument which will be compared
+	 * @param right second argument which will be compared
+	 * @return an expression that represents comparison
+	 */
+	public static Expression isLt(Expression left, Expression right) {
+		return isCmp(LT, left, right);
+	}
+
+	/**
+	 * Compares two arguments for whether the first argument is greater than the second argument
+	 *
+	 * @param left  first argument which will be compared
+	 * @param right second argument which will be compared
+	 * @return an expression that represents comparison
+	 */
+	public static Expression isGt(Expression left, Expression right) {
+		return isCmp(GT, left, right);
+	}
+
+	private static Expression isCmp(CompareOperation op, Expression left, Expression right) {
+		return ifObjCmp(op, left, right, value(true), value(false));
 	}
 
 	/**
@@ -355,7 +340,7 @@ public class Expressions {
 	 * @see #and(List)
 	 */
 	public static Expression and(Expression... predicates) {
-		return and(asList(predicates));
+		return and(List.of(predicates));
 	}
 
 	/**
@@ -366,7 +351,7 @@ public class Expressions {
 	 * @return an expression that represents a result of logical 'AND'
 	 */
 	public static Expression and(Expression predicate1, Expression predicate2) {
-		return and(asList(predicate1, predicate2));
+		return and(List.of(predicate1, predicate2));
 	}
 
 	/**
@@ -390,7 +375,7 @@ public class Expressions {
 	 * @see #or(List)
 	 */
 	public static ExpressionBooleanOr or(Expression... predicates) {
-		return or(asList(predicates));
+		return or(List.of(predicates));
 	}
 
 	/**
@@ -401,159 +386,32 @@ public class Expressions {
 	 * @return an expression that represents a result of logical 'OR'
 	 */
 	public static ExpressionBooleanOr or(Expression predicate1, Expression predicate2) {
-		return or(asList(predicate1, predicate2));
+		return or(List.of(predicate1, predicate2));
 	}
 
-	/**
-	 * An expression that represents implementation of {@link #equals(Object)} method that uses
-	 * given properties to check the equality
-	 *
-	 * @param properties list of properties
-	 * @return an `equals()` implementation expression
-	 */
-	public static Expression equalsImpl(List<String> properties) {
-		return and(properties.stream()
-				.map(property -> cmpEq(
-						property(self(), property),
-						property(castIntoSelf(arg(0)), property))));
-	}
-
-	/**
-	 * @see #equalsImpl(List)
-	 */
-	public static Expression equalsImpl(String... properties) {
-		return equalsImpl(asList(properties));
-	}
-
-	/**
-	 * An expression that represents implementation of {@link #toString()} method that uses
-	 * given properties to build a `toString()` result
-	 *
-	 * @param properties list of properties
-	 * @return a `toString()` implementation expression
-	 */
-	public static Expression toStringImpl(List<String> properties) {
-		ExpressionToString toString = ExpressionToString.create();
-		for (String property : properties) {
-			toString.with(property + "=", property(self(), property));
+	public static Expression tableSwitch(Expression key, Map<Integer, Expression> cases, Expression defaultExpression) {
+		List<Map.Entry<Integer, Expression>> list = new ArrayList<>(cases.entrySet());
+		list.sort(comparingInt(Map.Entry::getKey));
+		int[] keys = new int[list.size()];
+		Expression[] expressionsArray = new Expression[list.size()];
+		for (int i = 0; i < list.size(); i++) {
+			keys[i] = list.get(i).getKey();
+			expressionsArray[i] = list.get(i).getValue();
 		}
-		return toString;
-	}
-
-	/**
-	 * @see #toStringImpl(List)
-	 */
-	public static Expression toStringImpl(String... properties) {
-		return toStringImpl(asList(properties));
-	}
-
-	/**
-	 * Returns the string which was constructed by concatenation of all the arguments
-	 *
-	 * @param arguments list of arguments to be concatenated
-	 * @return new instance of the ExpressionConcat
-	 */
-	public static Expression concat(List<Expression> arguments) {
-		if (arguments.isEmpty()) return value("");
-		return ExpressionConcat.create(arguments);
-	}
-
-	/**
-	 * @see #concat(List)
-	 */
-	public static Expression concat(Expression... arguments) {
-		return concat(asList(arguments));
-	}
-
-	/**
-	 * An expression that represents implementation of {@link Comparator#compare(Object, Object)} method
-	 * that uses given properties for comparison
-	 *
-	 * @param properties properties which will be compared
-	 * @return a `compare(Object, Object)` implementation expression
-	 */
-	public static Expression compare(Class<?> type, List<String> properties) {
-		ExpressionComparator comparator = ExpressionComparator.create();
-		for (String property : properties) {
-			comparator.with(leftProperty(type, property), rightProperty(type, property), true);
-		}
-		return comparator;
-	}
-
-	/**
-	 * @see #compare(Class, List)
-	 */
-	public static Expression compare(Class<?> type, String... properties) {
-		return compare(type, asList(properties));
-	}
-
-	/**
-	 * An expression that represents implementation of {@link Comparable#compareTo(Object)} method
-	 * that uses given properties for comparison
-	 *
-	 * @param properties properties which will be compared
-	 * @return a `compareTo(Object)` implementation expression
-	 */
-	public static Expression compareToImpl(List<String> properties) {
-		ExpressionComparator comparator = ExpressionComparator.create();
-		for (String property : properties) {
-			comparator.with(thisProperty(property), thatProperty(property), true);
-		}
-		return comparator;
-	}
-
-	/**
-	 * @see #compareToImpl(List)
-	 */
-	public static Expression compareToImpl(String... properties) {
-		return compareToImpl(asList(properties));
-	}
-
-	/**
-	 * An exception that represents a hash code which was calculated using given {@code properties}
-	 *
-	 * @param properties list of properties which will be used to calculate hash code
-	 * @return new instance of the ExpressionHash
-	 */
-	public static Expression hash(List<Expression> properties) {
-		return new ExpressionHash(properties);
-	}
-
-	/**
-	 * @see #hash(List)
-	 */
-	public static Expression hash(Expression... properties) {
-		return hash(asList(properties));
-	}
-
-	/**
-	 * @see #hash(List)
-	 */
-	public static Expression hashCodeImpl(String... properties) {
-		return hashCodeImpl(asList(properties));
-	}
-
-	/**
-	 * @see #hash(List)
-	 */
-	public static Expression hashCodeImpl(List<String> properties) {
-		return new ExpressionHash(properties
-				.stream()
-				.map(property -> property(self(), property))
-				.collect(toList()));
+		return new ExpressionTableSwitch(key, keys, expressionsArray, defaultExpression);
 	}
 
 	/**
 	 * Unifies passed arithmetic types as one. Arithmetic types are all primitive types, excluding {@code boolean.class}
 	 * A unified type represents a result type after applying arithmetic operations on given types
-	 * as per <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-4.html">Java Language Specification</a>
+	 * as per <a href="https://docs.oracle.com/javase/specs/jls/se17/html/jls-4.html">Java Language Specification</a>
 	 * <p>
 	 * Rules are:
 	 * <ul>
 	 *     <li>If there is {@code double.class} among types, unified type is  {@code double.class}</li>
 	 *     <li>Else, if there is {@code float.class} among types, unified type is  {@code float.class}</li>
 	 *     <li>Else, if there is {@code long.class} among types, unified type is  {@code long.class}</li>
-	 *     <li>Else, unified type is  {@code int.class}</li>
+	 *     <li>Else, unified type is {@code int.class}</li>
 	 * </ul>
 	 *
 	 * @param types arithmetic types to be unified
@@ -757,11 +615,11 @@ public class Expressions {
 	 * @return new instance of the ExpressionConstructor
 	 */
 	public static Expression constructor(Class<?> type, Expression... fields) {
-		return new ExpressionConstructor(type, asList(fields));
+		return new ExpressionConstructor(type, List.of(fields));
 	}
 
 	public static Expression superConstructor(Expression... fields) {
-		return new ExpressionSuperConstructor(asList(fields));
+		return new ExpressionSuperConstructor(List.of(fields));
 	}
 
 	public static Expression callSuper(String methodName, Expression... arguments) {
@@ -781,8 +639,60 @@ public class Expressions {
 		return new ExpressionCall(owner, methodName, arguments);
 	}
 
-	public static Expression ifThenElse(Expression condition, Expression left, Expression right) {
-		return new ExpressionIf(condition, left, right);
+	public static Expression ifNull(Expression value, Expression expressionTrue, Expression expressionFalse) {
+		return new ExpressionIfNull(value, expressionTrue, expressionFalse);
+	}
+
+	public static Expression isNull(Expression value) {
+		return ifNull(value, value(true), value(false));
+	}
+
+	public static Expression ifNonNull(Expression value, Expression expressionTrue, Expression expressionFalse) {
+		return new ExpressionIfNonNull(value, expressionTrue, expressionFalse);
+	}
+
+	public static Expression isNotNull(Expression value) {
+		return ifNonNull(value, value(true), value(false));
+	}
+
+	public static Expression ifElse(Expression value, Expression expressionTrue, Expression expressionFalse) {
+		return new ExpressionIfZCmp(value, NE, expressionTrue, expressionFalse);
+	}
+
+	public static Expression ifEq(Expression value1, Expression value2, Expression expressionTrue, Expression expressionFalse) {
+		return ifObjCmp(EQ, value1, value2, expressionTrue, expressionFalse);
+	}
+
+	public static Expression ifNe(Expression value1, Expression value2, Expression expressionTrue, Expression expressionFalse) {
+		return ifObjCmp(NE, value1, value2, expressionTrue, expressionFalse);
+	}
+
+	public static Expression ifRefEq(Expression value1, Expression value2, Expression expressionTrue, Expression expressionFalse) {
+		return ifObjCmp(REF_EQ, value1, value2, expressionTrue, expressionFalse);
+	}
+
+	public static Expression ifRefNe(Expression value1, Expression value2, Expression expressionTrue, Expression expressionFalse) {
+		return ifObjCmp(REF_NE, value1, value2, expressionTrue, expressionFalse);
+	}
+
+	public static Expression ifLt(Expression value1, Expression value2, Expression expressionTrue, Expression expressionFalse) {
+		return ifObjCmp(LT, value1, value2, expressionTrue, expressionFalse);
+	}
+
+	public static Expression ifGt(Expression value1, Expression value2, Expression expressionTrue, Expression expressionFalse) {
+		return ifObjCmp(GT, value1, value2, expressionTrue, expressionFalse);
+	}
+
+	public static Expression ifLe(Expression value1, Expression value2, Expression expressionTrue, Expression expressionFalse) {
+		return ifObjCmp(LE, value1, value2, expressionTrue, expressionFalse);
+	}
+
+	public static Expression ifGe(Expression value1, Expression value2, Expression expressionTrue, Expression expressionFalse) {
+		return ifObjCmp(GE, value1, value2, expressionTrue, expressionFalse);
+	}
+
+	private static Expression ifObjCmp(CompareOperation op, Expression value1, Expression value2, Expression expressionTrue, Expression expressionFalse) {
+		return new ExpressionIfObjCmp(op, value1, value2, expressionTrue, expressionFalse);
 	}
 
 	public static Expression length(Expression field) {
@@ -794,23 +704,15 @@ public class Expressions {
 	}
 
 	public static Expression staticCall(Class<?> owner, String method, Expression... arguments) {
-		return new ExpressionStaticCall(owner, method, asList(arguments));
+		return new ExpressionStaticCall(owner, method, List.of(arguments));
 	}
 
 	public static Expression staticCallSelf(String method, Expression... arguments) {
-		return new ExpressionStaticCallSelf(method, asList(arguments));
+		return new ExpressionStaticCallSelf(method, List.of(arguments));
 	}
 
 	public static Expression arrayGet(Expression array, Expression index) {
 		return new ExpressionArrayGet(array, index);
-	}
-
-	public static Expression isNull(Expression field) {
-		return new ExpressionIsNull(field);
-	}
-
-	public static Expression isNotNull(Expression field) {
-		return new ExpressionIsNotNull(field);
 	}
 
 	public static Expression nullRef(Class<?> type) {
@@ -843,40 +745,6 @@ public class Expressions {
 
 	public static Expression throwException(Throwable exception) {
 		return new ExpressionThrow(value(exception));
-	}
-
-	public static Expression switchByIndex(Expression index, Expression... expressions) {
-		return switchByIndex(index, asList(expressions), ExpressionSwitch.DEFAULT_EXPRESSION);
-	}
-
-	public static Expression switchByIndex(Expression index, List<Expression> expressions) {
-		return switchByIndex(index, expressions, ExpressionSwitch.DEFAULT_EXPRESSION);
-	}
-
-	public static Expression switchByIndex(Expression index, List<Expression> expressions, Expression defaultExpression) {
-		return new ExpressionSwitch(index, IntStream.range(0, expressions.size()).mapToObj(Expressions::value).collect(toList()), expressions, defaultExpression);
-	}
-
-	public static Expression switchByKey(Expression key, List<Expression> matchCases, List<Expression> matchExpressions) {
-		return new ExpressionSwitch(key, matchCases, matchExpressions, ExpressionSwitch.DEFAULT_EXPRESSION);
-	}
-
-	public static Expression switchByKey(Expression key, List<Expression> matchCases, List<Expression> matchExpressions, Expression defaultExpression) {
-		return new ExpressionSwitch(key, matchCases, matchExpressions, defaultExpression);
-	}
-
-	public static Expression switchByKey(Expression key, Map<Expression, Expression> cases) {
-		return switchByKey(key, cases, ExpressionSwitch.DEFAULT_EXPRESSION);
-	}
-
-	public static Expression switchByKey(Expression key, Map<Expression, Expression> cases, Expression defaultExpression) {
-		List<Expression> matchCases = new ArrayList<>();
-		List<Expression> matchExpressions = new ArrayList<>();
-		for (Map.Entry<Expression, Expression> entry : cases.entrySet()) {
-			matchCases.add(entry.getKey());
-			matchExpressions.add(entry.getValue());
-		}
-		return new ExpressionSwitch(key, matchCases, matchExpressions, defaultExpression);
 	}
 
 	public static Expression arraySet(Expression array, Expression position, Expression newElement) {
@@ -935,6 +803,91 @@ public class Expressions {
 
 	public static Expression iterateMapValues(Expression map, UnaryOperator<Expression> action) {
 		return iterateIterable(call(map, "values"), action);
+	}
+
+	/**
+	 * Returns the string which was constructed by concatenation of all the arguments
+	 *
+	 * @param arguments list of arguments to be concatenated
+	 * @return new instance of the ExpressionConcat
+	 */
+	public static Expression concat(List<Expression> arguments) {
+		if (arguments.isEmpty()) return value("");
+		return ExpressionConcat.create(arguments);
+	}
+
+	/**
+	 * @see #concat(List)
+	 */
+	public static Expression concat(Expression... arguments) {
+		return concat(List.of(arguments));
+	}
+
+	public static Expression hashCode(Expression value) {
+		return call(value, "hashCode");
+	}
+
+	public static Expression compare(Expression left, Expression right) {
+		return call(cast(left, Comparable.class), "compareTo", cast(right, Comparable.class));
+	}
+
+	public static Expression hashCodeImpl(List<String> fields) {
+		return ExpressionHashCode.create().withFields(fields);
+	}
+
+	public static Expression hashCodeImpl(String... fields) {
+		return ExpressionHashCode.create().withFields(fields);
+	}
+
+	public static Expression equalsImpl(List<String> fields) {
+		return ifNull(arg(0),
+				value(false),
+				let(castIntoSelf(arg(0)), that -> and(fields.stream()
+						.map(field -> let(
+								new Expression[]{
+										property(self(), field),
+										property(that, field)
+								},
+								vars ->
+										ifNull(vars[0],
+												isNull(vars[1]),
+												ifNull(vars[1], value(false), isEq(vars[0], vars[1]))))))));
+	}
+
+	public static Expression equalsImpl(String... fields) {
+		return equalsImpl(List.of(fields));
+	}
+
+	public static Expression toStringImpl(List<String> fields) {
+		ExpressionToString toString = ExpressionToString.create();
+		for (String field : fields) {
+			toString.with(field, property(self(), field));
+		}
+		return toString;
+	}
+
+	public static Expression toStringImpl(String... fields) {
+		return toStringImpl(List.of(fields));
+	}
+
+	public static Expression comparableImpl(List<String> fields) {
+		ExpressionCompare comparator = ExpressionCompare.create();
+		for (String field : fields) {
+			comparator.with(thisProperty(field), thatProperty(field), true);
+		}
+		return comparator;
+	}
+
+	public static Expression comparableImpl(String... fields) {
+		return comparableImpl(List.of(fields));
+	}
+
+	public static Expression comparatorImpl(Class<?> type, List<String> fields) {
+		ExpressionCompare comparator = ExpressionCompare.create();
+		for (String field : fields) {
+			comparator.with(leftProperty(type, field), rightProperty(type, field), true);
+		}
+		return comparator;
 	}
 
 }

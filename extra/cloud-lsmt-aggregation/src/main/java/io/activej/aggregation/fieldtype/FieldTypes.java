@@ -28,18 +28,18 @@ import io.activej.types.Types;
 
 import java.lang.reflect.Type;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 import static io.activej.aggregation.fieldtype.JsonCodecs.*;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.StringFormat.UTF8;
 import static java.time.temporal.ChronoUnit.DAYS;
-import static java.util.Collections.singletonList;
 
 public final class FieldTypes {
 
 	public static FieldType<Byte> ofByte() {
-		return new FieldType<Byte>(byte.class, new SerializerDefByte(false), BYTE_CODEC) {
+		return new FieldType<>(byte.class, new SerializerDefByte(false), BYTE_CODEC) {
 			@Override
 			public Expression toStringValue(Expression value) {
 				return Expressions.staticCall(Byte.class, "toString", value);
@@ -48,7 +48,7 @@ public final class FieldTypes {
 	}
 
 	public static FieldType<Short> ofShort() {
-		return new FieldType<Short>(short.class, new SerializerDefShort(false), SHORT_CODEC) {
+		return new FieldType<>(short.class, new SerializerDefShort(false), SHORT_CODEC) {
 			@Override
 			public Expression toStringValue(Expression value) {
 				return Expressions.staticCall(Short.class, "toString", value);
@@ -90,13 +90,12 @@ public final class FieldTypes {
 			serializer.addGetter(HyperLogLog.class.getMethod("getRegisters"),
 					new SerializerDefArray(new SerializerDefByte(false), byte[].class), -1, -1);
 			serializer.setConstructor(HyperLogLog.class.getConstructor(byte[].class),
-					singletonList("registers"));
+					List.of("registers"));
 		} catch (NoSuchMethodException ignored) {
 			throw new RuntimeException("Unable to construct SerializerDef for HyperLogLog");
 		}
 		return serializer;
 	}
-
 
 	public static <T> FieldType<Set<T>> ofSet(FieldType<T> fieldType) {
 		SerializerDef itemSerializer = fieldType.getSerializer();
@@ -121,7 +120,7 @@ public final class FieldTypes {
 	}
 
 	public static FieldType<String> ofString(StringFormat format) {
-		return new FieldType<String>(String.class, new SerializerDefString(format), STRING_CODEC) {
+		return new FieldType<>(String.class, new SerializerDefString(format), STRING_CODEC) {
 			@Override
 			public Expression toStringValue(Expression value) {
 				return value;
@@ -165,4 +164,5 @@ public final class FieldTypes {
 		}
 
 	}
+
 }

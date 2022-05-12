@@ -35,7 +35,10 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Array;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 import java.util.function.*;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
@@ -46,8 +49,6 @@ import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static io.activej.promise.PromisePredicates.isResult;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 
 /**
  * Allows managing multiple {@link Promise}s.
@@ -74,7 +75,7 @@ public final class Promises {
 	public static <T> @NotNull Promise<T> timeout(long delay, @NotNull Promise<T> promise) {
 		if (promise.isComplete()) return promise;
 		if (delay <= 0) return Promise.ofException(new AsyncTimeoutException("Promise timeout"));
-		return promise.next(new NextPromise<T, T>() {
+		return promise.next(new NextPromise<>() {
 			@Nullable ScheduledRunnable schedule = getCurrentEventloop().delay(delay,
 					wrapContext(this, () -> {
 						promise.whenResult(Recyclers::recycle);
@@ -236,7 +237,7 @@ public final class Promises {
 	 */
 	@Contract(pure = true)
 	public static @NotNull Promise<Void> all(Promise<?>... promises) {
-		return all(asList(promises));
+		return all(List.of(promises));
 	}
 
 	/**
@@ -329,7 +330,7 @@ public final class Promises {
 	@Contract(pure = true)
 	@SafeVarargs
 	public static <T> @NotNull Promise<T> any(Promise<? extends T>... promises) {
-		return any(isResult(), asList(promises));
+		return any(isResult(), List.of(promises));
 	}
 
 	/**
@@ -358,18 +359,18 @@ public final class Promises {
 
 	@Contract(pure = true)
 	public static <T> @NotNull Promise<T> any(@NotNull BiPredicate<? super T, Exception> predicate, @NotNull Promise<? extends T> promise1) {
-		return any(predicate, singletonList(promise1));
+		return any(predicate, List.of(promise1));
 	}
 
 	@Contract(pure = true)
 	public static <T> @NotNull Promise<T> any(@NotNull BiPredicate<? super T, Exception> predicate, @NotNull Promise<? extends T> promise1, @NotNull Promise<? extends T> promise2) {
-		return any(predicate, asList(promise1, promise2));
+		return any(predicate, List.of(promise1, promise2));
 	}
 
 	@Contract(pure = true)
 	@SafeVarargs
 	public static <T> @NotNull Promise<T> any(@NotNull BiPredicate<? super T, Exception> predicate, Promise<? extends T>... promises) {
-		return any(predicate, asList(promises));
+		return any(predicate, List.of(promises));
 	}
 
 	@Contract(pure = true)
@@ -418,7 +419,7 @@ public final class Promises {
 	 */
 	@Contract(pure = true)
 	public static <T> @NotNull Promise<List<T>> toList() {
-		return Promise.of(emptyList());
+		return Promise.of(List.of());
 	}
 
 	/**
@@ -427,7 +428,7 @@ public final class Promises {
 	 */
 	@Contract(pure = true)
 	public static <T> @NotNull Promise<List<T>> toList(@NotNull Promise<? extends T> promise1) {
-		return promise1.map(Collections::singletonList);
+		return promise1.map(t -> List.of(t));
 	}
 
 	/**
@@ -435,7 +436,7 @@ public final class Promises {
 	 */
 	@Contract(pure = true)
 	public static <T> @NotNull Promise<List<T>> toList(@NotNull Promise<? extends T> promise1, @NotNull Promise<? extends T> promise2) {
-		return promise1.combine(promise2, Arrays::asList);
+		return promise1.combine(promise2, List::of);
 	}
 
 	/**
@@ -444,7 +445,7 @@ public final class Promises {
 	@Contract(pure = true)
 	@SafeVarargs
 	public static <T> @NotNull Promise<List<T>> toList(Promise<? extends T>... promises) {
-		return toList(asList(promises));
+		return toList(List.of(promises));
 	}
 
 	/**
@@ -453,9 +454,9 @@ public final class Promises {
 	@Contract(pure = true)
 	public static <T> @NotNull Promise<List<T>> toList(@NotNull List<? extends Promise<? extends T>> promises) {
 		int size = promises.size();
-		if (size == 0) return Promise.of(Collections.emptyList());
-		if (size == 1) return promises.get(0).map(Collections::singletonList);
-		if (size == 2) return promises.get(0).combine(promises.get(1), Arrays::asList);
+		if (size == 0) return Promise.of(List.of());
+		if (size == 1) return promises.get(0).map(t -> List.of(t));
+		if (size == 2) return promises.get(0).combine(promises.get(1), List::of);
 		return toListImpl(promises.iterator(), promises.size(), true);
 	}
 
@@ -790,7 +791,7 @@ public final class Promises {
 	 * @see Promises#sequence(Iterator)
 	 */
 	public static @NotNull Promise<Void> sequence(AsyncRunnable... runnables) {
-		return sequence(asList(runnables));
+		return sequence(List.of(runnables));
 	}
 
 	/**
@@ -875,7 +876,7 @@ public final class Promises {
 	@SafeVarargs
 	public static <T> @NotNull Promise<T> first(@NotNull BiPredicate<? super T, ? super Exception> predicate,
 			AsyncSupplier<? extends T>... promises) {
-		return first(predicate, asList(promises));
+		return first(predicate, List.of(promises));
 	}
 
 	/**

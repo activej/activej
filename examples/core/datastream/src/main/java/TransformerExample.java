@@ -12,14 +12,14 @@ public final class TransformerExample implements StreamTransformer<String, Integ
 	private static final int MAX_LENGTH = 10;
 
 	//[START REGION_1]
-	private final AbstractStreamConsumer<String> input = new AbstractStreamConsumer<String>() {
+	private final AbstractStreamConsumer<String> input = new AbstractStreamConsumer<>() {
 		@Override
 		protected void onEndOfStream() {
 			output.sendEndOfStream();
 		}
 	};
 
-	private final AbstractStreamSupplier<Integer> output = new AbstractStreamSupplier<Integer>() {
+	private final AbstractStreamSupplier<Integer> output = new AbstractStreamSupplier<>() {
 		@Override
 		protected void onResumed() {
 			input.resume(item -> {

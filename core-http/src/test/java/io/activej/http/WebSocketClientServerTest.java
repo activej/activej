@@ -33,7 +33,6 @@ import static io.activej.https.SslUtils.createTestSslContext;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.getFreePort;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -197,7 +196,7 @@ public final class WebSocketClientServerTest {
 	public void testCloseByServerWithError() throws IOException {
 		WebSocketException testError = new WebSocketException(4321, "Test error");
 		ExecutorService executor = Executors.newSingleThreadExecutor();
-		List<String> messages = asList("first", "second", "third");
+		List<String> messages = List.of("first", "second", "third");
 
 		startTestServer(webSocket -> webSocket.writeMessage(Message.text(messages.get(0)))
 				.then(() -> webSocket.writeMessage(Message.text(messages.get(1))))
@@ -231,7 +230,7 @@ public final class WebSocketClientServerTest {
 	@Test
 	public void testCloseByServerWithEOS() throws IOException {
 		ExecutorService executor = Executors.newSingleThreadExecutor();
-		List<String> messages = asList("first", "second", "third");
+		List<String> messages = List.of("first", "second", "third");
 
 		startTestServer(webSocket -> webSocket.writeMessage(Message.text(messages.get(0)))
 				.then(() -> webSocket.writeMessage(Message.text(messages.get(1))))
@@ -267,7 +266,7 @@ public final class WebSocketClientServerTest {
 	public void testCloseByClientWithError() throws IOException {
 		WebSocketException testError = new WebSocketException(4321, "Test error");
 		ExecutorService executor = Executors.newSingleThreadExecutor();
-		List<String> messages = asList("first", "second", "third");
+		List<String> messages = List.of("first", "second", "third");
 		List<String> result = new ArrayList<>();
 		Ref<Exception> serverErrorRef = new Ref<>();
 
@@ -304,7 +303,7 @@ public final class WebSocketClientServerTest {
 	@Test
 	public void testCloseByClientWithEOS() throws IOException {
 		ExecutorService executor = Executors.newSingleThreadExecutor();
-		List<String> messages = asList("first", "second", "third");
+		List<String> messages = List.of("first", "second", "third");
 		List<String> result = new ArrayList<>();
 
 		RefBoolean lastMessageNull = new RefBoolean(false);

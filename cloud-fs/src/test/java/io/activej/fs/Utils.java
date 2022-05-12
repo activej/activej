@@ -5,7 +5,6 @@ import io.activej.fs.exception.FsBatchException;
 import io.activej.fs.exception.FsScalarException;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -14,21 +13,21 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
-import static io.activej.common.Utils.mapOf;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public final class Utils {
 
 	public static void assertBatchException(@NotNull Exception e, String name, Class<? extends FsScalarException> exceptionClass) {
-		assertBatchException(e, mapOf(name, exceptionClass));
+		assertBatchException(e, Map.of(name, exceptionClass));
 	}
 
 	public static void assertBatchException(@NotNull Exception e, Map<String, Class<? extends FsScalarException>> exceptionClasses) {
@@ -39,6 +38,19 @@ public final class Utils {
 
 		for (Map.Entry<String, Class<? extends FsScalarException>> entry : exceptionClasses.entrySet()) {
 			assertThat(exceptions.get(entry.getKey()), instanceOf(entry.getValue()));
+		}
+	}
+
+	public static void assertBatchException(@NotNull Exception e, int minExpected, int maxExpected, BiConsumer<String, FsScalarException> exceptionAssertFn) {
+		assertThat(e, instanceOf(FsBatchException.class));
+		FsBatchException batchEx = (FsBatchException) e;
+
+		Map<String, FsScalarException> exceptions = batchEx.getExceptions();
+		assertTrue(exceptions.size() >= minExpected);
+		assertTrue(exceptions.size() <= maxExpected);
+
+		for (Map.Entry<String, FsScalarException> entry : exceptions.entrySet()) {
+			exceptionAssertFn.accept(entry.getKey(), entry.getValue());
 		}
 	}
 
@@ -70,30 +82,26 @@ public final class Utils {
 	}
 
 	public static String asString(InputStream inputStream) throws IOException {
-		try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-			LocalFileUtils.copy(inputStream, outputStream);
-			return outputStream.toString();
-		}
-	}
-
-	// In older JDK versions Files::getLastModifiedTime returns time in SECONDS resolution
-	public static long getDelay(long timestamp) {
-		return timestamp % 1000 == 0 ? 1000 : 10;
+		return new String(inputStream.readAllBytes(), UTF_8);
 	}
 
 	public static void assertFileEquals(Path firstPath, Path secondPath, String first, String second) {
 		try {
-			assertArrayEquals(Files.readAllBytes(firstPath.resolve(first)), Files.readAllBytes(firstPath.resolve(second)));
-			assertArrayEquals(Files.readAllBytes(secondPath.resolve(first)), Files.readAllBytes(secondPath.resolve(second)));
+			assertEquals(-1, Files.mismatch(firstPath.resolve(first), firstPath.resolve(second)));
+			assertEquals(-1, Files.mismatch(secondPath.resolve(first), secondPath.resolve(second)));
 		} catch (IOException e) {
 			throw new AssertionError(e);
 		}
 	}
 
 	public static void assertFilesAreSame(Path firstPath, Path secondPath) {
+		assertFilesAreSame(firstPath, secondPath, Set.of());
+	}
+
+	public static void assertFilesAreSame(Path firstPath, Path secondPath, Set<String> except) {
 		try {
-			List<Path> firstFiles = listFiles(firstPath);
-			List<Path> secondFiles = listFiles(secondPath);
+			List<Path> firstFiles = listFiles(firstPath, except);
+			List<Path> secondFiles = listFiles(secondPath, except);
 			assertEquals(firstFiles.size(), secondFiles.size());
 
 			for (int i = 0; i < firstFiles.size(); i++) {
@@ -109,8 +117,12 @@ public final class Utils {
 	}
 
 	public static List<Path> listPaths(Path directoryPath) {
+		return listPaths(directoryPath, Set.of());
+	}
+
+	public static List<Path> listPaths(Path directoryPath, Set<String> except) {
 		List<Path> paths = new ArrayList<>();
-		list(directoryPath, paths, true);
+		list(directoryPath, paths, except, true);
 		return paths.stream()
 				.map(directoryPath::relativize)
 				.collect(toList());
@@ -129,24 +141,29 @@ public final class Utils {
 		}
 	}
 
-	private static List<Path> listFiles(Path directoryPath) {
+	private static List<Path> listFiles(Path directoryPath, Set<String> except) {
 		List<Path> list = new ArrayList<>();
-		list(directoryPath, list, false);
+		list(directoryPath, list, except, false);
 		return list;
 	}
 
-	private static void list(Path directoryPath, List<Path> paths, boolean includeDirs) {
+	private static void list(Path directoryPath, List<Path> paths, Set<String> except, boolean includeDirs) {
+		Set<Path> exceptPaths = except.stream()
+				.map(directoryPath::resolve)
+				.collect(toSet());
+
 		try {
 			List<Path> subPaths;
 			try (Stream<Path> list = Files.list(directoryPath)) {
 				subPaths = list.sorted().collect(toList());
 			}
 			for (Path path : subPaths) {
+				if (exceptPaths.contains(path)) continue;
 				if (Files.isRegularFile(path)) {
 					paths.add(path);
 				} else if (Files.isDirectory(path)) {
 					if (includeDirs) paths.add(path);
-					list(path, paths, includeDirs);
+					list(path, paths, except, includeDirs);
 				} else {
 					throw new AssertionError();
 				}

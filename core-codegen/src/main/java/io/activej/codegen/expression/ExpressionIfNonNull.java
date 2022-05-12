@@ -22,30 +22,49 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
-final class ExpressionIsNull implements Expression {
-	private final Expression expression;
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static io.activej.codegen.util.TypeChecks.isAssignable;
+import static io.activej.codegen.util.Utils.isPrimitiveType;
 
-	ExpressionIsNull(@NotNull Expression expression) {
+final class ExpressionIfNonNull implements Expression {
+	private final Expression expression;
+	private final Expression expressionTrue;
+	private final Expression expressionFalse;
+
+	ExpressionIfNonNull(@NotNull Expression expression, Expression expressionTrue, Expression expressionFalse) {
 		this.expression = expression;
+		this.expressionTrue = expressionTrue;
+		this.expressionFalse = expressionFalse;
 	}
 
 	@Override
 	public Type load(Context ctx) {
 		GeneratorAdapter g = ctx.getGeneratorAdapter();
 
-		Label labelNull = new Label();
+		Label labelTrue = new Label();
 		Label labelExit = new Label();
 
-		expression.load(ctx);
-		g.ifNull(labelNull);
-		g.push(false);
+		Type argType = expression.load(ctx);
+		checkType(argType, isAssignable());
+
+		if (isPrimitiveType(argType)) {
+			if (argType.getSize() == 1)
+				g.pop();
+			if (argType.getSize() == 2)
+				g.pop2();
+			return expressionTrue.load(ctx);
+		}
+
+		g.ifNonNull(labelTrue);
+
+		Type typeFalse = expressionFalse.load(ctx);
 		g.goTo(labelExit);
 
-		g.mark(labelNull);
-		g.push(true);
+		g.mark(labelTrue);
+		Type typeTrue = expressionTrue.load(ctx);
 
 		g.mark(labelExit);
 
-		return Type.BOOLEAN_TYPE;
+		return ctx.unifyTypes(typeFalse, typeTrue);
 	}
 }

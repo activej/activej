@@ -30,6 +30,7 @@ import java.util.*;
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.http.HttpUtils.trimAndDecodePositiveInt;
 import static io.activej.uikernel.Utils.fromJson;
+import static java.util.Collections.unmodifiableMap;
 
 @SuppressWarnings("unused")
 public final class ReadSettings<K> {
@@ -76,7 +77,7 @@ public final class ReadSettings<K> {
 		if (fieldsParameter != null && !fieldsParameter.isEmpty()) {
 			fields = fromJson(gson, fieldsParameter, LIST_STRING_TYPE_TOKEN);
 		} else {
-			fields = Collections.emptyList();
+			fields = List.of();
 		}
 
 		String offsetParameter = request.getQueryParameter("offset");
@@ -95,9 +96,9 @@ public final class ReadSettings<K> {
 		Map<String, String> filters;
 		if (filtersParameter != null && !filtersParameter.isEmpty()) {
 			filters = fromJson(gson, filtersParameter, MAP_STRING_STRING_TYPE_TOKEN);
-			filters = Collections.unmodifiableMap(filters);
+			filters = unmodifiableMap(filters);
 		} else {
-			filters = Collections.emptyMap();
+			filters = Map.of();
 		}
 
 		String sortParameter = request.getQueryParameter("sort");
@@ -114,9 +115,9 @@ public final class ReadSettings<K> {
 				value = SortOrder.of(arr.get(1).getAsString());
 				sort.put(key, value);
 			}
-			sort = Collections.unmodifiableMap(sort);
+			sort = unmodifiableMap(sort);
 		} else {
-			sort = Collections.emptyMap();
+			sort = Map.of();
 		}
 
 		String extraParameter = request.getQueryParameter("extra");
@@ -124,7 +125,7 @@ public final class ReadSettings<K> {
 		if (extraParameter != null && !extraParameter.isEmpty()) {
 			extra = fromJson(gson, extraParameter, new TypeToken<LinkedHashSet<K>>() {}.getType());
 		} else {
-			extra = Collections.emptySet();
+			extra = Set.of();
 		}
 
 		return new ReadSettings<>(fields, offset, limit, filters, sort, extra);

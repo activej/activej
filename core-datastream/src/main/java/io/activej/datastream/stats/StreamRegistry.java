@@ -122,7 +122,7 @@ public final class StreamRegistry<V> implements Iterable<V>, WithInitializer<Str
 	@Override
 	public @NotNull Iterator<V> iterator() {
 		Iterator<Entry<V>> iterator = list.iterator();
-		return new Iterator<V>() {
+		return new Iterator<>() {
 			@Override
 			public boolean hasNext() {
 				return iterator.hasNext();

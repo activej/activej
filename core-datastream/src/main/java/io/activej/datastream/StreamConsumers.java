@@ -112,7 +112,6 @@ final class StreamConsumers {
 			this.promise = promise;
 		}
 
-		@SuppressWarnings("Convert2MethodRef") // does not compile on Java 8
 		@Override
 		protected void onInit() {
 			promise
@@ -121,7 +120,7 @@ final class StreamConsumers {
 								.whenResult(this::acknowledge)
 								.whenException(this::closeEx);
 						this.getAcknowledgement()
-								.whenException(e -> consumer.closeEx(e));
+								.whenException(consumer::closeEx);
 						internalSupplier.streamTo(consumer);
 					})
 					.whenException(this::closeEx);

@@ -19,14 +19,12 @@ package io.activej.jmx;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.first;
-import static java.util.Collections.singleton;
 import static java.util.Collections.singletonMap;
 
 abstract class AbstractAttributeNodeForLeaf implements AttributeNode {
@@ -49,20 +47,20 @@ abstract class AbstractAttributeNodeForLeaf implements AttributeNode {
 
 	@Override
 	public final Set<String> getAllAttributes() {
-		return singleton(name);
+		return Set.of(name);
 	}
 
 	@Override
 	public final Set<String> getVisibleAttributes() {
-		return visible ? singleton(name) : Collections.emptySet();
+		return visible ? Set.of(name) : Set.of();
 	}
 
 	@Override
 	public final Map<String, Map<String, String>> getDescriptions() {
 		if (description != null) {
-			return singletonMap(name, singletonMap(name, description));
+			return Map.of(name, singletonMap(name, description));
 		} else {
-			return singletonMap(name, Collections.emptyMap());
+			return Map.of(name, Map.of());
 		}
 	}
 
@@ -76,7 +74,7 @@ abstract class AbstractAttributeNodeForLeaf implements AttributeNode {
 			return singletonMap(attrName, null);
 		}
 
-		return Collections.singletonMap(name, aggregateAttribute(attrName, sources));
+		return singletonMap(name, aggregateAttribute(attrName, sources));
 	}
 
 	/**

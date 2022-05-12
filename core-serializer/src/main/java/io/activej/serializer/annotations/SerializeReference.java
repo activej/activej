@@ -23,7 +23,8 @@ import java.lang.annotation.*;
 		ElementType.FIELD,
 		ElementType.METHOD,
 		ElementType.TYPE,
-		ElementType.TYPE_USE})
+		ElementType.TYPE_USE,
+		ElementType.RECORD_COMPONENT})
 @Repeatable(SerializeReferences.class)
 public @interface SerializeReference {
 	int[] path() default {};

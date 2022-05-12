@@ -18,6 +18,7 @@ package io.activej.codegen;
 
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.VarLocal;
+import io.activej.codegen.util.TypeChecks;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -30,10 +31,11 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static io.activej.codegen.util.TypeChecks.isNotThrow;
 import static io.activej.codegen.util.Utils.*;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.isStatic;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 import static org.objectweb.asm.Type.*;
@@ -130,6 +132,8 @@ public final class Context {
 		VarLocal varLocal = varLocals.get(key);
 		if (varLocal == null) {
 			Type type = expression.load(this);
+			checkType(type, isNotThrow());
+
 			if (type == Type.VOID_TYPE) {
 				varLocal = VarLocal.VAR_LOCAL_VOID;
 			} else {
@@ -142,50 +146,78 @@ public final class Context {
 		return varLocal;
 	}
 
+	public @Nullable Type unifyTypes(@Nullable Type type1, @Nullable Type type2) {
+		if (type1 == null) return type2;
+		if (type2 == null) return type1;
+		int sort1 = type1.getSort();
+		int sort2 = type2.getSort();
+		if (sort1 == ARRAY && sort2 == ARRAY) {
+			if (type1.equals(type2))
+				return type1;
+		}
+		if (sort1 == OBJECT && sort2 == OBJECT) {
+			if (type1.equals(type2))
+				return type1;
+			Class<?> class1 = toJavaType(type1);
+			Class<?> class2 = toJavaType(type2);
+			if (class1.isAssignableFrom(class2)) {
+				return type1;
+			}
+			if (class2.isAssignableFrom(class1)) {
+				return type2;
+			}
+		}
+		if (sort1 == sort2) {
+			return type1;
+		}
+		throw new IllegalArgumentException();
+	}
+
 	public Class<?> toJavaType(Type type) {
 		if (type.equals(getSelfType()))
 			throw new IllegalArgumentException();
 		int sort = type.getSort();
-		if (sort == BOOLEAN)
-			return boolean.class;
-		if (sort == CHAR)
-			return char.class;
-		if (sort == BYTE)
-			return byte.class;
-		if (sort == SHORT)
-			return short.class;
-		if (sort == INT)
-			return int.class;
-		if (sort == FLOAT)
-			return float.class;
-		if (sort == LONG)
-			return long.class;
-		if (sort == DOUBLE)
-			return double.class;
-		if (sort == VOID)
-			return void.class;
-		if (sort == OBJECT) {
-			try {
-				return classLoader.loadClass(type.getClassName());
-			} catch (ClassNotFoundException e) {
-				throw new IllegalArgumentException(format("No class %s in class loader", type.getClassName()), e);
-			}
-		}
-		if (sort == ARRAY) {
-			Class<?> result;
-			if (type.equals(getType(Object[].class))) {
-				result = Object[].class;
-			} else {
-				String className = type.getDescriptor().replace('/', '.');
+		switch (sort) {
+			case BOOLEAN:
+				return boolean.class;
+			case CHAR:
+				return char.class;
+			case BYTE:
+				return byte.class;
+			case SHORT:
+				return short.class;
+			case INT:
+				return int.class;
+			case FLOAT:
+				return float.class;
+			case LONG:
+				return long.class;
+			case DOUBLE:
+				return double.class;
+			case VOID:
+				return void.class;
+			case OBJECT:
 				try {
-					result = Class.forName(className);
+					return classLoader.loadClass(type.getClassName());
 				} catch (ClassNotFoundException e) {
-					throw new IllegalArgumentException(format("No class %s in Class.forName", className), e);
+					throw new IllegalArgumentException(format("No class %s in class loader", type.getClassName()), e);
 				}
-			}
-			return result;
+			case ARRAY:
+				Class<?> result;
+				if (type.equals(getType(Object[].class))) {
+					result = Object[].class;
+				} else {
+					String className = type.getDescriptor().replace('/', '.');
+					try {
+						result = Class.forName(className);
+					} catch (ClassNotFoundException e) {
+						throw new IllegalArgumentException(format("No class %s in Class.forName", className), e);
+					}
+				}
+				return result;
+			default:
+				throw new IllegalArgumentException(format("No Java type for %s", type.getClassName()));
 		}
-		throw new IllegalArgumentException(format("No Java type for %s", type.getClassName()));
 	}
 
 	public void cast(Type typeFrom, Type typeTo) {
@@ -248,7 +280,7 @@ public final class Context {
 			Type targetTypePrimitive = isPrimitiveType(typeTo) ? typeTo : unwrap(typeTo);
 
 			if (isWrapperType(typeFrom)) {
-				g.invokeVirtual(typeFrom, toPrimitive(typeTo));
+				g.invokeVirtual(typeFrom, unwrapToPrimitive(targetTypePrimitive));
 				return;
 			}
 
@@ -269,15 +301,19 @@ public final class Context {
 	}
 
 	public Type invoke(Expression owner, String methodName, Expression... arguments) {
-		return invoke(owner, methodName, asList(arguments));
+		return invoke(owner, methodName, List.of(arguments));
 	}
 
 	public Type invoke(Expression owner, String methodName, List<Expression> arguments) {
 		Type ownerType = owner.load(this);
+		checkType(ownerType, TypeChecks.isAssignable());
+
 		Type[] argumentTypes = new Type[arguments.size()];
 		for (int i = 0; i < arguments.size(); i++) {
 			Expression argument = arguments.get(i);
-			argumentTypes[i] = argument.load(this);
+			Type argumentType = argument.load(this);
+			checkType(argumentType, TypeChecks.isAssignable());
+			argumentTypes[i] = argumentType;
 		}
 		return invoke(ownerType, methodName, argumentTypes);
 	}
@@ -317,14 +353,16 @@ public final class Context {
 	}
 
 	public Type invokeStatic(Type ownerType, String methodName, Expression... arguments) {
-		return invokeStatic(ownerType, methodName, asList(arguments));
+		return invokeStatic(ownerType, methodName, List.of(arguments));
 	}
 
 	public Type invokeStatic(Type ownerType, String methodName, List<Expression> arguments) {
 		Type[] argumentTypes = new Type[arguments.size()];
 		for (int i = 0; i < arguments.size(); i++) {
 			Expression argument = arguments.get(i);
-			argumentTypes[i] = argument.load(this);
+			Type argumentType = argument.load(this);
+			checkType(argumentType, TypeChecks.isAssignable());
+			argumentTypes[i] = argumentType;
 		}
 		return invokeStatic(ownerType, methodName, argumentTypes);
 	}
@@ -354,7 +392,7 @@ public final class Context {
 	}
 
 	public Type invokeConstructor(Type ownerType, Expression... arguments) {
-		return invokeConstructor(ownerType, asList(arguments));
+		return invokeConstructor(ownerType, List.of(arguments));
 	}
 
 	public Type invokeConstructor(Type ownerType, List<Expression> arguments) {
@@ -363,7 +401,9 @@ public final class Context {
 
 		Type[] argumentTypes = new Type[arguments.size()];
 		for (int i = 0; i < arguments.size(); i++) {
-			argumentTypes[i] = arguments.get(i).load(this);
+			Type argumentType = arguments.get(i).load(this);
+			checkType(argumentType, TypeChecks.isAssignable());
+			argumentTypes[i] = argumentType;
 		}
 		return invokeConstructor(ownerType, argumentTypes);
 	}
@@ -388,7 +428,9 @@ public final class Context {
 		g.loadThis();
 		Type[] argumentTypes = new Type[arguments.size()];
 		for (int i = 0; i < arguments.size(); i++) {
-			argumentTypes[i] = arguments.get(i).load(this);
+			Type argumentType = arguments.get(i).load(this);
+			checkType(argumentType, TypeChecks.isAssignable());
+			argumentTypes[i] = argumentType;
 		}
 		Class<?>[] argumentClasses = Stream.of(argumentTypes).map(this::toJavaType).toArray(Class[]::new);
 		Method foundMethod = findMethod(
@@ -411,14 +453,16 @@ public final class Context {
 	}
 
 	public Type invokeSuperMethod(String methodName, Expression[] arguments) {
-		return invokeSuperMethod(methodName, Arrays.asList(arguments));
+		return invokeSuperMethod(methodName, List.of(arguments));
 	}
 
 	public Type invokeSuperMethod(String methodName, List<Expression> arguments) {
 		g.loadThis();
 		Type[] argumentTypes = new Type[arguments.size()];
 		for (int i = 0; i < arguments.size(); i++) {
-			argumentTypes[i] = arguments.get(i).load(this);
+			Type argumentType = arguments.get(i).load(this);
+			checkType(argumentType, TypeChecks.isAssignable());
+			argumentTypes[i] = argumentType;
 		}
 		Class<?>[] argumentClasses = Stream.of(argumentTypes).map(this::toJavaType).toArray(Class[]::new);
 		Method foundMethod = findMethod(

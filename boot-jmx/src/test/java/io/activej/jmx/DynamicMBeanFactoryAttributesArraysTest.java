@@ -7,9 +7,9 @@ import io.activej.jmx.helper.JmxBeanAdapterStub;
 import org.junit.Test;
 
 import javax.management.DynamicMBean;
+import java.util.List;
 
 import static io.activej.jmx.JmxBeanSettings.defaultSettings;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertArrayEquals;
 
 public class DynamicMBeanFactoryAttributesArraysTest {
@@ -65,7 +65,7 @@ public class DynamicMBeanFactoryAttributesArraysTest {
 	// region helper methods
 	public static DynamicMBean createDynamicMBeanFor(Object... objects) {
 		return DynamicMBeanFactory.create()
-				.createDynamicMBean(asList(objects), defaultSettings(), false);
+				.createDynamicMBean(List.of(objects), defaultSettings(), false);
 	}
 	// endregion
 }

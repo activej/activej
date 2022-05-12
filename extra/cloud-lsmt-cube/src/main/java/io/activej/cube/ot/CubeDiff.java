@@ -24,8 +24,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static java.util.Collections.emptyMap;
-
 public class CubeDiff {
 	private final Map<String, AggregationDiff> diffs;
 
@@ -57,7 +55,7 @@ public class CubeDiff {
 	}
 
 	public static CubeDiff empty() {
-		return new CubeDiff(emptyMap());
+		return new CubeDiff(Map.of());
 	}
 
 	public CubeDiff inverse() {

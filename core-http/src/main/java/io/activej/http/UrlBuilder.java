@@ -23,7 +23,10 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URLEncoder;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import static io.activej.common.Checks.checkArgument;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -117,7 +120,7 @@ public class UrlBuilder {
 	}
 
 	public UrlBuilder appendPath(String pathTail) {
-		path.addAll(Arrays.asList(pathTail.split("/")));
+		path.addAll(List.of(pathTail.split("/")));
 		return this;
 	}
 

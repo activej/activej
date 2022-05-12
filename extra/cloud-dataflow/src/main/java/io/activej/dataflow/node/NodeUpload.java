@@ -24,8 +24,7 @@ import io.activej.dataflow.stats.NodeStat;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
-
-import static java.util.Collections.singletonList;
+import java.util.List;
 
 /**
  * Represents a node, which uploads data to a stream.
@@ -46,7 +45,7 @@ public final class NodeUpload<T> extends AbstractNode {
 
 	@Override
 	public Collection<StreamId> getInputs() {
-		return singletonList(streamId);
+		return List.of(streamId);
 	}
 
 	@Override

@@ -97,7 +97,7 @@ public class UserServiceExample extends Launcher {
 	private static void printUsers(Map<Long, User> users) {
 		System.out.println("All users: ");
 		users.forEach((id, user) ->
-				System.out.printf("\tID %d: %s %s%n", id, user.getFirstName(), user.getLastName()));
+				System.out.printf("\tID %d: %s %s%n", id, user.firstName(), user.lastName()));
 	}
 
 	public static void main(String[] args) throws Exception {

@@ -31,11 +31,9 @@ import java.util.Map;
 import java.util.Set;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
-import static io.activej.common.Utils.setOf;
 import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -53,13 +51,7 @@ public final class ActiveFsServletAndClientTest {
 	@Rule
 	public final TemporaryFolder tmpFolder = new TemporaryFolder();
 
-	private static final Set<String> initialFiles = setOf(
-			"file",
-			"file2",
-			"directory/subdir/file3.txt",
-			"directory/file.txt",
-			"directory2/file2.txt"
-	);
+	private static final Set<String> initialFiles = Set.of("file", "file2", "directory/subdir/file3.txt", "directory/file.txt", "directory2/file2.txt");
 
 	private Path storage;
 
@@ -170,7 +162,7 @@ public final class ActiveFsServletAndClientTest {
 			for (String path : initialFiles) {
 				Path file = this.storage.resolve(path);
 				Files.createDirectories(file.getParent());
-				Files.write(file, String.format("This is contents of file %s", file).getBytes(UTF_8), CREATE, TRUNCATE_EXISTING);
+				Files.writeString(file, String.format("This is contents of file %s", file), CREATE, TRUNCATE_EXISTING);
 			}
 		} catch (IOException e) {
 			throw new AssertionError(e);

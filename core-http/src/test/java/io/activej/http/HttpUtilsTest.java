@@ -15,7 +15,6 @@ import java.util.Random;
 import static io.activej.bytebuf.ByteBufStrings.decodeUtf8;
 import static io.activej.bytebuf.ByteBufStrings.encodePositiveInt;
 import static io.activej.http.HttpUtils.trimAndDecodePositiveInt;
-import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
@@ -117,16 +116,16 @@ public class HttpUtilsTest {
 
 		testFormatUrl(
 				new InetSocketAddress("::1", 80),
-				asList("http://localhost/", "http://ip6-localhost/"),
-				asList("https://localhost:80/", "https://ip6-localhost:80/"));
+				List.of("http://localhost/", "http://ip6-localhost/"),
+				List.of("https://localhost:80/", "https://ip6-localhost:80/"));
 		testFormatUrl(
 				new InetSocketAddress("::1", 443),
-				asList("http://localhost:443/", "http://ip6-localhost:443/"),
-				asList("https://localhost/", "https://ip6-localhost/"));
+				List.of("http://localhost:443/", "http://ip6-localhost:443/"),
+				List.of("https://localhost/", "https://ip6-localhost/"));
 		testFormatUrl(
 				new InetSocketAddress("::1", 1337),
-				asList("http://localhost:1337/", "http://ip6-localhost:1337/"),
-				asList("https://localhost:1337/", "https://ip6-localhost:1337/"));
+				List.of("http://localhost:1337/", "http://ip6-localhost:1337/"),
+				List.of("https://localhost:1337/", "https://ip6-localhost:1337/"));
 
 		testFormatUrl(
 				new InetSocketAddress("::", 80),

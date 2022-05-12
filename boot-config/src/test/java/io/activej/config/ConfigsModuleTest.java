@@ -96,7 +96,7 @@ public class ConfigsModuleTest {
 		properties2.put("workers", "4");
 		properties2.put("innerClass.field3", "true");
 
-		ConfigConverter<TestClass> configConverter = new ConfigConverter<TestClass>() {
+		ConfigConverter<TestClass> configConverter = new ConfigConverter<>() {
 			@Override
 			public @NotNull TestClass get(Config config) {
 				return get(config, null);

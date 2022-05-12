@@ -43,7 +43,7 @@ public class TestStreamTransformers {
 	}
 
 	static final class AsChannelConsumer<T> extends AbstractChannelConsumer<T> {
-		private final AbstractStreamSupplier<T> internalSupplier = new AbstractStreamSupplier<T>() {};
+		private final AbstractStreamSupplier<T> internalSupplier = new AbstractStreamSupplier<>() {};
 
 		AsChannelConsumer(StreamConsumer<T> consumer) {
 			this.internalSupplier.streamTo(consumer);

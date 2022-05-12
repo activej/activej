@@ -25,7 +25,6 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static io.activej.inject.util.Utils.next;
-import static java.util.Collections.emptyMap;
 
 /**
  * Completely generic and abstract simple Java implementation
@@ -61,7 +60,7 @@ public final class Trie<K, V> {
 	}
 
 	public Trie<K, V> getOrDefault(K key, V defaultValue) {
-		return children.getOrDefault(key, new Trie<>(defaultValue, emptyMap()));
+		return children.getOrDefault(key, new Trie<>(defaultValue, Map.of()));
 	}
 
 	public Trie<K, V> computeIfAbsent(K key, Function<K, V> f) {

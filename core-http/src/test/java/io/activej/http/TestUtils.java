@@ -10,7 +10,6 @@ import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,28 +25,19 @@ import static org.junit.Assert.*;
 
 public class TestUtils {
 
-	public static byte[] toByteArray(InputStream is) {
-		byte[] bytes;
-
+	public static void assertEmpty(InputStream inputStream) {
 		try {
-			ByteArrayOutputStream bos = new ByteArrayOutputStream();
-
-			byte[] data = new byte[1024];
-			int count;
-
-			while ((count = is.read(data)) != -1) {
-				bos.write(data, 0, count);
-			}
-
-			bos.flush();
-			bos.close();
-			is.close();
-
-			bytes = bos.toByteArray();
+			assertEquals(-1, inputStream.read());
 		} catch (IOException e) {
 			throw new AssertionError(e);
+		} finally {
+			try {
+				inputStream.close();
+			} catch (IOException e) {
+				//noinspection ThrowFromFinallyBlock
+				throw new AssertionError(e);
+			}
 		}
-		return bytes;
 	}
 
 	public static void readFully(InputStream is, byte[] bytes) {

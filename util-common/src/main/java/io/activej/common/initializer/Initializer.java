@@ -19,8 +19,6 @@ package io.activej.common.initializer;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static java.util.Arrays.asList;
-
 /**
  * An initializer of some value
  * <p>
@@ -45,7 +43,7 @@ public interface Initializer<T> extends Consumer<T> {
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	@SafeVarargs
 	static <T> Initializer<T> combine(Initializer<? super T>... initializers) {
-		return combine((List) asList((Initializer[]) initializers));
+		return combine((List) List.of((Initializer[]) initializers));
 	}
 
 	/**

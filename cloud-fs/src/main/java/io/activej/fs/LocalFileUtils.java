@@ -25,8 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -40,8 +38,6 @@ import static io.activej.fs.ActiveFs.SEPARATOR;
 import static io.activej.fs.util.RemoteFsUtils.isWildcard;
 import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 
 public final class LocalFileUtils {
 	private static final Logger logger = LoggerFactory.getLogger(LocalFileUtils.class);
@@ -50,13 +46,6 @@ public final class LocalFileUtils {
 		createDirectories(tempDir, fsyncDirectories);
 		if (!tempDir.startsWith(storage)) {
 			createDirectories(storage, fsyncDirectories);
-		}
-	}
-
-	static void copy(InputStream from, OutputStream to) throws IOException {
-		byte[] buf = new byte[16384];
-		for (int n; (n = from.read(buf)) != -1; ) {
-			to.write(buf, 0, n);
 		}
 	}
 
@@ -73,7 +62,7 @@ public final class LocalFileUtils {
 	}
 
 	static void tryDelete(Path target) throws IOException {
-		Files.walkFileTree(target, new SimpleFileVisitor<Path>() {
+		Files.walkFileTree(target, new SimpleFileVisitor<>() {
 			@Override
 			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 				if (target.equals(file)) {
@@ -177,8 +166,8 @@ public final class LocalFileUtils {
 		// optimization for single-file requests
 		if (subglob.isEmpty()) {
 			return Files.isRegularFile(subdirectory) ?
-					singletonList(subdirectory) :
-					emptyList();
+					List.of(subdirectory) :
+					List.of();
 		}
 
 		// common route
@@ -200,7 +189,7 @@ public final class LocalFileUtils {
 		}
 		String[] parts;
 		if (glob == null || (parts = glob.split(SEPARATOR))[0].contains("**")) {
-			Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
+			Files.walkFileTree(dir, new SimpleFileVisitor<>() {
 
 				@Override
 				public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
@@ -238,7 +227,7 @@ public final class LocalFileUtils {
 			matchers[i] = getPathMatcher(fs, part);
 		}
 
-		Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
+		Files.walkFileTree(dir, new SimpleFileVisitor<>() {
 			@Override
 			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 				walker.accept(file);

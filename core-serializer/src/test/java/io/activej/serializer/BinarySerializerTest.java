@@ -17,10 +17,10 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.common.Utils.*;
 import static io.activej.serializer.BinarySerializerTest.TestEnum.*;
 import static io.activej.serializer.StringFormat.*;
-import static io.activej.serializer.Utils.*;
+import static io.activej.serializer.Utils.DEFINING_CLASS_LOADER;
+import static io.activej.serializer.Utils.doTest;
 import static io.activej.serializer.impl.SerializerExpressions.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
@@ -29,9 +29,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
 
-@SuppressWarnings({"unused", "ArraysAsListWithZeroOrOneArgument"})
+@SuppressWarnings("unused")
 public class BinarySerializerTest {
 
 	@Rule
@@ -295,10 +294,10 @@ public class BinarySerializerTest {
 		testData1.nestedArrayArray = new TestDataNested[][]{
 				new TestDataNested[]{new TestDataNested(14), new TestDataNested(15)},
 				new TestDataNested[]{new TestDataNested(16)}};
-		testData1.nestedList = asList(new TestDataNested(1), new TestDataNested(2));
-		testData1.nestedListList = asList(
-				asList(new TestDataNested(20), new TestDataNested(21)),
-				singletonList(new TestDataNested(22)));
+		testData1.nestedList = List.of(new TestDataNested(1), new TestDataNested(2));
+		testData1.nestedListList = List.of(
+				List.of(new TestDataNested(20), new TestDataNested(21)),
+				List.of(new TestDataNested(22)));
 
 		TestDataComplex testData2 = doTest(TestDataComplex.class, testData1);
 
@@ -438,7 +437,7 @@ public class BinarySerializerTest {
 	@Test
 	public void testList() {
 		ListOfStringHolder testData1 = new ListOfStringHolder();
-		testData1.list = asList("a", "b", "c");
+		testData1.list = List.of("a", "b", "c");
 		ListOfStringHolder testData2 = doTest(ListOfStringHolder.class, testData1);
 		assertEquals(testData1.list, testData2.list);
 	}
@@ -540,7 +539,7 @@ public class BinarySerializerTest {
 	public void testGeneric() {
 		GenericHolder testData1 = new GenericHolder();
 		testData1.data = new TestDataGeneric<>();
-		testData1.data.setList(asList(
+		testData1.data.setList(List.of(
 				new TestDataGenericNested<>(10, "a"),
 				new TestDataGenericNested<>(20, "b")
 		));
@@ -560,8 +559,6 @@ public class BinarySerializerTest {
 
 	@Test
 	public void testGenericParameters() {
-		assumeTrue("Prior to Java 12, some complex annotation paths are not picked up by JVM", AT_LEAST_JAVA_12);
-
 		TestDataGenericParameters testData1 = new TestDataGenericParameters();
 		testData1.list = asList(
 				null,
@@ -583,7 +580,7 @@ public class BinarySerializerTest {
 	public void testGenericInterface() {
 		TestDataGenericInterfaceHolder testData1 = new TestDataGenericInterfaceHolder();
 		TestDataGeneric<Integer, String> generic = new TestDataGeneric<>();
-		generic.setList(asList(
+		generic.setList(List.of(
 				new TestDataGenericNested<>(10, "a"),
 				new TestDataGenericNested<>(20, "b")));
 
@@ -1076,8 +1073,8 @@ public class BinarySerializerTest {
 		testData1.object2 = "object2";
 
 		BinarySerializer<TestDataExtraSubclasses> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
-				.withSubclasses("extraSubclasses1", asList(Integer.class))
-				.withSubclasses(Object.class, asList(Boolean.class))
+				.withSubclasses("extraSubclasses1", List.of(Integer.class))
+				.withSubclasses(Object.class, List.of(Boolean.class))
 				.build(TestDataExtraSubclasses.class);
 		TestDataExtraSubclasses testData2 = doTest(testData1, serializer);
 
@@ -1117,8 +1114,8 @@ public class BinarySerializerTest {
 		((TestDataExtraSubclasses2) testData1).i = 10;
 
 		BinarySerializer<TestDataExtraSubclassesInterface> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
-				.withSubclasses("extraSubclasses", asList(TestDataExtraSubclasses2.class))
-				.withSubclasses(TestDataExtraSubclassesInterface.class, asList(TestDataExtraSubclasses3.class))
+				.withSubclasses("extraSubclasses", List.of(TestDataExtraSubclasses2.class))
+				.withSubclasses(TestDataExtraSubclassesInterface.class, List.of(TestDataExtraSubclasses3.class))
 				.build(TestDataExtraSubclassesInterface.class);
 		TestDataExtraSubclassesInterface testData2 = doTest(testData1, serializer);
 
@@ -1164,7 +1161,7 @@ public class BinarySerializerTest {
 		testData1.data = testImpl;
 
 		BinarySerializer<TestDataContainerOfAbstractData> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
-				.withSubclasses(TestDataAbstract.class, asList(TestDataAbstractImpl.class))
+				.withSubclasses(TestDataAbstract.class, List.of(TestDataAbstractImpl.class))
 				.build(TestDataContainerOfAbstractData.class);
 		TestDataContainerOfAbstractData testData2 = doTest(testData1, serializer);
 
@@ -1270,7 +1267,7 @@ public class BinarySerializerTest {
 	@Test
 	public void testListEnums() {
 		ListEnumHolder testData1 = new ListEnumHolder();
-		testData1.list = asList(ONE, TestEnum.THREE, TWO);
+		testData1.list = List.of(ONE, TestEnum.THREE, TWO);
 		ListEnumHolder testData2 = doTest(ListEnumHolder.class, testData1);
 		assertEquals(testData1.list, testData2.list);
 	}
@@ -1487,12 +1484,12 @@ public class BinarySerializerTest {
 
 	@Test
 	public void testEnumSet() {
-		Set<TestEnum> set = setOf(ONE, TWO);
-		Set<TestEnum> setNullable = setOf(TWO, THREE);
-		Set<TestEnum> setEmpty = emptySet();
-		Set<TestEnum> setEmptyNullable = emptySet();
-		Set<TestEnum> setSingle = singleton(ONE);
-		Set<TestEnum> setSingleNullable = singleton(TWO);
+		Set<TestEnum> set = Set.of(ONE, TWO);
+		Set<TestEnum> setNullable = Set.of(TWO, THREE);
+		Set<TestEnum> setEmpty = Set.of();
+		Set<TestEnum> setEmptyNullable = Set.of();
+		Set<TestEnum> setSingle = Set.of(ONE);
+		Set<TestEnum> setSingleNullable = Set.of(TWO);
 
 		EnumSet<TestEnum> enumSet = EnumSet.of(ONE, TWO);
 		EnumSet<TestEnum> enumSetNullable = EnumSet.of(TWO, THREE);
@@ -1631,12 +1628,17 @@ public class BinarySerializerTest {
 
 	@Test
 	public void testEnumMap() {
-		Map<TestEnum, String> map = mapOf(ONE, "one", TWO, "two");
-		Map<TestEnum, String> mapNullable = mapOf(TWO, "two", THREE, "three");
-		Map<TestEnum, String> mapEmpty = emptyMap();
-		Map<TestEnum, String> mapEmptyNullable = emptyMap();
-		Map<TestEnum, String> mapSingle = singletonMap(ONE, "one");
-		Map<TestEnum, String> mapSingleNullable = singletonMap(TWO, "two");
+		Map<TestEnum, String> map = Map.of(
+				ONE, "one",
+				TWO, "two");
+		Map<TestEnum, String> mapNullable = Map.of(
+				TWO, "two",
+				THREE, "three");
+		Map<TestEnum, String> mapEmpty = Map.of();
+		Map<TestEnum, String> mapEmptyNullable = Map.of();
+		Map<TestEnum, String> mapSingle = Map.of(
+				ONE, "one");
+		Map<TestEnum, String> mapSingleNullable = Map.of(TWO, "two");
 
 		EnumMap<TestEnum, String> enumMap = new EnumMap<>(TestEnum.class);
 		enumMap.put(ONE, "one");
@@ -1787,7 +1789,7 @@ public class BinarySerializerTest {
 	@Test
 	public void testListObj() {
 		ListOfObjectHolder testData1 = new ListOfObjectHolder();
-		testData1.list = asList(new TestObj("a", 1), new TestObj("b", 2), new TestObj("c", 3));
+		testData1.list = List.of(new TestObj("a", 1), new TestObj("b", 2), new TestObj("c", 3));
 		ListOfObjectHolder testData2 = doTest(ListOfObjectHolder.class, testData1);
 		assertEquals(testData1.list, testData2.list);
 	}
@@ -1930,7 +1932,7 @@ public class BinarySerializerTest {
 		testData1.address = InetAddress.getByName("127.0.0.1");
 		testData1.address2 = InetAddress.getByName("2001:0db8:11a3:09d7:1f34:8a2e:07a0:765d");
 
-		testData1.list = asList(Integer.MIN_VALUE, Integer.MAX_VALUE);
+		testData1.list = List.of(Integer.MIN_VALUE, Integer.MAX_VALUE);
 
 		TestObject testData2 = doTest(TestObject.class, testData1);
 
@@ -2046,7 +2048,7 @@ public class BinarySerializerTest {
 
 	@Test
 	public void testVersionGetter() {
-		TestGetterVersion test = TestGetterVersion.of("test", asList("a", "b"));
+		TestGetterVersion test = TestGetterVersion.of("test", List.of("a", "b"));
 		BinarySerializer<TestGetterVersion> serializerV1 = SerializerBuilder
 				.create(DEFINING_CLASS_LOADER)
 				.withEncodeVersion(1)
@@ -2239,7 +2241,7 @@ public class BinarySerializerTest {
 
 	@Test
 	public void testMorePreciseFieldType() {
-		LinkedListHolderImpl testData1 = new LinkedListHolderImpl(asList("first", "second", "third"));
+		LinkedListHolderImpl testData1 = new LinkedListHolderImpl(List.of("first", "second", "third"));
 		LinkedListHolder testData2 = doTest(LinkedListHolderImpl.class, testData1);
 
 		assertEquals(testData1.list(), testData2.list());
@@ -2280,12 +2282,12 @@ public class BinarySerializerTest {
 
 	@Test
 	public void testSets() {
-		Set<String> regular = setOf("a", "b", "c");
-		Set<String> regularNullable = setOf("d", "e", "f");
-		Set<String> regularEmpty = setOf();
-		Set<String> regularEmptyNullable = setOf();
-		Set<String> regularSingle = setOf("g");
-		Set<String> regularSingleNullable = setOf("h");
+		Set<String> regular = Set.of("a", "b", "c");
+		Set<String> regularNullable = Set.of("d", "e", "f");
+		Set<String> regularEmpty = Set.of();
+		Set<String> regularEmptyNullable = Set.of();
+		Set<String> regularSingle = Set.of("g");
+		Set<String> regularSingleNullable = Set.of("h");
 
 		HashSet<String> hash = new HashSet<>();
 		hash.add("i");
@@ -2360,12 +2362,12 @@ public class BinarySerializerTest {
 
 	@Test
 	public void testLists() {
-		List<String> regular = listOf("a", "b", "c");
-		List<String> regularNullable = listOf("d", "e", "f");
-		List<String> regularEmpty = listOf();
-		List<String> regularEmptyNullable = listOf();
-		List<String> regularSingle = listOf("g");
-		List<String> regularSingleNullable = listOf("h");
+		List<String> regular = List.of("a", "b", "c");
+		List<String> regularNullable = List.of("d", "e", "f");
+		List<String> regularEmpty = List.of();
+		List<String> regularEmptyNullable = List.of();
+		List<String> regularSingle = List.of("g");
+		List<String> regularSingleNullable = List.of("h");
 
 		ArrayList<String> array = new ArrayList<>();
 		array.add("i");
@@ -2440,18 +2442,20 @@ public class BinarySerializerTest {
 
 	@Test
 	public void testMaps() {
-		Map<Integer, String> regular = mapOf(
+		Map<Integer, String> regular = Map.of(
 				1, "a",
 				2, "b",
 				3, "c");
-		Map<Integer, String> regularNullable = mapOf(
+		Map<Integer, String> regularNullable = Map.of(
 				4, "d",
 				5, "e",
 				6, "f");
-		Map<Integer, String> regularEmpty = mapOf();
-		Map<Integer, String> regularEmptyNullable = mapOf();
-		Map<Integer, String> regularSingle = mapOf(7, "g");
-		Map<Integer, String> regularSingleNullable = mapOf(8, "h");
+		Map<Integer, String> regularEmpty = Map.of();
+		Map<Integer, String> regularEmptyNullable = Map.of();
+		Map<Integer, String> regularSingle = Map.of(
+				7, "g");
+		Map<Integer, String> regularSingleNullable = Map.of(
+				8, "h");
 
 		HashMap<Integer, String> hash = new HashMap<>();
 		hash.put(9, "i");
@@ -2787,12 +2791,12 @@ public class BinarySerializerTest {
 	@Test
 	public void abstractSubclass() {
 		SerializerBuilder serializerBuilder = SerializerBuilder.create()
-				.withSubclasses(Object.class, singletonList(AbstractClass.class));
+				.withSubclasses(Object.class, List.of(AbstractClass.class));
 
 		try {
 			serializerBuilder.build(Object.class);
 			fail();
-		} catch (IllegalArgumentException e){
+		} catch (IllegalArgumentException e) {
 			assertEquals("A subclass should not be an abstract class: " + AbstractClass.class, e.getMessage());
 		}
 	}
@@ -2800,12 +2804,12 @@ public class BinarySerializerTest {
 	@Test
 	public void interfaceSubclass() {
 		SerializerBuilder serializerBuilder = SerializerBuilder.create()
-				.withSubclasses(Object.class, singletonList(Interface.class));
+				.withSubclasses(Object.class, List.of(Interface.class));
 
 		try {
 			serializerBuilder.build(Object.class);
 			fail();
-		} catch (IllegalArgumentException e){
+		} catch (IllegalArgumentException e) {
 			assertEquals("A subclass should not be an interface: " + Interface.class, e.getMessage());
 		}
 	}
@@ -2813,12 +2817,12 @@ public class BinarySerializerTest {
 	@Test
 	public void annotationSubclass() {
 		SerializerBuilder serializerBuilder = SerializerBuilder.create()
-				.withSubclasses(Object.class, singletonList(Annotation.class));
+				.withSubclasses(Object.class, List.of(Annotation.class));
 
 		try {
 			serializerBuilder.build(Object.class);
 			fail();
-		} catch (IllegalArgumentException e){
+		} catch (IllegalArgumentException e) {
 			assertEquals("A subclass should not be an interface: " + Annotation.class, e.getMessage());
 		}
 	}

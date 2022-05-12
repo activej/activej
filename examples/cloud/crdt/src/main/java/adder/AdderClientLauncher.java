@@ -100,7 +100,7 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 					long id = Long.parseLong(parts[1]);
 					GetResponse getResponse = eventloop.submit(() -> client.
 							<GetRequest, GetResponse>sendRequest(new GetRequest(id))).get();
-					System.out.println("---> " + getResponse.getSum());
+					System.out.println("---> " + getResponse.sum());
 				} else {
 					throw new MalformedDataException("Unknown command: " + parts[0]);
 				}
@@ -111,7 +111,7 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 	}
 
 	private static long extractKey(Object request) {
-		if (request instanceof HasUserId) return ((HasUserId) request).getUserId();
+		if (request instanceof HasUserId) return ((HasUserId) request).userId();
 		throw new IllegalArgumentException();
 	}
 

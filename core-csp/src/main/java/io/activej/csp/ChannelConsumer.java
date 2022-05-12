@@ -110,7 +110,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	 * @return AbstractChannelConsumer which wraps AsyncConsumer
 	 */
 	static <T> ChannelConsumer<T> of(@NotNull AsyncConsumer<T> consumer, @Nullable AsyncCloseable closeable) {
-		return new AbstractChannelConsumer<T>(closeable) {
+		return new AbstractChannelConsumer<>(closeable) {
 			final AsyncConsumer<T> thisConsumer = consumer;
 
 			@Override
@@ -141,7 +141,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	 * returns Promise of exception when accepts values
 	 */
 	static <T> ChannelConsumer<T> ofException(Exception e) {
-		return new AbstractChannelConsumer<T>() {
+		return new AbstractChannelConsumer<>() {
 			@Override
 			protected Promise<Void> doAccept(T value) {
 				Recyclers.recycle(value);
@@ -179,7 +179,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	 */
 	static <T> ChannelConsumer<T> ofPromise(Promise<? extends ChannelConsumer<T>> promise) {
 		if (promise.isResult()) return promise.getResult();
-		return new AbstractChannelConsumer<T>() {
+		return new AbstractChannelConsumer<>() {
 			ChannelConsumer<T> consumer;
 			Exception exception;
 
@@ -210,7 +210,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 		if (Eventloop.getCurrentEventloop() == anotherEventloop) {
 			return anotherEventloopConsumer;
 		}
-		return new AbstractChannelConsumer<T>() {
+		return new AbstractChannelConsumer<>() {
 			@Override
 			protected Promise<Void> doAccept(@Nullable T value) {
 				SettablePromise<Void> promise = new SettablePromise<>();
@@ -243,7 +243,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	 * @return a {@code ChannelConsumer} which was wrapped in the {@code provider}
 	 */
 	static <T> ChannelConsumer<T> ofLazyProvider(Supplier<? extends ChannelConsumer<T>> provider) {
-		return new AbstractChannelConsumer<T>() {
+		return new AbstractChannelConsumer<>() {
 			private ChannelConsumer<T> consumer;
 
 			@Override
@@ -284,7 +284,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	}
 
 	default ChannelConsumer<T> async() {
-		return new AbstractChannelConsumer<T>(this) {
+		return new AbstractChannelConsumer<>(this) {
 			@Override
 			protected Promise<Void> doAccept(T value) {
 				return ChannelConsumer.this.accept(value).async();
@@ -302,7 +302,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	 * in provided {@code asyncExecutor}
 	 */
 	default ChannelConsumer<T> withExecutor(AsyncExecutor asyncExecutor) {
-		return new AbstractChannelConsumer<T>(this) {
+		return new AbstractChannelConsumer<>(this) {
 			@Override
 			protected Promise<Void> doAccept(T value) {
 				return asyncExecutor.execute(() -> ChannelConsumer.this.accept(value));
@@ -320,7 +320,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	 * @return a wrapper ChannelConsumer
 	 */
 	default ChannelConsumer<T> peek(Consumer<? super T> fn) {
-		return new AbstractChannelConsumer<T>(this) {
+		return new AbstractChannelConsumer<>(this) {
 			@Override
 			protected Promise<Void> doAccept(T value) {
 				if (value != null) fn.accept(value);
@@ -340,7 +340,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	 * @return a wrapper ChannelConsumer
 	 */
 	default <V> ChannelConsumer<V> map(FunctionEx<? super V, ? extends T> fn) {
-		return new AbstractChannelConsumer<V>(this) {
+		return new AbstractChannelConsumer<>(this) {
 			@Override
 			protected Promise<Void> doAccept(V value) {
 				if (value != null) {
@@ -372,7 +372,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	 * @return a wrapper ChannelConsumer
 	 */
 	default <V> ChannelConsumer<V> mapAsync(Function<? super V, Promise<T>> fn) {
-		return new AbstractChannelConsumer<V>(this) {
+		return new AbstractChannelConsumer<>(this) {
 			@Override
 			protected Promise<Void> doAccept(V value) {
 				return value != null ?
@@ -392,7 +392,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	 * @return a wrapper ChannelConsumer
 	 */
 	default ChannelConsumer<T> filter(Predicate<? super T> predicate) {
-		return new AbstractChannelConsumer<T>(this) {
+		return new AbstractChannelConsumer<>(this) {
 			@Override
 			protected Promise<Void> doAccept(T value) {
 				if (value != null && predicate.test(value)) {
@@ -418,7 +418,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	default ChannelConsumer<T> withAcknowledgement(UnaryOperator<Promise<Void>> fn) {
 		SettablePromise<Void> acknowledgement = new SettablePromise<>();
 		Promise<Void> newAcknowledgement = fn.apply(acknowledgement);
-		return new AbstractChannelConsumer<T>(this) {
+		return new AbstractChannelConsumer<>(this) {
 			@Override
 			protected Promise<Void> doAccept(@Nullable T value) {
 				if (value != null) {

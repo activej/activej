@@ -35,14 +35,12 @@ import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.TestUtils.runProcessLogs;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.concat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-@SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
 public class CubeIntegrationTest extends CubeTestBase {
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Test
@@ -93,7 +91,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 				multilog,
 				cube.logStreamConsumer(LogItem.class),
 				"testlog",
-				asList("partitionA"),
+				List.of("partitionA"),
 				cubeDiffLogOTState);
 
 		// checkout first (root) revision
@@ -131,7 +129,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 
 		await(aggregationChunkStorage.backup("backup1", (Set) cube.getAllChunks()));
 
-		List<LogItem> logItems = await(cube.queryRawStream(asList("date"), asList("clicks"), alwaysTrue(),
+		List<LogItem> logItems = await(cube.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(),
 						LogItem.class, DefiningClassLoader.create(CLASS_LOADER))
 				.toList());
 
@@ -155,7 +153,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 		await(aggregationChunkStorage.cleanup((Set) cube.getAllChunks()));
 
 		// Query
-		List<LogItem> queryResult = await(cube.queryRawStream(asList("date"), asList("clicks"), alwaysTrue(),
+		List<LogItem> queryResult = await(cube.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(),
 				LogItem.class, DefiningClassLoader.create(CLASS_LOADER)).toList());
 
 		assertEquals(map, queryResult.stream().collect(toMap(r -> r.date, r -> r.clicks)));

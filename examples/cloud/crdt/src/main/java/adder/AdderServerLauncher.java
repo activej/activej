@@ -25,14 +25,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static io.activej.common.Checks.checkState;
-import static java.util.Arrays.asList;
-import static java.util.Collections.unmodifiableList;
 
 public final class AdderServerLauncher extends Launcher {
-	public static final List<Class<?>> MESSAGE_TYPES = unmodifiableList(asList(
-			GetRequest.class, GetResponse.class,
-			AddRequest.class, AddResponse.class
-	));
+	public static final List<Class<?>> MESSAGE_TYPES = List.of(GetRequest.class, GetResponse.class, AddRequest.class, AddResponse.class);
 
 	@Override
 	protected Module getModule() {
@@ -59,8 +54,12 @@ public final class AdderServerLauncher extends Launcher {
 		return EventloopTaskScheduler.create(eventloop, () -> storage.download()
 						.then(StreamSupplier::toList)
 						.whenResult(crdtData -> {
-							logger.info("\nLocal storage data: \n{}" +
-											"\nLocal map data: \n{}",
+							logger.info("""
+
+											Local storage data:\s
+											{}
+											Local map data:\s
+											{}""",
 									crdtData.stream()
 											.map(data -> data.getKey() + ": " + data.getState().getSum())
 											.collect(Collectors.joining("\n")),

@@ -42,7 +42,7 @@ public final class TPSet<E> implements Set<E>, CrdtMergable<TPSet<E>> {
 	@SafeVarargs
 	public static <T> TPSet<T> of(T... items) {
 		TPSet<T> set = new TPSet<>();
-		set.addAll(Arrays.asList(items));
+		set.addAll(List.of(items));
 		return set;
 	}
 
@@ -83,7 +83,7 @@ public final class TPSet<E> implements Set<E>, CrdtMergable<TPSet<E>> {
 		return stream().toArray();
 	}
 
-	@SuppressWarnings("SuspiciousToArrayCall")
+	@SuppressWarnings({"SuspiciousToArrayCall", "SimplifyStreamApiCallChains"})
 	@Override
 	public <T> T @NotNull [] toArray(T @NotNull [] a) {
 		return stream().toArray($ -> a);

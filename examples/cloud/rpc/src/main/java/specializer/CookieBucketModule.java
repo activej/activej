@@ -23,116 +23,28 @@ public final class CookieBucketModule extends AbstractModule {
 				.build();
 	}
 
-	public static class Sugar {
-		public final String name;
-		public final float weight;
+	public record Sugar(String name, float weight) {}
 
-		public Sugar(String name, float weight) {
-			this.name = name;
-			this.weight = weight;
-		}
-	}
+	public record Butter(String name, float weight) {}
 
-	public static class Butter {
-		public final float weight;
-		public final String name;
+	public record Flour(String name, float weight) {}
 
-		public Butter(String name, float weight) {
-			this.weight = weight;
-			this.name = name;
-		}
-	}
+	public record Pastry(Sugar sugar, Butter butter, Flour flour) {}
 
-	public static class Flour {
-		public final float weight;
-		public final String name;
+	public record Cookie1(Pastry pastry) {}
 
-		public Flour(String name, float weight) {
-			this.weight = weight;
-			this.name = name;
-		}
-	}
+	public record Cookie2(Pastry pastry) {}
 
-	public static class Pastry {
-		public final Sugar sugar;
-		public final Butter butter;
-		public final Flour flour;
+	public record Cookie3(Pastry pastry) {}
 
-		public Pastry(Sugar sugar, Butter butter, Flour flour) {
-			this.sugar = sugar;
-			this.butter = butter;
-			this.flour = flour;
-		}
-	}
+	public record Cookie4(Pastry pastry) {}
 
-	public static class Cookie1 {
-		public final Pastry pastry;
+	public record Cookie5(Pastry pastry) {}
 
-		public Cookie1(Pastry pastry) {
-			this.pastry = pastry;
-		}
-	}
+	public record Cookie6(Pastry pastry) {}
 
-	public static class Cookie2 {
-		public final Pastry pastry;
-
-		public Cookie2(Pastry pastry) {
-			this.pastry = pastry;
-		}
-	}
-
-	public static class Cookie3 {
-		public final Pastry pastry;
-
-		public Cookie3(Pastry pastry) {
-			this.pastry = pastry;
-		}
-	}
-
-	public static class Cookie4 {
-		public final Pastry pastry;
-
-		public Cookie4(Pastry pastry) {
-			this.pastry = pastry;
-		}
-	}
-
-	public static class Cookie5 {
-		private final Pastry pastry;
-
-		public Cookie5(Pastry pastry) {
-			this.pastry = pastry;
-		}
-
-		public Pastry getPastry() {
-			return pastry;
-		}
-	}
-
-	public static class Cookie6 {
-		public final Pastry pastry;
-
-		public Cookie6(Pastry pastry) {
-			this.pastry = pastry;
-		}
-	}
-
-	public static class CookieBucket {
-		public final Cookie1 c1;
-		public final Cookie2 c2;
-		public final Cookie3 c3;
-		public final Cookie4 c4;
-		public final Cookie5 c5;
-		public final Cookie6 c6;
-
-		public CookieBucket(Cookie1 c1, Cookie2 c2, Cookie3 c3,
-				Cookie4 c4, Cookie5 c5, Cookie6 c6) {
-			this.c1 = c1;
-			this.c2 = c2;
-			this.c3 = c3;
-			this.c4 = c4;
-			this.c5 = c5;
-			this.c6 = c6;
-		}
+	public record CookieBucket(Cookie1 c1, Cookie2 c2,
+	                           Cookie3 c3, Cookie4 c4,
+	                           Cookie5 c5, Cookie6 c6) {
 	}
 }

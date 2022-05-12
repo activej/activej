@@ -20,7 +20,6 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static io.activej.common.Utils.last;
-import static io.activej.common.Utils.setOf;
 import static io.activej.fs.LocalBlockingFs.DEFAULT_TEMP_DIR;
 import static io.activej.fs.Utils.asString;
 import static io.activej.fs.Utils.createEmptyDirectories;
@@ -49,30 +48,30 @@ public final class TestLocalBlockingFs {
 		Files.createDirectories(clientPath);
 
 		Path f = clientPath.resolve("f.txt");
-		Files.write(f, "some text1\n\nmore text1\t\n\n\r".getBytes(UTF_8), CREATE, TRUNCATE_EXISTING);
+		Files.writeString(f, "some text1\n\nmore text1\t\n\n\r", CREATE, TRUNCATE_EXISTING);
 
 		Path c = clientPath.resolve("c.txt");
-		Files.write(c, "some text2\n\nmore text2\t\n\n\r".getBytes(UTF_8), CREATE, TRUNCATE_EXISTING);
+		Files.writeString(c, "some text2\n\nmore text2\t\n\n\r", CREATE, TRUNCATE_EXISTING);
 
 		Files.createDirectories(storagePath.resolve("1"));
 		Files.createDirectories(storagePath.resolve("2/3"));
 		Files.createDirectories(storagePath.resolve("2/b"));
 
 		Path a1 = storagePath.resolve("1/a.txt");
-		Files.write(a1, "1\n2\n3\n4\n5\n6\n".getBytes(UTF_8), CREATE, TRUNCATE_EXISTING);
+		Files.writeString(a1, "1\n2\n3\n4\n5\n6\n", CREATE, TRUNCATE_EXISTING);
 
 		Path b = storagePath.resolve("1/b.txt");
-		Files.write(b, "7\n8\n9\n10\n11\n12\n".getBytes(UTF_8), CREATE, TRUNCATE_EXISTING);
+		Files.writeString(b, "7\n8\n9\n10\n11\n12\n", CREATE, TRUNCATE_EXISTING);
 
 		Path a2 = storagePath.resolve("2/3/a.txt");
-		Files.write(a2, "6\n5\n4\n3\n2\n1\n".getBytes(UTF_8), CREATE, TRUNCATE_EXISTING);
+		Files.writeString(a2, "6\n5\n4\n3\n2\n1\n", CREATE, TRUNCATE_EXISTING);
 
 		Path d = storagePath.resolve("2/b/d.txt");
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < 1_000_000; i++) {
 			sb.append(i).append("\n");
 		}
-		Files.write(d, sb.toString().getBytes(UTF_8));
+		Files.writeString(d, sb.toString());
 
 		Path e = storagePath.resolve("2/b/e.txt");
 		try {
@@ -90,7 +89,7 @@ public final class TestLocalBlockingFs {
 
 		try (InputStream inputStream = new FileInputStream(path.toFile());
 				OutputStream outputStream = client.upload("1/c.txt")) {
-			LocalFileUtils.copy(inputStream, outputStream);
+			inputStream.transferTo(outputStream);
 		}
 
 		assertArrayEquals(Files.readAllBytes(path), Files.readAllBytes(storagePath.resolve("1/c.txt")));
@@ -175,7 +174,7 @@ public final class TestLocalBlockingFs {
 
 		try (InputStream inputStream = client.download("2/b/d.txt");
 				OutputStream outputStream = new FileOutputStream(outputFile.toFile())) {
-			LocalFileUtils.copy(inputStream, outputStream);
+			inputStream.transferTo(outputStream);
 		}
 
 		assertArrayEquals(Files.readAllBytes(storagePath.resolve("2/b/d.txt")), Files.readAllBytes(outputFile));
@@ -240,13 +239,7 @@ public final class TestLocalBlockingFs {
 
 	@Test
 	public void testListFiles() throws IOException {
-		Set<String> expected = setOf(
-				"1/a.txt",
-				"1/b.txt",
-				"2/3/a.txt",
-				"2/b/d.txt",
-				"2/b/e.txt"
-		);
+		Set<String> expected = Set.of("1/a.txt", "1/b.txt", "2/3/a.txt", "2/b/d.txt", "2/b/e.txt");
 
 		Map<String, FileMetadata> actual = client.list("**");
 
@@ -255,11 +248,7 @@ public final class TestLocalBlockingFs {
 
 	@Test
 	public void testGlobListFiles() throws IOException {
-		Set<String> expected = setOf(
-				"2/3/a.txt",
-				"2/b/d.txt",
-				"2/b/e.txt"
-		);
+		Set<String> expected = Set.of("2/3/a.txt", "2/b/d.txt", "2/b/e.txt");
 
 		Map<String, FileMetadata> actual = client.list("2/*/*.txt");
 
@@ -539,7 +528,7 @@ public final class TestLocalBlockingFs {
 	public void testCopyWithDeletedTempDir() throws IOException {
 		try (InputStream inputStream = new ByteArrayInputStream("Test content".getBytes(UTF_8));
 		     OutputStream outputStream = client.upload("test.txt")) {
-			LocalFileUtils.copy(inputStream, outputStream);
+			inputStream.transferTo(outputStream);
 		}
 
 		Path tempDir = storagePath.resolve(LocalActiveFs.DEFAULT_TEMP_DIR);
@@ -560,7 +549,7 @@ public final class TestLocalBlockingFs {
 
 		try (InputStream inputStream = new ByteArrayInputStream("Test content".getBytes(UTF_8));
 		     OutputStream outputStream = client.upload("test.txt")) {
-			LocalFileUtils.copy(inputStream, outputStream);
+			inputStream.transferTo(outputStream);
 			fail();
 		} catch (ActiveFsStructureException e){
 			assertEquals(e.getMessage(), "Temporary directory " + tempDir + " not found");
@@ -569,7 +558,7 @@ public final class TestLocalBlockingFs {
 
 	@Test
 	public void testRelativePaths() throws IOException {
-		Set<String> expected = setOf(
+		Set<String> expected = Set.of(
 				"1/a.txt",
 				"1/b.txt",
 				"2/3/a.txt",

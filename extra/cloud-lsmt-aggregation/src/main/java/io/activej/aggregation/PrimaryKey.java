@@ -22,13 +22,11 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 import static java.lang.System.arraycopy;
-import static java.util.Arrays.asList;
 
 public class PrimaryKey implements Comparable<PrimaryKey> {
 	private static final boolean CHECK = Checks.isEnabled(PrimaryKey.class);
@@ -72,7 +70,7 @@ public class PrimaryKey implements Comparable<PrimaryKey> {
 	}
 
 	public List<Object> values() {
-		return Collections.unmodifiableList(asList(values));
+		return List.of(values);
 	}
 
 	public Object[] getArray() {

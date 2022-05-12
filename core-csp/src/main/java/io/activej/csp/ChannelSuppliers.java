@@ -49,7 +49,6 @@ import static io.activej.common.Utils.iteratorOf;
 import static io.activej.common.Utils.nullify;
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 import static java.lang.Math.min;
-import static java.util.Arrays.asList;
 
 /**
  * Provides additional functionality for managing {@link ChannelSupplier}s.
@@ -62,7 +61,7 @@ public final class ChannelSuppliers {
 	 * @see #concat(Iterator)
 	 */
 	public static <T> ChannelSupplier<T> concat(ChannelSupplier<? extends T> supplier1, ChannelSupplier<? extends T> supplier2) {
-		return concat(asList(supplier1, supplier2));
+		return concat(List.of(supplier1, supplier2));
 	}
 
 	/**
@@ -70,7 +69,7 @@ public final class ChannelSuppliers {
 	 */
 	@SafeVarargs
 	public static <T> ChannelSupplier<T> concat(ChannelSupplier<? extends T>... suppliers) {
-		return concat(asList(suppliers));
+		return concat(List.of(suppliers));
 	}
 
 	/**
@@ -270,7 +269,7 @@ public final class ChannelSuppliers {
 	 * which returns an {@link Iterator} of a <V> type. Then provides this value to ChannelSupplier of <V>.
 	 */
 	public static <T, V> ChannelSupplier<V> remap(ChannelSupplier<T> supplier, Function<? super T, ? extends Iterator<? extends V>> fn) {
-		return new AbstractChannelSupplier<V>(supplier) {
+		return new AbstractChannelSupplier<>(supplier) {
 			Iterator<? extends V> iterator = iteratorOf();
 			boolean endOfStream;
 
@@ -342,7 +341,7 @@ public final class ChannelSuppliers {
 	 * @return a {@link ChannelSupplier<ByteBuf>} out ouf an {@link InputStream}
 	 */
 	public static ChannelSupplier<ByteBuf> inputStreamAsChannelSupplier(Executor executor, int bufSize, InputStream inputStream) {
-		return new AbstractChannelSupplier<ByteBuf>() {
+		return new AbstractChannelSupplier<>() {
 			@Override
 			protected Promise<ByteBuf> doGet() {
 				return Promise.ofBlocking(executor, () -> {

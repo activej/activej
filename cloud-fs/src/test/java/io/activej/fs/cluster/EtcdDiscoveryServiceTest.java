@@ -17,10 +17,10 @@ import org.junit.*;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static io.activej.common.Utils.setOf;
 import static io.activej.promise.TestUtils.await;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.*;
@@ -89,7 +89,7 @@ public class EtcdDiscoveryServiceTest {
 		putValue(PARTITIONS_1);
 
 		Map<Object, ActiveFs> partitions1 = await(nextPromise);
-		assertEquals(setOf("partition1"), partitions1.keySet());
+		assertEquals(Set.of("partition1"), partitions1.keySet());
 		assertSame(partitions1.get("partition1"), PARTITIONS.get("partition1"));
 	}
 
@@ -100,7 +100,7 @@ public class EtcdDiscoveryServiceTest {
 		AsyncSupplier<Map<Object, ActiveFs>> supplier = discoveryService.discover();
 
 		Map<Object, ActiveFs> partitions1 = await(supplier.get());
-		assertEquals(setOf("partition1"), partitions1.keySet());
+		assertEquals(Set.of("partition1"), partitions1.keySet());
 		assertSame(partitions1.get("partition1"), PARTITIONS.get("partition1"));
 
 		Promise<Map<Object, ActiveFs>> nextPromise = supplier.get();
@@ -110,7 +110,7 @@ public class EtcdDiscoveryServiceTest {
 		putValue(PARTITIONS_2);
 
 		Map<Object, ActiveFs> partitions2 = await(nextPromise);
-		assertEquals(setOf("partition1", "partition2"), partitions2.keySet());
+		assertEquals(Set.of("partition1", "partition2"), partitions2.keySet());
 		assertSame(partitions2.get("partition1"), PARTITIONS.get("partition1"));
 		assertSame(partitions2.get("partition2"), PARTITIONS.get("partition2"));
 	}

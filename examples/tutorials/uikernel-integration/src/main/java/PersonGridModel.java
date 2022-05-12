@@ -64,9 +64,9 @@ public class PersonGridModel implements GridModel<Integer, Person> {
 		if (offset <= people.size()) {
 			people = people.subList(offset, Math.min(people.size(), offset + readSettings.getLimit()));
 		} else {
-			people = Collections.emptyList();
+			people = List.of();
 		}
-		return Promise.of(ReadResponse.of(people, count, Collections.emptyList()));
+		return Promise.of(ReadResponse.of(people, count, List.of()));
 	}
 
 	@Override

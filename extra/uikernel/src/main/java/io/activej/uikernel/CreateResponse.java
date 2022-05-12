@@ -20,7 +20,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -34,7 +33,7 @@ public final class CreateResponse<K> {
 	}
 
 	public static <K> CreateResponse<K> of(K id) {
-		return new CreateResponse<>(id, Collections.emptyMap());
+		return new CreateResponse<>(id, Map.of());
 	}
 
 	public static <K> CreateResponse<K> of(K id, Map<String, List<String>> errors) {

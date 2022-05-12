@@ -178,7 +178,7 @@ public abstract class Binding<T> {
 	}
 
 	public <R> Binding<R> mapInstance(@NotNull Function<? super @NotNull T, ? extends @NotNull R> fn) {
-		return new Binding<R>(dependencies, type, location) {
+		return new Binding<>(dependencies, type, location) {
 			@Override
 			public CompiledBinding<R> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 				CompiledBinding<T> originalBinding = Binding.this.compile(compiledBindings, threadsafe, scope, null);
@@ -212,7 +212,7 @@ public abstract class Binding<T> {
 					.map(Key::getDisplayString)
 					.collect(joining(", ", "Binding has no dependencies ", " required by mapInstance call")));
 		}
-		return new Binding<R>(this.dependencies, this.type, this.location) {
+		return new Binding<>(this.dependencies, this.type, this.location) {
 			@Override
 			public CompiledBinding<R> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 				final CompiledBinding<T> originalBinding = Binding.this.compile(compiledBindings, threadsafe, scope, null);
@@ -263,7 +263,7 @@ public abstract class Binding<T> {
 
 	@SuppressWarnings("unchecked")
 	public <K> Binding<T> mapDependency(@NotNull Key<K> dependency, @NotNull Function<? super K, ? extends K> fn) {
-		return new Binding<T>(this.dependencies, this.type, this.location) {
+		return new Binding<>(this.dependencies, this.type, this.location) {
 			@Override
 			public CompiledBinding<T> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 				return Binding.this.compile(new CompiledBindingLocator() {
@@ -271,7 +271,7 @@ public abstract class Binding<T> {
 					public <Q> @NotNull CompiledBinding<Q> get(Key<Q> key) {
 						CompiledBinding<Q> originalBinding = compiledBindings.get(key);
 						if (!key.equals(dependency)) return originalBinding;
-						return new CompiledBinding<Q>() {
+						return new CompiledBinding<>() {
 							@Override
 							public @NotNull Q getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								Q instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
@@ -295,12 +295,12 @@ public abstract class Binding<T> {
 	public Binding<T> addDependencies(@NotNull Set<Key<?>> extraDependencies) {
 		return extraDependencies.isEmpty() ?
 				this :
-				new Binding<T>(union(this.dependencies, extraDependencies), this.type, this.location) {
+				new Binding<>(union(this.dependencies, extraDependencies), this.type, this.location) {
 					@Override
 					public CompiledBinding<T> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 						CompiledBinding<T> compiledBinding = Binding.this.compile(compiledBindings, threadsafe, scope, slot);
 						CompiledBinding<?>[] compiledExtraBindings = extraDependencies.stream().map(compiledBindings::get).toArray(CompiledBinding[]::new);
-						return new CompiledBinding<T>() {
+						return new CompiledBinding<>() {
 							@Override
 							public @NotNull T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								//noinspection ForLoopReplaceableByForEach
@@ -317,7 +317,7 @@ public abstract class Binding<T> {
 	public Binding<T> initializeWith(BindingInitializer<T> bindingInitializer) {
 		return bindingInitializer == BindingInitializer.noop() ?
 				this :
-				new Binding<T>(union(this.dependencies, bindingInitializer.getDependencies()), this.type, this.location) {
+				new Binding<>(union(this.dependencies, bindingInitializer.getDependencies()), this.type, this.location) {
 					@Override
 					public CompiledBinding<T> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 						final CompiledBinding<T> compiledBinding = Binding.this.compile(compiledBindings, threadsafe, scope, null);

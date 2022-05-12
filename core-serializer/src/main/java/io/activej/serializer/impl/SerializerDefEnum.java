@@ -50,13 +50,13 @@ public final class SerializerDefEnum extends AbstractSerializerDef implements Se
 		if (isSmallEnum()) {
 			return !nullable ?
 					writeByte(buf, pos, cast(ordinal, byte.class)) :
-					ifThenElse(isNull(value),
+					ifNull(value,
 							writeByte(buf, pos, value((byte) 0)),
 							writeByte(buf, pos, cast(add(ordinal, value(1)), byte.class)));
 		} else {
 			return !nullable ?
 					writeVarInt(buf, pos, ordinal) :
-					ifThenElse(isNull(value),
+					ifNull(value,
 							writeByte(buf, pos, value((byte) 0)),
 							writeVarInt(buf, pos, add(ordinal, value((byte) 1))));
 		}
@@ -68,14 +68,14 @@ public final class SerializerDefEnum extends AbstractSerializerDef implements Se
 				let(readByte(in), b ->
 						!nullable ?
 								arrayGet(staticCall(enumType, "values"), b) :
-								ifThenElse(cmpEq(b, value((byte) 0)),
-										nullRef(enumType),
+								ifEq(b, value((byte) 0),
+                                        nullRef(enumType),
 										arrayGet(staticCall(enumType, "values"), dec(b)))) :
 				let(readVarInt(in), value ->
 						!nullable ?
 								arrayGet(staticCall(enumType, "values"), value) :
-								ifThenElse(cmpEq(value, value(0)),
-										nullRef(enumType),
+								ifEq(value, value(0),
+                                        nullRef(enumType),
 										arrayGet(staticCall(enumType, "values"), dec(value))));
 	}
 

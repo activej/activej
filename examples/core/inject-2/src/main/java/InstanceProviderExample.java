@@ -26,7 +26,7 @@ public class InstanceProviderExample {
 
 		//[START REGION_2]
 		Injector injector = Injector.of(cookbook);
-		InstanceProvider<Integer> provider = injector.getInstance(new Key<InstanceProvider<Integer>>() {});
+		InstanceProvider<Integer> provider = injector.getInstance(new Key<>() {});
 		// lazy value get.
 		Integer someInt = provider.get();
 		System.out.println(someInt);

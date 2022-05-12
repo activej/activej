@@ -20,6 +20,8 @@ import io.activej.codegen.Context;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static io.activej.codegen.util.TypeChecks.isWidenedToInt;
 import static org.objectweb.asm.Type.getType;
 
 final class ExpressionArrayNew implements Expression {
@@ -36,7 +38,8 @@ final class ExpressionArrayNew implements Expression {
 	@Override
 	public Type load(Context ctx) {
 		GeneratorAdapter g = ctx.getGeneratorAdapter();
-		length.load(ctx);
+		Type lengthType = length.load(ctx);
+		checkType(lengthType, isWidenedToInt());
 		g.newArray(getType(getType(type).getDescriptor().substring(1)));
 		return getType(type);
 	}

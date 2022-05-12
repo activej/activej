@@ -21,7 +21,6 @@ import io.activej.etl.LogDiff;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
 public interface CubeDiffScheme<D> {
@@ -36,7 +35,7 @@ public interface CubeDiffScheme<D> {
 	}
 
 	static CubeDiffScheme<LogDiff<CubeDiff>> ofLogDiffs() {
-		return new CubeDiffScheme<LogDiff<CubeDiff>>() {
+		return new CubeDiffScheme<>() {
 			@Override
 			public LogDiff<CubeDiff> wrap(CubeDiff cubeDiff) {
 				return LogDiff.forCurrentPosition(cubeDiff);
@@ -50,7 +49,7 @@ public interface CubeDiffScheme<D> {
 	}
 
 	static CubeDiffScheme<CubeDiff> ofCubeDiffs() {
-		return new CubeDiffScheme<CubeDiff>() {
+		return new CubeDiffScheme<>() {
 			@Override
 			public CubeDiff wrap(CubeDiff cubeDiff) {
 				return cubeDiff;
@@ -58,7 +57,7 @@ public interface CubeDiffScheme<D> {
 
 			@Override
 			public List<CubeDiff> unwrap(CubeDiff diff) {
-				return singletonList(diff);
+				return List.of(diff);
 			}
 		};
 	}

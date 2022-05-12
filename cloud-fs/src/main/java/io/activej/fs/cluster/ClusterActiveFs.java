@@ -54,7 +54,6 @@ import static io.activej.common.Utils.transformIterator;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 import static io.activej.promise.Promises.first;
-import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -250,7 +249,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 
 	@Override
 	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
-		if (names.isEmpty()) return Promise.of(emptyMap());
+		if (names.isEmpty()) return Promise.of(Map.of());
 
 		return broadcast(fs -> fs.infoAll(names))
 				.map(filterErrorsFn())
@@ -377,7 +376,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 	}
 
 	private static <T> FunctionEx<List<Try<T>>, List<T>> filterErrorsFn() {
-		return filterErrorsFn(Collections::emptyList);
+		return filterErrorsFn(List::of);
 	}
 
 	private static <T> FunctionEx<List<Try<T>>, List<T>> filterErrorsFn(SupplierEx<List<T>> fallback) {
@@ -387,7 +386,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 				return successes;
 			}
 
-			List<Exception> exceptions = tries.stream().filter(Try::isException).map(Try::getException).collect(toList());
+			List<Exception> exceptions = tries.stream().filter(Try::isException).map(Try::getException).toList();
 			if (!exceptions.isEmpty()) {
 				Exception exception = exceptions.get(0);
 				if (exceptions.stream().skip(1).allMatch(e -> e == exception)) {
@@ -402,15 +401,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 		return broadcast(($, fs) -> action.apply(fs), $ -> {});
 	}
 
-	private static class Container<T> {
-		final Object id;
-		final T value;
-
-		Container(Object id, T value) {
-			this.id = id;
-			this.value = value;
-		}
-	}
+	private record Container<T>(Object id, T value) {}
 
 	// region JMX
 	@JmxAttribute

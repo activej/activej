@@ -6,11 +6,11 @@ import org.junit.Test;
 
 import javax.management.DynamicMBean;
 import javax.management.MBeanAttributeInfo;
+import java.util.List;
 import java.util.Map;
 
 import static io.activej.jmx.JmxBeanSettings.defaultSettings;
 import static io.activej.jmx.helper.Utils.nameToAttribute;
-import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.assertEquals;
 
 public class DynamicMBeanFactoryAttributeDescriptionTest {
@@ -18,7 +18,7 @@ public class DynamicMBeanFactoryAttributeDescriptionTest {
 	@Test
 	public void ifDescriptionIsNotSpecifiedItIsSameAsFullNameOfAttribute() {
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(singletonList(new MBeanWithNoJmxDescription()), defaultSettings(), false);
+				.createDynamicMBean(List.of(new MBeanWithNoJmxDescription()), defaultSettings(), false);
 
 		Map<String, MBeanAttributeInfo> nameToAttr = nameToAttribute(mbean.getMBeanInfo().getAttributes());
 
@@ -42,7 +42,7 @@ public class DynamicMBeanFactoryAttributeDescriptionTest {
 	@Test
 	public void showsDescriptionWithoutChangesIfAttributeNameDoNotContainUnderscores() {
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(singletonList(new MBeanWithDescriptionInDirectNonPojoAttribute()), defaultSettings(), false);
+				.createDynamicMBean(List.of(new MBeanWithDescriptionInDirectNonPojoAttribute()), defaultSettings(), false);
 
 		Map<String, MBeanAttributeInfo> nameToAttr = nameToAttribute(mbean.getMBeanInfo().getAttributes());
 
@@ -72,7 +72,7 @@ public class DynamicMBeanFactoryAttributeDescriptionTest {
 	@Test
 	public void formatsDescriptionsProperlyIfAttributeNameContainsUnderscores() {
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(singletonList(new MBeanWithPojoDescription()), defaultSettings(), false);
+				.createDynamicMBean(List.of(new MBeanWithPojoDescription()), defaultSettings(), false);
 
 		Map<String, MBeanAttributeInfo> nameToAttr = nameToAttribute(mbean.getMBeanInfo().getAttributes());
 

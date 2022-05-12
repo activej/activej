@@ -9,16 +9,13 @@ import io.activej.test.rules.ClassBuilderConstantsRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import static io.activej.common.Utils.*;
 import static io.activej.serializer.Utils.DEFINING_CLASS_LOADER;
-import static java.util.Collections.unmodifiableCollection;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.core.IsEqual.equalTo;
@@ -80,11 +77,14 @@ public class CompatibilityLevelTest {
 		TestNullables nullables = new TestNullables();
 		nullables.notNullArray = new String[]{"test1", "test2"};
 		nullables.notNullByteBuffer = ByteBuffer.wrap("test".getBytes(StandardCharsets.UTF_8));
-		nullables.notNullCollection = unmodifiableCollection(listOf("test1", "test2"));
+		nullables.notNullCollection = List.of("test1", "test2");
 		nullables.notNullEnum = TestEnum.ONE;
-		nullables.notNullList = Arrays.asList("test1", "test2");
-		nullables.notNullMap = mapOf(1, "test1", 2, "test2");
-		nullables.notNullSet = setOf("test1", "test2");
+		nullables.notNullList = List.of("test1", "test2");
+		nullables.notNullMap = new LinkedHashMap<>();
+		nullables.notNullMap.put(1, "test1");
+		nullables.notNullMap.put(2, "test2");
+
+		nullables.notNullSet = new LinkedHashSet<>(List.of("test1", "test2"));
 		nullables.notNullSubclass = 12345;
 
 		return doTestPreload(TestNullables.class, nullables, compatibilityLevel, "nullables");
@@ -122,13 +122,7 @@ public class CompatibilityLevelTest {
 	private static byte[] download(String filename) {
 		try (InputStream stream = CompatibilityLevelTest.class.getResourceAsStream("/compatibility/" + filename)) {
 			assert stream != null;
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			byte[] buffer = new byte[1024];
-			int size;
-			while ((size = stream.read(buffer)) != -1) {
-				baos.write(buffer, 0, size);
-			}
-			return baos.toByteArray();
+			return stream.readAllBytes();
 		} catch (IOException e) {
 			throw new AssertionError(e);
 		}

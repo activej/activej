@@ -24,7 +24,7 @@ public interface ChannelTransformer<I, O> extends
 		ChannelConsumerTransformer<O, ChannelConsumer<I>> {
 
 	static <T> ChannelTransformer<T, T> identity() {
-		return new ChannelTransformer<T, T>() {
+		return new ChannelTransformer<>() {
 			@Override
 			public ChannelConsumer<T> transform(ChannelConsumer<T> consumer) {
 				return consumer;

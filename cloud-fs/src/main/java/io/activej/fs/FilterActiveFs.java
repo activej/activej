@@ -28,7 +28,10 @@ import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import static io.activej.common.Checks.checkArgument;
@@ -130,7 +133,7 @@ final class FilterActiveFs implements ActiveFs {
 		Map<Boolean, Set<String>> partitioned = names.stream().collect(partitioningBy(predicate, toSet()));
 		Set<String> query = partitioned.get(TRUE);
 		return query.isEmpty() ?
-				Promise.of(Collections.emptyMap()) :
+				Promise.of(Map.of()) :
 				parent.infoAll(query);
 	}
 

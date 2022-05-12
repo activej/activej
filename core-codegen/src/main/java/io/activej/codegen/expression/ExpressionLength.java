@@ -21,6 +21,8 @@ import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
+import static io.activej.codegen.util.TypeChecks.*;
+
 final class ExpressionLength implements Expression {
 	private final Expression value;
 
@@ -33,6 +35,8 @@ final class ExpressionLength implements Expression {
 		GeneratorAdapter g = ctx.getGeneratorAdapter();
 
 		Type valueType = value.load(ctx);
+		checkType(valueType, isArray().or(isObject()));
+
 		if (valueType.getSort() == Type.ARRAY) {
 			g.arrayLength();
 		} else if (valueType.getSort() == Type.OBJECT) {

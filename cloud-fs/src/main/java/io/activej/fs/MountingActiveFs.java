@@ -37,7 +37,8 @@ import java.util.stream.Stream;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.isBijection;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toSet;
 
 /**
  * A file system that allows to mount several {@link ActiveFs} implementations to correspond to different filenames.
@@ -190,7 +191,7 @@ final class MountingActiveFs implements ActiveFs {
 					List<Tuple2<String, Exception>> exceptions = list.stream()
 							.filter(tuple -> tuple.getValue2().isException())
 							.map(tuple -> new Tuple2<>(tuple.getValue1(), tuple.getValue2().getException()))
-							.collect(toList());
+							.toList();
 					if (!exceptions.isEmpty()) {
 						Map<String, FsScalarException> scalarExceptions = new HashMap<>();
 						for (Tuple2<String, Exception> tuple : exceptions) {

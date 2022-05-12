@@ -31,7 +31,6 @@ import io.activej.fs.tcp.RemoteActiveFs;
 import io.activej.http.AsyncHttpClient;
 import io.activej.trigger.TriggersModuleSettings;
 
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,7 +60,7 @@ public final class Initializers {
 	public static DiscoveryService constantDiscoveryService(Eventloop eventloop, Config config) throws MalformedDataException {
 		Map<Object, ActiveFs> partitions = new LinkedHashMap<>();
 
-		List<String> partitionStrings = config.get(ofList(ofString()), "partitions", Collections.emptyList());
+		List<String> partitionStrings = config.get(ofList(ofString()), "partitions", List.of());
 		for (String toAdd : partitionStrings) {
 			ActiveFs client;
 			if (toAdd.startsWith("http")) {
@@ -80,7 +79,7 @@ public final class Initializers {
 		Map<Object, ActiveFs> partitions = new LinkedHashMap<>();
 		partitions.put(config.get("activefs.repartition.localPartitionId"), local);
 
-		List<String> partitionStrings = config.get(ofList(ofString()), "partitions", Collections.emptyList());
+		List<String> partitionStrings = config.get(ofList(ofString()), "partitions", List.of());
 		for (String toAdd : partitionStrings) {
 			ActiveFs client;
 			if (toAdd.startsWith("http")) {

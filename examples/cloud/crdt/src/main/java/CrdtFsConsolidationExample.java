@@ -18,7 +18,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
-import static io.activej.common.Utils.setOf;
 import static io.activej.serializer.BinarySerializers.*;
 
 public final class CrdtFsConsolidationExample {
@@ -61,21 +60,21 @@ public final class CrdtFsConsolidationExample {
 					long timestamp = Eventloop.getCurrentEventloop().currentTimeMillis();
 					Promise<Void> firstUpload =
 							StreamSupplier.ofStream(Stream.of(
-											new CrdtData<>("1_test_1", timestamp, setOf(1, 2, 3)),
-											new CrdtData<>("1_test_2", timestamp, setOf(2, 3, 7)),
-											new CrdtData<>("1_test_3", timestamp, setOf(78, 2, 3)),
-											new CrdtData<>("12_test_1", timestamp, setOf(123, 124, 125)),
-											new CrdtData<>("12_test_2", timestamp, setOf(12))).sorted())
+											new CrdtData<>("1_test_1", timestamp, Set.of(1, 2, 3)),
+											new CrdtData<>("1_test_2", timestamp, Set.of(2, 3, 7)),
+											new CrdtData<>("1_test_3", timestamp, Set.of(78, 2, 3)),
+											new CrdtData<>("12_test_1", timestamp, Set.of(123, 124, 125)),
+											new CrdtData<>("12_test_2", timestamp, Set.of(12))).sorted())
 									.streamTo(StreamConsumer.ofPromise(client.upload()));
 
 					timestamp += 100;
 					Promise<Void> secondUpload =
 							StreamSupplier.ofStream(Stream.of(
-											new CrdtData<>("2_test_1", timestamp, setOf(1, 2, 3)),
-											new CrdtData<>("2_test_2", timestamp, setOf(2, 3, 4)),
-											new CrdtData<>("2_test_3", timestamp, setOf(0, 1, 2)),
-											new CrdtData<>("12_test_1", timestamp, setOf(123, 542, 125, 2)),
-											new CrdtData<>("12_test_2", timestamp, setOf(12, 13))).sorted())
+											new CrdtData<>("2_test_1", timestamp, Set.of(1, 2, 3)),
+											new CrdtData<>("2_test_2", timestamp, Set.of(2, 3, 4)),
+											new CrdtData<>("2_test_3", timestamp, Set.of(0, 1, 2)),
+											new CrdtData<>("12_test_1", timestamp, Set.of(123, 542, 125, 2)),
+											new CrdtData<>("12_test_2", timestamp, Set.of(12, 13))).sorted())
 									.streamTo(StreamConsumer.ofPromise(client.upload()));
 					//[END REGION_2]
 

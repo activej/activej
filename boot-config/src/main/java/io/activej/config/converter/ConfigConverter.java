@@ -40,7 +40,7 @@ public interface ConfigConverter<T> {
 	 */
 	default <V> ConfigConverter<V> transform(Function<T, V> to, Function<V, T> from) {
 		ConfigConverter<T> thisConverter = this;
-		return new ConfigConverter<V>() {
+		return new ConfigConverter<>() {
 			@Override
 			public V get(Config config, @Nullable V defaultValue) {
 				T value = thisConverter.get(config, defaultValue == null ? null : from.apply(defaultValue));
@@ -56,7 +56,7 @@ public interface ConfigConverter<T> {
 
 	default ConfigConverter<T> withConstraint(Predicate<T> predicate) {
 		ConfigConverter<T> thisConverter = this;
-		return new ConfigConverter<T>() {
+		return new ConfigConverter<>() {
 			@Override
 			public T get(Config config, T defaultValue) {
 				T value = thisConverter.get(config, defaultValue);

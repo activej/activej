@@ -23,12 +23,12 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 import static io.activej.bytebuf.ByteBufStrings.decodeAscii;
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.config.converter.ConfigConverters.ofInetSocketAddress;
 import static io.activej.test.TestUtils.getFreePort;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
 public final class HttpWorkerServerTest {
@@ -81,17 +81,57 @@ public final class HttpWorkerServerTest {
 			socket1.connect(localhost);
 
 			for (int i = 0; i < 10; i++) {
-				socket0.getOutputStream().write(encodeAscii("GET /abc HTTP/1.1\r\nHost: localhost\r\nConnection: keep-alive\n\r\n"));
-				readAndAssert(socket0.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 16\r\n\r\nHello, world! #0");
+				socket0.getOutputStream().write(encodeAscii("""
+						GET /abc HTTP/1.1\r
+						Host: localhost\r
+						Connection: keep-alive
+						\r
+						"""));
+				readAndAssert(socket0.getInputStream(), """
+						HTTP/1.1 200 OK\r
+						Connection: keep-alive\r
+						Content-Length: 16\r
+						\r
+						Hello, world! #0""");
 
-				socket0.getOutputStream().write(encodeAscii("GET /abc HTTP/1.1\r\nHost: localhost\r\nConnection: keep-alive\n\r\n"));
-				readAndAssert(socket0.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 16\r\n\r\nHello, world! #0");
+				socket0.getOutputStream().write(encodeAscii("""
+						GET /abc HTTP/1.1\r
+						Host: localhost\r
+						Connection: keep-alive
+						\r
+						"""));
+				readAndAssert(socket0.getInputStream(), """
+						HTTP/1.1 200 OK\r
+						Connection: keep-alive\r
+						Content-Length: 16\r
+						\r
+						Hello, world! #0""");
 
-				socket1.getOutputStream().write(encodeAscii("GET /abc HTTP/1.1\r\nHost: localhost\r\nConnection: keep-alive\n\r\n"));
-				readAndAssert(socket1.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 16\r\n\r\nHello, world! #1");
+				socket1.getOutputStream().write(encodeAscii("""
+						GET /abc HTTP/1.1\r
+						Host: localhost\r
+						Connection: keep-alive
+						\r
+						"""));
+				readAndAssert(socket1.getInputStream(), """
+						HTTP/1.1 200 OK\r
+						Connection: keep-alive\r
+						Content-Length: 16\r
+						\r
+						Hello, world! #1""");
 
-				socket1.getOutputStream().write(encodeAscii("GET /abc HTTP/1.1\r\nHost: localhost\r\nConnection: keep-alive\n\r\n"));
-				readAndAssert(socket1.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 16\r\n\r\nHello, world! #1");
+				socket1.getOutputStream().write(encodeAscii("""
+						GET /abc HTTP/1.1\r
+						Host: localhost\r
+						Connection: keep-alive
+						\r
+						"""));
+				readAndAssert(socket1.getInputStream(), """
+						HTTP/1.1 200 OK\r
+						Connection: keep-alive\r
+						Content-Length: 16\r
+						\r
+						Hello, world! #1""");
 			}
 		} finally {
 			serviceGraph.stopFuture().get();
@@ -111,7 +151,7 @@ public final class HttpWorkerServerTest {
 			total += result;
 		}
 
-		assertEquals(new LinkedHashSet<>(asList(expected.split("\r\n"))), new LinkedHashSet<>(asList(decodeAscii(bytes).split("\r\n"))));
+		assertEquals(new LinkedHashSet<>(List.of(expected.split("\r\n"))), new LinkedHashSet<>(List.of(decodeAscii(bytes).split("\r\n"))));
 	}
 }
 

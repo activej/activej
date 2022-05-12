@@ -25,8 +25,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
-
-import static java.util.Collections.singletonList;
+import java.util.List;
 
 /**
  * Represents a node, which downloads data from a given address and stream.
@@ -55,7 +54,7 @@ public final class NodeDownload<T> extends AbstractNode {
 
 	@Override
 	public Collection<StreamId> getOutputs() {
-		return singletonList(streamId);
+		return List.of(streamId);
 	}
 
 	@Override

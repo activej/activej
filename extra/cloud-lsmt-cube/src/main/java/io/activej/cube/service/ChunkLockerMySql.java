@@ -27,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.*;
@@ -117,13 +116,7 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C>, WithInitialize
 		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 		try (InputStream stream = classLoader.getResourceAsStream("sql/ddl/uplink_chunk.sql")) {
 			assert stream != null;
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			byte[] buffer = new byte[4096];
-			int size;
-			while ((size = stream.read(buffer)) != -1) {
-				baos.write(buffer, 0, size);
-			}
-			return baos.toByteArray();
+			return stream.readAllBytes();
 		}
 	}
 

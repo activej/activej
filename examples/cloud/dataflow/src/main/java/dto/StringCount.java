@@ -18,8 +18,7 @@ public final class StringCount {
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
-		if (!(o instanceof StringCount)) return false;
-		StringCount that = (StringCount) o;
+		if (!(o instanceof StringCount that)) return false;
 		return string.equals(that.string) && count == that.count;
 	}
 

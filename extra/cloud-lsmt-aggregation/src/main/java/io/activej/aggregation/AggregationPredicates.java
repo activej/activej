@@ -27,42 +27,15 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.Utils.*;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.emptySet;
+import static io.activej.common.Utils.first;
+import static java.util.Collections.singletonMap;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class AggregationPredicates {
 	private static final class E extends Expressions {}
 
-	private static class PredicateSimplifierKey<L extends AggregationPredicate, R extends AggregationPredicate> {
-		private final Class<L> leftType;
-		private final Class<R> rightType;
-
-		private PredicateSimplifierKey(Class<L> leftType, Class<R> rightType) {
-			this.leftType = leftType;
-			this.rightType = rightType;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-
-			PredicateSimplifierKey that = (PredicateSimplifierKey) o;
-
-			if (!leftType.equals(that.leftType)) return false;
-			return rightType.equals(that.rightType);
-
-		}
-
-		@Override
-		public int hashCode() {
-			int result = leftType.hashCode();
-			result = 31 * result + rightType.hashCode();
-			return result;
-		}
+	private record PredicateSimplifierKey<L extends AggregationPredicate, R extends AggregationPredicate>(
+			Class<L> leftType, Class<R> rightType) {
 	}
 
 	@FunctionalInterface
@@ -475,17 +448,17 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return emptySet();
+			return Set.of();
 		}
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return emptyMap();
+			return Map.of();
 		}
 
 		@Override
 		public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-			return E.alwaysFalse();
+			return E.value(false);
 		}
 
 		@Override
@@ -507,17 +480,17 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return emptySet();
+			return Set.of();
 		}
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return emptyMap();
+			return Map.of();
 		}
 
 		@Override
 		public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-			return E.alwaysTrue();
+			return E.value(true);
 		}
 
 		@Override
@@ -570,7 +543,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return emptyMap();
+			return Map.of();
 		}
 
 		@Override
@@ -624,12 +597,12 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return setOf(key);
+			return Set.of(key);
 		}
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return mapOf(key, value);
+			return singletonMap(key, value);
 		}
 
 		@Override
@@ -640,7 +613,7 @@ public class AggregationPredicates {
 					isNull(property, fields.get(key)) :
 					E.and(
 							isNotNull(property, fields.get(key)),
-							E.cmpEq(property, E.value(internalValue)));
+							E.isEq(property, E.value(internalValue)));
 		}
 
 		@Override
@@ -691,12 +664,12 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return setOf(key);
+			return Set.of(key);
 		}
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return emptyMap();
+			return Map.of();
 		}
 
 		@Override
@@ -708,7 +681,7 @@ public class AggregationPredicates {
 					isNotNull(property, fieldType) :
 					E.or(
 							isNull(property, fieldType),
-							E.cmpNe(property, E.value(internalValue)));
+							E.isNe(property, E.value(internalValue)));
 		}
 
 		@Override
@@ -759,12 +732,12 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return setOf(key);
+			return Set.of(key);
 		}
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return emptyMap();
+			return Map.of();
 		}
 
 		@Override
@@ -772,7 +745,7 @@ public class AggregationPredicates {
 			Variable property = E.property(record, key.replace('.', '$'));
 			return E.and(
 					isNotNull(property, fields.get(key)),
-					E.cmpLe(property, E.value(toInternalValue(fields, key, value))));
+					E.isLe(property, E.value(toInternalValue(fields, key, value))));
 		}
 
 		@Override
@@ -823,19 +796,19 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return setOf(key);
+			return Set.of(key);
 		}
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return emptyMap();
+			return Map.of();
 		}
 
 		@Override
 		public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
 			Variable property = E.property(record, key.replace('.', '$'));
 			return E.and(isNotNull(property, fields.get(key)),
-					E.cmpLt(property, E.value(toInternalValue(fields, key, value))));
+					E.isLt(property, E.value(toInternalValue(fields, key, value))));
 		}
 
 		@Override
@@ -886,19 +859,19 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return setOf(key);
+			return Set.of(key);
 		}
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return emptyMap();
+			return Map.of();
 		}
 
 		@Override
 		public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
 			Variable property = E.property(record, key.replace('.', '$'));
 			return E.and(isNotNull(property, fields.get(key)),
-					E.cmpGe(property, E.value(toInternalValue(fields, key, value))));
+					E.isGe(property, E.value(toInternalValue(fields, key, value))));
 		}
 
 		@Override
@@ -949,19 +922,19 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return setOf(key);
+			return Set.of(key);
 		}
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return emptyMap();
+			return Map.of();
 		}
 
 		@Override
 		public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
 			Variable property = E.property(record, key.replace('.', '$'));
 			return E.and(isNotNull(property, fields.get(key)),
-					E.cmpGt(property, E.value(toInternalValue(fields, key, value))));
+					E.isGt(property, E.value(toInternalValue(fields, key, value))));
 		}
 
 		@Override
@@ -1006,17 +979,17 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return setOf(key);
+			return Set.of(key);
 		}
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return emptyMap();
+			return Map.of();
 		}
 
 		@Override
 		public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-			if (!fields.containsKey(key)) return E.alwaysFalse();
+			if (!fields.containsKey(key)) return E.value(false);
 			Variable property = E.property(record, key.replace('.', '$'));
 			FieldType fieldType = fields.get(key);
 			return isNotNull(property, fieldType);
@@ -1073,12 +1046,12 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return setOf(key);
+			return Set.of(key);
 		}
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return emptyMap();
+			return Map.of();
 		}
 
 		@Override
@@ -1086,7 +1059,7 @@ public class AggregationPredicates {
 			Variable value = E.property(record, key.replace('.', '$'));
 			return E.and(
 					isNotNull(value, fields.get(key)),
-					E.cmpNe(
+					E.isNe(
 							E.value(false),
 							E.call(E.call(E.value(regexp), "matcher", toStringValue(fields, key, value)), "matches")));
 		}
@@ -1144,17 +1117,17 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return setOf(key);
+			return Set.of(key);
 		}
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return emptyMap();
+			return Map.of();
 		}
 
 		@Override
 		public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
-			return E.cmpNe(
+			return E.isNe(
 					E.value(false),
 					E.call(E.value(values), "contains",
 							E.cast(E.property(record, key.replace('.', '$')), Object.class)));
@@ -1218,20 +1191,20 @@ public class AggregationPredicates {
 
 		@Override
 		public Set<String> getDimensions() {
-			return setOf(key);
+			return Set.of(key);
 		}
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return emptyMap();
+			return Map.of();
 		}
 
 		@Override
 		public Expression createPredicate(Expression record, Map<String, FieldType> fields) {
 			Variable property = E.property(record, key.replace('.', '$'));
 			return E.and(isNotNull(property, fields.get(key)),
-					E.cmpGe(property, E.value(toInternalValue(fields, key, from))),
-					E.cmpLe(property, E.value(toInternalValue(fields, key, to))));
+					E.isGe(property, E.value(toInternalValue(fields, key, from))),
+					E.isLe(property, E.value(toInternalValue(fields, key, to))));
 		}
 
 		@Override
@@ -1414,7 +1387,7 @@ public class AggregationPredicates {
 
 		@Override
 		public Map<String, Object> getFullySpecifiedDimensions() {
-			return emptyMap();
+			return Map.of();
 		}
 
 		@Override
@@ -1468,7 +1441,7 @@ public class AggregationPredicates {
 	}
 
 	public static AggregationPredicate and(AggregationPredicate... predicates) {
-		return and(asList(predicates));
+		return and(List.of(predicates));
 	}
 
 	public static AggregationPredicate or(List<AggregationPredicate> predicates) {
@@ -1476,7 +1449,7 @@ public class AggregationPredicates {
 	}
 
 	public static AggregationPredicate or(AggregationPredicate... predicates) {
-		return or(asList(predicates));
+		return or(List.of(predicates));
 	}
 
 	public static AggregationPredicate eq(String key, @Nullable Object value) {
@@ -1514,7 +1487,7 @@ public class AggregationPredicates {
 
 	@SuppressWarnings("unchecked")
 	public static AggregationPredicate in(String key, Comparable... values) {
-		return values.length == 1 ? new PredicateEq(key, values[0]) : new PredicateIn(key, new TreeSet(asList(values)));
+		return values.length == 1 ? new PredicateEq(key, values[0]) : new PredicateIn(key, new TreeSet(List.of(values)));
 	}
 
 	public static AggregationPredicate regexp(String key, @Language("RegExp") String pattern) {
@@ -1575,11 +1548,11 @@ public class AggregationPredicates {
 	}
 
 	private static Expression isNotNull(Expression field, FieldType fieldType) {
-		return fieldType != null && fieldType.getInternalDataType().isPrimitive() ? E.alwaysTrue() : E.isNotNull(field);
+		return fieldType != null && fieldType.getInternalDataType().isPrimitive() ? E.value(true) : E.isNotNull(field);
 	}
 
 	private static Expression isNull(Expression field, FieldType fieldType) {
-		return fieldType != null && fieldType.getInternalDataType().isPrimitive() ? E.alwaysFalse() : E.isNull(field);
+		return fieldType != null && fieldType.getInternalDataType().isPrimitive() ? E.value(false) : E.isNull(field);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -1605,16 +1578,14 @@ public class AggregationPredicates {
 		for (String key : primaryKey) {
 			for (int j = 0; j < conjunctions.size(); j++) {
 				AggregationPredicate conjunction = conjunctions.get(j);
-				if (conjunction instanceof PredicateEq && ((PredicateEq) conjunction).key.equals(key)) {
+				if (conjunction instanceof PredicateEq eq && ((PredicateEq) conjunction).key.equals(key)) {
 					conjunctions.remove(j);
-					PredicateEq eq = (PredicateEq) conjunction;
 					from.add(toInternalValue(fields, eq.key, eq.value));
 					to.add(toInternalValue(fields, eq.key, eq.value));
 					continue L;
 				}
-				if (conjunction instanceof PredicateBetween && ((PredicateBetween) conjunction).key.equals(key)) {
+				if (conjunction instanceof PredicateBetween between && ((PredicateBetween) conjunction).key.equals(key)) {
 					conjunctions.remove(j);
-					PredicateBetween between = (PredicateBetween) conjunction;
 					from.add(toInternalValue(fields, between.key, between.from));
 					to.add(toInternalValue(fields, between.key, between.to));
 					break L;

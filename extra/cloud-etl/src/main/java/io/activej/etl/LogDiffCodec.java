@@ -27,12 +27,10 @@ import io.activej.ot.repository.JsonIndentUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.*;
 
 import static com.dslplatform.json.JsonWriter.*;
 import static com.dslplatform.json.NumberConverter.serialize;
-import static java.util.Collections.emptyMap;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 public final class LogDiffCodec<D> implements ReadObject<LogDiff<D>>, WriteObject<LogDiff<D>>, WithInitializer<LogDiffCodec<D>> {
@@ -66,7 +64,7 @@ public final class LogDiffCodec<D> implements ReadObject<LogDiff<D>>, WriteObjec
 		Map<String, LogPositionDiff> positions = readValue(reader, POSITIONS, $ -> {
 			if (reader.last() != ARRAY_START) throw reader.newParseError("Expected '['");
 			if (reader.getNextToken() == ARRAY_END) {
-				return emptyMap();
+				return Map.of();
 			}
 			Map<String, LogPositionDiff> map = new LinkedHashMap<>();
 			Iterator<Map.Entry<String, LogPositionDiff>> iterator = reader.iterateOver((ReadObject) r -> {
@@ -77,7 +75,7 @@ public final class LogDiffCodec<D> implements ReadObject<LogDiff<D>>, WriteObjec
 				reader.comma();
 				LogPosition to = readValue(reader, TO, LOG_POSITION_FORMAT);
 				reader.endObject();
-				return new SimpleEntry<>(log, new LogPositionDiff(from, to));
+				return Map.entry(log, new LogPositionDiff(from, to));
 			});
 			while (iterator.hasNext()) {
 				Map.Entry<String, LogPositionDiff> entry = iterator.next();
@@ -113,12 +111,12 @@ public final class LogDiffCodec<D> implements ReadObject<LogDiff<D>>, WriteObjec
 
 			writer.writeString(FROM);
 			writer.writeByte(SEMI);
-			LOG_POSITION_FORMAT.write(writer, entry.getValue().from);
+			LOG_POSITION_FORMAT.write(writer, entry.getValue().from());
 			writer.writeByte(COMMA);
 
 			writer.writeString(TO);
 			writer.writeByte(SEMI);
-			LOG_POSITION_FORMAT.write(writer, entry.getValue().to);
+			LOG_POSITION_FORMAT.write(writer, entry.getValue().to());
 
 			writer.writeByte(OBJECT_END);
 		});

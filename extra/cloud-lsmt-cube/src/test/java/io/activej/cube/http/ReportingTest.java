@@ -35,17 +35,14 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.util.AbstractMap.SimpleEntry;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static io.activej.aggregation.AggregationPredicates.*;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.*;
-import static io.activej.common.Utils.*;
+import static io.activej.common.Utils.concat;
+import static io.activej.common.Utils.entriesToMap;
 import static io.activej.cube.ComputedMeasures.*;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.CubeQuery.Ordering.asc;
@@ -55,9 +52,6 @@ import static io.activej.cube.http.ReportingTest.LogItem.*;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
@@ -71,37 +65,37 @@ public final class ReportingTest extends CubeTestBase {
 	private int serverPort;
 
 	private static final Map<String, FieldType> DIMENSIONS_CUBE = entriesToMap(Stream.of(
-			new SimpleEntry<>("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
-			new SimpleEntry<>("advertiser", ofInt()),
-			new SimpleEntry<>("campaign", ofInt()),
-			new SimpleEntry<>("banner", ofInt()),
-			new SimpleEntry<>("affiliate", ofInt()),
-			new SimpleEntry<>("site", ofString())));
+			Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
+			Map.entry("advertiser", ofInt()),
+			Map.entry("campaign", ofInt()),
+			Map.entry("banner", ofInt()),
+			Map.entry("affiliate", ofInt()),
+			Map.entry("site", ofString())));
 
 	private static final Map<String, FieldType> DIMENSIONS_DATE_AGGREGATION =
-			singletonMap("date", ofLocalDate(LocalDate.parse("2000-01-01")));
+			Map.of("date", ofLocalDate(LocalDate.parse("2000-01-01")));
 
 	private static final Map<String, FieldType> DIMENSIONS_ADVERTISERS_AGGREGATION = entriesToMap(Stream.of(
-			new SimpleEntry<>("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
-			new SimpleEntry<>("advertiser", ofInt()),
-			new SimpleEntry<>("campaign", ofInt()),
-			new SimpleEntry<>("banner", ofInt())));
+			Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
+			Map.entry("advertiser", ofInt()),
+			Map.entry("campaign", ofInt()),
+			Map.entry("banner", ofInt())));
 
 	private static final Map<String, FieldType> DIMENSIONS_AFFILIATES_AGGREGATION = entriesToMap(Stream.of(
-			new SimpleEntry<>("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
-			new SimpleEntry<>("affiliate", ofInt()),
-			new SimpleEntry<>("site", ofString())));
+			Map.entry("date", ofLocalDate(LocalDate.parse("2000-01-01"))),
+			Map.entry("affiliate", ofInt()),
+			Map.entry("site", ofString())));
 
 	private static final Map<String, Measure> MEASURES = entriesToMap(Stream.of(
-			new SimpleEntry<>("impressions", sum(ofLong())),
-			new SimpleEntry<>("clicks", sum(ofLong())),
-			new SimpleEntry<>("conversions", sum(ofLong())),
-			new SimpleEntry<>("revenue", sum(ofDouble())),
-			new SimpleEntry<>("eventCount", count(ofInt())),
-			new SimpleEntry<>("minRevenue", min(ofDouble())),
-			new SimpleEntry<>("maxRevenue", max(ofDouble())),
-			new SimpleEntry<>("uniqueUserIdsCount", hyperLogLog(1024)),
-			new SimpleEntry<>("errors", sum(ofLong()))));
+			Map.entry("impressions", sum(ofLong())),
+			Map.entry("clicks", sum(ofLong())),
+			Map.entry("conversions", sum(ofLong())),
+			Map.entry("revenue", sum(ofDouble())),
+			Map.entry("eventCount", count(ofInt())),
+			Map.entry("minRevenue", min(ofDouble())),
+			Map.entry("maxRevenue", max(ofDouble())),
+			Map.entry("uniqueUserIdsCount", hyperLogLog(1024)),
+			Map.entry("errors", sum(ofLong()))));
 
 	private static class AdvertiserResolver extends AbstractAttributeResolver<Integer, String> {
 		@Override
@@ -116,7 +110,7 @@ public final class ReportingTest extends CubeTestBase {
 
 		@Override
 		public Map<String, Class<?>> getAttributeTypes() {
-			return singletonMap("name", String.class);
+			return Map.of("name", String.class);
 		}
 
 		@Override
@@ -126,14 +120,11 @@ public final class ReportingTest extends CubeTestBase {
 
 		@Override
 		public @Nullable String resolveAttributes(Integer key) {
-			switch (key) {
-				case 1:
-					return "first";
-				case 3:
-					return "third";
-				default:
-					return null;
-			}
+			return switch (key) {
+				case 1 -> "first";
+				case 3 -> "third";
+				default -> null;
+			};
 		}
 	}
 
@@ -224,7 +215,7 @@ public final class ReportingTest extends CubeTestBase {
 
 		@Override
 		protected StreamDataAcceptor<LogItem> createSplitter(@NotNull Context ctx) {
-			return new StreamDataAcceptor<LogItem>() {
+			return new StreamDataAcceptor<>() {
 				private final StreamDataAcceptor<LogItem> dateAggregator = ctx.addOutput(
 						cube.logStreamConsumer(
 								LogItem.class,
@@ -300,20 +291,20 @@ public final class ReportingTest extends CubeTestBase {
 				multilog,
 				new LogItemSplitter(cube),
 				"testlog",
-				singletonList("partitionA"),
+				List.of("partitionA"),
 				cubeDiffLogOTState);
 
 		// checkout first (root) revision
 		await(logCubeStateManager.checkout());
 
-		List<LogItem> logItemsForAdvertisersAggregations = asList(
+		List<LogItem> logItemsForAdvertisersAggregations = List.of(
 				new LogItem(1, 1, 1, 1, 20, 3, 1, 0.12, 2, 2, EXCLUDE_AFFILIATE, EXCLUDE_SITE),
 				new LogItem(1, 2, 2, 2, 100, 5, 0, 0.36, 10, 0, EXCLUDE_AFFILIATE, EXCLUDE_SITE),
 				new LogItem(1, 3, 3, 3, 80, 5, 0, 0.60, 1, 8, EXCLUDE_AFFILIATE, EXCLUDE_SITE),
 				new LogItem(2, 1, 1, 1, 15, 2, 0, 0.22, 1, 3, EXCLUDE_AFFILIATE, EXCLUDE_SITE),
 				new LogItem(3, 1, 1, 1, 30, 5, 2, 0.30, 3, 4, EXCLUDE_AFFILIATE, EXCLUDE_SITE));
 
-		List<LogItem> logItemsForAffiliatesAggregation = asList(
+		List<LogItem> logItemsForAffiliatesAggregation = List.of(
 				new LogItem(1, EXCLUDE_ADVERTISER, EXCLUDE_CAMPAIGN, EXCLUDE_BANNER, 10, 3, 1, 0.12, 0, 2, 1, "site3.com"),
 				new LogItem(1, EXCLUDE_ADVERTISER, EXCLUDE_CAMPAIGN, EXCLUDE_BANNER, 15, 2, 0, 0.22, 0, 3, 2, "site3.com"),
 				new LogItem(1, EXCLUDE_ADVERTISER, EXCLUDE_CAMPAIGN, EXCLUDE_BANNER, 30, 5, 2, 0.30, 0, 4, 2, "site3.com"),
@@ -389,8 +380,8 @@ public final class ReportingTest extends CubeTestBase {
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(2, records.size());
-		assertEquals(setOf("date"), new HashSet<>(queryResult.getAttributes()));
-		assertEquals(setOf("impressions", "clicks", "ctr", "revenue"), new HashSet<>(queryResult.getMeasures()));
+		assertEquals(Set.of("date"), new HashSet<>(queryResult.getAttributes()));
+		assertEquals(Set.of("impressions", "clicks", "ctr", "revenue"), new HashSet<>(queryResult.getMeasures()));
 		assertEquals(LocalDate.parse("2000-01-03"), records.get(0).get("date"));
 		assertEquals(5, (long) records.get(0).get("clicks"));
 		assertEquals(65, (long) records.get(0).get("impressions"));
@@ -404,7 +395,7 @@ public final class ReportingTest extends CubeTestBase {
 		assertEquals(38, (long) totals.get("clicks"));
 		assertEquals(500, (long) totals.get("impressions"));
 		assertEquals(38.0 / 500.0 * 100.0, totals.get("ctr"), DELTA);
-		assertEquals(setOf("date"), new HashSet<>(queryResult.getSortedBy()));
+		assertEquals(Set.of("date"), new HashSet<>(queryResult.getSortedBy()));
 	}
 
 	@Test
@@ -420,8 +411,8 @@ public final class ReportingTest extends CubeTestBase {
 
 		List<Record> records1 = queryResult1.getRecords();
 		assertEquals(2, records1.size());
-		assertEquals(setOf("date"), new HashSet<>(queryResult1.getAttributes()));
-		assertEquals(setOf("impressions", "clicks", "ctr", "revenue"), new HashSet<>(queryResult1.getMeasures()));
+		assertEquals(Set.of("date"), new HashSet<>(queryResult1.getAttributes()));
+		assertEquals(Set.of("impressions", "clicks", "ctr", "revenue"), new HashSet<>(queryResult1.getMeasures()));
 		assertEquals(LocalDate.parse("2000-01-03"), records1.get(0).get("date"));
 		assertEquals(5, (long) records1.get(0).get("clicks"));
 		assertEquals(65, (long) records1.get(0).get("impressions"));
@@ -435,7 +426,7 @@ public final class ReportingTest extends CubeTestBase {
 		assertEquals(38, (long) totals1.get("clicks"));
 		assertEquals(500, (long) totals1.get("impressions"));
 		assertEquals(38.0 / 500.0 * 100.0, totals1.get("ctr"), DELTA);
-		assertEquals(setOf("date"), new HashSet<>(queryResult1.getSortedBy()));
+		assertEquals(Set.of("date"), new HashSet<>(queryResult1.getSortedBy()));
 
 		startHttpServer();
 		QueryResult queryResult2 = await(cubeHttpClient.query(query));
@@ -472,8 +463,8 @@ public final class ReportingTest extends CubeTestBase {
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(2, records.size());
-		assertEquals(setOf("date"), new HashSet<>(queryResult.getAttributes()));
-		assertEquals(setOf("impressions", "clicks", "ctr", "revenue"), new HashSet<>(queryResult.getMeasures()));
+		assertEquals(Set.of("date"), new HashSet<>(queryResult.getAttributes()));
+		assertEquals(Set.of("impressions", "clicks", "ctr", "revenue"), new HashSet<>(queryResult.getMeasures()));
 		assertEquals(LocalDate.parse("2000-01-03"), records.get(0).get("date"));
 		assertEquals(5, (long) records.get(0).get("clicks"));
 		assertEquals(65, (long) records.get(0).get("impressions"));
@@ -487,7 +478,7 @@ public final class ReportingTest extends CubeTestBase {
 		assertEquals(38, (long) totals.get("clicks"));
 		assertEquals(500, (long) totals.get("impressions"));
 		assertEquals(38.0 / 500.0 * 100.0, totals.get("ctr"), DELTA);
-		assertEquals(setOf("date"), new HashSet<>(queryResult.getSortedBy()));
+		assertEquals(Set.of("date"), new HashSet<>(queryResult.getSortedBy()));
 	}
 
 	@Test
@@ -506,8 +497,8 @@ public final class ReportingTest extends CubeTestBase {
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(2, records.size());
-		assertEquals(setOf("date"), new HashSet<>(queryResult.getAttributes()));
-		assertEquals(setOf("impressions", "clicks", "ctr", "revenue"), new HashSet<>(queryResult.getMeasures()));
+		assertEquals(Set.of("date"), new HashSet<>(queryResult.getAttributes()));
+		assertEquals(Set.of("impressions", "clicks", "ctr", "revenue"), new HashSet<>(queryResult.getMeasures()));
 		assertEquals(LocalDate.parse("2000-01-03"), records.get(0).get("date"));
 		assertEquals(2, (long) records.get(0).get("clicks"));
 		assertEquals(15, (long) records.get(0).get("impressions"));
@@ -521,7 +512,7 @@ public final class ReportingTest extends CubeTestBase {
 		assertEquals(35, (long) totals.get("impressions"));
 		assertEquals(5, (long) totals.get("clicks"));
 		assertEquals(5.0 / 35.0 * 100.0, totals.get("ctr"), DELTA);
-		assertEquals(setOf("ctr"), new HashSet<>(queryResult.getSortedBy()));
+		assertEquals(Set.of("ctr"), new HashSet<>(queryResult.getSortedBy()));
 	}
 
 	@Test
@@ -567,8 +558,8 @@ public final class ReportingTest extends CubeTestBase {
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(3, records.size());
-		assertEquals(setOf("date", "advertiser", "advertiser.name"), new HashSet<>(queryResult.getAttributes()));
-		assertEquals(setOf("impressions"), new HashSet<>(queryResult.getMeasures()));
+		assertEquals(Set.of("date", "advertiser", "advertiser.name"), new HashSet<>(queryResult.getAttributes()));
+		assertEquals(Set.of("impressions"), new HashSet<>(queryResult.getMeasures()));
 
 		assertEquals(LocalDate.parse("2000-01-02"), records.get(0).get("date"));
 		assertEquals(2, (int) records.get(0).get("advertiser"));
@@ -588,7 +579,7 @@ public final class ReportingTest extends CubeTestBase {
 		Record totals = queryResult.getTotals();
 		// totals evaluated before applying having predicate
 		assertEquals(245, (long) totals.get("impressions"));
-		assertEquals(setOf("date", "advertiser.name"), new HashSet<>(queryResult.getSortedBy()));
+		assertEquals(Set.of("date", "advertiser.name"), new HashSet<>(queryResult.getSortedBy()));
 	}
 
 	@Test
@@ -654,9 +645,9 @@ public final class ReportingTest extends CubeTestBase {
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(2, records.size());
-		assertEquals(asList("advertiser.name", "clicks"), records.get(0).getScheme().getFields());
-		assertEquals(singletonList("advertiser.name"), queryResult.getAttributes());
-		assertEquals(singletonList("clicks"), queryResult.getMeasures());
+		assertEquals(List.of("advertiser.name", "clicks"), records.get(0).getScheme().getFields());
+		assertEquals(List.of("advertiser.name"), queryResult.getAttributes());
+		assertEquals(List.of("clicks"), queryResult.getMeasures());
 		assertEquals("first", records.get(0).get("advertiser.name"));
 		assertNull(records.get(1).get("advertiser.name"));
 	}
@@ -672,7 +663,7 @@ public final class ReportingTest extends CubeTestBase {
 		QueryResult queryResult = await(cubeHttpClient.query(query));
 
 		List<Record> records = queryResult.getRecords();
-		assertEquals(setOf("eventCount", "minRevenue", "maxRevenue", "uniqueUserIdsCount", "uniqueUserPercent", "clicks"),
+		assertEquals(Set.of("eventCount", "minRevenue", "maxRevenue", "uniqueUserIdsCount", "uniqueUserPercent", "clicks"),
 				new HashSet<>(queryResult.getMeasures()));
 		assertEquals(3, records.size());
 
@@ -736,17 +727,17 @@ public final class ReportingTest extends CubeTestBase {
 		CubeQuery queryWithPredicateIn = CubeQuery.create()
 				.withAttributes("advertiser")
 				.withWhere(and(
-						in("advertiser", asList(1, 2)),
+						in("advertiser", List.of(1, 2)),
 						notEq("advertiser", EXCLUDE_ADVERTISER),
 						notEq("banner", EXCLUDE_BANNER),
 						notEq("campaign", EXCLUDE_CAMPAIGN)))
 				.withMeasures("clicks", "ctr", "conversions")
 				.withReportType(DATA_WITH_TOTALS)
-				.withHaving(in("advertiser", asList(1, 2)));
+				.withHaving(in("advertiser", List.of(1, 2)));
 
 		QueryResult in = await(cubeHttpClient.query(queryWithPredicateIn));
 
-		List<String> expectedRecordFields = asList("advertiser", "clicks", "ctr", "conversions");
+		List<String> expectedRecordFields = List.of("advertiser", "clicks", "ctr", "conversions");
 		assertEquals(expectedRecordFields.size(), in.getRecordScheme().getFields().size());
 		assertEquals(2, in.getTotalCount());
 
@@ -777,7 +768,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withReportType(ReportType.METADATA);
 
 		QueryResult metadata = await(cubeHttpClient.query(queryAffectingNonCompatibleAggregations));
-		List<String> expectedMeasures = asList("impressions", "clicks");
+		List<String> expectedMeasures = List.of("impressions", "clicks");
 		assertEquals(expectedMeasures, metadata.getMeasures());
 	}
 
@@ -803,7 +794,7 @@ public final class ReportingTest extends CubeTestBase {
 	public void testAdvertisersAggregationTotals() {
 		CubeQuery queryAdvertisers = CubeQuery.create()
 				.withAttributes("date", "advertiser")
-				.withMeasures(asList("clicks", "impressions", "revenue", "errors"))
+				.withMeasures(List.of("clicks", "impressions", "revenue", "errors"))
 				.withWhere(and(notEq("advertiser", EXCLUDE_ADVERTISER), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER),
 						between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02"))))
 				.withReportType(DATA_WITH_TOTALS);
@@ -825,7 +816,7 @@ public final class ReportingTest extends CubeTestBase {
 	public void testAffiliatesAggregationTotals() {
 		CubeQuery queryAffiliates = CubeQuery.create()
 				.withAttributes("date", "affiliate")
-				.withMeasures(asList("clicks", "impressions", "revenue", "errors"))
+				.withMeasures(List.of("clicks", "impressions", "revenue", "errors"))
 				.withWhere(and(notEq("affiliate", 0), notEq("site", EXCLUDE_SITE),
 						between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02"))))
 				.withReportType(DATA_WITH_TOTALS);
@@ -847,7 +838,7 @@ public final class ReportingTest extends CubeTestBase {
 	public void testDailyAggregationTotals() {
 		CubeQuery queryDate = CubeQuery.create()
 				.withAttributes("date")
-				.withMeasures(asList("clicks", "impressions", "revenue", "errors"))
+				.withMeasures(List.of("clicks", "impressions", "revenue", "errors"))
 				.withWhere(between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02")))
 				.withReportType(DATA_WITH_TOTALS);
 
@@ -866,10 +857,10 @@ public final class ReportingTest extends CubeTestBase {
 
 	@Test
 	public void testResultContainsTotals_whenDataWithTotalsRequested() {
-		List<String> measures = asList("clicks", "impressions", "revenue", "errors");
+		List<String> measures = List.of("clicks", "impressions", "revenue", "errors");
 		List<String> requestMeasures = new ArrayList<>(measures);
 		requestMeasures.add(3, "nonexistentMeasure");
-		List<String> dateDimension = singletonList("date");
+		List<String> dateDimension = List.of("date");
 		CubeQuery queryDate = CubeQuery.create()
 				.withAttributes(dateDimension)
 				.withMeasures(requestMeasures)
@@ -894,7 +885,7 @@ public final class ReportingTest extends CubeTestBase {
 
 	@Test
 	public void testResultContainsTotalsAndMetadata_whenTotalsAndMetadataRequested() {
-		List<String> measures = asList("clicks", "impressions", "revenue", "errors");
+		List<String> measures = List.of("clicks", "impressions", "revenue", "errors");
 		List<String> requestMeasures = new ArrayList<>(measures);
 		requestMeasures.add("unexpected");
 		CubeQuery queryDate = CubeQuery.create()

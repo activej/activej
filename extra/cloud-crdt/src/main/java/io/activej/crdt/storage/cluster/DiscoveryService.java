@@ -47,7 +47,7 @@ public interface DiscoveryService<P> {
 	}
 
 	static <P> DiscoveryService<P> of(PartitionScheme<P> partitionScheme) {
-		return () -> new AsyncSupplier<PartitionScheme<P>>() {
+		return () -> new AsyncSupplier<>() {
 			int i = 0;
 
 			@Override

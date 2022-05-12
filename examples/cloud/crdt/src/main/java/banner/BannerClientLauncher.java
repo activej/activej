@@ -20,8 +20,6 @@ import java.util.stream.Stream;
 
 import static banner.BannerCommands.*;
 import static banner.BannerServerLauncher.MESSAGE_TYPES;
-import static java.util.Collections.singleton;
-import static java.util.stream.Collectors.toList;
 
 public final class BannerClientLauncher extends CrdtRpcClientLauncher {
 	public static final int USER_IDS_SIZE = 100;
@@ -31,7 +29,7 @@ public final class BannerClientLauncher extends CrdtRpcClientLauncher {
 	private static final List<Long> USER_IDS = Stream.generate(() -> RANDOM.nextLong(10L * USER_IDS_SIZE))
 			.distinct()
 			.limit(USER_IDS_SIZE)
-			.collect(toList());
+			.toList();
 
 	private final Map<Long, Set<Integer>> controlMap = new TreeMap<>();
 
@@ -63,7 +61,7 @@ public final class BannerClientLauncher extends CrdtRpcClientLauncher {
 								.map(userId -> {
 									int bannerId = RANDOM.nextInt(BANNER_SIZE) + 1;
 									return client.sendRequest(new PutRequest(userId, GSet.of(bannerId)))
-											.whenResult(() -> controlMap.merge(userId, singleton(bannerId), Utils::union));
+											.whenResult(() -> controlMap.merge(userId, Set.of(bannerId), Utils::union));
 								}))
 								.map($ -> i + 1),
 						i -> i == BANNER_SIZE / 2
@@ -74,7 +72,7 @@ public final class BannerClientLauncher extends CrdtRpcClientLauncher {
 	private @NotNull Set<Integer> fetchBannerIds(long randomUserId) throws Exception {
 		Set<Integer> fetchedBanners = eventloop.submit(() ->
 				client.<GetRequest, GetResponse>sendRequest(new GetRequest(randomUserId))
-						.map(GetResponse::getBannerIds)
+						.map(GetResponse::bannerIds)
 		).get();
 
 		System.out.println("Fetched banners for user ID [" + randomUserId + "]: " + fetchedBanners);
@@ -88,7 +86,7 @@ public final class BannerClientLauncher extends CrdtRpcClientLauncher {
 		int seenBannerId = fetchedBanners.stream()
 				.skip(RANDOM.nextInt(fetchedBanners.size()))
 				.findFirst()
-				.orElseThrow(AssertionError::new);
+				.orElseThrow();
 		CompletableFuture<Boolean> shouldBeSeenFuture = eventloop.submit(() ->
 				client.sendRequest(new IsBannerSeenRequest(randomUserId, seenBannerId)));
 		System.out.println("Should be seen. Has banner with id '" + seenBannerId + "' been seen? : " + shouldBeSeenFuture.get());

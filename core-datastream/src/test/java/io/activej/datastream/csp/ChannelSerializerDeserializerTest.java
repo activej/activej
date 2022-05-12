@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static io.activej.promise.TestUtils.await;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
@@ -26,7 +25,7 @@ public final class ChannelSerializerDeserializerTest {
 
 	@Test
 	public void initialBufferSizeOne() {
-		List<Integer> ints = asList(123, -567);
+		List<Integer> ints = List.of(123, -567);
 
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 
@@ -43,7 +42,7 @@ public final class ChannelSerializerDeserializerTest {
 		int nearMaxSize = (1 << 28) // ChannelSerializer.MAX_SIZE
 				- 4 // encoded size of an array
 				- 1;
-		List<byte[]> byteArrays = asList(new byte[1024], new byte[32 * 1024], new byte[10 * 1024 * 1024], new byte[nearMaxSize]);
+		List<byte[]> byteArrays = List.of(new byte[1024], new byte[32 * 1024], new byte[10 * 1024 * 1024], new byte[nearMaxSize]);
 		for (byte[] byteArray : byteArrays) {
 			ThreadLocalRandom.current().nextBytes(byteArray);
 		}

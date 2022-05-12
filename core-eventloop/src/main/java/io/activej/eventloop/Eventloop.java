@@ -320,12 +320,12 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		return selector;
 	}
 
-	private static final String NO_CURRENT_EVENTLOOP_ERROR = "Trying to start async operations prior eventloop.run(), or from outside of eventloop.run() \n" +
-			"Possible solutions: " +
-			"1) Eventloop.create().withCurrentThread() ... {your code block} ... eventloop.run() \n" +
-			"2) try_with_resources Eventloop.useCurrentThread() ... {your code block} \n" +
-			"3) refactor application so it starts async operations within eventloop.run(), \n" +
-			"   i.e. by implementing EventloopService::start() {your code block} and using ServiceGraphModule";
+	private static final String NO_CURRENT_EVENTLOOP_ERROR = """
+			Trying to start async operations prior eventloop.run(), or from outside of eventloop.run()\s
+			Possible solutions: 1) Eventloop.create().withCurrentThread() ... {your code block} ... eventloop.run()\s
+			2) try_with_resources Eventloop.useCurrentThread() ... {your code block}\s
+			3) refactor application so it starts async operations within eventloop.run(),\s
+			   i.e. by implementing EventloopService::start() {your code block} and using ServiceGraphModule""";
 
 	/**
 	 * Returns an {@link Eventloop} associated with the current thread

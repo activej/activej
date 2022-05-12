@@ -16,13 +16,10 @@
 
 package io.activej.http.decoder;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Predicate;
 
 import static io.activej.common.Utils.concat;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 
 /**
  * An enhanced predicate which can return a list of errors for given input object.
@@ -63,7 +60,7 @@ public interface Validator<T> {
 	}
 
 	static <T> Validator<T> alwaysOk() {
-		return value -> emptyList();
+		return value -> List.of();
 	}
 
 	/**
@@ -71,7 +68,7 @@ public interface Validator<T> {
 	 */
 	@SafeVarargs
 	static <T> Validator<T> sequence(Validator<T>... validators) {
-		return sequence(Arrays.asList(validators));
+		return sequence(List.of(validators));
 	}
 
 	/**
@@ -87,7 +84,7 @@ public interface Validator<T> {
 	 */
 	@SafeVarargs
 	static <T> Validator<T> of(Validator<T>... validators) {
-		return of(Arrays.asList(validators));
+		return of(List.of(validators));
 	}
 
 	/**
@@ -103,7 +100,7 @@ public interface Validator<T> {
 	 */
 	static <T> Validator<T> of(Predicate<T> predicate, String template) {
 		return value -> predicate.test(value) ?
-				emptyList() :
-				singletonList(DecodeError.of(template, value));
+				List.of() :
+				List.of(DecodeError.of(template, value));
 	}
 }

@@ -105,7 +105,7 @@ public final class ScopedRpcBenchmarkClient extends Launcher {
 		sent = 0;
 		completed = 0;
 
-		Callback<RpcResponse> callback = new Callback<RpcResponse>() {
+		Callback<RpcResponse> callback = new Callback<>() {
 			@Override
 			public void accept(RpcResponse result, @Nullable Exception e) {
 				completed++;

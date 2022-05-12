@@ -23,6 +23,8 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 
 import java.util.function.UnaryOperator;
 
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static io.activej.codegen.util.TypeChecks.isWidenedToInt;
 import static org.objectweb.asm.Type.INT_TYPE;
 import static org.objectweb.asm.Type.VOID_TYPE;
 
@@ -44,10 +46,14 @@ final class ExpressionIterate implements Expression {
 		Label labelExit = new Label();
 
 		VarLocal to = ctx.newLocal(INT_TYPE);
-		this.to.load(ctx);
+		Type toType = this.to.load(ctx);
+		checkType(toType, isWidenedToInt());
+
 		to.store(ctx);
 
-		from.load(ctx);
+		Type fromType = from.load(ctx);
+		checkType(fromType, isWidenedToInt());
+
 		VarLocal it = ctx.newLocal(INT_TYPE);
 		it.store(ctx);
 
@@ -59,10 +65,12 @@ final class ExpressionIterate implements Expression {
 		g.ifCmp(INT_TYPE, GeneratorAdapter.GE, labelExit);
 
 		Type forType = forVar.apply(it).load(ctx);
-		if (forType.getSize() == 1)
-			g.pop();
-		if (forType.getSize() == 2)
-			g.pop2();
+		if (forType != null) {
+			if (forType.getSize() == 1)
+				g.pop();
+			if (forType.getSize() == 2)
+				g.pop2();
+		}
 
 		it.load(ctx);
 		g.push(1);

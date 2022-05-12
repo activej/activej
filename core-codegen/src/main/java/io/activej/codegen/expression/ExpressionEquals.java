@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static io.activej.codegen.util.TypeChecks.isAssignable;
 import static io.activej.codegen.util.Utils.isPrimitiveType;
 import static io.activej.codegen.util.Utils.wrap;
 import static org.objectweb.asm.Type.INT_TYPE;
@@ -34,55 +36,24 @@ import static org.objectweb.asm.commons.GeneratorAdapter.NE;
 /**
  * Defines methods to compare some fields
  */
-public final class ExpressionComparator implements Expression {
-	private final List<ComparablePair> pairs = new ArrayList<>();
+public final class ExpressionEquals implements Expression {
+	private final List<Pair> pairs = new ArrayList<>();
 
-	private static final class ComparablePair {
-		private final Expression left;
-		private final Expression right;
-		private final boolean nullable;
+	private record Pair(Expression left, Expression right, boolean nullable) {}
 
-		private ComparablePair(Expression left, Expression right, boolean nullable) {
-			this.left = left;
-			this.right = right;
-			this.nullable = nullable;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-
-			ComparablePair that = (ComparablePair) o;
-
-			if (nullable != that.nullable) return false;
-			if (!left.equals(that.left)) return false;
-			return right.equals(that.right);
-
-		}
-
-		@Override
-		public int hashCode() {
-			int result = left.hashCode();
-			result = 31 * result + right.hashCode();
-			result = 31 * result + (nullable ? 1 : 0);
-			return result;
-		}
+	private ExpressionEquals() {
 	}
 
-	private ExpressionComparator() {
+	public static ExpressionEquals create() {
+		return new ExpressionEquals();
 	}
 
-	public static ExpressionComparator create() {
-		return new ExpressionComparator();
-	}
-
-	public ExpressionComparator with(Expression left, Expression right) {
+	public ExpressionEquals with(Expression left, Expression right) {
 		return with(left, right, false);
 	}
 
-	public ExpressionComparator with(Expression left, Expression right, boolean nullable) {
-		this.pairs.add(new ComparablePair(left, right, nullable));
+	public ExpressionEquals with(Expression left, Expression right, boolean nullable) {
+		this.pairs.add(new Pair(left, right, nullable));
 		return this;
 	}
 
@@ -108,9 +79,12 @@ public final class ExpressionComparator implements Expression {
 
 		Label labelReturn = new Label();
 
-		for (ComparablePair pair : pairs) {
+		for (Pair pair : pairs) {
 			Type leftPropertyType = pair.left.load(ctx);
+			checkType(leftPropertyType, isAssignable());
+
 			Type rightPropertyType = pair.right.load(ctx);
+			checkType(rightPropertyType, isAssignable());
 
 			if (!leftPropertyType.equals(rightPropertyType))
 				throw new IllegalArgumentException("Types of compared values should match");

@@ -20,12 +20,9 @@ import static io.activej.ot.OTAlgorithms.mergeAndPush;
 import static io.activej.ot.OTAlgorithms.mergeAndUpdateHeads;
 import static io.activej.ot.utils.Utils.*;
 import static io.activej.promise.TestUtils.await;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-@SuppressWarnings({"ArraysAsListWithZeroOrOneArgument"})
 public final class OTSystemTest {
 	private static final OTSystem<TestOp> SYSTEM = createTestOp();
 
@@ -34,8 +31,8 @@ public final class OTSystemTest {
 
 	@Test
 	public void testTransform1() throws Exception {
-		List<? extends TestOp> left = asList(add(2), add(1));
-		List<? extends TestOp> right = asList(add(1), add(10), add(100));
+		List<? extends TestOp> left = List.of(add(2), add(1));
+		List<? extends TestOp> right = List.of(add(1), add(10), add(100));
 		TransformResult<TestOp> result = SYSTEM.transform(left, right);
 		System.out.println(result.left);
 		System.out.println(result.right);
@@ -46,28 +43,28 @@ public final class OTSystemTest {
 
 	@Test
 	public void testTransform2() throws Exception {
-		List<? extends TestOp> left = asList(add(2), set(2, 1), add(2), add(10));
-		List<? extends TestOp> right = asList(set(0, -20), add(30), add(10));
+		List<? extends TestOp> left = List.of(add(2), set(2, 1), add(2), add(10));
+		List<? extends TestOp> right = List.of(set(0, -20), add(30), add(10));
 		TransformResult<TestOp> result = SYSTEM.transform(left, right);
 		System.out.println(result.left);
 		System.out.println(result.right);
 
-		assertEquals(asList(set(13, -20), add(30), add(10)), result.left);
+		assertEquals(List.of(set(13, -20), add(30), add(10)), result.left);
 		assertTrue(result.right.isEmpty());
 	}
 
 	@Test
 	public void testSimplify() {
-		List<? extends TestOp> arg = asList(add(2), set(2, 1), add(2), add(10));
+		List<? extends TestOp> arg = List.of(add(2), set(2, 1), add(2), add(10));
 		List<TestOp> result = SYSTEM.squash(arg);
 		System.out.println(result);
 
-		assertEquals(singletonList(set(0, 13)), result);
+		assertEquals(List.of(set(0, 13)), result);
 	}
 
 	@Test
 	public void testOtSource2() {
-		OTRepositoryStub<String, TestOp> repository = OTRepositoryStub.create(asList("m", "x", "y", "m2"));
+		OTRepositoryStub<String, TestOp> repository = OTRepositoryStub.create(List.of("m", "x", "y", "m2"));
 		repository.setGraph(g -> {
 			g.add("*", "a1", add(1));
 			g.add("a1", "a2", add(2));
@@ -124,7 +121,7 @@ public final class OTSystemTest {
 
 	@Test
 	public void testOtSource3() {
-		OTRepositoryStub<String, TestOp> otSource = OTRepositoryStub.create(asList("m"));
+		OTRepositoryStub<String, TestOp> otSource = OTRepositoryStub.create(List.of("m"));
 		otSource.setGraph(g -> {
 			g.add("*", "a1", add(1));
 			g.add("a1", "a2", add(2));
@@ -138,7 +135,7 @@ public final class OTSystemTest {
 
 	@Test
 	public void testOtSource4() {
-		OTRepositoryStub<String, TestOp> otSource = OTRepositoryStub.create(asList("m"));
+		OTRepositoryStub<String, TestOp> otSource = OTRepositoryStub.create(List.of("m"));
 		otSource.setGraph(g -> {
 			g.add("*", "a1", add(1));
 			g.add("*", "b1", add(10));

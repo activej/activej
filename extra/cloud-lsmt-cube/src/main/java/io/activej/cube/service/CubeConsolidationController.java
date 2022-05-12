@@ -49,7 +49,6 @@ import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.transformMap;
-import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toSet;
 
 public final class CubeConsolidationController<K, D, C> implements EventloopJmxBeanWithStats, WithInitializer<CubeConsolidationController<K, D, C>> {
@@ -57,9 +56,7 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 
 	private static final ChunkLocker<Object> NOOP_CHUNK_LOCKER = ChunkLockerNoOp.create();
 
-	public static final Supplier<AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>>> DEFAULT_LOCKER_STRATEGY = new Supplier<AsyncBiFunction<Aggregation,
-			Set<Object>,
-			List<AggregationChunk>>>() {
+	public static final Supplier<AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>>> DEFAULT_LOCKER_STRATEGY = new Supplier<>() {
 		private boolean hotSegment = false;
 
 		@Override
@@ -227,7 +224,7 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 					}
 					logger.info("Removing irrelevant chunks: {}", irrelevantChunks.keySet());
 					Map<String, AggregationDiff> diffMap = transformMap(irrelevantChunks,
-							chunksToRemove -> AggregationDiff.of(emptySet(), chunksToRemove));
+							chunksToRemove -> AggregationDiff.of(Set.of(), chunksToRemove));
 					CubeDiff cubeDiff = CubeDiff.of(diffMap);
 					cubeDiffJmx(cubeDiff);
 					stateManager.add(cubeDiffScheme.wrap(cubeDiff));

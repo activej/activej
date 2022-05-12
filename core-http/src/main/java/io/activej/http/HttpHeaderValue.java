@@ -26,7 +26,6 @@ import java.util.List;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.http.HttpUtils.trimAndDecodePositiveInt;
-import static java.util.Arrays.asList;
 
 @SuppressWarnings("WeakerAccess")
 public abstract class HttpHeaderValue {
@@ -58,7 +57,7 @@ public abstract class HttpHeaderValue {
 	}
 
 	public static @NotNull HttpHeaderValue ofAcceptCharsets(AcceptCharset... charsets) {
-		return ofAcceptCharsets(asList(charsets));
+		return ofAcceptCharsets(List.of(charsets));
 	}
 
 	public static @NotNull HttpHeaderValue ofInstant(@NotNull Instant date) {
@@ -74,7 +73,7 @@ public abstract class HttpHeaderValue {
 	}
 
 	public static @NotNull HttpHeaderValue ofAcceptMediaTypes(AcceptMediaType... types) {
-		return ofAcceptMediaTypes(asList(types));
+		return ofAcceptMediaTypes(List.of(types));
 	}
 
 	public static @NotNull HttpHeaderValue ofContentType(@NotNull ContentType type) {

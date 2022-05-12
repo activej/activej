@@ -11,6 +11,7 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import java.util.List;
 import java.util.Objects;
 
 import static io.activej.datastream.TestStreamTransformers.decorate;
@@ -19,8 +20,6 @@ import static io.activej.datastream.TestUtils.*;
 import static io.activej.datastream.processor.StreamReducers.deduplicateReducer;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.function.Function.identity;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
@@ -46,7 +45,7 @@ public class StreamReducerTest {
 								.transformWith(randomlySuspending()))
 		);
 
-		assertEquals(emptyList(), consumer.getList());
+		assertEquals(List.of(), consumer.getList());
 		assertEndOfStream(source);
 		assertEndOfStream(streamReducer.getOutput());
 		assertConsumersEndOfStream(streamReducer.getInputs());
@@ -82,7 +81,7 @@ public class StreamReducerTest {
 						.streamTo(consumer.transformWith(randomlySuspending()))
 		);
 
-		assertEquals(asList(1, 2, 3, 4, 5, 6, 7), consumer.getList());
+		assertEquals(List.of(1, 2, 3, 4, 5, 6, 7), consumer.getList());
 		assertEndOfStream(source0);
 		assertEndOfStream(source1);
 		assertEndOfStream(source2);
@@ -173,7 +172,7 @@ public class StreamReducerTest {
 			this.metric1 = metric1;
 		}
 
-		public static final ReducerToAccumulator<Integer, KeyValue1, KeyValueResult> REDUCER_TO_ACCUMULATOR = new ReducerToAccumulator<Integer, KeyValue1, KeyValueResult>() {
+		public static final ReducerToAccumulator<Integer, KeyValue1, KeyValueResult> REDUCER_TO_ACCUMULATOR = new ReducerToAccumulator<>() {
 			@Override
 			public KeyValueResult createAccumulator(Integer key) {
 				return new KeyValueResult(key, 0.0, 0.0, 0.0);
@@ -186,7 +185,7 @@ public class StreamReducerTest {
 			}
 		};
 
-		public static final Reducer<Integer, KeyValue1, KeyValueResult, KeyValueResult> REDUCER = new Reducer<Integer, KeyValue1, KeyValueResult, KeyValueResult>() {
+		public static final Reducer<Integer, KeyValue1, KeyValueResult, KeyValueResult> REDUCER = new Reducer<>() {
 			@Override
 			public KeyValueResult onFirstItem(StreamDataAcceptor<KeyValueResult> stream, Integer key, KeyValue1 firstValue) {
 				return new KeyValueResult(key, firstValue.metric1, 0.0, 0.0);
@@ -215,7 +214,7 @@ public class StreamReducerTest {
 			this.metric2 = metric2;
 		}
 
-		public static final ReducerToAccumulator<Integer, KeyValue2, KeyValueResult> REDUCER_TO_ACCUMULATOR = new ReducerToAccumulator<Integer, KeyValue2, KeyValueResult>() {
+		public static final ReducerToAccumulator<Integer, KeyValue2, KeyValueResult> REDUCER_TO_ACCUMULATOR = new ReducerToAccumulator<>() {
 			@Override
 			public KeyValueResult createAccumulator(Integer key) {
 				return new KeyValueResult(key, 0.0, 0.0, 0.0);
@@ -228,7 +227,7 @@ public class StreamReducerTest {
 			}
 		};
 
-		public static final Reducer<Integer, KeyValue2, KeyValueResult, KeyValueResult> REDUCER = new Reducer<Integer, KeyValue2, KeyValueResult, KeyValueResult>() {
+		public static final Reducer<Integer, KeyValue2, KeyValueResult, KeyValueResult> REDUCER = new Reducer<>() {
 			@Override
 			public KeyValueResult onFirstItem(StreamDataAcceptor<KeyValueResult> stream, Integer key, KeyValue2 firstValue) {
 				return new KeyValueResult(key, 0.0, firstValue.metric2, 0.0);
@@ -258,7 +257,7 @@ public class StreamReducerTest {
 			this.metric3 = metric3;
 		}
 
-		public static final ReducerToAccumulator<Integer, KeyValue3, KeyValueResult> REDUCER_TO_ACCUMULATOR = new ReducerToAccumulator<Integer, KeyValue3, KeyValueResult>() {
+		public static final ReducerToAccumulator<Integer, KeyValue3, KeyValueResult> REDUCER_TO_ACCUMULATOR = new ReducerToAccumulator<>() {
 			@Override
 			public KeyValueResult createAccumulator(Integer key) {
 				return new KeyValueResult(key, 0.0, 0.0, 0.0);
@@ -272,7 +271,7 @@ public class StreamReducerTest {
 			}
 		};
 
-		public static final Reducer<Integer, KeyValue3, KeyValueResult, KeyValueResult> REDUCER = new Reducer<Integer, KeyValue3, KeyValueResult, KeyValueResult>() {
+		public static final Reducer<Integer, KeyValue3, KeyValueResult, KeyValueResult> REDUCER = new Reducer<>() {
 			@Override
 			public KeyValueResult onFirstItem(StreamDataAcceptor<KeyValueResult> stream, Integer key, KeyValue3 firstValue) {
 				return new KeyValueResult(key, 0.0, firstValue.metric2, firstValue.metric3);
@@ -354,7 +353,7 @@ public class StreamReducerTest {
 				streamReducer.getOutput().streamTo(consumer.transformWith(randomlySuspending()))
 		);
 
-		assertEquals(asList(
+		assertEquals(List.of(
 				new KeyValueResult(1, 10.0, 10.0, 0.0),
 				new KeyValueResult(2, 0.0, 10.0, 20.0),
 				new KeyValueResult(3, 30.0, 40.0, 20.0)),
@@ -384,7 +383,7 @@ public class StreamReducerTest {
 						.streamTo(consumer.transformWith(randomlySuspending()))
 		);
 
-		assertEquals(asList(
+		assertEquals(List.of(
 				new KeyValueResult(1, 10.0, 10.0, 0.0),
 				new KeyValueResult(2, 0.0, 10.0, 20.0),
 				new KeyValueResult(3, 30.0, 40.0, 20.0)),

@@ -7,12 +7,11 @@ import org.junit.Test;
 
 import javax.management.*;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static io.activej.jmx.JmxBeanSettings.defaultSettings;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -20,12 +19,12 @@ public class DynamicMBeanFactoryAttributesBulkGettersTest {
 	@Test
 	public void bulkGetOmitsAttributesWithExceptionButReturnsValidAttributes() {
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(singletonList(new MBeanStub()), defaultSettings(), false);
+				.createDynamicMBean(List.of(new MBeanStub()), defaultSettings(), false);
 
 		Map<String, MBeanAttributeInfo> attrs = Utils.nameToAttribute(mbean.getMBeanInfo().getAttributes());
 
 		String[] expectedAttrNames = {"text", "value", "number"};
-		assertEquals(new HashSet<>(asList(expectedAttrNames)), attrs.keySet());
+		assertEquals(Set.of(expectedAttrNames), attrs.keySet());
 
 		AttributeList fetchedAttrs = mbean.getAttributes(expectedAttrNames);
 		assertEquals(2, fetchedAttrs.size());
@@ -42,7 +41,7 @@ public class DynamicMBeanFactoryAttributesBulkGettersTest {
 	@Test(expected = MBeanException.class)
 	public void propagatesExceptionInCaseOfSingleAttributeGet() throws Exception {
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(singletonList(new MBeanStub()), defaultSettings(), false);
+				.createDynamicMBean(List.of(new MBeanStub()), defaultSettings(), false);
 
 		mbean.getAttribute("value");
 	}

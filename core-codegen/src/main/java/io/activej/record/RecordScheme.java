@@ -20,7 +20,6 @@ import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.ExpressionComparator;
 import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.expression.Variable;
 import io.activej.codegen.util.WithInitializer;
@@ -29,14 +28,13 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.stream.Collectors;
 
-import static io.activej.codegen.expression.ExpressionComparator.leftProperty;
-import static io.activej.codegen.expression.ExpressionComparator.rightProperty;
 import static io.activej.codegen.expression.Expressions.*;
-import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toSet;
 
-@SuppressWarnings({"unused", "ArraysAsListWithZeroOrOneArgument"})
+@SuppressWarnings("unused")
 public final class RecordScheme implements WithInitializer<RecordScheme> {
 	private RecordFactory factory;
 
@@ -88,7 +86,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 	}
 
 	public RecordScheme withHashCodeEqualsFields(String... hashCodeEqualsFields) {
-		return withHashCodeEqualsFields(asList(hashCodeEqualsFields));
+		return withHashCodeEqualsFields(List.of(hashCodeEqualsFields));
 	}
 
 	public RecordScheme withComparator(List<String> comparedFields) {
@@ -99,7 +97,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 	}
 
 	public RecordScheme withComparator(String... comparedFields) {
-		return withComparator(asList(comparedFields));
+		return withComparator(List.of(comparedFields));
 	}
 
 	public void addField(@NotNull String field, @NotNull Type type) {
@@ -217,16 +215,17 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 		} else {
 			hashCodeEqualsFields = fieldTypes.keySet();
 		}
+		List<String> hashCodeEqualsClassFields = hashCodeEqualsFields.stream()
+				.map(this::getClassField)
+				.collect(Collectors.toList());
 
 		generatedClass = classLoader.ensureClass(
 				ClassKey.of(Record.class, this),
 				() -> ClassBuilder.create(Record.class)
-						.withConstructor(asList(RecordScheme.class),
+						.withConstructor(List.of(RecordScheme.class),
 								superConstructor(arg(0)))
-						.withMethod("hashCode",
-								hash(hashCodeEqualsFields.stream().map(this::getClassField).map(f -> Expressions.property(self(), f)).collect(toList())))
-						.withMethod("equals",
-								equalsImpl(hashCodeEqualsFields.stream().map(this::getClassField).collect(toList())))
+						.withMethod("hashCode", hashCodeImpl(hashCodeEqualsClassFields))
+						.withMethod("equals", equalsImpl(hashCodeEqualsClassFields))
 						.withInitializer(b -> {
 							for (Map.Entry<String, Type> entry : fieldTypes.entrySet()) {
 								Type type = entry.getValue();
@@ -288,15 +287,13 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 				throw new IllegalStateException("Missing some fields to be compared: " + missing);
 			}
 
-			ExpressionComparator expressionComparator = ExpressionComparator.create();
-			for (String comparedField : comparedFields) {
-				String classField = classFields.get(comparedField);
-				expressionComparator.with(leftProperty(generatedClass, classField), rightProperty(generatedClass, classField));
-			}
+			List<String> comparedClassFields = comparedFields.stream()
+					.map(this::getClassField)
+					.collect(Collectors.toList());
 
 			//noinspection unchecked
 			comparator = ClassBuilder.create(Comparator.class)
-					.withMethod("compare", expressionComparator)
+					.withMethod("compare", comparatorImpl(generatedClass, comparedClassFields))
 					.defineClassAndCreateInstance(classLoader);
 		}
 
@@ -304,7 +301,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 				ClassKey.of(RecordFactory.class, this),
 				() -> ClassBuilder.create(RecordFactory.class)
 						.withStaticFinalField("SCHEME", RecordScheme.class, value(this))
-						.withMethod("create", Record.class, asList(),
+						.withMethod("create", Record.class, List.of(),
 								constructor(generatedClass, staticField("SCHEME"))));
 	}
 

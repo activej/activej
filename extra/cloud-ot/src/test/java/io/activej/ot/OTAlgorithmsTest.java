@@ -15,18 +15,14 @@ import org.junit.Test;
 import java.util.*;
 
 import static io.activej.common.Utils.last;
-import static io.activej.common.Utils.setOf;
 import static io.activej.ot.OTAlgorithms.*;
 import static io.activej.ot.utils.Utils.add;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static java.util.Arrays.asList;
-import static java.util.Collections.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 
-@SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
 public class OTAlgorithmsTest {
 	private static final Random RANDOM = new Random();
 	private static final OTSystem<TestOp> TEST_OP = Utils.createTestOp();
@@ -46,7 +42,7 @@ public class OTAlgorithmsTest {
 		Integer id1 = await(REPOSITORY.createCommitId());
 		await(REPOSITORY.pushAndUpdateHead(OTCommit.ofRoot(id1)));
 		Integer id2 = await(REPOSITORY.createCommitId());
-		await(REPOSITORY.pushAndUpdateHead(OTCommit.ofCommit(0, id2, id1, emptyList(), id1)));
+		await(REPOSITORY.pushAndUpdateHead(OTCommit.ofCommit(0, id2, id1, List.of(), id1)));
 
 		Exception exception = awaitException(checkout(REPOSITORY, TEST_OP, id2));
 		assertThat(exception, instanceOf(GraphExhaustedException.class));
@@ -58,9 +54,9 @@ public class OTAlgorithmsTest {
 		Integer id1 = await(REPOSITORY.createCommitId());
 		await(REPOSITORY.pushAndUpdateHead(OTCommit.ofRoot(id1)));
 		Integer id2 = await(REPOSITORY.createCommitId());
-		await(REPOSITORY.pushAndUpdateHead(OTCommit.ofCommit(0, id2, id1, emptyList(), id1)));
+		await(REPOSITORY.pushAndUpdateHead(OTCommit.ofCommit(0, id2, id1, List.of(), id1)));
 
-		Exception exception = awaitException(findParent(REPOSITORY, TEST_OP, singleton(id2), DiffsReducer.toVoid(),
+		Exception exception = awaitException(findParent(REPOSITORY, TEST_OP, Set.of(id2), DiffsReducer.toVoid(),
 				commit -> REPOSITORY.loadSnapshot(commit.getId())
 						.map(Optional::isPresent)));
 		assertThat(exception, instanceOf(GraphExhaustedException.class));
@@ -77,7 +73,7 @@ public class OTAlgorithmsTest {
 			g.add(4, 5, add(1));
 		});
 
-		await(REPOSITORY.saveSnapshot(0, asList(add(10))));
+		await(REPOSITORY.saveSnapshot(0, List.of(add(10))));
 
 		Set<Integer> heads = await(REPOSITORY.getHeads());
 		List<TestOp> changes = await(checkout(REPOSITORY, TEST_OP, last(heads)));
@@ -98,7 +94,7 @@ public class OTAlgorithmsTest {
 			g.add(6, 7, add(1));
 		});
 
-		Map<Integer, List<TestOp>> result = await(reduceEdges(REPOSITORY, TEST_OP, setOf(5, 7), 0, DiffsReducer.toList()));
+		Map<Integer, List<TestOp>> result = await(reduceEdges(REPOSITORY, TEST_OP, Set.of(5, 7), 0, DiffsReducer.toList()));
 
 		assertEquals(1, applyToState(result.get(5)));
 		assertEquals(5, applyToState(result.get(7)));
@@ -115,7 +111,7 @@ public class OTAlgorithmsTest {
 			g.add(2, 5, add(-1));
 		});
 
-		Map<Integer, List<TestOp>> result = await(reduceEdges(REPOSITORY, TEST_OP, setOf(3, 4, 5), 0, DiffsReducer.toList()));
+		Map<Integer, List<TestOp>> result = await(reduceEdges(REPOSITORY, TEST_OP, Set.of(3, 4, 5), 0, DiffsReducer.toList()));
 
 		assertEquals(2, applyToState(result.get(3)));
 		assertEquals(0, applyToState(result.get(4)));
@@ -125,64 +121,64 @@ public class OTAlgorithmsTest {
 	@Test
 	public void testCheckoutSnapshotInAnotherBranch() {
 		graph1();
-		doTestCheckoutGraph1(5, singletonList(add(6)));
+		doTestCheckoutGraph1(5, List.of(add(6)));
 	}
 
 	@Test
 	public void testCheckoutSnapshotInSameBranch() {
 		graph1();
-		doTestCheckoutGraph1(7, singletonList(add(8)));
+		doTestCheckoutGraph1(7, List.of(add(8)));
 	}
 
 	@Test
 	public void testCheckoutSnapshotInCommonBranch() {
 		graph1();
-		doTestCheckoutGraph1(2, singletonList(add(2)));
+		doTestCheckoutGraph1(2, List.of(add(2)));
 	}
 
 	@Test
 	public void testCheckoutSnapshotIsRoot() {
 		graph1();
-		doTestCheckoutGraph1(0, singletonList(add(0)));
+		doTestCheckoutGraph1(0, List.of(add(0)));
 		graph2();
-		doTestCheckoutGraph2(0, singletonList(add(0)));
+		doTestCheckoutGraph2(0, List.of(add(0)));
 	}
 
 	@Test
 	public void testCheckoutSnapshotIsCheckoutCommit() {
 		graph1();
-		doTestCheckoutGraph1(9, singletonList(add(16)));
+		doTestCheckoutGraph1(9, List.of(add(16)));
 		graph2();
-		doTestCheckoutGraph2(2, singletonList(add(2)));
+		doTestCheckoutGraph2(2, List.of(add(2)));
 	}
 
 	@Test
 	public void testDiffBetween() {
 		graph1();
 		List<TestOp> diff = await(diff(REPOSITORY, TEST_OP, 5, 9));
-		assertEquals(applyToState(asList(add(10))), applyToState(diff)); // -2, +4, +4, +4
+		assertEquals(applyToState(List.of(add(10))), applyToState(diff)); // -2, +4, +4, +4
 
 		diff = await(diff(REPOSITORY, TEST_OP, 5, 0));
-		assertEquals(applyToState(asList(add(-6))), applyToState(diff)); // -2, -1, -1, -1, -1
+		assertEquals(applyToState(List.of(add(-6))), applyToState(diff)); // -2, -1, -1, -1, -1
 
 		diff = await(diff(REPOSITORY, TEST_OP, 5, 6));
-		assertEquals(applyToState(asList(add(+3))), applyToState(diff)); // +3
+		assertEquals(applyToState(List.of(add(+3))), applyToState(diff)); // +3
 
 		diff = await(diff(REPOSITORY, TEST_OP, 5, 5));
-		assertEquals(emptyList(), diff); // 0
+		assertEquals(List.of(), diff); // 0
 
 		graph2();
 		diff = await(diff(REPOSITORY, TEST_OP, 6, 3));
-		assertEquals(applyToState(asList(add(-2))), applyToState(diff)); // -1, -1
+		assertEquals(applyToState(List.of(add(-2))), applyToState(diff)); // -1, -1
 
 		diff = await(diff(REPOSITORY, TEST_OP, 0, 6));
-		assertEquals(applyToState(asList(add(5))), applyToState(diff)); // +1, +1, +1, +1, +1
+		assertEquals(applyToState(List.of(add(5))), applyToState(diff)); // +1, +1, +1, +1, +1
 
 		diff = await(diff(REPOSITORY, TEST_OP, 4, 5));
-		assertEquals(applyToState(emptyList()), applyToState(diff)); // +1, -1
+		assertEquals(applyToState(List.of()), applyToState(diff)); // +1, -1
 
 		diff = await(diff(REPOSITORY, TEST_OP, 3, 2));
-		assertEquals(applyToState(asList(add(-1))), applyToState(diff)); // -1
+		assertEquals(applyToState(List.of(add(-1))), applyToState(diff)); // -1
 
 	}
 

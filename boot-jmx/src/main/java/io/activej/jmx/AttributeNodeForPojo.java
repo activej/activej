@@ -25,8 +25,6 @@ import javax.management.openmbean.OpenType;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static java.util.Collections.singletonList;
-
 @SuppressWarnings("rawtypes")
 final class AttributeNodeForPojo implements AttributeNode {
 	private static final char ATTRIBUTE_NAME_SEPARATOR = '_';
@@ -81,7 +79,7 @@ final class AttributeNodeForPojo implements AttributeNode {
 	@Override
 	public Set<String> getVisibleAttributes() {
 		if (!visible) {
-			return Collections.emptySet();
+			return Set.of();
 		} else {
 			Set<String> allVisibleAttrs = new HashSet<>();
 			for (AttributeNode subNode : subNodes) {
@@ -145,7 +143,7 @@ final class AttributeNodeForPojo implements AttributeNode {
 			subsources = fetchInnerPojos(notNullSources);
 		} else {
 			Object reduced = reducer.reduce(fetchInnerPojos(sources));
-			subsources = singletonList(reduced);
+			subsources = List.of(reduced);
 		}
 
 		Map<String, Object> aggregatedAttrs = new HashMap<>();
@@ -222,11 +220,11 @@ final class AttributeNodeForPojo implements AttributeNode {
 		Object pojo = fetcher.fetchFrom(source);
 
 		if (pojo == null) {
-			return Collections.emptyList();
+			return List.of();
 		}
 
 		if (pojo instanceof JmxRefreshable) {
-			return singletonList((JmxRefreshable) pojo);
+			return List.of((JmxRefreshable) pojo);
 		}
 		List<JmxRefreshable> allJmxRefreshables = new ArrayList<>();
 		for (AttributeNode attributeNode : subNodes) {
@@ -248,7 +246,7 @@ final class AttributeNodeForPojo implements AttributeNode {
 
 	@Override
 	public void setAttribute(@NotNull String attrName, @NotNull Object value, @NotNull List<?> targets) throws SetterException {
-		List<?> notNullTargets = targets.stream().filter(Objects::nonNull).collect(Collectors.toList());
+		List<?> notNullTargets = targets.stream().filter(Objects::nonNull).toList();
 		if (notNullTargets.isEmpty()) {
 			return;
 		}

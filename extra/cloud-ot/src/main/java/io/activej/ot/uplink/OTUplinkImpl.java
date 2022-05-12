@@ -41,7 +41,6 @@ import static io.activej.ot.OTAlgorithms.*;
 import static io.activej.ot.reducers.DiffsReducer.toSquashedList;
 import static io.activej.promise.PromisePredicates.isResultOrException;
 import static io.activej.promise.Promises.retry;
-import static java.util.Collections.singleton;
 
 public final class OTUplinkImpl<K, D, PC> implements OTUplink<K, D, PC>, WithInitializer<OTUplinkImpl<K, D, PC>> {
 	private static final Logger logger = LoggerFactory.getLogger(OTUplinkImpl.class);
@@ -90,10 +89,10 @@ public final class OTUplinkImpl<K, D, PC> implements OTUplink<K, D, PC>, WithIni
 		}
 		return repository.push(commit)
 				.then(repository::getHeads)
-				.then(initialHeads -> excludeParents(repository, otSystem, union(initialHeads, singleton(commit.getId())))
+				.then(initialHeads -> excludeParents(repository, otSystem, union(initialHeads, Set.of(commit.getId())))
 						.then(heads -> mergeAndPush(repository, otSystem, heads))
 						.then(mergeHead -> {
-							Set<K> mergeHeadSet = singleton(mergeHead);
+							Set<K> mergeHeadSet = Set.of(mergeHead);
 							return repository.updateHeads(mergeHeadSet, difference(initialHeads, mergeHeadSet))
 									.then(() -> doFetch(mergeHeadSet, commit.getId()));
 						}))

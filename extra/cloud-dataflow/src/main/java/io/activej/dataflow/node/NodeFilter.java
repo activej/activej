@@ -21,9 +21,8 @@ import io.activej.dataflow.graph.Task;
 import io.activej.datastream.processor.StreamFilter;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Predicate;
-
-import static java.util.Collections.singletonList;
 
 /**
  * Represents a node, which filters a data stream and passes to output data items which satisfy a predicate.
@@ -48,12 +47,12 @@ public final class NodeFilter<T> extends AbstractNode {
 
 	@Override
 	public Collection<StreamId> getInputs() {
-		return singletonList(input);
+		return List.of(input);
 	}
 
 	@Override
 	public Collection<StreamId> getOutputs() {
-		return singletonList(output);
+		return List.of(output);
 	}
 
 	@Override

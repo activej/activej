@@ -25,23 +25,18 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.ToIntFunction;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.unmodifiableList;
-
 public class MemcacheRpcMessage {
 	public static final ToIntFunction<Object> HASH_FUNCTION =
 			item -> {
-				if (item instanceof GetRequest) {
-					GetRequest request = (GetRequest) item;
+				if (item instanceof GetRequest request) {
 					return Arrays.hashCode(request.getKey());
-				} else if (item instanceof PutRequest) {
-					PutRequest request = (PutRequest) item;
+				} else if (item instanceof PutRequest request) {
 					return Arrays.hashCode(request.getKey());
 				}
 				throw new IllegalArgumentException("Unknown request type " + item);
 			};
 
-	public static final List<Class<?>> MESSAGE_TYPES = unmodifiableList(asList(GetRequest.class, GetResponse.class, PutRequest.class, PutResponse.class));
+	public static final List<Class<?>> MESSAGE_TYPES = List.of(GetRequest.class, GetResponse.class, PutRequest.class, PutResponse.class);
 
 	public static final class GetRequest implements RpcMandatoryData {
 		private final byte[] key;

@@ -23,13 +23,11 @@ import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.*;
 
-import static io.activej.common.Utils.setOf;
 import static io.activej.crdt.function.CrdtFunction.ignoringTimestamp;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
 import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
 import static io.activej.test.TestUtils.getFreePort;
-import static java.util.Collections.singleton;
 import static org.junit.Assert.assertEquals;
 
 public final class TestCrdtCluster {
@@ -97,7 +95,7 @@ public final class TestCrdtCluster {
 		remoteStorages.values().forEach(v -> v.iterator()
 				.forEachRemaining(x -> result.compute(x, ($, count) -> count == null ? 1 : (count + 1))));
 
-		assertEquals(new HashSet<>(data), result.keySet());
+		assertEquals(Set.copyOf(data), result.keySet());
 		for (Integer count : result.values()) {
 			assertEquals(REPLICATION_COUNT, count.intValue());
 		}
@@ -123,9 +121,9 @@ public final class TestCrdtCluster {
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
 			CrdtStorageMap<String, Set<Integer>> storage = CrdtStorageMap.create(eventloop, union);
 
-			storage.put(key1, new HashSet<>(singleton(i)));
-			storage.put(key2, new HashSet<>(singleton(i / 2)));
-			storage.put(key3, new HashSet<>(singleton(123)));
+			storage.put(key1, Set.of(i));
+			storage.put(key2, Set.of(i / 2));
+			storage.put(key3, Set.of(123));
 
 			InetSocketAddress address = new InetSocketAddress(getFreePort());
 			CrdtServer<String, Set<Integer>> server = CrdtServer.create(eventloop, storage, serializer);
@@ -152,8 +150,8 @@ public final class TestCrdtCluster {
 						.streamTo(StreamConsumer.ofConsumer(localStorage::put)))
 				.whenComplete(() -> servers.forEach(AbstractServer::close)));
 
-		assertEquals(setOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), localStorage.get(key1));
-		assertEquals(setOf(0, 1, 2, 3, 4), localStorage.get(key2));
-		assertEquals(setOf(123), localStorage.get(key3));
+		assertEquals(Set.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), localStorage.get(key1));
+		assertEquals(Set.of(0, 1, 2, 3, 4), localStorage.get(key2));
+		assertEquals(Set.of(123), localStorage.get(key3));
 	}
 }

@@ -11,12 +11,12 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.UnaryOperator;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static java.util.Arrays.asList;
 
 public abstract class RecordProjection implements UnaryOperator<Record>, BiConsumer<Record, Record> {
 	private final RecordScheme schemeFrom;
@@ -28,7 +28,7 @@ public abstract class RecordProjection implements UnaryOperator<Record>, BiConsu
 	}
 
 	public static RecordProjection projection(RecordScheme schemeFrom, String... fields) {
-		return projection(schemeFrom, asList(fields));
+		return projection(schemeFrom, List.of(fields));
 	}
 
 	public static RecordProjection projection(RecordScheme schemeFrom, Collection<String> fields) {
@@ -36,7 +36,7 @@ public abstract class RecordProjection implements UnaryOperator<Record>, BiConsu
 	}
 
 	public static RecordProjection projection(DefiningClassLoader classLoader, RecordScheme schemeFrom, String... fields) {
-		return projection(classLoader, schemeFrom, asList(fields));
+		return projection(classLoader, schemeFrom, List.of(fields));
 	}
 
 	public static RecordProjection projection(DefiningClassLoader classLoader, RecordScheme schemeFrom, Collection<String> fields) {
@@ -51,7 +51,7 @@ public abstract class RecordProjection implements UnaryOperator<Record>, BiConsu
 				mapping.put(field, recordFrom -> schemeFrom.property(recordFrom, field));
 			}
 		}
-		return projection(classLoader, asList(schemeFrom, fields), schemeFrom, schemeTo, mapping);
+		return projection(classLoader, List.of(schemeFrom, fields), schemeFrom, schemeTo, mapping);
 	}
 
 	public static RecordProjection projection(RecordScheme schemeFrom, RecordScheme schemeTo,
@@ -68,9 +68,9 @@ public abstract class RecordProjection implements UnaryOperator<Record>, BiConsu
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(RecordProjection.class, classKey),
 				() -> ClassBuilder.create(RecordProjection.class)
-						.withConstructor(asList(RecordScheme.class, RecordScheme.class),
+						.withConstructor(List.of(RecordScheme.class, RecordScheme.class),
 								superConstructor(arg(0), arg(1)))
-						.withMethod("accept", void.class, asList(Record.class, Record.class), sequence(seq -> {
+						.withMethod("accept", void.class, List.of(Record.class, Record.class), sequence(seq -> {
 							for (Map.Entry<String, UnaryOperator<Expression>> entry : mapping.entrySet()) {
 								seq.add(Expressions.set(
 										schemeTo.property(cast(arg(1), schemeTo.getRecordClass()), entry.getKey()),

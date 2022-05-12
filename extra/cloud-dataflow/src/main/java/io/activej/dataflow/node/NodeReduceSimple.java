@@ -27,8 +27,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
-import static java.util.Collections.singletonList;
-
 /**
  * Represents a simple reducer node, with a single key function and reducer for all internalConsumers.
  *
@@ -69,7 +67,7 @@ public final class NodeReduceSimple<K, I, O, A> extends AbstractNode {
 
 	@Override
 	public Collection<StreamId> getOutputs() {
-		return singletonList(output);
+		return List.of(output);
 	}
 
 	@Override

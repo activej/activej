@@ -24,7 +24,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import static io.activej.common.Utils.union;
-import static java.util.Collections.emptySet;
 
 public final class AggregationDiff {
 	private final Set<AggregationChunk> addedChunks;
@@ -40,11 +39,11 @@ public final class AggregationDiff {
 	}
 
 	public static AggregationDiff of(Set<AggregationChunk> addedChunks) {
-		return of(addedChunks, emptySet());
+		return of(addedChunks, Set.of());
 	}
 
 	public static AggregationDiff empty() {
-		return new AggregationDiff(emptySet(), emptySet());
+		return new AggregationDiff(Set.of(), Set.of());
 	}
 
 	public Set<AggregationChunk> getAddedChunks() {

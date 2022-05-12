@@ -28,7 +28,6 @@ import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.http.Protocol.*;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Collections.emptyList;
 
 @SuppressWarnings("WeakerAccess")
 public final class UrlParser {
@@ -343,7 +342,7 @@ public final class UrlParser {
 
 	public @NotNull List<String> getQueryParameters(@NotNull String key) {
 		if (no(query)) {
-			return emptyList();
+			return List.of();
 		}
 		if (queryPositions == null) {
 			parseQueryParameters();
@@ -353,7 +352,7 @@ public final class UrlParser {
 
 	public @NotNull Iterable<QueryParameter> getQueryParametersIterable() {
 		if (no(query)) {
-			return emptyList();
+			return List.of();
 		}
 		if (queryPositions == null) {
 			parseQueryParameters();

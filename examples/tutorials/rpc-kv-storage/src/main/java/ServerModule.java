@@ -27,8 +27,8 @@ public class ServerModule extends AbstractModule {
 		return RpcServer.create(eventloop)
 				.withSerializerBuilder(SerializerBuilder.create())
 				.withMessageTypes(PutRequest.class, PutResponse.class, GetRequest.class, GetResponse.class)
-				.withHandler(PutRequest.class, req -> Promise.of(new PutResponse(store.put(req.getKey(), req.getValue()))))
-				.withHandler(GetRequest.class, req -> Promise.of(new GetResponse(store.get(req.getKey()))))
+				.withHandler(PutRequest.class, req -> Promise.of(new PutResponse(store.put(req.key(), req.value()))))
+				.withHandler(GetRequest.class, req -> Promise.of(new GetResponse(store.get(req.key()))))
 				.withListenPort(RPC_SERVER_PORT);
 	}
 }

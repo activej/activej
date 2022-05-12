@@ -15,7 +15,6 @@ import static io.activej.datastream.TestUtils.assertClosedWithError;
 import static io.activej.datastream.TestUtils.assertEndOfStream;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
@@ -33,7 +32,7 @@ public class StreamSupplierConcatTest {
 				StreamSupplier.of(4, 5, 6))
 				.streamTo(consumer.transformWith(randomlySuspending())));
 
-		assertEquals(asList(1, 2, 3, 4, 5, 6), consumer.getList());
+		assertEquals(List.of(1, 2, 3, 4, 5, 6), consumer.getList());
 		assertEndOfStream(consumer);
 	}
 
@@ -52,7 +51,7 @@ public class StreamSupplierConcatTest {
 				.streamTo(consumer));
 
 		assertSame(exception, e);
-		assertEquals(asList(1, 2, 3, 4, 5, 6), list);
+		assertEquals(List.of(1, 2, 3, 4, 5, 6), list);
 		assertClosedWithError(consumer);
 	}
 
@@ -64,7 +63,7 @@ public class StreamSupplierConcatTest {
 				StreamSupplier.of())
 				.toList());
 
-		assertEquals(asList(1, 2, 3, 4, 5, 6), list);
+		assertEquals(List.of(1, 2, 3, 4, 5, 6), list);
 	}
 
 	@Test
@@ -81,7 +80,7 @@ public class StreamSupplierConcatTest {
 				.streamTo(consumer));
 
 		assertSame(exception, e);
-		assertEquals(asList(1, 2, 3, 4, 5, 6), list);
+		assertEquals(List.of(1, 2, 3, 4, 5, 6), list);
 
 	}
 

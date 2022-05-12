@@ -25,6 +25,8 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static io.activej.codegen.util.TypeChecks.isNotThrow;
 import static io.activej.codegen.util.Utils.isWrapperType;
 import static org.objectweb.asm.Type.*;
 
@@ -93,7 +95,11 @@ public final class MeasureHyperLogLog extends Measure implements WithInitializer
 		public Type load(Context ctx) {
 			GeneratorAdapter g = ctx.getGeneratorAdapter();
 			Type accumulatorType = accumulator.load(ctx);
+			checkType(accumulatorType, isNotThrow());
+
 			Type valueType = value.load(ctx);
+			checkType(valueType, isNotThrow());
+
 			String methodName;
 			Type methodParameterType;
 			if (valueType == LONG_TYPE || valueType.getClassName().equals(Long.class.getName())) {

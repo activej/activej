@@ -52,9 +52,6 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.eventloop.net.ServerSocketSettings.DEFAULT_BACKLOG;
 import static io.activej.net.socket.tcp.AsyncTcpSocketNio.wrapChannel;
 import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapServerSocket;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -139,11 +136,11 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 	}
 
 	public final Self withListenAddresses(InetSocketAddress... addresses) {
-		return withListenAddresses(asList(addresses));
+		return withListenAddresses(List.of(addresses));
 	}
 
 	public final Self withListenAddress(InetSocketAddress address) {
-		return withListenAddresses(singletonList(address));
+		return withListenAddresses(List.of(address));
 	}
 
 	public final Self withListenPort(int port) {
@@ -159,11 +156,11 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 	}
 
 	public final Self withSslListenAddresses(SSLContext sslContext, Executor sslExecutor, InetSocketAddress... addresses) {
-		return withSslListenAddresses(sslContext, sslExecutor, asList(addresses));
+		return withSslListenAddresses(sslContext, sslExecutor, List.of(addresses));
 	}
 
 	public final Self withSslListenAddress(SSLContext sslContext, Executor sslExecutor, InetSocketAddress address) {
-		return withSslListenAddresses(sslContext, sslExecutor, singletonList(address));
+		return withSslListenAddresses(sslContext, sslExecutor, List.of(address));
 	}
 
 	public final Self withSslListenPort(SSLContext sslContext, Executor sslExecutor, int port) {
@@ -398,7 +395,7 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 
 	private List<InetSocketAddress> getBoundAddresses(List<ServerSocketChannel> channels) {
 		if (channels == null) {
-			return emptyList();
+			return List.of();
 		}
 		return channels.stream()
 				.map(ch -> {

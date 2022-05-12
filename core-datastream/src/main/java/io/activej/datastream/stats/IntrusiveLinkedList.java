@@ -29,7 +29,7 @@ final class IntrusiveLinkedList<T> implements Iterable<T> {
 
 	@Override
 	public @NotNull Iterator<T> iterator() {
-		return new Iterator<T>() {
+		return new Iterator<>() {
 			@Nullable Node<T> node = getFirstNode();
 
 			@Override

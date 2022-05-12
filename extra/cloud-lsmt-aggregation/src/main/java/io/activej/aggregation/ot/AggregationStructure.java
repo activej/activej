@@ -21,7 +21,10 @@ import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
 import io.activej.common.initializer.WithInitializer;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import static io.activej.common.Checks.checkArgument;
 
@@ -71,7 +74,7 @@ public final class AggregationStructure implements WithInitializer<AggregationSt
 	}
 
 	public AggregationStructure withPartitioningKey(String... partitioningKey) {
-		this.partitioningKey.addAll(Arrays.asList(partitioningKey));
+		this.partitioningKey.addAll(List.of(partitioningKey));
 		return this;
 	}
 

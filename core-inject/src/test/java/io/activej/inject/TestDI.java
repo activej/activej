@@ -31,8 +31,6 @@ import static io.activej.inject.binding.Multibinders.combinedMultibinder;
 import static io.activej.inject.module.Modules.combine;
 import static io.activej.inject.module.Modules.override;
 import static io.activej.inject.util.Utils.printGraphVizGraph;
-import static java.util.Arrays.asList;
-import static java.util.Collections.*;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
@@ -81,7 +79,7 @@ public final class TestDI {
 		assertEquals("str: 42", injector.getInstance(String.class));
 		assertEquals("str: 42", injector.getInstance(String.class));
 
-		InstanceProvider<String> provider = injector.getInstance(new Key<InstanceProvider<String>>() {});
+		InstanceProvider<String> provider = injector.getInstance(new Key<>() {});
 		assertEquals("str: 42", provider.get());
 		assertEquals("str: 42", provider.get());
 		assertEquals("str: 42", provider.get());
@@ -287,7 +285,7 @@ public final class TestDI {
 		ClassWithCustomDeps instance = injector.getInstance(ClassWithCustomDeps.class);
 		assertNull(instance.string);
 		assertNull(instance.raw);
-		InstanceInjector<ClassWithCustomDeps> instanceInjector = injector.getInstance(new Key<InstanceInjector<ClassWithCustomDeps>>() {});
+		InstanceInjector<ClassWithCustomDeps> instanceInjector = injector.getInstance(new Key<>() {});
 		instanceInjector.injectInto(instance);
 		assertEquals("str: 42", instance.string);
 		assertEquals(42, instance.raw.intValue());
@@ -467,7 +465,7 @@ public final class TestDI {
 				.bind(new Key<Container<Float, String, Integer>>() {})
 				.build());
 
-		Container<Float, String, Integer> instance = injector.getInstance(new Key<Container<Float, String, Integer>>() {});
+		Container<Float, String, Integer> instance = injector.getInstance(new Key<>() {});
 		assertEquals("hello", instance.something);
 		assertEquals(42, instance.somethingElse.intValue());
 	}
@@ -557,27 +555,27 @@ public final class TestDI {
 
 					@ProvidesIntoSet
 					List<String> stringsB1(Integer integer) {
-						return singletonList("str1: " + integer);
+						return List.of("str1: " + integer);
 					}
 
 					@ProvidesIntoSet
 					List<String> stringsB2(Integer integer) {
-						return singletonList("str2: " + integer);
+						return List.of("str2: " + integer);
 					}
 
 				})
 				.build());
 
-		Set<String> instance = injector.getInstance(new Key<Set<String>>() {});
+		Set<String> instance = injector.getInstance(new Key<>() {});
 
 		Set<String> expected = Stream.of("str1: 42", "str2: 42", "str3: 42").collect(toSet());
 
 		assertEquals(expected, instance);
 
-		Key<Set<List<String>>> key = new Key<Set<List<String>>>() {};
+		Key<Set<List<String>>> key = new Key<>() {};
 		Set<List<String>> instance2 = injector.getInstance(key);
 
-		Set<List<String>> expected2 = Stream.of(singletonList("str1: 42"), singletonList("str2: 42")).collect(toSet());
+		Set<List<String>> expected2 = Stream.of(List.of("str1: 42"), List.of("str2: 42")).collect(toSet());
 
 		assertEquals(expected2, instance2);
 	}
@@ -631,7 +629,7 @@ public final class TestDI {
 /*
 			@Provides
 			<T extends Number> List<T> generator(T instance, List<C> object) {
-				return object.isEmpty() ? emptyList() : singletonList(instance);
+				return object.isEmpty() ? List.of() : singletonList(instance);
 			}
 */
 
@@ -648,7 +646,7 @@ public final class TestDI {
 				super.configure();
 				bind(Integer.class).toInstance(42);
 				bind(Integer.class, "namedGeneric").toInstance(-42);
-				bind(new Key<List<Integer>>() {}).toInstance(asList(1, 2, 3));
+				bind(new Key<List<Integer>>() {}).toInstance(List.of(1, 2, 3));
 //				bind(new Key<List<Long>>() {});
 //				bind(Long.class).toInstance(-42L);
 			}
@@ -709,7 +707,7 @@ public final class TestDI {
 	@Test
 	public void mapMultibinding() {
 
-		Key<Map<String, Integer>> key = new Key<Map<String, Integer>>() {};
+		Key<Map<String, Integer>> key = new Key<>() {};
 
 		Injector injector = Injector.of(ModuleBuilder.create()
 				.multibindToMap(String.class, Integer.class)
@@ -721,17 +719,17 @@ public final class TestDI {
 
 					@Provides
 					Map<String, Integer> firstOne() {
-						return singletonMap("first", 1);
+						return Map.of("first", 1);
 					}
 
 					@Provides
 					Map<String, Integer> second(Integer integer) {
-						return singletonMap("second", integer);
+						return Map.of("second", integer);
 					}
 
 					@Provides
 					Map<String, Integer> thirdTwo() {
-						return singletonMap("third", 2);
+						return Map.of("third", 2);
 					}
 				})
 				.build());
@@ -1038,7 +1036,7 @@ public final class TestDI {
 						return new StringInterface("string");
 					}
 				});
-		Set<TestInterface<?>> interfaces = injector.getInstance(new Key<Set<TestInterface<?>>>() {});
+		Set<TestInterface<?>> interfaces = injector.getInstance(new Key<>() {});
 
 		injector.getInstance(StringInterface.class);
 
@@ -1148,7 +1146,7 @@ public final class TestDI {
 
 	@Test
 	public void transientGenerators() {
-		Key<Set<String>> stringSetKey = new Key<Set<String>>() {};
+		Key<Set<String>> stringSetKey = new Key<>() {};
 		{
 			AtomicInteger mut = new AtomicInteger();
 			Injector injector = Injector.of(ModuleBuilder.create()
@@ -1159,7 +1157,7 @@ public final class TestDI {
 					.scan(new Object() {
 						@Provides
 						<T> Set<T> set(T t) {
-							return singleton(t);
+							return Set.of(t);
 						}
 					})
 					.build());
@@ -1177,7 +1175,7 @@ public final class TestDI {
 						@Provides
 						@Transient
 						<T> Set<T> set(T t) {
-							return singleton(t);
+							return Set.of(t);
 						}
 					})
 					.build());
@@ -1194,7 +1192,7 @@ public final class TestDI {
 					.scan(new Object() {
 						@Provides
 						<T> Set<T> set(T t) {
-							return singleton(t);
+							return Set.of(t);
 						}
 					})
 					.build());
@@ -1228,17 +1226,17 @@ public final class TestDI {
 	@Test
 	public void partiallyTransientMultibind() {
 		AtomicInteger mut = new AtomicInteger();
-		Constructor0<Set<String>> constructor = () -> singleton("str_" + mut.incrementAndGet());
+		Constructor0<Set<String>> constructor = () -> Set.of("str_" + mut.incrementAndGet());
 
-		Key<Set<String>> setKey = new Key<Set<String>>() {};
+		Key<Set<String>> setKey = new Key<>() {};
 		Key<Set<String>> setKeyNt = setKey.qualified("nt");
 
 		Injector injector = Injector.of(ModuleBuilder.create()
 				.bind(setKey).to(constructor).asTransient()
-				.bind(setKey).toInstance(singleton("other one"))
+				.bind(setKey).toInstance(Set.of("other one"))
 
 				.bind(setKeyNt).to(constructor)
-				.bind(setKeyNt).toInstance(singleton("other one"))
+				.bind(setKeyNt).toInstance(Set.of("other one"))
 
 				.bind(new Key<Set<String>>() {})
 
@@ -1272,8 +1270,8 @@ public final class TestDI {
 						.build(),
 				Key.of(String.class, "exported"));
 
-		assertEquals(singleton(Key.of(String.class, "exported")), module.getExports().get());
-		assertEquals(singleton(Key.of(Integer.class, "imported")), module.getImports().get());
+		assertEquals(Set.of(Key.of(String.class, "exported")), module.getExports().get());
+		assertEquals(Set.of(Key.of(Integer.class, "imported")), module.getImports().get());
 
 		{
 			Injector injector = Injector.of(
@@ -1300,7 +1298,7 @@ public final class TestDI {
 
 	@Test
 	public void implicitKey() {
-		Key<Key<String>> keyOfKeyOfString = new Key<Key<String>>() {};
+		Key<Key<String>> keyOfKeyOfString = new Key<>() {};
 		Injector injector = Injector.of(ModuleBuilder.create()
 				.bind(keyOfKeyOfString)
 				.build());
@@ -1310,24 +1308,172 @@ public final class TestDI {
 	}
 
 	@Test
-	public void injectClass() {
-		Key<TestClass> key = new Key<TestClass>() {};
+	public void singleInjectConstructor() {
+		Key<SingleInjectConstructor> key = new Key<>() {};
 		String expected = "Hello, World";
 		Injector injector = Injector.of(ModuleBuilder.create()
 				.bind(String.class).to(() -> expected)
 				.bind(key)
 				.build());
-		TestClass instance = injector.getInstance(key);
+		SingleInjectConstructor instance = injector.getInstance(key);
 
 		assertEquals(expected, instance.getText());
 	}
 
-	public static final class TestClass {
+	@Test
+	public void multipleInjectConstructors() {
+		Module module = ModuleBuilder.create()
+				.bind(String.class).to(() -> "Hello, World")
+				.bind(new Key<MultipleInjectConstructors>() {})
+				.build();
+
+		try {
+			Injector.of(module);
+			fail();
+		} catch (DIException e) {
+			assertEquals("Failed to generate implicit binding for MultipleInjectConstructors, more than one inject constructor",
+					e.getMessage());
+		}
+	}
+
+	@Test
+	public void singleConstructorInjectClass() {
+		Key<SingleConstructorInject> key = new Key<>() {};
+		String expected = "Hello, World";
+		Injector injector = Injector.of(ModuleBuilder.create()
+				.bind(String.class).to(() -> expected)
+				.bind(key)
+				.build());
+		SingleConstructorInject instance = injector.getInstance(key);
+
+		assertEquals(expected, instance.getText());
+	}
+
+	@Test
+	public void multipleConstructorsInject() {
+		Module module = ModuleBuilder.create()
+				.bind(String.class).to(() -> "Hello, World")
+				.bind(MultipleConstructorsInject.class)
+				.build();
+
+		try {
+			Injector.of(module);
+			fail();
+		} catch (DIException e) {
+			assertEquals("Failed to generate implicit binding for MultipleConstructorsInject, " +
+							"inject annotation on class with multiple constructors",
+					e.getMessage());
+		}
+	}
+
+	@Test
+	public void injectInterface() {
+		Module module = ModuleBuilder.create()
+				.bind(new Key<InjectInterface>() {})
+				.build();
+
+		try {
+			Injector.of(module);
+			fail();
+		} catch (DIException e) {
+			assertEquals("Failed to generate implicit binding for InjectInterface, " +
+							"inject annotation on interface",
+					e.getMessage());
+		}
+	}
+
+	@Test
+	public void constructorAndFactoryInject() {
+		Module module = ModuleBuilder.create()
+				.bind(String.class).to(() -> "Hello, World")
+				.bind(ConstructorAndFactoryInject.class)
+				.build();
+
+		try {
+			Injector.of(module);
+			fail();
+		} catch (DIException e) {
+			assertEquals("Failed to generate implicit binding for ConstructorAndFactoryInject, " +
+							"inject annotation on class with factory method",
+					e.getMessage());
+		}
+	}
+
+	public static final class SingleInjectConstructor {
 		private final String text;
 
 		@Inject
-		public TestClass(String text) {
+		public SingleInjectConstructor(String text) {
 			this.text = text;
+		}
+
+		public String getText() {
+			return text;
+		}
+	}
+
+	public static final class MultipleInjectConstructors {
+		private final String text;
+
+		@Inject
+		public MultipleInjectConstructors(String text) {
+			this.text = text;
+		}
+
+		@Inject
+		public MultipleInjectConstructors() {
+			this.text = "test";
+		}
+
+		public String getText() {
+			return text;
+		}
+	}
+
+	@Inject
+	public static final class SingleConstructorInject {
+		private final String text;
+
+		public SingleConstructorInject(String text) {
+			this.text = text;
+		}
+
+		public String getText() {
+			return text;
+		}
+	}
+
+	@Inject
+	public static final class MultipleConstructorsInject {
+		private final String text;
+
+		public MultipleConstructorsInject(String text) {
+			this.text = text;
+		}
+
+		public MultipleConstructorsInject() {
+			this.text = "test";
+		}
+
+		public String getText() {
+			return text;
+		}
+	}
+
+	@Inject
+	public interface InjectInterface {
+	}
+
+	@Inject
+	public static final class ConstructorAndFactoryInject {
+		private final String text;
+
+		public ConstructorAndFactoryInject(String text) {
+			this.text = text;
+		}
+
+		public static ConstructorAndFactoryInject of(String text) {
+			return new ConstructorAndFactoryInject(text);
 		}
 
 		public String getText() {

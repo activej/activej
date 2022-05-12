@@ -158,7 +158,7 @@ public interface StreamSupplier<T> extends AsyncCloseable {
 	 * It closes itself (and changes to closed state) when lambda returns <code>null</code>.
 	 */
 	static <T> StreamSupplier<T> ofSupplier(SupplierEx<T> supplier) {
-		return new AbstractStreamSupplier<T>() {
+		return new AbstractStreamSupplier<>() {
 			@Override
 			protected void onResumed() {
 				while (isReady()) {
@@ -238,7 +238,7 @@ public interface StreamSupplier<T> extends AsyncCloseable {
 	 */
 	@SafeVarargs
 	static <T> StreamSupplier<T> concat(StreamSupplier<T>... suppliers) {
-		return concat(asList(suppliers));
+		return concat(List.of(suppliers));
 	}
 
 	/**
@@ -267,7 +267,7 @@ public interface StreamSupplier<T> extends AsyncCloseable {
 		if (endOfStream == suppliedEndOfStream) {
 			return this;
 		}
-		return new ForwardingStreamSupplier<T>(this) {
+		return new ForwardingStreamSupplier<>(this) {
 			@Override
 			public Promise<Void> getEndOfStream() {
 				return suppliedEndOfStream;

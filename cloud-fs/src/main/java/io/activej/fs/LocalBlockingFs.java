@@ -44,12 +44,11 @@ import java.util.stream.Collector;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
-import static io.activej.common.Utils.*;
+import static io.activej.common.Utils.isBijection;
+import static io.activej.common.Utils.noMergeFunction;
 import static io.activej.common.function.BiConsumerEx.uncheckedOf;
 import static io.activej.fs.LocalFileUtils.*;
 import static java.nio.file.StandardOpenOption.*;
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.singletonMap;
 
 public final class LocalBlockingFs implements BlockingFs, BlockingService, ConcurrentJmxBean, WithInitializer<LocalBlockingFs> {
 	private static final Logger logger = LoggerFactory.getLogger(LocalBlockingFs.class);
@@ -59,8 +58,8 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	public static final boolean DEFAULT_FSYNC_DIRECTORIES = ApplicationSettings.getBoolean(LocalBlockingFs.class, "fsyncDirectories", false);
 	public static final boolean DEFAULT_FSYNC_APPENDS = ApplicationSettings.getBoolean(LocalBlockingFs.class, "fsyncAppends", false);
 
-	private static final Set<StandardOpenOption> DEFAULT_APPEND_OPTIONS = setOf(WRITE);
-	private static final Set<StandardOpenOption> DEFAULT_APPEND_NEW_OPTIONS = setOf(WRITE, CREATE);
+	private static final Set<StandardOpenOption> DEFAULT_APPEND_OPTIONS = Set.of(WRITE);
+	private static final Set<StandardOpenOption> DEFAULT_APPEND_NEW_OPTIONS = Set.of(WRITE, CREATE);
 
 	private static final char SEPARATOR_CHAR = SEPARATOR.charAt(0);
 	private static final Function<String, String> toLocalName = File.separatorChar == SEPARATOR_CHAR ?
@@ -259,7 +258,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	@Override
 	public void copy(@NotNull String name, @NotNull String target) throws IOException {
 		checkStarted();
-		copyImpl(singletonMap(name, target));
+		copyImpl(Map.of(name, target));
 	}
 
 	@Override
@@ -272,7 +271,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	@Override
 	public void move(@NotNull String name, @NotNull String target) throws IOException {
 		checkStarted();
-		moveImpl(singletonMap(name, target));
+		moveImpl(Map.of(name, target));
 	}
 
 	@Override
@@ -285,7 +284,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	@Override
 	public Map<String, FileMetadata> list(@NotNull String glob) throws IOException {
 		checkStarted();
-		if (glob.isEmpty()) return emptyMap();
+		if (glob.isEmpty()) return Map.of();
 
 		String subdir = extractSubDir(glob);
 		Path subdirectory = resolve(subdir);

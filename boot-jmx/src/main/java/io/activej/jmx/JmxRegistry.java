@@ -39,7 +39,6 @@ import static io.activej.common.StringFormatUtils.parseDuration;
 import static io.activej.common.reflection.ReflectionUtils.getAnnotationString;
 import static io.activej.jmx.Utils.*;
 import static java.lang.String.format;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
@@ -70,7 +69,7 @@ public final class JmxRegistry implements JmxRegistryMXBean, WithInitializer<Jmx
 	}
 
 	public static JmxRegistry create(MBeanServer mbs, DynamicMBeanFactory mbeanFactory) {
-		return new JmxRegistry(mbs, mbeanFactory, Collections.emptyMap());
+		return new JmxRegistry(mbs, mbeanFactory, Map.of());
 	}
 
 	public static JmxRegistry create(MBeanServer mbs,
@@ -99,7 +98,7 @@ public final class JmxRegistry implements JmxRegistryMXBean, WithInitializer<Jmx
 		Object mbean;
 		if (isJmxBean(instanceClass)) {
 			// this will throw exception if something happens during initialization
-			mbean = mbeanFactory.createDynamicMBean(singletonList(singletonInstance), settings, true);
+			mbean = mbeanFactory.createDynamicMBean(List.of(singletonInstance), settings, true);
 		} else if (isStandardMBean(instanceClass) || isMXBean(instanceClass) || isDynamicMBean(instanceClass)) {
 			mbean = singletonInstance;
 		} else {
@@ -303,7 +302,7 @@ public final class JmxRegistry implements JmxRegistryMXBean, WithInitializer<Jmx
 
 		DynamicMBean mbean;
 		try {
-			mbean = mbeanFactory.createDynamicMBean(singletonList(worker), settings, false);
+			mbean = mbeanFactory.createDynamicMBean(List.of(worker), settings, false);
 		} catch (Exception e) {
 			String msg = format("Cannot create DynamicMBean for worker " +
 					"of pool of instances with key %s", key.toString());
@@ -368,8 +367,7 @@ public final class JmxRegistry implements JmxRegistryMXBean, WithInitializer<Jmx
 		}
 
 		Type type = key.getType();
-		if (type instanceof ParameterizedType) {
-			ParameterizedType pType = (ParameterizedType) type;
+		if (type instanceof ParameterizedType pType) {
 			Type[] genericArgs = pType.getActualTypeArguments();
 			List<String> genericParams = new ArrayList<>();
 			for (Type genericArg : genericArgs) {
@@ -414,8 +412,7 @@ public final class JmxRegistry implements JmxRegistryMXBean, WithInitializer<Jmx
 		Object qualifier = protoObjectName.getQualifier();
 		if (qualifier != null) {
 			String qualifierString = null;
-			if (qualifier instanceof Class) {
-				Class<?> qualifierClass = (Class<?>) qualifier;
+			if (qualifier instanceof Class<?> qualifierClass) {
 				if (qualifierClass.isAnnotation()) {
 					qualifierString = qualifierClass.getSimpleName();
 				}

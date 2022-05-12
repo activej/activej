@@ -24,7 +24,10 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({
 		ElementType.FIELD,
-		ElementType.METHOD})
+		ElementType.METHOD,
+		ElementType.TYPE,
+		ElementType.TYPE_USE,
+		ElementType.RECORD_COMPONENT})
 public @interface SerializeReferences {
 	SerializeReference[] value();
 }

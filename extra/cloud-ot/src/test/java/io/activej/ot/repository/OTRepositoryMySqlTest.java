@@ -34,8 +34,6 @@ import static io.activej.ot.utils.Utils.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.dataSource;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 
@@ -121,7 +119,7 @@ public class OTRepositoryMySqlTest {
 
 		Long id = await(repository.createCommitId());
 
-		await(repository.pushAndUpdateHead(ofCommit(0, id, rootId, singletonList(new TestSet(0, 5)), id)));
+		await(repository.pushAndUpdateHead(ofCommit(0, id, rootId, List.of(new TestSet(0, 5)), id)));
 
 		Set<Long> heads = await(repository.getHeads());
 		assertEquals(1, heads.size());
@@ -161,7 +159,7 @@ public class OTRepositoryMySqlTest {
 	//	@Test
 //	public void testMergeSnapshotOnMergeNodes() throws ExecutionException, InterruptedException {
 //		final GraphBuilder<Long, TestOp> graphBuilder = new GraphBuilder<>(repository);
-//		final CompletableFuture<Void> graphFuture = graphBuilder.buildGraph(asList(
+//		final CompletableFuture<Void> graphFuture = graphBuilder.buildGraph(List.of(
 //				edge(1, 2, add(1)),
 //				edge(1, 3, add(1)),
 //				edge(1, 4, add(1)),
@@ -305,7 +303,7 @@ public class OTRepositoryMySqlTest {
 					g.add(5, 6, add(1));
 					g.add(5, 7, add(1));
 				}))));
-		await(repository.saveSnapshot(1L, emptyList()));
+		await(repository.saveSnapshot(1L, List.of()));
 
 		List<TestOp> diffs = await(checkout(repository, SYSTEM, 5L));
 

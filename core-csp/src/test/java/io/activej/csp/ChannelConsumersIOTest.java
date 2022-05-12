@@ -14,7 +14,6 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -96,7 +95,7 @@ public class ChannelConsumersIOTest {
 		Thread eventloopThread = new Thread(eventloop);
 		eventloopThread.start();
 
-		List<ByteBuf> expected = Arrays.asList(wrapUtf8("Hello"), wrapUtf8("World"));
+		List<ByteBuf> expected = List.of(wrapUtf8("Hello"), wrapUtf8("World"));
 		List<ByteBuf> bufs = new ArrayList<>();
 
 		ChannelConsumer<ByteBuf> consumer = initWithEventloop(eventloop, () -> ChannelConsumer.ofConsumer(bufs::add));

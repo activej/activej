@@ -20,8 +20,8 @@ import java.nio.file.Path;
 import java.nio.file.WatchService;
 import java.time.Duration;
 import java.util.List;
+import java.util.Set;
 
-import static io.activej.common.Utils.setOf;
 import static io.activej.crdt.function.CrdtFunction.ignoringTimestamp;
 import static io.activej.promise.TestUtils.await;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -230,13 +230,13 @@ public class FileDiscoveryServiceTest {
 		CrdtStorageCluster<String, Integer, PartitionId> cluster = CrdtStorageCluster.create(Eventloop.getCurrentEventloop(), discoveryService, ignoringTimestamp(Integer::max));
 
 		await(cluster.start()
-				.whenResult(() -> assertEquals(setOf("a", "b", "c"), cluster.getCrdtStorages().keySet()
+				.whenResult(() -> assertEquals(Set.of("a", "b", "c"), cluster.getCrdtStorages().keySet()
 						.stream()
 						.map(PartitionId::getId)
 						.collect(toSet())))
 				.whenResult(() -> Files.write(file, TEST_PARTITIONS_4))
 				.then(() -> Promises.delay(Duration.ofMillis(200)))
-				.whenResult(() -> assertEquals(setOf("a", "d"), cluster.getCrdtStorages().keySet()
+				.whenResult(() -> assertEquals(Set.of("a", "d"), cluster.getCrdtStorages().keySet()
 						.stream()
 						.map(PartitionId::getId)
 						.collect(toSet())))
@@ -253,7 +253,7 @@ public class FileDiscoveryServiceTest {
 		assertEquals(2, group1.getReplicaCount());
 		assertTrue(group1.isRepartition());
 		assertTrue(group1.isActive());
-		assertEquals(setOf(
+		assertEquals(Set.of(
 				PartitionId.of("a", new InetSocketAddress("localhost", 9001), new InetSocketAddress("localhost", 9051)),
 				PartitionId.of("b", new InetSocketAddress("localhost", 9002), new InetSocketAddress("localhost", 9052))
 		), group1.getPartitionIds());
@@ -262,7 +262,7 @@ public class FileDiscoveryServiceTest {
 		assertEquals(1, group2.getReplicaCount());
 		assertFalse(group2.isRepartition());
 		assertFalse(group2.isActive());
-		assertEquals(setOf(
+		assertEquals(Set.of(
 				PartitionId.of("c", new InetSocketAddress("localhost", 9003), new InetSocketAddress("localhost", 9053))
 		), group2.getPartitionIds());
 	}
@@ -274,7 +274,7 @@ public class FileDiscoveryServiceTest {
 		assertEquals(1, group1.getReplicaCount());
 		assertTrue(group1.isRepartition());
 		assertTrue(group1.isActive());
-		assertEquals(setOf(
+		assertEquals(Set.of(
 				PartitionId.of("a", new InetSocketAddress("localhost", 9001), new InetSocketAddress("localhost", 9051))
 		), group1.getPartitionIds());
 
@@ -282,7 +282,7 @@ public class FileDiscoveryServiceTest {
 		assertEquals(1, group2.getReplicaCount());
 		assertFalse(group2.isRepartition());
 		assertFalse(group2.isActive());
-		assertEquals(setOf(
+		assertEquals(Set.of(
 				PartitionId.of("b", new InetSocketAddress("localhost", 9002), new InetSocketAddress("localhost", 9052))
 		), group2.getPartitionIds());
 	}
@@ -294,7 +294,7 @@ public class FileDiscoveryServiceTest {
 		assertEquals(1, group1.getReplicaCount());
 		assertFalse(group1.isRepartition());
 		assertTrue(group1.isActive());
-		assertEquals(setOf(
+		assertEquals(Set.of(
 				PartitionId.of("a", new InetSocketAddress("localhost", 9001), new InetSocketAddress("localhost", 9051)),
 				PartitionId.of("b", new InetSocketAddress("localhost", 9002), new InetSocketAddress("localhost", 9052))
 		), group1.getPartitionIds());

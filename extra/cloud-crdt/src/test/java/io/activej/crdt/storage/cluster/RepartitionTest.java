@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
 import static io.activej.crdt.function.CrdtFunction.ignoringTimestamp;
@@ -44,8 +43,7 @@ public final class RepartitionTest {
 		String localPartitionId = "client_0";
 		long now = Eventloop.getCurrentEventloop().currentTimeMillis();
 		List<CrdtData<String, Long>> data = LongStream.range(1, 100)
-				.mapToObj(i -> new CrdtData<>("test" + i, now, i))
-				.collect(Collectors.toList());
+				.mapToObj(i -> new CrdtData<>("test" + i, now, i)).toList();
 		await(StreamSupplier.ofIterator(data.iterator())
 				.streamTo(StreamConsumer.ofPromise(clients.get(localPartitionId).upload())));
 

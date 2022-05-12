@@ -31,9 +31,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import static io.activej.common.Checks.checkArgument;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonMap;
-import static java.util.stream.Collectors.toList;
 
 @SuppressWarnings("rawtypes")
 final class AttributeNodeForSimpleType extends AbstractAttributeNodeForLeaf {
@@ -52,7 +49,7 @@ final class AttributeNodeForSimpleType extends AbstractAttributeNodeForLeaf {
 
 	@Override
 	public Map<String, OpenType<?>> getOpenTypes() {
-		return singletonMap(name, simpleTypeOf(type));
+		return Map.of(name, simpleTypeOf(type));
 	}
 
 	@Override
@@ -69,7 +66,7 @@ final class AttributeNodeForSimpleType extends AbstractAttributeNodeForLeaf {
 
 	@Override
 	public List<JmxRefreshable> getAllRefreshables(@NotNull Object source) {
-		return emptyList();
+		return List.of();
 	}
 
 	@Override
@@ -83,7 +80,7 @@ final class AttributeNodeForSimpleType extends AbstractAttributeNodeForLeaf {
 		checkArgument(attrName.equals(name), "Attribute names do not match");
 		if (setter == null) return;
 
-		for (Object target : targets.stream().filter(Objects::nonNull).collect(toList())) {
+		for (Object target : targets.stream().filter(Objects::nonNull).toList()) {
 			try {
 				setter.invoke(target, value);
 			} catch (IllegalAccessException | InvocationTargetException e) {

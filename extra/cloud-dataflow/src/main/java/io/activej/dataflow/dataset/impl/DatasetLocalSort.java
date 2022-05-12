@@ -29,8 +29,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
-import static java.util.Collections.singletonList;
-
 public final class DatasetLocalSort<K, T> extends LocallySortedDataset<K, T> {
 	private final Dataset<T> input;
 	private final int sortBufferSize;
@@ -57,6 +55,6 @@ public final class DatasetLocalSort<K, T> extends LocallySortedDataset<K, T> {
 
 	@Override
 	public Collection<Dataset<?>> getBases() {
-		return singletonList(input);
+		return List.of(input);
 	}
 }

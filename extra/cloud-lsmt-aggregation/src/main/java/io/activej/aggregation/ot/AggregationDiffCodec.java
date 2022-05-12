@@ -27,7 +27,6 @@ import io.activej.common.initializer.WithInitializer;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Set;
 
 import static com.dslplatform.json.JsonWriter.*;
@@ -75,7 +74,7 @@ public class AggregationDiffCodec implements JsonCodec<AggregationDiff>, WithIni
 		String key = reader.readKey();
 		if (!key.equals(ADDED)) throw reader.newParseError("Expected key '" + ADDED + '\'');
 		Set<AggregationChunk> added = aggregationChunksCodec.read(reader);
-		Set<AggregationChunk> removed = Collections.emptySet();
+		Set<AggregationChunk> removed = Set.of();
 		assert added != null;
 		byte next = reader.getNextToken();
 		if (next == COMMA) {

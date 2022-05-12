@@ -52,8 +52,7 @@ import static io.activej.types.AnnotatedTypes.*;
 import static java.lang.String.format;
 import static java.lang.System.identityHashCode;
 import static java.lang.reflect.Modifier.*;
-import static java.util.Arrays.asList;
-import static java.util.Collections.*;
+import static java.util.Collections.newSetFromMap;
 import static java.util.Comparator.naturalOrder;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.groupingBy;
@@ -210,9 +209,9 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 					}
 				} else {
 					LinkedHashMap<Class<?>, SerializerDef> map = new LinkedHashMap<>();
-					LinkedHashSet<Class<?>> subclassesSet = new LinkedHashSet<>(asList(annotationClass.subclasses()));
-					subclassesSet.addAll(extraSubclassesMap.getOrDefault(rawClass, emptyList()));
-					subclassesSet.addAll(extraSubclassesMap.getOrDefault(annotationClass.subclassesId(), emptyList()));
+					LinkedHashSet<Class<?>> subclassesSet = new LinkedHashSet<>(List.of(annotationClass.subclasses()));
+					subclassesSet.addAll(extraSubclassesMap.getOrDefault(rawClass, List.of()));
+					subclassesSet.addAll(extraSubclassesMap.getOrDefault(annotationClass.subclassesId(), List.of()));
 					for (Class<?> subclass : subclassesSet) {
 						map.put(subclass, ctx.scan(subclass));
 					}
@@ -275,7 +274,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 
 	@SuppressWarnings("ForLoopReplaceableByForEach")
 	private <A extends Annotation> boolean hasAnnotation(Class<A> type, Annotation[] annotations) {
-		Map<Class<? extends Annotation>, Function<? extends Annotation, ? extends Annotation>> aliasesMap = annotationAliases.getOrDefault(type, emptyMap());
+		Map<Class<? extends Annotation>, Function<? extends Annotation, ? extends Annotation>> aliasesMap = annotationAliases.getOrDefault(type, Map.of());
 		for (int i = 0; i < annotations.length; i++) {
 			Class<? extends Annotation> annotationType = annotations[i].annotationType();
 			if (annotationType == type || aliasesMap.containsKey(annotationType)) {
@@ -321,8 +320,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 	 * In previous ActiveJ versions serializer annotations had to be placed directly on fields/getters.
 	 * To specify a concrete annotated type a {@code path} attribute was used. Now it is possible to
 	 * annotate types directly. However, for compatibility with classes annotated using a {@code path} attribute
-	 * or when using older versions of Java that may fail resolving type use annotations, this compatibility mode
-	 * can be enabled
+	 * this compatibility mode can be enabled
 	 */
 	public SerializerBuilder withAnnotationCompatibilityMode(boolean annotationsCompatibilityMode) {
 		this.annotationsCompatibilityMode = annotationsCompatibilityMode;
@@ -594,12 +592,12 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 			List<Expression> encoderInitializers, List<Expression> encoderFinalizers) {
 		StaticEncoders staticEncoders = staticEncoders(classBuilder);
 
-		classBuilder.withMethod("encode", int.class, asList(byte[].class, int.class, Object.class), methodBody(
+		classBuilder.withMethod("encode", int.class, List.of(byte[].class, int.class, Object.class), methodBody(
 				encoderInitializers, encoderFinalizers,
 				let(cast(arg(2), serializer.getEncodeType()), data ->
 						encoderImpl(serializer, encodeVersion, staticEncoders, arg(0), arg(1), data))));
 
-		classBuilder.withMethod("encode", void.class, asList(BinaryOutput.class, Object.class), methodBody(
+		classBuilder.withMethod("encode", void.class, List.of(BinaryOutput.class, Object.class), methodBody(
 				encoderInitializers, encoderFinalizers,
 				let(call(arg(0), "array"), buf ->
 						let(call(arg(0), "pos"), pos ->
@@ -628,18 +626,18 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		StaticDecoders staticDecoders = staticDecoders(classBuilder);
 
 		Integer latestVersion = decodeVersions.isEmpty() ? null : decodeVersions.get(decodeVersions.size() - 1);
-		classBuilder.withMethod("decode", Object.class, singletonList(BinaryInput.class), methodBody(
+		classBuilder.withMethod("decode", Object.class, List.of(BinaryInput.class), methodBody(
 				decoderInitializers, decoderFinalizers,
 				decodeImpl(serializer, latestVersion, staticDecoders, arg(0))));
 
-		classBuilder.withMethod("decode", Object.class, asList(byte[].class, int.class), methodBody(
+		classBuilder.withMethod("decode", Object.class, List.of(byte[].class, int.class), methodBody(
 				decoderInitializers, decoderFinalizers,
 				let(constructor(BinaryInput.class, arg(0), arg(1)), in ->
 						decodeImpl(serializer, latestVersion, staticDecoders, in))));
 
 		classBuilder.withMethod("decodeEarlierVersions",
 				serializer.getDecodeType(),
-				asList(BinaryInput.class, byte.class),
+				List.of(BinaryInput.class, byte.class),
 				get(() -> {
 					List<Expression> listKey = new ArrayList<>();
 					List<Expression> listValue = new ArrayList<>();
@@ -648,17 +646,17 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 						listKey.add(value((byte) version));
 						listValue.add(call(self(), "decodeVersion" + version, arg(0)));
 					}
-					return switchByKey(arg(1), listKey, listValue,
-							throwException(CorruptedDataException.class,
-									concat(
-											value("Unsupported version: "), arg(1),
-											value(", supported versions: " + decodeVersions))
-							));
+					Expression result = throwException(CorruptedDataException.class,
+							concat(value("Unsupported version: "), arg(1), value(", supported versions: " + decodeVersions)));
+					for (int i = listKey.size() - 1; i >= 0; i--) {
+						result = ifEq(arg(1), listKey.get(i), listValue.get(i), result);
+					}
+					return result;
 				}));
 
 		for (int i = decodeVersions.size() - 2; i >= 0; i--) {
 			int version = decodeVersions.get(i);
-			classBuilder.withMethod("decodeVersion" + version, serializer.getDecodeType(), singletonList(BinaryInput.class),
+			classBuilder.withMethod("decodeVersion" + version, serializer.getDecodeType(), List.of(BinaryInput.class),
 					sequence(serializer.defineDecoder(staticDecoders,
 							arg(0), version, compatibilityLevel)));
 		}
@@ -681,7 +679,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 						compatibilityLevel) :
 
 				let(readByte(in),
-						version -> ifThenElse(cmpEq(version, value((byte) (int) latestVersion)),
+						version -> ifEq(version, value((byte) (int) latestVersion),
 								serializer.decoder(
 										staticDecoders,
 										in,
@@ -696,7 +694,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 
 			@Override
 			public Expression define(SerializerDef serializerDef, Class<?> valueClazz, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-				List<?> key = asList(identityHashCode(serializerDef), version, compatibilityLevel);
+				List<?> key = List.of(identityHashCode(serializerDef), version, compatibilityLevel);
 				String methodName = defined.get(key);
 				if (methodName == null) {
 					for (int i = 1; ; i++) {
@@ -706,7 +704,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 						if (defined.values().stream().noneMatch(methodName::equals)) break;
 					}
 					defined.put(key, methodName);
-					classBuilder.withStaticMethod(methodName, int.class, asList(byte[].class, int.class, valueClazz), sequence(
+					classBuilder.withStaticMethod(methodName, int.class, List.of(byte[].class, int.class, valueClazz), sequence(
 							serializerDef.encoder(this, BUF, POS, VALUE, version, compatibilityLevel),
 							POS));
 				}
@@ -721,7 +719,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 
 			@Override
 			public Expression define(SerializerDef serializerDef, Class<?> valueClazz, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-				List<?> key = asList(identityHashCode(serializerDef), version, compatibilityLevel);
+				List<?> key = List.of(identityHashCode(serializerDef), version, compatibilityLevel);
 				String methodName = defined.get(key);
 				if (methodName == null) {
 					for (int i = 1; ; i++) {
@@ -732,7 +730,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 						if (defined.values().stream().noneMatch(methodName::equals)) break;
 					}
 					defined.put(key, methodName);
-					classBuilder.withStaticMethod(methodName, valueClazz, singletonList(BinaryInput.class),
+					classBuilder.withStaticMethod(methodName, valueClazz, List.of(BinaryInput.class),
 							serializerDef.decoder(this, IN, version, compatibilityLevel));
 				}
 				return staticCallSelf(methodName, in);
@@ -768,7 +766,13 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 			throw new IllegalArgumentException("Class should not be local");
 
 		SerializerDefClass serializer = SerializerDefClass.create(rawClass);
-		if (!rawClass.isInterface()) {
+		if (rawClass.getAnnotation(SerializeRecord.class) != null) {
+			if (!rawClass.isRecord()) {
+				throw new IllegalArgumentException("Non-record type '" + rawClass.getName() +
+						"' annotated with @SerializeRecord annotation");
+			}
+			scanRecord(ctx, serializer);
+		} else if (!rawClass.isInterface()) {
 			scanClass(ctx, serializer);
 		} else {
 			scanInterface(ctx, serializer);
@@ -787,12 +791,12 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		}
 
 		List<FoundSerializer> foundSerializers = new ArrayList<>();
+		scanConstructors(ctx, serializer);
+		scanStaticFactoryMethods(ctx, serializer);
+		scanSetters(ctx, serializer);
 		scanFields(ctx, bindings, foundSerializers);
 		scanGetters(ctx, bindings, foundSerializers);
 		addMethodsAndGettersToClass(ctx, serializer, foundSerializers);
-		scanSetters(ctx, serializer);
-		scanFactories(ctx, serializer);
-		scanConstructors(ctx, serializer);
 		if (!Modifier.isAbstract(ctx.getRawType().getModifiers())) {
 			serializer.addMatchingSetters();
 		}
@@ -808,6 +812,33 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		for (AnnotatedType superInterface : ctx.getRawType().getAnnotatedInterfaces()) {
 			scanInterface(ctx.push(bind(superInterface, bindings)), serializer);
 		}
+	}
+
+	private void scanRecord(Context<SerializerDef> ctx, SerializerDefClass serializer) {
+		Function<TypeVariable<?>, AnnotatedType> bindings = getTypeBindings(ctx.getAnnotatedType())::get;
+		List<FoundSerializer> foundSerializers = new ArrayList<>();
+
+		Class<?> rawType = ctx.getRawType();
+		int order = 1;
+		for (RecordComponent recordComponent : rawType.getRecordComponents()) {
+			String name = recordComponent.getName();
+
+			Method method;
+			try {
+				method = rawType.getMethod(name);
+			} catch (NoSuchMethodException e) {
+				throw new IllegalArgumentException(e);
+			}
+			FoundSerializer foundSerializer = new FoundSerializer(method, order++, Serialize.DEFAULT_VERSION, Serialize.DEFAULT_VERSION);
+			foundSerializer.serializer = ctx.scan(bind(
+					annotationsCompatibilityMode ?
+							annotateWithTypePath(recordComponent.getGenericType(), recordComponent.getAnnotations()) :
+							recordComponent.getAnnotatedType(),
+					bindings));
+			foundSerializers.add(foundSerializer);
+		}
+		serializer.setConstructor(rawType.getConstructors()[0], Arrays.stream(rawType.getRecordComponents()).map(RecordComponent::getName).toList());
+		addMethodsAndGettersToClass(ctx, serializer, foundSerializers);
 	}
 
 	private void addMethodsAndGettersToClass(Context<SerializerDef> ctx, SerializerDefClass serializer, List<FoundSerializer> foundSerializers) {
@@ -918,7 +949,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		}
 	}
 
-	private void scanFactories(Context<SerializerDef> ctx, SerializerDefClass serializer) {
+	private void scanStaticFactoryMethods(Context<SerializerDef> ctx, SerializerDefClass serializer) {
 		Class<?> factoryClassType = ctx.getRawType();
 		for (Method factory : factoryClassType.getDeclaredMethods()) {
 			if (ctx.getRawType() != factory.getReturnType()) {
@@ -935,7 +966,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 					}
 				}
 				if (fields.size() == factory.getParameterTypes().length) {
-					serializer.setFactory(factory, fields);
+					serializer.setStaticFactoryMethod(factory, fields);
 				} else {
 					if (!fields.isEmpty())
 						throw new IllegalArgumentException(format("@Deserialize is not fully specified for %s", fields));
@@ -1055,7 +1086,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 
 		SerializeProfiles profiles = getAnnotation(SerializeProfiles.class, annotations);
 		if (profiles != null) {
-			if (!asList(profiles.value()).contains(profile == null ? "" : profile)) {
+			if (!List.of(profiles.value()).contains(profile == null ? "" : profile)) {
 				return null;
 			}
 			int addedProfile = getProfileVersion(profiles.value(), profiles.added());

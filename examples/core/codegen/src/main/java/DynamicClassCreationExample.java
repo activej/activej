@@ -1,5 +1,6 @@
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.codegen.expression.ExpressionHashCode;
 import io.activej.codegen.expression.ExpressionToString;
 import org.jetbrains.annotations.NotNull;
 
@@ -30,14 +31,15 @@ public class DynamicClassCreationExample {
 				.withMethod("getName", property(self(), "name"))
 
 				// compareTo, equals, hashCode and toString methods implementations follow the standard convention
-				.withMethod("int compareTo(Person)", compareToImpl("id", "name"))
+				.withMethod("int compareTo(Person)", comparableImpl("id", "name"))
 				.withMethod("equals", equalsImpl("id", "name"))
-				.withMethod("hashOfPojo", hash(property(arg(0), "id"), property(arg(0), "name")))
-				.withMethod("hash", hash(property(self(), "id"), property(self(), "name")))
+				.withMethod("hash", hashCodeImpl("id", "name"))
+				.withMethod("hashOfPojo", ExpressionHashCode.create()
+						.with(property(arg(0), "id"))
+						.with(property(arg(0), "name")))
 				.withMethod("toString", ExpressionToString.create()
-						.withQuotes("{", "}", ", ")
-						.with("id: ", property(self(), "id"))
-						.with("name: ", property(self(), "name")))
+						.withField("id")
+						.with("name", property(self(), "name")))
 				.defineClass(CLASS_LOADER);
 		//[END REGION_2]
 

@@ -67,7 +67,6 @@ import static io.activej.fs.exception.FsExceptionConverter.unwindProtobufExcepti
 import static io.activej.fs.tcp.FsMessagingProto.FsResponse.ResponseCase.*;
 import static io.activej.fs.util.ProtobufUtils.codec;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
-import static java.util.Collections.emptyMap;
 
 /**
  * A client to the remote {@link ActiveFsServer}.
@@ -312,7 +311,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 
 	@Override
 	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
-		if (names.isEmpty()) return Promise.of(emptyMap());
+		if (names.isEmpty()) return Promise.of(Map.of());
 
 		return simpleCommand(infoAllRequest(names), INFO_ALL_FINISHED, fsResponse -> handleInfoAllFinished(fsResponse.getInfoAllFinished()))
 				.whenComplete(toLogger(logger, "infoAll", names, this))

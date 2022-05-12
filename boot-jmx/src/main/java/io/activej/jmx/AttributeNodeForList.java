@@ -22,13 +22,14 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.management.openmbean.*;
 import java.lang.reflect.Array;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.first;
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 
 final class AttributeNodeForList extends AbstractAttributeNodeForLeaf {
 	private final AttributeNode subNode;
@@ -89,7 +90,7 @@ final class AttributeNodeForList extends AbstractAttributeNodeForLeaf {
 
 	@Override
 	public Map<String, OpenType<?>> getOpenTypes() {
-		return Collections.singletonMap(name, arrayType);
+		return Map.of(name, arrayType);
 	}
 
 	@Override
@@ -102,7 +103,7 @@ final class AttributeNodeForList extends AbstractAttributeNodeForLeaf {
 				List<?> list = new ArrayList<>(currentList);
 				for (Object element : list) {
 					Map<String, Object> attributesFromElement =
-							subNode.aggregateAttributes(visibleSubAttrs, singletonList(element));
+							subNode.aggregateAttributes(visibleSubAttrs, List.of(element));
 
 					attributesFromAllElements.add(attributesFromElement);
 				}
@@ -135,8 +136,7 @@ final class AttributeNodeForList extends AbstractAttributeNodeForLeaf {
 		if (openType instanceof SimpleType || openType instanceof TabularType) {
 			checkArgument(attributes.size() == 1, "Only one attribute should be present");
 			return first(attributes.values());
-		} else if (openType instanceof CompositeType) {
-			CompositeType compositeType = (CompositeType) openType;
+		} else if (openType instanceof CompositeType compositeType) {
 			return new CompositeDataSupport(compositeType, attributes);
 		}
 		throw new RuntimeException("There is no support for " + openType);
@@ -146,11 +146,11 @@ final class AttributeNodeForList extends AbstractAttributeNodeForLeaf {
 	@SuppressWarnings("unchecked")
 	public List<JmxRefreshable> getAllRefreshables(@NotNull Object source) {
 		if (!isListOfJmxRefreshables) {
-			return emptyList();
+			return List.of();
 		}
 
 		List<JmxRefreshable> listRef = (List<JmxRefreshable>) fetcher.fetchFrom(source);
-		return Collections.singletonList(timestamp -> {
+		return List.of(timestamp -> {
 			for (JmxRefreshable jmxRefreshableElement : listRef) {
 				jmxRefreshableElement.refresh(timestamp);
 			}

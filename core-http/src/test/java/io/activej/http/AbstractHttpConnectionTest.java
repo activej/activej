@@ -40,7 +40,6 @@ import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertCompleteFn;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
@@ -245,7 +244,7 @@ public final class AbstractHttpConnectionTest {
 
 	@Test
 	public void testEmptyRequestResponse() {
-		List<Consumer<HttpMessage>> messageDecorators = asList(
+		List<Consumer<HttpMessage>> messageDecorators = List.of(
 				message -> {},
 				HttpMessage::setBodyGzipCompression,
 				message -> message.addHeader(CONTENT_LENGTH, "0"),

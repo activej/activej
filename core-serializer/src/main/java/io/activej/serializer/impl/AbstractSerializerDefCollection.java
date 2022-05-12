@@ -79,7 +79,7 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 					writeVarInt(buf, pos, length(value)),
 					doEncode(staticEncoders, buf, pos, value, version, compatibilityLevel));
 		} else {
-			return ifThenElse(isNull(value),
+			return ifNull(value,
 					writeByte(buf, pos, value((byte) 0)),
 					sequence(
 							writeVarInt(buf, pos, inc(length(value))),
@@ -97,7 +97,7 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 		return let(readVarInt(in), length ->
 				!nullable ?
 						doDecode(staticDecoders, in, version, compatibilityLevel, length) :
-						ifThenElse(cmpEq(length, value(0)),
+						ifEq(length, value(0),
 								nullRef(decodeType),
 								let(dec(length), len -> doDecode(staticDecoders, in, version, compatibilityLevel, len))));
 	}

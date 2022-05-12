@@ -23,9 +23,9 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.Method;
 
-import java.util.Objects;
-
 import static io.activej.codegen.operation.CompareOperation.*;
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static io.activej.codegen.util.TypeChecks.isAssignable;
 import static io.activej.codegen.util.Utils.isPrimitiveType;
 import static org.objectweb.asm.Type.BOOLEAN_TYPE;
 import static org.objectweb.asm.Type.INT_TYPE;
@@ -33,16 +33,20 @@ import static org.objectweb.asm.Type.INT_TYPE;
 /**
  * Defines methods for comparing functions
  */
-final class ExpressionCmp implements Expression {
+final class ExpressionIfObjCmp implements Expression {
 	private final Expression left;
 	private final Expression right;
 	private final CompareOperation operation;
+	private final Expression expressionTrue;
+	private final Expression expressionFalse;
 
 	// region builders
-	ExpressionCmp(CompareOperation operation, Expression left, Expression right) {
+	ExpressionIfObjCmp(CompareOperation operation, Expression left, Expression right, Expression expressionTrue, Expression expressionFalse) {
 		this.left = left;
 		this.right = right;
 		this.operation = operation;
+		this.expressionTrue = expressionTrue;
+		this.expressionFalse = expressionFalse;
 	}
 	// endregion
 
@@ -53,39 +57,36 @@ final class ExpressionCmp implements Expression {
 		Label labelExit = new Label();
 
 		Type leftType = left.load(ctx);
+		checkType(leftType, isAssignable());
+
 		Type rightType = right.load(ctx);
-		if (!Objects.equals(leftType, rightType))
+		checkType(rightType, isAssignable());
+
+		if (!leftType.equals(rightType))
 			throw new IllegalArgumentException("Types of compared values should match");
 
 		if (isPrimitiveType(leftType)) {
 			g.ifCmp(leftType, operation.opCode, labelTrue);
 		} else {
-			if (operation == EQ || operation == NE) {
+			if (operation == REF_EQ || operation == REF_NE) {
+				g.ifCmp(leftType, operation.opCode, labelTrue);
+			} else if (operation == EQ || operation == NE) {
 				g.invokeVirtual(leftType, new Method("equals", BOOLEAN_TYPE, new Type[]{Type.getType(Object.class)}));
-				g.push(operation == EQ);
-				g.ifCmp(BOOLEAN_TYPE, GeneratorAdapter.EQ, labelTrue);
+				g.ifZCmp(operation == EQ ? GeneratorAdapter.NE : GeneratorAdapter.EQ, labelTrue);
 			} else {
 				g.invokeVirtual(leftType, new Method("compareTo", INT_TYPE, new Type[]{Type.getType(Object.class)}));
-				if (operation == LT) {
-					g.ifZCmp(GeneratorAdapter.LT, labelTrue);
-				} else if (operation == GT) {
-					g.ifZCmp(GeneratorAdapter.GT, labelTrue);
-				} else if (operation == LE) {
-					g.ifZCmp(GeneratorAdapter.LE, labelTrue);
-				} else if (operation == GE) {
-					g.ifZCmp(GeneratorAdapter.GE, labelTrue);
-				}
+				g.ifZCmp(operation.opCode, labelTrue);
 			}
 		}
 
-		g.push(false);
+		Type typeFalse = expressionFalse.load(ctx);
 		g.goTo(labelExit);
 
 		g.mark(labelTrue);
-		g.push(true);
+		Type typeTrue = expressionTrue.load(ctx);
 
 		g.mark(labelExit);
 
-		return BOOLEAN_TYPE;
+		return ctx.unifyTypes(typeFalse, typeTrue);
 	}
 }

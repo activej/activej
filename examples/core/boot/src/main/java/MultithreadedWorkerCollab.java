@@ -53,7 +53,7 @@ public final class MultithreadedWorkerCollab extends AbstractModule {
 			thread.join();
 		}
 
-		ConcurrentLinkedQueue<Integer> queue = injector.getInstance(new Key<ConcurrentLinkedQueue<Integer>>() {});
+		ConcurrentLinkedQueue<Integer> queue = injector.getInstance(new Key<>() {});
 
 		while (!queue.isEmpty()) {
 			System.out.println(queue.poll());

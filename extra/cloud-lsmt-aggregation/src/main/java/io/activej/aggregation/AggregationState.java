@@ -34,7 +34,7 @@ import java.util.stream.Stream;
 import static io.activej.aggregation.AggregationPredicates.toRangeScan;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.intersection;
-import static java.util.Collections.*;
+import static java.util.Collections.unmodifiableMap;
 
 /**
  * Represents aggregation metadata. Chunks are stored in an index (represented by an array of {@link RangeTree}) for efficient search.
@@ -141,7 +141,7 @@ public final class AggregationState implements OTState<AggregationDiff> {
 	}
 
 	public List<AggregationChunk> findChunksGroupWithMostOverlaps() {
-		return findChunksGroupWithMostOverlaps(prefixRanges[aggregation.getKeys().size()], emptySet());
+		return findChunksGroupWithMostOverlaps(prefixRanges[aggregation.getKeys().size()], Set.of());
 	}
 
 	private static List<AggregationChunk> findChunksGroupWithMostOverlaps(RangeTree<PrimaryKey, AggregationChunk> tree, Set<Object> lockedChunkIds) {
@@ -170,7 +170,7 @@ public final class AggregationState implements OTState<AggregationDiff> {
 			if (chunksAndStrategy.chunks.size() >= minChunks)
 				return new PickedChunks(chunksAndStrategy.strategy, entry.getValue(), chunksAndStrategy.chunks);
 		}
-		return new PickedChunks(PickingStrategy.MIN_KEY, null, emptyList());
+		return new PickedChunks(PickingStrategy.MIN_KEY, null, List.of());
 	}
 
 	private static ChunksAndStrategy findChunksWithMinKeyOrSizeFixStrategy(RangeTree<PrimaryKey, AggregationChunk> tree,
@@ -197,7 +197,7 @@ public final class AggregationState implements OTState<AggregationDiff> {
 		}
 
 		if (tailMap == null)
-			return new ChunksAndStrategy(PickingStrategy.SIZE_FIX, emptyList());
+			return new ChunksAndStrategy(PickingStrategy.SIZE_FIX, List.of());
 
 		Set<AggregationChunk> chunks = new HashSet<>();
 		for (Map.Entry<PrimaryKey, Segment<AggregationChunk>> segmentEntry : tailMap.entrySet()) {
@@ -213,7 +213,7 @@ public final class AggregationState implements OTState<AggregationDiff> {
 			if (result.get(0).getCount() > optimalChunkSize)
 				return new ChunksAndStrategy(PickingStrategy.SIZE_FIX, result);
 			else
-				return new ChunksAndStrategy(PickingStrategy.SIZE_FIX, emptyList());
+				return new ChunksAndStrategy(PickingStrategy.SIZE_FIX, List.of());
 		}
 
 		return new ChunksAndStrategy(PickingStrategy.SIZE_FIX, result);
@@ -226,28 +226,12 @@ public final class AggregationState implements OTState<AggregationDiff> {
 		SIZE_FIX
 	}
 
-	private static class PickedChunks {
-		private final PickingStrategy strategy;
-		private final @Nullable RangeTree<PrimaryKey, AggregationChunk> partitionTree;
-		private final List<AggregationChunk> chunks;
-
-		public PickedChunks(PickingStrategy strategy, @Nullable RangeTree<PrimaryKey, AggregationChunk> partitionTree,
-				List<AggregationChunk> chunks) {
-			this.strategy = strategy;
-			this.partitionTree = partitionTree;
-			this.chunks = chunks;
-		}
+	private record PickedChunks(PickingStrategy strategy,
+	                            @Nullable RangeTree<PrimaryKey, AggregationChunk> partitionTree,
+	                            List<AggregationChunk> chunks) {
 	}
 
-	private static class ChunksAndStrategy {
-		private final PickingStrategy strategy;
-		private final List<AggregationChunk> chunks;
-
-		public ChunksAndStrategy(PickingStrategy strategy, List<AggregationChunk> chunks) {
-			this.strategy = strategy;
-			this.chunks = chunks;
-		}
-	}
+	private record ChunksAndStrategy(PickingStrategy strategy, List<AggregationChunk> chunks) {}
 
 	@VisibleForTesting
 	@Nullable SortedMap<PrimaryKey, RangeTree<PrimaryKey, AggregationChunk>> groupByPartition(int partitioningKeyLength) {
@@ -292,7 +276,7 @@ public final class AggregationState implements OTState<AggregationDiff> {
 	}
 
 	public List<AggregationChunk> findChunksForConsolidationMinKey(int maxChunks, int optimalChunkSize) {
-		return findChunksForConsolidationMinKey(maxChunks, optimalChunkSize, emptySet());
+		return findChunksForConsolidationMinKey(maxChunks, optimalChunkSize, Set.of());
 	}
 
 	public List<AggregationChunk> findChunksForConsolidationMinKey(int maxChunks, int optimalChunkSize, Set<Object> lockedChunkIds) {
@@ -308,7 +292,7 @@ public final class AggregationState implements OTState<AggregationDiff> {
 	}
 
 	public List<AggregationChunk> findChunksForConsolidationHotSegment(int maxChunks) {
-		return findChunksForConsolidationHotSegment(maxChunks, emptySet());
+		return findChunksForConsolidationHotSegment(maxChunks, Set.of());
 	}
 
 	public List<AggregationChunk> findChunksForConsolidationHotSegment(int maxChunks, Set<Object> lockedChunkIds) {
@@ -432,19 +416,10 @@ public final class AggregationState implements OTState<AggregationDiff> {
 		return infos;
 	}
 
-	public static class ConsolidationDebugInfo {
-		public final PrimaryKey key;
-		public final Set<AggregationChunk> segmentSet;
-		public final Set<AggregationChunk> segmentClosingSet;
-		public final int overlaps;
-
-		public ConsolidationDebugInfo(PrimaryKey key, Set<AggregationChunk> segmentSet,
-				Set<AggregationChunk> segmentClosingSet, int overlaps) {
-			this.key = key;
-			this.segmentSet = segmentSet;
-			this.segmentClosingSet = segmentClosingSet;
-			this.overlaps = overlaps;
-		}
+	public record ConsolidationDebugInfo(PrimaryKey key,
+	                                     Set<AggregationChunk> segmentSet,
+	                                     Set<AggregationChunk> segmentClosingSet,
+	                                     int overlaps) {
 	}
 
 	@VisibleForTesting
@@ -483,7 +458,7 @@ public final class AggregationState implements OTState<AggregationDiff> {
 	public List<AggregationChunk> findChunks(AggregationPredicate predicate, List<String> fields) {
 		RangeScan rangeScan = toRangeScan(predicate, aggregation.getKeys(), aggregation.getKeyTypes());
 		if (rangeScan.isNoScan())
-			return emptyList();
+			return List.of();
 
 		Set<String> requestedFields = new HashSet<>(fields);
 		List<AggregationChunk> chunks = new ArrayList<>();

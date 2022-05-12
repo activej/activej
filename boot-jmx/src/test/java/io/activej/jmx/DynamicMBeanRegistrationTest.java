@@ -17,7 +17,6 @@ import java.util.List;
 
 import static io.activej.jmx.JmxBeanSettings.defaultSettings;
 import static io.activej.jmx.helper.CustomMatchers.objectname;
-import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
@@ -51,7 +50,7 @@ public class DynamicMBeanRegistrationTest {
 	public void itShouldRegisterDynamicMBeansWithOverriddenAttributes() throws Exception {
 		PublicMBeanSubclass instance = new PublicMBeanSubclass();
 		DynamicMBean mBean = DynamicMBeanFactory.create()
-				.createDynamicMBean(singletonList(instance), defaultSettings(), false);
+				.createDynamicMBean(List.of(instance), defaultSettings(), false);
 
 		assertEquals(instance.getValue(), mBean.getAttribute("value"));
 	}
@@ -61,7 +60,7 @@ public class DynamicMBeanRegistrationTest {
 		NonPublicMBean instance = new NonPublicMBean();
 
 		DynamicMBeanFactory dynamicMBeanFactory = DynamicMBeanFactory.create();
-		List<NonPublicMBean> beans = singletonList(instance);
+		List<NonPublicMBean> beans = List.of(instance);
 		JmxBeanSettings settings = defaultSettings();
 		try {
 			dynamicMBeanFactory.createDynamicMBean(beans, settings, false);
@@ -76,7 +75,7 @@ public class DynamicMBeanRegistrationTest {
 	public void itShouldNotThrowExceptionForNonPublicMBeansWithNoJmxFields() throws Exception {
 		NonPublicMBeanSubclass instance = new NonPublicMBeanSubclass();
 		DynamicMBean mBean = DynamicMBeanFactory.create()
-				.createDynamicMBean(singletonList(instance), defaultSettings(), false);
+				.createDynamicMBean(List.of(instance), defaultSettings(), false);
 
 		assertEquals(instance.getValue(), mBean.getAttribute("value"));
 	}

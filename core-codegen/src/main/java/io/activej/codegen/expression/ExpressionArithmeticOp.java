@@ -22,6 +22,7 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
 import static io.activej.codegen.operation.ArithmeticOperation.*;
+import static io.activej.codegen.util.TypeChecks.*;
 import static io.activej.codegen.util.Utils.isWrapperType;
 import static io.activej.codegen.util.Utils.unwrap;
 import static org.objectweb.asm.Type.getType;
@@ -72,15 +73,21 @@ final class ExpressionArithmeticOp implements Expression {
 	public Type load(Context ctx) {
 		GeneratorAdapter g = ctx.getGeneratorAdapter();
 		Type leftType = left.load(ctx);
+		checkType(leftType, isArithmetic().or(isWrapper()));
+
 		if (isWrapperType(leftType)) {
 			leftType = unwrap(leftType);
 			g.unbox(leftType);
 		}
+
 		Type rightType = right.load(ctx);
+		checkType(rightType, isArithmetic().or(isWrapper()));
+
 		if (isWrapperType(rightType)) {
 			rightType = unwrap(rightType);
 			g.unbox(rightType);
 		}
+
 		if (op != SHL && op != SHR && op != USHR) {
 			Type resultType = getType(unifyArithmeticTypes(ctx.toJavaType(leftType), ctx.toJavaType(rightType)));
 			if (leftType != resultType) {

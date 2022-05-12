@@ -2,8 +2,6 @@ package io.activej.aggregation;
 
 import java.util.List;
 
-import static java.util.Arrays.asList;
-
 /**
  * Let's first define a class that will hold our key-value pair.
  * This class also contains 'timestamp' field, so that AggregationDB will return the latest entry for the particular key.
@@ -43,10 +41,9 @@ public class KeyValuePair {
 		return result;
 	}
 
-	@SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
-	public static final List<String> KEYS = asList("key");
+	public static final List<String> KEYS = List.of("key");
 
-	public static final List<String> FIELDS = asList("value", "timestamp");
+	public static final List<String> FIELDS = List.of("value", "timestamp");
 
 	@Override
 	public String toString() {

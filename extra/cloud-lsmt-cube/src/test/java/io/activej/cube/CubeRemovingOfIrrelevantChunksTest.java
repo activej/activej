@@ -41,7 +41,6 @@ import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.TestUtils.runProcessLogs;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -107,7 +106,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 				multilog,
 				basicCube.logStreamConsumer(LogItem.class),
 				"testlog",
-				singletonList("partitionA"),
+				List.of("partitionA"),
 				cubeDiffLogOTState);
 
 		// checkout first (root) revision
@@ -130,7 +129,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 			allLogItems.addAll(listOfRandomLogItems);
 		}
 
-		List<LogItem> logItems = await(basicCube.queryRawStream(singletonList("date"), singletonList("clicks"), alwaysTrue(),
+		List<LogItem> logItems = await(basicCube.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(),
 				LogItem.class, CLASS_LOADER)
 				.toList());
 

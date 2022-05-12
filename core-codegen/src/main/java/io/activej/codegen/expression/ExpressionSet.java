@@ -19,6 +19,9 @@ package io.activej.codegen.expression;
 import io.activej.codegen.Context;
 import org.objectweb.asm.Type;
 
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static io.activej.codegen.util.TypeChecks.isAssignable;
+
 /**
  * Defines methods which allow setting fields
  */
@@ -35,6 +38,8 @@ final class ExpressionSet implements Expression {
 	public Type load(Context ctx) {
 		Object storeContext = to.beginStore(ctx);
 		Type type = from.load(ctx);
+		checkType(type, isAssignable());
+
 		to.store(ctx, storeContext, type);
 		return Type.VOID_TYPE;
 	}

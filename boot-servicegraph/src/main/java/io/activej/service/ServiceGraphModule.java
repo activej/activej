@@ -60,7 +60,6 @@ import static io.activej.service.Utils.combineAll;
 import static io.activej.service.Utils.completedExceptionallyFuture;
 import static io.activej.service.adapter.ServiceAdapters.*;
 import static java.lang.Thread.currentThread;
-import static java.util.Collections.*;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.stream.Collectors.*;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -286,7 +285,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 
 	@ProvidesIntoSet
 	LauncherService service(ServiceGraph serviceGraph, OptionalDependency<Set<Initializer<ServiceGraphModuleSettings>>> initializers) {
-		for (Initializer<ServiceGraphModuleSettings> initializer : initializers.orElse(emptySet())) {
+		for (Initializer<ServiceGraphModuleSettings> initializer : initializers.orElse(Set.of())) {
 			initializer.accept(this);
 		}
 		return new LauncherService() {
@@ -330,7 +329,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 		logger.trace("Initializing ServiceGraph ...");
 
 		WorkerPools workerPools = injector.peekInstance(WorkerPools.class);
-		List<WorkerPool> pools = workerPools != null ? workerPools.getWorkerPools() : emptyList();
+		List<WorkerPool> pools = workerPools != null ? workerPools.getWorkerPools() : List.of();
 		Map<ServiceKey, List<?>> instances = new HashMap<>();
 		Map<ServiceKey, Set<ServiceKey>> instanceDependencies = new HashMap<>();
 
@@ -373,7 +372,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 			}
 
 			ServiceKey serviceKey = new ServiceKey(key);
-			instances.put(serviceKey, singletonList(instance));
+			instances.put(serviceKey, List.of(instance));
 			instanceDependencies.put(serviceKey,
 					binding.getDependencies().stream()
 							.map(dependency -> {
@@ -402,7 +401,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 	}
 
 	private Map<Key<?>, Set<ScopedKey>> getScopeDependencies(Injector injector, Scope scope) {
-		Trie<Scope, Map<Key<?>, Binding<?>>> scopeBindings = injector.getBindingsTrie().getOrDefault(scope, emptyMap());
+		Trie<Scope, Map<Key<?>, Binding<?>>> scopeBindings = injector.getBindingsTrie().getOrDefault(scope, Map.of());
 		return scopeBindings.get()
 				.entrySet()
 				.stream()
@@ -436,17 +435,17 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 			Key<?> key = serviceKey.getKey();
 			Set<ServiceKey> dependencies = new HashSet<>(entry.getValue());
 
-			if (!difference(removedDependencies.getOrDefault(key, emptySet()), dependencies).isEmpty()) {
-				logger.warn("Unused removed dependencies for {} : {}", key, difference(removedDependencies.getOrDefault(key, emptySet()), dependencies));
+			if (!difference(removedDependencies.getOrDefault(key, Set.of()), dependencies).isEmpty()) {
+				logger.warn("Unused removed dependencies for {} : {}", key, difference(removedDependencies.getOrDefault(key, Set.of()), dependencies));
 			}
 
-			if (!intersection(dependencies, addedDependencies.getOrDefault(key, emptySet())).isEmpty()) {
-				logger.warn("Unused added dependencies for {} : {}", key, intersection(dependencies, addedDependencies.getOrDefault(key, emptySet())));
+			if (!intersection(dependencies, addedDependencies.getOrDefault(key, Set.of())).isEmpty()) {
+				logger.warn("Unused added dependencies for {} : {}", key, intersection(dependencies, addedDependencies.getOrDefault(key, Set.of())));
 			}
 
-			Set<Key<?>> added = addedDependencies.getOrDefault(key, emptySet());
+			Set<Key<?>> added = addedDependencies.getOrDefault(key, Set.of());
 			for (Key<?> k : added) {
-				List<ServiceKey> found = instances.keySet().stream().filter(s -> s.getKey().equals(k)).collect(toList());
+				List<ServiceKey> found = instances.keySet().stream().filter(s -> s.getKey().equals(k)).toList();
 				if (found.isEmpty()) {
 					throw new IllegalArgumentException("Did not find an instance for the added dependency " + key.getDisplayString());
 				}
@@ -456,7 +455,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 				dependencies.add(found.get(0));
 			}
 
-			Set<Key<?>> removed = removedDependencies.getOrDefault(key, emptySet());
+			Set<Key<?>> removed = removedDependencies.getOrDefault(key, Set.of());
 			dependencies.removeIf(k -> removed.contains(k.getKey()));
 
 			for (ServiceKey dependency : dependencies) {
@@ -525,8 +524,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 	@SuppressWarnings("unchecked")
 	private <T> @Nullable Service getServiceOrNull(IdentityHashMap<Object, CachedService> cache, Key<T> key, @NotNull T instance) {
 		Object cacheKey = instance;
-		if (cacheKey instanceof OptionalDependency) {
-			OptionalDependency<?> optionalDependency = (OptionalDependency<?>) cacheKey;
+		if (cacheKey instanceof OptionalDependency<?> optionalDependency) {
 			if (!optionalDependency.isPresent()) {
 				return null;
 			}

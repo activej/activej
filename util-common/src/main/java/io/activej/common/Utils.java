@@ -27,8 +27,6 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static java.lang.Math.max;
-import static java.util.Arrays.asList;
-import static java.util.Collections.*;
 import static java.util.stream.Collectors.*;
 
 /**
@@ -42,7 +40,7 @@ public class Utils {
 		throw new AssertionError();
 	};
 
-	private static final Iterator<Object> EMPTY_ITERATOR = new Iterator<Object>() {
+	private static final Iterator<Object> EMPTY_ITERATOR = new Iterator<>() {
 		@Override
 		public boolean hasNext() {
 			return false;
@@ -71,15 +69,15 @@ public class Utils {
 	}
 
 	public static <T> Set<T> nonNullElseEmpty(@Nullable Set<T> set) {
-		return nonNullElse(set, emptySet());
+		return nonNullElse(set, Set.of());
 	}
 
 	public static <T> List<T> nonNullElseEmpty(@Nullable List<T> list) {
-		return nonNullElse(list, emptyList());
+		return nonNullElse(list, List.of());
 	}
 
 	public static <K, V> Map<K, V> nonNullElseEmpty(@Nullable Map<K, V> map) {
-		return nonNullElse(map, emptyMap());
+		return nonNullElse(map, Map.of());
 	}
 
 	public static <T, E extends Throwable> @NotNull T nonNullOrException(@Nullable T value, Supplier<@NotNull E> exceptionSupplier) throws E {
@@ -151,29 +149,7 @@ public class Utils {
 		Object[] objects = new Object[list1.size() + list2.size()];
 		System.arraycopy(list1.toArray(), 0, objects, 0, list1.size());
 		System.arraycopy(list2.toArray(), 0, objects, list1.size(), list2.size());
-		return (List<D>) asList(objects);
-	}
-
-	/**
-	 * Returns a {@link Set} of a provided element
-	 *
-	 * @see #setOf(Object[])
-	 */
-	public static <T> Set<T> setOf(T item) {
-		return singleton(item);
-	}
-
-	/**
-	 * Returns a {@link Set} of provided elements
-	 * <p>
-	 * No guarantee on a mutability of a resulting set is made,
-	 * so set should be considered unmodifiable
-	 * <p>
-	 * This is a simple alternative to Java 9's {@code Set#of} method
-	 */
-	@SafeVarargs
-	public static <T> Set<T> setOf(T... items) {
-		return new LinkedHashSet<>(asList(items));
+		return (List<D>) List.of(objects);
 	}
 
 	/**
@@ -248,44 +224,13 @@ public class Utils {
 		}
 	}
 
-	/**
-	 * Returns an empty {@link List}
-	 *
-	 * @see #listOf(Object[])
-	 */
-	public static <T> List<T> listOf() {
-		return emptyList();
-	}
-
-	/**
-	 * Returns a {@link List} of a provided element
-	 *
-	 * @see #listOf(Object[])
-	 */
-	public static <T> List<T> listOf(T value) {
-		return singletonList(value);
-	}
-
-	/**
-	 * Returns a {@link List} of provided elements
-	 * <p>
-	 * No guarantee on a mutability of a resulting list is made,
-	 * so list should be considered unmodifiable
-	 * <p>
-	 * This is a simple alternative to Java 9's {@code List#of} method
-	 */
-	@SuppressWarnings("unchecked")
-	public static <T> List<T> listOf(T... items) {
-		return asList(items);
-	}
-
 	@SuppressWarnings("unchecked")
 	public static <T> Iterator<T> iteratorOf() {
 		return (Iterator<T>) EMPTY_ITERATOR;
 	}
 
 	public static <T> Iterator<T> iteratorOf(T item) {
-		return new Iterator<T>() {
+		return new Iterator<>() {
 			boolean hasNext = true;
 
 			@Override
@@ -303,7 +248,7 @@ public class Utils {
 	}
 
 	public static <T> Iterator<T> iteratorOf(T item1, T item2) {
-		return new Iterator<T>() {
+		return new Iterator<>() {
 			int i = 0;
 
 			@Override
@@ -321,7 +266,7 @@ public class Utils {
 
 	@SafeVarargs
 	public static <T> Iterator<T> iteratorOf(T... items) {
-		return new Iterator<T>() {
+		return new Iterator<>() {
 			int i = 0;
 
 			@Override
@@ -338,7 +283,7 @@ public class Utils {
 	}
 
 	public static <T, R> Iterator<R> transformIterator(Iterator<? extends T> iterator, Function<? super T, ? extends R> fn) {
-		return new Iterator<R>() {
+		return new Iterator<>() {
 			@Override
 			public boolean hasNext() {
 				return iterator.hasNext();
@@ -364,7 +309,7 @@ public class Utils {
 	}
 
 	private static <T> Iterator<T> concatImpl(Iterator<? extends Iterator<? extends T>> iterators) {
-		return new Iterator<T>() {
+		return new Iterator<>() {
 			@Nullable Iterator<? extends T> it = iterators.hasNext() ? iterators.next() : null;
 
 			@Override
@@ -384,117 +329,6 @@ public class Utils {
 		};
 	}
 
-	/**
-	 * Returns an empty {@link Map}
-	 * <p>
-	 * No guarantee on a mutability of a resulting map is made,
-	 * so map should be considered unmodifiable
-	 * <p>
-	 * This is a simple alternative to Java 9's {@code Map#of} method
-	 */
-	public static <K, V> Map<K, V> mapOf() {
-		return new LinkedHashMap<>();
-	}
-
-	/**
-	 * Returns a {@link Map} of provided key and value
-	 * <p>
-	 * No guarantee on a mutability of a resulting map is made,
-	 * so map should be considered unmodifiable
-	 * <p>
-	 * This is a simple alternative to Java 9's {@code Map#of} method
-	 */
-	public static <K, V> Map<K, V> mapOf(K key1, V value1) {
-		Map<K, V> map = new LinkedHashMap<>();
-		map.put(key1, value1);
-		return map;
-	}
-
-	/**
-	 * Returns a {@link Map} of provided keys and values
-	 * <p>
-	 * No guarantee on a mutability of a resulting map is made,
-	 * so map should be considered unmodifiable
-	 * <p>
-	 * This is a simple alternative to Java 9's {@code Map#of} method
-	 */
-	public static <K, V> Map<K, V> mapOf(K key1, V value1, K key2, V value2) {
-		Map<K, V> map = new LinkedHashMap<>();
-		map.put(key1, value1);
-		map.put(key2, value2);
-		return map;
-	}
-
-	/**
-	 * Returns a {@link Map} of provided keys and values
-	 * <p>
-	 * No guarantee on a mutability of a resulting map is made,
-	 * so map should be considered unmodifiable
-	 * <p>
-	 * This is a simple alternative to Java 9's {@code Map#of} method
-	 */
-	public static <K, V> Map<K, V> mapOf(K key1, V value1, K key2, V value2, K key3, V value3) {
-		Map<K, V> map = new LinkedHashMap<>();
-		map.put(key1, value1);
-		map.put(key2, value2);
-		map.put(key3, value3);
-		return map;
-	}
-
-	/**
-	 * Returns a {@link Map} of provided keys and values
-	 * <p>
-	 * No guarantee on a mutability of a resulting map is made,
-	 * so map should be considered unmodifiable
-	 * <p>
-	 * This is a simple alternative to Java 9's {@code Map#of} method
-	 */
-	public static <K, V> Map<K, V> mapOf(K key1, V value1, K key2, V value2, K key3, V value3, K key4, V value4) {
-		Map<K, V> map = new LinkedHashMap<>();
-		map.put(key1, value1);
-		map.put(key2, value2);
-		map.put(key3, value3);
-		map.put(key4, value4);
-		return map;
-	}
-
-	/**
-	 * Returns a {@link Map} of provided keys and values
-	 * <p>
-	 * No guarantee on a mutability of a resulting map is made,
-	 * so map should be considered unmodifiable
-	 * <p>
-	 * This is a simple alternative to Java 9's {@code Map#of} method
-	 */
-	public static <K, V> Map<K, V> mapOf(K key1, V value1, K key2, V value2, K key3, V value3, K key4, V value4, K key5, V value5) {
-		Map<K, V> map = new LinkedHashMap<>();
-		map.put(key1, value1);
-		map.put(key2, value2);
-		map.put(key3, value3);
-		map.put(key4, value4);
-		map.put(key5, value5);
-		return map;
-	}
-
-	/**
-	 * Returns a {@link Map} of provided keys and values
-	 * <p>
-	 * No guarantee on a mutability of a resulting map is made,
-	 * so map should be considered unmodifiable
-	 * <p>
-	 * This is a simple alternative to Java 9's {@code Map#of} method
-	 */
-	public static <K, V> Map<K, V> mapOf(K key1, V value1, K key2, V value2, K key3, V value3, K key4, V value4, K key5, V value5, K key6, V value6) {
-		Map<K, V> map = new LinkedHashMap<>();
-		map.put(key1, value1);
-		map.put(key2, value2);
-		map.put(key3, value3);
-		map.put(key4, value4);
-		map.put(key5, value5);
-		map.put(key6, value6);
-		return map;
-	}
-
 	public static boolean isBijection(Map<?, ?> map) {
 		return new HashSet<>(map.values()).size() == map.size();
 	}
@@ -505,7 +339,7 @@ public class Utils {
 
 	public static <T> Stream<T> iterate(T seed, @NotNull Predicate<? super T> hasNext, @NotNull UnaryOperator<T> f) {
 		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
-				new Iterator<T>() {
+				new Iterator<>() {
 					T item = seed;
 
 					@Override

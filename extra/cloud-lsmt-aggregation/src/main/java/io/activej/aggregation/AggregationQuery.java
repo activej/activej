@@ -18,7 +18,10 @@ package io.activej.aggregation;
 
 import io.activej.common.initializer.WithInitializer;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 import static java.util.Collections.unmodifiableList;
 
@@ -86,7 +89,7 @@ public final class AggregationQuery implements WithInitializer<AggregationQuery>
 	}
 
 	public AggregationQuery withKeys(String... keys) {
-		this.keys.addAll(Arrays.asList(keys));
+		this.keys.addAll(List.of(keys));
 		return this;
 	}
 
@@ -96,7 +99,7 @@ public final class AggregationQuery implements WithInitializer<AggregationQuery>
 	}
 
 	public AggregationQuery withMeasures(String... fields) {
-		this.measures.addAll(Arrays.asList(fields));
+		this.measures.addAll(List.of(fields));
 		return this;
 	}
 

@@ -22,7 +22,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -36,7 +35,7 @@ public final class RpcStrategyRoundRobin implements RpcStrategy {
 	}
 
 	public static RpcStrategyRoundRobin create(RpcStrategy... list) {
-		return create(Arrays.asList(list));
+		return create(List.of(list));
 	}
 
 	public static RpcStrategyRoundRobin create(List<RpcStrategy> list) {

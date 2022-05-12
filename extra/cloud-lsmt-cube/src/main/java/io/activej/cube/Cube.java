@@ -29,7 +29,7 @@ import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.ExpressionComparator;
+import io.activej.codegen.expression.ExpressionCompare;
 import io.activej.codegen.expression.Variable;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.ref.Ref;
@@ -83,8 +83,8 @@ import java.util.stream.Stream;
 import static io.activej.aggregation.AggregationPredicates.between;
 import static io.activej.aggregation.AggregationPredicates.eq;
 import static io.activej.aggregation.util.Utils.*;
-import static io.activej.codegen.expression.ExpressionComparator.leftProperty;
-import static io.activej.codegen.expression.ExpressionComparator.rightProperty;
+import static io.activej.codegen.expression.ExpressionCompare.leftProperty;
+import static io.activej.codegen.expression.ExpressionCompare.rightProperty;
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.codegen.util.Primitives.wrap;
 import static io.activej.common.Checks.checkArgument;
@@ -93,8 +93,6 @@ import static io.activej.common.Utils.*;
 import static io.activej.cube.Utils.createResultClass;
 import static java.lang.Math.min;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static java.util.Collections.sort;
 import static java.util.stream.Collectors.toList;
 
@@ -199,7 +197,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		String attributeName = attribute.substring(pos + 1);
 		checkArgument(resolver.getAttributeTypes().containsKey(attributeName), "Resolver does not support %s", attribute);
 		List<String> dimensions = getAllParents(dimension);
-		checkArgument(dimensions.size() == resolver.getKeyTypes().length, "Parent dimensions: %s, key types: %s", dimensions, asList(resolver.getKeyTypes()));
+		checkArgument(dimensions.size() == resolver.getKeyTypes().length, "Parent dimensions: %s, key types: %s", dimensions, List.of(resolver.getKeyTypes()));
 		for (int i = 0; i < dimensions.size(); i++) {
 			String d = dimensions.get(i);
 			checkArgument(((Class<?>) dimensionTypes.get(d).getInternalDataType()).equals(resolver.getKeyTypes()[i]), "Dimension type mismatch for %s", d);
@@ -285,7 +283,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		}
 
 		public AggregationConfig withDimensions(String... dimensions) {
-			return withDimensions(asList(dimensions));
+			return withDimensions(List.of(dimensions));
 		}
 
 		public AggregationConfig withMeasures(Collection<String> measures) {
@@ -294,7 +292,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		}
 
 		public AggregationConfig withMeasures(String... measures) {
-			return withMeasures(asList(measures));
+			return withMeasures(List.of(measures));
 		}
 
 		public AggregationConfig withPredicate(AggregationPredicate predicate) {
@@ -308,7 +306,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		}
 
 		public AggregationConfig withPartitioningKey(String... partitioningKey) {
-			this.partitioningKey.addAll(asList(partitioningKey));
+			this.partitioningKey.addAll(List.of(partitioningKey));
 			return this;
 		}
 
@@ -517,7 +515,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 	public <T> LogDataConsumer<T, CubeDiff> logStreamConsumer(Class<T> inputClass, Map<String, String> dimensionFields, Map<String, String> measureFields,
 			AggregationPredicate predicate) {
 		return () -> consume(inputClass, dimensionFields, measureFields, predicate)
-				.transformResult(result -> result.map(Collections::singletonList));
+				.transformResult(result -> result.map(cubeDiff -> List.of(cubeDiff)));
 	}
 
 	public <T> StreamConsumerWithResult<T, CubeDiff> consume(Class<T> inputClass) {
@@ -612,7 +610,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(Predicate.class, inputClass, predicate),
 				() -> ClassBuilder.create(Predicate.class)
-						.withMethod("test", boolean.class, singletonList(Object.class),
+						.withMethod("test", boolean.class, List.of(Object.class),
 								predicate.createPredicate(cast(arg(0), inputClass), keyTypes))
 		);
 	}
@@ -705,14 +703,14 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 			Collection<String> storedMeasures,
 			AggregationPredicate where) {
 		where = where.simplify();
-		List<String> allDimensions = Stream.concat(dimensions.stream(), where.getDimensions().stream()).collect(toList());
+		List<String> allDimensions = Stream.concat(dimensions.stream(), where.getDimensions().stream()).toList();
 
 		List<AggregationContainer> compatibleAggregations = new ArrayList<>();
 		for (AggregationContainer aggregationContainer : aggregations.values()) {
 			List<String> keys = aggregationContainer.aggregation.getKeys();
 			if (!keys.containsAll(allDimensions)) continue;
 
-			List<String> compatibleMeasures = storedMeasures.stream().filter(aggregationContainer.measures::contains).collect(toList());
+			List<String> compatibleMeasures = storedMeasures.stream().filter(aggregationContainer.measures::contains).toList();
 			if (compatibleMeasures.isEmpty()) continue;
 			AggregationPredicate intersection = AggregationPredicates.and(where, aggregationContainer.predicate).simplify();
 
@@ -818,17 +816,17 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 				new LinkedHashSet<>(cubeQuery.getMeasures()),
 				cubeQuery.getWhere().getDimensions()));
 		long queryStarted = eventloop.currentTimeMillis();
-        return new RequestContext<>().execute(queryClassLoader, cubeQuery)
-                .whenResult(() -> queryTimes.recordValue((int) (eventloop.currentTimeMillis() - queryStarted)))
-                .whenException(e -> {
-                    queryErrors++;
-                    queryLastError = e;
+		return new RequestContext<>().execute(queryClassLoader, cubeQuery)
+				.whenResult(() -> queryTimes.recordValue((int) (eventloop.currentTimeMillis() - queryStarted)))
+				.whenException(e -> {
+					queryErrors++;
+					queryLastError = e;
 
-                    if (e instanceof FileNotFoundException) {
-                        logger.warn("Query failed because of FileNotFoundException. " + cubeQuery, e);
-                    }
-                });
-    }
+					if (e instanceof FileNotFoundException) {
+						logger.warn("Query failed because of FileNotFoundException. " + cubeQuery, e);
+					}
+				});
+	}
 	// endregion
 
 	private DefiningClassLoader getQueryClassLoader(CubeClassLoaderCache.Key key) {
@@ -1046,7 +1044,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 					ClassKey.of(Comparator.class, resultClass, query.getOrderings()),
 					() -> ClassBuilder.create(Comparator.class)
 							.withMethod("compare", get(() -> {
-								ExpressionComparator comparator = ExpressionComparator.create();
+								ExpressionCompare comparator = ExpressionCompare.create();
 								for (Ordering ordering : query.getOrderings()) {
 									String field = ordering.getField();
 									if (resultMeasures.contains(field) || resultAttributes.contains(field)) {
@@ -1158,7 +1156,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 			}
 
 			Ref<Object> attributesRef = new Ref<>();
-			return resolverContainer.resolver.resolveAttributes(singletonList(key),
+			return resolverContainer.resolver.resolveAttributes(List.of((Object) key),
 							result1 -> (Object[]) result1,
 							(result12, attributes) -> attributesRef.value = attributes)
 					.whenResult(() -> {

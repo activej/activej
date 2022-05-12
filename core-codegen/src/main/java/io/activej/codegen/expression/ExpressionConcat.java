@@ -24,13 +24,15 @@ import org.objectweb.asm.commons.Method;
 
 import java.util.List;
 
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static io.activej.codegen.util.TypeChecks.isAssignable;
 import static io.activej.codegen.util.Utils.isPrimitiveType;
 import static io.activej.codegen.util.Utils.wrap;
 import static org.objectweb.asm.Type.getType;
 import static org.objectweb.asm.commons.Method.getMethod;
 
 /**
- * Defines methods which allow to concat strings
+ * Defines methods which allow to concat arguments into a string
  */
 public final class ExpressionConcat implements Expression {
 	private final List<Expression> arguments;
@@ -54,6 +56,8 @@ public final class ExpressionConcat implements Expression {
 		for (Expression expression : arguments) {
 			g.dup();
 			Type type = expression.load(ctx);
+			checkType(type, isAssignable());
+
 			if (isPrimitiveType(type)) {
 				g.invokeStatic(wrap(type), new Method("toString", getType(String.class), new Type[]{type}));
 			} else {

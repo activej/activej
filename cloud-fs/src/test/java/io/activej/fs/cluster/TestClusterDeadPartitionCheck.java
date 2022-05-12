@@ -43,7 +43,6 @@ import java.util.concurrent.TimeUnit;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.Utils.first;
-import static io.activej.common.Utils.setOf;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.fs.LocalActiveFs.DEFAULT_TEMP_DIR;
 import static io.activej.promise.TestUtils.await;
@@ -81,7 +80,7 @@ public final class TestClusterDeadPartitionCheck {
 
 	@Parameters(name = "{0}")
 	public static Collection<Object[]> getParameters() {
-		return Arrays.asList(
+		return List.of(
 				// tcp
 				new Object[]{
 						new ClientServerFactory() {
@@ -205,12 +204,12 @@ public final class TestClusterDeadPartitionCheck {
 
 		setAliveNodes(0, 1, 2, 6, 8, 9);
 		await(fs.ping());
-		assertEquals(setOf(0, 1, 2, 6, 8, 9), partitions.getAlivePartitions().keySet());
+		assertEquals(Set.of(0, 1, 2, 6, 8, 9), partitions.getAlivePartitions().keySet());
 	}
 
 	@Test
 	public void testServersFailOnStreamingUpload() {
-		Set<Integer> toBeAlive = setOf(1, 3);
+		Set<Integer> toBeAlive = Set.of(1, 3);
 		String filename = "test";
 		Exception exception = awaitException(fs.upload(filename)
 				.whenComplete(TestUtils.assertCompleteFn($ -> assertEquals(CLIENT_SERVER_PAIRS, partitions.getAlivePartitions().size())))
@@ -225,7 +224,7 @@ public final class TestClusterDeadPartitionCheck {
 												assertTrue(files.size() <= 1);
 												return files.stream();
 											})
-											.collect(toList());
+											.toList();
 
 									// temporary files are created
 									assertEquals(fs.getUploadTargetsMax(), allFiles.size());
@@ -287,7 +286,7 @@ public final class TestClusterDeadPartitionCheck {
 	private static Set<Path> listAllFiles(Path dir) {
 		Set<Path> files = new HashSet<>();
 		try {
-			Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
+			Files.walkFileTree(dir, new SimpleFileVisitor<>() {
 				@Override
 				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
 					files.add(file);

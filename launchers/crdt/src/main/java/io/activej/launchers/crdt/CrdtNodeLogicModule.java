@@ -70,12 +70,12 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 
 	@Provides
 	CrdtStorageMap<K, S> runtimeCrdtClient(Eventloop eventloop, CrdtDescriptor<K, S> descriptor) {
-		return CrdtStorageMap.create(eventloop, descriptor.getCrdtFunction());
+		return CrdtStorageMap.create(eventloop, descriptor.crdtFunction());
 	}
 
 	@Provides
 	CrdtStorageFs<K, S> fsCrdtClient(Eventloop eventloop, ActiveFs activeFs, CrdtDescriptor<K, S> descriptor) {
-		return CrdtStorageFs.create(eventloop, activeFs, descriptor.getSerializer(), descriptor.getCrdtFunction());
+		return CrdtStorageFs.create(eventloop, activeFs, descriptor.serializer(), descriptor.crdtFunction());
 	}
 
 	@Provides
@@ -92,7 +92,7 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 					if (partitionId.equals(localPartitionId)) return localCrdtStorage;
 
 					InetSocketAddress crdtAddress = checkNotNull(partitionId.getCrdtAddress());
-					return CrdtStorageClient.create(eventloop, crdtAddress, descriptor.getSerializer());
+					return CrdtStorageClient.create(eventloop, crdtAddress, descriptor.serializer());
 				});
 
 		return DiscoveryService.of(scheme);
@@ -109,7 +109,7 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 			DiscoveryService<PartitionId> discoveryService,
 			CrdtDescriptor<K, S> descriptor
 	) {
-		return CrdtStorageCluster.create(eventloop, discoveryService, descriptor.getCrdtFunction());
+		return CrdtStorageCluster.create(eventloop, discoveryService, descriptor.crdtFunction());
 	}
 
 	@Provides
@@ -119,7 +119,7 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 
 	@Provides
 	CrdtServer<K, S> crdtServer(Eventloop eventloop, CrdtStorageMap<K, S> client, CrdtDescriptor<K, S> descriptor, PartitionId localPartitionId, Config config) {
-		return CrdtServer.create(eventloop, client, descriptor.getSerializer())
+		return CrdtServer.create(eventloop, client, descriptor.serializer())
 				.withInitializer(ofAbstractServer(config.getChild("crdt.server")))
 				.withListenAddress(localPartitionId.getCrdtAddress());
 	}
@@ -127,7 +127,7 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 	@Provides
 	@Cluster
 	CrdtServer<K, S> clusterServer(Eventloop eventloop, CrdtStorageCluster<K, S, PartitionId> client, CrdtDescriptor<K, S> descriptor, Config config) {
-		return CrdtServer.create(eventloop, client, descriptor.getSerializer())
+		return CrdtServer.create(eventloop, client, descriptor.serializer())
 				.withInitializer(ofAbstractServer(config.getChild("crdt.cluster.server")));
 	}
 

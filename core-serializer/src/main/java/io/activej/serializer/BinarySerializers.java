@@ -24,7 +24,7 @@ import java.util.function.Supplier;
 
 public final class BinarySerializers {
 
-	public static final BinarySerializer<Byte> BYTE_SERIALIZER = new BinarySerializer<Byte>() {
+	public static final BinarySerializer<Byte> BYTE_SERIALIZER = new BinarySerializer<>() {
 		@Override
 		public int encode(byte[] array, int pos, Byte item) {
 			return BinaryOutputUtils.writeByte(array, pos, item);
@@ -46,7 +46,7 @@ public final class BinarySerializers {
 		}
 	};
 
-	public static final BinarySerializer<Integer> INT_SERIALIZER = new BinarySerializer<Integer>() {
+	public static final BinarySerializer<Integer> INT_SERIALIZER = new BinarySerializer<>() {
 		@Override
 		public int encode(byte[] array, int pos, Integer item) {
 			array[pos] = (byte) (item >>> 24);
@@ -75,7 +75,7 @@ public final class BinarySerializers {
 		}
 	};
 
-	public static final BinarySerializer<Long> LONG_SERIALIZER = new BinarySerializer<Long>() {
+	public static final BinarySerializer<Long> LONG_SERIALIZER = new BinarySerializer<>() {
 		@Override
 		public int encode(byte[] array, int pos, Long item) {
 			int high = (int) (item >>> 32);
@@ -114,7 +114,7 @@ public final class BinarySerializers {
 		}
 	};
 
-	public static final BinarySerializer<Float> FLOAT_SERIALIZER = new BinarySerializer<Float>() {
+	public static final BinarySerializer<Float> FLOAT_SERIALIZER = new BinarySerializer<>() {
 		@Override
 		public int encode(byte[] array, int pos, Float item) {
 			int v = Float.floatToIntBits(item);
@@ -144,7 +144,7 @@ public final class BinarySerializers {
 		}
 	};
 
-	public static final BinarySerializer<Double> DOUBLE_SERIALIZER = new BinarySerializer<Double>() {
+	public static final BinarySerializer<Double> DOUBLE_SERIALIZER = new BinarySerializer<>() {
 		@Override
 		public int encode(byte[] array, int pos, Double item) {
 			long value = Double.doubleToLongBits(item);
@@ -184,7 +184,7 @@ public final class BinarySerializers {
 		}
 	};
 
-	public static final BinarySerializer<String> UTF8_SERIALIZER = new BinarySerializer<String>() {
+	public static final BinarySerializer<String> UTF8_SERIALIZER = new BinarySerializer<>() {
 		@Override
 		public void encode(BinaryOutput out, String item) throws ArrayIndexOutOfBoundsException {
 			out.writeUTF8(item);
@@ -196,7 +196,7 @@ public final class BinarySerializers {
 		}
 	};
 
-	public static final BinarySerializer<String> ISO_88591_SERIALIZER = new BinarySerializer<String>() {
+	public static final BinarySerializer<String> ISO_88591_SERIALIZER = new BinarySerializer<>() {
 		@Override
 		public void encode(BinaryOutput out, String item) throws ArrayIndexOutOfBoundsException {
 			out.writeIso88591(item);
@@ -208,7 +208,7 @@ public final class BinarySerializers {
 		}
 	};
 
-	public static final BinarySerializer<String> UTF8_MB3_SERIALIZER = new BinarySerializer<String>() {
+	public static final BinarySerializer<String> UTF8_MB3_SERIALIZER = new BinarySerializer<>() {
 		@Override
 		public void encode(BinaryOutput out, String item) throws ArrayIndexOutOfBoundsException {
 			out.writeUTF8mb3(item);
@@ -221,7 +221,7 @@ public final class BinarySerializers {
 		}
 	};
 
-	public static final BinarySerializer<byte[]> BYTES_SERIALIZER = new BinarySerializer<byte[]>() {
+	public static final BinarySerializer<byte[]> BYTES_SERIALIZER = new BinarySerializer<>() {
 		@Override
 		public void encode(BinaryOutput out, byte[] item) throws ArrayIndexOutOfBoundsException {
 			out.writeVarInt(item.length);
@@ -238,7 +238,7 @@ public final class BinarySerializers {
 	};
 
 	public static <T> BinarySerializer<Optional<T>> ofOptional(BinarySerializer<T> codec) {
-		return new BinarySerializer<Optional<T>>() {
+		return new BinarySerializer<>() {
 			final BinarySerializer<T> nullable = ofNullable(codec);
 
 			@Override
@@ -295,7 +295,7 @@ public final class BinarySerializers {
 				}
 			};
 		}
-		return new BinarySerializer<T>() {
+		return new BinarySerializer<>() {
 			@Override
 			public void encode(BinaryOutput out, T item) {
 				if (item != null) {
@@ -318,7 +318,7 @@ public final class BinarySerializers {
 	}
 
 	private static <E, C extends Collection<E>> BinarySerializer<C> ofCollection(BinarySerializer<E> element, Supplier<C> constructor) {
-		return new BinarySerializer<C>() {
+		return new BinarySerializer<>() {
 			@Override
 			public void encode(BinaryOutput out, C item) {
 				out.writeVarInt(item.size());
@@ -348,7 +348,7 @@ public final class BinarySerializers {
 	}
 
 	public static <K, V> BinarySerializer<Map<K, V>> ofMap(BinarySerializer<K> key, BinarySerializer<V> value) {
-		return new BinarySerializer<Map<K, V>>() {
+		return new BinarySerializer<>() {
 			@Override
 			public void encode(BinaryOutput out, Map<K, V> item) {
 				out.writeVarInt(item.size());

@@ -20,7 +20,6 @@ import io.activej.service.ServiceGraphModuleSettings;
 import java.util.Map;
 
 import static banner.BannerCommands.*;
-import static io.activej.common.Utils.mapOf;
 
 public class BannerServerModule extends AbstractModule {
 
@@ -30,21 +29,19 @@ public class BannerServerModule extends AbstractModule {
 			CrdtMap<Long, GSet<Integer>> map,
 			WriteAheadLog<Long, GSet<Integer>> writeAheadLog
 	) {
-		return mapOf(
+		return Map.of(
 				PutRequest.class, (RpcRequestHandler<PutRequest, PutResponse>) request -> {
-					long userId = request.getUserId();
-					GSet<Integer> bannerIds = GSet.of(request.getBannerIds());
+					long userId = request.userId();
+					GSet<Integer> bannerIds = GSet.of(request.bannerIds());
 					return writeAheadLog.put(userId, bannerIds)
 							.then(() -> map.put(userId, bannerIds))
 							.map($ -> PutResponse.INSTANCE);
 				},
-				GetRequest.class, (RpcRequestHandler<GetRequest, GetResponse>) request ->
-						map.get(request.getUserId())
-								.map(GetResponse::new),
-				IsBannerSeenRequest.class, (RpcRequestHandler<IsBannerSeenRequest, Boolean>) request ->
-						map.get(request.getUserId())
-								.map(bannerIds -> bannerIds != null && bannerIds.contains(request.getBannerId()))
-		);
+				GetRequest.class, (RpcRequestHandler<GetRequest, GetResponse>) request1 ->
+						map.get(request1.userId())
+								.map(GetResponse::new), IsBannerSeenRequest.class, (RpcRequestHandler<IsBannerSeenRequest, Boolean>) request2 ->
+						map.get(request2.userId())
+								.map(bannerIds1 -> bannerIds1 != null && bannerIds1.contains(request2.bannerId())));
 	}
 
 	@Provides
@@ -54,7 +51,7 @@ public class BannerServerModule extends AbstractModule {
 
 	@Provides
 	CrdtFunction<GSet<Integer>> function() {
-		return new CrdtFunction<GSet<Integer>>() {
+		return new CrdtFunction<>() {
 			@Override
 			public GSet<Integer> merge(GSet<Integer> first, long firstTimestamp, GSet<Integer> second, long secondTimestamp) {
 				return first.merge(second);

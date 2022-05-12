@@ -77,7 +77,7 @@ public class CrdtStorageAPITest {
 
 	@Parameters(name = "{0}")
 	public static Collection<Object[]> getParameters() {
-		return Arrays.asList(
+		return List.of(
 				new Object[]{
 						"FsCrdtClient",
 						(ICrdtClientFactory) (executor, testFolder) -> {
@@ -145,7 +145,7 @@ public class CrdtStorageAPITest {
 
 		List<CrdtData<String, Integer>> list = await(await(client.download()).toList());
 		System.out.println(list);
-		assertEquals(Arrays.asList(
+		assertEquals(List.of(
 						new CrdtData<>("test_0", 123, 0),
 						new CrdtData<>("test_1", 123, 345),
 						new CrdtData<>("test_2", 123, 44),
@@ -172,7 +172,7 @@ public class CrdtStorageAPITest {
 
 		List<CrdtData<String, Integer>> list = await(await(client.download()).toList());
 		System.out.println(list);
-		assertEquals(Arrays.asList(
+		assertEquals(List.of(
 						new CrdtData<>("test_1", 123, 2),
 						new CrdtData<>("test_3", 123, 4)),
 				list);
@@ -180,7 +180,7 @@ public class CrdtStorageAPITest {
 
 	@Test
 	public void testUploadAtomicity() {
-		List<CrdtData<String, Integer>> expected = Arrays.asList(
+		List<CrdtData<String, Integer>> expected = List.of(
 				new CrdtData<>("test_1", 123, 344),
 				new CrdtData<>("test_2", 123, 44),
 				new CrdtData<>("test_3", 123, 74),
@@ -212,7 +212,7 @@ public class CrdtStorageAPITest {
 
 	@Test
 	public void testRemoveAtomicity() {
-		List<CrdtData<String, Integer>> expected = Arrays.asList(
+		List<CrdtData<String, Integer>> expected = List.of(
 				new CrdtData<>("test_1", 123, 344),
 				new CrdtData<>("test_2", 123, 24),
 				new CrdtData<>("test_3", 123, -8));

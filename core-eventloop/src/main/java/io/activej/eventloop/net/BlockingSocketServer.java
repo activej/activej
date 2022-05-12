@@ -24,7 +24,10 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadFactory;
 
@@ -64,7 +67,7 @@ public final class BlockingSocketServer implements WithInitializer<BlockingSocke
 	}
 
 	public BlockingSocketServer withListenAddresses(InetSocketAddress... listenAddresses) {
-		return withListenAddresses(Arrays.asList(listenAddresses));
+		return withListenAddresses(List.of(listenAddresses));
 	}
 
 	public BlockingSocketServer withListenAddress(InetSocketAddress listenAddress) {

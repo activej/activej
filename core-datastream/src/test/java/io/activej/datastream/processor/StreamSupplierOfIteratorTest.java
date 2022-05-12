@@ -6,7 +6,6 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static io.activej.datastream.TestUtils.assertEndOfStream;
@@ -20,7 +19,7 @@ public class StreamSupplierOfIteratorTest {
 
 	@Test
 	public void test1() {
-		List<Integer> list = Arrays.asList(1, 2, 3);
+		List<Integer> list = List.of(1, 2, 3);
 
 		StreamSupplier<Integer> supplier = StreamSupplier.ofIterable(list);
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();

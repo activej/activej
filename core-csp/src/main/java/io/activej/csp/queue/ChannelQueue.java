@@ -60,7 +60,7 @@ public interface ChannelQueue<T> extends ChannelTransformer<T, T>, AsyncCloseabl
 	 * @return a {@code ChannelConsumer} for this queue
 	 */
 	default ChannelConsumer<T> getConsumer() {
-		return new AbstractChannelConsumer<T>(this) {
+		return new AbstractChannelConsumer<>(this) {
 			@Override
 			protected Promise<Void> doAccept(T value) {
 				return put(value);
@@ -84,7 +84,7 @@ public interface ChannelQueue<T> extends ChannelTransformer<T, T>, AsyncCloseabl
 	 * {@code null} value is accepted
 	 */
 	default ChannelConsumer<T> getConsumer(Promise<Void> acknowledgement) {
-		return new AbstractChannelConsumer<T>(this) {
+		return new AbstractChannelConsumer<>(this) {
 			@Override
 			protected Promise<Void> doAccept(T value) {
 				if (value != null) return put(value);
@@ -100,7 +100,7 @@ public interface ChannelQueue<T> extends ChannelTransformer<T, T>, AsyncCloseabl
 	 * @return a ChannelSupplier which takes values from this queue
 	 */
 	default ChannelSupplier<T> getSupplier() {
-		return new AbstractChannelSupplier<T>(this) {
+		return new AbstractChannelSupplier<>(this) {
 			@Override
 			protected Promise<T> doGet() {
 				return take();

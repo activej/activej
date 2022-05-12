@@ -27,8 +27,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
-import static java.util.Collections.singletonList;
-
 public final class DatasetMap<I, O> extends Dataset<O> {
 	private final Dataset<I> input;
 	private final Function<I, O> mapper;
@@ -55,6 +53,6 @@ public final class DatasetMap<I, O> extends Dataset<O> {
 
 	@Override
 	public Collection<Dataset<?>> getBases() {
-		return singletonList(input);
+		return List.of(input);
 	}
 }

@@ -13,23 +13,23 @@ import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.function.Function;
 
-import static io.activej.common.Utils.*;
+import static io.activej.common.Utils.difference;
+import static io.activej.common.Utils.union;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
-import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
 public class ClusterRpcStrategyTest {
 
-	private static final Map<String, InetSocketAddress> PARTITION_ADDRESS_MAP_1 = mapOf(
+	private static final Map<String, InetSocketAddress> PARTITION_ADDRESS_MAP_1 = Map.of(
 			"one", new InetSocketAddress(9001),
 			"two", new InetSocketAddress(9002),
 			"three", new InetSocketAddress(9003),
 			"four", new InetSocketAddress(9004)
 	);
 
-	private static final Map<String, InetSocketAddress> PARTITION_ADDRESS_MAP_2 = mapOf(
+	private static final Map<String, InetSocketAddress> PARTITION_ADDRESS_MAP_2 = Map.of(
 			"five", new InetSocketAddress(9005),
 			"six", new InetSocketAddress(9006),
 			"seven", new InetSocketAddress(9007),
@@ -50,7 +50,7 @@ public class ClusterRpcStrategyTest {
 				.withPartitionGroup(RendezvousPartitionGroup.create(crdtStorages, 2, true, false))
 				.withRpcProvider(p -> server(PARTITION_ADDRESS_MAP_1.get(p)));
 
-		List<String> alivePartitions = new ArrayList<>(difference(crdtStorages, singleton("two")));
+		List<String> alivePartitions = new ArrayList<>(difference(crdtStorages, Set.of("two")));
 
 		RpcStrategy rpcStrategy = partitionScheme.createRpcStrategy(KEY_GETTER);
 
@@ -71,7 +71,7 @@ public class ClusterRpcStrategyTest {
 				.withPartitionGroup(RendezvousPartitionGroup.create(partitionIds, 2, true, true))
 				.withRpcProvider(p -> server(PARTITION_ADDRESS_MAP_1.get(p)));
 
-		List<String> alivePartitions = new ArrayList<>(difference(partitionIds, singleton("two")));
+		List<String> alivePartitions = new ArrayList<>(difference(partitionIds, Set.of("two")));
 
 		RpcClientConnectionPoolStub poolStub = new RpcClientConnectionPoolStub();
 		for (String alivePartition : alivePartitions) {
@@ -186,7 +186,7 @@ public class ClusterRpcStrategyTest {
 				.withPartitionGroup(RendezvousPartitionGroup.create(PARTITION_ADDRESS_MAP_2.keySet(), 2, true, true))
 				.withRpcProvider(p -> server(partition2Address.get(p)));
 
-		List<String> alivePartitions = new ArrayList<>(difference(partitionIds, setOf("two", "seven", "nine")));
+		List<String> alivePartitions = new ArrayList<>(difference(partitionIds, Set.of("two", "seven", "nine")));
 
 		Map<InetSocketAddress, String> address2Partitions = partition2Address.entrySet()
 				.stream()

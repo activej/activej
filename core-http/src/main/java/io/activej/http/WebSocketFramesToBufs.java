@@ -206,8 +206,7 @@ final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 		if (output == null || input == null) return;
 
 		WebSocketException exception;
-		if (e instanceof WebSocketException) {
-			WebSocketException wsEx = (WebSocketException) e;
+		if (e instanceof WebSocketException wsEx) {
 			if (wsEx.canBeEchoed()) {
 				exception = wsEx;
 			} else {

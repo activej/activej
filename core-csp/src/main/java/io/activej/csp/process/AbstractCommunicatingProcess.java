@@ -138,7 +138,7 @@ public abstract class AbstractCommunicatingProcess implements AsyncProcess {
 	}
 
 	protected final <T> ChannelSupplier<T> sanitize(ChannelSupplier<T> supplier) {
-		return new AbstractChannelSupplier<T>() {
+		return new AbstractChannelSupplier<>() {
 			@Override
 			protected Promise<T> doGet() {
 				return sanitize(supplier.get());
@@ -153,7 +153,7 @@ public abstract class AbstractCommunicatingProcess implements AsyncProcess {
 	}
 
 	protected final <T> ChannelConsumer<T> sanitize(ChannelConsumer<T> consumer) {
-		return new AbstractChannelConsumer<T>() {
+		return new AbstractChannelConsumer<>() {
 			@Override
 			protected Promise<Void> doAccept(@Nullable T item) {
 				return sanitize(consumer.accept(item));

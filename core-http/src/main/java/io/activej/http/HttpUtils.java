@@ -21,22 +21,19 @@ import io.activej.common.exception.MalformedDataException;
 import io.activej.http.WebSocket.Frame.FrameType;
 import io.activej.http.WebSocket.Message.MessageType;
 import io.activej.http.WebSocketConstants.OpCode;
-import java.net.Inet4Address;
-import java.net.Inet6Address;
-import java.net.InetSocketAddress;
+import io.activej.net.AbstractServer;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.UnsupportedEncodingException;
-import java.net.InetAddress;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.nio.charset.CharacterCodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Stream;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.http.HttpHeaders.HOST;
@@ -46,6 +43,7 @@ import static io.activej.http.WebSocketConstants.MAGIC_STRING;
 import static io.activej.http.WebSocketConstants.OpCode.*;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.toList;
 
 /**
  * Util for working with {@link HttpRequest}
@@ -326,52 +324,30 @@ public final class HttpUtils {
 	 * RFC-7231, sections 6.5 and 6.6
 	 */
 	public static String getHttpErrorTitle(int code) {
-		switch (code) {
-			case 400:
-				return "400. Bad Request";
-			case 402:
-				return "402. Payment Required";
-			case 403:
-				return "403. Forbidden";
-			case 404:
-				return "404. Not Found";
-			case 405:
-				return "405. Method Not Allowed";
-			case 406:
-				return "406. Not Acceptable";
-			case 408:
-				return "408. Request Timeout";
-			case 409:
-				return "409. Conflict";
-			case 410:
-				return "410. Gone";
-			case 411:
-				return "411. Length Required";
-			case 413:
-				return "413. Payload Too Large";
-			case 414:
-				return "414. URI Too Long";
-			case 415:
-				return "415. Unsupported Media Type";
-			case 417:
-				return "417. Expectation Failed";
-			case 426:
-				return "426. Upgrade Required";
-			case 500:
-				return "500. Internal Server Error";
-			case 501:
-				return "501. Not Implemented";
-			case 502:
-				return "502. Bad Gateway";
-			case 503:
-				return "503. Service Unavailable";
-			case 504:
-				return "504. Gateway Timeout";
-			case 505:
-				return "505. HTTP Version Not Supported";
-			default:
-				return code + ". Unknown HTTP code, returned from an error";
-		}
+		return switch (code) {
+			case 400 -> "400. Bad Request";
+			case 402 -> "402. Payment Required";
+			case 403 -> "403. Forbidden";
+			case 404 -> "404. Not Found";
+			case 405 -> "405. Method Not Allowed";
+			case 406 -> "406. Not Acceptable";
+			case 408 -> "408. Request Timeout";
+			case 409 -> "409. Conflict";
+			case 410 -> "410. Gone";
+			case 411 -> "411. Length Required";
+			case 413 -> "413. Payload Too Large";
+			case 414 -> "414. URI Too Long";
+			case 415 -> "415. Unsupported Media Type";
+			case 417 -> "417. Expectation Failed";
+			case 426 -> "426. Upgrade Required";
+			case 500 -> "500. Internal Server Error";
+			case 501 -> "501. Not Implemented";
+			case 502 -> "502. Bad Gateway";
+			case 503 -> "503. Service Unavailable";
+			case 504 -> "504. Gateway Timeout";
+			case 505 -> "505. HTTP Version Not Supported";
+			default -> code + ". Unknown HTTP code, returned from an error";
+		};
 	}
 
 	/**
@@ -384,6 +360,13 @@ public final class HttpUtils {
 				+ formatHost(address.getAddress())
 				+ (address.getPort() != (ssl ? 443 : 80) ? ":" + address.getPort() : "")
 				+ "/";
+	}
+
+	public static List<String> getHttpAddresses(AbstractServer<?> server) {
+		return Stream.concat(
+				server.getBoundAddresses().stream().map(address -> HttpUtils.formatUrl(address, false)),
+				server.getSslBoundAddresses().stream().map(address -> HttpUtils.formatUrl(address, true))
+		).collect(toList());
 	}
 
 	private static String formatHost(InetAddress address) {
@@ -430,40 +413,28 @@ public final class HttpUtils {
 	}
 
 	static OpCode frameToOpType(FrameType frameType) {
-		switch (frameType) {
-			case TEXT:
-				return OP_TEXT;
-			case BINARY:
-				return OP_BINARY;
-			case CONTINUATION:
-				return OP_CONTINUATION;
-			default:
-				throw new AssertionError();
-		}
+		return switch (frameType) {
+			case TEXT -> OP_TEXT;
+			case BINARY -> OP_BINARY;
+			case CONTINUATION -> OP_CONTINUATION;
+		};
 	}
 
 	static FrameType opToFrameType(OpCode opType) {
-		switch (opType) {
-			case OP_TEXT:
-				return TEXT;
-			case OP_BINARY:
-				return BINARY;
-			case OP_CONTINUATION:
-				return CONTINUATION;
-			default:
-				throw new AssertionError();
-		}
+		return switch (opType) {
+			case OP_TEXT -> TEXT;
+			case OP_BINARY -> BINARY;
+			case OP_CONTINUATION -> CONTINUATION;
+			default -> throw new AssertionError();
+		};
 	}
 
 	static MessageType frameToMessageType(FrameType frameType) {
-		switch (frameType) {
-			case TEXT:
-				return MessageType.TEXT;
-			case BINARY:
-				return MessageType.BINARY;
-			default:
-				throw new AssertionError();
-		}
+		return switch (frameType) {
+			case TEXT -> MessageType.TEXT;
+			case BINARY -> MessageType.BINARY;
+			default -> throw new AssertionError();
+		};
 	}
 
 	static Exception translateToHttpException(Exception e) {

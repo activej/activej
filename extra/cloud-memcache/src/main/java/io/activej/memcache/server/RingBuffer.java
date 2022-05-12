@@ -47,7 +47,7 @@ public final class RingBuffer implements RingBufferMBean, WithInitializer<RingBu
 		private final byte[] array;
 		private final IntLongHashMap indexInt = new IntLongHashMap();
 		private final LongLongHashMap indexLong = new LongLongHashMap();
-		private final ObjectLongHashMap<byte[]> indexBytes = new ObjectLongHashMap<byte[]>() {
+		private final ObjectLongHashMap<byte[]> indexBytes = new ObjectLongHashMap<>() {
 			@Override
 			protected int hashKey(byte[] key) {
 				int result = 0;

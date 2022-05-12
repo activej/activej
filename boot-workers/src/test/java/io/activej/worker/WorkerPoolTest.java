@@ -11,7 +11,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.IntStream;
 
-import static io.activej.common.Utils.setOf;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 
@@ -39,7 +38,7 @@ public class WorkerPoolTest {
 
 	@Test
 	public void addedWorkerPools() {
-		assertEquals(setOf(first, second), new HashSet<>(pools.getWorkerPools()));
+		assertEquals(Set.of(first, second), new HashSet<>(pools.getWorkerPools()));
 	}
 
 	@Test

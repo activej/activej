@@ -31,7 +31,6 @@ import java.util.Objects;
 import static io.activej.common.Utils.concat;
 import static io.activej.promise.PromisePredicates.isResultOrException;
 import static io.activej.promise.Promises.retry;
-import static java.util.Collections.emptyList;
 
 @SuppressWarnings("WeakerAccess")
 public final class OTUplinkStorage<K, D> implements OTUplink<Long, D, OTUplinkStorage.ProtoCommit<D>> {
@@ -212,7 +211,7 @@ public final class OTUplinkStorage<K, D> implements OTUplink<Long, D, OTUplinkSt
 
 	@Override
 	public Promise<FetchData<Long, D>> push(ProtoCommit<D> protoCommit) {
-		return Promise.ofCallback(cb -> doPush(protoCommit.getId(), protoCommit.getDiffs(), emptyList(), cb));
+		return Promise.ofCallback(cb -> doPush(protoCommit.getId(), protoCommit.getDiffs(), List.of(), cb));
 	}
 
 	void doPush(long commitId, List<D> diffs, List<D> fetchedDiffs, SettablePromise<FetchData<Long, D>> cb) {

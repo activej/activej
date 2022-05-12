@@ -55,17 +55,18 @@ public class Utils {
 						.withInitializer(cb ->
 								keys.forEach((key, value) ->
 										cb.withField(key, value.getInternalDataType())))
-						.withMethod("compareTo", compareToImpl(keyList))
+						.withMethod("compareTo", comparableImpl(keyList))
 						.withMethod("equals", equalsImpl(keyList))
 						.withMethod("hashCode", hashCodeImpl(keyList))
 						.withMethod("toString", toStringImpl(keyList)));
 	}
 
-	public static <R> Comparator<R> createKeyComparator(Class<R> recordClass, List<String> keys, DefiningClassLoader classLoader) {
+	public static <R> Comparator<R> createKeyComparator(Class<R> recordClass, List<String> keys,
+			DefiningClassLoader classLoader) {
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(Comparator.class, recordClass, keys),
 				() -> ClassBuilder.create(Comparator.class)
-						.withMethod("compare", compare(recordClass, keys)));
+						.withMethod("compare", comparatorImpl(recordClass, keys)));
 	}
 
 	public static <T, R> Function<T, R> createMapper(Class<T> recordClass, Class<R> resultClass,
@@ -271,7 +272,7 @@ public class Utils {
 				() -> ClassBuilder.create(PartitionPredicate.class)
 						.withMethod("isSamePartition", and(
 								partitioningKey.stream()
-										.map(keyComponent -> cmpEq(
+										.map(keyComponent -> isEq(
 												property(cast(arg(0), recordClass), keyComponent),
 												property(cast(arg(1), recordClass), keyComponent))))));
 	}

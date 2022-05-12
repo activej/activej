@@ -38,8 +38,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static io.activej.trigger.util.Utils.prettyPrintSimpleKeyName;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptySet;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 @SuppressWarnings("unused")
@@ -49,17 +47,7 @@ public final class TriggersModule extends AbstractModule implements TriggersModu
 	private final Map<Class<?>, Set<TriggerConfig<?>>> classSettings = new LinkedHashMap<>();
 	private final Map<Key<?>, Set<TriggerConfig<?>>> keySettings = new LinkedHashMap<>();
 
-	private static final class TriggerConfig<T> {
-		private final Severity severity;
-		private final String name;
-		private final Function<T, TriggerResult> triggerFunction;
-
-		TriggerConfig(Severity severity, String name,
-				Function<T, TriggerResult> triggerFunction) {
-			this.severity = severity;
-			this.name = name;
-			this.triggerFunction = triggerFunction;
-		}
+	private record TriggerConfig<T>(Severity severity, String name, Function<T, TriggerResult> triggerFunction) {
 
 		@Override
 		public boolean equals(Object o) {
@@ -76,17 +64,7 @@ public final class TriggersModule extends AbstractModule implements TriggersModu
 		}
 	}
 
-	private static final class TriggerRegistryRecord {
-		private final Severity severity;
-		private final String name;
-		private final Supplier<TriggerResult> triggerFunction;
-
-		private TriggerRegistryRecord(Severity severity, String name, Supplier<TriggerResult> triggerFunction) {
-			this.severity = severity;
-			this.name = name;
-			this.triggerFunction = triggerFunction;
-		}
-	}
+	private record TriggerRegistryRecord(Severity severity, String name, Supplier<TriggerResult> triggerFunction) {}
 
 	private TriggersModule() {
 	}
@@ -130,7 +108,7 @@ public final class TriggersModule extends AbstractModule implements TriggersModu
 
 	@ProvidesIntoSet
 	LauncherService service(Injector injector, Triggers triggers, OptionalDependency<Set<Initializer<TriggersModuleSettings>>> initializers) {
-		for (Initializer<TriggersModuleSettings> initializer : initializers.orElse(emptySet())) {
+		for (Initializer<TriggersModuleSettings> initializer : initializers.orElse(Set.of())) {
 			initializer.accept(this);
 		}
 		return new LauncherService() {
@@ -175,7 +153,7 @@ public final class TriggersModule extends AbstractModule implements TriggersModu
 		}
 
 		for (KeyWithWorkerData keyWithWorkerData : triggersMap.keySet()) {
-			for (TriggerRegistryRecord registryRecord : triggersMap.getOrDefault(keyWithWorkerData, emptyList())) {
+			for (TriggerRegistryRecord registryRecord : triggersMap.getOrDefault(keyWithWorkerData, List.of())) {
 				triggers.addTrigger(registryRecord.severity, prettyPrintSimpleKeyName(keyWithWorkerData.getKey()), registryRecord.name, registryRecord.triggerFunction);
 			}
 		}
@@ -265,7 +243,7 @@ public final class TriggersModule extends AbstractModule implements TriggersModu
 	@SuppressWarnings({"unchecked", "RedundantCast"})
 	private void scanKeySettings(Map<KeyWithWorkerData, List<TriggerRegistryRecord>> triggers, KeyWithWorkerData internalKey, Object instance) {
 		Key<Object> key = (Key<Object>) internalKey.getKey();
-		for (TriggerConfig<?> config : keySettings.getOrDefault(key, emptySet())) {
+		for (TriggerConfig<?> config : keySettings.getOrDefault(key, Set.of())) {
 			triggers.computeIfAbsent(internalKey, $ -> new ArrayList<>())
 					.add(new TriggerRegistryRecord(config.severity, config.name, () ->
 							((TriggerConfig<Object>) config).triggerFunction.apply(instance)));

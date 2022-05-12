@@ -10,28 +10,26 @@ import javax.management.DynamicMBean;
 import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanInfo;
 import java.lang.reflect.Type;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import static io.activej.jmx.helper.Utils.nameToAttribute;
-import static java.util.Collections.singleton;
-import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class DynamicMBeanFactorySettingsTest {
-	private static final Set<String> NO_BEANS = Collections.emptySet();
-	private static final Map<String, AttributeModifier<?>> NO_MODIFIERS = Collections.emptyMap();
-	private static final Map<Type, JmxCustomTypeAdapter<?>> NO_CUSTOM_TYPES = Collections.emptyMap();
+	private static final Set<String> NO_BEANS = Set.of();
+	private static final Map<String, AttributeModifier<?>> NO_MODIFIERS = Map.of();
+	private static final Map<Type, JmxCustomTypeAdapter<?>> NO_CUSTOM_TYPES = Map.of();
 
 	// region included optionals
 	@Test
 	public void includesOptionalAttributes_thatAreSpecifiedInSettings() {
-		JmxBeanSettings settings = JmxBeanSettings.of(singleton("stats_text"), NO_MODIFIERS, NO_CUSTOM_TYPES);
+		JmxBeanSettings settings = JmxBeanSettings.of(Set.of("stats_text"), NO_MODIFIERS, NO_CUSTOM_TYPES);
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(singletonList(new MBeanStubOne()), settings, false);
+				.createDynamicMBean(List.of(new MBeanStubOne()), settings, false);
 
 		MBeanInfo mBeanInfo = mbean.getMBeanInfo();
 		Map<String, MBeanAttributeInfo> attrs = nameToAttribute(mBeanInfo.getAttributes());
@@ -81,7 +79,7 @@ public class DynamicMBeanFactorySettingsTest {
 		JmxBeanSettings settings = JmxBeanSettings.of(NO_BEANS, nameToModifier, NO_CUSTOM_TYPES);
 		MBeanStubTwo mBeanStubTwo = new MBeanStubTwo();
 		DynamicMBean mbean = DynamicMBeanFactory.create()
-				.createDynamicMBean(singletonList(mBeanStubTwo), settings, false);
+				.createDynamicMBean(List.of(mBeanStubTwo), settings, false);
 
 		assertEquals("configured", mbean.getAttribute("stats_data"));
 	}

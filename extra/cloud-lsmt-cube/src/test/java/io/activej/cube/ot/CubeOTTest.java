@@ -17,14 +17,13 @@ import org.hamcrest.collection.IsEmptyCollection;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 import static io.activej.aggregation.PrimaryKey.ofArray;
-import static io.activej.common.Utils.mapOf;
 import static io.activej.cube.TestUtils.STUB_CUBE_STATE;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -43,12 +42,12 @@ public class CubeOTTest {
 	}
 
 	private static CubeDiff cubeDiff(AggregationChunk... added) {
-		return cubeDiff(asList(added), Collections.emptyList());
+		return cubeDiff(List.of(added), List.of());
 	}
 
 	private static CubeDiff cubeDiff(List<AggregationChunk> added, List<AggregationChunk> removed) {
-		return CubeDiff.of(singletonMap("key", AggregationDiff.of(new HashSet<>(added),
-				new HashSet<>(removed))));
+		return CubeDiff.of(Map.of(
+				"key", AggregationDiff.of(new HashSet<>(added), new HashSet<>(removed))));
 	}
 
 	private static AggregationChunk chunk(List<String> fields, PrimaryKey minKey, PrimaryKey maxKey, int count) {
@@ -66,13 +65,13 @@ public class CubeOTTest {
 	@Test
 	public void test() throws TransformException {
 		LogFile logFile = new LogFile("file", 1);
-		List<String> fields = asList("field1", "field2");
-		LogDiff<CubeDiff> changesLeft = LogDiff.of(
-				singletonMap("clicks", positionDiff(logFile, 0, 10)),
+		List<String> fields = List.of("field1", "field2");
+		LogDiff<CubeDiff> changesLeft = LogDiff.of(Map.of(
+						"clicks", positionDiff(logFile, 0, 10)),
 				cubeDiff(chunk(fields, ofArray("str", 10), ofArray("str", 20), 15)));
 
-		LogDiff<CubeDiff> changesRight = LogDiff.of(
-				singletonMap("clicks", positionDiff(logFile, 0, 20)),
+		LogDiff<CubeDiff> changesRight = LogDiff.of(Map.of(
+						"clicks", positionDiff(logFile, 0, 20)),
 				cubeDiff(chunk(fields, ofArray("str", 10), ofArray("str", 25), 30)));
 		TransformResult<LogDiff<CubeDiff>> transform = logSystem.transform(changesLeft, changesRight);
 
@@ -80,8 +79,8 @@ public class CubeOTTest {
 		assertEquals(ConflictResolution.RIGHT, transform.resolution);
 		assertThat(transform.right, IsEmptyCollection.empty());
 
-		LogDiff<CubeDiff> result = LogDiff.of(
-				singletonMap("clicks", positionDiff(logFile, 10, 20)),
+		LogDiff<CubeDiff> result = LogDiff.of(Map.of(
+						"clicks", positionDiff(logFile, 10, 20)),
 				cubeDiff(addedChunks(changesRight.getDiffs()), addedChunks(changesLeft.getDiffs())));
 
 		assertEquals(1, transform.left.size());
@@ -99,13 +98,17 @@ public class CubeOTTest {
 		LogFile toLogfile = new LogFile("myLog", 100);
 		LogPosition toPosition = LogPosition.create(toLogfile, 500);
 
-		LogDiff<CubeDiff> logDiff = LogDiff.of(mapOf("test", new LogPositionDiff(fromPosition, toPosition)), CubeDiff.empty());
+		LogDiff<CubeDiff> logDiff = LogDiff.of(Map.of(
+						"test", new LogPositionDiff(fromPosition, toPosition)),
+				CubeDiff.empty());
 
 		state.apply(logDiff);
 		Map<String, LogPosition> positions = state.getPositions();
-		assertEquals(mapOf("test", toPosition), positions);
+		assertEquals(Map.of(
+						"test", toPosition),
+				positions);
 
-		List<LogDiff<CubeDiff>> inverted = logSystem.invert(singletonList(logDiff));
+		List<LogDiff<CubeDiff>> inverted = logSystem.invert(List.of(logDiff));
 		for (LogDiff<CubeDiff> invertedDiff : inverted) {
 			state.apply(invertedDiff);
 		}

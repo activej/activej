@@ -21,8 +21,11 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import static io.activej.codegen.util.TypeChecks.checkType;
+import static io.activej.codegen.util.TypeChecks.isAssignable;
 import static io.activej.codegen.util.Utils.isPrimitiveType;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.INT_TYPE;
@@ -32,11 +35,34 @@ import static org.objectweb.asm.commons.Method.getMethod;
 /**
  * Defines methods for hashing some fields
  */
-final class ExpressionHash implements Expression {
-	private final List<Expression> arguments;
+public final class ExpressionHashCode implements Expression {
+	private final List<Expression> arguments = new ArrayList<>();
 
-	ExpressionHash(List<Expression> arguments) {
-		this.arguments = arguments;
+	private ExpressionHashCode() {
+	}
+
+	public static ExpressionHashCode create() {
+		return new ExpressionHashCode();
+	}
+
+	public ExpressionHashCode with(Expression expression) {
+		this.arguments.add(expression);
+		return this;
+	}
+
+	public ExpressionHashCode withField(String field) {
+		return with(Expressions.property(Expressions.self(), field));
+	}
+
+	public ExpressionHashCode withFields(List<String> fields) {
+		for (String field : fields) {
+			withField(field);
+		}
+		return this;
+	}
+
+	public ExpressionHashCode withFields(String... fields) {
+		return withFields(List.of(fields));
 	}
 
 	@Override
@@ -58,6 +84,7 @@ final class ExpressionHash implements Expression {
 			}
 
 			Type fieldType = argument.load(ctx);
+			checkType(fieldType, isAssignable());
 
 			if (isPrimitiveType(fieldType)) {
 				if (fieldType.getSort() == Type.LONG) {

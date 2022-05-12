@@ -4,7 +4,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -44,8 +47,7 @@ public class AnnotatedTypes {
 		if (annotatedType instanceof AnnotatedParameterizedType) {
 			return ((AnnotatedParameterizedType) annotatedType).getAnnotatedActualTypeArguments();
 		}
-		if (annotatedType instanceof AnnotatedArrayType) {
-			AnnotatedArrayType annotatedArrayType = (AnnotatedArrayType) annotatedType;
+		if (annotatedType instanceof AnnotatedArrayType annotatedArrayType) {
 			return new AnnotatedType[]{annotatedArrayType.getAnnotatedGenericComponentType()};
 		}
 		return NO_ANNOTATED_TYPES;
@@ -57,7 +59,7 @@ public class AnnotatedTypes {
 	public static Map<TypeVariable<?>, AnnotatedType> getTypeBindings(AnnotatedType type) {
 		Class<?> typeClazz = getRawType(type);
 		AnnotatedType[] typeArguments = getTypeArguments(type);
-		if (typeArguments.length == 0) return Collections.emptyMap();
+		if (typeArguments.length == 0) return Map.of();
 		Map<TypeVariable<?>, AnnotatedType> map = new LinkedHashMap<>();
 		TypeVariable<?>[] typeVariables = typeClazz.getTypeParameters();
 		for (int i = 0; i < typeVariables.length; i++) {
@@ -88,15 +90,13 @@ public class AnnotatedTypes {
 			BinaryOperator<Annotation[]> annotationCombinerFn) {
 		if (annotatedType.getType() instanceof Class) return annotatedType;
 		Annotation[] annotations = annotatedType.getAnnotations();
-		if (annotatedType instanceof AnnotatedTypeVariable) {
-			AnnotatedTypeVariable annotatedTypeVariable = (AnnotatedTypeVariable) annotatedType;
+		if (annotatedType instanceof AnnotatedTypeVariable annotatedTypeVariable) {
 			AnnotatedType actualType = bindings.apply((TypeVariable<?>) annotatedTypeVariable.getType());
 			if (actualType == null) throw new IllegalArgumentException("Type not found: " + annotatedType);
 			if (annotations.length == 0) return actualType;
 			return annotatedTypeOf(actualType.getType(), annotationCombinerFn.apply(actualType.getAnnotations(), annotations));
 		}
-		if (annotatedType instanceof AnnotatedParameterizedType) {
-			AnnotatedParameterizedType annotatedParameterizedType = (AnnotatedParameterizedType) annotatedType;
+		if (annotatedType instanceof AnnotatedParameterizedType annotatedParameterizedType) {
 			AnnotatedType[] annotatedTypeArguments = annotatedParameterizedType.getAnnotatedActualTypeArguments();
 			AnnotatedType[] annotatedTypeArguments2 = new AnnotatedType[annotatedTypeArguments.length];
 			Type[] typeArguments2 = new Type[annotatedTypeArguments.length];
@@ -112,8 +112,7 @@ public class AnnotatedTypes {
 					annotations,
 					annotatedTypeArguments2);
 		}
-		if (annotatedType instanceof AnnotatedArrayType) {
-			AnnotatedArrayType annotatedArrayType = ((AnnotatedArrayType) annotatedType);
+		if (annotatedType instanceof AnnotatedArrayType annotatedArrayType) {
 			AnnotatedType annotatedGenericComponentType = annotatedArrayType.getAnnotatedGenericComponentType();
 			AnnotatedType annotatedGenericComponentType2 = bind(annotatedGenericComponentType, bindings);
 			return new AnnotatedArrayTypeImpl(
@@ -121,8 +120,7 @@ public class AnnotatedTypes {
 					annotations,
 					annotatedGenericComponentType2);
 		}
-		if (annotatedType instanceof AnnotatedWildcardType) {
-			AnnotatedWildcardType annotatedWildcardType = ((AnnotatedWildcardType) annotatedType);
+		if (annotatedType instanceof AnnotatedWildcardType annotatedWildcardType) {
 			AnnotatedType[] annotatedLowerBounds = annotatedWildcardType.getAnnotatedLowerBounds();
 			AnnotatedType[] annotatedLowerBounds2 = new AnnotatedType[annotatedLowerBounds.length];
 			Type[] lowerBounds2 = new Type[annotatedLowerBounds.length];

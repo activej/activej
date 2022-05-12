@@ -57,7 +57,7 @@ import static io.activej.cube.Utils.toJson;
 import static io.activej.cube.linear.Utils.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
-import static java.util.Collections.*;
+import static java.util.Collections.nCopies;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
@@ -130,7 +130,7 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 								long revision = getMaxRevision(connection);
 
 								if (revision == ROOT_REVISION) {
-									return new FetchData<>(revision, revision, Collections.<LogDiff<CubeDiff>>emptyList());
+									return new FetchData<>(revision, revision, List.<LogDiff<CubeDiff>>of());
 								}
 
 								List<LogDiff<CubeDiff>> diffs = doFetch(connection, ROOT_REVISION, revision);
@@ -143,7 +143,7 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 									ResultSet resultSet = ps.executeQuery();
 									resultSet.next();
 									if (!resultSet.getBoolean(1)) {
-										throw new StateFarAheadException(0L, singleton(revision));
+										throw new StateFarAheadException(0L, Set.of(revision));
 									}
 								}
 
@@ -163,7 +163,7 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 
 								long revision = getMaxRevision(connection);
 								if (revision == currentCommitId) {
-									return new FetchData<>(revision, revision, Collections.<LogDiff<CubeDiff>>emptyList());
+									return new FetchData<>(revision, revision, List.<LogDiff<CubeDiff>>of());
 								}
 								if (revision < currentCommitId) {
 									throw new IllegalArgumentException("Passed revision is higher than uplink revision");
@@ -237,7 +237,7 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 								if (revision == protoCommit.parentRevision + 1) {
 									logger.trace("Nothing to fetch after diffs are pushed");
 									connection.commit();
-									return new FetchData<>(revision, revision, Collections.<LogDiff<CubeDiff>>emptyList());
+									return new FetchData<>(revision, revision, List.<LogDiff<CubeDiff>>of());
 								}
 
 								logger.trace("Fetching diffs from finished concurrent pushes");
@@ -469,12 +469,12 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 		List<LogDiff<CubeDiff>> logDiffs;
 		if (cubeDiff.isEmpty()) {
 			if (positions.isEmpty()) {
-				logDiffs = emptyList();
+				logDiffs = List.of();
 			} else {
-				logDiffs = singletonList(LogDiff.of(positions, emptyList()));
+				logDiffs = List.of(LogDiff.of(positions, List.of()));
 			}
 		} else {
-			logDiffs = singletonList(LogDiff.of(positions, cubeDiff));
+			logDiffs = List.of(LogDiff.of(positions, cubeDiff));
 		}
 		return logDiffs;
 	}
@@ -536,7 +536,7 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 		Map<String, LogPosition> result = new HashMap<>();
 		for (LogDiff<CubeDiff> logDiff : diffsList) {
 			for (Map.Entry<String, LogPositionDiff> entry : logDiff.getPositions().entrySet()) {
-				result.put(entry.getKey(), entry.getValue().to);
+				result.put(entry.getKey(), entry.getValue().to());
 			}
 		}
 		return result;

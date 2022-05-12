@@ -18,9 +18,9 @@ import javax.management.MBeanServer;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.List;
 
 import static io.activej.jmx.helper.CustomMatchers.objectname;
-import static java.util.Arrays.asList;
 
 public class JmxRegistryTest {
 	@Rule
@@ -70,7 +70,7 @@ public class JmxRegistryTest {
 
 		BasicService basicServiceAnnotation = createBasicServiceAnnotation();
 		Key<?> key = Key.of(ServiceStub.class, basicServiceAnnotation);
-		jmxRegistry.unregisterWorkers(workerPool, key, asList(worker_1, worker_2, worker_3));
+		jmxRegistry.unregisterWorkers(workerPool, key, List.of(worker_1, worker_2, worker_3));
 	}
 
 	private WorkerPool getWorkerPool() {

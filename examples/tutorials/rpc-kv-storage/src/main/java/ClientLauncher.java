@@ -34,22 +34,21 @@ public class ClientLauncher extends Launcher {
 		}
 
 		switch (args[0]) {
-			case "--put":
+			case "--put" -> {
 				CompletableFuture<PutResponse> future1 = eventloop.submit(() ->
 						client.sendRequest(new PutRequest(args[1], args[2]), TIMEOUT)
 				);
 				PutResponse putResponse = future1.get();
 				System.out.println("PutResponse: " + putResponse);
-				break;
-			case "--get":
+			}
+			case "--get" -> {
 				CompletableFuture<GetResponse> future2 = eventloop.submit(() ->
 						client.sendRequest(new GetRequest(args[1]), TIMEOUT)
 				);
 				GetResponse getResponse = future2.get();
 				System.out.println("GetResponse: " + getResponse);
-				break;
-			default:
-				throw new RuntimeException("Unsupported option: " + args[0]);
+			}
+			default -> throw new RuntimeException("Unsupported option: " + args[0]);
 		}
 	}
 

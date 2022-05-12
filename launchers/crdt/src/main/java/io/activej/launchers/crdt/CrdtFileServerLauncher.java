@@ -84,13 +84,13 @@ public abstract class CrdtFileServerLauncher<K extends Comparable<K>, S> extends
 	public abstract static class CrdtFileServerLogicModule<K extends Comparable<K>, S> extends AbstractModule {
 		@Provides
 		CrdtServer<K, S> crdtServer(Eventloop eventloop, CrdtStorageFs<K, S> crdtClient, CrdtDescriptor<K, S> descriptor, Config config) {
-			return CrdtServer.create(eventloop, crdtClient, descriptor.getSerializer())
+			return CrdtServer.create(eventloop, crdtClient, descriptor.serializer())
 					.withInitializer(ofAbstractServer(config.getChild("crdt.server")));
 		}
 
 		@Provides
 		CrdtStorageFs<K, S> fsCrdtClient(Eventloop eventloop, LocalActiveFs localFsClient, CrdtDescriptor<K, S> descriptor) {
-			return CrdtStorageFs.create(eventloop, localFsClient, descriptor.getSerializer(), descriptor.getCrdtFunction());
+			return CrdtStorageFs.create(eventloop, localFsClient, descriptor.serializer(), descriptor.crdtFunction());
 		}
 	}
 

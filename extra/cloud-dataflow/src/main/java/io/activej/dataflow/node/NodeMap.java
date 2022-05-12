@@ -21,9 +21,8 @@ import io.activej.dataflow.graph.Task;
 import io.activej.datastream.processor.StreamFilter;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Function;
-
-import static java.util.Collections.singletonList;
 
 /**
  * Represents a node, which maps input values to output values based on a logic, defined by mapper.
@@ -49,12 +48,12 @@ public final class NodeMap<I, O> extends AbstractNode {
 
 	@Override
 	public Collection<StreamId> getInputs() {
-		return singletonList(input);
+		return List.of(input);
 	}
 
 	@Override
 	public Collection<StreamId> getOutputs() {
-		return singletonList(output);
+		return List.of(output);
 	}
 
 	@Override

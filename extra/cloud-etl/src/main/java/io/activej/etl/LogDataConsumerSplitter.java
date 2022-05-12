@@ -23,7 +23,6 @@ import io.activej.datastream.processor.StreamSplitter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -55,7 +54,7 @@ public abstract class LogDataConsumerSplitter<T, D> implements LogDataConsumer<T
 		createSplitter(ctx);
 
 		StreamSplitter<T, Object> splitter = StreamSplitter.create(acceptors -> {
-			ctx.acceptors = Arrays.asList(acceptors).iterator();
+			ctx.acceptors = List.of(acceptors).iterator();
 			return createSplitter(ctx);
 		});
 

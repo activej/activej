@@ -23,8 +23,6 @@ import io.activej.dataflow.graph.StreamId;
 
 import java.util.*;
 
-import static java.util.Collections.emptyList;
-
 /**
  * Represents distributed dataset which can span multiple partitions.
  * <p>
@@ -55,7 +53,7 @@ public abstract class Dataset<T> {
 	 * Can return empty list if this dataset is not based on any other dataset.
 	 */
 	public Collection<Dataset<?>> getBases() {
-		return emptyList();
+		return List.of();
 	}
 
 	@Override

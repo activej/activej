@@ -43,7 +43,8 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.*;
 import static io.activej.ot.reducers.GraphReducer.Result.*;
 import static io.activej.promise.Promises.toList;
-import static java.util.Collections.*;
+import static java.util.Collections.reverseOrder;
+import static java.util.Collections.unmodifiableCollection;
 import static java.util.Comparator.comparingLong;
 import static java.util.stream.Collectors.toSet;
 
@@ -156,7 +157,7 @@ public final class OTAlgorithms {
 	public static <K, D, A> Promise<FindResult<K, A>> findParent(OTRepository<K, D> repository, OTSystem<D> system,
 			Set<K> startNodes, DiffsReducer<A, D> diffsReducer, AsyncPredicate<OTCommit<K, D>> matchPredicate) {
 		return reduce(repository, system, startNodes,
-				new AbstractGraphReducer<K, D, A, FindResult<K, A>>(diffsReducer) {
+				new AbstractGraphReducer<>(diffsReducer) {
 					int epoch;
 
 					@Override
@@ -204,7 +205,7 @@ public final class OTAlgorithms {
 
 	public static <K, D> Promise<K> mergeAndUpdateHeads(OTRepository<K, D> repository, OTSystem<D> system, Set<K> heads) {
 		return mergeAndPush(repository, system, heads)
-				.then(mergeId -> repository.updateHeads(difference(singleton(mergeId), heads), difference(heads, singleton(mergeId)))
+				.then(mergeId -> repository.updateHeads(difference(Set.of(mergeId), heads), difference(heads, Set.of(mergeId)))
 						.map($ -> mergeId))
 				.whenComplete(toLogger(logger, thisMethod()));
 	}
@@ -235,7 +236,7 @@ public final class OTAlgorithms {
 	public static <K, D> Promise<Set<K>> findCut(OTRepository<K, D> repository, OTSystem<D> system, Set<K> startNodes,
 			Predicate<Collection<OTCommit<K, D>>> matchPredicate) {
 		return reduce(repository, system, startNodes,
-				new GraphReducer<K, D, Set<K>>() {
+				new GraphReducer<>() {
 					private Collection<OTCommit<K, D>> queue;
 
 					@Override
@@ -266,7 +267,9 @@ public final class OTAlgorithms {
 	}
 
 	public static <K, D> Promise<List<D>> diff(OTRepository<K, D> repository, OTSystem<D> system, K node1, K node2) {
-		Set<K> startCut = setOf(node1, node2);
+		if (node1.equals(node2)) return Promise.of(List.of());
+
+		Set<K> startCut = Set.of(node1, node2);
 		return reduce(repository, system, startCut, new FindAnyCommonParentReducer<>(DiffsReducer.toList()))
 				.map(entry -> {
 					List<D> diffs1 = entry.getValue().get(node1);
@@ -337,7 +340,7 @@ public final class OTAlgorithms {
 
 	public static <K, D, A> Promise<Map<K, A>> reduceEdges(OTRepository<K, D> repository, OTSystem<D> system, Set<K> heads, K parentNode,
 			DiffsReducer<A, D> diffAccumulator) {
-		return reduce(repository, system, heads, new AbstractGraphReducer<K, D, A, Map<K, A>>(diffAccumulator) {
+		return reduce(repository, system, heads, new AbstractGraphReducer<>(diffAccumulator) {
 			@Override
 			protected @NotNull Promise<Optional<Map<K, A>>> tryGetResult(OTCommit<K, D> commit, Map<K, Map<K, A>> accumulators, Map<K, OTCommit<K, D>> headCommits) {
 				if (accumulators.containsKey(parentNode)) {
@@ -366,7 +369,7 @@ public final class OTAlgorithms {
 		Ref<List<D>> cachedSnapshotRef = new Ref<>();
 		return repository.getHeads()
 				.then(heads ->
-						findParent(repository, system, union(heads, singleton(commitId)), DiffsReducer.toVoid(),
+						findParent(repository, system, union(heads, Set.of(commitId)), DiffsReducer.toVoid(),
 								commit -> repository.loadSnapshot(commit.getId())
 										.map(maybeSnapshot -> (cachedSnapshotRef.value = maybeSnapshot.orElse(null)) != null))
 								.then(findResult -> diff(repository, system, findResult.commit, commitId)
@@ -394,8 +397,8 @@ public final class OTAlgorithms {
 		public void onStart(@NotNull Collection<OTCommit<K, D>> queue) {
 			for (OTCommit<K, D> headCommit : queue) {
 				K head = headCommit.getId();
-				head2roots.put(head, new HashSet<>(listOf(head)));
-				root2heads.put(head, new HashSet<>(listOf(head)));
+				head2roots.put(head, new HashSet<>(List.of(head)));
+				root2heads.put(head, new HashSet<>(List.of(head)));
 			}
 		}
 
@@ -408,7 +411,7 @@ public final class OTAlgorithms {
 			for (K affectedHead : affectedHeads) {
 				head2roots.get(affectedHead).remove(node);
 			}
-			for (K parent : commit.isRoot() ? singleton(node) : parents.keySet()) {
+			for (K parent : commit.isRoot() ? Set.of(node) : parents.keySet()) {
 				Set<K> parentRoots = graph.findRoots(parent);
 				for (K affectedHead : affectedHeads) {
 					head2roots.computeIfAbsent(affectedHead, $ -> new HashSet<>()).addAll(parentRoots);
@@ -491,7 +494,7 @@ public final class OTAlgorithms {
 									});
 
 						})
-						.then(() -> to.updateHeads(heads, emptySet())));
+						.then(() -> to.updateHeads(heads, Set.of())));
 	}
 
 }

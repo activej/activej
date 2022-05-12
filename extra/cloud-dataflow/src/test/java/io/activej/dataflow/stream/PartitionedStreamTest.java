@@ -68,7 +68,6 @@ import java.util.stream.Collectors;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.Utils.first;
-import static io.activej.common.Utils.setOf;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.proto.ProtobufUtils.ofObject;
@@ -437,7 +436,7 @@ public final class PartitionedStreamTest {
 
 	private static void assertItemPrefixes(List<String> items, String... prefixes) {
 		Map<String, List<String>> collected = items.stream().collect(groupingBy(item -> item.split(":")[0]));
-		assertEquals(setOf(prefixes), collected.keySet());
+		assertEquals(Set.of(prefixes), collected.keySet());
 		int size = first(collected.values()).size();
 		assertTrue(size > 0);
 		for (List<String> value : collected.values()) {
@@ -524,7 +523,7 @@ public final class PartitionedStreamTest {
 			}
 		}
 		Path path = serverFsPath.resolve(SOURCE_FILENAME);
-		Files.write(path, stringBuilder.toString().getBytes(UTF_8));
+		Files.writeString(path, stringBuilder.toString());
 	}
 
 	private List<DataflowServer> launchDataflowServers(int nPartitions) {

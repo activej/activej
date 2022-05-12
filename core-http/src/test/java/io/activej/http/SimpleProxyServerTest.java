@@ -15,15 +15,15 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 import static io.activej.bytebuf.ByteBufStrings.decodeAscii;
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
+import static io.activej.http.TestUtils.assertEmpty;
 import static io.activej.http.TestUtils.readFully;
-import static io.activej.http.TestUtils.toByteArray;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
 public final class SimpleProxyServerTest {
@@ -43,7 +43,7 @@ public final class SimpleProxyServerTest {
 		byte[] bytes = new byte[expected.length()];
 		readFully(is, bytes);
 		String actual = decodeAscii(bytes);
-		assertEquals(new LinkedHashSet<>(asList(expected.split("\r\n"))), new LinkedHashSet<>(asList(actual.split("\r\n"))));
+		assertEquals(new LinkedHashSet<>(List.of(expected.split("\r\n"))), new LinkedHashSet<>(List.of(actual.split("\r\n"))));
 	}
 
 	@Test
@@ -85,17 +85,37 @@ public final class SimpleProxyServerTest {
 		socket.connect(new InetSocketAddress("localhost", proxyServerPort));
 		OutputStream stream = socket.getOutputStream();
 
-		stream.write(encodeAscii("GET /abc HTTP/1.1\r\nHost: localhost\r\nConnection: keep-alive\n\r\n"));
-		readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nContent-Length: 15\r\n\r\nFORWARDED: /abc");
-		stream.write(encodeAscii("GET /hello HTTP/1.1\r\nHost: localhost\r\nConnection: close\n\r\n"));
-		readAndAssert(socket.getInputStream(), "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 17\r\n\r\nFORWARDED: /hello");
+		stream.write(encodeAscii("""
+				GET /abc HTTP/1.1\r
+				Host: localhost\r
+				Connection: keep-alive
+				\r
+				"""));
+		readAndAssert(socket.getInputStream(), """
+				HTTP/1.1 200 OK\r
+				Connection: keep-alive\r
+				Content-Length: 15\r
+				\r
+				FORWARDED: /abc""");
+		stream.write(encodeAscii("""
+				GET /hello HTTP/1.1\r
+				Host: localhost\r
+				Connection: close
+				\r
+				"""));
+		readAndAssert(socket.getInputStream(), """
+				HTTP/1.1 200 OK\r
+				Connection: close\r
+				Content-Length: 17\r
+				\r
+				FORWARDED: /hello""");
 
 		httpClient.getEventloop().execute(httpClient::stop);
 
 		echoServer.closeFuture().get();
 		proxyServer.closeFuture().get();
 
-		assertEquals(0, toByteArray(socket.getInputStream()).length);
+		assertEmpty(socket.getInputStream());
 		socket.close();
 
 		echoServerThread.join();

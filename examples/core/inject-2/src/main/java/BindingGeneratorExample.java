@@ -159,7 +159,7 @@ public class BindingGeneratorExample {
 
 		//[START REGION_3]
 		Injector injector = Injector.of(cookbook);
-		System.out.println(injector.getInstance(new Key<Cookie<Pastry>>() {}).getPastry().orElseThrow(AssertionError::new).getButter().getName());
+		System.out.println(injector.getInstance(new Key<Cookie<Pastry>>() {}).getPastry().orElseThrow().getButter().getName());
 		//[END REGION_3]
 	}
 

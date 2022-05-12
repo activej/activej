@@ -40,9 +40,9 @@ public final class RpcStream {
 	private final ChannelSerializer<RpcMessage> serializer;
 	private Listener listener;
 
-	private final AbstractStreamConsumer<RpcMessage> internalConsumer = new AbstractStreamConsumer<RpcMessage>() {};
+	private final AbstractStreamConsumer<RpcMessage> internalConsumer = new AbstractStreamConsumer<>() {};
 
-	private final AbstractStreamSupplier<RpcMessage> internalSupplier = new AbstractStreamSupplier<RpcMessage>() {
+	private final AbstractStreamSupplier<RpcMessage> internalSupplier = new AbstractStreamSupplier<>() {
 		@Override
 		protected void onResumed() {
 			deserializer.updateDataAcceptor();

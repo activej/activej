@@ -27,8 +27,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
 
-import static java.util.Collections.singletonList;
-
 public final class DatasetFilter<T> extends Dataset<T> {
 	private final Dataset<T> input;
 	private final Predicate<T> predicate;
@@ -55,6 +53,6 @@ public final class DatasetFilter<T> extends Dataset<T> {
 
 	@Override
 	public Collection<Dataset<?>> getBases() {
-		return singletonList(input);
+		return List.of(input);
 	}
 }

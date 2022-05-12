@@ -49,7 +49,7 @@ public interface BlockingFs {
 			OutputStream to = upload(target);
 			//noinspection TryFinallyCanBeTryWithResources
 			try {
-				LocalFileUtils.copy(from, to);
+				from.transferTo(to);
 			} finally {
 				from.close();
 				to.close();

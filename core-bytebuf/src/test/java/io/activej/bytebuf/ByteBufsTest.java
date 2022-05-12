@@ -11,7 +11,6 @@ import java.util.Random;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapAscii;
 import static io.activej.bytebuf.ByteBufTest.initByteBufPool;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -74,7 +73,7 @@ public class ByteBufsTest {
 
 	@Test
 	public void testAsIterator() {
-		List<ByteBuf> expected = asList(wrapAscii("First"), wrapAscii("Second"), wrapAscii("Third"), wrapAscii("Fourth"));
+		List<ByteBuf> expected = List.of(wrapAscii("First"), wrapAscii("Second"), wrapAscii("Third"), wrapAscii("Fourth"));
 		bufs.addAll(expected);
 
 		List<ByteBuf> actual = new ArrayList<>();

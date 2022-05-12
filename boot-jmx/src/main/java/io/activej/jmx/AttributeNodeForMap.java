@@ -25,7 +25,6 @@ import java.util.*;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.first;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.*;
 
 final class AttributeNodeForMap extends AbstractAttributeNodeForLeaf {
@@ -102,7 +101,7 @@ final class AttributeNodeForMap extends AbstractAttributeNodeForLeaf {
 
 	@Override
 	public Map<String, OpenType<?>> getOpenTypes() {
-		return Collections.singletonMap(name, tabularType);
+		return Map.of(name, tabularType);
 	}
 
 	@Override
@@ -165,11 +164,11 @@ final class AttributeNodeForMap extends AbstractAttributeNodeForLeaf {
 	@SuppressWarnings("unchecked")
 	public List<JmxRefreshable> getAllRefreshables(@NotNull Object source) {
 		if (!isMapOfJmxRefreshable) {
-			return emptyList();
+			return List.of();
 		}
 
 		Map<?, JmxRefreshable> mapRef = (Map<?, JmxRefreshable>) fetcher.fetchFrom(source);
-		return Collections.singletonList(timestamp -> {
+		return List.of(timestamp -> {
 			for (JmxRefreshable jmxRefreshableValue : mapRef.values()) {
 				jmxRefreshableValue.refresh(timestamp);
 			}

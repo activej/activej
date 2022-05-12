@@ -6,8 +6,6 @@ import io.activej.aggregation.annotation.Measures;
 import java.util.List;
 import java.util.Objects;
 
-import static java.util.Arrays.asList;
-
 public class DataItemString1 {
 	@Key
 	public String key1;
@@ -29,9 +27,9 @@ public class DataItemString1 {
 		this.metric2 = metric2;
 	}
 
-	public static final List<String> DIMENSIONS = asList("key1", "key2");
+	public static final List<String> DIMENSIONS = List.of("key1", "key2");
 
-	public static final List<String> METRICS = asList("metric1", "metric2");
+	public static final List<String> METRICS = List.of("metric1", "metric2");
 
 	@Override
 	public boolean equals(Object o) {

@@ -11,7 +11,6 @@ import java.util.List;
 
 import static io.activej.datastream.TestUtils.assertEndOfStream;
 import static io.activej.promise.TestUtils.await;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
 public class ConsumerToListTest {
@@ -52,7 +51,7 @@ public class ConsumerToListTest {
 		StreamSupplier<Integer> supplier = StreamSupplier.ofIterable(testList2);
 		await(supplier.streamTo(consumer));
 
-		assertEquals(asList(1, 2, 3, 4, 5, 6), consumer.getList());
+		assertEquals(List.of(1, 2, 3, 4, 5, 6), consumer.getList());
 		assertEndOfStream(supplier);
 	}
 

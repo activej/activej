@@ -8,13 +8,13 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import java.util.List;
 import java.util.function.ToIntFunction;
 
 import static io.activej.datastream.TestStreamTransformers.*;
 import static io.activej.datastream.TestUtils.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
@@ -38,8 +38,8 @@ public class StreamSharderTest {
 				streamSharder.newOutput().streamTo(consumer2.transformWith(randomlySuspending()))
 		);
 
-		assertEquals(asList(2, 4), consumer1.getList());
-		assertEquals(asList(1, 3), consumer2.getList());
+		assertEquals(List.of(2, 4), consumer1.getList());
+		assertEquals(List.of(1, 3), consumer2.getList());
 
 		assertEndOfStream(source);
 		assertEndOfStream(streamSharder.getInput());
@@ -63,8 +63,8 @@ public class StreamSharderTest {
 				streamSharder.newOutput().streamTo(consumer2.transformWith(randomlySuspending()))
 		);
 
-		assertEquals(asList(2, 4), consumer1.getList());
-		assertEquals(asList(1, 3), consumer2.getList());
+		assertEquals(List.of(2, 4), consumer1.getList());
+		assertEquals(List.of(1, 3), consumer2.getList());
 
 		assertEndOfStream(source);
 		assertEndOfStream(source);

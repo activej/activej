@@ -28,7 +28,7 @@ public final class RendezvousPartitionScheme<P> implements PartitionScheme<P>, W
 
 	@SafeVarargs
 	public static <P> RendezvousPartitionScheme<P> create(RendezvousPartitionGroup<P>... partitionGroups) {
-		return create(Arrays.asList(partitionGroups));
+		return create(List.of(partitionGroups));
 	}
 
 	public static <P> RendezvousPartitionScheme<P> create(List<RendezvousPartitionGroup<P>> partitionGroups) {
@@ -125,7 +125,7 @@ public final class RendezvousPartitionScheme<P> implements PartitionScheme<P>, W
 		}
 
 		return RpcStrategySharding.create(
-				new ToIntFunction<Object>() {
+				new ToIntFunction<>() {
 					final int count = rendezvousHashings.size();
 
 					@Override

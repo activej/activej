@@ -45,9 +45,9 @@ public final class SerializerDefMap extends SerializerDefRegularMap {
 
 	@Override
 	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
-		return ifThenElse(cmpEq(length, value(0)),
+		return ifEq(length, value(0),
 				staticCall(Collections.class, "emptyMap"),
-				ifThenElse(cmpEq(length, value(1)),
+				ifEq(length, value(1),
 						staticCall(Collections.class, "singletonMap",
 								keySerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel),
 								valueSerializer.defineDecoder(staticDecoders, in, version, compatibilityLevel)),

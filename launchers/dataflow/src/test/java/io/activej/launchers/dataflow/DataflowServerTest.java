@@ -56,8 +56,6 @@ import static io.activej.launchers.dataflow.StreamMergeSorterStorageStub.FACTORY
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.getFreePort;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -109,11 +107,11 @@ public class DataflowServerTest {
 
 	@Test
 	public void testMapReduceSimple() throws Exception {
-		launchServers(asList("dog", "cat", "horse", "cat"), asList("dog", "cat"), false);
+		launchServers(List.of("dog", "cat", "horse", "cat"), List.of("dog", "cat"), false);
 		List<StringCount> result = new ArrayList<>();
 		await(mapReduce(result));
 		result.sort(StringCount.COMPARATOR);
-		assertEquals(asList(new StringCount("cat", 3), new StringCount("dog", 2), new StringCount("horse", 1)), result);
+		assertEquals(List.of(new StringCount("cat", 3), new StringCount("dog", 2), new StringCount("horse", 1)), result);
 	}
 
 	@Test
@@ -140,7 +138,7 @@ public class DataflowServerTest {
 
 	@Test
 	public void testMapReduceWithMalformedServer() throws Exception {
-		launchServers(asList("dog", "cat", "horse", "cat"), asList("dog", "cat"), true);
+		launchServers(List.of("dog", "cat", "horse", "cat"), List.of("dog", "cat"), true);
 		Exception exception = awaitException(mapReduce(new ArrayList<>()));
 
 		assertThat(exception.getMessage(), containsString("Error on remote server"));
@@ -150,7 +148,7 @@ public class DataflowServerTest {
 	public void testRepartitionAndSortSimple() throws Exception {
 		List<String> result1 = new ArrayList<>();
 		List<String> result2 = new ArrayList<>();
-		launchServers(asList("dog", "cat", "horse", "cat", "cow"), asList("dog", "cat", "cow"), result1, result2, false);
+		launchServers(List.of("dog", "cat", "horse", "cat", "cow"), List.of("dog", "cat", "cow"), result1, result2, false);
 		await(repartitionAndSort());
 
 		List<String> result = new ArrayList<>();
@@ -158,7 +156,7 @@ public class DataflowServerTest {
 		result.addAll(result2);
 		result.sort(Comparator.naturalOrder());
 
-		assertEquals(asList("cat", "cat", "cat", "cow", "cow", "dog", "dog", "horse"), result);
+		assertEquals(List.of("cat", "cat", "cat", "cow", "cow", "dog", "dog", "horse"), result);
 	}
 
 	@Test
@@ -186,7 +184,7 @@ public class DataflowServerTest {
 
 	@Test
 	public void testRepartitionAndSortWithMalformedServer() throws Exception {
-		launchServers(asList("dog", "cat", "horse", "cat", "cow"), asList("dog", "cat", "cow"), true);
+		launchServers(List.of("dog", "cat", "horse", "cat", "cow"), List.of("dog", "cat", "cow"), true);
 		Exception exception = awaitException(repartitionAndSort());
 
 		assertThat(exception.getMessage(), containsString("Error on remote server"));
@@ -197,7 +195,7 @@ public class DataflowServerTest {
 		Partition partition1 = new Partition(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port1));
 		Partition partition2 = new Partition(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port2));
 
-		Injector injector = Injector.of(createModule(asList(partition1, partition2)));
+		Injector injector = Injector.of(createModule(List.of(partition1, partition2)));
 
 		DataflowClient client = injector.getInstance(DataflowClient.class);
 		DataflowGraph graph = injector.getInstance(DataflowGraph.class);
@@ -217,7 +215,7 @@ public class DataflowServerTest {
 		Partition partition1 = new Partition(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port1));
 		Partition partition2 = new Partition(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port2));
 
-		Injector injector = Injector.of(createModule(asList(partition1, partition2)));
+		Injector injector = Injector.of(createModule(List.of(partition1, partition2)));
 
 		DataflowGraph graph = injector.getInstance(DataflowGraph.class);
 
@@ -237,7 +235,7 @@ public class DataflowServerTest {
 		for (int i = 0; i < howMany; i++) {
 			strings[i] = Integer.toString(random.nextInt(bound));
 		}
-		return Arrays.asList(strings);
+		return List.of(strings);
 	}
 
 	private void launchServers(List<String> server1Words, List<String> server2Words, boolean oneMalformed) {
@@ -284,8 +282,7 @@ public class DataflowServerTest {
 		@Override
 		public boolean equals(Object o) {
 			if (this == o) return true;
-			if (!(o instanceof StringCount)) return false;
-			StringCount that = (StringCount) o;
+			if (!(o instanceof StringCount that)) return false;
 			return s.equals(that.s) && count == that.count;
 		}
 
@@ -405,7 +402,7 @@ public class DataflowServerTest {
 
 		@Override
 		protected Module getOverrideModule() {
-			return createModule(emptyList())
+			return createModule(List.of())
 					.overrideWith(ModuleBuilder.create()
 							.bind(datasetId(malformed ? "" : "items")).toInstance(words)
 							.bind(Config.class).toInstance(Config.create().with("dataflow.server.listenAddresses", String.valueOf(port)))

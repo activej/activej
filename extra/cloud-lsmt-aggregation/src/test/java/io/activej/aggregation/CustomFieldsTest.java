@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofDouble;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.aggregation.measure.Measures.*;
-import static io.activej.common.Utils.setOf;
 import static io.activej.promise.TestUtils.await;
 import static junit.framework.TestCase.assertEquals;
 
@@ -48,23 +47,9 @@ public class CustomFieldsTest {
 	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	@Measures("eventCount")
-	public static class EventRecord {
-		// dimensions
-		@Key
-		public final int siteId;
-
-		// measures
-		@Measures({"sumRevenue", "minRevenue", "maxRevenue"})
-		public final double revenue;
-
-		@Measures({"uniqueUserIds", "estimatedUniqueUserIdCount"})
-		public final long userId;
-
-		public EventRecord(int siteId, double revenue, long userId) {
-			this.siteId = siteId;
-			this.revenue = revenue;
-			this.userId = userId;
-		}
+	public record EventRecord(@Key int siteId,
+	                          @Measures({"sumRevenue", "minRevenue", "maxRevenue"}) double revenue,
+	                          @Measures({"uniqueUserIds", "estimatedUniqueUserIdCount"}) long userId) {
 	}
 
 	public static class QueryResult {
@@ -167,7 +152,7 @@ public class CustomFieldsTest {
 		assertEquals(1.51, s1.sumRevenue, delta);
 		assertEquals(0.01, s1.minRevenue, delta);
 		assertEquals(0.59, s1.maxRevenue, delta);
-		assertEquals(setOf(1L, 17L, 500L, 1000L), s1.uniqueUserIds);
+		assertEquals(Set.of(1L, 17L, 500L, 1000L), s1.uniqueUserIds);
 		assertEquals(4, s1.estimatedUniqueUserIdCount.estimate());
 
 		QueryResult s2 = queryResults.get(1);
@@ -176,7 +161,7 @@ public class CustomFieldsTest {
 		assertEquals(2.48, s2.sumRevenue, delta);
 		assertEquals(0.30, s2.minRevenue, delta);
 		assertEquals(0.91, s2.maxRevenue, delta);
-		assertEquals(setOf(3L, 20L, 33L, 50L), s2.uniqueUserIds);
+		assertEquals(Set.of(3L, 20L, 33L, 50L), s2.uniqueUserIds);
 		assertEquals(4, s2.estimatedUniqueUserIdCount.estimate());
 
 		QueryResult s3 = queryResults.get(2);
@@ -185,7 +170,7 @@ public class CustomFieldsTest {
 		assertEquals(2.02, s3.sumRevenue, delta);
 		assertEquals(0.13, s3.minRevenue, delta);
 		assertEquals(1.01, s3.maxRevenue, delta);
-		assertEquals(setOf(20L, 21L), s3.uniqueUserIds);
+		assertEquals(Set.of(20L, 21L), s3.uniqueUserIds);
 		assertEquals(2, s3.estimatedUniqueUserIdCount.estimate());
 	}
 

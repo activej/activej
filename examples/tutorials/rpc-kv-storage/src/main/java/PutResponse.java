@@ -1,24 +1,7 @@
-import io.activej.serializer.annotations.Deserialize;
-import io.activej.serializer.annotations.Serialize;
 import io.activej.serializer.annotations.SerializeNullable;
+import io.activej.serializer.annotations.SerializeRecord;
 
 // [START EXAMPLE]
-public class PutResponse {
-	private final String previousValue;
-
-	public PutResponse(@Deserialize("previousValue") String previousValue) {
-		this.previousValue = previousValue;
-	}
-
-	@Serialize
-	@SerializeNullable
-	public String getPreviousValue() {
-		return previousValue;
-	}
-
-	@Override
-	public String toString() {
-		return "{previousValue='" + previousValue + '\'' + '}';
-	}
-}
+@SerializeRecord
+public record PutResponse(@SerializeNullable String previousValue) {}
 // [END EXAMPLE]

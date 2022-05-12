@@ -17,7 +17,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.stream.LongStream;
 
-import static io.activej.common.Utils.setOf;
 import static io.activej.cube.service.ChunkLockerMySql.CHUNK_TABLE;
 import static io.activej.cube.service.ChunkLockerMySql.DEFAULT_LOCK_TTL;
 import static io.activej.inject.util.Utils.union;
@@ -77,13 +76,13 @@ public class ChunkLockerMySqlTest {
 		assertTrue(await(lockerA.getLockedChunks()).isEmpty());
 		assertTrue(await(lockerB.getLockedChunks()).isEmpty());
 
-		Set<Long> lockedByA = setOf(1L, 2L, 3L);
+		Set<Long> lockedByA = Set.of(1L, 2L, 3L);
 		await(lockerA.lockChunks(lockedByA));
 
 		assertEquals(lockedByA, await(lockerA.getLockedChunks()));
 		assertEquals(lockedByA, await(lockerB.getLockedChunks()));
 
-		Set<Long> lockedByB = setOf(4L, 5L, 6L);
+		Set<Long> lockedByB = Set.of(4L, 5L, 6L);
 		await(lockerB.lockChunks(lockedByB));
 
 		Set<Long> lockedByBoth = union(lockedByA, lockedByB);
@@ -94,9 +93,9 @@ public class ChunkLockerMySqlTest {
 
 	@Test
 	public void release() {
-		Set<Long> lockedByA = setOf(1L, 2L, 3L);
+		Set<Long> lockedByA = Set.of(1L, 2L, 3L);
 		await(lockerA.lockChunks(lockedByA));
-		Set<Long> lockedByB = setOf(4L, 5L, 6L);
+		Set<Long> lockedByB = Set.of(4L, 5L, 6L);
 		await(lockerB.lockChunks(lockedByB));
 
 		Set<Long> lockedByBoth = union(lockedByA, lockedByB);
@@ -117,13 +116,13 @@ public class ChunkLockerMySqlTest {
 
 	@Test
 	public void lockAlreadyLockedShouldThrowError() {
-		Set<Long> lockedByA = setOf(1L, 2L, 3L);
+		Set<Long> lockedByA = Set.of(1L, 2L, 3L);
 		await(lockerA.lockChunks(lockedByA));
 
 		assertEquals(lockedByA, await(lockerA.getLockedChunks()));
 		assertEquals(lockedByA, await(lockerB.getLockedChunks()));
 
-		Set<Long> lockedByB = setOf(4L, 5L, 6L, 1L);
+		Set<Long> lockedByB = Set.of(4L, 5L, 6L, 1L);
 
 		Exception exception = awaitException(lockerB.lockChunks(lockedByB));
 		assertThat(exception, instanceOf(ChunksAlreadyLockedException.class));
@@ -134,8 +133,8 @@ public class ChunkLockerMySqlTest {
 
 	@Test
 	public void releaseChunksLockedByOtherShouldNotRelease() {
-		Set<Long> lockedByA = setOf(1L, 2L, 3L);
-		Set<Long> lockedByB = setOf(4L, 5L, 6L);
+		Set<Long> lockedByA = Set.of(1L, 2L, 3L);
+		Set<Long> lockedByB = Set.of(4L, 5L, 6L);
 		Set<Long> locked = union(lockedByA, lockedByB);
 		await(lockerA.lockChunks(lockedByA));
 		assertEquals(lockedByA, await(lockerA.getLockedChunks()));
@@ -158,24 +157,24 @@ public class ChunkLockerMySqlTest {
 
 	@Test
 	public void getLockedChunksShouldNotReturnExpiredChunks() {
-		Set<Long> lockedByA = setOf(1L, 2L, 3L);
+		Set<Long> lockedByA = Set.of(1L, 2L, 3L);
 		await(lockerA.lockChunks(lockedByA));
 
 		assertEquals(lockedByA, await(lockerA.getLockedChunks()));
 
 		expireLockedChunk(2L);
 
-		assertEquals(setOf(1L, 3L), await(lockerA.getLockedChunks()));
+		assertEquals(Set.of(1L, 3L), await(lockerA.getLockedChunks()));
 	}
 
 	@Test
 	public void lockShouldOverrideExpiredChunks() {
-		Set<Long> lockedByA = setOf(1L, 2L, 3L);
+		Set<Long> lockedByA = Set.of(1L, 2L, 3L);
 		await(lockerA.lockChunks(lockedByA));
 
 		assertEquals(lockedByA, await(lockerA.getLockedChunks()));
 
-		Set<Long> locked2 = setOf(1L, 4L);
+		Set<Long> locked2 = Set.of(1L, 4L);
 		Exception exception = awaitException(lockerA.lockChunks(locked2));
 		assertThat(exception, instanceOf(ChunksAlreadyLockedException.class));
 

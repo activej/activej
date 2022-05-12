@@ -11,10 +11,7 @@ import io.activej.inject.util.Trie;
 import org.junit.Test;
 
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static junit.framework.TestCase.*;
 
@@ -32,137 +29,51 @@ public class DIFollowUpTest {
 	public static final Scope ORDER_SCOPE = Scope.of(OrderScope.class);
 	//[END REGION_9]
 
-	static class Kitchen {
-		private final int places;
-
+	record Kitchen(int places) {
 		@Inject
 		Kitchen() {
-			this.places = 1;
-		}
-
-		public int getPlaces() {
-			return places;
+			this(1);
 		}
 	}
 
 	//[START REGION_8]
-	static class Sugar {
-		private final String name;
-		private final float weight;
-
+	record Sugar(String name, float weight) {
 		@Inject
 		public Sugar() {
-			this.name = "WhiteSugar";
-			this.weight = 10.f;
-		}
-		//[END REGION_8]
-
-		public Sugar(String name, float weight) {
-			this.name = name;
-			this.weight = weight;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public float getWeight() {
-			return weight;
+			this("WhiteSugar", 10.f);
 		}
 	}
+	//[END REGION_8]
 
-	static class Butter {
-		private final float weight;
-		private final String name;
-
+	record Butter(String name, float weight) {
 		@Inject
 		public Butter() {
-			this.weight = 10.f;
-			this.name = "Butter";
-		}
-
-		public Butter(String name, float weight) {
-			this.weight = weight;
-			this.name = name;
-		}
-
-		public float getWeight() {
-			return weight;
-		}
-
-		public String getName() {
-			return name;
+			this("Butter", 10.f);
 		}
 	}
 
-	static class Flour {
-		private float weight;
-		private String name;
-
+	record Flour(String name, float weight) {
 		@Inject
-		public Flour() { }
-
-		public Flour(String name, float weight) {
-			this.weight = weight;
-			this.name = name;
-		}
-
-		public float getWeight() {
-			return weight;
-		}
-
-		public String getName() {
-			return name;
+		public Flour() {
+			this(null, 0);
 		}
 	}
 
-	static class Pastry {
-		private final Sugar sugar;
-		private final Butter butter;
-		private final Flour flour;
+	@Inject
+	record Pastry(Sugar sugar, Butter butter, Flour flour) {}
 
-		@Inject
-		Pastry(Sugar sugar, Butter butter, Flour flour) {
-			this.sugar = sugar;
-			this.butter = butter;
-			this.flour = flour;
-		}
-
-		public Flour getFlour() {
-			return flour;
-		}
-
-		public Sugar getSugar() {
-			return sugar;
-		}
-
-		public Butter getButter() {
-			return butter;
-		}
-	}
-
-	static class Cookie {
-		private final Pastry pastry;
-
-		@Inject
-		Cookie(Pastry pastry) {
-			this.pastry = pastry;
-		}
-
-		public Pastry getPastry() {
-			return pastry;
-		}
-	}
+	@Inject
+	record Cookie(Pastry pastry) {}
 
 	static class InjectsDefinition {
 		@Provides
-		static Sugar sugar() { return new Sugar("WhiteSugar", 10.f); }
+		static Sugar sugar() {return new Sugar("WhiteSugar", 10.f);}
 
 		@Provides
-		static Butter butter() { return new Butter("PerfectButter", 20.0f); }
+		static Butter butter() {return new Butter("PerfectButter", 20.0f);}
 
 		@Provides
-		static Flour flour() { return new Flour("GoodFlour", 100.0f); }
+		static Flour flour() {return new Flour("GoodFlour", 100.0f);}
 
 		@Provides
 		static Pastry pastry(Sugar sugar, Butter butter, Flour flour) {
@@ -188,7 +99,7 @@ public class DIFollowUpTest {
 		Injector injector = Injector.of(Trie.leaf(bindings));
 		Cookie instance = injector.getInstance(Cookie.class);
 
-		assertEquals(10.f, instance.getPastry().getSugar().getWeight(), 0.0f);
+		assertEquals(10.f, instance.pastry().sugar().weight(), 0.0f);
 	}
 	//[END REGION_1]
 
@@ -204,7 +115,7 @@ public class DIFollowUpTest {
 				.build();
 
 		Injector injector = Injector.of(module);
-		assertEquals("PerfectButter", injector.getInstance(Cookie.class).getPastry().getButter().getName());
+		assertEquals("PerfectButter", injector.getInstance(Cookie.class).pastry().butter().name());
 	}
 	//[END REGION_2]
 
@@ -213,13 +124,13 @@ public class DIFollowUpTest {
 	public void provideAnnotationSnippet() {
 		Module cookbook = new AbstractModule() {
 			@Provides
-			Sugar sugar() { return new Sugar("WhiteSugar", 10.f); }
+			Sugar sugar() {return new Sugar("WhiteSugar", 10.f);}
 
 			@Provides
-			Butter butter() { return new Butter("PerfectButter", 20.0f); }
+			Butter butter() {return new Butter("PerfectButter", 20.0f);}
 
 			@Provides
-			Flour flour() { return new Flour("GoodFlour", 100.0f); }
+			Flour flour() {return new Flour("GoodFlour", 100.0f);}
 
 			@Provides
 			Pastry pastry(Sugar sugar, Butter butter, Flour flour) {
@@ -233,7 +144,7 @@ public class DIFollowUpTest {
 		};
 
 		Injector injector = Injector.of(cookbook);
-		assertEquals("PerfectButter", injector.getInstance(Cookie.class).getPastry().getButter().getName());
+		assertEquals("PerfectButter", injector.getInstance(Cookie.class).pastry().butter().name());
 	}
 	//[END REGION_3]
 
@@ -243,13 +154,13 @@ public class DIFollowUpTest {
 		Module cookbook = ModuleBuilder.create()
 				.scan(new Object() {
 					@Provides
-					Sugar sugar() { return new Sugar("WhiteSugar", 10.f); }
+					Sugar sugar() {return new Sugar("WhiteSugar", 10.f);}
 
 					@Provides
-					Butter butter() { return new Butter("PerfectButter", 20.0f); }
+					Butter butter() {return new Butter("PerfectButter", 20.0f);}
 
 					@Provides
-					Flour flour() { return new Flour("GoodFlour", 100.0f); }
+					Flour flour() {return new Flour("GoodFlour", 100.0f);}
 
 					@Provides
 					Pastry pastry(Sugar sugar, Butter butter, Flour flour) {
@@ -264,7 +175,7 @@ public class DIFollowUpTest {
 				.build();
 
 		Injector injector = Injector.of(cookbook);
-		assertEquals("PerfectButter", injector.getInstance(Cookie.class).getPastry().getButter().getName());
+		assertEquals("PerfectButter", injector.getInstance(Cookie.class).pastry().butter().name());
 	}
 	//[END REGION_4]
 
@@ -274,7 +185,7 @@ public class DIFollowUpTest {
 		Module cookbook = ModuleBuilder.create().scan(InjectsDefinition.class).build();
 
 		Injector injector = Injector.of(cookbook);
-		assertEquals("PerfectButter", injector.getInstance(Cookie.class).getPastry().getButter().getName());
+		assertEquals("PerfectButter", injector.getInstance(Cookie.class).pastry().butter().name());
 	}
 	//[END REGION_5]
 
@@ -284,7 +195,7 @@ public class DIFollowUpTest {
 		Module cookbook = ModuleBuilder.create().bind(Cookie.class).build();
 
 		Injector injector = Injector.of(cookbook);
-		assertEquals("WhiteSugar", injector.getInstance(Cookie.class).getPastry().getSugar().getName());
+		assertEquals("WhiteSugar", injector.getInstance(Cookie.class).pastry().sugar().name());
 	}
 	//[END REGION_6]
 
@@ -294,17 +205,17 @@ public class DIFollowUpTest {
 		Module cookbook = new AbstractModule() {
 			@Provides
 			@Named("zerosugar")
-			Sugar sugar1() { return new Sugar("SugarFree", 0.f); }
+			Sugar sugar1() {return new Sugar("SugarFree", 0.f);}
 
 			@Provides
 			@Named("normal")
-			Sugar sugar2() { return new Sugar("WhiteSugar", 10.f); }
+			Sugar sugar2() {return new Sugar("WhiteSugar", 10.f);}
 
 			@Provides
-			Butter butter() { return new Butter("PerfectButter", 20.f); }
+			Butter butter() {return new Butter("PerfectButter", 20.f);}
 
 			@Provides
-			Flour flour() { return new Flour("GoodFlour", 100.f); }
+			Flour flour() {return new Flour("GoodFlour", 100.f);}
 
 			@Provides
 			@Named("normal")
@@ -326,15 +237,15 @@ public class DIFollowUpTest {
 
 			@Provides
 			@Named("zerosugar")
-			Cookie cookie2(@Named("zerosugar") Pastry pastry) { return new Cookie(pastry); }
+			Cookie cookie2(@Named("zerosugar") Pastry pastry) {return new Cookie(pastry);}
 		};
 
 		Injector injector = Injector.of(cookbook);
 
 		float normalWeight = injector.getInstance(Key.of(Cookie.class, "normal"))
-				.getPastry().getSugar().getWeight();
+				.pastry().sugar().weight();
 		float zerosugarWeight = injector.getInstance(Key.of(Cookie.class, "zerosugar"))
-				.getPastry().getSugar().getWeight();
+				.pastry().sugar().weight();
 
 		assertEquals(10.f, normalWeight, 0.0f);
 		assertEquals(0.f, zerosugarWeight, 0.0f);
@@ -356,9 +267,9 @@ public class DIFollowUpTest {
 		Injector injector = Injector.of(cookbook);
 
 		float normalWeight = injector.getInstance(Key.of(Cookie.class, "normal"))
-				.getPastry().getSugar().getWeight();
+				.pastry().sugar().weight();
 		float zerosugarWeight = injector.getInstance(Key.of(Cookie.class, "zerosugar"))
-				.getPastry().getSugar().getWeight();
+				.pastry().sugar().weight();
 
 		assertEquals(10.f, normalWeight, 0.0f);
 		assertEquals(0.f, zerosugarWeight, 0.0f);
@@ -381,7 +292,7 @@ public class DIFollowUpTest {
 		//[START REGION_12]
 		Injector injector = Injector.of(cookbook);
 		Kitchen kitchen = injector.getInstance(Kitchen.class);
-		Set<Cookie> cookies = new HashSet<>();
+		Set<Cookie> cookies = Collections.newSetFromMap(new IdentityHashMap<>());
 		for (int i = 0; i < 10; ++i) {
 			Injector subinjector = injector.enterScope(ORDER_SCOPE);
 
@@ -408,7 +319,7 @@ public class DIFollowUpTest {
 				.build();
 
 		Injector injector = Injector.of(cookbook);
-		assertEquals("GoodFlour", injector.getInstance(Cookie.class).getPastry().getFlour().getName());
+		assertEquals("GoodFlour", injector.getInstance(Cookie.class).pastry().flour().name());
 	}
 	//[END REGION_13]
 }

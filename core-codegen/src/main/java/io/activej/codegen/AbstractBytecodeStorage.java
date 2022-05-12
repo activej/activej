@@ -19,7 +19,6 @@ package io.activej.codegen;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -60,16 +59,10 @@ public abstract class AbstractBytecodeStorage implements BytecodeStorage {
 	public final Optional<byte[]> loadBytecode(String className) {
 		try {
 			Optional<InputStream> maybeInputStream = getInputStream(className);
-			if (!maybeInputStream.isPresent()) return Optional.empty();
+			if (maybeInputStream.isEmpty()) return Optional.empty();
 
 			try (InputStream stream = maybeInputStream.get()) {
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
-				int size;
-				while ((size = stream.read(buffer)) != -1) {
-					baos.write(buffer, 0, size);
-				}
-				return Optional.of(baos.toByteArray());
+				return Optional.of(stream.readAllBytes());
 			}
 		} catch (IOException e) {
 			onLoadError(className, e);
@@ -81,7 +74,7 @@ public abstract class AbstractBytecodeStorage implements BytecodeStorage {
 	public final void saveBytecode(String className, byte[] bytecode) {
 		try {
 			Optional<OutputStream> maybeOutputStream = getOutputStream(className);
-			if (!maybeOutputStream.isPresent()) return;
+			if (maybeOutputStream.isEmpty()) return;
 
 			try (OutputStream outputStream = maybeOutputStream.get()) {
 				outputStream.write(bytecode);

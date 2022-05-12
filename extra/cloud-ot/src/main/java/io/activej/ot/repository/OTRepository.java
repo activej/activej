@@ -27,22 +27,20 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 import static io.activej.common.Utils.not;
-import static java.util.Collections.singleton;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.*;
 
 public interface OTRepository<K, D> extends OTCommitFactory<K, D> {
 	Promise<Void> push(Collection<OTCommit<K, D>> commits);
 
 	default Promise<Void> push(OTCommit<K, D> commit) {
-		return push(singletonList(commit));
+		return push(List.of(commit));
 	}
 
 	Promise<Void> updateHeads(Set<K> newHeads, Set<K> excludedHeads);
 
 	default Promise<Void> pushAndUpdateHead(OTCommit<K, D> commit) {
 		return push(commit)
-				.then(() -> updateHeads(singleton(commit.getId()), commit.getParentIds()));
+				.then(() -> updateHeads(Set.of(commit.getId()), commit.getParentIds()));
 	}
 
 	default Promise<Void> pushAndUpdateHeads(Collection<OTCommit<K, D>> commits) {

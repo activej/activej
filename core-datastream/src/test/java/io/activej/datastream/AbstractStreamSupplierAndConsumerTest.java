@@ -17,7 +17,6 @@ import static io.activej.datastream.TestUtils.assertClosedWithError;
 import static io.activej.datastream.TestUtils.assertEndOfStream;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.*;
 
 public final class AbstractStreamSupplierAndConsumerTest {
@@ -418,7 +417,7 @@ public final class AbstractStreamSupplierAndConsumerTest {
 		final List<Status> statuses = new ArrayList<>();
 
 		void assertStatuses(Status... expectedStatuses) {
-			assertEquals(asList(expectedStatuses), statuses);
+			assertEquals(List.of(expectedStatuses), statuses);
 		}
 
 		@Override

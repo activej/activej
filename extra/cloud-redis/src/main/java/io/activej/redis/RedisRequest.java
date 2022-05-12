@@ -18,12 +18,10 @@ package io.activej.redis;
 
 import io.activej.common.Checks;
 
-import java.util.Collections;
 import java.util.List;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Utils.listOf;
 import static io.activej.redis.RESPv2.ARRAY_MARKER;
 import static io.activej.redis.RESPv2.BYTES_MARKER;
 
@@ -58,7 +56,7 @@ public abstract class RedisRequest {
 		return new RedisRequest() {
 			@Override
 			public int write(byte[] array, int offset) throws ArrayIndexOutOfBoundsException {
-				return writeRequest(Collections.singletonList(cmd), array, offset);
+				return writeRequest(List.of(cmd), array, offset);
 			}
 		};
 	}
@@ -75,7 +73,7 @@ public abstract class RedisRequest {
 		return new RedisRequest() {
 			@Override
 			public int write(byte[] array, int offset) throws ArrayIndexOutOfBoundsException {
-				return writeRequest(listOf(cmd, arg1), array, offset);
+				return writeRequest(List.of(cmd, arg1), array, offset);
 			}
 		};
 	}
@@ -142,11 +140,9 @@ public abstract class RedisRequest {
 
 	private static int writeArgument(byte[] array, int offset, Object arg) {
 		array[offset++] = BYTES_MARKER;
-		if (arg instanceof String) {
-			String str = (String) arg;
+		if (arg instanceof String str) {
 			offset = writeString(array, offset, str);
-		} else if (arg instanceof byte[]) {
-			byte[] bytes = (byte[]) arg;
+		} else if (arg instanceof byte[] bytes) {
 			offset = writeBytes(array, offset, bytes);
 		} else {
 			throw new IllegalArgumentException();

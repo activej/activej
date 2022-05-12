@@ -10,15 +10,13 @@ import org.junit.Test;
 import java.net.InetSocketAddress;
 import java.util.*;
 
-import static io.activej.common.Utils.mapOf;
-import static io.activej.common.Utils.setOf;
 import static io.activej.launchers.crdt.ConfigConverters.*;
 import static org.junit.Assert.*;
 
 public class ConfigConverterTest {
 	@Test
 	public void ofSimplePartitionIdTest() {
-		Map<String, String> properties = mapOf(
+		Map<String, String> properties = Map.of(
 				"partition1", "testA",
 				"partition2", "testB|255.255.255.255:9000",
 				"partition3", "testC||255.255.255.255:9001",
@@ -64,7 +62,7 @@ public class ConfigConverterTest {
 
 	@Test
 	public void ofSimplePartitionGroupTest() {
-		Map<String, String> properties = mapOf(
+		Map<String, String> properties = Map.of(
 				"ids", "testA|101.101.101.101:9000|101.101.101.101:9001," +
 						"testB|102.102.102.102:9000|102.102.102.102:9001," +
 						"testC|103.103.103.103:9000|103.103.103.103:9001," +
@@ -78,7 +76,7 @@ public class ConfigConverterTest {
 
 		RendezvousPartitionGroup<PartitionId> partitionGroup = converter.get(config);
 
-		Set<PartitionId> expectedPartitionIds = setOf(
+		Set<PartitionId> expectedPartitionIds = Set.of(
 				PartitionId.of("testA",
 						new InetSocketAddress("101.101.101.101", 9000),
 						new InetSocketAddress("101.101.101.101", 9001)
@@ -130,7 +128,7 @@ public class ConfigConverterTest {
 		RendezvousPartitionScheme<PartitionId> partitionScheme = converter.get(config);
 		Set<PartitionId> partitions = partitionScheme.getPartitions();
 
-		Set<PartitionId> expectedPartitionIds = setOf(
+		Set<PartitionId> expectedPartitionIds = Set.of(
 				PartitionId.of("testA",
 						new InetSocketAddress("101.101.101.101", 9000),
 						new InetSocketAddress("101.101.101.101", 9001)

@@ -42,7 +42,7 @@ public abstract class SimpleConfigConverter<T> implements ConfigConverter<T> {
 	protected abstract String toString(T value);
 
 	public static <T> SimpleConfigConverter<T> of(FunctionEx<String, T> fromStringFn, Function<T, String> toStringFn) {
-		return new SimpleConfigConverter<T>() {
+		return new SimpleConfigConverter<>() {
 			@Override
 			protected T fromString(String string) {
 				try {

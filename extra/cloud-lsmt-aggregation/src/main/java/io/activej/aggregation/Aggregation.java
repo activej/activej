@@ -63,7 +63,6 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.*;
 import static io.activej.datastream.processor.StreamSupplierTransformer.identity;
 import static java.lang.Math.min;
-import static java.util.Collections.*;
 import static java.util.Comparator.comparing;
 import static java.util.function.Predicate.isEqual;
 import static java.util.stream.Collectors.toList;
@@ -224,7 +223,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 			List<String> keys, List<String> measures,
 			DefiningClassLoader classLoader) {
 		return Utils.aggregationReducer(structure, inputClass, outputClass,
-				keys, measures, emptyMap(), classLoader);
+				keys, measures, Map.of(), classLoader);
 	}
 
 	/**
@@ -492,7 +491,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 			List<AggregationChunk> individualChunks, Class<T> sequenceClass,
 			DefiningClassLoader queryClassLoader) {
 		Iterator<AggregationChunk> chunkIterator = individualChunks.iterator();
-		return StreamSupplier.concat(new Iterator<StreamSupplier<T>>() {
+		return StreamSupplier.concat(new Iterator<>() {
 			@Override
 			public boolean hasNext() {
 				return chunkIterator.hasNext();
@@ -521,7 +520,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(Predicate.class, chunkRecordClass, where),
 				() -> ClassBuilder.create(Predicate.class)
-						.withMethod("test", boolean.class, singletonList(Object.class),
+						.withMethod("test", boolean.class, List.of(Object.class),
 								where.createPredicate(cast(arg(0), chunkRecordClass), getKeyTypes()))
 		);
 	}
@@ -532,7 +531,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 	}
 
 	public Promise<AggregationDiff> consolidateMinKey() {
-		return consolidateMinKey(emptySet());
+		return consolidateMinKey(Set.of());
 	}
 
 	public Promise<AggregationDiff> consolidateMinKey(Set<Object> lockedChunkIds) {
@@ -540,7 +539,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 	}
 
 	public Promise<AggregationDiff> consolidateHotSegment() {
-		return consolidateHotSegment(emptySet());
+		return consolidateHotSegment(Set.of());
 	}
 
 	public Promise<AggregationDiff> consolidateHotSegment(Set<Object> lockedChunkIds) {

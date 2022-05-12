@@ -21,8 +21,9 @@ import io.activej.ot.TransformResult.ConflictResolution;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.system.OTSystemImpl;
 
+import java.util.List;
+
 import static io.activej.common.Utils.hasIntersection;
-import static java.util.Collections.singletonList;
 
 public class AggregationOT {
 	public static OTSystem<AggregationDiff> createAggregationOT() {
@@ -36,7 +37,7 @@ public class AggregationOT {
 							TransformResult.conflict(ConflictResolution.LEFT) :
 							TransformResult.conflict(ConflictResolution.RIGHT);
 				})
-				.withInvertFunction(AggregationDiff.class, op -> singletonList(op.inverse()))
+				.withInvertFunction(AggregationDiff.class, op -> List.of(op.inverse()))
 				.withEmptyPredicate(AggregationDiff.class, AggregationDiff::isEmpty)
 				.withSquashFunction(AggregationDiff.class, AggregationDiff.class, AggregationDiff::squash);
 	}

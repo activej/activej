@@ -24,8 +24,8 @@ import io.activej.inject.Key;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.serializer.BinarySerializer;
-import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
+import io.activej.serializer.annotations.SerializeRecord;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
@@ -33,7 +33,10 @@ import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 import java.net.InetSocketAddress;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
@@ -48,8 +51,6 @@ import static io.activej.dataflow.stream.DataflowTest.createCommon;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertCompleteFn;
 import static io.activej.test.TestUtils.getFreePort;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 
 public class PageRankTest {
@@ -86,27 +87,14 @@ public class PageRankTest {
 		sortingExecutor.shutdownNow();
 	}
 
-	public static class Page {
-		@Serialize
-		public final long pageId;
-		@Serialize
-		public final long[] links;
-
-		public Page(@Deserialize("pageId") long pageId, @Deserialize("links") long[] links) {
-			this.pageId = pageId;
-			this.links = links;
-		}
+	@SerializeRecord
+	public record Page(long pageId, long[] links) {
 
 		public void disperse(Rank rank, StreamDataAcceptor<Rank> cb) {
 			for (long link : links) {
 				Rank newRank = new Rank(link, rank.value / links.length);
 				cb.accept(newRank);
 			}
-		}
-
-		@Override
-		public String toString() {
-			return "Page{pageId=" + pageId + ", links=" + Arrays.toString(links) + '}';
 		}
 	}
 
@@ -117,33 +105,14 @@ public class PageRankTest {
 		}
 	}
 
-	public static class Rank {
-		@Serialize
-		public final long pageId;
-		@Serialize
-		public final double value;
-
-		public Rank(@Deserialize("pageId") long pageId, @Deserialize("value") double value) {
-			this.pageId = pageId;
-			this.value = value;
-		}
-
-		@Override
-		public String toString() {
-			return "Rank{pageId=" + pageId + ", value=" + value + '}';
-		}
-
+	@SerializeRecord
+	public record Rank(long pageId, double value) {
 		@SuppressWarnings({"SimplifiableIfStatement", "EqualsWhichDoesntCheckParameterClass"})
 		@Override
 		public boolean equals(Object o) {
 			Rank rank = (Rank) o;
 			if (pageId != rank.pageId) return false;
 			return Math.abs(rank.value - value) < 0.001;
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(pageId, value);
 		}
 	}
 
@@ -249,7 +218,7 @@ public class PageRankTest {
 	}
 
 	private Module createModule(Partition... partitions) throws Exception {
-		return createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(partitions))
+		return createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), List.of(partitions))
 				.install(createSerializersModule())
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
@@ -267,7 +236,7 @@ public class PageRankTest {
 	}
 
 	private static Iterable<Page> generatePages(int number) {
-		return () -> new Iterator<Page>() {
+		return () -> new Iterator<>() {
 			int i = 0;
 
 			@Override
@@ -318,12 +287,12 @@ public class PageRankTest {
 		Module common = createModule(new Partition(address1), new Partition(address2));
 
 		StreamConsumerToList<Rank> result1 = StreamConsumerToList.create();
-		DataflowServer server1 = launchServer(address1, asList(
+		DataflowServer server1 = launchServer(address1, List.of(
 				new Page(1, new long[]{1, 2, 3}),
 				new Page(3, new long[]{1})), result1);
 
 		StreamConsumerToList<Rank> result2 = StreamConsumerToList.create();
-		DataflowServer server2 = launchServer(address2, singletonList(new Page(2, new long[]{1})), result2);
+		DataflowServer server2 = launchServer(address2, List.of(new Page(2, new long[]{1})), result2);
 
 		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
 
@@ -347,7 +316,7 @@ public class PageRankTest {
 		result.addAll(result2.getList());
 		result.sort(Comparator.comparingLong(rank -> rank.pageId));
 
-		assertEquals(asList(new Rank(1, 1.7861), new Rank(2, 0.6069), new Rank(3, 0.6069)), result);
+		assertEquals(List.of(new Rank(1, 1.7861), new Rank(2, 0.6069), new Rank(3, 0.6069)), result);
 	}
 
 	@SuppressWarnings({"rawtypes", "unchecked"})

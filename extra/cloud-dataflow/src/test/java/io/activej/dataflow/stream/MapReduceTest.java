@@ -29,9 +29,7 @@ import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 import java.net.InetSocketAddress;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
@@ -44,7 +42,6 @@ import static io.activej.dataflow.stream.DataflowTest.createCommon;
 import static io.activej.dataflow.stream.DataflowTest.getFreeListenAddress;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertCompleteFn;
-import static java.util.Arrays.asList;
 import static java.util.Comparator.naturalOrder;
 import static org.junit.Assert.assertEquals;
 
@@ -91,8 +88,7 @@ public class MapReduceTest {
 		@Override
 		public boolean equals(Object o) {
 			if (this == o) return true;
-			if (!(o instanceof StringCount)) return false;
-			StringCount that = (StringCount) o;
+			if (!(o instanceof StringCount that)) return false;
 			return s.equals(that.s) && count == that.count;
 		}
 
@@ -113,14 +109,14 @@ public class MapReduceTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 
 		Module serverModule1 = ModuleBuilder.create()
 				.install(common)
-				.bind(datasetId("items")).toInstance(asList(
+				.bind(datasetId("items")).toInstance(List.of(
 						"dog",
 						"cat",
 						"horse",
@@ -129,7 +125,7 @@ public class MapReduceTest {
 
 		Module serverModule2 = ModuleBuilder.create()
 				.install(common)
-				.bind(datasetId("items")).toInstance(asList(
+				.bind(datasetId("items")).toInstance(List.of(
 						"dog",
 						"cat"))
 				.build();
@@ -162,10 +158,10 @@ public class MapReduceTest {
 
 		System.out.println(resultConsumer.getList());
 
-		assertEquals(new HashSet<>(asList(
+		assertEquals(Set.of(
 				new StringCount("cat", 3),
 				new StringCount("dog", 2),
-				new StringCount("horse", 1))), new HashSet<>(resultConsumer.getList()));
+				new StringCount("horse", 1)), new HashSet<>(resultConsumer.getList()));
 	}
 
 	public static class StringReducer extends ReducerToAccumulator<String, StringCount, StringCount> {

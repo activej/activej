@@ -39,13 +39,11 @@ import static io.activej.cube.TestUtils.runProcessLogs;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
-@SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
 public class CubeMeasureRemovalTest extends CubeTestBase {
 	private static final FrameFormat FRAME_FORMAT = LZ4FrameFormat.create();
 
@@ -112,7 +110,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(EVENTLOOP, LOG_OT, uplink, cubeDiffLogOTState);
 
 		LogOTProcessor<LogItem, CubeDiff> logOTProcessor = LogOTProcessor.create(EVENTLOOP, multilog,
-				cube.logStreamConsumer(LogItem.class), "testlog", asList("partitionA"), cubeDiffLogOTState);
+				cube.logStreamConsumer(LogItem.class), "testlog", List.of("partitionA"), cubeDiffLogOTState);
 
 		// checkout first (root) revision
 		await(logCubeStateManager.checkout());
@@ -155,7 +153,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		logCubeStateManager = OTStateManager.create(EVENTLOOP, LOG_OT, uplink, cubeDiffLogOTState1);
 
 		logOTProcessor = LogOTProcessor.create(EVENTLOOP, multilog, cube.logStreamConsumer(LogItem.class),
-				"testlog", asList("partitionA"), cubeDiffLogOTState1);
+				"testlog", List.of("partitionA"), cubeDiffLogOTState1);
 
 		await(logCubeStateManager.checkout());
 
@@ -184,7 +182,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 				.collect(groupingBy(o -> o.date, reducing(0L, o -> o.clicks, Long::sum)));
 
 		StreamConsumerToList<LogItem> queryResultConsumer2 = StreamConsumerToList.create();
-		await(cube.queryRawStream(asList("date"), asList("clicks"), alwaysTrue(), LogItem.class, CLASS_LOADER).streamTo(
+		await(cube.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(), LogItem.class, CLASS_LOADER).streamTo(
 				queryResultConsumer2));
 
 		// Check query results
@@ -212,7 +210,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 		// Query
 		StreamConsumerToList<LogItem> queryResultConsumer3 = StreamConsumerToList.create();
-		await(cube.queryRawStream(asList("date"), asList("clicks"), alwaysTrue(), LogItem.class, DefiningClassLoader.create(CLASS_LOADER))
+		await(cube.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(), LogItem.class, DefiningClassLoader.create(CLASS_LOADER))
 				.streamTo(queryResultConsumer3));
 		List<LogItem> queryResult3 = queryResultConsumer3.getList();
 
@@ -243,7 +241,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 			LogDataConsumer<LogItem, CubeDiff> logStreamConsumer1 = cube1.logStreamConsumer(LogItem.class);
 			LogOTProcessor<LogItem, CubeDiff> logOTProcessor1 = LogOTProcessor.create(EVENTLOOP,
-					multilog, logStreamConsumer1, "testlog", asList("partitionA"), cubeDiffLogOTState);
+					multilog, logStreamConsumer1, "testlog", List.of("partitionA"), cubeDiffLogOTState);
 
 			await(logCubeStateManager1.checkout());
 
@@ -302,7 +300,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 			LogDataConsumer<LogItem, CubeDiff> logStreamConsumer1 = cube1.logStreamConsumer(LogItem.class);
 
 			LogOTProcessor<LogItem, CubeDiff> logOTProcessor1 = LogOTProcessor.create(EVENTLOOP,
-					multilog, logStreamConsumer1, "testlog", asList("partitionA"), cubeDiffLogOTState);
+					multilog, logStreamConsumer1, "testlog", List.of("partitionA"), cubeDiffLogOTState);
 
 			await(logCubeStateManager1.checkout());
 

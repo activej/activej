@@ -235,22 +235,18 @@ public final class HttpActiveFs implements ActiveFs, WithInitializer<HttpActiveF
 	}
 
 	private static Promise<HttpResponse> checkResponse(HttpResponse response) throws HttpError {
-		switch (response.getCode()) {
-			case 200:
-			case 206:
-				return Promise.of(response);
-			case 500:
-				return response.loadBody()
-						.map(body -> {
-							try {
-								throw fromJson(FsException.class, body);
-							} catch (MalformedDataException ignored) {
-								throw HttpError.ofCode(500);
-							}
-						});
-			default:
-				throw HttpError.ofCode(response.getCode());
-		}
+		return switch (response.getCode()) {
+			case 200, 206 -> Promise.of(response);
+			case 500 -> response.loadBody()
+					.map(body -> {
+						try {
+							throw fromJson(FsException.class, body);
+						} catch (MalformedDataException ignored) {
+							throw HttpError.ofCode(500);
+						}
+					});
+			default -> throw HttpError.ofCode(response.getCode());
+		};
 	}
 
 	private @NotNull Promise<ChannelConsumer<ByteBuf>> doUpload(@NotNull String filename, @Nullable Long size) {

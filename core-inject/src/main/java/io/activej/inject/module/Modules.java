@@ -38,16 +38,13 @@ import java.util.function.UnaryOperator;
 import static io.activej.inject.Qualifiers.uniqueQualifier;
 import static io.activej.inject.Scope.UNSCOPED;
 import static io.activej.inject.util.Utils.*;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toCollection;
 
 /**
  * This class contains a set of utilities for working with {@link Module modules}.
  */
 public final class Modules {
-	static final Module EMPTY = new SimpleModule(Trie.leaf(emptyMap()), emptyMap(), emptyMap(), emptyMap());
+	static final Module EMPTY = new SimpleModule(Trie.leaf(Map.of()), Map.of(), Map.of(), Map.of());
 
 	/**
 	 * Combines multiple modules into one.
@@ -77,7 +74,7 @@ public final class Modules {
 	 * @see #combine(Collection)
 	 */
 	public static Module combine(Module... modules) {
-		return modules.length == 0 ? Module.empty() : modules.length == 1 ? modules[0] : combine(asList(modules));
+		return modules.length == 0 ? Module.empty() : modules.length == 1 ? modules[0] : combine(List.of(modules));
 	}
 
 	/**
@@ -93,7 +90,7 @@ public final class Modules {
 	 * @see #override(List) (Collection)
 	 */
 	public static Module override(Module... modules) {
-		return override(asList(modules));
+		return override(List.of(modules));
 	}
 
 	/**
@@ -136,7 +133,7 @@ public final class Modules {
 	}
 
 	public static Trie<Scope, Set<Key<?>>> getImports(Trie<Scope, Map<Key<?>, Set<Binding<?>>>> trie) {
-		return getImports(trie, emptySet());
+		return getImports(trie, Set.of());
 	}
 
 	private static Trie<Scope, Set<Key<?>>> getImports(Trie<Scope, Map<Key<?>, Set<Binding<?>>>> trie, Set<Key<?>> upperExports) {
@@ -166,14 +163,14 @@ public final class Modules {
 			BiFunction<Scope[], Key<?>, Key<?>> exportsMapping,
 			BiFunction<Scope[], Key<?>, Key<?>> importsMapping) {
 		return new SimpleModule(
-				remap(exportsMapping, importsMapping, UNSCOPED, module.getBindings(), emptyMap()),
+				remap(exportsMapping, importsMapping, UNSCOPED, module.getBindings(), Map.of()),
 				module.getBindingTransformers(),
 				module.getBindingGenerators(),
 				module.getMultibinders());
 	}
 
 	public static Module restrict(Module module, Key<?>... exports) {
-		return restrict(module, new HashSet<>(asList(exports)));
+		return restrict(module, Set.of(exports));
 	}
 
 	public static Module restrict(Module module, Set<Key<?>> exports) {
@@ -199,7 +196,7 @@ public final class Modules {
 			if (exportsPredicate.test(path, key)) {
 				return key;
 			}
-			Map<Key<?>, Key<?>> mapping = exportsMappings.computeIfAbsent(asList(path), $ -> new HashMap<>());
+			Map<Key<?>, Key<?>> mapping = exportsMappings.computeIfAbsent(List.of(path), $ -> new HashMap<>());
 			Key<?> result = mapping.get(key);
 			if (result == null) {
 				result = Key.ofType(key.getType(), uniqueQualifier(key.getQualifier()));
@@ -207,7 +204,7 @@ public final class Modules {
 			}
 			return result;
 		};
-		return remap(remapping, (path, key) -> key, UNSCOPED, trie, emptyMap());
+		return remap(remapping, (path, key) -> key, UNSCOPED, trie, Map.of());
 	}
 
 	private static Trie<Scope, Map<Key<?>, Set<Binding<?>>>> remap(BiFunction<Scope[], Key<?>, Key<?>> exportsMapping, BiFunction<Scope[], Key<?>, Key<?>> importsMapping,
@@ -236,7 +233,7 @@ public final class Modules {
 					newDependencies.add(newImportKey);
 				}
 				Binding<?> newBinding = changed ?
-						new Binding<Object>(newDependencies) {
+						new Binding<>(newDependencies) {
 							@Override
 							public CompiledBinding<Object> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 								//noinspection unchecked

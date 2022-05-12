@@ -56,7 +56,6 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.*;
 import static io.activej.common.Utils.first;
 import static io.activej.fs.util.RemoteFsUtils.isWildcard;
-import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toMap;
 
 public final class ClusterRepartitionController implements WithInitializer<ClusterRepartitionController>, EventloopJmxBeanWithStats, EventloopService {
@@ -83,7 +82,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 	private int failedFiles = 0;
 	private boolean isRepartitioning;
 
-	private Set<Object> lastAlivePartitionIds = emptySet();
+	private Set<Object> lastAlivePartitionIds = Set.of();
 	private long lastPlanRecalculation;
 
 	private @Nullable SettablePromise<Void> closeCallback;

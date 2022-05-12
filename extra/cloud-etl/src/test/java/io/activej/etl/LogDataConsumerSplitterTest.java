@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static io.activej.promise.TestUtils.await;
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
 public class LogDataConsumerSplitterTest {
@@ -34,7 +33,7 @@ public class LogDataConsumerSplitterTest {
 
 	@Test
 	public void testConsumes() {
-		List<StreamConsumerToList<Integer>> consumers = asList(
+		List<StreamConsumerToList<Integer>> consumers = List.of(
 				StreamConsumerToList.create(),
 				StreamConsumerToList.create());
 
@@ -51,7 +50,7 @@ public class LogDataConsumerSplitterTest {
 
 	@Test
 	public void testConsumersWithSuspend() {
-		List<StreamConsumerToList<Integer>> consumers = asList(
+		List<StreamConsumerToList<Integer>> consumers = List.of(
 				StreamConsumerToList.create(),
 				StreamConsumerToList.create());
 
@@ -68,7 +67,7 @@ public class LogDataConsumerSplitterTest {
 
 	@Test(expected = IllegalStateException.class)
 	public void testIncorrectImplementation() {
-		LogDataConsumerSplitter<Integer, Integer> splitter = new LogDataConsumerSplitter<Integer, Integer>() {
+		LogDataConsumerSplitter<Integer, Integer> splitter = new LogDataConsumerSplitter<>() {
 			@Override
 			protected StreamDataAcceptor<Integer> createSplitter(@NotNull Context ctx) {
 				return item -> {};

@@ -20,6 +20,7 @@ import org.junit.rules.TemporaryFolder;
 import javax.sql.DataSource;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -30,7 +31,6 @@ import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.TestUtils.initializeUplink;
 import static io.activej.test.TestUtils.dataSource;
-import static java.util.Collections.emptyList;
 
 public class CubeCleanerControllerTest {
 
@@ -111,19 +111,19 @@ public class CubeCleanerControllerTest {
 	public void initializeRepo() {
 		initializeUplink(uplink);
 
-		UplinkProtoCommit proto1 = await(() -> uplink.createProtoCommit(0L, emptyList(), 0));
+		UplinkProtoCommit proto1 = await(() -> uplink.createProtoCommit(0L, List.of(), 0));
 		await(() -> uplink.push(proto1)); // 1N
 
-		UplinkProtoCommit proto2 = await(() -> uplink.createProtoCommit(1L, emptyList(), 1));
+		UplinkProtoCommit proto2 = await(() -> uplink.createProtoCommit(1L, List.of(), 1));
 		await(() -> uplink.push(proto2)); // 2N
 
-		UplinkProtoCommit proto3 = await(() -> uplink.createProtoCommit(2L, emptyList(), 2));
+		UplinkProtoCommit proto3 = await(() -> uplink.createProtoCommit(2L, List.of(), 2));
 		await(() -> uplink.push(proto3)); // 3N
 
-		UplinkProtoCommit proto4 = await(() -> uplink.createProtoCommit(3L, emptyList(), 3));
+		UplinkProtoCommit proto4 = await(() -> uplink.createProtoCommit(3L, List.of(), 3));
 		await(() -> uplink.push(proto4)); // 4S
 
-		UplinkProtoCommit proto5 = await(() -> uplink.createProtoCommit(4L, emptyList(), 4));
+		UplinkProtoCommit proto5 = await(() -> uplink.createProtoCommit(4L, List.of(), 4));
 		await(() -> uplink.push(proto5)); // 5N
 	}
 

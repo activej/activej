@@ -27,7 +27,7 @@ import java.io.IOException;
 
 public interface JsonCodec<T> extends ReadObject<T>, WriteObject<T> {
 	static <T> JsonCodec<T> of(ReadObject<T> readObject, WriteObject<T> writeObject) {
-		return new JsonCodec<T>() {
+		return new JsonCodec<>() {
 			@Override
 			public T read(@NotNull JsonReader reader) throws IOException {
 				return readObject.read(reader);

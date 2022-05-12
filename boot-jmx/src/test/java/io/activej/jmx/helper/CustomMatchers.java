@@ -10,7 +10,7 @@ import javax.management.ObjectName;
 public final class CustomMatchers {
 
 	public static Matcher<ObjectName> objectname(String name) {
-		return new BaseMatcher<ObjectName>() {
+		return new BaseMatcher<>() {
 			@Override
 			public boolean matches(Object item) {
 				try {

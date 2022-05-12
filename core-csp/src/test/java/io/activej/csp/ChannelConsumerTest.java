@@ -23,7 +23,6 @@ import static io.activej.eventloop.Eventloop.initWithEventloop;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.asList;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
@@ -152,7 +151,7 @@ public class ChannelConsumerTest {
 	@Test
 	public void testOfAnotherEventloop() {
 		Eventloop anotherEventloop = Eventloop.create().withEventloopFatalErrorHandler(rethrow());
-		List<Integer> expectedList = asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+		List<Integer> expectedList = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 		List<Integer> actualList = new ArrayList<>();
 		ChannelConsumer<Integer> anotherEventloopConsumer = initWithEventloop(anotherEventloop, () -> ChannelConsumer.ofConsumer(actualList::add));
 		ChannelConsumer<Integer> consumer = ChannelConsumer.ofAnotherEventloop(anotherEventloop, anotherEventloopConsumer);
@@ -180,7 +179,7 @@ public class ChannelConsumerTest {
 		stopAnotherEventloop(anotherEventloop);
 
 		assertSame(expectedException, exception);
-		assertEquals(asList(1, 2), list);
+		assertEquals(List.of(1, 2), list);
 	}
 
 

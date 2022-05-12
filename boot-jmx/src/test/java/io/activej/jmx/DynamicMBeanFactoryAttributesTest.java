@@ -17,8 +17,6 @@ import java.util.*;
 
 import static io.activej.jmx.JmxBeanSettings.defaultSettings;
 import static io.activej.jmx.helper.Utils.nameToAttribute;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
@@ -99,9 +97,9 @@ public class DynamicMBeanFactoryAttributesTest {
 
 	@Test
 	public void concatenatesListAttributesFromDifferentMBeans() throws Exception {
-		MBeanWithListAttr mBeanWithListAttr_1 = new MBeanWithListAttr(asList("a", "b"));
+		MBeanWithListAttr mBeanWithListAttr_1 = new MBeanWithListAttr(List.of("a", "b"));
 		MBeanWithListAttr mBeanWithListAttr_2 = new MBeanWithListAttr(new ArrayList<>());
-		MBeanWithListAttr mBeanWithListAttr_3 = new MBeanWithListAttr(singletonList("w"));
+		MBeanWithListAttr mBeanWithListAttr_3 = new MBeanWithListAttr(List.of("w"));
 
 		DynamicMBean mbean = createDynamicMBeanFor(mBeanWithListAttr_1, mBeanWithListAttr_2, mBeanWithListAttr_3);
 
@@ -274,7 +272,7 @@ public class DynamicMBeanFactoryAttributesTest {
 	public void itShouldThrowExceptionForNonPublicAttributes() {
 		MBeanWithNonPublicAttributes instance = new MBeanWithNonPublicAttributes();
 		DynamicMBeanFactory dynamicMBeanFactory = DynamicMBeanFactory.create();
-		List<MBeanWithNonPublicAttributes> beans = singletonList(instance);
+		List<MBeanWithNonPublicAttributes> beans = List.of(instance);
 		JmxBeanSettings settings = defaultSettings();
 		try {
 			dynamicMBeanFactory.createDynamicMBean(beans, settings, false);
@@ -288,7 +286,7 @@ public class DynamicMBeanFactoryAttributesTest {
 	// region helper methods
 	public static DynamicMBean createDynamicMBeanFor(Object... objects) {
 		return DynamicMBeanFactory.create()
-				.createDynamicMBean(asList(objects), defaultSettings(), false);
+				.createDynamicMBean(List.of(objects), defaultSettings(), false);
 	}
 
 	public static Object[] keyForTabularData(String key) {

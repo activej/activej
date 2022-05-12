@@ -177,7 +177,7 @@ public abstract class AbstractRedisBenchmark extends Launcher {
 							sent = 0;
 							completed = 0;
 
-							Callback<Object> callback = new Callback<Object>() {
+							Callback<Object> callback = new Callback<>() {
 								@Override
 								public void accept(Object $, @Nullable Exception e) {
 									if (e != null) {

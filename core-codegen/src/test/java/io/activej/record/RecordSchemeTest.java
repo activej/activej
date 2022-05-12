@@ -110,12 +110,12 @@ public class RecordSchemeTest {
 	}
 
 	@Test
-	public void testHashCodeEquals() {
+	public void testHashCodeEqualsDefault() {
 		RecordScheme scheme = RecordScheme.create()
 				.withField("id", int.class)
 				.withField("code", long.class)
 				.withField("name", String.class)
-				.withHashCodeEqualsFields("id", "code")
+				.withField("complex.name", String.class)
 				.build();
 
 		Record record1 = scheme.record();
@@ -124,10 +124,46 @@ public class RecordSchemeTest {
 		record1.set("id", 10);
 		record1.set("code", 100L);
 		record1.set("name", "abc");
+		record1.set("complex.name", "def");
 
 		record2.set("id", 10);
 		record2.set("code", 100L);
 		record2.set("name", "abc");
+		record2.set("complex.name", "def");
+
+		assertEquals(record1, record2);
+		assertEquals(record1.hashCode(), record2.hashCode());
+
+		record1.set("complex.name", "def2");
+
+		assertNotEquals(record1, record2);
+		assertNotEquals(record1.hashCode(), record2.hashCode());
+
+		assertStaticConstantsCleared();
+	}
+
+	@Test
+	public void testHashCodeEquals() {
+		RecordScheme scheme = RecordScheme.create()
+				.withField("id", int.class)
+				.withField("code", long.class)
+				.withField("name", String.class)
+				.withField("complex.name", String.class)
+				.withHashCodeEqualsFields("id", "code", "complex.name")
+				.build();
+
+		Record record1 = scheme.record();
+		Record record2 = scheme.record();
+
+		record1.set("id", 10);
+		record1.set("code", 100L);
+		record1.set("name", "abc");
+		record1.set("complex.name", "def");
+
+		record2.set("id", 10);
+		record2.set("code", 100L);
+		record2.set("name", "abc");
+		record2.set("complex.name", "def");
 
 		assertEquals(record1, record2);
 		assertEquals(record1.hashCode(), record2.hashCode());
@@ -136,8 +172,7 @@ public class RecordSchemeTest {
 		assertEquals(record1, record2);
 		assertEquals(record1.hashCode(), record2.hashCode());
 
-		record1.set("name", "abc");
-		record1.set("id", 5);
+		record1.set("complex.name", "def2");
 		assertNotEquals(record1, record2);
 		assertNotEquals(record1.hashCode(), record2.hashCode());
 
@@ -155,7 +190,8 @@ public class RecordSchemeTest {
 				.withField("id", int.class)
 				.withField("code", long.class)
 				.withField("name", String.class)
-				.withComparator("id", "code")
+				.withField("complex.name", String.class)
+				.withComparator("id", "code", "complex.name")
 				.build();
 
 		Comparator<Record> comparator = scheme.recordComparator();
@@ -166,10 +202,12 @@ public class RecordSchemeTest {
 		record1.set("id", 10);
 		record1.set("code", 100L);
 		record1.set("name", "abc");
+		record1.set("complex.name", "def");
 
 		record2.set("id", 10);
 		record2.set("code", 100L);
 		record2.set("name", "abc");
+		record2.set("complex.name", "def");
 
 		assertEquals(0, comparator.compare(record1, record2));
 

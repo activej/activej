@@ -2,7 +2,6 @@ package io.activej.fs.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufStrings;
-import io.activej.common.Utils;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.fs.ActiveFs;
@@ -21,10 +20,8 @@ import org.junit.Test;
 import java.util.*;
 import java.util.stream.IntStream;
 
-import static io.activej.common.Utils.setOf;
 import static io.activej.promise.TestUtils.await;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -71,7 +68,7 @@ public final class ApiTest {
 
 	@Test
 	public void infoAll() {
-		Set<String> names = setOf("file1.txt", "file2.txt", "file3.txt", "file4.txt");
+		Set<String> names = Set.of("file1.txt", "file2.txt", "file3.txt", "file4.txt");
 		doTest(client.infoAll(names), names);
 	}
 
@@ -82,7 +79,7 @@ public final class ApiTest {
 
 	@Test
 	public void deleteAll() {
-		Set<String> toDelete = setOf("file1.txt", "file2.txt", "file3.txt");
+		Set<String> toDelete = Set.of("file1.txt", "file2.txt", "file3.txt");
 		doTest(client.deleteAll(toDelete), toDelete);
 	}
 
@@ -93,12 +90,11 @@ public final class ApiTest {
 
 	@Test
 	public void moveAll() {
-		Map<String, String> sourceToTarget = Utils.mapOf(
+		Map<String, String> sourceToTarget = Map.of(
 				"file1.txt", "newFile1.txt",
 				"file2.txt", "newFile2.txt",
 				"file3.txt", "newFile3.txt",
-				"file4.txt", "newFile4.txt"
-		);
+				"file4.txt", "newFile4.txt");
 		doTest(client.moveAll(sourceToTarget), sourceToTarget);
 	}
 
@@ -109,12 +105,11 @@ public final class ApiTest {
 
 	@Test
 	public void copyAll() {
-		Map<String, String> sourceToTarget = Utils.mapOf(
+		Map<String, String> sourceToTarget = Map.of(
 				"file1.txt", "newFile1.txt",
 				"file2.txt", "newFile2.txt",
 				"file3.txt", "newFile3.txt",
-				"file4.txt", "newFile4.txt"
-		);
+				"file4.txt", "newFile4.txt");
 		doTest(client.copyAll(sourceToTarget), sourceToTarget);
 	}
 
@@ -192,7 +187,7 @@ public final class ApiTest {
 			<T> Promise<T> resultOf(@Nullable T result, Object... args) {
 				params.clear();
 				params.add(result);
-				params.addAll(asList(args));
+				params.addAll(List.of(args));
 				return Promise.of(result);
 			}
 
@@ -238,11 +233,12 @@ public final class ApiTest {
 
 			@Override
 			public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
-				return resultOf(Utils.mapOf(
-						"test1", FileMetadata.of(100, 10),
-						"test2", FileMetadata.of(200, 20),
-						"test3", FileMetadata.of(300, 30)
-				), glob);
+				return resultOf(
+						Map.of(
+								"test1", FileMetadata.of(100, 10),
+								"test2", FileMetadata.of(200, 20),
+								"test3", FileMetadata.of(300, 30)),
+						glob);
 			}
 
 			@Override

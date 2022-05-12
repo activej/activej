@@ -65,8 +65,7 @@ class Utils {
 	}
 
 	static String getQualifierString(@NotNull Object qualifier) throws ReflectiveOperationException {
-		if (qualifier instanceof Class) {
-			Class<?> qualifierClass = (Class<?>) qualifier;
+		if (qualifier instanceof Class<?> qualifierClass) {
 			if (qualifierClass.isAnnotation()) {
 				return qualifierClass.getSimpleName();
 			}

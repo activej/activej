@@ -30,7 +30,6 @@ import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import static io.activej.inject.Qualifiers.isUnique;
-import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toSet;
 
 /**
@@ -79,7 +78,7 @@ public interface Module {
 	 * Creates a {@link Module module} out of given binding graph trie
 	 */
 	static Module of(Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindings) {
-		return new SimpleModule(bindings, emptyMap(), emptyMap(), emptyMap());
+		return new SimpleModule(bindings, Map.of(), Map.of(), Map.of());
 	}
 
 	/**
