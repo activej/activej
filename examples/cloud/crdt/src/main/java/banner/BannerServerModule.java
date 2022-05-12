@@ -24,7 +24,6 @@ import static banner.BannerCommands.*;
 public class BannerServerModule extends AbstractModule {
 
 	@Provides
-	@SuppressWarnings("ConstantConditions")
 	Map<Class<?>, RpcRequestHandler<?, ?>> handlers(
 			CrdtMap<Long, GSet<Integer>> map,
 			WriteAheadLog<Long, GSet<Integer>> writeAheadLog

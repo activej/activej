@@ -81,7 +81,6 @@ import static java.util.stream.Collectors.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-@SuppressWarnings("rawtypes")
 public final class PartitionedStreamTest {
 	private static final String SOURCE_FILENAME = "data.txt";
 	private static final String TARGET_FILENAME = "result.txt";
