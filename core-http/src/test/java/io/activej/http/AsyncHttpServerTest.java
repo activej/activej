@@ -567,9 +567,12 @@ public final class AsyncHttpServerTest {
 		Thread thread = new Thread(eventloop);
 		thread.start();
 
-		String malformedUriRequest = "GET /malformed uri HTTP/1.1\r\n" +
-				"Host: localhost\r\n" +
-				"Connection: keep-alive\r\n\r\n";
+		String malformedUriRequest = """
+				GET /malformed uri HTTP/1.1\r
+				Host: localhost\r
+				Connection: keep-alive\r
+				\r
+				""";
 		doTestMalformedRequest(malformedUriRequest);
 
 		ExceptionStats malformedHttpExceptions = inspector.getMalformedHttpExceptions();
@@ -598,10 +601,13 @@ public final class AsyncHttpServerTest {
 
 
 		// malformed header
-		String malformedHeaderRequest = "GET / HTTP/1.1\r\n" +
-				"Host: localhost\r\n" +
-				"Connection: keep-alive\r\n" +
-				"Content-Length: error\r\n\r\n";
+		String malformedHeaderRequest = """
+				GET / HTTP/1.1\r
+				Host: localhost\r
+				Connection: keep-alive\r
+				Content-Length: error\r
+				\r
+				""";
 		doTestMalformedRequest(malformedHeaderRequest);
 
 		ExceptionStats malformedHttpExceptions = inspector.getMalformedHttpExceptions();
@@ -629,13 +635,16 @@ public final class AsyncHttpServerTest {
 		thread.start();
 
 		// pipeline malformed first request
-		String malformedPipelinedRequest = "GET /malformed uri HTTP/1.1\r\n" +
-				"Host: localhost\r\n" +
-				"Connection: keep-alive\r\n\r\n" +
-
-				"GET / HTTP/1.1\r\n" +
-				"Host: localhost\r\n" +
-				"Connection: keep-alive\r\n\r\n";
+		String malformedPipelinedRequest = """
+				GET /malformed uri HTTP/1.1\r
+				Host: localhost\r
+				Connection: keep-alive\r
+				\r
+				GET / HTTP/1.1\r
+				Host: localhost\r
+				Connection: keep-alive\r
+				\r
+				""";
 		doTestMalformedRequest(malformedPipelinedRequest);
 
 		ExceptionStats malformedHttpExceptions = inspector.getMalformedHttpExceptions();
@@ -661,12 +670,18 @@ public final class AsyncHttpServerTest {
 		Thread thread = new Thread(eventloop);
 		thread.start();
 
-		String normalPipelinedrequest = "GET / HTTP/1.1\r\n" +
-				"Host: localhost\r\n" +
-				"Connection: keep-alive\r\n\r\n";
-		String malformedPipelinedRequest = "GET /malformed uri HTTP/1.1\r\n" +
-				"Host: localhost\r\n" +
-				"Connection: keep-alive\r\n\r\n";
+		String normalPipelinedrequest = """
+				GET / HTTP/1.1\r
+				Host: localhost\r
+				Connection: keep-alive\r
+				\r
+				""";
+		String malformedPipelinedRequest = """
+				GET /malformed uri HTTP/1.1\r
+				Host: localhost\r
+				Connection: keep-alive\r
+				\r
+				""";
 
 		try (Socket socket = new Socket()) {
 			socket.connect(new InetSocketAddress("localhost", port));
@@ -674,17 +689,17 @@ public final class AsyncHttpServerTest {
 			socket.shutdownOutput();
 
 			readAndAssert(socket.getInputStream(),
-					"HTTP/1.1 200 OK\r\n" +
-							"Connection: keep-alive\r\n" +
-							"Content-Type: text/plain; charset=utf-8\r\n" +
-							"Content-Length: 13\r\n" +
-							"\r\n" +
-							"Hello, world!" +
-
-							"HTTP/1.1 400 Bad Request\r\n" +
-							"Connection: close\r\n" +
-							"Content-Length: 0\r\n" +
-							"\r\n");
+					"""
+							HTTP/1.1 200 OK\r
+							Connection: keep-alive\r
+							Content-Type: text/plain; charset=utf-8\r
+							Content-Length: 13\r
+							\r
+							Hello, world!HTTP/1.1 400 Bad Request\r
+							Connection: close\r
+							Content-Length: 0\r
+							\r
+							""");
 
 
 			assertEmpty(socket.getInputStream());
@@ -708,10 +723,12 @@ public final class AsyncHttpServerTest {
 			writeByRandomParts(socket, string);
 			socket.shutdownOutput();
 
-			readAndAssert(socket.getInputStream(), "HTTP/1.1 400 Bad Request\r\n" +
-					"Connection: close\r\n" +
-					"Content-Length: 0\r\n" +
-					"\r\n");
+			readAndAssert(socket.getInputStream(), """
+					HTTP/1.1 400 Bad Request\r
+					Connection: close\r
+					Content-Length: 0\r
+					\r
+					""");
 		}
 	}
 
