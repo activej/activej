@@ -117,8 +117,7 @@ public final class ProtobufUtils {
 
 	public static NodeProto.Node convert(Node node, FunctionSerializer functionSerializer) {
 		NodeProto.Node.Builder builder = NodeProto.Node.newBuilder();
-		if (node instanceof NodeReduce) {
-			NodeReduce<?, ?, ?> reduce = (NodeReduce<?, ?, ?>) node;
+		if (node instanceof NodeReduce<?, ?, ?> reduce) {
 			builder.setReduce(Reduce.newBuilder()
 					.setIndex(reduce.getIndex())
 					.setKeyComparator(functionSerializer.serializeComparator(reduce.getKeyComparator()))
@@ -129,15 +128,13 @@ public final class ProtobufUtils {
 									.build())))
 					.setOutput(convert(reduce.getOutput()))
 					.build());
-		} else if (node instanceof NodeUpload) {
-			NodeUpload<?> upload = (NodeUpload<?>) node;
+		} else if (node instanceof NodeUpload<?> upload) {
 			builder.setUpload(NodeProto.Node.Upload.newBuilder()
 					.setIndex(upload.getIndex())
 					.setType(upload.getType().getName())
 					.setStreamId(convert(upload.getStreamId()))
 					.build());
-		} else if (node instanceof NodeSort) {
-			NodeSort<?, ?> sort = (NodeSort<?, ?>) node;
+		} else if (node instanceof NodeSort<?, ?> sort) {
 			builder.setSort(NodeProto.Node.Sort.newBuilder()
 					.setIndex(sort.getIndex())
 					.setType(sort.getType().getName())
@@ -148,8 +145,7 @@ public final class ProtobufUtils {
 					.setInput(convert(sort.getInput()))
 					.setOutput(convert(sort.getOutput()))
 					.build());
-		} else if (node instanceof NodeMerge) {
-			NodeMerge<?, ?> merge = (NodeMerge<?, ?>) node;
+		} else if (node instanceof NodeMerge<?, ?> merge) {
 			builder.setMerge(NodeProto.Node.Merge.newBuilder()
 					.setIndex(merge.getIndex())
 					.setKeyFunction(functionSerializer.serializeFunction(merge.getKeyFunction()))
@@ -158,8 +154,7 @@ public final class ProtobufUtils {
 					.addAllInputs(convertIds(merge.getInputs()))
 					.setOutput(convert(merge.getOutput()))
 					.build());
-		} else if (node instanceof NodeShard) {
-			NodeShard<?, ?> shard = (NodeShard<?, ?>) node;
+		} else if (node instanceof NodeShard<?, ?> shard) {
 			builder.setShard(NodeProto.Node.Shard.newBuilder()
 					.setIndex(shard.getIndex())
 					.setKeyFunction(functionSerializer.serializeFunction(shard.getKeyFunction()))
@@ -167,8 +162,7 @@ public final class ProtobufUtils {
 					.addAllOutputs(convertIds(shard.getOutputs()))
 					.setNonce(shard.getNonce())
 					.build());
-		} else if (node instanceof NodeDownload) {
-			NodeDownload<?> download = (NodeDownload<?>) node;
+		} else if (node instanceof NodeDownload<?> download) {
 			builder.setDownload(Download.newBuilder()
 					.setIndex(download.getIndex())
 					.setType(download.getType().getName())
@@ -178,16 +172,14 @@ public final class ProtobufUtils {
 					.setInput(convert(download.getStreamId()))
 					.setOutput(convert(download.getOutput()))
 					.build());
-		} else if (node instanceof NodeMap) {
-			NodeMap<?, ?> map = (NodeMap<?, ?>) node;
+		} else if (node instanceof NodeMap<?, ?> map) {
 			builder.setMap(NodeProto.Node.Map.newBuilder()
 					.setIndex(map.getIndex())
 					.setFunction(functionSerializer.serializeFunction(map.getFunction()))
 					.setInput(convert(map.getInput()))
 					.setOutput(convert(map.getOutput()))
 					.build());
-		} else if (node instanceof NodeJoin) {
-			NodeJoin<?, ?, ?, ?> join = (NodeJoin<?, ?, ?, ?>) node;
+		} else if (node instanceof NodeJoin<?, ?, ?, ?> join) {
 			builder.setJoin(Join.newBuilder()
 					.setIndex(join.getIndex())
 					.setLeft(convert(join.getLeft()))
@@ -198,16 +190,14 @@ public final class ProtobufUtils {
 					.setRightKeyFunction(functionSerializer.serializeFunction(join.getRightKeyFunction()))
 					.setJoiner(functionSerializer.serializeJoiner(join.getJoiner()))
 					.build());
-		} else if (node instanceof NodeFilter) {
-			NodeFilter<?> filter = (NodeFilter<?>) node;
+		} else if (node instanceof NodeFilter<?> filter) {
 			builder.setFilter(Filter.newBuilder()
 					.setIndex(filter.getIndex())
 					.setPredicate(functionSerializer.serializePredicate(filter.getPredicate()))
 					.setInput(convert(filter.getInput()))
 					.setOutput(convert(filter.getOutput()))
 					.build());
-		} else if (node instanceof NodeConsumerOfId) {
-			NodeConsumerOfId<?> consumerOfId = (NodeConsumerOfId<?>) node;
+		} else if (node instanceof NodeConsumerOfId<?> consumerOfId) {
 			builder.setConsumerOfId(ConsumerOfId.newBuilder()
 					.setIndex(consumerOfId.getIndex())
 					.setId(consumerOfId.getId())
@@ -215,8 +205,7 @@ public final class ProtobufUtils {
 					.setMaxPartitions(consumerOfId.getMaxPartitions())
 					.setInput(convert(consumerOfId.getInput()))
 					.build());
-		} else if (node instanceof NodeSupplierOfId) {
-			NodeSupplierOfId<?> supplierOfId = (NodeSupplierOfId<?>) node;
+		} else if (node instanceof NodeSupplierOfId<?> supplierOfId) {
 			builder.setSupplierOfId(NodeProto.Node.SupplierOfId.newBuilder()
 					.setIndex(supplierOfId.getIndex())
 					.setId(supplierOfId.getId())
@@ -224,8 +213,7 @@ public final class ProtobufUtils {
 					.setMaxPartitions(supplierOfId.getMaxPartitions())
 					.setOutput(convert(supplierOfId.getOutput()))
 					.build());
-		} else if (node instanceof NodeReduceSimple) {
-			NodeReduceSimple<?, ?, ?, ?> reduceSimple = (NodeReduceSimple<?, ?, ?, ?>) node;
+		} else if (node instanceof NodeReduceSimple<?, ?, ?, ?> reduceSimple) {
 			builder.setReduceSimple(NodeProto.Node.ReduceSimple.newBuilder()
 					.setIndex(reduceSimple.getIndex())
 					.setKeyFunction(functionSerializer.serializeFunction(reduceSimple.getKeyFunction()))
@@ -234,8 +222,7 @@ public final class ProtobufUtils {
 					.addAllInputs(convertIds(reduceSimple.getInputs()))
 					.setOutput(convert(reduceSimple.getOutput()))
 					.build());
-		} else if (node instanceof NodeUnion) {
-			NodeUnion<?> union = (NodeUnion<?>) node;
+		} else if (node instanceof NodeUnion<?> union) {
 			builder.setUnion(NodeProto.Node.Union.newBuilder()
 					.setIndex(union.getIndex())
 					.addAllInputs(convertIds(union.getInputs()))
