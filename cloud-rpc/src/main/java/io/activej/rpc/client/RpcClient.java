@@ -449,8 +449,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 			pendingConnections.retainAll(strategyAddresses);
 			new ArrayList<>(connections.keySet()).stream()
 					.filter(not(strategyAddresses::contains))
-					.map(connections::remove)
-					.collect(toList())
+					.map(connections::remove).toList()
 					.forEach(RpcClientConnection::shutdown);
 
 			if (newRequestSender != null) {

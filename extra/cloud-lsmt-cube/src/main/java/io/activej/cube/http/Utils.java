@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import static io.activej.common.Utils.not;
-import static java.util.stream.Collectors.toList;
 
 class Utils {
 	static final String MEASURES_PARAM = "measures";
@@ -56,7 +55,7 @@ class Utils {
 		List<String> tokens = splitter.splitAsStream(string)
 				.map(String::trim)
 				.filter(not(String::isEmpty))
-				.collect(toList());
+				.toList();
 		for (String s : tokens) {
 			int i = s.indexOf(':');
 			if (i == -1) {
