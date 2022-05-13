@@ -171,16 +171,18 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 						.then(() -> messaging.receive()
 								.mapException(e -> new CrdtException("Failed to receive response", e)))
 						.whenResult(simpleHandlerFn(TAKE_STARTED))
-						.map($ ->
-								messaging.receiveBinaryStream()
-										.transformWith(ChannelDeserializer.create(serializer))
-										.transformWith(detailedStats ? takeStatsDetailed : takeStats)
-										.withEndOfStream(eos -> eos
-												.then(() -> messaging.send(request(TAKE_ACK)))
-												.then(messaging::sendEndOfStream)
-												.mapException(e -> new CrdtException("Take failed", e))
-												.whenResult(messaging::close)
-												.whenException(messaging::closeEx))));
+						.map($ -> {
+							StreamSupplier<CrdtData<K, S>> supplier = messaging.receiveBinaryStream()
+									.transformWith(ChannelDeserializer.create(serializer))
+									.transformWith(detailedStats ? takeStatsDetailed : takeStats);
+							supplier.getAcknowledgement()
+									.then(() -> messaging.send(request(TAKE_ACK)))
+									.then(messaging::sendEndOfStream)
+									.mapException(e -> new CrdtException("Take failed", e))
+									.whenResult(messaging::close)
+									.whenException(messaging::closeEx);
+							return supplier;
+						}));
 	}
 
 	@Override

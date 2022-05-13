@@ -179,10 +179,10 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 										.whenException(e -> taken = null)
 										.map(supplier -> supplier
 												.transformWith(StreamFilter.mapper(reducingData -> new CrdtData<>(reducingData.key, reducingData.timestamp, reducingData.state)))
-												.transformWith(detailedStats ? takeStatsDetailed : takeStats)
-												.withEndOfStream(eos -> eos
-														.then(() -> fs.deleteAll(fileMap.keySet()))
-														.whenComplete(() -> taken = null)))))
+												.transformWith(detailedStats ? takeStatsDetailed : takeStats))
+										.whenResult(supplier -> supplier.getAcknowledgement()
+												.then(() -> fs.deleteAll(fileMap.keySet()))
+												.whenComplete(() -> taken = null))))
 				.mapException(e -> new CrdtException("Failed to take CRDT data", e));
 	}
 

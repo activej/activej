@@ -50,6 +50,7 @@ import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.crdt.CrdtMessagingProto.CrdtRequest.RequestCase.TAKE_ACK;
 import static io.activej.crdt.CrdtMessagingProto.CrdtResponse.ResponseCase.*;
+import static io.activej.crdt.util.Utils.ackTransformer;
 import static io.activej.fs.util.ProtobufUtils.codec;
 
 @SuppressWarnings("rawtypes")
@@ -159,17 +160,17 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer
 				.whenComplete(takeBeginPromise.recordStats())
 				.whenResult(() -> messaging.send(response(TAKE_STARTED)))
 				.then(supplier -> supplier
+						.transformWith(ackTransformer(ack -> ack
+								.then(() -> messaging.receive()
+										.then(takeAck -> {
+											if (!takeAck.hasTakeAck()) {
+												return Promise.ofException(new CrdtException("Received message " + takeAck + " instead of " + TAKE_ACK));
+											}
+											return Promise.complete();
+										}))))
 						.transformWith(detailedStats ? takeStatsDetailed : takeStats)
 						.transformWith(ChannelSerializer.create(serializer))
-						.streamTo(messaging.sendBinaryStream()
-								.withAcknowledgement(ack -> ack
-										.then(() -> messaging.receive()
-												.then(takeAck -> {
-													if (!takeAck.hasTakeAck()) {
-														return Promise.ofException(new CrdtException("Received message " + takeAck + " instead of " + TAKE_ACK));
-													}
-													return Promise.complete();
-												})))))
+						.streamTo(messaging.sendBinaryStream()))
 				.whenComplete(takeFinishedPromise.recordStats())
 				.whenComplete(toLogger(logger, TRACE, thisMethod(), messaging, take, this));
 	}

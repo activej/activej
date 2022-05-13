@@ -140,19 +140,20 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 		map.clear();
 		tombstones.clear();
 
-		return Promise.of(StreamSupplier.ofIterable(takenMap.values())
-				.transformWith(detailedStats ? takeStatsDetailed : takeStats)
-				.withEndOfStream(eos -> eos
-						.whenResult(() -> {
-							takenMap = null;
-							takenTombstones = null;
-						})
-						.mapException(e -> {
-							takenMap = nullify(takenMap, map -> map.values().forEach(this::doPut));
-							takenTombstones = nullify(takenTombstones, map -> map.values().forEach(this::doRemove));
+		StreamSupplier<CrdtData<K, S>> supplier = StreamSupplier.ofIterable(takenMap.values())
+				.transformWith(detailedStats ? takeStatsDetailed : takeStats);
+		supplier.getAcknowledgement()
+				.whenResult(() -> {
+					takenMap = null;
+					takenTombstones = null;
+				})
+				.mapException(e -> {
+					takenMap = nullify(takenMap, map -> map.values().forEach(this::doPut));
+					takenTombstones = nullify(takenTombstones, map -> map.values().forEach(this::doRemove));
 
-							return new CrdtException("Error while downloading CRDT data", e);
-						})));
+					return new CrdtException("Error while downloading CRDT data", e);
+				});
+		return Promise.of(supplier);
 	}
 
 	@Override

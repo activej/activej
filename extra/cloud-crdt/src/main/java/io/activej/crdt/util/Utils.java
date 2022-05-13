@@ -23,6 +23,7 @@ import com.dslplatform.json.ParsingException;
 import com.dslplatform.json.runtime.Settings;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.datastream.processor.StreamTransformer;
 import io.activej.promise.Promise;
 import io.activej.types.TypeT;
 import org.jetbrains.annotations.NotNull;
@@ -35,6 +36,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Executor;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 import static io.activej.crdt.wal.FileWriteAheadLog.EXT_FINAL;
@@ -106,4 +108,8 @@ public final class Utils {
 		}
 	}
 	// endregion
+
+	public static <T> StreamTransformer<T, T> ackTransformer(UnaryOperator<Promise<Void>> ackFn) {
+		return new StreamAckTransformer<>(ackFn);
+	}
 }
