@@ -85,11 +85,19 @@ public abstract class HttpHeaderValue {
 	}
 
 	public static @NotNull ContentType toContentType(@NotNull ByteBuf buf) throws MalformedHttpException {
-		return ContentType.decode(buf.array(), buf.head(), buf.readRemaining());
+		try {
+			return ContentType.decode(buf.array(), buf.head(), buf.readRemaining());
+		} catch (RuntimeException e) {
+			throw new MalformedHttpException("Failed to decode content-type", e);
+		}
 	}
 
 	public static @NotNull Instant toInstant(@NotNull ByteBuf buf) throws MalformedHttpException {
-		return Instant.ofEpochSecond(HttpDate.decode(buf.array(), buf.head()));
+		try {
+			return Instant.ofEpochSecond(HttpDate.decode(buf.array(), buf.head()));
+		} catch (RuntimeException e) {
+			throw new MalformedHttpException("Failed to decode date", e);
+		}
 	}
 
 	public @NotNull ByteBuf getBuf() {
@@ -106,19 +114,35 @@ public abstract class HttpHeaderValue {
 	}
 
 	public static void toAcceptContentTypes(@NotNull ByteBuf buf, @NotNull List<AcceptMediaType> into) throws MalformedHttpException {
-		AcceptMediaType.decode(buf.array(), buf.head(), buf.readRemaining(), into);
+		try {
+			AcceptMediaType.decode(buf.array(), buf.head(), buf.readRemaining(), into);
+		} catch (RuntimeException e) {
+			throw new MalformedHttpException("Failed to decode accept-content", e);
+		}
 	}
 
 	public static void toAcceptCharsets(@NotNull ByteBuf buf, @NotNull List<AcceptCharset> into) throws MalformedHttpException {
-		AcceptCharset.decode(buf.array(), buf.head(), buf.readRemaining(), into);
+		try {
+			AcceptCharset.decode(buf.array(), buf.head(), buf.readRemaining(), into);
+		} catch (RuntimeException e) {
+			throw new MalformedHttpException("Failed to decode accept-charset", e);
+		}
 	}
 
 	static void toSimpleCookies(@NotNull ByteBuf buf, @NotNull List<HttpCookie> into) throws MalformedHttpException {
-		HttpCookie.decodeSimple(buf.array(), buf.head(), buf.tail(), into);
+		try {
+			HttpCookie.decodeSimple(buf.array(), buf.head(), buf.tail(), into);
+		} catch (RuntimeException e) {
+			throw new MalformedHttpException("Failed to decode cookies", e);
+		}
 	}
 
 	static void toFullCookies(@NotNull ByteBuf buf, @NotNull List<HttpCookie> into) throws MalformedHttpException {
-		HttpCookie.decodeFull(buf.array(), buf.head(), buf.tail(), into);
+		try {
+			HttpCookie.decodeFull(buf.array(), buf.head(), buf.tail(), into);
+		} catch (RuntimeException e) {
+			throw new MalformedHttpException("Failed to decode cookies", e);
+		}
 	}
 
 	static final class HttpHeaderValueOfContentType extends HttpHeaderValue {

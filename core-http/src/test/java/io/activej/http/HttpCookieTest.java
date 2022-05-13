@@ -2,6 +2,7 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufStrings;
+import io.activej.http.HttpCookie.SameSite;
 import io.activej.test.rules.ByteBufRule;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -24,7 +25,7 @@ public class HttpCookieTest {
 
 	@Test
 	public void testDecoder() throws MalformedHttpException {
-		String cookieString = "name1=\"value1\"; expires=Thu, 01 Jan 2015 00:00:00 GMT; Secure; name2=value2; HttpOnly";
+		String cookieString = "name1=\"value1\"; expires=Thu, 01 Jan 2015 00:00:00 GMT; Secure; SameSite=None; name2=value2; HttpOnly; SameSite=Strict";
 		List<HttpCookie> httpCookies = new ArrayList<>();
 		byte[] bytes = encodeAscii(cookieString);
 		HttpCookie.decodeFull(bytes, 0, bytes.length, httpCookies);
@@ -38,11 +39,13 @@ public class HttpCookieTest {
 		assertEquals(-1, cookie1.getMaxAge());
 		assertTrue(cookie1.isSecure());
 		assertFalse(cookie1.isHttpOnly());
+		assertEquals(SameSite.NONE, cookie1.getSameSite());
 
 		assertEquals("name2", cookie2.getName());
 		assertEquals("value2", cookie2.getValue());
 		assertFalse(cookie2.isSecure());
 		assertTrue(cookie2.isHttpOnly());
+		assertEquals(SameSite.STRICT, cookie2.getSameSite());
 	}
 
 	@Test
@@ -53,12 +56,13 @@ public class HttpCookieTest {
 				.withMaxAge(Duration.ofSeconds(10))
 				.withPath("/test")
 				.withDomain("www.google.com")
+				.withSameSite(SameSite.NONE)
 				.withSecure(true)
 				.withHttpOnly(true)
 				.withExtension("Alhambra site");
 
 		String expected = "name=value; Expires=Thu, 19 Apr 2001 04:25:21 GMT; Max-Age=10; Domain=www.google.com; " +
-				"Path=/test; Secure; HttpOnly; Alhambra site";
+				"Path=/test; Secure; HttpOnly; SameSite=None; Alhambra site";
 		ByteBuf buf = ByteBuf.wrapForWriting(new byte[expected.length()]);
 		cookie.renderFull(buf);
 		assertEquals(expected, ByteBufStrings.asAscii(buf));
@@ -71,6 +75,7 @@ public class HttpCookieTest {
 				.withExpirationDate(date)
 				.withMaxAge(Duration.ofSeconds(10))
 				.withPath("/test")
+				.withSameSite(SameSite.LAX)
 				.withDomain("www.google.com")
 				.withSecure(true);
 
@@ -166,5 +171,19 @@ public class HttpCookieTest {
 		HttpResponse response = HttpResponse.ofCode(200);
 		response.addCookies(List.of(HttpCookie.of("key1", "value1"), HttpCookie.of("key2", "value2")));
 		assertEquals(2, response.getCookies().size());
+	}
+
+	@Test
+	public void testDecodeInvalidSameSite() {
+		String cookieString = "name1=\"value1\"; SameSite=Invalid";
+		List<HttpCookie> httpCookies = new ArrayList<>();
+		byte[] bytes = encodeAscii(cookieString);
+
+		try {
+			HttpCookie.decodeFull(bytes, 0, bytes.length, httpCookies);
+			fail();
+		} catch (MalformedHttpException e) {
+			assertEquals("Unknown SameSite value: Invalid", e.getMessage());
+		}
 	}
 }

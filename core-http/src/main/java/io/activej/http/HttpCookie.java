@@ -17,6 +17,9 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.bytebuf.ByteBufStrings;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -25,6 +28,7 @@ import java.util.Objects;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.http.HttpUtils.*;
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * This class represents an abstraction for HTTP Cookie with fast parsing algorithms.
@@ -46,6 +50,11 @@ public final class HttpCookie {
 	private static final int SECURE_HC = -18770248;
 	private static final byte[] SECURE = encodeAscii("Secure");
 	private static final int HTTP_ONLY_HC = -1939729611;
+	private static final byte[] SAME_SITE = encodeAscii("SameSite");
+	private static final int SAME_SITE_HC = 158165934;
+	private static final int SAME_SITE_LAX_HC = 105954;
+	private static final int SAME_SITE_STRICT_HC = -920615382;
+	private static final int SAME_SITE_NONE_HC = 3357401;
 
 	// RFC 6265
 	//
@@ -73,6 +82,7 @@ public final class HttpCookie {
 	private String path = "";
 	private boolean secure;
 	private boolean httpOnly;
+	private @Nullable SameSite sameSite;
 	private String extension;
 
 	// region builders
@@ -139,6 +149,11 @@ public final class HttpCookie {
 
 	public HttpCookie withHttpOnly(boolean httpOnly) {
 		setHttpOnly(httpOnly);
+		return this;
+	}
+
+	public HttpCookie withSameSite(@NotNull SameSite sameSite) {
+		setSameSite(sameSite);
 		return this;
 	}
 
@@ -213,6 +228,14 @@ public final class HttpCookie {
 		this.httpOnly = httpOnly;
 	}
 
+	public @Nullable SameSite getSameSite() {
+		return sameSite;
+	}
+
+	public void setSameSite(@NotNull SameSite sameSite) {
+		this.sameSite = sameSite;
+	}
+
 	public String getExtension() {
 		return extension;
 	}
@@ -223,43 +246,39 @@ public final class HttpCookie {
 	// endregion
 
 	static void decodeFull(byte[] bytes, int pos, int end, List<HttpCookie> cookies) throws MalformedHttpException {
-		try {
-			HttpCookie cookie = new HttpCookie("", "", "/");
-			while (pos < end) {
-				pos = skipSpaces(bytes, pos, end);
-				int keyStart = pos;
-				while (pos < end && bytes[pos] != ';') {
-					pos++;
-				}
-				int valueEnd = pos;
-				int equalSign = -1;
-				for (int i = keyStart; i < valueEnd; i++) {
-					if (bytes[i] == '=') {
-						equalSign = i;
-						break;
-					}
-				}
-				AvHandler handler = getCookieHandler(hashCodeLowerCaseAscii
-						(bytes, keyStart, (equalSign == -1 ? valueEnd : equalSign) - keyStart));
-				if (equalSign == -1 && handler == null) {
-					cookie.setExtension(decodeAscii(bytes, keyStart, valueEnd - keyStart));
-				} else if (handler == null) {
-					String key = decodeAscii(bytes, keyStart, equalSign - keyStart);
-					String value;
-					if (bytes[equalSign + 1] == '\"' && bytes[valueEnd - 1] == '\"') {
-						value = decodeAscii(bytes, equalSign + 2, valueEnd - equalSign - 3);
-					} else {
-						value = decodeAscii(bytes, equalSign + 1, valueEnd - equalSign - 1);
-					}
-					cookie = new HttpCookie(key, value, "/");
-					cookies.add(cookie);
-				} else {
-					handler.handle(cookie, bytes, equalSign + 1, valueEnd);
-				}
-				pos = valueEnd + 1;
+		HttpCookie cookie = new HttpCookie("", "", "/");
+		while (pos < end) {
+			pos = skipSpaces(bytes, pos, end);
+			int keyStart = pos;
+			while (pos < end && bytes[pos] != ';') {
+				pos++;
 			}
-		} catch (RuntimeException e) {
-			throw new MalformedHttpException("Failed to decode cookies", e);
+			int valueEnd = pos;
+			int equalSign = -1;
+			for (int i = keyStart; i < valueEnd; i++) {
+				if (bytes[i] == '=') {
+					equalSign = i;
+					break;
+				}
+			}
+			AvHandler handler = getCookieHandler(hashCodeLowerCaseAscii
+					(bytes, keyStart, (equalSign == -1 ? valueEnd : equalSign) - keyStart));
+			if (equalSign == -1 && handler == null) {
+				cookie.setExtension(decodeAscii(bytes, keyStart, valueEnd - keyStart));
+			} else if (handler == null) {
+				String key = decodeAscii(bytes, keyStart, equalSign - keyStart);
+				String value;
+				if (bytes[equalSign + 1] == '\"' && bytes[valueEnd - 1] == '\"') {
+					value = decodeAscii(bytes, equalSign + 2, valueEnd - equalSign - 3);
+				} else {
+					value = decodeAscii(bytes, equalSign + 1, valueEnd - equalSign - 1);
+				}
+				cookie = new HttpCookie(key, value, "/");
+				cookies.add(cookie);
+			} else {
+				handler.handle(cookie, bytes, equalSign + 1, valueEnd);
+			}
+			pos = valueEnd + 1;
 		}
 	}
 
@@ -286,42 +305,38 @@ public final class HttpCookie {
 		return pos;
 	}
 
-	static void decodeSimple(byte[] bytes, int pos, int end, List<HttpCookie> cookies) throws MalformedHttpException {
-		try {
-			while (pos < end) {
-				pos = skipSpaces(bytes, pos, end);
-				int keyStart = pos;
-				while (pos < end && !(bytes[pos] == ';' || bytes[pos] == ',')) {
-					pos++;
-				}
-				int valueEnd = pos;
-				int equalSign = -1;
-				for (int i = keyStart; i < valueEnd; i++) {
-					if (bytes[i] == '=') {
-						equalSign = i;
-						break;
-					}
-				}
-
-				if (equalSign == -1) {
-					String key = decodeAscii(bytes, keyStart, valueEnd - keyStart);
-					cookies.add(new HttpCookie(key, null));
-				} else {
-					String key = decodeAscii(bytes, keyStart, equalSign - keyStart);
-					String value;
-					if (bytes[equalSign + 1] == '\"' && bytes[valueEnd - 1] == '\"') {
-						value = decodeAscii(bytes, equalSign + 2, valueEnd - equalSign - 3);
-					} else {
-						value = decodeAscii(bytes, equalSign + 1, valueEnd - equalSign - 1);
-					}
-
-					cookies.add(new HttpCookie(key, value));
-				}
-
-				pos = valueEnd + 1;
+	static void decodeSimple(byte[] bytes, int pos, int end, List<HttpCookie> cookies) {
+		while (pos < end) {
+			pos = skipSpaces(bytes, pos, end);
+			int keyStart = pos;
+			while (pos < end && !(bytes[pos] == ';' || bytes[pos] == ',')) {
+				pos++;
 			}
-		} catch (RuntimeException e) {
-			throw new MalformedHttpException("Failed to decode cookies", e);
+			int valueEnd = pos;
+			int equalSign = -1;
+			for (int i = keyStart; i < valueEnd; i++) {
+				if (bytes[i] == '=') {
+					equalSign = i;
+					break;
+				}
+			}
+
+			if (equalSign == -1) {
+				String key = decodeAscii(bytes, keyStart, valueEnd - keyStart);
+				cookies.add(new HttpCookie(key, null));
+			} else {
+				String key = decodeAscii(bytes, keyStart, equalSign - keyStart);
+				String value;
+				if (bytes[equalSign + 1] == '\"' && bytes[valueEnd - 1] == '\"') {
+					value = decodeAscii(bytes, equalSign + 2, valueEnd - equalSign - 3);
+				} else {
+					value = decodeAscii(bytes, equalSign + 1, valueEnd - equalSign - 1);
+				}
+
+				cookies.add(new HttpCookie(key, value));
+			}
+
+			pos = valueEnd + 1;
 		}
 	}
 
@@ -386,6 +401,17 @@ public final class HttpCookie {
 				container[pos++] = httpOnlyByte;
 			}
 		}
+		if (sameSite != null) {
+			container[pos++] = SEMICOLON;
+			container[pos++] = SP;
+			for (byte sameSiteByte : SAME_SITE) {
+				container[pos++] = sameSiteByte;
+			}
+			container[pos++] = EQUALS;
+			for (byte sameSiteValueByte : sameSite.bytes) {
+				container[pos++] = sameSiteValueByte;
+			}
+		}
 		if (extension != null) {
 			container[pos++] = SEMICOLON;
 			container[pos++] = SP;
@@ -432,12 +458,32 @@ public final class HttpCookie {
 					cookie.setHttpOnly(true);
 				}
 			};
+			case SAME_SITE_HC -> new AvHandler() {
+				@Override
+				protected void handle(HttpCookie cookie, byte[] bytes, int start, int end) throws MalformedHttpException {
+					int sameSiteHc = ByteBufStrings.hashCode(bytes, start, end - start);
+					switch (sameSiteHc) {
+						case SAME_SITE_LAX_HC -> cookie.setSameSite(SameSite.LAX);
+						case SAME_SITE_STRICT_HC -> cookie.setSameSite(SameSite.STRICT);
+						case SAME_SITE_NONE_HC -> cookie.setSameSite(SameSite.NONE);
+						default ->
+								throw new MalformedHttpException("Unknown SameSite value: " + new String(bytes, start, end - start, ISO_8859_1));
+					}
+				}
+			};
 			default -> null;
 		};
 	}
 
 	private static Instant decodeExpirationDate(byte[] bytes, int start) throws MalformedHttpException {
-		return Instant.ofEpochSecond(HttpDate.decode(bytes, start));
+		long second;
+		try {
+			second = HttpDate.decode(bytes, start);
+		} catch (RuntimeException e) {
+			throw new MalformedHttpException("Failed to decode date", e);
+		}
+
+		return Instant.ofEpochSecond(second);
 	}
 
 	private static Duration decodeMaxAge(byte[] bytes, int start, int end) throws MalformedHttpException {
@@ -476,4 +522,16 @@ public final class HttpCookie {
 				", value='" + value + '\'' + '}';
 	}
 	// endregion
+
+	public enum SameSite {
+		LAX(encodeAscii("Lax")),
+		STRICT(encodeAscii("Strict")),
+		NONE(encodeAscii("None"));
+
+		private final byte[] bytes;
+
+		SameSite(byte[] bytes) {
+			this.bytes = bytes;
+		}
+	}
 }
