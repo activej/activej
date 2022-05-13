@@ -66,7 +66,7 @@ public class Initializers {
 			scheduler.setEnabled(!config.get(ofBoolean(), "disabled", false));
 			scheduler.withAbortOnError(config.get(ofBoolean(), "abortOnError", false))
 					.withInitialDelay(config.get(ofDuration(), "initialDelay", Duration.ZERO))
-					.withSchedule(config.get(ofEventloopTaskSchedule(), "schedule", null))
+					.withSchedule(config.get(ofEventloopTaskSchedule(), "schedule"))
 					.withRetryPolicy(config.get(ofRetryPolicy(), "retryPolicy"));
 		};
 	}

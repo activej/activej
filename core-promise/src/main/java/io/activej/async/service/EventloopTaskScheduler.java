@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 
+import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.nullify;
 import static io.activej.promise.Promises.retry;
 
@@ -142,7 +143,7 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 	}
 
 	public EventloopTaskScheduler withSchedule(Schedule schedule) {
-		this.schedule = schedule;
+		this.schedule = checkNotNull(schedule);
 		// for JMX:
 		this.period = null;
 		this.interval = null;
@@ -181,7 +182,7 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 	}
 
 	private void scheduleTask() {
-		if (schedule == null || scheduledTask != null && scheduledTask.isCancelled())
+		if (scheduledTask != null && scheduledTask.isCancelled())
 			return;
 
 		if (!enabled) return;
@@ -228,6 +229,8 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 
 	@Override
 	public @NotNull Promise<Void> start() {
+		checkNotNull(schedule, "Schedule is not set");
+
 		scheduleTask();
 		return Promise.complete();
 	}
@@ -243,7 +246,7 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 	}
 
 	public void setSchedule(Schedule schedule) {
-		this.schedule = schedule;
+		this.schedule = checkNotNull(schedule);
 		if (stats.getActivePromises() != 0 && scheduledTask != null && !scheduledTask.isCancelled()) {
 			scheduledTask = nullify(scheduledTask, ScheduledRunnable::cancel);
 			scheduleTask();
