@@ -72,7 +72,7 @@ public final class SerializerDefArray extends AbstractSerializerDef implements S
 
 	@Override
 	public Class<?> getEncodeType() {
-		return Object.class;
+		return type;
 	}
 
 	@Override
