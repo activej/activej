@@ -154,7 +154,7 @@ public final class StreamReducer<K, O, A> implements HasStreamInputs, HasStreamO
 			}
 			output.reduce();
 			output.getAcknowledgement()
-					.whenComplete(this::acknowledge)
+					.whenResult(this::acknowledge)
 					.whenException(this::closeEx);
 		}
 
