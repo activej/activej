@@ -7,6 +7,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
@@ -46,7 +48,7 @@ class Bindings {
 		final Key<?>[] dependencies;
 
 		BindingToConstructorN(ConstructorN<R> constructor, Key<?>[] dependencies) {
-			super(Set.of(dependencies));
+			super(new HashSet<>(List.of(dependencies)));
 			this.constructor = constructor;
 			this.dependencies = dependencies;
 		}
@@ -192,7 +194,7 @@ class Bindings {
 		final Key<T2> dependency2;
 
 		BindingToConstructor2(Key<T1> dependency1, Key<T2> dependency2, Constructor2<T1, T2, R> constructor) {
-			super(Set.of(dependency1, dependency2));
+			super(new HashSet<>(List.of(dependency1, dependency2)));
 			this.constructor = constructor;
 			this.dependency1 = dependency1;
 			this.dependency2 = dependency2;
@@ -246,7 +248,7 @@ class Bindings {
 		final Key<T3> dependency3;
 
 		BindingToConstructor3(Constructor3<T1, T2, T3, R> constructor, Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3) {
-			super(Set.of(dependency1, dependency2, dependency3));
+			super(new HashSet<>(List.of(dependency1, dependency2, dependency3)));
 			this.dependency1 = dependency1;
 			this.dependency2 = dependency2;
 			this.dependency3 = dependency3;
@@ -307,7 +309,7 @@ class Bindings {
 		final Key<T4> dependency4;
 
 		BindingToConstructor4(Constructor4<T1, T2, T3, T4, R> constructor, Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4) {
-			super(Set.of(dependency1, dependency2, dependency3, dependency4));
+			super(new HashSet<>(List.of(dependency1, dependency2, dependency3, dependency4)));
 			this.constructor = constructor;
 			this.dependency1 = dependency1;
 			this.dependency2 = dependency2;
@@ -375,7 +377,7 @@ class Bindings {
 		final Key<T5> dependency5;
 
 		BindingToConstructor5(Constructor5<T1, T2, T3, T4, T5, R> constructor, Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4, Key<T5> dependency5) {
-			super(Set.of(dependency1, dependency2, dependency3, dependency4, dependency5));
+			super(new HashSet<>(List.of(dependency1, dependency2, dependency3, dependency4, dependency5)));
 			this.constructor = constructor;
 			this.dependency1 = dependency1;
 			this.dependency2 = dependency2;
@@ -451,7 +453,7 @@ class Bindings {
 		final Key<T6> dependency6;
 
 		BindingToConstructor6(Constructor6<T1, T2, T3, T4, T5, T6, R> constructor, Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4, Key<T5> dependency5, Key<T6> dependency6) {
-			super(Set.of(dependency1, dependency2, dependency3, dependency4, dependency5, dependency6));
+			super(new HashSet<>(List.of(dependency1, dependency2, dependency3, dependency4, dependency5, dependency6)));
 			this.constructor = constructor;
 			this.dependency1 = dependency1;
 			this.dependency2 = dependency2;

@@ -290,7 +290,7 @@ public final class ReflectionUtils {
 	public static <T> BindingInitializer<T> methodInjector(Key<T> container, Method method) {
 		method.setAccessible(true);
 		Key<?>[] dependencies = toDependencies(container.getType(), method);
-		return new BindingInitializer<>(Set.of(dependencies)) {
+		return new BindingInitializer<>(new HashSet<>(List.of(dependencies))) {
 			@Override
 			public CompiledBindingInitializer<T> compile(CompiledBindingLocator compiledBindings) {
 				CompiledBinding[] argBindings = Stream.of(dependencies)
