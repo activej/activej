@@ -20,6 +20,7 @@ import io.activej.async.function.AsyncFunction;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.async.service.EventloopService;
+import io.activej.common.ApplicationSettings;
 import io.activej.common.collection.Try;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.crdt.CrdtData;
@@ -41,18 +42,23 @@ import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
+import io.activej.jmx.stats.EventStats;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
 
+import static io.activej.crdt.util.Utils.onItem;
 import static java.util.stream.Collectors.toMap;
 
 @SuppressWarnings("rawtypes") // JMX
 public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements CrdtStorage<K, S>, WithInitializer<CrdtStorageCluster<K, S, P>>, EventloopService, EventloopJmxBeanWithStats {
+	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageCluster.class, "smoothingWindow", Duration.ofMinutes(1));
+
 	private final Eventloop eventloop;
 	private final DiscoveryService<P> discoveryService;
 	private final CrdtFunction<S> crdtFunction;
@@ -76,6 +82,12 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 
 	private final StreamStatsBasic<CrdtData<K, S>> repartitionUploadStats = StreamStats.basic();
 	private final StreamStatsDetailed<CrdtData<K, S>> repartitionUploadStatsDetailed = StreamStats.detailed();
+
+	private final EventStats uploadedItems = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
+	private final EventStats downloadedItems = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
+	private final EventStats takenItems = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
+	private final EventStats removedItems = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
+	private final EventStats repartitionedItems = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
 	// endregion
 
 	// region creators
@@ -167,20 +179,25 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 						splitter.newOutput().streamTo(map.get(partitionId));
 					}
 					return Promise.of(splitter.getInput()
-							.transformWith(detailedStats ? uploadStatsDetailed : uploadStats));
+							.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
+							.transformWith(onItem(uploadedItems::recordEvent)));
 				});
 	}
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
 		return getData(storage -> storage.download(timestamp))
-				.map(supplier -> supplier.transformWith(detailedStats ? downloadStatsDetailed : downloadStats));
+				.map(supplier -> supplier
+						.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
+						.transformWith(onItem(downloadedItems::recordEvent)));
 	}
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> take() {
 		return getData(CrdtStorage::take)
-				.map(supplier -> supplier.transformWith(detailedStats ? takeStatsDetailed : takeStats));
+				.map(supplier -> supplier
+						.transformWith(detailedStats ? takeStatsDetailed : takeStats)
+						.transformWith(onItem(takenItems::recordEvent)));
 	}
 
 	@Override
@@ -205,7 +222,8 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 						splitter.newOutput().streamTo(map.get(partitionId));
 					}
 					return splitter.getInput()
-							.transformWith(detailedStats ? removeStatsDetailed : removeStats);
+							.transformWith(detailedStats ? removeStatsDetailed : removeStats)
+							.transformWith(onItem(removedItems::recordEvent));
 				});
 	}
 
@@ -268,6 +286,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 						//noinspection unchecked
 						((StreamSupplier<CrdtData<K, S>>) splitter.newOutput())
 								.transformWith(detailedStats ? repartitionUploadStatsDetailed : repartitionUploadStats)
+								.transformWith(onItem(repartitionedItems::recordEvent))
 								.streamTo(tuple.uploaders.get(partitionId));
 					}
 
@@ -448,6 +467,31 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 		return crdtStorages.entrySet().stream()
 				.filter(entry -> entry.getValue() instanceof CrdtStorageClient)
 				.collect(toMap(Map.Entry::getKey, e -> (CrdtStorageClient) e.getValue()));
+	}
+
+	@JmxAttribute
+	public EventStats getUploadedItems() {
+		return uploadedItems;
+	}
+
+	@JmxAttribute
+	public EventStats getDownloadedItems() {
+		return downloadedItems;
+	}
+
+	@JmxAttribute
+	public EventStats getTakenItems() {
+		return takenItems;
+	}
+
+	@JmxAttribute
+	public EventStats getRemovedItems() {
+		return removedItems;
+	}
+
+	@JmxAttribute
+	public EventStats getRepartitionedItems() {
+		return repartitionedItems;
 	}
 	// endregion
 }

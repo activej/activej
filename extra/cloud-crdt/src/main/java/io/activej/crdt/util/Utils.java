@@ -23,6 +23,8 @@ import com.dslplatform.json.ParsingException;
 import com.dslplatform.json.runtime.Settings;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.datastream.StreamDataAcceptor;
+import io.activej.datastream.processor.StreamFilter;
 import io.activej.datastream.processor.StreamTransformer;
 import io.activej.promise.Promise;
 import io.activej.types.TypeT;
@@ -111,5 +113,17 @@ public final class Utils {
 
 	public static <T> StreamTransformer<T, T> ackTransformer(UnaryOperator<Promise<Void>> ackFn) {
 		return new StreamAckTransformer<>(ackFn);
+	}
+
+	public static <T> StreamTransformer<T, T> onItem(Runnable consumer) {
+		return new StreamFilter<>() {
+			@Override
+			protected @NotNull StreamDataAcceptor<T> onResumed(@NotNull StreamDataAcceptor<T> output) {
+				return item -> {
+					consumer.run();
+					output.accept(item);
+				};
+			}
+		};
 	}
 }

@@ -20,6 +20,7 @@ import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncRunnables;
 import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.ApplicationSettings;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtException;
@@ -49,6 +50,7 @@ import io.activej.fs.FileMetadata;
 import io.activej.fs.exception.FileNotFoundException;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
+import io.activej.jmx.stats.EventStats;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
@@ -67,11 +69,14 @@ import java.util.function.Supplier;
 
 import static io.activej.common.Utils.entriesToMap;
 import static io.activej.crdt.util.CrdtDataSerializer.TIMESTAMP_SERIALIZER;
+import static io.activej.crdt.util.Utils.onItem;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStorage<K, S>,
 		WithInitializer<CrdtStorageFs<K, S>>, EventloopService, EventloopJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(CrdtStorageFs.class);
+
+	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageFs.class, "smoothingWindow", Duration.ofMinutes(1));
 
 	public static final String FILE_EXTENSION = ".bin";
 
@@ -100,7 +105,12 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 	private final StreamStatsBasic<CrdtTombstone<K>> removeStats = StreamStats.basic();
 	private final StreamStatsDetailed<CrdtTombstone<K>> removeStatsDetailed = StreamStats.detailed();
 
-	private final PromiseStats consolidationStats = PromiseStats.create(Duration.ofMinutes(5));
+	private final EventStats uploadedItems = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
+	private final EventStats downloadedItems = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
+	private final EventStats takenItems = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
+	private final EventStats removedItems = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
+
+	private final PromiseStats consolidationStats = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	// endregion
 
 	// region creators
@@ -151,6 +161,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 		String filename = namingStrategy.get() + FILE_EXTENSION;
 		return Promise.of(this.<CrdtData<K, S>>uploadNonEmpty(filename, CrdtReducingData::ofData)
 				.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
+				.transformWith(onItem(uploadedItems::recordEvent))
 				.withAcknowledgement(ack -> ack
 						.mapException(e -> new CrdtException("Error while uploading CRDT data to file", e))));
 	}
@@ -162,7 +173,8 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 								.then(fileMap -> doDownload(fileMap.keySet(), timestamp, false))
 								.map(supplier -> supplier
 										.transformWith(StreamFilter.mapper(reducingData -> new CrdtData<>(reducingData.key, reducingData.timestamp, reducingData.state)))
-										.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)))
+										.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
+										.transformWith(onItem(downloadedItems::recordEvent))))
 				.mapException(e -> new CrdtException("Failed to download CRDT data", e));
 	}
 
@@ -179,7 +191,8 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 										.whenException(e -> taken = null)
 										.map(supplier -> supplier
 												.transformWith(StreamFilter.mapper(reducingData -> new CrdtData<>(reducingData.key, reducingData.timestamp, reducingData.state)))
-												.transformWith(detailedStats ? takeStatsDetailed : takeStats))
+												.transformWith(detailedStats ? takeStatsDetailed : takeStats)
+												.transformWith(onItem(takenItems::recordEvent)))
 										.whenResult(supplier -> supplier.getAcknowledgement()
 												.then(() -> fs.deleteAll(fileMap.keySet()))
 												.whenComplete(() -> taken = null))))
@@ -209,6 +222,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 		String filename = namingStrategy.get() + FILE_EXTENSION;
 		return Promise.of(this.<CrdtTombstone<K>>uploadNonEmpty(filename, CrdtReducingData::ofTombstone)
 				.transformWith(detailedStats ? removeStatsDetailed : removeStats)
+				.transformWith(onItem(removedItems::recordEvent))
 				.withAcknowledgement(ack -> ack
 						.mapException(e -> new CrdtException("Error while removing CRDT data", e))));
 	}
@@ -474,6 +488,26 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 	@JmxAttribute
 	public PromiseStats getConsolidationStats() {
 		return consolidationStats;
+	}
+
+	@JmxAttribute
+	public EventStats getUploadedItems() {
+		return uploadedItems;
+	}
+
+	@JmxAttribute
+	public EventStats getDownloadedItems() {
+		return downloadedItems;
+	}
+
+	@JmxAttribute
+	public EventStats getTakenItems() {
+		return takenItems;
+	}
+
+	@JmxAttribute
+	public EventStats getRemovedItems() {
+		return removedItems;
 	}
 	// endregion
 }

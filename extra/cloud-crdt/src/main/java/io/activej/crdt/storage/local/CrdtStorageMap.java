@@ -17,6 +17,7 @@
 package io.activej.crdt.storage.local;
 
 import io.activej.async.service.EventloopService;
+import io.activej.common.ApplicationSettings;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.crdt.CrdtData;
@@ -49,10 +50,11 @@ import java.util.TreeMap;
 import java.util.stream.Stream;
 
 import static io.activej.common.Utils.nullify;
+import static io.activej.crdt.util.Utils.onItem;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtStorage<K, S>, WithInitializer<CrdtStorageMap<K, S>>, EventloopService, EventloopJmxBeanWithStats {
-	private static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
+	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageMap.class, "smoothingWindow", Duration.ofMinutes(1));
 
 	private final Eventloop eventloop;
 	private final CrdtFunction<S> function;
@@ -78,6 +80,11 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 	private final StreamStatsDetailed<CrdtData<K, S>> takeStatsDetailed = StreamStats.detailed();
 	private final StreamStatsBasic<CrdtTombstone<K>> removeStats = StreamStats.basic();
 	private final StreamStatsDetailed<CrdtTombstone<K>> removeStatsDetailed = StreamStats.detailed();
+
+	private final EventStats uploadedItems = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
+	private final EventStats downloadedItems = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
+	private final EventStats takenItems = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
+	private final EventStats removedItems = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
 
 	private final EventStats singlePuts = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final EventStats singleGets = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
@@ -118,13 +125,15 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 		return Promise.of(consumer.withAcknowledgement(ack -> ack
 						.whenResult(() -> consumer.getList().forEach(this::doPut))
 						.mapException(e -> new CrdtException("Error while uploading CRDT data", e)))
-				.transformWith(detailedStats ? uploadStatsDetailed : uploadStats));
+				.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
+				.transformWith(onItem(uploadedItems::recordEvent)));
 	}
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
 		return Promise.of(StreamSupplier.ofStream(extract(timestamp))
 				.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
+				.transformWith(onItem(downloadedItems::recordEvent))
 				.withEndOfStream(eos -> eos
 						.mapException(e -> new CrdtException("Error while downloading CRDT data", e))));
 	}
@@ -141,7 +150,8 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 		tombstones.clear();
 
 		StreamSupplier<CrdtData<K, S>> supplier = StreamSupplier.ofIterable(takenMap.values())
-				.transformWith(detailedStats ? takeStatsDetailed : takeStats);
+				.transformWith(detailedStats ? takeStatsDetailed : takeStats)
+				.transformWith(onItem(takenItems::recordEvent));
 		supplier.getAcknowledgement()
 				.whenResult(() -> {
 					takenMap = null;
@@ -162,7 +172,8 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 		return Promise.of(consumer.withAcknowledgement(ack -> ack
 						.whenResult(() -> consumer.getList().forEach(this::doRemove))
 						.mapException(e -> new CrdtException("Error while removing CRDT data", e)))
-				.transformWith(detailedStats ? removeStatsDetailed : removeStats));
+				.transformWith(detailedStats ? removeStatsDetailed : removeStats)
+				.transformWith(onItem(removedItems::recordEvent)));
 	}
 
 	@Override
@@ -372,6 +383,26 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 	@JmxAttribute
 	public EventStats getSingleRemoves() {
 		return singleRemoves;
+	}
+
+	@JmxAttribute
+	public EventStats getUploadedItems() {
+		return uploadedItems;
+	}
+
+	@JmxAttribute
+	public EventStats getDownloadedItems() {
+		return downloadedItems;
+	}
+
+	@JmxAttribute
+	public EventStats getTakenItems() {
+		return takenItems;
+	}
+
+	@JmxAttribute
+	public EventStats getRemovedItems() {
+		return removedItems;
 	}
 	// endregion
 }

@@ -42,6 +42,7 @@ import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.eventloop.net.SocketSettings;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
+import io.activej.jmx.stats.EventStats;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
 import io.activej.serializer.BinarySerializer;
@@ -53,6 +54,7 @@ import java.time.Duration;
 import static io.activej.crdt.CrdtMessagingProto.CrdtRequest.RequestCase.*;
 import static io.activej.crdt.CrdtMessagingProto.CrdtResponse;
 import static io.activej.crdt.CrdtMessagingProto.CrdtResponse.ResponseCase.*;
+import static io.activej.crdt.util.Utils.onItem;
 import static io.activej.fs.util.ProtobufUtils.codec;
 
 @SuppressWarnings("rawtypes")
@@ -60,6 +62,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 		EventloopJmxBeanWithStats, WithInitializer<CrdtStorageClient<K, S>> {
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(CrdtStorageClient.class, "connectTimeout", Duration.ZERO);
+	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageClient.class, "smoothingWindow", Duration.ofMinutes(1));
 
 	private static final ByteBufsCodec<CrdtResponse, CrdtRequest> SERIALIZER = codec(CrdtResponse.parser());
 
@@ -82,6 +85,11 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	private final StreamStatsDetailed<CrdtData<K, S>> takeStatsDetailed = StreamStats.detailed();
 	private final StreamStatsBasic<CrdtTombstone<K>> removeStats = StreamStats.basic();
 	private final StreamStatsDetailed<CrdtTombstone<K>> removeStatsDetailed = StreamStats.detailed();
+
+	private final EventStats uploadedItems = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
+	private final EventStats downloadedItems = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
+	private final EventStats takenItems = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
+	private final EventStats removedItems = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
 	// endregion
 
 	//region creators
@@ -135,6 +143,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 											.toVoid());
 							return StreamConsumer.<CrdtData<K, S>>ofSupplier(supplier ->
 											supplier.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
+													.transformWith(onItem(uploadedItems::recordEvent))
 													.transformWith(ChannelSerializer.create(serializer))
 													.streamTo(consumer))
 									.withAcknowledgement(ack -> ack
@@ -155,6 +164,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 								messaging.receiveBinaryStream()
 										.transformWith(ChannelDeserializer.create(serializer))
 										.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
+										.transformWith(onItem(downloadedItems::recordEvent))
 										.withEndOfStream(eos -> eos
 												.then(messaging::sendEndOfStream)
 												.mapException(e -> new CrdtException("Download failed", e))
@@ -174,7 +184,8 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 						.map($ -> {
 							StreamSupplier<CrdtData<K, S>> supplier = messaging.receiveBinaryStream()
 									.transformWith(ChannelDeserializer.create(serializer))
-									.transformWith(detailedStats ? takeStatsDetailed : takeStats);
+									.transformWith(detailedStats ? takeStatsDetailed : takeStats)
+									.transformWith(onItem(takenItems::recordEvent));
 							supplier.getAcknowledgement()
 									.then(() -> messaging.send(request(TAKE_ACK)))
 									.then(messaging::sendEndOfStream)
@@ -199,6 +210,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 											.toVoid());
 							return StreamConsumer.<CrdtTombstone<K>>ofSupplier(supplier ->
 											supplier.transformWith(detailedStats ? removeStatsDetailed : removeStats)
+													.transformWith(onItem(removedItems::recordEvent))
 													.transformWith(ChannelSerializer.create(tombstoneSerializer))
 													.streamTo(consumer))
 									.withAcknowledgement(ack -> ack
@@ -340,6 +352,26 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	@JmxAttribute
 	public StreamStatsDetailed getRemoveStatsDetailed() {
 		return removeStatsDetailed;
+	}
+
+ 	@JmxAttribute
+	public EventStats getUploadedItems() {
+		return uploadedItems;
+	}
+
+	@JmxAttribute
+	public EventStats getDownloadedItems() {
+		return downloadedItems;
+	}
+
+	@JmxAttribute
+	public EventStats getTakenItems() {
+		return takenItems;
+	}
+
+	@JmxAttribute
+	public EventStats getRemovedItems() {
+		return removedItems;
 	}
 	// endregion
 }
