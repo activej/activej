@@ -205,7 +205,7 @@ final class StreamConsumers {
 
 		@Override
 		protected void onInit() {
-			resultPromise.whenComplete(this::acknowledge);
+			resultPromise.whenResult(this::acknowledge);
 		}
 
 		@Override
