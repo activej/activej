@@ -55,7 +55,7 @@ public final class StreamConsumerToList<T> extends AbstractStreamConsumer<T> imp
 
 	@Override
 	protected void onInit() {
-		resultPromise.whenComplete(this::acknowledge);
+		resultPromise.whenResult(this::acknowledge);
 	}
 
 	@Override
