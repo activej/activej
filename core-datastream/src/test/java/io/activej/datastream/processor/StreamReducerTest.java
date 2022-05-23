@@ -126,9 +126,9 @@ public class StreamReducerTest {
 //		assertEquals(1, list.size());
 
 		assertSame(exception, e);
-		assertEndOfStream(source1);
-		assertEndOfStream(source2);
-		assertEndOfStream(source3);
+		assertClosedWithError(source1);
+		assertClosedWithError(source2);
+		assertClosedWithError(source3);
 
 		assertClosedWithError(streamReducer.getOutput());
 	}
@@ -158,9 +158,9 @@ public class StreamReducerTest {
 		assertSame(exception, e);
 		assertEquals(0, consumer.getList().size());
 		assertClosedWithError(consumer);
-		assertEndOfStream(source1);
+		assertClosedWithError(source1);
 		assertClosedWithError(source2);
-		assertEndOfStream(source3);
+		assertClosedWithError(source3);
 	}
 
 	private static final class KeyValue1 {
