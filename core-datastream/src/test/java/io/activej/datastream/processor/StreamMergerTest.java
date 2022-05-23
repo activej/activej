@@ -146,12 +146,12 @@ public class StreamMergerTest {
 
 		assertSame(exception, e);
 		assertEquals(5, consumer.getList().size());
-		assertEndOfStream(source1);
-		assertEndOfStream(source2);
+		assertClosedWithError(source1);
+		assertClosedWithError(source2);
 		assertClosedWithError(consumer);
 		assertClosedWithError(merger.getOutput());
-		assertEndOfStream(merger.getInput(0));
-		assertEndOfStream(merger.getInput(1));
+		assertClosedWithError(merger.getInput(0));
+		assertClosedWithError(merger.getInput(1));
 	}
 
 	@Test
@@ -185,7 +185,7 @@ public class StreamMergerTest {
 		assertClosedWithError(consumer);
 		assertClosedWithError(merger.getOutput());
 		assertClosedWithError(merger.getInput(0));
-		assertEndOfStream(merger.getInput(1));
+		assertClosedWithError(merger.getInput(1));
 	}
 
 }
