@@ -153,7 +153,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	private @Nullable String threadName;
 	private int threadPriority;
 
-	private @NotNull FatalErrorHandler eventloopFatalErrorHandler = this::logFatalError;
+	private @NotNull FatalErrorHandler eventloopFatalErrorHandler = Eventloop::logFatalError;
 	private @Nullable FatalErrorHandler threadFatalErrorHandler;
 
 	private volatile boolean keepAlive;
@@ -1282,20 +1282,16 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * @param e       a fatal error to be logged
 	 * @param context a context of a fatal error to be logged, may be {@code null} if a context is meaningless or unknown
 	 */
-	public void logFatalError(@NotNull Throwable e, @Nullable Object context) {
+	public static void logFatalError(@NotNull Throwable e, @Nullable Object context) {
 		if (e instanceof UncheckedException) {
 			e = e.getCause();
 		}
 
 		logger.error("Fatal error in {}", context, e);
 
-		if (inspector != null) {
-			if (inEventloopThread()) {
-				inspector.onFatalError(e, context);
-			} else {
-				Throwable finalE = e;
-				execute(() -> inspector.onFatalError(finalE, context));
-			}
+		Eventloop eventloop = getCurrentEventloopOrNull();
+		if (eventloop != null && eventloop.inspector != null) {
+			eventloop.inspector.onFatalError(e, context);
 		}
 	}
 
