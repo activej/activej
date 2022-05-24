@@ -20,7 +20,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
 
-import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.inject.module.Modules.combine;
 import static io.activej.launchers.initializers.ConfigConverters.ofFrameFormat;
@@ -49,16 +48,14 @@ public class RpcBenchmark extends Launcher {
 	@Provides
 	@Named("client")
 	Eventloop eventloopClient() {
-		return Eventloop.create()
-				.withEventloopFatalErrorHandler(rethrow());
+		return Eventloop.create();
 	}
 
 	@Provides
 	@Named("server")
 	Eventloop eventloopServer(@Named("client") Eventloop clientEventloop, Config config) {
 		return config.get(ofBoolean(), "multithreaded", true) ?
-				Eventloop.create()
-						.withEventloopFatalErrorHandler(rethrow()) :
+				Eventloop.create() :
 				clientEventloop;
 	}
 

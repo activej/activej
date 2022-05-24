@@ -89,7 +89,7 @@ public final class TestClusterActiveFs {
 			serverStorages.add(path);
 			Files.createDirectories(path);
 
-			Eventloop serverEventloop = Eventloop.create().withEventloopFatalErrorHandler(rethrow());
+			Eventloop serverEventloop = Eventloop.create().withFatalErrorHandler(rethrow());
 			serverEventloop.keepAlive(true);
 			LocalActiveFs localClient = LocalActiveFs.create(serverEventloop, executor, path);
 			serverEventloop.submit(localClient::start);

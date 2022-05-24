@@ -35,7 +35,7 @@ public final class EventloopRule implements TestRule {
 	private static void createEventloop() {
 		Eventloop.create()
 				.withCurrentThread()
-				.withEventloopFatalErrorHandler(rethrow());
+				.withFatalErrorHandler(rethrow());
 	}
 
 	@Override

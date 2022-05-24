@@ -21,7 +21,6 @@ import io.activej.async.callback.Callback;
 import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.common.Checks;
 import io.activej.common.exception.FatalErrorHandler;
-import io.activej.common.exception.FatalErrorHandlers;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.function.RunnableEx;
 import io.activej.common.initializer.WithInitializer;
@@ -153,8 +152,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	private @Nullable String threadName;
 	private int threadPriority;
 
-	private @NotNull FatalErrorHandler eventloopFatalErrorHandler = Eventloop::logFatalError;
-	private @Nullable FatalErrorHandler threadFatalErrorHandler;
+	private @NotNull FatalErrorHandler fatalErrorHandler = Eventloop::logFatalError;
 
 	private volatile boolean keepAlive;
 	private volatile boolean breakEventloop;
@@ -244,22 +242,8 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * @param fatalErrorHandler a fatal error handler on an event loop level
 	 * @return this {@link Eventloop}
 	 */
-	public @NotNull Eventloop withEventloopFatalErrorHandler(@NotNull FatalErrorHandler fatalErrorHandler) {
-		this.eventloopFatalErrorHandler = fatalErrorHandler;
-		return this;
-	}
-
-	/**
-	 * Sets a fatal error on a thread level
-	 * <p>
-	 * This is the handler that will be set using {@link FatalErrorHandlers#setThreadFatalErrorHandler(FatalErrorHandler)}.
-	 * It is usually the first handler to handle an error "nearer" to a throw site
-	 *
-	 * @param fatalErrorHandler a fatal error handler on a thread level
-	 * @return this {@link Eventloop}
-	 */
-	public @NotNull Eventloop withThreadFatalErrorHandler(@Nullable FatalErrorHandler fatalErrorHandler) {
-		this.threadFatalErrorHandler = fatalErrorHandler;
+	public @NotNull Eventloop withFatalErrorHandler(@NotNull FatalErrorHandler fatalErrorHandler) {
+		this.fatalErrorHandler = fatalErrorHandler;
 		return this;
 	}
 
@@ -514,8 +498,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		if (threadPriority != 0)
 			eventloopThread.setPriority(threadPriority);
 		CURRENT_EVENTLOOP.set(this);
-		if (threadFatalErrorHandler != null)
-			setThreadFatalErrorHandler(threadFatalErrorHandler);
+		setThreadFatalErrorHandler(fatalErrorHandler);
 		ensureSelector();
 		assert selector != null;
 		breakEventloop = false;
@@ -569,8 +552,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			return;
 		}
 		closeSelector();
-		if (threadFatalErrorHandler != null)
-			setThreadFatalErrorHandler(null);
+		setThreadFatalErrorHandler(null);
 	}
 
 	private long getSelectTimeout() {
@@ -832,7 +814,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			try {
 				acceptCallback.accept(channel);
 			} catch (Throwable e) {
-				handleError(eventloopFatalErrorHandler, e, acceptCallback);
+				handleError(fatalErrorHandler, e, acceptCallback);
 				closeChannel(channel, null);
 			}
 		}
@@ -865,7 +847,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 						"this is not possible without some bug in Java NIO"));
 			}
 		} catch (Throwable e) {
-			handleError(eventloopFatalErrorHandler, e, channel);
+			handleError(fatalErrorHandler, e, channel);
 			closeChannel(channel, null);
 		}
 	}
@@ -882,7 +864,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		try {
 			handler.onReadReady();
 		} catch (Throwable e) {
-			handleError(eventloopFatalErrorHandler, e, handler);
+			handleError(fatalErrorHandler, e, handler);
 			closeChannel(key.channel(), null);
 		}
 	}
@@ -899,7 +881,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 		try {
 			handler.onWriteReady();
 		} catch (Throwable e) {
-			handleError(eventloopFatalErrorHandler, e, handler);
+			handleError(fatalErrorHandler, e, handler);
 			closeChannel(key.channel(), null);
 		}
 	}
@@ -1008,7 +990,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			try {
 				cb.accept(null, e);
 			} catch (Throwable e1) {
-				handleError(eventloopFatalErrorHandler, e1, cb);
+				handleError(fatalErrorHandler, e1, cb);
 			}
 			return;
 		}
@@ -1039,7 +1021,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			try {
 				cb.accept(null, e);
 			} catch (Throwable e1) {
-				handleError(eventloopFatalErrorHandler, e1, cb);
+				handleError(fatalErrorHandler, e1, cb);
 			}
 		}
 	}
@@ -1207,7 +1189,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			try {
 				computation.run();
 			} catch (Exception ex) {
-				handleError(eventloopFatalErrorHandler, ex, computation);
+				handleError(fatalErrorHandler, ex, computation);
 				future.completeExceptionally(ex);
 				return;
 			}
@@ -1236,7 +1218,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 					}
 				});
 			} catch (Exception ex) {
-				handleError(eventloopFatalErrorHandler, ex, computation);
+				handleError(fatalErrorHandler, ex, computation);
 				future.completeExceptionally(ex);
 			}
 		});
@@ -1270,9 +1252,9 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 
 	private void onFatalError(@NotNull Throwable e, @Nullable Runnable runnable) {
 		if (runnable instanceof RunnableWithContext) {
-			handleError(eventloopFatalErrorHandler, e, ((RunnableWithContext) runnable).getContext());
+			handleError(fatalErrorHandler, e, ((RunnableWithContext) runnable).getContext());
 		} else {
-			handleError(eventloopFatalErrorHandler, e, runnable);
+			handleError(fatalErrorHandler, e, runnable);
 		}
 	}
 
@@ -1309,20 +1291,10 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * Returns this {@link Eventloop} fatal error handler
 	 *
 	 * @return this {@link Eventloop} fatal error handler
-	 * @see #withEventloopFatalErrorHandler(FatalErrorHandler)
+	 * @see #withFatalErrorHandler(FatalErrorHandler)
 	 */
-	public @NotNull FatalErrorHandler getEventloopFatalErrorHandler() {
-		return eventloopFatalErrorHandler;
-	}
-
-	/**
-	 * Returns a thread fatal error handler
-	 *
-	 * @return a thread fatal error handler
-	 * @see #withThreadFatalErrorHandler(FatalErrorHandler)
-	 */
-	public @Nullable FatalErrorHandler getThreadFatalErrorHandler() {
-		return threadFatalErrorHandler;
+	public @NotNull FatalErrorHandler getFatalErrorHandler() {
+		return fatalErrorHandler;
 	}
 
 	public int getThreadPriority() {

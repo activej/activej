@@ -38,7 +38,7 @@ public final class ScopedRpcBenchmarkClient extends Launcher {
 	@Provides
 	Eventloop eventloop() {
 		return Eventloop.create()
-				.withEventloopFatalErrorHandler(rethrow());
+				.withFatalErrorHandler(rethrow());
 	}
 
 	@Provides

@@ -20,7 +20,7 @@ public final class ScopedRpcServerExample extends Launcher {
 
 	@Provides
 	Eventloop eventloop() {
-		return Eventloop.create().withEventloopFatalErrorHandler(FatalErrorHandler.rethrow());
+		return Eventloop.create().withFatalErrorHandler(FatalErrorHandler.rethrow());
 	}
 
 	@Provides

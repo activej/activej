@@ -20,7 +20,7 @@ public final class HelloWorldPostServer {
 	}
 
 	public static void main(String[] args) throws Exception {
-		Eventloop primaryEventloop = Eventloop.create().withEventloopFatalErrorHandler(rethrow()).withCurrentThread();
+		Eventloop primaryEventloop = Eventloop.create().withFatalErrorHandler(rethrow()).withCurrentThread();
 
 		AsyncHttpServer httpServerListener = helloWorldServer(primaryEventloop, PORT);
 

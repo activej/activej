@@ -75,7 +75,7 @@ public class CubeBackupControllerTest {
 		Executor executor = Executors.newCachedThreadPool();
 
 		eventloop = Eventloop.create()
-				.withEventloopFatalErrorHandler(rethrow());
+				.withFatalErrorHandler(rethrow());
 
 		eventloop.keepAlive(true);
 

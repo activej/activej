@@ -109,7 +109,7 @@ public final class PartitionedStreamTest {
 		sourceFsServers = new ArrayList<>();
 		targetFsServers = new ArrayList<>();
 		dataflowServers = new ArrayList<>();
-		serverEventloop = Eventloop.create().withEventloopFatalErrorHandler(rethrow());
+		serverEventloop = Eventloop.create().withFatalErrorHandler(rethrow());
 		serverEventloop.keepAlive(true);
 		new Thread(serverEventloop).start();
 	}

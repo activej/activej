@@ -48,7 +48,7 @@ public final class SimpleProxyServerTest {
 
 	@Test
 	public void testSimpleProxyServer() throws Exception {
-		Eventloop eventloop1 = Eventloop.create().withEventloopFatalErrorHandler(rethrow()).withCurrentThread();
+		Eventloop eventloop1 = Eventloop.create().withFatalErrorHandler(rethrow()).withCurrentThread();
 
 		AsyncHttpServer echoServer = AsyncHttpServer.create(eventloop1,
 				request -> HttpResponse.ok200()
@@ -59,7 +59,7 @@ public final class SimpleProxyServerTest {
 		Thread echoServerThread = new Thread(eventloop1);
 		echoServerThread.start();
 
-		Eventloop eventloop2 = Eventloop.create().withEventloopFatalErrorHandler(rethrow()).withCurrentThread();
+		Eventloop eventloop2 = Eventloop.create().withFatalErrorHandler(rethrow()).withCurrentThread();
 
 		AsyncHttpClient httpClient = AsyncHttpClient.create(eventloop2)
 				.withDnsClient(CachedAsyncDnsClient.create(eventloop2, RemoteAsyncDnsClient.create(eventloop2)

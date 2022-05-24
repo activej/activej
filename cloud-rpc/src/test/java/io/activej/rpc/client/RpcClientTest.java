@@ -55,8 +55,7 @@ public final class RpcClientTest {
 		CountDownLatch latch = new CountDownLatch(NUMBER_OF_WORKING_SERVERS);
 		for (int i = 0; i < NUMBER_OF_WORKING_SERVERS + NUMBER_OF_FAILING_SERVERS; i++) {
 			Eventloop serverEventloop = Eventloop.create()
-					.withEventloopFatalErrorHandler(rethrow())
-					.withThreadFatalErrorHandler(rethrow());
+					.withFatalErrorHandler(rethrow());
 			serverEventloop.keepAlive(true);
 			new Thread(serverEventloop).start();
 
@@ -82,8 +81,7 @@ public final class RpcClientTest {
 		latch.await();
 
 		clientEventloop = Eventloop.create()
-				.withEventloopFatalErrorHandler(rethrow())
-				.withThreadFatalErrorHandler(rethrow());
+				.withFatalErrorHandler(rethrow());
 		clientEventloop.keepAlive(true);
 		new Thread(clientEventloop).start();
 	}

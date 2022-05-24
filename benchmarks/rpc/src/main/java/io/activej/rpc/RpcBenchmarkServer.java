@@ -13,7 +13,6 @@ import io.activej.promise.Promise;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraphModule;
 
-import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.config.converter.ConfigConverters.ofInteger;
 import static io.activej.config.converter.ConfigConverters.ofMemSize;
 import static io.activej.inject.module.Modules.combine;
@@ -25,8 +24,7 @@ public class RpcBenchmarkServer extends Launcher {
 	@Provides
 	@Named("server")
 	Eventloop eventloopServer() {
-		return Eventloop.create()
-				.withEventloopFatalErrorHandler(rethrow());
+		return Eventloop.create();
 	}
 
 	@Provides

@@ -16,7 +16,7 @@ public final class BlockingEventloopExecutorTest {
 
 	@Before
 	public void setUp() {
-		eventloop = Eventloop.create().withEventloopFatalErrorHandler(rethrow());
+		eventloop = Eventloop.create().withFatalErrorHandler(rethrow());
 	}
 
 	@Test
