@@ -59,7 +59,8 @@ public final class CrdtClusterExample {
 				eventloop,
 				DiscoveryService.of(RendezvousPartitionScheme.<String>create()
 						.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet())
-								.withReplicas(5))),
+								.withReplicas(5))
+						.withCrdtProvider(clients::get)),
 				CrdtFunction.ofCrdtType());
 
 		//[END REGION_1]

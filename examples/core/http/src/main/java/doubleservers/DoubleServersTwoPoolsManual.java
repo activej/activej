@@ -114,7 +114,7 @@ public final class DoubleServersTwoPoolsManual extends Launcher {
 							Key.of(Eventloop.class, "Second"), new Key<WorkerPool.Instances<AsyncHttpServer>>("Second") {});
 			bind(AsyncHttpServer.class)
 					.to((eventloop, workerId) -> AsyncHttpServer.create(eventloop, request -> HttpResponse.ok200()
-									.withPlainText("Hello from the first server, worker #" + workerId)),
+									.withPlainText("Hello from the second server, worker #" + workerId)),
 							Key.of(Eventloop.class), Key.of(int.class, WorkerId.class)).in(WorkerSecond.class);
 			bind(WorkerPool.class, "Second")
 					.to(workerPools -> workerPools.createPool(Scope.of(WorkerSecond.class), WORKERS), WorkerPools.class);

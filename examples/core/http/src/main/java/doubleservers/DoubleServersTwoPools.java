@@ -62,7 +62,7 @@ public final class DoubleServersTwoPools extends Launcher {
 	}
 
 	public static void main(String[] args) throws Exception {
-		new DoubleServersTwoPoolsManual().launch(args);
+		new DoubleServersTwoPools().launch(args);
 	}
 
 	public static final class FirstModule extends AbstractModule {
