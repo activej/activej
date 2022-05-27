@@ -616,7 +616,7 @@ public final class AsyncHttpServerTest {
 		String context = (String) malformedHttpExceptions.getContext();
 		assertNotNull(context);
 		assertFalse(context.isEmpty());
-		assertTrue(malformedHeaderRequest.startsWith(context));
+		assertTrue(malformedHeaderRequest.contains(context));
 
 		server.closeFuture().get();
 		thread.join();
