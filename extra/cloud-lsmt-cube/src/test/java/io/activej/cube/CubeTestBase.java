@@ -20,6 +20,7 @@ import io.activej.ot.uplink.OTUplinkImpl;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
@@ -63,9 +64,15 @@ public abstract class CubeTestBase {
 	@Parameter(1)
 	public UplinkFactory<OTUplink<Long, LogDiff<CubeDiff>, ?>> uplinkFactory;
 
-	public static final Eventloop EVENTLOOP = Eventloop.getCurrentEventloop();
 	public static final Executor EXECUTOR = Executors.newCachedThreadPool();
 	public static final DataSource DATA_SOURCE;
+
+	public Eventloop eventloop;
+
+	@Before
+	public void setUp() throws Exception {
+		eventloop = Eventloop.getCurrentEventloop();
+	}
 
 	static {
 		try {

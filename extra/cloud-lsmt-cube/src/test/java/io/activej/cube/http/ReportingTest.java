@@ -250,14 +250,15 @@ public final class ReportingTest extends CubeTestBase {
 
 	@Before
 	public void setUp() throws Exception {
+		super.setUp();
 		serverPort = getFreePort();
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 
-		LocalActiveFs fs = LocalActiveFs.create(EVENTLOOP, EXECUTOR, aggregationsDir);
+		LocalActiveFs fs = LocalActiveFs.create(eventloop, EXECUTOR, aggregationsDir);
 		await(fs.start());
-		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(EVENTLOOP,
+		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop,
 				ChunkIdCodec.ofLong(), new IdGeneratorStub(), LZ4FrameFormat.create(), fs);
-		cube = Cube.create(EVENTLOOP, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
+		cube = Cube.create(eventloop, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withClassLoaderCache(CubeClassLoaderCache.create(CLASS_LOADER, 5))
 				.withInitializer(cube -> DIMENSIONS_CUBE.forEach(cube::addDimension))
 				.withInitializer(cube -> MEASURES.forEach(cube::addMeasure))
@@ -286,17 +287,17 @@ public final class ReportingTest extends CubeTestBase {
 		OTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
 		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cube);
-		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(EVENTLOOP, LOG_OT, uplink, cubeDiffLogOTState);
+		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(eventloop, LOG_OT, uplink, cubeDiffLogOTState);
 
-		LocalActiveFs activeFs = LocalActiveFs.create(EVENTLOOP, EXECUTOR, temporaryFolder.newFolder().toPath());
+		LocalActiveFs activeFs = LocalActiveFs.create(eventloop, EXECUTOR, temporaryFolder.newFolder().toPath());
 		await(activeFs.start());
-		Multilog<LogItem> multilog = MultilogImpl.create(EVENTLOOP,
+		Multilog<LogItem> multilog = MultilogImpl.create(eventloop,
 				activeFs,
 				LZ4FrameFormat.create(),
 				SerializerBuilder.create(CLASS_LOADER).build(LogItem.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 
-		LogOTProcessor<LogItem, CubeDiff> logOTProcessor = LogOTProcessor.create(EVENTLOOP,
+		LogOTProcessor<LogItem, CubeDiff> logOTProcessor = LogOTProcessor.create(eventloop,
 				multilog,
 				new LogItemSplitter(cube),
 				"testlog",
@@ -334,7 +335,7 @@ public final class ReportingTest extends CubeTestBase {
 
 		cubeHttpServer = startHttpServer();
 
-		AsyncHttpClient httpClient = AsyncHttpClient.create(EVENTLOOP)
+		AsyncHttpClient httpClient = AsyncHttpClient.create(eventloop)
 				.withNoKeepAlive();
 		cubeHttpClient = CubeHttpClient.create(httpClient, "http://127.0.0.1:" + serverPort)
 				.withAttribute("date", LocalDate.class)
@@ -359,7 +360,7 @@ public final class ReportingTest extends CubeTestBase {
 	}
 
 	private AsyncHttpServer startHttpServer() {
-		AsyncHttpServer server = AsyncHttpServer.create(EVENTLOOP, ReportingServiceServlet.createRootServlet(EVENTLOOP, cube))
+		AsyncHttpServer server = AsyncHttpServer.create(eventloop, ReportingServiceServlet.createRootServlet(eventloop, cube))
 				.withListenPort(serverPort)
 				.withAcceptOnce();
 		try {
@@ -373,7 +374,7 @@ public final class ReportingTest extends CubeTestBase {
 	@After
 	public void after() {
 		if (cubeHttpServer != null) cubeHttpServer.closeFuture();
-		EVENTLOOP.run();
+		eventloop.run();
 	}
 
 	@Test

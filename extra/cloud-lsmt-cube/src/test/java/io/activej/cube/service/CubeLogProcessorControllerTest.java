@@ -54,14 +54,15 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 
 	@Before
 	public void setUp() throws Exception {
+		super.setUp();
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 		Path logsDir = temporaryFolder.newFolder().toPath();
 
-		LocalActiveFs aggregationFs = LocalActiveFs.create(EVENTLOOP, EXECUTOR, aggregationsDir);
+		LocalActiveFs aggregationFs = LocalActiveFs.create(eventloop, EXECUTOR, aggregationsDir);
 		await(aggregationFs.start());
-		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(EVENTLOOP, ChunkIdCodec.ofLong(), new IdGeneratorStub(),
+		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(),
 				LZ4FrameFormat.create(), aggregationFs);
-		Cube cube = Cube.create(EVENTLOOP, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
+		Cube cube = Cube.create(eventloop, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())
 				.withDimension("campaign", ofInt())
@@ -85,16 +86,16 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 		OTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
 		LogOTState<CubeDiff> logState = LogOTState.create(cube);
-		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(EVENTLOOP, LOG_OT, uplink, logState);
+		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(eventloop, LOG_OT, uplink, logState);
 
-		logsFs = LocalActiveFs.create(EVENTLOOP, EXECUTOR, logsDir);
+		logsFs = LocalActiveFs.create(eventloop, EXECUTOR, logsDir);
 		await(logsFs.start());
 		BinarySerializer<LogItem> serializer = SerializerBuilder.create(CLASS_LOADER)
 				.build(LogItem.class);
-		multilog = MultilogImpl.create(EVENTLOOP, logsFs, LZ4FrameFormat.create(), serializer, NAME_PARTITION_REMAINDER_SEQ);
+		multilog = MultilogImpl.create(eventloop, logsFs, LZ4FrameFormat.create(), serializer, NAME_PARTITION_REMAINDER_SEQ);
 
 		LogOTProcessor<LogItem, CubeDiff> logProcessor = LogOTProcessor.create(
-				EVENTLOOP,
+				eventloop,
 				multilog,
 				cube.logStreamConsumer(LogItem.class),
 				"test",
@@ -102,7 +103,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 				logState);
 
 		controller = CubeLogProcessorController.create(
-				EVENTLOOP,
+				eventloop,
 				logState,
 				stateManager,
 				aggregationChunkStorage,
