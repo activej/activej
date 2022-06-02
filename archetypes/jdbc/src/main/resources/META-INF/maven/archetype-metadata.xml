@@ -10,7 +10,7 @@
             <defaultValue>my-jdbc-app</defaultValue>
         </requiredProperty>
         <requiredProperty key="version">
-            <defaultValue>5.2-SNAPSHOT</defaultValue>
+            <defaultValue>5.3-SNAPSHOT</defaultValue>
         </requiredProperty>
         <requiredProperty key="mainClassName">
             <defaultValue>MyJdbcLauncher</defaultValue>
