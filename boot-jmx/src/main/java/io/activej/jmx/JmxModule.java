@@ -49,6 +49,7 @@ import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -78,6 +79,7 @@ public final class JmxModule extends AbstractModule implements WithInitializer<J
 	private Duration refreshPeriod = REFRESH_PERIOD_DEFAULT;
 	private int maxJmxRefreshesPerOneCycle = MAX_JMX_REFRESHES_PER_ONE_CYCLE_DEFAULT;
 	private ProtoObjectNameMapper objectNameMapper = ProtoObjectNameMapper.identity();
+	private BiPredicate<Key<?>, Integer> workerPredicate = (key, workerId) -> true;
 	private boolean withScopes = true;
 
 	private JmxModule() {
@@ -187,11 +189,17 @@ public final class JmxModule extends AbstractModule implements WithInitializer<J
 		return this;
 	}
 
+	public JmxModule withWorkerPredicate(BiPredicate<Key<?>, Integer> predicate) {
+		this.workerPredicate = predicate;
+		return this;
+	}
+
 	@Provides
 	JmxRegistry jmxRegistry(DynamicMBeanFactory mbeanFactory) {
 		return JmxRegistry.create(ManagementFactory.getPlatformMBeanServer(), mbeanFactory, customTypes)
 				.withObjectNameMapping(objectNameMapper)
-				.withScopes(withScopes);
+				.withScopes(withScopes)
+				.withWorkerPredicate(workerPredicate);
 	}
 
 	@Provides

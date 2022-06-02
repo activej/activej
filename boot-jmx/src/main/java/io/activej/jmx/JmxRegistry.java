@@ -32,6 +32,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.function.BiPredicate;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.StringFormatUtils.formatDuration;
@@ -53,7 +54,9 @@ public final class JmxRegistry implements JmxRegistryMXBean, WithInitializer<Jmx
 	private final Map<Type, JmxCustomTypeAdapter<?>> customTypes;
 	private final Map<WorkerPool, Key<?>> workerPoolKeys = new HashMap<>();
 	private final Set<ObjectName> registeredObjectNames = new HashSet<>();
+
 	private ProtoObjectNameMapper objectNameMapper = ProtoObjectNameMapper.identity();
+	private BiPredicate<Key<?>, Integer> workerPredicate = (key, workerId) -> true;
 	private boolean withScopes = true;
 
 	// jmx
@@ -86,6 +89,11 @@ public final class JmxRegistry implements JmxRegistryMXBean, WithInitializer<Jmx
 
 	public JmxRegistry withObjectNameMapping(ProtoObjectNameMapper objectNameMapper) {
 		this.objectNameMapper = objectNameMapper;
+		return this;
+	}
+
+	public JmxRegistry withWorkerPredicate(BiPredicate<Key<?>, Integer> predicate){
+		this.workerPredicate = predicate;
 		return this;
 	}
 
@@ -187,6 +195,8 @@ public final class JmxRegistry implements JmxRegistryMXBean, WithInitializer<Jmx
 
 		// register mbeans for each worker separately
 		for (int i = 0; i < poolInstances.size(); i++) {
+			if (!workerPredicate.test(key, i)) continue;
+
 			JmxBeanSettings settingsForOptionals = JmxBeanSettings.of(
 					settings.getIncludedOptionals(), new HashMap<>(), customTypes);
 			registerMBeanForWorker(poolInstances.get(i), i, commonName, key, settingsForOptionals);
@@ -254,6 +264,8 @@ public final class JmxRegistry implements JmxRegistryMXBean, WithInitializer<Jmx
 
 		// unregister mbeans for each worker separately
 		for (int i = 0; i < poolInstances.size(); i++) {
+			if (!workerPredicate.test(key, i)) continue;
+
 			try {
 				ProtoObjectName workerName = addWorkerName(commonName, i);
 				ProtoObjectName mappedWorkerName = objectNameMapper.apply(workerName);
