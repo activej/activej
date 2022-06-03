@@ -337,14 +337,10 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 
 			} else if (ReflectionUtils.isSimpleType(returnClass)) {
 				JmxReducer<?> reducer;
-				if (attrAnnotation == null) {
-					reducer = DEFAULT_REDUCER;
-				} else {
-					try {
-						reducer = fetchReducerFrom(getter);
-					} catch (Exception e) {
-						throw new RuntimeException(e);
-					}
+				try {
+					reducer = fetchReducerFrom(getter);
+				} catch (Exception e) {
+					throw new RuntimeException(e);
 				}
 				return new AttributeNodeForSimpleType(
 						attrName, attrDescription, included, defaultFetcher, setter, returnClass, reducer
@@ -435,9 +431,13 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 		if (getter == null) {
 			return DEFAULT_REDUCER;
 		}
+		Class<?> reducerClass = null;
 		JmxAttribute attrAnnotation = getter.getAnnotation(JmxAttribute.class);
-		Class<?> reducerClass = attrAnnotation.reducer();
-		if (reducerClass == DEFAULT_REDUCER.getClass()) {
+		if (attrAnnotation != null) reducerClass = attrAnnotation.reducer();
+		JmxOperation opAnnotation = getter.getAnnotation(JmxOperation.class);
+		if (opAnnotation != null) reducerClass = opAnnotation.reducer();
+
+		if (reducerClass == null || reducerClass == DEFAULT_REDUCER.getClass()) {
 			return DEFAULT_REDUCER;
 		}
 		return ((Class<? extends JmxReducer<?>>) reducerClass).getDeclaredConstructor().newInstance();

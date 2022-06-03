@@ -2,6 +2,7 @@ package io.activej.jmx;
 
 import io.activej.jmx.api.JmxBean;
 import io.activej.jmx.api.attribute.JmxAttribute;
+import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.api.attribute.JmxReducer;
 import io.activej.jmx.helper.JmxBeanAdapterStub;
 import org.junit.Test;
@@ -37,6 +38,11 @@ public class DynamicMBeanFactoryAttributeReducersTest {
 
 		@JmxAttribute(reducer = ConstantValueReducer.class)
 		public int getAttr() {
+			return attr;
+		}
+
+		@JmxOperation(reducer = ConstantValueReducer.class)
+		public int getOp() {
 			return attr;
 		}
 	}
@@ -114,6 +120,17 @@ public class DynamicMBeanFactoryAttributeReducersTest {
 
 			return new PojoStub(totalCount, totalName.toString());
 		}
+	}
+
+	@Test
+	public void properlyAggregatesJmxOperationResults() throws Exception {
+		DynamicMBean mbean = DynamicMBeanFactory.create()
+				.createDynamicMBean(
+						asList(new MBeanWithCustomReducer(200), new MBeanWithCustomReducer(350)),
+						defaultSettings(),
+						false);
+
+		assertEquals(ConstantValueReducer.CONSTANT_VALUE, mbean.invoke("getOp", new String[0], new String[0]));
 	}
 	// endregion
 }
