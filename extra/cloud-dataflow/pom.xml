@@ -60,6 +60,12 @@
     </dependency>
     <dependency>
       <groupId>io.activej</groupId>
+      <artifactId>activej-crdt</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.activej</groupId>
       <artifactId>activej-test</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
