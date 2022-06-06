@@ -88,9 +88,9 @@ public class DatasetUtils {
 	private static <T> StreamId forwardChannel(DataflowContext context, Class<T> type,
 			Partition sourcePartition, Partition targetPartition,
 			StreamId sourceStreamId, int uploadIndex, int downloadIndex) {
-//		if (sourcePartition == targetPartition) {
-//			return sourceStreamId;
-//		}
+		if (sourcePartition == targetPartition) {
+			return sourceStreamId;
+		}
 		DataflowGraph graph = context.getGraph();
 		NodeUpload<T> nodeUpload = new NodeUpload<>(uploadIndex, type, sourceStreamId);
 		NodeDownload<T> nodeDownload = new NodeDownload<>(downloadIndex, type, sourcePartition.getAddress(), sourceStreamId);
