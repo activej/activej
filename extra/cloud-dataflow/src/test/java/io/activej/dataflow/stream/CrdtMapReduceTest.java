@@ -2,9 +2,12 @@ package io.activej.dataflow.stream;
 
 import io.activej.common.Utils;
 import io.activej.crdt.CrdtData;
+import io.activej.crdt.CrdtServer;
+import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.storage.local.CrdtStorageMap;
+import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.collector.MergeCollector;
@@ -49,6 +52,7 @@ import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 
 import static io.activej.common.Utils.intersection;
@@ -59,11 +63,12 @@ import static io.activej.dataflow.proto.ProtobufUtils.ofObject;
 import static io.activej.dataflow.stream.DataflowTest.createCommon;
 import static io.activej.dataflow.stream.DataflowTest.getFreeListenAddress;
 import static io.activej.promise.TestUtils.await;
+import static io.activej.serializer.BinarySerializers.*;
 import static io.activej.test.TestUtils.assertCompleteFn;
 import static java.util.Comparator.naturalOrder;
 import static org.junit.Assert.*;
 
-public class CrdtMapReduceTest{
+public class CrdtMapReduceTest {
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -161,12 +166,12 @@ public class CrdtMapReduceTest{
 				.install(common)
 				.transform(new KeyPattern<CrdtStorage<Integer, Set<String>>>() {}, (bindings, scope, key, binding) -> binding
 						.onInstance(storage -> {
-							if (storage instanceof CrdtStorageMap<Integer, Set<String>> map) {
-								map.put(1, Set.of("dog"));
-								map.put(2, Set.of("dog", "cat"));
-								map.put(3, Set.of("cat", "horse"));
-								map.put(4, Set.of("cat", "dog", "rabbit"));
-							}
+							if (!(storage instanceof CrdtStorageMap<Integer, Set<String>> map)) return;
+
+							map.put(1, Set.of("dog"));
+							map.put(2, Set.of("dog", "cat"));
+							map.put(3, Set.of("cat", "horse"));
+							map.put(4, Set.of("cat", "dog", "rabbit"));
 						}))
 				.build();
 
@@ -174,11 +179,11 @@ public class CrdtMapReduceTest{
 				.install(common)
 				.transform(new KeyPattern<CrdtStorage<Integer, Set<String>>>() {}, (bindings, scope, key, binding) -> binding
 						.onInstance(storage -> {
-							if (storage instanceof CrdtStorageMap<Integer, Set<String>> map) {
-								map.put(1, Set.of("fish"));
-								map.put(2, Set.of("cat", "dog"));
-								map.put(8, Set.of("cat", "horse"));
-							}
+							if (!(storage instanceof CrdtStorageMap<Integer, Set<String>> map)) return;
+
+							map.put(1, Set.of("fish"));
+							map.put(2, Set.of("cat", "dog"));
+							map.put(8, Set.of("cat", "horse"));
 						}))
 				.build();
 
@@ -301,7 +306,121 @@ public class CrdtMapReduceTest{
 		assertEquals(3, getFromAny(actual1, actual2, "cat"));
 	}
 
-	private static Map<String, Integer> toMap(CrdtStorage<String, Integer> storage){
+	@Test
+	public void testCrdtSingleSourceStorage() throws Exception {
+		InetSocketAddress crdtAddress = getFreeListenAddress();
+
+		InetSocketAddress address1 = getFreeListenAddress();
+		InetSocketAddress address2 = getFreeListenAddress();
+
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), List.of(new Partition(address1), new Partition(address2)))
+				.install(createSerializersModule())
+				.install(new AbstractModule() {
+
+					@Provides
+					CrdtStorage<Integer, Set<String>> sourceStorage(Eventloop eventloop, CrdtDataSerializer<Integer, Set<String>> serializer) {
+						return CrdtStorageClient.create(eventloop, crdtAddress, serializer);
+					}
+
+					@Provides
+					@DatasetId("items")
+					@Transient
+					StreamSupplier<String> source(CrdtStorage<Integer, Set<String>> storage) {
+						return StreamSupplier.ofPromise(storage.download()
+								.map(supplier -> supplier.transformWith(new StreamFilter<>() {
+									@Override
+									protected @NotNull StreamDataAcceptor<CrdtData<Integer, Set<String>>> onResumed(@NotNull StreamDataAcceptor<String> output) {
+										return crdtData -> {
+											for (String string : crdtData.getState()) {
+												output.accept(string);
+											}
+										};
+									}
+								})));
+					}
+
+				})
+				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
+				.build();
+
+		Module crdtServerModule = ModuleBuilder.create()
+				.bind(new Key<CrdtDataSerializer<Integer, Set<String>>>() {}).toInstance(new CrdtDataSerializer<>(INT_SERIALIZER, ofSet(UTF8_SERIALIZER)))
+				.install(new AbstractModule() {
+					@Provides
+					Eventloop eventloop() {
+						return Eventloop.getCurrentEventloop();
+					}
+
+					@Provides
+					CrdtStorage<Integer, Set<String>> storage(Eventloop eventloop) {
+						return CrdtStorageMap.create(eventloop, CrdtFunction.ignoringTimestamp(Utils::union));
+					}
+
+					@Provides
+					CrdtServer<Integer, Set<String>> server(Eventloop eventloop, CrdtStorage<Integer, Set<String>> storage, CrdtDataSerializer<Integer, Set<String>> serializer) {
+						return CrdtServer.create(eventloop, storage, serializer);
+					}
+				})
+				.transform(new KeyPattern<CrdtStorage<Integer, Set<String>>>() {}, (bindings, scope, key, binding) -> binding
+						.onInstance(storage -> {
+							if (!(storage instanceof CrdtStorageMap<Integer, Set<String>> map)) return;
+
+							map.put(1, Set.of("dog"));
+							map.put(2, Set.of("dog", "cat"));
+							map.put(3, Set.of("cat", "horse"));
+							map.put(4, Set.of("cat", "dog", "rabbit"));
+							map.put(5, Set.of("fish"));
+							map.put(6, Set.of("cat", "dog"));
+							map.put(7, Set.of("cat", "horse"));
+						}))
+				.build();
+
+		CrdtServer<Integer, Set<String>> crdtServer = Injector.of(crdtServerModule).getInstance(new Key<CrdtServer<Integer, Set<String>>>() {}).withListenAddress(crdtAddress);
+		DataflowServer server1 = Injector.of(common).getInstance(DataflowServer.class).withListenAddress(address1);
+		DataflowServer server2 = Injector.of(common).getInstance(DataflowServer.class).withListenAddress(address2);
+
+		crdtServer.listen();
+		server1.listen();
+		server2.listen();
+
+		Injector clientInjector = Injector.of(common);
+		DataflowClient client = clientInjector.getInstance(DataflowClient.class);
+		DataflowGraph graph = clientInjector.getInstance(DataflowGraph.class);
+
+		List<Partition> partitions = graph.getAvailablePartitions();
+		assertTrue(partitions.size() > 1);
+		// a single random partition to download data
+		partitions = List.of(partitions.get(ThreadLocalRandom.current().nextInt(partitions.size())));
+
+		Dataset<String> items = datasetOfId("items", String.class, partitions);
+		Dataset<String> repartitioned = repartition(items, new StringIdentityFunction());
+		Dataset<StringCount> mappedItems = map(repartitioned, new StringMapFunction(), StringCount.class);
+		Dataset<StringCount> reducedItems = sortReduceRepartitionReduce(mappedItems,
+				new StringReducer(), String.class, new StringKeyFunction(), Comparator.naturalOrder());
+		MergeCollector<String, StringCount> collector = new MergeCollector<>(reducedItems, client, new StringKeyFunction(), naturalOrder(), false);
+		StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
+		StreamConsumerToList<StringCount> resultConsumer = StreamConsumerToList.create();
+
+		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
+
+		await(graph.execute()
+				.whenComplete(assertCompleteFn($ -> {
+					crdtServer.close();
+					server1.close();
+					server2.close();
+				})));
+
+		System.out.println(graph.toGraphViz());
+
+		assertEquals(List.of(
+				new StringCount("cat", 5),
+				new StringCount("dog", 4),
+				new StringCount("fish", 1),
+				new StringCount("horse", 2),
+				new StringCount("rabbit", 1)), resultConsumer.getList());
+	}
+
+	private static Map<String, Integer> toMap(CrdtStorage<String, Integer> storage) {
 		assert storage instanceof CrdtStorageMap<String, Integer>;
 
 		Map<String, Integer> result = new HashMap<>();
@@ -310,7 +429,7 @@ public class CrdtMapReduceTest{
 		return result;
 	}
 
-	private static int getFromAny(Map<String, Integer> map1, Map<String, Integer> map2, String key){
+	private static int getFromAny(Map<String, Integer> map1, Map<String, Integer> map2, String key) {
 		Integer result1 = map1.get(key);
 		if (result1 != null) return result1;
 
@@ -350,6 +469,13 @@ public class CrdtMapReduceTest{
 		}
 	}
 
+	public static class StringIdentityFunction implements Function<String, String> {
+		@Override
+		public String apply(String s) {
+			return s;
+		}
+	}
+
 	@SuppressWarnings({"rawtypes", "NullableProblems", "unchecked"})
 	private static Module createSerializersModule() {
 		return ModuleBuilder.create()
@@ -357,6 +483,7 @@ public class CrdtMapReduceTest{
 					FunctionSubtypeSerializer<Function<?, ?>> serializer = FunctionSubtypeSerializer.create();
 					serializer.setSubtypeCodec(StringKeyFunction.class, ofObject(StringKeyFunction::new));
 					serializer.setSubtypeCodec(StringMapFunction.class, ofObject(StringMapFunction::new));
+					serializer.setSubtypeCodec(StringIdentityFunction.class, ofObject(StringIdentityFunction::new));
 					return serializer;
 				})
 				.bind(new Key<BinarySerializer<Comparator<?>>>() {}).toInstance(ofObject(Comparator::naturalOrder))
@@ -369,6 +496,7 @@ public class CrdtMapReduceTest{
 						new Key<BinarySerializer<InputToAccumulator>>() {},
 						new Key<BinarySerializer<AccumulatorToOutput>>() {})
 				.bind(new Key<BinarySerializer<ReducerToResult>>() {}).toInstance(ofObject(StringReducer::new))
+				.bind(new Key<CrdtDataSerializer<Integer, Set<String>>>() {}).toInstance(new CrdtDataSerializer<>(INT_SERIALIZER, ofSet(UTF8_SERIALIZER)))
 				.build();
 	}
 }

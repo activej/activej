@@ -22,26 +22,29 @@ import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.node.NodeSupplierOfId;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public final class DatasetSupplierOfId<T> extends Dataset<T> {
 	private final String id;
+	private final @Nullable List<Partition> partitions;
 
-	public DatasetSupplierOfId(String id, Class<T> resultType) {
+	public DatasetSupplierOfId(String id, Class<T> resultType, @Nullable List<Partition> partitions) {
 		super(resultType);
 		this.id = id;
+		this.partitions = partitions;
 	}
 
 	@Override
 	public List<StreamId> channels(DataflowContext context) {
 		DataflowGraph graph = context.getGraph();
 		List<StreamId> outputStreamIds = new ArrayList<>();
-		List<Partition> availablePartitions = graph.getAvailablePartitions();
+		List<Partition> partitions = this.partitions == null ? graph.getAvailablePartitions() : this.partitions;
 		int index = context.generateNodeIndex();
-		for (int i = 0, size = availablePartitions.size(); i < size; i++) {
-			Partition partition = availablePartitions.get(i);
+		for (int i = 0, size = partitions.size(); i < size; i++) {
+			Partition partition = partitions.get(i);
 			NodeSupplierOfId<T> node = new NodeSupplierOfId<>(index, id, i, size);
 			graph.addNode(partition, node);
 			outputStreamIds.add(node.getOutput());
