@@ -3,6 +3,8 @@ package io.activej.jmx;
 import io.activej.jmx.api.ConcurrentJmxBean;
 import io.activej.jmx.api.JmxBean;
 import io.activej.jmx.api.attribute.JmxAttribute;
+import io.activej.jmx.api.attribute.JmxOperation;
+import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.jmx.helper.JmxBeanAdapterStub;
 import io.activej.jmx.helper.JmxStatsStub;
 import org.junit.Test;
@@ -125,21 +127,62 @@ public class DynamicMBeanFactoryAttributesTest {
 
 		DynamicMBean mbean = createDynamicMBeanFor(mBeanWithMap_1, mBeanWithMap_2);
 
-		TabularData tabularData = (TabularData) mbean.getAttribute("nameToNumber");
+		{
+			TabularData tabularData = (TabularData) mbean.getAttribute("nameToNumber");
 
-		assertEquals(4, tabularData.size());
+			assertEquals(4, tabularData.size());
 
-		CompositeData row_1 = tabularData.get(keyForTabularData("a"));
-		assertEquals(1, row_1.get("value"));
+			CompositeData row_1 = tabularData.get(keyForTabularData("a"));
+			assertEquals(1, row_1.get("value"));
 
-		CompositeData row_2 = tabularData.get(keyForTabularData("b"));
-		assertEquals(2, row_2.get("value"));
+			CompositeData row_2 = tabularData.get(keyForTabularData("b"));
+			assertEquals(2, row_2.get("value"));
 
-		CompositeData row_3 = tabularData.get(keyForTabularData("c"));
-		assertNull(row_3.get("value"));
+			CompositeData row_3 = tabularData.get(keyForTabularData("c"));
+			assertNull(row_3.get("value"));
 
-		CompositeData row_4 = tabularData.get(keyForTabularData("d"));
-		assertEquals(5, row_4.get("value"));
+			CompositeData row_4 = tabularData.get(keyForTabularData("d"));
+			assertEquals(5, row_4.get("value"));
+		}
+
+		{
+			TabularData tabularData = (TabularData) mbean.getAttribute("nameToNumberSum");
+
+			assertEquals(4, tabularData.size());
+
+			CompositeData row_1 = tabularData.get(keyForTabularData("a"));
+			assertEquals(1, row_1.get("value"));
+
+			CompositeData row_2 = tabularData.get(keyForTabularData("b"));
+			assertEquals(4, row_2.get("value"));
+
+			CompositeData row_3 = tabularData.get(keyForTabularData("c"));
+			assertEquals(300, row_3.get("value"));
+
+			CompositeData row_4 = tabularData.get(keyForTabularData("d"));
+			assertEquals(5, row_4.get("value"));
+		}
+
+		{
+			TabularData tabularData = (TabularData) mbean.getAttribute("nameToNumberSum");
+
+			assertEquals(4, tabularData.size());
+
+			CompositeData row_1 = tabularData.get(keyForTabularData("a"));
+			assertEquals(1, row_1.get("value"));
+
+			CompositeData row_2 = tabularData.get(keyForTabularData("b"));
+			assertEquals(4, row_2.get("value"));
+
+			CompositeData row_3 = tabularData.get(keyForTabularData("c"));
+			assertEquals(300, row_3.get("value"));
+
+			CompositeData row_4 = tabularData.get(keyForTabularData("d"));
+			assertEquals(5, row_4.get("value"));
+
+			TabularData operationTabularData = (TabularData) mbean.invoke("getNameToNumberSumOperation", new Object[0], new String[0]);
+			assertEquals(tabularData, operationTabularData);
+		}
 	}
 
 	// test empty names
@@ -280,7 +323,7 @@ public class DynamicMBeanFactoryAttributesTest {
 			dynamicMBeanFactory.createDynamicMBean(beans, settings, false);
 			fail();
 		} catch (IllegalStateException e) {
-			assertThat(e.getMessage(), containsString( "A method \"getValue\" in class '" + MBeanWithNonPublicAttributes.class.getName() +
+			assertThat(e.getMessage(), containsString("A method \"getValue\" in class '" + MBeanWithNonPublicAttributes.class.getName() +
 					"' annotated with @JmxAttribute should be declared public"));
 		}
 	}
@@ -389,6 +432,16 @@ public class DynamicMBeanFactoryAttributesTest {
 
 		@JmxAttribute
 		public Map<String, Integer> getNameToNumber() {
+			return nameToNumber;
+		}
+
+		@JmxAttribute(reducer = JmxReducerSum.class)
+		public Map<String, Integer> getNameToNumberSum() {
+			return nameToNumber;
+		}
+
+		@JmxOperation(reducer = JmxReducerSum.class)
+		public Map<String, Integer> getNameToNumberSumOperation() {
 			return nameToNumber;
 		}
 	}
