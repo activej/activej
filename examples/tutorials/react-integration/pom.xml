@@ -4,7 +4,7 @@
 
   <groupId>io.activej</groupId>
   <artifactId>tutorial-react-integration</artifactId>
-  <version>5.3-SNAPSHOT</version>
+  <version>5.3</version>
 
   <name>Tutorials : React-Integration</name>
 
