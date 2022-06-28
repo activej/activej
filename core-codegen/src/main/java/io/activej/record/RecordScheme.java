@@ -177,6 +177,10 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 		return new ArrayList<>(fieldTypes.keySet());
 	}
 
+	public List<Type> getTypes() {
+		return new ArrayList<>(fieldTypes.values());
+	}
+
 	public String getField(int index) {
 		return fields[index];
 	}
@@ -255,7 +259,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 							})
 							.withMethod("getScheme", value(this))
 							.withMethod("getField", value(field))
-							.withMethod("getType", value(fieldType))
+							.withMethod("getType", value(fieldType, Type.class))
 			);
 			recordGetters[recordGettersMap.size()] = recordGetter;
 			recordGettersMap.put(field, recordGetter);
@@ -276,7 +280,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 							})
 							.withMethod("getScheme", value(this))
 							.withMethod("getField", value(field))
-							.withMethod("getType", value(fieldType)));
+							.withMethod("getType", value(fieldType, Type.class)));
 			recordSetters[recordSettersMap.size()] = recordSetter;
 			recordSettersMap.put(field, recordSetter);
 		}

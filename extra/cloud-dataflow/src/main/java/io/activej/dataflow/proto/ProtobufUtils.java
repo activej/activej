@@ -126,14 +126,12 @@ public final class ProtobufUtils {
 									.setReducer(functionSerializer.serializeReducer(e.getValue().getReducer()))
 									.setKeyFunction(functionSerializer.serializeFunction(e.getValue().getKeyFunction()))
 									.build())))
-					.setOutput(convert(reduce.getOutput()))
-					.build());
+					.setOutput(convert(reduce.getOutput())));
 		} else if (node instanceof NodeUpload<?> upload) {
 			builder.setUpload(NodeProto.Node.Upload.newBuilder()
 					.setIndex(upload.getIndex())
 					.setType(upload.getType().getName())
-					.setStreamId(convert(upload.getStreamId()))
-					.build());
+					.setStreamId(convert(upload.getStreamId())));
 		} else if (node instanceof NodeSort<?, ?> sort) {
 			builder.setSort(NodeProto.Node.Sort.newBuilder()
 					.setIndex(sort.getIndex())
@@ -143,8 +141,7 @@ public final class ProtobufUtils {
 					.setDeduplicate(sort.isDeduplicate())
 					.setItemsInMemorySize(sort.getItemsInMemorySize())
 					.setInput(convert(sort.getInput()))
-					.setOutput(convert(sort.getOutput()))
-					.build());
+					.setOutput(convert(sort.getOutput())));
 		} else if (node instanceof NodeMerge<?, ?> merge) {
 			builder.setMerge(NodeProto.Node.Merge.newBuilder()
 					.setIndex(merge.getIndex())
@@ -152,16 +149,14 @@ public final class ProtobufUtils {
 					.setKeyComparator(functionSerializer.serializeComparator(merge.getKeyComparator()))
 					.setDeduplicate(merge.isDeduplicate())
 					.addAllInputs(convertIds(merge.getInputs()))
-					.setOutput(convert(merge.getOutput()))
-					.build());
+					.setOutput(convert(merge.getOutput())));
 		} else if (node instanceof NodeShard<?, ?> shard) {
 			builder.setShard(NodeProto.Node.Shard.newBuilder()
 					.setIndex(shard.getIndex())
 					.setKeyFunction(functionSerializer.serializeFunction(shard.getKeyFunction()))
 					.setInput(convert(shard.getInput()))
 					.addAllOutputs(convertIds(shard.getOutputs()))
-					.setNonce(shard.getNonce())
-					.build());
+					.setNonce(shard.getNonce()));
 		} else if (node instanceof NodeDownload<?> download) {
 			builder.setDownload(Download.newBuilder()
 					.setIndex(download.getIndex())
@@ -170,15 +165,13 @@ public final class ProtobufUtils {
 							.setHost(download.getAddress().getHostName())
 							.setPort(download.getAddress().getPort()))
 					.setInput(convert(download.getStreamId()))
-					.setOutput(convert(download.getOutput()))
-					.build());
+					.setOutput(convert(download.getOutput())));
 		} else if (node instanceof NodeMap<?, ?> map) {
 			builder.setMap(NodeProto.Node.Map.newBuilder()
 					.setIndex(map.getIndex())
 					.setFunction(functionSerializer.serializeFunction(map.getFunction()))
 					.setInput(convert(map.getInput()))
-					.setOutput(convert(map.getOutput()))
-					.build());
+					.setOutput(convert(map.getOutput())));
 		} else if (node instanceof NodeJoin<?, ?, ?, ?> join) {
 			builder.setJoin(Join.newBuilder()
 					.setIndex(join.getIndex())
@@ -188,31 +181,27 @@ public final class ProtobufUtils {
 					.setComparator(functionSerializer.serializeComparator(join.getKeyComparator()))
 					.setLeftKeyFunction(functionSerializer.serializeFunction(join.getLeftKeyFunction()))
 					.setRightKeyFunction(functionSerializer.serializeFunction(join.getRightKeyFunction()))
-					.setJoiner(functionSerializer.serializeJoiner(join.getJoiner()))
-					.build());
+					.setJoiner(functionSerializer.serializeJoiner(join.getJoiner())));
 		} else if (node instanceof NodeFilter<?> filter) {
 			builder.setFilter(Filter.newBuilder()
 					.setIndex(filter.getIndex())
 					.setPredicate(functionSerializer.serializePredicate(filter.getPredicate()))
 					.setInput(convert(filter.getInput()))
-					.setOutput(convert(filter.getOutput()))
-					.build());
+					.setOutput(convert(filter.getOutput())));
 		} else if (node instanceof NodeConsumerOfId<?> consumerOfId) {
 			builder.setConsumerOfId(ConsumerOfId.newBuilder()
 					.setIndex(consumerOfId.getIndex())
 					.setId(consumerOfId.getId())
 					.setPartitionIndex(consumerOfId.getPartitionIndex())
 					.setMaxPartitions(consumerOfId.getMaxPartitions())
-					.setInput(convert(consumerOfId.getInput()))
-					.build());
+					.setInput(convert(consumerOfId.getInput())));
 		} else if (node instanceof NodeSupplierOfId<?> supplierOfId) {
 			builder.setSupplierOfId(NodeProto.Node.SupplierOfId.newBuilder()
 					.setIndex(supplierOfId.getIndex())
 					.setId(supplierOfId.getId())
 					.setPartitionIndex(supplierOfId.getPartitionIndex())
 					.setMaxPartitions(supplierOfId.getMaxPartitions())
-					.setOutput(convert(supplierOfId.getOutput()))
-					.build());
+					.setOutput(convert(supplierOfId.getOutput())));
 		} else if (node instanceof NodeReduceSimple<?, ?, ?, ?> reduceSimple) {
 			builder.setReduceSimple(NodeProto.Node.ReduceSimple.newBuilder()
 					.setIndex(reduceSimple.getIndex())
@@ -220,14 +209,16 @@ public final class ProtobufUtils {
 					.setKeyComparator(functionSerializer.serializeComparator(reduceSimple.getKeyComparator()))
 					.setReducer(functionSerializer.serializeReducer(reduceSimple.getReducer()))
 					.addAllInputs(convertIds(reduceSimple.getInputs()))
-					.setOutput(convert(reduceSimple.getOutput()))
-					.build());
+					.setOutput(convert(reduceSimple.getOutput())));
 		} else if (node instanceof NodeUnion<?> union) {
 			builder.setUnion(NodeProto.Node.Union.newBuilder()
 					.setIndex(union.getIndex())
 					.addAllInputs(convertIds(union.getInputs()))
-					.setOutput(convert(union.getOutput()))
-					.build());
+					.setOutput(convert(union.getOutput())));
+		} else if (node instanceof NodeSupplierEmpty<?> empty) {
+			builder.setEmpty(NodeProto.Node.Empty.newBuilder()
+					.setIndex(empty.getIndex())
+					.setOutput(convert(empty.getOutput())));
 		} else {
 			throw new AssertionError();
 		}
@@ -322,6 +313,10 @@ public final class ProtobufUtils {
 				case UPLOAD -> {
 					Upload upload = node.getUpload();
 					return new NodeUpload<>(upload.getIndex(), getType(upload.getType()), convert(upload.getStreamId()));
+				}
+				case EMPTY -> {
+					Empty empty = node.getEmpty();
+					return new NodeSupplierEmpty<>(empty.getIndex(), convert(empty.getOutput()));
 				}
 				default -> throw new DataflowException("Node was not set");
 			}

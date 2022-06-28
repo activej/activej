@@ -1,5 +1,7 @@
 package io.activej.record;
 
+import java.lang.reflect.Type;
+
 public interface RecordSetter<T> {
 	void set(Record record, T value);
 
@@ -23,5 +25,5 @@ public interface RecordSetter<T> {
 
 	String getField();
 
-	Class<?> getType();
+	Type getType();
 }

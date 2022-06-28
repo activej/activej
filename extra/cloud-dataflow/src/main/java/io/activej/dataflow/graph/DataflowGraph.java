@@ -44,7 +44,7 @@ import static java.util.stream.Collectors.*;
  * Represents a graph of partitions, nodeStats and streams in datagraph system.
  */
 public final class DataflowGraph {
-	private final ObjectWriter objectWriter = new ObjectMapper()
+	private static final ObjectWriter OBJECT_WRITER = new ObjectMapper()
 			.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
 			.writerFor(new TypeReference<List<Node>>() {})
 			.with(new DefaultPrettyPrinter("%n"));
@@ -300,7 +300,7 @@ public final class DataflowGraph {
 			sb.append("--- " + entry.getKey() + "\n\n");
 			String nodes;
 			try {
-				nodes = objectWriter.writeValueAsString(entry.getValue());
+				nodes = OBJECT_WRITER.writeValueAsString(entry.getValue());
 			} catch (JsonProcessingException e) {
 				nodes = "<UNKNOWN>";
 			}

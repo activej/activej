@@ -8,7 +8,6 @@ import io.activej.codegen.expression.Expressions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -44,12 +43,13 @@ public abstract class RecordProjection implements UnaryOperator<Record>, BiConsu
 			throw new IllegalArgumentException("Unrelated ClassLoaders");
 		RecordScheme schemeTo = RecordScheme.create(classLoader);
 		Map<String, UnaryOperator<Expression>> mapping = new HashMap<>();
-		for (String field : schemeFrom.getFields()) {
-			Type fieldType = schemeFrom.getFieldType(field);
-			if (fields.contains(field)) {
-				schemeTo.withField(field, fieldType);
-				mapping.put(field, recordFrom -> schemeFrom.property(recordFrom, field));
+		List<String> fromFields = schemeFrom.getFields();
+		for (String field : fields) {
+			if (!fromFields.contains(field)) {
+				throw new IllegalArgumentException("Unknown field: " + field);
 			}
+			schemeTo.withField(field, schemeFrom.getFieldType(field));
+			mapping.put(field, recordFrom -> schemeFrom.property(recordFrom, field));
 		}
 		return projection(classLoader, List.of(schemeFrom, fields), schemeFrom, schemeTo, mapping);
 	}

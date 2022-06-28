@@ -124,6 +124,11 @@ message Node {
     StreamId stream_id = 3;
   }
 
+  message Empty {
+    int32 index = 1;
+    StreamId output = 2;
+  }
+
   oneof node {
     ConsumerOfId consumer_of_id = 1;
     Download download = 2;
@@ -138,5 +143,6 @@ message Node {
     SupplierOfId supplier_of_id = 11;
     Union union = 12;
     Upload upload = 13;
+    Empty empty = 14;
   }
 }

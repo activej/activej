@@ -1,5 +1,7 @@
 package io.activej.record;
 
+import java.lang.reflect.Type;
+
 public interface RecordGetter<T> {
 	T get(Record record);
 
@@ -23,5 +25,5 @@ public interface RecordGetter<T> {
 
 	String getField();
 
-	Class<?> getType();
+	Type getType();
 }

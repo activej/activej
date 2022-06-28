@@ -171,6 +171,8 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 				.with(LinkedHashSet.class, ctx -> new SerializerDefHashSet(ctx.scanTypeArgument(0), LinkedHashSet.class, LinkedHashSet.class))
 				.with(EnumSet.class, ctx -> new SerializerDefEnumSet(ctx.scanTypeArgument(0)))
 
+				.with(Type.class, ctx -> new SerializerDefType())
+
 				.with(Object.class, builder::scan);
 
 		return builder;

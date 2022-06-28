@@ -29,6 +29,7 @@ import io.activej.http.AsyncHttpServer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
+import io.activej.inject.annotation.Transient;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.serializer.BinarySerializer;
@@ -469,6 +470,7 @@ public final class DataflowTest {
 					}
 
 					@Provides
+					@Transient
 					DataflowGraph graph(DataflowClient client) {
 						return new DataflowGraph(client, graphPartitions);
 					}
