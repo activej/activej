@@ -5,7 +5,8 @@ import io.activej.dataflow.SqlDataflow;
 import io.activej.dataflow.calcite.DataflowSchema;
 import io.activej.dataflow.calcite.DataflowTable;
 import io.activej.dataflow.calcite.RecordFunction;
-import io.activej.dataflow.calcite.inject.CalciteModule;
+import io.activej.dataflow.calcite.inject.CalciteClientModule;
+import io.activej.dataflow.calcite.inject.CalciteServerModule;
 import io.activej.dataflow.calcite.inject.SerializersModule;
 import io.activej.dataflow.calcite.inject.SqlFunctionModule;
 import io.activej.dataflow.graph.Partition;
@@ -14,6 +15,7 @@ import io.activej.datastream.StreamConsumerToList;
 import io.activej.inject.Injector;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
+import io.activej.inject.module.Modules;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import io.activej.serializer.annotations.SerializeRecord;
@@ -53,6 +55,10 @@ public class CalciteTest {
 	@ClassRule
 	public static final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
+	public static final String STUDENT_TABLE_NAME = "student";
+	public static final String DEPARTMENT_TABLE_NAME = "department";
+	public static final String REGISTRY_TABLE_NAME = "registry";
+
 	private static final List<Student> STUDENT_LIST = List.of(
 			new Student(1, "John", "Doe", 1),
 			new Student(2, "Bob", "Black", 2),
@@ -71,10 +77,8 @@ public class CalciteTest {
 
 	private ExecutorService executor;
 	private ExecutorService sortingExecutor;
-	private DataflowServer server;
-	private Module common;
-
 	private SqlDataflow sqlDataflow;
+	private DataflowServer server;
 
 	@Before
 	public void setUp() throws IOException {
@@ -83,27 +87,31 @@ public class CalciteTest {
 
 		InetSocketAddress address = getFreeListenAddress();
 
-		common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), List.of(new Partition(address)))
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), List.of(new Partition(address)))
 				.install(new SerializersModule())
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.bind(DataflowSchema.class).to(() -> DataflowSchema.create(
-						Map.of("STUDENT", DataflowTable.create(Student.class, new StudentToRecord(), ofObject(StudentToRecord::new)),
-								"DEPARTMENT", DataflowTable.create(Department.class, new DepartmentToRecord(), ofObject(DepartmentToRecord::new)),
-								"REGISTRY", DataflowTable.create(Registry.class, new RegistryToRecord(), ofObject(RegistryToRecord::new)))))
+						Map.of(STUDENT_TABLE_NAME, DataflowTable.create(Student.class, new StudentToRecord(), ofObject(StudentToRecord::new)),
+								DEPARTMENT_TABLE_NAME, DataflowTable.create(Department.class, new DepartmentToRecord(), ofObject(DepartmentToRecord::new)),
+								REGISTRY_TABLE_NAME, DataflowTable.create(Registry.class, new RegistryToRecord(), ofObject(RegistryToRecord::new)))))
 				.build();
+
+		Module clientModule = Modules.combine(common,
+				new SqlFunctionModule(),
+				new CalciteClientModule());
+		sqlDataflow = Injector.of(clientModule).getInstance(SqlDataflow.class);
+
 
 		Module serverModule = ModuleBuilder.create()
 				.install(common)
-				.bind(datasetId("student")).toInstance(STUDENT_LIST)
-				.bind(datasetId("department")).toInstance(DEPARTMENT_LIST)
-				.bind(datasetId("registry")).toInstance(REGISTRY_LIST)
+				.install(new CalciteServerModule())
+				.bind(datasetId(STUDENT_TABLE_NAME)).toInstance(STUDENT_LIST)
+				.bind(datasetId(DEPARTMENT_TABLE_NAME)).toInstance(DEPARTMENT_LIST)
+				.bind(datasetId(REGISTRY_TABLE_NAME)).toInstance(REGISTRY_LIST)
 				.build();
 
 		server = Injector.of(serverModule).getInstance(DataflowServer.class).withListenAddress(address);
-
 		server.listen();
-
-		sqlDataflow = clientInjector().getInstance(SqlDataflow.class);
 	}
 
 	@After
@@ -551,12 +559,6 @@ public class CalciteTest {
 		Record third = result.get(2);
 		assertEquals(3, third.getInt(0));
 		assertEquals("Language", third.get(1));
-	}
-
-	private Injector clientInjector() {
-		return Injector.of(common,
-				new SqlFunctionModule(),
-				new CalciteModule());
 	}
 
 	private List<Record> query(String sql) {

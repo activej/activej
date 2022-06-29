@@ -21,6 +21,9 @@ import org.apache.calcite.schema.impl.AbstractSchema;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.TreeMap;
+
+import static io.activej.common.Checks.checkArgument;
 
 public final class DataflowSchema extends AbstractSchema {
 	private final Map<String, DataflowTable<?>> tableMap;
@@ -31,7 +34,16 @@ public final class DataflowSchema extends AbstractSchema {
 	}
 
 	public static DataflowSchema create(Map<String, DataflowTable<?>> tableMap) {
-		return new DataflowSchema(tableMap);
+		Map<String, DataflowTable<?>> map = new TreeMap<>();
+
+		for (Map.Entry<String, DataflowTable<?>> entry : tableMap.entrySet()) {
+			String tableName = entry.getKey();
+			DataflowTable<?> prev = map.put(tableName.toUpperCase(), entry.getValue());
+
+			checkArgument(prev == null, "Duplicate table names: " + tableName);
+		}
+
+		return new DataflowSchema(map);
 	}
 
 	@Override

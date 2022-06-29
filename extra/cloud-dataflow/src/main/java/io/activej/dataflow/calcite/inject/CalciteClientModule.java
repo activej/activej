@@ -37,7 +37,7 @@ import java.util.Set;
 import static io.activej.common.Checks.checkState;
 import static java.util.Collections.singletonList;
 
-public final class CalciteModule extends AbstractModule {
+public final class CalciteClientModule extends AbstractModule {
 
 	public static final String DATAFLOW_SCHEMA_NAME = "DATAFLOW";
 
