@@ -3,15 +3,13 @@ package io.activej.dataflow.calcite.inject;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.SqlDataflow;
 import io.activej.dataflow.calcite.CalciteSqlDataflow;
-import io.activej.dataflow.calcite.RecordFunction;
+import io.activej.dataflow.calcite.DataflowSchema;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.inject.Injector;
-import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.Binding;
 import io.activej.inject.binding.BindingType;
 import io.activej.inject.module.AbstractModule;
-import io.activej.types.Types;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
@@ -23,8 +21,6 @@ import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.prepare.CalciteCatalogReader;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
-import org.apache.calcite.schema.Schema;
-import org.apache.calcite.schema.SchemaFactory;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
@@ -36,7 +32,6 @@ import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.calcite.sql2rel.StandardConvertletTable;
 
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Set;
 
 import static io.activej.common.Checks.checkState;
@@ -47,12 +42,7 @@ public final class CalciteModule extends AbstractModule {
 	public static final String DATAFLOW_SCHEMA_NAME = "DATAFLOW";
 
 	@Provides
-	Schema schema(SchemaFactory schemaFactory) {
-		return schemaFactory.create(null, DATAFLOW_SCHEMA_NAME, Map.of());
-	}
-
-	@Provides
-	CalciteSchema calciteSchema(Schema schema) {
+	CalciteSchema calciteSchema(DataflowSchema schema) {
 		return CalciteSchema.createRootSchema(true).add(DATAFLOW_SCHEMA_NAME, schema);
 	}
 
@@ -104,7 +94,6 @@ public final class CalciteModule extends AbstractModule {
 		Binding<?> graphBinding = injector.getBinding(DataflowGraph.class);
 		checkState(graphBinding != null && graphBinding.getType() == BindingType.TRANSIENT);
 
-		return CalciteSqlDataflow.create(client, () -> injector.getInstance(DataflowGraph.class), sqlToRelConverter, planner,
-				cls -> injector.getInstance(Key.ofType(Types.parameterizedType(RecordFunction.class, cls))));
+		return CalciteSqlDataflow.create(client, () -> injector.getInstance(DataflowGraph.class), sqlToRelConverter, planner);
 	}
 }

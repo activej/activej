@@ -18,6 +18,7 @@ package io.activej.dataflow.calcite;
 
 import io.activej.codegen.util.Primitives;
 import io.activej.common.exception.ToDoException;
+import io.activej.serializer.BinarySerializer;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.schema.impl.AbstractTable;
@@ -30,13 +31,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class DataflowTable extends AbstractTable {
-	private final Type type;
+public class DataflowTable<T> extends AbstractTable {
+	private final Class<T> type;
+	private final RecordFunction<T> recordFunction;
+	private final BinarySerializer<RecordFunction<T>> recordFunctionSerializer;
 
 	private RelDataType relDataType;
 
-	public DataflowTable(Type type) {
+	private DataflowTable(Class<T> type, RecordFunction<T> recordFunction, BinarySerializer<RecordFunction<T>> recordFunctionSerializer) {
 		this.type = type;
+		this.recordFunction = recordFunction;
+		this.recordFunctionSerializer = recordFunctionSerializer;
+	}
+
+	public static <T> DataflowTable<T> create(Class<T> cls, RecordFunction<T> recordFunction, BinarySerializer<RecordFunction<T>> recordFunctionSerializer) {
+		return new DataflowTable<>(cls, recordFunction, recordFunctionSerializer);
 	}
 
 	@Override
@@ -47,13 +56,21 @@ public class DataflowTable extends AbstractTable {
 		return relDataType;
 	}
 
-	public Type getType() {
+	public Class<T> getType() {
 		return type;
+	}
+
+	public RecordFunction<T> getRecordFunction() {
+		return recordFunction;
+	}
+
+	public BinarySerializer<RecordFunction<T>> getRecordFunctionSerializer() {
+		return recordFunctionSerializer;
 	}
 
 	private static RelDataType toRowType(RelDataTypeFactory typeFactory, Type type) {
 		if (type instanceof Class<?> cls) {
-			if (cls.isPrimitive() || Primitives.isWrapperType(cls) ||  cls == String.class) {
+			if (cls.isPrimitive() || Primitives.isWrapperType(cls) || cls == String.class) {
 				return typeFactory.createJavaType(cls);
 			}
 
@@ -73,11 +90,11 @@ public class DataflowTable extends AbstractTable {
 
 		if (type instanceof ParameterizedType parameterizedType) {
 			Type rawType = parameterizedType.getRawType();
-			if (rawType == List.class){
+			if (rawType == List.class) {
 				RelDataType elementType = toRowType(typeFactory, parameterizedType.getActualTypeArguments()[0]);
 				return typeFactory.createArrayType(elementType, -1);
 			}
-			if (rawType == Map.class){
+			if (rawType == Map.class) {
 				Type[] typeArguments = parameterizedType.getActualTypeArguments();
 				RelDataType keyType = toRowType(typeFactory, typeArguments[0]);
 				RelDataType valueType = toRowType(typeFactory, typeArguments[1]);
@@ -85,7 +102,7 @@ public class DataflowTable extends AbstractTable {
 			}
 		}
 
-		if (type instanceof GenericArrayType genericArrayType){
+		if (type instanceof GenericArrayType genericArrayType) {
 			RelDataType elementType = toRowType(typeFactory, genericArrayType.getGenericComponentType());
 			return typeFactory.createArrayType(elementType, -1);
 		}

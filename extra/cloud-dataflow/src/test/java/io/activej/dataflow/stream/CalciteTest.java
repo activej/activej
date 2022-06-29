@@ -2,7 +2,7 @@ package io.activej.dataflow.stream;
 
 import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.SqlDataflow;
-import io.activej.dataflow.calcite.DataflowSchemaFactory;
+import io.activej.dataflow.calcite.DataflowSchema;
 import io.activej.dataflow.calcite.DataflowTable;
 import io.activej.dataflow.calcite.RecordFunction;
 import io.activej.dataflow.calcite.inject.CalciteModule;
@@ -10,20 +10,16 @@ import io.activej.dataflow.calcite.inject.SerializersModule;
 import io.activej.dataflow.calcite.inject.SqlFunctionModule;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
-import io.activej.dataflow.proto.FunctionSubtypeSerializer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.inject.Injector;
-import io.activej.inject.Key;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
-import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.annotations.SerializeRecord;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
-import org.apache.calcite.schema.SchemaFactory;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
@@ -35,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Function;
 
 import static io.activej.common.Checks.checkState;
 import static io.activej.dataflow.helper.StreamMergeSorterStorageStub.FACTORY_STUB;
@@ -90,8 +85,11 @@ public class CalciteTest {
 
 		common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), List.of(new Partition(address)))
 				.install(new SerializersModule())
-				.install(createCustomSerializersModule())
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
+				.bind(DataflowSchema.class).to(() -> DataflowSchema.create(
+						Map.of("STUDENT", DataflowTable.create(Student.class, new StudentToRecord(), ofObject(StudentToRecord::new)),
+								"DEPARTMENT", DataflowTable.create(Department.class, new DepartmentToRecord(), ofObject(DepartmentToRecord::new)),
+								"REGISTRY", DataflowTable.create(Registry.class, new RegistryToRecord(), ofObject(RegistryToRecord::new)))))
 				.build();
 
 		Module serverModule = ModuleBuilder.create()
@@ -558,17 +556,7 @@ public class CalciteTest {
 	private Injector clientInjector() {
 		return Injector.of(common,
 				new SqlFunctionModule(),
-				new CalciteModule(),
-				ModuleBuilder.create()
-						.bind(new Key<RecordFunction<Student>>() {}).to(StudentToRecord::new)
-						.bind(new Key<RecordFunction<Department>>() {}).to(DepartmentToRecord::new)
-						.bind(new Key<RecordFunction<Registry>>() {}).to(RegistryToRecord::new)
-
-						.bind(SchemaFactory.class).to(() -> DataflowSchemaFactory.create(
-								Map.of("STUDENT", new DataflowTable(Student.class),
-										"DEPARTMENT", new DataflowTable(Department.class),
-										"REGISTRY", new DataflowTable(Registry.class))))
-						.build());
+				new CalciteModule());
 	}
 
 	private List<Record> query(String sql) {
@@ -578,18 +566,6 @@ public class CalciteTest {
 				.then(supplier -> supplier.streamTo(resultConsumer))
 				.whenComplete(server::close)
 				.map($ -> resultConsumer.getList()));
-	}
-
-	private static Module createCustomSerializersModule() {
-		return ModuleBuilder.create()
-				.bind(new Key<BinarySerializer<Function<?, ?>>>() {}).to(() -> {
-					FunctionSubtypeSerializer<Function<?, ?>> serializer = FunctionSubtypeSerializer.create();
-					serializer.setSubtypeCodec(StudentToRecord.class, ofObject(StudentToRecord::new));
-					serializer.setSubtypeCodec(DepartmentToRecord.class, ofObject(DepartmentToRecord::new));
-					serializer.setSubtypeCodec(RegistryToRecord.class, ofObject(RegistryToRecord::new));
-					return serializer;
-				})
-				.build();
 	}
 
 	public static final class StudentToRecord implements RecordFunction<Student> {

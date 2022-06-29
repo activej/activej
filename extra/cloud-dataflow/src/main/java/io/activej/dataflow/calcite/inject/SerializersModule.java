@@ -1,5 +1,7 @@
 package io.activej.dataflow.calcite.inject;
 
+import io.activej.dataflow.calcite.DataflowSchema;
+import io.activej.dataflow.calcite.DataflowTable;
 import io.activej.dataflow.calcite.RecordProjectionFn;
 import io.activej.dataflow.calcite.RecordSerializer;
 import io.activej.dataflow.calcite.join.RecordInnerJoiner;
@@ -11,14 +13,12 @@ import io.activej.dataflow.proto.FunctionSubtypeSerializer;
 import io.activej.datastream.processor.StreamJoin;
 import io.activej.datastream.processor.StreamReducers;
 import io.activej.inject.Key;
-import io.activej.inject.KeyPattern;
 import io.activej.inject.module.AbstractModule;
 import io.activej.record.Record;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerBuilder;
 
 import java.util.Comparator;
-import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -28,14 +28,17 @@ public final class SerializersModule extends AbstractModule {
 	@Override
 	@SuppressWarnings({"rawtypes", "NullableProblems", "unchecked"})
 	protected void configure() {
-		transform(new KeyPattern<BinarySerializer<Function<?, ?>>>() {}, (bindings, scope, key, binding) -> binding
-				.addDependencies(SerializerBuilder.class)
-				.mapInstance(List.of(Key.of(SerializerBuilder.class)), (deps, serializer) -> {
-					FunctionSubtypeSerializer<Function<?, ?>> subtypeSerializer = (FunctionSubtypeSerializer<Function<?, ?>>) serializer;
-					subtypeSerializer.setSubtypeCodec((Class) RecordKeyFunction.class, new RecordKeyFunctionSerializer<>());
-					subtypeSerializer.setSubtypeCodec(RecordProjectionFn.class, ((SerializerBuilder) deps[0]).build(RecordProjectionFn.class));
-					return subtypeSerializer;
-				}));
+		bind(new Key<BinarySerializer<Function<?, ?>>>() {}).to((schema, serializerBuilder) -> {
+					FunctionSubtypeSerializer<Function<?, ?>> serializer = FunctionSubtypeSerializer.create();
+					for (DataflowTable<?> table : schema.getDataflowTableMap().values()) {
+						Class<? extends Function<?, ?>> recordFunctionClass = (Class<? extends Function<?, ?>>) table.getRecordFunction().getClass();
+						serializer.setSubtypeCodec(recordFunctionClass, table.getRecordFunctionSerializer());
+					}
+					serializer.setSubtypeCodec((Class) RecordKeyFunction.class, new RecordKeyFunctionSerializer<>());
+					serializer.setSubtypeCodec(RecordProjectionFn.class, serializerBuilder.build(RecordProjectionFn.class));
+					return serializer;
+				},
+				DataflowSchema.class, SerializerBuilder.class);
 
 		bind(new Key<BinarySerializer<Predicate<?>>>() {}).to(serializerBuilder -> ((BinarySerializer) serializerBuilder.build(WherePredicate.class)),
 				SerializerBuilder.class);

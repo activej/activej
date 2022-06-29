@@ -19,18 +19,27 @@ package io.activej.dataflow.calcite;
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.schema.impl.AbstractSchema;
 
+import java.util.Collections;
 import java.util.Map;
 
-class DataflowSchema extends AbstractSchema {
-	private final Map<String, Table> tableMap;
+public final class DataflowSchema extends AbstractSchema {
+	private final Map<String, DataflowTable<?>> tableMap;
 
-	public DataflowSchema(Map<String, DataflowTable> tableMap) {
+	private DataflowSchema(Map<String, DataflowTable<?>> tableMap) {
 		super();
-		this.tableMap = Map.copyOf(tableMap);
+		this.tableMap = tableMap;
+	}
+
+	public static DataflowSchema create(Map<String, DataflowTable<?>> tableMap) {
+		return new DataflowSchema(tableMap);
 	}
 
 	@Override
 	protected Map<String, Table> getTableMap() {
-		return tableMap;
+		return Collections.unmodifiableMap(tableMap);
+	}
+
+	public Map<String, DataflowTable<?>> getDataflowTableMap() {
+		return Collections.unmodifiableMap(tableMap);
 	}
 }

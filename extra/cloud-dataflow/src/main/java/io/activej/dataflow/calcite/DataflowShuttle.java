@@ -29,20 +29,13 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.type.SqlTypeName;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static io.activej.common.Checks.*;
 import static java.util.Objects.requireNonNull;
 
 public class DataflowShuttle extends RelShuttleImpl {
-	private final Function<Class<?>, RecordFunction<Object>> recordFnFactory;
-
 	Queue<Dataset<Record>> current = new ArrayDeque<>();
-
-	public DataflowShuttle(Function<Class<?>, RecordFunction<Object>> recordFnFactory) {
-		this.recordFnFactory = recordFnFactory;
-	}
 
 	@Override
 	public RelNode visit(LogicalCalc calc) {
@@ -100,18 +93,9 @@ public class DataflowShuttle extends RelShuttleImpl {
 	public RelNode visit(TableScan scan) {
 		RelNode result = super.visit(scan);
 
-		RelOptTable table = scan.getTable();
-		List<String> names = table.getQualifiedName();
+		Dataset<Record> scanned = scan(scan);
 
-		DataflowTable dataflowTable = table.unwrap(DataflowTable.class);
-		assert dataflowTable != null;
-
-		//noinspection unchecked
-		Dataset<Object> dataset = Datasets.datasetOfId(Utils.last(names).toLowerCase(), (Class<Object>) dataflowTable.getType());
-		RecordFunction<Object> mapper = recordFnFactory.apply(dataset.valueType());
-		Dataset<Record> mapped = Datasets.map(dataset, mapper, Record.class);
-
-		current.add(mapped);
+		current.add(scanned);
 		return result;
 	}
 
@@ -133,6 +117,20 @@ public class DataflowShuttle extends RelShuttleImpl {
 
 		current.add(joined);
 		return result;
+	}
+
+	private static <T> Dataset<Record> scan(TableScan scan) {
+		RelOptTable table = scan.getTable();
+		List<String> names = table.getQualifiedName();
+
+		//noinspection unchecked
+		DataflowTable<T> dataflowTable = table.unwrap(DataflowTable.class);
+		assert dataflowTable != null;
+
+		Dataset<T> dataset = Datasets.datasetOfId(Utils.last(names).toLowerCase(), dataflowTable.getType());
+		RecordFunction<T> mapper = dataflowTable.getRecordFunction();
+
+		return Datasets.map(dataset, mapper, Record.class);
 	}
 
 	private static <T extends Comparable<T>> Class<? extends T> getJoinKeyType(LogicalJoin join) {

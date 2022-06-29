@@ -21,7 +21,6 @@ import org.apache.calcite.tools.Program;
 import org.apache.calcite.tools.Programs;
 
 import java.util.Collections;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static io.activej.common.Checks.checkNotNull;
@@ -33,23 +32,21 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 	private final SqlToRelConverter converter;
 	private final SqlValidator validator;
 	private final RelOptPlanner planner;
-	private final Function<Class<?>, RecordFunction<Object>> recordFnFactory;
 
 	private RelTraitSet traits = RelTraitSet.createEmpty();
 
 	private CalciteSqlDataflow(DataflowClient client, Supplier<DataflowGraph> graphSupplier, SqlToRelConverter converter,
-			RelOptPlanner planner, Function<Class<?>, RecordFunction<Object>> recordFnFactory) {
+			RelOptPlanner planner) {
 		this.client = client;
 		this.graphSupplier = graphSupplier;
 		this.converter = converter;
 		this.validator = checkNotNull(converter.validator);
 		this.planner = planner;
-		this.recordFnFactory = recordFnFactory;
 	}
 
 	public static CalciteSqlDataflow create(DataflowClient client, Supplier<DataflowGraph> graphSupplier, SqlToRelConverter converter,
-			RelOptPlanner planner, Function<Class<?>, RecordFunction<Object>> recordFnFactory) {
-		return new CalciteSqlDataflow(client, graphSupplier, converter, planner, recordFnFactory);
+			RelOptPlanner planner) {
+		return new CalciteSqlDataflow(client, graphSupplier, converter, planner);
 	}
 
 	public CalciteSqlDataflow withTraits(RelTraitSet traits) {
@@ -94,7 +91,7 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 	}
 
 	private Promise<StreamSupplier<Record>> toResultSupplier(RelNode node) {
-		DataflowShuttle shuttle = new DataflowShuttle(recordFnFactory);
+		DataflowShuttle shuttle = new DataflowShuttle();
 		node.accept(shuttle);
 
 		Collector<Record> collector = new Collector<>(shuttle.result(), client);
