@@ -5,6 +5,7 @@ import io.activej.dataflow.DataflowException;
 import io.activej.dataflow.SqlDataflow;
 import io.activej.dataflow.collector.Collector;
 import io.activej.dataflow.graph.DataflowGraph;
+import io.activej.dataflow.graph.Partition;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
 import io.activej.record.Record;
@@ -21,13 +22,13 @@ import org.apache.calcite.tools.Program;
 import org.apache.calcite.tools.Programs;
 
 import java.util.Collections;
-import java.util.function.Supplier;
+import java.util.List;
 
 import static io.activej.common.Checks.checkNotNull;
 
 public final class CalciteSqlDataflow implements SqlDataflow {
 	private final DataflowClient client;
-	private final Supplier<DataflowGraph> graphSupplier;
+	private final List<Partition> partitions;
 
 	private final SqlToRelConverter converter;
 	private final SqlValidator validator;
@@ -35,18 +36,18 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 
 	private RelTraitSet traits = RelTraitSet.createEmpty();
 
-	private CalciteSqlDataflow(DataflowClient client, Supplier<DataflowGraph> graphSupplier, SqlToRelConverter converter,
+	private CalciteSqlDataflow(DataflowClient client, List<Partition> partitions, SqlToRelConverter converter,
 			RelOptPlanner planner) {
 		this.client = client;
-		this.graphSupplier = graphSupplier;
+		this.partitions = partitions;
 		this.converter = converter;
 		this.validator = checkNotNull(converter.validator);
 		this.planner = planner;
 	}
 
-	public static CalciteSqlDataflow create(DataflowClient client, Supplier<DataflowGraph> graphSupplier, SqlToRelConverter converter,
+	public static CalciteSqlDataflow create(DataflowClient client, List<Partition> partitions, SqlToRelConverter converter,
 			RelOptPlanner planner) {
-		return new CalciteSqlDataflow(client, graphSupplier, converter, planner);
+		return new CalciteSqlDataflow(client, partitions, converter, planner);
 	}
 
 	public CalciteSqlDataflow withTraits(RelTraitSet traits) {
@@ -96,7 +97,7 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 
 		Collector<Record> collector = new Collector<>(shuttle.result(), client);
 
-		DataflowGraph graph = graphSupplier.get();
+		DataflowGraph graph = new DataflowGraph(client, partitions);
 		StreamSupplier<Record> result = collector.compile(graph);
 
 		return graph.execute()

@@ -13,6 +13,7 @@ import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.inject.Injector;
+import io.activej.inject.Key;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.inject.module.Modules;
@@ -47,7 +48,7 @@ import static org.junit.Assert.assertTrue;
 public class CalciteTest {
 
 	@ClassRule
-	public static final EventloopRule eventloopRule = new EventloopRule();
+	public static final EventloopRule eventloopRule  = new EventloopRule();
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
@@ -87,9 +88,11 @@ public class CalciteTest {
 
 		InetSocketAddress address = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), List.of(new Partition(address)))
+		List<Partition> partitions = List.of(new Partition(address));
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), partitions)
 				.install(new SerializersModule())
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
+				.bind(new Key<List<Partition>>() {}).toInstance(partitions)
 				.bind(DataflowSchema.class).to(() -> DataflowSchema.create(
 						Map.of(STUDENT_TABLE_NAME, DataflowTable.create(Student.class, new StudentToRecord(), ofObject(StudentToRecord::new)),
 								DEPARTMENT_TABLE_NAME, DataflowTable.create(Department.class, new DepartmentToRecord(), ofObject(DepartmentToRecord::new)),

@@ -16,7 +16,6 @@
 
 package io.activej.dataflow.http;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -139,11 +138,6 @@ public final class DataflowDebugServlet implements AsyncServlet {
 													convert(task.getFinishTime()),
 													convert(task.getError())))));
 						}));
-	}
-
-	public static void main(String[] args) throws JsonProcessingException {
-		ObjectMapper mapper = new ObjectMapper();
-		System.out.println(mapper.writeValueAsString(new Partition(new InetSocketAddress("sss", 123))));
 	}
 
 	private static @Nullable NodeStat reduce(List<NodeStat> stats, ResourceLocator env) {

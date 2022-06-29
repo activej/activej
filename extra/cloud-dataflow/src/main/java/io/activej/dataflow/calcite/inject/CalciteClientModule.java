@@ -4,11 +4,8 @@ import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.SqlDataflow;
 import io.activej.dataflow.calcite.CalciteSqlDataflow;
 import io.activej.dataflow.calcite.DataflowSchema;
-import io.activej.dataflow.graph.DataflowGraph;
-import io.activej.inject.Injector;
+import io.activej.dataflow.graph.Partition;
 import io.activej.inject.annotation.Provides;
-import io.activej.inject.binding.Binding;
-import io.activej.inject.binding.BindingType;
 import io.activej.inject.module.AbstractModule;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.jdbc.CalciteSchema;
@@ -32,9 +29,9 @@ import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.calcite.sql2rel.StandardConvertletTable;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
-import static io.activej.common.Checks.checkState;
 import static java.util.Collections.singletonList;
 
 public final class CalciteClientModule extends AbstractModule {
@@ -90,10 +87,7 @@ public final class CalciteClientModule extends AbstractModule {
 	}
 
 	@Provides
-	SqlDataflow sqlDataflow(DataflowClient client, Injector injector, SqlToRelConverter sqlToRelConverter, RelOptPlanner planner) {
-		Binding<?> graphBinding = injector.getBinding(DataflowGraph.class);
-		checkState(graphBinding != null && graphBinding.getType() == BindingType.TRANSIENT);
-
-		return CalciteSqlDataflow.create(client, () -> injector.getInstance(DataflowGraph.class), sqlToRelConverter, planner);
+	SqlDataflow sqlDataflow(DataflowClient client, SqlToRelConverter sqlToRelConverter, RelOptPlanner planner, List<Partition> partitions) {
+		return CalciteSqlDataflow.create(client, partitions, sqlToRelConverter, planner);
 	}
 }
