@@ -561,6 +561,19 @@ public class CalciteTest {
 		assertEquals("Language", third.get(1));
 	}
 
+	@Test
+	public void testOrderBy() {
+		List<Record> result = query("""
+				SELECT * FROM student
+				ORDER BY firstName ASC, id DESC
+				""");
+
+		assertEquals(List.of(STUDENT_LIST.get(1), STUDENT_LIST.get(2), STUDENT_LIST.get(0)),
+				result.stream()
+						.map(CalciteTest::toStudent)
+						.toList());
+	}
+
 	private List<Record> query(String sql) {
 		StreamConsumerToList<Record> resultConsumer = StreamConsumerToList.create();
 

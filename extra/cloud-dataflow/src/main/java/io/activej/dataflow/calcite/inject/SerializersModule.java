@@ -7,6 +7,7 @@ import io.activej.dataflow.calcite.RecordSerializer;
 import io.activej.dataflow.calcite.join.RecordInnerJoiner;
 import io.activej.dataflow.calcite.join.RecordKeyFunction;
 import io.activej.dataflow.calcite.join.RecordKeyFunctionSerializer;
+import io.activej.dataflow.calcite.sort.RecordComparator;
 import io.activej.dataflow.calcite.where.WherePredicate;
 import io.activej.dataflow.inject.BinarySerializerModule;
 import io.activej.dataflow.proto.FunctionSubtypeSerializer;
@@ -35,6 +36,7 @@ public final class SerializersModule extends AbstractModule {
 						serializer.setSubtypeCodec(recordFunctionClass, table.getRecordFunctionSerializer());
 					}
 					serializer.setSubtypeCodec((Class) RecordKeyFunction.class, new RecordKeyFunctionSerializer<>());
+					serializer.setSubtypeCodec((Class) Function.identity().getClass(), "identity", ofObject(Function::identity));
 					serializer.setSubtypeCodec(RecordProjectionFn.class, serializerBuilder.build(RecordProjectionFn.class));
 					return serializer;
 				},
@@ -43,7 +45,17 @@ public final class SerializersModule extends AbstractModule {
 		bind(new Key<BinarySerializer<Predicate<?>>>() {}).to(serializerBuilder -> ((BinarySerializer) serializerBuilder.build(WherePredicate.class)),
 				SerializerBuilder.class);
 
-		bind(new Key<BinarySerializer<Comparator<?>>>() {}).toInstance(ofObject(Comparator::naturalOrder));
+		bind(new Key<BinarySerializer<Comparator<?>>>() {}).to(serializerBuilder -> {
+					FunctionSubtypeSerializer<Comparator<?>> serializer = FunctionSubtypeSerializer.create();
+
+					serializer.setSubtypeCodec((Class<? extends Comparator<?>>) Comparator.naturalOrder().getClass(), "natural", ofObject(Comparator::naturalOrder));
+					serializer.setSubtypeCodec((Class<? extends Comparator<?>>) Comparator.reverseOrder().getClass(), "reverse", ofObject(Comparator::reverseOrder));
+
+					serializer.setSubtypeCodec(RecordComparator.class, serializerBuilder.build(RecordComparator.class));
+
+					return serializer;
+				},
+				SerializerBuilder.class);
 
 		bind(new Key<BinarySerializer<StreamReducers.Reducer<?, ?, ?, ?>>>() {}).to((inputToAccumulator, accumulatorToOutput, mergeReducer) -> {
 					FunctionSubtypeSerializer<StreamReducers.Reducer> serializer = FunctionSubtypeSerializer.create();
