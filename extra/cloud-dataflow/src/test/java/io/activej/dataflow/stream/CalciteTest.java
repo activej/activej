@@ -39,16 +39,16 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.dataflow.helper.StreamMergeSorterStorageStub.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.dataflow.proto.ProtobufUtils.ofObject;
+import static io.activej.dataflow.stream.CalciteTest.MatchType.TYPE_1;
 import static io.activej.dataflow.stream.DataflowTest.createCommon;
 import static io.activej.dataflow.stream.DataflowTest.getFreeListenAddress;
 import static io.activej.promise.TestUtils.await;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class CalciteTest {
 
 	@ClassRule
-	public static final EventloopRule eventloopRule  = new EventloopRule();
+	public static final EventloopRule eventloopRule = new EventloopRule();
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
@@ -59,6 +59,7 @@ public class CalciteTest {
 	public static final String STUDENT_TABLE_NAME = "student";
 	public static final String DEPARTMENT_TABLE_NAME = "department";
 	public static final String REGISTRY_TABLE_NAME = "registry";
+	public static final String USER_PROFILES_TABLE_NAME = "profiles";
 
 	private static final List<Student> STUDENT_LIST = List.of(
 			new Student(1, "John", "Doe", 1),
@@ -72,6 +73,16 @@ public class CalciteTest {
 			new Registry(1, Map.of("John", 1, "Jack", 2), List.of("google.com", "amazon.com")),
 			new Registry(2, Map.of(), List.of("wikipedia.org")),
 			new Registry(3, Map.of("Sarah", 53, "Rob", 7564, "John", 18), List.of("yahoo.com", "ebay.com", "netflix.com")));
+	private static final List<UserProfile> USER_PROFILES_LIST = List.of(
+			new UserProfile("user1", new UserProfilePojo("test1", 1), Map.of(
+					1, new UserProfileIntent(1, "test1", TYPE_1, new Limits(new float[]{1.2f, 3.4f}, System.currentTimeMillis())),
+					2, new UserProfileIntent(2, "test2", MatchType.TYPE_2, new Limits(new float[]{5.6f, 7.8f}, System.currentTimeMillis()))),
+					System.currentTimeMillis()),
+			new UserProfile("user2", new UserProfilePojo("test2", 2), Map.of(
+					2, new UserProfileIntent(2, "test2", MatchType.TYPE_2, new Limits(new float[]{4.3f, 2.1f}, System.currentTimeMillis())),
+					3, new UserProfileIntent(3, "test3", TYPE_1, new Limits(new float[]{6.5f, 8.7f}, System.currentTimeMillis()))),
+					System.currentTimeMillis())
+	);
 
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
@@ -96,7 +107,8 @@ public class CalciteTest {
 				.bind(DataflowSchema.class).to(() -> DataflowSchema.create(
 						Map.of(STUDENT_TABLE_NAME, DataflowTable.create(Student.class, new StudentToRecord(), ofObject(StudentToRecord::new)),
 								DEPARTMENT_TABLE_NAME, DataflowTable.create(Department.class, new DepartmentToRecord(), ofObject(DepartmentToRecord::new)),
-								REGISTRY_TABLE_NAME, DataflowTable.create(Registry.class, new RegistryToRecord(), ofObject(RegistryToRecord::new)))))
+								REGISTRY_TABLE_NAME, DataflowTable.create(Registry.class, new RegistryToRecord(), ofObject(RegistryToRecord::new)),
+								USER_PROFILES_TABLE_NAME, DataflowTable.create(UserProfile.class, new UserProfileToRecord(), ofObject(UserProfileToRecord::new)))))
 				.build();
 
 		Module clientModule = Modules.combine(common,
@@ -111,6 +123,7 @@ public class CalciteTest {
 				.bind(datasetId(STUDENT_TABLE_NAME)).toInstance(STUDENT_LIST)
 				.bind(datasetId(DEPARTMENT_TABLE_NAME)).toInstance(DEPARTMENT_LIST)
 				.bind(datasetId(REGISTRY_TABLE_NAME)).toInstance(REGISTRY_LIST)
+				.bind(datasetId(USER_PROFILES_TABLE_NAME)).toInstance(USER_PROFILES_LIST)
 				.build();
 
 		server = Injector.of(serverModule).getInstance(DataflowServer.class).withListenAddress(address);
@@ -133,6 +146,26 @@ public class CalciteTest {
 
 	@SerializeRecord
 	public record Registry(int id, Map<String, Integer> counters, List<String> domains) {
+	}
+
+	@SerializeRecord
+	public record UserProfile(String id, UserProfilePojo pojo, Map<Integer, UserProfileIntent> intents, long timestamp) {
+	}
+
+	@SerializeRecord
+	public record UserProfilePojo(String value1, int value2) {
+	}
+
+	@SerializeRecord
+	public record UserProfileIntent(int campaignId, String keyword, MatchType matchType, Limits limits) {
+	}
+
+	public enum MatchType {
+		TYPE_1, TYPE_2
+	}
+
+	@SerializeRecord
+	public record Limits(float[] buckets, long timestamp) {
 	}
 
 	@Test
@@ -577,6 +610,43 @@ public class CalciteTest {
 						.toList());
 	}
 
+	@Test
+	public void testGetPojoField() {
+		List<Record> result = query("""
+				SELECT id, profiles.pojo.value1, profiles.pojo.value2 FROM profiles
+				""");
+
+		assertEquals(2, result.size());
+
+		Record first = result.get(0);
+		assertEquals("user1", first.get(0));
+		assertEquals("test1", first.get(1));
+		assertEquals(1, first.getInt(2));
+
+		Record second = result.get(1);
+		assertEquals("user2", second.get(0));
+		assertEquals("test2", second.get(1));
+		assertEquals(2, second.getInt(2));
+	}
+
+	@Test
+	public void testUserProfiles() {
+		List<Record> result = query("""
+				SELECT id, MAP_GET(intents, 1).keyword, MAP_GET(intents, 1).matchType FROM profiles
+				""");
+
+		assertEquals(2, result.size());
+		Record first = result.get(0);
+		assertEquals("user1", first.get(0));
+		assertEquals("test1", first.get(1));
+		assertEquals(TYPE_1, first.get(2));
+
+		Record second = result.get(1);
+		assertEquals("user2", second.get(0));
+		assertNull(second.get(1));
+		assertNull(second.get(2));
+	}
+
 	private List<Record> query(String sql) {
 		StreamConsumerToList<Record> resultConsumer = StreamConsumerToList.create();
 
@@ -621,6 +691,20 @@ public class CalciteTest {
 			record.set("id", registry.id);
 			record.set("counters", registry.counters);
 			record.set("domains", registry.domains);
+			return record;
+		}
+	}
+
+	public static final class UserProfileToRecord implements RecordFunction<UserProfile> {
+		private final RecordScheme scheme = ofJavaRecord(UserProfile.class);
+
+		@Override
+		public Record apply(UserProfile userProfile) {
+			Record record = scheme.record();
+			record.set("id", userProfile.id);
+			record.set("pojo", userProfile.pojo);
+			record.set("intents", userProfile.intents);
+			record.set("timestamp", userProfile.timestamp);
 			return record;
 		}
 	}

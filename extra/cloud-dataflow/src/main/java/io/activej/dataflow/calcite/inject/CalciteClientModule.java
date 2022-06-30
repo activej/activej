@@ -8,6 +8,7 @@ import io.activej.dataflow.graph.Partition;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import org.apache.calcite.config.CalciteConnectionConfig;
+import org.apache.calcite.config.Lex;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.plan.RelOptCluster;
@@ -21,6 +22,7 @@ import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.util.ListSqlOperatorTable;
 import org.apache.calcite.sql.util.SqlOperatorTables;
 import org.apache.calcite.sql.validate.SqlValidator;
@@ -87,7 +89,12 @@ public final class CalciteClientModule extends AbstractModule {
 	}
 
 	@Provides
-	SqlDataflow sqlDataflow(DataflowClient client, SqlToRelConverter sqlToRelConverter, RelOptPlanner planner, List<Partition> partitions) {
-		return CalciteSqlDataflow.create(client, partitions, sqlToRelConverter, planner);
+	SqlParser parser() {
+		return SqlParser.create("", SqlParser.config().withLex(Lex.JAVA));
+	}
+
+	@Provides
+	SqlDataflow sqlDataflow(DataflowClient client, SqlParser parser, SqlToRelConverter sqlToRelConverter, RelOptPlanner planner, List<Partition> partitions) {
+		return CalciteSqlDataflow.create(client, partitions, parser, sqlToRelConverter, planner);
 	}
 }

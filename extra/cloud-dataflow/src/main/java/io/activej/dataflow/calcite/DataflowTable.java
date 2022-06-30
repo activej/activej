@@ -19,6 +19,7 @@ package io.activej.dataflow.calcite;
 import io.activej.codegen.util.Primitives;
 import io.activej.common.exception.ToDoException;
 import io.activej.serializer.BinarySerializer;
+import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.schema.impl.AbstractTable;
@@ -30,6 +31,8 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static io.activej.common.Checks.checkArgument;
 
 public class DataflowTable<T> extends AbstractTable {
 	private final Class<T> type;
@@ -51,7 +54,9 @@ public class DataflowTable<T> extends AbstractTable {
 	@Override
 	public RelDataType getRowType(RelDataTypeFactory typeFactory) {
 		if (relDataType == null) {
-			relDataType = toRowType(typeFactory, type);
+			checkArgument(typeFactory instanceof JavaTypeFactory);
+
+			relDataType = toRowType((JavaTypeFactory) typeFactory, type);
 		}
 		return relDataType;
 	}
@@ -68,7 +73,7 @@ public class DataflowTable<T> extends AbstractTable {
 		return recordFunctionSerializer;
 	}
 
-	private static RelDataType toRowType(RelDataTypeFactory typeFactory, Type type) {
+	private static RelDataType toRowType(JavaTypeFactory typeFactory, Type type) {
 		if (type instanceof Class<?> cls) {
 			if (cls.isPrimitive() || Primitives.isWrapperType(cls) || cls == String.class) {
 				return typeFactory.createJavaType(cls);
@@ -76,15 +81,23 @@ public class DataflowTable<T> extends AbstractTable {
 
 			if (cls.isRecord()) {
 				RecordComponent[] recordComponents = cls.getRecordComponents();
-				List<RelDataType> types = new ArrayList<>(recordComponents.length + 1);
-				List<String> names = new ArrayList<>(recordComponents.length + 1);
+				List<RelDataType> types = new ArrayList<>(recordComponents.length);
+				List<String> names = new ArrayList<>(recordComponents.length);
 
 				for (RecordComponent recordComponent : recordComponents) {
-					names.add(recordComponent.getName().toUpperCase());
+					names.add(recordComponent.getName());
 					types.add(toRowType(typeFactory, recordComponent.getGenericType()));
 				}
 
 				return typeFactory.createStructType(types, names);
+			}
+
+			if (cls.isEnum()) {
+				return typeFactory.createJavaType(cls);
+			}
+
+			if (cls.isArray()) {
+				return toRowType(typeFactory, cls.getComponentType());
 			}
 		}
 

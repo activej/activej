@@ -38,7 +38,7 @@ public final class DataflowSchema extends AbstractSchema {
 
 		for (Map.Entry<String, DataflowTable<?>> entry : tableMap.entrySet()) {
 			String tableName = entry.getKey();
-			DataflowTable<?> prev = map.put(tableName.toUpperCase(), entry.getValue());
+			DataflowTable<?> prev = map.put(tableName, entry.getValue());
 
 			checkArgument(prev == null, "Duplicate table names: " + tableName);
 		}

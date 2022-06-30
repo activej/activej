@@ -30,24 +30,26 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 	private final DataflowClient client;
 	private final List<Partition> partitions;
 
+	private final SqlParser parser;
 	private final SqlToRelConverter converter;
 	private final SqlValidator validator;
 	private final RelOptPlanner planner;
 
 	private RelTraitSet traits = RelTraitSet.createEmpty();
 
-	private CalciteSqlDataflow(DataflowClient client, List<Partition> partitions, SqlToRelConverter converter,
-			RelOptPlanner planner) {
+	private CalciteSqlDataflow(DataflowClient client, List<Partition> partitions, SqlParser parser,
+			SqlToRelConverter converter, RelOptPlanner planner) {
 		this.client = client;
 		this.partitions = partitions;
+		this.parser = parser;
 		this.converter = converter;
 		this.validator = checkNotNull(converter.validator);
 		this.planner = planner;
 	}
 
-	public static CalciteSqlDataflow create(DataflowClient client, List<Partition> partitions, SqlToRelConverter converter,
-			RelOptPlanner planner) {
-		return new CalciteSqlDataflow(client, partitions, converter, planner);
+	public static CalciteSqlDataflow create(DataflowClient client, List<Partition> partitions, SqlParser parser,
+			SqlToRelConverter converter, RelOptPlanner planner) {
+		return new CalciteSqlDataflow(client, partitions, parser, converter, planner);
 	}
 
 	public CalciteSqlDataflow withTraits(RelTraitSet traits) {
@@ -59,7 +61,7 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 	public Promise<StreamSupplier<Record>> query(String sql) {
 		SqlNode sqlNode;
 		try {
-			sqlNode = parse(sql);
+			sqlNode = parser.parseQuery(sql);
 		} catch (SqlParseException e) {
 			return Promise.ofException(new DataflowException(e));
 		}
@@ -71,11 +73,6 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 		RelNode node = optimize(root);
 
 		return toResultSupplier(node);
-	}
-
-	private static SqlNode parse(String sql) throws SqlParseException {
-		SqlParser parser = SqlParser.create(sql);
-		return parser.parseStmt();
 	}
 
 	private SqlNode validate(SqlNode sqlNode) {

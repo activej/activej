@@ -16,7 +16,6 @@
 
 package io.activej.dataflow.inject;
 
-import io.activej.codegen.DefiningClassLoader;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
@@ -89,7 +88,7 @@ public final class BinarySerializerModule extends AbstractModule {
 			return (BinarySerializer<T>) serializers.computeIfAbsent(type, aType -> {
 				logger.info("Creating serializer for {}", type);
 				if (builder == null) {
-					builder = SerializerBuilder.create(DefiningClassLoader.create(Thread.currentThread().getContextClassLoader()));
+					builder = SerializerBuilder.create();
 				}
 				return builder.build(aType);
 			});

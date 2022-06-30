@@ -2,6 +2,7 @@ package io.activej.dataflow.calcite;
 
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
+import io.activej.codegen.util.Primitives;
 import io.activej.common.Checks;
 import io.activej.record.Record;
 import io.activej.record.RecordProjection;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Checks.checkArgument;
@@ -65,7 +67,7 @@ public final class RecordProjectionFn implements Function<Record, Record> {
 		return new ArrayList<>(fieldProjections);
 	}
 
-	@SerializeClass(subclasses = {FieldProjectionAsIs.class, FieldProjectionConstant.class, FieldProjectionMapGet.class, FieldProjectionListGet.class})
+	@SerializeClass(subclasses = {FieldProjectionAsIs.class, FieldProjectionConstant.class, FieldProjectionMapGet.class, FieldProjectionListGet.class, FieldProjectionPojoField.class, FieldProjectionChain.class})
 	public interface FieldProjection {
 		String getFieldName(RecordScheme original);
 
@@ -130,7 +132,13 @@ public final class RecordProjectionFn implements Function<Record, Record> {
 		@Override
 		public UnaryOperator<Expression> getMapping(RecordScheme original) {
 			String mapField = original.getField(mapIndex);
-			return recordFrom -> call(cast(original.property(recordFrom, mapField), Map.class), "get", value(key));
+			Class<?> fieldType = (Class<?>) getFieldType(original);
+			return recordFrom -> {
+				Expression mapExpr = cast(original.property(recordFrom, mapField), Map.class);
+				Expression keyExpr = cast(value(key), Object.class);
+				Expression lookupExpr = call(mapExpr, "get", keyExpr);
+				return cast(lookupExpr, fieldType);
+			};
 		}
 	}
 
@@ -196,6 +204,89 @@ public final class RecordProjectionFn implements Function<Record, Record> {
 		@Override
 		public UnaryOperator<Expression> getMapping(RecordScheme original) {
 			return $ -> value(constant);
+		}
+	}
+
+	public static final class FieldProjectionPojoField implements FieldProjection {
+		@Serialize(order = 1)
+		@SerializeNullable
+		public final String fieldName;
+		@Serialize(order = 2)
+		public final int index;
+		@Serialize(order = 3)
+		public final String pojoFieldName;
+		@Serialize(order = 4)
+		public final Class<?> type;
+
+		public FieldProjectionPojoField(@Deserialize("fieldName") String fieldName, @Deserialize("index") int index,
+				@Deserialize("pojoFieldName") String pojoFieldName, @Deserialize("type") Class<?> type) {
+			this.fieldName = fieldName;
+			this.index = index;
+			this.pojoFieldName = pojoFieldName;
+			this.type = type;
+		}
+
+		@Override
+		public String getFieldName(RecordScheme original) {
+			if (fieldName != null) return fieldName;
+
+			if (isTopLevel()) {
+				return original.getField(index) + '.' + pojoFieldName;
+			}
+
+			return pojoFieldName;
+		}
+
+		@Override
+		public Type getFieldType(RecordScheme original) {
+			return isTopLevel() ? type : Primitives.wrap(type);
+		}
+
+		@Override
+		public UnaryOperator<Expression> getMapping(RecordScheme original) {
+			if (isTopLevel()) {
+				String pojoField = original.getField(index);
+				return recordFrom -> property(original.property(recordFrom, pojoField), pojoFieldName);
+			}
+
+			Class<?> resultType = Primitives.wrap(type);
+
+			return pojo -> ifNull(pojo, nullRef((resultType)), cast(property(pojo, pojoFieldName), resultType));
+		}
+
+		private boolean isTopLevel() {
+			return index != -1;
+		}
+	}
+
+	public static final class FieldProjectionChain implements FieldProjection {
+		@Serialize(order = 1)
+		public final List<FieldProjection> projections;
+
+		public FieldProjectionChain(@Deserialize("projections") List<FieldProjection> projections) {
+			this.projections = projections;
+		}
+
+		@Override
+		public String getFieldName(RecordScheme original) {
+			return projections.stream()
+					.map(fieldProjection -> fieldProjection.getFieldName(original))
+					.collect(Collectors.joining("."));
+		}
+
+		@Override
+		public Type getFieldType(RecordScheme original) {
+			return projections.get(projections.size() - 1).getFieldType(original);
+		}
+
+		@Override
+		public UnaryOperator<Expression> getMapping(RecordScheme original) {
+			return expression -> {
+				for (FieldProjection projection : projections) {
+					expression = projection.getMapping(original).apply(expression);
+				}
+				return expression;
+			};
 		}
 	}
 }

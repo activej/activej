@@ -78,7 +78,7 @@ public final class SerializerDefType extends AbstractSerializerDef {
 	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		return let(call(staticField(SerializerDefType.class, "TYPE_TO_INDEX"), "get", value),
 				idx -> ifNull(idx,
-						sequence(writeByte(buf, pos, value(0)), staticCall(BinaryOutputUtils.class, "writeUTF8", buf, pos, call(cast(value, Class.class), "getName")), voidExp()),
+						sequence(writeByte(buf, pos, value(0)), set(pos, staticCall(BinaryOutputUtils.class, "writeUTF8", buf, pos, call(cast(value, Class.class), "getName")))),
 						writeByte(buf, pos, cast(idx, byte.class))));
 	}
 
