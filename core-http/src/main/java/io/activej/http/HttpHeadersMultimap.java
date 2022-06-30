@@ -52,6 +52,8 @@ final class HttpHeadersMultimap<K, V> {
 
 	@SuppressWarnings("unchecked")
 	private void resize() {
+		int beforeResize = this.size;
+
 		Object[] oldKvPairs = this.kvPairs;
 		this.kvPairs = new Object[this.kvPairs.length * 4];
 		for (int i = 0; i != oldKvPairs.length; i += 2) {
@@ -61,6 +63,8 @@ final class HttpHeadersMultimap<K, V> {
 				add(k, v);
 			}
 		}
+
+		this.size = beforeResize;
 	}
 
 	@Contract(pure = true)
