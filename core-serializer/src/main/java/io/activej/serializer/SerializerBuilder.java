@@ -756,7 +756,12 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		SerializerDef serializer = doScan(ctx);
 
 		forwardingSerializerDef.serializerDef = serializer;
-		cache.remove(ctx.getType(), forwardingSerializerDef);
+
+		if (hasAnnotation(SerializeReference.class, ctx.getAnnotations()) ||
+				hasAnnotation(SerializeReference.class, ctx.getRawType().getAnnotations())) {
+			cache.remove(ctx.getType(), forwardingSerializerDef);
+		}
+
 		return serializer;
 	}
 
