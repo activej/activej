@@ -3,36 +3,48 @@ package io.activej.dataflow.calcite.where;
 import io.activej.record.Record;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.regex.Pattern;
 
 public final class LikePredicate implements WherePredicate {
-	private final Operand<String> value;
-	private final String pattern;
+	private final Operand value;
+	private final Operand pattern;
 
-	private final Pattern matchPattern;
+	private @Nullable CompiledPattern compiledPattern;
 
-	public LikePredicate(@Deserialize("value") Operand<String> value, @Deserialize("pattern") String pattern) {
+	public LikePredicate(@Deserialize("value") Operand value, @Deserialize("pattern") Operand pattern) {
 		this.value = value;
 		this.pattern = pattern;
-
-		this.matchPattern = Pattern.compile("^" + pattern.replaceAll("%", ".*").replaceAll("_", ".") + "$");
 	}
 
 	@Override
 	public boolean test(Record record) {
-		String value = this.value.getValue(record);
+		String patternValue = pattern.getValue(record);
+		if (patternValue == null) return false;
 
-		return matchPattern.matcher(value).matches();
+		if (compiledPattern == null || !compiledPattern.original.equals(patternValue)) {
+			Pattern compiled = Pattern.compile("^" + patternValue.replaceAll("%", ".*").replaceAll("_", ".") + "$");
+			compiledPattern = new CompiledPattern(compiled, patternValue);
+		}
+
+
+		String value = this.value.getValue(record);
+		if (value == null) return false;
+
+		return compiledPattern.pattern.matcher(value).matches();
 	}
 
 	@Serialize(order = 1)
-	public Operand<String> getValue() {
+	public Operand getValue() {
 		return value;
 	}
 
 	@Serialize(order = 2)
-	public String getPattern() {
+	public Operand getPattern() {
 		return pattern;
+	}
+
+	private record CompiledPattern(Pattern pattern, String original) {
 	}
 }

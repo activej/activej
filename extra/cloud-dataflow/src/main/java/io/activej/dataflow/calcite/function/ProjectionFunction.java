@@ -1,6 +1,7 @@
 package io.activej.dataflow.calcite.function;
 
 import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjection;
+import io.activej.dataflow.calcite.where.Operand;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlFunction;
 import org.apache.calcite.sql.SqlFunctionCategory;
@@ -19,4 +20,6 @@ public abstract class ProjectionFunction extends SqlFunction {
 	}
 
 	public abstract FieldProjection projectField(@Nullable String fieldName, List<RexNode> operands);
+
+	public abstract Operand toOperand(List<Operand> operands);
 }

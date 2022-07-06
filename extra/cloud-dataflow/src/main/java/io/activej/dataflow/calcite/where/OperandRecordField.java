@@ -4,15 +4,15 @@ import io.activej.record.Record;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
 
-public final class OperandField<T> implements Operand<T> {
+public final class OperandRecordField implements Operand {
 	private final int index;
 
-	public OperandField(@Deserialize("index") int index) {
+	public OperandRecordField(@Deserialize("index") int index) {
 		this.index = index;
 	}
 
 	@Override
-	public T getValue(Record record) {
+	public <T> T getValue(Record record) {
 		return record.get(index);
 	}
 

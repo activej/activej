@@ -2,6 +2,8 @@ package io.activej.dataflow.calcite.function;
 
 import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjection;
 import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjectionListGet;
+import io.activej.dataflow.calcite.where.Operand;
+import io.activej.dataflow.calcite.where.OperandListGet;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
@@ -12,6 +14,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.dataflow.calcite.Utils.toJavaType;
 import static org.apache.calcite.sql.type.OperandTypes.family;
 
@@ -28,5 +31,14 @@ public final class ListGetFunction extends ProjectionFunction {
 		RexNode key = operands.get(1);
 
 		return new FieldProjectionListGet(null, listInput.getIndex(), (int) toJavaType((RexLiteral) key));
+	}
+
+	@Override
+	public Operand toOperand(List<Operand> operands) {
+		checkArgument(operands.size() == 2);
+
+		Operand listOperand = operands.get(0);
+		Operand indexOperand = operands.get(1);
+		return new OperandListGet<>(listOperand, indexOperand);
 	}
 }

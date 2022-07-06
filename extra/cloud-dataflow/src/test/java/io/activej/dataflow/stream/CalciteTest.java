@@ -70,9 +70,10 @@ public class CalciteTest {
 			new Department(2, "Language"),
 			new Department(3, "History"));
 	private static final List<Registry> REGISTRY_LIST = List.of(
-			new Registry(1, Map.of("John", 1, "Jack", 2), List.of("google.com", "amazon.com")),
+			new Registry(1, Map.of("John", 1, "Jack", 2, "Kevin", 7), List.of("google.com", "amazon.com")),
 			new Registry(2, Map.of(), List.of("wikipedia.org")),
-			new Registry(3, Map.of("Sarah", 53, "Rob", 7564, "John", 18), List.of("yahoo.com", "ebay.com", "netflix.com")));
+			new Registry(3, Map.of("Sarah", 53, "Rob", 7564, "John", 18, "Kevin", 7), List.of("yahoo.com", "ebay.com", "netflix.com")),
+			new Registry(4, Map.of("Kevin", 8), List.of("google.com")));
 	private static final List<UserProfile> USER_PROFILES_LIST = List.of(
 			new UserProfile("user1", new UserProfilePojo("test1", 1), Map.of(
 					1, new UserProfileIntent(1, "test1", TYPE_1, new Limits(new float[]{1.2f, 3.4f}, System.currentTimeMillis())),
@@ -149,7 +150,8 @@ public class CalciteTest {
 	}
 
 	@SerializeRecord
-	public record UserProfile(String id, UserProfilePojo pojo, Map<Integer, UserProfileIntent> intents, long timestamp) {
+	public record UserProfile(String id, UserProfilePojo pojo, Map<Integer, UserProfileIntent> intents,
+							  long timestamp) {
 	}
 
 	@SerializeRecord
@@ -516,6 +518,19 @@ public class CalciteTest {
 	}
 
 	@Test
+	public void testMapGetInWhereClause() {
+		List<Record> result = query("""
+				SELECT id FROM registry
+				WHERE MAP_GET(counters, 'Kevin') = 7
+				""");
+
+		assertEquals(2, result.size());
+
+		assertEquals(1, result.get(0).getInt("id"));
+		assertEquals(3, result.get(1).getInt("id"));
+	}
+
+	@Test
 	public void testListGetQuery() {
 		List<Record> result = query("""
 				SELECT id, LIST_GET(domains, 1) FROM registry
@@ -530,6 +545,19 @@ public class CalciteTest {
 			List<String> domains = registry.domains;
 			assertEquals(index >= domains.size() ? null : domains.get(index), record.get(index));
 		}
+	}
+
+	@Test
+	public void testListGetInWhereClause() {
+		List<Record> result = query("""
+				SELECT id FROM registry
+				WHERE LIST_GET(domains, 0) = 'google.com'
+				""");
+
+		assertEquals(2, result.size());
+
+		assertEquals(1, result.get(0).getInt("id"));
+		assertEquals(4, result.get(1).getInt("id"));
 	}
 
 	@Test

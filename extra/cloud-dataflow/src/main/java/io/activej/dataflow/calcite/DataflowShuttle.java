@@ -1,6 +1,5 @@
 package io.activej.dataflow.calcite;
 
-import io.activej.common.Utils;
 import io.activej.common.exception.ToDoException;
 import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjection;
 import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjectionAsIs;
@@ -35,7 +34,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static io.activej.common.Checks.*;
-import static io.activej.dataflow.calcite.Utils.toJavaType;
+import static io.activej.common.Utils.last;
+import static io.activej.dataflow.calcite.Utils.toOperand;
 
 public class DataflowShuttle extends RelShuttleImpl {
 	Queue<Dataset<Record>> current = new ArrayDeque<>();
@@ -209,7 +209,7 @@ public class DataflowShuttle extends RelShuttleImpl {
 		DataflowTable<T> dataflowTable = table.unwrap(DataflowTable.class);
 		assert dataflowTable != null;
 
-		Dataset<T> dataset = Datasets.datasetOfId(Utils.last(names).toLowerCase(), dataflowTable.getType());
+		Dataset<T> dataset = Datasets.datasetOfId(last(names).toLowerCase(), dataflowTable.getType());
 		RecordFunction<T> mapper = dataflowTable.getRecordFunction();
 
 		return Datasets.map(dataset, mapper, Record.class);
@@ -333,34 +333,16 @@ public class DataflowShuttle extends RelShuttleImpl {
 			case BETWEEN ->
 					new BetweenPredicate(toOperand(operands.get(0)), toOperand(operands.get(1)), toOperand(operands.get(2)));
 			case IN -> {
-				List<Operand<?>> options = operands.subList(1, operands.size())
+				List<Operand> options = operands.subList(1, operands.size())
 						.stream()
-						.map(DataflowShuttle::toOperand)
+						.map(Utils::toOperand)
 						.collect(Collectors.toList());
 				yield new InPredicate(toOperand(operands.get(0)), options);
 			}
-			case LIKE ->
-				//noinspection unchecked
-					new LikePredicate((Operand<String>) toOperand(operands.get(0)), (String) toJavaType((RexLiteral) operands.get(1)));
+			case LIKE -> new LikePredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
 			default -> throw new IllegalArgumentException("Not supported condition:" + conditionNode.getKind());
 		};
 	}
 
-	private static Operand<?> toOperand(RexNode conditionNode) {
-		if (conditionNode instanceof RexCall call) {
-			if (call.getKind() == SqlKind.CAST) {
-				List<RexNode> operands = call.getOperands();
-				if (operands.size() == 1) {
-					RexInputRef inputRef = (RexInputRef) operands.get(0);
-					return new OperandField<>(inputRef.getIndex());
-				}
-			}
-		} else if (conditionNode instanceof RexLiteral literal) {
-			return new OperandScalar<>(toJavaType(literal));
-		} else if (conditionNode instanceof RexInputRef inputRef) {
-			return new OperandField<>(inputRef.getIndex());
-		}
-		throw new IllegalArgumentException("Unknown node: " + conditionNode);
-	}
 
 }
