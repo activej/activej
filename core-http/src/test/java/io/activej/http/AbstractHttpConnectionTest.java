@@ -5,6 +5,7 @@ import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
 import io.activej.common.function.FunctionEx;
+import io.activej.common.ref.Ref;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelByteChunker;
@@ -404,6 +405,37 @@ public final class AbstractHttpConnectionTest {
 					assertEquals(1, serverInspector.getTotalConnections().getTotalCount());
 				})
 				.whenComplete(server::close));
+	}
+
+	@Test
+	public void testFatalErrorHandling() throws Exception {
+		RuntimeException fatalError = new RuntimeException("test");
+		Ref<Throwable> errorRef = new Ref<>();
+
+		Eventloop eventloop = Eventloop.create()
+				.withCurrentThread()
+				.withThreadFatalErrorHandler((e, context) -> {
+					assertNull(errorRef.get());
+					errorRef.set(e);
+				});
+
+		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
+						request -> {
+							throw fatalError;
+						})
+				.withListenPort(port);
+
+		server.listen();
+
+		AsyncHttpClient client = AsyncHttpClient.create(eventloop)
+				.withKeepAliveTimeout(Duration.ofSeconds(10));
+
+		int responseCode = await(client.request(HttpRequest.get("http://127.0.0.1:" + port))
+				.map(HttpResponse::getCode)
+				.whenComplete(server::close));
+
+		assertEquals(500, responseCode);
+		assertSame(fatalError, errorRef.get());
 	}
 
 	private @NotNull FunctionEx<HttpResponse, Promise<? extends ByteBuf>> ensureHelloWorldAsyncFn() {
