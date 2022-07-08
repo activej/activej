@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package dataflow.calcite;
+
+option java_multiple_files = false;
+option java_package = "io.activej.dataflow.proto.calcite";
+option java_outer_classname = "OperandProto";
+
+message Operand {
+  message RecordField {
+    int32 index = 1;
+  }
+
+  message Scalar {
+    message None{
+
+    }
+
+    oneof value {
+      None null = 1;
+      int32 integer = 2;
+      int64 long = 3;
+      float float = 4;
+      double double = 5;
+      bool boolean = 6;
+      string string = 7;
+    }
+  }
+
+  message MapGet {
+    Operand map_operand = 1;
+    Operand key_operand = 2;
+  }
+
+  message ListGet {
+    Operand list_operand = 1;
+    Operand index_operand = 2;
+  }
+
+  oneof operand {
+    RecordField record_field = 1;
+    Scalar scalar = 2;
+    MapGet map_get = 3;
+    ListGet list_get = 4;
+  }
+}
+

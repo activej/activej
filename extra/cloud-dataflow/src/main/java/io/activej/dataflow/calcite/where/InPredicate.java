@@ -1,8 +1,6 @@
 package io.activej.dataflow.calcite.where;
 
 import io.activej.record.Record;
-import io.activej.serializer.annotations.Deserialize;
-import io.activej.serializer.annotations.Serialize;
 
 import java.util.List;
 
@@ -10,7 +8,7 @@ public final class InPredicate implements WherePredicate {
 	private final Operand value;
 	private final List<Operand> options;
 
-	public InPredicate(@Deserialize("value") Operand value, @Deserialize("options") List<Operand> options) {
+	public InPredicate(Operand value, List<Operand> options) {
 		this.value = value;
 		this.options = options;
 	}
@@ -28,13 +26,19 @@ public final class InPredicate implements WherePredicate {
 		return false;
 	}
 
-	@Serialize(order = 1)
 	public Operand getValue() {
 		return value;
 	}
 
-	@Serialize(order = 2)
 	public List<Operand> getOptions() {
 		return options;
 	}
+
+	@Override
+	public String toString() {
+		return "InPredicate[" +
+				"value=" + value + ", " +
+				"options=" + options + ']';
+	}
+
 }

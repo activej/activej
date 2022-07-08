@@ -1,23 +1,20 @@
 package io.activej.dataflow.calcite.where;
 
 import io.activej.record.Record;
-import io.activej.serializer.annotations.Deserialize;
-import io.activej.serializer.annotations.Serialize;
 
 import java.util.List;
 
-public final class OperandListGet<T> implements Operand {
+public final class OperandListGet implements Operand {
 	private final Operand listOperand;
 	private final Operand indexOperand;
 
-	public OperandListGet(@Deserialize("listOperand") Operand listOperand, @Deserialize("indexOperand") Operand indexOperand) {
+	public OperandListGet(Operand listOperand, Operand indexOperand) {
 		this.listOperand = listOperand;
 		this.indexOperand = indexOperand;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public T getValue(Record record) {
+	public <T> T getValue(Record record) {
 		List<T> list = listOperand.getValue(record);
 		Integer index = indexOperand.getValue(record);
 
@@ -26,13 +23,19 @@ public final class OperandListGet<T> implements Operand {
 		return list.get(index);
 	}
 
-	@Serialize(order = 1)
 	public Operand getListOperand() {
 		return listOperand;
 	}
 
-	@Serialize(order = 2)
 	public Operand getIndexOperand() {
 		return indexOperand;
 	}
+
+	@Override
+	public String toString() {
+		return "OperandListGet[" +
+				"listOperand=" + listOperand + ", " +
+				"indexOperand=" + indexOperand + ']';
+	}
+
 }

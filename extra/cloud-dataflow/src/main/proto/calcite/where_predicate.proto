@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package dataflow.calcite;
+
+option java_multiple_files = false;
+option java_package = "io.activej.dataflow.proto.calcite";
+option java_outer_classname = "WherePredicateProto";
+
+import "operand.proto";
+
+message WherePredicate {
+  message AndPredicate {
+    repeated WherePredicate predicates = 1;
+  }
+
+  message OrPredicate {
+    repeated WherePredicate predicates = 1;
+  }
+
+  message EqPredicate {
+    Operand left = 1;
+    Operand right = 2;
+  }
+
+  message NotEqPredicate {
+    Operand left = 1;
+    Operand right = 2;
+  }
+
+  message GePredicate {
+    Operand left = 1;
+    Operand right = 2;
+  }
+
+  message GtPredicate {
+    Operand left = 1;
+    Operand right = 2;
+  }
+
+  message LePredicate {
+    Operand left = 1;
+    Operand right = 2;
+  }
+
+  message LtPredicate {
+    Operand left = 1;
+    Operand right = 2;
+  }
+
+  message BetweenPredicate {
+    Operand value = 1;
+    Operand from = 2;
+    Operand to = 3;
+  }
+
+  message InPredicate {
+    Operand value = 1;
+    repeated Operand options = 2;
+  }
+
+  message LikePredicate {
+    Operand value = 1;
+    Operand pattern = 2;
+  }
+
+  oneof operand {
+    AndPredicate and_predicate = 1;
+    OrPredicate or_predicate = 2;
+    EqPredicate eq_predicate = 3;
+    NotEqPredicate not_eq_predicate = 4;
+    GePredicate ge_predicate = 5;
+    GtPredicate gt_predicate = 6;
+    LePredicate le_predicate = 7;
+    LtPredicate lt_predicate = 8;
+    BetweenPredicate between_predicate = 9;
+    InPredicate in_predicate = 10;
+    LikePredicate like_predicate = 11;
+  }
+}

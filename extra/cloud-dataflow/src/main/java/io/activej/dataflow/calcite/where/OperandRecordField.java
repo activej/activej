@@ -1,13 +1,11 @@
 package io.activej.dataflow.calcite.where;
 
 import io.activej.record.Record;
-import io.activej.serializer.annotations.Deserialize;
-import io.activej.serializer.annotations.Serialize;
 
 public final class OperandRecordField implements Operand {
 	private final int index;
 
-	public OperandRecordField(@Deserialize("index") int index) {
+	public OperandRecordField(int index) {
 		this.index = index;
 	}
 
@@ -16,8 +14,12 @@ public final class OperandRecordField implements Operand {
 		return record.get(index);
 	}
 
-	@Serialize(order = 1)
-	public int getIndex() {
-		return index;
+	public int getIndex() {return index;}
+
+	@Override
+	public String toString() {
+		return "OperandRecordField[" +
+				"index=" + index + ']';
 	}
+
 }

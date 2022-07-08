@@ -1,14 +1,12 @@
 package io.activej.dataflow.calcite.where;
 
 import io.activej.record.Record;
-import io.activej.serializer.annotations.Deserialize;
-import io.activej.serializer.annotations.Serialize;
 
 public final class EqPredicate implements WherePredicate {
 	private final Operand left;
 	private final Operand right;
 
-	public EqPredicate(@Deserialize("left") Operand left, @Deserialize("right") Operand right) {
+	public EqPredicate(Operand left, Operand right) {
 		this.left = left;
 		this.right = right;
 	}
@@ -24,13 +22,19 @@ public final class EqPredicate implements WherePredicate {
 		return leftValue.equals(rightValue);
 	}
 
-	@Serialize(order = 1)
 	public Operand getLeft() {
 		return left;
 	}
 
-	@Serialize(order = 2)
 	public Operand getRight() {
 		return right;
 	}
+
+	@Override
+	public String toString() {
+		return "EqPredicate[" +
+				"left=" + left + ", " +
+				"right=" + right + ']';
+	}
+
 }

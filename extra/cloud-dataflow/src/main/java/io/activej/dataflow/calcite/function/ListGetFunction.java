@@ -39,6 +39,6 @@ public final class ListGetFunction extends ProjectionFunction {
 
 		Operand listOperand = operands.get(0);
 		Operand indexOperand = operands.get(1);
-		return new OperandListGet<>(listOperand, indexOperand);
+		return new OperandListGet(listOperand, indexOperand);
 	}
 }
