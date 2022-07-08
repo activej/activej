@@ -1,5 +1,6 @@
 package io.activej.dataflow.calcite.inject;
 
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.dataflow.calcite.DataflowSchema;
 import io.activej.dataflow.calcite.DataflowTable;
 import io.activej.dataflow.calcite.RecordProjectionFn;
@@ -14,6 +15,7 @@ import io.activej.dataflow.proto.calcite.WherePredicateSerializer;
 import io.activej.datastream.processor.StreamJoin;
 import io.activej.datastream.processor.StreamReducers;
 import io.activej.inject.Key;
+import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.record.Record;
 import io.activej.serializer.BinarySerializer;
@@ -42,7 +44,11 @@ public final class SerializersModule extends AbstractModule {
 				},
 				DataflowSchema.class, SerializerBuilder.class);
 
-		bind(new Key<BinarySerializer<Predicate<?>>>() {}).to(() -> (BinarySerializer) new WherePredicateSerializer());
+		bind(new Key<BinarySerializer<Predicate<?>>>() {}).to(optionalClassLoader -> (BinarySerializer)
+						(optionalClassLoader.isPresent() ?
+								new WherePredicateSerializer(optionalClassLoader.get()) :
+								new WherePredicateSerializer()),
+				new Key<OptionalDependency<DefiningClassLoader>>() {});
 
 		bind(new Key<BinarySerializer<Comparator<?>>>() {}).to(serializerBuilder -> {
 					FunctionSubtypeSerializer<Comparator<?>> serializer = FunctionSubtypeSerializer.create();

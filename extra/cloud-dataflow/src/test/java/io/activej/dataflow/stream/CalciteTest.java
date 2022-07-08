@@ -639,7 +639,7 @@ public class CalciteTest {
 	}
 
 	@Test
-	public void testGetPojoField() {
+	public void testPojoFieldSelect() {
 		List<Record> result = query("""
 				SELECT id, profiles.pojo.value1, profiles.pojo.value2 FROM profiles
 				""");
@@ -658,7 +658,19 @@ public class CalciteTest {
 	}
 
 	@Test
-	public void testUserProfiles() {
+	public void testPojoFieldInWhereClause() {
+		List<Record> result = query("""
+				SELECT id
+				FROM profiles
+				WHERE profiles.pojo.value1 = 'test1'
+				""");
+
+		assertEquals(1, result.size());
+		assertEquals("user1", result.get(0).get("id"));
+	}
+
+	@Test
+	public void testUserProfilesSelect() {
 		List<Record> result = query("""
 				SELECT id, MAP_GET(intents, 1).keyword, MAP_GET(intents, 1).matchType FROM profiles
 				""");
@@ -673,6 +685,18 @@ public class CalciteTest {
 		assertEquals("user2", second.get(0));
 		assertNull(second.get(1));
 		assertNull(second.get(2));
+	}
+
+	@Test
+	public void testUserProfilesInWhereClause() {
+		List<Record> result = query("""
+				SELECT id
+				FROM profiles
+				WHERE MAP_GET(intents, 1).keyword = 'test1'
+				""");
+
+		assertEquals(1, result.size());
+		assertEquals("user1", result.get(0).get("id"));
 	}
 
 	private List<Record> query(String sql) {

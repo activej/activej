@@ -1,14 +1,13 @@
 package io.activej.dataflow.calcite;
 
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.ToDoException;
 import io.activej.dataflow.calcite.function.ProjectionFunction;
 import io.activej.dataflow.calcite.where.Operand;
+import io.activej.dataflow.calcite.where.OperandFieldAccess;
 import io.activej.dataflow.calcite.where.OperandRecordField;
 import io.activej.dataflow.calcite.where.OperandScalar;
-import org.apache.calcite.rex.RexCall;
-import org.apache.calcite.rex.RexInputRef;
-import org.apache.calcite.rex.RexLiteral;
-import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.type.SqlTypeName;
 
@@ -28,18 +27,18 @@ public final class Utils {
 		};
 	}
 
-	public static Operand toOperand(RexNode conditionNode) {
+	public static Operand toOperand(RexNode conditionNode, DefiningClassLoader classLoader) {
 		if (conditionNode instanceof RexCall call) {
 			switch (call.getKind()) {
 				case CAST -> {
-					return toOperand(call.getOperands().get(0));
+					return toOperand(call.getOperands().get(0), classLoader);
 				}
 				case OTHER_FUNCTION -> {
 					SqlOperator operator = call.getOperator();
 					if (operator instanceof ProjectionFunction projectionFunction) {
 						List<Operand> operands = call.getOperands()
 								.stream()
-								.map(Utils::toOperand)
+								.map(operand -> toOperand(operand, classLoader))
 								.collect(Collectors.toList());
 
 						return projectionFunction.toOperand(operands);
@@ -50,6 +49,10 @@ public final class Utils {
 			return new OperandScalar(toJavaType(literal));
 		} else if (conditionNode instanceof RexInputRef inputRef) {
 			return new OperandRecordField(inputRef.getIndex());
+		} else if (conditionNode instanceof RexFieldAccess fieldAccess) {
+			Operand objectOperand = toOperand(fieldAccess.getReferenceExpr(), classLoader);
+			Operand fieldNameOperand = new OperandScalar(fieldAccess.getField().getName());
+			return new OperandFieldAccess(objectOperand, fieldNameOperand, classLoader);
 		}
 		throw new IllegalArgumentException("Unknown node: " + conditionNode);
 	}

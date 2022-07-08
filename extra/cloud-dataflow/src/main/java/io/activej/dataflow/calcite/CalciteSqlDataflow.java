@@ -1,5 +1,6 @@
 package io.activej.dataflow.calcite;
 
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowException;
 import io.activej.dataflow.SqlDataflow;
@@ -34,22 +35,24 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 	private final SqlToRelConverter converter;
 	private final SqlValidator validator;
 	private final RelOptPlanner planner;
+	private final DefiningClassLoader classLoader;
 
 	private RelTraitSet traits = RelTraitSet.createEmpty();
 
 	private CalciteSqlDataflow(DataflowClient client, List<Partition> partitions, SqlParser parser,
-			SqlToRelConverter converter, RelOptPlanner planner) {
+			SqlToRelConverter converter, RelOptPlanner planner, DefiningClassLoader classLoader) {
 		this.client = client;
 		this.partitions = partitions;
 		this.parser = parser;
 		this.converter = converter;
 		this.validator = checkNotNull(converter.validator);
 		this.planner = planner;
+		this.classLoader = classLoader;
 	}
 
 	public static CalciteSqlDataflow create(DataflowClient client, List<Partition> partitions, SqlParser parser,
-			SqlToRelConverter converter, RelOptPlanner planner) {
-		return new CalciteSqlDataflow(client, partitions, parser, converter, planner);
+			SqlToRelConverter converter, RelOptPlanner planner, DefiningClassLoader classLoader) {
+		return new CalciteSqlDataflow(client, partitions, parser, converter, planner, classLoader);
 	}
 
 	public CalciteSqlDataflow withTraits(RelTraitSet traits) {
@@ -89,7 +92,7 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 	}
 
 	private Promise<StreamSupplier<Record>> toResultSupplier(RelNode node) {
-		DataflowShuttle shuttle = new DataflowShuttle();
+		DataflowShuttle shuttle = new DataflowShuttle(classLoader);
 		node.accept(shuttle);
 
 		Collector<Record> collector = new Collector<>(shuttle.result(), client);

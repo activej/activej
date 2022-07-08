@@ -1,5 +1,6 @@
 package io.activej.dataflow.calcite;
 
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.ToDoException;
 import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjection;
 import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjectionAsIs;
@@ -38,7 +39,13 @@ import static io.activej.common.Utils.last;
 import static io.activej.dataflow.calcite.Utils.toOperand;
 
 public class DataflowShuttle extends RelShuttleImpl {
+	private final DefiningClassLoader classLoader;
+
 	Queue<Dataset<Record>> current = new ArrayDeque<>();
+
+	public DataflowShuttle(DefiningClassLoader classLoader) {
+		this.classLoader = classLoader;
+	}
 
 	@Override
 	public RelNode visit(LogicalCalc calc) {
@@ -293,7 +300,7 @@ public class DataflowShuttle extends RelShuttleImpl {
 		return current.peek();
 	}
 
-	private static Dataset<Record> filter(Dataset<Record> dataset, RexNode conditionNode) {
+	private Dataset<Record> filter(Dataset<Record> dataset, RexNode conditionNode) {
 		SqlKind kind = conditionNode.getKind();
 
 		if (kind == SqlKind.LITERAL) {
@@ -315,7 +322,7 @@ public class DataflowShuttle extends RelShuttleImpl {
 		return dataset;
 	}
 
-	private static WherePredicate toWherePredicate(RexCall conditionNode) {
+	private WherePredicate toWherePredicate(RexCall conditionNode) {
 		List<RexNode> operands = conditionNode.getOperands();
 		return switch (conditionNode.getKind()) {
 			case OR -> new OrPredicate(operands.stream()
@@ -324,25 +331,31 @@ public class DataflowShuttle extends RelShuttleImpl {
 			case AND -> new AndPredicate(operands.stream()
 					.map(rexNode -> toWherePredicate((RexCall) rexNode))
 					.collect(Collectors.toList()));
-			case EQUALS -> new EqPredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
-			case NOT_EQUALS -> new NotEqPredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
-			case GREATER_THAN -> new GtPredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
-			case GREATER_THAN_OR_EQUAL -> new GePredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
-			case LESS_THAN -> new LtPredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
-			case LESS_THAN_OR_EQUAL -> new LePredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
+			case EQUALS ->
+					new EqPredicate(toOperand(operands.get(0), classLoader), toOperand(operands.get(1), classLoader));
+			case NOT_EQUALS ->
+					new NotEqPredicate(toOperand(operands.get(0), classLoader), toOperand(operands.get(1), classLoader));
+			case GREATER_THAN ->
+					new GtPredicate(toOperand(operands.get(0), classLoader), toOperand(operands.get(1), classLoader));
+			case GREATER_THAN_OR_EQUAL ->
+					new GePredicate(toOperand(operands.get(0), classLoader), toOperand(operands.get(1), classLoader));
+			case LESS_THAN ->
+					new LtPredicate(toOperand(operands.get(0), classLoader), toOperand(operands.get(1), classLoader));
+			case LESS_THAN_OR_EQUAL ->
+					new LePredicate(toOperand(operands.get(0), classLoader), toOperand(operands.get(1), classLoader));
 			case BETWEEN ->
-					new BetweenPredicate(toOperand(operands.get(0)), toOperand(operands.get(1)), toOperand(operands.get(2)));
+					new BetweenPredicate(toOperand(operands.get(0), classLoader), toOperand(operands.get(1), classLoader), toOperand(operands.get(2), classLoader));
 			case IN -> {
 				List<Operand> options = operands.subList(1, operands.size())
 						.stream()
-						.map(Utils::toOperand)
+						.map(option -> Utils.toOperand(option, classLoader))
 						.collect(Collectors.toList());
-				yield new InPredicate(toOperand(operands.get(0)), options);
+				yield new InPredicate(toOperand(operands.get(0), classLoader), options);
 			}
-			case LIKE -> new LikePredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
+			case LIKE ->
+					new LikePredicate(toOperand(operands.get(0), classLoader), toOperand(operands.get(1), classLoader));
 			default -> throw new IllegalArgumentException("Not supported condition:" + conditionNode.getKind());
 		};
 	}
-
 
 }

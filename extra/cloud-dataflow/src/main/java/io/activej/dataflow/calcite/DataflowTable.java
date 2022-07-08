@@ -32,8 +32,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static io.activej.common.Checks.checkArgument;
-
 public class DataflowTable<T> extends AbstractTable {
 	private final Class<T> type;
 	private final RecordFunction<T> recordFunction;
@@ -54,8 +52,6 @@ public class DataflowTable<T> extends AbstractTable {
 	@Override
 	public RelDataType getRowType(RelDataTypeFactory typeFactory) {
 		if (relDataType == null) {
-			checkArgument(typeFactory instanceof JavaTypeFactory);
-
 			relDataType = toRowType((JavaTypeFactory) typeFactory, type);
 		}
 		return relDataType;

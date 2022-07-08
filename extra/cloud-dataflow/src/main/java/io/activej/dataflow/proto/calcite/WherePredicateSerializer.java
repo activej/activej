@@ -1,6 +1,7 @@
 package io.activej.dataflow.proto.calcite;
 
 import com.google.protobuf.InvalidProtocolBufferException;
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.dataflow.calcite.where.*;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.BinaryOutput;
@@ -11,6 +12,15 @@ import static io.activej.serializer.BinarySerializers.BYTES_SERIALIZER;
 
 
 public final class WherePredicateSerializer implements BinarySerializer<WherePredicate> {
+	private final DefiningClassLoader classLoader;
+
+	public WherePredicateSerializer(DefiningClassLoader classLoader) {
+		this.classLoader = classLoader;
+	}
+
+	public WherePredicateSerializer() {
+		this(DefiningClassLoader.create());
+	}
 
 	@Override
 	public void encode(BinaryOutput out, WherePredicate predicate) {
@@ -112,16 +122,16 @@ public final class WherePredicateSerializer implements BinarySerializer<WherePre
 		return builder.build();
 	}
 
-	private static WherePredicate convert(WherePredicateProto.WherePredicate predicate) {
+	private WherePredicate convert(WherePredicateProto.WherePredicate predicate) {
 		return switch (predicate.getOperandCase()) {
 			case AND_PREDICATE -> new AndPredicate(
 					predicate.getAndPredicate().getPredicatesList().stream()
-							.map(WherePredicateSerializer::convert)
+							.map(this::convert)
 							.toList()
 			);
 			case OR_PREDICATE -> new OrPredicate(
 					predicate.getOrPredicate().getPredicatesList().stream()
-							.map(WherePredicateSerializer::convert)
+							.map(this::convert)
 							.toList()
 			);
 			case EQ_PREDICATE -> new EqPredicate(
@@ -156,7 +166,7 @@ public final class WherePredicateSerializer implements BinarySerializer<WherePre
 			case IN_PREDICATE -> new InPredicate(
 					convert(predicate.getInPredicate().getValue()),
 					predicate.getInPredicate().getOptionsList().stream()
-							.map(WherePredicateSerializer::convert)
+							.map(this::convert)
 							.toList()
 			);
 			case LIKE_PREDICATE -> new LikePredicate(
@@ -210,6 +220,12 @@ public final class WherePredicateSerializer implements BinarySerializer<WherePre
 							.setListOperand(convert(operandListGet.getListOperand()))
 							.setIndexOperand(convert(operandListGet.getIndexOperand()))
 			);
+		} else if (operand instanceof OperandFieldAccess operandFieldAccess) {
+			builder.setFieldGet(
+					OperandProto.Operand.FieldGet.newBuilder()
+							.setObjectOperand(convert(operandFieldAccess.getObjectOperand()))
+							.setFieldNameOperand(convert(operandFieldAccess.getFieldNameOperand()))
+			);
 		} else {
 			throw new IllegalArgumentException("Unknown operand type: " + operand.getClass());
 		}
@@ -217,7 +233,7 @@ public final class WherePredicateSerializer implements BinarySerializer<WherePre
 		return builder.build();
 	}
 
-	private static Operand convert(OperandProto.Operand operand) {
+	private Operand convert(OperandProto.Operand operand) {
 		return switch (operand.getOperandCase()) {
 			case RECORD_FIELD -> new OperandRecordField(operand.getRecordField().getIndex());
 			case SCALAR -> new OperandScalar(
@@ -239,6 +255,11 @@ public final class WherePredicateSerializer implements BinarySerializer<WherePre
 			case LIST_GET -> new OperandListGet(
 					convert(operand.getListGet().getListOperand()),
 					convert(operand.getListGet().getIndexOperand())
+			);
+			case FIELD_GET -> new OperandFieldAccess(
+					convert(operand.getFieldGet().getObjectOperand()),
+					convert(operand.getFieldGet().getFieldNameOperand()),
+					classLoader
 			);
 			case OPERAND_NOT_SET -> throw new CorruptedDataException("Operand not set");
 		};

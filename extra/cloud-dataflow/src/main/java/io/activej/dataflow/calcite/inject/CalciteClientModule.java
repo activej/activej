@@ -1,5 +1,6 @@
 package io.activej.dataflow.calcite.inject;
 
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.SqlDataflow;
 import io.activej.dataflow.calcite.CalciteSqlDataflow;
@@ -94,7 +95,13 @@ public final class CalciteClientModule extends AbstractModule {
 	}
 
 	@Provides
-	SqlDataflow sqlDataflow(DataflowClient client, SqlParser parser, SqlToRelConverter sqlToRelConverter, RelOptPlanner planner, List<Partition> partitions) {
-		return CalciteSqlDataflow.create(client, partitions, parser, sqlToRelConverter, planner);
+	DefiningClassLoader classLoader() {
+		return DefiningClassLoader.create();
+	}
+
+	@Provides
+	SqlDataflow sqlDataflow(DataflowClient client, SqlParser parser, SqlToRelConverter sqlToRelConverter, RelOptPlanner planner,
+			List<Partition> partitions, DefiningClassLoader classLoader) {
+		return CalciteSqlDataflow.create(client, partitions, parser, sqlToRelConverter, planner, classLoader);
 	}
 }
