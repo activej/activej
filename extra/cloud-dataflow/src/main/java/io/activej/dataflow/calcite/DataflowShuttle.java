@@ -6,6 +6,7 @@ import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjection;
 import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjectionAsIs;
 import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjectionChain;
 import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjectionPojoField;
+import io.activej.dataflow.calcite.aggregation.*;
 import io.activej.dataflow.calcite.function.ProjectionFunction;
 import io.activej.dataflow.calcite.join.RecordInnerJoiner;
 import io.activej.dataflow.calcite.join.RecordKeyFunction;
@@ -14,21 +15,27 @@ import io.activej.dataflow.calcite.sort.RecordComparator.FieldSort;
 import io.activej.dataflow.calcite.where.*;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.Datasets;
+import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.dataset.SortedDataset;
+import io.activej.datastream.processor.StreamReducers.ReducerToResult.InputToOutput;
 import io.activej.record.Record;
+import io.activej.record.RecordScheme;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelFieldCollation.Direction;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
+import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.core.TableFunctionScan;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.logical.*;
 import org.apache.calcite.rel.type.RelDataTypeFactoryImpl.JavaType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.*;
+import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.type.SqlTypeName;
 
 import java.util.*;
 import java.util.function.Function;
@@ -143,7 +150,52 @@ public class DataflowShuttle extends RelShuttleImpl {
 
 	@Override
 	public RelNode visit(LogicalAggregate aggregate) {
-		throw new ToDoException();
+		RelNode result = super.visit(aggregate);
+
+		Dataset<Record> input = current.poll();
+
+		List<AggregateCall> callList = aggregate.getAggCallList();
+		List<FieldReducer<?, ?, ?>> fieldReducers = new ArrayList<>(callList.size());
+
+		for (AggregateCall aggregateCall : callList) {
+			SqlAggFunction aggregation = aggregateCall.getAggregation();
+
+			List<Integer> argList = aggregateCall.getArgList();
+			int fieldIndex = switch (argList.size()) {
+				case 0 -> -1;
+				case 1 -> argList.get(0);
+				default -> throw new AssertionError();
+			};
+
+			FieldReducer<?, ?, ?> fieldReducer = switch (aggregation.getKind()) {
+				case COUNT -> new CountReducer<>(fieldIndex);
+				case SUM -> {
+					SqlTypeName sqlTypeName = aggregate.getInput().getRowType().getFieldList().get(fieldIndex).getValue().getSqlTypeName();
+					if (sqlTypeName == SqlTypeName.TINYINT || sqlTypeName == SqlTypeName.SMALLINT ||
+							sqlTypeName == SqlTypeName.INTEGER || sqlTypeName == SqlTypeName.BIGINT)
+						yield new SumReducerInteger<>(fieldIndex);
+					if (sqlTypeName == SqlTypeName.FLOAT || sqlTypeName == SqlTypeName.DOUBLE ||
+							sqlTypeName == SqlTypeName.REAL)
+						yield new SumReducerDecimal<>(fieldIndex);
+					throw new AssertionError("SUM() is not supported for type: " + sqlTypeName);
+				}
+				case AVG -> new AvgReducer(fieldIndex);
+				case MIN -> new MinReducer<>(fieldIndex);
+				case MAX -> new MaxReducer<>(fieldIndex);
+				default -> throw new AssertionError();
+			};
+
+			fieldReducers.add(fieldReducer);
+		}
+
+		LocallySortedDataset<RecordScheme, Record> sorted = Datasets.castToSorted(input, RecordScheme.class, new RecordSchemeFunction(), new EqualObjectComparator<>());
+
+		RecordReducer recordReducer = new RecordReducer(fieldReducers);
+		InputToOutput<RecordScheme, Record, Record, Object[]> reducer = new InputToOutput<>(recordReducer);
+
+		current.add(Datasets.localReduce(sorted, reducer, Record.class, new RecordSchemeFunction()));
+
+		return result;
 	}
 
 	@Override

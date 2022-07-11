@@ -699,6 +699,62 @@ public class CalciteTest {
 		assertEquals("user1", result.get(0).get("id"));
 	}
 
+	@Test
+	public void testCountAllStudents() {
+		List<Record> result = query("SELECT COUNT(*) FROM student");
+
+		assertEquals(1, result.size());
+		assertEquals(3, result.get(0).getInt(0));
+	}
+
+	@Test
+	public void testCountMapGet() {
+		List<Record> result = query("SELECT COUNT(MAP_GET(counters, 'John')) FROM registry");
+
+		assertEquals(1, result.size());
+		assertEquals(2, result.get(0).getInt(0));
+	}
+
+	@Test
+	public void testSumStudentsId() {
+		List<Record> result = query("SELECT SUM(id) FROM student");
+
+		assertEquals(1, result.size());
+		assertEquals(6, result.get(0).getLong("SUM(id)"));
+	}
+
+	@Test
+	public void testSumPojoValues() {
+		List<Record> result = query("SELECT SUM(MAP_GET(intents, 2).campaignId) FROM profiles");
+
+		assertEquals(1, result.size());
+		assertEquals(4, result.get(0).getLong("SUM(intents.get(2).campaignId)"));
+	}
+
+	@Test
+	public void testAvgStudentsDepts() {
+		List<Record> result = query("SELECT AVG(dept) FROM student");
+
+		assertEquals(1, result.size());
+		assertEquals(5d / 3, result.get(0).getDouble("AVG(dept)"), 1e-9);
+	}
+
+	@Test
+	public void testMinStudentsId() {
+		List<Record> result = query("SELECT MIN(id) FROM student");
+
+		assertEquals(1, result.size());
+		assertEquals(1, result.get(0).getInt("MIN(id)"));
+	}
+
+	@Test
+	public void testMaxStudentsId() {
+		List<Record> result = query("SELECT MAX(id) FROM student");
+
+		assertEquals(1, result.size());
+		assertEquals(3, result.get(0).getInt("MAX(id)"));
+	}
+
 	private List<Record> query(String sql) {
 		StreamConsumerToList<Record> resultConsumer = StreamConsumerToList.create();
 
