@@ -37,9 +37,15 @@ import java.util.Set;
 
 import static java.util.Collections.singletonList;
 
-public final class CalciteClientModule extends AbstractModule {
+public final class CalciteModule extends AbstractModule {
 
 	public static final String DATAFLOW_SCHEMA_NAME = "DATAFLOW";
+
+	@Override
+	protected void configure() {
+		bind(SqlDataflow.class).to(CalciteSqlDataflow.class);
+		install(new SqlFunctionModule());
+	}
 
 	@Provides
 	CalciteSchema calciteSchema(DataflowSchema schema) {
@@ -100,7 +106,7 @@ public final class CalciteClientModule extends AbstractModule {
 	}
 
 	@Provides
-	SqlDataflow sqlDataflow(DataflowClient client, SqlParser parser, SqlToRelConverter sqlToRelConverter, RelOptPlanner planner,
+	CalciteSqlDataflow calciteSqlDataflow(DataflowClient client, SqlParser parser, SqlToRelConverter sqlToRelConverter, RelOptPlanner planner,
 			List<Partition> partitions, DefiningClassLoader classLoader) {
 		return CalciteSqlDataflow.create(client, partitions, parser, sqlToRelConverter, planner, classLoader);
 	}

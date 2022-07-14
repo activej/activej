@@ -9,6 +9,8 @@ import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.type.InferTypes;
+import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,18 +21,29 @@ import static io.activej.dataflow.calcite.Utils.toJavaType;
 import static org.apache.calcite.sql.type.OperandTypes.family;
 
 public final class ListGetFunction extends ProjectionFunction {
+	public static final int UNKNOWN_INDEX = -1;
 
 	public ListGetFunction() {
 		super("LIST_GET", SqlKind.OTHER_FUNCTION, opBinding -> opBinding.getOperandType(0).getComponentType(),
-				null, family(SqlTypeFamily.ARRAY, SqlTypeFamily.INTEGER), SqlFunctionCategory.USER_DEFINED_FUNCTION);
+				InferTypes.ANY_NULLABLE,
+				OperandTypes.or(OperandTypes.ANY,
+						family(SqlTypeFamily.ARRAY, SqlTypeFamily.INTEGER),
+						family(SqlTypeFamily.ARRAY, SqlTypeFamily.ANY)),
+				SqlFunctionCategory.USER_DEFINED_FUNCTION);
 	}
 
 	@Override
 	public FieldProjection projectField(@Nullable String fieldName, List<RexNode> operands) {
 		RexInputRef listInput = (RexInputRef) operands.get(0);
-		RexNode key = operands.get(1);
+		RexNode indexNode = operands.get(1);
 
-		return new FieldProjectionListGet(null, listInput.getIndex(), (int) toJavaType((RexLiteral) key));
+		int index = switch (indexNode.getKind()) {
+			case LITERAL -> toJavaType((RexLiteral) indexNode);
+			case DYNAMIC_PARAM -> UNKNOWN_INDEX;
+			default -> throw new IllegalArgumentException("Unsupported index type");
+		};
+
+		return new FieldProjectionListGet(null, listInput.getIndex(), index);
 	}
 
 	@Override

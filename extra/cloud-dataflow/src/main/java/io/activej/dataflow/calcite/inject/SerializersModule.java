@@ -1,10 +1,7 @@
 package io.activej.dataflow.calcite.inject;
 
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.dataflow.calcite.DataflowSchema;
-import io.activej.dataflow.calcite.DataflowTable;
-import io.activej.dataflow.calcite.RecordProjectionFn;
-import io.activej.dataflow.calcite.RecordSerializer;
+import io.activej.dataflow.calcite.*;
 import io.activej.dataflow.calcite.aggregation.EqualObjectComparator;
 import io.activej.dataflow.calcite.aggregation.RecordReducer;
 import io.activej.dataflow.calcite.aggregation.RecordSchemeFunction;
@@ -25,6 +22,7 @@ import io.activej.record.Record;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerBuilder;
 
+import java.lang.reflect.Type;
 import java.util.Comparator;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -96,6 +94,7 @@ public final class SerializersModule extends AbstractModule {
 
 		bind(new Key<BinarySerializer<Record>>() {}).to(RecordSerializer::create, BinarySerializerModule.BinarySerializerLocator.class).asTransient();
 
-		bind(SerializerBuilder.class).to(SerializerBuilder::create);
+		bind(SerializerBuilder.class).to(() -> SerializerBuilder.create()
+				.with(Type.class, ctx -> new SerializerDefType()));
 	}
 }

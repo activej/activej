@@ -237,30 +237,4 @@ public class SerializerBuilder2Test {
 			assertEquals(testData1, testData2);
 		}
 	}
-
-	public static class TestDataClass {
-		@Serialize
-		public Class<?> cls;
-	}
-
-	@Test
-	public void testClassSerialization() {
-		TestDataClass testData1 = new TestDataClass();
-		testData1.cls = Integer.class;
-
-		TestDataClass testData2 = doTest(TestDataClass.class, testData1);
-		assertEquals(testData1.cls, testData2.cls);
-
-		testData1.cls = int.class;
-		TestDataClass testData3 = doTest(TestDataClass.class, testData1);
-		assertEquals(testData1.cls, testData3.cls);
-
-		testData1.cls = void.class;
-		TestDataClass testData4 = doTest(TestDataClass.class, testData1);
-		assertEquals(testData1.cls, testData4.cls);
-
-		testData1.cls = Void.class;
-		TestDataClass testData5 = doTest(TestDataClass.class, testData1);
-		assertEquals(testData1.cls, testData5.cls);
-	}
 }

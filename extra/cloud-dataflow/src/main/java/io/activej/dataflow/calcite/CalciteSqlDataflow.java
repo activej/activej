@@ -5,15 +5,22 @@ import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowException;
 import io.activej.dataflow.SqlDataflow;
 import io.activej.dataflow.collector.Collector;
+import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
 import io.activej.record.Record;
+import io.activej.record.RecordScheme;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
+import org.apache.calcite.rel.metadata.JaninoRelMetadataProvider;
+import org.apache.calcite.rel.metadata.RelMetadataQueryBase;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexDynamicParam;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
@@ -62,20 +69,58 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 
 	@Override
 	public Promise<StreamSupplier<Record>> query(String sql) {
+		RelNode node;
+		try {
+			node = convertToNode(sql);
+		} catch (DataflowException e) {
+			return Promise.ofException(e);
+		}
+
+		TransformationResult transformed = transform(node);
+
+		return queryDataflow(transformed.dataset());
+	}
+
+	public RelNode convertToNode(String sql) throws DataflowException {
 		SqlNode sqlNode;
 		try {
 			sqlNode = parser.parseQuery(sql);
+			if (sqlNode.getKind() != SqlKind.SELECT && sqlNode.getKind() != SqlKind.ORDER_BY) { // `SELECT ... ORDER BY ...` is considered to have ORDER_BY kind for some reason
+				throw new DataflowException("Only 'SELECT' queries are allowed");
+			}
 		} catch (SqlParseException e) {
-			return Promise.ofException(new DataflowException(e));
+			throw new DataflowException(e);
 		}
 
 		sqlNode = validate(sqlNode);
 
 		RelRoot root = convert(sqlNode);
 
-		RelNode node = optimize(root);
+		return optimize(root);
+	}
 
-		return toResultSupplier(node);
+	public TransformationResult transform(RelNode node) {
+		DataflowShuttle shuttle = new DataflowShuttle(classLoader);
+		node.accept(shuttle);
+
+		return new TransformationResult(node.getRowType().getFieldList(), shuttle.getDataset(), shuttle.getScheme());
+	}
+
+	public PreparedTransformationResult transformPrepared(RelNode node) {
+		DataflowPrepareShuttle shuttle = new DataflowPrepareShuttle();
+		node.accept(shuttle);
+
+		return new PreparedTransformationResult(node.getRowType().getFieldList(), shuttle.getParameters(), shuttle.getScheme());
+	}
+
+	public Promise<StreamSupplier<Record>> queryDataflow(Dataset<Record> dataset) {
+		Collector<Record> collector = new Collector<>(dataset, client);
+
+		DataflowGraph graph = new DataflowGraph(client, partitions);
+		StreamSupplier<Record> result = collector.compile(graph);
+
+		return graph.execute()
+				.map($ -> result);
 	}
 
 	private SqlNode validate(SqlNode sqlNode) {
@@ -83,6 +128,9 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 	}
 
 	private RelRoot convert(SqlNode sqlNode) {
+		if (RelMetadataQueryBase.THREAD_PROVIDERS.get() == null) {
+			RelMetadataQueryBase.THREAD_PROVIDERS.set(JaninoRelMetadataProvider.DEFAULT);
+		}
 		return converter.convertQuery(sqlNode, false, true);
 	}
 
@@ -91,16 +139,11 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 		return program.run(planner, root.rel, traits, Collections.emptyList(), Collections.emptyList());
 	}
 
-	private Promise<StreamSupplier<Record>> toResultSupplier(RelNode node) {
-		DataflowShuttle shuttle = new DataflowShuttle(classLoader);
-		node.accept(shuttle);
+	public record TransformationResult(List<RelDataTypeField> fields, Dataset<Record> dataset, RecordScheme scheme) {
 
-		Collector<Record> collector = new Collector<>(shuttle.result(), client);
+	}
 
-		DataflowGraph graph = new DataflowGraph(client, partitions);
-		StreamSupplier<Record> result = collector.compile(graph);
+	public record PreparedTransformationResult(List<RelDataTypeField> fields, List<RexDynamicParam> parameters, RecordScheme scheme) {
 
-		return graph.execute()
-				.map($ -> result);
 	}
 }

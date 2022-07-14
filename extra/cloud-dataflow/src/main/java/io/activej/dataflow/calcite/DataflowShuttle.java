@@ -48,7 +48,7 @@ import static io.activej.dataflow.calcite.Utils.toOperand;
 public class DataflowShuttle extends RelShuttleImpl {
 	private final DefiningClassLoader classLoader;
 
-	Queue<Dataset<Record>> current = new ArrayDeque<>();
+	private final Queue<Pair> currentQueue = new ArrayDeque<>();
 
 	public DataflowShuttle(DefiningClassLoader classLoader) {
 		this.classLoader = classLoader;
@@ -60,16 +60,16 @@ public class DataflowShuttle extends RelShuttleImpl {
 
 		RexProgram program = calc.getProgram();
 
-		Dataset<Record> dataset = checkNotNull(current.poll());
+		Pair current = checkNotNull(currentQueue.poll());
 
 		RexLocalRef condition = program.getCondition();
 		if (condition != null) {
 			RexNode conditionNode = program.expandLocalRef(condition);
-			dataset = filter(dataset, conditionNode);
+			current = new Pair(filter(current.dataset, conditionNode), current.scheme);
 		}
 
 		if (program.getInputRowType().equals(program.getOutputRowType())) {
-			current.add(dataset);
+			currentQueue.add(current);
 			return result;
 		}
 
@@ -80,9 +80,11 @@ public class DataflowShuttle extends RelShuttleImpl {
 
 		RecordProjectionFn projectionFn = new RecordProjectionFn(projections);
 
-		dataset = Datasets.map(dataset, projectionFn, Record.class);
+		Dataset<Record> newDataset = Datasets.map(current.dataset, projectionFn, Record.class);
+		RecordScheme newScheme = projectionFn.getToScheme(current.scheme, ($1, $2) -> null);
+		current = new Pair(newDataset, newScheme);
 
-		current.add(dataset);
+		currentQueue.add(current);
 		return result;
 	}
 
@@ -122,16 +124,21 @@ public class DataflowShuttle extends RelShuttleImpl {
 	public RelNode visit(TableScan scan) {
 		RelNode result = super.visit(scan);
 
-		Dataset<Record> scanned = scan(scan);
+		Pair scanned = scan(scan);
 
-		current.add(scanned);
+		currentQueue.add(scanned);
 		return result;
 	}
 
 	@Override
 	public RelNode visit(LogicalFilter filter) {
 		RelNode result = super.visit(filter);
-		current.add(filter(current.poll(), filter.getCondition()));
+
+		Pair current = checkNotNull(currentQueue.poll());
+
+		Pair newResult = new Pair(filter(current.dataset, filter.getCondition()), current.scheme);
+
+		currentQueue.add(newResult);
 		return result;
 	}
 
@@ -139,12 +146,13 @@ public class DataflowShuttle extends RelShuttleImpl {
 	public RelNode visit(LogicalJoin join) {
 		RelNode result = super.visit(join);
 
-		Dataset<Record> left = checkNotNull(current.poll());
-		Dataset<Record> right = checkNotNull(current.poll());
+		Pair left = checkNotNull(currentQueue.poll());
+		Pair right = checkNotNull(currentQueue.poll());
 
-		Dataset<Record> joined = join(join, left, right, getJoinKeyType(join));
+		Dataset<Record> joined = join(join, left.dataset, right.dataset, getJoinKeyType(join));
 
-		current.add(joined);
+		Pair newResult = new Pair(joined, RecordInnerJoiner.createScheme(left.scheme, right.scheme));
+		currentQueue.add(newResult);
 		return result;
 	}
 
@@ -152,7 +160,7 @@ public class DataflowShuttle extends RelShuttleImpl {
 	public RelNode visit(LogicalAggregate aggregate) {
 		RelNode result = super.visit(aggregate);
 
-		Dataset<Record> input = current.poll();
+		Pair current = checkNotNull(currentQueue.poll());
 
 		List<AggregateCall> callList = aggregate.getAggCallList();
 		List<FieldReducer<?, ?, ?>> fieldReducers = new ArrayList<>(callList.size());
@@ -188,12 +196,15 @@ public class DataflowShuttle extends RelShuttleImpl {
 			fieldReducers.add(fieldReducer);
 		}
 
-		LocallySortedDataset<RecordScheme, Record> sorted = Datasets.castToSorted(input, RecordScheme.class, new RecordSchemeFunction(), new EqualObjectComparator<>());
+		LocallySortedDataset<RecordScheme, Record> sorted = Datasets.castToSorted(current.dataset, RecordScheme.class, new RecordSchemeFunction(), new EqualObjectComparator<>());
 
 		RecordReducer recordReducer = new RecordReducer(fieldReducers);
 		InputToOutput<RecordScheme, Record, Record, Object[]> reducer = new InputToOutput<>(recordReducer);
 
-		current.add(Datasets.localReduce(sorted, reducer, Record.class, new RecordSchemeFunction()));
+		LocallySortedDataset<RecordScheme, Record> reduced = Datasets.localReduce(sorted, reducer, Record.class, new RecordSchemeFunction());
+
+		Pair newResult = new Pair(reduced, recordReducer.createScheme(current.scheme));
+		currentQueue.add(newResult);
 
 		return result;
 	}
@@ -242,11 +253,11 @@ public class DataflowShuttle extends RelShuttleImpl {
 	public RelNode visit(LogicalSort sort) {
 		RelNode result = super.visit(sort);
 
-		Dataset<Record> dataset = checkNotNull(current.poll());
+		Pair current = checkNotNull(currentQueue.poll());
 
-		Dataset<Record> sorted = sort(sort, dataset);
+		Dataset<Record> sorted = sort(sort, current.dataset);
 
-		current.add(sorted);
+		currentQueue.add(new Pair(sorted, current.scheme));
 		return result;
 	}
 
@@ -260,7 +271,7 @@ public class DataflowShuttle extends RelShuttleImpl {
 		throw new ToDoException();
 	}
 
-	private static <T> Dataset<Record> scan(TableScan scan) {
+	private static <T> Pair scan(TableScan scan) {
 		RelOptTable table = scan.getTable();
 		List<String> names = table.getQualifiedName();
 
@@ -271,7 +282,7 @@ public class DataflowShuttle extends RelShuttleImpl {
 		Dataset<T> dataset = Datasets.datasetOfId(last(names).toLowerCase(), dataflowTable.getType());
 		RecordFunction<T> mapper = dataflowTable.getRecordFunction();
 
-		return Datasets.map(dataset, mapper, Record.class);
+		return new Pair(Datasets.map(dataset, mapper, Record.class), mapper.getScheme());
 	}
 
 	private static <T extends Comparable<T>> Class<? extends T> getJoinKeyType(LogicalJoin join) {
@@ -346,10 +357,18 @@ public class DataflowShuttle extends RelShuttleImpl {
 		return super.visit(other);
 	}
 
-	public Dataset<Record> result() {
-		checkState(current.size() == 1);
+	public RecordScheme getScheme() {
+		return getResult().scheme;
+	}
 
-		return current.peek();
+	public Dataset<Record> getDataset() {
+		return getResult().dataset;
+	}
+
+	private Pair getResult() {
+		checkState(currentQueue.size() == 1);
+
+		return currentQueue.peek();
 	}
 
 	private Dataset<Record> filter(Dataset<Record> dataset, RexNode conditionNode) {
@@ -410,4 +429,7 @@ public class DataflowShuttle extends RelShuttleImpl {
 		};
 	}
 
+	private record Pair(Dataset<Record> dataset, RecordScheme scheme) {
+
+	}
 }

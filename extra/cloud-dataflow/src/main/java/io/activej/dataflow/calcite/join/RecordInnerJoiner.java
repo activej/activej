@@ -20,11 +20,7 @@ public final class RecordInnerJoiner<K extends Comparable<K>> extends InnerJoine
 		RecordScheme rightScheme = right.getScheme();
 
 		if (scheme == null) {
-			scheme = RecordScheme.create();
-
-			addFields("left", leftScheme);
-			addFields("right", rightScheme);
-			scheme.build();
+			scheme = createScheme(leftScheme, rightScheme);
 		}
 
 		Record result = scheme.record();
@@ -40,9 +36,15 @@ public final class RecordInnerJoiner<K extends Comparable<K>> extends InnerJoine
 		output.accept(result);
 	}
 
-	private void addFields(String prefix, RecordScheme leftScheme) {
-		assert scheme != null;
+	public static RecordScheme createScheme(RecordScheme leftScheme, RecordScheme rightScheme) {
+		RecordScheme scheme = RecordScheme.create();
 
+		addFields(scheme, "left", leftScheme);
+		addFields(scheme, "right", rightScheme);
+		return scheme.build();
+	}
+
+	private static void addFields(RecordScheme scheme, String prefix, RecordScheme leftScheme) {
 		List<String> fields = leftScheme.getFields();
 		List<Type> types = leftScheme.getTypes();
 		for (int i = 0; i < fields.size(); i++) {

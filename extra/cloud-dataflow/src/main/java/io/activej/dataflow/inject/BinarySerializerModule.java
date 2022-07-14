@@ -20,6 +20,7 @@ import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.BindingType;
+import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
 import io.activej.serializer.BinarySerializer;
@@ -62,8 +63,11 @@ public final class BinarySerializerModule extends AbstractModule {
 	}
 
 	@Provides
-	BinarySerializerLocator serializerLocator(Injector injector) {
+	BinarySerializerLocator serializerLocator(Injector injector, OptionalDependency<SerializerBuilder> optionalSerializerBuilder) {
 		locator.injector = injector;
+		if (optionalSerializerBuilder.isPresent()) {
+			locator.builder = optionalSerializerBuilder.get();
+		}
 		return locator;
 	}
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.serializer.impl;
+package io.activej.dataflow.calcite;
 
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;

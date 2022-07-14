@@ -1,9 +1,9 @@
 package io.activej.dataflow.calcite;
 
-import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.util.Primitives;
 import io.activej.common.Checks;
+import io.activej.dataflow.calcite.function.MapGetFunction;
 import io.activej.record.Record;
 import io.activej.record.RecordProjection;
 import io.activej.record.RecordScheme;
@@ -19,12 +19,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.dataflow.calcite.function.ListGetFunction.UNKNOWN_INDEX;
 
 public final class RecordProjectionFn implements Function<Record, Record> {
 	private static final boolean CHECK = Checks.isEnabled(RecordProjectionFn.class);
@@ -41,17 +43,8 @@ public final class RecordProjectionFn implements Function<Record, Record> {
 	public Record apply(Record record) {
 		if (projection == null) {
 			RecordScheme original = record.getScheme();
-			DefiningClassLoader classLoader = record.getScheme().getClassLoader();
-			RecordScheme schemeTo = RecordScheme.create(classLoader);
 			Map<String, UnaryOperator<Expression>> mapping = new HashMap<>();
-			for (FieldProjection fieldProjection : fieldProjections) {
-				String fieldName = fieldProjection.getFieldName(original);
-				schemeTo.withField(fieldName, fieldProjection.getFieldType(original));
-				UnaryOperator<Expression> previous = mapping.put(fieldName, fieldProjection.getMapping(original));
-				if (previous != null) {
-					throw new IllegalArgumentException();
-				}
-			}
+			RecordScheme schemeTo = getToScheme(original, mapping::put);
 			projection = RecordProjection.projection(original, schemeTo, mapping);
 		}
 
@@ -60,6 +53,19 @@ public final class RecordProjectionFn implements Function<Record, Record> {
 		}
 
 		return projection.apply(record);
+	}
+
+	public RecordScheme getToScheme(RecordScheme original, BiFunction<String, UnaryOperator<Expression>, @Nullable UnaryOperator<Expression>> mapping) {
+		RecordScheme schemeTo = RecordScheme.create(original.getClassLoader());
+		for (FieldProjection fieldProjection : fieldProjections) {
+			String fieldName = fieldProjection.getFieldName(original);
+			schemeTo.withField(fieldName, fieldProjection.getFieldType(original));
+			UnaryOperator<Expression> previous = mapping.apply(fieldName, fieldProjection.getMapping(original));
+			if (previous != null) {
+				throw new IllegalArgumentException();
+			}
+		}
+		return schemeTo;
 	}
 
 	@Serialize(order = 1)
@@ -121,7 +127,7 @@ public final class RecordProjectionFn implements Function<Record, Record> {
 		public String getFieldName(RecordScheme original) {
 			if (fieldName != null) return fieldName;
 
-			return original.getField(mapIndex) + ".get(" + key.toString() + ")";
+			return original.getField(mapIndex) + ".get(" + (key == MapGetFunction.UNKNOWN_KEY ? '?' : key) + ")";
 		}
 
 		@Override
@@ -149,19 +155,19 @@ public final class RecordProjectionFn implements Function<Record, Record> {
 		@Serialize(order = 2)
 		public final int listIndex;
 		@Serialize(order = 3)
-		public final int key;
+		public final int index;
 
-		public FieldProjectionListGet(@Deserialize("fieldName") String fieldName, @Deserialize("listIndex") int listIndex, @Deserialize("key") int key) {
+		public FieldProjectionListGet(@Deserialize("fieldName") String fieldName, @Deserialize("listIndex") int listIndex, @Deserialize("index") int index) {
 			this.fieldName = fieldName;
 			this.listIndex = listIndex;
-			this.key = key;
+			this.index = index;
 		}
 
 		@Override
 		public String getFieldName(RecordScheme original) {
 			if (fieldName != null) return fieldName;
 
-			return original.getField(listIndex) + ".get(" + key + ")";
+			return original.getField(listIndex) + ".get(" + (index == UNKNOWN_INDEX ? "?" : index)  + ")";
 		}
 
 		@Override
@@ -173,9 +179,9 @@ public final class RecordProjectionFn implements Function<Record, Record> {
 		public UnaryOperator<Expression> getMapping(RecordScheme original) {
 			String listField = original.getField(listIndex);
 			return recordFrom -> let(cast(original.property(recordFrom, listField), List.class), list ->
-					ifGe(value(key), call(list, "size"),
+					ifGe(value(index), call(list, "size"),
 							nullRef(Object.class),
-							call(list, "get", value(key))));
+							call(list, "get", value(index))));
 		}
 	}
 

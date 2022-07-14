@@ -25,20 +25,7 @@ public final class RecordReducer extends StreamReducers.ReducerToResult<RecordSc
 			accumulator[i] = fieldAccumulator;
 		}
 
-		RecordScheme resultScheme = RecordScheme.create();
-
-		for (FieldReducer<Object, Object, Object> reducer : reducers) {
-			int fieldIndex = reducer.getFieldIndex();
-			String fieldName = fieldIndex == -1 ? "*" : originalScheme.getField(fieldIndex);
-			String resultFieldName = reducer.getName() + '(' + fieldName + ')';
-
-			//noinspection unchecked
-			Class<Object> fieldType = (Class<Object>) (fieldIndex == -1 ? long.class : originalScheme.getFieldType(fieldIndex));
-			Class<Object> resultClass = reducer.getResultClass(fieldType);
-			resultScheme.addField(resultFieldName, resultClass);
-		}
-
-		accumulator[i] = resultScheme.build();
+		accumulator[i] = createScheme(originalScheme);
 
 		return accumulator;
 	}
@@ -71,4 +58,21 @@ public final class RecordReducer extends StreamReducers.ReducerToResult<RecordSc
 	public List<FieldReducer<Object, Object, Object>> getReducers() {
 		return reducers;
 	}
+
+	public RecordScheme createScheme(RecordScheme originalScheme) {
+		RecordScheme resultScheme = RecordScheme.create();
+
+		for (FieldReducer<Object, Object, Object> reducer : reducers) {
+			int fieldIndex = reducer.getFieldIndex();
+			String fieldName = fieldIndex == -1 ? "*" : originalScheme.getField(fieldIndex);
+			String resultFieldName = reducer.getName() + '(' + fieldName + ')';
+
+			//noinspection unchecked
+			Class<Object> fieldType = (Class<Object>) (fieldIndex == -1 ? long.class : originalScheme.getFieldType(fieldIndex));
+			Class<Object> resultClass = reducer.getResultClass(fieldType);
+			resultScheme.addField(resultFieldName, resultClass);
+		}
+		return resultScheme.build();
+	}
+
 }
