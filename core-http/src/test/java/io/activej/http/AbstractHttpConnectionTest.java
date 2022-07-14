@@ -195,7 +195,7 @@ public final class AbstractHttpConnectionTest {
 		AsyncHttpServer server = AsyncHttpServer.create(Eventloop.getCurrentEventloop(),
 						request -> HttpResponse.ok200()
 								.withHeader(CONTENT_LENGTH, String.valueOf(size))
-								.withBodyStream(request.getBodyStream()))
+								.withBodyStream(request.takeBodyStream()))
 				.withListenPort(port);
 		server.listen();
 
@@ -210,7 +210,7 @@ public final class AbstractHttpConnectionTest {
 				}).limit(3_000)));
 
 		await(client.request(request)
-				.then(response -> response.getBodyStream()
+				.then(response -> response.takeBodyStream()
 						.streamTo(ChannelConsumer.ofConsumer(buf -> {
 							byte[] bytes = buf.asArray();
 							inChecksum.update(bytes, 0, bytes.length);
@@ -239,7 +239,7 @@ public final class AbstractHttpConnectionTest {
 		server.listen();
 
 		ByteBuf result = await(AsyncHttpClient.create(Eventloop.getCurrentEventloop()).request(HttpRequest.get("http://127.0.0.1:" + port))
-				.then(response -> response.getBodyStream().toCollector(ByteBufs.collector()))
+				.then(response -> response.takeBodyStream().toCollector(ByteBufs.collector()))
 				.whenComplete(server::close));
 		assertArrayEquals(expected.asArray(), result.asArray());
 	}
@@ -488,7 +488,7 @@ public final class AbstractHttpConnectionTest {
 						request -> request.loadBody()
 								.map(body -> {
 									HttpResponse httpResponse = HttpResponse.ok200()
-											.withBodyStream(request.getBodyStream()
+											.withBodyStream(request.takeBodyStream()
 													.transformWith(ChannelByteChunker.create(MemSize.of(1), MemSize.of(1))));
 									decorator.accept(httpResponse);
 									return httpResponse;
@@ -509,7 +509,7 @@ public final class AbstractHttpConnectionTest {
 		decorator.accept(request);
 
 		ByteBuf result = await(client.request(request)
-				.then(response -> response.getBodyStream()
+				.then(response -> response.takeBodyStream()
 						.toCollector(ByteBufs.collector()))
 				.whenComplete(server::close));
 		assertArrayEquals(expected.asArray(), result.asArray());

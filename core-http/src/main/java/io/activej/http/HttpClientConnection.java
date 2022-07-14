@@ -308,7 +308,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 					return Promise.of((WebSocket) new WebSocketImpl(
 							request,
 							res,
-							res.getBodyStream().transformWith(decoder),
+							res.takeBodyStream().transformWith(decoder),
 							buffer.getConsumer().transformWith(encoder),
 							decoder::onProtocolError,
 							maxWebSocketMessageSize

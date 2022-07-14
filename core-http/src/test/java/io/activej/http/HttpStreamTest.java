@@ -63,7 +63,7 @@ public final class HttpStreamTest {
 	@Test
 	public void testStreamUpload() throws IOException {
 		startTestServer(request -> request
-				.getBodyStream()
+				.takeBodyStream()
 				.async()
 				.toCollector(ByteBufs.collector())
 				.whenComplete(TestUtils.assertCompleteFn(buf -> assertEquals(requestBody, buf.asString(UTF_8))))
@@ -90,7 +90,7 @@ public final class HttpStreamTest {
 				.request(HttpRequest.post("http://127.0.0.1:" + port))
 				.async()
 				.whenComplete(TestUtils.assertCompleteFn(response -> assertEquals(200, response.getCode())))
-				.then(response -> response.getBodyStream().async().toCollector(ByteBufs.collector())));
+				.then(response -> response.takeBodyStream().async().toCollector(ByteBufs.collector())));
 
 		assertEquals(requestBody, body.asString(UTF_8));
 	}
@@ -98,7 +98,7 @@ public final class HttpStreamTest {
 	@Test
 	public void testLoopBack() throws IOException {
 		startTestServer(request -> request
-				.getBodyStream()
+				.takeBodyStream()
 				.async()
 				.toList()
 				.map(ChannelSupplier::ofList)
@@ -109,7 +109,7 @@ public final class HttpStreamTest {
 						.withBodyStream(ChannelSupplier.ofList(expectedList)
 								.mapAsync(item -> Promises.delay(1L, item))))
 				.whenComplete(TestUtils.assertCompleteFn(response -> assertEquals(200, response.getCode())))
-				.then(response -> response.getBodyStream().async().toCollector(ByteBufs.collector())));
+				.then(response -> response.takeBodyStream().async().toCollector(ByteBufs.collector())));
 
 		assertEquals(requestBody, body.asString(UTF_8));
 	}
@@ -125,7 +125,7 @@ public final class HttpStreamTest {
 		ByteBuf body = await(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
 				.request(HttpRequest.post("http://127.0.0.1:" + port)
 						.withBodyStream(supplier))
-				.then(response -> response.getBodyStream().toCollector(ByteBufs.collector())));
+				.then(response -> response.takeBodyStream().toCollector(ByteBufs.collector())));
 
 		assertTrue(body.asString(UTF_8).contains(exceptionMessage));
 	}
@@ -223,7 +223,7 @@ public final class HttpStreamTest {
 								.withBodyStream(ChannelSuppliers.concat(
 										ChannelSupplier.ofList(expectedList),
 										ChannelSupplier.ofException(exception))))
-						.then(response -> response.getBodyStream().toCollector(ByteBufs.collector())));
+						.then(response -> response.takeBodyStream().toCollector(ByteBufs.collector())));
 
 		assertThat(e, instanceOf(HttpException.class));
 		assertSame(exception, e.getCause());

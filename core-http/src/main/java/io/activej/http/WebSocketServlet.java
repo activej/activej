@@ -60,7 +60,7 @@ public abstract class WebSocketServlet implements AsyncServlet {
 		return validateHeaders(request)
 				.then(() -> processAnswer(request))
 				.then(answer -> {
-					ChannelSupplier<ByteBuf> rawStream = request.getBodyStream();
+					ChannelSupplier<ByteBuf> rawStream = request.takeBodyStream();
 					assert rawStream != null;
 
 					return onRequest(request)
