@@ -42,6 +42,11 @@ import static org.objectweb.asm.Type.*;
  * Contains information about a dynamic class
  */
 public final class Context {
+	private static final Set<Method> OBJECT_INSTANCE_METHODS = Arrays.stream(Object.class.getMethods())
+			.filter(m -> !isStatic(m.getModifiers()))
+			.map(Method::getMethod)
+			.collect(toSet());
+
 	private final ClassLoader classLoader;
 	private final ClassBuilder<?> classBuilder;
 	private final GeneratorAdapter g;
@@ -210,7 +215,7 @@ public final class Context {
 		}
 
 		if (typeFrom == VOID_TYPE) {
-			throw new RuntimeException(format("Can't cast VOID_TYPE typeTo %s. %s",
+			throw new RuntimeException(format("Can't cast VOID_TYPE type to %s. %s",
 					typeTo.getClassName(),
 					exceptionInGeneratedClass(this)));
 		}
@@ -221,7 +226,7 @@ public final class Context {
 			if (toSelfOrClass.isAssignableFrom(fromSelfOrClass)) {
 				return;
 			}
-			throw new RuntimeException(format("Can't cast self %s typeTo %s, %s",
+			throw new RuntimeException(format("Can't cast self %s type to %s, %s",
 					typeFrom.getClassName(),
 					typeTo.getClassName(),
 					exceptionInGeneratedClass(this)));
@@ -442,10 +447,7 @@ public final class Context {
 	private @Nullable Method findMethod(Stream<Method> methods, String name, SelfOrClass[] arguments) {
 		Set<Method> methodSet = methods.collect(toSet());
 
-		methodSet.addAll(Arrays.stream(Object.class.getMethods())
-				.filter(m -> !isStatic(m.getModifiers()))
-				.map(Method::getMethod)
-				.collect(toSet()));
+		methodSet.addAll(OBJECT_INSTANCE_METHODS);
 
 		Method foundMethod = null;
 		SelfOrClass[] foundMethodArguments = null;
