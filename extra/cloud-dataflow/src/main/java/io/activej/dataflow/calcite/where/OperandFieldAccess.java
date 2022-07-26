@@ -3,8 +3,12 @@ package io.activej.dataflow.calcite.where;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.common.Utils;
 import io.activej.record.Record;
+import org.apache.calcite.rex.RexDynamicParam;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 import static io.activej.codegen.expression.Expressions.*;
 
@@ -38,6 +42,20 @@ public final class OperandFieldAccess implements Operand {
 		);
 
 		return fieldGetter.getField(object, fieldName);
+	}
+
+	@Override
+	public Operand materialize(List<Object> params) {
+		return new OperandFieldAccess(
+				objectOperand.materialize(params),
+				fieldNameOperand.materialize(params),
+				classLoader
+		);
+	}
+
+	@Override
+	public List<RexDynamicParam> getParams() {
+		return Utils.concat(objectOperand.getParams(), fieldNameOperand.getParams());
 	}
 
 	public Operand getObjectOperand() {

@@ -8,7 +8,7 @@ option java_outer_classname = "OperandProto";
 
 message Operand {
   message RecordField {
-    int32 index = 1;
+    Operand index_operand = 1;
   }
 
   message Scalar {

@@ -2,6 +2,8 @@ package io.activej.dataflow.calcite.where;
 
 import io.activej.record.Record;
 
+import java.util.List;
+
 public final class GePredicate implements WherePredicate {
 	private final Operand left;
 	private final Operand right;
@@ -20,6 +22,14 @@ public final class GePredicate implements WherePredicate {
 		if (rightValue == null) return false;
 
 		return leftValue.compareTo(rightValue) >= 0;
+	}
+
+	@Override
+	public WherePredicate materialize(List<Object> params) {
+		return new GePredicate(
+				left.materialize(params),
+				right.materialize(params)
+		);
 	}
 
 	public Operand getLeft() {

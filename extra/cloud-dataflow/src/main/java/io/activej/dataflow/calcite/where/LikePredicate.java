@@ -3,6 +3,7 @@ package io.activej.dataflow.calcite.where;
 import io.activej.record.Record;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.regex.Pattern;
 
 public final class LikePredicate implements WherePredicate {
@@ -31,6 +32,14 @@ public final class LikePredicate implements WherePredicate {
 		if (value == null) return false;
 
 		return compiledPattern.pattern.matcher(value).matches();
+	}
+
+	@Override
+	public WherePredicate materialize(List<Object> params) {
+		return new LikePredicate(
+				value.materialize(params),
+				pattern.materialize(params)
+		);
 	}
 
 	public Operand getValue() {

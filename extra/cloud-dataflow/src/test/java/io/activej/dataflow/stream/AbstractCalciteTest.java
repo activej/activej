@@ -1191,6 +1191,24 @@ public abstract class AbstractCalciteTest {
 		assertSelectPojo(result);
 	}
 
+	@Test
+	public void testSelectPojoPreparedRepeated() {
+		List<QueryResult> results = queryPreparedRepeated("""
+				SELECT pojo
+				FROM profiles
+				WHERE id = ?
+				""",
+				stmt -> stmt.setString(1, "user1"),
+				stmt -> stmt.setString(1, "user2"));
+
+		List<QueryResult> expected = List.of(
+				new QueryResult(List.of("pojo"), List.<Object[]>of(new Object[]{new UserProfilePojo("test1", 1)})),
+				new QueryResult(List.of("pojo"), List.<Object[]>of(new Object[]{new UserProfilePojo("test2", 2)}))
+		);
+
+		assertEquals(expected, results);
+	}
+
 	private void assertSelectPojo(QueryResult result) {
 		QueryResult expected = new QueryResult(List.of("pojo"), List.<Object[]>of(new Object[]{new UserProfilePojo("test1", 1)}));
 
@@ -1201,6 +1219,8 @@ public abstract class AbstractCalciteTest {
 	protected abstract QueryResult query(String sql);
 
 	protected abstract QueryResult queryPrepared(String sql, ParamsSetter paramsSetter);
+
+	protected abstract List<QueryResult> queryPreparedRepeated(String sql, ParamsSetter... paramsSetters);
 
 	public static final class QueryResult {
 		private static final QueryResult EMPTY = new QueryResult(Collections.emptyList(), Collections.emptyList());

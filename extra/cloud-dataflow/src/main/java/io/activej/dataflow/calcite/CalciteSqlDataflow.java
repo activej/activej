@@ -4,6 +4,7 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowException;
 import io.activej.dataflow.SqlDataflow;
+import io.activej.dataflow.calcite.DataflowShuttle.UnmaterializedDataset;
 import io.activej.dataflow.collector.Collector;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.graph.DataflowGraph;
@@ -11,7 +12,6 @@ import io.activej.dataflow.graph.Partition;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
 import io.activej.record.Record;
-import io.activej.record.RecordScheme;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
@@ -78,7 +78,7 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 
 		TransformationResult transformed = transform(node);
 
-		return queryDataflow(transformed.dataset());
+		return queryDataflow(transformed.dataset().materialize(Collections.emptyList()));
 	}
 
 	public RelNode convertToNode(String sql) throws DataflowException {
@@ -103,14 +103,7 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 		DataflowShuttle shuttle = new DataflowShuttle(classLoader);
 		node.accept(shuttle);
 
-		return new TransformationResult(node.getRowType().getFieldList(), shuttle.getDataset(), shuttle.getScheme());
-	}
-
-	public PreparedTransformationResult transformPrepared(RelNode node) {
-		DataflowPrepareShuttle shuttle = new DataflowPrepareShuttle();
-		node.accept(shuttle);
-
-		return new PreparedTransformationResult(node.getRowType().getFieldList(), shuttle.getParameters(), shuttle.getScheme());
+		return new TransformationResult(node.getRowType().getFieldList(), shuttle.getParameters(), shuttle.getUnmaterializedDataset());
 	}
 
 	public Promise<StreamSupplier<Record>> queryDataflow(Dataset<Record> dataset) {
@@ -139,11 +132,7 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 		return program.run(planner, root.rel, traits, Collections.emptyList(), Collections.emptyList());
 	}
 
-	public record TransformationResult(List<RelDataTypeField> fields, Dataset<Record> dataset, RecordScheme scheme) {
-
-	}
-
-	public record PreparedTransformationResult(List<RelDataTypeField> fields, List<RexDynamicParam> parameters, RecordScheme scheme) {
+	public record TransformationResult(List<RelDataTypeField> fields, List<RexDynamicParam> parameters, UnmaterializedDataset dataset) {
 
 	}
 }

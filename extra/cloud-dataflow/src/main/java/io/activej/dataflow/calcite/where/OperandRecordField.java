@@ -1,25 +1,42 @@
 package io.activej.dataflow.calcite.where;
 
 import io.activej.record.Record;
+import org.apache.calcite.rex.RexDynamicParam;
+
+import java.util.List;
 
 public final class OperandRecordField implements Operand {
-	private final int index;
+	private final Operand indexOperand;
 
-	public OperandRecordField(int index) {
-		this.index = index;
+	public OperandRecordField(Operand indexOperand) {
+		this.indexOperand = indexOperand;
 	}
 
 	@Override
 	public <T> T getValue(Record record) {
+		//noinspection ConstantConditions
+		int index = indexOperand.getValue(record);
 		return record.get(index);
 	}
 
-	public int getIndex() {return index;}
+	@Override
+	public Operand materialize(List<Object> params) {
+		return new OperandRecordField(indexOperand.materialize(params));
+	}
+
+	@Override
+	public List<RexDynamicParam> getParams() {
+		return indexOperand.getParams();
+	}
+
+	public Operand getIndexOperand() {
+		return indexOperand;
+	}
 
 	@Override
 	public String toString() {
 		return "OperandRecordField[" +
-				"index=" + index + ']';
+				"indexOperand=" + indexOperand + ']';
 	}
 
 }

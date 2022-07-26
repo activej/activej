@@ -2,6 +2,8 @@ package io.activej.dataflow.calcite.where;
 
 import io.activej.record.Record;
 
+import java.util.List;
+
 public final class NotEqPredicate implements WherePredicate {
 	private final Operand left;
 	private final Operand right;
@@ -20,6 +22,14 @@ public final class NotEqPredicate implements WherePredicate {
 		if (rightValue == null) return false;
 
 		return !leftValue.equals(rightValue);
+	}
+
+	@Override
+	public WherePredicate materialize(List<Object> params) {
+		return new NotEqPredicate(
+				left.materialize(params),
+				right.materialize(params)
+		);
 	}
 
 	public Operand getLeft() {

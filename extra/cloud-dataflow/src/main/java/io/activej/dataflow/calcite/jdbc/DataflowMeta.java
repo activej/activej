@@ -2,8 +2,9 @@ package io.activej.dataflow.calcite.jdbc;
 
 import io.activej.dataflow.DataflowException;
 import io.activej.dataflow.calcite.CalciteSqlDataflow;
-import io.activej.dataflow.calcite.CalciteSqlDataflow.PreparedTransformationResult;
 import io.activej.dataflow.calcite.CalciteSqlDataflow.TransformationResult;
+import io.activej.dataflow.calcite.DataflowShuttle.UnmaterializedDataset;
+import io.activej.dataflow.dataset.Dataset;
 import io.activej.eventloop.Eventloop;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
@@ -32,6 +33,7 @@ public final class DataflowMeta extends LimitedMeta {
 	private final CalciteSqlDataflow sqlDataflow;
 	private final Map<String, Integer> statementIds = new ConcurrentHashMap<>();
 	private final Map<StatementKey, FrameConsumer> consumers = new ConcurrentHashMap<>();
+	private final Map<StatementKey, UnmaterializedDataset> unmaterializedDatasets = new ConcurrentHashMap<>();
 
 	public DataflowMeta(Eventloop eventloop, CalciteSqlDataflow sqlDataflow) {
 		this.eventloop = eventloop;
@@ -41,45 +43,60 @@ public final class DataflowMeta extends LimitedMeta {
 	@Override
 	public StatementHandle prepare(ConnectionHandle ch, String sql, long maxRowCount) {
 		StatementHandle statement = createStatement(ch);
-		PreparedTransformationResult transformed = transformPrepared(sql);
-		statement.signature = getSignature(sql, transformed.fields(), transformed.parameters(), transformed.scheme());
+		TransformationResult transformed = transform(sql);
+		statement.signature = getSignature(sql, transformed.fields(), transformed.parameters(), transformed.dataset().getScheme());
+		unmaterializedDatasets.put(StatementKey.create(statement), transformed.dataset());
 		return statement;
 	}
 
 	@Override
 	public ExecuteResult execute(StatementHandle h, List<TypedValue> parameterValues, int maxRowsInFirstFrame) throws NoSuchStatementException {
-		Signature signature = h.signature;
-		String sql = signature.sql;
-		for (TypedValue parameterValue : parameterValues) {
-			String value = parameterValue.value.toString();
-			Class<?> clazz = parameterValue.type.clazz;
-			if (clazz == String.class || clazz == Character.class || clazz == char.class) {
-				value = '\'' + value + '\'';
-			}
-			sql = sql.replaceFirst("\\?", value);
+		UnmaterializedDataset unmaterializedDataset = unmaterializedDatasets.get(StatementKey.create(h));
+		if (unmaterializedDataset == null) {
+			throw new NoSuchStatementException(h);
+		}
+		MetaResultSet metaResultSet = MetaResultSet.create(h.connectionId, h.id, false, h.signature, null);
+
+		List<Object> params = parameterValues.stream()
+				.map(typedValue -> typedValue.value)
+				.toList();
+
+		Dataset<Record> dataset = unmaterializedDataset.materialize(params);
+
+		FrameConsumer frameConsumer;
+		try {
+			frameConsumer = eventloop.submit(() -> sqlDataflow.queryDataflow(dataset)
+					.map(supplier -> {
+						FrameConsumer consumer = new FrameConsumer(unmaterializedDataset.getScheme().size());
+						supplier.streamTo(consumer);
+						return consumer;
+					})).get();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new RuntimeException(e);
+		} catch (ExecutionException e) {
+			throw new RuntimeException(e);
 		}
 
-		TransformationResult transformed = transform(sql);
+		consumers.put(StatementKey.create(h), frameConsumer);
 
-		return doExecute(h, transformed, signature);
+		return new ExecuteResult(List.of(metaResultSet));
 	}
 
 	@Override
 	public ExecuteResult prepareAndExecute(StatementHandle h, String sql, long maxRowCount, int maxRowsInFirstFrame, PrepareCallback callback) {
 		TransformationResult transformed = transform(sql);
-		Signature signature = getSignature(sql, transformed.fields(), Collections.emptyList(), transformed.scheme());
+		UnmaterializedDataset unmaterialized = transformed.dataset();
+		Dataset<Record> dataset = unmaterialized.materialize(Collections.emptyList());
+		Signature signature = getSignature(sql, transformed.fields(), Collections.emptyList(), unmaterialized.getScheme());
 
-		return doExecute(h, transformed, signature);
-	}
-
-	private ExecuteResult doExecute(StatementHandle h, TransformationResult transformed, Signature signature) {
 		MetaResultSet metaResultSet = MetaResultSet.create(h.connectionId, h.id, false, signature, null);
 
 		FrameConsumer frameConsumer;
 		try {
-			frameConsumer = eventloop.submit(() -> sqlDataflow.queryDataflow(transformed.dataset())
+			frameConsumer = eventloop.submit(() -> sqlDataflow.queryDataflow(dataset)
 					.map(supplier -> {
-						FrameConsumer consumer = new FrameConsumer(transformed.scheme().size());
+						FrameConsumer consumer = new FrameConsumer(unmaterialized.getScheme().size());
 						supplier.streamTo(consumer);
 						return consumer;
 					})).get();
@@ -141,12 +158,6 @@ public final class DataflowMeta extends LimitedMeta {
 		return sqlDataflow.transform(node);
 	}
 
-	private PreparedTransformationResult transformPrepared(String sql) {
-		RelNode node = convertToNode(sql);
-
-		return sqlDataflow.transformPrepared(node);
-	}
-
 	private RelNode convertToNode(String sql) {
 		RelNode node;
 		try {
@@ -194,7 +205,11 @@ public final class DataflowMeta extends LimitedMeta {
 
 	@Override
 	public void closeStatement(StatementHandle h) {
-		FrameConsumer frameConsumer = consumers.get(StatementKey.create(h));
+		StatementKey key = StatementKey.create(h);
+
+		unmaterializedDatasets.remove(key);
+
+		FrameConsumer frameConsumer = consumers.get(key);
 		if (frameConsumer == null) return;
 
 		try {

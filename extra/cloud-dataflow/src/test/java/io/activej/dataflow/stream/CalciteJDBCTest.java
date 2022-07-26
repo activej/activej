@@ -98,6 +98,28 @@ public class CalciteJDBCTest extends AbstractCalciteTest {
 		}
 	}
 
+	@Override
+	protected List<QueryResult> queryPreparedRepeated(String sql, ParamsSetter... paramsSetters) {
+		Properties connectionProperties = new Properties();
+		connectionProperties.put("url", "http://localhost:" + port);
+
+		List<QueryResult> results = new ArrayList<>(paramsSetters.length);
+		try (Connection connection = DriverManager.getConnection(Driver.CONNECT_STRING_PREFIX, connectionProperties)) {
+			try (PreparedStatement statement = connection.prepareStatement(sql)) {
+				for (ParamsSetter setter : paramsSetters) {
+					setter.setValues(statement);
+					try (ResultSet resultSet = statement.executeQuery()) {
+						results.add(toQueryResult(resultSet));
+					}
+				}
+			}
+		} catch (Exception e) {
+			throw new AssertionError(e);
+		}
+
+		return results;
+	}
+
 	private QueryResult toQueryResult(ResultSet resultSet) throws SQLException {
 		List<String> columnNames = new ArrayList<>();
 		List<Object[]> columnValues = new ArrayList<>();

@@ -2,6 +2,7 @@ package io.activej.dataflow.proto.calcite;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.dataflow.calcite.Value;
 import io.activej.dataflow.calcite.where.*;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.BinaryOutput;
@@ -54,7 +55,7 @@ public final class WherePredicateSerializer implements BinarySerializer<WherePre
 		} else if (predicate instanceof OrPredicate orPredicate) {
 			builder.setOrPredicate(
 					WherePredicateProto.WherePredicate.OrPredicate.newBuilder()
-							.addAllPredicates(orPredicate.predicates().stream()
+							.addAllPredicates(orPredicate.getPredicates().stream()
 									.map(WherePredicateSerializer::convert)
 									.toList())
 			);
@@ -183,12 +184,12 @@ public final class WherePredicateSerializer implements BinarySerializer<WherePre
 		if (operand instanceof OperandRecordField operandRecordField) {
 			builder.setRecordField(
 					OperandProto.Operand.RecordField.newBuilder()
-							.setIndex(operandRecordField.getIndex())
+							.setIndexOperand(convert(operandRecordField.getIndexOperand()))
 			);
 		} else if (operand instanceof OperandScalar operandScalar) {
 			OperandProto.Operand.Scalar.Builder scalarBuilder = OperandProto.Operand.Scalar.newBuilder();
 
-			Object value = operandScalar.getValue();
+			Object value = operandScalar.getValue().getValue();
 			if (value == null) {
 				scalarBuilder.setNull(OperandProto.Operand.Scalar.None.newBuilder());
 			} else if (value instanceof Integer anInteger) {
@@ -235,18 +236,20 @@ public final class WherePredicateSerializer implements BinarySerializer<WherePre
 
 	private Operand convert(OperandProto.Operand operand) {
 		return switch (operand.getOperandCase()) {
-			case RECORD_FIELD -> new OperandRecordField(operand.getRecordField().getIndex());
+			case RECORD_FIELD -> new OperandRecordField(convert(operand.getRecordField().getIndexOperand()));
 			case SCALAR -> new OperandScalar(
-					switch (operand.getScalar().getValueCase()) {
-						case NULL -> null;
-						case INTEGER -> operand.getScalar().getInteger();
-						case LONG -> operand.getScalar().getLong();
-						case FLOAT -> operand.getScalar().getFloat();
-						case DOUBLE -> operand.getScalar().getDouble();
-						case BOOLEAN -> operand.getScalar().getBoolean();
-						case STRING -> operand.getScalar().getString();
-						case VALUE_NOT_SET -> throw new CorruptedDataException("Scalar value not set");
-					}
+					Value.materializedValue(
+							switch (operand.getScalar().getValueCase()) {
+								case NULL -> null;
+								case INTEGER -> operand.getScalar().getInteger();
+								case LONG -> operand.getScalar().getLong();
+								case FLOAT -> operand.getScalar().getFloat();
+								case DOUBLE -> operand.getScalar().getDouble();
+								case BOOLEAN -> operand.getScalar().getBoolean();
+								case STRING -> operand.getScalar().getString();
+								case VALUE_NOT_SET -> throw new CorruptedDataException("Scalar value not set");
+							}
+					)
 			);
 			case MAP_GET -> new OperandMapGet<>(
 					convert(operand.getMapGet().getMapOperand()),

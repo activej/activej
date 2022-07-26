@@ -2,8 +2,10 @@ package io.activej.dataflow.calcite.function;
 
 import io.activej.dataflow.calcite.RecordProjectionFn;
 import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjectionMapGet;
+import io.activej.dataflow.calcite.Value;
 import io.activej.dataflow.calcite.where.Operand;
 import io.activej.dataflow.calcite.where.OperandMapGet;
+import org.apache.calcite.rex.RexDynamicParam;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
@@ -20,8 +22,6 @@ import static io.activej.dataflow.calcite.Utils.toJavaType;
 import static org.apache.calcite.sql.type.OperandTypes.family;
 
 public final class MapGetFunction extends ProjectionFunction {
-	public static final Object UNKNOWN_KEY = new Object();
-
 	public MapGetFunction() {
 		super("MAP_GET", SqlKind.OTHER_FUNCTION, opBinding -> opBinding.getOperandType(0).getValueType(),
 				InferTypes.ANY_NULLABLE, family(SqlTypeFamily.MAP, SqlTypeFamily.ANY), SqlFunctionCategory.USER_DEFINED_FUNCTION);
@@ -32,13 +32,13 @@ public final class MapGetFunction extends ProjectionFunction {
 		RexInputRef mapInput = (RexInputRef) operands.get(0);
 		RexNode key = operands.get(1);
 
-		Object keyObject = switch (key.getKind()) {
-			case LITERAL -> toJavaType((RexLiteral) key);
-			case DYNAMIC_PARAM -> UNKNOWN_KEY;
+		Value keyValue = switch (key.getKind()) {
+			case LITERAL -> Value.materializedValue(toJavaType((RexLiteral) key));
+			case DYNAMIC_PARAM -> Value.unmaterializedValue(((RexDynamicParam) key));
 			default -> throw new IllegalArgumentException("Unsupported key type");
 		};
 
-		return new FieldProjectionMapGet(null, mapInput.getIndex(), keyObject);
+		return new FieldProjectionMapGet(null, mapInput.getIndex(), keyValue);
 	}
 
 	@Override

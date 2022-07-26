@@ -26,6 +26,16 @@ public final class InPredicate implements WherePredicate {
 		return false;
 	}
 
+	@Override
+	public WherePredicate materialize(List<Object> params) {
+		return new InPredicate(
+				value.materialize(params),
+				options.stream()
+						.map(option -> option.materialize(params))
+						.toList()
+		);
+	}
+
 	public Operand getValue() {
 		return value;
 	}

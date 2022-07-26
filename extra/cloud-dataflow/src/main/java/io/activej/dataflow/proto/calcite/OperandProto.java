@@ -247,10 +247,19 @@ public final class OperandProto {
         com.google.protobuf.MessageOrBuilder {
 
       /**
-       * <code>int32 index = 1;</code>
-       * @return The index.
+       * <code>.dataflow.calcite.Operand index_operand = 1;</code>
+       * @return Whether the indexOperand field is set.
        */
-      int getIndex();
+      boolean hasIndexOperand();
+      /**
+       * <code>.dataflow.calcite.Operand index_operand = 1;</code>
+       * @return The indexOperand.
+       */
+      io.activej.dataflow.proto.calcite.OperandProto.Operand getIndexOperand();
+      /**
+       * <code>.dataflow.calcite.Operand index_operand = 1;</code>
+       */
+      io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder getIndexOperandOrBuilder();
     }
     /**
      * Protobuf type {@code dataflow.calcite.Operand.RecordField}
@@ -297,9 +306,17 @@ public final class OperandProto {
               case 0:
                 done = true;
                 break;
-              case 8: {
+              case 10: {
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder subBuilder = null;
+                if (indexOperand_ != null) {
+                  subBuilder = indexOperand_.toBuilder();
+                }
+                indexOperand_ = input.readMessage(io.activej.dataflow.proto.calcite.OperandProto.Operand.parser(), extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom(indexOperand_);
+                  indexOperand_ = subBuilder.buildPartial();
+                }
 
-                index_ = input.readInt32();
                 break;
               }
               default: {
@@ -334,15 +351,30 @@ public final class OperandProto {
                 io.activej.dataflow.proto.calcite.OperandProto.Operand.RecordField.class, io.activej.dataflow.proto.calcite.OperandProto.Operand.RecordField.Builder.class);
       }
 
-      public static final int INDEX_FIELD_NUMBER = 1;
-      private int index_;
+      public static final int INDEX_OPERAND_FIELD_NUMBER = 1;
+      private io.activej.dataflow.proto.calcite.OperandProto.Operand indexOperand_;
       /**
-       * <code>int32 index = 1;</code>
-       * @return The index.
+       * <code>.dataflow.calcite.Operand index_operand = 1;</code>
+       * @return Whether the indexOperand field is set.
        */
       @java.lang.Override
-      public int getIndex() {
-        return index_;
+      public boolean hasIndexOperand() {
+        return indexOperand_ != null;
+      }
+      /**
+       * <code>.dataflow.calcite.Operand index_operand = 1;</code>
+       * @return The indexOperand.
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.OperandProto.Operand getIndexOperand() {
+        return indexOperand_ == null ? io.activej.dataflow.proto.calcite.OperandProto.Operand.getDefaultInstance() : indexOperand_;
+      }
+      /**
+       * <code>.dataflow.calcite.Operand index_operand = 1;</code>
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder getIndexOperandOrBuilder() {
+        return getIndexOperand();
       }
 
       private byte memoizedIsInitialized = -1;
@@ -359,8 +391,8 @@ public final class OperandProto {
       @java.lang.Override
       public void writeTo(com.google.protobuf.CodedOutputStream output)
                           throws java.io.IOException {
-        if (index_ != 0) {
-          output.writeInt32(1, index_);
+        if (indexOperand_ != null) {
+          output.writeMessage(1, getIndexOperand());
         }
         unknownFields.writeTo(output);
       }
@@ -371,9 +403,9 @@ public final class OperandProto {
         if (size != -1) return size;
 
         size = 0;
-        if (index_ != 0) {
+        if (indexOperand_ != null) {
           size += com.google.protobuf.CodedOutputStream
-            .computeInt32Size(1, index_);
+            .computeMessageSize(1, getIndexOperand());
         }
         size += unknownFields.getSerializedSize();
         memoizedSize = size;
@@ -390,8 +422,11 @@ public final class OperandProto {
         }
         io.activej.dataflow.proto.calcite.OperandProto.Operand.RecordField other = (io.activej.dataflow.proto.calcite.OperandProto.Operand.RecordField) obj;
 
-        if (getIndex()
-            != other.getIndex()) return false;
+        if (hasIndexOperand() != other.hasIndexOperand()) return false;
+        if (hasIndexOperand()) {
+          if (!getIndexOperand()
+              .equals(other.getIndexOperand())) return false;
+        }
         if (!unknownFields.equals(other.unknownFields)) return false;
         return true;
       }
@@ -403,8 +438,10 @@ public final class OperandProto {
         }
         int hash = 41;
         hash = (19 * hash) + getDescriptor().hashCode();
-        hash = (37 * hash) + INDEX_FIELD_NUMBER;
-        hash = (53 * hash) + getIndex();
+        if (hasIndexOperand()) {
+          hash = (37 * hash) + INDEX_OPERAND_FIELD_NUMBER;
+          hash = (53 * hash) + getIndexOperand().hashCode();
+        }
         hash = (29 * hash) + unknownFields.hashCode();
         memoizedHashCode = hash;
         return hash;
@@ -538,8 +575,12 @@ public final class OperandProto {
         @java.lang.Override
         public Builder clear() {
           super.clear();
-          index_ = 0;
-
+          if (indexOperandBuilder_ == null) {
+            indexOperand_ = null;
+          } else {
+            indexOperand_ = null;
+            indexOperandBuilder_ = null;
+          }
           return this;
         }
 
@@ -566,7 +607,11 @@ public final class OperandProto {
         @java.lang.Override
         public io.activej.dataflow.proto.calcite.OperandProto.Operand.RecordField buildPartial() {
           io.activej.dataflow.proto.calcite.OperandProto.Operand.RecordField result = new io.activej.dataflow.proto.calcite.OperandProto.Operand.RecordField(this);
-          result.index_ = index_;
+          if (indexOperandBuilder_ == null) {
+            result.indexOperand_ = indexOperand_;
+          } else {
+            result.indexOperand_ = indexOperandBuilder_.build();
+          }
           onBuilt();
           return result;
         }
@@ -615,8 +660,8 @@ public final class OperandProto {
 
         public Builder mergeFrom(io.activej.dataflow.proto.calcite.OperandProto.Operand.RecordField other) {
           if (other == io.activej.dataflow.proto.calcite.OperandProto.Operand.RecordField.getDefaultInstance()) return this;
-          if (other.getIndex() != 0) {
-            setIndex(other.getIndex());
+          if (other.hasIndexOperand()) {
+            mergeIndexOperand(other.getIndexOperand());
           }
           this.mergeUnknownFields(other.unknownFields);
           onChanged();
@@ -647,35 +692,123 @@ public final class OperandProto {
           return this;
         }
 
-        private int index_ ;
+        private io.activej.dataflow.proto.calcite.OperandProto.Operand indexOperand_;
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.calcite.OperandProto.Operand, io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder, io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder> indexOperandBuilder_;
         /**
-         * <code>int32 index = 1;</code>
-         * @return The index.
+         * <code>.dataflow.calcite.Operand index_operand = 1;</code>
+         * @return Whether the indexOperand field is set.
          */
-        @java.lang.Override
-        public int getIndex() {
-          return index_;
+        public boolean hasIndexOperand() {
+          return indexOperandBuilder_ != null || indexOperand_ != null;
         }
         /**
-         * <code>int32 index = 1;</code>
-         * @param value The index to set.
-         * @return This builder for chaining.
+         * <code>.dataflow.calcite.Operand index_operand = 1;</code>
+         * @return The indexOperand.
          */
-        public Builder setIndex(int value) {
-          
-          index_ = value;
-          onChanged();
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand getIndexOperand() {
+          if (indexOperandBuilder_ == null) {
+            return indexOperand_ == null ? io.activej.dataflow.proto.calcite.OperandProto.Operand.getDefaultInstance() : indexOperand_;
+          } else {
+            return indexOperandBuilder_.getMessage();
+          }
+        }
+        /**
+         * <code>.dataflow.calcite.Operand index_operand = 1;</code>
+         */
+        public Builder setIndexOperand(io.activej.dataflow.proto.calcite.OperandProto.Operand value) {
+          if (indexOperandBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            indexOperand_ = value;
+            onChanged();
+          } else {
+            indexOperandBuilder_.setMessage(value);
+          }
+
           return this;
         }
         /**
-         * <code>int32 index = 1;</code>
-         * @return This builder for chaining.
+         * <code>.dataflow.calcite.Operand index_operand = 1;</code>
          */
-        public Builder clearIndex() {
-          
-          index_ = 0;
-          onChanged();
+        public Builder setIndexOperand(
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder builderForValue) {
+          if (indexOperandBuilder_ == null) {
+            indexOperand_ = builderForValue.build();
+            onChanged();
+          } else {
+            indexOperandBuilder_.setMessage(builderForValue.build());
+          }
+
           return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand index_operand = 1;</code>
+         */
+        public Builder mergeIndexOperand(io.activej.dataflow.proto.calcite.OperandProto.Operand value) {
+          if (indexOperandBuilder_ == null) {
+            if (indexOperand_ != null) {
+              indexOperand_ =
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.newBuilder(indexOperand_).mergeFrom(value).buildPartial();
+            } else {
+              indexOperand_ = value;
+            }
+            onChanged();
+          } else {
+            indexOperandBuilder_.mergeFrom(value);
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand index_operand = 1;</code>
+         */
+        public Builder clearIndexOperand() {
+          if (indexOperandBuilder_ == null) {
+            indexOperand_ = null;
+            onChanged();
+          } else {
+            indexOperand_ = null;
+            indexOperandBuilder_ = null;
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand index_operand = 1;</code>
+         */
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder getIndexOperandBuilder() {
+          
+          onChanged();
+          return getIndexOperandFieldBuilder().getBuilder();
+        }
+        /**
+         * <code>.dataflow.calcite.Operand index_operand = 1;</code>
+         */
+        public io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder getIndexOperandOrBuilder() {
+          if (indexOperandBuilder_ != null) {
+            return indexOperandBuilder_.getMessageOrBuilder();
+          } else {
+            return indexOperand_ == null ?
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.getDefaultInstance() : indexOperand_;
+          }
+        }
+        /**
+         * <code>.dataflow.calcite.Operand index_operand = 1;</code>
+         */
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.calcite.OperandProto.Operand, io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder, io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder> 
+            getIndexOperandFieldBuilder() {
+          if (indexOperandBuilder_ == null) {
+            indexOperandBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                io.activej.dataflow.proto.calcite.OperandProto.Operand, io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder, io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder>(
+                    getIndexOperand(),
+                    getParentForChildren(),
+                    isClean());
+            indexOperand_ = null;
+          }
+          return indexOperandBuilder_;
         }
         @java.lang.Override
         public final Builder setUnknownFields(
@@ -6511,7 +6644,7 @@ public final class OperandProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\roperand.proto\022\020dataflow.calcite\"\326\006\n\007Op" +
+      "\n\roperand.proto\022\020dataflow.calcite\"\371\006\n\007Op" +
       "erand\022=\n\014record_field\030\001 \001(\0132%.dataflow.c" +
       "alcite.Operand.RecordFieldH\000\0222\n\006scalar\030\002" +
       " \001(\0132 .dataflow.calcite.Operand.ScalarH\000" +
@@ -6519,22 +6652,23 @@ public final class OperandProto {
       "rand.MapGetH\000\0225\n\010list_get\030\004 \001(\0132!.datafl" +
       "ow.calcite.Operand.ListGetH\000\0227\n\tfield_ge" +
       "t\030\005 \001(\0132\".dataflow.calcite.Operand.Field" +
-      "GetH\000\032\034\n\013RecordField\022\r\n\005index\030\001 \001(\005\032\273\001\n\006" +
-      "Scalar\0225\n\004null\030\001 \001(\0132%.dataflow.calcite." +
-      "Operand.Scalar.NoneH\000\022\021\n\007integer\030\002 \001(\005H\000" +
-      "\022\016\n\004long\030\003 \001(\003H\000\022\017\n\005float\030\004 \001(\002H\000\022\020\n\006dou" +
-      "ble\030\005 \001(\001H\000\022\021\n\007boolean\030\006 \001(\010H\000\022\020\n\006string" +
-      "\030\007 \001(\tH\000\032\006\n\004NoneB\007\n\005value\032h\n\006MapGet\022.\n\013m" +
-      "ap_operand\030\001 \001(\0132\031.dataflow.calcite.Oper" +
-      "and\022.\n\013key_operand\030\002 \001(\0132\031.dataflow.calc" +
-      "ite.Operand\032l\n\007ListGet\022/\n\014list_operand\030\001" +
-      " \001(\0132\031.dataflow.calcite.Operand\0220\n\rindex" +
-      "_operand\030\002 \001(\0132\031.dataflow.calcite.Operan" +
-      "d\032t\n\010FieldGet\0221\n\016object_operand\030\001 \001(\0132\031." +
-      "dataflow.calcite.Operand\0225\n\022field_name_o" +
-      "perand\030\002 \001(\0132\031.dataflow.calcite.OperandB" +
-      "\t\n\007operandB3\n!io.activej.dataflow.proto." +
-      "calciteB\014OperandProtoP\000b\006proto3"
+      "GetH\000\032?\n\013RecordField\0220\n\rindex_operand\030\001 " +
+      "\001(\0132\031.dataflow.calcite.Operand\032\273\001\n\006Scala" +
+      "r\0225\n\004null\030\001 \001(\0132%.dataflow.calcite.Opera" +
+      "nd.Scalar.NoneH\000\022\021\n\007integer\030\002 \001(\005H\000\022\016\n\004l" +
+      "ong\030\003 \001(\003H\000\022\017\n\005float\030\004 \001(\002H\000\022\020\n\006double\030\005" +
+      " \001(\001H\000\022\021\n\007boolean\030\006 \001(\010H\000\022\020\n\006string\030\007 \001(" +
+      "\tH\000\032\006\n\004NoneB\007\n\005value\032h\n\006MapGet\022.\n\013map_op" +
+      "erand\030\001 \001(\0132\031.dataflow.calcite.Operand\022." +
+      "\n\013key_operand\030\002 \001(\0132\031.dataflow.calcite.O" +
+      "perand\032l\n\007ListGet\022/\n\014list_operand\030\001 \001(\0132" +
+      "\031.dataflow.calcite.Operand\0220\n\rindex_oper" +
+      "and\030\002 \001(\0132\031.dataflow.calcite.Operand\032t\n\010" +
+      "FieldGet\0221\n\016object_operand\030\001 \001(\0132\031.dataf" +
+      "low.calcite.Operand\0225\n\022field_name_operan" +
+      "d\030\002 \001(\0132\031.dataflow.calcite.OperandB\t\n\007op" +
+      "erandB3\n!io.activej.dataflow.proto.calci" +
+      "teB\014OperandProtoP\000b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -6551,7 +6685,7 @@ public final class OperandProto {
     internal_static_dataflow_calcite_Operand_RecordField_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_Operand_RecordField_descriptor,
-        new java.lang.String[] { "Index", });
+        new java.lang.String[] { "IndexOperand", });
     internal_static_dataflow_calcite_Operand_Scalar_descriptor =
       internal_static_dataflow_calcite_Operand_descriptor.getNestedTypes().get(1);
     internal_static_dataflow_calcite_Operand_Scalar_fieldAccessorTable = new

@@ -3,7 +3,6 @@ package io.activej.dataflow.calcite;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.util.Primitives;
 import io.activej.common.Checks;
-import io.activej.dataflow.calcite.function.MapGetFunction;
 import io.activej.record.Record;
 import io.activej.record.RecordProjection;
 import io.activej.record.RecordScheme;
@@ -11,14 +10,12 @@ import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
 import io.activej.serializer.annotations.SerializeClass;
 import io.activej.serializer.annotations.SerializeNullable;
+import org.apache.calcite.rex.RexDynamicParam;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
@@ -26,7 +23,6 @@ import java.util.stream.Collectors;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.dataflow.calcite.function.ListGetFunction.UNKNOWN_INDEX;
 
 public final class RecordProjectionFn implements Function<Record, Record> {
 	private static final boolean CHECK = Checks.isEnabled(RecordProjectionFn.class);
@@ -55,6 +51,14 @@ public final class RecordProjectionFn implements Function<Record, Record> {
 		return projection.apply(record);
 	}
 
+	public RecordProjectionFn materialize(List<Object> params) {
+		return new RecordProjectionFn(
+				fieldProjections.stream()
+						.map(fieldProjection -> fieldProjection.materialize(params))
+						.toList()
+		);
+	}
+
 	public RecordScheme getToScheme(RecordScheme original, BiFunction<String, UnaryOperator<Expression>, @Nullable UnaryOperator<Expression>> mapping) {
 		RecordScheme schemeTo = RecordScheme.create(original.getClassLoader());
 		for (FieldProjection fieldProjection : fieldProjections) {
@@ -80,6 +84,10 @@ public final class RecordProjectionFn implements Function<Record, Record> {
 		Type getFieldType(RecordScheme original);
 
 		UnaryOperator<Expression> getMapping(RecordScheme original);
+
+		FieldProjection materialize(List<Object> params);
+
+		List<RexDynamicParam> getParams();
 	}
 
 	public static final class FieldProjectionAsIs implements FieldProjection {
@@ -105,6 +113,16 @@ public final class RecordProjectionFn implements Function<Record, Record> {
 			String fieldName = getFieldName(original);
 			return recordFrom -> original.property(recordFrom, fieldName);
 		}
+
+		@Override
+		public FieldProjection materialize(List<Object> params) {
+			return this;
+		}
+
+		@Override
+		public List<RexDynamicParam> getParams() {
+			return Collections.emptyList();
+		}
 	}
 
 	public static final class FieldProjectionMapGet implements FieldProjection {
@@ -113,21 +131,31 @@ public final class RecordProjectionFn implements Function<Record, Record> {
 		public final String fieldName;
 		@Serialize(order = 2)
 		public final int mapIndex;
-		@Serialize(order = 3)
-		@SerializeClass(subclasses = {Byte.class, Short.class, Integer.class, Long.class, Float.class, Double.class, Character.class, Boolean.class, String.class})
-		public final Object key;
+
+		private final Value key;
 
 		public FieldProjectionMapGet(@Deserialize("fieldName") String fieldName, @Deserialize("mapIndex") int mapIndex, @Deserialize("key") Object key) {
+			this(fieldName, mapIndex, Value.materializedValue(key));
+		}
+
+		public FieldProjectionMapGet(String fieldName, int mapIndex, Value key) {
 			this.fieldName = fieldName;
 			this.mapIndex = mapIndex;
 			this.key = key;
+		}
+
+		@Serialize(order = 3)
+		@SerializeClass(subclasses = {Byte.class, Short.class, Integer.class, Long.class, Float.class, Double.class, Character.class, Boolean.class, String.class})
+		@SerializeNullable
+		public Object getKey() {
+			return key.getValue();
 		}
 
 		@Override
 		public String getFieldName(RecordScheme original) {
 			if (fieldName != null) return fieldName;
 
-			return original.getField(mapIndex) + ".get(" + (key == MapGetFunction.UNKNOWN_KEY ? '?' : key) + ")";
+			return original.getField(mapIndex) + ".get(" + (!key.isMaterialized() ? '?' : key) + ")";
 		}
 
 		@Override
@@ -141,10 +169,22 @@ public final class RecordProjectionFn implements Function<Record, Record> {
 			Class<?> fieldType = (Class<?>) getFieldType(original);
 			return recordFrom -> {
 				Expression mapExpr = cast(original.property(recordFrom, mapField), Map.class);
-				Expression keyExpr = cast(value(key), Object.class);
+				Expression keyExpr = cast(value(key.getValue()), Object.class);
 				Expression lookupExpr = call(mapExpr, "get", keyExpr);
 				return cast(lookupExpr, fieldType);
 			};
+		}
+
+		@Override
+		public FieldProjection materialize(List<Object> params) {
+			return new FieldProjectionMapGet(fieldName, mapIndex, key.materialize(params));
+		}
+
+		@Override
+		public List<RexDynamicParam> getParams() {
+			return key.isMaterialized() ?
+					Collections.emptyList() :
+					Collections.singletonList(key.getDynamicParam());
 		}
 	}
 
@@ -154,20 +194,29 @@ public final class RecordProjectionFn implements Function<Record, Record> {
 		public final String fieldName;
 		@Serialize(order = 2)
 		public final int listIndex;
-		@Serialize(order = 3)
-		public final int index;
+		private final Value index;
 
 		public FieldProjectionListGet(@Deserialize("fieldName") String fieldName, @Deserialize("listIndex") int listIndex, @Deserialize("index") int index) {
+			this(fieldName, listIndex, Value.materializedValue(index));
+		}
+
+		public FieldProjectionListGet(String fieldName, int listIndex, Value index) {
 			this.fieldName = fieldName;
 			this.listIndex = listIndex;
 			this.index = index;
+		}
+
+		@Serialize(order = 3)
+		public int getIndex() {
+			//noinspection ConstantConditions
+			return (int) index.getValue();
 		}
 
 		@Override
 		public String getFieldName(RecordScheme original) {
 			if (fieldName != null) return fieldName;
 
-			return original.getField(listIndex) + ".get(" + (index == UNKNOWN_INDEX ? "?" : index)  + ")";
+			return original.getField(listIndex) + ".get(" + (!index.isMaterialized() ? "?" : index.getValue()) + ")";
 		}
 
 		@Override
@@ -179,22 +228,43 @@ public final class RecordProjectionFn implements Function<Record, Record> {
 		public UnaryOperator<Expression> getMapping(RecordScheme original) {
 			String listField = original.getField(listIndex);
 			return recordFrom -> let(cast(original.property(recordFrom, listField), List.class), list ->
-					ifGe(value(index), call(list, "size"),
+					ifGe(value(index.getValue()), call(list, "size"),
 							nullRef(Object.class),
-							call(list, "get", value(index))));
+							call(list, "get", value(index.getValue()))));
+		}
+
+		@Override
+		public FieldProjection materialize(List<Object> params) {
+			return new FieldProjectionListGet(fieldName, listIndex, index.materialize(params));
+		}
+
+		@Override
+		public List<RexDynamicParam> getParams() {
+			return index.isMaterialized() ?
+					Collections.emptyList() :
+					Collections.singletonList(index.getDynamicParam());
 		}
 	}
 
 	public static final class FieldProjectionConstant implements FieldProjection {
 		@Serialize(order = 1)
 		public final String fieldName;
-		@Serialize(order = 2)
-		@SerializeClass(subclasses = {Byte.class, Short.class, Integer.class, Long.class, Float.class, Double.class, Character.class, Boolean.class, String.class})
-		public final Object constant;
+
+		private final Value constant;
 
 		public FieldProjectionConstant(@Deserialize("fieldName") String fieldName, @Deserialize("constant") Object constant) {
+			this(fieldName, Value.materializedValue(constant));
+		}
+
+		public FieldProjectionConstant(String fieldName, Value constant) {
 			this.fieldName = fieldName;
 			this.constant = constant;
+		}
+
+		@Serialize(order = 2)
+		@SerializeClass(subclasses = {Byte.class, Short.class, Integer.class, Long.class, Float.class, Double.class, Character.class, Boolean.class, String.class})
+		public Object getConstant() {
+			return constant;
 		}
 
 		@Override
@@ -209,7 +279,19 @@ public final class RecordProjectionFn implements Function<Record, Record> {
 
 		@Override
 		public UnaryOperator<Expression> getMapping(RecordScheme original) {
-			return $ -> value(constant);
+			return $ -> value(constant.getValue());
+		}
+
+		@Override
+		public FieldProjection materialize(List<Object> params) {
+			return new FieldProjectionConstant(fieldName, constant.materialize(params));
+		}
+
+		@Override
+		public List<RexDynamicParam> getParams() {
+			return constant.isMaterialized() ?
+					Collections.emptyList() :
+					Collections.singletonList(constant.getDynamicParam());
 		}
 	}
 
@@ -260,6 +342,16 @@ public final class RecordProjectionFn implements Function<Record, Record> {
 			return pojo -> ifNull(pojo, nullRef((resultType)), cast(property(pojo, pojoFieldName), resultType));
 		}
 
+		@Override
+		public FieldProjection materialize(List<Object> params) {
+			return this;
+		}
+
+		@Override
+		public List<RexDynamicParam> getParams() {
+			return Collections.emptyList();
+		}
+
 		private boolean isTopLevel() {
 			return index != -1;
 		}
@@ -293,6 +385,21 @@ public final class RecordProjectionFn implements Function<Record, Record> {
 				}
 				return expression;
 			};
+		}
+
+		@Override
+		public FieldProjection materialize(List<Object> params) {
+			return new FieldProjectionChain(projections.stream()
+					.map(fieldProjection -> fieldProjection.materialize(params))
+					.toList());
+		}
+
+		@Override
+		public List<RexDynamicParam> getParams() {
+			return projections.stream()
+					.map(FieldProjection::getParams)
+					.flatMap(Collection::stream)
+					.toList();
 		}
 	}
 }

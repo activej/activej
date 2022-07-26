@@ -29,11 +29,12 @@ public class CalcitePlainTest extends AbstractCalciteTest {
 
 	@Override
 	protected QueryResult queryPrepared(String sql, ParamsSetter paramsSetter) {
-		server.close();
-		//noinspection ConstantConditions
-		Assume.assumeTrue("Prepared statements are not supported in plain calls", false);
+		return denyPreparedRequests();
+	}
 
-		throw new AssertionError();
+	@Override
+	protected List<QueryResult> queryPreparedRepeated(String sql, ParamsSetter... paramsSetters) {
+		return denyPreparedRequests();
 	}
 
 	private static QueryResult toQueryResult(List<Record> records) {
@@ -44,5 +45,13 @@ public class CalcitePlainTest extends AbstractCalciteTest {
 				records.stream()
 						.map(Record::toArray)
 						.toList());
+	}
+
+	private <T> T denyPreparedRequests() {
+		server.close();
+		//noinspection ConstantConditions
+		Assume.assumeTrue("Prepared statements are not supported in plain calls", false);
+
+		throw new AssertionError();
 	}
 }

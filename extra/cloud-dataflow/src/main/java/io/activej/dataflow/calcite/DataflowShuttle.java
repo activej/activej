@@ -43,12 +43,12 @@ import java.util.stream.Collectors;
 
 import static io.activej.common.Checks.*;
 import static io.activej.common.Utils.last;
-import static io.activej.dataflow.calcite.Utils.toOperand;
 
 public class DataflowShuttle extends RelShuttleImpl {
 	private final DefiningClassLoader classLoader;
 
-	private final Queue<Pair> currentQueue = new ArrayDeque<>();
+	private final Queue<UnmaterializedDataset> currentQueue = new ArrayDeque<>();
+	private final Set<RexDynamicParam> params = new TreeSet<>(Comparator.comparingInt(RexDynamicParam::getIndex));
 
 	public DataflowShuttle(DefiningClassLoader classLoader) {
 		this.classLoader = classLoader;
@@ -60,12 +60,12 @@ public class DataflowShuttle extends RelShuttleImpl {
 
 		RexProgram program = calc.getProgram();
 
-		Pair current = checkNotNull(currentQueue.poll());
+		UnmaterializedDataset current = checkNotNull(currentQueue.poll());
 
 		RexLocalRef condition = program.getCondition();
 		if (condition != null) {
 			RexNode conditionNode = program.expandLocalRef(condition);
-			current = new Pair(filter(current.dataset, conditionNode), current.scheme);
+			current = filter(current, conditionNode);
 		}
 
 		if (program.getInputRowType().equals(program.getOutputRowType())) {
@@ -80,16 +80,17 @@ public class DataflowShuttle extends RelShuttleImpl {
 
 		RecordProjectionFn projectionFn = new RecordProjectionFn(projections);
 
-		Dataset<Record> newDataset = Datasets.map(current.dataset, projectionFn, Record.class);
-		RecordScheme newScheme = projectionFn.getToScheme(current.scheme, ($1, $2) -> null);
-		current = new Pair(newDataset, newScheme);
+		UnmaterializedDataset finalCurrent = current;
 
-		currentQueue.add(current);
+		currentQueue.add(UnmaterializedDataset.of(
+				projectionFn.getToScheme(current.getScheme(), ($1, $2) -> null),
+				params -> Datasets.map(finalCurrent.materialize(params), projectionFn.materialize(params), Record.class)));
+
 		return result;
 	}
 
-	private static FieldProjection project(RexNode rexNode) {
-		return switch (rexNode.getKind()) {
+	private FieldProjection project(RexNode rexNode) {
+		FieldProjection fieldProjection = switch (rexNode.getKind()) {
 			case INPUT_REF -> new FieldProjectionAsIs(((RexInputRef) rexNode).getIndex());
 			case OTHER_FUNCTION -> {
 				RexCall rexCall = (RexCall) rexNode;
@@ -118,13 +119,17 @@ public class DataflowShuttle extends RelShuttleImpl {
 			default -> throw new IllegalArgumentException("Unsupported node kind: " + rexNode.getKind());
 		};
 
+		params.addAll(fieldProjection.getParams());
+
+		return fieldProjection;
+
 	}
 
 	@Override
 	public RelNode visit(TableScan scan) {
 		RelNode result = super.visit(scan);
 
-		Pair scanned = scan(scan);
+		UnmaterializedDataset scanned = scan(scan);
 
 		currentQueue.add(scanned);
 		return result;
@@ -134,9 +139,9 @@ public class DataflowShuttle extends RelShuttleImpl {
 	public RelNode visit(LogicalFilter filter) {
 		RelNode result = super.visit(filter);
 
-		Pair current = checkNotNull(currentQueue.poll());
+		UnmaterializedDataset current = checkNotNull(currentQueue.poll());
 
-		Pair newResult = new Pair(filter(current.dataset, filter.getCondition()), current.scheme);
+		UnmaterializedDataset newResult = filter(current, filter.getCondition());
 
 		currentQueue.add(newResult);
 		return result;
@@ -146,13 +151,12 @@ public class DataflowShuttle extends RelShuttleImpl {
 	public RelNode visit(LogicalJoin join) {
 		RelNode result = super.visit(join);
 
-		Pair left = checkNotNull(currentQueue.poll());
-		Pair right = checkNotNull(currentQueue.poll());
+		UnmaterializedDataset left = checkNotNull(currentQueue.poll());
+		UnmaterializedDataset right = checkNotNull(currentQueue.poll());
 
-		Dataset<Record> joined = join(join, left.dataset, right.dataset, getJoinKeyType(join));
+		UnmaterializedDataset joined = join(join, left, right, getJoinKeyType(join));
 
-		Pair newResult = new Pair(joined, RecordInnerJoiner.createScheme(left.scheme, right.scheme));
-		currentQueue.add(newResult);
+		currentQueue.add(joined);
 		return result;
 	}
 
@@ -160,7 +164,7 @@ public class DataflowShuttle extends RelShuttleImpl {
 	public RelNode visit(LogicalAggregate aggregate) {
 		RelNode result = super.visit(aggregate);
 
-		Pair current = checkNotNull(currentQueue.poll());
+		UnmaterializedDataset current = checkNotNull(currentQueue.poll());
 
 		List<AggregateCall> callList = aggregate.getAggCallList();
 		List<FieldReducer<?, ?, ?>> fieldReducers = new ArrayList<>(callList.size());
@@ -196,15 +200,18 @@ public class DataflowShuttle extends RelShuttleImpl {
 			fieldReducers.add(fieldReducer);
 		}
 
-		LocallySortedDataset<RecordScheme, Record> sorted = Datasets.castToSorted(current.dataset, RecordScheme.class, new RecordSchemeFunction(), new EqualObjectComparator<>());
-
 		RecordReducer recordReducer = new RecordReducer(fieldReducers);
-		InputToOutput<RecordScheme, Record, Record, Object[]> reducer = new InputToOutput<>(recordReducer);
 
-		LocallySortedDataset<RecordScheme, Record> reduced = Datasets.localReduce(sorted, reducer, Record.class, new RecordSchemeFunction());
+		currentQueue.add(UnmaterializedDataset.of(
+				recordReducer.createScheme(current.getScheme()),
+				params -> {
+					Dataset<Record> materialized = current.materialize(params);
+					LocallySortedDataset<RecordScheme, Record> sorted = Datasets.castToSorted(materialized, RecordScheme.class, new RecordSchemeFunction(), new EqualObjectComparator<>());
 
-		Pair newResult = new Pair(reduced, recordReducer.createScheme(current.scheme));
-		currentQueue.add(newResult);
+					InputToOutput<RecordScheme, Record, Record, Object[]> reducer = new InputToOutput<>(recordReducer);
+
+					return Datasets.localReduce(sorted, reducer, Record.class, new RecordSchemeFunction());
+				}));
 
 		return result;
 	}
@@ -253,11 +260,11 @@ public class DataflowShuttle extends RelShuttleImpl {
 	public RelNode visit(LogicalSort sort) {
 		RelNode result = super.visit(sort);
 
-		Pair current = checkNotNull(currentQueue.poll());
+		UnmaterializedDataset current = checkNotNull(currentQueue.poll());
 
-		Dataset<Record> sorted = sort(sort, current.dataset);
+		UnmaterializedDataset sorted = sort(sort, current);
 
-		currentQueue.add(new Pair(sorted, current.scheme));
+		currentQueue.add(sorted);
 		return result;
 	}
 
@@ -271,7 +278,7 @@ public class DataflowShuttle extends RelShuttleImpl {
 		throw new ToDoException();
 	}
 
-	private static <T> Pair scan(TableScan scan) {
+	private static <T> UnmaterializedDataset scan(TableScan scan) {
 		RelOptTable table = scan.getTable();
 		List<String> names = table.getQualifiedName();
 
@@ -282,7 +289,7 @@ public class DataflowShuttle extends RelShuttleImpl {
 		Dataset<T> dataset = Datasets.datasetOfId(last(names).toLowerCase(), dataflowTable.getType());
 		RecordFunction<T> mapper = dataflowTable.getRecordFunction();
 
-		return new Pair(Datasets.map(dataset, mapper, Record.class), mapper.getScheme());
+		return UnmaterializedDataset.of(mapper.getScheme(), $ -> Datasets.map(dataset, mapper, Record.class));
 	}
 
 	private static <T extends Comparable<T>> Class<? extends T> getJoinKeyType(LogicalJoin join) {
@@ -305,7 +312,7 @@ public class DataflowShuttle extends RelShuttleImpl {
 		throw new IllegalArgumentException("Unsupported type: " + condition.getKind());
 	}
 
-	private static Dataset<Record> sort(LogicalSort sort, Dataset<Record> dataset) {
+	private static UnmaterializedDataset sort(LogicalSort sort, UnmaterializedDataset dataset) {
 		List<RelDataTypeField> fieldList = sort.getRowType().getFieldList();
 		List<FieldSort> sorts = new ArrayList<>(fieldList.size());
 		for (RelFieldCollation fieldCollation : sort.getCollation().getFieldCollations()) {
@@ -322,10 +329,13 @@ public class DataflowShuttle extends RelShuttleImpl {
 
 		RecordComparator comparator = new RecordComparator(sorts);
 
-		return Datasets.localSort(dataset, Record.class, Function.identity(), comparator);
+		return UnmaterializedDataset.of(
+				dataset.getScheme(),
+				params -> Datasets.localSort(dataset.materialize(params), Record.class, Function.identity(), comparator)
+		);
 	}
 
-	private static <K extends Comparable<K>> Dataset<Record> join(LogicalJoin join, Dataset<Record> left, Dataset<Record> right, Class<K> keyClass) {
+	private static <K extends Comparable<K>> UnmaterializedDataset join(LogicalJoin join, UnmaterializedDataset left, UnmaterializedDataset right, Class<K> keyClass) {
 		RexInputRef leftInputNode = (RexInputRef) ((RexCall) join.getCondition()).getOperands().get(0);
 		RexInputRef rightInputNode = (RexInputRef) ((RexCall) join.getCondition()).getOperands().get(1);
 
@@ -335,16 +345,21 @@ public class DataflowShuttle extends RelShuttleImpl {
 		RecordKeyFunction<K> leftKeyFunction = new RecordKeyFunction<>(leftIndex);
 		RecordKeyFunction<K> rightKeyFunction = new RecordKeyFunction<>(rightIndex);
 
-		SortedDataset<K, Record> sortedLeft = Datasets.castToSorted(left, keyClass, leftKeyFunction, Comparator.naturalOrder());
-		SortedDataset<K, Record> sortedRight = Datasets.castToSorted(right, keyClass, rightKeyFunction, Comparator.naturalOrder());
+		return UnmaterializedDataset.of(
+				RecordInnerJoiner.createScheme(left.getScheme(), right.getScheme()),
+				params -> {
 
-		return Datasets.join(
-				sortedLeft,
-				sortedRight,
-				new RecordInnerJoiner<>(),
-				Record.class,
-				leftKeyFunction
-		);
+					SortedDataset<K, Record> sortedLeft = Datasets.castToSorted(left.materialize(params), keyClass, leftKeyFunction, Comparator.naturalOrder());
+					SortedDataset<K, Record> sortedRight = Datasets.castToSorted(right.materialize(params), keyClass, rightKeyFunction, Comparator.naturalOrder());
+
+					return Datasets.join(
+							sortedLeft,
+							sortedRight,
+							new RecordInnerJoiner<>(),
+							Record.class,
+							leftKeyFunction
+					);
+				});
 	}
 
 	@Override
@@ -357,27 +372,25 @@ public class DataflowShuttle extends RelShuttleImpl {
 		return super.visit(other);
 	}
 
-	public RecordScheme getScheme() {
-		return getResult().scheme;
-	}
-
-	public Dataset<Record> getDataset() {
-		return getResult().dataset;
-	}
-
-	private Pair getResult() {
+	public UnmaterializedDataset getUnmaterializedDataset() {
 		checkState(currentQueue.size() == 1);
 
 		return currentQueue.peek();
 	}
 
-	private Dataset<Record> filter(Dataset<Record> dataset, RexNode conditionNode) {
+	public List<RexDynamicParam> getParameters() {
+		checkState(currentQueue.size() == 1);
+
+		return new ArrayList<>(params);
+	}
+
+	private UnmaterializedDataset filter(UnmaterializedDataset dataset, RexNode conditionNode) {
 		SqlKind kind = conditionNode.getKind();
 
 		if (kind == SqlKind.LITERAL) {
 			RexLiteral literal = (RexLiteral) conditionNode;
 			if (literal.isAlwaysFalse()) {
-				dataset = Datasets.empty(dataset.valueType());
+				return UnmaterializedDataset.of(dataset.getScheme(), $ -> Datasets.empty(Record.class));
 			} else //noinspection StatementWithEmptyBody
 				if (literal.isAlwaysTrue()) {
 					// Do nothing
@@ -386,7 +399,9 @@ public class DataflowShuttle extends RelShuttleImpl {
 				}
 		} else if (conditionNode instanceof RexCall call) {
 			WherePredicate wherePredicate = toWherePredicate(call);
-			dataset = Datasets.filter(dataset, wherePredicate);
+			return UnmaterializedDataset.of(
+					dataset.getScheme(),
+					params -> Datasets.filter(dataset.materialize(params), wherePredicate.materialize(params)));
 		} else {
 			throw new IllegalArgumentException("Unknown condition: " + kind);
 		}
@@ -429,7 +444,29 @@ public class DataflowShuttle extends RelShuttleImpl {
 		};
 	}
 
-	private record Pair(Dataset<Record> dataset, RecordScheme scheme) {
+	private Operand toOperand(RexNode conditionNode, DefiningClassLoader classLoader) {
+		Operand operand = Utils.toOperand(conditionNode, classLoader);
+		params.addAll(operand.getParams());
+		return operand;
+	}
 
+	public interface UnmaterializedDataset {
+		Dataset<Record> materialize(List<Object> params);
+
+		RecordScheme getScheme();
+
+		static UnmaterializedDataset of(RecordScheme scheme, Function<List<Object>, Dataset<Record>> materializeFn) {
+			return new UnmaterializedDataset() {
+				@Override
+				public Dataset<Record> materialize(List<Object> params) {
+					return materializeFn.apply(params);
+				}
+
+				@Override
+				public RecordScheme getScheme() {
+					return scheme;
+				}
+			};
+		}
 	}
 }

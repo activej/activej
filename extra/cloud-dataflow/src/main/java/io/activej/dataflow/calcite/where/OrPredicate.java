@@ -4,7 +4,12 @@ import io.activej.record.Record;
 
 import java.util.List;
 
-public record OrPredicate(List<WherePredicate> predicates) implements WherePredicate {
+public final class OrPredicate implements WherePredicate {
+	private final List<WherePredicate> predicates;
+
+	public OrPredicate(List<WherePredicate> predicates) {
+		this.predicates = predicates;
+	}
 
 	@Override
 	public boolean test(Record record) {
@@ -14,4 +19,22 @@ public record OrPredicate(List<WherePredicate> predicates) implements WherePredi
 		return false;
 	}
 
+	@Override
+	public WherePredicate materialize(List<Object> params) {
+		return new OrPredicate(
+				predicates.stream()
+						.map(wherePredicate -> wherePredicate.materialize(params))
+						.toList()
+		);
+	}
+
+	public List<WherePredicate> getPredicates() {
+		return predicates;
+	}
+
+	@Override
+	public String toString() {
+		return "OrPredicate[" +
+				"predicates=" + predicates + ']';
+	}
 }

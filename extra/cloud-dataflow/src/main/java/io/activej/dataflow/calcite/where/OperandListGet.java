@@ -1,6 +1,8 @@
 package io.activej.dataflow.calcite.where;
 
+import io.activej.common.Utils;
 import io.activej.record.Record;
+import org.apache.calcite.rex.RexDynamicParam;
 
 import java.util.List;
 
@@ -21,6 +23,19 @@ public final class OperandListGet implements Operand {
 		if (list == null || index == null || list.size() <= index) return null;
 
 		return list.get(index);
+	}
+
+	@Override
+	public Operand materialize(List<Object> params) {
+		return new OperandListGet(
+				listOperand.materialize(params),
+				indexOperand.materialize(params)
+		);
+	}
+
+	@Override
+	public List<RexDynamicParam> getParams() {
+		return Utils.concat(listOperand.getParams(), indexOperand.getParams());
 	}
 
 	public Operand getListOperand() {
