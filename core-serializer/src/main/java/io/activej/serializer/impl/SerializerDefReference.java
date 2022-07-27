@@ -58,13 +58,13 @@ public final class SerializerDefReference extends AbstractSerializerDef implemen
 	}
 
 	@Override
-	public Map<Object, Expression> getEncoderFinalizer() {
+	public Map<Object, Expression> getEncoderInitializer() {
 		return singletonMap(SerializerDefReference.class,
 				call(cast(call(staticField(SerializerDefReference.class, "MAP_ENCODE"), "get"), IdentityHashMap.class), "clear"));
 	}
 
 	@Override
-	public Map<Object, Expression> getDecoderFinalizer() {
+	public Map<Object, Expression> getDecoderInitializer() {
 		return singletonMap(SerializerDefReference.class,
 				call(cast(call(staticField(SerializerDefReference.class, "MAP_DECODE"), "get"), HashMap.class), "clear"));
 	}
