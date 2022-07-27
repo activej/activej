@@ -7,18 +7,24 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 final class FrameConsumer extends AbstractStreamConsumer<Record> {
-	private static final int DEFAULT_PREFETCH_COUNT = 100;
+	private static final int DEFAULT_PREFETCH_SIZE = 100;
+
+	private static final Record EOS_RECORD = new Record(null) {};
 
 	private final int columnSize;
 
-	private List<Record> records = new ArrayList<>(DEFAULT_PREFETCH_COUNT);
-	private List<Record> newRecords = new ArrayList<>(DEFAULT_PREFETCH_COUNT);
+	private final ConcurrentLinkedQueue<Record> recordQueue = new ConcurrentLinkedQueue<>();
 
 	private @Nullable Exception error;
 
-	private int prefetchCount = DEFAULT_PREFETCH_COUNT;
+	private final AtomicInteger prefetchSize = new AtomicInteger(DEFAULT_PREFETCH_SIZE);
+	private final AtomicBoolean suspended = new AtomicBoolean(false);
+
 	private int taken;
 	private boolean done;
 	private boolean doneSent;
@@ -27,13 +33,13 @@ final class FrameConsumer extends AbstractStreamConsumer<Record> {
 		this.columnSize = columnSize;
 	}
 
-	public synchronized Frame fetch(long offset, int fetchMaxRowCount) {
+	public Frame fetch(long offset, int fetchMaxRowCount) {
 		if (error != null) {
 			throw new RuntimeException(error);
 		}
 
 		if (offset != taken) {
-			System.out.println("Offset: " + offset + ", taken: " + taken);
+			throw new RuntimeException("Cannot return less records than already taken");
 		}
 		if (done) {
 			if (doneSent) {
@@ -42,17 +48,32 @@ final class FrameConsumer extends AbstractStreamConsumer<Record> {
 			doneSent = true;
 		}
 
-		taken += records.size();
-		prefetchCount = fetchMaxRowCount;
-
-		List<Record> records = new ArrayList<>(this.records);
-		this.records = newRecords;
-		newRecords = new ArrayList<>(prefetchCount);
-
-		List<Object> rows = new ArrayList<>(records.size());
-		for (Record record : records) {
-			rows.add(recordToRow(record));
+		if (fetchMaxRowCount != -1) {
+			prefetchSize.set(fetchMaxRowCount);
 		}
+
+		List<Object> rows = new ArrayList<>();
+
+		while (fetchMaxRowCount != 0) {
+			Record record = recordQueue.poll();
+			if (record == null) {
+				if (suspended.compareAndSet(true, false)) {
+					eventloop.submit(this::doResume);
+				}
+				break;
+			}
+			if (record == EOS_RECORD) {
+				done = true;
+				break;
+			}
+
+			Object[] row = recordToRow(record);
+			rows.add(row);
+
+			fetchMaxRowCount--;
+		}
+
+		taken += rows.size();
 
 		return Frame.create(offset, done, rows);
 	}
@@ -69,20 +90,19 @@ final class FrameConsumer extends AbstractStreamConsumer<Record> {
 
 	private void doResume() {
 		resume(item -> {
-			synchronized (this) {
-				if (records.size() > prefetchCount) {
-					newRecords.add(item);
-					suspend();
-				} else {
-					records.add(item);
-				}
+			recordQueue.add(item);
+
+			if (recordQueue.size() >= prefetchSize.get()) {
+				suspend();
+				suspended.set(true);
 			}
 		});
 	}
 
 	@Override
 	protected void onEndOfStream() {
-		done = true;
+		recordQueue.add(EOS_RECORD);
+		acknowledge();
 	}
 
 	private Object[] recordToRow(Record record) {
