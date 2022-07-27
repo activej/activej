@@ -31,6 +31,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.LongStream;
 
 import static io.activej.common.Checks.checkState;
 import static io.activej.dataflow.helper.StreamMergeSorterStorageStub.FACTORY_STUB;
@@ -58,6 +59,7 @@ public abstract class AbstractCalciteTest {
 	public static final String DEPARTMENT_TABLE_NAME = "department";
 	public static final String REGISTRY_TABLE_NAME = "registry";
 	public static final String USER_PROFILES_TABLE_NAME = "profiles";
+	public static final String LARGE_TABLE_NAME = "large_table";
 
 	protected static final List<Student> STUDENT_LIST = List.of(
 			new Student(1, "John", "Doe", 1),
@@ -80,8 +82,11 @@ public abstract class AbstractCalciteTest {
 			new UserProfile("user2", new UserProfilePojo("test2", 2), Map.of(
 					2, new UserProfileIntent(2, "test2", TYPE_2, new Limits(new float[]{4.3f, 2.1f}, System.currentTimeMillis())),
 					3, new UserProfileIntent(3, "test3", TYPE_1, new Limits(new float[]{6.5f, 8.7f}, System.currentTimeMillis()))),
-					System.currentTimeMillis())
-	);
+					System.currentTimeMillis()));
+	protected static final List<Large> LARGE_LIST = LongStream.range(0, 1_000_000)
+			.mapToObj(Large::new)
+			.toList();
+
 
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
@@ -108,7 +113,8 @@ public abstract class AbstractCalciteTest {
 						Map.of(STUDENT_TABLE_NAME, DataflowTable.create(Student.class, new StudentToRecord(), ofObject(StudentToRecord::new)),
 								DEPARTMENT_TABLE_NAME, DataflowTable.create(Department.class, new DepartmentToRecord(), ofObject(DepartmentToRecord::new)),
 								REGISTRY_TABLE_NAME, DataflowTable.create(Registry.class, new RegistryToRecord(), ofObject(RegistryToRecord::new)),
-								USER_PROFILES_TABLE_NAME, DataflowTable.create(UserProfile.class, new UserProfileToRecord(), ofObject(UserProfileToRecord::new)))))
+								USER_PROFILES_TABLE_NAME, DataflowTable.create(UserProfile.class, new UserProfileToRecord(), ofObject(UserProfileToRecord::new)),
+								LARGE_TABLE_NAME, DataflowTable.create(Large.class, new LargeToRecord(), ofObject(LargeToRecord::new)))))
 				.build();
 
 		Module clientModule = Modules.combine(common, new CalciteModule());
@@ -122,6 +128,7 @@ public abstract class AbstractCalciteTest {
 				.bind(datasetId(DEPARTMENT_TABLE_NAME)).toInstance(DEPARTMENT_LIST)
 				.bind(datasetId(REGISTRY_TABLE_NAME)).toInstance(REGISTRY_LIST)
 				.bind(datasetId(USER_PROFILES_TABLE_NAME)).toInstance(USER_PROFILES_LIST)
+				.bind(datasetId(LARGE_TABLE_NAME)).toInstance(LARGE_LIST)
 				.build()
 				.overrideWith(getAdditionalServerModule());
 
@@ -181,6 +188,10 @@ public abstract class AbstractCalciteTest {
 
 	@SerializeRecord
 	public record Limits(float[] buckets, long timestamp) {
+	}
+
+	@SerializeRecord
+	public record Large(long id) {
 	}
 
 	@Test
@@ -1182,10 +1193,10 @@ public abstract class AbstractCalciteTest {
 	@Test
 	public void testSelectPojoPrepared() {
 		QueryResult result = queryPrepared("""
-				SELECT pojo
-				FROM profiles
-				WHERE id = ?
-				""",
+						SELECT pojo
+						FROM profiles
+						WHERE id = ?
+						""",
 				stmt -> stmt.setString(1, "user1"));
 
 		assertSelectPojo(result);
@@ -1194,10 +1205,10 @@ public abstract class AbstractCalciteTest {
 	@Test
 	public void testSelectPojoPreparedRepeated() {
 		List<QueryResult> results = queryPreparedRepeated("""
-				SELECT pojo
-				FROM profiles
-				WHERE id = ?
-				""",
+						SELECT pojo
+						FROM profiles
+						WHERE id = ?
+						""",
 				stmt -> stmt.setString(1, "user1"),
 				stmt -> stmt.setString(1, "user2"));
 
@@ -1208,6 +1219,16 @@ public abstract class AbstractCalciteTest {
 
 		assertEquals(expected, results);
 	}
+
+	@Test
+	public void testSelectAllLarge() {
+		QueryResult result = query("SELECT * FROM large_table");
+
+		QueryResult expected = largeToQueryResult(LARGE_LIST);
+
+		assertEquals(expected, result);
+	}
+
 
 	private void assertSelectPojo(QueryResult result) {
 		QueryResult expected = new QueryResult(List.of("pojo"), List.<Object[]>of(new Object[]{new UserProfilePojo("test1", 1)}));
@@ -1370,6 +1391,22 @@ public abstract class AbstractCalciteTest {
 		}
 	}
 
+	public static final class LargeToRecord implements RecordFunction<Large> {
+		private final RecordScheme scheme = ofJavaRecord(Large.class);
+
+		@Override
+		public Record apply(Large large) {
+			Record record = scheme.record();
+			record.set("id", large.id);
+			return record;
+		}
+
+		@Override
+		public RecordScheme getScheme() {
+			return scheme;
+		}
+	}
+
 	private static QueryResult departmentsToQueryResult(List<Department> departments) {
 		List<String> columnNames = Arrays.asList("id", "departmentName");
 		List<Object[]> columnValues = new ArrayList<>(departments.size());
@@ -1387,6 +1424,17 @@ public abstract class AbstractCalciteTest {
 
 		for (Student student : students) {
 			columnValues.add(new Object[]{student.id, student.firstName, student.lastName, student.dept});
+		}
+
+		return new QueryResult(columnNames, columnValues);
+	}
+
+	private static QueryResult largeToQueryResult(List<Large> largeList) {
+		List<String> columnNames = List.of("id");
+		List<Object[]> columnValues = new ArrayList<>(largeList.size());
+
+		for (Large large : largeList) {
+			columnValues.add(new Object[]{large.id});
 		}
 
 		return new QueryResult(columnNames, columnValues);
