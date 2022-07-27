@@ -33,7 +33,9 @@ import static io.activej.serializer.impl.SerializerExpressions.*;
 import static java.util.Collections.singletonMap;
 
 public final class SerializerDefReference extends AbstractSerializerDef implements SerializerDef {
+	@SuppressWarnings("unused")
 	public static final ThreadLocal<IdentityHashMap<Object, Integer>> MAP_ENCODE = ThreadLocal.withInitial(IdentityHashMap::new);
+	@SuppressWarnings("unused")
 	public static final ThreadLocal<HashMap<Integer, Object>> MAP_DECODE = ThreadLocal.withInitial(HashMap::new);
 
 	private final SerializerDef serializer;
@@ -59,19 +61,27 @@ public final class SerializerDefReference extends AbstractSerializerDef implemen
 
 	@Override
 	public Map<Object, Expression> getEncoderInitializer() {
-		return singletonMap(SerializerDefReference.class,
-				call(cast(call(staticField(SerializerDefReference.class, "MAP_ENCODE"), "get"), IdentityHashMap.class), "clear"));
+		return clearMap(encodeMap());
+	}
+
+	@Override
+	public Map<Object, Expression> getEncoderFinalizer() {
+		return clearMap(encodeMap());
 	}
 
 	@Override
 	public Map<Object, Expression> getDecoderInitializer() {
-		return singletonMap(SerializerDefReference.class,
-				call(cast(call(staticField(SerializerDefReference.class, "MAP_DECODE"), "get"), HashMap.class), "clear"));
+		return clearMap(decodeMap());
+	}
+
+	@Override
+	public Map<Object, Expression> getDecoderFinalizer() {
+		return clearMap(decodeMap());
 	}
 
 	@Override
 	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-		return let(cast(call(staticField(SerializerDefReference.class, "MAP_ENCODE"), "get"), IdentityHashMap.class),
+		return let(encodeMap(),
 				map -> let(call(map, "get", value),
 						index -> ifThenElse(isNull(index),
 								sequence(
@@ -84,7 +94,7 @@ public final class SerializerDefReference extends AbstractSerializerDef implemen
 
 	@Override
 	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-		return let(cast(call(staticField(SerializerDefReference.class, "MAP_DECODE"), "get"), HashMap.class),
+		return let(decodeMap(),
 				map -> let(readVarInt(in),
 						index -> {
 							UnaryOperator<Expression> instanceInitializer = instance -> call(map, "put", cast(add(call(map, "size"), value(1)), Integer.class), instance);
@@ -99,4 +109,15 @@ public final class SerializerDefReference extends AbstractSerializerDef implemen
 						}));
 	}
 
+	private static Expression encodeMap() {
+		return cast(call(staticField(SerializerDefReference.class, "MAP_ENCODE"), "get"), Map.class);
+	}
+
+	private static Expression decodeMap() {
+		return cast(call(staticField(SerializerDefReference.class, "MAP_DECODE"), "get"), Map.class);
+	}
+
+	private static Map<Object, Expression> clearMap(Expression map) {
+		return singletonMap(SerializerDefReference.class, call(map, "clear"));
+	}
 }
