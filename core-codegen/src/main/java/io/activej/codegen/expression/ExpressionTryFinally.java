@@ -74,6 +74,6 @@ final class ExpressionTryFinally implements Expression {
 			return tryResult;
 		}
 
-		return ctx.unifyTypes(tryResult, finallyResult);
+		return finallyResult;
 	}
 }

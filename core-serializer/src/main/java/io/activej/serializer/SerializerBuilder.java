@@ -670,7 +670,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		if (initializers.isEmpty() && finalizers.isEmpty()) return body;
 		return finalizers.isEmpty() ?
 				sequence(sequence(initializers), body) :
-				sequence(sequence(initializers), let(body, v -> sequence(sequence(finalizers), v)));
+				tryFinally(sequence(sequence(initializers), body), sequence(finalizers));
 	}
 
 	private Expression decodeImpl(SerializerDef serializer, Integer latestVersion, StaticDecoders staticDecoders,

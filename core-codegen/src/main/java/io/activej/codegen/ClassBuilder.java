@@ -466,7 +466,10 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 				Context ctx = new Context(classLoader, this, g, classType, m);
 
 				Expression expression = this.methods.get(m);
-				ctx.cast(expression.load(ctx), m.getReturnType());
+				Type returnType = expression.load(ctx);
+				if (returnType != VOID_TYPE) {
+					ctx.cast(returnType, m.getReturnType());
+				}
 				g.returnValue();
 
 				g.endMethod();
