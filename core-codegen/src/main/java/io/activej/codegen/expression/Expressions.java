@@ -937,4 +937,7 @@ public class Expressions {
 		return iterateIterable(call(map, "values"), action);
 	}
 
+	public static Expression tryFinally(Expression tryBlock, Expression finallyBlock) {
+		return new ExpressionTryFinally(tryBlock, finallyBlock);
+	}
 }
