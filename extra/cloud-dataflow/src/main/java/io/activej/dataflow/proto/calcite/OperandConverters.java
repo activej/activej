@@ -55,6 +55,12 @@ final class OperandConverters {
 							.setObjectOperand(convert(operandFieldAccess.getObjectOperand()))
 							.setFieldNameOperand(convert(operandFieldAccess.getFieldNameOperand()))
 			);
+		} else if (operand instanceof OperandIfNull operandIfNull) {
+			builder.setIfNull(
+					OperandProto.Operand.IfNull.newBuilder()
+							.setCheckedOperand(convert(operandIfNull.getCheckedOperand()))
+							.setDefaultValueOperand(convert(operandIfNull.getDefaultValueOperand()))
+			);
 		} else {
 			throw new IllegalArgumentException("Unknown operand type: " + operand.getClass());
 		}
@@ -64,7 +70,8 @@ final class OperandConverters {
 
 	public static Operand convert(DefiningClassLoader classLoader, OperandProto.Operand operand) {
 		return switch (operand.getOperandCase()) {
-			case RECORD_FIELD -> new OperandRecordField(convert(classLoader, operand.getRecordField().getIndexOperand()));
+			case RECORD_FIELD ->
+					new OperandRecordField(convert(classLoader, operand.getRecordField().getIndexOperand()));
 			case SCALAR -> new OperandScalar(
 					switch (operand.getScalar().getValueCase()) {
 						case NULL -> null;
@@ -89,6 +96,10 @@ final class OperandConverters {
 					convert(classLoader, operand.getFieldGet().getObjectOperand()),
 					convert(classLoader, operand.getFieldGet().getFieldNameOperand()),
 					classLoader
+			);
+			case IF_NULL -> new OperandIfNull(
+					convert(classLoader, operand.getIfNull().getCheckedOperand()),
+					convert(classLoader, operand.getIfNull().getDefaultValueOperand())
 			);
 			case OPERAND_NOT_SET -> throw new CorruptedDataException("Operand not set");
 		};

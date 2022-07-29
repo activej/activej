@@ -1,5 +1,6 @@
 package io.activej.dataflow.calcite.inject;
 
+import io.activej.dataflow.calcite.function.IfNullFunction;
 import io.activej.dataflow.calcite.function.ListGetFunction;
 import io.activej.dataflow.calcite.function.MapGetFunction;
 import io.activej.inject.annotation.ProvidesIntoSet;
@@ -15,5 +16,10 @@ public final class SqlFunctionModule extends AbstractModule {
 	@ProvidesIntoSet
 	SqlOperator listGet() {
 		return new ListGetFunction();
+	}
+
+	@ProvidesIntoSet
+	SqlOperator ifNull() {
+		return new IfNullFunction();
 	}
 }

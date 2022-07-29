@@ -1265,6 +1265,26 @@ public abstract class AbstractCalciteTest {
 		assertEquals(expected, result);
 	}
 
+	@Test
+	public void testSelectIfNull() {
+		QueryResult result = query("""
+				SELECT id, IFNULL(lastName, '')
+				FROM student
+				""");
+
+		QueryResult expected = new QueryResult(
+				List.of("id", "IFNULL(lastName, '')"),
+				List.of(
+						new Object[]{1, "Doe"},
+						new Object[]{2, "Black"},
+						new Object[]{3, "Truman"},
+						new Object[]{4, ""}
+				)
+		);
+
+		assertEquals(expected, result);
+	}
+
 
 	private void assertSelectPojo(QueryResult result) {
 		QueryResult expected = new QueryResult(List.of("pojo"), List.<Object[]>of(new Object[]{new UserProfilePojo("test1", 1)}));

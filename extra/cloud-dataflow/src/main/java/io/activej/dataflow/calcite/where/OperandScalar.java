@@ -31,7 +31,14 @@ public final class OperandScalar implements Operand {
 
 	@Override
 	public String getFieldName(RecordScheme original) {
-		return value.isMaterialized() ? Objects.toString(value.getValue()) : "?";
+		if (!value.isMaterialized()) {
+			return "?";
+		}
+		Object actualValue = value.getValue();
+		if (value.getType() == String.class && actualValue != null) {
+			return "'" + actualValue + "'";
+		}
+		return Objects.toString(actualValue);
 	}
 
 	@Override

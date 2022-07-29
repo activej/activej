@@ -42,12 +42,18 @@ message Operand {
     Operand field_name_operand = 2;
   }
 
+  message IfNull {
+    Operand checked_operand = 1;
+    Operand default_value_operand = 2;
+  }
+
   oneof operand {
     RecordField record_field = 1;
     Scalar scalar = 2;
     MapGet map_get = 3;
     ListGet list_get = 4;
     FieldGet field_get = 5;
+    IfNull if_null = 6;
   }
 }
 

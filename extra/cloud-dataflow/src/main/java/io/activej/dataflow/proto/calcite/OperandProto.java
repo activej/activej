@@ -93,6 +93,21 @@ public final class OperandProto {
      */
     io.activej.dataflow.proto.calcite.OperandProto.Operand.FieldGetOrBuilder getFieldGetOrBuilder();
 
+    /**
+     * <code>.dataflow.calcite.Operand.IfNull if_null = 6;</code>
+     * @return Whether the ifNull field is set.
+     */
+    boolean hasIfNull();
+    /**
+     * <code>.dataflow.calcite.Operand.IfNull if_null = 6;</code>
+     * @return The ifNull.
+     */
+    io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull getIfNull();
+    /**
+     * <code>.dataflow.calcite.Operand.IfNull if_null = 6;</code>
+     */
+    io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNullOrBuilder getIfNullOrBuilder();
+
     public io.activej.dataflow.proto.calcite.OperandProto.Operand.OperandCase getOperandCase();
   }
   /**
@@ -208,6 +223,20 @@ public final class OperandProto {
                 operand_ = subBuilder.buildPartial();
               }
               operandCase_ = 5;
+              break;
+            }
+            case 50: {
+              io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull.Builder subBuilder = null;
+              if (operandCase_ == 6) {
+                subBuilder = ((io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull) operand_).toBuilder();
+              }
+              operand_ =
+                  input.readMessage(io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull) operand_);
+                operand_ = subBuilder.buildPartial();
+              }
+              operandCase_ = 6;
               break;
             }
             default: {
@@ -5194,6 +5223,830 @@ public final class OperandProto {
 
     }
 
+    public interface IfNullOrBuilder extends
+        // @@protoc_insertion_point(interface_extends:dataflow.calcite.Operand.IfNull)
+        com.google.protobuf.MessageOrBuilder {
+
+      /**
+       * <code>.dataflow.calcite.Operand checked_operand = 1;</code>
+       * @return Whether the checkedOperand field is set.
+       */
+      boolean hasCheckedOperand();
+      /**
+       * <code>.dataflow.calcite.Operand checked_operand = 1;</code>
+       * @return The checkedOperand.
+       */
+      io.activej.dataflow.proto.calcite.OperandProto.Operand getCheckedOperand();
+      /**
+       * <code>.dataflow.calcite.Operand checked_operand = 1;</code>
+       */
+      io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder getCheckedOperandOrBuilder();
+
+      /**
+       * <code>.dataflow.calcite.Operand default_value_operand = 2;</code>
+       * @return Whether the defaultValueOperand field is set.
+       */
+      boolean hasDefaultValueOperand();
+      /**
+       * <code>.dataflow.calcite.Operand default_value_operand = 2;</code>
+       * @return The defaultValueOperand.
+       */
+      io.activej.dataflow.proto.calcite.OperandProto.Operand getDefaultValueOperand();
+      /**
+       * <code>.dataflow.calcite.Operand default_value_operand = 2;</code>
+       */
+      io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder getDefaultValueOperandOrBuilder();
+    }
+    /**
+     * Protobuf type {@code dataflow.calcite.Operand.IfNull}
+     */
+    public static final class IfNull extends
+        com.google.protobuf.GeneratedMessageV3 implements
+        // @@protoc_insertion_point(message_implements:dataflow.calcite.Operand.IfNull)
+        IfNullOrBuilder {
+    private static final long serialVersionUID = 0L;
+      // Use IfNull.newBuilder() to construct.
+      private IfNull(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+        super(builder);
+      }
+      private IfNull() {
+      }
+
+      @java.lang.Override
+      @SuppressWarnings({"unused"})
+      protected java.lang.Object newInstance(
+          UnusedPrivateParameter unused) {
+        return new IfNull();
+      }
+
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+      getUnknownFields() {
+        return this.unknownFields;
+      }
+      private IfNull(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        this();
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 10: {
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder subBuilder = null;
+                if (checkedOperand_ != null) {
+                  subBuilder = checkedOperand_.toBuilder();
+                }
+                checkedOperand_ = input.readMessage(io.activej.dataflow.proto.calcite.OperandProto.Operand.parser(), extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom(checkedOperand_);
+                  checkedOperand_ = subBuilder.buildPartial();
+                }
+
+                break;
+              }
+              case 18: {
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder subBuilder = null;
+                if (defaultValueOperand_ != null) {
+                  subBuilder = defaultValueOperand_.toBuilder();
+                }
+                defaultValueOperand_ = input.readMessage(io.activej.dataflow.proto.calcite.OperandProto.Operand.parser(), extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom(defaultValueOperand_);
+                  defaultValueOperand_ = subBuilder.buildPartial();
+                }
+
+                break;
+              }
+              default: {
+                if (!parseUnknownField(
+                    input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e).setUnfinishedMessage(this);
+        } finally {
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_IfNull_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_IfNull_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull.class, io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull.Builder.class);
+      }
+
+      public static final int CHECKED_OPERAND_FIELD_NUMBER = 1;
+      private io.activej.dataflow.proto.calcite.OperandProto.Operand checkedOperand_;
+      /**
+       * <code>.dataflow.calcite.Operand checked_operand = 1;</code>
+       * @return Whether the checkedOperand field is set.
+       */
+      @java.lang.Override
+      public boolean hasCheckedOperand() {
+        return checkedOperand_ != null;
+      }
+      /**
+       * <code>.dataflow.calcite.Operand checked_operand = 1;</code>
+       * @return The checkedOperand.
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.OperandProto.Operand getCheckedOperand() {
+        return checkedOperand_ == null ? io.activej.dataflow.proto.calcite.OperandProto.Operand.getDefaultInstance() : checkedOperand_;
+      }
+      /**
+       * <code>.dataflow.calcite.Operand checked_operand = 1;</code>
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder getCheckedOperandOrBuilder() {
+        return getCheckedOperand();
+      }
+
+      public static final int DEFAULT_VALUE_OPERAND_FIELD_NUMBER = 2;
+      private io.activej.dataflow.proto.calcite.OperandProto.Operand defaultValueOperand_;
+      /**
+       * <code>.dataflow.calcite.Operand default_value_operand = 2;</code>
+       * @return Whether the defaultValueOperand field is set.
+       */
+      @java.lang.Override
+      public boolean hasDefaultValueOperand() {
+        return defaultValueOperand_ != null;
+      }
+      /**
+       * <code>.dataflow.calcite.Operand default_value_operand = 2;</code>
+       * @return The defaultValueOperand.
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.OperandProto.Operand getDefaultValueOperand() {
+        return defaultValueOperand_ == null ? io.activej.dataflow.proto.calcite.OperandProto.Operand.getDefaultInstance() : defaultValueOperand_;
+      }
+      /**
+       * <code>.dataflow.calcite.Operand default_value_operand = 2;</code>
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder getDefaultValueOperandOrBuilder() {
+        return getDefaultValueOperand();
+      }
+
+      private byte memoizedIsInitialized = -1;
+      @java.lang.Override
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
+
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      @java.lang.Override
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        if (checkedOperand_ != null) {
+          output.writeMessage(1, getCheckedOperand());
+        }
+        if (defaultValueOperand_ != null) {
+          output.writeMessage(2, getDefaultValueOperand());
+        }
+        unknownFields.writeTo(output);
+      }
+
+      @java.lang.Override
+      public int getSerializedSize() {
+        int size = memoizedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (checkedOperand_ != null) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(1, getCheckedOperand());
+        }
+        if (defaultValueOperand_ != null) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(2, getDefaultValueOperand());
+        }
+        size += unknownFields.getSerializedSize();
+        memoizedSize = size;
+        return size;
+      }
+
+      @java.lang.Override
+      public boolean equals(final java.lang.Object obj) {
+        if (obj == this) {
+         return true;
+        }
+        if (!(obj instanceof io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull)) {
+          return super.equals(obj);
+        }
+        io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull other = (io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull) obj;
+
+        if (hasCheckedOperand() != other.hasCheckedOperand()) return false;
+        if (hasCheckedOperand()) {
+          if (!getCheckedOperand()
+              .equals(other.getCheckedOperand())) return false;
+        }
+        if (hasDefaultValueOperand() != other.hasDefaultValueOperand()) return false;
+        if (hasDefaultValueOperand()) {
+          if (!getDefaultValueOperand()
+              .equals(other.getDefaultValueOperand())) return false;
+        }
+        if (!unknownFields.equals(other.unknownFields)) return false;
+        return true;
+      }
+
+      @java.lang.Override
+      public int hashCode() {
+        if (memoizedHashCode != 0) {
+          return memoizedHashCode;
+        }
+        int hash = 41;
+        hash = (19 * hash) + getDescriptor().hashCode();
+        if (hasCheckedOperand()) {
+          hash = (37 * hash) + CHECKED_OPERAND_FIELD_NUMBER;
+          hash = (53 * hash) + getCheckedOperand().hashCode();
+        }
+        if (hasDefaultValueOperand()) {
+          hash = (37 * hash) + DEFAULT_VALUE_OPERAND_FIELD_NUMBER;
+          hash = (53 * hash) + getDefaultValueOperand().hashCode();
+        }
+        hash = (29 * hash) + unknownFields.hashCode();
+        memoizedHashCode = hash;
+        return hash;
+      }
+
+      public static io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull parseFrom(
+          java.nio.ByteBuffer data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull parseFrom(
+          java.nio.ByteBuffer data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull parseFrom(
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull parseFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
+      }
+
+      @java.lang.Override
+      public Builder newBuilderForType() { return newBuilder(); }
+      public static Builder newBuilder() {
+        return DEFAULT_INSTANCE.toBuilder();
+      }
+      public static Builder newBuilder(io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull prototype) {
+        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      }
+      @java.lang.Override
+      public Builder toBuilder() {
+        return this == DEFAULT_INSTANCE
+            ? new Builder() : new Builder().mergeFrom(this);
+      }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       * Protobuf type {@code dataflow.calcite.Operand.IfNull}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+          // @@protoc_insertion_point(builder_implements:dataflow.calcite.Operand.IfNull)
+          io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNullOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_IfNull_descriptor;
+        }
+
+        @java.lang.Override
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_IfNull_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull.class, io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull.Builder.class);
+        }
+
+        // Construct using io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessageV3
+                  .alwaysUseFieldBuilders) {
+          }
+        }
+        @java.lang.Override
+        public Builder clear() {
+          super.clear();
+          if (checkedOperandBuilder_ == null) {
+            checkedOperand_ = null;
+          } else {
+            checkedOperand_ = null;
+            checkedOperandBuilder_ = null;
+          }
+          if (defaultValueOperandBuilder_ == null) {
+            defaultValueOperand_ = null;
+          } else {
+            defaultValueOperand_ = null;
+            defaultValueOperandBuilder_ = null;
+          }
+          return this;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_IfNull_descriptor;
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull getDefaultInstanceForType() {
+          return io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull.getDefaultInstance();
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull build() {
+          io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull buildPartial() {
+          io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull result = new io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull(this);
+          if (checkedOperandBuilder_ == null) {
+            result.checkedOperand_ = checkedOperand_;
+          } else {
+            result.checkedOperand_ = checkedOperandBuilder_.build();
+          }
+          if (defaultValueOperandBuilder_ == null) {
+            result.defaultValueOperand_ = defaultValueOperand_;
+          } else {
+            result.defaultValueOperand_ = defaultValueOperandBuilder_.build();
+          }
+          onBuilt();
+          return result;
+        }
+
+        @java.lang.Override
+        public Builder clone() {
+          return super.clone();
+        }
+        @java.lang.Override
+        public Builder setField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return super.setField(field, value);
+        }
+        @java.lang.Override
+        public Builder clearField(
+            com.google.protobuf.Descriptors.FieldDescriptor field) {
+          return super.clearField(field);
+        }
+        @java.lang.Override
+        public Builder clearOneof(
+            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+          return super.clearOneof(oneof);
+        }
+        @java.lang.Override
+        public Builder setRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            int index, java.lang.Object value) {
+          return super.setRepeatedField(field, index, value);
+        }
+        @java.lang.Override
+        public Builder addRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return super.addRepeatedField(field, value);
+        }
+        @java.lang.Override
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull) {
+            return mergeFrom((io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull other) {
+          if (other == io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull.getDefaultInstance()) return this;
+          if (other.hasCheckedOperand()) {
+            mergeCheckedOperand(other.getCheckedOperand());
+          }
+          if (other.hasDefaultValueOperand()) {
+            mergeDefaultValueOperand(other.getDefaultValueOperand());
+          }
+          this.mergeUnknownFields(other.unknownFields);
+          onChanged();
+          return this;
+        }
+
+        @java.lang.Override
+        public final boolean isInitialized() {
+          return true;
+        }
+
+        @java.lang.Override
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage = (io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull) e.getUnfinishedMessage();
+            throw e.unwrapIOException();
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+
+        private io.activej.dataflow.proto.calcite.OperandProto.Operand checkedOperand_;
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.calcite.OperandProto.Operand, io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder, io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder> checkedOperandBuilder_;
+        /**
+         * <code>.dataflow.calcite.Operand checked_operand = 1;</code>
+         * @return Whether the checkedOperand field is set.
+         */
+        public boolean hasCheckedOperand() {
+          return checkedOperandBuilder_ != null || checkedOperand_ != null;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand checked_operand = 1;</code>
+         * @return The checkedOperand.
+         */
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand getCheckedOperand() {
+          if (checkedOperandBuilder_ == null) {
+            return checkedOperand_ == null ? io.activej.dataflow.proto.calcite.OperandProto.Operand.getDefaultInstance() : checkedOperand_;
+          } else {
+            return checkedOperandBuilder_.getMessage();
+          }
+        }
+        /**
+         * <code>.dataflow.calcite.Operand checked_operand = 1;</code>
+         */
+        public Builder setCheckedOperand(io.activej.dataflow.proto.calcite.OperandProto.Operand value) {
+          if (checkedOperandBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            checkedOperand_ = value;
+            onChanged();
+          } else {
+            checkedOperandBuilder_.setMessage(value);
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand checked_operand = 1;</code>
+         */
+        public Builder setCheckedOperand(
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder builderForValue) {
+          if (checkedOperandBuilder_ == null) {
+            checkedOperand_ = builderForValue.build();
+            onChanged();
+          } else {
+            checkedOperandBuilder_.setMessage(builderForValue.build());
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand checked_operand = 1;</code>
+         */
+        public Builder mergeCheckedOperand(io.activej.dataflow.proto.calcite.OperandProto.Operand value) {
+          if (checkedOperandBuilder_ == null) {
+            if (checkedOperand_ != null) {
+              checkedOperand_ =
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.newBuilder(checkedOperand_).mergeFrom(value).buildPartial();
+            } else {
+              checkedOperand_ = value;
+            }
+            onChanged();
+          } else {
+            checkedOperandBuilder_.mergeFrom(value);
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand checked_operand = 1;</code>
+         */
+        public Builder clearCheckedOperand() {
+          if (checkedOperandBuilder_ == null) {
+            checkedOperand_ = null;
+            onChanged();
+          } else {
+            checkedOperand_ = null;
+            checkedOperandBuilder_ = null;
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand checked_operand = 1;</code>
+         */
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder getCheckedOperandBuilder() {
+          
+          onChanged();
+          return getCheckedOperandFieldBuilder().getBuilder();
+        }
+        /**
+         * <code>.dataflow.calcite.Operand checked_operand = 1;</code>
+         */
+        public io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder getCheckedOperandOrBuilder() {
+          if (checkedOperandBuilder_ != null) {
+            return checkedOperandBuilder_.getMessageOrBuilder();
+          } else {
+            return checkedOperand_ == null ?
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.getDefaultInstance() : checkedOperand_;
+          }
+        }
+        /**
+         * <code>.dataflow.calcite.Operand checked_operand = 1;</code>
+         */
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.calcite.OperandProto.Operand, io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder, io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder> 
+            getCheckedOperandFieldBuilder() {
+          if (checkedOperandBuilder_ == null) {
+            checkedOperandBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                io.activej.dataflow.proto.calcite.OperandProto.Operand, io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder, io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder>(
+                    getCheckedOperand(),
+                    getParentForChildren(),
+                    isClean());
+            checkedOperand_ = null;
+          }
+          return checkedOperandBuilder_;
+        }
+
+        private io.activej.dataflow.proto.calcite.OperandProto.Operand defaultValueOperand_;
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.calcite.OperandProto.Operand, io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder, io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder> defaultValueOperandBuilder_;
+        /**
+         * <code>.dataflow.calcite.Operand default_value_operand = 2;</code>
+         * @return Whether the defaultValueOperand field is set.
+         */
+        public boolean hasDefaultValueOperand() {
+          return defaultValueOperandBuilder_ != null || defaultValueOperand_ != null;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand default_value_operand = 2;</code>
+         * @return The defaultValueOperand.
+         */
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand getDefaultValueOperand() {
+          if (defaultValueOperandBuilder_ == null) {
+            return defaultValueOperand_ == null ? io.activej.dataflow.proto.calcite.OperandProto.Operand.getDefaultInstance() : defaultValueOperand_;
+          } else {
+            return defaultValueOperandBuilder_.getMessage();
+          }
+        }
+        /**
+         * <code>.dataflow.calcite.Operand default_value_operand = 2;</code>
+         */
+        public Builder setDefaultValueOperand(io.activej.dataflow.proto.calcite.OperandProto.Operand value) {
+          if (defaultValueOperandBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            defaultValueOperand_ = value;
+            onChanged();
+          } else {
+            defaultValueOperandBuilder_.setMessage(value);
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand default_value_operand = 2;</code>
+         */
+        public Builder setDefaultValueOperand(
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder builderForValue) {
+          if (defaultValueOperandBuilder_ == null) {
+            defaultValueOperand_ = builderForValue.build();
+            onChanged();
+          } else {
+            defaultValueOperandBuilder_.setMessage(builderForValue.build());
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand default_value_operand = 2;</code>
+         */
+        public Builder mergeDefaultValueOperand(io.activej.dataflow.proto.calcite.OperandProto.Operand value) {
+          if (defaultValueOperandBuilder_ == null) {
+            if (defaultValueOperand_ != null) {
+              defaultValueOperand_ =
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.newBuilder(defaultValueOperand_).mergeFrom(value).buildPartial();
+            } else {
+              defaultValueOperand_ = value;
+            }
+            onChanged();
+          } else {
+            defaultValueOperandBuilder_.mergeFrom(value);
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand default_value_operand = 2;</code>
+         */
+        public Builder clearDefaultValueOperand() {
+          if (defaultValueOperandBuilder_ == null) {
+            defaultValueOperand_ = null;
+            onChanged();
+          } else {
+            defaultValueOperand_ = null;
+            defaultValueOperandBuilder_ = null;
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand default_value_operand = 2;</code>
+         */
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder getDefaultValueOperandBuilder() {
+          
+          onChanged();
+          return getDefaultValueOperandFieldBuilder().getBuilder();
+        }
+        /**
+         * <code>.dataflow.calcite.Operand default_value_operand = 2;</code>
+         */
+        public io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder getDefaultValueOperandOrBuilder() {
+          if (defaultValueOperandBuilder_ != null) {
+            return defaultValueOperandBuilder_.getMessageOrBuilder();
+          } else {
+            return defaultValueOperand_ == null ?
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.getDefaultInstance() : defaultValueOperand_;
+          }
+        }
+        /**
+         * <code>.dataflow.calcite.Operand default_value_operand = 2;</code>
+         */
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.calcite.OperandProto.Operand, io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder, io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder> 
+            getDefaultValueOperandFieldBuilder() {
+          if (defaultValueOperandBuilder_ == null) {
+            defaultValueOperandBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                io.activej.dataflow.proto.calcite.OperandProto.Operand, io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder, io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder>(
+                    getDefaultValueOperand(),
+                    getParentForChildren(),
+                    isClean());
+            defaultValueOperand_ = null;
+          }
+          return defaultValueOperandBuilder_;
+        }
+        @java.lang.Override
+        public final Builder setUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.setUnknownFields(unknownFields);
+        }
+
+        @java.lang.Override
+        public final Builder mergeUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.mergeUnknownFields(unknownFields);
+        }
+
+
+        // @@protoc_insertion_point(builder_scope:dataflow.calcite.Operand.IfNull)
+      }
+
+      // @@protoc_insertion_point(class_scope:dataflow.calcite.Operand.IfNull)
+      private static final io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull DEFAULT_INSTANCE;
+      static {
+        DEFAULT_INSTANCE = new io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull();
+      }
+
+      public static io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull getDefaultInstance() {
+        return DEFAULT_INSTANCE;
+      }
+
+      private static final com.google.protobuf.Parser<IfNull>
+          PARSER = new com.google.protobuf.AbstractParser<IfNull>() {
+        @java.lang.Override
+        public IfNull parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new IfNull(input, extensionRegistry);
+        }
+      };
+
+      public static com.google.protobuf.Parser<IfNull> parser() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<IfNull> getParserForType() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull getDefaultInstanceForType() {
+        return DEFAULT_INSTANCE;
+      }
+
+    }
+
     private int operandCase_ = 0;
     private java.lang.Object operand_;
     public enum OperandCase
@@ -5204,6 +6057,7 @@ public final class OperandProto {
       MAP_GET(3),
       LIST_GET(4),
       FIELD_GET(5),
+      IF_NULL(6),
       OPERAND_NOT_SET(0);
       private final int value;
       private OperandCase(int value) {
@@ -5226,6 +6080,7 @@ public final class OperandProto {
           case 3: return MAP_GET;
           case 4: return LIST_GET;
           case 5: return FIELD_GET;
+          case 6: return IF_NULL;
           case 0: return OPERAND_NOT_SET;
           default: return null;
         }
@@ -5396,6 +6251,37 @@ public final class OperandProto {
       return io.activej.dataflow.proto.calcite.OperandProto.Operand.FieldGet.getDefaultInstance();
     }
 
+    public static final int IF_NULL_FIELD_NUMBER = 6;
+    /**
+     * <code>.dataflow.calcite.Operand.IfNull if_null = 6;</code>
+     * @return Whether the ifNull field is set.
+     */
+    @java.lang.Override
+    public boolean hasIfNull() {
+      return operandCase_ == 6;
+    }
+    /**
+     * <code>.dataflow.calcite.Operand.IfNull if_null = 6;</code>
+     * @return The ifNull.
+     */
+    @java.lang.Override
+    public io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull getIfNull() {
+      if (operandCase_ == 6) {
+         return (io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull) operand_;
+      }
+      return io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull.getDefaultInstance();
+    }
+    /**
+     * <code>.dataflow.calcite.Operand.IfNull if_null = 6;</code>
+     */
+    @java.lang.Override
+    public io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNullOrBuilder getIfNullOrBuilder() {
+      if (operandCase_ == 6) {
+         return (io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull) operand_;
+      }
+      return io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull.getDefaultInstance();
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -5425,6 +6311,9 @@ public final class OperandProto {
       if (operandCase_ == 5) {
         output.writeMessage(5, (io.activej.dataflow.proto.calcite.OperandProto.Operand.FieldGet) operand_);
       }
+      if (operandCase_ == 6) {
+        output.writeMessage(6, (io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull) operand_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -5453,6 +6342,10 @@ public final class OperandProto {
       if (operandCase_ == 5) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(5, (io.activej.dataflow.proto.calcite.OperandProto.Operand.FieldGet) operand_);
+      }
+      if (operandCase_ == 6) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(6, (io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull) operand_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -5491,6 +6384,10 @@ public final class OperandProto {
           if (!getFieldGet()
               .equals(other.getFieldGet())) return false;
           break;
+        case 6:
+          if (!getIfNull()
+              .equals(other.getIfNull())) return false;
+          break;
         case 0:
         default:
       }
@@ -5525,6 +6422,10 @@ public final class OperandProto {
         case 5:
           hash = (37 * hash) + FIELD_GET_FIELD_NUMBER;
           hash = (53 * hash) + getFieldGet().hashCode();
+          break;
+        case 6:
+          hash = (37 * hash) + IF_NULL_FIELD_NUMBER;
+          hash = (53 * hash) + getIfNull().hashCode();
           break;
         case 0:
         default:
@@ -5725,6 +6626,13 @@ public final class OperandProto {
             result.operand_ = fieldGetBuilder_.build();
           }
         }
+        if (operandCase_ == 6) {
+          if (ifNullBuilder_ == null) {
+            result.operand_ = operand_;
+          } else {
+            result.operand_ = ifNullBuilder_.build();
+          }
+        }
         result.operandCase_ = operandCase_;
         onBuilt();
         return result;
@@ -5793,6 +6701,10 @@ public final class OperandProto {
           }
           case FIELD_GET: {
             mergeFieldGet(other.getFieldGet());
+            break;
+          }
+          case IF_NULL: {
+            mergeIfNull(other.getIfNull());
             break;
           }
           case OPERAND_NOT_SET: {
@@ -6547,6 +7459,147 @@ public final class OperandProto {
         onChanged();;
         return fieldGetBuilder_;
       }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull, io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNullOrBuilder> ifNullBuilder_;
+      /**
+       * <code>.dataflow.calcite.Operand.IfNull if_null = 6;</code>
+       * @return Whether the ifNull field is set.
+       */
+      @java.lang.Override
+      public boolean hasIfNull() {
+        return operandCase_ == 6;
+      }
+      /**
+       * <code>.dataflow.calcite.Operand.IfNull if_null = 6;</code>
+       * @return The ifNull.
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull getIfNull() {
+        if (ifNullBuilder_ == null) {
+          if (operandCase_ == 6) {
+            return (io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull) operand_;
+          }
+          return io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull.getDefaultInstance();
+        } else {
+          if (operandCase_ == 6) {
+            return ifNullBuilder_.getMessage();
+          }
+          return io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.dataflow.calcite.Operand.IfNull if_null = 6;</code>
+       */
+      public Builder setIfNull(io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull value) {
+        if (ifNullBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          operand_ = value;
+          onChanged();
+        } else {
+          ifNullBuilder_.setMessage(value);
+        }
+        operandCase_ = 6;
+        return this;
+      }
+      /**
+       * <code>.dataflow.calcite.Operand.IfNull if_null = 6;</code>
+       */
+      public Builder setIfNull(
+          io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull.Builder builderForValue) {
+        if (ifNullBuilder_ == null) {
+          operand_ = builderForValue.build();
+          onChanged();
+        } else {
+          ifNullBuilder_.setMessage(builderForValue.build());
+        }
+        operandCase_ = 6;
+        return this;
+      }
+      /**
+       * <code>.dataflow.calcite.Operand.IfNull if_null = 6;</code>
+       */
+      public Builder mergeIfNull(io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull value) {
+        if (ifNullBuilder_ == null) {
+          if (operandCase_ == 6 &&
+              operand_ != io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull.getDefaultInstance()) {
+            operand_ = io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull.newBuilder((io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull) operand_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            operand_ = value;
+          }
+          onChanged();
+        } else {
+          if (operandCase_ == 6) {
+            ifNullBuilder_.mergeFrom(value);
+          }
+          ifNullBuilder_.setMessage(value);
+        }
+        operandCase_ = 6;
+        return this;
+      }
+      /**
+       * <code>.dataflow.calcite.Operand.IfNull if_null = 6;</code>
+       */
+      public Builder clearIfNull() {
+        if (ifNullBuilder_ == null) {
+          if (operandCase_ == 6) {
+            operandCase_ = 0;
+            operand_ = null;
+            onChanged();
+          }
+        } else {
+          if (operandCase_ == 6) {
+            operandCase_ = 0;
+            operand_ = null;
+          }
+          ifNullBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>.dataflow.calcite.Operand.IfNull if_null = 6;</code>
+       */
+      public io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull.Builder getIfNullBuilder() {
+        return getIfNullFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.dataflow.calcite.Operand.IfNull if_null = 6;</code>
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNullOrBuilder getIfNullOrBuilder() {
+        if ((operandCase_ == 6) && (ifNullBuilder_ != null)) {
+          return ifNullBuilder_.getMessageOrBuilder();
+        } else {
+          if (operandCase_ == 6) {
+            return (io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull) operand_;
+          }
+          return io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.dataflow.calcite.Operand.IfNull if_null = 6;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull, io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNullOrBuilder> 
+          getIfNullFieldBuilder() {
+        if (ifNullBuilder_ == null) {
+          if (!(operandCase_ == 6)) {
+            operand_ = io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull.getDefaultInstance();
+          }
+          ifNullBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull, io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNullOrBuilder>(
+                  (io.activej.dataflow.proto.calcite.OperandProto.Operand.IfNull) operand_,
+                  getParentForChildren(),
+                  isClean());
+          operand_ = null;
+        }
+        operandCase_ = 6;
+        onChanged();;
+        return ifNullBuilder_;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -6635,6 +7688,11 @@ public final class OperandProto {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_dataflow_calcite_Operand_FieldGet_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_dataflow_calcite_Operand_IfNull_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_dataflow_calcite_Operand_IfNull_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -6644,7 +7702,7 @@ public final class OperandProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\roperand.proto\022\020dataflow.calcite\"\371\006\n\007Op" +
+      "\n\roperand.proto\022\020dataflow.calcite\"\246\010\n\007Op" +
       "erand\022=\n\014record_field\030\001 \001(\0132%.dataflow.c" +
       "alcite.Operand.RecordFieldH\000\0222\n\006scalar\030\002" +
       " \001(\0132 .dataflow.calcite.Operand.ScalarH\000" +
@@ -6652,23 +7710,27 @@ public final class OperandProto {
       "rand.MapGetH\000\0225\n\010list_get\030\004 \001(\0132!.datafl" +
       "ow.calcite.Operand.ListGetH\000\0227\n\tfield_ge" +
       "t\030\005 \001(\0132\".dataflow.calcite.Operand.Field" +
-      "GetH\000\032?\n\013RecordField\0220\n\rindex_operand\030\001 " +
-      "\001(\0132\031.dataflow.calcite.Operand\032\273\001\n\006Scala" +
-      "r\0225\n\004null\030\001 \001(\0132%.dataflow.calcite.Opera" +
-      "nd.Scalar.NoneH\000\022\021\n\007integer\030\002 \001(\005H\000\022\016\n\004l" +
-      "ong\030\003 \001(\003H\000\022\017\n\005float\030\004 \001(\002H\000\022\020\n\006double\030\005" +
-      " \001(\001H\000\022\021\n\007boolean\030\006 \001(\010H\000\022\020\n\006string\030\007 \001(" +
-      "\tH\000\032\006\n\004NoneB\007\n\005value\032h\n\006MapGet\022.\n\013map_op" +
-      "erand\030\001 \001(\0132\031.dataflow.calcite.Operand\022." +
-      "\n\013key_operand\030\002 \001(\0132\031.dataflow.calcite.O" +
-      "perand\032l\n\007ListGet\022/\n\014list_operand\030\001 \001(\0132" +
-      "\031.dataflow.calcite.Operand\0220\n\rindex_oper" +
-      "and\030\002 \001(\0132\031.dataflow.calcite.Operand\032t\n\010" +
-      "FieldGet\0221\n\016object_operand\030\001 \001(\0132\031.dataf" +
-      "low.calcite.Operand\0225\n\022field_name_operan" +
-      "d\030\002 \001(\0132\031.dataflow.calcite.OperandB\t\n\007op" +
-      "erandB3\n!io.activej.dataflow.proto.calci" +
-      "teB\014OperandProtoP\000b\006proto3"
+      "GetH\000\0223\n\007if_null\030\006 \001(\0132 .dataflow.calcit" +
+      "e.Operand.IfNullH\000\032?\n\013RecordField\0220\n\rind" +
+      "ex_operand\030\001 \001(\0132\031.dataflow.calcite.Oper" +
+      "and\032\273\001\n\006Scalar\0225\n\004null\030\001 \001(\0132%.dataflow." +
+      "calcite.Operand.Scalar.NoneH\000\022\021\n\007integer" +
+      "\030\002 \001(\005H\000\022\016\n\004long\030\003 \001(\003H\000\022\017\n\005float\030\004 \001(\002H" +
+      "\000\022\020\n\006double\030\005 \001(\001H\000\022\021\n\007boolean\030\006 \001(\010H\000\022\020" +
+      "\n\006string\030\007 \001(\tH\000\032\006\n\004NoneB\007\n\005value\032h\n\006Map" +
+      "Get\022.\n\013map_operand\030\001 \001(\0132\031.dataflow.calc" +
+      "ite.Operand\022.\n\013key_operand\030\002 \001(\0132\031.dataf" +
+      "low.calcite.Operand\032l\n\007ListGet\022/\n\014list_o" +
+      "perand\030\001 \001(\0132\031.dataflow.calcite.Operand\022" +
+      "0\n\rindex_operand\030\002 \001(\0132\031.dataflow.calcit" +
+      "e.Operand\032t\n\010FieldGet\0221\n\016object_operand\030" +
+      "\001 \001(\0132\031.dataflow.calcite.Operand\0225\n\022fiel" +
+      "d_name_operand\030\002 \001(\0132\031.dataflow.calcite." +
+      "Operand\032v\n\006IfNull\0222\n\017checked_operand\030\001 \001" +
+      "(\0132\031.dataflow.calcite.Operand\0228\n\025default" +
+      "_value_operand\030\002 \001(\0132\031.dataflow.calcite." +
+      "OperandB\t\n\007operandB3\n!io.activej.dataflo" +
+      "w.proto.calciteB\014OperandProtoP\000b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -6679,7 +7741,7 @@ public final class OperandProto {
     internal_static_dataflow_calcite_Operand_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_Operand_descriptor,
-        new java.lang.String[] { "RecordField", "Scalar", "MapGet", "ListGet", "FieldGet", "Operand", });
+        new java.lang.String[] { "RecordField", "Scalar", "MapGet", "ListGet", "FieldGet", "IfNull", "Operand", });
     internal_static_dataflow_calcite_Operand_RecordField_descriptor =
       internal_static_dataflow_calcite_Operand_descriptor.getNestedTypes().get(0);
     internal_static_dataflow_calcite_Operand_RecordField_fieldAccessorTable = new
@@ -6716,6 +7778,12 @@ public final class OperandProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_Operand_FieldGet_descriptor,
         new java.lang.String[] { "ObjectOperand", "FieldNameOperand", });
+    internal_static_dataflow_calcite_Operand_IfNull_descriptor =
+      internal_static_dataflow_calcite_Operand_descriptor.getNestedTypes().get(5);
+    internal_static_dataflow_calcite_Operand_IfNull_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_dataflow_calcite_Operand_IfNull_descriptor,
+        new java.lang.String[] { "CheckedOperand", "DefaultValueOperand", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)
