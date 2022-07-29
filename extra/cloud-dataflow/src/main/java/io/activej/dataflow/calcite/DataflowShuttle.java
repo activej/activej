@@ -440,6 +440,9 @@ public class DataflowShuttle extends RelShuttleImpl {
 			}
 			case LIKE ->
 					new LikePredicate(toOperand(operands.get(0), classLoader), toOperand(operands.get(1), classLoader));
+			case IS_NULL -> new IsNullPredicate(toOperand(operands.get(0), classLoader));
+			case IS_NOT_NULL -> new IsNotNullPredicate(toOperand(operands.get(0), classLoader));
+
 			default -> throw new IllegalArgumentException("Not supported condition:" + conditionNode.getKind());
 		};
 	}

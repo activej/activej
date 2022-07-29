@@ -116,6 +116,16 @@ public final class WherePredicateSerializer implements BinarySerializer<WherePre
 							.setValue(convert(likePredicate.getValue()))
 							.setPattern(convert(likePredicate.getPattern()))
 			);
+		} else if (predicate instanceof IsNullPredicate isNullPredicate) {
+			builder.setIsNullPredicate(
+					WherePredicateProto.WherePredicate.IsNullPredicate.newBuilder()
+							.setValue(convert(isNullPredicate.getValue()))
+			);
+		} else if (predicate instanceof IsNotNullPredicate isNotNullPredicate) {
+			builder.setIsNotNullPredicate(
+					WherePredicateProto.WherePredicate.IsNotNullPredicate.newBuilder()
+							.setValue(convert(isNotNullPredicate.getValue()))
+			);
 		} else {
 			throw new IllegalArgumentException("Unknown predicate type: " + predicate.getClass());
 		}
@@ -174,6 +184,8 @@ public final class WherePredicateSerializer implements BinarySerializer<WherePre
 					convert(predicate.getLikePredicate().getValue()),
 					convert(predicate.getLikePredicate().getPattern())
 			);
+			case IS_NULL_PREDICATE -> new IsNullPredicate(convert(predicate.getIsNullPredicate().getValue()));
+			case IS_NOT_NULL_PREDICATE -> new IsNotNullPredicate(convert(predicate.getIsNotNullPredicate().getValue()));
 			case OPERAND_NOT_SET -> throw new CorruptedDataException("Predicate was not set");
 		};
 	}

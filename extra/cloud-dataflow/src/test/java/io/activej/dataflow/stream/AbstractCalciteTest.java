@@ -64,7 +64,8 @@ public abstract class AbstractCalciteTest {
 	protected static final List<Student> STUDENT_LIST = List.of(
 			new Student(1, "John", "Doe", 1),
 			new Student(2, "Bob", "Black", 2),
-			new Student(3, "John", "Truman", 2));
+			new Student(3, "John", "Truman", 2),
+			new Student(4, "Mark", null, 3));
 	protected static final List<Department> DEPARTMENT_LIST = List.of(
 			new Department(1, "Math"),
 			new Department(2, "Language"),
@@ -435,7 +436,7 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private void assertWhereNotEqualScalar(QueryResult result) {
-		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST.get(0), STUDENT_LIST.get(2)));
+		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST.get(0), STUDENT_LIST.get(2), STUDENT_LIST.get(3)));
 
 		assertEquals(expected, result);
 	}
@@ -448,7 +449,7 @@ public abstract class AbstractCalciteTest {
 				WHERE id <> dept
 				""");
 
-		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(2, 3));
+		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(2, 4));
 
 		assertEquals(expected, result);
 	}
@@ -476,7 +477,7 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private void assertWhereGreaterThanScalar(QueryResult result) {
-		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(1, 3));
+		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(1, 4));
 
 		assertEquals(expected, result);
 	}
@@ -489,7 +490,7 @@ public abstract class AbstractCalciteTest {
 				WHERE id > dept
 				""");
 
-		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(2, 3));
+		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(2, 4));
 
 		assertEquals(expected, result);
 	}
@@ -517,7 +518,7 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private void assertWhereGreaterThanOrEqualScalar(QueryResult result) {
-		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(1, 3));
+		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(1, 4));
 
 		assertEquals(expected, result);
 	}
@@ -749,7 +750,7 @@ public abstract class AbstractCalciteTest {
 
 	@Test
 	public void testWhereMatchAll() {
-		doTestWhereLike("%", 1, 2, 3);
+		doTestWhereLike("%", 1, 2, 3, 4);
 	}
 
 	private void doTestWhereLike(String firstNamePattern, int... expectedIds) {
@@ -901,10 +902,12 @@ public abstract class AbstractCalciteTest {
 		List<Object[]> expectedColumnValues = new ArrayList<>(3);
 
 		Student firstStudent = STUDENT_LIST.get(0);
-		Department firstDepartment = DEPARTMENT_LIST.get(0);
 		Student secondStudent = STUDENT_LIST.get(1);
-		Department secondDepartment = DEPARTMENT_LIST.get(1);
 		Student thirdStudent = STUDENT_LIST.get(2);
+		Student fourthStudent = STUDENT_LIST.get(3);
+		Department firstDepartment = DEPARTMENT_LIST.get(0);
+		Department secondDepartment = DEPARTMENT_LIST.get(1);
+		Department thirdDepartment = DEPARTMENT_LIST.get(2);
 
 		expectedColumnValues.add(new Object[]{
 				firstStudent.id, firstStudent.firstName, firstStudent.lastName, firstStudent.dept,
@@ -917,6 +920,10 @@ public abstract class AbstractCalciteTest {
 		expectedColumnValues.add(new Object[]{
 				thirdStudent.id, thirdStudent.firstName, thirdStudent.lastName, thirdStudent.dept,
 				secondDepartment.id, secondDepartment.departmentName
+		});
+		expectedColumnValues.add(new Object[]{
+				fourthStudent.id, fourthStudent.firstName, fourthStudent.lastName, fourthStudent.dept,
+				thirdDepartment.id, thirdDepartment.departmentName
 		});
 
 		QueryResult expected = new QueryResult(List.of("left.id", "left.firstName", "left.lastName", "left.dept", "right.id", "right.departmentName"), expectedColumnValues);
@@ -933,16 +940,19 @@ public abstract class AbstractCalciteTest {
 				""");
 
 		Student firstStudent = STUDENT_LIST.get(0);
-		Department firstDepartment = DEPARTMENT_LIST.get(0);
 		Student secondStudent = STUDENT_LIST.get(1);
-		Department secondDepartment = DEPARTMENT_LIST.get(1);
 		Student thirdStudent = STUDENT_LIST.get(2);
+		Student fourthStudent = STUDENT_LIST.get(3);
+		Department firstDepartment = DEPARTMENT_LIST.get(0);
+		Department secondDepartment = DEPARTMENT_LIST.get(1);
+		Department thirdDepartment = DEPARTMENT_LIST.get(2);
 
 		QueryResult expected = new QueryResult(List.of("left.id", "right.departmentName"),
 				List.of(
 						new Object[]{firstStudent.id, firstDepartment.departmentName},
 						new Object[]{secondStudent.id, secondDepartment.departmentName},
-						new Object[]{thirdStudent.id, secondDepartment.departmentName}
+						new Object[]{thirdStudent.id, secondDepartment.departmentName},
+						new Object[]{fourthStudent.id, thirdDepartment.departmentName}
 				));
 
 		assertEquals(expected, result);
@@ -955,7 +965,7 @@ public abstract class AbstractCalciteTest {
 				ORDER BY firstName ASC, id DESC
 				""");
 
-		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST.get(1), STUDENT_LIST.get(2), STUDENT_LIST.get(0)));
+		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST.get(1), STUDENT_LIST.get(2), STUDENT_LIST.get(0), STUDENT_LIST.get(3)));
 
 		assertEquals(expected, result);
 	}
@@ -1091,7 +1101,7 @@ public abstract class AbstractCalciteTest {
 	public void testCountAllStudents() {
 		QueryResult result = query("SELECT COUNT(*) FROM student");
 
-		QueryResult expected = new QueryResult(List.of("COUNT(*)"), List.<Object[]>of(new Object[]{3L}));
+		QueryResult expected = new QueryResult(List.of("COUNT(*)"), List.<Object[]>of(new Object[]{4L}));
 
 		assertEquals(expected, result);
 	}
@@ -1123,7 +1133,7 @@ public abstract class AbstractCalciteTest {
 	public void testSumStudentsId() {
 		QueryResult result = query("SELECT SUM(id) FROM student");
 
-		QueryResult expected = new QueryResult(List.of("SUM(id)"), List.<Object[]>of(new Object[]{6L}));
+		QueryResult expected = new QueryResult(List.of("SUM(id)"), List.<Object[]>of(new Object[]{10L}));
 
 		assertEquals(expected, result);
 	}
@@ -1155,7 +1165,7 @@ public abstract class AbstractCalciteTest {
 	public void testAvgStudentsDepts() {
 		QueryResult result = query("SELECT AVG(dept) FROM student");
 
-		QueryResult expected = new QueryResult(List.of("AVG(dept)"), List.<Object[]>of(new Object[]{5d / 3}));
+		QueryResult expected = new QueryResult(List.of("AVG(dept)"), List.<Object[]>of(new Object[]{2.0d}));
 
 		assertEquals(expected, result);
 	}
@@ -1173,7 +1183,7 @@ public abstract class AbstractCalciteTest {
 	public void testMaxStudentsId() {
 		QueryResult result = query("SELECT MAX(id) FROM student");
 
-		QueryResult expected = new QueryResult(List.of("MAX(id)"), List.<Object[]>of(new Object[]{3}));
+		QueryResult expected = new QueryResult(List.of("MAX(id)"), List.<Object[]>of(new Object[]{4}));
 
 		assertEquals(expected, result);
 	}
@@ -1225,6 +1235,32 @@ public abstract class AbstractCalciteTest {
 		QueryResult result = query("SELECT * FROM large_table");
 
 		QueryResult expected = largeToQueryResult(LARGE_LIST);
+
+		assertEquals(expected, result);
+	}
+
+	@Test
+	public void testSelectIsNull() {
+		QueryResult result = query("""
+				SELECT id
+				FROM student
+				WHERE lastName IS NULL
+				""");
+
+		QueryResult expected = new QueryResult(List.of("id"), List.<Object[]>of(new Object[]{4}));
+
+		assertEquals(expected, result);
+	}
+
+	@Test
+	public void testSelectIsNotNull() {
+		QueryResult result = query("""
+				SELECT *
+				FROM student
+				WHERE lastName IS NOT NULL
+				""");
+
+		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(0, 3));
 
 		assertEquals(expected, result);
 	}

@@ -63,6 +63,14 @@ message WherePredicate {
     Operand pattern = 2;
   }
 
+  message IsNullPredicate {
+    Operand value = 1;
+  }
+
+  message IsNotNullPredicate {
+    Operand value = 1;
+  }
+
   oneof operand {
     AndPredicate and_predicate = 1;
     OrPredicate or_predicate = 2;
@@ -75,5 +83,7 @@ message WherePredicate {
     BetweenPredicate between_predicate = 9;
     InPredicate in_predicate = 10;
     LikePredicate like_predicate = 11;
+    IsNullPredicate is_null_predicate = 12;
+    IsNotNullPredicate is_not_null_predicate = 13;
   }
 }

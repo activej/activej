@@ -183,6 +183,36 @@ public final class WherePredicateProto {
      */
     io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.LikePredicateOrBuilder getLikePredicateOrBuilder();
 
+    /**
+     * <code>.dataflow.calcite.WherePredicate.IsNullPredicate is_null_predicate = 12;</code>
+     * @return Whether the isNullPredicate field is set.
+     */
+    boolean hasIsNullPredicate();
+    /**
+     * <code>.dataflow.calcite.WherePredicate.IsNullPredicate is_null_predicate = 12;</code>
+     * @return The isNullPredicate.
+     */
+    io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate getIsNullPredicate();
+    /**
+     * <code>.dataflow.calcite.WherePredicate.IsNullPredicate is_null_predicate = 12;</code>
+     */
+    io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicateOrBuilder getIsNullPredicateOrBuilder();
+
+    /**
+     * <code>.dataflow.calcite.WherePredicate.IsNotNullPredicate is_not_null_predicate = 13;</code>
+     * @return Whether the isNotNullPredicate field is set.
+     */
+    boolean hasIsNotNullPredicate();
+    /**
+     * <code>.dataflow.calcite.WherePredicate.IsNotNullPredicate is_not_null_predicate = 13;</code>
+     * @return The isNotNullPredicate.
+     */
+    io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate getIsNotNullPredicate();
+    /**
+     * <code>.dataflow.calcite.WherePredicate.IsNotNullPredicate is_not_null_predicate = 13;</code>
+     */
+    io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicateOrBuilder getIsNotNullPredicateOrBuilder();
+
     public io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.OperandCase getOperandCase();
   }
   /**
@@ -382,6 +412,34 @@ public final class WherePredicateProto {
                 operand_ = subBuilder.buildPartial();
               }
               operandCase_ = 11;
+              break;
+            }
+            case 98: {
+              io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate.Builder subBuilder = null;
+              if (operandCase_ == 12) {
+                subBuilder = ((io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate) operand_).toBuilder();
+              }
+              operand_ =
+                  input.readMessage(io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate) operand_);
+                operand_ = subBuilder.buildPartial();
+              }
+              operandCase_ = 12;
+              break;
+            }
+            case 106: {
+              io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate.Builder subBuilder = null;
+              if (operandCase_ == 13) {
+                subBuilder = ((io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate) operand_).toBuilder();
+              }
+              operand_ =
+                  input.readMessage(io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate) operand_);
+                operand_ = subBuilder.buildPartial();
+              }
+              operandCase_ = 13;
               break;
             }
             default: {
@@ -9793,6 +9851,1248 @@ public final class WherePredicateProto {
 
     }
 
+    public interface IsNullPredicateOrBuilder extends
+        // @@protoc_insertion_point(interface_extends:dataflow.calcite.WherePredicate.IsNullPredicate)
+        com.google.protobuf.MessageOrBuilder {
+
+      /**
+       * <code>.dataflow.calcite.Operand value = 1;</code>
+       * @return Whether the value field is set.
+       */
+      boolean hasValue();
+      /**
+       * <code>.dataflow.calcite.Operand value = 1;</code>
+       * @return The value.
+       */
+      io.activej.dataflow.proto.calcite.OperandProto.Operand getValue();
+      /**
+       * <code>.dataflow.calcite.Operand value = 1;</code>
+       */
+      io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder getValueOrBuilder();
+    }
+    /**
+     * Protobuf type {@code dataflow.calcite.WherePredicate.IsNullPredicate}
+     */
+    public static final class IsNullPredicate extends
+        com.google.protobuf.GeneratedMessageV3 implements
+        // @@protoc_insertion_point(message_implements:dataflow.calcite.WherePredicate.IsNullPredicate)
+        IsNullPredicateOrBuilder {
+    private static final long serialVersionUID = 0L;
+      // Use IsNullPredicate.newBuilder() to construct.
+      private IsNullPredicate(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+        super(builder);
+      }
+      private IsNullPredicate() {
+      }
+
+      @java.lang.Override
+      @SuppressWarnings({"unused"})
+      protected java.lang.Object newInstance(
+          UnusedPrivateParameter unused) {
+        return new IsNullPredicate();
+      }
+
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+      getUnknownFields() {
+        return this.unknownFields;
+      }
+      private IsNullPredicate(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        this();
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 10: {
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder subBuilder = null;
+                if (value_ != null) {
+                  subBuilder = value_.toBuilder();
+                }
+                value_ = input.readMessage(io.activej.dataflow.proto.calcite.OperandProto.Operand.parser(), extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom(value_);
+                  value_ = subBuilder.buildPartial();
+                }
+
+                break;
+              }
+              default: {
+                if (!parseUnknownField(
+                    input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e).setUnfinishedMessage(this);
+        } finally {
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return io.activej.dataflow.proto.calcite.WherePredicateProto.internal_static_dataflow_calcite_WherePredicate_IsNullPredicate_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return io.activej.dataflow.proto.calcite.WherePredicateProto.internal_static_dataflow_calcite_WherePredicate_IsNullPredicate_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate.class, io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate.Builder.class);
+      }
+
+      public static final int VALUE_FIELD_NUMBER = 1;
+      private io.activej.dataflow.proto.calcite.OperandProto.Operand value_;
+      /**
+       * <code>.dataflow.calcite.Operand value = 1;</code>
+       * @return Whether the value field is set.
+       */
+      @java.lang.Override
+      public boolean hasValue() {
+        return value_ != null;
+      }
+      /**
+       * <code>.dataflow.calcite.Operand value = 1;</code>
+       * @return The value.
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.OperandProto.Operand getValue() {
+        return value_ == null ? io.activej.dataflow.proto.calcite.OperandProto.Operand.getDefaultInstance() : value_;
+      }
+      /**
+       * <code>.dataflow.calcite.Operand value = 1;</code>
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder getValueOrBuilder() {
+        return getValue();
+      }
+
+      private byte memoizedIsInitialized = -1;
+      @java.lang.Override
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
+
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      @java.lang.Override
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        if (value_ != null) {
+          output.writeMessage(1, getValue());
+        }
+        unknownFields.writeTo(output);
+      }
+
+      @java.lang.Override
+      public int getSerializedSize() {
+        int size = memoizedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (value_ != null) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(1, getValue());
+        }
+        size += unknownFields.getSerializedSize();
+        memoizedSize = size;
+        return size;
+      }
+
+      @java.lang.Override
+      public boolean equals(final java.lang.Object obj) {
+        if (obj == this) {
+         return true;
+        }
+        if (!(obj instanceof io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate)) {
+          return super.equals(obj);
+        }
+        io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate other = (io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate) obj;
+
+        if (hasValue() != other.hasValue()) return false;
+        if (hasValue()) {
+          if (!getValue()
+              .equals(other.getValue())) return false;
+        }
+        if (!unknownFields.equals(other.unknownFields)) return false;
+        return true;
+      }
+
+      @java.lang.Override
+      public int hashCode() {
+        if (memoizedHashCode != 0) {
+          return memoizedHashCode;
+        }
+        int hash = 41;
+        hash = (19 * hash) + getDescriptor().hashCode();
+        if (hasValue()) {
+          hash = (37 * hash) + VALUE_FIELD_NUMBER;
+          hash = (53 * hash) + getValue().hashCode();
+        }
+        hash = (29 * hash) + unknownFields.hashCode();
+        memoizedHashCode = hash;
+        return hash;
+      }
+
+      public static io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate parseFrom(
+          java.nio.ByteBuffer data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate parseFrom(
+          java.nio.ByteBuffer data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate parseFrom(
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate parseFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
+      }
+
+      @java.lang.Override
+      public Builder newBuilderForType() { return newBuilder(); }
+      public static Builder newBuilder() {
+        return DEFAULT_INSTANCE.toBuilder();
+      }
+      public static Builder newBuilder(io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate prototype) {
+        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      }
+      @java.lang.Override
+      public Builder toBuilder() {
+        return this == DEFAULT_INSTANCE
+            ? new Builder() : new Builder().mergeFrom(this);
+      }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       * Protobuf type {@code dataflow.calcite.WherePredicate.IsNullPredicate}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+          // @@protoc_insertion_point(builder_implements:dataflow.calcite.WherePredicate.IsNullPredicate)
+          io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicateOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return io.activej.dataflow.proto.calcite.WherePredicateProto.internal_static_dataflow_calcite_WherePredicate_IsNullPredicate_descriptor;
+        }
+
+        @java.lang.Override
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return io.activej.dataflow.proto.calcite.WherePredicateProto.internal_static_dataflow_calcite_WherePredicate_IsNullPredicate_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate.class, io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate.Builder.class);
+        }
+
+        // Construct using io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessageV3
+                  .alwaysUseFieldBuilders) {
+          }
+        }
+        @java.lang.Override
+        public Builder clear() {
+          super.clear();
+          if (valueBuilder_ == null) {
+            value_ = null;
+          } else {
+            value_ = null;
+            valueBuilder_ = null;
+          }
+          return this;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return io.activej.dataflow.proto.calcite.WherePredicateProto.internal_static_dataflow_calcite_WherePredicate_IsNullPredicate_descriptor;
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate getDefaultInstanceForType() {
+          return io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate.getDefaultInstance();
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate build() {
+          io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate buildPartial() {
+          io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate result = new io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate(this);
+          if (valueBuilder_ == null) {
+            result.value_ = value_;
+          } else {
+            result.value_ = valueBuilder_.build();
+          }
+          onBuilt();
+          return result;
+        }
+
+        @java.lang.Override
+        public Builder clone() {
+          return super.clone();
+        }
+        @java.lang.Override
+        public Builder setField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return super.setField(field, value);
+        }
+        @java.lang.Override
+        public Builder clearField(
+            com.google.protobuf.Descriptors.FieldDescriptor field) {
+          return super.clearField(field);
+        }
+        @java.lang.Override
+        public Builder clearOneof(
+            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+          return super.clearOneof(oneof);
+        }
+        @java.lang.Override
+        public Builder setRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            int index, java.lang.Object value) {
+          return super.setRepeatedField(field, index, value);
+        }
+        @java.lang.Override
+        public Builder addRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return super.addRepeatedField(field, value);
+        }
+        @java.lang.Override
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate) {
+            return mergeFrom((io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate other) {
+          if (other == io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate.getDefaultInstance()) return this;
+          if (other.hasValue()) {
+            mergeValue(other.getValue());
+          }
+          this.mergeUnknownFields(other.unknownFields);
+          onChanged();
+          return this;
+        }
+
+        @java.lang.Override
+        public final boolean isInitialized() {
+          return true;
+        }
+
+        @java.lang.Override
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage = (io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate) e.getUnfinishedMessage();
+            throw e.unwrapIOException();
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+
+        private io.activej.dataflow.proto.calcite.OperandProto.Operand value_;
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.calcite.OperandProto.Operand, io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder, io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder> valueBuilder_;
+        /**
+         * <code>.dataflow.calcite.Operand value = 1;</code>
+         * @return Whether the value field is set.
+         */
+        public boolean hasValue() {
+          return valueBuilder_ != null || value_ != null;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand value = 1;</code>
+         * @return The value.
+         */
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand getValue() {
+          if (valueBuilder_ == null) {
+            return value_ == null ? io.activej.dataflow.proto.calcite.OperandProto.Operand.getDefaultInstance() : value_;
+          } else {
+            return valueBuilder_.getMessage();
+          }
+        }
+        /**
+         * <code>.dataflow.calcite.Operand value = 1;</code>
+         */
+        public Builder setValue(io.activej.dataflow.proto.calcite.OperandProto.Operand value) {
+          if (valueBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            value_ = value;
+            onChanged();
+          } else {
+            valueBuilder_.setMessage(value);
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand value = 1;</code>
+         */
+        public Builder setValue(
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder builderForValue) {
+          if (valueBuilder_ == null) {
+            value_ = builderForValue.build();
+            onChanged();
+          } else {
+            valueBuilder_.setMessage(builderForValue.build());
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand value = 1;</code>
+         */
+        public Builder mergeValue(io.activej.dataflow.proto.calcite.OperandProto.Operand value) {
+          if (valueBuilder_ == null) {
+            if (value_ != null) {
+              value_ =
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.newBuilder(value_).mergeFrom(value).buildPartial();
+            } else {
+              value_ = value;
+            }
+            onChanged();
+          } else {
+            valueBuilder_.mergeFrom(value);
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand value = 1;</code>
+         */
+        public Builder clearValue() {
+          if (valueBuilder_ == null) {
+            value_ = null;
+            onChanged();
+          } else {
+            value_ = null;
+            valueBuilder_ = null;
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand value = 1;</code>
+         */
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder getValueBuilder() {
+          
+          onChanged();
+          return getValueFieldBuilder().getBuilder();
+        }
+        /**
+         * <code>.dataflow.calcite.Operand value = 1;</code>
+         */
+        public io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder getValueOrBuilder() {
+          if (valueBuilder_ != null) {
+            return valueBuilder_.getMessageOrBuilder();
+          } else {
+            return value_ == null ?
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.getDefaultInstance() : value_;
+          }
+        }
+        /**
+         * <code>.dataflow.calcite.Operand value = 1;</code>
+         */
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.calcite.OperandProto.Operand, io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder, io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder> 
+            getValueFieldBuilder() {
+          if (valueBuilder_ == null) {
+            valueBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                io.activej.dataflow.proto.calcite.OperandProto.Operand, io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder, io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder>(
+                    getValue(),
+                    getParentForChildren(),
+                    isClean());
+            value_ = null;
+          }
+          return valueBuilder_;
+        }
+        @java.lang.Override
+        public final Builder setUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.setUnknownFields(unknownFields);
+        }
+
+        @java.lang.Override
+        public final Builder mergeUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.mergeUnknownFields(unknownFields);
+        }
+
+
+        // @@protoc_insertion_point(builder_scope:dataflow.calcite.WherePredicate.IsNullPredicate)
+      }
+
+      // @@protoc_insertion_point(class_scope:dataflow.calcite.WherePredicate.IsNullPredicate)
+      private static final io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate DEFAULT_INSTANCE;
+      static {
+        DEFAULT_INSTANCE = new io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate();
+      }
+
+      public static io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate getDefaultInstance() {
+        return DEFAULT_INSTANCE;
+      }
+
+      private static final com.google.protobuf.Parser<IsNullPredicate>
+          PARSER = new com.google.protobuf.AbstractParser<IsNullPredicate>() {
+        @java.lang.Override
+        public IsNullPredicate parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new IsNullPredicate(input, extensionRegistry);
+        }
+      };
+
+      public static com.google.protobuf.Parser<IsNullPredicate> parser() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<IsNullPredicate> getParserForType() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate getDefaultInstanceForType() {
+        return DEFAULT_INSTANCE;
+      }
+
+    }
+
+    public interface IsNotNullPredicateOrBuilder extends
+        // @@protoc_insertion_point(interface_extends:dataflow.calcite.WherePredicate.IsNotNullPredicate)
+        com.google.protobuf.MessageOrBuilder {
+
+      /**
+       * <code>.dataflow.calcite.Operand value = 1;</code>
+       * @return Whether the value field is set.
+       */
+      boolean hasValue();
+      /**
+       * <code>.dataflow.calcite.Operand value = 1;</code>
+       * @return The value.
+       */
+      io.activej.dataflow.proto.calcite.OperandProto.Operand getValue();
+      /**
+       * <code>.dataflow.calcite.Operand value = 1;</code>
+       */
+      io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder getValueOrBuilder();
+    }
+    /**
+     * Protobuf type {@code dataflow.calcite.WherePredicate.IsNotNullPredicate}
+     */
+    public static final class IsNotNullPredicate extends
+        com.google.protobuf.GeneratedMessageV3 implements
+        // @@protoc_insertion_point(message_implements:dataflow.calcite.WherePredicate.IsNotNullPredicate)
+        IsNotNullPredicateOrBuilder {
+    private static final long serialVersionUID = 0L;
+      // Use IsNotNullPredicate.newBuilder() to construct.
+      private IsNotNullPredicate(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+        super(builder);
+      }
+      private IsNotNullPredicate() {
+      }
+
+      @java.lang.Override
+      @SuppressWarnings({"unused"})
+      protected java.lang.Object newInstance(
+          UnusedPrivateParameter unused) {
+        return new IsNotNullPredicate();
+      }
+
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+      getUnknownFields() {
+        return this.unknownFields;
+      }
+      private IsNotNullPredicate(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        this();
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 10: {
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder subBuilder = null;
+                if (value_ != null) {
+                  subBuilder = value_.toBuilder();
+                }
+                value_ = input.readMessage(io.activej.dataflow.proto.calcite.OperandProto.Operand.parser(), extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom(value_);
+                  value_ = subBuilder.buildPartial();
+                }
+
+                break;
+              }
+              default: {
+                if (!parseUnknownField(
+                    input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e).setUnfinishedMessage(this);
+        } finally {
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return io.activej.dataflow.proto.calcite.WherePredicateProto.internal_static_dataflow_calcite_WherePredicate_IsNotNullPredicate_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return io.activej.dataflow.proto.calcite.WherePredicateProto.internal_static_dataflow_calcite_WherePredicate_IsNotNullPredicate_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate.class, io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate.Builder.class);
+      }
+
+      public static final int VALUE_FIELD_NUMBER = 1;
+      private io.activej.dataflow.proto.calcite.OperandProto.Operand value_;
+      /**
+       * <code>.dataflow.calcite.Operand value = 1;</code>
+       * @return Whether the value field is set.
+       */
+      @java.lang.Override
+      public boolean hasValue() {
+        return value_ != null;
+      }
+      /**
+       * <code>.dataflow.calcite.Operand value = 1;</code>
+       * @return The value.
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.OperandProto.Operand getValue() {
+        return value_ == null ? io.activej.dataflow.proto.calcite.OperandProto.Operand.getDefaultInstance() : value_;
+      }
+      /**
+       * <code>.dataflow.calcite.Operand value = 1;</code>
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder getValueOrBuilder() {
+        return getValue();
+      }
+
+      private byte memoizedIsInitialized = -1;
+      @java.lang.Override
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
+
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      @java.lang.Override
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        if (value_ != null) {
+          output.writeMessage(1, getValue());
+        }
+        unknownFields.writeTo(output);
+      }
+
+      @java.lang.Override
+      public int getSerializedSize() {
+        int size = memoizedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (value_ != null) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(1, getValue());
+        }
+        size += unknownFields.getSerializedSize();
+        memoizedSize = size;
+        return size;
+      }
+
+      @java.lang.Override
+      public boolean equals(final java.lang.Object obj) {
+        if (obj == this) {
+         return true;
+        }
+        if (!(obj instanceof io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate)) {
+          return super.equals(obj);
+        }
+        io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate other = (io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate) obj;
+
+        if (hasValue() != other.hasValue()) return false;
+        if (hasValue()) {
+          if (!getValue()
+              .equals(other.getValue())) return false;
+        }
+        if (!unknownFields.equals(other.unknownFields)) return false;
+        return true;
+      }
+
+      @java.lang.Override
+      public int hashCode() {
+        if (memoizedHashCode != 0) {
+          return memoizedHashCode;
+        }
+        int hash = 41;
+        hash = (19 * hash) + getDescriptor().hashCode();
+        if (hasValue()) {
+          hash = (37 * hash) + VALUE_FIELD_NUMBER;
+          hash = (53 * hash) + getValue().hashCode();
+        }
+        hash = (29 * hash) + unknownFields.hashCode();
+        memoizedHashCode = hash;
+        return hash;
+      }
+
+      public static io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate parseFrom(
+          java.nio.ByteBuffer data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate parseFrom(
+          java.nio.ByteBuffer data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate parseFrom(
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate parseFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
+      }
+
+      @java.lang.Override
+      public Builder newBuilderForType() { return newBuilder(); }
+      public static Builder newBuilder() {
+        return DEFAULT_INSTANCE.toBuilder();
+      }
+      public static Builder newBuilder(io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate prototype) {
+        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      }
+      @java.lang.Override
+      public Builder toBuilder() {
+        return this == DEFAULT_INSTANCE
+            ? new Builder() : new Builder().mergeFrom(this);
+      }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       * Protobuf type {@code dataflow.calcite.WherePredicate.IsNotNullPredicate}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+          // @@protoc_insertion_point(builder_implements:dataflow.calcite.WherePredicate.IsNotNullPredicate)
+          io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicateOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return io.activej.dataflow.proto.calcite.WherePredicateProto.internal_static_dataflow_calcite_WherePredicate_IsNotNullPredicate_descriptor;
+        }
+
+        @java.lang.Override
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return io.activej.dataflow.proto.calcite.WherePredicateProto.internal_static_dataflow_calcite_WherePredicate_IsNotNullPredicate_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate.class, io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate.Builder.class);
+        }
+
+        // Construct using io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessageV3
+                  .alwaysUseFieldBuilders) {
+          }
+        }
+        @java.lang.Override
+        public Builder clear() {
+          super.clear();
+          if (valueBuilder_ == null) {
+            value_ = null;
+          } else {
+            value_ = null;
+            valueBuilder_ = null;
+          }
+          return this;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return io.activej.dataflow.proto.calcite.WherePredicateProto.internal_static_dataflow_calcite_WherePredicate_IsNotNullPredicate_descriptor;
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate getDefaultInstanceForType() {
+          return io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate.getDefaultInstance();
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate build() {
+          io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate buildPartial() {
+          io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate result = new io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate(this);
+          if (valueBuilder_ == null) {
+            result.value_ = value_;
+          } else {
+            result.value_ = valueBuilder_.build();
+          }
+          onBuilt();
+          return result;
+        }
+
+        @java.lang.Override
+        public Builder clone() {
+          return super.clone();
+        }
+        @java.lang.Override
+        public Builder setField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return super.setField(field, value);
+        }
+        @java.lang.Override
+        public Builder clearField(
+            com.google.protobuf.Descriptors.FieldDescriptor field) {
+          return super.clearField(field);
+        }
+        @java.lang.Override
+        public Builder clearOneof(
+            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+          return super.clearOneof(oneof);
+        }
+        @java.lang.Override
+        public Builder setRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            int index, java.lang.Object value) {
+          return super.setRepeatedField(field, index, value);
+        }
+        @java.lang.Override
+        public Builder addRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return super.addRepeatedField(field, value);
+        }
+        @java.lang.Override
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate) {
+            return mergeFrom((io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate other) {
+          if (other == io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate.getDefaultInstance()) return this;
+          if (other.hasValue()) {
+            mergeValue(other.getValue());
+          }
+          this.mergeUnknownFields(other.unknownFields);
+          onChanged();
+          return this;
+        }
+
+        @java.lang.Override
+        public final boolean isInitialized() {
+          return true;
+        }
+
+        @java.lang.Override
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage = (io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate) e.getUnfinishedMessage();
+            throw e.unwrapIOException();
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+
+        private io.activej.dataflow.proto.calcite.OperandProto.Operand value_;
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.calcite.OperandProto.Operand, io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder, io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder> valueBuilder_;
+        /**
+         * <code>.dataflow.calcite.Operand value = 1;</code>
+         * @return Whether the value field is set.
+         */
+        public boolean hasValue() {
+          return valueBuilder_ != null || value_ != null;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand value = 1;</code>
+         * @return The value.
+         */
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand getValue() {
+          if (valueBuilder_ == null) {
+            return value_ == null ? io.activej.dataflow.proto.calcite.OperandProto.Operand.getDefaultInstance() : value_;
+          } else {
+            return valueBuilder_.getMessage();
+          }
+        }
+        /**
+         * <code>.dataflow.calcite.Operand value = 1;</code>
+         */
+        public Builder setValue(io.activej.dataflow.proto.calcite.OperandProto.Operand value) {
+          if (valueBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            value_ = value;
+            onChanged();
+          } else {
+            valueBuilder_.setMessage(value);
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand value = 1;</code>
+         */
+        public Builder setValue(
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder builderForValue) {
+          if (valueBuilder_ == null) {
+            value_ = builderForValue.build();
+            onChanged();
+          } else {
+            valueBuilder_.setMessage(builderForValue.build());
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand value = 1;</code>
+         */
+        public Builder mergeValue(io.activej.dataflow.proto.calcite.OperandProto.Operand value) {
+          if (valueBuilder_ == null) {
+            if (value_ != null) {
+              value_ =
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.newBuilder(value_).mergeFrom(value).buildPartial();
+            } else {
+              value_ = value;
+            }
+            onChanged();
+          } else {
+            valueBuilder_.mergeFrom(value);
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand value = 1;</code>
+         */
+        public Builder clearValue() {
+          if (valueBuilder_ == null) {
+            value_ = null;
+            onChanged();
+          } else {
+            value_ = null;
+            valueBuilder_ = null;
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand value = 1;</code>
+         */
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder getValueBuilder() {
+          
+          onChanged();
+          return getValueFieldBuilder().getBuilder();
+        }
+        /**
+         * <code>.dataflow.calcite.Operand value = 1;</code>
+         */
+        public io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder getValueOrBuilder() {
+          if (valueBuilder_ != null) {
+            return valueBuilder_.getMessageOrBuilder();
+          } else {
+            return value_ == null ?
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.getDefaultInstance() : value_;
+          }
+        }
+        /**
+         * <code>.dataflow.calcite.Operand value = 1;</code>
+         */
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.calcite.OperandProto.Operand, io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder, io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder> 
+            getValueFieldBuilder() {
+          if (valueBuilder_ == null) {
+            valueBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                io.activej.dataflow.proto.calcite.OperandProto.Operand, io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder, io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder>(
+                    getValue(),
+                    getParentForChildren(),
+                    isClean());
+            value_ = null;
+          }
+          return valueBuilder_;
+        }
+        @java.lang.Override
+        public final Builder setUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.setUnknownFields(unknownFields);
+        }
+
+        @java.lang.Override
+        public final Builder mergeUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.mergeUnknownFields(unknownFields);
+        }
+
+
+        // @@protoc_insertion_point(builder_scope:dataflow.calcite.WherePredicate.IsNotNullPredicate)
+      }
+
+      // @@protoc_insertion_point(class_scope:dataflow.calcite.WherePredicate.IsNotNullPredicate)
+      private static final io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate DEFAULT_INSTANCE;
+      static {
+        DEFAULT_INSTANCE = new io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate();
+      }
+
+      public static io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate getDefaultInstance() {
+        return DEFAULT_INSTANCE;
+      }
+
+      private static final com.google.protobuf.Parser<IsNotNullPredicate>
+          PARSER = new com.google.protobuf.AbstractParser<IsNotNullPredicate>() {
+        @java.lang.Override
+        public IsNotNullPredicate parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new IsNotNullPredicate(input, extensionRegistry);
+        }
+      };
+
+      public static com.google.protobuf.Parser<IsNotNullPredicate> parser() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<IsNotNullPredicate> getParserForType() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate getDefaultInstanceForType() {
+        return DEFAULT_INSTANCE;
+      }
+
+    }
+
     private int operandCase_ = 0;
     private java.lang.Object operand_;
     public enum OperandCase
@@ -9809,6 +11109,8 @@ public final class WherePredicateProto {
       BETWEEN_PREDICATE(9),
       IN_PREDICATE(10),
       LIKE_PREDICATE(11),
+      IS_NULL_PREDICATE(12),
+      IS_NOT_NULL_PREDICATE(13),
       OPERAND_NOT_SET(0);
       private final int value;
       private OperandCase(int value) {
@@ -9837,6 +11139,8 @@ public final class WherePredicateProto {
           case 9: return BETWEEN_PREDICATE;
           case 10: return IN_PREDICATE;
           case 11: return LIKE_PREDICATE;
+          case 12: return IS_NULL_PREDICATE;
+          case 13: return IS_NOT_NULL_PREDICATE;
           case 0: return OPERAND_NOT_SET;
           default: return null;
         }
@@ -10193,6 +11497,68 @@ public final class WherePredicateProto {
       return io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.LikePredicate.getDefaultInstance();
     }
 
+    public static final int IS_NULL_PREDICATE_FIELD_NUMBER = 12;
+    /**
+     * <code>.dataflow.calcite.WherePredicate.IsNullPredicate is_null_predicate = 12;</code>
+     * @return Whether the isNullPredicate field is set.
+     */
+    @java.lang.Override
+    public boolean hasIsNullPredicate() {
+      return operandCase_ == 12;
+    }
+    /**
+     * <code>.dataflow.calcite.WherePredicate.IsNullPredicate is_null_predicate = 12;</code>
+     * @return The isNullPredicate.
+     */
+    @java.lang.Override
+    public io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate getIsNullPredicate() {
+      if (operandCase_ == 12) {
+         return (io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate) operand_;
+      }
+      return io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate.getDefaultInstance();
+    }
+    /**
+     * <code>.dataflow.calcite.WherePredicate.IsNullPredicate is_null_predicate = 12;</code>
+     */
+    @java.lang.Override
+    public io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicateOrBuilder getIsNullPredicateOrBuilder() {
+      if (operandCase_ == 12) {
+         return (io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate) operand_;
+      }
+      return io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate.getDefaultInstance();
+    }
+
+    public static final int IS_NOT_NULL_PREDICATE_FIELD_NUMBER = 13;
+    /**
+     * <code>.dataflow.calcite.WherePredicate.IsNotNullPredicate is_not_null_predicate = 13;</code>
+     * @return Whether the isNotNullPredicate field is set.
+     */
+    @java.lang.Override
+    public boolean hasIsNotNullPredicate() {
+      return operandCase_ == 13;
+    }
+    /**
+     * <code>.dataflow.calcite.WherePredicate.IsNotNullPredicate is_not_null_predicate = 13;</code>
+     * @return The isNotNullPredicate.
+     */
+    @java.lang.Override
+    public io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate getIsNotNullPredicate() {
+      if (operandCase_ == 13) {
+         return (io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate) operand_;
+      }
+      return io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate.getDefaultInstance();
+    }
+    /**
+     * <code>.dataflow.calcite.WherePredicate.IsNotNullPredicate is_not_null_predicate = 13;</code>
+     */
+    @java.lang.Override
+    public io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicateOrBuilder getIsNotNullPredicateOrBuilder() {
+      if (operandCase_ == 13) {
+         return (io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate) operand_;
+      }
+      return io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate.getDefaultInstance();
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -10239,6 +11605,12 @@ public final class WherePredicateProto {
       }
       if (operandCase_ == 11) {
         output.writeMessage(11, (io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.LikePredicate) operand_);
+      }
+      if (operandCase_ == 12) {
+        output.writeMessage(12, (io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate) operand_);
+      }
+      if (operandCase_ == 13) {
+        output.writeMessage(13, (io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate) operand_);
       }
       unknownFields.writeTo(output);
     }
@@ -10292,6 +11664,14 @@ public final class WherePredicateProto {
       if (operandCase_ == 11) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(11, (io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.LikePredicate) operand_);
+      }
+      if (operandCase_ == 12) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(12, (io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate) operand_);
+      }
+      if (operandCase_ == 13) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(13, (io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate) operand_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -10354,6 +11734,14 @@ public final class WherePredicateProto {
           if (!getLikePredicate()
               .equals(other.getLikePredicate())) return false;
           break;
+        case 12:
+          if (!getIsNullPredicate()
+              .equals(other.getIsNullPredicate())) return false;
+          break;
+        case 13:
+          if (!getIsNotNullPredicate()
+              .equals(other.getIsNotNullPredicate())) return false;
+          break;
         case 0:
         default:
       }
@@ -10412,6 +11800,14 @@ public final class WherePredicateProto {
         case 11:
           hash = (37 * hash) + LIKE_PREDICATE_FIELD_NUMBER;
           hash = (53 * hash) + getLikePredicate().hashCode();
+          break;
+        case 12:
+          hash = (37 * hash) + IS_NULL_PREDICATE_FIELD_NUMBER;
+          hash = (53 * hash) + getIsNullPredicate().hashCode();
+          break;
+        case 13:
+          hash = (37 * hash) + IS_NOT_NULL_PREDICATE_FIELD_NUMBER;
+          hash = (53 * hash) + getIsNotNullPredicate().hashCode();
           break;
         case 0:
         default:
@@ -10654,6 +12050,20 @@ public final class WherePredicateProto {
             result.operand_ = likePredicateBuilder_.build();
           }
         }
+        if (operandCase_ == 12) {
+          if (isNullPredicateBuilder_ == null) {
+            result.operand_ = operand_;
+          } else {
+            result.operand_ = isNullPredicateBuilder_.build();
+          }
+        }
+        if (operandCase_ == 13) {
+          if (isNotNullPredicateBuilder_ == null) {
+            result.operand_ = operand_;
+          } else {
+            result.operand_ = isNotNullPredicateBuilder_.build();
+          }
+        }
         result.operandCase_ = operandCase_;
         onBuilt();
         return result;
@@ -10746,6 +12156,14 @@ public final class WherePredicateProto {
           }
           case LIKE_PREDICATE: {
             mergeLikePredicate(other.getLikePredicate());
+            break;
+          }
+          case IS_NULL_PREDICATE: {
+            mergeIsNullPredicate(other.getIsNullPredicate());
+            break;
+          }
+          case IS_NOT_NULL_PREDICATE: {
+            mergeIsNotNullPredicate(other.getIsNotNullPredicate());
             break;
           }
           case OPERAND_NOT_SET: {
@@ -12346,6 +13764,288 @@ public final class WherePredicateProto {
         onChanged();;
         return likePredicateBuilder_;
       }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate, io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate.Builder, io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicateOrBuilder> isNullPredicateBuilder_;
+      /**
+       * <code>.dataflow.calcite.WherePredicate.IsNullPredicate is_null_predicate = 12;</code>
+       * @return Whether the isNullPredicate field is set.
+       */
+      @java.lang.Override
+      public boolean hasIsNullPredicate() {
+        return operandCase_ == 12;
+      }
+      /**
+       * <code>.dataflow.calcite.WherePredicate.IsNullPredicate is_null_predicate = 12;</code>
+       * @return The isNullPredicate.
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate getIsNullPredicate() {
+        if (isNullPredicateBuilder_ == null) {
+          if (operandCase_ == 12) {
+            return (io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate) operand_;
+          }
+          return io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate.getDefaultInstance();
+        } else {
+          if (operandCase_ == 12) {
+            return isNullPredicateBuilder_.getMessage();
+          }
+          return io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.dataflow.calcite.WherePredicate.IsNullPredicate is_null_predicate = 12;</code>
+       */
+      public Builder setIsNullPredicate(io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate value) {
+        if (isNullPredicateBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          operand_ = value;
+          onChanged();
+        } else {
+          isNullPredicateBuilder_.setMessage(value);
+        }
+        operandCase_ = 12;
+        return this;
+      }
+      /**
+       * <code>.dataflow.calcite.WherePredicate.IsNullPredicate is_null_predicate = 12;</code>
+       */
+      public Builder setIsNullPredicate(
+          io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate.Builder builderForValue) {
+        if (isNullPredicateBuilder_ == null) {
+          operand_ = builderForValue.build();
+          onChanged();
+        } else {
+          isNullPredicateBuilder_.setMessage(builderForValue.build());
+        }
+        operandCase_ = 12;
+        return this;
+      }
+      /**
+       * <code>.dataflow.calcite.WherePredicate.IsNullPredicate is_null_predicate = 12;</code>
+       */
+      public Builder mergeIsNullPredicate(io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate value) {
+        if (isNullPredicateBuilder_ == null) {
+          if (operandCase_ == 12 &&
+              operand_ != io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate.getDefaultInstance()) {
+            operand_ = io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate.newBuilder((io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate) operand_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            operand_ = value;
+          }
+          onChanged();
+        } else {
+          if (operandCase_ == 12) {
+            isNullPredicateBuilder_.mergeFrom(value);
+          }
+          isNullPredicateBuilder_.setMessage(value);
+        }
+        operandCase_ = 12;
+        return this;
+      }
+      /**
+       * <code>.dataflow.calcite.WherePredicate.IsNullPredicate is_null_predicate = 12;</code>
+       */
+      public Builder clearIsNullPredicate() {
+        if (isNullPredicateBuilder_ == null) {
+          if (operandCase_ == 12) {
+            operandCase_ = 0;
+            operand_ = null;
+            onChanged();
+          }
+        } else {
+          if (operandCase_ == 12) {
+            operandCase_ = 0;
+            operand_ = null;
+          }
+          isNullPredicateBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>.dataflow.calcite.WherePredicate.IsNullPredicate is_null_predicate = 12;</code>
+       */
+      public io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate.Builder getIsNullPredicateBuilder() {
+        return getIsNullPredicateFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.dataflow.calcite.WherePredicate.IsNullPredicate is_null_predicate = 12;</code>
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicateOrBuilder getIsNullPredicateOrBuilder() {
+        if ((operandCase_ == 12) && (isNullPredicateBuilder_ != null)) {
+          return isNullPredicateBuilder_.getMessageOrBuilder();
+        } else {
+          if (operandCase_ == 12) {
+            return (io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate) operand_;
+          }
+          return io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.dataflow.calcite.WherePredicate.IsNullPredicate is_null_predicate = 12;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate, io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate.Builder, io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicateOrBuilder> 
+          getIsNullPredicateFieldBuilder() {
+        if (isNullPredicateBuilder_ == null) {
+          if (!(operandCase_ == 12)) {
+            operand_ = io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate.getDefaultInstance();
+          }
+          isNullPredicateBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate, io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate.Builder, io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicateOrBuilder>(
+                  (io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNullPredicate) operand_,
+                  getParentForChildren(),
+                  isClean());
+          operand_ = null;
+        }
+        operandCase_ = 12;
+        onChanged();;
+        return isNullPredicateBuilder_;
+      }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate, io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate.Builder, io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicateOrBuilder> isNotNullPredicateBuilder_;
+      /**
+       * <code>.dataflow.calcite.WherePredicate.IsNotNullPredicate is_not_null_predicate = 13;</code>
+       * @return Whether the isNotNullPredicate field is set.
+       */
+      @java.lang.Override
+      public boolean hasIsNotNullPredicate() {
+        return operandCase_ == 13;
+      }
+      /**
+       * <code>.dataflow.calcite.WherePredicate.IsNotNullPredicate is_not_null_predicate = 13;</code>
+       * @return The isNotNullPredicate.
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate getIsNotNullPredicate() {
+        if (isNotNullPredicateBuilder_ == null) {
+          if (operandCase_ == 13) {
+            return (io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate) operand_;
+          }
+          return io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate.getDefaultInstance();
+        } else {
+          if (operandCase_ == 13) {
+            return isNotNullPredicateBuilder_.getMessage();
+          }
+          return io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.dataflow.calcite.WherePredicate.IsNotNullPredicate is_not_null_predicate = 13;</code>
+       */
+      public Builder setIsNotNullPredicate(io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate value) {
+        if (isNotNullPredicateBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          operand_ = value;
+          onChanged();
+        } else {
+          isNotNullPredicateBuilder_.setMessage(value);
+        }
+        operandCase_ = 13;
+        return this;
+      }
+      /**
+       * <code>.dataflow.calcite.WherePredicate.IsNotNullPredicate is_not_null_predicate = 13;</code>
+       */
+      public Builder setIsNotNullPredicate(
+          io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate.Builder builderForValue) {
+        if (isNotNullPredicateBuilder_ == null) {
+          operand_ = builderForValue.build();
+          onChanged();
+        } else {
+          isNotNullPredicateBuilder_.setMessage(builderForValue.build());
+        }
+        operandCase_ = 13;
+        return this;
+      }
+      /**
+       * <code>.dataflow.calcite.WherePredicate.IsNotNullPredicate is_not_null_predicate = 13;</code>
+       */
+      public Builder mergeIsNotNullPredicate(io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate value) {
+        if (isNotNullPredicateBuilder_ == null) {
+          if (operandCase_ == 13 &&
+              operand_ != io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate.getDefaultInstance()) {
+            operand_ = io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate.newBuilder((io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate) operand_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            operand_ = value;
+          }
+          onChanged();
+        } else {
+          if (operandCase_ == 13) {
+            isNotNullPredicateBuilder_.mergeFrom(value);
+          }
+          isNotNullPredicateBuilder_.setMessage(value);
+        }
+        operandCase_ = 13;
+        return this;
+      }
+      /**
+       * <code>.dataflow.calcite.WherePredicate.IsNotNullPredicate is_not_null_predicate = 13;</code>
+       */
+      public Builder clearIsNotNullPredicate() {
+        if (isNotNullPredicateBuilder_ == null) {
+          if (operandCase_ == 13) {
+            operandCase_ = 0;
+            operand_ = null;
+            onChanged();
+          }
+        } else {
+          if (operandCase_ == 13) {
+            operandCase_ = 0;
+            operand_ = null;
+          }
+          isNotNullPredicateBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>.dataflow.calcite.WherePredicate.IsNotNullPredicate is_not_null_predicate = 13;</code>
+       */
+      public io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate.Builder getIsNotNullPredicateBuilder() {
+        return getIsNotNullPredicateFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.dataflow.calcite.WherePredicate.IsNotNullPredicate is_not_null_predicate = 13;</code>
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicateOrBuilder getIsNotNullPredicateOrBuilder() {
+        if ((operandCase_ == 13) && (isNotNullPredicateBuilder_ != null)) {
+          return isNotNullPredicateBuilder_.getMessageOrBuilder();
+        } else {
+          if (operandCase_ == 13) {
+            return (io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate) operand_;
+          }
+          return io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.dataflow.calcite.WherePredicate.IsNotNullPredicate is_not_null_predicate = 13;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate, io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate.Builder, io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicateOrBuilder> 
+          getIsNotNullPredicateFieldBuilder() {
+        if (isNotNullPredicateBuilder_ == null) {
+          if (!(operandCase_ == 13)) {
+            operand_ = io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate.getDefaultInstance();
+          }
+          isNotNullPredicateBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate, io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate.Builder, io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicateOrBuilder>(
+                  (io.activej.dataflow.proto.calcite.WherePredicateProto.WherePredicate.IsNotNullPredicate) operand_,
+                  getParentForChildren(),
+                  isClean());
+          operand_ = null;
+        }
+        operandCase_ = 13;
+        onChanged();;
+        return isNotNullPredicateBuilder_;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -12459,6 +14159,16 @@ public final class WherePredicateProto {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_dataflow_calcite_WherePredicate_LikePredicate_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_dataflow_calcite_WherePredicate_IsNullPredicate_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_dataflow_calcite_WherePredicate_IsNullPredicate_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_dataflow_calcite_WherePredicate_IsNotNullPredicate_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_dataflow_calcite_WherePredicate_IsNotNullPredicate_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -12469,7 +14179,7 @@ public final class WherePredicateProto {
   static {
     java.lang.String[] descriptorData = {
       "\n\025where_predicate.proto\022\020dataflow.calcit" +
-      "e\032\roperand.proto\"\351\016\n\016WherePredicate\022F\n\ra" +
+      "e\032\roperand.proto\"\213\021\n\016WherePredicate\022F\n\ra" +
       "nd_predicate\030\001 \001(\0132-.dataflow.calcite.Wh" +
       "erePredicate.AndPredicateH\000\022D\n\014or_predic" +
       "ate\030\002 \001(\0132,.dataflow.calcite.WherePredic" +
@@ -12489,36 +14199,43 @@ public final class WherePredicateProto {
       "teH\000\022D\n\014in_predicate\030\n \001(\0132,.dataflow.ca" +
       "lcite.WherePredicate.InPredicateH\000\022H\n\016li" +
       "ke_predicate\030\013 \001(\0132..dataflow.calcite.Wh" +
-      "erePredicate.LikePredicateH\000\032D\n\014AndPredi" +
-      "cate\0224\n\npredicates\030\001 \003(\0132 .dataflow.calc" +
-      "ite.WherePredicate\032C\n\013OrPredicate\0224\n\npre" +
-      "dicates\030\001 \003(\0132 .dataflow.calcite.WherePr" +
-      "edicate\032`\n\013EqPredicate\022\'\n\004left\030\001 \001(\0132\031.d" +
+      "erePredicate.LikePredicateH\000\022M\n\021is_null_" +
+      "predicate\030\014 \001(\01320.dataflow.calcite.Where" +
+      "Predicate.IsNullPredicateH\000\022T\n\025is_not_nu" +
+      "ll_predicate\030\r \001(\01323.dataflow.calcite.Wh" +
+      "erePredicate.IsNotNullPredicateH\000\032D\n\014And" +
+      "Predicate\0224\n\npredicates\030\001 \003(\0132 .dataflow" +
+      ".calcite.WherePredicate\032C\n\013OrPredicate\0224" +
+      "\n\npredicates\030\001 \003(\0132 .dataflow.calcite.Wh" +
+      "erePredicate\032`\n\013EqPredicate\022\'\n\004left\030\001 \001(" +
+      "\0132\031.dataflow.calcite.Operand\022(\n\005right\030\002 " +
+      "\001(\0132\031.dataflow.calcite.Operand\032c\n\016NotEqP" +
+      "redicate\022\'\n\004left\030\001 \001(\0132\031.dataflow.calcit" +
+      "e.Operand\022(\n\005right\030\002 \001(\0132\031.dataflow.calc" +
+      "ite.Operand\032`\n\013GePredicate\022\'\n\004left\030\001 \001(\013" +
+      "2\031.dataflow.calcite.Operand\022(\n\005right\030\002 \001" +
+      "(\0132\031.dataflow.calcite.Operand\032`\n\013GtPredi" +
+      "cate\022\'\n\004left\030\001 \001(\0132\031.dataflow.calcite.Op" +
+      "erand\022(\n\005right\030\002 \001(\0132\031.dataflow.calcite." +
+      "Operand\032`\n\013LePredicate\022\'\n\004left\030\001 \001(\0132\031.d" +
       "ataflow.calcite.Operand\022(\n\005right\030\002 \001(\0132\031" +
-      ".dataflow.calcite.Operand\032c\n\016NotEqPredic" +
-      "ate\022\'\n\004left\030\001 \001(\0132\031.dataflow.calcite.Ope" +
-      "rand\022(\n\005right\030\002 \001(\0132\031.dataflow.calcite.O" +
-      "perand\032`\n\013GePredicate\022\'\n\004left\030\001 \001(\0132\031.da" +
-      "taflow.calcite.Operand\022(\n\005right\030\002 \001(\0132\031." +
-      "dataflow.calcite.Operand\032`\n\013GtPredicate\022" +
-      "\'\n\004left\030\001 \001(\0132\031.dataflow.calcite.Operand" +
-      "\022(\n\005right\030\002 \001(\0132\031.dataflow.calcite.Opera" +
-      "nd\032`\n\013LePredicate\022\'\n\004left\030\001 \001(\0132\031.datafl" +
-      "ow.calcite.Operand\022(\n\005right\030\002 \001(\0132\031.data" +
-      "flow.calcite.Operand\032`\n\013LtPredicate\022\'\n\004l" +
-      "eft\030\001 \001(\0132\031.dataflow.calcite.Operand\022(\n\005" +
-      "right\030\002 \001(\0132\031.dataflow.calcite.Operand\032\214" +
-      "\001\n\020BetweenPredicate\022(\n\005value\030\001 \001(\0132\031.dat" +
-      "aflow.calcite.Operand\022\'\n\004from\030\002 \001(\0132\031.da" +
-      "taflow.calcite.Operand\022%\n\002to\030\003 \001(\0132\031.dat" +
-      "aflow.calcite.Operand\032c\n\013InPredicate\022(\n\005" +
-      "value\030\001 \001(\0132\031.dataflow.calcite.Operand\022*" +
-      "\n\007options\030\002 \003(\0132\031.dataflow.calcite.Opera" +
-      "nd\032e\n\rLikePredicate\022(\n\005value\030\001 \001(\0132\031.dat" +
-      "aflow.calcite.Operand\022*\n\007pattern\030\002 \001(\0132\031" +
-      ".dataflow.calcite.OperandB\t\n\007operandB:\n!" +
-      "io.activej.dataflow.proto.calciteB\023Where" +
-      "PredicateProtoP\000b\006proto3"
+      ".dataflow.calcite.Operand\032`\n\013LtPredicate" +
+      "\022\'\n\004left\030\001 \001(\0132\031.dataflow.calcite.Operan" +
+      "d\022(\n\005right\030\002 \001(\0132\031.dataflow.calcite.Oper" +
+      "and\032\214\001\n\020BetweenPredicate\022(\n\005value\030\001 \001(\0132" +
+      "\031.dataflow.calcite.Operand\022\'\n\004from\030\002 \001(\013" +
+      "2\031.dataflow.calcite.Operand\022%\n\002to\030\003 \001(\0132" +
+      "\031.dataflow.calcite.Operand\032c\n\013InPredicat" +
+      "e\022(\n\005value\030\001 \001(\0132\031.dataflow.calcite.Oper" +
+      "and\022*\n\007options\030\002 \003(\0132\031.dataflow.calcite." +
+      "Operand\032e\n\rLikePredicate\022(\n\005value\030\001 \001(\0132" +
+      "\031.dataflow.calcite.Operand\022*\n\007pattern\030\002 " +
+      "\001(\0132\031.dataflow.calcite.Operand\032;\n\017IsNull" +
+      "Predicate\022(\n\005value\030\001 \001(\0132\031.dataflow.calc" +
+      "ite.Operand\032>\n\022IsNotNullPredicate\022(\n\005val" +
+      "ue\030\001 \001(\0132\031.dataflow.calcite.OperandB\t\n\007o" +
+      "perandB:\n!io.activej.dataflow.proto.calc" +
+      "iteB\023WherePredicateProtoP\000b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -12530,7 +14247,7 @@ public final class WherePredicateProto {
     internal_static_dataflow_calcite_WherePredicate_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_WherePredicate_descriptor,
-        new java.lang.String[] { "AndPredicate", "OrPredicate", "EqPredicate", "NotEqPredicate", "GePredicate", "GtPredicate", "LePredicate", "LtPredicate", "BetweenPredicate", "InPredicate", "LikePredicate", "Operand", });
+        new java.lang.String[] { "AndPredicate", "OrPredicate", "EqPredicate", "NotEqPredicate", "GePredicate", "GtPredicate", "LePredicate", "LtPredicate", "BetweenPredicate", "InPredicate", "LikePredicate", "IsNullPredicate", "IsNotNullPredicate", "Operand", });
     internal_static_dataflow_calcite_WherePredicate_AndPredicate_descriptor =
       internal_static_dataflow_calcite_WherePredicate_descriptor.getNestedTypes().get(0);
     internal_static_dataflow_calcite_WherePredicate_AndPredicate_fieldAccessorTable = new
@@ -12597,6 +14314,18 @@ public final class WherePredicateProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_WherePredicate_LikePredicate_descriptor,
         new java.lang.String[] { "Value", "Pattern", });
+    internal_static_dataflow_calcite_WherePredicate_IsNullPredicate_descriptor =
+      internal_static_dataflow_calcite_WherePredicate_descriptor.getNestedTypes().get(11);
+    internal_static_dataflow_calcite_WherePredicate_IsNullPredicate_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_dataflow_calcite_WherePredicate_IsNullPredicate_descriptor,
+        new java.lang.String[] { "Value", });
+    internal_static_dataflow_calcite_WherePredicate_IsNotNullPredicate_descriptor =
+      internal_static_dataflow_calcite_WherePredicate_descriptor.getNestedTypes().get(12);
+    internal_static_dataflow_calcite_WherePredicate_IsNotNullPredicate_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_dataflow_calcite_WherePredicate_IsNotNullPredicate_descriptor,
+        new java.lang.String[] { "Value", });
     io.activej.dataflow.proto.calcite.OperandProto.getDescriptor();
   }
 
