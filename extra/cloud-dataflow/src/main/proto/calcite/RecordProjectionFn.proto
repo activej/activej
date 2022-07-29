@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package dataflow.calcite;
+
+option java_multiple_files = false;
+option java_package = "io.activej.dataflow.proto.calcite";
+option java_outer_classname = "RecordProjectionFnProto";
+
+import "operand.proto";
+
+message RecordProjectionFn {
+  message FieldProjection {
+    Operand operand = 1;
+
+    oneof field_name {
+      string value = 2;
+      bool is_null = 3;
+    }
+  }
+
+  repeated FieldProjection field_projections = 1;
+}

@@ -11,6 +11,7 @@ import io.activej.dataflow.calcite.join.RecordKeyFunctionSerializer;
 import io.activej.dataflow.calcite.sort.RecordComparator;
 import io.activej.dataflow.inject.BinarySerializerModule;
 import io.activej.dataflow.proto.FunctionSubtypeSerializer;
+import io.activej.dataflow.proto.calcite.RecordProjectionFnSerializer;
 import io.activej.dataflow.proto.calcite.ReducerSerializer;
 import io.activej.dataflow.proto.calcite.WherePredicateSerializer;
 import io.activej.datastream.processor.StreamJoin;
@@ -33,7 +34,7 @@ public final class SerializersModule extends AbstractModule {
 	@Override
 	@SuppressWarnings({"rawtypes", "NullableProblems", "unchecked"})
 	protected void configure() {
-		bind(new Key<BinarySerializer<Function<?, ?>>>() {}).to((schema, serializerBuilder) -> {
+		bind(new Key<BinarySerializer<Function<?, ?>>>() {}).to((schema, recordProjectionFnSerializer) -> {
 					FunctionSubtypeSerializer<Function<?, ?>> serializer = FunctionSubtypeSerializer.create();
 					for (DataflowTable<?> table : schema.getDataflowTableMap().values()) {
 						Class<? extends Function<?, ?>> recordFunctionClass = (Class<? extends Function<?, ?>>) table.getRecordFunction().getClass();
@@ -41,11 +42,11 @@ public final class SerializersModule extends AbstractModule {
 					}
 					serializer.setSubtypeCodec((Class) RecordKeyFunction.class, new RecordKeyFunctionSerializer<>());
 					serializer.setSubtypeCodec((Class) Function.identity().getClass(), "identity", ofObject(Function::identity));
-					serializer.setSubtypeCodec(RecordProjectionFn.class, serializerBuilder.build(RecordProjectionFn.class));
+					serializer.setSubtypeCodec(RecordProjectionFn.class, recordProjectionFnSerializer);
 					serializer.setSubtypeCodec(RecordSchemeFunction.class, ofObject(RecordSchemeFunction::new));
 					return serializer;
 				},
-				DataflowSchema.class, SerializerBuilder.class);
+				Key.of(DataflowSchema.class), new Key<BinarySerializer<RecordProjectionFn>>() {});
 
 		bind(new Key<BinarySerializer<Predicate<?>>>() {}).to(optionalClassLoader -> (BinarySerializer)
 						(optionalClassLoader.isPresent() ?
@@ -80,10 +81,10 @@ public final class SerializersModule extends AbstractModule {
 				new Key<BinarySerializer<StreamReducers.MergeReducer>>() {});
 
 		bind(new Key<BinarySerializer<StreamReducers.ReducerToResult<?, ?, ?, ?>>>() {}).to(() -> {
-					FunctionSubtypeSerializer<StreamReducers.ReducerToResult> serializer = FunctionSubtypeSerializer.create();
-					serializer.setSubtypeCodec(RecordReducer.class, new ReducerSerializer());
-					return (BinarySerializer) serializer;
-				});
+			FunctionSubtypeSerializer<StreamReducers.ReducerToResult> serializer = FunctionSubtypeSerializer.create();
+			serializer.setSubtypeCodec(RecordReducer.class, new ReducerSerializer());
+			return (BinarySerializer) serializer;
+		});
 
 
 		bind(new Key<BinarySerializer<StreamJoin.Joiner<?, ?, ?, ?>>>() {}).to(() -> {
@@ -93,6 +94,12 @@ public final class SerializersModule extends AbstractModule {
 		});
 
 		bind(new Key<BinarySerializer<Record>>() {}).to(RecordSerializer::create, BinarySerializerModule.BinarySerializerLocator.class).asTransient();
+
+		bind(new Key<BinarySerializer<RecordProjectionFn>>() {}).to(optionalClassLoader ->
+						optionalClassLoader.isPresent() ?
+								new RecordProjectionFnSerializer(optionalClassLoader.get()) :
+								new RecordProjectionFnSerializer(),
+				new Key<OptionalDependency<DefiningClassLoader>>() {});
 
 		bind(SerializerBuilder.class).to(() -> SerializerBuilder.create()
 				.with(Type.class, ctx -> new SerializerDefType()));

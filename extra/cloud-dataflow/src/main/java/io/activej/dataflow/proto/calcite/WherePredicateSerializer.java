@@ -2,7 +2,6 @@ package io.activej.dataflow.proto.calcite;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.dataflow.calcite.Value;
 import io.activej.dataflow.calcite.where.*;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.BinaryOutput;
@@ -62,69 +61,69 @@ public final class WherePredicateSerializer implements BinarySerializer<WherePre
 		} else if (predicate instanceof EqPredicate eqPredicate) {
 			builder.setEqPredicate(
 					WherePredicateProto.WherePredicate.EqPredicate.newBuilder()
-							.setLeft(convert(eqPredicate.getLeft()))
-							.setRight(convert(eqPredicate.getRight()))
+							.setLeft(OperandConverters.convert(eqPredicate.getLeft()))
+							.setRight(OperandConverters.convert(eqPredicate.getRight()))
 			);
 		} else if (predicate instanceof NotEqPredicate notEqPredicate) {
 			builder.setNotEqPredicate(
 					WherePredicateProto.WherePredicate.NotEqPredicate.newBuilder()
-							.setLeft(convert(notEqPredicate.getLeft()))
-							.setRight(convert(notEqPredicate.getRight()))
+							.setLeft(OperandConverters.convert(notEqPredicate.getLeft()))
+							.setRight(OperandConverters.convert(notEqPredicate.getRight()))
 			);
 		} else if (predicate instanceof GePredicate gePredicate) {
 			builder.setGePredicate(
 					WherePredicateProto.WherePredicate.GePredicate.newBuilder()
-							.setLeft(convert(gePredicate.getLeft()))
-							.setRight(convert(gePredicate.getRight()))
+							.setLeft(OperandConverters.convert(gePredicate.getLeft()))
+							.setRight(OperandConverters.convert(gePredicate.getRight()))
 			);
 		} else if (predicate instanceof GtPredicate gtPredicate) {
 			builder.setGtPredicate(
 					WherePredicateProto.WherePredicate.GtPredicate.newBuilder()
-							.setLeft(convert(gtPredicate.getLeft()))
-							.setRight(convert(gtPredicate.getRight()))
+							.setLeft(OperandConverters.convert(gtPredicate.getLeft()))
+							.setRight(OperandConverters.convert(gtPredicate.getRight()))
 			);
 		} else if (predicate instanceof LePredicate lePredicate) {
 			builder.setLePredicate(
 					WherePredicateProto.WherePredicate.LePredicate.newBuilder()
-							.setLeft(convert(lePredicate.getLeft()))
-							.setRight(convert(lePredicate.getRight()))
+							.setLeft(OperandConverters.convert(lePredicate.getLeft()))
+							.setRight(OperandConverters.convert(lePredicate.getRight()))
 			);
 		} else if (predicate instanceof LtPredicate ltPredicate) {
 			builder.setLtPredicate(
 					WherePredicateProto.WherePredicate.LtPredicate.newBuilder()
-							.setLeft(convert(ltPredicate.getLeft()))
-							.setRight(convert(ltPredicate.getRight()))
+							.setLeft(OperandConverters.convert(ltPredicate.getLeft()))
+							.setRight(OperandConverters.convert(ltPredicate.getRight()))
 			);
 		} else if (predicate instanceof BetweenPredicate betweenPredicate) {
 			builder.setBetweenPredicate(
 					WherePredicateProto.WherePredicate.BetweenPredicate.newBuilder()
-							.setValue(convert(betweenPredicate.getValue()))
-							.setFrom(convert(betweenPredicate.getFrom()))
-							.setTo(convert(betweenPredicate.getTo()))
+							.setValue(OperandConverters.convert(betweenPredicate.getValue()))
+							.setFrom(OperandConverters.convert(betweenPredicate.getFrom()))
+							.setTo(OperandConverters.convert(betweenPredicate.getTo()))
 			);
 		} else if (predicate instanceof InPredicate inPredicate) {
 			builder.setInPredicate(
 					WherePredicateProto.WherePredicate.InPredicate.newBuilder()
-							.setValue(convert(inPredicate.getValue()))
+							.setValue(OperandConverters.convert(inPredicate.getValue()))
 							.addAllOptions(inPredicate.getOptions().stream()
-									.map(WherePredicateSerializer::convert)
+									.map(OperandConverters::convert)
 									.toList())
 			);
 		} else if (predicate instanceof LikePredicate likePredicate) {
 			builder.setLikePredicate(
 					WherePredicateProto.WherePredicate.LikePredicate.newBuilder()
-							.setValue(convert(likePredicate.getValue()))
-							.setPattern(convert(likePredicate.getPattern()))
+							.setValue(OperandConverters.convert(likePredicate.getValue()))
+							.setPattern(OperandConverters.convert(likePredicate.getPattern()))
 			);
 		} else if (predicate instanceof IsNullPredicate isNullPredicate) {
 			builder.setIsNullPredicate(
 					WherePredicateProto.WherePredicate.IsNullPredicate.newBuilder()
-							.setValue(convert(isNullPredicate.getValue()))
+							.setValue(OperandConverters.convert(isNullPredicate.getValue()))
 			);
 		} else if (predicate instanceof IsNotNullPredicate isNotNullPredicate) {
 			builder.setIsNotNullPredicate(
 					WherePredicateProto.WherePredicate.IsNotNullPredicate.newBuilder()
-							.setValue(convert(isNotNullPredicate.getValue()))
+							.setValue(OperandConverters.convert(isNotNullPredicate.getValue()))
 			);
 		} else {
 			throw new IllegalArgumentException("Unknown predicate type: " + predicate.getClass());
@@ -146,137 +145,47 @@ public final class WherePredicateSerializer implements BinarySerializer<WherePre
 							.toList()
 			);
 			case EQ_PREDICATE -> new EqPredicate(
-					convert(predicate.getEqPredicate().getLeft()),
-					convert(predicate.getEqPredicate().getRight())
+					OperandConverters.convert(classLoader, predicate.getEqPredicate().getLeft()),
+					OperandConverters.convert(classLoader, predicate.getEqPredicate().getRight())
 			);
 			case NOT_EQ_PREDICATE -> new NotEqPredicate(
-					convert(predicate.getNotEqPredicate().getLeft()),
-					convert(predicate.getNotEqPredicate().getRight())
+					OperandConverters.convert(classLoader, predicate.getNotEqPredicate().getLeft()),
+					OperandConverters.convert(classLoader, predicate.getNotEqPredicate().getRight())
 			);
 			case GE_PREDICATE -> new GePredicate(
-					convert(predicate.getGePredicate().getLeft()),
-					convert(predicate.getGePredicate().getRight())
+					OperandConverters.convert(classLoader, predicate.getGePredicate().getLeft()),
+					OperandConverters.convert(classLoader, predicate.getGePredicate().getRight())
 			);
 			case GT_PREDICATE -> new GtPredicate(
-					convert(predicate.getGtPredicate().getLeft()),
-					convert(predicate.getGtPredicate().getRight())
+					OperandConverters.convert(classLoader, predicate.getGtPredicate().getLeft()),
+					OperandConverters.convert(classLoader, predicate.getGtPredicate().getRight())
 			);
 			case LE_PREDICATE -> new LePredicate(
-					convert(predicate.getLePredicate().getLeft()),
-					convert(predicate.getLePredicate().getRight())
+					OperandConverters.convert(classLoader, predicate.getLePredicate().getLeft()),
+					OperandConverters.convert(classLoader, predicate.getLePredicate().getRight())
 			);
 			case LT_PREDICATE -> new LtPredicate(
-					convert(predicate.getLtPredicate().getLeft()),
-					convert(predicate.getLtPredicate().getRight())
+					OperandConverters.convert(classLoader, predicate.getLtPredicate().getLeft()),
+					OperandConverters.convert(classLoader, predicate.getLtPredicate().getRight())
 			);
 			case BETWEEN_PREDICATE -> new BetweenPredicate(
-					convert(predicate.getBetweenPredicate().getValue()),
-					convert(predicate.getBetweenPredicate().getFrom()),
-					convert(predicate.getBetweenPredicate().getTo())
+					OperandConverters.convert(classLoader, predicate.getBetweenPredicate().getValue()),
+					OperandConverters.convert(classLoader, predicate.getBetweenPredicate().getFrom()),
+					OperandConverters.convert(classLoader, predicate.getBetweenPredicate().getTo())
 			);
 			case IN_PREDICATE -> new InPredicate(
-					convert(predicate.getInPredicate().getValue()),
+					OperandConverters.convert(classLoader, predicate.getInPredicate().getValue()),
 					predicate.getInPredicate().getOptionsList().stream()
-							.map(this::convert)
+							.map(operand -> OperandConverters.convert(classLoader, operand))
 							.toList()
 			);
 			case LIKE_PREDICATE -> new LikePredicate(
-					convert(predicate.getLikePredicate().getValue()),
-					convert(predicate.getLikePredicate().getPattern())
+					OperandConverters.convert(classLoader, predicate.getLikePredicate().getValue()),
+					OperandConverters.convert(classLoader, predicate.getLikePredicate().getPattern())
 			);
-			case IS_NULL_PREDICATE -> new IsNullPredicate(convert(predicate.getIsNullPredicate().getValue()));
-			case IS_NOT_NULL_PREDICATE -> new IsNotNullPredicate(convert(predicate.getIsNotNullPredicate().getValue()));
+			case IS_NULL_PREDICATE -> new IsNullPredicate(OperandConverters.convert(classLoader, predicate.getIsNullPredicate().getValue()));
+			case IS_NOT_NULL_PREDICATE -> new IsNotNullPredicate(OperandConverters.convert(classLoader, predicate.getIsNotNullPredicate().getValue()));
 			case OPERAND_NOT_SET -> throw new CorruptedDataException("Predicate was not set");
-		};
-	}
-
-	private static OperandProto.Operand convert(Operand operand) {
-		OperandProto.Operand.Builder builder = OperandProto.Operand.newBuilder();
-
-		if (operand instanceof OperandRecordField operandRecordField) {
-			builder.setRecordField(
-					OperandProto.Operand.RecordField.newBuilder()
-							.setIndexOperand(convert(operandRecordField.getIndexOperand()))
-			);
-		} else if (operand instanceof OperandScalar operandScalar) {
-			OperandProto.Operand.Scalar.Builder scalarBuilder = OperandProto.Operand.Scalar.newBuilder();
-
-			Object value = operandScalar.getValue().getValue();
-			if (value == null) {
-				scalarBuilder.setNull(OperandProto.Operand.Scalar.None.newBuilder());
-			} else if (value instanceof Integer anInteger) {
-				scalarBuilder.setInteger(anInteger);
-			} else if (value instanceof Long aLong) {
-				scalarBuilder.setLong(aLong);
-			} else if (value instanceof Float aFloat) {
-				scalarBuilder.setFloat(aFloat);
-			} else if (value instanceof Double aDouble) {
-				scalarBuilder.setDouble(aDouble);
-			} else if (value instanceof Boolean aBoolean) {
-				scalarBuilder.setBoolean(aBoolean);
-			} else if (value instanceof String aString) {
-				scalarBuilder.setString(aString);
-			} else {
-				throw new IllegalArgumentException("Unsupported scalar type: " + value.getClass());
-			}
-
-			builder.setScalar(scalarBuilder);
-		} else if (operand instanceof OperandMapGet operandMapGet) {
-			builder.setMapGet(
-					OperandProto.Operand.MapGet.newBuilder()
-							.setMapOperand(convert(operandMapGet.getMapOperand()))
-							.setKeyOperand(convert(operandMapGet.getKeyOperand()))
-			);
-		} else if (operand instanceof OperandListGet operandListGet) {
-			builder.setListGet(
-					OperandProto.Operand.ListGet.newBuilder()
-							.setListOperand(convert(operandListGet.getListOperand()))
-							.setIndexOperand(convert(operandListGet.getIndexOperand()))
-			);
-		} else if (operand instanceof OperandFieldAccess operandFieldAccess) {
-			builder.setFieldGet(
-					OperandProto.Operand.FieldGet.newBuilder()
-							.setObjectOperand(convert(operandFieldAccess.getObjectOperand()))
-							.setFieldNameOperand(convert(operandFieldAccess.getFieldNameOperand()))
-			);
-		} else {
-			throw new IllegalArgumentException("Unknown operand type: " + operand.getClass());
-		}
-
-		return builder.build();
-	}
-
-	private Operand convert(OperandProto.Operand operand) {
-		return switch (operand.getOperandCase()) {
-			case RECORD_FIELD -> new OperandRecordField(convert(operand.getRecordField().getIndexOperand()));
-			case SCALAR -> new OperandScalar(
-					Value.materializedValue(
-							switch (operand.getScalar().getValueCase()) {
-								case NULL -> null;
-								case INTEGER -> operand.getScalar().getInteger();
-								case LONG -> operand.getScalar().getLong();
-								case FLOAT -> operand.getScalar().getFloat();
-								case DOUBLE -> operand.getScalar().getDouble();
-								case BOOLEAN -> operand.getScalar().getBoolean();
-								case STRING -> operand.getScalar().getString();
-								case VALUE_NOT_SET -> throw new CorruptedDataException("Scalar value not set");
-							}
-					)
-			);
-			case MAP_GET -> new OperandMapGet<>(
-					convert(operand.getMapGet().getMapOperand()),
-					convert(operand.getMapGet().getKeyOperand())
-			);
-			case LIST_GET -> new OperandListGet(
-					convert(operand.getListGet().getListOperand()),
-					convert(operand.getListGet().getIndexOperand())
-			);
-			case FIELD_GET -> new OperandFieldAccess(
-					convert(operand.getFieldGet().getObjectOperand()),
-					convert(operand.getFieldGet().getFieldNameOperand()),
-					classLoader
-			);
-			case OPERAND_NOT_SET -> throw new CorruptedDataException("Operand not set");
 		};
 	}
 

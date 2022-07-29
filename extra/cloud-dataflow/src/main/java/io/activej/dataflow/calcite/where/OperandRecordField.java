@@ -1,8 +1,10 @@
 package io.activej.dataflow.calcite.where;
 
 import io.activej.record.Record;
+import io.activej.record.RecordScheme;
 import org.apache.calcite.rex.RexDynamicParam;
 
+import java.lang.reflect.Type;
 import java.util.List;
 
 public final class OperandRecordField implements Operand {
@@ -17,6 +19,18 @@ public final class OperandRecordField implements Operand {
 		//noinspection ConstantConditions
 		int index = indexOperand.getValue(record);
 		return record.get(index);
+	}
+
+	@Override
+	public Type getFieldType(RecordScheme original) {
+		//noinspection ConstantConditions
+		return original.getFieldType(((int) indexOperand.getValue(original.record())));
+	}
+
+	@Override
+	public String getFieldName(RecordScheme original) {
+		//noinspection ConstantConditions
+		return original.getField(indexOperand.getValue(original.record()));
 	}
 
 	@Override

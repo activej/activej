@@ -27,10 +27,10 @@ public final class Utils {
 		};
 	}
 
-	public static Operand toOperand(RexNode conditionNode, DefiningClassLoader classLoader) {
-		if (conditionNode instanceof RexDynamicParam dynamicParam) {
+	public static Operand toOperand(RexNode node, DefiningClassLoader classLoader) {
+		if (node instanceof RexDynamicParam dynamicParam) {
 			return new OperandScalar(Value.unmaterializedValue(dynamicParam));
-		} else if (conditionNode instanceof RexCall call) {
+		} else if (node instanceof RexCall call) {
 			switch (call.getKind()) {
 				case CAST -> {
 					return toOperand(call.getOperands().get(0), classLoader);
@@ -47,20 +47,20 @@ public final class Utils {
 					}
 				}
 			}
-		} else if (conditionNode instanceof RexLiteral literal) {
-			Value value = Value.materializedValue(toJavaType(literal));
+		} else if (node instanceof RexLiteral literal) {
+			Value value = Value.materializedValue(literal);
 			return new OperandScalar(value);
-		} else if (conditionNode instanceof RexInputRef inputRef) {
-			Value value = Value.materializedValue(inputRef.getIndex());
+		} else if (node instanceof RexInputRef inputRef) {
+			Value value = Value.materializedValue(inputRef);
 			Operand indexOperand = new OperandScalar(value);
 			return new OperandRecordField(indexOperand);
-		} else if (conditionNode instanceof RexFieldAccess fieldAccess) {
+		} else if (node instanceof RexFieldAccess fieldAccess) {
 			Operand objectOperand = toOperand(fieldAccess.getReferenceExpr(), classLoader);
-			Value value = Value.materializedValue(fieldAccess.getField().getName());
+			Value value = Value.materializedValue(String.class, fieldAccess.getField().getName());
 			Operand fieldNameOperand = new OperandScalar(value);
 			return new OperandFieldAccess(objectOperand, fieldNameOperand, classLoader);
 		}
-		throw new IllegalArgumentException("Unknown node: " + conditionNode);
+		throw new IllegalArgumentException("Unknown node: " + node);
 	}
 
 }

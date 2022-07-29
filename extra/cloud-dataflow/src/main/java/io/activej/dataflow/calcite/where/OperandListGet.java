@@ -2,8 +2,11 @@ package io.activej.dataflow.calcite.where;
 
 import io.activej.common.Utils;
 import io.activej.record.Record;
+import io.activej.record.RecordScheme;
 import org.apache.calcite.rex.RexDynamicParam;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.List;
 
 public final class OperandListGet implements Operand {
@@ -23,6 +26,19 @@ public final class OperandListGet implements Operand {
 		if (list == null || index == null || list.size() <= index) return null;
 
 		return list.get(index);
+	}
+
+	@Override
+	public Type getFieldType(RecordScheme original) {
+		Type listFieldType = listOperand.getFieldType(original);
+		return ((ParameterizedType) listFieldType).getActualTypeArguments()[0];
+	}
+
+	@Override
+	public String getFieldName(RecordScheme original) {
+		String listFieldName = listOperand.getFieldName(original);
+		String indexFieldName = indexOperand.getFieldName(original);
+		return listFieldName + ".get(" + indexFieldName + ")";
 	}
 
 	@Override

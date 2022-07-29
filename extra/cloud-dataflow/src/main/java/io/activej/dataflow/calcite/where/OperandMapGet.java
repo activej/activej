@@ -2,8 +2,11 @@ package io.activej.dataflow.calcite.where;
 
 import io.activej.common.Utils;
 import io.activej.record.Record;
+import io.activej.record.RecordScheme;
 import org.apache.calcite.rex.RexDynamicParam;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +27,19 @@ public final class OperandMapGet<K> implements Operand {
 		if (map == null) return null;
 
 		return map.get(key);
+	}
+
+	@Override
+	public Type getFieldType(RecordScheme original) {
+		Type mapFieldType = mapOperand.getFieldType(original);
+		return ((ParameterizedType) mapFieldType).getActualTypeArguments()[1];
+	}
+
+	@Override
+	public String getFieldName(RecordScheme original) {
+		String mapFieldName = mapOperand.getFieldName(original);
+		String keyFieldName = keyOperand.getFieldName(original);
+		return mapFieldName + ".get(" + keyFieldName + ")";
 	}
 
 	@Override

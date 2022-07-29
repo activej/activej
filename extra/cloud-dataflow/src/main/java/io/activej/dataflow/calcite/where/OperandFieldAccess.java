@@ -5,12 +5,18 @@ import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.Utils;
 import io.activej.record.Record;
+import io.activej.record.RecordScheme;
 import org.apache.calcite.rex.RexDynamicParam;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.RecordComponent;
+import java.lang.reflect.Type;
 import java.util.List;
 
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.common.Checks.checkNotNull;
 
 public final class OperandFieldAccess implements Operand {
 	private final Operand objectOperand;
@@ -42,6 +48,40 @@ public final class OperandFieldAccess implements Operand {
 		);
 
 		return fieldGetter.getField(object, fieldName);
+	}
+
+	@Override
+	public Type getFieldType(RecordScheme original) {
+		Class<?> fieldType = (Class<?>) objectOperand.getFieldType(original);
+		String fieldName = checkNotNull(fieldNameOperand.getValue(original.record()));
+
+		if (fieldType.isRecord()) {
+			for (RecordComponent recordComponent : fieldType.getRecordComponents()) {
+				if (recordComponent.getName().equals(fieldName)) return recordComponent.getGenericType();
+			}
+		}
+
+		for (Field field : fieldType.getFields()) {
+			if (field.getName().equals(fieldName)) {
+				return field.getGenericType();
+			}
+		}
+
+		String capitalized = fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
+		String getMethod = "get" + capitalized;
+		String isMethod = "is" + capitalized;
+		for (Method method : fieldType.getMethods()) {
+			if (method.getName().equals(getMethod) || method.getName().equals(isMethod)) {
+				return method.getGenericReturnType();
+			}
+		}
+
+		throw new IllegalArgumentException();
+	}
+
+	@Override
+	public String getFieldName(RecordScheme original) {
+		return objectOperand.getFieldName(original) + '.' + fieldNameOperand.getFieldName(original);
 	}
 
 	@Override

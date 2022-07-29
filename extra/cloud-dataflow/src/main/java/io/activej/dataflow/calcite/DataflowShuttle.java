@@ -3,11 +3,7 @@ package io.activej.dataflow.calcite;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.ToDoException;
 import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjection;
-import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjectionAsIs;
-import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjectionChain;
-import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjectionPojoField;
 import io.activej.dataflow.calcite.aggregation.*;
-import io.activej.dataflow.calcite.function.ProjectionFunction;
 import io.activej.dataflow.calcite.join.RecordInnerJoiner;
 import io.activej.dataflow.calcite.join.RecordKeyFunction;
 import io.activej.dataflow.calcite.sort.RecordComparator;
@@ -34,7 +30,6 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlKind;
-import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.type.SqlTypeName;
 
 import java.util.*;
@@ -75,7 +70,7 @@ public class DataflowShuttle extends RelShuttleImpl {
 
 		List<FieldProjection> projections = new ArrayList<>();
 		for (RexNode rexNode : program.expandList(program.getProjectList())) {
-			projections.add(project(rexNode));
+			projections.add(new FieldProjection(toOperand(rexNode, classLoader), null));
 		}
 
 		RecordProjectionFn projectionFn = new RecordProjectionFn(projections);
@@ -87,42 +82,6 @@ public class DataflowShuttle extends RelShuttleImpl {
 				params -> Datasets.map(finalCurrent.materialize(params), projectionFn.materialize(params), Record.class)));
 
 		return result;
-	}
-
-	private FieldProjection project(RexNode rexNode) {
-		FieldProjection fieldProjection = switch (rexNode.getKind()) {
-			case INPUT_REF -> new FieldProjectionAsIs(((RexInputRef) rexNode).getIndex());
-			case OTHER_FUNCTION -> {
-				RexCall rexCall = (RexCall) rexNode;
-				SqlOperator operator = rexCall.getOperator();
-				if (operator instanceof ProjectionFunction projectionFunction) {
-					yield projectionFunction.projectField(null, rexCall.getOperands());
-				}
-				throw new IllegalArgumentException("Unknown function: " + rexCall.getOperator());
-			}
-			case FIELD_ACCESS -> {
-				RexFieldAccess fieldAccess = (RexFieldAccess) rexNode;
-				RexNode referenceExpr = fieldAccess.getReferenceExpr();
-				String fieldName = fieldAccess.getField().getName();
-				Class<?> type = ((JavaType) fieldAccess.getType()).getJavaClass();
-
-				if (referenceExpr instanceof RexInputRef input) {
-					yield new FieldProjectionPojoField(null, input.getIndex(), fieldName, type);
-				} else if (referenceExpr instanceof RexCall call) {
-					yield new FieldProjectionChain(List.of(
-							project(call),
-							new FieldProjectionPojoField(null, -1, fieldName, type)
-					));
-				}
-				throw new IllegalArgumentException();
-			}
-			default -> throw new IllegalArgumentException("Unsupported node kind: " + rexNode.getKind());
-		};
-
-		params.addAll(fieldProjection.getParams());
-
-		return fieldProjection;
-
 	}
 
 	@Override
@@ -447,8 +406,8 @@ public class DataflowShuttle extends RelShuttleImpl {
 		};
 	}
 
-	private Operand toOperand(RexNode conditionNode, DefiningClassLoader classLoader) {
-		Operand operand = Utils.toOperand(conditionNode, classLoader);
+	private Operand toOperand(RexNode node, DefiningClassLoader classLoader) {
+		Operand operand = Utils.toOperand(node, classLoader);
 		params.addAll(operand.getParams());
 		return operand;
 	}
