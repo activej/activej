@@ -50,7 +50,7 @@ public class CalcitePlainTest extends AbstractCalciteTest {
 	private <T> T denyPreparedRequests() {
 		server.close();
 		//noinspection ConstantConditions
-		Assume.assumeTrue("Prepared statements are not supported in plain calls", false);
+		Assume.assumeTrue("Prepared statements are not supported in plain queries", false);
 
 		throw new AssertionError();
 	}

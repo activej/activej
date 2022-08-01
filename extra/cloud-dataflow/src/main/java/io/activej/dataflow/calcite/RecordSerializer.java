@@ -9,7 +9,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
 import java.util.List;
-import java.util.Map;
 
 import static io.activej.common.Checks.checkState;
 
@@ -17,20 +16,20 @@ public final class RecordSerializer implements BinarySerializer<Record> {
 	private static final boolean CHECK = Checks.isEnabled(RecordSerializer.class);
 
 	private final BinarySerializerLocator locator;
-	private final BinarySerializer<String> stringSerializer;
+	private final BinarySerializer<Integer> intSerializer;
 
 	private @Nullable RecordScheme encodeRecordScheme;
 	private @Nullable RecordScheme decodeRecordScheme;
 
 	private BinarySerializer<Object> @Nullable [] fieldSerializers;
 
-	private RecordSerializer(BinarySerializerLocator locator, BinarySerializer<String> stringSerializer) {
+	private RecordSerializer(BinarySerializerLocator locator, BinarySerializer<Integer> intSerializer) {
 		this.locator = locator;
-		this.stringSerializer = stringSerializer;
+		this.intSerializer = intSerializer;
 	}
 
 	public static RecordSerializer create(BinarySerializerLocator locator) {
-		return new RecordSerializer(locator, locator.get(String.class));
+		return new RecordSerializer(locator, locator.get(int.class));
 	}
 
 	@Override
@@ -48,13 +47,12 @@ public final class RecordSerializer implements BinarySerializer<Record> {
 			locator.get(SerializableRecordScheme.class).encode(out, serializableRecordScheme);
 		}
 
-		Map<String, Object> map = item.toMap();
+		Object[] array = item.toArray();
 
-		int i = 0;
 		assert fieldSerializers != null;
-		for (Map.Entry<String, Object> entry : map.entrySet()) {
-			stringSerializer.encode(out, entry.getKey());
-			fieldSerializers[i++].encode(out, entry.getValue());
+		for (int i = 0; i < array.length; i++) {
+			intSerializer.encode(out, i);
+			fieldSerializers[i].encode(out, array[i]);
 		}
 	}
 
@@ -75,10 +73,10 @@ public final class RecordSerializer implements BinarySerializer<Record> {
 		assert fieldSerializers != null;
 		Record record = decodeRecordScheme.record();
 		for (int i = 0; i < decodeRecordScheme.size(); i++) {
-			String fieldName = stringSerializer.decode(in);
+			int index = intSerializer.decode(in);
 			Object fieldValue = fieldSerializers[i].decode(in);
 
-			record.set(fieldName, fieldValue);
+			record.set(index, fieldValue);
 		}
 
 		return record;

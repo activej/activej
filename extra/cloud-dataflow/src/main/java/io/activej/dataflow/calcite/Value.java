@@ -1,5 +1,6 @@
 package io.activej.dataflow.calcite;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.activej.record.Record;
 import io.activej.types.Types;
 import org.apache.calcite.rel.type.RelDataType;
@@ -62,6 +63,7 @@ public class Value {
 		return type;
 	}
 
+	@JsonIgnore
 	public RexDynamicParam getDynamicParam() {
 		checkState(!isMaterialized());
 

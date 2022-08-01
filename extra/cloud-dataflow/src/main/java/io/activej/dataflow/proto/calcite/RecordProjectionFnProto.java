@@ -21,7 +21,7 @@ public final class RecordProjectionFnProto {
     /**
      * <code>repeated .dataflow.calcite.RecordProjectionFn.FieldProjection field_projections = 1;</code>
      */
-    java.util.List<io.activej.dataflow.proto.calcite.RecordProjectionFnProto.RecordProjectionFn.FieldProjection> 
+    java.util.List<io.activej.dataflow.proto.calcite.RecordProjectionFnProto.RecordProjectionFn.FieldProjection>
         getFieldProjectionsList();
     /**
      * <code>repeated .dataflow.calcite.RecordProjectionFn.FieldProjection field_projections = 1;</code>
@@ -34,7 +34,7 @@ public final class RecordProjectionFnProto {
     /**
      * <code>repeated .dataflow.calcite.RecordProjectionFn.FieldProjection field_projections = 1;</code>
      */
-    java.util.List<? extends io.activej.dataflow.proto.calcite.RecordProjectionFnProto.RecordProjectionFn.FieldProjectionOrBuilder> 
+    java.util.List<? extends io.activej.dataflow.proto.calcite.RecordProjectionFnProto.RecordProjectionFn.FieldProjectionOrBuilder>
         getFieldProjectionsOrBuilderList();
     /**
      * <code>repeated .dataflow.calcite.RecordProjectionFn.FieldProjection field_projections = 1;</code>
@@ -370,7 +370,7 @@ public final class RecordProjectionFnProto {
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
-          com.google.protobuf.ByteString bs = 
+          com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           if (fieldNameCase_ == 2) {
@@ -390,7 +390,7 @@ public final class RecordProjectionFnProto {
           ref = fieldName_;
         }
         if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           if (fieldNameCase_ == 2) {
@@ -905,7 +905,7 @@ public final class RecordProjectionFnProto {
          * <code>.dataflow.calcite.Operand operand = 1;</code>
          */
         public io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder getOperandBuilder() {
-          
+
           onChanged();
           return getOperandFieldBuilder().getBuilder();
         }
@@ -924,7 +924,7 @@ public final class RecordProjectionFnProto {
          * <code>.dataflow.calcite.Operand operand = 1;</code>
          */
         private com.google.protobuf.SingleFieldBuilderV3<
-            io.activej.dataflow.proto.calcite.OperandProto.Operand, io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder, io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder> 
+            io.activej.dataflow.proto.calcite.OperandProto.Operand, io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder, io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder>
             getOperandFieldBuilder() {
           if (operandBuilder_ == null) {
             operandBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -979,7 +979,7 @@ public final class RecordProjectionFnProto {
             ref = fieldName_;
           }
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString b =
                 com.google.protobuf.ByteString.copyFromUtf8(
                     (java.lang.String) ref);
             if (fieldNameCase_ == 2) {
@@ -1140,7 +1140,7 @@ public final class RecordProjectionFnProto {
      * <code>repeated .dataflow.calcite.RecordProjectionFn.FieldProjection field_projections = 1;</code>
      */
     @java.lang.Override
-    public java.util.List<? extends io.activej.dataflow.proto.calcite.RecordProjectionFnProto.RecordProjectionFn.FieldProjectionOrBuilder> 
+    public java.util.List<? extends io.activej.dataflow.proto.calcite.RecordProjectionFnProto.RecordProjectionFn.FieldProjectionOrBuilder>
         getFieldProjectionsOrBuilderList() {
       return fieldProjections_;
     }
@@ -1471,7 +1471,7 @@ public final class RecordProjectionFnProto {
               fieldProjectionsBuilder_ = null;
               fieldProjections_ = other.fieldProjections_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              fieldProjectionsBuilder_ = 
+              fieldProjectionsBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getFieldProjectionsFieldBuilder() : null;
             } else {
@@ -1704,7 +1704,7 @@ public final class RecordProjectionFnProto {
       /**
        * <code>repeated .dataflow.calcite.RecordProjectionFn.FieldProjection field_projections = 1;</code>
        */
-      public java.util.List<? extends io.activej.dataflow.proto.calcite.RecordProjectionFnProto.RecordProjectionFn.FieldProjectionOrBuilder> 
+      public java.util.List<? extends io.activej.dataflow.proto.calcite.RecordProjectionFnProto.RecordProjectionFn.FieldProjectionOrBuilder>
            getFieldProjectionsOrBuilderList() {
         if (fieldProjectionsBuilder_ != null) {
           return fieldProjectionsBuilder_.getMessageOrBuilderList();
@@ -1730,12 +1730,12 @@ public final class RecordProjectionFnProto {
       /**
        * <code>repeated .dataflow.calcite.RecordProjectionFn.FieldProjection field_projections = 1;</code>
        */
-      public java.util.List<io.activej.dataflow.proto.calcite.RecordProjectionFnProto.RecordProjectionFn.FieldProjection.Builder> 
+      public java.util.List<io.activej.dataflow.proto.calcite.RecordProjectionFnProto.RecordProjectionFn.FieldProjection.Builder>
            getFieldProjectionsBuilderList() {
         return getFieldProjectionsFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          io.activej.dataflow.proto.calcite.RecordProjectionFnProto.RecordProjectionFn.FieldProjection, io.activej.dataflow.proto.calcite.RecordProjectionFnProto.RecordProjectionFn.FieldProjection.Builder, io.activej.dataflow.proto.calcite.RecordProjectionFnProto.RecordProjectionFn.FieldProjectionOrBuilder> 
+          io.activej.dataflow.proto.calcite.RecordProjectionFnProto.RecordProjectionFn.FieldProjection, io.activej.dataflow.proto.calcite.RecordProjectionFnProto.RecordProjectionFn.FieldProjection.Builder, io.activej.dataflow.proto.calcite.RecordProjectionFnProto.RecordProjectionFn.FieldProjectionOrBuilder>
           getFieldProjectionsFieldBuilder() {
         if (fieldProjectionsBuilder_ == null) {
           fieldProjectionsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -1803,12 +1803,12 @@ public final class RecordProjectionFnProto {
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_dataflow_calcite_RecordProjectionFn_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_dataflow_calcite_RecordProjectionFn_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_dataflow_calcite_RecordProjectionFn_FieldProjection_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_dataflow_calcite_RecordProjectionFn_FieldProjection_fieldAccessorTable;
 

@@ -1285,6 +1285,37 @@ public abstract class AbstractCalciteTest {
 		assertEquals(expected, result);
 	}
 
+	@Test
+	public void testUnion() {
+		QueryResult result = query("""
+				SELECT id, firstName
+				FROM student
+				WHERE id <= 2
+				UNION
+				SELECT id, departmentName
+				FROM department
+				UNION
+				SELECT id, lastName
+				FROM student
+				WHERE id > 2
+				""");
+
+		QueryResult expected = new QueryResult(
+				List.of("id", "firstName"),
+				List.of(
+						new Object[]{STUDENT_LIST.get(2).id(), STUDENT_LIST.get(2).lastName()},
+						new Object[]{STUDENT_LIST.get(3).id(), STUDENT_LIST.get(3).lastName()},
+						new Object[]{STUDENT_LIST.get(0).id(), STUDENT_LIST.get(0).firstName()},
+						new Object[]{STUDENT_LIST.get(1).id(), STUDENT_LIST.get(1).firstName()},
+						new Object[]{DEPARTMENT_LIST.get(0).id(), DEPARTMENT_LIST.get(0).departmentName()},
+						new Object[]{DEPARTMENT_LIST.get(1).id(), DEPARTMENT_LIST.get(1).departmentName()},
+						new Object[]{DEPARTMENT_LIST.get(2).id(), DEPARTMENT_LIST.get(2).departmentName()}
+				)
+		);
+
+		assertEquals(expected, result);
+	}
+
 
 	private void assertSelectPojo(QueryResult result) {
 		QueryResult expected = new QueryResult(List.of("pojo"), List.<Object[]>of(new Object[]{new UserProfilePojo("test1", 1)}));

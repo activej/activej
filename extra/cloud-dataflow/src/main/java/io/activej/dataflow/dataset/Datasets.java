@@ -207,4 +207,8 @@ public final class Datasets {
 	public static <T> Dataset<T> empty(Class<T> resultType) {
 		return new DatasetEmpty<>(resultType);
 	}
+
+	public static <T> Dataset<T> union(Dataset<T> left, Dataset<T> right) {
+		return new DatasetUnion<>(left, right);
+	}
 }

@@ -42,7 +42,7 @@ import static io.activej.common.Utils.last;
 public class DataflowShuttle extends RelShuttleImpl {
 	private final DefiningClassLoader classLoader;
 
-	private final Queue<UnmaterializedDataset> currentQueue = new ArrayDeque<>();
+	private final Deque<UnmaterializedDataset> datasetStack = new ArrayDeque<>();
 	private final Set<RexDynamicParam> params = new TreeSet<>(Comparator.comparingInt(RexDynamicParam::getIndex));
 
 	public DataflowShuttle(DefiningClassLoader classLoader) {
@@ -55,7 +55,7 @@ public class DataflowShuttle extends RelShuttleImpl {
 
 		RexProgram program = calc.getProgram();
 
-		UnmaterializedDataset current = checkNotNull(currentQueue.poll());
+		UnmaterializedDataset current = checkNotNull(datasetStack.pop());
 
 		RexLocalRef condition = program.getCondition();
 		if (condition != null) {
@@ -64,7 +64,7 @@ public class DataflowShuttle extends RelShuttleImpl {
 		}
 
 		if (program.getInputRowType().equals(program.getOutputRowType())) {
-			currentQueue.add(current);
+			datasetStack.push(current);
 			return result;
 		}
 
@@ -73,13 +73,13 @@ public class DataflowShuttle extends RelShuttleImpl {
 			projections.add(new FieldProjection(toOperand(rexNode, classLoader), null));
 		}
 
-		RecordProjectionFn projectionFn = new RecordProjectionFn(projections);
+		RecordProjectionFn projectionFn = RecordProjectionFn.create(projections);
 
 		UnmaterializedDataset finalCurrent = current;
 
-		currentQueue.add(UnmaterializedDataset.of(
+		datasetStack.push(UnmaterializedDataset.of(
 				projectionFn.getToScheme(current.getScheme(), ($1, $2) -> null),
-				params -> Datasets.map(finalCurrent.materialize(params), projectionFn.materialize(params), Record.class)));
+				params -> Datasets.map(finalCurrent.materialize(params), projectionFn.materialize(params))));
 
 		return result;
 	}
@@ -90,7 +90,7 @@ public class DataflowShuttle extends RelShuttleImpl {
 
 		UnmaterializedDataset scanned = scan(scan);
 
-		currentQueue.add(scanned);
+		datasetStack.push(scanned);
 		return result;
 	}
 
@@ -98,11 +98,11 @@ public class DataflowShuttle extends RelShuttleImpl {
 	public RelNode visit(LogicalFilter filter) {
 		RelNode result = super.visit(filter);
 
-		UnmaterializedDataset current = checkNotNull(currentQueue.poll());
+		UnmaterializedDataset current = checkNotNull(datasetStack.pop());
 
 		UnmaterializedDataset newResult = filter(current, filter.getCondition());
 
-		currentQueue.add(newResult);
+		datasetStack.push(newResult);
 		return result;
 	}
 
@@ -110,12 +110,12 @@ public class DataflowShuttle extends RelShuttleImpl {
 	public RelNode visit(LogicalJoin join) {
 		RelNode result = super.visit(join);
 
-		UnmaterializedDataset left = checkNotNull(currentQueue.poll());
-		UnmaterializedDataset right = checkNotNull(currentQueue.poll());
+		UnmaterializedDataset right = checkNotNull(datasetStack.pop());
+		UnmaterializedDataset left = checkNotNull(datasetStack.pop());
 
 		UnmaterializedDataset joined = join(join, left, right, getJoinKeyType(join));
 
-		currentQueue.add(joined);
+		datasetStack.push(joined);
 		return result;
 	}
 
@@ -123,7 +123,7 @@ public class DataflowShuttle extends RelShuttleImpl {
 	public RelNode visit(LogicalAggregate aggregate) {
 		RelNode result = super.visit(aggregate);
 
-		UnmaterializedDataset current = checkNotNull(currentQueue.poll());
+		UnmaterializedDataset current = checkNotNull(datasetStack.pop());
 
 		List<AggregateCall> callList = aggregate.getAggCallList();
 		List<FieldReducer<?, ?, ?>> fieldReducers = new ArrayList<>(callList.size());
@@ -161,7 +161,7 @@ public class DataflowShuttle extends RelShuttleImpl {
 
 		RecordReducer recordReducer = new RecordReducer(fieldReducers);
 
-		currentQueue.add(UnmaterializedDataset.of(
+		datasetStack.push(UnmaterializedDataset.of(
 				recordReducer.createScheme(current.getScheme()),
 				params -> {
 					Dataset<Record> materialized = current.materialize(params);
@@ -202,7 +202,22 @@ public class DataflowShuttle extends RelShuttleImpl {
 
 	@Override
 	public RelNode visit(LogicalUnion union) {
-		throw new ToDoException();
+		RelNode result = super.visit(union);
+
+		UnmaterializedDataset right = checkNotNull(datasetStack.pop());
+		UnmaterializedDataset left = checkNotNull(datasetStack.pop());
+
+		datasetStack.push(UnmaterializedDataset.of(left.getScheme(), params -> {
+			Dataset<Record> leftDataset = left.materialize(params);
+			Dataset<Record> rightDataset = right.materialize(params);
+
+			// Make sure field names match
+			rightDataset = Datasets.map(rightDataset, RecordProjectionFn.rename(left.getScheme()));
+
+			return Datasets.union(leftDataset, rightDataset);
+		}));
+
+		return result;
 	}
 
 	@Override
@@ -219,11 +234,11 @@ public class DataflowShuttle extends RelShuttleImpl {
 	public RelNode visit(LogicalSort sort) {
 		RelNode result = super.visit(sort);
 
-		UnmaterializedDataset current = checkNotNull(currentQueue.poll());
+		UnmaterializedDataset current = checkNotNull(datasetStack.pop());
 
 		UnmaterializedDataset sorted = sort(sort, current);
 
-		currentQueue.add(sorted);
+		datasetStack.push(sorted);
 		return result;
 	}
 
@@ -332,13 +347,13 @@ public class DataflowShuttle extends RelShuttleImpl {
 	}
 
 	public UnmaterializedDataset getUnmaterializedDataset() {
-		checkState(currentQueue.size() == 1);
+		checkState(datasetStack.size() == 1);
 
-		return currentQueue.peek();
+		return datasetStack.peek();
 	}
 
 	public List<RexDynamicParam> getParameters() {
-		checkState(currentQueue.size() == 1);
+		checkState(datasetStack.size() == 1);
 
 		return new ArrayList<>(params);
 	}

@@ -55,7 +55,7 @@ public final class RecordProjectionFnSerializer implements BinarySerializer<Reco
 			throw new CorruptedDataException(e.getMessage());
 		}
 
-		return new RecordProjectionFn(
+		return RecordProjectionFn.create(
 				recordProjectionFn.getFieldProjectionsList().stream()
 						.map(fieldProjection -> new RecordProjectionFn.FieldProjection(
 								OperandConverters.convert(classLoader, fieldProjection.getOperand()),

@@ -85,7 +85,9 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 		SqlNode sqlNode;
 		try {
 			sqlNode = parser.parseQuery(sql);
-			if (sqlNode.getKind() != SqlKind.SELECT && sqlNode.getKind() != SqlKind.ORDER_BY) { // `SELECT ... ORDER BY ...` is considered to have ORDER_BY kind for some reason
+			if (sqlNode.getKind() != SqlKind.SELECT &&
+					sqlNode.getKind() != SqlKind.UNION &&
+					sqlNode.getKind() != SqlKind.ORDER_BY) { // `SELECT ... ORDER BY ...` is considered to have ORDER_BY kind for some reason
 				throw new DataflowException("Only 'SELECT' queries are allowed");
 			}
 		} catch (SqlParseException e) {
