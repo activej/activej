@@ -3,7 +3,6 @@ package io.activej.dataflow.calcite.where;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.Utils;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import org.apache.calcite.rex.RexDynamicParam;
@@ -16,21 +15,20 @@ import java.lang.reflect.Type;
 import java.util.List;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.common.Checks.checkNotNull;
 
 public final class OperandFieldAccess implements Operand {
 	private final Operand objectOperand;
-	private final Operand fieldNameOperand;
+	private final String fieldName;
 	private final DefiningClassLoader classLoader;
 
-	public OperandFieldAccess(Operand objectOperand, Operand fieldNameOperand, DefiningClassLoader classLoader) {
+	public OperandFieldAccess(Operand objectOperand, String fieldName, DefiningClassLoader classLoader) {
 		this.objectOperand = objectOperand;
-		this.fieldNameOperand = fieldNameOperand;
+		this.fieldName = fieldName;
 		this.classLoader = classLoader;
 	}
 
-	public OperandFieldAccess(Operand objectOperand, Operand fieldNameOperand) {
-		this(objectOperand, fieldNameOperand, DefiningClassLoader.create());
+	public OperandFieldAccess(Operand objectOperand, String fieldName) {
+		this(objectOperand, fieldName, DefiningClassLoader.create());
 	}
 
 	@Override
@@ -38,7 +36,6 @@ public final class OperandFieldAccess implements Operand {
 		Object object = objectOperand.getValue(record);
 		if (object == null) return null;
 
-		String fieldName = fieldNameOperand.getValue(record);
 		Class<?> objectClass = object.getClass();
 
 		FieldGetter fieldGetter = classLoader.ensureClassAndCreateInstance(
@@ -53,7 +50,6 @@ public final class OperandFieldAccess implements Operand {
 	@Override
 	public Type getFieldType(RecordScheme original) {
 		Class<?> fieldType = (Class<?>) objectOperand.getFieldType(original);
-		String fieldName = checkNotNull(fieldNameOperand.getValue(original.record()));
 
 		if (fieldType.isRecord()) {
 			for (RecordComponent recordComponent : fieldType.getRecordComponents()) {
@@ -81,29 +77,29 @@ public final class OperandFieldAccess implements Operand {
 
 	@Override
 	public String getFieldName(RecordScheme original) {
-		return objectOperand.getFieldName(original) + '.' + fieldNameOperand.getFieldName(original);
+		return objectOperand.getFieldName(original) + '.' + fieldName;
 	}
 
 	@Override
 	public Operand materialize(List<Object> params) {
 		return new OperandFieldAccess(
 				objectOperand.materialize(params),
-				fieldNameOperand.materialize(params),
+				fieldName,
 				classLoader
 		);
 	}
 
 	@Override
 	public List<RexDynamicParam> getParams() {
-		return Utils.concat(objectOperand.getParams(), fieldNameOperand.getParams());
+		return objectOperand.getParams();
 	}
 
 	public Operand getObjectOperand() {
 		return objectOperand;
 	}
 
-	public Operand getFieldNameOperand() {
-		return fieldNameOperand;
+	public String getFieldName() {
+		return fieldName;
 	}
 
 	public interface FieldGetter {
@@ -114,6 +110,6 @@ public final class OperandFieldAccess implements Operand {
 	public String toString() {
 		return "OperandFieldAcces[" +
 				"objectOperand=" + objectOperand + ", " +
-				"fieldNameOperand=" + fieldNameOperand + ']';
+				"fieldName=" + fieldName + ']';
 	}
 }

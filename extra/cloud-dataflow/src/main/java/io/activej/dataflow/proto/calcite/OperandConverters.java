@@ -12,7 +12,7 @@ final class OperandConverters {
 		if (operand instanceof OperandRecordField operandRecordField) {
 			builder.setRecordField(
 					OperandProto.Operand.RecordField.newBuilder()
-							.setIndexOperand(convert(operandRecordField.getIndexOperand()))
+							.setIndex(operandRecordField.getIndex())
 			);
 		} else if (operand instanceof OperandScalar operandScalar) {
 			OperandProto.Operand.Scalar.Builder scalarBuilder = OperandProto.Operand.Scalar.newBuilder();
@@ -53,7 +53,7 @@ final class OperandConverters {
 			builder.setFieldGet(
 					OperandProto.Operand.FieldGet.newBuilder()
 							.setObjectOperand(convert(operandFieldAccess.getObjectOperand()))
-							.setFieldNameOperand(convert(operandFieldAccess.getFieldNameOperand()))
+							.setFieldName(operandFieldAccess.getFieldName())
 			);
 		} else if (operand instanceof OperandIfNull operandIfNull) {
 			builder.setIfNull(
@@ -71,7 +71,7 @@ final class OperandConverters {
 	public static Operand convert(DefiningClassLoader classLoader, OperandProto.Operand operand) {
 		return switch (operand.getOperandCase()) {
 			case RECORD_FIELD ->
-					new OperandRecordField(convert(classLoader, operand.getRecordField().getIndexOperand()));
+					new OperandRecordField(operand.getRecordField().getIndex());
 			case SCALAR -> new OperandScalar(
 					switch (operand.getScalar().getValueCase()) {
 						case NULL -> null;
@@ -94,7 +94,7 @@ final class OperandConverters {
 			);
 			case FIELD_GET -> new OperandFieldAccess(
 					convert(classLoader, operand.getFieldGet().getObjectOperand()),
-					convert(classLoader, operand.getFieldGet().getFieldNameOperand()),
+					operand.getFieldGet().getFieldName(),
 					classLoader
 			);
 			case IF_NULL -> new OperandIfNull(

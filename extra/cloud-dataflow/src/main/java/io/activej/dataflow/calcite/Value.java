@@ -6,7 +6,6 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactoryImpl;
 import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rex.RexDynamicParam;
-import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.sql.type.MapSqlType;
@@ -40,11 +39,6 @@ public class Value {
 	public static Value materializedValue(RexLiteral literal) {
 		Type type = getJavaType(literal.getType());
 		return new Value(type, Utils.toJavaType(literal), null);
-	}
-
-	public static Value materializedValue(RexInputRef inputRef) {
-		Type type = getJavaType(inputRef.getType());
-		return new Value(type, inputRef.getIndex(), null);
 	}
 
 	public static Value unmaterializedValue(RexDynamicParam dynamicParam) {

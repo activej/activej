@@ -8,7 +8,7 @@ option java_outer_classname = "OperandProto";
 
 message Operand {
   message RecordField {
-    Operand index_operand = 1;
+    int32 index = 1;
   }
 
   message Scalar {
@@ -39,7 +39,7 @@ message Operand {
 
   message FieldGet {
     Operand object_operand = 1;
-    Operand field_name_operand = 2;
+    string field_name = 2;
   }
 
   message IfNull {

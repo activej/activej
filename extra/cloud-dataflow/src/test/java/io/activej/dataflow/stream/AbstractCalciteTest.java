@@ -781,7 +781,7 @@ public abstract class AbstractCalciteTest {
 			columnValues.add(new Object[]{registry.id, registry.counters.get("John")});
 		}
 
-		QueryResult expected = new QueryResult(List.of("id", "counters.get(John)"), columnValues);
+		QueryResult expected = new QueryResult(List.of("id", "counters.get('John')"), columnValues);
 
 		assertEquals(expected, result);
 	}
@@ -1111,7 +1111,7 @@ public abstract class AbstractCalciteTest {
 	public void testCountMapGet() {
 		QueryResult result = query("SELECT COUNT(MAP_GET(counters, 'John')) FROM registry");
 
-		assertCountMapGet(result, "John");
+		assertCountMapGet(result, "'John'");
 	}
 
 	@Test

@@ -51,14 +51,10 @@ public final class Utils {
 			Value value = Value.materializedValue(literal);
 			return new OperandScalar(value);
 		} else if (node instanceof RexInputRef inputRef) {
-			Value value = Value.materializedValue(inputRef);
-			Operand indexOperand = new OperandScalar(value);
-			return new OperandRecordField(indexOperand);
+			return new OperandRecordField(inputRef.getIndex());
 		} else if (node instanceof RexFieldAccess fieldAccess) {
 			Operand objectOperand = toOperand(fieldAccess.getReferenceExpr(), classLoader);
-			Value value = Value.materializedValue(String.class, fieldAccess.getField().getName());
-			Operand fieldNameOperand = new OperandScalar(value);
-			return new OperandFieldAccess(objectOperand, fieldNameOperand, classLoader);
+			return new OperandFieldAccess(objectOperand, fieldAccess.getField().getName(), classLoader);
 		}
 		throw new IllegalArgumentException("Unknown node: " + node);
 	}

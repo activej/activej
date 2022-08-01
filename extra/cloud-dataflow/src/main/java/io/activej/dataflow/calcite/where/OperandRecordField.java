@@ -5,52 +5,49 @@ import io.activej.record.RecordScheme;
 import org.apache.calcite.rex.RexDynamicParam;
 
 import java.lang.reflect.Type;
+import java.util.Collections;
 import java.util.List;
 
 public final class OperandRecordField implements Operand {
-	private final Operand indexOperand;
+	private final int index;
 
-	public OperandRecordField(Operand indexOperand) {
-		this.indexOperand = indexOperand;
+	public OperandRecordField(int index) {
+		this.index = index;
 	}
 
 	@Override
 	public <T> T getValue(Record record) {
-		//noinspection ConstantConditions
-		int index = indexOperand.getValue(record);
 		return record.get(index);
 	}
 
 	@Override
 	public Type getFieldType(RecordScheme original) {
-		//noinspection ConstantConditions
-		return original.getFieldType(((int) indexOperand.getValue(original.record())));
+		return original.getFieldType(index);
 	}
 
 	@Override
 	public String getFieldName(RecordScheme original) {
-		//noinspection ConstantConditions
-		return original.getField(indexOperand.getValue(original.record()));
+		return original.getField(index);
 	}
 
 	@Override
 	public Operand materialize(List<Object> params) {
-		return new OperandRecordField(indexOperand.materialize(params));
+		return this;
 	}
 
 	@Override
 	public List<RexDynamicParam> getParams() {
-		return indexOperand.getParams();
+		return Collections.emptyList();
 	}
 
-	public Operand getIndexOperand() {
-		return indexOperand;
+	public int getIndex() {
+		return index;
 	}
 
 	@Override
 	public String toString() {
 		return "OperandRecordField[" +
-				"indexOperand=" + indexOperand + ']';
+				"index=" + index + ']';
 	}
 
 }
