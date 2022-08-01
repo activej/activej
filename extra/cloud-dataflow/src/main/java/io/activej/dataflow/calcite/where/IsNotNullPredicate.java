@@ -1,13 +1,14 @@
 package io.activej.dataflow.calcite.where;
 
+import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.record.Record;
 
 import java.util.List;
 
 public final class IsNotNullPredicate implements WherePredicate {
-	private final Operand value;
+	private final Operand<?> value;
 
-	public IsNotNullPredicate(Operand value) {
+	public IsNotNullPredicate(Operand<?> value) {
 		this.value = value;
 	}
 
@@ -21,7 +22,7 @@ public final class IsNotNullPredicate implements WherePredicate {
 		return new IsNotNullPredicate(value.materialize(params));
 	}
 
-	public Operand getValue() {
+	public Operand<?> getValue() {
 		return value;
 	}
 

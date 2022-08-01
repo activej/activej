@@ -1,5 +1,6 @@
 package io.activej.dataflow.calcite.where;
 
+import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.record.Record;
 import org.jetbrains.annotations.Nullable;
 
@@ -7,12 +8,12 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public final class LikePredicate implements WherePredicate {
-	private final Operand value;
-	private final Operand pattern;
+	private final Operand<?> value;
+	private final Operand<?> pattern;
 
 	private @Nullable CompiledPattern compiledPattern;
 
-	public LikePredicate(Operand value, Operand pattern) {
+	public LikePredicate(Operand<?> value, Operand<?> pattern) {
 		this.value = value;
 		this.pattern = pattern;
 	}
@@ -42,11 +43,11 @@ public final class LikePredicate implements WherePredicate {
 		);
 	}
 
-	public Operand getValue() {
+	public Operand<?> getValue() {
 		return value;
 	}
 
-	public Operand getPattern() {
+	public Operand<?> getPattern() {
 		return pattern;
 	}
 

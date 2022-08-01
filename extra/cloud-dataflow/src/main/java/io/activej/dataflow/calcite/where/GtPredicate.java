@@ -1,14 +1,15 @@
 package io.activej.dataflow.calcite.where;
 
+import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.record.Record;
 
 import java.util.List;
 
 public final class GtPredicate implements WherePredicate {
-	private final Operand left;
-	private final Operand right;
+	private final Operand<?> left;
+	private final Operand<?> right;
 
-	public GtPredicate(Operand left, Operand right) {
+	public GtPredicate(Operand<?> left, Operand<?> right) {
 		this.left = left;
 		this.right = right;
 	}
@@ -32,11 +33,11 @@ public final class GtPredicate implements WherePredicate {
 		);
 	}
 
-	public Operand getLeft() {
+	public Operand<?> getLeft() {
 		return left;
 	}
 
-	public Operand getRight() {
+	public Operand<?> getRight() {
 		return right;
 	}
 

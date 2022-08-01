@@ -1,4 +1,4 @@
-package io.activej.dataflow.calcite.where;
+package io.activej.dataflow.calcite.operand;
 
 import io.activej.dataflow.calcite.Value;
 import io.activej.record.Record;
@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public final class OperandScalar implements Operand {
+public final class OperandScalar implements Operand<OperandScalar> {
 
 	private final Value value;
 
@@ -42,7 +42,7 @@ public final class OperandScalar implements Operand {
 	}
 
 	@Override
-	public Operand materialize(List<Object> params) {
+	public OperandScalar materialize(List<Object> params) {
 		return new OperandScalar(value.materialize(params));
 	}
 

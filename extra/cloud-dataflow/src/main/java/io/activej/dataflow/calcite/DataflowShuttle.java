@@ -6,6 +6,8 @@ import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjection;
 import io.activej.dataflow.calcite.aggregation.*;
 import io.activej.dataflow.calcite.join.RecordInnerJoiner;
 import io.activej.dataflow.calcite.join.RecordKeyFunction;
+import io.activej.dataflow.calcite.operand.Operand;
+import io.activej.dataflow.calcite.operand.OperandScalar;
 import io.activej.dataflow.calcite.sort.RecordComparator;
 import io.activej.dataflow.calcite.sort.RecordComparator.FieldSort;
 import io.activej.dataflow.calcite.where.*;
@@ -13,7 +15,9 @@ import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.Datasets;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.dataset.SortedDataset;
+import io.activej.datastream.processor.StreamLimiter;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult.InputToOutput;
+import io.activej.datastream.processor.StreamSkip;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import org.apache.calcite.plan.RelOptTable;
@@ -70,7 +74,7 @@ public class DataflowShuttle extends RelShuttleImpl {
 
 		List<FieldProjection> projections = new ArrayList<>();
 		for (RexNode rexNode : program.expandList(program.getProjectList())) {
-			projections.add(new FieldProjection(toOperand(rexNode, classLoader), null));
+			projections.add(new FieldProjection(toOperand(rexNode), null));
 		}
 
 		RecordProjectionFn projectionFn = RecordProjectionFn.create(projections);
@@ -78,7 +82,7 @@ public class DataflowShuttle extends RelShuttleImpl {
 		UnmaterializedDataset finalCurrent = current;
 
 		datasetStack.push(UnmaterializedDataset.of(
-				projectionFn.getToScheme(current.getScheme(), ($1, $2) -> null),
+				projectionFn.getToScheme(current.getScheme(), null),
 				params -> Datasets.map(finalCurrent.materialize(params), projectionFn.materialize(params))));
 
 		return result;
@@ -286,7 +290,8 @@ public class DataflowShuttle extends RelShuttleImpl {
 		throw new IllegalArgumentException("Unsupported type: " + condition.getKind());
 	}
 
-	private static UnmaterializedDataset sort(LogicalSort sort, UnmaterializedDataset dataset) {
+	@SuppressWarnings("ConstantConditions")
+	private UnmaterializedDataset sort(LogicalSort sort, UnmaterializedDataset dataset) {
 		List<RelDataTypeField> fieldList = sort.getRowType().getFieldList();
 		List<FieldSort> sorts = new ArrayList<>(fieldList.size());
 		for (RelFieldCollation fieldCollation : sort.getCollation().getFieldCollations()) {
@@ -301,11 +306,37 @@ public class DataflowShuttle extends RelShuttleImpl {
 			sorts.add(new FieldSort(fieldIndex, asc));
 		}
 
-		RecordComparator comparator = new RecordComparator(sorts);
+		Comparator<Record> comparator = sorts.isEmpty() ? new EqualObjectComparator<>() : new RecordComparator(sorts);
+
+		OperandScalar offset = sort.offset == null ?
+				new OperandScalar(Value.materializedValue(int.class, StreamSkip.NO_SKIP)) :
+				toScalarOperand(sort.offset);
+
+		OperandScalar limit = sort.fetch == null ?
+				new OperandScalar(Value.materializedValue(int.class, StreamLimiter.NO_LIMIT)) :
+				toScalarOperand(sort.fetch);
 
 		return UnmaterializedDataset.of(
 				dataset.getScheme(),
-				params -> Datasets.localSort(dataset.materialize(params), Record.class, Function.identity(), comparator)
+				params -> {
+					Dataset<Record> materializedDataset = dataset.materialize(params);
+
+					LocallySortedDataset<Record, Record> result;
+					if (comparator instanceof EqualObjectComparator<Record>) {
+						result = Datasets.castToSorted(materializedDataset, Record.class, Function.identity(), comparator);
+					} else {
+						result = Datasets.localSort(materializedDataset, Record.class, Function.identity(), comparator);
+					}
+
+					long offsetValue = ((Number) offset.materialize(params).getValue().getValue()).longValue();
+					long limitValue = ((Number) limit.materialize(params).getValue().getValue()).longValue();
+
+					if (offsetValue == StreamSkip.NO_SKIP && limitValue == StreamLimiter.NO_LIMIT) {
+						return result;
+					}
+
+					return Datasets.datasetOffsetLimit(result, offsetValue, limitValue);
+				}
 		);
 	}
 
@@ -391,40 +422,39 @@ public class DataflowShuttle extends RelShuttleImpl {
 			case AND -> new AndPredicate(operands.stream()
 					.map(rexNode -> toWherePredicate((RexCall) rexNode))
 					.collect(Collectors.toList()));
-			case EQUALS ->
-					new EqPredicate(toOperand(operands.get(0), classLoader), toOperand(operands.get(1), classLoader));
-			case NOT_EQUALS ->
-					new NotEqPredicate(toOperand(operands.get(0), classLoader), toOperand(operands.get(1), classLoader));
-			case GREATER_THAN ->
-					new GtPredicate(toOperand(operands.get(0), classLoader), toOperand(operands.get(1), classLoader));
-			case GREATER_THAN_OR_EQUAL ->
-					new GePredicate(toOperand(operands.get(0), classLoader), toOperand(operands.get(1), classLoader));
-			case LESS_THAN ->
-					new LtPredicate(toOperand(operands.get(0), classLoader), toOperand(operands.get(1), classLoader));
-			case LESS_THAN_OR_EQUAL ->
-					new LePredicate(toOperand(operands.get(0), classLoader), toOperand(operands.get(1), classLoader));
+			case EQUALS -> new EqPredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
+			case NOT_EQUALS -> new NotEqPredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
+			case GREATER_THAN -> new GtPredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
+			case GREATER_THAN_OR_EQUAL -> new GePredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
+			case LESS_THAN -> new LtPredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
+			case LESS_THAN_OR_EQUAL -> new LePredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
 			case BETWEEN ->
-					new BetweenPredicate(toOperand(operands.get(0), classLoader), toOperand(operands.get(1), classLoader), toOperand(operands.get(2), classLoader));
+					new BetweenPredicate(toOperand(operands.get(0)), toOperand(operands.get(1)), toOperand(operands.get(2)));
 			case IN -> {
-				List<Operand> options = operands.subList(1, operands.size())
+				List<Operand<?>> options = operands.subList(1, operands.size())
 						.stream()
-						.map(option -> Utils.toOperand(option, classLoader))
+						.map(this::toOperand)
 						.collect(Collectors.toList());
-				yield new InPredicate(toOperand(operands.get(0), classLoader), options);
+				yield new InPredicate(toOperand(operands.get(0)), options);
 			}
-			case LIKE ->
-					new LikePredicate(toOperand(operands.get(0), classLoader), toOperand(operands.get(1), classLoader));
-			case IS_NULL -> new IsNullPredicate(toOperand(operands.get(0), classLoader));
-			case IS_NOT_NULL -> new IsNotNullPredicate(toOperand(operands.get(0), classLoader));
+			case LIKE -> new LikePredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
+			case IS_NULL -> new IsNullPredicate(toOperand(operands.get(0)));
+			case IS_NOT_NULL -> new IsNotNullPredicate(toOperand(operands.get(0)));
 
 			default -> throw new IllegalArgumentException("Not supported condition:" + conditionNode.getKind());
 		};
 	}
 
-	private Operand toOperand(RexNode node, DefiningClassLoader classLoader) {
-		Operand operand = Utils.toOperand(node, classLoader);
+	private Operand<?> toOperand(RexNode node) {
+		Operand<?> operand = Utils.toOperand(node, classLoader);
 		params.addAll(operand.getParams());
 		return operand;
+	}
+
+	private OperandScalar toScalarOperand(RexNode node) {
+		Operand<?> operand = toOperand(node);
+		checkArgument(operand instanceof OperandScalar, "Not scalar operand");
+		return (OperandScalar) operand;
 	}
 
 	public interface UnmaterializedDataset {

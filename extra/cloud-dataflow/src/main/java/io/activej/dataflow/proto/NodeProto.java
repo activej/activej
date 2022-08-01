@@ -228,6 +228,21 @@ public final class NodeProto {
      */
     io.activej.dataflow.proto.NodeProto.Node.EmptyOrBuilder getEmptyOrBuilder();
 
+    /**
+     * <code>.dataflow.Node.OffsetLimit offset_limit = 15;</code>
+     * @return Whether the offsetLimit field is set.
+     */
+    boolean hasOffsetLimit();
+    /**
+     * <code>.dataflow.Node.OffsetLimit offset_limit = 15;</code>
+     * @return The offsetLimit.
+     */
+    io.activej.dataflow.proto.NodeProto.Node.OffsetLimit getOffsetLimit();
+    /**
+     * <code>.dataflow.Node.OffsetLimit offset_limit = 15;</code>
+     */
+    io.activej.dataflow.proto.NodeProto.Node.OffsetLimitOrBuilder getOffsetLimitOrBuilder();
+
     public io.activej.dataflow.proto.NodeProto.Node.NodeCase getNodeCase();
   }
   /**
@@ -469,6 +484,20 @@ public final class NodeProto {
                 node_ = subBuilder.buildPartial();
               }
               nodeCase_ = 14;
+              break;
+            }
+            case 122: {
+              io.activej.dataflow.proto.NodeProto.Node.OffsetLimit.Builder subBuilder = null;
+              if (nodeCase_ == 15) {
+                subBuilder = ((io.activej.dataflow.proto.NodeProto.Node.OffsetLimit) node_).toBuilder();
+              }
+              node_ =
+                  input.readMessage(io.activej.dataflow.proto.NodeProto.Node.OffsetLimit.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((io.activej.dataflow.proto.NodeProto.Node.OffsetLimit) node_);
+                node_ = subBuilder.buildPartial();
+              }
+              nodeCase_ = 15;
               break;
             }
             default: {
@@ -17047,6 +17076,1042 @@ public final class NodeProto {
 
     }
 
+    public interface OffsetLimitOrBuilder extends
+        // @@protoc_insertion_point(interface_extends:dataflow.Node.OffsetLimit)
+        com.google.protobuf.MessageOrBuilder {
+
+      /**
+       * <code>int32 index = 1;</code>
+       * @return The index.
+       */
+      int getIndex();
+
+      /**
+       * <code>int64 offset = 2;</code>
+       * @return The offset.
+       */
+      long getOffset();
+
+      /**
+       * <code>int64 limit = 3;</code>
+       * @return The limit.
+       */
+      long getLimit();
+
+      /**
+       * <code>.dataflow.StreamId input = 4;</code>
+       * @return Whether the input field is set.
+       */
+      boolean hasInput();
+      /**
+       * <code>.dataflow.StreamId input = 4;</code>
+       * @return The input.
+       */
+      io.activej.dataflow.proto.StreamIdProto.StreamId getInput();
+      /**
+       * <code>.dataflow.StreamId input = 4;</code>
+       */
+      io.activej.dataflow.proto.StreamIdProto.StreamIdOrBuilder getInputOrBuilder();
+
+      /**
+       * <code>.dataflow.StreamId output = 5;</code>
+       * @return Whether the output field is set.
+       */
+      boolean hasOutput();
+      /**
+       * <code>.dataflow.StreamId output = 5;</code>
+       * @return The output.
+       */
+      io.activej.dataflow.proto.StreamIdProto.StreamId getOutput();
+      /**
+       * <code>.dataflow.StreamId output = 5;</code>
+       */
+      io.activej.dataflow.proto.StreamIdProto.StreamIdOrBuilder getOutputOrBuilder();
+    }
+    /**
+     * Protobuf type {@code dataflow.Node.OffsetLimit}
+     */
+    public static final class OffsetLimit extends
+        com.google.protobuf.GeneratedMessageV3 implements
+        // @@protoc_insertion_point(message_implements:dataflow.Node.OffsetLimit)
+        OffsetLimitOrBuilder {
+    private static final long serialVersionUID = 0L;
+      // Use OffsetLimit.newBuilder() to construct.
+      private OffsetLimit(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+        super(builder);
+      }
+      private OffsetLimit() {
+      }
+
+      @java.lang.Override
+      @SuppressWarnings({"unused"})
+      protected java.lang.Object newInstance(
+          UnusedPrivateParameter unused) {
+        return new OffsetLimit();
+      }
+
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+      getUnknownFields() {
+        return this.unknownFields;
+      }
+      private OffsetLimit(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        this();
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 8: {
+
+                index_ = input.readInt32();
+                break;
+              }
+              case 16: {
+
+                offset_ = input.readInt64();
+                break;
+              }
+              case 24: {
+
+                limit_ = input.readInt64();
+                break;
+              }
+              case 34: {
+                io.activej.dataflow.proto.StreamIdProto.StreamId.Builder subBuilder = null;
+                if (input_ != null) {
+                  subBuilder = input_.toBuilder();
+                }
+                input_ = input.readMessage(io.activej.dataflow.proto.StreamIdProto.StreamId.parser(), extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom(input_);
+                  input_ = subBuilder.buildPartial();
+                }
+
+                break;
+              }
+              case 42: {
+                io.activej.dataflow.proto.StreamIdProto.StreamId.Builder subBuilder = null;
+                if (output_ != null) {
+                  subBuilder = output_.toBuilder();
+                }
+                output_ = input.readMessage(io.activej.dataflow.proto.StreamIdProto.StreamId.parser(), extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom(output_);
+                  output_ = subBuilder.buildPartial();
+                }
+
+                break;
+              }
+              default: {
+                if (!parseUnknownField(
+                    input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e).setUnfinishedMessage(this);
+        } finally {
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return io.activej.dataflow.proto.NodeProto.internal_static_dataflow_Node_OffsetLimit_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return io.activej.dataflow.proto.NodeProto.internal_static_dataflow_Node_OffsetLimit_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                io.activej.dataflow.proto.NodeProto.Node.OffsetLimit.class, io.activej.dataflow.proto.NodeProto.Node.OffsetLimit.Builder.class);
+      }
+
+      public static final int INDEX_FIELD_NUMBER = 1;
+      private int index_;
+      /**
+       * <code>int32 index = 1;</code>
+       * @return The index.
+       */
+      @java.lang.Override
+      public int getIndex() {
+        return index_;
+      }
+
+      public static final int OFFSET_FIELD_NUMBER = 2;
+      private long offset_;
+      /**
+       * <code>int64 offset = 2;</code>
+       * @return The offset.
+       */
+      @java.lang.Override
+      public long getOffset() {
+        return offset_;
+      }
+
+      public static final int LIMIT_FIELD_NUMBER = 3;
+      private long limit_;
+      /**
+       * <code>int64 limit = 3;</code>
+       * @return The limit.
+       */
+      @java.lang.Override
+      public long getLimit() {
+        return limit_;
+      }
+
+      public static final int INPUT_FIELD_NUMBER = 4;
+      private io.activej.dataflow.proto.StreamIdProto.StreamId input_;
+      /**
+       * <code>.dataflow.StreamId input = 4;</code>
+       * @return Whether the input field is set.
+       */
+      @java.lang.Override
+      public boolean hasInput() {
+        return input_ != null;
+      }
+      /**
+       * <code>.dataflow.StreamId input = 4;</code>
+       * @return The input.
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.StreamIdProto.StreamId getInput() {
+        return input_ == null ? io.activej.dataflow.proto.StreamIdProto.StreamId.getDefaultInstance() : input_;
+      }
+      /**
+       * <code>.dataflow.StreamId input = 4;</code>
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.StreamIdProto.StreamIdOrBuilder getInputOrBuilder() {
+        return getInput();
+      }
+
+      public static final int OUTPUT_FIELD_NUMBER = 5;
+      private io.activej.dataflow.proto.StreamIdProto.StreamId output_;
+      /**
+       * <code>.dataflow.StreamId output = 5;</code>
+       * @return Whether the output field is set.
+       */
+      @java.lang.Override
+      public boolean hasOutput() {
+        return output_ != null;
+      }
+      /**
+       * <code>.dataflow.StreamId output = 5;</code>
+       * @return The output.
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.StreamIdProto.StreamId getOutput() {
+        return output_ == null ? io.activej.dataflow.proto.StreamIdProto.StreamId.getDefaultInstance() : output_;
+      }
+      /**
+       * <code>.dataflow.StreamId output = 5;</code>
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.StreamIdProto.StreamIdOrBuilder getOutputOrBuilder() {
+        return getOutput();
+      }
+
+      private byte memoizedIsInitialized = -1;
+      @java.lang.Override
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
+
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      @java.lang.Override
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        if (index_ != 0) {
+          output.writeInt32(1, index_);
+        }
+        if (offset_ != 0L) {
+          output.writeInt64(2, offset_);
+        }
+        if (limit_ != 0L) {
+          output.writeInt64(3, limit_);
+        }
+        if (input_ != null) {
+          output.writeMessage(4, getInput());
+        }
+        if (output_ != null) {
+          output.writeMessage(5, getOutput());
+        }
+        unknownFields.writeTo(output);
+      }
+
+      @java.lang.Override
+      public int getSerializedSize() {
+        int size = memoizedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (index_ != 0) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(1, index_);
+        }
+        if (offset_ != 0L) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt64Size(2, offset_);
+        }
+        if (limit_ != 0L) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt64Size(3, limit_);
+        }
+        if (input_ != null) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(4, getInput());
+        }
+        if (output_ != null) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(5, getOutput());
+        }
+        size += unknownFields.getSerializedSize();
+        memoizedSize = size;
+        return size;
+      }
+
+      @java.lang.Override
+      public boolean equals(final java.lang.Object obj) {
+        if (obj == this) {
+         return true;
+        }
+        if (!(obj instanceof io.activej.dataflow.proto.NodeProto.Node.OffsetLimit)) {
+          return super.equals(obj);
+        }
+        io.activej.dataflow.proto.NodeProto.Node.OffsetLimit other = (io.activej.dataflow.proto.NodeProto.Node.OffsetLimit) obj;
+
+        if (getIndex()
+            != other.getIndex()) return false;
+        if (getOffset()
+            != other.getOffset()) return false;
+        if (getLimit()
+            != other.getLimit()) return false;
+        if (hasInput() != other.hasInput()) return false;
+        if (hasInput()) {
+          if (!getInput()
+              .equals(other.getInput())) return false;
+        }
+        if (hasOutput() != other.hasOutput()) return false;
+        if (hasOutput()) {
+          if (!getOutput()
+              .equals(other.getOutput())) return false;
+        }
+        if (!unknownFields.equals(other.unknownFields)) return false;
+        return true;
+      }
+
+      @java.lang.Override
+      public int hashCode() {
+        if (memoizedHashCode != 0) {
+          return memoizedHashCode;
+        }
+        int hash = 41;
+        hash = (19 * hash) + getDescriptor().hashCode();
+        hash = (37 * hash) + INDEX_FIELD_NUMBER;
+        hash = (53 * hash) + getIndex();
+        hash = (37 * hash) + OFFSET_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getOffset());
+        hash = (37 * hash) + LIMIT_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getLimit());
+        if (hasInput()) {
+          hash = (37 * hash) + INPUT_FIELD_NUMBER;
+          hash = (53 * hash) + getInput().hashCode();
+        }
+        if (hasOutput()) {
+          hash = (37 * hash) + OUTPUT_FIELD_NUMBER;
+          hash = (53 * hash) + getOutput().hashCode();
+        }
+        hash = (29 * hash) + unknownFields.hashCode();
+        memoizedHashCode = hash;
+        return hash;
+      }
+
+      public static io.activej.dataflow.proto.NodeProto.Node.OffsetLimit parseFrom(
+          java.nio.ByteBuffer data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.NodeProto.Node.OffsetLimit parseFrom(
+          java.nio.ByteBuffer data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.NodeProto.Node.OffsetLimit parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.NodeProto.Node.OffsetLimit parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.NodeProto.Node.OffsetLimit parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.NodeProto.Node.OffsetLimit parseFrom(
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.NodeProto.Node.OffsetLimit parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.NodeProto.Node.OffsetLimit parseFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.NodeProto.Node.OffsetLimit parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.NodeProto.Node.OffsetLimit parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.NodeProto.Node.OffsetLimit parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.NodeProto.Node.OffsetLimit parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
+      }
+
+      @java.lang.Override
+      public Builder newBuilderForType() { return newBuilder(); }
+      public static Builder newBuilder() {
+        return DEFAULT_INSTANCE.toBuilder();
+      }
+      public static Builder newBuilder(io.activej.dataflow.proto.NodeProto.Node.OffsetLimit prototype) {
+        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      }
+      @java.lang.Override
+      public Builder toBuilder() {
+        return this == DEFAULT_INSTANCE
+            ? new Builder() : new Builder().mergeFrom(this);
+      }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       * Protobuf type {@code dataflow.Node.OffsetLimit}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+          // @@protoc_insertion_point(builder_implements:dataflow.Node.OffsetLimit)
+          io.activej.dataflow.proto.NodeProto.Node.OffsetLimitOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return io.activej.dataflow.proto.NodeProto.internal_static_dataflow_Node_OffsetLimit_descriptor;
+        }
+
+        @java.lang.Override
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return io.activej.dataflow.proto.NodeProto.internal_static_dataflow_Node_OffsetLimit_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  io.activej.dataflow.proto.NodeProto.Node.OffsetLimit.class, io.activej.dataflow.proto.NodeProto.Node.OffsetLimit.Builder.class);
+        }
+
+        // Construct using io.activej.dataflow.proto.NodeProto.Node.OffsetLimit.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessageV3
+                  .alwaysUseFieldBuilders) {
+          }
+        }
+        @java.lang.Override
+        public Builder clear() {
+          super.clear();
+          index_ = 0;
+
+          offset_ = 0L;
+
+          limit_ = 0L;
+
+          if (inputBuilder_ == null) {
+            input_ = null;
+          } else {
+            input_ = null;
+            inputBuilder_ = null;
+          }
+          if (outputBuilder_ == null) {
+            output_ = null;
+          } else {
+            output_ = null;
+            outputBuilder_ = null;
+          }
+          return this;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return io.activej.dataflow.proto.NodeProto.internal_static_dataflow_Node_OffsetLimit_descriptor;
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.NodeProto.Node.OffsetLimit getDefaultInstanceForType() {
+          return io.activej.dataflow.proto.NodeProto.Node.OffsetLimit.getDefaultInstance();
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.NodeProto.Node.OffsetLimit build() {
+          io.activej.dataflow.proto.NodeProto.Node.OffsetLimit result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.NodeProto.Node.OffsetLimit buildPartial() {
+          io.activej.dataflow.proto.NodeProto.Node.OffsetLimit result = new io.activej.dataflow.proto.NodeProto.Node.OffsetLimit(this);
+          result.index_ = index_;
+          result.offset_ = offset_;
+          result.limit_ = limit_;
+          if (inputBuilder_ == null) {
+            result.input_ = input_;
+          } else {
+            result.input_ = inputBuilder_.build();
+          }
+          if (outputBuilder_ == null) {
+            result.output_ = output_;
+          } else {
+            result.output_ = outputBuilder_.build();
+          }
+          onBuilt();
+          return result;
+        }
+
+        @java.lang.Override
+        public Builder clone() {
+          return super.clone();
+        }
+        @java.lang.Override
+        public Builder setField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return super.setField(field, value);
+        }
+        @java.lang.Override
+        public Builder clearField(
+            com.google.protobuf.Descriptors.FieldDescriptor field) {
+          return super.clearField(field);
+        }
+        @java.lang.Override
+        public Builder clearOneof(
+            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+          return super.clearOneof(oneof);
+        }
+        @java.lang.Override
+        public Builder setRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            int index, java.lang.Object value) {
+          return super.setRepeatedField(field, index, value);
+        }
+        @java.lang.Override
+        public Builder addRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return super.addRepeatedField(field, value);
+        }
+        @java.lang.Override
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof io.activej.dataflow.proto.NodeProto.Node.OffsetLimit) {
+            return mergeFrom((io.activej.dataflow.proto.NodeProto.Node.OffsetLimit)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(io.activej.dataflow.proto.NodeProto.Node.OffsetLimit other) {
+          if (other == io.activej.dataflow.proto.NodeProto.Node.OffsetLimit.getDefaultInstance()) return this;
+          if (other.getIndex() != 0) {
+            setIndex(other.getIndex());
+          }
+          if (other.getOffset() != 0L) {
+            setOffset(other.getOffset());
+          }
+          if (other.getLimit() != 0L) {
+            setLimit(other.getLimit());
+          }
+          if (other.hasInput()) {
+            mergeInput(other.getInput());
+          }
+          if (other.hasOutput()) {
+            mergeOutput(other.getOutput());
+          }
+          this.mergeUnknownFields(other.unknownFields);
+          onChanged();
+          return this;
+        }
+
+        @java.lang.Override
+        public final boolean isInitialized() {
+          return true;
+        }
+
+        @java.lang.Override
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          io.activej.dataflow.proto.NodeProto.Node.OffsetLimit parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage = (io.activej.dataflow.proto.NodeProto.Node.OffsetLimit) e.getUnfinishedMessage();
+            throw e.unwrapIOException();
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+
+        private int index_ ;
+        /**
+         * <code>int32 index = 1;</code>
+         * @return The index.
+         */
+        @java.lang.Override
+        public int getIndex() {
+          return index_;
+        }
+        /**
+         * <code>int32 index = 1;</code>
+         * @param value The index to set.
+         * @return This builder for chaining.
+         */
+        public Builder setIndex(int value) {
+          
+          index_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>int32 index = 1;</code>
+         * @return This builder for chaining.
+         */
+        public Builder clearIndex() {
+          
+          index_ = 0;
+          onChanged();
+          return this;
+        }
+
+        private long offset_ ;
+        /**
+         * <code>int64 offset = 2;</code>
+         * @return The offset.
+         */
+        @java.lang.Override
+        public long getOffset() {
+          return offset_;
+        }
+        /**
+         * <code>int64 offset = 2;</code>
+         * @param value The offset to set.
+         * @return This builder for chaining.
+         */
+        public Builder setOffset(long value) {
+          
+          offset_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>int64 offset = 2;</code>
+         * @return This builder for chaining.
+         */
+        public Builder clearOffset() {
+          
+          offset_ = 0L;
+          onChanged();
+          return this;
+        }
+
+        private long limit_ ;
+        /**
+         * <code>int64 limit = 3;</code>
+         * @return The limit.
+         */
+        @java.lang.Override
+        public long getLimit() {
+          return limit_;
+        }
+        /**
+         * <code>int64 limit = 3;</code>
+         * @param value The limit to set.
+         * @return This builder for chaining.
+         */
+        public Builder setLimit(long value) {
+          
+          limit_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>int64 limit = 3;</code>
+         * @return This builder for chaining.
+         */
+        public Builder clearLimit() {
+          
+          limit_ = 0L;
+          onChanged();
+          return this;
+        }
+
+        private io.activej.dataflow.proto.StreamIdProto.StreamId input_;
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.StreamIdProto.StreamId, io.activej.dataflow.proto.StreamIdProto.StreamId.Builder, io.activej.dataflow.proto.StreamIdProto.StreamIdOrBuilder> inputBuilder_;
+        /**
+         * <code>.dataflow.StreamId input = 4;</code>
+         * @return Whether the input field is set.
+         */
+        public boolean hasInput() {
+          return inputBuilder_ != null || input_ != null;
+        }
+        /**
+         * <code>.dataflow.StreamId input = 4;</code>
+         * @return The input.
+         */
+        public io.activej.dataflow.proto.StreamIdProto.StreamId getInput() {
+          if (inputBuilder_ == null) {
+            return input_ == null ? io.activej.dataflow.proto.StreamIdProto.StreamId.getDefaultInstance() : input_;
+          } else {
+            return inputBuilder_.getMessage();
+          }
+        }
+        /**
+         * <code>.dataflow.StreamId input = 4;</code>
+         */
+        public Builder setInput(io.activej.dataflow.proto.StreamIdProto.StreamId value) {
+          if (inputBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            input_ = value;
+            onChanged();
+          } else {
+            inputBuilder_.setMessage(value);
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.StreamId input = 4;</code>
+         */
+        public Builder setInput(
+            io.activej.dataflow.proto.StreamIdProto.StreamId.Builder builderForValue) {
+          if (inputBuilder_ == null) {
+            input_ = builderForValue.build();
+            onChanged();
+          } else {
+            inputBuilder_.setMessage(builderForValue.build());
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.StreamId input = 4;</code>
+         */
+        public Builder mergeInput(io.activej.dataflow.proto.StreamIdProto.StreamId value) {
+          if (inputBuilder_ == null) {
+            if (input_ != null) {
+              input_ =
+                io.activej.dataflow.proto.StreamIdProto.StreamId.newBuilder(input_).mergeFrom(value).buildPartial();
+            } else {
+              input_ = value;
+            }
+            onChanged();
+          } else {
+            inputBuilder_.mergeFrom(value);
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.StreamId input = 4;</code>
+         */
+        public Builder clearInput() {
+          if (inputBuilder_ == null) {
+            input_ = null;
+            onChanged();
+          } else {
+            input_ = null;
+            inputBuilder_ = null;
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.StreamId input = 4;</code>
+         */
+        public io.activej.dataflow.proto.StreamIdProto.StreamId.Builder getInputBuilder() {
+          
+          onChanged();
+          return getInputFieldBuilder().getBuilder();
+        }
+        /**
+         * <code>.dataflow.StreamId input = 4;</code>
+         */
+        public io.activej.dataflow.proto.StreamIdProto.StreamIdOrBuilder getInputOrBuilder() {
+          if (inputBuilder_ != null) {
+            return inputBuilder_.getMessageOrBuilder();
+          } else {
+            return input_ == null ?
+                io.activej.dataflow.proto.StreamIdProto.StreamId.getDefaultInstance() : input_;
+          }
+        }
+        /**
+         * <code>.dataflow.StreamId input = 4;</code>
+         */
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.StreamIdProto.StreamId, io.activej.dataflow.proto.StreamIdProto.StreamId.Builder, io.activej.dataflow.proto.StreamIdProto.StreamIdOrBuilder> 
+            getInputFieldBuilder() {
+          if (inputBuilder_ == null) {
+            inputBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                io.activej.dataflow.proto.StreamIdProto.StreamId, io.activej.dataflow.proto.StreamIdProto.StreamId.Builder, io.activej.dataflow.proto.StreamIdProto.StreamIdOrBuilder>(
+                    getInput(),
+                    getParentForChildren(),
+                    isClean());
+            input_ = null;
+          }
+          return inputBuilder_;
+        }
+
+        private io.activej.dataflow.proto.StreamIdProto.StreamId output_;
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.StreamIdProto.StreamId, io.activej.dataflow.proto.StreamIdProto.StreamId.Builder, io.activej.dataflow.proto.StreamIdProto.StreamIdOrBuilder> outputBuilder_;
+        /**
+         * <code>.dataflow.StreamId output = 5;</code>
+         * @return Whether the output field is set.
+         */
+        public boolean hasOutput() {
+          return outputBuilder_ != null || output_ != null;
+        }
+        /**
+         * <code>.dataflow.StreamId output = 5;</code>
+         * @return The output.
+         */
+        public io.activej.dataflow.proto.StreamIdProto.StreamId getOutput() {
+          if (outputBuilder_ == null) {
+            return output_ == null ? io.activej.dataflow.proto.StreamIdProto.StreamId.getDefaultInstance() : output_;
+          } else {
+            return outputBuilder_.getMessage();
+          }
+        }
+        /**
+         * <code>.dataflow.StreamId output = 5;</code>
+         */
+        public Builder setOutput(io.activej.dataflow.proto.StreamIdProto.StreamId value) {
+          if (outputBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            output_ = value;
+            onChanged();
+          } else {
+            outputBuilder_.setMessage(value);
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.StreamId output = 5;</code>
+         */
+        public Builder setOutput(
+            io.activej.dataflow.proto.StreamIdProto.StreamId.Builder builderForValue) {
+          if (outputBuilder_ == null) {
+            output_ = builderForValue.build();
+            onChanged();
+          } else {
+            outputBuilder_.setMessage(builderForValue.build());
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.StreamId output = 5;</code>
+         */
+        public Builder mergeOutput(io.activej.dataflow.proto.StreamIdProto.StreamId value) {
+          if (outputBuilder_ == null) {
+            if (output_ != null) {
+              output_ =
+                io.activej.dataflow.proto.StreamIdProto.StreamId.newBuilder(output_).mergeFrom(value).buildPartial();
+            } else {
+              output_ = value;
+            }
+            onChanged();
+          } else {
+            outputBuilder_.mergeFrom(value);
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.StreamId output = 5;</code>
+         */
+        public Builder clearOutput() {
+          if (outputBuilder_ == null) {
+            output_ = null;
+            onChanged();
+          } else {
+            output_ = null;
+            outputBuilder_ = null;
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.StreamId output = 5;</code>
+         */
+        public io.activej.dataflow.proto.StreamIdProto.StreamId.Builder getOutputBuilder() {
+          
+          onChanged();
+          return getOutputFieldBuilder().getBuilder();
+        }
+        /**
+         * <code>.dataflow.StreamId output = 5;</code>
+         */
+        public io.activej.dataflow.proto.StreamIdProto.StreamIdOrBuilder getOutputOrBuilder() {
+          if (outputBuilder_ != null) {
+            return outputBuilder_.getMessageOrBuilder();
+          } else {
+            return output_ == null ?
+                io.activej.dataflow.proto.StreamIdProto.StreamId.getDefaultInstance() : output_;
+          }
+        }
+        /**
+         * <code>.dataflow.StreamId output = 5;</code>
+         */
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.StreamIdProto.StreamId, io.activej.dataflow.proto.StreamIdProto.StreamId.Builder, io.activej.dataflow.proto.StreamIdProto.StreamIdOrBuilder> 
+            getOutputFieldBuilder() {
+          if (outputBuilder_ == null) {
+            outputBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                io.activej.dataflow.proto.StreamIdProto.StreamId, io.activej.dataflow.proto.StreamIdProto.StreamId.Builder, io.activej.dataflow.proto.StreamIdProto.StreamIdOrBuilder>(
+                    getOutput(),
+                    getParentForChildren(),
+                    isClean());
+            output_ = null;
+          }
+          return outputBuilder_;
+        }
+        @java.lang.Override
+        public final Builder setUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.setUnknownFields(unknownFields);
+        }
+
+        @java.lang.Override
+        public final Builder mergeUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.mergeUnknownFields(unknownFields);
+        }
+
+
+        // @@protoc_insertion_point(builder_scope:dataflow.Node.OffsetLimit)
+      }
+
+      // @@protoc_insertion_point(class_scope:dataflow.Node.OffsetLimit)
+      private static final io.activej.dataflow.proto.NodeProto.Node.OffsetLimit DEFAULT_INSTANCE;
+      static {
+        DEFAULT_INSTANCE = new io.activej.dataflow.proto.NodeProto.Node.OffsetLimit();
+      }
+
+      public static io.activej.dataflow.proto.NodeProto.Node.OffsetLimit getDefaultInstance() {
+        return DEFAULT_INSTANCE;
+      }
+
+      private static final com.google.protobuf.Parser<OffsetLimit>
+          PARSER = new com.google.protobuf.AbstractParser<OffsetLimit>() {
+        @java.lang.Override
+        public OffsetLimit parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new OffsetLimit(input, extensionRegistry);
+        }
+      };
+
+      public static com.google.protobuf.Parser<OffsetLimit> parser() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<OffsetLimit> getParserForType() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public io.activej.dataflow.proto.NodeProto.Node.OffsetLimit getDefaultInstanceForType() {
+        return DEFAULT_INSTANCE;
+      }
+
+    }
+
     private int nodeCase_ = 0;
     private java.lang.Object node_;
     public enum NodeCase
@@ -17066,6 +18131,7 @@ public final class NodeProto {
       UNION(12),
       UPLOAD(13),
       EMPTY(14),
+      OFFSET_LIMIT(15),
       NODE_NOT_SET(0);
       private final int value;
       private NodeCase(int value) {
@@ -17097,6 +18163,7 @@ public final class NodeProto {
           case 12: return UNION;
           case 13: return UPLOAD;
           case 14: return EMPTY;
+          case 15: return OFFSET_LIMIT;
           case 0: return NODE_NOT_SET;
           default: return null;
         }
@@ -17546,6 +18613,37 @@ public final class NodeProto {
       return io.activej.dataflow.proto.NodeProto.Node.Empty.getDefaultInstance();
     }
 
+    public static final int OFFSET_LIMIT_FIELD_NUMBER = 15;
+    /**
+     * <code>.dataflow.Node.OffsetLimit offset_limit = 15;</code>
+     * @return Whether the offsetLimit field is set.
+     */
+    @java.lang.Override
+    public boolean hasOffsetLimit() {
+      return nodeCase_ == 15;
+    }
+    /**
+     * <code>.dataflow.Node.OffsetLimit offset_limit = 15;</code>
+     * @return The offsetLimit.
+     */
+    @java.lang.Override
+    public io.activej.dataflow.proto.NodeProto.Node.OffsetLimit getOffsetLimit() {
+      if (nodeCase_ == 15) {
+         return (io.activej.dataflow.proto.NodeProto.Node.OffsetLimit) node_;
+      }
+      return io.activej.dataflow.proto.NodeProto.Node.OffsetLimit.getDefaultInstance();
+    }
+    /**
+     * <code>.dataflow.Node.OffsetLimit offset_limit = 15;</code>
+     */
+    @java.lang.Override
+    public io.activej.dataflow.proto.NodeProto.Node.OffsetLimitOrBuilder getOffsetLimitOrBuilder() {
+      if (nodeCase_ == 15) {
+         return (io.activej.dataflow.proto.NodeProto.Node.OffsetLimit) node_;
+      }
+      return io.activej.dataflow.proto.NodeProto.Node.OffsetLimit.getDefaultInstance();
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -17601,6 +18699,9 @@ public final class NodeProto {
       }
       if (nodeCase_ == 14) {
         output.writeMessage(14, (io.activej.dataflow.proto.NodeProto.Node.Empty) node_);
+      }
+      if (nodeCase_ == 15) {
+        output.writeMessage(15, (io.activej.dataflow.proto.NodeProto.Node.OffsetLimit) node_);
       }
       unknownFields.writeTo(output);
     }
@@ -17666,6 +18767,10 @@ public final class NodeProto {
       if (nodeCase_ == 14) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(14, (io.activej.dataflow.proto.NodeProto.Node.Empty) node_);
+      }
+      if (nodeCase_ == 15) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(15, (io.activej.dataflow.proto.NodeProto.Node.OffsetLimit) node_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -17740,6 +18845,10 @@ public final class NodeProto {
           if (!getEmpty()
               .equals(other.getEmpty())) return false;
           break;
+        case 15:
+          if (!getOffsetLimit()
+              .equals(other.getOffsetLimit())) return false;
+          break;
         case 0:
         default:
       }
@@ -17810,6 +18919,10 @@ public final class NodeProto {
         case 14:
           hash = (37 * hash) + EMPTY_FIELD_NUMBER;
           hash = (53 * hash) + getEmpty().hashCode();
+          break;
+        case 15:
+          hash = (37 * hash) + OFFSET_LIMIT_FIELD_NUMBER;
+          hash = (53 * hash) + getOffsetLimit().hashCode();
           break;
         case 0:
         default:
@@ -18073,6 +19186,13 @@ public final class NodeProto {
             result.node_ = emptyBuilder_.build();
           }
         }
+        if (nodeCase_ == 15) {
+          if (offsetLimitBuilder_ == null) {
+            result.node_ = node_;
+          } else {
+            result.node_ = offsetLimitBuilder_.build();
+          }
+        }
         result.nodeCase_ = nodeCase_;
         onBuilt();
         return result;
@@ -18177,6 +19297,10 @@ public final class NodeProto {
           }
           case EMPTY: {
             mergeEmpty(other.getEmpty());
+            break;
+          }
+          case OFFSET_LIMIT: {
+            mergeOffsetLimit(other.getOffsetLimit());
             break;
           }
           case NODE_NOT_SET: {
@@ -20200,6 +21324,147 @@ public final class NodeProto {
         onChanged();;
         return emptyBuilder_;
       }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          io.activej.dataflow.proto.NodeProto.Node.OffsetLimit, io.activej.dataflow.proto.NodeProto.Node.OffsetLimit.Builder, io.activej.dataflow.proto.NodeProto.Node.OffsetLimitOrBuilder> offsetLimitBuilder_;
+      /**
+       * <code>.dataflow.Node.OffsetLimit offset_limit = 15;</code>
+       * @return Whether the offsetLimit field is set.
+       */
+      @java.lang.Override
+      public boolean hasOffsetLimit() {
+        return nodeCase_ == 15;
+      }
+      /**
+       * <code>.dataflow.Node.OffsetLimit offset_limit = 15;</code>
+       * @return The offsetLimit.
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.NodeProto.Node.OffsetLimit getOffsetLimit() {
+        if (offsetLimitBuilder_ == null) {
+          if (nodeCase_ == 15) {
+            return (io.activej.dataflow.proto.NodeProto.Node.OffsetLimit) node_;
+          }
+          return io.activej.dataflow.proto.NodeProto.Node.OffsetLimit.getDefaultInstance();
+        } else {
+          if (nodeCase_ == 15) {
+            return offsetLimitBuilder_.getMessage();
+          }
+          return io.activej.dataflow.proto.NodeProto.Node.OffsetLimit.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.dataflow.Node.OffsetLimit offset_limit = 15;</code>
+       */
+      public Builder setOffsetLimit(io.activej.dataflow.proto.NodeProto.Node.OffsetLimit value) {
+        if (offsetLimitBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          node_ = value;
+          onChanged();
+        } else {
+          offsetLimitBuilder_.setMessage(value);
+        }
+        nodeCase_ = 15;
+        return this;
+      }
+      /**
+       * <code>.dataflow.Node.OffsetLimit offset_limit = 15;</code>
+       */
+      public Builder setOffsetLimit(
+          io.activej.dataflow.proto.NodeProto.Node.OffsetLimit.Builder builderForValue) {
+        if (offsetLimitBuilder_ == null) {
+          node_ = builderForValue.build();
+          onChanged();
+        } else {
+          offsetLimitBuilder_.setMessage(builderForValue.build());
+        }
+        nodeCase_ = 15;
+        return this;
+      }
+      /**
+       * <code>.dataflow.Node.OffsetLimit offset_limit = 15;</code>
+       */
+      public Builder mergeOffsetLimit(io.activej.dataflow.proto.NodeProto.Node.OffsetLimit value) {
+        if (offsetLimitBuilder_ == null) {
+          if (nodeCase_ == 15 &&
+              node_ != io.activej.dataflow.proto.NodeProto.Node.OffsetLimit.getDefaultInstance()) {
+            node_ = io.activej.dataflow.proto.NodeProto.Node.OffsetLimit.newBuilder((io.activej.dataflow.proto.NodeProto.Node.OffsetLimit) node_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            node_ = value;
+          }
+          onChanged();
+        } else {
+          if (nodeCase_ == 15) {
+            offsetLimitBuilder_.mergeFrom(value);
+          }
+          offsetLimitBuilder_.setMessage(value);
+        }
+        nodeCase_ = 15;
+        return this;
+      }
+      /**
+       * <code>.dataflow.Node.OffsetLimit offset_limit = 15;</code>
+       */
+      public Builder clearOffsetLimit() {
+        if (offsetLimitBuilder_ == null) {
+          if (nodeCase_ == 15) {
+            nodeCase_ = 0;
+            node_ = null;
+            onChanged();
+          }
+        } else {
+          if (nodeCase_ == 15) {
+            nodeCase_ = 0;
+            node_ = null;
+          }
+          offsetLimitBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>.dataflow.Node.OffsetLimit offset_limit = 15;</code>
+       */
+      public io.activej.dataflow.proto.NodeProto.Node.OffsetLimit.Builder getOffsetLimitBuilder() {
+        return getOffsetLimitFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.dataflow.Node.OffsetLimit offset_limit = 15;</code>
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.NodeProto.Node.OffsetLimitOrBuilder getOffsetLimitOrBuilder() {
+        if ((nodeCase_ == 15) && (offsetLimitBuilder_ != null)) {
+          return offsetLimitBuilder_.getMessageOrBuilder();
+        } else {
+          if (nodeCase_ == 15) {
+            return (io.activej.dataflow.proto.NodeProto.Node.OffsetLimit) node_;
+          }
+          return io.activej.dataflow.proto.NodeProto.Node.OffsetLimit.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.dataflow.Node.OffsetLimit offset_limit = 15;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          io.activej.dataflow.proto.NodeProto.Node.OffsetLimit, io.activej.dataflow.proto.NodeProto.Node.OffsetLimit.Builder, io.activej.dataflow.proto.NodeProto.Node.OffsetLimitOrBuilder> 
+          getOffsetLimitFieldBuilder() {
+        if (offsetLimitBuilder_ == null) {
+          if (!(nodeCase_ == 15)) {
+            node_ = io.activej.dataflow.proto.NodeProto.Node.OffsetLimit.getDefaultInstance();
+          }
+          offsetLimitBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.NodeProto.Node.OffsetLimit, io.activej.dataflow.proto.NodeProto.Node.OffsetLimit.Builder, io.activej.dataflow.proto.NodeProto.Node.OffsetLimitOrBuilder>(
+                  (io.activej.dataflow.proto.NodeProto.Node.OffsetLimit) node_,
+                  getParentForChildren(),
+                  isClean());
+          node_ = null;
+        }
+        nodeCase_ = 15;
+        onChanged();;
+        return offsetLimitBuilder_;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -20343,6 +21608,11 @@ public final class NodeProto {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_dataflow_Node_Empty_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_dataflow_Node_OffsetLimit_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_dataflow_Node_OffsetLimit_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -20353,7 +21623,7 @@ public final class NodeProto {
   static {
     java.lang.String[] descriptorData = {
       "\n\nnode.proto\022\010dataflow\032\017stream_id.proto\"" +
-      "\370\024\n\004Node\0225\n\016consumer_of_id\030\001 \001(\0132\033.dataf" +
+      "\261\026\n\004Node\0225\n\016consumer_of_id\030\001 \001(\0132\033.dataf" +
       "low.Node.ConsumerOfIdH\000\022+\n\010download\030\002 \001(" +
       "\0132\027.dataflow.Node.DownloadH\000\022\'\n\006filter\030\003" +
       " \001(\0132\025.dataflow.Node.FilterH\000\022#\n\004join\030\004 " +
@@ -20368,60 +21638,64 @@ public final class NodeProto {
       "OfIdH\000\022%\n\005union\030\014 \001(\0132\024.dataflow.Node.Un" +
       "ionH\000\022\'\n\006upload\030\r \001(\0132\025.dataflow.Node.Up" +
       "loadH\000\022%\n\005empty\030\016 \001(\0132\024.dataflow.Node.Em" +
-      "ptyH\000\032}\n\014ConsumerOfId\022\r\n\005index\030\001 \001(\005\022\n\n\002" +
-      "id\030\002 \001(\t\022\027\n\017partition_index\030\003 \001(\005\022\026\n\016max" +
-      "_partitions\030\004 \001(\005\022!\n\005input\030\005 \001(\0132\022.dataf" +
-      "low.StreamId\032\307\001\n\010Download\022\r\n\005index\030\001 \001(\005" +
-      "\022\014\n\004type\030\002 \001(\t\0220\n\007address\030\003 \001(\0132\037.datafl" +
-      "ow.Node.Download.Address\022!\n\005input\030\004 \001(\0132" +
-      "\022.dataflow.StreamId\022\"\n\006output\030\005 \001(\0132\022.da" +
-      "taflow.StreamId\032%\n\007Address\022\014\n\004host\030\001 \001(\t" +
-      "\022\014\n\004port\030\002 \001(\005\032q\n\006Filter\022\r\n\005index\030\001 \001(\005\022" +
-      "\021\n\tpredicate\030\002 \001(\014\022!\n\005input\030\003 \001(\0132\022.data" +
-      "flow.StreamId\022\"\n\006output\030\004 \001(\0132\022.dataflow" +
-      ".StreamId\032\331\001\n\004Join\022\r\n\005index\030\001 \001(\005\022 \n\004lef" +
-      "t\030\002 \001(\0132\022.dataflow.StreamId\022!\n\005right\030\003 \001" +
-      "(\0132\022.dataflow.StreamId\022\"\n\006output\030\004 \001(\0132\022" +
-      ".dataflow.StreamId\022\022\n\ncomparator\030\005 \001(\014\022\031" +
-      "\n\021left_key_function\030\006 \001(\014\022\032\n\022right_key_f" +
-      "unction\030\007 \001(\014\022\016\n\006joiner\030\010 \001(\014\032m\n\003Map\022\r\n\005" +
-      "index\030\001 \001(\005\022\020\n\010function\030\002 \001(\014\022!\n\005input\030\003" +
-      " \001(\0132\022.dataflow.StreamId\022\"\n\006output\030\004 \001(\013" +
-      "2\022.dataflow.StreamId\032\241\001\n\005Merge\022\r\n\005index\030" +
-      "\001 \001(\005\022\024\n\014key_function\030\002 \001(\014\022\026\n\016key_compa" +
-      "rator\030\003 \001(\014\022\023\n\013deduplicate\030\004 \001(\010\022\"\n\006inpu" +
+      "ptyH\000\0222\n\014offset_limit\030\017 \001(\0132\032.dataflow.N" +
+      "ode.OffsetLimitH\000\032}\n\014ConsumerOfId\022\r\n\005ind" +
+      "ex\030\001 \001(\005\022\n\n\002id\030\002 \001(\t\022\027\n\017partition_index\030" +
+      "\003 \001(\005\022\026\n\016max_partitions\030\004 \001(\005\022!\n\005input\030\005" +
+      " \001(\0132\022.dataflow.StreamId\032\307\001\n\010Download\022\r\n" +
+      "\005index\030\001 \001(\005\022\014\n\004type\030\002 \001(\t\0220\n\007address\030\003 " +
+      "\001(\0132\037.dataflow.Node.Download.Address\022!\n\005" +
+      "input\030\004 \001(\0132\022.dataflow.StreamId\022\"\n\006outpu" +
+      "t\030\005 \001(\0132\022.dataflow.StreamId\032%\n\007Address\022\014" +
+      "\n\004host\030\001 \001(\t\022\014\n\004port\030\002 \001(\005\032q\n\006Filter\022\r\n\005" +
+      "index\030\001 \001(\005\022\021\n\tpredicate\030\002 \001(\014\022!\n\005input\030" +
+      "\003 \001(\0132\022.dataflow.StreamId\022\"\n\006output\030\004 \001(" +
+      "\0132\022.dataflow.StreamId\032\331\001\n\004Join\022\r\n\005index\030" +
+      "\001 \001(\005\022 \n\004left\030\002 \001(\0132\022.dataflow.StreamId\022" +
+      "!\n\005right\030\003 \001(\0132\022.dataflow.StreamId\022\"\n\006ou" +
+      "tput\030\004 \001(\0132\022.dataflow.StreamId\022\022\n\ncompar" +
+      "ator\030\005 \001(\014\022\031\n\021left_key_function\030\006 \001(\014\022\032\n" +
+      "\022right_key_function\030\007 \001(\014\022\016\n\006joiner\030\010 \001(" +
+      "\014\032m\n\003Map\022\r\n\005index\030\001 \001(\005\022\020\n\010function\030\002 \001(" +
+      "\014\022!\n\005input\030\003 \001(\0132\022.dataflow.StreamId\022\"\n\006" +
+      "output\030\004 \001(\0132\022.dataflow.StreamId\032\241\001\n\005Mer" +
+      "ge\022\r\n\005index\030\001 \001(\005\022\024\n\014key_function\030\002 \001(\014\022" +
+      "\026\n\016key_comparator\030\003 \001(\014\022\023\n\013deduplicate\030\004" +
+      " \001(\010\022\"\n\006inputs\030\005 \003(\0132\022.dataflow.StreamId" +
+      "\022\"\n\006output\030\006 \001(\0132\022.dataflow.StreamId\032\202\002\n" +
+      "\006Reduce\022\r\n\005index\030\001 \001(\005\022\026\n\016key_comparator" +
+      "\030\002 \001(\014\0221\n\006inputs\030\003 \003(\0132!.dataflow.Node.R" +
+      "educe.InputsEntry\022\"\n\006output\030\004 \001(\0132\022.data" +
+      "flow.StreamId\032.\n\005Input\022\017\n\007reducer\030\001 \001(\014\022" +
+      "\024\n\014key_function\030\002 \001(\014\032J\n\013InputsEntry\022\013\n\003" +
+      "key\030\001 \001(\003\022*\n\005value\030\002 \001(\0132\033.dataflow.Node" +
+      ".Reduce.Input:\0028\001\032\244\001\n\014ReduceSimple\022\r\n\005in" +
+      "dex\030\001 \001(\005\022\024\n\014key_function\030\002 \001(\014\022\026\n\016key_c" +
+      "omparator\030\003 \001(\014\022\017\n\007reducer\030\004 \001(\014\022\"\n\006inpu" +
       "ts\030\005 \003(\0132\022.dataflow.StreamId\022\"\n\006output\030\006" +
-      " \001(\0132\022.dataflow.StreamId\032\202\002\n\006Reduce\022\r\n\005i" +
-      "ndex\030\001 \001(\005\022\026\n\016key_comparator\030\002 \001(\014\0221\n\006in" +
-      "puts\030\003 \003(\0132!.dataflow.Node.Reduce.Inputs" +
-      "Entry\022\"\n\006output\030\004 \001(\0132\022.dataflow.StreamI" +
-      "d\032.\n\005Input\022\017\n\007reducer\030\001 \001(\014\022\024\n\014key_funct" +
-      "ion\030\002 \001(\014\032J\n\013InputsEntry\022\013\n\003key\030\001 \001(\003\022*\n" +
-      "\005value\030\002 \001(\0132\033.dataflow.Node.Reduce.Inpu" +
-      "t:\0028\001\032\244\001\n\014ReduceSimple\022\r\n\005index\030\001 \001(\005\022\024\n" +
-      "\014key_function\030\002 \001(\014\022\026\n\016key_comparator\030\003 " +
-      "\001(\014\022\017\n\007reducer\030\004 \001(\014\022\"\n\006inputs\030\005 \003(\0132\022.d" +
-      "ataflow.StreamId\022\"\n\006output\030\006 \001(\0132\022.dataf" +
-      "low.StreamId\032\203\001\n\005Shard\022\r\n\005index\030\001 \001(\005\022\024\n" +
-      "\014key_function\030\002 \001(\014\022!\n\005input\030\003 \001(\0132\022.dat" +
-      "aflow.StreamId\022#\n\007outputs\030\004 \003(\0132\022.datafl" +
-      "ow.StreamId\022\r\n\005nonce\030\005 \001(\005\032\313\001\n\004Sort\022\r\n\005i" +
-      "ndex\030\001 \001(\005\022\014\n\004type\030\002 \001(\t\022\024\n\014key_function" +
-      "\030\003 \001(\014\022\026\n\016key_comparator\030\004 \001(\014\022\023\n\013dedupl" +
-      "icate\030\005 \001(\010\022\034\n\024items_in_memory_size\030\006 \001(" +
-      "\005\022!\n\005input\030\007 \001(\0132\022.dataflow.StreamId\022\"\n\006" +
-      "output\030\010 \001(\0132\022.dataflow.StreamId\032~\n\014Supp" +
-      "lierOfId\022\r\n\005index\030\001 \001(\005\022\n\n\002id\030\002 \001(\t\022\027\n\017p" +
-      "artition_index\030\003 \001(\005\022\026\n\016max_partitions\030\004" +
-      " \001(\005\022\"\n\006output\030\005 \001(\0132\022.dataflow.StreamId" +
-      "\032^\n\005Union\022\r\n\005index\030\001 \001(\005\022\"\n\006inputs\030\002 \003(\013" +
-      "2\022.dataflow.StreamId\022\"\n\006output\030\003 \001(\0132\022.d" +
-      "ataflow.StreamId\032L\n\006Upload\022\r\n\005index\030\001 \001(" +
-      "\005\022\014\n\004type\030\002 \001(\t\022%\n\tstream_id\030\003 \001(\0132\022.dat" +
-      "aflow.StreamId\032:\n\005Empty\022\r\n\005index\030\001 \001(\005\022\"" +
-      "\n\006output\030\002 \001(\0132\022.dataflow.StreamIdB\006\n\004no" +
-      "deB(\n\031io.activej.dataflow.protoB\tNodePro" +
-      "toP\000b\006proto3"
+      " \001(\0132\022.dataflow.StreamId\032\203\001\n\005Shard\022\r\n\005in" +
+      "dex\030\001 \001(\005\022\024\n\014key_function\030\002 \001(\014\022!\n\005input" +
+      "\030\003 \001(\0132\022.dataflow.StreamId\022#\n\007outputs\030\004 " +
+      "\003(\0132\022.dataflow.StreamId\022\r\n\005nonce\030\005 \001(\005\032\313" +
+      "\001\n\004Sort\022\r\n\005index\030\001 \001(\005\022\014\n\004type\030\002 \001(\t\022\024\n\014" +
+      "key_function\030\003 \001(\014\022\026\n\016key_comparator\030\004 \001" +
+      "(\014\022\023\n\013deduplicate\030\005 \001(\010\022\034\n\024items_in_memo" +
+      "ry_size\030\006 \001(\005\022!\n\005input\030\007 \001(\0132\022.dataflow." +
+      "StreamId\022\"\n\006output\030\010 \001(\0132\022.dataflow.Stre" +
+      "amId\032~\n\014SupplierOfId\022\r\n\005index\030\001 \001(\005\022\n\n\002i" +
+      "d\030\002 \001(\t\022\027\n\017partition_index\030\003 \001(\005\022\026\n\016max_" +
+      "partitions\030\004 \001(\005\022\"\n\006output\030\005 \001(\0132\022.dataf" +
+      "low.StreamId\032^\n\005Union\022\r\n\005index\030\001 \001(\005\022\"\n\006" +
+      "inputs\030\002 \003(\0132\022.dataflow.StreamId\022\"\n\006outp" +
+      "ut\030\003 \001(\0132\022.dataflow.StreamId\032L\n\006Upload\022\r" +
+      "\n\005index\030\001 \001(\005\022\014\n\004type\030\002 \001(\t\022%\n\tstream_id" +
+      "\030\003 \001(\0132\022.dataflow.StreamId\032:\n\005Empty\022\r\n\005i" +
+      "ndex\030\001 \001(\005\022\"\n\006output\030\002 \001(\0132\022.dataflow.St" +
+      "reamId\032\202\001\n\013OffsetLimit\022\r\n\005index\030\001 \001(\005\022\016\n" +
+      "\006offset\030\002 \001(\003\022\r\n\005limit\030\003 \001(\003\022!\n\005input\030\004 " +
+      "\001(\0132\022.dataflow.StreamId\022\"\n\006output\030\005 \001(\0132" +
+      "\022.dataflow.StreamIdB\006\n\004nodeB(\n\031io.active" +
+      "j.dataflow.protoB\tNodeProtoP\000b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -20433,7 +21707,7 @@ public final class NodeProto {
     internal_static_dataflow_Node_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_Node_descriptor,
-        new java.lang.String[] { "ConsumerOfId", "Download", "Filter", "Join", "Map", "Merge", "Reduce", "ReduceSimple", "Shard", "Sort", "SupplierOfId", "Union", "Upload", "Empty", "Node", });
+        new java.lang.String[] { "ConsumerOfId", "Download", "Filter", "Join", "Map", "Merge", "Reduce", "ReduceSimple", "Shard", "Sort", "SupplierOfId", "Union", "Upload", "Empty", "OffsetLimit", "Node", });
     internal_static_dataflow_Node_ConsumerOfId_descriptor =
       internal_static_dataflow_Node_descriptor.getNestedTypes().get(0);
     internal_static_dataflow_Node_ConsumerOfId_fieldAccessorTable = new
@@ -20536,6 +21810,12 @@ public final class NodeProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_Node_Empty_descriptor,
         new java.lang.String[] { "Index", "Output", });
+    internal_static_dataflow_Node_OffsetLimit_descriptor =
+      internal_static_dataflow_Node_descriptor.getNestedTypes().get(14);
+    internal_static_dataflow_Node_OffsetLimit_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_dataflow_Node_OffsetLimit_descriptor,
+        new java.lang.String[] { "Index", "Offset", "Limit", "Input", "Output", });
     io.activej.dataflow.proto.StreamIdProto.getDescriptor();
   }
 

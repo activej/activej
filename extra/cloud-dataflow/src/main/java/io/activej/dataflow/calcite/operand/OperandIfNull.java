@@ -1,4 +1,4 @@
-package io.activej.dataflow.calcite.where;
+package io.activej.dataflow.calcite.operand;
 
 import io.activej.common.Utils;
 import io.activej.record.Record;
@@ -8,11 +8,11 @@ import org.apache.calcite.rex.RexDynamicParam;
 import java.lang.reflect.Type;
 import java.util.List;
 
-public final class OperandIfNull implements Operand {
-	private final Operand checkedOperand;
-	private final Operand defaultValueOperand;
+public final class OperandIfNull implements Operand<OperandIfNull> {
+	private final Operand<?> checkedOperand;
+	private final Operand<?> defaultValueOperand;
 
-	public OperandIfNull(Operand checkedOperand, Operand defaultValueOperand) {
+	public OperandIfNull(Operand<?> checkedOperand, Operand<?> defaultValueOperand) {
 		this.checkedOperand = checkedOperand;
 		this.defaultValueOperand = defaultValueOperand;
 	}
@@ -39,7 +39,7 @@ public final class OperandIfNull implements Operand {
 	}
 
 	@Override
-	public Operand materialize(List<Object> params) {
+	public OperandIfNull materialize(List<Object> params) {
 		return new OperandIfNull(
 				checkedOperand.materialize(params),
 				defaultValueOperand.materialize(params)
@@ -51,11 +51,11 @@ public final class OperandIfNull implements Operand {
 		return Utils.concat(checkedOperand.getParams(), defaultValueOperand.getParams());
 	}
 
-	public Operand getCheckedOperand() {
+	public Operand<?> getCheckedOperand() {
 		return checkedOperand;
 	}
 
-	public Operand getDefaultValueOperand() {
+	public Operand<?> getDefaultValueOperand() {
 		return defaultValueOperand;
 	}
 

@@ -1,15 +1,16 @@
 package io.activej.dataflow.calcite.where;
 
+import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.record.Record;
 
 import java.util.List;
 
 public final class BetweenPredicate implements WherePredicate {
-	private final Operand value;
-	private final Operand from;
-	private final Operand to;
+	private final Operand<?> value;
+	private final Operand<?> from;
+	private final Operand<?> to;
 
-	public BetweenPredicate(Operand value, Operand from, Operand to) {
+	public BetweenPredicate(Operand<?> value, Operand<?> from, Operand<?> to) {
 		this.value = value;
 		this.from = from;
 		this.to = to;
@@ -38,15 +39,15 @@ public final class BetweenPredicate implements WherePredicate {
 		);
 	}
 
-	public Operand getValue() {
+	public Operand<?> getValue() {
 		return value;
 	}
 
-	public Operand getFrom() {
+	public Operand<?> getFrom() {
 		return from;
 	}
 
-	public Operand getTo() {
+	public Operand<?> getTo() {
 		return to;
 	}
 

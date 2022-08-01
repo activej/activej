@@ -1,4 +1,4 @@
-package io.activej.dataflow.calcite.where;
+package io.activej.dataflow.calcite.operand;
 
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
@@ -8,7 +8,7 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.List;
 
-public final class OperandRecordField implements Operand {
+public final class OperandRecordField implements Operand<OperandRecordField> {
 	private final int index;
 
 	public OperandRecordField(int index) {
@@ -31,7 +31,7 @@ public final class OperandRecordField implements Operand {
 	}
 
 	@Override
-	public Operand materialize(List<Object> params) {
+	public OperandRecordField materialize(List<Object> params) {
 		return this;
 	}
 

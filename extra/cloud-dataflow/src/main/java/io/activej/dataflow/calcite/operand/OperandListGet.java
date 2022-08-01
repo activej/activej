@@ -1,4 +1,4 @@
-package io.activej.dataflow.calcite.where;
+package io.activej.dataflow.calcite.operand;
 
 import io.activej.common.Utils;
 import io.activej.record.Record;
@@ -9,11 +9,11 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
 
-public final class OperandListGet implements Operand {
-	private final Operand listOperand;
-	private final Operand indexOperand;
+public final class OperandListGet implements Operand<OperandListGet> {
+	private final Operand<?> listOperand;
+	private final Operand<?> indexOperand;
 
-	public OperandListGet(Operand listOperand, Operand indexOperand) {
+	public OperandListGet(Operand<?> listOperand, Operand<?> indexOperand) {
 		this.listOperand = listOperand;
 		this.indexOperand = indexOperand;
 	}
@@ -42,7 +42,7 @@ public final class OperandListGet implements Operand {
 	}
 
 	@Override
-	public Operand materialize(List<Object> params) {
+	public OperandListGet materialize(List<Object> params) {
 		return new OperandListGet(
 				listOperand.materialize(params),
 				indexOperand.materialize(params)
@@ -54,11 +54,11 @@ public final class OperandListGet implements Operand {
 		return Utils.concat(listOperand.getParams(), indexOperand.getParams());
 	}
 
-	public Operand getListOperand() {
+	public Operand<?> getListOperand() {
 		return listOperand;
 	}
 
-	public Operand getIndexOperand() {
+	public Operand<?> getIndexOperand() {
 		return indexOperand;
 	}
 

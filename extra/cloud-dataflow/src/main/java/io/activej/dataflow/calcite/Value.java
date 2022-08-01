@@ -37,6 +37,10 @@ public class Value {
 		return new Value(type, value, null);
 	}
 
+	public static <T> Value materializedValue(Class<T> type, @Nullable T value) {
+		return new Value(type, value, null);
+	}
+
 	public static Value materializedValue(RexLiteral literal) {
 		Type type = getJavaType(literal.getType());
 		return new Value(type, Utils.toJavaType(literal), null);

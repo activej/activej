@@ -219,6 +219,13 @@ public final class ProtobufUtils {
 			builder.setEmpty(NodeProto.Node.Empty.newBuilder()
 					.setIndex(empty.getIndex())
 					.setOutput(convert(empty.getOutput())));
+		} else if (node instanceof NodeOffsetLimit<?> offsetLimit) {
+			builder.setOffsetLimit(OffsetLimit.newBuilder()
+					.setIndex(offsetLimit.getIndex())
+					.setOffset(offsetLimit.getOffset())
+					.setLimit(offsetLimit.getLimit())
+					.setInput(convert(offsetLimit.getInput()))
+					.setOutput(convert(offsetLimit.getOutput())));
 		} else {
 			throw new AssertionError();
 		}
@@ -248,19 +255,19 @@ public final class ProtobufUtils {
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	public static Node convert(NodeProto.Node node, FunctionSerializer functionSerializer) throws DataflowException {
 		try {
-			switch (node.getNodeCase()) {
+			return switch (node.getNodeCase()) {
 				case CONSUMER_OF_ID -> {
 					ConsumerOfId coi = node.getConsumerOfId();
-					return new NodeConsumerOfId<>(coi.getIndex(), coi.getId(), coi.getPartitionIndex(), coi.getMaxPartitions(), convert(coi.getInput()));
+					yield new NodeConsumerOfId<>(coi.getIndex(), coi.getId(), coi.getPartitionIndex(), coi.getMaxPartitions(), convert(coi.getInput()));
 				}
 				case DOWNLOAD -> {
 					Download download = node.getDownload();
 					Address address = download.getAddress();
-					return new NodeDownload<>(download.getIndex(), getType(download.getType()), new InetSocketAddress(address.getHost(), address.getPort()), convert(download.getInput()), convert(download.getOutput()));
+					yield new NodeDownload<>(download.getIndex(), getType(download.getType()), new InetSocketAddress(address.getHost(), address.getPort()), convert(download.getInput()), convert(download.getOutput()));
 				}
 				case FILTER -> {
 					Filter filter = node.getFilter();
-					return new NodeFilter<>(filter.getIndex(), functionSerializer.deserializePredicate(filter.getPredicate()), convert(filter.getInput()), convert(filter.getOutput()));
+					yield new NodeFilter<>(filter.getIndex(), functionSerializer.deserializePredicate(filter.getPredicate()), convert(filter.getInput()), convert(filter.getOutput()));
 				}
 				case JOIN -> {
 					Join join = node.getJoin();
@@ -268,58 +275,62 @@ public final class ProtobufUtils {
 					Function leftKeyFunction = functionSerializer.deserializeFunction(join.getLeftKeyFunction());
 					Function rightKeyFunction = functionSerializer.deserializeFunction(join.getRightKeyFunction());
 					Joiner joiner = functionSerializer.deserializeJoiner(join.getJoiner());
-					return new NodeJoin<>(join.getIndex(), convert(join.getLeft()), convert(join.getRight()), convert(join.getOutput()), joinComparator, leftKeyFunction, rightKeyFunction, joiner);
+					yield new NodeJoin<>(join.getIndex(), convert(join.getLeft()), convert(join.getRight()), convert(join.getOutput()), joinComparator, leftKeyFunction, rightKeyFunction, joiner);
 				}
 				case MAP -> {
 					NodeProto.Node.Map map = node.getMap();
-					return new NodeMap<>(map.getIndex(), functionSerializer.deserializeFunction(map.getFunction()), convert(map.getInput()), convert(map.getOutput()));
+					yield new NodeMap<>(map.getIndex(), functionSerializer.deserializeFunction(map.getFunction()), convert(map.getInput()), convert(map.getOutput()));
 				}
 				case MERGE -> {
 					Merge merge = node.getMerge();
 					Function function = functionSerializer.deserializeFunction(merge.getKeyFunction());
 					Comparator mergeComparator = functionSerializer.deserializeComparator(merge.getKeyComparator());
-					return new NodeMerge<>(merge.getIndex(), function, mergeComparator, merge.getDeduplicate(), convertProtoIds(merge.getInputsList()), convert(merge.getOutput()));
+					yield new NodeMerge<>(merge.getIndex(), function, mergeComparator, merge.getDeduplicate(), convertProtoIds(merge.getInputsList()), convert(merge.getOutput()));
 				}
 				case REDUCE -> {
 					Reduce reduce = node.getReduce();
 					Comparator reduceComparator = functionSerializer.deserializeComparator(reduce.getKeyComparator());
-					return new NodeReduce<>(reduce.getIndex(), reduceComparator, convertInputs(functionSerializer, reduce.getInputsMap()), convert(reduce.getOutput()));
+					yield new NodeReduce<>(reduce.getIndex(), reduceComparator, convertInputs(functionSerializer, reduce.getInputsMap()), convert(reduce.getOutput()));
 				}
 				case REDUCE_SIMPLE -> {
 					ReduceSimple reduceSimple = node.getReduceSimple();
 					Function keyFunction = functionSerializer.deserializeFunction(reduceSimple.getKeyFunction());
 					Comparator keyComparator = functionSerializer.deserializeComparator(reduceSimple.getKeyComparator());
 					Reducer reducer = functionSerializer.deserializeReducer(reduceSimple.getReducer());
-					return new NodeReduceSimple<>(reduceSimple.getIndex(), keyFunction, keyComparator, reducer, convertProtoIds(reduceSimple.getInputsList()), convert(reduceSimple.getOutput()));
+					yield new NodeReduceSimple<>(reduceSimple.getIndex(), keyFunction, keyComparator, reducer, convertProtoIds(reduceSimple.getInputsList()), convert(reduceSimple.getOutput()));
 				}
 				case SHARD -> {
 					Shard shard = node.getShard();
-					return new NodeShard<>(shard.getIndex(), functionSerializer.deserializeFunction(shard.getKeyFunction()), convert(shard.getInput()), convertProtoIds(shard.getOutputsList()), shard.getNonce());
+					yield new NodeShard<>(shard.getIndex(), functionSerializer.deserializeFunction(shard.getKeyFunction()), convert(shard.getInput()), convertProtoIds(shard.getOutputsList()), shard.getNonce());
 				}
 				case SORT -> {
 					Sort sort = node.getSort();
 					Function sortFunction = functionSerializer.deserializeFunction(sort.getKeyFunction());
 					Comparator sortComparator = functionSerializer.deserializeComparator(sort.getKeyComparator());
-					return new NodeSort<>(sort.getIndex(), getType(sort.getType()), sortFunction, sortComparator, sort.getDeduplicate(), sort.getItemsInMemorySize(), convert(sort.getInput()), convert(sort.getOutput()));
+					yield new NodeSort<>(sort.getIndex(), getType(sort.getType()), sortFunction, sortComparator, sort.getDeduplicate(), sort.getItemsInMemorySize(), convert(sort.getInput()), convert(sort.getOutput()));
 				}
 				case SUPPLIER_OF_ID -> {
 					SupplierOfId sid = node.getSupplierOfId();
-					return new NodeSupplierOfId<>(sid.getIndex(), sid.getId(), sid.getPartitionIndex(), sid.getMaxPartitions(), convert(sid.getOutput()));
+					yield new NodeSupplierOfId<>(sid.getIndex(), sid.getId(), sid.getPartitionIndex(), sid.getMaxPartitions(), convert(sid.getOutput()));
 				}
 				case UNION -> {
 					Union union = node.getUnion();
-					return new NodeUnion<>(union.getIndex(), convertProtoIds(union.getInputsList()), convert(union.getOutput()));
+					yield new NodeUnion<>(union.getIndex(), convertProtoIds(union.getInputsList()), convert(union.getOutput()));
 				}
 				case UPLOAD -> {
 					Upload upload = node.getUpload();
-					return new NodeUpload<>(upload.getIndex(), getType(upload.getType()), convert(upload.getStreamId()));
+					yield new NodeUpload<>(upload.getIndex(), getType(upload.getType()), convert(upload.getStreamId()));
 				}
 				case EMPTY -> {
 					Empty empty = node.getEmpty();
-					return new NodeSupplierEmpty<>(empty.getIndex(), convert(empty.getOutput()));
+					yield new NodeSupplierEmpty<>(empty.getIndex(), convert(empty.getOutput()));
 				}
-				default -> throw new DataflowException("Node was not set");
-			}
+				case OFFSET_LIMIT -> {
+					OffsetLimit offsetLimit = node.getOffsetLimit();
+					yield new NodeOffsetLimit<>(offsetLimit.getIndex(), offsetLimit.getOffset(), offsetLimit.getLimit(), convert(offsetLimit.getInput()), convert(offsetLimit.getOutput()));
+				}
+				case NODE_NOT_SET -> throw new DataflowException("Node was not set");
+			};
 		} catch (MalformedDataException e) {
 			throw new DataflowException(e);
 		}

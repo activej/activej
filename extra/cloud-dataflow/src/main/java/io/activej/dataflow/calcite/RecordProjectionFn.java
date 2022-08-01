@@ -2,8 +2,8 @@ package io.activej.dataflow.calcite;
 
 import io.activej.codegen.expression.Expression;
 import io.activej.common.Checks;
-import io.activej.dataflow.calcite.where.Operand;
-import io.activej.dataflow.calcite.where.OperandRecordField;
+import io.activej.dataflow.calcite.operand.Operand;
+import io.activej.dataflow.calcite.operand.OperandRecordField;
 import io.activej.record.Record;
 import io.activej.record.RecordProjection;
 import io.activej.record.RecordScheme;
@@ -76,6 +76,9 @@ public final class RecordProjectionFn implements UnaryOperator<Record> {
 		for (FieldProjection fieldProjection : fieldProjections) {
 			String fieldName = fieldProjection.fieldName() != null ? fieldProjection.fieldName() : fieldProjection.operand().getFieldName(original);
 			schemeTo.withField(fieldName, fieldProjection.operand().getFieldType(original));
+
+			if (mapping == null) continue;
+
 			UnaryOperator<Expression> previous = mapping.apply(fieldName, record -> call(value(fieldProjection.operand()), "getValue", record));
 			if (previous != null) {
 				throw new IllegalArgumentException();
@@ -88,6 +91,6 @@ public final class RecordProjectionFn implements UnaryOperator<Record> {
 		return new ArrayList<>(fieldProjections);
 	}
 
-	public record FieldProjection(Operand operand, @Nullable String fieldName) {
+	public record FieldProjection(Operand<?> operand, @Nullable String fieldName) {
 	}
 }

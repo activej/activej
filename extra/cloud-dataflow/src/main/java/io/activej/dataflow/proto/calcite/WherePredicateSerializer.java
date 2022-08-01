@@ -8,6 +8,8 @@ import io.activej.serializer.BinaryOutput;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.CorruptedDataException;
 
+import java.util.stream.Collectors;
+
 import static io.activej.serializer.BinarySerializers.BYTES_SERIALIZER;
 
 
@@ -177,7 +179,7 @@ public final class WherePredicateSerializer implements BinarySerializer<WherePre
 					OperandConverters.convert(classLoader, predicate.getInPredicate().getValue()),
 					predicate.getInPredicate().getOptionsList().stream()
 							.map(operand -> OperandConverters.convert(classLoader, operand))
-							.toList()
+							.collect(Collectors.toList())
 			);
 			case LIKE_PREDICATE -> new LikePredicate(
 					OperandConverters.convert(classLoader, predicate.getLikePredicate().getValue()),

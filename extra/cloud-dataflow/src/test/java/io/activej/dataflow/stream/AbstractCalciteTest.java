@@ -280,7 +280,7 @@ public abstract class AbstractCalciteTest {
 		assertWhereEqualTrue(result);
 	}
 
-	private void assertWhereEqualTrue(QueryResult result) {
+	private static void assertWhereEqualTrue(QueryResult result) {
 		QueryResult expected = studentsToQueryResult(STUDENT_LIST);
 
 		assertEquals(expected, result);
@@ -309,7 +309,7 @@ public abstract class AbstractCalciteTest {
 		assertWhereEqualFalse(result);
 	}
 
-	private void assertWhereEqualFalse(QueryResult result) {
+	private static void assertWhereEqualFalse(QueryResult result) {
 		assertTrue(result.isEmpty());
 	}
 	// endregion
@@ -336,7 +336,7 @@ public abstract class AbstractCalciteTest {
 		assertWhereEqualScalar(result);
 	}
 
-	private void assertWhereEqualScalar(QueryResult result) {
+	private static void assertWhereEqualScalar(QueryResult result) {
 		Student student = STUDENT_LIST.get(1);
 		QueryResult expected = new QueryResult(List.of("firstName", "lastName"),
 				List.<Object[]>of(new Object[]{student.firstName, student.lastName}));
@@ -379,7 +379,7 @@ public abstract class AbstractCalciteTest {
 		assertWhereNotEqualTrue(result);
 	}
 
-	private void assertWhereNotEqualTrue(QueryResult result) {
+	private static void assertWhereNotEqualTrue(QueryResult result) {
 		assertTrue(result.isEmpty());
 	}
 	// endregion
@@ -406,7 +406,7 @@ public abstract class AbstractCalciteTest {
 		assertWhereNotEqualFalse(result);
 	}
 
-	private void assertWhereNotEqualFalse(QueryResult result) {
+	private static void assertWhereNotEqualFalse(QueryResult result) {
 		QueryResult expected = studentsToQueryResult(STUDENT_LIST);
 
 		assertEquals(expected, result);
@@ -435,7 +435,7 @@ public abstract class AbstractCalciteTest {
 		assertWhereNotEqualScalar(result);
 	}
 
-	private void assertWhereNotEqualScalar(QueryResult result) {
+	private static void assertWhereNotEqualScalar(QueryResult result) {
 		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST.get(0), STUDENT_LIST.get(2), STUDENT_LIST.get(3)));
 
 		assertEquals(expected, result);
@@ -476,7 +476,7 @@ public abstract class AbstractCalciteTest {
 		assertWhereGreaterThanScalar(result);
 	}
 
-	private void assertWhereGreaterThanScalar(QueryResult result) {
+	private static void assertWhereGreaterThanScalar(QueryResult result) {
 		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(1, 4));
 
 		assertEquals(expected, result);
@@ -517,7 +517,7 @@ public abstract class AbstractCalciteTest {
 		assertWhereGreaterThanOrEqualScalar(result);
 	}
 
-	private void assertWhereGreaterThanOrEqualScalar(QueryResult result) {
+	private static void assertWhereGreaterThanOrEqualScalar(QueryResult result) {
 		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(1, 4));
 
 		assertEquals(expected, result);
@@ -558,7 +558,7 @@ public abstract class AbstractCalciteTest {
 		assertWhereLessThanScalar(result);
 	}
 
-	private void assertWhereLessThanScalar(QueryResult result) {
+	private static void assertWhereLessThanScalar(QueryResult result) {
 		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(0, 1));
 
 		assertEquals(expected, result);
@@ -587,7 +587,7 @@ public abstract class AbstractCalciteTest {
 		assertWhereLessThanOrEqualScalar(result);
 	}
 
-	private void assertWhereLessThanOrEqualScalar(QueryResult result) {
+	private static void assertWhereLessThanOrEqualScalar(QueryResult result) {
 		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(0, 2));
 
 		assertEquals(expected, result);
@@ -619,7 +619,7 @@ public abstract class AbstractCalciteTest {
 		assertWhereAndEqual(result);
 	}
 
-	private void assertWhereAndEqual(QueryResult result) {
+	private static void assertWhereAndEqual(QueryResult result) {
 		QueryResult expected = new QueryResult(List.of("id"),
 				List.<Object[]>of(new Object[]{STUDENT_LIST.get(0).id}));
 
@@ -652,7 +652,7 @@ public abstract class AbstractCalciteTest {
 		assertWhereOrEqual(result);
 	}
 
-	private void assertWhereOrEqual(QueryResult result) {
+	private static void assertWhereOrEqual(QueryResult result) {
 		QueryResult expected = new QueryResult(List.of("id"),
 				List.of(
 						new Object[]{STUDENT_LIST.get(1).id},
@@ -688,7 +688,7 @@ public abstract class AbstractCalciteTest {
 		assertWhereBetween(result);
 	}
 
-	private void assertWhereBetween(QueryResult result) {
+	private static void assertWhereBetween(QueryResult result) {
 		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(0, 2));
 
 		assertEquals(expected, result);
@@ -721,7 +721,7 @@ public abstract class AbstractCalciteTest {
 		assertWhereIn(result);
 	}
 
-	private void assertWhereIn(QueryResult result) {
+	private static void assertWhereIn(QueryResult result) {
 		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST.get(0), STUDENT_LIST.get(2)));
 
 		assertEquals(expected, result);
@@ -811,7 +811,7 @@ public abstract class AbstractCalciteTest {
 		assertMapGetInWhereClause(result);
 	}
 
-	private void assertMapGetInWhereClause(QueryResult result) {
+	private static void assertMapGetInWhereClause(QueryResult result) {
 		QueryResult expected = new QueryResult(List.of("id"),
 				List.of(
 						new Object[]{REGISTRY_LIST.get(0).id},
@@ -842,7 +842,7 @@ public abstract class AbstractCalciteTest {
 		assertListGetQuery(result, "?");
 	}
 
-	private void assertListGetQuery(QueryResult result, String index) {
+	private static void assertListGetQuery(QueryResult result, String index) {
 		List<Object[]> columnValues = new ArrayList<>(result.columnValues.size());
 		for (Registry registry : REGISTRY_LIST) {
 			String domain = registry.domains.size() > 1 ? registry.domains.get(1) : null;
@@ -880,7 +880,7 @@ public abstract class AbstractCalciteTest {
 		assertListGetInWhereClause(result);
 	}
 
-	private void assertListGetInWhereClause(QueryResult result) {
+	private static void assertListGetInWhereClause(QueryResult result) {
 		QueryResult expected = new QueryResult(List.of("id"),
 				List.of(
 						new Object[]{REGISTRY_LIST.get(0).id},
@@ -1015,7 +1015,7 @@ public abstract class AbstractCalciteTest {
 		assertPojoFieldInWhereClause(result);
 	}
 
-	private void assertPojoFieldInWhereClause(QueryResult result) {
+	private static void assertPojoFieldInWhereClause(QueryResult result) {
 		QueryResult expected = new QueryResult(List.of("id"), List.<Object[]>of(new Object[]{USER_PROFILES_LIST.get(0).id}));
 
 		assertEquals(expected, result);
@@ -1045,7 +1045,7 @@ public abstract class AbstractCalciteTest {
 		assertUserProfilesSelect(result, "?");
 	}
 
-	private void assertUserProfilesSelect(QueryResult result, String key) {
+	private static void assertUserProfilesSelect(QueryResult result, String key) {
 		List<Object[]> expectedColumnValues = new ArrayList<>(USER_PROFILES_LIST.size());
 
 		for (UserProfile userProfile : USER_PROFILES_LIST) {
@@ -1090,7 +1090,7 @@ public abstract class AbstractCalciteTest {
 		assertUserProfilesInWhereClause(result);
 	}
 
-	private void assertUserProfilesInWhereClause(QueryResult result) {
+	private static void assertUserProfilesInWhereClause(QueryResult result) {
 		QueryResult expected = new QueryResult(List.of("id"), List.<Object[]>of(new Object[]{USER_PROFILES_LIST.get(0).id}));
 
 		assertEquals(expected, result);
@@ -1122,7 +1122,7 @@ public abstract class AbstractCalciteTest {
 		assertCountMapGet(result, "?");
 	}
 
-	private void assertCountMapGet(QueryResult result, String key) {
+	private static void assertCountMapGet(QueryResult result, String key) {
 		QueryResult expected = new QueryResult(List.of("COUNT(counters.get(" + key + "))"), List.<Object[]>of(new Object[]{2L}));
 
 		assertEquals(expected, result);
@@ -1154,7 +1154,7 @@ public abstract class AbstractCalciteTest {
 		assertSumPojoValues(result, "?");
 	}
 
-	private void assertSumPojoValues(QueryResult result, String key) {
+	private static void assertSumPojoValues(QueryResult result, String key) {
 		QueryResult expected = new QueryResult(List.of("SUM(intents.get(" + key + ").campaignId)"), List.<Object[]>of(new Object[]{4L}));
 
 		assertEquals(expected, result);
@@ -1229,6 +1229,13 @@ public abstract class AbstractCalciteTest {
 
 		assertEquals(expected, results);
 	}
+
+	private static void assertSelectPojo(QueryResult result) {
+		QueryResult expected = new QueryResult(List.of("pojo"), List.<Object[]>of(new Object[]{new UserProfilePojo("test1", 1)}));
+
+		assertEquals(expected, result);
+	}
+	// endregion
 
 	@Test
 	public void testSelectAllLarge() {
@@ -1316,14 +1323,207 @@ public abstract class AbstractCalciteTest {
 		assertEquals(expected, result);
 	}
 
+	// region Offset
+	@Test
+	public void testOffset() {
+		QueryResult result = query("""
+				SELECT *
+				FROM student
+				OFFSET 2
+				""");
 
-	private void assertSelectPojo(QueryResult result) {
-		QueryResult expected = new QueryResult(List.of("pojo"), List.<Object[]>of(new Object[]{new UserProfilePojo("test1", 1)}));
+		assertOffset(result);
+	}
+
+	@Test
+	public void testOffsetPrepared() {
+		QueryResult result = queryPrepared("""
+						SELECT *
+						FROM student
+						OFFSET ?
+						""",
+				stmt -> stmt.setInt(1, 2));
+
+		assertOffset(result);
+	}
+
+	private static void assertOffset(QueryResult result) {
+		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(2, STUDENT_LIST.size()));
 
 		assertEquals(expected, result);
 	}
 	// endregion
 
+	// region Limit
+	@Test
+	public void testLimit() {
+		QueryResult result = query("""
+				SELECT *
+				FROM student
+				LIMIT 2
+				""");
+
+		assertLimit(result);
+	}
+
+	@Test
+	public void testLimitPrepared() {
+		QueryResult result = queryPrepared("""
+						SELECT *
+						FROM student
+						LIMIT ?
+						""",
+				stmt -> stmt.setInt(1, 2));
+
+		assertLimit(result);
+	}
+
+	private static void assertLimit(QueryResult result) {
+		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(0, 2));
+
+		assertEquals(expected, result);
+	}
+	// endregion
+
+	// region OffsetLimit
+	@Test
+	public void testOffsetLimit() {
+		QueryResult result = query("""
+				SELECT *
+				FROM student
+				LIMIT 2
+				OFFSET 1
+				""");
+
+		assertOffsetLimit(result);
+	}
+
+	@Test
+	public void testOffsetLimitPrepared() {
+		QueryResult result = queryPrepared("""
+						SELECT *
+						FROM student
+						LIMIT ?
+						OFFSET ?
+						""",
+				stmt -> {
+					stmt.setInt(1, 2);
+					stmt.setInt(2, 1);
+				});
+
+		assertOffsetLimit(result);
+	}
+
+	private static void assertOffsetLimit(QueryResult result) {
+		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(1, 3));
+
+		assertEquals(expected, result);
+	}
+	// endregion
+
+	// region SortedOffset
+	@Test
+	public void testSortedOffset() {
+		QueryResult result = query("""
+				SELECT *
+				FROM student
+				ORDER BY firstName ASC, id DESC
+				OFFSET 2
+				""");
+
+		assertSortedOffset(result);
+	}
+
+	@Test
+	public void testSortedOffsetPrepared() {
+		QueryResult result = queryPrepared("""
+						SELECT *
+						FROM student
+						ORDER BY firstName ASC, id DESC
+						OFFSET ?
+						""",
+				stmt -> stmt.setInt(1, 2));
+
+		assertSortedOffset(result);
+	}
+
+	private static void assertSortedOffset(QueryResult result) {
+		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST.get(0), STUDENT_LIST.get(3)));
+
+		assertEquals(expected, result);
+	}
+	// endregion
+
+	// region SortedLimit
+	@Test
+	public void testSortedLimit() {
+		QueryResult result = query("""
+				SELECT *
+				FROM student
+				ORDER BY firstName ASC, id DESC
+				LIMIT 2
+				""");
+
+		assertSortedLimit(result);
+	}
+
+	@Test
+	public void testSortedLimitPrepared() {
+		QueryResult result = queryPrepared("""
+						SELECT *
+						FROM student
+						ORDER BY firstName ASC, id DESC
+						LIMIT ?
+						""",
+				stmt -> stmt.setInt(1, 2));
+
+		assertSortedLimit(result);
+	}
+
+	private static void assertSortedLimit(QueryResult result) {
+		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST.get(1), STUDENT_LIST.get(2)));
+
+		assertEquals(expected, result);
+	}
+	// endregion
+
+	// region SortedOffsetLimit
+	@Test
+	public void testSortedOffsetLimit() {
+		QueryResult result = query("""
+				SELECT *
+				FROM student
+				ORDER BY firstName ASC, id DESC
+				LIMIT 2
+				OFFSET 1
+				""");
+
+		assertSortedOffsetLimit(result);
+	}
+
+	@Test
+	public void testSortedOffsetLimitPrepared() {
+		QueryResult result = queryPrepared("""
+						SELECT *
+						FROM student
+						ORDER BY firstName ASC, id DESC
+						LIMIT ?
+						OFFSET ?
+						""",
+				stmt -> {
+					stmt.setInt(1, 2);
+					stmt.setInt(2, 1);
+				});
+
+		assertSortedOffsetLimit(result);
+	}
+
+	private static void assertSortedOffsetLimit(QueryResult result) {
+		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST.get(2), STUDENT_LIST.get(0)));
+
+		assertEquals(expected, result);
+	}
+	// endregion
 	protected abstract QueryResult query(String sql);
 
 	protected abstract QueryResult queryPrepared(String sql, ParamsSetter paramsSetter);

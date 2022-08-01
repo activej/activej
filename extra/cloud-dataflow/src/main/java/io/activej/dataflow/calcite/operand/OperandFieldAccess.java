@@ -1,4 +1,4 @@
-package io.activej.dataflow.calcite.where;
+package io.activej.dataflow.calcite.operand;
 
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
@@ -16,18 +16,18 @@ import java.util.List;
 
 import static io.activej.codegen.expression.Expressions.*;
 
-public final class OperandFieldAccess implements Operand {
-	private final Operand objectOperand;
+public final class OperandFieldAccess implements Operand<OperandFieldAccess> {
+	private final Operand<?> objectOperand;
 	private final String fieldName;
 	private final DefiningClassLoader classLoader;
 
-	public OperandFieldAccess(Operand objectOperand, String fieldName, DefiningClassLoader classLoader) {
+	public OperandFieldAccess(Operand<?> objectOperand, String fieldName, DefiningClassLoader classLoader) {
 		this.objectOperand = objectOperand;
 		this.fieldName = fieldName;
 		this.classLoader = classLoader;
 	}
 
-	public OperandFieldAccess(Operand objectOperand, String fieldName) {
+	public OperandFieldAccess(Operand<?> objectOperand, String fieldName) {
 		this(objectOperand, fieldName, DefiningClassLoader.create());
 	}
 
@@ -81,7 +81,7 @@ public final class OperandFieldAccess implements Operand {
 	}
 
 	@Override
-	public Operand materialize(List<Object> params) {
+	public OperandFieldAccess materialize(List<Object> params) {
 		return new OperandFieldAccess(
 				objectOperand.materialize(params),
 				fieldName,
@@ -94,7 +94,7 @@ public final class OperandFieldAccess implements Operand {
 		return objectOperand.getParams();
 	}
 
-	public Operand getObjectOperand() {
+	public Operand<?> getObjectOperand() {
 		return objectOperand;
 	}
 

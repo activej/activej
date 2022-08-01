@@ -151,6 +151,7 @@ abstract class LimitedMeta implements Meta {
 	}
 
 	@Override
+	@Deprecated
 	public ExecuteResult prepareAndExecute(StatementHandle h, String sql, long maxRowCount, PrepareCallback callback) throws NoSuchStatementException {
 		throw new UnsupportedOperationException();
 	}
@@ -176,6 +177,7 @@ abstract class LimitedMeta implements Meta {
 	}
 
 	@Override
+	@Deprecated
 	public ExecuteResult execute(StatementHandle h, List<TypedValue> parameterValues, long maxRowCount) throws NoSuchStatementException {
 		throw new UnsupportedOperationException();
 	}

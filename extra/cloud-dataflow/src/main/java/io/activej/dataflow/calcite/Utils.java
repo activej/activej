@@ -3,10 +3,10 @@ package io.activej.dataflow.calcite;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.ToDoException;
 import io.activej.dataflow.calcite.function.ProjectionFunction;
-import io.activej.dataflow.calcite.where.Operand;
-import io.activej.dataflow.calcite.where.OperandFieldAccess;
-import io.activej.dataflow.calcite.where.OperandRecordField;
-import io.activej.dataflow.calcite.where.OperandScalar;
+import io.activej.dataflow.calcite.operand.Operand;
+import io.activej.dataflow.calcite.operand.OperandFieldAccess;
+import io.activej.dataflow.calcite.operand.OperandRecordField;
+import io.activej.dataflow.calcite.operand.OperandScalar;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -27,7 +27,7 @@ public final class Utils {
 		};
 	}
 
-	public static Operand toOperand(RexNode node, DefiningClassLoader classLoader) {
+	public static Operand<?> toOperand(RexNode node, DefiningClassLoader classLoader) {
 		if (node instanceof RexDynamicParam dynamicParam) {
 			return new OperandScalar(Value.unmaterializedValue(dynamicParam));
 		} else if (node instanceof RexCall call) {
@@ -38,7 +38,7 @@ public final class Utils {
 				case OTHER_FUNCTION -> {
 					SqlOperator operator = call.getOperator();
 					if (operator instanceof ProjectionFunction projectionFunction) {
-						List<Operand> operands = call.getOperands()
+						List<Operand<?>> operands = call.getOperands()
 								.stream()
 								.map(operand -> toOperand(operand, classLoader))
 								.collect(Collectors.toList());
@@ -53,7 +53,7 @@ public final class Utils {
 		} else if (node instanceof RexInputRef inputRef) {
 			return new OperandRecordField(inputRef.getIndex());
 		} else if (node instanceof RexFieldAccess fieldAccess) {
-			Operand objectOperand = toOperand(fieldAccess.getReferenceExpr(), classLoader);
+			Operand<?> objectOperand = toOperand(fieldAccess.getReferenceExpr(), classLoader);
 			return new OperandFieldAccess(objectOperand, fieldAccess.getField().getName(), classLoader);
 		}
 		throw new IllegalArgumentException("Unknown node: " + node);

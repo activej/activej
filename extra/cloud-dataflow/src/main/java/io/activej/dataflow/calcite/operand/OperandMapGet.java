@@ -1,4 +1,4 @@
-package io.activej.dataflow.calcite.where;
+package io.activej.dataflow.calcite.operand;
 
 import io.activej.common.Utils;
 import io.activej.record.Record;
@@ -10,11 +10,11 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
-public final class OperandMapGet<K> implements Operand {
-	private final Operand mapOperand;
-	private final Operand keyOperand;
+public final class OperandMapGet<K> implements Operand<OperandMapGet<K>> {
+	private final Operand<?> mapOperand;
+	private final Operand<?> keyOperand;
 
-	public OperandMapGet(Operand mapOperand, Operand keyOperand) {
+	public OperandMapGet(Operand<?> mapOperand, Operand<?> keyOperand) {
 		this.mapOperand = mapOperand;
 		this.keyOperand = keyOperand;
 	}
@@ -43,7 +43,7 @@ public final class OperandMapGet<K> implements Operand {
 	}
 
 	@Override
-	public Operand materialize(List<Object> params) {
+	public OperandMapGet<K> materialize(List<Object> params) {
 		return new OperandMapGet<>(
 				mapOperand.materialize(params),
 				keyOperand.materialize(params)
@@ -55,11 +55,11 @@ public final class OperandMapGet<K> implements Operand {
 		return Utils.concat(mapOperand.getParams(), keyOperand.getParams());
 	}
 
-	public Operand getMapOperand() {
+	public Operand<?> getMapOperand() {
 		return mapOperand;
 	}
 
-	public Operand getKeyOperand() {
+	public Operand<?> getKeyOperand() {
 		return keyOperand;
 	}
 

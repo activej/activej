@@ -129,6 +129,14 @@ message Node {
     StreamId output = 2;
   }
 
+  message OffsetLimit {
+    int32 index = 1;
+    int64 offset = 2;
+    int64  limit = 3;
+    StreamId input = 4;
+    StreamId output = 5;
+  }
+
   oneof node {
     ConsumerOfId consumer_of_id = 1;
     Download download = 2;
@@ -144,5 +152,6 @@ message Node {
     Union union = 12;
     Upload upload = 13;
     Empty empty = 14;
+    OffsetLimit offset_limit = 15;
   }
 }
