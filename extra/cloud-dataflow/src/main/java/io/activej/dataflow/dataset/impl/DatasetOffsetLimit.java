@@ -31,6 +31,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static io.activej.datastream.processor.StreamReducers.mergeReducer;
+
 public final class DatasetOffsetLimit<K, T> extends LocallySortedDataset<K, T> {
 	private final LocallySortedDataset<K, T> input;
 
@@ -64,10 +66,10 @@ public final class DatasetOffsetLimit<K, T> extends LocallySortedDataset<K, T> {
 		StreamId randomStreamId = streamIds.get(Math.abs(sharderNonce) % streamIds.size());
 		Partition randomPartition = graph.getPartition(randomStreamId);
 
-		List<StreamId> newStreamIds = DatasetUtils.repartitionAndSort(next, input, List.of(randomPartition));
+		List<StreamId> newStreamIds = DatasetUtils.repartitionAndReduce(next, streamIds, valueType(), input.keyFunction(), input.keyComparator(), mergeReducer(), List.of(randomPartition));
 		assert newStreamIds.size() == 1;
 
-		return toOutput(graph, index, streamIds.get(0));
+		return toOutput(graph, index, newStreamIds.get(0));
 	}
 
 	@Override

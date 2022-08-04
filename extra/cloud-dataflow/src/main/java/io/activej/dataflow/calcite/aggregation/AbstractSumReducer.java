@@ -11,6 +11,11 @@ public abstract class AbstractSumReducer<I, T> extends FieldReducer<I, T, T> {
 	}
 
 	@Override
+	public final Class<T> getResultClass(Class<T> accumulatorClass) {
+		return accumulatorClass;
+	}
+
+	@Override
 	public final T produceResult(T accumulator) {
 		return accumulator;
 	}

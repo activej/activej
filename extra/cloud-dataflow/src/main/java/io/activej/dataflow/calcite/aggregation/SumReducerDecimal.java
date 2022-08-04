@@ -9,7 +9,7 @@ public final class SumReducerDecimal<I extends Number> extends AbstractSumReduce
 	}
 
 	@Override
-	public Class<Double> getResultClass(Class<I> inputClass) {
+	public Class<Double> getAccumulatorClass(Class<I> inputClass) {
 		return double.class;
 	}
 
@@ -21,5 +21,10 @@ public final class SumReducerDecimal<I extends Number> extends AbstractSumReduce
 	@Override
 	protected Double doAccumulate(Double accumulator, @NotNull I fieldValue) {
 		return accumulator + fieldValue.doubleValue();
+	}
+
+	@Override
+	public Double combine(Double accumulator, Double anotherAccumulator) {
+		return accumulator + anotherAccumulator;
 	}
 }

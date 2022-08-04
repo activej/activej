@@ -1,6 +1,8 @@
 package io.activej.dataflow.calcite.aggregation;
 
 import io.activej.record.RecordScheme;
+import io.activej.serializer.annotations.Deserialize;
+import io.activej.serializer.annotations.Serialize;
 import org.jetbrains.annotations.NotNull;
 
 public class AvgReducer extends FieldReducer<Number, Double, AvgReducer.AvgAccumulator> {
@@ -9,8 +11,13 @@ public class AvgReducer extends FieldReducer<Number, Double, AvgReducer.AvgAccum
 	}
 
 	@Override
-	public Class<Double> getResultClass(Class<Number> inputClass) {
+	public Class<Double> getResultClass(Class<AvgAccumulator> accumulatorClass) {
 		return double.class;
+	}
+
+	@Override
+	public Class<AvgAccumulator> getAccumulatorClass(Class<Number> inputClass) {
+		return AvgAccumulator.class;
 	}
 
 	@Override
@@ -20,13 +27,21 @@ public class AvgReducer extends FieldReducer<Number, Double, AvgReducer.AvgAccum
 
 	@Override
 	public AvgAccumulator createAccumulator(RecordScheme key) {
-		return new AvgAccumulator();
+		return new AvgAccumulator(0d, 0L);
 	}
 
 	@Override
 	protected AvgAccumulator doAccumulate(AvgAccumulator accumulator, @NotNull Number fieldValue) {
 		accumulator.add(fieldValue.doubleValue());
 		return accumulator;
+	}
+
+	@Override
+	public AvgAccumulator combine(AvgAccumulator accumulator, AvgAccumulator anotherAccumulator) {
+		return new AvgAccumulator(
+				accumulator.sum + anotherAccumulator.sum,
+				accumulator.count + anotherAccumulator.count
+		);
 	}
 
 	@Override
@@ -38,6 +53,11 @@ public class AvgReducer extends FieldReducer<Number, Double, AvgReducer.AvgAccum
 		private double sum;
 		private long count;
 
+		public AvgAccumulator(@Deserialize("sum") double sum, @Deserialize("count") long count) {
+			this.sum = sum;
+			this.count = count;
+		}
+
 		private void add(double value) {
 			sum += value;
 			count++;
@@ -46,6 +66,16 @@ public class AvgReducer extends FieldReducer<Number, Double, AvgReducer.AvgAccum
 		public double getAvg() {
 			if (count == 0) return 0d;
 			return sum / count;
+		}
+
+		@Serialize(order = 1)
+		public double getSum() {
+			return sum;
+		}
+
+		@Serialize(order = 2)
+		public long getCount() {
+			return count;
 		}
 	}
 }

@@ -101,11 +101,6 @@ public final class CalciteModule extends AbstractModule {
 	}
 
 	@Provides
-	DefiningClassLoader classLoader() {
-		return DefiningClassLoader.create();
-	}
-
-	@Provides
 	CalciteSqlDataflow calciteSqlDataflow(DataflowClient client, SqlParser parser, SqlToRelConverter sqlToRelConverter, RelOptPlanner planner,
 			List<Partition> partitions, DefiningClassLoader classLoader) {
 		return CalciteSqlDataflow.create(client, partitions, parser, sqlToRelConverter, planner, classLoader);

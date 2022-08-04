@@ -8,15 +8,14 @@ import io.activej.dataflow.calcite.join.RecordInnerJoiner;
 import io.activej.dataflow.calcite.join.RecordKeyFunction;
 import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.dataflow.calcite.operand.OperandScalar;
-import io.activej.dataflow.calcite.sort.RecordComparator;
-import io.activej.dataflow.calcite.sort.RecordComparator.FieldSort;
+import io.activej.dataflow.calcite.utils.*;
+import io.activej.dataflow.calcite.utils.RecordComparator.FieldSort;
 import io.activej.dataflow.calcite.where.*;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.Datasets;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.dataset.SortedDataset;
 import io.activej.datastream.processor.StreamLimiter;
-import io.activej.datastream.processor.StreamReducers.ReducerToResult.InputToOutput;
 import io.activej.datastream.processor.StreamSkip;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
@@ -169,11 +168,11 @@ public class DataflowShuttle extends RelShuttleImpl {
 				recordReducer.createScheme(current.getScheme()),
 				params -> {
 					Dataset<Record> materialized = current.materialize(params);
-					LocallySortedDataset<RecordScheme, Record> sorted = Datasets.castToSorted(materialized, RecordScheme.class, new RecordSchemeFunction(), new EqualObjectComparator<>());
+					LocallySortedDataset<RecordScheme, Record> sorted = Datasets.castToSorted(materialized, RecordScheme.class, RecordSchemeFunction.getInstance(), EqualObjectComparator.getInstance());
 
-					InputToOutput<RecordScheme, Record, Record, Object[]> reducer = new InputToOutput<>(recordReducer);
+					LocallySortedDataset<RecordScheme, Record> partiallyReduced = Datasets.localReduce(sorted, recordReducer.getInputToAccumulator(), Record.class, RecordSchemeFunction.getInstance());
 
-					return Datasets.localReduce(sorted, reducer, Record.class, new RecordSchemeFunction());
+					return DatasetCalciteAggregate.create(partiallyReduced, recordReducer);
 				}));
 
 		return result;
@@ -306,8 +305,6 @@ public class DataflowShuttle extends RelShuttleImpl {
 			sorts.add(new FieldSort(fieldIndex, asc));
 		}
 
-		Comparator<Record> comparator = sorts.isEmpty() ? new EqualObjectComparator<>() : new RecordComparator(sorts);
-
 		OperandScalar offset = sort.offset == null ?
 				new OperandScalar(Value.materializedValue(int.class, StreamSkip.NO_SKIP)) :
 				toScalarOperand(sort.offset);
@@ -321,11 +318,11 @@ public class DataflowShuttle extends RelShuttleImpl {
 				params -> {
 					Dataset<Record> materializedDataset = dataset.materialize(params);
 
-					LocallySortedDataset<Record, Record> result;
-					if (comparator instanceof EqualObjectComparator<Record>) {
-						result = Datasets.castToSorted(materializedDataset, Record.class, Function.identity(), comparator);
+					LocallySortedDataset<?, Record> result;
+					if (sorts.isEmpty()) {
+						result = Datasets.castToSorted(materializedDataset, int.class, ToZeroFunction.getInstance(), EqualObjectComparator.getInstance());
 					} else {
-						result = Datasets.localSort(materializedDataset, Record.class, Function.identity(), comparator);
+						result = Datasets.localSort(materializedDataset, Record.class, Function.identity(), new RecordComparator(sorts));
 					}
 
 					long offsetValue = ((Number) offset.materialize(params).getValue().getValue()).longValue();
@@ -350,21 +347,42 @@ public class DataflowShuttle extends RelShuttleImpl {
 		RecordKeyFunction<K> leftKeyFunction = new RecordKeyFunction<>(leftIndex);
 		RecordKeyFunction<K> rightKeyFunction = new RecordKeyFunction<>(rightIndex);
 
-		return UnmaterializedDataset.of(
-				RecordInnerJoiner.createScheme(left.getScheme(), right.getScheme()),
-				params -> {
+		RecordInnerJoiner<K> joiner = RecordInnerJoiner.create(left.getScheme(), right.getScheme());
 
-					SortedDataset<K, Record> sortedLeft = Datasets.castToSorted(left.materialize(params), keyClass, leftKeyFunction, Comparator.naturalOrder());
-					SortedDataset<K, Record> sortedRight = Datasets.castToSorted(right.materialize(params), keyClass, rightKeyFunction, Comparator.naturalOrder());
+		return UnmaterializedDataset.of(
+				joiner.getScheme(),
+				params -> {
+					Dataset<Record> leftDataset = left.materialize(params);
+					SortedDataset<K, Record> sortedLeft = sortForJoin(keyClass, leftKeyFunction, leftDataset, Datasets::repartitionSort);
+
+					Dataset<Record> rightDataset = right.materialize(params);
+					SortedDataset<K, Record> sortedRight = sortForJoin(keyClass, rightKeyFunction, rightDataset, Datasets::castToSorted);
 
 					return Datasets.join(
 							sortedLeft,
 							sortedRight,
-							new RecordInnerJoiner<>(),
+							joiner,
 							Record.class,
 							leftKeyFunction
 					);
 				});
+	}
+
+	private static <K extends Comparable<K>> SortedDataset<K, Record> sortForJoin(
+			Class<K> keyClass, RecordKeyFunction<K> keyFunction, Dataset<Record> dataset,
+			Function<LocallySortedDataset<K, Record>, SortedDataset<K, Record>> toSortedFn
+	) {
+		//noinspection PointlessBooleanExpression,unchecked
+
+		LocallySortedDataset<K, Record> locallySorted = true &&
+				dataset instanceof LocallySortedDataset<?, ?> locallySortedDataset &&
+				locallySortedDataset.keyFunction() instanceof RecordKeyFunction<?> recordKeyFunction &&
+				recordKeyFunction.getIndex() == keyFunction.getIndex() &&
+				locallySortedDataset.keyComparator() == Comparator.naturalOrder() ?
+				(LocallySortedDataset<K, Record>) locallySortedDataset :
+				Datasets.localSort(dataset, keyClass, keyFunction, Comparator.naturalOrder());
+
+		return toSortedFn.apply(locallySorted);
 	}
 
 	@Override

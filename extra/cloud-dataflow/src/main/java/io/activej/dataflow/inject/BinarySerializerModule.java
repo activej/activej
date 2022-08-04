@@ -18,6 +18,7 @@ package io.activej.dataflow.inject;
 
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
+import io.activej.inject.KeyPattern;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.BindingType;
 import io.activej.inject.binding.OptionalDependency;
@@ -31,12 +32,11 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Type;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public final class BinarySerializerModule extends AbstractModule {
 	private static final Logger logger = LoggerFactory.getLogger(BinarySerializerModule.class);
-
-	private final BinarySerializerLocator locator = new BinarySerializerLocator();
 
 	private BinarySerializerModule() {
 	}
@@ -47,45 +47,65 @@ public final class BinarySerializerModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		transform(BinarySerializer.class, (bindings, scope, key, binding) -> {
+		Map<Type, Key<BinarySerializer<?>>> transientSerializers = new HashMap<>();
+
+		transform(new KeyPattern<BinarySerializer<?>>() {}, (bindings, scope, key, binding) -> {
 			Class<?> rawType = key.getTypeParameter(0).getRawType();
 
 			if (binding.getType() == BindingType.TRANSIENT) {
-				locator.transientSerializers.put(rawType, key);
+				transientSerializers.put(rawType, key);
 				return binding;
 			}
 
-			return binding.mapInstance(serializer -> {
-				locator.serializers.putIfAbsent(rawType, serializer);
-				return serializer;
-			});
+			return binding
+					.addDependencies(BinarySerializerLocator.class)
+					.mapInstance(List.of(Key.of(BinarySerializerLocator.class)), (dependencies, serializer) -> {
+						BinarySerializerLocator locator = (BinarySerializerLocator) dependencies[0];
+						locator.serializers.putIfAbsent(rawType, serializer);
+						return serializer;
+					});
 		});
+
+		transform(BinarySerializerLocator.class,
+				(bindings, scope, key, binding) -> binding.mapInstance(locator -> {
+					locator.transientSerializers = transientSerializers;
+					return locator;
+				}));
 	}
 
 	@Provides
 	BinarySerializerLocator serializerLocator(Injector injector, OptionalDependency<SerializerBuilder> optionalSerializerBuilder) {
-		locator.injector = injector;
+		BinarySerializerLocator locator = new BinarySerializerLocator(injector);
 		if (optionalSerializerBuilder.isPresent()) {
 			locator.builder = optionalSerializerBuilder.get();
 		}
 		return locator;
 	}
 
-	@SuppressWarnings("rawtypes")
+	@Provides
+	<T> BinarySerializer<T> generator(BinarySerializerLocator locator, Key<T> key) {
+		return locator.get(key.getType());
+	}
+
 	public static final class BinarySerializerLocator {
-		private final Map<Type, Key<BinarySerializer>> transientSerializers = new HashMap<>();
 		private final Map<Type, BinarySerializer<?>> serializers = new HashMap<>();
+
+		private Map<Type, Key<BinarySerializer<?>>> transientSerializers;
 		private @Nullable SerializerBuilder builder = null;
 
-		private Injector injector;
+		private final Injector injector;
+
+		public BinarySerializerLocator(Injector injector) {
+			this.injector = injector;
+		}
 
 		public <T> BinarySerializer<T> get(Class<T> cls) {
 			return get(((Type) cls));
 		}
 
-		@SuppressWarnings("unchecked")
+		@SuppressWarnings({"unchecked"})
 		public <T> BinarySerializer<T> get(Type type) {
-			Key<BinarySerializer> transientKey = transientSerializers.get(type);
+			Key<BinarySerializer<?>> transientKey = transientSerializers.get(type);
 			if (transientKey != null) {
 				return (BinarySerializer<T>) injector.getInstance(transientKey);
 			}

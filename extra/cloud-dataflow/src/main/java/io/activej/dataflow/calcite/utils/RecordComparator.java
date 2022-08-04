@@ -1,4 +1,4 @@
-package io.activej.dataflow.calcite.sort;
+package io.activej.dataflow.calcite.utils;
 
 import io.activej.record.Record;
 import io.activej.serializer.annotations.Deserialize;

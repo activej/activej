@@ -12,7 +12,8 @@ import static io.activej.promise.TestUtils.await;
 public class CalcitePlainTest extends AbstractCalciteTest {
 	@Override
 	protected void onSetUp() throws IOException {
-		server.listen();
+		server1.listen();
+		server2.listen();
 	}
 
 	@Override
@@ -21,7 +22,8 @@ public class CalcitePlainTest extends AbstractCalciteTest {
 
 		List<Record> records = await(sqlDataflow.query(sql)
 				.then(supplier -> supplier.streamTo(resultConsumer))
-				.whenComplete(server::close)
+				.whenComplete(server1::close)
+				.whenComplete(server2::close)
 				.map($ -> resultConsumer.getList()));
 
 		return toQueryResult(records);
@@ -48,7 +50,8 @@ public class CalcitePlainTest extends AbstractCalciteTest {
 	}
 
 	private <T> T denyPreparedRequests() {
-		server.close();
+		server1.close();
+		server2.close();
 		//noinspection ConstantConditions
 		Assume.assumeTrue("Prepared statements are not supported in plain queries", false);
 

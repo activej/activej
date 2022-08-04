@@ -1,5 +1,6 @@
 package io.activej.dataflow.stream;
 
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.SqlDataflow;
 import io.activej.dataflow.calcite.DataflowSchema;
@@ -34,6 +35,7 @@ import java.util.concurrent.Executors;
 import java.util.stream.LongStream;
 
 import static io.activej.common.Checks.checkState;
+import static io.activej.common.Utils.concat;
 import static io.activej.dataflow.helper.StreamMergeSorterStorageStub.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.dataflow.proto.ProtobufUtils.ofObject;
@@ -61,30 +63,43 @@ public abstract class AbstractCalciteTest {
 	public static final String USER_PROFILES_TABLE_NAME = "profiles";
 	public static final String LARGE_TABLE_NAME = "large_table";
 
-	protected static final List<Student> STUDENT_LIST = List.of(
-			new Student(1, "John", "Doe", 1),
-			new Student(2, "Bob", "Black", 2),
+	protected static final List<Student> STUDENT_LIST_1 = List.of(
+			new Student(4, "Mark", null, 3),
+			new Student(1, "John", "Doe", 1));
+	protected static final List<Student> STUDENT_LIST_2 = List.of(
 			new Student(3, "John", "Truman", 2),
-			new Student(4, "Mark", null, 3));
-	protected static final List<Department> DEPARTMENT_LIST = List.of(
-			new Department(1, "Math"),
-			new Department(2, "Language"),
-			new Department(3, "History"));
-	protected static final List<Registry> REGISTRY_LIST = List.of(
-			new Registry(1, Map.of("John", 1, "Jack", 2, "Kevin", 7), List.of("google.com", "amazon.com")),
-			new Registry(2, Map.of(), List.of("wikipedia.org")),
+			new Student(2, "Bob", "Black", 2));
+
+	protected static final List<Department> DEPARTMENT_LIST_1 = List.of(
+			new Department(2, "Language"));
+	protected static final List<Department> DEPARTMENT_LIST_2 = List.of(
+			new Department(3, "History"),
+			new Department(1, "Math"));
+
+	protected static final List<Registry> REGISTRY_LIST_1 = List.of(
+			new Registry(4, Map.of("Kevin", 8), List.of("google.com")),
+			new Registry(1, Map.of("John", 1, "Jack", 2, "Kevin", 7), List.of("google.com", "amazon.com")));
+	protected static final List<Registry> REGISTRY_LIST_2 = List.of(
 			new Registry(3, Map.of("Sarah", 53, "Rob", 7564, "John", 18, "Kevin", 7), List.of("yahoo.com", "ebay.com", "netflix.com")),
-			new Registry(4, Map.of("Kevin", 8), List.of("google.com")));
-	protected static final List<UserProfile> USER_PROFILES_LIST = List.of(
-			new UserProfile("user1", new UserProfilePojo("test1", 1), Map.of(
-					1, new UserProfileIntent(1, "test1", TYPE_1, new Limits(new float[]{1.2f, 3.4f}, System.currentTimeMillis())),
-					2, new UserProfileIntent(2, "test2", TYPE_2, new Limits(new float[]{5.6f, 7.8f}, System.currentTimeMillis()))),
-					System.currentTimeMillis()),
+			new Registry(2, Map.of(), List.of("wikipedia.org")));
+
+	protected static final List<UserProfile> USER_PROFILES_LIST_1 = List.of(
 			new UserProfile("user2", new UserProfilePojo("test2", 2), Map.of(
 					2, new UserProfileIntent(2, "test2", TYPE_2, new Limits(new float[]{4.3f, 2.1f}, System.currentTimeMillis())),
 					3, new UserProfileIntent(3, "test3", TYPE_1, new Limits(new float[]{6.5f, 8.7f}, System.currentTimeMillis()))),
 					System.currentTimeMillis()));
-	protected static final List<Large> LARGE_LIST = LongStream.range(0, 1_000_000)
+	protected static final List<UserProfile> USER_PROFILES_LIST_2 = List.of(
+			new UserProfile("user1", new UserProfilePojo("test1", 1), Map.of(
+					1, new UserProfileIntent(1, "test1", TYPE_1, new Limits(new float[]{1.2f, 3.4f}, System.currentTimeMillis())),
+					2, new UserProfileIntent(2, "test2", TYPE_2, new Limits(new float[]{5.6f, 7.8f}, System.currentTimeMillis()))),
+					System.currentTimeMillis()));
+
+	protected static final List<Large> LARGE_LIST_1 = LongStream.range(0, 1_000_000)
+			.filter(value -> value % 2 == 0)
+			.mapToObj(Large::new)
+			.toList();
+	protected static final List<Large> LARGE_LIST_2 = LongStream.range(0, 1_000_000)
+			.filter(value -> value % 2 == 1)
 			.mapToObj(Large::new)
 			.toList();
 
@@ -95,46 +110,76 @@ public abstract class AbstractCalciteTest {
 	protected ExecutorService executor;
 	protected ExecutorService sortingExecutor;
 	protected SqlDataflow sqlDataflow;
-	protected DataflowServer server;
-	protected Injector serverInjector;
+	protected DataflowServer server1;
+	protected DataflowServer server2;
+	protected Injector server1Injector;
+	protected Injector server2Injector;
 
 	@Before
 	public final void setUp() throws Exception {
 		executor = Executors.newSingleThreadExecutor();
 		sortingExecutor = Executors.newSingleThreadExecutor();
 
-		InetSocketAddress address = getFreeListenAddress();
+		InetSocketAddress address1 = getFreeListenAddress();
+		InetSocketAddress address2 = getFreeListenAddress();
 
-		List<Partition> partitions = List.of(new Partition(address));
+		List<Partition> partitions = List.of(new Partition(address1), new Partition(address2));
 		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), partitions)
 				.install(new SerializersModule())
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.bind(new Key<List<Partition>>() {}).toInstance(partitions)
-				.bind(DataflowSchema.class).to(() -> DataflowSchema.create(
-						Map.of(STUDENT_TABLE_NAME, DataflowTable.create(Student.class, new StudentToRecord(), ofObject(StudentToRecord::new)),
-								DEPARTMENT_TABLE_NAME, DataflowTable.create(Department.class, new DepartmentToRecord(), ofObject(DepartmentToRecord::new)),
-								REGISTRY_TABLE_NAME, DataflowTable.create(Registry.class, new RegistryToRecord(), ofObject(RegistryToRecord::new)),
-								USER_PROFILES_TABLE_NAME, DataflowTable.create(UserProfile.class, new UserProfileToRecord(), ofObject(UserProfileToRecord::new)),
-								LARGE_TABLE_NAME, DataflowTable.create(Large.class, new LargeToRecord(), ofObject(LargeToRecord::new)))))
+				.bind(DataflowSchema.class).to(classLoader -> {
+							StudentToRecord studentToRecord = StudentToRecord.create(classLoader);
+							DepartmentToRecord departmentToRecord = DepartmentToRecord.create(classLoader);
+							RegistryToRecord recordToFunction = RegistryToRecord.create(classLoader);
+							UserProfileToRecord userProfileToRecord = UserProfileToRecord.create(classLoader);
+							LargeToRecord largeToRecord = LargeToRecord.create(classLoader);
+
+							return DataflowSchema.create(
+									Map.of(STUDENT_TABLE_NAME, DataflowTable.create(Student.class, studentToRecord, ofObject(() -> studentToRecord)),
+											DEPARTMENT_TABLE_NAME, DataflowTable.create(Department.class, departmentToRecord, ofObject(() -> departmentToRecord)),
+											REGISTRY_TABLE_NAME, DataflowTable.create(Registry.class, recordToFunction, ofObject(() -> recordToFunction)),
+											USER_PROFILES_TABLE_NAME, DataflowTable.create(UserProfile.class, userProfileToRecord, ofObject(() -> userProfileToRecord)),
+											LARGE_TABLE_NAME, DataflowTable.create(Large.class, largeToRecord, ofObject(() -> largeToRecord))));
+						},
+						DefiningClassLoader.class)
 				.build();
 
-		Module clientModule = Modules.combine(common, new CalciteModule());
+		Module clientModule = Modules.combine(common, new CalciteModule(), ModuleBuilder.create()
+				.bind(String.class).to(() -> "CLIENT")
+				.build());
 		sqlDataflow = Injector.of(clientModule).getInstance(SqlDataflow.class);
 
 
 		Module serverModule = ModuleBuilder.create()
 				.install(common)
 				.install(new CalciteServerModule())
-				.bind(datasetId(STUDENT_TABLE_NAME)).toInstance(STUDENT_LIST)
-				.bind(datasetId(DEPARTMENT_TABLE_NAME)).toInstance(DEPARTMENT_LIST)
-				.bind(datasetId(REGISTRY_TABLE_NAME)).toInstance(REGISTRY_LIST)
-				.bind(datasetId(USER_PROFILES_TABLE_NAME)).toInstance(USER_PROFILES_LIST)
-				.bind(datasetId(LARGE_TABLE_NAME)).toInstance(LARGE_LIST)
 				.build()
 				.overrideWith(getAdditionalServerModule());
 
-		serverInjector = Injector.of(serverModule);
-		server = serverInjector.getInstance(DataflowServer.class).withListenAddress(address);
+
+		Module server1Module = Modules.combine(serverModule,
+				ModuleBuilder.create()
+						.bind(datasetId(STUDENT_TABLE_NAME)).toInstance(STUDENT_LIST_1)
+						.bind(datasetId(DEPARTMENT_TABLE_NAME)).toInstance(DEPARTMENT_LIST_1)
+						.bind(datasetId(REGISTRY_TABLE_NAME)).toInstance(REGISTRY_LIST_1)
+						.bind(datasetId(USER_PROFILES_TABLE_NAME)).toInstance(USER_PROFILES_LIST_1)
+						.bind(datasetId(LARGE_TABLE_NAME)).toInstance(LARGE_LIST_1)
+						.build());
+		Module server2Module = Modules.combine(serverModule,
+				ModuleBuilder.create()
+						.bind(datasetId(STUDENT_TABLE_NAME)).toInstance(STUDENT_LIST_2)
+						.bind(datasetId(DEPARTMENT_TABLE_NAME)).toInstance(DEPARTMENT_LIST_2)
+						.bind(datasetId(REGISTRY_TABLE_NAME)).toInstance(REGISTRY_LIST_2)
+						.bind(datasetId(USER_PROFILES_TABLE_NAME)).toInstance(USER_PROFILES_LIST_2)
+						.bind(datasetId(LARGE_TABLE_NAME)).toInstance(LARGE_LIST_2)
+						.build());
+
+		server1Injector = Injector.of(server1Module);
+		server2Injector = Injector.of(server2Module);
+
+		server1 = server1Injector.getInstance(DataflowServer.class).withListenAddress(address1);
+		server2 = server2Injector.getInstance(DataflowServer.class).withListenAddress(address2);
 
 		onSetUp();
 	}
@@ -199,7 +244,7 @@ public abstract class AbstractCalciteTest {
 	public void testSelectAllStudents() {
 		QueryResult result = query("SELECT * FROM student");
 
-		QueryResult expected = studentsToQueryResult(STUDENT_LIST);
+		QueryResult expected = studentsToQueryResult(concat(STUDENT_LIST_1, STUDENT_LIST_2));
 
 		assertEquals(expected, result);
 	}
@@ -208,7 +253,7 @@ public abstract class AbstractCalciteTest {
 	public void testSelectAllDepartments() {
 		QueryResult result = query("SELECT * FROM department");
 
-		QueryResult expected = departmentsToQueryResult(DEPARTMENT_LIST);
+		QueryResult expected = departmentsToQueryResult(concat(DEPARTMENT_LIST_1, DEPARTMENT_LIST_2));
 
 		assertEquals(expected, result);
 	}
@@ -218,7 +263,7 @@ public abstract class AbstractCalciteTest {
 		QueryResult result = query("SELECT departmentName FROM department");
 
 		List<Object[]> columnValues = new ArrayList<>();
-		for (Department department : DEPARTMENT_LIST) {
+		for (Department department : concat(DEPARTMENT_LIST_1, DEPARTMENT_LIST_2)) {
 			columnValues.add(new Object[]{department.departmentName});
 		}
 
@@ -232,7 +277,7 @@ public abstract class AbstractCalciteTest {
 		QueryResult result = query("SELECT dept, firstName FROM student");
 
 		List<Object[]> columnValues = new ArrayList<>();
-		for (Student student : STUDENT_LIST) {
+		for (Student student : concat(STUDENT_LIST_1, STUDENT_LIST_2)) {
 			columnValues.add(new Object[]{student.dept, student.firstName});
 		}
 
@@ -249,7 +294,7 @@ public abstract class AbstractCalciteTest {
 				""");
 
 		List<Object[]> columnValues = new ArrayList<>();
-		for (Student student : STUDENT_LIST) {
+		for (Student student : concat(STUDENT_LIST_1, STUDENT_LIST_2)) {
 			columnValues.add(new Object[]{student.firstName, student.id});
 		}
 
@@ -281,7 +326,7 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static void assertWhereEqualTrue(QueryResult result) {
-		QueryResult expected = studentsToQueryResult(STUDENT_LIST);
+		QueryResult expected = studentsToQueryResult(concat(STUDENT_LIST_1, STUDENT_LIST_2));
 
 		assertEquals(expected, result);
 	}
@@ -295,7 +340,7 @@ public abstract class AbstractCalciteTest {
 				WHERE 1 = 2
 				""");
 
-		assertTrue(result.isEmpty());
+		assertWhereEqualFalse(result);
 	}
 
 	@Test
@@ -337,7 +382,7 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static void assertWhereEqualScalar(QueryResult result) {
-		Student student = STUDENT_LIST.get(1);
+		Student student = STUDENT_LIST_2.get(1);
 		QueryResult expected = new QueryResult(List.of("firstName", "lastName"),
 				List.<Object[]>of(new Object[]{student.firstName, student.lastName}));
 
@@ -352,7 +397,7 @@ public abstract class AbstractCalciteTest {
 				WHERE id = dept
 				""");
 
-		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(0, 2));
+		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST_1.get(1), STUDENT_LIST_2.get(1)));
 
 		assertEquals(expected, result);
 	}
@@ -407,7 +452,7 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static void assertWhereNotEqualFalse(QueryResult result) {
-		QueryResult expected = studentsToQueryResult(STUDENT_LIST);
+		QueryResult expected = studentsToQueryResult(concat(STUDENT_LIST_1, STUDENT_LIST_2));
 
 		assertEquals(expected, result);
 	}
@@ -436,7 +481,7 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static void assertWhereNotEqualScalar(QueryResult result) {
-		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST.get(0), STUDENT_LIST.get(2), STUDENT_LIST.get(3)));
+		QueryResult expected = studentsToQueryResult(concat(STUDENT_LIST_1, STUDENT_LIST_2.subList(0, 1)));
 
 		assertEquals(expected, result);
 	}
@@ -449,7 +494,7 @@ public abstract class AbstractCalciteTest {
 				WHERE id <> dept
 				""");
 
-		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(2, 4));
+		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST_1.get(0), STUDENT_LIST_2.get(0)));
 
 		assertEquals(expected, result);
 	}
@@ -477,7 +522,7 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static void assertWhereGreaterThanScalar(QueryResult result) {
-		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(1, 4));
+		QueryResult expected = studentsToQueryResult(concat(STUDENT_LIST_1.subList(0, 1), STUDENT_LIST_2));
 
 		assertEquals(expected, result);
 	}
@@ -490,7 +535,7 @@ public abstract class AbstractCalciteTest {
 				WHERE id > dept
 				""");
 
-		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(2, 4));
+		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST_1.get(0), STUDENT_LIST_2.get(0)));
 
 		assertEquals(expected, result);
 	}
@@ -518,7 +563,7 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static void assertWhereGreaterThanOrEqualScalar(QueryResult result) {
-		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(1, 4));
+		QueryResult expected = studentsToQueryResult(concat(STUDENT_LIST_1.subList(0, 1), STUDENT_LIST_2));
 
 		assertEquals(expected, result);
 	}
@@ -531,7 +576,7 @@ public abstract class AbstractCalciteTest {
 				WHERE dept >= id
 				""");
 
-		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(0, 2));
+		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST_1.get(1), STUDENT_LIST_2.get(1)));
 
 		assertEquals(expected, result);
 	}
@@ -559,7 +604,7 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static void assertWhereLessThanScalar(QueryResult result) {
-		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(0, 1));
+		QueryResult expected = studentsToQueryResult(STUDENT_LIST_1.subList(1, 2));
 
 		assertEquals(expected, result);
 	}
@@ -588,7 +633,7 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static void assertWhereLessThanOrEqualScalar(QueryResult result) {
-		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(0, 2));
+		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST_1.get(1), STUDENT_LIST_2.get(1)));
 
 		assertEquals(expected, result);
 	}
@@ -621,7 +666,7 @@ public abstract class AbstractCalciteTest {
 
 	private static void assertWhereAndEqual(QueryResult result) {
 		QueryResult expected = new QueryResult(List.of("id"),
-				List.<Object[]>of(new Object[]{STUDENT_LIST.get(0).id}));
+				List.<Object[]>of(new Object[]{STUDENT_LIST_1.get(1).id}));
 
 		assertEquals(expected, result);
 	}
@@ -655,8 +700,8 @@ public abstract class AbstractCalciteTest {
 	private static void assertWhereOrEqual(QueryResult result) {
 		QueryResult expected = new QueryResult(List.of("id"),
 				List.of(
-						new Object[]{STUDENT_LIST.get(1).id},
-						new Object[]{STUDENT_LIST.get(2).id}
+						new Object[]{STUDENT_LIST_2.get(0).id},
+						new Object[]{STUDENT_LIST_2.get(1).id}
 				));
 
 		assertEquals(expected, result);
@@ -689,7 +734,7 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static void assertWhereBetween(QueryResult result) {
-		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(0, 2));
+		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST_1.get(1), STUDENT_LIST_2.get(1)));
 
 		assertEquals(expected, result);
 	}
@@ -722,7 +767,7 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static void assertWhereIn(QueryResult result) {
-		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST.get(0), STUDENT_LIST.get(2)));
+		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST_1.get(1), STUDENT_LIST_2.get(0)));
 
 		assertEquals(expected, result);
 	}
@@ -730,34 +775,34 @@ public abstract class AbstractCalciteTest {
 
 	@Test
 	public void testWhereLikeStartsWithJ() {
-		doTestWhereLike("J%", 1, 3);
+		doTestWhereLike("J%", STUDENT_LIST_1.get(1), STUDENT_LIST_2.get(0));
 	}
 
 	@Test
 	public void testWhereLikeEndsWithHn() {
-		doTestWhereLike("%hn", 1, 3);
+		doTestWhereLike("%hn", STUDENT_LIST_1.get(1), STUDENT_LIST_2.get(0));
 	}
 
 	@Test
 	public void testWhereStartsWithB() {
-		doTestWhereLike("B%", 2);
+		doTestWhereLike("B%", STUDENT_LIST_2.get(1));
 	}
 
 	@Test
 	public void testWhereSecondLetterIsO() {
-		doTestWhereLike("_o%", 1, 2, 3);
+		doTestWhereLike("_o%", STUDENT_LIST_1.get(1), STUDENT_LIST_2.get(0), STUDENT_LIST_2.get(1));
 	}
 
 	@Test
 	public void testWhereMatchAll() {
-		doTestWhereLike("%", 1, 2, 3, 4);
+		doTestWhereLike("%", STUDENT_LIST_1.get(0), STUDENT_LIST_1.get(1), STUDENT_LIST_2.get(0), STUDENT_LIST_2.get(1));
 	}
 
-	private void doTestWhereLike(String firstNamePattern, int... expectedIds) {
+	private void doTestWhereLike(String firstNamePattern, Student... expectedStudents) {
 		QueryResult result = query("SELECT * FROM student " +
 				"WHERE firstName LIKE '" + firstNamePattern + '\'');
 
-		QueryResult expected = studentsToQueryResult(Arrays.stream(expectedIds).mapToObj(id -> STUDENT_LIST.get(id - 1)).toList());
+		QueryResult expected = studentsToQueryResult(Arrays.asList(expectedStudents));
 
 		assertEquals(expected, result);
 	}
@@ -777,7 +822,7 @@ public abstract class AbstractCalciteTest {
 				""");
 
 		List<Object[]> columnValues = new ArrayList<>(result.columnValues.size());
-		for (Registry registry : REGISTRY_LIST) {
+		for (Registry registry : concat(REGISTRY_LIST_1, REGISTRY_LIST_2)) {
 			columnValues.add(new Object[]{registry.id, registry.counters.get("John")});
 		}
 
@@ -814,11 +859,11 @@ public abstract class AbstractCalciteTest {
 	private static void assertMapGetInWhereClause(QueryResult result) {
 		QueryResult expected = new QueryResult(List.of("id"),
 				List.of(
-						new Object[]{REGISTRY_LIST.get(0).id},
-						new Object[]{REGISTRY_LIST.get(2).id}
+						new Object[]{REGISTRY_LIST_1.get(1).id},
+						new Object[]{REGISTRY_LIST_2.get(0).id}
 				));
 
-		assertEquals(result, expected);
+		assertEquals(expected, result);
 	}
 	// endregion
 
@@ -844,7 +889,7 @@ public abstract class AbstractCalciteTest {
 
 	private static void assertListGetQuery(QueryResult result, String index) {
 		List<Object[]> columnValues = new ArrayList<>(result.columnValues.size());
-		for (Registry registry : REGISTRY_LIST) {
+		for (Registry registry : concat(REGISTRY_LIST_1, REGISTRY_LIST_2)) {
 			String domain = registry.domains.size() > 1 ? registry.domains.get(1) : null;
 			columnValues.add(new Object[]{registry.id, domain});
 		}
@@ -883,8 +928,8 @@ public abstract class AbstractCalciteTest {
 	private static void assertListGetInWhereClause(QueryResult result) {
 		QueryResult expected = new QueryResult(List.of("id"),
 				List.of(
-						new Object[]{REGISTRY_LIST.get(0).id},
-						new Object[]{REGISTRY_LIST.get(3).id}
+						new Object[]{REGISTRY_LIST_1.get(0).id},
+						new Object[]{REGISTRY_LIST_1.get(1).id}
 				));
 
 		assertEquals(expected, result);
@@ -899,31 +944,31 @@ public abstract class AbstractCalciteTest {
 				ON student.dept = department.id
 				""");
 
-		List<Object[]> expectedColumnValues = new ArrayList<>(3);
+		List<Object[]> expectedColumnValues = new ArrayList<>(4);
 
-		Student firstStudent = STUDENT_LIST.get(0);
-		Student secondStudent = STUDENT_LIST.get(1);
-		Student thirdStudent = STUDENT_LIST.get(2);
-		Student fourthStudent = STUDENT_LIST.get(3);
-		Department firstDepartment = DEPARTMENT_LIST.get(0);
-		Department secondDepartment = DEPARTMENT_LIST.get(1);
-		Department thirdDepartment = DEPARTMENT_LIST.get(2);
+		Student firstStudent = STUDENT_LIST_1.get(0);
+		Student secondStudent = STUDENT_LIST_1.get(1);
+		Student thirdStudent = STUDENT_LIST_2.get(0);
+		Student fourthStudent = STUDENT_LIST_2.get(1);
+		Department firstDepartment = DEPARTMENT_LIST_1.get(0);
+		Department secondDepartment = DEPARTMENT_LIST_2.get(0);
+		Department thirdDepartment = DEPARTMENT_LIST_2.get(1);
 
 		expectedColumnValues.add(new Object[]{
 				firstStudent.id, firstStudent.firstName, firstStudent.lastName, firstStudent.dept,
-				firstDepartment.id, firstDepartment.departmentName
+				secondDepartment.id, secondDepartment.departmentName
 		});
 		expectedColumnValues.add(new Object[]{
 				secondStudent.id, secondStudent.firstName, secondStudent.lastName, secondStudent.dept,
-				secondDepartment.id, secondDepartment.departmentName
+				thirdDepartment.id, thirdDepartment.departmentName
 		});
 		expectedColumnValues.add(new Object[]{
 				thirdStudent.id, thirdStudent.firstName, thirdStudent.lastName, thirdStudent.dept,
-				secondDepartment.id, secondDepartment.departmentName
+				firstDepartment.id, firstDepartment.departmentName
 		});
 		expectedColumnValues.add(new Object[]{
 				fourthStudent.id, fourthStudent.firstName, fourthStudent.lastName, fourthStudent.dept,
-				thirdDepartment.id, thirdDepartment.departmentName
+				firstDepartment.id, firstDepartment.departmentName
 		});
 
 		QueryResult expected = new QueryResult(List.of("left.id", "left.firstName", "left.lastName", "left.dept", "right.id", "right.departmentName"), expectedColumnValues);
@@ -939,20 +984,20 @@ public abstract class AbstractCalciteTest {
 				ON student.dept = department.id
 				""");
 
-		Student firstStudent = STUDENT_LIST.get(0);
-		Student secondStudent = STUDENT_LIST.get(1);
-		Student thirdStudent = STUDENT_LIST.get(2);
-		Student fourthStudent = STUDENT_LIST.get(3);
-		Department firstDepartment = DEPARTMENT_LIST.get(0);
-		Department secondDepartment = DEPARTMENT_LIST.get(1);
-		Department thirdDepartment = DEPARTMENT_LIST.get(2);
+		Student firstStudent = STUDENT_LIST_1.get(0);
+		Student secondStudent = STUDENT_LIST_1.get(1);
+		Student thirdStudent = STUDENT_LIST_2.get(0);
+		Student fourthStudent = STUDENT_LIST_2.get(1);
+		Department firstDepartment = DEPARTMENT_LIST_1.get(0);
+		Department secondDepartment = DEPARTMENT_LIST_2.get(0);
+		Department thirdDepartment = DEPARTMENT_LIST_2.get(1);
 
 		QueryResult expected = new QueryResult(List.of("left.id", "right.departmentName"),
 				List.of(
-						new Object[]{firstStudent.id, firstDepartment.departmentName},
-						new Object[]{secondStudent.id, secondDepartment.departmentName},
-						new Object[]{thirdStudent.id, secondDepartment.departmentName},
-						new Object[]{fourthStudent.id, thirdDepartment.departmentName}
+						new Object[]{firstStudent.id, secondDepartment.departmentName},
+						new Object[]{secondStudent.id, thirdDepartment.departmentName},
+						new Object[]{thirdStudent.id, firstDepartment.departmentName},
+						new Object[]{fourthStudent.id, firstDepartment.departmentName}
 				));
 
 		assertEquals(expected, result);
@@ -965,9 +1010,9 @@ public abstract class AbstractCalciteTest {
 				ORDER BY firstName ASC, id DESC
 				""");
 
-		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST.get(1), STUDENT_LIST.get(2), STUDENT_LIST.get(0), STUDENT_LIST.get(3)));
+		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST_2.get(1), STUDENT_LIST_2.get(0), STUDENT_LIST_1.get(1), STUDENT_LIST_1.get(0)));
 
-		assertEquals(expected, result);
+		assertTrue(expected.equalsOrdered(result));
 	}
 
 	@Test
@@ -976,9 +1021,9 @@ public abstract class AbstractCalciteTest {
 				SELECT id, profiles.pojo.value1, profiles.pojo.value2 FROM profiles
 				""");
 
-		List<Object[]> expectedColumnValues = new ArrayList<>(USER_PROFILES_LIST.size());
+		List<Object[]> expectedColumnValues = new ArrayList<>();
 
-		for (UserProfile userProfile : USER_PROFILES_LIST) {
+		for (UserProfile userProfile : concat(USER_PROFILES_LIST_1, USER_PROFILES_LIST_2)) {
 			expectedColumnValues.add(new Object[]{
 					userProfile.id,
 					userProfile.pojo.value1,
@@ -1016,7 +1061,7 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static void assertPojoFieldInWhereClause(QueryResult result) {
-		QueryResult expected = new QueryResult(List.of("id"), List.<Object[]>of(new Object[]{USER_PROFILES_LIST.get(0).id}));
+		QueryResult expected = new QueryResult(List.of("id"), List.<Object[]>of(new Object[]{USER_PROFILES_LIST_2.get(0).id}));
 
 		assertEquals(expected, result);
 	}
@@ -1046,9 +1091,9 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static void assertUserProfilesSelect(QueryResult result, String key) {
-		List<Object[]> expectedColumnValues = new ArrayList<>(USER_PROFILES_LIST.size());
+		List<Object[]> expectedColumnValues = new ArrayList<>();
 
-		for (UserProfile userProfile : USER_PROFILES_LIST) {
+		for (UserProfile userProfile : concat(USER_PROFILES_LIST_1, USER_PROFILES_LIST_2)) {
 			UserProfileIntent intent = userProfile.intents.get(1);
 			expectedColumnValues.add(new Object[]{
 					userProfile.id,
@@ -1091,7 +1136,7 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static void assertUserProfilesInWhereClause(QueryResult result) {
-		QueryResult expected = new QueryResult(List.of("id"), List.<Object[]>of(new Object[]{USER_PROFILES_LIST.get(0).id}));
+		QueryResult expected = new QueryResult(List.of("id"), List.<Object[]>of(new Object[]{USER_PROFILES_LIST_2.get(0).id}));
 
 		assertEquals(expected, result);
 	}
@@ -1241,7 +1286,7 @@ public abstract class AbstractCalciteTest {
 	public void testSelectAllLarge() {
 		QueryResult result = query("SELECT * FROM large_table");
 
-		QueryResult expected = largeToQueryResult(LARGE_LIST);
+		QueryResult expected = largeToQueryResult(concat(LARGE_LIST_1, LARGE_LIST_2));
 
 		assertEquals(expected, result);
 	}
@@ -1267,7 +1312,7 @@ public abstract class AbstractCalciteTest {
 				WHERE lastName IS NOT NULL
 				""");
 
-		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(0, 3));
+		QueryResult expected = studentsToQueryResult(concat(STUDENT_LIST_1.subList(1, 2), STUDENT_LIST_2));
 
 		assertEquals(expected, result);
 	}
@@ -1282,10 +1327,10 @@ public abstract class AbstractCalciteTest {
 		QueryResult expected = new QueryResult(
 				List.of("id", "IFNULL(lastName, '')"),
 				List.of(
+						new Object[]{4, ""},
 						new Object[]{1, "Doe"},
-						new Object[]{2, "Black"},
 						new Object[]{3, "Truman"},
-						new Object[]{4, ""}
+						new Object[]{2, "Black"}
 				)
 		);
 
@@ -1310,13 +1355,13 @@ public abstract class AbstractCalciteTest {
 		QueryResult expected = new QueryResult(
 				List.of("id", "firstName"),
 				List.of(
-						new Object[]{STUDENT_LIST.get(2).id(), STUDENT_LIST.get(2).lastName()},
-						new Object[]{STUDENT_LIST.get(3).id(), STUDENT_LIST.get(3).lastName()},
-						new Object[]{STUDENT_LIST.get(0).id(), STUDENT_LIST.get(0).firstName()},
-						new Object[]{STUDENT_LIST.get(1).id(), STUDENT_LIST.get(1).firstName()},
-						new Object[]{DEPARTMENT_LIST.get(0).id(), DEPARTMENT_LIST.get(0).departmentName()},
-						new Object[]{DEPARTMENT_LIST.get(1).id(), DEPARTMENT_LIST.get(1).departmentName()},
-						new Object[]{DEPARTMENT_LIST.get(2).id(), DEPARTMENT_LIST.get(2).departmentName()}
+						new Object[]{STUDENT_LIST_1.get(0).id(), STUDENT_LIST_1.get(0).lastName()},
+						new Object[]{STUDENT_LIST_1.get(1).id(), STUDENT_LIST_1.get(1).firstName()},
+						new Object[]{STUDENT_LIST_2.get(0).id(), STUDENT_LIST_2.get(0).lastName()},
+						new Object[]{STUDENT_LIST_2.get(1).id(), STUDENT_LIST_2.get(1).firstName()},
+						new Object[]{DEPARTMENT_LIST_1.get(0).id(), DEPARTMENT_LIST_1.get(0).departmentName()},
+						new Object[]{DEPARTMENT_LIST_2.get(0).id(), DEPARTMENT_LIST_2.get(0).departmentName()},
+						new Object[]{DEPARTMENT_LIST_2.get(1).id(), DEPARTMENT_LIST_2.get(1).departmentName()}
 				)
 		);
 
@@ -1348,9 +1393,18 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static void assertOffset(QueryResult result) {
-		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(2, STUDENT_LIST.size()));
+		assertEquals(List.of("id", "firstName", "lastName", "dept"), result.columnNames);
 
-		assertEquals(expected, result);
+		assertEquals(STUDENT_LIST_1.size() + STUDENT_LIST_2.size() - 2, result.columnValues.size());
+
+		Set<Student> returned = new HashSet<>();
+		for (Object[] columnValue : result.columnValues) {
+			Student student = columnsToStudent(columnValue);
+
+			assertTrue(STUDENT_LIST_1.contains(student) || STUDENT_LIST_2.contains(student));
+
+			assertTrue(returned.add(student));
+		}
 	}
 	// endregion
 
@@ -1379,9 +1433,18 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static void assertLimit(QueryResult result) {
-		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(0, 2));
+		assertEquals(List.of("id", "firstName", "lastName", "dept"), result.columnNames);
 
-		assertEquals(expected, result);
+		assertEquals(2, result.columnValues.size());
+
+		Set<Student> returned = new HashSet<>();
+		for (Object[] columnValue : result.columnValues) {
+			Student student = columnsToStudent(columnValue);
+
+			assertTrue(STUDENT_LIST_1.contains(student) || STUDENT_LIST_2.contains(student));
+
+			assertTrue(returned.add(student));
+		}
 	}
 	// endregion
 
@@ -1415,9 +1478,18 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static void assertOffsetLimit(QueryResult result) {
-		QueryResult expected = studentsToQueryResult(STUDENT_LIST.subList(1, 3));
+		assertEquals(List.of("id", "firstName", "lastName", "dept"), result.columnNames);
 
-		assertEquals(expected, result);
+		assertEquals(Math.min(2, STUDENT_LIST_1.size() + STUDENT_LIST_2.size() - 1), result.columnValues.size());
+
+		Set<Student> returned = new HashSet<>();
+		for (Object[] columnValue : result.columnValues) {
+			Student student = columnsToStudent(columnValue);
+
+			assertTrue(STUDENT_LIST_1.contains(student) || STUDENT_LIST_2.contains(student));
+
+			assertTrue(returned.add(student));
+		}
 	}
 	// endregion
 
@@ -1448,9 +1520,9 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static void assertSortedOffset(QueryResult result) {
-		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST.get(0), STUDENT_LIST.get(3)));
+		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST_1.get(1), STUDENT_LIST_1.get(0)));
 
-		assertEquals(expected, result);
+		assertTrue(expected.equalsOrdered(result));
 	}
 	// endregion
 
@@ -1481,9 +1553,9 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static void assertSortedLimit(QueryResult result) {
-		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST.get(1), STUDENT_LIST.get(2)));
+		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST_2.get(1), STUDENT_LIST_2.get(0)));
 
-		assertEquals(expected, result);
+		assertTrue(expected.equalsOrdered(result));
 	}
 	// endregion
 
@@ -1519,11 +1591,12 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static void assertSortedOffsetLimit(QueryResult result) {
-		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST.get(2), STUDENT_LIST.get(0)));
+		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST_2.get(0), STUDENT_LIST_1.get(1)));
 
-		assertEquals(expected, result);
+		assertTrue(expected.equalsOrdered(result));
 	}
 	// endregion
+
 	protected abstract QueryResult query(String sql);
 
 	protected abstract QueryResult queryPrepared(String sql, ParamsSetter paramsSetter);
@@ -1573,12 +1646,53 @@ public abstract class AbstractCalciteTest {
 			return columnValues.isEmpty();
 		}
 
+		@SuppressWarnings({"rawtypes", "unchecked"})
+		private static final Comparator<Object[]> VALUES_COMPARATOR = (values1, values2) -> {
+			for (int i = 0; i < values1.length; i++) {
+				Object value1 = values1[i];
+				Object value2 = values2[i];
+
+				if (value1 == value2) continue;
+				if (value1 == null) return -1;
+				if (value2 == null) return 1;
+
+				Comparable comparable1 = (Comparable) value1;
+				Comparable comparable2 = (Comparable) value2;
+				Comparator<Comparable> naturalOrder = Comparator.naturalOrder();
+				int result = naturalOrder.compare(comparable1, comparable2);
+				if (result == 0) continue;
+				return result;
+			}
+			return 0;
+		};
+
 		@Override
 		public boolean equals(Object o) {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
 
 			QueryResult that = (QueryResult) o;
+
+			if (!columnNames.equals(that.columnNames)) return false;
+
+			if (columnValues.size() != that.columnValues.size()) return false;
+
+			List<Object[]> sortedValues = columnValues.stream().sorted(VALUES_COMPARATOR).toList();
+			List<Object[]> thatSortedValues = that.columnValues.stream().sorted(VALUES_COMPARATOR).toList();
+
+			for (int i = 0; i < sortedValues.size(); i++) {
+				Object[] columnValue = sortedValues.get(i);
+				Object[] thatColumnValue = thatSortedValues.get(i);
+
+				if (!Arrays.equals(columnValue, thatColumnValue)) return false;
+			}
+
+			return true;
+		}
+
+		public boolean equalsOrdered(QueryResult that) {
+			if (this == that) return true;
+			if (that == null) return false;
 
 			if (!columnNames.equals(that.columnNames)) return false;
 
@@ -1606,7 +1720,15 @@ public abstract class AbstractCalciteTest {
 	}
 
 	public static final class StudentToRecord implements RecordFunction<Student> {
-		private final RecordScheme scheme = ofJavaRecord(Student.class);
+		private final RecordScheme scheme;
+
+		private StudentToRecord(RecordScheme scheme) {
+			this.scheme = scheme;
+		}
+
+		public static StudentToRecord create(DefiningClassLoader classLoader) {
+			return new StudentToRecord(ofJavaRecord(classLoader, Student.class));
+		}
 
 		@Override
 		public Record apply(Student student) {
@@ -1625,7 +1747,13 @@ public abstract class AbstractCalciteTest {
 	}
 
 	public static final class DepartmentToRecord implements RecordFunction<Department> {
-		private final RecordScheme scheme = ofJavaRecord(Department.class);
+		private final RecordScheme scheme;
+
+		private DepartmentToRecord(RecordScheme scheme) {this.scheme = scheme;}
+
+		public static DepartmentToRecord create(DefiningClassLoader classLoader) {
+			return new DepartmentToRecord(ofJavaRecord(classLoader, Department.class));
+		}
 
 		@Override
 		public Record apply(Department department) {
@@ -1642,7 +1770,15 @@ public abstract class AbstractCalciteTest {
 	}
 
 	public static final class RegistryToRecord implements RecordFunction<Registry> {
-		private final RecordScheme scheme = ofJavaRecord(Registry.class);
+		private final RecordScheme scheme;
+
+		private RegistryToRecord(RecordScheme scheme) {
+			this.scheme = scheme;
+		}
+
+		public static RegistryToRecord create(DefiningClassLoader classLoader) {
+			return new RegistryToRecord(ofJavaRecord(classLoader, Registry.class));
+		}
 
 		@Override
 		public Record apply(Registry registry) {
@@ -1660,7 +1796,15 @@ public abstract class AbstractCalciteTest {
 	}
 
 	public static final class UserProfileToRecord implements RecordFunction<UserProfile> {
-		private final RecordScheme scheme = ofJavaRecord(UserProfile.class);
+		private final RecordScheme scheme;
+
+		private UserProfileToRecord(RecordScheme scheme) {
+			this.scheme = scheme;
+		}
+
+		public static UserProfileToRecord create(DefiningClassLoader classLoader) {
+			return new UserProfileToRecord(ofJavaRecord(classLoader, UserProfile.class));
+		}
 
 		@Override
 		public Record apply(UserProfile userProfile) {
@@ -1679,7 +1823,15 @@ public abstract class AbstractCalciteTest {
 	}
 
 	public static final class LargeToRecord implements RecordFunction<Large> {
-		private final RecordScheme scheme = ofJavaRecord(Large.class);
+		private final RecordScheme scheme;
+
+		private LargeToRecord(RecordScheme scheme) {
+			this.scheme = scheme;
+		}
+
+		public static LargeToRecord create(DefiningClassLoader classLoader) {
+			return new LargeToRecord(ofJavaRecord(classLoader, Large.class));
+		}
 
 		@Override
 		public Record apply(Large large) {
@@ -1727,10 +1879,10 @@ public abstract class AbstractCalciteTest {
 		return new QueryResult(columnNames, columnValues);
 	}
 
-	private static RecordScheme ofJavaRecord(Class<?> recordClass) {
+	private static RecordScheme ofJavaRecord(DefiningClassLoader classLoader, Class<?> recordClass) {
 		checkState(recordClass.isRecord());
 
-		RecordScheme recordScheme = RecordScheme.create();
+		RecordScheme recordScheme = RecordScheme.create(classLoader);
 		RecordComponent[] recordComponents = recordClass.getRecordComponents();
 
 		for (RecordComponent recordComponent : recordComponents) {
@@ -1738,6 +1890,10 @@ public abstract class AbstractCalciteTest {
 		}
 
 		return recordScheme.build();
+	}
+
+	private static Student columnsToStudent(Object[] columnValue) {
+		return new Student((Integer) columnValue[0], (String) columnValue[1], (String) columnValue[2], (Integer) columnValue[3]);
 	}
 
 	protected interface ParamsSetter {

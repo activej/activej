@@ -5,23 +5,33 @@ import io.activej.datastream.processor.StreamJoin.InnerJoiner;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 
-import javax.annotation.Nullable;
 import java.lang.reflect.Type;
 import java.util.List;
 
 public final class RecordInnerJoiner<K extends Comparable<K>> extends InnerJoiner<K, Record, Record, Record> {
 
-	@Nullable
-	RecordScheme scheme;
+	private final RecordScheme scheme;
+
+	private RecordInnerJoiner(RecordScheme scheme) {
+		this.scheme = scheme;
+	}
+
+	public static <K extends Comparable<K>> RecordInnerJoiner<K> create(RecordScheme left, RecordScheme right) {
+		return new RecordInnerJoiner<>(createScheme(left, right));
+	}
+
+	public static <K extends Comparable<K>> RecordInnerJoiner<K> create(RecordScheme scheme) {
+		return new RecordInnerJoiner<>(scheme);
+	}
+
+	public RecordScheme getScheme() {
+		return scheme;
+	}
 
 	@Override
 	public void onInnerJoin(K key, Record left, Record right, StreamDataAcceptor<Record> output) {
 		RecordScheme leftScheme = left.getScheme();
 		RecordScheme rightScheme = right.getScheme();
-
-		if (scheme == null) {
-			scheme = createScheme(leftScheme, rightScheme);
-		}
 
 		Record result = scheme.record();
 
@@ -36,8 +46,9 @@ public final class RecordInnerJoiner<K extends Comparable<K>> extends InnerJoine
 		output.accept(result);
 	}
 
-	public static RecordScheme createScheme(RecordScheme leftScheme, RecordScheme rightScheme) {
-		RecordScheme scheme = RecordScheme.create();
+	private static RecordScheme createScheme(RecordScheme leftScheme, RecordScheme rightScheme) {
+		assert leftScheme.getClassLoader() == rightScheme.getClassLoader();
+		RecordScheme scheme = RecordScheme.create(leftScheme.getClassLoader());
 
 		addFields(scheme, "left", leftScheme);
 		addFields(scheme, "right", rightScheme);

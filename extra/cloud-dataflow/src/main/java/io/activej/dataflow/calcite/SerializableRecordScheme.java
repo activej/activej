@@ -1,5 +1,6 @@
 package io.activej.dataflow.calcite;
 
+import io.activej.codegen.DefiningClassLoader;
 import io.activej.record.RecordScheme;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
@@ -32,8 +33,8 @@ public final class SerializableRecordScheme {
 		return new SerializableRecordScheme(fields);
 	}
 
-	public RecordScheme toRecordScheme() {
-		RecordScheme recordScheme = RecordScheme.create();
+	public RecordScheme toRecordScheme(DefiningClassLoader classLoader) {
+		RecordScheme recordScheme = RecordScheme.create(classLoader);
 
 		fields.forEach(recordScheme::addField);
 

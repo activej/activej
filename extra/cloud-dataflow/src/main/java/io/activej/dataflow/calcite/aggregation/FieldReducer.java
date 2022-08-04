@@ -12,7 +12,9 @@ public abstract class FieldReducer<I, O, A> extends StreamReducers.ReducerToResu
 		this.fieldIndex = fieldIndex;
 	}
 
-	public abstract Class<O> getResultClass(Class<I> inputClass);
+	public abstract Class<O> getResultClass(Class<A> accumulatorClass);
+
+	public abstract Class<A> getAccumulatorClass(Class<I> inputClass);
 
 	public abstract String getName();
 
@@ -31,6 +33,9 @@ public abstract class FieldReducer<I, O, A> extends StreamReducers.ReducerToResu
 
 		return doAccumulate(accumulator, fieldValue);
 	}
+
+	@Override
+	public abstract A combine(A accumulator, A anotherAccumulator);
 
 	public final int getFieldIndex() {
 		return fieldIndex;

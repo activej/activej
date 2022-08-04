@@ -5,8 +5,9 @@ import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowException;
 import io.activej.dataflow.SqlDataflow;
 import io.activej.dataflow.calcite.DataflowShuttle.UnmaterializedDataset;
-import io.activej.dataflow.collector.Collector;
+import io.activej.dataflow.calcite.collector.CalciteCollector;
 import io.activej.dataflow.dataset.Dataset;
+import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.datastream.StreamSupplier;
@@ -109,10 +110,12 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 	}
 
 	public Promise<StreamSupplier<Record>> queryDataflow(Dataset<Record> dataset) {
-		Collector<Record> collector = new Collector<>(dataset, client);
+		CalciteCollector<?> calciteCollector = dataset instanceof LocallySortedDataset<?, Record> sortedDataset ?
+				CalciteCollector.createOrdered(sortedDataset, client) :
+				CalciteCollector.create(dataset, client);
 
 		DataflowGraph graph = new DataflowGraph(client, partitions);
-		StreamSupplier<Record> result = collector.compile(graph);
+		StreamSupplier<Record> result = calciteCollector.compile(graph);
 
 		return graph.execute()
 				.map($ -> result);
@@ -134,7 +137,8 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 		return program.run(planner, root.rel, traits, Collections.emptyList(), Collections.emptyList());
 	}
 
-	public record TransformationResult(List<RelDataTypeField> fields, List<RexDynamicParam> parameters, UnmaterializedDataset dataset) {
+	public record TransformationResult(List<RelDataTypeField> fields, List<RexDynamicParam> parameters,
+									   UnmaterializedDataset dataset) {
 
 	}
 }

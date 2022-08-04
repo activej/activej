@@ -6,7 +6,7 @@ import io.activej.record.RecordScheme;
 
 import java.util.List;
 
-public final class RecordReducer extends StreamReducers.ReducerToResult<RecordScheme, Record, Record, Object[]> {
+public final class RecordReducer extends StreamReducers.ReducerToResult<RecordScheme, Record, Record, Record> {
 	private final List<FieldReducer<Object, Object, Object>> reducers;
 
 	public RecordReducer(List<FieldReducer<?, ?, ?>> reducers) {
@@ -15,52 +15,67 @@ public final class RecordReducer extends StreamReducers.ReducerToResult<RecordSc
 	}
 
 	@Override
-	public Object[] createAccumulator(RecordScheme originalScheme) {
-		Object[] accumulator = new Object[reducers.size() + 1];
+	public Record createAccumulator(RecordScheme originalScheme) {
+		RecordScheme accumulatorScheme = createAccumulatorScheme(originalScheme);
 
-		int i = 0;
-		for (int reducersSize = reducers.size(); i < reducersSize; i++) {
+		Record accumulator = accumulatorScheme.record();
+
+		for (int i = 0; i < reducers.size(); i++) {
 			FieldReducer<Object, Object, Object> reducer = reducers.get(i);
 			Object fieldAccumulator = reducer.createAccumulator(originalScheme);
-			accumulator[i] = fieldAccumulator;
-		}
-
-		accumulator[i] = createScheme(originalScheme);
-
-		return accumulator;
-	}
-
-	@Override
-	public Object[] accumulate(Object[] accumulator, Record value) {
-		for (int i = 0, reducersSize = reducers.size(); i < reducersSize; i++) {
-			FieldReducer<Object, Object, Object> reducer = reducers.get(i);
-			Object fieldAccumulator = reducer.accumulate(accumulator[i], value);
-			accumulator[i] = fieldAccumulator;
+			accumulator.set(i, fieldAccumulator);
 		}
 
 		return accumulator;
 	}
 
 	@Override
-	public Record produceResult(Object[] accumulator) {
-		RecordScheme recordScheme = (RecordScheme) accumulator[accumulator.length - 1];
-		Record record = recordScheme.record();
+	public Record accumulate(Record accumulator, Record value) {
+		for (int i = 0, reducersSize = reducers.size(); i < reducersSize; i++) {
+			FieldReducer<Object, Object, Object> reducer = reducers.get(i);
+			Object fieldAccumulated = reducer.accumulate(accumulator.get(i), value);
+			accumulator.set(i, fieldAccumulated);
+		}
+
+		return accumulator;
+	}
+
+	@Override
+	public Record combine(Record accumulator, Record anotherAccumulator) {
+		RecordScheme scheme = accumulator.getScheme();
+		assert scheme == anotherAccumulator.getScheme();
+
+		Record newAccumulator = scheme.record();
+
+		for (int i = 0; i < reducers.size(); i++) {
+			FieldReducer<Object, Object, Object> reducer = reducers.get(i);
+			Object combined = reducer.combine(accumulator.get(i), anotherAccumulator.get(i));
+			newAccumulator.set(i, combined);
+		}
+
+		return newAccumulator;
+	}
+
+	@Override
+	public Record produceResult(Record accumulator) {
+		RecordScheme outputScheme = createOutputScheme(accumulator.getScheme());
+		Record result = outputScheme.record();
 
 		for (int i = 0, reducersSize = reducers.size(); i < reducersSize; i++) {
 			FieldReducer<Object, Object, Object> reducer = reducers.get(i);
-			Object result = reducer.produceResult(accumulator[i]);
-			record.set(i, result);
+			Object fieldResult = reducer.produceResult(accumulator.get(i));
+			result.set(i, fieldResult);
 		}
 
-		return record;
+		return result;
 	}
 
 	public List<FieldReducer<Object, Object, Object>> getReducers() {
 		return reducers;
 	}
 
-	public RecordScheme createScheme(RecordScheme originalScheme) {
-		RecordScheme resultScheme = RecordScheme.create();
+	private RecordScheme createAccumulatorScheme(RecordScheme originalScheme) {
+		RecordScheme resultScheme = RecordScheme.create(originalScheme.getClassLoader());
 
 		for (FieldReducer<Object, Object, Object> reducer : reducers) {
 			int fieldIndex = reducer.getFieldIndex();
@@ -69,10 +84,37 @@ public final class RecordReducer extends StreamReducers.ReducerToResult<RecordSc
 
 			//noinspection unchecked
 			Class<Object> fieldType = (Class<Object>) (fieldIndex == -1 ? long.class : originalScheme.getFieldType(fieldIndex));
-			Class<Object> resultClass = reducer.getResultClass(fieldType);
+			Class<Object> resultClass = reducer.getAccumulatorClass(fieldType);
 			resultScheme.addField(resultFieldName, resultClass);
 		}
 		return resultScheme.build();
 	}
 
+	private RecordScheme createOutputScheme(RecordScheme accumulatorScheme) {
+		RecordScheme outputScheme = RecordScheme.create(accumulatorScheme.getClassLoader());
+
+		for (int i = 0; i < accumulatorScheme.size(); i++) {
+			String accumulatorFieldName = accumulatorScheme.getField(i);
+
+			//noinspection unchecked
+			Class<Object> accumulatorFieldType = (Class<Object>) accumulatorScheme.getFieldType(i);
+			FieldReducer<Object, Object, Object> reducer = reducers.get(i);
+			Class<?> outputFieldClass = reducer.getResultClass(accumulatorFieldType);
+
+			outputScheme.addField(accumulatorFieldName, outputFieldClass);
+		}
+		return outputScheme.build();
+	}
+
+	public RecordScheme createScheme(RecordScheme originalScheme) {
+		return createOutputScheme(createAccumulatorScheme(originalScheme));
+	}
+
+	public InputToAccumulator<RecordScheme, Record, Record, Record> getInputToAccumulator() {
+		return new InputToAccumulator<>(this);
+	}
+
+	public AccumulatorToOutput<RecordScheme, Record, Record, Record> getAccumulatorToOutput() {
+		return new AccumulatorToOutput<>(this);
+	}
 }

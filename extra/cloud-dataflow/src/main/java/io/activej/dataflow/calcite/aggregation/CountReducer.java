@@ -9,7 +9,12 @@ public class CountReducer<I> extends FieldReducer<I, Long, Long> {
 	}
 
 	@Override
-	public Class<Long> getResultClass(Class<I> inputClass) {
+	public Class<Long> getResultClass(Class<Long> accumulatorClass) {
+		return accumulatorClass;
+	}
+
+	@Override
+	public Class<Long> getAccumulatorClass(Class<I> inputClass) {
 		return long.class;
 	}
 
@@ -26,6 +31,11 @@ public class CountReducer<I> extends FieldReducer<I, Long, Long> {
 	@Override
 	protected Long doAccumulate(Long accumulator, @NotNull Object fieldValue) {
 		return accumulator + 1;
+	}
+
+	@Override
+	public Long combine(Long accumulator, Long anotherAccumulator) {
+		return accumulator + anotherAccumulator;
 	}
 
 	@Override

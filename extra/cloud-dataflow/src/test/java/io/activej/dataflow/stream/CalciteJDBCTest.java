@@ -8,6 +8,7 @@ import io.activej.dataflow.calcite.jdbc.Driver;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
+import io.activej.test.TestUtils;
 import org.apache.calcite.avatica.remote.LocalService;
 import org.apache.calcite.avatica.server.AvaticaJsonHandler;
 import org.apache.calcite.avatica.server.HttpServer;
@@ -17,14 +18,15 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ThreadLocalRandom;
 
-import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.assertTrue;
 
 public class CalciteJDBCTest extends AbstractCalciteTest {
 
 	private int port;
-	private Eventloop serverEventloop;
+	private Eventloop server1Eventloop;
+	private Eventloop server2Eventloop;
 	private HttpServer jdbcServer;
 
 	@BeforeClass
@@ -34,34 +36,41 @@ public class CalciteJDBCTest extends AbstractCalciteTest {
 
 	@Override
 	protected Module getAdditionalServerModule() {
-		port = getFreePort();
 		return ModuleBuilder.create()
 				.install(new CalciteModule())
-				.bind(HttpServer.class).to((eventloop, calciteSqlDataflow) -> new HttpServer.Builder<>()
+				.bind(int.class).to(TestUtils::getFreePort)
+				.bind(HttpServer.class).to((eventloop, port, calciteSqlDataflow) -> new HttpServer.Builder<>()
 								.withHandler(new AvaticaJsonHandler(new LocalService(new DataflowMeta(eventloop, calciteSqlDataflow))))
 								.withPort(port)
 								.build(),
-						Eventloop.class, CalciteSqlDataflow.class)
+						Eventloop.class, int.class, CalciteSqlDataflow.class)
 				.bind(Eventloop.class).to(() -> Eventloop.create().withFatalErrorHandler(FatalErrorHandler.rethrow()))
 				.build();
 	}
 
 	@Override
 	protected void onSetUp() throws Exception {
-		jdbcServer = serverInjector.getInstance(HttpServer.class);
-		serverEventloop = serverInjector.getInstance(Eventloop.class);
-		serverEventloop.keepAlive(true);
+		jdbcServer = (ThreadLocalRandom.current().nextBoolean() ? server1Injector : server2Injector).getInstance(HttpServer.class);
+		server1Eventloop = server1Injector.getInstance(Eventloop.class);
+		server2Eventloop = server2Injector.getInstance(Eventloop.class);
+		server1Eventloop.keepAlive(true);
+		server2Eventloop.keepAlive(true);
+
+		port = jdbcServer.getPort();
 
 		jdbcServer.start();
 
-		new Thread(serverEventloop).start();
+		new Thread(server1Eventloop).start();
+		new Thread(server2Eventloop).start();
 
-		serverEventloop.submit(() -> server.listen()).get();
+		server1Eventloop.submit(() -> server1.listen()).get();
+		server2Eventloop.submit(() -> server2.listen()).get();
 	}
 
 	@Override
 	protected void onTearDown() {
-		serverEventloop.keepAlive(false);
+		server1Eventloop.keepAlive(false);
+		server2Eventloop.keepAlive(false);
 		jdbcServer.stop();
 	}
 

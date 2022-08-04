@@ -1,7 +1,8 @@
-package io.activej.dataflow.calcite;
+package io.activej.dataflow.calcite.utils;
 
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.ToDoException;
+import io.activej.dataflow.calcite.Value;
 import io.activej.dataflow.calcite.function.ProjectionFunction;
 import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.dataflow.calcite.operand.OperandFieldAccess;
