@@ -50,7 +50,7 @@ public class CalciteCollector<K> {
 		this.keyComparator = keyComparator;
 	}
 
-	public static CalciteCollector<?> create(Dataset<Record> input, DataflowClient client) {
+	public static CalciteCollector<?> createUnordered(Dataset<Record> input, DataflowClient client) {
 		return new CalciteCollector<>(input, client, ToZeroFunction.getInstance(), EqualObjectComparator.getInstance());
 	}
 

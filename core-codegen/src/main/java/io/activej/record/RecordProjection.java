@@ -8,10 +8,7 @@ import io.activej.codegen.expression.Expressions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.UnaryOperator;
 
@@ -50,6 +47,16 @@ public abstract class RecordProjection implements UnaryOperator<Record>, BiConsu
 			}
 			schemeTo.withField(field, schemeFrom.getFieldType(field));
 			mapping.put(field, recordFrom -> schemeFrom.property(recordFrom, field));
+		}
+		List<String> comparedFields = schemeFrom.getComparedFields();
+		if (!comparedFields.isEmpty()) {
+			List<String> newComparedFields = new ArrayList<>();
+			for (String field : fields) {
+				if (comparedFields.contains(field)) {
+					newComparedFields.add(field);
+				}
+			}
+			schemeTo.withComparator(newComparedFields);
 		}
 		return projection(classLoader, List.of(schemeFrom, fields), schemeFrom, schemeTo, mapping);
 	}

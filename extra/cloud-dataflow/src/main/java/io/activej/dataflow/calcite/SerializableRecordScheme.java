@@ -38,7 +38,9 @@ public final class SerializableRecordScheme {
 
 		fields.forEach(recordScheme::addField);
 
-		return recordScheme.build();
+		return recordScheme
+				.withComparator(recordScheme.getFields())
+				.build();
 	}
 
 	@Serialize(order = 1)

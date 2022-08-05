@@ -52,7 +52,10 @@ public final class RecordInnerJoiner<K extends Comparable<K>> extends InnerJoine
 
 		addFields(scheme, "left", leftScheme);
 		addFields(scheme, "right", rightScheme);
-		return scheme.build();
+
+		return scheme
+				.withComparator(scheme.getFields())
+				.build();
 	}
 
 	private static void addFields(RecordScheme scheme, String prefix, RecordScheme leftScheme) {

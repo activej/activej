@@ -112,7 +112,7 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 	public Promise<StreamSupplier<Record>> queryDataflow(Dataset<Record> dataset) {
 		CalciteCollector<?> calciteCollector = dataset instanceof LocallySortedDataset<?, Record> sortedDataset ?
 				CalciteCollector.createOrdered(sortedDataset, client) :
-				CalciteCollector.create(dataset, client);
+				CalciteCollector.createUnordered(dataset, client);
 
 		DataflowGraph graph = new DataflowGraph(client, partitions);
 		StreamSupplier<Record> result = calciteCollector.compile(graph);

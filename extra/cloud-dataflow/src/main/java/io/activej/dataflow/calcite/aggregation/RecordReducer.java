@@ -87,7 +87,10 @@ public final class RecordReducer extends StreamReducers.ReducerToResult<RecordSc
 			Class<Object> resultClass = reducer.getAccumulatorClass(fieldType);
 			resultScheme.addField(resultFieldName, resultClass);
 		}
-		return resultScheme.build();
+
+		return resultScheme
+				.withComparator(resultScheme.getFields())
+				.build();
 	}
 
 	private RecordScheme createOutputScheme(RecordScheme accumulatorScheme) {
@@ -103,7 +106,10 @@ public final class RecordReducer extends StreamReducers.ReducerToResult<RecordSc
 
 			outputScheme.addField(accumulatorFieldName, outputFieldClass);
 		}
-		return outputScheme.build();
+
+		return outputScheme
+				.withComparator(outputScheme.getFields())
+				.build();
 	}
 
 	public RecordScheme createScheme(RecordScheme originalScheme) {

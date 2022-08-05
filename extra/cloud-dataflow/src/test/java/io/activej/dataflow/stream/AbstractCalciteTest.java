@@ -1889,7 +1889,9 @@ public abstract class AbstractCalciteTest {
 			recordScheme.addField(recordComponent.getName(), recordComponent.getGenericType());
 		}
 
-		return recordScheme.build();
+		return recordScheme
+				.withComparator(recordScheme.getComparedFields())
+				.build();
 	}
 
 	private static Student columnsToStudent(Object[] columnValue) {

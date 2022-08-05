@@ -197,6 +197,10 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 		return fieldIndices.get(field);
 	}
 
+	public List<String> getComparedFields() {
+		return comparedFields == null ? Collections.emptyList() : new ArrayList<>(comparedFields);
+	}
+
 	public int size() {
 		return fields.length;
 	}
