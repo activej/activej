@@ -8,22 +8,17 @@ import io.activej.serializer.annotations.SerializeRecord;
 import java.util.Comparator;
 import java.util.List;
 
-import static io.activej.common.Checks.checkArgument;
-
 public final class RecordSortComparator implements Comparator<Record> {
 	private final List<FieldSort> sorts;
 	private final Comparator<Record> recordComparator;
 
 	public RecordSortComparator(@Deserialize("sorts") List<FieldSort> sorts) {
-		checkArgument(sorts.size() != 0);
-
 		this.sorts = sorts;
 
-		FieldSort first = sorts.get(0);
-		Comparator<Record> comparator = first.toComparator();
+		Comparator<Record> comparator = EqualObjectComparator.getInstance();
 
-		for (int i = 1; i < sorts.size(); i++) {
-			Comparator<Record> nextComparator = sorts.get(i).toComparator();
+		for (FieldSort sort : sorts) {
+			Comparator<Record> nextComparator = sort.toComparator();
 			comparator = comparator.thenComparing(nextComparator);
 		}
 

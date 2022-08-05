@@ -9,8 +9,10 @@ import io.activej.dataflow.calcite.join.RecordKeyFunction;
 import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.dataflow.calcite.operand.OperandRecordField;
 import io.activej.dataflow.calcite.operand.OperandScalar;
-import io.activej.dataflow.calcite.utils.*;
+import io.activej.dataflow.calcite.utils.RecordKeyComparator;
+import io.activej.dataflow.calcite.utils.RecordSortComparator;
 import io.activej.dataflow.calcite.utils.RecordSortComparator.FieldSort;
+import io.activej.dataflow.calcite.utils.Utils;
 import io.activej.dataflow.calcite.where.*;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.Datasets;
@@ -328,12 +330,7 @@ public class DataflowShuttle extends RelShuttleImpl {
 				params -> {
 					Dataset<Record> materializedDataset = dataset.materialize(params);
 
-					LocallySortedDataset<?, Record> result;
-					if (sorts.isEmpty()) {
-						result = Datasets.castToSorted(materializedDataset, int.class, ToZeroFunction.getInstance(), EqualObjectComparator.getInstance());
-					} else {
-						result = Datasets.localSort(materializedDataset, Record.class, Function.identity(), new RecordSortComparator(sorts));
-					}
+					LocallySortedDataset<Record, Record> result = Datasets.localSort(materializedDataset, Record.class, Function.identity(), new RecordSortComparator(sorts));
 
 					long offsetValue = ((Number) offset.materialize(params).getValue().getValue()).longValue();
 					long limitValue = ((Number) limit.materialize(params).getValue().getValue()).longValue();
