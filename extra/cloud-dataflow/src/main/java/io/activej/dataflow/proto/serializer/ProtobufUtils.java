@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.dataflow.proto;
+package io.activej.dataflow.proto.serializer;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
@@ -28,11 +28,14 @@ import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.TaskStatus;
 import io.activej.dataflow.node.*;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
+import io.activej.dataflow.proto.NodeProto;
 import io.activej.dataflow.proto.NodeProto.Node.*;
 import io.activej.dataflow.proto.NodeProto.Node.Download.Address;
 import io.activej.dataflow.proto.NodeProto.Node.Reduce.Input;
+import io.activej.dataflow.proto.NodeStatProto;
 import io.activej.dataflow.proto.NodeStatProto.NodeStat.Binary;
 import io.activej.dataflow.proto.NodeStatProto.NodeStat.Test;
+import io.activej.dataflow.proto.StreamIdProto;
 import io.activej.dataflow.stats.BinaryNodeStat;
 import io.activej.dataflow.stats.NodeStat;
 import io.activej.dataflow.stats.TestNodeStat;

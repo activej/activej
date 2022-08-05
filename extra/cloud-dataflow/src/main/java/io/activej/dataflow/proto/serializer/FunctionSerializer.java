@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.dataflow.proto;
+package io.activej.dataflow.proto.serializer;
 
 import com.google.protobuf.ByteString;
 import io.activej.common.exception.MalformedDataException;

@@ -38,7 +38,7 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.concat;
 import static io.activej.dataflow.helper.StreamMergeSorterStorageStub.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
-import static io.activej.dataflow.proto.ProtobufUtils.ofObject;
+import static io.activej.dataflow.proto.serializer.ProtobufUtils.ofObject;
 import static io.activej.dataflow.stream.AbstractCalciteTest.MatchType.TYPE_1;
 import static io.activej.dataflow.stream.AbstractCalciteTest.MatchType.TYPE_2;
 import static io.activej.dataflow.stream.DataflowTest.createCommon;
@@ -62,6 +62,7 @@ public abstract class AbstractCalciteTest {
 	public static final String REGISTRY_TABLE_NAME = "registry";
 	public static final String USER_PROFILES_TABLE_NAME = "profiles";
 	public static final String LARGE_TABLE_NAME = "large_table";
+	public static final String SUBJECT_SELECTION_TABLE_NAME = "subject_selection";
 
 	protected static final List<Student> STUDENT_LIST_1 = List.of(
 			new Student(4, "Mark", null, 3),
@@ -103,6 +104,18 @@ public abstract class AbstractCalciteTest {
 			.mapToObj(Large::new)
 			.toList();
 
+	protected static final List<SubjectSelection> SUBJECT_SELECTION_LIST_1 = List.of(
+			new SubjectSelection("ITB001", 1, "John"),
+			new SubjectSelection("ITB001", 1, "Mickey"),
+			new SubjectSelection("ITB001", 2, "James"),
+			new SubjectSelection("MKB114", 1, "Erica")
+	);
+	protected static final List<SubjectSelection> SUBJECT_SELECTION_LIST_2 = List.of(
+			new SubjectSelection("ITB001", 1, "Bob"),
+			new SubjectSelection("ITB001", 2, "Jenny"),
+			new SubjectSelection("MKB114", 1, "John")
+	);
+
 
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
@@ -134,13 +147,15 @@ public abstract class AbstractCalciteTest {
 							RegistryToRecord recordToFunction = RegistryToRecord.create(classLoader);
 							UserProfileToRecord userProfileToRecord = UserProfileToRecord.create(classLoader);
 							LargeToRecord largeToRecord = LargeToRecord.create(classLoader);
+							SubjectSelectionToRecord subjectSelectionToRecord = SubjectSelectionToRecord.create(classLoader);
 
 							return DataflowSchema.create(
 									Map.of(STUDENT_TABLE_NAME, DataflowTable.create(Student.class, studentToRecord, ofObject(() -> studentToRecord)),
 											DEPARTMENT_TABLE_NAME, DataflowTable.create(Department.class, departmentToRecord, ofObject(() -> departmentToRecord)),
 											REGISTRY_TABLE_NAME, DataflowTable.create(Registry.class, recordToFunction, ofObject(() -> recordToFunction)),
 											USER_PROFILES_TABLE_NAME, DataflowTable.create(UserProfile.class, userProfileToRecord, ofObject(() -> userProfileToRecord)),
-											LARGE_TABLE_NAME, DataflowTable.create(Large.class, largeToRecord, ofObject(() -> largeToRecord))));
+											LARGE_TABLE_NAME, DataflowTable.create(Large.class, largeToRecord, ofObject(() -> largeToRecord)),
+											SUBJECT_SELECTION_TABLE_NAME, DataflowTable.create(SubjectSelection.class, subjectSelectionToRecord, ofObject(() -> subjectSelectionToRecord))));
 						},
 						DefiningClassLoader.class)
 				.build();
@@ -165,6 +180,7 @@ public abstract class AbstractCalciteTest {
 						.bind(datasetId(REGISTRY_TABLE_NAME)).toInstance(REGISTRY_LIST_1)
 						.bind(datasetId(USER_PROFILES_TABLE_NAME)).toInstance(USER_PROFILES_LIST_1)
 						.bind(datasetId(LARGE_TABLE_NAME)).toInstance(LARGE_LIST_1)
+						.bind(datasetId(SUBJECT_SELECTION_TABLE_NAME)).toInstance(SUBJECT_SELECTION_LIST_1)
 						.build());
 		Module server2Module = Modules.combine(serverModule,
 				ModuleBuilder.create()
@@ -173,6 +189,7 @@ public abstract class AbstractCalciteTest {
 						.bind(datasetId(REGISTRY_TABLE_NAME)).toInstance(REGISTRY_LIST_2)
 						.bind(datasetId(USER_PROFILES_TABLE_NAME)).toInstance(USER_PROFILES_LIST_2)
 						.bind(datasetId(LARGE_TABLE_NAME)).toInstance(LARGE_LIST_2)
+						.bind(datasetId(SUBJECT_SELECTION_TABLE_NAME)).toInstance(SUBJECT_SELECTION_LIST_2)
 						.build());
 
 		server1Injector = Injector.of(server1Module);
@@ -239,6 +256,11 @@ public abstract class AbstractCalciteTest {
 	@SerializeRecord
 	public record Large(long id) {
 	}
+
+	@SerializeRecord // https://stackoverflow.com/a/2421441 - testing GROUP BY
+	public record SubjectSelection(String subject, int semester, String attendee) {
+	}
+
 
 	@Test
 	public void testSelectAllStudents() {
@@ -1151,6 +1173,16 @@ public abstract class AbstractCalciteTest {
 		assertEquals(expected, result);
 	}
 
+	@Test
+	public void testCountSumAllStudents() {
+		QueryResult result = query("SELECT COUNT(*), SUM(id) FROM student");
+
+		QueryResult expected = new QueryResult(List.of("COUNT(*)", "SUM(id)"), List.<Object[]>of(new Object[]{4L, 10L}));
+
+		System.out.println(result);
+		assertEquals(expected, result);
+	}
+
 	// region CountMapGet
 	@Test
 	public void testCountMapGet() {
@@ -1597,6 +1629,45 @@ public abstract class AbstractCalciteTest {
 	}
 	// endregion
 
+	@Test
+	public void testGroupBySingleColumn() {
+		QueryResult result = query("""
+				SELECT subject, COUNT(*)
+				FROM subject_selection
+				GROUP BY subject
+				""");
+
+		QueryResult expected = new QueryResult(
+				List.of("subject", "COUNT(*)"),
+				List.of(
+						new Object[]{"ITB001", 5L},
+						new Object[]{"MKB114", 2L}
+				)
+		);
+
+		assertEquals(expected, result);
+	}
+
+	@Test
+	public void testGroupByMultipleColumns() {
+		QueryResult result = query("""
+				SELECT subject, semester, COUNT(*)
+				FROM subject_selection
+				GROUP BY subject, semester
+				""");
+
+		QueryResult expected = new QueryResult(
+				List.of("subject", "semester", "COUNT(*)"),
+				List.of(
+						new Object[]{"ITB001", 1, 3L},
+						new Object[]{"ITB001", 2, 2L},
+						new Object[]{"MKB114", 1, 2L}
+				)
+		);
+
+		assertEquals(expected, result);
+	}
+
 	protected abstract QueryResult query(String sql);
 
 	protected abstract QueryResult queryPrepared(String sql, ParamsSetter paramsSetter);
@@ -1837,6 +1908,32 @@ public abstract class AbstractCalciteTest {
 		public Record apply(Large large) {
 			Record record = scheme.record();
 			record.set("id", large.id);
+			return record;
+		}
+
+		@Override
+		public RecordScheme getScheme() {
+			return scheme;
+		}
+	}
+
+	public static final class SubjectSelectionToRecord implements RecordFunction<SubjectSelection> {
+		private final RecordScheme scheme;
+
+		private SubjectSelectionToRecord(RecordScheme scheme) {
+			this.scheme = scheme;
+		}
+
+		public static SubjectSelectionToRecord create(DefiningClassLoader classLoader) {
+			return new SubjectSelectionToRecord(ofJavaRecord(classLoader, SubjectSelection.class));
+		}
+
+		@Override
+		public Record apply(SubjectSelection subjectSelection) {
+			Record record = scheme.record();
+			record.set("subject", subjectSelection.subject);
+			record.set("semester", subjectSelection.semester);
+			record.set("attendee", subjectSelection.attendee);
 			return record;
 		}
 

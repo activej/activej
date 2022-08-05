@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.dataflow.proto;
+package io.activej.dataflow.proto.serializer;
 
 import io.activej.datastream.processor.StreamJoin.Joiner;
 import io.activej.datastream.processor.StreamReducers.DeduplicateReducer;
@@ -37,7 +37,7 @@ import java.util.Comparator;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static io.activej.dataflow.proto.ProtobufUtils.ofObject;
+import static io.activej.dataflow.proto.serializer.ProtobufUtils.ofObject;
 
 public final class ProtobufFunctionModule extends AbstractModule {
 

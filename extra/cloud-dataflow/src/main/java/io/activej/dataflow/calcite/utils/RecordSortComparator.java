@@ -10,11 +10,11 @@ import java.util.List;
 
 import static io.activej.common.Checks.checkArgument;
 
-public final class RecordComparator implements Comparator<Record> {
+public final class RecordSortComparator implements Comparator<Record> {
 	private final List<FieldSort> sorts;
 	private final Comparator<Record> recordComparator;
 
-	public RecordComparator(@Deserialize("sorts") List<FieldSort> sorts) {
+	public RecordSortComparator(@Deserialize("sorts") List<FieldSort> sorts) {
 		checkArgument(sorts.size() != 0);
 
 		this.sorts = sorts;

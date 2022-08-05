@@ -1,6 +1,6 @@
 package io.activej.dataflow.calcite.aggregation;
 
-import io.activej.record.RecordScheme;
+import io.activej.record.Record;
 import org.jetbrains.annotations.NotNull;
 
 public class CountReducer<I> extends FieldReducer<I, Long, Long> {
@@ -19,12 +19,12 @@ public class CountReducer<I> extends FieldReducer<I, Long, Long> {
 	}
 
 	@Override
-	public String getName() {
-		return "COUNT";
+	public String getName(String fieldName) {
+		return "COUNT(" + fieldName + ')';
 	}
 
 	@Override
-	public Long createAccumulator(RecordScheme key) {
+	public Long createAccumulator(Record key) {
 		return 0L;
 	}
 

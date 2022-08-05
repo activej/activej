@@ -8,8 +8,8 @@ public final class MinReducer<I extends Comparable<I>> extends AbstractMinMaxRed
 	}
 
 	@Override
-	public String getName() {
-		return "MIN";
+	public String getName(String fieldName) {
+		return "MIN(" + fieldName + ')';
 	}
 
 	@Override

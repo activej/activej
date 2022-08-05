@@ -6,9 +6,15 @@ option java_multiple_files = false;
 option java_package = "io.activej.dataflow.proto.calcite";
 option java_outer_classname = "ReducerProto";
 
+import "record_scheme.proto";
+
 message RecordReducer {
 
   message FieldReducer {
+
+    message KeyReducer {
+      int32 field_index = 1;
+    }
 
     message CountReducer {
       int32 field_index = 1;
@@ -35,16 +41,18 @@ message RecordReducer {
     }
 
     oneof field_reducer {
-      CountReducer count_reducer = 1;
-      SumReducerInteger sum_reducer_integer = 2;
-      SumReducerDecimal sum_reducer_decimal = 3;
-      AvgReducer avg_reducer = 4;
-      MinReducer min_reducer = 5;
-      MaxReducer max_reducer = 6;
+      KeyReducer key_reducer = 1;
+      CountReducer count_reducer = 2;
+      SumReducerInteger sum_reducer_integer = 3;
+      SumReducerDecimal sum_reducer_decimal = 4;
+      AvgReducer avg_reducer = 5;
+      MinReducer min_reducer = 6;
+      MaxReducer max_reducer = 7;
     }
 
   }
 
-  repeated FieldReducer field_reducers = 1;
+  RecordScheme record_scheme = 1;
+  repeated FieldReducer field_reducers = 2;
 }
 

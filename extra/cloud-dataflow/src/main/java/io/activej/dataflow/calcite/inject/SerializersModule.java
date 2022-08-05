@@ -6,15 +6,12 @@ import io.activej.dataflow.calcite.aggregation.RecordReducer;
 import io.activej.dataflow.calcite.join.RecordInnerJoiner;
 import io.activej.dataflow.calcite.join.RecordKeyFunction;
 import io.activej.dataflow.calcite.join.RecordKeyFunctionSerializer;
-import io.activej.dataflow.calcite.utils.EqualObjectComparator;
-import io.activej.dataflow.calcite.utils.RecordComparator;
-import io.activej.dataflow.calcite.utils.RecordSchemeFunction;
-import io.activej.dataflow.calcite.utils.ToZeroFunction;
+import io.activej.dataflow.calcite.utils.*;
 import io.activej.dataflow.inject.BinarySerializerModule;
-import io.activej.dataflow.proto.FunctionSubtypeSerializer;
-import io.activej.dataflow.proto.calcite.RecordProjectionFnSerializer;
-import io.activej.dataflow.proto.calcite.ReducerSerializer;
-import io.activej.dataflow.proto.calcite.WherePredicateSerializer;
+import io.activej.dataflow.proto.calcite.serializer.RecordProjectionFnSerializer;
+import io.activej.dataflow.proto.calcite.serializer.ReducerSerializer;
+import io.activej.dataflow.proto.calcite.serializer.WherePredicateSerializer;
+import io.activej.dataflow.proto.serializer.FunctionSubtypeSerializer;
 import io.activej.datastream.processor.StreamJoin;
 import io.activej.datastream.processor.StreamReducers;
 import io.activej.inject.Key;
@@ -29,7 +26,7 @@ import java.util.Comparator;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static io.activej.dataflow.proto.ProtobufUtils.ofObject;
+import static io.activej.dataflow.proto.serializer.ProtobufUtils.ofObject;
 
 public final class SerializersModule extends AbstractModule {
 	@Override
@@ -62,7 +59,8 @@ public final class SerializersModule extends AbstractModule {
 					serializer.setSubtypeCodec(Comparator.naturalOrder().getClass(), "natural", ofObject(Comparator::naturalOrder));
 					serializer.setSubtypeCodec(Comparator.reverseOrder().getClass(), "reverse", ofObject(Comparator::reverseOrder));
 
-					serializer.setSubtypeCodec(RecordComparator.class, serializerBuilder.build(RecordComparator.class));
+					serializer.setSubtypeCodec(RecordSortComparator.class, serializerBuilder.build(RecordSortComparator.class));
+					serializer.setSubtypeCodec(RecordKeyComparator.class, ofObject(RecordKeyComparator::getInstance));
 					serializer.setSubtypeCodec(EqualObjectComparator.class, ofObject(EqualObjectComparator::getInstance));
 
 					return (BinarySerializer) serializer;
@@ -82,11 +80,13 @@ public final class SerializersModule extends AbstractModule {
 				new Key<BinarySerializer<StreamReducers.ReducerToResult.AccumulatorToOutput>>() {},
 				new Key<BinarySerializer<StreamReducers.MergeReducer>>() {});
 
-		bind(new Key<BinarySerializer<StreamReducers.ReducerToResult<?, ?, ?, ?>>>() {}).to(() -> {
+		bind(new Key<BinarySerializer<StreamReducers.ReducerToResult<?, ?, ?, ?>>>() {}).to(optionalClassLoader -> {
 			FunctionSubtypeSerializer<StreamReducers.ReducerToResult> serializer = FunctionSubtypeSerializer.create();
-			serializer.setSubtypeCodec(RecordReducer.class, new ReducerSerializer());
+			serializer.setSubtypeCodec(RecordReducer.class, optionalClassLoader.isPresent() ?
+					new ReducerSerializer(optionalClassLoader.get()) :
+					new ReducerSerializer());
 			return (BinarySerializer) serializer;
-		});
+		}, new Key<OptionalDependency<DefiningClassLoader>>() {});
 
 
 		bind(new Key<BinarySerializer<StreamJoin.Joiner<?, ?, ?, ?>>>() {}).to((schemeSerializer, definingClassLoader) -> {
@@ -108,7 +108,7 @@ public final class SerializersModule extends AbstractModule {
 				}
 			});
 			return (BinarySerializer) serializer;
-		}, new Key<BinarySerializer<SerializableRecordScheme>>(){}, Key.of(DefiningClassLoader.class));
+		}, new Key<BinarySerializer<SerializableRecordScheme>>() {}, Key.of(DefiningClassLoader.class));
 
 		bind(new Key<BinarySerializer<Record>>() {}).to(RecordSerializer::create, DefiningClassLoader.class, BinarySerializerModule.BinarySerializerLocator.class).asTransient();
 
@@ -119,7 +119,7 @@ public final class SerializersModule extends AbstractModule {
 				new Key<OptionalDependency<DefiningClassLoader>>() {});
 
 		bind(SerializerBuilder.class).to(classLoader -> SerializerBuilder.create(classLoader)
-				.with(Type.class, ctx -> new SerializerDefType()),
+						.with(Type.class, ctx -> new SerializerDefType()),
 				DefiningClassLoader.class);
 
 		bind(DefiningClassLoader.class).to(DefiningClassLoader::create);

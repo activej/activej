@@ -2,10 +2,9 @@ package io.activej.dataflow.calcite.aggregation;
 
 import io.activej.datastream.processor.StreamReducers;
 import io.activej.record.Record;
-import io.activej.record.RecordScheme;
 import org.jetbrains.annotations.NotNull;
 
-public abstract class FieldReducer<I, O, A> extends StreamReducers.ReducerToResult<RecordScheme, Record, O, A> {
+public abstract class FieldReducer<I, O, A> extends StreamReducers.ReducerToResult<Record, Record, O, A> {
 	private final int fieldIndex;
 
 	protected FieldReducer(int fieldIndex) {
@@ -16,7 +15,7 @@ public abstract class FieldReducer<I, O, A> extends StreamReducers.ReducerToResu
 
 	public abstract Class<A> getAccumulatorClass(Class<I> inputClass);
 
-	public abstract String getName();
+	public abstract String getName(String fieldName);
 
 	protected abstract A doAccumulate(A accumulator, @NotNull I fieldValue);
 

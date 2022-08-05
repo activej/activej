@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.dataflow.proto;
+package io.activej.dataflow.proto.serializer;
 
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.BinaryOutput;

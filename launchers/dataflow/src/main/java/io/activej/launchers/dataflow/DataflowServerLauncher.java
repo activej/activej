@@ -26,7 +26,7 @@ import io.activej.dataflow.inject.DataflowModule;
 import io.activej.dataflow.inject.SortingExecutor;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
-import io.activej.dataflow.proto.FunctionSerializer;
+import io.activej.dataflow.proto.serializer.FunctionSerializer;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;
 import io.activej.inject.Injector;

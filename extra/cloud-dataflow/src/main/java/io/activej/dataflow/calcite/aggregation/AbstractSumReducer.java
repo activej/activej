@@ -6,8 +6,8 @@ public abstract class AbstractSumReducer<I, T> extends FieldReducer<I, T, T> {
 	}
 
 	@Override
-	public final String getName() {
-		return "SUM";
+	public final String getName(String fieldName) {
+		return "SUM(" + fieldName + ')';
 	}
 
 	@Override

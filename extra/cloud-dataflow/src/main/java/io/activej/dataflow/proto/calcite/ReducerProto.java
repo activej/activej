@@ -19,25 +19,40 @@ public final class ReducerProto {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+     * <code>.dataflow.calcite.RecordScheme record_scheme = 1;</code>
+     * @return Whether the recordScheme field is set.
+     */
+    boolean hasRecordScheme();
+    /**
+     * <code>.dataflow.calcite.RecordScheme record_scheme = 1;</code>
+     * @return The recordScheme.
+     */
+    io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordScheme getRecordScheme();
+    /**
+     * <code>.dataflow.calcite.RecordScheme record_scheme = 1;</code>
+     */
+    io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordSchemeOrBuilder getRecordSchemeOrBuilder();
+
+    /**
+     * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
      */
     java.util.List<io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer> 
         getFieldReducersList();
     /**
-     * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+     * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
      */
     io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer getFieldReducers(int index);
     /**
-     * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+     * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
      */
     int getFieldReducersCount();
     /**
-     * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+     * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
      */
     java.util.List<? extends io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducerOrBuilder> 
         getFieldReducersOrBuilderList();
     /**
-     * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+     * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
      */
     io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducerOrBuilder getFieldReducersOrBuilder(
         int index);
@@ -90,6 +105,19 @@ public final class ReducerProto {
               done = true;
               break;
             case 10: {
+              io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordScheme.Builder subBuilder = null;
+              if (recordScheme_ != null) {
+                subBuilder = recordScheme_.toBuilder();
+              }
+              recordScheme_ = input.readMessage(io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordScheme.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(recordScheme_);
+                recordScheme_ = subBuilder.buildPartial();
+              }
+
+              break;
+            }
+            case 18: {
               if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 fieldReducers_ = new java.util.ArrayList<io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer>();
                 mutable_bitField0_ |= 0x00000001;
@@ -138,92 +166,107 @@ public final class ReducerProto {
         com.google.protobuf.MessageOrBuilder {
 
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 1;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.KeyReducer key_reducer = 1;</code>
+       * @return Whether the keyReducer field is set.
+       */
+      boolean hasKeyReducer();
+      /**
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.KeyReducer key_reducer = 1;</code>
+       * @return The keyReducer.
+       */
+      io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer getKeyReducer();
+      /**
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.KeyReducer key_reducer = 1;</code>
+       */
+      io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducerOrBuilder getKeyReducerOrBuilder();
+
+      /**
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 2;</code>
        * @return Whether the countReducer field is set.
        */
       boolean hasCountReducer();
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 1;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 2;</code>
        * @return The countReducer.
        */
       io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer getCountReducer();
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 1;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 2;</code>
        */
       io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducerOrBuilder getCountReducerOrBuilder();
 
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 2;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 3;</code>
        * @return Whether the sumReducerInteger field is set.
        */
       boolean hasSumReducerInteger();
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 2;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 3;</code>
        * @return The sumReducerInteger.
        */
       io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger getSumReducerInteger();
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 2;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 3;</code>
        */
       io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerIntegerOrBuilder getSumReducerIntegerOrBuilder();
 
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 3;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 4;</code>
        * @return Whether the sumReducerDecimal field is set.
        */
       boolean hasSumReducerDecimal();
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 3;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 4;</code>
        * @return The sumReducerDecimal.
        */
       io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal getSumReducerDecimal();
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 3;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 4;</code>
        */
       io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimalOrBuilder getSumReducerDecimalOrBuilder();
 
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 4;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 5;</code>
        * @return Whether the avgReducer field is set.
        */
       boolean hasAvgReducer();
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 4;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 5;</code>
        * @return The avgReducer.
        */
       io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer getAvgReducer();
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 4;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 5;</code>
        */
       io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducerOrBuilder getAvgReducerOrBuilder();
 
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 5;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 6;</code>
        * @return Whether the minReducer field is set.
        */
       boolean hasMinReducer();
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 5;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 6;</code>
        * @return The minReducer.
        */
       io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer getMinReducer();
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 5;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 6;</code>
        */
       io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducerOrBuilder getMinReducerOrBuilder();
 
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 6;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 7;</code>
        * @return Whether the maxReducer field is set.
        */
       boolean hasMaxReducer();
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 6;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 7;</code>
        * @return The maxReducer.
        */
       io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer getMaxReducer();
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 6;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 7;</code>
        */
       io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducerOrBuilder getMaxReducerOrBuilder();
 
@@ -275,8 +318,22 @@ public final class ReducerProto {
                 done = true;
                 break;
               case 10: {
-                io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer.Builder subBuilder = null;
+                io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer.Builder subBuilder = null;
                 if (fieldReducerCase_ == 1) {
+                  subBuilder = ((io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer) fieldReducer_).toBuilder();
+                }
+                fieldReducer_ =
+                    input.readMessage(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer.parser(), extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom((io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer) fieldReducer_);
+                  fieldReducer_ = subBuilder.buildPartial();
+                }
+                fieldReducerCase_ = 1;
+                break;
+              }
+              case 18: {
+                io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer.Builder subBuilder = null;
+                if (fieldReducerCase_ == 2) {
                   subBuilder = ((io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer) fieldReducer_).toBuilder();
                 }
                 fieldReducer_ =
@@ -285,12 +342,12 @@ public final class ReducerProto {
                   subBuilder.mergeFrom((io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer) fieldReducer_);
                   fieldReducer_ = subBuilder.buildPartial();
                 }
-                fieldReducerCase_ = 1;
+                fieldReducerCase_ = 2;
                 break;
               }
-              case 18: {
+              case 26: {
                 io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger.Builder subBuilder = null;
-                if (fieldReducerCase_ == 2) {
+                if (fieldReducerCase_ == 3) {
                   subBuilder = ((io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger) fieldReducer_).toBuilder();
                 }
                 fieldReducer_ =
@@ -299,12 +356,12 @@ public final class ReducerProto {
                   subBuilder.mergeFrom((io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger) fieldReducer_);
                   fieldReducer_ = subBuilder.buildPartial();
                 }
-                fieldReducerCase_ = 2;
+                fieldReducerCase_ = 3;
                 break;
               }
-              case 26: {
+              case 34: {
                 io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal.Builder subBuilder = null;
-                if (fieldReducerCase_ == 3) {
+                if (fieldReducerCase_ == 4) {
                   subBuilder = ((io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal) fieldReducer_).toBuilder();
                 }
                 fieldReducer_ =
@@ -313,12 +370,12 @@ public final class ReducerProto {
                   subBuilder.mergeFrom((io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal) fieldReducer_);
                   fieldReducer_ = subBuilder.buildPartial();
                 }
-                fieldReducerCase_ = 3;
+                fieldReducerCase_ = 4;
                 break;
               }
-              case 34: {
+              case 42: {
                 io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer.Builder subBuilder = null;
-                if (fieldReducerCase_ == 4) {
+                if (fieldReducerCase_ == 5) {
                   subBuilder = ((io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer) fieldReducer_).toBuilder();
                 }
                 fieldReducer_ =
@@ -327,12 +384,12 @@ public final class ReducerProto {
                   subBuilder.mergeFrom((io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer) fieldReducer_);
                   fieldReducer_ = subBuilder.buildPartial();
                 }
-                fieldReducerCase_ = 4;
+                fieldReducerCase_ = 5;
                 break;
               }
-              case 42: {
+              case 50: {
                 io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer.Builder subBuilder = null;
-                if (fieldReducerCase_ == 5) {
+                if (fieldReducerCase_ == 6) {
                   subBuilder = ((io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer) fieldReducer_).toBuilder();
                 }
                 fieldReducer_ =
@@ -341,12 +398,12 @@ public final class ReducerProto {
                   subBuilder.mergeFrom((io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer) fieldReducer_);
                   fieldReducer_ = subBuilder.buildPartial();
                 }
-                fieldReducerCase_ = 5;
+                fieldReducerCase_ = 6;
                 break;
               }
-              case 50: {
+              case 58: {
                 io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer.Builder subBuilder = null;
-                if (fieldReducerCase_ == 6) {
+                if (fieldReducerCase_ == 7) {
                   subBuilder = ((io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer) fieldReducer_).toBuilder();
                 }
                 fieldReducer_ =
@@ -355,7 +412,7 @@ public final class ReducerProto {
                   subBuilder.mergeFrom((io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer) fieldReducer_);
                   fieldReducer_ = subBuilder.buildPartial();
                 }
-                fieldReducerCase_ = 6;
+                fieldReducerCase_ = 7;
                 break;
               }
               default: {
@@ -388,6 +445,494 @@ public final class ReducerProto {
         return io.activej.dataflow.proto.calcite.ReducerProto.internal_static_dataflow_calcite_RecordReducer_FieldReducer_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.class, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.Builder.class);
+      }
+
+      public interface KeyReducerOrBuilder extends
+          // @@protoc_insertion_point(interface_extends:dataflow.calcite.RecordReducer.FieldReducer.KeyReducer)
+          com.google.protobuf.MessageOrBuilder {
+
+        /**
+         * <code>int32 field_index = 1;</code>
+         * @return The fieldIndex.
+         */
+        int getFieldIndex();
+      }
+      /**
+       * Protobuf type {@code dataflow.calcite.RecordReducer.FieldReducer.KeyReducer}
+       */
+      public static final class KeyReducer extends
+          com.google.protobuf.GeneratedMessageV3 implements
+          // @@protoc_insertion_point(message_implements:dataflow.calcite.RecordReducer.FieldReducer.KeyReducer)
+          KeyReducerOrBuilder {
+      private static final long serialVersionUID = 0L;
+        // Use KeyReducer.newBuilder() to construct.
+        private KeyReducer(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+          super(builder);
+        }
+        private KeyReducer() {
+        }
+
+        @java.lang.Override
+        @SuppressWarnings({"unused"})
+        protected java.lang.Object newInstance(
+            UnusedPrivateParameter unused) {
+          return new KeyReducer();
+        }
+
+        @java.lang.Override
+        public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+          return this.unknownFields;
+        }
+        private KeyReducer(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          this();
+          if (extensionRegistry == null) {
+            throw new java.lang.NullPointerException();
+          }
+          com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+              com.google.protobuf.UnknownFieldSet.newBuilder();
+          try {
+            boolean done = false;
+            while (!done) {
+              int tag = input.readTag();
+              switch (tag) {
+                case 0:
+                  done = true;
+                  break;
+                case 8: {
+
+                  fieldIndex_ = input.readInt32();
+                  break;
+                }
+                default: {
+                  if (!parseUnknownField(
+                      input, unknownFields, extensionRegistry, tag)) {
+                    done = true;
+                  }
+                  break;
+                }
+              }
+            }
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            throw e.setUnfinishedMessage(this);
+          } catch (java.io.IOException e) {
+            throw new com.google.protobuf.InvalidProtocolBufferException(
+                e).setUnfinishedMessage(this);
+          } finally {
+            this.unknownFields = unknownFields.build();
+            makeExtensionsImmutable();
+          }
+        }
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return io.activej.dataflow.proto.calcite.ReducerProto.internal_static_dataflow_calcite_RecordReducer_FieldReducer_KeyReducer_descriptor;
+        }
+
+        @java.lang.Override
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return io.activej.dataflow.proto.calcite.ReducerProto.internal_static_dataflow_calcite_RecordReducer_FieldReducer_KeyReducer_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer.class, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer.Builder.class);
+        }
+
+        public static final int FIELD_INDEX_FIELD_NUMBER = 1;
+        private int fieldIndex_;
+        /**
+         * <code>int32 field_index = 1;</code>
+         * @return The fieldIndex.
+         */
+        @java.lang.Override
+        public int getFieldIndex() {
+          return fieldIndex_;
+        }
+
+        private byte memoizedIsInitialized = -1;
+        @java.lang.Override
+        public final boolean isInitialized() {
+          byte isInitialized = memoizedIsInitialized;
+          if (isInitialized == 1) return true;
+          if (isInitialized == 0) return false;
+
+          memoizedIsInitialized = 1;
+          return true;
+        }
+
+        @java.lang.Override
+        public void writeTo(com.google.protobuf.CodedOutputStream output)
+                            throws java.io.IOException {
+          if (fieldIndex_ != 0) {
+            output.writeInt32(1, fieldIndex_);
+          }
+          unknownFields.writeTo(output);
+        }
+
+        @java.lang.Override
+        public int getSerializedSize() {
+          int size = memoizedSize;
+          if (size != -1) return size;
+
+          size = 0;
+          if (fieldIndex_ != 0) {
+            size += com.google.protobuf.CodedOutputStream
+              .computeInt32Size(1, fieldIndex_);
+          }
+          size += unknownFields.getSerializedSize();
+          memoizedSize = size;
+          return size;
+        }
+
+        @java.lang.Override
+        public boolean equals(final java.lang.Object obj) {
+          if (obj == this) {
+           return true;
+          }
+          if (!(obj instanceof io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer)) {
+            return super.equals(obj);
+          }
+          io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer other = (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer) obj;
+
+          if (getFieldIndex()
+              != other.getFieldIndex()) return false;
+          if (!unknownFields.equals(other.unknownFields)) return false;
+          return true;
+        }
+
+        @java.lang.Override
+        public int hashCode() {
+          if (memoizedHashCode != 0) {
+            return memoizedHashCode;
+          }
+          int hash = 41;
+          hash = (19 * hash) + getDescriptor().hashCode();
+          hash = (37 * hash) + FIELD_INDEX_FIELD_NUMBER;
+          hash = (53 * hash) + getFieldIndex();
+          hash = (29 * hash) + unknownFields.hashCode();
+          memoizedHashCode = hash;
+          return hash;
+        }
+
+        public static io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer parseFrom(
+            java.nio.ByteBuffer data)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data);
+        }
+        public static io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer parseFrom(
+            java.nio.ByteBuffer data,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer parseFrom(
+            com.google.protobuf.ByteString data)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data);
+        }
+        public static io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer parseFrom(
+            com.google.protobuf.ByteString data,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer parseFrom(byte[] data)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data);
+        }
+        public static io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer parseFrom(
+            byte[] data,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer parseFrom(java.io.InputStream input)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input);
+        }
+        public static io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer parseFrom(
+            java.io.InputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer parseDelimitedFrom(java.io.InputStream input)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseDelimitedWithIOException(PARSER, input);
+        }
+        public static io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer parseDelimitedFrom(
+            java.io.InputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer parseFrom(
+            com.google.protobuf.CodedInputStream input)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input);
+        }
+        public static io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer parseFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input, extensionRegistry);
+        }
+
+        @java.lang.Override
+        public Builder newBuilderForType() { return newBuilder(); }
+        public static Builder newBuilder() {
+          return DEFAULT_INSTANCE.toBuilder();
+        }
+        public static Builder newBuilder(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer prototype) {
+          return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+        }
+        @java.lang.Override
+        public Builder toBuilder() {
+          return this == DEFAULT_INSTANCE
+              ? new Builder() : new Builder().mergeFrom(this);
+        }
+
+        @java.lang.Override
+        protected Builder newBuilderForType(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          Builder builder = new Builder(parent);
+          return builder;
+        }
+        /**
+         * Protobuf type {@code dataflow.calcite.RecordReducer.FieldReducer.KeyReducer}
+         */
+        public static final class Builder extends
+            com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+            // @@protoc_insertion_point(builder_implements:dataflow.calcite.RecordReducer.FieldReducer.KeyReducer)
+            io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducerOrBuilder {
+          public static final com.google.protobuf.Descriptors.Descriptor
+              getDescriptor() {
+            return io.activej.dataflow.proto.calcite.ReducerProto.internal_static_dataflow_calcite_RecordReducer_FieldReducer_KeyReducer_descriptor;
+          }
+
+          @java.lang.Override
+          protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+              internalGetFieldAccessorTable() {
+            return io.activej.dataflow.proto.calcite.ReducerProto.internal_static_dataflow_calcite_RecordReducer_FieldReducer_KeyReducer_fieldAccessorTable
+                .ensureFieldAccessorsInitialized(
+                    io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer.class, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer.Builder.class);
+          }
+
+          // Construct using io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer.newBuilder()
+          private Builder() {
+            maybeForceBuilderInitialization();
+          }
+
+          private Builder(
+              com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+            super(parent);
+            maybeForceBuilderInitialization();
+          }
+          private void maybeForceBuilderInitialization() {
+            if (com.google.protobuf.GeneratedMessageV3
+                    .alwaysUseFieldBuilders) {
+            }
+          }
+          @java.lang.Override
+          public Builder clear() {
+            super.clear();
+            fieldIndex_ = 0;
+
+            return this;
+          }
+
+          @java.lang.Override
+          public com.google.protobuf.Descriptors.Descriptor
+              getDescriptorForType() {
+            return io.activej.dataflow.proto.calcite.ReducerProto.internal_static_dataflow_calcite_RecordReducer_FieldReducer_KeyReducer_descriptor;
+          }
+
+          @java.lang.Override
+          public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer getDefaultInstanceForType() {
+            return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer.getDefaultInstance();
+          }
+
+          @java.lang.Override
+          public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer build() {
+            io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer result = buildPartial();
+            if (!result.isInitialized()) {
+              throw newUninitializedMessageException(result);
+            }
+            return result;
+          }
+
+          @java.lang.Override
+          public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer buildPartial() {
+            io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer result = new io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer(this);
+            result.fieldIndex_ = fieldIndex_;
+            onBuilt();
+            return result;
+          }
+
+          @java.lang.Override
+          public Builder clone() {
+            return super.clone();
+          }
+          @java.lang.Override
+          public Builder setField(
+              com.google.protobuf.Descriptors.FieldDescriptor field,
+              java.lang.Object value) {
+            return super.setField(field, value);
+          }
+          @java.lang.Override
+          public Builder clearField(
+              com.google.protobuf.Descriptors.FieldDescriptor field) {
+            return super.clearField(field);
+          }
+          @java.lang.Override
+          public Builder clearOneof(
+              com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+            return super.clearOneof(oneof);
+          }
+          @java.lang.Override
+          public Builder setRepeatedField(
+              com.google.protobuf.Descriptors.FieldDescriptor field,
+              int index, java.lang.Object value) {
+            return super.setRepeatedField(field, index, value);
+          }
+          @java.lang.Override
+          public Builder addRepeatedField(
+              com.google.protobuf.Descriptors.FieldDescriptor field,
+              java.lang.Object value) {
+            return super.addRepeatedField(field, value);
+          }
+          @java.lang.Override
+          public Builder mergeFrom(com.google.protobuf.Message other) {
+            if (other instanceof io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer) {
+              return mergeFrom((io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer)other);
+            } else {
+              super.mergeFrom(other);
+              return this;
+            }
+          }
+
+          public Builder mergeFrom(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer other) {
+            if (other == io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer.getDefaultInstance()) return this;
+            if (other.getFieldIndex() != 0) {
+              setFieldIndex(other.getFieldIndex());
+            }
+            this.mergeUnknownFields(other.unknownFields);
+            onChanged();
+            return this;
+          }
+
+          @java.lang.Override
+          public final boolean isInitialized() {
+            return true;
+          }
+
+          @java.lang.Override
+          public Builder mergeFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws java.io.IOException {
+            io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer parsedMessage = null;
+            try {
+              parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+              parsedMessage = (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer) e.getUnfinishedMessage();
+              throw e.unwrapIOException();
+            } finally {
+              if (parsedMessage != null) {
+                mergeFrom(parsedMessage);
+              }
+            }
+            return this;
+          }
+
+          private int fieldIndex_ ;
+          /**
+           * <code>int32 field_index = 1;</code>
+           * @return The fieldIndex.
+           */
+          @java.lang.Override
+          public int getFieldIndex() {
+            return fieldIndex_;
+          }
+          /**
+           * <code>int32 field_index = 1;</code>
+           * @param value The fieldIndex to set.
+           * @return This builder for chaining.
+           */
+          public Builder setFieldIndex(int value) {
+            
+            fieldIndex_ = value;
+            onChanged();
+            return this;
+          }
+          /**
+           * <code>int32 field_index = 1;</code>
+           * @return This builder for chaining.
+           */
+          public Builder clearFieldIndex() {
+            
+            fieldIndex_ = 0;
+            onChanged();
+            return this;
+          }
+          @java.lang.Override
+          public final Builder setUnknownFields(
+              final com.google.protobuf.UnknownFieldSet unknownFields) {
+            return super.setUnknownFields(unknownFields);
+          }
+
+          @java.lang.Override
+          public final Builder mergeUnknownFields(
+              final com.google.protobuf.UnknownFieldSet unknownFields) {
+            return super.mergeUnknownFields(unknownFields);
+          }
+
+
+          // @@protoc_insertion_point(builder_scope:dataflow.calcite.RecordReducer.FieldReducer.KeyReducer)
+        }
+
+        // @@protoc_insertion_point(class_scope:dataflow.calcite.RecordReducer.FieldReducer.KeyReducer)
+        private static final io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer DEFAULT_INSTANCE;
+        static {
+          DEFAULT_INSTANCE = new io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer();
+        }
+
+        public static io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer getDefaultInstance() {
+          return DEFAULT_INSTANCE;
+        }
+
+        private static final com.google.protobuf.Parser<KeyReducer>
+            PARSER = new com.google.protobuf.AbstractParser<KeyReducer>() {
+          @java.lang.Override
+          public KeyReducer parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new KeyReducer(input, extensionRegistry);
+          }
+        };
+
+        public static com.google.protobuf.Parser<KeyReducer> parser() {
+          return PARSER;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Parser<KeyReducer> getParserForType() {
+          return PARSER;
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer getDefaultInstanceForType() {
+          return DEFAULT_INSTANCE;
+        }
+
       }
 
       public interface CountReducerOrBuilder extends
@@ -3323,12 +3868,13 @@ public final class ReducerProto {
       public enum FieldReducerCase
           implements com.google.protobuf.Internal.EnumLite,
               com.google.protobuf.AbstractMessage.InternalOneOfEnum {
-        COUNT_REDUCER(1),
-        SUM_REDUCER_INTEGER(2),
-        SUM_REDUCER_DECIMAL(3),
-        AVG_REDUCER(4),
-        MIN_REDUCER(5),
-        MAX_REDUCER(6),
+        KEY_REDUCER(1),
+        COUNT_REDUCER(2),
+        SUM_REDUCER_INTEGER(3),
+        SUM_REDUCER_DECIMAL(4),
+        AVG_REDUCER(5),
+        MIN_REDUCER(6),
+        MAX_REDUCER(7),
         FIELDREDUCER_NOT_SET(0);
         private final int value;
         private FieldReducerCase(int value) {
@@ -3346,12 +3892,13 @@ public final class ReducerProto {
 
         public static FieldReducerCase forNumber(int value) {
           switch (value) {
-            case 1: return COUNT_REDUCER;
-            case 2: return SUM_REDUCER_INTEGER;
-            case 3: return SUM_REDUCER_DECIMAL;
-            case 4: return AVG_REDUCER;
-            case 5: return MIN_REDUCER;
-            case 6: return MAX_REDUCER;
+            case 1: return KEY_REDUCER;
+            case 2: return COUNT_REDUCER;
+            case 3: return SUM_REDUCER_INTEGER;
+            case 4: return SUM_REDUCER_DECIMAL;
+            case 5: return AVG_REDUCER;
+            case 6: return MIN_REDUCER;
+            case 7: return MAX_REDUCER;
             case 0: return FIELDREDUCER_NOT_SET;
             default: return null;
           }
@@ -3367,187 +3914,218 @@ public final class ReducerProto {
             fieldReducerCase_);
       }
 
-      public static final int COUNT_REDUCER_FIELD_NUMBER = 1;
+      public static final int KEY_REDUCER_FIELD_NUMBER = 1;
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 1;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.KeyReducer key_reducer = 1;</code>
+       * @return Whether the keyReducer field is set.
+       */
+      @java.lang.Override
+      public boolean hasKeyReducer() {
+        return fieldReducerCase_ == 1;
+      }
+      /**
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.KeyReducer key_reducer = 1;</code>
+       * @return The keyReducer.
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer getKeyReducer() {
+        if (fieldReducerCase_ == 1) {
+           return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer) fieldReducer_;
+        }
+        return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer.getDefaultInstance();
+      }
+      /**
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.KeyReducer key_reducer = 1;</code>
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducerOrBuilder getKeyReducerOrBuilder() {
+        if (fieldReducerCase_ == 1) {
+           return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer) fieldReducer_;
+        }
+        return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer.getDefaultInstance();
+      }
+
+      public static final int COUNT_REDUCER_FIELD_NUMBER = 2;
+      /**
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 2;</code>
        * @return Whether the countReducer field is set.
        */
       @java.lang.Override
       public boolean hasCountReducer() {
-        return fieldReducerCase_ == 1;
+        return fieldReducerCase_ == 2;
       }
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 1;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 2;</code>
        * @return The countReducer.
        */
       @java.lang.Override
       public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer getCountReducer() {
-        if (fieldReducerCase_ == 1) {
+        if (fieldReducerCase_ == 2) {
            return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer) fieldReducer_;
         }
         return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer.getDefaultInstance();
       }
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 1;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 2;</code>
        */
       @java.lang.Override
       public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducerOrBuilder getCountReducerOrBuilder() {
-        if (fieldReducerCase_ == 1) {
+        if (fieldReducerCase_ == 2) {
            return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer) fieldReducer_;
         }
         return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer.getDefaultInstance();
       }
 
-      public static final int SUM_REDUCER_INTEGER_FIELD_NUMBER = 2;
+      public static final int SUM_REDUCER_INTEGER_FIELD_NUMBER = 3;
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 2;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 3;</code>
        * @return Whether the sumReducerInteger field is set.
        */
       @java.lang.Override
       public boolean hasSumReducerInteger() {
-        return fieldReducerCase_ == 2;
+        return fieldReducerCase_ == 3;
       }
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 2;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 3;</code>
        * @return The sumReducerInteger.
        */
       @java.lang.Override
       public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger getSumReducerInteger() {
-        if (fieldReducerCase_ == 2) {
+        if (fieldReducerCase_ == 3) {
            return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger) fieldReducer_;
         }
         return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger.getDefaultInstance();
       }
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 2;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 3;</code>
        */
       @java.lang.Override
       public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerIntegerOrBuilder getSumReducerIntegerOrBuilder() {
-        if (fieldReducerCase_ == 2) {
+        if (fieldReducerCase_ == 3) {
            return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger) fieldReducer_;
         }
         return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger.getDefaultInstance();
       }
 
-      public static final int SUM_REDUCER_DECIMAL_FIELD_NUMBER = 3;
+      public static final int SUM_REDUCER_DECIMAL_FIELD_NUMBER = 4;
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 3;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 4;</code>
        * @return Whether the sumReducerDecimal field is set.
        */
       @java.lang.Override
       public boolean hasSumReducerDecimal() {
-        return fieldReducerCase_ == 3;
+        return fieldReducerCase_ == 4;
       }
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 3;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 4;</code>
        * @return The sumReducerDecimal.
        */
       @java.lang.Override
       public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal getSumReducerDecimal() {
-        if (fieldReducerCase_ == 3) {
+        if (fieldReducerCase_ == 4) {
            return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal) fieldReducer_;
         }
         return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal.getDefaultInstance();
       }
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 3;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 4;</code>
        */
       @java.lang.Override
       public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimalOrBuilder getSumReducerDecimalOrBuilder() {
-        if (fieldReducerCase_ == 3) {
+        if (fieldReducerCase_ == 4) {
            return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal) fieldReducer_;
         }
         return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal.getDefaultInstance();
       }
 
-      public static final int AVG_REDUCER_FIELD_NUMBER = 4;
+      public static final int AVG_REDUCER_FIELD_NUMBER = 5;
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 4;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 5;</code>
        * @return Whether the avgReducer field is set.
        */
       @java.lang.Override
       public boolean hasAvgReducer() {
-        return fieldReducerCase_ == 4;
+        return fieldReducerCase_ == 5;
       }
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 4;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 5;</code>
        * @return The avgReducer.
        */
       @java.lang.Override
       public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer getAvgReducer() {
-        if (fieldReducerCase_ == 4) {
+        if (fieldReducerCase_ == 5) {
            return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer) fieldReducer_;
         }
         return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer.getDefaultInstance();
       }
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 4;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 5;</code>
        */
       @java.lang.Override
       public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducerOrBuilder getAvgReducerOrBuilder() {
-        if (fieldReducerCase_ == 4) {
+        if (fieldReducerCase_ == 5) {
            return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer) fieldReducer_;
         }
         return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer.getDefaultInstance();
       }
 
-      public static final int MIN_REDUCER_FIELD_NUMBER = 5;
+      public static final int MIN_REDUCER_FIELD_NUMBER = 6;
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 5;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 6;</code>
        * @return Whether the minReducer field is set.
        */
       @java.lang.Override
       public boolean hasMinReducer() {
-        return fieldReducerCase_ == 5;
+        return fieldReducerCase_ == 6;
       }
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 5;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 6;</code>
        * @return The minReducer.
        */
       @java.lang.Override
       public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer getMinReducer() {
-        if (fieldReducerCase_ == 5) {
+        if (fieldReducerCase_ == 6) {
            return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer) fieldReducer_;
         }
         return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer.getDefaultInstance();
       }
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 5;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 6;</code>
        */
       @java.lang.Override
       public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducerOrBuilder getMinReducerOrBuilder() {
-        if (fieldReducerCase_ == 5) {
+        if (fieldReducerCase_ == 6) {
            return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer) fieldReducer_;
         }
         return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer.getDefaultInstance();
       }
 
-      public static final int MAX_REDUCER_FIELD_NUMBER = 6;
+      public static final int MAX_REDUCER_FIELD_NUMBER = 7;
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 6;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 7;</code>
        * @return Whether the maxReducer field is set.
        */
       @java.lang.Override
       public boolean hasMaxReducer() {
-        return fieldReducerCase_ == 6;
+        return fieldReducerCase_ == 7;
       }
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 6;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 7;</code>
        * @return The maxReducer.
        */
       @java.lang.Override
       public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer getMaxReducer() {
-        if (fieldReducerCase_ == 6) {
+        if (fieldReducerCase_ == 7) {
            return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer) fieldReducer_;
         }
         return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer.getDefaultInstance();
       }
       /**
-       * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 6;</code>
+       * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 7;</code>
        */
       @java.lang.Override
       public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducerOrBuilder getMaxReducerOrBuilder() {
-        if (fieldReducerCase_ == 6) {
+        if (fieldReducerCase_ == 7) {
            return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer) fieldReducer_;
         }
         return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer.getDefaultInstance();
@@ -3568,22 +4146,25 @@ public final class ReducerProto {
       public void writeTo(com.google.protobuf.CodedOutputStream output)
                           throws java.io.IOException {
         if (fieldReducerCase_ == 1) {
-          output.writeMessage(1, (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer) fieldReducer_);
+          output.writeMessage(1, (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer) fieldReducer_);
         }
         if (fieldReducerCase_ == 2) {
-          output.writeMessage(2, (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger) fieldReducer_);
+          output.writeMessage(2, (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer) fieldReducer_);
         }
         if (fieldReducerCase_ == 3) {
-          output.writeMessage(3, (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal) fieldReducer_);
+          output.writeMessage(3, (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger) fieldReducer_);
         }
         if (fieldReducerCase_ == 4) {
-          output.writeMessage(4, (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer) fieldReducer_);
+          output.writeMessage(4, (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal) fieldReducer_);
         }
         if (fieldReducerCase_ == 5) {
-          output.writeMessage(5, (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer) fieldReducer_);
+          output.writeMessage(5, (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer) fieldReducer_);
         }
         if (fieldReducerCase_ == 6) {
-          output.writeMessage(6, (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer) fieldReducer_);
+          output.writeMessage(6, (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer) fieldReducer_);
+        }
+        if (fieldReducerCase_ == 7) {
+          output.writeMessage(7, (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer) fieldReducer_);
         }
         unknownFields.writeTo(output);
       }
@@ -3596,27 +4177,31 @@ public final class ReducerProto {
         size = 0;
         if (fieldReducerCase_ == 1) {
           size += com.google.protobuf.CodedOutputStream
-            .computeMessageSize(1, (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer) fieldReducer_);
+            .computeMessageSize(1, (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer) fieldReducer_);
         }
         if (fieldReducerCase_ == 2) {
           size += com.google.protobuf.CodedOutputStream
-            .computeMessageSize(2, (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger) fieldReducer_);
+            .computeMessageSize(2, (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer) fieldReducer_);
         }
         if (fieldReducerCase_ == 3) {
           size += com.google.protobuf.CodedOutputStream
-            .computeMessageSize(3, (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal) fieldReducer_);
+            .computeMessageSize(3, (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger) fieldReducer_);
         }
         if (fieldReducerCase_ == 4) {
           size += com.google.protobuf.CodedOutputStream
-            .computeMessageSize(4, (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer) fieldReducer_);
+            .computeMessageSize(4, (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal) fieldReducer_);
         }
         if (fieldReducerCase_ == 5) {
           size += com.google.protobuf.CodedOutputStream
-            .computeMessageSize(5, (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer) fieldReducer_);
+            .computeMessageSize(5, (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer) fieldReducer_);
         }
         if (fieldReducerCase_ == 6) {
           size += com.google.protobuf.CodedOutputStream
-            .computeMessageSize(6, (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer) fieldReducer_);
+            .computeMessageSize(6, (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer) fieldReducer_);
+        }
+        if (fieldReducerCase_ == 7) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(7, (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer) fieldReducer_);
         }
         size += unknownFields.getSerializedSize();
         memoizedSize = size;
@@ -3636,26 +4221,30 @@ public final class ReducerProto {
         if (!getFieldReducerCase().equals(other.getFieldReducerCase())) return false;
         switch (fieldReducerCase_) {
           case 1:
+            if (!getKeyReducer()
+                .equals(other.getKeyReducer())) return false;
+            break;
+          case 2:
             if (!getCountReducer()
                 .equals(other.getCountReducer())) return false;
             break;
-          case 2:
+          case 3:
             if (!getSumReducerInteger()
                 .equals(other.getSumReducerInteger())) return false;
             break;
-          case 3:
+          case 4:
             if (!getSumReducerDecimal()
                 .equals(other.getSumReducerDecimal())) return false;
             break;
-          case 4:
+          case 5:
             if (!getAvgReducer()
                 .equals(other.getAvgReducer())) return false;
             break;
-          case 5:
+          case 6:
             if (!getMinReducer()
                 .equals(other.getMinReducer())) return false;
             break;
-          case 6:
+          case 7:
             if (!getMaxReducer()
                 .equals(other.getMaxReducer())) return false;
             break;
@@ -3675,26 +4264,30 @@ public final class ReducerProto {
         hash = (19 * hash) + getDescriptor().hashCode();
         switch (fieldReducerCase_) {
           case 1:
+            hash = (37 * hash) + KEY_REDUCER_FIELD_NUMBER;
+            hash = (53 * hash) + getKeyReducer().hashCode();
+            break;
+          case 2:
             hash = (37 * hash) + COUNT_REDUCER_FIELD_NUMBER;
             hash = (53 * hash) + getCountReducer().hashCode();
             break;
-          case 2:
+          case 3:
             hash = (37 * hash) + SUM_REDUCER_INTEGER_FIELD_NUMBER;
             hash = (53 * hash) + getSumReducerInteger().hashCode();
             break;
-          case 3:
+          case 4:
             hash = (37 * hash) + SUM_REDUCER_DECIMAL_FIELD_NUMBER;
             hash = (53 * hash) + getSumReducerDecimal().hashCode();
             break;
-          case 4:
+          case 5:
             hash = (37 * hash) + AVG_REDUCER_FIELD_NUMBER;
             hash = (53 * hash) + getAvgReducer().hashCode();
             break;
-          case 5:
+          case 6:
             hash = (37 * hash) + MIN_REDUCER_FIELD_NUMBER;
             hash = (53 * hash) + getMinReducer().hashCode();
             break;
-          case 6:
+          case 7:
             hash = (37 * hash) + MAX_REDUCER_FIELD_NUMBER;
             hash = (53 * hash) + getMaxReducer().hashCode();
             break;
@@ -3863,41 +4456,48 @@ public final class ReducerProto {
         public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer buildPartial() {
           io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer result = new io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer(this);
           if (fieldReducerCase_ == 1) {
+            if (keyReducerBuilder_ == null) {
+              result.fieldReducer_ = fieldReducer_;
+            } else {
+              result.fieldReducer_ = keyReducerBuilder_.build();
+            }
+          }
+          if (fieldReducerCase_ == 2) {
             if (countReducerBuilder_ == null) {
               result.fieldReducer_ = fieldReducer_;
             } else {
               result.fieldReducer_ = countReducerBuilder_.build();
             }
           }
-          if (fieldReducerCase_ == 2) {
+          if (fieldReducerCase_ == 3) {
             if (sumReducerIntegerBuilder_ == null) {
               result.fieldReducer_ = fieldReducer_;
             } else {
               result.fieldReducer_ = sumReducerIntegerBuilder_.build();
             }
           }
-          if (fieldReducerCase_ == 3) {
+          if (fieldReducerCase_ == 4) {
             if (sumReducerDecimalBuilder_ == null) {
               result.fieldReducer_ = fieldReducer_;
             } else {
               result.fieldReducer_ = sumReducerDecimalBuilder_.build();
             }
           }
-          if (fieldReducerCase_ == 4) {
+          if (fieldReducerCase_ == 5) {
             if (avgReducerBuilder_ == null) {
               result.fieldReducer_ = fieldReducer_;
             } else {
               result.fieldReducer_ = avgReducerBuilder_.build();
             }
           }
-          if (fieldReducerCase_ == 5) {
+          if (fieldReducerCase_ == 6) {
             if (minReducerBuilder_ == null) {
               result.fieldReducer_ = fieldReducer_;
             } else {
               result.fieldReducer_ = minReducerBuilder_.build();
             }
           }
-          if (fieldReducerCase_ == 6) {
+          if (fieldReducerCase_ == 7) {
             if (maxReducerBuilder_ == null) {
               result.fieldReducer_ = fieldReducer_;
             } else {
@@ -3954,6 +4554,10 @@ public final class ReducerProto {
         public Builder mergeFrom(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer other) {
           if (other == io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.getDefaultInstance()) return this;
           switch (other.getFieldReducerCase()) {
+            case KEY_REDUCER: {
+              mergeKeyReducer(other.getKeyReducer());
+              break;
+            }
             case COUNT_REDUCER: {
               mergeCountReducer(other.getCountReducer());
               break;
@@ -4027,35 +4631,176 @@ public final class ReducerProto {
 
 
         private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducerOrBuilder> keyReducerBuilder_;
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.KeyReducer key_reducer = 1;</code>
+         * @return Whether the keyReducer field is set.
+         */
+        @java.lang.Override
+        public boolean hasKeyReducer() {
+          return fieldReducerCase_ == 1;
+        }
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.KeyReducer key_reducer = 1;</code>
+         * @return The keyReducer.
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer getKeyReducer() {
+          if (keyReducerBuilder_ == null) {
+            if (fieldReducerCase_ == 1) {
+              return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer) fieldReducer_;
+            }
+            return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer.getDefaultInstance();
+          } else {
+            if (fieldReducerCase_ == 1) {
+              return keyReducerBuilder_.getMessage();
+            }
+            return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer.getDefaultInstance();
+          }
+        }
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.KeyReducer key_reducer = 1;</code>
+         */
+        public Builder setKeyReducer(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer value) {
+          if (keyReducerBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            fieldReducer_ = value;
+            onChanged();
+          } else {
+            keyReducerBuilder_.setMessage(value);
+          }
+          fieldReducerCase_ = 1;
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.KeyReducer key_reducer = 1;</code>
+         */
+        public Builder setKeyReducer(
+            io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer.Builder builderForValue) {
+          if (keyReducerBuilder_ == null) {
+            fieldReducer_ = builderForValue.build();
+            onChanged();
+          } else {
+            keyReducerBuilder_.setMessage(builderForValue.build());
+          }
+          fieldReducerCase_ = 1;
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.KeyReducer key_reducer = 1;</code>
+         */
+        public Builder mergeKeyReducer(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer value) {
+          if (keyReducerBuilder_ == null) {
+            if (fieldReducerCase_ == 1 &&
+                fieldReducer_ != io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer.getDefaultInstance()) {
+              fieldReducer_ = io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer.newBuilder((io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer) fieldReducer_)
+                  .mergeFrom(value).buildPartial();
+            } else {
+              fieldReducer_ = value;
+            }
+            onChanged();
+          } else {
+            if (fieldReducerCase_ == 1) {
+              keyReducerBuilder_.mergeFrom(value);
+            }
+            keyReducerBuilder_.setMessage(value);
+          }
+          fieldReducerCase_ = 1;
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.KeyReducer key_reducer = 1;</code>
+         */
+        public Builder clearKeyReducer() {
+          if (keyReducerBuilder_ == null) {
+            if (fieldReducerCase_ == 1) {
+              fieldReducerCase_ = 0;
+              fieldReducer_ = null;
+              onChanged();
+            }
+          } else {
+            if (fieldReducerCase_ == 1) {
+              fieldReducerCase_ = 0;
+              fieldReducer_ = null;
+            }
+            keyReducerBuilder_.clear();
+          }
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.KeyReducer key_reducer = 1;</code>
+         */
+        public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer.Builder getKeyReducerBuilder() {
+          return getKeyReducerFieldBuilder().getBuilder();
+        }
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.KeyReducer key_reducer = 1;</code>
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducerOrBuilder getKeyReducerOrBuilder() {
+          if ((fieldReducerCase_ == 1) && (keyReducerBuilder_ != null)) {
+            return keyReducerBuilder_.getMessageOrBuilder();
+          } else {
+            if (fieldReducerCase_ == 1) {
+              return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer) fieldReducer_;
+            }
+            return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer.getDefaultInstance();
+          }
+        }
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.KeyReducer key_reducer = 1;</code>
+         */
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducerOrBuilder> 
+            getKeyReducerFieldBuilder() {
+          if (keyReducerBuilder_ == null) {
+            if (!(fieldReducerCase_ == 1)) {
+              fieldReducer_ = io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer.getDefaultInstance();
+            }
+            keyReducerBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducerOrBuilder>(
+                    (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer) fieldReducer_,
+                    getParentForChildren(),
+                    isClean());
+            fieldReducer_ = null;
+          }
+          fieldReducerCase_ = 1;
+          onChanged();;
+          return keyReducerBuilder_;
+        }
+
+        private com.google.protobuf.SingleFieldBuilderV3<
             io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducerOrBuilder> countReducerBuilder_;
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 1;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 2;</code>
          * @return Whether the countReducer field is set.
          */
         @java.lang.Override
         public boolean hasCountReducer() {
-          return fieldReducerCase_ == 1;
+          return fieldReducerCase_ == 2;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 1;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 2;</code>
          * @return The countReducer.
          */
         @java.lang.Override
         public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer getCountReducer() {
           if (countReducerBuilder_ == null) {
-            if (fieldReducerCase_ == 1) {
+            if (fieldReducerCase_ == 2) {
               return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer) fieldReducer_;
             }
             return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer.getDefaultInstance();
           } else {
-            if (fieldReducerCase_ == 1) {
+            if (fieldReducerCase_ == 2) {
               return countReducerBuilder_.getMessage();
             }
             return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer.getDefaultInstance();
           }
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 1;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 2;</code>
          */
         public Builder setCountReducer(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer value) {
           if (countReducerBuilder_ == null) {
@@ -4067,11 +4812,11 @@ public final class ReducerProto {
           } else {
             countReducerBuilder_.setMessage(value);
           }
-          fieldReducerCase_ = 1;
+          fieldReducerCase_ = 2;
           return this;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 1;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 2;</code>
          */
         public Builder setCountReducer(
             io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer.Builder builderForValue) {
@@ -4081,15 +4826,15 @@ public final class ReducerProto {
           } else {
             countReducerBuilder_.setMessage(builderForValue.build());
           }
-          fieldReducerCase_ = 1;
+          fieldReducerCase_ = 2;
           return this;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 1;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 2;</code>
          */
         public Builder mergeCountReducer(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer value) {
           if (countReducerBuilder_ == null) {
-            if (fieldReducerCase_ == 1 &&
+            if (fieldReducerCase_ == 2 &&
                 fieldReducer_ != io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer.getDefaultInstance()) {
               fieldReducer_ = io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer.newBuilder((io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer) fieldReducer_)
                   .mergeFrom(value).buildPartial();
@@ -4098,26 +4843,26 @@ public final class ReducerProto {
             }
             onChanged();
           } else {
-            if (fieldReducerCase_ == 1) {
+            if (fieldReducerCase_ == 2) {
               countReducerBuilder_.mergeFrom(value);
             }
             countReducerBuilder_.setMessage(value);
           }
-          fieldReducerCase_ = 1;
+          fieldReducerCase_ = 2;
           return this;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 1;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 2;</code>
          */
         public Builder clearCountReducer() {
           if (countReducerBuilder_ == null) {
-            if (fieldReducerCase_ == 1) {
+            if (fieldReducerCase_ == 2) {
               fieldReducerCase_ = 0;
               fieldReducer_ = null;
               onChanged();
             }
           } else {
-            if (fieldReducerCase_ == 1) {
+            if (fieldReducerCase_ == 2) {
               fieldReducerCase_ = 0;
               fieldReducer_ = null;
             }
@@ -4126,33 +4871,33 @@ public final class ReducerProto {
           return this;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 1;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 2;</code>
          */
         public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer.Builder getCountReducerBuilder() {
           return getCountReducerFieldBuilder().getBuilder();
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 1;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 2;</code>
          */
         @java.lang.Override
         public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducerOrBuilder getCountReducerOrBuilder() {
-          if ((fieldReducerCase_ == 1) && (countReducerBuilder_ != null)) {
+          if ((fieldReducerCase_ == 2) && (countReducerBuilder_ != null)) {
             return countReducerBuilder_.getMessageOrBuilder();
           } else {
-            if (fieldReducerCase_ == 1) {
+            if (fieldReducerCase_ == 2) {
               return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer) fieldReducer_;
             }
             return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer.getDefaultInstance();
           }
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 1;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.CountReducer count_reducer = 2;</code>
          */
         private com.google.protobuf.SingleFieldBuilderV3<
             io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducerOrBuilder> 
             getCountReducerFieldBuilder() {
           if (countReducerBuilder_ == null) {
-            if (!(fieldReducerCase_ == 1)) {
+            if (!(fieldReducerCase_ == 2)) {
               fieldReducer_ = io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer.getDefaultInstance();
             }
             countReducerBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -4162,7 +4907,7 @@ public final class ReducerProto {
                     isClean());
             fieldReducer_ = null;
           }
-          fieldReducerCase_ = 1;
+          fieldReducerCase_ = 2;
           onChanged();;
           return countReducerBuilder_;
         }
@@ -4170,33 +4915,33 @@ public final class ReducerProto {
         private com.google.protobuf.SingleFieldBuilderV3<
             io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerIntegerOrBuilder> sumReducerIntegerBuilder_;
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 2;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 3;</code>
          * @return Whether the sumReducerInteger field is set.
          */
         @java.lang.Override
         public boolean hasSumReducerInteger() {
-          return fieldReducerCase_ == 2;
+          return fieldReducerCase_ == 3;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 2;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 3;</code>
          * @return The sumReducerInteger.
          */
         @java.lang.Override
         public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger getSumReducerInteger() {
           if (sumReducerIntegerBuilder_ == null) {
-            if (fieldReducerCase_ == 2) {
+            if (fieldReducerCase_ == 3) {
               return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger) fieldReducer_;
             }
             return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger.getDefaultInstance();
           } else {
-            if (fieldReducerCase_ == 2) {
+            if (fieldReducerCase_ == 3) {
               return sumReducerIntegerBuilder_.getMessage();
             }
             return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger.getDefaultInstance();
           }
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 2;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 3;</code>
          */
         public Builder setSumReducerInteger(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger value) {
           if (sumReducerIntegerBuilder_ == null) {
@@ -4208,11 +4953,11 @@ public final class ReducerProto {
           } else {
             sumReducerIntegerBuilder_.setMessage(value);
           }
-          fieldReducerCase_ = 2;
+          fieldReducerCase_ = 3;
           return this;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 2;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 3;</code>
          */
         public Builder setSumReducerInteger(
             io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger.Builder builderForValue) {
@@ -4222,15 +4967,15 @@ public final class ReducerProto {
           } else {
             sumReducerIntegerBuilder_.setMessage(builderForValue.build());
           }
-          fieldReducerCase_ = 2;
+          fieldReducerCase_ = 3;
           return this;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 2;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 3;</code>
          */
         public Builder mergeSumReducerInteger(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger value) {
           if (sumReducerIntegerBuilder_ == null) {
-            if (fieldReducerCase_ == 2 &&
+            if (fieldReducerCase_ == 3 &&
                 fieldReducer_ != io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger.getDefaultInstance()) {
               fieldReducer_ = io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger.newBuilder((io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger) fieldReducer_)
                   .mergeFrom(value).buildPartial();
@@ -4239,26 +4984,26 @@ public final class ReducerProto {
             }
             onChanged();
           } else {
-            if (fieldReducerCase_ == 2) {
+            if (fieldReducerCase_ == 3) {
               sumReducerIntegerBuilder_.mergeFrom(value);
             }
             sumReducerIntegerBuilder_.setMessage(value);
           }
-          fieldReducerCase_ = 2;
+          fieldReducerCase_ = 3;
           return this;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 2;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 3;</code>
          */
         public Builder clearSumReducerInteger() {
           if (sumReducerIntegerBuilder_ == null) {
-            if (fieldReducerCase_ == 2) {
+            if (fieldReducerCase_ == 3) {
               fieldReducerCase_ = 0;
               fieldReducer_ = null;
               onChanged();
             }
           } else {
-            if (fieldReducerCase_ == 2) {
+            if (fieldReducerCase_ == 3) {
               fieldReducerCase_ = 0;
               fieldReducer_ = null;
             }
@@ -4267,33 +5012,33 @@ public final class ReducerProto {
           return this;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 2;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 3;</code>
          */
         public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger.Builder getSumReducerIntegerBuilder() {
           return getSumReducerIntegerFieldBuilder().getBuilder();
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 2;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 3;</code>
          */
         @java.lang.Override
         public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerIntegerOrBuilder getSumReducerIntegerOrBuilder() {
-          if ((fieldReducerCase_ == 2) && (sumReducerIntegerBuilder_ != null)) {
+          if ((fieldReducerCase_ == 3) && (sumReducerIntegerBuilder_ != null)) {
             return sumReducerIntegerBuilder_.getMessageOrBuilder();
           } else {
-            if (fieldReducerCase_ == 2) {
+            if (fieldReducerCase_ == 3) {
               return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger) fieldReducer_;
             }
             return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger.getDefaultInstance();
           }
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 2;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger sum_reducer_integer = 3;</code>
          */
         private com.google.protobuf.SingleFieldBuilderV3<
             io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerIntegerOrBuilder> 
             getSumReducerIntegerFieldBuilder() {
           if (sumReducerIntegerBuilder_ == null) {
-            if (!(fieldReducerCase_ == 2)) {
+            if (!(fieldReducerCase_ == 3)) {
               fieldReducer_ = io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger.getDefaultInstance();
             }
             sumReducerIntegerBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -4303,7 +5048,7 @@ public final class ReducerProto {
                     isClean());
             fieldReducer_ = null;
           }
-          fieldReducerCase_ = 2;
+          fieldReducerCase_ = 3;
           onChanged();;
           return sumReducerIntegerBuilder_;
         }
@@ -4311,33 +5056,33 @@ public final class ReducerProto {
         private com.google.protobuf.SingleFieldBuilderV3<
             io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimalOrBuilder> sumReducerDecimalBuilder_;
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 3;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 4;</code>
          * @return Whether the sumReducerDecimal field is set.
          */
         @java.lang.Override
         public boolean hasSumReducerDecimal() {
-          return fieldReducerCase_ == 3;
+          return fieldReducerCase_ == 4;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 3;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 4;</code>
          * @return The sumReducerDecimal.
          */
         @java.lang.Override
         public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal getSumReducerDecimal() {
           if (sumReducerDecimalBuilder_ == null) {
-            if (fieldReducerCase_ == 3) {
+            if (fieldReducerCase_ == 4) {
               return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal) fieldReducer_;
             }
             return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal.getDefaultInstance();
           } else {
-            if (fieldReducerCase_ == 3) {
+            if (fieldReducerCase_ == 4) {
               return sumReducerDecimalBuilder_.getMessage();
             }
             return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal.getDefaultInstance();
           }
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 3;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 4;</code>
          */
         public Builder setSumReducerDecimal(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal value) {
           if (sumReducerDecimalBuilder_ == null) {
@@ -4349,11 +5094,11 @@ public final class ReducerProto {
           } else {
             sumReducerDecimalBuilder_.setMessage(value);
           }
-          fieldReducerCase_ = 3;
+          fieldReducerCase_ = 4;
           return this;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 3;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 4;</code>
          */
         public Builder setSumReducerDecimal(
             io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal.Builder builderForValue) {
@@ -4363,15 +5108,15 @@ public final class ReducerProto {
           } else {
             sumReducerDecimalBuilder_.setMessage(builderForValue.build());
           }
-          fieldReducerCase_ = 3;
+          fieldReducerCase_ = 4;
           return this;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 3;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 4;</code>
          */
         public Builder mergeSumReducerDecimal(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal value) {
           if (sumReducerDecimalBuilder_ == null) {
-            if (fieldReducerCase_ == 3 &&
+            if (fieldReducerCase_ == 4 &&
                 fieldReducer_ != io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal.getDefaultInstance()) {
               fieldReducer_ = io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal.newBuilder((io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal) fieldReducer_)
                   .mergeFrom(value).buildPartial();
@@ -4380,26 +5125,26 @@ public final class ReducerProto {
             }
             onChanged();
           } else {
-            if (fieldReducerCase_ == 3) {
+            if (fieldReducerCase_ == 4) {
               sumReducerDecimalBuilder_.mergeFrom(value);
             }
             sumReducerDecimalBuilder_.setMessage(value);
           }
-          fieldReducerCase_ = 3;
+          fieldReducerCase_ = 4;
           return this;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 3;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 4;</code>
          */
         public Builder clearSumReducerDecimal() {
           if (sumReducerDecimalBuilder_ == null) {
-            if (fieldReducerCase_ == 3) {
+            if (fieldReducerCase_ == 4) {
               fieldReducerCase_ = 0;
               fieldReducer_ = null;
               onChanged();
             }
           } else {
-            if (fieldReducerCase_ == 3) {
+            if (fieldReducerCase_ == 4) {
               fieldReducerCase_ = 0;
               fieldReducer_ = null;
             }
@@ -4408,33 +5153,33 @@ public final class ReducerProto {
           return this;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 3;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 4;</code>
          */
         public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal.Builder getSumReducerDecimalBuilder() {
           return getSumReducerDecimalFieldBuilder().getBuilder();
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 3;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 4;</code>
          */
         @java.lang.Override
         public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimalOrBuilder getSumReducerDecimalOrBuilder() {
-          if ((fieldReducerCase_ == 3) && (sumReducerDecimalBuilder_ != null)) {
+          if ((fieldReducerCase_ == 4) && (sumReducerDecimalBuilder_ != null)) {
             return sumReducerDecimalBuilder_.getMessageOrBuilder();
           } else {
-            if (fieldReducerCase_ == 3) {
+            if (fieldReducerCase_ == 4) {
               return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal) fieldReducer_;
             }
             return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal.getDefaultInstance();
           }
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 3;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal sum_reducer_decimal = 4;</code>
          */
         private com.google.protobuf.SingleFieldBuilderV3<
             io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimalOrBuilder> 
             getSumReducerDecimalFieldBuilder() {
           if (sumReducerDecimalBuilder_ == null) {
-            if (!(fieldReducerCase_ == 3)) {
+            if (!(fieldReducerCase_ == 4)) {
               fieldReducer_ = io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal.getDefaultInstance();
             }
             sumReducerDecimalBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -4444,7 +5189,7 @@ public final class ReducerProto {
                     isClean());
             fieldReducer_ = null;
           }
-          fieldReducerCase_ = 3;
+          fieldReducerCase_ = 4;
           onChanged();;
           return sumReducerDecimalBuilder_;
         }
@@ -4452,33 +5197,33 @@ public final class ReducerProto {
         private com.google.protobuf.SingleFieldBuilderV3<
             io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducerOrBuilder> avgReducerBuilder_;
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 4;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 5;</code>
          * @return Whether the avgReducer field is set.
          */
         @java.lang.Override
         public boolean hasAvgReducer() {
-          return fieldReducerCase_ == 4;
+          return fieldReducerCase_ == 5;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 4;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 5;</code>
          * @return The avgReducer.
          */
         @java.lang.Override
         public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer getAvgReducer() {
           if (avgReducerBuilder_ == null) {
-            if (fieldReducerCase_ == 4) {
+            if (fieldReducerCase_ == 5) {
               return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer) fieldReducer_;
             }
             return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer.getDefaultInstance();
           } else {
-            if (fieldReducerCase_ == 4) {
+            if (fieldReducerCase_ == 5) {
               return avgReducerBuilder_.getMessage();
             }
             return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer.getDefaultInstance();
           }
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 4;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 5;</code>
          */
         public Builder setAvgReducer(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer value) {
           if (avgReducerBuilder_ == null) {
@@ -4490,11 +5235,11 @@ public final class ReducerProto {
           } else {
             avgReducerBuilder_.setMessage(value);
           }
-          fieldReducerCase_ = 4;
+          fieldReducerCase_ = 5;
           return this;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 4;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 5;</code>
          */
         public Builder setAvgReducer(
             io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer.Builder builderForValue) {
@@ -4504,15 +5249,15 @@ public final class ReducerProto {
           } else {
             avgReducerBuilder_.setMessage(builderForValue.build());
           }
-          fieldReducerCase_ = 4;
+          fieldReducerCase_ = 5;
           return this;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 4;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 5;</code>
          */
         public Builder mergeAvgReducer(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer value) {
           if (avgReducerBuilder_ == null) {
-            if (fieldReducerCase_ == 4 &&
+            if (fieldReducerCase_ == 5 &&
                 fieldReducer_ != io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer.getDefaultInstance()) {
               fieldReducer_ = io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer.newBuilder((io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer) fieldReducer_)
                   .mergeFrom(value).buildPartial();
@@ -4521,26 +5266,26 @@ public final class ReducerProto {
             }
             onChanged();
           } else {
-            if (fieldReducerCase_ == 4) {
+            if (fieldReducerCase_ == 5) {
               avgReducerBuilder_.mergeFrom(value);
             }
             avgReducerBuilder_.setMessage(value);
           }
-          fieldReducerCase_ = 4;
+          fieldReducerCase_ = 5;
           return this;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 4;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 5;</code>
          */
         public Builder clearAvgReducer() {
           if (avgReducerBuilder_ == null) {
-            if (fieldReducerCase_ == 4) {
+            if (fieldReducerCase_ == 5) {
               fieldReducerCase_ = 0;
               fieldReducer_ = null;
               onChanged();
             }
           } else {
-            if (fieldReducerCase_ == 4) {
+            if (fieldReducerCase_ == 5) {
               fieldReducerCase_ = 0;
               fieldReducer_ = null;
             }
@@ -4549,33 +5294,33 @@ public final class ReducerProto {
           return this;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 4;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 5;</code>
          */
         public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer.Builder getAvgReducerBuilder() {
           return getAvgReducerFieldBuilder().getBuilder();
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 4;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 5;</code>
          */
         @java.lang.Override
         public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducerOrBuilder getAvgReducerOrBuilder() {
-          if ((fieldReducerCase_ == 4) && (avgReducerBuilder_ != null)) {
+          if ((fieldReducerCase_ == 5) && (avgReducerBuilder_ != null)) {
             return avgReducerBuilder_.getMessageOrBuilder();
           } else {
-            if (fieldReducerCase_ == 4) {
+            if (fieldReducerCase_ == 5) {
               return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer) fieldReducer_;
             }
             return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer.getDefaultInstance();
           }
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 4;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.AvgReducer avg_reducer = 5;</code>
          */
         private com.google.protobuf.SingleFieldBuilderV3<
             io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducerOrBuilder> 
             getAvgReducerFieldBuilder() {
           if (avgReducerBuilder_ == null) {
-            if (!(fieldReducerCase_ == 4)) {
+            if (!(fieldReducerCase_ == 5)) {
               fieldReducer_ = io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer.getDefaultInstance();
             }
             avgReducerBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -4585,7 +5330,7 @@ public final class ReducerProto {
                     isClean());
             fieldReducer_ = null;
           }
-          fieldReducerCase_ = 4;
+          fieldReducerCase_ = 5;
           onChanged();;
           return avgReducerBuilder_;
         }
@@ -4593,33 +5338,33 @@ public final class ReducerProto {
         private com.google.protobuf.SingleFieldBuilderV3<
             io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducerOrBuilder> minReducerBuilder_;
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 5;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 6;</code>
          * @return Whether the minReducer field is set.
          */
         @java.lang.Override
         public boolean hasMinReducer() {
-          return fieldReducerCase_ == 5;
+          return fieldReducerCase_ == 6;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 5;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 6;</code>
          * @return The minReducer.
          */
         @java.lang.Override
         public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer getMinReducer() {
           if (minReducerBuilder_ == null) {
-            if (fieldReducerCase_ == 5) {
+            if (fieldReducerCase_ == 6) {
               return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer) fieldReducer_;
             }
             return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer.getDefaultInstance();
           } else {
-            if (fieldReducerCase_ == 5) {
+            if (fieldReducerCase_ == 6) {
               return minReducerBuilder_.getMessage();
             }
             return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer.getDefaultInstance();
           }
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 5;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 6;</code>
          */
         public Builder setMinReducer(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer value) {
           if (minReducerBuilder_ == null) {
@@ -4631,11 +5376,11 @@ public final class ReducerProto {
           } else {
             minReducerBuilder_.setMessage(value);
           }
-          fieldReducerCase_ = 5;
+          fieldReducerCase_ = 6;
           return this;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 5;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 6;</code>
          */
         public Builder setMinReducer(
             io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer.Builder builderForValue) {
@@ -4645,15 +5390,15 @@ public final class ReducerProto {
           } else {
             minReducerBuilder_.setMessage(builderForValue.build());
           }
-          fieldReducerCase_ = 5;
+          fieldReducerCase_ = 6;
           return this;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 5;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 6;</code>
          */
         public Builder mergeMinReducer(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer value) {
           if (minReducerBuilder_ == null) {
-            if (fieldReducerCase_ == 5 &&
+            if (fieldReducerCase_ == 6 &&
                 fieldReducer_ != io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer.getDefaultInstance()) {
               fieldReducer_ = io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer.newBuilder((io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer) fieldReducer_)
                   .mergeFrom(value).buildPartial();
@@ -4662,26 +5407,26 @@ public final class ReducerProto {
             }
             onChanged();
           } else {
-            if (fieldReducerCase_ == 5) {
+            if (fieldReducerCase_ == 6) {
               minReducerBuilder_.mergeFrom(value);
             }
             minReducerBuilder_.setMessage(value);
           }
-          fieldReducerCase_ = 5;
+          fieldReducerCase_ = 6;
           return this;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 5;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 6;</code>
          */
         public Builder clearMinReducer() {
           if (minReducerBuilder_ == null) {
-            if (fieldReducerCase_ == 5) {
+            if (fieldReducerCase_ == 6) {
               fieldReducerCase_ = 0;
               fieldReducer_ = null;
               onChanged();
             }
           } else {
-            if (fieldReducerCase_ == 5) {
+            if (fieldReducerCase_ == 6) {
               fieldReducerCase_ = 0;
               fieldReducer_ = null;
             }
@@ -4690,33 +5435,33 @@ public final class ReducerProto {
           return this;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 5;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 6;</code>
          */
         public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer.Builder getMinReducerBuilder() {
           return getMinReducerFieldBuilder().getBuilder();
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 5;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 6;</code>
          */
         @java.lang.Override
         public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducerOrBuilder getMinReducerOrBuilder() {
-          if ((fieldReducerCase_ == 5) && (minReducerBuilder_ != null)) {
+          if ((fieldReducerCase_ == 6) && (minReducerBuilder_ != null)) {
             return minReducerBuilder_.getMessageOrBuilder();
           } else {
-            if (fieldReducerCase_ == 5) {
+            if (fieldReducerCase_ == 6) {
               return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer) fieldReducer_;
             }
             return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer.getDefaultInstance();
           }
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 5;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MinReducer min_reducer = 6;</code>
          */
         private com.google.protobuf.SingleFieldBuilderV3<
             io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducerOrBuilder> 
             getMinReducerFieldBuilder() {
           if (minReducerBuilder_ == null) {
-            if (!(fieldReducerCase_ == 5)) {
+            if (!(fieldReducerCase_ == 6)) {
               fieldReducer_ = io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer.getDefaultInstance();
             }
             minReducerBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -4726,7 +5471,7 @@ public final class ReducerProto {
                     isClean());
             fieldReducer_ = null;
           }
-          fieldReducerCase_ = 5;
+          fieldReducerCase_ = 6;
           onChanged();;
           return minReducerBuilder_;
         }
@@ -4734,33 +5479,33 @@ public final class ReducerProto {
         private com.google.protobuf.SingleFieldBuilderV3<
             io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducerOrBuilder> maxReducerBuilder_;
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 6;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 7;</code>
          * @return Whether the maxReducer field is set.
          */
         @java.lang.Override
         public boolean hasMaxReducer() {
-          return fieldReducerCase_ == 6;
+          return fieldReducerCase_ == 7;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 6;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 7;</code>
          * @return The maxReducer.
          */
         @java.lang.Override
         public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer getMaxReducer() {
           if (maxReducerBuilder_ == null) {
-            if (fieldReducerCase_ == 6) {
+            if (fieldReducerCase_ == 7) {
               return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer) fieldReducer_;
             }
             return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer.getDefaultInstance();
           } else {
-            if (fieldReducerCase_ == 6) {
+            if (fieldReducerCase_ == 7) {
               return maxReducerBuilder_.getMessage();
             }
             return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer.getDefaultInstance();
           }
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 6;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 7;</code>
          */
         public Builder setMaxReducer(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer value) {
           if (maxReducerBuilder_ == null) {
@@ -4772,11 +5517,11 @@ public final class ReducerProto {
           } else {
             maxReducerBuilder_.setMessage(value);
           }
-          fieldReducerCase_ = 6;
+          fieldReducerCase_ = 7;
           return this;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 6;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 7;</code>
          */
         public Builder setMaxReducer(
             io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer.Builder builderForValue) {
@@ -4786,15 +5531,15 @@ public final class ReducerProto {
           } else {
             maxReducerBuilder_.setMessage(builderForValue.build());
           }
-          fieldReducerCase_ = 6;
+          fieldReducerCase_ = 7;
           return this;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 6;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 7;</code>
          */
         public Builder mergeMaxReducer(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer value) {
           if (maxReducerBuilder_ == null) {
-            if (fieldReducerCase_ == 6 &&
+            if (fieldReducerCase_ == 7 &&
                 fieldReducer_ != io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer.getDefaultInstance()) {
               fieldReducer_ = io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer.newBuilder((io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer) fieldReducer_)
                   .mergeFrom(value).buildPartial();
@@ -4803,26 +5548,26 @@ public final class ReducerProto {
             }
             onChanged();
           } else {
-            if (fieldReducerCase_ == 6) {
+            if (fieldReducerCase_ == 7) {
               maxReducerBuilder_.mergeFrom(value);
             }
             maxReducerBuilder_.setMessage(value);
           }
-          fieldReducerCase_ = 6;
+          fieldReducerCase_ = 7;
           return this;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 6;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 7;</code>
          */
         public Builder clearMaxReducer() {
           if (maxReducerBuilder_ == null) {
-            if (fieldReducerCase_ == 6) {
+            if (fieldReducerCase_ == 7) {
               fieldReducerCase_ = 0;
               fieldReducer_ = null;
               onChanged();
             }
           } else {
-            if (fieldReducerCase_ == 6) {
+            if (fieldReducerCase_ == 7) {
               fieldReducerCase_ = 0;
               fieldReducer_ = null;
             }
@@ -4831,33 +5576,33 @@ public final class ReducerProto {
           return this;
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 6;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 7;</code>
          */
         public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer.Builder getMaxReducerBuilder() {
           return getMaxReducerFieldBuilder().getBuilder();
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 6;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 7;</code>
          */
         @java.lang.Override
         public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducerOrBuilder getMaxReducerOrBuilder() {
-          if ((fieldReducerCase_ == 6) && (maxReducerBuilder_ != null)) {
+          if ((fieldReducerCase_ == 7) && (maxReducerBuilder_ != null)) {
             return maxReducerBuilder_.getMessageOrBuilder();
           } else {
-            if (fieldReducerCase_ == 6) {
+            if (fieldReducerCase_ == 7) {
               return (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer) fieldReducer_;
             }
             return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer.getDefaultInstance();
           }
         }
         /**
-         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 6;</code>
+         * <code>.dataflow.calcite.RecordReducer.FieldReducer.MaxReducer max_reducer = 7;</code>
          */
         private com.google.protobuf.SingleFieldBuilderV3<
             io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducerOrBuilder> 
             getMaxReducerFieldBuilder() {
           if (maxReducerBuilder_ == null) {
-            if (!(fieldReducerCase_ == 6)) {
+            if (!(fieldReducerCase_ == 7)) {
               fieldReducer_ = io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer.getDefaultInstance();
             }
             maxReducerBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -4867,7 +5612,7 @@ public final class ReducerProto {
                     isClean());
             fieldReducer_ = null;
           }
-          fieldReducerCase_ = 6;
+          fieldReducerCase_ = 7;
           onChanged();;
           return maxReducerBuilder_;
         }
@@ -4924,17 +5669,43 @@ public final class ReducerProto {
 
     }
 
-    public static final int FIELD_REDUCERS_FIELD_NUMBER = 1;
+    public static final int RECORD_SCHEME_FIELD_NUMBER = 1;
+    private io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordScheme recordScheme_;
+    /**
+     * <code>.dataflow.calcite.RecordScheme record_scheme = 1;</code>
+     * @return Whether the recordScheme field is set.
+     */
+    @java.lang.Override
+    public boolean hasRecordScheme() {
+      return recordScheme_ != null;
+    }
+    /**
+     * <code>.dataflow.calcite.RecordScheme record_scheme = 1;</code>
+     * @return The recordScheme.
+     */
+    @java.lang.Override
+    public io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordScheme getRecordScheme() {
+      return recordScheme_ == null ? io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordScheme.getDefaultInstance() : recordScheme_;
+    }
+    /**
+     * <code>.dataflow.calcite.RecordScheme record_scheme = 1;</code>
+     */
+    @java.lang.Override
+    public io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordSchemeOrBuilder getRecordSchemeOrBuilder() {
+      return getRecordScheme();
+    }
+
+    public static final int FIELD_REDUCERS_FIELD_NUMBER = 2;
     private java.util.List<io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer> fieldReducers_;
     /**
-     * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+     * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
      */
     @java.lang.Override
     public java.util.List<io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer> getFieldReducersList() {
       return fieldReducers_;
     }
     /**
-     * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+     * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
      */
     @java.lang.Override
     public java.util.List<? extends io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducerOrBuilder> 
@@ -4942,21 +5713,21 @@ public final class ReducerProto {
       return fieldReducers_;
     }
     /**
-     * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+     * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
      */
     @java.lang.Override
     public int getFieldReducersCount() {
       return fieldReducers_.size();
     }
     /**
-     * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+     * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
      */
     @java.lang.Override
     public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer getFieldReducers(int index) {
       return fieldReducers_.get(index);
     }
     /**
-     * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+     * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
      */
     @java.lang.Override
     public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducerOrBuilder getFieldReducersOrBuilder(
@@ -4978,8 +5749,11 @@ public final class ReducerProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
+      if (recordScheme_ != null) {
+        output.writeMessage(1, getRecordScheme());
+      }
       for (int i = 0; i < fieldReducers_.size(); i++) {
-        output.writeMessage(1, fieldReducers_.get(i));
+        output.writeMessage(2, fieldReducers_.get(i));
       }
       unknownFields.writeTo(output);
     }
@@ -4990,9 +5764,13 @@ public final class ReducerProto {
       if (size != -1) return size;
 
       size = 0;
+      if (recordScheme_ != null) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, getRecordScheme());
+      }
       for (int i = 0; i < fieldReducers_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, fieldReducers_.get(i));
+          .computeMessageSize(2, fieldReducers_.get(i));
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -5009,6 +5787,11 @@ public final class ReducerProto {
       }
       io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer other = (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer) obj;
 
+      if (hasRecordScheme() != other.hasRecordScheme()) return false;
+      if (hasRecordScheme()) {
+        if (!getRecordScheme()
+            .equals(other.getRecordScheme())) return false;
+      }
       if (!getFieldReducersList()
           .equals(other.getFieldReducersList())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
@@ -5022,6 +5805,10 @@ public final class ReducerProto {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasRecordScheme()) {
+        hash = (37 * hash) + RECORD_SCHEME_FIELD_NUMBER;
+        hash = (53 * hash) + getRecordScheme().hashCode();
+      }
       if (getFieldReducersCount() > 0) {
         hash = (37 * hash) + FIELD_REDUCERS_FIELD_NUMBER;
         hash = (53 * hash) + getFieldReducersList().hashCode();
@@ -5160,6 +5947,12 @@ public final class ReducerProto {
       @java.lang.Override
       public Builder clear() {
         super.clear();
+        if (recordSchemeBuilder_ == null) {
+          recordScheme_ = null;
+        } else {
+          recordScheme_ = null;
+          recordSchemeBuilder_ = null;
+        }
         if (fieldReducersBuilder_ == null) {
           fieldReducers_ = java.util.Collections.emptyList();
           bitField0_ = (bitField0_ & ~0x00000001);
@@ -5193,6 +5986,11 @@ public final class ReducerProto {
       public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer buildPartial() {
         io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer result = new io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer(this);
         int from_bitField0_ = bitField0_;
+        if (recordSchemeBuilder_ == null) {
+          result.recordScheme_ = recordScheme_;
+        } else {
+          result.recordScheme_ = recordSchemeBuilder_.build();
+        }
         if (fieldReducersBuilder_ == null) {
           if (((bitField0_ & 0x00000001) != 0)) {
             fieldReducers_ = java.util.Collections.unmodifiableList(fieldReducers_);
@@ -5250,6 +6048,9 @@ public final class ReducerProto {
 
       public Builder mergeFrom(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer other) {
         if (other == io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.getDefaultInstance()) return this;
+        if (other.hasRecordScheme()) {
+          mergeRecordScheme(other.getRecordScheme());
+        }
         if (fieldReducersBuilder_ == null) {
           if (!other.fieldReducers_.isEmpty()) {
             if (fieldReducers_.isEmpty()) {
@@ -5306,6 +6107,125 @@ public final class ReducerProto {
       }
       private int bitField0_;
 
+      private io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordScheme recordScheme_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordScheme, io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordScheme.Builder, io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordSchemeOrBuilder> recordSchemeBuilder_;
+      /**
+       * <code>.dataflow.calcite.RecordScheme record_scheme = 1;</code>
+       * @return Whether the recordScheme field is set.
+       */
+      public boolean hasRecordScheme() {
+        return recordSchemeBuilder_ != null || recordScheme_ != null;
+      }
+      /**
+       * <code>.dataflow.calcite.RecordScheme record_scheme = 1;</code>
+       * @return The recordScheme.
+       */
+      public io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordScheme getRecordScheme() {
+        if (recordSchemeBuilder_ == null) {
+          return recordScheme_ == null ? io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordScheme.getDefaultInstance() : recordScheme_;
+        } else {
+          return recordSchemeBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>.dataflow.calcite.RecordScheme record_scheme = 1;</code>
+       */
+      public Builder setRecordScheme(io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordScheme value) {
+        if (recordSchemeBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          recordScheme_ = value;
+          onChanged();
+        } else {
+          recordSchemeBuilder_.setMessage(value);
+        }
+
+        return this;
+      }
+      /**
+       * <code>.dataflow.calcite.RecordScheme record_scheme = 1;</code>
+       */
+      public Builder setRecordScheme(
+          io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordScheme.Builder builderForValue) {
+        if (recordSchemeBuilder_ == null) {
+          recordScheme_ = builderForValue.build();
+          onChanged();
+        } else {
+          recordSchemeBuilder_.setMessage(builderForValue.build());
+        }
+
+        return this;
+      }
+      /**
+       * <code>.dataflow.calcite.RecordScheme record_scheme = 1;</code>
+       */
+      public Builder mergeRecordScheme(io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordScheme value) {
+        if (recordSchemeBuilder_ == null) {
+          if (recordScheme_ != null) {
+            recordScheme_ =
+              io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordScheme.newBuilder(recordScheme_).mergeFrom(value).buildPartial();
+          } else {
+            recordScheme_ = value;
+          }
+          onChanged();
+        } else {
+          recordSchemeBuilder_.mergeFrom(value);
+        }
+
+        return this;
+      }
+      /**
+       * <code>.dataflow.calcite.RecordScheme record_scheme = 1;</code>
+       */
+      public Builder clearRecordScheme() {
+        if (recordSchemeBuilder_ == null) {
+          recordScheme_ = null;
+          onChanged();
+        } else {
+          recordScheme_ = null;
+          recordSchemeBuilder_ = null;
+        }
+
+        return this;
+      }
+      /**
+       * <code>.dataflow.calcite.RecordScheme record_scheme = 1;</code>
+       */
+      public io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordScheme.Builder getRecordSchemeBuilder() {
+        
+        onChanged();
+        return getRecordSchemeFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.dataflow.calcite.RecordScheme record_scheme = 1;</code>
+       */
+      public io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordSchemeOrBuilder getRecordSchemeOrBuilder() {
+        if (recordSchemeBuilder_ != null) {
+          return recordSchemeBuilder_.getMessageOrBuilder();
+        } else {
+          return recordScheme_ == null ?
+              io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordScheme.getDefaultInstance() : recordScheme_;
+        }
+      }
+      /**
+       * <code>.dataflow.calcite.RecordScheme record_scheme = 1;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordScheme, io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordScheme.Builder, io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordSchemeOrBuilder> 
+          getRecordSchemeFieldBuilder() {
+        if (recordSchemeBuilder_ == null) {
+          recordSchemeBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordScheme, io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordScheme.Builder, io.activej.dataflow.proto.calcite.RecordSchemeProto.RecordSchemeOrBuilder>(
+                  getRecordScheme(),
+                  getParentForChildren(),
+                  isClean());
+          recordScheme_ = null;
+        }
+        return recordSchemeBuilder_;
+      }
+
       private java.util.List<io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer> fieldReducers_ =
         java.util.Collections.emptyList();
       private void ensureFieldReducersIsMutable() {
@@ -5319,7 +6239,7 @@ public final class ReducerProto {
           io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducerOrBuilder> fieldReducersBuilder_;
 
       /**
-       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
        */
       public java.util.List<io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer> getFieldReducersList() {
         if (fieldReducersBuilder_ == null) {
@@ -5329,7 +6249,7 @@ public final class ReducerProto {
         }
       }
       /**
-       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
        */
       public int getFieldReducersCount() {
         if (fieldReducersBuilder_ == null) {
@@ -5339,7 +6259,7 @@ public final class ReducerProto {
         }
       }
       /**
-       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
        */
       public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer getFieldReducers(int index) {
         if (fieldReducersBuilder_ == null) {
@@ -5349,7 +6269,7 @@ public final class ReducerProto {
         }
       }
       /**
-       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
        */
       public Builder setFieldReducers(
           int index, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer value) {
@@ -5366,7 +6286,7 @@ public final class ReducerProto {
         return this;
       }
       /**
-       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
        */
       public Builder setFieldReducers(
           int index, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.Builder builderForValue) {
@@ -5380,7 +6300,7 @@ public final class ReducerProto {
         return this;
       }
       /**
-       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
        */
       public Builder addFieldReducers(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer value) {
         if (fieldReducersBuilder_ == null) {
@@ -5396,7 +6316,7 @@ public final class ReducerProto {
         return this;
       }
       /**
-       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
        */
       public Builder addFieldReducers(
           int index, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer value) {
@@ -5413,7 +6333,7 @@ public final class ReducerProto {
         return this;
       }
       /**
-       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
        */
       public Builder addFieldReducers(
           io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.Builder builderForValue) {
@@ -5427,7 +6347,7 @@ public final class ReducerProto {
         return this;
       }
       /**
-       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
        */
       public Builder addFieldReducers(
           int index, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.Builder builderForValue) {
@@ -5441,7 +6361,7 @@ public final class ReducerProto {
         return this;
       }
       /**
-       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
        */
       public Builder addAllFieldReducers(
           java.lang.Iterable<? extends io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer> values) {
@@ -5456,7 +6376,7 @@ public final class ReducerProto {
         return this;
       }
       /**
-       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
        */
       public Builder clearFieldReducers() {
         if (fieldReducersBuilder_ == null) {
@@ -5469,7 +6389,7 @@ public final class ReducerProto {
         return this;
       }
       /**
-       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
        */
       public Builder removeFieldReducers(int index) {
         if (fieldReducersBuilder_ == null) {
@@ -5482,14 +6402,14 @@ public final class ReducerProto {
         return this;
       }
       /**
-       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
        */
       public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.Builder getFieldReducersBuilder(
           int index) {
         return getFieldReducersFieldBuilder().getBuilder(index);
       }
       /**
-       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
        */
       public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducerOrBuilder getFieldReducersOrBuilder(
           int index) {
@@ -5499,7 +6419,7 @@ public final class ReducerProto {
         }
       }
       /**
-       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
        */
       public java.util.List<? extends io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducerOrBuilder> 
            getFieldReducersOrBuilderList() {
@@ -5510,14 +6430,14 @@ public final class ReducerProto {
         }
       }
       /**
-       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
        */
       public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.Builder addFieldReducersBuilder() {
         return getFieldReducersFieldBuilder().addBuilder(
             io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.getDefaultInstance());
       }
       /**
-       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
        */
       public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.Builder addFieldReducersBuilder(
           int index) {
@@ -5525,7 +6445,7 @@ public final class ReducerProto {
             index, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.getDefaultInstance());
       }
       /**
-       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 1;</code>
+       * <code>repeated .dataflow.calcite.RecordReducer.FieldReducer field_reducers = 2;</code>
        */
       public java.util.List<io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.Builder> 
            getFieldReducersBuilderList() {
@@ -5609,6 +6529,11 @@ public final class ReducerProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_dataflow_calcite_RecordReducer_FieldReducer_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_dataflow_calcite_RecordReducer_FieldReducer_KeyReducer_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_dataflow_calcite_RecordReducer_FieldReducer_KeyReducer_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_CountReducer_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -5647,83 +6572,96 @@ public final class ReducerProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\rreducer.proto\022\020dataflow.calcite\"\333\006\n\rRe" +
-      "cordReducer\022D\n\016field_reducers\030\001 \003(\0132,.da" +
+      "\n\rreducer.proto\022\020dataflow.calcite\032\023recor" +
+      "d_scheme.proto\"\205\010\n\rRecordReducer\0225\n\rreco" +
+      "rd_scheme\030\001 \001(\0132\036.dataflow.calcite.Recor" +
+      "dScheme\022D\n\016field_reducers\030\002 \003(\0132,.datafl" +
+      "ow.calcite.RecordReducer.FieldReducer\032\366\006" +
+      "\n\014FieldReducer\022N\n\013key_reducer\030\001 \001(\01327.da" +
       "taflow.calcite.RecordReducer.FieldReduce" +
-      "r\032\203\006\n\014FieldReducer\022R\n\rcount_reducer\030\001 \001(" +
-      "\01329.dataflow.calcite.RecordReducer.Field" +
-      "Reducer.CountReducerH\000\022]\n\023sum_reducer_in" +
-      "teger\030\002 \001(\0132>.dataflow.calcite.RecordRed" +
-      "ucer.FieldReducer.SumReducerIntegerH\000\022]\n" +
-      "\023sum_reducer_decimal\030\003 \001(\0132>.dataflow.ca" +
-      "lcite.RecordReducer.FieldReducer.SumRedu" +
-      "cerDecimalH\000\022N\n\013avg_reducer\030\004 \001(\01327.data" +
-      "flow.calcite.RecordReducer.FieldReducer." +
-      "AvgReducerH\000\022N\n\013min_reducer\030\005 \001(\01327.data" +
-      "flow.calcite.RecordReducer.FieldReducer." +
-      "MinReducerH\000\022N\n\013max_reducer\030\006 \001(\01327.data" +
-      "flow.calcite.RecordReducer.FieldReducer." +
-      "MaxReducerH\000\032#\n\014CountReducer\022\023\n\013field_in" +
-      "dex\030\001 \001(\005\032(\n\021SumReducerInteger\022\023\n\013field_" +
-      "index\030\001 \001(\005\032(\n\021SumReducerDecimal\022\023\n\013fiel" +
-      "d_index\030\001 \001(\005\032!\n\nAvgReducer\022\023\n\013field_ind" +
-      "ex\030\001 \001(\005\032!\n\nMinReducer\022\023\n\013field_index\030\001 " +
-      "\001(\005\032!\n\nMaxReducer\022\023\n\013field_index\030\001 \001(\005B\017" +
-      "\n\rfield_reducerB3\n!io.activej.dataflow.p" +
-      "roto.calciteB\014ReducerProtoP\000b\006proto3"
+      "r.KeyReducerH\000\022R\n\rcount_reducer\030\002 \001(\01329." +
+      "dataflow.calcite.RecordReducer.FieldRedu" +
+      "cer.CountReducerH\000\022]\n\023sum_reducer_intege" +
+      "r\030\003 \001(\0132>.dataflow.calcite.RecordReducer" +
+      ".FieldReducer.SumReducerIntegerH\000\022]\n\023sum" +
+      "_reducer_decimal\030\004 \001(\0132>.dataflow.calcit" +
+      "e.RecordReducer.FieldReducer.SumReducerD" +
+      "ecimalH\000\022N\n\013avg_reducer\030\005 \001(\01327.dataflow" +
+      ".calcite.RecordReducer.FieldReducer.AvgR" +
+      "educerH\000\022N\n\013min_reducer\030\006 \001(\01327.dataflow" +
+      ".calcite.RecordReducer.FieldReducer.MinR" +
+      "educerH\000\022N\n\013max_reducer\030\007 \001(\01327.dataflow" +
+      ".calcite.RecordReducer.FieldReducer.MaxR" +
+      "educerH\000\032!\n\nKeyReducer\022\023\n\013field_index\030\001 " +
+      "\001(\005\032#\n\014CountReducer\022\023\n\013field_index\030\001 \001(\005" +
+      "\032(\n\021SumReducerInteger\022\023\n\013field_index\030\001 \001" +
+      "(\005\032(\n\021SumReducerDecimal\022\023\n\013field_index\030\001" +
+      " \001(\005\032!\n\nAvgReducer\022\023\n\013field_index\030\001 \001(\005\032" +
+      "!\n\nMinReducer\022\023\n\013field_index\030\001 \001(\005\032!\n\nMa" +
+      "xReducer\022\023\n\013field_index\030\001 \001(\005B\017\n\rfield_r" +
+      "educerB3\n!io.activej.dataflow.proto.calc" +
+      "iteB\014ReducerProtoP\000b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
+          io.activej.dataflow.proto.calcite.RecordSchemeProto.getDescriptor(),
         });
     internal_static_dataflow_calcite_RecordReducer_descriptor =
       getDescriptor().getMessageTypes().get(0);
     internal_static_dataflow_calcite_RecordReducer_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_RecordReducer_descriptor,
-        new java.lang.String[] { "FieldReducers", });
+        new java.lang.String[] { "RecordScheme", "FieldReducers", });
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_descriptor =
       internal_static_dataflow_calcite_RecordReducer_descriptor.getNestedTypes().get(0);
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_RecordReducer_FieldReducer_descriptor,
-        new java.lang.String[] { "CountReducer", "SumReducerInteger", "SumReducerDecimal", "AvgReducer", "MinReducer", "MaxReducer", "FieldReducer", });
-    internal_static_dataflow_calcite_RecordReducer_FieldReducer_CountReducer_descriptor =
+        new java.lang.String[] { "KeyReducer", "CountReducer", "SumReducerInteger", "SumReducerDecimal", "AvgReducer", "MinReducer", "MaxReducer", "FieldReducer", });
+    internal_static_dataflow_calcite_RecordReducer_FieldReducer_KeyReducer_descriptor =
       internal_static_dataflow_calcite_RecordReducer_FieldReducer_descriptor.getNestedTypes().get(0);
+    internal_static_dataflow_calcite_RecordReducer_FieldReducer_KeyReducer_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_dataflow_calcite_RecordReducer_FieldReducer_KeyReducer_descriptor,
+        new java.lang.String[] { "FieldIndex", });
+    internal_static_dataflow_calcite_RecordReducer_FieldReducer_CountReducer_descriptor =
+      internal_static_dataflow_calcite_RecordReducer_FieldReducer_descriptor.getNestedTypes().get(1);
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_CountReducer_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_RecordReducer_FieldReducer_CountReducer_descriptor,
         new java.lang.String[] { "FieldIndex", });
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_SumReducerInteger_descriptor =
-      internal_static_dataflow_calcite_RecordReducer_FieldReducer_descriptor.getNestedTypes().get(1);
+      internal_static_dataflow_calcite_RecordReducer_FieldReducer_descriptor.getNestedTypes().get(2);
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_SumReducerInteger_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_RecordReducer_FieldReducer_SumReducerInteger_descriptor,
         new java.lang.String[] { "FieldIndex", });
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_SumReducerDecimal_descriptor =
-      internal_static_dataflow_calcite_RecordReducer_FieldReducer_descriptor.getNestedTypes().get(2);
+      internal_static_dataflow_calcite_RecordReducer_FieldReducer_descriptor.getNestedTypes().get(3);
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_SumReducerDecimal_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_RecordReducer_FieldReducer_SumReducerDecimal_descriptor,
         new java.lang.String[] { "FieldIndex", });
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_AvgReducer_descriptor =
-      internal_static_dataflow_calcite_RecordReducer_FieldReducer_descriptor.getNestedTypes().get(3);
+      internal_static_dataflow_calcite_RecordReducer_FieldReducer_descriptor.getNestedTypes().get(4);
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_AvgReducer_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_RecordReducer_FieldReducer_AvgReducer_descriptor,
         new java.lang.String[] { "FieldIndex", });
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_MinReducer_descriptor =
-      internal_static_dataflow_calcite_RecordReducer_FieldReducer_descriptor.getNestedTypes().get(4);
+      internal_static_dataflow_calcite_RecordReducer_FieldReducer_descriptor.getNestedTypes().get(5);
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_MinReducer_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_RecordReducer_FieldReducer_MinReducer_descriptor,
         new java.lang.String[] { "FieldIndex", });
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_MaxReducer_descriptor =
-      internal_static_dataflow_calcite_RecordReducer_FieldReducer_descriptor.getNestedTypes().get(5);
+      internal_static_dataflow_calcite_RecordReducer_FieldReducer_descriptor.getNestedTypes().get(6);
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_MaxReducer_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_RecordReducer_FieldReducer_MaxReducer_descriptor,
         new java.lang.String[] { "FieldIndex", });
+    io.activej.dataflow.proto.calcite.RecordSchemeProto.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

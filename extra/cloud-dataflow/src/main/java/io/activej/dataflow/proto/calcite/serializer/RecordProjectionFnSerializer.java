@@ -1,8 +1,9 @@
-package io.activej.dataflow.proto.calcite;
+package io.activej.dataflow.proto.calcite.serializer;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.dataflow.calcite.RecordProjectionFn;
+import io.activej.dataflow.proto.calcite.RecordProjectionFnProto;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.BinaryOutput;
 import io.activej.serializer.BinarySerializer;
@@ -30,7 +31,7 @@ public final class RecordProjectionFnSerializer implements BinarySerializer<Reco
 								.map(fieldProjection -> {
 									RecordProjectionFnProto.RecordProjectionFn.FieldProjection.Builder builder =
 											RecordProjectionFnProto.RecordProjectionFn.FieldProjection.newBuilder();
-									builder.setOperand(OperandConverters.convert(fieldProjection.operand()));
+									builder.setOperand(OperandConverter.convert(fieldProjection.operand()));
 									if (fieldProjection.fieldName() == null) {
 										builder.setIsNull(true);
 									} else {
@@ -58,7 +59,7 @@ public final class RecordProjectionFnSerializer implements BinarySerializer<Reco
 		return RecordProjectionFn.create(
 				recordProjectionFn.getFieldProjectionsList().stream()
 						.map(fieldProjection -> new RecordProjectionFn.FieldProjection(
-								OperandConverters.convert(classLoader, fieldProjection.getOperand()),
+								OperandConverter.convert(classLoader, fieldProjection.getOperand()),
 								switch (fieldProjection.getFieldNameCase()) {
 									case VALUE -> fieldProjection.getValue();
 									case IS_NULL -> null;

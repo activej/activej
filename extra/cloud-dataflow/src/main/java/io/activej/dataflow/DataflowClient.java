@@ -29,7 +29,7 @@ import io.activej.dataflow.node.Node;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.Handshake.NotOk;
-import io.activej.dataflow.proto.FunctionSerializer;
+import io.activej.dataflow.proto.serializer.FunctionSerializer;
 import io.activej.datastream.AbstractStreamConsumer;
 import io.activej.datastream.AbstractStreamSupplier;
 import io.activej.datastream.StreamDataAcceptor;
@@ -49,7 +49,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static io.activej.dataflow.proto.ProtobufUtils.convert;
+import static io.activej.dataflow.proto.serializer.ProtobufUtils.convert;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**

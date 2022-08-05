@@ -1,6 +1,6 @@
 package io.activej.dataflow.calcite.aggregation;
 
-import io.activej.record.RecordScheme;
+import io.activej.record.Record;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
 import org.jetbrains.annotations.NotNull;
@@ -21,12 +21,12 @@ public class AvgReducer extends FieldReducer<Number, Double, AvgReducer.AvgAccum
 	}
 
 	@Override
-	public String getName() {
-		return "AVG";
+	public String getName(String fieldName) {
+		return "AVG(" + fieldName + ')';
 	}
 
 	@Override
-	public AvgAccumulator createAccumulator(RecordScheme key) {
+	public AvgAccumulator createAccumulator(Record key) {
 		return new AvgAccumulator(0d, 0L);
 	}
 

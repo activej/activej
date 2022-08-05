@@ -1,7 +1,7 @@
 package io.activej.dataflow.calcite.aggregation;
 
 import io.activej.codegen.util.Primitives;
-import io.activej.record.RecordScheme;
+import io.activej.record.Record;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class AbstractMinMaxReducer<I extends Comparable<I>> extends FieldReducer<I, I, I> {
@@ -23,7 +23,7 @@ public abstract class AbstractMinMaxReducer<I extends Comparable<I>> extends Fie
 	}
 
 	@Override
-	public final I createAccumulator(RecordScheme key) {
+	public final I createAccumulator(Record key) {
 		return null;
 	}
 

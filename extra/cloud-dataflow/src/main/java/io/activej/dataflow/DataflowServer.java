@@ -42,7 +42,7 @@ import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.Handsha
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.PartitionData.TaskDesc;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.TaskData;
 import io.activej.dataflow.proto.DataflowMessagingProto.Version;
-import io.activej.dataflow.proto.FunctionSerializer;
+import io.activej.dataflow.proto.serializer.FunctionSerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.eventloop.Eventloop;
@@ -62,8 +62,8 @@ import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
 
-import static io.activej.dataflow.proto.ProtobufUtils.convert;
-import static io.activej.dataflow.proto.ProtobufUtils.error;
+import static io.activej.dataflow.proto.serializer.ProtobufUtils.convert;
+import static io.activej.dataflow.proto.serializer.ProtobufUtils.error;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 

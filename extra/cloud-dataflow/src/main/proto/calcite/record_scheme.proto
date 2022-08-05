@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package dataflow.calcite;
+
+option java_multiple_files = false;
+option java_package = "io.activej.dataflow.proto.calcite";
+option java_outer_classname = "RecordSchemeProto";
+
+import "java_type.proto";
+
+message RecordScheme {
+  // Cannot use `map` here, as map only supports integral or string keys
+  repeated string field_names = 1;
+  repeated JavaType types = 2;
+}
+

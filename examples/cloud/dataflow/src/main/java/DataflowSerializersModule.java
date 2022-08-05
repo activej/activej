@@ -1,7 +1,7 @@
 import dto.CreateStringCountFunction;
 import dto.ExtractStringFunction;
 import dto.StringCountReducer;
-import io.activej.dataflow.proto.FunctionSubtypeSerializer;
+import io.activej.dataflow.proto.serializer.FunctionSubtypeSerializer;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult.AccumulatorToOutput;
@@ -13,7 +13,7 @@ import io.activej.serializer.BinarySerializer;
 import java.util.Comparator;
 import java.util.function.Function;
 
-import static io.activej.dataflow.proto.ProtobufUtils.ofObject;
+import static io.activej.dataflow.proto.serializer.ProtobufUtils.ofObject;
 
 public final class DataflowSerializersModule extends AbstractModule {
 

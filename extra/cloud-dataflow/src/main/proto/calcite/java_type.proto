@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package dataflow.calcite;
+
+option java_multiple_files = false;
+option java_package = "io.activej.dataflow.proto.calcite";
+option java_outer_classname = "JavaTypeProto";
+
+message JavaType {
+  message JavaClass {
+    string class_name = 1;
+  }
+
+  message JavaParameterizedType {
+    JavaTypeNullable owner_type = 1;
+    JavaType raw_type = 2;
+    repeated JavaType parameters = 3;
+  }
+
+  message JavaGenericArrayType {
+    JavaType component_type = 1;
+  }
+
+  oneof java_type {
+    JavaClass java_class = 1;
+    JavaParameterizedType java_parameterized_type = 2;
+    JavaGenericArrayType java_generic_array_type = 3;
+  }
+}
+
+message JavaTypeNullable {
+  oneof java_type_nullable {
+    JavaType type = 1;
+    bool is_null = 2;
+  }
+}
+

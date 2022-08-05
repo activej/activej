@@ -1,12 +1,17 @@
-package io.activej.dataflow.proto.calcite;
+package io.activej.dataflow.proto.calcite.serializer;
 
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.dataflow.calcite.Value;
 import io.activej.dataflow.calcite.operand.*;
+import io.activej.dataflow.proto.calcite.OperandProto;
 import io.activej.serializer.CorruptedDataException;
 
-final class OperandConverters {
-	public static OperandProto.Operand convert(Operand<?> operand) {
+final class OperandConverter {
+
+	private OperandConverter() {
+	}
+
+	static OperandProto.Operand convert(Operand<?> operand) {
 		OperandProto.Operand.Builder builder = OperandProto.Operand.newBuilder();
 
 		if (operand instanceof OperandRecordField operandRecordField) {
@@ -68,7 +73,7 @@ final class OperandConverters {
 		return builder.build();
 	}
 
-	public static Operand<?> convert(DefiningClassLoader classLoader, OperandProto.Operand operand) {
+	static Operand<?> convert(DefiningClassLoader classLoader, OperandProto.Operand operand) {
 		return switch (operand.getOperandCase()) {
 			case RECORD_FIELD ->
 					new OperandRecordField(operand.getRecordField().getIndex());

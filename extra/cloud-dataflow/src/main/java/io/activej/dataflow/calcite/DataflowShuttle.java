@@ -7,9 +7,10 @@ import io.activej.dataflow.calcite.aggregation.*;
 import io.activej.dataflow.calcite.join.RecordInnerJoiner;
 import io.activej.dataflow.calcite.join.RecordKeyFunction;
 import io.activej.dataflow.calcite.operand.Operand;
+import io.activej.dataflow.calcite.operand.OperandRecordField;
 import io.activej.dataflow.calcite.operand.OperandScalar;
 import io.activej.dataflow.calcite.utils.*;
-import io.activej.dataflow.calcite.utils.RecordComparator.FieldSort;
+import io.activej.dataflow.calcite.utils.RecordSortComparator.FieldSort;
 import io.activej.dataflow.calcite.where.*;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.Datasets;
@@ -34,6 +35,7 @@ import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.util.ImmutableBitSet;
 
 import java.util.*;
 import java.util.function.Function;
@@ -131,6 +133,11 @@ public class DataflowShuttle extends RelShuttleImpl {
 		List<AggregateCall> callList = aggregate.getAggCallList();
 		List<FieldReducer<?, ?, ?>> fieldReducers = new ArrayList<>(callList.size());
 
+		ImmutableBitSet groupSet = aggregate.getGroupSet();
+		for (Integer index : groupSet) {
+			fieldReducers.add(new KeyReducer<>(index));
+		}
+
 		for (AggregateCall aggregateCall : callList) {
 			SqlAggFunction aggregation = aggregateCall.getAggregation();
 
@@ -162,20 +169,23 @@ public class DataflowShuttle extends RelShuttleImpl {
 			fieldReducers.add(fieldReducer);
 		}
 
-		RecordReducer recordReducer = new RecordReducer(fieldReducers);
+		RecordReducer recordReducer = RecordReducer.create(current.getScheme(), fieldReducers);
+		Function<Record, Record> keyFunction = getKeyFunction(groupSet.toList());
 
 		datasetStack.push(UnmaterializedDataset.of(
-				recordReducer.createScheme(current.getScheme()),
-				params -> {
-					Dataset<Record> materialized = current.materialize(params);
-					LocallySortedDataset<RecordScheme, Record> sorted = Datasets.castToSorted(materialized, RecordScheme.class, RecordSchemeFunction.getInstance(), EqualObjectComparator.getInstance());
-
-					LocallySortedDataset<RecordScheme, Record> partiallyReduced = Datasets.localReduce(sorted, recordReducer.getInputToAccumulator(), Record.class, RecordSchemeFunction.getInstance());
-
-					return DatasetCalciteAggregate.create(partiallyReduced, recordReducer);
-				}));
+				recordReducer.getOutputScheme(),
+				params -> Datasets.sortReduceRepartitionReduce(current.materialize(params), recordReducer,
+						Record.class, keyFunction, RecordKeyComparator.getInstance())));
 
 		return result;
+	}
+
+	private static Function<Record, Record> getKeyFunction(List<Integer> indices) {
+		List<FieldProjection> projections = new ArrayList<>(indices.size());
+		for (Integer index : indices) {
+			projections.add(new FieldProjection(new OperandRecordField(index), String.valueOf(index)));
+		}
+		return RecordProjectionFn.create(projections);
 	}
 
 	@Override
@@ -322,7 +332,7 @@ public class DataflowShuttle extends RelShuttleImpl {
 					if (sorts.isEmpty()) {
 						result = Datasets.castToSorted(materializedDataset, int.class, ToZeroFunction.getInstance(), EqualObjectComparator.getInstance());
 					} else {
-						result = Datasets.localSort(materializedDataset, Record.class, Function.identity(), new RecordComparator(sorts));
+						result = Datasets.localSort(materializedDataset, Record.class, Function.identity(), new RecordSortComparator(sorts));
 					}
 
 					long offsetValue = ((Number) offset.materialize(params).getValue().getValue()).longValue();
