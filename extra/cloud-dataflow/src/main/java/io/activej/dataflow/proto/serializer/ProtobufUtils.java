@@ -20,9 +20,11 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.Parser;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.binary.ByteBufsCodec;
+import io.activej.csp.binary.ByteBufsDecoder;
 import io.activej.dataflow.DataflowException;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.TaskStatus;
@@ -46,12 +48,8 @@ import io.activej.serializer.BinaryInput;
 import io.activej.serializer.BinaryOutput;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.CorruptedDataException;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.time.Instant;
 import java.util.Map;
@@ -68,40 +66,29 @@ public final class ProtobufUtils {
 		return new ByteBufsCodec<>() {
 			@Override
 			public ByteBuf encode(O item) {
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				try {
-					item.writeDelimitedTo(baos);
-				} catch (IOException e) {
-					throw new AssertionError(e);
-				}
-				return ByteBuf.wrapForReading(baos.toByteArray());
+				byte[] bytes = item.toByteArray();
+
+				int length = bytes.length;
+				ByteBuf buf = ByteBufPool.allocate(length + 5);
+
+				buf.writeVarInt(length);
+				buf.put(bytes);
+				return buf;
 			}
 
 			@Override
 			public @Nullable I tryDecode(ByteBufs bufs) throws MalformedDataException {
-				try {
-					PeekingInputStream peekingInputStream = new PeekingInputStream(bufs);
-					I result = inputParser.parseDelimitedFrom(peekingInputStream);
-					bufs.skip(peekingInputStream.offset);
-					return result;
-				} catch (InvalidProtocolBufferException e) {
-					IOException ioException = e.unwrapIOException();
-					if (ioException == NEED_MORE_DATA_EXCEPTION) {
-						return null;
-					}
-					throw new MalformedDataException(e);
-				}
+				return ByteBufsDecoder.ofVarIntSizePrefixedBytes()
+						.andThen(buf -> {
+							try {
+								return inputParser.parseFrom(buf.asArray());
+							} catch (InvalidProtocolBufferException e) {
+								throw new MalformedDataException(e);
+							}
+						})
+						.tryDecode(bufs);
 			}
 		};
-	}
-
-	private static final NeedMoreDataException NEED_MORE_DATA_EXCEPTION = new NeedMoreDataException();
-
-	private static final class NeedMoreDataException extends IOException {
-		@Override
-		public synchronized Throwable fillInStackTrace() {
-			return this;
-		}
 	}
 
 	public static StreamIdProto.StreamId convert(StreamId streamId) {
@@ -448,30 +435,5 @@ public final class ProtobufUtils {
 		}
 
 		return aType;
-	}
-
-	private static class PeekingInputStream extends InputStream {
-		private final ByteBufs bufs;
-		int offset;
-
-		public PeekingInputStream(ByteBufs bufs) {
-			this.bufs = bufs;
-			offset = 0;
-		}
-
-		@Override
-		public int read() throws IOException {
-			if (!bufs.hasRemainingBytes(offset + 1)) throw NEED_MORE_DATA_EXCEPTION;
-			return bufs.peekByte(offset++);
-		}
-
-		@Override
-		public int read(byte @NotNull [] b, int off, int len) throws IOException {
-			if (!bufs.hasRemainingBytes(offset + 1)) throw NEED_MORE_DATA_EXCEPTION;
-
-			int peeked = bufs.peekTo(this.offset, b, off, len);
-			this.offset += peeked;
-			return peeked;
-		}
 	}
 }
