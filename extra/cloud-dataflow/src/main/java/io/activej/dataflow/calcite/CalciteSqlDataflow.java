@@ -5,7 +5,9 @@ import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowException;
 import io.activej.dataflow.SqlDataflow;
 import io.activej.dataflow.calcite.DataflowShuttle.UnmaterializedDataset;
-import io.activej.dataflow.calcite.collector.CalciteCollector;
+import io.activej.dataflow.collector.Collector;
+import io.activej.dataflow.collector.MergeCollector;
+import io.activej.dataflow.collector.UnionCollector;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.graph.DataflowGraph;
@@ -110,9 +112,9 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 	}
 
 	public Promise<StreamSupplier<Record>> queryDataflow(Dataset<Record> dataset) {
-		CalciteCollector<?> calciteCollector = dataset instanceof LocallySortedDataset<?, Record> sortedDataset ?
-				CalciteCollector.createOrdered(sortedDataset, client) :
-				CalciteCollector.createUnordered(dataset, client);
+		Collector<Record> calciteCollector = dataset instanceof LocallySortedDataset<?, Record> sortedDataset ?
+				MergeCollector.create(sortedDataset, client, false) :
+				UnionCollector.create(dataset, client);
 
 		DataflowGraph graph = new DataflowGraph(client, partitions);
 		StreamSupplier<Record> result = calciteCollector.compile(graph);

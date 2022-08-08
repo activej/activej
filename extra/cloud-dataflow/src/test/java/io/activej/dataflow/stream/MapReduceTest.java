@@ -2,6 +2,7 @@ package io.activej.dataflow.stream;
 
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowServer;
+import io.activej.dataflow.collector.Collector;
 import io.activej.dataflow.collector.MergeCollector;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.graph.DataflowGraph;
@@ -144,7 +145,7 @@ public class MapReduceTest {
 		Dataset<StringCount> mappedItems = map(items, new StringMapFunction(), StringCount.class);
 		Dataset<StringCount> reducedItems = sortReduceRepartitionReduce(mappedItems,
 				new StringReducer(), String.class, new StringKeyFunction(), Comparator.naturalOrder());
-		MergeCollector<String, StringCount> collector = new MergeCollector<>(reducedItems, client, new StringKeyFunction(), naturalOrder(), false);
+		Collector<StringCount> collector = MergeCollector.create(reducedItems, client, new StringKeyFunction(), naturalOrder(), false);
 		StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
 		StreamConsumerToList<StringCount> resultConsumer = StreamConsumerToList.create();
 

@@ -4,6 +4,7 @@ import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.collector.Collector;
+import io.activej.dataflow.collector.ConcatCollector;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.dataset.SortedDataset;
@@ -414,7 +415,7 @@ public final class DataflowTest {
 		Dataset<TestItem> filterDataset = filter(datasetOfId("items", TestItem.class), new TestPredicate());
 		LocallySortedDataset<Long, TestItem> sortedDataset = localSort(filterDataset, long.class, new TestKeyFunction(), new TestComparator());
 
-		Collector<TestItem> collector = new Collector<>(sortedDataset, client);
+		Collector<TestItem> collector = ConcatCollector.create(sortedDataset, client);
 		StreamSupplier<TestItem> resultSupplier = collector.compile(graph);
 
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
