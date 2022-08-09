@@ -125,7 +125,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * {@code errorSupplier} exception.
 	 */
 	@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "OptionalIsPresent"})
-	static <T> @NotNull Promise<T> ofOptional(@NotNull Optional<T> optional, @NotNull Supplier<? extends Exception> errorSupplier) {
+	static <T> @NotNull Promise<T> ofOptional(@NotNull Optional<T> optional, @NotNull Supplier<? extends @NotNull Exception> errorSupplier) {
 		if (optional.isPresent()) return Promise.of(optional.get());
 		return Promise.ofException(errorSupplier.get());
 	}
@@ -499,7 +499,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise} whose result is the result of a mapping
 	 * function applied either to an exception of {@code this} promise.
 	 */
-	default @NotNull Promise<T> mapException(@NotNull FunctionEx<@NotNull Exception, Exception> exceptionFn) {
+	default @NotNull Promise<T> mapException(@NotNull FunctionEx<@NotNull Exception, @NotNull Exception> exceptionFn) {
 		return then(Promise::of, e -> Promise.ofException(exceptionFn.apply(e)));
 	}
 
