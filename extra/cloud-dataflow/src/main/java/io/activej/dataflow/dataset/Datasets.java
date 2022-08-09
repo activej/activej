@@ -212,7 +212,11 @@ public final class Datasets {
 		return new DatasetEmpty<>(resultType);
 	}
 
-	public static <T> Dataset<T> union(Dataset<T> left, Dataset<T> right) {
+	public static <T> Dataset<T> unionAll(Dataset<T> left, Dataset<T> right) {
+		return new DatasetUnionAll<>(left, right);
+	}
+
+	public static <K, T> SortedDataset<K, T> union(SortedDataset<K, T> left, SortedDataset<K, T> right) {
 		return new DatasetUnion<>(left, right);
 	}
 

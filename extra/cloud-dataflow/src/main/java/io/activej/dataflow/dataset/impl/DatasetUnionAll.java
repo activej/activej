@@ -17,31 +17,25 @@
 package io.activej.dataflow.dataset.impl;
 
 import io.activej.dataflow.dataset.Dataset;
-import io.activej.dataflow.dataset.SortedDataset;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.StreamId;
-import io.activej.dataflow.node.NodeMerge;
+import io.activej.dataflow.node.NodeUnion;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.activej.dataflow.dataset.DatasetUtils.repartitionAndSort;
+public final class DatasetUnionAll<T> extends Dataset<T> {
+	private final Dataset<T> left;
+	private final Dataset<T> right;
 
-public final class DatasetUnion<K, T> extends SortedDataset<K, T> {
-	private final SortedDataset<K, T> left;
-	private final SortedDataset<K, T> right;
-
-	private final int sharderNonce = ThreadLocalRandom.current().nextInt();
-
-	public DatasetUnion(SortedDataset<K, T> left, SortedDataset<K, T> right) {
-		super(left.valueType(), left.keyComparator(), left.keyType(), left.keyFunction());
+	public DatasetUnionAll(Dataset<T> left, Dataset<T> right) {
+		super(left.valueType());
 		this.left = left;
 		this.right = right;
 	}
@@ -51,10 +45,8 @@ public final class DatasetUnion<K, T> extends SortedDataset<K, T> {
 		DataflowGraph graph = context.getGraph();
 		List<StreamId> outputStreamIds = new ArrayList<>();
 
-		DataflowContext next = context.withFixedNonce(sharderNonce);
-
-		List<StreamId> leftStreamIds = left.channels(next);
-		List<StreamId> rightStreamIds = repartitionAndSort(next, right, graph.getPartitions(leftStreamIds));
+		List<StreamId> leftStreamIds = left.channels(context);
+		List<StreamId> rightStreamIds = right.channels(context);
 
 		Map<Partition, List<StreamId>> partitioned = Stream.concat(leftStreamIds.stream(), rightStreamIds.stream())
 				.collect(Collectors.groupingBy(graph::getPartition));
@@ -63,14 +55,17 @@ public final class DatasetUnion<K, T> extends SortedDataset<K, T> {
 
 		for (Map.Entry<Partition, List<StreamId>> entry : partitioned.entrySet()) {
 			List<StreamId> streamIds = entry.getValue();
+			assert !streamIds.isEmpty();
 
-			NodeMerge<K, T> nodeMerge = new NodeMerge<>(index, keyFunction(), keyComparator(), true);
-			for (StreamId streamId : streamIds) {
-				nodeMerge.addInput(streamId);
+			if (streamIds.size() == 1) {
+				outputStreamIds.add(streamIds.get(0));
+				continue;
 			}
-			graph.addNode(entry.getKey(), nodeMerge);
 
-			outputStreamIds.add(nodeMerge.getOutput());
+			NodeUnion<T> nodeUnion = new NodeUnion<>(index, streamIds);
+			graph.addNode(entry.getKey(), nodeUnion);
+
+			outputStreamIds.add(nodeUnion.getOutput());
 		}
 
 		return outputStreamIds;

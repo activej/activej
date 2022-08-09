@@ -1400,6 +1400,57 @@ public abstract class AbstractCalciteTest {
 		assertEquals(expected, result);
 	}
 
+	@Test
+	public void testUnionDeduplication() {
+		QueryResult result = query("""
+				SELECT id
+				FROM student
+				UNION
+				SELECT id
+				FROM department
+				""");
+
+		QueryResult expected = new QueryResult(
+				List.of("id"),
+				List.of(
+						new Object[]{1},
+						new Object[]{2},
+						new Object[]{3},
+						new Object[]{4}
+				)
+		);
+
+		assertEquals(expected, result);
+	}
+
+	@Test
+	public void testUnionAll() {
+		QueryResult result = query("""
+				SELECT id
+				FROM student
+				UNION ALL
+				SELECT id
+				FROM department
+				""");
+
+		System.out.println(result);
+
+		QueryResult expected = new QueryResult(
+				List.of("id"),
+				List.of(
+						new Object[]{1},
+						new Object[]{2},
+						new Object[]{3},
+						new Object[]{4},
+						new Object[]{1},
+						new Object[]{2},
+						new Object[]{3}
+				)
+		);
+
+		assertEquals(expected, result);
+	}
+
 	// region Offset
 	@Test
 	public void testOffset() {

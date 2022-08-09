@@ -229,7 +229,14 @@ public class DataflowShuttle extends RelShuttleImpl {
 			// Make sure field names match
 			rightDataset = Datasets.map(rightDataset, RecordProjectionFn.rename(left.getScheme()));
 
-			return Datasets.union(leftDataset, rightDataset);
+			if (union.all) {
+				return Datasets.unionAll(leftDataset, rightDataset);
+			}
+
+			SortedDataset<Record, Record> sortedLeft = sortForUnion(leftDataset, Datasets::repartitionSort);
+			SortedDataset<Record, Record> sortedRight = sortForUnion(rightDataset, Datasets::castToSorted);
+
+			return Datasets.union(sortedLeft, sortedRight);
 		}));
 
 		return result;
@@ -375,23 +382,6 @@ public class DataflowShuttle extends RelShuttleImpl {
 				});
 	}
 
-	private static <K extends Comparable<K>> SortedDataset<K, Record> sortForJoin(
-			Class<K> keyClass, RecordKeyFunction<K> keyFunction, Dataset<Record> dataset,
-			Function<LocallySortedDataset<K, Record>, SortedDataset<K, Record>> toSortedFn
-	) {
-		//noinspection PointlessBooleanExpression,unchecked
-
-		LocallySortedDataset<K, Record> locallySorted = true &&
-				dataset instanceof LocallySortedDataset<?, ?> locallySortedDataset &&
-				locallySortedDataset.keyFunction() instanceof RecordKeyFunction<?> recordKeyFunction &&
-				recordKeyFunction.getIndex() == keyFunction.getIndex() &&
-				locallySortedDataset.keyComparator() == Comparator.naturalOrder() ?
-				(LocallySortedDataset<K, Record>) locallySortedDataset :
-				Datasets.localSort(dataset, keyClass, keyFunction, Comparator.naturalOrder());
-
-		return toSortedFn.apply(locallySorted);
-	}
-
 	@Override
 	public RelNode visit(RelNode other) {
 		if (other instanceof LogicalCalc calc) {
@@ -480,6 +470,38 @@ public class DataflowShuttle extends RelShuttleImpl {
 		Operand<?> operand = toOperand(node);
 		checkArgument(operand instanceof OperandScalar, "Not scalar operand");
 		return (OperandScalar) operand;
+	}
+
+	private static <K extends Comparable<K>> SortedDataset<K, Record> sortForJoin(
+			Class<K> keyClass, RecordKeyFunction<K> keyFunction, Dataset<Record> dataset,
+			Function<LocallySortedDataset<K, Record>, SortedDataset<K, Record>> toSortedFn
+	) {
+		//noinspection PointlessBooleanExpression,unchecked
+
+		LocallySortedDataset<K, Record> locallySorted = true &&
+				dataset instanceof LocallySortedDataset<?, ?> locallySortedDataset &&
+				locallySortedDataset.keyFunction() instanceof RecordKeyFunction<?> recordKeyFunction &&
+				recordKeyFunction.getIndex() == keyFunction.getIndex() &&
+				locallySortedDataset.keyComparator() == Comparator.naturalOrder() ?
+				(LocallySortedDataset<K, Record>) locallySortedDataset :
+				Datasets.localSort(dataset, keyClass, keyFunction, Comparator.naturalOrder());
+
+		return toSortedFn.apply(locallySorted);
+	}
+
+	private static SortedDataset<Record, Record> sortForUnion(Dataset<Record> dataset,
+			Function<LocallySortedDataset<Record, Record>, SortedDataset<Record, Record>> toSortedFn
+	) {
+		//noinspection PointlessBooleanExpression,unchecked
+
+		LocallySortedDataset<Record, Record> locallySorted = true &&
+				dataset instanceof LocallySortedDataset<?, ?> locallySortedDataset &&
+				locallySortedDataset.keyFunction() == Function.identity() &&
+				locallySortedDataset.keyComparator() == Comparator.naturalOrder() ?
+				(LocallySortedDataset<Record, Record>) locallySortedDataset :
+				Datasets.localSort(dataset, Record.class, Function.identity(), RecordKeyComparator.getInstance());
+
+		return toSortedFn.apply(locallySorted);
 	}
 
 	public interface UnmaterializedDataset {
