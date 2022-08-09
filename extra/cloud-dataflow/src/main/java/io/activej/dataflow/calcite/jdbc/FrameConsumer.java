@@ -1,33 +1,32 @@
 package io.activej.dataflow.calcite.jdbc;
 
+import io.activej.common.ApplicationSettings;
 import io.activej.datastream.AbstractStreamConsumer;
 import io.activej.record.Record;
+import org.apache.calcite.avatica.AvaticaStatement;
 import org.apache.calcite.avatica.Meta.Frame;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 final class FrameConsumer extends AbstractStreamConsumer<Record> {
-	private static final int DEFAULT_PREFETCH_SIZE = 100;
+	private static final int FETCH_SIZE = ApplicationSettings.getInt(FrameConsumer.class, "fetchSize", AvaticaStatement.DEFAULT_FETCH_SIZE);
 
-	private static final Record EOS_RECORD = new Record(null) {};
+	private static final Record FINISH_RECORD = new Record(null) {};
 
 	private final int columnSize;
 
-	private final ConcurrentLinkedQueue<Record> recordQueue = new ConcurrentLinkedQueue<>();
+	private final LinkedBlockingQueue<Record> recordQueue = new LinkedBlockingQueue<>();
 
 	private @Nullable Exception error;
 
-	private final AtomicInteger prefetchSize = new AtomicInteger(DEFAULT_PREFETCH_SIZE);
 	private final AtomicBoolean suspended = new AtomicBoolean(false);
 
 	private int taken;
 	private boolean done;
-	private boolean doneSent;
 
 	FrameConsumer(int columnSize) {
 		this.columnSize = columnSize;
@@ -39,38 +38,40 @@ final class FrameConsumer extends AbstractStreamConsumer<Record> {
 		}
 
 		if (offset != taken) {
-			throw new RuntimeException("Cannot return less records than already taken");
+			throw new RuntimeException("Cannot return records from offset that is not equal to number of already taken records");
 		}
 		if (done) {
-			if (doneSent) {
-				throw new AssertionError();
+			throw new AssertionError();
+		}
+
+		int fetchSize = Math.min(Math.max(0, fetchMaxRowCount), FETCH_SIZE);
+
+		List<Object> rows = new ArrayList<>(fetchSize);
+
+		for (int i = 0; i < fetchSize; i++) {
+			Record record;
+			try {
+				record = recordQueue.take();
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				throw new RuntimeException(e);
 			}
-			doneSent = true;
-		}
 
-		if (fetchMaxRowCount != -1) {
-			prefetchSize.set(fetchMaxRowCount);
-		}
-
-		List<Object> rows = new ArrayList<>();
-
-		while (fetchMaxRowCount != 0) {
-			Record record = recordQueue.poll();
-			if (record == null) {
-				if (suspended.compareAndSet(true, false)) {
-					eventloop.submit(this::doResume);
+			if (record == FINISH_RECORD) {
+				if (error == null) {
+					done = true;
+					eventloop.submit(this::acknowledge);
+				} else if (i == 0) {
+					throw new RuntimeException(error);
 				}
 				break;
 			}
-			if (record == EOS_RECORD) {
-				done = true;
-				break;
+			if (suspended.compareAndSet(true, false)) {
+				eventloop.submit(this::doResume);
 			}
 
 			Object[] row = recordToRow(record);
 			rows.add(row);
-
-			fetchMaxRowCount--;
 		}
 
 		taken += rows.size();
@@ -86,23 +87,22 @@ final class FrameConsumer extends AbstractStreamConsumer<Record> {
 	@Override
 	protected void onError(Exception e) {
 		error = e;
+		recordQueue.add(FINISH_RECORD);
 	}
 
 	private void doResume() {
 		resume(item -> {
-			recordQueue.add(item);
-
-			if (recordQueue.size() >= prefetchSize.get()) {
+			if (recordQueue.size() > FETCH_SIZE) {
 				suspend();
 				suspended.set(true);
 			}
+			recordQueue.add(item);
 		});
 	}
 
 	@Override
 	protected void onEndOfStream() {
-		recordQueue.add(EOS_RECORD);
-		acknowledge();
+		recordQueue.add(FINISH_RECORD);
 	}
 
 	private Object[] recordToRow(Record record) {

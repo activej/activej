@@ -44,18 +44,20 @@ public final class DataflowMeta extends LimitedMeta {
 	public StatementHandle prepare(ConnectionHandle ch, String sql, long maxRowCount) {
 		StatementHandle statement = createStatement(ch);
 		TransformationResult transformed = transform(sql);
-		statement.signature = getSignature(sql, transformed.fields(), transformed.parameters(), transformed.dataset().getScheme());
+		statement.signature = createSignature(sql, transformed.fields(), transformed.parameters(), transformed.dataset().getScheme());
+
 		unmaterializedDatasets.put(StatementKey.create(statement), transformed.dataset());
 		return statement;
 	}
 
 	@Override
 	public ExecuteResult execute(StatementHandle h, List<TypedValue> parameterValues, int maxRowsInFirstFrame) throws NoSuchStatementException {
-		UnmaterializedDataset unmaterializedDataset = unmaterializedDatasets.get(StatementKey.create(h));
+		StatementKey key = StatementKey.create(h);
+
+		UnmaterializedDataset unmaterializedDataset = unmaterializedDatasets.get(key);
 		if (unmaterializedDataset == null) {
 			throw new NoSuchStatementException(h);
 		}
-		MetaResultSet metaResultSet = MetaResultSet.create(h.connectionId, h.id, false, h.signature, null);
 
 		List<Object> params = parameterValues.stream()
 				.map(typedValue -> typedValue.value)
@@ -63,23 +65,11 @@ public final class DataflowMeta extends LimitedMeta {
 
 		Dataset<Record> dataset = unmaterializedDataset.materialize(params);
 
-		FrameConsumer frameConsumer;
-		try {
-			frameConsumer = eventloop.submit(() -> sqlDataflow.queryDataflow(dataset)
-					.map(supplier -> {
-						FrameConsumer consumer = new FrameConsumer(unmaterializedDataset.getScheme().size());
-						supplier.streamTo(consumer);
-						return consumer;
-					})).get();
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-			throw new RuntimeException(e);
-		} catch (ExecutionException e) {
-			throw new RuntimeException(e);
-		}
+		FrameConsumer frameConsumer = createFrameConsumer(h, dataset);
 
-		consumers.put(StatementKey.create(h), frameConsumer);
+		Frame firstFrame = frameConsumer.fetch(0, maxRowsInFirstFrame);
 
+		MetaResultSet metaResultSet = MetaResultSet.create(h.connectionId, h.id, false, h.signature, firstFrame);
 		return new ExecuteResult(List.of(metaResultSet));
 	}
 
@@ -87,16 +77,24 @@ public final class DataflowMeta extends LimitedMeta {
 	public ExecuteResult prepareAndExecute(StatementHandle h, String sql, long maxRowCount, int maxRowsInFirstFrame, PrepareCallback callback) {
 		TransformationResult transformed = transform(sql);
 		UnmaterializedDataset unmaterialized = transformed.dataset();
+		h.signature = createSignature(sql, transformed.fields(), Collections.emptyList(), unmaterialized.getScheme());
+
 		Dataset<Record> dataset = unmaterialized.materialize(Collections.emptyList());
-		Signature signature = getSignature(sql, transformed.fields(), Collections.emptyList(), unmaterialized.getScheme());
 
-		MetaResultSet metaResultSet = MetaResultSet.create(h.connectionId, h.id, false, signature, null);
+		FrameConsumer frameConsumer = createFrameConsumer(h, dataset);
 
+		Frame firstFrame = frameConsumer.fetch(0, maxRowsInFirstFrame);
+
+		MetaResultSet metaResultSet = MetaResultSet.create(h.connectionId, h.id, false, h.signature, firstFrame);
+		return new ExecuteResult(List.of(metaResultSet));
+	}
+
+	private FrameConsumer createFrameConsumer(StatementHandle statement, Dataset<Record> dataset) {
 		FrameConsumer frameConsumer;
 		try {
 			frameConsumer = eventloop.submit(() -> sqlDataflow.queryDataflow(dataset)
 					.map(supplier -> {
-						FrameConsumer consumer = new FrameConsumer(unmaterialized.getScheme().size());
+						FrameConsumer consumer = new FrameConsumer(statement.signature.columns.size());
 						supplier.streamTo(consumer);
 						return consumer;
 					})).get();
@@ -107,12 +105,11 @@ public final class DataflowMeta extends LimitedMeta {
 			throw new RuntimeException(e);
 		}
 
-		consumers.put(StatementKey.create(h), frameConsumer);
-
-		return new ExecuteResult(List.of(metaResultSet));
+		consumers.put(StatementKey.create(statement), frameConsumer);
+		return frameConsumer;
 	}
 
-	private Signature getSignature(String sql, List<RelDataTypeField> fields, List<RexDynamicParam> dynamicParams, RecordScheme scheme) {
+	private Signature createSignature(String sql, List<RelDataTypeField> fields, List<RexDynamicParam> dynamicParams, RecordScheme scheme) {
 		int fieldCount = scheme.size();
 		List<ColumnMetaData> columns = new ArrayList<>(fieldCount);
 		for (int i = 0; i < fieldCount; i++) {
@@ -148,7 +145,7 @@ public final class DataflowMeta extends LimitedMeta {
 				columns,
 				sql,
 				parameters,
-				CursorFactory.record(Record.class, Collections.emptyList(), Collections.emptyList()), // we already know the fields
+				CursorFactory.LIST,
 				StatementType.SELECT);
 	}
 
