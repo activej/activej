@@ -5,6 +5,8 @@ import io.activej.record.Record;
 
 import java.util.List;
 
+import static io.activej.dataflow.calcite.utils.Utils.compareToUnknown;
+
 public final class BetweenPredicate implements WherePredicate {
 	private final Operand<?> value;
 	private final Operand<?> from;
@@ -27,7 +29,7 @@ public final class BetweenPredicate implements WherePredicate {
 		Comparable<Object> to = this.to.getValue(record);
 		if (to == null) return false;
 
-		return value.compareTo(from) >= 0 && value.compareTo(to) <= 0;
+		return compareToUnknown(value, from) >= 0 && compareToUnknown(value, to) <= 0;
 	}
 
 	@Override

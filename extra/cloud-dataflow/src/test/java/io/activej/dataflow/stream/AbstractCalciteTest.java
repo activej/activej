@@ -108,12 +108,14 @@ public abstract class AbstractCalciteTest {
 			new SubjectSelection("ITB001", 1, "John"),
 			new SubjectSelection("ITB001", 1, "Mickey"),
 			new SubjectSelection("ITB001", 2, "James"),
-			new SubjectSelection("MKB114", 1, "Erica")
+			new SubjectSelection("MKB114", 1, "Erica"),
+			new SubjectSelection("MKB114", 2, "Steve")
 	);
 	protected static final List<SubjectSelection> SUBJECT_SELECTION_LIST_2 = List.of(
 			new SubjectSelection("ITB001", 1, "Bob"),
 			new SubjectSelection("ITB001", 2, "Jenny"),
-			new SubjectSelection("MKB114", 1, "John")
+			new SubjectSelection("MKB114", 1, "John"),
+			new SubjectSelection("MKB114", 1, "Paul")
 	);
 
 
@@ -1692,8 +1694,25 @@ public abstract class AbstractCalciteTest {
 				List.of("subject", "COUNT(*)"),
 				List.of(
 						new Object[]{"ITB001", 5L},
-						new Object[]{"MKB114", 2L}
+						new Object[]{"MKB114", 4L}
 				)
+		);
+
+		assertEquals(expected, result);
+	}
+
+	@Test
+	public void testGroupBySingleColumnWithHaving() {
+		QueryResult result = query("""
+				SELECT subject, COUNT(*)
+				FROM subject_selection
+				GROUP BY subject
+				HAVING COUNT(*) > 4
+				""");
+
+		QueryResult expected = new QueryResult(
+				List.of("subject", "COUNT(*)"),
+				List.<Object[]>of(new Object[]{"ITB001", 5L})
 		);
 
 		assertEquals(expected, result);
@@ -1712,7 +1731,29 @@ public abstract class AbstractCalciteTest {
 				List.of(
 						new Object[]{"ITB001", 1, 3L},
 						new Object[]{"ITB001", 2, 2L},
-						new Object[]{"MKB114", 1, 2L}
+						new Object[]{"MKB114", 1, 3L},
+						new Object[]{"MKB114", 2, 1L}
+				)
+		);
+
+		assertEquals(expected, result);
+	}
+
+	@Test
+	public void testGroupByMultipleColumnsWithHaving() {
+		QueryResult result = query("""
+				SELECT subject, semester, COUNT(*)
+				FROM subject_selection
+				GROUP BY subject, semester
+				HAVING COUNT(*) > 1
+				""");
+
+		QueryResult expected = new QueryResult(
+				List.of("subject", "semester", "COUNT(*)"),
+				List.of(
+						new Object[]{"ITB001", 1, 3L},
+						new Object[]{"ITB001", 2, 2L},
+						new Object[]{"MKB114", 1, 3L}
 				)
 		);
 

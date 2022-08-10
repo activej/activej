@@ -6,6 +6,8 @@ import io.activej.record.Record;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static io.activej.dataflow.calcite.utils.Utils.equalsUnknown;
+
 public final class InPredicate implements WherePredicate {
 	private final Operand<?> value;
 	private final List<Operand<?>> options;
@@ -22,7 +24,7 @@ public final class InPredicate implements WherePredicate {
 
 		for (Operand<?> option : options) {
 			Object optionValue = option.getValue(record);
-			if (toTest.equals(optionValue)) return true;
+			if (optionValue != null && equalsUnknown(toTest, optionValue)) return true;
 		}
 
 		return false;

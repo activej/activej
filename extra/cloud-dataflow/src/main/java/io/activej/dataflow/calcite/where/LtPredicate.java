@@ -5,6 +5,8 @@ import io.activej.record.Record;
 
 import java.util.List;
 
+import static io.activej.dataflow.calcite.utils.Utils.compareToUnknown;
+
 public final class LtPredicate implements WherePredicate {
 	private final Operand<?> left;
 	private final Operand<?> right;
@@ -22,7 +24,7 @@ public final class LtPredicate implements WherePredicate {
 		Comparable<Object> rightValue = right.getValue(record);
 		if (rightValue == null) return false;
 
-		return leftValue.compareTo(rightValue) < 0;
+		return compareToUnknown(leftValue, rightValue) < 0;
 	}
 
 	@Override

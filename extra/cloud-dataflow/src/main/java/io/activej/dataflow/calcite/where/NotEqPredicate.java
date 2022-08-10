@@ -5,6 +5,8 @@ import io.activej.record.Record;
 
 import java.util.List;
 
+import static io.activej.dataflow.calcite.utils.Utils.equalsUnknown;
+
 public final class NotEqPredicate implements WherePredicate {
 	private final Operand<?> left;
 	private final Operand<?> right;
@@ -22,7 +24,7 @@ public final class NotEqPredicate implements WherePredicate {
 		Object rightValue = right.getValue(record);
 		if (rightValue == null) return false;
 
-		return !leftValue.equals(rightValue);
+		return !equalsUnknown(leftValue, rightValue);
 	}
 
 	@Override

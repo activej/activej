@@ -60,4 +60,21 @@ public final class Utils {
 		throw new IllegalArgumentException("Unknown node: " + node);
 	}
 
+	public static int compareToUnknown(Comparable<Object> comparable1, Comparable<Object> comparable2) {
+		if (comparable1.getClass() != comparable2.getClass() &&
+				comparable1 instanceof Number number1 && comparable2 instanceof Number number2) {
+			return Double.compare(number1.doubleValue(), number2.doubleValue());
+		}
+
+		return comparable1.compareTo(comparable2);
+	}
+
+	public static boolean equalsUnknown(Object object1, Object object2) {
+		if (object1.getClass() != object2.getClass() &&
+				object1 instanceof Number number1 && object2 instanceof Number number2) {
+			return Double.compare(number1.doubleValue(), number2.doubleValue()) == 0;
+		}
+
+		return object1.equals(object2);
+	}
 }
