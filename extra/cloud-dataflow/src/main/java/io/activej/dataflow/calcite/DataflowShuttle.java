@@ -1,5 +1,6 @@
 package io.activej.dataflow.calcite;
 
+import com.google.common.collect.ImmutableList;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.ToDoException;
 import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjection;
@@ -202,7 +203,46 @@ public class DataflowShuttle extends RelShuttleImpl {
 
 	@Override
 	public RelNode visit(LogicalValues values) {
-		throw new ToDoException();
+		RelNode result = super.visit(values);
+
+		ImmutableList<ImmutableList<RexLiteral>> tuples = values.getTuples();
+
+		List<Dataset<Record>> singleDatasets = new ArrayList<>(tuples.size());
+		RecordScheme scheme = null;
+		for (ImmutableList<RexLiteral> tuple : tuples) {
+			SortedDataset<Record, Record> singleDummyDataset = Utils.singleDummyDataset();
+			List<FieldProjection> projections = new ArrayList<>();
+			for (RexLiteral field : tuple) {
+				projections.add(new FieldProjection(toOperand(field), null));
+			}
+			RecordProjectionFn projectionFn = RecordProjectionFn.create(projections);
+			singleDatasets.add(Datasets.map(singleDummyDataset, projectionFn));
+
+			if (scheme == null) {
+				scheme = projectionFn.getToScheme(RecordScheme.create(classLoader), null);
+			}
+		}
+
+		if (singleDatasets.isEmpty()) return result;
+		assert scheme != null;
+
+		if (singleDatasets.size() == 1) {
+			datasetStack.push(UnmaterializedDataset.of(scheme, $ -> singleDatasets.get(0)));
+
+			return result;
+		}
+
+		Dataset<Record> union = singleDatasets.get(0);
+		for (int i = 1; i < singleDatasets.size(); i++) {
+			Dataset<Record> next = singleDatasets.get(i);
+
+			union = Datasets.unionAll(union, next);
+		}
+
+		Dataset<Record> finalUnion = union;
+		datasetStack.push(UnmaterializedDataset.of(scheme, $ -> finalUnion));
+
+		return result;
 	}
 
 	@Override

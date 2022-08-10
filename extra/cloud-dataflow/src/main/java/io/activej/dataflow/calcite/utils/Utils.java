@@ -4,15 +4,20 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.ToDoException;
 import io.activej.dataflow.calcite.Value;
 import io.activej.dataflow.calcite.function.ProjectionFunction;
+import io.activej.dataflow.calcite.inject.CalciteServerModule;
 import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.dataflow.calcite.operand.OperandFieldAccess;
 import io.activej.dataflow.calcite.operand.OperandRecordField;
 import io.activej.dataflow.calcite.operand.OperandScalar;
+import io.activej.dataflow.dataset.Datasets;
+import io.activej.dataflow.dataset.SortedDataset;
+import io.activej.record.Record;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.type.SqlTypeName;
 
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -76,5 +81,9 @@ public final class Utils {
 		}
 
 		return object1.equals(object2);
+	}
+
+	public static SortedDataset<Record, Record> singleDummyDataset() {
+		return Datasets.sortedDatasetOfId(CalciteServerModule.CALCITE_SINGLE_DUMMY_DATASET, Record.class, Record.class, Function.identity(), RecordKeyComparator.getInstance());
 	}
 }

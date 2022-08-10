@@ -327,6 +327,39 @@ public abstract class AbstractCalciteTest {
 		assertEquals(expected, result);
 	}
 
+	@Test
+	public void testSelectAdditionalColumns() {
+		QueryResult result = query("SELECT 123, 'test', id FROM department");
+
+		QueryResult expected = new QueryResult(
+				List.of("123", "'test'", "id"),
+				concat(DEPARTMENT_LIST_1, DEPARTMENT_LIST_2).stream()
+						.map(department -> new Object[]{123, "test", department.id})
+						.toList()
+		);
+
+		assertEquals(expected, result);
+	}
+
+	@Test
+	public void testSelectAdditionalColumnsNoTable() {
+		QueryResult result = query("""
+				SELECT 123, 'test1'
+				UNION
+				SELECT 321, 'test2'
+				""");
+
+		QueryResult expected = new QueryResult(
+				List.of("123", "'test1'"),
+				List.<Object[]>of(
+						new Object[]{123, "test1"},
+						new Object[]{321, "test2"}
+						)
+		);
+
+		assertEquals(expected, result);
+	}
+
 	// region WhereEqualTrue
 	@Test
 	public void testWhereEqualTrue() {
