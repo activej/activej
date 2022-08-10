@@ -161,6 +161,797 @@ public final class ReducerProto {
               io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.class, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.Builder.class);
     }
 
+    public interface FieldAliasOrBuilder extends
+        // @@protoc_insertion_point(interface_extends:dataflow.calcite.RecordReducer.FieldAlias)
+        com.google.protobuf.MessageOrBuilder {
+
+      /**
+       * <code>string alias = 1;</code>
+       * @return Whether the alias field is set.
+       */
+      boolean hasAlias();
+      /**
+       * <code>string alias = 1;</code>
+       * @return The alias.
+       */
+      java.lang.String getAlias();
+      /**
+       * <code>string alias = 1;</code>
+       * @return The bytes for alias.
+       */
+      com.google.protobuf.ByteString
+          getAliasBytes();
+
+      /**
+       * <code>bool is_null = 2;</code>
+       * @return Whether the isNull field is set.
+       */
+      boolean hasIsNull();
+      /**
+       * <code>bool is_null = 2;</code>
+       * @return The isNull.
+       */
+      boolean getIsNull();
+
+      public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.FieldAliasCase getFieldAliasCase();
+    }
+    /**
+     * Protobuf type {@code dataflow.calcite.RecordReducer.FieldAlias}
+     */
+    public static final class FieldAlias extends
+        com.google.protobuf.GeneratedMessageV3 implements
+        // @@protoc_insertion_point(message_implements:dataflow.calcite.RecordReducer.FieldAlias)
+        FieldAliasOrBuilder {
+    private static final long serialVersionUID = 0L;
+      // Use FieldAlias.newBuilder() to construct.
+      private FieldAlias(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+        super(builder);
+      }
+      private FieldAlias() {
+      }
+
+      @java.lang.Override
+      @SuppressWarnings({"unused"})
+      protected java.lang.Object newInstance(
+          UnusedPrivateParameter unused) {
+        return new FieldAlias();
+      }
+
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+      getUnknownFields() {
+        return this.unknownFields;
+      }
+      private FieldAlias(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        this();
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 10: {
+                java.lang.String s = input.readStringRequireUtf8();
+                fieldAliasCase_ = 1;
+                fieldAlias_ = s;
+                break;
+              }
+              case 16: {
+                fieldAlias_ = input.readBool();
+                fieldAliasCase_ = 2;
+                break;
+              }
+              default: {
+                if (!parseUnknownField(
+                    input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e).setUnfinishedMessage(this);
+        } finally {
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return io.activej.dataflow.proto.calcite.ReducerProto.internal_static_dataflow_calcite_RecordReducer_FieldAlias_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return io.activej.dataflow.proto.calcite.ReducerProto.internal_static_dataflow_calcite_RecordReducer_FieldAlias_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.class, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder.class);
+      }
+
+      private int fieldAliasCase_ = 0;
+      private java.lang.Object fieldAlias_;
+      public enum FieldAliasCase
+          implements com.google.protobuf.Internal.EnumLite,
+              com.google.protobuf.AbstractMessage.InternalOneOfEnum {
+        ALIAS(1),
+        IS_NULL(2),
+        FIELDALIAS_NOT_SET(0);
+        private final int value;
+        private FieldAliasCase(int value) {
+          this.value = value;
+        }
+        /**
+         * @param value The number of the enum to look for.
+         * @return The enum associated with the given number.
+         * @deprecated Use {@link #forNumber(int)} instead.
+         */
+        @java.lang.Deprecated
+        public static FieldAliasCase valueOf(int value) {
+          return forNumber(value);
+        }
+
+        public static FieldAliasCase forNumber(int value) {
+          switch (value) {
+            case 1: return ALIAS;
+            case 2: return IS_NULL;
+            case 0: return FIELDALIAS_NOT_SET;
+            default: return null;
+          }
+        }
+        public int getNumber() {
+          return this.value;
+        }
+      };
+
+      public FieldAliasCase
+      getFieldAliasCase() {
+        return FieldAliasCase.forNumber(
+            fieldAliasCase_);
+      }
+
+      public static final int ALIAS_FIELD_NUMBER = 1;
+      /**
+       * <code>string alias = 1;</code>
+       * @return Whether the alias field is set.
+       */
+      public boolean hasAlias() {
+        return fieldAliasCase_ == 1;
+      }
+      /**
+       * <code>string alias = 1;</code>
+       * @return The alias.
+       */
+      public java.lang.String getAlias() {
+        java.lang.Object ref = "";
+        if (fieldAliasCase_ == 1) {
+          ref = fieldAlias_;
+        }
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
+        } else {
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (fieldAliasCase_ == 1) {
+            fieldAlias_ = s;
+          }
+          return s;
+        }
+      }
+      /**
+       * <code>string alias = 1;</code>
+       * @return The bytes for alias.
+       */
+      public com.google.protobuf.ByteString
+          getAliasBytes() {
+        java.lang.Object ref = "";
+        if (fieldAliasCase_ == 1) {
+          ref = fieldAlias_;
+        }
+        if (ref instanceof java.lang.String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          if (fieldAliasCase_ == 1) {
+            fieldAlias_ = b;
+          }
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+
+      public static final int IS_NULL_FIELD_NUMBER = 2;
+      /**
+       * <code>bool is_null = 2;</code>
+       * @return Whether the isNull field is set.
+       */
+      @java.lang.Override
+      public boolean hasIsNull() {
+        return fieldAliasCase_ == 2;
+      }
+      /**
+       * <code>bool is_null = 2;</code>
+       * @return The isNull.
+       */
+      @java.lang.Override
+      public boolean getIsNull() {
+        if (fieldAliasCase_ == 2) {
+          return (java.lang.Boolean) fieldAlias_;
+        }
+        return false;
+      }
+
+      private byte memoizedIsInitialized = -1;
+      @java.lang.Override
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
+
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      @java.lang.Override
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        if (fieldAliasCase_ == 1) {
+          com.google.protobuf.GeneratedMessageV3.writeString(output, 1, fieldAlias_);
+        }
+        if (fieldAliasCase_ == 2) {
+          output.writeBool(
+              2, (boolean)((java.lang.Boolean) fieldAlias_));
+        }
+        unknownFields.writeTo(output);
+      }
+
+      @java.lang.Override
+      public int getSerializedSize() {
+        int size = memoizedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (fieldAliasCase_ == 1) {
+          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, fieldAlias_);
+        }
+        if (fieldAliasCase_ == 2) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBoolSize(
+                2, (boolean)((java.lang.Boolean) fieldAlias_));
+        }
+        size += unknownFields.getSerializedSize();
+        memoizedSize = size;
+        return size;
+      }
+
+      @java.lang.Override
+      public boolean equals(final java.lang.Object obj) {
+        if (obj == this) {
+         return true;
+        }
+        if (!(obj instanceof io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias)) {
+          return super.equals(obj);
+        }
+        io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias other = (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias) obj;
+
+        if (!getFieldAliasCase().equals(other.getFieldAliasCase())) return false;
+        switch (fieldAliasCase_) {
+          case 1:
+            if (!getAlias()
+                .equals(other.getAlias())) return false;
+            break;
+          case 2:
+            if (getIsNull()
+                != other.getIsNull()) return false;
+            break;
+          case 0:
+          default:
+        }
+        if (!unknownFields.equals(other.unknownFields)) return false;
+        return true;
+      }
+
+      @java.lang.Override
+      public int hashCode() {
+        if (memoizedHashCode != 0) {
+          return memoizedHashCode;
+        }
+        int hash = 41;
+        hash = (19 * hash) + getDescriptor().hashCode();
+        switch (fieldAliasCase_) {
+          case 1:
+            hash = (37 * hash) + ALIAS_FIELD_NUMBER;
+            hash = (53 * hash) + getAlias().hashCode();
+            break;
+          case 2:
+            hash = (37 * hash) + IS_NULL_FIELD_NUMBER;
+            hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
+                getIsNull());
+            break;
+          case 0:
+          default:
+        }
+        hash = (29 * hash) + unknownFields.hashCode();
+        memoizedHashCode = hash;
+        return hash;
+      }
+
+      public static io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias parseFrom(
+          java.nio.ByteBuffer data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias parseFrom(
+          java.nio.ByteBuffer data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias parseFrom(
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias parseFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
+      }
+
+      @java.lang.Override
+      public Builder newBuilderForType() { return newBuilder(); }
+      public static Builder newBuilder() {
+        return DEFAULT_INSTANCE.toBuilder();
+      }
+      public static Builder newBuilder(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias prototype) {
+        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      }
+      @java.lang.Override
+      public Builder toBuilder() {
+        return this == DEFAULT_INSTANCE
+            ? new Builder() : new Builder().mergeFrom(this);
+      }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       * Protobuf type {@code dataflow.calcite.RecordReducer.FieldAlias}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+          // @@protoc_insertion_point(builder_implements:dataflow.calcite.RecordReducer.FieldAlias)
+          io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return io.activej.dataflow.proto.calcite.ReducerProto.internal_static_dataflow_calcite_RecordReducer_FieldAlias_descriptor;
+        }
+
+        @java.lang.Override
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return io.activej.dataflow.proto.calcite.ReducerProto.internal_static_dataflow_calcite_RecordReducer_FieldAlias_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.class, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder.class);
+        }
+
+        // Construct using io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessageV3
+                  .alwaysUseFieldBuilders) {
+          }
+        }
+        @java.lang.Override
+        public Builder clear() {
+          super.clear();
+          fieldAliasCase_ = 0;
+          fieldAlias_ = null;
+          return this;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return io.activej.dataflow.proto.calcite.ReducerProto.internal_static_dataflow_calcite_RecordReducer_FieldAlias_descriptor;
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias getDefaultInstanceForType() {
+          return io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.getDefaultInstance();
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias build() {
+          io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias buildPartial() {
+          io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias result = new io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias(this);
+          if (fieldAliasCase_ == 1) {
+            result.fieldAlias_ = fieldAlias_;
+          }
+          if (fieldAliasCase_ == 2) {
+            result.fieldAlias_ = fieldAlias_;
+          }
+          result.fieldAliasCase_ = fieldAliasCase_;
+          onBuilt();
+          return result;
+        }
+
+        @java.lang.Override
+        public Builder clone() {
+          return super.clone();
+        }
+        @java.lang.Override
+        public Builder setField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return super.setField(field, value);
+        }
+        @java.lang.Override
+        public Builder clearField(
+            com.google.protobuf.Descriptors.FieldDescriptor field) {
+          return super.clearField(field);
+        }
+        @java.lang.Override
+        public Builder clearOneof(
+            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+          return super.clearOneof(oneof);
+        }
+        @java.lang.Override
+        public Builder setRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            int index, java.lang.Object value) {
+          return super.setRepeatedField(field, index, value);
+        }
+        @java.lang.Override
+        public Builder addRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return super.addRepeatedField(field, value);
+        }
+        @java.lang.Override
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias) {
+            return mergeFrom((io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias other) {
+          if (other == io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.getDefaultInstance()) return this;
+          switch (other.getFieldAliasCase()) {
+            case ALIAS: {
+              fieldAliasCase_ = 1;
+              fieldAlias_ = other.fieldAlias_;
+              onChanged();
+              break;
+            }
+            case IS_NULL: {
+              setIsNull(other.getIsNull());
+              break;
+            }
+            case FIELDALIAS_NOT_SET: {
+              break;
+            }
+          }
+          this.mergeUnknownFields(other.unknownFields);
+          onChanged();
+          return this;
+        }
+
+        @java.lang.Override
+        public final boolean isInitialized() {
+          return true;
+        }
+
+        @java.lang.Override
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage = (io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias) e.getUnfinishedMessage();
+            throw e.unwrapIOException();
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+        private int fieldAliasCase_ = 0;
+        private java.lang.Object fieldAlias_;
+        public FieldAliasCase
+            getFieldAliasCase() {
+          return FieldAliasCase.forNumber(
+              fieldAliasCase_);
+        }
+
+        public Builder clearFieldAlias() {
+          fieldAliasCase_ = 0;
+          fieldAlias_ = null;
+          onChanged();
+          return this;
+        }
+
+
+        /**
+         * <code>string alias = 1;</code>
+         * @return Whether the alias field is set.
+         */
+        @java.lang.Override
+        public boolean hasAlias() {
+          return fieldAliasCase_ == 1;
+        }
+        /**
+         * <code>string alias = 1;</code>
+         * @return The alias.
+         */
+        @java.lang.Override
+        public java.lang.String getAlias() {
+          java.lang.Object ref = "";
+          if (fieldAliasCase_ == 1) {
+            ref = fieldAlias_;
+          }
+          if (!(ref instanceof java.lang.String)) {
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
+            java.lang.String s = bs.toStringUtf8();
+            if (fieldAliasCase_ == 1) {
+              fieldAlias_ = s;
+            }
+            return s;
+          } else {
+            return (java.lang.String) ref;
+          }
+        }
+        /**
+         * <code>string alias = 1;</code>
+         * @return The bytes for alias.
+         */
+        @java.lang.Override
+        public com.google.protobuf.ByteString
+            getAliasBytes() {
+          java.lang.Object ref = "";
+          if (fieldAliasCase_ == 1) {
+            ref = fieldAlias_;
+          }
+          if (ref instanceof String) {
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
+            if (fieldAliasCase_ == 1) {
+              fieldAlias_ = b;
+            }
+            return b;
+          } else {
+            return (com.google.protobuf.ByteString) ref;
+          }
+        }
+        /**
+         * <code>string alias = 1;</code>
+         * @param value The alias to set.
+         * @return This builder for chaining.
+         */
+        public Builder setAlias(
+            java.lang.String value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  fieldAliasCase_ = 1;
+          fieldAlias_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>string alias = 1;</code>
+         * @return This builder for chaining.
+         */
+        public Builder clearAlias() {
+          if (fieldAliasCase_ == 1) {
+            fieldAliasCase_ = 0;
+            fieldAlias_ = null;
+            onChanged();
+          }
+          return this;
+        }
+        /**
+         * <code>string alias = 1;</code>
+         * @param value The bytes for alias to set.
+         * @return This builder for chaining.
+         */
+        public Builder setAliasBytes(
+            com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+          fieldAliasCase_ = 1;
+          fieldAlias_ = value;
+          onChanged();
+          return this;
+        }
+
+        /**
+         * <code>bool is_null = 2;</code>
+         * @return Whether the isNull field is set.
+         */
+        public boolean hasIsNull() {
+          return fieldAliasCase_ == 2;
+        }
+        /**
+         * <code>bool is_null = 2;</code>
+         * @return The isNull.
+         */
+        public boolean getIsNull() {
+          if (fieldAliasCase_ == 2) {
+            return (java.lang.Boolean) fieldAlias_;
+          }
+          return false;
+        }
+        /**
+         * <code>bool is_null = 2;</code>
+         * @param value The isNull to set.
+         * @return This builder for chaining.
+         */
+        public Builder setIsNull(boolean value) {
+          fieldAliasCase_ = 2;
+          fieldAlias_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>bool is_null = 2;</code>
+         * @return This builder for chaining.
+         */
+        public Builder clearIsNull() {
+          if (fieldAliasCase_ == 2) {
+            fieldAliasCase_ = 0;
+            fieldAlias_ = null;
+            onChanged();
+          }
+          return this;
+        }
+        @java.lang.Override
+        public final Builder setUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.setUnknownFields(unknownFields);
+        }
+
+        @java.lang.Override
+        public final Builder mergeUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.mergeUnknownFields(unknownFields);
+        }
+
+
+        // @@protoc_insertion_point(builder_scope:dataflow.calcite.RecordReducer.FieldAlias)
+      }
+
+      // @@protoc_insertion_point(class_scope:dataflow.calcite.RecordReducer.FieldAlias)
+      private static final io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias DEFAULT_INSTANCE;
+      static {
+        DEFAULT_INSTANCE = new io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias();
+      }
+
+      public static io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias getDefaultInstance() {
+        return DEFAULT_INSTANCE;
+      }
+
+      private static final com.google.protobuf.Parser<FieldAlias>
+          PARSER = new com.google.protobuf.AbstractParser<FieldAlias>() {
+        @java.lang.Override
+        public FieldAlias parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new FieldAlias(input, extensionRegistry);
+        }
+      };
+
+      public static com.google.protobuf.Parser<FieldAlias> parser() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<FieldAlias> getParserForType() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias getDefaultInstanceForType() {
+        return DEFAULT_INSTANCE;
+      }
+
+    }
+
     public interface FieldReducerOrBuilder extends
         // @@protoc_insertion_point(interface_extends:dataflow.calcite.RecordReducer.FieldReducer)
         com.google.protobuf.MessageOrBuilder {
@@ -456,6 +1247,21 @@ public final class ReducerProto {
          * @return The fieldIndex.
          */
         int getFieldIndex();
+
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return Whether the fieldAlias field is set.
+         */
+        boolean hasFieldAlias();
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return The fieldAlias.
+         */
+        io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias getFieldAlias();
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         */
+        io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder getFieldAliasOrBuilder();
       }
       /**
        * Protobuf type {@code dataflow.calcite.RecordReducer.FieldReducer.KeyReducer}
@@ -507,6 +1313,19 @@ public final class ReducerProto {
                   fieldIndex_ = input.readInt32();
                   break;
                 }
+                case 18: {
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder subBuilder = null;
+                  if (fieldAlias_ != null) {
+                    subBuilder = fieldAlias_.toBuilder();
+                  }
+                  fieldAlias_ = input.readMessage(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.parser(), extensionRegistry);
+                  if (subBuilder != null) {
+                    subBuilder.mergeFrom(fieldAlias_);
+                    fieldAlias_ = subBuilder.buildPartial();
+                  }
+
+                  break;
+                }
                 default: {
                   if (!parseUnknownField(
                       input, unknownFields, extensionRegistry, tag)) {
@@ -550,6 +1369,32 @@ public final class ReducerProto {
           return fieldIndex_;
         }
 
+        public static final int FIELD_ALIAS_FIELD_NUMBER = 2;
+        private io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias fieldAlias_;
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return Whether the fieldAlias field is set.
+         */
+        @java.lang.Override
+        public boolean hasFieldAlias() {
+          return fieldAlias_ != null;
+        }
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return The fieldAlias.
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias getFieldAlias() {
+          return fieldAlias_ == null ? io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.getDefaultInstance() : fieldAlias_;
+        }
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder getFieldAliasOrBuilder() {
+          return getFieldAlias();
+        }
+
         private byte memoizedIsInitialized = -1;
         @java.lang.Override
         public final boolean isInitialized() {
@@ -567,6 +1412,9 @@ public final class ReducerProto {
           if (fieldIndex_ != 0) {
             output.writeInt32(1, fieldIndex_);
           }
+          if (fieldAlias_ != null) {
+            output.writeMessage(2, getFieldAlias());
+          }
           unknownFields.writeTo(output);
         }
 
@@ -579,6 +1427,10 @@ public final class ReducerProto {
           if (fieldIndex_ != 0) {
             size += com.google.protobuf.CodedOutputStream
               .computeInt32Size(1, fieldIndex_);
+          }
+          if (fieldAlias_ != null) {
+            size += com.google.protobuf.CodedOutputStream
+              .computeMessageSize(2, getFieldAlias());
           }
           size += unknownFields.getSerializedSize();
           memoizedSize = size;
@@ -597,6 +1449,11 @@ public final class ReducerProto {
 
           if (getFieldIndex()
               != other.getFieldIndex()) return false;
+          if (hasFieldAlias() != other.hasFieldAlias()) return false;
+          if (hasFieldAlias()) {
+            if (!getFieldAlias()
+                .equals(other.getFieldAlias())) return false;
+          }
           if (!unknownFields.equals(other.unknownFields)) return false;
           return true;
         }
@@ -610,6 +1467,10 @@ public final class ReducerProto {
           hash = (19 * hash) + getDescriptor().hashCode();
           hash = (37 * hash) + FIELD_INDEX_FIELD_NUMBER;
           hash = (53 * hash) + getFieldIndex();
+          if (hasFieldAlias()) {
+            hash = (37 * hash) + FIELD_ALIAS_FIELD_NUMBER;
+            hash = (53 * hash) + getFieldAlias().hashCode();
+          }
           hash = (29 * hash) + unknownFields.hashCode();
           memoizedHashCode = hash;
           return hash;
@@ -745,6 +1606,12 @@ public final class ReducerProto {
             super.clear();
             fieldIndex_ = 0;
 
+            if (fieldAliasBuilder_ == null) {
+              fieldAlias_ = null;
+            } else {
+              fieldAlias_ = null;
+              fieldAliasBuilder_ = null;
+            }
             return this;
           }
 
@@ -772,6 +1639,11 @@ public final class ReducerProto {
           public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer buildPartial() {
             io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer result = new io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer(this);
             result.fieldIndex_ = fieldIndex_;
+            if (fieldAliasBuilder_ == null) {
+              result.fieldAlias_ = fieldAlias_;
+            } else {
+              result.fieldAlias_ = fieldAliasBuilder_.build();
+            }
             onBuilt();
             return result;
           }
@@ -822,6 +1694,9 @@ public final class ReducerProto {
             if (other == io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.KeyReducer.getDefaultInstance()) return this;
             if (other.getFieldIndex() != 0) {
               setFieldIndex(other.getFieldIndex());
+            }
+            if (other.hasFieldAlias()) {
+              mergeFieldAlias(other.getFieldAlias());
             }
             this.mergeUnknownFields(other.unknownFields);
             onChanged();
@@ -881,6 +1756,125 @@ public final class ReducerProto {
             fieldIndex_ = 0;
             onChanged();
             return this;
+          }
+
+          private io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias fieldAlias_;
+          private com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder> fieldAliasBuilder_;
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           * @return Whether the fieldAlias field is set.
+           */
+          public boolean hasFieldAlias() {
+            return fieldAliasBuilder_ != null || fieldAlias_ != null;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           * @return The fieldAlias.
+           */
+          public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias getFieldAlias() {
+            if (fieldAliasBuilder_ == null) {
+              return fieldAlias_ == null ? io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.getDefaultInstance() : fieldAlias_;
+            } else {
+              return fieldAliasBuilder_.getMessage();
+            }
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder setFieldAlias(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias value) {
+            if (fieldAliasBuilder_ == null) {
+              if (value == null) {
+                throw new NullPointerException();
+              }
+              fieldAlias_ = value;
+              onChanged();
+            } else {
+              fieldAliasBuilder_.setMessage(value);
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder setFieldAlias(
+              io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder builderForValue) {
+            if (fieldAliasBuilder_ == null) {
+              fieldAlias_ = builderForValue.build();
+              onChanged();
+            } else {
+              fieldAliasBuilder_.setMessage(builderForValue.build());
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder mergeFieldAlias(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias value) {
+            if (fieldAliasBuilder_ == null) {
+              if (fieldAlias_ != null) {
+                fieldAlias_ =
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.newBuilder(fieldAlias_).mergeFrom(value).buildPartial();
+              } else {
+                fieldAlias_ = value;
+              }
+              onChanged();
+            } else {
+              fieldAliasBuilder_.mergeFrom(value);
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder clearFieldAlias() {
+            if (fieldAliasBuilder_ == null) {
+              fieldAlias_ = null;
+              onChanged();
+            } else {
+              fieldAlias_ = null;
+              fieldAliasBuilder_ = null;
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder getFieldAliasBuilder() {
+            
+            onChanged();
+            return getFieldAliasFieldBuilder().getBuilder();
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder getFieldAliasOrBuilder() {
+            if (fieldAliasBuilder_ != null) {
+              return fieldAliasBuilder_.getMessageOrBuilder();
+            } else {
+              return fieldAlias_ == null ?
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.getDefaultInstance() : fieldAlias_;
+            }
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          private com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder> 
+              getFieldAliasFieldBuilder() {
+            if (fieldAliasBuilder_ == null) {
+              fieldAliasBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder>(
+                      getFieldAlias(),
+                      getParentForChildren(),
+                      isClean());
+              fieldAlias_ = null;
+            }
+            return fieldAliasBuilder_;
           }
           @java.lang.Override
           public final Builder setUnknownFields(
@@ -944,6 +1938,21 @@ public final class ReducerProto {
          * @return The fieldIndex.
          */
         int getFieldIndex();
+
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return Whether the fieldAlias field is set.
+         */
+        boolean hasFieldAlias();
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return The fieldAlias.
+         */
+        io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias getFieldAlias();
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         */
+        io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder getFieldAliasOrBuilder();
       }
       /**
        * Protobuf type {@code dataflow.calcite.RecordReducer.FieldReducer.CountReducer}
@@ -995,6 +2004,19 @@ public final class ReducerProto {
                   fieldIndex_ = input.readInt32();
                   break;
                 }
+                case 18: {
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder subBuilder = null;
+                  if (fieldAlias_ != null) {
+                    subBuilder = fieldAlias_.toBuilder();
+                  }
+                  fieldAlias_ = input.readMessage(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.parser(), extensionRegistry);
+                  if (subBuilder != null) {
+                    subBuilder.mergeFrom(fieldAlias_);
+                    fieldAlias_ = subBuilder.buildPartial();
+                  }
+
+                  break;
+                }
                 default: {
                   if (!parseUnknownField(
                       input, unknownFields, extensionRegistry, tag)) {
@@ -1038,6 +2060,32 @@ public final class ReducerProto {
           return fieldIndex_;
         }
 
+        public static final int FIELD_ALIAS_FIELD_NUMBER = 2;
+        private io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias fieldAlias_;
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return Whether the fieldAlias field is set.
+         */
+        @java.lang.Override
+        public boolean hasFieldAlias() {
+          return fieldAlias_ != null;
+        }
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return The fieldAlias.
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias getFieldAlias() {
+          return fieldAlias_ == null ? io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.getDefaultInstance() : fieldAlias_;
+        }
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder getFieldAliasOrBuilder() {
+          return getFieldAlias();
+        }
+
         private byte memoizedIsInitialized = -1;
         @java.lang.Override
         public final boolean isInitialized() {
@@ -1055,6 +2103,9 @@ public final class ReducerProto {
           if (fieldIndex_ != 0) {
             output.writeInt32(1, fieldIndex_);
           }
+          if (fieldAlias_ != null) {
+            output.writeMessage(2, getFieldAlias());
+          }
           unknownFields.writeTo(output);
         }
 
@@ -1067,6 +2118,10 @@ public final class ReducerProto {
           if (fieldIndex_ != 0) {
             size += com.google.protobuf.CodedOutputStream
               .computeInt32Size(1, fieldIndex_);
+          }
+          if (fieldAlias_ != null) {
+            size += com.google.protobuf.CodedOutputStream
+              .computeMessageSize(2, getFieldAlias());
           }
           size += unknownFields.getSerializedSize();
           memoizedSize = size;
@@ -1085,6 +2140,11 @@ public final class ReducerProto {
 
           if (getFieldIndex()
               != other.getFieldIndex()) return false;
+          if (hasFieldAlias() != other.hasFieldAlias()) return false;
+          if (hasFieldAlias()) {
+            if (!getFieldAlias()
+                .equals(other.getFieldAlias())) return false;
+          }
           if (!unknownFields.equals(other.unknownFields)) return false;
           return true;
         }
@@ -1098,6 +2158,10 @@ public final class ReducerProto {
           hash = (19 * hash) + getDescriptor().hashCode();
           hash = (37 * hash) + FIELD_INDEX_FIELD_NUMBER;
           hash = (53 * hash) + getFieldIndex();
+          if (hasFieldAlias()) {
+            hash = (37 * hash) + FIELD_ALIAS_FIELD_NUMBER;
+            hash = (53 * hash) + getFieldAlias().hashCode();
+          }
           hash = (29 * hash) + unknownFields.hashCode();
           memoizedHashCode = hash;
           return hash;
@@ -1233,6 +2297,12 @@ public final class ReducerProto {
             super.clear();
             fieldIndex_ = 0;
 
+            if (fieldAliasBuilder_ == null) {
+              fieldAlias_ = null;
+            } else {
+              fieldAlias_ = null;
+              fieldAliasBuilder_ = null;
+            }
             return this;
           }
 
@@ -1260,6 +2330,11 @@ public final class ReducerProto {
           public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer buildPartial() {
             io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer result = new io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer(this);
             result.fieldIndex_ = fieldIndex_;
+            if (fieldAliasBuilder_ == null) {
+              result.fieldAlias_ = fieldAlias_;
+            } else {
+              result.fieldAlias_ = fieldAliasBuilder_.build();
+            }
             onBuilt();
             return result;
           }
@@ -1310,6 +2385,9 @@ public final class ReducerProto {
             if (other == io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.CountReducer.getDefaultInstance()) return this;
             if (other.getFieldIndex() != 0) {
               setFieldIndex(other.getFieldIndex());
+            }
+            if (other.hasFieldAlias()) {
+              mergeFieldAlias(other.getFieldAlias());
             }
             this.mergeUnknownFields(other.unknownFields);
             onChanged();
@@ -1369,6 +2447,125 @@ public final class ReducerProto {
             fieldIndex_ = 0;
             onChanged();
             return this;
+          }
+
+          private io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias fieldAlias_;
+          private com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder> fieldAliasBuilder_;
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           * @return Whether the fieldAlias field is set.
+           */
+          public boolean hasFieldAlias() {
+            return fieldAliasBuilder_ != null || fieldAlias_ != null;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           * @return The fieldAlias.
+           */
+          public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias getFieldAlias() {
+            if (fieldAliasBuilder_ == null) {
+              return fieldAlias_ == null ? io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.getDefaultInstance() : fieldAlias_;
+            } else {
+              return fieldAliasBuilder_.getMessage();
+            }
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder setFieldAlias(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias value) {
+            if (fieldAliasBuilder_ == null) {
+              if (value == null) {
+                throw new NullPointerException();
+              }
+              fieldAlias_ = value;
+              onChanged();
+            } else {
+              fieldAliasBuilder_.setMessage(value);
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder setFieldAlias(
+              io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder builderForValue) {
+            if (fieldAliasBuilder_ == null) {
+              fieldAlias_ = builderForValue.build();
+              onChanged();
+            } else {
+              fieldAliasBuilder_.setMessage(builderForValue.build());
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder mergeFieldAlias(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias value) {
+            if (fieldAliasBuilder_ == null) {
+              if (fieldAlias_ != null) {
+                fieldAlias_ =
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.newBuilder(fieldAlias_).mergeFrom(value).buildPartial();
+              } else {
+                fieldAlias_ = value;
+              }
+              onChanged();
+            } else {
+              fieldAliasBuilder_.mergeFrom(value);
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder clearFieldAlias() {
+            if (fieldAliasBuilder_ == null) {
+              fieldAlias_ = null;
+              onChanged();
+            } else {
+              fieldAlias_ = null;
+              fieldAliasBuilder_ = null;
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder getFieldAliasBuilder() {
+            
+            onChanged();
+            return getFieldAliasFieldBuilder().getBuilder();
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder getFieldAliasOrBuilder() {
+            if (fieldAliasBuilder_ != null) {
+              return fieldAliasBuilder_.getMessageOrBuilder();
+            } else {
+              return fieldAlias_ == null ?
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.getDefaultInstance() : fieldAlias_;
+            }
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          private com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder> 
+              getFieldAliasFieldBuilder() {
+            if (fieldAliasBuilder_ == null) {
+              fieldAliasBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder>(
+                      getFieldAlias(),
+                      getParentForChildren(),
+                      isClean());
+              fieldAlias_ = null;
+            }
+            return fieldAliasBuilder_;
           }
           @java.lang.Override
           public final Builder setUnknownFields(
@@ -1432,6 +2629,21 @@ public final class ReducerProto {
          * @return The fieldIndex.
          */
         int getFieldIndex();
+
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return Whether the fieldAlias field is set.
+         */
+        boolean hasFieldAlias();
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return The fieldAlias.
+         */
+        io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias getFieldAlias();
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         */
+        io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder getFieldAliasOrBuilder();
       }
       /**
        * Protobuf type {@code dataflow.calcite.RecordReducer.FieldReducer.SumReducerInteger}
@@ -1483,6 +2695,19 @@ public final class ReducerProto {
                   fieldIndex_ = input.readInt32();
                   break;
                 }
+                case 18: {
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder subBuilder = null;
+                  if (fieldAlias_ != null) {
+                    subBuilder = fieldAlias_.toBuilder();
+                  }
+                  fieldAlias_ = input.readMessage(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.parser(), extensionRegistry);
+                  if (subBuilder != null) {
+                    subBuilder.mergeFrom(fieldAlias_);
+                    fieldAlias_ = subBuilder.buildPartial();
+                  }
+
+                  break;
+                }
                 default: {
                   if (!parseUnknownField(
                       input, unknownFields, extensionRegistry, tag)) {
@@ -1526,6 +2751,32 @@ public final class ReducerProto {
           return fieldIndex_;
         }
 
+        public static final int FIELD_ALIAS_FIELD_NUMBER = 2;
+        private io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias fieldAlias_;
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return Whether the fieldAlias field is set.
+         */
+        @java.lang.Override
+        public boolean hasFieldAlias() {
+          return fieldAlias_ != null;
+        }
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return The fieldAlias.
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias getFieldAlias() {
+          return fieldAlias_ == null ? io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.getDefaultInstance() : fieldAlias_;
+        }
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder getFieldAliasOrBuilder() {
+          return getFieldAlias();
+        }
+
         private byte memoizedIsInitialized = -1;
         @java.lang.Override
         public final boolean isInitialized() {
@@ -1543,6 +2794,9 @@ public final class ReducerProto {
           if (fieldIndex_ != 0) {
             output.writeInt32(1, fieldIndex_);
           }
+          if (fieldAlias_ != null) {
+            output.writeMessage(2, getFieldAlias());
+          }
           unknownFields.writeTo(output);
         }
 
@@ -1555,6 +2809,10 @@ public final class ReducerProto {
           if (fieldIndex_ != 0) {
             size += com.google.protobuf.CodedOutputStream
               .computeInt32Size(1, fieldIndex_);
+          }
+          if (fieldAlias_ != null) {
+            size += com.google.protobuf.CodedOutputStream
+              .computeMessageSize(2, getFieldAlias());
           }
           size += unknownFields.getSerializedSize();
           memoizedSize = size;
@@ -1573,6 +2831,11 @@ public final class ReducerProto {
 
           if (getFieldIndex()
               != other.getFieldIndex()) return false;
+          if (hasFieldAlias() != other.hasFieldAlias()) return false;
+          if (hasFieldAlias()) {
+            if (!getFieldAlias()
+                .equals(other.getFieldAlias())) return false;
+          }
           if (!unknownFields.equals(other.unknownFields)) return false;
           return true;
         }
@@ -1586,6 +2849,10 @@ public final class ReducerProto {
           hash = (19 * hash) + getDescriptor().hashCode();
           hash = (37 * hash) + FIELD_INDEX_FIELD_NUMBER;
           hash = (53 * hash) + getFieldIndex();
+          if (hasFieldAlias()) {
+            hash = (37 * hash) + FIELD_ALIAS_FIELD_NUMBER;
+            hash = (53 * hash) + getFieldAlias().hashCode();
+          }
           hash = (29 * hash) + unknownFields.hashCode();
           memoizedHashCode = hash;
           return hash;
@@ -1721,6 +2988,12 @@ public final class ReducerProto {
             super.clear();
             fieldIndex_ = 0;
 
+            if (fieldAliasBuilder_ == null) {
+              fieldAlias_ = null;
+            } else {
+              fieldAlias_ = null;
+              fieldAliasBuilder_ = null;
+            }
             return this;
           }
 
@@ -1748,6 +3021,11 @@ public final class ReducerProto {
           public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger buildPartial() {
             io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger result = new io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger(this);
             result.fieldIndex_ = fieldIndex_;
+            if (fieldAliasBuilder_ == null) {
+              result.fieldAlias_ = fieldAlias_;
+            } else {
+              result.fieldAlias_ = fieldAliasBuilder_.build();
+            }
             onBuilt();
             return result;
           }
@@ -1798,6 +3076,9 @@ public final class ReducerProto {
             if (other == io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerInteger.getDefaultInstance()) return this;
             if (other.getFieldIndex() != 0) {
               setFieldIndex(other.getFieldIndex());
+            }
+            if (other.hasFieldAlias()) {
+              mergeFieldAlias(other.getFieldAlias());
             }
             this.mergeUnknownFields(other.unknownFields);
             onChanged();
@@ -1857,6 +3138,125 @@ public final class ReducerProto {
             fieldIndex_ = 0;
             onChanged();
             return this;
+          }
+
+          private io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias fieldAlias_;
+          private com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder> fieldAliasBuilder_;
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           * @return Whether the fieldAlias field is set.
+           */
+          public boolean hasFieldAlias() {
+            return fieldAliasBuilder_ != null || fieldAlias_ != null;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           * @return The fieldAlias.
+           */
+          public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias getFieldAlias() {
+            if (fieldAliasBuilder_ == null) {
+              return fieldAlias_ == null ? io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.getDefaultInstance() : fieldAlias_;
+            } else {
+              return fieldAliasBuilder_.getMessage();
+            }
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder setFieldAlias(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias value) {
+            if (fieldAliasBuilder_ == null) {
+              if (value == null) {
+                throw new NullPointerException();
+              }
+              fieldAlias_ = value;
+              onChanged();
+            } else {
+              fieldAliasBuilder_.setMessage(value);
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder setFieldAlias(
+              io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder builderForValue) {
+            if (fieldAliasBuilder_ == null) {
+              fieldAlias_ = builderForValue.build();
+              onChanged();
+            } else {
+              fieldAliasBuilder_.setMessage(builderForValue.build());
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder mergeFieldAlias(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias value) {
+            if (fieldAliasBuilder_ == null) {
+              if (fieldAlias_ != null) {
+                fieldAlias_ =
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.newBuilder(fieldAlias_).mergeFrom(value).buildPartial();
+              } else {
+                fieldAlias_ = value;
+              }
+              onChanged();
+            } else {
+              fieldAliasBuilder_.mergeFrom(value);
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder clearFieldAlias() {
+            if (fieldAliasBuilder_ == null) {
+              fieldAlias_ = null;
+              onChanged();
+            } else {
+              fieldAlias_ = null;
+              fieldAliasBuilder_ = null;
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder getFieldAliasBuilder() {
+            
+            onChanged();
+            return getFieldAliasFieldBuilder().getBuilder();
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder getFieldAliasOrBuilder() {
+            if (fieldAliasBuilder_ != null) {
+              return fieldAliasBuilder_.getMessageOrBuilder();
+            } else {
+              return fieldAlias_ == null ?
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.getDefaultInstance() : fieldAlias_;
+            }
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          private com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder> 
+              getFieldAliasFieldBuilder() {
+            if (fieldAliasBuilder_ == null) {
+              fieldAliasBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder>(
+                      getFieldAlias(),
+                      getParentForChildren(),
+                      isClean());
+              fieldAlias_ = null;
+            }
+            return fieldAliasBuilder_;
           }
           @java.lang.Override
           public final Builder setUnknownFields(
@@ -1920,6 +3320,21 @@ public final class ReducerProto {
          * @return The fieldIndex.
          */
         int getFieldIndex();
+
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return Whether the fieldAlias field is set.
+         */
+        boolean hasFieldAlias();
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return The fieldAlias.
+         */
+        io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias getFieldAlias();
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         */
+        io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder getFieldAliasOrBuilder();
       }
       /**
        * Protobuf type {@code dataflow.calcite.RecordReducer.FieldReducer.SumReducerDecimal}
@@ -1971,6 +3386,19 @@ public final class ReducerProto {
                   fieldIndex_ = input.readInt32();
                   break;
                 }
+                case 18: {
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder subBuilder = null;
+                  if (fieldAlias_ != null) {
+                    subBuilder = fieldAlias_.toBuilder();
+                  }
+                  fieldAlias_ = input.readMessage(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.parser(), extensionRegistry);
+                  if (subBuilder != null) {
+                    subBuilder.mergeFrom(fieldAlias_);
+                    fieldAlias_ = subBuilder.buildPartial();
+                  }
+
+                  break;
+                }
                 default: {
                   if (!parseUnknownField(
                       input, unknownFields, extensionRegistry, tag)) {
@@ -2014,6 +3442,32 @@ public final class ReducerProto {
           return fieldIndex_;
         }
 
+        public static final int FIELD_ALIAS_FIELD_NUMBER = 2;
+        private io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias fieldAlias_;
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return Whether the fieldAlias field is set.
+         */
+        @java.lang.Override
+        public boolean hasFieldAlias() {
+          return fieldAlias_ != null;
+        }
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return The fieldAlias.
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias getFieldAlias() {
+          return fieldAlias_ == null ? io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.getDefaultInstance() : fieldAlias_;
+        }
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder getFieldAliasOrBuilder() {
+          return getFieldAlias();
+        }
+
         private byte memoizedIsInitialized = -1;
         @java.lang.Override
         public final boolean isInitialized() {
@@ -2031,6 +3485,9 @@ public final class ReducerProto {
           if (fieldIndex_ != 0) {
             output.writeInt32(1, fieldIndex_);
           }
+          if (fieldAlias_ != null) {
+            output.writeMessage(2, getFieldAlias());
+          }
           unknownFields.writeTo(output);
         }
 
@@ -2043,6 +3500,10 @@ public final class ReducerProto {
           if (fieldIndex_ != 0) {
             size += com.google.protobuf.CodedOutputStream
               .computeInt32Size(1, fieldIndex_);
+          }
+          if (fieldAlias_ != null) {
+            size += com.google.protobuf.CodedOutputStream
+              .computeMessageSize(2, getFieldAlias());
           }
           size += unknownFields.getSerializedSize();
           memoizedSize = size;
@@ -2061,6 +3522,11 @@ public final class ReducerProto {
 
           if (getFieldIndex()
               != other.getFieldIndex()) return false;
+          if (hasFieldAlias() != other.hasFieldAlias()) return false;
+          if (hasFieldAlias()) {
+            if (!getFieldAlias()
+                .equals(other.getFieldAlias())) return false;
+          }
           if (!unknownFields.equals(other.unknownFields)) return false;
           return true;
         }
@@ -2074,6 +3540,10 @@ public final class ReducerProto {
           hash = (19 * hash) + getDescriptor().hashCode();
           hash = (37 * hash) + FIELD_INDEX_FIELD_NUMBER;
           hash = (53 * hash) + getFieldIndex();
+          if (hasFieldAlias()) {
+            hash = (37 * hash) + FIELD_ALIAS_FIELD_NUMBER;
+            hash = (53 * hash) + getFieldAlias().hashCode();
+          }
           hash = (29 * hash) + unknownFields.hashCode();
           memoizedHashCode = hash;
           return hash;
@@ -2209,6 +3679,12 @@ public final class ReducerProto {
             super.clear();
             fieldIndex_ = 0;
 
+            if (fieldAliasBuilder_ == null) {
+              fieldAlias_ = null;
+            } else {
+              fieldAlias_ = null;
+              fieldAliasBuilder_ = null;
+            }
             return this;
           }
 
@@ -2236,6 +3712,11 @@ public final class ReducerProto {
           public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal buildPartial() {
             io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal result = new io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal(this);
             result.fieldIndex_ = fieldIndex_;
+            if (fieldAliasBuilder_ == null) {
+              result.fieldAlias_ = fieldAlias_;
+            } else {
+              result.fieldAlias_ = fieldAliasBuilder_.build();
+            }
             onBuilt();
             return result;
           }
@@ -2286,6 +3767,9 @@ public final class ReducerProto {
             if (other == io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal.getDefaultInstance()) return this;
             if (other.getFieldIndex() != 0) {
               setFieldIndex(other.getFieldIndex());
+            }
+            if (other.hasFieldAlias()) {
+              mergeFieldAlias(other.getFieldAlias());
             }
             this.mergeUnknownFields(other.unknownFields);
             onChanged();
@@ -2345,6 +3829,125 @@ public final class ReducerProto {
             fieldIndex_ = 0;
             onChanged();
             return this;
+          }
+
+          private io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias fieldAlias_;
+          private com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder> fieldAliasBuilder_;
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           * @return Whether the fieldAlias field is set.
+           */
+          public boolean hasFieldAlias() {
+            return fieldAliasBuilder_ != null || fieldAlias_ != null;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           * @return The fieldAlias.
+           */
+          public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias getFieldAlias() {
+            if (fieldAliasBuilder_ == null) {
+              return fieldAlias_ == null ? io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.getDefaultInstance() : fieldAlias_;
+            } else {
+              return fieldAliasBuilder_.getMessage();
+            }
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder setFieldAlias(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias value) {
+            if (fieldAliasBuilder_ == null) {
+              if (value == null) {
+                throw new NullPointerException();
+              }
+              fieldAlias_ = value;
+              onChanged();
+            } else {
+              fieldAliasBuilder_.setMessage(value);
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder setFieldAlias(
+              io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder builderForValue) {
+            if (fieldAliasBuilder_ == null) {
+              fieldAlias_ = builderForValue.build();
+              onChanged();
+            } else {
+              fieldAliasBuilder_.setMessage(builderForValue.build());
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder mergeFieldAlias(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias value) {
+            if (fieldAliasBuilder_ == null) {
+              if (fieldAlias_ != null) {
+                fieldAlias_ =
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.newBuilder(fieldAlias_).mergeFrom(value).buildPartial();
+              } else {
+                fieldAlias_ = value;
+              }
+              onChanged();
+            } else {
+              fieldAliasBuilder_.mergeFrom(value);
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder clearFieldAlias() {
+            if (fieldAliasBuilder_ == null) {
+              fieldAlias_ = null;
+              onChanged();
+            } else {
+              fieldAlias_ = null;
+              fieldAliasBuilder_ = null;
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder getFieldAliasBuilder() {
+            
+            onChanged();
+            return getFieldAliasFieldBuilder().getBuilder();
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder getFieldAliasOrBuilder() {
+            if (fieldAliasBuilder_ != null) {
+              return fieldAliasBuilder_.getMessageOrBuilder();
+            } else {
+              return fieldAlias_ == null ?
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.getDefaultInstance() : fieldAlias_;
+            }
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          private com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder> 
+              getFieldAliasFieldBuilder() {
+            if (fieldAliasBuilder_ == null) {
+              fieldAliasBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder>(
+                      getFieldAlias(),
+                      getParentForChildren(),
+                      isClean());
+              fieldAlias_ = null;
+            }
+            return fieldAliasBuilder_;
           }
           @java.lang.Override
           public final Builder setUnknownFields(
@@ -2408,6 +4011,21 @@ public final class ReducerProto {
          * @return The fieldIndex.
          */
         int getFieldIndex();
+
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return Whether the fieldAlias field is set.
+         */
+        boolean hasFieldAlias();
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return The fieldAlias.
+         */
+        io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias getFieldAlias();
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         */
+        io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder getFieldAliasOrBuilder();
       }
       /**
        * Protobuf type {@code dataflow.calcite.RecordReducer.FieldReducer.AvgReducer}
@@ -2459,6 +4077,19 @@ public final class ReducerProto {
                   fieldIndex_ = input.readInt32();
                   break;
                 }
+                case 18: {
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder subBuilder = null;
+                  if (fieldAlias_ != null) {
+                    subBuilder = fieldAlias_.toBuilder();
+                  }
+                  fieldAlias_ = input.readMessage(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.parser(), extensionRegistry);
+                  if (subBuilder != null) {
+                    subBuilder.mergeFrom(fieldAlias_);
+                    fieldAlias_ = subBuilder.buildPartial();
+                  }
+
+                  break;
+                }
                 default: {
                   if (!parseUnknownField(
                       input, unknownFields, extensionRegistry, tag)) {
@@ -2502,6 +4133,32 @@ public final class ReducerProto {
           return fieldIndex_;
         }
 
+        public static final int FIELD_ALIAS_FIELD_NUMBER = 2;
+        private io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias fieldAlias_;
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return Whether the fieldAlias field is set.
+         */
+        @java.lang.Override
+        public boolean hasFieldAlias() {
+          return fieldAlias_ != null;
+        }
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return The fieldAlias.
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias getFieldAlias() {
+          return fieldAlias_ == null ? io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.getDefaultInstance() : fieldAlias_;
+        }
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder getFieldAliasOrBuilder() {
+          return getFieldAlias();
+        }
+
         private byte memoizedIsInitialized = -1;
         @java.lang.Override
         public final boolean isInitialized() {
@@ -2519,6 +4176,9 @@ public final class ReducerProto {
           if (fieldIndex_ != 0) {
             output.writeInt32(1, fieldIndex_);
           }
+          if (fieldAlias_ != null) {
+            output.writeMessage(2, getFieldAlias());
+          }
           unknownFields.writeTo(output);
         }
 
@@ -2531,6 +4191,10 @@ public final class ReducerProto {
           if (fieldIndex_ != 0) {
             size += com.google.protobuf.CodedOutputStream
               .computeInt32Size(1, fieldIndex_);
+          }
+          if (fieldAlias_ != null) {
+            size += com.google.protobuf.CodedOutputStream
+              .computeMessageSize(2, getFieldAlias());
           }
           size += unknownFields.getSerializedSize();
           memoizedSize = size;
@@ -2549,6 +4213,11 @@ public final class ReducerProto {
 
           if (getFieldIndex()
               != other.getFieldIndex()) return false;
+          if (hasFieldAlias() != other.hasFieldAlias()) return false;
+          if (hasFieldAlias()) {
+            if (!getFieldAlias()
+                .equals(other.getFieldAlias())) return false;
+          }
           if (!unknownFields.equals(other.unknownFields)) return false;
           return true;
         }
@@ -2562,6 +4231,10 @@ public final class ReducerProto {
           hash = (19 * hash) + getDescriptor().hashCode();
           hash = (37 * hash) + FIELD_INDEX_FIELD_NUMBER;
           hash = (53 * hash) + getFieldIndex();
+          if (hasFieldAlias()) {
+            hash = (37 * hash) + FIELD_ALIAS_FIELD_NUMBER;
+            hash = (53 * hash) + getFieldAlias().hashCode();
+          }
           hash = (29 * hash) + unknownFields.hashCode();
           memoizedHashCode = hash;
           return hash;
@@ -2697,6 +4370,12 @@ public final class ReducerProto {
             super.clear();
             fieldIndex_ = 0;
 
+            if (fieldAliasBuilder_ == null) {
+              fieldAlias_ = null;
+            } else {
+              fieldAlias_ = null;
+              fieldAliasBuilder_ = null;
+            }
             return this;
           }
 
@@ -2724,6 +4403,11 @@ public final class ReducerProto {
           public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer buildPartial() {
             io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer result = new io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer(this);
             result.fieldIndex_ = fieldIndex_;
+            if (fieldAliasBuilder_ == null) {
+              result.fieldAlias_ = fieldAlias_;
+            } else {
+              result.fieldAlias_ = fieldAliasBuilder_.build();
+            }
             onBuilt();
             return result;
           }
@@ -2774,6 +4458,9 @@ public final class ReducerProto {
             if (other == io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.AvgReducer.getDefaultInstance()) return this;
             if (other.getFieldIndex() != 0) {
               setFieldIndex(other.getFieldIndex());
+            }
+            if (other.hasFieldAlias()) {
+              mergeFieldAlias(other.getFieldAlias());
             }
             this.mergeUnknownFields(other.unknownFields);
             onChanged();
@@ -2833,6 +4520,125 @@ public final class ReducerProto {
             fieldIndex_ = 0;
             onChanged();
             return this;
+          }
+
+          private io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias fieldAlias_;
+          private com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder> fieldAliasBuilder_;
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           * @return Whether the fieldAlias field is set.
+           */
+          public boolean hasFieldAlias() {
+            return fieldAliasBuilder_ != null || fieldAlias_ != null;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           * @return The fieldAlias.
+           */
+          public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias getFieldAlias() {
+            if (fieldAliasBuilder_ == null) {
+              return fieldAlias_ == null ? io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.getDefaultInstance() : fieldAlias_;
+            } else {
+              return fieldAliasBuilder_.getMessage();
+            }
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder setFieldAlias(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias value) {
+            if (fieldAliasBuilder_ == null) {
+              if (value == null) {
+                throw new NullPointerException();
+              }
+              fieldAlias_ = value;
+              onChanged();
+            } else {
+              fieldAliasBuilder_.setMessage(value);
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder setFieldAlias(
+              io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder builderForValue) {
+            if (fieldAliasBuilder_ == null) {
+              fieldAlias_ = builderForValue.build();
+              onChanged();
+            } else {
+              fieldAliasBuilder_.setMessage(builderForValue.build());
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder mergeFieldAlias(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias value) {
+            if (fieldAliasBuilder_ == null) {
+              if (fieldAlias_ != null) {
+                fieldAlias_ =
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.newBuilder(fieldAlias_).mergeFrom(value).buildPartial();
+              } else {
+                fieldAlias_ = value;
+              }
+              onChanged();
+            } else {
+              fieldAliasBuilder_.mergeFrom(value);
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder clearFieldAlias() {
+            if (fieldAliasBuilder_ == null) {
+              fieldAlias_ = null;
+              onChanged();
+            } else {
+              fieldAlias_ = null;
+              fieldAliasBuilder_ = null;
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder getFieldAliasBuilder() {
+            
+            onChanged();
+            return getFieldAliasFieldBuilder().getBuilder();
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder getFieldAliasOrBuilder() {
+            if (fieldAliasBuilder_ != null) {
+              return fieldAliasBuilder_.getMessageOrBuilder();
+            } else {
+              return fieldAlias_ == null ?
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.getDefaultInstance() : fieldAlias_;
+            }
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          private com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder> 
+              getFieldAliasFieldBuilder() {
+            if (fieldAliasBuilder_ == null) {
+              fieldAliasBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder>(
+                      getFieldAlias(),
+                      getParentForChildren(),
+                      isClean());
+              fieldAlias_ = null;
+            }
+            return fieldAliasBuilder_;
           }
           @java.lang.Override
           public final Builder setUnknownFields(
@@ -2896,6 +4702,21 @@ public final class ReducerProto {
          * @return The fieldIndex.
          */
         int getFieldIndex();
+
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return Whether the fieldAlias field is set.
+         */
+        boolean hasFieldAlias();
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return The fieldAlias.
+         */
+        io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias getFieldAlias();
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         */
+        io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder getFieldAliasOrBuilder();
       }
       /**
        * Protobuf type {@code dataflow.calcite.RecordReducer.FieldReducer.MinReducer}
@@ -2947,6 +4768,19 @@ public final class ReducerProto {
                   fieldIndex_ = input.readInt32();
                   break;
                 }
+                case 18: {
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder subBuilder = null;
+                  if (fieldAlias_ != null) {
+                    subBuilder = fieldAlias_.toBuilder();
+                  }
+                  fieldAlias_ = input.readMessage(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.parser(), extensionRegistry);
+                  if (subBuilder != null) {
+                    subBuilder.mergeFrom(fieldAlias_);
+                    fieldAlias_ = subBuilder.buildPartial();
+                  }
+
+                  break;
+                }
                 default: {
                   if (!parseUnknownField(
                       input, unknownFields, extensionRegistry, tag)) {
@@ -2990,6 +4824,32 @@ public final class ReducerProto {
           return fieldIndex_;
         }
 
+        public static final int FIELD_ALIAS_FIELD_NUMBER = 2;
+        private io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias fieldAlias_;
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return Whether the fieldAlias field is set.
+         */
+        @java.lang.Override
+        public boolean hasFieldAlias() {
+          return fieldAlias_ != null;
+        }
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return The fieldAlias.
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias getFieldAlias() {
+          return fieldAlias_ == null ? io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.getDefaultInstance() : fieldAlias_;
+        }
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder getFieldAliasOrBuilder() {
+          return getFieldAlias();
+        }
+
         private byte memoizedIsInitialized = -1;
         @java.lang.Override
         public final boolean isInitialized() {
@@ -3007,6 +4867,9 @@ public final class ReducerProto {
           if (fieldIndex_ != 0) {
             output.writeInt32(1, fieldIndex_);
           }
+          if (fieldAlias_ != null) {
+            output.writeMessage(2, getFieldAlias());
+          }
           unknownFields.writeTo(output);
         }
 
@@ -3019,6 +4882,10 @@ public final class ReducerProto {
           if (fieldIndex_ != 0) {
             size += com.google.protobuf.CodedOutputStream
               .computeInt32Size(1, fieldIndex_);
+          }
+          if (fieldAlias_ != null) {
+            size += com.google.protobuf.CodedOutputStream
+              .computeMessageSize(2, getFieldAlias());
           }
           size += unknownFields.getSerializedSize();
           memoizedSize = size;
@@ -3037,6 +4904,11 @@ public final class ReducerProto {
 
           if (getFieldIndex()
               != other.getFieldIndex()) return false;
+          if (hasFieldAlias() != other.hasFieldAlias()) return false;
+          if (hasFieldAlias()) {
+            if (!getFieldAlias()
+                .equals(other.getFieldAlias())) return false;
+          }
           if (!unknownFields.equals(other.unknownFields)) return false;
           return true;
         }
@@ -3050,6 +4922,10 @@ public final class ReducerProto {
           hash = (19 * hash) + getDescriptor().hashCode();
           hash = (37 * hash) + FIELD_INDEX_FIELD_NUMBER;
           hash = (53 * hash) + getFieldIndex();
+          if (hasFieldAlias()) {
+            hash = (37 * hash) + FIELD_ALIAS_FIELD_NUMBER;
+            hash = (53 * hash) + getFieldAlias().hashCode();
+          }
           hash = (29 * hash) + unknownFields.hashCode();
           memoizedHashCode = hash;
           return hash;
@@ -3185,6 +5061,12 @@ public final class ReducerProto {
             super.clear();
             fieldIndex_ = 0;
 
+            if (fieldAliasBuilder_ == null) {
+              fieldAlias_ = null;
+            } else {
+              fieldAlias_ = null;
+              fieldAliasBuilder_ = null;
+            }
             return this;
           }
 
@@ -3212,6 +5094,11 @@ public final class ReducerProto {
           public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer buildPartial() {
             io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer result = new io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer(this);
             result.fieldIndex_ = fieldIndex_;
+            if (fieldAliasBuilder_ == null) {
+              result.fieldAlias_ = fieldAlias_;
+            } else {
+              result.fieldAlias_ = fieldAliasBuilder_.build();
+            }
             onBuilt();
             return result;
           }
@@ -3262,6 +5149,9 @@ public final class ReducerProto {
             if (other == io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MinReducer.getDefaultInstance()) return this;
             if (other.getFieldIndex() != 0) {
               setFieldIndex(other.getFieldIndex());
+            }
+            if (other.hasFieldAlias()) {
+              mergeFieldAlias(other.getFieldAlias());
             }
             this.mergeUnknownFields(other.unknownFields);
             onChanged();
@@ -3321,6 +5211,125 @@ public final class ReducerProto {
             fieldIndex_ = 0;
             onChanged();
             return this;
+          }
+
+          private io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias fieldAlias_;
+          private com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder> fieldAliasBuilder_;
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           * @return Whether the fieldAlias field is set.
+           */
+          public boolean hasFieldAlias() {
+            return fieldAliasBuilder_ != null || fieldAlias_ != null;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           * @return The fieldAlias.
+           */
+          public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias getFieldAlias() {
+            if (fieldAliasBuilder_ == null) {
+              return fieldAlias_ == null ? io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.getDefaultInstance() : fieldAlias_;
+            } else {
+              return fieldAliasBuilder_.getMessage();
+            }
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder setFieldAlias(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias value) {
+            if (fieldAliasBuilder_ == null) {
+              if (value == null) {
+                throw new NullPointerException();
+              }
+              fieldAlias_ = value;
+              onChanged();
+            } else {
+              fieldAliasBuilder_.setMessage(value);
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder setFieldAlias(
+              io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder builderForValue) {
+            if (fieldAliasBuilder_ == null) {
+              fieldAlias_ = builderForValue.build();
+              onChanged();
+            } else {
+              fieldAliasBuilder_.setMessage(builderForValue.build());
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder mergeFieldAlias(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias value) {
+            if (fieldAliasBuilder_ == null) {
+              if (fieldAlias_ != null) {
+                fieldAlias_ =
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.newBuilder(fieldAlias_).mergeFrom(value).buildPartial();
+              } else {
+                fieldAlias_ = value;
+              }
+              onChanged();
+            } else {
+              fieldAliasBuilder_.mergeFrom(value);
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder clearFieldAlias() {
+            if (fieldAliasBuilder_ == null) {
+              fieldAlias_ = null;
+              onChanged();
+            } else {
+              fieldAlias_ = null;
+              fieldAliasBuilder_ = null;
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder getFieldAliasBuilder() {
+            
+            onChanged();
+            return getFieldAliasFieldBuilder().getBuilder();
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder getFieldAliasOrBuilder() {
+            if (fieldAliasBuilder_ != null) {
+              return fieldAliasBuilder_.getMessageOrBuilder();
+            } else {
+              return fieldAlias_ == null ?
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.getDefaultInstance() : fieldAlias_;
+            }
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          private com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder> 
+              getFieldAliasFieldBuilder() {
+            if (fieldAliasBuilder_ == null) {
+              fieldAliasBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder>(
+                      getFieldAlias(),
+                      getParentForChildren(),
+                      isClean());
+              fieldAlias_ = null;
+            }
+            return fieldAliasBuilder_;
           }
           @java.lang.Override
           public final Builder setUnknownFields(
@@ -3384,6 +5393,21 @@ public final class ReducerProto {
          * @return The fieldIndex.
          */
         int getFieldIndex();
+
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return Whether the fieldAlias field is set.
+         */
+        boolean hasFieldAlias();
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return The fieldAlias.
+         */
+        io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias getFieldAlias();
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         */
+        io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder getFieldAliasOrBuilder();
       }
       /**
        * Protobuf type {@code dataflow.calcite.RecordReducer.FieldReducer.MaxReducer}
@@ -3435,6 +5459,19 @@ public final class ReducerProto {
                   fieldIndex_ = input.readInt32();
                   break;
                 }
+                case 18: {
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder subBuilder = null;
+                  if (fieldAlias_ != null) {
+                    subBuilder = fieldAlias_.toBuilder();
+                  }
+                  fieldAlias_ = input.readMessage(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.parser(), extensionRegistry);
+                  if (subBuilder != null) {
+                    subBuilder.mergeFrom(fieldAlias_);
+                    fieldAlias_ = subBuilder.buildPartial();
+                  }
+
+                  break;
+                }
                 default: {
                   if (!parseUnknownField(
                       input, unknownFields, extensionRegistry, tag)) {
@@ -3478,6 +5515,32 @@ public final class ReducerProto {
           return fieldIndex_;
         }
 
+        public static final int FIELD_ALIAS_FIELD_NUMBER = 2;
+        private io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias fieldAlias_;
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return Whether the fieldAlias field is set.
+         */
+        @java.lang.Override
+        public boolean hasFieldAlias() {
+          return fieldAlias_ != null;
+        }
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         * @return The fieldAlias.
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias getFieldAlias() {
+          return fieldAlias_ == null ? io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.getDefaultInstance() : fieldAlias_;
+        }
+        /**
+         * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder getFieldAliasOrBuilder() {
+          return getFieldAlias();
+        }
+
         private byte memoizedIsInitialized = -1;
         @java.lang.Override
         public final boolean isInitialized() {
@@ -3495,6 +5558,9 @@ public final class ReducerProto {
           if (fieldIndex_ != 0) {
             output.writeInt32(1, fieldIndex_);
           }
+          if (fieldAlias_ != null) {
+            output.writeMessage(2, getFieldAlias());
+          }
           unknownFields.writeTo(output);
         }
 
@@ -3507,6 +5573,10 @@ public final class ReducerProto {
           if (fieldIndex_ != 0) {
             size += com.google.protobuf.CodedOutputStream
               .computeInt32Size(1, fieldIndex_);
+          }
+          if (fieldAlias_ != null) {
+            size += com.google.protobuf.CodedOutputStream
+              .computeMessageSize(2, getFieldAlias());
           }
           size += unknownFields.getSerializedSize();
           memoizedSize = size;
@@ -3525,6 +5595,11 @@ public final class ReducerProto {
 
           if (getFieldIndex()
               != other.getFieldIndex()) return false;
+          if (hasFieldAlias() != other.hasFieldAlias()) return false;
+          if (hasFieldAlias()) {
+            if (!getFieldAlias()
+                .equals(other.getFieldAlias())) return false;
+          }
           if (!unknownFields.equals(other.unknownFields)) return false;
           return true;
         }
@@ -3538,6 +5613,10 @@ public final class ReducerProto {
           hash = (19 * hash) + getDescriptor().hashCode();
           hash = (37 * hash) + FIELD_INDEX_FIELD_NUMBER;
           hash = (53 * hash) + getFieldIndex();
+          if (hasFieldAlias()) {
+            hash = (37 * hash) + FIELD_ALIAS_FIELD_NUMBER;
+            hash = (53 * hash) + getFieldAlias().hashCode();
+          }
           hash = (29 * hash) + unknownFields.hashCode();
           memoizedHashCode = hash;
           return hash;
@@ -3673,6 +5752,12 @@ public final class ReducerProto {
             super.clear();
             fieldIndex_ = 0;
 
+            if (fieldAliasBuilder_ == null) {
+              fieldAlias_ = null;
+            } else {
+              fieldAlias_ = null;
+              fieldAliasBuilder_ = null;
+            }
             return this;
           }
 
@@ -3700,6 +5785,11 @@ public final class ReducerProto {
           public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer buildPartial() {
             io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer result = new io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer(this);
             result.fieldIndex_ = fieldIndex_;
+            if (fieldAliasBuilder_ == null) {
+              result.fieldAlias_ = fieldAlias_;
+            } else {
+              result.fieldAlias_ = fieldAliasBuilder_.build();
+            }
             onBuilt();
             return result;
           }
@@ -3750,6 +5840,9 @@ public final class ReducerProto {
             if (other == io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldReducer.MaxReducer.getDefaultInstance()) return this;
             if (other.getFieldIndex() != 0) {
               setFieldIndex(other.getFieldIndex());
+            }
+            if (other.hasFieldAlias()) {
+              mergeFieldAlias(other.getFieldAlias());
             }
             this.mergeUnknownFields(other.unknownFields);
             onChanged();
@@ -3809,6 +5902,125 @@ public final class ReducerProto {
             fieldIndex_ = 0;
             onChanged();
             return this;
+          }
+
+          private io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias fieldAlias_;
+          private com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder> fieldAliasBuilder_;
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           * @return Whether the fieldAlias field is set.
+           */
+          public boolean hasFieldAlias() {
+            return fieldAliasBuilder_ != null || fieldAlias_ != null;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           * @return The fieldAlias.
+           */
+          public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias getFieldAlias() {
+            if (fieldAliasBuilder_ == null) {
+              return fieldAlias_ == null ? io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.getDefaultInstance() : fieldAlias_;
+            } else {
+              return fieldAliasBuilder_.getMessage();
+            }
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder setFieldAlias(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias value) {
+            if (fieldAliasBuilder_ == null) {
+              if (value == null) {
+                throw new NullPointerException();
+              }
+              fieldAlias_ = value;
+              onChanged();
+            } else {
+              fieldAliasBuilder_.setMessage(value);
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder setFieldAlias(
+              io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder builderForValue) {
+            if (fieldAliasBuilder_ == null) {
+              fieldAlias_ = builderForValue.build();
+              onChanged();
+            } else {
+              fieldAliasBuilder_.setMessage(builderForValue.build());
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder mergeFieldAlias(io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias value) {
+            if (fieldAliasBuilder_ == null) {
+              if (fieldAlias_ != null) {
+                fieldAlias_ =
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.newBuilder(fieldAlias_).mergeFrom(value).buildPartial();
+              } else {
+                fieldAlias_ = value;
+              }
+              onChanged();
+            } else {
+              fieldAliasBuilder_.mergeFrom(value);
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public Builder clearFieldAlias() {
+            if (fieldAliasBuilder_ == null) {
+              fieldAlias_ = null;
+              onChanged();
+            } else {
+              fieldAlias_ = null;
+              fieldAliasBuilder_ = null;
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder getFieldAliasBuilder() {
+            
+            onChanged();
+            return getFieldAliasFieldBuilder().getBuilder();
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          public io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder getFieldAliasOrBuilder() {
+            if (fieldAliasBuilder_ != null) {
+              return fieldAliasBuilder_.getMessageOrBuilder();
+            } else {
+              return fieldAlias_ == null ?
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.getDefaultInstance() : fieldAlias_;
+            }
+          }
+          /**
+           * <code>.dataflow.calcite.RecordReducer.FieldAlias field_alias = 2;</code>
+           */
+          private com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder> 
+              getFieldAliasFieldBuilder() {
+            if (fieldAliasBuilder_ == null) {
+              fieldAliasBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                  io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAlias.Builder, io.activej.dataflow.proto.calcite.ReducerProto.RecordReducer.FieldAliasOrBuilder>(
+                      getFieldAlias(),
+                      getParentForChildren(),
+                      isClean());
+              fieldAlias_ = null;
+            }
+            return fieldAliasBuilder_;
           }
           @java.lang.Override
           public final Builder setUnknownFields(
@@ -6524,6 +8736,11 @@ public final class ReducerProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_dataflow_calcite_RecordReducer_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_dataflow_calcite_RecordReducer_FieldAlias_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_dataflow_calcite_RecordReducer_FieldAlias_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -6573,32 +8790,45 @@ public final class ReducerProto {
   static {
     java.lang.String[] descriptorData = {
       "\n\rreducer.proto\022\020dataflow.calcite\032\023recor" +
-      "d_scheme.proto\"\205\010\n\rRecordReducer\0225\n\rreco" +
+      "d_scheme.proto\"\215\014\n\rRecordReducer\0225\n\rreco" +
       "rd_scheme\030\001 \001(\0132\036.dataflow.calcite.Recor" +
       "dScheme\022D\n\016field_reducers\030\002 \003(\0132,.datafl" +
-      "ow.calcite.RecordReducer.FieldReducer\032\366\006" +
-      "\n\014FieldReducer\022N\n\013key_reducer\030\001 \001(\01327.da" +
-      "taflow.calcite.RecordReducer.FieldReduce" +
-      "r.KeyReducerH\000\022R\n\rcount_reducer\030\002 \001(\01329." +
-      "dataflow.calcite.RecordReducer.FieldRedu" +
-      "cer.CountReducerH\000\022]\n\023sum_reducer_intege" +
-      "r\030\003 \001(\0132>.dataflow.calcite.RecordReducer" +
-      ".FieldReducer.SumReducerIntegerH\000\022]\n\023sum" +
-      "_reducer_decimal\030\004 \001(\0132>.dataflow.calcit" +
-      "e.RecordReducer.FieldReducer.SumReducerD" +
-      "ecimalH\000\022N\n\013avg_reducer\030\005 \001(\01327.dataflow" +
-      ".calcite.RecordReducer.FieldReducer.AvgR" +
-      "educerH\000\022N\n\013min_reducer\030\006 \001(\01327.dataflow" +
-      ".calcite.RecordReducer.FieldReducer.MinR" +
-      "educerH\000\022N\n\013max_reducer\030\007 \001(\01327.dataflow" +
-      ".calcite.RecordReducer.FieldReducer.MaxR" +
-      "educerH\000\032!\n\nKeyReducer\022\023\n\013field_index\030\001 " +
-      "\001(\005\032#\n\014CountReducer\022\023\n\013field_index\030\001 \001(\005" +
-      "\032(\n\021SumReducerInteger\022\023\n\013field_index\030\001 \001" +
-      "(\005\032(\n\021SumReducerDecimal\022\023\n\013field_index\030\001" +
-      " \001(\005\032!\n\nAvgReducer\022\023\n\013field_index\030\001 \001(\005\032" +
-      "!\n\nMinReducer\022\023\n\013field_index\030\001 \001(\005\032!\n\nMa" +
-      "xReducer\022\023\n\013field_index\030\001 \001(\005B\017\n\rfield_r" +
+      "ow.calcite.RecordReducer.FieldReducer\032?\n" +
+      "\nFieldAlias\022\017\n\005alias\030\001 \001(\tH\000\022\021\n\007is_null\030" +
+      "\002 \001(\010H\000B\r\n\013field_alias\032\275\n\n\014FieldReducer\022" +
+      "N\n\013key_reducer\030\001 \001(\01327.dataflow.calcite." +
+      "RecordReducer.FieldReducer.KeyReducerH\000\022" +
+      "R\n\rcount_reducer\030\002 \001(\01329.dataflow.calcit" +
+      "e.RecordReducer.FieldReducer.CountReduce" +
+      "rH\000\022]\n\023sum_reducer_integer\030\003 \001(\0132>.dataf" +
+      "low.calcite.RecordReducer.FieldReducer.S" +
+      "umReducerIntegerH\000\022]\n\023sum_reducer_decima" +
+      "l\030\004 \001(\0132>.dataflow.calcite.RecordReducer" +
+      ".FieldReducer.SumReducerDecimalH\000\022N\n\013avg" +
+      "_reducer\030\005 \001(\01327.dataflow.calcite.Record" +
+      "Reducer.FieldReducer.AvgReducerH\000\022N\n\013min" +
+      "_reducer\030\006 \001(\01327.dataflow.calcite.Record" +
+      "Reducer.FieldReducer.MinReducerH\000\022N\n\013max" +
+      "_reducer\030\007 \001(\01327.dataflow.calcite.Record" +
+      "Reducer.FieldReducer.MaxReducerH\000\032b\n\nKey" +
+      "Reducer\022\023\n\013field_index\030\001 \001(\005\022?\n\013field_al" +
+      "ias\030\002 \001(\0132*.dataflow.calcite.RecordReduc" +
+      "er.FieldAlias\032d\n\014CountReducer\022\023\n\013field_i" +
+      "ndex\030\001 \001(\005\022?\n\013field_alias\030\002 \001(\0132*.datafl" +
+      "ow.calcite.RecordReducer.FieldAlias\032i\n\021S" +
+      "umReducerInteger\022\023\n\013field_index\030\001 \001(\005\022?\n" +
+      "\013field_alias\030\002 \001(\0132*.dataflow.calcite.Re" +
+      "cordReducer.FieldAlias\032i\n\021SumReducerDeci" +
+      "mal\022\023\n\013field_index\030\001 \001(\005\022?\n\013field_alias\030" +
+      "\002 \001(\0132*.dataflow.calcite.RecordReducer.F" +
+      "ieldAlias\032b\n\nAvgReducer\022\023\n\013field_index\030\001" +
+      " \001(\005\022?\n\013field_alias\030\002 \001(\0132*.dataflow.cal" +
+      "cite.RecordReducer.FieldAlias\032b\n\nMinRedu" +
+      "cer\022\023\n\013field_index\030\001 \001(\005\022?\n\013field_alias\030" +
+      "\002 \001(\0132*.dataflow.calcite.RecordReducer.F" +
+      "ieldAlias\032b\n\nMaxReducer\022\023\n\013field_index\030\001" +
+      " \001(\005\022?\n\013field_alias\030\002 \001(\0132*.dataflow.cal" +
+      "cite.RecordReducer.FieldAliasB\017\n\rfield_r" +
       "educerB3\n!io.activej.dataflow.proto.calc" +
       "iteB\014ReducerProtoP\000b\006proto3"
     };
@@ -6613,8 +8843,14 @@ public final class ReducerProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_RecordReducer_descriptor,
         new java.lang.String[] { "RecordScheme", "FieldReducers", });
-    internal_static_dataflow_calcite_RecordReducer_FieldReducer_descriptor =
+    internal_static_dataflow_calcite_RecordReducer_FieldAlias_descriptor =
       internal_static_dataflow_calcite_RecordReducer_descriptor.getNestedTypes().get(0);
+    internal_static_dataflow_calcite_RecordReducer_FieldAlias_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_dataflow_calcite_RecordReducer_FieldAlias_descriptor,
+        new java.lang.String[] { "Alias", "IsNull", "FieldAlias", });
+    internal_static_dataflow_calcite_RecordReducer_FieldReducer_descriptor =
+      internal_static_dataflow_calcite_RecordReducer_descriptor.getNestedTypes().get(1);
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_RecordReducer_FieldReducer_descriptor,
@@ -6624,43 +8860,43 @@ public final class ReducerProto {
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_KeyReducer_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_RecordReducer_FieldReducer_KeyReducer_descriptor,
-        new java.lang.String[] { "FieldIndex", });
+        new java.lang.String[] { "FieldIndex", "FieldAlias", });
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_CountReducer_descriptor =
       internal_static_dataflow_calcite_RecordReducer_FieldReducer_descriptor.getNestedTypes().get(1);
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_CountReducer_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_RecordReducer_FieldReducer_CountReducer_descriptor,
-        new java.lang.String[] { "FieldIndex", });
+        new java.lang.String[] { "FieldIndex", "FieldAlias", });
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_SumReducerInteger_descriptor =
       internal_static_dataflow_calcite_RecordReducer_FieldReducer_descriptor.getNestedTypes().get(2);
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_SumReducerInteger_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_RecordReducer_FieldReducer_SumReducerInteger_descriptor,
-        new java.lang.String[] { "FieldIndex", });
+        new java.lang.String[] { "FieldIndex", "FieldAlias", });
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_SumReducerDecimal_descriptor =
       internal_static_dataflow_calcite_RecordReducer_FieldReducer_descriptor.getNestedTypes().get(3);
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_SumReducerDecimal_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_RecordReducer_FieldReducer_SumReducerDecimal_descriptor,
-        new java.lang.String[] { "FieldIndex", });
+        new java.lang.String[] { "FieldIndex", "FieldAlias", });
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_AvgReducer_descriptor =
       internal_static_dataflow_calcite_RecordReducer_FieldReducer_descriptor.getNestedTypes().get(4);
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_AvgReducer_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_RecordReducer_FieldReducer_AvgReducer_descriptor,
-        new java.lang.String[] { "FieldIndex", });
+        new java.lang.String[] { "FieldIndex", "FieldAlias", });
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_MinReducer_descriptor =
       internal_static_dataflow_calcite_RecordReducer_FieldReducer_descriptor.getNestedTypes().get(5);
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_MinReducer_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_RecordReducer_FieldReducer_MinReducer_descriptor,
-        new java.lang.String[] { "FieldIndex", });
+        new java.lang.String[] { "FieldIndex", "FieldAlias", });
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_MaxReducer_descriptor =
       internal_static_dataflow_calcite_RecordReducer_FieldReducer_descriptor.getNestedTypes().get(6);
     internal_static_dataflow_calcite_RecordReducer_FieldReducer_MaxReducer_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_RecordReducer_FieldReducer_MaxReducer_descriptor,
-        new java.lang.String[] { "FieldIndex", });
+        new java.lang.String[] { "FieldIndex", "FieldAlias", });
     io.activej.dataflow.proto.calcite.RecordSchemeProto.getDescriptor();
   }
 

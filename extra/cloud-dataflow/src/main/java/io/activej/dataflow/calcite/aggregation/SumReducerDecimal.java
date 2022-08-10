@@ -2,10 +2,11 @@ package io.activej.dataflow.calcite.aggregation;
 
 import io.activej.record.Record;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class SumReducerDecimal<I extends Number> extends AbstractSumReducer<I, Double> {
-	public SumReducerDecimal(int fieldIndex) {
-		super(fieldIndex);
+	public SumReducerDecimal(int fieldIndex, @Nullable String fieldAlias) {
+		super(fieldIndex, fieldAlias);
 	}
 
 	@Override

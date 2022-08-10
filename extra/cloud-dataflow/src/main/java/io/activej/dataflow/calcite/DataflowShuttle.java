@@ -40,6 +40,7 @@ import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.ImmutableBitSet;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -80,9 +81,21 @@ public class DataflowShuttle extends RelShuttleImpl {
 			return result;
 		}
 
-		List<FieldProjection> projections = new ArrayList<>();
-		for (RexNode rexNode : program.expandList(program.getProjectList())) {
-			projections.add(new FieldProjection(toOperand(rexNode), null));
+		List<RexNode> projectNodes = program.expandList(program.getProjectList());
+		List<String> fieldNames = program.getOutputRowType().getFieldNames();
+
+		List<FieldProjection> projections = new ArrayList<>(projectNodes.size());
+		assert projectNodes.size() == fieldNames.size();
+
+		for (int i = 0; i < projectNodes.size(); i++) {
+			RexNode projectNode = projectNodes.get(i);
+			String fieldName = fieldNames.get(i);
+
+			Operand<?> projectOperand = toOperand(projectNode);
+
+			FieldProjection fieldProjection = new FieldProjection(projectOperand, tryGetAlias(fieldName));
+
+			projections.add(fieldProjection);
 		}
 
 		RecordProjectionFn projectionFn = RecordProjectionFn.create(projections);
@@ -141,7 +154,7 @@ public class DataflowShuttle extends RelShuttleImpl {
 		UnmaterializedDataset right = checkNotNull(datasetStack.pop());
 		UnmaterializedDataset left = checkNotNull(datasetStack.pop());
 
-		UnmaterializedDataset joined = join(join, left, right, getJoinKeyType(join));
+		UnmaterializedDataset joined = join(join, left, right);
 
 		datasetStack.push(joined);
 		return result;
@@ -156,9 +169,11 @@ public class DataflowShuttle extends RelShuttleImpl {
 		List<AggregateCall> callList = aggregate.getAggCallList();
 		List<FieldReducer<?, ?, ?>> fieldReducers = new ArrayList<>(callList.size());
 
+		List<RelDataTypeField> fieldList = result.getRowType().getFieldList();
 		ImmutableBitSet groupSet = aggregate.getGroupSet();
 		for (Integer index : groupSet) {
-			fieldReducers.add(new KeyReducer<>(index));
+			String fieldName = fieldList.get(fieldReducers.size()).getName();
+			fieldReducers.add(new KeyReducer<>(index, isSynthetic(fieldName) ? null : fieldName));
 		}
 
 		for (AggregateCall aggregateCall : callList) {
@@ -171,21 +186,23 @@ public class DataflowShuttle extends RelShuttleImpl {
 				default -> throw new AssertionError();
 			};
 
+			String fieldName = fieldList.get(fieldReducers.size()).getName();
+			String alias = isSynthetic(fieldName) ? null : fieldName;
 			FieldReducer<?, ?, ?> fieldReducer = switch (aggregation.getKind()) {
-				case COUNT -> new CountReducer<>(fieldIndex);
+				case COUNT -> new CountReducer<>(fieldIndex, alias);
 				case SUM -> {
 					SqlTypeName sqlTypeName = aggregate.getInput().getRowType().getFieldList().get(fieldIndex).getValue().getSqlTypeName();
 					if (sqlTypeName == SqlTypeName.TINYINT || sqlTypeName == SqlTypeName.SMALLINT ||
 							sqlTypeName == SqlTypeName.INTEGER || sqlTypeName == SqlTypeName.BIGINT)
-						yield new SumReducerInteger<>(fieldIndex);
+						yield new SumReducerInteger<>(fieldIndex, alias);
 					if (sqlTypeName == SqlTypeName.FLOAT || sqlTypeName == SqlTypeName.DOUBLE ||
 							sqlTypeName == SqlTypeName.REAL)
-						yield new SumReducerDecimal<>(fieldIndex);
+						yield new SumReducerDecimal<>(fieldIndex, alias);
 					throw new AssertionError("SUM() is not supported for type: " + sqlTypeName);
 				}
-				case AVG -> new AvgReducer(fieldIndex);
-				case MIN -> new MinReducer<>(fieldIndex);
-				case MAX -> new MaxReducer<>(fieldIndex);
+				case AVG -> new AvgReducer(fieldIndex, alias);
+				case MIN -> new MinReducer<>(fieldIndex, alias);
+				case MAX -> new MaxReducer<>(fieldIndex, alias);
 				default -> throw new AssertionError();
 			};
 
@@ -348,24 +365,40 @@ public class DataflowShuttle extends RelShuttleImpl {
 		return UnmaterializedDataset.of(mapper.getScheme(), $ -> Datasets.map(dataset, mapper, Record.class));
 	}
 
-	private static <T extends Comparable<T>> Class<? extends T> getJoinKeyType(LogicalJoin join) {
+	private static <T extends Comparable<T>> JoinKeyInfo<T> getJoinKeyInfo(LogicalJoin join) {
 		RexNode condition = join.getCondition();
-		if (condition.getKind() == SqlKind.EQUALS) {
-			RexCall rexCall = (RexCall) condition;
-			List<RexNode> operands = rexCall.getOperands();
-			checkArgument(operands.size() == 2);
-
-			JavaType left = ((JavaType) operands.get(0).getType());
-			JavaType right = ((JavaType) operands.get(1).getType());
-
-			//noinspection unchecked
-			Class<T> leftClass = left.getJavaClass();
-			checkArgument(leftClass == right.getJavaClass());
-			checkArgument(leftClass.isPrimitive() || Comparable.class.isAssignableFrom(leftClass));
-
-			return leftClass;
+		if (condition.getKind() != SqlKind.EQUALS) {
+			throw new IllegalArgumentException("Unsupported type: " + condition.getKind());
 		}
-		throw new IllegalArgumentException("Unsupported type: " + condition.getKind());
+
+		RexCall rexCall = (RexCall) condition;
+		List<RexNode> operands = rexCall.getOperands();
+		checkArgument(operands.size() == 2);
+
+		RexNode leftOperand = operands.get(0);
+		JavaType left = ((JavaType) leftOperand.getType());
+
+		RexNode rightOperand = operands.get(1);
+		JavaType right = ((JavaType) rightOperand.getType());
+
+		//noinspection unchecked
+		Class<T> leftClass = left.getJavaClass();
+		checkArgument(leftClass == right.getJavaClass());
+		checkArgument(leftClass.isPrimitive() || Comparable.class.isAssignableFrom(leftClass));
+
+		RexInputRef leftInputNode = (RexInputRef) leftOperand;
+		RexInputRef rightInputNode = (RexInputRef) rightOperand;
+
+		int leftIndex = leftInputNode.getIndex();
+		int rightIndex = rightInputNode.getIndex();
+
+		if (rightIndex > leftIndex) {
+			rightIndex -= join.getLeft().getRowType().getFieldCount();
+		} else {
+			leftIndex -= join.getRight().getRowType().getFieldCount();
+		}
+
+		return new JoinKeyInfo<>(leftClass, leftIndex, rightIndex);
 	}
 
 	@SuppressWarnings("ConstantConditions")
@@ -411,26 +444,23 @@ public class DataflowShuttle extends RelShuttleImpl {
 		);
 	}
 
-	private static <K extends Comparable<K>> UnmaterializedDataset join(LogicalJoin join, UnmaterializedDataset left, UnmaterializedDataset right, Class<K> keyClass) {
-		RexInputRef leftInputNode = (RexInputRef) ((RexCall) join.getCondition()).getOperands().get(0);
-		RexInputRef rightInputNode = (RexInputRef) ((RexCall) join.getCondition()).getOperands().get(1);
+	private static <K extends Comparable<K>> UnmaterializedDataset join(LogicalJoin join, UnmaterializedDataset left, UnmaterializedDataset right) {
+		JoinKeyInfo<K> joinKeyInfo = getJoinKeyInfo(join);
 
-		int leftIndex = leftInputNode.getIndex();
-		int rightIndex = rightInputNode.getIndex() - join.getLeft().getRowType().getFieldCount();
+		RecordKeyFunction<K> leftKeyFunction = new RecordKeyFunction<>(joinKeyInfo.leftIndex);
+		RecordKeyFunction<K> rightKeyFunction = new RecordKeyFunction<>(joinKeyInfo.rightIndex);
 
-		RecordKeyFunction<K> leftKeyFunction = new RecordKeyFunction<>(leftIndex);
-		RecordKeyFunction<K> rightKeyFunction = new RecordKeyFunction<>(rightIndex);
-
-		RecordInnerJoiner<K> joiner = RecordInnerJoiner.create(left.getScheme(), right.getScheme());
+		List<String> fieldNames = join.getRowType().getFieldNames();
+		RecordInnerJoiner<K> joiner = RecordInnerJoiner.create(left.getScheme(), right.getScheme(), fieldNames);
 
 		return UnmaterializedDataset.of(
 				joiner.getScheme(),
 				params -> {
 					Dataset<Record> leftDataset = left.materialize(params);
-					SortedDataset<K, Record> sortedLeft = sortForJoin(keyClass, leftKeyFunction, leftDataset, Datasets::repartitionSort);
+					SortedDataset<K, Record> sortedLeft = sortForJoin(joinKeyInfo.keyClass, leftKeyFunction, leftDataset, Datasets::repartitionSort);
 
 					Dataset<Record> rightDataset = right.materialize(params);
-					SortedDataset<K, Record> sortedRight = sortForJoin(keyClass, rightKeyFunction, rightDataset, Datasets::castToSorted);
+					SortedDataset<K, Record> sortedRight = sortForJoin(joinKeyInfo.keyClass, rightKeyFunction, rightDataset, Datasets::castToSorted);
 
 					return Datasets.join(
 							sortedLeft,
@@ -530,6 +560,16 @@ public class DataflowShuttle extends RelShuttleImpl {
 		Operand<?> operand = toOperand(node);
 		checkArgument(operand instanceof OperandScalar, "Not scalar operand");
 		return (OperandScalar) operand;
+	}
+
+	private static @Nullable String tryGetAlias(String fieldName) {
+		return fieldName.startsWith(DataflowSqlValidator.ALIAS_PREFIX) ?
+				fieldName.substring(DataflowSqlValidator.ALIAS_PREFIX.length()) :
+				null;
+	}
+
+	private boolean isSynthetic(String fieldName) {
+		return fieldName.contains("$");
 	}
 
 	private static <K extends Comparable<K>> SortedDataset<K, Record> sortForJoin(
@@ -660,5 +700,8 @@ public class DataflowShuttle extends RelShuttleImpl {
 		public Collection<Dataset<?>> getBases() {
 			return List.of(input);
 		}
+	}
+
+	private record JoinKeyInfo<T extends Comparable<T>>(Class<T> keyClass, int leftIndex, int rightIndex) {
 	}
 }

@@ -150,19 +150,14 @@ public final class DataflowMeta extends LimitedMeta {
 	}
 
 	private TransformationResult transform(String sql) {
-		RelNode node = convertToNode(sql);
-
-		return sqlDataflow.transform(node);
-	}
-
-	private RelNode convertToNode(String sql) {
 		RelNode node;
 		try {
 			node = sqlDataflow.convertToNode(sql);
 		} catch (DataflowException e) {
 			throw new RuntimeException(e);
 		}
-		return node;
+
+		return sqlDataflow.transform(node);
 	}
 
 	@Override

@@ -1,14 +1,15 @@
 package io.activej.dataflow.calcite.aggregation;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class MinReducer<I extends Comparable<I>> extends AbstractMinMaxReducer<I> {
-	public MinReducer(int fieldIndex) {
-		super(fieldIndex);
+	public MinReducer(int fieldIndex, @Nullable String fieldAlias) {
+		super(fieldIndex, fieldAlias);
 	}
 
 	@Override
-	public String getName(String fieldName) {
+	public String doGetName(String fieldName) {
 		return "MIN(" + fieldName + ')';
 	}
 

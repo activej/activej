@@ -58,28 +58,43 @@ public final class ReducerSerializer implements BinarySerializer<RecordReducer> 
 	private static ReducerProto.RecordReducer.FieldReducer convert(FieldReducer<?, ?, ?> fieldReducer) {
 		ReducerProto.RecordReducer.FieldReducer.Builder builder = ReducerProto.RecordReducer.FieldReducer.newBuilder();
 		int fieldIndex = fieldReducer.getFieldIndex();
+		String fieldAlias = fieldReducer.getFieldAlias();
+
+		ReducerProto.RecordReducer.FieldAlias.Builder fieldAliasBuilder = ReducerProto.RecordReducer.FieldAlias.newBuilder();
+		if (fieldAlias == null) {
+			fieldAliasBuilder.setIsNull(true);
+		} else {
+			fieldAliasBuilder.setAlias(fieldAlias);
+		}
 
 		if (fieldReducer instanceof KeyReducer<?>) {
 			builder.setKeyReducer(ReducerProto.RecordReducer.FieldReducer.KeyReducer.newBuilder()
-					.setFieldIndex(fieldIndex));
+					.setFieldIndex(fieldIndex)
+					.setFieldAlias(fieldAliasBuilder));
 		} else if (fieldReducer instanceof CountReducer<?>) {
 			builder.setCountReducer(ReducerProto.RecordReducer.FieldReducer.CountReducer.newBuilder()
-					.setFieldIndex(fieldIndex));
+					.setFieldIndex(fieldIndex)
+					.setFieldAlias(fieldAliasBuilder));
 		} else if (fieldReducer instanceof SumReducerInteger<?>) {
 			builder.setSumReducerInteger(ReducerProto.RecordReducer.FieldReducer.SumReducerInteger.newBuilder()
-					.setFieldIndex(fieldIndex));
+					.setFieldIndex(fieldIndex)
+					.setFieldAlias(fieldAliasBuilder));
 		} else if (fieldReducer instanceof SumReducerDecimal<?>) {
 			builder.setSumReducerDecimal(ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal.newBuilder()
-					.setFieldIndex(fieldIndex));
+					.setFieldIndex(fieldIndex)
+					.setFieldAlias(fieldAliasBuilder));
 		} else if (fieldReducer instanceof AvgReducer) {
 			builder.setAvgReducer(ReducerProto.RecordReducer.FieldReducer.AvgReducer.newBuilder()
-					.setFieldIndex(fieldIndex));
+					.setFieldIndex(fieldIndex)
+					.setFieldAlias(fieldAliasBuilder));
 		} else if (fieldReducer instanceof MinReducer) {
 			builder.setMinReducer(ReducerProto.RecordReducer.FieldReducer.MinReducer.newBuilder()
-					.setFieldIndex(fieldIndex));
+					.setFieldIndex(fieldIndex)
+					.setFieldAlias(fieldAliasBuilder));
 		} else if (fieldReducer instanceof MaxReducer) {
 			builder.setMaxReducer(ReducerProto.RecordReducer.FieldReducer.MaxReducer.newBuilder()
-					.setFieldIndex(fieldIndex));
+					.setFieldIndex(fieldIndex)
+					.setFieldAlias(fieldAliasBuilder));
 		} else {
 			throw new IllegalArgumentException("Unknown field reducer type: " + fieldReducer.getClass());
 		}
@@ -98,13 +113,41 @@ public final class ReducerSerializer implements BinarySerializer<RecordReducer> 
 
 	private static FieldReducer<?, ?, ?> convert(ReducerProto.RecordReducer.FieldReducer fieldReducer) {
 		return switch (fieldReducer.getFieldReducerCase()) {
-			case KEY_REDUCER -> new KeyReducer<>(fieldReducer.getKeyReducer().getFieldIndex());
-			case COUNT_REDUCER -> new CountReducer<>(fieldReducer.getCountReducer().getFieldIndex());
-			case SUM_REDUCER_INTEGER -> new SumReducerInteger<>(fieldReducer.getSumReducerInteger().getFieldIndex());
-			case SUM_REDUCER_DECIMAL -> new SumReducerDecimal<>(fieldReducer.getSumReducerDecimal().getFieldIndex());
-			case AVG_REDUCER -> new AvgReducer(fieldReducer.getAvgReducer().getFieldIndex());
-			case MIN_REDUCER -> new MinReducer<>(fieldReducer.getMinReducer().getFieldIndex());
-			case MAX_REDUCER -> new MaxReducer<>(fieldReducer.getMaxReducer().getFieldIndex());
+			case KEY_REDUCER -> {
+				ReducerProto.RecordReducer.FieldReducer.KeyReducer keyReducer = fieldReducer.getKeyReducer();
+				ReducerProto.RecordReducer.FieldAlias fieldAlias = keyReducer.getFieldAlias();
+				yield new KeyReducer<>(keyReducer.getFieldIndex(), fieldAlias.hasIsNull() ? null : fieldAlias.getAlias());
+			}
+			case COUNT_REDUCER -> {
+				ReducerProto.RecordReducer.FieldReducer.CountReducer countReducer = fieldReducer.getCountReducer();
+				ReducerProto.RecordReducer.FieldAlias fieldAlias = countReducer.getFieldAlias();
+				yield new CountReducer<>(countReducer.getFieldIndex(), fieldAlias.hasIsNull() ? null : fieldAlias.getAlias());
+			}
+			case SUM_REDUCER_INTEGER -> {
+				ReducerProto.RecordReducer.FieldReducer.SumReducerInteger sumReducerInteger = fieldReducer.getSumReducerInteger();
+				ReducerProto.RecordReducer.FieldAlias fieldAlias = sumReducerInteger.getFieldAlias();
+				yield new SumReducerInteger<>(sumReducerInteger.getFieldIndex(), fieldAlias.hasIsNull() ? null : fieldAlias.getAlias());
+			}
+			case SUM_REDUCER_DECIMAL -> {
+				ReducerProto.RecordReducer.FieldReducer.SumReducerDecimal sumReducerDecimal = fieldReducer.getSumReducerDecimal();
+				ReducerProto.RecordReducer.FieldAlias fieldAlias = sumReducerDecimal.getFieldAlias();
+				yield new SumReducerDecimal<>(sumReducerDecimal.getFieldIndex(), fieldAlias.hasIsNull() ? null : fieldAlias.getAlias());
+			}
+			case AVG_REDUCER -> {
+				ReducerProto.RecordReducer.FieldReducer.AvgReducer avgReducer = fieldReducer.getAvgReducer();
+				ReducerProto.RecordReducer.FieldAlias fieldAlias = avgReducer.getFieldAlias();
+				yield new AvgReducer(avgReducer.getFieldIndex(), fieldAlias.hasIsNull() ? null : fieldAlias.getAlias());
+			}
+			case MIN_REDUCER -> {
+				ReducerProto.RecordReducer.FieldReducer.MinReducer minReducer = fieldReducer.getMinReducer();
+				ReducerProto.RecordReducer.FieldAlias fieldAlias = minReducer.getFieldAlias();
+				yield new MinReducer<>(minReducer.getFieldIndex(), fieldAlias.hasIsNull() ? null : fieldAlias.getAlias());
+			}
+			case MAX_REDUCER -> {
+				ReducerProto.RecordReducer.FieldReducer.MaxReducer maxReducer = fieldReducer.getMaxReducer();
+				ReducerProto.RecordReducer.FieldAlias fieldAlias = maxReducer.getFieldAlias();
+				yield new MaxReducer<>(maxReducer.getFieldIndex(), fieldAlias.hasIsNull() ? null : fieldAlias.getAlias());
+			}
 			case FIELDREDUCER_NOT_SET -> throw new CorruptedDataException("Field predicate was not set");
 		};
 	}

@@ -312,6 +312,34 @@ public abstract class AbstractCalciteTest {
 	}
 
 	@Test
+	public void testSelectStudentFieldsRenamed() {
+		QueryResult result = query("SELECT dept as department, firstName as f_name, id as stud_id FROM student");
+
+		List<Object[]> columnValues = new ArrayList<>();
+		for (Student student : concat(STUDENT_LIST_1, STUDENT_LIST_2)) {
+			columnValues.add(new Object[]{student.dept, student.firstName, student.id});
+		}
+
+		QueryResult expected = new QueryResult(List.of("department", "f_name", "stud_id"), columnValues);
+
+		assertEquals(expected, result);
+	}
+
+	@Test
+	public void testSelectDepartmentFieldsAllRenamed() {
+		QueryResult result = query("SELECT id as dep_id, departmentName as dep_name FROM department");
+
+		List<Object[]> columnValues = new ArrayList<>();
+		for (Department department : concat(DEPARTMENT_LIST_1, DEPARTMENT_LIST_2)) {
+			columnValues.add(new Object[]{department.id, department.departmentName});
+		}
+
+		QueryResult expected = new QueryResult(List.of("dep_id", "dep_name"), columnValues);
+
+		assertEquals(expected, result);
+	}
+
+	@Test
 	public void testSubSelect() {
 		QueryResult result = query("""
 				SELECT firstName, id
@@ -997,7 +1025,8 @@ public abstract class AbstractCalciteTest {
 	@Test
 	public void testJoin() {
 		QueryResult result = query("""
-				SELECT * FROM student
+				SELECT *
+				FROM student
 				JOIN department
 				ON student.dept = department.id
 				""");
@@ -1029,7 +1058,48 @@ public abstract class AbstractCalciteTest {
 				firstDepartment.id, firstDepartment.departmentName
 		});
 
-		QueryResult expected = new QueryResult(List.of("left.id", "left.firstName", "left.lastName", "left.dept", "right.id", "right.departmentName"), expectedColumnValues);
+		QueryResult expected = new QueryResult(List.of("id", "firstName", "lastName", "dept", "id0", "departmentName"), expectedColumnValues);
+
+		assertEquals(expected, result);
+	}
+
+	@Test
+	public void testJoinNamedTables() {
+		QueryResult result = query("""
+				SELECT *
+				FROM student s
+				JOIN department d
+				ON s.dept = d.id
+				""");
+
+		List<Object[]> expectedColumnValues = new ArrayList<>(4);
+
+		Student firstStudent = STUDENT_LIST_1.get(0);
+		Student secondStudent = STUDENT_LIST_1.get(1);
+		Student thirdStudent = STUDENT_LIST_2.get(0);
+		Student fourthStudent = STUDENT_LIST_2.get(1);
+		Department firstDepartment = DEPARTMENT_LIST_1.get(0);
+		Department secondDepartment = DEPARTMENT_LIST_2.get(0);
+		Department thirdDepartment = DEPARTMENT_LIST_2.get(1);
+
+		expectedColumnValues.add(new Object[]{
+				firstStudent.id, firstStudent.firstName, firstStudent.lastName, firstStudent.dept,
+				secondDepartment.id, secondDepartment.departmentName
+		});
+		expectedColumnValues.add(new Object[]{
+				secondStudent.id, secondStudent.firstName, secondStudent.lastName, secondStudent.dept,
+				thirdDepartment.id, thirdDepartment.departmentName
+		});
+		expectedColumnValues.add(new Object[]{
+				thirdStudent.id, thirdStudent.firstName, thirdStudent.lastName, thirdStudent.dept,
+				firstDepartment.id, firstDepartment.departmentName
+		});
+		expectedColumnValues.add(new Object[]{
+				fourthStudent.id, fourthStudent.firstName, fourthStudent.lastName, fourthStudent.dept,
+				firstDepartment.id, firstDepartment.departmentName
+		});
+
+		QueryResult expected = new QueryResult(List.of("id", "firstName", "lastName", "dept", "id0", "departmentName"), expectedColumnValues);
 
 		assertEquals(expected, result);
 	}
@@ -1050,13 +1120,42 @@ public abstract class AbstractCalciteTest {
 		Department secondDepartment = DEPARTMENT_LIST_2.get(0);
 		Department thirdDepartment = DEPARTMENT_LIST_2.get(1);
 
-		QueryResult expected = new QueryResult(List.of("left.id", "right.departmentName"),
+		QueryResult expected = new QueryResult(List.of("id", "departmentName"),
 				List.of(
 						new Object[]{firstStudent.id, secondDepartment.departmentName},
 						new Object[]{secondStudent.id, thirdDepartment.departmentName},
 						new Object[]{thirdStudent.id, firstDepartment.departmentName},
 						new Object[]{fourthStudent.id, firstDepartment.departmentName}
 				));
+
+		assertEquals(expected, result);
+	}
+
+	@Test
+	public void testSelfJoin() {
+		QueryResult result = query("""
+				SELECT *
+				FROM student s1
+				JOIN student s2
+				ON s1.id = s2.id
+				JOIN student s3
+				ON s3.id = s1.id
+				""");
+
+		QueryResult expected = new QueryResult(List.of("id", "firstName", "lastName", "dept", "id0", "firstName0", "lastName0", "dept0", "id1", "firstName1", "lastName1", "dept1"),
+				concat(STUDENT_LIST_1, STUDENT_LIST_2).stream()
+						.map(student -> {
+							Object[] row = new Object[12];
+							for (int i = 0; i < 3; i++) {
+								int offset = i * 4;
+								row[offset] = student.id;
+								row[offset + 1] = student.firstName;
+								row[offset + 2] = student.lastName;
+								row[offset + 3] = student.dept;
+							}
+							return row;
+						})
+						.toList());
 
 		assertEquals(expected, result);
 	}
@@ -1080,7 +1179,6 @@ public abstract class AbstractCalciteTest {
 				ORDER BY firstName ASC, id DESC
 				""");
 
-		System.out.println(result);
 		QueryResult expected = new QueryResult(
 				List.of("lastName"),
 				Stream.of(STUDENT_LIST_2.get(1), STUDENT_LIST_2.get(0), STUDENT_LIST_1.get(1), STUDENT_LIST_1.get(0))
@@ -1228,12 +1326,20 @@ public abstract class AbstractCalciteTest {
 	}
 
 	@Test
+	public void testCountAllStudentsRenamed() {
+		QueryResult result = query("SELECT COUNT(*) as student_count FROM student");
+
+		QueryResult expected = new QueryResult(List.of("student_count"), List.<Object[]>of(new Object[]{4L}));
+
+		assertEquals(expected, result);
+	}
+
+	@Test
 	public void testCountSumAllStudents() {
 		QueryResult result = query("SELECT COUNT(*), SUM(id) FROM student");
 
 		QueryResult expected = new QueryResult(List.of("COUNT(*)", "SUM(id)"), List.<Object[]>of(new Object[]{4L, 10L}));
 
-		System.out.println(result);
 		assertEquals(expected, result);
 	}
 
@@ -1486,8 +1592,6 @@ public abstract class AbstractCalciteTest {
 				SELECT id
 				FROM department
 				""");
-
-		System.out.println(result);
 
 		QueryResult expected = new QueryResult(
 				List.of("id"),

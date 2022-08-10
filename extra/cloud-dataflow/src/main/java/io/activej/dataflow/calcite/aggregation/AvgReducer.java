@@ -4,10 +4,11 @@ import io.activej.record.Record;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class AvgReducer extends FieldReducer<Number, Double, AvgReducer.AvgAccumulator> {
-	public AvgReducer(int fieldIndex) {
-		super(fieldIndex);
+	public AvgReducer(int fieldIndex, @Nullable String fieldAlias) {
+		super(fieldIndex, fieldAlias);
 	}
 
 	@Override
@@ -21,7 +22,7 @@ public class AvgReducer extends FieldReducer<Number, Double, AvgReducer.AvgAccum
 	}
 
 	@Override
-	public String getName(String fieldName) {
+	public String doGetName(String fieldName) {
 		return "AVG(" + fieldName + ')';
 	}
 

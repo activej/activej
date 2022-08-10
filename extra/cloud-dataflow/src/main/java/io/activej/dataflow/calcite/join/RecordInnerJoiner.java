@@ -16,8 +16,8 @@ public final class RecordInnerJoiner<K extends Comparable<K>> extends InnerJoine
 		this.scheme = scheme;
 	}
 
-	public static <K extends Comparable<K>> RecordInnerJoiner<K> create(RecordScheme left, RecordScheme right) {
-		return new RecordInnerJoiner<>(createScheme(left, right));
+	public static <K extends Comparable<K>> RecordInnerJoiner<K> create(RecordScheme left, RecordScheme right, List<String> fieldNames) {
+		return new RecordInnerJoiner<>(createScheme(left, right, fieldNames));
 	}
 
 	public static <K extends Comparable<K>> RecordInnerJoiner<K> create(RecordScheme scheme) {
@@ -46,25 +46,24 @@ public final class RecordInnerJoiner<K extends Comparable<K>> extends InnerJoine
 		output.accept(result);
 	}
 
-	private static RecordScheme createScheme(RecordScheme leftScheme, RecordScheme rightScheme) {
+	private static RecordScheme createScheme(RecordScheme leftScheme, RecordScheme rightScheme, List<String> fieldNames) {
 		assert leftScheme.getClassLoader() == rightScheme.getClassLoader();
+		assert fieldNames.size() == leftScheme.size() + rightScheme.size();
+
 		RecordScheme scheme = RecordScheme.create(leftScheme.getClassLoader());
 
-		addFields(scheme, "left", leftScheme);
-		addFields(scheme, "right", rightScheme);
+		addFields(scheme, leftScheme, fieldNames, 0);
+		addFields(scheme, rightScheme, fieldNames, leftScheme.size());
 
 		return scheme
 				.withComparator(scheme.getFields())
 				.build();
 	}
 
-	private static void addFields(RecordScheme scheme, String prefix, RecordScheme leftScheme) {
-		List<String> fields = leftScheme.getFields();
-		List<Type> types = leftScheme.getTypes();
-		for (int i = 0; i < fields.size(); i++) {
-			String fieldName = fields.get(i);
-			Type type = types.get(i);
-			scheme.addField(prefix + '.' + fieldName, type);
+	private static void addFields(RecordScheme toScheme, RecordScheme fromScheme, List<String> fieldNames, int offset) {
+		List<Type> types = fromScheme.getTypes();
+		for (int i = 0; i < types.size(); i++) {
+			toScheme.addField(fieldNames.get(i + offset), types.get(i));
 		}
 	}
 }

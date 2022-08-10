@@ -10,34 +10,48 @@ import "record_scheme.proto";
 
 message RecordReducer {
 
+  message FieldAlias {
+    oneof field_alias {
+      string alias = 1;
+      bool is_null = 2;
+    }
+  }
+
   message FieldReducer {
 
     message KeyReducer {
       int32 field_index = 1;
+      FieldAlias field_alias = 2;
     }
 
     message CountReducer {
       int32 field_index = 1;
+      FieldAlias field_alias = 2;
     }
 
     message SumReducerInteger {
       int32 field_index = 1;
+      FieldAlias field_alias = 2;
     }
 
     message SumReducerDecimal {
       int32 field_index = 1;
+      FieldAlias field_alias = 2;
     }
 
     message AvgReducer {
       int32 field_index = 1;
+      FieldAlias field_alias = 2;
     }
 
     message MinReducer {
       int32 field_index = 1;
+      FieldAlias field_alias = 2;
     }
 
     message MaxReducer {
       int32 field_index = 1;
+      FieldAlias field_alias = 2;
     }
 
     oneof field_reducer {

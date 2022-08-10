@@ -2,12 +2,13 @@ package io.activej.dataflow.calcite.aggregation;
 
 import io.activej.record.Record;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
-public final class KeyReducer<K> extends FieldReducer<K, K, K>{
-	public KeyReducer(int fieldIndex) {
-		super(fieldIndex);
+public final class KeyReducer<K> extends FieldReducer<K, K, K> {
+	public KeyReducer(int fieldIndex, @Nullable String fieldAlias) {
+		super(fieldIndex, fieldAlias);
 	}
 
 	@Override
@@ -31,7 +32,7 @@ public final class KeyReducer<K> extends FieldReducer<K, K, K>{
 	}
 
 	@Override
-	public String getName(String fieldName) {
+	public String doGetName(String fieldName) {
 		return fieldName;
 	}
 

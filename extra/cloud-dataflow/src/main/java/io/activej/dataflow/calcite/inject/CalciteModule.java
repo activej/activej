@@ -5,6 +5,7 @@ import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.SqlDataflow;
 import io.activej.dataflow.calcite.CalciteSqlDataflow;
 import io.activej.dataflow.calcite.DataflowSchema;
+import io.activej.dataflow.calcite.DataflowSqlValidator;
 import io.activej.dataflow.graph.Partition;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
@@ -27,7 +28,6 @@ import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.util.ListSqlOperatorTable;
 import org.apache.calcite.sql.util.SqlOperatorTables;
 import org.apache.calcite.sql.validate.SqlValidator;
-import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.calcite.sql2rel.StandardConvertletTable;
 
@@ -72,7 +72,7 @@ public final class CalciteModule extends AbstractModule {
 
 	@Provides
 	SqlValidator validator(SqlOperatorTable operatorTable, CalciteCatalogReader catalogReader, RelDataTypeFactory typeFactory) {
-		return SqlValidatorUtil.newValidator(operatorTable, catalogReader, typeFactory, SqlValidator.Config.DEFAULT);
+		return new DataflowSqlValidator(operatorTable, catalogReader, typeFactory, SqlValidator.Config.DEFAULT);
 	}
 
 	@Provides

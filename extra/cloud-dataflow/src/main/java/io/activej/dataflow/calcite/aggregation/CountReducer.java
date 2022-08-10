@@ -2,10 +2,11 @@ package io.activej.dataflow.calcite.aggregation;
 
 import io.activej.record.Record;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class CountReducer<I> extends FieldReducer<I, Long, Long> {
-	public CountReducer(int fieldIndex) {
-		super(fieldIndex);
+	public CountReducer(int fieldIndex, @Nullable String fieldAlias) {
+		super(fieldIndex, fieldAlias);
 	}
 
 	@Override
@@ -19,7 +20,7 @@ public class CountReducer<I> extends FieldReducer<I, Long, Long> {
 	}
 
 	@Override
-	public String getName(String fieldName) {
+	public String doGetName(String fieldName) {
 		return "COUNT(" + fieldName + ')';
 	}
 

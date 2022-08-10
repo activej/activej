@@ -88,16 +88,15 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 		SqlNode sqlNode;
 		try {
 			sqlNode = parser.parseQuery(sql);
-			if (sqlNode.getKind() != SqlKind.SELECT &&
-					sqlNode.getKind() != SqlKind.UNION &&
-					sqlNode.getKind() != SqlKind.ORDER_BY) { // `SELECT ... ORDER BY ...` is considered to have ORDER_BY kind for some reason
-				throw new DataflowException("Only 'SELECT' queries are allowed");
-			}
 		} catch (SqlParseException e) {
 			throw new DataflowException(e);
 		}
 
-		sqlNode = validate(sqlNode);
+		sqlNode = validator.validate(sqlNode);
+
+		if (sqlNode.getKind() != SqlKind.SELECT && sqlNode.getKind() != SqlKind.UNION) {
+			throw new DataflowException("Only 'SELECT' queries are allowed");
+		}
 
 		RelRoot root = convert(sqlNode);
 
@@ -123,10 +122,6 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 				.map($ -> result);
 	}
 
-	private SqlNode validate(SqlNode sqlNode) {
-		return validator.validate(sqlNode);
-	}
-
 	private RelRoot convert(SqlNode sqlNode) {
 		if (RelMetadataQueryBase.THREAD_PROVIDERS.get() == null) {
 			RelMetadataQueryBase.THREAD_PROVIDERS.set(JaninoRelMetadataProvider.DEFAULT);
@@ -141,6 +136,5 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 
 	public record TransformationResult(List<RelDataTypeField> fields, List<RexDynamicParam> parameters,
 									   UnmaterializedDataset dataset) {
-
 	}
 }
