@@ -33,6 +33,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.concat;
@@ -351,10 +352,10 @@ public abstract class AbstractCalciteTest {
 
 		QueryResult expected = new QueryResult(
 				List.of("123", "'test1'"),
-				List.<Object[]>of(
+				List.of(
 						new Object[]{123, "test1"},
 						new Object[]{321, "test2"}
-						)
+				)
 		);
 
 		assertEquals(expected, result);
@@ -1068,6 +1069,24 @@ public abstract class AbstractCalciteTest {
 				""");
 
 		QueryResult expected = studentsToQueryResult(List.of(STUDENT_LIST_2.get(1), STUDENT_LIST_2.get(0), STUDENT_LIST_1.get(1), STUDENT_LIST_1.get(0)));
+
+		assertTrue(expected.equalsOrdered(result));
+	}
+
+	@Test
+	public void testOrderByNonReturnedField() {
+		QueryResult result = query("""
+				SELECT lastName FROM student
+				ORDER BY firstName ASC, id DESC
+				""");
+
+		System.out.println(result);
+		QueryResult expected = new QueryResult(
+				List.of("lastName"),
+				Stream.of(STUDENT_LIST_2.get(1), STUDENT_LIST_2.get(0), STUDENT_LIST_1.get(1), STUDENT_LIST_1.get(0))
+						.map(student -> new Object[]{student.lastName})
+						.toList()
+		);
 
 		assertTrue(expected.equalsOrdered(result));
 	}

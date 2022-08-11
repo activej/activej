@@ -136,7 +136,7 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 
 	private RelNode optimize(RelRoot root) {
 		Program program = Programs.standard();
-		return program.run(planner, root.rel, traits, Collections.emptyList(), Collections.emptyList());
+		return program.run(planner, root.project(), traits, Collections.emptyList(), Collections.emptyList());
 	}
 
 	public record TransformationResult(List<RelDataTypeField> fields, List<RexDynamicParam> parameters,

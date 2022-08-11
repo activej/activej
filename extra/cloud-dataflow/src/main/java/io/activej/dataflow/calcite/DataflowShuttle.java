@@ -15,10 +15,11 @@ import io.activej.dataflow.calcite.utils.RecordSortComparator;
 import io.activej.dataflow.calcite.utils.RecordSortComparator.FieldSort;
 import io.activej.dataflow.calcite.utils.Utils;
 import io.activej.dataflow.calcite.where.*;
-import io.activej.dataflow.dataset.Dataset;
-import io.activej.dataflow.dataset.Datasets;
-import io.activej.dataflow.dataset.LocallySortedDataset;
-import io.activej.dataflow.dataset.SortedDataset;
+import io.activej.dataflow.dataset.*;
+import io.activej.dataflow.graph.DataflowContext;
+import io.activej.dataflow.graph.DataflowGraph;
+import io.activej.dataflow.graph.Partition;
+import io.activej.dataflow.graph.StreamId;
 import io.activej.datastream.processor.StreamLimiter;
 import io.activej.datastream.processor.StreamSkip;
 import io.activej.record.Record;
@@ -41,11 +42,14 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.ImmutableBitSet;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static io.activej.common.Checks.*;
 import static io.activej.common.Utils.last;
+import static io.activej.datastream.processor.StreamReducers.mergeReducer;
 
 public class DataflowShuttle extends RelShuttleImpl {
 	private final DefiningClassLoader classLoader;
@@ -84,10 +88,26 @@ public class DataflowShuttle extends RelShuttleImpl {
 		RecordProjectionFn projectionFn = RecordProjectionFn.create(projections);
 
 		UnmaterializedDataset finalCurrent = current;
+		RecordScheme scheme = current.getScheme();
 
 		datasetStack.push(UnmaterializedDataset.of(
-				projectionFn.getToScheme(current.getScheme(), null),
-				params -> Datasets.map(finalCurrent.materialize(params), projectionFn.materialize(params))));
+				projectionFn.getToScheme(scheme, null),
+				params -> {
+					Dataset<Record> materialized = finalCurrent.materialize(params);
+					RecordProjectionFn materializedFn = projectionFn.materialize(params);
+
+					if (!(materialized instanceof LocallySortedDataset<?, Record> locallySortedDataset)) {
+						return Datasets.map(materialized, materializedFn);
+					}
+
+					boolean needsRepartition = doesNeedRepartition(projections, scheme.size(), locallySortedDataset);
+
+					if (!needsRepartition) {
+						return mapAsSorted(projectionFn, locallySortedDataset);
+					}
+
+					return repartitionMap(projectionFn, locallySortedDataset);
+				}));
 
 		return result;
 	}
@@ -544,6 +564,47 @@ public class DataflowShuttle extends RelShuttleImpl {
 		return toSortedFn.apply(locallySorted);
 	}
 
+	private static boolean doesNeedRepartition(List<FieldProjection> projections, int schemeSize, LocallySortedDataset<?, Record> locallySortedDataset) {
+		Comparator<?> comparator = locallySortedDataset.keyComparator();
+		if (comparator instanceof RecordKeyComparator) {
+			return checkReSortIndices(projections, IntStream.of(0, schemeSize).boxed().toList());
+		}
+		if (comparator instanceof RecordSortComparator recordSortComparator) {
+			List<FieldSort> sorts = recordSortComparator.getSorts();
+			return checkReSortIndices(projections, sorts.stream().map(FieldSort::index).distinct().toList());
+		}
+		if (comparator == Comparator.naturalOrder()) {
+			return !(locallySortedDataset.keyFunction() instanceof RecordKeyFunction<?> recordKeyFunction) ||
+					checkReSortIndices(projections, List.of(recordKeyFunction.getIndex()));
+		}
+		throw new AssertionError();
+	}
+
+	private static boolean checkReSortIndices(List<FieldProjection> projections, List<Integer> indices) {
+		int size = projections.size();
+		for (Integer index : indices) {
+			if (index >= size) return true;
+
+			FieldProjection projection = projections.get(index);
+			if (!(projection.operand() instanceof OperandRecordField operandField) || operandField.getIndex() != index) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static <K> SortedDataset<K, Record> mapAsSorted(RecordProjectionFn projectionFn, LocallySortedDataset<K, Record> locallySortedDataset) {
+		Dataset<Record> mapped = Datasets.map(locallySortedDataset, projectionFn);
+		Class<K> keyType = locallySortedDataset.keyType();
+		Function<Record, K> keyFunction = locallySortedDataset.keyFunction();
+		return Datasets.castToSorted(mapped, keyType, keyFunction, locallySortedDataset.keyComparator());
+	}
+
+	private static <K> Dataset<Record> repartitionMap(RecordProjectionFn projectionFn, LocallySortedDataset<K, Record> locallySortedDataset) {
+		Dataset<Record> repartitioned = new RepartitionToSingleDataset<>(locallySortedDataset);
+		return Datasets.map(repartitioned, projectionFn);
+	}
+
 	public interface UnmaterializedDataset {
 		Dataset<Record> materialize(List<Object> params);
 
@@ -561,6 +622,43 @@ public class DataflowShuttle extends RelShuttleImpl {
 					return scheme;
 				}
 			};
+		}
+	}
+
+	private static final class RepartitionToSingleDataset<K> extends LocallySortedDataset<K, Record> {
+		private final Dataset<Record> input;
+
+		private final int sharderNonce = ThreadLocalRandom.current().nextInt();
+
+		private RepartitionToSingleDataset(LocallySortedDataset<K, Record> input) {
+			super(input.valueType(), input.keyComparator(), input.keyType(), input.keyFunction());
+			this.input = input;
+		}
+
+		@Override
+		public List<StreamId> channels(DataflowContext context) {
+			DataflowContext next = context.withFixedNonce(sharderNonce);
+
+			List<StreamId> streamIds = input.channels(context);
+
+			DataflowGraph graph = next.getGraph();
+
+			if (streamIds.size() <= 1) {
+				return streamIds;
+			}
+
+			StreamId randomStreamId = streamIds.get(Math.abs(sharderNonce) % streamIds.size());
+			Partition randomPartition = graph.getPartition(randomStreamId);
+
+			List<StreamId> newStreamIds = DatasetUtils.repartitionAndReduce(next, streamIds, valueType(), keyFunction(), keyComparator(), mergeReducer(), List.of(randomPartition));
+			assert newStreamIds.size() == 1;
+
+			return newStreamIds;
+		}
+
+		@Override
+		public Collection<Dataset<?>> getBases() {
+			return List.of(input);
 		}
 	}
 }

@@ -59,6 +59,8 @@ public final class DatasetOffsetLimit<K, T> extends LocallySortedDataset<K, T> {
 		DataflowGraph graph = next.getGraph();
 		int index = next.generateNodeIndex();
 
+		if (streamIds.isEmpty()) return streamIds;
+
 		if (streamIds.size() == 1) {
 			return toOutput(graph, index, streamIds.get(0));
 		}
