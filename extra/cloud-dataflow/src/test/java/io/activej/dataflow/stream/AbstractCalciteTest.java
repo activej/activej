@@ -6,9 +6,8 @@ import io.activej.dataflow.SqlDataflow;
 import io.activej.dataflow.calcite.DataflowSchema;
 import io.activej.dataflow.calcite.DataflowTable;
 import io.activej.dataflow.calcite.RecordFunction;
-import io.activej.dataflow.calcite.inject.CalciteModule;
+import io.activej.dataflow.calcite.inject.CalciteClientModule;
 import io.activej.dataflow.calcite.inject.CalciteServerModule;
-import io.activej.dataflow.calcite.inject.SerializersModule;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
 import io.activej.inject.Injector;
@@ -141,7 +140,6 @@ public abstract class AbstractCalciteTest {
 
 		List<Partition> partitions = List.of(new Partition(address1), new Partition(address2));
 		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), partitions)
-				.install(new SerializersModule())
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.bind(new Key<List<Partition>>() {}).toInstance(partitions)
 				.bind(DataflowSchema.class).to(classLoader -> {
@@ -163,7 +161,7 @@ public abstract class AbstractCalciteTest {
 						DefiningClassLoader.class)
 				.build();
 
-		Module clientModule = Modules.combine(common, new CalciteModule(), ModuleBuilder.create()
+		Module clientModule = Modules.combine(common, CalciteClientModule.create(), ModuleBuilder.create()
 				.bind(String.class).to(() -> "CLIENT")
 				.build());
 		sqlDataflow = Injector.of(clientModule).getInstance(SqlDataflow.class);
@@ -171,7 +169,7 @@ public abstract class AbstractCalciteTest {
 
 		Module serverModule = ModuleBuilder.create()
 				.install(common)
-				.install(new CalciteServerModule())
+				.install(CalciteServerModule.create())
 				.build()
 				.overrideWith(getAdditionalServerModule());
 
@@ -223,19 +221,15 @@ public abstract class AbstractCalciteTest {
 	}
 
 
-	@SerializeRecord
 	public record Student(int id, String firstName, String lastName, int dept) {
 	}
 
-	@SerializeRecord
 	public record Department(int id, String departmentName) {
 	}
 
-	@SerializeRecord
 	public record Registry(int id, Map<String, Integer> counters, List<String> domains) {
 	}
 
-	@SerializeRecord
 	public record UserProfile(String id, UserProfilePojo pojo, Map<Integer, UserProfileIntent> intents,
 							  long timestamp) {
 	}
@@ -252,11 +246,9 @@ public abstract class AbstractCalciteTest {
 		TYPE_1, TYPE_2
 	}
 
-	@SerializeRecord
 	public record Limits(float[] buckets, long timestamp) {
 	}
 
-	@SerializeRecord
 	public record Large(long id) {
 	}
 

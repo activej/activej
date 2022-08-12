@@ -24,10 +24,7 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.schema.impl.AbstractTable;
 
-import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.RecordComponent;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +68,7 @@ public class DataflowTable<T> extends AbstractTable {
 
 	private static RelDataType toRowType(JavaTypeFactory typeFactory, Type type) {
 		if (type instanceof Class<?> cls) {
-			if (cls.isPrimitive() || Primitives.isWrapperType(cls) || cls == String.class) {
+			if (cls.isPrimitive() || cls.isEnum() || Primitives.isWrapperType(cls) || cls == String.class) {
 				return typeFactory.createJavaType(cls);
 			}
 
@@ -88,13 +85,22 @@ public class DataflowTable<T> extends AbstractTable {
 				return typeFactory.createStructType(types, names);
 			}
 
-			if (cls.isEnum()) {
-				return typeFactory.createJavaType(cls);
+			if (cls.isArray()) {
+				RelDataType elementType = toRowType(typeFactory, cls.getComponentType());
+				return typeFactory.createArrayType(elementType, -1);
 			}
 
-			if (cls.isArray()) {
-				return toRowType(typeFactory, cls.getComponentType());
+			List<RelDataType> types = new ArrayList<>();
+			List<String> names = new ArrayList<>();
+
+			// TODO: either require RelDataType on table creation or use order from @Serialize annotation?
+			for (Field field : cls.getFields()) {
+				if (Modifier.isStatic(field.getModifiers())) continue;
+
+				names.add(field.getName());
+				types.add(toRowType(typeFactory, field.getGenericType()));
 			}
+			return typeFactory.createStructType(types, names);
 		}
 
 		if (type instanceof ParameterizedType parameterizedType) {

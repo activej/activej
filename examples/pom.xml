@@ -45,6 +45,7 @@
     <module>cloud/crdt</module>
     <module>cloud/redis</module>
     <module>cloud/dataflow</module>
+    <module>cloud/multilog-sql-demo</module>
   </modules>
 
   <dependencies>

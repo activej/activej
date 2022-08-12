@@ -37,12 +37,12 @@ import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
 import io.activej.service.ServiceGraphModule;
 
+import java.util.List;
 import java.util.concurrent.Executor;
 
 import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.inject.module.Modules.combine;
 import static io.activej.launchers.initializers.Initializers.ofEventloop;
-import static java.util.stream.Collectors.toList;
 
 public abstract class DataflowClientLauncher extends Launcher {
 	public static final String PROPERTIES_FILE = "dataflow-client.properties";
@@ -68,9 +68,15 @@ public abstract class DataflowClientLauncher extends Launcher {
 	}
 
 	@Provides
-	DataflowGraph graph(Config config, DataflowClient client) {
-		return new DataflowGraph(client,
-				config.get(ofList(ofInetSocketAddress()), "dataflow.partitions").stream().map(Partition::new).collect(toList()));
+	DataflowGraph graph(DataflowClient client, List<Partition> partitions) {
+		return new DataflowGraph(client, partitions);
+	}
+
+	@Provides
+	List<Partition> partitions(Config config) {
+		return config.get(ofList(ofInetSocketAddress()), "dataflow.partitions").stream()
+				.map(Partition::new)
+				.toList();
 	}
 
 	@Provides

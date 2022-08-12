@@ -37,14 +37,23 @@ import java.util.Set;
 
 import static java.util.Collections.singletonList;
 
-public final class CalciteModule extends AbstractModule {
+public final class CalciteClientModule extends AbstractModule {
 
 	public static final String DATAFLOW_SCHEMA_NAME = "DATAFLOW";
 
+	private CalciteClientModule() {
+	}
+
+	public static CalciteClientModule create() {
+		return new CalciteClientModule();
+	}
+
 	@Override
 	protected void configure() {
-		bind(SqlDataflow.class).to(CalciteSqlDataflow.class);
 		install(new SqlFunctionModule());
+		install(new SerializersModule());
+
+		bind(SqlDataflow.class).to(CalciteSqlDataflow.class);
 	}
 
 	@Provides

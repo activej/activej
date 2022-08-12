@@ -21,6 +21,7 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.Task;
 import io.activej.datastream.StreamSupplier;
+import io.activej.promise.Promise;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -77,6 +78,8 @@ public final class NodeSupplierOfId<T> extends AbstractNode {
 			supplier = StreamSupplier.ofChannelSupplier((ChannelSupplier<T>) object);
 		} else if (object instanceof PartitionedStreamSupplierFactory) {
 			supplier = ((PartitionedStreamSupplierFactory<T>) object).get(partitionIndex, maxPartitions);
+		} else if (object instanceof Promise) {
+			supplier = StreamSupplier.ofPromise(((Promise<StreamSupplier<T>>) object));
 		} else {
 			throw new IllegalArgumentException("Object with id '" + id + "' is not a valid supplier of data: " + object);
 		}
