@@ -99,13 +99,13 @@ public class StreamOutput implements Closeable, WithInitializer<StreamOutput> {
 	}
 
 	public final void write(byte[] b) throws IOException {
-		ensure(b.length);
-		out.write(b);
+		doFlush();
+		outputStream.write(b);
 	}
 
 	public final void write(byte[] b, int off, int len) throws IOException {
-		ensure(len);
-		out.write(b, off, len);
+		doFlush();
+		outputStream.write(b, off, len);
 	}
 
 	public final void writeBoolean(boolean v) throws IOException {

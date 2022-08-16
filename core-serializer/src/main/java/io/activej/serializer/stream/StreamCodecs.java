@@ -145,7 +145,6 @@ public final class StreamCodecs {
 						.withMethod("encode", let(cast(arg(1), arrayType),
 								array -> sequence(
 										call(stream, "writeVarInt", length(array)),
-										call(stream, "ensure", mul(value(elementSize), length(array))),
 										let(call(stream, "out"),
 												out -> iterateArray(array,
 														it -> call(out, encode, it))))))
