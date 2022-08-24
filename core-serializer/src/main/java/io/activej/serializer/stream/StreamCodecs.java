@@ -145,19 +145,15 @@ public final class StreamCodecs {
 						.withMethod("encode", let(cast(arg(1), arrayType),
 								array -> sequence(
 										call(stream, "writeVarInt", length(array)),
-										let(call(stream, "out"),
-												out -> iterateArray(array,
-														it -> call(out, encode, it))))))
+										iterateArray(array, it -> call(stream, encode, it)))))
 						.withMethod("decode",
 								let(call(stream, "readVarInt"),
 										length -> sequence(
-												call(stream, "ensure", mul(value(elementSize), length)),
 												let(arrayNew(arrayType, length),
-														array -> let(call(stream, "in"),
-																in -> sequence(
-																		iterate(value(0), length,
-																				i -> arraySet(array, i, call(in, decode))),
-																		array))))))
+														array -> sequence(
+																iterate(value(0), length,
+																		i -> arraySet(array, i, call(stream, decode))),
+																array)))))
 						.defineClassAndCreateInstance(CLASS_LOADER));
 	}
 
@@ -165,30 +161,17 @@ public final class StreamCodecs {
 		return new StreamCodec<int[]>() {
 			@Override
 			public void encode(StreamOutput output, int[] array) throws IOException {
-				output.ensure((array.length + 1) * 5);
-				BinaryOutput out = output.out();
-				out.writeVarInt(array.length);
+				output.writeVarInt(array.length);
 				for (int i = 0; i < array.length; i++) {
-					out.writeVarInt(array[i]);
+					output.writeVarInt(array[i]);
 				}
 			}
 
 			@Override
 			public int[] decode(StreamInput input) throws IOException {
 				int[] array = new int[input.readVarInt()];
-				BinaryInput in = input.in();
-				int idx = 0;
-				while (idx < array.length) {
-					int remaining = array.length - idx;
-					input.ensure(remaining);
-					int safeReadCount = Math.min(remaining, input.remaining() / 5);
-					if (safeReadCount == 0) break;
-					for (int i = 0; i < safeReadCount; i++) {
-						array[idx++] = in.readVarInt();
-					}
-				}
-				for (; idx < array.length; idx++) {
-					array[idx] = input.readVarInt();
+				for (int i = 0; i < array.length; i++) {
+					array[i] = input.readVarInt();
 				}
 				return array;
 			}
@@ -199,30 +182,17 @@ public final class StreamCodecs {
 		return new StreamCodec<long[]>() {
 			@Override
 			public void encode(StreamOutput output, long[] array) throws IOException {
-				output.ensure((array.length + 1) * 10);
-				BinaryOutput out = output.out();
-				out.writeVarInt(array.length);
+				output.writeVarInt(array.length);
 				for (int i = 0; i < array.length; i++) {
-					out.writeVarLong(array[i]);
+					output.writeVarLong(array[i]);
 				}
 			}
 
 			@Override
 			public long[] decode(StreamInput input) throws IOException {
 				long[] array = new long[input.readVarInt()];
-				BinaryInput in = input.in();
-				int idx = 0;
-				while (idx < array.length) {
-					int remaining = array.length - idx;
-					input.ensure(remaining);
-					int safeReadCount = Math.min(remaining, input.remaining() / 10);
-					if (safeReadCount == 0) break;
-					for (int i = 0; i < safeReadCount; i++) {
-						array[idx++] = in.readVarLong();
-					}
-				}
-				for (; idx < array.length; idx++) {
-					array[idx] = input.readVarLong();
+				for (int i = 0; i < array.length; i++) {
+					array[i] = input.readVarLong();
 				}
 				return array;
 			}
@@ -360,7 +330,7 @@ public final class StreamCodecs {
 	}
 
 	public static <K, V> StreamCodec<Map<K, V>> ofMap(StreamCodec<K> keyCodec,
-			Function<? super K, ? extends StreamCodec<? extends V>> valueCodecFn) {
+	                                                  Function<? super K, ? extends StreamCodec<? extends V>> valueCodecFn) {
 		return ofMap(keyCodec, valueCodecFn, length -> new HashMap<>(hashInitialSize(length)));
 	}
 
@@ -570,7 +540,7 @@ public final class StreamCodecs {
 		}
 
 		private void ensureHeaderSize(StreamOutput output, int positionBegin, int positionData,
-				int dataSize, int headerSize) {
+		                              int dataSize, int headerSize) {
 			int previousHeaderSize = positionData - positionBegin;
 			if (previousHeaderSize == headerSize) return; // offset is enough for header
 

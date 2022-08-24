@@ -147,7 +147,7 @@ public class StreamOutput implements Closeable, WithInitializer<StreamOutput> {
 	}
 
 	public final void writeVarLong(long v) throws IOException {
-		ensure(9);
+		ensure(10);
 		out.writeVarLong(v);
 	}
 

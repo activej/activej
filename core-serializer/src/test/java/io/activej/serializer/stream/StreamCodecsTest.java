@@ -10,8 +10,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class StreamCodecsTest {
 
@@ -138,6 +137,28 @@ public class StreamCodecsTest {
 	}
 
 	@Test
+	public void ofByteArray() {
+		StreamCodec<byte[]> codec = StreamCodecs.ofByteArray();
+		byte[] expected = new byte[1024];
+		for (int i = 0; i < expected.length; i++) {
+			expected[i] = (byte) i;
+		}
+		byte[] actual = doTest(codec, expected);
+		assertArrayEquals(expected, actual);
+	}
+
+	@Test
+	public void ofIntArray() {
+		StreamCodec<int[]> codec = StreamCodecs.ofIntArray();
+		int[] expected = new int[1024];
+		for (int i = 0; i < expected.length; i++) {
+			expected[i] = i;
+		}
+		int[] actual = doTest(codec, expected);
+		assertArrayEquals(expected, actual);
+	}
+
+	@Test
 	public void ofVarIntArrayList() {
 		StreamCodec<List<int[]>> codec = StreamCodecs.ofList(StreamCodecs.ofVarIntArray());
 		List<int[]> expected = Arrays.asList(
@@ -182,7 +203,7 @@ public class StreamCodecsTest {
 		}
 
 		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-		try (StreamInput input = StreamInput.create(bais)) {
+		try (StreamInput input = StreamInput.create(bais, 5)) {
 			return codec.decode(input);
 		} catch (IOException e) {
 			throw new AssertionError(e);
