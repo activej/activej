@@ -27,6 +27,7 @@ public class StreamCodecsTest {
 		return Arrays.asList(
 				new Object[]{1},
 				new Object[]{2},
+				new Object[]{5},
 				new Object[]{10},
 				new Object[]{100},
 				new Object[]{StreamOutput.DEFAULT_BUFFER_SIZE}
@@ -215,6 +216,27 @@ public class StreamCodecsTest {
 	}
 
 	@Test
+	public void ofByteArray() {
+		StreamCodec<byte[]> codec = StreamCodecs.ofByteArray();
+		byte[] bytes = {1, 2, 3, 4, 5, 6, 7, 8};
+		byte[] result = doTest(codec, bytes);
+
+		assertArrayEquals(bytes, result);
+	}
+
+	@Test
+	public void ofLargeByteArray() {
+		StreamCodec<byte[]> codec = StreamCodecs.ofByteArray();
+		byte[] bytes = new byte[10_000_000];
+		Random random = ThreadLocalRandom.current();
+		random.nextBytes(bytes);
+
+		byte[] result = doTest(codec, bytes);
+
+		assertArrayEquals(bytes, result);
+	}
+
+	@Test
 	public void ofVarIntArray() {
 		StreamCodec<int[]> codec = StreamCodecs.ofVarIntArray();
 		int[] ints = {1, 2, 3, 4, 5, 6, 7, 8};
@@ -269,7 +291,7 @@ public class StreamCodecsTest {
 		}
 
 		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-		try (StreamInput input = StreamInput.create(bais)) {
+		try (StreamInput input = StreamInput.create(bais, bufferSize)) {
 			return codec.decode(input);
 		} catch (IOException e) {
 			throw new AssertionError(e);

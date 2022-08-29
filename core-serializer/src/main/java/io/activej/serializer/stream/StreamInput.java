@@ -147,9 +147,31 @@ public class StreamInput implements Closeable, WithInitializer<StreamInput> {
 	}
 
 	public final int read(byte[] b, int off, int len) throws IOException {
-		ensure(len);
-		in.read(b, off, len);
+		if (in.pos < limit) {
+			int copy = Math.min(limit - in.pos, len);
+			in.read(b, off, copy);
+			off += copy;
+			len -= copy;
+		}
+		readBytes(b, off, len);
 		return len;
+	}
+
+	private void readBytes(byte[] b, int off, int len) throws IOException {
+		try {
+			while (len > 0) {
+				int bytesRead = inputStream.read(b, off, len);
+				if (bytesRead == -1) {
+					close();
+					throw new CorruptedDataException("Unexpected end of data");
+				}
+				off += bytesRead;
+				len -= bytesRead;
+			}
+		} catch (IOException e) {
+			recycle();
+			throw e;
+		}
 	}
 
 	public final byte readByte() throws IOException {
