@@ -2,7 +2,6 @@ package io.activej.serializer.stream;
 
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.codegen.expression.Variable;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.BinaryOutput;
 import io.activej.serializer.BinarySerializer;
@@ -20,7 +19,6 @@ import java.util.function.IntFunction;
 import static io.activej.codegen.expression.Expressions.*;
 import static java.util.Arrays.asList;
 
-@SuppressWarnings("ForLoopReplaceableByForEach")
 public final class StreamCodecs {
 	private static final ConcurrentHashMap<Class<?>, StreamCodec<?>> CODECS = new ConcurrentHashMap<>();
 
@@ -138,93 +136,99 @@ public final class StreamCodecs {
 	}
 
 	private static <T> StreamCodec<T> buildArrayCodec(Class<T> arrayType, int elementSize, String encode, String decode) {
-		Variable stream = arg(0);
 		//noinspection unchecked
 		return (StreamCodec<T>) CODECS.computeIfAbsent(arrayType, $ ->
-				(StreamCodec<T>) ClassBuilder.create(StreamCodec.class)
-						.withMethod("encode", let(cast(arg(1), arrayType),
-								array -> sequence(
-										call(stream, "writeVarInt", length(array)),
-										let(call(stream, "out"),
-												out -> iterateArray(array,
-														it -> call(out, encode, it))))))
-						.withMethod("decode",
-								let(call(stream, "readVarInt"),
-										length -> sequence(
-												call(stream, "ensure", mul(value(elementSize), length)),
-												let(arrayNew(arrayType, length),
-														array -> let(call(stream, "in"),
-																in -> sequence(
-																		iterate(value(0), length,
-																				i -> arraySet(array, i, call(in, decode))),
-																		array))))))
+				ClassBuilder.create(AbstractArrayStreamCodec.class)
+						.withConstructor(superConstructor(value(elementSize)))
+
+						.withMethod("getArrayLength", length(cast(arg(0), arrayType)))
+						.withMethod("doWrite", let(cast(arg(1), arrayType),
+								array -> iterate(
+										arg(2),
+										arg(3),
+										it -> call(arg(0), encode, arrayGet(array, it)))))
+
+						.withMethod("createArray", arrayNew(arrayType, arg(0)))
+						.withMethod("doRead", let(cast(arg(1), arrayType),
+								array -> iterate(
+										value(0),
+										arg(3),
+										i -> arraySet(array, add(i, arg(2)), call(arg(0), decode)))))
+						.withMethod("doReadRemaining", let(cast(arg(1), arrayType),
+								array -> iterate(
+										arg(2),
+										arg(3),
+										i -> arraySet(array, i, call(arg(0), decode)))))
+
 						.defineClassAndCreateInstance(CLASS_LOADER));
 	}
 
 	public static StreamCodec<int[]> ofVarIntArray() {
-		return new StreamCodec<int[]>() {
+		return new AbstractArrayStreamCodec<int[]>(1, 5) {
 			@Override
-			public void encode(StreamOutput output, int[] array) throws IOException {
-				output.ensure((array.length + 1) * 5);
-				BinaryOutput out = output.out();
-				out.writeVarInt(array.length);
-				for (int i = 0; i < array.length; i++) {
-					out.writeVarInt(array[i]);
+			protected int getArrayLength(int[] array) {
+				return array.length;
+			}
+
+			@Override
+			protected void doWrite(BinaryOutput output, int[] array, int offset, int limit) {
+				for (int i = offset; i < limit; i++) {
+					output.writeVarInt(array[i]);
 				}
 			}
 
 			@Override
-			public int[] decode(StreamInput input) throws IOException {
-				int[] array = new int[input.readVarInt()];
-				BinaryInput in = input.in();
-				int idx = 0;
-				while (idx < array.length) {
-					int remaining = array.length - idx;
-					input.ensure(remaining);
-					int safeReadCount = Math.min(remaining, input.remaining() / 5);
-					if (safeReadCount == 0) break;
-					for (int i = 0; i < safeReadCount; i++) {
-						array[idx++] = in.readVarInt();
-					}
+			protected int[] createArray(int length) {
+				return new int[length];
+			}
+
+			@Override
+			protected void doRead(BinaryInput input, int[] array, int offset, int count) {
+				for (int i = 0; i < count; i++) {
+					array[offset++] = input.readVarInt();
 				}
-				for (; idx < array.length; idx++) {
-					array[idx] = input.readVarInt();
+			}
+
+			@Override
+			protected void doReadRemaining(StreamInput input, int[] array, int offset, int limit) throws IOException {
+				for (; offset < limit; offset++) {
+					array[offset] = input.readVarInt();
 				}
-				return array;
 			}
 		};
 	}
 
 	public static StreamCodec<long[]> ofVarLongArray() {
-		return new StreamCodec<long[]>() {
+		return new AbstractArrayStreamCodec<long[]>(1, 10) {
 			@Override
-			public void encode(StreamOutput output, long[] array) throws IOException {
-				output.ensure((array.length + 1) * 10);
-				BinaryOutput out = output.out();
-				out.writeVarInt(array.length);
-				for (int i = 0; i < array.length; i++) {
-					out.writeVarLong(array[i]);
+			protected int getArrayLength(long[] array) {
+				return array.length;
+			}
+
+			@Override
+			protected void doWrite(BinaryOutput output, long[] array, int offset, int limit) {
+				for (int i = offset; i < limit; i++) {
+					output.writeVarLong(array[i]);
 				}
 			}
 
 			@Override
-			public long[] decode(StreamInput input) throws IOException {
-				long[] array = new long[input.readVarInt()];
-				BinaryInput in = input.in();
-				int idx = 0;
-				while (idx < array.length) {
-					int remaining = array.length - idx;
-					input.ensure(remaining);
-					int safeReadCount = Math.min(remaining, input.remaining() / 10);
-					if (safeReadCount == 0) break;
-					for (int i = 0; i < safeReadCount; i++) {
-						array[idx++] = in.readVarLong();
-					}
+			protected long[] createArray(int length) {
+				return new long[length];
+			}
+
+			@Override
+			protected void doRead(BinaryInput input, long[] array, int offset, int count) {
+				for (int i = 0; i < count; i++) {
+					array[offset++] = input.readVarLong();
 				}
-				for (; idx < array.length; idx++) {
-					array[idx] = input.readVarLong();
+			}
+
+			@Override
+			protected void doReadRemaining(StreamInput input, long[] array, int offset, int limit) throws IOException {
+				for (; offset < limit; offset++) {
+					array[offset] = input.readVarLong();
 				}
-				return array;
 			}
 		};
 	}
@@ -679,6 +683,73 @@ public final class StreamCodecs {
 			}
 			return result;
 		}
+
+	}
+
+	protected static abstract class AbstractArrayStreamCodec<T> implements StreamCodec<T> {
+		protected final int minElementSize;
+		protected final int maxElementSize;
+
+		protected AbstractArrayStreamCodec(int minElementSize, int maxElementSize) {
+			this.minElementSize = minElementSize;
+			this.maxElementSize = maxElementSize;
+		}
+
+		protected AbstractArrayStreamCodec(int elementSize) {
+			this.minElementSize = elementSize;
+			this.maxElementSize = elementSize;
+		}
+
+		@Override
+		public final void encode(StreamOutput output, T array) throws IOException {
+			int sourceArrayLength = getArrayLength(array);
+			output.writeVarInt(sourceArrayLength);
+			output.ensure(maxElementSize);
+
+			for (int i = 0; i < sourceArrayLength; ) {
+				int numberOfItems = output.remaining() / maxElementSize;
+				if (numberOfItems == 0) {
+					output.flush();
+					continue;
+				}
+				int limit = i + Math.min(numberOfItems, sourceArrayLength - i);
+				doWrite(output.out(), array, i, limit);
+				i += numberOfItems;
+			}
+		}
+
+		protected abstract int getArrayLength(T array);
+
+		protected abstract void doWrite(BinaryOutput output, T array, int offset, int limit);
+
+		@Override
+		public final T decode(StreamInput input) throws IOException {
+			int length = input.readVarInt();
+			T array = createArray(length);
+			int idx = 0;
+			while (idx < length) {
+				int safeRemaining = (length - idx) * minElementSize;
+				int safeReadCount = Math.min(safeRemaining, input.remaining() / maxElementSize);
+				if (safeReadCount == 0) {
+					int safeEnsure = Math.min(input.array().length - input.remaining(), safeRemaining);
+					input.ensure(safeEnsure);
+					if (input.remaining() / maxElementSize == 0) {
+						break;
+					}
+					continue;
+				}
+				doRead(input.in(), array, idx, safeReadCount);
+				idx += safeReadCount;
+			}
+			doReadRemaining(input, array, idx, length);
+			return array;
+		}
+
+		protected abstract T createArray(int length);
+
+		protected abstract void doRead(BinaryInput input, T array, int offset, int count);
+
+		protected abstract void doReadRemaining(StreamInput input, T array, int offset, int limit) throws IOException;
 
 	}
 }

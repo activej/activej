@@ -2,18 +2,36 @@ package io.activej.serializer.stream;
 
 import io.activej.serializer.stream.StreamCodecs.SubtypeBuilder;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
+@RunWith(Parameterized.class)
 public class StreamCodecsTest {
+
+	@Parameter()
+	public int bufferSize;
+
+	@Parameters(name = "{0}")
+	public static Collection<Object[]> getParameters() {
+		return Arrays.asList(
+				new Object[]{1},
+				new Object[]{2},
+				new Object[]{10},
+				new Object[]{100},
+				new Object[]{StreamOutput.DEFAULT_BUFFER_SIZE}
+		);
+	}
 
 	@Test
 	public void ofString() {
@@ -173,9 +191,78 @@ public class StreamCodecsTest {
 		}
 	}
 
-	private static <T> T doTest(StreamCodec<T> codec, T value) {
+	@Test
+	public void ofIntArray() {
+		StreamCodec<int[]> codec = StreamCodecs.ofIntArray();
+		int[] ints = {1, 2, 3, 4, 5, 6, 7, 8};
+		int[] result = doTest(codec, ints);
+
+		assertArrayEquals(ints, result);
+	}
+
+	@Test
+	public void ofLargeIntArray() {
+		StreamCodec<int[]> codec = StreamCodecs.ofIntArray();
+		int[] ints = new int[10_000_000];
+		Random random = ThreadLocalRandom.current();
+		for (int i = 0; i < ints.length; i++) {
+			ints[i] = random.nextInt();
+		}
+
+		int[] result = doTest(codec, ints);
+
+		assertArrayEquals(ints, result);
+	}
+
+	@Test
+	public void ofVarIntArray() {
+		StreamCodec<int[]> codec = StreamCodecs.ofVarIntArray();
+		int[] ints = {1, 2, 3, 4, 5, 6, 7, 8};
+		int[] result = doTest(codec, ints);
+
+		assertArrayEquals(ints, result);
+	}
+
+	@Test
+	public void ofLargeVarIntArray() {
+		StreamCodec<int[]> codec = StreamCodecs.ofVarIntArray();
+		int[] ints = new int[10_000_000];
+		Random random = ThreadLocalRandom.current();
+		for (int i = 0; i < ints.length; i++) {
+			ints[i] = random.nextInt();
+		}
+
+		int[] result = doTest(codec, ints);
+
+		assertArrayEquals(ints, result);
+	}
+
+	@Test
+	public void ofVarLongArray() {
+		StreamCodec<long[]> codec = StreamCodecs.ofVarLongArray();
+		long[] longs = {1, 2, 3, 4, 5, 6, 7, 8};
+		long[] result = doTest(codec, longs);
+
+		assertArrayEquals(longs, result);
+	}
+
+	@Test
+	public void ofLargeVarLongArray() {
+		StreamCodec<long[]> codec = StreamCodecs.ofVarLongArray();
+		long[] longs = new long[10_000_000];
+		Random random = ThreadLocalRandom.current();
+		for (int i = 0; i < longs.length; i++) {
+			longs[i] = random.nextLong();
+		}
+
+		long[] result = doTest(codec, longs);
+
+		assertArrayEquals(longs, result);
+	}
+
+	private <T> T doTest(StreamCodec<T> codec, T value) {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try (StreamOutput output = StreamOutput.create(baos, 1)) {
+		try (StreamOutput output = StreamOutput.create(baos, bufferSize)) {
 			codec.encode(output, value);
 		} catch (IOException e) {
 			throw new AssertionError(e);
