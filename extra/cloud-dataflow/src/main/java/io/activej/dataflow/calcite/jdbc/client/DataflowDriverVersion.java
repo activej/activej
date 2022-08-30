@@ -1,4 +1,4 @@
-package io.activej.dataflow.calcite.jdbc;
+package io.activej.dataflow.calcite.jdbc.client;
 
 import org.apache.calcite.avatica.DriverVersion;
 

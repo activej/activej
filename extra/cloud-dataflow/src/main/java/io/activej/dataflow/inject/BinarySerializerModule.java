@@ -110,7 +110,7 @@ public final class BinarySerializerModule extends AbstractModule {
 				return (BinarySerializer<T>) injector.getInstance(transientKey);
 			}
 			return (BinarySerializer<T>) serializers.computeIfAbsent(type, aType -> {
-				logger.info("Creating serializer for {}", type);
+				logger.trace("Creating serializer for {}", type);
 				if (builder == null) {
 					builder = SerializerBuilder.create();
 				}

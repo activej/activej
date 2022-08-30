@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
-// Taken from Cube tests
+// Taken from Cube tests with slight modifications
 public class LogItem {
 	@Serialize
 	public int date = randomInt(16570, 16580);

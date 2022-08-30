@@ -1,6 +1,7 @@
 package plain;
 
 import io.activej.config.Config;
+import io.activej.dataflow.DataflowException;
 import io.activej.dataflow.SqlDataflow;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.eventloop.Eventloop;
@@ -12,6 +13,7 @@ import io.activej.launchers.dataflow.DataflowClientLauncher;
 import io.activej.record.Record;
 import misc.PrintUtils;
 import module.MultilogDataflowClientModule;
+import org.apache.calcite.runtime.CalciteException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -46,11 +48,17 @@ public final class MultilogDataflowPlainClientLauncher extends DataflowClientLau
 	}
 
 	@Override
-	protected void run() throws Exception {
+	protected void onStart() throws Exception {
+		executeQuery("SELECT 1");
+		System.out.println("Connection to partitions established");
+	}
 
+	@Override
+	protected void run() throws Exception {
 		Scanner scanIn = new Scanner(System.in);
+
 		while (true) {
-			System.out.print("Enter your query:");
+			System.out.println("Enter your query:");
 			System.out.print("> ");
 			String query = scanIn.nextLine();
 			if (query.isEmpty()) {
@@ -58,34 +66,38 @@ public final class MultilogDataflowPlainClientLauncher extends DataflowClientLau
 				break;
 			}
 
+			List<Record> records;
 			try {
-				executeQuery(query);
+				records = executeQuery(query);
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
 				throw e;
 			} catch (ExecutionException e) {
 				Throwable cause = e.getCause();
-				if (cause instanceof Exception && !(cause instanceof RuntimeException)) {
+				if (cause instanceof Exception &&
+						!(cause instanceof RuntimeException || cause instanceof DataflowException) ||
+						cause instanceof CalciteException) {
 					// recoverable
-					e.printStackTrace();
+					System.err.println("WARNING: " + cause.getMessage());
+					continue;
 				} else {
 					throw new RuntimeException(cause);
 				}
 			}
+
+			System.out.println("\n\n");
+			PrintUtils.printRecords(records);
 		}
 	}
 
-	private void executeQuery(String query) throws InterruptedException, ExecutionException {
-		List<Record> records = eventloop.submit(() -> {
+	private List<Record> executeQuery(String query) throws InterruptedException, ExecutionException {
+		return eventloop.submit(() -> {
 					StreamConsumerToList<Record> consumer = StreamConsumerToList.create();
 					return sqlDataflow.query(query)
 							.then(supplier -> supplier.streamTo(consumer))
 							.map($ -> consumer.getList());
 				})
 				.get();
-
-		System.out.println("\n\n");
-		PrintUtils.printRecords(records);
 	}
 
 	public static void main(String[] args) throws Exception {

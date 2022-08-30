@@ -75,7 +75,7 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 		RelNode node;
 		try {
 			node = convertToNode(sql);
-		} catch (DataflowException e) {
+		} catch (DataflowException | SqlParseException e) {
 			return Promise.ofException(e);
 		}
 
@@ -84,13 +84,8 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 		return queryDataflow(transformed.dataset().materialize(Collections.emptyList()));
 	}
 
-	public RelNode convertToNode(String sql) throws DataflowException {
-		SqlNode sqlNode;
-		try {
-			sqlNode = parser.parseQuery(sql);
-		} catch (SqlParseException e) {
-			throw new DataflowException(e);
-		}
+	public RelNode convertToNode(String sql) throws SqlParseException, DataflowException {
+		SqlNode sqlNode = parser.parseQuery(sql);
 
 		sqlNode = validator.validate(sqlNode);
 
@@ -135,6 +130,6 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 	}
 
 	public record TransformationResult(List<RelDataTypeField> fields, List<RexDynamicParam> parameters,
-									   UnmaterializedDataset dataset) {
+	                                   UnmaterializedDataset dataset) {
 	}
 }

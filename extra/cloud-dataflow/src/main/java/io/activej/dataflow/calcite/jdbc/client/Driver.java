@@ -1,4 +1,4 @@
-package io.activej.dataflow.calcite.jdbc;
+package io.activej.dataflow.calcite.jdbc.client;
 
 import org.apache.calcite.avatica.DriverVersion;
 
@@ -32,7 +32,7 @@ public class Driver extends org.apache.calcite.avatica.remote.Driver {
 						+ jdbcVersion);
 			case JDBC_41:
 			default:
-				yield "io.activej.dataflow.calcite.jdbc.DataflowJdbc41Factory";
+				yield "io.activej.dataflow.calcite.jdbc.client.DataflowJdbc41Factory";
 		};
 	}
 }

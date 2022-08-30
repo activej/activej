@@ -1,4 +1,4 @@
-package plain;
+package worker;
 
 import io.activej.common.ApplicationSettings;
 import io.activej.config.Config;
@@ -17,8 +17,8 @@ import module.MultilogDataflowServerModule;
 import java.io.IOException;
 import java.nio.file.Files;
 
-public final class MultilogDataflowServerLauncher extends DataflowServerLauncher {
-	public static final int NUMBER_OF_ITEMS = ApplicationSettings.getInt(MultilogDataflowServerLauncher.class, "numberOfItems", 100);
+public final class MultilogDataflowWorkerServerLauncher extends DataflowServerLauncher {
+	public static final int NUMBER_OF_ITEMS = ApplicationSettings.getInt(MultilogDataflowWorkerServerLauncher.class, "numberOfItems", 100);
 
 	@Inject
 	Eventloop eventloop;
@@ -59,6 +59,6 @@ public final class MultilogDataflowServerLauncher extends DataflowServerLauncher
 	}
 
 	public static void main(String[] args) throws Exception {
-		new MultilogDataflowServerLauncher().launch(args);
+		new MultilogDataflowWorkerServerLauncher().launch(args);
 	}
 }

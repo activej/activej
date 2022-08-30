@@ -1,4 +1,4 @@
-package io.activej.dataflow.calcite.jdbc;
+package io.activej.dataflow.calcite.jdbc.server;
 
 import io.activej.dataflow.DataflowException;
 import io.activej.dataflow.calcite.CalciteSqlDataflow;
@@ -11,13 +11,13 @@ import io.activej.record.RecordScheme;
 import io.activej.types.Types;
 import org.apache.calcite.avatica.AvaticaParameter;
 import org.apache.calcite.avatica.ColumnMetaData;
-import org.apache.calcite.avatica.MissingResultsException;
 import org.apache.calcite.avatica.NoSuchStatementException;
 import org.apache.calcite.avatica.remote.TypedValue;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexDynamicParam;
+import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.type.SqlTypeName;
 
 import java.lang.reflect.Type;
@@ -153,7 +153,7 @@ public final class DataflowMeta extends LimitedMeta {
 		RelNode node;
 		try {
 			node = sqlDataflow.convertToNode(sql);
-		} catch (DataflowException e) {
+		} catch (DataflowException | SqlParseException e) {
 			throw new RuntimeException(e);
 		}
 
@@ -161,7 +161,7 @@ public final class DataflowMeta extends LimitedMeta {
 	}
 
 	@Override
-	public Frame fetch(StatementHandle h, long offset, int fetchMaxRowCount) throws NoSuchStatementException, MissingResultsException {
+	public Frame fetch(StatementHandle h, long offset, int fetchMaxRowCount) throws NoSuchStatementException {
 		FrameConsumer frameConsumer = consumers.get(StatementKey.create(h));
 		if (frameConsumer == null) {
 			throw new NoSuchStatementException(h);
