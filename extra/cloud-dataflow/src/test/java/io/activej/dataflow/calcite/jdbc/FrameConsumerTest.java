@@ -1,4 +1,4 @@
-package io.activej.dataflow.calcite.jdbc.server;
+package io.activej.dataflow.calcite.jdbc;
 
 import io.activej.common.ref.RefLong;
 import io.activej.datastream.StreamSupplier;

@@ -1,6 +1,7 @@
-package io.activej.dataflow.calcite.jdbc.client;
+package io.activej.dataflow.jdbc.driver;
 
 import org.apache.calcite.avatica.DriverVersion;
+import org.apache.calcite.avatica.remote.RemoteService;
 
 public class Driver extends org.apache.calcite.avatica.remote.Driver {
 	public static final String CONNECT_STRING_PREFIX = "jdbc:activej:dataflow:";
@@ -11,6 +12,7 @@ public class Driver extends org.apache.calcite.avatica.remote.Driver {
 
 	public Driver() {
 		super();
+		new RemoteService(null);
 	}
 
 	@Override
@@ -32,7 +34,7 @@ public class Driver extends org.apache.calcite.avatica.remote.Driver {
 						+ jdbcVersion);
 			case JDBC_41:
 			default:
-				yield "io.activej.dataflow.calcite.jdbc.client.DataflowJdbc41Factory";
+				yield "io.activej.dataflow.jdbc.driver.DataflowJdbc41Factory";
 		};
 	}
 }

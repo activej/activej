@@ -1,4 +1,4 @@
-package io.activej.dataflow.calcite.jdbc.client;
+package io.activej.dataflow.jdbc.driver;
 
 import org.apache.calcite.avatica.AvaticaResultSet;
 import org.apache.calcite.avatica.AvaticaStatement;

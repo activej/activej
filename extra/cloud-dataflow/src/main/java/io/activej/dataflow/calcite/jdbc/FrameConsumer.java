@@ -1,4 +1,4 @@
-package io.activej.dataflow.calcite.jdbc.server;
+package io.activej.dataflow.calcite.jdbc;
 
 import io.activej.common.ApplicationSettings;
 import io.activej.datastream.AbstractStreamConsumer;

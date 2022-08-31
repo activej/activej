@@ -1,4 +1,4 @@
-package io.activej.dataflow.calcite.jdbc.server;
+package io.activej.dataflow.calcite.jdbc;
 
 import org.apache.calcite.avatica.Meta;
 import org.apache.calcite.avatica.MissingResultsException;

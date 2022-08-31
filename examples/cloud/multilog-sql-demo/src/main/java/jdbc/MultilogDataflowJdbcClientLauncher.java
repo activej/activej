@@ -2,7 +2,7 @@ package jdbc;
 
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
-import io.activej.dataflow.calcite.jdbc.client.Driver;
+import io.activej.dataflow.jdbc.driver.Driver;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;

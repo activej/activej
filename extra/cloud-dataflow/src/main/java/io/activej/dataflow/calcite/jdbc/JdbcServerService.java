@@ -1,4 +1,4 @@
-package io.activej.dataflow.calcite.jdbc.server;
+package io.activej.dataflow.calcite.jdbc;
 
 import io.activej.common.service.BlockingService;
 import org.apache.calcite.avatica.server.HttpServer;

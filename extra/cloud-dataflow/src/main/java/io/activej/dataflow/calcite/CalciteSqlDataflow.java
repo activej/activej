@@ -15,6 +15,7 @@ import io.activej.dataflow.graph.Partition;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
 import io.activej.record.Record;
+import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
@@ -131,5 +132,9 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 
 	public record TransformationResult(List<RelDataTypeField> fields, List<RexDynamicParam> parameters,
 	                                   UnmaterializedDataset dataset) {
+	}
+
+	public CalciteSchema getSchema() {
+		return validator.getCatalogReader().getRootSchema();
 	}
 }

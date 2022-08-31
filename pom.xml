@@ -53,6 +53,7 @@
     <module>test</module>
 
     <module>extra/cloud-dataflow</module>
+    <module>extra/cloud-dataflow-jdbc-driver</module>
     <module>extra/cloud-crdt</module>
     <module>extra/cloud-etl</module>
     <module>extra/cloud-lsmt-aggregation</module>

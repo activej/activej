@@ -1,7 +1,8 @@
-package io.activej.dataflow.calcite.jdbc.client;
+package io.activej.dataflow.jdbc.driver;
 
 import org.apache.calcite.avatica.*;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.apache.calcite.avatica.Meta.StatementHandle;
+import org.jetbrains.annotations.Nullable;
 
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -25,12 +26,12 @@ public class DataflowJdbc41Factory implements AvaticaFactory {
 	}
 
 	@Override
-	public AvaticaStatement newStatement(AvaticaConnection connection, Meta.StatementHandle h, int resultSetType, int resultSetConcurrency, int resultSetHoldability) {
+	public AvaticaStatement newStatement(AvaticaConnection connection, StatementHandle h, int resultSetType, int resultSetConcurrency, int resultSetHoldability) {
 		return new DataflowJdbc41Statement(connection, h, resultSetType, resultSetConcurrency, resultSetHoldability);
 	}
 
 	@Override
-	public AvaticaPreparedStatement newPreparedStatement(AvaticaConnection connection, Meta.StatementHandle h, Meta.Signature signature, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+	public AvaticaPreparedStatement newPreparedStatement(AvaticaConnection connection, StatementHandle h, Meta.Signature signature, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
 		return new DataflowJdbc41PreparedStatement(connection, h, signature, resultSetType, resultSetConcurrency, resultSetHoldability);
 	}
 
@@ -64,7 +65,7 @@ public class DataflowJdbc41Factory implements AvaticaFactory {
 
 	private static class DataflowJdbc41Statement extends AvaticaStatement {
 		private DataflowJdbc41Statement(AvaticaConnection connection,
-				Meta.StatementHandle h, int resultSetType, int resultSetConcurrency,
+				StatementHandle h, int resultSetType, int resultSetConcurrency,
 				int resultSetHoldability) {
 			super(connection, h, resultSetType, resultSetConcurrency,
 					resultSetHoldability);
@@ -73,7 +74,7 @@ public class DataflowJdbc41Factory implements AvaticaFactory {
 
 	private static class DataflowJdbc41PreparedStatement extends AvaticaPreparedStatement {
 		DataflowJdbc41PreparedStatement(AvaticaConnection connection,
-				Meta.@Nullable StatementHandle h, Meta.Signature signature,
+				@Nullable StatementHandle h, Meta.Signature signature,
 				int resultSetType, int resultSetConcurrency, int resultSetHoldability)
 				throws SQLException {
 			super(connection, h, signature, resultSetType, resultSetConcurrency,

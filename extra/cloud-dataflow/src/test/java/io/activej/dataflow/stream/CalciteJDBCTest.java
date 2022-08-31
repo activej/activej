@@ -3,8 +3,8 @@ package io.activej.dataflow.stream;
 import io.activej.common.exception.FatalErrorHandler;
 import io.activej.dataflow.calcite.CalciteSqlDataflow;
 import io.activej.dataflow.calcite.inject.CalciteClientModule;
-import io.activej.dataflow.calcite.jdbc.client.Driver;
-import io.activej.dataflow.calcite.jdbc.server.DataflowMeta;
+import io.activej.dataflow.calcite.jdbc.DataflowMeta;
+import io.activej.dataflow.jdbc.driver.Driver;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
@@ -12,7 +12,6 @@ import io.activej.test.TestUtils;
 import org.apache.calcite.avatica.remote.LocalService;
 import org.apache.calcite.avatica.server.AvaticaJsonHandler;
 import org.apache.calcite.avatica.server.HttpServer;
-import org.junit.BeforeClass;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -28,11 +27,6 @@ public class CalciteJDBCTest extends AbstractCalciteTest {
 	private Eventloop server1Eventloop;
 	private Eventloop server2Eventloop;
 	private HttpServer jdbcServer;
-
-	@BeforeClass
-	public static void beforeClass() throws Exception {
-		Class.forName("io.activej.dataflow.calcite.jdbc.client.Driver");
-	}
 
 	@Override
 	protected Module getAdditionalServerModule() {

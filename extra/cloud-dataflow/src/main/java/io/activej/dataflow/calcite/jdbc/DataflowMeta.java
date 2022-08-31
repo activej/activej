@@ -1,4 +1,4 @@
-package io.activej.dataflow.calcite.jdbc.server;
+package io.activej.dataflow.calcite.jdbc;
 
 import io.activej.dataflow.DataflowException;
 import io.activej.dataflow.calcite.CalciteSqlDataflow;
@@ -213,6 +213,19 @@ public final class DataflowMeta extends LimitedMeta {
 			throw new RuntimeException(e);
 		}
 	}
+
+//	@Override
+//	public MetaResultSet getSchemas(ConnectionHandle ch, String catalog, Pat schemaPattern) {
+//		CalciteSchema schema = sqlDataflow.getSchema();
+//		Map<String, CalciteSchema> subSchemaMap = schema.getSubSchemaMap();
+//
+//		Signature.create(List.of(
+//				ColumnMetaData.scalar()
+//		))
+//		MetaResultSet metaResultSet = MetaResultSet.create(ch.id, 12, false, h.signature, firstFrame);
+//
+//		return metaResultSet;
+//	}
 
 	private static int getScale(RelDataType type) {
 		return type.getScale() == RelDataType.SCALE_NOT_SPECIFIED
