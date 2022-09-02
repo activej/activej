@@ -9,6 +9,7 @@ import io.activej.dataflow.calcite.DataflowSqlValidator;
 import io.activej.dataflow.graph.Partition;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
+import org.apache.calcite.avatica.util.Quoting;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.config.Lex;
 import org.apache.calcite.jdbc.CalciteSchema;
@@ -105,13 +106,15 @@ public final class CalciteClientModule extends AbstractModule {
 	}
 
 	@Provides
-	SqlParser parser() {
-		return SqlParser.create("", SqlParser.config().withLex(Lex.JAVA));
+	SqlParser.Config parserConfig() {
+		return SqlParser.config()
+				.withLex(Lex.JAVA)
+				.withQuoting(Quoting.DOUBLE_QUOTE);
 	}
 
 	@Provides
-	CalciteSqlDataflow calciteSqlDataflow(DataflowClient client, SqlParser parser, SqlToRelConverter sqlToRelConverter, RelOptPlanner planner,
+	CalciteSqlDataflow calciteSqlDataflow(DataflowClient client, SqlParser.Config parserConfig, SqlToRelConverter sqlToRelConverter, RelOptPlanner planner,
 			List<Partition> partitions, DefiningClassLoader classLoader) {
-		return CalciteSqlDataflow.create(client, partitions, parser, sqlToRelConverter, planner, classLoader);
+		return CalciteSqlDataflow.create(client, partitions, parserConfig, sqlToRelConverter, planner, classLoader);
 	}
 }

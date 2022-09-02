@@ -13,22 +13,61 @@ import org.apache.calcite.avatica.AvaticaParameter;
 import org.apache.calcite.avatica.ColumnMetaData;
 import org.apache.calcite.avatica.NoSuchStatementException;
 import org.apache.calcite.avatica.remote.TypedValue;
+import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rel.type.RelDataTypeFactoryImpl;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexDynamicParam;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.type.SqlTypeName;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.sql.DatabaseMetaData;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 public final class DataflowMeta extends LimitedMeta {
+	private static final String TABLE_CAT = "TABLE_CAT";
+	private static final String TABLE_SCHEM = "TABLE_SCHEM";
+	private static final String TABLE_NAME = "TABLE_NAME";
+	private static final String TABLE_CATALOG = "TABLE_CATALOG";
+	private static final String TABLE_TYPE = "TABLE_TYPE";
+	private static final String REMARKS = "REMARKS";
+	private static final String TYPE_CAT = "TYPE_CAT";
+	private static final String TYPE_SCHEME = "TYPE_SCHEME";
+	private static final String TYPE_NAME = "TYPE_NAME";
+	private static final String SELF_REFERENCING_COL_NAME = "SELF_REFERENCING_COL_NAME";
+	private static final String REF_GENERATION = "REF_GENERATION";
+	private static final String DATA_TYPE = "DATA_TYPE";
+	private static final String COLUMN_NAME = "COLUMN_NAME";
+	private static final String COLUMN_SIZE = "COLUMN_SIZE";
+	private static final String COLUMN_DEF = "COLUMN_DEF";
+	private static final String BUFFER_LENGTH = "BUFFER_LENGTH";
+	private static final String DECIMAL_DIGITS = "DECIMAL_DIGITS";
+	private static final String NUM_PREC_RADIX = "NUM_PREC_RADIX";
+	private static final String NULLABLE = "NULLABLE";
+	private static final String SQL_DATA_TYPE = "SQL_DATA_TYPE";
+	private static final String SQL_DATETIME_SUB = "SQL_DATETIME_SUB";
+	private static final String CHAR_OCTET_LENGTH = "CHAR_OCTET_LENGTH";
+	private static final String ORDINAL_POSITION = "ORDINAL_POSITION";
+	private static final String IS_NULLABLE = "IS_NULLABLE";
+	private static final String SCOPE_CATALOG = "SCOPE_CATALOG";
+	private static final String SCOPE_SCHEMA = "SCOPE_SCHEMA";
+	private static final String SCOPE_TABLE = "SCOPE_TABLE";
+	private static final String SOURCE_DATA_TYPE = "SOURCE_DATA_TYPE";
+	private static final String IS_AUTOINCREMENT = "IS_AUTOINCREMENT";
+	private static final String IS_GENERATEDCOLUMN = "IS_GENERATEDCOLUMN";
+	private static final String TABLE = "TABLE";
+	private static final String NO = "NO";
+	private static final String YES = "YES";
+
+	private static final String SCHEMA_NAME = "dataflow";
+
 	private final Eventloop eventloop;
 	private final CalciteSqlDataflow sqlDataflow;
 	private final Map<String, Integer> statementIds = new ConcurrentHashMap<>();
@@ -119,11 +158,11 @@ public final class DataflowMeta extends LimitedMeta {
 			String fieldName = scheme.getField(i);
 			RelDataTypeField field = fields.get(i);
 
-			ColumnMetaData columnMetaData = new ColumnMetaData(i + 1, false, true, false, false, 1, false,
-					1, fieldName, fieldName, "dataflow",
+			ColumnMetaData columnMetaData = new ColumnMetaData(i, false, true, false, false, 0, false,
+					1, fieldName, fieldName, SCHEMA_NAME,
 					getPrecision(field.getType()),
 					getScale(field.getType()),
-					"", "dataflow",
+					"", SCHEMA_NAME,
 					scalarType, true, false, false, Types.getRawType(fieldType).getName());
 			columns.add(columnMetaData);
 		}
@@ -214,18 +253,198 @@ public final class DataflowMeta extends LimitedMeta {
 		}
 	}
 
-//	@Override
-//	public MetaResultSet getSchemas(ConnectionHandle ch, String catalog, Pat schemaPattern) {
-//		CalciteSchema schema = sqlDataflow.getSchema();
-//		Map<String, CalciteSchema> subSchemaMap = schema.getSubSchemaMap();
-//
-//		Signature.create(List.of(
-//				ColumnMetaData.scalar()
-//		))
-//		MetaResultSet metaResultSet = MetaResultSet.create(ch.id, 12, false, h.signature, firstFrame);
-//
-//		return metaResultSet;
-//	}
+	private static final LinkedHashMap<String, Class<?>> GET_CATALOGS_COLUMNS = new LinkedHashMap<>();
+
+	static {
+		GET_CATALOGS_COLUMNS.put(TABLE_CAT, String.class);
+	}
+
+	@Override
+	public MetaResultSet getCatalogs(ConnectionHandle ch) {
+		return createMetaResponse(ch, GET_CATALOGS_COLUMNS, List.<Object[]>of(new Object[]{SCHEMA_NAME}));
+	}
+
+	private static final LinkedHashMap<String, Class<?>> GET_SCHEMAS_COLUMNS = new LinkedHashMap<>();
+
+	static {
+		GET_SCHEMAS_COLUMNS.put(TABLE_SCHEM, String.class);
+		GET_SCHEMAS_COLUMNS.put(TABLE_CATALOG, String.class);
+	}
+
+	@Override
+	public MetaResultSet getSchemas(ConnectionHandle ch, String catalog, Pat schemaPattern) {
+		return createMetaResponse(ch, GET_SCHEMAS_COLUMNS, Collections.emptyList());
+	}
+
+	private static final LinkedHashMap<String, Class<?>> GET_TABLE_TYPES_COLUMNS = new LinkedHashMap<>();
+
+	static {
+		GET_TABLE_TYPES_COLUMNS.put(TABLE_TYPE, String.class);
+	}
+
+	@Override
+	public MetaResultSet getTableTypes(ConnectionHandle ch) {
+		return createMetaResponse(ch, GET_TABLE_TYPES_COLUMNS, List.<Object[]>of(new Object[]{TABLE}));
+	}
+
+	private static final LinkedHashMap<String, Class<?>> GET_TABLES_COLUMNS = new LinkedHashMap<>();
+
+	static {
+		GET_TABLES_COLUMNS.put(TABLE_CAT, String.class);
+		GET_TABLES_COLUMNS.put(TABLE_SCHEM, String.class);
+		GET_TABLES_COLUMNS.put(TABLE_NAME, String.class);
+		GET_TABLES_COLUMNS.put(TABLE_TYPE, String.class);
+		GET_TABLES_COLUMNS.put(REMARKS, String.class);
+		GET_TABLES_COLUMNS.put(TYPE_CAT, String.class);
+		GET_TABLES_COLUMNS.put(TYPE_SCHEME, String.class);
+		GET_TABLES_COLUMNS.put(TYPE_NAME, String.class);
+		GET_TABLES_COLUMNS.put(SELF_REFERENCING_COL_NAME, String.class);
+		GET_TABLES_COLUMNS.put(REF_GENERATION, String.class);
+	}
+
+	@Override
+	public MetaResultSet getTables(ConnectionHandle ch, String catalog, Pat schemaPattern, Pat tableNamePattern, List<String> typeList) {
+		List<Object[]> results = new ArrayList<>();
+		//noinspection PointlessBooleanExpression
+		if (true &&
+				(catalog == null || catalog.equals(SCHEMA_NAME)) &&
+				(schemaPattern.s == null || schemaPattern.s.isEmpty()) &&
+				(typeList == null || typeList.contains(TABLE))
+		) {
+			Predicate<String> tableNamePredicate = patternToPredicate(tableNamePattern);
+			for (String tableName : sqlDataflow.getSchema().getTableNames()) {
+				if (!tableNamePredicate.test(tableName)) continue;
+
+				Object[] row = new Object[10];
+				row[0] = SCHEMA_NAME;
+				row[2] = tableName;
+				row[3] = TABLE;
+				results.add(row);
+			}
+		}
+
+		return createMetaResponse(ch, GET_TABLES_COLUMNS, results);
+	}
+
+	private static final LinkedHashMap<String, Class<?>> GET_COLUMNS_COLUMNS = new LinkedHashMap<>();
+
+	static {
+		GET_COLUMNS_COLUMNS.put(TABLE_CAT, String.class); // 0
+		GET_COLUMNS_COLUMNS.put(TABLE_SCHEM, String.class); // 1
+		GET_COLUMNS_COLUMNS.put(TABLE_NAME, String.class); // 2
+		GET_COLUMNS_COLUMNS.put(COLUMN_NAME, String.class); // 3
+		GET_COLUMNS_COLUMNS.put(DATA_TYPE, Integer.class); // 4
+		GET_COLUMNS_COLUMNS.put(TYPE_NAME, String.class); // 5
+		GET_COLUMNS_COLUMNS.put(COLUMN_SIZE, Integer.class); // 6
+		GET_COLUMNS_COLUMNS.put(BUFFER_LENGTH, Integer.class); // 7
+		GET_COLUMNS_COLUMNS.put(DECIMAL_DIGITS, Integer.class); // 8
+		GET_COLUMNS_COLUMNS.put(NUM_PREC_RADIX, Integer.class); // 9
+		GET_COLUMNS_COLUMNS.put(NULLABLE, Integer.class); // 10
+		GET_COLUMNS_COLUMNS.put(REMARKS, String.class); // 11
+		GET_COLUMNS_COLUMNS.put(COLUMN_DEF, String.class); // 12
+		GET_COLUMNS_COLUMNS.put(SQL_DATA_TYPE, Integer.class); // 13
+		GET_COLUMNS_COLUMNS.put(SQL_DATETIME_SUB, Integer.class); // 14
+		GET_COLUMNS_COLUMNS.put(CHAR_OCTET_LENGTH, Integer.class); // 15
+		GET_COLUMNS_COLUMNS.put(ORDINAL_POSITION, Integer.class); // 16
+		GET_COLUMNS_COLUMNS.put(IS_NULLABLE, String.class); // 17
+		GET_COLUMNS_COLUMNS.put(SCOPE_CATALOG, String.class); // 18
+		GET_COLUMNS_COLUMNS.put(SCOPE_SCHEMA, String.class); // 19
+		GET_COLUMNS_COLUMNS.put(SCOPE_TABLE, String.class); // 20
+		GET_COLUMNS_COLUMNS.put(SOURCE_DATA_TYPE, Integer.class); // 21
+		GET_COLUMNS_COLUMNS.put(IS_AUTOINCREMENT, String.class); // 22
+		GET_COLUMNS_COLUMNS.put(IS_GENERATEDCOLUMN, String.class); //23
+	}
+
+	@Override
+	public MetaResultSet getColumns(ConnectionHandle ch, String catalog, Pat schemaPattern, Pat tableNamePattern, Pat columnNamePattern) {
+		List<Object[]> results = new ArrayList<>();
+		CalciteSchema schema = sqlDataflow.getSchema();
+		RelDataTypeFactory typeFactory = sqlDataflow.getTypeFactory();
+
+		if ((catalog == null || catalog.equals(SCHEMA_NAME)) && (schemaPattern.s == null || schemaPattern.s.isEmpty())) {
+			Predicate<String> tableNamePredicate = patternToPredicate(tableNamePattern);
+			Predicate<String> columnNamePredicate = patternToPredicate(columnNamePattern);
+			for (String tableName : schema.getTableNames()) {
+				if (!tableNamePredicate.test(tableName)) continue;
+
+				CalciteSchema.TableEntry entry = schema.getTable(tableName, false);
+				assert entry != null;
+				RelDataType dataType = entry.getTable().getRowType(typeFactory);
+				List<RelDataTypeField> fieldList = dataType.getFieldList();
+
+				for (RelDataTypeField field : fieldList) {
+					String fieldName = field.getName();
+					if (!columnNamePredicate.test(fieldName)) continue;
+
+					Object[] row = new Object[24];
+					RelDataType fieldType = field.getType();
+					SqlTypeName sqlTypeName = fieldType.getSqlTypeName();
+
+					int precision =
+							sqlTypeName.allowsPrec()
+									&& !(fieldType
+									instanceof RelDataTypeFactoryImpl.JavaType)
+									? fieldType.getPrecision()
+									: -1;
+
+					row[0] = SCHEMA_NAME;
+					row[2] = tableName;
+					row[3] = fieldName;
+					row[4] = sqlTypeName.getJdbcOrdinal();
+					row[5] = sqlTypeName.getName();
+					row[6] = precision;
+					row[8] = sqlTypeName.allowsScale()
+							? fieldType.getScale()
+							: null;
+					row[9] = 10;
+
+					boolean isNUllable = field.getType().isNullable();
+					row[10] = isNUllable
+							? DatabaseMetaData.columnNullable
+							: DatabaseMetaData.columnNoNulls;
+					row[15] = precision;
+					row[16] = field.getIndex() + 1;
+					row[17] = isNUllable ? YES : NO;
+					row[22] = NO;
+					row[23] = NO;
+
+					results.add(row);
+				}
+			}
+		}
+
+		return createMetaResponse(ch, GET_COLUMNS_COLUMNS, results);
+	}
+
+	private MetaResultSet createMetaResponse(ConnectionHandle ch, LinkedHashMap<String, Class<?>> columnNamesToTypes, List<Object[]> frameRows) {
+		assert frameRows.stream().allMatch(objects -> objects.length == columnNamesToTypes.size());
+
+		StatementHandle statement = createStatement(ch);
+		Signature signature = createMetaSignature(columnNamesToTypes);
+		Frame frame = Frame.create(0, true, new ArrayList<>(frameRows));
+
+		return MetaResultSet.create(ch.id, statement.id, true, signature, frame);
+	}
+
+	private static Signature createMetaSignature(LinkedHashMap<String, Class<?>> columnNamesToTypes) {
+		List<ColumnMetaData> columnMetaDatas = new ArrayList<>(columnNamesToTypes.size());
+		int i = 0;
+		for (Map.Entry<String, Class<?>> entry : columnNamesToTypes.entrySet()) {
+			String columnName = entry.getKey();
+			Class<?> type = entry.getValue();
+			String typeName = type.getName();
+			ColumnMetaData.Rep rep = ColumnMetaData.Rep.of(type);
+			ColumnMetaData.ScalarType scalarType = ColumnMetaData.scalar(rep.typeId, rep.name(), rep);
+			ColumnMetaData columnMetaData = new ColumnMetaData(i++, false, true, false, false, 0, false,
+					1, columnName, columnName, SCHEMA_NAME,
+					0,
+					0,
+					"", SCHEMA_NAME,
+					scalarType, true, false, false, typeName);
+			columnMetaDatas.add(columnMetaData);
+		}
+		return Signature.create(columnMetaDatas, null, null, CursorFactory.LIST, null);
+	}
 
 	private static int getScale(RelDataType type) {
 		return type.getScale() == RelDataType.SCALE_NOT_SPECIFIED
@@ -252,6 +471,14 @@ public final class DataflowMeta extends LimitedMeta {
 			case INTERVAL_MINUTE_SECOND -> "INTERVAL_MINUTE_TO_SECOND";
 			default -> sqlTypeName.getName();
 		};
+	}
+
+	private static Predicate<String> patternToPredicate(Pat pattern) {
+		String patternString = pattern.s;
+		if (patternString == null || patternString.equals("%")) return $ -> true;
+
+		Pattern regexPattern = Pattern.compile("^" + patternString.replaceAll("%", ".*").replaceAll("_", ".") + "$");
+		return string -> regexPattern.matcher(string).matches();
 	}
 
 	private record StatementKey(String connectionId, int statementId) {

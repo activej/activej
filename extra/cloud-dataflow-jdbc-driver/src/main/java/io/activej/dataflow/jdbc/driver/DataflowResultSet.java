@@ -52,7 +52,7 @@ class DataflowResultSet extends AvaticaResultSet {
 			}
 		});
 
-		if (cls == UNKNOWN_CLASS){
+		if (cls == UNKNOWN_CLASS) {
 			return result;
 		}
 

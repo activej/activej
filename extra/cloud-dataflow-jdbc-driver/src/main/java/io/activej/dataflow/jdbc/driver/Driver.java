@@ -1,7 +1,6 @@
 package io.activej.dataflow.jdbc.driver;
 
 import org.apache.calcite.avatica.DriverVersion;
-import org.apache.calcite.avatica.remote.RemoteService;
 
 public class Driver extends org.apache.calcite.avatica.remote.Driver {
 	public static final String CONNECT_STRING_PREFIX = "jdbc:activej:dataflow:";
@@ -12,7 +11,6 @@ public class Driver extends org.apache.calcite.avatica.remote.Driver {
 
 	public Driver() {
 		super();
-		new RemoteService(null);
 	}
 
 	@Override

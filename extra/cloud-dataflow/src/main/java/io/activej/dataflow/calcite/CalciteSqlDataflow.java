@@ -22,6 +22,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.metadata.JaninoRelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMetadataQueryBase;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexDynamicParam;
 import org.apache.calcite.sql.SqlKind;
@@ -42,7 +43,7 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 	private final DataflowClient client;
 	private final List<Partition> partitions;
 
-	private final SqlParser parser;
+	private final SqlParser.Config parserConfig;
 	private final SqlToRelConverter converter;
 	private final SqlValidator validator;
 	private final RelOptPlanner planner;
@@ -50,20 +51,20 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 
 	private RelTraitSet traits = RelTraitSet.createEmpty();
 
-	private CalciteSqlDataflow(DataflowClient client, List<Partition> partitions, SqlParser parser,
+	private CalciteSqlDataflow(DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
 			SqlToRelConverter converter, RelOptPlanner planner, DefiningClassLoader classLoader) {
 		this.client = client;
 		this.partitions = partitions;
-		this.parser = parser;
+		this.parserConfig = parserConfig;
 		this.converter = converter;
 		this.validator = checkNotNull(converter.validator);
 		this.planner = planner;
 		this.classLoader = classLoader;
 	}
 
-	public static CalciteSqlDataflow create(DataflowClient client, List<Partition> partitions, SqlParser parser,
+	public static CalciteSqlDataflow create(DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
 			SqlToRelConverter converter, RelOptPlanner planner, DefiningClassLoader classLoader) {
-		return new CalciteSqlDataflow(client, partitions, parser, converter, planner, classLoader);
+		return new CalciteSqlDataflow(client, partitions, parserConfig, converter, planner, classLoader);
 	}
 
 	public CalciteSqlDataflow withTraits(RelTraitSet traits) {
@@ -86,7 +87,8 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 	}
 
 	public RelNode convertToNode(String sql) throws SqlParseException, DataflowException {
-		SqlNode sqlNode = parser.parseQuery(sql);
+		SqlParser sqlParser = SqlParser.create(sql, parserConfig);
+		SqlNode sqlNode = sqlParser.parseQuery();
 
 		sqlNode = validator.validate(sqlNode);
 
@@ -131,10 +133,14 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 	}
 
 	public record TransformationResult(List<RelDataTypeField> fields, List<RexDynamicParam> parameters,
-	                                   UnmaterializedDataset dataset) {
+									   UnmaterializedDataset dataset) {
 	}
 
 	public CalciteSchema getSchema() {
 		return validator.getCatalogReader().getRootSchema();
+	}
+
+	public RelDataTypeFactory getTypeFactory() {
+		return validator.getTypeFactory();
 	}
 }
