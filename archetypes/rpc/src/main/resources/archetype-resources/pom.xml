@@ -28,7 +28,7 @@
         <dependency>
             <groupId>io.activej</groupId>
             <artifactId>activej-launchers-rpc</artifactId>
-            <version>5.4-SNAPSHOT</version>
+            <version>5.4.2</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>

@@ -4,7 +4,7 @@
 
   <groupId>io.activej</groupId>
   <artifactId>tutorial-rpc-kv-storage</artifactId>
-  <version>5.4-SNAPSHOT</version>
+  <version>5.4.2</version>
 
   <name>Tutorials : Rpc-KV-Storage</name>
 
