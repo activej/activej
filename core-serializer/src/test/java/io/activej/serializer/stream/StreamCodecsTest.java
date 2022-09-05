@@ -51,6 +51,21 @@ public class StreamCodecsTest {
 	}
 
 	@Theory
+	public void ofArrayWithAdditionalData(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize,
+			@FromDataPoints("containerSizes") int arraySize) {
+		assumeTrue((arraySize != 1_000_000 || readBufferSize > 100) && writeBufferSize > 100);
+
+		StreamCodec<String[]> codec = StreamCodecs.ofArray(StreamCodecs.ofString(), String[]::new);
+		String[] strings = new String[arraySize];
+		for (int i = 0; i < arraySize; i++) {
+			strings[i] = String.valueOf(i);
+		}
+		String[] result = doTestWithAdditionalData(codec, strings, readBufferSize, writeBufferSize, 100, 100);
+
+		assertArrayEquals(strings, result);
+	}
+
+	@Theory
 	public void ofHeterogeneousArray(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize) {
 		StreamCodec<Object[]> codec = StreamCodecs.ofArray(value -> {
 			switch (value % 3) {
@@ -214,6 +229,23 @@ public class StreamCodecsTest {
 	}
 
 	@Theory
+	public void ofIntArrayWithAdditionalData(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize,
+			@FromDataPoints("containerSizes") int arraySize) {
+		assumeTrue((arraySize != 1_000_000 || readBufferSize > 100) && writeBufferSize > 100);
+
+		StreamCodec<int[]> codec = StreamCodecs.ofIntArray();
+		int[] ints = new int[arraySize];
+		Random random = ThreadLocalRandom.current();
+		for (int i = 0; i < ints.length; i++) {
+			ints[i] = random.nextInt();
+		}
+
+		int[] result = doTestWithAdditionalData(codec, ints, readBufferSize, writeBufferSize, 4, 4);
+
+		assertArrayEquals(ints, result);
+	}
+
+	@Theory
 	public void ofByteArray(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize,
 			@FromDataPoints("containerSizes") int arraySize) {
 		assumeTrue((arraySize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
@@ -224,6 +256,21 @@ public class StreamCodecsTest {
 		random.nextBytes(bytes);
 
 		byte[] result = doTest(codec, bytes, readBufferSize, writeBufferSize);
+
+		assertArrayEquals(bytes, result);
+	}
+
+	@Theory
+	public void ofByteArrayWithAdditionalData(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize,
+			@FromDataPoints("containerSizes") int arraySize) {
+		assumeTrue((arraySize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
+
+		StreamCodec<byte[]> codec = StreamCodecs.ofByteArray();
+		byte[] bytes = new byte[arraySize];
+		Random random = ThreadLocalRandom.current();
+		random.nextBytes(bytes);
+
+		byte[] result = doTestWithAdditionalData(codec, bytes, readBufferSize, writeBufferSize, 4, 4);
 
 		assertArrayEquals(bytes, result);
 	}
@@ -246,6 +293,23 @@ public class StreamCodecsTest {
 	}
 
 	@Theory
+	public void ofVarIntArrayWithAdditionalData(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize,
+			@FromDataPoints("containerSizes") int arraySize) {
+		assumeTrue((arraySize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
+
+		StreamCodec<int[]> codec = StreamCodecs.ofVarIntArray();
+		int[] ints = new int[arraySize];
+		Random random = ThreadLocalRandom.current();
+		for (int i = 0; i < ints.length; i++) {
+			ints[i] = random.nextInt();
+		}
+
+		int[] result = doTestWithAdditionalData(codec, ints, readBufferSize, writeBufferSize, 5, 5);
+
+		assertArrayEquals(ints, result);
+	}
+
+	@Theory
 	public void ofVarLongArray(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize,
 			@FromDataPoints("containerSizes") int arraySize) {
 		assumeTrue((arraySize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
@@ -258,6 +322,23 @@ public class StreamCodecsTest {
 		}
 
 		long[] result = doTest(codec, longs, readBufferSize, writeBufferSize);
+
+		assertArrayEquals(longs, result);
+	}
+
+	@Theory
+	public void ofVarLongArrayWithAdditionalData(@FromDataPoints("bufferSizes") int readBufferSize, @FromDataPoints("bufferSizes") int writeBufferSize,
+			@FromDataPoints("containerSizes") int arraySize) {
+		assumeTrue((arraySize != 1_000_000 || readBufferSize >= 100) && writeBufferSize >= 100);
+
+		StreamCodec<long[]> codec = StreamCodecs.ofVarLongArray();
+		long[] longs = new long[arraySize];
+		Random random = ThreadLocalRandom.current();
+		for (int i = 0; i < longs.length; i++) {
+			longs[i] = random.nextLong();
+		}
+
+		long[] result = doTestWithAdditionalData(codec, longs, readBufferSize, writeBufferSize, 10, 10);
 
 		assertArrayEquals(longs, result);
 	}
@@ -275,6 +356,49 @@ public class StreamCodecsTest {
 			return codec.decode(input);
 		} catch (IOException e) {
 			throw new AssertionError(e);
+		}
+	}
+
+	private <T> T doTestWithAdditionalData(StreamCodec<T> codec, T value, int readBufferSize, int writeBufferSize,
+			int additionalDataBefore, int additionalDataAfter) {
+		StreamCodec<T> codecWithAdditionalData = new StreamCodecWithAdditionalData<>(codec, additionalDataBefore, additionalDataAfter);
+		return doTest(codecWithAdditionalData, value, readBufferSize, writeBufferSize);
+	}
+
+	private static class StreamCodecWithAdditionalData<T> implements StreamCodec<T> {
+		private final StreamCodec<T> codec;
+		private final int additionalDataBefore;
+		private final int additionalDataAfter;
+
+		public StreamCodecWithAdditionalData(StreamCodec<T> codec, int additionalDataBefore, int additionalDataAfter) {
+			this.codec = codec;
+			this.additionalDataBefore = additionalDataBefore;
+			this.additionalDataAfter = additionalDataAfter;
+		}
+
+		@Override
+		public void encode(StreamOutput output, T item) throws IOException {
+			for (int i = 0; i < additionalDataBefore; i++) {
+				output.writeByte((byte) 1);
+			}
+			codec.encode(output, item);
+			for (int i = 0; i < additionalDataAfter; i++) {
+				output.writeByte((byte) 1);
+			}
+		}
+
+		@Override
+		public T decode(StreamInput input) throws IOException {
+			for (int i = 0; i < additionalDataBefore; i++) {
+				byte b = input.readByte();
+				assertEquals(1, b);
+			}
+			T decoded = codec.decode(input);
+			for (int i = 0; i < additionalDataAfter; i++) {
+				byte b = input.readByte();
+				assertEquals(1, b);
+			}
+			return decoded;
 		}
 	}
 }

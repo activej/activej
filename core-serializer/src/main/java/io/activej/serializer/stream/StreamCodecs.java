@@ -102,7 +102,7 @@ public final class StreamCodecs {
 		return new StreamCodec<byte[]>() {
 			@Override
 			public void encode(StreamOutput output, byte[] item) throws IOException {
-				output.writeVarLong(item.length);
+				output.writeVarInt(item.length);
 				output.write(item);
 			}
 
@@ -728,10 +728,10 @@ public final class StreamCodecs {
 			T array = createArray(length);
 			int idx = 0;
 			while (idx < length) {
-				int safeRemaining = (length - idx) * minElementSize;
+				int safeRemaining = length - idx;
 				int safeReadCount = Math.min(safeRemaining, input.remaining() / maxElementSize);
 				if (safeReadCount == 0) {
-					int safeEnsure = Math.min(input.array().length - input.remaining(), safeRemaining);
+					int safeEnsure = Math.min(input.array().length - input.remaining(), safeRemaining * minElementSize);
 					input.ensure(safeEnsure);
 					if (input.remaining() / maxElementSize == 0) {
 						break;
