@@ -5,11 +5,13 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.dataflow.calcite.*;
 import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjection;
 import io.activej.dataflow.calcite.aggregation.*;
+import io.activej.dataflow.calcite.dataset.DatasetSupplierOfPredicate;
 import io.activej.dataflow.calcite.join.RecordInnerJoiner;
 import io.activej.dataflow.calcite.join.RecordKeyFunction;
 import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.dataflow.calcite.operand.OperandRecordField;
 import io.activej.dataflow.calcite.operand.OperandScalar;
+import io.activej.dataflow.calcite.rel.FilterableTableScan;
 import io.activej.dataflow.calcite.utils.RecordKeyComparator;
 import io.activej.dataflow.calcite.utils.RecordSortComparator;
 import io.activej.dataflow.calcite.utils.RecordSortComparator.FieldSort;
@@ -29,7 +31,6 @@ import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelFieldCollation.Direction;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.AggregateCall;
-import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.logical.*;
 import org.apache.calcite.rel.type.RelDataTypeFactoryImpl.JavaType;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -49,6 +50,7 @@ import java.util.stream.IntStream;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.last;
 import static io.activej.datastream.processor.StreamReducers.mergeReducer;
+import static java.util.Collections.emptyList;
 
 public class RelToDatasetConverter {
 	private final DefiningClassLoader classLoader;
@@ -68,10 +70,10 @@ public class RelToDatasetConverter {
 	}
 
 	private UnmaterializedDataset handle(RelNode relNode, ParamsCollector paramsCollector) {
-		if (relNode instanceof LogicalCalc logicalCalc) {
-			return handle(logicalCalc, paramsCollector);
+		if (relNode instanceof LogicalProject logicalProject) {
+			return handle(logicalProject, paramsCollector);
 		}
-		if (relNode instanceof TableScan tableScan) {
+		if (relNode instanceof FilterableTableScan tableScan) {
 			return handle(tableScan);
 		}
 		if (relNode instanceof LogicalFilter logicalFilter) {
@@ -92,26 +94,14 @@ public class RelToDatasetConverter {
 		if (relNode instanceof LogicalSort logicalSort) {
 			return handle(logicalSort, paramsCollector);
 		}
-		throw new IllegalArgumentException();
+		throw new IllegalArgumentException("Unknown node type: " + relNode.getClass().getName());
 	}
 
-	private UnmaterializedDataset handle(LogicalCalc calc, ParamsCollector paramsCollector) {
-		RexProgram program = calc.getProgram();
+	private UnmaterializedDataset handle(LogicalProject project, ParamsCollector paramsCollector) {
+		UnmaterializedDataset current = handle(project.getInput(), paramsCollector);
 
-		UnmaterializedDataset current = handle(calc.getInput(), paramsCollector);
-
-		RexLocalRef condition = program.getCondition();
-		if (condition != null) {
-			RexNode conditionNode = program.expandLocalRef(condition);
-			current = filter(current, conditionNode, paramsCollector);
-		}
-
-		if (program.getInputRowType().equals(program.getOutputRowType())) {
-			return current;
-		}
-
-		List<RexNode> projectNodes = program.expandList(program.getProjectList());
-		List<String> fieldNames = program.getOutputRowType().getFieldNames();
+		List<RexNode> projectNodes = project.getProjects();
+		List<String> fieldNames = project.getRowType().getFieldNames();
 
 		List<FieldProjection> projections = new ArrayList<>(projectNodes.size());
 		assert projectNodes.size() == fieldNames.size();
@@ -129,13 +119,12 @@ public class RelToDatasetConverter {
 
 		RecordProjectionFn projectionFn = RecordProjectionFn.create(projections);
 
-		UnmaterializedDataset finalCurrent = current;
 		RecordScheme scheme = current.getScheme();
 
 		return UnmaterializedDataset.of(
 				projectionFn.getToScheme(scheme, null),
 				params -> {
-					Dataset<Record> materialized = finalCurrent.materialize(params);
+					Dataset<Record> materialized = current.materialize(params);
 					RecordProjectionFn materializedFn = projectionFn.materialize(params);
 
 					if (!(materialized instanceof LocallySortedDataset<?, Record> locallySortedDataset)) {
@@ -152,7 +141,7 @@ public class RelToDatasetConverter {
 				});
 	}
 
-	private UnmaterializedDataset handle(TableScan scan) {
+	private UnmaterializedDataset handle(FilterableTableScan scan) {
 		RelOptTable table = scan.getTable();
 		List<String> names = table.getQualifiedName();
 
@@ -160,10 +149,23 @@ public class RelToDatasetConverter {
 		DataflowTable<Object> dataflowTable = table.unwrap(DataflowTable.class);
 		assert dataflowTable != null;
 
-		Dataset<Object> dataset = Datasets.datasetOfId(last(names).toLowerCase(), dataflowTable.getType());
 		RecordFunction<Object> mapper = dataflowTable.getRecordFunction();
+		String id = last(names).toLowerCase();
 
-		return UnmaterializedDataset.of(mapper.getScheme(), $ -> Datasets.map(dataset, mapper, Record.class));
+
+		WherePredicate wherePredicate;
+		RexNode predicate = scan.getCondition();
+		if (predicate instanceof RexCall call) {
+			ParamsCollector collector = new ParamsCollector();
+			wherePredicate = collector.toWherePredicate(call);
+		} else {
+			wherePredicate = new AndPredicate(emptyList());
+		}
+
+		return UnmaterializedDataset.of(mapper.getScheme(), params -> {
+			Dataset<Object> dataset = DatasetSupplierOfPredicate.create(id, wherePredicate.materialize(params), dataflowTable.getType());
+			return Datasets.map(dataset, mapper, Record.class);
+		});
 	}
 
 	private UnmaterializedDataset handle(LogicalFilter filter, ParamsCollector paramsCollector) {
@@ -591,18 +593,12 @@ public class RelToDatasetConverter {
 				case AND -> new AndPredicate(operands.stream()
 						.map(rexNode -> toWherePredicate((RexCall) rexNode))
 						.collect(Collectors.toList()));
-				case EQUALS ->
-						new EqPredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
-				case NOT_EQUALS ->
-						new NotEqPredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
-				case GREATER_THAN ->
-						new GtPredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
-				case GREATER_THAN_OR_EQUAL ->
-						new GePredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
-				case LESS_THAN ->
-						new LtPredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
-				case LESS_THAN_OR_EQUAL ->
-						new LePredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
+				case EQUALS -> new EqPredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
+				case NOT_EQUALS -> new NotEqPredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
+				case GREATER_THAN -> new GtPredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
+				case GREATER_THAN_OR_EQUAL -> new GePredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
+				case LESS_THAN -> new LtPredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
+				case LESS_THAN_OR_EQUAL -> new LePredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
 				case BETWEEN ->
 						new BetweenPredicate(toOperand(operands.get(0)), toOperand(operands.get(1)), toOperand(operands.get(2)));
 				case IN -> {
@@ -612,8 +608,7 @@ public class RelToDatasetConverter {
 							.collect(Collectors.toList());
 					yield new InPredicate(toOperand(operands.get(0)), options);
 				}
-				case LIKE ->
-						new LikePredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
+				case LIKE -> new LikePredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
 				case IS_NULL -> new IsNullPredicate(toOperand(operands.get(0)));
 				case IS_NOT_NULL -> new IsNotNullPredicate(toOperand(operands.get(0)));
 

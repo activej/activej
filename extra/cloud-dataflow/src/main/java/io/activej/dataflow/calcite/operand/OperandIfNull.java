@@ -1,6 +1,7 @@
 package io.activej.dataflow.calcite.operand;
 
 import io.activej.common.Utils;
+import io.activej.dataflow.proto.calcite.serializer.OperandFunctionRegistry;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import org.apache.calcite.rex.RexDynamicParam;
@@ -8,13 +9,20 @@ import org.apache.calcite.rex.RexDynamicParam;
 import java.lang.reflect.Type;
 import java.util.List;
 
-public final class OperandIfNull implements Operand<OperandIfNull> {
+public final class OperandIfNull extends OperandFunction<OperandIfNull> {
 	private final Operand<?> checkedOperand;
 	private final Operand<?> defaultValueOperand;
 
 	public OperandIfNull(Operand<?> checkedOperand, Operand<?> defaultValueOperand) {
 		this.checkedOperand = checkedOperand;
 		this.defaultValueOperand = defaultValueOperand;
+	}
+
+	public static void register() {
+		OperandFunctionRegistry.register(OperandIfNull.class, operands -> {
+			assert operands.size() == 2;
+			return new OperandIfNull(operands.get(0), operands.get(1));
+		});
 	}
 
 	@Override
@@ -57,6 +65,11 @@ public final class OperandIfNull implements Operand<OperandIfNull> {
 
 	public Operand<?> getDefaultValueOperand() {
 		return defaultValueOperand;
+	}
+
+	@Override
+	public List<Operand<?>> getOperands() {
+		return List.of(checkedOperand, defaultValueOperand);
 	}
 
 	@Override

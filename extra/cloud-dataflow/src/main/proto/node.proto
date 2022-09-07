@@ -137,6 +137,10 @@ message Node {
     StreamId output = 5;
   }
 
+  message CustomNode {
+    bytes serialized_node = 1;
+  }
+
   oneof node {
     ConsumerOfId consumer_of_id = 1;
     Download download = 2;
@@ -153,5 +157,6 @@ message Node {
     Upload upload = 13;
     Empty empty = 14;
     OffsetLimit offset_limit = 15;
+    CustomNode custom_node = 16;
   }
 }

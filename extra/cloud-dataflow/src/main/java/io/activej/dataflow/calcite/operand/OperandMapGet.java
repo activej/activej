@@ -1,6 +1,7 @@
 package io.activej.dataflow.calcite.operand;
 
 import io.activej.common.Utils;
+import io.activej.dataflow.proto.calcite.serializer.OperandFunctionRegistry;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import org.apache.calcite.rex.RexDynamicParam;
@@ -10,7 +11,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
-public final class OperandMapGet<K> implements Operand<OperandMapGet<K>> {
+public final class OperandMapGet extends OperandFunction<OperandMapGet> {
 	private final Operand<?> mapOperand;
 	private final Operand<?> keyOperand;
 
@@ -19,10 +20,17 @@ public final class OperandMapGet<K> implements Operand<OperandMapGet<K>> {
 		this.keyOperand = keyOperand;
 	}
 
+	public static void register() {
+		OperandFunctionRegistry.register(OperandMapGet.class, operands -> {
+			assert operands.size() == 2;
+			return new OperandMapGet(operands.get(0), operands.get(1));
+		});
+	}
+
 	@Override
 	public <V> V getValue(Record record) {
-		Map<K, V> map = mapOperand.getValue(record);
-		K key = keyOperand.getValue(record);
+		Map<?, V> map = mapOperand.getValue(record);
+		Object key = keyOperand.getValue(record);
 
 		if (map == null) return null;
 
@@ -43,8 +51,8 @@ public final class OperandMapGet<K> implements Operand<OperandMapGet<K>> {
 	}
 
 	@Override
-	public OperandMapGet<K> materialize(List<Object> params) {
-		return new OperandMapGet<>(
+	public OperandMapGet materialize(List<Object> params) {
+		return new OperandMapGet(
 				mapOperand.materialize(params),
 				keyOperand.materialize(params)
 		);
@@ -64,10 +72,14 @@ public final class OperandMapGet<K> implements Operand<OperandMapGet<K>> {
 	}
 
 	@Override
+	public List<Operand<?>> getOperands() {
+		return List.of(mapOperand, keyOperand);
+	}
+
+	@Override
 	public String toString() {
 		return "OperandMapGet[" +
 				"mapOperand=" + mapOperand + ", " +
 				"keyOperand=" + keyOperand + ']';
 	}
-
 }

@@ -5,11 +5,17 @@ import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.SqlDataflow;
 import io.activej.dataflow.calcite.DataflowSchema;
 import io.activej.dataflow.calcite.DataflowTable;
+import io.activej.dataflow.calcite.FilteredDataflowSupplier;
 import io.activej.dataflow.calcite.RecordFunction;
 import io.activej.dataflow.calcite.inject.CalciteClientModule;
 import io.activej.dataflow.calcite.inject.CalciteServerModule;
+import io.activej.dataflow.calcite.operand.Operand;
+import io.activej.dataflow.calcite.operand.OperandRecordField;
+import io.activej.dataflow.calcite.operand.OperandScalar;
+import io.activej.dataflow.calcite.where.*;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
+import io.activej.datastream.StreamSupplier;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.module.Module;
@@ -21,6 +27,7 @@ import io.activej.serializer.annotations.SerializeRecord;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
+import org.jetbrains.annotations.Nullable;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
@@ -63,6 +70,7 @@ public abstract class AbstractCalciteTest {
 	public static final String USER_PROFILES_TABLE_NAME = "profiles";
 	public static final String LARGE_TABLE_NAME = "large_table";
 	public static final String SUBJECT_SELECTION_TABLE_NAME = "subject_selection";
+	public static final String FILTERABLE_TABLE_NAME = "filterable";
 
 	protected static final List<Student> STUDENT_LIST_1 = List.of(
 			new Student(4, "Mark", null, 3),
@@ -117,6 +125,18 @@ public abstract class AbstractCalciteTest {
 			new SubjectSelection("MKB114", 1, "John"),
 			new SubjectSelection("MKB114", 1, "Paul")
 	);
+	protected static final TreeSet<Filterable> FILTERABLE_1 = new TreeSet<>(Comparator.comparing(Filterable::created));
+	protected static final TreeSet<Filterable> FILTERABLE_2 = new TreeSet<>(Comparator.comparing(Filterable::created));
+
+	static {
+		FILTERABLE_1.add(new Filterable(43, 65L));
+		FILTERABLE_1.add(new Filterable(13, 78L));
+		FILTERABLE_1.add(new Filterable(76, 12L));
+
+		FILTERABLE_2.add(new Filterable(33, 15L));
+		FILTERABLE_2.add(new Filterable(64, 42L));
+		FILTERABLE_2.add(new Filterable(45, 22L));
+	}
 
 
 	@Rule
@@ -149,6 +169,7 @@ public abstract class AbstractCalciteTest {
 							UserProfileToRecord userProfileToRecord = UserProfileToRecord.create(classLoader);
 							LargeToRecord largeToRecord = LargeToRecord.create(classLoader);
 							SubjectSelectionToRecord subjectSelectionToRecord = SubjectSelectionToRecord.create(classLoader);
+							FilterableToRecord filterableToRecord = FilterableToRecord.create(classLoader);
 
 							return DataflowSchema.create()
 									.withTable(STUDENT_TABLE_NAME, DataflowTable.create(Student.class, studentToRecord, ofObject(() -> studentToRecord)))
@@ -156,7 +177,8 @@ public abstract class AbstractCalciteTest {
 									.withTable(REGISTRY_TABLE_NAME, DataflowTable.create(Registry.class, recordToFunction, ofObject(() -> recordToFunction)))
 									.withTable(USER_PROFILES_TABLE_NAME, DataflowTable.create(UserProfile.class, userProfileToRecord, ofObject(() -> userProfileToRecord)))
 									.withTable(LARGE_TABLE_NAME, DataflowTable.create(Large.class, largeToRecord, ofObject(() -> largeToRecord)))
-									.withTable(SUBJECT_SELECTION_TABLE_NAME, DataflowTable.create(SubjectSelection.class, subjectSelectionToRecord, ofObject(() -> subjectSelectionToRecord)));
+									.withTable(SUBJECT_SELECTION_TABLE_NAME, DataflowTable.create(SubjectSelection.class, subjectSelectionToRecord, ofObject(() -> subjectSelectionToRecord)))
+									.withTable(FILTERABLE_TABLE_NAME, DataflowTable.create(Filterable.class, filterableToRecord, ofObject(() -> filterableToRecord)));
 						},
 						DefiningClassLoader.class)
 				.build();
@@ -182,6 +204,7 @@ public abstract class AbstractCalciteTest {
 						.bind(datasetId(USER_PROFILES_TABLE_NAME)).toInstance(USER_PROFILES_LIST_1)
 						.bind(datasetId(LARGE_TABLE_NAME)).toInstance(LARGE_LIST_1)
 						.bind(datasetId(SUBJECT_SELECTION_TABLE_NAME)).toInstance(SUBJECT_SELECTION_LIST_1)
+						.bind(datasetId(FILTERABLE_TABLE_NAME)).toInstance(createFilterableSupplier(FILTERABLE_1))
 						.build());
 		Module server2Module = Modules.combine(serverModule,
 				ModuleBuilder.create()
@@ -191,6 +214,7 @@ public abstract class AbstractCalciteTest {
 						.bind(datasetId(USER_PROFILES_TABLE_NAME)).toInstance(USER_PROFILES_LIST_2)
 						.bind(datasetId(LARGE_TABLE_NAME)).toInstance(LARGE_LIST_2)
 						.bind(datasetId(SUBJECT_SELECTION_TABLE_NAME)).toInstance(SUBJECT_SELECTION_LIST_2)
+						.bind(datasetId(FILTERABLE_TABLE_NAME)).toInstance(createFilterableSupplier(FILTERABLE_2))
 						.build());
 
 		server1Injector = Injector.of(server1Module);
@@ -231,7 +255,7 @@ public abstract class AbstractCalciteTest {
 	}
 
 	public record UserProfile(String id, UserProfilePojo pojo, Map<Integer, UserProfileIntent> intents,
-	                          long timestamp) {
+							  long timestamp) {
 	}
 
 	@SerializeRecord
@@ -255,6 +279,10 @@ public abstract class AbstractCalciteTest {
 
 	@SerializeRecord // https://stackoverflow.com/a/2421441 - testing GROUP BY
 	public record SubjectSelection(String subject, int semester, String attendee) {
+	}
+
+	@SerializeRecord
+	public record Filterable(int id, long created) {
 	}
 
 
@@ -1909,6 +1937,25 @@ public abstract class AbstractCalciteTest {
 		assertEquals(expected, result);
 	}
 
+	@Test
+	public void testFilterable() {
+		QueryResult result = query("""
+				SELECT id
+				FROM filterable
+				WHERE created > 20 AND created < 60
+				""");
+
+		QueryResult expected = new QueryResult(
+				List.of("id"),
+				List.of(
+						new Object[]{45},
+						new Object[]{64}
+				)
+		);
+
+		assertEquals(expected, result);
+	}
+
 	protected abstract QueryResult query(String sql);
 
 	protected abstract QueryResult queryPrepared(String sql, ParamsSetter paramsSetter);
@@ -2184,6 +2231,31 @@ public abstract class AbstractCalciteTest {
 		}
 	}
 
+	public static final class FilterableToRecord implements RecordFunction<Filterable> {
+		private final RecordScheme scheme;
+
+		private FilterableToRecord(RecordScheme scheme) {
+			this.scheme = scheme;
+		}
+
+		public static FilterableToRecord create(DefiningClassLoader classLoader) {
+			return new FilterableToRecord(ofJavaRecord(classLoader, Filterable.class));
+		}
+
+		@Override
+		public Record apply(Filterable filterable) {
+			Record record = scheme.record();
+			record.setInt("id", filterable.id);
+			record.setLong("created", filterable.created);
+			return record;
+		}
+
+		@Override
+		public RecordScheme getScheme() {
+			return scheme;
+		}
+	}
+
 	private static QueryResult departmentsToQueryResult(List<Department> departments) {
 		List<String> columnNames = Arrays.asList("id", "departmentName");
 		List<Object[]> columnValues = new ArrayList<>(departments.size());
@@ -2234,6 +2306,204 @@ public abstract class AbstractCalciteTest {
 
 	private static Student columnsToStudent(Object[] columnValue) {
 		return new Student((Integer) columnValue[0], (String) columnValue[1], (String) columnValue[2], (Integer) columnValue[3]);
+	}
+
+	private static FilteredDataflowSupplier<Filterable> createFilterableSupplier(NavigableSet<Filterable> filterableData) {
+		return predicate -> {
+			DateRange dateRange = predicateToDateRange(predicate);
+
+			if (dateRange == null) {
+				return StreamSupplier.ofIterable(filterableData);
+			}
+
+			return StreamSupplier.ofIterable(filterableData.subSet(
+					new Filterable(-1, dateRange.from), dateRange.fromInclusive,
+					new Filterable(-1, dateRange.to), dateRange.toInclusive
+			));
+		};
+	}
+
+	private record DateRange(long from, boolean fromInclusive, long to, boolean toInclusive) {
+	}
+
+	private static @Nullable DateRange predicateToDateRange(WherePredicate predicate) {
+		if (predicate instanceof OrPredicate orPredicate) {
+			List<WherePredicate> predicates = orPredicate.getPredicates();
+			List<DateRange> ranges = new ArrayList<>(predicates.size());
+			for (WherePredicate wherePredicate : predicates) {
+				DateRange dateRange = predicateToDateRange(wherePredicate);
+				if (dateRange == null) return null;
+				ranges.add(dateRange);
+			}
+			return orRanges(ranges);
+		}
+		if (predicate instanceof AndPredicate andPredicate) {
+			List<WherePredicate> predicates = andPredicate.getPredicates();
+			List<DateRange> ranges = new ArrayList<>(predicates.size());
+			for (WherePredicate wherePredicate : predicates) {
+				DateRange dateRange = predicateToDateRange(wherePredicate);
+				if (dateRange == null) continue;
+				ranges.add(dateRange);
+			}
+			return andRanges(ranges);
+		}
+		if (predicate instanceof EqPredicate eqPredicate) {
+			if (isDate(eqPredicate.getLeft())) {
+				Long date = extractDate(eqPredicate.getRight());
+				if (date != null) {
+					return new DateRange(date, true, date, true);
+				}
+			} else if (isDate(eqPredicate.getRight())) {
+				Long date = extractDate(eqPredicate.getLeft());
+				if (date != null) {
+					return new DateRange(date, true, date, true);
+				}
+			}
+		}
+		if (predicate instanceof NotEqPredicate notEqPredicate) {
+			if (isDate(notEqPredicate.getLeft()) || isDate(notEqPredicate.getRight())) {
+				return new DateRange(Long.MIN_VALUE, true, Long.MAX_VALUE, true);
+			}
+		}
+		if (predicate instanceof GtPredicate gtPredicate) {
+			if (isDate(gtPredicate.getLeft())) {
+				Long date = extractDate(gtPredicate.getRight());
+				if (date != null) {
+					return new DateRange(date, false, Long.MAX_VALUE, true);
+				}
+			} else if (isDate(gtPredicate.getRight())) {
+				Long date = extractDate(gtPredicate.getLeft());
+				if (date != null) {
+					return new DateRange(Long.MIN_VALUE, true, date, false);
+				}
+			}
+		}
+		if (predicate instanceof GePredicate gePredicate) {
+			if (isDate(gePredicate.getLeft())) {
+				Long date = extractDate(gePredicate.getRight());
+				if (date != null) {
+					return new DateRange(date, true, Long.MAX_VALUE, true);
+				}
+			} else if (isDate(gePredicate.getRight())) {
+				Long date = extractDate(gePredicate.getLeft());
+				if (date != null) {
+					return new DateRange(Long.MIN_VALUE, true, date, true);
+				}
+			}
+		}
+		if (predicate instanceof LtPredicate ltPredicate) {
+			if (isDate(ltPredicate.getLeft())) {
+				Long date = extractDate(ltPredicate.getRight());
+				if (date != null) {
+					return new DateRange(Long.MIN_VALUE, true, date, false);
+				}
+			} else if (isDate(ltPredicate.getRight())) {
+				Long date = extractDate(ltPredicate.getLeft());
+				if (date != null) {
+					return new DateRange(date, false, Long.MAX_VALUE, true);
+				}
+			}
+		}
+		if (predicate instanceof LePredicate lePredicate) {
+			if (isDate(lePredicate.getLeft())) {
+				Long date = extractDate(lePredicate.getRight());
+				if (date != null) {
+					return new DateRange(Long.MIN_VALUE, true, date, true);
+				}
+			} else if (isDate(lePredicate.getRight())) {
+				Long date = extractDate(lePredicate.getLeft());
+				if (date != null) {
+					return new DateRange(date, true, Long.MAX_VALUE, true);
+				}
+			}
+		}
+		if (predicate instanceof BetweenPredicate betweenPredicate) {
+			if (isDate(betweenPredicate.getValue())) {
+				Long from = extractDate(betweenPredicate.getFrom());
+				from = from == null ? Long.MIN_VALUE : from;
+				Long to = extractDate(betweenPredicate.getTo());
+				to = to == null ? Long.MAX_VALUE : to;
+				return new DateRange(from, true, to, true);
+			}
+		}
+		if (predicate instanceof InPredicate inPredicate) {
+			if (isDate(inPredicate.getValue())) {
+				List<Operand<?>> options = inPredicate.getOptions();
+				List<Long> dates = new ArrayList<>(options.size());
+				for (Operand<?> option : options) {
+					Long date = extractDate(option);
+					if (date == null) {
+						return null;
+					}
+					dates.add(date);
+				}
+				return new DateRange(Collections.min(dates), true, Collections.max(dates), true);
+			}
+		}
+		if (predicate instanceof IsNullPredicate isNotNullPredicate) {
+			if (isDate(isNotNullPredicate.getValue())) {
+				return new DateRange(0, false, 0, false);
+			}
+		}
+		if (predicate instanceof IsNotNullPredicate isNotNullPredicate) {
+			if (isDate(isNotNullPredicate.getValue())) {
+				return new DateRange(Long.MIN_VALUE, true, Long.MAX_VALUE, true);
+			}
+		}
+		return null;
+	}
+
+	private static boolean isDate(Operand<?> operand) {
+		if (!(operand instanceof OperandRecordField recordField)) return false;
+
+		return recordField.getIndex() == 1;
+	}
+
+	private static @Nullable Long extractDate(Operand<?> operand) {
+		if (!(operand instanceof OperandScalar scalar)) return null;
+
+		Integer value = (Integer) scalar.getValue().getValue();
+		return value == null ? null : Long.valueOf(value);
+	}
+
+	private static DateRange andRanges(List<DateRange> ranges) {
+		DateRange result = ranges.get(0);
+		for (int i = 1; i < ranges.size(); i++) {
+			DateRange current = ranges.get(i);
+			if (current.from == result.from) {
+				result = new DateRange(current.from, current.fromInclusive & result.fromInclusive, result.to, result.toInclusive);
+			} else if (current.from > result.from) {
+				result = new DateRange(current.from, current.fromInclusive, result.to, result.toInclusive);
+			}
+
+			if (current.to == result.to) {
+				result = new DateRange(result.from, result.fromInclusive, result.to, result.toInclusive || current.toInclusive);
+			} else if (current.to < result.to) {
+				result = new DateRange(result.from, result.fromInclusive, current.to, current.toInclusive);
+			}
+		}
+
+		return result;
+	}
+
+	private static DateRange orRanges(List<DateRange> ranges) {
+		DateRange result = ranges.get(0);
+		for (int i = 1; i < ranges.size(); i++) {
+			DateRange current = ranges.get(i);
+			if (current.from == result.from) {
+				result = new DateRange(current.from, current.fromInclusive || result.fromInclusive, result.to, result.toInclusive);
+			} else if (current.from < result.from) {
+				result = new DateRange(current.from, current.fromInclusive, result.to, result.toInclusive);
+			}
+
+			if (current.to == result.to) {
+				result = new DateRange(result.from, result.fromInclusive, result.to, result.toInclusive || current.toInclusive);
+			} else if (current.to > result.to) {
+				result = new DateRange(result.from, result.fromInclusive, current.to, current.toInclusive);
+			}
+		}
+
+		return result;
 	}
 
 	protected interface ParamsSetter {

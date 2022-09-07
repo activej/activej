@@ -1,6 +1,7 @@
 package io.activej.dataflow.calcite.function;
 
 import io.activej.dataflow.calcite.operand.Operand;
+import io.activej.dataflow.calcite.operand.OperandFunction;
 import io.activej.dataflow.calcite.operand.OperandListGet;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlKind;
@@ -24,7 +25,7 @@ public final class ListGetFunction extends ProjectionFunction {
 	}
 
 	@Override
-	public Operand<?> toOperand(List<Operand<?>> operands) {
+	public OperandFunction<?> toOperandFunction(List<Operand<?>> operands) {
 		checkArgument(operands.size() == 2);
 
 		Operand<?> listOperand = operands.get(0);

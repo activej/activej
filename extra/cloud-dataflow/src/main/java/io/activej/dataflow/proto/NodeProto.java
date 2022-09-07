@@ -243,6 +243,21 @@ public final class NodeProto {
      */
     io.activej.dataflow.proto.NodeProto.Node.OffsetLimitOrBuilder getOffsetLimitOrBuilder();
 
+    /**
+     * <code>.dataflow.Node.CustomNode custom_node = 16;</code>
+     * @return Whether the customNode field is set.
+     */
+    boolean hasCustomNode();
+    /**
+     * <code>.dataflow.Node.CustomNode custom_node = 16;</code>
+     * @return The customNode.
+     */
+    io.activej.dataflow.proto.NodeProto.Node.CustomNode getCustomNode();
+    /**
+     * <code>.dataflow.Node.CustomNode custom_node = 16;</code>
+     */
+    io.activej.dataflow.proto.NodeProto.Node.CustomNodeOrBuilder getCustomNodeOrBuilder();
+
     public io.activej.dataflow.proto.NodeProto.Node.NodeCase getNodeCase();
   }
   /**
@@ -498,6 +513,20 @@ public final class NodeProto {
                 node_ = subBuilder.buildPartial();
               }
               nodeCase_ = 15;
+              break;
+            }
+            case 130: {
+              io.activej.dataflow.proto.NodeProto.Node.CustomNode.Builder subBuilder = null;
+              if (nodeCase_ == 16) {
+                subBuilder = ((io.activej.dataflow.proto.NodeProto.Node.CustomNode) node_).toBuilder();
+              }
+              node_ =
+                  input.readMessage(io.activej.dataflow.proto.NodeProto.Node.CustomNode.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((io.activej.dataflow.proto.NodeProto.Node.CustomNode) node_);
+                node_ = subBuilder.buildPartial();
+              }
+              nodeCase_ = 16;
               break;
             }
             default: {
@@ -18112,6 +18141,498 @@ public final class NodeProto {
 
     }
 
+    public interface CustomNodeOrBuilder extends
+        // @@protoc_insertion_point(interface_extends:dataflow.Node.CustomNode)
+        com.google.protobuf.MessageOrBuilder {
+
+      /**
+       * <code>bytes serialized_node = 1;</code>
+       * @return The serializedNode.
+       */
+      com.google.protobuf.ByteString getSerializedNode();
+    }
+    /**
+     * Protobuf type {@code dataflow.Node.CustomNode}
+     */
+    public static final class CustomNode extends
+        com.google.protobuf.GeneratedMessageV3 implements
+        // @@protoc_insertion_point(message_implements:dataflow.Node.CustomNode)
+        CustomNodeOrBuilder {
+    private static final long serialVersionUID = 0L;
+      // Use CustomNode.newBuilder() to construct.
+      private CustomNode(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+        super(builder);
+      }
+      private CustomNode() {
+        serializedNode_ = com.google.protobuf.ByteString.EMPTY;
+      }
+
+      @java.lang.Override
+      @SuppressWarnings({"unused"})
+      protected java.lang.Object newInstance(
+          UnusedPrivateParameter unused) {
+        return new CustomNode();
+      }
+
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+      getUnknownFields() {
+        return this.unknownFields;
+      }
+      private CustomNode(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        this();
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 10: {
+
+                serializedNode_ = input.readBytes();
+                break;
+              }
+              default: {
+                if (!parseUnknownField(
+                    input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e).setUnfinishedMessage(this);
+        } finally {
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return io.activej.dataflow.proto.NodeProto.internal_static_dataflow_Node_CustomNode_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return io.activej.dataflow.proto.NodeProto.internal_static_dataflow_Node_CustomNode_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                io.activej.dataflow.proto.NodeProto.Node.CustomNode.class, io.activej.dataflow.proto.NodeProto.Node.CustomNode.Builder.class);
+      }
+
+      public static final int SERIALIZED_NODE_FIELD_NUMBER = 1;
+      private com.google.protobuf.ByteString serializedNode_;
+      /**
+       * <code>bytes serialized_node = 1;</code>
+       * @return The serializedNode.
+       */
+      @java.lang.Override
+      public com.google.protobuf.ByteString getSerializedNode() {
+        return serializedNode_;
+      }
+
+      private byte memoizedIsInitialized = -1;
+      @java.lang.Override
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
+
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      @java.lang.Override
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        if (!serializedNode_.isEmpty()) {
+          output.writeBytes(1, serializedNode_);
+        }
+        unknownFields.writeTo(output);
+      }
+
+      @java.lang.Override
+      public int getSerializedSize() {
+        int size = memoizedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (!serializedNode_.isEmpty()) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(1, serializedNode_);
+        }
+        size += unknownFields.getSerializedSize();
+        memoizedSize = size;
+        return size;
+      }
+
+      @java.lang.Override
+      public boolean equals(final java.lang.Object obj) {
+        if (obj == this) {
+         return true;
+        }
+        if (!(obj instanceof io.activej.dataflow.proto.NodeProto.Node.CustomNode)) {
+          return super.equals(obj);
+        }
+        io.activej.dataflow.proto.NodeProto.Node.CustomNode other = (io.activej.dataflow.proto.NodeProto.Node.CustomNode) obj;
+
+        if (!getSerializedNode()
+            .equals(other.getSerializedNode())) return false;
+        if (!unknownFields.equals(other.unknownFields)) return false;
+        return true;
+      }
+
+      @java.lang.Override
+      public int hashCode() {
+        if (memoizedHashCode != 0) {
+          return memoizedHashCode;
+        }
+        int hash = 41;
+        hash = (19 * hash) + getDescriptor().hashCode();
+        hash = (37 * hash) + SERIALIZED_NODE_FIELD_NUMBER;
+        hash = (53 * hash) + getSerializedNode().hashCode();
+        hash = (29 * hash) + unknownFields.hashCode();
+        memoizedHashCode = hash;
+        return hash;
+      }
+
+      public static io.activej.dataflow.proto.NodeProto.Node.CustomNode parseFrom(
+          java.nio.ByteBuffer data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.NodeProto.Node.CustomNode parseFrom(
+          java.nio.ByteBuffer data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.NodeProto.Node.CustomNode parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.NodeProto.Node.CustomNode parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.NodeProto.Node.CustomNode parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.NodeProto.Node.CustomNode parseFrom(
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.NodeProto.Node.CustomNode parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.NodeProto.Node.CustomNode parseFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.NodeProto.Node.CustomNode parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.NodeProto.Node.CustomNode parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.NodeProto.Node.CustomNode parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.NodeProto.Node.CustomNode parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
+      }
+
+      @java.lang.Override
+      public Builder newBuilderForType() { return newBuilder(); }
+      public static Builder newBuilder() {
+        return DEFAULT_INSTANCE.toBuilder();
+      }
+      public static Builder newBuilder(io.activej.dataflow.proto.NodeProto.Node.CustomNode prototype) {
+        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      }
+      @java.lang.Override
+      public Builder toBuilder() {
+        return this == DEFAULT_INSTANCE
+            ? new Builder() : new Builder().mergeFrom(this);
+      }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       * Protobuf type {@code dataflow.Node.CustomNode}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+          // @@protoc_insertion_point(builder_implements:dataflow.Node.CustomNode)
+          io.activej.dataflow.proto.NodeProto.Node.CustomNodeOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return io.activej.dataflow.proto.NodeProto.internal_static_dataflow_Node_CustomNode_descriptor;
+        }
+
+        @java.lang.Override
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return io.activej.dataflow.proto.NodeProto.internal_static_dataflow_Node_CustomNode_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  io.activej.dataflow.proto.NodeProto.Node.CustomNode.class, io.activej.dataflow.proto.NodeProto.Node.CustomNode.Builder.class);
+        }
+
+        // Construct using io.activej.dataflow.proto.NodeProto.Node.CustomNode.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessageV3
+                  .alwaysUseFieldBuilders) {
+          }
+        }
+        @java.lang.Override
+        public Builder clear() {
+          super.clear();
+          serializedNode_ = com.google.protobuf.ByteString.EMPTY;
+
+          return this;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return io.activej.dataflow.proto.NodeProto.internal_static_dataflow_Node_CustomNode_descriptor;
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.NodeProto.Node.CustomNode getDefaultInstanceForType() {
+          return io.activej.dataflow.proto.NodeProto.Node.CustomNode.getDefaultInstance();
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.NodeProto.Node.CustomNode build() {
+          io.activej.dataflow.proto.NodeProto.Node.CustomNode result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.NodeProto.Node.CustomNode buildPartial() {
+          io.activej.dataflow.proto.NodeProto.Node.CustomNode result = new io.activej.dataflow.proto.NodeProto.Node.CustomNode(this);
+          result.serializedNode_ = serializedNode_;
+          onBuilt();
+          return result;
+        }
+
+        @java.lang.Override
+        public Builder clone() {
+          return super.clone();
+        }
+        @java.lang.Override
+        public Builder setField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return super.setField(field, value);
+        }
+        @java.lang.Override
+        public Builder clearField(
+            com.google.protobuf.Descriptors.FieldDescriptor field) {
+          return super.clearField(field);
+        }
+        @java.lang.Override
+        public Builder clearOneof(
+            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+          return super.clearOneof(oneof);
+        }
+        @java.lang.Override
+        public Builder setRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            int index, java.lang.Object value) {
+          return super.setRepeatedField(field, index, value);
+        }
+        @java.lang.Override
+        public Builder addRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return super.addRepeatedField(field, value);
+        }
+        @java.lang.Override
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof io.activej.dataflow.proto.NodeProto.Node.CustomNode) {
+            return mergeFrom((io.activej.dataflow.proto.NodeProto.Node.CustomNode)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(io.activej.dataflow.proto.NodeProto.Node.CustomNode other) {
+          if (other == io.activej.dataflow.proto.NodeProto.Node.CustomNode.getDefaultInstance()) return this;
+          if (other.getSerializedNode() != com.google.protobuf.ByteString.EMPTY) {
+            setSerializedNode(other.getSerializedNode());
+          }
+          this.mergeUnknownFields(other.unknownFields);
+          onChanged();
+          return this;
+        }
+
+        @java.lang.Override
+        public final boolean isInitialized() {
+          return true;
+        }
+
+        @java.lang.Override
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          io.activej.dataflow.proto.NodeProto.Node.CustomNode parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage = (io.activej.dataflow.proto.NodeProto.Node.CustomNode) e.getUnfinishedMessage();
+            throw e.unwrapIOException();
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+
+        private com.google.protobuf.ByteString serializedNode_ = com.google.protobuf.ByteString.EMPTY;
+        /**
+         * <code>bytes serialized_node = 1;</code>
+         * @return The serializedNode.
+         */
+        @java.lang.Override
+        public com.google.protobuf.ByteString getSerializedNode() {
+          return serializedNode_;
+        }
+        /**
+         * <code>bytes serialized_node = 1;</code>
+         * @param value The serializedNode to set.
+         * @return This builder for chaining.
+         */
+        public Builder setSerializedNode(com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  
+          serializedNode_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>bytes serialized_node = 1;</code>
+         * @return This builder for chaining.
+         */
+        public Builder clearSerializedNode() {
+          
+          serializedNode_ = getDefaultInstance().getSerializedNode();
+          onChanged();
+          return this;
+        }
+        @java.lang.Override
+        public final Builder setUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.setUnknownFields(unknownFields);
+        }
+
+        @java.lang.Override
+        public final Builder mergeUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.mergeUnknownFields(unknownFields);
+        }
+
+
+        // @@protoc_insertion_point(builder_scope:dataflow.Node.CustomNode)
+      }
+
+      // @@protoc_insertion_point(class_scope:dataflow.Node.CustomNode)
+      private static final io.activej.dataflow.proto.NodeProto.Node.CustomNode DEFAULT_INSTANCE;
+      static {
+        DEFAULT_INSTANCE = new io.activej.dataflow.proto.NodeProto.Node.CustomNode();
+      }
+
+      public static io.activej.dataflow.proto.NodeProto.Node.CustomNode getDefaultInstance() {
+        return DEFAULT_INSTANCE;
+      }
+
+      private static final com.google.protobuf.Parser<CustomNode>
+          PARSER = new com.google.protobuf.AbstractParser<CustomNode>() {
+        @java.lang.Override
+        public CustomNode parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new CustomNode(input, extensionRegistry);
+        }
+      };
+
+      public static com.google.protobuf.Parser<CustomNode> parser() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<CustomNode> getParserForType() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public io.activej.dataflow.proto.NodeProto.Node.CustomNode getDefaultInstanceForType() {
+        return DEFAULT_INSTANCE;
+      }
+
+    }
+
     private int nodeCase_ = 0;
     private java.lang.Object node_;
     public enum NodeCase
@@ -18132,6 +18653,7 @@ public final class NodeProto {
       UPLOAD(13),
       EMPTY(14),
       OFFSET_LIMIT(15),
+      CUSTOM_NODE(16),
       NODE_NOT_SET(0);
       private final int value;
       private NodeCase(int value) {
@@ -18164,6 +18686,7 @@ public final class NodeProto {
           case 13: return UPLOAD;
           case 14: return EMPTY;
           case 15: return OFFSET_LIMIT;
+          case 16: return CUSTOM_NODE;
           case 0: return NODE_NOT_SET;
           default: return null;
         }
@@ -18644,6 +19167,37 @@ public final class NodeProto {
       return io.activej.dataflow.proto.NodeProto.Node.OffsetLimit.getDefaultInstance();
     }
 
+    public static final int CUSTOM_NODE_FIELD_NUMBER = 16;
+    /**
+     * <code>.dataflow.Node.CustomNode custom_node = 16;</code>
+     * @return Whether the customNode field is set.
+     */
+    @java.lang.Override
+    public boolean hasCustomNode() {
+      return nodeCase_ == 16;
+    }
+    /**
+     * <code>.dataflow.Node.CustomNode custom_node = 16;</code>
+     * @return The customNode.
+     */
+    @java.lang.Override
+    public io.activej.dataflow.proto.NodeProto.Node.CustomNode getCustomNode() {
+      if (nodeCase_ == 16) {
+         return (io.activej.dataflow.proto.NodeProto.Node.CustomNode) node_;
+      }
+      return io.activej.dataflow.proto.NodeProto.Node.CustomNode.getDefaultInstance();
+    }
+    /**
+     * <code>.dataflow.Node.CustomNode custom_node = 16;</code>
+     */
+    @java.lang.Override
+    public io.activej.dataflow.proto.NodeProto.Node.CustomNodeOrBuilder getCustomNodeOrBuilder() {
+      if (nodeCase_ == 16) {
+         return (io.activej.dataflow.proto.NodeProto.Node.CustomNode) node_;
+      }
+      return io.activej.dataflow.proto.NodeProto.Node.CustomNode.getDefaultInstance();
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -18702,6 +19256,9 @@ public final class NodeProto {
       }
       if (nodeCase_ == 15) {
         output.writeMessage(15, (io.activej.dataflow.proto.NodeProto.Node.OffsetLimit) node_);
+      }
+      if (nodeCase_ == 16) {
+        output.writeMessage(16, (io.activej.dataflow.proto.NodeProto.Node.CustomNode) node_);
       }
       unknownFields.writeTo(output);
     }
@@ -18771,6 +19328,10 @@ public final class NodeProto {
       if (nodeCase_ == 15) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(15, (io.activej.dataflow.proto.NodeProto.Node.OffsetLimit) node_);
+      }
+      if (nodeCase_ == 16) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(16, (io.activej.dataflow.proto.NodeProto.Node.CustomNode) node_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -18849,6 +19410,10 @@ public final class NodeProto {
           if (!getOffsetLimit()
               .equals(other.getOffsetLimit())) return false;
           break;
+        case 16:
+          if (!getCustomNode()
+              .equals(other.getCustomNode())) return false;
+          break;
         case 0:
         default:
       }
@@ -18923,6 +19488,10 @@ public final class NodeProto {
         case 15:
           hash = (37 * hash) + OFFSET_LIMIT_FIELD_NUMBER;
           hash = (53 * hash) + getOffsetLimit().hashCode();
+          break;
+        case 16:
+          hash = (37 * hash) + CUSTOM_NODE_FIELD_NUMBER;
+          hash = (53 * hash) + getCustomNode().hashCode();
           break;
         case 0:
         default:
@@ -19193,6 +19762,13 @@ public final class NodeProto {
             result.node_ = offsetLimitBuilder_.build();
           }
         }
+        if (nodeCase_ == 16) {
+          if (customNodeBuilder_ == null) {
+            result.node_ = node_;
+          } else {
+            result.node_ = customNodeBuilder_.build();
+          }
+        }
         result.nodeCase_ = nodeCase_;
         onBuilt();
         return result;
@@ -19301,6 +19877,10 @@ public final class NodeProto {
           }
           case OFFSET_LIMIT: {
             mergeOffsetLimit(other.getOffsetLimit());
+            break;
+          }
+          case CUSTOM_NODE: {
+            mergeCustomNode(other.getCustomNode());
             break;
           }
           case NODE_NOT_SET: {
@@ -21465,6 +22045,147 @@ public final class NodeProto {
         onChanged();;
         return offsetLimitBuilder_;
       }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          io.activej.dataflow.proto.NodeProto.Node.CustomNode, io.activej.dataflow.proto.NodeProto.Node.CustomNode.Builder, io.activej.dataflow.proto.NodeProto.Node.CustomNodeOrBuilder> customNodeBuilder_;
+      /**
+       * <code>.dataflow.Node.CustomNode custom_node = 16;</code>
+       * @return Whether the customNode field is set.
+       */
+      @java.lang.Override
+      public boolean hasCustomNode() {
+        return nodeCase_ == 16;
+      }
+      /**
+       * <code>.dataflow.Node.CustomNode custom_node = 16;</code>
+       * @return The customNode.
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.NodeProto.Node.CustomNode getCustomNode() {
+        if (customNodeBuilder_ == null) {
+          if (nodeCase_ == 16) {
+            return (io.activej.dataflow.proto.NodeProto.Node.CustomNode) node_;
+          }
+          return io.activej.dataflow.proto.NodeProto.Node.CustomNode.getDefaultInstance();
+        } else {
+          if (nodeCase_ == 16) {
+            return customNodeBuilder_.getMessage();
+          }
+          return io.activej.dataflow.proto.NodeProto.Node.CustomNode.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.dataflow.Node.CustomNode custom_node = 16;</code>
+       */
+      public Builder setCustomNode(io.activej.dataflow.proto.NodeProto.Node.CustomNode value) {
+        if (customNodeBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          node_ = value;
+          onChanged();
+        } else {
+          customNodeBuilder_.setMessage(value);
+        }
+        nodeCase_ = 16;
+        return this;
+      }
+      /**
+       * <code>.dataflow.Node.CustomNode custom_node = 16;</code>
+       */
+      public Builder setCustomNode(
+          io.activej.dataflow.proto.NodeProto.Node.CustomNode.Builder builderForValue) {
+        if (customNodeBuilder_ == null) {
+          node_ = builderForValue.build();
+          onChanged();
+        } else {
+          customNodeBuilder_.setMessage(builderForValue.build());
+        }
+        nodeCase_ = 16;
+        return this;
+      }
+      /**
+       * <code>.dataflow.Node.CustomNode custom_node = 16;</code>
+       */
+      public Builder mergeCustomNode(io.activej.dataflow.proto.NodeProto.Node.CustomNode value) {
+        if (customNodeBuilder_ == null) {
+          if (nodeCase_ == 16 &&
+              node_ != io.activej.dataflow.proto.NodeProto.Node.CustomNode.getDefaultInstance()) {
+            node_ = io.activej.dataflow.proto.NodeProto.Node.CustomNode.newBuilder((io.activej.dataflow.proto.NodeProto.Node.CustomNode) node_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            node_ = value;
+          }
+          onChanged();
+        } else {
+          if (nodeCase_ == 16) {
+            customNodeBuilder_.mergeFrom(value);
+          }
+          customNodeBuilder_.setMessage(value);
+        }
+        nodeCase_ = 16;
+        return this;
+      }
+      /**
+       * <code>.dataflow.Node.CustomNode custom_node = 16;</code>
+       */
+      public Builder clearCustomNode() {
+        if (customNodeBuilder_ == null) {
+          if (nodeCase_ == 16) {
+            nodeCase_ = 0;
+            node_ = null;
+            onChanged();
+          }
+        } else {
+          if (nodeCase_ == 16) {
+            nodeCase_ = 0;
+            node_ = null;
+          }
+          customNodeBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>.dataflow.Node.CustomNode custom_node = 16;</code>
+       */
+      public io.activej.dataflow.proto.NodeProto.Node.CustomNode.Builder getCustomNodeBuilder() {
+        return getCustomNodeFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.dataflow.Node.CustomNode custom_node = 16;</code>
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.NodeProto.Node.CustomNodeOrBuilder getCustomNodeOrBuilder() {
+        if ((nodeCase_ == 16) && (customNodeBuilder_ != null)) {
+          return customNodeBuilder_.getMessageOrBuilder();
+        } else {
+          if (nodeCase_ == 16) {
+            return (io.activej.dataflow.proto.NodeProto.Node.CustomNode) node_;
+          }
+          return io.activej.dataflow.proto.NodeProto.Node.CustomNode.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.dataflow.Node.CustomNode custom_node = 16;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          io.activej.dataflow.proto.NodeProto.Node.CustomNode, io.activej.dataflow.proto.NodeProto.Node.CustomNode.Builder, io.activej.dataflow.proto.NodeProto.Node.CustomNodeOrBuilder> 
+          getCustomNodeFieldBuilder() {
+        if (customNodeBuilder_ == null) {
+          if (!(nodeCase_ == 16)) {
+            node_ = io.activej.dataflow.proto.NodeProto.Node.CustomNode.getDefaultInstance();
+          }
+          customNodeBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.NodeProto.Node.CustomNode, io.activej.dataflow.proto.NodeProto.Node.CustomNode.Builder, io.activej.dataflow.proto.NodeProto.Node.CustomNodeOrBuilder>(
+                  (io.activej.dataflow.proto.NodeProto.Node.CustomNode) node_,
+                  getParentForChildren(),
+                  isClean());
+          node_ = null;
+        }
+        nodeCase_ = 16;
+        onChanged();;
+        return customNodeBuilder_;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -21613,6 +22334,11 @@ public final class NodeProto {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_dataflow_Node_OffsetLimit_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_dataflow_Node_CustomNode_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_dataflow_Node_CustomNode_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -21623,7 +22349,7 @@ public final class NodeProto {
   static {
     java.lang.String[] descriptorData = {
       "\n\nnode.proto\022\010dataflow\032\017stream_id.proto\"" +
-      "\261\026\n\004Node\0225\n\016consumer_of_id\030\001 \001(\0132\033.dataf" +
+      "\212\027\n\004Node\0225\n\016consumer_of_id\030\001 \001(\0132\033.dataf" +
       "low.Node.ConsumerOfIdH\000\022+\n\010download\030\002 \001(" +
       "\0132\027.dataflow.Node.DownloadH\000\022\'\n\006filter\030\003" +
       " \001(\0132\025.dataflow.Node.FilterH\000\022#\n\004join\030\004 " +
@@ -21639,63 +22365,66 @@ public final class NodeProto {
       "ionH\000\022\'\n\006upload\030\r \001(\0132\025.dataflow.Node.Up" +
       "loadH\000\022%\n\005empty\030\016 \001(\0132\024.dataflow.Node.Em" +
       "ptyH\000\0222\n\014offset_limit\030\017 \001(\0132\032.dataflow.N" +
-      "ode.OffsetLimitH\000\032}\n\014ConsumerOfId\022\r\n\005ind" +
-      "ex\030\001 \001(\005\022\n\n\002id\030\002 \001(\t\022\027\n\017partition_index\030" +
-      "\003 \001(\005\022\026\n\016max_partitions\030\004 \001(\005\022!\n\005input\030\005" +
-      " \001(\0132\022.dataflow.StreamId\032\307\001\n\010Download\022\r\n" +
-      "\005index\030\001 \001(\005\022\014\n\004type\030\002 \001(\t\0220\n\007address\030\003 " +
-      "\001(\0132\037.dataflow.Node.Download.Address\022!\n\005" +
-      "input\030\004 \001(\0132\022.dataflow.StreamId\022\"\n\006outpu" +
-      "t\030\005 \001(\0132\022.dataflow.StreamId\032%\n\007Address\022\014" +
-      "\n\004host\030\001 \001(\t\022\014\n\004port\030\002 \001(\005\032q\n\006Filter\022\r\n\005" +
-      "index\030\001 \001(\005\022\021\n\tpredicate\030\002 \001(\014\022!\n\005input\030" +
-      "\003 \001(\0132\022.dataflow.StreamId\022\"\n\006output\030\004 \001(" +
-      "\0132\022.dataflow.StreamId\032\331\001\n\004Join\022\r\n\005index\030" +
-      "\001 \001(\005\022 \n\004left\030\002 \001(\0132\022.dataflow.StreamId\022" +
-      "!\n\005right\030\003 \001(\0132\022.dataflow.StreamId\022\"\n\006ou" +
-      "tput\030\004 \001(\0132\022.dataflow.StreamId\022\022\n\ncompar" +
-      "ator\030\005 \001(\014\022\031\n\021left_key_function\030\006 \001(\014\022\032\n" +
-      "\022right_key_function\030\007 \001(\014\022\016\n\006joiner\030\010 \001(" +
-      "\014\032m\n\003Map\022\r\n\005index\030\001 \001(\005\022\020\n\010function\030\002 \001(" +
-      "\014\022!\n\005input\030\003 \001(\0132\022.dataflow.StreamId\022\"\n\006" +
-      "output\030\004 \001(\0132\022.dataflow.StreamId\032\241\001\n\005Mer" +
-      "ge\022\r\n\005index\030\001 \001(\005\022\024\n\014key_function\030\002 \001(\014\022" +
-      "\026\n\016key_comparator\030\003 \001(\014\022\023\n\013deduplicate\030\004" +
-      " \001(\010\022\"\n\006inputs\030\005 \003(\0132\022.dataflow.StreamId" +
-      "\022\"\n\006output\030\006 \001(\0132\022.dataflow.StreamId\032\202\002\n" +
-      "\006Reduce\022\r\n\005index\030\001 \001(\005\022\026\n\016key_comparator" +
-      "\030\002 \001(\014\0221\n\006inputs\030\003 \003(\0132!.dataflow.Node.R" +
-      "educe.InputsEntry\022\"\n\006output\030\004 \001(\0132\022.data" +
-      "flow.StreamId\032.\n\005Input\022\017\n\007reducer\030\001 \001(\014\022" +
-      "\024\n\014key_function\030\002 \001(\014\032J\n\013InputsEntry\022\013\n\003" +
-      "key\030\001 \001(\003\022*\n\005value\030\002 \001(\0132\033.dataflow.Node" +
-      ".Reduce.Input:\0028\001\032\244\001\n\014ReduceSimple\022\r\n\005in" +
-      "dex\030\001 \001(\005\022\024\n\014key_function\030\002 \001(\014\022\026\n\016key_c" +
-      "omparator\030\003 \001(\014\022\017\n\007reducer\030\004 \001(\014\022\"\n\006inpu" +
-      "ts\030\005 \003(\0132\022.dataflow.StreamId\022\"\n\006output\030\006" +
-      " \001(\0132\022.dataflow.StreamId\032\203\001\n\005Shard\022\r\n\005in" +
-      "dex\030\001 \001(\005\022\024\n\014key_function\030\002 \001(\014\022!\n\005input" +
-      "\030\003 \001(\0132\022.dataflow.StreamId\022#\n\007outputs\030\004 " +
-      "\003(\0132\022.dataflow.StreamId\022\r\n\005nonce\030\005 \001(\005\032\313" +
-      "\001\n\004Sort\022\r\n\005index\030\001 \001(\005\022\014\n\004type\030\002 \001(\t\022\024\n\014" +
-      "key_function\030\003 \001(\014\022\026\n\016key_comparator\030\004 \001" +
-      "(\014\022\023\n\013deduplicate\030\005 \001(\010\022\034\n\024items_in_memo" +
-      "ry_size\030\006 \001(\005\022!\n\005input\030\007 \001(\0132\022.dataflow." +
-      "StreamId\022\"\n\006output\030\010 \001(\0132\022.dataflow.Stre" +
-      "amId\032~\n\014SupplierOfId\022\r\n\005index\030\001 \001(\005\022\n\n\002i" +
-      "d\030\002 \001(\t\022\027\n\017partition_index\030\003 \001(\005\022\026\n\016max_" +
-      "partitions\030\004 \001(\005\022\"\n\006output\030\005 \001(\0132\022.dataf" +
-      "low.StreamId\032^\n\005Union\022\r\n\005index\030\001 \001(\005\022\"\n\006" +
-      "inputs\030\002 \003(\0132\022.dataflow.StreamId\022\"\n\006outp" +
-      "ut\030\003 \001(\0132\022.dataflow.StreamId\032L\n\006Upload\022\r" +
-      "\n\005index\030\001 \001(\005\022\014\n\004type\030\002 \001(\t\022%\n\tstream_id" +
-      "\030\003 \001(\0132\022.dataflow.StreamId\032:\n\005Empty\022\r\n\005i" +
-      "ndex\030\001 \001(\005\022\"\n\006output\030\002 \001(\0132\022.dataflow.St" +
-      "reamId\032\202\001\n\013OffsetLimit\022\r\n\005index\030\001 \001(\005\022\016\n" +
-      "\006offset\030\002 \001(\003\022\r\n\005limit\030\003 \001(\003\022!\n\005input\030\004 " +
-      "\001(\0132\022.dataflow.StreamId\022\"\n\006output\030\005 \001(\0132" +
-      "\022.dataflow.StreamIdB\006\n\004nodeB(\n\031io.active" +
-      "j.dataflow.protoB\tNodeProtoP\000b\006proto3"
+      "ode.OffsetLimitH\000\0220\n\013custom_node\030\020 \001(\0132\031" +
+      ".dataflow.Node.CustomNodeH\000\032}\n\014ConsumerO" +
+      "fId\022\r\n\005index\030\001 \001(\005\022\n\n\002id\030\002 \001(\t\022\027\n\017partit" +
+      "ion_index\030\003 \001(\005\022\026\n\016max_partitions\030\004 \001(\005\022" +
+      "!\n\005input\030\005 \001(\0132\022.dataflow.StreamId\032\307\001\n\010D" +
+      "ownload\022\r\n\005index\030\001 \001(\005\022\014\n\004type\030\002 \001(\t\0220\n\007" +
+      "address\030\003 \001(\0132\037.dataflow.Node.Download.A" +
+      "ddress\022!\n\005input\030\004 \001(\0132\022.dataflow.StreamI" +
+      "d\022\"\n\006output\030\005 \001(\0132\022.dataflow.StreamId\032%\n" +
+      "\007Address\022\014\n\004host\030\001 \001(\t\022\014\n\004port\030\002 \001(\005\032q\n\006" +
+      "Filter\022\r\n\005index\030\001 \001(\005\022\021\n\tpredicate\030\002 \001(\014" +
+      "\022!\n\005input\030\003 \001(\0132\022.dataflow.StreamId\022\"\n\006o" +
+      "utput\030\004 \001(\0132\022.dataflow.StreamId\032\331\001\n\004Join" +
+      "\022\r\n\005index\030\001 \001(\005\022 \n\004left\030\002 \001(\0132\022.dataflow" +
+      ".StreamId\022!\n\005right\030\003 \001(\0132\022.dataflow.Stre" +
+      "amId\022\"\n\006output\030\004 \001(\0132\022.dataflow.StreamId" +
+      "\022\022\n\ncomparator\030\005 \001(\014\022\031\n\021left_key_functio" +
+      "n\030\006 \001(\014\022\032\n\022right_key_function\030\007 \001(\014\022\016\n\006j" +
+      "oiner\030\010 \001(\014\032m\n\003Map\022\r\n\005index\030\001 \001(\005\022\020\n\010fun" +
+      "ction\030\002 \001(\014\022!\n\005input\030\003 \001(\0132\022.dataflow.St" +
+      "reamId\022\"\n\006output\030\004 \001(\0132\022.dataflow.Stream" +
+      "Id\032\241\001\n\005Merge\022\r\n\005index\030\001 \001(\005\022\024\n\014key_funct" +
+      "ion\030\002 \001(\014\022\026\n\016key_comparator\030\003 \001(\014\022\023\n\013ded" +
+      "uplicate\030\004 \001(\010\022\"\n\006inputs\030\005 \003(\0132\022.dataflo" +
+      "w.StreamId\022\"\n\006output\030\006 \001(\0132\022.dataflow.St" +
+      "reamId\032\202\002\n\006Reduce\022\r\n\005index\030\001 \001(\005\022\026\n\016key_" +
+      "comparator\030\002 \001(\014\0221\n\006inputs\030\003 \003(\0132!.dataf" +
+      "low.Node.Reduce.InputsEntry\022\"\n\006output\030\004 " +
+      "\001(\0132\022.dataflow.StreamId\032.\n\005Input\022\017\n\007redu" +
+      "cer\030\001 \001(\014\022\024\n\014key_function\030\002 \001(\014\032J\n\013Input" +
+      "sEntry\022\013\n\003key\030\001 \001(\003\022*\n\005value\030\002 \001(\0132\033.dat" +
+      "aflow.Node.Reduce.Input:\0028\001\032\244\001\n\014ReduceSi" +
+      "mple\022\r\n\005index\030\001 \001(\005\022\024\n\014key_function\030\002 \001(" +
+      "\014\022\026\n\016key_comparator\030\003 \001(\014\022\017\n\007reducer\030\004 \001" +
+      "(\014\022\"\n\006inputs\030\005 \003(\0132\022.dataflow.StreamId\022\"" +
+      "\n\006output\030\006 \001(\0132\022.dataflow.StreamId\032\203\001\n\005S" +
+      "hard\022\r\n\005index\030\001 \001(\005\022\024\n\014key_function\030\002 \001(" +
+      "\014\022!\n\005input\030\003 \001(\0132\022.dataflow.StreamId\022#\n\007" +
+      "outputs\030\004 \003(\0132\022.dataflow.StreamId\022\r\n\005non" +
+      "ce\030\005 \001(\005\032\313\001\n\004Sort\022\r\n\005index\030\001 \001(\005\022\014\n\004type" +
+      "\030\002 \001(\t\022\024\n\014key_function\030\003 \001(\014\022\026\n\016key_comp" +
+      "arator\030\004 \001(\014\022\023\n\013deduplicate\030\005 \001(\010\022\034\n\024ite" +
+      "ms_in_memory_size\030\006 \001(\005\022!\n\005input\030\007 \001(\0132\022" +
+      ".dataflow.StreamId\022\"\n\006output\030\010 \001(\0132\022.dat" +
+      "aflow.StreamId\032~\n\014SupplierOfId\022\r\n\005index\030" +
+      "\001 \001(\005\022\n\n\002id\030\002 \001(\t\022\027\n\017partition_index\030\003 \001" +
+      "(\005\022\026\n\016max_partitions\030\004 \001(\005\022\"\n\006output\030\005 \001" +
+      "(\0132\022.dataflow.StreamId\032^\n\005Union\022\r\n\005index" +
+      "\030\001 \001(\005\022\"\n\006inputs\030\002 \003(\0132\022.dataflow.Stream" +
+      "Id\022\"\n\006output\030\003 \001(\0132\022.dataflow.StreamId\032L" +
+      "\n\006Upload\022\r\n\005index\030\001 \001(\005\022\014\n\004type\030\002 \001(\t\022%\n" +
+      "\tstream_id\030\003 \001(\0132\022.dataflow.StreamId\032:\n\005" +
+      "Empty\022\r\n\005index\030\001 \001(\005\022\"\n\006output\030\002 \001(\0132\022.d" +
+      "ataflow.StreamId\032\202\001\n\013OffsetLimit\022\r\n\005inde" +
+      "x\030\001 \001(\005\022\016\n\006offset\030\002 \001(\003\022\r\n\005limit\030\003 \001(\003\022!" +
+      "\n\005input\030\004 \001(\0132\022.dataflow.StreamId\022\"\n\006out" +
+      "put\030\005 \001(\0132\022.dataflow.StreamId\032%\n\nCustomN" +
+      "ode\022\027\n\017serialized_node\030\001 \001(\014B\006\n\004nodeB(\n\031" +
+      "io.activej.dataflow.protoB\tNodeProtoP\000b\006" +
+      "proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -21707,7 +22436,7 @@ public final class NodeProto {
     internal_static_dataflow_Node_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_Node_descriptor,
-        new java.lang.String[] { "ConsumerOfId", "Download", "Filter", "Join", "Map", "Merge", "Reduce", "ReduceSimple", "Shard", "Sort", "SupplierOfId", "Union", "Upload", "Empty", "OffsetLimit", "Node", });
+        new java.lang.String[] { "ConsumerOfId", "Download", "Filter", "Join", "Map", "Merge", "Reduce", "ReduceSimple", "Shard", "Sort", "SupplierOfId", "Union", "Upload", "Empty", "OffsetLimit", "CustomNode", "Node", });
     internal_static_dataflow_Node_ConsumerOfId_descriptor =
       internal_static_dataflow_Node_descriptor.getNestedTypes().get(0);
     internal_static_dataflow_Node_ConsumerOfId_fieldAccessorTable = new
@@ -21816,6 +22545,12 @@ public final class NodeProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_Node_OffsetLimit_descriptor,
         new java.lang.String[] { "Index", "Offset", "Limit", "Input", "Output", });
+    internal_static_dataflow_Node_CustomNode_descriptor =
+      internal_static_dataflow_Node_descriptor.getNestedTypes().get(15);
+    internal_static_dataflow_Node_CustomNode_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_dataflow_Node_CustomNode_descriptor,
+        new java.lang.String[] { "SerializedNode", });
     io.activej.dataflow.proto.StreamIdProto.getDescriptor();
   }
 

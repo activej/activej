@@ -6,12 +6,13 @@ import io.activej.dataflow.calcite.aggregation.RecordReducer;
 import io.activej.dataflow.calcite.join.RecordInnerJoiner;
 import io.activej.dataflow.calcite.join.RecordKeyFunction;
 import io.activej.dataflow.calcite.join.RecordKeyFunctionSerializer;
+import io.activej.dataflow.calcite.operand.OperandIfNull;
+import io.activej.dataflow.calcite.operand.OperandListGet;
+import io.activej.dataflow.calcite.operand.OperandMapGet;
 import io.activej.dataflow.calcite.utils.*;
 import io.activej.dataflow.inject.BinarySerializerModule;
-import io.activej.dataflow.proto.calcite.serializer.RecordProjectionFnSerializer;
-import io.activej.dataflow.proto.calcite.serializer.RecordSchemeSerializer;
-import io.activej.dataflow.proto.calcite.serializer.ReducerSerializer;
-import io.activej.dataflow.proto.calcite.serializer.WherePredicateSerializer;
+import io.activej.dataflow.proto.calcite.serializer.*;
+import io.activej.dataflow.proto.serializer.CustomNodeSerializer;
 import io.activej.dataflow.proto.serializer.FunctionSubtypeSerializer;
 import io.activej.datastream.processor.StreamJoin;
 import io.activej.datastream.processor.StreamReducers;
@@ -30,6 +31,13 @@ import java.util.function.Predicate;
 import static io.activej.dataflow.proto.serializer.ProtobufUtils.ofObject;
 
 public final class SerializersModule extends AbstractModule {
+
+	static {
+		OperandIfNull.register();
+		OperandListGet.register();
+		OperandMapGet.register();
+	}
+
 	@Override
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	protected void configure() {
@@ -121,6 +129,12 @@ public final class SerializersModule extends AbstractModule {
 		bind(SerializerBuilder.class).to(classLoader -> SerializerBuilder.create(classLoader)
 						.with(Type.class, ctx -> new SerializerDefType()),
 				DefiningClassLoader.class);
+
+		bind(CustomNodeSerializer.class).to(optionalClassLoader ->
+						optionalClassLoader.isPresent() ?
+								new CalciteNodeSerializer(optionalClassLoader.get()) :
+								new CalciteNodeSerializer(),
+				new Key<OptionalDependency<DefiningClassLoader>>() {});
 
 		bind(DefiningClassLoader.class).to(DefiningClassLoader::create);
 	}

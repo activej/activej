@@ -41,10 +41,10 @@ public final class WherePredicateSerializer implements BinarySerializer<WherePre
 			throw new CorruptedDataException(e.getMessage());
 		}
 
-		return convert(predicate);
+		return convert(predicate, classLoader);
 	}
 
-	private static WherePredicateProto.WherePredicate convert(WherePredicate predicate) {
+	public static WherePredicateProto.WherePredicate convert(WherePredicate predicate) {
 		WherePredicateProto.WherePredicate.Builder builder = WherePredicateProto.WherePredicate.newBuilder();
 
 		if (predicate instanceof AndPredicate andPredicate) {
@@ -135,16 +135,16 @@ public final class WherePredicateSerializer implements BinarySerializer<WherePre
 		return builder.build();
 	}
 
-	private WherePredicate convert(WherePredicateProto.WherePredicate predicate) {
+	public static WherePredicate convert(WherePredicateProto.WherePredicate predicate, DefiningClassLoader classLoader) {
 		return switch (predicate.getOperandCase()) {
 			case AND_PREDICATE -> new AndPredicate(
 					predicate.getAndPredicate().getPredicatesList().stream()
-							.map(this::convert)
+							.map(wherePredicate -> convert(wherePredicate, classLoader))
 							.toList()
 			);
 			case OR_PREDICATE -> new OrPredicate(
 					predicate.getOrPredicate().getPredicatesList().stream()
-							.map(this::convert)
+							.map(wherePredicate -> convert(wherePredicate, classLoader))
 							.toList()
 			);
 			case EQ_PREDICATE -> new EqPredicate(
@@ -186,8 +186,10 @@ public final class WherePredicateSerializer implements BinarySerializer<WherePre
 					OperandConverter.convert(classLoader, predicate.getLikePredicate().getValue()),
 					OperandConverter.convert(classLoader, predicate.getLikePredicate().getPattern())
 			);
-			case IS_NULL_PREDICATE -> new IsNullPredicate(OperandConverter.convert(classLoader, predicate.getIsNullPredicate().getValue()));
-			case IS_NOT_NULL_PREDICATE -> new IsNotNullPredicate(OperandConverter.convert(classLoader, predicate.getIsNotNullPredicate().getValue()));
+			case IS_NULL_PREDICATE ->
+					new IsNullPredicate(OperandConverter.convert(classLoader, predicate.getIsNullPredicate().getValue()));
+			case IS_NOT_NULL_PREDICATE ->
+					new IsNotNullPredicate(OperandConverter.convert(classLoader, predicate.getIsNotNullPredicate().getValue()));
 			case OPERAND_NOT_SET -> throw new CorruptedDataException("Predicate was not set");
 		};
 	}

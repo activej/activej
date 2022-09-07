@@ -6,7 +6,7 @@ option java_multiple_files = false;
 option java_package = "io.activej.dataflow.proto.calcite";
 option java_outer_classname = "RecordProjectionFnProto";
 
-import "operand.proto";
+import "calcite/operand.proto";
 
 message RecordProjectionFn {
   message FieldProjection {

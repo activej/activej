@@ -42,6 +42,7 @@ import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.Handsha
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.PartitionData.TaskDesc;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.TaskData;
 import io.activej.dataflow.proto.DataflowMessagingProto.Version;
+import io.activej.dataflow.proto.serializer.CustomNodeSerializer;
 import io.activej.dataflow.proto.serializer.FunctionSerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.csp.ChannelSerializer;
@@ -223,7 +224,7 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 
 	private void handleExecute(Messaging<DataflowRequest, DataflowResponse> messaging, Execute execute) throws DataflowException {
 		long taskId = execute.getTaskId();
-		Task task = new Task(taskId, environment, convert(execute.getNodesList(), functionSerializer));
+		Task task = new Task(taskId, environment, convert(execute.getNodesList(), functionSerializer, environment.getInstanceOrNull(CustomNodeSerializer.class)));
 		try {
 			task.bind();
 		} catch (Exception e) {

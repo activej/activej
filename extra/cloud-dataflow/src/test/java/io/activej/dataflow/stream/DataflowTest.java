@@ -19,6 +19,7 @@ import io.activej.dataflow.inject.SortingExecutor;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
+import io.activej.dataflow.proto.serializer.CustomNodeSerializer;
 import io.activej.dataflow.proto.serializer.FunctionSerializer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
@@ -31,6 +32,7 @@ import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.Transient;
+import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.serializer.BinarySerializer;
@@ -466,8 +468,14 @@ public final class DataflowTest {
 					}
 
 					@Provides
-					DataflowClient client(Executor executor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerModule.BinarySerializerLocator serializers, FunctionSerializer functionSerializer) {
-						return new DataflowClient(executor, secondaryPath, codec, serializers, functionSerializer);
+					DataflowClient client(Executor executor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec,
+							BinarySerializerModule.BinarySerializerLocator serializers, FunctionSerializer functionSerializer,
+							OptionalDependency<CustomNodeSerializer> optionalCustomNodeSerializer) {
+						DataflowClient dataflowClient = DataflowClient.create(executor, secondaryPath, codec, serializers, functionSerializer);
+						if (optionalCustomNodeSerializer.isPresent()) {
+							return dataflowClient.withCustomNodeSerializer(optionalCustomNodeSerializer.get());
+						}
+						return dataflowClient;
 					}
 
 					@Provides

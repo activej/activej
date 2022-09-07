@@ -6,7 +6,7 @@ option java_multiple_files = false;
 option java_package = "io.activej.dataflow.proto.calcite";
 option java_outer_classname = "RecordSchemeProto";
 
-import "java_type.proto";
+import "calcite/java_type.proto";
 
 message RecordScheme {
   // Cannot use `map` here, as map only supports integral or string keys

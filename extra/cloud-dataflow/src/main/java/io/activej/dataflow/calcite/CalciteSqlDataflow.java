@@ -5,6 +5,7 @@ import io.activej.dataflow.DataflowException;
 import io.activej.dataflow.RelToDatasetConverter;
 import io.activej.dataflow.RelToDatasetConverter.ConversionResult;
 import io.activej.dataflow.SqlDataflow;
+import io.activej.dataflow.calcite.optimizer.ParameterizedTableRule;
 import io.activej.dataflow.collector.Collector;
 import io.activej.dataflow.collector.MergeCollector;
 import io.activej.dataflow.collector.UnionCollector;
@@ -18,10 +19,13 @@ import io.activej.record.Record;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
+import org.apache.calcite.rel.metadata.DefaultRelMetadataProvider;
 import org.apache.calcite.rel.metadata.JaninoRelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMetadataQueryBase;
+import org.apache.calcite.rel.rules.CoreRules;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlNode;
@@ -123,7 +127,10 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 	}
 
 	private RelNode optimize(RelRoot root) {
-		Program program = Programs.standard();
+		HepProgramBuilder builder = new HepProgramBuilder();
+		builder.addRuleCollection(List.of(CoreRules.FILTER_INTO_JOIN, ParameterizedTableRule.create()));
+		Program prog = Programs.of(builder.build(), true, DefaultRelMetadataProvider.INSTANCE);
+		Program program = Programs.sequence(prog);
 		return program.run(planner, root.project(), traits, Collections.emptyList(), Collections.emptyList());
 	}
 

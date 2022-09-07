@@ -29,6 +29,7 @@ import io.activej.dataflow.node.Node;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.Handshake.NotOk;
+import io.activej.dataflow.proto.serializer.CustomNodeSerializer;
 import io.activej.dataflow.proto.serializer.FunctionSerializer;
 import io.activej.datastream.AbstractStreamConsumer;
 import io.activej.datastream.AbstractStreamSupplier;
@@ -40,6 +41,7 @@ import io.activej.eventloop.net.SocketSettings;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.net.InetSocketAddress;
@@ -71,8 +73,9 @@ public final class DataflowClient {
 	private final AtomicInteger secondaryId = new AtomicInteger(ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE));
 
 	private int bufferMinSize, bufferMaxSize;
+	private @Nullable CustomNodeSerializer customNodeSerializer;
 
-	public DataflowClient(Executor executor, Path secondaryPath, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator serializers, FunctionSerializer functionSerializer) {
+	private DataflowClient(Executor executor, Path secondaryPath, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator serializers, FunctionSerializer functionSerializer) {
 		this.executor = executor;
 		this.secondaryPath = secondaryPath;
 		this.codec = codec;
@@ -80,9 +83,18 @@ public final class DataflowClient {
 		this.functionSerializer = functionSerializer;
 	}
 
+	public static DataflowClient create(Executor executor, Path secondaryPath, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator serializers, FunctionSerializer functionSerializer) {
+		return new DataflowClient(executor, secondaryPath, codec, serializers, functionSerializer);
+	}
+
 	public DataflowClient withBufferSizes(int bufferMinSize, int bufferMaxSize) {
 		this.bufferMinSize = bufferMinSize;
 		this.bufferMaxSize = bufferMaxSize;
+		return this;
+	}
+
+	public DataflowClient withCustomNodeSerializer(CustomNodeSerializer customNodeSerializer) {
+		this.customNodeSerializer = customNodeSerializer;
 		return this;
 	}
 
@@ -233,7 +245,7 @@ public final class DataflowClient {
 		return DataflowRequest.newBuilder()
 				.setExecute(DataflowRequest.Execute.newBuilder()
 						.setTaskId(taskId)
-						.addAllNodes(convert(nodes, functionSerializer)))
+						.addAllNodes(convert(nodes, functionSerializer, customNodeSerializer)))
 				.build();
 	}
 

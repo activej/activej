@@ -6,7 +6,7 @@ option java_multiple_files = false;
 option java_package = "io.activej.dataflow.proto.calcite";
 option java_outer_classname = "ReducerProto";
 
-import "record_scheme.proto";
+import "calcite/record_scheme.proto";
 
 message RecordReducer {
 

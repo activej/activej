@@ -8,11 +8,11 @@ option java_outer_classname = "OperandProto";
 
 message Operand {
   message RecordField {
-    int32 index = 1;
+    int32 index = 1; // string
   }
 
   message Scalar {
-    message None{
+    message None {
 
     }
 
@@ -27,33 +27,21 @@ message Operand {
     }
   }
 
-  message MapGet {
-    Operand map_operand = 1;
-    Operand key_operand = 2;
-  }
-
-  message ListGet {
-    Operand list_operand = 1;
-    Operand index_operand = 2;
-  }
-
   message FieldGet {
     Operand object_operand = 1;
     string field_name = 2;
   }
 
-  message IfNull {
-    Operand checked_operand = 1;
-    Operand default_value_operand = 2;
+  message Function {
+    string function_name = 1;
+    repeated Operand operands = 2;
   }
 
   oneof operand {
     RecordField record_field = 1;
     Scalar scalar = 2;
-    MapGet map_get = 3;
-    ListGet list_get = 4;
-    FieldGet field_get = 5;
-    IfNull if_null = 6;
+    FieldGet field_get = 3;
+    Function function = 4;
   }
 }
 

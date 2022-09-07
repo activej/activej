@@ -9,6 +9,7 @@ import io.activej.dataflow.calcite.DataflowSchema;
 import io.activej.dataflow.calcite.DataflowSqlValidator;
 import io.activej.dataflow.graph.Partition;
 import io.activej.inject.annotation.Provides;
+import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import org.apache.calcite.avatica.util.Quoting;
 import org.apache.calcite.config.CalciteConnectionConfig;
@@ -21,6 +22,7 @@ import org.apache.calcite.plan.ViewExpanders;
 import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.prepare.CalciteCatalogReader;
+import org.apache.calcite.rel.hint.HintStrategyTable;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.sql.SqlOperator;
@@ -102,8 +104,26 @@ public final class CalciteClientModule extends AbstractModule {
 	}
 
 	@Provides
-	SqlToRelConverter sqlToRelConverter(RelOptCluster cluster, SqlValidator validator, CalciteCatalogReader catalogReader) {
-		return new SqlToRelConverter(ViewExpanders.simpleContext(cluster), validator, catalogReader, cluster, StandardConvertletTable.INSTANCE, SqlToRelConverter.CONFIG);
+	HintStrategyTable hintStrategyTable() {
+		return HintStrategyTable.builder()
+				.hintStrategy("date_ranges", (hint, rel) -> {
+					System.out.println();
+					return true;
+				})
+				.build();
+	}
+
+	@Provides
+	SqlToRelConverter.Config sqlToRelConverterConfig(OptionalDependency<HintStrategyTable> optionalHintStrategyTable) {
+		SqlToRelConverter.Config config = SqlToRelConverter.CONFIG;
+		return optionalHintStrategyTable.isPresent() ?
+				config.withHintStrategyTable(optionalHintStrategyTable.get()) :
+				config;
+	}
+
+	@Provides
+	SqlToRelConverter sqlToRelConverter(RelOptCluster cluster, SqlValidator validator, CalciteCatalogReader catalogReader, SqlToRelConverter.Config sqlToRelConverterConfig) {
+		return new SqlToRelConverter(ViewExpanders.simpleContext(cluster), validator, catalogReader, cluster, StandardConvertletTable.INSTANCE, sqlToRelConverterConfig);
 	}
 
 	@Provides
@@ -114,7 +134,7 @@ public final class CalciteClientModule extends AbstractModule {
 	}
 
 	@Provides
-	RelToDatasetConverter relToDatasetConverter(DefiningClassLoader classLoader){
+	RelToDatasetConverter relToDatasetConverter(DefiningClassLoader classLoader) {
 		return RelToDatasetConverter.create(classLoader);
 	}
 

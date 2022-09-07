@@ -6,6 +6,8 @@ import io.activej.dataflow.calcite.operand.*;
 import io.activej.dataflow.proto.calcite.OperandProto;
 import io.activej.serializer.CorruptedDataException;
 
+import static java.util.stream.Collectors.toList;
+
 final class OperandConverter {
 
 	private OperandConverter() {
@@ -42,29 +44,19 @@ final class OperandConverter {
 			}
 
 			builder.setScalar(scalarBuilder);
-		} else if (operand instanceof OperandMapGet<?> operandMapGet) {
-			builder.setMapGet(
-					OperandProto.Operand.MapGet.newBuilder()
-							.setMapOperand(convert(operandMapGet.getMapOperand()))
-							.setKeyOperand(convert(operandMapGet.getKeyOperand()))
-			);
-		} else if (operand instanceof OperandListGet operandListGet) {
-			builder.setListGet(
-					OperandProto.Operand.ListGet.newBuilder()
-							.setListOperand(convert(operandListGet.getListOperand()))
-							.setIndexOperand(convert(operandListGet.getIndexOperand()))
-			);
 		} else if (operand instanceof OperandFieldAccess operandFieldAccess) {
 			builder.setFieldGet(
 					OperandProto.Operand.FieldGet.newBuilder()
 							.setObjectOperand(convert(operandFieldAccess.getObjectOperand()))
 							.setFieldName(operandFieldAccess.getFieldName())
 			);
-		} else if (operand instanceof OperandIfNull operandIfNull) {
-			builder.setIfNull(
-					OperandProto.Operand.IfNull.newBuilder()
-							.setCheckedOperand(convert(operandIfNull.getCheckedOperand()))
-							.setDefaultValueOperand(convert(operandIfNull.getDefaultValueOperand()))
+		} else if (operand instanceof OperandFunction<?> operandFunction) {
+			builder.setFunction(
+					OperandProto.Operand.Function.newBuilder()
+							.setFunctionName(operandFunction.getClass().getName())
+							.addAllOperands(operandFunction.getOperands().stream()
+									.map(OperandConverter::convert)
+									.toList())
 			);
 		} else {
 			throw new IllegalArgumentException("Unknown operand type: " + operand.getClass());
@@ -75,8 +67,7 @@ final class OperandConverter {
 
 	static Operand<?> convert(DefiningClassLoader classLoader, OperandProto.Operand operand) {
 		return switch (operand.getOperandCase()) {
-			case RECORD_FIELD ->
-					new OperandRecordField(operand.getRecordField().getIndex());
+			case RECORD_FIELD -> new OperandRecordField(operand.getRecordField().getIndex());
 			case SCALAR -> new OperandScalar(
 					switch (operand.getScalar().getValueCase()) {
 						case NULL -> null;
@@ -89,23 +80,24 @@ final class OperandConverter {
 						case VALUE_NOT_SET -> throw new CorruptedDataException("Scalar value not set");
 					}
 			);
-			case MAP_GET -> new OperandMapGet<>(
-					convert(classLoader, operand.getMapGet().getMapOperand()),
-					convert(classLoader, operand.getMapGet().getKeyOperand())
-			);
-			case LIST_GET -> new OperandListGet(
-					convert(classLoader, operand.getListGet().getListOperand()),
-					convert(classLoader, operand.getListGet().getIndexOperand())
-			);
 			case FIELD_GET -> new OperandFieldAccess(
 					convert(classLoader, operand.getFieldGet().getObjectOperand()),
 					operand.getFieldGet().getFieldName(),
 					classLoader
 			);
-			case IF_NULL -> new OperandIfNull(
-					convert(classLoader, operand.getIfNull().getCheckedOperand()),
-					convert(classLoader, operand.getIfNull().getDefaultValueOperand())
-			);
+			case FUNCTION -> {
+				OperandProto.Operand.Function function = operand.getFunction();
+				String functionName = function.getFunctionName();
+				OperandFunctionRegistry.OperandFunctionFactory<?> factory = OperandFunctionRegistry.getFactory(functionName);
+				if (factory == null) {
+					throw new CorruptedDataException("Unknown function: " + functionName);
+				}
+				yield factory.create(
+						function.getOperandsList().stream()
+								.map(functionOperand -> convert(classLoader, functionOperand))
+								.collect(toList())
+				);
+			}
 			case OPERAND_NOT_SET -> throw new CorruptedDataException("Operand not set");
 		};
 	}

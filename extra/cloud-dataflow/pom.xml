@@ -126,6 +126,9 @@
               <inputDirectories>
                 <include>src/main/proto</include>
               </inputDirectories>
+              <includeDirectories>
+                <include>src/main/proto</include>
+              </includeDirectories>
               <outputTargets>
                 <outputTarget>
                   <type>java</type>

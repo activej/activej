@@ -16,6 +16,7 @@
 
 package io.activej.dataflow.proto.serializer;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.Parser;
@@ -58,6 +59,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static io.activej.common.Checks.checkNotNull;
 import static java.util.stream.Collectors.toList;
 
 public final class ProtobufUtils {
@@ -99,13 +101,13 @@ public final class ProtobufUtils {
 		return new StreamId(streamId.getId());
 	}
 
-	public static List<NodeProto.Node> convert(Collection<Node> nodes, FunctionSerializer functionSerializer) {
+	public static List<NodeProto.Node> convert(Collection<Node> nodes, FunctionSerializer functionSerializer, @Nullable CustomNodeSerializer customNodeSerializer) {
 		return nodes.stream()
-				.map(node -> convert(node, functionSerializer))
+				.map(node -> convert(node, functionSerializer, customNodeSerializer))
 				.collect(toList());
 	}
 
-	public static NodeProto.Node convert(Node node, FunctionSerializer functionSerializer) {
+	public static NodeProto.Node convert(Node node, FunctionSerializer functionSerializer, @Nullable CustomNodeSerializer customNodeSerializer) {
 		NodeProto.Node.Builder builder = NodeProto.Node.newBuilder();
 		if (node instanceof NodeReduce<?, ?, ?> reduce) {
 			builder.setReduce(Reduce.newBuilder()
@@ -217,7 +219,11 @@ public final class ProtobufUtils {
 					.setInput(convert(offsetLimit.getInput()))
 					.setOutput(convert(offsetLimit.getOutput())));
 		} else {
-			throw new AssertionError();
+			checkNotNull(customNodeSerializer, "Custom node serializer is not specified");
+
+			ByteString encoded = encode(customNodeSerializer, node);
+			builder.setCustomNode(CustomNode.newBuilder()
+					.setSerializedNode(encoded));
 		}
 		return builder.build();
 	}
@@ -234,16 +240,16 @@ public final class ProtobufUtils {
 				.collect(toList());
 	}
 
-	public static List<Node> convert(List<NodeProto.Node> nodes, FunctionSerializer functionSerializer) throws DataflowException {
+	public static List<Node> convert(List<NodeProto.Node> nodes, FunctionSerializer functionSerializer, @Nullable CustomNodeSerializer customNodeSerializer) throws DataflowException {
 		List<Node> list = new ArrayList<>();
 		for (NodeProto.Node node : nodes) {
-			list.add(convert(node, functionSerializer));
+			list.add(convert(node, functionSerializer, customNodeSerializer));
 		}
 		return list;
 	}
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
-	public static Node convert(NodeProto.Node node, FunctionSerializer functionSerializer) throws DataflowException {
+	public static Node convert(NodeProto.Node node, FunctionSerializer functionSerializer, @Nullable CustomNodeSerializer customNodeSerializer) throws DataflowException {
 		try {
 			return switch (node.getNodeCase()) {
 				case CONSUMER_OF_ID -> {
@@ -318,6 +324,11 @@ public final class ProtobufUtils {
 				case OFFSET_LIMIT -> {
 					OffsetLimit offsetLimit = node.getOffsetLimit();
 					yield new NodeOffsetLimit<>(offsetLimit.getIndex(), offsetLimit.getOffset(), offsetLimit.getLimit(), convert(offsetLimit.getInput()), convert(offsetLimit.getOutput()));
+				}
+				case CUSTOM_NODE -> {
+					checkNotNull(customNodeSerializer, "Custom node serializer is not specified");
+					CustomNode customNode = node.getCustomNode();
+					yield decode(customNodeSerializer, customNode.getSerializedNode());
 				}
 				case NODE_NOT_SET -> throw new DataflowException("Node was not set");
 			};
@@ -418,6 +429,24 @@ public final class ProtobufUtils {
 				return constructor.create();
 			}
 		};
+	}
+
+	private static ByteString encode(BinarySerializer<Node> serializer, Node node) {
+		int bufferSize = 128;
+
+		while (true) {
+			try {
+				byte[] buffer = new byte[bufferSize];
+				int encoded = serializer.encode(buffer, 0, node);
+				return ByteString.copyFrom(buffer, 0, encoded);
+			} catch (ArrayIndexOutOfBoundsException e) {
+				bufferSize *= 2;
+			}
+		}
+	}
+
+	private static Node decode(BinarySerializer<Node> serializer, ByteString byteString) {
+		return serializer.decode(byteString.toByteArray(), 0);
 	}
 
 	private static final Map<String, Class<?>> TYPE_CACHE = new ConcurrentHashMap<>();

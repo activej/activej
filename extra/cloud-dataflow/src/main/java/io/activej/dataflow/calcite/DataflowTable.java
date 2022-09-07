@@ -18,10 +18,14 @@ package io.activej.dataflow.calcite;
 
 import io.activej.codegen.util.Primitives;
 import io.activej.common.exception.ToDoException;
+import io.activej.dataflow.calcite.rel.FilterableTableScan;
 import io.activej.serializer.BinarySerializer;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
+import org.apache.calcite.plan.RelOptTable;
+import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.schema.TranslatableTable;
 import org.apache.calcite.schema.impl.AbstractTable;
 
 import java.lang.reflect.*;
@@ -29,7 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class DataflowTable<T> extends AbstractTable {
+public final class DataflowTable<T> extends AbstractTable implements TranslatableTable {
 	private final Class<T> type;
 	private final RecordFunction<T> recordFunction;
 	private final BinarySerializer<RecordFunction<T>> recordFunctionSerializer;
@@ -123,5 +127,10 @@ public class DataflowTable<T> extends AbstractTable {
 		}
 
 		throw new ToDoException();
+	}
+
+	@Override
+	public RelNode toRel(RelOptTable.ToRelContext context, RelOptTable relOptTable) {
+		return FilterableTableScan.create(context.getCluster(), relOptTable, context.getTableHints());
 	}
 }

@@ -49,7 +49,7 @@ public final class Utils {
 								.map(operand -> toOperand(operand, classLoader))
 								.collect(Collectors.toList());
 
-						return projectionFunction.toOperand(operands);
+						return projectionFunction.toOperandFunction(operands);
 					}
 				}
 			}

@@ -26,6 +26,7 @@ import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator
 import io.activej.dataflow.inject.DataflowModule;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
+import io.activej.dataflow.proto.serializer.CustomNodeSerializer;
 import io.activej.dataflow.proto.serializer.FunctionSerializer;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;
@@ -63,8 +64,13 @@ public abstract class DataflowClientLauncher extends Launcher {
 	}
 
 	@Provides
-	DataflowClient client(Executor executor, Config config, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator serializers, FunctionSerializer functionSerializer) {
-		return new DataflowClient(executor, config.get(ofPath(), "dataflow.secondaryBufferPath"), codec, serializers, functionSerializer);
+	DataflowClient client(Executor executor, Config config, ByteBufsCodec<DataflowResponse, DataflowRequest> codec,
+			BinarySerializerLocator serializers, FunctionSerializer functionSerializer, OptionalDependency<CustomNodeSerializer> optionalCustomNodeSerializer) {
+		DataflowClient dataflowClient = DataflowClient.create(executor, config.get(ofPath(), "dataflow.secondaryBufferPath"), codec, serializers, functionSerializer);
+		if (optionalCustomNodeSerializer.isPresent()) {
+			return dataflowClient.withCustomNodeSerializer(optionalCustomNodeSerializer.get());
+		}
+		return dataflowClient;
 	}
 
 	@Provides

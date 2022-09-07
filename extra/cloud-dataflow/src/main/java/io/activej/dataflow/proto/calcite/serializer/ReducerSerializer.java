@@ -148,7 +148,7 @@ public final class ReducerSerializer implements BinarySerializer<RecordReducer> 
 				ReducerProto.RecordReducer.FieldAlias fieldAlias = maxReducer.getFieldAlias();
 				yield new MaxReducer<>(maxReducer.getFieldIndex(), fieldAlias.hasIsNull() ? null : fieldAlias.getAlias());
 			}
-			case FIELDREDUCER_NOT_SET -> throw new CorruptedDataException("Field predicate was not set");
+			case FIELDREDUCER_NOT_SET -> throw new CorruptedDataException("Field reducer was not set");
 		};
 	}
 

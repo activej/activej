@@ -30,6 +30,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.List;
@@ -50,6 +51,8 @@ public final class BinarySerializerModule extends AbstractModule {
 		Map<Type, Key<BinarySerializer<?>>> transientSerializers = new HashMap<>();
 
 		transform(new KeyPattern<BinarySerializer<?>>() {}, (bindings, scope, key, binding) -> {
+			if (!(key.getType() instanceof ParameterizedType)) return binding;
+
 			Class<?> rawType = key.getTypeParameter(0).getRawType();
 
 			if (binding.getType() == BindingType.TRANSIENT) {
