@@ -1,10 +1,10 @@
 package io.activej.dataflow.calcite;
 
-import io.activej.codegen.DefiningClassLoader;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowException;
+import io.activej.dataflow.RelToDatasetConverter;
+import io.activej.dataflow.RelToDatasetConverter.ConversionResult;
 import io.activej.dataflow.SqlDataflow;
-import io.activej.dataflow.calcite.DataflowShuttle.UnmaterializedDataset;
 import io.activej.dataflow.collector.Collector;
 import io.activej.dataflow.collector.MergeCollector;
 import io.activej.dataflow.collector.UnionCollector;
@@ -23,8 +23,6 @@ import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.metadata.JaninoRelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMetadataQueryBase;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rex.RexDynamicParam;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
@@ -47,24 +45,24 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 	private final SqlToRelConverter converter;
 	private final SqlValidator validator;
 	private final RelOptPlanner planner;
-	private final DefiningClassLoader classLoader;
+	private final RelToDatasetConverter relToDatasetConverter;
 
 	private RelTraitSet traits = RelTraitSet.createEmpty();
 
 	private CalciteSqlDataflow(DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
-			SqlToRelConverter converter, RelOptPlanner planner, DefiningClassLoader classLoader) {
+			SqlToRelConverter converter, RelOptPlanner planner, RelToDatasetConverter relToDatasetConverter) {
 		this.client = client;
 		this.partitions = partitions;
 		this.parserConfig = parserConfig;
 		this.converter = converter;
 		this.validator = checkNotNull(converter.validator);
 		this.planner = planner;
-		this.classLoader = classLoader;
+		this.relToDatasetConverter = relToDatasetConverter;
 	}
 
 	public static CalciteSqlDataflow create(DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
-			SqlToRelConverter converter, RelOptPlanner planner, DefiningClassLoader classLoader) {
-		return new CalciteSqlDataflow(client, partitions, parserConfig, converter, planner, classLoader);
+			SqlToRelConverter converter, RelOptPlanner planner, RelToDatasetConverter relToDatasetConverter) {
+		return new CalciteSqlDataflow(client, partitions, parserConfig, converter, planner, relToDatasetConverter);
 	}
 
 	public CalciteSqlDataflow withTraits(RelTraitSet traits) {
@@ -81,9 +79,9 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 			return Promise.ofException(e);
 		}
 
-		TransformationResult transformed = transform(node);
+		ConversionResult transformed = convert(node);
 
-		return queryDataflow(transformed.dataset().materialize(Collections.emptyList()));
+		return queryDataflow(transformed.unmaterializedDataset().materialize(Collections.emptyList()));
 	}
 
 	public RelNode convertToNode(String sql) throws SqlParseException, DataflowException {
@@ -101,11 +99,8 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 		return optimize(root);
 	}
 
-	public TransformationResult transform(RelNode node) {
-		DataflowShuttle shuttle = new DataflowShuttle(classLoader);
-		node.accept(shuttle);
-
-		return new TransformationResult(node.getRowType().getFieldList(), shuttle.getParameters(), shuttle.getUnmaterializedDataset());
+	public ConversionResult convert(RelNode node) {
+		return relToDatasetConverter.convert(node);
 	}
 
 	public Promise<StreamSupplier<Record>> queryDataflow(Dataset<Record> dataset) {
@@ -130,10 +125,6 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 	private RelNode optimize(RelRoot root) {
 		Program program = Programs.standard();
 		return program.run(planner, root.project(), traits, Collections.emptyList(), Collections.emptyList());
-	}
-
-	public record TransformationResult(List<RelDataTypeField> fields, List<RexDynamicParam> parameters,
-									   UnmaterializedDataset dataset) {
 	}
 
 	public CalciteSchema getSchema() {

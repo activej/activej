@@ -1,9 +1,9 @@
 package io.activej.dataflow.calcite.jdbc;
 
 import io.activej.dataflow.DataflowException;
+import io.activej.dataflow.RelToDatasetConverter.ConversionResult;
+import io.activej.dataflow.RelToDatasetConverter.UnmaterializedDataset;
 import io.activej.dataflow.calcite.CalciteSqlDataflow;
-import io.activej.dataflow.calcite.CalciteSqlDataflow.TransformationResult;
-import io.activej.dataflow.calcite.DataflowShuttle.UnmaterializedDataset;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.eventloop.Eventloop;
 import io.activej.record.Record;
@@ -83,9 +83,10 @@ public final class DataflowMeta extends LimitedMeta {
 	public StatementHandle prepare(ConnectionHandle ch, String sql, long maxRowCount) {
 		StatementHandle statement = createStatement(ch);
 		TransformationResult transformed = transform(sql);
-		statement.signature = createSignature(sql, transformed.fields(), transformed.parameters(), transformed.dataset().getScheme());
+		ConversionResult conversionResult = transformed.conversionResult();
+		statement.signature = createSignature(sql, transformed.fields(), conversionResult.dynamicParams(), conversionResult.unmaterializedDataset().getScheme());
 
-		unmaterializedDatasets.put(StatementKey.create(statement), transformed.dataset());
+		unmaterializedDatasets.put(StatementKey.create(statement), conversionResult.unmaterializedDataset());
 		return statement;
 	}
 
@@ -115,7 +116,8 @@ public final class DataflowMeta extends LimitedMeta {
 	@Override
 	public ExecuteResult prepareAndExecute(StatementHandle h, String sql, long maxRowCount, int maxRowsInFirstFrame, PrepareCallback callback) {
 		TransformationResult transformed = transform(sql);
-		UnmaterializedDataset unmaterialized = transformed.dataset();
+		ConversionResult conversionResult = transformed.conversionResult();
+		UnmaterializedDataset unmaterialized = conversionResult.unmaterializedDataset();
 		h.signature = createSignature(sql, transformed.fields(), Collections.emptyList(), unmaterialized.getScheme());
 
 		Dataset<Record> dataset = unmaterialized.materialize(Collections.emptyList());
@@ -196,7 +198,7 @@ public final class DataflowMeta extends LimitedMeta {
 			throw new RuntimeException(e);
 		}
 
-		return sqlDataflow.transform(node);
+		return new TransformationResult(node.getRowType().getFieldList(), sqlDataflow.convert(node));
 	}
 
 	@Override
@@ -485,5 +487,9 @@ public final class DataflowMeta extends LimitedMeta {
 		static StatementKey create(StatementHandle h) {
 			return new StatementKey(h.connectionId, h.id);
 		}
+	}
+
+	private record TransformationResult(List<RelDataTypeField> fields, ConversionResult conversionResult) {
+
 	}
 }
