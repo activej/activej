@@ -18,6 +18,7 @@ package io.activej.dataflow.calcite;
 
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.schema.impl.AbstractSchema;
+import org.apache.calcite.util.NameSet;
 
 import java.util.Collections;
 import java.util.Map;
@@ -26,24 +27,30 @@ import java.util.TreeMap;
 import static io.activej.common.Checks.checkArgument;
 
 public final class DataflowSchema extends AbstractSchema {
-	private final Map<String, DataflowTable<?>> tableMap;
+	private final Map<String, DataflowTable<?>> tableMap = new TreeMap<>(NameSet.COMPARATOR);
 
-	private DataflowSchema(Map<String, DataflowTable<?>> tableMap) {
+	private DataflowSchema() {
 		super();
-		this.tableMap = tableMap;
 	}
 
-	public static DataflowSchema create(Map<String, DataflowTable<?>> tableMap) {
-		Map<String, DataflowTable<?>> map = new TreeMap<>();
+	public static DataflowSchema create() {
+		return new DataflowSchema();
+	}
 
+	public DataflowSchema withTable(String tableName, DataflowTable<?> table) {
+		DataflowTable<?> prev = tableMap.put(tableName, table);
+		checkArgument(prev == null, "Duplicate table names: " + tableName);
+		return this;
+	}
+
+	public DataflowSchema withTables(Map<String, DataflowTable<?>> tables) {
 		for (Map.Entry<String, DataflowTable<?>> entry : tableMap.entrySet()) {
 			String tableName = entry.getKey();
-			DataflowTable<?> prev = map.put(tableName, entry.getValue());
+			DataflowTable<?> prev = tableMap.put(tableName, entry.getValue());
 
 			checkArgument(prev == null, "Duplicate table names: " + tableName);
 		}
-
-		return new DataflowSchema(map);
+		return this;
 	}
 
 	@Override

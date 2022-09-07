@@ -150,13 +150,13 @@ public abstract class AbstractCalciteTest {
 							LargeToRecord largeToRecord = LargeToRecord.create(classLoader);
 							SubjectSelectionToRecord subjectSelectionToRecord = SubjectSelectionToRecord.create(classLoader);
 
-							return DataflowSchema.create(
-									Map.of(STUDENT_TABLE_NAME, DataflowTable.create(Student.class, studentToRecord, ofObject(() -> studentToRecord)),
-											DEPARTMENT_TABLE_NAME, DataflowTable.create(Department.class, departmentToRecord, ofObject(() -> departmentToRecord)),
-											REGISTRY_TABLE_NAME, DataflowTable.create(Registry.class, recordToFunction, ofObject(() -> recordToFunction)),
-											USER_PROFILES_TABLE_NAME, DataflowTable.create(UserProfile.class, userProfileToRecord, ofObject(() -> userProfileToRecord)),
-											LARGE_TABLE_NAME, DataflowTable.create(Large.class, largeToRecord, ofObject(() -> largeToRecord)),
-											SUBJECT_SELECTION_TABLE_NAME, DataflowTable.create(SubjectSelection.class, subjectSelectionToRecord, ofObject(() -> subjectSelectionToRecord))));
+							return DataflowSchema.create()
+									.withTable(STUDENT_TABLE_NAME, DataflowTable.create(Student.class, studentToRecord, ofObject(() -> studentToRecord)))
+									.withTable(DEPARTMENT_TABLE_NAME, DataflowTable.create(Department.class, departmentToRecord, ofObject(() -> departmentToRecord)))
+									.withTable(REGISTRY_TABLE_NAME, DataflowTable.create(Registry.class, recordToFunction, ofObject(() -> recordToFunction)))
+									.withTable(USER_PROFILES_TABLE_NAME, DataflowTable.create(UserProfile.class, userProfileToRecord, ofObject(() -> userProfileToRecord)))
+									.withTable(LARGE_TABLE_NAME, DataflowTable.create(Large.class, largeToRecord, ofObject(() -> largeToRecord)))
+									.withTable(SUBJECT_SELECTION_TABLE_NAME, DataflowTable.create(SubjectSelection.class, subjectSelectionToRecord, ofObject(() -> subjectSelectionToRecord)));
 						},
 						DefiningClassLoader.class)
 				.build();
@@ -231,7 +231,7 @@ public abstract class AbstractCalciteTest {
 	}
 
 	public record UserProfile(String id, UserProfilePojo pojo, Map<Integer, UserProfileIntent> intents,
-							  long timestamp) {
+	                          long timestamp) {
 	}
 
 	@SerializeRecord
