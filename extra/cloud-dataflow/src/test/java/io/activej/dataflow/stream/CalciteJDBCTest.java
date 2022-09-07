@@ -12,6 +12,8 @@ import io.activej.test.TestUtils;
 import org.apache.calcite.avatica.remote.LocalService;
 import org.apache.calcite.avatica.server.AvaticaJsonHandler;
 import org.apache.calcite.avatica.server.HttpServer;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -149,5 +151,12 @@ public class CalciteJDBCTest extends AbstractCalciteTest {
 		if (columnNames.isEmpty()) return QueryResult.empty();
 
 		return new QueryResult(columnNames, columnValues);
+	}
+
+	@Test
+	@Ignore("Never stops, for debug purposes only")
+	public void startServer() throws InterruptedException {
+		System.out.println("Server port: " + port);
+		Thread.currentThread().join();
 	}
 }

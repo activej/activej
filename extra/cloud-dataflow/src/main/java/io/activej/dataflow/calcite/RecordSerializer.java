@@ -1,6 +1,5 @@
 package io.activej.dataflow.calcite;
 
-import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.Checks;
 import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator;
 import io.activej.record.Record;
@@ -16,7 +15,6 @@ import static io.activej.common.Checks.checkState;
 public final class RecordSerializer implements BinarySerializer<Record> {
 	private static final boolean CHECK = Checks.isEnabled(RecordSerializer.class);
 
-	private final DefiningClassLoader classLoader;
 	private final BinarySerializerLocator locator;
 	private final BinarySerializer<Integer> intSerializer;
 
@@ -25,14 +23,13 @@ public final class RecordSerializer implements BinarySerializer<Record> {
 
 	private BinarySerializer<Object> @Nullable [] fieldSerializers;
 
-	private RecordSerializer(DefiningClassLoader classLoader, BinarySerializerLocator locator, BinarySerializer<Integer> intSerializer) {
-		this.classLoader = classLoader;
+	private RecordSerializer(BinarySerializerLocator locator, BinarySerializer<Integer> intSerializer) {
 		this.locator = locator;
 		this.intSerializer = intSerializer;
 	}
 
-	public static RecordSerializer create(DefiningClassLoader classLoader, BinarySerializerLocator locator) {
-		return new RecordSerializer(classLoader, locator, locator.get(int.class));
+	public static RecordSerializer create(BinarySerializerLocator locator) {
+		return new RecordSerializer(locator, locator.get(int.class));
 	}
 
 	@Override
@@ -46,8 +43,7 @@ public final class RecordSerializer implements BinarySerializer<Record> {
 			}
 
 			ensureFieldSerializers(encodeRecordScheme);
-			SerializableRecordScheme serializableRecordScheme = SerializableRecordScheme.fromRecordScheme(encodeRecordScheme);
-			locator.get(SerializableRecordScheme.class).encode(out, serializableRecordScheme);
+			locator.get(RecordScheme.class).encode(out, encodeRecordScheme);
 		}
 
 		Object[] array = item.toArray();
@@ -62,8 +58,7 @@ public final class RecordSerializer implements BinarySerializer<Record> {
 	@Override
 	public Record decode(BinaryInput in) throws CorruptedDataException {
 		if (decodeRecordScheme == null) {
-			SerializableRecordScheme serializableRecordScheme = locator.get(SerializableRecordScheme.class).decode(in);
-			decodeRecordScheme = serializableRecordScheme.toRecordScheme(classLoader);
+			decodeRecordScheme = locator.get(RecordScheme.class).decode(in);
 			assert decodeRecordScheme != null;
 
 			if (CHECK && encodeRecordScheme != null) {

@@ -9,6 +9,7 @@ import io.activej.dataflow.calcite.join.RecordKeyFunctionSerializer;
 import io.activej.dataflow.calcite.utils.*;
 import io.activej.dataflow.inject.BinarySerializerModule;
 import io.activej.dataflow.proto.calcite.serializer.RecordProjectionFnSerializer;
+import io.activej.dataflow.proto.calcite.serializer.RecordSchemeSerializer;
 import io.activej.dataflow.proto.calcite.serializer.ReducerSerializer;
 import io.activej.dataflow.proto.calcite.serializer.WherePredicateSerializer;
 import io.activej.dataflow.proto.serializer.FunctionSubtypeSerializer;
@@ -96,21 +97,20 @@ public final class SerializersModule extends AbstractModule {
 				@Override
 				public void encode(BinaryOutput out, RecordInnerJoiner<?> item) {
 					RecordScheme scheme = item.getScheme();
-					SerializableRecordScheme serializableRecordScheme = SerializableRecordScheme.fromRecordScheme(scheme);
-					schemeSerializer.encode(out, serializableRecordScheme);
+					schemeSerializer.encode(out, scheme);
 				}
 
 				@Override
 				public RecordInnerJoiner<?> decode(BinaryInput in) throws CorruptedDataException {
-					SerializableRecordScheme serializableRecordScheme = schemeSerializer.decode(in);
-					RecordScheme scheme = serializableRecordScheme.toRecordScheme(definingClassLoader);
+					RecordScheme scheme = schemeSerializer.decode(in);
 					return RecordInnerJoiner.create(scheme);
 				}
 			});
 			return (BinarySerializer) serializer;
-		}, new Key<BinarySerializer<SerializableRecordScheme>>() {}, Key.of(DefiningClassLoader.class));
+		}, new Key<BinarySerializer<RecordScheme>>() {}, Key.of(DefiningClassLoader.class));
 
-		bind(new Key<BinarySerializer<Record>>() {}).to(RecordSerializer::create, DefiningClassLoader.class, BinarySerializerModule.BinarySerializerLocator.class).asTransient();
+		bind(new Key<BinarySerializer<RecordScheme>>() {}).to(RecordSchemeSerializer::new, DefiningClassLoader.class);
+		bind(new Key<BinarySerializer<Record>>() {}).to(RecordSerializer::create, BinarySerializerModule.BinarySerializerLocator.class).asTransient();
 
 		bind(new Key<BinarySerializer<RecordProjectionFn>>() {}).to(optionalClassLoader ->
 						optionalClassLoader.isPresent() ?

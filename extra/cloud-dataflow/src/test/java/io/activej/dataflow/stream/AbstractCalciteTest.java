@@ -246,6 +246,7 @@ public abstract class AbstractCalciteTest {
 		TYPE_1, TYPE_2
 	}
 
+	@SerializeRecord
 	public record Limits(float[] buckets, long timestamp) {
 	}
 
