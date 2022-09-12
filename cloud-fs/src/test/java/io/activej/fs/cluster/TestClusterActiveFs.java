@@ -92,7 +92,7 @@ public final class TestClusterActiveFs {
 			Eventloop serverEventloop = Eventloop.create().withEventloopFatalErrorHandler(rethrow());
 			serverEventloop.keepAlive(true);
 			LocalActiveFs localClient = LocalActiveFs.create(serverEventloop, executor, path);
-			serverEventloop.submit(localClient::start);
+			CompletableFuture<Void> startFuture = serverEventloop.submit(localClient::start);
 			AsyncHttpServer server = AsyncHttpServer.create(serverEventloop, ActiveFsServlet.create(localClient))
 					.withListenPort(port);
 			CompletableFuture<Void> listenFuture = serverEventloop.submit(() -> {
@@ -104,6 +104,7 @@ public final class TestClusterActiveFs {
 			});
 			servers.add(server);
 			new Thread(serverEventloop).start();
+			startFuture.get();
 			listenFuture.get();
 		}
 
