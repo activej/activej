@@ -16,34 +16,31 @@
 
 package io.activej.serializer.impl;
 
-import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Variable;
-import io.activej.serializer.AbstractSerializerDef;
-import io.activej.serializer.CompatibilityLevel;
+import io.activej.serializer.*;
 
 import java.net.Inet6Address;
-import java.net.NetworkInterface;
+import java.net.UnknownHostException;
 
-import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.serializer.impl.SerializerExpressions.readBytes;
-import static io.activej.serializer.impl.SerializerExpressions.writeBytes;
-
-public final class SerializerDefInet6Address extends AbstractSerializerDef {
+public final class SerializerDefInet6Address extends SimpleSerializerDef<Inet6Address> {
 	@Override
-	public Class<?> getEncodeType() {
-		return Inet6Address.class;
-	}
+	protected BinarySerializer<Inet6Address> createSerializer(int version, CompatibilityLevel compatibilityLevel) {
+		return new BinarySerializer<Inet6Address>() {
+			@Override
+			public void encode(BinaryOutput out, Inet6Address address) {
+				out.write(address.getAddress());
+			}
 
-	@Override
-	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-		return writeBytes(buf, pos, call(value, "getAddress"));
-	}
+			@Override
+			public Inet6Address decode(BinaryInput in) throws CorruptedDataException {
+				byte[] addressBytes = new byte[16];
+				in.read(addressBytes);
 
-	@Override
-	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-		return let(arrayNew(byte[].class, value(16)), array ->
-				sequence(
-						readBytes(in, array),
-						staticCall(getDecodeType(), "getByAddress", nullRef(String.class), array, nullRef(NetworkInterface.class))));
+				try {
+					return Inet6Address.getByAddress(null, addressBytes, null);
+				} catch (UnknownHostException e) {
+					throw new CorruptedDataException(e.getMessage());
+				}
+			}
+		};
 	}
 }

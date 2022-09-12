@@ -1,15 +1,9 @@
-import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Variable;
 import io.activej.serializer.*;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
 
 import java.time.LocalDate;
 import java.util.Arrays;
-
-import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.serializer.impl.SerializerExpressions.readVarInt;
-import static io.activej.serializer.impl.SerializerExpressions.writeVarInt;
 
 /**
  * An example of writing a {@link SerializerDef} for a LocalDate and attaching it to a {@link SerializerBuilder}
@@ -64,37 +58,26 @@ public final class LocalDateSerializerExample {
 	//[END HOLDER]
 
 	//[START SERIALIZER]
-	public static class SerializerDefLocalDate extends AbstractSerializerDef {
-
+	public static class SerializerDefLocalDate extends SimpleSerializerDef<LocalDate> {
 		@Override
-		public Class<?> getEncodeType() {
-			return LocalDate.class;
-		}
+		protected BinarySerializer<LocalDate> createSerializer(int version, CompatibilityLevel compatibilityLevel) {
+			return new BinarySerializer<LocalDate>() {
+				@Override
+				public void encode(BinaryOutput out, LocalDate localDate) {
+					out.writeVarInt(localDate.getYear());
+					out.writeVarInt(localDate.getMonthValue());
+					out.writeVarInt(localDate.getDayOfMonth());
+				}
 
-		@Override
-		public Expression encoder(final StaticEncoders staticEncoders,
-				final Expression buf,
-				final Variable pos,
-				final Expression localDate,
-				final int version,
-				final CompatibilityLevel compatibilityLevel) {
-			return sequence(
-					writeVarInt(buf, pos, call(localDate, "getYear")),
-					writeVarInt(buf, pos, call(localDate, "getMonthValue")),
-					writeVarInt(buf, pos, call(localDate, "getDayOfMonth"))
-			);
-		}
+				@Override
+				public LocalDate decode(BinaryInput in) throws CorruptedDataException {
+					int year = in.readVarInt();
+					int month = in.readVarInt();
+					int day = in.readVarInt();
 
-		@Override
-		public Expression decoder(final StaticDecoders staticDecoders,
-				final Expression input,
-				final int version,
-				final CompatibilityLevel compatibilityLevel) {
-			return staticCall(LocalDate.class, "of",
-					readVarInt(input),
-					readVarInt(input),
-					readVarInt(input)
-			);
+					return LocalDate.of(year, month, day);
+				}
+			};
 		}
 	}
 	//[END SERIALIZER]
