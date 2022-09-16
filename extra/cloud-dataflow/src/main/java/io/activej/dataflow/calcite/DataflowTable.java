@@ -19,12 +19,14 @@ package io.activej.dataflow.calcite;
 import io.activej.codegen.util.Primitives;
 import io.activej.common.exception.ToDoException;
 import io.activej.dataflow.calcite.rel.FilterableTableScan;
+import io.activej.dataflow.calcite.utils.JavaRecordType;
 import io.activej.serializer.BinarySerializer;
-import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
 import org.apache.calcite.schema.TranslatableTable;
 import org.apache.calcite.schema.impl.AbstractTable;
 
@@ -32,28 +34,35 @@ import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 public final class DataflowTable<T> extends AbstractTable implements TranslatableTable {
 	private final Class<T> type;
 	private final RecordFunction<T> recordFunction;
 	private final BinarySerializer<RecordFunction<T>> recordFunctionSerializer;
+	private final Function<RelDataTypeFactory, RelDataType> relDataTypeFactory;
 
 	private RelDataType relDataType;
 
-	private DataflowTable(Class<T> type, RecordFunction<T> recordFunction, BinarySerializer<RecordFunction<T>> recordFunctionSerializer) {
+	private DataflowTable(Class<T> type, Function<RelDataTypeFactory, RelDataType> relDataTypeFactory, RecordFunction<T> recordFunction, BinarySerializer<RecordFunction<T>> recordFunctionSerializer) {
 		this.type = type;
 		this.recordFunction = recordFunction;
 		this.recordFunctionSerializer = recordFunctionSerializer;
+		this.relDataTypeFactory = relDataTypeFactory;
 	}
 
 	public static <T> DataflowTable<T> create(Class<T> cls, RecordFunction<T> recordFunction, BinarySerializer<RecordFunction<T>> recordFunctionSerializer) {
-		return new DataflowTable<>(cls, recordFunction, recordFunctionSerializer);
+		return new DataflowTable<>(cls, typeFactory -> toRowType(typeFactory, cls), recordFunction, recordFunctionSerializer);
+	}
+
+	public static <T> DataflowTable<T> create(Class<T> cls, Function<RelDataTypeFactory, RelDataType> relDataTypeFactory, RecordFunction<T> recordFunction, BinarySerializer<RecordFunction<T>> recordFunctionSerializer) {
+		return new DataflowTable<>(cls, relDataTypeFactory, recordFunction, recordFunctionSerializer);
 	}
 
 	@Override
 	public RelDataType getRowType(RelDataTypeFactory typeFactory) {
 		if (relDataType == null) {
-			relDataType = toRowType((JavaTypeFactory) typeFactory, type);
+			relDataType = relDataTypeFactory.apply(typeFactory);
 		}
 		return relDataType;
 	}
@@ -70,7 +79,7 @@ public final class DataflowTable<T> extends AbstractTable implements Translatabl
 		return recordFunctionSerializer;
 	}
 
-	private static RelDataType toRowType(JavaTypeFactory typeFactory, Type type) {
+	private static RelDataType toRowType(RelDataTypeFactory typeFactory, Type type) {
 		if (type instanceof Class<?> cls) {
 			if (cls.isPrimitive() || cls.isEnum() || Primitives.isWrapperType(cls) || cls == String.class) {
 				return typeFactory.createJavaType(cls);
@@ -78,15 +87,17 @@ public final class DataflowTable<T> extends AbstractTable implements Translatabl
 
 			if (cls.isRecord()) {
 				RecordComponent[] recordComponents = cls.getRecordComponents();
-				List<RelDataType> types = new ArrayList<>(recordComponents.length);
-				List<String> names = new ArrayList<>(recordComponents.length);
+				List<RelDataTypeField> fields = new ArrayList<>();
 
 				for (RecordComponent recordComponent : recordComponents) {
-					names.add(recordComponent.getName());
-					types.add(toRowType(typeFactory, recordComponent.getGenericType()));
+					fields.add(new RelDataTypeFieldImpl(
+							recordComponent.getName(),
+							fields.size(),
+							toRowType(typeFactory, recordComponent.getGenericType())
+					));
 				}
 
-				return typeFactory.createStructType(types, names);
+				return new JavaRecordType(fields, cls);
 			}
 
 			if (cls.isArray()) {
@@ -94,17 +105,18 @@ public final class DataflowTable<T> extends AbstractTable implements Translatabl
 				return typeFactory.createArrayType(elementType, -1);
 			}
 
-			List<RelDataType> types = new ArrayList<>();
-			List<String> names = new ArrayList<>();
+			List<RelDataTypeField> fields = new ArrayList<>();
 
-			// TODO: either require RelDataType on table creation or use order from @Serialize annotation?
 			for (Field field : cls.getFields()) {
 				if (Modifier.isStatic(field.getModifiers())) continue;
 
-				names.add(field.getName());
-				types.add(toRowType(typeFactory, field.getGenericType()));
+				fields.add(new RelDataTypeFieldImpl(
+						field.getName(),
+						fields.size(),
+						toRowType(typeFactory, field.getGenericType())
+				));
 			}
-			return typeFactory.createStructType(types, names);
+			return new JavaRecordType(fields, cls);
 		}
 
 		if (type instanceof ParameterizedType parameterizedType) {

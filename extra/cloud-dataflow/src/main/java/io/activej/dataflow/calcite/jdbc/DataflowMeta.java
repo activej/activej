@@ -4,6 +4,7 @@ import io.activej.dataflow.DataflowException;
 import io.activej.dataflow.RelToDatasetConverter.ConversionResult;
 import io.activej.dataflow.RelToDatasetConverter.UnmaterializedDataset;
 import io.activej.dataflow.calcite.CalciteSqlDataflow;
+import io.activej.dataflow.calcite.utils.JavaRecordType;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.eventloop.Eventloop;
 import io.activej.record.Record;
@@ -12,6 +13,7 @@ import io.activej.types.Types;
 import org.apache.calcite.avatica.AvaticaParameter;
 import org.apache.calcite.avatica.ColumnMetaData;
 import org.apache.calcite.avatica.NoSuchStatementException;
+import org.apache.calcite.avatica.SqlType;
 import org.apache.calcite.avatica.remote.TypedValue;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.rel.RelNode;
@@ -21,8 +23,12 @@ import org.apache.calcite.rel.type.RelDataTypeFactoryImpl;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexDynamicParam;
 import org.apache.calcite.sql.parser.SqlParseException;
+import org.apache.calcite.sql.type.ArraySqlType;
+import org.apache.calcite.sql.type.MapSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.sql.DatabaseMetaData;
 import java.util.*;
@@ -155,17 +161,16 @@ public final class DataflowMeta extends LimitedMeta {
 		List<ColumnMetaData> columns = new ArrayList<>(fieldCount);
 		for (int i = 0; i < fieldCount; i++) {
 			Type fieldType = scheme.getFieldType(i);
-			ColumnMetaData.Rep rep = ColumnMetaData.Rep.of(fieldType);
-			ColumnMetaData.ScalarType scalarType = ColumnMetaData.scalar(rep.typeId, rep.name(), rep);
 			String fieldName = scheme.getField(i);
-			RelDataTypeField field = fields.get(i);
+			RelDataType relDataType = fields.get(i).getType();
+			ColumnMetaData.AvaticaType avaticaType = getAvaticaType(relDataType, fieldType);
 
 			ColumnMetaData columnMetaData = new ColumnMetaData(i, false, true, false, false, 0, false,
 					1, fieldName, fieldName, SCHEMA_NAME,
-					getPrecision(field.getType()),
-					getScale(field.getType()),
+					getPrecision(relDataType),
+					getScale(relDataType),
 					"", SCHEMA_NAME,
-					scalarType, true, false, false, Types.getRawType(fieldType).getName());
+					avaticaType, true, false, false, Types.getRawType(fieldType).getName());
 			columns.add(columnMetaData);
 		}
 
@@ -188,6 +193,56 @@ public final class DataflowMeta extends LimitedMeta {
 				parameters,
 				CursorFactory.LIST,
 				StatementType.SELECT);
+	}
+
+	private static ColumnMetaData.AvaticaType getAvaticaType(RelDataType relDataType, @Nullable Type type) {
+		if (relDataType instanceof MapSqlType mapSqlType) {
+			Type keyType = null;
+			Type valueType = null;
+			if (type instanceof ParameterizedType parameterizedType) {
+				Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+				if (actualTypeArguments.length == 2) {
+					keyType = actualTypeArguments[0];
+					valueType = actualTypeArguments[1];
+				}
+			}
+
+			ColumnMetaData.AvaticaType keyAvaticaType = getAvaticaType(mapSqlType.getKeyType(), keyType);
+			ColumnMetaData.AvaticaType valueAvaticaType = getAvaticaType(mapSqlType.getValueType(), valueType);
+
+			return ColumnMetaData.scalar(SqlType.MAP.id, "MAP(" + keyAvaticaType.name + "," + valueAvaticaType.name + ")", ColumnMetaData.Rep.OBJECT);
+		}
+		if (relDataType instanceof ArraySqlType arraySqlType) {
+			Type componentType = null;
+			if (type instanceof ParameterizedType parameterizedType) {
+				Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+				if (actualTypeArguments.length == 1) {
+					componentType = actualTypeArguments[0];
+				}
+			}
+
+			ColumnMetaData.AvaticaType componentAvaticaType = getAvaticaType(arraySqlType.getComponentType(), componentType);
+
+			return ColumnMetaData.array(componentAvaticaType, "ARRAY(" + componentAvaticaType.name + ")", ColumnMetaData.Rep.ARRAY);
+		}
+
+		if (type != null) {
+			ColumnMetaData.Rep rep = ColumnMetaData.Rep.of(type);
+			return ColumnMetaData.scalar(rep.typeId, type.getTypeName(), rep);
+		}
+		int jdbcOrdinal = relDataType.getSqlTypeName().getJdbcOrdinal();
+		SqlType sqlType = SqlType.valueOf(jdbcOrdinal);
+		ColumnMetaData.Rep rep = ColumnMetaData.Rep.nonPrimitiveRepOf(sqlType);
+
+		String typeName;
+		if (relDataType instanceof RelDataTypeFactoryImpl.JavaType javaType) {
+			typeName = javaType.getJavaClass().getName();
+		} else if (relDataType instanceof JavaRecordType javaRecordType) {
+			typeName = javaRecordType.getClazz().getName();
+		} else {
+			typeName = rep.name();
+		}
+		return ColumnMetaData.scalar(rep.typeId, typeName, rep);
 	}
 
 	private TransformationResult transform(String sql) {

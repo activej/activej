@@ -51,7 +51,7 @@ public final class BinarySerializerModule extends AbstractModule {
 		Map<Type, Key<BinarySerializer<?>>> transientSerializers = new HashMap<>();
 
 		transform(new KeyPattern<BinarySerializer<?>>() {}, (bindings, scope, key, binding) -> {
-			if (!(key.getType() instanceof ParameterizedType)) return binding;
+			if (!key.getRawType().equals(BinarySerializer.class) || !(key.getType() instanceof ParameterizedType)) return binding;
 
 			Class<?> rawType = key.getTypeParameter(0).getRawType();
 
