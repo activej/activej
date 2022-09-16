@@ -4,7 +4,7 @@
 
   <groupId>io.activej</groupId>
   <artifactId>tutorial-template-engine</artifactId>
-  <version>5.4-SNAPSHOT</version>
+  <version>5.4.3</version>
 
   <name>Tutorials : Template-Engine</name>
 
