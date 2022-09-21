@@ -56,6 +56,10 @@ public final class FunctionSubtypeSerializer<T> implements BinarySerializer<T> {
 		setSubtypeCodec(type, name, codec);
 	}
 
+	public boolean hasSubtypeCodec(Class<? extends T> type){
+		return subtypesToNames.containsKey(type);
+	}
+
 	@Override
 	@SuppressWarnings("unchecked")
 	public void encode(BinaryOutput out, T item) {

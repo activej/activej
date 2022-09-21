@@ -1,6 +1,7 @@
 package io.activej.dataflow.stream;
 
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.dataflow.DataflowPartitionedTable;
 import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.SqlDataflow;
 import io.activej.dataflow.calcite.DataflowSchema;
@@ -16,6 +17,7 @@ import io.activej.dataflow.calcite.where.*;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
 import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.processor.StreamReducers;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.module.Module;
@@ -38,6 +40,8 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
@@ -65,6 +69,7 @@ public abstract class AbstractCalciteTest {
 	public static final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	public static final String STUDENT_TABLE_NAME = "student";
+	public static final String STUDENT_DUPLICATES_TABLE_NAME = "student_duplicates";
 	public static final String DEPARTMENT_TABLE_NAME = "department";
 	public static final String REGISTRY_TABLE_NAME = "registry";
 	public static final String USER_PROFILES_TABLE_NAME = "profiles";
@@ -78,6 +83,15 @@ public abstract class AbstractCalciteTest {
 	protected static final List<Student> STUDENT_LIST_2 = List.of(
 			new Student(3, "John", "Truman", 2),
 			new Student(2, "Bob", "Black", 2));
+
+	protected static final List<Student> STUDENT_DUPLICATES_LIST_1 = List.of(
+			new Student(4, "Mark", null, 3),
+			new Student(1, "John", "Doe", 1),
+			new Student(5, "Jack", "Dawson", 2));
+	protected static final List<Student> STUDENT_DUPLICATES_LIST_2 = List.of(
+			new Student(3, "John", "Truman", 2),
+			new Student(2, "Bob", "Black", 2),
+			new Student(5, "Jack", "Dawson", 3));
 
 	protected static final List<Department> DEPARTMENT_LIST_1 = List.of(
 			new Department(2, "Language"));
@@ -170,6 +184,7 @@ public abstract class AbstractCalciteTest {
 							LargeToRecord largeToRecord = LargeToRecord.create(classLoader);
 							SubjectSelectionToRecord subjectSelectionToRecord = SubjectSelectionToRecord.create(classLoader);
 							FilterableToRecord filterableToRecord = FilterableToRecord.create(classLoader);
+							StudentReducer studentReducer = new StudentReducer();
 
 							return DataflowSchema.create()
 									.withTable(STUDENT_TABLE_NAME, DataflowTable.create(Student.class, studentToRecord, ofObject(() -> studentToRecord)))
@@ -178,7 +193,10 @@ public abstract class AbstractCalciteTest {
 									.withTable(USER_PROFILES_TABLE_NAME, DataflowTable.create(UserProfile.class, userProfileToRecord, ofObject(() -> userProfileToRecord)))
 									.withTable(LARGE_TABLE_NAME, DataflowTable.create(Large.class, largeToRecord, ofObject(() -> largeToRecord)))
 									.withTable(SUBJECT_SELECTION_TABLE_NAME, DataflowTable.create(SubjectSelection.class, subjectSelectionToRecord, ofObject(() -> subjectSelectionToRecord)))
-									.withTable(FILTERABLE_TABLE_NAME, DataflowTable.create(Filterable.class, filterableToRecord, ofObject(() -> filterableToRecord)));
+									.withTable(FILTERABLE_TABLE_NAME, DataflowTable.create(Filterable.class, filterableToRecord, ofObject(() -> filterableToRecord)))
+									.withTable(STUDENT_DUPLICATES_TABLE_NAME, DataflowPartitionedTable.create(Student.class, studentToRecord, ofObject(() -> studentToRecord))
+											.withReducer(studentReducer, ofObject(() -> studentReducer))
+											.withPrimaryKeyIndexes(0));
 						},
 						DefiningClassLoader.class)
 				.build();
@@ -205,6 +223,7 @@ public abstract class AbstractCalciteTest {
 						.bind(datasetId(LARGE_TABLE_NAME)).toInstance(LARGE_LIST_1)
 						.bind(datasetId(SUBJECT_SELECTION_TABLE_NAME)).toInstance(SUBJECT_SELECTION_LIST_1)
 						.bind(datasetId(FILTERABLE_TABLE_NAME)).toInstance(createFilterableSupplier(FILTERABLE_1))
+						.bind(datasetId(STUDENT_DUPLICATES_TABLE_NAME)).toInstance(STUDENT_DUPLICATES_LIST_1)
 						.build());
 		Module server2Module = Modules.combine(serverModule,
 				ModuleBuilder.create()
@@ -215,6 +234,7 @@ public abstract class AbstractCalciteTest {
 						.bind(datasetId(LARGE_TABLE_NAME)).toInstance(LARGE_LIST_2)
 						.bind(datasetId(SUBJECT_SELECTION_TABLE_NAME)).toInstance(SUBJECT_SELECTION_LIST_2)
 						.bind(datasetId(FILTERABLE_TABLE_NAME)).toInstance(createFilterableSupplier(FILTERABLE_2))
+						.bind(datasetId(STUDENT_DUPLICATES_TABLE_NAME)).toInstance(STUDENT_DUPLICATES_LIST_2)
 						.build());
 
 		server1Injector = Injector.of(server1Module);
@@ -291,6 +311,25 @@ public abstract class AbstractCalciteTest {
 		QueryResult result = query("SELECT * FROM student");
 
 		QueryResult expected = studentsToQueryResult(concat(STUDENT_LIST_1, STUDENT_LIST_2));
+
+		assertEquals(expected, result);
+	}
+
+	@Test
+	public void testSelectAllStudentsWithDuplicates() {
+		QueryResult result = query("SELECT * FROM student_duplicates");
+
+		QueryResult expected = studentsToQueryResult(new ArrayList<>(
+				Stream.concat(
+						STUDENT_DUPLICATES_LIST_1.stream(),
+						STUDENT_DUPLICATES_LIST_2.stream()
+				)
+				.collect(Collectors.toMap(
+						Student::id,
+						Function.identity(),
+						(student1, student2) -> student1.dept > student2.dept ? student1 : student2))
+				.values()));
+
 
 		assertEquals(expected, result);
 	}
@@ -2508,5 +2547,12 @@ public abstract class AbstractCalciteTest {
 
 	protected interface ParamsSetter {
 		void setValues(PreparedStatement stmt) throws SQLException;
+	}
+
+	public static final class StudentReducer extends StreamReducers.BinaryAccumulatorReducer<Record, Record> {
+		@Override
+		protected Record combine(Record key, Record nextValue, Record accumulator) {
+			return nextValue.getInt("dept") > accumulator.getInt("dept") ? nextValue : accumulator;
+		}
 	}
 }

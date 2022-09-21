@@ -23,6 +23,8 @@ import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.datastream.processor.StreamLimiter;
+import io.activej.datastream.processor.StreamReducers;
+import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.datastream.processor.StreamSkip;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
@@ -164,7 +166,18 @@ public class RelToDatasetConverter {
 
 		return UnmaterializedDataset.of(mapper.getScheme(), params -> {
 			Dataset<Object> dataset = DatasetSupplierOfPredicate.create(id, wherePredicate.materialize(params), dataflowTable.getType());
-			return Datasets.map(dataset, mapper, Record.class);
+			Dataset<Record> mapped = Datasets.map(dataset, mapper, Record.class);
+
+			if (!(dataflowTable instanceof DataflowPartitionedTable<Object> dataflowPartitionedTable)) return mapped;
+
+			List<Integer> indexes = new ArrayList<>(dataflowPartitionedTable.getPrimaryKeyIndexes());
+
+			LocallySortedDataset<Record, Record> locallySortedDataset = Datasets.localSort(mapped, Record.class, getKeyFunction(indexes), RecordKeyComparator.getInstance());
+
+			Reducer<Record, Record, Record, Record> providedReducer = dataflowPartitionedTable.getReducer();
+			Reducer<Record, Record, Record, ?> reducer = providedReducer == null ? StreamReducers.deduplicateReducer() : providedReducer;
+
+			return Datasets.repartitionReduce(locallySortedDataset, reducer, Record.class);
 		});
 	}
 

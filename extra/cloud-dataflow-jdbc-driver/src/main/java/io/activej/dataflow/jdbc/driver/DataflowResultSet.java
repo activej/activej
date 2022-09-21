@@ -10,6 +10,7 @@ import org.apache.calcite.avatica.ColumnMetaData;
 import org.apache.calcite.avatica.Meta;
 import org.jetbrains.annotations.Nullable;
 
+import java.sql.Array;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.List;
@@ -46,7 +47,7 @@ class DataflowResultSet extends AvaticaResultSet {
 
 		JavaType javaType = getJavaType(type);
 
-		if (javaType == TypeFactory.unknownType()) {
+		if (javaType == TypeFactory.unknownType() || result instanceof Array) {
 			return result;
 		}
 

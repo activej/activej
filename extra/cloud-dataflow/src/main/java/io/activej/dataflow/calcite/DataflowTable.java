@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-public final class DataflowTable<T> extends AbstractTable implements TranslatableTable {
+public class DataflowTable<T> extends AbstractTable implements TranslatableTable {
 	private final Class<T> type;
 	private final RecordFunction<T> recordFunction;
 	private final BinarySerializer<RecordFunction<T>> recordFunctionSerializer;
@@ -44,7 +44,7 @@ public final class DataflowTable<T> extends AbstractTable implements Translatabl
 
 	private RelDataType relDataType;
 
-	private DataflowTable(Class<T> type, Function<RelDataTypeFactory, RelDataType> relDataTypeFactory, RecordFunction<T> recordFunction, BinarySerializer<RecordFunction<T>> recordFunctionSerializer) {
+	protected DataflowTable(Class<T> type, Function<RelDataTypeFactory, RelDataType> relDataTypeFactory, RecordFunction<T> recordFunction, BinarySerializer<RecordFunction<T>> recordFunctionSerializer) {
 		this.type = type;
 		this.recordFunction = recordFunction;
 		this.recordFunctionSerializer = recordFunctionSerializer;
@@ -79,7 +79,7 @@ public final class DataflowTable<T> extends AbstractTable implements Translatabl
 		return recordFunctionSerializer;
 	}
 
-	private static RelDataType toRowType(RelDataTypeFactory typeFactory, Type type) {
+	protected static RelDataType toRowType(RelDataTypeFactory typeFactory, Type type) {
 		if (type instanceof Class<?> cls) {
 			if (cls.isPrimitive() || cls.isEnum() || Primitives.isWrapperType(cls) || cls == String.class) {
 				return typeFactory.createJavaType(cls);
