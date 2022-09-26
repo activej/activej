@@ -11,7 +11,6 @@ import org.apache.calcite.rex.RexDynamicParam;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.sql.type.MapSqlType;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
@@ -22,7 +21,6 @@ import java.util.Objects;
 import static io.activej.common.Checks.checkState;
 
 @SuppressWarnings("ConstantConditions")
-@ApiStatus.Internal
 public class Value {
 	private final Type type;
 	private final @Nullable RexDynamicParam dynamicParam;

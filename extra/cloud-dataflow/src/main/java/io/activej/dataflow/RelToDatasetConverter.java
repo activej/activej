@@ -2,8 +2,11 @@ package io.activej.dataflow;
 
 import com.google.common.collect.ImmutableList;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.dataflow.calcite.*;
+import io.activej.dataflow.calcite.DataflowTable;
+import io.activej.dataflow.calcite.RecordFunction;
+import io.activej.dataflow.calcite.RecordProjectionFn;
 import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjection;
+import io.activej.dataflow.calcite.Value;
 import io.activej.dataflow.calcite.aggregation.*;
 import io.activej.dataflow.calcite.dataset.DatasetSupplierOfPredicate;
 import io.activej.dataflow.calcite.join.RecordInnerJoiner;
@@ -41,7 +44,6 @@ import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.ImmutableBitSet;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -114,7 +116,10 @@ public class RelToDatasetConverter {
 
 			Operand<?> projectOperand = paramsCollector.toOperand(projectNode);
 
-			FieldProjection fieldProjection = new FieldProjection(projectOperand, tryGetAlias(fieldName));
+			if (isSynthetic(fieldName) || projectNode.getKind() == SqlKind.FIELD_ACCESS) {
+				fieldName = null;
+			}
+			FieldProjection fieldProjection = new FieldProjection(projectOperand, fieldName);
 
 			projections.add(fieldProjection);
 		}
@@ -445,12 +450,6 @@ public class RelToDatasetConverter {
 			throw new IllegalArgumentException("Unknown condition: " + kind);
 		}
 		return dataset;
-	}
-
-	private static @Nullable String tryGetAlias(String fieldName) {
-		return fieldName.startsWith(DataflowSqlValidator.ALIAS_PREFIX) ?
-				fieldName.substring(DataflowSqlValidator.ALIAS_PREFIX.length()) :
-				null;
 	}
 
 	private boolean isSynthetic(String fieldName) {

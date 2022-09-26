@@ -2,7 +2,6 @@ package io.activej.dataflow.calcite;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.SqlUtil;
@@ -12,7 +11,6 @@ import org.apache.calcite.sql.validate.SqlValidatorImpl;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Util;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
 import java.util.Map;
@@ -20,7 +18,6 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class DataflowSqlValidator extends SqlValidatorImpl {
-	public static final String ALIAS_PREFIX = "$ALIAS_";
 	public static final String SYNTHETIC_PREFIX = "$SYNTH_";
 
 	public static final SqlValidatorUtil.Suggester ALIAS_SUGGESTER = (original, attempt, size) ->
@@ -33,15 +30,6 @@ public final class DataflowSqlValidator extends SqlValidatorImpl {
 	@Override
 	public SqlNode validate(SqlNode topNode) {
 		return super.validate(topNode);
-	}
-
-	@Override
-	public @Nullable String deriveAlias(SqlNode node, int ordinal) {
-		String alias = super.deriveAlias(node, ordinal);
-		if (alias != null && node.getKind() == SqlKind.AS && !alias.startsWith(SYNTHETIC_PREFIX)) {
-			return ALIAS_PREFIX + alias;
-		}
-		return alias;
 	}
 
 	@Override

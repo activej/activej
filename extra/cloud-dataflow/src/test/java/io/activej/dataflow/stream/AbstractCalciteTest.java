@@ -275,7 +275,7 @@ public abstract class AbstractCalciteTest {
 	}
 
 	public record UserProfile(String id, UserProfilePojo pojo, Map<Integer, UserProfileIntent> intents,
-							  long timestamp) {
+	                          long timestamp) {
 	}
 
 	@SerializeRecord
@@ -321,14 +321,14 @@ public abstract class AbstractCalciteTest {
 
 		QueryResult expected = studentsToQueryResult(new ArrayList<>(
 				Stream.concat(
-						STUDENT_DUPLICATES_LIST_1.stream(),
-						STUDENT_DUPLICATES_LIST_2.stream()
-				)
-				.collect(Collectors.toMap(
-						Student::id,
-						Function.identity(),
-						(student1, student2) -> student1.dept > student2.dept ? student1 : student2))
-				.values()));
+								STUDENT_DUPLICATES_LIST_1.stream(),
+								STUDENT_DUPLICATES_LIST_2.stream()
+						)
+						.collect(Collectors.toMap(
+								Student::id,
+								Function.identity(),
+								(student1, student2) -> student1.dept > student2.dept ? student1 : student2))
+						.values()));
 
 
 		assertEquals(expected, result);
@@ -1989,6 +1989,29 @@ public abstract class AbstractCalciteTest {
 				List.of(
 						new Object[]{45},
 						new Object[]{64}
+				)
+		);
+
+		assertEquals(expected, result);
+	}
+
+	@Test
+	public void testComplexQuery() {
+		QueryResult result = query("""
+				SELECT uname, SUM(nameCount) as totalNameCount
+				FROM (SELECT 'John' as uname, MAP_GET(counters, 'John') as nameCount
+				      FROM registry
+				      UNION
+				      SELECT 'Kevin', MAP_GET(counters, 'Kevin')
+				      FROM registry)
+				GROUP BY uname
+				""");
+
+		QueryResult expected = new QueryResult(
+				List.of("uname", "totalNameCount"),
+				List.of(
+						new Object[]{"John", 19L},
+						new Object[]{"Kevin", 15L}
 				)
 		);
 

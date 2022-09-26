@@ -2,7 +2,10 @@ package io.activej.dataflow.calcite.inject;
 
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.dataflow.DataflowPartitionedTable;
-import io.activej.dataflow.calcite.*;
+import io.activej.dataflow.calcite.DataflowSchema;
+import io.activej.dataflow.calcite.DataflowTable;
+import io.activej.dataflow.calcite.RecordProjectionFn;
+import io.activej.dataflow.calcite.RecordSerializer;
 import io.activej.dataflow.calcite.aggregation.RecordReducer;
 import io.activej.dataflow.calcite.join.RecordInnerJoiner;
 import io.activej.dataflow.calcite.join.RecordKeyFunction;
@@ -24,7 +27,6 @@ import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import io.activej.serializer.*;
 
-import java.lang.reflect.Type;
 import java.util.Comparator;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -144,9 +146,7 @@ public final class SerializersModule extends AbstractModule {
 								new RecordProjectionFnSerializer(),
 				new Key<OptionalDependency<DefiningClassLoader>>() {});
 
-		bind(SerializerBuilder.class).to(classLoader -> SerializerBuilder.create(classLoader)
-						.with(Type.class, ctx -> new SerializerDefType()),
-				DefiningClassLoader.class);
+		bind(SerializerBuilder.class).to(SerializerBuilder::create, DefiningClassLoader.class);
 
 		bind(CustomNodeSerializer.class).to(optionalClassLoader ->
 						optionalClassLoader.isPresent() ?
