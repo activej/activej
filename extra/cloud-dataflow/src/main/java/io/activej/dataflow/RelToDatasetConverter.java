@@ -78,7 +78,7 @@ public class RelToDatasetConverter {
 			return handle(logicalProject, paramsCollector);
 		}
 		if (relNode instanceof FilterableTableScan tableScan) {
-			return handle(tableScan);
+			return handle(tableScan, paramsCollector);
 		}
 		if (relNode instanceof LogicalFilter logicalFilter) {
 			return handle(logicalFilter, paramsCollector);
@@ -148,7 +148,7 @@ public class RelToDatasetConverter {
 				});
 	}
 
-	private UnmaterializedDataset handle(FilterableTableScan scan) {
+	private UnmaterializedDataset handle(FilterableTableScan scan, ParamsCollector paramsCollector) {
 		RelOptTable table = scan.getTable();
 		List<String> names = table.getQualifiedName();
 
@@ -159,25 +159,28 @@ public class RelToDatasetConverter {
 		RecordFunction<Object> mapper = dataflowTable.getRecordFunction();
 		String id = last(names).toLowerCase();
 
-
 		WherePredicate wherePredicate;
 		RexNode predicate = scan.getCondition();
-		if (predicate instanceof RexCall call) {
-			ParamsCollector collector = new ParamsCollector();
-			wherePredicate = collector.toWherePredicate(call);
+		boolean needsFiltering = predicate instanceof RexCall;
+		if (needsFiltering) {
+			wherePredicate = paramsCollector.toWherePredicate((RexCall) predicate);
 		} else {
 			wherePredicate = new AndPredicate(emptyList());
 		}
 
 		return UnmaterializedDataset.of(mapper.getScheme(), params -> {
-			Dataset<Object> dataset = DatasetSupplierOfPredicate.create(id, wherePredicate.materialize(params), dataflowTable.getType());
+			WherePredicate materializedPredicate = wherePredicate.materialize(params);
+			Dataset<Object> dataset = DatasetSupplierOfPredicate.create(id, materializedPredicate, dataflowTable.getType());
 			Dataset<Record> mapped = Datasets.map(dataset, mapper, Record.class);
+			Dataset<Record> filtered = needsFiltering ?
+					Datasets.filter(mapped, materializedPredicate) :
+					mapped;
 
-			if (!(dataflowTable instanceof DataflowPartitionedTable<Object> dataflowPartitionedTable)) return mapped;
+			if (!(dataflowTable instanceof DataflowPartitionedTable<Object> dataflowPartitionedTable)) return filtered;
 
 			List<Integer> indexes = new ArrayList<>(dataflowPartitionedTable.getPrimaryKeyIndexes());
 
-			LocallySortedDataset<Record, Record> locallySortedDataset = Datasets.localSort(mapped, Record.class, getKeyFunction(indexes), RecordKeyComparator.getInstance());
+			LocallySortedDataset<Record, Record> locallySortedDataset = Datasets.localSort(filtered, Record.class, getKeyFunction(indexes), RecordKeyComparator.getInstance());
 
 			Reducer<Record, Record, Record, Record> providedReducer = dataflowPartitionedTable.getReducer();
 			Reducer<Record, Record, Record, ?> reducer = providedReducer == null ? StreamReducers.deduplicateReducer() : providedReducer;

@@ -45,5 +45,7 @@ public class ParameterizedTableRule extends RelOptRule {
 		if (condition.isAlwaysTrue()) return;
 
 		scan.setCondition(condition);
+
+		call.transformTo(scan);
 	}
 }
