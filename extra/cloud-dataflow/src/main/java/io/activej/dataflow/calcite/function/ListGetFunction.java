@@ -5,9 +5,7 @@ import io.activej.dataflow.calcite.operand.OperandFunction;
 import io.activej.dataflow.calcite.operand.OperandListGet;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlKind;
-import org.apache.calcite.sql.type.InferTypes;
-import org.apache.calcite.sql.type.OperandTypes;
-import org.apache.calcite.sql.type.SqlTypeFamily;
+import org.apache.calcite.sql.type.*;
 
 import java.util.List;
 
@@ -16,7 +14,8 @@ import static org.apache.calcite.sql.type.OperandTypes.family;
 
 public final class ListGetFunction extends ProjectionFunction {
 	public ListGetFunction() {
-		super("LIST_GET", SqlKind.OTHER_FUNCTION, opBinding -> opBinding.getOperandType(0).getComponentType(),
+		super("LIST_GET", SqlKind.OTHER_FUNCTION, ((SqlReturnTypeInference) (opBinding -> opBinding.getOperandType(0).getComponentType()))
+						.andThen(SqlTypeTransforms.FORCE_NULLABLE),
 				InferTypes.ANY_NULLABLE,
 				OperandTypes.or(OperandTypes.ANY,
 						family(SqlTypeFamily.ARRAY, SqlTypeFamily.INTEGER),
