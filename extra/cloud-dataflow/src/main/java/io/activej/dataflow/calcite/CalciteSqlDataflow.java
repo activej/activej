@@ -76,16 +76,11 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 
 	@Override
 	public Promise<StreamSupplier<Record>> query(String sql) {
-		RelNode node;
 		try {
-			node = convertToNode(sql);
+			return queryDataflow(convertToDataset(sql));
 		} catch (DataflowException | SqlParseException e) {
 			return Promise.ofException(e);
 		}
-
-		ConversionResult transformed = convert(node);
-
-		return queryDataflow(transformed.unmaterializedDataset().materialize(Collections.emptyList()));
 	}
 
 	public RelNode convertToNode(String sql) throws SqlParseException, DataflowException {
@@ -103,14 +98,19 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 		return optimize(root);
 	}
 
+	public Dataset<Record> convertToDataset(String sql) throws SqlParseException, DataflowException {
+		RelNode node = convertToNode(sql);
+		ConversionResult transformed = convert(node);
+
+		return transformed.unmaterializedDataset().materialize(Collections.emptyList());
+	}
+
 	public ConversionResult convert(RelNode node) {
 		return relToDatasetConverter.convert(node);
 	}
 
 	public Promise<StreamSupplier<Record>> queryDataflow(Dataset<Record> dataset) {
-		Collector<Record> calciteCollector = dataset instanceof LocallySortedDataset<?, Record> sortedDataset ?
-				MergeCollector.create(sortedDataset, client, false) :
-				UnionCollector.create(dataset, client);
+		Collector<Record> calciteCollector = createCollector(dataset);
 
 		DataflowGraph graph = new DataflowGraph(client, partitions);
 		StreamSupplier<Record> result = calciteCollector.compile(graph);
@@ -140,5 +140,29 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 
 	public RelDataTypeFactory getTypeFactory() {
 		return validator.getTypeFactory();
+	}
+
+	public String explainPlan(String query) throws SqlParseException, DataflowException {
+		return convertToNode(query).explain();
+	}
+
+	public String explainGraph(String query) throws SqlParseException, DataflowException {
+		return convertToDataset(query).toGraphViz();
+	}
+
+	public String explainNodes(String query) throws SqlParseException, DataflowException {
+		Dataset<Record> dataset = convertToDataset(query);
+		Collector<Record> calciteCollector = createCollector(dataset);
+
+		DataflowGraph graph = new DataflowGraph(client, partitions);
+		calciteCollector.compile(graph);
+
+		return graph.toGraphViz();
+	}
+
+	private Collector<Record> createCollector(Dataset<Record> dataset) {
+		return dataset instanceof LocallySortedDataset<?, Record> sortedDataset ?
+				MergeCollector.create(sortedDataset, client, false) :
+				UnionCollector.create(dataset, client);
 	}
 }

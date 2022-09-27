@@ -1,5 +1,6 @@
 package io.activej.dataflow.calcite.jdbc;
 
+import io.activej.async.callback.AsyncComputation;
 import io.activej.dataflow.DataflowException;
 import io.activej.dataflow.RelToDatasetConverter.ConversionResult;
 import io.activej.dataflow.RelToDatasetConverter.UnmaterializedDataset;
@@ -74,6 +75,11 @@ public final class DataflowMeta extends LimitedMeta {
 
 	private static final String SCHEMA_NAME = "dataflow";
 
+	private static final String EXPLAIN = "EXPLAIN";
+	private static final String EXPLAIN_PLAN = "EXPLAIN PLAN ";
+	private static final String EXPLAIN_GRAPH = "EXPLAIN GRAPH ";
+	private static final String EXPLAIN_NODES = "EXPLAIN NODES ";
+
 	private final Eventloop eventloop;
 	private final CalciteSqlDataflow sqlDataflow;
 	private final Map<String, Integer> statementIds = new ConcurrentHashMap<>();
@@ -121,6 +127,10 @@ public final class DataflowMeta extends LimitedMeta {
 
 	@Override
 	public ExecuteResult prepareAndExecute(StatementHandle h, String sql, long maxRowCount, int maxRowsInFirstFrame, PrepareCallback callback) {
+		if (sql.toUpperCase().startsWith(EXPLAIN)) {
+			return handleExplainQuery(h, sql);
+		}
+
 		TransformationResult transformed = transform(sql);
 		ConversionResult conversionResult = transformed.conversionResult();
 		UnmaterializedDataset unmaterialized = conversionResult.unmaterializedDataset();
@@ -134,6 +144,36 @@ public final class DataflowMeta extends LimitedMeta {
 
 		MetaResultSet metaResultSet = MetaResultSet.create(h.connectionId, h.id, false, h.signature, firstFrame);
 		return new ExecuteResult(List.of(metaResultSet));
+	}
+
+	private static final LinkedHashMap<String, Class<?>> EXPLAIN_QUERY_COLUMNS = new LinkedHashMap<>();
+
+	static {
+		EXPLAIN_QUERY_COLUMNS.put(EXPLAIN, String.class);
+	}
+
+	private ExecuteResult handleExplainQuery(StatementHandle h, String sql) {
+		String upperCaseSql = sql.toUpperCase();
+		String explainString;
+		try {
+			if (upperCaseSql.startsWith(EXPLAIN_PLAN)) {
+				explainString = sqlDataflow.explainPlan(sql.substring(EXPLAIN_PLAN.length()));
+			} else if (upperCaseSql.startsWith(EXPLAIN_GRAPH)) {
+				explainString = sqlDataflow.explainGraph(sql.substring(EXPLAIN_GRAPH.length()));
+			} else if (upperCaseSql.startsWith(EXPLAIN_NODES)) {
+				explainString = eventloop.submit(AsyncComputation.of(() -> sqlDataflow.explainNodes(sql.substring(EXPLAIN_GRAPH.length())))).get();
+			} else {
+				throw new RuntimeException("Unknown EXPLAIN query, only `EXPLAIN PLAN`, `EXPLAIN GRAPH` and `EXPLAIN NODES` queries are supported");
+			}
+		} catch (SqlParseException | DataflowException | ExecutionException e) {
+			throw new RuntimeException(e);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new RuntimeException(e);
+		}
+
+		MetaResultSet resultSet = createMetaResponse(h, EXPLAIN_QUERY_COLUMNS, List.<Object[]>of(new Object[]{explainString}));
+		return new ExecuteResult(List.of(resultSet));
 	}
 
 	private FrameConsumer createFrameConsumer(StatementHandle statement, Dataset<Record> dataset) {
@@ -318,7 +358,7 @@ public final class DataflowMeta extends LimitedMeta {
 
 	@Override
 	public MetaResultSet getCatalogs(ConnectionHandle ch) {
-		return createMetaResponse(ch, GET_CATALOGS_COLUMNS, List.<Object[]>of(new Object[]{SCHEMA_NAME}));
+		return createMetaResponse(createStatement(ch), GET_CATALOGS_COLUMNS, List.<Object[]>of(new Object[]{SCHEMA_NAME}));
 	}
 
 	private static final LinkedHashMap<String, Class<?>> GET_SCHEMAS_COLUMNS = new LinkedHashMap<>();
@@ -330,7 +370,7 @@ public final class DataflowMeta extends LimitedMeta {
 
 	@Override
 	public MetaResultSet getSchemas(ConnectionHandle ch, String catalog, Pat schemaPattern) {
-		return createMetaResponse(ch, GET_SCHEMAS_COLUMNS, Collections.emptyList());
+		return createMetaResponse(createStatement(ch), GET_SCHEMAS_COLUMNS, Collections.emptyList());
 	}
 
 	private static final LinkedHashMap<String, Class<?>> GET_TABLE_TYPES_COLUMNS = new LinkedHashMap<>();
@@ -341,7 +381,7 @@ public final class DataflowMeta extends LimitedMeta {
 
 	@Override
 	public MetaResultSet getTableTypes(ConnectionHandle ch) {
-		return createMetaResponse(ch, GET_TABLE_TYPES_COLUMNS, List.<Object[]>of(new Object[]{TABLE}));
+		return createMetaResponse(createStatement(ch), GET_TABLE_TYPES_COLUMNS, List.<Object[]>of(new Object[]{TABLE}));
 	}
 
 	private static final LinkedHashMap<String, Class<?>> GET_TABLES_COLUMNS = new LinkedHashMap<>();
@@ -380,7 +420,7 @@ public final class DataflowMeta extends LimitedMeta {
 			}
 		}
 
-		return createMetaResponse(ch, GET_TABLES_COLUMNS, results);
+		return createMetaResponse(createStatement(ch), GET_TABLES_COLUMNS, results);
 	}
 
 	private static final LinkedHashMap<String, Class<?>> GET_COLUMNS_COLUMNS = new LinkedHashMap<>();
@@ -470,17 +510,16 @@ public final class DataflowMeta extends LimitedMeta {
 			}
 		}
 
-		return createMetaResponse(ch, GET_COLUMNS_COLUMNS, results);
+		return createMetaResponse(createStatement(ch), GET_COLUMNS_COLUMNS, results);
 	}
 
-	private MetaResultSet createMetaResponse(ConnectionHandle ch, LinkedHashMap<String, Class<?>> columnNamesToTypes, List<Object[]> frameRows) {
+	private MetaResultSet createMetaResponse(StatementHandle h, LinkedHashMap<String, Class<?>> columnNamesToTypes, List<Object[]> frameRows) {
 		assert frameRows.stream().allMatch(objects -> objects.length == columnNamesToTypes.size());
 
-		StatementHandle statement = createStatement(ch);
 		Signature signature = createMetaSignature(columnNamesToTypes);
 		Frame frame = Frame.create(0, true, new ArrayList<>(frameRows));
 
-		return MetaResultSet.create(ch.id, statement.id, true, signature, frame);
+		return MetaResultSet.create(h.connectionId, h.id, true, signature, frame);
 	}
 
 	private static Signature createMetaSignature(LinkedHashMap<String, Class<?>> columnNamesToTypes) {
