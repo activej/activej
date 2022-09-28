@@ -47,7 +47,7 @@ public final class CalciteServerModule extends AbstractModule {
 	@Provides
 	@DatasetId(CALCITE_SINGLE_DUMMY_DATASET)
 	List<Record> calciteSingleDummy(DefiningClassLoader classLoader) {
-		RecordScheme emptyScheme = RecordScheme.create(classLoader).build();
+		RecordScheme emptyScheme = RecordScheme.create(classLoader).withComparator().build();
 		return List.of(emptyScheme.record());
 	}
 }
