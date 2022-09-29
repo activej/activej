@@ -2,14 +2,9 @@ package module;
 
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.LZ4FrameFormat;
-import io.activej.dataflow.calcite.inject.CalciteServerModule;
-import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.inject.DatasetId;
-import io.activej.dataflow.node.NodeSort;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.StreamSupplierWithResult;
-import io.activej.datastream.processor.StreamSorterStorage;
-import io.activej.datastream.processor.StreamSorterStorageImpl;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.LocalActiveFs;
@@ -22,7 +17,6 @@ import io.activej.multilog.LogNamingScheme;
 import io.activej.multilog.Multilog;
 import io.activej.multilog.MultilogImpl;
 import io.activej.promise.Promise;
-import io.activej.record.Record;
 import io.activej.serializer.BinarySerializer;
 import misc.LogItem;
 
@@ -46,7 +40,6 @@ public class MultilogDataflowServerModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		install(CalciteServerModule.create());
 		install(MultilogDataflowSchemaModule.create());
 	}
 
@@ -86,22 +79,5 @@ public class MultilogDataflowServerModule extends AbstractModule {
 	@Provides
 	LogNamingScheme logNamingScheme() {
 		return LogNamingScheme.NAME_PARTITION_REMAINDER;
-	}
-
-	@Provides
-	NodeSort.StreamSorterStorageFactory storageFactory(Executor executor, BinarySerializer<Record> recordSerializer, FrameFormat frameFormat) {
-		return new NodeSort.StreamSorterStorageFactory() {
-			@Override
-			public <T> StreamSorterStorage<T> create(Class<T> type, Task context, Promise<Void> taskExecuted) {
-				Path sortPath;
-				try {
-					sortPath = Files.createTempDirectory("sorter");
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-				//noinspection unchecked,rawtypes
-				return StreamSorterStorageImpl.create(executor, ((BinarySerializer) recordSerializer), frameFormat, sortPath);
-			}
-		};
 	}
 }

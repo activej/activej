@@ -1,0 +1,97 @@
+package io.activej.launchers.dataflow;
+
+import io.activej.config.Config;
+import io.activej.csp.binary.ByteBufsCodec;
+import io.activej.csp.process.frames.LZ4FrameFormat;
+import io.activej.dataflow.DataflowClient;
+import io.activej.dataflow.DataflowServer;
+import io.activej.dataflow.calcite.inject.CalciteServerModule;
+import io.activej.dataflow.graph.Task;
+import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator;
+import io.activej.dataflow.inject.DataflowModule;
+import io.activej.dataflow.inject.SortingExecutor;
+import io.activej.dataflow.node.NodeSort;
+import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
+import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
+import io.activej.dataflow.proto.serializer.CustomNodeSerializer;
+import io.activej.dataflow.proto.serializer.FunctionSerializer;
+import io.activej.datastream.processor.StreamSorterStorage;
+import io.activej.datastream.processor.StreamSorterStorageImpl;
+import io.activej.eventloop.Eventloop;
+import io.activej.inject.Injector;
+import io.activej.inject.annotation.Eager;
+import io.activej.inject.annotation.Named;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.binding.OptionalDependency;
+import io.activej.inject.module.AbstractModule;
+import io.activej.promise.Promise;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.concurrent.Executor;
+
+import static io.activej.config.converter.ConfigConverters.getExecutor;
+import static io.activej.config.converter.ConfigConverters.ofPath;
+import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
+
+public final class DataflowServerModule extends AbstractModule {
+	private DataflowServerModule() {
+	}
+
+	public static DataflowServerModule create() {
+		return new DataflowServerModule();
+	}
+
+	@Override
+	protected void configure() {
+		install(DataflowModule.create());
+		install(CalciteServerModule.create());
+	}
+
+	@Provides
+	Executor executor(Config config) {
+		return getExecutor(config);
+	}
+
+	@Provides
+	@Eager
+	@SortingExecutor
+	Executor sortingExecutor(Config config) {
+		return getExecutor(config.getChild("sortingExecutor"));
+	}
+
+	@Provides
+	DataflowServer server(@Named("Dataflow") Eventloop eventloop, Config config, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator serializers, Injector environment, FunctionSerializer functionSerializer) {
+		return DataflowServer.create(eventloop, codec, serializers, environment, functionSerializer)
+				.withInitializer(ofAbstractServer(config.getChild("dataflow.server")))
+				.withInitializer(s -> s.withSocketSettings(s.getSocketSettings().withTcpNoDelay(true)));
+	}
+
+	@Provides
+	@Eager
+	DataflowClient client(Executor executor, Config config, ByteBufsCodec<DataflowResponse, DataflowRequest> codec,
+			BinarySerializerLocator serializers, FunctionSerializer functionSerializer, OptionalDependency<CustomNodeSerializer> optionalCustomNodeSerializer) {
+		DataflowClient dataflowClient = DataflowClient.create(executor, config.get(ofPath(), "dataflow.secondaryBufferPath"), codec, serializers, functionSerializer);
+		if (optionalCustomNodeSerializer.isPresent()) {
+			return dataflowClient.withCustomNodeSerializer(optionalCustomNodeSerializer.get());
+		}
+		return dataflowClient;
+	}
+
+	@Provides
+	@Eager
+	NodeSort.StreamSorterStorageFactory storageFactory(Executor executor, BinarySerializerLocator serializerLocator, Config config) throws IOException {
+		Path providedSortDir = config.get(ofPath(), "dataflow.sortDir", null);
+		Path sortDir = providedSortDir == null ? Files.createTempDirectory("dataflow-sort-dir") : providedSortDir;
+		return new NodeSort.StreamSorterStorageFactory() {
+			int index;
+
+			@Override
+			public <T> StreamSorterStorage<T> create(Class<T> type, Task context, Promise<Void> taskExecuted) {
+				Path taskSortDir = sortDir.resolve(context.getTaskId() + "_" + index++);
+				return StreamSorterStorageImpl.create(executor, serializerLocator.get(type), LZ4FrameFormat.create(), taskSortDir);
+			}
+		};
+	}
+}
