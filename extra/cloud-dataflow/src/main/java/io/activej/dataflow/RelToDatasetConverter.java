@@ -103,6 +103,7 @@ public class RelToDatasetConverter {
 
 	private UnmaterializedDataset handle(LogicalProject project, ParamsCollector paramsCollector) {
 		UnmaterializedDataset current = handle(project.getInput(), paramsCollector);
+		RecordScheme scheme = current.getScheme();
 
 		List<RexNode> projectNodes = project.getProjects();
 		List<String> fieldNames = project.getRowType().getFieldNames();
@@ -110,6 +111,7 @@ public class RelToDatasetConverter {
 		List<FieldProjection> projections = new ArrayList<>(projectNodes.size());
 		assert projectNodes.size() == fieldNames.size();
 
+		boolean redundantProjection = projectNodes.size() == scheme.size();
 		for (int i = 0; i < projectNodes.size(); i++) {
 			RexNode projectNode = projectNodes.get(i);
 			String fieldName = fieldNames.get(i);
@@ -122,11 +124,19 @@ public class RelToDatasetConverter {
 			FieldProjection fieldProjection = new FieldProjection(projectOperand, fieldName);
 
 			projections.add(fieldProjection);
+
+			if (!(projectOperand instanceof OperandRecordField operandRecordField) ||
+					operandRecordField.getIndex() != i ||
+					!scheme.getField(i).equals(fieldName)) {
+				redundantProjection = false;
+			}
+		}
+
+		if (redundantProjection) {
+			return current;
 		}
 
 		RecordProjectionFn projectionFn = RecordProjectionFn.create(projections);
-
-		RecordScheme scheme = current.getScheme();
 
 		return UnmaterializedDataset.of(
 				projectionFn.getToScheme(scheme, null),
