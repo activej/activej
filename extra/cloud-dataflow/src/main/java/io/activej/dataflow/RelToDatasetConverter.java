@@ -144,7 +144,8 @@ public class RelToDatasetConverter {
 					Dataset<Record> materialized = current.materialize(params);
 					RecordProjectionFn materializedFn = projectionFn.materialize(params);
 
-					if (!(materialized instanceof LocallySortedDataset<?, Record> locallySortedDataset)) {
+					if (!(materialized instanceof LocallySortedDataset<?, Record> locallySortedDataset) ||
+							!(locallySortedDataset.keyComparator() instanceof RecordSortComparator)) {
 						return Datasets.map(materialized, materializedFn);
 					}
 
@@ -178,7 +179,8 @@ public class RelToDatasetConverter {
 			wherePredicate = new AndPredicate(emptyList());
 		}
 
-		return UnmaterializedDataset.of(mapper.getScheme(), params -> {
+		RecordScheme scheme = mapper.getScheme();
+		return UnmaterializedDataset.of(scheme, params -> {
 			WherePredicate materializedPredicate = wherePredicate.materialize(params);
 			Dataset<Object> dataset = DatasetSupplierOfPredicate.create(id, materializedPredicate, dataflowTable.getType());
 			Dataset<Record> mapped = Datasets.map(dataset, mapper, Record.class);
@@ -189,6 +191,11 @@ public class RelToDatasetConverter {
 			if (!(dataflowTable instanceof DataflowPartitionedTable<Object> dataflowPartitionedTable)) return filtered;
 
 			List<Integer> indexes = new ArrayList<>(dataflowPartitionedTable.getPrimaryKeyIndexes());
+			if (indexes.isEmpty()) {
+				for (int i = 0; i < scheme.size(); i++) {
+					indexes.add(i);
+				}
+			}
 
 			LocallySortedDataset<Record, Record> locallySortedDataset = Datasets.localSort(filtered, Record.class, getKeyFunction(indexes), RecordKeyComparator.getInstance());
 
