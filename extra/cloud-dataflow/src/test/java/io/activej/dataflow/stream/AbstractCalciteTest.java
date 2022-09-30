@@ -49,7 +49,6 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.concat;
 import static io.activej.dataflow.helper.StreamMergeSorterStorageStub.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
-import static io.activej.dataflow.proto.serializer.ProtobufUtils.ofObject;
 import static io.activej.dataflow.stream.AbstractCalciteTest.MatchType.TYPE_1;
 import static io.activej.dataflow.stream.AbstractCalciteTest.MatchType.TYPE_2;
 import static io.activej.dataflow.stream.DataflowTest.createCommon;
@@ -184,18 +183,17 @@ public abstract class AbstractCalciteTest {
 							LargeToRecord largeToRecord = LargeToRecord.create(classLoader);
 							SubjectSelectionToRecord subjectSelectionToRecord = SubjectSelectionToRecord.create(classLoader);
 							FilterableToRecord filterableToRecord = FilterableToRecord.create(classLoader);
-							StudentReducer studentReducer = new StudentReducer();
 
 							return DataflowSchema.create()
-									.withTable(STUDENT_TABLE_NAME, DataflowTable.create(Student.class, studentToRecord, ofObject(() -> studentToRecord)))
-									.withTable(DEPARTMENT_TABLE_NAME, DataflowTable.create(Department.class, departmentToRecord, ofObject(() -> departmentToRecord)))
-									.withTable(REGISTRY_TABLE_NAME, DataflowTable.create(Registry.class, recordToFunction, ofObject(() -> recordToFunction)))
-									.withTable(USER_PROFILES_TABLE_NAME, DataflowTable.create(UserProfile.class, userProfileToRecord, ofObject(() -> userProfileToRecord)))
-									.withTable(LARGE_TABLE_NAME, DataflowTable.create(Large.class, largeToRecord, ofObject(() -> largeToRecord)))
-									.withTable(SUBJECT_SELECTION_TABLE_NAME, DataflowTable.create(SubjectSelection.class, subjectSelectionToRecord, ofObject(() -> subjectSelectionToRecord)))
-									.withTable(FILTERABLE_TABLE_NAME, DataflowTable.create(Filterable.class, filterableToRecord, ofObject(() -> filterableToRecord)))
-									.withTable(STUDENT_DUPLICATES_TABLE_NAME, DataflowPartitionedTable.create(Student.class, studentToRecord, ofObject(() -> studentToRecord))
-											.withReducer(studentReducer, ofObject(() -> studentReducer))
+									.withTable(STUDENT_TABLE_NAME, DataflowTable.create(Student.class, studentToRecord))
+									.withTable(DEPARTMENT_TABLE_NAME, DataflowTable.create(Department.class, departmentToRecord))
+									.withTable(REGISTRY_TABLE_NAME, DataflowTable.create(Registry.class, recordToFunction))
+									.withTable(USER_PROFILES_TABLE_NAME, DataflowTable.create(UserProfile.class, userProfileToRecord))
+									.withTable(LARGE_TABLE_NAME, DataflowTable.create(Large.class, largeToRecord))
+									.withTable(SUBJECT_SELECTION_TABLE_NAME, DataflowTable.create(SubjectSelection.class, subjectSelectionToRecord))
+									.withTable(FILTERABLE_TABLE_NAME, DataflowTable.create(Filterable.class, filterableToRecord))
+									.withTable(STUDENT_DUPLICATES_TABLE_NAME, DataflowPartitionedTable.create(Student.class, studentToRecord)
+											.withReducer(new StudentReducer())
 											.withPrimaryKeyIndexes(0));
 						},
 						DefiningClassLoader.class)
@@ -275,7 +273,7 @@ public abstract class AbstractCalciteTest {
 	}
 
 	public record UserProfile(String id, UserProfilePojo pojo, Map<Integer, UserProfileIntent> intents,
-	                          long timestamp) {
+							  long timestamp) {
 	}
 
 	@SerializeRecord

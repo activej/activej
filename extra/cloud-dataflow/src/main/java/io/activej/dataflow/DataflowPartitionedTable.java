@@ -20,7 +20,6 @@ import io.activej.dataflow.calcite.DataflowTable;
 import io.activej.dataflow.calcite.RecordFunction;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.record.Record;
-import io.activej.serializer.BinarySerializer;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.jetbrains.annotations.Nullable;
@@ -35,18 +34,17 @@ public final class DataflowPartitionedTable<T> extends DataflowTable<T> {
 	private final Set<Integer> primaryKeyIndexes = new HashSet<>();
 
 	private @Nullable Reducer<Record, Record, Record, Record> reducer;
-	private @Nullable BinarySerializer<Reducer<Record, Record, Record, Record>> reducerSerializer;
 
-	private DataflowPartitionedTable(Class<T> type, Function<RelDataTypeFactory, RelDataType> relDataTypeFactory, RecordFunction<T> recordFunction, BinarySerializer<RecordFunction<T>> recordFunctionSerializer) {
-		super(type, relDataTypeFactory, recordFunction, recordFunctionSerializer);
+	private DataflowPartitionedTable(Class<T> type, Function<RelDataTypeFactory, RelDataType> relDataTypeFactory, RecordFunction<T> recordFunction) {
+		super(type, relDataTypeFactory, recordFunction);
 	}
 
-	public static <T> DataflowPartitionedTable<T> create(Class<T> cls, RecordFunction<T> recordFunction, BinarySerializer<RecordFunction<T>> recordFunctionSerializer) {
-		return new DataflowPartitionedTable<>(cls, typeFactory -> toRowType(typeFactory, cls), recordFunction, recordFunctionSerializer);
+	public static <T> DataflowPartitionedTable<T> create(Class<T> cls, RecordFunction<T> recordFunction) {
+		return new DataflowPartitionedTable<>(cls, typeFactory -> toRowType(typeFactory, cls), recordFunction);
 	}
 
-	public static <T> DataflowPartitionedTable<T> create(Class<T> type, Function<RelDataTypeFactory, RelDataType> relDataTypeFactory, RecordFunction<T> recordFunction, BinarySerializer<RecordFunction<T>> recordFunctionSerializer) {
-		return new DataflowPartitionedTable<>(type, relDataTypeFactory, recordFunction, recordFunctionSerializer);
+	public static <T> DataflowPartitionedTable<T> create(Class<T> type, Function<RelDataTypeFactory, RelDataType> relDataTypeFactory, RecordFunction<T> recordFunction) {
+		return new DataflowPartitionedTable<>(type, relDataTypeFactory, recordFunction);
 	}
 
 	public DataflowPartitionedTable<T> withPrimaryKeyIndexes(int... indexes) {
@@ -54,9 +52,8 @@ public final class DataflowPartitionedTable<T> extends DataflowTable<T> {
 		return this;
 	}
 
-	public DataflowPartitionedTable<T> withReducer(Reducer<Record, Record, Record, Record> reducer, BinarySerializer<Reducer<Record, Record, Record, Record>> reducerSerializer) {
+	public DataflowPartitionedTable<T> withReducer(Reducer<Record, Record, Record, Record> reducer) {
 		this.reducer = reducer;
-		this.reducerSerializer = reducerSerializer;
 		return this;
 	}
 
@@ -66,9 +63,5 @@ public final class DataflowPartitionedTable<T> extends DataflowTable<T> {
 
 	public @Nullable Reducer<Record, Record, Record, Record> getReducer() {
 		return reducer;
-	}
-
-	public @Nullable BinarySerializer<Reducer<Record, Record, Record, Record>> getReducerSerializer() {
-		return reducerSerializer;
 	}
 }

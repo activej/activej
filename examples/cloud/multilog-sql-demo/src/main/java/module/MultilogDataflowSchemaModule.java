@@ -8,8 +8,6 @@ import io.activej.inject.module.AbstractModule;
 import misc.LogItem;
 import misc.LogItemRecordFunction;
 
-import static io.activej.dataflow.proto.serializer.ProtobufUtils.ofObject;
-
 public class MultilogDataflowSchemaModule extends AbstractModule {
 	public static final String LOG_ITEM_TABLE_NAME = "log_item";
 
@@ -28,7 +26,7 @@ public class MultilogDataflowSchemaModule extends AbstractModule {
 
 	@Provides
 	DataflowTable<LogItem> logItemTable(LogItemRecordFunction recordFunction) {
-		return DataflowTable.create(LogItem.class, recordFunction, ofObject(() -> recordFunction));
+		return DataflowTable.create(LogItem.class, recordFunction);
 	}
 
 	@Provides

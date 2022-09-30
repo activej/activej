@@ -20,7 +20,6 @@ import io.activej.codegen.util.Primitives;
 import io.activej.common.exception.ToDoException;
 import io.activej.dataflow.calcite.rel.FilterableTableScan;
 import io.activej.dataflow.calcite.utils.JavaRecordType;
-import io.activej.serializer.BinarySerializer;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
@@ -39,24 +38,22 @@ import java.util.function.Function;
 public class DataflowTable<T> extends AbstractTable implements TranslatableTable {
 	private final Class<T> type;
 	private final RecordFunction<T> recordFunction;
-	private final BinarySerializer<RecordFunction<T>> recordFunctionSerializer;
 	private final Function<RelDataTypeFactory, RelDataType> relDataTypeFactory;
 
 	private RelDataType relDataType;
 
-	protected DataflowTable(Class<T> type, Function<RelDataTypeFactory, RelDataType> relDataTypeFactory, RecordFunction<T> recordFunction, BinarySerializer<RecordFunction<T>> recordFunctionSerializer) {
+	protected DataflowTable(Class<T> type, Function<RelDataTypeFactory, RelDataType> relDataTypeFactory, RecordFunction<T> recordFunction) {
 		this.type = type;
 		this.recordFunction = recordFunction;
-		this.recordFunctionSerializer = recordFunctionSerializer;
 		this.relDataTypeFactory = relDataTypeFactory;
 	}
 
-	public static <T> DataflowTable<T> create(Class<T> cls, RecordFunction<T> recordFunction, BinarySerializer<RecordFunction<T>> recordFunctionSerializer) {
-		return new DataflowTable<>(cls, typeFactory -> toRowType(typeFactory, cls), recordFunction, recordFunctionSerializer);
+	public static <T> DataflowTable<T> create(Class<T> cls, RecordFunction<T> recordFunction) {
+		return new DataflowTable<>(cls, typeFactory -> toRowType(typeFactory, cls), recordFunction);
 	}
 
-	public static <T> DataflowTable<T> create(Class<T> cls, Function<RelDataTypeFactory, RelDataType> relDataTypeFactory, RecordFunction<T> recordFunction, BinarySerializer<RecordFunction<T>> recordFunctionSerializer) {
-		return new DataflowTable<>(cls, relDataTypeFactory, recordFunction, recordFunctionSerializer);
+	public static <T> DataflowTable<T> create(Class<T> cls, Function<RelDataTypeFactory, RelDataType> relDataTypeFactory, RecordFunction<T> recordFunction) {
+		return new DataflowTable<>(cls, relDataTypeFactory, recordFunction);
 	}
 
 	@Override
@@ -73,10 +70,6 @@ public class DataflowTable<T> extends AbstractTable implements TranslatableTable
 
 	public RecordFunction<T> getRecordFunction() {
 		return recordFunction;
-	}
-
-	public BinarySerializer<RecordFunction<T>> getRecordFunctionSerializer() {
-		return recordFunctionSerializer;
 	}
 
 	protected static RelDataType toRowType(RelDataTypeFactory typeFactory, Type type) {

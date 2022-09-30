@@ -15,10 +15,8 @@ import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.dataflow.calcite.operand.OperandRecordField;
 import io.activej.dataflow.calcite.operand.OperandScalar;
 import io.activej.dataflow.calcite.rel.FilterableTableScan;
-import io.activej.dataflow.calcite.utils.RecordKeyComparator;
-import io.activej.dataflow.calcite.utils.RecordSortComparator;
+import io.activej.dataflow.calcite.utils.*;
 import io.activej.dataflow.calcite.utils.RecordSortComparator.FieldSort;
-import io.activej.dataflow.calcite.utils.Utils;
 import io.activej.dataflow.calcite.where.*;
 import io.activej.dataflow.dataset.*;
 import io.activej.dataflow.graph.DataflowContext;
@@ -183,7 +181,7 @@ public class RelToDatasetConverter {
 		return UnmaterializedDataset.of(scheme, params -> {
 			WherePredicate materializedPredicate = wherePredicate.materialize(params);
 			Dataset<Object> dataset = DatasetSupplierOfPredicate.create(id, materializedPredicate, dataflowTable.getType());
-			Dataset<Record> mapped = Datasets.map(dataset, mapper, Record.class);
+			Dataset<Record> mapped = Datasets.map(dataset, new NamedRecordFunction<>(id, mapper), Record.class);
 			Dataset<Record> filtered = needsFiltering ?
 					Datasets.filter(mapped, materializedPredicate) :
 					mapped;
@@ -200,7 +198,9 @@ public class RelToDatasetConverter {
 			LocallySortedDataset<Record, Record> locallySortedDataset = Datasets.localSort(filtered, Record.class, getKeyFunction(indexes), RecordKeyComparator.getInstance());
 
 			Reducer<Record, Record, Record, Record> providedReducer = dataflowPartitionedTable.getReducer();
-			Reducer<Record, Record, Record, ?> reducer = providedReducer == null ? StreamReducers.deduplicateReducer() : providedReducer;
+			Reducer<Record, Record, Record, ?> reducer = providedReducer == null ?
+					StreamReducers.deduplicateReducer() :
+					new NamedReducer(id, providedReducer);
 
 			return Datasets.repartitionReduce(locallySortedDataset, reducer, Record.class);
 		});

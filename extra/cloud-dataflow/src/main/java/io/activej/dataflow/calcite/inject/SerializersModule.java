@@ -1,9 +1,7 @@
 package io.activej.dataflow.calcite.inject;
 
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.dataflow.DataflowPartitionedTable;
 import io.activej.dataflow.calcite.DataflowSchema;
-import io.activej.dataflow.calcite.DataflowTable;
 import io.activej.dataflow.calcite.RecordProjectionFn;
 import io.activej.dataflow.calcite.RecordSerializer;
 import io.activej.dataflow.calcite.aggregation.RecordReducer;
@@ -46,12 +44,7 @@ public final class SerializersModule extends AbstractModule {
 	protected void configure() {
 		bind(new Key<BinarySerializer<Function<?, ?>>>() {}).to((schema, recordProjectionFnSerializer) -> {
 					FunctionSubtypeSerializer<Function<?, ?>> serializer = FunctionSubtypeSerializer.create();
-					for (DataflowTable<?> table : schema.getDataflowTableMap().values()) {
-						Class<? extends Function<?, ?>> recordFunctionClass = (Class<? extends Function<?, ?>>) table.getRecordFunction().getClass();
-						if (!serializer.hasSubtypeCodec(recordFunctionClass)) {
-							serializer.setSubtypeCodec(recordFunctionClass, table.getRecordFunctionSerializer());
-						}
-					}
+					serializer.setSubtypeCodec((Class) NamedRecordFunction.class, new NamedRecordFunctionSerializer(schema));
 					serializer.setSubtypeCodec((Class) RecordKeyFunction.class, new RecordKeyFunctionSerializer<>());
 					serializer.setSubtypeCodec((Class) Function.identity().getClass(), "identity", ofObject(Function::identity));
 					serializer.setSubtypeCodec(RecordProjectionFn.class, recordProjectionFnSerializer);
@@ -83,17 +76,7 @@ public final class SerializersModule extends AbstractModule {
 
 		bind(new Key<BinarySerializer<StreamReducers.Reducer<?, ?, ?, ?>>>() {}).to((schema, inputToAccumulator, inputToOutput, accumulatorToOutput, mergeReducer, deduplicateReducer) -> {
 					FunctionSubtypeSerializer<StreamReducers.Reducer> serializer = FunctionSubtypeSerializer.create();
-					for (DataflowTable<?> table : schema.getDataflowTableMap().values()) {
-						if (!(table instanceof DataflowPartitionedTable<?> dataflowPartitionedTable)) {
-							continue;
-						}
-						StreamReducers.Reducer<Record, Record, Record, Record> reducer = dataflowPartitionedTable.getReducer();
-						if (reducer == null) continue;
-						Class<? extends StreamReducers.Reducer> reducerClass = reducer.getClass();
-						if (!serializer.hasSubtypeCodec(reducerClass)) {
-							serializer.setSubtypeCodec(reducerClass, dataflowPartitionedTable.getReducerSerializer());
-						}
-					}
+					serializer.setSubtypeCodec(NamedReducer.class, new NamedReducerFunctionSerializer(schema));
 					serializer.setSubtypeCodec(StreamReducers.ReducerToResult.InputToAccumulator.class, inputToAccumulator);
 					serializer.setSubtypeCodec(StreamReducers.ReducerToResult.InputToOutput.class, inputToOutput);
 					serializer.setSubtypeCodec(StreamReducers.ReducerToResult.AccumulatorToOutput.class, accumulatorToOutput);
