@@ -28,25 +28,27 @@ import java.util.function.Function;
 
 import static io.activej.dataflow.calcite.utils.Utils.toRowType;
 
-public class DataflowTable<T> extends AbstractTable implements TranslatableTable {
-	private final Class<T> type;
-	private final RecordFunction<T> recordFunction;
+public class DataflowTable extends AbstractTable implements TranslatableTable {
+	private final String tableName;
+	private final Class<?> type;
+	private final RecordFunction<?> recordFunction;
 	private final Function<RelDataTypeFactory, RelDataType> relDataTypeFactory;
 
 	private RelDataType relDataType;
 
-	protected DataflowTable(Class<T> type, Function<RelDataTypeFactory, RelDataType> relDataTypeFactory, RecordFunction<T> recordFunction) {
+	protected DataflowTable(String tableName, Class<?> type, Function<RelDataTypeFactory, RelDataType> relDataTypeFactory, RecordFunction<?> recordFunction) {
+		this.tableName = tableName;
 		this.type = type;
 		this.recordFunction = recordFunction;
 		this.relDataTypeFactory = relDataTypeFactory;
 	}
 
-	public static <T> DataflowTable<T> create(Class<T> cls, RecordFunction<T> recordFunction) {
-		return new DataflowTable<>(cls, typeFactory -> toRowType(typeFactory, cls), recordFunction);
+	public static <T> DataflowTable create(String tableName, Class<T> cls, RecordFunction<T> recordFunction) {
+		return new DataflowTable(tableName, cls, typeFactory -> toRowType(typeFactory, cls), recordFunction);
 	}
 
-	public static <T> DataflowTable<T> create(Class<T> cls, Function<RelDataTypeFactory, RelDataType> relDataTypeFactory, RecordFunction<T> recordFunction) {
-		return new DataflowTable<>(cls, relDataTypeFactory, recordFunction);
+	public static <T> DataflowTable create(String tableName, Class<T> cls, Function<RelDataTypeFactory, RelDataType> relDataTypeFactory, RecordFunction<T> recordFunction) {
+		return new DataflowTable(tableName, cls, relDataTypeFactory, recordFunction);
 	}
 
 	@Override
@@ -57,11 +59,15 @@ public class DataflowTable<T> extends AbstractTable implements TranslatableTable
 		return relDataType;
 	}
 
-	public Class<T> getType() {
+	public String getTableName() {
+		return tableName;
+	}
+
+	public Class<?> getType() {
 		return type;
 	}
 
-	public RecordFunction<T> getRecordFunction() {
+	public RecordFunction<?> getRecordFunction() {
 		return recordFunction;
 	}
 

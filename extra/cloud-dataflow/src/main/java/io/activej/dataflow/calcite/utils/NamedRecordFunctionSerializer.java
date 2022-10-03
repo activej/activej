@@ -24,7 +24,7 @@ public final class NamedRecordFunctionSerializer implements BinarySerializer<Nam
 	@Override
 	public NamedRecordFunction<?> decode(BinaryInput in) throws CorruptedDataException {
 		String tableName = UTF8_SERIALIZER.decode(in);
-		DataflowTable<?> dataflowTable = dataflowSchema.getDataflowTableMap().get(tableName);
+		DataflowTable dataflowTable = dataflowSchema.getDataflowTableMap().get(tableName);
 		if (dataflowTable == null) {
 			throw new CorruptedDataException("Unknown table: " + tableName);
 		}

@@ -2,11 +2,11 @@ package io.activej.dataflow.calcite.inject;
 
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.dataflow.DataflowClient;
-import io.activej.dataflow.RelToDatasetConverter;
 import io.activej.dataflow.SqlDataflow;
 import io.activej.dataflow.calcite.CalciteSqlDataflow;
 import io.activej.dataflow.calcite.DataflowSchema;
 import io.activej.dataflow.calcite.DataflowSqlValidator;
+import io.activej.dataflow.calcite.RelToDatasetConverter;
 import io.activej.dataflow.graph.Partition;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.OptionalDependency;
@@ -54,8 +54,8 @@ public final class CalciteClientModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
+		install(new CalciteCommonModule());
 		install(new SqlFunctionModule());
-		install(new SerializersModule());
 
 		bind(SqlDataflow.class).to(CalciteSqlDataflow.class);
 	}

@@ -14,10 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.activej.dataflow;
+package io.activej.dataflow.calcite;
 
-import io.activej.dataflow.calcite.DataflowTable;
-import io.activej.dataflow.calcite.RecordFunction;
 import io.activej.datastream.processor.StreamReducers;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.record.Record;
@@ -32,29 +30,29 @@ import java.util.function.Function;
 
 import static io.activej.dataflow.calcite.utils.Utils.toRowType;
 
-public final class DataflowPartitionedTable<T> extends DataflowTable<T> {
+public final class DataflowPartitionedTable extends DataflowTable {
 	private final Set<Integer> primaryKeyIndexes = new HashSet<>();
 
 	private Reducer<Record, Record, Record, ?> reducer = StreamReducers.deduplicateReducer();
 
-	private DataflowPartitionedTable(Class<T> type, Function<RelDataTypeFactory, RelDataType> relDataTypeFactory, RecordFunction<T> recordFunction) {
-		super(type, relDataTypeFactory, recordFunction);
+	private DataflowPartitionedTable(String tableName, Class<?> type, Function<RelDataTypeFactory, RelDataType> relDataTypeFactory, RecordFunction<?> recordFunction) {
+		super(tableName, type, relDataTypeFactory, recordFunction);
 	}
 
-	public static <T> DataflowPartitionedTable<T> create(Class<T> cls, RecordFunction<T> recordFunction) {
-		return new DataflowPartitionedTable<>(cls, typeFactory -> toRowType(typeFactory, cls), recordFunction);
+	public static <T> DataflowPartitionedTable create(String tableName, Class<T> cls, RecordFunction<T> recordFunction) {
+		return new DataflowPartitionedTable(tableName, cls, typeFactory -> toRowType(typeFactory, cls), recordFunction);
 	}
 
-	public static <T> DataflowPartitionedTable<T> create(Class<T> type, Function<RelDataTypeFactory, RelDataType> relDataTypeFactory, RecordFunction<T> recordFunction) {
-		return new DataflowPartitionedTable<>(type, relDataTypeFactory, recordFunction);
+	public static <T> DataflowPartitionedTable create(String tableName, Class<T> type, Function<RelDataTypeFactory, RelDataType> relDataTypeFactory, RecordFunction<T> recordFunction) {
+		return new DataflowPartitionedTable(tableName, type, relDataTypeFactory, recordFunction);
 	}
 
-	public DataflowPartitionedTable<T> withPrimaryKeyIndexes(int... indexes) {
+	public DataflowPartitionedTable withPrimaryKeyIndexes(int... indexes) {
 		primaryKeyIndexes.addAll(Arrays.stream(indexes).boxed().toList());
 		return this;
 	}
 
-	public DataflowPartitionedTable<T> withReducer(Reducer<Record, Record, Record, ?> reducer) {
+	public DataflowPartitionedTable withReducer(Reducer<Record, Record, Record, ?> reducer) {
 		this.reducer = reducer;
 		return this;
 	}

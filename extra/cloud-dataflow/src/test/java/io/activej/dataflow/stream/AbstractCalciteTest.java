@@ -1,7 +1,6 @@
 package io.activej.dataflow.stream;
 
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.dataflow.DataflowPartitionedTable;
 import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.SqlDataflow;
 import io.activej.dataflow.calcite.*;
@@ -192,57 +191,72 @@ public abstract class AbstractCalciteTest {
 		InetSocketAddress address2 = getFreeListenAddress();
 
 		List<Partition> partitions = List.of(new Partition(address1), new Partition(address2));
+		Key<Set<DataflowTable>> setTableKey = new Key<>() {};
 		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), partitions)
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.bind(new Key<List<Partition>>() {}).toInstance(partitions)
-				.bind(DataflowSchema.class).to(classLoader -> {
-							StudentToRecord studentToRecord = StudentToRecord.create(classLoader);
-							DepartmentToRecord departmentToRecord = DepartmentToRecord.create(classLoader);
-							RegistryToRecord recordToFunction = RegistryToRecord.create(classLoader);
-							UserProfileToRecord userProfileToRecord = UserProfileToRecord.create(classLoader);
-							LargeToRecord largeToRecord = LargeToRecord.create(classLoader);
-							SubjectSelectionToRecord subjectSelectionToRecord = SubjectSelectionToRecord.create(classLoader);
-							FilterableToRecord filterableToRecord = FilterableToRecord.create(classLoader);
-
-							return DataflowSchema.create()
-									.withTable(STUDENT_TABLE_NAME, DataflowTable.create(Student.class, studentToRecord))
-									.withTable(DEPARTMENT_TABLE_NAME, DataflowTable.create(Department.class, departmentToRecord))
-									.withTable(REGISTRY_TABLE_NAME, DataflowTable.create(Registry.class, recordToFunction))
-									.withTable(USER_PROFILES_TABLE_NAME, DataflowTable.create(UserProfile.class, userProfileToRecord))
-									.withTable(LARGE_TABLE_NAME, DataflowTable.create(Large.class, largeToRecord))
-									.withTable(SUBJECT_SELECTION_TABLE_NAME, DataflowTable.create(SubjectSelection.class, subjectSelectionToRecord))
-									.withTable(FILTERABLE_TABLE_NAME, DataflowTable.create(Filterable.class, filterableToRecord))
-									.withTable(STUDENT_DUPLICATES_TABLE_NAME, DataflowPartitionedTable.create(Student.class, studentToRecord)
-											.withReducer(new StudentReducer())
-											.withPrimaryKeyIndexes(0))
-									.withTable(CUSTOM_TABLE_NAME, DataflowTableBuilder.create(classLoader, Custom.class)
-											.withColumn("id", int.class, Custom::getId)
-											.withColumn("price", double.class, custom -> custom.getPrice().doubleValue())
-											.withColumn("description", String.class, Custom::getDescription)
-											.build()
-									)
-									.withTable(CUSTOM_PARTITIONED_TABLE_NAME, DataflowTableBuilder.createPartitioned(classLoader, Custom.class)
-											.withColumn("id", int.class, Custom::getId)
-											.withColumn("price", double.class, custom -> custom.getPrice().doubleValue())
-											.withPrimaryKeyIndexes(0)
-											.build()
-									);
-						},
+				.bind(new Key<RecordFunction<Student>>() {}).to(StudentToRecord::create, DefiningClassLoader.class)
+				.bind(setTableKey).to(studentToRecord -> Set.of(
+								DataflowTable.create(STUDENT_TABLE_NAME, Student.class, studentToRecord)),
+						new Key<RecordFunction<Student>>() {})
+				.bind(setTableKey).to(classLoader -> {
+					DepartmentToRecord departmentToRecord = DepartmentToRecord.create(classLoader);
+					return Set.of(DataflowTable.create(DEPARTMENT_TABLE_NAME, Department.class, departmentToRecord));
+				}, DefiningClassLoader.class)
+				.bind(setTableKey).to(classLoader -> {
+					RegistryToRecord registryToRecord = RegistryToRecord.create(classLoader);
+					return Set.of(DataflowTable.create(REGISTRY_TABLE_NAME, Registry.class, registryToRecord));
+				}, DefiningClassLoader.class)
+				.bind(setTableKey).to(classLoader -> {
+					UserProfileToRecord userProfileToRecord = UserProfileToRecord.create(classLoader);
+					return Set.of(DataflowTable.create(USER_PROFILES_TABLE_NAME, UserProfile.class, userProfileToRecord));
+				}, DefiningClassLoader.class)
+				.bind(setTableKey).to(classLoader -> {
+					LargeToRecord largeToRecord = LargeToRecord.create(classLoader);
+					return Set.of(DataflowTable.create(LARGE_TABLE_NAME, Large.class, largeToRecord));
+				}, DefiningClassLoader.class)
+				.bind(setTableKey).to(classLoader -> {
+					SubjectSelectionToRecord subjectSelectionToRecord = SubjectSelectionToRecord.create(classLoader);
+					return Set.of(DataflowTable.create(SUBJECT_SELECTION_TABLE_NAME, SubjectSelection.class, subjectSelectionToRecord));
+				}, DefiningClassLoader.class)
+				.bind(setTableKey).to(classLoader -> {
+					FilterableToRecord filterableToRecord = FilterableToRecord.create(classLoader);
+					return Set.of(DataflowTable.create(FILTERABLE_TABLE_NAME, Filterable.class, filterableToRecord));
+				}, DefiningClassLoader.class)
+				.bind(setTableKey).to(studentToRecord -> Set.of(
+								DataflowPartitionedTable.create(STUDENT_DUPLICATES_TABLE_NAME, Student.class, studentToRecord)
+										.withReducer(new StudentReducer())
+										.withPrimaryKeyIndexes(0)),
+						new Key<RecordFunction<Student>>() {})
+				.bind(setTableKey).to(classLoader -> Set.of(
+								DataflowTableBuilder.create(classLoader, CUSTOM_TABLE_NAME, Custom.class)
+										.withColumn("id", int.class, Custom::getId)
+										.withColumn("price", double.class, custom -> custom.getPrice().doubleValue())
+										.withColumn("description", String.class, Custom::getDescription)
+										.build()),
 						DefiningClassLoader.class)
+				.bind(setTableKey).to(classLoader -> Set.of(
+								DataflowTableBuilder.createPartitioned(classLoader, CUSTOM_PARTITIONED_TABLE_NAME, Custom.class)
+										.withColumn("id", int.class, Custom::getId)
+										.withColumn("price", double.class, custom -> custom.getPrice().doubleValue())
+										.withPrimaryKeyIndexes(0)
+										.build()),
+						DefiningClassLoader.class)
+				.multibindToSet(DataflowTable.class)
 				.build();
 
 		Module clientModule = Modules.combine(common, CalciteClientModule.create(), ModuleBuilder.create()
 				.bind(String.class).to(() -> "CLIENT")
 				.build());
-		sqlDataflow = Injector.of(clientModule).getInstance(SqlDataflow.class);
-
+		Injector clientInjector = Injector.of(clientModule);
+		clientInjector.createEagerInstances();
+		sqlDataflow = clientInjector.getInstance(SqlDataflow.class);
 
 		Module serverModule = ModuleBuilder.create()
 				.install(common)
 				.install(CalciteServerModule.create())
 				.build()
 				.overrideWith(getAdditionalServerModule());
-
 
 		Module server1Module = Modules.combine(serverModule,
 				ModuleBuilder.create()
@@ -274,6 +288,8 @@ public abstract class AbstractCalciteTest {
 		server1Injector = Injector.of(server1Module);
 		server2Injector = Injector.of(server2Module);
 
+		server1Injector.createEagerInstances();
+		server2Injector.createEagerInstances();
 		server1 = server1Injector.getInstance(DataflowServer.class).withListenAddress(address1);
 		server2 = server2Injector.getInstance(DataflowServer.class).withListenAddress(address2);
 
@@ -298,7 +314,6 @@ public abstract class AbstractCalciteTest {
 		return Module.empty();
 	}
 
-
 	public record Student(int id, String firstName, String lastName, int dept) {
 	}
 
@@ -309,7 +324,7 @@ public abstract class AbstractCalciteTest {
 	}
 
 	public record UserProfile(String id, UserProfilePojo pojo, Map<Integer, UserProfileIntent> intents,
-	                          long timestamp) {
+							  long timestamp) {
 	}
 
 	@SerializeRecord
@@ -361,7 +376,6 @@ public abstract class AbstractCalciteTest {
 		}
 	}
 
-
 	@Test
 	public void testSelectAllStudents() {
 		QueryResult result = query("SELECT * FROM student");
@@ -385,7 +399,6 @@ public abstract class AbstractCalciteTest {
 								Function.identity(),
 								(student1, student2) -> student1.dept > student2.dept ? student1 : student2))
 						.values()));
-
 
 		assertEquals(expected, result);
 	}

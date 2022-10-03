@@ -27,15 +27,15 @@ public final class CalciteServerModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		install(new SerializersModule());
+		install(new CalciteCommonModule());
 
 		transform(DataflowSchema.class, (bindings, scope, key, binding) -> binding
 				.addDependencies(DatasetIds.class)
 				.mapInstance(List.of(Key.of(DatasetIds.class)), (deps, schema) -> {
 					DatasetIds datasetIds = (DatasetIds) deps[0];
-					Map<String, DataflowTable<?>> tableMap = schema.getDataflowTableMap();
+					Map<String, DataflowTable> tableMap = schema.getDataflowTableMap();
 
-					for (Map.Entry<String, DataflowTable<?>> entry : tableMap.entrySet()) {
+					for (Map.Entry<String, DataflowTable> entry : tableMap.entrySet()) {
 						String id = entry.getKey().toLowerCase();
 						datasetIds.getKeyForId(id); // throws exception if no key
 					}

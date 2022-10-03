@@ -2,9 +2,8 @@ package io.activej.dataflow.calcite;
 
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowException;
-import io.activej.dataflow.RelToDatasetConverter;
-import io.activej.dataflow.RelToDatasetConverter.ConversionResult;
 import io.activej.dataflow.SqlDataflow;
+import io.activej.dataflow.calcite.RelToDatasetConverter.ConversionResult;
 import io.activej.dataflow.calcite.optimizer.ParameterizedTableRule;
 import io.activej.dataflow.collector.Collector;
 import io.activej.dataflow.collector.MergeCollector;

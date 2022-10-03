@@ -1,12 +1,8 @@
-package io.activej.dataflow;
+package io.activej.dataflow.calcite;
 
 import com.google.common.collect.ImmutableList;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.dataflow.calcite.DataflowTable;
-import io.activej.dataflow.calcite.RecordFunction;
-import io.activej.dataflow.calcite.RecordProjectionFn;
 import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjection;
-import io.activej.dataflow.calcite.Value;
 import io.activej.dataflow.calcite.aggregation.*;
 import io.activej.dataflow.calcite.dataset.DatasetSupplierOfPredicate;
 import io.activej.dataflow.calcite.join.RecordInnerJoiner;
@@ -156,15 +152,15 @@ public class RelToDatasetConverter {
 				});
 	}
 
+	@SuppressWarnings("unchecked")
 	private UnmaterializedDataset handle(FilterableTableScan scan, ParamsCollector paramsCollector) {
 		RelOptTable table = scan.getTable();
 		List<String> names = table.getQualifiedName();
 
-		//noinspection unchecked
-		DataflowTable<Object> dataflowTable = table.unwrap(DataflowTable.class);
+		DataflowTable dataflowTable = table.unwrap(DataflowTable.class);
 		assert dataflowTable != null;
 
-		RecordFunction<Object> mapper = dataflowTable.getRecordFunction();
+		RecordFunction<Object> mapper = (RecordFunction<Object>) dataflowTable.getRecordFunction();
 		String id = last(names).toLowerCase();
 
 		WherePredicate wherePredicate;
@@ -179,13 +175,14 @@ public class RelToDatasetConverter {
 		RecordScheme scheme = mapper.getScheme();
 		return UnmaterializedDataset.of(scheme, params -> {
 			WherePredicate materializedPredicate = wherePredicate.materialize(params);
-			Dataset<Object> dataset = DatasetSupplierOfPredicate.create(id, materializedPredicate, dataflowTable.getType());
+			Class<Object> type = (Class<Object>) dataflowTable.getType();
+			Dataset<Object> dataset = DatasetSupplierOfPredicate.create(id, materializedPredicate, type);
 			Dataset<Record> mapped = Datasets.map(dataset, new NamedRecordFunction<>(id, mapper), Record.class);
 			Dataset<Record> filtered = needsFiltering ?
 					Datasets.filter(mapped, materializedPredicate) :
 					mapped;
 
-			if (!(dataflowTable instanceof DataflowPartitionedTable<Object> dataflowPartitionedTable)) return filtered;
+			if (!(dataflowTable instanceof DataflowPartitionedTable dataflowPartitionedTable)) return filtered;
 
 			List<Integer> indexes = new ArrayList<>(dataflowPartitionedTable.getPrimaryKeyIndexes());
 			if (indexes.isEmpty()) {
@@ -197,7 +194,6 @@ public class RelToDatasetConverter {
 			LocallySortedDataset<Record, Record> locallySortedDataset = Datasets.localSort(filtered, Record.class, getKeyFunction(indexes), RecordKeyComparator.getInstance());
 
 			Reducer<Record, Record, Record, ?> providedReducer = dataflowPartitionedTable.getReducer();
-			//noinspection unchecked
 			Reducer<Record, Record, Record, ?> reducer = new NamedReducer(id, (Reducer<Record, Record, Record, Object>) providedReducer);
 
 			return Datasets.repartitionReduce(locallySortedDataset, reducer, Record.class);

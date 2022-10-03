@@ -20,6 +20,7 @@ import org.apache.calcite.schema.Table;
 import org.apache.calcite.schema.impl.AbstractSchema;
 import org.apache.calcite.util.NameSet;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
@@ -27,7 +28,7 @@ import java.util.TreeMap;
 import static io.activej.common.Checks.checkArgument;
 
 public final class DataflowSchema extends AbstractSchema {
-	private final Map<String, DataflowTable<?>> tableMap = new TreeMap<>(NameSet.COMPARATOR);
+	private final Map<String, DataflowTable> tableMap = new TreeMap<>(NameSet.COMPARATOR);
 
 	private DataflowSchema() {
 		super();
@@ -37,16 +38,16 @@ public final class DataflowSchema extends AbstractSchema {
 		return new DataflowSchema();
 	}
 
-	public DataflowSchema withTable(String tableName, DataflowTable<?> table) {
-		DataflowTable<?> prev = tableMap.put(tableName, table);
-		checkArgument(prev == null, "Duplicate table names: " + tableName);
+	public DataflowSchema withTable(DataflowTable table) {
+		DataflowTable prev = tableMap.put(table.getTableName(), table);
+		checkArgument(prev == null, "Duplicate table names: " + table.getTableName());
 		return this;
 	}
 
-	public DataflowSchema withTables(Map<String, DataflowTable<?>> tables) {
-		for (Map.Entry<String, DataflowTable<?>> entry : tableMap.entrySet()) {
-			String tableName = entry.getKey();
-			DataflowTable<?> prev = tableMap.put(tableName, entry.getValue());
+	public DataflowSchema withTables(Collection<DataflowTable> tables) {
+		for (DataflowTable table : tables) {
+			String tableName = table.getTableName();
+			DataflowTable prev = tableMap.put(tableName, table);
 
 			checkArgument(prev == null, "Duplicate table names: " + tableName);
 		}
@@ -58,7 +59,7 @@ public final class DataflowSchema extends AbstractSchema {
 		return Collections.unmodifiableMap(tableMap);
 	}
 
-	public Map<String, DataflowTable<?>> getDataflowTableMap() {
+	public Map<String, DataflowTable> getDataflowTableMap() {
 		return Collections.unmodifiableMap(tableMap);
 	}
 }

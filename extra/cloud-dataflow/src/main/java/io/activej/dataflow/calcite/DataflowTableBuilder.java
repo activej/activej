@@ -1,7 +1,6 @@
 package io.activej.dataflow.calcite;
 
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.dataflow.DataflowPartitionedTable;
 import io.activej.dataflow.calcite.utils.JavaRecordType;
 import io.activej.dataflow.calcite.utils.Utils;
 import io.activej.datastream.processor.StreamReducers;
@@ -25,28 +24,30 @@ import static io.activej.inject.util.Utils.checkState;
 
 public final class DataflowTableBuilder<T> {
 	private final DefiningClassLoader classLoader;
+	private final String tableName;
 	private final Class<T> type;
 	private final LinkedHashMap<String, ColumnEntry> columns = new LinkedHashMap<>();
 	private final @Nullable Reducer<Record, Record, Record, ?> reducer;
 
 	private int[] primaryKeyIndexes = new int[0];
 
-	private DataflowTableBuilder(DefiningClassLoader classLoader, Class<T> type, @Nullable Reducer<Record, Record, Record, ?> reducer) {
+	private DataflowTableBuilder(DefiningClassLoader classLoader, String tableName, Class<T> type, @Nullable Reducer<Record, Record, Record, ?> reducer) {
+		this.tableName = tableName;
 		this.classLoader = classLoader;
 		this.type = type;
 		this.reducer = reducer;
 	}
 
-	public static <T> DataflowTableBuilder<T> create(DefiningClassLoader classLoader, Class<T> type) {
-		return new DataflowTableBuilder<>(classLoader, type, null);
+	public static <T> DataflowTableBuilder<T> create(DefiningClassLoader classLoader, String tableName, Class<T> type) {
+		return new DataflowTableBuilder<>(classLoader, tableName, type, null);
 	}
 
-	public static <T> DataflowTableBuilder<T> createPartitioned(DefiningClassLoader classLoader, Class<T> type) {
-		return new DataflowTableBuilder<>(classLoader, type, StreamReducers.deduplicateReducer());
+	public static <T> DataflowTableBuilder<T> createPartitioned(DefiningClassLoader classLoader, String tableName, Class<T> type) {
+		return new DataflowTableBuilder<>(classLoader, tableName, type, StreamReducers.deduplicateReducer());
 	}
 
-	public static <T> DataflowTableBuilder<T> createPartitioned(DefiningClassLoader classLoader, Class<T> type, Reducer<Record, Record, Record, ?> reducer) {
-		return new DataflowTableBuilder<>(classLoader, type, reducer);
+	public static <T> DataflowTableBuilder<T> createPartitioned(DefiningClassLoader classLoader, String tableName, Class<T> type, Reducer<Record, Record, Record, ?> reducer) {
+		return new DataflowTableBuilder<>(classLoader, tableName, type, reducer);
 	}
 
 	public <C> DataflowTableBuilder<T> withColumn(String columnName, Class<C> columnType, Function<T, C> getter) {
@@ -87,13 +88,13 @@ public final class DataflowTableBuilder<T> {
 		return this;
 	}
 
-	public DataflowTable<T> build() {
+	public DataflowTable build() {
 		RecordFunction<T> recordFunction = createRecordFunction(classLoader);
 		Function<RelDataTypeFactory, RelDataType> typeFactory = createTypeFactory();
 
 		return reducer == null ?
-				DataflowTable.create(type, typeFactory, recordFunction) :
-				DataflowPartitionedTable.create(type, typeFactory, recordFunction)
+				DataflowTable.create(tableName, type, typeFactory, recordFunction) :
+				DataflowPartitionedTable.create(tableName, type, typeFactory, recordFunction)
 						.withReducer(reducer)
 						.withPrimaryKeyIndexes(primaryKeyIndexes);
 	}
