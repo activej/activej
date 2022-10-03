@@ -1,4 +1,5 @@
 <code_scheme name="ActiveJ" version="1">
+  <option name="LINE_SEPARATOR" value="&#10;"/>
   <JavaCodeStyleSettings>
     <option name="PREFER_LONGER_NAMES" value="false"/>
   </JavaCodeStyleSettings>
