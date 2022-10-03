@@ -18,11 +18,11 @@ package io.activej.dataflow;
 
 import io.activej.dataflow.calcite.DataflowTable;
 import io.activej.dataflow.calcite.RecordFunction;
+import io.activej.datastream.processor.StreamReducers;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.record.Record;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,10 +30,12 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Function;
 
+import static io.activej.dataflow.calcite.utils.Utils.toRowType;
+
 public final class DataflowPartitionedTable<T> extends DataflowTable<T> {
 	private final Set<Integer> primaryKeyIndexes = new HashSet<>();
 
-	private @Nullable Reducer<Record, Record, Record, Record> reducer;
+	private Reducer<Record, Record, Record, ?> reducer = StreamReducers.deduplicateReducer();
 
 	private DataflowPartitionedTable(Class<T> type, Function<RelDataTypeFactory, RelDataType> relDataTypeFactory, RecordFunction<T> recordFunction) {
 		super(type, relDataTypeFactory, recordFunction);
@@ -52,7 +54,7 @@ public final class DataflowPartitionedTable<T> extends DataflowTable<T> {
 		return this;
 	}
 
-	public DataflowPartitionedTable<T> withReducer(Reducer<Record, Record, Record, Record> reducer) {
+	public DataflowPartitionedTable<T> withReducer(Reducer<Record, Record, Record, ?> reducer) {
 		this.reducer = reducer;
 		return this;
 	}
@@ -61,7 +63,7 @@ public final class DataflowPartitionedTable<T> extends DataflowTable<T> {
 		return Collections.unmodifiableSet(primaryKeyIndexes);
 	}
 
-	public @Nullable Reducer<Record, Record, Record, Record> getReducer() {
+	public Reducer<Record, Record, Record, ?> getReducer() {
 		return reducer;
 	}
 }

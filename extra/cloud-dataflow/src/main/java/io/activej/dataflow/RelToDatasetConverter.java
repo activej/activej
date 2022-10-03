@@ -24,7 +24,6 @@ import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.datastream.processor.StreamLimiter;
-import io.activej.datastream.processor.StreamReducers;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.datastream.processor.StreamSkip;
 import io.activej.record.Record;
@@ -197,10 +196,9 @@ public class RelToDatasetConverter {
 
 			LocallySortedDataset<Record, Record> locallySortedDataset = Datasets.localSort(filtered, Record.class, getKeyFunction(indexes), RecordKeyComparator.getInstance());
 
-			Reducer<Record, Record, Record, Record> providedReducer = dataflowPartitionedTable.getReducer();
-			Reducer<Record, Record, Record, ?> reducer = providedReducer == null ?
-					StreamReducers.deduplicateReducer() :
-					new NamedReducer(id, providedReducer);
+			Reducer<Record, Record, Record, ?> providedReducer = dataflowPartitionedTable.getReducer();
+			//noinspection unchecked
+			Reducer<Record, Record, Record, ?> reducer = new NamedReducer(id, (Reducer<Record, Record, Record, Object>) providedReducer);
 
 			return Datasets.repartitionReduce(locallySortedDataset, reducer, Record.class);
 		});

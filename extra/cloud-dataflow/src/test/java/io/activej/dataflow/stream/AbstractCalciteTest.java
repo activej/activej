@@ -4,10 +4,7 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.dataflow.DataflowPartitionedTable;
 import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.SqlDataflow;
-import io.activej.dataflow.calcite.DataflowSchema;
-import io.activej.dataflow.calcite.DataflowTable;
-import io.activej.dataflow.calcite.FilteredDataflowSupplier;
-import io.activej.dataflow.calcite.RecordFunction;
+import io.activej.dataflow.calcite.*;
 import io.activej.dataflow.calcite.inject.CalciteClientModule;
 import io.activej.dataflow.calcite.inject.CalciteServerModule;
 import io.activej.dataflow.calcite.operand.Operand;
@@ -34,6 +31,7 @@ import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 import java.lang.reflect.RecordComponent;
+import java.math.BigDecimal;
 import java.net.InetSocketAddress;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -75,6 +73,8 @@ public abstract class AbstractCalciteTest {
 	public static final String LARGE_TABLE_NAME = "large_table";
 	public static final String SUBJECT_SELECTION_TABLE_NAME = "subject_selection";
 	public static final String FILTERABLE_TABLE_NAME = "filterable";
+	public static final String CUSTOM_TABLE_NAME = "custom";
+	public static final String CUSTOM_PARTITIONED_TABLE_NAME = "custom_partitioned";
 
 	protected static final List<Student> STUDENT_LIST_1 = List.of(
 			new Student(4, "Mark", null, 3),
@@ -151,6 +151,26 @@ public abstract class AbstractCalciteTest {
 		FILTERABLE_2.add(new Filterable(45, 22L));
 	}
 
+	protected static final List<Custom> CUSTOM_LIST_1 = List.of(
+			new Custom(1, BigDecimal.valueOf(32.4), "abc"),
+			new Custom(4, BigDecimal.valueOf(102.42), "def")
+	);
+	protected static final List<Custom> CUSTOM_LIST_2 = List.of(
+			new Custom(3, BigDecimal.valueOf(9.4343), "geh"),
+			new Custom(2, BigDecimal.valueOf(43.53), "ijk")
+	);
+
+	protected static final List<Custom> CUSTOM_PARTITIONED_LIST_1 = List.of(
+			new Custom(1, BigDecimal.valueOf(32.4), "abc"),
+			new Custom(4, BigDecimal.valueOf(102.42), "def"),
+			new Custom(2, BigDecimal.valueOf(43.53), "ijk")
+	);
+	protected static final List<Custom> CUSTOM_PARTITIONED_LIST_2 = List.of(
+			new Custom(3, BigDecimal.valueOf(9.4343), "geh"),
+			new Custom(1, BigDecimal.valueOf(32.4), "abc"),
+			new Custom(2, BigDecimal.valueOf(43.53), "ijk"),
+			new Custom(5, BigDecimal.valueOf(231.424), "lmn")
+	);
 
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
@@ -194,7 +214,19 @@ public abstract class AbstractCalciteTest {
 									.withTable(FILTERABLE_TABLE_NAME, DataflowTable.create(Filterable.class, filterableToRecord))
 									.withTable(STUDENT_DUPLICATES_TABLE_NAME, DataflowPartitionedTable.create(Student.class, studentToRecord)
 											.withReducer(new StudentReducer())
-											.withPrimaryKeyIndexes(0));
+											.withPrimaryKeyIndexes(0))
+									.withTable(CUSTOM_TABLE_NAME, DataflowTableBuilder.create(classLoader, Custom.class)
+											.withColumn("id", int.class, Custom::getId)
+											.withColumn("price", double.class, custom -> custom.getPrice().doubleValue())
+											.withColumn("description", String.class, Custom::getDescription)
+											.build()
+									)
+									.withTable(CUSTOM_PARTITIONED_TABLE_NAME, DataflowTableBuilder.createPartitioned(classLoader, Custom.class)
+											.withColumn("id", int.class, Custom::getId)
+											.withColumn("price", double.class, custom -> custom.getPrice().doubleValue())
+											.withPrimaryKeyIndexes(0)
+											.build()
+									);
 						},
 						DefiningClassLoader.class)
 				.build();
@@ -222,6 +254,8 @@ public abstract class AbstractCalciteTest {
 						.bind(datasetId(SUBJECT_SELECTION_TABLE_NAME)).toInstance(SUBJECT_SELECTION_LIST_1)
 						.bind(datasetId(FILTERABLE_TABLE_NAME)).toInstance(createFilterableSupplier(FILTERABLE_1))
 						.bind(datasetId(STUDENT_DUPLICATES_TABLE_NAME)).toInstance(STUDENT_DUPLICATES_LIST_1)
+						.bind(datasetId(CUSTOM_TABLE_NAME)).toInstance(CUSTOM_LIST_1)
+						.bind(datasetId(CUSTOM_PARTITIONED_TABLE_NAME)).toInstance(CUSTOM_PARTITIONED_LIST_1)
 						.build());
 		Module server2Module = Modules.combine(serverModule,
 				ModuleBuilder.create()
@@ -233,6 +267,8 @@ public abstract class AbstractCalciteTest {
 						.bind(datasetId(SUBJECT_SELECTION_TABLE_NAME)).toInstance(SUBJECT_SELECTION_LIST_2)
 						.bind(datasetId(FILTERABLE_TABLE_NAME)).toInstance(createFilterableSupplier(FILTERABLE_2))
 						.bind(datasetId(STUDENT_DUPLICATES_TABLE_NAME)).toInstance(STUDENT_DUPLICATES_LIST_2)
+						.bind(datasetId(CUSTOM_TABLE_NAME)).toInstance(CUSTOM_LIST_2)
+						.bind(datasetId(CUSTOM_PARTITIONED_TABLE_NAME)).toInstance(CUSTOM_PARTITIONED_LIST_2)
 						.build());
 
 		server1Injector = Injector.of(server1Module);
@@ -273,7 +309,7 @@ public abstract class AbstractCalciteTest {
 	}
 
 	public record UserProfile(String id, UserProfilePojo pojo, Map<Integer, UserProfileIntent> intents,
-							  long timestamp) {
+	                          long timestamp) {
 	}
 
 	@SerializeRecord
@@ -295,12 +331,34 @@ public abstract class AbstractCalciteTest {
 	public record Large(long id) {
 	}
 
-	@SerializeRecord // https://stackoverflow.com/a/2421441 - testing GROUP BY
 	public record SubjectSelection(String subject, int semester, String attendee) {
 	}
 
-	@SerializeRecord
 	public record Filterable(int id, long created) {
+	}
+
+	public static final class Custom {
+		private final int id;
+		private final BigDecimal price;
+		private final String description;
+
+		public Custom(int id, BigDecimal price, String description) {
+			this.id = id;
+			this.price = price;
+			this.description = description;
+		}
+
+		public int getId() {
+			return id;
+		}
+
+		public BigDecimal getPrice() {
+			return price;
+		}
+
+		public String getDescription() {
+			return description;
+		}
 	}
 
 
@@ -2010,6 +2068,41 @@ public abstract class AbstractCalciteTest {
 				List.of(
 						new Object[]{"John", 19L},
 						new Object[]{"Kevin", 15L}
+				)
+		);
+
+		assertEquals(expected, result);
+	}
+
+	@Test
+	public void testSelectAllCustom() {
+		QueryResult result = query("SELECT * FROM custom");
+
+		QueryResult expected = new QueryResult(
+				List.of("id", "price", "description"),
+				List.of(
+						new Object[]{1, 32.4d, "abc"},
+						new Object[]{2, 43.53d, "ijk"},
+						new Object[]{3, 9.4343d, "geh"},
+						new Object[]{4, 102.42d, "def"}
+				)
+		);
+
+		assertEquals(expected, result);
+	}
+
+	@Test
+	public void testSelectAllCustomPartitioned() {
+		QueryResult result = query("SELECT * FROM custom_partitioned");
+
+		QueryResult expected = new QueryResult(
+				List.of("id", "price"),
+				List.of(
+						new Object[]{1, 32.4d},
+						new Object[]{2, 43.53d},
+						new Object[]{3, 9.4343d},
+						new Object[]{4, 102.42d},
+						new Object[]{5, 231.424d}
 				)
 		);
 

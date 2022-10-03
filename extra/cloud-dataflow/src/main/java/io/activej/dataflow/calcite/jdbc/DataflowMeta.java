@@ -7,6 +7,7 @@ import io.activej.dataflow.RelToDatasetConverter.UnmaterializedDataset;
 import io.activej.dataflow.calcite.CalciteSqlDataflow;
 import io.activej.dataflow.calcite.utils.JavaRecordType;
 import io.activej.dataflow.dataset.Dataset;
+import io.activej.datastream.SynchronousStreamConsumer;
 import io.activej.eventloop.Eventloop;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
@@ -83,7 +84,7 @@ public final class DataflowMeta extends LimitedMeta {
 	private final Eventloop eventloop;
 	private final CalciteSqlDataflow sqlDataflow;
 	private final Map<String, Integer> statementIds = new ConcurrentHashMap<>();
-	private final Map<StatementKey, FrameConsumer> consumers = new ConcurrentHashMap<>();
+	private final Map<StatementKey, FrameFetcher> consumers = new ConcurrentHashMap<>();
 	private final Map<StatementKey, UnmaterializedDataset> unmaterializedDatasets = new ConcurrentHashMap<>();
 
 	public DataflowMeta(Eventloop eventloop, CalciteSqlDataflow sqlDataflow) {
@@ -117,9 +118,9 @@ public final class DataflowMeta extends LimitedMeta {
 
 		Dataset<Record> dataset = unmaterializedDataset.materialize(params);
 
-		FrameConsumer frameConsumer = createFrameConsumer(h, dataset);
+		FrameFetcher frameFetcher = createFrameConsumer(h, dataset);
 
-		Frame firstFrame = frameConsumer.fetch(0, maxRowsInFirstFrame);
+		Frame firstFrame = frameFetcher.fetch(0, maxRowsInFirstFrame);
 
 		MetaResultSet metaResultSet = MetaResultSet.create(h.connectionId, h.id, false, h.signature, firstFrame);
 		return new ExecuteResult(List.of(metaResultSet));
@@ -138,9 +139,9 @@ public final class DataflowMeta extends LimitedMeta {
 
 		Dataset<Record> dataset = unmaterialized.materialize(Collections.emptyList());
 
-		FrameConsumer frameConsumer = createFrameConsumer(h, dataset);
+		FrameFetcher frameFetcher = createFrameConsumer(h, dataset);
 
-		Frame firstFrame = frameConsumer.fetch(0, maxRowsInFirstFrame);
+		Frame firstFrame = frameFetcher.fetch(0, maxRowsInFirstFrame);
 
 		MetaResultSet metaResultSet = MetaResultSet.create(h.connectionId, h.id, false, h.signature, firstFrame);
 		return new ExecuteResult(List.of(metaResultSet));
@@ -176,14 +177,14 @@ public final class DataflowMeta extends LimitedMeta {
 		return new ExecuteResult(List.of(resultSet));
 	}
 
-	private FrameConsumer createFrameConsumer(StatementHandle statement, Dataset<Record> dataset) {
-		FrameConsumer frameConsumer;
+	private FrameFetcher createFrameConsumer(StatementHandle statement, Dataset<Record> dataset) {
+		FrameFetcher frameFetcher;
 		try {
-			frameConsumer = eventloop.submit(() -> sqlDataflow.queryDataflow(dataset)
+			frameFetcher = eventloop.submit(() -> sqlDataflow.queryDataflow(dataset)
 					.map(supplier -> {
-						FrameConsumer consumer = new FrameConsumer(statement.signature.columns.size());
-						supplier.streamTo(consumer);
-						return consumer;
+						SynchronousStreamConsumer<Record> recordConsumer = SynchronousStreamConsumer.create();
+						supplier.streamTo(recordConsumer);
+						return new FrameFetcher(recordConsumer, statement.signature.columns.size());
 					})).get();
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
@@ -192,8 +193,8 @@ public final class DataflowMeta extends LimitedMeta {
 			throw new RuntimeException(e);
 		}
 
-		consumers.put(StatementKey.create(statement), frameConsumer);
-		return frameConsumer;
+		consumers.put(StatementKey.create(statement), frameFetcher);
+		return frameFetcher;
 	}
 
 	private Signature createSignature(String sql, List<RelDataTypeField> fields, List<RexDynamicParam> dynamicParams, RecordScheme scheme) {
@@ -298,11 +299,11 @@ public final class DataflowMeta extends LimitedMeta {
 
 	@Override
 	public Frame fetch(StatementHandle h, long offset, int fetchMaxRowCount) throws NoSuchStatementException {
-		FrameConsumer frameConsumer = consumers.get(StatementKey.create(h));
-		if (frameConsumer == null) {
+		FrameFetcher frameFetcher = consumers.get(StatementKey.create(h));
+		if (frameFetcher == null) {
 			throw new NoSuchStatementException(h);
 		}
-		return frameConsumer.fetch(offset, fetchMaxRowCount);
+		return frameFetcher.fetch(offset, fetchMaxRowCount);
 	}
 
 	@Override
@@ -337,11 +338,11 @@ public final class DataflowMeta extends LimitedMeta {
 
 		unmaterializedDatasets.remove(key);
 
-		FrameConsumer frameConsumer = consumers.get(key);
-		if (frameConsumer == null) return;
+		FrameFetcher frameFetcher = consumers.get(key);
+		if (frameFetcher == null) return;
 
 		try {
-			eventloop.submit(frameConsumer::close).get();
+			eventloop.submit(frameFetcher::close).get();
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 			throw new RuntimeException(e);
@@ -495,13 +496,13 @@ public final class DataflowMeta extends LimitedMeta {
 							: null;
 					row[9] = 10;
 
-					boolean isNUllable = field.getType().isNullable();
-					row[10] = isNUllable
+					boolean isNullable = field.getType().isNullable();
+					row[10] = isNullable
 							? DatabaseMetaData.columnNullable
 							: DatabaseMetaData.columnNoNulls;
 					row[15] = precision;
 					row[16] = field.getIndex() + 1;
-					row[17] = isNUllable ? YES : NO;
+					row[17] = isNullable ? YES : NO;
 					row[22] = NO;
 					row[23] = NO;
 

@@ -3,6 +3,8 @@ package io.activej.dataflow.calcite.utils;
 import io.activej.dataflow.DataflowPartitionedTable;
 import io.activej.dataflow.calcite.DataflowSchema;
 import io.activej.dataflow.calcite.DataflowTable;
+import io.activej.datastream.processor.StreamReducers;
+import io.activej.record.Record;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.BinaryOutput;
 import io.activej.serializer.BinarySerializer;
@@ -32,6 +34,7 @@ public final class NamedReducerFunctionSerializer implements BinarySerializer<Na
 		if (!(dataflowTable instanceof DataflowPartitionedTable<?> dataflowPartitionedTable)) {
 			throw new CorruptedDataException("Not a partitioned table: " + tableName);
 		}
-		return new NamedReducer(tableName, dataflowPartitionedTable.getReducer());
+		//noinspection unchecked
+		return new NamedReducer(tableName, (StreamReducers.Reducer<Record, Record, Record, Object>) dataflowPartitionedTable.getReducer());
 	}
 }

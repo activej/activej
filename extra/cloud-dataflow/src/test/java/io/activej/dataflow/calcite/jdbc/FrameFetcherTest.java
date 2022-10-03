@@ -2,6 +2,7 @@ package io.activej.dataflow.calcite.jdbc;
 
 import io.activej.common.ref.RefLong;
 import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.SynchronousStreamConsumer;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.record.Record;
@@ -19,7 +20,7 @@ import java.util.stream.Stream;
 import static io.activej.promise.TestUtils.await;
 import static org.junit.Assert.assertEquals;
 
-public class FrameConsumerTest {
+public class FrameFetcherTest {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
@@ -85,9 +86,9 @@ public class FrameConsumerTest {
 				})
 				.limit(maxCount));
 
-		FrameConsumer frameConsumer = new FrameConsumer(SCHEME.size());
-
-		Promise<Void> streamPromise = recordSupplier.streamTo(frameConsumer);
+		SynchronousStreamConsumer<Record> synchronousStreamConsumer = SynchronousStreamConsumer.create();
+		FrameFetcher frameFetcher = new FrameFetcher(synchronousStreamConsumer, SCHEME.size());
+		Promise<Void> streamPromise = recordSupplier.streamTo(synchronousStreamConsumer);
 
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
 		eventloop.keepAlive(true);
@@ -99,7 +100,7 @@ public class FrameConsumerTest {
 						-1 :
 						random.nextInt(1000);
 
-				Meta.Frame frame = frameConsumer.fetch(countRef.get(), maxRows);
+				Meta.Frame frame = frameFetcher.fetch(countRef.get(), maxRows);
 
 				for (Object row : frame.rows) {
 					Object[] rowArray = (Object[]) row;

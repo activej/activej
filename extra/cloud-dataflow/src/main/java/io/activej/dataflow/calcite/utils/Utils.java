@@ -1,6 +1,7 @@
 package io.activej.dataflow.calcite.utils;
 
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.codegen.util.Primitives;
 import io.activej.common.exception.ToDoException;
 import io.activej.dataflow.calcite.Value;
 import io.activej.dataflow.calcite.function.ProjectionFunction;
@@ -12,11 +13,18 @@ import io.activej.dataflow.calcite.operand.OperandScalar;
 import io.activej.dataflow.dataset.Datasets;
 import io.activej.dataflow.dataset.SortedDataset;
 import io.activej.record.Record;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.type.SqlTypeName;
 
+import java.lang.reflect.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -85,5 +93,67 @@ public final class Utils {
 
 	public static SortedDataset<Record, Record> singleDummyDataset() {
 		return Datasets.sortedDatasetOfId(CalciteServerModule.CALCITE_SINGLE_DUMMY_DATASET, Record.class, Record.class, Function.identity(), RecordKeyComparator.getInstance());
+	}
+
+	public static RelDataType toRowType(RelDataTypeFactory typeFactory, Type type) {
+		if (type instanceof Class<?> cls) {
+			if (cls.isPrimitive() || cls.isEnum() || Primitives.isWrapperType(cls) || cls == String.class) {
+				return typeFactory.createJavaType(cls);
+			}
+
+			if (cls.isRecord()) {
+				RecordComponent[] recordComponents = cls.getRecordComponents();
+				List<RelDataTypeField> fields = new ArrayList<>();
+
+				for (RecordComponent recordComponent : recordComponents) {
+					fields.add(new RelDataTypeFieldImpl(
+							recordComponent.getName(),
+							fields.size(),
+							toRowType(typeFactory, recordComponent.getGenericType())
+					));
+				}
+
+				return new JavaRecordType(fields, cls);
+			}
+
+			if (cls.isArray()) {
+				RelDataType elementType = toRowType(typeFactory, cls.getComponentType());
+				return typeFactory.createArrayType(elementType, -1);
+			}
+
+			List<RelDataTypeField> fields = new ArrayList<>();
+
+			for (Field field : cls.getFields()) {
+				if (Modifier.isStatic(field.getModifiers())) continue;
+
+				fields.add(new RelDataTypeFieldImpl(
+						field.getName(),
+						fields.size(),
+						toRowType(typeFactory, field.getGenericType())
+				));
+			}
+			return new JavaRecordType(fields, cls);
+		}
+
+		if (type instanceof ParameterizedType parameterizedType) {
+			Type rawType = parameterizedType.getRawType();
+			if (rawType == List.class) {
+				RelDataType elementType = toRowType(typeFactory, parameterizedType.getActualTypeArguments()[0]);
+				return typeFactory.createArrayType(elementType, -1);
+			}
+			if (rawType == Map.class) {
+				Type[] typeArguments = parameterizedType.getActualTypeArguments();
+				RelDataType keyType = toRowType(typeFactory, typeArguments[0]);
+				RelDataType valueType = toRowType(typeFactory, typeArguments[1]);
+				return typeFactory.createMapType(keyType, valueType);
+			}
+		}
+
+		if (type instanceof GenericArrayType genericArrayType) {
+			RelDataType elementType = toRowType(typeFactory, genericArrayType.getGenericComponentType());
+			return typeFactory.createArrayType(elementType, -1);
+		}
+
+		throw new ToDoException();
 	}
 }
