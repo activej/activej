@@ -15,7 +15,7 @@ public final class RecordSortComparator implements Comparator<Record> {
 	public RecordSortComparator(@Deserialize("sorts") List<FieldSort> sorts) {
 		this.sorts = sorts;
 
-		Comparator<Record> comparator = EqualObjectComparator.getInstance();
+		Comparator<Record> comparator = ($1, $2) -> 0;
 
 		for (FieldSort sort : sorts) {
 			Comparator<Record> nextComparator = sort.toComparator();

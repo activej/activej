@@ -48,8 +48,6 @@ public final class SerializersModule extends AbstractModule {
 					serializer.setSubtypeCodec((Class) RecordKeyFunction.class, new RecordKeyFunctionSerializer<>());
 					serializer.setSubtypeCodec((Class) Function.identity().getClass(), "identity", ofObject(Function::identity));
 					serializer.setSubtypeCodec(RecordProjectionFn.class, recordProjectionFnSerializer);
-					serializer.setSubtypeCodec(RecordSchemeFunction.class, ofObject(RecordSchemeFunction::getInstance));
-					serializer.setSubtypeCodec(ToZeroFunction.class, ofObject(ToZeroFunction::getInstance));
 					return serializer;
 				},
 				Key.of(DataflowSchema.class), new Key<BinarySerializer<RecordProjectionFn>>() {});
@@ -68,7 +66,6 @@ public final class SerializersModule extends AbstractModule {
 
 					serializer.setSubtypeCodec(RecordSortComparator.class, serializerBuilder.build(RecordSortComparator.class));
 					serializer.setSubtypeCodec(RecordKeyComparator.class, ofObject(RecordKeyComparator::getInstance));
-					serializer.setSubtypeCodec(EqualObjectComparator.class, ofObject(EqualObjectComparator::getInstance));
 
 					return (BinarySerializer) serializer;
 				},
@@ -107,14 +104,17 @@ public final class SerializersModule extends AbstractModule {
 
 				@Override
 				public void encode(BinaryOutput out, RecordInnerJoiner<?> item) {
-					RecordScheme scheme = item.getScheme();
-					schemeSerializer.encode(out, scheme);
+					schemeSerializer.encode(out, item.getScheme());
+					schemeSerializer.encode(out, item.getLeft());
+					schemeSerializer.encode(out, item.getRight());
 				}
 
 				@Override
 				public RecordInnerJoiner<?> decode(BinaryInput in) throws CorruptedDataException {
 					RecordScheme scheme = schemeSerializer.decode(in);
-					return RecordInnerJoiner.create(scheme);
+					RecordScheme left = schemeSerializer.decode(in);
+					RecordScheme right = schemeSerializer.decode(in);
+					return RecordInnerJoiner.create(scheme, left, right);
 				}
 			});
 			return (BinarySerializer) serializer;
