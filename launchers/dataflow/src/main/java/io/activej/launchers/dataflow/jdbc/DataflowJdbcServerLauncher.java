@@ -6,9 +6,8 @@ import io.activej.dataflow.calcite.inject.CalciteClientModule;
 import io.activej.datastream.StreamConsumer;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Inject;
-import io.activej.inject.annotation.Provides;
-import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
+import io.activej.inject.module.ModuleBuilder;
 import io.activej.inject.module.Modules;
 import io.activej.launchers.dataflow.DataflowClientLauncher;
 
@@ -33,6 +32,21 @@ public abstract class DataflowJdbcServerLauncher extends DataflowClientLauncher 
 		return Module.empty();
 	}
 
+	/**
+	 * Override this method to supply your own config.
+	 */
+	protected Config getConfig() {
+		try {
+			return Config.create()
+					.with("dataflow.jdbc.server.port", String.valueOf(DEFAULT_JDBC_SERVER_PORT))
+					.with("dataflow.secondaryBufferPath", Files.createTempDirectory("secondaryBufferPath").toString())
+					.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
+					.overrideWith(Config.ofProperties(System.getProperties()).getChild("config"));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	@Override
 	protected final Module getBusinessLogicModule() {
 		return Modules.combine(
@@ -45,16 +59,10 @@ public abstract class DataflowJdbcServerLauncher extends DataflowClientLauncher 
 	protected final Module getOverrideModule() {
 		return Modules.combine(
 				getDataflowSchemaModule(),
-				new AbstractModule() {
-					@Provides
-					Config config() throws IOException {
-						return Config.create()
-								.with("dataflow.jdbc.server.port", String.valueOf(DEFAULT_JDBC_SERVER_PORT))
-								.with("dataflow.secondaryBufferPath", Files.createTempDirectory("secondaryBufferPath").toString())
-								.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
-								.overrideWith(Config.ofProperties(System.getProperties()).getChild("config"));
-					}
-				});
+				ModuleBuilder.create()
+						.bind(Config.class).to(this::getConfig)
+						.build()
+		);
 	}
 
 	@Override
