@@ -20,16 +20,15 @@ import java.util.*;
 import java.util.function.Function;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.inject.util.Utils.checkState;
 
-public final class DataflowTableBuilder<T> {
+public sealed class DataflowTableBuilder<T> permits DataflowTableBuilder.DataflowPartitionedTableBuilder {
 	private final DefiningClassLoader classLoader;
 	private final String tableName;
 	private final Class<T> type;
 	private final LinkedHashMap<String, ColumnEntry> columns = new LinkedHashMap<>();
 	private final @Nullable Function<RecordScheme, Reducer<Record, Record, Record, ?>> reducerFactory;
 
-	private int[] primaryKeyIndexes = new int[0];
+	private final List<Integer> primaryKeyIndexes = new ArrayList<>();
 
 	private DataflowTableBuilder(DefiningClassLoader classLoader, String tableName, Class<T> type, @Nullable Function<RecordScheme, Reducer<Record, Record, Record, ?>> reducerFactory) {
 		this.tableName = tableName;
@@ -42,16 +41,16 @@ public final class DataflowTableBuilder<T> {
 		return new DataflowTableBuilder<>(classLoader, tableName, type, null);
 	}
 
-	public static <T> DataflowTableBuilder<T> createPartitioned(DefiningClassLoader classLoader, String tableName, Class<T> type) {
-		return new DataflowTableBuilder<>(classLoader, tableName, type, $ -> StreamReducers.deduplicateReducer());
+	public static <T> DataflowPartitionedTableBuilder<T> createPartitioned(DefiningClassLoader classLoader, String tableName, Class<T> type) {
+		return new DataflowPartitionedTableBuilder<>(classLoader, tableName, type, $ -> StreamReducers.deduplicateReducer());
 	}
 
-	public static <T> DataflowTableBuilder<T> createPartitioned(DefiningClassLoader classLoader, String tableName, Class<T> type, Reducer<Record, Record, Record, ?> reducer) {
-		return new DataflowTableBuilder<>(classLoader, tableName, type, $ -> reducer);
+	public static <T> DataflowPartitionedTableBuilder<T> createPartitioned(DefiningClassLoader classLoader, String tableName, Class<T> type, Reducer<Record, Record, Record, ?> reducer) {
+		return new DataflowPartitionedTableBuilder<>(classLoader, tableName, type, $ -> reducer);
 	}
 
-	public static <T> DataflowTableBuilder<T> createPartitioned(DefiningClassLoader classLoader, String tableName, Class<T> type, Function<RecordScheme, Reducer<Record, Record, Record, ?>> reducerFactory) {
-		return new DataflowTableBuilder<>(classLoader, tableName, type, reducerFactory);
+	public static <T> DataflowPartitionedTableBuilder<T> createPartitioned(DefiningClassLoader classLoader, String tableName, Class<T> type, Function<RecordScheme, Reducer<Record, Record, Record, ?>> reducerFactory) {
+		return new DataflowPartitionedTableBuilder<>(classLoader, tableName, type, reducerFactory);
 	}
 
 	public <C> DataflowTableBuilder<T> withColumn(String columnName, Class<C> columnType, Function<T, C> getter) {
@@ -74,7 +73,7 @@ public final class DataflowTableBuilder<T> {
 		return this;
 	}
 
-	private <C> void addColumn(String columnName, Type columnType, Function<T, C> getter, Function<RelDataTypeFactory, RelDataType> typeFactory) {
+	protected <C> void addColumn(String columnName, Type columnType, Function<T, C> getter, Function<RelDataTypeFactory, RelDataType> typeFactory) {
 		ColumnEntry columnEntry = new ColumnEntry(
 				columnType,
 				getter,
@@ -86,21 +85,22 @@ public final class DataflowTableBuilder<T> {
 		checkArgument(old == null, "Column '" + columnName + "' was already added");
 	}
 
-	public DataflowTableBuilder<T> withPrimaryKeyIndexes(int... primaryKeyIndexes) {
-		checkState(reducerFactory != null, "Primary key indexes only apply to partitioned tables");
-		this.primaryKeyIndexes = primaryKeyIndexes;
-		return this;
+	protected <C> void addKeyColumn(String columnName, Type columnType, Function<T, C> getter, Function<RelDataTypeFactory, RelDataType> typeFactory) {
+		int index = columns.size();
+		addColumn(columnName, columnType, getter, typeFactory);
+		primaryKeyIndexes.add(index);
 	}
 
 	public DataflowTable build() {
 		RecordFunction<T> recordFunction = createRecordFunction(classLoader);
 		Function<RelDataTypeFactory, RelDataType> typeFactory = createTypeFactory();
+		int[] indexes = primaryKeyIndexes.stream().mapToInt($ -> $).toArray();
 
 		return reducerFactory == null ?
 				DataflowTable.create(tableName, type, typeFactory, recordFunction) :
 				DataflowPartitionedTable.create(tableName, type, typeFactory, recordFunction)
 						.withReducer(reducerFactory.apply(recordFunction.getScheme()))
-						.withPrimaryKeyIndexes(primaryKeyIndexes);
+						.withPrimaryKeyIndexes(indexes);
 	}
 
 	private Function<RelDataTypeFactory, RelDataType> createTypeFactory() {
@@ -168,6 +168,52 @@ public final class DataflowTableBuilder<T> {
 			this.type = type;
 			this.getter = getter;
 			this.typeFactory = typeFactory;
+		}
+	}
+
+	public static final class DataflowPartitionedTableBuilder<T> extends DataflowTableBuilder<T> {
+		private DataflowPartitionedTableBuilder(DefiningClassLoader classLoader, String tableName, Class<T> type, @Nullable Function<RecordScheme, Reducer<Record, Record, Record, ?>> reducerFactory) {
+			super(classLoader, tableName, type, reducerFactory);
+		}
+
+		@Override
+		public <C> DataflowPartitionedTableBuilder<T> withColumn(String columnName, Class<C> columnType, Function<T, C> getter) {
+			return (DataflowPartitionedTableBuilder<T>) super.withColumn(columnName, columnType, getter);
+		}
+
+		@Override
+		public <C> DataflowPartitionedTableBuilder<T> withColumn(String columnName, Class<C> columnType, Function<T, C> getter, Function<RelDataTypeFactory, RelDataType> typeFactory) {
+			return (DataflowPartitionedTableBuilder<T>) super.withColumn(columnName, columnType, getter, typeFactory);
+		}
+
+		@Override
+		public <C> DataflowPartitionedTableBuilder<T> withColumn(String columnName, TypeT<C> columnType, Function<T, C> getter) {
+			return (DataflowPartitionedTableBuilder<T>) super.withColumn(columnName, columnType, getter);
+		}
+
+		@Override
+		public <C> DataflowPartitionedTableBuilder<T> withColumn(String columnName, TypeT<C> columnType, Function<T, C> getter, Function<RelDataTypeFactory, RelDataType> typeFactory) {
+			return (DataflowPartitionedTableBuilder<T>) super.withColumn(columnName, columnType, getter, typeFactory);
+		}
+
+		public <C> DataflowPartitionedTableBuilder<T> withKeyColumn(String columnName, Class<C> columnType, Function<T, C> getter) {
+			addKeyColumn(columnName, columnType, getter, relDataTypeFactory -> Utils.toRowType(relDataTypeFactory, columnType));
+			return this;
+		}
+
+		public <C> DataflowPartitionedTableBuilder<T> withKeyColumn(String columnName, Class<C> columnType, Function<T, C> getter, Function<RelDataTypeFactory, RelDataType> typeFactory) {
+			addKeyColumn(columnName, columnType, getter, typeFactory);
+			return this;
+		}
+
+		public <C> DataflowPartitionedTableBuilder<T> withKeyColumn(String columnName, TypeT<C> columnType, Function<T, C> getter) {
+			addKeyColumn(columnName, columnType.getType(), getter, relDataTypeFactory -> Utils.toRowType(relDataTypeFactory, columnType.getType()));
+			return this;
+		}
+
+		public <C> DataflowPartitionedTableBuilder<T> withKeyColumn(String columnName, TypeT<C> columnType, Function<T, C> getter, Function<RelDataTypeFactory, RelDataType> typeFactory) {
+			addKeyColumn(columnName, columnType.getType(), getter, typeFactory);
+			return this;
 		}
 	}
 }

@@ -237,9 +237,8 @@ public abstract class AbstractCalciteTest {
 						DefiningClassLoader.class)
 				.bind(setTableKey).to(classLoader -> Set.of(
 								DataflowTableBuilder.createPartitioned(classLoader, CUSTOM_PARTITIONED_TABLE_NAME, Custom.class)
-										.withColumn("id", int.class, Custom::getId)
+										.withKeyColumn("id", int.class, Custom::getId)
 										.withColumn("price", double.class, custom -> custom.getPrice().doubleValue())
-										.withPrimaryKeyIndexes(0)
 										.build()),
 						DefiningClassLoader.class)
 				.multibindToSet(DataflowTable.class)
