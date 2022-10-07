@@ -71,7 +71,7 @@ public abstract class DataflowJdbcServerLauncher extends DataflowClientLauncher 
 						.then(supplier -> supplier.streamTo(StreamConsumer.skip())))
 				.get();
 
-		System.out.println("Connection to partitions established");
+		logger.info("Connection to partitions established");
 	}
 
 	@Override
