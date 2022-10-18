@@ -235,7 +235,9 @@ public final class ByteBufStrings {
 					array[pos + 2] = (byte) (0x80 | c & 0x3F);
 					pos += 3;
 				} else {
-					pos += writeUtf8char4(array, pos, c, string, i++);
+					byte inc = writeUtf8char4(array, pos, c, string, i);
+					pos += inc;
+					i += inc >>> 2;
 				}
 			}
 

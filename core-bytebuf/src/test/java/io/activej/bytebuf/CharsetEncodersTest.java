@@ -7,8 +7,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class CharsetEncodersTest {
 	private static final String SMILES1 = "Hello 😵 World!";
@@ -19,10 +18,20 @@ public class CharsetEncodersTest {
 		assertEquals(SMILES2, SMILES1);
 		assertEncode(SMILES2, SMILES1);
 		assertEncode("Миру - мир!", "Миру - мир!");
-		assertReplacement("\uD83D ", "");
-		assertReplacement("BEGIN \uDE35 END", "BEGIN END");
+		assertReplacement("\uD83D ", " ");
+		assertReplacement("BEGIN \uDE35 END", "BEGIN  END");
 		assertReplacement("BEGIN \uD83D", "BEGIN ");
 		assertReplacement("BEGIN \uDE35", "BEGIN ");
+	}
+
+	@Test
+	public void testCharAfterInvalidSurrogate() throws MalformedDataException {
+		String s = "==\uD83C\uDF46🍆🍆\uD83C\uDF46==";
+		String s1 = s.substring(0, 5) + '\t';
+		ByteBuf byteBuf = ByteBufStrings.wrapUtf8(s1);
+		String s2 = ByteBufStrings.decodeUtf8(byteBuf);
+
+		assertTrue(s2.endsWith("\t"));
 	}
 
 	private static void assertEncode(String s, String expected) throws MalformedDataException {
