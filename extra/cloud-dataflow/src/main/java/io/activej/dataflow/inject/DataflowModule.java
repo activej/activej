@@ -26,13 +26,12 @@ import io.activej.dataflow.stats.StatReducer;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
-import io.activej.inject.module.Module;
 
 public final class DataflowModule extends AbstractModule {
 	private DataflowModule() {
 	}
 
-	public static Module create() {
+	public static DataflowModule create() {
 		return new DataflowModule();
 	}
 

@@ -18,16 +18,7 @@ package io.activej.launchers.dataflow;
 
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
-import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.dataflow.DataflowClient;
-import io.activej.dataflow.graph.DataflowGraph;
-import io.activej.dataflow.graph.Partition;
-import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator;
-import io.activej.dataflow.inject.DataflowModule;
-import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
-import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
-import io.activej.dataflow.proto.serializer.CustomNodeSerializer;
-import io.activej.dataflow.proto.serializer.FunctionSerializer;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;
 import io.activej.inject.annotation.Inject;
@@ -38,10 +29,6 @@ import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
 import io.activej.service.ServiceGraphModule;
 
-import java.util.List;
-import java.util.concurrent.Executor;
-
-import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.inject.module.Modules.combine;
 import static io.activej.launchers.initializers.Initializers.ofEventloop;
 
@@ -59,33 +46,6 @@ public abstract class DataflowClientLauncher extends Launcher {
 	}
 
 	@Provides
-	Executor executor(Config config) {
-		return getExecutor(config);
-	}
-
-	@Provides
-	DataflowClient client(Executor executor, Config config, ByteBufsCodec<DataflowResponse, DataflowRequest> codec,
-			BinarySerializerLocator serializers, FunctionSerializer functionSerializer, OptionalDependency<CustomNodeSerializer> optionalCustomNodeSerializer) {
-		DataflowClient dataflowClient = DataflowClient.create(executor, config.get(ofPath(), "dataflow.secondaryBufferPath"), codec, serializers, functionSerializer);
-		if (optionalCustomNodeSerializer.isPresent()) {
-			return dataflowClient.withCustomNodeSerializer(optionalCustomNodeSerializer.get());
-		}
-		return dataflowClient;
-	}
-
-	@Provides
-	DataflowGraph graph(DataflowClient client, List<Partition> partitions) {
-		return new DataflowGraph(client, partitions);
-	}
-
-	@Provides
-	List<Partition> partitions(Config config) {
-		return config.get(ofList(ofInetSocketAddress()), "dataflow.partitions").stream()
-				.map(Partition::new)
-				.toList();
-	}
-
-	@Provides
 	Config config() {
 		return Config.create()
 				.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
@@ -97,7 +57,7 @@ public abstract class DataflowClientLauncher extends Launcher {
 		return combine(
 				ServiceGraphModule.create(),
 				JmxModule.create(),
-				DataflowModule.create(),
+				DataflowClientModule.create(),
 				ConfigModule.create()
 						.withEffectiveConfigLogger(),
 				getBusinessLogicModule()

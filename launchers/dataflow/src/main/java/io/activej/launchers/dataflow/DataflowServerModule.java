@@ -5,7 +5,6 @@ import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowServer;
-import io.activej.dataflow.calcite.inject.CalciteServerModule;
 import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator;
 import io.activej.dataflow.inject.DataflowModule;
@@ -46,7 +45,6 @@ public final class DataflowServerModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		install(DataflowModule.create());
-		install(CalciteServerModule.create());
 	}
 
 	@Provides

@@ -2,6 +2,7 @@ package module;
 
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.LZ4FrameFormat;
+import io.activej.dataflow.calcite.inject.CalciteServerModule;
 import io.activej.dataflow.inject.DatasetId;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.StreamSupplierWithResult;
@@ -40,6 +41,7 @@ public class MultilogDataflowServerModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
+		install(CalciteServerModule.create());
 		install(MultilogDataflowSchemaModule.create());
 	}
 

@@ -1,20 +1,26 @@
 package io.activej.launchers.dataflow.jdbc;
 
 import io.activej.config.Config;
+import io.activej.config.ConfigModule;
 import io.activej.dataflow.SqlDataflow;
-import io.activej.dataflow.calcite.inject.CalciteClientModule;
 import io.activej.datastream.StreamConsumer;
 import io.activej.eventloop.Eventloop;
+import io.activej.eventloop.inspector.ThrottlingController;
 import io.activej.inject.annotation.Inject;
+import io.activej.inject.annotation.Provides;
+import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.Module;
-import io.activej.inject.module.ModuleBuilder;
-import io.activej.inject.module.Modules;
-import io.activej.launchers.dataflow.DataflowClientLauncher;
+import io.activej.jmx.JmxModule;
+import io.activej.launcher.Launcher;
+import io.activej.service.ServiceGraphModule;
 
 import java.io.IOException;
 import java.nio.file.Files;
 
-public abstract class DataflowJdbcServerLauncher extends DataflowClientLauncher {
+import static io.activej.inject.module.Modules.combine;
+import static io.activej.launchers.initializers.Initializers.ofEventloop;
+
+public abstract class DataflowJdbcServerLauncher extends Launcher {
 	public static final int DEFAULT_JDBC_SERVER_PORT = 3387;
 	public static final String PROPERTIES_FILE = "dataflow-jdbc-server.properties";
 
@@ -26,42 +32,36 @@ public abstract class DataflowJdbcServerLauncher extends DataflowClientLauncher 
 
 	/**
 	 * Override this method to supply your dataflow schema.
-	 * Bindings from this module override any other bindings.
 	 */
 	protected Module getDataflowSchemaModule() {
 		return Module.empty();
 	}
 
-	/**
-	 * Override this method to supply your own config.
-	 */
-	protected Config getConfig() {
-		try {
-			return Config.create()
-					.with("dataflow.jdbc.server.port", String.valueOf(DEFAULT_JDBC_SERVER_PORT))
-					.with("dataflow.secondaryBufferPath", Files.createTempDirectory("secondaryBufferPath").toString())
-					.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
-					.overrideWith(Config.ofProperties(System.getProperties()).getChild("config"));
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+	@Provides
+	Eventloop eventloop(Config config, OptionalDependency<ThrottlingController> throttlingController) {
+		return Eventloop.create()
+				.withInitializer(ofEventloop(config.getChild("eventloop")))
+				.withInitializer(eventloop -> eventloop.withInspector(throttlingController.orElse(null)));
+	}
+
+	@Provides
+	Config config() throws IOException {
+		return Config.create()
+				.with("dataflow.jdbc.server.port", String.valueOf(DEFAULT_JDBC_SERVER_PORT))
+				.with("dataflow.secondaryBufferPath", Files.createTempDirectory("secondaryBufferPath").toString())
+				.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
+				.overrideWith(Config.ofProperties(System.getProperties()).getChild("config"));
 	}
 
 	@Override
-	protected final Module getBusinessLogicModule() {
-		return Modules.combine(
-				CalciteClientModule.create(),
-				DataflowJdbcServerModule.create()
-		);
-	}
-
-	@Override
-	protected final Module getOverrideModule() {
-		return Modules.combine(
-				getDataflowSchemaModule(),
-				ModuleBuilder.create()
-						.bind(Config.class).to(this::getConfig)
-						.build()
+	protected final Module getModule() {
+		return combine(
+				ServiceGraphModule.create(),
+				JmxModule.create(),
+				ConfigModule.create()
+						.withEffectiveConfigLogger(),
+				DataflowJdbcServerModule.create(),
+				getDataflowSchemaModule()
 		);
 	}
 
