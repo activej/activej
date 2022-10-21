@@ -23,7 +23,10 @@ import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
-import io.activej.serializer.*;
+import io.activej.serializer.BinaryInput;
+import io.activej.serializer.BinaryOutput;
+import io.activej.serializer.BinarySerializer;
+import io.activej.serializer.CorruptedDataException;
 
 import java.util.Comparator;
 import java.util.function.Function;
@@ -58,18 +61,18 @@ public final class SerializersModule extends AbstractModule {
 								new WherePredicateSerializer()),
 				new Key<OptionalDependency<DefiningClassLoader>>() {});
 
-		bind(new Key<BinarySerializer<Comparator<?>>>() {}).to(serializerBuilder -> {
+		bind(new Key<BinarySerializer<Comparator<?>>>() {}).to(serializerLocator -> {
 					FunctionSubtypeSerializer<Comparator> serializer = FunctionSubtypeSerializer.create();
 
 					serializer.setSubtypeCodec(Comparator.naturalOrder().getClass(), "natural", ofObject(Comparator::naturalOrder));
 					serializer.setSubtypeCodec(Comparator.reverseOrder().getClass(), "reverse", ofObject(Comparator::reverseOrder));
 
-					serializer.setSubtypeCodec(RecordSortComparator.class, serializerBuilder.build(RecordSortComparator.class));
+					serializer.setSubtypeCodec(RecordSortComparator.class, serializerLocator.get(RecordSortComparator.class));
 					serializer.setSubtypeCodec(RecordKeyComparator.class, ofObject(RecordKeyComparator::getInstance));
 
 					return (BinarySerializer) serializer;
 				},
-				SerializerBuilder.class);
+				BinarySerializerModule.BinarySerializerLocator.class);
 
 		bind(new Key<BinarySerializer<StreamReducers.Reducer<?, ?, ?, ?>>>() {}).to((schema, inputToAccumulator, inputToOutput, accumulatorToOutput, mergeReducer, deduplicateReducer) -> {
 					FunctionSubtypeSerializer<StreamReducers.Reducer> serializer = FunctionSubtypeSerializer.create();
@@ -98,7 +101,7 @@ public final class SerializersModule extends AbstractModule {
 		}, new Key<OptionalDependency<DefiningClassLoader>>() {});
 
 
-		bind(new Key<BinarySerializer<StreamJoin.Joiner<?, ?, ?, ?>>>() {}).to((schemeSerializer, definingClassLoader) -> {
+		bind(new Key<BinarySerializer<StreamJoin.Joiner<?, ?, ?, ?>>>() {}).to(schemeSerializer -> {
 			FunctionSubtypeSerializer<StreamJoin.Joiner> serializer = FunctionSubtypeSerializer.create();
 			serializer.setSubtypeCodec(RecordInnerJoiner.class, new BinarySerializer<RecordInnerJoiner<?>>() {
 
@@ -118,7 +121,7 @@ public final class SerializersModule extends AbstractModule {
 				}
 			});
 			return (BinarySerializer) serializer;
-		}, new Key<BinarySerializer<RecordScheme>>() {}, Key.of(DefiningClassLoader.class));
+		}, new Key<BinarySerializer<RecordScheme>>() {});
 
 		bind(new Key<BinarySerializer<RecordScheme>>() {}).to(RecordSchemeSerializer::new, DefiningClassLoader.class);
 		bind(new Key<BinarySerializer<Record>>() {}).to(RecordSerializer::create, BinarySerializerModule.BinarySerializerLocator.class).asTransient();
@@ -128,8 +131,6 @@ public final class SerializersModule extends AbstractModule {
 								new RecordProjectionFnSerializer(optionalClassLoader.get()) :
 								new RecordProjectionFnSerializer(),
 				new Key<OptionalDependency<DefiningClassLoader>>() {});
-
-		bind(SerializerBuilder.class).to(SerializerBuilder::create, DefiningClassLoader.class);
 
 		bind(CustomNodeSerializer.class).to(optionalClassLoader ->
 						optionalClassLoader.isPresent() ?
