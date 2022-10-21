@@ -93,10 +93,10 @@ public abstract class AbstractCalciteTest {
 			new Student(5, "Jack", "Dawson", 3));
 
 	protected static final List<Department> DEPARTMENT_LIST_1 = List.of(
-			new Department(2, "Language"));
+			new Department(2, "Language", Set.of("Linguistics", "Grammar", "Morphology")));
 	protected static final List<Department> DEPARTMENT_LIST_2 = List.of(
-			new Department(3, "History"),
-			new Department(1, "Math"));
+			new Department(3, "History", Set.of()),
+			new Department(1, "Math", Set.of("Algebra", "Geometry", "Calculus")));
 
 	protected static final List<Registry> REGISTRY_LIST_1 = List.of(
 			new Registry(4, Map.of("Kevin", 8), List.of("google.com")),
@@ -318,7 +318,7 @@ public abstract class AbstractCalciteTest {
 	public record Student(int id, String firstName, String lastName, int dept) {
 	}
 
-	public record Department(int id, String departmentName) {
+	public record Department(int id, String departmentName, Set<String> aliases) {
 	}
 
 	public record Registry(int id, Map<String, Integer> counters, List<String> domains) {
@@ -1173,22 +1173,22 @@ public abstract class AbstractCalciteTest {
 
 		expectedColumnValues.add(new Object[]{
 				firstStudent.id, firstStudent.firstName, firstStudent.lastName, firstStudent.dept,
-				secondDepartment.id, secondDepartment.departmentName
+				secondDepartment.id, secondDepartment.departmentName, secondDepartment.aliases
 		});
 		expectedColumnValues.add(new Object[]{
 				secondStudent.id, secondStudent.firstName, secondStudent.lastName, secondStudent.dept,
-				thirdDepartment.id, thirdDepartment.departmentName
+				thirdDepartment.id, thirdDepartment.departmentName, thirdDepartment.aliases
 		});
 		expectedColumnValues.add(new Object[]{
 				thirdStudent.id, thirdStudent.firstName, thirdStudent.lastName, thirdStudent.dept,
-				firstDepartment.id, firstDepartment.departmentName
+				firstDepartment.id, firstDepartment.departmentName, firstDepartment.aliases
 		});
 		expectedColumnValues.add(new Object[]{
 				fourthStudent.id, fourthStudent.firstName, fourthStudent.lastName, fourthStudent.dept,
-				firstDepartment.id, firstDepartment.departmentName
+				firstDepartment.id, firstDepartment.departmentName, firstDepartment.aliases
 		});
 
-		QueryResult expected = new QueryResult(List.of("id", "firstName", "lastName", "dept", "id0", "departmentName"), expectedColumnValues);
+		QueryResult expected = new QueryResult(List.of("id", "firstName", "lastName", "dept", "id0", "departmentName", "aliases"), expectedColumnValues);
 
 		assertEquals(expected, result);
 	}
@@ -1214,22 +1214,22 @@ public abstract class AbstractCalciteTest {
 
 		expectedColumnValues.add(new Object[]{
 				firstStudent.id, firstStudent.firstName, firstStudent.lastName, firstStudent.dept,
-				secondDepartment.id, secondDepartment.departmentName
+				secondDepartment.id, secondDepartment.departmentName, secondDepartment.aliases
 		});
 		expectedColumnValues.add(new Object[]{
 				secondStudent.id, secondStudent.firstName, secondStudent.lastName, secondStudent.dept,
-				thirdDepartment.id, thirdDepartment.departmentName
+				thirdDepartment.id, thirdDepartment.departmentName, thirdDepartment.aliases
 		});
 		expectedColumnValues.add(new Object[]{
 				thirdStudent.id, thirdStudent.firstName, thirdStudent.lastName, thirdStudent.dept,
-				firstDepartment.id, firstDepartment.departmentName
+				firstDepartment.id, firstDepartment.departmentName, firstDepartment.aliases
 		});
 		expectedColumnValues.add(new Object[]{
 				fourthStudent.id, fourthStudent.firstName, fourthStudent.lastName, fourthStudent.dept,
-				firstDepartment.id, firstDepartment.departmentName
+				firstDepartment.id, firstDepartment.departmentName, firstDepartment.aliases
 		});
 
-		QueryResult expected = new QueryResult(List.of("id", "firstName", "lastName", "dept", "id0", "departmentName"), expectedColumnValues);
+		QueryResult expected = new QueryResult(List.of("id", "firstName", "lastName", "dept", "id0", "departmentName", "aliases"), expectedColumnValues);
 
 		assertEquals(expected, result);
 	}
@@ -2210,7 +2210,7 @@ public abstract class AbstractCalciteTest {
 				Object[] columnValue = sortedValues.get(i);
 				Object[] thatColumnValue = thatSortedValues.get(i);
 
-				if (!Arrays.equals(columnValue, thatColumnValue)) return false;
+				if (doesArraysDiffer(columnValue, thatColumnValue)) return false;
 			}
 
 			return true;
@@ -2228,10 +2228,38 @@ public abstract class AbstractCalciteTest {
 				Object[] columnValue = columnValues.get(i);
 				Object[] thatColumnValue = that.columnValues.get(i);
 
-				if (!Arrays.equals(columnValue, thatColumnValue)) return false;
+				if (doesArraysDiffer(columnValue, thatColumnValue)) return false;
 			}
 
 			return true;
+		}
+
+		private static boolean doesArraysDiffer(Object[] columnValue, Object[] thatColumnValue) {
+			if (columnValue == thatColumnValue)
+				return false;
+			if (columnValue == null || thatColumnValue == null)
+				return true;
+
+			int length = columnValue.length;
+			if (thatColumnValue.length != length)
+				return true;
+
+			for (int i = 0; i < length; i++) {
+				Object value = columnValue[i];
+				Object thatValue = thatColumnValue[i];
+
+				if (value instanceof Set<?> && thatValue instanceof List<?> thatList){
+					thatValue = new HashSet<>(thatList);
+				} else if (thatValue instanceof Set<?> && value instanceof List<?> list ){
+					value = new HashSet<>(list);
+				}
+
+				if (!Objects.equals(value, thatValue)) {
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		@Override
@@ -2286,6 +2314,7 @@ public abstract class AbstractCalciteTest {
 			Record record = scheme.record();
 			record.set("id", department.id);
 			record.set("departmentName", department.departmentName);
+			record.set("aliases", department.aliases);
 			return record;
 		}
 
@@ -2424,11 +2453,11 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static QueryResult departmentsToQueryResult(List<Department> departments) {
-		List<String> columnNames = Arrays.asList("id", "departmentName");
+		List<String> columnNames = Arrays.asList("id", "departmentName", "aliases");
 		List<Object[]> columnValues = new ArrayList<>(departments.size());
 
 		for (Department department : departments) {
-			columnValues.add(new Object[]{department.id, department.departmentName});
+			columnValues.add(new Object[]{department.id, department.departmentName, department.aliases});
 		}
 
 		return new QueryResult(columnNames, columnValues);

@@ -25,6 +25,7 @@ import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -140,6 +141,10 @@ public final class Utils {
 			if (rawType == List.class) {
 				RelDataType elementType = toRowType(typeFactory, parameterizedType.getActualTypeArguments()[0]);
 				return typeFactory.createArrayType(elementType, -1);
+			}
+			if (rawType == Set.class) {
+				RelDataType elementType = toRowType(typeFactory, parameterizedType.getActualTypeArguments()[0]);
+				return typeFactory.createMultisetType(elementType, -1);
 			}
 			if (rawType == Map.class) {
 				Type[] typeArguments = parameterizedType.getActualTypeArguments();
