@@ -36,7 +36,7 @@ public final class CalciteServerModule extends AbstractModule {
 					Map<String, DataflowTable> tableMap = schema.getDataflowTableMap();
 
 					for (Map.Entry<String, DataflowTable> entry : tableMap.entrySet()) {
-						String id = entry.getKey().toLowerCase();
+						String id = entry.getKey();
 						datasetIds.getKeyForId(id); // throws exception if no key
 					}
 

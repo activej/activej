@@ -155,13 +155,12 @@ public class RelToDatasetConverter {
 	@SuppressWarnings("unchecked")
 	private UnmaterializedDataset handle(FilterableTableScan scan, ParamsCollector paramsCollector) {
 		RelOptTable table = scan.getTable();
-		List<String> names = table.getQualifiedName();
 
 		DataflowTable dataflowTable = table.unwrap(DataflowTable.class);
 		assert dataflowTable != null;
 
 		RecordFunction<Object> mapper = (RecordFunction<Object>) dataflowTable.getRecordFunction();
-		String id = last(names).toLowerCase();
+		String id = last(table.getQualifiedName());
 
 		WherePredicate wherePredicate;
 		RexNode predicate = scan.getCondition();
