@@ -8,6 +8,7 @@ import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator;
 import io.activej.dataflow.inject.DataflowModule;
+import io.activej.dataflow.inject.DatasetIdModule;
 import io.activej.dataflow.inject.SortingExecutor;
 import io.activej.dataflow.node.NodeSort;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
@@ -45,6 +46,7 @@ public final class DataflowServerModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		install(DataflowModule.create());
+		install(DatasetIdModule.create());
 	}
 
 	@Provides

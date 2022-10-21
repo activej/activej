@@ -6,6 +6,7 @@ import io.activej.dataflow.dataset.impl.DatasetConsumerOfId;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
+import io.activej.dataflow.inject.DatasetIdModule;
 import io.activej.dataflow.stream.DataflowTest.TestComparator;
 import io.activej.dataflow.stream.DataflowTest.TestItem;
 import io.activej.dataflow.stream.DataflowTest.TestKeyFunction;
@@ -91,6 +92,7 @@ public class ReducerDeadlockTest {
 
 		Module serverModule1 = ModuleBuilder.create()
 				.install(common)
+				.install(DatasetIdModule.create())
 				.bind(datasetId("items")).toInstance(list1)
 				.bind(datasetId("result")).toInstance(result1)
 				.build();
@@ -102,6 +104,7 @@ public class ReducerDeadlockTest {
 
 		Module serverModule2 = ModuleBuilder.create()
 				.install(common)
+				.install(DatasetIdModule.create())
 				.bind(datasetId("items")).toInstance(list2)
 				.bind(datasetId("result")).toInstance(result2)
 				.build();

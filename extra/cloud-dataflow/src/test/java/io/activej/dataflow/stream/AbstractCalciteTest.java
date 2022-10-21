@@ -11,6 +11,7 @@ import io.activej.dataflow.calcite.operand.OperandRecordField;
 import io.activej.dataflow.calcite.operand.OperandScalar;
 import io.activej.dataflow.calcite.where.*;
 import io.activej.dataflow.graph.Partition;
+import io.activej.dataflow.inject.DatasetIdModule;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamReducers;
@@ -253,6 +254,7 @@ public abstract class AbstractCalciteTest {
 
 		Module serverModule = ModuleBuilder.create()
 				.install(common)
+				.install(DatasetIdModule.create())
 				.install(CalciteServerModule.create())
 				.build()
 				.overrideWith(getAdditionalServerModule());

@@ -38,7 +38,6 @@ public final class DataflowModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		install(ProtobufFunctionModule.create());
-		install(DatasetIdModule.create());
 		install(BinarySerializerModule.create());
 
 		bind(new Key<StatReducer<BinaryNodeStat>>() {}).toInstance(BinaryNodeStat.REDUCER);

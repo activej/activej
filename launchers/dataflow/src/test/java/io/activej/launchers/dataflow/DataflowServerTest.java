@@ -12,6 +12,7 @@ import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator;
 import io.activej.dataflow.inject.DataflowModule;
+import io.activej.dataflow.inject.DatasetIdModule;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
@@ -349,6 +350,7 @@ public class DataflowServerTest {
 	public static Module createModule(List<Partition> partitions) {
 		return ModuleBuilder.create()
 				.install(DataflowModule.create())
+				.install(DatasetIdModule.create())
 				.bind(new Key<BinarySerializer<Function<?, ?>>>() {}).to(() -> {
 					FunctionSubtypeSerializer<Function<?, ?>> serializer = FunctionSubtypeSerializer.create();
 
@@ -410,12 +412,8 @@ public class DataflowServerTest {
 							.bind(Eventloop.class).toInstance(Eventloop.create().withCurrentThread().withFatalErrorHandler(rethrow()))
 							.bind(Executor.class).toInstance(Executors.newSingleThreadExecutor())
 							.bind(datasetId("result")).toInstance(StreamConsumerToList.create(result))
+							.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 							.build());
-		}
-
-		@Provides
-		StreamSorterStorageFactory storage() {
-			return FACTORY_STUB;
 		}
 
 		@Override

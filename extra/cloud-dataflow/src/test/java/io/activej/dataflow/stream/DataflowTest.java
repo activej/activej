@@ -15,6 +15,7 @@ import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.http.DataflowDebugServlet;
 import io.activej.dataflow.inject.BinarySerializerModule;
 import io.activej.dataflow.inject.DataflowModule;
+import io.activej.dataflow.inject.DatasetIdModule;
 import io.activej.dataflow.inject.SortingExecutor;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
@@ -111,6 +112,7 @@ public final class DataflowTest {
 
 		Module serverModule1 = ModuleBuilder.create()
 				.install(common)
+				.install(DatasetIdModule.create())
 				.bind(datasetId("items")).toInstance(List.of(
 						new TestItem(1),
 						new TestItem(3),
@@ -120,6 +122,7 @@ public final class DataflowTest {
 
 		Module serverModule2 = ModuleBuilder.create()
 				.install(common)
+				.install(DatasetIdModule.create())
 				.bind(datasetId("items")).toInstance(List.of(
 						new TestItem(2),
 						new TestItem(4),
@@ -165,6 +168,7 @@ public final class DataflowTest {
 
 		Module serverModule1 = ModuleBuilder.create()
 				.install(common)
+				.install(DatasetIdModule.create())
 				.bind(datasetId("items")).toInstance(List.of(
 						new TestItem(1),
 						new TestItem(2),
@@ -177,6 +181,7 @@ public final class DataflowTest {
 
 		Module serverModule2 = ModuleBuilder.create()
 				.install(common)
+				.install(DatasetIdModule.create())
 				.bind(datasetId("items")).toInstance(List.of(
 						new TestItem(1),
 						new TestItem(6)))
@@ -246,6 +251,7 @@ public final class DataflowTest {
 				new TestItem(13));
 		Module serverModule1 = ModuleBuilder.create()
 				.install(common)
+				.install(DatasetIdModule.create())
 				.bind(datasetId("items")).toInstance(list1)
 				.bind(datasetId("result")).toInstance(result1)
 				.build();
@@ -255,6 +261,7 @@ public final class DataflowTest {
 				new TestItem(26));
 		Module serverModule2 = ModuleBuilder.create()
 				.install(common)
+				.install(DatasetIdModule.create())
 				.bind(datasetId("items")).toInstance(list2)
 				.bind(datasetId("result")).toInstance(result2)
 				.build();
@@ -267,6 +274,7 @@ public final class DataflowTest {
 				new TestItem(36));
 		Module serverModule3 = ModuleBuilder.create()
 				.install(common)
+				.install(DatasetIdModule.create())
 				.bind(datasetId("items")).toInstance(list3)
 				.bind(datasetId("result")).toInstance(result3)
 				.build();
@@ -329,6 +337,7 @@ public final class DataflowTest {
 
 		Module serverModule1 = ModuleBuilder.create()
 				.install(common)
+				.install(DatasetIdModule.create())
 				.bind(datasetId("items")).toInstance(List.of(
 						new TestItem(6),
 						new TestItem(4),
@@ -340,6 +349,7 @@ public final class DataflowTest {
 
 		Module serverModule2 = ModuleBuilder.create()
 				.install(common)
+				.install(DatasetIdModule.create())
 				.bind(datasetId("items")).toInstance(List.of(
 						new TestItem(7),
 						new TestItem(7),
@@ -386,6 +396,7 @@ public final class DataflowTest {
 
 		Module serverModule1 = ModuleBuilder.create()
 				.install(common)
+				.install(DatasetIdModule.create())
 				.bind(datasetId("items")).toInstance(List.of(
 						new TestItem(1),
 						new TestItem(2),
@@ -396,6 +407,7 @@ public final class DataflowTest {
 
 		Module serverModule2 = ModuleBuilder.create()
 				.install(common)
+				.install(DatasetIdModule.create())
 				.bind(datasetId("items")).toInstance(List.of(
 						new TestItem(6),
 						new TestItem(7),

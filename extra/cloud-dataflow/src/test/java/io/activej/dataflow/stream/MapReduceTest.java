@@ -7,6 +7,7 @@ import io.activej.dataflow.collector.MergeCollector;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
+import io.activej.dataflow.inject.DatasetIdModule;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
 import io.activej.dataflow.proto.serializer.FunctionSubtypeSerializer;
 import io.activej.datastream.StreamConsumerToList;
@@ -117,6 +118,7 @@ public class MapReduceTest {
 
 		Module serverModule1 = ModuleBuilder.create()
 				.install(common)
+				.install(DatasetIdModule.create())
 				.bind(datasetId("items")).toInstance(List.of(
 						"dog",
 						"cat",
@@ -126,6 +128,7 @@ public class MapReduceTest {
 
 		Module serverModule2 = ModuleBuilder.create()
 				.install(common)
+				.install(DatasetIdModule.create())
 				.bind(datasetId("items")).toInstance(List.of(
 						"dog",
 						"cat"))

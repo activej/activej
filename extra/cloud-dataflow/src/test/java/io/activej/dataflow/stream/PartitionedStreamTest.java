@@ -21,6 +21,7 @@ import io.activej.dataflow.helper.PartitionedCollector;
 import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator;
 import io.activej.dataflow.inject.DataflowModule;
 import io.activej.dataflow.inject.DatasetId;
+import io.activej.dataflow.inject.DatasetIdModule;
 import io.activej.dataflow.node.PartitionedStreamConsumerFactory;
 import io.activej.dataflow.node.PartitionedStreamSupplierFactory;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
@@ -290,6 +291,7 @@ public final class PartitionedStreamTest {
 	private Module createServerModule() {
 		return Modules.combine(
 				DataflowModule.create(),
+				DatasetIdModule.create(),
 				createSerializersModule(),
 				new AbstractModule() {
 					@Provides

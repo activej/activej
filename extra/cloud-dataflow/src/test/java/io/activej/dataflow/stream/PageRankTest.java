@@ -7,6 +7,7 @@ import io.activej.dataflow.dataset.impl.DatasetConsumerOfId;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
+import io.activej.dataflow.inject.DatasetIdModule;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
 import io.activej.dataflow.proto.serializer.FunctionSubtypeSerializer;
 import io.activej.datastream.StreamConsumerToList;
@@ -227,6 +228,7 @@ public class PageRankTest {
 	public DataflowServer launchServer(InetSocketAddress address, Object items, Object result) throws Exception {
 		Injector env = Injector.of(ModuleBuilder.create()
 				.install(createModule())
+				.install(DatasetIdModule.create())
 				.bind(datasetId("items")).toInstance(items)
 				.bind(datasetId("result")).toInstance(result)
 				.build());
