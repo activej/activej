@@ -60,6 +60,6 @@ public final class DataflowJdbcServerModule extends AbstractModule {
 
 	@Provides
 	Meta meta(Eventloop eventloop, CalciteSqlDataflow calciteSqlDataflow) {
-		return new DataflowMeta(eventloop, calciteSqlDataflow);
+		return DataflowMeta.create(eventloop, calciteSqlDataflow);
 	}
 }

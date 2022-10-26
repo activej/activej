@@ -8,6 +8,7 @@ import org.apache.calcite.rex.RexDynamicParam;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -32,9 +33,9 @@ public final class OperandMapGet extends OperandFunction<OperandMapGet> {
 		Map<?, V> map = mapOperand.getValue(record);
 		Object key = keyOperand.getValue(record);
 
-		if (map == null) return null;
+		if (map == null || key == null) return null;
 
-		return map.get(key);
+		return map.get(convertKey(record, key));
 	}
 
 	@Override
@@ -74,6 +75,25 @@ public final class OperandMapGet extends OperandFunction<OperandMapGet> {
 	@Override
 	public List<Operand<?>> getOperands() {
 		return List.of(mapOperand, keyOperand);
+	}
+
+	private Object convertKey(Record record, Object key) {
+		if (!(key instanceof BigDecimal bigDecimal)) return key;
+
+		Type fieldType = mapOperand.getFieldType(record.getScheme());
+		assert fieldType instanceof ParameterizedType;
+		Type keyType = ((ParameterizedType) fieldType).getActualTypeArguments()[0];
+
+		if (keyType == BigDecimal.class) return key;
+
+		if (keyType == Byte.class) return bigDecimal.byteValue();
+		if (keyType == Short.class) return bigDecimal.shortValue();
+		if (keyType == Integer.class) return bigDecimal.intValue();
+		if (keyType == Long.class) return bigDecimal.longValue();
+		if (keyType == Float.class) return bigDecimal.floatValue();
+		if (keyType == Double.class) return bigDecimal.doubleValue();
+
+		throw new IllegalStateException("Cannot convert key to: " + keyType);
 	}
 
 	@Override

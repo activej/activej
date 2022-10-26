@@ -12,7 +12,11 @@ import io.activej.dataflow.calcite.operand.OperandIfNull;
 import io.activej.dataflow.calcite.operand.OperandListGet;
 import io.activej.dataflow.calcite.operand.OperandMapGet;
 import io.activej.dataflow.calcite.utils.*;
+import io.activej.dataflow.calcite.utils.time.SqlDateBinarySerializer;
+import io.activej.dataflow.calcite.utils.time.SqlTimeBinarySerializer;
+import io.activej.dataflow.calcite.utils.time.SqlTimestampBinarySerializer;
 import io.activej.dataflow.inject.BinarySerializerModule;
+import io.activej.dataflow.jdbc.driver.time.TimeUtils;
 import io.activej.dataflow.proto.calcite.serializer.*;
 import io.activej.dataflow.proto.serializer.CustomNodeSerializer;
 import io.activej.dataflow.proto.serializer.FunctionSubtypeSerializer;
@@ -28,6 +32,10 @@ import io.activej.serializer.BinaryOutput;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.CorruptedDataException;
 
+import java.math.BigDecimal;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.Comparator;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -40,6 +48,7 @@ public final class SerializersModule extends AbstractModule {
 		OperandIfNull.register();
 		OperandListGet.register();
 		OperandMapGet.register();
+		TimeUtils.registerTimeSerializers();
 	}
 
 	@Override
@@ -137,6 +146,12 @@ public final class SerializersModule extends AbstractModule {
 								new CalciteNodeSerializer(optionalClassLoader.get()) :
 								new CalciteNodeSerializer(),
 				new Key<OptionalDependency<DefiningClassLoader>>() {});
+
+		bind(new Key<BinarySerializer<Date>>() {}).toInstance(SqlDateBinarySerializer.getInstance()).asEager();
+		bind(new Key<BinarySerializer<Time>>() {}).toInstance(SqlTimeBinarySerializer.getInstance()).asEager();
+		bind(new Key<BinarySerializer<Timestamp>>() {}).toInstance(SqlTimestampBinarySerializer.getInstance()).asEager();
+
+		bind(new Key<BinarySerializer<BigDecimal>>() {}).toInstance(BigDecimalSerializer.getInstance()).asEager();
 
 		bind(DefiningClassLoader.class).to(DefiningClassLoader::create);
 	}

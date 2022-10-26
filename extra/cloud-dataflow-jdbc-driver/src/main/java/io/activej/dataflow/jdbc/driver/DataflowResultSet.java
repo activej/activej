@@ -10,9 +10,7 @@ import org.apache.calcite.avatica.ColumnMetaData;
 import org.apache.calcite.avatica.Meta;
 import org.jetbrains.annotations.Nullable;
 
-import java.sql.Array;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
@@ -51,7 +49,26 @@ class DataflowResultSet extends AvaticaResultSet {
 			return result;
 		}
 
+		if (isTemporalType(javaType)) {
+			return getTemporalType((String) result, javaType);
+		}
+
 		return MAPPER.convertValue(result, javaType);
+	}
+
+	private static Object getTemporalType(String result, JavaType javaType) {
+		Class<?> rawClass = javaType.getRawClass();
+
+		if (rawClass == Timestamp.class) return Timestamp.valueOf(result);
+		if (rawClass == Date.class) return Date.valueOf(result);
+		if (rawClass == Time.class) return Time.valueOf(result);
+
+		throw new AssertionError();
+	}
+
+	private static boolean isTemporalType(JavaType javaType) {
+		Class<?> rawClass = javaType.getRawClass();
+		return rawClass == Timestamp.class || rawClass == Date.class || rawClass == Time.class;
 	}
 
 	private static JavaType getJavaType(ColumnMetaData.AvaticaType avaticaType) {

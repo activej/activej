@@ -24,6 +24,37 @@ message Operand {
       double double = 5;
       bool boolean = 6;
       string string = 7;
+      BDecimal big_decimal = 8;
+      Date date = 9;
+      Time time = 10;
+      Timestamp timestamp = 11;
+    }
+
+    message BDecimal {
+      int32 scale = 1;
+      BInteger int_val = 2;
+    }
+
+    message BInteger {
+      bytes value = 1;
+    }
+
+    message Date {
+      int32 year = 1;
+      int32 month = 2;
+      int32 day = 3;
+    }
+
+    message Time {
+      int32 hour = 1;
+      int32 minute = 2;
+      int32 second = 3;
+      int32 nano = 4;
+    }
+
+    message Timestamp {
+      Date date = 1;
+      Time time = 2;
     }
   }
 
@@ -37,11 +68,17 @@ message Operand {
     repeated Operand operands = 2;
   }
 
+  message Cast {
+    Operand value_operand = 1;
+    int32 type = 2;
+  }
+
   oneof operand {
     RecordField record_field = 1;
     Scalar scalar = 2;
     FieldGet field_get = 3;
     Function function = 4;
+    Cast cast = 5;
   }
 }
 

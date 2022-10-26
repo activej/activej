@@ -36,7 +36,7 @@ public class CalciteJDBCTest extends AbstractCalciteTest {
 				.install(CalciteClientModule.create())
 				.bind(int.class).to(TestUtils::getFreePort)
 				.bind(HttpServer.class).to((eventloop, port, calciteSqlDataflow) -> new HttpServer.Builder<>()
-								.withHandler(new AvaticaJsonHandler(new LocalService(new DataflowMeta(eventloop, calciteSqlDataflow))))
+								.withHandler(new AvaticaJsonHandler(new LocalService(DataflowMeta.create(eventloop, calciteSqlDataflow))))
 								.withPort(port)
 								.build(),
 						Eventloop.class, int.class, CalciteSqlDataflow.class)

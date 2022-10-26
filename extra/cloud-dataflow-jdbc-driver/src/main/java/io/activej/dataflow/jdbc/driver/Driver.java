@@ -1,5 +1,6 @@
 package io.activej.dataflow.jdbc.driver;
 
+import io.activej.dataflow.jdbc.driver.time.TimeUtils;
 import org.apache.calcite.avatica.DriverVersion;
 
 public class Driver extends org.apache.calcite.avatica.remote.Driver {
@@ -7,6 +8,8 @@ public class Driver extends org.apache.calcite.avatica.remote.Driver {
 
 	static {
 		new Driver().register();
+
+		TimeUtils.registerTimeSerializers();
 	}
 
 	public Driver() {

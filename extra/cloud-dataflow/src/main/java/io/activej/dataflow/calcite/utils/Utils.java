@@ -6,10 +6,7 @@ import io.activej.common.exception.ToDoException;
 import io.activej.dataflow.calcite.Value;
 import io.activej.dataflow.calcite.function.ProjectionFunction;
 import io.activej.dataflow.calcite.inject.CalciteServerModule;
-import io.activej.dataflow.calcite.operand.Operand;
-import io.activej.dataflow.calcite.operand.OperandFieldAccess;
-import io.activej.dataflow.calcite.operand.OperandRecordField;
-import io.activej.dataflow.calcite.operand.OperandScalar;
+import io.activej.dataflow.calcite.operand.*;
 import io.activej.dataflow.dataset.Datasets;
 import io.activej.dataflow.dataset.SortedDataset;
 import io.activej.record.Record;
@@ -19,9 +16,13 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.type.SqlTypeName;
 
 import java.lang.reflect.*;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -29,17 +30,15 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static java.util.Objects.requireNonNull;
-
 public final class Utils {
+	@SuppressWarnings("unchecked")
 	public static <T> T toJavaType(RexLiteral literal) {
 		SqlTypeName typeName = literal.getTypeName();
+		if (typeName.getFamily() == SqlTypeFamily.CHARACTER) {
+			return (T) literal.getValueAs(String.class);
+		}
 
-		return (T) switch (requireNonNull(typeName.getFamily())) {
-			case CHARACTER -> literal.getValueAs(String.class);
-			case NUMERIC, INTEGER -> literal.getValueAs(Integer.class);
-			default -> throw new ToDoException();
-		};
+		return (T) literal.getValue();
 	}
 
 	public static Operand<?> toOperand(RexNode node, DefiningClassLoader classLoader) {
@@ -48,7 +47,9 @@ public final class Utils {
 		} else if (node instanceof RexCall call) {
 			switch (call.getKind()) {
 				case CAST -> {
-					return toOperand(call.getOperands().get(0), classLoader);
+					int castType = call.getType().getSqlTypeName().getJdbcOrdinal();
+					Operand<?> operand = toOperand(call.getOperands().get(0), classLoader);
+					return new OperandCast(operand, castType);
 				}
 				case OTHER_FUNCTION -> {
 					SqlOperator operator = call.getOperator();
@@ -74,13 +75,20 @@ public final class Utils {
 		throw new IllegalArgumentException("Unknown node: " + node);
 	}
 
-	public static int compareToUnknown(Comparable<Object> comparable1, Comparable<Object> comparable2) {
-		if (comparable1.getClass() != comparable2.getClass() &&
-				comparable1 instanceof Number number1 && comparable2 instanceof Number number2) {
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	public static int compareToUnknown(Comparable left, Comparable right) {
+		Class<? extends Comparable> leftClass = left.getClass();
+		Class<? extends Comparable> rightClass = right.getClass();
+
+		if (leftClass == rightClass) {
+			return left.compareTo(right);
+		}
+
+		if (left instanceof Number number1 && right instanceof Number number2) {
 			return Double.compare(number1.doubleValue(), number2.doubleValue());
 		}
 
-		return comparable1.compareTo(comparable2);
+		return left.compareTo(right);
 	}
 
 	public static boolean equalsUnknown(Object object1, Object object2) {
@@ -98,7 +106,8 @@ public final class Utils {
 
 	public static RelDataType toRowType(RelDataTypeFactory typeFactory, Type type) {
 		if (type instanceof Class<?> cls) {
-			if (cls.isPrimitive() || cls.isEnum() || Primitives.isWrapperType(cls) || cls == String.class) {
+			if (cls.isPrimitive() || cls.isEnum() || Primitives.isWrapperType(cls) || cls == String.class ||
+					cls == Timestamp.class || cls == Date.class || cls == Time.class) {
 				return typeFactory.createJavaType(cls);
 			}
 

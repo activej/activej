@@ -26,7 +26,9 @@ final class FrameFetcher implements AsyncCloseable {
 			throw new RuntimeException("Cannot return records from offset that is not equal to number of already taken records");
 		}
 
-		int fetchSize = Math.min(Math.max(0, fetchMaxRowCount), synchronousConsumer.getBufferSize());
+		int fetchSize = fetchMaxRowCount == -1 ?
+				synchronousConsumer.getBufferSize() :
+				Math.min(fetchMaxRowCount, synchronousConsumer.getBufferSize());
 
 		List<Object> rows = new ArrayList<>(fetchSize);
 

@@ -29,11 +29,11 @@ public final class OperandListGet extends OperandFunction<OperandListGet> {
 	@Override
 	public <T> T getValue(Record record) {
 		List<T> list = listOperand.getValue(record);
-		Integer index = indexOperand.getValue(record);
+		Number index = indexOperand.getValue(record);
 
-		if (list == null || index == null || list.size() <= index) return null;
+		if (list == null || index == null || list.size() <= index.intValue()) return null;
 
-		return list.get(index);
+		return list.get(index.intValue());
 	}
 
 	@Override

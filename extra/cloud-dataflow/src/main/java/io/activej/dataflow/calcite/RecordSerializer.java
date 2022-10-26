@@ -16,20 +16,18 @@ public final class RecordSerializer implements BinarySerializer<Record> {
 	private static final boolean CHECK = Checks.isEnabled(RecordSerializer.class);
 
 	private final BinarySerializerLocator locator;
-	private final BinarySerializer<Integer> intSerializer;
 
 	private @Nullable RecordScheme encodeRecordScheme;
 	private @Nullable RecordScheme decodeRecordScheme;
 
 	private BinarySerializer<Object> @Nullable [] fieldSerializers;
 
-	private RecordSerializer(BinarySerializerLocator locator, BinarySerializer<Integer> intSerializer) {
+	private RecordSerializer(BinarySerializerLocator locator) {
 		this.locator = locator;
-		this.intSerializer = intSerializer;
 	}
 
 	public static RecordSerializer create(BinarySerializerLocator locator) {
-		return new RecordSerializer(locator, locator.get(int.class));
+		return new RecordSerializer(locator);
 	}
 
 	@Override
@@ -50,7 +48,6 @@ public final class RecordSerializer implements BinarySerializer<Record> {
 
 		assert fieldSerializers != null;
 		for (int i = 0; i < array.length; i++) {
-			intSerializer.encode(out, i);
 			fieldSerializers[i].encode(out, array[i]);
 		}
 	}
@@ -71,10 +68,8 @@ public final class RecordSerializer implements BinarySerializer<Record> {
 		assert fieldSerializers != null;
 		Record record = decodeRecordScheme.record();
 		for (int i = 0; i < decodeRecordScheme.size(); i++) {
-			int index = intSerializer.decode(in);
 			Object fieldValue = fieldSerializers[i].decode(in);
-
-			record.set(index, fieldValue);
+			record.set(i, fieldValue);
 		}
 
 		return record;

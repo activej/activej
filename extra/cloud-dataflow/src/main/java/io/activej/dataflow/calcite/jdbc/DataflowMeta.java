@@ -33,6 +33,9 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.sql.DatabaseMetaData;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
@@ -87,9 +90,20 @@ public final class DataflowMeta extends LimitedMeta {
 	private final Map<StatementKey, FrameFetcher> consumers = new ConcurrentHashMap<>();
 	private final Map<StatementKey, UnmaterializedDataset> unmaterializedDatasets = new ConcurrentHashMap<>();
 
-	public DataflowMeta(Eventloop eventloop, CalciteSqlDataflow sqlDataflow) {
+	private TimeZone timeZone = TimeZone.getDefault();
+
+	private DataflowMeta(Eventloop eventloop, CalciteSqlDataflow sqlDataflow) {
 		this.eventloop = eventloop;
 		this.sqlDataflow = sqlDataflow;
+	}
+
+	public static DataflowMeta create(Eventloop eventloop, CalciteSqlDataflow sqlDataflow) {
+		return new DataflowMeta(eventloop, sqlDataflow);
+	}
+
+	public DataflowMeta withTimeZone(TimeZone timeZone) {
+		this.timeZone = timeZone;
+		return this;
 	}
 
 	@Override
@@ -112,8 +126,9 @@ public final class DataflowMeta extends LimitedMeta {
 			throw new NoSuchStatementException(h);
 		}
 
+		Calendar calendar = Calendar.getInstance(timeZone);
 		List<Object> params = parameterValues.stream()
-				.map(typedValue -> typedValue.value)
+				.map(typedValue -> typedValue.toJdbc(calendar))
 				.toList();
 
 		Dataset<Record> dataset = unmaterializedDataset.materialize(params);
@@ -269,6 +284,9 @@ public final class DataflowMeta extends LimitedMeta {
 
 		if (type != null) {
 			ColumnMetaData.Rep rep = ColumnMetaData.Rep.of(type);
+			if (type == Timestamp.class || type == Date.class || type == Time.class) {
+				rep = ColumnMetaData.Rep.STRING;
+			}
 			return ColumnMetaData.scalar(rep.typeId, type.getTypeName(), rep);
 		}
 		int jdbcOrdinal = relDataType.getSqlTypeName().getJdbcOrdinal();

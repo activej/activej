@@ -11,9 +11,12 @@ import org.apache.calcite.rex.RexDynamicParam;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.sql.type.MapSqlType;
+import org.apache.calcite.sql.type.SqlTypeFamily;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -95,12 +98,12 @@ public class Value {
 		if (dataType instanceof RelRecordType) {
 			return Record.class;
 		}
-		return switch (dataType.getSqlTypeName()) {
+		SqlTypeName sqlTypeName = dataType.getSqlTypeName();
+		if (sqlTypeName.getFamily() == SqlTypeFamily.NUMERIC) {
+			return BigDecimal.class;
+		}
+		return switch (sqlTypeName) {
 			case BOOLEAN -> boolean.class;
-			case TINYINT, SMALLINT, INTEGER -> int.class;
-			case BIGINT -> long.class;
-			case DECIMAL, REAL, DOUBLE -> double.class;
-			case FLOAT -> float.class;
 			case CHAR, VARCHAR -> String.class;
 			case BINARY, VARBINARY -> byte[].class;
 			case NULL, UNKNOWN, ANY -> Object.class;

@@ -33,8 +33,12 @@ import org.junit.rules.TemporaryFolder;
 import java.lang.reflect.RecordComponent;
 import java.math.BigDecimal;
 import java.net.InetSocketAddress;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.Date;
+import java.sql.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -75,6 +79,7 @@ public abstract class AbstractCalciteTest {
 	public static final String FILTERABLE_TABLE_NAME = "filterable";
 	public static final String CUSTOM_TABLE_NAME = "custom";
 	public static final String CUSTOM_PARTITIONED_TABLE_NAME = "custom_partitioned";
+	public static final String TEMPORAL_VALUES_TABLE_NAME = "temporal_values";
 
 	protected static final List<Student> STUDENT_LIST_1 = List.of(
 			new Student(4, "Mark", null, 3),
@@ -172,6 +177,36 @@ public abstract class AbstractCalciteTest {
 			new Custom(5, BigDecimal.valueOf(231.424), "lmn")
 	);
 
+	private static final LocalDateTime INITIAL_TIMESTAMP = LocalDateTime.of(2022, 6, 15, 12, 0, 0);
+	private static final LocalDate INITIAL_DATE = INITIAL_TIMESTAMP.toLocalDate();
+	private static final LocalTime INITIAL_TIME = INITIAL_TIMESTAMP.toLocalTime();
+
+	protected static final List<TemporalValues> TEMPORAL_VALUES_LIST_1 = List.of(
+			new TemporalValues(
+					1,
+					INITIAL_TIMESTAMP.minus(10, ChronoUnit.DAYS),
+					INITIAL_DATE.minus(20, ChronoUnit.YEARS),
+					INITIAL_TIME),
+			new TemporalValues(
+					3,
+					INITIAL_TIMESTAMP.minus(15, ChronoUnit.DAYS),
+					INITIAL_DATE.minus(31, ChronoUnit.YEARS),
+					INITIAL_TIME.minus(5, ChronoUnit.HOURS))
+	);
+
+	protected static final List<TemporalValues> TEMPORAL_VALUES_LIST_2 = List.of(
+			new TemporalValues(
+					2,
+					INITIAL_TIMESTAMP.minus(20, ChronoUnit.DAYS),
+					INITIAL_DATE.minus(39, ChronoUnit.YEARS),
+					INITIAL_TIME.minus(20, ChronoUnit.MINUTES)),
+			new TemporalValues(
+					5,
+					INITIAL_TIMESTAMP.minus(7, ChronoUnit.DAYS),
+					INITIAL_DATE.minus(43, ChronoUnit.YEARS),
+					INITIAL_TIME.minus(30, ChronoUnit.MINUTES))
+	);
+
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
@@ -242,6 +277,14 @@ public abstract class AbstractCalciteTest {
 										.withColumn("price", double.class, custom -> custom.getPrice().doubleValue())
 										.build()),
 						DefiningClassLoader.class)
+				.bind(setTableKey).to(classLoader -> Set.of(
+								DataflowTableBuilder.create(classLoader, TEMPORAL_VALUES_TABLE_NAME, TemporalValues.class)
+										.withColumn("userId", int.class, TemporalValues::userId)
+										.withColumn("registeredAt", Timestamp.class, temporalValues -> Timestamp.valueOf(temporalValues.registeredAt))
+										.withColumn("dateOfBirth", Date.class, temporalValues -> java.sql.Date.valueOf(temporalValues.dateOfBirth))
+										.withColumn("timeOfBirth", Time.class, temporalValues -> Time.valueOf(temporalValues.timeOfBirth))
+										.build()),
+						DefiningClassLoader.class)
 				.multibindToSet(DataflowTable.class)
 				.build();
 
@@ -271,6 +314,7 @@ public abstract class AbstractCalciteTest {
 						.bind(datasetId(STUDENT_DUPLICATES_TABLE_NAME)).toInstance(STUDENT_DUPLICATES_LIST_1)
 						.bind(datasetId(CUSTOM_TABLE_NAME)).toInstance(CUSTOM_LIST_1)
 						.bind(datasetId(CUSTOM_PARTITIONED_TABLE_NAME)).toInstance(CUSTOM_PARTITIONED_LIST_1)
+						.bind(datasetId(TEMPORAL_VALUES_TABLE_NAME)).toInstance(TEMPORAL_VALUES_LIST_1)
 						.build());
 		Module server2Module = Modules.combine(serverModule,
 				ModuleBuilder.create()
@@ -284,6 +328,7 @@ public abstract class AbstractCalciteTest {
 						.bind(datasetId(STUDENT_DUPLICATES_TABLE_NAME)).toInstance(STUDENT_DUPLICATES_LIST_2)
 						.bind(datasetId(CUSTOM_TABLE_NAME)).toInstance(CUSTOM_LIST_2)
 						.bind(datasetId(CUSTOM_PARTITIONED_TABLE_NAME)).toInstance(CUSTOM_PARTITIONED_LIST_2)
+						.bind(datasetId(TEMPORAL_VALUES_TABLE_NAME)).toInstance(TEMPORAL_VALUES_LIST_2)
 						.build());
 
 		server1Injector = Injector.of(server1Module);
@@ -375,6 +420,9 @@ public abstract class AbstractCalciteTest {
 		public String getDescription() {
 			return description;
 		}
+	}
+
+	public record TemporalValues(int userId, LocalDateTime registeredAt, LocalDate dateOfBirth, LocalTime timeOfBirth) {
 	}
 
 	@Test
@@ -493,7 +541,7 @@ public abstract class AbstractCalciteTest {
 		QueryResult expected = new QueryResult(
 				List.of("123", "'test'", "id"),
 				concat(DEPARTMENT_LIST_1, DEPARTMENT_LIST_2).stream()
-						.map(department -> new Object[]{123, "test", department.id})
+						.map(department -> new Object[]{new BigDecimal(123), "test", department.id})
 						.toList()
 		);
 
@@ -511,8 +559,8 @@ public abstract class AbstractCalciteTest {
 		QueryResult expected = new QueryResult(
 				List.of("123", "'test1'"),
 				List.of(
-						new Object[]{123, "test1"},
-						new Object[]{321, "test2"}
+						new Object[]{new BigDecimal(123), "test1"},
+						new Object[]{new BigDecimal(321), "test2"}
 				)
 		);
 
@@ -2123,6 +2171,84 @@ public abstract class AbstractCalciteTest {
 		assertEquals(expected, result);
 	}
 
+	@Test
+	public void testSelectAllTemporalValues() {
+		QueryResult result = query("SELECT * FROM temporal_values");
+
+		QueryResult expected = temporalValuesToQueryResult(concat(TEMPORAL_VALUES_LIST_1, TEMPORAL_VALUES_LIST_2));
+
+		assertEquals(expected, result);
+	}
+
+	// region SelectTemporalValuesByTimestamp
+	@Test
+	public void testSelectTemporalValuesByTimestamp() {
+		QueryResult result = query("SELECT * FROM temporal_values WHERE registeredAt > '2022-06-01 12:34:23'");
+
+		assertSelectTemporalValuesByTimestamp(result);
+	}
+
+	@Test
+	public void testSelectTemporalValuesByTimestampPrepared() {
+		QueryResult result = queryPrepared("SELECT * FROM temporal_values WHERE registeredAt > ?",
+				stmt -> stmt.setTimestamp(1, Timestamp.valueOf("2022-06-01 12:34:23")));
+
+		assertSelectTemporalValuesByTimestamp(result);
+	}
+
+	private static void assertSelectTemporalValuesByTimestamp(QueryResult result) {
+		QueryResult expected = temporalValuesToQueryResult(List.of(TEMPORAL_VALUES_LIST_1.get(0), TEMPORAL_VALUES_LIST_2.get(1)));
+
+		assertEquals(expected, result);
+	}
+	// endregion
+
+	// region SelectTemporalValuesByTime
+	@Test
+	public void testSelectTemporalValuesByTime() {
+		QueryResult result = query("SELECT * FROM temporal_values WHERE timeOfBirth > '09:27:21'");
+
+		assertSelectTemporalValuesByTime(result);
+	}
+
+	@Test
+	public void testSelectTemporalValuesByTimePrepared() {
+		QueryResult result = queryPrepared("SELECT * FROM temporal_values WHERE timeOfBirth > ?",
+				stmt -> stmt.setTime(1, Time.valueOf("09:27:21")));
+
+		assertSelectTemporalValuesByTime(result);
+	}
+
+	private static void assertSelectTemporalValuesByTime(QueryResult result) {
+		QueryResult expected = temporalValuesToQueryResult(concat(List.of(TEMPORAL_VALUES_LIST_1.get(0)), TEMPORAL_VALUES_LIST_2));
+
+		assertEquals(expected, result);
+	}
+	// endregion
+
+	// region SelectTemporalValuesByDate
+	@Test
+	public void testSelectTemporalValuesByDate() {
+		QueryResult result = query("SELECT * FROM temporal_values WHERE dateOfBirth > '1985-01-01'");
+
+		assertSelectTemporalValuesByDate(result);
+	}
+
+	@Test
+	public void testSelectTemporalValuesByDatePrepared() {
+		QueryResult result = queryPrepared("SELECT * FROM temporal_values WHERE dateOfBirth > ?",
+				stmt -> stmt.setDate(1, Date.valueOf("1985-01-01")));
+
+		assertSelectTemporalValuesByDate(result);
+	}
+
+	private static void assertSelectTemporalValuesByDate(QueryResult result) {
+		QueryResult expected = temporalValuesToQueryResult(TEMPORAL_VALUES_LIST_1);
+
+		assertEquals(expected, result);
+	}
+	// endregion
+
 	protected abstract QueryResult query(String sql);
 
 	protected abstract QueryResult queryPrepared(String sql, ParamsSetter paramsSetter);
@@ -2248,9 +2374,9 @@ public abstract class AbstractCalciteTest {
 				Object value = columnValue[i];
 				Object thatValue = thatColumnValue[i];
 
-				if (value instanceof Set<?> && thatValue instanceof List<?> thatList){
+				if (value instanceof Set<?> && thatValue instanceof List<?> thatList) {
 					thatValue = new HashSet<>(thatList);
-				} else if (thatValue instanceof Set<?> && value instanceof List<?> list ){
+				} else if (thatValue instanceof Set<?> && value instanceof List<?> list) {
 					value = new HashSet<>(list);
 				}
 
@@ -2485,6 +2611,17 @@ public abstract class AbstractCalciteTest {
 		return new QueryResult(columnNames, columnValues);
 	}
 
+	private static QueryResult temporalValuesToQueryResult(List<TemporalValues> temporalValues) {
+		List<String> columnNames = Arrays.asList("userId", "registeredAt", "dateOfBirth", "timeOfBirth");
+		List<Object[]> columnValues = new ArrayList<>(temporalValues.size());
+
+		for (TemporalValues temporalValue : temporalValues) {
+			columnValues.add(new Object[]{temporalValue.userId, Timestamp.valueOf(temporalValue.registeredAt), Date.valueOf(temporalValue.dateOfBirth), Time.valueOf(temporalValue.timeOfBirth)});
+		}
+
+		return new QueryResult(columnNames, columnValues);
+	}
+
 	private static RecordScheme ofJavaRecord(DefiningClassLoader classLoader, Class<?> recordClass) {
 		checkState(recordClass.isRecord());
 
@@ -2658,8 +2795,8 @@ public abstract class AbstractCalciteTest {
 	private static @Nullable Long extractDate(Operand<?> operand) {
 		if (!(operand instanceof OperandScalar scalar)) return null;
 
-		Integer value = (Integer) scalar.getValue().getValue();
-		return value == null ? null : Long.valueOf(value);
+		BigDecimal value = (BigDecimal) scalar.getValue().getValue();
+		return value == null ? null : value.longValue();
 	}
 
 	private static DateRange andRanges(List<DateRange> ranges) {

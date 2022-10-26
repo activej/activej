@@ -72,6 +72,11 @@
       <artifactId>value</artifactId>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>io.activej</groupId>
+      <artifactId>activej-dataflow-jdbc-driver</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>io.activej</groupId>
@@ -88,12 +93,6 @@
     <dependency>
       <groupId>io.activej</groupId>
       <artifactId>activej-test</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.activej</groupId>
-      <artifactId>activej-dataflow-jdbc-driver</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>

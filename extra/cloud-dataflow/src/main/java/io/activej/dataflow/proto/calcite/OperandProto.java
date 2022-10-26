@@ -78,6 +78,21 @@ public final class OperandProto {
      */
     io.activej.dataflow.proto.calcite.OperandProto.Operand.FunctionOrBuilder getFunctionOrBuilder();
 
+    /**
+     * <code>.dataflow.calcite.Operand.Cast cast = 5;</code>
+     * @return Whether the cast field is set.
+     */
+    boolean hasCast();
+    /**
+     * <code>.dataflow.calcite.Operand.Cast cast = 5;</code>
+     * @return The cast.
+     */
+    io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast getCast();
+    /**
+     * <code>.dataflow.calcite.Operand.Cast cast = 5;</code>
+     */
+    io.activej.dataflow.proto.calcite.OperandProto.Operand.CastOrBuilder getCastOrBuilder();
+
     public io.activej.dataflow.proto.calcite.OperandProto.Operand.OperandCase getOperandCase();
   }
   /**
@@ -179,6 +194,20 @@ public final class OperandProto {
                 operand_ = subBuilder.buildPartial();
               }
               operandCase_ = 4;
+              break;
+            }
+            case 42: {
+              io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast.Builder subBuilder = null;
+              if (operandCase_ == 5) {
+                subBuilder = ((io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast) operand_).toBuilder();
+              }
+              operand_ =
+                  input.readMessage(io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast) operand_);
+                operand_ = subBuilder.buildPartial();
+              }
+              operandCase_ = 5;
               break;
             }
             default: {
@@ -812,6 +841,66 @@ public final class OperandProto {
       com.google.protobuf.ByteString
           getStringBytes();
 
+      /**
+       * <code>.dataflow.calcite.Operand.Scalar.BDecimal big_decimal = 8;</code>
+       * @return Whether the bigDecimal field is set.
+       */
+      boolean hasBigDecimal();
+      /**
+       * <code>.dataflow.calcite.Operand.Scalar.BDecimal big_decimal = 8;</code>
+       * @return The bigDecimal.
+       */
+      io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal getBigDecimal();
+      /**
+       * <code>.dataflow.calcite.Operand.Scalar.BDecimal big_decimal = 8;</code>
+       */
+      io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimalOrBuilder getBigDecimalOrBuilder();
+
+      /**
+       * <code>.dataflow.calcite.Operand.Scalar.Date date = 9;</code>
+       * @return Whether the date field is set.
+       */
+      boolean hasDate();
+      /**
+       * <code>.dataflow.calcite.Operand.Scalar.Date date = 9;</code>
+       * @return The date.
+       */
+      io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date getDate();
+      /**
+       * <code>.dataflow.calcite.Operand.Scalar.Date date = 9;</code>
+       */
+      io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.DateOrBuilder getDateOrBuilder();
+
+      /**
+       * <code>.dataflow.calcite.Operand.Scalar.Time time = 10;</code>
+       * @return Whether the time field is set.
+       */
+      boolean hasTime();
+      /**
+       * <code>.dataflow.calcite.Operand.Scalar.Time time = 10;</code>
+       * @return The time.
+       */
+      io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time getTime();
+      /**
+       * <code>.dataflow.calcite.Operand.Scalar.Time time = 10;</code>
+       */
+      io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.TimeOrBuilder getTimeOrBuilder();
+
+      /**
+       * <code>.dataflow.calcite.Operand.Scalar.Timestamp timestamp = 11;</code>
+       * @return Whether the timestamp field is set.
+       */
+      boolean hasTimestamp();
+      /**
+       * <code>.dataflow.calcite.Operand.Scalar.Timestamp timestamp = 11;</code>
+       * @return The timestamp.
+       */
+      io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp getTimestamp();
+      /**
+       * <code>.dataflow.calcite.Operand.Scalar.Timestamp timestamp = 11;</code>
+       */
+      io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.TimestampOrBuilder getTimestampOrBuilder();
+
       public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.ValueCase getValueCase();
     }
     /**
@@ -902,6 +991,62 @@ public final class OperandProto {
                 java.lang.String s = input.readStringRequireUtf8();
                 valueCase_ = 7;
                 value_ = s;
+                break;
+              }
+              case 66: {
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal.Builder subBuilder = null;
+                if (valueCase_ == 8) {
+                  subBuilder = ((io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal) value_).toBuilder();
+                }
+                value_ =
+                    input.readMessage(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal.parser(), extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom((io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal) value_);
+                  value_ = subBuilder.buildPartial();
+                }
+                valueCase_ = 8;
+                break;
+              }
+              case 74: {
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.Builder subBuilder = null;
+                if (valueCase_ == 9) {
+                  subBuilder = ((io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date) value_).toBuilder();
+                }
+                value_ =
+                    input.readMessage(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.parser(), extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom((io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date) value_);
+                  value_ = subBuilder.buildPartial();
+                }
+                valueCase_ = 9;
+                break;
+              }
+              case 82: {
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.Builder subBuilder = null;
+                if (valueCase_ == 10) {
+                  subBuilder = ((io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time) value_).toBuilder();
+                }
+                value_ =
+                    input.readMessage(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.parser(), extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom((io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time) value_);
+                  value_ = subBuilder.buildPartial();
+                }
+                valueCase_ = 10;
+                break;
+              }
+              case 90: {
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp.Builder subBuilder = null;
+                if (valueCase_ == 11) {
+                  subBuilder = ((io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp) value_).toBuilder();
+                }
+                value_ =
+                    input.readMessage(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp.parser(), extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom((io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp) value_);
+                  value_ = subBuilder.buildPartial();
+                }
+                valueCase_ = 11;
                 break;
               }
               default: {
@@ -1354,6 +1499,3339 @@ public final class OperandProto {
 
       }
 
+      public interface BDecimalOrBuilder extends
+          // @@protoc_insertion_point(interface_extends:dataflow.calcite.Operand.Scalar.BDecimal)
+          com.google.protobuf.MessageOrBuilder {
+
+        /**
+         * <code>int32 scale = 1;</code>
+         * @return The scale.
+         */
+        int getScale();
+
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.BInteger int_val = 2;</code>
+         * @return Whether the intVal field is set.
+         */
+        boolean hasIntVal();
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.BInteger int_val = 2;</code>
+         * @return The intVal.
+         */
+        io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger getIntVal();
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.BInteger int_val = 2;</code>
+         */
+        io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BIntegerOrBuilder getIntValOrBuilder();
+      }
+      /**
+       * Protobuf type {@code dataflow.calcite.Operand.Scalar.BDecimal}
+       */
+      public static final class BDecimal extends
+          com.google.protobuf.GeneratedMessageV3 implements
+          // @@protoc_insertion_point(message_implements:dataflow.calcite.Operand.Scalar.BDecimal)
+          BDecimalOrBuilder {
+      private static final long serialVersionUID = 0L;
+        // Use BDecimal.newBuilder() to construct.
+        private BDecimal(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+          super(builder);
+        }
+        private BDecimal() {
+        }
+
+        @java.lang.Override
+        @SuppressWarnings({"unused"})
+        protected java.lang.Object newInstance(
+            UnusedPrivateParameter unused) {
+          return new BDecimal();
+        }
+
+        @java.lang.Override
+        public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+          return this.unknownFields;
+        }
+        private BDecimal(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          this();
+          if (extensionRegistry == null) {
+            throw new java.lang.NullPointerException();
+          }
+          com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+              com.google.protobuf.UnknownFieldSet.newBuilder();
+          try {
+            boolean done = false;
+            while (!done) {
+              int tag = input.readTag();
+              switch (tag) {
+                case 0:
+                  done = true;
+                  break;
+                case 8: {
+
+                  scale_ = input.readInt32();
+                  break;
+                }
+                case 18: {
+                  io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger.Builder subBuilder = null;
+                  if (intVal_ != null) {
+                    subBuilder = intVal_.toBuilder();
+                  }
+                  intVal_ = input.readMessage(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger.parser(), extensionRegistry);
+                  if (subBuilder != null) {
+                    subBuilder.mergeFrom(intVal_);
+                    intVal_ = subBuilder.buildPartial();
+                  }
+
+                  break;
+                }
+                default: {
+                  if (!parseUnknownField(
+                      input, unknownFields, extensionRegistry, tag)) {
+                    done = true;
+                  }
+                  break;
+                }
+              }
+            }
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            throw e.setUnfinishedMessage(this);
+          } catch (java.io.IOException e) {
+            throw new com.google.protobuf.InvalidProtocolBufferException(
+                e).setUnfinishedMessage(this);
+          } finally {
+            this.unknownFields = unknownFields.build();
+            makeExtensionsImmutable();
+          }
+        }
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Scalar_BDecimal_descriptor;
+        }
+
+        @java.lang.Override
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Scalar_BDecimal_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal.class, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal.Builder.class);
+        }
+
+        public static final int SCALE_FIELD_NUMBER = 1;
+        private int scale_;
+        /**
+         * <code>int32 scale = 1;</code>
+         * @return The scale.
+         */
+        @java.lang.Override
+        public int getScale() {
+          return scale_;
+        }
+
+        public static final int INT_VAL_FIELD_NUMBER = 2;
+        private io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger intVal_;
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.BInteger int_val = 2;</code>
+         * @return Whether the intVal field is set.
+         */
+        @java.lang.Override
+        public boolean hasIntVal() {
+          return intVal_ != null;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.BInteger int_val = 2;</code>
+         * @return The intVal.
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger getIntVal() {
+          return intVal_ == null ? io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger.getDefaultInstance() : intVal_;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.BInteger int_val = 2;</code>
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BIntegerOrBuilder getIntValOrBuilder() {
+          return getIntVal();
+        }
+
+        private byte memoizedIsInitialized = -1;
+        @java.lang.Override
+        public final boolean isInitialized() {
+          byte isInitialized = memoizedIsInitialized;
+          if (isInitialized == 1) return true;
+          if (isInitialized == 0) return false;
+
+          memoizedIsInitialized = 1;
+          return true;
+        }
+
+        @java.lang.Override
+        public void writeTo(com.google.protobuf.CodedOutputStream output)
+                            throws java.io.IOException {
+          if (scale_ != 0) {
+            output.writeInt32(1, scale_);
+          }
+          if (intVal_ != null) {
+            output.writeMessage(2, getIntVal());
+          }
+          unknownFields.writeTo(output);
+        }
+
+        @java.lang.Override
+        public int getSerializedSize() {
+          int size = memoizedSize;
+          if (size != -1) return size;
+
+          size = 0;
+          if (scale_ != 0) {
+            size += com.google.protobuf.CodedOutputStream
+              .computeInt32Size(1, scale_);
+          }
+          if (intVal_ != null) {
+            size += com.google.protobuf.CodedOutputStream
+              .computeMessageSize(2, getIntVal());
+          }
+          size += unknownFields.getSerializedSize();
+          memoizedSize = size;
+          return size;
+        }
+
+        @java.lang.Override
+        public boolean equals(final java.lang.Object obj) {
+          if (obj == this) {
+           return true;
+          }
+          if (!(obj instanceof io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal)) {
+            return super.equals(obj);
+          }
+          io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal other = (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal) obj;
+
+          if (getScale()
+              != other.getScale()) return false;
+          if (hasIntVal() != other.hasIntVal()) return false;
+          if (hasIntVal()) {
+            if (!getIntVal()
+                .equals(other.getIntVal())) return false;
+          }
+          if (!unknownFields.equals(other.unknownFields)) return false;
+          return true;
+        }
+
+        @java.lang.Override
+        public int hashCode() {
+          if (memoizedHashCode != 0) {
+            return memoizedHashCode;
+          }
+          int hash = 41;
+          hash = (19 * hash) + getDescriptor().hashCode();
+          hash = (37 * hash) + SCALE_FIELD_NUMBER;
+          hash = (53 * hash) + getScale();
+          if (hasIntVal()) {
+            hash = (37 * hash) + INT_VAL_FIELD_NUMBER;
+            hash = (53 * hash) + getIntVal().hashCode();
+          }
+          hash = (29 * hash) + unknownFields.hashCode();
+          memoizedHashCode = hash;
+          return hash;
+        }
+
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal parseFrom(
+            java.nio.ByteBuffer data)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal parseFrom(
+            java.nio.ByteBuffer data,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal parseFrom(
+            com.google.protobuf.ByteString data)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal parseFrom(
+            com.google.protobuf.ByteString data,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal parseFrom(byte[] data)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal parseFrom(
+            byte[] data,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal parseFrom(java.io.InputStream input)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal parseFrom(
+            java.io.InputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal parseDelimitedFrom(java.io.InputStream input)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseDelimitedWithIOException(PARSER, input);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal parseDelimitedFrom(
+            java.io.InputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal parseFrom(
+            com.google.protobuf.CodedInputStream input)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal parseFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input, extensionRegistry);
+        }
+
+        @java.lang.Override
+        public Builder newBuilderForType() { return newBuilder(); }
+        public static Builder newBuilder() {
+          return DEFAULT_INSTANCE.toBuilder();
+        }
+        public static Builder newBuilder(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal prototype) {
+          return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+        }
+        @java.lang.Override
+        public Builder toBuilder() {
+          return this == DEFAULT_INSTANCE
+              ? new Builder() : new Builder().mergeFrom(this);
+        }
+
+        @java.lang.Override
+        protected Builder newBuilderForType(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          Builder builder = new Builder(parent);
+          return builder;
+        }
+        /**
+         * Protobuf type {@code dataflow.calcite.Operand.Scalar.BDecimal}
+         */
+        public static final class Builder extends
+            com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+            // @@protoc_insertion_point(builder_implements:dataflow.calcite.Operand.Scalar.BDecimal)
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimalOrBuilder {
+          public static final com.google.protobuf.Descriptors.Descriptor
+              getDescriptor() {
+            return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Scalar_BDecimal_descriptor;
+          }
+
+          @java.lang.Override
+          protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+              internalGetFieldAccessorTable() {
+            return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Scalar_BDecimal_fieldAccessorTable
+                .ensureFieldAccessorsInitialized(
+                    io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal.class, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal.Builder.class);
+          }
+
+          // Construct using io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal.newBuilder()
+          private Builder() {
+            maybeForceBuilderInitialization();
+          }
+
+          private Builder(
+              com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+            super(parent);
+            maybeForceBuilderInitialization();
+          }
+          private void maybeForceBuilderInitialization() {
+            if (com.google.protobuf.GeneratedMessageV3
+                    .alwaysUseFieldBuilders) {
+            }
+          }
+          @java.lang.Override
+          public Builder clear() {
+            super.clear();
+            scale_ = 0;
+
+            if (intValBuilder_ == null) {
+              intVal_ = null;
+            } else {
+              intVal_ = null;
+              intValBuilder_ = null;
+            }
+            return this;
+          }
+
+          @java.lang.Override
+          public com.google.protobuf.Descriptors.Descriptor
+              getDescriptorForType() {
+            return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Scalar_BDecimal_descriptor;
+          }
+
+          @java.lang.Override
+          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal getDefaultInstanceForType() {
+            return io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal.getDefaultInstance();
+          }
+
+          @java.lang.Override
+          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal build() {
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal result = buildPartial();
+            if (!result.isInitialized()) {
+              throw newUninitializedMessageException(result);
+            }
+            return result;
+          }
+
+          @java.lang.Override
+          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal buildPartial() {
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal result = new io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal(this);
+            result.scale_ = scale_;
+            if (intValBuilder_ == null) {
+              result.intVal_ = intVal_;
+            } else {
+              result.intVal_ = intValBuilder_.build();
+            }
+            onBuilt();
+            return result;
+          }
+
+          @java.lang.Override
+          public Builder clone() {
+            return super.clone();
+          }
+          @java.lang.Override
+          public Builder setField(
+              com.google.protobuf.Descriptors.FieldDescriptor field,
+              java.lang.Object value) {
+            return super.setField(field, value);
+          }
+          @java.lang.Override
+          public Builder clearField(
+              com.google.protobuf.Descriptors.FieldDescriptor field) {
+            return super.clearField(field);
+          }
+          @java.lang.Override
+          public Builder clearOneof(
+              com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+            return super.clearOneof(oneof);
+          }
+          @java.lang.Override
+          public Builder setRepeatedField(
+              com.google.protobuf.Descriptors.FieldDescriptor field,
+              int index, java.lang.Object value) {
+            return super.setRepeatedField(field, index, value);
+          }
+          @java.lang.Override
+          public Builder addRepeatedField(
+              com.google.protobuf.Descriptors.FieldDescriptor field,
+              java.lang.Object value) {
+            return super.addRepeatedField(field, value);
+          }
+          @java.lang.Override
+          public Builder mergeFrom(com.google.protobuf.Message other) {
+            if (other instanceof io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal) {
+              return mergeFrom((io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal)other);
+            } else {
+              super.mergeFrom(other);
+              return this;
+            }
+          }
+
+          public Builder mergeFrom(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal other) {
+            if (other == io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal.getDefaultInstance()) return this;
+            if (other.getScale() != 0) {
+              setScale(other.getScale());
+            }
+            if (other.hasIntVal()) {
+              mergeIntVal(other.getIntVal());
+            }
+            this.mergeUnknownFields(other.unknownFields);
+            onChanged();
+            return this;
+          }
+
+          @java.lang.Override
+          public final boolean isInitialized() {
+            return true;
+          }
+
+          @java.lang.Override
+          public Builder mergeFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws java.io.IOException {
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal parsedMessage = null;
+            try {
+              parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+              parsedMessage = (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal) e.getUnfinishedMessage();
+              throw e.unwrapIOException();
+            } finally {
+              if (parsedMessage != null) {
+                mergeFrom(parsedMessage);
+              }
+            }
+            return this;
+          }
+
+          private int scale_ ;
+          /**
+           * <code>int32 scale = 1;</code>
+           * @return The scale.
+           */
+          @java.lang.Override
+          public int getScale() {
+            return scale_;
+          }
+          /**
+           * <code>int32 scale = 1;</code>
+           * @param value The scale to set.
+           * @return This builder for chaining.
+           */
+          public Builder setScale(int value) {
+            
+            scale_ = value;
+            onChanged();
+            return this;
+          }
+          /**
+           * <code>int32 scale = 1;</code>
+           * @return This builder for chaining.
+           */
+          public Builder clearScale() {
+            
+            scale_ = 0;
+            onChanged();
+            return this;
+          }
+
+          private io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger intVal_;
+          private com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BIntegerOrBuilder> intValBuilder_;
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.BInteger int_val = 2;</code>
+           * @return Whether the intVal field is set.
+           */
+          public boolean hasIntVal() {
+            return intValBuilder_ != null || intVal_ != null;
+          }
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.BInteger int_val = 2;</code>
+           * @return The intVal.
+           */
+          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger getIntVal() {
+            if (intValBuilder_ == null) {
+              return intVal_ == null ? io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger.getDefaultInstance() : intVal_;
+            } else {
+              return intValBuilder_.getMessage();
+            }
+          }
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.BInteger int_val = 2;</code>
+           */
+          public Builder setIntVal(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger value) {
+            if (intValBuilder_ == null) {
+              if (value == null) {
+                throw new NullPointerException();
+              }
+              intVal_ = value;
+              onChanged();
+            } else {
+              intValBuilder_.setMessage(value);
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.BInteger int_val = 2;</code>
+           */
+          public Builder setIntVal(
+              io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger.Builder builderForValue) {
+            if (intValBuilder_ == null) {
+              intVal_ = builderForValue.build();
+              onChanged();
+            } else {
+              intValBuilder_.setMessage(builderForValue.build());
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.BInteger int_val = 2;</code>
+           */
+          public Builder mergeIntVal(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger value) {
+            if (intValBuilder_ == null) {
+              if (intVal_ != null) {
+                intVal_ =
+                  io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger.newBuilder(intVal_).mergeFrom(value).buildPartial();
+              } else {
+                intVal_ = value;
+              }
+              onChanged();
+            } else {
+              intValBuilder_.mergeFrom(value);
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.BInteger int_val = 2;</code>
+           */
+          public Builder clearIntVal() {
+            if (intValBuilder_ == null) {
+              intVal_ = null;
+              onChanged();
+            } else {
+              intVal_ = null;
+              intValBuilder_ = null;
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.BInteger int_val = 2;</code>
+           */
+          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger.Builder getIntValBuilder() {
+            
+            onChanged();
+            return getIntValFieldBuilder().getBuilder();
+          }
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.BInteger int_val = 2;</code>
+           */
+          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BIntegerOrBuilder getIntValOrBuilder() {
+            if (intValBuilder_ != null) {
+              return intValBuilder_.getMessageOrBuilder();
+            } else {
+              return intVal_ == null ?
+                  io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger.getDefaultInstance() : intVal_;
+            }
+          }
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.BInteger int_val = 2;</code>
+           */
+          private com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BIntegerOrBuilder> 
+              getIntValFieldBuilder() {
+            if (intValBuilder_ == null) {
+              intValBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                  io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BIntegerOrBuilder>(
+                      getIntVal(),
+                      getParentForChildren(),
+                      isClean());
+              intVal_ = null;
+            }
+            return intValBuilder_;
+          }
+          @java.lang.Override
+          public final Builder setUnknownFields(
+              final com.google.protobuf.UnknownFieldSet unknownFields) {
+            return super.setUnknownFields(unknownFields);
+          }
+
+          @java.lang.Override
+          public final Builder mergeUnknownFields(
+              final com.google.protobuf.UnknownFieldSet unknownFields) {
+            return super.mergeUnknownFields(unknownFields);
+          }
+
+
+          // @@protoc_insertion_point(builder_scope:dataflow.calcite.Operand.Scalar.BDecimal)
+        }
+
+        // @@protoc_insertion_point(class_scope:dataflow.calcite.Operand.Scalar.BDecimal)
+        private static final io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal DEFAULT_INSTANCE;
+        static {
+          DEFAULT_INSTANCE = new io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal();
+        }
+
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal getDefaultInstance() {
+          return DEFAULT_INSTANCE;
+        }
+
+        private static final com.google.protobuf.Parser<BDecimal>
+            PARSER = new com.google.protobuf.AbstractParser<BDecimal>() {
+          @java.lang.Override
+          public BDecimal parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new BDecimal(input, extensionRegistry);
+          }
+        };
+
+        public static com.google.protobuf.Parser<BDecimal> parser() {
+          return PARSER;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Parser<BDecimal> getParserForType() {
+          return PARSER;
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal getDefaultInstanceForType() {
+          return DEFAULT_INSTANCE;
+        }
+
+      }
+
+      public interface BIntegerOrBuilder extends
+          // @@protoc_insertion_point(interface_extends:dataflow.calcite.Operand.Scalar.BInteger)
+          com.google.protobuf.MessageOrBuilder {
+
+        /**
+         * <code>bytes value = 1;</code>
+         * @return The value.
+         */
+        com.google.protobuf.ByteString getValue();
+      }
+      /**
+       * Protobuf type {@code dataflow.calcite.Operand.Scalar.BInteger}
+       */
+      public static final class BInteger extends
+          com.google.protobuf.GeneratedMessageV3 implements
+          // @@protoc_insertion_point(message_implements:dataflow.calcite.Operand.Scalar.BInteger)
+          BIntegerOrBuilder {
+      private static final long serialVersionUID = 0L;
+        // Use BInteger.newBuilder() to construct.
+        private BInteger(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+          super(builder);
+        }
+        private BInteger() {
+          value_ = com.google.protobuf.ByteString.EMPTY;
+        }
+
+        @java.lang.Override
+        @SuppressWarnings({"unused"})
+        protected java.lang.Object newInstance(
+            UnusedPrivateParameter unused) {
+          return new BInteger();
+        }
+
+        @java.lang.Override
+        public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+          return this.unknownFields;
+        }
+        private BInteger(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          this();
+          if (extensionRegistry == null) {
+            throw new java.lang.NullPointerException();
+          }
+          com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+              com.google.protobuf.UnknownFieldSet.newBuilder();
+          try {
+            boolean done = false;
+            while (!done) {
+              int tag = input.readTag();
+              switch (tag) {
+                case 0:
+                  done = true;
+                  break;
+                case 10: {
+
+                  value_ = input.readBytes();
+                  break;
+                }
+                default: {
+                  if (!parseUnknownField(
+                      input, unknownFields, extensionRegistry, tag)) {
+                    done = true;
+                  }
+                  break;
+                }
+              }
+            }
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            throw e.setUnfinishedMessage(this);
+          } catch (java.io.IOException e) {
+            throw new com.google.protobuf.InvalidProtocolBufferException(
+                e).setUnfinishedMessage(this);
+          } finally {
+            this.unknownFields = unknownFields.build();
+            makeExtensionsImmutable();
+          }
+        }
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Scalar_BInteger_descriptor;
+        }
+
+        @java.lang.Override
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Scalar_BInteger_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger.class, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger.Builder.class);
+        }
+
+        public static final int VALUE_FIELD_NUMBER = 1;
+        private com.google.protobuf.ByteString value_;
+        /**
+         * <code>bytes value = 1;</code>
+         * @return The value.
+         */
+        @java.lang.Override
+        public com.google.protobuf.ByteString getValue() {
+          return value_;
+        }
+
+        private byte memoizedIsInitialized = -1;
+        @java.lang.Override
+        public final boolean isInitialized() {
+          byte isInitialized = memoizedIsInitialized;
+          if (isInitialized == 1) return true;
+          if (isInitialized == 0) return false;
+
+          memoizedIsInitialized = 1;
+          return true;
+        }
+
+        @java.lang.Override
+        public void writeTo(com.google.protobuf.CodedOutputStream output)
+                            throws java.io.IOException {
+          if (!value_.isEmpty()) {
+            output.writeBytes(1, value_);
+          }
+          unknownFields.writeTo(output);
+        }
+
+        @java.lang.Override
+        public int getSerializedSize() {
+          int size = memoizedSize;
+          if (size != -1) return size;
+
+          size = 0;
+          if (!value_.isEmpty()) {
+            size += com.google.protobuf.CodedOutputStream
+              .computeBytesSize(1, value_);
+          }
+          size += unknownFields.getSerializedSize();
+          memoizedSize = size;
+          return size;
+        }
+
+        @java.lang.Override
+        public boolean equals(final java.lang.Object obj) {
+          if (obj == this) {
+           return true;
+          }
+          if (!(obj instanceof io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger)) {
+            return super.equals(obj);
+          }
+          io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger other = (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger) obj;
+
+          if (!getValue()
+              .equals(other.getValue())) return false;
+          if (!unknownFields.equals(other.unknownFields)) return false;
+          return true;
+        }
+
+        @java.lang.Override
+        public int hashCode() {
+          if (memoizedHashCode != 0) {
+            return memoizedHashCode;
+          }
+          int hash = 41;
+          hash = (19 * hash) + getDescriptor().hashCode();
+          hash = (37 * hash) + VALUE_FIELD_NUMBER;
+          hash = (53 * hash) + getValue().hashCode();
+          hash = (29 * hash) + unknownFields.hashCode();
+          memoizedHashCode = hash;
+          return hash;
+        }
+
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger parseFrom(
+            java.nio.ByteBuffer data)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger parseFrom(
+            java.nio.ByteBuffer data,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger parseFrom(
+            com.google.protobuf.ByteString data)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger parseFrom(
+            com.google.protobuf.ByteString data,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger parseFrom(byte[] data)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger parseFrom(
+            byte[] data,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger parseFrom(java.io.InputStream input)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger parseFrom(
+            java.io.InputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger parseDelimitedFrom(java.io.InputStream input)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseDelimitedWithIOException(PARSER, input);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger parseDelimitedFrom(
+            java.io.InputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger parseFrom(
+            com.google.protobuf.CodedInputStream input)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger parseFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input, extensionRegistry);
+        }
+
+        @java.lang.Override
+        public Builder newBuilderForType() { return newBuilder(); }
+        public static Builder newBuilder() {
+          return DEFAULT_INSTANCE.toBuilder();
+        }
+        public static Builder newBuilder(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger prototype) {
+          return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+        }
+        @java.lang.Override
+        public Builder toBuilder() {
+          return this == DEFAULT_INSTANCE
+              ? new Builder() : new Builder().mergeFrom(this);
+        }
+
+        @java.lang.Override
+        protected Builder newBuilderForType(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          Builder builder = new Builder(parent);
+          return builder;
+        }
+        /**
+         * Protobuf type {@code dataflow.calcite.Operand.Scalar.BInteger}
+         */
+        public static final class Builder extends
+            com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+            // @@protoc_insertion_point(builder_implements:dataflow.calcite.Operand.Scalar.BInteger)
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BIntegerOrBuilder {
+          public static final com.google.protobuf.Descriptors.Descriptor
+              getDescriptor() {
+            return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Scalar_BInteger_descriptor;
+          }
+
+          @java.lang.Override
+          protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+              internalGetFieldAccessorTable() {
+            return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Scalar_BInteger_fieldAccessorTable
+                .ensureFieldAccessorsInitialized(
+                    io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger.class, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger.Builder.class);
+          }
+
+          // Construct using io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger.newBuilder()
+          private Builder() {
+            maybeForceBuilderInitialization();
+          }
+
+          private Builder(
+              com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+            super(parent);
+            maybeForceBuilderInitialization();
+          }
+          private void maybeForceBuilderInitialization() {
+            if (com.google.protobuf.GeneratedMessageV3
+                    .alwaysUseFieldBuilders) {
+            }
+          }
+          @java.lang.Override
+          public Builder clear() {
+            super.clear();
+            value_ = com.google.protobuf.ByteString.EMPTY;
+
+            return this;
+          }
+
+          @java.lang.Override
+          public com.google.protobuf.Descriptors.Descriptor
+              getDescriptorForType() {
+            return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Scalar_BInteger_descriptor;
+          }
+
+          @java.lang.Override
+          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger getDefaultInstanceForType() {
+            return io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger.getDefaultInstance();
+          }
+
+          @java.lang.Override
+          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger build() {
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger result = buildPartial();
+            if (!result.isInitialized()) {
+              throw newUninitializedMessageException(result);
+            }
+            return result;
+          }
+
+          @java.lang.Override
+          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger buildPartial() {
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger result = new io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger(this);
+            result.value_ = value_;
+            onBuilt();
+            return result;
+          }
+
+          @java.lang.Override
+          public Builder clone() {
+            return super.clone();
+          }
+          @java.lang.Override
+          public Builder setField(
+              com.google.protobuf.Descriptors.FieldDescriptor field,
+              java.lang.Object value) {
+            return super.setField(field, value);
+          }
+          @java.lang.Override
+          public Builder clearField(
+              com.google.protobuf.Descriptors.FieldDescriptor field) {
+            return super.clearField(field);
+          }
+          @java.lang.Override
+          public Builder clearOneof(
+              com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+            return super.clearOneof(oneof);
+          }
+          @java.lang.Override
+          public Builder setRepeatedField(
+              com.google.protobuf.Descriptors.FieldDescriptor field,
+              int index, java.lang.Object value) {
+            return super.setRepeatedField(field, index, value);
+          }
+          @java.lang.Override
+          public Builder addRepeatedField(
+              com.google.protobuf.Descriptors.FieldDescriptor field,
+              java.lang.Object value) {
+            return super.addRepeatedField(field, value);
+          }
+          @java.lang.Override
+          public Builder mergeFrom(com.google.protobuf.Message other) {
+            if (other instanceof io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger) {
+              return mergeFrom((io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger)other);
+            } else {
+              super.mergeFrom(other);
+              return this;
+            }
+          }
+
+          public Builder mergeFrom(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger other) {
+            if (other == io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger.getDefaultInstance()) return this;
+            if (other.getValue() != com.google.protobuf.ByteString.EMPTY) {
+              setValue(other.getValue());
+            }
+            this.mergeUnknownFields(other.unknownFields);
+            onChanged();
+            return this;
+          }
+
+          @java.lang.Override
+          public final boolean isInitialized() {
+            return true;
+          }
+
+          @java.lang.Override
+          public Builder mergeFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws java.io.IOException {
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger parsedMessage = null;
+            try {
+              parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+              parsedMessage = (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger) e.getUnfinishedMessage();
+              throw e.unwrapIOException();
+            } finally {
+              if (parsedMessage != null) {
+                mergeFrom(parsedMessage);
+              }
+            }
+            return this;
+          }
+
+          private com.google.protobuf.ByteString value_ = com.google.protobuf.ByteString.EMPTY;
+          /**
+           * <code>bytes value = 1;</code>
+           * @return The value.
+           */
+          @java.lang.Override
+          public com.google.protobuf.ByteString getValue() {
+            return value_;
+          }
+          /**
+           * <code>bytes value = 1;</code>
+           * @param value The value to set.
+           * @return This builder for chaining.
+           */
+          public Builder setValue(com.google.protobuf.ByteString value) {
+            if (value == null) {
+    throw new NullPointerException();
+  }
+  
+            value_ = value;
+            onChanged();
+            return this;
+          }
+          /**
+           * <code>bytes value = 1;</code>
+           * @return This builder for chaining.
+           */
+          public Builder clearValue() {
+            
+            value_ = getDefaultInstance().getValue();
+            onChanged();
+            return this;
+          }
+          @java.lang.Override
+          public final Builder setUnknownFields(
+              final com.google.protobuf.UnknownFieldSet unknownFields) {
+            return super.setUnknownFields(unknownFields);
+          }
+
+          @java.lang.Override
+          public final Builder mergeUnknownFields(
+              final com.google.protobuf.UnknownFieldSet unknownFields) {
+            return super.mergeUnknownFields(unknownFields);
+          }
+
+
+          // @@protoc_insertion_point(builder_scope:dataflow.calcite.Operand.Scalar.BInteger)
+        }
+
+        // @@protoc_insertion_point(class_scope:dataflow.calcite.Operand.Scalar.BInteger)
+        private static final io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger DEFAULT_INSTANCE;
+        static {
+          DEFAULT_INSTANCE = new io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger();
+        }
+
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger getDefaultInstance() {
+          return DEFAULT_INSTANCE;
+        }
+
+        private static final com.google.protobuf.Parser<BInteger>
+            PARSER = new com.google.protobuf.AbstractParser<BInteger>() {
+          @java.lang.Override
+          public BInteger parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new BInteger(input, extensionRegistry);
+          }
+        };
+
+        public static com.google.protobuf.Parser<BInteger> parser() {
+          return PARSER;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Parser<BInteger> getParserForType() {
+          return PARSER;
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BInteger getDefaultInstanceForType() {
+          return DEFAULT_INSTANCE;
+        }
+
+      }
+
+      public interface DateOrBuilder extends
+          // @@protoc_insertion_point(interface_extends:dataflow.calcite.Operand.Scalar.Date)
+          com.google.protobuf.MessageOrBuilder {
+
+        /**
+         * <code>int32 year = 1;</code>
+         * @return The year.
+         */
+        int getYear();
+
+        /**
+         * <code>int32 month = 2;</code>
+         * @return The month.
+         */
+        int getMonth();
+
+        /**
+         * <code>int32 day = 3;</code>
+         * @return The day.
+         */
+        int getDay();
+      }
+      /**
+       * Protobuf type {@code dataflow.calcite.Operand.Scalar.Date}
+       */
+      public static final class Date extends
+          com.google.protobuf.GeneratedMessageV3 implements
+          // @@protoc_insertion_point(message_implements:dataflow.calcite.Operand.Scalar.Date)
+          DateOrBuilder {
+      private static final long serialVersionUID = 0L;
+        // Use Date.newBuilder() to construct.
+        private Date(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+          super(builder);
+        }
+        private Date() {
+        }
+
+        @java.lang.Override
+        @SuppressWarnings({"unused"})
+        protected java.lang.Object newInstance(
+            UnusedPrivateParameter unused) {
+          return new Date();
+        }
+
+        @java.lang.Override
+        public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+          return this.unknownFields;
+        }
+        private Date(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          this();
+          if (extensionRegistry == null) {
+            throw new java.lang.NullPointerException();
+          }
+          com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+              com.google.protobuf.UnknownFieldSet.newBuilder();
+          try {
+            boolean done = false;
+            while (!done) {
+              int tag = input.readTag();
+              switch (tag) {
+                case 0:
+                  done = true;
+                  break;
+                case 8: {
+
+                  year_ = input.readInt32();
+                  break;
+                }
+                case 16: {
+
+                  month_ = input.readInt32();
+                  break;
+                }
+                case 24: {
+
+                  day_ = input.readInt32();
+                  break;
+                }
+                default: {
+                  if (!parseUnknownField(
+                      input, unknownFields, extensionRegistry, tag)) {
+                    done = true;
+                  }
+                  break;
+                }
+              }
+            }
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            throw e.setUnfinishedMessage(this);
+          } catch (java.io.IOException e) {
+            throw new com.google.protobuf.InvalidProtocolBufferException(
+                e).setUnfinishedMessage(this);
+          } finally {
+            this.unknownFields = unknownFields.build();
+            makeExtensionsImmutable();
+          }
+        }
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Scalar_Date_descriptor;
+        }
+
+        @java.lang.Override
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Scalar_Date_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.class, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.Builder.class);
+        }
+
+        public static final int YEAR_FIELD_NUMBER = 1;
+        private int year_;
+        /**
+         * <code>int32 year = 1;</code>
+         * @return The year.
+         */
+        @java.lang.Override
+        public int getYear() {
+          return year_;
+        }
+
+        public static final int MONTH_FIELD_NUMBER = 2;
+        private int month_;
+        /**
+         * <code>int32 month = 2;</code>
+         * @return The month.
+         */
+        @java.lang.Override
+        public int getMonth() {
+          return month_;
+        }
+
+        public static final int DAY_FIELD_NUMBER = 3;
+        private int day_;
+        /**
+         * <code>int32 day = 3;</code>
+         * @return The day.
+         */
+        @java.lang.Override
+        public int getDay() {
+          return day_;
+        }
+
+        private byte memoizedIsInitialized = -1;
+        @java.lang.Override
+        public final boolean isInitialized() {
+          byte isInitialized = memoizedIsInitialized;
+          if (isInitialized == 1) return true;
+          if (isInitialized == 0) return false;
+
+          memoizedIsInitialized = 1;
+          return true;
+        }
+
+        @java.lang.Override
+        public void writeTo(com.google.protobuf.CodedOutputStream output)
+                            throws java.io.IOException {
+          if (year_ != 0) {
+            output.writeInt32(1, year_);
+          }
+          if (month_ != 0) {
+            output.writeInt32(2, month_);
+          }
+          if (day_ != 0) {
+            output.writeInt32(3, day_);
+          }
+          unknownFields.writeTo(output);
+        }
+
+        @java.lang.Override
+        public int getSerializedSize() {
+          int size = memoizedSize;
+          if (size != -1) return size;
+
+          size = 0;
+          if (year_ != 0) {
+            size += com.google.protobuf.CodedOutputStream
+              .computeInt32Size(1, year_);
+          }
+          if (month_ != 0) {
+            size += com.google.protobuf.CodedOutputStream
+              .computeInt32Size(2, month_);
+          }
+          if (day_ != 0) {
+            size += com.google.protobuf.CodedOutputStream
+              .computeInt32Size(3, day_);
+          }
+          size += unknownFields.getSerializedSize();
+          memoizedSize = size;
+          return size;
+        }
+
+        @java.lang.Override
+        public boolean equals(final java.lang.Object obj) {
+          if (obj == this) {
+           return true;
+          }
+          if (!(obj instanceof io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date)) {
+            return super.equals(obj);
+          }
+          io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date other = (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date) obj;
+
+          if (getYear()
+              != other.getYear()) return false;
+          if (getMonth()
+              != other.getMonth()) return false;
+          if (getDay()
+              != other.getDay()) return false;
+          if (!unknownFields.equals(other.unknownFields)) return false;
+          return true;
+        }
+
+        @java.lang.Override
+        public int hashCode() {
+          if (memoizedHashCode != 0) {
+            return memoizedHashCode;
+          }
+          int hash = 41;
+          hash = (19 * hash) + getDescriptor().hashCode();
+          hash = (37 * hash) + YEAR_FIELD_NUMBER;
+          hash = (53 * hash) + getYear();
+          hash = (37 * hash) + MONTH_FIELD_NUMBER;
+          hash = (53 * hash) + getMonth();
+          hash = (37 * hash) + DAY_FIELD_NUMBER;
+          hash = (53 * hash) + getDay();
+          hash = (29 * hash) + unknownFields.hashCode();
+          memoizedHashCode = hash;
+          return hash;
+        }
+
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date parseFrom(
+            java.nio.ByteBuffer data)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date parseFrom(
+            java.nio.ByteBuffer data,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date parseFrom(
+            com.google.protobuf.ByteString data)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date parseFrom(
+            com.google.protobuf.ByteString data,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date parseFrom(byte[] data)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date parseFrom(
+            byte[] data,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date parseFrom(java.io.InputStream input)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date parseFrom(
+            java.io.InputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date parseDelimitedFrom(java.io.InputStream input)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseDelimitedWithIOException(PARSER, input);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date parseDelimitedFrom(
+            java.io.InputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date parseFrom(
+            com.google.protobuf.CodedInputStream input)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date parseFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input, extensionRegistry);
+        }
+
+        @java.lang.Override
+        public Builder newBuilderForType() { return newBuilder(); }
+        public static Builder newBuilder() {
+          return DEFAULT_INSTANCE.toBuilder();
+        }
+        public static Builder newBuilder(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date prototype) {
+          return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+        }
+        @java.lang.Override
+        public Builder toBuilder() {
+          return this == DEFAULT_INSTANCE
+              ? new Builder() : new Builder().mergeFrom(this);
+        }
+
+        @java.lang.Override
+        protected Builder newBuilderForType(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          Builder builder = new Builder(parent);
+          return builder;
+        }
+        /**
+         * Protobuf type {@code dataflow.calcite.Operand.Scalar.Date}
+         */
+        public static final class Builder extends
+            com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+            // @@protoc_insertion_point(builder_implements:dataflow.calcite.Operand.Scalar.Date)
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.DateOrBuilder {
+          public static final com.google.protobuf.Descriptors.Descriptor
+              getDescriptor() {
+            return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Scalar_Date_descriptor;
+          }
+
+          @java.lang.Override
+          protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+              internalGetFieldAccessorTable() {
+            return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Scalar_Date_fieldAccessorTable
+                .ensureFieldAccessorsInitialized(
+                    io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.class, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.Builder.class);
+          }
+
+          // Construct using io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.newBuilder()
+          private Builder() {
+            maybeForceBuilderInitialization();
+          }
+
+          private Builder(
+              com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+            super(parent);
+            maybeForceBuilderInitialization();
+          }
+          private void maybeForceBuilderInitialization() {
+            if (com.google.protobuf.GeneratedMessageV3
+                    .alwaysUseFieldBuilders) {
+            }
+          }
+          @java.lang.Override
+          public Builder clear() {
+            super.clear();
+            year_ = 0;
+
+            month_ = 0;
+
+            day_ = 0;
+
+            return this;
+          }
+
+          @java.lang.Override
+          public com.google.protobuf.Descriptors.Descriptor
+              getDescriptorForType() {
+            return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Scalar_Date_descriptor;
+          }
+
+          @java.lang.Override
+          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date getDefaultInstanceForType() {
+            return io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.getDefaultInstance();
+          }
+
+          @java.lang.Override
+          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date build() {
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date result = buildPartial();
+            if (!result.isInitialized()) {
+              throw newUninitializedMessageException(result);
+            }
+            return result;
+          }
+
+          @java.lang.Override
+          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date buildPartial() {
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date result = new io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date(this);
+            result.year_ = year_;
+            result.month_ = month_;
+            result.day_ = day_;
+            onBuilt();
+            return result;
+          }
+
+          @java.lang.Override
+          public Builder clone() {
+            return super.clone();
+          }
+          @java.lang.Override
+          public Builder setField(
+              com.google.protobuf.Descriptors.FieldDescriptor field,
+              java.lang.Object value) {
+            return super.setField(field, value);
+          }
+          @java.lang.Override
+          public Builder clearField(
+              com.google.protobuf.Descriptors.FieldDescriptor field) {
+            return super.clearField(field);
+          }
+          @java.lang.Override
+          public Builder clearOneof(
+              com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+            return super.clearOneof(oneof);
+          }
+          @java.lang.Override
+          public Builder setRepeatedField(
+              com.google.protobuf.Descriptors.FieldDescriptor field,
+              int index, java.lang.Object value) {
+            return super.setRepeatedField(field, index, value);
+          }
+          @java.lang.Override
+          public Builder addRepeatedField(
+              com.google.protobuf.Descriptors.FieldDescriptor field,
+              java.lang.Object value) {
+            return super.addRepeatedField(field, value);
+          }
+          @java.lang.Override
+          public Builder mergeFrom(com.google.protobuf.Message other) {
+            if (other instanceof io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date) {
+              return mergeFrom((io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date)other);
+            } else {
+              super.mergeFrom(other);
+              return this;
+            }
+          }
+
+          public Builder mergeFrom(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date other) {
+            if (other == io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.getDefaultInstance()) return this;
+            if (other.getYear() != 0) {
+              setYear(other.getYear());
+            }
+            if (other.getMonth() != 0) {
+              setMonth(other.getMonth());
+            }
+            if (other.getDay() != 0) {
+              setDay(other.getDay());
+            }
+            this.mergeUnknownFields(other.unknownFields);
+            onChanged();
+            return this;
+          }
+
+          @java.lang.Override
+          public final boolean isInitialized() {
+            return true;
+          }
+
+          @java.lang.Override
+          public Builder mergeFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws java.io.IOException {
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date parsedMessage = null;
+            try {
+              parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+              parsedMessage = (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date) e.getUnfinishedMessage();
+              throw e.unwrapIOException();
+            } finally {
+              if (parsedMessage != null) {
+                mergeFrom(parsedMessage);
+              }
+            }
+            return this;
+          }
+
+          private int year_ ;
+          /**
+           * <code>int32 year = 1;</code>
+           * @return The year.
+           */
+          @java.lang.Override
+          public int getYear() {
+            return year_;
+          }
+          /**
+           * <code>int32 year = 1;</code>
+           * @param value The year to set.
+           * @return This builder for chaining.
+           */
+          public Builder setYear(int value) {
+            
+            year_ = value;
+            onChanged();
+            return this;
+          }
+          /**
+           * <code>int32 year = 1;</code>
+           * @return This builder for chaining.
+           */
+          public Builder clearYear() {
+            
+            year_ = 0;
+            onChanged();
+            return this;
+          }
+
+          private int month_ ;
+          /**
+           * <code>int32 month = 2;</code>
+           * @return The month.
+           */
+          @java.lang.Override
+          public int getMonth() {
+            return month_;
+          }
+          /**
+           * <code>int32 month = 2;</code>
+           * @param value The month to set.
+           * @return This builder for chaining.
+           */
+          public Builder setMonth(int value) {
+            
+            month_ = value;
+            onChanged();
+            return this;
+          }
+          /**
+           * <code>int32 month = 2;</code>
+           * @return This builder for chaining.
+           */
+          public Builder clearMonth() {
+            
+            month_ = 0;
+            onChanged();
+            return this;
+          }
+
+          private int day_ ;
+          /**
+           * <code>int32 day = 3;</code>
+           * @return The day.
+           */
+          @java.lang.Override
+          public int getDay() {
+            return day_;
+          }
+          /**
+           * <code>int32 day = 3;</code>
+           * @param value The day to set.
+           * @return This builder for chaining.
+           */
+          public Builder setDay(int value) {
+            
+            day_ = value;
+            onChanged();
+            return this;
+          }
+          /**
+           * <code>int32 day = 3;</code>
+           * @return This builder for chaining.
+           */
+          public Builder clearDay() {
+            
+            day_ = 0;
+            onChanged();
+            return this;
+          }
+          @java.lang.Override
+          public final Builder setUnknownFields(
+              final com.google.protobuf.UnknownFieldSet unknownFields) {
+            return super.setUnknownFields(unknownFields);
+          }
+
+          @java.lang.Override
+          public final Builder mergeUnknownFields(
+              final com.google.protobuf.UnknownFieldSet unknownFields) {
+            return super.mergeUnknownFields(unknownFields);
+          }
+
+
+          // @@protoc_insertion_point(builder_scope:dataflow.calcite.Operand.Scalar.Date)
+        }
+
+        // @@protoc_insertion_point(class_scope:dataflow.calcite.Operand.Scalar.Date)
+        private static final io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date DEFAULT_INSTANCE;
+        static {
+          DEFAULT_INSTANCE = new io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date();
+        }
+
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date getDefaultInstance() {
+          return DEFAULT_INSTANCE;
+        }
+
+        private static final com.google.protobuf.Parser<Date>
+            PARSER = new com.google.protobuf.AbstractParser<Date>() {
+          @java.lang.Override
+          public Date parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new Date(input, extensionRegistry);
+          }
+        };
+
+        public static com.google.protobuf.Parser<Date> parser() {
+          return PARSER;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Parser<Date> getParserForType() {
+          return PARSER;
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date getDefaultInstanceForType() {
+          return DEFAULT_INSTANCE;
+        }
+
+      }
+
+      public interface TimeOrBuilder extends
+          // @@protoc_insertion_point(interface_extends:dataflow.calcite.Operand.Scalar.Time)
+          com.google.protobuf.MessageOrBuilder {
+
+        /**
+         * <code>int32 hour = 1;</code>
+         * @return The hour.
+         */
+        int getHour();
+
+        /**
+         * <code>int32 minute = 2;</code>
+         * @return The minute.
+         */
+        int getMinute();
+
+        /**
+         * <code>int32 second = 3;</code>
+         * @return The second.
+         */
+        int getSecond();
+
+        /**
+         * <code>int32 nano = 4;</code>
+         * @return The nano.
+         */
+        int getNano();
+      }
+      /**
+       * Protobuf type {@code dataflow.calcite.Operand.Scalar.Time}
+       */
+      public static final class Time extends
+          com.google.protobuf.GeneratedMessageV3 implements
+          // @@protoc_insertion_point(message_implements:dataflow.calcite.Operand.Scalar.Time)
+          TimeOrBuilder {
+      private static final long serialVersionUID = 0L;
+        // Use Time.newBuilder() to construct.
+        private Time(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+          super(builder);
+        }
+        private Time() {
+        }
+
+        @java.lang.Override
+        @SuppressWarnings({"unused"})
+        protected java.lang.Object newInstance(
+            UnusedPrivateParameter unused) {
+          return new Time();
+        }
+
+        @java.lang.Override
+        public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+          return this.unknownFields;
+        }
+        private Time(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          this();
+          if (extensionRegistry == null) {
+            throw new java.lang.NullPointerException();
+          }
+          com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+              com.google.protobuf.UnknownFieldSet.newBuilder();
+          try {
+            boolean done = false;
+            while (!done) {
+              int tag = input.readTag();
+              switch (tag) {
+                case 0:
+                  done = true;
+                  break;
+                case 8: {
+
+                  hour_ = input.readInt32();
+                  break;
+                }
+                case 16: {
+
+                  minute_ = input.readInt32();
+                  break;
+                }
+                case 24: {
+
+                  second_ = input.readInt32();
+                  break;
+                }
+                case 32: {
+
+                  nano_ = input.readInt32();
+                  break;
+                }
+                default: {
+                  if (!parseUnknownField(
+                      input, unknownFields, extensionRegistry, tag)) {
+                    done = true;
+                  }
+                  break;
+                }
+              }
+            }
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            throw e.setUnfinishedMessage(this);
+          } catch (java.io.IOException e) {
+            throw new com.google.protobuf.InvalidProtocolBufferException(
+                e).setUnfinishedMessage(this);
+          } finally {
+            this.unknownFields = unknownFields.build();
+            makeExtensionsImmutable();
+          }
+        }
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Scalar_Time_descriptor;
+        }
+
+        @java.lang.Override
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Scalar_Time_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.class, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.Builder.class);
+        }
+
+        public static final int HOUR_FIELD_NUMBER = 1;
+        private int hour_;
+        /**
+         * <code>int32 hour = 1;</code>
+         * @return The hour.
+         */
+        @java.lang.Override
+        public int getHour() {
+          return hour_;
+        }
+
+        public static final int MINUTE_FIELD_NUMBER = 2;
+        private int minute_;
+        /**
+         * <code>int32 minute = 2;</code>
+         * @return The minute.
+         */
+        @java.lang.Override
+        public int getMinute() {
+          return minute_;
+        }
+
+        public static final int SECOND_FIELD_NUMBER = 3;
+        private int second_;
+        /**
+         * <code>int32 second = 3;</code>
+         * @return The second.
+         */
+        @java.lang.Override
+        public int getSecond() {
+          return second_;
+        }
+
+        public static final int NANO_FIELD_NUMBER = 4;
+        private int nano_;
+        /**
+         * <code>int32 nano = 4;</code>
+         * @return The nano.
+         */
+        @java.lang.Override
+        public int getNano() {
+          return nano_;
+        }
+
+        private byte memoizedIsInitialized = -1;
+        @java.lang.Override
+        public final boolean isInitialized() {
+          byte isInitialized = memoizedIsInitialized;
+          if (isInitialized == 1) return true;
+          if (isInitialized == 0) return false;
+
+          memoizedIsInitialized = 1;
+          return true;
+        }
+
+        @java.lang.Override
+        public void writeTo(com.google.protobuf.CodedOutputStream output)
+                            throws java.io.IOException {
+          if (hour_ != 0) {
+            output.writeInt32(1, hour_);
+          }
+          if (minute_ != 0) {
+            output.writeInt32(2, minute_);
+          }
+          if (second_ != 0) {
+            output.writeInt32(3, second_);
+          }
+          if (nano_ != 0) {
+            output.writeInt32(4, nano_);
+          }
+          unknownFields.writeTo(output);
+        }
+
+        @java.lang.Override
+        public int getSerializedSize() {
+          int size = memoizedSize;
+          if (size != -1) return size;
+
+          size = 0;
+          if (hour_ != 0) {
+            size += com.google.protobuf.CodedOutputStream
+              .computeInt32Size(1, hour_);
+          }
+          if (minute_ != 0) {
+            size += com.google.protobuf.CodedOutputStream
+              .computeInt32Size(2, minute_);
+          }
+          if (second_ != 0) {
+            size += com.google.protobuf.CodedOutputStream
+              .computeInt32Size(3, second_);
+          }
+          if (nano_ != 0) {
+            size += com.google.protobuf.CodedOutputStream
+              .computeInt32Size(4, nano_);
+          }
+          size += unknownFields.getSerializedSize();
+          memoizedSize = size;
+          return size;
+        }
+
+        @java.lang.Override
+        public boolean equals(final java.lang.Object obj) {
+          if (obj == this) {
+           return true;
+          }
+          if (!(obj instanceof io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time)) {
+            return super.equals(obj);
+          }
+          io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time other = (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time) obj;
+
+          if (getHour()
+              != other.getHour()) return false;
+          if (getMinute()
+              != other.getMinute()) return false;
+          if (getSecond()
+              != other.getSecond()) return false;
+          if (getNano()
+              != other.getNano()) return false;
+          if (!unknownFields.equals(other.unknownFields)) return false;
+          return true;
+        }
+
+        @java.lang.Override
+        public int hashCode() {
+          if (memoizedHashCode != 0) {
+            return memoizedHashCode;
+          }
+          int hash = 41;
+          hash = (19 * hash) + getDescriptor().hashCode();
+          hash = (37 * hash) + HOUR_FIELD_NUMBER;
+          hash = (53 * hash) + getHour();
+          hash = (37 * hash) + MINUTE_FIELD_NUMBER;
+          hash = (53 * hash) + getMinute();
+          hash = (37 * hash) + SECOND_FIELD_NUMBER;
+          hash = (53 * hash) + getSecond();
+          hash = (37 * hash) + NANO_FIELD_NUMBER;
+          hash = (53 * hash) + getNano();
+          hash = (29 * hash) + unknownFields.hashCode();
+          memoizedHashCode = hash;
+          return hash;
+        }
+
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time parseFrom(
+            java.nio.ByteBuffer data)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time parseFrom(
+            java.nio.ByteBuffer data,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time parseFrom(
+            com.google.protobuf.ByteString data)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time parseFrom(
+            com.google.protobuf.ByteString data,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time parseFrom(byte[] data)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time parseFrom(
+            byte[] data,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time parseFrom(java.io.InputStream input)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time parseFrom(
+            java.io.InputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time parseDelimitedFrom(java.io.InputStream input)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseDelimitedWithIOException(PARSER, input);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time parseDelimitedFrom(
+            java.io.InputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time parseFrom(
+            com.google.protobuf.CodedInputStream input)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time parseFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input, extensionRegistry);
+        }
+
+        @java.lang.Override
+        public Builder newBuilderForType() { return newBuilder(); }
+        public static Builder newBuilder() {
+          return DEFAULT_INSTANCE.toBuilder();
+        }
+        public static Builder newBuilder(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time prototype) {
+          return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+        }
+        @java.lang.Override
+        public Builder toBuilder() {
+          return this == DEFAULT_INSTANCE
+              ? new Builder() : new Builder().mergeFrom(this);
+        }
+
+        @java.lang.Override
+        protected Builder newBuilderForType(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          Builder builder = new Builder(parent);
+          return builder;
+        }
+        /**
+         * Protobuf type {@code dataflow.calcite.Operand.Scalar.Time}
+         */
+        public static final class Builder extends
+            com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+            // @@protoc_insertion_point(builder_implements:dataflow.calcite.Operand.Scalar.Time)
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.TimeOrBuilder {
+          public static final com.google.protobuf.Descriptors.Descriptor
+              getDescriptor() {
+            return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Scalar_Time_descriptor;
+          }
+
+          @java.lang.Override
+          protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+              internalGetFieldAccessorTable() {
+            return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Scalar_Time_fieldAccessorTable
+                .ensureFieldAccessorsInitialized(
+                    io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.class, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.Builder.class);
+          }
+
+          // Construct using io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.newBuilder()
+          private Builder() {
+            maybeForceBuilderInitialization();
+          }
+
+          private Builder(
+              com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+            super(parent);
+            maybeForceBuilderInitialization();
+          }
+          private void maybeForceBuilderInitialization() {
+            if (com.google.protobuf.GeneratedMessageV3
+                    .alwaysUseFieldBuilders) {
+            }
+          }
+          @java.lang.Override
+          public Builder clear() {
+            super.clear();
+            hour_ = 0;
+
+            minute_ = 0;
+
+            second_ = 0;
+
+            nano_ = 0;
+
+            return this;
+          }
+
+          @java.lang.Override
+          public com.google.protobuf.Descriptors.Descriptor
+              getDescriptorForType() {
+            return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Scalar_Time_descriptor;
+          }
+
+          @java.lang.Override
+          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time getDefaultInstanceForType() {
+            return io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.getDefaultInstance();
+          }
+
+          @java.lang.Override
+          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time build() {
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time result = buildPartial();
+            if (!result.isInitialized()) {
+              throw newUninitializedMessageException(result);
+            }
+            return result;
+          }
+
+          @java.lang.Override
+          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time buildPartial() {
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time result = new io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time(this);
+            result.hour_ = hour_;
+            result.minute_ = minute_;
+            result.second_ = second_;
+            result.nano_ = nano_;
+            onBuilt();
+            return result;
+          }
+
+          @java.lang.Override
+          public Builder clone() {
+            return super.clone();
+          }
+          @java.lang.Override
+          public Builder setField(
+              com.google.protobuf.Descriptors.FieldDescriptor field,
+              java.lang.Object value) {
+            return super.setField(field, value);
+          }
+          @java.lang.Override
+          public Builder clearField(
+              com.google.protobuf.Descriptors.FieldDescriptor field) {
+            return super.clearField(field);
+          }
+          @java.lang.Override
+          public Builder clearOneof(
+              com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+            return super.clearOneof(oneof);
+          }
+          @java.lang.Override
+          public Builder setRepeatedField(
+              com.google.protobuf.Descriptors.FieldDescriptor field,
+              int index, java.lang.Object value) {
+            return super.setRepeatedField(field, index, value);
+          }
+          @java.lang.Override
+          public Builder addRepeatedField(
+              com.google.protobuf.Descriptors.FieldDescriptor field,
+              java.lang.Object value) {
+            return super.addRepeatedField(field, value);
+          }
+          @java.lang.Override
+          public Builder mergeFrom(com.google.protobuf.Message other) {
+            if (other instanceof io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time) {
+              return mergeFrom((io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time)other);
+            } else {
+              super.mergeFrom(other);
+              return this;
+            }
+          }
+
+          public Builder mergeFrom(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time other) {
+            if (other == io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.getDefaultInstance()) return this;
+            if (other.getHour() != 0) {
+              setHour(other.getHour());
+            }
+            if (other.getMinute() != 0) {
+              setMinute(other.getMinute());
+            }
+            if (other.getSecond() != 0) {
+              setSecond(other.getSecond());
+            }
+            if (other.getNano() != 0) {
+              setNano(other.getNano());
+            }
+            this.mergeUnknownFields(other.unknownFields);
+            onChanged();
+            return this;
+          }
+
+          @java.lang.Override
+          public final boolean isInitialized() {
+            return true;
+          }
+
+          @java.lang.Override
+          public Builder mergeFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws java.io.IOException {
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time parsedMessage = null;
+            try {
+              parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+              parsedMessage = (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time) e.getUnfinishedMessage();
+              throw e.unwrapIOException();
+            } finally {
+              if (parsedMessage != null) {
+                mergeFrom(parsedMessage);
+              }
+            }
+            return this;
+          }
+
+          private int hour_ ;
+          /**
+           * <code>int32 hour = 1;</code>
+           * @return The hour.
+           */
+          @java.lang.Override
+          public int getHour() {
+            return hour_;
+          }
+          /**
+           * <code>int32 hour = 1;</code>
+           * @param value The hour to set.
+           * @return This builder for chaining.
+           */
+          public Builder setHour(int value) {
+            
+            hour_ = value;
+            onChanged();
+            return this;
+          }
+          /**
+           * <code>int32 hour = 1;</code>
+           * @return This builder for chaining.
+           */
+          public Builder clearHour() {
+            
+            hour_ = 0;
+            onChanged();
+            return this;
+          }
+
+          private int minute_ ;
+          /**
+           * <code>int32 minute = 2;</code>
+           * @return The minute.
+           */
+          @java.lang.Override
+          public int getMinute() {
+            return minute_;
+          }
+          /**
+           * <code>int32 minute = 2;</code>
+           * @param value The minute to set.
+           * @return This builder for chaining.
+           */
+          public Builder setMinute(int value) {
+            
+            minute_ = value;
+            onChanged();
+            return this;
+          }
+          /**
+           * <code>int32 minute = 2;</code>
+           * @return This builder for chaining.
+           */
+          public Builder clearMinute() {
+            
+            minute_ = 0;
+            onChanged();
+            return this;
+          }
+
+          private int second_ ;
+          /**
+           * <code>int32 second = 3;</code>
+           * @return The second.
+           */
+          @java.lang.Override
+          public int getSecond() {
+            return second_;
+          }
+          /**
+           * <code>int32 second = 3;</code>
+           * @param value The second to set.
+           * @return This builder for chaining.
+           */
+          public Builder setSecond(int value) {
+            
+            second_ = value;
+            onChanged();
+            return this;
+          }
+          /**
+           * <code>int32 second = 3;</code>
+           * @return This builder for chaining.
+           */
+          public Builder clearSecond() {
+            
+            second_ = 0;
+            onChanged();
+            return this;
+          }
+
+          private int nano_ ;
+          /**
+           * <code>int32 nano = 4;</code>
+           * @return The nano.
+           */
+          @java.lang.Override
+          public int getNano() {
+            return nano_;
+          }
+          /**
+           * <code>int32 nano = 4;</code>
+           * @param value The nano to set.
+           * @return This builder for chaining.
+           */
+          public Builder setNano(int value) {
+            
+            nano_ = value;
+            onChanged();
+            return this;
+          }
+          /**
+           * <code>int32 nano = 4;</code>
+           * @return This builder for chaining.
+           */
+          public Builder clearNano() {
+            
+            nano_ = 0;
+            onChanged();
+            return this;
+          }
+          @java.lang.Override
+          public final Builder setUnknownFields(
+              final com.google.protobuf.UnknownFieldSet unknownFields) {
+            return super.setUnknownFields(unknownFields);
+          }
+
+          @java.lang.Override
+          public final Builder mergeUnknownFields(
+              final com.google.protobuf.UnknownFieldSet unknownFields) {
+            return super.mergeUnknownFields(unknownFields);
+          }
+
+
+          // @@protoc_insertion_point(builder_scope:dataflow.calcite.Operand.Scalar.Time)
+        }
+
+        // @@protoc_insertion_point(class_scope:dataflow.calcite.Operand.Scalar.Time)
+        private static final io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time DEFAULT_INSTANCE;
+        static {
+          DEFAULT_INSTANCE = new io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time();
+        }
+
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time getDefaultInstance() {
+          return DEFAULT_INSTANCE;
+        }
+
+        private static final com.google.protobuf.Parser<Time>
+            PARSER = new com.google.protobuf.AbstractParser<Time>() {
+          @java.lang.Override
+          public Time parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new Time(input, extensionRegistry);
+          }
+        };
+
+        public static com.google.protobuf.Parser<Time> parser() {
+          return PARSER;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Parser<Time> getParserForType() {
+          return PARSER;
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time getDefaultInstanceForType() {
+          return DEFAULT_INSTANCE;
+        }
+
+      }
+
+      public interface TimestampOrBuilder extends
+          // @@protoc_insertion_point(interface_extends:dataflow.calcite.Operand.Scalar.Timestamp)
+          com.google.protobuf.MessageOrBuilder {
+
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
+         * @return Whether the date field is set.
+         */
+        boolean hasDate();
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
+         * @return The date.
+         */
+        io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date getDate();
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
+         */
+        io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.DateOrBuilder getDateOrBuilder();
+
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
+         * @return Whether the time field is set.
+         */
+        boolean hasTime();
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
+         * @return The time.
+         */
+        io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time getTime();
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
+         */
+        io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.TimeOrBuilder getTimeOrBuilder();
+      }
+      /**
+       * Protobuf type {@code dataflow.calcite.Operand.Scalar.Timestamp}
+       */
+      public static final class Timestamp extends
+          com.google.protobuf.GeneratedMessageV3 implements
+          // @@protoc_insertion_point(message_implements:dataflow.calcite.Operand.Scalar.Timestamp)
+          TimestampOrBuilder {
+      private static final long serialVersionUID = 0L;
+        // Use Timestamp.newBuilder() to construct.
+        private Timestamp(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+          super(builder);
+        }
+        private Timestamp() {
+        }
+
+        @java.lang.Override
+        @SuppressWarnings({"unused"})
+        protected java.lang.Object newInstance(
+            UnusedPrivateParameter unused) {
+          return new Timestamp();
+        }
+
+        @java.lang.Override
+        public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+          return this.unknownFields;
+        }
+        private Timestamp(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          this();
+          if (extensionRegistry == null) {
+            throw new java.lang.NullPointerException();
+          }
+          com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+              com.google.protobuf.UnknownFieldSet.newBuilder();
+          try {
+            boolean done = false;
+            while (!done) {
+              int tag = input.readTag();
+              switch (tag) {
+                case 0:
+                  done = true;
+                  break;
+                case 10: {
+                  io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.Builder subBuilder = null;
+                  if (date_ != null) {
+                    subBuilder = date_.toBuilder();
+                  }
+                  date_ = input.readMessage(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.parser(), extensionRegistry);
+                  if (subBuilder != null) {
+                    subBuilder.mergeFrom(date_);
+                    date_ = subBuilder.buildPartial();
+                  }
+
+                  break;
+                }
+                case 18: {
+                  io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.Builder subBuilder = null;
+                  if (time_ != null) {
+                    subBuilder = time_.toBuilder();
+                  }
+                  time_ = input.readMessage(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.parser(), extensionRegistry);
+                  if (subBuilder != null) {
+                    subBuilder.mergeFrom(time_);
+                    time_ = subBuilder.buildPartial();
+                  }
+
+                  break;
+                }
+                default: {
+                  if (!parseUnknownField(
+                      input, unknownFields, extensionRegistry, tag)) {
+                    done = true;
+                  }
+                  break;
+                }
+              }
+            }
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            throw e.setUnfinishedMessage(this);
+          } catch (java.io.IOException e) {
+            throw new com.google.protobuf.InvalidProtocolBufferException(
+                e).setUnfinishedMessage(this);
+          } finally {
+            this.unknownFields = unknownFields.build();
+            makeExtensionsImmutable();
+          }
+        }
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Scalar_Timestamp_descriptor;
+        }
+
+        @java.lang.Override
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Scalar_Timestamp_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp.class, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp.Builder.class);
+        }
+
+        public static final int DATE_FIELD_NUMBER = 1;
+        private io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date date_;
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
+         * @return Whether the date field is set.
+         */
+        @java.lang.Override
+        public boolean hasDate() {
+          return date_ != null;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
+         * @return The date.
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date getDate() {
+          return date_ == null ? io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.getDefaultInstance() : date_;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.DateOrBuilder getDateOrBuilder() {
+          return getDate();
+        }
+
+        public static final int TIME_FIELD_NUMBER = 2;
+        private io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time time_;
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
+         * @return Whether the time field is set.
+         */
+        @java.lang.Override
+        public boolean hasTime() {
+          return time_ != null;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
+         * @return The time.
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time getTime() {
+          return time_ == null ? io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.getDefaultInstance() : time_;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.TimeOrBuilder getTimeOrBuilder() {
+          return getTime();
+        }
+
+        private byte memoizedIsInitialized = -1;
+        @java.lang.Override
+        public final boolean isInitialized() {
+          byte isInitialized = memoizedIsInitialized;
+          if (isInitialized == 1) return true;
+          if (isInitialized == 0) return false;
+
+          memoizedIsInitialized = 1;
+          return true;
+        }
+
+        @java.lang.Override
+        public void writeTo(com.google.protobuf.CodedOutputStream output)
+                            throws java.io.IOException {
+          if (date_ != null) {
+            output.writeMessage(1, getDate());
+          }
+          if (time_ != null) {
+            output.writeMessage(2, getTime());
+          }
+          unknownFields.writeTo(output);
+        }
+
+        @java.lang.Override
+        public int getSerializedSize() {
+          int size = memoizedSize;
+          if (size != -1) return size;
+
+          size = 0;
+          if (date_ != null) {
+            size += com.google.protobuf.CodedOutputStream
+              .computeMessageSize(1, getDate());
+          }
+          if (time_ != null) {
+            size += com.google.protobuf.CodedOutputStream
+              .computeMessageSize(2, getTime());
+          }
+          size += unknownFields.getSerializedSize();
+          memoizedSize = size;
+          return size;
+        }
+
+        @java.lang.Override
+        public boolean equals(final java.lang.Object obj) {
+          if (obj == this) {
+           return true;
+          }
+          if (!(obj instanceof io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp)) {
+            return super.equals(obj);
+          }
+          io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp other = (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp) obj;
+
+          if (hasDate() != other.hasDate()) return false;
+          if (hasDate()) {
+            if (!getDate()
+                .equals(other.getDate())) return false;
+          }
+          if (hasTime() != other.hasTime()) return false;
+          if (hasTime()) {
+            if (!getTime()
+                .equals(other.getTime())) return false;
+          }
+          if (!unknownFields.equals(other.unknownFields)) return false;
+          return true;
+        }
+
+        @java.lang.Override
+        public int hashCode() {
+          if (memoizedHashCode != 0) {
+            return memoizedHashCode;
+          }
+          int hash = 41;
+          hash = (19 * hash) + getDescriptor().hashCode();
+          if (hasDate()) {
+            hash = (37 * hash) + DATE_FIELD_NUMBER;
+            hash = (53 * hash) + getDate().hashCode();
+          }
+          if (hasTime()) {
+            hash = (37 * hash) + TIME_FIELD_NUMBER;
+            hash = (53 * hash) + getTime().hashCode();
+          }
+          hash = (29 * hash) + unknownFields.hashCode();
+          memoizedHashCode = hash;
+          return hash;
+        }
+
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp parseFrom(
+            java.nio.ByteBuffer data)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp parseFrom(
+            java.nio.ByteBuffer data,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp parseFrom(
+            com.google.protobuf.ByteString data)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp parseFrom(
+            com.google.protobuf.ByteString data,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp parseFrom(byte[] data)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp parseFrom(
+            byte[] data,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp parseFrom(java.io.InputStream input)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp parseFrom(
+            java.io.InputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp parseDelimitedFrom(java.io.InputStream input)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseDelimitedWithIOException(PARSER, input);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp parseDelimitedFrom(
+            java.io.InputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp parseFrom(
+            com.google.protobuf.CodedInputStream input)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input);
+        }
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp parseFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input, extensionRegistry);
+        }
+
+        @java.lang.Override
+        public Builder newBuilderForType() { return newBuilder(); }
+        public static Builder newBuilder() {
+          return DEFAULT_INSTANCE.toBuilder();
+        }
+        public static Builder newBuilder(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp prototype) {
+          return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+        }
+        @java.lang.Override
+        public Builder toBuilder() {
+          return this == DEFAULT_INSTANCE
+              ? new Builder() : new Builder().mergeFrom(this);
+        }
+
+        @java.lang.Override
+        protected Builder newBuilderForType(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          Builder builder = new Builder(parent);
+          return builder;
+        }
+        /**
+         * Protobuf type {@code dataflow.calcite.Operand.Scalar.Timestamp}
+         */
+        public static final class Builder extends
+            com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+            // @@protoc_insertion_point(builder_implements:dataflow.calcite.Operand.Scalar.Timestamp)
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.TimestampOrBuilder {
+          public static final com.google.protobuf.Descriptors.Descriptor
+              getDescriptor() {
+            return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Scalar_Timestamp_descriptor;
+          }
+
+          @java.lang.Override
+          protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+              internalGetFieldAccessorTable() {
+            return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Scalar_Timestamp_fieldAccessorTable
+                .ensureFieldAccessorsInitialized(
+                    io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp.class, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp.Builder.class);
+          }
+
+          // Construct using io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp.newBuilder()
+          private Builder() {
+            maybeForceBuilderInitialization();
+          }
+
+          private Builder(
+              com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+            super(parent);
+            maybeForceBuilderInitialization();
+          }
+          private void maybeForceBuilderInitialization() {
+            if (com.google.protobuf.GeneratedMessageV3
+                    .alwaysUseFieldBuilders) {
+            }
+          }
+          @java.lang.Override
+          public Builder clear() {
+            super.clear();
+            if (dateBuilder_ == null) {
+              date_ = null;
+            } else {
+              date_ = null;
+              dateBuilder_ = null;
+            }
+            if (timeBuilder_ == null) {
+              time_ = null;
+            } else {
+              time_ = null;
+              timeBuilder_ = null;
+            }
+            return this;
+          }
+
+          @java.lang.Override
+          public com.google.protobuf.Descriptors.Descriptor
+              getDescriptorForType() {
+            return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Scalar_Timestamp_descriptor;
+          }
+
+          @java.lang.Override
+          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp getDefaultInstanceForType() {
+            return io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp.getDefaultInstance();
+          }
+
+          @java.lang.Override
+          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp build() {
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp result = buildPartial();
+            if (!result.isInitialized()) {
+              throw newUninitializedMessageException(result);
+            }
+            return result;
+          }
+
+          @java.lang.Override
+          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp buildPartial() {
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp result = new io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp(this);
+            if (dateBuilder_ == null) {
+              result.date_ = date_;
+            } else {
+              result.date_ = dateBuilder_.build();
+            }
+            if (timeBuilder_ == null) {
+              result.time_ = time_;
+            } else {
+              result.time_ = timeBuilder_.build();
+            }
+            onBuilt();
+            return result;
+          }
+
+          @java.lang.Override
+          public Builder clone() {
+            return super.clone();
+          }
+          @java.lang.Override
+          public Builder setField(
+              com.google.protobuf.Descriptors.FieldDescriptor field,
+              java.lang.Object value) {
+            return super.setField(field, value);
+          }
+          @java.lang.Override
+          public Builder clearField(
+              com.google.protobuf.Descriptors.FieldDescriptor field) {
+            return super.clearField(field);
+          }
+          @java.lang.Override
+          public Builder clearOneof(
+              com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+            return super.clearOneof(oneof);
+          }
+          @java.lang.Override
+          public Builder setRepeatedField(
+              com.google.protobuf.Descriptors.FieldDescriptor field,
+              int index, java.lang.Object value) {
+            return super.setRepeatedField(field, index, value);
+          }
+          @java.lang.Override
+          public Builder addRepeatedField(
+              com.google.protobuf.Descriptors.FieldDescriptor field,
+              java.lang.Object value) {
+            return super.addRepeatedField(field, value);
+          }
+          @java.lang.Override
+          public Builder mergeFrom(com.google.protobuf.Message other) {
+            if (other instanceof io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp) {
+              return mergeFrom((io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp)other);
+            } else {
+              super.mergeFrom(other);
+              return this;
+            }
+          }
+
+          public Builder mergeFrom(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp other) {
+            if (other == io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp.getDefaultInstance()) return this;
+            if (other.hasDate()) {
+              mergeDate(other.getDate());
+            }
+            if (other.hasTime()) {
+              mergeTime(other.getTime());
+            }
+            this.mergeUnknownFields(other.unknownFields);
+            onChanged();
+            return this;
+          }
+
+          @java.lang.Override
+          public final boolean isInitialized() {
+            return true;
+          }
+
+          @java.lang.Override
+          public Builder mergeFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws java.io.IOException {
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp parsedMessage = null;
+            try {
+              parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+              parsedMessage = (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp) e.getUnfinishedMessage();
+              throw e.unwrapIOException();
+            } finally {
+              if (parsedMessage != null) {
+                mergeFrom(parsedMessage);
+              }
+            }
+            return this;
+          }
+
+          private io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date date_;
+          private com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.DateOrBuilder> dateBuilder_;
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
+           * @return Whether the date field is set.
+           */
+          public boolean hasDate() {
+            return dateBuilder_ != null || date_ != null;
+          }
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
+           * @return The date.
+           */
+          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date getDate() {
+            if (dateBuilder_ == null) {
+              return date_ == null ? io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.getDefaultInstance() : date_;
+            } else {
+              return dateBuilder_.getMessage();
+            }
+          }
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
+           */
+          public Builder setDate(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date value) {
+            if (dateBuilder_ == null) {
+              if (value == null) {
+                throw new NullPointerException();
+              }
+              date_ = value;
+              onChanged();
+            } else {
+              dateBuilder_.setMessage(value);
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
+           */
+          public Builder setDate(
+              io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.Builder builderForValue) {
+            if (dateBuilder_ == null) {
+              date_ = builderForValue.build();
+              onChanged();
+            } else {
+              dateBuilder_.setMessage(builderForValue.build());
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
+           */
+          public Builder mergeDate(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date value) {
+            if (dateBuilder_ == null) {
+              if (date_ != null) {
+                date_ =
+                  io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.newBuilder(date_).mergeFrom(value).buildPartial();
+              } else {
+                date_ = value;
+              }
+              onChanged();
+            } else {
+              dateBuilder_.mergeFrom(value);
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
+           */
+          public Builder clearDate() {
+            if (dateBuilder_ == null) {
+              date_ = null;
+              onChanged();
+            } else {
+              date_ = null;
+              dateBuilder_ = null;
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
+           */
+          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.Builder getDateBuilder() {
+            
+            onChanged();
+            return getDateFieldBuilder().getBuilder();
+          }
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
+           */
+          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.DateOrBuilder getDateOrBuilder() {
+            if (dateBuilder_ != null) {
+              return dateBuilder_.getMessageOrBuilder();
+            } else {
+              return date_ == null ?
+                  io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.getDefaultInstance() : date_;
+            }
+          }
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
+           */
+          private com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.DateOrBuilder> 
+              getDateFieldBuilder() {
+            if (dateBuilder_ == null) {
+              dateBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                  io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.DateOrBuilder>(
+                      getDate(),
+                      getParentForChildren(),
+                      isClean());
+              date_ = null;
+            }
+            return dateBuilder_;
+          }
+
+          private io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time time_;
+          private com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.TimeOrBuilder> timeBuilder_;
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
+           * @return Whether the time field is set.
+           */
+          public boolean hasTime() {
+            return timeBuilder_ != null || time_ != null;
+          }
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
+           * @return The time.
+           */
+          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time getTime() {
+            if (timeBuilder_ == null) {
+              return time_ == null ? io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.getDefaultInstance() : time_;
+            } else {
+              return timeBuilder_.getMessage();
+            }
+          }
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
+           */
+          public Builder setTime(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time value) {
+            if (timeBuilder_ == null) {
+              if (value == null) {
+                throw new NullPointerException();
+              }
+              time_ = value;
+              onChanged();
+            } else {
+              timeBuilder_.setMessage(value);
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
+           */
+          public Builder setTime(
+              io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.Builder builderForValue) {
+            if (timeBuilder_ == null) {
+              time_ = builderForValue.build();
+              onChanged();
+            } else {
+              timeBuilder_.setMessage(builderForValue.build());
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
+           */
+          public Builder mergeTime(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time value) {
+            if (timeBuilder_ == null) {
+              if (time_ != null) {
+                time_ =
+                  io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.newBuilder(time_).mergeFrom(value).buildPartial();
+              } else {
+                time_ = value;
+              }
+              onChanged();
+            } else {
+              timeBuilder_.mergeFrom(value);
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
+           */
+          public Builder clearTime() {
+            if (timeBuilder_ == null) {
+              time_ = null;
+              onChanged();
+            } else {
+              time_ = null;
+              timeBuilder_ = null;
+            }
+
+            return this;
+          }
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
+           */
+          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.Builder getTimeBuilder() {
+            
+            onChanged();
+            return getTimeFieldBuilder().getBuilder();
+          }
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
+           */
+          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.TimeOrBuilder getTimeOrBuilder() {
+            if (timeBuilder_ != null) {
+              return timeBuilder_.getMessageOrBuilder();
+            } else {
+              return time_ == null ?
+                  io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.getDefaultInstance() : time_;
+            }
+          }
+          /**
+           * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
+           */
+          private com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.TimeOrBuilder> 
+              getTimeFieldBuilder() {
+            if (timeBuilder_ == null) {
+              timeBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                  io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.TimeOrBuilder>(
+                      getTime(),
+                      getParentForChildren(),
+                      isClean());
+              time_ = null;
+            }
+            return timeBuilder_;
+          }
+          @java.lang.Override
+          public final Builder setUnknownFields(
+              final com.google.protobuf.UnknownFieldSet unknownFields) {
+            return super.setUnknownFields(unknownFields);
+          }
+
+          @java.lang.Override
+          public final Builder mergeUnknownFields(
+              final com.google.protobuf.UnknownFieldSet unknownFields) {
+            return super.mergeUnknownFields(unknownFields);
+          }
+
+
+          // @@protoc_insertion_point(builder_scope:dataflow.calcite.Operand.Scalar.Timestamp)
+        }
+
+        // @@protoc_insertion_point(class_scope:dataflow.calcite.Operand.Scalar.Timestamp)
+        private static final io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp DEFAULT_INSTANCE;
+        static {
+          DEFAULT_INSTANCE = new io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp();
+        }
+
+        public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp getDefaultInstance() {
+          return DEFAULT_INSTANCE;
+        }
+
+        private static final com.google.protobuf.Parser<Timestamp>
+            PARSER = new com.google.protobuf.AbstractParser<Timestamp>() {
+          @java.lang.Override
+          public Timestamp parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new Timestamp(input, extensionRegistry);
+          }
+        };
+
+        public static com.google.protobuf.Parser<Timestamp> parser() {
+          return PARSER;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Parser<Timestamp> getParserForType() {
+          return PARSER;
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp getDefaultInstanceForType() {
+          return DEFAULT_INSTANCE;
+        }
+
+      }
+
       private int valueCase_ = 0;
       private java.lang.Object value_;
       public enum ValueCase
@@ -1366,6 +4844,10 @@ public final class OperandProto {
         DOUBLE(5),
         BOOLEAN(6),
         STRING(7),
+        BIG_DECIMAL(8),
+        DATE(9),
+        TIME(10),
+        TIMESTAMP(11),
         VALUE_NOT_SET(0);
         private final int value;
         private ValueCase(int value) {
@@ -1390,6 +4872,10 @@ public final class OperandProto {
             case 5: return DOUBLE;
             case 6: return BOOLEAN;
             case 7: return STRING;
+            case 8: return BIG_DECIMAL;
+            case 9: return DATE;
+            case 10: return TIME;
+            case 11: return TIMESTAMP;
             case 0: return VALUE_NOT_SET;
             default: return null;
           }
@@ -1593,6 +5079,130 @@ public final class OperandProto {
         }
       }
 
+      public static final int BIG_DECIMAL_FIELD_NUMBER = 8;
+      /**
+       * <code>.dataflow.calcite.Operand.Scalar.BDecimal big_decimal = 8;</code>
+       * @return Whether the bigDecimal field is set.
+       */
+      @java.lang.Override
+      public boolean hasBigDecimal() {
+        return valueCase_ == 8;
+      }
+      /**
+       * <code>.dataflow.calcite.Operand.Scalar.BDecimal big_decimal = 8;</code>
+       * @return The bigDecimal.
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal getBigDecimal() {
+        if (valueCase_ == 8) {
+           return (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal) value_;
+        }
+        return io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal.getDefaultInstance();
+      }
+      /**
+       * <code>.dataflow.calcite.Operand.Scalar.BDecimal big_decimal = 8;</code>
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimalOrBuilder getBigDecimalOrBuilder() {
+        if (valueCase_ == 8) {
+           return (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal) value_;
+        }
+        return io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal.getDefaultInstance();
+      }
+
+      public static final int DATE_FIELD_NUMBER = 9;
+      /**
+       * <code>.dataflow.calcite.Operand.Scalar.Date date = 9;</code>
+       * @return Whether the date field is set.
+       */
+      @java.lang.Override
+      public boolean hasDate() {
+        return valueCase_ == 9;
+      }
+      /**
+       * <code>.dataflow.calcite.Operand.Scalar.Date date = 9;</code>
+       * @return The date.
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date getDate() {
+        if (valueCase_ == 9) {
+           return (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date) value_;
+        }
+        return io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.getDefaultInstance();
+      }
+      /**
+       * <code>.dataflow.calcite.Operand.Scalar.Date date = 9;</code>
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.DateOrBuilder getDateOrBuilder() {
+        if (valueCase_ == 9) {
+           return (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date) value_;
+        }
+        return io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.getDefaultInstance();
+      }
+
+      public static final int TIME_FIELD_NUMBER = 10;
+      /**
+       * <code>.dataflow.calcite.Operand.Scalar.Time time = 10;</code>
+       * @return Whether the time field is set.
+       */
+      @java.lang.Override
+      public boolean hasTime() {
+        return valueCase_ == 10;
+      }
+      /**
+       * <code>.dataflow.calcite.Operand.Scalar.Time time = 10;</code>
+       * @return The time.
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time getTime() {
+        if (valueCase_ == 10) {
+           return (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time) value_;
+        }
+        return io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.getDefaultInstance();
+      }
+      /**
+       * <code>.dataflow.calcite.Operand.Scalar.Time time = 10;</code>
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.TimeOrBuilder getTimeOrBuilder() {
+        if (valueCase_ == 10) {
+           return (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time) value_;
+        }
+        return io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.getDefaultInstance();
+      }
+
+      public static final int TIMESTAMP_FIELD_NUMBER = 11;
+      /**
+       * <code>.dataflow.calcite.Operand.Scalar.Timestamp timestamp = 11;</code>
+       * @return Whether the timestamp field is set.
+       */
+      @java.lang.Override
+      public boolean hasTimestamp() {
+        return valueCase_ == 11;
+      }
+      /**
+       * <code>.dataflow.calcite.Operand.Scalar.Timestamp timestamp = 11;</code>
+       * @return The timestamp.
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp getTimestamp() {
+        if (valueCase_ == 11) {
+           return (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp) value_;
+        }
+        return io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp.getDefaultInstance();
+      }
+      /**
+       * <code>.dataflow.calcite.Operand.Scalar.Timestamp timestamp = 11;</code>
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.TimestampOrBuilder getTimestampOrBuilder() {
+        if (valueCase_ == 11) {
+           return (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp) value_;
+        }
+        return io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp.getDefaultInstance();
+      }
+
       private byte memoizedIsInitialized = -1;
       @java.lang.Override
       public final boolean isInitialized() {
@@ -1632,6 +5242,18 @@ public final class OperandProto {
         }
         if (valueCase_ == 7) {
           com.google.protobuf.GeneratedMessageV3.writeString(output, 7, value_);
+        }
+        if (valueCase_ == 8) {
+          output.writeMessage(8, (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal) value_);
+        }
+        if (valueCase_ == 9) {
+          output.writeMessage(9, (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date) value_);
+        }
+        if (valueCase_ == 10) {
+          output.writeMessage(10, (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time) value_);
+        }
+        if (valueCase_ == 11) {
+          output.writeMessage(11, (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp) value_);
         }
         unknownFields.writeTo(output);
       }
@@ -1673,6 +5295,22 @@ public final class OperandProto {
         }
         if (valueCase_ == 7) {
           size += com.google.protobuf.GeneratedMessageV3.computeStringSize(7, value_);
+        }
+        if (valueCase_ == 8) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(8, (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal) value_);
+        }
+        if (valueCase_ == 9) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(9, (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date) value_);
+        }
+        if (valueCase_ == 10) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(10, (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time) value_);
+        }
+        if (valueCase_ == 11) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(11, (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp) value_);
         }
         size += unknownFields.getSerializedSize();
         memoizedSize = size;
@@ -1721,6 +5359,22 @@ public final class OperandProto {
             if (!getString()
                 .equals(other.getString())) return false;
             break;
+          case 8:
+            if (!getBigDecimal()
+                .equals(other.getBigDecimal())) return false;
+            break;
+          case 9:
+            if (!getDate()
+                .equals(other.getDate())) return false;
+            break;
+          case 10:
+            if (!getTime()
+                .equals(other.getTime())) return false;
+            break;
+          case 11:
+            if (!getTimestamp()
+                .equals(other.getTimestamp())) return false;
+            break;
           case 0:
           default:
         }
@@ -1767,6 +5421,22 @@ public final class OperandProto {
           case 7:
             hash = (37 * hash) + STRING_FIELD_NUMBER;
             hash = (53 * hash) + getString().hashCode();
+            break;
+          case 8:
+            hash = (37 * hash) + BIG_DECIMAL_FIELD_NUMBER;
+            hash = (53 * hash) + getBigDecimal().hashCode();
+            break;
+          case 9:
+            hash = (37 * hash) + DATE_FIELD_NUMBER;
+            hash = (53 * hash) + getDate().hashCode();
+            break;
+          case 10:
+            hash = (37 * hash) + TIME_FIELD_NUMBER;
+            hash = (53 * hash) + getTime().hashCode();
+            break;
+          case 11:
+            hash = (37 * hash) + TIMESTAMP_FIELD_NUMBER;
+            hash = (53 * hash) + getTimestamp().hashCode();
             break;
           case 0:
           default:
@@ -1957,6 +5627,34 @@ public final class OperandProto {
           if (valueCase_ == 7) {
             result.value_ = value_;
           }
+          if (valueCase_ == 8) {
+            if (bigDecimalBuilder_ == null) {
+              result.value_ = value_;
+            } else {
+              result.value_ = bigDecimalBuilder_.build();
+            }
+          }
+          if (valueCase_ == 9) {
+            if (dateBuilder_ == null) {
+              result.value_ = value_;
+            } else {
+              result.value_ = dateBuilder_.build();
+            }
+          }
+          if (valueCase_ == 10) {
+            if (timeBuilder_ == null) {
+              result.value_ = value_;
+            } else {
+              result.value_ = timeBuilder_.build();
+            }
+          }
+          if (valueCase_ == 11) {
+            if (timestampBuilder_ == null) {
+              result.value_ = value_;
+            } else {
+              result.value_ = timestampBuilder_.build();
+            }
+          }
           result.valueCase_ = valueCase_;
           onBuilt();
           return result;
@@ -2035,6 +5733,22 @@ public final class OperandProto {
               valueCase_ = 7;
               value_ = other.value_;
               onChanged();
+              break;
+            }
+            case BIG_DECIMAL: {
+              mergeBigDecimal(other.getBigDecimal());
+              break;
+            }
+            case DATE: {
+              mergeDate(other.getDate());
+              break;
+            }
+            case TIME: {
+              mergeTime(other.getTime());
+              break;
+            }
+            case TIMESTAMP: {
+              mergeTimestamp(other.getTimestamp());
               break;
             }
             case VALUE_NOT_SET: {
@@ -2526,6 +6240,570 @@ public final class OperandProto {
           value_ = value;
           onChanged();
           return this;
+        }
+
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimalOrBuilder> bigDecimalBuilder_;
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.BDecimal big_decimal = 8;</code>
+         * @return Whether the bigDecimal field is set.
+         */
+        @java.lang.Override
+        public boolean hasBigDecimal() {
+          return valueCase_ == 8;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.BDecimal big_decimal = 8;</code>
+         * @return The bigDecimal.
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal getBigDecimal() {
+          if (bigDecimalBuilder_ == null) {
+            if (valueCase_ == 8) {
+              return (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal) value_;
+            }
+            return io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal.getDefaultInstance();
+          } else {
+            if (valueCase_ == 8) {
+              return bigDecimalBuilder_.getMessage();
+            }
+            return io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal.getDefaultInstance();
+          }
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.BDecimal big_decimal = 8;</code>
+         */
+        public Builder setBigDecimal(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal value) {
+          if (bigDecimalBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            value_ = value;
+            onChanged();
+          } else {
+            bigDecimalBuilder_.setMessage(value);
+          }
+          valueCase_ = 8;
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.BDecimal big_decimal = 8;</code>
+         */
+        public Builder setBigDecimal(
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal.Builder builderForValue) {
+          if (bigDecimalBuilder_ == null) {
+            value_ = builderForValue.build();
+            onChanged();
+          } else {
+            bigDecimalBuilder_.setMessage(builderForValue.build());
+          }
+          valueCase_ = 8;
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.BDecimal big_decimal = 8;</code>
+         */
+        public Builder mergeBigDecimal(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal value) {
+          if (bigDecimalBuilder_ == null) {
+            if (valueCase_ == 8 &&
+                value_ != io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal.getDefaultInstance()) {
+              value_ = io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal.newBuilder((io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal) value_)
+                  .mergeFrom(value).buildPartial();
+            } else {
+              value_ = value;
+            }
+            onChanged();
+          } else {
+            if (valueCase_ == 8) {
+              bigDecimalBuilder_.mergeFrom(value);
+            }
+            bigDecimalBuilder_.setMessage(value);
+          }
+          valueCase_ = 8;
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.BDecimal big_decimal = 8;</code>
+         */
+        public Builder clearBigDecimal() {
+          if (bigDecimalBuilder_ == null) {
+            if (valueCase_ == 8) {
+              valueCase_ = 0;
+              value_ = null;
+              onChanged();
+            }
+          } else {
+            if (valueCase_ == 8) {
+              valueCase_ = 0;
+              value_ = null;
+            }
+            bigDecimalBuilder_.clear();
+          }
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.BDecimal big_decimal = 8;</code>
+         */
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal.Builder getBigDecimalBuilder() {
+          return getBigDecimalFieldBuilder().getBuilder();
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.BDecimal big_decimal = 8;</code>
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimalOrBuilder getBigDecimalOrBuilder() {
+          if ((valueCase_ == 8) && (bigDecimalBuilder_ != null)) {
+            return bigDecimalBuilder_.getMessageOrBuilder();
+          } else {
+            if (valueCase_ == 8) {
+              return (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal) value_;
+            }
+            return io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal.getDefaultInstance();
+          }
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.BDecimal big_decimal = 8;</code>
+         */
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimalOrBuilder> 
+            getBigDecimalFieldBuilder() {
+          if (bigDecimalBuilder_ == null) {
+            if (!(valueCase_ == 8)) {
+              value_ = io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal.getDefaultInstance();
+            }
+            bigDecimalBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimalOrBuilder>(
+                    (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.BDecimal) value_,
+                    getParentForChildren(),
+                    isClean());
+            value_ = null;
+          }
+          valueCase_ = 8;
+          onChanged();;
+          return bigDecimalBuilder_;
+        }
+
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.DateOrBuilder> dateBuilder_;
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Date date = 9;</code>
+         * @return Whether the date field is set.
+         */
+        @java.lang.Override
+        public boolean hasDate() {
+          return valueCase_ == 9;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Date date = 9;</code>
+         * @return The date.
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date getDate() {
+          if (dateBuilder_ == null) {
+            if (valueCase_ == 9) {
+              return (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date) value_;
+            }
+            return io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.getDefaultInstance();
+          } else {
+            if (valueCase_ == 9) {
+              return dateBuilder_.getMessage();
+            }
+            return io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.getDefaultInstance();
+          }
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Date date = 9;</code>
+         */
+        public Builder setDate(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date value) {
+          if (dateBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            value_ = value;
+            onChanged();
+          } else {
+            dateBuilder_.setMessage(value);
+          }
+          valueCase_ = 9;
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Date date = 9;</code>
+         */
+        public Builder setDate(
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.Builder builderForValue) {
+          if (dateBuilder_ == null) {
+            value_ = builderForValue.build();
+            onChanged();
+          } else {
+            dateBuilder_.setMessage(builderForValue.build());
+          }
+          valueCase_ = 9;
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Date date = 9;</code>
+         */
+        public Builder mergeDate(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date value) {
+          if (dateBuilder_ == null) {
+            if (valueCase_ == 9 &&
+                value_ != io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.getDefaultInstance()) {
+              value_ = io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.newBuilder((io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date) value_)
+                  .mergeFrom(value).buildPartial();
+            } else {
+              value_ = value;
+            }
+            onChanged();
+          } else {
+            if (valueCase_ == 9) {
+              dateBuilder_.mergeFrom(value);
+            }
+            dateBuilder_.setMessage(value);
+          }
+          valueCase_ = 9;
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Date date = 9;</code>
+         */
+        public Builder clearDate() {
+          if (dateBuilder_ == null) {
+            if (valueCase_ == 9) {
+              valueCase_ = 0;
+              value_ = null;
+              onChanged();
+            }
+          } else {
+            if (valueCase_ == 9) {
+              valueCase_ = 0;
+              value_ = null;
+            }
+            dateBuilder_.clear();
+          }
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Date date = 9;</code>
+         */
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.Builder getDateBuilder() {
+          return getDateFieldBuilder().getBuilder();
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Date date = 9;</code>
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.DateOrBuilder getDateOrBuilder() {
+          if ((valueCase_ == 9) && (dateBuilder_ != null)) {
+            return dateBuilder_.getMessageOrBuilder();
+          } else {
+            if (valueCase_ == 9) {
+              return (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date) value_;
+            }
+            return io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.getDefaultInstance();
+          }
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Date date = 9;</code>
+         */
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.DateOrBuilder> 
+            getDateFieldBuilder() {
+          if (dateBuilder_ == null) {
+            if (!(valueCase_ == 9)) {
+              value_ = io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.getDefaultInstance();
+            }
+            dateBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.DateOrBuilder>(
+                    (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date) value_,
+                    getParentForChildren(),
+                    isClean());
+            value_ = null;
+          }
+          valueCase_ = 9;
+          onChanged();;
+          return dateBuilder_;
+        }
+
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.TimeOrBuilder> timeBuilder_;
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Time time = 10;</code>
+         * @return Whether the time field is set.
+         */
+        @java.lang.Override
+        public boolean hasTime() {
+          return valueCase_ == 10;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Time time = 10;</code>
+         * @return The time.
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time getTime() {
+          if (timeBuilder_ == null) {
+            if (valueCase_ == 10) {
+              return (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time) value_;
+            }
+            return io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.getDefaultInstance();
+          } else {
+            if (valueCase_ == 10) {
+              return timeBuilder_.getMessage();
+            }
+            return io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.getDefaultInstance();
+          }
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Time time = 10;</code>
+         */
+        public Builder setTime(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time value) {
+          if (timeBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            value_ = value;
+            onChanged();
+          } else {
+            timeBuilder_.setMessage(value);
+          }
+          valueCase_ = 10;
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Time time = 10;</code>
+         */
+        public Builder setTime(
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.Builder builderForValue) {
+          if (timeBuilder_ == null) {
+            value_ = builderForValue.build();
+            onChanged();
+          } else {
+            timeBuilder_.setMessage(builderForValue.build());
+          }
+          valueCase_ = 10;
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Time time = 10;</code>
+         */
+        public Builder mergeTime(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time value) {
+          if (timeBuilder_ == null) {
+            if (valueCase_ == 10 &&
+                value_ != io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.getDefaultInstance()) {
+              value_ = io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.newBuilder((io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time) value_)
+                  .mergeFrom(value).buildPartial();
+            } else {
+              value_ = value;
+            }
+            onChanged();
+          } else {
+            if (valueCase_ == 10) {
+              timeBuilder_.mergeFrom(value);
+            }
+            timeBuilder_.setMessage(value);
+          }
+          valueCase_ = 10;
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Time time = 10;</code>
+         */
+        public Builder clearTime() {
+          if (timeBuilder_ == null) {
+            if (valueCase_ == 10) {
+              valueCase_ = 0;
+              value_ = null;
+              onChanged();
+            }
+          } else {
+            if (valueCase_ == 10) {
+              valueCase_ = 0;
+              value_ = null;
+            }
+            timeBuilder_.clear();
+          }
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Time time = 10;</code>
+         */
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.Builder getTimeBuilder() {
+          return getTimeFieldBuilder().getBuilder();
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Time time = 10;</code>
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.TimeOrBuilder getTimeOrBuilder() {
+          if ((valueCase_ == 10) && (timeBuilder_ != null)) {
+            return timeBuilder_.getMessageOrBuilder();
+          } else {
+            if (valueCase_ == 10) {
+              return (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time) value_;
+            }
+            return io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.getDefaultInstance();
+          }
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Time time = 10;</code>
+         */
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.TimeOrBuilder> 
+            getTimeFieldBuilder() {
+          if (timeBuilder_ == null) {
+            if (!(valueCase_ == 10)) {
+              value_ = io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.getDefaultInstance();
+            }
+            timeBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.TimeOrBuilder>(
+                    (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time) value_,
+                    getParentForChildren(),
+                    isClean());
+            value_ = null;
+          }
+          valueCase_ = 10;
+          onChanged();;
+          return timeBuilder_;
+        }
+
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.TimestampOrBuilder> timestampBuilder_;
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Timestamp timestamp = 11;</code>
+         * @return Whether the timestamp field is set.
+         */
+        @java.lang.Override
+        public boolean hasTimestamp() {
+          return valueCase_ == 11;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Timestamp timestamp = 11;</code>
+         * @return The timestamp.
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp getTimestamp() {
+          if (timestampBuilder_ == null) {
+            if (valueCase_ == 11) {
+              return (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp) value_;
+            }
+            return io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp.getDefaultInstance();
+          } else {
+            if (valueCase_ == 11) {
+              return timestampBuilder_.getMessage();
+            }
+            return io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp.getDefaultInstance();
+          }
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Timestamp timestamp = 11;</code>
+         */
+        public Builder setTimestamp(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp value) {
+          if (timestampBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            value_ = value;
+            onChanged();
+          } else {
+            timestampBuilder_.setMessage(value);
+          }
+          valueCase_ = 11;
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Timestamp timestamp = 11;</code>
+         */
+        public Builder setTimestamp(
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp.Builder builderForValue) {
+          if (timestampBuilder_ == null) {
+            value_ = builderForValue.build();
+            onChanged();
+          } else {
+            timestampBuilder_.setMessage(builderForValue.build());
+          }
+          valueCase_ = 11;
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Timestamp timestamp = 11;</code>
+         */
+        public Builder mergeTimestamp(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp value) {
+          if (timestampBuilder_ == null) {
+            if (valueCase_ == 11 &&
+                value_ != io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp.getDefaultInstance()) {
+              value_ = io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp.newBuilder((io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp) value_)
+                  .mergeFrom(value).buildPartial();
+            } else {
+              value_ = value;
+            }
+            onChanged();
+          } else {
+            if (valueCase_ == 11) {
+              timestampBuilder_.mergeFrom(value);
+            }
+            timestampBuilder_.setMessage(value);
+          }
+          valueCase_ = 11;
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Timestamp timestamp = 11;</code>
+         */
+        public Builder clearTimestamp() {
+          if (timestampBuilder_ == null) {
+            if (valueCase_ == 11) {
+              valueCase_ = 0;
+              value_ = null;
+              onChanged();
+            }
+          } else {
+            if (valueCase_ == 11) {
+              valueCase_ = 0;
+              value_ = null;
+            }
+            timestampBuilder_.clear();
+          }
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Timestamp timestamp = 11;</code>
+         */
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp.Builder getTimestampBuilder() {
+          return getTimestampFieldBuilder().getBuilder();
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Timestamp timestamp = 11;</code>
+         */
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.TimestampOrBuilder getTimestampOrBuilder() {
+          if ((valueCase_ == 11) && (timestampBuilder_ != null)) {
+            return timestampBuilder_.getMessageOrBuilder();
+          } else {
+            if (valueCase_ == 11) {
+              return (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp) value_;
+            }
+            return io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp.getDefaultInstance();
+          }
+        }
+        /**
+         * <code>.dataflow.calcite.Operand.Scalar.Timestamp timestamp = 11;</code>
+         */
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.TimestampOrBuilder> 
+            getTimestampFieldBuilder() {
+          if (timestampBuilder_ == null) {
+            if (!(valueCase_ == 11)) {
+              value_ = io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp.getDefaultInstance();
+            }
+            timestampBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.TimestampOrBuilder>(
+                    (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp) value_,
+                    getParentForChildren(),
+                    isClean());
+            value_ = null;
+          }
+          valueCase_ = 11;
+          onChanged();;
+          return timestampBuilder_;
         }
         @java.lang.Override
         public final Builder setUnknownFields(
@@ -4294,6 +8572,697 @@ public final class OperandProto {
 
     }
 
+    public interface CastOrBuilder extends
+        // @@protoc_insertion_point(interface_extends:dataflow.calcite.Operand.Cast)
+        com.google.protobuf.MessageOrBuilder {
+
+      /**
+       * <code>.dataflow.calcite.Operand value_operand = 1;</code>
+       * @return Whether the valueOperand field is set.
+       */
+      boolean hasValueOperand();
+      /**
+       * <code>.dataflow.calcite.Operand value_operand = 1;</code>
+       * @return The valueOperand.
+       */
+      io.activej.dataflow.proto.calcite.OperandProto.Operand getValueOperand();
+      /**
+       * <code>.dataflow.calcite.Operand value_operand = 1;</code>
+       */
+      io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder getValueOperandOrBuilder();
+
+      /**
+       * <code>int32 type = 2;</code>
+       * @return The type.
+       */
+      int getType();
+    }
+    /**
+     * Protobuf type {@code dataflow.calcite.Operand.Cast}
+     */
+    public static final class Cast extends
+        com.google.protobuf.GeneratedMessageV3 implements
+        // @@protoc_insertion_point(message_implements:dataflow.calcite.Operand.Cast)
+        CastOrBuilder {
+    private static final long serialVersionUID = 0L;
+      // Use Cast.newBuilder() to construct.
+      private Cast(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+        super(builder);
+      }
+      private Cast() {
+      }
+
+      @java.lang.Override
+      @SuppressWarnings({"unused"})
+      protected java.lang.Object newInstance(
+          UnusedPrivateParameter unused) {
+        return new Cast();
+      }
+
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+      getUnknownFields() {
+        return this.unknownFields;
+      }
+      private Cast(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        this();
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 10: {
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder subBuilder = null;
+                if (valueOperand_ != null) {
+                  subBuilder = valueOperand_.toBuilder();
+                }
+                valueOperand_ = input.readMessage(io.activej.dataflow.proto.calcite.OperandProto.Operand.parser(), extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom(valueOperand_);
+                  valueOperand_ = subBuilder.buildPartial();
+                }
+
+                break;
+              }
+              case 16: {
+
+                type_ = input.readInt32();
+                break;
+              }
+              default: {
+                if (!parseUnknownField(
+                    input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e).setUnfinishedMessage(this);
+        } finally {
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Cast_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Cast_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast.class, io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast.Builder.class);
+      }
+
+      public static final int VALUE_OPERAND_FIELD_NUMBER = 1;
+      private io.activej.dataflow.proto.calcite.OperandProto.Operand valueOperand_;
+      /**
+       * <code>.dataflow.calcite.Operand value_operand = 1;</code>
+       * @return Whether the valueOperand field is set.
+       */
+      @java.lang.Override
+      public boolean hasValueOperand() {
+        return valueOperand_ != null;
+      }
+      /**
+       * <code>.dataflow.calcite.Operand value_operand = 1;</code>
+       * @return The valueOperand.
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.OperandProto.Operand getValueOperand() {
+        return valueOperand_ == null ? io.activej.dataflow.proto.calcite.OperandProto.Operand.getDefaultInstance() : valueOperand_;
+      }
+      /**
+       * <code>.dataflow.calcite.Operand value_operand = 1;</code>
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder getValueOperandOrBuilder() {
+        return getValueOperand();
+      }
+
+      public static final int TYPE_FIELD_NUMBER = 2;
+      private int type_;
+      /**
+       * <code>int32 type = 2;</code>
+       * @return The type.
+       */
+      @java.lang.Override
+      public int getType() {
+        return type_;
+      }
+
+      private byte memoizedIsInitialized = -1;
+      @java.lang.Override
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
+
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      @java.lang.Override
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        if (valueOperand_ != null) {
+          output.writeMessage(1, getValueOperand());
+        }
+        if (type_ != 0) {
+          output.writeInt32(2, type_);
+        }
+        unknownFields.writeTo(output);
+      }
+
+      @java.lang.Override
+      public int getSerializedSize() {
+        int size = memoizedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (valueOperand_ != null) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(1, getValueOperand());
+        }
+        if (type_ != 0) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(2, type_);
+        }
+        size += unknownFields.getSerializedSize();
+        memoizedSize = size;
+        return size;
+      }
+
+      @java.lang.Override
+      public boolean equals(final java.lang.Object obj) {
+        if (obj == this) {
+         return true;
+        }
+        if (!(obj instanceof io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast)) {
+          return super.equals(obj);
+        }
+        io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast other = (io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast) obj;
+
+        if (hasValueOperand() != other.hasValueOperand()) return false;
+        if (hasValueOperand()) {
+          if (!getValueOperand()
+              .equals(other.getValueOperand())) return false;
+        }
+        if (getType()
+            != other.getType()) return false;
+        if (!unknownFields.equals(other.unknownFields)) return false;
+        return true;
+      }
+
+      @java.lang.Override
+      public int hashCode() {
+        if (memoizedHashCode != 0) {
+          return memoizedHashCode;
+        }
+        int hash = 41;
+        hash = (19 * hash) + getDescriptor().hashCode();
+        if (hasValueOperand()) {
+          hash = (37 * hash) + VALUE_OPERAND_FIELD_NUMBER;
+          hash = (53 * hash) + getValueOperand().hashCode();
+        }
+        hash = (37 * hash) + TYPE_FIELD_NUMBER;
+        hash = (53 * hash) + getType();
+        hash = (29 * hash) + unknownFields.hashCode();
+        memoizedHashCode = hash;
+        return hash;
+      }
+
+      public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast parseFrom(
+          java.nio.ByteBuffer data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast parseFrom(
+          java.nio.ByteBuffer data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast parseFrom(
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast parseFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
+      }
+
+      @java.lang.Override
+      public Builder newBuilderForType() { return newBuilder(); }
+      public static Builder newBuilder() {
+        return DEFAULT_INSTANCE.toBuilder();
+      }
+      public static Builder newBuilder(io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast prototype) {
+        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      }
+      @java.lang.Override
+      public Builder toBuilder() {
+        return this == DEFAULT_INSTANCE
+            ? new Builder() : new Builder().mergeFrom(this);
+      }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       * Protobuf type {@code dataflow.calcite.Operand.Cast}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+          // @@protoc_insertion_point(builder_implements:dataflow.calcite.Operand.Cast)
+          io.activej.dataflow.proto.calcite.OperandProto.Operand.CastOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Cast_descriptor;
+        }
+
+        @java.lang.Override
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Cast_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast.class, io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast.Builder.class);
+        }
+
+        // Construct using io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessageV3
+                  .alwaysUseFieldBuilders) {
+          }
+        }
+        @java.lang.Override
+        public Builder clear() {
+          super.clear();
+          if (valueOperandBuilder_ == null) {
+            valueOperand_ = null;
+          } else {
+            valueOperand_ = null;
+            valueOperandBuilder_ = null;
+          }
+          type_ = 0;
+
+          return this;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return io.activej.dataflow.proto.calcite.OperandProto.internal_static_dataflow_calcite_Operand_Cast_descriptor;
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast getDefaultInstanceForType() {
+          return io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast.getDefaultInstance();
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast build() {
+          io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast buildPartial() {
+          io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast result = new io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast(this);
+          if (valueOperandBuilder_ == null) {
+            result.valueOperand_ = valueOperand_;
+          } else {
+            result.valueOperand_ = valueOperandBuilder_.build();
+          }
+          result.type_ = type_;
+          onBuilt();
+          return result;
+        }
+
+        @java.lang.Override
+        public Builder clone() {
+          return super.clone();
+        }
+        @java.lang.Override
+        public Builder setField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return super.setField(field, value);
+        }
+        @java.lang.Override
+        public Builder clearField(
+            com.google.protobuf.Descriptors.FieldDescriptor field) {
+          return super.clearField(field);
+        }
+        @java.lang.Override
+        public Builder clearOneof(
+            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+          return super.clearOneof(oneof);
+        }
+        @java.lang.Override
+        public Builder setRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            int index, java.lang.Object value) {
+          return super.setRepeatedField(field, index, value);
+        }
+        @java.lang.Override
+        public Builder addRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return super.addRepeatedField(field, value);
+        }
+        @java.lang.Override
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast) {
+            return mergeFrom((io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast other) {
+          if (other == io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast.getDefaultInstance()) return this;
+          if (other.hasValueOperand()) {
+            mergeValueOperand(other.getValueOperand());
+          }
+          if (other.getType() != 0) {
+            setType(other.getType());
+          }
+          this.mergeUnknownFields(other.unknownFields);
+          onChanged();
+          return this;
+        }
+
+        @java.lang.Override
+        public final boolean isInitialized() {
+          return true;
+        }
+
+        @java.lang.Override
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage = (io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast) e.getUnfinishedMessage();
+            throw e.unwrapIOException();
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+
+        private io.activej.dataflow.proto.calcite.OperandProto.Operand valueOperand_;
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.calcite.OperandProto.Operand, io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder, io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder> valueOperandBuilder_;
+        /**
+         * <code>.dataflow.calcite.Operand value_operand = 1;</code>
+         * @return Whether the valueOperand field is set.
+         */
+        public boolean hasValueOperand() {
+          return valueOperandBuilder_ != null || valueOperand_ != null;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand value_operand = 1;</code>
+         * @return The valueOperand.
+         */
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand getValueOperand() {
+          if (valueOperandBuilder_ == null) {
+            return valueOperand_ == null ? io.activej.dataflow.proto.calcite.OperandProto.Operand.getDefaultInstance() : valueOperand_;
+          } else {
+            return valueOperandBuilder_.getMessage();
+          }
+        }
+        /**
+         * <code>.dataflow.calcite.Operand value_operand = 1;</code>
+         */
+        public Builder setValueOperand(io.activej.dataflow.proto.calcite.OperandProto.Operand value) {
+          if (valueOperandBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            valueOperand_ = value;
+            onChanged();
+          } else {
+            valueOperandBuilder_.setMessage(value);
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand value_operand = 1;</code>
+         */
+        public Builder setValueOperand(
+            io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder builderForValue) {
+          if (valueOperandBuilder_ == null) {
+            valueOperand_ = builderForValue.build();
+            onChanged();
+          } else {
+            valueOperandBuilder_.setMessage(builderForValue.build());
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand value_operand = 1;</code>
+         */
+        public Builder mergeValueOperand(io.activej.dataflow.proto.calcite.OperandProto.Operand value) {
+          if (valueOperandBuilder_ == null) {
+            if (valueOperand_ != null) {
+              valueOperand_ =
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.newBuilder(valueOperand_).mergeFrom(value).buildPartial();
+            } else {
+              valueOperand_ = value;
+            }
+            onChanged();
+          } else {
+            valueOperandBuilder_.mergeFrom(value);
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand value_operand = 1;</code>
+         */
+        public Builder clearValueOperand() {
+          if (valueOperandBuilder_ == null) {
+            valueOperand_ = null;
+            onChanged();
+          } else {
+            valueOperand_ = null;
+            valueOperandBuilder_ = null;
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.calcite.Operand value_operand = 1;</code>
+         */
+        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder getValueOperandBuilder() {
+          
+          onChanged();
+          return getValueOperandFieldBuilder().getBuilder();
+        }
+        /**
+         * <code>.dataflow.calcite.Operand value_operand = 1;</code>
+         */
+        public io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder getValueOperandOrBuilder() {
+          if (valueOperandBuilder_ != null) {
+            return valueOperandBuilder_.getMessageOrBuilder();
+          } else {
+            return valueOperand_ == null ?
+                io.activej.dataflow.proto.calcite.OperandProto.Operand.getDefaultInstance() : valueOperand_;
+          }
+        }
+        /**
+         * <code>.dataflow.calcite.Operand value_operand = 1;</code>
+         */
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.calcite.OperandProto.Operand, io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder, io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder> 
+            getValueOperandFieldBuilder() {
+          if (valueOperandBuilder_ == null) {
+            valueOperandBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                io.activej.dataflow.proto.calcite.OperandProto.Operand, io.activej.dataflow.proto.calcite.OperandProto.Operand.Builder, io.activej.dataflow.proto.calcite.OperandProto.OperandOrBuilder>(
+                    getValueOperand(),
+                    getParentForChildren(),
+                    isClean());
+            valueOperand_ = null;
+          }
+          return valueOperandBuilder_;
+        }
+
+        private int type_ ;
+        /**
+         * <code>int32 type = 2;</code>
+         * @return The type.
+         */
+        @java.lang.Override
+        public int getType() {
+          return type_;
+        }
+        /**
+         * <code>int32 type = 2;</code>
+         * @param value The type to set.
+         * @return This builder for chaining.
+         */
+        public Builder setType(int value) {
+          
+          type_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>int32 type = 2;</code>
+         * @return This builder for chaining.
+         */
+        public Builder clearType() {
+          
+          type_ = 0;
+          onChanged();
+          return this;
+        }
+        @java.lang.Override
+        public final Builder setUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.setUnknownFields(unknownFields);
+        }
+
+        @java.lang.Override
+        public final Builder mergeUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.mergeUnknownFields(unknownFields);
+        }
+
+
+        // @@protoc_insertion_point(builder_scope:dataflow.calcite.Operand.Cast)
+      }
+
+      // @@protoc_insertion_point(class_scope:dataflow.calcite.Operand.Cast)
+      private static final io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast DEFAULT_INSTANCE;
+      static {
+        DEFAULT_INSTANCE = new io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast();
+      }
+
+      public static io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast getDefaultInstance() {
+        return DEFAULT_INSTANCE;
+      }
+
+      private static final com.google.protobuf.Parser<Cast>
+          PARSER = new com.google.protobuf.AbstractParser<Cast>() {
+        @java.lang.Override
+        public Cast parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new Cast(input, extensionRegistry);
+        }
+      };
+
+      public static com.google.protobuf.Parser<Cast> parser() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<Cast> getParserForType() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast getDefaultInstanceForType() {
+        return DEFAULT_INSTANCE;
+      }
+
+    }
+
     private int operandCase_ = 0;
     private java.lang.Object operand_;
     public enum OperandCase
@@ -4303,6 +9272,7 @@ public final class OperandProto {
       SCALAR(2),
       FIELD_GET(3),
       FUNCTION(4),
+      CAST(5),
       OPERAND_NOT_SET(0);
       private final int value;
       private OperandCase(int value) {
@@ -4324,6 +9294,7 @@ public final class OperandProto {
           case 2: return SCALAR;
           case 3: return FIELD_GET;
           case 4: return FUNCTION;
+          case 5: return CAST;
           case 0: return OPERAND_NOT_SET;
           default: return null;
         }
@@ -4463,6 +9434,37 @@ public final class OperandProto {
       return io.activej.dataflow.proto.calcite.OperandProto.Operand.Function.getDefaultInstance();
     }
 
+    public static final int CAST_FIELD_NUMBER = 5;
+    /**
+     * <code>.dataflow.calcite.Operand.Cast cast = 5;</code>
+     * @return Whether the cast field is set.
+     */
+    @java.lang.Override
+    public boolean hasCast() {
+      return operandCase_ == 5;
+    }
+    /**
+     * <code>.dataflow.calcite.Operand.Cast cast = 5;</code>
+     * @return The cast.
+     */
+    @java.lang.Override
+    public io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast getCast() {
+      if (operandCase_ == 5) {
+         return (io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast) operand_;
+      }
+      return io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast.getDefaultInstance();
+    }
+    /**
+     * <code>.dataflow.calcite.Operand.Cast cast = 5;</code>
+     */
+    @java.lang.Override
+    public io.activej.dataflow.proto.calcite.OperandProto.Operand.CastOrBuilder getCastOrBuilder() {
+      if (operandCase_ == 5) {
+         return (io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast) operand_;
+      }
+      return io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast.getDefaultInstance();
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -4489,6 +9491,9 @@ public final class OperandProto {
       if (operandCase_ == 4) {
         output.writeMessage(4, (io.activej.dataflow.proto.calcite.OperandProto.Operand.Function) operand_);
       }
+      if (operandCase_ == 5) {
+        output.writeMessage(5, (io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast) operand_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -4513,6 +9518,10 @@ public final class OperandProto {
       if (operandCase_ == 4) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, (io.activej.dataflow.proto.calcite.OperandProto.Operand.Function) operand_);
+      }
+      if (operandCase_ == 5) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(5, (io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast) operand_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -4547,6 +9556,10 @@ public final class OperandProto {
           if (!getFunction()
               .equals(other.getFunction())) return false;
           break;
+        case 5:
+          if (!getCast()
+              .equals(other.getCast())) return false;
+          break;
         case 0:
         default:
       }
@@ -4577,6 +9590,10 @@ public final class OperandProto {
         case 4:
           hash = (37 * hash) + FUNCTION_FIELD_NUMBER;
           hash = (53 * hash) + getFunction().hashCode();
+          break;
+        case 5:
+          hash = (37 * hash) + CAST_FIELD_NUMBER;
+          hash = (53 * hash) + getCast().hashCode();
           break;
         case 0:
         default:
@@ -4770,6 +9787,13 @@ public final class OperandProto {
             result.operand_ = functionBuilder_.build();
           }
         }
+        if (operandCase_ == 5) {
+          if (castBuilder_ == null) {
+            result.operand_ = operand_;
+          } else {
+            result.operand_ = castBuilder_.build();
+          }
+        }
         result.operandCase_ = operandCase_;
         onBuilt();
         return result;
@@ -4834,6 +9858,10 @@ public final class OperandProto {
           }
           case FUNCTION: {
             mergeFunction(other.getFunction());
+            break;
+          }
+          case CAST: {
+            mergeCast(other.getCast());
             break;
           }
           case OPERAND_NOT_SET: {
@@ -5447,6 +10475,147 @@ public final class OperandProto {
         onChanged();;
         return functionBuilder_;
       }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast, io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.CastOrBuilder> castBuilder_;
+      /**
+       * <code>.dataflow.calcite.Operand.Cast cast = 5;</code>
+       * @return Whether the cast field is set.
+       */
+      @java.lang.Override
+      public boolean hasCast() {
+        return operandCase_ == 5;
+      }
+      /**
+       * <code>.dataflow.calcite.Operand.Cast cast = 5;</code>
+       * @return The cast.
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast getCast() {
+        if (castBuilder_ == null) {
+          if (operandCase_ == 5) {
+            return (io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast) operand_;
+          }
+          return io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast.getDefaultInstance();
+        } else {
+          if (operandCase_ == 5) {
+            return castBuilder_.getMessage();
+          }
+          return io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.dataflow.calcite.Operand.Cast cast = 5;</code>
+       */
+      public Builder setCast(io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast value) {
+        if (castBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          operand_ = value;
+          onChanged();
+        } else {
+          castBuilder_.setMessage(value);
+        }
+        operandCase_ = 5;
+        return this;
+      }
+      /**
+       * <code>.dataflow.calcite.Operand.Cast cast = 5;</code>
+       */
+      public Builder setCast(
+          io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast.Builder builderForValue) {
+        if (castBuilder_ == null) {
+          operand_ = builderForValue.build();
+          onChanged();
+        } else {
+          castBuilder_.setMessage(builderForValue.build());
+        }
+        operandCase_ = 5;
+        return this;
+      }
+      /**
+       * <code>.dataflow.calcite.Operand.Cast cast = 5;</code>
+       */
+      public Builder mergeCast(io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast value) {
+        if (castBuilder_ == null) {
+          if (operandCase_ == 5 &&
+              operand_ != io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast.getDefaultInstance()) {
+            operand_ = io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast.newBuilder((io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast) operand_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            operand_ = value;
+          }
+          onChanged();
+        } else {
+          if (operandCase_ == 5) {
+            castBuilder_.mergeFrom(value);
+          }
+          castBuilder_.setMessage(value);
+        }
+        operandCase_ = 5;
+        return this;
+      }
+      /**
+       * <code>.dataflow.calcite.Operand.Cast cast = 5;</code>
+       */
+      public Builder clearCast() {
+        if (castBuilder_ == null) {
+          if (operandCase_ == 5) {
+            operandCase_ = 0;
+            operand_ = null;
+            onChanged();
+          }
+        } else {
+          if (operandCase_ == 5) {
+            operandCase_ = 0;
+            operand_ = null;
+          }
+          castBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>.dataflow.calcite.Operand.Cast cast = 5;</code>
+       */
+      public io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast.Builder getCastBuilder() {
+        return getCastFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.dataflow.calcite.Operand.Cast cast = 5;</code>
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.calcite.OperandProto.Operand.CastOrBuilder getCastOrBuilder() {
+        if ((operandCase_ == 5) && (castBuilder_ != null)) {
+          return castBuilder_.getMessageOrBuilder();
+        } else {
+          if (operandCase_ == 5) {
+            return (io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast) operand_;
+          }
+          return io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.dataflow.calcite.Operand.Cast cast = 5;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast, io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.CastOrBuilder> 
+          getCastFieldBuilder() {
+        if (castBuilder_ == null) {
+          if (!(operandCase_ == 5)) {
+            operand_ = io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast.getDefaultInstance();
+          }
+          castBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast, io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.CastOrBuilder>(
+                  (io.activej.dataflow.proto.calcite.OperandProto.Operand.Cast) operand_,
+                  getParentForChildren(),
+                  isClean());
+          operand_ = null;
+        }
+        operandCase_ = 5;
+        onChanged();;
+        return castBuilder_;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -5521,6 +10690,31 @@ public final class OperandProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_dataflow_calcite_Operand_Scalar_None_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_dataflow_calcite_Operand_Scalar_BDecimal_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_dataflow_calcite_Operand_Scalar_BDecimal_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_dataflow_calcite_Operand_Scalar_BInteger_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_dataflow_calcite_Operand_Scalar_BInteger_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_dataflow_calcite_Operand_Scalar_Date_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_dataflow_calcite_Operand_Scalar_Date_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_dataflow_calcite_Operand_Scalar_Time_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_dataflow_calcite_Operand_Scalar_Time_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_dataflow_calcite_Operand_Scalar_Timestamp_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_dataflow_calcite_Operand_Scalar_Timestamp_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_dataflow_calcite_Operand_FieldGet_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -5530,6 +10724,11 @@ public final class OperandProto {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_dataflow_calcite_Operand_Function_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_dataflow_calcite_Operand_Cast_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_dataflow_calcite_Operand_Cast_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -5540,24 +10739,42 @@ public final class OperandProto {
   static {
     java.lang.String[] descriptorData = {
       "\n\025calcite/operand.proto\022\020dataflow.calcit" +
-      "e\"\367\004\n\007Operand\022=\n\014record_field\030\001 \001(\0132%.da" +
+      "e\"\277\n\n\007Operand\022=\n\014record_field\030\001 \001(\0132%.da" +
       "taflow.calcite.Operand.RecordFieldH\000\0222\n\006" +
       "scalar\030\002 \001(\0132 .dataflow.calcite.Operand." +
       "ScalarH\000\0227\n\tfield_get\030\003 \001(\0132\".dataflow.c" +
       "alcite.Operand.FieldGetH\000\0226\n\010function\030\004 " +
       "\001(\0132\".dataflow.calcite.Operand.FunctionH" +
-      "\000\032\034\n\013RecordField\022\r\n\005index\030\001 \001(\005\032\273\001\n\006Scal" +
-      "ar\0225\n\004null\030\001 \001(\0132%.dataflow.calcite.Oper" +
-      "and.Scalar.NoneH\000\022\021\n\007integer\030\002 \001(\005H\000\022\016\n\004" +
-      "long\030\003 \001(\003H\000\022\017\n\005float\030\004 \001(\002H\000\022\020\n\006double\030" +
-      "\005 \001(\001H\000\022\021\n\007boolean\030\006 \001(\010H\000\022\020\n\006string\030\007 \001" +
-      "(\tH\000\032\006\n\004NoneB\007\n\005value\032Q\n\010FieldGet\0221\n\016obj" +
+      "\000\022.\n\004cast\030\005 \001(\0132\036.dataflow.calcite.Opera" +
+      "nd.CastH\000\032\034\n\013RecordField\022\r\n\005index\030\001 \001(\005\032" +
+      "\213\006\n\006Scalar\0225\n\004null\030\001 \001(\0132%.dataflow.calc" +
+      "ite.Operand.Scalar.NoneH\000\022\021\n\007integer\030\002 \001" +
+      "(\005H\000\022\016\n\004long\030\003 \001(\003H\000\022\017\n\005float\030\004 \001(\002H\000\022\020\n" +
+      "\006double\030\005 \001(\001H\000\022\021\n\007boolean\030\006 \001(\010H\000\022\020\n\006st" +
+      "ring\030\007 \001(\tH\000\022@\n\013big_decimal\030\010 \001(\0132).data" +
+      "flow.calcite.Operand.Scalar.BDecimalH\000\0225" +
+      "\n\004date\030\t \001(\0132%.dataflow.calcite.Operand." +
+      "Scalar.DateH\000\0225\n\004time\030\n \001(\0132%.dataflow.c" +
+      "alcite.Operand.Scalar.TimeH\000\022?\n\ttimestam" +
+      "p\030\013 \001(\0132*.dataflow.calcite.Operand.Scala" +
+      "r.TimestampH\000\032\006\n\004None\032U\n\010BDecimal\022\r\n\005sca" +
+      "le\030\001 \001(\005\022:\n\007int_val\030\002 \001(\0132).dataflow.cal" +
+      "cite.Operand.Scalar.BInteger\032\031\n\010BInteger" +
+      "\022\r\n\005value\030\001 \001(\014\0320\n\004Date\022\014\n\004year\030\001 \001(\005\022\r\n" +
+      "\005month\030\002 \001(\005\022\013\n\003day\030\003 \001(\005\032B\n\004Time\022\014\n\004hou" +
+      "r\030\001 \001(\005\022\016\n\006minute\030\002 \001(\005\022\016\n\006second\030\003 \001(\005\022" +
+      "\014\n\004nano\030\004 \001(\005\032u\n\tTimestamp\0223\n\004date\030\001 \001(\013" +
+      "2%.dataflow.calcite.Operand.Scalar.Date\022" +
+      "3\n\004time\030\002 \001(\0132%.dataflow.calcite.Operand" +
+      ".Scalar.TimeB\007\n\005value\032Q\n\010FieldGet\0221\n\016obj" +
       "ect_operand\030\001 \001(\0132\031.dataflow.calcite.Ope" +
       "rand\022\022\n\nfield_name\030\002 \001(\t\032N\n\010Function\022\025\n\r" +
       "function_name\030\001 \001(\t\022+\n\010operands\030\002 \003(\0132\031." +
-      "dataflow.calcite.OperandB\t\n\007operandB3\n!i" +
-      "o.activej.dataflow.proto.calciteB\014Operan" +
-      "dProtoP\000b\006proto3"
+      "dataflow.calcite.Operand\032F\n\004Cast\0220\n\rvalu" +
+      "e_operand\030\001 \001(\0132\031.dataflow.calcite.Opera" +
+      "nd\022\014\n\004type\030\002 \001(\005B\t\n\007operandB3\n!io.active" +
+      "j.dataflow.proto.calciteB\014OperandProtoP\000" +
+      "b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -5568,7 +10785,7 @@ public final class OperandProto {
     internal_static_dataflow_calcite_Operand_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_Operand_descriptor,
-        new java.lang.String[] { "RecordField", "Scalar", "FieldGet", "Function", "Operand", });
+        new java.lang.String[] { "RecordField", "Scalar", "FieldGet", "Function", "Cast", "Operand", });
     internal_static_dataflow_calcite_Operand_RecordField_descriptor =
       internal_static_dataflow_calcite_Operand_descriptor.getNestedTypes().get(0);
     internal_static_dataflow_calcite_Operand_RecordField_fieldAccessorTable = new
@@ -5580,13 +10797,43 @@ public final class OperandProto {
     internal_static_dataflow_calcite_Operand_Scalar_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_Operand_Scalar_descriptor,
-        new java.lang.String[] { "Null", "Integer", "Long", "Float", "Double", "Boolean", "String", "Value", });
+        new java.lang.String[] { "Null", "Integer", "Long", "Float", "Double", "Boolean", "String", "BigDecimal", "Date", "Time", "Timestamp", "Value", });
     internal_static_dataflow_calcite_Operand_Scalar_None_descriptor =
       internal_static_dataflow_calcite_Operand_Scalar_descriptor.getNestedTypes().get(0);
     internal_static_dataflow_calcite_Operand_Scalar_None_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_Operand_Scalar_None_descriptor,
         new java.lang.String[] { });
+    internal_static_dataflow_calcite_Operand_Scalar_BDecimal_descriptor =
+      internal_static_dataflow_calcite_Operand_Scalar_descriptor.getNestedTypes().get(1);
+    internal_static_dataflow_calcite_Operand_Scalar_BDecimal_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_dataflow_calcite_Operand_Scalar_BDecimal_descriptor,
+        new java.lang.String[] { "Scale", "IntVal", });
+    internal_static_dataflow_calcite_Operand_Scalar_BInteger_descriptor =
+      internal_static_dataflow_calcite_Operand_Scalar_descriptor.getNestedTypes().get(2);
+    internal_static_dataflow_calcite_Operand_Scalar_BInteger_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_dataflow_calcite_Operand_Scalar_BInteger_descriptor,
+        new java.lang.String[] { "Value", });
+    internal_static_dataflow_calcite_Operand_Scalar_Date_descriptor =
+      internal_static_dataflow_calcite_Operand_Scalar_descriptor.getNestedTypes().get(3);
+    internal_static_dataflow_calcite_Operand_Scalar_Date_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_dataflow_calcite_Operand_Scalar_Date_descriptor,
+        new java.lang.String[] { "Year", "Month", "Day", });
+    internal_static_dataflow_calcite_Operand_Scalar_Time_descriptor =
+      internal_static_dataflow_calcite_Operand_Scalar_descriptor.getNestedTypes().get(4);
+    internal_static_dataflow_calcite_Operand_Scalar_Time_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_dataflow_calcite_Operand_Scalar_Time_descriptor,
+        new java.lang.String[] { "Hour", "Minute", "Second", "Nano", });
+    internal_static_dataflow_calcite_Operand_Scalar_Timestamp_descriptor =
+      internal_static_dataflow_calcite_Operand_Scalar_descriptor.getNestedTypes().get(5);
+    internal_static_dataflow_calcite_Operand_Scalar_Timestamp_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_dataflow_calcite_Operand_Scalar_Timestamp_descriptor,
+        new java.lang.String[] { "Date", "Time", });
     internal_static_dataflow_calcite_Operand_FieldGet_descriptor =
       internal_static_dataflow_calcite_Operand_descriptor.getNestedTypes().get(2);
     internal_static_dataflow_calcite_Operand_FieldGet_fieldAccessorTable = new
@@ -5599,6 +10846,12 @@ public final class OperandProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_Operand_Function_descriptor,
         new java.lang.String[] { "FunctionName", "Operands", });
+    internal_static_dataflow_calcite_Operand_Cast_descriptor =
+      internal_static_dataflow_calcite_Operand_descriptor.getNestedTypes().get(4);
+    internal_static_dataflow_calcite_Operand_Cast_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_dataflow_calcite_Operand_Cast_descriptor,
+        new java.lang.String[] { "ValueOperand", "Type", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)
