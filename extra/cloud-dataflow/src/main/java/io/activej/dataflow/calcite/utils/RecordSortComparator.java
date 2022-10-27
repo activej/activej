@@ -4,6 +4,7 @@ import io.activej.record.Record;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
 import io.activej.serializer.annotations.SerializeRecord;
+import org.apache.calcite.rel.RelFieldCollation.NullDirection;
 
 import java.util.Comparator;
 import java.util.List;
@@ -36,9 +37,15 @@ public final class RecordSortComparator implements Comparator<Record> {
 	}
 
 	@SerializeRecord
-	public record FieldSort(int index, boolean asc) {
+	public record FieldSort(int index, boolean asc, NullDirection nullDirection) {
 		public <K extends Comparable<K>> Comparator<Record> toComparator() {
-			return Comparator.<Record, K>comparing(record -> record.get(index), asc ? Comparator.naturalOrder() : Comparator.reverseOrder());
+			Comparator<K> keyComparator = asc ? Comparator.naturalOrder() : Comparator.reverseOrder();
+			if (nullDirection == NullDirection.LAST) {
+				keyComparator = Comparator.nullsLast(keyComparator);
+			} else {
+				keyComparator = Comparator.nullsFirst(keyComparator);
+			}
+			return Comparator.comparing(record -> record.get(index), keyComparator);
 		}
 	}
 }

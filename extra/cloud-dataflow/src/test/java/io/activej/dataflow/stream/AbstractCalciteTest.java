@@ -108,7 +108,7 @@ public abstract class AbstractCalciteTest {
 			new Registry(1, Map.of("John", 1, "Jack", 2, "Kevin", 7), List.of("google.com", "amazon.com")));
 	protected static final List<Registry> REGISTRY_LIST_2 = List.of(
 			new Registry(3, Map.of("Sarah", 53, "Rob", 7564, "John", 18, "Kevin", 7), List.of("yahoo.com", "ebay.com", "netflix.com")),
-			new Registry(2, Map.of(), List.of("wikipedia.org")));
+			new Registry(2, Map.of("John", 999), List.of("wikipedia.org")));
 
 	protected static final List<UserProfile> USER_PROFILES_LIST_1 = List.of(
 			new UserProfile("user2", new UserProfilePojo("test2", 2), Map.of(
@@ -1351,6 +1351,58 @@ public abstract class AbstractCalciteTest {
 	}
 
 	@Test
+	public void testOrderByFunctionCall() {
+		QueryResult result = query("""
+				SELECT * FROM registry
+				ORDER BY MAP_GET(counters, 'Kevin'), id
+				""");
+
+		QueryResult expected = registryToQueryResult(
+				List.of(
+						REGISTRY_LIST_1.get(1),
+						REGISTRY_LIST_2.get(0),
+						REGISTRY_LIST_1.get(0),
+						REGISTRY_LIST_2.get(1)
+				)
+		);
+
+		assertTrue(expected.equalsOrdered(result));
+	}
+
+	@Test
+	public void testOrderByFunctionCallNullsLast() {
+		QueryResult result = query("""
+				SELECT * FROM registry
+				ORDER BY MAP_GET(counters, 'Kevin'), id
+				NULLS LAST
+				""");
+
+		QueryResult expected = registryToQueryResult(
+				List.of(
+						REGISTRY_LIST_1.get(1),
+						REGISTRY_LIST_2.get(0),
+						REGISTRY_LIST_1.get(0),
+						REGISTRY_LIST_2.get(1)
+				)
+		);
+
+		assertTrue(expected.equalsOrdered(result));
+	}
+
+	@Test
+	public void testOrderByFunctionCallNullsFirst() {
+		QueryResult result = query("""
+				SELECT * FROM registry
+				ORDER BY MAP_GET(counters, 'John')
+				NULLS FIRST
+				""");
+
+		QueryResult expected = registryToQueryResult(concat(REGISTRY_LIST_1, REGISTRY_LIST_2));
+
+		assertTrue(expected.equalsOrdered(result));
+	}
+
+	@Test
 	public void testOrderByNonReturnedField() {
 		QueryResult result = query("""
 				SELECT lastName FROM student
@@ -1538,7 +1590,7 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static void assertCountMapGet(QueryResult result, String key) {
-		QueryResult expected = new QueryResult(List.of("COUNT(counters.get(" + key + "))"), List.<Object[]>of(new Object[]{2L}));
+		QueryResult expected = new QueryResult(List.of("COUNT(counters.get(" + key + "))"), List.<Object[]>of(new Object[]{3L}));
 
 		assertEquals(expected, result);
 	}
@@ -2128,7 +2180,7 @@ public abstract class AbstractCalciteTest {
 		QueryResult expected = new QueryResult(
 				List.of("uname", "totalNameCount"),
 				List.of(
-						new Object[]{"John", 19L},
+						new Object[]{"John", 1018L},
 						new Object[]{"Kevin", 15L}
 				)
 		);
@@ -2380,6 +2432,16 @@ public abstract class AbstractCalciteTest {
 					value = new HashSet<>(list);
 				}
 
+				try {
+					if (value instanceof Array array && thatValue instanceof List<?>) {
+						value = List.of((Object[]) array.getArray());
+					} else if (thatValue instanceof Array array && value instanceof List<?>) {
+						thatValue = List.of((Object[]) array.getArray());
+					}
+				} catch (SQLException e) {
+					throw new RuntimeException(e);
+				}
+
 				if (!Objects.equals(value, thatValue)) {
 					return true;
 				}
@@ -2617,6 +2679,17 @@ public abstract class AbstractCalciteTest {
 
 		for (TemporalValues temporalValue : temporalValues) {
 			columnValues.add(new Object[]{temporalValue.userId, Timestamp.valueOf(temporalValue.registeredAt), Date.valueOf(temporalValue.dateOfBirth), Time.valueOf(temporalValue.timeOfBirth)});
+		}
+
+		return new QueryResult(columnNames, columnValues);
+	}
+
+	private static QueryResult registryToQueryResult(List<Registry> registries) {
+		List<String> columnNames = Arrays.asList("id", "counters", "domains");
+		List<Object[]> columnValues = new ArrayList<>(registries.size());
+
+		for (Registry registry : registries) {
+			columnValues.add(new Object[]{registry.id, registry.counters, registry.domains});
 		}
 
 		return new QueryResult(columnNames, columnValues);

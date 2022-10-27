@@ -24,6 +24,7 @@ import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.datastream.processor.StreamSkip;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
+import io.activej.types.Types;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelFieldCollation.Direction;
@@ -38,6 +39,7 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.ImmutableBitSet;
 
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
@@ -360,11 +362,19 @@ public class RelToDatasetConverter {
 	@SuppressWarnings("ConstantConditions")
 	private UnmaterializedDataset handle(LogicalSort sort, ParamsCollector paramsCollector) {
 		UnmaterializedDataset current = handle(sort.getInput(), paramsCollector);
+		RecordScheme scheme = current.getScheme();
 
 		List<RelDataTypeField> fieldList = sort.getRowType().getFieldList();
 		List<FieldSort> sorts = new ArrayList<>(fieldList.size());
 		for (RelFieldCollation fieldCollation : sort.getCollation().getFieldCollations()) {
 			int fieldIndex = fieldCollation.getFieldIndex();
+			Type fieldType = scheme.getFieldType(fieldIndex);
+
+			Class<?> rawType = Types.getRawType(fieldType);
+			if (!(rawType.isPrimitive() || Comparable.class.isAssignableFrom(rawType))) {
+				throw new IllegalArgumentException("Field: '" + scheme.getField(fieldIndex) + "' cannot be ordered");
+			}
+
 			Direction direction = fieldCollation.getDirection();
 
 			boolean asc;
@@ -372,7 +382,7 @@ public class RelToDatasetConverter {
 			else if (direction == Direction.DESCENDING) asc = false;
 			else throw new IllegalArgumentException("Unsupported sort direction: " + direction);
 
-			sorts.add(new FieldSort(fieldIndex, asc));
+			sorts.add(new FieldSort(fieldIndex, asc, fieldCollation.nullDirection));
 		}
 
 		OperandScalar offset = sort.offset == null ?
@@ -384,7 +394,7 @@ public class RelToDatasetConverter {
 				paramsCollector.toScalarOperand(sort.fetch);
 
 		return UnmaterializedDataset.of(
-				current.getScheme(),
+				scheme,
 				params -> {
 					Dataset<Record> materializedDataset = current.materialize(params);
 
