@@ -2255,6 +2255,29 @@ public abstract class AbstractCalciteTest {
 	}
 	// endregion
 
+	// region SelectTemporalValuesByTimestampEquals
+	@Test
+	public void testSelectTemporalValuesByTimestampEquals() {
+		QueryResult result = query("SELECT * FROM temporal_values WHERE registeredAt = '2022-06-05 12:00:00'");
+
+		assertSelectTemporalValuesByTimestampEquals(result);
+	}
+
+	@Test
+	public void testSelectTemporalValuesByTimestampPreparedEquals() {
+		QueryResult result = queryPrepared("SELECT * FROM temporal_values WHERE registeredAt = ?",
+				stmt -> stmt.setTimestamp(1, Timestamp.valueOf("2022-06-05 12:00:00")));
+
+		assertSelectTemporalValuesByTimestampEquals(result);
+	}
+
+	private static void assertSelectTemporalValuesByTimestampEquals(QueryResult result) {
+		QueryResult expected = temporalValuesToQueryResult(List.of(TEMPORAL_VALUES_LIST_1.get(0)));
+
+		assertEquals(expected, result);
+	}
+	// endregion
+
 	// region SelectTemporalValuesByTime
 	@Test
 	public void testSelectTemporalValuesByTime() {
@@ -2273,6 +2296,29 @@ public abstract class AbstractCalciteTest {
 
 	private static void assertSelectTemporalValuesByTime(QueryResult result) {
 		QueryResult expected = temporalValuesToQueryResult(concat(List.of(TEMPORAL_VALUES_LIST_1.get(0)), TEMPORAL_VALUES_LIST_2));
+
+		assertEquals(expected, result);
+	}
+	// endregion
+
+	// region SelectTemporalValuesByTimeEquals
+	@Test
+	public void testSelectTemporalValuesByTimeEquals() {
+		QueryResult result = query("SELECT * FROM temporal_values WHERE timeOfBirth = '12:00:00'");
+
+		assertSelectTemporalValuesByTimeEquals(result);
+	}
+
+	@Test
+	public void testSelectTemporalValuesByTimeEqualsPrepared() {
+		QueryResult result = queryPrepared("SELECT * FROM temporal_values WHERE timeOfBirth = ?",
+				stmt -> stmt.setTime(1, Time.valueOf("12:00:00")));
+
+		assertSelectTemporalValuesByTimeEquals(result);
+	}
+
+	private static void assertSelectTemporalValuesByTimeEquals(QueryResult result) {
+		QueryResult expected = temporalValuesToQueryResult(List.of(TEMPORAL_VALUES_LIST_1.get(0)));
 
 		assertEquals(expected, result);
 	}
@@ -2301,6 +2347,28 @@ public abstract class AbstractCalciteTest {
 	}
 	// endregion
 
+	// region SelectTemporalValuesByDateEquals
+	@Test
+	public void testSelectTemporalValuesByDateEquals() {
+		QueryResult result = query("SELECT * FROM temporal_values WHERE dateOfBirth = '2002-06-15'");
+
+		assertSelectTemporalValuesByDateEquals(result);
+	}
+
+	@Test
+	public void testSelectTemporalValuesByDateEqualsPrepared() {
+		QueryResult result = queryPrepared("SELECT * FROM temporal_values WHERE dateOfBirth = ?",
+				stmt -> stmt.setDate(1, Date.valueOf("2002-06-15")));
+
+		assertSelectTemporalValuesByDateEquals(result);
+	}
+
+	private static void assertSelectTemporalValuesByDateEquals(QueryResult result) {
+		QueryResult expected = temporalValuesToQueryResult(List.of(TEMPORAL_VALUES_LIST_1.get(0)));
+
+		assertEquals(expected, result);
+	}
+	// endregion
 	protected abstract QueryResult query(String sql);
 
 	protected abstract QueryResult queryPrepared(String sql, ParamsSetter paramsSetter);

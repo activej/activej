@@ -106,8 +106,19 @@ public final class Utils {
 
 	public static RelDataType toRowType(RelDataTypeFactory typeFactory, Type type) {
 		if (type instanceof Class<?> cls) {
-			if (cls.isPrimitive() || cls.isEnum() || Primitives.isWrapperType(cls) || cls == String.class ||
-					cls == Timestamp.class || cls == Date.class || cls == Time.class) {
+			if (cls == String.class) {
+				return typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.VARCHAR), true);
+			}
+			if (cls == Timestamp.class) {
+				return typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.TIMESTAMP), true);
+			}
+			if (cls == Time.class) {
+				return typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.TIME), true);
+			}
+			if (cls == Date.class) {
+				return typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.DATE), true);
+			}
+			if (cls.isPrimitive() || cls.isEnum() || Primitives.isWrapperType(cls)) {
 				return typeFactory.createJavaType(cls);
 			}
 
