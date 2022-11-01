@@ -6,10 +6,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.Calendar;
 import java.util.Properties;
 import java.util.TimeZone;
 
 public class DataflowJdbc41Factory implements AvaticaFactory {
+	public static final TimeZone UTC_TIME_ZONE = TimeZone.getTimeZone("UTC");
+	public static final Calendar UTC_CALENDAR = Calendar.getInstance(UTC_TIME_ZONE);
+
 	@Override
 	public int getJdbcMajorVersion() {
 		return 4;
@@ -55,6 +59,11 @@ public class DataflowJdbc41Factory implements AvaticaFactory {
 		private DataflowJdbc41Connection(UnregisteredDriver driver, AvaticaFactory factory, String url, Properties info) {
 			super(driver, factory, url, info);
 		}
+
+		@Override
+		public TimeZone getTimeZone() {
+			return UTC_TIME_ZONE;
+		}
 	}
 
 	private static class DataflowJdbc41DatabaseMetaData extends AvaticaDatabaseMetaData {
@@ -79,6 +88,11 @@ public class DataflowJdbc41Factory implements AvaticaFactory {
 				throws SQLException {
 			super(connection, h, signature, resultSetType, resultSetConcurrency,
 					resultSetHoldability);
+		}
+
+		@Override
+		protected Calendar getCalendar() {
+			return UTC_CALENDAR;
 		}
 	}
 }

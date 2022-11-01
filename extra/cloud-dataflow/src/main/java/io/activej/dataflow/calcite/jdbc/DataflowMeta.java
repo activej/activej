@@ -36,6 +36,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
@@ -84,13 +85,13 @@ public final class DataflowMeta extends LimitedMeta {
 	private static final String EXPLAIN_GRAPH = "EXPLAIN GRAPH ";
 	private static final String EXPLAIN_NODES = "EXPLAIN NODES ";
 
+	private static final Calendar UTC_CALENDAR = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+
 	private final Eventloop eventloop;
 	private final CalciteSqlDataflow sqlDataflow;
 	private final Map<String, Integer> statementIds = new ConcurrentHashMap<>();
 	private final Map<StatementKey, FrameFetcher> consumers = new ConcurrentHashMap<>();
 	private final Map<StatementKey, UnmaterializedDataset> unmaterializedDatasets = new ConcurrentHashMap<>();
-
-	private TimeZone timeZone = TimeZone.getDefault();
 
 	private DataflowMeta(Eventloop eventloop, CalciteSqlDataflow sqlDataflow) {
 		this.eventloop = eventloop;
@@ -99,11 +100,6 @@ public final class DataflowMeta extends LimitedMeta {
 
 	public static DataflowMeta create(Eventloop eventloop, CalciteSqlDataflow sqlDataflow) {
 		return new DataflowMeta(eventloop, sqlDataflow);
-	}
-
-	public DataflowMeta withTimeZone(TimeZone timeZone) {
-		this.timeZone = timeZone;
-		return this;
 	}
 
 	@Override
@@ -126,9 +122,8 @@ public final class DataflowMeta extends LimitedMeta {
 			throw new NoSuchStatementException(h);
 		}
 
-		Calendar calendar = Calendar.getInstance(timeZone);
 		List<Object> params = parameterValues.stream()
-				.map(typedValue -> typedValue.toJdbc(calendar))
+				.map(this::paramToJdbc)
 				.toList();
 
 		Dataset<Record> dataset = unmaterializedDataset.materialize(params);
@@ -284,9 +279,6 @@ public final class DataflowMeta extends LimitedMeta {
 
 		if (type != null) {
 			ColumnMetaData.Rep rep = ColumnMetaData.Rep.of(type);
-			if (type == Timestamp.class || type == Date.class || type == Time.class) {
-				rep = ColumnMetaData.Rep.STRING;
-			}
 			return ColumnMetaData.scalar(rep.typeId, type.getTypeName(), rep);
 		}
 		int jdbcOrdinal = relDataType.getSqlTypeName().getJdbcOrdinal();
@@ -594,6 +586,14 @@ public final class DataflowMeta extends LimitedMeta {
 
 		Pattern regexPattern = Pattern.compile("^" + patternString.replaceAll("%", ".*").replaceAll("_", ".") + "$");
 		return string -> regexPattern.matcher(string).matches();
+	}
+
+	private Object paramToJdbc(TypedValue typedValue) {
+		Object result = typedValue.toJdbc(UTC_CALENDAR);
+		if (result instanceof Timestamp timestamp) return timestamp.toLocalDateTime().toInstant(ZoneOffset.UTC);
+		if (result instanceof Date date) return date.toLocalDate().plusDays(1); // Bug with TypedValue
+		if (result instanceof Time time) return time.toLocalTime();
+		return result;
 	}
 
 	private record StatementKey(String connectionId, int statementId) {

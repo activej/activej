@@ -9,11 +9,8 @@ import io.activej.serializer.CorruptedDataException;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import static java.util.stream.Collectors.toList;
@@ -56,40 +53,26 @@ final class OperandConverter {
 				scalarBuilder.setFloat(aFloat);
 			} else if (value instanceof Double aDouble) {
 				scalarBuilder.setDouble(aDouble);
-			} else if (value instanceof Date date) {
-				LocalDate localDate = date.toLocalDate();
+			} else if (value instanceof LocalDate date) {
 				scalarBuilder.setDate(
 						OperandProto.Operand.Scalar.Date.newBuilder()
-								.setYear(localDate.getYear())
-								.setMonth(localDate.getMonthValue())
-								.setDay(localDate.getDayOfMonth())
+								.setYear(date.getYear())
+								.setMonth(date.getMonthValue())
+								.setDay(date.getDayOfMonth())
 				);
-			} else if (value instanceof Time time) {
-				LocalTime localTime = time.toLocalTime();
+			} else if (value instanceof LocalTime time) {
 				scalarBuilder.setTime(
 						OperandProto.Operand.Scalar.Time.newBuilder()
-								.setHour(localTime.getHour())
-								.setMinute(localTime.getMinute())
-								.setSecond(localTime.getSecond())
-								.setNano(localTime.getNano())
+								.setHour(time.getHour())
+								.setMinute(time.getMinute())
+								.setSecond(time.getSecond())
+								.setNano(time.getNano())
 				);
-			} else if (value instanceof Timestamp timestamp) {
-				LocalDateTime localDateTime = timestamp.toLocalDateTime();
+			} else if (value instanceof Instant instant) {
 				scalarBuilder.setTimestamp(
 						OperandProto.Operand.Scalar.Timestamp.newBuilder()
-								.setDate(
-										OperandProto.Operand.Scalar.Date.newBuilder()
-												.setYear(localDateTime.getYear())
-												.setMonth(localDateTime.getMonthValue())
-												.setDay(localDateTime.getDayOfMonth())
-								)
-								.setTime(
-										OperandProto.Operand.Scalar.Time.newBuilder()
-												.setHour(localDateTime.getHour())
-												.setMinute(localDateTime.getMinute())
-												.setSecond(localDateTime.getSecond())
-												.setNano(localDateTime.getNano())
-								)
+								.setSeconds(instant.getEpochSecond())
+								.setNanos(instant.getNano())
 				);
 			} else {
 				throw new IllegalArgumentException("Unsupported scalar type: " + value.getClass());
@@ -145,42 +128,29 @@ final class OperandConverter {
 						case STRING -> Value.materializedValue(String.class, operand.getScalar().getString());
 						case DATE -> {
 							OperandProto.Operand.Scalar.Date date = operand.getScalar().getDate();
-							yield Value.materializedValue(Date.class, Date.valueOf(
-									LocalDate.of(
+							yield Value.materializedValue(LocalDate.class, LocalDate.of(
 											date.getYear(),
 											date.getMonth(),
 											date.getDay()
 									)
-							));
+							);
 						}
 						case TIME -> {
 							OperandProto.Operand.Scalar.Time time = operand.getScalar().getTime();
-							yield Value.materializedValue(Time.class, Time.valueOf(
-									LocalTime.of(
+							yield Value.materializedValue(LocalTime.class, LocalTime.of(
 											time.getHour(),
 											time.getMinute(),
 											time.getSecond(),
 											time.getNano()
 									)
-							));
+							);
 						}
 						case TIMESTAMP -> {
 							OperandProto.Operand.Scalar.Timestamp timestamp = operand.getScalar().getTimestamp();
-							OperandProto.Operand.Scalar.Date date = timestamp.getDate();
-							OperandProto.Operand.Scalar.Time time = timestamp.getTime();
-							yield Value.materializedValue(Timestamp.class, Timestamp.valueOf(LocalDateTime.of(
-									LocalDate.of(
-											date.getYear(),
-											date.getMonth(),
-											date.getDay()
-									),
-									LocalTime.of(
-											time.getHour(),
-											time.getMinute(),
-											time.getSecond(),
-											time.getNano()
-									)
-							)));
+							yield Value.materializedValue(Instant.class, Instant.ofEpochSecond(
+									timestamp.getSeconds(),
+									timestamp.getNanos()
+							));
 						}
 						case VALUE_NOT_SET -> throw new CorruptedDataException("Scalar value not set");
 					}

@@ -1,5 +1,6 @@
 package io.activej.dataflow.calcite.inject;
 
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.dataflow.calcite.DataflowSchema;
 import io.activej.dataflow.calcite.RecordProjectionFn;
@@ -12,11 +13,10 @@ import io.activej.dataflow.calcite.operand.OperandIfNull;
 import io.activej.dataflow.calcite.operand.OperandListGet;
 import io.activej.dataflow.calcite.operand.OperandMapGet;
 import io.activej.dataflow.calcite.utils.*;
-import io.activej.dataflow.calcite.utils.time.SqlDateBinarySerializer;
-import io.activej.dataflow.calcite.utils.time.SqlTimeBinarySerializer;
-import io.activej.dataflow.calcite.utils.time.SqlTimestampBinarySerializer;
+import io.activej.dataflow.calcite.utils.time.InstantBinarySerializer;
+import io.activej.dataflow.calcite.utils.time.LocalDateBinarySerializer;
+import io.activej.dataflow.calcite.utils.time.LocalTimeBinarySerializer;
 import io.activej.dataflow.inject.BinarySerializerModule;
-import io.activej.dataflow.jdbc.driver.time.TimeUtils;
 import io.activej.dataflow.proto.calcite.serializer.*;
 import io.activej.dataflow.proto.serializer.CustomNodeSerializer;
 import io.activej.dataflow.proto.serializer.FunctionSubtypeSerializer;
@@ -31,11 +31,12 @@ import io.activej.serializer.BinaryInput;
 import io.activej.serializer.BinaryOutput;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.CorruptedDataException;
+import org.apache.calcite.avatica.remote.JsonService;
 
 import java.math.BigDecimal;
-import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -48,7 +49,7 @@ public final class SerializersModule extends AbstractModule {
 		OperandIfNull.register();
 		OperandListGet.register();
 		OperandMapGet.register();
-		TimeUtils.registerTimeSerializers();
+		JsonService.MAPPER.registerModule(new JavaTimeModule());
 	}
 
 	@Override
@@ -145,9 +146,9 @@ public final class SerializersModule extends AbstractModule {
 								new CalciteNodeSerializer(),
 				new Key<OptionalDependency<DefiningClassLoader>>() {});
 
-		bind(new Key<BinarySerializer<Date>>() {}).toInstance(SqlDateBinarySerializer.getInstance()).asEager();
-		bind(new Key<BinarySerializer<Time>>() {}).toInstance(SqlTimeBinarySerializer.getInstance()).asEager();
-		bind(new Key<BinarySerializer<Timestamp>>() {}).toInstance(SqlTimestampBinarySerializer.getInstance()).asEager();
+		bind(new Key<BinarySerializer<LocalDate>>() {}).toInstance(LocalDateBinarySerializer.getInstance()).asEager();
+		bind(new Key<BinarySerializer<LocalTime>>() {}).toInstance(LocalTimeBinarySerializer.getInstance()).asEager();
+		bind(new Key<BinarySerializer<Instant>>() {}).toInstance(InstantBinarySerializer.getInstance()).asEager();
 
 		bind(new Key<BinarySerializer<BigDecimal>>() {}).toInstance(BigDecimalSerializer.getInstance()).asEager();
 

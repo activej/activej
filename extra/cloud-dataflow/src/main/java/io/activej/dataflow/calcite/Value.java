@@ -17,9 +17,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
-import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -110,9 +110,9 @@ public class Value {
 			case CHAR, VARCHAR -> String.class;
 			case BINARY, VARBINARY -> byte[].class;
 			case NULL, UNKNOWN, ANY -> Object.class;
-			case TIME -> Time.class;
-			case DATE -> Date.class;
-			case TIMESTAMP -> Timestamp.class;
+			case TIME -> LocalTime.class;
+			case DATE -> LocalDate.class;
+			case TIMESTAMP -> Instant.class;
 			default -> throw new AssertionError();
 		};
 	}

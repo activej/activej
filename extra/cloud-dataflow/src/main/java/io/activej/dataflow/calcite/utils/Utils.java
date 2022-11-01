@@ -20,15 +20,19 @@ import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.type.SqlTypeName;
 
 import java.lang.reflect.*;
-import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 
 public final class Utils {
 	@SuppressWarnings("unchecked")
@@ -109,13 +113,13 @@ public final class Utils {
 			if (cls == String.class) {
 				return typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.VARCHAR), true);
 			}
-			if (cls == Timestamp.class) {
+			if (cls == Instant.class) {
 				return typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.TIMESTAMP), true);
 			}
-			if (cls == Time.class) {
+			if (cls == LocalTime.class) {
 				return typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.TIME), true);
 			}
-			if (cls == Date.class) {
+			if (cls == LocalDate.class) {
 				return typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.DATE), true);
 			}
 			if (cls.isPrimitive() || cls.isEnum() || Primitives.isWrapperType(cls)) {
@@ -184,5 +188,17 @@ public final class Utils {
 
 	public static boolean isSortable(Class<?> cls) {
 		return cls.isPrimitive() || Comparable.class.isAssignableFrom(cls);
+	}
+
+	private static final DateTimeFormatter DATE_TIME_FORMATTER = new DateTimeFormatterBuilder()
+			.parseCaseInsensitive()
+			.append(ISO_LOCAL_DATE)
+			.appendLiteral(' ')
+			.append(ISO_LOCAL_TIME)
+			.toFormatter();
+
+	public static Instant parseInstantFromTimestampString(String timestampString) {
+		TemporalAccessor parsed = DATE_TIME_FORMATTER.parse(timestampString);
+		return LocalDateTime.from(parsed).toInstant(ZoneOffset.UTC);
 	}
 }

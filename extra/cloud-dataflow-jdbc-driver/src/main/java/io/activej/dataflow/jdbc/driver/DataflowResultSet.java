@@ -45,30 +45,15 @@ class DataflowResultSet extends AvaticaResultSet {
 
 		JavaType javaType = getJavaType(type);
 
-		if (javaType == TypeFactory.unknownType() || result instanceof Array) {
+		if (result == null ||
+				javaType == TypeFactory.unknownType() ||
+				result instanceof Array ||
+				javaType.getRawClass().isAssignableFrom(result.getClass())
+		) {
 			return result;
 		}
 
-		if (isTemporalType(javaType)) {
-			return getTemporalType((String) result, javaType);
-		}
-
 		return MAPPER.convertValue(result, javaType);
-	}
-
-	private static Object getTemporalType(String result, JavaType javaType) {
-		Class<?> rawClass = javaType.getRawClass();
-
-		if (rawClass == Timestamp.class) return Timestamp.valueOf(result);
-		if (rawClass == Date.class) return Date.valueOf(result);
-		if (rawClass == Time.class) return Time.valueOf(result);
-
-		throw new AssertionError();
-	}
-
-	private static boolean isTemporalType(JavaType javaType) {
-		Class<?> rawClass = javaType.getRawClass();
-		return rawClass == Timestamp.class || rawClass == Date.class || rawClass == Time.class;
 	}
 
 	private static JavaType getJavaType(ColumnMetaData.AvaticaType avaticaType) {
@@ -117,6 +102,21 @@ class DataflowResultSet extends AvaticaResultSet {
 				resolveSimple(components[0]),
 				resolveSimple(components[1])
 		);
+	}
+
+	@Override
+	public Date getDate(int columnIndex) {
+		throw new UnsupportedOperationException("java.sql.Date is not supported");
+	}
+
+	@Override
+	public Timestamp getTimestamp(int columnIndex) throws SQLException {
+		throw new UnsupportedOperationException("java.sql.Timestamp is not supported");
+	}
+
+	@Override
+	public Time getTime(int columnIndex) {
+		throw new UnsupportedOperationException("java.sql.Time is not supported");
 	}
 
 	private record MapTypes(JavaType keyType, JavaType valueType) {

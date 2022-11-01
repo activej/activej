@@ -35,9 +35,7 @@ import java.math.BigDecimal;
 import java.net.InetSocketAddress;
 import java.sql.Date;
 import java.sql.*;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -177,19 +175,20 @@ public abstract class AbstractCalciteTest {
 			new Custom(5, BigDecimal.valueOf(231.424), "lmn")
 	);
 
-	private static final LocalDateTime INITIAL_TIMESTAMP = LocalDateTime.of(2022, 6, 15, 12, 0, 0);
-	private static final LocalDate INITIAL_DATE = INITIAL_TIMESTAMP.toLocalDate();
-	private static final LocalTime INITIAL_TIME = INITIAL_TIMESTAMP.toLocalTime();
+	private static final LocalDateTime INITIAL_DATE_TIME = LocalDateTime.of(2022, 6, 15, 12, 0, 0);
+	private static final Instant INITIAL_REGISTERED_AT = INITIAL_DATE_TIME.toInstant(ZoneOffset.UTC);
+	private static final LocalDate INITIAL_DATE = INITIAL_DATE_TIME.toLocalDate();
+	private static final LocalTime INITIAL_TIME = INITIAL_DATE_TIME.toLocalTime();
 
 	protected static final List<TemporalValues> TEMPORAL_VALUES_LIST_1 = List.of(
 			new TemporalValues(
 					1,
-					INITIAL_TIMESTAMP.minus(10, ChronoUnit.DAYS),
+					INITIAL_REGISTERED_AT,
 					INITIAL_DATE.minus(20, ChronoUnit.YEARS),
 					INITIAL_TIME),
 			new TemporalValues(
 					3,
-					INITIAL_TIMESTAMP.minus(15, ChronoUnit.DAYS),
+					INITIAL_REGISTERED_AT.minus(15, ChronoUnit.DAYS),
 					INITIAL_DATE.minus(31, ChronoUnit.YEARS),
 					INITIAL_TIME.minus(5, ChronoUnit.HOURS))
 	);
@@ -197,12 +196,12 @@ public abstract class AbstractCalciteTest {
 	protected static final List<TemporalValues> TEMPORAL_VALUES_LIST_2 = List.of(
 			new TemporalValues(
 					2,
-					INITIAL_TIMESTAMP.minus(20, ChronoUnit.DAYS),
+					INITIAL_REGISTERED_AT.minus(20, ChronoUnit.DAYS),
 					INITIAL_DATE.minus(39, ChronoUnit.YEARS),
 					INITIAL_TIME.minus(20, ChronoUnit.MINUTES)),
 			new TemporalValues(
 					5,
-					INITIAL_TIMESTAMP.minus(7, ChronoUnit.DAYS),
+					INITIAL_REGISTERED_AT.minus(7, ChronoUnit.DAYS),
 					INITIAL_DATE.minus(43, ChronoUnit.YEARS),
 					INITIAL_TIME.minus(30, ChronoUnit.MINUTES))
 	);
@@ -280,9 +279,9 @@ public abstract class AbstractCalciteTest {
 				.bind(setTableKey).to(classLoader -> Set.of(
 								DataflowTableBuilder.create(classLoader, TEMPORAL_VALUES_TABLE_NAME, TemporalValues.class)
 										.withColumn("userId", int.class, TemporalValues::userId)
-										.withColumn("registeredAt", Timestamp.class, temporalValues -> Timestamp.valueOf(temporalValues.registeredAt))
-										.withColumn("dateOfBirth", Date.class, temporalValues -> java.sql.Date.valueOf(temporalValues.dateOfBirth))
-										.withColumn("timeOfBirth", Time.class, temporalValues -> Time.valueOf(temporalValues.timeOfBirth))
+										.withColumn("registeredAt", Instant.class, TemporalValues::registeredAt)
+										.withColumn("dateOfBirth", LocalDate.class, TemporalValues::dateOfBirth)
+										.withColumn("timeOfBirth", LocalTime.class, TemporalValues::timeOfBirth)
 										.build()),
 						DefiningClassLoader.class)
 				.multibindToSet(DataflowTable.class)
@@ -422,7 +421,7 @@ public abstract class AbstractCalciteTest {
 		}
 	}
 
-	public record TemporalValues(int userId, LocalDateTime registeredAt, LocalDate dateOfBirth, LocalTime timeOfBirth) {
+	public record TemporalValues(int userId, Instant registeredAt, LocalDate dateOfBirth, LocalTime timeOfBirth) {
 	}
 
 	@Test
@@ -2262,7 +2261,7 @@ public abstract class AbstractCalciteTest {
 	// region SelectTemporalValuesByTimestampEquals
 	@Test
 	public void testSelectTemporalValuesByTimestampEquals() {
-		QueryResult result = query("SELECT * FROM temporal_values WHERE registeredAt = '2022-06-05 12:00:00'");
+		QueryResult result = query("SELECT * FROM temporal_values WHERE registeredAt = '2022-06-15 12:00:00'");
 
 		assertSelectTemporalValuesByTimestampEquals(result);
 	}
@@ -2270,7 +2269,7 @@ public abstract class AbstractCalciteTest {
 	@Test
 	public void testSelectTemporalValuesByTimestampPreparedEquals() {
 		QueryResult result = queryPrepared("SELECT * FROM temporal_values WHERE registeredAt = ?",
-				stmt -> stmt.setTimestamp(1, Timestamp.valueOf("2022-06-05 12:00:00")));
+				stmt -> stmt.setTimestamp(1, Timestamp.valueOf("2022-06-15 12:00:00")));
 
 		assertSelectTemporalValuesByTimestampEquals(result);
 	}
@@ -2751,7 +2750,7 @@ public abstract class AbstractCalciteTest {
 		List<Object[]> columnValues = new ArrayList<>(temporalValues.size());
 
 		for (TemporalValues temporalValue : temporalValues) {
-			columnValues.add(new Object[]{temporalValue.userId, Timestamp.valueOf(temporalValue.registeredAt), Date.valueOf(temporalValue.dateOfBirth), Time.valueOf(temporalValue.timeOfBirth)});
+			columnValues.add(new Object[]{temporalValue.userId, temporalValue.registeredAt, temporalValue.dateOfBirth, temporalValue.timeOfBirth});
 		}
 
 		return new QueryResult(columnNames, columnValues);

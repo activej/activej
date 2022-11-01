@@ -1,7 +1,8 @@
 package io.activej.dataflow.jdbc.driver;
 
-import io.activej.dataflow.jdbc.driver.time.TimeUtils;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.apache.calcite.avatica.DriverVersion;
+import org.apache.calcite.avatica.remote.JsonService;
 
 public class Driver extends org.apache.calcite.avatica.remote.Driver {
 	public static final String CONNECT_STRING_PREFIX = "jdbc:activej:dataflow:";
@@ -9,7 +10,7 @@ public class Driver extends org.apache.calcite.avatica.remote.Driver {
 	static {
 		new Driver().register();
 
-		TimeUtils.registerTimeSerializers();
+		JsonService.MAPPER.registerModule(new JavaTimeModule());
 	}
 
 	public Driver() {

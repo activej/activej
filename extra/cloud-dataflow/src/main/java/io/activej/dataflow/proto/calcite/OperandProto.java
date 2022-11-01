@@ -4013,34 +4013,16 @@ public final class OperandProto {
           com.google.protobuf.MessageOrBuilder {
 
         /**
-         * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
-         * @return Whether the date field is set.
+         * <code>int64 seconds = 1;</code>
+         * @return The seconds.
          */
-        boolean hasDate();
-        /**
-         * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
-         * @return The date.
-         */
-        io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date getDate();
-        /**
-         * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
-         */
-        io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.DateOrBuilder getDateOrBuilder();
+        long getSeconds();
 
         /**
-         * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
-         * @return Whether the time field is set.
+         * <code>int32 nanos = 2;</code>
+         * @return The nanos.
          */
-        boolean hasTime();
-        /**
-         * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
-         * @return The time.
-         */
-        io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time getTime();
-        /**
-         * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
-         */
-        io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.TimeOrBuilder getTimeOrBuilder();
+        int getNanos();
       }
       /**
        * Protobuf type {@code dataflow.calcite.Operand.Scalar.Timestamp}
@@ -4087,30 +4069,14 @@ public final class OperandProto {
                 case 0:
                   done = true;
                   break;
-                case 10: {
-                  io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.Builder subBuilder = null;
-                  if (date_ != null) {
-                    subBuilder = date_.toBuilder();
-                  }
-                  date_ = input.readMessage(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.parser(), extensionRegistry);
-                  if (subBuilder != null) {
-                    subBuilder.mergeFrom(date_);
-                    date_ = subBuilder.buildPartial();
-                  }
+                case 8: {
 
+                  seconds_ = input.readInt64();
                   break;
                 }
-                case 18: {
-                  io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.Builder subBuilder = null;
-                  if (time_ != null) {
-                    subBuilder = time_.toBuilder();
-                  }
-                  time_ = input.readMessage(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.parser(), extensionRegistry);
-                  if (subBuilder != null) {
-                    subBuilder.mergeFrom(time_);
-                    time_ = subBuilder.buildPartial();
-                  }
+                case 16: {
 
+                  nanos_ = input.readInt32();
                   break;
                 }
                 default: {
@@ -4145,56 +4111,26 @@ public final class OperandProto {
                   io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp.class, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp.Builder.class);
         }
 
-        public static final int DATE_FIELD_NUMBER = 1;
-        private io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date date_;
+        public static final int SECONDS_FIELD_NUMBER = 1;
+        private long seconds_;
         /**
-         * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
-         * @return Whether the date field is set.
+         * <code>int64 seconds = 1;</code>
+         * @return The seconds.
          */
         @java.lang.Override
-        public boolean hasDate() {
-          return date_ != null;
-        }
-        /**
-         * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
-         * @return The date.
-         */
-        @java.lang.Override
-        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date getDate() {
-          return date_ == null ? io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.getDefaultInstance() : date_;
-        }
-        /**
-         * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
-         */
-        @java.lang.Override
-        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.DateOrBuilder getDateOrBuilder() {
-          return getDate();
+        public long getSeconds() {
+          return seconds_;
         }
 
-        public static final int TIME_FIELD_NUMBER = 2;
-        private io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time time_;
+        public static final int NANOS_FIELD_NUMBER = 2;
+        private int nanos_;
         /**
-         * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
-         * @return Whether the time field is set.
+         * <code>int32 nanos = 2;</code>
+         * @return The nanos.
          */
         @java.lang.Override
-        public boolean hasTime() {
-          return time_ != null;
-        }
-        /**
-         * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
-         * @return The time.
-         */
-        @java.lang.Override
-        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time getTime() {
-          return time_ == null ? io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.getDefaultInstance() : time_;
-        }
-        /**
-         * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
-         */
-        @java.lang.Override
-        public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.TimeOrBuilder getTimeOrBuilder() {
-          return getTime();
+        public int getNanos() {
+          return nanos_;
         }
 
         private byte memoizedIsInitialized = -1;
@@ -4211,11 +4147,11 @@ public final class OperandProto {
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output)
                             throws java.io.IOException {
-          if (date_ != null) {
-            output.writeMessage(1, getDate());
+          if (seconds_ != 0L) {
+            output.writeInt64(1, seconds_);
           }
-          if (time_ != null) {
-            output.writeMessage(2, getTime());
+          if (nanos_ != 0) {
+            output.writeInt32(2, nanos_);
           }
           unknownFields.writeTo(output);
         }
@@ -4226,13 +4162,13 @@ public final class OperandProto {
           if (size != -1) return size;
 
           size = 0;
-          if (date_ != null) {
+          if (seconds_ != 0L) {
             size += com.google.protobuf.CodedOutputStream
-              .computeMessageSize(1, getDate());
+              .computeInt64Size(1, seconds_);
           }
-          if (time_ != null) {
+          if (nanos_ != 0) {
             size += com.google.protobuf.CodedOutputStream
-              .computeMessageSize(2, getTime());
+              .computeInt32Size(2, nanos_);
           }
           size += unknownFields.getSerializedSize();
           memoizedSize = size;
@@ -4249,16 +4185,10 @@ public final class OperandProto {
           }
           io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp other = (io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp) obj;
 
-          if (hasDate() != other.hasDate()) return false;
-          if (hasDate()) {
-            if (!getDate()
-                .equals(other.getDate())) return false;
-          }
-          if (hasTime() != other.hasTime()) return false;
-          if (hasTime()) {
-            if (!getTime()
-                .equals(other.getTime())) return false;
-          }
+          if (getSeconds()
+              != other.getSeconds()) return false;
+          if (getNanos()
+              != other.getNanos()) return false;
           if (!unknownFields.equals(other.unknownFields)) return false;
           return true;
         }
@@ -4270,14 +4200,11 @@ public final class OperandProto {
           }
           int hash = 41;
           hash = (19 * hash) + getDescriptor().hashCode();
-          if (hasDate()) {
-            hash = (37 * hash) + DATE_FIELD_NUMBER;
-            hash = (53 * hash) + getDate().hashCode();
-          }
-          if (hasTime()) {
-            hash = (37 * hash) + TIME_FIELD_NUMBER;
-            hash = (53 * hash) + getTime().hashCode();
-          }
+          hash = (37 * hash) + SECONDS_FIELD_NUMBER;
+          hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+              getSeconds());
+          hash = (37 * hash) + NANOS_FIELD_NUMBER;
+          hash = (53 * hash) + getNanos();
           hash = (29 * hash) + unknownFields.hashCode();
           memoizedHashCode = hash;
           return hash;
@@ -4411,18 +4338,10 @@ public final class OperandProto {
           @java.lang.Override
           public Builder clear() {
             super.clear();
-            if (dateBuilder_ == null) {
-              date_ = null;
-            } else {
-              date_ = null;
-              dateBuilder_ = null;
-            }
-            if (timeBuilder_ == null) {
-              time_ = null;
-            } else {
-              time_ = null;
-              timeBuilder_ = null;
-            }
+            seconds_ = 0L;
+
+            nanos_ = 0;
+
             return this;
           }
 
@@ -4449,16 +4368,8 @@ public final class OperandProto {
           @java.lang.Override
           public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp buildPartial() {
             io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp result = new io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp(this);
-            if (dateBuilder_ == null) {
-              result.date_ = date_;
-            } else {
-              result.date_ = dateBuilder_.build();
-            }
-            if (timeBuilder_ == null) {
-              result.time_ = time_;
-            } else {
-              result.time_ = timeBuilder_.build();
-            }
+            result.seconds_ = seconds_;
+            result.nanos_ = nanos_;
             onBuilt();
             return result;
           }
@@ -4507,11 +4418,11 @@ public final class OperandProto {
 
           public Builder mergeFrom(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp other) {
             if (other == io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Timestamp.getDefaultInstance()) return this;
-            if (other.hasDate()) {
-              mergeDate(other.getDate());
+            if (other.getSeconds() != 0L) {
+              setSeconds(other.getSeconds());
             }
-            if (other.hasTime()) {
-              mergeTime(other.getTime());
+            if (other.getNanos() != 0) {
+              setNanos(other.getNanos());
             }
             this.mergeUnknownFields(other.unknownFields);
             onChanged();
@@ -4542,242 +4453,66 @@ public final class OperandProto {
             return this;
           }
 
-          private io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date date_;
-          private com.google.protobuf.SingleFieldBuilderV3<
-              io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.DateOrBuilder> dateBuilder_;
+          private long seconds_ ;
           /**
-           * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
-           * @return Whether the date field is set.
+           * <code>int64 seconds = 1;</code>
+           * @return The seconds.
            */
-          public boolean hasDate() {
-            return dateBuilder_ != null || date_ != null;
+          @java.lang.Override
+          public long getSeconds() {
+            return seconds_;
           }
           /**
-           * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
-           * @return The date.
+           * <code>int64 seconds = 1;</code>
+           * @param value The seconds to set.
+           * @return This builder for chaining.
            */
-          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date getDate() {
-            if (dateBuilder_ == null) {
-              return date_ == null ? io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.getDefaultInstance() : date_;
-            } else {
-              return dateBuilder_.getMessage();
-            }
-          }
-          /**
-           * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
-           */
-          public Builder setDate(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date value) {
-            if (dateBuilder_ == null) {
-              if (value == null) {
-                throw new NullPointerException();
-              }
-              date_ = value;
-              onChanged();
-            } else {
-              dateBuilder_.setMessage(value);
-            }
-
-            return this;
-          }
-          /**
-           * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
-           */
-          public Builder setDate(
-              io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.Builder builderForValue) {
-            if (dateBuilder_ == null) {
-              date_ = builderForValue.build();
-              onChanged();
-            } else {
-              dateBuilder_.setMessage(builderForValue.build());
-            }
-
-            return this;
-          }
-          /**
-           * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
-           */
-          public Builder mergeDate(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date value) {
-            if (dateBuilder_ == null) {
-              if (date_ != null) {
-                date_ =
-                  io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.newBuilder(date_).mergeFrom(value).buildPartial();
-              } else {
-                date_ = value;
-              }
-              onChanged();
-            } else {
-              dateBuilder_.mergeFrom(value);
-            }
-
-            return this;
-          }
-          /**
-           * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
-           */
-          public Builder clearDate() {
-            if (dateBuilder_ == null) {
-              date_ = null;
-              onChanged();
-            } else {
-              date_ = null;
-              dateBuilder_ = null;
-            }
-
-            return this;
-          }
-          /**
-           * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
-           */
-          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.Builder getDateBuilder() {
+          public Builder setSeconds(long value) {
             
+            seconds_ = value;
             onChanged();
-            return getDateFieldBuilder().getBuilder();
-          }
-          /**
-           * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
-           */
-          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.DateOrBuilder getDateOrBuilder() {
-            if (dateBuilder_ != null) {
-              return dateBuilder_.getMessageOrBuilder();
-            } else {
-              return date_ == null ?
-                  io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.getDefaultInstance() : date_;
-            }
-          }
-          /**
-           * <code>.dataflow.calcite.Operand.Scalar.Date date = 1;</code>
-           */
-          private com.google.protobuf.SingleFieldBuilderV3<
-              io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.DateOrBuilder> 
-              getDateFieldBuilder() {
-            if (dateBuilder_ == null) {
-              dateBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-                  io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Date.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.DateOrBuilder>(
-                      getDate(),
-                      getParentForChildren(),
-                      isClean());
-              date_ = null;
-            }
-            return dateBuilder_;
-          }
-
-          private io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time time_;
-          private com.google.protobuf.SingleFieldBuilderV3<
-              io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.TimeOrBuilder> timeBuilder_;
-          /**
-           * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
-           * @return Whether the time field is set.
-           */
-          public boolean hasTime() {
-            return timeBuilder_ != null || time_ != null;
-          }
-          /**
-           * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
-           * @return The time.
-           */
-          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time getTime() {
-            if (timeBuilder_ == null) {
-              return time_ == null ? io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.getDefaultInstance() : time_;
-            } else {
-              return timeBuilder_.getMessage();
-            }
-          }
-          /**
-           * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
-           */
-          public Builder setTime(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time value) {
-            if (timeBuilder_ == null) {
-              if (value == null) {
-                throw new NullPointerException();
-              }
-              time_ = value;
-              onChanged();
-            } else {
-              timeBuilder_.setMessage(value);
-            }
-
             return this;
           }
           /**
-           * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
+           * <code>int64 seconds = 1;</code>
+           * @return This builder for chaining.
            */
-          public Builder setTime(
-              io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.Builder builderForValue) {
-            if (timeBuilder_ == null) {
-              time_ = builderForValue.build();
-              onChanged();
-            } else {
-              timeBuilder_.setMessage(builderForValue.build());
-            }
-
-            return this;
-          }
-          /**
-           * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
-           */
-          public Builder mergeTime(io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time value) {
-            if (timeBuilder_ == null) {
-              if (time_ != null) {
-                time_ =
-                  io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.newBuilder(time_).mergeFrom(value).buildPartial();
-              } else {
-                time_ = value;
-              }
-              onChanged();
-            } else {
-              timeBuilder_.mergeFrom(value);
-            }
-
-            return this;
-          }
-          /**
-           * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
-           */
-          public Builder clearTime() {
-            if (timeBuilder_ == null) {
-              time_ = null;
-              onChanged();
-            } else {
-              time_ = null;
-              timeBuilder_ = null;
-            }
-
-            return this;
-          }
-          /**
-           * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
-           */
-          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.Builder getTimeBuilder() {
+          public Builder clearSeconds() {
             
+            seconds_ = 0L;
             onChanged();
-            return getTimeFieldBuilder().getBuilder();
+            return this;
+          }
+
+          private int nanos_ ;
+          /**
+           * <code>int32 nanos = 2;</code>
+           * @return The nanos.
+           */
+          @java.lang.Override
+          public int getNanos() {
+            return nanos_;
           }
           /**
-           * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
+           * <code>int32 nanos = 2;</code>
+           * @param value The nanos to set.
+           * @return This builder for chaining.
            */
-          public io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.TimeOrBuilder getTimeOrBuilder() {
-            if (timeBuilder_ != null) {
-              return timeBuilder_.getMessageOrBuilder();
-            } else {
-              return time_ == null ?
-                  io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.getDefaultInstance() : time_;
-            }
+          public Builder setNanos(int value) {
+            
+            nanos_ = value;
+            onChanged();
+            return this;
           }
           /**
-           * <code>.dataflow.calcite.Operand.Scalar.Time time = 2;</code>
+           * <code>int32 nanos = 2;</code>
+           * @return This builder for chaining.
            */
-          private com.google.protobuf.SingleFieldBuilderV3<
-              io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.TimeOrBuilder> 
-              getTimeFieldBuilder() {
-            if (timeBuilder_ == null) {
-              timeBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-                  io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.Time.Builder, io.activej.dataflow.proto.calcite.OperandProto.Operand.Scalar.TimeOrBuilder>(
-                      getTime(),
-                      getParentForChildren(),
-                      isClean());
-              time_ = null;
-            }
-            return timeBuilder_;
+          public Builder clearNanos() {
+            
+            nanos_ = 0;
+            onChanged();
+            return this;
           }
           @java.lang.Override
           public final Builder setUnknownFields(
@@ -10739,7 +10474,7 @@ public final class OperandProto {
   static {
     java.lang.String[] descriptorData = {
       "\n\025calcite/operand.proto\022\020dataflow.calcit" +
-      "e\"\277\n\n\007Operand\022=\n\014record_field\030\001 \001(\0132%.da" +
+      "e\"\365\t\n\007Operand\022=\n\014record_field\030\001 \001(\0132%.da" +
       "taflow.calcite.Operand.RecordFieldH\000\0222\n\006" +
       "scalar\030\002 \001(\0132 .dataflow.calcite.Operand." +
       "ScalarH\000\0227\n\tfield_get\030\003 \001(\0132\".dataflow.c" +
@@ -10747,7 +10482,7 @@ public final class OperandProto {
       "\001(\0132\".dataflow.calcite.Operand.FunctionH" +
       "\000\022.\n\004cast\030\005 \001(\0132\036.dataflow.calcite.Opera" +
       "nd.CastH\000\032\034\n\013RecordField\022\r\n\005index\030\001 \001(\005\032" +
-      "\213\006\n\006Scalar\0225\n\004null\030\001 \001(\0132%.dataflow.calc" +
+      "\301\005\n\006Scalar\0225\n\004null\030\001 \001(\0132%.dataflow.calc" +
       "ite.Operand.Scalar.NoneH\000\022\021\n\007integer\030\002 \001" +
       "(\005H\000\022\016\n\004long\030\003 \001(\003H\000\022\017\n\005float\030\004 \001(\002H\000\022\020\n" +
       "\006double\030\005 \001(\001H\000\022\021\n\007boolean\030\006 \001(\010H\000\022\020\n\006st" +
@@ -10763,18 +10498,16 @@ public final class OperandProto {
       "\022\r\n\005value\030\001 \001(\014\0320\n\004Date\022\014\n\004year\030\001 \001(\005\022\r\n" +
       "\005month\030\002 \001(\005\022\013\n\003day\030\003 \001(\005\032B\n\004Time\022\014\n\004hou" +
       "r\030\001 \001(\005\022\016\n\006minute\030\002 \001(\005\022\016\n\006second\030\003 \001(\005\022" +
-      "\014\n\004nano\030\004 \001(\005\032u\n\tTimestamp\0223\n\004date\030\001 \001(\013" +
-      "2%.dataflow.calcite.Operand.Scalar.Date\022" +
-      "3\n\004time\030\002 \001(\0132%.dataflow.calcite.Operand" +
-      ".Scalar.TimeB\007\n\005value\032Q\n\010FieldGet\0221\n\016obj" +
-      "ect_operand\030\001 \001(\0132\031.dataflow.calcite.Ope" +
-      "rand\022\022\n\nfield_name\030\002 \001(\t\032N\n\010Function\022\025\n\r" +
-      "function_name\030\001 \001(\t\022+\n\010operands\030\002 \003(\0132\031." +
-      "dataflow.calcite.Operand\032F\n\004Cast\0220\n\rvalu" +
-      "e_operand\030\001 \001(\0132\031.dataflow.calcite.Opera" +
-      "nd\022\014\n\004type\030\002 \001(\005B\t\n\007operandB3\n!io.active" +
-      "j.dataflow.proto.calciteB\014OperandProtoP\000" +
-      "b\006proto3"
+      "\014\n\004nano\030\004 \001(\005\032+\n\tTimestamp\022\017\n\007seconds\030\001 " +
+      "\001(\003\022\r\n\005nanos\030\002 \001(\005B\007\n\005value\032Q\n\010FieldGet\022" +
+      "1\n\016object_operand\030\001 \001(\0132\031.dataflow.calci" +
+      "te.Operand\022\022\n\nfield_name\030\002 \001(\t\032N\n\010Functi" +
+      "on\022\025\n\rfunction_name\030\001 \001(\t\022+\n\010operands\030\002 " +
+      "\003(\0132\031.dataflow.calcite.Operand\032F\n\004Cast\0220" +
+      "\n\rvalue_operand\030\001 \001(\0132\031.dataflow.calcite" +
+      ".Operand\022\014\n\004type\030\002 \001(\005B\t\n\007operandB3\n!io." +
+      "activej.dataflow.proto.calciteB\014OperandP" +
+      "rotoP\000b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -10833,7 +10566,7 @@ public final class OperandProto {
     internal_static_dataflow_calcite_Operand_Scalar_Timestamp_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_Operand_Scalar_Timestamp_descriptor,
-        new java.lang.String[] { "Date", "Time", });
+        new java.lang.String[] { "Seconds", "Nanos", });
     internal_static_dataflow_calcite_Operand_FieldGet_descriptor =
       internal_static_dataflow_calcite_Operand_descriptor.getNestedTypes().get(2);
     internal_static_dataflow_calcite_Operand_FieldGet_fieldAccessorTable = new
