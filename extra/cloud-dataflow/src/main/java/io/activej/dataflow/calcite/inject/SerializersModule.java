@@ -7,8 +7,6 @@ import io.activej.dataflow.calcite.RecordProjectionFn;
 import io.activej.dataflow.calcite.RecordSerializer;
 import io.activej.dataflow.calcite.aggregation.RecordReducer;
 import io.activej.dataflow.calcite.join.RecordInnerJoiner;
-import io.activej.dataflow.calcite.join.RecordKeyFunction;
-import io.activej.dataflow.calcite.join.RecordKeyFunctionSerializer;
 import io.activej.dataflow.calcite.operand.OperandIfNull;
 import io.activej.dataflow.calcite.operand.OperandListGet;
 import io.activej.dataflow.calcite.operand.OperandMapGet;
@@ -58,7 +56,6 @@ public final class SerializersModule extends AbstractModule {
 		bind(new Key<BinarySerializer<Function<?, ?>>>() {}).to((schema, recordProjectionFnSerializer) -> {
 					FunctionSubtypeSerializer<Function<?, ?>> serializer = FunctionSubtypeSerializer.create();
 					serializer.setSubtypeCodec((Class) NamedRecordFunction.class, new NamedRecordFunctionSerializer(schema));
-					serializer.setSubtypeCodec((Class) RecordKeyFunction.class, new RecordKeyFunctionSerializer<>());
 					serializer.setSubtypeCodec((Class) Function.identity().getClass(), "identity", ofObject(Function::identity));
 					serializer.setSubtypeCodec(RecordProjectionFn.class, recordProjectionFnSerializer);
 					return serializer;
@@ -74,7 +71,6 @@ public final class SerializersModule extends AbstractModule {
 		bind(new Key<BinarySerializer<Comparator<?>>>() {}).to(serializerLocator -> {
 					FunctionSubtypeSerializer<Comparator> serializer = FunctionSubtypeSerializer.create();
 
-					serializer.setSubtypeCodec(NaturalNullsFirstComparator.class, ofObject(NaturalNullsFirstComparator::getInstance));
 					serializer.setSubtypeCodec(RecordSortComparator.class, serializerLocator.get(RecordSortComparator.class));
 					serializer.setSubtypeCodec(RecordKeyComparator.class, ofObject(RecordKeyComparator::getInstance));
 
@@ -111,17 +107,17 @@ public final class SerializersModule extends AbstractModule {
 
 		bind(new Key<BinarySerializer<StreamJoin.Joiner<?, ?, ?, ?>>>() {}).to(schemeSerializer -> {
 			FunctionSubtypeSerializer<StreamJoin.Joiner> serializer = FunctionSubtypeSerializer.create();
-			serializer.setSubtypeCodec(RecordInnerJoiner.class, new BinarySerializer<RecordInnerJoiner<?>>() {
+			serializer.setSubtypeCodec(RecordInnerJoiner.class, new BinarySerializer<RecordInnerJoiner>() {
 
 				@Override
-				public void encode(BinaryOutput out, RecordInnerJoiner<?> item) {
+				public void encode(BinaryOutput out, RecordInnerJoiner item) {
 					schemeSerializer.encode(out, item.getScheme());
 					schemeSerializer.encode(out, item.getLeft());
 					schemeSerializer.encode(out, item.getRight());
 				}
 
 				@Override
-				public RecordInnerJoiner<?> decode(BinaryInput in) throws CorruptedDataException {
+				public RecordInnerJoiner decode(BinaryInput in) throws CorruptedDataException {
 					RecordScheme scheme = schemeSerializer.decode(in);
 					RecordScheme left = schemeSerializer.decode(in);
 					RecordScheme right = schemeSerializer.decode(in);

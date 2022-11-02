@@ -6,7 +6,6 @@ import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjection;
 import io.activej.dataflow.calcite.aggregation.*;
 import io.activej.dataflow.calcite.dataset.DatasetSupplierOfPredicate;
 import io.activej.dataflow.calcite.join.RecordInnerJoiner;
-import io.activej.dataflow.calcite.join.RecordKeyFunction;
 import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.dataflow.calcite.operand.OperandRecordField;
 import io.activej.dataflow.calcite.operand.OperandScalar;
@@ -206,33 +205,33 @@ public class RelToDatasetConverter {
 		return filter(current, filter.getCondition(), paramsCollector);
 	}
 
-	private <K extends Comparable<K>> UnmaterializedDataset handle(LogicalJoin join, ParamsCollector paramsCollector) {
+	private UnmaterializedDataset handle(LogicalJoin join, ParamsCollector paramsCollector) {
 		UnmaterializedDataset left = handle(join.getLeft(), paramsCollector);
 		UnmaterializedDataset right = handle(join.getRight(), paramsCollector);
 
 		RecordScheme leftScheme = left.getScheme();
 		RecordScheme rightScheme = right.getScheme();
 
-		JoinKeyInfo<K> joinKeyInfo = getJoinKeyInfo(leftScheme, rightScheme, join);
+		JoinKeyProjections joinKeyProjections = getJoinKeyProjections(leftScheme, rightScheme, join);
 
 		List<String> fieldNames = join.getRowType().getFieldNames();
-		RecordInnerJoiner<K> joiner = RecordInnerJoiner.create(leftScheme, rightScheme, fieldNames);
+		RecordInnerJoiner joiner = RecordInnerJoiner.create(leftScheme, rightScheme, fieldNames);
 
 		return UnmaterializedDataset.of(
 				joiner.getScheme(),
 				params -> {
 					Dataset<Record> leftDataset = left.materialize(params);
-					SortedDataset<K, Record> sortedLeft = sortForJoin(joinKeyInfo.keyClass, joinKeyInfo.leftKeyFn, leftDataset, Datasets::repartitionSort);
+					SortedDataset<Record, Record> sortedLeft = sortForJoin(joinKeyProjections.leftKeyProjection, leftDataset, Datasets::repartitionSort);
 
 					Dataset<Record> rightDataset = right.materialize(params);
-					SortedDataset<K, Record> sortedRight = sortForJoin(joinKeyInfo.keyClass, joinKeyInfo.rightKeyFn, rightDataset, Datasets::castToSorted);
+					SortedDataset<Record, Record> sortedRight = sortForJoin(joinKeyProjections.rightKeyProjection, rightDataset, Datasets::castToSorted);
 
 					return Datasets.join(
 							sortedLeft,
 							sortedRight,
 							joiner,
 							Record.class,
-							joinKeyInfo.leftKeyFn
+							joinKeyProjections.leftKeyProjection
 					);
 				});
 	}
@@ -410,40 +409,76 @@ public class RelToDatasetConverter {
 		);
 	}
 
-	@SuppressWarnings("unchecked")
-	private static <T extends Comparable<T>> JoinKeyInfo<T> getJoinKeyInfo(RecordScheme leftScheme, RecordScheme rightScheme, LogicalJoin join) {
+	private static JoinKeyProjections getJoinKeyProjections(RecordScheme leftScheme, RecordScheme rightScheme, LogicalJoin join) {
 		RexNode condition = join.getCondition();
-		if (condition.getKind() != SqlKind.EQUALS) {
-			throw new IllegalArgumentException("Unsupported type: " + condition.getKind());
+		List<RexCall> conditions = flattenJoinConditions(condition);
+
+		List<FieldProjection> leftProjections = new ArrayList<>(conditions.size());
+		List<FieldProjection> rightProjections = new ArrayList<>(conditions.size());
+
+		for (RexCall eqCondition : conditions) {
+			List<RexNode> operands = eqCondition.getOperands();
+
+			RexNode firstOperand = operands.get(0);
+			RexNode secondOperand = operands.get(1);
+
+			RexInputRef firstInputNode = (RexInputRef) firstOperand;
+			RexInputRef secondInputNode = (RexInputRef) secondOperand;
+
+			int firstIndex = firstInputNode.getIndex();
+			int secondIndex = secondInputNode.getIndex();
+
+			int leftIndex, rightIndex = 0;
+			if (secondIndex > firstIndex) {
+				leftIndex = firstIndex;
+				rightIndex -= secondIndex - leftScheme.size();
+			} else {
+				leftIndex = secondIndex;
+				rightIndex = firstIndex - leftScheme.size();
+			}
+
+			Class<?> leftClass = Types.getRawType(leftScheme.getFieldType(leftIndex));
+			Class<?> rightClass = Types.getRawType(rightScheme.getFieldType(rightIndex));
+
+			checkArgument(leftClass == rightClass);
+			checkArgument(Utils.isSortable(leftClass), "Column not sortable");
+
+			leftProjections.add(new FieldProjection(new OperandRecordField(leftIndex), "join_" + leftProjections.size()));
+			rightProjections.add(new FieldProjection(new OperandRecordField(rightIndex), "join_" + rightProjections.size()));
 		}
 
-		RexCall rexCall = (RexCall) condition;
-		List<RexNode> operands = rexCall.getOperands();
-		checkArgument(operands.size() == 2);
+		return new JoinKeyProjections(
+				RecordProjectionFn.create(leftProjections),
+				RecordProjectionFn.create(rightProjections)
+		);
+	}
 
-		RexNode leftOperand = operands.get(0);
-
-		RexNode rightOperand = operands.get(1);
-
-		RexInputRef leftInputNode = (RexInputRef) leftOperand;
-		RexInputRef rightInputNode = (RexInputRef) rightOperand;
-
-		int leftIndex = leftInputNode.getIndex();
-		int rightIndex = rightInputNode.getIndex();
-
-		if (rightIndex > leftIndex) {
-			rightIndex -= join.getLeft().getRowType().getFieldCount();
-		} else {
-			leftIndex -= join.getRight().getRowType().getFieldCount();
+	private static List<RexCall> flattenJoinConditions(RexNode condition) {
+		if (condition.getKind() == SqlKind.EQUALS) {
+			RexCall eqCondition = (RexCall) condition;
+			List<RexNode> operands = eqCondition.getOperands();
+			if (operands.size() != 2) {
+				throw new IllegalArgumentException("Illegal number of EQ operands");
+			}
+			for (RexNode operand : operands) {
+				if (operand.getKind() != SqlKind.INPUT_REF) {
+					throw new IllegalArgumentException("Unsupported join condition: " + operand +
+							". Only equi-joins are supported");
+				}
+			}
+			return List.of(eqCondition);
 		}
 
-		Class<T> leftClass = (Class<T>) Types.getRawType(leftScheme.getFieldType(leftIndex));
-		Class<T> rightClass = (Class<T>) Types.getRawType(rightScheme.getFieldType(rightIndex));
+		if (condition.getKind() == SqlKind.AND) {
+			List<RexCall> result = new ArrayList<>();
+			for (RexNode operand : ((RexCall) condition).getOperands()) {
+				result.addAll(flattenJoinConditions(operand));
+			}
+			return result;
+		}
 
-		checkArgument(leftClass == rightClass);
-		checkArgument(Utils.isSortable(leftClass));
-
-		return new JoinKeyInfo<>(leftClass, new RecordKeyFunction<>(leftIndex), new RecordKeyFunction<>(rightIndex));
+		throw new IllegalArgumentException("Unsupported join condition: " + condition +
+				". Only equi-joins are supported");
 	}
 
 	public record ConversionResult(UnmaterializedDataset unmaterializedDataset, List<RexDynamicParam> dynamicParams) {
@@ -477,11 +512,11 @@ public class RelToDatasetConverter {
 		return fieldName.contains("$");
 	}
 
-	private static <K extends Comparable<K>> SortedDataset<K, Record> sortForJoin(
-			Class<K> keyClass, RecordKeyFunction<K> keyFunction, Dataset<Record> dataset,
-			Function<LocallySortedDataset<K, Record>, SortedDataset<K, Record>> toSortedFn
+	private static SortedDataset<Record, Record> sortForJoin(
+			RecordProjectionFn keyFunction, Dataset<Record> dataset,
+			Function<LocallySortedDataset<Record, Record>, SortedDataset<Record, Record>> toSortedFn
 	) {
-		return toSortedFn.apply(Datasets.localSort(dataset, keyClass, keyFunction, NaturalNullsFirstComparator.getInstance()));
+		return toSortedFn.apply(Datasets.localSort(dataset, Record.class, keyFunction, RecordKeyComparator.getInstance()));
 	}
 
 	private static SortedDataset<Record, Record> sortForUnion(Dataset<Record> dataset,
@@ -498,10 +533,6 @@ public class RelToDatasetConverter {
 		if (comparator instanceof RecordSortComparator recordSortComparator) {
 			List<FieldSort> sorts = recordSortComparator.getSorts();
 			return checkReSortIndices(projections, sorts.stream().map(FieldSort::index).distinct().toList());
-		}
-		if (comparator == Comparator.naturalOrder()) {
-			return !(locallySortedDataset.keyFunction() instanceof RecordKeyFunction<?> recordKeyFunction) ||
-					checkReSortIndices(projections, List.of(recordKeyFunction.getIndex()));
 		}
 		throw new AssertionError();
 	}
@@ -588,7 +619,7 @@ public class RelToDatasetConverter {
 		}
 	}
 
-	private record JoinKeyInfo<K extends Comparable<K>>(Class<K> keyClass, RecordKeyFunction<K> leftKeyFn, RecordKeyFunction<K> rightKeyFn) {
+	private record JoinKeyProjections(RecordProjectionFn leftKeyProjection, RecordProjectionFn rightKeyProjection) {
 	}
 
 	private final class ParamsCollector {

@@ -78,6 +78,8 @@ public abstract class AbstractCalciteTest {
 	public static final String CUSTOM_TABLE_NAME = "custom";
 	public static final String CUSTOM_PARTITIONED_TABLE_NAME = "custom_partitioned";
 	public static final String TEMPORAL_VALUES_TABLE_NAME = "temporal_values";
+	public static final String ENROLLMENT_TABLE_NAME = "enrollment";
+	public static final String PAYMENT_TABLE_NAME = "payment";
 
 	protected static final List<Student> STUDENT_LIST_1 = List.of(
 			new Student(4, "Mark", null, 3),
@@ -206,6 +208,24 @@ public abstract class AbstractCalciteTest {
 					INITIAL_TIME.minus(30, ChronoUnit.MINUTES))
 	);
 
+	protected static final List<Enrollment> ENROLLMENT_LIST_1 = List.of(
+			new Enrollment(1, "AA01", true, LocalDate.parse("2022-04-24")),
+			new Enrollment(2, "SK53", true, LocalDate.parse("2022-05-12"))
+	);
+	protected static final List<Enrollment> ENROLLMENT_LIST_2 = List.of(
+			new Enrollment(1, "PX41", false, LocalDate.parse("2021-11-30")),
+			new Enrollment(3, "RJ67", true, LocalDate.parse("2022-01-03"))
+	);
+
+	protected static final List<Payment> PAYMENT_LIST_1 = List.of(
+			new Payment(1, "AA01", true, 340),
+			new Payment(2, "SK53", false, 200)
+	);
+	protected static final List<Payment> PAYMENT_LIST_2 = List.of(
+			new Payment(1, "PX41", false, 415),
+			new Payment(3, "RJ67", true, 210)
+	);
+
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
@@ -284,12 +304,26 @@ public abstract class AbstractCalciteTest {
 										.withColumn("timeOfBirth", LocalTime.class, TemporalValues::timeOfBirth)
 										.build()),
 						DefiningClassLoader.class)
+				.bind(setTableKey).to(classLoader -> Set.of(
+								DataflowTableBuilder.create(classLoader, ENROLLMENT_TABLE_NAME, Enrollment.class)
+										.withColumn("studentId", int.class, Enrollment::studentId)
+										.withColumn("courseCode", String.class, Enrollment::courseCode)
+										.withColumn("active", boolean.class, Enrollment::active)
+										.withColumn("startDate", LocalDate.class, Enrollment::startDate)
+										.build()),
+						DefiningClassLoader.class)
+				.bind(setTableKey).to(classLoader -> Set.of(
+								DataflowTableBuilder.create(classLoader, PAYMENT_TABLE_NAME, Payment.class)
+										.withColumn("studentId", int.class, Payment::studentId)
+										.withColumn("courseCode", String.class, Payment::courseCode)
+										.withColumn("status", boolean.class, Payment::status)
+										.withColumn("amount", int.class, Payment::amount)
+										.build()),
+						DefiningClassLoader.class)
 				.multibindToSet(DataflowTable.class)
 				.build();
 
-		Module clientModule = Modules.combine(common, CalciteClientModule.create(), ModuleBuilder.create()
-				.bind(String.class).to(() -> "CLIENT")
-				.build());
+		Module clientModule = Modules.combine(common, CalciteClientModule.create());
 		Injector clientInjector = Injector.of(clientModule);
 		clientInjector.createEagerInstances();
 		sqlDataflow = clientInjector.getInstance(SqlDataflow.class);
@@ -314,6 +348,8 @@ public abstract class AbstractCalciteTest {
 						.bind(datasetId(CUSTOM_TABLE_NAME)).toInstance(CUSTOM_LIST_1)
 						.bind(datasetId(CUSTOM_PARTITIONED_TABLE_NAME)).toInstance(CUSTOM_PARTITIONED_LIST_1)
 						.bind(datasetId(TEMPORAL_VALUES_TABLE_NAME)).toInstance(TEMPORAL_VALUES_LIST_1)
+						.bind(datasetId(ENROLLMENT_TABLE_NAME)).toInstance(ENROLLMENT_LIST_1)
+						.bind(datasetId(PAYMENT_TABLE_NAME)).toInstance(PAYMENT_LIST_1)
 						.build());
 		Module server2Module = Modules.combine(serverModule,
 				ModuleBuilder.create()
@@ -328,6 +364,8 @@ public abstract class AbstractCalciteTest {
 						.bind(datasetId(CUSTOM_TABLE_NAME)).toInstance(CUSTOM_LIST_2)
 						.bind(datasetId(CUSTOM_PARTITIONED_TABLE_NAME)).toInstance(CUSTOM_PARTITIONED_LIST_2)
 						.bind(datasetId(TEMPORAL_VALUES_TABLE_NAME)).toInstance(TEMPORAL_VALUES_LIST_2)
+						.bind(datasetId(ENROLLMENT_TABLE_NAME)).toInstance(ENROLLMENT_LIST_2)
+						.bind(datasetId(PAYMENT_TABLE_NAME)).toInstance(PAYMENT_LIST_2)
 						.build());
 
 		server1Injector = Injector.of(server1Module);
@@ -422,6 +460,12 @@ public abstract class AbstractCalciteTest {
 	}
 
 	public record TemporalValues(int userId, Instant registeredAt, LocalDate dateOfBirth, LocalTime timeOfBirth) {
+	}
+
+	public record Enrollment(int studentId, String courseCode, boolean active, LocalDate startDate) {
+	}
+
+	public record Payment(int studentId, String courseCode, boolean status, int amount) {
 	}
 
 	@Test
@@ -1337,6 +1381,38 @@ public abstract class AbstractCalciteTest {
 							return row;
 						})
 						.toList());
+
+		assertEquals(expected, result);
+	}
+
+	@Test
+	public void testJoinByMultipleColums() {
+		QueryResult result = query("""
+				SELECT s.lastName, s.firstName, p.courseCode, p.status, p.amount
+				FROM enrollment e
+				JOIN student s
+				ON s.id = e.studentId
+				JOIN payment p
+				ON p.courseCode = e.courseCode
+				AND p.studentId = e.studentId
+				""");
+
+		Student firstStudent = STUDENT_LIST_1.get(1);
+		Student secondStudent = STUDENT_LIST_2.get(1);
+		Student thirdStudent = STUDENT_LIST_2.get(0);
+
+		Payment firstPayment = PAYMENT_LIST_1.get(0);
+		Payment secondPayment = PAYMENT_LIST_2.get(0);
+		Payment thirdPayment = PAYMENT_LIST_1.get(1);
+		Payment fourthPayment = PAYMENT_LIST_2.get(1);
+
+		QueryResult expected = new QueryResult(List.of("lastName", "firstName", "courseCode", "status", "amount"),
+				List.of(
+						new Object[]{firstStudent.lastName, firstStudent.firstName, firstPayment.courseCode, firstPayment.status, firstPayment.amount},
+						new Object[]{firstStudent.lastName, firstStudent.firstName, secondPayment.courseCode, secondPayment.status, secondPayment.amount},
+						new Object[]{secondStudent.lastName, secondStudent.firstName, thirdPayment.courseCode, thirdPayment.status, thirdPayment.amount},
+						new Object[]{thirdStudent.lastName, thirdStudent.firstName, fourthPayment.courseCode, fourthPayment.status, fourthPayment.amount}
+				));
 
 		assertEquals(expected, result);
 	}

@@ -10,7 +10,7 @@ import io.activej.record.RecordSetter;
 import java.lang.reflect.Type;
 import java.util.List;
 
-public final class RecordInnerJoiner<K extends Comparable<K>> extends InnerJoiner<K, Record, Record, Record> {
+public final class RecordInnerJoiner extends InnerJoiner<Record, Record, Record, Record> {
 
 	private final RecordScheme scheme;
 	private final RecordScheme left;
@@ -35,17 +35,17 @@ public final class RecordInnerJoiner<K extends Comparable<K>> extends InnerJoine
 		this.rightGetters = rightGetters;
 	}
 
-	public static <K extends Comparable<K>> RecordInnerJoiner<K> create(RecordScheme left, RecordScheme right, List<String> fieldNames) {
+	public static RecordInnerJoiner create(RecordScheme left, RecordScheme right, List<String> fieldNames) {
 		RecordScheme scheme = createScheme(left, right, fieldNames);
 		return create(scheme, left, right);
 	}
 
-	public static <K extends Comparable<K>> RecordInnerJoiner<K> create(RecordScheme scheme, RecordScheme left, RecordScheme right) {
+	public static RecordInnerJoiner create(RecordScheme scheme, RecordScheme left, RecordScheme right) {
 		RecordSetter<?>[] setters = getSetters(scheme);
 		RecordGetter<?>[] leftGetters = getGetters(left);
 		RecordGetter<?>[] rightGetters = getGetters(right);
 
-		return new RecordInnerJoiner<>(scheme, left, right, setters, leftGetters, rightGetters);
+		return new RecordInnerJoiner(scheme, left, right, setters, leftGetters, rightGetters);
 	}
 
 	public RecordScheme getScheme() {
@@ -62,7 +62,7 @@ public final class RecordInnerJoiner<K extends Comparable<K>> extends InnerJoine
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void onInnerJoin(K key, Record left, Record right, StreamDataAcceptor<Record> output) {
+	public void onInnerJoin(Record key, Record left, Record right, StreamDataAcceptor<Record> output) {
 		Record result = scheme.record();
 
 		int idx = 0;
