@@ -25,6 +25,7 @@ import io.activej.datastream.processor.StreamSplitter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -93,10 +94,10 @@ public final class NodeShard<K, T> extends AbstractNode {
 		int bits = partitions - 1;
 		BiConsumer<T, StreamDataAcceptor<T>[]> splitter = (partitions & bits) == 0 ?
 				(item, acceptors) -> {
-					acceptors[murmur3hash(keyFunction.apply(item).hashCode() + nonce) & bits].accept(item);
+					acceptors[murmur3hash(Objects.hashCode(keyFunction.apply(item)) + nonce) & bits].accept(item);
 				} :
 				(item, acceptors) -> {
-					int hash = murmur3hash(keyFunction.apply(item).hashCode() + nonce);
+					int hash = murmur3hash(Objects.hashCode(keyFunction.apply(item)) + nonce);
 					int hashAbs = hash < 0 ? hash == Integer.MIN_VALUE ? Integer.MAX_VALUE : -hash : hash;
 					acceptors[hashAbs % partitions].accept(item);
 				};

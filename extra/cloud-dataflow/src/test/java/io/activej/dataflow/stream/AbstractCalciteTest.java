@@ -1209,36 +1209,7 @@ public abstract class AbstractCalciteTest {
 				ON student.dept = department.id
 				""");
 
-		List<Object[]> expectedColumnValues = new ArrayList<>(4);
-
-		Student firstStudent = STUDENT_LIST_1.get(0);
-		Student secondStudent = STUDENT_LIST_1.get(1);
-		Student thirdStudent = STUDENT_LIST_2.get(0);
-		Student fourthStudent = STUDENT_LIST_2.get(1);
-		Department firstDepartment = DEPARTMENT_LIST_1.get(0);
-		Department secondDepartment = DEPARTMENT_LIST_2.get(0);
-		Department thirdDepartment = DEPARTMENT_LIST_2.get(1);
-
-		expectedColumnValues.add(new Object[]{
-				firstStudent.id, firstStudent.firstName, firstStudent.lastName, firstStudent.dept,
-				secondDepartment.id, secondDepartment.departmentName, secondDepartment.aliases
-		});
-		expectedColumnValues.add(new Object[]{
-				secondStudent.id, secondStudent.firstName, secondStudent.lastName, secondStudent.dept,
-				thirdDepartment.id, thirdDepartment.departmentName, thirdDepartment.aliases
-		});
-		expectedColumnValues.add(new Object[]{
-				thirdStudent.id, thirdStudent.firstName, thirdStudent.lastName, thirdStudent.dept,
-				firstDepartment.id, firstDepartment.departmentName, firstDepartment.aliases
-		});
-		expectedColumnValues.add(new Object[]{
-				fourthStudent.id, fourthStudent.firstName, fourthStudent.lastName, fourthStudent.dept,
-				firstDepartment.id, firstDepartment.departmentName, firstDepartment.aliases
-		});
-
-		QueryResult expected = new QueryResult(List.of("id", "firstName", "lastName", "dept", "id0", "departmentName", "aliases"), expectedColumnValues);
-
-		assertEquals(expected, result);
+		assertFullStudentDepartmentJoin(result);
 	}
 
 	@Test
@@ -1250,6 +1221,21 @@ public abstract class AbstractCalciteTest {
 				ON s.dept = d.id
 				""");
 
+		assertFullStudentDepartmentJoin(result);
+	}
+
+	@Test
+	public void testJoinUsingWhere() {
+		QueryResult result = query("""
+				SELECT *
+				FROM student, department
+				WHERE student.dept = department.id
+				""");
+
+		assertFullStudentDepartmentJoin(result);
+	}
+
+	private static void assertFullStudentDepartmentJoin(QueryResult result) {
 		List<Object[]> expectedColumnValues = new ArrayList<>(4);
 
 		Student firstStudent = STUDENT_LIST_1.get(0);
@@ -1320,6 +1306,24 @@ public abstract class AbstractCalciteTest {
 				ON s3.id = s1.id
 				""");
 
+		assertSelfJoinStudent(result);
+	}
+
+	@Test
+	public void testSelfJoinDifferentColumns() {
+		QueryResult result = query("""
+				SELECT *
+				FROM student s1
+				JOIN student s2
+				ON s1.id = s2.id
+				JOIN student s3
+				ON s3.lastName = s1.lastName
+				""");
+
+		assertSelfJoinStudent(result);
+	}
+
+	private static void assertSelfJoinStudent(QueryResult result) {
 		QueryResult expected = new QueryResult(List.of("id", "firstName", "lastName", "dept", "id0", "firstName0", "lastName0", "dept0", "id1", "firstName1", "lastName1", "dept1"),
 				concat(STUDENT_LIST_1, STUDENT_LIST_2).stream()
 						.map(student -> {
@@ -2368,6 +2372,7 @@ public abstract class AbstractCalciteTest {
 
 		assertEquals(expected, result);
 	}
+
 	// endregion
 	protected abstract QueryResult query(String sql);
 

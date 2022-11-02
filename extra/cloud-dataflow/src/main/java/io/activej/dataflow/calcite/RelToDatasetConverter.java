@@ -31,7 +31,6 @@ import org.apache.calcite.rel.RelFieldCollation.Direction;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.logical.*;
-import org.apache.calcite.rel.type.RelDataTypeFactoryImpl.JavaType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlAggFunction;
@@ -211,29 +210,29 @@ public class RelToDatasetConverter {
 		UnmaterializedDataset left = handle(join.getLeft(), paramsCollector);
 		UnmaterializedDataset right = handle(join.getRight(), paramsCollector);
 
-		JoinKeyInfo<K> joinKeyInfo = getJoinKeyInfo(join);
+		RecordScheme leftScheme = left.getScheme();
+		RecordScheme rightScheme = right.getScheme();
 
-		RecordKeyFunction<K> leftKeyFunction = new RecordKeyFunction<>(joinKeyInfo.leftIndex);
-		RecordKeyFunction<K> rightKeyFunction = new RecordKeyFunction<>(joinKeyInfo.rightIndex);
+		JoinKeyInfo<K> joinKeyInfo = getJoinKeyInfo(leftScheme, rightScheme, join);
 
 		List<String> fieldNames = join.getRowType().getFieldNames();
-		RecordInnerJoiner<K> joiner = RecordInnerJoiner.create(left.getScheme(), right.getScheme(), fieldNames);
+		RecordInnerJoiner<K> joiner = RecordInnerJoiner.create(leftScheme, rightScheme, fieldNames);
 
 		return UnmaterializedDataset.of(
 				joiner.getScheme(),
 				params -> {
 					Dataset<Record> leftDataset = left.materialize(params);
-					SortedDataset<K, Record> sortedLeft = sortForJoin(joinKeyInfo.keyClass, leftKeyFunction, leftDataset, Datasets::repartitionSort);
+					SortedDataset<K, Record> sortedLeft = sortForJoin(joinKeyInfo.keyClass, joinKeyInfo.leftKeyFn, leftDataset, Datasets::repartitionSort);
 
 					Dataset<Record> rightDataset = right.materialize(params);
-					SortedDataset<K, Record> sortedRight = sortForJoin(joinKeyInfo.keyClass, rightKeyFunction, rightDataset, Datasets::castToSorted);
+					SortedDataset<K, Record> sortedRight = sortForJoin(joinKeyInfo.keyClass, joinKeyInfo.rightKeyFn, rightDataset, Datasets::castToSorted);
 
 					return Datasets.join(
 							sortedLeft,
 							sortedRight,
 							joiner,
 							Record.class,
-							leftKeyFunction
+							joinKeyInfo.leftKeyFn
 					);
 				});
 	}
@@ -370,8 +369,7 @@ public class RelToDatasetConverter {
 			int fieldIndex = fieldCollation.getFieldIndex();
 			Type fieldType = scheme.getFieldType(fieldIndex);
 
-			Class<?> rawType = Types.getRawType(fieldType);
-			if (!(rawType.isPrimitive() || Comparable.class.isAssignableFrom(rawType))) {
+			if (!Utils.isSortable(Types.getRawType(fieldType))) {
 				throw new IllegalArgumentException("Field: '" + scheme.getField(fieldIndex) + "' cannot be ordered");
 			}
 
@@ -412,7 +410,8 @@ public class RelToDatasetConverter {
 		);
 	}
 
-	private static <T extends Comparable<T>> JoinKeyInfo<T> getJoinKeyInfo(LogicalJoin join) {
+	@SuppressWarnings("unchecked")
+	private static <T extends Comparable<T>> JoinKeyInfo<T> getJoinKeyInfo(RecordScheme leftScheme, RecordScheme rightScheme, LogicalJoin join) {
 		RexNode condition = join.getCondition();
 		if (condition.getKind() != SqlKind.EQUALS) {
 			throw new IllegalArgumentException("Unsupported type: " + condition.getKind());
@@ -423,15 +422,8 @@ public class RelToDatasetConverter {
 		checkArgument(operands.size() == 2);
 
 		RexNode leftOperand = operands.get(0);
-		JavaType left = ((JavaType) leftOperand.getType());
 
 		RexNode rightOperand = operands.get(1);
-		JavaType right = ((JavaType) rightOperand.getType());
-
-		//noinspection unchecked
-		Class<T> leftClass = left.getJavaClass();
-		checkArgument(leftClass == right.getJavaClass());
-		checkArgument(leftClass.isPrimitive() || Comparable.class.isAssignableFrom(leftClass));
 
 		RexInputRef leftInputNode = (RexInputRef) leftOperand;
 		RexInputRef rightInputNode = (RexInputRef) rightOperand;
@@ -445,7 +437,13 @@ public class RelToDatasetConverter {
 			leftIndex -= join.getRight().getRowType().getFieldCount();
 		}
 
-		return new JoinKeyInfo<>(leftClass, leftIndex, rightIndex);
+		Class<T> leftClass = (Class<T>) Types.getRawType(leftScheme.getFieldType(leftIndex));
+		Class<T> rightClass = (Class<T>) Types.getRawType(rightScheme.getFieldType(rightIndex));
+
+		checkArgument(leftClass == rightClass);
+		checkArgument(Utils.isSortable(leftClass));
+
+		return new JoinKeyInfo<>(leftClass, new RecordKeyFunction<>(leftIndex), new RecordKeyFunction<>(rightIndex));
 	}
 
 	public record ConversionResult(UnmaterializedDataset unmaterializedDataset, List<RexDynamicParam> dynamicParams) {
@@ -483,32 +481,13 @@ public class RelToDatasetConverter {
 			Class<K> keyClass, RecordKeyFunction<K> keyFunction, Dataset<Record> dataset,
 			Function<LocallySortedDataset<K, Record>, SortedDataset<K, Record>> toSortedFn
 	) {
-		//noinspection PointlessBooleanExpression,unchecked
-
-		LocallySortedDataset<K, Record> locallySorted = true &&
-				dataset instanceof LocallySortedDataset<?, ?> locallySortedDataset &&
-				locallySortedDataset.keyFunction() instanceof RecordKeyFunction<?> recordKeyFunction &&
-				recordKeyFunction.getIndex() == keyFunction.getIndex() &&
-				locallySortedDataset.keyComparator() == Comparator.naturalOrder() ?
-				(LocallySortedDataset<K, Record>) locallySortedDataset :
-				Datasets.localSort(dataset, keyClass, keyFunction, Comparator.naturalOrder());
-
-		return toSortedFn.apply(locallySorted);
+		return toSortedFn.apply(Datasets.localSort(dataset, keyClass, keyFunction, NaturalNullsFirstComparator.getInstance()));
 	}
 
 	private static SortedDataset<Record, Record> sortForUnion(Dataset<Record> dataset,
 			Function<LocallySortedDataset<Record, Record>, SortedDataset<Record, Record>> toSortedFn
 	) {
-		//noinspection PointlessBooleanExpression,unchecked
-
-		LocallySortedDataset<Record, Record> locallySorted = true &&
-				dataset instanceof LocallySortedDataset<?, ?> locallySortedDataset &&
-				locallySortedDataset.keyFunction() == Function.identity() &&
-				locallySortedDataset.keyComparator() == Comparator.naturalOrder() ?
-				(LocallySortedDataset<Record, Record>) locallySortedDataset :
-				Datasets.localSort(dataset, Record.class, Function.identity(), RecordKeyComparator.getInstance());
-
-		return toSortedFn.apply(locallySorted);
+		return toSortedFn.apply(Datasets.localSort(dataset, Record.class, Function.identity(), RecordKeyComparator.getInstance()));
 	}
 
 	private static boolean doesNeedRepartition(List<FieldProjection> projections, int schemeSize, LocallySortedDataset<?, Record> locallySortedDataset) {
@@ -609,7 +588,7 @@ public class RelToDatasetConverter {
 		}
 	}
 
-	private record JoinKeyInfo<T extends Comparable<T>>(Class<T> keyClass, int leftIndex, int rightIndex) {
+	private record JoinKeyInfo<K extends Comparable<K>>(Class<K> keyClass, RecordKeyFunction<K> leftKeyFn, RecordKeyFunction<K> rightKeyFn) {
 	}
 
 	private final class ParamsCollector {

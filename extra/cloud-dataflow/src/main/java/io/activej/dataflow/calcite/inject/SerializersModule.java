@@ -73,9 +73,7 @@ public final class SerializersModule extends AbstractModule {
 		bind(new Key<BinarySerializer<Comparator<?>>>() {}).to(serializerLocator -> {
 					FunctionSubtypeSerializer<Comparator> serializer = FunctionSubtypeSerializer.create();
 
-					serializer.setSubtypeCodec(Comparator.naturalOrder().getClass(), "natural", ofObject(Comparator::naturalOrder));
-					serializer.setSubtypeCodec(Comparator.reverseOrder().getClass(), "reverse", ofObject(Comparator::reverseOrder));
-
+					serializer.setSubtypeCodec(NaturalNullsFirstComparator.class, ofObject(NaturalNullsFirstComparator::getInstance));
 					serializer.setSubtypeCodec(RecordSortComparator.class, serializerLocator.get(RecordSortComparator.class));
 					serializer.setSubtypeCodec(RecordKeyComparator.class, ofObject(RecordKeyComparator::getInstance));
 

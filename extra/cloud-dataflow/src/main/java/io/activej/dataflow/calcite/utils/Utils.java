@@ -181,4 +181,8 @@ public final class Utils {
 
 		throw new ToDoException();
 	}
+
+	public static boolean isSortable(Class<?> cls) {
+		return cls.isPrimitive() || Comparable.class.isAssignableFrom(cls);
+	}
 }
