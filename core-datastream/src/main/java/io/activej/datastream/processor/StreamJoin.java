@@ -75,7 +75,7 @@ public final class StreamJoin<K, L, R, V> implements HasStreamInputs, HasStreamO
 		/**
 		 * Method which contains realization inner join.
 		 */
-		public abstract V doInnerJoin(K key, L left, R right);
+		public abstract @Nullable V doInnerJoin(K key, L left, R right);
 
 		/**
 		 * Method which contains realization left join
@@ -218,6 +218,11 @@ public final class StreamJoin<K, L, R, V> implements HasStreamInputs, HasStreamO
 			}
 			if (isReady()) {
 				if (left.isEndOfStream() && right.isEndOfStream()) {
+					while (!leftDeque.isEmpty()) {
+						L leftValue = leftDeque.poll();
+						K leftKey = leftKeyFunction.apply(leftValue);
+						joiner.onLeftJoin(leftKey, leftValue, acceptor);
+					}
 					sendEndOfStream();
 				} else {
 					left.resume(left);
