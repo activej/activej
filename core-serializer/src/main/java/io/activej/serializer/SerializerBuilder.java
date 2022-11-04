@@ -773,6 +773,8 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 			throw new IllegalArgumentException("Class should not be anonymous");
 		if (rawClass.isLocalClass())
 			throw new IllegalArgumentException("Class should not be local");
+		if (rawClass.getEnclosingClass() != null && !Modifier.isStatic(rawClass.getModifiers()))
+			throw new IllegalArgumentException("Class should not be an inner class");
 
 		SerializerDefClass serializer = SerializerDefClass.create(rawClass);
 		if (!rawClass.isInterface()) {
