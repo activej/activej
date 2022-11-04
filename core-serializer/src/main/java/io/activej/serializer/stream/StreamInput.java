@@ -123,15 +123,14 @@ public class StreamInput implements Closeable, WithInitializer<StreamInput> {
 	}
 
 	public final boolean isEndOfStream() throws IOException {
-		if (limit == in.pos()) {
-			ensureWriteRemaining(1);
-			int bytesRead = inputStream.read(in.array(), limit, remaining());
-			if (bytesRead == -1) {
-				recycle();
-				return true;
-			}
-			limit += bytesRead;
+		if (remaining() != 0) return false;
+
+		ensureWriteRemaining(1);
+		int bytesRead = inputStream.read(in.array(), in.pos, 1);
+		if (bytesRead == -1) {
+			return true;
 		}
+		limit += bytesRead;
 		return false;
 	}
 
