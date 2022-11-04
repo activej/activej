@@ -7,6 +7,7 @@ import io.activej.dataflow.calcite.CalciteSqlDataflow;
 import io.activej.dataflow.calcite.DataflowSchema;
 import io.activej.dataflow.calcite.DataflowSqlValidator;
 import io.activej.dataflow.calcite.RelToDatasetConverter;
+import io.activej.dataflow.calcite.rel.DataflowSqlToRelConverter;
 import io.activej.dataflow.graph.Partition;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
@@ -108,7 +109,7 @@ public final class CalciteClientModule extends AbstractModule {
 
 	@Provides
 	SqlToRelConverter sqlToRelConverter(RelOptCluster cluster, SqlValidator validator, CalciteCatalogReader catalogReader, SqlToRelConverter.Config sqlToRelConverterConfig) {
-		return new SqlToRelConverter(ViewExpanders.simpleContext(cluster), validator, catalogReader, cluster, StandardConvertletTable.INSTANCE, sqlToRelConverterConfig);
+		return new DataflowSqlToRelConverter(ViewExpanders.simpleContext(cluster), validator, catalogReader, cluster, StandardConvertletTable.INSTANCE, sqlToRelConverterConfig);
 	}
 
 	@Provides

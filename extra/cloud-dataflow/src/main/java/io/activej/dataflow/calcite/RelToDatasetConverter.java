@@ -5,7 +5,7 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.dataflow.calcite.RecordProjectionFn.FieldProjection;
 import io.activej.dataflow.calcite.aggregation.*;
 import io.activej.dataflow.calcite.dataset.DatasetSupplierOfPredicate;
-import io.activej.dataflow.calcite.join.RecordInnerJoiner;
+import io.activej.dataflow.calcite.join.RecordJoiner;
 import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.dataflow.calcite.operand.OperandRecordField;
 import io.activej.dataflow.calcite.operand.OperandScalar;
@@ -212,10 +212,10 @@ public class RelToDatasetConverter {
 		RecordScheme leftScheme = left.getScheme();
 		RecordScheme rightScheme = right.getScheme();
 
-		JoinKeyProjections joinKeyProjections = getJoinKeyProjections(leftScheme, rightScheme, join);
-
 		List<String> fieldNames = join.getRowType().getFieldNames();
-		RecordInnerJoiner joiner = RecordInnerJoiner.create(leftScheme, rightScheme, fieldNames);
+		RecordJoiner joiner = RecordJoiner.create(join.getJoinType(), leftScheme, rightScheme, fieldNames);
+
+		JoinKeyProjections joinKeyProjections = getJoinKeyProjections(leftScheme, rightScheme, join);
 
 		return UnmaterializedDataset.of(
 				joiner.getScheme(),

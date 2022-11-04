@@ -6,7 +6,7 @@ import io.activej.dataflow.calcite.DataflowSchema;
 import io.activej.dataflow.calcite.RecordProjectionFn;
 import io.activej.dataflow.calcite.RecordSerializer;
 import io.activej.dataflow.calcite.aggregation.RecordReducer;
-import io.activej.dataflow.calcite.join.RecordInnerJoiner;
+import io.activej.dataflow.calcite.join.RecordJoiner;
 import io.activej.dataflow.calcite.operand.OperandIfNull;
 import io.activej.dataflow.calcite.operand.OperandListGet;
 import io.activej.dataflow.calcite.operand.OperandMapGet;
@@ -30,6 +30,7 @@ import io.activej.serializer.BinaryOutput;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.CorruptedDataException;
 import org.apache.calcite.avatica.remote.JsonService;
+import org.apache.calcite.rel.core.JoinRelType;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -104,28 +105,29 @@ public final class SerializersModule extends AbstractModule {
 			return (BinarySerializer) serializer;
 		}, new Key<OptionalDependency<DefiningClassLoader>>() {});
 
-
-		bind(new Key<BinarySerializer<StreamJoin.Joiner<?, ?, ?, ?>>>() {}).to(schemeSerializer -> {
+		bind(new Key<BinarySerializer<StreamJoin.Joiner<?, ?, ?, ?>>>() {}).to((joinTypeSerializer, schemeSerializer) -> {
 			FunctionSubtypeSerializer<StreamJoin.Joiner> serializer = FunctionSubtypeSerializer.create();
-			serializer.setSubtypeCodec(RecordInnerJoiner.class, new BinarySerializer<RecordInnerJoiner>() {
+			serializer.setSubtypeCodec(RecordJoiner.class, new BinarySerializer<RecordJoiner>() {
 
 				@Override
-				public void encode(BinaryOutput out, RecordInnerJoiner item) {
+				public void encode(BinaryOutput out, RecordJoiner item) {
+					joinTypeSerializer.encode(out, item.getJoinRelType());
 					schemeSerializer.encode(out, item.getScheme());
 					schemeSerializer.encode(out, item.getLeft());
 					schemeSerializer.encode(out, item.getRight());
 				}
 
 				@Override
-				public RecordInnerJoiner decode(BinaryInput in) throws CorruptedDataException {
+				public RecordJoiner decode(BinaryInput in) throws CorruptedDataException {
+					JoinRelType joinType = joinTypeSerializer.decode(in);
 					RecordScheme scheme = schemeSerializer.decode(in);
 					RecordScheme left = schemeSerializer.decode(in);
 					RecordScheme right = schemeSerializer.decode(in);
-					return RecordInnerJoiner.create(scheme, left, right);
+					return RecordJoiner.create(joinType, scheme, left, right);
 				}
 			});
 			return (BinarySerializer) serializer;
-		}, new Key<BinarySerializer<RecordScheme>>() {});
+		}, new Key<BinarySerializer<JoinRelType>>() {}, new Key<BinarySerializer<RecordScheme>>() {});
 
 		bind(new Key<BinarySerializer<RecordScheme>>() {}).to(RecordSchemeSerializer::new, DefiningClassLoader.class);
 		bind(new Key<BinarySerializer<Record>>() {}).to(RecordSerializer::create, BinarySerializerModule.BinarySerializerLocator.class).asTransient();

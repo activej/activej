@@ -1,16 +1,23 @@
 package io.activej.dataflow.calcite.join;
 
+import io.activej.codegen.util.Primitives;
 import io.activej.datastream.StreamDataAcceptor;
-import io.activej.datastream.processor.StreamJoin.InnerJoiner;
+import io.activej.datastream.processor.StreamJoin.Joiner;
 import io.activej.record.Record;
 import io.activej.record.RecordGetter;
 import io.activej.record.RecordScheme;
 import io.activej.record.RecordSetter;
+import org.apache.calcite.rel.core.JoinRelType;
 
 import java.lang.reflect.Type;
 import java.util.List;
 
-public final class RecordInnerJoiner extends InnerJoiner<Record, Record, Record, Record> {
+import static io.activej.common.Checks.checkArgument;
+import static org.apache.calcite.rel.core.JoinRelType.INNER;
+import static org.apache.calcite.rel.core.JoinRelType.LEFT;
+
+public final class RecordJoiner implements Joiner<Record, Record, Record, Record> {
+	private final JoinRelType joinType;
 
 	private final RecordScheme scheme;
 	private final RecordScheme left;
@@ -20,13 +27,15 @@ public final class RecordInnerJoiner extends InnerJoiner<Record, Record, Record,
 	private final RecordGetter<?>[] leftGetters;
 	private final RecordGetter<?>[] rightGetters;
 
-	private RecordInnerJoiner(
+	private RecordJoiner(
+			JoinRelType joinType,
 			RecordScheme scheme,
 			RecordScheme leftScheme,
 			RecordScheme rightScheme,
 			RecordSetter<?>[] setters,
 			RecordGetter<?>[] leftGetters,
 			RecordGetter<?>[] rightGetters) {
+		this.joinType = joinType;
 		this.scheme = scheme;
 		this.left = leftScheme;
 		this.right = rightScheme;
@@ -35,17 +44,23 @@ public final class RecordInnerJoiner extends InnerJoiner<Record, Record, Record,
 		this.rightGetters = rightGetters;
 	}
 
-	public static RecordInnerJoiner create(RecordScheme left, RecordScheme right, List<String> fieldNames) {
-		RecordScheme scheme = createScheme(left, right, fieldNames);
-		return create(scheme, left, right);
+	public static RecordJoiner create(JoinRelType joinType, RecordScheme left, RecordScheme right, List<String> fieldNames) {
+		RecordScheme scheme = createScheme(joinType, left, right, fieldNames);
+		return create(joinType, scheme, left, right);
 	}
 
-	public static RecordInnerJoiner create(RecordScheme scheme, RecordScheme left, RecordScheme right) {
+	public static RecordJoiner create(JoinRelType joinType, RecordScheme scheme, RecordScheme left, RecordScheme right) {
+		checkArgument(joinType == INNER || joinType == LEFT, "Only INNER and LEFT joins are supported");
+
 		RecordSetter<?>[] setters = getSetters(scheme);
 		RecordGetter<?>[] leftGetters = getGetters(left);
 		RecordGetter<?>[] rightGetters = getGetters(right);
 
-		return new RecordInnerJoiner(scheme, left, right, setters, leftGetters, rightGetters);
+		return new RecordJoiner(joinType, scheme, left, right, setters, leftGetters, rightGetters);
+	}
+
+	public JoinRelType getJoinRelType() {
+		return joinType;
 	}
 
 	public RecordScheme getScheme() {
@@ -58,6 +73,22 @@ public final class RecordInnerJoiner extends InnerJoiner<Record, Record, Record,
 
 	public RecordScheme getRight() {
 		return right;
+	}
+
+	@Override
+	public void onLeftJoin(Record key, Record left, StreamDataAcceptor<Record> output) {
+		if (joinType != LEFT) return;
+
+		Record result = scheme.record();
+
+		for (int i = 0; i < leftGetters.length; i++) {
+			RecordGetter<?> leftGetter = leftGetters[i];
+			//noinspection unchecked
+			RecordSetter<Object> setter = (RecordSetter<Object>) setters[i];
+			setter.set(result, leftGetter.get(left));
+		}
+
+		output.accept(result);
 	}
 
 	@Override
@@ -78,24 +109,28 @@ public final class RecordInnerJoiner extends InnerJoiner<Record, Record, Record,
 		output.accept(result);
 	}
 
-	private static RecordScheme createScheme(RecordScheme leftScheme, RecordScheme rightScheme, List<String> fieldNames) {
+	private static RecordScheme createScheme(JoinRelType joinType, RecordScheme leftScheme, RecordScheme rightScheme, List<String> fieldNames) {
 		assert leftScheme.getClassLoader() == rightScheme.getClassLoader();
 		assert fieldNames.size() == leftScheme.size() + rightScheme.size();
 
 		RecordScheme scheme = RecordScheme.create(leftScheme.getClassLoader());
 
-		addFields(scheme, leftScheme, fieldNames, 0);
-		addFields(scheme, rightScheme, fieldNames, leftScheme.size());
+		addFields(scheme, leftScheme, fieldNames, 0, false);
+		addFields(scheme, rightScheme, fieldNames, leftScheme.size(), joinType == LEFT);
 
 		return scheme
 				.withComparator(scheme.getFields())
 				.build();
 	}
 
-	private static void addFields(RecordScheme toScheme, RecordScheme fromScheme, List<String> fieldNames, int offset) {
+	private static void addFields(RecordScheme toScheme, RecordScheme fromScheme, List<String> fieldNames, int offset, boolean forceNullability) {
 		List<Type> types = fromScheme.getTypes();
 		for (int i = 0; i < types.size(); i++) {
-			toScheme.addField(fieldNames.get(i + offset), types.get(i));
+			Type type = types.get(i);
+			if (forceNullability && type instanceof Class<?> cls && cls.isPrimitive()){
+				type = Primitives.wrap(cls);
+			}
+			toScheme.addField(fieldNames.get(i + offset), type);
 		}
 	}
 
