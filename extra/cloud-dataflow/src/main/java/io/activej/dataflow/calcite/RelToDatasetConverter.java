@@ -431,7 +431,7 @@ public class RelToDatasetConverter {
 			int leftIndex, rightIndex = 0;
 			if (secondIndex > firstIndex) {
 				leftIndex = firstIndex;
-				rightIndex -= secondIndex - leftScheme.size();
+				rightIndex = secondIndex - leftScheme.size();
 			} else {
 				leftIndex = secondIndex;
 				rightIndex = firstIndex - leftScheme.size();
