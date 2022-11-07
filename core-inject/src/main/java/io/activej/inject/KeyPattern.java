@@ -25,6 +25,7 @@ import java.lang.reflect.Type;
 import java.util.Objects;
 import java.util.function.Predicate;
 
+import static io.activej.inject.util.TypeUtils.simplifyType;
 import static io.activej.types.IsAssignableUtils.isAssignable;
 
 /**
@@ -40,22 +41,22 @@ public abstract class KeyPattern<T> {
 	private final Predicate<?> qualifier;
 
 	protected KeyPattern() {
-		this.type = getTypeParameter();
+		this.type = simplifyType(getTypeParameter());
 		this.qualifier = null;
 	}
 
 	protected KeyPattern(Object qualifier) {
-		this.type = getTypeParameter();
+		this.type = simplifyType(getTypeParameter());
 		this.qualifier = predicateOf(qualifier);
 	}
 
 	protected KeyPattern(Predicate<?> qualifier) {
-		this.type = getTypeParameter();
+		this.type = simplifyType(getTypeParameter());
 		this.qualifier = qualifier;
 	}
 
 	KeyPattern(@NotNull Type type, Predicate<?> qualifier) {
-		this.type = type;
+		this.type = simplifyType(type);
 		this.qualifier = qualifier;
 	}
 
