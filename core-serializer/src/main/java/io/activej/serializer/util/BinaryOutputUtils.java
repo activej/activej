@@ -208,7 +208,9 @@ public final class BinaryOutputUtils {
 					buf[pos + 3] = (byte) (0x80 | c & 0x3F);
 					pos += 3;
 				} else {
-					pos += writeUtf8char4(buf, pos, c, s, i++);
+					byte inc = writeUtf8char4(buf, pos, c, s, i);
+					pos += inc;
+					i += inc >>> 2;
 				}
 			}
 		}
@@ -245,7 +247,9 @@ public final class BinaryOutputUtils {
 					buf[pos + 3] = (byte) (0x80 | c & 0x3F);
 					pos += 3;
 				} else {
-					pos += writeUtf8char4(buf, pos, c, s, i++);
+					byte inc = writeUtf8char4(buf, pos, c, s, i);
+					pos += inc;
+					i += inc >>> 2;
 				}
 			}
 		}

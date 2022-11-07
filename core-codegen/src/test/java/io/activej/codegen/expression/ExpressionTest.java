@@ -778,6 +778,76 @@ public class ExpressionTest {
 		assertEquals(5, instance.method(5, 10));
 	}
 
+	public static final class TestCallStaticSelf {
+		public static int method(Object argument) {
+			return 0;
+		}
+
+		public static int method(Self1 argument) {
+			return 1;
+		}
+	}
+
+	public static final class TestCallStaticSelfAmbiguous {
+		public static int method(Self1 argument) {
+			return 1;
+		}
+
+		public static int method(Self2 argument) {
+			return 2;
+		}
+	}
+
+	public interface Self1 {
+		int getValue1();
+	}
+
+	public interface Self2 {
+		int getValue2();
+	}
+
+	@org.junit.Test
+	public void testCallStaticWithSelfArgument() {
+		Self1 instance = ClassBuilder.create(Self1.class)
+				.withMethod("getValue1", staticCall(TestCallStaticSelf.class, "method", self()))
+				.defineClassAndCreateInstance(CLASS_LOADER);
+
+		assertEquals(1, instance.getValue1());
+	}
+
+	@org.junit.Test
+	public void testCallStaticWithCastSelfArgument() {
+		Self1 instance = ClassBuilder.create(Self1.class)
+				.withMethod("getValue1", staticCall(TestCallStaticSelf.class, "method", cast(self(), Object.class)))
+				.defineClassAndCreateInstance(CLASS_LOADER);
+
+		assertEquals(0, instance.getValue1());
+	}
+
+	@org.junit.Test
+	public void testCallStaticWithAmbiguousSelfArgument() {
+		ClassBuilder<Self1> classBuilder = ClassBuilder.create(Self1.class, Self2.class)
+				.withMethod("getValue1", staticCall(TestCallStaticSelfAmbiguous.class, "method", self()))
+				.withMethod("getValue2", staticCall(TestCallStaticSelfAmbiguous.class, "method", self()));
+		try {
+			classBuilder.defineClassAndCreateInstance(CLASS_LOADER);
+			fail();
+		} catch (IllegalArgumentException e) {
+			assertTrue(e.getMessage().startsWith("Ambiguous method: "));
+		}
+	}
+
+	@org.junit.Test
+	public void testCallStaticWithCastAmbiguousSelfArgument() {
+		Self1 instance = ClassBuilder.create(Self1.class, Self2.class)
+				.withMethod("getValue1", staticCall(TestCallStaticSelfAmbiguous.class, "method", cast(self(), Self1.class)))
+				.withMethod("getValue2", staticCall(TestCallStaticSelfAmbiguous.class, "method", cast(self(), Self2.class)))
+				.defineClassAndCreateInstance(CLASS_LOADER);
+
+		assertEquals(1, instance.getValue1());
+		assertEquals(2, ((Self2) instance).getValue2());
+	}
+
 	public interface TestIsNull {
 		boolean method(String a);
 	}

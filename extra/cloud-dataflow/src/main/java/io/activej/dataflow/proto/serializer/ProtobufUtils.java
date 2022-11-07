@@ -42,7 +42,7 @@ import io.activej.dataflow.proto.StreamIdProto;
 import io.activej.dataflow.stats.BinaryNodeStat;
 import io.activej.dataflow.stats.NodeStat;
 import io.activej.dataflow.stats.TestNodeStat;
-import io.activej.datastream.processor.StreamJoin.Joiner;
+import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.inject.util.Constructors;
 import io.activej.serializer.BinaryInput;
@@ -270,7 +270,7 @@ public final class ProtobufUtils {
 					Comparator joinComparator = functionSerializer.deserializeComparator(join.getComparator());
 					Function leftKeyFunction = functionSerializer.deserializeFunction(join.getLeftKeyFunction());
 					Function rightKeyFunction = functionSerializer.deserializeFunction(join.getRightKeyFunction());
-					Joiner joiner = functionSerializer.deserializeJoiner(join.getJoiner());
+					LeftJoiner joiner = functionSerializer.deserializeJoiner(join.getJoiner());
 					yield new NodeJoin<>(join.getIndex(), convert(join.getLeft()), convert(join.getRight()), convert(join.getOutput()), joinComparator, leftKeyFunction, rightKeyFunction, joiner);
 				}
 				case MAP -> {

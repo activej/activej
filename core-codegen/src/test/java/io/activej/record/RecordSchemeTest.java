@@ -1,10 +1,14 @@
 package io.activej.record;
 
 import io.activej.codegen.ClassBuilder;
+import io.activej.types.Types;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 
 import static io.activej.codegen.TestUtils.assertStaticConstantsCleared;
 import static org.junit.Assert.*;
@@ -54,6 +58,7 @@ public class RecordSchemeTest {
 
 	@Test
 	public void test2() {
+		Type listType = Types.parameterizedType(List.class, Integer.class);
 		RecordScheme scheme = RecordScheme.create()
 				.withField("boolean", boolean.class)
 				.withField("char", char.class)
@@ -71,6 +76,7 @@ public class RecordSchemeTest {
 				.withField("Long", Long.class)
 				.withField("Float", Float.class)
 				.withField("Double", Double.class)
+				.withField("list", listType)
 				.build();
 
 		Record record = scheme.record();
@@ -106,6 +112,14 @@ public class RecordSchemeTest {
 		assertSame(scheme, scheme.getter("int").getScheme());
 		assertEquals("int", scheme.getter("int").getField());
 		assertEquals(int.class, scheme.getter("int").getType());
+
+		List<Integer> list = Arrays.asList(1, 2, 3, 4, 5);
+		record.set( "list", list);
+		assertSame(scheme, scheme.getter("list").getScheme());
+		assertEquals("list", scheme.getter("list").getField());
+		assertEquals(listType, scheme.getter("list").getType());
+		assertEquals(list, record.get("list"));
+
 		assertStaticConstantsCleared();
 	}
 

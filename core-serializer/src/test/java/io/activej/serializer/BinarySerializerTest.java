@@ -1,7 +1,5 @@
 package io.activej.serializer;
 
-import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Variable;
 import io.activej.serializer.annotations.*;
 import io.activej.serializer.impl.*;
 import io.activej.test.rules.ClassBuilderConstantsRule;
@@ -12,16 +10,15 @@ import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.common.Utils.*;
 import static io.activej.serializer.BinarySerializerTest.TestEnum.*;
 import static io.activej.serializer.StringFormat.*;
 import static io.activej.serializer.Utils.DEFINING_CLASS_LOADER;
 import static io.activej.serializer.Utils.doTest;
-import static io.activej.serializer.impl.SerializerExpressions.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.*;
@@ -2827,30 +2824,28 @@ public class BinarySerializerTest {
 		}
 	}
 
-	public static final class StringHolderSerializerDef extends AbstractSerializerDef {
-
+	public static final class StringHolderSerializerDef extends SimpleSerializerDef<StringHolder> {
 		@Override
-		public Class<?> getEncodeType() {
-			return StringHolder.class;
-		}
+		protected BinarySerializer<StringHolder> createSerializer(int version, CompatibilityLevel compatibilityLevel) {
+			return new BinarySerializer<StringHolder>() {
+				@Override
+				public void encode(BinaryOutput out, StringHolder item) {
+					String string = item.getString();
+					byte[] bytes = string.getBytes(UTF_8);
 
-		@Override
-		public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-			Expression string = call(value, "getString");
-			Expression charset = value(UTF_8, Charset.class);
+					out.writeVarInt(bytes.length);
+					out.write(bytes);
+				}
 
-			return let(call(string, "getBytes", charset), bytes -> sequence(
-					writeVarInt(buf, pos, length(bytes)),
-					writeBytes(buf, pos, bytes)));
-		}
+				@Override
+				public StringHolder decode(BinaryInput in) throws CorruptedDataException {
+					byte[] bytes = new byte[in.readVarInt()];
+					in.read(bytes);
+					String string = new String(bytes, UTF_8);
 
-		@Override
-		public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-			Expression charset = value(UTF_8, Charset.class);
-
-			return let(arrayNew(byte[].class, readVarInt(in)), array ->
-					sequence(readBytes(in, array),
-							constructor(StringHolder.class, constructor(String.class, array, charset))));
+					return new StringHolder(string);
+				}
+			};
 		}
 	}
 

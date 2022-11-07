@@ -101,7 +101,7 @@ public final class HttpActiveFs implements ActiveFs, WithInitializer<HttpActiveF
 								url + urlBuilder
 										.build()))
 				.then(HttpActiveFs::checkResponse)
-				.map(HttpMessage::getBodyStream);
+				.map(HttpMessage::takeBodyStream);
 	}
 
 	@Override

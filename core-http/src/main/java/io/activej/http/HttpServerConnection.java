@@ -37,6 +37,7 @@ import java.net.InetAddress;
 import static io.activej.bytebuf.ByteBufStrings.*;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nullify;
+import static io.activej.common.exception.FatalErrorHandlers.handleError;
 import static io.activej.csp.ChannelSuppliers.concat;
 import static io.activej.http.HttpHeaderValue.ofBytes;
 import static io.activej.http.HttpHeaderValue.ofDecimal;
@@ -363,6 +364,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		try {
 			servletResult = servlet.serveAsync(request);
 		} catch (Exception e) {
+			handleError(e, this);
 			servletResult = Promise.ofException(e);
 		}
 		servletResult.run((response, e) -> {

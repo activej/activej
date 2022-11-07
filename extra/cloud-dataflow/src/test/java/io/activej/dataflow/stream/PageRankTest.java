@@ -12,8 +12,8 @@ import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
 import io.activej.dataflow.proto.serializer.FunctionSubtypeSerializer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamDataAcceptor;
-import io.activej.datastream.processor.StreamJoin.InnerJoiner;
-import io.activej.datastream.processor.StreamJoin.Joiner;
+import io.activej.datastream.processor.StreamLeftJoin.LeftInnerLeftJoiner;
+import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
 import io.activej.datastream.processor.StreamReducers.MergeReducer;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult;
@@ -189,7 +189,7 @@ public class PageRankTest {
 		}
 	}
 
-	public static class PageRankJoiner extends InnerJoiner<Long, Page, Rank, Rank> {
+	public static class PageRankLeftJoiner extends LeftInnerLeftJoiner<Long, Page, Rank, Rank> {
 		@Override
 		public void onInnerJoin(Long key, Page page, Rank rank, StreamDataAcceptor<Rank> output) {
 			page.disperse(rank, output);
@@ -197,7 +197,7 @@ public class PageRankTest {
 	}
 
 	private static SortedDataset<Long, Rank> pageRankIteration(SortedDataset<Long, Page> pages, SortedDataset<Long, Rank> ranks) {
-		Dataset<Rank> updates = join(pages, ranks, new PageRankJoiner(), Rank.class, new RankKeyFunction());
+		Dataset<Rank> updates = join(pages, ranks, new PageRankLeftJoiner(), Rank.class, new RankKeyFunction());
 
 		Dataset<Rank> newRanks = sortReduceRepartitionReduce(updates, new RankAccumulatorReducer(),
 				Long.class, new RankKeyFunction(), new LongComparator(),
@@ -336,7 +336,7 @@ public class PageRankTest {
 				})
 				.bind(new Key<BinarySerializer<Comparator<?>>>() {}).toInstance(ofObject(LongComparator::new))
 				.bind(new Key<BinarySerializer<ReducerToResult>>() {}).toInstance(ofObject(RankAccumulatorReducer::new))
-				.bind(new Key<BinarySerializer<Joiner<?, ?, ?, ?>>>() {}).toInstance(ofObject(PageRankJoiner::new))
+				.bind(new Key<BinarySerializer<LeftJoiner<?, ?, ?, ?>>>() {}).toInstance(ofObject(PageRankLeftJoiner::new))
 				.bind(new Key<BinarySerializer<Reducer<?, ?, ?, ?>>>() {}).to((mergeReducerSerializer, inputToAccumulatorSerializer, accumulatorToOutputSerializer) -> {
 							FunctionSubtypeSerializer<Reducer> serializer = FunctionSubtypeSerializer.create();
 

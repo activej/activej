@@ -125,7 +125,7 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> mapException(@NotNull FunctionEx<@NotNull Exception, Exception> exceptionFn) {
+	public @NotNull Promise<T> mapException(@NotNull FunctionEx<@NotNull Exception, @NotNull Exception> exceptionFn) {
 		try {
 			return Promise.ofException(exceptionFn.apply(exception));
 		} catch (Exception ex) {

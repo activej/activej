@@ -31,16 +31,17 @@ import java.util.function.Function;
 
 /**
  * Represents an object which has left and right consumers and one supplier. After receiving data
- * it can join it, or either does an inner-join or a left join. It works similar to joins from SQL.
- * It is a {@link StreamJoin} which receives specified type and streams
+ * it can join it, or either does a left-inner join or a left-outer join. It works similar to joins from SQL,
+ * but it requires primary keys at the 'right' input and foreign keys at the 'left' input.
+ * It is a {@link StreamLeftJoin} which receives specified type and streams
  * set of join's result to the destination.
  */
-public final class StreamJoin<K, L, R, V> implements HasStreamInputs, HasStreamOutput<V>, WithInitializer<StreamJoin<K, L, R, V>> {
+public final class StreamLeftJoin<K, L, R, V> implements HasStreamInputs, HasStreamOutput<V>, WithInitializer<StreamLeftJoin<K, L, R, V>> {
 
 	/**
-	 * It is the primary interface of a joiner. It contains methods which will join streams
+	 * It is the primary interface of a left joiner. It contains methods which will left join streams
 	 */
-	public interface Joiner<K, L, R, V> {
+	public interface LeftJoiner<K, L, R, V> {
 		/**
 		 * Streams objects with all fields from both received streams as long as there is a match
 		 * between the keys in both items.
@@ -51,34 +52,34 @@ public final class StreamJoin<K, L, R, V> implements HasStreamInputs, HasStreamO
 		 * Streams objects with all fields from the left stream, with the matching key - fields in the
 		 * right stream. The field of result object is NULL in the right stream when there is no match.
 		 */
-		void onLeftJoin(K key, L left, StreamDataAcceptor<V> output);
+		void onOuterJoin(K key, L left, StreamDataAcceptor<V> output);
 	}
 
 	/**
-	 * Represents a joiner that produces only inner joins
+	 * Represents a left joiner that produces only left inner joins
 	 */
-	public abstract static class InnerJoiner<K, L, R, V> implements Joiner<K, L, R, V> {
+	public abstract static class LeftInnerLeftJoiner<K, L, R, V> implements LeftJoiner<K, L, R, V> {
 		/**
-		 * Left join does nothing for absence null fields in result inner join
+		 * Left outer join does nothing for absence null fields in result left inner join
 		 */
 		@Override
-		public void onLeftJoin(K key, L left, StreamDataAcceptor<V> output) {
+		public void onOuterJoin(K key, L left, StreamDataAcceptor<V> output) {
 		}
 	}
 
 	/**
-	 * Simple implementation of Joiner, which does inner and left join
+	 * Simple implementation of Joiner, which does left inner and left outer join
 	 */
-	public abstract static class ValueJoiner<K, L, R, V> implements Joiner<K, L, R, V> {
+	public abstract static class ValueLeftJoiner<K, L, R, V> implements LeftJoiner<K, L, R, V> {
 		/**
-		 * Method which contains realization inner join.
+		 * Method which contains implementation for left inner join.
 		 */
 		public abstract @Nullable V doInnerJoin(K key, L left, R right);
 
 		/**
-		 * Method which contains realization left join
+		 * Method which contains implementation for left outer join
 		 */
-		public @Nullable V doLeftJoin(K key, L left) {
+		public @Nullable V doOuterJoin(K key, L left) {
 			return null;
 		}
 
@@ -91,8 +92,8 @@ public final class StreamJoin<K, L, R, V> implements HasStreamInputs, HasStreamO
 		}
 
 		@Override
-		public final void onLeftJoin(K key, L left, StreamDataAcceptor<V> output) {
-			V result = doLeftJoin(key, left);
+		public final void onOuterJoin(K key, L left, StreamDataAcceptor<V> output) {
+			V result = doOuterJoin(key, left);
 			if (result != null) {
 				output.accept(result);
 			}
@@ -110,13 +111,13 @@ public final class StreamJoin<K, L, R, V> implements HasStreamInputs, HasStreamO
 	private final Function<L, K> leftKeyFunction;
 	private final Function<R, K> rightKeyFunction;
 
-	private final Joiner<K, L, R, V> joiner;
+	private final LeftJoiner<K, L, R, V> leftJoiner;
 
-	private StreamJoin(@NotNull Comparator<K> keyComparator,
+	private StreamLeftJoin(@NotNull Comparator<K> keyComparator,
 			@NotNull Function<L, K> leftKeyFunction, @NotNull Function<R, K> rightKeyFunction,
-			@NotNull Joiner<K, L, R, V> joiner) {
+			@NotNull StreamLeftJoin.LeftJoiner<K, L, R, V> leftJoiner) {
 		this.keyComparator = keyComparator;
-		this.joiner = joiner;
+		this.leftJoiner = leftJoiner;
 		this.left = new Input<>(leftDeque);
 		this.right = new Input<>(rightDeque);
 		this.leftKeyFunction = leftKeyFunction;
@@ -130,12 +131,12 @@ public final class StreamJoin<K, L, R, V> implements HasStreamInputs, HasStreamO
 	 * @param keyComparator    comparator for compare keys
 	 * @param leftKeyFunction  function for counting keys of left stream
 	 * @param rightKeyFunction function for counting keys of right stream
-	 * @param joiner           joiner which will join streams
+	 * @param leftJoiner           joiner which will join streams
 	 */
-	public static <K, L, R, V> StreamJoin<K, L, R, V> create(Comparator<K> keyComparator,
+	public static <K, L, R, V> StreamLeftJoin<K, L, R, V> create(Comparator<K> keyComparator,
 			Function<L, K> leftKeyFunction, Function<R, K> rightKeyFunction,
-			Joiner<K, L, R, V> joiner) {
-		return new StreamJoin<>(keyComparator, leftKeyFunction, rightKeyFunction, joiner);
+			LeftJoiner<K, L, R, V> leftJoiner) {
+		return new StreamLeftJoin<>(keyComparator, leftKeyFunction, rightKeyFunction, leftJoiner);
 	}
 
 	private final class Input<I> extends AbstractStreamConsumer<I> implements StreamDataAcceptor<I> {
@@ -190,7 +191,7 @@ public final class StreamJoin<K, L, R, V> implements HasStreamInputs, HasStreamO
 				while (true) {
 					int compare = keyComparator.compare(leftKey, rightKey);
 					if (compare < 0) {
-						joiner.onLeftJoin(leftKey, leftValue, acceptor);
+						leftJoiner.onOuterJoin(leftKey, leftValue, acceptor);
 						leftDeque.poll();
 						if (leftDeque.isEmpty())
 							break;
@@ -203,7 +204,7 @@ public final class StreamJoin<K, L, R, V> implements HasStreamInputs, HasStreamO
 						rightValue = rightDeque.peek();
 						rightKey = rightKeyFunction.apply(rightValue);
 					} else {
-						joiner.onInnerJoin(leftKey, leftValue, rightValue, acceptor);
+						leftJoiner.onInnerJoin(leftKey, leftValue, rightValue, acceptor);
 						leftDeque.poll();
 						if (leftDeque.isEmpty())
 							break;
@@ -219,7 +220,7 @@ public final class StreamJoin<K, L, R, V> implements HasStreamInputs, HasStreamO
 					while (!leftDeque.isEmpty()) {
 						L leftValue = leftDeque.poll();
 						K leftKey = leftKeyFunction.apply(leftValue);
-						joiner.onLeftJoin(leftKey, leftValue, acceptor);
+						leftJoiner.onOuterJoin(leftKey, leftValue, acceptor);
 					}
 					sendEndOfStream();
 				} else {

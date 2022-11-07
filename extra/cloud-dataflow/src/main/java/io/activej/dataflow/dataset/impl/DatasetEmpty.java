@@ -22,20 +22,24 @@ import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.node.NodeSupplierEmpty;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public final class DatasetEmpty<T> extends Dataset<T> {
-	public DatasetEmpty(Class<T> cls) {
+	private final @Nullable List<Partition> partitions;
+
+	public DatasetEmpty(Class<T> cls, @Nullable List<Partition> partitions) {
 		super(cls);
+		this.partitions = partitions;
 	}
 
 	@Override
 	public List<StreamId> channels(DataflowContext context) {
 		DataflowGraph graph = context.getGraph();
 		List<StreamId> outputStreamIds = new ArrayList<>();
-		List<Partition> partitions = graph.getAvailablePartitions();
+		List<Partition> partitions = this.partitions == null ? graph.getAvailablePartitions() : this.partitions;
 		int index = context.generateNodeIndex();
 		for (Partition partition : partitions) {
 			NodeSupplierEmpty<T> node = new NodeSupplierEmpty<>(index);

@@ -22,7 +22,7 @@ import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.node.NodeJoin;
-import io.activej.datastream.processor.StreamJoin.Joiner;
+import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,16 +35,16 @@ import static io.activej.dataflow.dataset.DatasetUtils.repartitionAndSort;
 public final class DatasetJoin<K, L, R, V> extends SortedDataset<K, V> {
 	private final SortedDataset<K, L> left;
 	private final SortedDataset<K, R> right;
-	private final Joiner<K, L, R, V> joiner;
+	private final LeftJoiner<K, L, R, V> leftJoiner;
 
 	private final int sharderNonce = ThreadLocalRandom.current().nextInt();
 
-	public DatasetJoin(SortedDataset<K, L> left, SortedDataset<K, R> right, Joiner<K, L, R, V> joiner,
+	public DatasetJoin(SortedDataset<K, L> left, SortedDataset<K, R> right, LeftJoiner<K, L, R, V> leftJoiner,
 			Class<V> resultType, Function<V, K> keyFunction) {
 		super(resultType, left.keyComparator(), left.keyType(), keyFunction);
 		this.left = left;
 		this.right = right;
-		this.joiner = joiner;
+		this.leftJoiner = leftJoiner;
 	}
 
 	@Override
@@ -63,7 +63,7 @@ public final class DatasetJoin<K, L, R, V> extends SortedDataset<K, V> {
 			StreamId leftStreamId = leftStreamIds.get(i);
 			StreamId rightStreamId = rightStreamIds.get(i);
 			NodeJoin<K, L, R, V> node = new NodeJoin<>(index, leftStreamId, rightStreamId, left.keyComparator(),
-					left.keyFunction(), right.keyFunction(), joiner);
+					left.keyFunction(), right.keyFunction(), leftJoiner);
 			graph.addNode(graph.getPartition(leftStreamId), node);
 			outputStreamIds.add(node.getOutput());
 		}

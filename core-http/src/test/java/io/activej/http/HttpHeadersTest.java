@@ -4,6 +4,10 @@ import io.activej.test.rules.ByteBufRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import java.util.Collection;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import static io.activej.http.ContentTypes.JSON_UTF_8;
 import static io.activej.http.HttpHeaderValue.*;
 import static io.activej.http.HttpHeaders.*;
@@ -34,5 +38,25 @@ public final class HttpHeadersTest {
 				.withHeader(DATE, HttpHeaderValue.ofTimestamp(1486944000021L));
 
 		assertEquals("Mon, 13 Feb 2017 00:00:00 GMT", response.getHeader(DATE));
+	}
+
+	@Test
+	public void testHeadersSize() {
+		HttpRequest request = HttpRequest.post("http://example.com")
+				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
+				.withHeader(ACCEPT, ofAcceptMediaTypes(AcceptMediaType.of(ANY_IMAGE, 50), AcceptMediaType.of(MediaTypes.HTML)))
+				.withHeader(ACCEPT_CHARSET, ofAcceptCharsets(AcceptCharset.of(UTF_8), AcceptCharset.of(ISO_8859_1)));
+
+		Collection<Map.Entry<HttpHeader, HttpHeaderValue>> headersCollection = request.getHeaders();
+
+		assertEquals(4, headersCollection.size());
+
+		Map<HttpHeader, HttpHeaderValue> headersMap = headersCollection.stream()
+				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+		assertEquals("example.com", headersMap.get(HOST).toString());
+		assertEquals("application/json; charset=utf-8", headersMap.get(CONTENT_TYPE).toString());
+		assertEquals("image/*; q=0.5, text/html", headersMap.get(ACCEPT).toString());
+		assertEquals("utf-8, iso-8859-1", headersMap.get(ACCEPT_CHARSET).toString());
 	}
 }

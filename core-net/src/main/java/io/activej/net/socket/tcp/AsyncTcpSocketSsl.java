@@ -404,10 +404,6 @@ public final class AsyncTcpSocketSsl implements AsyncTcpSocket, WithInitializer<
 		} else {
 			upstream.closeEx(e);
 		}
-		if (write != null) {
-			write.setException(e);
-			write = null;
-		}
 		if (read != null) {
 			if (shouldReturnEndOfStream) {
 				shouldReturnEndOfStream = false;
@@ -416,6 +412,10 @@ public final class AsyncTcpSocketSsl implements AsyncTcpSocket, WithInitializer<
 				read.setException(e);
 			}
 			read = null;
+		}
+		if (write != null) {
+			write.setException(e);
+			write = null;
 		}
 	}
 

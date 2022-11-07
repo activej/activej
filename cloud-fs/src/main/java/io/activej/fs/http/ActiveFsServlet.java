@@ -206,7 +206,7 @@ public final class ActiveFsServlet implements WithInitializer<ActiveFsServlet> {
 	private static FunctionEx<ChannelConsumer<ByteBuf>, HttpResponse> uploadAcknowledgeFn(@NotNull HttpRequest request) {
 		return consumer -> HttpResponse.ok200()
 				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
-				.withBodyStream(ChannelSupplier.ofPromise(request.getBodyStream()
+				.withBodyStream(ChannelSupplier.ofPromise(request.takeBodyStream()
 						.streamTo(consumer)
 						.map($ -> UploadAcknowledgement.ok(), e -> UploadAcknowledgement.ofError(castError(e)))
 						.map(ack -> ChannelSupplier.of(toJson(ack)))));

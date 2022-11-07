@@ -334,7 +334,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 			boundary = boundary.substring(1, boundary.length() - 1);
 		}
 		return MultipartDecoder.create(boundary)
-				.split(getBodyStream(), multipartDataHandler);
+				.split(takeBodyStream(), multipartDataHandler);
 	}
 
 	int getPos() {

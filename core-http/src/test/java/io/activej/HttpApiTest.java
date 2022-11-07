@@ -15,6 +15,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import static io.activej.http.HttpHeaderValue.*;
@@ -22,7 +23,7 @@ import static io.activej.http.HttpHeaders.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.time.ZoneOffset.UTC;
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 
 public final class HttpApiTest {
@@ -141,7 +142,7 @@ public final class HttpApiTest {
 		assertEquals(dateIMS, request.getHeader(IF_MODIFIED_SINCE, HttpHeaderValue::toInstant));
 		assertEquals(dateIUMS, request.getHeader(IF_UNMODIFIED_SINCE, HttpHeaderValue::toInstant));
 		assertEquals(requestContentType, request.getHeader(CONTENT_TYPE, HttpHeaderValue::toContentType));
-		assertEquals(requestCookies.stream().map(HttpCookie::getValue).collect(toList()), new ArrayList<>(request.getCookies().values()));
+		assertEquals(requestCookies.stream().map(HttpCookie::getValue).collect(toSet()), new HashSet<>(request.getCookies().values()));
 	}
 
 	private static Instant createDate(int year, int month, int day) {

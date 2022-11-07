@@ -3,18 +3,23 @@ package io.activej.serializer;
 import io.activej.serializer.stream.StreamCodec;
 import io.activej.serializer.stream.StreamInput;
 import io.activej.serializer.stream.StreamOutput;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public final class StreamInputOutputTest {
+
+	@Rule
+	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
+
 	@Test
 	public void bufferSizeOne() throws IOException {
 		int int1 = 123;
@@ -77,4 +82,20 @@ public final class StreamInputOutputTest {
 			}
 		}
 	}
+
+	@Test
+	public void isEndOfStream() throws IOException {
+		Path tempFile = temporaryFolder.newFile().toPath();
+
+		try (StreamOutput output = StreamOutput.create(new BufferedOutputStream(Files.newOutputStream(tempFile)))) {
+			output.writeInt(1);
+		}
+
+		try (StreamInput input = StreamInput.create(new BufferedInputStream(Files.newInputStream(tempFile)))) {
+			assertFalse(input.isEndOfStream());
+			input.readInt();
+			assertTrue(input.isEndOfStream());
+		}
+	}
+
 }

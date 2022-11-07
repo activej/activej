@@ -198,6 +198,9 @@ public abstract class Launcher {
 			}
 
 		} catch (Exception e) {
+			if (applicationError != e) {
+				logger.error("Launch error", e);
+			}
 			throw e;
 		} catch (Throwable e) {
 			applicationError = e;

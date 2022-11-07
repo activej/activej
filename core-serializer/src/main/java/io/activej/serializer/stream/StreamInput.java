@@ -37,14 +37,11 @@ public class StreamInput implements Closeable, WithInitializer<StreamInput> {
 
 	@Override
 	public final void close() throws IOException {
-		recycle();
+		if (in != null) {
+			recycle(in.array());
+			in = null;
+		}
 		inputStream.close();
-	}
-
-	private void recycle() {
-		if (in == null) return;
-		recycle(in.array());
-		in = null;
 	}
 
 	protected byte[] allocate(int size) {
@@ -89,19 +86,14 @@ public class StreamInput implements Closeable, WithInitializer<StreamInput> {
 	}
 
 	private void doEnsureRead(int size) throws IOException {
-		try {
-			while (remaining() < size) {
-				ensureWriteRemaining(size);
-				int bytesRead = inputStream.read(in.array(), limit, in.array().length - limit);
-				if (bytesRead == -1) {
-					close();
-					throw new CorruptedDataException("Unexpected end of data");
-				}
-				limit += bytesRead;
+		while (remaining() < size) {
+			ensureWriteRemaining(size);
+			int bytesRead = inputStream.read(in.array(), limit, in.array().length - limit);
+			if (bytesRead == -1) {
+				close();
+				throw new CorruptedDataException("Unexpected end of data");
 			}
-		} catch (IOException e) {
-			recycle();
-			throw e;
+			limit += bytesRead;
 		}
 	}
 
@@ -114,24 +106,24 @@ public class StreamInput implements Closeable, WithInitializer<StreamInput> {
 				limit = readRemaining;
 				in.pos = 0;
 			} else {
-				byte[] bytes = allocate(max(in.array.length, remaining() + size));
-				System.arraycopy(in.array(), in.pos(), bytes, 0, remaining());
+				byte[] bytes = allocate(max(in.array.length, size));
+				System.arraycopy(in.array(), in.pos(), bytes, 0, readRemaining);
 				limit -= in.pos();
+				recycle(in.array);
 				in = new BinaryInput(bytes);
 			}
 		}
 	}
 
 	public final boolean isEndOfStream() throws IOException {
-		if (limit == in.pos()) {
-			ensureWriteRemaining(1);
-			int bytesRead = inputStream.read(in.array(), limit, remaining());
-			if (bytesRead == -1) {
-				recycle();
-				return true;
-			}
-			limit += bytesRead;
+		if (remaining() != 0) return false;
+
+		ensureWriteRemaining(1);
+		int bytesRead = inputStream.read(in.array(), in.pos, 1);
+		if (bytesRead == -1) {
+			return true;
 		}
+		limit += bytesRead;
 		return false;
 	}
 
@@ -147,9 +139,26 @@ public class StreamInput implements Closeable, WithInitializer<StreamInput> {
 	}
 
 	public final int read(byte[] b, int off, int len) throws IOException {
-		ensure(len);
-		in.read(b, off, len);
+		if (in.pos < limit) {
+			int copy = Math.min(limit - in.pos, len);
+			in.read(b, off, copy);
+			off += copy;
+			len -= copy;
+		}
+		readBytes(b, off, len);
 		return len;
+	}
+
+	private void readBytes(byte[] b, int off, int len) throws IOException {
+		while (len > 0) {
+			int bytesRead = inputStream.read(b, off, len);
+			if (bytesRead == -1) {
+				close();
+				throw new CorruptedDataException("Unexpected end of data");
+			}
+			off += bytesRead;
+			len -= bytesRead;
+		}
 	}
 
 	public final byte readByte() throws IOException {

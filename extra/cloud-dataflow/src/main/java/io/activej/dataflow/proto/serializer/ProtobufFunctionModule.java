@@ -16,7 +16,7 @@
 
 package io.activej.dataflow.proto.serializer;
 
-import io.activej.datastream.processor.StreamJoin.Joiner;
+import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
 import io.activej.datastream.processor.StreamReducers.DeduplicateReducer;
 import io.activej.datastream.processor.StreamReducers.MergeReducer;
 import io.activej.datastream.processor.StreamReducers.Reducer;
@@ -54,7 +54,7 @@ public final class ProtobufFunctionModule extends AbstractModule {
 			OptionalDependency<BinarySerializer<Predicate<?>>> predicateSerializer,
 			OptionalDependency<BinarySerializer<Comparator<?>>> comparatorSerializer,
 			OptionalDependency<BinarySerializer<Reducer<?, ?, ?, ?>>> reducerSerializer,
-			OptionalDependency<BinarySerializer<Joiner<?, ?, ?, ?>>> joinerSerializer
+			OptionalDependency<BinarySerializer<LeftJoiner<?, ?, ?, ?>>> joinerSerializer
 	) {
 		FunctionSerializer serializer = new FunctionSerializer();
 		if (functionSerializer.isPresent()) serializer.setFunctionSerializer(functionSerializer.get());

@@ -6,7 +6,7 @@ import io.activej.dataflow.proto.serializer.FunctionSerializer;
 import io.activej.dataflow.proto.serializer.FunctionSubtypeSerializer;
 import io.activej.dataflow.proto.serializer.ProtobufFunctionModule;
 import io.activej.datastream.StreamDataAcceptor;
-import io.activej.datastream.processor.StreamJoin.Joiner;
+import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
@@ -45,14 +45,14 @@ public class DataflowSerializationTest {
 		public void onComplete(StreamDataAcceptor<Integer> stream, Integer key, Integer accumulator) {}
 	}
 
-	private static class TestJoiner implements Joiner<Integer, Integer, Integer, Integer> {
+	private static class TestJoiner implements LeftJoiner<Integer, Integer, Integer, Integer> {
 
 		@Override
 		public void onInnerJoin(Integer key, Integer left, Integer right, StreamDataAcceptor<Integer> output) {
 		}
 
 		@Override
-		public void onLeftJoin(Integer key, Integer left, StreamDataAcceptor<Integer> output) {
+		public void onOuterJoin(Integer key, Integer left, StreamDataAcceptor<Integer> output) {
 		}
 	}
 
@@ -86,7 +86,7 @@ public class DataflowSerializationTest {
 				.install(ProtobufFunctionModule.create())
 				.bind(new Key<BinarySerializer<Comparator<?>>>() {}).toInstance(ofObject(TestComparator::new))
 				.bind(new Key<BinarySerializer<Reducer<?, ?, ?, ?>>>() {}).toInstance(ofObject(TestReducer::new))
-				.bind(new Key<BinarySerializer<Joiner<?, ?, ?, ?>>>() {}).toInstance(ofObject(TestJoiner::new))
+				.bind(new Key<BinarySerializer<LeftJoiner<?, ?, ?, ?>>>() {}).toInstance(ofObject(TestJoiner::new))
 				.bind(new Key<BinarySerializer<Predicate<?>>>() {}).toInstance(ofObject(TestPredicate::new))
 				.bind(testFunctionSerializerKey).toInstance(ofObject(TestFunction::new))
 				.bind(testIdentityFunctionSerializerKey).toInstance(ofObject(TestIdentityFunction::new))

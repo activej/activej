@@ -294,7 +294,7 @@ public final class Try<T> {
 	 * @return a result of mapping of either a result or an exception of a {@link Try}
 	 */
 	@Contract(pure = true)
-	public <U> U reduce(@NotNull Function<? super T, ? extends U> function, @NotNull Function<Exception, ? extends U> exceptionFunction) {
+	public <U> U reduce(@NotNull Function<? super T, ? extends U> function, @NotNull Function<@NotNull Exception, ? extends U> exceptionFunction) {
 		return exception == null ? function.apply(result) : exceptionFunction.apply(exception);
 	}
 

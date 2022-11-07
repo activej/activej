@@ -16,33 +16,31 @@
 
 package io.activej.serializer.impl;
 
-import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Variable;
-import io.activej.serializer.AbstractSerializerDef;
-import io.activej.serializer.CompatibilityLevel;
+import io.activej.serializer.*;
 
 import java.net.Inet4Address;
+import java.net.UnknownHostException;
 
-import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.serializer.impl.SerializerExpressions.readBytes;
-import static io.activej.serializer.impl.SerializerExpressions.writeBytes;
-
-public final class SerializerDefInet4Address extends AbstractSerializerDef {
+public final class SerializerDefInet4Address extends SimpleSerializerDef<Inet4Address> {
 	@Override
-	public Class<?> getEncodeType() {
-		return Inet4Address.class;
-	}
+	protected BinarySerializer<Inet4Address> createSerializer(int version, CompatibilityLevel compatibilityLevel) {
+		return new BinarySerializer<Inet4Address>() {
+			@Override
+			public void encode(BinaryOutput out, Inet4Address address) {
+				out.write(address.getAddress());
+			}
 
-	@Override
-	public Expression encoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-		return writeBytes(buf, pos, call(value, "getAddress"));
-	}
+			@Override
+			public Inet4Address decode(BinaryInput in) throws CorruptedDataException {
+				byte[] addressBytes = new byte[4];
+				in.read(addressBytes);
 
-	@Override
-	public Expression decoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
-		return let(arrayNew(byte[].class, value(4)), array ->
-				sequence(
-						readBytes(in, array),
-						staticCall(getDecodeType(), "getByAddress", array)));
+				try {
+					return (Inet4Address) Inet4Address.getByAddress(addressBytes);
+				} catch (UnknownHostException e) {
+					throw new CorruptedDataException(e.getMessage());
+				}
+			}
+		};
 	}
 }

@@ -218,7 +218,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			Type type = attrGetter.getGenericReturnType();
 			Method attrSetter = descriptor.setter();
 			AttributeNode attrNode = createAttributeNodeFor(attrName, attrDescription, type, included,
-					attrAnnotation, attrGetter, attrSetter, beanClass,
+					attrAnnotation, null, attrGetter, attrSetter, beanClass,
 					customTypes);
 			attrNodes.add(attrNode);
 		}
@@ -318,6 +318,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 			Type attrType,
 			boolean included,
 			@Nullable JmxAttribute attrAnnotation,
+			@Nullable JmxReducer<?> reducer,
 			@Nullable Method getter,
 			@Nullable Method setter,
 			Class<?> beanClass,
@@ -333,16 +334,8 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 						defaultFetcher, setter, customTypeAdapter.to, customTypeAdapter.from);
 
 			} else if (ReflectionUtils.isSimpleType(returnClass)) {
-				JmxReducer<?> reducer;
-				if (attrAnnotation == null) {
-					reducer = DEFAULT_REDUCER;
-				} else {
-					try {
-						reducer = fetchReducerFrom(getter);
-					} catch (Exception e) {
-						throw new RuntimeException(e);
-					}
-				}
+				reducer = reducer == null ? fetchReducerFrom(getter) : reducer;
+
 				return new AttributeNodeForSimpleType(
 						attrName, attrDescription, included, defaultFetcher, setter, returnClass, reducer
 				);
@@ -386,12 +379,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 				} else {
 					// POJO case
 
-					JmxReducer<?> reducer;
-					try {
-						reducer = fetchReducerFrom(getter);
-					} catch (Exception e) {
-						throw new RuntimeException(e);
-					}
+					reducer = reducer == null ? fetchReducerFrom(getter) : reducer;
 
 					return new AttributeNodeForPojo(
 							attrName, attrDescription, included, defaultFetcher, reducer == DEFAULT_REDUCER ? null : reducer, subNodes);
@@ -427,16 +415,24 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 		return jmxStats;
 	}
 
-	private static JmxReducer<?> fetchReducerFrom(@Nullable Method getter) throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
+	private static JmxReducer<?> fetchReducerFrom(@Nullable Method getter) {
 		if (getter == null) {
 			return DEFAULT_REDUCER;
 		}
+		Class<? extends JmxReducer> reducerClass = null;
 		JmxAttribute attrAnnotation = getter.getAnnotation(JmxAttribute.class);
-		Class<? extends JmxReducer> reducerClass = attrAnnotation.reducer();
-		if (reducerClass == DEFAULT_REDUCER.getClass()) {
+		if (attrAnnotation != null) reducerClass = attrAnnotation.reducer();
+		JmxOperation opAnnotation = getter.getAnnotation(JmxOperation.class);
+		if (opAnnotation != null) reducerClass = opAnnotation.reducer();
+
+		if (reducerClass == null || reducerClass == DEFAULT_REDUCER.getClass()) {
 			return DEFAULT_REDUCER;
 		}
-		return reducerClass.getDeclaredConstructor().newInstance();
+		try {
+			return reducerClass.getDeclaredConstructor().newInstance();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private static void checkJmxStatsAreValid(Class<?> returnClass, Class<?> beanClass, @Nullable Method getter) {
@@ -486,7 +482,8 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 					attrName, attrDescription, included, fetcher, listElementType, beanClass, customTypes);
 		} else if (rawType == Map.class) {
 			Type valueType = pType.getActualTypeArguments()[1];
-			return createMapAttributeNodeFor(attrName, attrDescription, included, fetcher, valueType, beanClass, customTypes);
+			JmxReducer<?> reducer = fetchReducerFrom(getter);
+			return createMapAttributeNodeFor(attrName, attrDescription, included, fetcher, reducer, valueType, beanClass, customTypes);
 		} else if (customTypes.containsKey(rawType)) {
 			return createConverterAttributeNodeFor(attrName, attrDescription, pType, included, fetcher, setter, customTypes);
 		} else {
@@ -525,7 +522,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 					attrDescription,
 					included,
 					fetcher,
-					createAttributeNodeFor("", attrDescription, listElementType, true, null, null, null, beanClass, customTypes),
+					createAttributeNodeFor("", attrDescription, listElementType, true, null, null, null, null, beanClass, customTypes),
 					isListOfJmxRefreshable
 			);
 		} else if (listElementType instanceof ParameterizedType) {
@@ -549,14 +546,14 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 	private AttributeNodeForMap createMapAttributeNodeFor(
 			String attrName,
 			@Nullable String attrDescription,
-			boolean included, ValueFetcher fetcher,
+			boolean included, ValueFetcher fetcher, JmxReducer<?> reducer,
 			Type valueType, Class<?> beanClass,
 			Map<Type, JmxCustomTypeAdapter<?>> customTypes) {
 		boolean isMapOfJmxRefreshable = false;
 		AttributeNode node;
 		if (valueType instanceof Class<?> valueClass) {
 			isMapOfJmxRefreshable = JmxRefreshable.class.isAssignableFrom(valueClass);
-			node = createAttributeNodeFor("", attrDescription, valueType, true, null, null, null, beanClass, customTypes);
+			node = createAttributeNodeFor("", attrDescription, valueType, true, null, reducer, null, null, beanClass, customTypes);
 		} else if (valueType instanceof ParameterizedType) {
 			String typeName = ((Class<?>) ((ParameterizedType) valueType).getRawType()).getSimpleName();
 			node = createNodeForParametrizedType(typeName, attrDescription, (ParameterizedType) valueType, true, null, null, beanClass,
@@ -689,7 +686,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 				Either<Method, AttributeNode> either;
 				if (isGetter(method)) {
 					String name = extractFieldNameFromGetter(method);
-					AttributeNode node = createAttributeNodeFor(name, null, method.getGenericReturnType(), true, null, method, null, beanClass, customTypes);
+					AttributeNode node = createAttributeNodeFor(name, null, method.getGenericReturnType(), true, null, null, method, null, beanClass, customTypes);
 					either = Either.right(node);
 				} else {
 					either = Either.left(method);

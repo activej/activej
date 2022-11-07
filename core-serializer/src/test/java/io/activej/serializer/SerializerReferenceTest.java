@@ -144,4 +144,52 @@ public class SerializerReferenceTest {
 		assertSame(container2, container2.ref);
 	}
 
+	@Test
+	public void testDanglingReferences() {
+		TestDataReferences testData = new TestDataReferences();
+
+		testData.string = "string";
+
+		testData.list = new ArrayList<>();
+		testData.list.add("string");
+		testData.map = new LinkedHashMap<>();
+
+		BinarySerializer<TestDataReferences> serializer = SerializerBuilder.create(Utils.DEFINING_CLASS_LOADER)
+				.build(TestDataReferences.class);
+		byte[] array = new byte[1];
+
+		try {
+			serializer.encode(array, 0, testData);
+			fail();
+		} catch (ArrayIndexOutOfBoundsException ignore) {
+		}
+
+
+		// Now, let's do fresh serialization/deserialization
+
+		Container container = new Container();
+		container.self1 = new SelfReference();
+		container.self2 = new SelfReference();
+		container.self2.selfReference = container.self2;
+		container.cyclicReferenceA = new CyclicReferenceA();
+		container.cyclicReferenceA.cyclicReferenceB = new CyclicReferenceB();
+		container.cyclicReferenceA.cyclicReferenceB.cyclicReferenceA = container.cyclicReferenceA;
+
+		Node node1 = new Node();
+		Node node2 = new Node();
+		node1.nodes = List.of(node2);
+		node2.nodes = List.of(node1);
+		container.node = node1;
+
+		Container container1 = doTest(Container.class, container);
+
+		assertNull(container1.self1.selfReference);
+		assertNotNull(container1.self2);
+		assertNotNull(container1.cyclicReferenceA);
+		assertNotNull(container1.node);
+		assertSame(container1.self2, container1.self2.selfReference);
+		assertSame(container1.cyclicReferenceA, container1.cyclicReferenceA.cyclicReferenceB.cyclicReferenceA);
+		assertSame(container1.node, container1.node.nodes.get(0).nodes.get(0));
+		assertSame(container1.node.nodes.get(0), container1.node.nodes.get(0).nodes.get(0).nodes.get(0));
+	}
 }

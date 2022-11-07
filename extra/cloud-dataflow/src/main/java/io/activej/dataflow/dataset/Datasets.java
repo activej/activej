@@ -18,7 +18,7 @@ package io.activej.dataflow.dataset;
 
 import io.activej.dataflow.dataset.impl.*;
 import io.activej.dataflow.graph.Partition;
-import io.activej.datastream.processor.StreamJoin.Joiner;
+import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
 import io.activej.datastream.processor.StreamLimiter;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult;
@@ -44,9 +44,9 @@ public final class Datasets {
 	}
 
 	public static <K, L, R, V> SortedDataset<K, V> join(SortedDataset<K, L> left, SortedDataset<K, R> right,
-			Joiner<K, L, R, V> joiner,
+			LeftJoiner<K, L, R, V> leftJoiner,
 			Class<V> resultType, Function<V, K> keyFunction) {
-		return new DatasetJoin<>(left, right, joiner, resultType, keyFunction);
+		return new DatasetJoin<>(left, right, leftJoiner, resultType, keyFunction);
 	}
 
 	public static <I, O> Dataset<O> map(Dataset<I> dataset, Function<I, O> mapper, Class<O> resultType) {
@@ -208,8 +208,12 @@ public final class Datasets {
 		return new DatasetConsumerOfId<>(input, listId);
 	}
 
+	public static <T> Dataset<T> empty(Class<T> resultType, List<Partition> partitions) {
+		return new DatasetEmpty<>(resultType, partitions);
+	}
+
 	public static <T> Dataset<T> empty(Class<T> resultType) {
-		return new DatasetEmpty<>(resultType);
+		return new DatasetEmpty<>(resultType, null);
 	}
 
 	public static <T> Dataset<T> unionAll(Dataset<T> left, Dataset<T> right) {
@@ -220,18 +224,17 @@ public final class Datasets {
 		return new DatasetUnion<>(left, right);
 	}
 
-	public static <K, T> LocallySortedDataset<K, T> datasetOffset(LocallySortedDataset<K, T> dataset, long offset) {
+	public static <K, T> SortedDataset<K, T> datasetOffset(LocallySortedDataset<K, T> dataset, long offset) {
 		return datasetOffsetLimit(dataset, offset, StreamLimiter.NO_LIMIT);
 	}
 
-	public static <K, T> LocallySortedDataset<K, T> datasetLimit(LocallySortedDataset<K, T> dataset, long limit) {
+	public static <K, T> SortedDataset<K, T> datasetLimit(LocallySortedDataset<K, T> dataset, long limit) {
 		return datasetOffsetLimit(dataset, StreamSkip.NO_SKIP, limit);
 	}
 
-	public static <K, T> LocallySortedDataset<K, T> datasetOffsetLimit(LocallySortedDataset<K, T> dataset, long offset, long limit) {
+	public static <K, T> SortedDataset<K, T> datasetOffsetLimit(LocallySortedDataset<K, T> dataset, long offset, long limit) {
 		checkArgument(offset >= StreamSkip.NO_SKIP && limit >= StreamLimiter.NO_LIMIT, "Negative offset or limit");
 
 		return new DatasetOffsetLimit<>(dataset, offset, limit);
 	}
-
 }

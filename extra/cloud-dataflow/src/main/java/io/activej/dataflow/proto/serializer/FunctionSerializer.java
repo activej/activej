@@ -18,7 +18,7 @@ package io.activej.dataflow.proto.serializer;
 
 import com.google.protobuf.ByteString;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.datastream.processor.StreamJoin.Joiner;
+import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.CorruptedDataException;
@@ -36,7 +36,7 @@ public final class FunctionSerializer {
 	private @Nullable BinarySerializer<Predicate<?>> predicateSerializer;
 	private @Nullable BinarySerializer<Comparator<?>> comparatorSerializer;
 	private @Nullable BinarySerializer<Reducer<?, ?, ?, ?>> reducerSerializer;
-	private @Nullable BinarySerializer<Joiner<?, ?, ?, ?>> joinerSerializer;
+	private @Nullable BinarySerializer<LeftJoiner<?, ?, ?, ?>> joinerSerializer;
 
 	public void setFunctionSerializer(@NotNull BinarySerializer<Function<?, ?>> functionSerializer) {
 		this.functionSerializer = functionSerializer;
@@ -54,7 +54,7 @@ public final class FunctionSerializer {
 		this.reducerSerializer = reducerSerializer;
 	}
 
-	public void setJoinerSerializer(@NotNull BinarySerializer<Joiner<?, ?, ?, ?>> joinerSerializer) {
+	public void setJoinerSerializer(@NotNull BinarySerializer<LeftJoiner<?, ?, ?, ?>> joinerSerializer) {
 		this.joinerSerializer = joinerSerializer;
 	}
 
@@ -75,7 +75,7 @@ public final class FunctionSerializer {
 		return doSerialize(checkNotNull(reducerSerializer), reducer);
 	}
 
-	public ByteString serializeJoiner(Joiner<?, ?, ?, ?> joiner) {
+	public ByteString serializeJoiner(LeftJoiner<?, ?, ?, ?> joiner) {
 		return doSerialize(checkNotNull(joinerSerializer), joiner);
 	}
 
@@ -110,7 +110,7 @@ public final class FunctionSerializer {
 		return doDeserialize(checkNotNull(reducerSerializer), byteString);
 	}
 
-	public Joiner<?, ?, ?, ?> deserializeJoiner(ByteString byteString) throws MalformedDataException {
+	public LeftJoiner<?, ?, ?, ?> deserializeJoiner(ByteString byteString) throws MalformedDataException {
 		return doDeserialize(checkNotNull(joinerSerializer), byteString);
 	}
 

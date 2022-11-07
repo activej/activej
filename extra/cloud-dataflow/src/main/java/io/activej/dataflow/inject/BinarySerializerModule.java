@@ -36,6 +36,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Collections.singletonList;
+
 public final class BinarySerializerModule extends AbstractModule {
 	private static final Logger logger = LoggerFactory.getLogger(BinarySerializerModule.class);
 

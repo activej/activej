@@ -5,6 +5,7 @@ import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.MemSize;
 import io.activej.common.function.FunctionEx;
+import io.activej.common.ref.Ref;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelByteChunker;
@@ -193,7 +194,7 @@ public final class AbstractHttpConnectionTest {
 		AsyncHttpServer server = AsyncHttpServer.create(Eventloop.getCurrentEventloop(),
 						request -> HttpResponse.ok200()
 								.withHeader(CONTENT_LENGTH, String.valueOf(size))
-								.withBodyStream(request.getBodyStream()))
+								.withBodyStream(request.takeBodyStream()))
 				.withListenPort(port);
 		server.listen();
 
@@ -208,7 +209,7 @@ public final class AbstractHttpConnectionTest {
 				}).limit(3_000)));
 
 		await(client.request(request)
-				.then(response -> response.getBodyStream()
+				.then(response -> response.takeBodyStream()
 						.streamTo(ChannelConsumer.ofConsumer(buf -> {
 							byte[] bytes = buf.asArray();
 							inChecksum.update(bytes, 0, bytes.length);
@@ -237,7 +238,7 @@ public final class AbstractHttpConnectionTest {
 		server.listen();
 
 		ByteBuf result = await(AsyncHttpClient.create(Eventloop.getCurrentEventloop()).request(HttpRequest.get("http://127.0.0.1:" + port))
-				.then(response -> response.getBodyStream().toCollector(ByteBufs.collector()))
+				.then(response -> response.takeBodyStream().toCollector(ByteBufs.collector()))
 				.whenComplete(server::close));
 		assertArrayEquals(expected.asArray(), result.asArray());
 	}
@@ -405,6 +406,37 @@ public final class AbstractHttpConnectionTest {
 				.whenComplete(server::close));
 	}
 
+	@Test
+	public void testFatalErrorHandling() throws Exception {
+		RuntimeException fatalError = new RuntimeException("test");
+		Ref<Throwable> errorRef = new Ref<>();
+
+		Eventloop eventloop = Eventloop.create()
+				.withCurrentThread()
+				.withFatalErrorHandler((e, context) -> {
+					assertNull(errorRef.get());
+					errorRef.set(e);
+				});
+
+		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
+						request -> {
+							throw fatalError;
+						})
+				.withListenPort(port);
+
+		server.listen();
+
+		AsyncHttpClient client = AsyncHttpClient.create(eventloop)
+				.withKeepAliveTimeout(Duration.ofSeconds(10));
+
+		int responseCode = await(client.request(HttpRequest.get("http://127.0.0.1:" + port))
+				.map(HttpResponse::getCode)
+				.whenComplete(server::close));
+
+		assertEquals(500, responseCode);
+		assertSame(fatalError, errorRef.get());
+	}
+
 	private @NotNull FunctionEx<HttpResponse, Promise<? extends ByteBuf>> ensureHelloWorldAsyncFn() {
 		return response -> response.loadBody()
 				.whenComplete(assertCompleteFn(body -> assertEquals(decodeAscii(HELLO_WORLD), body.getString(UTF_8))))
@@ -455,7 +487,7 @@ public final class AbstractHttpConnectionTest {
 						request -> request.loadBody()
 								.map(body -> {
 									HttpResponse httpResponse = HttpResponse.ok200()
-											.withBodyStream(request.getBodyStream()
+											.withBodyStream(request.takeBodyStream()
 													.transformWith(ChannelByteChunker.create(MemSize.of(1), MemSize.of(1))));
 									decorator.accept(httpResponse);
 									return httpResponse;
@@ -476,7 +508,7 @@ public final class AbstractHttpConnectionTest {
 		decorator.accept(request);
 
 		ByteBuf result = await(client.request(request)
-				.then(response -> response.getBodyStream()
+				.then(response -> response.takeBodyStream()
 						.toCollector(ByteBufs.collector()))
 				.whenComplete(server::close));
 		assertArrayEquals(expected.asArray(), result.asArray());

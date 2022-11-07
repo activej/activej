@@ -19,6 +19,7 @@ package io.activej.dataflow.dataset.impl;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.DatasetUtils;
 import io.activej.dataflow.dataset.LocallySortedDataset;
+import io.activej.dataflow.dataset.SortedDataset;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
@@ -33,7 +34,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static io.activej.datastream.processor.StreamReducers.mergeReducer;
 
-public final class DatasetOffsetLimit<K, T> extends LocallySortedDataset<K, T> {
+public final class DatasetOffsetLimit<K, T> extends SortedDataset<K, T> {
 	private final LocallySortedDataset<K, T> input;
 
 	private final long offset;

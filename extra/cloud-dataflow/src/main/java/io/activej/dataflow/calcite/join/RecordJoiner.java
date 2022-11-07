@@ -2,7 +2,7 @@ package io.activej.dataflow.calcite.join;
 
 import io.activej.codegen.util.Primitives;
 import io.activej.datastream.StreamDataAcceptor;
-import io.activej.datastream.processor.StreamJoin.Joiner;
+import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
 import io.activej.record.Record;
 import io.activej.record.RecordGetter;
 import io.activej.record.RecordScheme;
@@ -16,7 +16,7 @@ import static io.activej.common.Checks.checkArgument;
 import static org.apache.calcite.rel.core.JoinRelType.INNER;
 import static org.apache.calcite.rel.core.JoinRelType.LEFT;
 
-public final class RecordJoiner implements Joiner<Record, Record, Record, Record> {
+public final class RecordJoiner implements LeftJoiner<Record, Record, Record, Record> {
 	private final JoinRelType joinType;
 
 	private final RecordScheme scheme;
@@ -76,7 +76,7 @@ public final class RecordJoiner implements Joiner<Record, Record, Record, Record
 	}
 
 	@Override
-	public void onLeftJoin(Record key, Record left, StreamDataAcceptor<Record> output) {
+	public void onOuterJoin(Record key, Record left, StreamDataAcceptor<Record> output) {
 		if (joinType != LEFT) return;
 
 		Record result = scheme.record();

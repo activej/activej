@@ -18,7 +18,7 @@ import io.activej.dataflow.inject.BinarySerializerModule;
 import io.activej.dataflow.proto.calcite.serializer.*;
 import io.activej.dataflow.proto.serializer.CustomNodeSerializer;
 import io.activej.dataflow.proto.serializer.FunctionSubtypeSerializer;
-import io.activej.datastream.processor.StreamJoin;
+import io.activej.datastream.processor.StreamLeftJoin;
 import io.activej.datastream.processor.StreamReducers;
 import io.activej.inject.Key;
 import io.activej.inject.binding.OptionalDependency;
@@ -105,8 +105,8 @@ public final class SerializersModule extends AbstractModule {
 			return (BinarySerializer) serializer;
 		}, new Key<OptionalDependency<DefiningClassLoader>>() {});
 
-		bind(new Key<BinarySerializer<StreamJoin.Joiner<?, ?, ?, ?>>>() {}).to((joinTypeSerializer, schemeSerializer) -> {
-			FunctionSubtypeSerializer<StreamJoin.Joiner> serializer = FunctionSubtypeSerializer.create();
+		bind(new Key<BinarySerializer<StreamLeftJoin.LeftJoiner<?, ?, ?, ?>>>() {}).to((joinTypeSerializer, schemeSerializer) -> {
+			FunctionSubtypeSerializer<StreamLeftJoin.LeftJoiner> serializer = FunctionSubtypeSerializer.create();
 			serializer.setSubtypeCodec(RecordJoiner.class, new BinarySerializer<RecordJoiner>() {
 
 				@Override

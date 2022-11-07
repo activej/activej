@@ -47,6 +47,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
 
 public final class TestLocalActiveFs {
 
@@ -522,6 +523,9 @@ public final class TestLocalActiveFs {
 
 	@Test
 	public void testRelativePaths() {
+		Path current = Paths.get(".").toAbsolutePath();
+		assumeTrue("This test is located on a different drive than temporary directory", current.getRoot().equals(storagePath.getRoot()));
+
 		Set<String> expected = Set.of(
 				"1/a.txt",
 				"1/b.txt",
@@ -530,8 +534,7 @@ public final class TestLocalActiveFs {
 				"2/b/e.txt"
 		);
 
-		Path current = Paths.get(".");
-		Path relativePath = current.toAbsolutePath().relativize(storagePath);
+		Path relativePath = current.relativize(storagePath);
 		relativePath = relativePath.getParent().resolve(".").resolve(relativePath.getFileName());
 
 		assertFalse(relativePath.isAbsolute());

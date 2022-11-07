@@ -126,11 +126,13 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		}
 
 		LinkedHashMap<Class<?>, SerializerDef> addressMap = new LinkedHashMap<>();
-		addressMap.put(Inet4Address.class, new SerializerDefInet4Address());
-		addressMap.put(Inet6Address.class, new SerializerDefInet6Address());
+		SerializerDefInet4Address serializerDefInet4Address = new SerializerDefInet4Address();
+		SerializerDefInet6Address serializerDefInet6Address = new SerializerDefInet6Address();
+		addressMap.put(Inet4Address.class, serializerDefInet4Address);
+		addressMap.put(Inet6Address.class, serializerDefInet6Address);
 		builder
-				.with(Inet4Address.class, ctx -> new SerializerDefInet4Address())
-				.with(Inet6Address.class, ctx -> new SerializerDefInet6Address())
+				.with(Inet4Address.class, ctx -> serializerDefInet4Address)
+				.with(Inet6Address.class, ctx -> serializerDefInet6Address)
 				.with(InetAddress.class, ctx -> new SerializerDefSubclass(InetAddress.class, addressMap, 0));
 
 		builder
@@ -769,6 +771,8 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 			throw new IllegalArgumentException("Class should not be anonymous");
 		if (rawClass.isLocalClass())
 			throw new IllegalArgumentException("Class should not be local");
+		if (rawClass.getEnclosingClass() != null && !Modifier.isStatic(rawClass.getModifiers()))
+			throw new IllegalArgumentException("Class should not be an inner class");
 
 		SerializerDefClass serializer = SerializerDefClass.create(rawClass);
 		if (rawClass.getAnnotation(SerializeRecord.class) != null) {

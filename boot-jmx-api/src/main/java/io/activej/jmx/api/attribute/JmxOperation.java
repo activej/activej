@@ -27,4 +27,6 @@ public @interface JmxOperation {
 	String name() default "";
 
 	String description() default "";
+
+	Class<? extends JmxReducer> reducer() default JmxReducers.JmxReducerDistinct.class;
 }
