@@ -49,12 +49,12 @@ public class StreamJoinTest {
 						input -> input.id,
 						new ValueJoiner<Integer, DataItemMaster, DataItemDetail, DataItemMasterDetail>() {
 							@Override
-							public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
+							public DataItemMasterDetail doLeftInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
 								return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);
 							}
 
 							@Override
-							public DataItemMasterDetail doLeftJoin(Integer key, DataItemMaster left) {
+							public DataItemMasterDetail doLeftOuterJoin(Integer key, DataItemMaster left) {
 								return new DataItemMasterDetail(left.id, left.detailId, left.master, null);
 							}
 						}
@@ -82,7 +82,7 @@ public class StreamJoinTest {
 	}
 
 	@Test
-	public void testLeftJoinSingleLeft() {
+	public void testLeftOuterJoinSingleLeft() {
 		StreamSupplier<DataItemMaster> source1 = StreamSupplier.of(
 				new DataItemMaster(25, 5, "master")
 		);
@@ -94,12 +94,12 @@ public class StreamJoinTest {
 						input -> input.id,
 						new ValueJoiner<Integer, DataItemMaster, DataItemDetail, DataItemMasterDetail>() {
 							@Override
-							public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
+							public DataItemMasterDetail doLeftInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
 								return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);
 							}
 
 							@Override
-							public DataItemMasterDetail doLeftJoin(Integer key, DataItemMaster left) {
+							public DataItemMasterDetail doLeftOuterJoin(Integer key, DataItemMaster left) {
 								return new DataItemMasterDetail(left.id, left.detailId, left.master, null);
 							}
 						}
@@ -142,12 +142,12 @@ public class StreamJoinTest {
 						input -> input.id,
 						new ValueJoiner<Integer, DataItemMaster, DataItemDetail, DataItemMasterDetail>() {
 							@Override
-							public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
+							public DataItemMasterDetail doLeftInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
 								return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);
 							}
 
 							@Override
-							public DataItemMasterDetail doLeftJoin(Integer key, DataItemMaster left) {
+							public DataItemMasterDetail doLeftOuterJoin(Integer key, DataItemMaster left) {
 								return new DataItemMasterDetail(left.id, left.detailId, left.master, null);
 							}
 						}
@@ -195,12 +195,12 @@ public class StreamJoinTest {
 						input -> input.id,
 						new ValueJoiner<Integer, DataItemMaster, DataItemDetail, DataItemMasterDetail>() {
 							@Override
-							public DataItemMasterDetail doInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
+							public DataItemMasterDetail doLeftInnerJoin(Integer key, DataItemMaster left, DataItemDetail right) {
 								return new DataItemMasterDetail(left.id, left.detailId, left.master, right.detail);
 							}
 
 							@Override
-							public DataItemMasterDetail doLeftJoin(Integer key, DataItemMaster left) {
+							public DataItemMasterDetail doLeftOuterJoin(Integer key, DataItemMaster left) {
 								return new DataItemMasterDetail(left.id, left.detailId, left.master, null);
 							}
 						}

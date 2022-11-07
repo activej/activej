@@ -11,7 +11,7 @@ import io.activej.dataflow.json.JsonCodec;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamDataAcceptor;
-import io.activej.datastream.processor.StreamJoin.InnerJoiner;
+import io.activej.datastream.processor.StreamJoin.LeftInnerJoiner;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult;
 import io.activej.http.AsyncHttpServer;
 import io.activej.inject.Injector;
@@ -213,9 +213,9 @@ public class PageRankTest {
 		}
 	}
 
-	public static class PageRankJoiner extends InnerJoiner<Long, Page, Rank, Rank> {
+	public static class PageRankJoiner extends LeftInnerJoiner<Long, Page, Rank, Rank> {
 		@Override
-		public void onInnerJoin(Long key, Page page, Rank rank, StreamDataAcceptor<Rank> output) {
+		public void onLeftInnerJoin(Long key, Page page, Rank rank, StreamDataAcceptor<Rank> output) {
 			page.disperse(rank, output);
 		}
 	}
