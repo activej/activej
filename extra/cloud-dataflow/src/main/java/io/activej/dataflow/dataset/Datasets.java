@@ -218,4 +218,12 @@ public final class Datasets {
 		return new DatasetOffsetLimit<>(dataset, offset, limit);
 	}
 
+
+	public static <T> Dataset<T> empty(Class<T> resultType, List<Partition> partitions) {
+		return new DatasetEmpty<>(resultType, partitions);
+	}
+
+	public static <T> Dataset<T> empty(Class<T> resultType) {
+		return new DatasetEmpty<>(resultType, null);
+	}
 }
