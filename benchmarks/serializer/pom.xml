@@ -4,7 +4,7 @@
   <parent>
     <groupId>io.activej</groupId>
     <artifactId>benchmarks</artifactId>
-    <version>5.4-SNAPSHOT</version>
+    <version>5.5-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
