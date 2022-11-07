@@ -19,14 +19,18 @@ package io.activej.dataflow.dataset;
 import io.activej.dataflow.dataset.impl.*;
 import io.activej.dataflow.graph.Partition;
 import io.activej.datastream.processor.StreamJoin.Joiner;
+import io.activej.datastream.processor.StreamLimiter;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult;
+import io.activej.datastream.processor.StreamSkip;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
+
+import static io.activej.common.Checks.checkArgument;
 
 public final class Datasets {
 
@@ -199,4 +203,19 @@ public final class Datasets {
 	public static <T> DatasetConsumerOfId<T> consumerOfId(Dataset<T> input, String listId) {
 		return new DatasetConsumerOfId<>(input, listId);
 	}
+
+	public static <K, T> SortedDataset<K, T> datasetOffset(LocallySortedDataset<K, T> dataset, long offset) {
+		return datasetOffsetLimit(dataset, offset, StreamLimiter.NO_LIMIT);
+	}
+
+	public static <K, T> SortedDataset<K, T> datasetLimit(LocallySortedDataset<K, T> dataset, long limit) {
+		return datasetOffsetLimit(dataset, StreamSkip.NO_SKIP, limit);
+	}
+
+	public static <K, T> SortedDataset<K, T> datasetOffsetLimit(LocallySortedDataset<K, T> dataset, long offset, long limit) {
+		checkArgument(offset >= StreamSkip.NO_SKIP && limit >= StreamLimiter.NO_LIMIT, "Negative offset or limit");
+
+		return new DatasetOffsetLimit<>(dataset, offset, limit);
+	}
+
 }

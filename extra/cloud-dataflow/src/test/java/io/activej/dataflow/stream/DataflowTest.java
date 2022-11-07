@@ -4,6 +4,7 @@ import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.collector.Collector;
+import io.activej.dataflow.collector.MergeCollector;
 import io.activej.dataflow.command.DataflowCommand;
 import io.activej.dataflow.command.DataflowResponse;
 import io.activej.dataflow.dataset.Dataset;
@@ -419,6 +420,65 @@ public final class DataflowTest {
 				})));
 
 		assertEquals(asList(new TestItem(2), new TestItem(4), new TestItem(6), new TestItem(8), new TestItem(10)), resultConsumer.getList());
+	}
+
+	@Test
+	public void testOffsetLimit() throws Exception {
+		StreamConsumerToList<TestItem> resultConsumer = StreamConsumerToList.create();
+
+		InetSocketAddress address1 = getFreeListenAddress();
+		InetSocketAddress address2 = getFreeListenAddress();
+
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
+				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
+				.build();
+
+		Module serverModule1 = ModuleBuilder.create()
+				.install(common)
+				.bind(datasetId("items")).toInstance(asList(
+						new TestItem(1),
+						new TestItem(2),
+						new TestItem(3),
+						new TestItem(4),
+						new TestItem(5)))
+				.build();
+
+		Module serverModule2 = ModuleBuilder.create()
+				.install(common)
+				.bind(datasetId("items")).toInstance(asList(
+						new TestItem(6),
+						new TestItem(7),
+						new TestItem(8),
+						new TestItem(9),
+						new TestItem(10)))
+				.build();
+
+		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenAddress(address1);
+		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenAddress(address2);
+
+		server1.listen();
+		server2.listen();
+
+		Injector clientInjector = Injector.of(common);
+		DataflowClient client = clientInjector.getInstance(DataflowClient.class);
+		DataflowGraph graph = clientInjector.getInstance(DataflowGraph.class);
+
+		Dataset<TestItem> dataset = datasetOfId("items", TestItem.class);
+		LocallySortedDataset<Long, TestItem> sortedDataset = localSort(dataset, long.class, new TestKeyFunction(), new TestComparator());
+		SortedDataset<Long, TestItem> afterOffsetAndLimitApplied = datasetOffsetLimit(sortedDataset, 3, 4);
+
+		MergeCollector<Long, TestItem> collector = new MergeCollector<>(afterOffsetAndLimitApplied, client, false);
+		StreamSupplier<TestItem> resultSupplier = collector.compile(graph);
+
+		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
+
+		await(graph.execute()
+				.whenComplete(assertCompleteFn($ -> {
+					server1.close();
+					server2.close();
+				})));
+
+		assertEquals(asList(new TestItem(4), new TestItem(5), new TestItem(6), new TestItem(7)), resultConsumer.getList());
 	}
 
 	public static final class TestItem {

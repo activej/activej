@@ -27,6 +27,7 @@ import io.activej.dataflow.node.NodeUpload;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.IntStream;
@@ -36,16 +37,18 @@ import static io.activej.datastream.processor.StreamReducers.mergeReducer;
 public class DatasetUtils {
 
 	public static <K, I, O, A> List<StreamId> repartitionAndReduce(DataflowContext context,
-			LocallySortedDataset<K, I> input,
+			List<StreamId> inputs,
+			Class<I> inputClass,
+			Function<I, K> keyFunction,
+			Comparator<K> keyComparator,
 			Reducer<K, I, O, A> reducer,
 			List<Partition> partitions) {
 		DataflowGraph graph = context.getGraph();
 		int nonce = context.getNonce();
-		Function<I, K> keyFunction = input.keyFunction();
 		List<StreamId> outputStreamIds = new ArrayList<>();
 		List<NodeShard<K, I>> sharders = new ArrayList<>();
 		int sharderIndex = context.generateNodeIndex();
-		for (StreamId inputStreamId : input.channels(context.withoutFixedNonce())) {
+		for (StreamId inputStreamId : inputs) {
 			Partition partition = graph.getPartition(inputStreamId);
 			NodeShard<K, I> sharder = new NodeShard<>(sharderIndex, keyFunction, inputStreamId, nonce);
 			graph.addNode(partition, sharder);
@@ -57,14 +60,14 @@ public class DatasetUtils {
 		int[] uploadIndexes = generateIndexes(context, partitions.size());
 		for (int i = 0; i < partitions.size(); i++) {
 			Partition partition = partitions.get(i);
-			NodeReduce<K, O, A> nodeReduce = new NodeReduce<>(reducerIndex, input.keyComparator());
+			NodeReduce<K, O, A> nodeReduce = new NodeReduce<>(reducerIndex, keyComparator);
 			graph.addNode(partition, nodeReduce);
 
 			for (int j = 0; j < sharders.size(); j++) {
 				NodeShard<K, I> sharder = sharders.get(j);
 				StreamId sharderOutput = sharder.newPartition();
 				graph.addNodeStream(sharder, sharderOutput);
-				StreamId reducerInput = forwardChannel(context, input.valueType(), sharderOutput, partition, uploadIndexes[i], downloadIndexes[j]);
+				StreamId reducerInput = forwardChannel(context, inputClass, sharderOutput, partition, uploadIndexes[i], downloadIndexes[j]);
 				nodeReduce.addInput(reducerInput, keyFunction, reducer);
 			}
 
@@ -72,6 +75,13 @@ public class DatasetUtils {
 		}
 
 		return outputStreamIds;
+	}
+
+	public static <K, I, O, A> List<StreamId> repartitionAndReduce(DataflowContext context,
+			LocallySortedDataset<K, I> input,
+			Reducer<K, I, O, A> reducer,
+			List<Partition> partitions) {
+		return repartitionAndReduce(context, input.channels(context.withoutFixedNonce()), input.valueType(), input.keyFunction(), input.keyComparator(), reducer, partitions);
 	}
 
 	public static <K, T> List<StreamId> repartitionAndSort(DataflowContext context, LocallySortedDataset<K, T> input,

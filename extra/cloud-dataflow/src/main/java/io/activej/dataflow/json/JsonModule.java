@@ -98,6 +98,7 @@ public final class JsonModule extends AbstractModule {
 		bind(codec(NodeConsumerOfId.class));
 		bind(codec(NodeSupplierOfId.class));
 		bind(codec(NodeUnion.class));
+		bind(codec(NodeOffsetLimit.class));
 		bind(codec(DataflowCommandDownload.class));
 		bind(codec(DataflowResponsePartitionData.class));
 		bind(codec(TestNodeStat.class));
