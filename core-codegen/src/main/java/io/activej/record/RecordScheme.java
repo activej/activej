@@ -179,6 +179,10 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 		return new ArrayList<>(fieldTypes.keySet());
 	}
 
+	public List<Type> getTypes() {
+		return new ArrayList<>(fieldTypes.values());
+	}
+
 	public String getField(int index) {
 		return fields[index];
 	}
@@ -193,6 +197,10 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 
 	public int getFieldIndex(String field) {
 		return fieldIndices.get(field);
+	}
+
+	public List<String> getComparedFields() {
+		return comparedFields == null ? Collections.emptyList() : new ArrayList<>(comparedFields);
 	}
 
 	public int size() {
