@@ -27,7 +27,6 @@ import io.activej.dataflow.stats.StatReducer;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
-import io.activej.inject.module.Module;
 
 import static io.activej.csp.binary.ByteBufsDecoder.ofNullTerminatedBytes;
 import static io.activej.dataflow.json.JsonUtils.fromJson;
@@ -37,7 +36,7 @@ public final class DataflowModule extends AbstractModule {
 	private DataflowModule() {
 	}
 
-	public static Module create() {
+	public static DataflowModule create() {
 		return new DataflowModule();
 	}
 

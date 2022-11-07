@@ -1,18 +1,25 @@
 package io.activej.dataflow.inject;
 
+import io.activej.common.function.SupplierEx;
+import io.activej.csp.ChannelSupplier;
+import io.activej.datastream.StreamSupplier;
 import io.activej.inject.Key;
+import io.activej.inject.binding.BindingType;
 import io.activej.inject.module.AbstractModule;
-import io.activej.inject.module.Module;
+import io.activej.promise.Promise;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public final class DatasetIdModule extends AbstractModule {
 
 	private DatasetIdModule() {
 	}
 
-	public static Module create() {
+	public static DatasetIdModule create() {
 		return new DatasetIdModule();
 	}
 
@@ -21,8 +28,23 @@ public final class DatasetIdModule extends AbstractModule {
 		DatasetIds datasetIds = new DatasetIds();
 		bind(DatasetIds.class).toInstance(datasetIds);
 		transform(Object.class, (bindings, scope, key, binding) -> {
-			if (key.getQualifier() instanceof DatasetId) {
-				String id = ((DatasetId) key.getQualifier()).value();
+			Object qualifier = key.getQualifier();
+			if (qualifier instanceof DatasetId) {
+				String id = ((DatasetId) qualifier).value();
+				Class<?> rawType = key.getRawType();
+
+				if (binding.getType() != BindingType.TRANSIENT &&
+						(rawType == Iterator.class ||
+								rawType == Supplier.class ||
+								rawType == SupplierEx.class ||
+								rawType == Stream.class ||
+								rawType == StreamSupplier.class ||
+								rawType == ChannelSupplier.class ||
+								rawType == Promise.class)) {
+					throw new IllegalStateException("Provided dataset '" + id +"' is a single use dataset. " +
+							"Maybe mark it as @Transient?");
+				}
+
 				Key<?> previousKey = datasetIds.keys.put(id, key);
 				if (previousKey != null && !previousKey.equals(key)) {
 					throw new IllegalStateException("More than one items provided for dataset id '" + id + "'");

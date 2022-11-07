@@ -192,7 +192,11 @@ public final class Datasets {
 	}
 
 	public static <T> Dataset<T> datasetOfId(String dataId, Class<T> resultType) {
-		return new DatasetSupplierOfId<>(dataId, resultType);
+		return new DatasetSupplierOfId<>(dataId, resultType, null);
+	}
+
+	public static <T> Dataset<T> datasetOfId(String dataId, Class<T> resultType, List<Partition> partitions) {
+		return new DatasetSupplierOfId<>(dataId, resultType, partitions);
 	}
 
 	public static <K, T> SortedDataset<K, T> sortedDatasetOfId(String dataId, Class<T> resultType, Class<K> keyType,
