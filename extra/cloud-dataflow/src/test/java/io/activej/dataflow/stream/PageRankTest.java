@@ -11,7 +11,7 @@ import io.activej.dataflow.json.JsonCodec;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamDataAcceptor;
-import io.activej.datastream.processor.StreamJoin.LeftInnerJoiner;
+import io.activej.datastream.processor.StreamLeftJoin.LeftInnerLeftJoiner;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult;
 import io.activej.http.AsyncHttpServer;
 import io.activej.inject.Injector;
@@ -213,15 +213,15 @@ public class PageRankTest {
 		}
 	}
 
-	public static class PageRankJoiner extends LeftInnerJoiner<Long, Page, Rank, Rank> {
+	public static class PageRankLeftJoiner extends LeftInnerLeftJoiner<Long, Page, Rank, Rank> {
 		@Override
-		public void onLeftInnerJoin(Long key, Page page, Rank rank, StreamDataAcceptor<Rank> output) {
+		public void onInnerJoin(Long key, Page page, Rank rank, StreamDataAcceptor<Rank> output) {
 			page.disperse(rank, output);
 		}
 	}
 
 	private static SortedDataset<Long, Rank> pageRankIteration(SortedDataset<Long, Page> pages, SortedDataset<Long, Rank> ranks) {
-		Dataset<Rank> updates = join(pages, ranks, new PageRankJoiner(), Rank.class, new RankKeyFunction());
+		Dataset<Rank> updates = join(pages, ranks, new PageRankLeftJoiner(), Rank.class, new RankKeyFunction());
 
 		Dataset<Rank> newRanks = sortReduceRepartitionReduce(updates, new RankAccumulatorReducer(),
 				Long.class, new RankKeyFunction(), new LongComparator(),
@@ -250,7 +250,7 @@ public class PageRankTest {
 				.bind(new Key<JsonCodec<LongComparator>>() {}).toInstance(ofObject(LongComparator::new))
 				.bind(new Key<JsonCodec<PageToRankFunction>>() {}).toInstance(ofObject(PageToRankFunction::new))
 				.bind(new Key<JsonCodec<RankAccumulatorReducer>>() {}).toInstance(ofObject(RankAccumulatorReducer::new))
-				.bind(new Key<JsonCodec<PageRankJoiner>>() {}).toInstance(ofObject(PageRankJoiner::new))
+				.bind(new Key<JsonCodec<PageRankLeftJoiner>>() {}).toInstance(ofObject(PageRankLeftJoiner::new))
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
 	}

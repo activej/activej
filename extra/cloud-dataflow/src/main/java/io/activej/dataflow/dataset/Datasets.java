@@ -18,7 +18,7 @@ package io.activej.dataflow.dataset;
 
 import io.activej.dataflow.dataset.impl.*;
 import io.activej.dataflow.graph.Partition;
-import io.activej.datastream.processor.StreamJoin.Joiner;
+import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
 import io.activej.datastream.processor.StreamLimiter;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult;
@@ -44,9 +44,9 @@ public final class Datasets {
 	}
 
 	public static <K, L, R, V> SortedDataset<K, V> join(SortedDataset<K, L> left, SortedDataset<K, R> right,
-			Joiner<K, L, R, V> joiner,
+			LeftJoiner<K, L, R, V> leftJoiner,
 			Class<V> resultType, Function<V, K> keyFunction) {
-		return new DatasetJoin<>(left, right, joiner, resultType, keyFunction);
+		return new DatasetJoin<>(left, right, leftJoiner, resultType, keyFunction);
 	}
 
 	public static <I, O> Dataset<O> map(Dataset<I> dataset, Function<I, O> mapper, Class<O> resultType) {

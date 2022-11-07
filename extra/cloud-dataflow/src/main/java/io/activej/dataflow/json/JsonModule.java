@@ -27,7 +27,7 @@ import io.activej.dataflow.node.*;
 import io.activej.dataflow.stats.BinaryNodeStat;
 import io.activej.dataflow.stats.NodeStat;
 import io.activej.dataflow.stats.TestNodeStat;
-import io.activej.datastream.processor.StreamJoin.Joiner;
+import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
 import io.activej.datastream.processor.StreamReducers.DeduplicateReducer;
 import io.activej.datastream.processor.StreamReducers.MergeReducer;
 import io.activej.datastream.processor.StreamReducers.Reducer;
@@ -822,7 +822,7 @@ public final class JsonModule extends AbstractModule {
 
 	@Provides
 	JsonCodec<NodeJoin> nodeJoin(
-			@Subtypes JsonCodec<Joiner> joinerCodec,
+			@Subtypes JsonCodec<LeftJoiner> joinerCodec,
 			@Subtypes JsonCodec<Comparator> comparatorCodec,
 			@Subtypes JsonCodec<Function> functionCodec,
 			JsonCodec<StreamId> streamIdCodec) {
@@ -851,10 +851,10 @@ public final class JsonModule extends AbstractModule {
 					Function rightKeyFunction = readValue(reader, RIGHT_KEY_FUNCTION, functionCodec);
 					reader.comma();
 
-					Joiner joiner = readValue(reader, JOINER, joinerCodec);
+					LeftJoiner leftJoiner = readValue(reader, JOINER, joinerCodec);
 					reader.endObject();
 
-					return new NodeJoin<>(index, left, right, output, comparator, leftKeyFunction, rightKeyFunction, joiner);
+					return new NodeJoin<>(index, left, right, output, comparator, leftKeyFunction, rightKeyFunction, leftJoiner);
 				},
 				(writer, value) -> {
 					writer.writeByte(OBJECT_START);
