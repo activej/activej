@@ -2515,8 +2515,53 @@ public abstract class AbstractCalciteTest {
 
 		assertEquals(expected, result);
 	}
-
 	// endregion
+
+	@Test
+	public void testJoinFilterByDate() {
+		QueryResult result = query("""
+				SELECT e.courseCode
+				FROM enrollment e
+				JOIN temporal_values t
+				ON t.userId = e.studentId
+				WHERE t.dateOfBirth = '2002-06-15'
+				""");
+
+		QueryResult expected = new QueryResult(List.of("courseCode"), List.of(new Object[]{"PX41"}, new Object[]{"AA01"}));
+
+		assertEquals(expected, result);
+	}
+
+	@Test
+	public void testJoinFilterByTime() {
+		QueryResult result = query("""
+				SELECT e.courseCode
+				FROM enrollment e
+				JOIN temporal_values t
+				ON t.userId = e.studentId
+				WHERE t.timeOfBirth = '12:00:00'
+				""");
+
+		QueryResult expected = new QueryResult(List.of("courseCode"), List.of(new Object[]{"PX41"}, new Object[]{"AA01"}));
+
+		assertEquals(expected, result);
+	}
+
+	@Test
+	public void testJoinFilterByTimestamp() {
+		QueryResult result = query("""
+				SELECT e.courseCode
+				FROM enrollment e
+				JOIN temporal_values t
+				ON t.userId = e.studentId
+				WHERE t.registeredAt = '2022-06-15 12:00:00'
+				""");
+
+		QueryResult expected = new QueryResult(List.of("courseCode"), List.of(new Object[]{"PX41"}, new Object[]{"AA01"}));
+
+		assertEquals(expected, result);
+	}
+
 	protected abstract QueryResult query(String sql);
 
 	protected abstract QueryResult queryPrepared(String sql, ParamsSetter paramsSetter);

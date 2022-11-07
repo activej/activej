@@ -35,11 +35,25 @@ import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 
 public final class Utils {
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "ConstantConditions"})
 	public static <T> T toJavaType(RexLiteral literal) {
 		SqlTypeName typeName = literal.getTypeName();
 		if (typeName.getFamily() == SqlTypeFamily.CHARACTER) {
 			return (T) literal.getValueAs(String.class);
+		}
+		if (typeName.getFamily() == SqlTypeFamily.DATE) {
+			Integer daysSinceEpoch = literal.getValueAs(Integer.class);
+			return (T) LocalDate.ofEpochDay(daysSinceEpoch);
+		}
+		if (typeName.getFamily() == SqlTypeFamily.TIME) {
+			Integer millisOfDay = literal.getValueAs(Integer.class);
+			assert millisOfDay % 1000 == 0; // Millis are ignored
+			int secondsOfDay = millisOfDay / 1000;
+			return (T) LocalTime.ofSecondOfDay(secondsOfDay);
+		}
+		if (typeName.getFamily() == SqlTypeFamily.TIMESTAMP) {
+			Long epochMillis = literal.getValueAs(Long.class);
+			return (T) Instant.ofEpochMilli(epochMillis);
 		}
 
 		return (T) literal.getValue();
