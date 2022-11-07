@@ -525,6 +525,160 @@ public final class DataflowTest {
 		assertTrue(result2.getList().isEmpty());
 	}
 
+	@Test
+	public void testUnion() throws Exception {
+		StreamConsumerToList<TestItem> resultConsumer = StreamConsumerToList.create();
+
+		InetSocketAddress address1 = getFreeListenAddress();
+		InetSocketAddress address2 = getFreeListenAddress();
+
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
+				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
+				.build();
+
+		Module serverModule1 = ModuleBuilder.create()
+				.install(common)
+				.bind(datasetId("items1")).toInstance(asList(
+						new TestItem(1),
+						new TestItem(2),
+						new TestItem(3)))
+				.bind(datasetId("items2")).toInstance(asList(
+						new TestItem(3),
+						new TestItem(4),
+						new TestItem(5)))
+				.build();
+
+		Module serverModule2 = ModuleBuilder.create()
+				.install(common)
+				.bind(datasetId("items1")).toInstance(asList(
+						new TestItem(1),
+						new TestItem(6),
+						new TestItem(7)))
+				.bind(datasetId("items2")).toInstance(asList(
+						new TestItem(1),
+						new TestItem(5),
+						new TestItem(8)))
+				.build();
+
+		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenAddress(address1);
+		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenAddress(address2);
+
+		server1.listen();
+		server2.listen();
+
+		Injector clientInjector = Injector.of(common);
+		DataflowClient client = clientInjector.getInstance(DataflowClient.class);
+		DataflowGraph graph = clientInjector.getInstance(DataflowGraph.class);
+
+		Dataset<TestItem> dataset1 = datasetOfId("items1", TestItem.class);
+		SortedDataset<Long, TestItem> sorted1 = repartitionSort(localSort(dataset1, Long.class, new TestKeyFunction(), Comparator.naturalOrder()));
+		Dataset<TestItem> dataset2 = datasetOfId("items2", TestItem.class);
+		SortedDataset<Long, TestItem> sorted2 = repartitionSort(localSort(dataset2, Long.class, new TestKeyFunction(), Comparator.naturalOrder()));
+
+		SortedDataset<Long, TestItem> union = union(sorted1, sorted2);
+
+		MergeCollector<Long, TestItem> collector = new MergeCollector<>(union, client, false);
+		StreamSupplier<TestItem> resultSupplier = collector.compile(graph);
+
+		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
+
+		await(graph.execute()
+				.whenComplete(assertCompleteFn($ -> {
+					server1.close();
+					server2.close();
+				})));
+
+		assertEquals(asList(
+				new TestItem(1),
+				new TestItem(2),
+				new TestItem(3),
+				new TestItem(4),
+				new TestItem(5),
+				new TestItem(6),
+				new TestItem(7),
+				new TestItem(8)
+		), resultConsumer.getList());
+	}
+
+	@Test
+	public void testUnionAll() throws Exception {
+		StreamConsumerToList<TestItem> resultConsumer = StreamConsumerToList.create();
+
+		InetSocketAddress address1 = getFreeListenAddress();
+		InetSocketAddress address2 = getFreeListenAddress();
+
+		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), asList(new Partition(address1), new Partition(address2)))
+				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
+				.build();
+
+		Module serverModule1 = ModuleBuilder.create()
+				.install(common)
+				.bind(datasetId("items1")).toInstance(asList(
+						new TestItem(1),
+						new TestItem(2),
+						new TestItem(3)))
+				.bind(datasetId("items2")).toInstance(asList(
+						new TestItem(3),
+						new TestItem(4),
+						new TestItem(5)))
+				.build();
+
+		Module serverModule2 = ModuleBuilder.create()
+				.install(common)
+				.bind(datasetId("items1")).toInstance(asList(
+						new TestItem(1),
+						new TestItem(6),
+						new TestItem(7)))
+				.bind(datasetId("items2")).toInstance(asList(
+						new TestItem(1),
+						new TestItem(5),
+						new TestItem(8)))
+				.build();
+
+		DataflowServer server1 = Injector.of(serverModule1).getInstance(DataflowServer.class).withListenAddress(address1);
+		DataflowServer server2 = Injector.of(serverModule2).getInstance(DataflowServer.class).withListenAddress(address2);
+
+		server1.listen();
+		server2.listen();
+
+		Injector clientInjector = Injector.of(common);
+		DataflowClient client = clientInjector.getInstance(DataflowClient.class);
+		DataflowGraph graph = clientInjector.getInstance(DataflowGraph.class);
+
+		Dataset<TestItem> dataset1 = datasetOfId("items1", TestItem.class);
+		Dataset<TestItem> dataset2 = datasetOfId("items2", TestItem.class);
+
+		Dataset<TestItem> union = unionAll(dataset1, dataset2);
+
+		SortedDataset<Long, TestItem> sortedUnion = repartitionSort(localSort(union, Long.class, new TestKeyFunction(), Comparator.naturalOrder()));
+
+		MergeCollector<Long, TestItem> collector = new MergeCollector<>(sortedUnion, client, false);
+		StreamSupplier<TestItem> resultSupplier = collector.compile(graph);
+
+		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
+
+		await(graph.execute()
+				.whenComplete(assertCompleteFn($ -> {
+					server1.close();
+					server2.close();
+				})));
+
+		assertEquals(asList(
+				new TestItem(1),
+				new TestItem(1),
+				new TestItem(1),
+				new TestItem(2),
+				new TestItem(3),
+				new TestItem(3),
+				new TestItem(4),
+				new TestItem(5),
+				new TestItem(5),
+				new TestItem(6),
+				new TestItem(7),
+				new TestItem(8)
+		), resultConsumer.getList());
+	}
+
 	public static final class TestItem {
 		@Serialize
 		public final long value;

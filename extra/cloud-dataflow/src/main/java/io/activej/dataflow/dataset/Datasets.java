@@ -230,4 +230,12 @@ public final class Datasets {
 	public static <T> Dataset<T> empty(Class<T> resultType) {
 		return new DatasetEmpty<>(resultType, null);
 	}
+
+	public static <T> Dataset<T> unionAll(Dataset<T> left, Dataset<T> right) {
+		return new DatasetUnionAll<>(left, right);
+	}
+
+	public static <K, T> SortedDataset<K, T> union(SortedDataset<K, T> left, SortedDataset<K, T> right) {
+		return new DatasetUnion<>(left, right);
+	}
 }
