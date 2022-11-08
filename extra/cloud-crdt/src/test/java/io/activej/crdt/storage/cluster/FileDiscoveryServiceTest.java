@@ -5,7 +5,7 @@ import io.activej.crdt.storage.cluster.DiscoveryService.PartitionScheme;
 import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
-import io.activej.promise.Promises;
+import io.activej.promise.SettablePromise;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -18,7 +18,6 @@ import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.WatchService;
-import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 
@@ -227,7 +226,9 @@ public class FileDiscoveryServiceTest {
 
 		Files.write(file, TEST_PARTITIONS_1);
 
-		CrdtStorageCluster<String, Integer, PartitionId> cluster = CrdtStorageCluster.create(Eventloop.getCurrentEventloop(), discoveryService, ignoringTimestamp(Integer::max));
+		NotifyingDiscoveryService notifyingDiscoveryService = new NotifyingDiscoveryService();
+
+		CrdtStorageCluster<String, Integer, PartitionId> cluster = CrdtStorageCluster.create(Eventloop.getCurrentEventloop(), notifyingDiscoveryService, ignoringTimestamp(Integer::max));
 
 		await(cluster.start()
 				.whenResult(() -> assertEquals(Set.of("a", "b", "c"), cluster.getCrdtStorages().keySet()
@@ -235,7 +236,8 @@ public class FileDiscoveryServiceTest {
 						.map(PartitionId::getId)
 						.collect(toSet())))
 				.whenResult(() -> Files.write(file, TEST_PARTITIONS_4))
-				.then(() -> Promises.delay(Duration.ofMillis(200)))
+				.then(notifyingDiscoveryService::onChange)
+				.then(() -> Promise.complete().async())
 				.whenResult(() -> assertEquals(Set.of("a", "d"), cluster.getCrdtStorages().keySet()
 						.stream()
 						.map(PartitionId::getId)
@@ -300,4 +302,28 @@ public class FileDiscoveryServiceTest {
 		), group1.getPartitionIds());
 	}
 
+	private class NotifyingDiscoveryService implements DiscoveryService<PartitionId> {
+		private SettablePromise<Void> onChangePromise;
+
+		@Override
+		public AsyncSupplier<PartitionScheme<PartitionId>> discover() {
+			AsyncSupplier<PartitionScheme<PartitionId>> discover = discoveryService.discover();
+			return () -> discover.get()
+					.whenComplete((scheme, e) -> {
+								if (onChangePromise != null) {
+									SettablePromise<Void> onChangePromise = this.onChangePromise;
+									this.onChangePromise = null;
+									onChangePromise.accept(null, e);
+								}
+							}
+					);
+		}
+
+		Promise<Void> onChange() {
+			assert onChangePromise == null;
+
+			onChangePromise = new SettablePromise<>();
+			return onChangePromise;
+		}
+	}
 }

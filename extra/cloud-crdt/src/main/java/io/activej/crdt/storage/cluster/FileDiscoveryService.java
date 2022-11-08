@@ -16,6 +16,7 @@
 
 package io.activej.crdt.storage.cluster;
 
+import com.sun.nio.file.SensitivityWatchEventModifier;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.crdt.CrdtException;
@@ -90,7 +91,11 @@ public final class FileDiscoveryService implements DiscoveryService<PartitionId>
 	@Override
 	public AsyncSupplier<PartitionScheme<PartitionId>> discover() {
 		try {
-			pathToFile.getParent().register(watchService, ENTRY_CREATE, ENTRY_MODIFY, ENTRY_DELETE);
+			pathToFile.getParent().register(
+					watchService,
+					new WatchEvent.Kind[]{ENTRY_CREATE, ENTRY_MODIFY, ENTRY_DELETE},
+					SensitivityWatchEventModifier.HIGH
+			);
 		} catch (IOException e) {
 			CrdtException exception = new CrdtException("Could not register a path to the watch service", e);
 			return () -> Promise.ofException(exception);
