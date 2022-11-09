@@ -16,12 +16,15 @@ import io.activej.service.ServiceGraphModule;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.time.Duration;
 
+import static io.activej.config.converter.ConfigConverters.ofDuration;
 import static io.activej.inject.module.Modules.combine;
 import static io.activej.launchers.initializers.Initializers.ofEventloop;
 
 public abstract class DataflowJdbcServerLauncher extends Launcher {
 	public static final int DEFAULT_JDBC_SERVER_PORT = 3387;
+	public static final Duration DEFAULT_IDLE_TIMEOUT = Duration.ofMinutes(1);
 	public static final String PROPERTIES_FILE = "dataflow-jdbc-server.properties";
 
 	@Inject
@@ -48,6 +51,7 @@ public abstract class DataflowJdbcServerLauncher extends Launcher {
 	Config config() throws IOException {
 		return Config.create()
 				.with("dataflow.jdbc.server.port", String.valueOf(DEFAULT_JDBC_SERVER_PORT))
+				.with("dataflow.jdbc.server.idleTimeout", Config.ofValue(ofDuration(), DEFAULT_IDLE_TIMEOUT))
 				.with("dataflow.secondaryBufferPath", Files.createTempDirectory("secondaryBufferPath").toString())
 				.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
 				.overrideWith(Config.ofProperties(System.getProperties()).getChild("config"));

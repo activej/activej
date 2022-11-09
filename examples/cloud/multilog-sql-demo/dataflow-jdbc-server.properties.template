@@ -1,0 +1,4 @@
+dataflow.partitions=
+
+dataflow.jdbc.server.port=3387
+dataflow.jdbc.server.idleTimeout=1 minute
