@@ -5,6 +5,7 @@ import io.activej.dataflow.calcite.CalciteSqlDataflow;
 import io.activej.dataflow.calcite.inject.CalciteClientModule;
 import io.activej.dataflow.calcite.jdbc.DataflowMeta;
 import io.activej.dataflow.jdbc.driver.Driver;
+import io.activej.dataflow.jdbc.driver.utils.InstantHolder;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
@@ -16,6 +17,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.sql.*;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -123,6 +125,11 @@ public class CalciteJDBCTest extends AbstractCalciteTest {
 		}
 
 		return results;
+	}
+
+	@Override
+	protected InstantHolder wrapInstant(Instant instant) {
+		return new InstantHolder(instant);
 	}
 
 	private QueryResult toQueryResult(ResultSet resultSet) throws SQLException {

@@ -2395,7 +2395,7 @@ public abstract class AbstractCalciteTest {
 		assertSelectTemporalValuesByTimestamp(result);
 	}
 
-	private static void assertSelectTemporalValuesByTimestamp(QueryResult result) {
+	private void assertSelectTemporalValuesByTimestamp(QueryResult result) {
 		QueryResult expected = temporalValuesToQueryResult(List.of(TEMPORAL_VALUES_LIST_1.get(0), TEMPORAL_VALUES_LIST_2.get(1)));
 
 		assertEquals(expected, result);
@@ -2418,7 +2418,7 @@ public abstract class AbstractCalciteTest {
 		assertSelectTemporalValuesByTimestampEquals(result);
 	}
 
-	private static void assertSelectTemporalValuesByTimestampEquals(QueryResult result) {
+	private void assertSelectTemporalValuesByTimestampEquals(QueryResult result) {
 		QueryResult expected = temporalValuesToQueryResult(List.of(TEMPORAL_VALUES_LIST_1.get(0)));
 
 		assertEquals(expected, result);
@@ -2441,7 +2441,7 @@ public abstract class AbstractCalciteTest {
 		assertSelectTemporalValuesByTime(result);
 	}
 
-	private static void assertSelectTemporalValuesByTime(QueryResult result) {
+	private void assertSelectTemporalValuesByTime(QueryResult result) {
 		QueryResult expected = temporalValuesToQueryResult(concat(List.of(TEMPORAL_VALUES_LIST_1.get(0)), TEMPORAL_VALUES_LIST_2));
 
 		assertEquals(expected, result);
@@ -2464,7 +2464,7 @@ public abstract class AbstractCalciteTest {
 		assertSelectTemporalValuesByTimeEquals(result);
 	}
 
-	private static void assertSelectTemporalValuesByTimeEquals(QueryResult result) {
+	private void assertSelectTemporalValuesByTimeEquals(QueryResult result) {
 		QueryResult expected = temporalValuesToQueryResult(List.of(TEMPORAL_VALUES_LIST_1.get(0)));
 
 		assertEquals(expected, result);
@@ -2487,7 +2487,7 @@ public abstract class AbstractCalciteTest {
 		assertSelectTemporalValuesByDate(result);
 	}
 
-	private static void assertSelectTemporalValuesByDate(QueryResult result) {
+	private void assertSelectTemporalValuesByDate(QueryResult result) {
 		QueryResult expected = temporalValuesToQueryResult(TEMPORAL_VALUES_LIST_1);
 
 		assertEquals(expected, result);
@@ -2510,7 +2510,7 @@ public abstract class AbstractCalciteTest {
 		assertSelectTemporalValuesByDateEquals(result);
 	}
 
-	private static void assertSelectTemporalValuesByDateEquals(QueryResult result) {
+	private void assertSelectTemporalValuesByDateEquals(QueryResult result) {
 		QueryResult expected = temporalValuesToQueryResult(List.of(TEMPORAL_VALUES_LIST_1.get(0)));
 
 		assertEquals(expected, result);
@@ -2567,6 +2567,10 @@ public abstract class AbstractCalciteTest {
 	protected abstract QueryResult queryPrepared(String sql, ParamsSetter paramsSetter);
 
 	protected abstract List<QueryResult> queryPreparedRepeated(String sql, ParamsSetter... paramsSetters);
+
+	protected Object wrapInstant(Instant instant){
+		return instant;
+	}
 
 	public static final class QueryResult {
 		private static final QueryResult EMPTY = new QueryResult(Collections.emptyList(), Collections.emptyList());
@@ -2934,12 +2938,13 @@ public abstract class AbstractCalciteTest {
 		return new QueryResult(columnNames, columnValues);
 	}
 
-	private static QueryResult temporalValuesToQueryResult(List<TemporalValues> temporalValues) {
+	private QueryResult temporalValuesToQueryResult(List<TemporalValues> temporalValues) {
 		List<String> columnNames = Arrays.asList("userId", "registeredAt", "dateOfBirth", "timeOfBirth");
 		List<Object[]> columnValues = new ArrayList<>(temporalValues.size());
 
 		for (TemporalValues temporalValue : temporalValues) {
-			columnValues.add(new Object[]{temporalValue.userId, temporalValue.registeredAt, temporalValue.dateOfBirth, temporalValue.timeOfBirth});
+			Object wrappedInstant = wrapInstant(temporalValue.registeredAt);
+			columnValues.add(new Object[]{temporalValue.userId, wrappedInstant, temporalValue.dateOfBirth, temporalValue.timeOfBirth});
 		}
 
 		return new QueryResult(columnNames, columnValues);

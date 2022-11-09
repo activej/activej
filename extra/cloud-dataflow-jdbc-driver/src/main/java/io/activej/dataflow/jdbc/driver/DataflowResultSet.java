@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import com.fasterxml.jackson.databind.type.MapType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
+import io.activej.dataflow.jdbc.driver.utils.InstantHolder;
 import org.apache.calcite.avatica.AvaticaResultSet;
 import org.apache.calcite.avatica.AvaticaStatement;
 import org.apache.calcite.avatica.ColumnMetaData;
@@ -11,6 +12,7 @@ import org.apache.calcite.avatica.Meta;
 import org.jetbrains.annotations.Nullable;
 
 import java.sql.*;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
@@ -38,12 +40,36 @@ class DataflowResultSet extends AvaticaResultSet {
 
 	@Override
 	public Object getObject(int columnIndex) throws SQLException {
+		Object result = doGetObject(columnIndex, null);
+
+		if (result instanceof Instant instant) {
+			return new InstantHolder(instant);
+		}
+
+		return result;
+	}
+
+	@Override
+	public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
+		Object object = doGetObject(columnIndex, type);
+
+		if (type == InstantHolder.class && object instanceof Instant instant) {
+			//noinspection unchecked
+			return (T) new InstantHolder(instant);
+		}
+
+		return MAPPER.convertValue(object, type);
+	}
+
+	private Object doGetObject(int columnIndex, @Nullable Class<?> expectedClass) throws SQLException {
 		Object result = super.getObject(columnIndex);
 
 		ColumnMetaData columnMetaData = signature.columns.get(columnIndex - 1);
 		ColumnMetaData.AvaticaType type = columnMetaData.type;
 
-		JavaType javaType = getJavaType(type);
+		JavaType javaType = expectedClass == null ?
+				getJavaType(type) :
+				TYPE_FACTORY.constructSimpleType(expectedClass, new JavaType[0]);
 
 		if (result == null ||
 				javaType == TypeFactory.unknownType() ||
@@ -55,6 +81,7 @@ class DataflowResultSet extends AvaticaResultSet {
 
 		return MAPPER.convertValue(result, javaType);
 	}
+
 
 	private static JavaType getJavaType(ColumnMetaData.AvaticaType avaticaType) {
 		String name = avaticaType.getName();
@@ -120,6 +147,5 @@ class DataflowResultSet extends AvaticaResultSet {
 	}
 
 	private record MapTypes(JavaType keyType, JavaType valueType) {
-
 	}
 }
