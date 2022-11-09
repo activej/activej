@@ -21,11 +21,12 @@ import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 
+import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.List;
 
 import static io.activej.config.converter.ConfigConverters.ofDuration;
-import static io.activej.config.converter.ConfigConverters.ofInteger;
+import static io.activej.config.converter.ConfigConverters.ofInetSocketAddress;
 
 public final class DataflowJdbcServerModule extends AbstractModule {
 	private DataflowJdbcServerModule() {
@@ -49,16 +50,18 @@ public final class DataflowJdbcServerModule extends AbstractModule {
 
 	@Provides
 	HttpServer server(AvaticaHandler handler, Config config) {
-		Integer port = config.get(ofInteger(), "dataflow.jdbc.server.port");
+		InetSocketAddress address = config.get(ofInetSocketAddress(), "dataflow.jdbc.server.listenAddress");
 		Duration idleTimeout = config.get(ofDuration(), "dataflow.jdbc.server.idleTimeout");
 
 		return new Builder<Server>()
 				.withHandler(handler)
-				.withPort(port)
 				.withServerCustomizers(List.of(server -> {
 					Connector[] connectors = server.getConnectors();
 					assert connectors.length == 1;
-					((ServerConnector) connectors[0]).setIdleTimeout(idleTimeout.toMillis());
+					ServerConnector connector = (ServerConnector) connectors[0];
+					connector.setIdleTimeout(idleTimeout.toMillis());
+					connector.setHost(address.getHostName());
+					connector.setPort(address.getPort());
 				}), Server.class)
 				.build();
 	}
