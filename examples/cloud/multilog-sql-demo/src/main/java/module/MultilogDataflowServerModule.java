@@ -48,7 +48,7 @@ public class MultilogDataflowServerModule extends AbstractModule {
 	@Provides
 	@Transient
 	@DatasetId(LOG_ITEM_TABLE_NAME)
-	Promise<StreamSupplier<LogItem>> logItemDataset(Eventloop eventloop, Multilog<LogItem> logItemMultilog, @Named("partition") String partition) {
+	Promise<StreamSupplier<LogItem>> logItemDataset(@Named("Dataflow") Eventloop eventloop, Multilog<LogItem> logItemMultilog, @Named("partition") String partition) {
 		checkState(eventloop.inEventloopThread());
 
 		return logItemMultilog.read(partition, new LogFile("", 0), 0L, null)
@@ -63,12 +63,12 @@ public class MultilogDataflowServerModule extends AbstractModule {
 	}
 
 	@Provides
-	Multilog<LogItem> multilog(Eventloop eventloop, ActiveFs fs, FrameFormat frameFormat, BinarySerializer<LogItem> logItemSerializer, LogNamingScheme namingScheme) {
+	Multilog<LogItem> multilog(@Named("Dataflow") Eventloop eventloop, ActiveFs fs, FrameFormat frameFormat, BinarySerializer<LogItem> logItemSerializer, LogNamingScheme namingScheme) {
 		return MultilogImpl.create(eventloop, fs, frameFormat, logItemSerializer, namingScheme);
 	}
 
 	@Provides
-	ActiveFs fs(Eventloop eventloop, Executor executor) throws IOException {
+	ActiveFs fs(@Named("Dataflow") Eventloop eventloop, Executor executor) throws IOException {
 		Path multilogPath = Files.createTempDirectory("multilog");
 		return LocalActiveFs.create(eventloop, executor, multilogPath);
 	}
