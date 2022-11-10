@@ -10,7 +10,6 @@
     let selectedPartition = -1;
 
     let taskData, overviewData;
-    let taskDuration;
 
     function formatDuration(millis) {
         if (millis < 1000) {
@@ -34,13 +33,7 @@
         } else {
             return fetch(`/api/tasks/${task}/${selectedPartition}`)
                     .then(r => r.json())
-                    .then(r => {
-                        const started = r.started;
-                        if (started) {
-                            taskDuration = derived(timeSource, seconds => seconds - started);
-                        }
-                        taskData = r;
-                    }, () => taskDuration = null);
+                    .then(r => taskData = r);
         }
     }
     $: updateTaskData(selectedPartition);
@@ -133,11 +126,11 @@
                 <div>Status: {taskData.status}</div>
                 {#if taskData.started}
                     <div>Started: {new Date(taskData.started).toLocaleString('en-GB')}</div>
-                    {#if taskDuration}
-                        <div>Task is running for {formatDuration($taskDuration)}</div>
-                    {/if}
                     {#if taskData.finished}
-                        <div>Finished: {new Date(taskData.started).toLocaleString('en-GB')}</div>
+                        <div>Finished: {new Date(taskData.finished).toLocaleString('en-GB')}</div>
+                        <div>Task took {formatDuration(taskData.finished - taskData.started)} to execute</div>
+                    {:else}
+                        <div>Task is running for {formatDuration($timeSource - taskData.started)}</div>
                     {/if}
                 {/if}
                 <Graph graphviz={taskData.graph}
