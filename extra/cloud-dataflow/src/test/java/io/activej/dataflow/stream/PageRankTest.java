@@ -257,31 +257,37 @@ public class PageRankTest {
 		};
 	}
 
-	@SuppressWarnings("unused") // For manual run
+	InetSocketAddress addressForDebug1 = new InetSocketAddress(9001);
+	InetSocketAddress addressForDebug2 = new InetSocketAddress(9002);
+
+	@Ignore("For manual run")
+	@Test
 	public void launchServers() throws Exception {
-		launchServer(address1, generatePages(100000), (Consumer<Rank>) $ -> {});
-		launchServer(address2, generatePages(90000), (Consumer<Rank>) $ -> {});
+		launchServer(addressForDebug1, generatePages(100000), (Consumer<Rank>) $ -> {});
+		launchServer(addressForDebug2, generatePages(90000), (Consumer<Rank>) $ -> {});
 		await();
 	}
 
-	@SuppressWarnings("unused") // For manual run
+	@Ignore("For manual run")
+	@Test
+	public void runDebugServer() throws Exception {
+		Injector env = Injector.of(createModule(new Partition(addressForDebug1), new Partition(addressForDebug2)));
+		env.getInstance(AsyncHttpServer.class).withListenPort(8080).listen();
+		await();
+	}
+
+	@Ignore("For manual run")
+	@Test
 	public void postPageRankTask() throws Exception {
 		SortedDataset<Long, Page> sorted = sortedDatasetOfId("items", Page.class, Long.class, new PageKeyFunction(), new LongComparator());
 		SortedDataset<Long, Page> repartitioned = repartitionSort(sorted);
 		SortedDataset<Long, Rank> pageRanks = pageRank(repartitioned);
 
-		Injector env = Injector.of(createModule(new Partition(address1), new Partition(address2)));
+		Injector env = Injector.of(createModule(new Partition(addressForDebug1), new Partition(addressForDebug2)));
 		DataflowGraph graph = env.getInstance(DataflowGraph.class);
 		consumerOfId(pageRanks, "result").channels(DataflowContext.of(graph));
 
 		await(graph.execute());
-	}
-
-	@SuppressWarnings("unused") // For manual run
-	public void runDebugServer() throws Exception {
-		Injector env = Injector.of(createModule(new Partition(address1), new Partition(address2)));
-		env.getInstance(AsyncHttpServer.class).withListenPort(8080).listen();
-		await();
 	}
 
 	@Test
