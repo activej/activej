@@ -70,13 +70,13 @@ public interface SerializerDef {
 		Variable POS = arg(1);
 		Variable VALUE = arg(2);
 
-		Expression define(SerializerDef serializerDef, Class<?> valueClazz, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel);
+		Expression define(SerializerDef serializerDef, Expression buf, Variable pos, Expression value);
 	}
 
 	interface StaticDecoders {
 		Variable IN = arg(0);
 
-		Expression define(SerializerDef serializerDef, Class<?> valueClazz, Expression in, int version, CompatibilityLevel compatibilityLevel);
+		Expression define(SerializerDef serializerDef, Expression in);
 
 		<T> Class<T> buildClass(ClassBuilder<T> classBuilder);
 	}
@@ -93,7 +93,7 @@ public interface SerializerDef {
 	 default Expression defineEncoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		 return isInline(version, compatibilityLevel) ?
 				 encoder(staticEncoders, buf, pos, value, version, compatibilityLevel) :
-				 staticEncoders.define(this, getEncodeType(), buf, pos, value, version, compatibilityLevel);
+				 staticEncoders.define(this, buf, pos, value);
 	 }
 
 	/**
@@ -106,6 +106,6 @@ public interface SerializerDef {
 	default Expression defineDecoder(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel) {
 		return isInline(version, compatibilityLevel) ?
 				decoder(staticDecoders, in, version, compatibilityLevel) :
-				staticDecoders.define(this, getDecodeType(), in, version, compatibilityLevel);
+				staticDecoders.define(this, in);
 	}
 }
