@@ -1,6 +1,7 @@
 package io.activej.serializer.stream;
 
 import io.activej.serializer.stream.StreamCodecs.SubtypeBuilder;
+import org.junit.Test;
 import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.FromDataPoints;
 import org.junit.experimental.theories.Theories;
@@ -13,8 +14,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
 @RunWith(Theories.class)
@@ -399,6 +399,35 @@ public class StreamCodecsTest {
 				assertEquals(1, b);
 			}
 			return decoded;
+		}
+	}
+
+	@Test
+	public void testReference() throws IOException {
+		StreamCodec<String> codec = StreamCodecs.reference(StreamCodecs.ofString());
+		ByteArrayOutputStream os = new ByteArrayOutputStream();
+		try (StreamOutput output = StreamOutput.create(os)) {
+			String s1 = "s1";
+			String s2 = "s2";
+			String s3 = "s3";
+			codec.encode(output, s1);
+			codec.encode(output, s2);
+			codec.encode(output, s1);
+			codec.encode(output, s3);
+			codec.encode(output, s2);
+		}
+
+		codec = StreamCodecs.reference(StreamCodecs.ofString());
+		byte[] buf = os.toByteArray();
+		try (StreamInput input = StreamInput.create(new ByteArrayInputStream(buf))) {
+			String s1 = codec.decode(input);
+			assertEquals("s1", s1);
+			String s2 = codec.decode(input);
+			assertEquals("s2", s2);
+			assertSame(s1, codec.decode(input));
+			String s3 = codec.decode(input);
+			assertEquals("s3", s3);
+			assertSame(s2, codec.decode(input));
 		}
 	}
 }
