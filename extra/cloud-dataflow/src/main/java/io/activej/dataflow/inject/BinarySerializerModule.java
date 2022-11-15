@@ -36,8 +36,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static java.util.Collections.singletonList;
-
 public final class BinarySerializerModule extends AbstractModule {
 	private static final Logger logger = LoggerFactory.getLogger(BinarySerializerModule.class);
 
@@ -105,7 +103,7 @@ public final class BinarySerializerModule extends AbstractModule {
 		}
 
 		public <T> BinarySerializer<T> get(Class<T> cls) {
-			return get(((Type) cls));
+			return get((Type) cls);
 		}
 
 		@SuppressWarnings({"unchecked"})
