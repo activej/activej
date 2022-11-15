@@ -318,7 +318,8 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 						.then(() -> !forcedStart && requestSender instanceof NoSenderAvailable ?
 								Promise.ofException(START_EXCEPTION) :
 								Promise.complete()))
-				.whenResult(this::rediscover);
+				.whenResult(this::rediscover)
+				.whenException(() -> doStop());
 	}
 
 	@Override
@@ -326,15 +327,22 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 		if (CHECK) Checks.checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
 		if (stopPromise != null) return stopPromise;
 
+		doStop();
+		return stopPromise;
+	}
+
+	private void doStop() {
+		assert stopPromise == null;
+
 		stopPromise = new SettablePromise<>();
 		if (connections.size() == 0) {
 			stopPromise.set(null);
-			return stopPromise;
+			return;
 		}
+
 		for (RpcClientConnection connection : connections.values()) {
 			connection.shutdown();
 		}
-		return stopPromise;
 	}
 
 	private Promise<Void> connect(InetSocketAddress address) {
