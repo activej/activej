@@ -34,10 +34,6 @@ public final class CustomAnnotations {
 		return new SerializeFixedSizeImpl(value);
 	}
 
-	public static SerializeReference serializeReference() {
-		return new SerializerReferenceImpl();
-	}
-
 	public static SerializeStringFormat serializeStringFormat(StringFormat stringFormat) {
 		return new SerializerStringFormatImpl(stringFormat);
 	}
@@ -112,9 +108,6 @@ public final class CustomAnnotations {
 		public int subclassesIdx() {
 			return subclassesIdx;
 		}
-	}
-
-	static final class SerializerReferenceImpl extends AbstractSerializeAnnotation implements SerializeReference {
 	}
 
 	static final class SerializerStringFormatImpl extends AbstractSerializeAnnotation implements SerializeStringFormat {

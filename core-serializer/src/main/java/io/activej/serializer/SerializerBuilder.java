@@ -230,11 +230,6 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 				serializerDef = fn.apply(ctx);
 			}
 
-			if (hasAnnotation(SerializeReference.class, ctx.getAnnotations()) ||
-					hasAnnotation(SerializeReference.class, rawClass.getAnnotations())) {
-				serializerDef = new SerializerDefReference(serializerDef);
-			}
-
 			if (hasAnnotation(SerializeVarLength.class, ctx.getAnnotations())) {
 				serializerDef = ((SerializerDefWithVarLength) serializerDef).ensureVarLength();
 			}
@@ -759,11 +754,6 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 
 		forwardingSerializerDef.serializerDef = serializer;
 
-		if (hasAnnotation(SerializeReference.class, ctx.getAnnotations()) ||
-				hasAnnotation(SerializeReference.class, ctx.getRawType().getAnnotations())) {
-			cache.remove(ctx.getType(), forwardingSerializerDef);
-		}
-
 		return serializer;
 	}
 
@@ -1025,7 +1015,6 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 	static {
 		repeatable(SerializeFixedSizes.class, SerializeFixedSize.class, SerializeFixedSizes::value, SerializeFixedSize::path);
 		repeatable(SerializeNullables.class, SerializeNullable.class, SerializeNullables::value, SerializeNullable::path);
-		repeatable(SerializeReferences.class, SerializeReference.class, SerializeReferences::value, SerializeReference::path);
 		repeatable(SerializeStringFormats.class, SerializeStringFormat.class, SerializeStringFormats::value, SerializeStringFormat::path);
 		repeatable(SerializeClasses.class, SerializeClass.class, SerializeClasses::value, SerializeClass::path);
 		repeatable(SerializeVarLengths.class, SerializeVarLength.class, SerializeVarLengths::value, SerializeVarLength::path);
