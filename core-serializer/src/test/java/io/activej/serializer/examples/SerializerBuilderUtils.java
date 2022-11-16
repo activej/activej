@@ -18,7 +18,7 @@ public class SerializerBuilderUtils {
 			byte.class, short.class, int.class, long.class, float.class, double.class, char.class, Object.class
 	);
 
-	private static final Map<String, String> collectionImplSuffix = new HashMap<String, String>() {{
+	private static final Map<String, String> COLLECTION_IMPL_SUFFIX = new HashMap<String, String>() {{
 		put("Set", "HashSet");
 		put("IndexedContainer", "ArrayList");
 	}};
@@ -45,6 +45,9 @@ public class SerializerBuilderUtils {
 	private static void registerHppcMaps(SerializerBuilder builder, DefiningClassLoader classLoader) {
 		for (int i = 0; i < TYPES.size(); i++) {
 			Class<?> keyType = TYPES.get(i);
+			if (keyType == float.class || keyType == byte.class || keyType == double.class) {
+				continue;
+			}
 			String keyTypeName = keyType.getSimpleName();
 			for (Class<?> valueType : TYPES) {
 				String valueTypeName = valueType.getSimpleName();
@@ -56,7 +59,7 @@ public class SerializerBuilderUtils {
 					hppcMapType = Class.forName(hppcMapTypeName, true, classLoader);
 					hppcMapImplType = Class.forName(hppcMapImplTypeName, true, classLoader);
 				} catch (ClassNotFoundException e) {
-					throw new IllegalStateException("There is no collection with given name" + e.getClass().getName(), e);
+					throw new IllegalStateException("There is no collection with given name", e);
 				}
 				builder.with(hppcMapType, serializerDefMap(hppcMapType, hppcMapImplType, keyType, valueType));
 			}
@@ -64,11 +67,16 @@ public class SerializerBuilderUtils {
 	}
 
 	private static void registerHppcCollections(SerializerBuilder builder, DefiningClassLoader classLoader) {
-		for (Map.Entry<String, String> collectionImpl : collectionImplSuffix.entrySet()) {
+		for (Map.Entry<String, String> collectionImpl : COLLECTION_IMPL_SUFFIX.entrySet()) {
 			for (Class<?> valueType : TYPES) {
+				String collectionImplKey = collectionImpl.getKey();
+				if (collectionImplKey.equals("Set") &&
+						(valueType == byte.class || valueType == float.class || valueType == double.class)) {
+					continue;
+				}
 				String valueTypeName = valueType.getSimpleName();
 				String prefix = "com.carrotsearch.hppc." + capitalize(valueTypeName);
-				String hppcCollectionTypeName = prefix + collectionImpl.getKey();
+				String hppcCollectionTypeName = prefix + collectionImplKey;
 				String hppcCollectionTypeImplName = prefix + collectionImpl.getValue();
 				Class<?> hppcCollectionType, hppcCollectionTypeImpl;
 				try {
