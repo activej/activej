@@ -86,7 +86,10 @@ final class ExpressionHash implements Expression {
 				Label ifNullLabel = g.newLabel();
 				g.ifNull(ifNullLabel);
 				g.loadLocal(tmpVar);
-				g.invokeVirtual(fieldType, getMethod("int hashCode()"));
+				Type owner = ctx.toJavaType(fieldType).isInterface() ?
+						Type.getType(Object.class) :
+						fieldType;
+				g.invokeVirtual(owner, getMethod("int hashCode()"));
 				g.visitInsn(IADD);
 				g.mark(ifNullLabel);
 			}
