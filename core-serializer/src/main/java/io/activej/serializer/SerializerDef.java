@@ -20,7 +20,6 @@ import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 
-import java.util.Map;
 import java.util.Set;
 
 import static io.activej.codegen.expression.Expressions.arg;
@@ -50,14 +49,6 @@ public interface SerializerDef {
 	Class<?> getEncodeType();
 
 	Class<?> getDecodeType();
-
-	Map<Object, Expression> getEncoderInitializer();
-
-	Map<Object, Expression> getDecoderInitializer();
-
-	Map<Object, Expression> getEncoderFinalizer();
-
-	Map<Object, Expression> getDecoderFinalizer();
 
 	boolean isInline(int version, CompatibilityLevel compatibilityLevel);
 

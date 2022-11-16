@@ -5,7 +5,6 @@ import io.activej.codegen.expression.Variable;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 
-import java.util.Map;
 import java.util.Set;
 
 public abstract class ForwardingSerializerDef implements SerializerDef {
@@ -34,26 +33,6 @@ public abstract class ForwardingSerializerDef implements SerializerDef {
 	@Override
 	public Class<?> getDecodeType() {
 		return serializer().getDecodeType();
-	}
-
-	@Override
-	public Map<Object, Expression> getEncoderInitializer() {
-		return serializer().getEncoderInitializer();
-	}
-
-	@Override
-	public Map<Object, Expression> getDecoderInitializer() {
-		return serializer().getDecoderInitializer();
-	}
-
-	@Override
-	public Map<Object, Expression> getEncoderFinalizer() {
-		return serializer().getEncoderFinalizer();
-	}
-
-	@Override
-	public Map<Object, Expression> getDecoderFinalizer() {
-		return serializer().getDecoderFinalizer();
 	}
 
 	@Override

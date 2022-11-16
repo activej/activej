@@ -1,9 +1,5 @@
 package io.activej.serializer;
 
-import io.activej.codegen.expression.Expression;
-
-import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 
 import static java.util.Collections.emptySet;
@@ -28,23 +24,4 @@ public abstract class AbstractSerializerDef implements SerializerDef {
 		return getEncodeType();
 	}
 
-	@Override
-	public Map<Object, Expression> getEncoderInitializer() {
-		return Collections.emptyMap();
-	}
-
-	@Override
-	public Map<Object, Expression> getDecoderInitializer() {
-		return Collections.emptyMap();
-	}
-
-	@Override
-	public Map<Object, Expression> getEncoderFinalizer() {
-		return Collections.emptyMap();
-	}
-
-	@Override
-	public Map<Object, Expression> getDecoderFinalizer() {
-		return Collections.emptyMap();
-	}
 }
