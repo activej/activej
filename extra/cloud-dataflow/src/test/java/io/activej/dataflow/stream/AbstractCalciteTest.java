@@ -51,6 +51,8 @@ import static io.activej.dataflow.helper.StreamMergeSorterStorageStub.FACTORY_ST
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.dataflow.stream.AbstractCalciteTest.MatchType.TYPE_1;
 import static io.activej.dataflow.stream.AbstractCalciteTest.MatchType.TYPE_2;
+import static io.activej.dataflow.stream.AbstractCalciteTest.State.OFF;
+import static io.activej.dataflow.stream.AbstractCalciteTest.State.ON;
 import static io.activej.dataflow.stream.DataflowTest.createCommon;
 import static io.activej.dataflow.stream.DataflowTest.getFreeListenAddress;
 import static org.junit.Assert.assertEquals;
@@ -80,6 +82,7 @@ public abstract class AbstractCalciteTest {
 	public static final String TEMPORAL_VALUES_TABLE_NAME = "temporal_values";
 	public static final String ENROLLMENT_TABLE_NAME = "enrollment";
 	public static final String PAYMENT_TABLE_NAME = "payment";
+	public static final String STATES_TABLE_NAME = "states";
 
 	protected static final List<Student> STUDENT_LIST_1 = List.of(
 			new Student(4, "Mark", null, 3),
@@ -227,6 +230,15 @@ public abstract class AbstractCalciteTest {
 			new Payment(3, "RJ67", true, 210)
 	);
 
+	protected static final List<States> STATES_LIST_1 = List.of(
+			new States(1, ON, new InnerState(OFF)),
+			new States(4, ON, new InnerState(ON))
+	);
+	protected static final List<States> STATES_LIST_2 = List.of(
+			new States(3, OFF, new InnerState(OFF)),
+			new States(2, OFF, new InnerState(ON))
+	);
+
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
@@ -321,6 +333,13 @@ public abstract class AbstractCalciteTest {
 										.withColumn("amount", int.class, Payment::amount)
 										.build()),
 						DefiningClassLoader.class)
+				.bind(setTableKey).to(classLoader -> Set.of(
+								DataflowTableBuilder.create(classLoader, STATES_TABLE_NAME, States.class)
+										.withColumn("id", int.class, States::id)
+										.withColumn("state", State.class, States::state)
+										.withColumn("innerState", InnerState.class, States::innerState)
+										.build())
+						, DefiningClassLoader.class)
 				.multibindToSet(DataflowTable.class)
 				.build();
 
@@ -351,6 +370,7 @@ public abstract class AbstractCalciteTest {
 						.bind(datasetId(TEMPORAL_VALUES_TABLE_NAME)).toInstance(TEMPORAL_VALUES_LIST_1)
 						.bind(datasetId(ENROLLMENT_TABLE_NAME)).toInstance(ENROLLMENT_LIST_1)
 						.bind(datasetId(PAYMENT_TABLE_NAME)).toInstance(PAYMENT_LIST_1)
+						.bind(datasetId(STATES_TABLE_NAME)).toInstance(STATES_LIST_1)
 						.build());
 		Module server2Module = Modules.combine(serverModule,
 				ModuleBuilder.create()
@@ -367,6 +387,7 @@ public abstract class AbstractCalciteTest {
 						.bind(datasetId(TEMPORAL_VALUES_TABLE_NAME)).toInstance(TEMPORAL_VALUES_LIST_2)
 						.bind(datasetId(ENROLLMENT_TABLE_NAME)).toInstance(ENROLLMENT_LIST_2)
 						.bind(datasetId(PAYMENT_TABLE_NAME)).toInstance(PAYMENT_LIST_2)
+						.bind(datasetId(STATES_TABLE_NAME)).toInstance(STATES_LIST_2)
 						.build());
 
 		server1Injector = Injector.of(server1Module);
@@ -467,6 +488,18 @@ public abstract class AbstractCalciteTest {
 	}
 
 	public record Payment(int studentId, String courseCode, boolean status, int amount) {
+	}
+
+	@SerializeRecord
+	public record States(int id, State state, InnerState innerState) {
+	}
+
+	public enum State {
+		OFF, ON
+	}
+
+	@SerializeRecord
+	public record InnerState(State state) {
 	}
 
 	@Test
@@ -2562,13 +2595,89 @@ public abstract class AbstractCalciteTest {
 		assertEquals(expected, result);
 	}
 
+	// region SelectByStateEnum
+	@Test
+	public void testSelectByStateEnum() {
+		QueryResult result = query("""
+				SELECT id
+				FROM states
+				WHERE state = 'ON'
+				""");
+
+		assertSelectByStateEnum(result);
+	}
+
+	@Test
+	public void testSelectByStateEnumPrepared() {
+		QueryResult result = queryPrepared("""
+				SELECT id
+				FROM states
+				WHERE state = ?
+				""", stmt -> stmt.setString(1, "ON"));
+
+		assertSelectByStateEnum(result);
+	}
+
+	private static void assertSelectByStateEnum(QueryResult result) {
+		QueryResult expected = new QueryResult(List.of("id"), List.of(new Object[]{1}, new Object[]{4}));
+
+		assertEquals(expected, result);
+	}
+	// endregion
+
+	// region SelectByInnerStateEnum
+	@Test
+	public void testSelectByInnerStateEnum() {
+		QueryResult result = query("""
+				SELECT id
+				FROM states
+				WHERE states.innerState.state = 'OFF'
+				""");
+
+		assertSelectByInnerStateEnum(result);
+	}
+
+	@Test
+	public void testSelectByInnerStateEnumPrepared() {
+		QueryResult result = queryPrepared("""
+				SELECT id
+				FROM states
+				WHERE states.innerState.state = ?
+				""", stmt -> stmt.setString(1, "OFF"));
+
+		assertSelectByInnerStateEnum(result);
+	}
+
+	private static void assertSelectByInnerStateEnum(QueryResult result) {
+		QueryResult expected = new QueryResult(List.of("id"), List.of(new Object[]{1}, new Object[]{3}));
+
+		assertEquals(expected, result);
+	}
+	// endregion
+
+	@Test
+	public void testSortByEnum() {
+		QueryResult result = query("""
+				SELECT id
+				FROM states
+				ORDER BY state ASC, states.innerState.state DESC
+				""");
+
+		QueryResult expected = new QueryResult(
+				List.of("id"),
+				List.of(new Object[]{2}, new Object[]{3}, new Object[]{4}, new Object[]{1})
+		);
+
+		assertTrue(expected.equalsOrdered(result));
+	}
+
 	protected abstract QueryResult query(String sql);
 
 	protected abstract QueryResult queryPrepared(String sql, ParamsSetter paramsSetter);
 
 	protected abstract List<QueryResult> queryPreparedRepeated(String sql, ParamsSetter... paramsSetters);
 
-	protected Object wrapInstant(Instant instant){
+	protected Object wrapInstant(Instant instant) {
 		return instant;
 	}
 

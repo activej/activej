@@ -95,6 +95,9 @@ public final class Utils {
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	public static int compareToUnknown(Comparable left, Comparable right) {
+		left = tryCoerceEnum(left, right);
+		right = tryCoerceEnum(right, left);
+
 		Class<? extends Comparable> leftClass = left.getClass();
 		Class<? extends Comparable> rightClass = right.getClass();
 
@@ -110,12 +113,23 @@ public final class Utils {
 	}
 
 	public static boolean equalsUnknown(Object object1, Object object2) {
+		object1 = tryCoerceEnum(object1, object2);
+		object2 = tryCoerceEnum(object2, object1);
+
 		if (object1.getClass() != object2.getClass() &&
 				object1 instanceof Number number1 && object2 instanceof Number number2) {
 			return Double.compare(number1.doubleValue(), number2.doubleValue()) == 0;
 		}
 
 		return object1.equals(object2);
+	}
+
+	private static <T> T tryCoerceEnum(T from, T to) {
+		if (from instanceof String aString && to instanceof Enum<?> anEnum) {
+			//noinspection unchecked
+			return (T) Enum.valueOf(anEnum.getClass(), aString);
+		}
+		return from;
 	}
 
 	public static SortedDataset<Record, Record> singleDummyDataset() {
@@ -136,7 +150,10 @@ public final class Utils {
 			if (cls == LocalDate.class) {
 				return typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.DATE), true);
 			}
-			if (cls.isPrimitive() || cls.isEnum() || Primitives.isWrapperType(cls)) {
+			if (cls.isEnum()) {
+				return typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.VARCHAR), true);
+			}
+			if (cls.isPrimitive() || Primitives.isWrapperType(cls)) {
 				return typeFactory.createJavaType(cls);
 			}
 
