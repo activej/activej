@@ -10,9 +10,12 @@ import java.util.Calendar;
 import java.util.Properties;
 import java.util.TimeZone;
 
+@SuppressWarnings("unused") // Used through reflection
 public class DataflowJdbc41Factory implements AvaticaFactory {
 	public static final TimeZone UTC_TIME_ZONE = TimeZone.getTimeZone("UTC");
 	public static final Calendar UTC_CALENDAR = Calendar.getInstance(UTC_TIME_ZONE);
+
+	private static final String URL_KEY = "url";
 
 	@Override
 	public int getJdbcMajorVersion() {
@@ -26,6 +29,10 @@ public class DataflowJdbc41Factory implements AvaticaFactory {
 
 	@Override
 	public AvaticaConnection newConnection(UnregisteredDriver driver, AvaticaFactory factory, String url, Properties info) {
+		String urlPart = url.substring(Driver.CONNECT_STRING_PREFIX.length());
+		if (info.put(URL_KEY, urlPart) != null) {
+			throw new IllegalArgumentException("URL should be set using connect string, not properties");
+		}
 		return new DataflowJdbc41Connection(driver, factory, url, info);
 	}
 

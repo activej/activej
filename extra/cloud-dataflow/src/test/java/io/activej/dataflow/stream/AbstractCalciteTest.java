@@ -3248,6 +3248,7 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static DateRange andRanges(List<DateRange> ranges) {
+		if (ranges.isEmpty()) return null;
 		DateRange result = ranges.get(0);
 		for (int i = 1; i < ranges.size(); i++) {
 			DateRange current = ranges.get(i);
@@ -3268,6 +3269,7 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static DateRange orRanges(List<DateRange> ranges) {
+		if (ranges.isEmpty()) return null;
 		DateRange result = ranges.get(0);
 		for (int i = 1; i < ranges.size(); i++) {
 			DateRange current = ranges.get(i);

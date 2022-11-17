@@ -13,7 +13,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.Properties;
 import java.util.Scanner;
 
 import static jdbc.MultilogDataflowJdbcServerLauncher.DEFAULT_JDBC_SERVER_PORT;
@@ -46,11 +45,8 @@ public final class MultilogDataflowJdbcClientLauncher extends Launcher {
 	protected void run() throws Exception {
 		Scanner scanIn = new Scanner(System.in);
 
-		Properties connectionProperties = new Properties();
-		connectionProperties.put("url", url);
-
 		try (
-				Connection connection = DriverManager.getConnection(Driver.CONNECT_STRING_PREFIX, connectionProperties);
+				Connection connection = DriverManager.getConnection(Driver.CONNECT_STRING_PREFIX + url);
 				Statement statement = connection.createStatement()
 		) {
 			while (true) {

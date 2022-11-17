@@ -20,7 +20,6 @@ import java.sql.*;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.Assert.assertTrue;
@@ -74,11 +73,8 @@ public class CalciteJDBCTest extends AbstractCalciteTest {
 
 	@Override
 	protected QueryResult query(String sql) {
-		Properties connectionProperties = new Properties();
-		connectionProperties.put("url", "http://localhost:" + port);
-
 		try (
-				Connection connection = DriverManager.getConnection(Driver.CONNECT_STRING_PREFIX, connectionProperties);
+				Connection connection = DriverManager.getConnection(Driver.CONNECT_STRING_PREFIX + "http://localhost:" + port);
 				Statement statement = connection.createStatement();
 				ResultSet resultSet = statement.executeQuery(sql)
 		) {
@@ -90,10 +86,7 @@ public class CalciteJDBCTest extends AbstractCalciteTest {
 
 	@Override
 	protected QueryResult queryPrepared(String sql, ParamsSetter setter) {
-		Properties connectionProperties = new Properties();
-		connectionProperties.put("url", "http://localhost:" + port);
-
-		try (Connection connection = DriverManager.getConnection(Driver.CONNECT_STRING_PREFIX, connectionProperties)) {
+		try (Connection connection = DriverManager.getConnection(Driver.CONNECT_STRING_PREFIX + "http://localhost:" + port)) {
 			try (PreparedStatement statement = connection.prepareStatement(sql)) {
 				setter.setValues(statement);
 				try (ResultSet resultSet = statement.executeQuery()) {
@@ -107,11 +100,8 @@ public class CalciteJDBCTest extends AbstractCalciteTest {
 
 	@Override
 	protected List<QueryResult> queryPreparedRepeated(String sql, ParamsSetter... paramsSetters) {
-		Properties connectionProperties = new Properties();
-		connectionProperties.put("url", "http://localhost:" + port);
-
 		List<QueryResult> results = new ArrayList<>(paramsSetters.length);
-		try (Connection connection = DriverManager.getConnection(Driver.CONNECT_STRING_PREFIX, connectionProperties)) {
+		try (Connection connection = DriverManager.getConnection(Driver.CONNECT_STRING_PREFIX + "http://localhost:" + port)) {
 			try (PreparedStatement statement = connection.prepareStatement(sql)) {
 				for (ParamsSetter setter : paramsSetters) {
 					setter.setValues(statement);
