@@ -26,6 +26,7 @@ import org.objectweb.asm.commons.Method;
 import java.util.Objects;
 
 import static io.activej.codegen.operation.CompareOperation.*;
+import static io.activej.codegen.util.Utils.invokeVirtualOrInterface;
 import static io.activej.codegen.util.Utils.isPrimitiveType;
 import static org.objectweb.asm.Type.BOOLEAN_TYPE;
 import static org.objectweb.asm.Type.INT_TYPE;
@@ -61,11 +62,11 @@ final class ExpressionCmp implements Expression {
 			g.ifCmp(leftType, operation.opCode, labelTrue);
 		} else {
 			if (operation == EQ || operation == NE) {
-				g.invokeVirtual(leftType, new Method("equals", BOOLEAN_TYPE, new Type[]{Type.getType(Object.class)}));
+				invokeVirtualOrInterface(ctx, leftType, new Method("equals", BOOLEAN_TYPE, new Type[]{Type.getType(Object.class)}));
 				g.push(operation == EQ);
 				g.ifCmp(BOOLEAN_TYPE, GeneratorAdapter.EQ, labelTrue);
 			} else {
-				g.invokeVirtual(leftType, new Method("compareTo", INT_TYPE, new Type[]{Type.getType(Object.class)}));
+				invokeVirtualOrInterface(ctx, leftType, new Method("compareTo", INT_TYPE, new Type[]{Type.getType(Object.class)}));
 				if (operation == LT) {
 					g.ifZCmp(GeneratorAdapter.LT, labelTrue);
 				} else if (operation == GT) {

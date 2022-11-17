@@ -26,8 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.codegen.util.Utils.isPrimitiveType;
-import static io.activej.codegen.util.Utils.wrap;
+import static io.activej.codegen.util.Utils.*;
 import static org.objectweb.asm.Type.INT_TYPE;
 import static org.objectweb.asm.commons.GeneratorAdapter.NE;
 
@@ -120,7 +119,7 @@ public final class ExpressionComparator implements Expression {
 				g.ifZCmp(NE, labelReturn);
 				g.pop();
 			} else if (!pair.nullable) {
-				g.invokeVirtual(leftPropertyType, new Method("compareTo", INT_TYPE, new Type[]{Type.getType(Object.class)}));
+				invokeVirtualOrInterface(ctx, leftPropertyType, new Method("compareTo", INT_TYPE, new Type[]{Type.getType(Object.class)}));
 				g.dup();
 				g.ifZCmp(NE, labelReturn);
 				g.pop();
@@ -155,7 +154,7 @@ public final class ExpressionComparator implements Expression {
 				varLeft.load(ctx);
 				varRight.load(ctx);
 
-				g.invokeVirtual(leftPropertyType, new Method("compareTo", INT_TYPE, new Type[]{Type.getType(Object.class)}));
+				invokeVirtualOrInterface(ctx, leftPropertyType, new Method("compareTo", INT_TYPE, new Type[]{Type.getType(Object.class)}));
 				g.dup();
 				g.ifZCmp(NE, labelReturn);
 				g.pop();

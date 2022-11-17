@@ -24,8 +24,7 @@ import org.objectweb.asm.commons.Method;
 
 import java.util.List;
 
-import static io.activej.codegen.util.Utils.isPrimitiveType;
-import static io.activej.codegen.util.Utils.wrap;
+import static io.activej.codegen.util.Utils.*;
 import static org.objectweb.asm.Type.getType;
 import static org.objectweb.asm.commons.Method.getMethod;
 
@@ -61,7 +60,7 @@ public final class ExpressionConcat implements Expression {
 				Label afterToString = new Label();
 				g.dup();
 				g.ifNull(nullLabel);
-				g.invokeVirtual(type, getMethod("String toString()"));
+				invokeVirtualOrInterface(ctx, type, getMethod("String toString()"));
 				g.goTo(afterToString);
 				g.mark(nullLabel);
 				g.pop();

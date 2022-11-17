@@ -23,6 +23,7 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 
 import java.util.List;
 
+import static io.activej.codegen.util.Utils.invokeVirtualOrInterface;
 import static io.activej.codegen.util.Utils.isPrimitiveType;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.INT_TYPE;
@@ -86,10 +87,7 @@ final class ExpressionHash implements Expression {
 				Label ifNullLabel = g.newLabel();
 				g.ifNull(ifNullLabel);
 				g.loadLocal(tmpVar);
-				Type owner = ctx.toJavaType(fieldType).isInterface() ?
-						Type.getType(Object.class) :
-						fieldType;
-				g.invokeVirtual(owner, getMethod("int hashCode()"));
+				invokeVirtualOrInterface(ctx, fieldType, getMethod("int hashCode()"));
 				g.visitInsn(IADD);
 				g.mark(ifNullLabel);
 			}

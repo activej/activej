@@ -113,7 +113,7 @@ final class Property implements Variable {
 		if (javaSetter != null) {
 			Type fieldType = getType(javaSetter.getParameterTypes()[0]);
 			ctx.cast(valueType, fieldType);
-			invokeVirtualOrInterface(g, argumentClass, getMethod(javaSetter));
+			invokeVirtualOrInterface(ctx, ownerType, getMethod(javaSetter));
 			Type returnType = getType(javaSetter.getReturnType());
 			if (returnType.getSize() == 1) {
 				g.pop();
@@ -215,7 +215,7 @@ final class Property implements Variable {
 		if (m != null) {
 			Type resultType = getType(m.getReturnType());
 			if (g != null) {
-				invokeVirtualOrInterface(g, argumentClass, getMethod(m));
+				invokeVirtualOrInterface(ctx, ownerType, getMethod(m));
 			}
 			return resultType;
 		}

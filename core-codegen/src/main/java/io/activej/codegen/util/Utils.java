@@ -34,6 +34,7 @@ import static org.objectweb.asm.commons.Method.getMethod;
 
 @SuppressWarnings("WeakerAccess")
 public final class Utils {
+	private static final Type OBJECT_TYPE = Type.getType(Object.class);
 	private static final Map<String, Type> WRAPPER_TO_PRIMITIVE = new HashMap<>();
 
 	static {
@@ -125,11 +126,42 @@ public final class Utils {
 		return reference;
 	}
 
-	public static void invokeVirtualOrInterface(GeneratorAdapter g, Class<?> owner, Method method) {
-		if (owner.isInterface())
-			g.invokeInterface(getType(owner), method);
-		else
-			g.invokeVirtual(getType(owner), method);
+	public static void invokeVirtualOrInterface(Context context, Type owner, Method method) {
+		GeneratorAdapter g = context.getGeneratorAdapter();
+		Class<?> ownerClass = context.toJavaType(owner);
+		if (!ownerClass.isInterface()) {
+			g.invokeVirtual(owner, method);
+			return;
+		}
+
+		if (!hasMethod(context, ownerClass, method) && hasMethod(context, Object.class, method)) {
+			g.invokeVirtual(OBJECT_TYPE, method);
+		} else {
+			g.invokeInterface(owner, method);
+		}
+	}
+
+	private static boolean hasMethod(Context context, Class<?> owner, Method method) {
+		Type[] argumentTypes = method.getArgumentTypes();
+		Class<?>[] parameterTypes = new Class[argumentTypes.length];
+		for (int i = 0; i < argumentTypes.length; i++) {
+			parameterTypes[i] = context.toJavaType(argumentTypes[i]);
+		}
+
+		try {
+			owner.getMethod(method.getName(), parameterTypes);
+		} catch (NoSuchMethodException e) {
+			return false;
+		}
+
+		return true;
+	}
+
+	public static void main(String[] args) {
+		Method method1 = getMethod("int hashCode()");
+		Method method2 = getMethod("int hashCode()");
+
+		System.out.println(method1.equals(method2));
 	}
 
 	public static String exceptionInGeneratedClass(Context ctx) {
