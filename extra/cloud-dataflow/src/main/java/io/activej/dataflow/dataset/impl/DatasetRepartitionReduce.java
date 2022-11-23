@@ -21,6 +21,7 @@ import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.StreamId;
+import io.activej.dataflow.graph.StreamSchema;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 
 import java.util.Collection;
@@ -34,13 +35,13 @@ public final class DatasetRepartitionReduce<K, I, O> extends Dataset<O> {
 	private final List<Partition> partitions;
 
 	public DatasetRepartitionReduce(LocallySortedDataset<K, I> input, Reducer<K, I, O, ?> reducer,
-			Class<O> resultType) {
-		this(input, reducer, resultType, null);
+			StreamSchema<O> resultStreamSchema) {
+		this(input, reducer, resultStreamSchema, null);
 	}
 
 	public DatasetRepartitionReduce(LocallySortedDataset<K, I> input, Reducer<K, I, O, ?> reducer,
-			Class<O> resultType, List<Partition> partitions) {
-		super(resultType);
+			StreamSchema<O> resultStreamSchema, List<Partition> partitions) {
+		super(resultStreamSchema);
 		this.input = input;
 		this.reducer = reducer;
 		this.partitions = partitions;

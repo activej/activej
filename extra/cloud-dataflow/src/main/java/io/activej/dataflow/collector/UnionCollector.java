@@ -48,10 +48,10 @@ public class UnionCollector<T> implements Collector<T> {
 		StreamUnion<T> union = StreamUnion.create();
 		int index = context.generateNodeIndex();
 		for (StreamId streamId : inputStreamIds) {
-			NodeUpload<T> nodeUpload = new NodeUpload<>(index, input.valueType(), streamId);
+			NodeUpload<T> nodeUpload = new NodeUpload<>(index, input.streamSchema(), streamId);
 			Partition partition = graph.getPartition(streamId);
 			graph.addNode(partition, nodeUpload);
-			StreamSupplier<T> supplier = client.download(partition.getAddress(), streamId, input.valueType());
+			StreamSupplier<T> supplier = client.download(partition.getAddress(), streamId, input.streamSchema());
 			supplier.streamTo(union.newInput());
 		}
 

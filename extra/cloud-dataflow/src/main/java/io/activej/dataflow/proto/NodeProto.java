@@ -1553,16 +1553,19 @@ public final class NodeProto {
       int getIndex();
 
       /**
-       * <code>string type = 2;</code>
-       * @return The type.
+       * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+       * @return Whether the streamSchema field is set.
        */
-      java.lang.String getType();
+      boolean hasStreamSchema();
       /**
-       * <code>string type = 2;</code>
-       * @return The bytes for type.
+       * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+       * @return The streamSchema.
        */
-      com.google.protobuf.ByteString
-          getTypeBytes();
+      io.activej.dataflow.proto.StreamSchemaProto.StreamSchema getStreamSchema();
+      /**
+       * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+       */
+      io.activej.dataflow.proto.StreamSchemaProto.StreamSchemaOrBuilder getStreamSchemaOrBuilder();
 
       /**
        * <code>.dataflow.Node.Download.Address address = 3;</code>
@@ -1622,7 +1625,6 @@ public final class NodeProto {
         super(builder);
       }
       private Download() {
-        type_ = "";
       }
 
       @java.lang.Override
@@ -1661,9 +1663,16 @@ public final class NodeProto {
                 break;
               }
               case 18: {
-                java.lang.String s = input.readStringRequireUtf8();
+                io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.Builder subBuilder = null;
+                if (streamSchema_ != null) {
+                  subBuilder = streamSchema_.toBuilder();
+                }
+                streamSchema_ = input.readMessage(io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.parser(), extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom(streamSchema_);
+                  streamSchema_ = subBuilder.buildPartial();
+                }
 
-                type_ = s;
                 break;
               }
               case 26: {
@@ -2386,42 +2395,30 @@ public final class NodeProto {
         return index_;
       }
 
-      public static final int TYPE_FIELD_NUMBER = 2;
-      private volatile java.lang.Object type_;
+      public static final int STREAM_SCHEMA_FIELD_NUMBER = 2;
+      private io.activej.dataflow.proto.StreamSchemaProto.StreamSchema streamSchema_;
       /**
-       * <code>string type = 2;</code>
-       * @return The type.
+       * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+       * @return Whether the streamSchema field is set.
        */
       @java.lang.Override
-      public java.lang.String getType() {
-        java.lang.Object ref = type_;
-        if (ref instanceof java.lang.String) {
-          return (java.lang.String) ref;
-        } else {
-          com.google.protobuf.ByteString bs = 
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          type_ = s;
-          return s;
-        }
+      public boolean hasStreamSchema() {
+        return streamSchema_ != null;
       }
       /**
-       * <code>string type = 2;</code>
-       * @return The bytes for type.
+       * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+       * @return The streamSchema.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString
-          getTypeBytes() {
-        java.lang.Object ref = type_;
-        if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          type_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
+      public io.activej.dataflow.proto.StreamSchemaProto.StreamSchema getStreamSchema() {
+        return streamSchema_ == null ? io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.getDefaultInstance() : streamSchema_;
+      }
+      /**
+       * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.StreamSchemaProto.StreamSchemaOrBuilder getStreamSchemaOrBuilder() {
+        return getStreamSchema();
       }
 
       public static final int ADDRESS_FIELD_NUMBER = 3;
@@ -2519,8 +2516,8 @@ public final class NodeProto {
         if (index_ != 0) {
           output.writeInt32(1, index_);
         }
-        if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(type_)) {
-          com.google.protobuf.GeneratedMessageV3.writeString(output, 2, type_);
+        if (streamSchema_ != null) {
+          output.writeMessage(2, getStreamSchema());
         }
         if (address_ != null) {
           output.writeMessage(3, getAddress());
@@ -2544,8 +2541,9 @@ public final class NodeProto {
           size += com.google.protobuf.CodedOutputStream
             .computeInt32Size(1, index_);
         }
-        if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(type_)) {
-          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, type_);
+        if (streamSchema_ != null) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(2, getStreamSchema());
         }
         if (address_ != null) {
           size += com.google.protobuf.CodedOutputStream
@@ -2576,8 +2574,11 @@ public final class NodeProto {
 
         if (getIndex()
             != other.getIndex()) return false;
-        if (!getType()
-            .equals(other.getType())) return false;
+        if (hasStreamSchema() != other.hasStreamSchema()) return false;
+        if (hasStreamSchema()) {
+          if (!getStreamSchema()
+              .equals(other.getStreamSchema())) return false;
+        }
         if (hasAddress() != other.hasAddress()) return false;
         if (hasAddress()) {
           if (!getAddress()
@@ -2606,8 +2607,10 @@ public final class NodeProto {
         hash = (19 * hash) + getDescriptor().hashCode();
         hash = (37 * hash) + INDEX_FIELD_NUMBER;
         hash = (53 * hash) + getIndex();
-        hash = (37 * hash) + TYPE_FIELD_NUMBER;
-        hash = (53 * hash) + getType().hashCode();
+        if (hasStreamSchema()) {
+          hash = (37 * hash) + STREAM_SCHEMA_FIELD_NUMBER;
+          hash = (53 * hash) + getStreamSchema().hashCode();
+        }
         if (hasAddress()) {
           hash = (37 * hash) + ADDRESS_FIELD_NUMBER;
           hash = (53 * hash) + getAddress().hashCode();
@@ -2755,8 +2758,12 @@ public final class NodeProto {
           super.clear();
           index_ = 0;
 
-          type_ = "";
-
+          if (streamSchemaBuilder_ == null) {
+            streamSchema_ = null;
+          } else {
+            streamSchema_ = null;
+            streamSchemaBuilder_ = null;
+          }
           if (addressBuilder_ == null) {
             address_ = null;
           } else {
@@ -2802,7 +2809,11 @@ public final class NodeProto {
         public io.activej.dataflow.proto.NodeProto.Node.Download buildPartial() {
           io.activej.dataflow.proto.NodeProto.Node.Download result = new io.activej.dataflow.proto.NodeProto.Node.Download(this);
           result.index_ = index_;
-          result.type_ = type_;
+          if (streamSchemaBuilder_ == null) {
+            result.streamSchema_ = streamSchema_;
+          } else {
+            result.streamSchema_ = streamSchemaBuilder_.build();
+          }
           if (addressBuilder_ == null) {
             result.address_ = address_;
           } else {
@@ -2869,9 +2880,8 @@ public final class NodeProto {
           if (other.getIndex() != 0) {
             setIndex(other.getIndex());
           }
-          if (!other.getType().isEmpty()) {
-            type_ = other.type_;
-            onChanged();
+          if (other.hasStreamSchema()) {
+            mergeStreamSchema(other.getStreamSchema());
           }
           if (other.hasAddress()) {
             mergeAddress(other.getAddress());
@@ -2942,80 +2952,123 @@ public final class NodeProto {
           return this;
         }
 
-        private java.lang.Object type_ = "";
+        private io.activej.dataflow.proto.StreamSchemaProto.StreamSchema streamSchema_;
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.StreamSchemaProto.StreamSchema, io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.Builder, io.activej.dataflow.proto.StreamSchemaProto.StreamSchemaOrBuilder> streamSchemaBuilder_;
         /**
-         * <code>string type = 2;</code>
-         * @return The type.
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+         * @return Whether the streamSchema field is set.
          */
-        public java.lang.String getType() {
-          java.lang.Object ref = type_;
-          if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs =
-                (com.google.protobuf.ByteString) ref;
-            java.lang.String s = bs.toStringUtf8();
-            type_ = s;
-            return s;
+        public boolean hasStreamSchema() {
+          return streamSchemaBuilder_ != null || streamSchema_ != null;
+        }
+        /**
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+         * @return The streamSchema.
+         */
+        public io.activej.dataflow.proto.StreamSchemaProto.StreamSchema getStreamSchema() {
+          if (streamSchemaBuilder_ == null) {
+            return streamSchema_ == null ? io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.getDefaultInstance() : streamSchema_;
           } else {
-            return (java.lang.String) ref;
+            return streamSchemaBuilder_.getMessage();
           }
         }
         /**
-         * <code>string type = 2;</code>
-         * @return The bytes for type.
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
          */
-        public com.google.protobuf.ByteString
-            getTypeBytes() {
-          java.lang.Object ref = type_;
-          if (ref instanceof String) {
-            com.google.protobuf.ByteString b = 
-                com.google.protobuf.ByteString.copyFromUtf8(
-                    (java.lang.String) ref);
-            type_ = b;
-            return b;
+        public Builder setStreamSchema(io.activej.dataflow.proto.StreamSchemaProto.StreamSchema value) {
+          if (streamSchemaBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            streamSchema_ = value;
+            onChanged();
           } else {
-            return (com.google.protobuf.ByteString) ref;
+            streamSchemaBuilder_.setMessage(value);
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+         */
+        public Builder setStreamSchema(
+            io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.Builder builderForValue) {
+          if (streamSchemaBuilder_ == null) {
+            streamSchema_ = builderForValue.build();
+            onChanged();
+          } else {
+            streamSchemaBuilder_.setMessage(builderForValue.build());
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+         */
+        public Builder mergeStreamSchema(io.activej.dataflow.proto.StreamSchemaProto.StreamSchema value) {
+          if (streamSchemaBuilder_ == null) {
+            if (streamSchema_ != null) {
+              streamSchema_ =
+                io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.newBuilder(streamSchema_).mergeFrom(value).buildPartial();
+            } else {
+              streamSchema_ = value;
+            }
+            onChanged();
+          } else {
+            streamSchemaBuilder_.mergeFrom(value);
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+         */
+        public Builder clearStreamSchema() {
+          if (streamSchemaBuilder_ == null) {
+            streamSchema_ = null;
+            onChanged();
+          } else {
+            streamSchema_ = null;
+            streamSchemaBuilder_ = null;
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+         */
+        public io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.Builder getStreamSchemaBuilder() {
+          
+          onChanged();
+          return getStreamSchemaFieldBuilder().getBuilder();
+        }
+        /**
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+         */
+        public io.activej.dataflow.proto.StreamSchemaProto.StreamSchemaOrBuilder getStreamSchemaOrBuilder() {
+          if (streamSchemaBuilder_ != null) {
+            return streamSchemaBuilder_.getMessageOrBuilder();
+          } else {
+            return streamSchema_ == null ?
+                io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.getDefaultInstance() : streamSchema_;
           }
         }
         /**
-         * <code>string type = 2;</code>
-         * @param value The type to set.
-         * @return This builder for chaining.
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
          */
-        public Builder setType(
-            java.lang.String value) {
-          if (value == null) {
-    throw new NullPointerException();
-  }
-  
-          type_ = value;
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>string type = 2;</code>
-         * @return This builder for chaining.
-         */
-        public Builder clearType() {
-          
-          type_ = getDefaultInstance().getType();
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>string type = 2;</code>
-         * @param value The bytes for type to set.
-         * @return This builder for chaining.
-         */
-        public Builder setTypeBytes(
-            com.google.protobuf.ByteString value) {
-          if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-          
-          type_ = value;
-          onChanged();
-          return this;
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.StreamSchemaProto.StreamSchema, io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.Builder, io.activej.dataflow.proto.StreamSchemaProto.StreamSchemaOrBuilder> 
+            getStreamSchemaFieldBuilder() {
+          if (streamSchemaBuilder_ == null) {
+            streamSchemaBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                io.activej.dataflow.proto.StreamSchemaProto.StreamSchema, io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.Builder, io.activej.dataflow.proto.StreamSchemaProto.StreamSchemaOrBuilder>(
+                    getStreamSchema(),
+                    getParentForChildren(),
+                    isClean());
+            streamSchema_ = null;
+          }
+          return streamSchemaBuilder_;
         }
 
         private io.activej.dataflow.proto.NodeProto.Node.Download.Address address_;
@@ -12204,16 +12257,19 @@ public final class NodeProto {
       int getIndex();
 
       /**
-       * <code>string type = 2;</code>
-       * @return The type.
+       * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+       * @return Whether the streamSchema field is set.
        */
-      java.lang.String getType();
+      boolean hasStreamSchema();
       /**
-       * <code>string type = 2;</code>
-       * @return The bytes for type.
+       * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+       * @return The streamSchema.
        */
-      com.google.protobuf.ByteString
-          getTypeBytes();
+      io.activej.dataflow.proto.StreamSchemaProto.StreamSchema getStreamSchema();
+      /**
+       * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+       */
+      io.activej.dataflow.proto.StreamSchemaProto.StreamSchemaOrBuilder getStreamSchemaOrBuilder();
 
       /**
        * <code>bytes key_function = 3;</code>
@@ -12282,7 +12338,6 @@ public final class NodeProto {
         super(builder);
       }
       private Sort() {
-        type_ = "";
         keyFunction_ = com.google.protobuf.ByteString.EMPTY;
         keyComparator_ = com.google.protobuf.ByteString.EMPTY;
       }
@@ -12323,9 +12378,16 @@ public final class NodeProto {
                 break;
               }
               case 18: {
-                java.lang.String s = input.readStringRequireUtf8();
+                io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.Builder subBuilder = null;
+                if (streamSchema_ != null) {
+                  subBuilder = streamSchema_.toBuilder();
+                }
+                streamSchema_ = input.readMessage(io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.parser(), extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom(streamSchema_);
+                  streamSchema_ = subBuilder.buildPartial();
+                }
 
-                type_ = s;
                 break;
               }
               case 26: {
@@ -12417,42 +12479,30 @@ public final class NodeProto {
         return index_;
       }
 
-      public static final int TYPE_FIELD_NUMBER = 2;
-      private volatile java.lang.Object type_;
+      public static final int STREAM_SCHEMA_FIELD_NUMBER = 2;
+      private io.activej.dataflow.proto.StreamSchemaProto.StreamSchema streamSchema_;
       /**
-       * <code>string type = 2;</code>
-       * @return The type.
+       * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+       * @return Whether the streamSchema field is set.
        */
       @java.lang.Override
-      public java.lang.String getType() {
-        java.lang.Object ref = type_;
-        if (ref instanceof java.lang.String) {
-          return (java.lang.String) ref;
-        } else {
-          com.google.protobuf.ByteString bs = 
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          type_ = s;
-          return s;
-        }
+      public boolean hasStreamSchema() {
+        return streamSchema_ != null;
       }
       /**
-       * <code>string type = 2;</code>
-       * @return The bytes for type.
+       * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+       * @return The streamSchema.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString
-          getTypeBytes() {
-        java.lang.Object ref = type_;
-        if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          type_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
+      public io.activej.dataflow.proto.StreamSchemaProto.StreamSchema getStreamSchema() {
+        return streamSchema_ == null ? io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.getDefaultInstance() : streamSchema_;
+      }
+      /**
+       * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.StreamSchemaProto.StreamSchemaOrBuilder getStreamSchemaOrBuilder() {
+        return getStreamSchema();
       }
 
       public static final int KEY_FUNCTION_FIELD_NUMBER = 3;
@@ -12568,8 +12618,8 @@ public final class NodeProto {
         if (index_ != 0) {
           output.writeInt32(1, index_);
         }
-        if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(type_)) {
-          com.google.protobuf.GeneratedMessageV3.writeString(output, 2, type_);
+        if (streamSchema_ != null) {
+          output.writeMessage(2, getStreamSchema());
         }
         if (!keyFunction_.isEmpty()) {
           output.writeBytes(3, keyFunction_);
@@ -12602,8 +12652,9 @@ public final class NodeProto {
           size += com.google.protobuf.CodedOutputStream
             .computeInt32Size(1, index_);
         }
-        if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(type_)) {
-          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, type_);
+        if (streamSchema_ != null) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(2, getStreamSchema());
         }
         if (!keyFunction_.isEmpty()) {
           size += com.google.protobuf.CodedOutputStream
@@ -12646,8 +12697,11 @@ public final class NodeProto {
 
         if (getIndex()
             != other.getIndex()) return false;
-        if (!getType()
-            .equals(other.getType())) return false;
+        if (hasStreamSchema() != other.hasStreamSchema()) return false;
+        if (hasStreamSchema()) {
+          if (!getStreamSchema()
+              .equals(other.getStreamSchema())) return false;
+        }
         if (!getKeyFunction()
             .equals(other.getKeyFunction())) return false;
         if (!getKeyComparator()
@@ -12679,8 +12733,10 @@ public final class NodeProto {
         hash = (19 * hash) + getDescriptor().hashCode();
         hash = (37 * hash) + INDEX_FIELD_NUMBER;
         hash = (53 * hash) + getIndex();
-        hash = (37 * hash) + TYPE_FIELD_NUMBER;
-        hash = (53 * hash) + getType().hashCode();
+        if (hasStreamSchema()) {
+          hash = (37 * hash) + STREAM_SCHEMA_FIELD_NUMBER;
+          hash = (53 * hash) + getStreamSchema().hashCode();
+        }
         hash = (37 * hash) + KEY_FUNCTION_FIELD_NUMBER;
         hash = (53 * hash) + getKeyFunction().hashCode();
         hash = (37 * hash) + KEY_COMPARATOR_FIELD_NUMBER;
@@ -12833,8 +12889,12 @@ public final class NodeProto {
           super.clear();
           index_ = 0;
 
-          type_ = "";
-
+          if (streamSchemaBuilder_ == null) {
+            streamSchema_ = null;
+          } else {
+            streamSchema_ = null;
+            streamSchemaBuilder_ = null;
+          }
           keyFunction_ = com.google.protobuf.ByteString.EMPTY;
 
           keyComparator_ = com.google.protobuf.ByteString.EMPTY;
@@ -12882,7 +12942,11 @@ public final class NodeProto {
         public io.activej.dataflow.proto.NodeProto.Node.Sort buildPartial() {
           io.activej.dataflow.proto.NodeProto.Node.Sort result = new io.activej.dataflow.proto.NodeProto.Node.Sort(this);
           result.index_ = index_;
-          result.type_ = type_;
+          if (streamSchemaBuilder_ == null) {
+            result.streamSchema_ = streamSchema_;
+          } else {
+            result.streamSchema_ = streamSchemaBuilder_.build();
+          }
           result.keyFunction_ = keyFunction_;
           result.keyComparator_ = keyComparator_;
           result.deduplicate_ = deduplicate_;
@@ -12948,9 +13012,8 @@ public final class NodeProto {
           if (other.getIndex() != 0) {
             setIndex(other.getIndex());
           }
-          if (!other.getType().isEmpty()) {
-            type_ = other.type_;
-            onChanged();
+          if (other.hasStreamSchema()) {
+            mergeStreamSchema(other.getStreamSchema());
           }
           if (other.getKeyFunction() != com.google.protobuf.ByteString.EMPTY) {
             setKeyFunction(other.getKeyFunction());
@@ -13030,80 +13093,123 @@ public final class NodeProto {
           return this;
         }
 
-        private java.lang.Object type_ = "";
+        private io.activej.dataflow.proto.StreamSchemaProto.StreamSchema streamSchema_;
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.StreamSchemaProto.StreamSchema, io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.Builder, io.activej.dataflow.proto.StreamSchemaProto.StreamSchemaOrBuilder> streamSchemaBuilder_;
         /**
-         * <code>string type = 2;</code>
-         * @return The type.
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+         * @return Whether the streamSchema field is set.
          */
-        public java.lang.String getType() {
-          java.lang.Object ref = type_;
-          if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs =
-                (com.google.protobuf.ByteString) ref;
-            java.lang.String s = bs.toStringUtf8();
-            type_ = s;
-            return s;
+        public boolean hasStreamSchema() {
+          return streamSchemaBuilder_ != null || streamSchema_ != null;
+        }
+        /**
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+         * @return The streamSchema.
+         */
+        public io.activej.dataflow.proto.StreamSchemaProto.StreamSchema getStreamSchema() {
+          if (streamSchemaBuilder_ == null) {
+            return streamSchema_ == null ? io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.getDefaultInstance() : streamSchema_;
           } else {
-            return (java.lang.String) ref;
+            return streamSchemaBuilder_.getMessage();
           }
         }
         /**
-         * <code>string type = 2;</code>
-         * @return The bytes for type.
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
          */
-        public com.google.protobuf.ByteString
-            getTypeBytes() {
-          java.lang.Object ref = type_;
-          if (ref instanceof String) {
-            com.google.protobuf.ByteString b = 
-                com.google.protobuf.ByteString.copyFromUtf8(
-                    (java.lang.String) ref);
-            type_ = b;
-            return b;
+        public Builder setStreamSchema(io.activej.dataflow.proto.StreamSchemaProto.StreamSchema value) {
+          if (streamSchemaBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            streamSchema_ = value;
+            onChanged();
           } else {
-            return (com.google.protobuf.ByteString) ref;
+            streamSchemaBuilder_.setMessage(value);
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+         */
+        public Builder setStreamSchema(
+            io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.Builder builderForValue) {
+          if (streamSchemaBuilder_ == null) {
+            streamSchema_ = builderForValue.build();
+            onChanged();
+          } else {
+            streamSchemaBuilder_.setMessage(builderForValue.build());
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+         */
+        public Builder mergeStreamSchema(io.activej.dataflow.proto.StreamSchemaProto.StreamSchema value) {
+          if (streamSchemaBuilder_ == null) {
+            if (streamSchema_ != null) {
+              streamSchema_ =
+                io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.newBuilder(streamSchema_).mergeFrom(value).buildPartial();
+            } else {
+              streamSchema_ = value;
+            }
+            onChanged();
+          } else {
+            streamSchemaBuilder_.mergeFrom(value);
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+         */
+        public Builder clearStreamSchema() {
+          if (streamSchemaBuilder_ == null) {
+            streamSchema_ = null;
+            onChanged();
+          } else {
+            streamSchema_ = null;
+            streamSchemaBuilder_ = null;
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+         */
+        public io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.Builder getStreamSchemaBuilder() {
+          
+          onChanged();
+          return getStreamSchemaFieldBuilder().getBuilder();
+        }
+        /**
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+         */
+        public io.activej.dataflow.proto.StreamSchemaProto.StreamSchemaOrBuilder getStreamSchemaOrBuilder() {
+          if (streamSchemaBuilder_ != null) {
+            return streamSchemaBuilder_.getMessageOrBuilder();
+          } else {
+            return streamSchema_ == null ?
+                io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.getDefaultInstance() : streamSchema_;
           }
         }
         /**
-         * <code>string type = 2;</code>
-         * @param value The type to set.
-         * @return This builder for chaining.
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
          */
-        public Builder setType(
-            java.lang.String value) {
-          if (value == null) {
-    throw new NullPointerException();
-  }
-  
-          type_ = value;
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>string type = 2;</code>
-         * @return This builder for chaining.
-         */
-        public Builder clearType() {
-          
-          type_ = getDefaultInstance().getType();
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>string type = 2;</code>
-         * @param value The bytes for type to set.
-         * @return This builder for chaining.
-         */
-        public Builder setTypeBytes(
-            com.google.protobuf.ByteString value) {
-          if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-          
-          type_ = value;
-          onChanged();
-          return this;
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.StreamSchemaProto.StreamSchema, io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.Builder, io.activej.dataflow.proto.StreamSchemaProto.StreamSchemaOrBuilder> 
+            getStreamSchemaFieldBuilder() {
+          if (streamSchemaBuilder_ == null) {
+            streamSchemaBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                io.activej.dataflow.proto.StreamSchemaProto.StreamSchema, io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.Builder, io.activej.dataflow.proto.StreamSchemaProto.StreamSchemaOrBuilder>(
+                    getStreamSchema(),
+                    getParentForChildren(),
+                    isClean());
+            streamSchema_ = null;
+          }
+          return streamSchemaBuilder_;
         }
 
         private com.google.protobuf.ByteString keyFunction_ = com.google.protobuf.ByteString.EMPTY;
@@ -15584,16 +15690,19 @@ public final class NodeProto {
       int getIndex();
 
       /**
-       * <code>string type = 2;</code>
-       * @return The type.
+       * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+       * @return Whether the streamSchema field is set.
        */
-      java.lang.String getType();
+      boolean hasStreamSchema();
       /**
-       * <code>string type = 2;</code>
-       * @return The bytes for type.
+       * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+       * @return The streamSchema.
        */
-      com.google.protobuf.ByteString
-          getTypeBytes();
+      io.activej.dataflow.proto.StreamSchemaProto.StreamSchema getStreamSchema();
+      /**
+       * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+       */
+      io.activej.dataflow.proto.StreamSchemaProto.StreamSchemaOrBuilder getStreamSchemaOrBuilder();
 
       /**
        * <code>.dataflow.StreamId stream_id = 3;</code>
@@ -15623,7 +15732,6 @@ public final class NodeProto {
         super(builder);
       }
       private Upload() {
-        type_ = "";
       }
 
       @java.lang.Override
@@ -15662,9 +15770,16 @@ public final class NodeProto {
                 break;
               }
               case 18: {
-                java.lang.String s = input.readStringRequireUtf8();
+                io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.Builder subBuilder = null;
+                if (streamSchema_ != null) {
+                  subBuilder = streamSchema_.toBuilder();
+                }
+                streamSchema_ = input.readMessage(io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.parser(), extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom(streamSchema_);
+                  streamSchema_ = subBuilder.buildPartial();
+                }
 
-                type_ = s;
                 break;
               }
               case 26: {
@@ -15723,42 +15838,30 @@ public final class NodeProto {
         return index_;
       }
 
-      public static final int TYPE_FIELD_NUMBER = 2;
-      private volatile java.lang.Object type_;
+      public static final int STREAM_SCHEMA_FIELD_NUMBER = 2;
+      private io.activej.dataflow.proto.StreamSchemaProto.StreamSchema streamSchema_;
       /**
-       * <code>string type = 2;</code>
-       * @return The type.
+       * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+       * @return Whether the streamSchema field is set.
        */
       @java.lang.Override
-      public java.lang.String getType() {
-        java.lang.Object ref = type_;
-        if (ref instanceof java.lang.String) {
-          return (java.lang.String) ref;
-        } else {
-          com.google.protobuf.ByteString bs = 
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          type_ = s;
-          return s;
-        }
+      public boolean hasStreamSchema() {
+        return streamSchema_ != null;
       }
       /**
-       * <code>string type = 2;</code>
-       * @return The bytes for type.
+       * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+       * @return The streamSchema.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString
-          getTypeBytes() {
-        java.lang.Object ref = type_;
-        if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          type_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
+      public io.activej.dataflow.proto.StreamSchemaProto.StreamSchema getStreamSchema() {
+        return streamSchema_ == null ? io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.getDefaultInstance() : streamSchema_;
+      }
+      /**
+       * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.StreamSchemaProto.StreamSchemaOrBuilder getStreamSchemaOrBuilder() {
+        return getStreamSchema();
       }
 
       public static final int STREAM_ID_FIELD_NUMBER = 3;
@@ -15804,8 +15907,8 @@ public final class NodeProto {
         if (index_ != 0) {
           output.writeInt32(1, index_);
         }
-        if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(type_)) {
-          com.google.protobuf.GeneratedMessageV3.writeString(output, 2, type_);
+        if (streamSchema_ != null) {
+          output.writeMessage(2, getStreamSchema());
         }
         if (streamId_ != null) {
           output.writeMessage(3, getStreamId());
@@ -15823,8 +15926,9 @@ public final class NodeProto {
           size += com.google.protobuf.CodedOutputStream
             .computeInt32Size(1, index_);
         }
-        if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(type_)) {
-          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, type_);
+        if (streamSchema_ != null) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(2, getStreamSchema());
         }
         if (streamId_ != null) {
           size += com.google.protobuf.CodedOutputStream
@@ -15847,8 +15951,11 @@ public final class NodeProto {
 
         if (getIndex()
             != other.getIndex()) return false;
-        if (!getType()
-            .equals(other.getType())) return false;
+        if (hasStreamSchema() != other.hasStreamSchema()) return false;
+        if (hasStreamSchema()) {
+          if (!getStreamSchema()
+              .equals(other.getStreamSchema())) return false;
+        }
         if (hasStreamId() != other.hasStreamId()) return false;
         if (hasStreamId()) {
           if (!getStreamId()
@@ -15867,8 +15974,10 @@ public final class NodeProto {
         hash = (19 * hash) + getDescriptor().hashCode();
         hash = (37 * hash) + INDEX_FIELD_NUMBER;
         hash = (53 * hash) + getIndex();
-        hash = (37 * hash) + TYPE_FIELD_NUMBER;
-        hash = (53 * hash) + getType().hashCode();
+        if (hasStreamSchema()) {
+          hash = (37 * hash) + STREAM_SCHEMA_FIELD_NUMBER;
+          hash = (53 * hash) + getStreamSchema().hashCode();
+        }
         if (hasStreamId()) {
           hash = (37 * hash) + STREAM_ID_FIELD_NUMBER;
           hash = (53 * hash) + getStreamId().hashCode();
@@ -16008,8 +16117,12 @@ public final class NodeProto {
           super.clear();
           index_ = 0;
 
-          type_ = "";
-
+          if (streamSchemaBuilder_ == null) {
+            streamSchema_ = null;
+          } else {
+            streamSchema_ = null;
+            streamSchemaBuilder_ = null;
+          }
           if (streamIdBuilder_ == null) {
             streamId_ = null;
           } else {
@@ -16043,7 +16156,11 @@ public final class NodeProto {
         public io.activej.dataflow.proto.NodeProto.Node.Upload buildPartial() {
           io.activej.dataflow.proto.NodeProto.Node.Upload result = new io.activej.dataflow.proto.NodeProto.Node.Upload(this);
           result.index_ = index_;
-          result.type_ = type_;
+          if (streamSchemaBuilder_ == null) {
+            result.streamSchema_ = streamSchema_;
+          } else {
+            result.streamSchema_ = streamSchemaBuilder_.build();
+          }
           if (streamIdBuilder_ == null) {
             result.streamId_ = streamId_;
           } else {
@@ -16100,9 +16217,8 @@ public final class NodeProto {
           if (other.getIndex() != 0) {
             setIndex(other.getIndex());
           }
-          if (!other.getType().isEmpty()) {
-            type_ = other.type_;
-            onChanged();
+          if (other.hasStreamSchema()) {
+            mergeStreamSchema(other.getStreamSchema());
           }
           if (other.hasStreamId()) {
             mergeStreamId(other.getStreamId());
@@ -16167,80 +16283,123 @@ public final class NodeProto {
           return this;
         }
 
-        private java.lang.Object type_ = "";
+        private io.activej.dataflow.proto.StreamSchemaProto.StreamSchema streamSchema_;
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.StreamSchemaProto.StreamSchema, io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.Builder, io.activej.dataflow.proto.StreamSchemaProto.StreamSchemaOrBuilder> streamSchemaBuilder_;
         /**
-         * <code>string type = 2;</code>
-         * @return The type.
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+         * @return Whether the streamSchema field is set.
          */
-        public java.lang.String getType() {
-          java.lang.Object ref = type_;
-          if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs =
-                (com.google.protobuf.ByteString) ref;
-            java.lang.String s = bs.toStringUtf8();
-            type_ = s;
-            return s;
+        public boolean hasStreamSchema() {
+          return streamSchemaBuilder_ != null || streamSchema_ != null;
+        }
+        /**
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+         * @return The streamSchema.
+         */
+        public io.activej.dataflow.proto.StreamSchemaProto.StreamSchema getStreamSchema() {
+          if (streamSchemaBuilder_ == null) {
+            return streamSchema_ == null ? io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.getDefaultInstance() : streamSchema_;
           } else {
-            return (java.lang.String) ref;
+            return streamSchemaBuilder_.getMessage();
           }
         }
         /**
-         * <code>string type = 2;</code>
-         * @return The bytes for type.
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
          */
-        public com.google.protobuf.ByteString
-            getTypeBytes() {
-          java.lang.Object ref = type_;
-          if (ref instanceof String) {
-            com.google.protobuf.ByteString b = 
-                com.google.protobuf.ByteString.copyFromUtf8(
-                    (java.lang.String) ref);
-            type_ = b;
-            return b;
+        public Builder setStreamSchema(io.activej.dataflow.proto.StreamSchemaProto.StreamSchema value) {
+          if (streamSchemaBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            streamSchema_ = value;
+            onChanged();
           } else {
-            return (com.google.protobuf.ByteString) ref;
+            streamSchemaBuilder_.setMessage(value);
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+         */
+        public Builder setStreamSchema(
+            io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.Builder builderForValue) {
+          if (streamSchemaBuilder_ == null) {
+            streamSchema_ = builderForValue.build();
+            onChanged();
+          } else {
+            streamSchemaBuilder_.setMessage(builderForValue.build());
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+         */
+        public Builder mergeStreamSchema(io.activej.dataflow.proto.StreamSchemaProto.StreamSchema value) {
+          if (streamSchemaBuilder_ == null) {
+            if (streamSchema_ != null) {
+              streamSchema_ =
+                io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.newBuilder(streamSchema_).mergeFrom(value).buildPartial();
+            } else {
+              streamSchema_ = value;
+            }
+            onChanged();
+          } else {
+            streamSchemaBuilder_.mergeFrom(value);
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+         */
+        public Builder clearStreamSchema() {
+          if (streamSchemaBuilder_ == null) {
+            streamSchema_ = null;
+            onChanged();
+          } else {
+            streamSchema_ = null;
+            streamSchemaBuilder_ = null;
+          }
+
+          return this;
+        }
+        /**
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+         */
+        public io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.Builder getStreamSchemaBuilder() {
+          
+          onChanged();
+          return getStreamSchemaFieldBuilder().getBuilder();
+        }
+        /**
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
+         */
+        public io.activej.dataflow.proto.StreamSchemaProto.StreamSchemaOrBuilder getStreamSchemaOrBuilder() {
+          if (streamSchemaBuilder_ != null) {
+            return streamSchemaBuilder_.getMessageOrBuilder();
+          } else {
+            return streamSchema_ == null ?
+                io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.getDefaultInstance() : streamSchema_;
           }
         }
         /**
-         * <code>string type = 2;</code>
-         * @param value The type to set.
-         * @return This builder for chaining.
+         * <code>.dataflow.StreamSchema stream_schema = 2;</code>
          */
-        public Builder setType(
-            java.lang.String value) {
-          if (value == null) {
-    throw new NullPointerException();
-  }
-  
-          type_ = value;
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>string type = 2;</code>
-         * @return This builder for chaining.
-         */
-        public Builder clearType() {
-          
-          type_ = getDefaultInstance().getType();
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>string type = 2;</code>
-         * @param value The bytes for type to set.
-         * @return This builder for chaining.
-         */
-        public Builder setTypeBytes(
-            com.google.protobuf.ByteString value) {
-          if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-          
-          type_ = value;
-          onChanged();
-          return this;
+        private com.google.protobuf.SingleFieldBuilderV3<
+            io.activej.dataflow.proto.StreamSchemaProto.StreamSchema, io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.Builder, io.activej.dataflow.proto.StreamSchemaProto.StreamSchemaOrBuilder> 
+            getStreamSchemaFieldBuilder() {
+          if (streamSchemaBuilder_ == null) {
+            streamSchemaBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                io.activej.dataflow.proto.StreamSchemaProto.StreamSchema, io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.Builder, io.activej.dataflow.proto.StreamSchemaProto.StreamSchemaOrBuilder>(
+                    getStreamSchema(),
+                    getParentForChildren(),
+                    isClean());
+            streamSchema_ = null;
+          }
+          return streamSchemaBuilder_;
         }
 
         private io.activej.dataflow.proto.StreamIdProto.StreamId streamId_;
@@ -22348,74 +22507,77 @@ public final class NodeProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\nnode.proto\022\010dataflow\032\017stream_id.proto\"" +
-      "\212\027\n\004Node\0225\n\016consumer_of_id\030\001 \001(\0132\033.dataf" +
-      "low.Node.ConsumerOfIdH\000\022+\n\010download\030\002 \001(" +
-      "\0132\027.dataflow.Node.DownloadH\000\022\'\n\006filter\030\003" +
-      " \001(\0132\025.dataflow.Node.FilterH\000\022#\n\004join\030\004 " +
-      "\001(\0132\023.dataflow.Node.JoinH\000\022!\n\003map\030\005 \001(\0132" +
-      "\022.dataflow.Node.MapH\000\022%\n\005merge\030\006 \001(\0132\024.d" +
-      "ataflow.Node.MergeH\000\022\'\n\006reduce\030\007 \001(\0132\025.d" +
-      "ataflow.Node.ReduceH\000\0224\n\rreduce_simple\030\010" +
-      " \001(\0132\033.dataflow.Node.ReduceSimpleH\000\022%\n\005s" +
-      "hard\030\t \001(\0132\024.dataflow.Node.ShardH\000\022#\n\004so" +
-      "rt\030\n \001(\0132\023.dataflow.Node.SortH\000\0225\n\016suppl" +
-      "ier_of_id\030\013 \001(\0132\033.dataflow.Node.Supplier" +
-      "OfIdH\000\022%\n\005union\030\014 \001(\0132\024.dataflow.Node.Un" +
-      "ionH\000\022\'\n\006upload\030\r \001(\0132\025.dataflow.Node.Up" +
-      "loadH\000\022%\n\005empty\030\016 \001(\0132\024.dataflow.Node.Em" +
-      "ptyH\000\0222\n\014offset_limit\030\017 \001(\0132\032.dataflow.N" +
-      "ode.OffsetLimitH\000\0220\n\013custom_node\030\020 \001(\0132\031" +
-      ".dataflow.Node.CustomNodeH\000\032}\n\014ConsumerO" +
-      "fId\022\r\n\005index\030\001 \001(\005\022\n\n\002id\030\002 \001(\t\022\027\n\017partit" +
-      "ion_index\030\003 \001(\005\022\026\n\016max_partitions\030\004 \001(\005\022" +
-      "!\n\005input\030\005 \001(\0132\022.dataflow.StreamId\032\307\001\n\010D" +
-      "ownload\022\r\n\005index\030\001 \001(\005\022\014\n\004type\030\002 \001(\t\0220\n\007" +
-      "address\030\003 \001(\0132\037.dataflow.Node.Download.A" +
-      "ddress\022!\n\005input\030\004 \001(\0132\022.dataflow.StreamI" +
-      "d\022\"\n\006output\030\005 \001(\0132\022.dataflow.StreamId\032%\n" +
-      "\007Address\022\014\n\004host\030\001 \001(\t\022\014\n\004port\030\002 \001(\005\032q\n\006" +
-      "Filter\022\r\n\005index\030\001 \001(\005\022\021\n\tpredicate\030\002 \001(\014" +
-      "\022!\n\005input\030\003 \001(\0132\022.dataflow.StreamId\022\"\n\006o" +
-      "utput\030\004 \001(\0132\022.dataflow.StreamId\032\331\001\n\004Join" +
-      "\022\r\n\005index\030\001 \001(\005\022 \n\004left\030\002 \001(\0132\022.dataflow" +
-      ".StreamId\022!\n\005right\030\003 \001(\0132\022.dataflow.Stre" +
-      "amId\022\"\n\006output\030\004 \001(\0132\022.dataflow.StreamId" +
-      "\022\022\n\ncomparator\030\005 \001(\014\022\031\n\021left_key_functio" +
-      "n\030\006 \001(\014\022\032\n\022right_key_function\030\007 \001(\014\022\016\n\006j" +
-      "oiner\030\010 \001(\014\032m\n\003Map\022\r\n\005index\030\001 \001(\005\022\020\n\010fun" +
-      "ction\030\002 \001(\014\022!\n\005input\030\003 \001(\0132\022.dataflow.St" +
-      "reamId\022\"\n\006output\030\004 \001(\0132\022.dataflow.Stream" +
-      "Id\032\241\001\n\005Merge\022\r\n\005index\030\001 \001(\005\022\024\n\014key_funct" +
-      "ion\030\002 \001(\014\022\026\n\016key_comparator\030\003 \001(\014\022\023\n\013ded" +
-      "uplicate\030\004 \001(\010\022\"\n\006inputs\030\005 \003(\0132\022.dataflo" +
-      "w.StreamId\022\"\n\006output\030\006 \001(\0132\022.dataflow.St" +
-      "reamId\032\202\002\n\006Reduce\022\r\n\005index\030\001 \001(\005\022\026\n\016key_" +
-      "comparator\030\002 \001(\014\0221\n\006inputs\030\003 \003(\0132!.dataf" +
-      "low.Node.Reduce.InputsEntry\022\"\n\006output\030\004 " +
-      "\001(\0132\022.dataflow.StreamId\032.\n\005Input\022\017\n\007redu" +
-      "cer\030\001 \001(\014\022\024\n\014key_function\030\002 \001(\014\032J\n\013Input" +
-      "sEntry\022\013\n\003key\030\001 \001(\003\022*\n\005value\030\002 \001(\0132\033.dat" +
-      "aflow.Node.Reduce.Input:\0028\001\032\244\001\n\014ReduceSi" +
-      "mple\022\r\n\005index\030\001 \001(\005\022\024\n\014key_function\030\002 \001(" +
-      "\014\022\026\n\016key_comparator\030\003 \001(\014\022\017\n\007reducer\030\004 \001" +
-      "(\014\022\"\n\006inputs\030\005 \003(\0132\022.dataflow.StreamId\022\"" +
-      "\n\006output\030\006 \001(\0132\022.dataflow.StreamId\032\203\001\n\005S" +
-      "hard\022\r\n\005index\030\001 \001(\005\022\024\n\014key_function\030\002 \001(" +
-      "\014\022!\n\005input\030\003 \001(\0132\022.dataflow.StreamId\022#\n\007" +
-      "outputs\030\004 \003(\0132\022.dataflow.StreamId\022\r\n\005non" +
-      "ce\030\005 \001(\005\032\313\001\n\004Sort\022\r\n\005index\030\001 \001(\005\022\014\n\004type" +
-      "\030\002 \001(\t\022\024\n\014key_function\030\003 \001(\014\022\026\n\016key_comp" +
-      "arator\030\004 \001(\014\022\023\n\013deduplicate\030\005 \001(\010\022\034\n\024ite" +
-      "ms_in_memory_size\030\006 \001(\005\022!\n\005input\030\007 \001(\0132\022" +
-      ".dataflow.StreamId\022\"\n\006output\030\010 \001(\0132\022.dat" +
-      "aflow.StreamId\032~\n\014SupplierOfId\022\r\n\005index\030" +
-      "\001 \001(\005\022\n\n\002id\030\002 \001(\t\022\027\n\017partition_index\030\003 \001" +
-      "(\005\022\026\n\016max_partitions\030\004 \001(\005\022\"\n\006output\030\005 \001" +
-      "(\0132\022.dataflow.StreamId\032^\n\005Union\022\r\n\005index" +
-      "\030\001 \001(\005\022\"\n\006inputs\030\002 \003(\0132\022.dataflow.Stream" +
-      "Id\022\"\n\006output\030\003 \001(\0132\022.dataflow.StreamId\032L" +
-      "\n\006Upload\022\r\n\005index\030\001 \001(\005\022\014\n\004type\030\002 \001(\t\022%\n" +
+      "\n\nnode.proto\022\010dataflow\032\017stream_id.proto\032" +
+      "\023stream_schema.proto\"\355\027\n\004Node\0225\n\016consume" +
+      "r_of_id\030\001 \001(\0132\033.dataflow.Node.ConsumerOf" +
+      "IdH\000\022+\n\010download\030\002 \001(\0132\027.dataflow.Node.D" +
+      "ownloadH\000\022\'\n\006filter\030\003 \001(\0132\025.dataflow.Nod" +
+      "e.FilterH\000\022#\n\004join\030\004 \001(\0132\023.dataflow.Node" +
+      ".JoinH\000\022!\n\003map\030\005 \001(\0132\022.dataflow.Node.Map" +
+      "H\000\022%\n\005merge\030\006 \001(\0132\024.dataflow.Node.MergeH" +
+      "\000\022\'\n\006reduce\030\007 \001(\0132\025.dataflow.Node.Reduce" +
+      "H\000\0224\n\rreduce_simple\030\010 \001(\0132\033.dataflow.Nod" +
+      "e.ReduceSimpleH\000\022%\n\005shard\030\t \001(\0132\024.datafl" +
+      "ow.Node.ShardH\000\022#\n\004sort\030\n \001(\0132\023.dataflow" +
+      ".Node.SortH\000\0225\n\016supplier_of_id\030\013 \001(\0132\033.d" +
+      "ataflow.Node.SupplierOfIdH\000\022%\n\005union\030\014 \001" +
+      "(\0132\024.dataflow.Node.UnionH\000\022\'\n\006upload\030\r \001" +
+      "(\0132\025.dataflow.Node.UploadH\000\022%\n\005empty\030\016 \001" +
+      "(\0132\024.dataflow.Node.EmptyH\000\0222\n\014offset_lim" +
+      "it\030\017 \001(\0132\032.dataflow.Node.OffsetLimitH\000\0220" +
+      "\n\013custom_node\030\020 \001(\0132\031.dataflow.Node.Cust" +
+      "omNodeH\000\032}\n\014ConsumerOfId\022\r\n\005index\030\001 \001(\005\022" +
+      "\n\n\002id\030\002 \001(\t\022\027\n\017partition_index\030\003 \001(\005\022\026\n\016" +
+      "max_partitions\030\004 \001(\005\022!\n\005input\030\005 \001(\0132\022.da" +
+      "taflow.StreamId\032\350\001\n\010Download\022\r\n\005index\030\001 " +
+      "\001(\005\022-\n\rstream_schema\030\002 \001(\0132\026.dataflow.St" +
+      "reamSchema\0220\n\007address\030\003 \001(\0132\037.dataflow.N" +
+      "ode.Download.Address\022!\n\005input\030\004 \001(\0132\022.da" +
+      "taflow.StreamId\022\"\n\006output\030\005 \001(\0132\022.datafl" +
+      "ow.StreamId\032%\n\007Address\022\014\n\004host\030\001 \001(\t\022\014\n\004" +
+      "port\030\002 \001(\005\032q\n\006Filter\022\r\n\005index\030\001 \001(\005\022\021\n\tp" +
+      "redicate\030\002 \001(\014\022!\n\005input\030\003 \001(\0132\022.dataflow" +
+      ".StreamId\022\"\n\006output\030\004 \001(\0132\022.dataflow.Str" +
+      "eamId\032\331\001\n\004Join\022\r\n\005index\030\001 \001(\005\022 \n\004left\030\002 " +
+      "\001(\0132\022.dataflow.StreamId\022!\n\005right\030\003 \001(\0132\022" +
+      ".dataflow.StreamId\022\"\n\006output\030\004 \001(\0132\022.dat" +
+      "aflow.StreamId\022\022\n\ncomparator\030\005 \001(\014\022\031\n\021le" +
+      "ft_key_function\030\006 \001(\014\022\032\n\022right_key_funct" +
+      "ion\030\007 \001(\014\022\016\n\006joiner\030\010 \001(\014\032m\n\003Map\022\r\n\005inde" +
+      "x\030\001 \001(\005\022\020\n\010function\030\002 \001(\014\022!\n\005input\030\003 \001(\013" +
+      "2\022.dataflow.StreamId\022\"\n\006output\030\004 \001(\0132\022.d" +
+      "ataflow.StreamId\032\241\001\n\005Merge\022\r\n\005index\030\001 \001(" +
+      "\005\022\024\n\014key_function\030\002 \001(\014\022\026\n\016key_comparato" +
+      "r\030\003 \001(\014\022\023\n\013deduplicate\030\004 \001(\010\022\"\n\006inputs\030\005" +
+      " \003(\0132\022.dataflow.StreamId\022\"\n\006output\030\006 \001(\013" +
+      "2\022.dataflow.StreamId\032\202\002\n\006Reduce\022\r\n\005index" +
+      "\030\001 \001(\005\022\026\n\016key_comparator\030\002 \001(\014\0221\n\006inputs" +
+      "\030\003 \003(\0132!.dataflow.Node.Reduce.InputsEntr" +
+      "y\022\"\n\006output\030\004 \001(\0132\022.dataflow.StreamId\032.\n" +
+      "\005Input\022\017\n\007reducer\030\001 \001(\014\022\024\n\014key_function\030" +
+      "\002 \001(\014\032J\n\013InputsEntry\022\013\n\003key\030\001 \001(\003\022*\n\005val" +
+      "ue\030\002 \001(\0132\033.dataflow.Node.Reduce.Input:\0028" +
+      "\001\032\244\001\n\014ReduceSimple\022\r\n\005index\030\001 \001(\005\022\024\n\014key" +
+      "_function\030\002 \001(\014\022\026\n\016key_comparator\030\003 \001(\014\022" +
+      "\017\n\007reducer\030\004 \001(\014\022\"\n\006inputs\030\005 \003(\0132\022.dataf" +
+      "low.StreamId\022\"\n\006output\030\006 \001(\0132\022.dataflow." +
+      "StreamId\032\203\001\n\005Shard\022\r\n\005index\030\001 \001(\005\022\024\n\014key" +
+      "_function\030\002 \001(\014\022!\n\005input\030\003 \001(\0132\022.dataflo" +
+      "w.StreamId\022#\n\007outputs\030\004 \003(\0132\022.dataflow.S" +
+      "treamId\022\r\n\005nonce\030\005 \001(\005\032\354\001\n\004Sort\022\r\n\005index" +
+      "\030\001 \001(\005\022-\n\rstream_schema\030\002 \001(\0132\026.dataflow" +
+      ".StreamSchema\022\024\n\014key_function\030\003 \001(\014\022\026\n\016k" +
+      "ey_comparator\030\004 \001(\014\022\023\n\013deduplicate\030\005 \001(\010" +
+      "\022\034\n\024items_in_memory_size\030\006 \001(\005\022!\n\005input\030" +
+      "\007 \001(\0132\022.dataflow.StreamId\022\"\n\006output\030\010 \001(" +
+      "\0132\022.dataflow.StreamId\032~\n\014SupplierOfId\022\r\n" +
+      "\005index\030\001 \001(\005\022\n\n\002id\030\002 \001(\t\022\027\n\017partition_in" +
+      "dex\030\003 \001(\005\022\026\n\016max_partitions\030\004 \001(\005\022\"\n\006out" +
+      "put\030\005 \001(\0132\022.dataflow.StreamId\032^\n\005Union\022\r" +
+      "\n\005index\030\001 \001(\005\022\"\n\006inputs\030\002 \003(\0132\022.dataflow" +
+      ".StreamId\022\"\n\006output\030\003 \001(\0132\022.dataflow.Str" +
+      "eamId\032m\n\006Upload\022\r\n\005index\030\001 \001(\005\022-\n\rstream" +
+      "_schema\030\002 \001(\0132\026.dataflow.StreamSchema\022%\n" +
       "\tstream_id\030\003 \001(\0132\022.dataflow.StreamId\032:\n\005" +
       "Empty\022\r\n\005index\030\001 \001(\005\022\"\n\006output\030\002 \001(\0132\022.d" +
       "ataflow.StreamId\032\202\001\n\013OffsetLimit\022\r\n\005inde" +
@@ -22430,6 +22592,7 @@ public final class NodeProto {
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           io.activej.dataflow.proto.StreamIdProto.getDescriptor(),
+          io.activej.dataflow.proto.StreamSchemaProto.getDescriptor(),
         });
     internal_static_dataflow_Node_descriptor =
       getDescriptor().getMessageTypes().get(0);
@@ -22448,7 +22611,7 @@ public final class NodeProto {
     internal_static_dataflow_Node_Download_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_Node_Download_descriptor,
-        new java.lang.String[] { "Index", "Type", "Address", "Input", "Output", });
+        new java.lang.String[] { "Index", "StreamSchema", "Address", "Input", "Output", });
     internal_static_dataflow_Node_Download_Address_descriptor =
       internal_static_dataflow_Node_Download_descriptor.getNestedTypes().get(0);
     internal_static_dataflow_Node_Download_Address_fieldAccessorTable = new
@@ -22514,7 +22677,7 @@ public final class NodeProto {
     internal_static_dataflow_Node_Sort_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_Node_Sort_descriptor,
-        new java.lang.String[] { "Index", "Type", "KeyFunction", "KeyComparator", "Deduplicate", "ItemsInMemorySize", "Input", "Output", });
+        new java.lang.String[] { "Index", "StreamSchema", "KeyFunction", "KeyComparator", "Deduplicate", "ItemsInMemorySize", "Input", "Output", });
     internal_static_dataflow_Node_SupplierOfId_descriptor =
       internal_static_dataflow_Node_descriptor.getNestedTypes().get(10);
     internal_static_dataflow_Node_SupplierOfId_fieldAccessorTable = new
@@ -22532,7 +22695,7 @@ public final class NodeProto {
     internal_static_dataflow_Node_Upload_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_Node_Upload_descriptor,
-        new java.lang.String[] { "Index", "Type", "StreamId", });
+        new java.lang.String[] { "Index", "StreamSchema", "StreamId", });
     internal_static_dataflow_Node_Empty_descriptor =
       internal_static_dataflow_Node_descriptor.getNestedTypes().get(13);
     internal_static_dataflow_Node_Empty_fieldAccessorTable = new
@@ -22552,6 +22715,7 @@ public final class NodeProto {
         internal_static_dataflow_Node_CustomNode_descriptor,
         new java.lang.String[] { "SerializedNode", });
     io.activej.dataflow.proto.StreamIdProto.getDescriptor();
+    io.activej.dataflow.proto.StreamSchemaProto.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

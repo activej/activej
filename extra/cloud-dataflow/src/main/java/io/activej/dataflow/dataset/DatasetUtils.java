@@ -16,10 +16,7 @@
 
 package io.activej.dataflow.dataset;
 
-import io.activej.dataflow.graph.DataflowContext;
-import io.activej.dataflow.graph.DataflowGraph;
-import io.activej.dataflow.graph.Partition;
-import io.activej.dataflow.graph.StreamId;
+import io.activej.dataflow.graph.*;
 import io.activej.dataflow.node.NodeDownload;
 import io.activej.dataflow.node.NodeReduce;
 import io.activej.dataflow.node.NodeShard;
@@ -38,7 +35,7 @@ public class DatasetUtils {
 
 	public static <K, I, O, A> List<StreamId> repartitionAndReduce(DataflowContext context,
 			List<StreamId> inputs,
-			Class<I> inputClass,
+			StreamSchema<I> inputStreamSchema,
 			Function<I, K> keyFunction,
 			Comparator<K> keyComparator,
 			Reducer<K, I, O, A> reducer,
@@ -67,7 +64,7 @@ public class DatasetUtils {
 				NodeShard<K, I> sharder = sharders.get(j);
 				StreamId sharderOutput = sharder.newPartition();
 				graph.addNodeStream(sharder, sharderOutput);
-				StreamId reducerInput = forwardChannel(context, inputClass, sharderOutput, partition, uploadIndexes[i], downloadIndexes[j]);
+				StreamId reducerInput = forwardChannel(context, inputStreamSchema, sharderOutput, partition, uploadIndexes[i], downloadIndexes[j]);
 				nodeReduce.addInput(reducerInput, keyFunction, reducer);
 			}
 
@@ -81,7 +78,7 @@ public class DatasetUtils {
 			LocallySortedDataset<K, I> input,
 			Reducer<K, I, O, A> reducer,
 			List<Partition> partitions) {
-		return repartitionAndReduce(context, input.channels(context.withoutFixedNonce()), input.valueType(), input.keyFunction(), input.keyComparator(), reducer, partitions);
+		return repartitionAndReduce(context, input.channels(context.withoutFixedNonce()), input.streamSchema(), input.keyFunction(), input.keyComparator(), reducer, partitions);
 	}
 
 	public static <K, T> List<StreamId> repartitionAndSort(DataflowContext context, LocallySortedDataset<K, T> input,
@@ -89,21 +86,21 @@ public class DatasetUtils {
 		return repartitionAndReduce(context, input, mergeReducer(), partitions);
 	}
 
-	public static <T> StreamId forwardChannel(DataflowContext context, Class<T> type,
+	public static <T> StreamId forwardChannel(DataflowContext context, StreamSchema<T> streamSchema,
 			StreamId sourceStreamId, Partition targetPartition, int uploadIndex, int downloadIndex) {
 		Partition sourcePartition = context.getGraph().getPartition(sourceStreamId);
-		return forwardChannel(context, type, sourcePartition, targetPartition, sourceStreamId, uploadIndex, downloadIndex);
+		return forwardChannel(context, streamSchema, sourcePartition, targetPartition, sourceStreamId, uploadIndex, downloadIndex);
 	}
 
-	private static <T> StreamId forwardChannel(DataflowContext context, Class<T> type,
+	private static <T> StreamId forwardChannel(DataflowContext context, StreamSchema<T> streamSchema,
 			Partition sourcePartition, Partition targetPartition,
 			StreamId sourceStreamId, int uploadIndex, int downloadIndex) {
 		if (sourcePartition == targetPartition) {
 			return sourceStreamId;
 		}
 		DataflowGraph graph = context.getGraph();
-		NodeUpload<T> nodeUpload = new NodeUpload<>(uploadIndex, type, sourceStreamId);
-		NodeDownload<T> nodeDownload = new NodeDownload<>(downloadIndex, type, sourcePartition.getAddress(), sourceStreamId);
+		NodeUpload<T> nodeUpload = new NodeUpload<>(uploadIndex, streamSchema, sourceStreamId);
+		NodeDownload<T> nodeDownload = new NodeDownload<>(downloadIndex, streamSchema, sourcePartition.getAddress(), sourceStreamId);
 		graph.addNode(sourcePartition, nodeUpload);
 		graph.addNode(targetPartition, nodeDownload);
 		return nodeDownload.getOutput();

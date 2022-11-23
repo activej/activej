@@ -2,10 +2,7 @@ package io.activej.dataflow.helper;
 
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.dataset.Dataset;
-import io.activej.dataflow.graph.DataflowContext;
-import io.activej.dataflow.graph.DataflowGraph;
-import io.activej.dataflow.graph.Partition;
-import io.activej.dataflow.graph.StreamId;
+import io.activej.dataflow.graph.*;
 import io.activej.dataflow.node.NodeUpload;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
@@ -33,10 +30,10 @@ public final class PartitionedCollector<T> {
 
 		List<Promise<Void>> streamingPromises = new ArrayList<>();
 		for (StreamId streamId : input.channels(DataflowContext.of(graph))) {
-			NodeUpload<String> nodeUpload = new NodeUpload<>(0, String.class, streamId);
+			NodeUpload<String> nodeUpload = new NodeUpload<>(0, StreamSchemas.simple(String.class), streamId);
 			Partition partition = graph.getPartition(streamId);
 			graph.addNode(partition, nodeUpload);
-			StreamSupplier<T> supplier = client.download(partition.getAddress(), streamId, input.valueType());
+			StreamSupplier<T> supplier = client.download(partition.getAddress(), streamId, input.streamSchema());
 			ArrayList<T> partitionItems = new ArrayList<>();
 			List<T> prev = result.put(partition, partitionItems);
 			checkState(prev == null, "Partition provides multiple channels");

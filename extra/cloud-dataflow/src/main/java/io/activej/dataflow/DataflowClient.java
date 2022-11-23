@@ -24,12 +24,14 @@ import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.csp.queue.*;
 import io.activej.dataflow.graph.StreamId;
+import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.Handshake.NotOk;
 import io.activej.dataflow.proto.serializer.CustomNodeSerializer;
+import io.activej.dataflow.proto.serializer.CustomStreamSchemaSerializer;
 import io.activej.dataflow.proto.serializer.FunctionSerializer;
 import io.activej.datastream.AbstractStreamConsumer;
 import io.activej.datastream.AbstractStreamSupplier;
@@ -74,6 +76,7 @@ public final class DataflowClient {
 
 	private int bufferMinSize, bufferMaxSize;
 	private @Nullable CustomNodeSerializer customNodeSerializer;
+	private @Nullable CustomStreamSchemaSerializer customStreamSchemaSerializer;
 
 	private DataflowClient(Executor executor, Path secondaryPath, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator serializers, FunctionSerializer functionSerializer) {
 		this.executor = executor;
@@ -98,7 +101,12 @@ public final class DataflowClient {
 		return this;
 	}
 
-	public <T> StreamSupplier<T> download(InetSocketAddress address, StreamId streamId, Class<T> type, ChannelTransformer<ByteBuf, ByteBuf> transformer) {
+	public DataflowClient withCustomStreamSchemaSerializer(CustomStreamSchemaSerializer customStreamSchemaSerializer) {
+		this.customStreamSchemaSerializer = customStreamSchemaSerializer;
+		return this;
+	}
+
+	public <T> StreamSupplier<T> download(InetSocketAddress address, StreamId streamId, StreamSchema<T> streamSchema, ChannelTransformer<ByteBuf, ByteBuf> transformer) {
 		return StreamSupplier.ofPromise(AsyncTcpSocketNio.connect(address, 0, socketSettings)
 				.mapException(e -> new DataflowException("Failed to connect to " + address, e))
 				.then(socket -> {
@@ -119,7 +127,7 @@ public final class DataflowClient {
 								return messaging.receiveBinaryStream()
 										.transformWith(transformer)
 										.transformWith(buffer)
-										.transformWith(ChannelDeserializer.create(serializers.get(type))
+										.transformWith(ChannelDeserializer.create(streamSchema.createSerializer(serializers))
 												.withExplicitEndOfStream())
 										.transformWith(new StreamTraceCounter<>(streamId, address))
 										.withEndOfStream(eos -> eos
@@ -129,8 +137,8 @@ public final class DataflowClient {
 				}));
 	}
 
-	public <T> StreamSupplier<T> download(InetSocketAddress address, StreamId streamId, Class<T> type) {
-		return download(address, streamId, type, ChannelTransformer.identity());
+	public <T> StreamSupplier<T> download(InetSocketAddress address, StreamId streamId, StreamSchema<T> streamSchema) {
+		return download(address, streamId, streamSchema, ChannelTransformer.identity());
 	}
 
 	private static class StreamTraceCounter<T> implements StreamSupplierTransformer<T, StreamSupplier<T>> {
@@ -245,7 +253,7 @@ public final class DataflowClient {
 		return DataflowRequest.newBuilder()
 				.setExecute(DataflowRequest.Execute.newBuilder()
 						.setTaskId(taskId)
-						.addAllNodes(convert(nodes, functionSerializer, customNodeSerializer)))
+						.addAllNodes(convert(nodes, functionSerializer, customNodeSerializer, customStreamSchemaSerializer)))
 				.build();
 	}
 

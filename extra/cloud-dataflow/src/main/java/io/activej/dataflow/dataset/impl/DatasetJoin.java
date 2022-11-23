@@ -21,6 +21,7 @@ import io.activej.dataflow.dataset.SortedDataset;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.StreamId;
+import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.node.NodeJoin;
 import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
 
@@ -40,8 +41,8 @@ public final class DatasetJoin<K, L, R, V> extends SortedDataset<K, V> {
 	private final int sharderNonce = ThreadLocalRandom.current().nextInt();
 
 	public DatasetJoin(SortedDataset<K, L> left, SortedDataset<K, R> right, LeftJoiner<K, L, R, V> leftJoiner,
-			Class<V> resultType, Function<V, K> keyFunction) {
-		super(resultType, left.keyComparator(), left.keyType(), keyFunction);
+			StreamSchema<V> resultStreamSchema, Function<V, K> keyFunction) {
+		super(resultStreamSchema, left.keyComparator(), left.keyType(), keyFunction);
 		this.left = left;
 		this.right = right;
 		this.leftJoiner = leftJoiner;

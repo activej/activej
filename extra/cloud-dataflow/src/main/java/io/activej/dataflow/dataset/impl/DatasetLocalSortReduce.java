@@ -21,6 +21,7 @@ import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.StreamId;
+import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.node.NodeReduceSimple;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 
@@ -34,8 +35,8 @@ public final class DatasetLocalSortReduce<K, I, O> extends LocallySortedDataset<
 	private final Reducer<K, I, O, ?> reducer;
 
 	public DatasetLocalSortReduce(LocallySortedDataset<K, I> input, Reducer<K, I, O, ?> reducer,
-			Class<O> resultType, Function<O, K> resultKeyFunction) {
-		super(resultType, input.keyComparator(), input.keyType(), resultKeyFunction);
+			StreamSchema<O> resultStreamSchema, Function<O, K> resultKeyFunction) {
+		super(resultStreamSchema, input.keyComparator(), input.keyType(), resultKeyFunction);
 		this.input = input;
 		this.reducer = reducer;
 	}

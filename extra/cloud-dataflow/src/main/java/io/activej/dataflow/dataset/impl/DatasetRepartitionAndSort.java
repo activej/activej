@@ -38,7 +38,7 @@ public final class DatasetRepartitionAndSort<K, T> extends SortedDataset<K, T> {
 	}
 
 	public DatasetRepartitionAndSort(LocallySortedDataset<K, T> input, @Nullable List<Partition> partitions) {
-		super(input.valueType(), input.keyComparator(), input.keyType(), input.keyFunction());
+		super(input.streamSchema(), input.keyComparator(), input.keyType(), input.keyFunction());
 		this.input = input;
 		this.partitions = partitions;
 	}

@@ -20,13 +20,14 @@ import io.activej.common.ref.RefInt;
 import io.activej.common.tuple.Tuple2;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.StreamId;
+import io.activej.dataflow.graph.StreamSchema;
 
 import java.util.*;
 
 /**
  * Represents distributed dataset which can span multiple partitions.
  * <p>
- * Typically it is implemented as result of some distributed operation:
+ * Typically, it is implemented as result of some distributed operation:
  * <ul>
  * <li>Parallel query to some underlying distributed data source which is provided by 'environment'
  * <li>Transformation of some existing datasets
@@ -36,14 +37,14 @@ import java.util.*;
  * Internally this is achieved by creating a node on each server during compilation of Datagraph
  */
 public abstract class Dataset<T> {
-	private final Class<T> valueType;
+	private final StreamSchema<T> streamSchema;
 
-	protected Dataset(Class<T> valueType) {
-		this.valueType = valueType;
+	protected Dataset(StreamSchema<T> streamSchema) {
+		this.streamSchema = streamSchema;
 	}
 
-	public final Class<T> valueType() {
-		return valueType;
+	public final StreamSchema<T> streamSchema() {
+		return streamSchema;
 	}
 
 	public abstract List<StreamId> channels(DataflowContext context);
@@ -59,7 +60,7 @@ public abstract class Dataset<T> {
 	@Override
 	public String toString() {
 		String name = getClass().getSimpleName();
-		return (name.startsWith("Dataset") ? name.substring(7) : name) + "<" + valueType.getSimpleName() + ">";
+		return (name.startsWith("Dataset") ? name.substring(7) : name) + "<" + streamSchema.createClass().getSimpleName() + ">";
 	}
 
 	private static void writeDatasets(StringBuilder sb, Map<Dataset<?>, String> ids, Set<Tuple2<Dataset<?>, Dataset<?>>> visited, RefInt lastId, Dataset<?> dataset) {

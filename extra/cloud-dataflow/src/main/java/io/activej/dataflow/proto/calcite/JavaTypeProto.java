@@ -19,19 +19,19 @@ public final class JavaTypeProto {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>.dataflow.calcite.JavaType.JavaClass java_class = 1;</code>
+     * <code>.dataflow.JavaClass java_class = 1;</code>
      * @return Whether the javaClass field is set.
      */
     boolean hasJavaClass();
     /**
-     * <code>.dataflow.calcite.JavaType.JavaClass java_class = 1;</code>
+     * <code>.dataflow.JavaClass java_class = 1;</code>
      * @return The javaClass.
      */
-    io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass getJavaClass();
+    io.activej.dataflow.proto.JavaClassProto.JavaClass getJavaClass();
     /**
-     * <code>.dataflow.calcite.JavaType.JavaClass java_class = 1;</code>
+     * <code>.dataflow.JavaClass java_class = 1;</code>
      */
-    io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClassOrBuilder getJavaClassOrBuilder();
+    io.activej.dataflow.proto.JavaClassProto.JavaClassOrBuilder getJavaClassOrBuilder();
 
     /**
      * <code>.dataflow.calcite.JavaType.JavaParameterizedType java_parameterized_type = 2;</code>
@@ -111,14 +111,14 @@ public final class JavaTypeProto {
               done = true;
               break;
             case 10: {
-              io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass.Builder subBuilder = null;
+              io.activej.dataflow.proto.JavaClassProto.JavaClass.Builder subBuilder = null;
               if (javaTypeCase_ == 1) {
-                subBuilder = ((io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass) javaType_).toBuilder();
+                subBuilder = ((io.activej.dataflow.proto.JavaClassProto.JavaClass) javaType_).toBuilder();
               }
               javaType_ =
-                  input.readMessage(io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass.parser(), extensionRegistry);
+                  input.readMessage(io.activej.dataflow.proto.JavaClassProto.JavaClass.parser(), extensionRegistry);
               if (subBuilder != null) {
-                subBuilder.mergeFrom((io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass) javaType_);
+                subBuilder.mergeFrom((io.activej.dataflow.proto.JavaClassProto.JavaClass) javaType_);
                 javaType_ = subBuilder.buildPartial();
               }
               javaTypeCase_ = 1;
@@ -182,574 +182,6 @@ public final class JavaTypeProto {
       return io.activej.dataflow.proto.calcite.JavaTypeProto.internal_static_dataflow_calcite_JavaType_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.class, io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.Builder.class);
-    }
-
-    public interface JavaClassOrBuilder extends
-        // @@protoc_insertion_point(interface_extends:dataflow.calcite.JavaType.JavaClass)
-        com.google.protobuf.MessageOrBuilder {
-
-      /**
-       * <code>string class_name = 1;</code>
-       * @return The className.
-       */
-      java.lang.String getClassName();
-      /**
-       * <code>string class_name = 1;</code>
-       * @return The bytes for className.
-       */
-      com.google.protobuf.ByteString
-          getClassNameBytes();
-    }
-    /**
-     * Protobuf type {@code dataflow.calcite.JavaType.JavaClass}
-     */
-    public static final class JavaClass extends
-        com.google.protobuf.GeneratedMessageV3 implements
-        // @@protoc_insertion_point(message_implements:dataflow.calcite.JavaType.JavaClass)
-        JavaClassOrBuilder {
-    private static final long serialVersionUID = 0L;
-      // Use JavaClass.newBuilder() to construct.
-      private JavaClass(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-        super(builder);
-      }
-      private JavaClass() {
-        className_ = "";
-      }
-
-      @java.lang.Override
-      @SuppressWarnings({"unused"})
-      protected java.lang.Object newInstance(
-          UnusedPrivateParameter unused) {
-        return new JavaClass();
-      }
-
-      @java.lang.Override
-      public final com.google.protobuf.UnknownFieldSet
-      getUnknownFields() {
-        return this.unknownFields;
-      }
-      private JavaClass(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        this();
-        if (extensionRegistry == null) {
-          throw new java.lang.NullPointerException();
-        }
-        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-            com.google.protobuf.UnknownFieldSet.newBuilder();
-        try {
-          boolean done = false;
-          while (!done) {
-            int tag = input.readTag();
-            switch (tag) {
-              case 0:
-                done = true;
-                break;
-              case 10: {
-                java.lang.String s = input.readStringRequireUtf8();
-
-                className_ = s;
-                break;
-              }
-              default: {
-                if (!parseUnknownField(
-                    input, unknownFields, extensionRegistry, tag)) {
-                  done = true;
-                }
-                break;
-              }
-            }
-          }
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          throw e.setUnfinishedMessage(this);
-        } catch (java.io.IOException e) {
-          throw new com.google.protobuf.InvalidProtocolBufferException(
-              e).setUnfinishedMessage(this);
-        } finally {
-          this.unknownFields = unknownFields.build();
-          makeExtensionsImmutable();
-        }
-      }
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return io.activej.dataflow.proto.calcite.JavaTypeProto.internal_static_dataflow_calcite_JavaType_JavaClass_descriptor;
-      }
-
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return io.activej.dataflow.proto.calcite.JavaTypeProto.internal_static_dataflow_calcite_JavaType_JavaClass_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass.class, io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass.Builder.class);
-      }
-
-      public static final int CLASS_NAME_FIELD_NUMBER = 1;
-      private volatile java.lang.Object className_;
-      /**
-       * <code>string class_name = 1;</code>
-       * @return The className.
-       */
-      @java.lang.Override
-      public java.lang.String getClassName() {
-        java.lang.Object ref = className_;
-        if (ref instanceof java.lang.String) {
-          return (java.lang.String) ref;
-        } else {
-          com.google.protobuf.ByteString bs = 
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          className_ = s;
-          return s;
-        }
-      }
-      /**
-       * <code>string class_name = 1;</code>
-       * @return The bytes for className.
-       */
-      @java.lang.Override
-      public com.google.protobuf.ByteString
-          getClassNameBytes() {
-        java.lang.Object ref = className_;
-        if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          className_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-
-      private byte memoizedIsInitialized = -1;
-      @java.lang.Override
-      public final boolean isInitialized() {
-        byte isInitialized = memoizedIsInitialized;
-        if (isInitialized == 1) return true;
-        if (isInitialized == 0) return false;
-
-        memoizedIsInitialized = 1;
-        return true;
-      }
-
-      @java.lang.Override
-      public void writeTo(com.google.protobuf.CodedOutputStream output)
-                          throws java.io.IOException {
-        if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(className_)) {
-          com.google.protobuf.GeneratedMessageV3.writeString(output, 1, className_);
-        }
-        unknownFields.writeTo(output);
-      }
-
-      @java.lang.Override
-      public int getSerializedSize() {
-        int size = memoizedSize;
-        if (size != -1) return size;
-
-        size = 0;
-        if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(className_)) {
-          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, className_);
-        }
-        size += unknownFields.getSerializedSize();
-        memoizedSize = size;
-        return size;
-      }
-
-      @java.lang.Override
-      public boolean equals(final java.lang.Object obj) {
-        if (obj == this) {
-         return true;
-        }
-        if (!(obj instanceof io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass)) {
-          return super.equals(obj);
-        }
-        io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass other = (io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass) obj;
-
-        if (!getClassName()
-            .equals(other.getClassName())) return false;
-        if (!unknownFields.equals(other.unknownFields)) return false;
-        return true;
-      }
-
-      @java.lang.Override
-      public int hashCode() {
-        if (memoizedHashCode != 0) {
-          return memoizedHashCode;
-        }
-        int hash = 41;
-        hash = (19 * hash) + getDescriptor().hashCode();
-        hash = (37 * hash) + CLASS_NAME_FIELD_NUMBER;
-        hash = (53 * hash) + getClassName().hashCode();
-        hash = (29 * hash) + unknownFields.hashCode();
-        memoizedHashCode = hash;
-        return hash;
-      }
-
-      public static io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass parseFrom(
-          java.nio.ByteBuffer data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data);
-      }
-      public static io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass parseFrom(
-          java.nio.ByteBuffer data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data, extensionRegistry);
-      }
-      public static io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass parseFrom(
-          com.google.protobuf.ByteString data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data);
-      }
-      public static io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass parseFrom(
-          com.google.protobuf.ByteString data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data, extensionRegistry);
-      }
-      public static io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass parseFrom(byte[] data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data);
-      }
-      public static io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass parseFrom(
-          byte[] data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data, extensionRegistry);
-      }
-      public static io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass parseFrom(java.io.InputStream input)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input);
-      }
-      public static io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass parseFrom(
-          java.io.InputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input, extensionRegistry);
-      }
-      public static io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass parseDelimitedFrom(java.io.InputStream input)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseDelimitedWithIOException(PARSER, input);
-      }
-      public static io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass parseDelimitedFrom(
-          java.io.InputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
-      }
-      public static io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass parseFrom(
-          com.google.protobuf.CodedInputStream input)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input);
-      }
-      public static io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass parseFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input, extensionRegistry);
-      }
-
-      @java.lang.Override
-      public Builder newBuilderForType() { return newBuilder(); }
-      public static Builder newBuilder() {
-        return DEFAULT_INSTANCE.toBuilder();
-      }
-      public static Builder newBuilder(io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass prototype) {
-        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-      }
-      @java.lang.Override
-      public Builder toBuilder() {
-        return this == DEFAULT_INSTANCE
-            ? new Builder() : new Builder().mergeFrom(this);
-      }
-
-      @java.lang.Override
-      protected Builder newBuilderForType(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-        Builder builder = new Builder(parent);
-        return builder;
-      }
-      /**
-       * Protobuf type {@code dataflow.calcite.JavaType.JavaClass}
-       */
-      public static final class Builder extends
-          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-          // @@protoc_insertion_point(builder_implements:dataflow.calcite.JavaType.JavaClass)
-          io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClassOrBuilder {
-        public static final com.google.protobuf.Descriptors.Descriptor
-            getDescriptor() {
-          return io.activej.dataflow.proto.calcite.JavaTypeProto.internal_static_dataflow_calcite_JavaType_JavaClass_descriptor;
-        }
-
-        @java.lang.Override
-        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-            internalGetFieldAccessorTable() {
-          return io.activej.dataflow.proto.calcite.JavaTypeProto.internal_static_dataflow_calcite_JavaType_JavaClass_fieldAccessorTable
-              .ensureFieldAccessorsInitialized(
-                  io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass.class, io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass.Builder.class);
-        }
-
-        // Construct using io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass.newBuilder()
-        private Builder() {
-          maybeForceBuilderInitialization();
-        }
-
-        private Builder(
-            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-          super(parent);
-          maybeForceBuilderInitialization();
-        }
-        private void maybeForceBuilderInitialization() {
-          if (com.google.protobuf.GeneratedMessageV3
-                  .alwaysUseFieldBuilders) {
-          }
-        }
-        @java.lang.Override
-        public Builder clear() {
-          super.clear();
-          className_ = "";
-
-          return this;
-        }
-
-        @java.lang.Override
-        public com.google.protobuf.Descriptors.Descriptor
-            getDescriptorForType() {
-          return io.activej.dataflow.proto.calcite.JavaTypeProto.internal_static_dataflow_calcite_JavaType_JavaClass_descriptor;
-        }
-
-        @java.lang.Override
-        public io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass getDefaultInstanceForType() {
-          return io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass.getDefaultInstance();
-        }
-
-        @java.lang.Override
-        public io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass build() {
-          io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass result = buildPartial();
-          if (!result.isInitialized()) {
-            throw newUninitializedMessageException(result);
-          }
-          return result;
-        }
-
-        @java.lang.Override
-        public io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass buildPartial() {
-          io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass result = new io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass(this);
-          result.className_ = className_;
-          onBuilt();
-          return result;
-        }
-
-        @java.lang.Override
-        public Builder clone() {
-          return super.clone();
-        }
-        @java.lang.Override
-        public Builder setField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            java.lang.Object value) {
-          return super.setField(field, value);
-        }
-        @java.lang.Override
-        public Builder clearField(
-            com.google.protobuf.Descriptors.FieldDescriptor field) {
-          return super.clearField(field);
-        }
-        @java.lang.Override
-        public Builder clearOneof(
-            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-          return super.clearOneof(oneof);
-        }
-        @java.lang.Override
-        public Builder setRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            int index, java.lang.Object value) {
-          return super.setRepeatedField(field, index, value);
-        }
-        @java.lang.Override
-        public Builder addRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            java.lang.Object value) {
-          return super.addRepeatedField(field, value);
-        }
-        @java.lang.Override
-        public Builder mergeFrom(com.google.protobuf.Message other) {
-          if (other instanceof io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass) {
-            return mergeFrom((io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass)other);
-          } else {
-            super.mergeFrom(other);
-            return this;
-          }
-        }
-
-        public Builder mergeFrom(io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass other) {
-          if (other == io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass.getDefaultInstance()) return this;
-          if (!other.getClassName().isEmpty()) {
-            className_ = other.className_;
-            onChanged();
-          }
-          this.mergeUnknownFields(other.unknownFields);
-          onChanged();
-          return this;
-        }
-
-        @java.lang.Override
-        public final boolean isInitialized() {
-          return true;
-        }
-
-        @java.lang.Override
-        public Builder mergeFrom(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws java.io.IOException {
-          io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass parsedMessage = null;
-          try {
-            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage = (io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass) e.getUnfinishedMessage();
-            throw e.unwrapIOException();
-          } finally {
-            if (parsedMessage != null) {
-              mergeFrom(parsedMessage);
-            }
-          }
-          return this;
-        }
-
-        private java.lang.Object className_ = "";
-        /**
-         * <code>string class_name = 1;</code>
-         * @return The className.
-         */
-        public java.lang.String getClassName() {
-          java.lang.Object ref = className_;
-          if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs =
-                (com.google.protobuf.ByteString) ref;
-            java.lang.String s = bs.toStringUtf8();
-            className_ = s;
-            return s;
-          } else {
-            return (java.lang.String) ref;
-          }
-        }
-        /**
-         * <code>string class_name = 1;</code>
-         * @return The bytes for className.
-         */
-        public com.google.protobuf.ByteString
-            getClassNameBytes() {
-          java.lang.Object ref = className_;
-          if (ref instanceof String) {
-            com.google.protobuf.ByteString b = 
-                com.google.protobuf.ByteString.copyFromUtf8(
-                    (java.lang.String) ref);
-            className_ = b;
-            return b;
-          } else {
-            return (com.google.protobuf.ByteString) ref;
-          }
-        }
-        /**
-         * <code>string class_name = 1;</code>
-         * @param value The className to set.
-         * @return This builder for chaining.
-         */
-        public Builder setClassName(
-            java.lang.String value) {
-          if (value == null) {
-    throw new NullPointerException();
-  }
-  
-          className_ = value;
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>string class_name = 1;</code>
-         * @return This builder for chaining.
-         */
-        public Builder clearClassName() {
-          
-          className_ = getDefaultInstance().getClassName();
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>string class_name = 1;</code>
-         * @param value The bytes for className to set.
-         * @return This builder for chaining.
-         */
-        public Builder setClassNameBytes(
-            com.google.protobuf.ByteString value) {
-          if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-          
-          className_ = value;
-          onChanged();
-          return this;
-        }
-        @java.lang.Override
-        public final Builder setUnknownFields(
-            final com.google.protobuf.UnknownFieldSet unknownFields) {
-          return super.setUnknownFields(unknownFields);
-        }
-
-        @java.lang.Override
-        public final Builder mergeUnknownFields(
-            final com.google.protobuf.UnknownFieldSet unknownFields) {
-          return super.mergeUnknownFields(unknownFields);
-        }
-
-
-        // @@protoc_insertion_point(builder_scope:dataflow.calcite.JavaType.JavaClass)
-      }
-
-      // @@protoc_insertion_point(class_scope:dataflow.calcite.JavaType.JavaClass)
-      private static final io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass DEFAULT_INSTANCE;
-      static {
-        DEFAULT_INSTANCE = new io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass();
-      }
-
-      public static io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass getDefaultInstance() {
-        return DEFAULT_INSTANCE;
-      }
-
-      private static final com.google.protobuf.Parser<JavaClass>
-          PARSER = new com.google.protobuf.AbstractParser<JavaClass>() {
-        @java.lang.Override
-        public JavaClass parsePartialFrom(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws com.google.protobuf.InvalidProtocolBufferException {
-          return new JavaClass(input, extensionRegistry);
-        }
-      };
-
-      public static com.google.protobuf.Parser<JavaClass> parser() {
-        return PARSER;
-      }
-
-      @java.lang.Override
-      public com.google.protobuf.Parser<JavaClass> getParserForType() {
-        return PARSER;
-      }
-
-      @java.lang.Override
-      public io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass getDefaultInstanceForType() {
-        return DEFAULT_INSTANCE;
-      }
-
     }
 
     public interface JavaParameterizedTypeOrBuilder extends
@@ -2617,7 +2049,7 @@ public final class JavaTypeProto {
 
     public static final int JAVA_CLASS_FIELD_NUMBER = 1;
     /**
-     * <code>.dataflow.calcite.JavaType.JavaClass java_class = 1;</code>
+     * <code>.dataflow.JavaClass java_class = 1;</code>
      * @return Whether the javaClass field is set.
      */
     @java.lang.Override
@@ -2625,25 +2057,25 @@ public final class JavaTypeProto {
       return javaTypeCase_ == 1;
     }
     /**
-     * <code>.dataflow.calcite.JavaType.JavaClass java_class = 1;</code>
+     * <code>.dataflow.JavaClass java_class = 1;</code>
      * @return The javaClass.
      */
     @java.lang.Override
-    public io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass getJavaClass() {
+    public io.activej.dataflow.proto.JavaClassProto.JavaClass getJavaClass() {
       if (javaTypeCase_ == 1) {
-         return (io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass) javaType_;
+         return (io.activej.dataflow.proto.JavaClassProto.JavaClass) javaType_;
       }
-      return io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass.getDefaultInstance();
+      return io.activej.dataflow.proto.JavaClassProto.JavaClass.getDefaultInstance();
     }
     /**
-     * <code>.dataflow.calcite.JavaType.JavaClass java_class = 1;</code>
+     * <code>.dataflow.JavaClass java_class = 1;</code>
      */
     @java.lang.Override
-    public io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClassOrBuilder getJavaClassOrBuilder() {
+    public io.activej.dataflow.proto.JavaClassProto.JavaClassOrBuilder getJavaClassOrBuilder() {
       if (javaTypeCase_ == 1) {
-         return (io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass) javaType_;
+         return (io.activej.dataflow.proto.JavaClassProto.JavaClass) javaType_;
       }
-      return io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass.getDefaultInstance();
+      return io.activej.dataflow.proto.JavaClassProto.JavaClass.getDefaultInstance();
     }
 
     public static final int JAVA_PARAMETERIZED_TYPE_FIELD_NUMBER = 2;
@@ -2723,7 +2155,7 @@ public final class JavaTypeProto {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (javaTypeCase_ == 1) {
-        output.writeMessage(1, (io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass) javaType_);
+        output.writeMessage(1, (io.activej.dataflow.proto.JavaClassProto.JavaClass) javaType_);
       }
       if (javaTypeCase_ == 2) {
         output.writeMessage(2, (io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaParameterizedType) javaType_);
@@ -2742,7 +2174,7 @@ public final class JavaTypeProto {
       size = 0;
       if (javaTypeCase_ == 1) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, (io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass) javaType_);
+          .computeMessageSize(1, (io.activej.dataflow.proto.JavaClassProto.JavaClass) javaType_);
       }
       if (javaTypeCase_ == 2) {
         size += com.google.protobuf.CodedOutputStream
@@ -3104,9 +2536,9 @@ public final class JavaTypeProto {
 
 
       private com.google.protobuf.SingleFieldBuilderV3<
-          io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass, io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass.Builder, io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClassOrBuilder> javaClassBuilder_;
+          io.activej.dataflow.proto.JavaClassProto.JavaClass, io.activej.dataflow.proto.JavaClassProto.JavaClass.Builder, io.activej.dataflow.proto.JavaClassProto.JavaClassOrBuilder> javaClassBuilder_;
       /**
-       * <code>.dataflow.calcite.JavaType.JavaClass java_class = 1;</code>
+       * <code>.dataflow.JavaClass java_class = 1;</code>
        * @return Whether the javaClass field is set.
        */
       @java.lang.Override
@@ -3114,27 +2546,27 @@ public final class JavaTypeProto {
         return javaTypeCase_ == 1;
       }
       /**
-       * <code>.dataflow.calcite.JavaType.JavaClass java_class = 1;</code>
+       * <code>.dataflow.JavaClass java_class = 1;</code>
        * @return The javaClass.
        */
       @java.lang.Override
-      public io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass getJavaClass() {
+      public io.activej.dataflow.proto.JavaClassProto.JavaClass getJavaClass() {
         if (javaClassBuilder_ == null) {
           if (javaTypeCase_ == 1) {
-            return (io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass) javaType_;
+            return (io.activej.dataflow.proto.JavaClassProto.JavaClass) javaType_;
           }
-          return io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass.getDefaultInstance();
+          return io.activej.dataflow.proto.JavaClassProto.JavaClass.getDefaultInstance();
         } else {
           if (javaTypeCase_ == 1) {
             return javaClassBuilder_.getMessage();
           }
-          return io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass.getDefaultInstance();
+          return io.activej.dataflow.proto.JavaClassProto.JavaClass.getDefaultInstance();
         }
       }
       /**
-       * <code>.dataflow.calcite.JavaType.JavaClass java_class = 1;</code>
+       * <code>.dataflow.JavaClass java_class = 1;</code>
        */
-      public Builder setJavaClass(io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass value) {
+      public Builder setJavaClass(io.activej.dataflow.proto.JavaClassProto.JavaClass value) {
         if (javaClassBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -3148,10 +2580,10 @@ public final class JavaTypeProto {
         return this;
       }
       /**
-       * <code>.dataflow.calcite.JavaType.JavaClass java_class = 1;</code>
+       * <code>.dataflow.JavaClass java_class = 1;</code>
        */
       public Builder setJavaClass(
-          io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass.Builder builderForValue) {
+          io.activej.dataflow.proto.JavaClassProto.JavaClass.Builder builderForValue) {
         if (javaClassBuilder_ == null) {
           javaType_ = builderForValue.build();
           onChanged();
@@ -3162,13 +2594,13 @@ public final class JavaTypeProto {
         return this;
       }
       /**
-       * <code>.dataflow.calcite.JavaType.JavaClass java_class = 1;</code>
+       * <code>.dataflow.JavaClass java_class = 1;</code>
        */
-      public Builder mergeJavaClass(io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass value) {
+      public Builder mergeJavaClass(io.activej.dataflow.proto.JavaClassProto.JavaClass value) {
         if (javaClassBuilder_ == null) {
           if (javaTypeCase_ == 1 &&
-              javaType_ != io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass.getDefaultInstance()) {
-            javaType_ = io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass.newBuilder((io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass) javaType_)
+              javaType_ != io.activej.dataflow.proto.JavaClassProto.JavaClass.getDefaultInstance()) {
+            javaType_ = io.activej.dataflow.proto.JavaClassProto.JavaClass.newBuilder((io.activej.dataflow.proto.JavaClassProto.JavaClass) javaType_)
                 .mergeFrom(value).buildPartial();
           } else {
             javaType_ = value;
@@ -3184,7 +2616,7 @@ public final class JavaTypeProto {
         return this;
       }
       /**
-       * <code>.dataflow.calcite.JavaType.JavaClass java_class = 1;</code>
+       * <code>.dataflow.JavaClass java_class = 1;</code>
        */
       public Builder clearJavaClass() {
         if (javaClassBuilder_ == null) {
@@ -3203,38 +2635,38 @@ public final class JavaTypeProto {
         return this;
       }
       /**
-       * <code>.dataflow.calcite.JavaType.JavaClass java_class = 1;</code>
+       * <code>.dataflow.JavaClass java_class = 1;</code>
        */
-      public io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass.Builder getJavaClassBuilder() {
+      public io.activej.dataflow.proto.JavaClassProto.JavaClass.Builder getJavaClassBuilder() {
         return getJavaClassFieldBuilder().getBuilder();
       }
       /**
-       * <code>.dataflow.calcite.JavaType.JavaClass java_class = 1;</code>
+       * <code>.dataflow.JavaClass java_class = 1;</code>
        */
       @java.lang.Override
-      public io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClassOrBuilder getJavaClassOrBuilder() {
+      public io.activej.dataflow.proto.JavaClassProto.JavaClassOrBuilder getJavaClassOrBuilder() {
         if ((javaTypeCase_ == 1) && (javaClassBuilder_ != null)) {
           return javaClassBuilder_.getMessageOrBuilder();
         } else {
           if (javaTypeCase_ == 1) {
-            return (io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass) javaType_;
+            return (io.activej.dataflow.proto.JavaClassProto.JavaClass) javaType_;
           }
-          return io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass.getDefaultInstance();
+          return io.activej.dataflow.proto.JavaClassProto.JavaClass.getDefaultInstance();
         }
       }
       /**
-       * <code>.dataflow.calcite.JavaType.JavaClass java_class = 1;</code>
+       * <code>.dataflow.JavaClass java_class = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass, io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass.Builder, io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClassOrBuilder> 
+          io.activej.dataflow.proto.JavaClassProto.JavaClass, io.activej.dataflow.proto.JavaClassProto.JavaClass.Builder, io.activej.dataflow.proto.JavaClassProto.JavaClassOrBuilder> 
           getJavaClassFieldBuilder() {
         if (javaClassBuilder_ == null) {
           if (!(javaTypeCase_ == 1)) {
-            javaType_ = io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass.getDefaultInstance();
+            javaType_ = io.activej.dataflow.proto.JavaClassProto.JavaClass.getDefaultInstance();
           }
           javaClassBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass, io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass.Builder, io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClassOrBuilder>(
-                  (io.activej.dataflow.proto.calcite.JavaTypeProto.JavaType.JavaClass) javaType_,
+              io.activej.dataflow.proto.JavaClassProto.JavaClass, io.activej.dataflow.proto.JavaClassProto.JavaClass.Builder, io.activej.dataflow.proto.JavaClassProto.JavaClassOrBuilder>(
+                  (io.activej.dataflow.proto.JavaClassProto.JavaClass) javaType_,
                   getParentForChildren(),
                   isClean());
           javaType_ = null;
@@ -4407,11 +3839,6 @@ public final class JavaTypeProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_dataflow_calcite_JavaType_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_dataflow_calcite_JavaType_JavaClass_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_dataflow_calcite_JavaType_JavaClass_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_dataflow_calcite_JavaType_JavaParameterizedType_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -4436,28 +3863,28 @@ public final class JavaTypeProto {
   static {
     java.lang.String[] descriptorData = {
       "\n\027calcite/java_type.proto\022\020dataflow.calc" +
-      "ite\"\231\004\n\010JavaType\022:\n\njava_class\030\001 \001(\0132$.d" +
-      "ataflow.calcite.JavaType.JavaClassH\000\022S\n\027" +
-      "java_parameterized_type\030\002 \001(\01320.dataflow" +
-      ".calcite.JavaType.JavaParameterizedTypeH" +
-      "\000\022R\n\027java_generic_array_type\030\003 \001(\0132/.dat" +
-      "aflow.calcite.JavaType.JavaGenericArrayT" +
-      "ypeH\000\032\037\n\tJavaClass\022\022\n\nclass_name\030\001 \001(\t\032\255" +
-      "\001\n\025JavaParameterizedType\0226\n\nowner_type\030\001" +
-      " \001(\0132\".dataflow.calcite.JavaTypeNullable" +
-      "\022,\n\010raw_type\030\002 \001(\0132\032.dataflow.calcite.Ja" +
-      "vaType\022.\n\nparameters\030\003 \003(\0132\032.dataflow.ca" +
-      "lcite.JavaType\032J\n\024JavaGenericArrayType\0222" +
-      "\n\016component_type\030\001 \001(\0132\032.dataflow.calcit" +
-      "e.JavaTypeB\013\n\tjava_type\"g\n\020JavaTypeNulla" +
-      "ble\022*\n\004type\030\001 \001(\0132\032.dataflow.calcite.Jav" +
-      "aTypeH\000\022\021\n\007is_null\030\002 \001(\010H\000B\024\n\022java_type_" +
-      "nullableB4\n!io.activej.dataflow.proto.ca" +
-      "lciteB\rJavaTypeProtoP\000b\006proto3"
+      "ite\032\020java_class.proto\"\347\003\n\010JavaType\022)\n\nja" +
+      "va_class\030\001 \001(\0132\023.dataflow.JavaClassH\000\022S\n" +
+      "\027java_parameterized_type\030\002 \001(\01320.dataflo" +
+      "w.calcite.JavaType.JavaParameterizedType" +
+      "H\000\022R\n\027java_generic_array_type\030\003 \001(\0132/.da" +
+      "taflow.calcite.JavaType.JavaGenericArray" +
+      "TypeH\000\032\255\001\n\025JavaParameterizedType\0226\n\nowne" +
+      "r_type\030\001 \001(\0132\".dataflow.calcite.JavaType" +
+      "Nullable\022,\n\010raw_type\030\002 \001(\0132\032.dataflow.ca" +
+      "lcite.JavaType\022.\n\nparameters\030\003 \003(\0132\032.dat" +
+      "aflow.calcite.JavaType\032J\n\024JavaGenericArr" +
+      "ayType\0222\n\016component_type\030\001 \001(\0132\032.dataflo" +
+      "w.calcite.JavaTypeB\013\n\tjava_type\"g\n\020JavaT" +
+      "ypeNullable\022*\n\004type\030\001 \001(\0132\032.dataflow.cal" +
+      "cite.JavaTypeH\000\022\021\n\007is_null\030\002 \001(\010H\000B\024\n\022ja" +
+      "va_type_nullableB4\n!io.activej.dataflow." +
+      "proto.calciteB\rJavaTypeProtoP\000b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
+          io.activej.dataflow.proto.JavaClassProto.getDescriptor(),
         });
     internal_static_dataflow_calcite_JavaType_descriptor =
       getDescriptor().getMessageTypes().get(0);
@@ -4465,20 +3892,14 @@ public final class JavaTypeProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_JavaType_descriptor,
         new java.lang.String[] { "JavaClass", "JavaParameterizedType", "JavaGenericArrayType", "JavaType", });
-    internal_static_dataflow_calcite_JavaType_JavaClass_descriptor =
-      internal_static_dataflow_calcite_JavaType_descriptor.getNestedTypes().get(0);
-    internal_static_dataflow_calcite_JavaType_JavaClass_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_dataflow_calcite_JavaType_JavaClass_descriptor,
-        new java.lang.String[] { "ClassName", });
     internal_static_dataflow_calcite_JavaType_JavaParameterizedType_descriptor =
-      internal_static_dataflow_calcite_JavaType_descriptor.getNestedTypes().get(1);
+      internal_static_dataflow_calcite_JavaType_descriptor.getNestedTypes().get(0);
     internal_static_dataflow_calcite_JavaType_JavaParameterizedType_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_JavaType_JavaParameterizedType_descriptor,
         new java.lang.String[] { "OwnerType", "RawType", "Parameters", });
     internal_static_dataflow_calcite_JavaType_JavaGenericArrayType_descriptor =
-      internal_static_dataflow_calcite_JavaType_descriptor.getNestedTypes().get(2);
+      internal_static_dataflow_calcite_JavaType_descriptor.getNestedTypes().get(1);
     internal_static_dataflow_calcite_JavaType_JavaGenericArrayType_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_JavaType_JavaGenericArrayType_descriptor,
@@ -4489,6 +3910,7 @@ public final class JavaTypeProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_calcite_JavaTypeNullable_descriptor,
         new java.lang.String[] { "Type", "IsNull", "JavaTypeNullable", });
+    io.activej.dataflow.proto.JavaClassProto.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

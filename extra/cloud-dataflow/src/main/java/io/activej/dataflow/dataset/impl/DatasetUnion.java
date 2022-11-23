@@ -41,7 +41,7 @@ public final class DatasetUnion<K, T> extends SortedDataset<K, T> {
 	private final int sharderNonce = ThreadLocalRandom.current().nextInt();
 
 	public DatasetUnion(SortedDataset<K, T> left, SortedDataset<K, T> right) {
-		super(left.valueType(), left.keyComparator(), left.keyType(), left.keyFunction());
+		super(left.streamSchema(), left.keyComparator(), left.keyType(), left.keyFunction());
 		this.left = left;
 		this.right = right;
 	}

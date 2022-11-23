@@ -1,4 +1,4 @@
-package io.activej.dataflow.stream;
+package io.activej.dataflow.calcite;
 
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.record.Record;

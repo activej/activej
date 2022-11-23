@@ -5,6 +5,7 @@ import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowServer;
+import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator;
 import io.activej.dataflow.inject.DataflowModule;
@@ -14,6 +15,7 @@ import io.activej.dataflow.node.NodeSort;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
 import io.activej.dataflow.proto.serializer.CustomNodeSerializer;
+import io.activej.dataflow.proto.serializer.CustomStreamSchemaSerializer;
 import io.activej.dataflow.proto.serializer.FunctionSerializer;
 import io.activej.datastream.processor.StreamSorterStorage;
 import io.activej.datastream.processor.StreamSorterStorageImpl;
@@ -75,10 +77,16 @@ public final class DataflowServerModule extends AbstractModule {
 	@Provides
 	@Eager
 	DataflowClient client(Executor executor, Config config, ByteBufsCodec<DataflowResponse, DataflowRequest> codec,
-			BinarySerializerLocator serializers, FunctionSerializer functionSerializer, OptionalDependency<CustomNodeSerializer> optionalCustomNodeSerializer) {
+			BinarySerializerLocator serializers, FunctionSerializer functionSerializer,
+			OptionalDependency<CustomNodeSerializer> optionalCustomNodeSerializer,
+			OptionalDependency<CustomStreamSchemaSerializer> optionalCustomStreamSchemaSerializer
+	) {
 		DataflowClient dataflowClient = DataflowClient.create(executor, config.get(ofPath(), "dataflow.secondaryBufferPath"), codec, serializers, functionSerializer);
 		if (optionalCustomNodeSerializer.isPresent()) {
-			return dataflowClient.withCustomNodeSerializer(optionalCustomNodeSerializer.get());
+			dataflowClient.withCustomNodeSerializer(optionalCustomNodeSerializer.get());
+		}
+		if (optionalCustomStreamSchemaSerializer.isPresent()) {
+			dataflowClient.withCustomStreamSchemaSerializer(optionalCustomStreamSchemaSerializer.get());
 		}
 		return dataflowClient;
 	}
@@ -92,9 +100,9 @@ public final class DataflowServerModule extends AbstractModule {
 			int index;
 
 			@Override
-			public <T> StreamSorterStorage<T> create(Class<T> type, Task context, Promise<Void> taskExecuted) {
+			public <T> StreamSorterStorage<T> create(StreamSchema<T> streamSchema, Task context, Promise<Void> taskExecuted) {
 				Path taskSortDir = sortDir.resolve(context.getTaskId() + "_" + index++);
-				return StreamSorterStorageImpl.create(executor, serializerLocator.get(type), LZ4FrameFormat.create(), taskSortDir);
+				return StreamSorterStorageImpl.create(executor, streamSchema.createSerializer(serializerLocator), LZ4FrameFormat.create(), taskSortDir);
 			}
 
 			@Override
@@ -105,7 +113,7 @@ public final class DataflowServerModule extends AbstractModule {
 				return Promise.ofBlocking(executor, () -> {
 					try {
 						Files.deleteIfExists(storageImpl.getPath());
-					} catch (IOException e){
+					} catch (IOException e) {
 						logger.warn("Could not delete sort storage directory: {}", storageImpl.getPath(), e);
 					}
 				});

@@ -66,10 +66,10 @@ public class MergeCollector<K, T> implements Collector<T> {
 		StreamReducer<K, T, Void> merger = StreamReducer.create(keyComparator);
 		int index = context.generateNodeIndex();
 		for (StreamId streamId : inputStreamIds) {
-			NodeUpload<T> nodeUpload = new NodeUpload<>(index, input.valueType(), streamId);
+			NodeUpload<T> nodeUpload = new NodeUpload<>(index, input.streamSchema(), streamId);
 			Partition partition = graph.getPartition(streamId);
 			graph.addNode(partition, nodeUpload);
-			StreamSupplier<T> supplier = client.download(partition.getAddress(), streamId, input.valueType());
+			StreamSupplier<T> supplier = client.download(partition.getAddress(), streamId, input.streamSchema());
 			supplier.streamTo(merger.newInput(keyFunction, deduplicate ? deduplicateReducer() : mergeReducer()));
 		}
 

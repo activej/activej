@@ -1,9 +1,9 @@
-package io.activej.dataflow.stream;
+package io.activej.dataflow.calcite.jdbc;
 
 import io.activej.common.exception.FatalErrorHandler;
+import io.activej.dataflow.calcite.AbstractCalciteTest;
 import io.activej.dataflow.calcite.CalciteSqlDataflow;
 import io.activej.dataflow.calcite.inject.CalciteClientModule;
-import io.activej.dataflow.calcite.jdbc.DataflowMeta;
 import io.activej.dataflow.jdbc.driver.Driver;
 import io.activej.dataflow.jdbc.driver.utils.InstantHolder;
 import io.activej.eventloop.Eventloop;

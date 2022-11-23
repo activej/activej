@@ -37,6 +37,7 @@ import java.util.concurrent.Executors;
 import java.util.function.Function;
 
 import static io.activej.dataflow.dataset.Datasets.*;
+import static io.activej.dataflow.graph.StreamSchemas.simple;
 import static io.activej.dataflow.helper.StreamMergeSorterStorageStub.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.dataflow.proto.serializer.ProtobufUtils.ofObject;
@@ -144,8 +145,8 @@ public class MapReduceTest {
 		DataflowClient client = clientInjector.getInstance(DataflowClient.class);
 		DataflowGraph graph = clientInjector.getInstance(DataflowGraph.class);
 
-		Dataset<String> items = datasetOfId("items", String.class);
-		Dataset<StringCount> mappedItems = map(items, new StringMapFunction(), StringCount.class);
+		Dataset<String> items = datasetOfId("items", simple(String.class));
+		Dataset<StringCount> mappedItems = map(items, new StringMapFunction(), simple(StringCount.class));
 		Dataset<StringCount> reducedItems = sortReduceRepartitionReduce(mappedItems,
 				new StringReducer(), String.class, new StringKeyFunction(), Comparator.naturalOrder());
 		Collector<StringCount> collector = MergeCollector.create(reducedItems, client, new StringKeyFunction(), naturalOrder(), false);
@@ -201,7 +202,7 @@ public class MapReduceTest {
 		}
 	}
 
-	@SuppressWarnings({"rawtypes", "NullableProblems", "unchecked"})
+	@SuppressWarnings({"rawtypes", "unchecked"})
 	private static Module createSerializersModule() {
 		return ModuleBuilder.create()
 				.bind(new Key<BinarySerializer<Function<?, ?>>>() {}).to(() -> {

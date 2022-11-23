@@ -22,7 +22,7 @@ public final class DatasetRepartition<T, K> extends Dataset<T> {
 	private final @Nullable List<Partition> partitions;
 
 	public DatasetRepartition(Dataset<T> input, Function<T, K> keyFunction, @Nullable List<Partition> partitions) {
-		super(input.valueType());
+		super(input.streamSchema());
 		this.input = input;
 		this.keyFunction = keyFunction;
 		this.partitions = partitions;
@@ -55,7 +55,7 @@ public final class DatasetRepartition<T, K> extends Dataset<T> {
 				NodeShard<K, T> sharder = sharders.get(j);
 				StreamId sharderOutput = sharder.newPartition();
 				graph.addNodeStream(sharder, sharderOutput);
-				StreamId unionInput = forwardChannel(context, input.valueType(), sharderOutput, partition, uploadIndexes[i], downloadIndexes[j]);
+				StreamId unionInput = forwardChannel(context, input.streamSchema(), sharderOutput, partition, uploadIndexes[i], downloadIndexes[j]);
 				unionInputs.add(unionInput);
 			}
 			NodeUnion<T> nodeUnion = new NodeUnion<>(unionIndex, unionInputs);

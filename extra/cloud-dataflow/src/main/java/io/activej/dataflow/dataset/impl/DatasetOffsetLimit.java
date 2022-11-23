@@ -43,7 +43,7 @@ public final class DatasetOffsetLimit<K, T> extends SortedDataset<K, T> {
 	private final int sharderNonce = ThreadLocalRandom.current().nextInt();
 
 	public DatasetOffsetLimit(LocallySortedDataset<K, T> input, long offset, long limit) {
-		super(input.valueType(), input.keyComparator(), input.keyType(), input.keyFunction());
+		super(input.streamSchema(), input.keyComparator(), input.keyType(), input.keyFunction());
 		this.input = input;
 		this.offset = offset;
 		this.limit = limit;
@@ -69,7 +69,7 @@ public final class DatasetOffsetLimit<K, T> extends SortedDataset<K, T> {
 		StreamId randomStreamId = streamIds.get(Math.abs(sharderNonce) % streamIds.size());
 		Partition randomPartition = graph.getPartition(randomStreamId);
 
-		List<StreamId> newStreamIds = DatasetUtils.repartitionAndReduce(next, streamIds, valueType(), input.keyFunction(), input.keyComparator(), mergeReducer(), List.of(randomPartition));
+		List<StreamId> newStreamIds = DatasetUtils.repartitionAndReduce(next, streamIds, streamSchema(), input.keyFunction(), input.keyComparator(), mergeReducer(), List.of(randomPartition));
 		assert newStreamIds.size() == 1;
 
 		return toOutput(graph, index, newStreamIds.get(0));

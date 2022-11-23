@@ -16,6 +16,8 @@
 
 package io.activej.dataflow.dataset;
 
+import io.activej.dataflow.graph.StreamSchema;
+
 import java.util.Comparator;
 import java.util.function.Function;
 
@@ -27,7 +29,7 @@ import java.util.function.Function;
  * @param <T> data item type
  */
 public abstract class SortedDataset<K, T> extends LocallySortedDataset<K, T> {
-	protected SortedDataset(Class<T> valueType, Comparator<K> keyComparator, Class<K> keyType, Function<T, K> keyFunction) {
-		super(valueType, keyComparator, keyType, keyFunction);
+	protected SortedDataset(StreamSchema<T> streamSchema, Comparator<K> keyComparator, Class<K> keyType, Function<T, K> keyFunction) {
+		super(streamSchema, keyComparator, keyType, keyFunction);
 	}
 }

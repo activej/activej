@@ -36,6 +36,7 @@ import java.util.concurrent.Executors;
 import java.util.function.Function;
 
 import static io.activej.dataflow.dataset.Datasets.*;
+import static io.activej.dataflow.graph.StreamSchemas.simple;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.dataflow.proto.serializer.ProtobufUtils.ofObject;
 import static io.activej.dataflow.stream.DataflowTest.createCommon;
@@ -118,7 +119,7 @@ public class ReducerDeadlockTest {
 		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
 
 		SortedDataset<Long, TestItem> items = repartitionSort(sortedDatasetOfId("items",
-				TestItem.class, Long.class, new TestKeyFunction(), new TestComparator()));
+				simple(TestItem.class), Long.class, new TestKeyFunction(), new TestComparator()));
 
 		DatasetConsumerOfId<TestItem> consumerNode = consumerOfId(items, "result");
 

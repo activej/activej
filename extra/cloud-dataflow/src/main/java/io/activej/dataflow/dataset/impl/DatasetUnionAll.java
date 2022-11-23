@@ -35,7 +35,7 @@ public final class DatasetUnionAll<T> extends Dataset<T> {
 	private final Dataset<T> right;
 
 	public DatasetUnionAll(Dataset<T> left, Dataset<T> right) {
-		super(left.valueType());
+		super(left.streamSchema());
 		this.left = left;
 		this.right = right;
 	}

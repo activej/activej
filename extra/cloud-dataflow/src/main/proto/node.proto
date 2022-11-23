@@ -7,6 +7,7 @@ option java_package = "io.activej.dataflow.proto";
 option java_outer_classname = "NodeProto";
 
 import "stream_id.proto";
+import "stream_schema.proto";
 
 message Node {
   message ConsumerOfId {
@@ -24,7 +25,7 @@ message Node {
     }
 
     int32 index = 1;
-    string type = 2;
+    StreamSchema stream_schema = 2;
     Address address = 3;
     StreamId input = 4;
     StreamId output = 5;
@@ -95,7 +96,7 @@ message Node {
 
   message Sort {
     int32 index = 1;
-    string type = 2;
+    StreamSchema stream_schema = 2;
     bytes key_function = 3;
     bytes key_comparator = 4;
     bool deduplicate = 5;
@@ -120,7 +121,7 @@ message Node {
 
   message Upload {
     int32 index = 1;
-    string type = 2;
+    StreamSchema stream_schema = 2;
     StreamId stream_id = 3;
   }
 

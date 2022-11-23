@@ -29,6 +29,7 @@ import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.csp.queue.ChannelQueue;
 import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.dataflow.graph.StreamId;
+import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator;
 import io.activej.dataflow.node.Node;
@@ -43,6 +44,7 @@ import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.Partiti
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.TaskData;
 import io.activej.dataflow.proto.DataflowMessagingProto.Version;
 import io.activej.dataflow.proto.serializer.CustomNodeSerializer;
+import io.activej.dataflow.proto.serializer.CustomStreamSchemaSerializer;
 import io.activej.dataflow.proto.serializer.FunctionSerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.csp.ChannelSerializer;
@@ -122,8 +124,8 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 				.whenComplete(messaging::close);
 	}
 
-	public <T> StreamConsumer<T> upload(StreamId streamId, Class<T> type, ChannelTransformer<ByteBuf, ByteBuf> transformer) {
-		ChannelSerializer<T> streamSerializer = ChannelSerializer.create(serializers.get(type))
+	public <T> StreamConsumer<T> upload(StreamId streamId, StreamSchema<T> streamSchema, ChannelTransformer<ByteBuf, ByteBuf> transformer) {
+		ChannelSerializer<T> streamSerializer = ChannelSerializer.create(streamSchema.createSerializer(serializers))
 				.withInitialBufferSize(MemSize.kilobytes(256))
 				.withAutoFlushInterval(Duration.ZERO)
 				.withExplicitEndOfStream();
@@ -149,8 +151,8 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 		return streamSerializer;
 	}
 
-	public <T> StreamConsumer<T> upload(StreamId streamId, Class<T> type) {
-		return upload(streamId, type, ChannelTransformer.identity());
+	public <T> StreamConsumer<T> upload(StreamId streamId, StreamSchema<T> streamSchema) {
+		return upload(streamId, streamSchema, ChannelTransformer.identity());
 	}
 
 	@Override
@@ -224,7 +226,10 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 
 	private void handleExecute(Messaging<DataflowRequest, DataflowResponse> messaging, Execute execute) throws DataflowException {
 		long taskId = execute.getTaskId();
-		Task task = new Task(taskId, environment, convert(execute.getNodesList(), functionSerializer, environment.getInstanceOrNull(CustomNodeSerializer.class)));
+		Task task = new Task(taskId, environment, convert(execute.getNodesList(), functionSerializer,
+				environment.getInstanceOrNull(CustomNodeSerializer.class),
+				environment.getInstanceOrNull(CustomStreamSchemaSerializer.class)
+		));
 		try {
 			task.bind();
 		} catch (Exception e) {

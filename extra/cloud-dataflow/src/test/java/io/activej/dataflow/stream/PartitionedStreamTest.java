@@ -71,6 +71,7 @@ import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.Utils.first;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.dataflow.dataset.Datasets.*;
+import static io.activej.dataflow.graph.StreamSchemas.simple;
 import static io.activej.dataflow.proto.serializer.ProtobufUtils.ofObject;
 import static io.activej.datastream.StreamSupplier.ofChannelSupplier;
 import static io.activej.datastream.processor.StreamReducers.mergeReducer;
@@ -449,7 +450,7 @@ public final class PartitionedStreamTest {
 		Injector injector = Injector.of(createClientModule());
 		DataflowClient client = injector.getInstance(DataflowClient.class);
 		DataflowGraph graph = new DataflowGraph(client, toPartitions(dataflowServers));
-		Dataset<String> compoundDataset = datasetOfId(sorted ? "sorted data source" : "data source", String.class);
+		Dataset<String> compoundDataset = datasetOfId(sorted ? "sorted data source" : "data source", simple(String.class));
 
 		PartitionedCollector<String> collector = new PartitionedCollector<>(compoundDataset, client);
 
@@ -462,7 +463,7 @@ public final class PartitionedStreamTest {
 		Injector injector = Injector.of(createClientModule());
 		DataflowClient client = injector.getInstance(DataflowClient.class);
 		DataflowGraph graph = new DataflowGraph(client, toPartitions(dataflowServers));
-		Dataset<String> compoundDataset = datasetOfId("data source", String.class);
+		Dataset<String> compoundDataset = datasetOfId("data source", simple(String.class));
 		Dataset<String> filteredDataset = filter(compoundDataset, new IsEven());
 		Dataset<String> consumerDataset = consumerOfId(filteredDataset, "data target");
 		consumerDataset.channels(DataflowContext.of(graph));

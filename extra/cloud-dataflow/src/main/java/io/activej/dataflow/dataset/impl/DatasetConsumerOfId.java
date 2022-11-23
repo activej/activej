@@ -31,7 +31,7 @@ public final class DatasetConsumerOfId<T> extends Dataset<T> {
 	private final Dataset<T> input;
 
 	public DatasetConsumerOfId(Dataset<T> input, String id) {
-		super(input.valueType());
+		super(input.streamSchema());
 		this.id = id;
 		this.input = input;
 	}

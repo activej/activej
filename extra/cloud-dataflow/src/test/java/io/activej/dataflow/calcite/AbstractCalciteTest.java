@@ -1,9 +1,8 @@
-package io.activej.dataflow.stream;
+package io.activej.dataflow.calcite;
 
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.SqlDataflow;
-import io.activej.dataflow.calcite.*;
 import io.activej.dataflow.calcite.inject.CalciteClientModule;
 import io.activej.dataflow.calcite.inject.CalciteServerModule;
 import io.activej.dataflow.calcite.operand.Operand;
@@ -47,12 +46,12 @@ import java.util.stream.Stream;
 
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.concat;
+import static io.activej.dataflow.calcite.AbstractCalciteTest.MatchType.TYPE_1;
+import static io.activej.dataflow.calcite.AbstractCalciteTest.MatchType.TYPE_2;
+import static io.activej.dataflow.calcite.AbstractCalciteTest.State.OFF;
+import static io.activej.dataflow.calcite.AbstractCalciteTest.State.ON;
 import static io.activej.dataflow.helper.StreamMergeSorterStorageStub.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
-import static io.activej.dataflow.stream.AbstractCalciteTest.MatchType.TYPE_1;
-import static io.activej.dataflow.stream.AbstractCalciteTest.MatchType.TYPE_2;
-import static io.activej.dataflow.stream.AbstractCalciteTest.State.OFF;
-import static io.activej.dataflow.stream.AbstractCalciteTest.State.ON;
 import static io.activej.dataflow.stream.DataflowTest.createCommon;
 import static io.activej.dataflow.stream.DataflowTest.getFreeListenAddress;
 import static org.junit.Assert.assertEquals;
@@ -2261,6 +2260,25 @@ public abstract class AbstractCalciteTest {
 				List.of(
 						new Object[]{"ITB001", 5L},
 						new Object[]{"MKB114", 4L}
+				)
+		);
+
+		assertEquals(expected, result);
+	}
+
+	@Test
+	public void testGroupBySingleColumnReverseOrder() {
+		QueryResult result = query("""
+				SELECT COUNT(*), subject
+				FROM subject_selection
+				GROUP BY subject
+				""");
+
+		QueryResult expected = new QueryResult(
+				List.of("COUNT(*)", "subject"),
+				List.of(
+						new Object[]{5L, "ITB001"},
+						new Object[]{4L, "MKB114"}
 				)
 		);
 

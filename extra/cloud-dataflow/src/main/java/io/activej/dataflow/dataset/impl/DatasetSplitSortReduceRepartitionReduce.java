@@ -18,10 +18,7 @@ package io.activej.dataflow.dataset.impl;
 
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.DatasetUtils;
-import io.activej.dataflow.graph.DataflowContext;
-import io.activej.dataflow.graph.DataflowGraph;
-import io.activej.dataflow.graph.Partition;
-import io.activej.dataflow.graph.StreamId;
+import io.activej.dataflow.graph.*;
 import io.activej.dataflow.node.NodeReduce;
 import io.activej.dataflow.node.NodeReduceSimple;
 import io.activej.dataflow.node.NodeShard;
@@ -42,7 +39,7 @@ public final class DatasetSplitSortReduceRepartitionReduce<K, I, O, A> extends D
 	private final Function<A, K> accumulatorKeyFunction;
 	private final Comparator<K> keyComparator;
 	private final ReducerToResult<K, I, O, A> reducer;
-	private final Class<A> accumulatorType;
+	private final StreamSchema<A> accumulatorStreamSchema;
 	private final int sortBufferSize;
 
 	public DatasetSplitSortReduceRepartitionReduce(Dataset<I> input,
@@ -50,16 +47,16 @@ public final class DatasetSplitSortReduceRepartitionReduce<K, I, O, A> extends D
 			Function<A, K> accumulatorKeyFunction,
 			Comparator<K> keyComparator,
 			ReducerToResult<K, I, O, A> reducer,
-			Class<O> resultType,
-			Class<A> accumulatorType,
+			StreamSchema<O> resultStreamSchema,
+			StreamSchema<A> accumulatorStreamSchema,
 			int sortBufferSize) {
-		super(resultType);
+		super(resultStreamSchema);
 		this.input = input;
 		this.inputKeyFunction = inputKeyFunction;
 		this.accumulatorKeyFunction = accumulatorKeyFunction;
 		this.keyComparator = keyComparator;
 		this.reducer = reducer;
-		this.accumulatorType = accumulatorType;
+		this.accumulatorStreamSchema = accumulatorStreamSchema;
 		this.sortBufferSize = sortBufferSize;
 	}
 
@@ -106,14 +103,14 @@ public final class DatasetSplitSortReduceRepartitionReduce<K, I, O, A> extends D
 		DataflowGraph graph = context.getGraph();
 		Partition sourcePartition = graph.getPartition(sourceStreamId);
 
-		NodeSort<K, I> nodeSort = new NodeSort<>(sortIndex, input.valueType(), inputKeyFunction, keyComparator, false, sortBufferSize, sourceStreamId);
+		NodeSort<K, I> nodeSort = new NodeSort<>(sortIndex, input.streamSchema(), inputKeyFunction, keyComparator, false, sortBufferSize, sourceStreamId);
 		graph.addNode(sourcePartition, nodeSort);
 
 		NodeReduceSimple<K, I, A, A> nodeReduce = new NodeReduceSimple<>(simpleReduceIndex, inputKeyFunction, keyComparator, reducer.inputToAccumulator());
 		nodeReduce.addInput(nodeSort.getOutput());
 		graph.addNode(sourcePartition, nodeReduce);
 
-		return DatasetUtils.forwardChannel(context, accumulatorType, nodeReduce.getOutput(), targetPartition, uploadIndex, downloadIndex);
+		return DatasetUtils.forwardChannel(context, accumulatorStreamSchema, nodeReduce.getOutput(), targetPartition, uploadIndex, downloadIndex);
 	}
 
 	@Override

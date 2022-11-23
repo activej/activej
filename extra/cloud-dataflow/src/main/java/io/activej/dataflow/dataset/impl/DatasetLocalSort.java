@@ -34,7 +34,7 @@ public final class DatasetLocalSort<K, T> extends LocallySortedDataset<K, T> {
 	private final int sortBufferSize;
 
 	public DatasetLocalSort(Dataset<T> input, Class<K> keyType, Function<T, K> keyFunction, Comparator<K> keyComparator, int sortBufferSize) {
-		super(input.valueType(), keyComparator, keyType, keyFunction);
+		super(input.streamSchema(), keyComparator, keyType, keyFunction);
 		this.sortBufferSize = sortBufferSize;
 		this.input = input;
 	}
@@ -46,7 +46,7 @@ public final class DatasetLocalSort<K, T> extends LocallySortedDataset<K, T> {
 		List<StreamId> streamIds = input.channels(context);
 		int index = context.generateNodeIndex();
 		for (StreamId streamId : streamIds) {
-			NodeSort<K, T> node = new NodeSort<>(index, input.valueType(), keyFunction(), keyComparator(), false, sortBufferSize, streamId);
+			NodeSort<K, T> node = new NodeSort<>(index, input.streamSchema(), keyFunction(), keyComparator(), false, sortBufferSize, streamId);
 			graph.addNode(graph.getPartition(streamId), node);
 			outputStreamIds.add(node.getOutput());
 		}

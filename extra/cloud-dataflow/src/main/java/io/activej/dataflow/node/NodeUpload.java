@@ -18,6 +18,7 @@ package io.activej.dataflow.node;
 
 import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.graph.StreamId;
+import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.stats.BinaryNodeStat;
 import io.activej.dataflow.stats.NodeStat;
@@ -32,14 +33,14 @@ import java.util.List;
  * @param <T> data items type
  */
 public final class NodeUpload<T> extends AbstractNode {
-	private final Class<T> type;
+	private final StreamSchema<T> streamSchema;
 	private final StreamId streamId;
 
 	private BinaryNodeStat stats;
 
-	public NodeUpload(int index, Class<T> type, StreamId streamId) {
+	public NodeUpload(int index, StreamSchema<T> streamSchema, StreamId streamId) {
 		super(index);
-		this.type = type;
+		this.streamSchema = streamSchema;
 		this.streamId = streamId;
 	}
 
@@ -50,11 +51,11 @@ public final class NodeUpload<T> extends AbstractNode {
 
 	@Override
 	public void createAndBind(Task task) {
-		task.bindChannel(streamId, task.get(DataflowServer.class).upload(streamId, type, stats = new BinaryNodeStat()));
+		task.bindChannel(streamId, task.get(DataflowServer.class).upload(streamId, streamSchema, stats = new BinaryNodeStat()));
 	}
 
-	public Class<T> getType() {
-		return type;
+	public StreamSchema<T> getStreamSchema() {
+		return streamSchema;
 	}
 
 	public StreamId getStreamId() {
@@ -68,6 +69,6 @@ public final class NodeUpload<T> extends AbstractNode {
 
 	@Override
 	public String toString() {
-		return "NodeUpload{type=" + type + ", streamId=" + streamId + '}';
+		return "NodeUpload{type=" + streamSchema + ", streamId=" + streamId + '}';
 	}
 }

@@ -31,8 +31,8 @@ public final class DatasetFilter<T> extends Dataset<T> {
 	private final Dataset<T> input;
 	private final Predicate<T> predicate;
 
-	public DatasetFilter(Dataset<T> input, Predicate<T> predicate, Class<T> resultType) {
-		super(resultType);
+	public DatasetFilter(Dataset<T> input, Predicate<T> predicate) {
+		super(input.streamSchema());
 		this.input = input;
 		this.predicate = predicate;
 	}

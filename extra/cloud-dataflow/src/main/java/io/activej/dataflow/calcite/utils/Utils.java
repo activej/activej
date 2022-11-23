@@ -3,13 +3,16 @@ package io.activej.dataflow.calcite.utils;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.util.Primitives;
 import io.activej.common.exception.ToDoException;
+import io.activej.dataflow.calcite.RecordStreamSchema;
 import io.activej.dataflow.calcite.Value;
 import io.activej.dataflow.calcite.function.ProjectionFunction;
 import io.activej.dataflow.calcite.inject.CalciteServerModule;
 import io.activej.dataflow.calcite.operand.*;
 import io.activej.dataflow.dataset.Datasets;
 import io.activej.dataflow.dataset.SortedDataset;
+import io.activej.dataflow.graph.StreamSchema;
 import io.activej.record.Record;
+import io.activej.record.RecordScheme;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -35,6 +38,9 @@ import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 
 public final class Utils {
+
+	private static final StreamSchema<Record> EMPTY_STREAM_SCHEME = RecordStreamSchema.create(RecordScheme.create().build());
+
 	@SuppressWarnings({"unchecked", "ConstantConditions"})
 	public static <T> T toJavaType(RexLiteral literal) {
 		SqlTypeName typeName = literal.getTypeName();
@@ -133,7 +139,7 @@ public final class Utils {
 	}
 
 	public static SortedDataset<Record, Record> singleDummyDataset() {
-		return Datasets.sortedDatasetOfId(CalciteServerModule.CALCITE_SINGLE_DUMMY_DATASET, Record.class, Record.class, Function.identity(), RecordKeyComparator.getInstance());
+		return Datasets.sortedDatasetOfId(CalciteServerModule.CALCITE_SINGLE_DUMMY_DATASET, EMPTY_STREAM_SCHEME, Record.class, Function.identity(), RecordKeyComparator.getInstance());
 	}
 
 	public static RelDataType toRowType(RelDataTypeFactory typeFactory, Type type) {

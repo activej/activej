@@ -22,6 +22,7 @@ import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
 import io.activej.dataflow.proto.serializer.CustomNodeSerializer;
+import io.activej.dataflow.proto.serializer.CustomStreamSchemaSerializer;
 import io.activej.dataflow.proto.serializer.FunctionSerializer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
@@ -59,6 +60,7 @@ import java.util.function.Predicate;
 
 import static io.activej.common.Utils.concat;
 import static io.activej.dataflow.dataset.Datasets.*;
+import static io.activej.dataflow.graph.StreamSchemas.simple;
 import static io.activej.dataflow.helper.StreamMergeSorterStorageStub.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.dataflow.proto.serializer.ProtobufUtils.ofObject;
@@ -140,7 +142,7 @@ public final class DataflowTest {
 
 		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
 
-		Dataset<TestItem> items = datasetOfId("items", TestItem.class);
+		Dataset<TestItem> items = datasetOfId("items", simple(TestItem.class));
 		DatasetConsumerOfId<TestItem> consumerNode = consumerOfId(items, "result");
 		consumerNode.channels(DataflowContext.of(graph));
 
@@ -198,7 +200,7 @@ public final class DataflowTest {
 		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
 
 		SortedDataset<Long, TestItem> items = repartitionSort(sortedDatasetOfId("items",
-				TestItem.class, Long.class, new TestKeyFunction(), new TestComparator()));
+				simple(TestItem.class), Long.class, new TestKeyFunction(), new TestComparator()));
 		DatasetConsumerOfId<TestItem> consumerNode = consumerOfId(items, "result");
 		consumerNode.channels(DataflowContext.of(graph));
 
@@ -292,7 +294,7 @@ public final class DataflowTest {
 
 		Dataset<TestItem> items = localSort(
 				repartition(
-						datasetOfId("items", TestItem.class),
+						datasetOfId("items", simple(TestItem.class)),
 						new TestKeyFunction(),
 						List.of(partition2, partition3)
 				),
@@ -368,7 +370,7 @@ public final class DataflowTest {
 
 		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
 
-		Dataset<TestItem> filterDataset = filter(datasetOfId("items", TestItem.class), new TestPredicate());
+		Dataset<TestItem> filterDataset = filter(datasetOfId("items", simple(TestItem.class)), new TestPredicate());
 		LocallySortedDataset<Long, TestItem> sortedDataset = localSort(filterDataset, long.class, new TestKeyFunction(), new TestComparator());
 		DatasetConsumerOfId<TestItem> consumerNode = consumerOfId(sortedDataset, "result");
 		consumerNode.channels(DataflowContext.of(graph));
@@ -427,7 +429,7 @@ public final class DataflowTest {
 		DataflowClient client = clientInjector.getInstance(DataflowClient.class);
 		DataflowGraph graph = clientInjector.getInstance(DataflowGraph.class);
 
-		Dataset<TestItem> filterDataset = filter(datasetOfId("items", TestItem.class), new TestPredicate());
+		Dataset<TestItem> filterDataset = filter(datasetOfId("items", simple(TestItem.class)), new TestPredicate());
 		LocallySortedDataset<Long, TestItem> sortedDataset = localSort(filterDataset, long.class, new TestKeyFunction(), new TestComparator());
 
 		Collector<TestItem> collector = ConcatCollector.create(sortedDataset, client);
@@ -489,7 +491,7 @@ public final class DataflowTest {
 		DataflowClient client = clientInjector.getInstance(DataflowClient.class);
 		DataflowGraph graph = clientInjector.getInstance(DataflowGraph.class);
 
-		Dataset<TestItem> dataset = datasetOfId("items", TestItem.class);
+		Dataset<TestItem> dataset = datasetOfId("items", simple(TestItem.class));
 		LocallySortedDataset<Long, TestItem> sortedDataset = localSort(dataset, long.class, new TestKeyFunction(), new TestComparator());
 		SortedDataset<Long, TestItem> afterOffsetAndLimitApplied = datasetOffsetLimit(sortedDataset, 3, 4);
 
@@ -540,7 +542,7 @@ public final class DataflowTest {
 
 		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
 
-		Dataset<TestItem> emptyDataset = empty(TestItem.class);
+		Dataset<TestItem> emptyDataset = empty(simple(TestItem.class));
 		DatasetConsumerOfId<TestItem> consumerNode = consumerOfId(emptyDataset, "result");
 		consumerNode.channels(DataflowContext.of(graph));
 
@@ -603,9 +605,9 @@ public final class DataflowTest {
 		DataflowClient client = clientInjector.getInstance(DataflowClient.class);
 		DataflowGraph graph = clientInjector.getInstance(DataflowGraph.class);
 
-		Dataset<TestItem> dataset1 = datasetOfId("items1", TestItem.class);
+		Dataset<TestItem> dataset1 = datasetOfId("items1", simple(TestItem.class));
 		SortedDataset<Long, TestItem> sorted1 = repartitionSort(localSort(dataset1, Long.class, new TestKeyFunction(), Comparator.naturalOrder()));
-		Dataset<TestItem> dataset2 = datasetOfId("items2", TestItem.class);
+		Dataset<TestItem> dataset2 = datasetOfId("items2", simple(TestItem.class));
 		SortedDataset<Long, TestItem> sorted2 = repartitionSort(localSort(dataset2, Long.class, new TestKeyFunction(), Comparator.naturalOrder()));
 
 		SortedDataset<Long, TestItem> union = union(sorted1, sorted2);
@@ -682,8 +684,8 @@ public final class DataflowTest {
 		DataflowClient client = clientInjector.getInstance(DataflowClient.class);
 		DataflowGraph graph = clientInjector.getInstance(DataflowGraph.class);
 
-		Dataset<TestItem> dataset1 = datasetOfId("items1", TestItem.class);
-		Dataset<TestItem> dataset2 = datasetOfId("items2", TestItem.class);
+		Dataset<TestItem> dataset1 = datasetOfId("items1", simple(TestItem.class));
+		Dataset<TestItem> dataset2 = datasetOfId("items2", simple(TestItem.class));
 
 		Dataset<TestItem> union = unionAll(dataset1, dataset2);
 
@@ -740,7 +742,7 @@ public final class DataflowTest {
 		}
 	}
 
-	static ModuleBuilder createCommon(Executor executor, Executor sortingExecutor, Path secondaryPath, List<Partition> graphPartitions) {
+	public static ModuleBuilder createCommon(Executor executor, Executor sortingExecutor, Path secondaryPath, List<Partition> graphPartitions) {
 		return ModuleBuilder.create()
 				.install(DataflowModule.create())
 				.bind(Executor.class, SortingExecutor.class).toInstance(sortingExecutor)
@@ -755,10 +757,15 @@ public final class DataflowTest {
 					@Provides
 					DataflowClient client(Executor executor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec,
 							BinarySerializerModule.BinarySerializerLocator serializers, FunctionSerializer functionSerializer,
-							OptionalDependency<CustomNodeSerializer> optionalCustomNodeSerializer) {
+							OptionalDependency<CustomNodeSerializer> optionalCustomNodeSerializer,
+							OptionalDependency<CustomStreamSchemaSerializer> optionalCustomStreamSchemaSerializer
+							) {
 						DataflowClient dataflowClient = DataflowClient.create(executor, secondaryPath, codec, serializers, functionSerializer);
 						if (optionalCustomNodeSerializer.isPresent()) {
-							return dataflowClient.withCustomNodeSerializer(optionalCustomNodeSerializer.get());
+							dataflowClient.withCustomNodeSerializer(optionalCustomNodeSerializer.get());
+						}
+						if (optionalCustomStreamSchemaSerializer.isPresent()) {
+							dataflowClient.withCustomStreamSchemaSerializer(optionalCustomStreamSchemaSerializer.get());
 						}
 						return dataflowClient;
 					}
@@ -781,7 +788,7 @@ public final class DataflowTest {
 				});
 	}
 
-	static InetSocketAddress getFreeListenAddress() {
+	public static InetSocketAddress getFreeListenAddress() {
 		try {
 			return new InetSocketAddress(InetAddress.getByName("127.0.0.1"), getFreePort());
 		} catch (UnknownHostException ignored) {

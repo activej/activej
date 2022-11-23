@@ -84,7 +84,7 @@ public final class RecordProjectionFn implements UnaryOperator<Record> {
 				throw new IllegalArgumentException();
 			}
 		}
-		return schemeTo.withComparator(schemeTo.getFields());
+		return schemeTo.withComparator(schemeTo.getFields()).build();
 	}
 
 	public List<FieldProjection> getFieldProjections() {

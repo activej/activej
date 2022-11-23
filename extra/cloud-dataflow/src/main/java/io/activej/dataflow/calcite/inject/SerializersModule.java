@@ -4,7 +4,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.dataflow.calcite.DataflowSchema;
 import io.activej.dataflow.calcite.RecordProjectionFn;
-import io.activej.dataflow.calcite.RecordSerializer;
 import io.activej.dataflow.calcite.aggregation.RecordReducer;
 import io.activej.dataflow.calcite.join.RecordJoiner;
 import io.activej.dataflow.calcite.operand.OperandIfNull;
@@ -17,13 +16,13 @@ import io.activej.dataflow.calcite.utils.time.LocalTimeBinarySerializer;
 import io.activej.dataflow.inject.BinarySerializerModule;
 import io.activej.dataflow.proto.calcite.serializer.*;
 import io.activej.dataflow.proto.serializer.CustomNodeSerializer;
+import io.activej.dataflow.proto.serializer.CustomStreamSchemaSerializer;
 import io.activej.dataflow.proto.serializer.FunctionSubtypeSerializer;
 import io.activej.datastream.processor.StreamLeftJoin;
 import io.activej.datastream.processor.StreamReducers;
 import io.activej.inject.Key;
 import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
-import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.BinaryOutput;
@@ -130,7 +129,6 @@ public final class SerializersModule extends AbstractModule {
 		}, new Key<BinarySerializer<JoinRelType>>() {}, new Key<BinarySerializer<RecordScheme>>() {});
 
 		bind(new Key<BinarySerializer<RecordScheme>>() {}).to(RecordSchemeSerializer::new, DefiningClassLoader.class);
-		bind(new Key<BinarySerializer<Record>>() {}).to(RecordSerializer::create, BinarySerializerModule.BinarySerializerLocator.class).asTransient();
 
 		bind(new Key<BinarySerializer<RecordProjectionFn>>() {}).to(optionalClassLoader ->
 						optionalClassLoader.isPresent() ?
@@ -142,6 +140,11 @@ public final class SerializersModule extends AbstractModule {
 						optionalClassLoader.isPresent() ?
 								new CalciteNodeSerializer(optionalClassLoader.get()) :
 								new CalciteNodeSerializer(),
+				new Key<OptionalDependency<DefiningClassLoader>>() {});
+		bind(CustomStreamSchemaSerializer.class).to(optionalClassLoader ->
+						optionalClassLoader.isPresent() ?
+								new CalciteStreamSchemaSerializer(optionalClassLoader.get()) :
+								new CalciteStreamSchemaSerializer(),
 				new Key<OptionalDependency<DefiningClassLoader>>() {});
 
 		bind(new Key<BinarySerializer<LocalDate>>() {}).toInstance(LocalDateBinarySerializer.getInstance()).asEager();

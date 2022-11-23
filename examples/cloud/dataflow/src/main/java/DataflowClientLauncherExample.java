@@ -18,6 +18,7 @@ import io.activej.inject.module.ModuleBuilder;
 import io.activej.launchers.dataflow.DataflowClientLauncher;
 
 import static io.activej.dataflow.dataset.Datasets.*;
+import static io.activej.dataflow.graph.StreamSchemas.simple;
 import static java.util.Comparator.naturalOrder;
 
 /**
@@ -58,15 +59,15 @@ public final class DataflowClientLauncherExample extends DataflowClientLauncher 
 			StringCountReducer reducer = new StringCountReducer();
 			ExtractStringFunction keyFunction = new ExtractStringFunction();
 
-			Dataset<String> items = datasetOfId("items", String.class);
+			Dataset<String> items = datasetOfId("items", simple(String.class));
 
-			Dataset<StringCount> mappedItems = map(items, new CreateStringCountFunction(), StringCount.class);
+			Dataset<StringCount> mappedItems = map(items, new CreateStringCountFunction(), simple(StringCount.class));
 
 			LocallySortedDataset<String, StringCount> locallySorted = localSort(mappedItems, String.class, keyFunction, naturalOrder());
 
-			LocallySortedDataset<String, StringCount> locallyReduced = localReduce(locallySorted, reducer.inputToAccumulator(), StringCount.class, keyFunction);
+			LocallySortedDataset<String, StringCount> locallyReduced = localReduce(locallySorted, reducer.inputToAccumulator(), simple(StringCount.class), keyFunction);
 
-			Dataset<StringCount> reducedItems = repartitionReduce(locallyReduced, reducer.accumulatorToOutput(), StringCount.class);
+			Dataset<StringCount> reducedItems = repartitionReduce(locallyReduced, reducer.accumulatorToOutput(), simple(StringCount.class));
 
 			Collector<StringCount> collector = MergeCollector.create(reducedItems, client, keyFunction, naturalOrder(), false);
 

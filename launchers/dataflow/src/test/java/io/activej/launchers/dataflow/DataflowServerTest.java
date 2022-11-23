@@ -52,6 +52,7 @@ import java.util.stream.Stream;
 
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.dataflow.dataset.Datasets.*;
+import static io.activej.dataflow.graph.StreamSchemas.simple;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.dataflow.proto.serializer.ProtobufUtils.ofObject;
 import static io.activej.launchers.dataflow.StreamMergeSorterStorageStub.FACTORY_STUB;
@@ -202,8 +203,8 @@ public class DataflowServerTest {
 		DataflowClient client = injector.getInstance(DataflowClient.class);
 		DataflowGraph graph = injector.getInstance(DataflowGraph.class);
 
-		Dataset<String> items = datasetOfId("items", String.class);
-		Dataset<StringCount> mappedItems = map(items, new TestMapFunction(), StringCount.class);
+		Dataset<String> items = datasetOfId("items", simple(String.class));
+		Dataset<StringCount> mappedItems = map(items, new TestMapFunction(), simple(StringCount.class));
 		Dataset<StringCount> reducedItems = splitSortReduceRepartitionReduce(mappedItems, new TestReducer(), new TestKeyFunction(), new TestComparator());
 		Collector<StringCount> collector = ConcatCollector.create(reducedItems, client);
 		StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
@@ -221,7 +222,7 @@ public class DataflowServerTest {
 
 		DataflowGraph graph = injector.getInstance(DataflowGraph.class);
 
-		Dataset<String> items = datasetOfId("items", String.class);
+		Dataset<String> items = datasetOfId("items", simple(String.class));
 		Dataset<String> sorted = repartitionSort(localSort(items, String.class, new StringFunction(), new TestComparator()));
 		DatasetConsumerOfId<String> consumerNode = consumerOfId(sorted, "result");
 		consumerNode.channels(DataflowContext.of(graph));

@@ -19,10 +19,7 @@ package io.activej.dataflow.calcite.dataset;
 import io.activej.dataflow.calcite.node.FilterableNodeSupplierOfId;
 import io.activej.dataflow.calcite.where.WherePredicate;
 import io.activej.dataflow.dataset.Dataset;
-import io.activej.dataflow.graph.DataflowContext;
-import io.activej.dataflow.graph.DataflowGraph;
-import io.activej.dataflow.graph.Partition;
-import io.activej.dataflow.graph.StreamId;
+import io.activej.dataflow.graph.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -33,19 +30,19 @@ public final class DatasetSupplierOfPredicate<T> extends Dataset<T> {
 	private final WherePredicate predicate;
 	private final @Nullable List<Partition> partitions;
 
-	private DatasetSupplierOfPredicate(String id, WherePredicate predicate, Class<T> resultType, @Nullable List<Partition> partitions) {
-		super(resultType);
+	private DatasetSupplierOfPredicate(String id, WherePredicate predicate, StreamSchema<T> resultStreamSchema, @Nullable List<Partition> partitions) {
+		super(resultStreamSchema);
 		this.id = id;
 		this.predicate = predicate;
 		this.partitions = partitions;
 	}
 
-	public static <T> DatasetSupplierOfPredicate<T> create(String id, WherePredicate predicate, Class<T> resultType, @Nullable List<Partition> partitions) {
-		return new DatasetSupplierOfPredicate<>(id, predicate, resultType, partitions);
+	public static <T> DatasetSupplierOfPredicate<T> create(String id, WherePredicate predicate, StreamSchema<T> resultStreamSchema, @Nullable List<Partition> partitions) {
+		return new DatasetSupplierOfPredicate<>(id, predicate, resultStreamSchema, partitions);
 	}
 
-	public static <T> DatasetSupplierOfPredicate<T> create(String id, WherePredicate predicate, Class<T> resultType) {
-		return new DatasetSupplierOfPredicate<>(id, predicate, resultType, null);
+	public static <T> DatasetSupplierOfPredicate<T> create(String id, WherePredicate predicate, StreamSchema<T> resultStreamSchema) {
+		return new DatasetSupplierOfPredicate<>(id, predicate, resultStreamSchema, null);
 	}
 
 	@Override

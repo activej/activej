@@ -17,10 +17,7 @@
 package io.activej.dataflow.dataset.impl;
 
 import io.activej.dataflow.dataset.Dataset;
-import io.activej.dataflow.graph.DataflowContext;
-import io.activej.dataflow.graph.DataflowGraph;
-import io.activej.dataflow.graph.Partition;
-import io.activej.dataflow.graph.StreamId;
+import io.activej.dataflow.graph.*;
 import io.activej.dataflow.node.NodeSupplierEmpty;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,8 +27,8 @@ import java.util.List;
 public final class DatasetEmpty<T> extends Dataset<T> {
 	private final @Nullable List<Partition> partitions;
 
-	public DatasetEmpty(Class<T> cls, @Nullable List<Partition> partitions) {
-		super(cls);
+	public DatasetEmpty(StreamSchema<T> streamSchema, @Nullable List<Partition> partitions) {
+		super(streamSchema);
 		this.partitions = partitions;
 	}
 

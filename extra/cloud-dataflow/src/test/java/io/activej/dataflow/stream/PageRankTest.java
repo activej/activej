@@ -45,6 +45,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static io.activej.dataflow.dataset.Datasets.*;
+import static io.activej.dataflow.graph.StreamSchemas.simple;
 import static io.activej.dataflow.helper.StreamMergeSorterStorageStub.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.dataflow.proto.serializer.ProtobufUtils.ofObject;
@@ -197,18 +198,18 @@ public class PageRankTest {
 	}
 
 	private static SortedDataset<Long, Rank> pageRankIteration(SortedDataset<Long, Page> pages, SortedDataset<Long, Rank> ranks) {
-		Dataset<Rank> updates = join(pages, ranks, new PageRankLeftJoiner(), Rank.class, new RankKeyFunction());
+		Dataset<Rank> updates = join(pages, ranks, new PageRankLeftJoiner(), simple(Rank.class), new RankKeyFunction());
 
 		Dataset<Rank> newRanks = sortReduceRepartitionReduce(updates, new RankAccumulatorReducer(),
 				Long.class, new RankKeyFunction(), new LongComparator(),
-				RankAccumulator.class, new RankAccumulatorKeyFunction(),
-				Rank.class);
+				simple(RankAccumulator.class), new RankAccumulatorKeyFunction(),
+				simple(Rank.class));
 
 		return castToSorted(newRanks, Long.class, new RankKeyFunction(), new LongComparator());
 	}
 
 	private static SortedDataset<Long, Rank> pageRank(SortedDataset<Long, Page> pages) {
-		SortedDataset<Long, Rank> ranks = castToSorted(map(pages, new PageToRankFunction(), Rank.class),
+		SortedDataset<Long, Rank> ranks = castToSorted(map(pages, new PageToRankFunction(), simple(Rank.class)),
 				Long.class, new RankKeyFunction(), new LongComparator());
 
 		for (int i = 0; i < 10; i++) {
@@ -279,7 +280,7 @@ public class PageRankTest {
 	@Ignore("For manual run")
 	@Test
 	public void postPageRankTask() throws Exception {
-		SortedDataset<Long, Page> sorted = sortedDatasetOfId("items", Page.class, Long.class, new PageKeyFunction(), new LongComparator());
+		SortedDataset<Long, Page> sorted = sortedDatasetOfId("items", simple(Page.class), Long.class, new PageKeyFunction(), new LongComparator());
 		SortedDataset<Long, Page> repartitioned = repartitionSort(sorted);
 		SortedDataset<Long, Rank> pageRanks = pageRank(repartitioned);
 
@@ -305,7 +306,7 @@ public class PageRankTest {
 		DataflowGraph graph = Injector.of(common).getInstance(DataflowGraph.class);
 
 		SortedDataset<Long, Page> pages = repartitionSort(sortedDatasetOfId("items",
-				Page.class, Long.class, new PageKeyFunction(), new LongComparator()));
+				simple(Page.class), Long.class, new PageKeyFunction(), new LongComparator()));
 
 		SortedDataset<Long, Rank> pageRanks = pageRank(pages);
 

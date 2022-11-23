@@ -18,6 +18,7 @@ package io.activej.dataflow.dataset;
 
 import io.activej.dataflow.dataset.impl.*;
 import io.activej.dataflow.graph.Partition;
+import io.activej.dataflow.graph.StreamSchema;
 import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
 import io.activej.datastream.processor.StreamLimiter;
 import io.activej.datastream.processor.StreamReducers.Reducer;
@@ -45,20 +46,20 @@ public final class Datasets {
 
 	public static <K, L, R, V> SortedDataset<K, V> join(SortedDataset<K, L> left, SortedDataset<K, R> right,
 			LeftJoiner<K, L, R, V> leftJoiner,
-			Class<V> resultType, Function<V, K> keyFunction) {
-		return new DatasetJoin<>(left, right, leftJoiner, resultType, keyFunction);
+			StreamSchema<V> resultStreamSchema, Function<V, K> keyFunction) {
+		return new DatasetJoin<>(left, right, leftJoiner, resultStreamSchema, keyFunction);
 	}
 
-	public static <I, O> Dataset<O> map(Dataset<I> dataset, Function<I, O> mapper, Class<O> resultType) {
-		return new DatasetMap<>(dataset, mapper, resultType);
+	public static <I, O> Dataset<O> map(Dataset<I> dataset, Function<I, O> mapper, StreamSchema<O> resultStreamSchema) {
+		return new DatasetMap<>(dataset, mapper, resultStreamSchema);
 	}
 
 	public static <T> Dataset<T> map(Dataset<T> dataset, UnaryOperator<T> mapper) {
-		return map(dataset, mapper, dataset.valueType());
+		return map(dataset, mapper, dataset.streamSchema());
 	}
 
 	public static <T> Dataset<T> filter(Dataset<T> dataset, Predicate<T> predicate) {
-		return new DatasetFilter<>(dataset, predicate, dataset.valueType());
+		return new DatasetFilter<>(dataset, predicate);
 	}
 
 	public static <K, I> LocallySortedDataset<K, I> localSort(Dataset<I> dataset, Class<K> keyType,
@@ -73,9 +74,9 @@ public final class Datasets {
 
 	public static <K, I, O> LocallySortedDataset<K, O> localReduce(LocallySortedDataset<K, I> stream,
 			Reducer<K, I, O, ?> reducer,
-			Class<O> resultType,
+			StreamSchema<O> resultStreamSchema,
 			Function<O, K> resultKeyFunction) {
-		return new DatasetLocalSortReduce<>(stream, reducer, resultType, resultKeyFunction);
+		return new DatasetLocalSortReduce<>(stream, reducer, resultStreamSchema, resultKeyFunction);
 	}
 
 	public static <T, K> Dataset<T> repartition(Dataset<T> dataset, Function<T, K> keyFunction, List<Partition> partitions) {
@@ -88,14 +89,14 @@ public final class Datasets {
 
 	public static <K, I, O> Dataset<O> repartitionReduce(LocallySortedDataset<K, I> dataset,
 			Reducer<K, I, O, ?> reducer,
-			Class<O> resultType) {
-		return new DatasetRepartitionReduce<>(dataset, reducer, resultType);
+			StreamSchema<O> resultStreamSchema) {
+		return new DatasetRepartitionReduce<>(dataset, reducer, resultStreamSchema);
 	}
 
 	public static <K, I, O> Dataset<O> repartitionReduce(LocallySortedDataset<K, I> dataset,
 			Reducer<K, I, O, ?> reducer,
-			Class<O> resultType, List<Partition> partitions) {
-		return new DatasetRepartitionReduce<>(dataset, reducer, resultType, partitions);
+			StreamSchema<O> resultStreamSchema, List<Partition> partitions) {
+		return new DatasetRepartitionReduce<>(dataset, reducer, resultStreamSchema, partitions);
 	}
 
 	public static <K, T> SortedDataset<K, T> repartitionSort(LocallySortedDataset<K, T> dataset) {
@@ -112,14 +113,14 @@ public final class Datasets {
 			Class<K> keyType,
 			Function<I, K> inputKeyFunction,
 			Comparator<K> keyComparator,
-			Class<A> accumulatorType,
+			StreamSchema<A> accumulatorStreamSchema,
 			Function<A, K> accumulatorKeyFunction,
-			Class<O> outputType,
+			StreamSchema<O> outputStreamSchema,
 			int sortBufferSize) {
 		LocallySortedDataset<K, I> partiallySorted = localSort(dataset, keyType, inputKeyFunction, keyComparator, sortBufferSize);
 		LocallySortedDataset<K, A> partiallyReduced = localReduce(partiallySorted, reducer.inputToAccumulator(),
-				accumulatorType, accumulatorKeyFunction);
-		return repartitionReduce(partiallyReduced, reducer.accumulatorToOutput(), outputType);
+				accumulatorStreamSchema, accumulatorKeyFunction);
+		return repartitionReduce(partiallyReduced, reducer.accumulatorToOutput(), outputStreamSchema);
 	}
 
 	public static <K, I, O, A> Dataset<O> sortReduceRepartitionReduce(Dataset<I> dataset,
@@ -127,10 +128,10 @@ public final class Datasets {
 			Class<K> keyType,
 			Function<I, K> inputKeyFunction,
 			Comparator<K> keyComparator,
-			Class<A> accumulatorType,
+			StreamSchema<A> accumulatorStreamSchema,
 			Function<A, K> accumulatorKeyFunction,
-			Class<O> outputType) {
-		return sortReduceRepartitionReduce(dataset, reducer, keyType, inputKeyFunction, keyComparator, accumulatorType, accumulatorKeyFunction, outputType, 1_000_000);
+			StreamSchema<O> outputStreamSchema) {
+		return sortReduceRepartitionReduce(dataset, reducer, keyType, inputKeyFunction, keyComparator, accumulatorStreamSchema, accumulatorKeyFunction, outputStreamSchema, 1_000_000);
 	}
 
 	public static <K, I, A> Dataset<A> sortReduceRepartitionReduce(Dataset<I> dataset,
@@ -138,11 +139,11 @@ public final class Datasets {
 			Class<K> keyType,
 			Function<I, K> inputKeyFunction,
 			Comparator<K> keyComparator,
-			Class<A> accumulatorType,
+			StreamSchema<A> accumulatorStreamSchema,
 			Function<A, K> accumulatorKeyFunction) {
 		return sortReduceRepartitionReduce(dataset, reducer,
 				keyType, inputKeyFunction, keyComparator,
-				accumulatorType, accumulatorKeyFunction, accumulatorType
+				accumulatorStreamSchema, accumulatorKeyFunction, accumulatorStreamSchema
 		);
 	}
 
@@ -152,7 +153,7 @@ public final class Datasets {
 			Comparator<K> keyComparator) {
 		return sortReduceRepartitionReduce(dataset, reducer,
 				keyType, keyFunction, keyComparator,
-				dataset.valueType(), keyFunction, dataset.valueType()
+				dataset.streamSchema(), keyFunction, dataset.streamSchema()
 		);
 	}
 
@@ -160,12 +161,12 @@ public final class Datasets {
 			ReducerToResult<K, I, O, A> reducer,
 			Function<I, K> inputKeyFunction,
 			Comparator<K> keyComparator,
-			Class<A> accumulatorType,
+			StreamSchema<A> accumulatorStreamSchema,
 			Function<A, K> accumulatorKeyFunction,
-			Class<O> outputType,
+			StreamSchema<O> outputStreamSchema,
 			int sortBufferSize) {
 		return new DatasetSplitSortReduceRepartitionReduce<>(dataset, inputKeyFunction, accumulatorKeyFunction, keyComparator,
-				reducer, outputType, accumulatorType, sortBufferSize);
+				reducer, outputStreamSchema, accumulatorStreamSchema, sortBufferSize);
 
 	}
 
@@ -173,11 +174,11 @@ public final class Datasets {
 			ReducerToResult<K, I, A, A> reducer,
 			Function<I, K> inputKeyFunction,
 			Comparator<K> keyComparator,
-			Class<A> accumulatorType,
+			StreamSchema<A> accumulatorStreamSchema,
 			Function<A, K> accumulatorKeyFunction) {
 		return splitSortReduceRepartitionReduce(dataset, reducer,
 				inputKeyFunction, keyComparator,
-				accumulatorType, accumulatorKeyFunction, accumulatorType, 1_000_000
+				accumulatorStreamSchema, accumulatorKeyFunction, accumulatorStreamSchema, 1_000_000
 		);
 	}
 
@@ -187,33 +188,33 @@ public final class Datasets {
 			Comparator<K> keyComparator) {
 		return splitSortReduceRepartitionReduce(dataset, reducer,
 				keyFunction, keyComparator,
-				dataset.valueType(), keyFunction, dataset.valueType(), 1_000_000
+				dataset.streamSchema(), keyFunction, dataset.streamSchema(), 1_000_000
 		);
 	}
 
-	public static <T> Dataset<T> datasetOfId(String dataId, Class<T> resultType) {
-		return new DatasetSupplierOfId<>(dataId, resultType, null);
+	public static <T> Dataset<T> datasetOfId(String dataId, StreamSchema<T> resultStreamSchema) {
+		return new DatasetSupplierOfId<>(dataId, resultStreamSchema, null);
 	}
 
-	public static <T> Dataset<T> datasetOfId(String dataId, Class<T> resultType, List<Partition> partitions) {
-		return new DatasetSupplierOfId<>(dataId, resultType, partitions);
+	public static <T> Dataset<T> datasetOfId(String dataId, StreamSchema<T> resultStreamSchema, List<Partition> partitions) {
+		return new DatasetSupplierOfId<>(dataId, resultStreamSchema, partitions);
 	}
 
-	public static <K, T> SortedDataset<K, T> sortedDatasetOfId(String dataId, Class<T> resultType, Class<K> keyType,
+	public static <K, T> SortedDataset<K, T> sortedDatasetOfId(String dataId, StreamSchema<T> resultStreamSchema, Class<K> keyType,
 			Function<T, K> keyFunction, Comparator<K> keyComparator) {
-		return castToSorted(datasetOfId(dataId, resultType), keyType, keyFunction, keyComparator);
+		return castToSorted(datasetOfId(dataId, resultStreamSchema), keyType, keyFunction, keyComparator);
 	}
 
 	public static <T> DatasetConsumerOfId<T> consumerOfId(Dataset<T> input, String listId) {
 		return new DatasetConsumerOfId<>(input, listId);
 	}
 
-	public static <T> Dataset<T> empty(Class<T> resultType, List<Partition> partitions) {
-		return new DatasetEmpty<>(resultType, partitions);
+	public static <T> Dataset<T> empty(StreamSchema<T> resultStreamSchema, List<Partition> partitions) {
+		return new DatasetEmpty<>(resultStreamSchema, partitions);
 	}
 
-	public static <T> Dataset<T> empty(Class<T> resultType) {
-		return new DatasetEmpty<>(resultType, null);
+	public static <T> Dataset<T> empty(StreamSchema<T> resultStreamSchema) {
+		return new DatasetEmpty<>(resultStreamSchema, null);
 	}
 
 	public static <T> Dataset<T> unionAll(Dataset<T> left, Dataset<T> right) {

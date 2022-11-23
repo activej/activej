@@ -18,6 +18,7 @@ package io.activej.dataflow.node;
 
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.graph.StreamId;
+import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.stats.BinaryNodeStat;
 import io.activej.dataflow.stats.NodeStat;
@@ -33,20 +34,20 @@ import java.util.List;
  * @param <T> data items type
  */
 public final class NodeDownload<T> extends AbstractNode {
-	private final Class<T> type;
+	private final StreamSchema<T> streamSchema;
 	private final InetSocketAddress address;
 	private final StreamId streamId;
 	private final StreamId output;
 
 	private BinaryNodeStat stats;
 
-	public NodeDownload(int index, Class<T> type, InetSocketAddress address, StreamId streamId) {
-		this(index, type, address, streamId, new StreamId());
+	public NodeDownload(int index, StreamSchema<T> streamSchema, InetSocketAddress address, StreamId streamId) {
+		this(index, streamSchema, address, streamId, new StreamId());
 	}
 
-	public NodeDownload(int index, Class<T> type, InetSocketAddress address, StreamId streamId, StreamId output) {
+	public NodeDownload(int index, StreamSchema<T> streamSchema, InetSocketAddress address, StreamId streamId, StreamId output) {
 		super(index);
-		this.type = type;
+		this.streamSchema = streamSchema;
 		this.address = address;
 		this.streamId = streamId;
 		this.output = output;
@@ -59,11 +60,11 @@ public final class NodeDownload<T> extends AbstractNode {
 
 	@Override
 	public void createAndBind(Task task) {
-		task.export(output, task.get(DataflowClient.class).download(address, streamId, type, stats = new BinaryNodeStat()));
+		task.export(output, task.get(DataflowClient.class).download(address, streamId, streamSchema, stats = new BinaryNodeStat()));
 	}
 
-	public Class<T> getType() {
-		return type;
+	public StreamSchema<T> getStreamSchema() {
+		return streamSchema;
 	}
 
 	public InetSocketAddress getAddress() {
@@ -85,6 +86,6 @@ public final class NodeDownload<T> extends AbstractNode {
 
 	@Override
 	public String toString() {
-		return "NodeDownload{type=" + type + ", address=" + address + ", streamId=" + streamId + ", output=" + output + '}';
+		return "NodeDownload{type=" + streamSchema + ", address=" + address + ", streamId=" + streamId + ", output=" + output + '}';
 	}
 }

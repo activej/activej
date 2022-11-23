@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package dataflow;
+
+option java_multiple_files = false;
+option java_package = "io.activej.dataflow.proto";
+option java_outer_classname = "StreamSchemaProto";
+
+import "java_class.proto";
+
+message StreamSchema {
+  message Simple {
+    JavaClass java_class = 1;
+  }
+
+  message Custom {
+    bytes serialized = 1;
+  }
+
+  oneof stream_schema {
+    Simple simple = 1;
+    Custom custom = 2;
+  }
+}

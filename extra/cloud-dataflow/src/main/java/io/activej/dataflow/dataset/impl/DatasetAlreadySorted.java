@@ -30,7 +30,7 @@ public final class DatasetAlreadySorted<K, T> extends SortedDataset<K, T> {
 	private final Dataset<T> dataset;
 
 	public DatasetAlreadySorted(Dataset<T> dataset, Comparator<K> keyComparator, Class<K> keyType, Function<T, K> keyFunction) {
-		super(dataset.valueType(), keyComparator, keyType, keyFunction);
+		super(dataset.streamSchema(), keyComparator, keyType, keyFunction);
 		this.dataset = dataset;
 	}
 

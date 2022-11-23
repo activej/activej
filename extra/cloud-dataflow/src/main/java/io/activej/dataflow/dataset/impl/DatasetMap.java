@@ -20,6 +20,7 @@ import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.StreamId;
+import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.node.NodeMap;
 
 import java.util.ArrayList;
@@ -31,8 +32,8 @@ public final class DatasetMap<I, O> extends Dataset<O> {
 	private final Dataset<I> input;
 	private final Function<I, O> mapper;
 
-	public DatasetMap(Dataset<I> input, Function<I, O> mapper, Class<O> resultType) {
-		super(resultType);
+	public DatasetMap(Dataset<I> input, Function<I, O> mapper, StreamSchema<O> resultStreamSchema) {
+		super(resultStreamSchema);
 		this.input = input;
 		this.mapper = mapper;
 	}

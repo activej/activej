@@ -28,9 +28,12 @@ import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.binary.ByteBufsDecoder;
 import io.activej.dataflow.DataflowException;
 import io.activej.dataflow.graph.StreamId;
+import io.activej.dataflow.graph.StreamSchema;
+import io.activej.dataflow.graph.StreamSchemas;
 import io.activej.dataflow.graph.TaskStatus;
 import io.activej.dataflow.node.*;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
+import io.activej.dataflow.proto.JavaClassProto.JavaClass;
 import io.activej.dataflow.proto.NodeProto;
 import io.activej.dataflow.proto.NodeProto.Node.*;
 import io.activej.dataflow.proto.NodeProto.Node.Download.Address;
@@ -39,6 +42,9 @@ import io.activej.dataflow.proto.NodeStatProto;
 import io.activej.dataflow.proto.NodeStatProto.NodeStat.Binary;
 import io.activej.dataflow.proto.NodeStatProto.NodeStat.Test;
 import io.activej.dataflow.proto.StreamIdProto;
+import io.activej.dataflow.proto.StreamSchemaProto;
+import io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.Custom;
+import io.activej.dataflow.proto.StreamSchemaProto.StreamSchema.Simple;
 import io.activej.dataflow.stats.BinaryNodeStat;
 import io.activej.dataflow.stats.NodeStat;
 import io.activej.dataflow.stats.TestNodeStat;
@@ -55,7 +61,6 @@ import java.net.InetSocketAddress;
 import java.time.Instant;
 import java.util.Map;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -101,13 +106,19 @@ public final class ProtobufUtils {
 		return new StreamId(streamId.getId());
 	}
 
-	public static List<NodeProto.Node> convert(Collection<Node> nodes, FunctionSerializer functionSerializer, @Nullable CustomNodeSerializer customNodeSerializer) {
+	public static List<NodeProto.Node> convert(Collection<Node> nodes, FunctionSerializer functionSerializer,
+			@Nullable CustomNodeSerializer customNodeSerializer,
+			@Nullable CustomStreamSchemaSerializer customStreamSchemaSerializer
+	) {
 		return nodes.stream()
-				.map(node -> convert(node, functionSerializer, customNodeSerializer))
+				.map(node -> convert(node, functionSerializer, customNodeSerializer, customStreamSchemaSerializer))
 				.collect(toList());
 	}
 
-	public static NodeProto.Node convert(Node node, FunctionSerializer functionSerializer, @Nullable CustomNodeSerializer customNodeSerializer) {
+	public static NodeProto.Node convert(Node node, FunctionSerializer functionSerializer,
+			@Nullable CustomNodeSerializer customNodeSerializer,
+			@Nullable CustomStreamSchemaSerializer customStreamSchemaSerializer
+	) {
 		NodeProto.Node.Builder builder = NodeProto.Node.newBuilder();
 		if (node instanceof NodeReduce<?, ?, ?> reduce) {
 			builder.setReduce(Reduce.newBuilder()
@@ -122,12 +133,12 @@ public final class ProtobufUtils {
 		} else if (node instanceof NodeUpload<?> upload) {
 			builder.setUpload(NodeProto.Node.Upload.newBuilder()
 					.setIndex(upload.getIndex())
-					.setType(upload.getType().getName())
+					.setStreamSchema(convert(upload.getStreamSchema(), customStreamSchemaSerializer))
 					.setStreamId(convert(upload.getStreamId())));
 		} else if (node instanceof NodeSort<?, ?> sort) {
 			builder.setSort(NodeProto.Node.Sort.newBuilder()
 					.setIndex(sort.getIndex())
-					.setType(sort.getType().getName())
+					.setStreamSchema(convert(sort.getStreamSchema(), customStreamSchemaSerializer))
 					.setKeyFunction(functionSerializer.serializeFunction(sort.getKeyFunction()))
 					.setKeyComparator(functionSerializer.serializeComparator(sort.getKeyComparator()))
 					.setDeduplicate(sort.isDeduplicate())
@@ -152,7 +163,7 @@ public final class ProtobufUtils {
 		} else if (node instanceof NodeDownload<?> download) {
 			builder.setDownload(Download.newBuilder()
 					.setIndex(download.getIndex())
-					.setType(download.getType().getName())
+					.setStreamSchema(convert(download.getStreamSchema(), customStreamSchemaSerializer))
 					.setAddress(Address.newBuilder()
 							.setHost(download.getAddress().getHostName())
 							.setPort(download.getAddress().getPort()))
@@ -221,9 +232,9 @@ public final class ProtobufUtils {
 		} else {
 			checkNotNull(customNodeSerializer, "Custom node serializer is not specified");
 
-			ByteString encoded = encode(customNodeSerializer, node);
+			ByteString serialized = encode(customNodeSerializer, node);
 			builder.setCustomNode(CustomNode.newBuilder()
-					.setSerializedNode(encoded));
+					.setSerializedNode(serialized));
 		}
 		return builder.build();
 	}
@@ -240,30 +251,53 @@ public final class ProtobufUtils {
 				.collect(toList());
 	}
 
-	public static List<Node> convert(List<NodeProto.Node> nodes, FunctionSerializer functionSerializer, @Nullable CustomNodeSerializer customNodeSerializer) throws DataflowException {
+	public static List<Node> convert(List<NodeProto.Node> nodes, FunctionSerializer functionSerializer,
+			@Nullable CustomNodeSerializer customNodeSerializer,
+			@Nullable CustomStreamSchemaSerializer customStreamSchemaSerializer
+	) throws DataflowException {
 		List<Node> list = new ArrayList<>();
 		for (NodeProto.Node node : nodes) {
-			list.add(convert(node, functionSerializer, customNodeSerializer));
+			list.add(convert(node, functionSerializer, customNodeSerializer, customStreamSchemaSerializer));
 		}
 		return list;
 	}
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
-	public static Node convert(NodeProto.Node node, FunctionSerializer functionSerializer, @Nullable CustomNodeSerializer customNodeSerializer) throws DataflowException {
+	public static Node convert(NodeProto.Node node, FunctionSerializer functionSerializer,
+			@Nullable CustomNodeSerializer customNodeSerializer,
+			@Nullable CustomStreamSchemaSerializer customStreamSchemaSerializer
+	) throws DataflowException {
 		try {
 			return switch (node.getNodeCase()) {
 				case CONSUMER_OF_ID -> {
 					ConsumerOfId coi = node.getConsumerOfId();
-					yield new NodeConsumerOfId<>(coi.getIndex(), coi.getId(), coi.getPartitionIndex(), coi.getMaxPartitions(), convert(coi.getInput()));
+					yield new NodeConsumerOfId<>(
+							coi.getIndex(),
+							coi.getId(),
+							coi.getPartitionIndex(),
+							coi.getMaxPartitions(),
+							convert(coi.getInput())
+					);
 				}
 				case DOWNLOAD -> {
 					Download download = node.getDownload();
 					Address address = download.getAddress();
-					yield new NodeDownload<>(download.getIndex(), getType(download.getType()), new InetSocketAddress(address.getHost(), address.getPort()), convert(download.getInput()), convert(download.getOutput()));
+					yield new NodeDownload<>(
+							download.getIndex(),
+							convert(download.getStreamSchema(), customStreamSchemaSerializer),
+							new InetSocketAddress(address.getHost(), address.getPort()),
+							convert(download.getInput()),
+							convert(download.getOutput())
+					);
 				}
 				case FILTER -> {
 					Filter filter = node.getFilter();
-					yield new NodeFilter<>(filter.getIndex(), functionSerializer.deserializePredicate(filter.getPredicate()), convert(filter.getInput()), convert(filter.getOutput()));
+					yield new NodeFilter<>(
+							filter.getIndex(),
+							functionSerializer.deserializePredicate(filter.getPredicate()),
+							convert(filter.getInput()),
+							convert(filter.getOutput())
+					);
 				}
 				case JOIN -> {
 					Join join = node.getJoin();
@@ -271,51 +305,113 @@ public final class ProtobufUtils {
 					Function leftKeyFunction = functionSerializer.deserializeFunction(join.getLeftKeyFunction());
 					Function rightKeyFunction = functionSerializer.deserializeFunction(join.getRightKeyFunction());
 					LeftJoiner joiner = functionSerializer.deserializeJoiner(join.getJoiner());
-					yield new NodeJoin<>(join.getIndex(), convert(join.getLeft()), convert(join.getRight()), convert(join.getOutput()), joinComparator, leftKeyFunction, rightKeyFunction, joiner);
+					yield new NodeJoin<>(
+							join.getIndex(),
+							convert(join.getLeft()),
+							convert(join.getRight()),
+							convert(join.getOutput()),
+							joinComparator,
+							leftKeyFunction,
+							rightKeyFunction,
+							joiner
+					);
 				}
 				case MAP -> {
 					NodeProto.Node.Map map = node.getMap();
-					yield new NodeMap<>(map.getIndex(), functionSerializer.deserializeFunction(map.getFunction()), convert(map.getInput()), convert(map.getOutput()));
+					yield new NodeMap<>(
+							map.getIndex(),
+							functionSerializer.deserializeFunction(map.getFunction()),
+							convert(map.getInput()),
+							convert(map.getOutput())
+					);
 				}
 				case MERGE -> {
 					Merge merge = node.getMerge();
 					Function function = functionSerializer.deserializeFunction(merge.getKeyFunction());
 					Comparator mergeComparator = functionSerializer.deserializeComparator(merge.getKeyComparator());
-					yield new NodeMerge<>(merge.getIndex(), function, mergeComparator, merge.getDeduplicate(), convertProtoIds(merge.getInputsList()), convert(merge.getOutput()));
+					yield new NodeMerge<>(
+							merge.getIndex(),
+							function,
+							mergeComparator,
+							merge.getDeduplicate(),
+							convertProtoIds(merge.getInputsList()),
+							convert(merge.getOutput())
+					);
 				}
 				case REDUCE -> {
 					Reduce reduce = node.getReduce();
 					Comparator reduceComparator = functionSerializer.deserializeComparator(reduce.getKeyComparator());
-					yield new NodeReduce<>(reduce.getIndex(), reduceComparator, convertInputs(functionSerializer, reduce.getInputsMap()), convert(reduce.getOutput()));
+					yield new NodeReduce<>(
+							reduce.getIndex(),
+							reduceComparator,
+							convertInputs(functionSerializer, reduce.getInputsMap()),
+							convert(reduce.getOutput())
+					);
 				}
 				case REDUCE_SIMPLE -> {
 					ReduceSimple reduceSimple = node.getReduceSimple();
 					Function keyFunction = functionSerializer.deserializeFunction(reduceSimple.getKeyFunction());
 					Comparator keyComparator = functionSerializer.deserializeComparator(reduceSimple.getKeyComparator());
 					Reducer reducer = functionSerializer.deserializeReducer(reduceSimple.getReducer());
-					yield new NodeReduceSimple<>(reduceSimple.getIndex(), keyFunction, keyComparator, reducer, convertProtoIds(reduceSimple.getInputsList()), convert(reduceSimple.getOutput()));
+					yield new NodeReduceSimple<>(
+							reduceSimple.getIndex(),
+							keyFunction,
+							keyComparator,
+							reducer,
+							convertProtoIds(reduceSimple.getInputsList()),
+							convert(reduceSimple.getOutput())
+					);
 				}
 				case SHARD -> {
 					Shard shard = node.getShard();
-					yield new NodeShard<>(shard.getIndex(), functionSerializer.deserializeFunction(shard.getKeyFunction()), convert(shard.getInput()), convertProtoIds(shard.getOutputsList()), shard.getNonce());
+					yield new NodeShard<>(
+							shard.getIndex(),
+							functionSerializer.deserializeFunction(shard.getKeyFunction()),
+							convert(shard.getInput()),
+							convertProtoIds(shard.getOutputsList()),
+							shard.getNonce()
+					);
 				}
 				case SORT -> {
 					Sort sort = node.getSort();
 					Function sortFunction = functionSerializer.deserializeFunction(sort.getKeyFunction());
 					Comparator sortComparator = functionSerializer.deserializeComparator(sort.getKeyComparator());
-					yield new NodeSort<>(sort.getIndex(), getType(sort.getType()), sortFunction, sortComparator, sort.getDeduplicate(), sort.getItemsInMemorySize(), convert(sort.getInput()), convert(sort.getOutput()));
+					yield new NodeSort<>(
+							sort.getIndex(),
+							convert(sort.getStreamSchema(), customStreamSchemaSerializer),
+							sortFunction,
+							sortComparator,
+							sort.getDeduplicate(),
+							sort.getItemsInMemorySize(),
+							convert(sort.getInput()),
+							convert(sort.getOutput())
+					);
 				}
 				case SUPPLIER_OF_ID -> {
 					SupplierOfId sid = node.getSupplierOfId();
-					yield new NodeSupplierOfId<>(sid.getIndex(), sid.getId(), sid.getPartitionIndex(), sid.getMaxPartitions(), convert(sid.getOutput()));
+					yield new NodeSupplierOfId<>(
+							sid.getIndex(),
+							sid.getId(),
+							sid.getPartitionIndex(),
+							sid.getMaxPartitions(),
+							convert(sid.getOutput())
+					);
 				}
 				case UNION -> {
 					Union union = node.getUnion();
-					yield new NodeUnion<>(union.getIndex(), convertProtoIds(union.getInputsList()), convert(union.getOutput()));
+					yield new NodeUnion<>(
+							union.getIndex(),
+							convertProtoIds(union.getInputsList()),
+							convert(union.getOutput())
+					);
 				}
 				case UPLOAD -> {
 					Upload upload = node.getUpload();
-					yield new NodeUpload<>(upload.getIndex(), getType(upload.getType()), convert(upload.getStreamId()));
+					yield new NodeUpload<>(
+							upload.getIndex(),
+							convert(upload.getStreamSchema(), customStreamSchemaSerializer),
+							convert(upload.getStreamId())
+					);
 				}
 				case EMPTY -> {
 					Empty empty = node.getEmpty();
@@ -323,7 +419,13 @@ public final class ProtobufUtils {
 				}
 				case OFFSET_LIMIT -> {
 					OffsetLimit offsetLimit = node.getOffsetLimit();
-					yield new NodeOffsetLimit<>(offsetLimit.getIndex(), offsetLimit.getOffset(), offsetLimit.getLimit(), convert(offsetLimit.getInput()), convert(offsetLimit.getOutput()));
+					yield new NodeOffsetLimit<>(
+							offsetLimit.getIndex(),
+							offsetLimit.getOffset(),
+							offsetLimit.getLimit(),
+							convert(offsetLimit.getInput()),
+							convert(offsetLimit.getOutput())
+					);
 				}
 				case CUSTOM_NODE -> {
 					checkNotNull(customNodeSerializer, "Custom node serializer is not specified");
@@ -431,13 +533,57 @@ public final class ProtobufUtils {
 		};
 	}
 
-	private static ByteString encode(BinarySerializer<Node> serializer, Node node) {
+	private static <T> StreamSchema<T> convert(
+			StreamSchemaProto.StreamSchema streamSchema,
+			@Nullable CustomStreamSchemaSerializer customStreamSchemaSerializer
+	) throws DataflowException {
+		return switch (streamSchema.getStreamSchemaCase()) {
+			case SIMPLE -> {
+				Simple simple = streamSchema.getSimple();
+				JavaClass javaClass = simple.getJavaClass();
+				Class<T> aClass = JavaClassConverter.convert(javaClass);
+				yield StreamSchemas.simple(aClass);
+			}
+			case CUSTOM -> {
+				checkNotNull(customStreamSchemaSerializer, "Custom stream schema serializer is not specified");
+				Custom custom = streamSchema.getCustom();
+				//noinspection unchecked
+				yield (StreamSchema<T>) decode(customStreamSchemaSerializer, custom.getSerialized());
+			}
+			case STREAMSCHEMA_NOT_SET -> throw new DataflowException("Stream schema was not set");
+		};
+	}
+
+	public static <T> StreamSchemaProto.StreamSchema convert(
+			StreamSchema<T> streamSchema,
+			@Nullable CustomStreamSchemaSerializer customStreamSchemaSerializer
+	) {
+		StreamSchemaProto.StreamSchema.Builder builder = StreamSchemaProto.StreamSchema.newBuilder();
+		if (streamSchema instanceof StreamSchemas.Simple<T>) {
+			builder.setSimple(
+					Simple.newBuilder()
+							.setJavaClass(JavaClassConverter.convert(streamSchema.createClass()))
+			);
+		} else {
+			checkNotNull(customStreamSchemaSerializer, "Custom stream schema serializer is not specified");
+
+			ByteString serialized = encode(customStreamSchemaSerializer, streamSchema);
+			builder.setCustom(
+					Custom.newBuilder()
+							.setSerialized(serialized)
+			);
+
+		}
+		return builder.build();
+	}
+
+	private static <T> ByteString encode(BinarySerializer<T> serializer, T item) {
 		int bufferSize = 128;
 
 		while (true) {
 			try {
 				byte[] buffer = new byte[bufferSize];
-				int encoded = serializer.encode(buffer, 0, node);
+				int encoded = serializer.encode(buffer, 0, item);
 				return ByteString.copyFrom(buffer, 0, encoded);
 			} catch (ArrayIndexOutOfBoundsException e) {
 				bufferSize *= 2;
@@ -445,24 +591,7 @@ public final class ProtobufUtils {
 		}
 	}
 
-	private static Node decode(BinarySerializer<Node> serializer, ByteString byteString) {
+	private static <T> T decode(BinarySerializer<T> serializer, ByteString byteString) {
 		return serializer.decode(byteString.toByteArray(), 0);
-	}
-
-	private static final Map<String, Class<?>> TYPE_CACHE = new ConcurrentHashMap<>();
-
-	private static Class<?> getType(String typeString) throws DataflowException {
-		Class<?> aType = TYPE_CACHE.computeIfAbsent(typeString, $ -> {
-			try {
-				return Class.forName(typeString);
-			} catch (ClassNotFoundException e) {
-				return null;
-			}
-		});
-		if (aType == null) {
-			throw new DataflowException("Cannot construct class: " + typeString);
-		}
-
-		return aType;
 	}
 }

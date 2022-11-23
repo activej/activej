@@ -17,10 +17,7 @@
 package io.activej.dataflow.dataset.impl;
 
 import io.activej.dataflow.dataset.Dataset;
-import io.activej.dataflow.graph.DataflowContext;
-import io.activej.dataflow.graph.DataflowGraph;
-import io.activej.dataflow.graph.Partition;
-import io.activej.dataflow.graph.StreamId;
+import io.activej.dataflow.graph.*;
 import io.activej.dataflow.node.NodeSupplierOfId;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,8 +28,8 @@ public final class DatasetSupplierOfId<T> extends Dataset<T> {
 	private final String id;
 	private final @Nullable List<Partition> partitions;
 
-	public DatasetSupplierOfId(String id, Class<T> resultType, @Nullable List<Partition> partitions) {
-		super(resultType);
+	public DatasetSupplierOfId(String id, StreamSchema<T> resultStreamSchema, @Nullable List<Partition> partitions) {
+		super(resultStreamSchema);
 		this.id = id;
 		this.partitions = partitions;
 	}

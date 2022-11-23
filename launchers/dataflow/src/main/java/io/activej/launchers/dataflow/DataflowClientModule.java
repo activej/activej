@@ -25,6 +25,7 @@ import io.activej.dataflow.inject.BinarySerializerModule;
 import io.activej.dataflow.inject.DataflowModule;
 import io.activej.dataflow.proto.DataflowMessagingProto;
 import io.activej.dataflow.proto.serializer.CustomNodeSerializer;
+import io.activej.dataflow.proto.serializer.CustomStreamSchemaSerializer;
 import io.activej.dataflow.proto.serializer.FunctionSerializer;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.OptionalDependency;
@@ -55,10 +56,16 @@ public final class DataflowClientModule extends AbstractModule {
 
 	@Provides
 	DataflowClient client(Executor executor, Config config, ByteBufsCodec<DataflowMessagingProto.DataflowResponse, DataflowMessagingProto.DataflowRequest> codec,
-			BinarySerializerModule.BinarySerializerLocator serializers, FunctionSerializer functionSerializer, OptionalDependency<CustomNodeSerializer> optionalCustomNodeSerializer) {
+			BinarySerializerModule.BinarySerializerLocator serializers, FunctionSerializer functionSerializer,
+			OptionalDependency<CustomNodeSerializer> optionalCustomNodeSerializer,
+			OptionalDependency<CustomStreamSchemaSerializer> optionalCustomStreamSchemeSerializer
+	) {
 		DataflowClient dataflowClient = DataflowClient.create(executor, config.get(ofPath(), "dataflow.secondaryBufferPath"), codec, serializers, functionSerializer);
 		if (optionalCustomNodeSerializer.isPresent()) {
-			return dataflowClient.withCustomNodeSerializer(optionalCustomNodeSerializer.get());
+			dataflowClient.withCustomNodeSerializer(optionalCustomNodeSerializer.get());
+		}
+		if (optionalCustomStreamSchemeSerializer.isPresent()) {
+			dataflowClient.withCustomStreamSchemaSerializer(optionalCustomStreamSchemeSerializer.get());
 		}
 		return dataflowClient;
 	}
