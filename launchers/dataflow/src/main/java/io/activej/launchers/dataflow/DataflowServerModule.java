@@ -25,6 +25,8 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.promise.Promise;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -36,6 +38,8 @@ import static io.activej.config.converter.ConfigConverters.ofPath;
 import static io.activej.launchers.initializers.Initializers.ofAbstractServer;
 
 public final class DataflowServerModule extends AbstractModule {
+	private static final Logger logger = LoggerFactory.getLogger(DataflowServerModule.class);
+
 	private DataflowServerModule() {
 	}
 
@@ -91,6 +95,20 @@ public final class DataflowServerModule extends AbstractModule {
 			public <T> StreamSorterStorage<T> create(Class<T> type, Task context, Promise<Void> taskExecuted) {
 				Path taskSortDir = sortDir.resolve(context.getTaskId() + "_" + index++);
 				return StreamSorterStorageImpl.create(executor, serializerLocator.get(type), LZ4FrameFormat.create(), taskSortDir);
+			}
+
+			@Override
+			public <T> Promise<Void> cleanup(StreamSorterStorage<T> storage) {
+				assert storage instanceof StreamSorterStorageImpl<T>;
+				StreamSorterStorageImpl<T> storageImpl = (StreamSorterStorageImpl<T>) storage;
+
+				return Promise.ofBlocking(executor, () -> {
+					try {
+						Files.deleteIfExists(storageImpl.getPath());
+					} catch (IOException e){
+						logger.warn("Could not delete sort storage directory: {}", storageImpl.getPath(), e);
+					}
+				});
 			}
 		};
 	}

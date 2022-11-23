@@ -40,6 +40,10 @@ public final class NodeSort<K, T> extends AbstractNode {
 
 	public interface StreamSorterStorageFactory {
 		<T> StreamSorterStorage<T> create(Class<T> type, Task context, Promise<Void> taskExecuted);
+
+		default <T> Promise<Void> cleanup(StreamSorterStorage<T> storage) {
+			return Promise.complete();
+		}
 	}
 
 	private final Class<T> type;
@@ -87,6 +91,8 @@ public final class NodeSort<K, T> extends AbstractNode {
 				.withSortingExecutor(executor);
 		task.bindChannel(input, streamSorter.getInput());
 		task.export(output, streamSorter.getOutput());
+		streamSorter.getInput().getAcknowledgement()
+				.whenComplete(() -> storageFactory.cleanup(storage));
 	}
 
 	public Class<T> getType() {

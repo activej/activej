@@ -112,6 +112,10 @@ public final class StreamSorterStorageImpl<T> implements StreamSorterStorage<T>,
 	}
 	// endregion
 
+	public Path getPath() {
+		return path;
+	}
+
 	private Path partitionPath(int i) {
 		return path.resolve(format(filePattern, i));
 	}
