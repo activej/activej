@@ -9,7 +9,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class JavaClassConverter {
 	private static final Map<String, Class<?>> CLASS_CACHE = new ConcurrentHashMap<>();
-	private static final Class<?> UNKNOWN_CLASS = JavaClassConverter.class;
 
 	static {
 		for (Class<?> primitiveType : Primitives.allPrimitiveTypes()) {
@@ -30,21 +29,14 @@ public final class JavaClassConverter {
 				.build();
 	}
 
+	@SuppressWarnings("unchecked")
 	public static <T> Class<T> convert(JavaClass javaClass) {
-		String className = javaClass.getClassName();
-		Class<?> cls = CLASS_CACHE.computeIfAbsent(className, $ -> {
+		return (Class<T>) CLASS_CACHE.computeIfAbsent(javaClass.getClassName(), className -> {
 			try {
 				return Class.forName(className);
 			} catch (ClassNotFoundException e) {
-				return UNKNOWN_CLASS;
+				throw new CorruptedDataException("Cannot find class: " + className);
 			}
 		});
-
-		if (cls == UNKNOWN_CLASS) {
-			throw new CorruptedDataException("Cannot find class: " + className);
-		}
-
-		//noinspection unchecked
-		return (Class<T>) cls;
 	}
 }
