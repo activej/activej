@@ -43,18 +43,18 @@ public final class SerializerDefHppc7Example {
 	}
 
 	@Test
-	public void testByteSet() {
-		BinarySerializer<ByteSet> serializer = getBufferSerializer(ByteSet.class);
+	public void testIntSet() {
+		BinarySerializer<IntSet> serializer = getBufferSerializer(IntSet.class);
 
-		ByteSet test1 = new ByteHashSet();
-		ByteSet test2 = doTest(test1, serializer);
+		IntSet test1 = new IntHashSet();
+		IntSet test2 = doTest(test1, serializer);
 		assertNotNull(test2);
 		assertEquals(test1, test2);
 
 		test1.add((byte) 10);
 		test1.add((byte) 11);
 
-		ByteSet test3 = doTest(test1, serializer);
+		IntSet test3 = doTest(test1, serializer);
 		assertNotNull(test3);
 		assertEquals(test1, test3);
 	}

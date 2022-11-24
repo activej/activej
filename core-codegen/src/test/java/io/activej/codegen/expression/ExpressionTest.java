@@ -5,6 +5,7 @@ import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.operation.ArithmeticOperation;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
@@ -574,11 +575,17 @@ public class ExpressionTest {
 	public interface TestCompare {
 		boolean compareObjectLE(Integer i1, Integer i2);
 
+		boolean compareInterfaceGE(TestInterface ti1, TestInterface ti2);
+
 		boolean comparePrimitiveLE(int i1, int i2);
 
 		boolean compareObjectEQ(Integer i1, Integer i2);
 
+		boolean compareInterfaceEQ(List<Integer> l1, List<Integer> l2);
+
 		boolean compareObjectNE(Integer i1, Integer i2);
+
+		boolean compareInterfaceNE(TestInterface ti1, TestInterface ti2);
 
 	}
 
@@ -589,6 +596,9 @@ public class ExpressionTest {
 				.withMethod("comparePrimitiveLE", isLe(arg(0), arg(1)))
 				.withMethod("compareObjectEQ", isEq(arg(0), arg(1)))
 				.withMethod("compareObjectNE", isNe(arg(0), arg(1)))
+				.withMethod("compareInterfaceEQ", isEq(arg(0), arg(1)))
+				.withMethod("compareInterfaceNE", isNe(arg(0), arg(1)))
+				.withMethod("compareInterfaceGE", isGe(arg(0), arg(1)))
 				.defineClass(CLASS_LOADER);
 
 		TestCompare testCompare = test1.getDeclaredConstructor().newInstance();
@@ -596,6 +606,9 @@ public class ExpressionTest {
 		assertTrue(testCompare.comparePrimitiveLE(5, 6));
 		assertTrue(testCompare.compareObjectEQ(5, 5));
 		assertTrue(testCompare.compareObjectNE(5, -5));
+		assertTrue(testCompare.compareInterfaceEQ(Arrays.asList(1, 2, 3), Arrays.asList(1, 2, 3)));
+		assertFalse(testCompare.compareInterfaceNE(new TestInterfaceImpl(3.4), new TestInterfaceImpl(3.4)));
+		assertTrue(testCompare.compareInterfaceGE(new TestInterfaceImpl(5.4), new TestInterfaceImpl(3.4)));
 	}
 
 	public record StringHolder(String string1, String string2) {}
@@ -642,6 +655,34 @@ public class ExpressionTest {
 		}
 	}
 
+	public static class InterfaceHolderComparator implements Comparator<InterfaceHolder> {
+		public int compare(InterfaceHolder var1, InterfaceHolder var2) {
+			TestInterface var1Interface1 = var1.getInterface1();
+			TestInterface var2Interface1 = var2.getInterface1();
+			int compare;
+			if (var1Interface1 == null) {
+				if (var2Interface1 != null) {
+					return -1;
+				}
+			} else {
+				if (var2Interface1 == null) {
+					return 1;
+				}
+
+				compare = var1Interface1.compareTo(var2Interface1);
+				if (compare != 0) {
+					return compare;
+				}
+			}
+
+			TestInterface var1Interface2 = var1.getInterface2();
+			TestInterface var2Interface2 = var2.getInterface2();
+
+			return var1Interface2.compareTo(var2Interface2);
+
+		}
+	}
+
 	@SuppressWarnings("unchecked")
 	@org.junit.Test
 	public void testComparatorNullable() {
@@ -662,12 +703,97 @@ public class ExpressionTest {
 		assertEquals(strings, strings2);
 	}
 
-	public interface TestInterface {
+	@SuppressWarnings("unchecked")
+	@org.junit.Test
+	public void testComparatorInterface() {
+		Comparator<InterfaceHolder> generatedComparator = ClassBuilder.create(Comparator.class)
+				.withMethod("compare", ExpressionCompare.create()
+						.with(leftProperty(InterfaceHolder.class, "interface1"), rightProperty(InterfaceHolder.class, "interface1"), true)
+						.with(leftProperty(InterfaceHolder.class, "interface2"), rightProperty(InterfaceHolder.class, "interface2"), false))
+				.defineClassAndCreateInstance(CLASS_LOADER);
+
+		List<InterfaceHolder> interfaceHolders = Arrays.asList(
+				new InterfaceHolder(null, new TestInterfaceImpl(2.3)),
+				new InterfaceHolder(null, new TestInterfaceImpl(1.2)),
+				new InterfaceHolder(new TestInterfaceImpl(3.5), new TestInterfaceImpl(5.7)),
+				new InterfaceHolder(new TestInterfaceImpl(3.5), new TestInterfaceImpl(6.8)),
+				new InterfaceHolder(new TestInterfaceImpl(6.8), new TestInterfaceImpl(10.4))
+		);
+		List<InterfaceHolder> interfaceHolders2 = new ArrayList<>(interfaceHolders);
+		interfaceHolders.sort(generatedComparator);
+		interfaceHolders2.sort(new InterfaceHolderComparator());
+
+		assertEquals(interfaceHolders, interfaceHolders2);
+	}
+
+	public interface TestInterface extends Comparable<TestInterface> {
 		double returnDouble();
+	}
+
+	public interface TestInterfaceWrapper {
+		TestInterface getTestInterface();
 	}
 
 	public static abstract class TestAbstract implements TestInterface {
 		protected abstract int returnInt();
+	}
+
+	public static class TestInterfaceImpl implements TestInterface {
+		private final double value;
+
+		public TestInterfaceImpl(double value) {
+			this.value = value;
+		}
+
+		@Override
+		public double returnDouble() {
+			return value;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) return true;
+			if (o == null || getClass() != o.getClass()) return false;
+			TestInterfaceImpl that = (TestInterfaceImpl) o;
+			return Double.compare(that.value, value) == 0;
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(value);
+		}
+
+		@Override
+		public int compareTo(@NotNull ExpressionTest.TestInterface o) {
+			return Double.compare(returnDouble(), o.returnDouble());
+		}
+
+		@Override
+		public String toString() {
+			return "TestInterfaceImpl{" +
+					"value=" + value +
+					'}';
+		}
+	}
+
+	public static class InterfaceHolder {
+		private final TestInterface interface1;
+		private final TestInterface interface2;
+
+		public InterfaceHolder(@Nullable TestInterface interface1, @NotNull TestInterface interface2) {
+			this.interface1 = interface1;
+			this.interface2 = interface2;
+		}
+
+		@Nullable
+		public TestInterface getInterface1() {
+			return interface1;
+		}
+
+		@NotNull
+		public TestInterface getInterface2() {
+			return interface2;
+		}
 	}
 
 	@org.junit.Test
@@ -733,6 +859,20 @@ public class ExpressionTest {
 
 		assertNull(instance.b());
 		assertEquals("{null}", instance.toString());
+	}
+
+	@org.junit.Test
+	public void testInterfaceToString() {
+		TestInterfaceImpl value = new TestInterfaceImpl(3.5);
+		TestInterfaceWrapper wrapper = ClassBuilder.create(TestInterfaceWrapper.class)
+				.withMethod("getTestInterface", value(value))
+				.withMethod("toString",
+						ExpressionToString.create()
+								.with(call(self(), "getTestInterface")))
+				.defineClassAndCreateInstance(CLASS_LOADER);
+
+		assertEquals(value, wrapper.getTestInterface());
+		assertEquals("{" + value +"}", wrapper.toString());
 	}
 
 	@org.junit.Test
@@ -1014,7 +1154,7 @@ public class ExpressionTest {
 	}
 
 	public interface TestConcat {
-		String concat(byte aByte, int anInt, String space, long aLong, char aChar, Object anObject, TestPojo testPojo);
+		String concat(byte aByte, int anInt, String space, long aLong, char aChar, Object anObject, TestPojo testPojo, TestInterface testInterface);
 	}
 
 	@org.junit.Test
@@ -1048,14 +1188,15 @@ public class ExpressionTest {
 		char aChar = 't';
 		Object anObject = null;
 		TestPojo testPojo = new TestPojo(10, 20);
+		TestInterface testInterface = new TestInterfaceImpl(4.3);
 
 		TestConcat testConcat = ClassBuilder.create(TestConcat.class)
 				.withMethod("concat", concat(arg(0), arg(1), arg(2),
-						arg(3), arg(4), arg(5), arg(6)))
+						arg(3), arg(4), arg(5), arg(6), arg(7)))
 				.defineClassAndCreateInstance(CLASS_LOADER);
 
-		String expected = "" + aByte + anInt + space + aLong + aChar + anObject + testPojo;
-		String actual = testConcat.concat(aByte, anInt, space, aLong, aChar, anObject, testPojo);
+		String expected = "" + aByte + anInt + space + aLong + aChar + anObject + testPojo + testInterface;
+		String actual = testConcat.concat(aByte, anInt, space, aLong, aChar, anObject, testPojo, testInterface);
 		assertEquals(expected, actual);
 	}
 

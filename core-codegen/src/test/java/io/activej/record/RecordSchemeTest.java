@@ -6,9 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 import static io.activej.codegen.TestUtils.assertStaticConstantsCleared;
 import static org.junit.Assert.*;
@@ -54,6 +52,21 @@ public class RecordSchemeTest {
 
 		assertSame(scheme.getRecordClass(), scheme2.getRecordClass());
 		assertStaticConstantsCleared();
+	}
+
+	@Test
+	public void testInterfaceHashCode() {
+		RecordScheme scheme = RecordScheme.create()
+				.withField("map", Map.class)
+				.build();
+
+		Record record = scheme.record();
+
+		Map<Integer, String> value = new HashMap<>();
+		value.put(1, "x");
+		record.set("map", value);
+
+		assertEquals(value.hashCode(), record.hashCode());
 	}
 
 	@Test
@@ -114,7 +127,7 @@ public class RecordSchemeTest {
 		assertEquals(int.class, scheme.getter("int").getType());
 
 		List<Integer> list = Arrays.asList(1, 2, 3, 4, 5);
-		record.set( "list", list);
+		record.set("list", list);
 		assertSame(scheme, scheme.getter("list").getScheme());
 		assertEquals("list", scheme.getter("list").getField());
 		assertEquals(listType, scheme.getter("list").getType());

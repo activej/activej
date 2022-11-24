@@ -229,11 +229,6 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 				serializerDef = fn.apply(ctx);
 			}
 
-			if (hasAnnotation(SerializeReference.class, ctx.getAnnotations()) ||
-					hasAnnotation(SerializeReference.class, rawClass.getAnnotations())) {
-				serializerDef = new SerializerDefReference(serializerDef);
-			}
-
 			if (hasAnnotation(SerializeVarLength.class, ctx.getAnnotations())) {
 				serializerDef = ((SerializerDefWithVarLength) serializerDef).ensureVarLength();
 			}
@@ -552,20 +547,12 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		ClassBuilder<BinarySerializer<T>> classBuilder = ClassBuilder.create((Class<BinarySerializer<T>>) implementationClass, BinarySerializer.class);
 
 		Set<Integer> collectedVersions = new HashSet<>();
-		Map<Object, Expression> encoderInitializers = new HashMap<>();
-		Map<Object, Expression> decoderInitializers = new HashMap<>();
-		Map<Object, Expression> encoderFinalizers = new HashMap<>();
-		Map<Object, Expression> decoderFinalizers = new HashMap<>();
 		Set<SerializerDef> visited = newSetFromMap(new IdentityHashMap<>());
 		Visitor visitor = new Visitor() {
 			@Override
 			public void visit(String serializerId, SerializerDef visitedSerializer) {
 				if (!visited.add(visitedSerializer)) return;
 				collectedVersions.addAll(visitedSerializer.getVersions());
-				encoderInitializers.putAll(visitedSerializer.getEncoderInitializer());
-				decoderInitializers.putAll(visitedSerializer.getDecoderInitializer());
-				encoderFinalizers.putAll(visitedSerializer.getEncoderFinalizer());
-				decoderFinalizers.putAll(visitedSerializer.getDecoderFinalizer());
 				visitedSerializer.accept(this);
 			}
 		};
@@ -581,32 +568,27 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 				.sorted()
 				.collect(toList());
 
-		defineEncoders(classBuilder, serializer, encodeVersion,
-				new ArrayList<>(encoderInitializers.values()), new ArrayList<>(encoderFinalizers.values()));
+		defineEncoders(classBuilder, serializer, encodeVersion);
 
-		defineDecoders(classBuilder, serializer, decodeVersions,
-				new ArrayList<>(decoderInitializers.values()), new ArrayList<>(decoderFinalizers.values()));
+		defineDecoders(classBuilder, serializer, decodeVersions);
 
 		return classBuilder;
 	}
 
-	private void defineEncoders(ClassBuilder<?> classBuilder, SerializerDef serializer, @Nullable Integer encodeVersion,
-			List<Expression> encoderInitializers, List<Expression> encoderFinalizers) {
-		StaticEncoders staticEncoders = staticEncoders(classBuilder);
+	private void defineEncoders(ClassBuilder<?> classBuilder, SerializerDef serializer, @Nullable Integer encodeVersion) {
+		StaticEncoders staticEncoders = staticEncoders(classBuilder, encodeVersion != null ? encodeVersion : 0, compatibilityLevel);
 
-		classBuilder.withMethod("encode", int.class, List.of(byte[].class, int.class, Object.class), methodBody(
-				encoderInitializers, encoderFinalizers,
+		classBuilder.withMethod("encode", int.class, List.of(byte[].class, int.class, Object.class),
 				let(cast(arg(2), serializer.getEncodeType()), data ->
-						encoderImpl(serializer, encodeVersion, staticEncoders, arg(0), arg(1), data))));
+						encoderImpl(serializer, encodeVersion, staticEncoders, arg(0), arg(1), data)));
 
-		classBuilder.withMethod("encode", void.class, List.of(BinaryOutput.class, Object.class), methodBody(
-				encoderInitializers, encoderFinalizers,
+		classBuilder.withMethod("encode", void.class, List.of(BinaryOutput.class, Object.class),
 				let(call(arg(0), "array"), buf ->
 						let(call(arg(0), "pos"), pos ->
 								let(cast(arg(1), serializer.getEncodeType()), data ->
 										sequence(
 												encoderImpl(serializer, encodeVersion, staticEncoders, buf, pos, data),
-												call(arg(0), "pos", pos)))))));
+												call(arg(0), "pos", pos))))));
 	}
 
 	private Expression encoderImpl(SerializerDef serializer, @Nullable Integer encodeVersion, StaticEncoders staticEncoders, Expression buf, Variable pos, Variable data) {
@@ -623,19 +605,16 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 				pos);
 	}
 
-	private void defineDecoders(ClassBuilder<?> classBuilder, SerializerDef serializer, List<Integer> decodeVersions,
-			List<Expression> decoderInitializers, List<Expression> decoderFinalizers) {
-		StaticDecoders staticDecoders = staticDecoders(classBuilder);
+	private void defineDecoders(ClassBuilder<?> classBuilder, SerializerDef serializer, List<Integer> decodeVersions) {
 
 		Integer latestVersion = decodeVersions.isEmpty() ? null : decodeVersions.get(decodeVersions.size() - 1);
-		classBuilder.withMethod("decode", Object.class, List.of(BinaryInput.class), methodBody(
-				decoderInitializers, decoderFinalizers,
-				decodeImpl(serializer, latestVersion, staticDecoders, arg(0))));
+		StaticDecoders latestStaticDecoders = staticDecoders(classBuilder, latestVersion == null ? 0 : latestVersion);
+		classBuilder.withMethod("decode", Object.class, List.of(BinaryInput.class),
+				decodeImpl(serializer, latestVersion, latestStaticDecoders, arg(0)));
 
-		classBuilder.withMethod("decode", Object.class, List.of(byte[].class, int.class), methodBody(
-				decoderInitializers, decoderFinalizers,
+		classBuilder.withMethod("decode", Object.class, List.of(byte[].class, int.class),
 				let(constructor(BinaryInput.class, arg(0), arg(1)), in ->
-						decodeImpl(serializer, latestVersion, staticDecoders, in))));
+						decodeImpl(serializer, latestVersion, latestStaticDecoders, in)));
 
 		classBuilder.withMethod("decodeEarlierVersions",
 				serializer.getDecodeType(),
@@ -659,16 +638,9 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		for (int i = decodeVersions.size() - 2; i >= 0; i--) {
 			int version = decodeVersions.get(i);
 			classBuilder.withMethod("decodeVersion" + version, serializer.getDecodeType(), List.of(BinaryInput.class),
-					sequence(serializer.defineDecoder(staticDecoders,
+					sequence(serializer.defineDecoder(staticDecoders(classBuilder, version),
 							arg(0), version, compatibilityLevel)));
 		}
-	}
-
-	private Expression methodBody(List<Expression> initializers, List<Expression> finalizers, Expression body) {
-		if (initializers.isEmpty() && finalizers.isEmpty()) return body;
-		return finalizers.isEmpty() ?
-				sequence(sequence(initializers), body) :
-				sequence(sequence(initializers), let(body, v -> sequence(sequence(finalizers), v)));
 	}
 
 	private Expression decodeImpl(SerializerDef serializer, Integer latestVersion, StaticDecoders staticDecoders,
@@ -690,49 +662,49 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 								call(self(), "decodeEarlierVersions", in, version)));
 	}
 
-	private static StaticEncoders staticEncoders(ClassBuilder<?> classBuilder) {
+	private static StaticEncoders staticEncoders(ClassBuilder<?> classBuilder, int version, CompatibilityLevel compatibilityLevel) {
 		return new StaticEncoders() {
 			final Map<List<?>, String> defined = new HashMap<>();
 
 			@Override
-			public Expression define(SerializerDef serializerDef, Class<?> valueClazz, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+			public Expression define(SerializerDef serializerDef, Expression buf, Variable pos, Expression value) {
 				List<?> key = List.of(identityHashCode(serializerDef), version, compatibilityLevel);
 				String methodName = defined.get(key);
 				if (methodName == null) {
 					for (int i = 1; ; i++) {
 						methodName = "encode_" +
-								valueClazz.getSimpleName().replace('[', 's').replace(']', '_') +
+								serializerDef.getEncodeType().getSimpleName().replace('[', 's').replace(']', '_') +
 								(i == 1 ? "" : "_" + i);
 						if (defined.values().stream().noneMatch(methodName::equals)) break;
 					}
 					defined.put(key, methodName);
-					classBuilder.withStaticMethod(methodName, int.class, List.of(byte[].class, int.class, valueClazz), sequence(
+					classBuilder.withStaticMethod(methodName, int.class, List.of(byte[].class, int.class, serializerDef.getEncodeType()), sequence(
 							serializerDef.encoder(this, BUF, POS, VALUE, version, compatibilityLevel),
 							POS));
 				}
-				return set(pos, staticCallSelf(methodName, buf, pos, cast(value, valueClazz)));
+				return set(pos, staticCallSelf(methodName, buf, pos, value));
 			}
 		};
 	}
 
-	private StaticDecoders staticDecoders(ClassBuilder<?> classBuilder) {
+	private StaticDecoders staticDecoders(ClassBuilder<?> classBuilder, int version) {
 		return new StaticDecoders() {
 			final Map<List<?>, String> defined = new HashMap<>();
 
 			@Override
-			public Expression define(SerializerDef serializerDef, Class<?> valueClazz, Expression in, int version, CompatibilityLevel compatibilityLevel) {
+			public Expression define(SerializerDef serializerDef, Expression in) {
 				List<?> key = List.of(identityHashCode(serializerDef), version, compatibilityLevel);
 				String methodName = defined.get(key);
 				if (methodName == null) {
 					for (int i = 1; ; i++) {
 						methodName = "decode_" +
-								valueClazz.getSimpleName().replace('[', 's').replace(']', '_') +
+								serializerDef.getDecodeType().getSimpleName().replace('[', 's').replace(']', '_') +
 								("_V" + version) +
 								(i == 1 ? "" : "_" + i);
 						if (defined.values().stream().noneMatch(methodName::equals)) break;
 					}
 					defined.put(key, methodName);
-					classBuilder.withStaticMethod(methodName, valueClazz, List.of(BinaryInput.class),
+					classBuilder.withStaticMethod(methodName, serializerDef.getDecodeType(), List.of(BinaryInput.class),
 							serializerDef.decoder(this, IN, version, compatibilityLevel));
 				}
 				return staticCallSelf(methodName, in);
@@ -756,11 +728,6 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		SerializerDef serializer = doScan(ctx);
 
 		forwardingSerializerDef.serializerDef = serializer;
-
-		if (hasAnnotation(SerializeReference.class, ctx.getAnnotations()) ||
-				hasAnnotation(SerializeReference.class, ctx.getRawType().getAnnotations())) {
-			cache.remove(ctx.getType(), forwardingSerializerDef);
-		}
 
 		return serializer;
 	}
@@ -1056,7 +1023,6 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 	static {
 		repeatable(SerializeFixedSizes.class, SerializeFixedSize.class, SerializeFixedSizes::value, SerializeFixedSize::path);
 		repeatable(SerializeNullables.class, SerializeNullable.class, SerializeNullables::value, SerializeNullable::path);
-		repeatable(SerializeReferences.class, SerializeReference.class, SerializeReferences::value, SerializeReference::path);
 		repeatable(SerializeStringFormats.class, SerializeStringFormat.class, SerializeStringFormats::value, SerializeStringFormat::path);
 		repeatable(SerializeClasses.class, SerializeClass.class, SerializeClasses::value, SerializeClass::path);
 		repeatable(SerializeVarLengths.class, SerializeVarLength.class, SerializeVarLengths::value, SerializeVarLength::path);

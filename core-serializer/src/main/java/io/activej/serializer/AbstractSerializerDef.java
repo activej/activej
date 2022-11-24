@@ -1,8 +1,5 @@
 package io.activej.serializer;
 
-import io.activej.codegen.expression.Expression;
-
-import java.util.Map;
 import java.util.Set;
 
 public abstract class AbstractSerializerDef implements SerializerDef {
@@ -25,23 +22,4 @@ public abstract class AbstractSerializerDef implements SerializerDef {
 		return getEncodeType();
 	}
 
-	@Override
-	public Map<Object, Expression> getEncoderInitializer() {
-		return Map.of();
-	}
-
-	@Override
-	public Map<Object, Expression> getDecoderInitializer() {
-		return Map.of();
-	}
-
-	@Override
-	public Map<Object, Expression> getEncoderFinalizer() {
-		return Map.of();
-	}
-
-	@Override
-	public Map<Object, Expression> getDecoderFinalizer() {
-		return Map.of();
-	}
 }

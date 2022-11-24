@@ -350,11 +350,7 @@ public final class Context {
 				throw new IllegalArgumentException("Method not found: " + ownerType.getClassName() + '#' + methodName +
 						Arrays.stream(arguments).map(SelfOrClass::toString).collect(joining(",", "(", ")")));
 			}
-			if (javaOwnerType.isInterface()) {
-				g.invokeInterface(ownerType, foundMethod);
-			} else {
-				g.invokeVirtual(ownerType, foundMethod);
-			}
+			invokeVirtualOrInterface(this, ownerType, foundMethod);
 		}
 		return foundMethod.getReturnType();
 	}

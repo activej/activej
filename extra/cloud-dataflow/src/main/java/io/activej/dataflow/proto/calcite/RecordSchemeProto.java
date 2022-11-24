@@ -1107,11 +1107,11 @@ public final class RecordSchemeProto {
   static {
     java.lang.String[] descriptorData = {
       "\n\033calcite/record_scheme.proto\022\020dataflow." +
-      "calcite\032\017java_type.proto\"N\n\014RecordScheme" +
-      "\022\023\n\013field_names\030\001 \003(\t\022)\n\005types\030\002 \003(\0132\032.d" +
-      "ataflow.calcite.JavaTypeB8\n!io.activej.d" +
-      "ataflow.proto.calciteB\021RecordSchemeProto" +
-      "P\000b\006proto3"
+      "calcite\032\027calcite/java_type.proto\"N\n\014Reco" +
+      "rdScheme\022\023\n\013field_names\030\001 \003(\t\022)\n\005types\030\002" +
+      " \003(\0132\032.dataflow.calcite.JavaTypeB8\n!io.a" +
+      "ctivej.dataflow.proto.calciteB\021RecordSch" +
+      "emeProtoP\000b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,

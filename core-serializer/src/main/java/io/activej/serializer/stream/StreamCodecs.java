@@ -743,4 +743,36 @@ public final class StreamCodecs {
 		protected abstract void doReadRemaining(StreamInput input, T array, int offset, int limit) throws IOException;
 
 	}
+
+	public static <T> StreamCodec<T> reference(StreamCodec<T> codec) {
+		return new StreamCodec<T>() {
+			private final IdentityHashMap<T, Integer> mapEncode = new IdentityHashMap<>();
+			private final ArrayList<T> mapDecode = new ArrayList<>();
+
+			@Override
+			public void encode(StreamOutput output, T item) throws IOException {
+				int index = mapEncode.getOrDefault(item, 0);
+				if (index == 0) {
+					mapEncode.put(item, mapEncode.size() + 1);
+					output.writeVarInt(0);
+					codec.encode(output, item);
+				} else {
+					output.writeVarInt(index);
+				}
+			}
+
+			@Override
+			public T decode(StreamInput input) throws IOException {
+				int index = input.readVarInt();
+				if (index == 0) {
+					T item = codec.decode(input);
+					mapDecode.add(item);
+					return item;
+				} else {
+					return mapDecode.get(index - 1);
+				}
+			}
+		};
+	}
+
 }

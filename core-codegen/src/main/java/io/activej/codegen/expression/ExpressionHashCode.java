@@ -26,6 +26,7 @@ import java.util.List;
 
 import static io.activej.codegen.util.TypeChecks.checkType;
 import static io.activej.codegen.util.TypeChecks.isAssignable;
+import static io.activej.codegen.util.Utils.invokeVirtualOrInterface;
 import static io.activej.codegen.util.Utils.isPrimitiveType;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.INT_TYPE;
@@ -113,7 +114,7 @@ public final class ExpressionHashCode implements Expression {
 				Label ifNullLabel = g.newLabel();
 				g.ifNull(ifNullLabel);
 				g.loadLocal(tmpVar);
-				g.invokeVirtual(fieldType, getMethod("int hashCode()"));
+				invokeVirtualOrInterface(ctx, fieldType, getMethod("int hashCode()"));
 				g.visitInsn(IADD);
 				g.mark(ifNullLabel);
 			}
