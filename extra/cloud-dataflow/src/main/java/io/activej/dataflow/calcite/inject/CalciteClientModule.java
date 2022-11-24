@@ -28,7 +28,6 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParser;
-import org.apache.calcite.sql.util.ListSqlOperatorTable;
 import org.apache.calcite.sql.util.SqlOperatorTables;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
@@ -77,7 +76,7 @@ public final class CalciteClientModule extends AbstractModule {
 	@Provides
 	SqlOperatorTable operatorTable(Set<SqlOperator> customOperators) {
 		SqlOperatorTable standard = SqlStdOperatorTable.instance();
-		SqlOperatorTable custom = new ListSqlOperatorTable(new ArrayList<>(customOperators));
+		SqlOperatorTable custom = SqlOperatorTables.of(new ArrayList<>(customOperators));
 
 		return SqlOperatorTables.chain(standard, custom);
 	}

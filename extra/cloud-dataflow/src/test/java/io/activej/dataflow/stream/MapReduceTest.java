@@ -9,21 +9,18 @@ import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.inject.DatasetIdModule;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
-import io.activej.dataflow.proto.serializer.FunctionSubtypeSerializer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.datastream.processor.StreamReducers.ReducerToAccumulator;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult;
-import io.activej.datastream.processor.StreamReducers.ReducerToResult.AccumulatorToOutput;
-import io.activej.datastream.processor.StreamReducers.ReducerToResult.InputToAccumulator;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
-import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamCodecs;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
@@ -35,11 +32,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
 
+import static io.activej.dataflow.codec.SubtypeImpl.subtype;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.graph.StreamSchemas.simple;
 import static io.activej.dataflow.helper.StreamMergeSorterStorageStub.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
-import static io.activej.dataflow.proto.serializer.ProtobufUtils.ofObject;
 import static io.activej.dataflow.stream.DataflowTest.createCommon;
 import static io.activej.dataflow.stream.DataflowTest.getFreeListenAddress;
 import static io.activej.promise.TestUtils.await;
@@ -198,25 +195,13 @@ public class MapReduceTest {
 		}
 	}
 
-	@SuppressWarnings({"rawtypes", "unchecked"})
+	@SuppressWarnings("rawtypes")
 	private static Module createSerializersModule() {
 		return ModuleBuilder.create()
-				.bind(new Key<BinarySerializer<Function<?, ?>>>() {}).to(() -> {
-					FunctionSubtypeSerializer<Function<?, ?>> serializer = FunctionSubtypeSerializer.create();
-					serializer.setSubtypeCodec(StringKeyFunction.class, ofObject(StringKeyFunction::new));
-					serializer.setSubtypeCodec(StringMapFunction.class, ofObject(StringMapFunction::new));
-					return serializer;
-				})
-				.bind(new Key<BinarySerializer<Comparator<?>>>() {}).toInstance(ofObject(Comparator::naturalOrder))
-				.bind(new Key<BinarySerializer<Reducer<?, ?, ?, ?>>>() {}).to((inputToAccumulator, accumulatorToOutput) -> {
-							FunctionSubtypeSerializer<Reducer> serializer = FunctionSubtypeSerializer.create();
-							serializer.setSubtypeCodec(InputToAccumulator.class, inputToAccumulator);
-							serializer.setSubtypeCodec(AccumulatorToOutput.class, accumulatorToOutput);
-							return ((BinarySerializer) serializer);
-						},
-						new Key<BinarySerializer<InputToAccumulator>>() {},
-						new Key<BinarySerializer<AccumulatorToOutput>>() {})
-				.bind(new Key<BinarySerializer<ReducerToResult>>() {}).toInstance(ofObject(StringReducer::new))
+				.bind(new Key<StreamCodec<StringKeyFunction>>(subtype(0)) {}).toInstance(StreamCodecs.singleton(new StringKeyFunction()))
+				.bind(new Key<StreamCodec<StringMapFunction>>(subtype(1)) {}).toInstance(StreamCodecs.singleton(new StringMapFunction()))
+				.bind(new Key<StreamCodec<Comparator<?>>>() {}).toInstance(StreamCodecs.singleton(Comparator.naturalOrder()))
+				.bind(new Key<StreamCodec<ReducerToResult>>() {}).toInstance(StreamCodecs.singleton(new StringReducer()))
 				.build();
 	}
 }

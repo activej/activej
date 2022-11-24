@@ -1,7 +1,6 @@
 package io.activej.dataflow.calcite.operand;
 
 import io.activej.common.Utils;
-import io.activej.dataflow.proto.calcite.serializer.OperandFunctionRegistry;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import org.apache.calcite.rex.RexDynamicParam;
@@ -19,13 +18,6 @@ public final class OperandMapGet extends OperandFunction<OperandMapGet> {
 	public OperandMapGet(Operand<?> mapOperand, Operand<?> keyOperand) {
 		this.mapOperand = mapOperand;
 		this.keyOperand = keyOperand;
-	}
-
-	public static void register() {
-		OperandFunctionRegistry.register(OperandMapGet.class, operands -> {
-			assert operands.size() == 2;
-			return new OperandMapGet(operands.get(0), operands.get(1));
-		});
 	}
 
 	@Override

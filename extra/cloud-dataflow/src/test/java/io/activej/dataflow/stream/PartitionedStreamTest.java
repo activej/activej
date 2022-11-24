@@ -22,11 +22,10 @@ import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator
 import io.activej.dataflow.inject.DataflowModule;
 import io.activej.dataflow.inject.DatasetId;
 import io.activej.dataflow.inject.DatasetIdModule;
+import io.activej.dataflow.messaging.DataflowRequest;
+import io.activej.dataflow.messaging.DataflowResponse;
 import io.activej.dataflow.node.PartitionedStreamConsumerFactory;
 import io.activej.dataflow.node.PartitionedStreamSupplierFactory;
-import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
-import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
-import io.activej.dataflow.proto.serializer.FunctionSerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
@@ -49,7 +48,8 @@ import io.activej.inject.module.Modules;
 import io.activej.net.AbstractServer;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
-import io.activej.serializer.BinarySerializer;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamCodecs;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
@@ -72,7 +72,6 @@ import static io.activej.common.Utils.first;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.graph.StreamSchemas.simple;
-import static io.activej.dataflow.proto.serializer.ProtobufUtils.ofObject;
 import static io.activej.datastream.StreamSupplier.ofChannelSupplier;
 import static io.activej.datastream.processor.StreamReducers.mergeReducer;
 import static io.activej.promise.TestUtils.await;
@@ -301,8 +300,8 @@ public final class PartitionedStreamTest {
 					}
 
 					@Provides
-					DataflowServer server(Eventloop eventloop, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator locator, Injector injector, FunctionSerializer functionSerializer) {
-						return DataflowServer.create(eventloop, codec, locator, injector, functionSerializer);
+					DataflowServer server(Eventloop eventloop, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator locator, Injector injector) {
+						return DataflowServer.create(eventloop, codec, locator, injector);
 					}
 
 					@Provides
@@ -380,8 +379,8 @@ public final class PartitionedStreamTest {
 					}
 
 					@Provides
-					DataflowClient client(ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator locator, FunctionSerializer functionSerializer) {
-						return DataflowClient.create(codec, locator, functionSerializer);
+					DataflowClient client(ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator locator) {
+						return DataflowClient.create(codec, locator);
 					}
 
 					@Provides
@@ -395,8 +394,8 @@ public final class PartitionedStreamTest {
 	private static Module createSerializersModule() {
 		return new AbstractModule() {
 			@Provides
-			BinarySerializer<Predicate<?>> isEvenCodec() {
-				return ofObject(IsEven::new);
+			StreamCodec<Predicate<?>> isEvenCodec() {
+				return StreamCodecs.singleton(new IsEven());
 			}
 		};
 	}

@@ -4,7 +4,7 @@ import io.activej.dataflow.inject.BinarySerializerModule;
 import io.activej.serializer.BinarySerializer;
 
 public final class StreamSchemas {
-	public static <T> StreamSchema<T> simple(Class<T> cls) {
+	public static <T> Simple<T> simple(Class<T> cls) {
 		return new Simple<>(cls);
 	}
 
@@ -23,6 +23,10 @@ public final class StreamSchemas {
 		@Override
 		public BinarySerializer<T> createSerializer(BinarySerializerModule.BinarySerializerLocator locator) {
 			return locator.get(cls);
+		}
+
+		public Class<?> getCls() {
+			return cls;
 		}
 	}
 }

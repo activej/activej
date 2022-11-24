@@ -26,12 +26,13 @@ import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.exception.DataflowException;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.TaskStatus;
-import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
-import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.GetTasks.TaskId;
-import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
-import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.PartitionData;
-import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.PartitionData.TaskDesc;
-import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.TaskData;
+import io.activej.dataflow.messaging.DataflowRequest;
+import io.activej.dataflow.messaging.DataflowRequest.GetTasks;
+import io.activej.dataflow.messaging.DataflowResponse;
+import io.activej.dataflow.messaging.DataflowResponse.PartitionData;
+import io.activej.dataflow.messaging.DataflowResponse.Result;
+import io.activej.dataflow.messaging.DataflowResponse.TaskData;
+import io.activej.dataflow.messaging.DataflowResponse.TaskDescription;
 import io.activej.dataflow.stats.NodeStat;
 import io.activej.dataflow.stats.StatReducer;
 import io.activej.http.*;
@@ -49,7 +50,6 @@ import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
-import static io.activej.dataflow.proto.serializer.ProtobufUtils.convert;
 import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpResponse.ok200;
 import static io.activej.types.Types.parameterizedType;
@@ -78,9 +78,9 @@ public final class DataflowDebugServlet implements AsyncServlet {
 											Map<Long, List<@Nullable TaskStatus>> tasks = new HashMap<>();
 											for (int i = 0; i < partitionStats.size(); i++) {
 												PartitionData partitionStat = partitionStats.get(i);
-												for (TaskDesc taskDesc : partitionStat.getLastList()) {
-													tasks.computeIfAbsent(taskDesc.getId(), $ -> Arrays.asList(new TaskStatus[partitionStats.size()]))
-															.set(i, convert(taskDesc.getStatus()));
+												for (TaskDescription taskDesc : partitionStat.lastTasks()) {
+													tasks.computeIfAbsent(taskDesc.id(), $ -> Arrays.asList(new TaskStatus[partitionStats.size()]))
+															.set(i, taskDesc.status());
 												}
 											}
 											return ok200()
@@ -99,12 +99,12 @@ public final class DataflowDebugServlet implements AsyncServlet {
 											if (localTaskData == null) {
 												continue;
 											}
-											statuses.set(i, convert(localTaskData.getStatus()));
+											statuses.set(i, localTaskData.status());
 											int finalI = i;
-											localTaskData.getNodesMap()
+											localTaskData.nodes()
 													.forEach((index, nodeStat) ->
 															nodeStats.computeIfAbsent(index, $ -> Arrays.asList(new NodeStat[localStats.size()]))
-																	.set(finalI, convert(nodeStat)));
+																	.set(finalI, nodeStat));
 										}
 
 										Map<Integer, @Nullable NodeStat> reduced = nodeStats.entrySet().stream()
@@ -115,7 +115,7 @@ public final class DataflowDebugServlet implements AsyncServlet {
 													}
 												}, HashMap::putAll);
 
-										ReducedTaskData taskData = new ReducedTaskData(statuses, localStats.get(0).getGraphViz(), reduced);
+										ReducedTaskData taskData = new ReducedTaskData(statuses, localStats.get(0).graphViz(), reduced);
 										return ok200()
 												.withJson(objectMapper.writeValueAsString(taskData));
 									});
@@ -131,12 +131,12 @@ public final class DataflowDebugServlet implements AsyncServlet {
 							}
 							return getTask(partition.getAddress(), id)
 									.map(task -> ok200()
-											.withJson(objectMapper.writeValueAsString(new LocalTaskData(convert(task.getStatus()), task.getGraphViz(),
-													task.getNodesMap().entrySet().stream()
-															.collect(Collectors.toMap(Map.Entry::getKey, e -> convert(e.getValue()))),
-													convert(task.getStartTime()),
-													convert(task.getFinishTime()),
-													convert(task.getError())))));
+											.withJson(objectMapper.writeValueAsString(new LocalTaskData(task.status(), task.graphViz(),
+													task.nodes().entrySet().stream()
+															.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
+													task.startTime(),
+													task.finishTime(),
+													task.error()))));
 						}));
 	}
 
@@ -166,16 +166,17 @@ public final class DataflowDebugServlet implements AsyncServlet {
 				.then(socket -> {
 					Messaging<DataflowResponse, DataflowRequest> messaging = MessagingWithBinaryStreaming.create(socket, codec);
 					return DataflowClient.performHandshake(messaging)
-							.then(() -> messaging.send(getTasks(null)))
+							.then(() -> messaging.send(new GetTasks(null)))
 							.then(messaging::receive)
 							.map(response -> {
 								messaging.close();
-								return switch (response.getResponseCase()) {
-									case PARTITION_DATA -> response.getPartitionData();
-									case RESULT ->
-											throw new DataflowException("Error on remote server " + address + ": " + response.getResult().getError().getError());
-									default -> throw new DataflowException("Bad response from server");
-								};
+								if (response instanceof PartitionData partitionData) {
+									return partitionData;
+								}
+								if (response instanceof Result result) {
+									throw new DataflowException("Error on remote server " + address + ": " + result.error());
+								}
+								throw new DataflowException("Bad response from server");
 							});
 				});
 	}
@@ -185,16 +186,17 @@ public final class DataflowDebugServlet implements AsyncServlet {
 				.then(socket -> {
 					Messaging<DataflowResponse, DataflowRequest> messaging = MessagingWithBinaryStreaming.create(socket, codec);
 					return DataflowClient.performHandshake(messaging)
-							.then(() -> messaging.send(getTasks(taskId)))
+							.then(() -> messaging.send(new GetTasks(taskId)))
 							.then($ -> messaging.receive())
 							.map(response -> {
 								messaging.close();
-								return switch (response.getResponseCase()) {
-									case TASK_DATA -> response.getTaskData();
-									case RESULT ->
-											throw new DataflowException("Error on remote server " + address + ": " + response.getResult().getError().getError());
-									default -> throw new DataflowException("Bad response from server");
-								};
+								if (response instanceof TaskData taskData) {
+									return taskData;
+								}
+								if (response instanceof Result result) {
+									throw new DataflowException("Error on remote server " + address + ": " + result.error());
+								}
+								throw new DataflowException("Bad response from server");
 							});
 				});
 	}
@@ -203,18 +205,4 @@ public final class DataflowDebugServlet implements AsyncServlet {
 	public @NotNull Promisable<HttpResponse> serve(@NotNull HttpRequest request) throws Exception {
 		return servlet.serve(request);
 	}
-
-	private static DataflowRequest getTasks(@Nullable Long taskId) {
-		TaskId.Builder taskIdBuilder = TaskId.newBuilder();
-		if (taskId == null) {
-			taskIdBuilder.setTaskIdIsNull(true);
-		} else {
-			taskIdBuilder.setTaskId(taskId);
-		}
-		return DataflowRequest.newBuilder()
-				.setGetTasks(DataflowRequest.GetTasks.newBuilder()
-						.setTaskId(taskIdBuilder))
-				.build();
-	}
-
 }

@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.IntFunction;
+import java.util.function.Supplier;
 
 import static io.activej.codegen.expression.Expressions.*;
 
@@ -745,7 +746,7 @@ public final class StreamCodecs {
 	}
 
 	public static <T> StreamCodec<T> reference(StreamCodec<T> codec) {
-		return new StreamCodec<T>() {
+		return new StreamCodec<>() {
 			private final IdentityHashMap<T, Integer> mapEncode = new IdentityHashMap<>();
 			private final ArrayList<T> mapDecode = new ArrayList<>();
 
@@ -775,4 +776,23 @@ public final class StreamCodecs {
 		};
 	}
 
+	public static <T> StreamCodec<T> lazy(Supplier<StreamCodec<T>> codecSupplier) {
+		return new StreamCodec<>() {
+			private StreamCodec<T> codec;
+
+			@Override
+			public T decode(StreamInput input) throws IOException {
+				return ensureCodec().decode(input);
+			}
+
+			@Override
+			public void encode(StreamOutput output, T item) throws IOException {
+				ensureCodec().encode(output, item);
+			}
+
+			private StreamCodec<T> ensureCodec() {
+				return codec = Objects.requireNonNullElseGet(codec, codecSupplier);
+			}
+		};
+	}
 }

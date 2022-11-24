@@ -398,7 +398,7 @@ public class RelToDatasetConverter {
 				params -> {
 					Dataset<Record> materializedDataset = current.materialize(params);
 
-					LocallySortedDataset<Record, Record> result = Datasets.localSort(materializedDataset, Record.class, Function.identity(), new RecordSortComparator(sorts));
+					LocallySortedDataset<Record, Record> result = Datasets.localSort(materializedDataset, Record.class, IdentityFunction.getInstance(), new RecordSortComparator(sorts));
 
 					long offsetValue = ((Number) offset.materialize(params).getValue().getValue()).longValue();
 					long limitValue = ((Number) limit.materialize(params).getValue().getValue()).longValue();
@@ -525,7 +525,7 @@ public class RelToDatasetConverter {
 	private static SortedDataset<Record, Record> sortForUnion(Dataset<Record> dataset,
 			Function<LocallySortedDataset<Record, Record>, SortedDataset<Record, Record>> toSortedFn
 	) {
-		return toSortedFn.apply(Datasets.localSort(dataset, Record.class, Function.identity(), RecordKeyComparator.getInstance()));
+		return toSortedFn.apply(Datasets.localSort(dataset, Record.class, IdentityFunction.getInstance(), RecordKeyComparator.getInstance()));
 	}
 
 	private static boolean doesNeedRepartition(List<FieldProjection> projections, int schemeSize, LocallySortedDataset<?, Record> locallySortedDataset) {

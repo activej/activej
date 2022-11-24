@@ -11,12 +11,9 @@ import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator
 import io.activej.dataflow.inject.DataflowModule;
 import io.activej.dataflow.inject.DatasetIdModule;
 import io.activej.dataflow.inject.SortingExecutor;
+import io.activej.dataflow.messaging.DataflowRequest;
+import io.activej.dataflow.messaging.DataflowResponse;
 import io.activej.dataflow.node.NodeSort;
-import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
-import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
-import io.activej.dataflow.proto.serializer.CustomNodeSerializer;
-import io.activej.dataflow.proto.serializer.CustomStreamSchemaSerializer;
-import io.activej.dataflow.proto.serializer.FunctionSerializer;
 import io.activej.datastream.processor.StreamSorterStorage;
 import io.activej.datastream.processor.StreamSorterStorageImpl;
 import io.activej.eventloop.Eventloop;
@@ -24,7 +21,6 @@ import io.activej.inject.Injector;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
-import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.promise.Promise;
 import org.slf4j.Logger;
@@ -68,8 +64,8 @@ public final class DataflowServerModule extends AbstractModule {
 	}
 
 	@Provides
-	DataflowServer server(@Named("Dataflow") Eventloop eventloop, Config config, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator serializers, Injector environment, FunctionSerializer functionSerializer) {
-		return DataflowServer.create(eventloop, codec, serializers, environment, functionSerializer)
+	DataflowServer server(@Named("Dataflow") Eventloop eventloop, Config config, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator serializers, Injector environment) {
+		return DataflowServer.create(eventloop, codec, serializers, environment)
 				.withInitializer(ofAbstractServer(config.getChild("dataflow.server")))
 				.withInitializer(s -> s.withSocketSettings(s.getSocketSettings().withTcpNoDelay(true)));
 	}
@@ -77,18 +73,9 @@ public final class DataflowServerModule extends AbstractModule {
 	@Provides
 	@Eager
 	DataflowClient client(ByteBufsCodec<DataflowResponse, DataflowRequest> codec,
-			BinarySerializerLocator serializers, FunctionSerializer functionSerializer,
-			OptionalDependency<CustomNodeSerializer> optionalCustomNodeSerializer,
-			OptionalDependency<CustomStreamSchemaSerializer> optionalCustomStreamSchemaSerializer
+			BinarySerializerLocator serializers
 	) {
-		DataflowClient dataflowClient = DataflowClient.create(codec, serializers, functionSerializer);
-		if (optionalCustomNodeSerializer.isPresent()) {
-			dataflowClient.withCustomNodeSerializer(optionalCustomNodeSerializer.get());
-		}
-		if (optionalCustomStreamSchemaSerializer.isPresent()) {
-			dataflowClient.withCustomStreamSchemaSerializer(optionalCustomStreamSchemaSerializer.get());
-		}
-		return dataflowClient;
+		return DataflowClient.create(codec, serializers);
 	}
 
 	@Provides

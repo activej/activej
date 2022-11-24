@@ -26,6 +26,7 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerBuilder;
+import io.activej.types.Types;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +52,8 @@ public final class BinarySerializerModule extends AbstractModule {
 		Map<Type, Key<BinarySerializer<?>>> transientSerializers = new HashMap<>();
 
 		transform(new KeyPattern<BinarySerializer<?>>() {}, (bindings, scope, key, binding) -> {
-			if (!key.getRawType().equals(BinarySerializer.class) || !(key.getType() instanceof ParameterizedType)) return binding;
+			if (!key.getRawType().equals(BinarySerializer.class) || !(key.getType() instanceof ParameterizedType))
+				return binding;
 
 			Class<?> rawType = key.getTypeParameter(0).getRawType();
 
@@ -87,7 +89,7 @@ public final class BinarySerializerModule extends AbstractModule {
 
 	@Provides
 	<T> BinarySerializer<T> generator(BinarySerializerLocator locator, Key<T> key) {
-		return locator.get(key.getType());
+		return locator.ensureSerializer(key.getType());
 	}
 
 	public static final class BinarySerializerLocator {
@@ -112,12 +114,21 @@ public final class BinarySerializerModule extends AbstractModule {
 			if (transientKey != null) {
 				return (BinarySerializer<T>) injector.getInstance(transientKey);
 			}
-			return (BinarySerializer<T>) serializers.computeIfAbsent(type, aType -> {
+			BinarySerializer<T> instance = injector.getInstanceOrNull(Key.ofType(Types.parameterizedType(BinarySerializer.class, type)));
+			if (instance != null) {
+				return instance;
+			}
+			return ensureSerializer(type);
+		}
+
+		private <T> BinarySerializer<T> ensureSerializer(Type type) {
+			//noinspection unchecked
+			return (BinarySerializer<T>) serializers.computeIfAbsent(type, $ -> {
 				logger.trace("Creating serializer for {}", type);
 				if (builder == null) {
 					builder = SerializerBuilder.create();
 				}
-				return builder.build(aType);
+				return builder.build(type);
 			});
 		}
 	}

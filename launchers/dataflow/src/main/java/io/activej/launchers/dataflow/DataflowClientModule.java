@@ -21,14 +21,11 @@ import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
-import io.activej.dataflow.inject.BinarySerializerModule;
+import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator;
 import io.activej.dataflow.inject.DataflowModule;
-import io.activej.dataflow.proto.DataflowMessagingProto;
-import io.activej.dataflow.proto.serializer.CustomNodeSerializer;
-import io.activej.dataflow.proto.serializer.CustomStreamSchemaSerializer;
-import io.activej.dataflow.proto.serializer.FunctionSerializer;
+import io.activej.dataflow.messaging.DataflowRequest;
+import io.activej.dataflow.messaging.DataflowResponse;
 import io.activej.inject.annotation.Provides;
-import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 
 import java.util.List;
@@ -50,19 +47,10 @@ public final class DataflowClientModule extends AbstractModule {
 	}
 
 	@Provides
-	DataflowClient client(ByteBufsCodec<DataflowMessagingProto.DataflowResponse, DataflowMessagingProto.DataflowRequest> codec,
-			BinarySerializerModule.BinarySerializerLocator serializers, FunctionSerializer functionSerializer,
-			OptionalDependency<CustomNodeSerializer> optionalCustomNodeSerializer,
-			OptionalDependency<CustomStreamSchemaSerializer> optionalCustomStreamSchemeSerializer
+	DataflowClient client(ByteBufsCodec<DataflowResponse, DataflowRequest> codec,
+			BinarySerializerLocator serializers
 	) {
-		DataflowClient dataflowClient = DataflowClient.create(codec, serializers, functionSerializer);
-		if (optionalCustomNodeSerializer.isPresent()) {
-			dataflowClient.withCustomNodeSerializer(optionalCustomNodeSerializer.get());
-		}
-		if (optionalCustomStreamSchemeSerializer.isPresent()) {
-			dataflowClient.withCustomStreamSchemaSerializer(optionalCustomStreamSchemeSerializer.get());
-		}
-		return dataflowClient;
+		return DataflowClient.create(codec, serializers);
 	}
 
 	@Provides

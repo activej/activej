@@ -1,7 +1,6 @@
 package io.activej.dataflow.calcite.operand;
 
 import io.activej.common.Utils;
-import io.activej.dataflow.proto.calcite.serializer.OperandFunctionRegistry;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import org.apache.calcite.rex.RexDynamicParam;
@@ -17,13 +16,6 @@ public final class OperandListGet extends OperandFunction<OperandListGet> {
 	public OperandListGet(Operand<?> listOperand, Operand<?> indexOperand) {
 		this.listOperand = listOperand;
 		this.indexOperand = indexOperand;
-	}
-
-	public static void register() {
-		OperandFunctionRegistry.register(OperandListGet.class, operands -> {
-			assert operands.size() == 2;
-			return new OperandListGet(operands.get(0), operands.get(1));
-		});
 	}
 
 	@Override

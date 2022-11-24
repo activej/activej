@@ -17,15 +17,16 @@
 package io.activej.dataflow.inject;
 
 import io.activej.csp.binary.ByteBufsCodec;
-import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
-import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
-import io.activej.dataflow.proto.serializer.ProtobufFunctionModule;
-import io.activej.dataflow.proto.serializer.ProtobufUtils;
+import io.activej.dataflow.codec.Utils;
+import io.activej.dataflow.codec.module.DataflowStreamCodecsModule;
+import io.activej.dataflow.messaging.DataflowRequest;
+import io.activej.dataflow.messaging.DataflowResponse;
 import io.activej.dataflow.stats.BinaryNodeStat;
 import io.activej.dataflow.stats.StatReducer;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
+import io.activej.serializer.stream.StreamCodec;
 
 public final class DataflowModule extends AbstractModule {
 	private DataflowModule() {
@@ -37,19 +38,25 @@ public final class DataflowModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		install(ProtobufFunctionModule.create());
+		install(DataflowStreamCodecsModule.create());
 		install(BinarySerializerModule.create());
 
 		bind(new Key<StatReducer<BinaryNodeStat>>() {}).toInstance(BinaryNodeStat.REDUCER);
 	}
 
 	@Provides
-	ByteBufsCodec<DataflowResponse, DataflowRequest> responseRequestCodec() {
-		return ProtobufUtils.codec(DataflowResponse.parser());
+	ByteBufsCodec<DataflowResponse, DataflowRequest> responseRequestCodec(
+			StreamCodec<DataflowRequest> requestStreamCodec,
+			StreamCodec<DataflowResponse> responseStreamCodec
+	) {
+		return Utils.codec(responseStreamCodec, requestStreamCodec);
 	}
 
 	@Provides
-	ByteBufsCodec<DataflowRequest, DataflowResponse> requestResponseCodec() {
-		return ProtobufUtils.codec(DataflowRequest.parser());
+	ByteBufsCodec<DataflowRequest, DataflowResponse> requestResponseCodec(
+			StreamCodec<DataflowRequest> requestStreamCodec,
+			StreamCodec<DataflowResponse> responseStreamCodec
+	) {
+		return Utils.codec(requestStreamCodec, responseStreamCodec);
 	}
 }

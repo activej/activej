@@ -1,0 +1,126 @@
+package io.activej.dataflow.codec.module;
+
+import io.activej.dataflow.codec.StreamCodecSubtype;
+import io.activej.dataflow.codec.Subtype;
+import io.activej.dataflow.codec.SubtypeImpl;
+import io.activej.inject.Injector;
+import io.activej.inject.Key;
+import io.activej.inject.KeyPattern;
+import io.activej.inject.binding.Binding;
+import io.activej.inject.module.AbstractModule;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamInput;
+import io.activej.serializer.stream.StreamOutput;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import static io.activej.common.Checks.checkState;
+import static io.activej.types.Types.parameterizedType;
+
+public final class DataflowStreamCodecsModule extends AbstractModule {
+	private static final ThreadLocal<Set<Key<StreamCodec<?>>>> GENERATING = ThreadLocal.withInitial(HashSet::new);
+
+	private DataflowStreamCodecsModule() {
+	}
+
+	public static DataflowStreamCodecsModule create() {
+		return new DataflowStreamCodecsModule();
+	}
+
+	@Override
+	protected void configure() {
+		install(new DataflowRequestCodecsModule());
+		install(new DataflowResponseCodecsModule());
+
+		generate(new KeyPattern<StreamCodec<?>>() {}, (bindings, scope, key) ->
+				Binding.to(injector -> {
+							Set<Key<StreamCodec<?>>> generating = GENERATING.get();
+							try {
+								if (!generating.add(key)) {
+									return new LazyStreamCodec<>(injector, key);
+								}
+								return doGenerate(key, injector);
+							} finally {
+								generating.remove(key);
+							}
+
+						},
+						Injector.class));
+	}
+
+	@SuppressWarnings("unchecked")
+	private static StreamCodec<?> doGenerate(Key<StreamCodec<?>> key, Injector injector) {
+		Map<Integer, Class<?>> subtypes = new HashMap<>();
+		Class<Object> type = key.getTypeParameter(0).getRawType();
+
+		Injector i = injector;
+		while (i != null) {
+			for (Key<?> k : i.getBindings().keySet()) {
+				if (k.getRawType() != StreamCodec.class) {
+					continue;
+				}
+				if (!(k.getQualifier() instanceof Subtype subtypeAnnotation)) {
+					continue;
+				}
+				Class<?> subtype = k.getTypeParameter(0).getRawType();
+
+				if (!(type.isAssignableFrom(subtype))) {
+					continue;
+				}
+
+				checkState(!subtypes.containsValue(subtype), "Duplicate subtypes of type: " + subtype);
+				Class<?> prev = subtypes.put(subtypeAnnotation.value(), subtype);
+				checkState(prev == null, "Duplicate subtypes with index: " + subtypeAnnotation.value());
+			}
+			i = i.getParent();
+		}
+
+		StreamCodecSubtype<Object> codecSubtype = new StreamCodecSubtype<>();
+
+		for (Map.Entry<Integer, Class<?>> entry : subtypes.entrySet()) {
+			StreamCodec<?> codec = injector.getInstance(Key.ofType(
+					parameterizedType(StreamCodec.class, entry.getValue()),
+					SubtypeImpl.subtype(entry.getKey())));
+
+			//noinspection rawtypes
+			codecSubtype.addSubtype(entry.getKey(), ((Class) entry.getValue()), codec);
+		}
+
+		return codecSubtype;
+	}
+
+	private static final class LazyStreamCodec<T> implements StreamCodec<T> {
+		private final Injector injector;
+		private final Key<StreamCodec<?>> key;
+
+		private StreamCodec<T> codec;
+
+		private LazyStreamCodec(Injector injector, Key<StreamCodec<?>> key) {
+			this.injector = injector;
+			this.key = key;
+		}
+
+		@Override
+		public T decode(StreamInput input) throws IOException {
+			ensureCodec();
+
+			return codec.decode(input);
+		}
+
+		@Override
+		public void encode(StreamOutput output, T item) throws IOException {
+			ensureCodec();
+
+			codec.encode(output, item);
+		}
+
+		private void ensureCodec() {
+			//noinspection unchecked
+			codec = (StreamCodec<T>) doGenerate(key, injector);
+		}
+	}
+}

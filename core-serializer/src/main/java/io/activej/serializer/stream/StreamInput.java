@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Closeable;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -91,7 +92,7 @@ public class StreamInput implements Closeable, WithInitializer<StreamInput> {
 			int bytesRead = inputStream.read(in.array(), limit, in.array().length - limit);
 			if (bytesRead == -1) {
 				close();
-				throw new CorruptedDataException("Unexpected end of data");
+				throw new EOFException("Unexpected end of data");
 			}
 			limit += bytesRead;
 		}
@@ -154,7 +155,7 @@ public class StreamInput implements Closeable, WithInitializer<StreamInput> {
 			int bytesRead = inputStream.read(b, off, len);
 			if (bytesRead == -1) {
 				close();
-				throw new CorruptedDataException("Unexpected end of data");
+				throw new EOFException("Unexpected end of data");
 			}
 			off += bytesRead;
 			len -= bytesRead;

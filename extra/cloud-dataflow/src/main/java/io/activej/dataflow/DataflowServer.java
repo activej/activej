@@ -35,20 +35,16 @@ import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator;
+import io.activej.dataflow.messaging.DataflowRequest;
+import io.activej.dataflow.messaging.DataflowRequest.Download;
+import io.activej.dataflow.messaging.DataflowRequest.Execute;
+import io.activej.dataflow.messaging.DataflowRequest.GetTasks;
+import io.activej.dataflow.messaging.DataflowResponse;
+import io.activej.dataflow.messaging.DataflowResponse.Result;
+import io.activej.dataflow.messaging.DataflowResponse.TaskData;
+import io.activej.dataflow.messaging.DataflowResponse.TaskDescription;
+import io.activej.dataflow.messaging.Version;
 import io.activej.dataflow.node.Node;
-import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
-import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.Download;
-import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.Execute;
-import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.GetTasks;
-import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.GetTasks.TaskId;
-import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
-import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.Handshake.Ok;
-import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.PartitionData.TaskDesc;
-import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.TaskData;
-import io.activej.dataflow.proto.DataflowMessagingProto.Version;
-import io.activej.dataflow.proto.serializer.CustomNodeSerializer;
-import io.activej.dataflow.proto.serializer.CustomStreamSchemaSerializer;
-import io.activej.dataflow.proto.serializer.FunctionSerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.eventloop.Eventloop;
@@ -57,7 +53,6 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.net.AbstractServer;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
-import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.Nullable;
 
@@ -69,8 +64,6 @@ import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
 
-import static io.activej.dataflow.proto.serializer.ProtobufUtils.convert;
-import static io.activej.dataflow.proto.serializer.ProtobufUtils.error;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
@@ -78,7 +71,7 @@ import static java.util.stream.Collectors.toMap;
  * Server for processing JSON commands.
  */
 public final class DataflowServer extends AbstractServer<DataflowServer> {
-	public static final Version VERSION = Version.newBuilder().setMajor(1).setMinor(0).build();
+	public static final Version VERSION = new Version(1, 0);
 
 	private static final int MAX_LAST_RAN_TASKS = ApplicationSettings.getInt(DataflowServer.class, "maxLastRanTasks", 1000);
 
@@ -87,7 +80,6 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 	private final ByteBufsCodec<DataflowRequest, DataflowResponse> codec;
 	private final BinarySerializerLocator serializers;
 	private final ResourceLocator environment;
-	private final FunctionSerializer functionSerializer;
 
 	private final Map<Long, Task> runningTasks = new HashMap<>();
 	private final Map<Long, Task> lastTasks = new LinkedHashMap<>() {
@@ -98,20 +90,18 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 	};
 
 	private int succeededTasks = 0, canceledTasks = 0, failedTasks = 0;
-	private Function<DataflowRequest.Handshake, DataflowResponse.Handshake> handshakeHandler = $ -> DataflowResponse.Handshake.newBuilder()
-			.setOk(Ok.newBuilder().build())
-			.build();
+	private Function<DataflowRequest.Handshake, DataflowResponse.Handshake> handshakeHandler = $ ->
+			new DataflowResponse.Handshake(null);
 
-	private DataflowServer(Eventloop eventloop, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator serializers, ResourceLocator environment, FunctionSerializer functionSerializer) {
+	private DataflowServer(Eventloop eventloop, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator serializers, ResourceLocator environment) {
 		super(eventloop);
 		this.codec = codec;
 		this.serializers = serializers;
 		this.environment = environment;
-		this.functionSerializer = functionSerializer;
 	}
 
-	public static DataflowServer create(Eventloop eventloop, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator serializers, ResourceLocator environment, FunctionSerializer functionSerializer) {
-		return new DataflowServer(eventloop, codec, serializers, environment, functionSerializer);
+	public static DataflowServer create(Eventloop eventloop, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator serializers, ResourceLocator environment) {
+		return new DataflowServer(eventloop, codec, serializers, environment);
 	}
 
 	public DataflowServer withHandshakeHandler(Function<DataflowRequest.Handshake, DataflowResponse.Handshake> handshakeHandler) {
@@ -124,7 +114,7 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 		if (exception != null) {
 			error = exception.getClass().getSimpleName() + ": " + exception.getMessage();
 		}
-		messaging.send(resultResponse(error))
+		messaging.send(new Result(error))
 				.whenComplete(messaging::close);
 	}
 
@@ -164,15 +154,13 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
 		Messaging<DataflowRequest, DataflowResponse> messaging = MessagingWithBinaryStreaming.create(socket, codec);
 		messaging.receive()
-				.then(handshakeMsg -> {
-					if (!handshakeMsg.hasHandshake()) {
-						return Promise.ofException(new DataflowException("Handshake expected"));
+				.map(request -> {
+					if (!DataflowRequest.Handshake.class.isAssignableFrom(request.getClass())) {
+						throw new DataflowException("Handshake expected, got: " + request);
 					}
-					DataflowResponse handshakeResponse = DataflowResponse.newBuilder()
-							.setHandshake(handshakeHandler.apply(handshakeMsg.getHandshake()))
-							.build();
-					return messaging.send(handshakeResponse);
+					return (DataflowRequest.Handshake) request;
 				})
+				.then(handshakeMsg -> messaging.send(handshakeHandler.apply(handshakeMsg)))
 				.then(messaging::receive)
 				.mapException(IOException.class, DataflowStacklessException::new)
 				.mapException(TruncatedDataException.class, e -> new DataflowStacklessException(e.getMessage()))
@@ -191,23 +179,19 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 	}
 
 	private void doRead(Messaging<DataflowRequest, DataflowResponse> messaging, DataflowRequest request) throws DataflowException {
-		switch (request.getRequestCase()) {
-			case DOWNLOAD -> handleDownload(messaging, request.getDownload());
-			case EXECUTE -> handleExecute(messaging, request.getExecute());
-			case GET_TASKS -> handleGetTasks(messaging, request.getGetTasks());
-			case HANDSHAKE -> throw new DataflowException("Handshake was already performed");
-			default -> {
-				logger.error("missing handler for {}", request.getRequestCase());
-				messaging.close();
-			}
-		}
+		Class<? extends DataflowRequest> requestClass = request.getClass();
+		if (requestClass == Download.class) handleDownload(messaging, (Download) request);
+		else if (requestClass == Execute.class) handleExecute(messaging, (Execute) request);
+		else if (requestClass == GetTasks.class) handleGetTasks(messaging, (GetTasks) request);
+		else if (requestClass == DataflowRequest.Handshake.class)
+			throw new DataflowException("Handshake was already performed");
 	}
 
 	private void handleDownload(Messaging<DataflowRequest, DataflowResponse> messaging, Download download) {
 		if (logger.isTraceEnabled()) {
 			logger.trace("Processing onDownload: {}, {}", download, messaging);
 		}
-		StreamId streamId = convert(download.getStreamId());
+		StreamId streamId = download.streamId();
 		ChannelQueue<ByteBuf> forwarder = pendingStreams.remove(streamId);
 		if (forwarder != null) {
 			logger.info("onDownload: transferring {}, pending downloads: {}", streamId, pendingStreams.size());
@@ -234,12 +218,9 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 		);
 	}
 
-	private void handleExecute(Messaging<DataflowRequest, DataflowResponse> messaging, Execute execute) throws DataflowException {
-		long taskId = execute.getTaskId();
-		Task task = new Task(taskId, environment, convert(execute.getNodesList(), functionSerializer,
-				environment.getInstanceOrNull(CustomNodeSerializer.class),
-				environment.getInstanceOrNull(CustomStreamSchemaSerializer.class)
-		));
+	private void handleExecute(Messaging<DataflowRequest, DataflowResponse> messaging, Execute execute) {
+		long taskId = execute.taskId();
+		Task task = new Task(taskId, environment, execute.nodes());
 		try {
 			task.bind();
 		} catch (Exception e) {
@@ -277,16 +258,16 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 	}
 
 	private void handleGetTasks(Messaging<DataflowRequest, DataflowResponse> messaging, GetTasks getTasks) {
-		TaskId taskId = getTasks.getTaskId();
-		if (taskId.getTaskIdIsNull()) {
+		Long taskId = getTasks.taskId();
+		if (taskId == null) {
 			messaging.send(partitionDataResponse())
 					.mapException(IOException.class, DataflowStacklessException::new)
 					.whenException(e -> logger.error("Failed to send answer for the partition data request", e));
 			return;
 		}
-		Task task = lastTasks.get(taskId.getTaskId());
+		Task task = lastTasks.get(taskId);
 		if (task == null) {
-			messaging.send(resultResponse("No task found with id " + taskId));
+			messaging.send(new Result("No task found with id " + taskId));
 			return;
 		}
 		String err;
@@ -314,41 +295,29 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 		return lastTasks;
 	}
 
-	private static DataflowResponse resultResponse(@Nullable String error) {
-		return DataflowResponse.newBuilder()
-				.setResult(DataflowResponse.Result.newBuilder()
-						.setError(error(error)))
-				.build();
-	}
-
 	private DataflowResponse partitionDataResponse() {
-		return DataflowResponse.newBuilder()
-				.setPartitionData(DataflowResponse.PartitionData.newBuilder()
-						.setRunning(getRunningTasks())
-						.setCancelled(getCanceledTasks())
-						.setFailed(getFailedTasks())
-						.setSucceeded(getSucceededTasks())
-						.addAllLast(lastTasks.entrySet().stream()
-								.map(e -> TaskDesc.newBuilder()
-										.setId(e.getKey())
-										.setStatus(convert(e.getValue().getStatus()))
-										.build())
-								.collect(toList())))
-				.build();
+		return new DataflowResponse.PartitionData(
+				getRunningTasks(),
+				getSucceededTasks(),
+				getFailedTasks(),
+				getCanceledTasks(),
+				lastTasks.entrySet().stream()
+						.map(e -> new TaskDescription(e.getKey(), e.getValue().getStatus()))
+						.collect(toList())
+		);
 	}
 
 	private DataflowResponse taskDataResponse(Task task, @Nullable String error) {
-		return DataflowResponse.newBuilder()
-				.setTaskData(TaskData.newBuilder()
-						.setStatus(convert(task.getStatus()))
-						.setStartTime(convert(task.getStartTime()))
-						.setFinishTime(convert(task.getFinishTime()))
-						.setError(error(error))
-						.setGraphViz(task.getGraphViz())
-						.putAllNodes(task.getNodes().stream()
-								.filter(n -> n.getStats() != null)
-								.collect(toMap(Node::getIndex, node -> convert(node.getStats())))))
-				.build();
+		return new TaskData(
+				task.getStatus(),
+				task.getStartTime(),
+				task.getFinishTime(),
+				error,
+				task.getNodes().stream()
+						.filter(n -> n.getStats() != null)
+						.collect(toMap(Node::getIndex, Node::getStats)),
+				task.getGraphViz()
+		);
 	}
 
 	@JmxAttribute

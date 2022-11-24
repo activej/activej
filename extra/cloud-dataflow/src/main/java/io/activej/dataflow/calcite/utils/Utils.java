@@ -8,11 +8,14 @@ import io.activej.dataflow.calcite.Value;
 import io.activej.dataflow.calcite.function.ProjectionFunction;
 import io.activej.dataflow.calcite.inject.CalciteServerModule;
 import io.activej.dataflow.calcite.operand.*;
+import io.activej.dataflow.codec.StructuredStreamCodec;
 import io.activej.dataflow.dataset.Datasets;
 import io.activej.dataflow.dataset.SortedDataset;
 import io.activej.dataflow.graph.StreamSchema;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamCodecs;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -23,15 +26,13 @@ import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.type.SqlTypeName;
 
 import java.lang.reflect.*;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.TemporalAccessor;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
@@ -40,6 +41,61 @@ import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 public final class Utils {
 
 	private static final StreamSchema<Record> EMPTY_STREAM_SCHEME = RecordStreamSchema.create(RecordScheme.create().build());
+
+	private static final StreamCodec<BigDecimal> BIG_DECIMAL_STREAM_CODEC = StructuredStreamCodec.create((scale, bytes) -> {
+				BigInteger unscaledValue = new BigInteger(bytes);
+				return new BigDecimal(unscaledValue, scale);
+			},
+			BigDecimal::scale, StreamCodecs.ofVarInt(),
+			bigDecimal -> bigDecimal.unscaledValue().toByteArray(), StreamCodecs.ofByteArray()
+	);
+
+	private static final StreamCodec<LocalDate> LOCAL_DATE_STREAM_CODEC = StructuredStreamCodec.create(LocalDate::of,
+			LocalDate::getYear, StreamCodecs.ofVarInt(),
+			LocalDate::getMonthValue, StreamCodecs.ofVarInt(),
+			LocalDate::getDayOfMonth, StreamCodecs.ofVarInt()
+	);
+
+	private static final StreamCodec<LocalTime> LOCAL_TIME_STREAM_CODEC = StructuredStreamCodec.create(LocalTime::of,
+			LocalTime::getHour, StreamCodecs.ofVarInt(),
+			LocalTime::getMinute, StreamCodecs.ofVarInt(),
+			LocalTime::getSecond, StreamCodecs.ofVarInt(),
+			LocalTime::getNano, StreamCodecs.ofVarInt()
+	);
+
+	private static final StreamCodec<Instant> INSTANT_STREAM_CODEC = StructuredStreamCodec.create(Instant::ofEpochSecond,
+			Instant::getEpochSecond, StreamCodecs.ofVarLong(),
+			Instant::getNano, StreamCodecs.ofVarInt()
+	);
+
+	private static final LinkedHashMap<Class<?>, StreamCodec<?>> VALUE_CODECS = new LinkedHashMap<>();
+
+	static {
+		addValueCodec(BigDecimal.class, BIG_DECIMAL_STREAM_CODEC);
+		addValueCodec(String.class, StreamCodecs.ofString());
+		addValueCodec(Boolean.class, StreamCodecs.ofBoolean());
+		addValueCodec(Integer.class, StreamCodecs.ofInt());
+		addValueCodec(Long.class, StreamCodecs.ofLong());
+		addValueCodec(Float.class, StreamCodecs.ofFloat());
+		addValueCodec(Double.class, StreamCodecs.ofDouble());
+		addValueCodec(LocalDate.class, LOCAL_DATE_STREAM_CODEC);
+		addValueCodec(LocalTime.class, LOCAL_TIME_STREAM_CODEC);
+		addValueCodec(Instant.class, INSTANT_STREAM_CODEC);
+	}
+
+	private static <T> void addValueCodec(Class<T> cls, StreamCodec<T> codec) {
+		VALUE_CODECS.put(cls, codec);
+	}
+
+	private static final StreamCodec<Object> VALUE_OBJECT_STREAM_CODEC = StreamCodecs.ofSubtype(VALUE_CODECS);
+
+	public static final StreamCodec<Value> VALUE_STREAM_CODEC = StreamCodec.of(
+			(output, item) -> VALUE_OBJECT_STREAM_CODEC.encode(output, item.getValue()),
+			input -> {
+				Object decoded = VALUE_OBJECT_STREAM_CODEC.decode(input);
+				return Value.materializedValue(decoded.getClass(), decoded);
+			}
+	);
 
 	@SuppressWarnings({"unchecked", "ConstantConditions"})
 	public static <T> T toJavaType(RexLiteral literal) {
@@ -139,7 +195,7 @@ public final class Utils {
 	}
 
 	public static SortedDataset<Record, Record> singleDummyDataset() {
-		return Datasets.sortedDatasetOfId(CalciteServerModule.CALCITE_SINGLE_DUMMY_DATASET, EMPTY_STREAM_SCHEME, Record.class, Function.identity(), RecordKeyComparator.getInstance());
+		return Datasets.sortedDatasetOfId(CalciteServerModule.CALCITE_SINGLE_DUMMY_DATASET, EMPTY_STREAM_SCHEME, Record.class, IdentityFunction.getInstance(), RecordKeyComparator.getInstance());
 	}
 
 	public static RelDataType toRowType(RelDataTypeFactory typeFactory, Type type) {

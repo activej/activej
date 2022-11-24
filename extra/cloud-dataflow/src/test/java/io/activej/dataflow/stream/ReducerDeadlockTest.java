@@ -17,7 +17,8 @@ import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
-import io.activej.serializer.BinarySerializer;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamCodecs;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
 import io.activej.types.Types;
@@ -37,7 +38,6 @@ import java.util.function.Function;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.graph.StreamSchemas.simple;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
-import static io.activej.dataflow.proto.serializer.ProtobufUtils.ofObject;
 import static io.activej.dataflow.stream.DataflowTest.createCommon;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertCompleteFn;
@@ -74,9 +74,9 @@ public class ReducerDeadlockTest {
 		InetSocketAddress address2 = getFreeListenAddress();
 
 		Module common = createCommon(executor, sortingExecutor, List.of(new Partition(address1), new Partition(address2)))
-				.bind(new Key<BinarySerializer<Function<?, ?>>>() {}).toInstance(ofObject(TestKeyFunction::new))
-				.bind(new Key<BinarySerializer<Comparator<?>>>() {}).toInstance(ofObject(TestComparator::new))
-				.bind(new Key<BinarySerializer<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(BinarySerializer.class, MergeReducer.class)))
+				.bind(new Key<StreamCodec<Function<?, ?>>>() {}).toInstance(StreamCodecs.singleton(new TestKeyFunction()))
+				.bind(new Key<StreamCodec<Comparator<?>>>() {}).toInstance(StreamCodecs.singleton(new TestComparator()))
+				.bind(new Key<StreamCodec<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(StreamCodec.class, MergeReducer.class)))
 				.build();
 
 		StreamConsumerToList<TestItem> result1 = StreamConsumerToList.create();
