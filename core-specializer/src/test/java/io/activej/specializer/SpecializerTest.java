@@ -92,5 +92,20 @@ public class SpecializerTest {
 		Assert.assertEquals(expected, specialized.apply(55));
 	}
 
+	@Test
+	public void testIfElse() {
+		TestInterface ifElseTestClass = new IfElseTestClass(x -> x * 2);
+		Specializer specializer = Specializer.create();
+//				.withBytecodeSaveDir(Paths.get("tmp"));
+		TestInterface specialized = specializer.specialize(ifElseTestClass);
+		Assert.assertEquals(6, specialized.apply(3));
+	}
 
+	@Test
+	public void testMultipleFrames() {
+		TestInterface ifElseTestClass = new MultipleFramesTestClass();
+		Specializer specializer = Specializer.create();
+		TestInterface specialized = specializer.specialize(ifElseTestClass);
+		Assert.assertEquals(0, specialized.apply(3));
+	}
 }

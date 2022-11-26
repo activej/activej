@@ -311,44 +311,35 @@ public final class Specializer {
 			AnalyzerAdapter analyzerAdapter = new AnalyzerAdapter(getType(instanceClass).getInternalName(), ACC_PUBLIC | ACC_FINAL, methodNode.name, methodNode.desc, null);
 
 			Type[] methodParameters = new Method(methodNode.name, methodNode.desc).getArgumentTypes();
-			final Map<Integer, Integer> localsRemapping = new HashMap<>();
-			Map<LabelNode, Map<Integer, Integer>> localRemappingsByLabel = new HashMap<>();
+
+			class Remapping {
+				final int slot;
+				final Type type;
+
+				Remapping(int slot, Type type) {
+					this.slot = slot;
+					this.type = type;
+				}
+			}
+			List<Remapping> remappings = new ArrayList<>();
+
 			AbstractInsnNode insn;
 			for (int i = 0; i < methodNode.instructions.size(); i++, insn.accept(analyzerAdapter)) {
 				insn = methodNode.instructions.get(i);
+
 				int opcode = insn.getOpcode();
 
-				if (insn instanceof JumpInsnNode) {
-					JumpInsnNode insnJump = (JumpInsnNode) insn;
-					localRemappingsByLabel.put(insnJump.label, new HashMap<>(localsRemapping));
-				}
-
 				if (insn instanceof LabelNode) {
 					LabelNode insnLabel = (LabelNode) insn;
-					methodNode.tryCatchBlocks.stream()
-							.filter(block -> block.end == insnLabel)
-							.findFirst()
-							.ifPresent(block ->
-									localRemappingsByLabel.put(block.handler, new HashMap<>(localsRemapping)));
-				}
-
-				if (insn instanceof LabelNode) {
-					LabelNode insnLabel = (LabelNode) insn;
-					if (localRemappingsByLabel.containsKey(insnLabel)) {
-						localsRemapping.clear();
-						localsRemapping.putAll(localRemappingsByLabel.get(insnLabel));
-					}
 					g.visitLabel(insnLabel.getLabel());
 					continue;
 				}
 
 				if (insn instanceof FrameNode) {
-					FrameNode insnFrame = (FrameNode) insn;
-					for (Integer k : new ArrayList<>(localsRemapping.keySet())) {
-						if (k >= insnFrame.local.size()) {
-							localsRemapping.remove(k);
-						}
-					}
+					continue;
+				}
+
+				if (insn instanceof LineNumberNode) {
 					continue;
 				}
 
@@ -394,7 +385,7 @@ public final class Specializer {
 							g.loadArg(insnVar.var - 1);
 							break;
 						}
-						g.loadLocal(localsRemapping.get(insnVar.var));
+						g.loadLocal(remappings.get(insnVar.var).slot);
 						break;
 					}
 
@@ -422,19 +413,26 @@ public final class Specializer {
 							break;
 						}
 
-						if (localsRemapping.containsKey(var)) {
-							g.storeLocal(localsRemapping.get(var));
+						Object top = analyzerAdapter.stack.get(analyzerAdapter.stack.size() - 1);
+						if (top == Opcodes.TOP) top = analyzerAdapter.stack.get(analyzerAdapter.stack.size() - 2);
+						Type topType;
+						if (top == Opcodes.INTEGER) topType = Type.INT_TYPE;
+						else if (top == Opcodes.FLOAT) topType = Type.FLOAT_TYPE;
+						else if (top == Opcodes.DOUBLE) topType = Type.DOUBLE_TYPE;
+						else if (top == Opcodes.LONG) topType = Type.LONG_TYPE;
+						else if (top == Opcodes.NULL) topType = getType(Object.class);
+						else if (top instanceof String) topType = Type.getType(internalizeClassName((String) top));
+						else throw new UnsupportedOperationException("" + top + " " + insn);
+
+						@Nullable Remapping remapping = var < remappings.size() ? remappings.get(var) : null;
+						if (remapping != null && Objects.equals(topType, remapping.type)) {
+							g.storeLocal(remapping.slot);
 						} else {
-							Object top = analyzerAdapter.stack.get(analyzerAdapter.stack.size() - 1);
-							Type type = null;
-							if (top == Opcodes.INTEGER) type = Type.INT_TYPE;
-							if (top == Opcodes.FLOAT) type = Type.FLOAT_TYPE;
-							if (top == Opcodes.DOUBLE) type = Type.DOUBLE_TYPE;
-							if (top == Opcodes.LONG) type = Type.LONG_TYPE;
-							if (top == Opcodes.NULL) type = getType(Object.class);
-							if (top instanceof String) type = Type.getType(internalizeClassName((String) top));
-							int newLocal = g.newLocal(type);
-							localsRemapping.put(var, newLocal);
+							int newLocal = g.newLocal(topType);
+							while (var >= remappings.size()) {
+								remappings.add(null);
+							}
+							remappings.set(var, new Remapping(newLocal, topType));
 							g.storeLocal(newLocal);
 						}
 						break;
@@ -508,7 +506,7 @@ public final class Specializer {
 							g.visitIincInsn(var, insnInc.incr);
 							break;
 						}
-						g.iinc(localsRemapping.get(insnInc.var), insnInc.incr);
+						g.iinc(remappings.get(insnInc.var).slot, insnInc.incr);
 						break;
 					}
 
