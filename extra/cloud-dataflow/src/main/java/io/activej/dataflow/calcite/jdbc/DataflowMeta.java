@@ -7,6 +7,7 @@ import io.activej.dataflow.calcite.RelToDatasetConverter.ConversionResult;
 import io.activej.dataflow.calcite.RelToDatasetConverter.UnmaterializedDataset;
 import io.activej.dataflow.calcite.utils.JavaRecordType;
 import io.activej.dataflow.dataset.Dataset;
+import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.SynchronousStreamConsumer;
 import io.activej.eventloop.Eventloop;
 import io.activej.record.Record;
@@ -90,8 +91,8 @@ public final class DataflowMeta extends LimitedMeta {
 	private final Eventloop eventloop;
 	private final CalciteSqlDataflow sqlDataflow;
 	private final Map<String, Integer> statementIds = new ConcurrentHashMap<>();
-	private final Map<StatementKey, FrameFetcher> consumers = new ConcurrentHashMap<>();
-	private final Map<StatementKey, UnmaterializedDataset> unmaterializedDatasets = new ConcurrentHashMap<>();
+	private final Map<String, Map<Integer, FrameFetcher>> fetchers = new ConcurrentHashMap<>();
+	private final Map<String, Map<Integer, UnmaterializedDataset>> unmaterializedDatasets = new ConcurrentHashMap<>();
 
 	private DataflowMeta(Eventloop eventloop, CalciteSqlDataflow sqlDataflow) {
 		this.eventloop = eventloop;
@@ -104,20 +105,28 @@ public final class DataflowMeta extends LimitedMeta {
 
 	@Override
 	public StatementHandle prepare(ConnectionHandle ch, String sql, long maxRowCount) {
+		Map<Integer, UnmaterializedDataset> connectionDatasets = unmaterializedDatasets.get(ch.id);
+		if (connectionDatasets == null) {
+			throw new RuntimeException("Unknown connection: " + ch);
+		}
+
 		StatementHandle statement = createStatement(ch);
 		TransformationResult transformed = transform(sql);
 		ConversionResult conversionResult = transformed.conversionResult();
 		statement.signature = createSignature(sql, transformed.fields(), conversionResult.dynamicParams(), conversionResult.unmaterializedDataset().getScheme());
 
-		unmaterializedDatasets.put(StatementKey.create(statement), conversionResult.unmaterializedDataset());
+		connectionDatasets.put(statement.id, conversionResult.unmaterializedDataset());
 		return statement;
 	}
 
 	@Override
 	public ExecuteResult execute(StatementHandle h, List<TypedValue> parameterValues, int maxRowsInFirstFrame) throws NoSuchStatementException {
-		StatementKey key = StatementKey.create(h);
+		Map<Integer, UnmaterializedDataset> connectionDatasets = unmaterializedDatasets.get(h.connectionId);
+		if (connectionDatasets == null) {
+			throw new RuntimeException("Unknown connection: " + h.connectionId);
+		}
 
-		UnmaterializedDataset unmaterializedDataset = unmaterializedDatasets.get(key);
+		UnmaterializedDataset unmaterializedDataset = connectionDatasets.get(h.id);
 		if (unmaterializedDataset == null) {
 			throw new NoSuchStatementException(h);
 		}
@@ -128,7 +137,7 @@ public final class DataflowMeta extends LimitedMeta {
 
 		Dataset<Record> dataset = unmaterializedDataset.materialize(params);
 
-		FrameFetcher frameFetcher = createFrameConsumer(h, dataset);
+		FrameFetcher frameFetcher = createFrameFetcher(h, dataset);
 
 		Frame firstFrame = frameFetcher.fetch(0, maxRowsInFirstFrame);
 
@@ -149,7 +158,7 @@ public final class DataflowMeta extends LimitedMeta {
 
 		Dataset<Record> dataset = unmaterialized.materialize(Collections.emptyList());
 
-		FrameFetcher frameFetcher = createFrameConsumer(h, dataset);
+		FrameFetcher frameFetcher = createFrameFetcher(h, dataset);
 
 		Frame firstFrame = frameFetcher.fetch(0, maxRowsInFirstFrame);
 
@@ -187,15 +196,15 @@ public final class DataflowMeta extends LimitedMeta {
 		return new ExecuteResult(List.of(resultSet));
 	}
 
-	private FrameFetcher createFrameConsumer(StatementHandle statement, Dataset<Record> dataset) {
+	private FrameFetcher createFrameFetcher(StatementHandle statement, Dataset<Record> dataset) {
 		FrameFetcher frameFetcher;
 		try {
-			frameFetcher = eventloop.submit(() -> sqlDataflow.queryDataflow(dataset)
-					.map(supplier -> {
-						SynchronousStreamConsumer<Record> recordConsumer = SynchronousStreamConsumer.create();
-						supplier.streamTo(recordConsumer);
-						return new FrameFetcher(recordConsumer, statement.signature.columns.size());
-					})).get();
+			frameFetcher = eventloop.submit((AsyncComputation<FrameFetcher>) cb -> {
+				StreamSupplier<Record> supplier = sqlDataflow.queryDataflow(dataset);
+				SynchronousStreamConsumer<Record> recordConsumer = SynchronousStreamConsumer.create();
+				supplier.streamTo(recordConsumer);
+				cb.accept(new FrameFetcher(recordConsumer, statement.signature.columns.size()), null);
+			}).get();
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 			throw new RuntimeException(e);
@@ -203,7 +212,8 @@ public final class DataflowMeta extends LimitedMeta {
 			throw new RuntimeException(e);
 		}
 
-		consumers.put(StatementKey.create(statement), frameFetcher);
+		fetchers.get(statement.connectionId).put(statement.id, frameFetcher);
+
 		return frameFetcher;
 	}
 
@@ -309,7 +319,12 @@ public final class DataflowMeta extends LimitedMeta {
 
 	@Override
 	public Frame fetch(StatementHandle h, long offset, int fetchMaxRowCount) throws NoSuchStatementException {
-		FrameFetcher frameFetcher = consumers.get(StatementKey.create(h));
+		Map<Integer, FrameFetcher> connectionFetchers = fetchers.get(h.connectionId);
+		if (connectionFetchers == null) {
+			throw new RuntimeException("Unknown connection: " + h.connectionId);
+		}
+
+		FrameFetcher frameFetcher = connectionFetchers.get(h.id);
 		if (frameFetcher == null) {
 			throw new NoSuchStatementException(h);
 		}
@@ -330,11 +345,32 @@ public final class DataflowMeta extends LimitedMeta {
 	@Override
 	public void openConnection(ConnectionHandle ch, Map<String, String> info) {
 		statementIds.put(ch.id, 0);
+		unmaterializedDatasets.put(ch.id, new HashMap<>());
+		fetchers.put(ch.id, new HashMap<>());
 	}
 
 	@Override
 	public void closeConnection(ConnectionHandle ch) {
 		statementIds.remove(ch.id);
+
+		unmaterializedDatasets.remove(ch.id);
+
+		Map<Integer, FrameFetcher> connectionFetchers = fetchers.remove(ch.id);
+		if (connectionFetchers == null) return;
+
+		try {
+			eventloop.submit(() -> {
+				for (FrameFetcher frameFetcher : connectionFetchers.values()) {
+					frameFetcher.close();
+				}
+			}).get();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new RuntimeException(e);
+		} catch (ExecutionException e) {
+			throw new RuntimeException(e);
+		}
+
 	}
 
 	@Override
@@ -344,11 +380,15 @@ public final class DataflowMeta extends LimitedMeta {
 
 	@Override
 	public void closeStatement(StatementHandle h) {
-		StatementKey key = StatementKey.create(h);
+		Map<Integer, UnmaterializedDataset> connectionDatasets = unmaterializedDatasets.get(h.connectionId);
+		if (connectionDatasets != null) {
+			connectionDatasets.remove(h.id);
+		}
 
-		unmaterializedDatasets.remove(key);
+		Map<Integer, FrameFetcher> connectionFetchers = fetchers.get(h.connectionId);
+		if (connectionFetchers == null) return;
 
-		FrameFetcher frameFetcher = consumers.get(key);
+		FrameFetcher frameFetcher = connectionFetchers.remove(h.id);
 		if (frameFetcher == null) return;
 
 		try {
@@ -594,12 +634,6 @@ public final class DataflowMeta extends LimitedMeta {
 		if (result instanceof Date date) return date.toLocalDate().plusDays(1); // Bug with TypedValue
 		if (result instanceof Time time) return time.toLocalTime();
 		return result;
-	}
-
-	private record StatementKey(String connectionId, int statementId) {
-		static StatementKey create(StatementHandle h) {
-			return new StatementKey(h.connectionId, h.id);
-		}
 	}
 
 	private record TransformationResult(List<RelDataTypeField> fields, ConversionResult conversionResult) {

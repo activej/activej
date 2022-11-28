@@ -76,7 +76,7 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 	@Override
 	public Promise<StreamSupplier<Record>> query(String sql) {
 		try {
-			return queryDataflow(convertToDataset(sql));
+			return Promise.of(queryDataflow(convertToDataset(sql)));
 		} catch (DataflowException | SqlParseException e) {
 			return Promise.ofException(e);
 		}
@@ -108,14 +108,14 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 		return relToDatasetConverter.convert(node);
 	}
 
-	public Promise<StreamSupplier<Record>> queryDataflow(Dataset<Record> dataset) {
+	public StreamSupplier<Record> queryDataflow(Dataset<Record> dataset) {
 		Collector<Record> calciteCollector = createCollector(dataset);
 
 		DataflowGraph graph = new DataflowGraph(client, partitions);
 		StreamSupplier<Record> result = calciteCollector.compile(graph);
 
-		return graph.execute()
-				.map($ -> result);
+		graph.execute();
+		return result;
 	}
 
 	private RelRoot convert(SqlNode sqlNode) {
