@@ -18,23 +18,15 @@ package io.activej.dataflow.collector;
 
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.dataset.Dataset;
-import io.activej.dataflow.graph.DataflowContext;
-import io.activej.dataflow.graph.DataflowGraph;
-import io.activej.dataflow.graph.Partition;
-import io.activej.dataflow.graph.StreamId;
-import io.activej.dataflow.node.NodeUpload;
 import io.activej.datastream.StreamSupplier;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public final class ConcatCollector<T> implements Collector<T> {
-	private final Dataset<T> input;
-	private final DataflowClient client;
+public final class ConcatCollector<T> extends AbstractCollector<T, List<StreamSupplier<T>>> {
 
 	private ConcatCollector(Dataset<T> input, DataflowClient client) {
-		this.input = input;
-		this.client = client;
+		super(input, client);
 	}
 
 	public static <T> ConcatCollector<T> create(Dataset<T> input, DataflowClient client) {
@@ -42,21 +34,19 @@ public final class ConcatCollector<T> implements Collector<T> {
 	}
 
 	@Override
-	public StreamSupplier<T> compile(DataflowGraph graph) {
-		DataflowContext context = DataflowContext.of(graph);
-		List<StreamId> inputStreamIds = input.channels(context);
-		List<StreamSupplier<T>> suppliers = new ArrayList<>();
+	protected List<StreamSupplier<T>> createAccumulator() {
+		return new ArrayList<>();
+	}
 
-		int index = context.generateNodeIndex();
-		for (StreamId streamId : inputStreamIds) {
-			NodeUpload<T> nodeUpload = new NodeUpload<>(index, input.streamSchema(), streamId);
-			Partition partition = graph.getPartition(streamId);
-			graph.addNode(partition, nodeUpload);
-			StreamSupplier<T> supplier = client.download(partition.getAddress(), streamId, input.streamSchema());
-			suppliers.add(supplier);
-		}
+	@Override
+	protected void accumulate(List<StreamSupplier<T>> accumulator, StreamSupplier<T> supplier) {
+		accumulator.add(supplier);
+	}
 
-		return StreamSupplier.concat(suppliers)
-				.withEndOfStream(eos -> eos.whenException(e -> suppliers.forEach(supplier -> supplier.closeEx(e))));
+	@Override
+	protected StreamSupplier<T> getResult(List<StreamSupplier<T>> accumulator) {
+		return StreamSupplier.concat(accumulator)
+				.withEndOfStream(eos -> eos
+						.whenException(e -> accumulator.forEach(supplier -> supplier.closeEx(e))));
 	}
 }
