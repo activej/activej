@@ -38,11 +38,16 @@ message DataflowRequest {
     Version version = 1;
   }
 
+  message CancelTask {
+    int64 task_id = 1;
+  }
+
   oneof request {
     Handshake handshake = 1;
     Download download = 2;
     Execute execute = 3;
     GetTasks get_tasks = 4;
+    CancelTask cancel_task = 5;
   }
 }
 
@@ -103,11 +108,16 @@ message DataflowResponse {
     }
   }
 
+  message CancelTaskAck {
+    bool canceled = 1;
+  }
+
   oneof response {
     Handshake handshake = 1;
     PartitionData partition_data = 2;
     Result result = 3;
     TaskData task_data = 4;
+    CancelTaskAck cancel_task_ack = 5;
   }
 
 }

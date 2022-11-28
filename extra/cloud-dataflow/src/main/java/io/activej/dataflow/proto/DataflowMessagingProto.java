@@ -636,6 +636,21 @@ public final class DataflowMessagingProto {
      */
     io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.GetTasksOrBuilder getGetTasksOrBuilder();
 
+    /**
+     * <code>.dataflow.DataflowRequest.CancelTask cancel_task = 5;</code>
+     * @return Whether the cancelTask field is set.
+     */
+    boolean hasCancelTask();
+    /**
+     * <code>.dataflow.DataflowRequest.CancelTask cancel_task = 5;</code>
+     * @return The cancelTask.
+     */
+    io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask getCancelTask();
+    /**
+     * <code>.dataflow.DataflowRequest.CancelTask cancel_task = 5;</code>
+     */
+    io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTaskOrBuilder getCancelTaskOrBuilder();
+
     public io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.RequestCase getRequestCase();
   }
   /**
@@ -737,6 +752,20 @@ public final class DataflowMessagingProto {
                 request_ = subBuilder.buildPartial();
               }
               requestCase_ = 4;
+              break;
+            }
+            case 42: {
+              io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask.Builder subBuilder = null;
+              if (requestCase_ == 5) {
+                subBuilder = ((io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask) request_).toBuilder();
+              }
+              request_ =
+                  input.readMessage(io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask) request_);
+                request_ = subBuilder.buildPartial();
+              }
+              requestCase_ = 5;
               break;
             }
             default: {
@@ -4058,6 +4087,495 @@ public final class DataflowMessagingProto {
 
     }
 
+    public interface CancelTaskOrBuilder extends
+        // @@protoc_insertion_point(interface_extends:dataflow.DataflowRequest.CancelTask)
+        com.google.protobuf.MessageOrBuilder {
+
+      /**
+       * <code>int64 task_id = 1;</code>
+       * @return The taskId.
+       */
+      long getTaskId();
+    }
+    /**
+     * Protobuf type {@code dataflow.DataflowRequest.CancelTask}
+     */
+    public static final class CancelTask extends
+        com.google.protobuf.GeneratedMessageV3 implements
+        // @@protoc_insertion_point(message_implements:dataflow.DataflowRequest.CancelTask)
+        CancelTaskOrBuilder {
+    private static final long serialVersionUID = 0L;
+      // Use CancelTask.newBuilder() to construct.
+      private CancelTask(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+        super(builder);
+      }
+      private CancelTask() {
+      }
+
+      @java.lang.Override
+      @SuppressWarnings({"unused"})
+      protected java.lang.Object newInstance(
+          UnusedPrivateParameter unused) {
+        return new CancelTask();
+      }
+
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+      getUnknownFields() {
+        return this.unknownFields;
+      }
+      private CancelTask(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        this();
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 8: {
+
+                taskId_ = input.readInt64();
+                break;
+              }
+              default: {
+                if (!parseUnknownField(
+                    input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e).setUnfinishedMessage(this);
+        } finally {
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return io.activej.dataflow.proto.DataflowMessagingProto.internal_static_dataflow_DataflowRequest_CancelTask_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return io.activej.dataflow.proto.DataflowMessagingProto.internal_static_dataflow_DataflowRequest_CancelTask_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask.class, io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask.Builder.class);
+      }
+
+      public static final int TASK_ID_FIELD_NUMBER = 1;
+      private long taskId_;
+      /**
+       * <code>int64 task_id = 1;</code>
+       * @return The taskId.
+       */
+      @java.lang.Override
+      public long getTaskId() {
+        return taskId_;
+      }
+
+      private byte memoizedIsInitialized = -1;
+      @java.lang.Override
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
+
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      @java.lang.Override
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        if (taskId_ != 0L) {
+          output.writeInt64(1, taskId_);
+        }
+        unknownFields.writeTo(output);
+      }
+
+      @java.lang.Override
+      public int getSerializedSize() {
+        int size = memoizedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (taskId_ != 0L) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt64Size(1, taskId_);
+        }
+        size += unknownFields.getSerializedSize();
+        memoizedSize = size;
+        return size;
+      }
+
+      @java.lang.Override
+      public boolean equals(final java.lang.Object obj) {
+        if (obj == this) {
+         return true;
+        }
+        if (!(obj instanceof io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask)) {
+          return super.equals(obj);
+        }
+        io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask other = (io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask) obj;
+
+        if (getTaskId()
+            != other.getTaskId()) return false;
+        if (!unknownFields.equals(other.unknownFields)) return false;
+        return true;
+      }
+
+      @java.lang.Override
+      public int hashCode() {
+        if (memoizedHashCode != 0) {
+          return memoizedHashCode;
+        }
+        int hash = 41;
+        hash = (19 * hash) + getDescriptor().hashCode();
+        hash = (37 * hash) + TASK_ID_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getTaskId());
+        hash = (29 * hash) + unknownFields.hashCode();
+        memoizedHashCode = hash;
+        return hash;
+      }
+
+      public static io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask parseFrom(
+          java.nio.ByteBuffer data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask parseFrom(
+          java.nio.ByteBuffer data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask parseFrom(
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask parseFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
+      }
+
+      @java.lang.Override
+      public Builder newBuilderForType() { return newBuilder(); }
+      public static Builder newBuilder() {
+        return DEFAULT_INSTANCE.toBuilder();
+      }
+      public static Builder newBuilder(io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask prototype) {
+        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      }
+      @java.lang.Override
+      public Builder toBuilder() {
+        return this == DEFAULT_INSTANCE
+            ? new Builder() : new Builder().mergeFrom(this);
+      }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       * Protobuf type {@code dataflow.DataflowRequest.CancelTask}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+          // @@protoc_insertion_point(builder_implements:dataflow.DataflowRequest.CancelTask)
+          io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTaskOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return io.activej.dataflow.proto.DataflowMessagingProto.internal_static_dataflow_DataflowRequest_CancelTask_descriptor;
+        }
+
+        @java.lang.Override
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return io.activej.dataflow.proto.DataflowMessagingProto.internal_static_dataflow_DataflowRequest_CancelTask_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask.class, io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask.Builder.class);
+        }
+
+        // Construct using io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessageV3
+                  .alwaysUseFieldBuilders) {
+          }
+        }
+        @java.lang.Override
+        public Builder clear() {
+          super.clear();
+          taskId_ = 0L;
+
+          return this;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return io.activej.dataflow.proto.DataflowMessagingProto.internal_static_dataflow_DataflowRequest_CancelTask_descriptor;
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask getDefaultInstanceForType() {
+          return io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask.getDefaultInstance();
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask build() {
+          io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask buildPartial() {
+          io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask result = new io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask(this);
+          result.taskId_ = taskId_;
+          onBuilt();
+          return result;
+        }
+
+        @java.lang.Override
+        public Builder clone() {
+          return super.clone();
+        }
+        @java.lang.Override
+        public Builder setField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return super.setField(field, value);
+        }
+        @java.lang.Override
+        public Builder clearField(
+            com.google.protobuf.Descriptors.FieldDescriptor field) {
+          return super.clearField(field);
+        }
+        @java.lang.Override
+        public Builder clearOneof(
+            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+          return super.clearOneof(oneof);
+        }
+        @java.lang.Override
+        public Builder setRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            int index, java.lang.Object value) {
+          return super.setRepeatedField(field, index, value);
+        }
+        @java.lang.Override
+        public Builder addRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return super.addRepeatedField(field, value);
+        }
+        @java.lang.Override
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask) {
+            return mergeFrom((io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask other) {
+          if (other == io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask.getDefaultInstance()) return this;
+          if (other.getTaskId() != 0L) {
+            setTaskId(other.getTaskId());
+          }
+          this.mergeUnknownFields(other.unknownFields);
+          onChanged();
+          return this;
+        }
+
+        @java.lang.Override
+        public final boolean isInitialized() {
+          return true;
+        }
+
+        @java.lang.Override
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage = (io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask) e.getUnfinishedMessage();
+            throw e.unwrapIOException();
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+
+        private long taskId_ ;
+        /**
+         * <code>int64 task_id = 1;</code>
+         * @return The taskId.
+         */
+        @java.lang.Override
+        public long getTaskId() {
+          return taskId_;
+        }
+        /**
+         * <code>int64 task_id = 1;</code>
+         * @param value The taskId to set.
+         * @return This builder for chaining.
+         */
+        public Builder setTaskId(long value) {
+          
+          taskId_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>int64 task_id = 1;</code>
+         * @return This builder for chaining.
+         */
+        public Builder clearTaskId() {
+          
+          taskId_ = 0L;
+          onChanged();
+          return this;
+        }
+        @java.lang.Override
+        public final Builder setUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.setUnknownFields(unknownFields);
+        }
+
+        @java.lang.Override
+        public final Builder mergeUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.mergeUnknownFields(unknownFields);
+        }
+
+
+        // @@protoc_insertion_point(builder_scope:dataflow.DataflowRequest.CancelTask)
+      }
+
+      // @@protoc_insertion_point(class_scope:dataflow.DataflowRequest.CancelTask)
+      private static final io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask DEFAULT_INSTANCE;
+      static {
+        DEFAULT_INSTANCE = new io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask();
+      }
+
+      public static io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask getDefaultInstance() {
+        return DEFAULT_INSTANCE;
+      }
+
+      private static final com.google.protobuf.Parser<CancelTask>
+          PARSER = new com.google.protobuf.AbstractParser<CancelTask>() {
+        @java.lang.Override
+        public CancelTask parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new CancelTask(input, extensionRegistry);
+        }
+      };
+
+      public static com.google.protobuf.Parser<CancelTask> parser() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<CancelTask> getParserForType() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask getDefaultInstanceForType() {
+        return DEFAULT_INSTANCE;
+      }
+
+    }
+
     private int requestCase_ = 0;
     private java.lang.Object request_;
     public enum RequestCase
@@ -4067,6 +4585,7 @@ public final class DataflowMessagingProto {
       DOWNLOAD(2),
       EXECUTE(3),
       GET_TASKS(4),
+      CANCEL_TASK(5),
       REQUEST_NOT_SET(0);
       private final int value;
       private RequestCase(int value) {
@@ -4088,6 +4607,7 @@ public final class DataflowMessagingProto {
           case 2: return DOWNLOAD;
           case 3: return EXECUTE;
           case 4: return GET_TASKS;
+          case 5: return CANCEL_TASK;
           case 0: return REQUEST_NOT_SET;
           default: return null;
         }
@@ -4227,6 +4747,37 @@ public final class DataflowMessagingProto {
       return io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.GetTasks.getDefaultInstance();
     }
 
+    public static final int CANCEL_TASK_FIELD_NUMBER = 5;
+    /**
+     * <code>.dataflow.DataflowRequest.CancelTask cancel_task = 5;</code>
+     * @return Whether the cancelTask field is set.
+     */
+    @java.lang.Override
+    public boolean hasCancelTask() {
+      return requestCase_ == 5;
+    }
+    /**
+     * <code>.dataflow.DataflowRequest.CancelTask cancel_task = 5;</code>
+     * @return The cancelTask.
+     */
+    @java.lang.Override
+    public io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask getCancelTask() {
+      if (requestCase_ == 5) {
+         return (io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask) request_;
+      }
+      return io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask.getDefaultInstance();
+    }
+    /**
+     * <code>.dataflow.DataflowRequest.CancelTask cancel_task = 5;</code>
+     */
+    @java.lang.Override
+    public io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTaskOrBuilder getCancelTaskOrBuilder() {
+      if (requestCase_ == 5) {
+         return (io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask) request_;
+      }
+      return io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask.getDefaultInstance();
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -4253,6 +4804,9 @@ public final class DataflowMessagingProto {
       if (requestCase_ == 4) {
         output.writeMessage(4, (io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.GetTasks) request_);
       }
+      if (requestCase_ == 5) {
+        output.writeMessage(5, (io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask) request_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -4277,6 +4831,10 @@ public final class DataflowMessagingProto {
       if (requestCase_ == 4) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, (io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.GetTasks) request_);
+      }
+      if (requestCase_ == 5) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(5, (io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask) request_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -4311,6 +4869,10 @@ public final class DataflowMessagingProto {
           if (!getGetTasks()
               .equals(other.getGetTasks())) return false;
           break;
+        case 5:
+          if (!getCancelTask()
+              .equals(other.getCancelTask())) return false;
+          break;
         case 0:
         default:
       }
@@ -4341,6 +4903,10 @@ public final class DataflowMessagingProto {
         case 4:
           hash = (37 * hash) + GET_TASKS_FIELD_NUMBER;
           hash = (53 * hash) + getGetTasks().hashCode();
+          break;
+        case 5:
+          hash = (37 * hash) + CANCEL_TASK_FIELD_NUMBER;
+          hash = (53 * hash) + getCancelTask().hashCode();
           break;
         case 0:
         default:
@@ -4534,6 +5100,13 @@ public final class DataflowMessagingProto {
             result.request_ = getTasksBuilder_.build();
           }
         }
+        if (requestCase_ == 5) {
+          if (cancelTaskBuilder_ == null) {
+            result.request_ = request_;
+          } else {
+            result.request_ = cancelTaskBuilder_.build();
+          }
+        }
         result.requestCase_ = requestCase_;
         onBuilt();
         return result;
@@ -4598,6 +5171,10 @@ public final class DataflowMessagingProto {
           }
           case GET_TASKS: {
             mergeGetTasks(other.getGetTasks());
+            break;
+          }
+          case CANCEL_TASK: {
+            mergeCancelTask(other.getCancelTask());
             break;
           }
           case REQUEST_NOT_SET: {
@@ -5211,6 +5788,147 @@ public final class DataflowMessagingProto {
         onChanged();;
         return getTasksBuilder_;
       }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask, io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask.Builder, io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTaskOrBuilder> cancelTaskBuilder_;
+      /**
+       * <code>.dataflow.DataflowRequest.CancelTask cancel_task = 5;</code>
+       * @return Whether the cancelTask field is set.
+       */
+      @java.lang.Override
+      public boolean hasCancelTask() {
+        return requestCase_ == 5;
+      }
+      /**
+       * <code>.dataflow.DataflowRequest.CancelTask cancel_task = 5;</code>
+       * @return The cancelTask.
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask getCancelTask() {
+        if (cancelTaskBuilder_ == null) {
+          if (requestCase_ == 5) {
+            return (io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask) request_;
+          }
+          return io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask.getDefaultInstance();
+        } else {
+          if (requestCase_ == 5) {
+            return cancelTaskBuilder_.getMessage();
+          }
+          return io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.dataflow.DataflowRequest.CancelTask cancel_task = 5;</code>
+       */
+      public Builder setCancelTask(io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask value) {
+        if (cancelTaskBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          request_ = value;
+          onChanged();
+        } else {
+          cancelTaskBuilder_.setMessage(value);
+        }
+        requestCase_ = 5;
+        return this;
+      }
+      /**
+       * <code>.dataflow.DataflowRequest.CancelTask cancel_task = 5;</code>
+       */
+      public Builder setCancelTask(
+          io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask.Builder builderForValue) {
+        if (cancelTaskBuilder_ == null) {
+          request_ = builderForValue.build();
+          onChanged();
+        } else {
+          cancelTaskBuilder_.setMessage(builderForValue.build());
+        }
+        requestCase_ = 5;
+        return this;
+      }
+      /**
+       * <code>.dataflow.DataflowRequest.CancelTask cancel_task = 5;</code>
+       */
+      public Builder mergeCancelTask(io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask value) {
+        if (cancelTaskBuilder_ == null) {
+          if (requestCase_ == 5 &&
+              request_ != io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask.getDefaultInstance()) {
+            request_ = io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask.newBuilder((io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask) request_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            request_ = value;
+          }
+          onChanged();
+        } else {
+          if (requestCase_ == 5) {
+            cancelTaskBuilder_.mergeFrom(value);
+          }
+          cancelTaskBuilder_.setMessage(value);
+        }
+        requestCase_ = 5;
+        return this;
+      }
+      /**
+       * <code>.dataflow.DataflowRequest.CancelTask cancel_task = 5;</code>
+       */
+      public Builder clearCancelTask() {
+        if (cancelTaskBuilder_ == null) {
+          if (requestCase_ == 5) {
+            requestCase_ = 0;
+            request_ = null;
+            onChanged();
+          }
+        } else {
+          if (requestCase_ == 5) {
+            requestCase_ = 0;
+            request_ = null;
+          }
+          cancelTaskBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>.dataflow.DataflowRequest.CancelTask cancel_task = 5;</code>
+       */
+      public io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask.Builder getCancelTaskBuilder() {
+        return getCancelTaskFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.dataflow.DataflowRequest.CancelTask cancel_task = 5;</code>
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTaskOrBuilder getCancelTaskOrBuilder() {
+        if ((requestCase_ == 5) && (cancelTaskBuilder_ != null)) {
+          return cancelTaskBuilder_.getMessageOrBuilder();
+        } else {
+          if (requestCase_ == 5) {
+            return (io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask) request_;
+          }
+          return io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.dataflow.DataflowRequest.CancelTask cancel_task = 5;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask, io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask.Builder, io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTaskOrBuilder> 
+          getCancelTaskFieldBuilder() {
+        if (cancelTaskBuilder_ == null) {
+          if (!(requestCase_ == 5)) {
+            request_ = io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask.getDefaultInstance();
+          }
+          cancelTaskBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask, io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask.Builder, io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTaskOrBuilder>(
+                  (io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask) request_,
+                  getParentForChildren(),
+                  isClean());
+          request_ = null;
+        }
+        requestCase_ = 5;
+        onChanged();;
+        return cancelTaskBuilder_;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -5328,6 +6046,21 @@ public final class DataflowMessagingProto {
      */
     io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.TaskDataOrBuilder getTaskDataOrBuilder();
 
+    /**
+     * <code>.dataflow.DataflowResponse.CancelTaskAck cancel_task_ack = 5;</code>
+     * @return Whether the cancelTaskAck field is set.
+     */
+    boolean hasCancelTaskAck();
+    /**
+     * <code>.dataflow.DataflowResponse.CancelTaskAck cancel_task_ack = 5;</code>
+     * @return The cancelTaskAck.
+     */
+    io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck getCancelTaskAck();
+    /**
+     * <code>.dataflow.DataflowResponse.CancelTaskAck cancel_task_ack = 5;</code>
+     */
+    io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAckOrBuilder getCancelTaskAckOrBuilder();
+
     public io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.ResponseCase getResponseCase();
   }
   /**
@@ -5429,6 +6162,20 @@ public final class DataflowMessagingProto {
                 response_ = subBuilder.buildPartial();
               }
               responseCase_ = 4;
+              break;
+            }
+            case 42: {
+              io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck.Builder subBuilder = null;
+              if (responseCase_ == 5) {
+                subBuilder = ((io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck) response_).toBuilder();
+              }
+              response_ =
+                  input.readMessage(io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck) response_);
+                response_ = subBuilder.buildPartial();
+              }
+              responseCase_ = 5;
               break;
             }
             default: {
@@ -12830,6 +13577,495 @@ public final class DataflowMessagingProto {
 
     }
 
+    public interface CancelTaskAckOrBuilder extends
+        // @@protoc_insertion_point(interface_extends:dataflow.DataflowResponse.CancelTaskAck)
+        com.google.protobuf.MessageOrBuilder {
+
+      /**
+       * <code>bool canceled = 1;</code>
+       * @return The canceled.
+       */
+      boolean getCanceled();
+    }
+    /**
+     * Protobuf type {@code dataflow.DataflowResponse.CancelTaskAck}
+     */
+    public static final class CancelTaskAck extends
+        com.google.protobuf.GeneratedMessageV3 implements
+        // @@protoc_insertion_point(message_implements:dataflow.DataflowResponse.CancelTaskAck)
+        CancelTaskAckOrBuilder {
+    private static final long serialVersionUID = 0L;
+      // Use CancelTaskAck.newBuilder() to construct.
+      private CancelTaskAck(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+        super(builder);
+      }
+      private CancelTaskAck() {
+      }
+
+      @java.lang.Override
+      @SuppressWarnings({"unused"})
+      protected java.lang.Object newInstance(
+          UnusedPrivateParameter unused) {
+        return new CancelTaskAck();
+      }
+
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+      getUnknownFields() {
+        return this.unknownFields;
+      }
+      private CancelTaskAck(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        this();
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 8: {
+
+                canceled_ = input.readBool();
+                break;
+              }
+              default: {
+                if (!parseUnknownField(
+                    input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e).setUnfinishedMessage(this);
+        } finally {
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return io.activej.dataflow.proto.DataflowMessagingProto.internal_static_dataflow_DataflowResponse_CancelTaskAck_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return io.activej.dataflow.proto.DataflowMessagingProto.internal_static_dataflow_DataflowResponse_CancelTaskAck_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck.class, io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck.Builder.class);
+      }
+
+      public static final int CANCELED_FIELD_NUMBER = 1;
+      private boolean canceled_;
+      /**
+       * <code>bool canceled = 1;</code>
+       * @return The canceled.
+       */
+      @java.lang.Override
+      public boolean getCanceled() {
+        return canceled_;
+      }
+
+      private byte memoizedIsInitialized = -1;
+      @java.lang.Override
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
+
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      @java.lang.Override
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        if (canceled_ != false) {
+          output.writeBool(1, canceled_);
+        }
+        unknownFields.writeTo(output);
+      }
+
+      @java.lang.Override
+      public int getSerializedSize() {
+        int size = memoizedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (canceled_ != false) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBoolSize(1, canceled_);
+        }
+        size += unknownFields.getSerializedSize();
+        memoizedSize = size;
+        return size;
+      }
+
+      @java.lang.Override
+      public boolean equals(final java.lang.Object obj) {
+        if (obj == this) {
+         return true;
+        }
+        if (!(obj instanceof io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck)) {
+          return super.equals(obj);
+        }
+        io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck other = (io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck) obj;
+
+        if (getCanceled()
+            != other.getCanceled()) return false;
+        if (!unknownFields.equals(other.unknownFields)) return false;
+        return true;
+      }
+
+      @java.lang.Override
+      public int hashCode() {
+        if (memoizedHashCode != 0) {
+          return memoizedHashCode;
+        }
+        int hash = 41;
+        hash = (19 * hash) + getDescriptor().hashCode();
+        hash = (37 * hash) + CANCELED_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
+            getCanceled());
+        hash = (29 * hash) + unknownFields.hashCode();
+        memoizedHashCode = hash;
+        return hash;
+      }
+
+      public static io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck parseFrom(
+          java.nio.ByteBuffer data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck parseFrom(
+          java.nio.ByteBuffer data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck parseFrom(
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck parseFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
+      public static io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
+      }
+
+      @java.lang.Override
+      public Builder newBuilderForType() { return newBuilder(); }
+      public static Builder newBuilder() {
+        return DEFAULT_INSTANCE.toBuilder();
+      }
+      public static Builder newBuilder(io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck prototype) {
+        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      }
+      @java.lang.Override
+      public Builder toBuilder() {
+        return this == DEFAULT_INSTANCE
+            ? new Builder() : new Builder().mergeFrom(this);
+      }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       * Protobuf type {@code dataflow.DataflowResponse.CancelTaskAck}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+          // @@protoc_insertion_point(builder_implements:dataflow.DataflowResponse.CancelTaskAck)
+          io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAckOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return io.activej.dataflow.proto.DataflowMessagingProto.internal_static_dataflow_DataflowResponse_CancelTaskAck_descriptor;
+        }
+
+        @java.lang.Override
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return io.activej.dataflow.proto.DataflowMessagingProto.internal_static_dataflow_DataflowResponse_CancelTaskAck_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck.class, io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck.Builder.class);
+        }
+
+        // Construct using io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessageV3
+                  .alwaysUseFieldBuilders) {
+          }
+        }
+        @java.lang.Override
+        public Builder clear() {
+          super.clear();
+          canceled_ = false;
+
+          return this;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return io.activej.dataflow.proto.DataflowMessagingProto.internal_static_dataflow_DataflowResponse_CancelTaskAck_descriptor;
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck getDefaultInstanceForType() {
+          return io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck.getDefaultInstance();
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck build() {
+          io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        @java.lang.Override
+        public io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck buildPartial() {
+          io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck result = new io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck(this);
+          result.canceled_ = canceled_;
+          onBuilt();
+          return result;
+        }
+
+        @java.lang.Override
+        public Builder clone() {
+          return super.clone();
+        }
+        @java.lang.Override
+        public Builder setField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return super.setField(field, value);
+        }
+        @java.lang.Override
+        public Builder clearField(
+            com.google.protobuf.Descriptors.FieldDescriptor field) {
+          return super.clearField(field);
+        }
+        @java.lang.Override
+        public Builder clearOneof(
+            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+          return super.clearOneof(oneof);
+        }
+        @java.lang.Override
+        public Builder setRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            int index, java.lang.Object value) {
+          return super.setRepeatedField(field, index, value);
+        }
+        @java.lang.Override
+        public Builder addRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return super.addRepeatedField(field, value);
+        }
+        @java.lang.Override
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck) {
+            return mergeFrom((io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck other) {
+          if (other == io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck.getDefaultInstance()) return this;
+          if (other.getCanceled() != false) {
+            setCanceled(other.getCanceled());
+          }
+          this.mergeUnknownFields(other.unknownFields);
+          onChanged();
+          return this;
+        }
+
+        @java.lang.Override
+        public final boolean isInitialized() {
+          return true;
+        }
+
+        @java.lang.Override
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage = (io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck) e.getUnfinishedMessage();
+            throw e.unwrapIOException();
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+
+        private boolean canceled_ ;
+        /**
+         * <code>bool canceled = 1;</code>
+         * @return The canceled.
+         */
+        @java.lang.Override
+        public boolean getCanceled() {
+          return canceled_;
+        }
+        /**
+         * <code>bool canceled = 1;</code>
+         * @param value The canceled to set.
+         * @return This builder for chaining.
+         */
+        public Builder setCanceled(boolean value) {
+          
+          canceled_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>bool canceled = 1;</code>
+         * @return This builder for chaining.
+         */
+        public Builder clearCanceled() {
+          
+          canceled_ = false;
+          onChanged();
+          return this;
+        }
+        @java.lang.Override
+        public final Builder setUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.setUnknownFields(unknownFields);
+        }
+
+        @java.lang.Override
+        public final Builder mergeUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.mergeUnknownFields(unknownFields);
+        }
+
+
+        // @@protoc_insertion_point(builder_scope:dataflow.DataflowResponse.CancelTaskAck)
+      }
+
+      // @@protoc_insertion_point(class_scope:dataflow.DataflowResponse.CancelTaskAck)
+      private static final io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck DEFAULT_INSTANCE;
+      static {
+        DEFAULT_INSTANCE = new io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck();
+      }
+
+      public static io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck getDefaultInstance() {
+        return DEFAULT_INSTANCE;
+      }
+
+      private static final com.google.protobuf.Parser<CancelTaskAck>
+          PARSER = new com.google.protobuf.AbstractParser<CancelTaskAck>() {
+        @java.lang.Override
+        public CancelTaskAck parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new CancelTaskAck(input, extensionRegistry);
+        }
+      };
+
+      public static com.google.protobuf.Parser<CancelTaskAck> parser() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<CancelTaskAck> getParserForType() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck getDefaultInstanceForType() {
+        return DEFAULT_INSTANCE;
+      }
+
+    }
+
     private int responseCase_ = 0;
     private java.lang.Object response_;
     public enum ResponseCase
@@ -12839,6 +14075,7 @@ public final class DataflowMessagingProto {
       PARTITION_DATA(2),
       RESULT(3),
       TASK_DATA(4),
+      CANCEL_TASK_ACK(5),
       RESPONSE_NOT_SET(0);
       private final int value;
       private ResponseCase(int value) {
@@ -12860,6 +14097,7 @@ public final class DataflowMessagingProto {
           case 2: return PARTITION_DATA;
           case 3: return RESULT;
           case 4: return TASK_DATA;
+          case 5: return CANCEL_TASK_ACK;
           case 0: return RESPONSE_NOT_SET;
           default: return null;
         }
@@ -12999,6 +14237,37 @@ public final class DataflowMessagingProto {
       return io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.TaskData.getDefaultInstance();
     }
 
+    public static final int CANCEL_TASK_ACK_FIELD_NUMBER = 5;
+    /**
+     * <code>.dataflow.DataflowResponse.CancelTaskAck cancel_task_ack = 5;</code>
+     * @return Whether the cancelTaskAck field is set.
+     */
+    @java.lang.Override
+    public boolean hasCancelTaskAck() {
+      return responseCase_ == 5;
+    }
+    /**
+     * <code>.dataflow.DataflowResponse.CancelTaskAck cancel_task_ack = 5;</code>
+     * @return The cancelTaskAck.
+     */
+    @java.lang.Override
+    public io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck getCancelTaskAck() {
+      if (responseCase_ == 5) {
+         return (io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck) response_;
+      }
+      return io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck.getDefaultInstance();
+    }
+    /**
+     * <code>.dataflow.DataflowResponse.CancelTaskAck cancel_task_ack = 5;</code>
+     */
+    @java.lang.Override
+    public io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAckOrBuilder getCancelTaskAckOrBuilder() {
+      if (responseCase_ == 5) {
+         return (io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck) response_;
+      }
+      return io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck.getDefaultInstance();
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -13025,6 +14294,9 @@ public final class DataflowMessagingProto {
       if (responseCase_ == 4) {
         output.writeMessage(4, (io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.TaskData) response_);
       }
+      if (responseCase_ == 5) {
+        output.writeMessage(5, (io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck) response_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -13049,6 +14321,10 @@ public final class DataflowMessagingProto {
       if (responseCase_ == 4) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, (io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.TaskData) response_);
+      }
+      if (responseCase_ == 5) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(5, (io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck) response_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -13083,6 +14359,10 @@ public final class DataflowMessagingProto {
           if (!getTaskData()
               .equals(other.getTaskData())) return false;
           break;
+        case 5:
+          if (!getCancelTaskAck()
+              .equals(other.getCancelTaskAck())) return false;
+          break;
         case 0:
         default:
       }
@@ -13113,6 +14393,10 @@ public final class DataflowMessagingProto {
         case 4:
           hash = (37 * hash) + TASK_DATA_FIELD_NUMBER;
           hash = (53 * hash) + getTaskData().hashCode();
+          break;
+        case 5:
+          hash = (37 * hash) + CANCEL_TASK_ACK_FIELD_NUMBER;
+          hash = (53 * hash) + getCancelTaskAck().hashCode();
           break;
         case 0:
         default:
@@ -13306,6 +14590,13 @@ public final class DataflowMessagingProto {
             result.response_ = taskDataBuilder_.build();
           }
         }
+        if (responseCase_ == 5) {
+          if (cancelTaskAckBuilder_ == null) {
+            result.response_ = response_;
+          } else {
+            result.response_ = cancelTaskAckBuilder_.build();
+          }
+        }
         result.responseCase_ = responseCase_;
         onBuilt();
         return result;
@@ -13370,6 +14661,10 @@ public final class DataflowMessagingProto {
           }
           case TASK_DATA: {
             mergeTaskData(other.getTaskData());
+            break;
+          }
+          case CANCEL_TASK_ACK: {
+            mergeCancelTaskAck(other.getCancelTaskAck());
             break;
           }
           case RESPONSE_NOT_SET: {
@@ -13983,6 +15278,147 @@ public final class DataflowMessagingProto {
         onChanged();;
         return taskDataBuilder_;
       }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck, io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck.Builder, io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAckOrBuilder> cancelTaskAckBuilder_;
+      /**
+       * <code>.dataflow.DataflowResponse.CancelTaskAck cancel_task_ack = 5;</code>
+       * @return Whether the cancelTaskAck field is set.
+       */
+      @java.lang.Override
+      public boolean hasCancelTaskAck() {
+        return responseCase_ == 5;
+      }
+      /**
+       * <code>.dataflow.DataflowResponse.CancelTaskAck cancel_task_ack = 5;</code>
+       * @return The cancelTaskAck.
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck getCancelTaskAck() {
+        if (cancelTaskAckBuilder_ == null) {
+          if (responseCase_ == 5) {
+            return (io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck) response_;
+          }
+          return io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck.getDefaultInstance();
+        } else {
+          if (responseCase_ == 5) {
+            return cancelTaskAckBuilder_.getMessage();
+          }
+          return io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.dataflow.DataflowResponse.CancelTaskAck cancel_task_ack = 5;</code>
+       */
+      public Builder setCancelTaskAck(io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck value) {
+        if (cancelTaskAckBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          response_ = value;
+          onChanged();
+        } else {
+          cancelTaskAckBuilder_.setMessage(value);
+        }
+        responseCase_ = 5;
+        return this;
+      }
+      /**
+       * <code>.dataflow.DataflowResponse.CancelTaskAck cancel_task_ack = 5;</code>
+       */
+      public Builder setCancelTaskAck(
+          io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck.Builder builderForValue) {
+        if (cancelTaskAckBuilder_ == null) {
+          response_ = builderForValue.build();
+          onChanged();
+        } else {
+          cancelTaskAckBuilder_.setMessage(builderForValue.build());
+        }
+        responseCase_ = 5;
+        return this;
+      }
+      /**
+       * <code>.dataflow.DataflowResponse.CancelTaskAck cancel_task_ack = 5;</code>
+       */
+      public Builder mergeCancelTaskAck(io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck value) {
+        if (cancelTaskAckBuilder_ == null) {
+          if (responseCase_ == 5 &&
+              response_ != io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck.getDefaultInstance()) {
+            response_ = io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck.newBuilder((io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck) response_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            response_ = value;
+          }
+          onChanged();
+        } else {
+          if (responseCase_ == 5) {
+            cancelTaskAckBuilder_.mergeFrom(value);
+          }
+          cancelTaskAckBuilder_.setMessage(value);
+        }
+        responseCase_ = 5;
+        return this;
+      }
+      /**
+       * <code>.dataflow.DataflowResponse.CancelTaskAck cancel_task_ack = 5;</code>
+       */
+      public Builder clearCancelTaskAck() {
+        if (cancelTaskAckBuilder_ == null) {
+          if (responseCase_ == 5) {
+            responseCase_ = 0;
+            response_ = null;
+            onChanged();
+          }
+        } else {
+          if (responseCase_ == 5) {
+            responseCase_ = 0;
+            response_ = null;
+          }
+          cancelTaskAckBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>.dataflow.DataflowResponse.CancelTaskAck cancel_task_ack = 5;</code>
+       */
+      public io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck.Builder getCancelTaskAckBuilder() {
+        return getCancelTaskAckFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.dataflow.DataflowResponse.CancelTaskAck cancel_task_ack = 5;</code>
+       */
+      @java.lang.Override
+      public io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAckOrBuilder getCancelTaskAckOrBuilder() {
+        if ((responseCase_ == 5) && (cancelTaskAckBuilder_ != null)) {
+          return cancelTaskAckBuilder_.getMessageOrBuilder();
+        } else {
+          if (responseCase_ == 5) {
+            return (io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck) response_;
+          }
+          return io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.dataflow.DataflowResponse.CancelTaskAck cancel_task_ack = 5;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck, io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck.Builder, io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAckOrBuilder> 
+          getCancelTaskAckFieldBuilder() {
+        if (cancelTaskAckBuilder_ == null) {
+          if (!(responseCase_ == 5)) {
+            response_ = io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck.getDefaultInstance();
+          }
+          cancelTaskAckBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck, io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck.Builder, io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAckOrBuilder>(
+                  (io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck) response_,
+                  getParentForChildren(),
+                  isClean());
+          response_ = null;
+        }
+        responseCase_ = 5;
+        onChanged();;
+        return cancelTaskAckBuilder_;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -14072,6 +15508,11 @@ public final class DataflowMessagingProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_dataflow_DataflowRequest_Handshake_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_dataflow_DataflowRequest_CancelTask_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_dataflow_DataflowRequest_CancelTask_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_dataflow_DataflowResponse_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -14126,6 +15567,11 @@ public final class DataflowMessagingProto {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_dataflow_DataflowResponse_Handshake_NotOk_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_dataflow_DataflowResponse_CancelTaskAck_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_dataflow_DataflowResponse_CancelTaskAck_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -14137,56 +15583,61 @@ public final class DataflowMessagingProto {
     java.lang.String[] descriptorData = {
       "\n\017messaging.proto\022\010dataflow\032\017stream_id.p" +
       "roto\032\nnode.proto\032\017node_stat.proto\"\'\n\007Ver" +
-      "sion\022\r\n\005major\030\001 \001(\005\022\r\n\005minor\030\002 \001(\005\"\230\004\n\017D" +
+      "sion\022\r\n\005major\030\001 \001(\005\022\r\n\005minor\030\002 \001(\005\"\364\004\n\017D" +
       "ataflowRequest\0228\n\thandshake\030\001 \001(\0132#.data" +
       "flow.DataflowRequest.HandshakeH\000\0226\n\010down" +
       "load\030\002 \001(\0132\".dataflow.DataflowRequest.Do" +
       "wnloadH\000\0224\n\007execute\030\003 \001(\0132!.dataflow.Dat" +
       "aflowRequest.ExecuteH\000\0227\n\tget_tasks\030\004 \001(" +
-      "\0132\".dataflow.DataflowRequest.GetTasksH\000\032" +
-      "1\n\010Download\022%\n\tstream_id\030\001 \001(\0132\022.dataflo" +
-      "w.StreamId\0329\n\007Execute\022\017\n\007task_id\030\001 \001(\003\022\035" +
-      "\n\005nodes\030\002 \003(\0132\016.dataflow.Node\032z\n\010GetTask" +
-      "s\022:\n\007task_id\030\001 \001(\0132).dataflow.DataflowRe" +
-      "quest.GetTasks.TaskId\0322\n\006TaskId\022\027\n\017task_" +
-      "id_is_null\030\001 \001(\010\022\017\n\007task_id\030\002 \001(\003\032/\n\tHan" +
-      "dshake\022\"\n\007version\030\001 \001(\0132\021.dataflow.Versi" +
-      "onB\t\n\007request\"\306\n\n\020DataflowResponse\0229\n\tha" +
-      "ndshake\030\001 \001(\0132$.dataflow.DataflowRespons" +
-      "e.HandshakeH\000\022B\n\016partition_data\030\002 \001(\0132(." +
-      "dataflow.DataflowResponse.PartitionDataH" +
-      "\000\0223\n\006result\030\003 \001(\0132!.dataflow.DataflowRes" +
-      "ponse.ResultH\000\0228\n\ttask_data\030\004 \001(\0132#.data" +
-      "flow.DataflowResponse.TaskDataH\000\032\346\001\n\rPar" +
-      "titionData\022\017\n\007running\030\001 \001(\005\022\021\n\tsucceeded" +
-      "\030\002 \001(\005\022\016\n\006failed\030\003 \001(\005\022\021\n\tcancelled\030\004 \001(" +
-      "\005\022?\n\004last\030\005 \003(\01321.dataflow.DataflowRespo" +
-      "nse.PartitionData.TaskDesc\032M\n\010TaskDesc\022\n" +
-      "\n\002id\030\001 \001(\003\0225\n\006status\030\002 \001(\0162%.dataflow.Da" +
-      "taflowResponse.TaskStatus\032-\n\005Error\022\025\n\rer" +
-      "ror_is_null\030\001 \001(\010\022\r\n\005error\030\002 \001(\t\0325\n\007Inst" +
-      "ant\022\027\n\017instant_is_null\030\001 \001(\010\022\021\n\ttimestam" +
-      "p\030\002 \001(\003\0329\n\006Result\022/\n\005error\030\001 \001(\0132 .dataf" +
-      "low.DataflowResponse.Error\032\367\002\n\010TaskData\022" +
-      "5\n\006status\030\001 \001(\0162%.dataflow.DataflowRespo" +
-      "nse.TaskStatus\0226\n\nstart_time\030\002 \001(\0132\".dat" +
-      "aflow.DataflowResponse.Instant\0227\n\013finish" +
-      "_time\030\003 \001(\0132\".dataflow.DataflowResponse." +
-      "Instant\022/\n\005error\030\004 \001(\0132 .dataflow.Datafl" +
-      "owResponse.Error\022=\n\005nodes\030\005 \003(\0132..datafl" +
-      "ow.DataflowResponse.TaskData.NodesEntry\022" +
-      "\021\n\tgraph_viz\030\006 \001(\t\032@\n\nNodesEntry\022\013\n\003key\030" +
-      "\001 \001(\005\022!\n\005value\030\002 \001(\0132\022.dataflow.NodeStat" +
-      ":\0028\001\032\325\001\n\tHandshake\0225\n\002ok\030\001 \001(\0132\'.dataflo" +
-      "w.DataflowResponse.Handshake.OkH\000\022<\n\006not" +
-      "_ok\030\002 \001(\0132*.dataflow.DataflowResponse.Ha" +
-      "ndshake.NotOkH\000\032\004\n\002Ok\032C\n\005NotOk\022)\n\016minima" +
-      "lVersion\030\001 \001(\0132\021.dataflow.Version\022\017\n\007mes" +
-      "sage\030\002 \001(\tB\010\n\006result\"\\\n\nTaskStatus\022\027\n\023TA" +
-      "SK_STATUS_NOT_SET\020\000\022\013\n\007RUNNING\020\001\022\r\n\tCOMP" +
-      "LETED\020\002\022\n\n\006FAILED\020\003\022\r\n\tCANCELLED\020\004B\n\n\010re" +
-      "sponseB5\n\031io.activej.dataflow.protoB\026Dat" +
-      "aflowMessagingProtoP\000b\006proto3"
+      "\0132\".dataflow.DataflowRequest.GetTasksH\000\022" +
+      ";\n\013cancel_task\030\005 \001(\0132$.dataflow.Dataflow" +
+      "Request.CancelTaskH\000\0321\n\010Download\022%\n\tstre" +
+      "am_id\030\001 \001(\0132\022.dataflow.StreamId\0329\n\007Execu" +
+      "te\022\017\n\007task_id\030\001 \001(\003\022\035\n\005nodes\030\002 \003(\0132\016.dat" +
+      "aflow.Node\032z\n\010GetTasks\022:\n\007task_id\030\001 \001(\0132" +
+      ").dataflow.DataflowRequest.GetTasks.Task" +
+      "Id\0322\n\006TaskId\022\027\n\017task_id_is_null\030\001 \001(\010\022\017\n" +
+      "\007task_id\030\002 \001(\003\032/\n\tHandshake\022\"\n\007version\030\001" +
+      " \001(\0132\021.dataflow.Version\032\035\n\nCancelTask\022\017\n" +
+      "\007task_id\030\001 \001(\003B\t\n\007request\"\256\013\n\020DataflowRe" +
+      "sponse\0229\n\thandshake\030\001 \001(\0132$.dataflow.Dat" +
+      "aflowResponse.HandshakeH\000\022B\n\016partition_d" +
+      "ata\030\002 \001(\0132(.dataflow.DataflowResponse.Pa" +
+      "rtitionDataH\000\0223\n\006result\030\003 \001(\0132!.dataflow" +
+      ".DataflowResponse.ResultH\000\0228\n\ttask_data\030" +
+      "\004 \001(\0132#.dataflow.DataflowResponse.TaskDa" +
+      "taH\000\022C\n\017cancel_task_ack\030\005 \001(\0132(.dataflow" +
+      ".DataflowResponse.CancelTaskAckH\000\032\346\001\n\rPa" +
+      "rtitionData\022\017\n\007running\030\001 \001(\005\022\021\n\tsucceede" +
+      "d\030\002 \001(\005\022\016\n\006failed\030\003 \001(\005\022\021\n\tcancelled\030\004 \001" +
+      "(\005\022?\n\004last\030\005 \003(\01321.dataflow.DataflowResp" +
+      "onse.PartitionData.TaskDesc\032M\n\010TaskDesc\022" +
+      "\n\n\002id\030\001 \001(\003\0225\n\006status\030\002 \001(\0162%.dataflow.D" +
+      "ataflowResponse.TaskStatus\032-\n\005Error\022\025\n\re" +
+      "rror_is_null\030\001 \001(\010\022\r\n\005error\030\002 \001(\t\0325\n\007Ins" +
+      "tant\022\027\n\017instant_is_null\030\001 \001(\010\022\021\n\ttimesta" +
+      "mp\030\002 \001(\003\0329\n\006Result\022/\n\005error\030\001 \001(\0132 .data" +
+      "flow.DataflowResponse.Error\032\367\002\n\010TaskData" +
+      "\0225\n\006status\030\001 \001(\0162%.dataflow.DataflowResp" +
+      "onse.TaskStatus\0226\n\nstart_time\030\002 \001(\0132\".da" +
+      "taflow.DataflowResponse.Instant\0227\n\013finis" +
+      "h_time\030\003 \001(\0132\".dataflow.DataflowResponse" +
+      ".Instant\022/\n\005error\030\004 \001(\0132 .dataflow.Dataf" +
+      "lowResponse.Error\022=\n\005nodes\030\005 \003(\0132..dataf" +
+      "low.DataflowResponse.TaskData.NodesEntry" +
+      "\022\021\n\tgraph_viz\030\006 \001(\t\032@\n\nNodesEntry\022\013\n\003key" +
+      "\030\001 \001(\005\022!\n\005value\030\002 \001(\0132\022.dataflow.NodeSta" +
+      "t:\0028\001\032\325\001\n\tHandshake\0225\n\002ok\030\001 \001(\0132\'.datafl" +
+      "ow.DataflowResponse.Handshake.OkH\000\022<\n\006no" +
+      "t_ok\030\002 \001(\0132*.dataflow.DataflowResponse.H" +
+      "andshake.NotOkH\000\032\004\n\002Ok\032C\n\005NotOk\022)\n\016minim" +
+      "alVersion\030\001 \001(\0132\021.dataflow.Version\022\017\n\007me" +
+      "ssage\030\002 \001(\tB\010\n\006result\032!\n\rCancelTaskAck\022\020" +
+      "\n\010canceled\030\001 \001(\010\"\\\n\nTaskStatus\022\027\n\023TASK_S" +
+      "TATUS_NOT_SET\020\000\022\013\n\007RUNNING\020\001\022\r\n\tCOMPLETE" +
+      "D\020\002\022\n\n\006FAILED\020\003\022\r\n\tCANCELLED\020\004B\n\n\010respon" +
+      "seB5\n\031io.activej.dataflow.protoB\026Dataflo" +
+      "wMessagingProtoP\000b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -14206,7 +15657,7 @@ public final class DataflowMessagingProto {
     internal_static_dataflow_DataflowRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_DataflowRequest_descriptor,
-        new java.lang.String[] { "Handshake", "Download", "Execute", "GetTasks", "Request", });
+        new java.lang.String[] { "Handshake", "Download", "Execute", "GetTasks", "CancelTask", "Request", });
     internal_static_dataflow_DataflowRequest_Download_descriptor =
       internal_static_dataflow_DataflowRequest_descriptor.getNestedTypes().get(0);
     internal_static_dataflow_DataflowRequest_Download_fieldAccessorTable = new
@@ -14237,12 +15688,18 @@ public final class DataflowMessagingProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_DataflowRequest_Handshake_descriptor,
         new java.lang.String[] { "Version", });
+    internal_static_dataflow_DataflowRequest_CancelTask_descriptor =
+      internal_static_dataflow_DataflowRequest_descriptor.getNestedTypes().get(4);
+    internal_static_dataflow_DataflowRequest_CancelTask_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_dataflow_DataflowRequest_CancelTask_descriptor,
+        new java.lang.String[] { "TaskId", });
     internal_static_dataflow_DataflowResponse_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_dataflow_DataflowResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_DataflowResponse_descriptor,
-        new java.lang.String[] { "Handshake", "PartitionData", "Result", "TaskData", "Response", });
+        new java.lang.String[] { "Handshake", "PartitionData", "Result", "TaskData", "CancelTaskAck", "Response", });
     internal_static_dataflow_DataflowResponse_PartitionData_descriptor =
       internal_static_dataflow_DataflowResponse_descriptor.getNestedTypes().get(0);
     internal_static_dataflow_DataflowResponse_PartitionData_fieldAccessorTable = new
@@ -14303,6 +15760,12 @@ public final class DataflowMessagingProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_dataflow_DataflowResponse_Handshake_NotOk_descriptor,
         new java.lang.String[] { "MinimalVersion", "Message", });
+    internal_static_dataflow_DataflowResponse_CancelTaskAck_descriptor =
+      internal_static_dataflow_DataflowResponse_descriptor.getNestedTypes().get(6);
+    internal_static_dataflow_DataflowResponse_CancelTaskAck_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_dataflow_DataflowResponse_CancelTaskAck_descriptor,
+        new java.lang.String[] { "Canceled", });
     io.activej.dataflow.proto.StreamIdProto.getDescriptor();
     io.activej.dataflow.proto.NodeProto.getDescriptor();
     io.activej.dataflow.proto.NodeStatProto.getDescriptor();

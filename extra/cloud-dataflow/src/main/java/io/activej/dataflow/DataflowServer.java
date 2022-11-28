@@ -34,11 +34,13 @@ import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
+import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.CancelTask;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.Download;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.Execute;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.GetTasks;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest.GetTasks.TaskId;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
+import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.Handshake.Ok;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.PartitionData.TaskDesc;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.TaskData;
@@ -71,7 +73,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 /**
- * Server for processing JSON commands.
+ * Server for processing Protobuf commands.
  */
 public final class DataflowServer extends AbstractServer<DataflowServer> {
 	public static final Version VERSION = Version.newBuilder().setMajor(1).setMinor(0).build();
@@ -188,7 +190,9 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 			case DOWNLOAD -> handleDownload(messaging, request.getDownload());
 			case EXECUTE -> handleExecute(messaging, request.getExecute());
 			case GET_TASKS -> handleGetTasks(messaging, request.getGetTasks());
+			case CANCEL_TASK -> handleCancelTask(messaging, request.getCancelTask());
 			case HANDSHAKE -> throw new DataflowException("Handshake was already performed");
+			case REQUEST_NOT_SET -> throw new DataflowException("Request was not set");
 			default -> {
 				logger.error("missing handler for {}", request.getRequestCase());
 				messaging.close();
@@ -285,6 +289,19 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 		}
 		messaging.send(taskDataResponse(task, err))
 				.whenException(e -> logger.error("Failed to send answer for the task (" + taskId + ") data request", e));
+	}
+
+	private void handleCancelTask(Messaging<DataflowRequest, DataflowResponse> messaging, CancelTask cancelTask) {
+		if (logger.isTraceEnabled()) {
+			logger.trace("Processing CancelTask: {}, {}", cancelTask, messaging);
+		}
+		long taskId = cancelTask.getTaskId();
+		boolean canceled = cancel(taskId);
+		messaging.send(DataflowResponse.newBuilder()
+				.setCancelTaskAck(CancelTaskAck.newBuilder()
+						.setCanceled(canceled))
+				.build())
+				.whenComplete(messaging::close);
 	}
 
 	@Override

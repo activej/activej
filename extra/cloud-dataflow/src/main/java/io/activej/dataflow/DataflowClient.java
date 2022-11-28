@@ -23,12 +23,14 @@ import io.activej.csp.dsl.ChannelTransformer;
 import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.csp.queue.*;
+import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse;
+import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.CancelTaskAck;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowResponse.Handshake.NotOk;
 import io.activej.dataflow.proto.serializer.CustomNodeSerializer;
 import io.activej.dataflow.proto.serializer.CustomStreamSchemaSerializer;
@@ -42,6 +44,7 @@ import io.activej.datastream.processor.StreamSupplierTransformer;
 import io.activej.eventloop.net.SocketSettings;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
+import io.activej.promise.Promises;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -49,6 +52,7 @@ import org.slf4j.Logger;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -57,8 +61,8 @@ import static io.activej.dataflow.proto.serializer.ProtobufUtils.convert;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
- * Client for datagraph server.
- * Sends JSON commands for performing certain actions on server.
+ * Client for dataflow server.
+ * Sends Protobuf commands for performing certain actions on server.
  */
 public final class DataflowClient {
 	private static final Logger logger = getLogger(DataflowClient.class);
@@ -230,6 +234,25 @@ public final class DataflowClient {
 					.toVoid();
 		}
 
+		public Promise<Boolean> cancelTask(long taskId) {
+			return performHandshake(messaging)
+					.then(() -> messaging.send(cancelTaskRequest(taskId))
+							.mapException(e -> new DataflowException("Failed to send command to " + address, e)))
+					.then(() -> messaging.receive()
+							.mapException(e -> new DataflowException("Failed to receive response from " + address, e)))
+					.map(response -> {
+						messaging.close();
+						switch (response.getResponseCase()) {
+							case CANCEL_TASK_ACK -> {
+								CancelTaskAck cancelTaskAck = response.getCancelTaskAck();
+								return cancelTaskAck.getCanceled();
+							}
+							case RESPONSE_NOT_SET -> throw new DataflowException("Server did not set a response");
+							default -> throw new DataflowException("Bad response from server");
+						}
+					});
+		}
+
 		@Override
 		public void closeEx(@NotNull Exception e) {
 			messaging.closeEx(e);
@@ -240,6 +263,16 @@ public final class DataflowClient {
 		return AsyncTcpSocketNio.connect(address, 0, socketSettings)
 				.map(socket -> new Session(address, socket))
 				.mapException(e -> new DataflowException("Could not connect to " + address, e));
+	}
+
+	public Promise<Boolean> cancelTask(List<Partition> partitions, long taskId) {
+		return Promises.toList(partitions.stream()
+						.map(Partition::getAddress)
+						.map(this::connect))
+				.then(sessions -> Promises.toList(sessions.stream()
+								.map(session -> session.cancelTask(taskId)))
+						.map(cancelledTasks -> cancelledTasks.stream()
+								.anyMatch($ -> $)));
 	}
 
 	private static DataflowRequest downloadRequest(StreamId streamId) {
@@ -254,6 +287,13 @@ public final class DataflowClient {
 				.setExecute(DataflowRequest.Execute.newBuilder()
 						.setTaskId(taskId)
 						.addAllNodes(convert(nodes, functionSerializer, customNodeSerializer, customStreamSchemaSerializer)))
+				.build();
+	}
+
+	private DataflowRequest cancelTaskRequest(long taskId) {
+		return DataflowRequest.newBuilder()
+				.setCancelTask(DataflowRequest.CancelTask.newBuilder()
+						.setTaskId(taskId))
 				.build();
 	}
 
