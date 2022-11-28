@@ -125,7 +125,7 @@ public class ReducerDeadlockTest {
 
 		consumerNode.channels(DataflowContext.of(graph));
 
-		await(graph.execute()
+		await(graph.execute().executionPromise()
 				.whenComplete(assertCompleteFn($ -> {
 					server1.close();
 					server2.close();

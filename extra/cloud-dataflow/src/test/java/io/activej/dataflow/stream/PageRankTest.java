@@ -288,7 +288,7 @@ public class PageRankTest {
 		DataflowGraph graph = env.getInstance(DataflowGraph.class);
 		consumerOfId(pageRanks, "result").channels(DataflowContext.of(graph));
 
-		await(graph.execute());
+		await(graph.execute().executionPromise());
 	}
 
 	@Test
@@ -314,7 +314,7 @@ public class PageRankTest {
 
 		consumerNode.channels(DataflowContext.of(graph));
 
-		await(graph.execute()
+		await(graph.execute().executionPromise()
 				.whenComplete(assertCompleteFn($ -> {
 					server1.close();
 					server2.close();

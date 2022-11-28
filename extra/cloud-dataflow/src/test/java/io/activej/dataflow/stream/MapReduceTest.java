@@ -155,7 +155,7 @@ public class MapReduceTest {
 
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
 
-		await(graph.execute()
+		await(graph.execute().executionPromise()
 				.whenComplete(assertCompleteFn($ -> {
 					server1.close();
 					server2.close();

@@ -99,20 +99,20 @@ public final class DataflowGraph {
 	/**
 	 * Executes the defined operations on all partitions.
 	 */
-	public Promise<Void> execute() {
+	public Execution execute() {
 		Map<Partition, List<Node>> nodesByPartition = getNodesByPartition();
 		long taskId = ThreadLocalRandom.current().nextInt() & (Integer.MAX_VALUE >>> 1);
-		return connect(nodesByPartition.keySet())
+		return new Execution(taskId, connect(nodesByPartition.keySet())
 				.then(sessions ->
 						Promises.all(
-								sessions.stream()
-										.map(session -> session.execute(taskId, nodesByPartition.get(session.partition))))
-								.whenException(() -> sessions.forEach(PartitionSession::close)));
+										sessions.stream()
+												.map(session -> session.execute(taskId, nodesByPartition.get(session.partition))))
+								.whenException(() -> sessions.forEach(PartitionSession::close))));
 	}
 
 	private Promise<List<PartitionSession>> connect(Set<Partition> partitions) {
 		return Promises.toList(partitions.stream()
-				.map(partition -> client.connect(partition.getAddress()).map(session -> new PartitionSession(partition, session)).toTry()))
+						.map(partition -> client.connect(partition.getAddress()).map(session -> new PartitionSession(partition, session)).toTry()))
 				.map(tries -> {
 					List<PartitionSession> sessions = tries.stream()
 							.filter(Try::isSuccess)
@@ -308,5 +308,8 @@ public final class DataflowGraph {
 			sb.append("\n\n");
 		}
 		return sb.toString();
+	}
+
+	public record Execution(long taskId, Promise<Void> executionPromise) {
 	}
 }

@@ -210,7 +210,7 @@ public class DataflowServerTest {
 		StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
 		StreamConsumerToList<StringCount> resultConsumer = StreamConsumerToList.create(result);
 
-		return graph.execute().both(resultSupplier.streamTo(resultConsumer))
+		return graph.execute().executionPromise().both(resultSupplier.streamTo(resultConsumer))
 				.whenException(resultConsumer::closeEx);
 	}
 
@@ -228,7 +228,7 @@ public class DataflowServerTest {
 		consumerNode.channels(DataflowContext.of(graph));
 
 		System.out.println(graph);
-		return graph.execute();
+		return graph.execute().executionPromise();
 	}
 
 	@SuppressWarnings("SameParameterValue")

@@ -455,7 +455,7 @@ public final class PartitionedStreamTest {
 		PartitionedCollector<String> collector = new PartitionedCollector<>(compoundDataset, client);
 
 		Promise<Map<Partition, List<String>>> resultPromise = collector.compile(graph);
-		await(graph.execute());
+		await(graph.execute().executionPromise());
 		return await(resultPromise);
 	}
 
@@ -468,7 +468,7 @@ public final class PartitionedStreamTest {
 		Dataset<String> consumerDataset = consumerOfId(filteredDataset, "data target");
 		consumerDataset.channels(DataflowContext.of(graph));
 
-		await(graph.execute());
+		await(graph.execute().executionPromise());
 	}
 
 	private void launchServers(int nSourceFsServers, int nDataflowServers, int nTargetFsServers, boolean sorted) throws IOException {

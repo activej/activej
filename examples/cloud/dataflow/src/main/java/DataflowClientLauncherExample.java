@@ -80,7 +80,7 @@ public final class DataflowClientLauncherExample extends DataflowClientLauncher 
 			System.out.println("\n *** Compiled nodes graph:\n");
 			System.out.println(graph.toGraphViz());
 
-			graph.execute().both(resultSupplier.streamTo(resultConsumer))
+			graph.execute().executionPromise().both(resultSupplier.streamTo(resultConsumer))
 					.whenException(Exception::printStackTrace)
 					.whenResult(() -> {
 						System.out.println("Top 100 words:");

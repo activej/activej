@@ -146,7 +146,7 @@ public final class DataflowTest {
 		DatasetConsumerOfId<TestItem> consumerNode = consumerOfId(items, "result");
 		consumerNode.channels(DataflowContext.of(graph));
 
-		await(graph.execute()
+		await(graph.execute().executionPromise()
 				.whenComplete(assertCompleteFn($ -> {
 					server1.close();
 					server2.close();
@@ -204,7 +204,7 @@ public final class DataflowTest {
 		DatasetConsumerOfId<TestItem> consumerNode = consumerOfId(items, "result");
 		consumerNode.channels(DataflowContext.of(graph));
 
-		await(graph.execute()
+		await(graph.execute().executionPromise()
 				.whenComplete(assertCompleteFn($ -> {
 					server1.close();
 					server2.close();
@@ -305,7 +305,7 @@ public final class DataflowTest {
 		Dataset<TestItem> consumerNode = consumerOfId(items, "result");
 		consumerNode.channels(DataflowContext.of(graph));
 
-		await(graph.execute()
+		await(graph.execute().executionPromise()
 				.whenComplete(assertCompleteFn($ -> {
 					server1.close();
 					server2.close();
@@ -375,7 +375,7 @@ public final class DataflowTest {
 		DatasetConsumerOfId<TestItem> consumerNode = consumerOfId(sortedDataset, "result");
 		consumerNode.channels(DataflowContext.of(graph));
 
-		await(graph.execute()
+		await(graph.execute().executionPromise()
 				.whenComplete(assertCompleteFn($ -> {
 					server1.close();
 					server2.close();
@@ -437,7 +437,7 @@ public final class DataflowTest {
 
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
 
-		await(graph.execute()
+		await(graph.execute().executionPromise()
 				.whenComplete(assertCompleteFn($ -> {
 					server1.close();
 					server2.close();
@@ -500,7 +500,7 @@ public final class DataflowTest {
 
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
 
-		await(graph.execute()
+		await(graph.execute().executionPromise()
 				.whenComplete(assertCompleteFn($ -> {
 					server1.close();
 					server2.close();
@@ -546,7 +546,7 @@ public final class DataflowTest {
 		DatasetConsumerOfId<TestItem> consumerNode = consumerOfId(emptyDataset, "result");
 		consumerNode.channels(DataflowContext.of(graph));
 
-		await(graph.execute()
+		await(graph.execute().executionPromise()
 				.whenComplete(assertCompleteFn($ -> {
 					server1.close();
 					server2.close();
@@ -617,7 +617,7 @@ public final class DataflowTest {
 
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
 
-		await(graph.execute()
+		await(graph.execute().executionPromise()
 				.whenComplete(assertCompleteFn($ -> {
 					server1.close();
 					server2.close();
@@ -696,7 +696,7 @@ public final class DataflowTest {
 
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
 
-		await(graph.execute()
+		await(graph.execute().executionPromise()
 				.whenComplete(assertCompleteFn($ -> {
 					server1.close();
 					server2.close();
