@@ -46,7 +46,6 @@ public final class DataflowClientLauncherExample extends DataflowClientLauncher 
 
 				.bind(Config.class).toInstance(
 						Config.create()
-								.with("dataflow.secondaryBufferPath", Util.createTempDir("dataflow-client-secondary-storage"))
 								.with("dataflow.partitions", args.length == 0 ? DEFAULT_PARTITION : String.join(",", args)))
 				.build();
 	}

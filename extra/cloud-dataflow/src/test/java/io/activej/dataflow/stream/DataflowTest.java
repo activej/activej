@@ -45,12 +45,10 @@ import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
 import io.activej.types.Types;
 import org.junit.*;
-import org.junit.rules.TemporaryFolder;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -79,9 +77,6 @@ public final class DataflowTest {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
-	@ClassRule
-	public static final TemporaryFolder temporaryFolder = new TemporaryFolder();
-
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
@@ -106,7 +101,7 @@ public final class DataflowTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), List.of(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(executor, sortingExecutor, List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
 				.build();
 
@@ -161,7 +156,7 @@ public final class DataflowTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), List.of(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(executor, sortingExecutor, List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
 				.bind(new Key<BinarySerializer<StreamReducers.Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(BinarySerializer.class, MergeReducer.class)))
 				.build();
@@ -236,7 +231,7 @@ public final class DataflowTest {
 		Partition partition2 = new Partition(address2);
 		Partition partition3 = new Partition(address3);
 
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), List.of(partition1, partition2, partition3))
+		Module common = createCommon(executor, sortingExecutor, List.of(partition1, partition2, partition3))
 				.install(createSerializersModule())
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
@@ -330,7 +325,7 @@ public final class DataflowTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), List.of(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(executor, sortingExecutor, List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
@@ -392,7 +387,7 @@ public final class DataflowTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), List.of(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(executor, sortingExecutor, List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
@@ -453,7 +448,7 @@ public final class DataflowTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), List.of(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(executor, sortingExecutor, List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
 				.bind(new Key<BinarySerializer<StreamReducers.Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(BinarySerializer.class, MergeReducer.class)))
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
@@ -514,7 +509,7 @@ public final class DataflowTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), List.of(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(executor, sortingExecutor, List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
@@ -563,7 +558,7 @@ public final class DataflowTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), List.of(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(executor, sortingExecutor, List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
 				.bind(new Key<BinarySerializer<StreamReducers.Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(BinarySerializer.class, MergeReducer.class)))
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
@@ -642,7 +637,7 @@ public final class DataflowTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), List.of(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(executor, sortingExecutor, List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
 				.bind(new Key<BinarySerializer<StreamReducers.Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(BinarySerializer.class, MergeReducer.class)))
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
@@ -742,7 +737,7 @@ public final class DataflowTest {
 		}
 	}
 
-	public static ModuleBuilder createCommon(Executor executor, Executor sortingExecutor, Path secondaryPath, List<Partition> graphPartitions) {
+	public static ModuleBuilder createCommon(Executor executor, Executor sortingExecutor, List<Partition> graphPartitions) {
 		return ModuleBuilder.create()
 				.install(DataflowModule.create())
 				.bind(Executor.class, SortingExecutor.class).toInstance(sortingExecutor)
@@ -755,12 +750,12 @@ public final class DataflowTest {
 					}
 
 					@Provides
-					DataflowClient client(Executor executor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec,
+					DataflowClient client(ByteBufsCodec<DataflowResponse, DataflowRequest> codec,
 							BinarySerializerModule.BinarySerializerLocator serializers, FunctionSerializer functionSerializer,
 							OptionalDependency<CustomNodeSerializer> optionalCustomNodeSerializer,
 							OptionalDependency<CustomStreamSchemaSerializer> optionalCustomStreamSchemaSerializer
 							) {
-						DataflowClient dataflowClient = DataflowClient.create(executor, secondaryPath, codec, serializers, functionSerializer);
+						DataflowClient dataflowClient = DataflowClient.create(codec, serializers, functionSerializer);
 						if (optionalCustomNodeSerializer.isPresent()) {
 							dataflowClient.withCustomNodeSerializer(optionalCustomNodeSerializer.get());
 						}

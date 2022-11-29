@@ -22,7 +22,6 @@ import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
 import io.activej.types.Types;
 import org.junit.*;
-import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -50,9 +49,6 @@ public class ReducerDeadlockTest {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
-	@ClassRule
-	public static final TemporaryFolder temporaryFolder = new TemporaryFolder();
-
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
@@ -77,7 +73,7 @@ public class ReducerDeadlockTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), List.of(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(executor, sortingExecutor, List.of(new Partition(address1), new Partition(address2)))
 				.bind(new Key<BinarySerializer<Function<?, ?>>>() {}).toInstance(ofObject(TestKeyFunction::new))
 				.bind(new Key<BinarySerializer<Comparator<?>>>() {}).toInstance(ofObject(TestComparator::new))
 				.bind(new Key<BinarySerializer<Reducer<?, ?, ?, ?>>>() {}).to(Key.ofType(Types.parameterizedType(BinarySerializer.class, MergeReducer.class)))

@@ -30,9 +30,6 @@ import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
 import io.activej.service.ServiceGraphModule;
 
-import java.io.IOException;
-import java.nio.file.Files;
-
 import static io.activej.inject.module.Modules.combine;
 import static io.activej.launchers.initializers.Initializers.ofEventloop;
 
@@ -51,9 +48,8 @@ public abstract class DataflowServerLauncher extends Launcher {
 	}
 
 	@Provides
-	Config config() throws IOException {
+	Config config() {
 		return Config.create()
-				.with("dataflow.secondaryBufferPath", Files.createTempDirectory("secondaryBufferPath").toString())
 				.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
 				.overrideWith(Config.ofProperties(System.getProperties()).getChild("config"));
 	}

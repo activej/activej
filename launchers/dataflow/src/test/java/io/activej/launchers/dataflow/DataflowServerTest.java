@@ -40,7 +40,6 @@ import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.*;
-import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -69,9 +68,6 @@ public class DataflowServerTest {
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
-
-	@ClassRule
-	public static final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
@@ -377,8 +373,8 @@ public class DataflowServerTest {
 						new Key<BinarySerializer<MergeReducer>>() {})
 				.scan(new Object() {
 					@Provides
-					DataflowClient client(ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator serializers, FunctionSerializer functionSerializer) throws IOException {
-						return DataflowClient.create(Executors.newSingleThreadExecutor(), temporaryFolder.newFolder().toPath(), codec, serializers, functionSerializer);
+					DataflowClient client(ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator serializers, FunctionSerializer functionSerializer) {
+						return DataflowClient.create(codec, serializers, functionSerializer);
 					}
 
 					@Provides

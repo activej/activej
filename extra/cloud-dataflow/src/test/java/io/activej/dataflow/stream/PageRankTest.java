@@ -31,7 +31,6 @@ import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.*;
-import org.junit.rules.TemporaryFolder;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -61,9 +60,6 @@ public class PageRankTest {
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
-
-	@ClassRule
-	public static final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
@@ -219,8 +215,8 @@ public class PageRankTest {
 		return ranks;
 	}
 
-	private Module createModule(Partition... partitions) throws Exception {
-		return createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), List.of(partitions))
+	private Module createModule(Partition... partitions) {
+		return createCommon(executor, sortingExecutor, List.of(partitions))
 				.install(createSerializersModule())
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();
@@ -279,7 +275,7 @@ public class PageRankTest {
 
 	@Ignore("For manual run")
 	@Test
-	public void postPageRankTask() throws Exception {
+	public void postPageRankTask() {
 		SortedDataset<Long, Page> sorted = sortedDatasetOfId("items", simple(Page.class), Long.class, new PageKeyFunction(), new LongComparator());
 		SortedDataset<Long, Page> repartitioned = repartitionSort(sorted);
 		SortedDataset<Long, Rank> pageRanks = pageRank(repartitioned);

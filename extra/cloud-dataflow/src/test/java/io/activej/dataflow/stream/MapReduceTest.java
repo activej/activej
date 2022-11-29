@@ -28,7 +28,6 @@ import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.*;
-import org.junit.rules.TemporaryFolder;
 
 import java.net.InetSocketAddress;
 import java.util.*;
@@ -55,9 +54,6 @@ public class MapReduceTest {
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
-
-	@ClassRule
-	public static final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
@@ -112,7 +108,7 @@ public class MapReduceTest {
 		InetSocketAddress address1 = getFreeListenAddress();
 		InetSocketAddress address2 = getFreeListenAddress();
 
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), List.of(new Partition(address1), new Partition(address2)))
+		Module common = createCommon(executor, sortingExecutor, List.of(new Partition(address1), new Partition(address2)))
 				.install(createSerializersModule())
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.build();

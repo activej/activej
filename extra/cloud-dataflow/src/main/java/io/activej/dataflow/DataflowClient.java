@@ -22,7 +22,6 @@ import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.dsl.ChannelTransformer;
 import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
-import io.activej.csp.queue.*;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator;
@@ -48,11 +47,7 @@ import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.file.Path;
 import java.util.Collection;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.activej.dataflow.proto.serializer.ProtobufUtils.convert;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -66,35 +61,21 @@ public final class DataflowClient {
 
 	private final SocketSettings socketSettings = SocketSettings.createDefault();
 
-	private final Executor executor;
-	private final Path secondaryPath;
-
 	private final ByteBufsCodec<DataflowResponse, DataflowRequest> codec;
 	private final BinarySerializerLocator serializers;
 	private final FunctionSerializer functionSerializer;
 
-	private final AtomicInteger secondaryId = new AtomicInteger(ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE));
-
-	private int bufferMinSize, bufferMaxSize;
 	private @Nullable CustomNodeSerializer customNodeSerializer;
 	private @Nullable CustomStreamSchemaSerializer customStreamSchemaSerializer;
 
-	private DataflowClient(Executor executor, Path secondaryPath, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator serializers, FunctionSerializer functionSerializer) {
-		this.executor = executor;
-		this.secondaryPath = secondaryPath;
+	private DataflowClient(ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator serializers, FunctionSerializer functionSerializer) {
 		this.codec = codec;
 		this.serializers = serializers;
 		this.functionSerializer = functionSerializer;
 	}
 
-	public static DataflowClient create(Executor executor, Path secondaryPath, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator serializers, FunctionSerializer functionSerializer) {
-		return new DataflowClient(executor, secondaryPath, codec, serializers, functionSerializer);
-	}
-
-	public DataflowClient withBufferSizes(int bufferMinSize, int bufferMaxSize) {
-		this.bufferMinSize = bufferMinSize;
-		this.bufferMaxSize = bufferMaxSize;
-		return this;
+	public static DataflowClient create(ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator serializers, FunctionSerializer functionSerializer) {
+		return new DataflowClient(codec, serializers, functionSerializer);
 	}
 
 	public DataflowClient withCustomNodeSerializer(CustomNodeSerializer customNodeSerializer) {
@@ -115,28 +96,16 @@ public final class DataflowClient {
 					return performHandshake(messaging)
 							.then(() -> messaging.send(downloadRequest(streamId))
 									.mapException(IOException.class, e -> new DataflowException("Failed to download from " + address, e)))
-							.map($ -> {
-								ChannelQueue<ByteBuf> primaryBuffer =
-										bufferMinSize == 0 && bufferMaxSize == 0 ?
-												new ChannelZeroBuffer<>() :
-												new ChannelBuffer<>(bufferMinSize, bufferMaxSize);
-
-								ChannelQueue<ByteBuf> buffer = new ChannelBufferWithFallback<>(
-										primaryBuffer,
-										() -> ChannelFileBuffer.create(executor, secondaryPath.resolve(secondaryId.getAndIncrement() + ".bin")));
-
-								return messaging.receiveBinaryStream()
-										.transformWith(transformer)
-										.transformWith(buffer)
-										.transformWith(ChannelDeserializer.create(streamSchema.createSerializer(serializers))
-												.withExplicitEndOfStream())
-										.transformWith(new StreamTraceCounter<>(streamId, address))
-										.withEndOfStream(eos -> eos
-												.mapException(e -> e instanceof  IOException ?
+							.map($ -> messaging.receiveBinaryStream()
+									.transformWith(transformer)
+									.transformWith(ChannelDeserializer.create(streamSchema.createSerializer(serializers))
+											.withExplicitEndOfStream())
+									.transformWith(new StreamTraceCounter<>(streamId, address))
+									.withEndOfStream(eos -> eos
+											.mapException(e -> e instanceof  IOException ?
 														new DataflowIOException("Error when downloading from " + address, (IOException) e) :
 														new DataflowException("Error when downloading from " + address, e))
-												.whenComplete(messaging::close));
-							});
+											.whenComplete(messaging::close)));
 				}));
 	}
 

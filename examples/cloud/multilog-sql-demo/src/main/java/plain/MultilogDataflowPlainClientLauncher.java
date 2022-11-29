@@ -15,8 +15,6 @@ import misc.PrintUtils;
 import module.MultilogDataflowClientModule;
 import org.apache.calcite.runtime.CalciteException;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
@@ -38,9 +36,8 @@ public final class MultilogDataflowPlainClientLauncher extends DataflowClientLau
 	protected Module getOverrideModule() {
 		return new AbstractModule() {
 			@Provides
-			Config config() throws IOException {
+			Config config() {
 				return Config.create()
-						.with("dataflow.secondaryBufferPath", Files.createTempDirectory("secondaryBufferPath").toString())
 						.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
 						.overrideWith(Config.ofProperties(System.getProperties()).getChild("config"));
 			}

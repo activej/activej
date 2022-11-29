@@ -76,12 +76,12 @@ public final class DataflowServerModule extends AbstractModule {
 
 	@Provides
 	@Eager
-	DataflowClient client(Executor executor, Config config, ByteBufsCodec<DataflowResponse, DataflowRequest> codec,
+	DataflowClient client(ByteBufsCodec<DataflowResponse, DataflowRequest> codec,
 			BinarySerializerLocator serializers, FunctionSerializer functionSerializer,
 			OptionalDependency<CustomNodeSerializer> optionalCustomNodeSerializer,
 			OptionalDependency<CustomStreamSchemaSerializer> optionalCustomStreamSchemaSerializer
 	) {
-		DataflowClient dataflowClient = DataflowClient.create(executor, config.get(ofPath(), "dataflow.secondaryBufferPath"), codec, serializers, functionSerializer);
+		DataflowClient dataflowClient = DataflowClient.create(codec, serializers, functionSerializer);
 		if (optionalCustomNodeSerializer.isPresent()) {
 			dataflowClient.withCustomNodeSerializer(optionalCustomNodeSerializer.get());
 		}

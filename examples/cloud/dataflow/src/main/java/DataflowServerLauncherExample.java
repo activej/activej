@@ -32,8 +32,7 @@ public final class DataflowServerLauncherExample extends DataflowServerLauncher 
 
 				.bind(Config.class).toInstance(
 						Config.create()
-								.with("dataflow.server.listenAddresses", args.length > 0 ? args[0] : "9000")
-								.with("dataflow.secondaryBufferPath", Util.createTempDir("dataflow-server-secondary-storage")))
+								.with("dataflow.server.listenAddresses", args.length > 0 ? args[0] : "9000"))
 				.build();
 	}
 

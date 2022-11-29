@@ -27,7 +27,6 @@ import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
 import org.jetbrains.annotations.Nullable;
 import org.junit.*;
-import org.junit.rules.TemporaryFolder;
 
 import java.lang.reflect.RecordComponent;
 import java.math.BigDecimal;
@@ -64,9 +63,6 @@ public abstract class AbstractCalciteTest {
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
-
-	@ClassRule
-	public static final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	public static final String STUDENT_TABLE_NAME = "student";
 	public static final String STUDENT_DUPLICATES_TABLE_NAME = "student_duplicates";
@@ -259,7 +255,7 @@ public abstract class AbstractCalciteTest {
 
 		List<Partition> partitions = List.of(new Partition(address1), new Partition(address2));
 		Key<Set<DataflowTable>> setTableKey = new Key<>() {};
-		Module common = createCommon(executor, sortingExecutor, temporaryFolder.newFolder().toPath(), partitions)
+		Module common = createCommon(executor, sortingExecutor, partitions)
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.bind(new Key<List<Partition>>() {}).toInstance(partitions)
 				.bind(new Key<RecordFunction<Student>>() {}).to(StudentToRecord::create, DefiningClassLoader.class)

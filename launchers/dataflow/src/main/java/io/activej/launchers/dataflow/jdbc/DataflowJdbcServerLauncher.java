@@ -14,9 +14,7 @@ import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
 import io.activej.service.ServiceGraphModule;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.file.Files;
 import java.time.Duration;
 
 import static io.activej.config.converter.ConfigConverters.ofDuration;
@@ -51,11 +49,10 @@ public abstract class DataflowJdbcServerLauncher extends Launcher {
 	}
 
 	@Provides
-	Config config() throws IOException {
+	Config config() {
 		return Config.create()
 				.with("dataflow.jdbc.server.listenAddress", Config.ofValue(ofInetSocketAddress(), new InetSocketAddress(DEFAULT_JDBC_SERVER_HOSTNAME, DEFAULT_JDBC_SERVER_PORT)))
 				.with("dataflow.jdbc.server.idleTimeout", Config.ofValue(ofDuration(), DEFAULT_IDLE_TIMEOUT))
-				.with("dataflow.secondaryBufferPath", Files.createTempDirectory("secondaryBufferPath").toString())
 				.overrideWith(Config.ofClassPathProperties(PROPERTIES_FILE, true))
 				.overrideWith(Config.ofProperties(System.getProperties()).getChild("config"));
 	}

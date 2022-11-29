@@ -380,8 +380,8 @@ public final class PartitionedStreamTest {
 					}
 
 					@Provides
-					DataflowClient client(Executor executor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator locator, FunctionSerializer functionSerializer) throws IOException {
-						return DataflowClient.create(executor, Files.createTempDirectory("").toAbsolutePath(), codec, locator, functionSerializer);
+					DataflowClient client(ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator locator, FunctionSerializer functionSerializer) {
+						return DataflowClient.create(codec, locator, functionSerializer);
 					}
 
 					@Provides
