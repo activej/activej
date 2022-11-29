@@ -16,8 +16,8 @@
 
 package io.activej.dataflow.graph;
 
-import io.activej.async.exception.AsyncCloseException;
 import io.activej.dataflow.DataflowException;
+import io.activej.dataflow.TaskCanceledException;
 import io.activej.dataflow.inject.DatasetIdModule.DatasetIds;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.NodeDownload;
@@ -138,7 +138,7 @@ public final class Task {
 					}
 					status = e == null ?
 							TaskStatus.COMPLETED :
-							e instanceof AsyncCloseException ?
+							e instanceof TaskCanceledException ?
 									TaskStatus.CANCELED :
 									TaskStatus.FAILED;
 					executionPromise.accept($, e);
@@ -146,8 +146,9 @@ public final class Task {
 	}
 
 	public void cancel() {
-		suppliers.values().forEach(StreamSupplier::close);
-		consumers.values().forEach(StreamConsumer::close);
+		TaskCanceledException taskCanceledException = new TaskCanceledException(taskId);
+		suppliers.values().forEach(supplier -> supplier.closeEx(taskCanceledException));
+		consumers.values().forEach(consumer -> consumer.closeEx(taskCanceledException));
 	}
 
 	public Promise<Void> getExecutionPromise() {

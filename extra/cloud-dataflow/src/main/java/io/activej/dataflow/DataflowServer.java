@@ -16,7 +16,6 @@
 
 package io.activej.dataflow;
 
-import io.activej.async.exception.AsyncCloseException;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
@@ -249,7 +248,7 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 					if (exception == null) {
 						succeededTasks++;
 						logger.info("Task executed successfully: {}", execute);
-					} else if (exception instanceof AsyncCloseException) {
+					} else if (exception instanceof TaskCanceledException) {
 						canceledTasks++;
 						logger.error("Canceled task: {}", execute, exception);
 					} else {

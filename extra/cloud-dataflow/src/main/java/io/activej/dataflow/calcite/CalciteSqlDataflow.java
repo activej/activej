@@ -1,5 +1,6 @@
 package io.activej.dataflow.calcite;
 
+import io.activej.async.exception.AsyncCloseException;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowException;
 import io.activej.dataflow.SqlDataflow;
@@ -12,6 +13,8 @@ import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
+import io.activej.datastream.AbstractStreamConsumer;
+import io.activej.datastream.AbstractStreamSupplier;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
 import io.activej.record.Record;
@@ -114,8 +117,8 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 		DataflowGraph graph = new DataflowGraph(client, partitions);
 		StreamSupplier<Record> result = calciteCollector.compile(graph);
 
-		graph.execute();
-		return result;
+		DataflowGraph.Execution execution = graph.execute();
+		return new CancellableStreamSupplier(result, execution.taskId());
 	}
 
 	private RelRoot convert(SqlNode sqlNode) {
@@ -163,5 +166,51 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 		return dataset instanceof LocallySortedDataset<?, Record> sortedDataset ?
 				MergeCollector.create(sortedDataset, client, false) :
 				UnionCollector.create(dataset, client);
+	}
+
+	private final class CancellableStreamSupplier extends AbstractStreamSupplier<Record> {
+		private final StreamSupplier<Record> streamSupplier;
+		private final long taskId;
+		private final InternalConsumer internalConsumer = new InternalConsumer();
+
+		private final class InternalConsumer extends AbstractStreamConsumer<Record> {}
+
+		private CancellableStreamSupplier(StreamSupplier<Record> streamSupplier, long taskId) {
+			this.streamSupplier = streamSupplier;
+			this.taskId = taskId;
+		}
+
+		@Override
+		protected void onInit() {
+			streamSupplier.getEndOfStream()
+					.whenResult(this::sendEndOfStream)
+					.whenException(this::closeEx);
+
+			streamSupplier.streamTo(internalConsumer);
+		}
+
+		@Override
+		protected void onResumed() {
+			internalConsumer.resume(getDataAcceptor());
+		}
+
+		@Override
+		protected void onSuspended() {
+			internalConsumer.suspend();
+		}
+
+		@Override
+		protected void onAcknowledge() {
+			internalConsumer.acknowledge();
+		}
+
+		@Override
+		protected void onError(Exception e) {
+			Promise.complete()
+					.then(() -> e instanceof AsyncCloseException ?
+							client.cancelTask(partitions, taskId) :
+							Promise.complete())
+							.whenComplete(() -> internalConsumer.closeEx(e));
+		}
 	}
 }
