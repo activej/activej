@@ -58,6 +58,7 @@ import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.InetAddress;
@@ -148,7 +149,8 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 						removed.close();
 					}
 				});
-		return streamSerializer;
+		return streamSerializer
+				.withAcknowledgement(ack -> ack.mapException(IOException.class, DataflowIOException::new));
 	}
 
 	public <T> StreamConsumer<T> upload(StreamId streamId, StreamSchema<T> streamSchema) {
@@ -169,6 +171,7 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 					return messaging.send(handshakeResponse);
 				})
 				.then(messaging::receive)
+				.mapException(IOException.class, DataflowIOException::new)
 				.whenResult(msg -> {
 					if (msg != null) {
 						doRead(messaging, msg);
@@ -216,8 +219,11 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 						}
 					});
 		}
-		ChannelConsumer<ByteBuf> consumer = messaging.sendBinaryStream();
-		forwarder.getSupplier().streamTo(consumer);
+		ChannelConsumer<ByteBuf> consumer = messaging.sendBinaryStream()
+				.withAcknowledgement(ack -> ack
+						.mapException(IOException.class, DataflowIOException::new));
+		forwarder.getSupplier()
+				.streamTo(consumer);
 		consumer.withAcknowledgement(ack -> ack
 				.whenComplete(messaging::close)
 				.whenException(e -> logger.warn("Exception occurred while trying to send data", e))
@@ -240,6 +246,7 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 		lastTasks.put(taskId, task);
 		runningTasks.put(taskId, task);
 		task.execute()
+				.mapException(IOException.class, DataflowIOException::new)
 				.whenComplete(($, exception) -> {
 					runningTasks.remove(taskId);
 					if (exception == null) {
@@ -267,7 +274,9 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 	private void handleGetTasks(Messaging<DataflowRequest, DataflowResponse> messaging, GetTasks getTasks) {
 		TaskId taskId = getTasks.getTaskId();
 		if (taskId.getTaskIdIsNull()) {
-			messaging.send(partitionDataResponse()).whenException(e -> logger.error("Failed to send answer for the partition data request", e));
+			messaging.send(partitionDataResponse())
+					.mapException(IOException.class, DataflowIOException::new)
+					.whenException(e -> logger.error("Failed to send answer for the partition data request", e));
 			return;
 		}
 		Task task = lastTasks.get(taskId.getTaskId());
@@ -284,6 +293,7 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 			err = null;
 		}
 		messaging.send(taskDataResponse(task, err))
+				.mapException(IOException.class, DataflowIOException::new)
 				.whenException(e -> logger.error("Failed to send answer for the task (" + taskId + ") data request", e));
 	}
 
