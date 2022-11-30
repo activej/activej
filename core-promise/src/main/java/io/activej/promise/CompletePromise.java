@@ -155,7 +155,7 @@ abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> mapException(@NotNull Class<? extends Exception> clazz, @NotNull FunctionEx<@NotNull Exception, @NotNull Exception> exceptionFn) {
+	public @NotNull <E extends Exception> Promise<T> mapException(@NotNull Class<E> clazz, @NotNull FunctionEx<@NotNull E, @NotNull Exception> exceptionFn) {
 		return this;
 	}
 
@@ -376,7 +376,7 @@ abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> whenException(@NotNull Class<? extends Exception> clazz, @NotNull ConsumerEx<@NotNull Exception> fn) {
+	public @NotNull <E extends Exception> Promise<T> whenException(@NotNull Class<E> clazz, @NotNull ConsumerEx<@NotNull E> fn) {
 		return this;
 	}
 
