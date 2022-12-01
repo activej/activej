@@ -21,6 +21,7 @@ import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
+import io.activej.common.exception.TruncatedDataException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.dsl.ChannelTransformer;
@@ -28,6 +29,8 @@ import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.csp.queue.ChannelQueue;
 import io.activej.csp.queue.ChannelZeroBuffer;
+import io.activej.dataflow.exception.DataflowException;
+import io.activej.dataflow.exception.DataflowStacklessException;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.graph.Task;
@@ -150,7 +153,7 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 					}
 				});
 		return streamSerializer
-				.withAcknowledgement(ack -> ack.mapException(IOException.class, DataflowIOException::new));
+				.withAcknowledgement(ack -> ack.mapException(IOException.class, DataflowStacklessException::new));
 	}
 
 	public <T> StreamConsumer<T> upload(StreamId streamId, StreamSchema<T> streamSchema) {
@@ -171,7 +174,8 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 					return messaging.send(handshakeResponse);
 				})
 				.then(messaging::receive)
-				.mapException(IOException.class, DataflowIOException::new)
+				.mapException(IOException.class, DataflowStacklessException::new)
+				.mapException(TruncatedDataException.class, e -> new DataflowStacklessException(e.getMessage()))
 				.whenResult(msg -> {
 					if (msg != null) {
 						doRead(messaging, msg);
@@ -221,7 +225,7 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 		}
 		ChannelConsumer<ByteBuf> consumer = messaging.sendBinaryStream()
 				.withAcknowledgement(ack -> ack
-						.mapException(IOException.class, DataflowIOException::new));
+						.mapException(IOException.class, DataflowStacklessException::new));
 		forwarder.getSupplier()
 				.streamTo(consumer);
 		consumer.withAcknowledgement(ack -> ack
@@ -246,7 +250,8 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 		lastTasks.put(taskId, task);
 		runningTasks.put(taskId, task);
 		task.execute()
-				.mapException(IOException.class, DataflowIOException::new)
+				.mapException(IOException.class, DataflowStacklessException::new)
+				.mapException(TruncatedDataException.class, e -> new DataflowStacklessException(e.getMessage()))
 				.whenComplete(($, exception) -> {
 					runningTasks.remove(taskId);
 					if (exception == null) {
@@ -275,7 +280,7 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 		TaskId taskId = getTasks.getTaskId();
 		if (taskId.getTaskIdIsNull()) {
 			messaging.send(partitionDataResponse())
-					.mapException(IOException.class, DataflowIOException::new)
+					.mapException(IOException.class, DataflowStacklessException::new)
 					.whenException(e -> logger.error("Failed to send answer for the partition data request", e));
 			return;
 		}
@@ -293,7 +298,7 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 			err = null;
 		}
 		messaging.send(taskDataResponse(task, err))
-				.mapException(IOException.class, DataflowIOException::new)
+				.mapException(IOException.class, DataflowStacklessException::new)
 				.whenException(e -> logger.error("Failed to send answer for the task (" + taskId + ") data request", e));
 	}
 

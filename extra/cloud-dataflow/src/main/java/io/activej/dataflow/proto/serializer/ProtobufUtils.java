@@ -26,7 +26,7 @@ import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.binary.ByteBufsDecoder;
-import io.activej.dataflow.DataflowException;
+import io.activej.dataflow.exception.DataflowException;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.graph.StreamSchemas;

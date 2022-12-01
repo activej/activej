@@ -23,7 +23,7 @@ import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.dataflow.DataflowClient;
-import io.activej.dataflow.DataflowException;
+import io.activej.dataflow.exception.DataflowException;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.TaskStatus;
 import io.activej.dataflow.proto.DataflowMessagingProto.DataflowRequest;

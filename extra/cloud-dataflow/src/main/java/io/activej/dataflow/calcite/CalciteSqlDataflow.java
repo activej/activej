@@ -1,7 +1,6 @@
 package io.activej.dataflow.calcite;
 
 import io.activej.dataflow.DataflowClient;
-import io.activej.dataflow.DataflowException;
 import io.activej.dataflow.SqlDataflow;
 import io.activej.dataflow.calcite.RelToDatasetConverter.ConversionResult;
 import io.activej.dataflow.calcite.optimizer.ParameterizedTableRule;
@@ -10,6 +9,7 @@ import io.activej.dataflow.collector.MergeCollector;
 import io.activej.dataflow.collector.UnionCollector;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
+import io.activej.dataflow.exception.DataflowException;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.datastream.StreamSupplier;

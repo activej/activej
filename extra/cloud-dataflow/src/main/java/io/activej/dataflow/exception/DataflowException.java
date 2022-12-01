@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.dataflow;
+package io.activej.dataflow.exception;
 
 public class DataflowException extends Exception {
 	public DataflowException(String message) {

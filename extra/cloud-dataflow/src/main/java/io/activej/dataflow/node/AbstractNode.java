@@ -1,6 +1,6 @@
 package io.activej.dataflow.node;
 
-import io.activej.dataflow.DataflowException;
+import io.activej.dataflow.exception.DataflowException;
 import io.activej.dataflow.stats.NodeStat;
 import org.jetbrains.annotations.Nullable;
 

@@ -27,7 +27,7 @@ import io.activej.common.collection.Try;
 import io.activej.common.ref.RefInt;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowClient.Session;
-import io.activej.dataflow.DataflowException;
+import io.activej.dataflow.exception.DataflowException;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.NodeDownload;
 import io.activej.dataflow.node.NodeUpload;

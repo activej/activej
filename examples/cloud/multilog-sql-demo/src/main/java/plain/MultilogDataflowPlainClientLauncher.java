@@ -1,8 +1,8 @@
 package plain;
 
 import io.activej.config.Config;
-import io.activej.dataflow.DataflowException;
 import io.activej.dataflow.SqlDataflow;
+import io.activej.dataflow.exception.DataflowException;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Inject;

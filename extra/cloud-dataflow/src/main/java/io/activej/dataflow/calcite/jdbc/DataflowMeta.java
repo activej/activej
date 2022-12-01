@@ -1,12 +1,12 @@
 package io.activej.dataflow.calcite.jdbc;
 
 import io.activej.async.callback.AsyncComputation;
-import io.activej.dataflow.DataflowException;
 import io.activej.dataflow.calcite.CalciteSqlDataflow;
 import io.activej.dataflow.calcite.RelToDatasetConverter.ConversionResult;
 import io.activej.dataflow.calcite.RelToDatasetConverter.UnmaterializedDataset;
 import io.activej.dataflow.calcite.utils.JavaRecordType;
 import io.activej.dataflow.dataset.Dataset;
+import io.activej.dataflow.exception.DataflowException;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.SynchronousStreamConsumer;
 import io.activej.eventloop.Eventloop;

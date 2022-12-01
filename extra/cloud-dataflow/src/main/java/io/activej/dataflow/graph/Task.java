@@ -17,7 +17,7 @@
 package io.activej.dataflow.graph;
 
 import io.activej.async.exception.AsyncCloseException;
-import io.activej.dataflow.DataflowException;
+import io.activej.dataflow.exception.DataflowException;
 import io.activej.dataflow.inject.DatasetIdModule.DatasetIds;
 import io.activej.dataflow.node.Node;
 import io.activej.dataflow.node.NodeDownload;

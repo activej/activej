@@ -14,31 +14,27 @@
  * limitations under the License.
  */
 
-package io.activej.dataflow;
+package io.activej.dataflow.exception;
 
 import io.activej.common.ApplicationSettings;
 
-import java.io.IOException;
+public class DataflowStacklessException extends DataflowException {
+	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(DataflowStacklessException.class, "withStackTrace", false);
 
-public final class DataflowIOException extends DataflowException {
-	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(DataflowIOException.class, "withStackTrace", false);
+	public DataflowStacklessException(String message) {
+		super(message);
+	}
 
-	public DataflowIOException(IOException e) {
+	public DataflowStacklessException(Exception e) {
 		super(e.getClass().getName() + (e.getMessage() == null ? "" : (": " + e.getMessage())));
 	}
 
-	public DataflowIOException(String message, IOException e) {
+	public DataflowStacklessException(String message, Exception e) {
 		super(message + ": " + e.getClass().getName() + (e.getMessage() == null ? "" : (": " + e.getMessage())));
 	}
 
 	@Override
 	public Throwable fillInStackTrace() {
 		return WITH_STACK_TRACE ? super.fillInStackTrace() : this;
-	}
-
-	@Override
-	public String getMessage() {
-		String message = super.getMessage();
-		return message;
 	}
 }

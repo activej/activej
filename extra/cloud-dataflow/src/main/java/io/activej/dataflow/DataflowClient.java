@@ -18,10 +18,14 @@ package io.activej.dataflow;
 
 import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.exception.TruncatedDataException;
+import io.activej.common.exception.UnknownFormatException;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.dsl.ChannelTransformer;
 import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
+import io.activej.dataflow.exception.DataflowException;
+import io.activej.dataflow.exception.DataflowStacklessException;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.inject.BinarySerializerModule.BinarySerializerLocator;
@@ -90,7 +94,7 @@ public final class DataflowClient {
 
 	public <T> StreamSupplier<T> download(InetSocketAddress address, StreamId streamId, StreamSchema<T> streamSchema, ChannelTransformer<ByteBuf, ByteBuf> transformer) {
 		return StreamSupplier.ofPromise(AsyncTcpSocketNio.connect(address, 0, socketSettings)
-				.mapException(IOException.class, e -> new DataflowIOException("Failed to connect to " + address, e))
+				.mapException(IOException.class, e -> new DataflowStacklessException("Failed to connect to " + address, e))
 				.then(socket -> {
 					Messaging<DataflowResponse, DataflowRequest> messaging = MessagingWithBinaryStreaming.create(socket, codec);
 					return performHandshake(messaging)
@@ -102,9 +106,11 @@ public final class DataflowClient {
 											.withExplicitEndOfStream())
 									.transformWith(new StreamTraceCounter<>(streamId, address))
 									.withEndOfStream(eos -> eos
-											.mapException(e -> e instanceof  IOException ?
-														new DataflowIOException("Error when downloading from " + address, (IOException) e) :
-														new DataflowException("Error when downloading from " + address, e))
+											.mapException(e -> (e instanceof IOException ||
+													e instanceof UnknownFormatException ||
+													e instanceof TruncatedDataException) ?
+													new DataflowStacklessException("Error when downloading from " + address, e) :
+													new DataflowException("Error when downloading from " + address, e))
 											.whenComplete(messaging::close)));
 				}));
 	}
@@ -183,9 +189,9 @@ public final class DataflowClient {
 		public Promise<Void> execute(long taskId, Collection<Node> nodes) {
 			return performHandshake(messaging)
 					.then(() -> messaging.send(executeRequest(taskId, nodes))
-							.mapException(IOException.class, e -> new DataflowIOException("Failed to send command to " + address, e)))
+							.mapException(IOException.class, e -> new DataflowStacklessException("Failed to send command to " + address, e)))
 					.then(() -> messaging.receive()
-							.mapException(IOException.class, e -> new DataflowIOException("Failed to receive response from " + address, e)))
+							.mapException(IOException.class, e -> new DataflowStacklessException("Failed to receive response from " + address, e)))
 					.whenResult(response -> {
 						messaging.close();
 						switch (response.getResponseCase()) {
@@ -232,7 +238,7 @@ public final class DataflowClient {
 	public static Promise<Void> performHandshake(Messaging<DataflowResponse, DataflowRequest> messaging) {
 		return messaging.send(DataflowRequest.newBuilder().setHandshake(DataflowRequest.Handshake.newBuilder().setVersion(DataflowServer.VERSION)).build())
 				.then(messaging::receive)
-				.mapException(IOException.class, DataflowIOException::new)
+				.mapException(IOException.class, DataflowStacklessException::new)
 				.whenResult(handshakeResponse -> {
 					if (!handshakeResponse.hasHandshake()) {
 						throw new DataflowException("Handshake response expected, got " + handshakeResponse.getResponseCase());
