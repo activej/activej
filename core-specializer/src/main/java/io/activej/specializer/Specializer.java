@@ -425,7 +425,7 @@ public final class Specializer {
 						else throw new UnsupportedOperationException("" + top + " " + insn);
 
 						@Nullable Remapping remapping = var < remappings.size() ? remappings.get(var) : null;
-						if (remapping != null && Objects.equals(topType, remapping.type)) {
+						if (remapping != null && topType.getSort() == remapping.type.getSort()) {
 							g.storeLocal(remapping.slot);
 						} else {
 							int newLocal = g.newLocal(topType);

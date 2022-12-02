@@ -102,6 +102,42 @@ public class SpecializerTest {
 	}
 
 	@Test
+	public void testIfElse2() {
+		TestInterface ifElseTestClass = new IfElseTestClass2();
+		Specializer specializer = Specializer.create();
+//				.withBytecodeSaveDir(Paths.get("tmp"));
+		TestInterface specialized = specializer.specialize(ifElseTestClass);
+		Assert.assertEquals(0, specialized.apply(3));
+	}
+
+	@Test
+	public void testIfElse3() {
+		TestInterface ifElseTestClass = new IfElseTestClass3();
+		Specializer specializer = Specializer.create();
+//				.withBytecodeSaveDir(Paths.get("tmp"));
+		TestInterface specialized = specializer.specialize(ifElseTestClass);
+		Assert.assertEquals(0, specialized.apply(3));
+	}
+
+	@Test
+	public void testIfElse4() {
+		TestInterface ifElseTestClass = new IfElseTestClass4();
+		Specializer specializer = Specializer.create();
+//				.withBytecodeSaveDir(Paths.get("tmp"));
+		TestInterface specialized = specializer.specialize(ifElseTestClass);
+		Assert.assertEquals(0, specialized.apply(3));
+	}
+
+	@Test
+	public void testIfElse5() {
+		TestInterface ifElseTestClass = new IfElseTestClass5();
+		Specializer specializer = Specializer.create();
+//				.withBytecodeSaveDir(Paths.get("tmp"));
+		TestInterface specialized = specializer.specialize(ifElseTestClass);
+		Assert.assertEquals(0, specialized.apply(3));
+	}
+
+	@Test
 	public void testMultipleFrames() {
 		TestInterface ifElseTestClass = new MultipleFramesTestClass();
 		Specializer specializer = Specializer.create();
