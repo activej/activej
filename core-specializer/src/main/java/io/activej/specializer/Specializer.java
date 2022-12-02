@@ -548,10 +548,24 @@ public final class Specializer {
 						g.visitJumpInsn(opcode, ((JumpInsnNode) insn).label.getLabel());
 						break;
 
-					case GETSTATIC:
+					case GETSTATIC: {
+						FieldInsnNode insnField = (FieldInsnNode) insn;
+						Type ownerType = getType(internalizeClassName(insnField.owner));
+						doCallStatic(ownerType,
+								s -> Optional.ofNullable(s.lookupField(s.instance.getClass(), insnField.name))
+										.map(lookupField ->
+												() -> g.getStatic(s.specializedType, lookupField, getType(insnField.desc))),
+								() -> g.visitFieldInsn(GETSTATIC, insnField.owner, insnField.name, insnField.desc));
+						break;
+					}
 					case PUTSTATIC: {
 						FieldInsnNode insnField = (FieldInsnNode) insn;
-						g.visitFieldInsn(opcode, insnField.owner, insnField.name, insnField.desc);
+						Type ownerType = getType(internalizeClassName(insnField.owner));
+						doCallStatic(ownerType,
+								s -> Optional.ofNullable(s.lookupField(s.instance.getClass(), insnField.name))
+										.map(lookupField ->
+												() -> g.putStatic(s.specializedType, lookupField, getType(insnField.desc))),
+								() -> g.visitFieldInsn(PUTSTATIC, insnField.owner, insnField.name, insnField.desc));
 						break;
 					}
 
@@ -731,6 +745,24 @@ public final class Specializer {
 			defaultCall.run();
 
 			g.mark(labelExit);
+		}
+
+		private void doCallStatic(Type ownerType,
+				Function<Specialization, Optional<Runnable>> staticCallSupplier,
+				Runnable defaultCall) {
+
+			Class<?> ownerClazz = loadClass(classLoader, ownerType);
+
+			for (Specialization s : relatedSpecializations) {
+				if (!ownerClazz.isAssignableFrom(s.instance.getClass())) continue;
+				Optional<Runnable> staticCall = staticCallSupplier.apply(s);
+				if (!staticCall.isPresent()) continue;
+
+				staticCall.get().run();
+				return;
+			}
+
+			defaultCall.run();
 		}
 
 		@Nullable String lookupField(Class<?> owner, String field) {

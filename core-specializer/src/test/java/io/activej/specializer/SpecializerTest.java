@@ -139,9 +139,25 @@ public class SpecializerTest {
 
 	@Test
 	public void testMultipleFrames() {
-		TestInterface ifElseTestClass = new MultipleFramesTestClass();
+		TestInterface multipleFramesTestClass = new MultipleFramesTestClass();
 		Specializer specializer = Specializer.create();
-		TestInterface specialized = specializer.specialize(ifElseTestClass);
+		TestInterface specialized = specializer.specialize(multipleFramesTestClass);
 		Assert.assertEquals(0, specialized.apply(3));
+	}
+
+	@Test
+	public void testStaticFields() {
+		TestInterface staticFieldTestClass = new StaticFieldTestClass();
+		Specializer specializer = Specializer.create();
+		TestInterface specialized = specializer.specialize(staticFieldTestClass);
+		Assert.assertEquals(staticFieldTestClass.apply(3), specialized.apply(3));
+	}
+
+	@Test
+	public void testStaticMethods() {
+		TestInterface staticMethodsTestClass = new StaticMethodTestClass();
+		Specializer specializer = Specializer.create();
+		TestInterface specialized = specializer.specialize(staticMethodsTestClass);
+		Assert.assertEquals(staticMethodsTestClass.apply(3), specialized.apply(3));
 	}
 }
