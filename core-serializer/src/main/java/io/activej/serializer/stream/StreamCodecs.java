@@ -1,7 +1,5 @@
 package io.activej.serializer.stream;
 
-import io.activej.codegen.ClassBuilder;
-import io.activej.codegen.DefiningClassLoader;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.BinaryOutput;
 import io.activej.serializer.BinarySerializer;
@@ -11,19 +9,13 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 
-import static io.activej.codegen.expression.Expressions.*;
 import static java.util.Arrays.asList;
 
 public final class StreamCodecs {
-	private static final ConcurrentHashMap<Class<?>, StreamCodec<?>> CODECS = new ConcurrentHashMap<>();
-
-	public static final DefiningClassLoader CLASS_LOADER = DefiningClassLoader.create();
-
 	public static StreamCodec<Void> ofVoid() {
 		return new StreamCodec<Void>() {
 			@Override
@@ -38,64 +30,227 @@ public final class StreamCodecs {
 	}
 
 	public static StreamCodec<Boolean> ofBoolean() {
-		return buildCodec(boolean.class, "writeBoolean", "readBoolean");
+		return new StreamCodec<Boolean>() {
+			@Override
+			public Boolean decode(StreamInput input) throws IOException {
+				return input.readBoolean();
+			}
+
+			@Override
+			public void encode(StreamOutput output, Boolean item) throws IOException {
+				output.writeBoolean(item);
+			}
+		};
 	}
 
 	public static StreamCodec<Character> ofChar() {
-		return buildCodec(char.class, "writeChar", "readChar");
+		return new StreamCodec<Character>() {
+			@Override
+			public Character decode(StreamInput input) throws IOException {
+				return input.readChar();
+			}
+
+			@Override
+			public void encode(StreamOutput output, Character item) throws IOException {
+				output.writeChar(item);
+			}
+		};
 	}
 
 	public static StreamCodec<Byte> ofByte() {
-		return buildCodec(byte.class, "writeByte", "readByte");
+		return new StreamCodec<Byte>() {
+			@Override
+			public Byte decode(StreamInput input) throws IOException {
+				return input.readByte();
+			}
+
+			@Override
+			public void encode(StreamOutput output, Byte item) throws IOException {
+				output.writeByte(item);
+			}
+		};
 	}
 
 	public static StreamCodec<Short> ofShort() {
-		return buildCodec(short.class, "writeShort", "readShort");
+		return new StreamCodec<Short>() {
+			@Override
+			public Short decode(StreamInput input) throws IOException {
+				return input.readShort();
+			}
+
+			@Override
+			public void encode(StreamOutput output, Short item) throws IOException {
+				output.writeShort(item);
+			}
+		};
 	}
 
 	public static StreamCodec<Integer> ofInt() {
-		return buildCodec(int.class, "writeInt", "readInt");
+		return new StreamCodec<Integer>() {
+			@Override
+			public Integer decode(StreamInput input) throws IOException {
+				return input.readInt();
+			}
+
+			@Override
+			public void encode(StreamOutput output, Integer item) throws IOException {
+				output.writeInt(item);
+			}
+		};
 	}
 
 	public static StreamCodec<Integer> ofVarInt() {
-		return buildCodec(int.class, "writeVarInt", "readVarInt");
+		return new StreamCodec<Integer>() {
+			@Override
+			public Integer decode(StreamInput input) throws IOException {
+				return input.readVarInt();
+			}
+
+			@Override
+			public void encode(StreamOutput output, Integer item) throws IOException {
+				output.writeVarInt(item);
+			}
+		};
 	}
 
 	public static StreamCodec<Long> ofLong() {
-		return buildCodec(long.class, "writeLong", "readLong");
+		return new StreamCodec<Long>() {
+			@Override
+			public Long decode(StreamInput input) throws IOException {
+				return input.readLong();
+			}
+
+			@Override
+			public void encode(StreamOutput output, Long item) throws IOException {
+				output.writeLong(item);
+			}
+		};
 	}
 
 	public static StreamCodec<Long> ofVarLong() {
-		return buildCodec(long.class, "writeVarLong", "readVarLong");
+		return new StreamCodec<Long>() {
+			@Override
+			public Long decode(StreamInput input) throws IOException {
+				return input.readVarLong();
+			}
+
+			@Override
+			public void encode(StreamOutput output, Long item) throws IOException {
+				output.writeVarLong(item);
+			}
+		};
 	}
 
 	public static StreamCodec<Float> ofFloat() {
-		return buildCodec(float.class, "writeFloat", "readFloat");
+		return new StreamCodec<Float>() {
+			@Override
+			public Float decode(StreamInput input) throws IOException {
+				return input.readFloat();
+			}
+
+			@Override
+			public void encode(StreamOutput output, Float item) throws IOException {
+				output.writeFloat(item);
+			}
+		};
 	}
 
 	public static StreamCodec<Double> ofDouble() {
-		return buildCodec(double.class, "writeDouble", "readDouble");
+		return new StreamCodec<Double>() {
+			@Override
+			public Double decode(StreamInput input) throws IOException {
+				return input.readDouble();
+			}
+
+			@Override
+			public void encode(StreamOutput output, Double item) throws IOException {
+				output.writeDouble(item);
+			}
+		};
 	}
 
 	public static StreamCodec<String> ofString() {
-		return buildCodec(String.class, "writeString", "readString");
-	}
+		return new StreamCodec<String>() {
+			@Override
+			public String decode(StreamInput input) throws IOException {
+				return input.readString();
+			}
 
-	private static <T> StreamCodec<T> buildCodec(Class<T> itemType, String encode, String decode) {
-		//noinspection unchecked
-		return (StreamCodec<T>) CODECS.computeIfAbsent(itemType, $ ->
-				(StreamCodec<T>) ClassBuilder.create(StreamCodec.class)
-						.withMethod("encode", call(arg(0), encode, cast(arg(1), itemType)))
-						.withMethod("decode", call(arg(0), decode))
-						.defineClassAndCreateInstance(CLASS_LOADER));
+			@Override
+			public void encode(StreamOutput output, String item) throws IOException {
+				output.writeString(item);
+			}
+		};
 	}
 
 	public static StreamCodec<boolean[]> ofBooleanArray() {
-		return buildArrayCodec(boolean[].class, 1, "writeBoolean", "readBoolean");
+		return new AbstractArrayStreamCodec<boolean[]>(1) {
+			@Override
+			protected int getArrayLength(boolean[] array) {
+				return array.length;
+			}
+
+			@Override
+			protected void doWrite(BinaryOutput output, boolean[] array, int offset, int limit) {
+				for (; offset < limit; offset++) {
+					output.writeBoolean(array[offset]);
+				}
+			}
+
+			@Override
+			protected boolean[] createArray(int length) {
+				return new boolean[length];
+			}
+
+			@Override
+			protected void doRead(BinaryInput input, boolean[] array, int offset, int count) {
+				for (int i = 0; i < count; i++) {
+					array[i + offset] = input.readBoolean();
+				}
+			}
+
+			@Override
+			protected void doReadRemaining(StreamInput input, boolean[] array, int offset, int limit) throws IOException {
+				for (; offset < limit; offset++) {
+					array[offset] = input.readBoolean();
+				}
+			}
+		};
 	}
 
 	public static StreamCodec<char[]> ofCharArray() {
-		return buildArrayCodec(char[].class, 2, "writeChar", "readChar");
+		return new AbstractArrayStreamCodec<char[]>(2) {
+			@Override
+			protected int getArrayLength(char[] array) {
+				return array.length;
+			}
+
+			@Override
+			protected void doWrite(BinaryOutput output, char[] array, int offset, int limit) {
+				for (; offset < limit; offset++) {
+					output.writeChar(array[offset]);
+				}
+			}
+
+			@Override
+			protected char[] createArray(int length) {
+				return new char[length];
+			}
+
+			@Override
+			protected void doRead(BinaryInput input, char[] array, int offset, int count) {
+				for (int i = 0; i < count; i++) {
+					array[i + offset] = input.readChar();
+				}
+			}
+
+			@Override
+			protected void doReadRemaining(StreamInput input, char[] array, int offset, int limit) throws IOException {
+				for (; offset < limit; offset++) {
+					array[offset] = input.readChar();
+				}
+			}
+		};
 	}
 
 	public static StreamCodec<byte[]> ofByteArray() {
@@ -116,51 +271,178 @@ public final class StreamCodecs {
 	}
 
 	public static StreamCodec<short[]> ofShortArray() {
-		return buildArrayCodec(short[].class, 2, "writeShort", "readShort");
+		return new AbstractArrayStreamCodec<short[]>(2) {
+			@Override
+			protected int getArrayLength(short[] array) {
+				return array.length;
+			}
+
+			@Override
+			protected void doWrite(BinaryOutput output, short[] array, int offset, int limit) {
+				for (; offset < limit; offset++) {
+					output.writeShort(array[offset]);
+				}
+			}
+
+			@Override
+			protected short[] createArray(int length) {
+				return new short[length];
+			}
+
+			@Override
+			protected void doRead(BinaryInput input, short[] array, int offset, int count) {
+				for (int i = 0; i < count; i++) {
+					array[i + offset] = input.readShort();
+				}
+			}
+
+			@Override
+			protected void doReadRemaining(StreamInput input, short[] array, int offset, int limit) throws IOException {
+				for (; offset < limit; offset++) {
+					array[offset] = input.readShort();
+				}
+			}
+		};
 	}
 
 	public static StreamCodec<int[]> ofIntArray() {
-		return buildArrayCodec(int[].class, 4, "writeInt", "readInt");
+		return new AbstractArrayStreamCodec<int[]>(4) {
+			@Override
+			protected int getArrayLength(int[] array) {
+				return array.length;
+			}
+
+			@Override
+			protected void doWrite(BinaryOutput output, int[] array, int offset, int limit) {
+				for (; offset < limit; offset++) {
+					output.writeInt(array[offset]);
+				}
+			}
+
+			@Override
+			protected int[] createArray(int length) {
+				return new int[length];
+			}
+
+			@Override
+			protected void doRead(BinaryInput input, int[] array, int offset, int count) {
+				for (int i = 0; i < count; i++) {
+					array[i + offset] = input.readInt();
+				}
+			}
+
+			@Override
+			protected void doReadRemaining(StreamInput input, int[] array, int offset, int limit) throws IOException {
+				for (; offset < limit; offset++) {
+					array[offset] = input.readInt();
+				}
+			}
+		};
 	}
 
 	public static StreamCodec<long[]> ofLongArray() {
-		return buildArrayCodec(long[].class, 8, "writeLong", "readLong");
+		return new AbstractArrayStreamCodec<long[]>(8) {
+			@Override
+			protected int getArrayLength(long[] array) {
+				return array.length;
+			}
+
+			@Override
+			protected void doWrite(BinaryOutput output, long[] array, int offset, int limit) {
+				for (; offset < limit; offset++) {
+					output.writeLong(array[offset]);
+				}
+			}
+
+			@Override
+			protected long[] createArray(int length) {
+				return new long[length];
+			}
+
+			@Override
+			protected void doRead(BinaryInput input, long[] array, int offset, int count) {
+				for (int i = 0; i < count; i++) {
+					array[i + offset] = input.readLong();
+				}
+			}
+
+			@Override
+			protected void doReadRemaining(StreamInput input, long[] array, int offset, int limit) throws IOException {
+				for (; offset < limit; offset++) {
+					array[offset] = input.readLong();
+				}
+			}
+		};
 	}
 
 	public static StreamCodec<float[]> ofFloatArray() {
-		return buildArrayCodec(float[].class, 4, "writeFloat", "readFloat");
+		return new AbstractArrayStreamCodec<float[]>(4) {
+			@Override
+			protected int getArrayLength(float[] array) {
+				return array.length;
+			}
+
+			@Override
+			protected void doWrite(BinaryOutput output, float[] array, int offset, int limit) {
+				for (; offset < limit; offset++) {
+					output.writeFloat(array[offset]);
+				}
+			}
+
+			@Override
+			protected float[] createArray(int length) {
+				return new float[length];
+			}
+
+			@Override
+			protected void doRead(BinaryInput input, float[] array, int offset, int count) {
+				for (int i = 0; i < count; i++) {
+					array[i + offset] = input.readFloat();
+				}
+			}
+
+			@Override
+			protected void doReadRemaining(StreamInput input, float[] array, int offset, int limit) throws IOException {
+				for (; offset < limit; offset++) {
+					array[offset] = input.readFloat();
+				}
+			}
+		};
 	}
 
 	public static StreamCodec<double[]> ofDoubleArray() {
-		return buildArrayCodec(double[].class, 8, "writeDouble", "readDouble");
-	}
+		return new AbstractArrayStreamCodec<double[]>(8) {
+			@Override
+			protected int getArrayLength(double[] array) {
+				return array.length;
+			}
 
-	private static <T> StreamCodec<T> buildArrayCodec(Class<T> arrayType, int elementSize, String encode, String decode) {
-		//noinspection unchecked
-		return (StreamCodec<T>) CODECS.computeIfAbsent(arrayType, $ ->
-				ClassBuilder.create(AbstractArrayStreamCodec.class)
-						.withConstructor(superConstructor(value(elementSize)))
+			@Override
+			protected void doWrite(BinaryOutput output, double[] array, int offset, int limit) {
+				for (; offset < limit; offset++) {
+					output.writeDouble(array[offset]);
+				}
+			}
 
-						.withMethod("getArrayLength", length(cast(arg(0), arrayType)))
-						.withMethod("doWrite", let(cast(arg(1), arrayType),
-								array -> iterate(
-										arg(2),
-										arg(3),
-										it -> call(arg(0), encode, arrayGet(array, it)))))
+			@Override
+			protected double[] createArray(int length) {
+				return new double[length];
+			}
 
-						.withMethod("createArray", arrayNew(arrayType, arg(0)))
-						.withMethod("doRead", let(cast(arg(1), arrayType),
-								array -> iterate(
-										value(0),
-										arg(3),
-										i -> arraySet(array, add(i, arg(2)), call(arg(0), decode)))))
-						.withMethod("doReadRemaining", let(cast(arg(1), arrayType),
-								array -> iterate(
-										arg(2),
-										arg(3),
-										i -> arraySet(array, i, call(arg(0), decode)))))
+			@Override
+			protected void doRead(BinaryInput input, double[] array, int offset, int count) {
+				for (int i = 0; i < count; i++) {
+					array[i + offset] = input.readDouble();
+				}
+			}
 
-						.defineClassAndCreateInstance(CLASS_LOADER));
+			@Override
+			protected void doReadRemaining(StreamInput input, double[] array, int offset, int limit) throws IOException {
+				for (; offset < limit; offset++) {
+					array[offset] = input.readDouble();
+				}
+			}
+		};
 	}
 
 	public static StreamCodec<int[]> ofVarIntArray() {
