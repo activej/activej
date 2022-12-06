@@ -20,7 +20,6 @@ import com.dslplatform.json.JsonConverter;
 import com.dslplatform.json.JsonReader;
 import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.ParsingException;
-import io.activej.fs.tcp.FsMessagingProto.FsResponse.ServerError;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -138,55 +137,5 @@ public abstract class FsExceptionConverter {
 		FsException exception = readFsException(reader);
 		if (exception instanceof FsScalarException) return (FsScalarException) exception;
 		throw ParsingException.create("Expected exception to be instance of FsScalarException", true);
-	}
-
-	public static FsException unwindProtobufException(ServerError serverError) {
-		switch (serverError.getErrorCase()) {
-			case FS_BATCH_EXCEPTION:
-				Map<String, FsScalarException> exceptions = new LinkedHashMap<>();
-				serverError.getFsBatchException().getExceptionsMap()
-						.forEach((fileName, oneOfFsScalarExceptions) -> {
-							switch (oneOfFsScalarExceptions.getExceptionCase()) {
-								case FS_SCALAR_EXCEPTION ->
-										exceptions.put(fileName, new FsScalarException(oneOfFsScalarExceptions.getFsScalarException().getMessage(), false));
-								case PATH_CONTAINS_FILE_EXCEPTION ->
-										exceptions.put(fileName, new PathContainsFileException(oneOfFsScalarExceptions.getPathContainsFileException().getMessage(), false));
-								case ILLEGAL_OFFSET_EXCEPTION ->
-										exceptions.put(fileName, new IllegalOffsetException(oneOfFsScalarExceptions.getIllegalOffsetException().getMessage(), false));
-								case FILE_NOT_FOUND_EXCEPTION ->
-										exceptions.put(fileName, new FileNotFoundException(oneOfFsScalarExceptions.getFileNotFoundException().getMessage(), false));
-								case FORBIDDEN_PATH_EXCEPTION ->
-										exceptions.put(fileName, new ForbiddenPathException(oneOfFsScalarExceptions.getForbiddenPathException().getMessage(), false));
-								case MALFORMED_GLOB_EXCEPTION ->
-										exceptions.put(fileName, new MalformedGlobException(oneOfFsScalarExceptions.getMalformedGlobException().getMessage(), false));
-								case IS_A_DIRECTORY_EXCEPTION ->
-										exceptions.put(fileName, new IsADirectoryException(oneOfFsScalarExceptions.getIsADirectoryException().getMessage(), false));
-								default -> exceptions.put(fileName, new FsScalarException("Unknown exception", false));
-							}
-						});
-				return new FsBatchException(exceptions, false);
-			case FS_EXCEPTION:
-				return new FsException(serverError.getFsException().getMessage(), false);
-			case FS_STATE_EXCEPTION:
-				return new FsStateException(serverError.getFsStateException().getMessage(), false);
-			case FS_SCALAR_EXCEPTION:
-				return new FsScalarException(serverError.getFsScalarException().getMessage(), false);
-			case PATH_CONTAINS_FILE_EXCEPTION:
-				return new PathContainsFileException(serverError.getPathContainsFileException().getMessage(), false);
-			case ILLEGAL_OFFSET_EXCEPTION:
-				return new IllegalOffsetException(serverError.getIllegalOffsetException().getMessage(), false);
-			case FILE_NOT_FOUND_EXCEPTION:
-				return new FileNotFoundException(serverError.getFileNotFoundException().getMessage(), false);
-			case FORBIDDEN_PATH_EXCEPTION:
-				return new ForbiddenPathException(serverError.getForbiddenPathException().getMessage(), false);
-			case MALFORMED_GLOB_EXCEPTION:
-				return new MalformedGlobException(serverError.getMalformedGlobException().getMessage(), false);
-			case IS_A_DIRECTORY_EXCEPTION:
-				return new IsADirectoryException(serverError.getIsADirectoryException().getMessage(), false);
-			case FS_IO_EXCEPTION:
-				return new FsIOException(serverError.getFsIoException().getMessage(), false);
-			default:
-				return new FsException("Unknown exception", false);
-		}
 	}
 }

@@ -146,6 +146,7 @@ public final class Initializers {
 				.with(RemoteActiveFs.class, WARNING, "errorAppendFinish", fs -> ofPromiseStats(fs.getAppendFinishPromise()))
 				.with(RemoteActiveFs.class, WARNING, "errorInfo", fs -> ofPromiseStats(fs.getInfoPromise()))
 				.with(RemoteActiveFs.class, WARNING, "errorInfoAll", fs -> ofPromiseStats(fs.getInfoAllPromise()))
-				.with(RemoteActiveFs.class, WARNING, "errorPing", fs -> ofPromiseStats(fs.getPingPromise()));
+				.with(RemoteActiveFs.class, WARNING, "errorPing", fs -> ofPromiseStats(fs.getPingPromise()))
+				.with(RemoteActiveFs.class, WARNING, "errorHandshake", fs -> ofPromiseStats(fs.getHandshakePromise()));
 	}
 }

@@ -51,7 +51,7 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.crdt.CrdtMessagingProto.CrdtRequest.RequestCase.TAKE_ACK;
 import static io.activej.crdt.CrdtMessagingProto.CrdtResponse.ResponseCase.*;
 import static io.activej.crdt.util.Utils.ackTransformer;
-import static io.activej.fs.util.ProtobufUtils.codec;
+import static io.activej.crdt.util.Utils.codec;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer<CrdtServer<K, S>> {

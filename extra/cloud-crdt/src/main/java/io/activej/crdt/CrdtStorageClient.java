@@ -54,8 +54,8 @@ import java.time.Duration;
 import static io.activej.crdt.CrdtMessagingProto.CrdtRequest.RequestCase.*;
 import static io.activej.crdt.CrdtMessagingProto.CrdtResponse;
 import static io.activej.crdt.CrdtMessagingProto.CrdtResponse.ResponseCase.*;
+import static io.activej.crdt.util.Utils.codec;
 import static io.activej.crdt.util.Utils.onItem;
-import static io.activej.fs.util.ProtobufUtils.codec;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtStorageClient<K extends Comparable<K>, S> implements CrdtStorage<K, S>, EventloopService,

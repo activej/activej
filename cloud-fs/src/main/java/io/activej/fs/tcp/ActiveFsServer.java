@@ -22,35 +22,26 @@ import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
-import io.activej.fs.FileMetadata;
-import io.activej.fs.exception.*;
-import io.activej.fs.tcp.FsMessagingProto.FsRequest;
-import io.activej.fs.tcp.FsMessagingProto.FsRequest.*;
-import io.activej.fs.tcp.FsMessagingProto.FsResponse;
-import io.activej.fs.tcp.FsMessagingProto.FsResponse.*;
-import io.activej.fs.tcp.FsMessagingProto.FsResponse.Handshake.Ok;
-import io.activej.fs.tcp.FsMessagingProto.FsResponse.ServerError.OneOfFsScalarExceptions;
-import io.activej.fs.tcp.FsMessagingProto.Version;
+import io.activej.fs.exception.FileNotFoundException;
+import io.activej.fs.exception.FsException;
+import io.activej.fs.tcp.messaging.FsRequest;
+import io.activej.fs.tcp.messaging.FsResponse;
+import io.activej.fs.tcp.messaging.Version;
+import io.activej.fs.util.RemoteFsUtils;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.net.AbstractServer;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
-import org.jetbrains.annotations.Nullable;
 
 import java.net.InetAddress;
 import java.time.Duration;
-import java.util.HashSet;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.fs.tcp.FsMessagingProto.FsResponse.ResponseCase.*;
-import static io.activej.fs.tcp.FsMessagingProto.FsResponse.ServerError.FsBatchException.newBuilder;
-import static io.activej.fs.util.ProtobufUtils.codec;
 import static io.activej.fs.util.RemoteFsUtils.castError;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 
@@ -61,15 +52,17 @@ import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
  * <b>This server should not be launched as a publicly available server, it is meant for private networks.</b>
  */
 public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
-	public static final Version VERSION = Version.newBuilder().setMajor(1).setMinor(0).build();
+	public static final Version VERSION = new Version(1, 0);
 
-	private static final ByteBufsCodec<FsRequest, FsResponse> SERIALIZER = codec(FsRequest.parser());
+	private static final ByteBufsCodec<FsRequest, FsResponse> SERIALIZER = RemoteFsUtils.codec(
+			RemoteFsUtils.FS_REQUEST_CODEC,
+			RemoteFsUtils.FS_RESPONSE_CODEC
+	);
 
 	private final ActiveFs fs;
 
-	private Function<FsRequest.Handshake, FsResponse.Handshake> handshakeHandler = $ -> FsResponse.Handshake.newBuilder()
-			.setOk(Ok.newBuilder())
-			.build();
+	private Function<FsRequest.Handshake, FsResponse.Handshake> handshakeHandler = $ ->
+			new FsResponse.Handshake(null);
 
 	// region JMX
 	private final PromiseStats handleRequestPromise = PromiseStats.create(Duration.ofMinutes(5));
@@ -115,76 +108,103 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 		MessagingWithBinaryStreaming<FsRequest, FsResponse> messaging =
 				MessagingWithBinaryStreaming.create(socket, SERIALIZER);
 		messaging.receive()
-				.then(handshakeMsg -> {
-					if (!handshakeMsg.hasHandshake()) {
+				.then(request -> {
+					if (!(request instanceof FsRequest.Handshake handshake)) {
 						return Promise.ofException(new FsException("Handshake expected"));
 					}
-					return handleHandshake(messaging, handshakeMsg.getHandshake())
+					return handleHandshake(messaging, handshake)
 							.then(() -> messaging.receive()
-									.then(msg -> switch (msg.getRequestCase()) {
-										case UPLOAD -> handleUpload(messaging, msg.getUpload());
-										case APPEND -> handleAppend(messaging, msg.getAppend());
-										case DOWNLOAD -> handleDownload(messaging, msg.getDownload());
-										case COPY -> handleCopy(messaging, msg.getCopy());
-										case COPY_ALL -> handleCopyAll(messaging, msg.getCopyAll());
-										case MOVE -> handleMove(messaging, msg.getMove());
-										case MOVE_ALL -> handleMoveAll(messaging, msg.getMoveAll());
-										case DELETE -> handleDelete(messaging, msg.getDelete());
-										case DELETE_ALL -> handleDeleteAll(messaging, msg.getDeleteAll());
-										case LIST -> handleList(messaging, msg.getList());
-										case INFO -> handleInfo(messaging, msg.getInfo());
-										case INFO_ALL -> handleInfoAll(messaging, msg.getInfoAll());
-										case PING -> handlePing(messaging);
-										case HANDSHAKE ->
-												Promise.ofException(new FsException("Handshake was already performed"));
-										case REQUEST_NOT_SET ->
-												Promise.ofException(new FsException("Request was not set"));
+									.then(msg -> {
+										if (msg instanceof FsRequest.Upload upload) {
+											return handleUpload(messaging, upload);
+										}
+										if (msg instanceof FsRequest.Append append) {
+											return handleAppend(messaging, append);
+										}
+										if (msg instanceof FsRequest.Download download) {
+											return handleDownload(messaging, download);
+										}
+										if (msg instanceof FsRequest.Copy copy) {
+											return handleCopy(messaging, copy);
+										}
+										if (msg instanceof FsRequest.CopyAll copyAll) {
+											return handleCopyAll(messaging, copyAll);
+										}
+										if (msg instanceof FsRequest.Move move) {
+											return handleMove(messaging, move);
+										}
+										if (msg instanceof FsRequest.MoveAll moveAll) {
+											return handleMoveAll(messaging, moveAll);
+										}
+										if (msg instanceof FsRequest.Delete delete) {
+											return handleDelete(messaging, delete);
+										}
+										if (msg instanceof FsRequest.DeleteAll deleteAll) {
+											return handleDeleteAll(messaging, deleteAll);
+										}
+										if (msg instanceof FsRequest.List list) {
+											return handleList(messaging, list);
+										}
+										if (msg instanceof FsRequest.Info info) {
+											return handleInfo(messaging, info);
+										}
+										if (msg instanceof FsRequest.InfoAll infoAll) {
+											return handleInfoAll(messaging, infoAll);
+										}
+										if (msg instanceof FsRequest.Ping) {
+											return handlePing(messaging);
+										}
+										if (msg instanceof FsRequest.Handshake) {
+											return Promise.ofException(new FsException("Handshake was already performed"));
+										}
+										throw new AssertionError();
 									}));
 				})
 				.whenComplete(handleRequestPromise.recordStats())
 				.whenException(e -> {
 					logger.warn("got an error while handling message : {}", this, e);
-					messaging.send(serverError(e))
+					messaging.send(new FsResponse.ServerError(castError(e)))
 							.then(messaging::sendEndOfStream)
 							.whenResult(messaging::close);
 				});
 	}
 
-	private Promise<Void> handleHandshake(Messaging<FsRequest, FsResponse> messaging, FsRequest.Handshake handshake) {
-		return messaging.send(FsResponse.newBuilder().setHandshake(handshakeHandler.apply(handshake)).build())
+	private Promise<Void> handleHandshake(Messaging<FsRequest, FsResponse> messaging, FsRequest.Handshake
+			handshake) {
+		return messaging.send(handshakeHandler.apply(handshake))
 				.whenComplete(handshakePromise.recordStats())
 				.whenComplete(toLogger(logger, TRACE, "handshake", handshake, this));
 	}
 
-	private Promise<Void> handleUpload(Messaging<FsRequest, FsResponse> messaging, Upload upload) {
-		String name = upload.getName();
-		long size = upload.getSize();
+	private Promise<Void> handleUpload(Messaging<FsRequest, FsResponse> messaging, FsRequest.Upload upload) {
+		String name = upload.name();
+		long size = upload.size();
 		return (size == -1 ? fs.upload(name) : fs.upload(name, size))
 				.map(uploader -> size == -1 ? uploader : uploader.transformWith(ofFixedSize(size)))
-				.then(uploader -> messaging.send(response(UPLOAD_ACK))
+				.then(uploader -> messaging.send(new FsResponse.UploadAck())
 						.then(() -> messaging.receiveBinaryStream()
 								.streamTo(uploader.withAcknowledgement(
 										ack -> ack
 												.whenComplete(uploadFinishPromise.recordStats())
 												.whenComplete(toLogger(logger, TRACE, "onUploadComplete", upload, this)))
 								)))
-				.then(() -> messaging.send(response(UPLOAD_FINISHED)))
+				.then(() -> messaging.send(new FsResponse.UploadFinished()))
 				.then(messaging::sendEndOfStream)
 				.whenResult(messaging::close)
 				.whenComplete(uploadBeginPromise.recordStats())
 				.whenComplete(toLogger(logger, TRACE, "upload", upload, this));
 	}
 
-	private Promise<Void> handleAppend(Messaging<FsRequest, FsResponse> messaging, Append append) {
-		String name = append.getName();
-		long offset = append.getOffset();
+	private Promise<Void> handleAppend(Messaging<FsRequest, FsResponse> messaging, FsRequest.Append append) {
+		String name = append.name();
+		long offset = append.offset();
 		return fs.append(name, offset)
-				.then(uploader -> messaging.send(response(APPEND_ACK))
+				.then(uploader -> messaging.send(new FsResponse.AppendAck())
 						.then(() -> messaging.receiveBinaryStream().streamTo(uploader.withAcknowledgement(
 								ack -> ack
 										.whenComplete(appendFinishPromise.recordStats())
 										.whenComplete(toLogger(logger, TRACE, "onAppendComplete", append, this))))))
-				.then(() -> messaging.send(response(APPEND_FINISHED)))
+				.then(() -> messaging.send(new FsResponse.AppendFinished()))
 				.then(messaging::sendEndOfStream)
 				.whenResult(messaging::close)
 				.whenComplete(appendBeginPromise.recordStats())
@@ -192,10 +212,10 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 
 	}
 
-	private Promise<Void> handleDownload(Messaging<FsRequest, FsResponse> messaging, Download download) {
-		String name = download.getName();
-		long offset = download.getOffset();
-		long limit = download.getLimit();
+	private Promise<Void> handleDownload(Messaging<FsRequest, FsResponse> messaging, FsRequest.Download download) {
+		String name = download.name();
+		long offset = download.offset();
+		long limit = download.limit();
 		return fs.info(name)
 				.whenResult(Objects::isNull, $ -> {
 					throw new FileNotFoundException();
@@ -205,7 +225,7 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 					long fixedLimit = Math.max(0, Math.min(meta.getSize() - offset, limit));
 
 					return fs.download(name, offset, fixedLimit)
-							.then(supplier -> messaging.send(downloadSize(fixedLimit))
+							.then(supplier -> messaging.send(new FsResponse.DownloadSize(fixedLimit))
 									.whenException(supplier::closeEx)
 									.then(() -> supplier.streamTo(messaging.sendBinaryStream()
 											.withAcknowledgement(ack -> ack
@@ -216,166 +236,74 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 				.whenComplete(downloadBeginPromise.recordStats());
 	}
 
-	private Promise<Void> handleCopy(Messaging<FsRequest, FsResponse> messaging, Copy copy) throws Exception {
-		return simpleHandle(messaging, () -> fs.copy(copy.getName(), copy.getTarget()), $ -> response(COPY_FINISHED), copyPromise);
+	private Promise<Void> handleCopy(Messaging<FsRequest, FsResponse> messaging, FsRequest.Copy copy) throws
+			Exception {
+		return simpleHandle(messaging, () -> fs.copy(copy.name(), copy.target()), FsResponse.CopyFinished::new, copyPromise);
 	}
 
-	private Promise<Void> handleCopyAll(Messaging<FsRequest, FsResponse> messaging, CopyAll copyAll) throws Exception {
-		return simpleHandle(messaging, () -> fs.copyAll(copyAll.getSourceToTargetMap()), $ -> response(COPY_ALL_FINISHED), copyAllPromise);
+	private Promise<Void> handleCopyAll(Messaging<FsRequest, FsResponse> messaging, FsRequest.CopyAll copyAll) throws
+			Exception {
+		return simpleHandle(messaging, () -> fs.copyAll(copyAll.sourceToTarget()), FsResponse.CopyAllFinished::new, copyAllPromise);
 	}
 
-	private Promise<Void> handleMove(Messaging<FsRequest, FsResponse> messaging, Move move) throws Exception {
-		return simpleHandle(messaging, () -> fs.move(move.getName(), move.getTarget()), $ -> response(MOVE_FINISHED), movePromise);
+	private Promise<Void> handleMove(Messaging<FsRequest, FsResponse> messaging, FsRequest.Move move) throws
+			Exception {
+		return simpleHandle(messaging, () -> fs.move(move.name(), move.target()), FsResponse.MoveFinished::new, movePromise);
 	}
 
-	private Promise<Void> handleMoveAll(Messaging<FsRequest, FsResponse> messaging, MoveAll moveAll) throws Exception {
-		return simpleHandle(messaging, () -> fs.moveAll(moveAll.getSourceToTargetMap()), $ -> response(MOVE_ALL_FINISHED), moveAllPromise);
+	private Promise<Void> handleMoveAll(Messaging<FsRequest, FsResponse> messaging, FsRequest.MoveAll moveAll) throws
+			Exception {
+		return simpleHandle(messaging, () -> fs.moveAll(moveAll.sourceToTarget()), FsResponse.MoveAllFinished::new, moveAllPromise);
 	}
 
-	private Promise<Void> handleDelete(Messaging<FsRequest, FsResponse> messaging, Delete delete) throws Exception {
-		return simpleHandle(messaging, () -> fs.delete(delete.getName()), $ -> response(DELETE_FINISHED), deletePromise);
+	private Promise<Void> handleDelete(Messaging<FsRequest, FsResponse> messaging, FsRequest.Delete delete) throws
+			Exception {
+		return simpleHandle(messaging, () -> fs.delete(delete.name()), FsResponse.DeleteFinished::new, deletePromise);
 	}
 
-	private Promise<Void> handleDeleteAll(Messaging<FsRequest, FsResponse> messaging, DeleteAll deleteAll) throws Exception {
-		return simpleHandle(messaging, () -> fs.deleteAll(listToSet(deleteAll.getToDeleteList())), $ -> response(DELETE_ALL_FINISHED), deleteAllPromise);
+	private Promise<Void> handleDeleteAll(Messaging<FsRequest, FsResponse> messaging, FsRequest.DeleteAll
+			deleteAll) throws Exception {
+		return simpleHandle(messaging, () -> fs.deleteAll(deleteAll.toDelete()), FsResponse.DeleteAllFinished::new, deleteAllPromise);
 	}
 
-	private Promise<Void> handleList(Messaging<FsRequest, FsResponse> messaging, List list) throws Exception {
-		return simpleHandle(messaging, () -> fs.list(list.getGlob()), ActiveFsServer::listFinished, listPromise);
+	private Promise<Void> handleList(Messaging<FsRequest, FsResponse> messaging, FsRequest.List list) throws
+			Exception {
+		return simpleHandle(messaging, () -> fs.list(list.glob()), FsResponse.ListFinished::new, listPromise);
 	}
 
-	private Promise<Void> handleInfo(Messaging<FsRequest, FsResponse> messaging, Info info) throws Exception {
-		return simpleHandle(messaging, () -> fs.info(info.getName()), ActiveFsServer::infoFinished, infoPromise);
+	private Promise<Void> handleInfo(Messaging<FsRequest, FsResponse> messaging, FsRequest.Info info) throws
+			Exception {
+		return simpleHandle(messaging, () -> fs.info(info.name()), FsResponse.InfoFinished::new, infoPromise);
 	}
 
-	private Promise<Void> handleInfoAll(Messaging<FsRequest, FsResponse> messaging, InfoAll infoAll) throws Exception {
-		return simpleHandle(messaging, () -> fs.infoAll(listToSet(infoAll.getNamesList())), ActiveFsServer::infoAllFinished, infoAllPromise);
+	private Promise<Void> handleInfoAll(Messaging<FsRequest, FsResponse> messaging, FsRequest.InfoAll infoAll) throws
+			Exception {
+		return simpleHandle(messaging, () -> fs.infoAll(infoAll.names()), FsResponse.InfoAllFinished::new, infoAllPromise);
 	}
 
 	private Promise<Void> handlePing(Messaging<FsRequest, FsResponse> messaging) throws Exception {
-		return simpleHandle(messaging, fs::ping, $ -> response(PONG), pingPromise);
+		return simpleHandle(messaging, fs::ping, FsResponse.Pong::new, pingPromise);
 	}
 
-	private <R> Promise<Void> simpleHandle(Messaging<FsRequest, FsResponse> messaging, SupplierEx<Promise<R>> action, Function<R, FsResponse> response, PromiseStats stats) throws Exception {
+	private Promise<Void> simpleHandle(
+			Messaging<FsRequest, FsResponse> messaging,
+			SupplierEx<Promise<Void>> action,
+			Supplier<FsResponse> response,
+			PromiseStats stats
+	) throws Exception {
+		return simpleHandle(messaging, action, $ -> response.get(), stats);
+	}
+
+	private <R> Promise<Void> simpleHandle(
+			Messaging<FsRequest, FsResponse> messaging,
+			SupplierEx<Promise<R>> action,
+			Function<R, FsResponse> response,
+			PromiseStats stats
+	) throws Exception {
 		return action.get()
 				.then(res -> messaging.send(response.apply(res)))
 				.then(messaging::sendEndOfStream)
 				.whenComplete(stats.recordStats());
-	}
-
-	private static FsResponse response(ResponseCase responseCase) {
-		FsResponse.Builder builder = FsResponse.newBuilder();
-		return switch (responseCase) {
-			case UPLOAD_ACK -> builder.setUploadAck(UploadAck.newBuilder()).build();
-			case UPLOAD_FINISHED -> builder.setUploadFinished(UploadFinished.newBuilder()).build();
-			case APPEND_ACK -> builder.setAppendAck(AppendAck.newBuilder()).build();
-			case APPEND_FINISHED -> builder.setAppendFinished(AppendFinished.newBuilder()).build();
-			case COPY_FINISHED -> builder.setCopyFinished(CopyFinished.newBuilder()).build();
-			case COPY_ALL_FINISHED -> builder.setCopyAllFinished(CopyAllFinished.newBuilder()).build();
-			case MOVE_FINISHED -> builder.setMoveFinished(MoveFinished.newBuilder()).build();
-			case MOVE_ALL_FINISHED -> builder.setMoveAllFinished(MoveAllFinished.newBuilder()).build();
-			case LIST_FINISHED -> builder.setListFinished(ListFinished.newBuilder()).build();
-			case INFO_FINISHED -> builder.setInfoFinished(InfoFinished.newBuilder()).build();
-			case INFO_ALL_FINISHED -> builder.setInfoAllFinished(InfoAllFinished.newBuilder()).build();
-			case DELETE_FINISHED -> builder.setDeleteFinished(DeleteFinished.newBuilder()).build();
-			case DELETE_ALL_FINISHED -> builder.setDeleteAllFinished(DeleteAllFinished.newBuilder()).build();
-			case PONG -> builder.setPong(Pong.newBuilder()).build();
-			default -> throw new AssertionError();
-		};
-	}
-
-	private static FsResponse downloadSize(long fixedSize) {
-		return FsResponse.newBuilder().setDownloadSize(DownloadSize.newBuilder().setSize(fixedSize)).build();
-	}
-
-	private static FsResponse listFinished(Map<String, FileMetadata> files) {
-		ListFinished.Builder listFinishedBuilder = ListFinished.newBuilder();
-		files.forEach((fileName, fileMetadata) -> listFinishedBuilder.putFiles(fileName, convertFileMetadata(fileMetadata)));
-		return FsResponse.newBuilder().setListFinished(listFinishedBuilder).build();
-	}
-
-	private static FsResponse infoFinished(@Nullable FileMetadata fileMetadata) {
-		InfoFinished.Builder infoFinishedBuilder = InfoFinished.newBuilder();
-		NullableFileMetadata.Builder nullableFileMetadataBuilder = NullableFileMetadata.newBuilder();
-		if (fileMetadata == null) {
-			nullableFileMetadataBuilder.setIsNull(true);
-		} else {
-			nullableFileMetadataBuilder.setValue(convertFileMetadata(fileMetadata));
-		}
-		infoFinishedBuilder.setNullableFileMetadata(nullableFileMetadataBuilder);
-		return FsResponse.newBuilder().setInfoFinished(infoFinishedBuilder).build();
-	}
-
-	private static FsResponse infoAllFinished(Map<String, FileMetadata> files) {
-		InfoAllFinished.Builder infoAllFinishedBuilder = InfoAllFinished.newBuilder();
-		files.forEach((fileName, fileMetadata) -> infoAllFinishedBuilder.putFiles(fileName, convertFileMetadata(fileMetadata)));
-		return FsResponse.newBuilder().setInfoAllFinished(infoAllFinishedBuilder).build();
-	}
-
-	private static FsResponse serverError(Exception exception) {
-		ServerError.Builder serverErrorBuilder = ServerError.newBuilder();
-
-		FsException fsException = castError(exception);
-		Class<? extends FsException> exceptionClass = fsException.getClass();
-
-		if (exceptionClass == FsStateException.class) {
-			serverErrorBuilder.setFsStateException(ServerError.FsStateException.newBuilder().setMessage(fsException.getMessage()));
-		} else if (exceptionClass == FsScalarException.class) {
-			serverErrorBuilder.setFsScalarException(ServerError.FsScalarException.newBuilder().setMessage(fsException.getMessage()));
-		} else if (exceptionClass == PathContainsFileException.class) {
-			serverErrorBuilder.setPathContainsFileException(ServerError.PathContainsFileException.newBuilder().setMessage(fsException.getMessage()));
-		} else if (exceptionClass == IllegalOffsetException.class) {
-			serverErrorBuilder.setIllegalOffsetException(ServerError.IllegalOffsetException.newBuilder().setMessage(fsException.getMessage()));
-		} else if (exceptionClass == FileNotFoundException.class) {
-			serverErrorBuilder.setFileNotFoundException(ServerError.FileNotFoundException.newBuilder().setMessage(fsException.getMessage()));
-		} else if (exceptionClass == ForbiddenPathException.class) {
-			serverErrorBuilder.setForbiddenPathException(ServerError.ForbiddenPathException.newBuilder().setMessage(fsException.getMessage()));
-		} else if (exceptionClass == MalformedGlobException.class) {
-			serverErrorBuilder.setMalformedGlobException(ServerError.MalformedGlobException.newBuilder().setMessage(fsException.getMessage()));
-		} else if (exceptionClass == IsADirectoryException.class) {
-			serverErrorBuilder.setIsADirectoryException(ServerError.IsADirectoryException.newBuilder().setMessage(fsException.getMessage()).build());
-		} else if (exceptionClass == FsIOException.class) {
-			serverErrorBuilder.setFsIoException(ServerError.FsIOException.newBuilder().setMessage(fsException.getMessage()).build());
-		} else if (exceptionClass == FsBatchException.class) {
-			ServerError.FsBatchException.Builder batchExceptionBuilder = newBuilder();
-			Map<String, FsScalarException> exceptions = ((FsBatchException) fsException).getExceptions();
-			exceptions.forEach((fileName, scalarException) -> {
-				Class<? extends FsScalarException> scalarExceptionClass = scalarException.getClass();
-				OneOfFsScalarExceptions.Builder oneOfFsScalarExceptionsBuilder = OneOfFsScalarExceptions.newBuilder();
-				if (scalarExceptionClass == PathContainsFileException.class) {
-					oneOfFsScalarExceptionsBuilder.setPathContainsFileException(ServerError.PathContainsFileException.newBuilder().setMessage(scalarException.getMessage()).build());
-				} else if (scalarExceptionClass == IllegalOffsetException.class) {
-					oneOfFsScalarExceptionsBuilder.setIllegalOffsetException(ServerError.IllegalOffsetException.newBuilder().setMessage(scalarException.getMessage()).build());
-				} else if (scalarExceptionClass == FileNotFoundException.class) {
-					oneOfFsScalarExceptionsBuilder.setFileNotFoundException(ServerError.FileNotFoundException.newBuilder().setMessage(scalarException.getMessage()).build());
-				} else if (scalarExceptionClass == ForbiddenPathException.class) {
-					oneOfFsScalarExceptionsBuilder.setForbiddenPathException(ServerError.ForbiddenPathException.newBuilder().setMessage(scalarException.getMessage()).build());
-				} else if (scalarExceptionClass == MalformedGlobException.class) {
-					oneOfFsScalarExceptionsBuilder.setMalformedGlobException(ServerError.MalformedGlobException.newBuilder().setMessage(scalarException.getMessage()).build());
-				} else if (scalarExceptionClass == IsADirectoryException.class) {
-					oneOfFsScalarExceptionsBuilder.setIsADirectoryException(ServerError.IsADirectoryException.newBuilder().setMessage(scalarException.getMessage()).build());
-				} else {
-					oneOfFsScalarExceptionsBuilder.setFsScalarException(ServerError.FsScalarException.newBuilder().setMessage(scalarException.getMessage()).build());
-				}
-				batchExceptionBuilder.putExceptions(fileName, oneOfFsScalarExceptionsBuilder.build());
-			});
-			serverErrorBuilder.setFsBatchException(batchExceptionBuilder);
-		} else {
-			serverErrorBuilder.setFsException(ServerError.FsException.newBuilder().setMessage(fsException.getMessage()));
-		}
-		return FsResponse.newBuilder().setServerError(serverErrorBuilder).build();
-	}
-
-	private static FsResponse.FileMetadata convertFileMetadata(FileMetadata fileMetadata) {
-		return FsResponse.FileMetadata.newBuilder().setSize(fileMetadata.getSize()).setTimestamp(fileMetadata.getTimestamp()).build();
-	}
-
-	private static <T> Set<T> listToSet(java.util.List<T> list) throws FsException {
-		Set<T> set = new HashSet<>(list);
-		if (set.size() != list.size()) {
-			throw new FsException("Found duplicate values in a set: " + list);
-		}
-		return set;
 	}
 
 	@Override

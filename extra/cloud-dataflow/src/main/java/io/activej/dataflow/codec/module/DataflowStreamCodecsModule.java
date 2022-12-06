@@ -9,10 +9,8 @@ import io.activej.inject.KeyPattern;
 import io.activej.inject.binding.Binding;
 import io.activej.inject.module.AbstractModule;
 import io.activej.serializer.stream.StreamCodec;
-import io.activej.serializer.stream.StreamInput;
-import io.activej.serializer.stream.StreamOutput;
+import io.activej.serializer.stream.StreamCodecs;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -41,7 +39,7 @@ public final class DataflowStreamCodecsModule extends AbstractModule {
 							Set<Key<StreamCodec<?>>> generating = GENERATING.get();
 							try {
 								if (!generating.add(key)) {
-									return new LazyStreamCodec<>(injector, key);
+									return StreamCodecs.lazy(() -> doGenerate(key, injector));
 								}
 								return doGenerate(key, injector);
 							} finally {
@@ -91,36 +89,5 @@ public final class DataflowStreamCodecsModule extends AbstractModule {
 		}
 
 		return codecSubtype;
-	}
-
-	private static final class LazyStreamCodec<T> implements StreamCodec<T> {
-		private final Injector injector;
-		private final Key<StreamCodec<?>> key;
-
-		private StreamCodec<T> codec;
-
-		private LazyStreamCodec(Injector injector, Key<StreamCodec<?>> key) {
-			this.injector = injector;
-			this.key = key;
-		}
-
-		@Override
-		public T decode(StreamInput input) throws IOException {
-			ensureCodec();
-
-			return codec.decode(input);
-		}
-
-		@Override
-		public void encode(StreamOutput output, T item) throws IOException {
-			ensureCodec();
-
-			codec.encode(output, item);
-		}
-
-		private void ensureCodec() {
-			//noinspection unchecked
-			codec = (StreamCodec<T>) doGenerate(key, injector);
-		}
 	}
 }

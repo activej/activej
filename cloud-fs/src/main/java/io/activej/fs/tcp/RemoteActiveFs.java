@@ -36,13 +36,9 @@ import io.activej.eventloop.net.SocketSettings;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.exception.FsException;
-import io.activej.fs.tcp.FsMessagingProto.FsRequest;
-import io.activej.fs.tcp.FsMessagingProto.FsRequest.*;
-import io.activej.fs.tcp.FsMessagingProto.FsResponse;
-import io.activej.fs.tcp.FsMessagingProto.FsResponse.InfoAllFinished;
-import io.activej.fs.tcp.FsMessagingProto.FsResponse.InfoFinished;
-import io.activej.fs.tcp.FsMessagingProto.FsResponse.ListFinished;
-import io.activej.fs.tcp.FsMessagingProto.FsResponse.ResponseCase;
+import io.activej.fs.tcp.messaging.FsRequest;
+import io.activej.fs.tcp.messaging.FsResponse;
+import io.activej.fs.util.RemoteFsUtils;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
@@ -56,16 +52,13 @@ import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.isBijection;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
-import static io.activej.fs.exception.FsExceptionConverter.unwindProtobufException;
-import static io.activej.fs.tcp.FsMessagingProto.FsResponse.ResponseCase.*;
-import static io.activej.fs.util.ProtobufUtils.codec;
+import static io.activej.fs.util.RemoteFsUtils.codec;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 
 /**
@@ -81,7 +74,10 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 
 	public static final Duration DEFAULT_CONNECTION_TIMEOUT = ApplicationSettings.getDuration(RemoteActiveFs.class, "connectTimeout", Duration.ZERO);
 
-	private static final ByteBufsCodec<FsResponse, FsRequest> SERIALIZER = codec(FsResponse.parser());
+	private static final ByteBufsCodec<FsResponse, FsRequest> SERIALIZER = codec(
+			RemoteFsUtils.FS_RESPONSE_CODEC,
+			RemoteFsUtils.FS_REQUEST_CODEC
+	);
 
 	private final Eventloop eventloop;
 	private final InetSocketAddress address;
@@ -155,15 +151,15 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 	}
 
 	private @NotNull Promise<ChannelConsumer<ByteBuf>> doUpload(Messaging<FsResponse, FsRequest> messaging, @NotNull String name, @Nullable Long size) {
-		return messaging.send(uploadRequest(name, size))
+		return messaging.send(new FsRequest.Upload(name, size == null ? -1 : size))
 				.then(messaging::receive)
-				.whenResult(validateFn(UPLOAD_ACK))
+				.whenResult(validateFn(FsResponse.UploadAck.class))
 				.then(() -> Promise.of(messaging.sendBinaryStream()
 						.transformWith(size == null ? identity() : ofFixedSize(size))
 						.withAcknowledgement(ack -> ack
 								.then(messaging::receive)
 								.whenResult(messaging::close)
-								.whenResult(validateFn(UPLOAD_FINISHED))
+								.whenResult(validateFn(FsResponse.UploadFinished.class))
 								.toVoid()
 								.whenException(e -> {
 									messaging.closeEx(e);
@@ -182,14 +178,14 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 		return connect(address)
 				.then(this::performHandshake)
 				.then(messaging ->
-						messaging.send(appendRequest(name, offset))
+						messaging.send(new FsRequest.Append(name, offset))
 								.then(messaging::receive)
-								.whenResult(validateFn(APPEND_ACK))
+								.whenResult(validateFn(FsResponse.AppendAck.class))
 								.then(() -> Promise.of(messaging.sendBinaryStream()
 										.withAcknowledgement(ack -> ack
 												.then(messaging::receive)
 												.whenResult(messaging::close)
-												.whenResult(validateFn(APPEND_FINISHED))
+												.whenResult(validateFn(FsResponse.AppendFinished.class))
 												.toVoid()
 												.whenException(messaging::closeEx)
 												.whenComplete(appendFinishPromise.recordStats())
@@ -207,11 +203,11 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 		return connect(address)
 				.then(this::performHandshake)
 				.then(messaging ->
-						messaging.send(downloadRequest(name, offset, limit))
+						messaging.send(new FsRequest.Download(name, offset, limit))
 								.then(messaging::receive)
-								.whenResult(validateFn(DOWNLOAD_SIZE))
+								.map(castFn(FsResponse.DownloadSize.class))
 								.then(msg -> {
-									long receivingSize = msg.getDownloadSize().getSize();
+									long receivingSize = msg.size();
 									if (receivingSize > limit) {
 										throw new UnexpectedDataException();
 									}
@@ -247,7 +243,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 
 	@Override
 	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
-		return simpleCommand(copyRequest(name, target), COPY_FINISHED, $ -> (Void) null)
+		return simpleCommand(new FsRequest.Copy(name, target), FsResponse.CopyFinished.class)
 				.whenComplete(toLogger(logger, "copy", name, target, this))
 				.whenComplete(copyPromise.recordStats());
 	}
@@ -257,14 +253,14 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
-		return simpleCommand(copyAllRequest(sourceToTarget), COPY_ALL_FINISHED, $ -> (Void) null)
+		return simpleCommand(new FsRequest.CopyAll(sourceToTarget), FsResponse.CopyAllFinished.class )
 				.whenComplete(toLogger(logger, "copyAll", sourceToTarget, this))
 				.whenComplete(copyAllPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> move(@NotNull String name, @NotNull String target) {
-		return simpleCommand(moveRequest(name, target), MOVE_FINISHED, $ -> (Void) null)
+		return simpleCommand(new FsRequest.Move(name, target), FsResponse.MoveFinished.class)
 				.whenComplete(toLogger(logger, "move", name, target, this))
 				.whenComplete(movePromise.recordStats());
 	}
@@ -274,14 +270,14 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
-		return simpleCommand(moveAllRequest(sourceToTarget), MOVE_ALL_FINISHED, $ -> (Void) null)
+		return simpleCommand(new FsRequest.MoveAll(sourceToTarget), FsResponse.MoveAllFinished.class)
 				.whenComplete(toLogger(logger, "moveAll", sourceToTarget, this))
 				.whenComplete(moveAllPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> delete(@NotNull String name) {
-		return simpleCommand(deleteRequest(name), DELETE_FINISHED, $ -> (Void) null)
+		return simpleCommand(new FsRequest.Delete(name), FsResponse.DeleteFinished.class)
 				.whenComplete(toLogger(logger, "delete", name, this))
 				.whenComplete(deletePromise.recordStats());
 	}
@@ -290,21 +286,21 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 	public Promise<Void> deleteAll(Set<String> toDelete) {
 		if (toDelete.isEmpty()) return Promise.complete();
 
-		return simpleCommand(deleteAllRequest(toDelete), DELETE_ALL_FINISHED, $ -> (Void) null)
+		return simpleCommand(new FsRequest.DeleteAll(toDelete), FsResponse.DeleteAllFinished.class)
 				.whenComplete(toLogger(logger, "deleteAll", toDelete, this))
 				.whenComplete(deleteAllPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
-		return simpleCommand(listRequest(glob), LIST_FINISHED, fsResponse -> handleListFinished(fsResponse.getListFinished()))
+		return simpleCommand(new FsRequest.List(glob), FsResponse.ListFinished.class, FsResponse.ListFinished::files)
 				.whenComplete(toLogger(logger, "list", glob, this))
 				.whenComplete(listPromise.recordStats());
 	}
 
 	@Override
 	public Promise<@Nullable FileMetadata> info(@NotNull String name) {
-		return simpleCommand(infoRequest(name), INFO_FINISHED, fsResponse -> handleInfoFinished(fsResponse.getInfoFinished()))
+		return simpleCommand(new FsRequest.Info(name), FsResponse.InfoFinished.class, FsResponse.InfoFinished::fileMetadata)
 				.whenComplete(toLogger(logger, "info", name, this))
 				.whenComplete(infoPromise.recordStats());
 	}
@@ -313,14 +309,14 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
 		if (names.isEmpty()) return Promise.of(Map.of());
 
-		return simpleCommand(infoAllRequest(names), INFO_ALL_FINISHED, fsResponse -> handleInfoAllFinished(fsResponse.getInfoAllFinished()))
+		return simpleCommand(new FsRequest.InfoAll(names), FsResponse.InfoAllFinished.class, FsResponse.InfoAllFinished::files)
 				.whenComplete(toLogger(logger, "infoAll", names, this))
 				.whenComplete(infoAllPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> ping() {
-		return simpleCommand(pingRequest(), PONG, $ -> (Void) null)
+		return simpleCommand(new FsRequest.Ping(), FsResponse.Pong.class)
 				.whenComplete(toLogger(logger, "ping", this))
 				.whenComplete(pingPromise.recordStats());
 	}
@@ -342,20 +338,14 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 	}
 
 	private Promise<Messaging<FsResponse, FsRequest>> performHandshake(Messaging<FsResponse, FsRequest> messaging) {
-		return messaging.send(FsRequest.newBuilder().setHandshake(FsRequest.Handshake.newBuilder().setVersion(ActiveFsServer.VERSION)).build())
+		return messaging.send(new FsRequest.Handshake(ActiveFsServer.VERSION))
 				.then(messaging::receive)
+				.map(castFn(FsResponse.Handshake.class))
 				.map(handshakeResponse -> {
-					if (!handshakeResponse.hasHandshake()) {
-						if (handshakeResponse.hasServerError()) {
-							throw unwindProtobufException(handshakeResponse.getServerError());
-						}
-						throw new FsException("Handshake response expected, got " + handshakeResponse.getResponseCase());
-					}
-					FsResponse.Handshake handshake = handshakeResponse.getHandshake();
-					if (handshake.hasNotOk()) {
-						FsResponse.Handshake.NotOk notOk = handshake.getNotOk();
+					FsResponse.HandshakeFailure handshakeFailure = handshakeResponse.handshakeFailure();
+					if (handshakeFailure != null) {
 						throw new FsException(String.format("Handshake failed: %s. Minimal allowed version: %s",
-								notOk.getMessage(), notOk.hasMinimalVersion() ? notOk.getMinimalVersion() : "unspecified"));
+								handshakeFailure.message(),  handshakeFailure.minimalVersion()));
 					}
 					return messaging;
 				})
@@ -363,110 +353,40 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 				.whenComplete(handshakePromise.recordStats());
 	}
 
-	private static ConsumerEx<FsResponse> validateFn(ResponseCase expectedCase) {
+	private static <T extends FsResponse> ConsumerEx<FsResponse> validateFn(Class<T> responseClass) {
+		return fsResponse -> castFn(responseClass).apply(fsResponse);
+	}
+
+	private static <T extends FsResponse> FunctionEx<FsResponse, T> castFn(Class<T> responseClass) {
 		return msg -> {
-			ResponseCase actualCase = msg.getResponseCase();
-			if (actualCase == SERVER_ERROR) {
-				throw unwindProtobufException(msg.getServerError());
+			if (msg instanceof FsResponse.ServerError serverError) {
+				throw serverError.exception();
 			}
-			if (actualCase == RESPONSE_NOT_SET) {
-				throw new FsException("Received empty request");
+			if (msg.getClass() != responseClass) {
+				throw new FsException("Received request " + msg.getClass().getName() + " instead of " + responseClass);
 			}
-			if (actualCase != expectedCase) {
-				throw new FsException("Received request " + actualCase + " instead of " + expectedCase);
-			}
+			//noinspection unchecked
+			return ((T) msg);
 		};
 	}
 
-	private <T> Promise<T> simpleCommand(FsRequest command, ResponseCase responseCase, FunctionEx<FsResponse, T> answerExtractor) {
+	private <T extends FsResponse> Promise<Void> simpleCommand(FsRequest command, Class<T> responseCls) {
+		return simpleCommand(command, responseCls, $ -> null);
+	}
+
+	private <T extends FsResponse, U> Promise<U> simpleCommand(FsRequest command, Class<T> responseCls, FunctionEx<T, U> answerExtractor) {
 		return connect(address)
 				.then(this::performHandshake)
 				.then(messaging ->
 						messaging.send(command)
 								.then(messaging::receive)
 								.whenResult(messaging::close)
-								.whenResult(validateFn(responseCase))
+								.map(castFn(responseCls))
 								.map(answerExtractor)
 								.whenException(e -> {
 									messaging.closeEx(e);
 									logger.warn("Error while processing command {} : {}", command, this, e);
 								}));
-	}
-
-	private static FsRequest uploadRequest(String name, @Nullable Long size) {
-		return FsRequest.newBuilder().setUpload(Upload.newBuilder().setName(name).setSize(size == null ? -1L : size)).build();
-	}
-
-	private static FsRequest appendRequest(String name, long offset) {
-		return FsRequest.newBuilder().setAppend(Append.newBuilder().setName(name).setOffset(offset)).build();
-	}
-
-	private static FsRequest downloadRequest(String name, long offset, long limit) {
-		return FsRequest.newBuilder().setDownload(Download.newBuilder().setName(name).setOffset(offset).setLimit(limit)).build();
-	}
-
-	private static FsRequest copyRequest(String name, String target) {
-		return FsRequest.newBuilder().setCopy(Copy.newBuilder().setName(name).setTarget(target)).build();
-	}
-
-	private static FsRequest copyAllRequest(Map<String, String> sourceToTarget) {
-		return FsRequest.newBuilder().setCopyAll(CopyAll.newBuilder().putAllSourceToTarget(sourceToTarget)).build();
-	}
-
-	private static FsRequest moveRequest(String name, String target) {
-		return FsRequest.newBuilder().setMove(Move.newBuilder().setName(name).setTarget(target)).build();
-	}
-
-	private static FsRequest moveAllRequest(Map<String, String> sourceToTarget) {
-		return FsRequest.newBuilder().setMoveAll(MoveAll.newBuilder().putAllSourceToTarget(sourceToTarget)).build();
-	}
-
-	private static FsRequest deleteRequest(String name) {
-		return FsRequest.newBuilder().setDelete(Delete.newBuilder().setName(name)).build();
-	}
-
-	private static FsRequest deleteAllRequest(Set<String> toDelete) {
-		return FsRequest.newBuilder().setDeleteAll(DeleteAll.newBuilder().addAllToDelete(toDelete)).build();
-	}
-
-	private static FsRequest listRequest(String glob) {
-		return FsRequest.newBuilder().setList(List.newBuilder().setGlob(glob)).build();
-	}
-
-	private static FsRequest infoRequest(String name) {
-		return FsRequest.newBuilder().setInfo(Info.newBuilder().setName(name)).build();
-	}
-
-	private static FsRequest infoAllRequest(Set<String> names) {
-		return FsRequest.newBuilder().setInfoAll(InfoAll.newBuilder().addAllNames(names)).build();
-	}
-
-	private static FsRequest pingRequest() {
-		return FsRequest.newBuilder().setPing(Ping.newBuilder()).build();
-	}
-
-	private static Map<String, FileMetadata> handleListFinished(ListFinished listFinished) {
-		return convertFileMetadata(listFinished.getFilesMap());
-	}
-
-	private static @Nullable FileMetadata handleInfoFinished(InfoFinished infoFinished) {
-		FsResponse.NullableFileMetadata nullableFileMetadata = infoFinished.getNullableFileMetadata();
-		if (nullableFileMetadata.getIsNull()) return null;
-		return convertFileMetadata(nullableFileMetadata.getValue());
-	}
-
-	private static Map<String, FileMetadata> handleInfoAllFinished(InfoAllFinished infoAllFinished) {
-		return convertFileMetadata(infoAllFinished.getFilesMap());
-	}
-
-	private static FileMetadata convertFileMetadata(FsResponse.FileMetadata fileMetadata) {
-		return FileMetadata.of(fileMetadata.getSize(), fileMetadata.getTimestamp());
-	}
-
-	private static Map<String, FileMetadata> convertFileMetadata(Map<String, FsResponse.FileMetadata> files) {
-		return files.entrySet()
-				.stream()
-				.collect(Collectors.toMap(Map.Entry::getKey, e -> convertFileMetadata(e.getValue())));
 	}
 
 	@Override

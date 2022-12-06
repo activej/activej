@@ -21,8 +21,15 @@ import com.dslplatform.json.JsonReader;
 import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.ParsingException;
 import com.dslplatform.json.runtime.Settings;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.Message;
+import com.google.protobuf.Parser;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.bytebuf.ByteBufPool;
+import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.csp.binary.ByteBufsCodec;
+import io.activej.csp.binary.ByteBufsDecoder;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.processor.StreamFilter;
 import io.activej.datastream.processor.StreamTransformer;
@@ -123,6 +130,35 @@ public final class Utils {
 					consumer.run();
 					output.accept(item);
 				};
+			}
+		};
+	}
+
+	public static <I extends Message, O extends Message> ByteBufsCodec<I, O> codec(Parser<I> inputParser) {
+		return new ByteBufsCodec<>() {
+			@Override
+			public ByteBuf encode(O item) {
+				byte[] bytes = item.toByteArray();
+
+				int length = bytes.length;
+				ByteBuf buf = ByteBufPool.allocate(length + 5);
+
+				buf.writeVarInt(length);
+				buf.put(bytes);
+				return buf;
+			}
+
+			@Override
+			public @Nullable I tryDecode(ByteBufs bufs) throws MalformedDataException {
+				return ByteBufsDecoder.ofVarIntSizePrefixedBytes()
+						.andThen(buf -> {
+							try {
+								return inputParser.parseFrom(buf.asArray());
+							} catch (InvalidProtocolBufferException e) {
+								throw new MalformedDataException(e);
+							}
+						})
+						.tryDecode(bufs);
 			}
 		};
 	}
