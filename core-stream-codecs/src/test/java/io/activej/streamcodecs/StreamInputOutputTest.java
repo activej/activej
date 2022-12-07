@@ -1,8 +1,7 @@
-package io.activej.serializer;
+package io.activej.streamcodecs;
 
-import io.activej.serializer.stream.StreamCodec;
-import io.activej.serializer.stream.StreamInput;
-import io.activej.serializer.stream.StreamOutput;
+import io.activej.serializer.BinarySerializer;
+import io.activej.serializer.BinarySerializers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;

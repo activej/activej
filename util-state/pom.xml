@@ -19,7 +19,7 @@
   <dependencies>
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-serializer</artifactId>
+      <artifactId>activej-stream-codecs</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

@@ -1,9 +1,9 @@
 package io.activej.dataflow.codec;
 
 import io.activej.serializer.CorruptedDataException;
-import io.activej.serializer.stream.StreamCodec;
-import io.activej.serializer.stream.StreamInput;
-import io.activej.serializer.stream.StreamOutput;
+import io.activej.streamcodecs.StreamCodec;
+import io.activej.streamcodecs.StreamInput;
+import io.activej.streamcodecs.StreamOutput;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;

@@ -1,7 +1,5 @@
 package io.activej.dataflow.codec.module;
 
-import io.activej.dataflow.codec.StructuredStreamCodec;
-import io.activej.dataflow.codec.StructuredStreamCodec.CodecAndGetter;
 import io.activej.dataflow.codec.Subtype;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.StreamSchema;
@@ -10,8 +8,10 @@ import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
-import io.activej.serializer.stream.StreamCodec;
-import io.activej.serializer.stream.StreamCodecs;
+import io.activej.streamcodecs.StreamCodec;
+import io.activej.streamcodecs.StreamCodecs;
+import io.activej.streamcodecs.StructuredStreamCodec;
+import io.activej.streamcodecs.StructuredStreamCodec.CodecAndGetter;
 
 import java.net.InetSocketAddress;
 import java.util.Comparator;

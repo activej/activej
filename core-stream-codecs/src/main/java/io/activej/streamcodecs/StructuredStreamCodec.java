@@ -1,9 +1,6 @@
-package io.activej.dataflow.codec;
+package io.activej.streamcodecs;
 
 import io.activej.common.tuple.*;
-import io.activej.serializer.stream.StreamCodec;
-import io.activej.serializer.stream.StreamInput;
-import io.activej.serializer.stream.StreamOutput;
 
 import java.io.IOException;
 import java.util.List;
@@ -11,15 +8,16 @@ import java.util.function.Function;
 
 public final class StructuredStreamCodec<T> implements StreamCodec<T> {
 	private final Function<Object[], T> constructor;
-	private final List<CodecAndGetter<T, ?>> codecAndGetters;
+	private final CodecAndGetter<T, ?>[] codecAndGetters;
 
-	private StructuredStreamCodec(Function<Object[], T> constructor, List<CodecAndGetter<T, ?>> codecAndGetters) {
+	@SafeVarargs
+	private StructuredStreamCodec(Function<Object[], T> constructor, CodecAndGetter<T, ?>... codecAndGetters) {
 		this.constructor = constructor;
 		this.codecAndGetters = codecAndGetters;
 	}
 
 	public static <T> StructuredStreamCodec<T> create(TupleConstructor0<T> constructor0) {
-		return new StructuredStreamCodec<>(objects -> constructor0.create(), List.of());
+		return new StructuredStreamCodec<>(objects -> constructor0.create());
 	}
 
 	public static <T1, T> StructuredStreamCodec<T> create(TupleConstructor1<T1, T> constructor1,
@@ -30,7 +28,7 @@ public final class StructuredStreamCodec<T> implements StreamCodec<T> {
 				constructor1.create(
 						(T1) objects[0]
 				),
-				List.of(new CodecAndGetter<>(codec1, getter1))
+				new CodecAndGetter<>(codec1, getter1)
 		);
 	}
 
@@ -44,10 +42,8 @@ public final class StructuredStreamCodec<T> implements StreamCodec<T> {
 						(T1) objects[0],
 						(T2) objects[1]
 				),
-				List.of(
-						new CodecAndGetter<>(codec1, getter1),
-						new CodecAndGetter<>(codec2, getter2)
-				)
+				new CodecAndGetter<>(codec1, getter1),
+				new CodecAndGetter<>(codec2, getter2)
 		);
 	}
 
@@ -63,11 +59,9 @@ public final class StructuredStreamCodec<T> implements StreamCodec<T> {
 						(T2) objects[1],
 						(T3) objects[2]
 				),
-				List.of(
-						new CodecAndGetter<>(codec1, getter1),
-						new CodecAndGetter<>(codec2, getter2),
-						new CodecAndGetter<>(codec3, getter3)
-				)
+				new CodecAndGetter<>(codec1, getter1),
+				new CodecAndGetter<>(codec2, getter2),
+				new CodecAndGetter<>(codec3, getter3)
 		);
 	}
 
@@ -85,13 +79,10 @@ public final class StructuredStreamCodec<T> implements StreamCodec<T> {
 						(T3) objects[2],
 						(T4) objects[3]
 				),
-				List.of(
-						new CodecAndGetter<>(codec1, getter1),
-						new CodecAndGetter<>(codec2, getter2),
-						new CodecAndGetter<>(codec3, getter3),
-						new CodecAndGetter<>(codec4, getter4)
-				)
-
+				new CodecAndGetter<>(codec1, getter1),
+				new CodecAndGetter<>(codec2, getter2),
+				new CodecAndGetter<>(codec3, getter3),
+				new CodecAndGetter<>(codec4, getter4)
 		);
 	}
 
@@ -111,14 +102,11 @@ public final class StructuredStreamCodec<T> implements StreamCodec<T> {
 						(T4) objects[3],
 						(T5) objects[4]
 				),
-				List.of(
-						new CodecAndGetter<>(codec1, getter1),
-						new CodecAndGetter<>(codec2, getter2),
-						new CodecAndGetter<>(codec3, getter3),
-						new CodecAndGetter<>(codec4, getter4),
-						new CodecAndGetter<>(codec5, getter5)
-				)
-
+				new CodecAndGetter<>(codec1, getter1),
+				new CodecAndGetter<>(codec2, getter2),
+				new CodecAndGetter<>(codec3, getter3),
+				new CodecAndGetter<>(codec4, getter4),
+				new CodecAndGetter<>(codec5, getter5)
 		);
 	}
 
@@ -140,29 +128,27 @@ public final class StructuredStreamCodec<T> implements StreamCodec<T> {
 						(T5) objects[4],
 						(T6) objects[5]
 				),
-				List.of(
-						new CodecAndGetter<>(codec1, getter1),
-						new CodecAndGetter<>(codec2, getter2),
-						new CodecAndGetter<>(codec3, getter3),
-						new CodecAndGetter<>(codec4, getter4),
-						new CodecAndGetter<>(codec5, getter5),
-						new CodecAndGetter<>(codec6, getter6)
-				)
-
+				new CodecAndGetter<>(codec1, getter1),
+				new CodecAndGetter<>(codec2, getter2),
+				new CodecAndGetter<>(codec3, getter3),
+				new CodecAndGetter<>(codec4, getter4),
+				new CodecAndGetter<>(codec5, getter5),
+				new CodecAndGetter<>(codec6, getter6)
 		);
 	}
 
 	public static <T> StructuredStreamCodec<T> create(Function<Object[], T> constructorN,
 			List<CodecAndGetter<T, ?>> codecsAndGetters
 	) {
-		return new StructuredStreamCodec<>(constructorN, codecsAndGetters);
+		//noinspection unchecked
+		return new StructuredStreamCodec<>(constructorN, codecsAndGetters.toArray(CodecAndGetter[]::new));
 	}
 
 	@Override
 	public T decode(StreamInput input) throws IOException {
-		Object[] fields = new Object[codecAndGetters.size()];
-		for (int i = 0, codecAndGettersSize = codecAndGetters.size(); i < codecAndGettersSize; i++) {
-			CodecAndGetter<T, ?> codecAndGetter = codecAndGetters.get(i);
+		Object[] fields = new Object[codecAndGetters.length];
+		for (int i = 0, codecAndGettersSize = codecAndGetters.length; i < codecAndGettersSize; i++) {
+			CodecAndGetter<T, ?> codecAndGetter = codecAndGetters[i];
 			Object field = codecAndGetter.codec.decode(input);
 			fields[i] = field;
 		}

@@ -29,6 +29,7 @@ import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.crdt.util.Utils;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.binary.ByteBufsCodec;
+import io.activej.csp.net.MessagingCodec;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
@@ -40,7 +41,6 @@ import io.activej.datastream.stats.StreamStatsDetailed;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.eventloop.net.SocketSettings;
-import io.activej.fs.util.RemoteFsUtils;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.EventStats;
@@ -61,7 +61,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(CrdtStorageClient.class, "connectTimeout", Duration.ZERO);
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageClient.class, "smoothingWindow", Duration.ofMinutes(1));
 
-	private static final ByteBufsCodec<CrdtResponse, CrdtRequest> SERIALIZER = RemoteFsUtils.codec(
+	private static final ByteBufsCodec<CrdtResponse, CrdtRequest> SERIALIZER = MessagingCodec.create(
 			Utils.CRDT_RESPONSE_CODEC,
 			Utils.CRDT_REQUEST_CODEC
 	);

@@ -8,8 +8,8 @@ import io.activej.inject.Key;
 import io.activej.inject.KeyPattern;
 import io.activej.inject.binding.Binding;
 import io.activej.inject.module.AbstractModule;
-import io.activej.serializer.stream.StreamCodec;
-import io.activej.serializer.stream.StreamCodecs;
+import io.activej.streamcodecs.StreamCodec;
+import io.activej.streamcodecs.StreamCodecs;
 
 import java.util.HashMap;
 import java.util.HashSet;

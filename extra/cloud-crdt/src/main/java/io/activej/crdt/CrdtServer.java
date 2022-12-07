@@ -23,6 +23,7 @@ import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.Messaging;
+import io.activej.csp.net.MessagingCodec;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.csp.ChannelDeserializer;
@@ -31,7 +32,6 @@ import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStatsBasic;
 import io.activej.datastream.stats.StreamStatsDetailed;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.util.RemoteFsUtils;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.net.AbstractServer;
@@ -53,7 +53,7 @@ import static io.activej.crdt.util.Utils.*;
 public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer<CrdtServer<K, S>> {
 	public static final Version VERSION = new Version(1, 0);
 
-	private static final ByteBufsCodec<CrdtRequest, CrdtResponse> SERIALIZER = RemoteFsUtils.codec(
+	private static final ByteBufsCodec<CrdtRequest, CrdtResponse> SERIALIZER = MessagingCodec.create(
 			CRDT_REQUEST_CODEC,
 			CRDT_RESPONSE_CODEC
 	);

@@ -1,6 +1,6 @@
-package io.activej.serializer.stream;
+package io.activej.streamcodecs;
 
-import io.activej.serializer.stream.StreamCodecs.SubtypeBuilder;
+import io.activej.streamcodecs.StreamCodecs.SubtypeBuilder;
 import org.junit.Test;
 import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.FromDataPoints;
@@ -11,9 +11,10 @@ import org.junit.runner.RunWith;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.*;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.Assert.*;

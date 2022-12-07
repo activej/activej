@@ -4,10 +4,10 @@ import io.activej.dataflow.calcite.DataflowSchema;
 import io.activej.dataflow.calcite.DataflowTable;
 import io.activej.dataflow.calcite.utils.NamedRecordFunction;
 import io.activej.serializer.CorruptedDataException;
-import io.activej.serializer.stream.StreamCodec;
-import io.activej.serializer.stream.StreamCodecs;
-import io.activej.serializer.stream.StreamInput;
-import io.activej.serializer.stream.StreamOutput;
+import io.activej.streamcodecs.StreamCodec;
+import io.activej.streamcodecs.StreamCodecs;
+import io.activej.streamcodecs.StreamInput;
+import io.activej.streamcodecs.StreamOutput;
 
 import java.io.IOException;
 

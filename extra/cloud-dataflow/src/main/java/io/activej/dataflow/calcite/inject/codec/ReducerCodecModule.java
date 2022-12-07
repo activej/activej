@@ -4,15 +4,15 @@ import io.activej.dataflow.calcite.DataflowPartitionedTable;
 import io.activej.dataflow.calcite.DataflowSchema;
 import io.activej.dataflow.calcite.DataflowTable;
 import io.activej.dataflow.calcite.utils.NamedReducer;
-import io.activej.dataflow.codec.StructuredStreamCodec;
 import io.activej.dataflow.codec.Subtype;
 import io.activej.datastream.processor.StreamReducers;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.record.Record;
 import io.activej.serializer.CorruptedDataException;
-import io.activej.serializer.stream.StreamCodec;
-import io.activej.serializer.stream.StreamCodecs;
+import io.activej.streamcodecs.StreamCodec;
+import io.activej.streamcodecs.StreamCodecs;
+import io.activej.streamcodecs.StructuredStreamCodec;
 
 final class ReducerCodecModule extends AbstractModule {
 	@Provides

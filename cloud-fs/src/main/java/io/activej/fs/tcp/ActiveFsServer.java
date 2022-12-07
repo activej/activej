@@ -19,6 +19,7 @@ package io.activej.fs.tcp;
 import io.activej.common.function.SupplierEx;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.Messaging;
+import io.activej.csp.net.MessagingCodec;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
@@ -54,7 +55,7 @@ import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 	public static final Version VERSION = new Version(1, 0);
 
-	private static final ByteBufsCodec<FsRequest, FsResponse> SERIALIZER = RemoteFsUtils.codec(
+	private static final ByteBufsCodec<FsRequest, FsResponse> SERIALIZER = MessagingCodec.create(
 			RemoteFsUtils.FS_REQUEST_CODEC,
 			RemoteFsUtils.FS_RESPONSE_CODEC
 	);

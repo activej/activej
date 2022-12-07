@@ -2,12 +2,12 @@ package io.activej.dataflow.calcite.inject.codec;
 
 import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.dataflow.calcite.where.*;
-import io.activej.dataflow.codec.StructuredStreamCodec;
 import io.activej.dataflow.codec.Subtype;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
-import io.activej.serializer.stream.StreamCodec;
-import io.activej.serializer.stream.StreamCodecs;
+import io.activej.streamcodecs.StreamCodec;
+import io.activej.streamcodecs.StreamCodecs;
+import io.activej.streamcodecs.StructuredStreamCodec;
 
 final class WherePredicateCodecModule extends AbstractModule {
 	@Provides

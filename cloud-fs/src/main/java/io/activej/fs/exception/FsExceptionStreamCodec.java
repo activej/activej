@@ -1,9 +1,9 @@
 package io.activej.fs.exception;
 
-import io.activej.fs.util.StructuredStreamCodec;
-import io.activej.serializer.stream.StreamCodec;
-import io.activej.serializer.stream.StreamCodecs;
-import io.activej.serializer.stream.StreamCodecs.SubtypeBuilder;
+import io.activej.streamcodecs.StreamCodec;
+import io.activej.streamcodecs.StreamCodecs;
+import io.activej.streamcodecs.StreamCodecs.SubtypeBuilder;
+import io.activej.streamcodecs.StructuredStreamCodec;
 
 import java.util.function.BiFunction;
 

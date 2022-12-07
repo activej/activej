@@ -1,12 +1,12 @@
 package io.activej.dataflow.calcite.inject.codec;
 
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.dataflow.codec.StructuredStreamCodec;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.record.RecordScheme;
-import io.activej.serializer.stream.StreamCodec;
-import io.activej.serializer.stream.StreamCodecs;
+import io.activej.streamcodecs.StreamCodec;
+import io.activej.streamcodecs.StreamCodecs;
+import io.activej.streamcodecs.StructuredStreamCodec;
 
 import java.lang.reflect.Type;
 

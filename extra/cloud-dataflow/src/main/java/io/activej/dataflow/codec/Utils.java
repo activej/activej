@@ -1,20 +1,12 @@
 package io.activej.dataflow.codec;
 
-import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufs;
-import io.activej.common.exception.MalformedDataException;
-import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.messaging.Version;
 import io.activej.serializer.CorruptedDataException;
-import io.activej.serializer.stream.StreamCodec;
-import io.activej.serializer.stream.StreamCodecs;
-import io.activej.serializer.stream.StreamInput;
-import org.jetbrains.annotations.Nullable;
+import io.activej.streamcodecs.StreamCodec;
+import io.activej.streamcodecs.StreamCodecs;
+import io.activej.streamcodecs.StructuredStreamCodec;
 
-import java.io.ByteArrayInputStream;
-import java.io.EOFException;
-import java.io.IOException;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
@@ -71,36 +63,5 @@ public final class Utils {
 
 		CLASS_TO_INDEX.put(cls, nextIdx);
 		INDEX_TO_CLASS.put(nextIdx, cls);
-	}
-
-	public static <I, O> ByteBufsCodec<I, O> codec(StreamCodec<I> inputCodec, StreamCodec<O> outputCodec) {
-		return new ByteBufsCodec<>() {
-			@Override
-			public ByteBuf encode(O item) {
-				byte[] bytes = outputCodec.toByteArray(item);
-				return ByteBuf.wrapForReading(bytes);
-			}
-
-			@Override
-			public @Nullable I tryDecode(ByteBufs bufs) throws MalformedDataException {
-				ByteBuf buf = bufs.takeRemaining();
-				try (ByteArrayInputStream bais = new ByteArrayInputStream(buf.getArray())) {
-					try (StreamInput streamInput = StreamInput.create(bais)) {
-						I decode;
-						try {
-							decode = inputCodec.decode(streamInput);
-						} catch (EOFException e) {
-							bufs.add(buf);
-							return null;
-						}
-						buf.moveHead(streamInput.pos());
-						bufs.add(buf);
-						return decode;
-					}
-				} catch (IOException e) {
-					throw new MalformedDataException(e);
-				}
-			}
-		};
 	}
 }

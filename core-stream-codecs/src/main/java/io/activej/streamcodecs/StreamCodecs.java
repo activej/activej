@@ -1,4 +1,4 @@
-package io.activej.serializer.stream;
+package io.activej.streamcodecs;
 
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;

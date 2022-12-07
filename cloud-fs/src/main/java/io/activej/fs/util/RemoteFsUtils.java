@@ -22,14 +22,12 @@ import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.ParsingException;
 import com.dslplatform.json.runtime.Settings;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufs;
 import io.activej.common.collection.Try;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnexpectedDataException;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.ChannelConsumer;
-import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.exception.*;
@@ -38,15 +36,13 @@ import io.activej.fs.tcp.messaging.FsRequest.*;
 import io.activej.fs.tcp.messaging.FsResponse;
 import io.activej.fs.tcp.messaging.Version;
 import io.activej.promise.Promise;
-import io.activej.serializer.stream.StreamCodec;
-import io.activej.serializer.stream.StreamCodecs;
-import io.activej.serializer.stream.StreamInput;
+import io.activej.streamcodecs.StreamCodec;
+import io.activej.streamcodecs.StreamCodecs;
+import io.activej.streamcodecs.StructuredStreamCodec;
 import io.activej.types.TypeT;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.ByteArrayInputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.file.FileSystems;
@@ -228,37 +224,6 @@ public final class RemoteFsUtils {
 		}
 	}
 	// endregion
-
-	public static <I, O> ByteBufsCodec<I, O> codec(StreamCodec<I> inputCodec, StreamCodec<O> outputCodec) {
-		return new ByteBufsCodec<>() {
-			@Override
-			public ByteBuf encode(O item) {
-				byte[] bytes = outputCodec.toByteArray(item);
-				return ByteBuf.wrapForReading(bytes);
-			}
-
-			@Override
-			public @Nullable I tryDecode(ByteBufs bufs) throws MalformedDataException {
-				ByteBuf buf = bufs.takeRemaining();
-				try (ByteArrayInputStream bais = new ByteArrayInputStream(buf.getArray())) {
-					try (StreamInput streamInput = StreamInput.create(bais)) {
-						I decode;
-						try {
-							decode = inputCodec.decode(streamInput);
-						} catch (EOFException e) {
-							bufs.add(buf);
-							return null;
-						}
-						buf.moveHead(streamInput.pos());
-						bufs.add(buf);
-						return decode;
-					}
-				} catch (IOException e) {
-					throw new MalformedDataException(e);
-				}
-			}
-		};
-	}
 
 	private static StreamCodec<FsRequest> createFsRequestStreamCodec() {
 		StreamCodecs.SubtypeBuilder<FsRequest> builder = new StreamCodecs.SubtypeBuilder<>();

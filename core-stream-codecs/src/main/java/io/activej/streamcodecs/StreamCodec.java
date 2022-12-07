@@ -1,4 +1,4 @@
-package io.activej.serializer.stream;
+package io.activej.streamcodecs;
 
 import io.activej.serializer.BinarySerializer;
 
