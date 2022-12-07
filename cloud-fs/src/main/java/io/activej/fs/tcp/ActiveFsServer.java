@@ -112,54 +112,10 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 					if (!(request instanceof FsRequest.Handshake handshake)) {
 						return Promise.ofException(new FsException("Handshake expected"));
 					}
-					return handleHandshake(messaging, handshake)
-							.then(() -> messaging.receive()
-									.then(msg -> {
-										if (msg instanceof FsRequest.Upload upload) {
-											return handleUpload(messaging, upload);
-										}
-										if (msg instanceof FsRequest.Append append) {
-											return handleAppend(messaging, append);
-										}
-										if (msg instanceof FsRequest.Download download) {
-											return handleDownload(messaging, download);
-										}
-										if (msg instanceof FsRequest.Copy copy) {
-											return handleCopy(messaging, copy);
-										}
-										if (msg instanceof FsRequest.CopyAll copyAll) {
-											return handleCopyAll(messaging, copyAll);
-										}
-										if (msg instanceof FsRequest.Move move) {
-											return handleMove(messaging, move);
-										}
-										if (msg instanceof FsRequest.MoveAll moveAll) {
-											return handleMoveAll(messaging, moveAll);
-										}
-										if (msg instanceof FsRequest.Delete delete) {
-											return handleDelete(messaging, delete);
-										}
-										if (msg instanceof FsRequest.DeleteAll deleteAll) {
-											return handleDeleteAll(messaging, deleteAll);
-										}
-										if (msg instanceof FsRequest.List list) {
-											return handleList(messaging, list);
-										}
-										if (msg instanceof FsRequest.Info info) {
-											return handleInfo(messaging, info);
-										}
-										if (msg instanceof FsRequest.InfoAll infoAll) {
-											return handleInfoAll(messaging, infoAll);
-										}
-										if (msg instanceof FsRequest.Ping) {
-											return handlePing(messaging);
-										}
-										if (msg instanceof FsRequest.Handshake) {
-											return Promise.ofException(new FsException("Handshake was already performed"));
-										}
-										throw new AssertionError();
-									}));
+					return handleHandshake(messaging, handshake);
 				})
+				.then(messaging::receive)
+				.then(msg -> dispatch(messaging, msg))
 				.whenComplete(handleRequestPromise.recordStats())
 				.whenException(e -> {
 					logger.warn("got an error while handling message : {}", this, e);
@@ -167,6 +123,52 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 							.then(messaging::sendEndOfStream)
 							.whenResult(messaging::close);
 				});
+	}
+
+	private Promise<Void> dispatch(MessagingWithBinaryStreaming<FsRequest, FsResponse> messaging, FsRequest msg) throws Exception {
+		if (msg instanceof FsRequest.Upload upload) {
+			return handleUpload(messaging, upload);
+		}
+		if (msg instanceof FsRequest.Append append) {
+			return handleAppend(messaging, append);
+		}
+		if (msg instanceof FsRequest.Download download) {
+			return handleDownload(messaging, download);
+		}
+		if (msg instanceof FsRequest.Copy copy) {
+			return handleCopy(messaging, copy);
+		}
+		if (msg instanceof FsRequest.CopyAll copyAll) {
+			return handleCopyAll(messaging, copyAll);
+		}
+		if (msg instanceof FsRequest.Move move) {
+			return handleMove(messaging, move);
+		}
+		if (msg instanceof FsRequest.MoveAll moveAll) {
+			return handleMoveAll(messaging, moveAll);
+		}
+		if (msg instanceof FsRequest.Delete delete) {
+			return handleDelete(messaging, delete);
+		}
+		if (msg instanceof FsRequest.DeleteAll deleteAll) {
+			return handleDeleteAll(messaging, deleteAll);
+		}
+		if (msg instanceof FsRequest.List list) {
+			return handleList(messaging, list);
+		}
+		if (msg instanceof FsRequest.Info info) {
+			return handleInfo(messaging, info);
+		}
+		if (msg instanceof FsRequest.InfoAll infoAll) {
+			return handleInfoAll(messaging, infoAll);
+		}
+		if (msg instanceof FsRequest.Ping) {
+			return handlePing(messaging);
+		}
+		if (msg instanceof FsRequest.Handshake) {
+			return Promise.ofException(new FsException("Handshake was already performed"));
+		}
+		throw new AssertionError();
 	}
 
 	private Promise<Void> handleHandshake(Messaging<FsRequest, FsResponse> messaging, FsRequest.Handshake

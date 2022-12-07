@@ -16,11 +16,9 @@
 
 package io.activej.crdt;
 
-import io.activej.crdt.CrdtMessagingProto.CrdtRequest;
-import io.activej.crdt.CrdtMessagingProto.CrdtResponse;
-import io.activej.crdt.CrdtMessagingProto.CrdtResponse.*;
-import io.activej.crdt.CrdtMessagingProto.CrdtResponse.Handshake.Ok;
-import io.activej.crdt.CrdtMessagingProto.Version;
+import io.activej.crdt.messaging.CrdtRequest;
+import io.activej.crdt.messaging.CrdtResponse;
+import io.activej.crdt.messaging.Version;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.csp.binary.ByteBufsCodec;
@@ -33,6 +31,7 @@ import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStatsBasic;
 import io.activej.datastream.stats.StreamStatsDetailed;
 import io.activej.eventloop.Eventloop;
+import io.activej.fs.util.RemoteFsUtils;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.net.AbstractServer;
@@ -48,20 +47,19 @@ import java.util.function.Function;
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.crdt.CrdtMessagingProto.CrdtRequest.RequestCase.TAKE_ACK;
-import static io.activej.crdt.CrdtMessagingProto.CrdtResponse.ResponseCase.*;
-import static io.activej.crdt.util.Utils.ackTransformer;
-import static io.activej.crdt.util.Utils.codec;
+import static io.activej.crdt.util.Utils.*;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer<CrdtServer<K, S>> {
-	public static final Version VERSION = Version.newBuilder().setMajor(1).setMinor(0).build();
+	public static final Version VERSION = new Version(1, 0);
 
-	private static final ByteBufsCodec<CrdtRequest, CrdtResponse> SERIALIZER = codec(CrdtRequest.parser());
+	private static final ByteBufsCodec<CrdtRequest, CrdtResponse> SERIALIZER = RemoteFsUtils.codec(
+			CRDT_REQUEST_CODEC,
+			CRDT_RESPONSE_CODEC
+	);
 
-	private Function<CrdtRequest.Handshake, CrdtResponse.Handshake> handshakeHandler = $ -> Handshake.newBuilder()
-			.setOk(Ok.newBuilder())
-			.build();
+	private Function<CrdtRequest.Handshake, CrdtResponse.Handshake> handshakeHandler = $ ->
+			new CrdtResponse.Handshake(null);
 
 	private final CrdtStorage<K, S> storage;
 	private final CrdtDataSerializer<K, S> serializer;
@@ -117,57 +115,66 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer
 		MessagingWithBinaryStreaming<CrdtRequest, CrdtResponse> messaging =
 				MessagingWithBinaryStreaming.create(socket, SERIALIZER);
 		messaging.receive()
-				.then(handshakeMsg -> {
-					if (!handshakeMsg.hasHandshake()) {
+				.then(request -> {
+					if (!(request instanceof CrdtRequest.Handshake handshake)) {
 						return Promise.ofException(new CrdtException("Handshake expected"));
 					}
-					return handshake(messaging, handshakeMsg.getHandshake())
-							.then(messaging::receive)
-							.then(msg -> switch (msg.getRequestCase()) {
-								case DOWNLOAD -> download(messaging, msg.getDownload());
-								case UPLOAD -> upload(messaging, msg.getUpload());
-								case REMOVE -> remove(messaging, msg.getRemove());
-								case PING -> ping(messaging, msg.getPing());
-								case TAKE -> take(messaging, msg.getTake());
-								case HANDSHAKE ->
-										Promise.ofException(new CrdtException("Handshake was already performed"));
-								case REQUEST_NOT_SET ->
-										Promise.ofException(new CrdtException("Request was not set"));
-								default ->
-										Promise.ofException(new CrdtException("Unknown message type: " + msg.getRequestCase()));
-							});
+					return handleHandshake(messaging, handshake);
 				})
+				.then(messaging::receive)
+				.then(msg -> dispatch(messaging, msg))
 				.whenException(e -> {
 					logger.warn("got an error while handling message {}", this, e);
-					messaging.send(errorResponse(e))
+					messaging.send(new CrdtResponse.ServerError(e.getClass().getSimpleName() + ": " + e.getMessage()))
 							.then(messaging::sendEndOfStream)
 							.whenResult(messaging::close);
 				});
 	}
 
-	private Promise<Void> handshake(Messaging<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Handshake handshake) {
-		CrdtResponse handShakeResponse = CrdtResponse.newBuilder()
-				.setHandshake(handshakeHandler.apply(handshake))
-				.build();
+	private Promise<Void> dispatch(MessagingWithBinaryStreaming<CrdtRequest, CrdtResponse> messaging, CrdtRequest msg) {
+		if (msg instanceof CrdtRequest.Download download) {
+			return handleDownload(messaging, download);
+		}
+		if (msg instanceof CrdtRequest.Upload upload) {
+			return handleUpload(messaging, upload);
+		}
+		if (msg instanceof CrdtRequest.Remove remove) {
+			return handleRemove(messaging, remove);
+		}
+		if (msg instanceof CrdtRequest.Ping ping) {
+			return handlePing(messaging, ping);
+		}
+		if (msg instanceof CrdtRequest.Take take) {
+			return handleTake(messaging, take);
+		}
+		if (msg instanceof CrdtRequest.Handshake) {
+			return Promise.ofException(new CrdtException("Handshake was already performed"));
+		}
+		throw new AssertionError();
+	}
 
-		return messaging.send(handShakeResponse)
+	private Promise<Void> handleHandshake(Messaging<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Handshake handshake) {
+		return messaging.send(handshakeHandler.apply(handshake))
 				.whenComplete(handshakePromise.recordStats())
 				.whenComplete(toLogger(logger, TRACE, thisMethod(), messaging, handshake, this));
 	}
 
-	private Promise<Void> take(MessagingWithBinaryStreaming<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Take take) {
+	private Promise<Void> handleTake(MessagingWithBinaryStreaming<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Take take) {
 		return storage.take()
 				.whenComplete(takeBeginPromise.recordStats())
-				.whenResult(() -> messaging.send(response(TAKE_STARTED)))
+				.whenResult(() -> messaging.send(new CrdtResponse.TakeStarted()))
 				.then(supplier -> supplier
 						.transformWith(ackTransformer(ack -> ack
-								.then(() -> messaging.receive()
-										.then(takeAck -> {
-											if (!takeAck.hasTakeAck()) {
-												return Promise.ofException(new CrdtException("Received message " + takeAck + " instead of " + TAKE_ACK));
-											}
-											return Promise.complete();
-										}))))
+								.then(messaging::receive)
+								.then(msg -> {
+									if (!(msg instanceof CrdtRequest.TakeAck)) {
+										return Promise.ofException(new CrdtException(
+												"Received message " + msg +
+														" instead of " + CrdtRequest.TakeAck.class
+										));
+									}
+									return Promise.complete();
+								})))
 						.transformWith(detailedStats ? takeStatsDetailed : takeStats)
 						.transformWith(ChannelSerializer.create(serializer))
 						.streamTo(messaging.sendBinaryStream()))
@@ -175,69 +182,50 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer
 				.whenComplete(toLogger(logger, TRACE, thisMethod(), messaging, take, this));
 	}
 
-	private Promise<Void> ping(MessagingWithBinaryStreaming<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Ping ping) {
-		return messaging.send(response(PONG))
+	private Promise<Void> handlePing(MessagingWithBinaryStreaming<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Ping ping) {
+		return messaging.send(new CrdtResponse.Pong())
 				.then(messaging::sendEndOfStream)
 				.whenResult(messaging::close)
 				.whenComplete(pingPromise.recordStats())
 				.whenComplete(toLogger(logger, TRACE, thisMethod(), messaging, ping, this));
 	}
 
-	private Promise<Void> remove(MessagingWithBinaryStreaming<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Remove remove) {
+	private Promise<Void> handleRemove(MessagingWithBinaryStreaming<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Remove remove) {
 		return messaging.receiveBinaryStream()
 				.transformWith(ChannelDeserializer.create(tombstoneSerializer))
 				.streamTo(StreamConsumer.ofPromise(storage.remove()
 						.map(consumer -> consumer.transformWith(detailedStats ? removeStatsDetailed : removeStats))
 						.whenComplete(removeBeginPromise.recordStats())))
-				.then(() -> messaging.send(response(REMOVE_ACK)))
+				.then(() -> messaging.send(new CrdtResponse.RemoveAck()))
 				.then(messaging::sendEndOfStream)
 				.whenResult(messaging::close)
 				.whenComplete(removeFinishedPromise.recordStats())
 				.whenComplete(toLogger(logger, TRACE, thisMethod(), messaging, remove, this));
 	}
 
-	private Promise<Void> upload(MessagingWithBinaryStreaming<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Upload upload) {
+	private Promise<Void> handleUpload(MessagingWithBinaryStreaming<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Upload upload) {
 		return messaging.receiveBinaryStream()
 				.transformWith(ChannelDeserializer.create(serializer))
 				.streamTo(StreamConsumer.ofPromise(storage.upload()
 						.map(consumer -> consumer.transformWith(detailedStats ? uploadStatsDetailed : uploadStats))
 						.whenComplete(uploadBeginPromise.recordStats())))
-				.then(() -> messaging.send(response(UPLOAD_ACK)))
+				.then(() -> messaging.send(new CrdtResponse.UploadAck()))
 				.then(messaging::sendEndOfStream)
 				.whenResult(messaging::close)
 				.whenComplete(uploadFinishedPromise.recordStats())
 				.whenComplete(toLogger(logger, TRACE, thisMethod(), messaging, upload, this));
 	}
 
-	private Promise<Void> download(MessagingWithBinaryStreaming<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Download download) {
-		return storage.download(download.getToken())
+	private Promise<Void> handleDownload(MessagingWithBinaryStreaming<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Download download) {
+		return storage.download(download.token())
 				.map(consumer -> consumer.transformWith(detailedStats ? downloadStatsDetailed : downloadStats))
 				.whenComplete(downloadBeginPromise.recordStats())
-				.whenResult(() -> messaging.send(response(DOWNLOAD_STARTED)))
+				.whenResult(() -> messaging.send(new CrdtResponse.DownloadStarted()))
 				.then(supplier -> supplier
 						.transformWith(ChannelSerializer.create(serializer))
 						.streamTo(messaging.sendBinaryStream()))
 				.whenComplete(downloadFinishedPromise.recordStats())
 				.whenComplete(toLogger(logger, TRACE, thisMethod(), messaging, download, this));
-	}
-
-	private static CrdtResponse response(ResponseCase responseCase) {
-		CrdtResponse.Builder builder = CrdtResponse.newBuilder();
-		return switch (responseCase) {
-			case UPLOAD_ACK -> builder.setUploadAck(UploadAck.newBuilder()).build();
-			case REMOVE_ACK -> builder.setRemoveAck(RemoveAck.newBuilder()).build();
-			case PONG -> builder.setPong(Pong.newBuilder()).build();
-			case DOWNLOAD_STARTED -> builder.setDownloadStarted(DownloadStarted.newBuilder()).build();
-			case TAKE_STARTED -> builder.setTakeStarted(TakeStarted.newBuilder()).build();
-			default -> throw new AssertionError();
-		};
-	}
-
-	private static CrdtResponse errorResponse(Exception exception) {
-		return CrdtResponse.newBuilder()
-				.setServerError(ServerError.newBuilder()
-						.setMessage(exception.getClass().getSimpleName() + ": " + exception.getMessage()))
-				.build();
 	}
 
 	// region JMX

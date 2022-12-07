@@ -20,13 +20,13 @@ import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.function.ConsumerEx;
+import io.activej.common.function.FunctionEx;
 import io.activej.common.initializer.WithInitializer;
-import io.activej.crdt.CrdtMessagingProto.CrdtRequest;
-import io.activej.crdt.CrdtMessagingProto.CrdtRequest.*;
-import io.activej.crdt.CrdtMessagingProto.CrdtResponse.Handshake.NotOk;
-import io.activej.crdt.CrdtMessagingProto.CrdtResponse.ResponseCase;
+import io.activej.crdt.messaging.CrdtRequest;
+import io.activej.crdt.messaging.CrdtResponse;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
+import io.activej.crdt.util.Utils;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
@@ -40,6 +40,7 @@ import io.activej.datastream.stats.StreamStatsDetailed;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.eventloop.net.SocketSettings;
+import io.activej.fs.util.RemoteFsUtils;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.EventStats;
@@ -51,10 +52,6 @@ import org.jetbrains.annotations.NotNull;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 
-import static io.activej.crdt.CrdtMessagingProto.CrdtRequest.RequestCase.*;
-import static io.activej.crdt.CrdtMessagingProto.CrdtResponse;
-import static io.activej.crdt.CrdtMessagingProto.CrdtResponse.ResponseCase.*;
-import static io.activej.crdt.util.Utils.codec;
 import static io.activej.crdt.util.Utils.onItem;
 
 @SuppressWarnings("rawtypes")
@@ -64,7 +61,10 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(CrdtStorageClient.class, "connectTimeout", Duration.ZERO);
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageClient.class, "smoothingWindow", Duration.ofMinutes(1));
 
-	private static final ByteBufsCodec<CrdtResponse, CrdtRequest> SERIALIZER = codec(CrdtResponse.parser());
+	private static final ByteBufsCodec<CrdtResponse, CrdtRequest> SERIALIZER = RemoteFsUtils.codec(
+			Utils.CRDT_RESPONSE_CODEC,
+			Utils.CRDT_REQUEST_CODEC
+	);
 
 	private final Eventloop eventloop;
 	private final InetSocketAddress address;
@@ -133,33 +133,31 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
 		return connect()
 				.then(CrdtStorageClient::performHandshake)
-				.then(messaging -> messaging.send(request(UPLOAD))
+				.then(messaging -> messaging.send(new CrdtRequest.Upload())
 						.mapException(e -> new CrdtException("Failed to send 'Upload' request", e))
-						.map($ -> {
-							ChannelConsumer<ByteBuf> consumer = messaging.sendBinaryStream()
-									.withAcknowledgement(ack -> ack
-											.then(messaging::receive)
-											.whenResult(simpleHandlerFn(UPLOAD_ACK))
-											.toVoid());
-							return StreamConsumer.<CrdtData<K, S>>ofSupplier(supplier ->
-											supplier.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
-													.transformWith(onItem(uploadedItems::recordEvent))
-													.transformWith(ChannelSerializer.create(serializer))
-													.streamTo(consumer))
-									.withAcknowledgement(ack -> ack
-											.mapException(e -> new CrdtException("Upload failed", e)));
-						}));
+						.map($ -> messaging.sendBinaryStream()
+								.withAcknowledgement(ack -> ack
+										.then(messaging::receive)
+										.whenResult(validateFn(CrdtResponse.UploadAck.class))
+										.toVoid()))
+						.map(consumer -> StreamConsumer.<CrdtData<K, S>>ofSupplier(supplier ->
+										supplier.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
+												.transformWith(onItem(uploadedItems::recordEvent))
+												.transformWith(ChannelSerializer.create(serializer))
+												.streamTo(consumer))
+								.withAcknowledgement(ack -> ack
+										.mapException(e -> new CrdtException("Upload failed", e)))));
 	}
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
 		return connect()
 				.then(CrdtStorageClient::performHandshake)
-				.then(messaging -> messaging.send(downloadRequest(timestamp))
+				.then(messaging -> messaging.send(new CrdtRequest.Download(timestamp))
 						.mapException(e -> new CrdtException("Failed to send 'Download' request", e))
 						.then(() -> messaging.receive()
 								.mapException(e -> new CrdtException("Failed to receive response", e)))
-						.whenResult(simpleHandlerFn(DOWNLOAD_STARTED))
+						.whenResult(validateFn(CrdtResponse.DownloadStarted.class))
 						.map($ ->
 								messaging.receiveBinaryStream()
 										.transformWith(ChannelDeserializer.create(serializer))
@@ -176,18 +174,18 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	public Promise<StreamSupplier<CrdtData<K, S>>> take() {
 		return connect()
 				.then(CrdtStorageClient::performHandshake)
-				.then(messaging -> messaging.send(request(TAKE))
+				.then(messaging -> messaging.send(new CrdtRequest.Take())
 						.mapException(e -> new CrdtException("Failed to send 'Take' request", e))
 						.then(() -> messaging.receive()
 								.mapException(e -> new CrdtException("Failed to receive response", e)))
-						.whenResult(simpleHandlerFn(TAKE_STARTED))
+						.whenResult(validateFn(CrdtResponse.TakeStarted.class))
 						.map($ -> {
 							StreamSupplier<CrdtData<K, S>> supplier = messaging.receiveBinaryStream()
 									.transformWith(ChannelDeserializer.create(serializer))
 									.transformWith(detailedStats ? takeStatsDetailed : takeStats)
 									.transformWith(onItem(takenItems::recordEvent));
 							supplier.getAcknowledgement()
-									.then(() -> messaging.send(request(TAKE_ACK)))
+									.then(() -> messaging.send(new CrdtRequest.TakeAck()))
 									.then(messaging::sendEndOfStream)
 									.mapException(e -> new CrdtException("Take failed", e))
 									.whenResult(messaging::close)
@@ -200,13 +198,13 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	public Promise<StreamConsumer<CrdtTombstone<K>>> remove() {
 		return connect()
 				.then(CrdtStorageClient::performHandshake)
-				.then(messaging -> messaging.send(request(REMOVE))
+				.then(messaging -> messaging.send(new CrdtRequest.Remove())
 						.mapException(e -> new CrdtException("Failed to send 'Remove' request", e))
 						.map($ -> {
 							ChannelConsumer<ByteBuf> consumer = messaging.sendBinaryStream()
 									.withAcknowledgement(ack -> ack
 											.then(messaging::receive)
-											.whenResult(simpleHandlerFn(REMOVE_ACK))
+											.whenResult(validateFn(CrdtResponse.RemoveAck.class))
 											.toVoid());
 							return StreamConsumer.<CrdtTombstone<K>>ofSupplier(supplier ->
 											supplier.transformWith(detailedStats ? removeStatsDetailed : removeStats)
@@ -222,11 +220,11 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	public Promise<Void> ping() {
 		return connect()
 				.then(CrdtStorageClient::performHandshake)
-				.then(messaging -> messaging.send(request(PING))
+				.then(messaging -> messaging.send(new CrdtRequest.Ping())
 						.mapException(e -> new CrdtException("Failed to send 'Ping'", e))
 						.then(() -> messaging.receive()
 								.mapException(e -> new CrdtException("Failed to receive 'Pong'", e)))
-						.whenResult(simpleHandlerFn(PONG))
+						.whenResult(validateFn(CrdtResponse.Pong.class))
 						.toVoid()
 						.whenResult(messaging::close)
 						.whenException(messaging::closeEx));
@@ -242,19 +240,21 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 		return Promise.complete();
 	}
 
-	private ConsumerEx<CrdtResponse> simpleHandlerFn(ResponseCase responseCase) {
+	private static <T extends CrdtResponse> FunctionEx<CrdtResponse, T> castFn(Class<T> expectedCls) {
 		return response -> {
-			ResponseCase actualCase = response.getResponseCase();
-			if (actualCase == SERVER_ERROR) {
-				throw new CrdtException((response.getServerError()).getMessage());
+			if (response instanceof CrdtResponse.ServerError serverError) {
+				throw new CrdtException(serverError.message());
 			}
-			if (actualCase == RESPONSE_NOT_SET) {
-				throw new CrdtException("Received empty request");
+			if (response.getClass() != expectedCls) {
+				throw new CrdtException("Received response " + response + " instead of " + expectedCls.getName());
 			}
-			if (actualCase != responseCase) {
-				throw new CrdtException("Received request " + actualCase + " instead of " + responseCase);
-			}
+			//noinspection unchecked
+			return (T) response;
 		};
+	}
+
+	private static ConsumerEx<CrdtResponse> validateFn(Class<? extends CrdtResponse> expectedCls) {
+		return response -> castFn(expectedCls).apply(response);
 	}
 
 	private Promise<MessagingWithBinaryStreaming<CrdtResponse, CrdtRequest>> connect() {
@@ -263,44 +263,18 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 				.mapException(e -> new CrdtException("Failed to connect to " + address, e));
 	}
 
-	private static CrdtRequest request(RequestCase requestCase) {
-		CrdtRequest.Builder builder = CrdtRequest.newBuilder();
-		return switch (requestCase) {
-			case UPLOAD -> builder.setUpload(Upload.newBuilder()).build();
-			case REMOVE -> builder.setRemove(Remove.newBuilder()).build();
-			case PING -> builder.setPing(Ping.newBuilder()).build();
-			case TAKE -> builder.setTake(Take.newBuilder()).build();
-			case TAKE_ACK -> builder.setTakeAck(TakeAck.newBuilder()).build();
-			default -> throw new AssertionError();
-		};
-
-	}
-
 	private static Promise<MessagingWithBinaryStreaming<CrdtResponse, CrdtRequest>> performHandshake(MessagingWithBinaryStreaming<CrdtResponse, CrdtRequest> messaging) {
-		return messaging.send(CrdtRequest.newBuilder().setHandshake(CrdtRequest.Handshake.newBuilder().setVersion(CrdtServer.VERSION)).build())
+		return messaging.send(new CrdtRequest.Handshake(CrdtServer.VERSION))
 				.then(messaging::receive)
-				.map(handshakeResponse -> {
-					if (!handshakeResponse.hasHandshake()) {
-						if (handshakeResponse.hasServerError()) {
-							throw new CrdtException(handshakeResponse.getServerError().getMessage());
-						}
-						throw new CrdtException("Handshake response expected, got " + handshakeResponse.getResponseCase());
-					}
-					CrdtResponse.Handshake handshake = handshakeResponse.getHandshake();
-					if (handshake.hasNotOk()) {
-						NotOk notOk = handshake.getNotOk();
+				.map(castFn(CrdtResponse.Handshake.class))
+				.map(handshake -> {
+					CrdtResponse.HandshakeFailure handshakeFailure = handshake.handshakeFailure();
+					if (handshakeFailure != null) {
 						throw new CrdtException(String.format("Handshake failed: %s. Minimal allowed version: %s",
-								notOk.getMessage(), notOk.hasMinimalVersion() ? notOk.getMinimalVersion() : "unspecified"));
+								handshakeFailure.message(), handshakeFailure.minimalVersion()));
 					}
 					return messaging;
 				});
-	}
-
-	private static CrdtRequest downloadRequest(long timestamp) {
-		return CrdtRequest.newBuilder()
-				.setDownload(Download.newBuilder()
-						.setToken(timestamp))
-				.build();
 	}
 
 	// region JMX
@@ -354,7 +328,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 		return removeStatsDetailed;
 	}
 
- 	@JmxAttribute
+	@JmxAttribute
 	public EventStats getUploadedItems() {
 		return uploadedItems;
 	}

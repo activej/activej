@@ -53,6 +53,7 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.net.AbstractServer;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.Nullable;
 
@@ -154,36 +155,27 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
 		Messaging<DataflowRequest, DataflowResponse> messaging = MessagingWithBinaryStreaming.create(socket, codec);
 		messaging.receive()
-				.map(request -> {
-					if (!DataflowRequest.Handshake.class.isAssignableFrom(request.getClass())) {
-						throw new DataflowException("Handshake expected, got: " + request);
+				.then(request -> {
+					if (!(request instanceof DataflowRequest.Handshake handshake)) {
+						return Promise.ofException(new DataflowException("Handshake expected, got: " + request));
 					}
-					return (DataflowRequest.Handshake) request;
+					return messaging.send(handshakeHandler.apply(handshake));
 				})
-				.then(handshakeMsg -> messaging.send(handshakeHandler.apply(handshakeMsg)))
 				.then(messaging::receive)
 				.mapException(IOException.class, DataflowStacklessException::new)
 				.mapException(TruncatedDataException.class, e -> new DataflowStacklessException(e.getMessage()))
-				.whenResult(msg -> {
-					if (msg != null) {
-						doRead(messaging, msg);
-					} else {
-						logger.warn("unexpected end of stream");
-						messaging.close();
-					}
-				})
+				.whenResult(msg -> dispatch(messaging, msg))
 				.whenException(e -> {
 					logger.error("received error while trying to read", e);
 					messaging.close();
 				});
 	}
 
-	private void doRead(Messaging<DataflowRequest, DataflowResponse> messaging, DataflowRequest request) throws DataflowException {
-		Class<? extends DataflowRequest> requestClass = request.getClass();
-		if (requestClass == Download.class) handleDownload(messaging, (Download) request);
-		else if (requestClass == Execute.class) handleExecute(messaging, (Execute) request);
-		else if (requestClass == GetTasks.class) handleGetTasks(messaging, (GetTasks) request);
-		else if (requestClass == DataflowRequest.Handshake.class)
+	private void dispatch(Messaging<DataflowRequest, DataflowResponse> messaging, DataflowRequest request) throws DataflowException {
+		if (request instanceof Download download) handleDownload(messaging, download);
+		else if (request instanceof Execute execute) handleExecute(messaging, execute);
+		else if (request instanceof GetTasks getTasks) handleGetTasks(messaging, getTasks);
+		else if (request instanceof DataflowRequest.Handshake)
 			throw new DataflowException("Handshake was already performed");
 	}
 

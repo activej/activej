@@ -21,19 +21,19 @@ import com.dslplatform.json.JsonReader;
 import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.ParsingException;
 import com.dslplatform.json.runtime.Settings;
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.Message;
-import com.google.protobuf.Parser;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.bytebuf.ByteBufPool;
-import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.csp.binary.ByteBufsCodec;
-import io.activej.csp.binary.ByteBufsDecoder;
+import io.activej.crdt.messaging.CrdtRequest;
+import io.activej.crdt.messaging.CrdtResponse;
+import io.activej.crdt.messaging.Version;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.processor.StreamFilter;
 import io.activej.datastream.processor.StreamTransformer;
+import io.activej.fs.util.StructuredStreamCodec;
 import io.activej.promise.Promise;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamCodecs;
+import io.activej.serializer.stream.StreamCodecs.SubtypeBuilder;
 import io.activej.types.TypeT;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -52,6 +52,13 @@ import static io.activej.crdt.wal.FileWriteAheadLog.EXT_FINAL;
 import static java.util.stream.Collectors.toList;
 
 public final class Utils {
+	private static final StreamCodec<Version> VERSION_CODEC = StructuredStreamCodec.create(Version::new,
+			Version::major, StreamCodecs.ofVarInt(),
+			Version::minor, StreamCodecs.ofVarInt()
+	);
+
+	public static final StreamCodec<CrdtRequest> CRDT_REQUEST_CODEC = createCrdtRequestStreamCodec();
+	public static final StreamCodec<CrdtResponse> CRDT_RESPONSE_CODEC = createCrdtResponseStreamCodec();
 
 	public static Promise<List<Path>> getWalFiles(Executor executor, Path walDir) {
 		return Promise.ofBlocking(executor,
@@ -134,32 +141,43 @@ public final class Utils {
 		};
 	}
 
-	public static <I extends Message, O extends Message> ByteBufsCodec<I, O> codec(Parser<I> inputParser) {
-		return new ByteBufsCodec<>() {
-			@Override
-			public ByteBuf encode(O item) {
-				byte[] bytes = item.toByteArray();
+	private static StreamCodec<CrdtRequest> createCrdtRequestStreamCodec() {
+		SubtypeBuilder<CrdtRequest> builder = new SubtypeBuilder<>();
 
-				int length = bytes.length;
-				ByteBuf buf = ByteBufPool.allocate(length + 5);
+		builder.add(CrdtRequest.Download.class, StructuredStreamCodec.create(CrdtRequest.Download::new,
+				CrdtRequest.Download::token, StreamCodecs.ofVarLong())
+		);
+		builder.add(CrdtRequest.Handshake.class, StructuredStreamCodec.create(CrdtRequest.Handshake::new,
+				CrdtRequest.Handshake::version, VERSION_CODEC)
+		);
+		builder.add(CrdtRequest.Ping.class, StreamCodecs.singleton(new CrdtRequest.Ping()));
+		builder.add(CrdtRequest.Take.class, StreamCodecs.singleton(new CrdtRequest.Take()));
+		builder.add(CrdtRequest.TakeAck.class, StreamCodecs.singleton(new CrdtRequest.TakeAck()));
+		builder.add(CrdtRequest.Upload.class, StreamCodecs.singleton(new CrdtRequest.Upload()));
 
-				buf.writeVarInt(length);
-				buf.put(bytes);
-				return buf;
-			}
+		return builder.build();
+	}
 
-			@Override
-			public @Nullable I tryDecode(ByteBufs bufs) throws MalformedDataException {
-				return ByteBufsDecoder.ofVarIntSizePrefixedBytes()
-						.andThen(buf -> {
-							try {
-								return inputParser.parseFrom(buf.asArray());
-							} catch (InvalidProtocolBufferException e) {
-								throw new MalformedDataException(e);
-							}
-						})
-						.tryDecode(bufs);
-			}
-		};
+	private static StreamCodec<CrdtResponse> createCrdtResponseStreamCodec() {
+		SubtypeBuilder<CrdtResponse> builder = new SubtypeBuilder<>();
+
+		builder.add(CrdtResponse.DownloadStarted.class, StreamCodecs.singleton(new CrdtResponse.DownloadStarted()));
+		builder.add(CrdtResponse.Handshake.class, StructuredStreamCodec.create(CrdtResponse.Handshake::new,
+				CrdtResponse.Handshake::handshakeFailure, StreamCodecs.ofNullable(
+						StructuredStreamCodec.create(CrdtResponse.HandshakeFailure::new,
+								CrdtResponse.HandshakeFailure::minimalVersion, VERSION_CODEC,
+								CrdtResponse.HandshakeFailure::message, StreamCodecs.ofString())
+				))
+		);
+		builder.add(CrdtResponse.Pong.class, StreamCodecs.singleton(new CrdtResponse.Pong()));
+		builder.add(CrdtResponse.RemoveAck.class, StreamCodecs.singleton(new CrdtResponse.RemoveAck()));
+		builder.add(CrdtResponse.ServerError.class, StructuredStreamCodec.create(CrdtResponse.ServerError::new,
+				CrdtResponse.ServerError::message, StreamCodecs.ofString()
+				)
+		);
+		builder.add(CrdtResponse.TakeStarted.class, StreamCodecs.singleton(new CrdtResponse.TakeStarted()));
+		builder.add(CrdtResponse.UploadAck.class, StreamCodecs.singleton(new CrdtResponse.UploadAck()));
+
+		return builder.build();
 	}
 }

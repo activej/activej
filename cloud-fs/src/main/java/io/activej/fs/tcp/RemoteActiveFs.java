@@ -58,7 +58,6 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.isBijection;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
-import static io.activej.fs.util.RemoteFsUtils.codec;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 
 /**
@@ -74,7 +73,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 
 	public static final Duration DEFAULT_CONNECTION_TIMEOUT = ApplicationSettings.getDuration(RemoteActiveFs.class, "connectTimeout", Duration.ZERO);
 
-	private static final ByteBufsCodec<FsResponse, FsRequest> SERIALIZER = codec(
+	private static final ByteBufsCodec<FsResponse, FsRequest> SERIALIZER = RemoteFsUtils.codec(
 			RemoteFsUtils.FS_RESPONSE_CODEC,
 			RemoteFsUtils.FS_REQUEST_CODEC
 	);
@@ -253,7 +252,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
-		return simpleCommand(new FsRequest.CopyAll(sourceToTarget), FsResponse.CopyAllFinished.class )
+		return simpleCommand(new FsRequest.CopyAll(sourceToTarget), FsResponse.CopyAllFinished.class)
 				.whenComplete(toLogger(logger, "copyAll", sourceToTarget, this))
 				.whenComplete(copyAllPromise.recordStats());
 	}
@@ -345,7 +344,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 					FsResponse.HandshakeFailure handshakeFailure = handshakeResponse.handshakeFailure();
 					if (handshakeFailure != null) {
 						throw new FsException(String.format("Handshake failed: %s. Minimal allowed version: %s",
-								handshakeFailure.message(),  handshakeFailure.minimalVersion()));
+								handshakeFailure.message(), handshakeFailure.minimalVersion()));
 					}
 					return messaging;
 				})
