@@ -136,7 +136,7 @@ public interface RetryPolicy<S> {
 
 		@Override
 		public final long nextRetryTimestamp(long now, Exception lastError, Tuple2<S, DS> retryState) {
-			return nextRetryTimestamp(now, lastError, retryState.getValue1(), retryState.getValue2());
+			return nextRetryTimestamp(now, lastError, retryState.value1(), retryState.value2());
 		}
 
 		public abstract long nextRetryTimestamp(long now, Exception lastError, S retryState, DS delegateRetryState);

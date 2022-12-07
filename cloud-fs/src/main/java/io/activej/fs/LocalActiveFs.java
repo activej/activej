@@ -464,7 +464,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 					return new Tuple2<>(tempPath, FileChannel.open(tempPath, CREATE, WRITE));
 				})
 				.map(pathAndChannel -> {
-					ChannelFileWriter writer = ChannelFileWriter.create(executor, pathAndChannel.getValue2());
+					ChannelFileWriter writer = ChannelFileWriter.create(executor, pathAndChannel.value2());
 					if (fsyncUploads) {
 						writer.withForceOnClose(true);
 					}
@@ -473,13 +473,13 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 							.withAcknowledgement(ack -> ack
 									.then(() -> execute(() -> {
 										Path target = resolve(name);
-										doMove(pathAndChannel.getValue1(), target);
+										doMove(pathAndChannel.value1(), target);
 										if (fsyncDirectories) {
 											tryFsync(target.getParent());
 										}
 									}))
 									.then(translateScalarErrorsFn())
-									.whenException(() -> execute(() -> Files.deleteIfExists(pathAndChannel.getValue1())))
+									.whenException(() -> execute(() -> Files.deleteIfExists(pathAndChannel.value1())))
 									.whenComplete(uploadFinishPromise.recordStats())
 									.whenComplete(toLogger(logger, TRACE, "onUploadComplete", name, this)));
 				})

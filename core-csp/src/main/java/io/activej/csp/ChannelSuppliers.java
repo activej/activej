@@ -178,7 +178,7 @@ public final class ChannelSuppliers {
 
 	public static <T> Promise<Void> streamTo(Promise<ChannelSupplier<T>> supplier, Promise<ChannelConsumer<T>> consumer) {
 		return Promises.toTuple(supplier.toTry(), consumer.toTry())
-				.then(t -> streamTo(t.getValue1(), t.getValue2()));
+				.then(t -> streamTo(t.value1(), t.value2()));
 	}
 
 	public static <T> Promise<Void> streamTo(Try<ChannelSupplier<T>> supplier, Try<ChannelConsumer<T>> consumer) {

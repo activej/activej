@@ -55,12 +55,12 @@ public final class MergedOTSystem<D, D1, D2> implements OTSystem<D> {
 			Function<D, List<D3>> getter3, OTSystem<D3> otSystem3) {
 
 		OTSystem<Tuple2<List<D1>, List<D2>>> premerged = mergeOtSystems(Tuple2::new,
-				Tuple2::getValue1, otSystem1,
-				Tuple2::getValue2, otSystem2);
+				Tuple2::value1, otSystem1,
+				Tuple2::value2, otSystem2);
 
 		return mergeOtSystems((tuples, list) -> {
 					Tuple2<List<D1>, List<D2>> tuple = extractTuple2(tuples);
-					return constructor.create(tuple.getValue1(), tuple.getValue2(), list);
+					return constructor.create(tuple.value1(), tuple.value2(), list);
 				},
 				d -> combineLists2(getter1.apply(d), getter2.apply(d), Tuple2::new), premerged,
 				getter3, otSystem3);
@@ -73,17 +73,17 @@ public final class MergedOTSystem<D, D1, D2> implements OTSystem<D> {
 			Function<D, List<D4>> getter4, OTSystem<D4> otSystem4) {
 
 		OTSystem<Tuple2<List<D1>, List<D2>>> premerged1 = mergeOtSystems(Tuple2::new,
-				Tuple2::getValue1, otSystem1,
-				Tuple2::getValue2, otSystem2);
+				Tuple2::value1, otSystem1,
+				Tuple2::value2, otSystem2);
 
 		OTSystem<Tuple2<List<D3>, List<D4>>> premerged2 = mergeOtSystems(Tuple2::new,
-				Tuple2::getValue1, otSystem3,
-				Tuple2::getValue2, otSystem4);
+				Tuple2::value1, otSystem3,
+				Tuple2::value2, otSystem4);
 
 		return mergeOtSystems((tuples1, tuples2) -> {
 					Tuple2<List<D1>, List<D2>> tuple1 = extractTuple2(tuples1);
 					Tuple2<List<D3>, List<D4>> tuple2 = extractTuple2(tuples2);
-					return constructor.create(tuple1.getValue1(), tuple1.getValue2(), tuple2.getValue1(), tuple2.getValue2());
+					return constructor.create(tuple1.value1(), tuple1.value2(), tuple2.value1(), tuple2.value2());
 				},
 				d -> combineLists2(getter1.apply(d), getter2.apply(d), Tuple2::new), premerged1,
 				d -> combineLists2(getter3.apply(d), getter4.apply(d), Tuple2::new), premerged2);
@@ -97,18 +97,18 @@ public final class MergedOTSystem<D, D1, D2> implements OTSystem<D> {
 			Function<D, List<D5>> getter5, OTSystem<D5> otSystem5) {
 
 		OTSystem<Tuple3<List<D1>, List<D2>, List<D3>>> premerged1 = mergeOtSystems(Tuple3::new,
-				Tuple3::getValue1, otSystem1,
-				Tuple3::getValue2, otSystem2,
-				Tuple3::getValue3, otSystem3);
+				Tuple3::value1, otSystem1,
+				Tuple3::value2, otSystem2,
+				Tuple3::value3, otSystem3);
 
 		OTSystem<Tuple2<List<D4>, List<D5>>> premerged2 = mergeOtSystems(Tuple2::new,
-				Tuple2::getValue1, otSystem4,
-				Tuple2::getValue2, otSystem5);
+				Tuple2::value1, otSystem4,
+				Tuple2::value2, otSystem5);
 
 		return mergeOtSystems((tuples1, tuples2) -> {
 					Tuple3<List<D1>, List<D2>, List<D3>> tuple1 = extractTuple3(tuples1);
 					Tuple2<List<D4>, List<D5>> tuple2 = extractTuple2(tuples2);
-					return constructor.create(tuple1.getValue1(), tuple1.getValue2(), tuple1.getValue3(), tuple2.getValue1(), tuple2.getValue2());
+					return constructor.create(tuple1.value1(), tuple1.value2(), tuple1.value3(), tuple2.value1(), tuple2.value2());
 				},
 				d -> combineLists3(getter1.apply(d), getter2.apply(d), getter3.apply(d), Tuple3::new), premerged1,
 				d -> combineLists2(getter4.apply(d), getter5.apply(d), Tuple2::new), premerged2);

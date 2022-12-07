@@ -23,9 +23,9 @@ import static org.junit.Assert.*;
 
 public final class MergedOTSystemTest {
 	private static final OTSystem<Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>>> MERGED = mergeOtSystems(Tuple3::new,
-			Tuple3::getValue1, createAddIntSystem(),
-			Tuple3::getValue2, createTestSetSystem(),
-			Tuple3::getValue3, createTestSetNameSystem());
+			Tuple3::value1, createAddIntSystem(),
+			Tuple3::value2, createTestSetSystem(),
+			Tuple3::value3, createTestSetNameSystem());
 
 	@Test
 	public void testIsEmpty() {
@@ -236,12 +236,12 @@ public final class MergedOTSystemTest {
 
 		@Override
 		public void apply(Tuple3<List<TestAdd>, List<TestSet>, List<TestSetName>> op) {
-			op.getValue1().forEach(add -> addVal += add.getDelta());
-			op.getValue2().forEach(set -> {
+			op.value1().forEach(add -> addVal += add.getDelta());
+			op.value2().forEach(set -> {
 				assert setVal == set.getPrev();
 				setVal = set.getNext();
 			});
-			op.getValue3().forEach(setName -> {
+			op.value3().forEach(setName -> {
 				assert name.equals(setName.getPrev());
 				name = setName.getNext();
 			});

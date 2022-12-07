@@ -261,7 +261,7 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 			if (entry == null) {
 				break;
 			}
-			UdpPacket packet = entry.getValue1();
+			UdpPacket packet = entry.value1();
 			ByteBuffer buffer = packet.getBuf().toReadByteBuffer();
 
 			try {
@@ -275,7 +275,7 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 				break;
 			}
 			// at this point the packet is *sent* so we poll the queue and recycle the packet
-			entry.getValue2().set(null);
+			entry.value2().set(null);
 
 			if (inspector != null) {
 				inspector.onSend(this, packet);

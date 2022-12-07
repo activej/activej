@@ -106,8 +106,8 @@ public final class CubeBackupController<K, D, C> implements EventloopJmxBeanWith
 		return Promises.toTuple(repository.loadCommit(commitId), checkout(repository, otSystem, commitId))
 				.mapException(e -> new CubeException("Failed to check out commit '" + commitId + '\'', e))
 				.then(tuple -> Promises.sequence(
-						() -> backupChunks(commitId, chunksInDiffs(cubeDiffScheme, tuple.getValue2())),
-						() -> backupDb(tuple.getValue1(), tuple.getValue2())))
+						() -> backupChunks(commitId, chunksInDiffs(cubeDiffScheme, tuple.value2())),
+						() -> backupDb(tuple.value1(), tuple.value2())))
 				.whenComplete(toLogger(logger, thisMethod(), commitId));
 	}
 

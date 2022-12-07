@@ -294,13 +294,13 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 						.computeIfAbsent(aggregationId, $ -> new Tuple2<>(new HashSet<>(), new HashSet<>()));
 
 				if (isAdded) {
-					tuple.getValue1().add(chunk);
+					tuple.value1().add(chunk);
 				} else {
-					tuple.getValue2().add(chunk);
+					tuple.value2().add(chunk);
 				}
 			}
 
-			cubeDiff = CubeDiff.of(transformMap(aggregationDiffs, tuple -> AggregationDiff.of(tuple.getValue1(), tuple.getValue2())));
+			cubeDiff = CubeDiff.of(transformMap(aggregationDiffs, tuple -> AggregationDiff.of(tuple.value1(), tuple.value2())));
 		}
 		return cubeDiff;
 	}

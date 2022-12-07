@@ -144,85 +144,85 @@ public final class PromisesTest {
 	@Test
 	public void toTuple1Test() {
 		Tuple1<Integer> tuple1 = await(toTuple(Tuple1::new, Promise.of(321)));
-		assertEquals(Integer.valueOf(321), tuple1.getValue1());
+		assertEquals(Integer.valueOf(321), tuple1.value1());
 
 		Tuple1<Integer> tuple2 = await(toTuple(Promise.of(321)));
-		assertEquals(Integer.valueOf(321), tuple2.getValue1());
+		assertEquals(Integer.valueOf(321), tuple2.value1());
 	}
 
 	@Test
 	public void toTuple2Test() {
 		Tuple2<Integer, String> tuple1 = await(toTuple(Tuple2::new, Promise.of(321), Promise.of("322")));
-		assertEquals(Integer.valueOf(321), tuple1.getValue1());
-		assertEquals("322", tuple1.getValue2());
+		assertEquals(Integer.valueOf(321), tuple1.value1());
+		assertEquals("322", tuple1.value2());
 
 		Tuple2<Integer, String> tuple2 = await(toTuple(Promise.of(321), Promise.of("322")));
-		assertEquals(Integer.valueOf(321), tuple2.getValue1());
-		assertEquals("322", tuple2.getValue2());
+		assertEquals(Integer.valueOf(321), tuple2.value1());
+		assertEquals("322", tuple2.value2());
 	}
 
 	@Test
 	public void toTuple3Test() {
 		Tuple3<Integer, String, Double> tuple1 = await(toTuple(Tuple3::new, Promise.of(321), Promise.of("322"), Promise.of(323.34)));
-		assertEquals(Integer.valueOf(321), tuple1.getValue1());
-		assertEquals("322", tuple1.getValue2());
-		assertEquals(323.34, tuple1.getValue3());
+		assertEquals(Integer.valueOf(321), tuple1.value1());
+		assertEquals("322", tuple1.value2());
+		assertEquals(323.34, tuple1.value3());
 
 		Tuple3<Integer, String, Double> tuple2 = await(toTuple(Promise.of(321), Promise.of("322"), Promise.of(323.34)));
-		assertEquals(Integer.valueOf(321), tuple2.getValue1());
-		assertEquals("322", tuple2.getValue2());
-		assertEquals(323.34, tuple2.getValue3());
+		assertEquals(Integer.valueOf(321), tuple2.value1());
+		assertEquals("322", tuple2.value2());
+		assertEquals(323.34, tuple2.value3());
 	}
 
 	@Test
 	public void toTuple4Test() {
 		Tuple4<Integer, String, Double, Duration> tuple1 = await(toTuple(Tuple4::new, Promise.of(321), Promise.of("322"), Promise.of(323.34), Promise.of(ofMillis(324))));
-		assertEquals(Integer.valueOf(321), tuple1.getValue1());
-		assertEquals("322", tuple1.getValue2());
-		assertEquals(323.34, tuple1.getValue3());
-		assertEquals(ofMillis(324), tuple1.getValue4());
+		assertEquals(Integer.valueOf(321), tuple1.value1());
+		assertEquals("322", tuple1.value2());
+		assertEquals(323.34, tuple1.value3());
+		assertEquals(ofMillis(324), tuple1.value4());
 
 		Tuple4<Integer, String, Double, Duration> tuple2 = await(toTuple(Promise.of(321), Promise.of("322"), Promise.of(323.34), Promise.of(ofMillis(324))));
-		assertEquals(Integer.valueOf(321), tuple2.getValue1());
-		assertEquals("322", tuple2.getValue2());
-		assertEquals(323.34, tuple2.getValue3());
-		assertEquals(ofMillis(324), tuple2.getValue4());
+		assertEquals(Integer.valueOf(321), tuple2.value1());
+		assertEquals("322", tuple2.value2());
+		assertEquals(323.34, tuple2.value3());
+		assertEquals(ofMillis(324), tuple2.value4());
 	}
 
 	@Test
 	public void toTuple5Test() {
 		Tuple5<Integer, String, Double, Duration, Integer> tuple1 = await(toTuple(Tuple5::new, Promise.of(321), Promise.of("322"), Promise.of(323.34), Promise.of(ofMillis(324)), Promise.of(1)));
-		assertEquals(Integer.valueOf(321), tuple1.getValue1());
-		assertEquals("322", tuple1.getValue2());
-		assertEquals(323.34, tuple1.getValue3());
-		assertEquals(ofMillis(324), tuple1.getValue4());
-		assertEquals(Integer.valueOf(1), tuple1.getValue5());
+		assertEquals(Integer.valueOf(321), tuple1.value1());
+		assertEquals("322", tuple1.value2());
+		assertEquals(323.34, tuple1.value3());
+		assertEquals(ofMillis(324), tuple1.value4());
+		assertEquals(Integer.valueOf(1), tuple1.value5());
 
 		Tuple5<Integer, String, Double, Duration, Integer> tuple2 = await(toTuple(Promise.of(321), Promise.of("322"), Promise.of(323.34), Promise.of(ofMillis(324)), Promise.of(1)));
-		assertEquals(Integer.valueOf(321), tuple2.getValue1());
-		assertEquals("322", tuple2.getValue2());
-		assertEquals(323.34, tuple2.getValue3());
-		assertEquals(ofMillis(324), tuple2.getValue4());
-		assertEquals(Integer.valueOf(1), tuple2.getValue5());
+		assertEquals(Integer.valueOf(321), tuple2.value1());
+		assertEquals("322", tuple2.value2());
+		assertEquals(323.34, tuple2.value3());
+		assertEquals(ofMillis(324), tuple2.value4());
+		assertEquals(Integer.valueOf(1), tuple2.value5());
 	}
 
 	@Test
 	public void toTuple6Test() {
 		Tuple6<Integer, String, Double, Duration, Integer, Object> tuple1 = await(toTuple(Tuple6::new, Promise.of(321), Promise.of("322"), Promise.of(323.34), Promise.of(ofMillis(324)), Promise.of(1), Promise.of(null)));
-		assertEquals(Integer.valueOf(321), tuple1.getValue1());
-		assertEquals("322", tuple1.getValue2());
-		assertEquals(323.34, tuple1.getValue3());
-		assertEquals(ofMillis(324), tuple1.getValue4());
-		assertEquals(Integer.valueOf(1), tuple1.getValue5());
-		assertNull(tuple1.getValue6());
+		assertEquals(Integer.valueOf(321), tuple1.value1());
+		assertEquals("322", tuple1.value2());
+		assertEquals(323.34, tuple1.value3());
+		assertEquals(ofMillis(324), tuple1.value4());
+		assertEquals(Integer.valueOf(1), tuple1.value5());
+		assertNull(tuple1.value6());
 
 		Tuple6<Integer, String, Double, Duration, Integer, Object> tuple2 = await(toTuple(Promise.of(321), Promise.of("322"), Promise.of(323.34), Promise.of(ofMillis(324)), Promise.of(1), Promise.of(null)));
-		assertEquals(Integer.valueOf(321), tuple2.getValue1());
-		assertEquals("322", tuple2.getValue2());
-		assertEquals(323.34, tuple2.getValue3());
-		assertEquals(ofMillis(324), tuple2.getValue4());
-		assertEquals(Integer.valueOf(1), tuple2.getValue5());
-		assertNull(tuple2.getValue6());
+		assertEquals(Integer.valueOf(321), tuple2.value1());
+		assertEquals("322", tuple2.value2());
+		assertEquals(323.34, tuple2.value3());
+		assertEquals(ofMillis(324), tuple2.value4());
+		assertEquals(Integer.valueOf(1), tuple2.value5());
+		assertNull(tuple2.value6());
 	}
 
 	@Test

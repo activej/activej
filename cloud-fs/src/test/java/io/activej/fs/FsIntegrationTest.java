@@ -322,8 +322,8 @@ public final class FsIntegrationTest {
 						.whenComplete(server::close)
 		);
 
-		assertEquals(expected1, tuple.getValue1().keySet());
-		assertEquals(expected2, tuple.getValue2().keySet());
+		assertEquals(expected1, tuple.value1().keySet());
+		assertEquals(expected2, tuple.value2().keySet());
 	}
 
 	@Test
