@@ -315,13 +315,7 @@ public final class Context {
 		Type ownerType = owner.load(this);
 		checkType(ownerType, TypeChecks.isAssignable());
 
-		Type[] argumentTypes = new Type[arguments.size()];
-		for (int i = 0; i < arguments.size(); i++) {
-			Expression argument = arguments.get(i);
-			Type argumentType = argument.load(this);
-			checkType(argumentType, TypeChecks.isAssignable());
-			argumentTypes[i] = argumentType;
-		}
+		Type[] argumentTypes = getArgumentTypes(arguments);
 		return invoke(ownerType, methodName, argumentTypes);
 	}
 
@@ -360,13 +354,7 @@ public final class Context {
 	}
 
 	public Type invokeStatic(Type ownerType, String methodName, List<Expression> arguments) {
-		Type[] argumentTypes = new Type[arguments.size()];
-		for (int i = 0; i < arguments.size(); i++) {
-			Expression argument = arguments.get(i);
-			Type argumentType = argument.load(this);
-			checkType(argumentType, TypeChecks.isAssignable());
-			argumentTypes[i] = argumentType;
-		}
+		Type[] argumentTypes = getArgumentTypes(arguments);
 		return invokeStatic(ownerType, methodName, argumentTypes);
 	}
 
@@ -402,12 +390,7 @@ public final class Context {
 		g.newInstance(ownerType);
 		g.dup();
 
-		Type[] argumentTypes = new Type[arguments.size()];
-		for (int i = 0; i < arguments.size(); i++) {
-			Type argumentType = arguments.get(i).load(this);
-			checkType(argumentType, TypeChecks.isAssignable());
-			argumentTypes[i] = argumentType;
-		}
+		Type[] argumentTypes = getArgumentTypes(arguments);
 		return invokeConstructor(ownerType, argumentTypes);
 	}
 
@@ -429,12 +412,7 @@ public final class Context {
 
 	public Type invokeSuperConstructor(List<Expression> arguments) {
 		g.loadThis();
-		Type[] argumentTypes = new Type[arguments.size()];
-		for (int i = 0; i < arguments.size(); i++) {
-			Type argumentType = arguments.get(i).load(this);
-			checkType(argumentType, TypeChecks.isAssignable());
-			argumentTypes[i] = argumentType;
-		}
+		Type[] argumentTypes = getArgumentTypes(arguments);
 		SelfOrClass[] argumentClasses = Stream.of(argumentTypes).map(this::toSelfOrClass).toArray(SelfOrClass[]::new);
 		Method foundMethod = findMethod(
 				Arrays.stream(classBuilder.superclass.getDeclaredConstructors()).map(Method::getMethod),
@@ -461,12 +439,7 @@ public final class Context {
 
 	public Type invokeSuperMethod(String methodName, List<Expression> arguments) {
 		g.loadThis();
-		Type[] argumentTypes = new Type[arguments.size()];
-		for (int i = 0; i < arguments.size(); i++) {
-			Type argumentType = arguments.get(i).load(this);
-			checkType(argumentType, TypeChecks.isAssignable());
-			argumentTypes[i] = argumentType;
-		}
+		Type[] argumentTypes = getArgumentTypes(arguments);
 		SelfOrClass[] argumentClasses = Stream.of(argumentTypes).map(this::toSelfOrClass).toArray(SelfOrClass[]::new);
 		Method foundMethod = findMethod(
 				getAccessibleMethods().stream(),
@@ -573,5 +546,16 @@ public final class Context {
 			}
 			return sb.toString();
 		}
+	}
+
+	private Type[] getArgumentTypes(List<Expression> arguments) {
+		Type[] argumentTypes = new Type[arguments.size()];
+		for (int i = 0; i < arguments.size(); i++) {
+			Expression argument = arguments.get(i);
+			Type argumentType = argument.load(this);
+			checkType(argumentType, TypeChecks.isAssignable());
+			argumentTypes[i] = argumentType;
+		}
+		return argumentTypes;
 	}
 }

@@ -39,8 +39,10 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.isBijection;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.http.FsCommand.*;
+import static io.activej.fs.util.JsonUtils.fromJson;
+import static io.activej.fs.util.JsonUtils.toJson;
 import static io.activej.fs.util.MessageTypes.STRING_META_MAP_TYPE;
-import static io.activej.fs.util.RemoteFsUtils.*;
+import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 import static io.activej.http.HttpHeaders.CONTENT_LENGTH;
 
 /**

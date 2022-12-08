@@ -30,6 +30,7 @@ import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.fs.tcp.RemoteActiveFs;
 import io.activej.http.AsyncHttpClient;
 import io.activej.trigger.TriggersModuleSettings;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -58,24 +59,10 @@ public final class Initializers {
 	}
 
 	public static DiscoveryService constantDiscoveryService(Eventloop eventloop, Config config) throws MalformedDataException {
-		Map<Object, ActiveFs> partitions = new LinkedHashMap<>();
-
-		List<String> partitionStrings = config.get(ofList(ofString()), "partitions", List.of());
-		for (String toAdd : partitionStrings) {
-			ActiveFs client;
-			if (toAdd.startsWith("http")) {
-				client = HttpActiveFs.create(toAdd, AsyncHttpClient.create(eventloop));
-			} else {
-				client = RemoteActiveFs.create(eventloop, parseInetSocketAddress(toAdd));
-			}
-			partitions.put(toAdd, client);
-		}
-
-		checkState(!partitions.isEmpty(), "Cluster could not operate without partitions, config had none");
-		return DiscoveryService.constant(partitions);
+		return constantDiscoveryService(eventloop, null, config);
 	}
 
-	public static DiscoveryService constantDiscoveryService(Eventloop eventloop, ActiveFs local, Config config) throws MalformedDataException {
+	public static DiscoveryService constantDiscoveryService(Eventloop eventloop, @Nullable ActiveFs local, Config config) throws MalformedDataException {
 		Map<Object, ActiveFs> partitions = new LinkedHashMap<>();
 		partitions.put(config.get("activefs.repartition.localPartitionId"), local);
 

@@ -906,15 +906,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 				continue;
 			}
 			if (method.getParameterTypes().length != 0) {
-				List<String> fields = new ArrayList<>(method.getParameterTypes().length);
-				for (int i = 0; i < method.getParameterTypes().length; i++) {
-					Annotation[] parameterAnnotations = method.getParameterAnnotations()[i];
-					Deserialize annotation = getAnnotation(Deserialize.class, parameterAnnotations);
-					if (annotation != null) {
-						String field = annotation.value();
-						fields.add(field);
-					}
-				}
+				List<String> fields = extractFields(method);
 				if (fields.size() == method.getParameterTypes().length) {
 					serializer.addSetter(method, fields);
 				} else {
@@ -932,15 +924,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 				continue;
 			}
 			if (factory.getParameterTypes().length != 0) {
-				List<String> fields = new ArrayList<>(factory.getParameterTypes().length);
-				for (int i = 0; i < factory.getParameterTypes().length; i++) {
-					Annotation[] parameterAnnotations = factory.getParameterAnnotations()[i];
-					Deserialize annotation = getAnnotation(Deserialize.class, parameterAnnotations);
-					if (annotation != null) {
-						String field = annotation.value();
-						fields.add(field);
-					}
-				}
+				List<String> fields = extractFields(factory);
 				if (fields.size() == factory.getParameterTypes().length) {
 					serializer.setStaticFactoryMethod(factory, fields);
 				} else {
@@ -949,6 +933,19 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 				}
 			}
 		}
+	}
+
+	private List<String> extractFields(Method method) {
+		List<String> fields = new ArrayList<>(method.getParameterTypes().length);
+		for (int i = 0; i < method.getParameterTypes().length; i++) {
+			Annotation[] parameterAnnotations = method.getParameterAnnotations()[i];
+			Deserialize annotation = getAnnotation(Deserialize.class, parameterAnnotations);
+			if (annotation != null) {
+				String field = annotation.value();
+				fields.add(field);
+			}
+		}
+		return fields;
 	}
 
 	private void scanConstructors(Context<SerializerDef> ctx, SerializerDefClass serializer) {

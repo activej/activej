@@ -16,7 +16,7 @@
 
 package io.activej.csp;
 
-import io.activej.async.function.AsyncRunnable;
+import io.activej.async.function.AsyncSupplier;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.recycle.Recyclable;
 import io.activej.common.recycle.Recyclers;
@@ -26,6 +26,7 @@ import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Iterator;
@@ -160,35 +161,39 @@ public final class ChannelConsumers {
 				if (isClosed) {
 					throw new IOException("Stream Closed");
 				}
-				submit(() -> channelConsumer.accept(ByteBuf.wrap(b, off, off + len)));
+				submit(eventloop,
+						() -> channelConsumer.accept(ByteBuf.wrap(b, off, off + len)),
+						this);
 			}
 
 			@Override
 			public void close() throws IOException {
 				if (isClosed) return;
 				isClosed = true;
-				submit(() -> channelConsumer.acceptEndOfStream()
-						.whenComplete(channelConsumer::close));
-			}
-
-			private void submit(AsyncRunnable runnable) throws IOException {
-				CompletableFuture<Void> future = eventloop.submit(runnable::run);
-				try {
-					future.get();
-				} catch (InterruptedException e) {
-					close();
-					Thread.currentThread().interrupt();
-					throw new IOException(e);
-				} catch (ExecutionException e) {
-					close();
-					Throwable cause = e.getCause();
-					if (cause instanceof IOException) throw (IOException) cause;
-					if (cause instanceof RuntimeException) throw (RuntimeException) cause;
-					if (cause instanceof Exception) throw new IOException(cause);
-					if (cause instanceof Error) throw (Error) cause;
-					throw new RuntimeException(cause);
-				}
+				submit(eventloop,
+						() -> channelConsumer.acceptEndOfStream()
+								.whenComplete(channelConsumer::close),
+						this);
 			}
 		};
+	}
+
+	static <T> T submit(Eventloop eventloop, AsyncSupplier<T> supplier, Closeable closeable) throws IOException {
+		CompletableFuture<T> future = eventloop.submit(supplier::get);
+		try {
+			return future.get();
+		} catch (InterruptedException e) {
+			closeable.close();
+			Thread.currentThread().interrupt();
+			throw new IOException(e);
+		} catch (ExecutionException e) {
+			closeable.close();
+			Throwable cause = e.getCause();
+			if (cause instanceof IOException) throw (IOException) cause;
+			if (cause instanceof RuntimeException) throw (RuntimeException) cause;
+			if (cause instanceof Exception) throw new IOException(cause);
+			if (cause instanceof Error) throw (Error) cause;
+			throw new RuntimeException(cause);
+		}
 	}
 }

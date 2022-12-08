@@ -24,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.*;
@@ -32,6 +33,7 @@ import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Function;
 import java.util.regex.PatternSyntaxException;
 
 import static io.activej.fs.ActiveFs.SEPARATOR;
@@ -41,6 +43,15 @@ import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
 
 public final class LocalFileUtils {
 	private static final Logger logger = LoggerFactory.getLogger(LocalFileUtils.class);
+
+	static final char SEPARATOR_CHAR = SEPARATOR.charAt(0);
+	static final Function<String, String> TO_LOCAL_NAME = File.separatorChar == SEPARATOR_CHAR ?
+			Function.identity() :
+			s -> s.replace(SEPARATOR_CHAR, File.separatorChar);
+
+	static final Function<String, String> TO_REMOTE_NAME = File.separatorChar == SEPARATOR_CHAR ?
+			Function.identity() :
+			s -> s.replace(File.separatorChar, SEPARATOR_CHAR);
 
 	static void init(Path storage, Path tempDir, boolean fsyncDirectories) throws IOException {
 		createDirectories(tempDir, fsyncDirectories);

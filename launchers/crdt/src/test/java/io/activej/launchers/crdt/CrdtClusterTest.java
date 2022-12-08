@@ -34,7 +34,7 @@ import java.util.stream.IntStream;
 import static io.activej.config.converter.ConfigConverters.ofExecutor;
 import static io.activej.config.converter.ConfigConverters.ofPath;
 import static io.activej.crdt.function.CrdtFunction.ignoringTimestamp;
-import static io.activej.crdt.util.Utils.toJson;
+import static io.activej.fs.util.JsonUtils.toJson;
 import static io.activej.http.HttpMethod.PUT;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;

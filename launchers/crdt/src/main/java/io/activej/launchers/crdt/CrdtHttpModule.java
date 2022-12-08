@@ -31,8 +31,8 @@ import io.activej.types.TypeT;
 
 import java.util.concurrent.Executor;
 
-import static io.activej.crdt.util.Utils.fromJson;
-import static io.activej.crdt.util.Utils.toJson;
+import static io.activej.fs.util.JsonUtils.fromJson;
+import static io.activej.fs.util.JsonUtils.toJson;
 import static io.activej.http.HttpMethod.*;
 import static io.activej.launchers.initializers.Initializers.ofHttpServer;
 import static java.nio.charset.StandardCharsets.UTF_8;

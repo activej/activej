@@ -253,8 +253,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 					() -> ClassBuilder.create(RecordGetter.class)
 							.withMethod("get", property)
 							.withInitializer(cb -> {
-								if (fieldType == byte.class || fieldType == short.class || fieldType == int.class || fieldType == long.class || fieldType == float.class || fieldType == double.class ||
-										fieldType == Byte.class || fieldType == Short.class || fieldType == Integer.class || fieldType == Long.class || fieldType == Float.class || fieldType == Double.class) {
+								if (isImplicitType(fieldType)) {
 									cb.withMethod("getInt", property);
 									cb.withMethod("getLong", property);
 									cb.withMethod("getFloat", property);
@@ -274,8 +273,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 					() -> ClassBuilder.create(RecordSetter.class)
 							.withMethod("set", set)
 							.withInitializer(cb -> {
-								if (fieldType == byte.class || fieldType == short.class || fieldType == int.class || fieldType == long.class || fieldType == float.class || fieldType == double.class ||
-										fieldType == Byte.class || fieldType == Short.class || fieldType == Integer.class || fieldType == Long.class || fieldType == Float.class || fieldType == Double.class) {
+								if (isImplicitType(fieldType)) {
 									cb.withMethod("setInt", set);
 									cb.withMethod("setLong", set);
 									cb.withMethod("setFloat", set);
@@ -311,6 +309,11 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 						.withStaticFinalField("SCHEME", RecordScheme.class, value(this))
 						.withMethod("create", Record.class, List.of(),
 								constructor(generatedClass, staticField("SCHEME"))));
+	}
+
+	private static boolean isImplicitType(Type fieldType) {
+		return fieldType == byte.class || fieldType == short.class || fieldType == int.class || fieldType == long.class || fieldType == float.class || fieldType == double.class ||
+				fieldType == Byte.class || fieldType == Short.class || fieldType == Integer.class || fieldType == Long.class || fieldType == Float.class || fieldType == Double.class;
 	}
 
 	private Set<String> getMissingFields(List<String> fields) {

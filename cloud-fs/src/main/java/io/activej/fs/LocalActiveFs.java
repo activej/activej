@@ -21,6 +21,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.common.exception.UncheckedException;
 import io.activej.common.function.BiFunctionEx;
 import io.activej.common.function.RunnableEx;
 import io.activej.common.function.SupplierEx;
@@ -43,7 +44,6 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.*;
@@ -51,7 +51,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Executor;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
@@ -84,15 +83,6 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 
 	private static final Set<StandardOpenOption> DEFAULT_APPEND_OPTIONS = Set.of(WRITE);
 	private static final Set<StandardOpenOption> DEFAULT_APPEND_NEW_OPTIONS = Set.of(WRITE, CREATE);
-
-	private static final char SEPARATOR_CHAR = SEPARATOR.charAt(0);
-	private static final Function<String, String> toLocalName = File.separatorChar == SEPARATOR_CHAR ?
-			Function.identity() :
-			s -> s.replace(SEPARATOR_CHAR, File.separatorChar);
-
-	private static final Function<String, String> toRemoteName = File.separatorChar == SEPARATOR_CHAR ?
-			Function.identity() :
-			s -> s.replace(File.separatorChar, SEPARATOR_CHAR);
 
 	private final Eventloop eventloop;
 	private final Path storage;
@@ -323,7 +313,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 									uncheckedOf((map, path) -> {
 										FileMetadata metadata = toFileMetadata(path);
 										if (metadata != null) {
-											String filename = toRemoteName.apply(storage.relativize(path).toString());
+											String filename = TO_REMOTE_NAME.apply(storage.relativize(path).toString());
 											map.put(filename, metadata);
 										}
 									}),
@@ -454,7 +444,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	}
 
 	private Path resolve(String name) throws ForbiddenPathException {
-		return LocalFileUtils.resolve(storage, tempDir, toLocalName.apply(name));
+		return LocalFileUtils.resolve(storage, tempDir, TO_LOCAL_NAME.apply(name));
 	}
 
 	private Promise<ChannelConsumer<ByteBuf>> uploadImpl(String name, ChannelConsumerTransformer<ByteBuf, ChannelConsumer<ByteBuf>> transformer) {
@@ -602,7 +592,11 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		return (v, e) -> {
 			if (e == null) {
 				return Promise.of(v);
-			} else if (e instanceof FsBatchException) {
+			}
+			while (e instanceof UncheckedException uncheckedException) {
+				e = uncheckedException.getCause();
+			}
+			if (e instanceof FsBatchException) {
 				Map<String, FsScalarException> exceptions = ((FsBatchException) e).getExceptions();
 				assert exceptions.size() == 1;
 				throw first(exceptions.values());
@@ -620,6 +614,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 			} else if (e instanceof ActiveFsStructureException) {
 				throw new FsIOException(e.getMessage());
 			}
+			Exception finalE = e;
 			return execute(() -> {
 				if (name != null) {
 					Path path = resolve(name);
@@ -627,8 +622,8 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 						throw new FileNotFoundException("File '" + name + "' not found");
 					if (Files.isDirectory(path)) throw isADirectoryException(name);
 				}
-				logger.warn("Operation failed", e);
-				if (e instanceof IOException) {
+				logger.warn("Operation failed", finalE);
+				if (finalE instanceof IOException) {
 					throw new FsIOException("IO Error");
 				}
 				throw new FsIOException("Unknown error");

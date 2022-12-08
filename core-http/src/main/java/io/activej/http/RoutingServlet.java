@@ -115,22 +115,20 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	}
 
 	private void visit(String prefix, Visitor visitor) {
-		for (int i = 0; i < rootServlets.length; i++) {
-			AsyncServlet rootServlet = rootServlets[i];
-			if (rootServlet != null) {
-				HttpMethod method = i == WS_ORDINAL || i == ANY_HTTP_ORDINAL ? null : HttpMethod.values()[i];
-				visitor.accept(method, prefix, rootServlet);
-			}
-		}
-		for (int i = 0; i < fallbackServlets.length; i++) {
-			AsyncServlet fallbackServlet = fallbackServlets[i];
-			if (fallbackServlet != null) {
-				HttpMethod method = i == WS_ORDINAL || i == ANY_HTTP_ORDINAL ? null : HttpMethod.values()[i];
-				visitor.accept(method, prefix, fallbackServlet);
-			}
-		}
+		visitServlets(rootServlets, visitor, prefix);
+		visitServlets(fallbackServlets, visitor, prefix);
 		routes.forEach((route, subtree) -> subtree.visit(prefix + route + "/", visitor));
 		parameters.forEach((route, subtree) -> subtree.visit(prefix + ":" + route + "/", visitor));
+	}
+
+	private void visitServlets(AsyncServlet[] servlets, Visitor visitor, String prefix) {
+		for (int i = 0; i < servlets.length; i++) {
+			AsyncServlet servlet = servlets[i];
+			if (servlet != null) {
+				HttpMethod method = i == WS_ORDINAL || i == ANY_HTTP_ORDINAL ? null : HttpMethod.values()[i];
+				visitor.accept(method, prefix, servlet);
+			}
+		}
 	}
 
 	public @Nullable RoutingServlet getSubtree(String path) {

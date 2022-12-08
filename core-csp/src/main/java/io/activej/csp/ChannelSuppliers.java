@@ -16,7 +16,6 @@
 
 package io.activej.csp;
 
-import io.activej.async.function.AsyncSupplier;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
@@ -38,8 +37,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -48,6 +45,7 @@ import java.util.function.ToIntFunction;
 import static io.activej.common.Utils.iteratorOf;
 import static io.activej.common.Utils.nullify;
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
+import static io.activej.csp.ChannelConsumers.submit;
 import static java.lang.Math.min;
 
 /**
@@ -414,7 +412,7 @@ public final class ChannelSuppliers {
 				if (peeked == null) {
 					ByteBuf buf;
 					do {
-						buf = submit(channelSupplier::get);
+						buf = submit(eventloop, channelSupplier::get, this);
 						if (buf == null) {
 							isEOS = true;
 							return -1;
@@ -437,31 +435,13 @@ public final class ChannelSuppliers {
 				if (isClosed) return;
 				isClosed = true;
 				current = nullify(current, ByteBuf::recycle);
-				submit(() -> {
-					channelSupplier.close();
-					return Promise.complete();
-				});
+				submit(eventloop,
+						() -> {
+							channelSupplier.close();
+							return Promise.complete();
+						},
+						this);
 			}
-
-			private <T> T submit(AsyncSupplier<T> supplier) throws IOException {
-				CompletableFuture<T> future = eventloop.submit(supplier::get);
-				try {
-					return future.get();
-				} catch (InterruptedException e) {
-					close();
-					Thread.currentThread().interrupt();
-					throw new IOException(e);
-				} catch (ExecutionException e) {
-					close();
-					Throwable cause = e.getCause();
-					if (cause instanceof IOException) throw (IOException) cause;
-					if (cause instanceof RuntimeException) throw (RuntimeException) cause;
-					if (cause instanceof Exception) throw new IOException(cause);
-					if (cause instanceof Error) throw (Error) cause;
-					throw new RuntimeException(cause);
-				}
-			}
-
 		};
 	}
 

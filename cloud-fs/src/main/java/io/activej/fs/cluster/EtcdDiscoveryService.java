@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
-import static io.activej.fs.util.RemoteFsUtils.fromJson;
+import static io.activej.fs.util.JsonUtils.fromJson;
 
 public final class EtcdDiscoveryService implements DiscoveryService {
 	private final TypeT<Set<String>> PARTITION_IDS_TYPE_T = new TypeT<>() {};

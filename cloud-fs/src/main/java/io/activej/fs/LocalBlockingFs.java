@@ -38,7 +38,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
@@ -60,15 +59,6 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 
 	private static final Set<StandardOpenOption> DEFAULT_APPEND_OPTIONS = Set.of(WRITE);
 	private static final Set<StandardOpenOption> DEFAULT_APPEND_NEW_OPTIONS = Set.of(WRITE, CREATE);
-
-	private static final char SEPARATOR_CHAR = SEPARATOR.charAt(0);
-	private static final Function<String, String> toLocalName = File.separatorChar == SEPARATOR_CHAR ?
-			Function.identity() :
-			s -> s.replace(SEPARATOR_CHAR, File.separatorChar);
-
-	private static final Function<String, String> toRemoteName = File.separatorChar == SEPARATOR_CHAR ?
-			Function.identity() :
-			s -> s.replace(File.separatorChar, SEPARATOR_CHAR);
 
 	private final Path storage;
 
@@ -296,7 +286,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 						uncheckedOf((map, path) -> {
 							FileMetadata metadata = toFileMetadata(path);
 							if (metadata != null) {
-								String filename = toRemoteName.apply(storage.relativize(path).toString());
+								String filename = TO_REMOTE_NAME.apply(storage.relativize(path).toString());
 								map.put(filename, metadata);
 							}
 						}),
@@ -342,7 +332,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 
 	private Path resolve(String name) throws IOException {
 		try {
-			return LocalFileUtils.resolve(storage, tempDir, toLocalName.apply(name));
+			return LocalFileUtils.resolve(storage, tempDir, TO_LOCAL_NAME.apply(name));
 		} catch (ForbiddenPathException e) {
 			throw new FileSystemException(name, null, e.getMessage());
 		}

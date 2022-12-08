@@ -26,6 +26,7 @@ import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -361,44 +362,34 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 	}
 
 	private Expression callFactoryMethod(Map<String, Expression> map, int version) {
-		Expression[] param = new Expression[staticFactoryMethodParams.size()];
-		Class<?>[] parameterTypes = staticFactoryMethod.getParameterTypes();
-		for (int i = 0; i < staticFactoryMethodParams.size(); i++) {
-			String fieldName = staticFactoryMethodParams.get(i);
-			FieldDef fieldDef = fields.get(fieldName);
-			if (fieldDef == null)
-				throw new NullPointerException(format("Field '%s' is not found in '%s'", fieldName, staticFactoryMethod));
-			if (fieldDef.hasVersion(version)) {
-				param[i] = cast(map.get(fieldName), parameterTypes[i]);
-			} else {
-				param[i] = cast(pushDefaultValue(fieldDef.getAsmType()), parameterTypes[i]);
-			}
-		}
+		Expression[] param = extractParameters(map, version, staticFactoryMethod, staticFactoryMethodParams);
 		return staticCall(staticFactoryMethod.getDeclaringClass(), staticFactoryMethod.getName(), param);
 	}
 
 	private Expression callConstructor(Class<?> targetType, Map<String, Expression> map, int version) {
-		Expression[] param;
 		if (constructorParams == null) {
-			param = new Expression[0];
-			return constructor(targetType, param);
+			return constructor(targetType);
 		}
-		param = new Expression[constructorParams.size()];
 
-		Class<?>[] parameterTypes = constructor.getParameterTypes();
-		for (int i = 0; i < constructorParams.size(); i++) {
-			String fieldName = constructorParams.get(i);
+		Expression[] param = extractParameters(map, version, constructor, constructorParams);
+		return constructor(targetType, param);
+	}
+
+	private Expression[] extractParameters(Map<String, Expression> map, int version, Executable executable, List<String> parameterNames) {
+		Expression[] parameters = new Expression[parameterNames.size()];
+		Class<?>[] parameterTypes = executable.getParameterTypes();
+		for (int i = 0; i < parameterNames.size(); i++) {
+			String fieldName = parameterNames.get(i);
 			FieldDef fieldDef = fields.get(fieldName);
 			if (fieldDef == null)
-				throw new NullPointerException(format("Field '%s' is not found in '%s'", fieldName, constructor));
+				throw new NullPointerException(format("Field '%s' is not found in '%s'", fieldName, executable));
 			if (fieldDef.hasVersion(version)) {
-				param[i] = cast(map.get(fieldName), parameterTypes[i]);
+				parameters[i] = cast(map.get(fieldName), parameterTypes[i]);
 			} else {
-				param[i] = cast(pushDefaultValue(fieldDef.getAsmType()), parameterTypes[i]);
+				parameters[i] = cast(pushDefaultValue(fieldDef.getAsmType()), parameterTypes[i]);
 			}
-
 		}
-		return constructor(targetType, param);
+		return parameters;
 	}
 
 	private Expression deserializeInterface(StaticDecoders staticDecoders, Expression in,

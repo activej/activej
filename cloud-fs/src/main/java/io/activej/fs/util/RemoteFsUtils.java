@@ -16,14 +16,8 @@
 
 package io.activej.fs.util;
 
-import com.dslplatform.json.DslJson;
-import com.dslplatform.json.JsonReader;
-import com.dslplatform.json.JsonWriter;
-import com.dslplatform.json.ParsingException;
-import com.dslplatform.json.runtime.Settings;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.collection.Try;
-import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnexpectedDataException;
 import io.activej.common.ref.RefLong;
@@ -39,12 +33,7 @@ import io.activej.promise.Promise;
 import io.activej.streamcodecs.StreamCodec;
 import io.activej.streamcodecs.StreamCodecs;
 import io.activej.streamcodecs.StructuredStreamCodec;
-import io.activej.types.TypeT;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
-import java.lang.reflect.Type;
 import java.nio.file.FileSystems;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
@@ -158,72 +147,6 @@ public final class RemoteFsUtils {
 			throw new FsBatchException(scalarExceptions);
 		}
 	}
-
-	// region JSON
-	private static final DslJson<?> DSL_JSON = new DslJson<>(Settings.withRuntime().includeServiceLoader());
-	private static final ThreadLocal<JsonWriter> WRITERS = ThreadLocal.withInitial(DSL_JSON::newWriter);
-	private static final ThreadLocal<JsonReader<?>> READERS = ThreadLocal.withInitial(DSL_JSON::newReader);
-
-	public static <T> ByteBuf toJson(@Nullable T object) {
-		if (object == null) return ByteBuf.wrap(new byte[]{'n', 'u', 'l', 'l'}, 0, 4);
-		JsonWriter writer = toJson(object.getClass(), object);
-		return ByteBuf.wrapForReading(writer.toByteArray());
-	}
-
-	public static <T> ByteBuf toJson(@NotNull Class<? super T> manifest, @Nullable T object) {
-		if (object == null) return ByteBuf.wrap(new byte[]{'n', 'u', 'l', 'l'}, 0, 4);
-		JsonWriter writer = toJson((Type) manifest, object);
-		return ByteBuf.wrapForReading(writer.toByteArray());
-	}
-
-	private static <T> JsonWriter toJson(@NotNull Type manifest, @Nullable T object) {
-		JsonWriter jsonWriter = WRITERS.get();
-		jsonWriter.reset();
-		if (!DSL_JSON.serialize(jsonWriter, manifest, object)) {
-			throw new IllegalArgumentException("Cannot serialize " + manifest);
-		}
-		return jsonWriter;
-	}
-
-	public static <T> T fromJson(@NotNull Class<T> type, @NotNull ByteBuf buf) throws MalformedDataException {
-		return fromJson((Type) type, buf);
-	}
-
-	public static <T> T fromJson(@NotNull TypeT<T> type, @NotNull ByteBuf buf) throws MalformedDataException {
-		return fromJson(type.getType(), buf);
-	}
-
-	public static <T> T fromJson(@NotNull Type manifest, @NotNull ByteBuf buf) throws MalformedDataException {
-		byte[] bytes = buf.getArray();
-		return fromJson(manifest, bytes);
-	}
-
-	public static <T> T fromJson(@NotNull TypeT<T> type, byte @NotNull [] bytes) throws MalformedDataException {
-		return fromJson(type.getType(), bytes);
-	}
-
-	public static <T> T fromJson(@NotNull Type manifest, byte[] bytes) throws MalformedDataException {
-		try {
-			//noinspection unchecked
-			JsonReader.ReadObject<T> readObject = (JsonReader.ReadObject<T>) DSL_JSON.tryFindReader(manifest);
-			if (readObject == null) {
-				throw new IllegalArgumentException("Unknown type: " + manifest);
-			}
-			JsonReader<?> jsonReader = READERS.get().process(bytes, bytes.length);
-			jsonReader.getNextToken();
-			T deserialized = readObject.read(jsonReader);
-			if (jsonReader.length() != jsonReader.getCurrentIndex()) {
-				String unexpectedData = jsonReader.toString().substring(jsonReader.getCurrentIndex());
-				throw new MalformedDataException("Unexpected JSON data: " + unexpectedData);
-			}
-			return deserialized;
-		} catch (ParsingException e) {
-			throw new MalformedDataException(e);
-		} catch (IOException e) {
-			throw new AssertionError(e);
-		}
-	}
-	// endregion
 
 	private static StreamCodec<FsRequest> createFsRequestStreamCodec() {
 		StreamCodecs.SubtypeBuilder<FsRequest> builder = new StreamCodecs.SubtypeBuilder<>();

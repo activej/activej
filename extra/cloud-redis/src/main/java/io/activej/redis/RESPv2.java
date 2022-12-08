@@ -239,14 +239,8 @@ public final class RESPv2 {
 	}
 
 	private byte @Nullable [] decodeBytes() throws MalformedDataException {
-		int length = (int) decodeLong();
-		if (length == -1) {
-			return null;
-		}
-		if (tail - head < length + 2) throw NEED_MORE_DATA;
-		if (ASSERT_PROTOCOL && array[head + length] != CR || array[head + length + 1] != LF) {
-			throw new MalformedDataException("Bulk String does not end with \\r\\n");
-		}
+		Integer length = decodeBulkStringLength();
+		if (length == null) return null;
 		byte[] result = new byte[length];
 		System.arraycopy(array, head, result, 0, length);
 		head += length + 2;
@@ -269,6 +263,14 @@ public final class RESPv2 {
 	}
 
 	private @Nullable String decodeBytes(Charset charset) throws MalformedDataException {
+		Integer length = decodeBulkStringLength();
+		if (length == null) return null;
+		String result = new String(array, head, length, charset);
+		head += length + 2;
+		return result;
+	}
+
+	private @Nullable Integer decodeBulkStringLength() throws MalformedDataException {
 		int length = (int) decodeLong();
 		if (length == -1) {
 			return null;
@@ -277,9 +279,7 @@ public final class RESPv2 {
 		if (ASSERT_PROTOCOL && array[head + length] != CR || array[head + length + 1] != LF) {
 			throw new MalformedDataException("Bulk String does not end with \\r\\n");
 		}
-		String result = new String(array, head, length, charset);
-		head += length + 2;
-		return result;
+		return length;
 	}
 
 	private void skipBytes() throws MalformedDataException {

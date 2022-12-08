@@ -20,37 +20,25 @@ import com.sun.nio.file.SensitivityWatchEventModifier;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.crdt.CrdtException;
-import io.activej.crdt.storage.CrdtStorage;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
-import io.activej.rpc.client.sender.RpcStrategy;
-import io.activej.types.TypeT;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.*;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
-import static io.activej.crdt.util.Utils.fromJson;
 import static java.nio.file.StandardWatchEventKinds.*;
 
-public final class FileDiscoveryService implements DiscoveryService<PartitionId> {
+public final class FileDiscoveryService extends AbstractDiscoveryService<FileDiscoveryService> {
 	private static final SettablePromise<PartitionScheme<PartitionId>> UPDATE_CONSUMED = new SettablePromise<>();
-	private static final TypeT<List<RendezvousPartitionGroup<PartitionId>>> PARTITION_GROUPS_TYPE = new TypeT<>() {};
 
 	private final Eventloop eventloop;
 	private final WatchService watchService;
 	private final Path pathToFile;
-
-	private @Nullable Function<PartitionId, @NotNull RpcStrategy> rpcProvider;
-	private @Nullable Function<PartitionId, @NotNull CrdtStorage<?, ?>> crdtProvider;
 
 	private FileDiscoveryService(Eventloop eventloop, WatchService watchService, Path pathToFile) {
 		this.eventloop = eventloop;
@@ -76,16 +64,6 @@ public final class FileDiscoveryService implements DiscoveryService<PartitionId>
 			throw new CrdtException("Could not create a watch service", e);
 		}
 		return create(eventloop, watchService, pathToFile);
-	}
-
-	public FileDiscoveryService withCrdtProvider(Function<PartitionId, CrdtStorage<?, ?>> crdtProvider) {
-		this.crdtProvider = crdtProvider;
-		return this;
-	}
-
-	public FileDiscoveryService withRpcProvider(Function<PartitionId, RpcStrategy> rpcProvider) {
-		this.rpcProvider = rpcProvider;
-		return this;
 	}
 
 	@Override
@@ -207,16 +185,5 @@ public final class FileDiscoveryService implements DiscoveryService<PartitionId>
 				}
 			}
 		};
-	}
-
-	private RendezvousPartitionScheme<PartitionId> parseScheme(byte[] bytes) throws MalformedDataException {
-		List<RendezvousPartitionGroup<PartitionId>> partitionGroups = fromJson(PARTITION_GROUPS_TYPE, bytes);
-		RendezvousPartitionScheme<PartitionId> scheme = RendezvousPartitionScheme.create(partitionGroups)
-				.withPartitionIdGetter(PartitionId::getId);
-
-		if (rpcProvider != null) scheme.withRpcProvider(rpcProvider);
-		if (crdtProvider != null) scheme.withCrdtProvider(crdtProvider);
-
-		return scheme;
 	}
 }

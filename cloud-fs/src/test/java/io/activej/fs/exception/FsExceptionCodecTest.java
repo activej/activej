@@ -8,8 +8,8 @@ import org.junit.Test;
 
 import java.util.Map;
 
-import static io.activej.fs.util.RemoteFsUtils.fromJson;
-import static io.activej.fs.util.RemoteFsUtils.toJson;
+import static io.activej.fs.util.JsonUtils.fromJson;
+import static io.activej.fs.util.JsonUtils.toJson;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 

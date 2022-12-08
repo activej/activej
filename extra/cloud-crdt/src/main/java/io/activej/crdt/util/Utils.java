@@ -16,13 +16,6 @@
 
 package io.activej.crdt.util;
 
-import com.dslplatform.json.DslJson;
-import com.dslplatform.json.JsonReader;
-import com.dslplatform.json.JsonWriter;
-import com.dslplatform.json.ParsingException;
-import com.dslplatform.json.runtime.Settings;
-import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.MalformedDataException;
 import io.activej.crdt.messaging.CrdtRequest;
 import io.activej.crdt.messaging.CrdtResponse;
 import io.activej.crdt.messaging.Version;
@@ -34,12 +27,8 @@ import io.activej.streamcodecs.StreamCodec;
 import io.activej.streamcodecs.StreamCodecs;
 import io.activej.streamcodecs.StreamCodecs.SubtypeBuilder;
 import io.activej.streamcodecs.StructuredStreamCodec;
-import io.activej.types.TypeT;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
-import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -78,52 +67,6 @@ public final class Utils {
 			}
 		});
 	}
-
-	// region JSON
-	private static final DslJson<?> DSL_JSON = new DslJson<>(Settings.withRuntime().includeServiceLoader());
-	private static final ThreadLocal<JsonWriter> WRITERS = ThreadLocal.withInitial(DSL_JSON::newWriter);
-	private static final ThreadLocal<JsonReader<?>> READERS = ThreadLocal.withInitial(DSL_JSON::newReader);
-
-	public static <T> ByteBuf toJson(@NotNull Type manifest, @Nullable T object) {
-		if (object == null) return ByteBuf.wrap(new byte[]{'n', 'u', 'l', 'l'}, 0, 4);
-		JsonWriter jsonWriter = WRITERS.get();
-		jsonWriter.reset();
-		if (!DSL_JSON.serialize(jsonWriter, manifest, object)) {
-			throw new IllegalArgumentException("Cannot serialize " + manifest);
-		}
-		return ByteBuf.wrapForReading(jsonWriter.toByteArray());
-	}
-
-	public static <T> T fromJson(@NotNull Type manifest, @NotNull ByteBuf buf) throws MalformedDataException {
-		return fromJson(manifest, buf.getArray());
-	}
-
-	public static <T> T fromJson(@NotNull TypeT<T> typeT, byte[] bytes) throws MalformedDataException {
-		return fromJson(typeT.getType(), bytes);
-	}
-
-	public static <T> T fromJson(@NotNull Type manifest, byte[] bytes) throws MalformedDataException {
-		try {
-			//noinspection unchecked
-			JsonReader.ReadObject<T> readObject = (JsonReader.ReadObject<T>) DSL_JSON.tryFindReader(manifest);
-			if (readObject == null) {
-				throw new IllegalArgumentException("Unknown type: " + manifest);
-			}
-			JsonReader<?> jsonReader = READERS.get().process(bytes, bytes.length);
-			jsonReader.getNextToken();
-			T deserialized = readObject.read(jsonReader);
-			if (jsonReader.length() != jsonReader.getCurrentIndex()) {
-				String unexpectedData = jsonReader.toString().substring(jsonReader.getCurrentIndex());
-				throw new MalformedDataException("Unexpected JSON data: " + unexpectedData);
-			}
-			return deserialized;
-		} catch (ParsingException e) {
-			throw new MalformedDataException(e);
-		} catch (IOException e) {
-			throw new AssertionError(e);
-		}
-	}
-	// endregion
 
 	public static <T> StreamTransformer<T, T> ackTransformer(UnaryOperator<Promise<Void>> ackFn) {
 		return new StreamAckTransformer<>(ackFn);
