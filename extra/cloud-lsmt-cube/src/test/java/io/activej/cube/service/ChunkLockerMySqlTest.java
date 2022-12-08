@@ -17,9 +17,9 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.stream.LongStream;
 
+import static io.activej.common.Utils.union;
 import static io.activej.cube.service.ChunkLockerMySql.CHUNK_TABLE;
 import static io.activej.cube.service.ChunkLockerMySql.DEFAULT_LOCK_TTL;
-import static io.activej.inject.util.Utils.union;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.dataSource;

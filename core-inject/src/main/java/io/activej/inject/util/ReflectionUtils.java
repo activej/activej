@@ -107,22 +107,21 @@ public final class ReflectionUtils {
 				names.add(annotation);
 			}
 		}
-		switch (names.size()) {
-			case 0:
-				return null;
-			case 1:
+		return switch (names.size()) {
+			case 0 -> null;
+			case 1 -> {
 				Annotation annotation = names.iterator().next();
 				if (annotation instanceof Named) {
-					return ((Named) annotation).value();
+					yield ((Named) annotation).value();
 				}
 				Class<? extends Annotation> annotationType = annotation.annotationType();
 				if (isMarker(annotationType)) {
-					return annotationType;
+					yield annotationType;
 				}
-				return annotation;
-			default:
-				throw new DIException("More than one name annotation on " + annotatedElement);
-		}
+				yield annotation;
+			}
+			default -> throw new DIException("More than one name annotation on " + annotatedElement);
+		};
 	}
 
 	public static <T> Key<T> keyOf(@Nullable Type container, Type type, AnnotatedElement annotatedElement) {

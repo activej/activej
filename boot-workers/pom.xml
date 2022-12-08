@@ -22,13 +22,6 @@
       <artifactId>activej-inject</artifactId>
       <version>${project.version}</version>
     </dependency>
-
-    <dependency>
-      <groupId>io.activej</groupId>
-      <artifactId>activej-common</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
 
   <build>

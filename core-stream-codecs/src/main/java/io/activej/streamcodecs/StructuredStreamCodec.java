@@ -7,11 +7,11 @@ import java.util.List;
 import java.util.function.Function;
 
 public final class StructuredStreamCodec<T> implements StreamCodec<T> {
-	private final Function<Object[], T> constructor;
+	private final TupleConstructorN<T> constructor;
 	private final CodecAndGetter<T, ?>[] codecAndGetters;
 
 	@SafeVarargs
-	private StructuredStreamCodec(Function<Object[], T> constructor, CodecAndGetter<T, ?>... codecAndGetters) {
+	private StructuredStreamCodec(TupleConstructorN<T> constructor, CodecAndGetter<T, ?>... codecAndGetters) {
 		this.constructor = constructor;
 		this.codecAndGetters = codecAndGetters;
 	}
@@ -137,7 +137,7 @@ public final class StructuredStreamCodec<T> implements StreamCodec<T> {
 		);
 	}
 
-	public static <T> StructuredStreamCodec<T> create(Function<Object[], T> constructorN,
+	public static <T> StructuredStreamCodec<T> create(TupleConstructorN<T> constructorN,
 			List<CodecAndGetter<T, ?>> codecsAndGetters
 	) {
 		//noinspection unchecked
@@ -152,7 +152,7 @@ public final class StructuredStreamCodec<T> implements StreamCodec<T> {
 			Object field = codecAndGetter.codec.decode(input);
 			fields[i] = field;
 		}
-		return constructor.apply(fields);
+		return constructor.create(fields);
 	}
 
 	@Override

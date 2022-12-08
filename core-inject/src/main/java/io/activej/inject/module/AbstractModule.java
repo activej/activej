@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 
-import static io.activej.inject.util.Utils.checkState;
+import static io.activej.common.Checks.checkState;
 
 /**
  * This class is an abstract module wrapper around {@link ModuleBuilder}.

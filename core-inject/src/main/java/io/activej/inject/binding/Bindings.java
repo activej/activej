@@ -1,8 +1,8 @@
 package io.activej.inject.binding;
 
+import io.activej.common.tuple.*;
 import io.activej.inject.Key;
 import io.activej.inject.impl.*;
-import io.activej.inject.util.Constructors.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -44,10 +44,10 @@ class Bindings {
 	}
 
 	public static class BindingToConstructorN<R> extends Binding<R> {
-		final ConstructorN<R> constructor;
+		final TupleConstructorN<R> constructor;
 		final Key<?>[] dependencies;
 
-		BindingToConstructorN(ConstructorN<R> constructor, Key<?>[] dependencies) {
+		BindingToConstructorN(TupleConstructorN<R> constructor, Key<?>[] dependencies) {
 			super(new HashSet<>(List.of(dependencies)));
 			this.constructor = constructor;
 			this.dependencies = dependencies;
@@ -55,7 +55,7 @@ class Bindings {
 
 		@Override
 		public CompiledBinding<R> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
-			final ConstructorN<R> constructor = this.constructor;
+			final TupleConstructorN<R> constructor = this.constructor;
 			final CompiledBinding<?>[] bindings = Arrays.stream(dependencies)
 					.map(compiledBindings::get)
 					.toArray(CompiledBinding[]::new);
@@ -104,16 +104,16 @@ class Bindings {
 	}
 
 	public static class BindingToConstructor0<R> extends Binding<R> {
-		final Constructor0<R> constructor;
+		final TupleConstructor0<R> constructor;
 
-		BindingToConstructor0(Constructor0<R> constructor) {
+		BindingToConstructor0(TupleConstructor0<R> constructor) {
 			super(Set.of());
 			this.constructor = constructor;
 		}
 
 		@Override
 		public CompiledBinding<R> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
-			final Constructor0<R> constructor = this.constructor;
+			final TupleConstructor0<R> constructor = this.constructor;
 			return slot != null ? threadsafe ? scope == 0 ?
 					new AbstractRootCompiledBinding<>(slot) {
 						@Override
@@ -143,10 +143,10 @@ class Bindings {
 	}
 
 	public static class BindingToConstructor1<R, T1> extends Binding<R> {
-		final Constructor1<T1, R> constructor;
+		final TupleConstructor1<T1, R> constructor;
 		final Key<T1> dependency1;
 
-		BindingToConstructor1(Constructor1<T1, R> constructor, Key<T1> dependency1) {
+		BindingToConstructor1(TupleConstructor1<T1, R> constructor, Key<T1> dependency1) {
 			super(Set.of(dependency1));
 			this.constructor = constructor;
 			this.dependency1 = dependency1;
@@ -154,7 +154,7 @@ class Bindings {
 
 		@Override
 		public CompiledBinding<R> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
-			final Constructor1<T1, R> constructor = this.constructor;
+			final TupleConstructor1<T1, R> constructor = this.constructor;
 			final CompiledBinding<T1> binding1 = compiledBindings.get(dependency1);
 			return slot != null ? threadsafe ? scope == 0 ?
 					new AbstractRootCompiledBinding<>(slot) {
@@ -189,11 +189,11 @@ class Bindings {
 	}
 
 	public static class BindingToConstructor2<R, T1, T2> extends Binding<R> {
-		final Constructor2<T1, T2, R> constructor;
+		final TupleConstructor2<T1, T2, R> constructor;
 		final Key<T1> dependency1;
 		final Key<T2> dependency2;
 
-		BindingToConstructor2(Key<T1> dependency1, Key<T2> dependency2, Constructor2<T1, T2, R> constructor) {
+		BindingToConstructor2(Key<T1> dependency1, Key<T2> dependency2, TupleConstructor2<T1, T2, R> constructor) {
 			super(new HashSet<>(List.of(dependency1, dependency2)));
 			this.constructor = constructor;
 			this.dependency1 = dependency1;
@@ -202,7 +202,7 @@ class Bindings {
 
 		@Override
 		public CompiledBinding<R> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
-			final Constructor2<T1, T2, R> constructor = this.constructor;
+			final TupleConstructor2<T1, T2, R> constructor = this.constructor;
 			final CompiledBinding<T1> binding1 = compiledBindings.get(dependency1);
 			final CompiledBinding<T2> binding2 = compiledBindings.get(dependency2);
 			return slot != null ? threadsafe ? scope == 0 ?
@@ -242,12 +242,12 @@ class Bindings {
 	}
 
 	public static class BindingToConstructor3<R, T1, T2, T3> extends Binding<R> {
-		final Constructor3<T1, T2, T3, R> constructor;
+		final TupleConstructor3<T1, T2, T3, R> constructor;
 		final Key<T1> dependency1;
 		final Key<T2> dependency2;
 		final Key<T3> dependency3;
 
-		BindingToConstructor3(Constructor3<T1, T2, T3, R> constructor, Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3) {
+		BindingToConstructor3(TupleConstructor3<T1, T2, T3, R> constructor, Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3) {
 			super(new HashSet<>(List.of(dependency1, dependency2, dependency3)));
 			this.dependency1 = dependency1;
 			this.dependency2 = dependency2;
@@ -257,7 +257,7 @@ class Bindings {
 
 		@Override
 		public CompiledBinding<R> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
-			final Constructor3<T1, T2, T3, R> constructor = this.constructor;
+			final TupleConstructor3<T1, T2, T3, R> constructor = this.constructor;
 			final CompiledBinding<T1> binding1 = compiledBindings.get(dependency1);
 			final CompiledBinding<T2> binding2 = compiledBindings.get(dependency2);
 			final CompiledBinding<T3> binding3 = compiledBindings.get(dependency3);
@@ -302,13 +302,13 @@ class Bindings {
 	}
 
 	public static class BindingToConstructor4<R, T1, T2, T3, T4> extends Binding<R> {
-		final Constructor4<T1, T2, T3, T4, R> constructor;
+		final TupleConstructor4<T1, T2, T3, T4, R> constructor;
 		final Key<T1> dependency1;
 		final Key<T2> dependency2;
 		final Key<T3> dependency3;
 		final Key<T4> dependency4;
 
-		BindingToConstructor4(Constructor4<T1, T2, T3, T4, R> constructor, Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4) {
+		BindingToConstructor4(TupleConstructor4<T1, T2, T3, T4, R> constructor, Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4) {
 			super(new HashSet<>(List.of(dependency1, dependency2, dependency3, dependency4)));
 			this.constructor = constructor;
 			this.dependency1 = dependency1;
@@ -319,7 +319,7 @@ class Bindings {
 
 		@Override
 		public CompiledBinding<R> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
-			final Constructor4<T1, T2, T3, T4, R> constructor = this.constructor;
+			final TupleConstructor4<T1, T2, T3, T4, R> constructor = this.constructor;
 			final CompiledBinding<T1> binding1 = compiledBindings.get(dependency1);
 			final CompiledBinding<T2> binding2 = compiledBindings.get(dependency2);
 			final CompiledBinding<T3> binding3 = compiledBindings.get(dependency3);
@@ -369,14 +369,14 @@ class Bindings {
 	}
 
 	public static class BindingToConstructor5<R, T1, T2, T3, T4, T5> extends Binding<R> {
-		final Constructor5<T1, T2, T3, T4, T5, R> constructor;
+		final TupleConstructor5<T1, T2, T3, T4, T5, R> constructor;
 		final Key<T1> dependency1;
 		final Key<T2> dependency2;
 		final Key<T3> dependency3;
 		final Key<T4> dependency4;
 		final Key<T5> dependency5;
 
-		BindingToConstructor5(Constructor5<T1, T2, T3, T4, T5, R> constructor, Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4, Key<T5> dependency5) {
+		BindingToConstructor5(TupleConstructor5<T1, T2, T3, T4, T5, R> constructor, Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4, Key<T5> dependency5) {
 			super(new HashSet<>(List.of(dependency1, dependency2, dependency3, dependency4, dependency5)));
 			this.constructor = constructor;
 			this.dependency1 = dependency1;
@@ -388,7 +388,7 @@ class Bindings {
 
 		@Override
 		public CompiledBinding<R> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
-			final Constructor5<T1, T2, T3, T4, T5, R> constructor = this.constructor;
+			final TupleConstructor5<T1, T2, T3, T4, T5, R> constructor = this.constructor;
 			final CompiledBinding<T1> binding1 = compiledBindings.get(dependency1);
 			final CompiledBinding<T2> binding2 = compiledBindings.get(dependency2);
 			final CompiledBinding<T3> binding3 = compiledBindings.get(dependency3);
@@ -444,7 +444,7 @@ class Bindings {
 	}
 
 	public static class BindingToConstructor6<R, T1, T2, T3, T4, T5, T6> extends Binding<R> {
-		final Constructor6<T1, T2, T3, T4, T5, T6, R> constructor;
+		final TupleConstructor6<T1, T2, T3, T4, T5, T6, R> constructor;
 		final Key<T1> dependency1;
 		final Key<T2> dependency2;
 		final Key<T3> dependency3;
@@ -452,7 +452,7 @@ class Bindings {
 		final Key<T5> dependency5;
 		final Key<T6> dependency6;
 
-		BindingToConstructor6(Constructor6<T1, T2, T3, T4, T5, T6, R> constructor, Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4, Key<T5> dependency5, Key<T6> dependency6) {
+		BindingToConstructor6(TupleConstructor6<T1, T2, T3, T4, T5, T6, R> constructor, Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4, Key<T5> dependency5, Key<T6> dependency6) {
 			super(new HashSet<>(List.of(dependency1, dependency2, dependency3, dependency4, dependency5, dependency6)));
 			this.constructor = constructor;
 			this.dependency1 = dependency1;
@@ -465,7 +465,7 @@ class Bindings {
 
 		@Override
 		public CompiledBinding<R> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
-			final Constructor6<T1, T2, T3, T4, T5, T6, R> constructor = this.constructor;
+			final TupleConstructor6<T1, T2, T3, T4, T5, T6, R> constructor = this.constructor;
 			final CompiledBinding<T1> binding1 = compiledBindings.get(dependency1);
 			final CompiledBinding<T2> binding2 = compiledBindings.get(dependency2);
 			final CompiledBinding<T3> binding3 = compiledBindings.get(dependency3);

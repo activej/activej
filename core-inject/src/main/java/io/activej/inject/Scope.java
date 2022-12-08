@@ -22,7 +22,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 
-import static io.activej.inject.util.Utils.checkArgument;
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.inject.util.Utils.isMarker;
 
 public final class Scope {

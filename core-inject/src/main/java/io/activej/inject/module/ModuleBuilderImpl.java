@@ -30,6 +30,7 @@ import java.lang.annotation.Annotation;
 import java.util.*;
 import java.util.stream.Stream;
 
+import static io.activej.common.Checks.checkState;
 import static io.activej.inject.Scope.UNSCOPED;
 import static io.activej.inject.util.ReflectionUtils.scanClassHierarchy;
 import static io.activej.inject.util.Utils.*;

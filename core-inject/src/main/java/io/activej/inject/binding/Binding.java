@@ -16,10 +16,10 @@
 
 package io.activej.inject.binding;
 
+import io.activej.common.tuple.*;
 import io.activej.inject.Key;
 import io.activej.inject.binding.Bindings.*;
 import io.activej.inject.impl.*;
-import io.activej.inject.util.Constructors.*;
 import io.activej.inject.util.LocationInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -34,7 +34,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.activej.inject.util.Utils.union;
+import static io.activej.common.Utils.union;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
@@ -77,83 +77,83 @@ public abstract class Binding<T> {
 		return new BindingToKey<>(key);
 	}
 
-	public static <R> Binding<R> to(@NotNull ConstructorN<R> constructor, Class<?>[] types) {
+	public static <R> Binding<R> to(@NotNull TupleConstructorN<R> constructor, Class<?>[] types) {
 		return Binding.to(constructor, Stream.of(types).map(Key::of).toArray(Key<?>[]::new));
 	}
 
 	@SuppressWarnings("Duplicates")
-	public static <R> Binding<R> to(@NotNull ConstructorN<R> constructor, Key<?>[] dependencies) {
+	public static <R> Binding<R> to(@NotNull TupleConstructorN<R> constructor, Key<?>[] dependencies) {
 		if (dependencies.length == 0) {
 			return to(constructor::create);
 		}
 		return new BindingToConstructorN<>(constructor, dependencies);
 	}
 
-	public static <T1, R> Binding<R> to(@NotNull Constructor1<T1, R> constructor,
+	public static <T1, R> Binding<R> to(@NotNull TupleConstructor1<T1, R> constructor,
 			@NotNull Class<T1> dependency1) {
 		return Binding.to(constructor, Key.of(dependency1));
 	}
 
-	public static <T1, T2, R> Binding<R> to(@NotNull Constructor2<T1, T2, R> constructor,
+	public static <T1, T2, R> Binding<R> to(@NotNull TupleConstructor2<T1, T2, R> constructor,
 			@NotNull Class<T1> dependency1, @NotNull Class<T2> dependency2) {
 		return Binding.to(constructor, Key.of(dependency1), Key.of(dependency2));
 	}
 
-	public static <T1, T2, T3, R> Binding<R> to(@NotNull Constructor3<T1, T2, T3, R> constructor,
+	public static <T1, T2, T3, R> Binding<R> to(@NotNull TupleConstructor3<T1, T2, T3, R> constructor,
 			@NotNull Class<T1> dependency1, @NotNull Class<T2> dependency2, @NotNull Class<T3> dependency3) {
 		return Binding.to(constructor, Key.of(dependency1), Key.of(dependency2), Key.of(dependency3));
 	}
 
-	public static <T1, T2, T3, T4, R> Binding<R> to(@NotNull Constructor4<T1, T2, T3, T4, R> constructor,
+	public static <T1, T2, T3, T4, R> Binding<R> to(@NotNull TupleConstructor4<T1, T2, T3, T4, R> constructor,
 			@NotNull Class<T1> dependency1, @NotNull Class<T2> dependency2, @NotNull Class<T3> dependency3, @NotNull Class<T4> dependency4) {
 		return Binding.to(constructor, Key.of(dependency1), Key.of(dependency2), Key.of(dependency3), Key.of(dependency4));
 	}
 
-	public static <T1, T2, T3, T4, T5, R> Binding<R> to(@NotNull Constructor5<T1, T2, T3, T4, T5, R> constructor,
+	public static <T1, T2, T3, T4, T5, R> Binding<R> to(@NotNull TupleConstructor5<T1, T2, T3, T4, T5, R> constructor,
 			@NotNull Class<T1> dependency1, @NotNull Class<T2> dependency2, @NotNull Class<T3> dependency3, @NotNull Class<T4> dependency4, @NotNull Class<T5> dependency5) {
 		return Binding.to(constructor, Key.of(dependency1), Key.of(dependency2), Key.of(dependency3), Key.of(dependency4), Key.of(dependency5));
 	}
 
-	public static <T1, T2, T3, T4, T5, T6, R> Binding<R> to(@NotNull Constructor6<T1, T2, T3, T4, T5, T6, R> constructor,
+	public static <T1, T2, T3, T4, T5, T6, R> Binding<R> to(@NotNull TupleConstructor6<T1, T2, T3, T4, T5, T6, R> constructor,
 			@NotNull Class<T1> dependency1, @NotNull Class<T2> dependency2, @NotNull Class<T3> dependency3, @NotNull Class<T4> dependency4, @NotNull Class<T5> dependency5, @NotNull Class<T6> dependency6) {
 		return Binding.to(constructor, Key.of(dependency1), Key.of(dependency2), Key.of(dependency3), Key.of(dependency4), Key.of(dependency5), Key.of(dependency6));
 	}
 
-	public static <R> Binding<R> to(@NotNull Constructor0<R> constructor) {
+	public static <R> Binding<R> to(@NotNull TupleConstructor0<R> constructor) {
 		return new BindingToConstructor0<>(constructor);
 	}
 
-	public static <T1, R> Binding<R> to(@NotNull Constructor1<T1, R> constructor,
+	public static <T1, R> Binding<R> to(@NotNull TupleConstructor1<T1, R> constructor,
 			@NotNull Key<T1> dependency1) {
 		return new BindingToConstructor1<>(constructor, dependency1);
 	}
 
 	@SuppressWarnings("Duplicates")
-	public static <T1, T2, R> Binding<R> to(@NotNull Constructor2<T1, T2, R> constructor,
+	public static <T1, T2, R> Binding<R> to(@NotNull TupleConstructor2<T1, T2, R> constructor,
 			@NotNull Key<T1> dependency1, @NotNull Key<T2> dependency2) {
 		return new BindingToConstructor2<>(dependency1, dependency2, constructor);
 	}
 
 	@SuppressWarnings("Duplicates")
-	public static <T1, T2, T3, R> Binding<R> to(@NotNull Constructor3<T1, T2, T3, R> constructor,
+	public static <T1, T2, T3, R> Binding<R> to(@NotNull TupleConstructor3<T1, T2, T3, R> constructor,
 			@NotNull Key<T1> dependency1, @NotNull Key<T2> dependency2, @NotNull Key<T3> dependency3) {
 		return new BindingToConstructor3<>(constructor, dependency1, dependency2, dependency3);
 	}
 
 	@SuppressWarnings("Duplicates")
-	public static <T1, T2, T3, T4, R> Binding<R> to(@NotNull Constructor4<T1, T2, T3, T4, R> constructor,
+	public static <T1, T2, T3, T4, R> Binding<R> to(@NotNull TupleConstructor4<T1, T2, T3, T4, R> constructor,
 			@NotNull Key<T1> dependency1, @NotNull Key<T2> dependency2, @NotNull Key<T3> dependency3, @NotNull Key<T4> dependency4) {
 		return new BindingToConstructor4<>(constructor, dependency1, dependency2, dependency3, dependency4);
 	}
 
 	@SuppressWarnings("Duplicates")
-	public static <T1, T2, T3, T4, T5, R> Binding<R> to(@NotNull Constructor5<T1, T2, T3, T4, T5, R> constructor,
+	public static <T1, T2, T3, T4, T5, R> Binding<R> to(@NotNull TupleConstructor5<T1, T2, T3, T4, T5, R> constructor,
 			@NotNull Key<T1> dependency1, @NotNull Key<T2> dependency2, @NotNull Key<T3> dependency3, @NotNull Key<T4> dependency4, @NotNull Key<T5> dependency5) {
 		return new BindingToConstructor5<>(constructor, dependency1, dependency2, dependency3, dependency4, dependency5);
 	}
 
 	@SuppressWarnings("Duplicates")
-	public static <T1, T2, T3, T4, T5, T6, R> Binding<R> to(@NotNull Constructor6<T1, T2, T3, T4, T5, T6, R> constructor,
+	public static <T1, T2, T3, T4, T5, T6, R> Binding<R> to(@NotNull TupleConstructor6<T1, T2, T3, T4, T5, T6, R> constructor,
 			@NotNull Key<T1> dependency1, @NotNull Key<T2> dependency2, @NotNull Key<T3> dependency3, @NotNull Key<T4> dependency4, @NotNull Key<T5> dependency5, @NotNull Key<T6> dependency6) {
 		return new BindingToConstructor6<>(constructor, dependency1, dependency2, dependency3, dependency4, dependency5, dependency6);
 	}

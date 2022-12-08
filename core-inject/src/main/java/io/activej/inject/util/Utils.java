@@ -83,15 +83,6 @@ public final class Utils {
 		multimap.forEach((key, set) -> accumulator.computeIfAbsent(key, $ -> new HashSet<>()).addAll(set));
 	}
 
-	public static <T> Set<T> union(Set<T> first, Set<T> second) {
-		if (first.isEmpty()) return second;
-		if (second.isEmpty()) return first;
-		Set<T> result = new HashSet<>((first.size() + second.size()) * 4 / 3 + 1);
-		result.addAll(first);
-		result.addAll(second);
-		return result;
-	}
-
 	public static <K, V> Map<K, V> override(Map<K, V> into, Map<K, V> from) {
 		Map<K, V> result = new HashMap<>((from.size() + into.size()) * 4 / 3 + 1);
 		result.putAll(from);
@@ -101,24 +92,12 @@ public final class Utils {
 
 	public static <T, K, V> Collector<T, ?, Map<K, Set<V>>> toMultimap(Function<? super T, ? extends K> keyMapper,
 			Function<? super T, ? extends V> valueMapper) {
-		return toMap(keyMapper, t -> Set.of(valueMapper.apply(t)), Utils::union);
+		return toMap(keyMapper, t -> Set.of(valueMapper.apply(t)), io.activej.common.Utils::union);
 	}
 
 	public static <K, V> Map<K, V> squash(Map<K, Set<V>> multimap, BiFunction<K, Set<V>, V> squasher) {
 		return multimap.entrySet().stream()
 				.collect(toMap(Entry::getKey, e -> squasher.apply(e.getKey(), e.getValue())));
-	}
-
-	public static void checkArgument(boolean condition, String message) {
-		if (!condition) {
-			throw new IllegalArgumentException(message);
-		}
-	}
-
-	public static void checkState(boolean condition, String message) {
-		if (!condition) {
-			throw new IllegalStateException(message);
-		}
 	}
 
 	public static String getLocation(@Nullable Binding<?> binding) {
@@ -295,20 +274,5 @@ public final class Utils {
 				})
 				.collect(toMap(Entry::getKey, Entry::getValue,
 						(v1, v2) -> {throw new AssertionError();}, LinkedHashMap::new));
-	}
-
-	public static @Nullable Type match(Type type, Collection<Type> patterns) {
-		Type best = null;
-		for (Type found : patterns) {
-			if (isAssignable(found, type)) {
-				if (best == null || isAssignable(best, found)) {
-					if (best != null && !best.equals(found) && isAssignable(found, best)) {
-						throw new IllegalArgumentException("Conflicting types: " + type + " " + best);
-					}
-					best = found;
-				}
-			}
-		}
-		return best;
 	}
 }

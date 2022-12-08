@@ -1,5 +1,6 @@
 package io.activej.inject;
 
+import io.activej.common.tuple.TupleConstructor0;
 import io.activej.inject.annotation.*;
 import io.activej.inject.binding.Binding;
 import io.activej.inject.binding.DIException;
@@ -9,7 +10,6 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.inject.module.Modules;
-import io.activej.inject.util.Constructors.Constructor0;
 import io.activej.inject.util.Trie;
 import io.activej.inject.util.Utils;
 import org.jetbrains.annotations.NotNull;
@@ -1226,7 +1226,7 @@ public final class TestDI {
 	@Test
 	public void partiallyTransientMultibind() {
 		AtomicInteger mut = new AtomicInteger();
-		Constructor0<Set<String>> constructor = () -> Set.of("str_" + mut.incrementAndGet());
+		TupleConstructor0<Set<String>> constructor = () -> Set.of("str_" + mut.incrementAndGet());
 
 		Key<Set<String>> setKey = new Key<>() {};
 		Key<Set<String>> setKeyNt = setKey.qualified("nt");

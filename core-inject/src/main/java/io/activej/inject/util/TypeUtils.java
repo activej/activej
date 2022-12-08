@@ -17,12 +17,12 @@
 package io.activej.inject.util;
 
 import io.activej.types.Types;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.*;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+
+import static io.activej.types.IsAssignableUtils.isAssignable;
 
 /**
  * This class contains reflection utilities to work with Java types.
@@ -254,5 +254,20 @@ public final class TypeUtils {
 			if (type != Object.class) return false;
 		}
 		return true;
+	}
+
+	public static @Nullable Type match(Type type, Collection<Type> patterns) {
+		Type best = null;
+		for (Type found : patterns) {
+			if (isAssignable(found, type)) {
+				if (best == null || isAssignable(best, found)) {
+					if (best != null && !best.equals(found) && isAssignable(found, best)) {
+						throw new IllegalArgumentException("Conflicting types: " + type + " " + best);
+					}
+					best = found;
+				}
+			}
+		}
+		return best;
 	}
 }

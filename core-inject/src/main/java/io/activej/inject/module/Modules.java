@@ -35,6 +35,8 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
+import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Utils.union;
 import static io.activej.inject.Qualifiers.uniqueQualifier;
 import static io.activej.inject.Scope.UNSCOPED;
 import static io.activej.inject.util.Utils.*;
