@@ -1,7 +1,6 @@
 package io.activej.dataflow.calcite.utils;
 
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.codegen.util.Primitives;
 import io.activej.common.exception.ToDoException;
 import io.activej.dataflow.calcite.RecordStreamSchema;
 import io.activej.dataflow.calcite.Value;
@@ -16,6 +15,7 @@ import io.activej.record.RecordScheme;
 import io.activej.streamcodecs.StreamCodec;
 import io.activej.streamcodecs.StreamCodecs;
 import io.activej.streamcodecs.StructuredStreamCodec;
+import io.activej.types.Primitives;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;

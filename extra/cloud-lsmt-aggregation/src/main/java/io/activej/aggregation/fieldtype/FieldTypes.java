@@ -20,10 +20,10 @@ import io.activej.aggregation.measure.HyperLogLog;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
-import io.activej.codegen.util.Primitives;
 import io.activej.serializer.SerializerDef;
 import io.activej.serializer.StringFormat;
 import io.activej.serializer.impl.*;
+import io.activej.types.Primitives;
 import io.activej.types.Types;
 
 import java.lang.reflect.Type;

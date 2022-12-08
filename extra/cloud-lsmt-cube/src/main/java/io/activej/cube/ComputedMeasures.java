@@ -19,7 +19,7 @@ package io.activej.cube;
 import io.activej.aggregation.measure.Measure;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
-import io.activej.codegen.util.Primitives;
+import io.activej.types.Primitives;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;

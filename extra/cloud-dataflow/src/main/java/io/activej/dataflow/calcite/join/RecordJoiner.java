@@ -1,12 +1,12 @@
 package io.activej.dataflow.calcite.join;
 
-import io.activej.codegen.util.Primitives;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
 import io.activej.record.Record;
 import io.activej.record.RecordGetter;
 import io.activej.record.RecordScheme;
 import io.activej.record.RecordSetter;
+import io.activej.types.Primitives;
 import org.apache.calcite.rel.core.JoinRelType;
 
 import java.lang.reflect.Type;

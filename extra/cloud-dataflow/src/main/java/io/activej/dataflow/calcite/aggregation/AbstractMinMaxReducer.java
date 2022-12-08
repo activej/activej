@@ -1,7 +1,7 @@
 package io.activej.dataflow.calcite.aggregation;
 
-import io.activej.codegen.util.Primitives;
 import io.activej.record.Record;
+import io.activej.types.Primitives;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

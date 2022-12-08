@@ -17,7 +17,7 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
-import io.activej.codegen.util.Primitives;
+import io.activej.types.Primitives;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;

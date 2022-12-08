@@ -1,6 +1,5 @@
 package io.activej.dataflow.calcite;
 
-import io.activej.codegen.util.Primitives;
 import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.inject.BinarySerializerModule;
 import io.activej.record.Record;
@@ -8,6 +7,7 @@ import io.activej.record.RecordScheme;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.BinarySerializers;
 import io.activej.serializer.util.RecordSerializer;
+import io.activej.types.Primitives;
 
 import java.lang.reflect.Type;
 import java.util.List;
