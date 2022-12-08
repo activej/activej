@@ -1,6 +1,6 @@
 package io.activej.streamcodecs;
 
-import io.activej.codegen.util.WithInitializer;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.serializer.BinaryOutput;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

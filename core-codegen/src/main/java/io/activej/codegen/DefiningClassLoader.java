@@ -16,7 +16,7 @@
 
 package io.activej.codegen;
 
-import io.activej.codegen.util.WithInitializer;
+import io.activej.common.initializer.WithInitializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

@@ -16,7 +16,7 @@
 
 package io.activej.codegen;
 
-import io.activej.codegen.util.WithInitializer;
+import io.activej.common.initializer.WithInitializer;
 
 import java.io.*;
 import java.nio.file.Path;

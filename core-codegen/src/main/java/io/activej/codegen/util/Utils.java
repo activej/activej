@@ -141,13 +141,6 @@ public final class Utils {
 		return true;
 	}
 
-	public static void main(String[] args) {
-		Method method1 = getMethod("int hashCode()");
-		Method method2 = getMethod("int hashCode()");
-
-		System.out.println(method1.equals(method2));
-	}
-
 	public static String exceptionInGeneratedClass(Context ctx) {
 		return format("Thrown in generated class %s in method %s",
 				ctx.getSelfType().getClassName(),

@@ -1,6 +1,6 @@
 package io.activej.streamcodecs;
 
-import io.activej.codegen.util.WithInitializer;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.CorruptedDataException;
 import org.jetbrains.annotations.NotNull;

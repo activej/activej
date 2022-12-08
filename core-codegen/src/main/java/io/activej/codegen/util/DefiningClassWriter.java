@@ -16,6 +16,7 @@
 
 package io.activej.codegen.util;
 
+import io.activej.common.initializer.WithInitializer;
 import org.objectweb.asm.ClassWriter;
 
 public final class DefiningClassWriter extends ClassWriter implements WithInitializer<DefiningClassWriter> {

@@ -1,6 +1,6 @@
 package io.activej.serializer.util;
 
-import io.activej.codegen.util.WithInitializer;
+import io.activej.common.initializer.WithInitializer;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import io.activej.serializer.BinaryInput;
