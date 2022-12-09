@@ -511,12 +511,12 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> mapException(@NotNull Class<? extends Exception> clazz, @NotNull FunctionEx<@NotNull Exception, @NotNull Exception> exceptionFn) {
+	public @NotNull <E extends Exception> Promise<T> mapException(@NotNull Class<E> clazz, @NotNull FunctionEx<@NotNull E, @NotNull Exception> exceptionFn) {
 		if (isComplete()) {
 			try {
 				return exception == null ?
 						this :
-						clazz.isAssignableFrom(exception.getClass()) ? Promise.ofException(exceptionFn.apply(exception)) : this;
+						clazz.isAssignableFrom(exception.getClass()) ? Promise.ofException(exceptionFn.apply((E) exception)) : this;
 			} catch (Exception ex) {
 				handleError(ex, this);
 				return Promise.ofException(ex);
@@ -529,7 +529,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 					complete(result);
 				} else {
 					try {
-						e = clazz.isAssignableFrom(e.getClass()) ? exceptionFn.apply(e) : e;
+						e = clazz.isAssignableFrom(e.getClass()) ? exceptionFn.apply((E) e) : e;
 					} catch (Exception ex) {
 						handleError(ex, this);
 						completeExceptionally(ex);
@@ -1342,11 +1342,11 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> whenException(@NotNull Class<? extends Exception> clazz, @NotNull ConsumerEx<@NotNull Exception> fn) {
+	public @NotNull <E extends Exception> Promise<T> whenException(@NotNull Class<E> clazz, @NotNull ConsumerEx<@NotNull E> fn) {
 		if (isComplete()) {
 			try {
 				if (exception != null && clazz.isAssignableFrom(exception.getClass())) {
-					fn.accept(exception);
+					fn.accept((E) exception);
 				}
 				return this;
 			} catch (Exception ex) {
@@ -1359,7 +1359,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 			public void accept(T result1, @Nullable Exception e) {
 				try {
 					if (e != null && clazz.isAssignableFrom(e.getClass())) {
-						fn.accept(e);
+						fn.accept((E) e);
 					}
 				} catch (Exception ex) {
 					handleError(ex, this);

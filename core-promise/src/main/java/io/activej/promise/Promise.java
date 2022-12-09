@@ -541,9 +541,10 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise} whose result is the result of a mapping
 	 * function applied either to an exception of {@code this} promise.
 	 */
-	default @NotNull Promise<T> mapException(@NotNull Class<? extends Exception> clazz,
-			@NotNull FunctionEx<@NotNull Exception, @NotNull Exception> exceptionFn) {
-		return mapException(e -> clazz.isAssignableFrom(e.getClass()), exceptionFn);
+	default @NotNull <E extends Exception> Promise<T> mapException(@NotNull Class<E> clazz,
+			@NotNull FunctionEx<@NotNull E, @NotNull Exception> exceptionFn) {
+		//noinspection unchecked
+		return mapException(e -> clazz.isAssignableFrom(e.getClass()), (FunctionEx<Exception, Exception>) exceptionFn);
 	}
 
 	/**
@@ -974,8 +975,9 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *              only if an exception of {@code this} promise is an instance of the specified class
 	 * @param fn    consumer that consumes an exception of {@code this} promise
 	 */
-	default @NotNull Promise<T> whenException(@NotNull Class<? extends Exception> clazz, @NotNull ConsumerEx<@NotNull Exception> fn) {
-		return when(P.isException(clazz), null, fn);
+	default @NotNull <E extends Exception> Promise<T> whenException(@NotNull Class<E> clazz, @NotNull ConsumerEx<@NotNull E> fn) {
+		//noinspection unchecked
+		return when(P.isException(clazz), null, (ConsumerEx<Exception>) fn);
 	}
 
 	/**
