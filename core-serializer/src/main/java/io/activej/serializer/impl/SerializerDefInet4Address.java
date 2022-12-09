@@ -24,7 +24,7 @@ import java.net.UnknownHostException;
 public final class SerializerDefInet4Address extends SimpleSerializerDef<Inet4Address> {
 	@Override
 	protected BinarySerializer<Inet4Address> createSerializer(int version, CompatibilityLevel compatibilityLevel) {
-		return new BinarySerializer<Inet4Address>() {
+		return new BinarySerializer<>() {
 			@Override
 			public void encode(BinaryOutput out, Inet4Address address) {
 				out.write(address.getAddress());

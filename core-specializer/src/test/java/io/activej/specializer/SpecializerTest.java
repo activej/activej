@@ -92,5 +92,72 @@ public class SpecializerTest {
 		Assert.assertEquals(expected, specialized.apply(55));
 	}
 
+	@Test
+	public void testIfElse() {
+		TestInterface ifElseTestClass = new IfElseTestClass(x -> x * 2);
+		Specializer specializer = Specializer.create();
+//				.withBytecodeSaveDir(Paths.get("tmp"));
+		TestInterface specialized = specializer.specialize(ifElseTestClass);
+		Assert.assertEquals(6, specialized.apply(3));
+	}
 
+	@Test
+	public void testIfElse2() {
+		TestInterface ifElseTestClass = new IfElseTestClass2();
+		Specializer specializer = Specializer.create();
+//				.withBytecodeSaveDir(Paths.get("tmp"));
+		TestInterface specialized = specializer.specialize(ifElseTestClass);
+		Assert.assertEquals(0, specialized.apply(3));
+	}
+
+	@Test
+	public void testIfElse3() {
+		TestInterface ifElseTestClass = new IfElseTestClass3();
+		Specializer specializer = Specializer.create();
+//				.withBytecodeSaveDir(Paths.get("tmp"));
+		TestInterface specialized = specializer.specialize(ifElseTestClass);
+		Assert.assertEquals(0, specialized.apply(3));
+	}
+
+	@Test
+	public void testIfElse4() {
+		TestInterface ifElseTestClass = new IfElseTestClass4();
+		Specializer specializer = Specializer.create();
+//				.withBytecodeSaveDir(Paths.get("tmp"));
+		TestInterface specialized = specializer.specialize(ifElseTestClass);
+		Assert.assertEquals(0, specialized.apply(3));
+	}
+
+	@Test
+	public void testIfElse5() {
+		TestInterface ifElseTestClass = new IfElseTestClass5();
+		Specializer specializer = Specializer.create();
+//				.withBytecodeSaveDir(Paths.get("tmp"));
+		TestInterface specialized = specializer.specialize(ifElseTestClass);
+		Assert.assertEquals(0, specialized.apply(3));
+	}
+
+	@Test
+	public void testMultipleFrames() {
+		TestInterface multipleFramesTestClass = new MultipleFramesTestClass();
+		Specializer specializer = Specializer.create();
+		TestInterface specialized = specializer.specialize(multipleFramesTestClass);
+		Assert.assertEquals(0, specialized.apply(3));
+	}
+
+	@Test
+	public void testStaticFields() {
+		TestInterface staticFieldTestClass = new StaticFieldTestClass();
+		Specializer specializer = Specializer.create();
+		TestInterface specialized = specializer.specialize(staticFieldTestClass);
+		Assert.assertEquals(staticFieldTestClass.apply(3), specialized.apply(3));
+	}
+
+	@Test
+	public void testStaticMethods() {
+		TestInterface staticMethodsTestClass = new StaticMethodTestClass();
+		Specializer specializer = Specializer.create();
+		TestInterface specialized = specializer.specialize(staticMethodsTestClass);
+		Assert.assertEquals(staticMethodsTestClass.apply(3), specialized.apply(3));
+	}
 }

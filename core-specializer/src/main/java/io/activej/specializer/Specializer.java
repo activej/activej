@@ -310,45 +310,40 @@ public final class Specializer {
 			AnalyzerAdapter analyzerAdapter = new AnalyzerAdapter(getType(instanceClass).getInternalName(), ACC_PUBLIC | ACC_FINAL, methodNode.name, methodNode.desc, null);
 
 			Type[] methodParameters = new Method(methodNode.name, methodNode.desc).getArgumentTypes();
-			final Map<Integer, Integer> localsRemapping = new HashMap<>();
-			Map<LabelNode, Map<Integer, Integer>> localRemappingsByLabel = new HashMap<>();
+
+			class Remapping {
+				final int slot;
+				final Type type;
+
+				Remapping(int slot, Type type) {
+					this.slot = slot;
+					this.type = type;
+				}
+			}
+			List<Remapping> remappings = new ArrayList<>();
+
 			AbstractInsnNode insn;
 			for (int i = 0; i < methodNode.instructions.size(); i++, insn.accept(analyzerAdapter)) {
 				insn = methodNode.instructions.get(i);
+
 				int opcode = insn.getOpcode();
 
-				if (insn instanceof JumpInsnNode insnJump) {
-					localRemappingsByLabel.put(insnJump.label, new HashMap<>(localsRemapping));
-				}
-
-				if (insn instanceof LabelNode insnLabel) {
-					methodNode.tryCatchBlocks.stream()
-							.filter(block -> block.end == insnLabel)
-							.findFirst()
-							.ifPresent(block ->
-									localRemappingsByLabel.put(block.handler, new HashMap<>(localsRemapping)));
-				}
-
-				if (insn instanceof LabelNode insnLabel) {
-					if (localRemappingsByLabel.containsKey(insnLabel)) {
-						localsRemapping.clear();
-						localsRemapping.putAll(localRemappingsByLabel.get(insnLabel));
-					}
-					g.visitLabel(insnLabel.getLabel());
+				if (insn instanceof LabelNode labelNode) {
+					g.visitLabel(labelNode.getLabel());
 					continue;
 				}
 
-				if (insn instanceof FrameNode insnFrame) {
-					for (Integer k : new ArrayList<>(localsRemapping.keySet())) {
-						if (k >= insnFrame.local.size()) {
-							localsRemapping.remove(k);
-						}
-					}
+				if (insn instanceof FrameNode) {
+					continue;
+				}
+
+				if (insn instanceof LineNumberNode) {
 					continue;
 				}
 
 				switch (opcode) {
-					case ACONST_NULL, ICONST_M1, ICONST_0, ICONST_1, ICONST_2, ICONST_3, ICONST_4, ICONST_5, LCONST_0, LCONST_1, FCONST_0, FCONST_1, FCONST_2, DCONST_0, DCONST_1 -> g.visitInsn(opcode);
+					case ACONST_NULL, ICONST_M1, ICONST_0, ICONST_1, ICONST_2, ICONST_3, ICONST_4, ICONST_5, LCONST_0,
+							LCONST_1, FCONST_0, FCONST_1, FCONST_2, DCONST_0, DCONST_1 -> g.visitInsn(opcode);
 					case BIPUSH, SIPUSH -> g.visitIntInsn(opcode, ((IntInsnNode) insn).operand);
 					case LDC -> g.visitLdcInsn(((LdcInsnNode) insn).cst);
 					case ILOAD, LLOAD, FLOAD, DLOAD, ALOAD -> {
@@ -361,7 +356,7 @@ public final class Specializer {
 							g.loadArg(insnVar.var - 1);
 							break;
 						}
-						g.loadLocal(localsRemapping.get(insnVar.var));
+						g.loadLocal(remappings.get(insnVar.var).slot);
 					}
 					case IALOAD, LALOAD, FALOAD, DALOAD, AALOAD, BALOAD, CALOAD, SALOAD -> g.visitInsn(opcode);
 					case ISTORE, LSTORE, FSTORE, DSTORE, ASTORE -> {
@@ -373,25 +368,34 @@ public final class Specializer {
 							break;
 						}
 
-						if (localsRemapping.containsKey(var)) {
-							g.storeLocal(localsRemapping.get(var));
+						Object top = analyzerAdapter.stack.get(analyzerAdapter.stack.size() - 1);
+						if (top == Opcodes.TOP) top = analyzerAdapter.stack.get(analyzerAdapter.stack.size() - 2);
+						Type topType;
+						if (top == Opcodes.INTEGER) topType = Type.INT_TYPE;
+						else if (top == Opcodes.FLOAT) topType = Type.FLOAT_TYPE;
+						else if (top == Opcodes.DOUBLE) topType = Type.DOUBLE_TYPE;
+						else if (top == Opcodes.LONG) topType = Type.LONG_TYPE;
+						else if (top == Opcodes.NULL) topType = getType(Object.class);
+						else if (top instanceof String) topType = Type.getType(internalizeClassName((String) top));
+						else throw new UnsupportedOperationException("" + top + " " + insn);
+
+						@Nullable Remapping remapping = var < remappings.size() ? remappings.get(var) : null;
+						if (remapping != null && topType.getSort() == remapping.type.getSort()) {
+							g.storeLocal(remapping.slot);
 						} else {
-							Object top = analyzerAdapter.stack.get(analyzerAdapter.stack.size() - 1);
-							Type type = null;
-							if (top == Opcodes.INTEGER) type = Type.INT_TYPE;
-							if (top == Opcodes.FLOAT) type = Type.FLOAT_TYPE;
-							if (top == Opcodes.DOUBLE) type = Type.DOUBLE_TYPE;
-							if (top == Opcodes.LONG) type = Type.LONG_TYPE;
-							if (top == Opcodes.NULL) type = getType(Object.class);
-							if (top instanceof String) type = Type.getType(internalizeClassName((String) top));
-							int newLocal = g.newLocal(type);
-							localsRemapping.put(var, newLocal);
+							int newLocal = g.newLocal(topType);
+							while (var >= remappings.size()) {
+								remappings.add(null);
+							}
+							remappings.set(var, new Remapping(newLocal, topType));
 							g.storeLocal(newLocal);
 						}
 					}
 					case IASTORE, LASTORE, FASTORE, DASTORE, AASTORE, BASTORE, CASTORE, SASTORE -> g.visitInsn(opcode);
 					case POP, POP2, DUP, DUP_X1, DUP_X2, DUP2, DUP2_X1, DUP2_X2 -> g.visitInsn(opcode);
-					case IADD, LADD, FADD, DADD, ISUB, LSUB, FSUB, DSUB, IMUL, LMUL, FMUL, DMUL, IDIV, LDIV, FDIV, DDIV, IREM, LREM, FREM, DREM, INEG, LNEG, FNEG, DNEG, ISHL, LSHL, ISHR, LSHR, IUSHR, LUSHR, IAND, LAND, IOR, LOR, IXOR, LXOR -> g.visitInsn(opcode);
+					case IADD, LADD, FADD, DADD, ISUB, LSUB, FSUB, DSUB, IMUL, LMUL, FMUL, DMUL, IDIV, LDIV, FDIV, DDIV,
+							IREM, LREM, FREM, DREM, INEG, LNEG, FNEG, DNEG, ISHL, LSHL, ISHR, LSHR, IUSHR, LUSHR, IAND,
+							LAND, IOR, LOR, IXOR, LXOR -> g.visitInsn(opcode);
 					case IINC -> {
 						IincInsnNode insnInc = (IincInsnNode) insn;
 						int var = insnInc.var;
@@ -399,13 +403,34 @@ public final class Specializer {
 							g.visitIincInsn(var, insnInc.incr);
 							break;
 						}
-						g.iinc(localsRemapping.get(insnInc.var), insnInc.incr);
+						g.iinc(remappings.get(insnInc.var).slot, insnInc.incr);
 					}
-					case I2L, I2F, I2D, L2I, L2F, L2D, F2I, F2L, F2D, D2I, D2L, D2F, I2B, I2C, I2S -> g.visitInsn(opcode);
-					case IFEQ, IFNE, IFLT, IFGE, IFGT, IFLE, IF_ICMPEQ, IF_ICMPNE, IF_ICMPLT, IF_ICMPGE, IF_ICMPGT, IF_ICMPLE, IF_ACMPEQ, IF_ACMPNE, GOTO, IFNULL, IFNONNULL -> g.visitJumpInsn(opcode, ((JumpInsnNode) insn).label.getLabel());
-					case GETSTATIC, PUTSTATIC -> {
+
+					case I2L, I2F, I2D, L2I, L2F, L2D, F2I, F2L, F2D, D2I, D2L, D2F, I2B, I2C, I2S ->
+							g.visitInsn(opcode);
+
+					case IFEQ, IFNE, IFLT, IFGE, IFGT, IFLE, IF_ICMPEQ, IF_ICMPNE, IF_ICMPLT, IF_ICMPGE, IF_ICMPGT,
+							IF_ICMPLE, IF_ACMPEQ, IF_ACMPNE, GOTO, IFNULL, IFNONNULL ->
+							g.visitJumpInsn(opcode, ((JumpInsnNode) insn).label.getLabel());
+
+					case GETSTATIC -> {
 						FieldInsnNode insnField = (FieldInsnNode) insn;
-						g.visitFieldInsn(opcode, insnField.owner, insnField.name, insnField.desc);
+						Type ownerType = getType(internalizeClassName(insnField.owner));
+						doCallStatic(ownerType,
+								s -> Optional.ofNullable(s.lookupField(s.instance.getClass(), insnField.name))
+										.map(lookupField ->
+												() -> g.getStatic(s.specializedType, lookupField, getType(insnField.desc))),
+								() -> g.visitFieldInsn(GETSTATIC, insnField.owner, insnField.name, insnField.desc));
+						break;
+					}
+					case PUTSTATIC -> {
+						FieldInsnNode insnField = (FieldInsnNode) insn;
+						Type ownerType = getType(internalizeClassName(insnField.owner));
+						doCallStatic(ownerType,
+								s -> Optional.ofNullable(s.lookupField(s.instance.getClass(), insnField.name))
+										.map(lookupField ->
+												() -> g.putStatic(s.specializedType, lookupField, getType(insnField.desc))),
+								() -> g.visitFieldInsn(PUTSTATIC, insnField.owner, insnField.name, insnField.desc));
 					}
 					case GETFIELD -> {
 						FieldInsnNode insnField = (FieldInsnNode) insn;
@@ -544,6 +569,24 @@ public final class Specializer {
 			defaultCall.run();
 
 			g.mark(labelExit);
+		}
+
+		private void doCallStatic(Type ownerType,
+				Function<Specialization, Optional<Runnable>> staticCallSupplier,
+				Runnable defaultCall) {
+
+			Class<?> ownerClazz = loadClass(classLoader, ownerType);
+
+			for (Specialization s : relatedSpecializations) {
+				if (!ownerClazz.isAssignableFrom(s.instance.getClass())) continue;
+				Optional<Runnable> staticCall = staticCallSupplier.apply(s);
+				if (staticCall.isEmpty()) continue;
+
+				staticCall.get().run();
+				return;
+			}
+
+			defaultCall.run();
 		}
 
 		@Nullable String lookupField(Class<?> owner, String field) {

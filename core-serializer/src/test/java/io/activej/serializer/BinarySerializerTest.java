@@ -13,8 +13,6 @@ import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static io.activej.codegen.expression.Expressions.*;
-import static io.activej.common.Utils.*;
 import static io.activej.serializer.BinarySerializerTest.TestEnum.*;
 import static io.activej.serializer.StringFormat.*;
 import static io.activej.serializer.Utils.DEFINING_CLASS_LOADER;
@@ -2827,7 +2825,7 @@ public class BinarySerializerTest {
 	public static final class StringHolderSerializerDef extends SimpleSerializerDef<StringHolder> {
 		@Override
 		protected BinarySerializer<StringHolder> createSerializer(int version, CompatibilityLevel compatibilityLevel) {
-			return new BinarySerializer<StringHolder>() {
+			return new BinarySerializer<>() {
 				@Override
 				public void encode(BinaryOutput out, StringHolder item) {
 					String string = item.getString();

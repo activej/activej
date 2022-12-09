@@ -183,14 +183,14 @@ public abstract class Binding<T> {
 			public CompiledBinding<R> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 				CompiledBinding<T> originalBinding = Binding.this.compile(compiledBindings, threadsafe, scope, null);
 				return slot != null ?
-						new AbstractCompiledBinding<R>(scope, slot) {
+						new AbstractCompiledBinding<>(scope, slot) {
 							@Override
 							protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								T instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
 								return fn.apply(instance);
 							}
 						} :
-						new CompiledBinding<R>() {
+						new CompiledBinding<>() {
 							@Override
 							public @NotNull R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								T instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
@@ -220,7 +220,7 @@ public abstract class Binding<T> {
 						dependencies.stream().map(compiledBindings::get).toArray(CompiledBinding[]::new);
 
 				return slot != null ?
-						new AbstractCompiledBinding<R>(scope, slot) {
+						new AbstractCompiledBinding<>(scope, slot) {
 							@Override
 							protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								Object[] args = new Object[bindings.length];
@@ -231,7 +231,7 @@ public abstract class Binding<T> {
 								return fn.apply(args, instance);
 							}
 						} :
-						new CompiledBinding<R>() {
+						new CompiledBinding<>() {
 							@Override
 							public @NotNull R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								Object[] args = new Object[bindings.length];
@@ -324,7 +324,7 @@ public abstract class Binding<T> {
 						final CompiledBindingInitializer<T> consumer = bindingInitializer.compile(compiledBindings);
 
 						return slot != null ?
-								new AbstractCompiledBinding<T>(scope, slot) {
+								new AbstractCompiledBinding<>(scope, slot) {
 									@Override
 									protected @NotNull T doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 										T instance = compiledBinding.getInstance(scopedInstances, synchronizedScope);
@@ -332,7 +332,7 @@ public abstract class Binding<T> {
 										return instance;
 									}
 								} :
-								new CompiledBinding<T>() {
+								new CompiledBinding<>() {
 									@Override
 									public @NotNull T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 										T instance = compiledBinding.getInstance(scopedInstances, synchronizedScope);

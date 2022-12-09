@@ -15,7 +15,7 @@ public class SimpleSerializerDefTest {
 				.with(ExternalComponent.class, ctx -> new SimpleSerializerDef<ExternalComponent>() {
 					@Override
 					protected BinarySerializer<ExternalComponent> createSerializer(int version, CompatibilityLevel compatibilityLevel) {
-						return new BinarySerializer<ExternalComponent>() {
+						return new BinarySerializer<>() {
 							@Override
 							public void encode(BinaryOutput out, ExternalComponent item) {
 								out.writeVarInt(item.getX());

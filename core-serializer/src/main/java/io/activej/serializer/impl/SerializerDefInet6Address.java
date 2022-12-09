@@ -24,7 +24,7 @@ import java.net.UnknownHostException;
 public final class SerializerDefInet6Address extends SimpleSerializerDef<Inet6Address> {
 	@Override
 	protected BinarySerializer<Inet6Address> createSerializer(int version, CompatibilityLevel compatibilityLevel) {
-		return new BinarySerializer<Inet6Address>() {
+		return new BinarySerializer<>() {
 			@Override
 			public void encode(BinaryOutput out, Inet6Address address) {
 				out.write(address.getAddress());

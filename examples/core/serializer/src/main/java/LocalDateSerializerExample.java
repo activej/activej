@@ -61,7 +61,7 @@ public final class LocalDateSerializerExample {
 	public static class SerializerDefLocalDate extends SimpleSerializerDef<LocalDate> {
 		@Override
 		protected BinarySerializer<LocalDate> createSerializer(int version, CompatibilityLevel compatibilityLevel) {
-			return new BinarySerializer<LocalDate>() {
+			return new BinarySerializer<>() {
 				@Override
 				public void encode(BinaryOutput out, LocalDate localDate) {
 					out.writeVarInt(localDate.getYear());
