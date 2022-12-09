@@ -49,4 +49,11 @@ public final class RecordStreamSchema implements StreamSchema<Record> {
 	public RecordScheme getRecordScheme() {
 		return recordScheme;
 	}
+
+	@Override
+	public String toString() {
+		return "RecordStreamSchema{" +
+				"recordScheme=" + recordScheme +
+				'}';
+	}
 }

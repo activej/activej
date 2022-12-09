@@ -28,5 +28,12 @@ public final class StreamSchemas {
 		public Class<?> getCls() {
 			return cls;
 		}
+
+		@Override
+		public String toString() {
+			return "Simple{" +
+					"cls=" + cls +
+					'}';
+		}
 	}
 }
