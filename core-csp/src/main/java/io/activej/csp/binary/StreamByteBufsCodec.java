@@ -1,11 +1,10 @@
-package io.activej.csp.net;
+package io.activej.csp.binary;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.serializer.stream.EOSException;
-import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamDecoder;
 import io.activej.serializer.stream.StreamEncoder;
 import io.activej.serializer.stream.StreamInput;
 import org.jetbrains.annotations.Nullable;
@@ -13,26 +12,18 @@ import org.jetbrains.annotations.Nullable;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-public final class MessagingCodec<I, O> implements ByteBufsCodec<I, O> {
-	private final StreamCodec<I> inputCodec;
-	private final StreamEncoder<O> outputCodec;
+final class StreamByteBufsCodec<I, O> implements ByteBufsCodec<I, O> {
+	private final StreamDecoder<I> input;
+	private final StreamEncoder<O> output;
 
-	private MessagingCodec(StreamCodec<I> inputCodec, StreamEncoder<O> outputCodec) {
-		this.inputCodec = inputCodec;
-		this.outputCodec = outputCodec;
-	}
-
-	public static <I, O> MessagingCodec<I, O> create(StreamCodec<I> inputCodec, StreamEncoder<O> outputCodec) {
-		return new MessagingCodec<>(inputCodec, outputCodec);
-	}
-
-	public static <T> MessagingCodec<T, T> create(StreamCodec<T> codec) {
-		return new MessagingCodec<>(codec, codec);
+	StreamByteBufsCodec(StreamDecoder<I> input, StreamEncoder<O> output) {
+		this.input = input;
+		this.output = output;
 	}
 
 	@Override
 	public ByteBuf encode(O item) {
-		byte[] bytes = outputCodec.toByteArray(item);
+		byte[] bytes = output.toByteArray(item);
 		return ByteBuf.wrapForReading(bytes);
 	}
 
@@ -43,7 +34,7 @@ public final class MessagingCodec<I, O> implements ByteBufsCodec<I, O> {
 			try (StreamInput streamInput = StreamInput.create(bais)) {
 				I decode;
 				try {
-					decode = inputCodec.decode(streamInput);
+					decode = input.decode(streamInput);
 				} catch (EOSException e) {
 					bufs.add(buf);
 					return null;

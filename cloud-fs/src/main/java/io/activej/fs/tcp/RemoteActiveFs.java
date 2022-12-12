@@ -29,7 +29,6 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.Messaging;
-import io.activej.csp.net.MessagingCodec;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
@@ -74,7 +73,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 
 	public static final Duration DEFAULT_CONNECTION_TIMEOUT = ApplicationSettings.getDuration(RemoteActiveFs.class, "connectTimeout", Duration.ZERO);
 
-	private static final ByteBufsCodec<FsResponse, FsRequest> SERIALIZER = MessagingCodec.create(
+	private static final ByteBufsCodec<FsResponse, FsRequest> SERIALIZER = ByteBufsCodec.ofStreamCodecs(
 			RemoteFsUtils.FS_RESPONSE_CODEC,
 			RemoteFsUtils.FS_REQUEST_CODEC
 	);

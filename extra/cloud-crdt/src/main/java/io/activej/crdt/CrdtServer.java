@@ -23,7 +23,6 @@ import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.Messaging;
-import io.activej.csp.net.MessagingCodec;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.csp.ChannelDeserializer;
@@ -53,7 +52,7 @@ import static io.activej.crdt.util.Utils.*;
 public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer<CrdtServer<K, S>> {
 	public static final Version VERSION = new Version(1, 0);
 
-	private static final ByteBufsCodec<CrdtRequest, CrdtResponse> SERIALIZER = MessagingCodec.create(
+	private static final ByteBufsCodec<CrdtRequest, CrdtResponse> SERIALIZER = ByteBufsCodec.ofStreamCodecs(
 			CRDT_REQUEST_CODEC,
 			CRDT_RESPONSE_CODEC
 	);

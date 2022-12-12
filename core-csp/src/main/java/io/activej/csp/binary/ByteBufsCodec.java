@@ -19,6 +19,9 @@ package io.activej.csp.binary;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.MalformedDataException;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamDecoder;
+import io.activej.serializer.stream.StreamEncoder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,7 +33,7 @@ public interface ByteBufsCodec<I, O> {
 
 	@Nullable I tryDecode(ByteBufs bufs) throws MalformedDataException;
 
-	default <I1, O1> @NotNull ByteBufsCodec<I1, O1> andThen(DecoderFunction<? super I, ? extends I1> decoder, Function<? super O1, ? extends O> encoder) {
+	default <I1, O1> @NotNull ByteBufsCodec<I1, O1> transform(DecoderFunction<? super I, ? extends I1> decoder, Function<? super O1, ? extends O> encoder) {
 		return new ByteBufsCodec<>() {
 			@Override
 			public ByteBuf encode(O1 item) {
@@ -58,6 +61,14 @@ public interface ByteBufsCodec<I, O> {
 				return delimiterIn.tryDecode(bufs);
 			}
 		};
+	}
+
+	static @NotNull <I, O> ByteBufsCodec<I, O> ofStreamCodecs(StreamDecoder<I> decoder, StreamEncoder<O> encoder) {
+		return new StreamByteBufsCodec<>(decoder, encoder);
+	}
+
+	static @NotNull <T> ByteBufsCodec<T, T> ofStreamCodecs(StreamCodec<T> codec) {
+		return ofStreamCodecs(codec, codec);
 	}
 
 }

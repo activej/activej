@@ -1,9 +1,8 @@
-package io.activej.csp.net;
+package io.activej.csp.binary;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.serializer.stream.StreamCodecs;
 import io.activej.test.rules.ByteBufRule;
 import org.junit.ClassRule;
@@ -12,14 +11,14 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-public class MessagingCodecTest {
+public class StreamByteBufsCodecTest {
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	@Test
 	public void testCodec() throws MalformedDataException {
-		ByteBufsCodec<String, String> codec = MessagingCodec.create(
+		ByteBufsCodec<String, String> codec = new StreamByteBufsCodec<>(
 				StreamCodecs.ofString(),
 				StreamCodecs.ofString()
 		);
