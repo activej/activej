@@ -4,13 +4,13 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.binary.ByteBufsCodec;
+import io.activej.serializer.stream.EOSException;
 import io.activej.serializer.stream.StreamCodec;
 import io.activej.serializer.stream.StreamEncoder;
 import io.activej.serializer.stream.StreamInput;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.ByteArrayInputStream;
-import java.io.EOFException;
 import java.io.IOException;
 
 public final class MessagingCodec<I, O> implements ByteBufsCodec<I, O> {
@@ -44,7 +44,7 @@ public final class MessagingCodec<I, O> implements ByteBufsCodec<I, O> {
 				I decode;
 				try {
 					decode = inputCodec.decode(streamInput);
-				} catch (EOFException e) {
+				} catch (EOSException e) {
 					bufs.add(buf);
 					return null;
 				}
