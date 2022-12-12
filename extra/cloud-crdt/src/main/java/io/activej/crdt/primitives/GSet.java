@@ -78,7 +78,6 @@ public final class GSet<E> implements Set<E>, CrdtMergable<GSet<E>> {
 	}
 
 	@Override
-	@SuppressWarnings("SuspiciousToArrayCall")
 	public <T> T @NotNull [] toArray(T @NotNull [] a) {
 		return set.toArray(a);
 	}

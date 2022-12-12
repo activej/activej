@@ -81,7 +81,6 @@ public abstract class Binding<T> {
 		return Binding.to(constructor, Stream.of(types).map(Key::of).toArray(Key<?>[]::new));
 	}
 
-	@SuppressWarnings("Duplicates")
 	public static <R> Binding<R> to(@NotNull TupleConstructorN<R> constructor, Key<?>[] dependencies) {
 		if (dependencies.length == 0) {
 			return to(constructor::create);
@@ -128,36 +127,30 @@ public abstract class Binding<T> {
 		return new BindingToConstructor1<>(constructor, dependency1);
 	}
 
-	@SuppressWarnings("Duplicates")
 	public static <T1, T2, R> Binding<R> to(@NotNull TupleConstructor2<T1, T2, R> constructor,
 			@NotNull Key<T1> dependency1, @NotNull Key<T2> dependency2) {
 		return new BindingToConstructor2<>(dependency1, dependency2, constructor);
 	}
 
-	@SuppressWarnings("Duplicates")
 	public static <T1, T2, T3, R> Binding<R> to(@NotNull TupleConstructor3<T1, T2, T3, R> constructor,
 			@NotNull Key<T1> dependency1, @NotNull Key<T2> dependency2, @NotNull Key<T3> dependency3) {
 		return new BindingToConstructor3<>(constructor, dependency1, dependency2, dependency3);
 	}
 
-	@SuppressWarnings("Duplicates")
 	public static <T1, T2, T3, T4, R> Binding<R> to(@NotNull TupleConstructor4<T1, T2, T3, T4, R> constructor,
 			@NotNull Key<T1> dependency1, @NotNull Key<T2> dependency2, @NotNull Key<T3> dependency3, @NotNull Key<T4> dependency4) {
 		return new BindingToConstructor4<>(constructor, dependency1, dependency2, dependency3, dependency4);
 	}
 
-	@SuppressWarnings("Duplicates")
 	public static <T1, T2, T3, T4, T5, R> Binding<R> to(@NotNull TupleConstructor5<T1, T2, T3, T4, T5, R> constructor,
 			@NotNull Key<T1> dependency1, @NotNull Key<T2> dependency2, @NotNull Key<T3> dependency3, @NotNull Key<T4> dependency4, @NotNull Key<T5> dependency5) {
 		return new BindingToConstructor5<>(constructor, dependency1, dependency2, dependency3, dependency4, dependency5);
 	}
 
-	@SuppressWarnings("Duplicates")
 	public static <T1, T2, T3, T4, T5, T6, R> Binding<R> to(@NotNull TupleConstructor6<T1, T2, T3, T4, T5, T6, R> constructor,
 			@NotNull Key<T1> dependency1, @NotNull Key<T2> dependency2, @NotNull Key<T3> dependency3, @NotNull Key<T4> dependency4, @NotNull Key<T5> dependency5, @NotNull Key<T6> dependency6) {
 		return new BindingToConstructor6<>(constructor, dependency1, dependency2, dependency3, dependency4, dependency5, dependency6);
 	}
-
 	// endregion
 
 	public Binding<T> at(@Nullable LocationInfo location) {
