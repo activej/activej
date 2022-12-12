@@ -100,7 +100,6 @@ public final class DoubleServersTwoPools extends Launcher {
 					.withPlainText("Hello from the first server, worker #" + workerId));
 		}
 
-
 		@Provides
 		@Named("First")
 		WorkerPool workerPool(WorkerPools workerPools) {
@@ -142,7 +141,6 @@ public final class DoubleServersTwoPools extends Launcher {
 			return AsyncHttpServer.create(eventloop, request -> HttpResponse.ok200()
 					.withPlainText("Hello from the second server, worker #" + workerId));
 		}
-
 
 		@Provides
 		@Named("Second")

@@ -22,7 +22,7 @@ import io.activej.crdt.util.CrdtDataSerializer;
 import java.lang.reflect.Type;
 
 public record CrdtDescriptor<K extends Comparable<K>, S>(CrdtFunction<S> crdtFunction,
-                                                         CrdtDataSerializer<K, S> serializer,
-                                                         Type keyManifest,
-                                                         Type stateManifest) {
+														 CrdtDataSerializer<K, S> serializer,
+														 Type keyManifest,
+														 Type stateManifest) {
 }

@@ -102,11 +102,11 @@ final class MountingActiveFs implements ActiveFs {
 	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
 		Map<String, @NotNull FileMetadata> result = new HashMap<>();
 		return Promises.all(names.stream()
-				.collect(groupingBy(this::findMount, toSet()))
-				.entrySet().stream()
-				.map(entry -> entry.getKey()
-						.infoAll(entry.getValue())
-						.whenResult(result::putAll)))
+						.collect(groupingBy(this::findMount, toSet()))
+						.entrySet().stream()
+						.map(entry -> entry.getKey()
+								.infoAll(entry.getValue())
+								.whenResult(result::putAll)))
 				.map($ -> result);
 	}
 

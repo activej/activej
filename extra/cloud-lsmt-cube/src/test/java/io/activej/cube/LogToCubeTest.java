@@ -53,7 +53,7 @@ public final class LogToCubeTest extends CubeTestBase {
 				.withMeasure("advRequests", sum(ofLong()))
 				.withAggregation(id("pub").withDimensions("pub", "testEnum").withMeasures("pubRequests")
 //						.withPredicate(AggregationPredicates.notEq("testEnum", null)) // ok
-						.withPredicate(AggregationPredicates.has("testEnum")) // fail
+								.withPredicate(AggregationPredicates.has("testEnum")) // fail
 				)
 				.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests"));
 

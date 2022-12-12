@@ -59,7 +59,7 @@ public class DiDependencyGraphExplore {
 		private String name;
 
 		@Inject
-		public Flour() { }
+		public Flour() {}
 
 		public Flour(String name, float weight) {
 			this.weight = weight;
@@ -127,15 +127,15 @@ public class DiDependencyGraphExplore {
 
 			@Provides
 			@OrderScope
-			Sugar sugar() { return new Sugar("WhiteSugar", 10.f); }
+			Sugar sugar() {return new Sugar("WhiteSugar", 10.f);}
 
 			@Provides
 			@OrderScope
-			Butter butter() { return new Butter("PerfectButter", 20.0f); }
+			Butter butter() {return new Butter("PerfectButter", 20.0f);}
 
 			@Provides
 			@OrderScope
-			Flour flour() { return new Flour("GoodFlour", 100.0f); }
+			Flour flour() {return new Flour("GoodFlour", 100.0f);}
 
 			@Provides
 			@OrderScope

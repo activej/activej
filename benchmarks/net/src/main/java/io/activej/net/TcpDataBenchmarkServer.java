@@ -26,11 +26,11 @@ public class TcpDataBenchmarkServer extends Launcher {
 	@Eager
 	SimpleServer server(Eventloop eventloop) {
 		return SimpleServer.create(eventloop,
-				socket -> ChannelSupplier.ofSocket(socket)
-						.transformWith(ChannelDeserializer.create(INT_SERIALIZER))
-						.transformWith(StreamFilter.mapper(Function.identity()))
-						.transformWith(ChannelSerializer.create(INT_SERIALIZER))
-						.streamTo(ChannelConsumer.ofSocket(socket)))
+						socket -> ChannelSupplier.ofSocket(socket)
+								.transformWith(ChannelDeserializer.create(INT_SERIALIZER))
+								.transformWith(StreamFilter.mapper(Function.identity()))
+								.transformWith(ChannelSerializer.create(INT_SERIALIZER))
+								.streamTo(ChannelConsumer.ofSocket(socket)))
 				.withListenPort(9001);
 	}
 

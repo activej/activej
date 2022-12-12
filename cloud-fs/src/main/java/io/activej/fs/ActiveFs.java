@@ -203,7 +203,7 @@ public interface ActiveFs {
 
 		Set<Entry<String, String>> entrySet = sourceToTarget.entrySet();
 		return Promises.toList(entrySet.stream()
-				.map(entry -> copy(entry.getKey(), entry.getValue()).toTry()))
+						.map(entry -> copy(entry.getKey(), entry.getValue()).toTry()))
 				.whenResult(tries -> reduceErrors(tries, transformIterator(entrySet.iterator(), Entry::getKey)))
 				.toVoid();
 	}
@@ -280,8 +280,8 @@ public interface ActiveFs {
 
 		Map<String, FileMetadata> result = new HashMap<>();
 		return Promises.all(names.stream()
-				.map(name -> info(name)
-						.whenResult(Objects::nonNull, metadata -> result.put(name, metadata))))
+						.map(name -> info(name)
+								.whenResult(Objects::nonNull, metadata -> result.put(name, metadata))))
 				.map($ -> result);
 	}
 

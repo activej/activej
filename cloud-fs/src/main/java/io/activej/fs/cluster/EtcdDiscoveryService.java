@@ -53,7 +53,7 @@ public final class EtcdDiscoveryService implements DiscoveryService {
 					Set<String> partitionIds;
 					try {
 						partitionIds = fromJson(PARTITION_IDS_TYPE_T, bytes);
-					} catch (MalformedDataException e){
+					} catch (MalformedDataException e) {
 						throw new FsException("Could not parse partition ids: " + e.getMessage());
 					}
 					Map<Object, ActiveFs> result = new HashMap<>();

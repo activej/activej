@@ -86,7 +86,7 @@ public class GuiceDiScopesBenchmark {
 		private String name;
 
 		@Inject
-		public Flour() { }
+		public Flour() {}
 
 		public Flour(String name, float weight) {
 			this.weight = weight;
@@ -245,19 +245,19 @@ public class GuiceDiScopesBenchmark {
 
 			@Provides
 			@Singleton
-			Kitchen kitchen() { return new Kitchen(); }
+			Kitchen kitchen() {return new Kitchen();}
 
 			@Provides
 			@GuiceOrder
-			Sugar sugar() { return new Sugar("WhiteSugar", 10.f); }
+			Sugar sugar() {return new Sugar("WhiteSugar", 10.f);}
 
 			@Provides
 			@GuiceOrder
-			Butter butter() { return new Butter("PerfectButter", 20.0f); }
+			Butter butter() {return new Butter("PerfectButter", 20.0f);}
 
 			@Provides
 			@GuiceOrder
-			Flour flour() { return new Flour("GoodFlour", 100.0f); }
+			Flour flour() {return new Flour("GoodFlour", 100.0f);}
 
 			@Provides
 			@GuiceOrder

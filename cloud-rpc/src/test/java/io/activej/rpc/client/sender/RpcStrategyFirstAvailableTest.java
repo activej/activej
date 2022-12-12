@@ -34,7 +34,7 @@ public class RpcStrategyFirstAvailableTest {
 		RpcSenderStub connection1 = new RpcSenderStub();
 		RpcSenderStub connection2 = new RpcSenderStub();
 		RpcSenderStub connection3 = new RpcSenderStub();
-        RpcStrategy firstAvailableStrategy = RpcStrategyFirstAvailable.create(servers(address1, address2, address3));
+		RpcStrategy firstAvailableStrategy = RpcStrategyFirstAvailable.create(servers(address1, address2, address3));
 		RpcSender sender;
 		int callsToSender1 = 10;
 		int callsToSender2 = 25;
@@ -71,8 +71,8 @@ public class RpcStrategyFirstAvailableTest {
 		RpcSenderStub connection = new RpcSenderStub();
 		// one connection is added
 		pool.put(address2, connection);
-        RpcStrategy firstAvailableStrategy =
-                RpcStrategyFirstAvailable.create(servers(address1, address2));
+		RpcStrategy firstAvailableStrategy =
+				RpcStrategyFirstAvailable.create(servers(address1, address2));
 
 		assertNotNull(firstAvailableStrategy.createSender(pool));
 	}
@@ -81,7 +81,7 @@ public class RpcStrategyFirstAvailableTest {
 	public void itShouldNotBeCreatedWhenThereAreNoActiveSubSenders() {
 		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
 		// no connections were added to pool
-        RpcStrategy firstAvailableStrategy = RpcStrategyFirstAvailable.create(servers(address1, address2, address3));
+		RpcStrategy firstAvailableStrategy = RpcStrategyFirstAvailable.create(servers(address1, address2, address3));
 
 		assertNull(firstAvailableStrategy.createSender(pool));
 	}

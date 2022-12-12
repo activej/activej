@@ -109,10 +109,10 @@ public abstract class WebSocketServlet implements AsyncServlet {
 				.whenResult(rawStream::closeEx)
 				.whenException(rawStream::closeEx);
 
-        decoder.getProcessCompletion()
-                .whenResult(() -> encoder.sendCloseFrame(REGULAR_CLOSE))
-                .whenException(encoder::closeEx);
-    }
+		decoder.getProcessCompletion()
+				.whenResult(() -> encoder.sendCloseFrame(REGULAR_CLOSE))
+				.whenException(encoder::closeEx);
+	}
 
 	private static boolean isUpgradeHeaderMissing(HttpMessage message) {
 		String headerValue = message.getHeader(HttpHeaders.CONNECTION);

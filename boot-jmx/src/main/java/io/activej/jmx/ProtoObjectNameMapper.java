@@ -27,7 +27,7 @@ public interface ProtoObjectNameMapper {
 
 	ProtoObjectName apply(ProtoObjectName protoObjectName);
 
-	static ProtoObjectNameMapper identity(){
+	static ProtoObjectNameMapper identity() {
 		return protoObjectName -> protoObjectName;
 	}
 

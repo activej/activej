@@ -21,6 +21,6 @@ public class ChannelBufferTest {
 		ChannelSupplier.of(1, 2, 3, 4, 5).streamTo(buffer.getConsumer());
 		List<Integer> list = await(buffer.getSupplier().toList());
 
-		assertEquals(List.of(1,2,3,4,5), list);
+		assertEquals(List.of(1, 2, 3, 4, 5), list);
 	}
 }

@@ -47,16 +47,16 @@ class StaticLoaderFileReader implements StaticLoader {
 		}
 
 		return Promise.ofBlocking(executor,
-				() -> {
-					if (Files.isRegularFile(file)) {
-						return;
-					}
-					if (Files.isDirectory(file)) {
-						throw new ResourceIsADirectoryException("Resource '" + path + "' is a directory");
-					} else {
-						throw new ResourceNotFoundException("Could not find '" + path + '\'');
-					}
-				})
+						() -> {
+							if (Files.isRegularFile(file)) {
+								return;
+							}
+							if (Files.isDirectory(file)) {
+								throw new ResourceIsADirectoryException("Resource '" + path + "' is a directory");
+							} else {
+								throw new ResourceNotFoundException("Could not find '" + path + '\'');
+							}
+						})
 				.then(() -> ChannelFileReader.open(executor, file))
 				.then(cfr -> cfr.toCollector(ByteBufs.collector()));
 	}

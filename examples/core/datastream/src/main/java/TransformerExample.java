@@ -45,7 +45,6 @@ public final class TransformerExample implements StreamTransformer<String, Integ
 				.whenException(input::closeEx);
 	}
 
-
 	@Override
 	public StreamConsumer<String> getInput() {
 		return input;

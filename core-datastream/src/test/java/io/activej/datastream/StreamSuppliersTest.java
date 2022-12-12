@@ -23,12 +23,12 @@ public class StreamSuppliersTest {
 		List<Integer> actual = new ArrayList<>();
 		RefInt count = new RefInt(-1);
 		await(StreamSupplier.ofSupplier(
-				() -> {
-					if (count.get() == 10) {
-						return null;
-					}
-					return count.inc();
-				})
+						() -> {
+							if (count.get() == 10) {
+								return null;
+							}
+							return count.inc();
+						})
 				.streamTo(StreamConsumerToList.create(actual)));
 
 		assertEquals(List.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10), actual);

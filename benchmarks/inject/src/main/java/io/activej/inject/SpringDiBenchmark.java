@@ -224,19 +224,19 @@ public class SpringDiBenchmark {
 	}
 
 	@Bean
-	Kitchen kitchen() { return new Kitchen(); }
+	Kitchen kitchen() {return new Kitchen();}
 
 	@Bean
 	@org.springframework.context.annotation.Scope("prototype")
-	Sugar sugar() { return new Sugar(); }
+	Sugar sugar() {return new Sugar();}
 
 	@Bean
 	@org.springframework.context.annotation.Scope("prototype")
-	Butter butter() { return new Butter(); }
+	Butter butter() {return new Butter();}
 
 	@Bean
 	@org.springframework.context.annotation.Scope("prototype")
-	Flour flour() { return new Flour(); }
+	Flour flour() {return new Flour();}
 
 	@Bean
 	@org.springframework.context.annotation.Scope("prototype")

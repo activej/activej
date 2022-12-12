@@ -31,11 +31,11 @@ public final class TestClientMultilineHeaders {
 	@Test
 	public void testMultilineHeaders() throws IOException {
 		AsyncHttpServer.create(Eventloop.getCurrentEventloop(),
-				request -> {
-					HttpResponse response = HttpResponse.ok200();
-					response.addHeader(ALLOW, "GET,\r\n HEAD");
-					return response;
-				})
+						request -> {
+							HttpResponse response = HttpResponse.ok200();
+							response.addHeader(ALLOW, "GET,\r\n HEAD");
+							return response;
+						})
 				.withListenPort(port)
 				.withAcceptOnce()
 				.listen();

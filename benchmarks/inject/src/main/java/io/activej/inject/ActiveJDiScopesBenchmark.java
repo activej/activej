@@ -89,7 +89,7 @@ public class ActiveJDiScopesBenchmark {
 		private String name;
 
 		@Inject
-		public Flour() { }
+		public Flour() {}
 
 		public Flour(String name, float weight) {
 			this.weight = weight;
@@ -260,16 +260,16 @@ public class ActiveJDiScopesBenchmark {
 			}
 
 			@Provides
-			Kitchen kitchen() { return new Kitchen(); }
+			Kitchen kitchen() {return new Kitchen();}
 
 			@OrderScope
-			Sugar sugar() { return new Sugar("WhiteSugar", 10.f); }
+			Sugar sugar() {return new Sugar("WhiteSugar", 10.f);}
 
 			@OrderScope
-			Butter butter() { return new Butter("PerfectButter", 20.0f); }
+			Butter butter() {return new Butter("PerfectButter", 20.0f);}
 
 			@OrderScope
-			Flour flour() { return new Flour("GoodFlour", 100.0f); }
+			Flour flour() {return new Flour("GoodFlour", 100.0f);}
 
 			@OrderScope
 			Pastry pastry(Sugar sugar, Butter butter, Flour flour) {

@@ -47,11 +47,11 @@ public class TcpDataBenchmarkClient extends Launcher {
 
 	@Provides
 	@Named("benchmark")
-	Eventloop benchmarkEventloop() { return Eventloop.create(); }
+	Eventloop benchmarkEventloop() {return Eventloop.create();}
 
 	@Provides
 	@Named("client")
-	Eventloop clientEventloop() { return Eventloop.create(); }
+	Eventloop clientEventloop() {return Eventloop.create();}
 
 	@Provides
 	Config config() {

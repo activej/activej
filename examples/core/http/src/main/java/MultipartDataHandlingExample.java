@@ -99,8 +99,8 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 	protected void run() throws ExecutionException, InterruptedException {
 		CompletableFuture<Integer> future = eventloop.submit(() ->
 				client.request(HttpRequest.post("http://localhost:8080/handleMultipart")
-						.withHeader(HttpHeaders.CONTENT_TYPE, "multipart/form-data; boundary=" + BOUNDARY.substring(2))
-						.withBody(ByteBufStrings.encodeAscii(MULTIPART_REQUEST)))
+								.withHeader(HttpHeaders.CONTENT_TYPE, "multipart/form-data; boundary=" + BOUNDARY.substring(2))
+								.withBody(ByteBufStrings.encodeAscii(MULTIPART_REQUEST)))
 						.map(HttpResponse::getCode));
 
 		int code = future.get();

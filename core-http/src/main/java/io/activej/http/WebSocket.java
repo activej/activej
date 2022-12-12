@@ -213,7 +213,6 @@ public interface WebSocket extends AsyncCloseable {
 		}
 	}
 
-
 	/**
 	 * Representation of a web socket data frame. It may be one of text, binary or continuation types.
 	 */

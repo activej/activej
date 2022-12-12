@@ -432,6 +432,6 @@ final class AggregationPredicateCodec implements JsonCodec<AggregationPredicate>
 		return has(attribute);
 	}
 
-	private record AttributeAndValue(String attribute, Comparable<?> value){
+	private record AttributeAndValue(String attribute, Comparable<?> value) {
 	}
 }

@@ -27,15 +27,15 @@ public final class PingPongSocketConnection {
 		Eventloop eventloop = Eventloop.create().withCurrentThread();
 
 		SimpleServer server = SimpleServer.create(
-				socket -> {
-					BinaryChannelSupplier bufsSupplier = BinaryChannelSupplier.of(ChannelSupplier.ofSocket(socket));
-					repeat(() ->
-							bufsSupplier.decode(DECODER)
-									.whenResult(x -> System.out.println(x))
-									.then(() -> socket.write(wrapAscii(RESPONSE_MSG)))
-									.map($ -> true))
-							.whenComplete(socket::close);
-				})
+						socket -> {
+							BinaryChannelSupplier bufsSupplier = BinaryChannelSupplier.of(ChannelSupplier.ofSocket(socket));
+							repeat(() ->
+									bufsSupplier.decode(DECODER)
+											.whenResult(x -> System.out.println(x))
+											.then(() -> socket.write(wrapAscii(RESPONSE_MSG)))
+											.map($ -> true))
+									.whenComplete(socket::close);
+						})
 				.withListenAddress(ADDRESS)
 				.withAcceptOnce();
 
@@ -52,7 +52,7 @@ public final class PingPongSocketConnection {
 											.map($2 -> i + 1)))
 							.whenComplete(socket::close);
 				})
-				.whenException(e -> { throw new RuntimeException(e); });
+				.whenException(e -> {throw new RuntimeException(e);});
 
 		eventloop.run();
 	}

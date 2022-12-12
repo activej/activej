@@ -3,8 +3,8 @@
 
 ## Introduction
 
-[ActiveJ](https://activej.io) is a modern Java platform built from the ground up. 
-It is designed to be self-sufficient (no third-party dependencies), simple, lightweight and provides competitive performance. 
+[ActiveJ](https://activej.io) is a modern Java platform built from the ground up.
+It is designed to be self-sufficient (no third-party dependencies), simple, lightweight and provides competitive performance.
 ActiveJ consists of a range of libraries, from dependency injection and high-performance
 asynchronous I/O (inspired by Node.js), to application servers and big data solutions. You can use ActiveJ to build scalable
 web applications, distributed systems and use it for high-load data processing.
@@ -58,7 +58,7 @@ Paste this snippet into your terminal...
 mvn archetype:generate -DarchetypeGroupId=io.activej -DarchetypeArtifactId=archetype-http -DarchetypeVersion=5.5-rc1
 ```
 
-... and open the project in your favorite  IDE. Then build the application and run it. Open your browser
+... and open the project in your favorite IDE. Then build the application and run it. Open your browser
 on [localhost:8080](http://localhost:8080)
 to see the "Hello World" message.
 

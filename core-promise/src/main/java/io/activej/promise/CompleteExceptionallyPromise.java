@@ -84,8 +84,8 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 		return (Promise<U>) this;
 	}
 
-    @Override
-    public @NotNull <U> Promise<U> mapIfElse(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<? super T, ? extends U> fnElse) {
+	@Override
+	public @NotNull <U> Promise<U> mapIfElse(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<? super T, ? extends U> fnElse) {
 		return (Promise<U>) this;
 	}
 

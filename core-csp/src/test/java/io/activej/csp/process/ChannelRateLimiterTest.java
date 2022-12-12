@@ -37,7 +37,6 @@ public class ChannelRateLimiterTest {
 				.streamTo(ChannelConsumer.ofConsumer(actual::add))
 				.whenResult(() -> passed.value = eventloop.currentTimeMillis() - passed.value));
 
-
 		assertEquals(expected, actual);
 		assertTrue(passed.value > 2_000);
 	}
@@ -58,7 +57,6 @@ public class ChannelRateLimiterTest {
 				.streamTo(ChannelConsumer.ofConsumer(actual::add))
 				.whenResult(() -> passed.value = eventloop.currentTimeMillis() - passed.value));
 
-
 		assertEquals(expected, actual);
 		assertTrue(passed.value > 1_000 && passed.value < 2_000);
 	}
@@ -78,7 +76,6 @@ public class ChannelRateLimiterTest {
 				.transformWith(limiter)
 				.streamTo(ChannelConsumer.ofConsumer(actual::add))
 				.whenResult(() -> passed.value = eventloop.currentTimeMillis() - passed.value));
-
 
 		assertEquals(expected, actual);
 		assertTrue(passed.value < 1_000);

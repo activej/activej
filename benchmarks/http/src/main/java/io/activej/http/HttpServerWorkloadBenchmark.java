@@ -37,11 +37,11 @@ public class HttpServerWorkloadBenchmark extends Launcher {
 
 	@Provides
 	@Named("server")
-	Eventloop serverEventloop() { return Eventloop.create(); }
+	Eventloop serverEventloop() {return Eventloop.create();}
 
 	@Provides
 	@Named("client")
-	Eventloop clientEventloop() { return Eventloop.create(); }
+	Eventloop clientEventloop() {return Eventloop.create();}
 
 	@Inject
 	@Named("server")
@@ -63,8 +63,8 @@ public class HttpServerWorkloadBenchmark extends Launcher {
 	@Provides
 	AsyncHttpServer server() {
 		return AsyncHttpServer.create(serverEventloop,
-				request ->
-						HttpResponse.ok200().withPlainText("Response!!"))
+						request ->
+								HttpResponse.ok200().withPlainText("Response!!"))
 				.withListenAddresses(config.get(ofList(ofInetSocketAddress()), "address"));
 	}
 

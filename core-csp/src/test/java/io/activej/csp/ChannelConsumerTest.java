@@ -182,7 +182,6 @@ public class ChannelConsumerTest {
 		assertEquals(List.of(1, 2), list);
 	}
 
-
 	private void startAnotherEventloop(Eventloop anotherEventloop) {
 		anotherEventloop.keepAlive(true);
 		new Thread(anotherEventloop, "another").start();

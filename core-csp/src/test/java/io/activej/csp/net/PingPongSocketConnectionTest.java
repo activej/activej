@@ -52,17 +52,17 @@ public final class PingPongSocketConnectionTest {
 	@Test
 	public void test() throws IOException {
 		SimpleServer.create(
-				socket -> {
-					BinaryChannelSupplier bufsSupplier = BinaryChannelSupplier.of(ChannelSupplier.ofSocket(socket));
-					loop(ITERATIONS,
-							i -> i != 0,
-							i -> bufsSupplier.decode(DECODER)
-									.whenResult(res -> assertEquals(REQUEST_MSG, res))
-									.then(() -> socket.write(wrapAscii(RESPONSE_MSG)))
-									.map($ -> i - 1))
-							.whenComplete(socket::close)
-							.whenComplete(assertCompleteFn());
-				})
+						socket -> {
+							BinaryChannelSupplier bufsSupplier = BinaryChannelSupplier.of(ChannelSupplier.ofSocket(socket));
+							loop(ITERATIONS,
+									i -> i != 0,
+									i -> bufsSupplier.decode(DECODER)
+											.whenResult(res -> assertEquals(REQUEST_MSG, res))
+											.then(() -> socket.write(wrapAscii(RESPONSE_MSG)))
+											.map($ -> i - 1))
+									.whenComplete(socket::close)
+									.whenComplete(assertCompleteFn());
+						})
 				.withListenAddress(address)
 				.withAcceptOnce()
 				.listen();

@@ -45,7 +45,7 @@ public final class RoutingServletExample extends HttpServerLauncher {
 						HttpResponse.ofCode(404)
 								.withHtml("<h1>404</h1><p>Path '" + request.getRelativePath() + "' not found</p>" +
 										"<a href=\"/\">Go home</a>"));
-				//[END REGION_4]
+		//[END REGION_4]
 	}
 	//[END REGION_1]
 

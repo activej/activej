@@ -41,7 +41,7 @@ public final class DatasetIdModule extends AbstractModule {
 								rawType == StreamSupplier.class ||
 								rawType == ChannelSupplier.class ||
 								rawType == Promise.class)) {
-					throw new IllegalStateException("Provided dataset '" + datasetId.value() +"' is a single use dataset. " +
+					throw new IllegalStateException("Provided dataset '" + datasetId.value() + "' is a single use dataset. " +
 							"Maybe mark it as @Transient?");
 				}
 

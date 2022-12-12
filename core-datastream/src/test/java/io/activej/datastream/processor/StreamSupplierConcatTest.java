@@ -28,8 +28,8 @@ public class StreamSupplierConcatTest {
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 
 		await(StreamSupplier.concat(
-				StreamSupplier.of(1, 2, 3),
-				StreamSupplier.of(4, 5, 6))
+						StreamSupplier.of(1, 2, 3),
+						StreamSupplier.of(4, 5, 6))
 				.streamTo(consumer.transformWith(randomlySuspending())));
 
 		assertEquals(List.of(1, 2, 3, 4, 5, 6), consumer.getList());
@@ -44,10 +44,10 @@ public class StreamSupplierConcatTest {
 		ExpectedException exception = new ExpectedException("Test Exception");
 
 		Exception e = awaitException(StreamSupplier.concat(
-				StreamSupplier.of(1, 2, 3),
-				StreamSupplier.of(4, 5, 6),
-				StreamSupplier.closingWithError(exception),
-				StreamSupplier.of(1, 2, 3))
+						StreamSupplier.of(1, 2, 3),
+						StreamSupplier.of(4, 5, 6),
+						StreamSupplier.closingWithError(exception),
+						StreamSupplier.of(1, 2, 3))
 				.streamTo(consumer));
 
 		assertSame(exception, e);
@@ -58,9 +58,9 @@ public class StreamSupplierConcatTest {
 	@Test
 	public void testConcat() {
 		List<Integer> list = await(StreamSupplier.concat(
-				StreamSupplier.of(1, 2, 3),
-				StreamSupplier.of(4, 5, 6),
-				StreamSupplier.of())
+						StreamSupplier.of(1, 2, 3),
+						StreamSupplier.of(4, 5, 6),
+						StreamSupplier.of())
 				.toList());
 
 		assertEquals(List.of(1, 2, 3, 4, 5, 6), list);
@@ -74,9 +74,9 @@ public class StreamSupplierConcatTest {
 		ExpectedException exception = new ExpectedException("Test Exception");
 
 		Exception e = awaitException(StreamSupplier.concat(
-				StreamSupplier.of(1, 2, 3),
-				StreamSupplier.of(4, 5, 6),
-				StreamSupplier.closingWithError(exception))
+						StreamSupplier.of(1, 2, 3),
+						StreamSupplier.of(4, 5, 6),
+						StreamSupplier.closingWithError(exception))
 				.streamTo(consumer));
 
 		assertSame(exception, e);

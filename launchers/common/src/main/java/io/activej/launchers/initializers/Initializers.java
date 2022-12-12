@@ -113,7 +113,6 @@ public class Initializers {
 								TriggerResult.ofError(eventloop.getStats().getFatalErrors()));
 	}
 
-
 	public static Initializer<TriggersModuleSettings> ofEventloopBusinessLogicTriggers(Config config) {
 		long businessLogicTimeLow = config.get(ofDurationAsMillis(), "businessLogicTimeLow", 10L);
 		long businessLogicTimeHigh = config.get(ofDurationAsMillis(), "businessLogicTimeHigh", 100L);

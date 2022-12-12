@@ -22,7 +22,7 @@ public class JsonTest {
 		try {
 			fromJson(reader, stringJson + moreData);
 			fail();
-		} catch (MalformedDataException e){
+		} catch (MalformedDataException e) {
 			assertEquals(e.getMessage(), "Unexpected JSON data: " + moreData);
 		}
 	}

@@ -56,7 +56,6 @@ public final class AsyncTcpSocketSslTest {
 
 	private static final String TEST_STRING = "Hello world";
 
-
 	private static final ByteBufsDecoder<String> DECODER = ByteBufsDecoder.ofFixedSize(TEST_STRING.length())
 			.andThen(ByteBuf::asArray)
 			.andThen(ByteBufStrings::decodeAscii);

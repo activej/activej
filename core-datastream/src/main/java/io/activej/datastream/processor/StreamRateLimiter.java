@@ -93,7 +93,7 @@ public final class StreamRateLimiter<T> implements StreamTransformer<T, T> {
 
 		@Override
 		protected void onEndOfStream() {
-			if (scheduledRunnable == null || scheduledRunnable.isComplete()){
+			if (scheduledRunnable == null || scheduledRunnable.isComplete()) {
 				output.sendEndOfStream();
 			}
 		}

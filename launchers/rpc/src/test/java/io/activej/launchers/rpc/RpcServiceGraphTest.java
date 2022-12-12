@@ -87,7 +87,7 @@ public class RpcServiceGraphTest {
 
 		try {
 			serviceGraph.startFuture().get();
-		} catch (ExecutionException e){
+		} catch (ExecutionException e) {
 			Throwable cause = e.getCause();
 			assertTrue(cause instanceof RpcException);
 			assertEquals("Could not establish connection", cause.getMessage());

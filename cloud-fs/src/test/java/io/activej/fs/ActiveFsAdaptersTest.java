@@ -94,7 +94,7 @@ public final class ActiveFsAdaptersTest {
 		ActiveFs second = ActiveFsAdapters.subdirectory(local, "second");
 		ActiveFs third = ActiveFsAdapters.subdirectory(local, "third");
 
-        ActiveFs mounted = ActiveFsAdapters.mount(root, Map.of(
+		ActiveFs mounted = ActiveFsAdapters.mount(root, Map.of(
 				"hello", first,
 				"test/inner", second,
 				"last", third));

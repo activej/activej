@@ -40,7 +40,7 @@ public final class FsExceptionCodecTest {
 
 	@Test
 	public void testBatchException() {
-        doTest(new FsBatchException(Map.of(
+		doTest(new FsBatchException(Map.of(
 				"file1", new FsScalarException("Test"),
 				"file2", new FileNotFoundException("Test"),
 				"file3", new IsADirectoryException("Test")

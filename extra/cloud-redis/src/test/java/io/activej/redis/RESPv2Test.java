@@ -31,7 +31,6 @@ public final class RESPv2Test {
 		assertNull(array);
 	}
 
-
 	@Test
 	public void string() {
 		test("", RedisResponse.STRING);

@@ -25,7 +25,7 @@ public class AsyncExecutorsTest {
 			int finalI = i;
 			promises.add(buffered.execute(() -> {
 				Promise<Void> completePromise = Promise.complete();
-				if (finalI < 50_000){
+				if (finalI < 50_000) {
 					return completePromise.async();
 				} else {
 					return completePromise;

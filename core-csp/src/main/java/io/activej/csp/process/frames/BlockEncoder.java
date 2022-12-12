@@ -40,6 +40,7 @@ public interface BlockEncoder {
 
 	/**
 	 * Encodes an End-Of-Stream Block which indicates an end of stream.
+	 *
 	 * @return {@link ByteBuf} which contains End-Of-Stream block
 	 */
 	ByteBuf encodeEndOfStreamBlock();

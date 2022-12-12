@@ -62,10 +62,10 @@ public final class HttpApiTest {
 	public void setUp() {
 		port = getFreePort();
 		server = AsyncHttpServer.create(Eventloop.getCurrentEventloop(),
-				request -> {
-					testRequest(request);
-					return createResponse();
-				})
+						request -> {
+							testRequest(request);
+							return createResponse();
+						})
 				.withListenPort(port);
 
 		client = AsyncHttpClient.create(Eventloop.getCurrentEventloop());

@@ -81,8 +81,8 @@ abstract class CompletePromise<T> implements Promise<T> {
 		}
 	}
 
-    @Override
-    public @NotNull <U> Promise<U> mapIfElse(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<? super T, ? extends U> fnElse) {
+	@Override
+	public @NotNull <U> Promise<U> mapIfElse(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<? super T, ? extends U> fnElse) {
 		try {
 			return Promise.of(predicate.test(getResult()) ? fn.apply(getResult()) : fnElse.apply(getResult()));
 		} catch (Exception ex) {

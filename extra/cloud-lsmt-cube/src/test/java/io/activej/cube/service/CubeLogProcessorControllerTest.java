@@ -109,7 +109,6 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 				aggregationChunkStorage,
 				List.of(logProcessor));
 
-
 		await(stateManager.checkout());
 	}
 
@@ -120,7 +119,6 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 
 		Map<String, FileMetadata> files = await(logsFs.list("**"));
 		assertEquals(1, files.size());
-
 
 		String logFile = first(files.keySet());
 		ByteBuf serializedData = await(logsFs.download(logFile).then(supplier -> supplier

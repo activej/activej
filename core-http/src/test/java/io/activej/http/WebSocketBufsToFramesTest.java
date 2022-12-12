@@ -72,7 +72,6 @@ public final class WebSocketBufsToFramesTest {
 		assertEquals("Hel", firstFrame.getPayload().asString(UTF_8));
 		assertFalse(firstFrame.isLastFrame());
 
-
 		Frame secondFrame = await(supplier.get());
 		assertEquals(CONTINUATION, secondFrame.getType());
 		assertEquals("lo", secondFrame.getPayload().asString(UTF_8));

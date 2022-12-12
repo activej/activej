@@ -14,7 +14,7 @@ var columns = {
         '<span class="glyphicon glyphicon-pencil"></span></a>\n' +
         '<a href="javascript:void(0)" ref="remove" class="text-danger action">\n' +
         '<span class="glyphicon glyphicon-remove"></span></a>\n' +
-      '</div>';
+        '</div>';
     }],
     onClickRefs: {
       // ref="edit" click handler

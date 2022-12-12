@@ -398,5 +398,4 @@ final class StreamConsumers {
 		}
 	}
 
-
 }

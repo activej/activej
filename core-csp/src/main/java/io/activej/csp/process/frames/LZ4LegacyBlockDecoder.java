@@ -165,5 +165,4 @@ final class LZ4LegacyBlockDecoder implements BlockDecoder {
 		}
 	}
 
-
 }

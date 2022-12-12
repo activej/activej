@@ -21,7 +21,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class ForwardingOutputStream extends OutputStream{
+public class ForwardingOutputStream extends OutputStream {
 	protected final OutputStream peer;
 
 	public ForwardingOutputStream(OutputStream peer) {

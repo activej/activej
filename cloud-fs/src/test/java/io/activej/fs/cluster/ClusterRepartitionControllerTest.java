@@ -84,7 +84,6 @@ public final class ClusterRepartitionControllerTest {
 		LocalActiveFs localFs = LocalActiveFs.create(eventloop, executor, regularPath);
 		await(localFs.start());
 
-
 		InetSocketAddress failingPartitionAddress = new InetSocketAddress("localhost", getFreePort());
 		Path failingPath = storage.resolve("failing");
 		Files.createDirectories(failingPath);
@@ -97,13 +96,13 @@ public final class ClusterRepartitionControllerTest {
 		servers.add(regularServer);
 
 		ActiveFsServer failingServer = ActiveFsServer.create(eventloop,
-				new ForwardingActiveFs(peer) {
-					@Override
-					public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
-						return super.upload(name)
-								.map(consumer -> consumer.transformWith(ofFixedSize(fileSize / 2)));
-					}
-				})
+						new ForwardingActiveFs(peer) {
+							@Override
+							public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
+								return super.upload(name)
+										.map(consumer -> consumer.transformWith(ofFixedSize(fileSize / 2)));
+							}
+						})
 				.withListenAddress(failingPartitionAddress);
 		failingServer.listen();
 		servers.add(failingServer);

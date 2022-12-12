@@ -31,7 +31,7 @@ public final class DynamicRoutingExample extends HttpServerLauncher {
 	AsyncServlet firstServlet() {
 		return request -> HttpResponse.ok200().withHtml(
 				"<h1>This page is served by first servlet</h1>" +
-				"<h3>Try to reload the page</h3>"
+						"<h3>Try to reload the page</h3>"
 		);
 	}
 

@@ -99,7 +99,7 @@ public class ChannelSuppliersIOTest {
 		ChannelSupplier<ByteBuf> supplier = initWithEventloop(eventloop, () -> ChannelSupplier.of(byteBuf));
 
 		try (InputStream inputStream = inputStream();
-		     InputStream channelSupplierAsInputStream = channelSupplierAsInputStream(eventloop, supplier)) {
+			 InputStream channelSupplierAsInputStream = channelSupplierAsInputStream(eventloop, supplier)) {
 			while (true) {
 				int read1 = inputStream.read();
 				int read2 = channelSupplierAsInputStream.read();
@@ -134,7 +134,7 @@ public class ChannelSuppliersIOTest {
 		ChannelSupplier<ByteBuf> supplier = initWithEventloop(eventloop, () -> ChannelSupplier.of(byteBuf));
 
 		try (InputStream inputStream = inputStream();
-		     InputStream channelSupplierAsInputStream = channelSupplierAsInputStream(eventloop, supplier)) {
+			 InputStream channelSupplierAsInputStream = channelSupplierAsInputStream(eventloop, supplier)) {
 			inputStream.close();
 			channelSupplierAsInputStream.close();
 

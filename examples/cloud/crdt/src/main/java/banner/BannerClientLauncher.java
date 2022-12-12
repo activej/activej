@@ -58,11 +58,11 @@ public final class BannerClientLauncher extends CrdtRpcClientLauncher {
 	private void uploadBannerIds() throws Exception {
 		eventloop.submit(() ->
 				Promises.until(0, i -> Promises.all(USER_IDS.stream()
-								.map(userId -> {
-									int bannerId = RANDOM.nextInt(BANNER_SIZE) + 1;
-									return client.sendRequest(new PutRequest(userId, GSet.of(bannerId)))
-											.whenResult(() -> controlMap.merge(userId, Set.of(bannerId), Utils::union));
-								}))
+										.map(userId -> {
+											int bannerId = RANDOM.nextInt(BANNER_SIZE) + 1;
+											return client.sendRequest(new PutRequest(userId, GSet.of(bannerId)))
+													.whenResult(() -> controlMap.merge(userId, Set.of(bannerId), Utils::union));
+										}))
 								.map($ -> i + 1),
 						i -> i == BANNER_SIZE / 2
 				)).get();

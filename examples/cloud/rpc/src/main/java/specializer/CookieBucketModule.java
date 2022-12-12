@@ -44,7 +44,7 @@ public final class CookieBucketModule extends AbstractModule {
 	public record Cookie6(Pastry pastry) {}
 
 	public record CookieBucket(Cookie1 c1, Cookie2 c2,
-	                           Cookie3 c3, Cookie4 c4,
-	                           Cookie5 c5, Cookie6 c6) {
+							   Cookie3 c3, Cookie4 c4,
+							   Cookie5 c5, Cookie6 c6) {
 	}
 }

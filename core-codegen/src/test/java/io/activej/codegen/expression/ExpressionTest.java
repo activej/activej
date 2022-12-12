@@ -74,7 +74,7 @@ public class ExpressionTest {
 	}
 
 	public record TestPojo2(String property1, int property2, long property3, float property4, int property5,
-	                        double property6, String property7) {
+							double property6, String property7) {
 	}
 
 	public interface Test2 {
@@ -872,7 +872,7 @@ public class ExpressionTest {
 				.defineClassAndCreateInstance(CLASS_LOADER);
 
 		assertEquals(value, wrapper.getTestInterface());
-		assertEquals("{" + value +"}", wrapper.toString());
+		assertEquals("{" + value + "}", wrapper.toString());
 	}
 
 	@org.junit.Test

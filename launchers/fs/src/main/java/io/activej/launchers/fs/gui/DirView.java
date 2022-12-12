@@ -41,7 +41,7 @@ public final class DirView {
 		return files;
 	}
 
-	public boolean isEmpty(){
+	public boolean isEmpty() {
 		return true;
 	}
 }

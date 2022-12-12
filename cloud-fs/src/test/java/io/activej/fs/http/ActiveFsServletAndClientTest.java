@@ -96,8 +96,8 @@ public final class ActiveFsServletAndClientTest {
 		ChannelConsumer<ByteBuf> consumer = await(fs.upload(filename));
 
 		Exception exception = awaitException(ChannelSuppliers.concat(
-				ChannelSupplier.of(wrapUtf8("some"), wrapUtf8("test"), wrapUtf8("data")),
-				ChannelSupplier.ofException(expectedException))
+						ChannelSupplier.of(wrapUtf8("some"), wrapUtf8("test"), wrapUtf8("data")),
+						ChannelSupplier.ofException(expectedException))
 				.streamTo(consumer));
 
 		assertSame(expectedException, exception);

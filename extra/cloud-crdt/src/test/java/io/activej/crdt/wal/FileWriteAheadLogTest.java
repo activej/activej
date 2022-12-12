@@ -128,7 +128,6 @@ public class FileWriteAheadLogTest {
 		assertEquals(expected, actual);
 	}
 
-
 	@Test
 	public void multipleFlushesSequential() {
 		wal = wal.withCurrentTimeProvider(TestCurrentTimeProvider.ofTimeSequence(100, 10));

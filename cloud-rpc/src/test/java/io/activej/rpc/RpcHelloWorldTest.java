@@ -92,8 +92,8 @@ public final class RpcHelloWorldTest {
 		public String hello(String name) throws Exception {
 			try {
 				return rpcClient.getEventloop().submit(
-						() -> rpcClient
-								.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT))
+								() -> rpcClient
+										.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT))
 						.get()
 						.message;
 			} catch (ExecutionException e) {

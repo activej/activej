@@ -308,7 +308,6 @@ public final class RpcClientTest {
 					return rpcClient.changeStrategy(RpcStrategyRoundRobin.create(getAddresses(3, 4)), false);
 				}));
 
-
 		int response3 = await(() -> rpcClient.sendRequest(REQUEST));
 		int response4 = await(() -> rpcClient.sendRequest(REQUEST));
 

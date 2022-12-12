@@ -98,7 +98,7 @@ public class ClusterTcpClientLauncher extends Launcher {
 				.overrideWith(Config.ofSystemProperties("config"));
 	}
 
-	protected Config createConfig(){
+	protected Config createConfig() {
 		return Config.create()
 				.with("activefs.listenAddresses", DEFAULT_SERVER_LISTEN_ADDRESS)
 				.with("activefs.http.gui.listenAddresses", DEFAULT_GUI_SERVER_LISTEN_ADDRESS)

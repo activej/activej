@@ -354,9 +354,9 @@ public class StreamReducerTest {
 		);
 
 		assertEquals(List.of(
-				new KeyValueResult(1, 10.0, 10.0, 0.0),
-				new KeyValueResult(2, 0.0, 10.0, 20.0),
-				new KeyValueResult(3, 30.0, 40.0, 20.0)),
+						new KeyValueResult(1, 10.0, 10.0, 0.0),
+						new KeyValueResult(2, 0.0, 10.0, 20.0),
+						new KeyValueResult(3, 30.0, 40.0, 20.0)),
 				consumer.getList());
 		assertEndOfStream(source1);
 		assertEndOfStream(source2);
@@ -384,9 +384,9 @@ public class StreamReducerTest {
 		);
 
 		assertEquals(List.of(
-				new KeyValueResult(1, 10.0, 10.0, 0.0),
-				new KeyValueResult(2, 0.0, 10.0, 20.0),
-				new KeyValueResult(3, 30.0, 40.0, 20.0)),
+						new KeyValueResult(1, 10.0, 10.0, 0.0),
+						new KeyValueResult(2, 0.0, 10.0, 20.0),
+						new KeyValueResult(3, 30.0, 40.0, 20.0)),
 				consumer.getList());
 		assertEndOfStream(source1);
 		assertEndOfStream(source2);

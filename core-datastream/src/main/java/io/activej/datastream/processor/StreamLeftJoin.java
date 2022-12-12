@@ -131,7 +131,7 @@ public final class StreamLeftJoin<K, L, R, V> implements HasStreamInputs, HasStr
 	 * @param keyComparator    comparator for compare keys
 	 * @param leftKeyFunction  function for counting keys of left stream
 	 * @param rightKeyFunction function for counting keys of right stream
-	 * @param leftJoiner           joiner which will join streams
+	 * @param leftJoiner       joiner which will join streams
 	 */
 	public static <K, L, R, V> StreamLeftJoin<K, L, R, V> create(Comparator<K> keyComparator,
 			Function<L, K> leftKeyFunction, Function<R, K> rightKeyFunction,

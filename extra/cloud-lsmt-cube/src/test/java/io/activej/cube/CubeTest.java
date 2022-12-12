@@ -116,10 +116,10 @@ public final class CubeTest {
 				consume(cube, chunkStorage, new DataItem2(1, 3, 10, 20), new DataItem2(1, 4, 10, 20))
 		);
 		List<DataItemResult> list = await(cube.queryRawStream(
-				List.of("key1", "key2"),
-				List.of("metric1", "metric2", "metric3"),
-				and(eq("key1", 1), eq("key2", 3)),
-				DataItemResult.class, classLoader)
+						List.of("key1", "key2"),
+						List.of("metric1", "metric2", "metric3"),
+						and(eq("key1", 1), eq("key2", 3)),
+						DataItemResult.class, classLoader)
 				.toList());
 
 		assertEquals(expected, list);
@@ -149,15 +149,15 @@ public final class CubeTest {
 
 		await(
 				Promises.all(consume(cube, chunkStorage, new DataItem1(1, 2, 10, 20), new DataItem1(1, 3, 10, 20)),
-						consume(cube, chunkStorage, new DataItem2(1, 3, 10, 20), new DataItem2(1, 4, 10, 20)))
+								consume(cube, chunkStorage, new DataItem2(1, 3, 10, 20), new DataItem2(1, 4, 10, 20)))
 						.whenComplete(server1::close)
 		);
 		AsyncHttpServer server2 = startServer(executor, serverStorage);
 
 		List<DataItemResult> list = await(cube.queryRawStream(
-				List.of("key1", "key2"), List.of("metric1", "metric2", "metric3"),
-				and(eq("key1", 1), eq("key2", 3)),
-				DataItemResult.class, classLoader)
+						List.of("key1", "key2"), List.of("metric1", "metric2", "metric3"),
+						and(eq("key1", 1), eq("key2", 3)),
+						DataItemResult.class, classLoader)
 				.toList()
 				.whenComplete(server2::close));
 

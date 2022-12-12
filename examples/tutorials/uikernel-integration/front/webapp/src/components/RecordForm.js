@@ -99,7 +99,7 @@ var RecordForm = createClass({
                 </div>
               </div>
               <div className={'form-group' + (this.hasChanges('gender') ? ' bg-warning' : '') +
-              (this.hasError('email') ? ' bg-danger' : '')}>
+                (this.hasError('email') ? ' bg-danger' : '')}>
                 <label className='col-sm-3 control-label'>Gender</label>
                 <div className='col-sm-9'>
                   <UIKernel.Editors.Select
@@ -124,7 +124,7 @@ var RecordForm = createClass({
           </div>
         </div>
       </div>
-  )
+    )
   }
 });
 

@@ -34,8 +34,8 @@ public final class ChannelFileExample {
 	//[START REGION_1]
 	private static @NotNull Promise<Void> writeToFile() {
 		return ChannelSupplier.of(
-				ByteBufStrings.wrapAscii("Hello, this is example file\n"),
-				ByteBufStrings.wrapAscii("This is the second line of file\n"))
+						ByteBufStrings.wrapAscii("Hello, this is example file\n"),
+						ByteBufStrings.wrapAscii("This is the second line of file\n"))
 				.streamTo(ChannelFileWriter.open(executor, PATH, WRITE));
 	}
 

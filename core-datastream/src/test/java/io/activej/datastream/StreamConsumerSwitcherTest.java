@@ -64,7 +64,7 @@ public class StreamConsumerSwitcherTest {
 
 		assertEndOfStream(streamSupplier, switcher);
 		consumers.forEach(consumer -> {
-			assertEquals(List.of(1,2,3,4,5,6,7,8,9,10), consumer.getList());
+			assertEquals(List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), consumer.getList());
 			assertEndOfStream(consumer);
 		});
 	}

@@ -68,11 +68,11 @@ public class StreamLeftJoinTest {
 		);
 
 		assertEquals(List.of(
-				new DataItemMasterDetail(10, 10, "masterA", "detailX"),
-				new DataItemMasterDetail(20, 10, "masterB", "detailX"),
-				new DataItemMasterDetail(25, 15, "masterB+", null),
-				new DataItemMasterDetail(30, 20, "masterC", "detailY"),
-				new DataItemMasterDetail(40, 20, "masterD", "detailY")
+						new DataItemMasterDetail(10, 10, "masterA", "detailX"),
+						new DataItemMasterDetail(20, 10, "masterB", "detailX"),
+						new DataItemMasterDetail(25, 15, "masterB+", null),
+						new DataItemMasterDetail(30, 20, "masterC", "detailY"),
+						new DataItemMasterDetail(40, 20, "masterD", "detailY")
 				),
 				consumer.getList());
 		assertEndOfStream(source1);

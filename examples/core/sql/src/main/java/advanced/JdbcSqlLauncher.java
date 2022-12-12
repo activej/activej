@@ -47,7 +47,7 @@ public final class JdbcSqlLauncher extends Launcher {
 		logger.info("Copying data from table \"{}\" to table \"{}\"...", TABLE_FROM, TABLE_TO);
 
 		try (Connection connection = dataSource.getConnection();
-		     Statement statement = connection.createStatement()
+			 Statement statement = connection.createStatement()
 		) {
 			statement.executeUpdate("" +
 					"INSERT INTO " + TABLE_TO + " " +

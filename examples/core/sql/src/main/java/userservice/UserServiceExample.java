@@ -63,10 +63,10 @@ public class UserServiceExample extends Launcher {
 		System.out.println();
 		CompletableFuture<?> future = eventloop.submit(() ->
 				Promises.all(
-						userDao.addUser(new User("Kory", "Holloway")),
-						userDao.addUser(new User("Abraham", "Ventura")),
-						userDao.addUser(new User("Emile", "Weiss")),
-						userDao.addUser(new User("Torin", "Browne")))
+								userDao.addUser(new User("Kory", "Holloway")),
+								userDao.addUser(new User("Abraham", "Ventura")),
+								userDao.addUser(new User("Emile", "Weiss")),
+								userDao.addUser(new User("Torin", "Browne")))
 						.then(() -> userDao.getAll())
 						.whenResult(UserServiceExample::printUsers)
 						.then(() -> {

@@ -399,7 +399,7 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 			throw new NullPointerException();
 		}
 
-		ClassBuilder<?> classBuilder = ClassBuilder.create( decodeType);
+		ClassBuilder<?> classBuilder = ClassBuilder.create(decodeType);
 		for (Map.Entry<String, FieldDef> entry : fields.entrySet()) {
 			String fieldName = entry.getKey();
 			Method method = entry.getValue().method;

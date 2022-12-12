@@ -186,7 +186,7 @@ public class FileStateManagerTest {
 		try {
 			manager.save(500, 25L);
 			fail();
-		} catch (IllegalArgumentException ignored){
+		} catch (IllegalArgumentException ignored) {
 		}
 
 		FileState<Integer> load1 = manager.load();

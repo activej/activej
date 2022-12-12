@@ -82,24 +82,24 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 			ByteBufs messageBufs = new ByteBufs();
 			Ref<MessageType> typeRef = new Ref<>();
 			return Promises.repeat(() -> frameInput.get()
-					.then(frame -> {
-						if (frame == null) {
-							if (typeRef.get() == null) {
-								return Promise.of(false);
-							}
-							// hence, all other exceptions would fail get() promise
-							return Promise.ofException(REGULAR_CLOSE);
-						}
-						if (typeRef.get() == null) {
-							typeRef.set(frameToMessageType(frame.getType()));
-						}
-						ByteBuf payload = frame.getPayload();
-						if (messageBufs.remainingBytes() + payload.readRemaining() > maxMessageSize) {
-							return protocolError(MESSAGE_TOO_BIG);
-						}
-						messageBufs.add(payload);
-						return Promise.of(!frame.isLastFrame());
-					}))
+							.then(frame -> {
+								if (frame == null) {
+									if (typeRef.get() == null) {
+										return Promise.of(false);
+									}
+									// hence, all other exceptions would fail get() promise
+									return Promise.ofException(REGULAR_CLOSE);
+								}
+								if (typeRef.get() == null) {
+									typeRef.set(frameToMessageType(frame.getType()));
+								}
+								ByteBuf payload = frame.getPayload();
+								if (messageBufs.remainingBytes() + payload.readRemaining() > maxMessageSize) {
+									return protocolError(MESSAGE_TOO_BIG);
+								}
+								messageBufs.add(payload);
+								return Promise.of(!frame.isLastFrame());
+							}))
 					.whenException(e -> messageBufs.recycle())
 					.then($ -> {
 						ByteBuf payload = messageBufs.takeRemaining();
