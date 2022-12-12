@@ -72,19 +72,17 @@ public final class ConfigConverters {
 			}
 
 			private FrameFormat doGet(Config config, String formatName) {
-				switch (formatName) {
-					case "identity":
-						return FrameFormats.identity();
-					case "size-prefixed":
-						return FrameFormats.sizePrefixed();
-					case "lz4":
+				return switch (formatName) {
+					case "identity" -> FrameFormats.identity();
+					case "size-prefixed" -> FrameFormats.sizePrefixed();
+					case "lz4" -> {
 						LZ4FrameFormat format = LZ4FrameFormat.create();
-						if (config.hasChild("compressionLevel")) {
-							return format.withCompressionLevel(config.get(ofInteger(), "compressionLevel"));
-						} else {
-							return format;
+						if (!config.hasChild("compressionLevel")) {
+							yield format;
 						}
-					case "legacy-lz4":
+						yield format.withCompressionLevel(config.get(ofInteger(), "compressionLevel"));
+					}
+					case "legacy-lz4" -> {
 						LZ4LegacyFrameFormat legacyFormat = LZ4LegacyFrameFormat.create();
 						if (config.hasChild("compressionLevel")) {
 							legacyFormat.withCompressionLevel(config.get(ofInteger(), "compressionLevel"));
@@ -92,8 +90,9 @@ public final class ConfigConverters {
 						if (config.hasChild("ignoreMissingEndOfStream")) {
 							legacyFormat.withIgnoreMissingEndOfStream(config.get(ofBoolean(), "ignoreMissingEndOfStream"));
 						}
-						return legacyFormat;
-					case "compound":
+						yield legacyFormat;
+					}
+					case "compound" -> {
 						Config compoundFormatsConfig = config.getChild("compoundFormats");
 						List<String> formatNames = ofList(ofString()).get(compoundFormatsConfig);
 						List<FrameFormat> formats = new ArrayList<>(formatNames.size());
@@ -104,11 +103,11 @@ public final class ConfigConverters {
 								formats.add(doGet(compoundFormatsConfig, name));
 							}
 						}
-
-						return FrameFormats.compound(formats.get(0), formats.subList(1, formats.size()).toArray(new FrameFormat[0]));
-					default:
-						throw new IllegalArgumentException("No frame format named " + config.getValue() + " exists");
-				}
+						yield FrameFormats.compound(formats.get(0), formats.subList(1, formats.size()).toArray(new FrameFormat[0]));
+					}
+					default ->
+							throw new IllegalArgumentException("No frame format named " + config.getValue() + " exists");
+				};
 			}
 
 			@Override

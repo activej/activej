@@ -312,50 +312,40 @@ public final class ConfigConverters {
 		return new ConfigConverter<>() {
 			@Override
 			public @NotNull FatalErrorHandler get(Config config) {
-				switch (config.getValue()) {
-					case "rethrow":
-						return rethrow();
-					case "ignore":
-						return ignore();
-					case "halt":
-						return halt();
-					case "haltOnError":
-						return haltOnError();
-					case "haltOnVirtualMachineError":
-						return haltOnVirtualMachineError();
-					case "haltOnOutOfMemoryError":
-						return haltOnOutOfMemoryError();
-					case "rethrowOn":
-						return rethrowOn(
-								toThrowablePredicate(
-										config.get(OF_CLASSES, "whitelist", List.of()),
-										config.get(OF_CLASSES, "blacklist", List.of())
-								));
-					case "haltOn":
-						return haltOn(
-								toThrowablePredicate(
-										config.get(OF_CLASSES, "whitelist", List.of()),
-										config.get(OF_CLASSES, "blacklist", List.of())
-								));
-					case "logging":
-						return logging();
-					case "loggingToSystemOut":
-						return loggingToSystemOut();
-					case "loggingToSystemErr":
-						return loggingToSystemErr();
-					case "loggingToEventloop":
+				return switch (config.getValue()) {
+					case "rethrow" -> rethrow();
+					case "ignore" -> ignore();
+					case "halt" -> halt();
+					case "haltOnError" -> haltOnError();
+					case "haltOnVirtualMachineError" -> haltOnVirtualMachineError();
+					case "haltOnOutOfMemoryError" -> haltOnOutOfMemoryError();
+					case "rethrowOn" -> rethrowOn(
+							toThrowablePredicate(
+									config.get(OF_CLASSES, "whitelist", List.of()),
+									config.get(OF_CLASSES, "blacklist", List.of())
+							));
+					case "haltOn" -> haltOn(
+							toThrowablePredicate(
+									config.get(OF_CLASSES, "whitelist", List.of()),
+									config.get(OF_CLASSES, "blacklist", List.of())
+							));
+					case "logging" -> logging();
+					case "loggingToSystemOut" -> loggingToSystemOut();
+					case "loggingToSystemErr" -> loggingToSystemErr();
+					case "loggingToEventloop" -> {
 						FatalErrorHandler logging = logging();
-						return (e, context) -> {
+						yield (e, context) -> {
 							Eventloop eventloop = Eventloop.getCurrentEventloopOrNull();
 							if (eventloop != null) {
-								eventloop.logFatalError(e, context);
+								Eventloop.logFatalError(e, context);
 							} else {
 								logging.handle(e, context);
 							}
 						};
-					default:
-						throw new IllegalArgumentException("No fatal error handler named " + config.getValue() + " exists!");
-				}
+					}
+					default ->
+							throw new IllegalArgumentException("No fatal error handler named " + config.getValue() + " exists!");
+				};
 			}
 
 			@Override
@@ -385,7 +375,8 @@ public final class ConfigConverters {
 					case "delay" -> Schedule.ofDelay(config.get(ofDuration(), "value"));
 					case "interval" -> Schedule.ofInterval(config.get(ofDuration(), "value"));
 					case "period" -> Schedule.ofPeriod(config.get(ofDuration(), "value"));
-					default -> throw new IllegalArgumentException("No eventloop task schedule type named " + config.getValue() + " exists!");
+					default ->
+							throw new IllegalArgumentException("No eventloop task schedule type named " + config.getValue() + " exists!");
 				};
 			}
 
@@ -410,9 +401,11 @@ public final class ConfigConverters {
 				RetryPolicy retryPolicy = switch (config.getValue()) {
 					case "immediate" -> RetryPolicy.immediateRetry();
 					case "fixedDelay" -> RetryPolicy.fixedDelay(config.get(ofDuration(), "delay").toMillis());
-					case "exponentialBackoff" -> RetryPolicy.exponentialBackoff(config.get(ofDuration(), "initialDelay").toMillis(),
-							config.get(ofDuration(), "maxDelay").toMillis(), config.get(ofDouble(), "exponent", 2.0));
-					default -> throw new IllegalArgumentException("No retry policy named " + config.getValue() + " exists!");
+					case "exponentialBackoff" ->
+							RetryPolicy.exponentialBackoff(config.get(ofDuration(), "initialDelay").toMillis(),
+									config.get(ofDuration(), "maxDelay").toMillis(), config.get(ofDouble(), "exponent", 2.0));
+					default ->
+							throw new IllegalArgumentException("No retry policy named " + config.getValue() + " exists!");
 				};
 				int maxRetryCount = config.get(ofInteger(), "maxRetryCount", Integer.MAX_VALUE);
 				if (maxRetryCount != Integer.MAX_VALUE) {
