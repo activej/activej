@@ -26,7 +26,6 @@ import io.activej.promise.Promise;
 import io.activej.serializer.stream.StreamCodec;
 import io.activej.serializer.stream.StreamCodecs;
 import io.activej.serializer.stream.StreamCodecs.SubtypeBuilder;
-import io.activej.serializer.stream.StructuredStreamCodec;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Files;
@@ -41,7 +40,7 @@ import static io.activej.crdt.wal.FileWriteAheadLog.EXT_FINAL;
 import static java.util.stream.Collectors.toList;
 
 public final class Utils {
-	private static final StreamCodec<Version> VERSION_CODEC = StructuredStreamCodec.create(Version::new,
+	private static final StreamCodec<Version> VERSION_CODEC = StreamCodec.create(Version::new,
 			Version::major, StreamCodecs.ofVarInt(),
 			Version::minor, StreamCodecs.ofVarInt()
 	);
@@ -87,10 +86,10 @@ public final class Utils {
 	private static StreamCodec<CrdtRequest> createCrdtRequestStreamCodec() {
 		SubtypeBuilder<CrdtRequest> builder = new SubtypeBuilder<>();
 
-		builder.add(CrdtRequest.Download.class, StructuredStreamCodec.create(CrdtRequest.Download::new,
+		builder.add(CrdtRequest.Download.class, StreamCodec.create(CrdtRequest.Download::new,
 				CrdtRequest.Download::token, StreamCodecs.ofVarLong())
 		);
-		builder.add(CrdtRequest.Handshake.class, StructuredStreamCodec.create(CrdtRequest.Handshake::new,
+		builder.add(CrdtRequest.Handshake.class, StreamCodec.create(CrdtRequest.Handshake::new,
 				CrdtRequest.Handshake::version, VERSION_CODEC)
 		);
 		builder.add(CrdtRequest.Ping.class, StreamCodecs.singleton(new CrdtRequest.Ping()));
@@ -105,17 +104,17 @@ public final class Utils {
 		SubtypeBuilder<CrdtResponse> builder = new SubtypeBuilder<>();
 
 		builder.add(CrdtResponse.DownloadStarted.class, StreamCodecs.singleton(new CrdtResponse.DownloadStarted()));
-		builder.add(CrdtResponse.Handshake.class, StructuredStreamCodec.create(CrdtResponse.Handshake::new,
+		builder.add(CrdtResponse.Handshake.class, StreamCodec.create(CrdtResponse.Handshake::new,
 				CrdtResponse.Handshake::handshakeFailure, StreamCodecs.ofNullable(
-						StructuredStreamCodec.create(CrdtResponse.HandshakeFailure::new,
+						StreamCodec.create(CrdtResponse.HandshakeFailure::new,
 								CrdtResponse.HandshakeFailure::minimalVersion, VERSION_CODEC,
 								CrdtResponse.HandshakeFailure::message, StreamCodecs.ofString())
 				))
 		);
 		builder.add(CrdtResponse.Pong.class, StreamCodecs.singleton(new CrdtResponse.Pong()));
 		builder.add(CrdtResponse.RemoveAck.class, StreamCodecs.singleton(new CrdtResponse.RemoveAck()));
-		builder.add(CrdtResponse.ServerError.class, StructuredStreamCodec.create(CrdtResponse.ServerError::new,
-				CrdtResponse.ServerError::message, StreamCodecs.ofString()
+		builder.add(CrdtResponse.ServerError.class, StreamCodec.create(CrdtResponse.ServerError::new,
+						CrdtResponse.ServerError::message, StreamCodecs.ofString()
 				)
 		);
 		builder.add(CrdtResponse.TakeStarted.class, StreamCodecs.singleton(new CrdtResponse.TakeStarted()));

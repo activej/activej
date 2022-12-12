@@ -8,7 +8,6 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.serializer.stream.StreamCodec;
 import io.activej.serializer.stream.StreamCodecs;
-import io.activej.serializer.stream.StructuredStreamCodec;
 
 final class NodeCodecModule extends AbstractModule {
 	@Provides
@@ -16,7 +15,7 @@ final class NodeCodecModule extends AbstractModule {
 	StreamCodec<FilterableNodeSupplierOfId<?>> filterableNodeSupplierOfId(
 			StreamCodec<WherePredicate> predicateStreamCodec
 	) {
-		return StructuredStreamCodec.create(FilterableNodeSupplierOfId::new,
+		return StreamCodec.create(FilterableNodeSupplierOfId::new,
 				FilterableNodeSupplierOfId::getIndex, StreamCodecs.ofVarInt(),
 				FilterableNodeSupplierOfId::getId, StreamCodecs.ofString(),
 				FilterableNodeSupplierOfId::getPredicate, predicateStreamCodec,

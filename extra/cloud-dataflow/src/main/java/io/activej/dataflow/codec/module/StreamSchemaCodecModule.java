@@ -5,7 +5,6 @@ import io.activej.dataflow.graph.StreamSchemas;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.serializer.stream.StreamCodec;
-import io.activej.serializer.stream.StructuredStreamCodec;
 
 import static io.activej.dataflow.codec.Utils.CLASS_STREAM_CODEC;
 
@@ -13,7 +12,7 @@ final class StreamSchemaCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(0)
 	StreamCodec<StreamSchemas.Simple<?>> simpleStreamSchema() {
-		return StructuredStreamCodec.create(StreamSchemas::simple,
+		return StreamCodec.create(StreamSchemas::simple,
 				StreamSchemas.Simple::getCls, CLASS_STREAM_CODEC
 		);
 	}

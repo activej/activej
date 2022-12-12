@@ -7,14 +7,13 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.record.RecordScheme;
 import io.activej.serializer.stream.StreamCodec;
 import io.activej.serializer.stream.StreamCodecs;
-import io.activej.serializer.stream.StructuredStreamCodec;
 import org.apache.calcite.rel.core.JoinRelType;
 
 final class LeftJoinerCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(0)
 	StreamCodec<RecordJoiner> leftJoinerStreamCodec(StreamCodec<RecordScheme> recordSchemeStreamCodec) {
-		return StructuredStreamCodec.create(RecordJoiner::create,
+		return StreamCodec.create(RecordJoiner::create,
 				RecordJoiner::getJoinRelType, StreamCodecs.ofEnum(JoinRelType.class),
 				RecordJoiner::getScheme, recordSchemeStreamCodec,
 				RecordJoiner::getLeft, recordSchemeStreamCodec,

@@ -8,7 +8,6 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.record.RecordScheme;
 import io.activej.serializer.stream.StreamCodec;
 import io.activej.serializer.stream.StreamCodecs;
-import io.activej.serializer.stream.StructuredStreamCodec;
 
 import java.util.List;
 
@@ -24,7 +23,7 @@ final class RecordReducerCodecModule extends AbstractModule {
 			StreamCodec<FieldReducer<Object, Object, Object>> fieldReducerStreamCodec
 	) {
 		//noinspection unchecked,rawtypes
-		return (StreamCodec) StructuredStreamCodec.create((value1, value2) -> RecordReducer.create(value1, ((List) value2)),
+		return (StreamCodec) StreamCodec.create((value1, value2) -> RecordReducer.create(value1, ((List) value2)),
 				RecordReducer::getOriginalScheme, recordSchemeStreamCodec,
 				RecordReducer::getReducers, StreamCodecs.ofList(fieldReducerStreamCodec));
 	}

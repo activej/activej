@@ -6,7 +6,6 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.record.RecordScheme;
 import io.activej.serializer.stream.StreamCodec;
 import io.activej.serializer.stream.StreamCodecs;
-import io.activej.serializer.stream.StructuredStreamCodec;
 
 import java.lang.reflect.Type;
 
@@ -37,7 +36,7 @@ public class CalciteCodecModule extends AbstractModule {
 			DefiningClassLoader classLoader,
 			StreamCodec<Type> typeStreamCodec
 	) {
-		return StructuredStreamCodec.create((fieldNames, fieldTypes) -> {
+		return StreamCodec.create((fieldNames, fieldTypes) -> {
 					RecordScheme recordScheme = RecordScheme.create(classLoader);
 
 					for (int i = 0; i < fieldNames.size(); i++) {

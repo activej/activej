@@ -1,10 +1,8 @@
 package io.activej.fs.exception;
 
-
 import io.activej.serializer.stream.StreamCodec;
 import io.activej.serializer.stream.StreamCodecs;
 import io.activej.serializer.stream.StreamCodecs.SubtypeBuilder;
-import io.activej.serializer.stream.StructuredStreamCodec;
 
 import java.util.function.BiFunction;
 
@@ -14,7 +12,7 @@ public final class FsExceptionStreamCodec {
 
 		StreamCodec<FsScalarException> scalarExceptionCodec = simpleCodec(FsScalarException::new);
 
-		builder.add(FsBatchException.class, StructuredStreamCodec.create(exceptions -> new FsBatchException(exceptions, false),
+		builder.add(FsBatchException.class, StreamCodec.create(exceptions -> new FsBatchException(exceptions, false),
 				FsBatchException::getExceptions, StreamCodecs.ofMap(StreamCodecs.ofString(), scalarExceptionCodec))
 		);
 		builder.add(FsException.class, simpleCodec(FsException::new));
@@ -32,7 +30,7 @@ public final class FsExceptionStreamCodec {
 	}
 
 	private static <E extends FsException> StreamCodec<E> simpleCodec(BiFunction<String, Boolean, E> constructor) {
-		return StructuredStreamCodec.create(message -> constructor.apply(message, false),
+		return StreamCodec.create(message -> constructor.apply(message, false),
 				E::getMessage, StreamCodecs.ofString()
 		);
 	}

@@ -32,7 +32,6 @@ import io.activej.fs.tcp.messaging.Version;
 import io.activej.promise.Promise;
 import io.activej.serializer.stream.StreamCodec;
 import io.activej.serializer.stream.StreamCodecs;
-import io.activej.serializer.stream.StructuredStreamCodec;
 
 import java.nio.file.FileSystems;
 import java.nio.file.PathMatcher;
@@ -45,11 +44,11 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 public final class RemoteFsUtils {
-	private static final StreamCodec<Version> VERSION_CODEC = StructuredStreamCodec.create(Version::new,
+	private static final StreamCodec<Version> VERSION_CODEC = StreamCodec.create(Version::new,
 			Version::major, StreamCodecs.ofVarInt(),
 			Version::minor, StreamCodecs.ofVarInt()
 	);
-	private static final StreamCodec<FileMetadata> FILE_METADATA_CODEC = StructuredStreamCodec.create(FileMetadata::of,
+	private static final StreamCodec<FileMetadata> FILE_METADATA_CODEC = StreamCodec.create(FileMetadata::of,
 			FileMetadata::getSize, StreamCodecs.ofVarLong(),
 			FileMetadata::getTimestamp, StreamCodecs.ofVarLong()
 	);
@@ -151,49 +150,49 @@ public final class RemoteFsUtils {
 	private static StreamCodec<FsRequest> createFsRequestStreamCodec() {
 		StreamCodecs.SubtypeBuilder<FsRequest> builder = new StreamCodecs.SubtypeBuilder<>();
 
-		builder.add(FsRequest.Append.class, StructuredStreamCodec.create(FsRequest.Append::new,
+		builder.add(FsRequest.Append.class, StreamCodec.create(Append::new,
 				Append::name, StreamCodecs.ofString(),
 				Append::offset, StreamCodecs.ofVarLong())
 		);
-		builder.add(FsRequest.Copy.class, StructuredStreamCodec.create(FsRequest.Copy::new,
+		builder.add(FsRequest.Copy.class, StreamCodec.create(Copy::new,
 				Copy::name, StreamCodecs.ofString(),
 				Copy::target, StreamCodecs.ofString())
 		);
-		builder.add(FsRequest.CopyAll.class, StructuredStreamCodec.create(FsRequest.CopyAll::new,
+		builder.add(FsRequest.CopyAll.class, StreamCodec.create(CopyAll::new,
 				CopyAll::sourceToTarget, StreamCodecs.ofMap(StreamCodecs.ofString(), StreamCodecs.ofString()))
 		);
-		builder.add(FsRequest.Delete.class, StructuredStreamCodec.create(FsRequest.Delete::new,
+		builder.add(FsRequest.Delete.class, StreamCodec.create(Delete::new,
 				Delete::name, StreamCodecs.ofString())
 		);
-		builder.add(FsRequest.DeleteAll.class, StructuredStreamCodec.create(FsRequest.DeleteAll::new,
+		builder.add(FsRequest.DeleteAll.class, StreamCodec.create(DeleteAll::new,
 				DeleteAll::toDelete, StreamCodecs.ofSet(StreamCodecs.ofString()))
 		);
-		builder.add(FsRequest.Download.class, StructuredStreamCodec.create(FsRequest.Download::new,
+		builder.add(FsRequest.Download.class, StreamCodec.create(Download::new,
 				Download::name, StreamCodecs.ofString(),
 				Download::offset, StreamCodecs.ofVarLong(),
 				Download::limit, StreamCodecs.ofVarLong())
 		);
-		builder.add(FsRequest.Handshake.class, StructuredStreamCodec.create(FsRequest.Handshake::new,
+		builder.add(FsRequest.Handshake.class, StreamCodec.create(Handshake::new,
 				Handshake::version, VERSION_CODEC)
 		);
-		builder.add(FsRequest.Info.class, StructuredStreamCodec.create(FsRequest.Info::new,
+		builder.add(FsRequest.Info.class, StreamCodec.create(Info::new,
 				Info::name, StreamCodecs.ofString())
 		);
-		builder.add(FsRequest.InfoAll.class, StructuredStreamCodec.create(FsRequest.InfoAll::new,
+		builder.add(FsRequest.InfoAll.class, StreamCodec.create(InfoAll::new,
 				InfoAll::names, StreamCodecs.ofSet(StreamCodecs.ofString()))
 		);
-		builder.add(FsRequest.List.class, StructuredStreamCodec.create(FsRequest.List::new,
+		builder.add(FsRequest.List.class, StreamCodec.create(FsRequest.List::new,
 				FsRequest.List::glob, StreamCodecs.ofString())
 		);
-		builder.add(FsRequest.Move.class, StructuredStreamCodec.create(FsRequest.Move::new,
+		builder.add(FsRequest.Move.class, StreamCodec.create(Move::new,
 				Move::name, StreamCodecs.ofString(),
 				Move::target, StreamCodecs.ofString())
 		);
-		builder.add(FsRequest.MoveAll.class, StructuredStreamCodec.create(FsRequest.MoveAll::new,
+		builder.add(FsRequest.MoveAll.class, StreamCodec.create(MoveAll::new,
 				MoveAll::sourceToTarget, StreamCodecs.ofMap(StreamCodecs.ofString(), StreamCodecs.ofString()))
 		);
 		builder.add(FsRequest.Ping.class, StreamCodecs.singleton(new Ping()));
-		builder.add(FsRequest.Upload.class, StructuredStreamCodec.create(FsRequest.Upload::new,
+		builder.add(FsRequest.Upload.class, StreamCodec.create(Upload::new,
 				Upload::name, StreamCodecs.ofString(),
 				Upload::size, StreamCodecs.ofVarLong())
 		);
@@ -210,30 +209,30 @@ public final class RemoteFsUtils {
 		builder.add(FsResponse.CopyFinished.class, StreamCodecs.singleton(new FsResponse.CopyFinished()));
 		builder.add(FsResponse.DeleteAllFinished.class, StreamCodecs.singleton(new FsResponse.DeleteAllFinished()));
 		builder.add(FsResponse.DeleteFinished.class, StreamCodecs.singleton(new FsResponse.DeleteFinished()));
-		builder.add(FsResponse.DownloadSize.class, StructuredStreamCodec.create(FsResponse.DownloadSize::new,
+		builder.add(FsResponse.DownloadSize.class, StreamCodec.create(FsResponse.DownloadSize::new,
 				FsResponse.DownloadSize::size, StreamCodecs.ofVarLong())
 		);
-		builder.add(FsResponse.Handshake.class, StructuredStreamCodec.create(FsResponse.Handshake::new,
+		builder.add(FsResponse.Handshake.class, StreamCodec.create(FsResponse.Handshake::new,
 						FsResponse.Handshake::handshakeFailure, StreamCodecs.ofNullable(
-								StructuredStreamCodec.create(FsResponse.HandshakeFailure::new,
+								StreamCodec.create(FsResponse.HandshakeFailure::new,
 										FsResponse.HandshakeFailure::minimalVersion, VERSION_CODEC,
 										FsResponse.HandshakeFailure::message, StreamCodecs.ofString())
 						)
 				)
 		);
-		builder.add(FsResponse.InfoAllFinished.class, StructuredStreamCodec.create(FsResponse.InfoAllFinished::new,
+		builder.add(FsResponse.InfoAllFinished.class, StreamCodec.create(FsResponse.InfoAllFinished::new,
 				FsResponse.InfoAllFinished::files, StreamCodecs.ofMap(StreamCodecs.ofString(), FILE_METADATA_CODEC))
 		);
-		builder.add(FsResponse.InfoFinished.class, StructuredStreamCodec.create(FsResponse.InfoFinished::new,
+		builder.add(FsResponse.InfoFinished.class, StreamCodec.create(FsResponse.InfoFinished::new,
 				FsResponse.InfoFinished::fileMetadata, StreamCodecs.ofNullable(FILE_METADATA_CODEC))
 		);
-		builder.add(FsResponse.ListFinished.class, StructuredStreamCodec.create(FsResponse.ListFinished::new,
+		builder.add(FsResponse.ListFinished.class, StreamCodec.create(FsResponse.ListFinished::new,
 				FsResponse.ListFinished::files, StreamCodecs.ofMap(StreamCodecs.ofString(), FILE_METADATA_CODEC))
 		);
 		builder.add(FsResponse.MoveAllFinished.class, StreamCodecs.singleton(new FsResponse.MoveAllFinished()));
 		builder.add(FsResponse.MoveFinished.class, StreamCodecs.singleton(new FsResponse.MoveFinished()));
 		builder.add(FsResponse.Pong.class, StreamCodecs.singleton(new FsResponse.Pong()));
-		builder.add(FsResponse.ServerError.class, StructuredStreamCodec.create(FsResponse.ServerError::new,
+		builder.add(FsResponse.ServerError.class, StreamCodec.create(FsResponse.ServerError::new,
 				FsResponse.ServerError::exception, FsExceptionStreamCodec.createFsExceptionCodec()));
 		builder.add(FsResponse.UploadAck.class, StreamCodecs.singleton(new FsResponse.UploadAck()));
 		builder.add(FsResponse.UploadFinished.class, StreamCodecs.singleton(new FsResponse.UploadFinished()));

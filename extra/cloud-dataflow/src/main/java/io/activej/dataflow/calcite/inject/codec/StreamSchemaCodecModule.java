@@ -6,13 +6,12 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.record.RecordScheme;
 import io.activej.serializer.stream.StreamCodec;
-import io.activej.serializer.stream.StructuredStreamCodec;
 
 final class StreamSchemaCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(1)
 	StreamCodec<RecordStreamSchema> recordStreamSchema(StreamCodec<RecordScheme> recordSchemeStreamCodec) {
-		return StructuredStreamCodec.create(RecordStreamSchema::create,
+		return StreamCodec.create(RecordStreamSchema::create,
 				RecordStreamSchema::getRecordScheme, recordSchemeStreamCodec
 		);
 	}

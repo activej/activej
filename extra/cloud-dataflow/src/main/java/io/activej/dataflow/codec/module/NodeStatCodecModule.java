@@ -7,13 +7,12 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.serializer.stream.StreamCodec;
 import io.activej.serializer.stream.StreamCodecs;
-import io.activej.serializer.stream.StructuredStreamCodec;
 
 final class NodeStatCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(0)
 	StreamCodec<BinaryNodeStat> binaryNodeStat() {
-		return StructuredStreamCodec.create(BinaryNodeStat::new,
+		return StreamCodec.create(BinaryNodeStat::new,
 				BinaryNodeStat::getBytes, StreamCodecs.ofVarLong()
 		);
 	}
@@ -21,7 +20,7 @@ final class NodeStatCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(1)
 	StreamCodec<TestNodeStat> testNodeStat() {
-		return StructuredStreamCodec.create(TestNodeStat::new,
+		return StreamCodec.create(TestNodeStat::new,
 				TestNodeStat::getNodeIndex, StreamCodecs.ofVarInt()
 		);
 	}
