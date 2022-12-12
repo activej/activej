@@ -60,11 +60,6 @@
       <artifactId>avatica-server</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.immutables</groupId>
-      <artifactId>value</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
       <groupId>io.activej</groupId>
       <artifactId>activej-dataflow-jdbc-driver</artifactId>
       <version>${project.version}</version>
