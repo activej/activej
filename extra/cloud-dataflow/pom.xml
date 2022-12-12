@@ -52,10 +52,6 @@
       <artifactId>calcite-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.calcite</groupId>
-      <artifactId>calcite-file</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.calcite.avatica</groupId>
       <artifactId>avatica-core</artifactId>
     </dependency>

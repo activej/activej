@@ -205,11 +205,6 @@
         <version>1.32.0</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.calcite</groupId>
-        <artifactId>calcite-file</artifactId>
-        <version>1.32.0</version>
-      </dependency>
-      <dependency>
         <groupId>org.apache.calcite.avatica</groupId>
         <artifactId>avatica-core</artifactId>
         <version>1.22.0</version>
