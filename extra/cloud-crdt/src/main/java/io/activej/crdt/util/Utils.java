@@ -23,10 +23,10 @@ import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.processor.StreamFilter;
 import io.activej.datastream.processor.StreamTransformer;
 import io.activej.promise.Promise;
-import io.activej.streamcodecs.StreamCodec;
-import io.activej.streamcodecs.StreamCodecs;
-import io.activej.streamcodecs.StreamCodecs.SubtypeBuilder;
-import io.activej.streamcodecs.StructuredStreamCodec;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamCodecs;
+import io.activej.serializer.stream.StreamCodecs.SubtypeBuilder;
+import io.activej.serializer.stream.StructuredStreamCodec;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Files;

@@ -4,7 +4,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.binary.ByteBufsCodec;
-import io.activej.streamcodecs.StreamCodecs;
+import io.activej.serializer.stream.StreamCodecs;
 import io.activej.test.rules.ByteBufRule;
 import org.junit.ClassRule;
 import org.junit.Test;

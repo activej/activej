@@ -4,9 +4,9 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.binary.ByteBufsCodec;
-import io.activej.streamcodecs.StreamCodec;
-import io.activej.streamcodecs.StreamEncoder;
-import io.activej.streamcodecs.StreamInput;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamEncoder;
+import io.activej.serializer.stream.StreamInput;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.ByteArrayInputStream;

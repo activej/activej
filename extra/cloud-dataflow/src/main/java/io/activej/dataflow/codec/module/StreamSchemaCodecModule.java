@@ -4,8 +4,8 @@ import io.activej.dataflow.codec.Subtype;
 import io.activej.dataflow.graph.StreamSchemas;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
-import io.activej.streamcodecs.StreamCodec;
-import io.activej.streamcodecs.StructuredStreamCodec;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StructuredStreamCodec;
 
 import static io.activej.dataflow.codec.Utils.CLASS_STREAM_CODEC;
 

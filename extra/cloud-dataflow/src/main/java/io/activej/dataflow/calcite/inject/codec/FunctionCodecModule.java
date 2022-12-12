@@ -9,9 +9,9 @@ import io.activej.dataflow.calcite.utils.NamedRecordFunction;
 import io.activej.dataflow.codec.Subtype;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
-import io.activej.streamcodecs.StreamCodec;
-import io.activej.streamcodecs.StreamCodecs;
-import io.activej.streamcodecs.StructuredStreamCodec;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamCodecs;
+import io.activej.serializer.stream.StructuredStreamCodec;
 
 final class FunctionCodecModule extends AbstractModule {
 	@Provides

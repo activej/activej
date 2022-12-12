@@ -1,4 +1,4 @@
-package io.activej.streamcodecs;
+package io.activej.serializer.stream;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

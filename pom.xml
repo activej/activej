@@ -37,7 +37,6 @@
     <module>core-codegen</module>
     <module>core-serializer</module>
     <module>core-specializer</module>
-    <module>core-stream-codecs</module>
     <module>core-promise</module>
     <module>core-csp</module>
     <module>core-net</module>

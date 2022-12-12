@@ -26,11 +26,6 @@
     </dependency>
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-stream-codecs</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.activej</groupId>
       <artifactId>activej-inject</artifactId>
       <version>${project.version}</version>
     </dependency>

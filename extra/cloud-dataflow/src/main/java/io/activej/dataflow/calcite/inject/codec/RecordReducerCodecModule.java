@@ -6,9 +6,9 @@ import io.activej.datastream.processor.StreamReducers;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.record.RecordScheme;
-import io.activej.streamcodecs.StreamCodec;
-import io.activej.streamcodecs.StreamCodecs;
-import io.activej.streamcodecs.StructuredStreamCodec;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamCodecs;
+import io.activej.serializer.stream.StructuredStreamCodec;
 
 import java.util.List;
 

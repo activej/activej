@@ -5,9 +5,9 @@ import io.activej.dataflow.stats.BinaryNodeStat;
 import io.activej.dataflow.stats.TestNodeStat;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
-import io.activej.streamcodecs.StreamCodec;
-import io.activej.streamcodecs.StreamCodecs;
-import io.activej.streamcodecs.StructuredStreamCodec;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamCodecs;
+import io.activej.serializer.stream.StructuredStreamCodec;
 
 final class NodeStatCodecModule extends AbstractModule {
 	@Provides

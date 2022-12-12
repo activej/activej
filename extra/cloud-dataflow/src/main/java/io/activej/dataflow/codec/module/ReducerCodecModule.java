@@ -10,10 +10,10 @@ import io.activej.datastream.processor.StreamReducers.ReducerToResult.InputToOut
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
-import io.activej.streamcodecs.StreamCodec;
-import io.activej.streamcodecs.StreamCodecs;
-import io.activej.streamcodecs.StreamInput;
-import io.activej.streamcodecs.StreamOutput;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamCodecs;
+import io.activej.serializer.stream.StreamInput;
+import io.activej.serializer.stream.StreamOutput;
 
 import java.io.IOException;
 

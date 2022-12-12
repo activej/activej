@@ -30,9 +30,9 @@ import io.activej.fs.tcp.messaging.FsRequest.*;
 import io.activej.fs.tcp.messaging.FsResponse;
 import io.activej.fs.tcp.messaging.Version;
 import io.activej.promise.Promise;
-import io.activej.streamcodecs.StreamCodec;
-import io.activej.streamcodecs.StreamCodecs;
-import io.activej.streamcodecs.StructuredStreamCodec;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamCodecs;
+import io.activej.serializer.stream.StructuredStreamCodec;
 
 import java.nio.file.FileSystems;
 import java.nio.file.PathMatcher;

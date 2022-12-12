@@ -6,9 +6,9 @@ import io.activej.dataflow.messaging.DataflowResponse.*;
 import io.activej.dataflow.stats.NodeStat;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
-import io.activej.streamcodecs.StreamCodec;
-import io.activej.streamcodecs.StreamCodecs;
-import io.activej.streamcodecs.StructuredStreamCodec;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamCodecs;
+import io.activej.serializer.stream.StructuredStreamCodec;
 
 import static io.activej.dataflow.codec.Utils.INSTANT_STREAM_CODEC;
 import static io.activej.dataflow.codec.Utils.VERSION_STREAM_CODEC;

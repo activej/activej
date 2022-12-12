@@ -26,7 +26,7 @@ import io.activej.dataflow.stats.StatReducer;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
-import io.activej.streamcodecs.StreamCodec;
+import io.activej.serializer.stream.StreamCodec;
 
 public final class DataflowModule extends AbstractModule {
 	private DataflowModule() {

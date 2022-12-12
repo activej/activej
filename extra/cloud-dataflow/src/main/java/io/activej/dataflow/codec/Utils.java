@@ -3,9 +3,9 @@ package io.activej.dataflow.codec;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.messaging.Version;
 import io.activej.serializer.CorruptedDataException;
-import io.activej.streamcodecs.StreamCodec;
-import io.activej.streamcodecs.StreamCodecs;
-import io.activej.streamcodecs.StructuredStreamCodec;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamCodecs;
+import io.activej.serializer.stream.StructuredStreamCodec;
 
 import java.time.Instant;
 import java.util.HashMap;
