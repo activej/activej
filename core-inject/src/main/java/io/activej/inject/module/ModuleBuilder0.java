@@ -20,9 +20,11 @@ import io.activej.inject.Key;
 import io.activej.inject.Scope;
 import io.activej.inject.binding.Binding;
 import io.activej.inject.util.Constructors.*;
+import io.activej.inject.util.ReflectionUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 
 public interface ModuleBuilder0<T> extends ModuleBuilder {
 	/**
@@ -190,5 +192,12 @@ public interface ModuleBuilder0<T> extends ModuleBuilder {
 	default <T1, T2, T3, T4, T5, T6> ModuleBuilder1<T> to(@NotNull Constructor6<T1, T2, T3, T4, T5, T6, ? extends T> constructor,
 			@NotNull Key<T1> dependency1, @NotNull Key<T2> dependency2, @NotNull Key<T3> dependency3, @NotNull Key<T4> dependency4, @NotNull Key<T5> dependency5, @NotNull Key<T6> dependency6) {
 		return to(Binding.to(constructor, dependency1, dependency2, dependency3, dependency4, dependency5, dependency6));
+	}
+
+	/**
+	 * DSL shortcut for creating a binding out of Java's constructor.
+	 */
+	default ModuleBuilder1<T> to(Constructor<T> constructor) {
+		return to(ReflectionUtils.bindingFromConstructor(Key.of(constructor.getDeclaringClass()), constructor));
 	}
 }
