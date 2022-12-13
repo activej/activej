@@ -12,7 +12,7 @@ import java.util.function.Function;
 
 import static io.activej.fs.util.JsonUtils.fromJson;
 
-public abstract class AbstractDiscoveryService<D extends AbstractDiscoveryService<D>> implements DiscoveryService {
+public abstract class AbstractDiscoveryService<D extends AbstractDiscoveryService<D>> implements DiscoveryService<PartitionId> {
 	protected static final TypeT<List<RendezvousPartitionGroup<PartitionId>>> PARTITION_GROUPS_TYPE = new TypeT<>() {};
 
 	protected @Nullable Function<PartitionId, @NotNull RpcStrategy> rpcProvider;
