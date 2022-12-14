@@ -24,30 +24,45 @@ import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.nullify;
 
 public final class ChannelRateLimiter<T> extends AbstractChannelTransformer<ChannelRateLimiter<T>, T, T>
 		implements WithInitializer<ChannelRateLimiter<T>> {
-	private final Eventloop eventloop;
-	private final long refillRatePerSecond;
+	private static final Duration MILLIS_DURATION = ChronoUnit.MILLIS.getDuration();
 
-	private long tokens;
+	private final Eventloop eventloop;
+	private final double refillRatePerMillis;
+
+	private double tokens;
 	private long lastRefillTimestamp;
 	private Tokenizer<T> tokenizer = $ -> 1;
 
 	private @Nullable ScheduledRunnable scheduledRunnable;
 
-	private ChannelRateLimiter(Eventloop eventloop, long refillRatePerSecond) {
+	private ChannelRateLimiter(Eventloop eventloop, double refillRatePerMillis) {
 		this.eventloop = eventloop;
-		this.refillRatePerSecond = refillRatePerSecond;
+		this.refillRatePerMillis = refillRatePerMillis;
 		this.lastRefillTimestamp = eventloop.currentTimeMillis();
 	}
 
-	public static <T> ChannelRateLimiter<T> create(Eventloop eventloop, long refillRatePerSecond) {
-		return new ChannelRateLimiter<>(eventloop, refillRatePerSecond);
+	public static <T> ChannelRateLimiter<T> create(Eventloop eventloop, double refillRate, ChronoUnit perUnit) {
+		checkArgument(refillRate >= 0, "Negative refill rate");
+
+		Duration perUnitDuration = perUnit.getDuration();
+		double refillRatePerMillis;
+		if (perUnit.ordinal() > ChronoUnit.MILLIS.ordinal()) {
+			refillRatePerMillis = refillRate / perUnitDuration.dividedBy(MILLIS_DURATION);
+		} else {
+			refillRatePerMillis = refillRate * MILLIS_DURATION.dividedBy(perUnitDuration);
+		}
+		return new ChannelRateLimiter<>(eventloop, refillRatePerMillis);
 	}
 
-	public ChannelRateLimiter<T> withInitialTokens(long initialTokens) {
+	public ChannelRateLimiter<T> withInitialTokens(double initialTokens) {
 		this.tokens = initialTokens;
 		return this;
 	}
@@ -63,30 +78,33 @@ public final class ChannelRateLimiter<T> extends AbstractChannelTransformer<Chan
 
 		refill();
 
-		long itemTokens = tokenizer.getTokens(item);
+		double itemTokens = tokenizer.getTokens(item);
 		if (itemTokens <= tokens) {
 			tokens -= itemTokens;
 			return send(item);
 		}
 
-		return Promise.ofCallback(cb -> scheduledRunnable = eventloop.delay(calculateDelay(itemTokens), () -> onItem(item).whenComplete(cb::accept)));
+		return Promise.ofCallback(cb ->
+				scheduledRunnable = eventloop.delay(
+						calculateDelay(itemTokens),
+						() -> onItem(item)
+								.whenComplete(cb::accept))
+		);
 	}
 
 	private void refill() {
 		long timestamp = eventloop.currentTimeMillis();
-		long passedMillis = timestamp - lastRefillTimestamp;
+		double passedMillis = timestamp - lastRefillTimestamp;
 
-		tokens += (long) (passedMillis / 1000.0d * refillRatePerSecond);
+		tokens += passedMillis * refillRatePerMillis;
 		lastRefillTimestamp = timestamp;
 	}
 
-	private long calculateDelay(long itemTokens) {
-		long missing = itemTokens - tokens;
+	private long calculateDelay(double itemTokens) {
+		double missing = itemTokens - tokens;
 		assert missing > 0;
 
-		double secondsToRefill = (double) missing / refillRatePerSecond;
-
-		return Math.max(1, (long) (secondsToRefill * 1000));
+		return (long) Math.ceil(missing / refillRatePerMillis);
 	}
 
 	@Override
@@ -95,7 +113,7 @@ public final class ChannelRateLimiter<T> extends AbstractChannelTransformer<Chan
 	}
 
 	public interface Tokenizer<T> {
-		long getTokens(T item);
+		double getTokens(T item);
 
 		static Tokenizer<ByteBuf> forByteBufs() {
 			return ByteBuf::readRemaining;

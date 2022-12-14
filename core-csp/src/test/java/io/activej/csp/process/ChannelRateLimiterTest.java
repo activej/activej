@@ -8,6 +8,7 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -25,7 +26,7 @@ public class ChannelRateLimiterTest {
 	@Test
 	public void testEmpty() {
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
-		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.create(eventloop, 100);
+		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.create(eventloop, 100, ChronoUnit.SECONDS);
 
 		List<Integer> expected = IntStream.range(0, 200)
 				.boxed().collect(toList());
@@ -44,8 +45,8 @@ public class ChannelRateLimiterTest {
 	@Test
 	public void testHalfFull() {
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
-		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.<Integer>create(eventloop, 100)
-				.withInitialTokens(100L);
+		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.<Integer>create(eventloop, 0.0001, ChronoUnit.MICROS)
+				.withInitialTokens(100);
 
 		List<Integer> expected = IntStream.range(0, 200)
 				.boxed().collect(toList());
@@ -64,8 +65,8 @@ public class ChannelRateLimiterTest {
 	@Test
 	public void testFull() {
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
-		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.<Integer>create(eventloop, 100)
-				.withInitialTokens(200L);
+		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.<Integer>create(eventloop, 0.1, ChronoUnit.MILLIS)
+				.withInitialTokens(200);
 
 		List<Integer> expected = IntStream.range(0, 200)
 				.boxed().collect(toList());
