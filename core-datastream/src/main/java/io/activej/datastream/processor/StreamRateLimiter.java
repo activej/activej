@@ -17,15 +17,14 @@
 package io.activej.datastream.processor;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.csp.process.ChannelRateLimiter;
 import io.activej.datastream.*;
-import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.schedule.ScheduledRunnable;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayDeque;
-import java.util.Queue;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 
+import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.nullify;
 
 /**
@@ -33,10 +32,11 @@ import static io.activej.common.Utils.nullify;
  * which receives specified type and streams set of function's result  to the destination .
  */
 public final class StreamRateLimiter<T> implements StreamTransformer<T, T> {
-	private final Eventloop eventloop;
-	private final long refillRatePerSecond;
+	private static final Duration MILLIS_DURATION = ChronoUnit.MILLIS.getDuration();
 
-	private long tokens;
+	private final double refillRatePerMillis;
+
+	private double tokens;
 	private long lastRefillTimestamp;
 	private Tokenizer<T> tokenizer = $ -> 1;
 
@@ -45,9 +45,8 @@ public final class StreamRateLimiter<T> implements StreamTransformer<T, T> {
 
 	private @Nullable ScheduledRunnable scheduledRunnable;
 
-	private StreamRateLimiter(Eventloop eventloop, long refillRatePerSecond) {
-		this.eventloop = eventloop;
-		this.refillRatePerSecond = refillRatePerSecond;
+	private StreamRateLimiter(double refillRatePerMillis) {
+		this.refillRatePerMillis = refillRatePerMillis;
 		this.input = new Input();
 		this.output = new Output();
 
@@ -58,8 +57,17 @@ public final class StreamRateLimiter<T> implements StreamTransformer<T, T> {
 				.whenException(input::closeEx);
 	}
 
-	public static <T> StreamRateLimiter<T> create(Eventloop eventloop, long refillRatePerSecond) {
-		return new StreamRateLimiter<>(eventloop, refillRatePerSecond);
+	public static <T> StreamRateLimiter<T> create(double refillRate, ChronoUnit perUnit) {
+		checkArgument(refillRate >= 0, "Negative refill rate");
+
+		Duration perUnitDuration = perUnit.getDuration();
+		double refillRatePerMillis;
+		if (perUnit.ordinal() > ChronoUnit.MILLIS.ordinal()) {
+			refillRatePerMillis = refillRate / perUnitDuration.dividedBy(MILLIS_DURATION);
+		} else {
+			refillRatePerMillis = refillRate * MILLIS_DURATION.dividedBy(perUnitDuration);
+		}
+		return new StreamRateLimiter<>(refillRatePerMillis);
 	}
 
 	public StreamRateLimiter<T> withInitialTokens(long initialTokens) {
@@ -83,8 +91,6 @@ public final class StreamRateLimiter<T> implements StreamTransformer<T, T> {
 	}
 
 	private final class Input extends AbstractStreamConsumer<T> implements StreamDataAcceptor<T> {
-		private final Queue<T> buffer = new ArrayDeque<>();
-
 		@Override
 		protected void onStarted() {
 			lastRefillTimestamp = eventloop.currentTimeMillis();
@@ -105,55 +111,35 @@ public final class StreamRateLimiter<T> implements StreamTransformer<T, T> {
 
 		@Override
 		public void accept(T item) {
-			if (!buffer.isEmpty()) {
-				buffer.add(item);
-				return;
-			}
-
 			long itemTokens = tokenizer.getTokens(item);
-			if (itemTokens <= tokens) {
-				tokens -= itemTokens;
+			tokens -= itemTokens;
+
+			if (tokens >= 0) {
 				output.send(item);
 				return;
 			}
 
-			buffer.add(item);
 			input.suspend();
+			output.send(item);
 
-			scheduledRunnable = eventloop.delay(calculateDelay(itemTokens), output::proceed);
-		}
-
-		public boolean flush() {
-			while (!buffer.isEmpty() && output.isReady()) {
-				long itemTokens = tokenizer.getTokens(buffer.peek());
-				if (itemTokens > tokens) return false;
-				tokens -= itemTokens;
-				output.send(buffer.poll());
+			if (scheduledRunnable != null) {
+				return;
 			}
-			return buffer.isEmpty();
+
+			scheduledRunnable = eventloop.delay(
+					calculateDelay(itemTokens),
+					() -> output.proceed(itemTokens)
+			);
 		}
 	}
 
 	private final class Output extends AbstractStreamSupplier<T> {
 		@Override
 		protected void onResumed() {
-			refill();
-			if (input.flush()) {
-				if (input.isEndOfStream()) {
-					output.sendEndOfStream();
-				} else {
-					input.resume(input);
-				}
+			if (input.isEndOfStream()) {
+				output.sendEndOfStream();
 			} else {
-				if (!input.buffer.isEmpty()) {
-					long totalDelay = input.buffer.stream()
-							.map(tokenizer::getTokens)
-							.mapToLong(StreamRateLimiter.this::calculateDelay)
-							.sum();
-
-					scheduledRunnable = eventloop.delay(totalDelay, output::proceed);
-				}
-				input.suspend();
+				input.resume(input);
 			}
 		}
 
@@ -162,33 +148,38 @@ public final class StreamRateLimiter<T> implements StreamTransformer<T, T> {
 			input.suspend();
 		}
 
-		public void proceed() {
+		public void proceed(long itemTokens) {
 			scheduledRunnable = null;
-			resume();
+
+			refill();
+			if (tokens >= itemTokens) {
+				resume();
+				return;
+			}
+
+			scheduledRunnable = eventloop.delay(calculateDelay(itemTokens), () -> proceed(itemTokens));
+		}
+
+		private void refill() {
+			long timestamp = eventloop.currentTimeMillis();
+			double passedMillis = timestamp - lastRefillTimestamp;
+
+			tokens += passedMillis * refillRatePerMillis;
+			lastRefillTimestamp = timestamp;
 		}
 	}
 
-	private void refill() {
-		long timestamp = eventloop.currentTimeMillis();
-		long passedMillis = timestamp - lastRefillTimestamp;
-
-		tokens += (long) (passedMillis / 1000.0d * refillRatePerSecond);
-		lastRefillTimestamp = timestamp;
-	}
-
 	private long calculateDelay(long itemTokens) {
-		long missing = itemTokens - tokens;
+		double missing = itemTokens - tokens;
 		assert missing > 0;
 
-		double secondsToRefill = (double) missing / refillRatePerSecond;
-
-		return Math.max(1, (long) (secondsToRefill * 1000));
+		return (long) Math.ceil(missing / refillRatePerMillis);
 	}
 
 	public interface Tokenizer<T> {
 		long getTokens(T item);
 
-		static ChannelRateLimiter.Tokenizer<ByteBuf> forByteBufs() {
+		static Tokenizer<ByteBuf> forByteBufs() {
 			return ByteBuf::readRemaining;
 		}
 	}

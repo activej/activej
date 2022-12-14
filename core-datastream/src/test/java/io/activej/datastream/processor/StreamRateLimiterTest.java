@@ -8,6 +8,7 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -25,7 +26,7 @@ public class StreamRateLimiterTest {
 	@Test
 	public void testEmpty() {
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
-		StreamRateLimiter<Integer> limiter = StreamRateLimiter.create(eventloop, 100);
+		StreamRateLimiter<Integer> limiter = StreamRateLimiter.create(100, ChronoUnit.SECONDS);
 
 		List<Integer> expected = IntStream.range(0, 200)
 				.boxed().collect(toList());
@@ -44,7 +45,7 @@ public class StreamRateLimiterTest {
 	@Test
 	public void testHalfFull() {
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
-		StreamRateLimiter<Integer> limiter = StreamRateLimiter.<Integer>create(eventloop, 100)
+		StreamRateLimiter<Integer> limiter = StreamRateLimiter.<Integer>create(0.1, ChronoUnit.MILLIS)
 				.withInitialTokens(100L);
 
 		List<Integer> expected = IntStream.range(0, 200)
@@ -64,7 +65,7 @@ public class StreamRateLimiterTest {
 	@Test
 	public void testFull() {
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
-		StreamRateLimiter<Integer> limiter = StreamRateLimiter.<Integer>create(eventloop, 100)
+		StreamRateLimiter<Integer> limiter = StreamRateLimiter.<Integer>create(0.0001, ChronoUnit.MICROS)
 				.withInitialTokens(200L);
 
 		List<Integer> expected = IntStream.range(0, 200)
