@@ -1,6 +1,5 @@
 package io.activej.dataflow.codec;
 
-import io.activej.common.exception.MalformedDataException;
 import io.activej.dataflow.codec.module.DataflowStreamCodecsModule;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
@@ -13,6 +12,7 @@ import io.activej.streamcodecs.StreamCodec;
 import io.activej.streamcodecs.StreamCodecs;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.function.Function;
@@ -77,7 +77,7 @@ public class DataflowSerializationTest {
 	}
 
 	@Test
-	public void test() throws MalformedDataException {
+	public void test() throws IOException {
 		Module serialization = ModuleBuilder.create()
 				.install(DataflowStreamCodecsModule.create())
 				.bind(new Key<StreamCodec<Comparator<?>>>() {}).toInstance(StreamCodecs.singleton(new TestComparator()))

@@ -870,7 +870,7 @@ public final class StreamCodecs {
 				System.arraycopy(oldArray, positionData, array, newPositionData, dataSize);
 				recycle(oldArray);
 			}
-			output.pos(newPositionEnd);
+			output.out().pos(newPositionEnd);
 		}
 
 		private static int varIntSize(int dataSize) {

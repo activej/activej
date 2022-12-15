@@ -48,20 +48,12 @@ public class StreamOutput implements Closeable, WithInitializer<StreamOutput> {
 		return out.array();
 	}
 
-	public int pos() {
-		return out.pos();
-	}
-
-	public void pos(int pos) {
-		out.pos(pos);
-	}
-
 	public int limit() {
 		return out.array().length;
 	}
 
 	public int remaining() {
-		return limit() - pos();
+		return limit() - out.pos();
 	}
 
 	public void ensure(int bytes) throws IOException {

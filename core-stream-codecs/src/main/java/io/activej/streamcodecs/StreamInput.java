@@ -23,6 +23,12 @@ public class StreamInput implements Closeable, WithInitializer<StreamInput> {
 
 	private char[] charArray = new char[128];
 
+	private StreamInput(InputStream inputStream, BinaryInput binaryInput) {
+		this.inputStream = inputStream;
+		this.in = binaryInput;
+		this.limit = binaryInput.array.length;
+	}
+
 	private StreamInput(InputStream inputStream, int initialBufferSize) {
 		this.inputStream = inputStream;
 		this.in = new BinaryInput(allocate(initialBufferSize));
@@ -34,6 +40,14 @@ public class StreamInput implements Closeable, WithInitializer<StreamInput> {
 
 	public static StreamInput create(InputStream inputStream, int bufferSize) {
 		return new StreamInput(inputStream, bufferSize);
+	}
+
+	public static StreamInput create(BinaryInput binaryInput) {
+		return new StreamInput(InputStream.nullInputStream(), binaryInput);
+	}
+
+	public static StreamInput create(InputStream inputStream, BinaryInput binaryInput) {
+		return new StreamInput(inputStream, binaryInput);
 	}
 
 	@Override
@@ -64,20 +78,12 @@ public class StreamInput implements Closeable, WithInitializer<StreamInput> {
 		return in.array();
 	}
 
-	public int pos() {
-		return in.pos();
-	}
-
-	public void pos(int pos) {
-		in.pos(pos);
-	}
-
 	public int limit() {
 		return limit;
 	}
 
 	public int remaining() {
-		return limit() - pos();
+		return limit() - in.pos();
 	}
 
 	public void ensure(int bytes) throws IOException {
