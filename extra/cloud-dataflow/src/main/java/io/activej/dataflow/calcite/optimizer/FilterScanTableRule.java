@@ -16,28 +16,28 @@
  */
 package io.activej.dataflow.calcite.optimizer;
 
-import io.activej.dataflow.calcite.rel.FilterableTableScan;
+import io.activej.dataflow.calcite.rel.DataflowTableScan;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rex.RexNode;
 
-public class ParameterizedTableRule extends RelOptRule {
+public class FilterScanTableRule extends RelOptRule {
 
-	private ParameterizedTableRule(RelOptRuleOperand operand) {
+	private FilterScanTableRule(RelOptRuleOperand operand) {
 		super(operand);
 	}
 
-	public static ParameterizedTableRule create() {
-		return new ParameterizedTableRule(operand(LogicalFilter.class,
-				operand(FilterableTableScan.class, none())));
+	public static FilterScanTableRule create() {
+		return new FilterScanTableRule(operand(LogicalFilter.class,
+				operand(DataflowTableScan.class, none())));
 	}
 
 	@Override
 	public void onMatch(RelOptRuleCall call) {
 		LogicalFilter filter = call.rel(0);
-		FilterableTableScan scan = call.rel(1);
+		DataflowTableScan scan = call.rel(1);
 
 		if (scan.getCondition() != null) return;
 

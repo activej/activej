@@ -225,17 +225,23 @@ public final class Datasets {
 		return new DatasetUnion<>(left, right);
 	}
 
-	public static <K, T> SortedDataset<K, T> datasetOffset(LocallySortedDataset<K, T> dataset, long offset) {
-		return datasetOffsetLimit(dataset, offset, StreamLimiter.NO_LIMIT);
+	public static <K, T> SortedDataset<K, T> offset(LocallySortedDataset<K, T> dataset, long offset) {
+		return offsetLimit(dataset, offset, StreamLimiter.NO_LIMIT);
 	}
 
-	public static <K, T> SortedDataset<K, T> datasetLimit(LocallySortedDataset<K, T> dataset, long limit) {
-		return datasetOffsetLimit(dataset, StreamSkip.NO_SKIP, limit);
+	public static <K, T> SortedDataset<K, T> limit(LocallySortedDataset<K, T> dataset, long limit) {
+		return offsetLimit(dataset, StreamSkip.NO_SKIP, limit);
 	}
 
-	public static <K, T> SortedDataset<K, T> datasetOffsetLimit(LocallySortedDataset<K, T> dataset, long offset, long limit) {
+	public static <K, T> SortedDataset<K, T> offsetLimit(LocallySortedDataset<K, T> dataset, long offset, long limit) {
 		checkArgument(offset >= StreamSkip.NO_SKIP && limit >= StreamLimiter.NO_LIMIT, "Negative offset or limit");
 
 		return new DatasetOffsetLimit<>(dataset, offset, limit);
+	}
+
+	public static <T> Dataset<T> localLimit(Dataset<T> dataset, long limit) {
+		checkArgument(limit >= StreamLimiter.NO_LIMIT, "Negative limit");
+
+		return new DatasetLocalLimit<>(dataset, limit);
 	}
 }

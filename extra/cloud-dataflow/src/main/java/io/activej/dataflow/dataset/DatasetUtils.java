@@ -17,10 +17,7 @@
 package io.activej.dataflow.dataset;
 
 import io.activej.dataflow.graph.*;
-import io.activej.dataflow.node.NodeDownload;
-import io.activej.dataflow.node.NodeReduce;
-import io.activej.dataflow.node.NodeShard;
-import io.activej.dataflow.node.NodeUpload;
+import io.activej.dataflow.node.*;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 
 import java.util.ArrayList;
@@ -109,4 +106,11 @@ public class DatasetUtils {
 	public static int[] generateIndexes(DataflowContext context, int size) {
 		return IntStream.generate(context::generateNodeIndex).limit(size).toArray();
 	}
+
+	public static StreamId limitStream(DataflowGraph graph, int index, long limit, StreamId streamId) {
+		NodeOffsetLimit<?> node = new NodeOffsetLimit<>(index, 0, limit, streamId);
+		graph.addNode(graph.getPartition(streamId), node);
+		return node.getOutput();
+	}
+
 }

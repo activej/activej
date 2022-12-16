@@ -3,7 +3,8 @@ package io.activej.dataflow.calcite;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.SqlDataflow;
 import io.activej.dataflow.calcite.RelToDatasetConverter.ConversionResult;
-import io.activej.dataflow.calcite.optimizer.ParameterizedTableRule;
+import io.activej.dataflow.calcite.optimizer.FilterScanTableRule;
+import io.activej.dataflow.calcite.optimizer.SortScanTableRule;
 import io.activej.dataflow.collector.Collector;
 import io.activej.dataflow.collector.MergeCollector;
 import io.activej.dataflow.collector.UnionCollector;
@@ -127,7 +128,10 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 
 	private RelNode optimize(RelRoot root) {
 		HepProgramBuilder builder = new HepProgramBuilder();
-		builder.addRuleCollection(List.of(CoreRules.FILTER_INTO_JOIN, ParameterizedTableRule.create()));
+		builder.addRuleCollection(List.of(CoreRules.FILTER_INTO_JOIN,
+				FilterScanTableRule.create(),
+				SortScanTableRule.create())
+		);
 		Program prog = Programs.of(builder.build(), true, DefaultRelMetadataProvider.INSTANCE);
 		Program program = Programs.sequence(prog);
 		return program.run(planner, root.project(), traits, Collections.emptyList(), Collections.emptyList());

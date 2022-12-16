@@ -28,10 +28,12 @@ import io.activej.dataflow.node.NodeOffsetLimit;
 import io.activej.datastream.processor.StreamLimiter;
 import io.activej.datastream.processor.StreamSkip;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static io.activej.dataflow.dataset.DatasetUtils.limitStream;
 import static io.activej.datastream.processor.StreamReducers.mergeReducer;
 
 public final class DatasetOffsetLimit<K, T> extends SortedDataset<K, T> {
@@ -58,12 +60,20 @@ public final class DatasetOffsetLimit<K, T> extends SortedDataset<K, T> {
 		if (offset == StreamSkip.NO_SKIP && limit == StreamLimiter.NO_LIMIT) return streamIds;
 
 		DataflowGraph graph = next.getGraph();
-		int index = next.generateNodeIndex();
 
 		if (streamIds.isEmpty()) return streamIds;
 
 		if (streamIds.size() == 1) {
-			return toOutput(graph, index, streamIds.get(0));
+			return toOutput(graph, next.generateNodeIndex(), streamIds.get(0));
+		}
+
+		if (limit != StreamLimiter.NO_LIMIT) {
+			List<StreamId> newStreamIds = new ArrayList<>(streamIds.size());
+			for (StreamId streamId : streamIds) {
+				StreamId limitedStream = limitStream(graph, next.generateNodeIndex(), offset + limit, streamId);
+				newStreamIds.add(limitedStream);
+			}
+			streamIds = newStreamIds;
 		}
 
 		StreamId randomStreamId = streamIds.get(Math.abs(sharderNonce) % streamIds.size());
@@ -72,7 +82,7 @@ public final class DatasetOffsetLimit<K, T> extends SortedDataset<K, T> {
 		List<StreamId> newStreamIds = DatasetUtils.repartitionAndReduce(next, streamIds, streamSchema(), input.keyFunction(), input.keyComparator(), mergeReducer(), List.of(randomPartition));
 		assert newStreamIds.size() == 1;
 
-		return toOutput(graph, index, newStreamIds.get(0));
+		return toOutput(graph, next.generateNodeIndex(), newStreamIds.get(0));
 	}
 
 	@Override

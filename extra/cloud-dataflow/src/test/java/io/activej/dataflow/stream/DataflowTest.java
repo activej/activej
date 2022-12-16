@@ -484,7 +484,7 @@ public final class DataflowTest {
 
 		Dataset<TestItem> dataset = datasetOfId("items", simple(TestItem.class));
 		LocallySortedDataset<Long, TestItem> sortedDataset = localSort(dataset, long.class, new TestKeyFunction(), new TestComparator());
-		SortedDataset<Long, TestItem> afterOffsetAndLimitApplied = datasetOffsetLimit(sortedDataset, 3, 4);
+		SortedDataset<Long, TestItem> afterOffsetAndLimitApplied = offsetLimit(sortedDataset, 3, 4);
 
 		Collector<TestItem> collector = MergeCollector.create(afterOffsetAndLimitApplied, client, false);
 		StreamSupplier<TestItem> resultSupplier = collector.compile(graph);

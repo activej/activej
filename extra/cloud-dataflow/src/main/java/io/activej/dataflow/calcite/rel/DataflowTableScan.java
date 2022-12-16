@@ -18,13 +18,19 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Objects;
 
-public class FilterableTableScan extends TableScan {
+public class DataflowTableScan extends TableScan {
 	private @Nullable RexNode condition;
 
-	private FilterableTableScan(RelOptCluster cluster, RelTraitSet traitSet,
-			RelOptTable table, List<RelHint> hints, @Nullable RexNode condition) {
+	private @Nullable RexNode offset;
+	private @Nullable RexNode limit;
+
+	private DataflowTableScan(RelOptCluster cluster, RelTraitSet traitSet,
+			RelOptTable table, List<RelHint> hints, @Nullable RexNode condition,
+			@Nullable RexNode offset, @Nullable RexNode limit) {
 		super(cluster, traitSet, hints, table);
 		this.condition = condition;
+		this.offset = offset;
+		this.limit = limit;
 	}
 
 	@Override
@@ -34,7 +40,7 @@ public class FilterableTableScan extends TableScan {
 		return this;
 	}
 
-	public static FilterableTableScan create(RelOptCluster cluster,
+	public static DataflowTableScan create(RelOptCluster cluster,
 			final RelOptTable relOptTable, List<RelHint> hints) {
 		final Table table = relOptTable.unwrap(Table.class);
 		final RelTraitSet traitSet =
@@ -45,12 +51,12 @@ public class FilterableTableScan extends TableScan {
 							}
 							return ImmutableList.of();
 						});
-		return new FilterableTableScan(cluster, traitSet, relOptTable, hints, null);
+		return new DataflowTableScan(cluster, traitSet, relOptTable, hints, null, null, null);
 	}
 
 	@Override
 	public RelNode withHints(List<RelHint> hintList) {
-		return new FilterableTableScan(getCluster(), traitSet, table, hintList, condition);
+		return new DataflowTableScan(getCluster(), traitSet, table, hintList, condition, offset, limit);
 	}
 
 	public void setCondition(@NotNull RexNode condition) {
@@ -61,20 +67,46 @@ public class FilterableTableScan extends TableScan {
 		return condition;
 	}
 
+	public void setOffset(@NotNull RexNode offset) {
+		this.offset = offset;
+	}
+
+	public @Nullable RexNode getOffset() {
+		return offset;
+	}
+
+	public void setLimit(@NotNull RexNode limit) {
+		this.limit = limit;
+	}
+
+	public @Nullable RexNode getLimit() {
+		return limit;
+	}
+
 	@Override
 	public RelWriter explainTerms(RelWriter pw) {
 		return super.explainTerms(pw)
-				.item("condition", condition);
+				.item("condition", condition)
+				.item("offset", offset)
+				.item("limit", limit);
 	}
 
 	@Override
 	public boolean deepEquals(Object obj) {
-		return super.deepEquals(obj)
-				&& Objects.equals(condition, ((FilterableTableScan) obj).condition);
+		if (!super.deepEquals(obj)) {
+			return false;
+		}
+		DataflowTableScan other = (DataflowTableScan) obj;
+		return Objects.equals(condition, other.condition) &&
+				Objects.equals(offset, other.offset) &&
+				Objects.equals(limit, other.limit);
 	}
 
 	@Override
 	public int deepHashCode() {
-		return super.deepHashCode() + Objects.hashCode(condition);
+		return super.deepHashCode() +
+				Objects.hashCode(condition) +
+				Objects.hashCode(offset) +
+				Objects.hashCode(limit);
 	}
 }

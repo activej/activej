@@ -9,7 +9,7 @@ import io.activej.dataflow.calcite.join.RecordJoiner;
 import io.activej.dataflow.calcite.operand.Operand;
 import io.activej.dataflow.calcite.operand.OperandRecordField;
 import io.activej.dataflow.calcite.operand.OperandScalar;
-import io.activej.dataflow.calcite.rel.FilterableTableScan;
+import io.activej.dataflow.calcite.rel.DataflowTableScan;
 import io.activej.dataflow.calcite.utils.*;
 import io.activej.dataflow.calcite.utils.RecordSortComparator.FieldSort;
 import io.activej.dataflow.calcite.where.*;
@@ -67,7 +67,7 @@ public class RelToDatasetConverter {
 		if (relNode instanceof LogicalProject logicalProject) {
 			return handle(logicalProject, paramsCollector);
 		}
-		if (relNode instanceof FilterableTableScan tableScan) {
+		if (relNode instanceof DataflowTableScan tableScan) {
 			return handle(tableScan, paramsCollector);
 		}
 		if (relNode instanceof LogicalFilter logicalFilter) {
@@ -150,8 +150,8 @@ public class RelToDatasetConverter {
 				});
 	}
 
-	@SuppressWarnings("unchecked")
-	private UnmaterializedDataset handle(FilterableTableScan scan, ParamsCollector paramsCollector) {
+	@SuppressWarnings({"unchecked", "ConstantConditions"})
+	private UnmaterializedDataset handle(DataflowTableScan scan, ParamsCollector paramsCollector) {
 		RelOptTable table = scan.getTable();
 
 		DataflowTable dataflowTable = table.unwrap(DataflowTable.class);
@@ -169,11 +169,29 @@ public class RelToDatasetConverter {
 			wherePredicate = new AndPredicate(emptyList());
 		}
 
+		RexNode offsetNode = scan.getOffset();
+		RexNode limitNode = scan.getLimit();
+		OperandScalar offsetOperand = offsetNode == null ?
+				new OperandScalar(Value.materializedValue(int.class, StreamSkip.NO_SKIP)) :
+				paramsCollector.toScalarOperand(offsetNode);
+
+		OperandScalar limitOperand = limitNode == null ?
+				new OperandScalar(Value.materializedValue(int.class, StreamLimiter.NO_LIMIT)) :
+				paramsCollector.toScalarOperand(limitNode);
+
 		RecordScheme scheme = mapper.getScheme();
 		return UnmaterializedDataset.of(scheme, params -> {
 			WherePredicate materializedPredicate = wherePredicate.materialize(params);
 			Class<Object> type = (Class<Object>) dataflowTable.getType();
 			Dataset<Object> dataset = DatasetSupplierOfPredicate.create(id, materializedPredicate, StreamSchemas.simple(type));
+
+			long offset = ((Number) offsetOperand.materialize(params).getValue().getValue()).longValue();
+			long limit = ((Number) limitOperand.materialize(params).getValue().getValue()).longValue();
+
+			if (limit != StreamLimiter.NO_LIMIT) {
+				dataset = Datasets.localLimit(dataset, offset + limit);
+			}
+
 			Dataset<Record> mapped = Datasets.map(dataset, new NamedRecordFunction<>(id, mapper), RecordStreamSchema.create(scheme));
 			Dataset<Record> filtered = needsFiltering ?
 					Datasets.filter(mapped, materializedPredicate) :
@@ -398,7 +416,9 @@ public class RelToDatasetConverter {
 				params -> {
 					Dataset<Record> materializedDataset = current.materialize(params);
 
-					LocallySortedDataset<Record, Record> result = Datasets.localSort(materializedDataset, Record.class, IdentityFunction.getInstance(), new RecordSortComparator(sorts));
+					LocallySortedDataset<Record, Record> result = sorts.isEmpty() ?
+							Datasets.castToSorted(materializedDataset, Record.class, IdentityFunction.getInstance(), new RecordSortComparator(sorts)) :
+							Datasets.localSort(materializedDataset, Record.class, IdentityFunction.getInstance(), new RecordSortComparator(sorts));
 
 					long offsetValue = ((Number) offset.materialize(params).getValue().getValue()).longValue();
 					long limitValue = ((Number) limit.materialize(params).getValue().getValue()).longValue();
@@ -407,7 +427,7 @@ public class RelToDatasetConverter {
 						return result;
 					}
 
-					return Datasets.datasetOffsetLimit(result, offsetValue, limitValue);
+					return Datasets.offsetLimit(result, offsetValue, limitValue);
 				}
 		);
 	}

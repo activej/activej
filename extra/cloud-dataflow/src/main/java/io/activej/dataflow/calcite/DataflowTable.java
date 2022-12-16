@@ -16,7 +16,7 @@
  */
 package io.activej.dataflow.calcite;
 
-import io.activej.dataflow.calcite.rel.FilterableTableScan;
+import io.activej.dataflow.calcite.rel.DataflowTableScan;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
@@ -73,6 +73,6 @@ public class DataflowTable extends AbstractTable implements TranslatableTable {
 
 	@Override
 	public RelNode toRel(RelOptTable.ToRelContext context, RelOptTable relOptTable) {
-		return FilterableTableScan.create(context.getCluster(), relOptTable, context.getTableHints());
+		return DataflowTableScan.create(context.getCluster(), relOptTable, context.getTableHints());
 	}
 }
