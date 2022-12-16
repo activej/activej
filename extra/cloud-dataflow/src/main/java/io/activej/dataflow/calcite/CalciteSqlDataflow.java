@@ -5,6 +5,7 @@ import io.activej.dataflow.SqlDataflow;
 import io.activej.dataflow.calcite.RelToDatasetConverter.ConversionResult;
 import io.activej.dataflow.calcite.optimizer.FilterScanTableRule;
 import io.activej.dataflow.calcite.optimizer.SortScanTableRule;
+import io.activej.dataflow.collector.AbstractCollector;
 import io.activej.dataflow.collector.Collector;
 import io.activej.dataflow.collector.MergeCollector;
 import io.activej.dataflow.collector.UnionCollector;
@@ -119,14 +120,10 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 			return StreamSupplier.of();
 		}
 
-		Collector<Record> calciteCollector = createCollector(dataset);
+		Collector<Record> calciteCollector = createCollector(dataset, limit);
 
 		DataflowGraph graph = new DataflowGraph(client, partitions);
 		StreamSupplier<Record> result = calciteCollector.compile(graph);
-
-		if (limit != StreamLimiter.NO_LIMIT) {
-			result = result.transformWith(StreamLimiter.create(limit));
-		}
 
 		graph.execute();
 		return result;
@@ -168,7 +165,7 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 
 	public String explainNodes(String query) throws SqlParseException, DataflowException {
 		Dataset<Record> dataset = convertToDataset(query);
-		Collector<Record> calciteCollector = createCollector(dataset);
+		Collector<Record> calciteCollector = createCollector(dataset, StreamLimiter.NO_LIMIT);
 
 		DataflowGraph graph = new DataflowGraph(client, partitions);
 		calciteCollector.compile(graph);
@@ -176,9 +173,15 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 		return graph.toGraphViz();
 	}
 
-	private Collector<Record> createCollector(Dataset<Record> dataset) {
-		return dataset instanceof LocallySortedDataset<?, Record> sortedDataset ?
+	private Collector<Record> createCollector(Dataset<Record> dataset, long limit) {
+		AbstractCollector<Record, ?, ?> collector = dataset instanceof LocallySortedDataset<?, Record> sortedDataset ?
 				MergeCollector.create(sortedDataset, client, false) :
 				UnionCollector.create(dataset, client);
+
+		if (limit == StreamLimiter.NO_LIMIT) {
+			return collector;
+		}
+
+		return collector.withLimit(limit);
 	}
 }

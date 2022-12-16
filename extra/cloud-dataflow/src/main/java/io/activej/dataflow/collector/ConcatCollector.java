@@ -23,7 +23,7 @@ import io.activej.datastream.StreamSupplier;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class ConcatCollector<T> extends AbstractCollector<T, List<StreamSupplier<T>>> {
+public final class ConcatCollector<T> extends AbstractCollector<T, List<StreamSupplier<T>>, ConcatCollector<T>> {
 
 	private ConcatCollector(Dataset<T> input, DataflowClient client) {
 		super(input, client);

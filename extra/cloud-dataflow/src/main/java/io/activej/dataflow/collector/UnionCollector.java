@@ -21,7 +21,7 @@ import io.activej.dataflow.dataset.Dataset;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamUnion;
 
-public class UnionCollector<T> extends AbstractCollector<T, StreamUnion<T>> {
+public class UnionCollector<T> extends AbstractCollector<T, StreamUnion<T>, UnionCollector<T>> {
 
 	private UnionCollector(Dataset<T> input, DataflowClient client) {
 		super(input, client);

@@ -18,9 +18,9 @@ package io.activej.dataflow;
 
 import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.function.FunctionEx;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnknownFormatException;
+import io.activej.common.function.FunctionEx;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.dsl.ChannelTransformer;
 import io.activej.csp.net.Messaging;
