@@ -1,5 +1,6 @@
 package io.activej.datastream.processor;
 
+import io.activej.datastream.AbstractStreamConsumer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.test.ExpectedException;
@@ -29,8 +30,8 @@ public class StreamSupplierConcatTest {
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 
 		await(StreamSupplier.concat(
-				StreamSupplier.of(1, 2, 3),
-				StreamSupplier.of(4, 5, 6))
+						StreamSupplier.of(1, 2, 3),
+						StreamSupplier.of(4, 5, 6))
 				.streamTo(consumer.transformWith(randomlySuspending())));
 
 		assertEquals(asList(1, 2, 3, 4, 5, 6), consumer.getList());
@@ -45,10 +46,10 @@ public class StreamSupplierConcatTest {
 		ExpectedException exception = new ExpectedException("Test Exception");
 
 		Exception e = awaitException(StreamSupplier.concat(
-				StreamSupplier.of(1, 2, 3),
-				StreamSupplier.of(4, 5, 6),
-				StreamSupplier.closingWithError(exception),
-				StreamSupplier.of(1, 2, 3))
+						StreamSupplier.of(1, 2, 3),
+						StreamSupplier.of(4, 5, 6),
+						StreamSupplier.closingWithError(exception),
+						StreamSupplier.of(1, 2, 3))
 				.streamTo(consumer));
 
 		assertSame(exception, e);
@@ -59,9 +60,9 @@ public class StreamSupplierConcatTest {
 	@Test
 	public void testConcat() {
 		List<Integer> list = await(StreamSupplier.concat(
-				StreamSupplier.of(1, 2, 3),
-				StreamSupplier.of(4, 5, 6),
-				StreamSupplier.of())
+						StreamSupplier.of(1, 2, 3),
+						StreamSupplier.of(4, 5, 6),
+						StreamSupplier.of())
 				.toList());
 
 		assertEquals(asList(1, 2, 3, 4, 5, 6), list);
@@ -75,14 +76,36 @@ public class StreamSupplierConcatTest {
 		ExpectedException exception = new ExpectedException("Test Exception");
 
 		Exception e = awaitException(StreamSupplier.concat(
-				StreamSupplier.of(1, 2, 3),
-				StreamSupplier.of(4, 5, 6),
-				StreamSupplier.closingWithError(exception))
+						StreamSupplier.of(1, 2, 3),
+						StreamSupplier.of(4, 5, 6),
+						StreamSupplier.closingWithError(exception))
 				.streamTo(consumer));
 
 		assertSame(exception, e);
 		assertEquals(asList(1, 2, 3, 4, 5, 6), list);
 
+	}
+
+	@Test
+	public void testConcatPreemptiveAcknowledge() {
+		List<Integer> result = new ArrayList<>();
+		await(StreamSupplier.concat(
+						StreamSupplier.of(1, 2, 3),
+						StreamSupplier.of(4, 5, 6)
+				)
+				.streamTo(new AbstractStreamConsumer<Integer>() {
+					@Override
+					protected void onInit() {
+						resume(integer -> {
+							result.add(integer);
+							if (result.size() == 2) {
+								acknowledge();
+							}
+						});
+					}
+				}));
+
+		assertEquals(asList(1, 2), result);
 	}
 
 }
