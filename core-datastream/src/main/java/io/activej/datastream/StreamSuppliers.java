@@ -160,6 +160,11 @@ final class StreamSuppliers {
 		}
 
 		@Override
+		protected void onAcknowledge() {
+			internalConsumer.acknowledge();
+		}
+
+		@Override
 		protected void onSuspended() {
 			internalConsumer.suspend();
 		}
