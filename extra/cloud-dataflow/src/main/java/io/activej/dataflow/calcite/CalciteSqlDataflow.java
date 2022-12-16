@@ -14,6 +14,7 @@ import io.activej.dataflow.exception.DataflowException;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.processor.StreamLimiter;
 import io.activej.promise.Promise;
 import io.activej.record.Record;
 import org.apache.calcite.jdbc.CalciteSchema;
@@ -110,10 +111,22 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 	}
 
 	public StreamSupplier<Record> queryDataflow(Dataset<Record> dataset) {
+		return queryDataflow(dataset, StreamLimiter.NO_LIMIT);
+	}
+
+	public StreamSupplier<Record> queryDataflow(Dataset<Record> dataset, long limit) {
+		if (limit == 0) {
+			return StreamSupplier.of();
+		}
+
 		Collector<Record> calciteCollector = createCollector(dataset);
 
 		DataflowGraph graph = new DataflowGraph(client, partitions);
 		StreamSupplier<Record> result = calciteCollector.compile(graph);
+
+		if (limit != StreamLimiter.NO_LIMIT) {
+			result = result.transformWith(StreamLimiter.create(limit));
+		}
 
 		graph.execute();
 		return result;

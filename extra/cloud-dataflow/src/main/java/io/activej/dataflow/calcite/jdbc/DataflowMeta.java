@@ -13,10 +13,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import io.activej.types.Types;
-import org.apache.calcite.avatica.AvaticaParameter;
-import org.apache.calcite.avatica.ColumnMetaData;
-import org.apache.calcite.avatica.NoSuchStatementException;
-import org.apache.calcite.avatica.SqlType;
+import org.apache.calcite.avatica.*;
 import org.apache.calcite.avatica.remote.TypedValue;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.rel.RelNode;
@@ -92,7 +89,7 @@ public final class DataflowMeta extends LimitedMeta {
 	private final CalciteSqlDataflow sqlDataflow;
 	private final Map<String, Integer> statementIds = new ConcurrentHashMap<>();
 	private final Map<String, Map<Integer, FrameFetcher>> fetchers = new ConcurrentHashMap<>();
-	private final Map<String, Map<Integer, UnmaterializedDataset>> unmaterializedDatasets = new ConcurrentHashMap<>();
+	private final Map<String, Map<Integer, DatasetWithLimit>> unmaterializedDatasets = new ConcurrentHashMap<>();
 
 	private DataflowMeta(Eventloop eventloop, CalciteSqlDataflow sqlDataflow) {
 		this.eventloop = eventloop;
@@ -105,7 +102,7 @@ public final class DataflowMeta extends LimitedMeta {
 
 	@Override
 	public StatementHandle prepare(ConnectionHandle ch, String sql, long maxRowCount) {
-		Map<Integer, UnmaterializedDataset> connectionDatasets = unmaterializedDatasets.get(ch.id);
+		Map<Integer, DatasetWithLimit> connectionDatasets = unmaterializedDatasets.get(ch.id);
 		if (connectionDatasets == null) {
 			throw new RuntimeException("Unknown connection: " + ch);
 		}
@@ -115,19 +112,24 @@ public final class DataflowMeta extends LimitedMeta {
 		ConversionResult conversionResult = transformed.conversionResult();
 		statement.signature = createSignature(sql, transformed.fields(), conversionResult.dynamicParams(), conversionResult.unmaterializedDataset().getScheme());
 
-		connectionDatasets.put(statement.id, conversionResult.unmaterializedDataset());
+		connectionDatasets.put(statement.id, new DatasetWithLimit(conversionResult.unmaterializedDataset(), maxRowCount));
 		return statement;
 	}
 
 	@Override
 	public ExecuteResult execute(StatementHandle h, List<TypedValue> parameterValues, int maxRowsInFirstFrame) throws NoSuchStatementException {
-		Map<Integer, UnmaterializedDataset> connectionDatasets = unmaterializedDatasets.get(h.connectionId);
+		Map<Integer, DatasetWithLimit> connectionDatasets = unmaterializedDatasets.get(h.connectionId);
 		if (connectionDatasets == null) {
 			throw new RuntimeException("Unknown connection: " + h.connectionId);
 		}
 
-		UnmaterializedDataset unmaterializedDataset = connectionDatasets.get(h.id);
-		if (unmaterializedDataset == null) {
+		Map<Integer, FrameFetcher> fetchersMap = fetchers.get(h.connectionId);
+		if (fetchersMap == null) {
+			throw new RuntimeException("Unknown connection: " + h.connectionId);
+		}
+
+		DatasetWithLimit datasetWithLimit = connectionDatasets.get(h.id);
+		if (datasetWithLimit == null) {
 			throw new NoSuchStatementException(h);
 		}
 
@@ -135,20 +137,22 @@ public final class DataflowMeta extends LimitedMeta {
 				.map(this::paramToJdbc)
 				.toList();
 
-		Dataset<Record> dataset = unmaterializedDataset.materialize(params);
+		Dataset<Record> dataset = datasetWithLimit.dataset.materialize(params);
 
-		FrameFetcher frameFetcher = createFrameFetcher(h, dataset);
+		FrameFetcher frameFetcher = createFrameFetcher(h, dataset, datasetWithLimit.limit);
 
-		Frame firstFrame = frameFetcher.fetch(0, maxRowsInFirstFrame);
-
-		MetaResultSet metaResultSet = MetaResultSet.create(h.connectionId, h.id, false, h.signature, firstFrame);
-		return new ExecuteResult(List.of(metaResultSet));
+		return fetchResult(h, maxRowsInFirstFrame, fetchersMap, frameFetcher);
 	}
 
 	@Override
 	public ExecuteResult prepareAndExecute(StatementHandle h, String sql, long maxRowCount, int maxRowsInFirstFrame, PrepareCallback callback) {
 		if (sql.toUpperCase().startsWith(EXPLAIN)) {
 			return handleExplainQuery(h, sql);
+		}
+
+		Map<Integer, FrameFetcher> fetchersMap = fetchers.get(h.connectionId);
+		if (fetchersMap == null) {
+			throw new RuntimeException("Unknown connection: " + h.connectionId);
 		}
 
 		TransformationResult transformed = transform(sql);
@@ -158,9 +162,19 @@ public final class DataflowMeta extends LimitedMeta {
 
 		Dataset<Record> dataset = unmaterialized.materialize(Collections.emptyList());
 
-		FrameFetcher frameFetcher = createFrameFetcher(h, dataset);
+		FrameFetcher frameFetcher = createFrameFetcher(h, dataset, maxRowCount);
 
+		return fetchResult(h, maxRowsInFirstFrame, fetchersMap, frameFetcher);
+	}
+
+	private Meta.ExecuteResult fetchResult(StatementHandle h, int maxRowsInFirstFrame, Map<Integer, FrameFetcher> fetchersMap, FrameFetcher frameFetcher) {
 		Frame firstFrame = frameFetcher.fetch(0, maxRowsInFirstFrame);
+
+		if (firstFrame.done) {
+			eventloop.submit(frameFetcher::close);
+		} else {
+			fetchersMap.put(h.id, frameFetcher);
+		}
 
 		MetaResultSet metaResultSet = MetaResultSet.create(h.connectionId, h.id, false, h.signature, firstFrame);
 		return new ExecuteResult(List.of(metaResultSet));
@@ -196,11 +210,10 @@ public final class DataflowMeta extends LimitedMeta {
 		return new ExecuteResult(List.of(resultSet));
 	}
 
-	private FrameFetcher createFrameFetcher(StatementHandle statement, Dataset<Record> dataset) {
-		FrameFetcher frameFetcher;
+	private FrameFetcher createFrameFetcher(StatementHandle statement, Dataset<Record> dataset, long limit) {
 		try {
-			frameFetcher = eventloop.submit((AsyncComputation<FrameFetcher>) cb -> {
-				StreamSupplier<Record> supplier = sqlDataflow.queryDataflow(dataset);
+			return eventloop.submit((AsyncComputation<FrameFetcher>) cb -> {
+				StreamSupplier<Record> supplier = sqlDataflow.queryDataflow(dataset, limit);
 				SynchronousStreamConsumer<Record> recordConsumer = SynchronousStreamConsumer.create();
 				supplier.streamTo(recordConsumer);
 				cb.accept(new FrameFetcher(recordConsumer, statement.signature.columns.size()), null);
@@ -211,10 +224,6 @@ public final class DataflowMeta extends LimitedMeta {
 		} catch (ExecutionException e) {
 			throw new RuntimeException(e);
 		}
-
-		fetchers.get(statement.connectionId).put(statement.id, frameFetcher);
-
-		return frameFetcher;
 	}
 
 	private Signature createSignature(String sql, List<RelDataTypeField> fields, List<RexDynamicParam> dynamicParams, RecordScheme scheme) {
@@ -328,7 +337,14 @@ public final class DataflowMeta extends LimitedMeta {
 		if (frameFetcher == null) {
 			throw new NoSuchStatementException(h);
 		}
-		return frameFetcher.fetch(offset, fetchMaxRowCount);
+		Frame frame = frameFetcher.fetch(offset, fetchMaxRowCount);
+
+		if (frame.done) {
+			connectionFetchers.remove(h.id);
+			eventloop.submit(frameFetcher::close);
+		}
+
+		return frame;
 	}
 
 	@Override
@@ -380,7 +396,7 @@ public final class DataflowMeta extends LimitedMeta {
 
 	@Override
 	public void closeStatement(StatementHandle h) {
-		Map<Integer, UnmaterializedDataset> connectionDatasets = unmaterializedDatasets.get(h.connectionId);
+		Map<Integer, DatasetWithLimit> connectionDatasets = unmaterializedDatasets.get(h.connectionId);
 		if (connectionDatasets != null) {
 			connectionDatasets.remove(h.id);
 		}
@@ -637,6 +653,10 @@ public final class DataflowMeta extends LimitedMeta {
 	}
 
 	private record TransformationResult(List<RelDataTypeField> fields, ConversionResult conversionResult) {
+
+	}
+
+	private record DatasetWithLimit(UnmaterializedDataset dataset, long limit) {
 
 	}
 }
