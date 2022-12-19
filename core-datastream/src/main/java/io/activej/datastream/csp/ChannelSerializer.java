@@ -207,7 +207,8 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T>
 									output.accept(ByteBuf.wrapForReading(explicitEndOfStream)) :
 									Promise.complete())
 					.then(output::acceptEndOfStream)
-					.whenResult(this::acknowledge);
+					.whenResult(this::acknowledge)
+					.whenException(this::closeEx);
 		} else {
 			resume(input);
 		}
