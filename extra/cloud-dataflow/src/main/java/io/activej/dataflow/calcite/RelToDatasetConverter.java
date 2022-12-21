@@ -416,18 +416,26 @@ public class RelToDatasetConverter {
 				params -> {
 					Dataset<Record> materializedDataset = current.materialize(params);
 
-					LocallySortedDataset<Record, Record> result = sorts.isEmpty() ?
-							Datasets.castToSorted(materializedDataset, Record.class, IdentityFunction.getInstance(), new RecordSortComparator(sorts)) :
-							Datasets.localSort(materializedDataset, Record.class, IdentityFunction.getInstance(), new RecordSortComparator(sorts));
-
 					long offsetValue = ((Number) offset.materialize(params).getValue().getValue()).longValue();
 					long limitValue = ((Number) limit.materialize(params).getValue().getValue()).longValue();
 
-					if (offsetValue == StreamSkip.NO_SKIP && limitValue == StreamLimiter.NO_LIMIT) {
-						return result;
+
+					if (sorts.isEmpty()) {
+						return Datasets.offsetLimit(materializedDataset, IdentityFunction.getInstance(), offsetValue, limitValue);
 					}
 
-					return Datasets.offsetLimit(result, offsetValue, limitValue);
+					LocallySortedDataset<Record, Record> sorted = Datasets.localSort(
+							materializedDataset,
+							Record.class,
+							IdentityFunction.getInstance(),
+							new RecordSortComparator(sorts)
+					);
+
+					if (offsetValue == StreamSkip.NO_SKIP && limitValue == StreamLimiter.NO_LIMIT) {
+						return sorted;
+					}
+
+					return Datasets.offsetLimit(sorted, offsetValue, limitValue);
 				}
 		);
 	}

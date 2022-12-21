@@ -18,11 +18,14 @@ package io.activej.dataflow.dataset;
 
 import io.activej.dataflow.graph.*;
 import io.activej.dataflow.node.*;
+import io.activej.datastream.processor.StreamLimiter;
 import io.activej.datastream.processor.StreamReducers.Reducer;
+import io.activej.datastream.processor.StreamSkip;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
@@ -83,6 +86,47 @@ public class DatasetUtils {
 		return repartitionAndReduce(context, input, mergeReducer(), partitions);
 	}
 
+	public static <T, K> List<StreamId> repartition(DataflowContext context,
+			List<StreamId> inputs,
+			StreamSchema<T> inputStreamSchema,
+			Function<T, K> keyFunction,
+			List<Partition> partitions) {
+
+		DataflowGraph graph = context.getGraph();
+		int nonce = context.getNonce();
+		List<StreamId> outputStreamIds = new ArrayList<>();
+
+		List<NodeShard<K, T>> sharders = new ArrayList<>();
+		int shardIndex = context.generateNodeIndex();
+		for (StreamId inputStreamId : inputs) {
+			Partition partition = graph.getPartition(inputStreamId);
+			NodeShard<K, T> sharder = new NodeShard<>(shardIndex, keyFunction, inputStreamId, nonce);
+			graph.addNode(partition, sharder);
+			sharders.add(sharder);
+		}
+
+		int unionIndex = context.generateNodeIndex();
+		int[] downloadIndexes = generateIndexes(context, sharders.size());
+		int[] uploadIndexes = generateIndexes(context, partitions.size());
+		for (int i = 0; i < partitions.size(); i++) {
+			Partition partition = partitions.get(i);
+			List<StreamId> unionInputs = new ArrayList<>();
+			for (int j = 0; j < sharders.size(); j++) {
+				NodeShard<K, T> sharder = sharders.get(j);
+				StreamId sharderOutput = sharder.newPartition();
+				graph.addNodeStream(sharder, sharderOutput);
+				StreamId unionInput = forwardChannel(context, inputStreamSchema, sharderOutput, partition, uploadIndexes[i], downloadIndexes[j]);
+				unionInputs.add(unionInput);
+			}
+			NodeUnion<T> nodeUnion = new NodeUnion<>(unionIndex, unionInputs);
+			graph.addNode(partition, nodeUnion);
+
+			outputStreamIds.add(nodeUnion.getOutput());
+		}
+
+		return outputStreamIds;
+	}
+
 	public static <T> StreamId forwardChannel(DataflowContext context, StreamSchema<T> streamSchema,
 			StreamId sourceStreamId, Partition targetPartition, int uploadIndex, int downloadIndex) {
 		Partition sourcePartition = context.getGraph().getPartition(sourceStreamId);
@@ -111,6 +155,46 @@ public class DatasetUtils {
 		NodeOffsetLimit<?> node = new NodeOffsetLimit<>(index, 0, limit, streamId);
 		graph.addNode(graph.getPartition(streamId), node);
 		return node.getOutput();
+	}
+
+	public static List<StreamId> offsetLimit(DataflowContext context,
+			List<StreamId> inputs,
+			long offset,
+			long limit,
+			BiFunction<List<StreamId>, Partition, StreamId> inputReducer
+	) {
+
+		if (offset == StreamSkip.NO_SKIP && limit == StreamLimiter.NO_LIMIT) return inputs;
+
+		DataflowGraph graph = context.getGraph();
+
+		if (inputs.isEmpty()) return inputs;
+
+		if (inputs.size() == 1) {
+			return toOutput(graph, context.generateNodeIndex(), inputs.get(0), offset, limit);
+		}
+
+		if (limit != StreamLimiter.NO_LIMIT) {
+			List<StreamId> newStreamIds = new ArrayList<>(inputs.size());
+			for (StreamId streamId : inputs) {
+				StreamId limitedStream = limitStream(graph, context.generateNodeIndex(), offset + limit, streamId);
+				newStreamIds.add(limitedStream);
+			}
+			inputs = newStreamIds;
+		}
+
+		StreamId randomStreamId = inputs.get(Math.abs(context.getNonce()) % inputs.size());
+		Partition randomPartition = graph.getPartition(randomStreamId);
+
+		StreamId newStreamId = inputReducer.apply(inputs, randomPartition);
+
+		return toOutput(graph, context.generateNodeIndex(), newStreamId, offset, limit);
+	}
+
+	private static <T> List<StreamId> toOutput(DataflowGraph graph, int index, StreamId streamId, long offset, long limit) {
+		NodeOffsetLimit<T> node = new NodeOffsetLimit<>(index, offset, limit, streamId);
+		graph.addNode(graph.getPartition(streamId), node);
+		return List.of(node.getOutput());
 	}
 
 }

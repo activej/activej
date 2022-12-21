@@ -236,7 +236,21 @@ public final class Datasets {
 	public static <K, T> SortedDataset<K, T> offsetLimit(LocallySortedDataset<K, T> dataset, long offset, long limit) {
 		checkArgument(offset >= StreamSkip.NO_SKIP && limit >= StreamLimiter.NO_LIMIT, "Negative offset or limit");
 
-		return new DatasetOffsetLimit<>(dataset, offset, limit);
+		return new SortedDatasetOffsetLimit<>(dataset, offset, limit);
+	}
+
+	public static <T, K> Dataset<T> offset(Dataset<T> dataset, Function<T, K> keyFunction, long offset) {
+		return offsetLimit(dataset, keyFunction, offset, StreamLimiter.NO_LIMIT);
+	}
+
+	public static <T, K> Dataset<T> limit(Dataset<T> dataset, Function<T, K> keyFunction, long limit) {
+		return offsetLimit(dataset, keyFunction, StreamSkip.NO_SKIP, limit);
+	}
+
+	public static <T, K> Dataset<T> offsetLimit(Dataset<T> dataset, Function<T, K> keyFunction, long offset, long limit) {
+		checkArgument(offset >= StreamSkip.NO_SKIP && limit >= StreamLimiter.NO_LIMIT, "Negative offset or limit");
+
+		return new DatasetOffsetLimit<>(dataset, keyFunction, offset, limit);
 	}
 
 	public static <T> Dataset<T> localLimit(Dataset<T> dataset, long limit) {

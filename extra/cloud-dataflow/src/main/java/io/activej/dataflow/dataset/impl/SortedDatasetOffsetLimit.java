@@ -18,27 +18,28 @@ package io.activej.dataflow.dataset.impl;
 
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.DatasetUtils;
+import io.activej.dataflow.dataset.LocallySortedDataset;
+import io.activej.dataflow.dataset.SortedDataset;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.StreamId;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.Function;
 
-public final class DatasetOffsetLimit<T, K> extends Dataset<T> {
-	private final Dataset<T> input;
-	private final Function<T, K> keyFunction;
+import static io.activej.datastream.processor.StreamReducers.mergeReducer;
+
+public final class SortedDatasetOffsetLimit<K, T> extends SortedDataset<K, T> {
+	private final LocallySortedDataset<K, T> input;
 
 	private final long offset;
 	private final long limit;
 
 	private final int sharderNonce = ThreadLocalRandom.current().nextInt();
 
-	public DatasetOffsetLimit(Dataset<T> input, Function<T, K> keyFunction, long offset, long limit) {
-		super(input.streamSchema());
+	public SortedDatasetOffsetLimit(LocallySortedDataset<K, T> input, long offset, long limit) {
+		super(input.streamSchema(), input.keyComparator(), input.keyType(), input.keyFunction());
 		this.input = input;
-		this.keyFunction = keyFunction;
 		this.offset = offset;
 		this.limit = limit;
 	}
@@ -51,7 +52,15 @@ public final class DatasetOffsetLimit<T, K> extends Dataset<T> {
 
 		return DatasetUtils.offsetLimit(next, streamIds, offset, limit,
 				(inputs, partition) -> {
-					List<StreamId> repartitioned = DatasetUtils.repartition(next, inputs, input.streamSchema(), keyFunction, List.of(partition));
+					List<StreamId> repartitioned = DatasetUtils.repartitionAndReduce(
+							context,
+							inputs,
+							streamSchema(),
+							keyFunction(),
+							keyComparator(),
+							mergeReducer(),
+							List.of(partition)
+					);
 					assert repartitioned.size() == 1;
 					return repartitioned.get(0);
 				});
