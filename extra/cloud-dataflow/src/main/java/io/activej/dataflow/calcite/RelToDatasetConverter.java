@@ -185,17 +185,17 @@ public class RelToDatasetConverter {
 			Class<Object> type = (Class<Object>) dataflowTable.getType();
 			Dataset<Object> dataset = DatasetSupplierOfPredicate.create(id, materializedPredicate, StreamSchemas.simple(type));
 
-			long offset = ((Number) offsetOperand.materialize(params).getValue().getValue()).longValue();
-			long limit = ((Number) limitOperand.materialize(params).getValue().getValue()).longValue();
-
-			if (limit != StreamLimiter.NO_LIMIT) {
-				dataset = Datasets.localLimit(dataset, offset + limit);
-			}
-
 			Dataset<Record> mapped = Datasets.map(dataset, new NamedRecordFunction<>(id, mapper), RecordStreamSchema.create(scheme));
 			Dataset<Record> filtered = needsFiltering ?
 					Datasets.filter(mapped, materializedPredicate) :
 					mapped;
+
+			long offset = ((Number) offsetOperand.materialize(params).getValue().getValue()).longValue();
+			long limit = ((Number) limitOperand.materialize(params).getValue().getValue()).longValue();
+
+			if (limit != StreamLimiter.NO_LIMIT) {
+				filtered = Datasets.localLimit(filtered, offset + limit);
+			}
 
 			if (!(dataflowTable instanceof DataflowPartitionedTable dataflowPartitionedTable)) return filtered;
 

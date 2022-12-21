@@ -51,8 +51,6 @@ public class SortScanTableRule extends RelOptRule {
 		RexNode offset = sort.offset;
 		RexNode limit = sort.fetch;
 
-		if (scan.getLimit() != null || scan.getCondition() != null || (offset == null && limit == null)) return;
-
 		List<RelFieldCollation> fieldCollations = sort.getCollation().getFieldCollations();
 		if (!fieldCollations.isEmpty()) return;
 
