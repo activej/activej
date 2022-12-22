@@ -89,15 +89,15 @@ public final class StreamLimiter<T> implements StreamTransformer<T, T> {
 	}
 
 	private void sync() {
+		if (input.limit == 0) return;
+
 		StreamDataAcceptor<T> dataAcceptor = output.getDataAcceptor();
 		if (dataAcceptor != null) {
 			input.resume(item -> {
-				if (input.limit == 0) return;
-
 				dataAcceptor.accept(item);
 
 				if (input.limit != NO_LIMIT && --input.limit == 0) {
-					input.acknowledge();
+					input.suspend();
 					output.sendEndOfStream();
 				}
 			});
