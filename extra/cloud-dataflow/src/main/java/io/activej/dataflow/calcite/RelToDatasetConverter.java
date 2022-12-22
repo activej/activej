@@ -190,14 +190,14 @@ public class RelToDatasetConverter {
 					Datasets.filter(mapped, materializedPredicate) :
 					mapped;
 
+			if (!(dataflowTable instanceof DataflowPartitionedTable dataflowPartitionedTable)) return filtered;
+
 			long offset = ((Number) offsetOperand.materialize(params).getValue().getValue()).longValue();
 			long limit = ((Number) limitOperand.materialize(params).getValue().getValue()).longValue();
 
 			if (limit != StreamLimiter.NO_LIMIT) {
 				filtered = Datasets.localLimit(filtered, offset + limit);
 			}
-
-			if (!(dataflowTable instanceof DataflowPartitionedTable dataflowPartitionedTable)) return filtered;
 
 			List<Integer> indexes = new ArrayList<>(dataflowPartitionedTable.getPrimaryKeyIndexes());
 			if (indexes.isEmpty()) {
