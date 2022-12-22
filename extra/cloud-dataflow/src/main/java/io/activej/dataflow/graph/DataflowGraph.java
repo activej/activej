@@ -148,11 +148,11 @@ public final class DataflowGraph {
 	}
 
 	public String toGraphViz() {
-		return toGraphViz(false, 2);
+		return toGraphViz(false, -1);
 	}
 
 	public String toGraphViz(boolean streamLabels) {
-		return toGraphViz(streamLabels, 2);
+		return toGraphViz(streamLabels, -1);
 	}
 
 	public String toGraphViz(int maxPartitions) {
@@ -195,7 +195,7 @@ public final class DataflowGraph {
 		getNodesByPartition()
 				.entrySet()
 				.stream()
-				.limit(maxPartitions)
+				.limit(maxPartitions == -1 ? availablePartitions.size() : maxPartitions)
 				.forEach(e -> {
 					sb.append("  subgraph cluster_")
 							.append(++clusterCounter.value)
