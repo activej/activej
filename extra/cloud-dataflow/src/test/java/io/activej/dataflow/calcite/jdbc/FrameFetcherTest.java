@@ -1,8 +1,8 @@
 package io.activej.dataflow.calcite.jdbc;
 
 import io.activej.common.ref.RefLong;
+import io.activej.datastream.BlockingStreamConsumer;
 import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.SynchronousStreamConsumer;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.record.Record;
@@ -86,9 +86,9 @@ public class FrameFetcherTest {
 				})
 				.limit(maxCount));
 
-		SynchronousStreamConsumer<Record> synchronousStreamConsumer = SynchronousStreamConsumer.create();
-		FrameFetcher frameFetcher = new FrameFetcher(synchronousStreamConsumer, SCHEME.size());
-		Promise<Void> streamPromise = recordSupplier.streamTo(synchronousStreamConsumer);
+		BlockingStreamConsumer<Record> blockingStreamConsumer = BlockingStreamConsumer.create();
+		FrameFetcher frameFetcher = new FrameFetcher(blockingStreamConsumer, SCHEME.size());
+		Promise<Void> streamPromise = recordSupplier.streamTo(blockingStreamConsumer);
 
 		Eventloop eventloop = Eventloop.getCurrentEventloop();
 		eventloop.keepAlive(true);
