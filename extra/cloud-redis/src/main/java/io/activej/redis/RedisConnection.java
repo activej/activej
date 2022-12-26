@@ -300,12 +300,12 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 	private void postFlush() {
 		flushPosted = true;
 		if (autoFlushIntervalMillis <= 0) {
-			eventloop.postLast(() -> {
+			reactor.postLast(() -> {
 				flushPosted = false;
 				flush();
 			});
 		} else {
-			eventloop.delayBackground(autoFlushIntervalMillis, () -> {
+			reactor.delayBackground(autoFlushIntervalMillis, () -> {
 				flushPosted = false;
 				flush();
 			});

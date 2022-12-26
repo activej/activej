@@ -23,7 +23,7 @@ import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.dsl.HasStreamInputs;
 import io.activej.datastream.dsl.HasStreamOutput;
-import io.activej.eventloop.Eventloop;
+import io.activej.reactor.Reactor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,7 +47,7 @@ public final class StreamUnion<T> implements HasStreamOutput<T>, HasStreamInputs
 
 	public static <T> StreamUnion<T> create() {
 		StreamUnion<T> union = new StreamUnion<>();
-		Eventloop.getCurrentEventloop().post(union::start);
+		Reactor.getCurrentReactor().post(union::start);
 		return union;
 	}
 

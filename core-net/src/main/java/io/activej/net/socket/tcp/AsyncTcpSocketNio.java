@@ -24,16 +24,16 @@ import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.NioChannelEventHandler;
-import io.activej.eventloop.net.SocketSettings;
-import io.activej.eventloop.schedule.ScheduledRunnable;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ExceptionStats;
 import io.activej.jmx.stats.ValueStats;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.net.SocketSettings;
+import io.activej.reactor.nio.NioChannelEventHandler;
+import io.activej.reactor.nio.NioReactor;
+import io.activej.reactor.schedule.ScheduledRunnable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -49,7 +49,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.MemSize.kilobytes;
 import static io.activej.common.Utils.nullify;
-import static io.activej.eventloop.Eventloop.getCurrentEventloop;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 
 @SuppressWarnings("WeakerAccess")
 public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventHandler {
@@ -62,7 +62,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 
 	private static final AtomicInteger CONNECTION_COUNT = new AtomicInteger(0);
 
-	private final Eventloop eventloop;
+	private final NioReactor reactor;
 	private final InetSocketAddress remoteAddress;
 
 	private @Nullable SocketChannel channel;
@@ -225,8 +225,8 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		}
 	}
 
-	public static AsyncTcpSocketNio wrapChannel(Eventloop eventloop, SocketChannel socketChannel, @NotNull InetSocketAddress remoteAddress, @Nullable SocketSettings socketSettings) throws IOException {
-		AsyncTcpSocketNio asyncTcpSocket = new AsyncTcpSocketNio(eventloop, socketChannel, remoteAddress);
+	public static AsyncTcpSocketNio wrapChannel(NioReactor reactor, SocketChannel socketChannel, @NotNull InetSocketAddress remoteAddress, @Nullable SocketSettings socketSettings) throws IOException {
+		AsyncTcpSocketNio asyncTcpSocket = new AsyncTcpSocketNio(reactor, socketChannel, remoteAddress);
 		if (socketSettings == null) return asyncTcpSocket;
 		socketSettings.applySettings(socketChannel);
 		if (socketSettings.hasImplReadTimeout()) {
@@ -241,12 +241,16 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		return asyncTcpSocket;
 	}
 
-	public static AsyncTcpSocketNio wrapChannel(Eventloop eventloop, SocketChannel socketChannel, @Nullable SocketSettings socketSettings) throws IOException {
-		return wrapChannel(eventloop, socketChannel, ((InetSocketAddress) socketChannel.getRemoteAddress()), socketSettings);
+	public static AsyncTcpSocketNio wrapChannel(NioReactor reactor, SocketChannel socketChannel, @Nullable SocketSettings socketSettings) throws IOException {
+		return wrapChannel(reactor, socketChannel, ((InetSocketAddress) socketChannel.getRemoteAddress()), socketSettings);
 	}
 
 	public static Promise<AsyncTcpSocketNio> connect(InetSocketAddress address) {
 		return connect(address, null, null);
+	}
+
+	public static Promise<AsyncTcpSocketNio> connect(NioReactor reactor, InetSocketAddress address) {
+		return connect(reactor, address, 0, null);
 	}
 
 	public static Promise<AsyncTcpSocketNio> connect(InetSocketAddress address, @Nullable Duration duration, @Nullable SocketSettings socketSettings) {
@@ -254,13 +258,17 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	}
 
 	public static Promise<AsyncTcpSocketNio> connect(InetSocketAddress address, long timeout, @Nullable SocketSettings socketSettings) {
-		Eventloop eventloop = getCurrentEventloop();
-		return Promise.<SocketChannel>ofCallback(cb -> eventloop.connect(address, timeout, cb))
+		NioReactor reactor = getCurrentReactor();
+		return connect(reactor, address, timeout, socketSettings);
+	}
+
+	public static Promise<AsyncTcpSocketNio> connect(NioReactor reactor, InetSocketAddress address, long timeout, @Nullable SocketSettings socketSettings) {
+		return Promise.<SocketChannel>ofCallback(cb -> reactor.connect(address, timeout, cb))
 				.map(channel -> {
 					try {
-						return wrapChannel(eventloop, channel, address, socketSettings);
+						return wrapChannel(reactor, channel, address, socketSettings);
 					} catch (IOException e) {
-						eventloop.closeChannel(channel, null);
+						reactor.closeChannel(channel, null);
 						throw e;
 					}
 				});
@@ -270,8 +278,8 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		this.inspector = inspector;
 	}
 
-	private AsyncTcpSocketNio(Eventloop eventloop, @NotNull SocketChannel socketChannel, InetSocketAddress remoteAddress) {
-		this.eventloop = eventloop;
+	private AsyncTcpSocketNio(NioReactor reactor, @NotNull SocketChannel socketChannel, InetSocketAddress remoteAddress) {
+		this.reactor = reactor;
 		this.channel = socketChannel;
 		this.remoteAddress = remoteAddress;
 	}
@@ -301,7 +309,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	// timeouts management
 	private void scheduleReadTimeout() {
 		assert scheduledReadTimeout == null && readTimeout != NO_TIMEOUT;
-		scheduledReadTimeout = eventloop.delayBackground(readTimeout, () -> {
+		scheduledReadTimeout = reactor.delayBackground(readTimeout, () -> {
 			if (inspector != null) inspector.onReadTimeout(this);
 			scheduledReadTimeout = null;
 			closeEx(new AsyncTimeoutException("Timed out"));
@@ -310,7 +318,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 
 	private void scheduleWriteTimeout() {
 		assert scheduledWriteTimeout == null && writeTimeout != NO_TIMEOUT;
-		scheduledWriteTimeout = eventloop.delayBackground(writeTimeout, () -> {
+		scheduledWriteTimeout = reactor.delayBackground(writeTimeout, () -> {
 			if (inspector != null) inspector.onWriteTimeout(this);
 			scheduledWriteTimeout = null;
 			closeEx(new AsyncTimeoutException("Timed out"));
@@ -323,7 +331,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		if (key == null) {
 			ops = newOps;
 			try {
-				key = channel.register(eventloop.ensureSelector(), ops, this);
+				key = channel.register(reactor.ensureSelector(), ops, this);
 				CONNECTION_COUNT.incrementAndGet();
 			} catch (ClosedChannelException e) {
 				closeEx(e);
@@ -338,7 +346,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 
 	@Override
 	public @NotNull Promise<ByteBuf> read() {
-		if (CHECK) checkState(eventloop.inEventloopThread());
+		if (CHECK) checkState(reactor.inReactorThread());
 		if (isClosed()) return Promise.ofException(new AsyncCloseException());
 		read = null;
 		if (readBuf != null || readEndOfStream) {
@@ -435,7 +443,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	@Override
 	public @NotNull Promise<Void> write(@Nullable ByteBuf buf) {
 		if (CHECK) {
-			checkState(eventloop.inEventloopThread());
+			checkState(reactor.inReactorThread());
 			checkState(!writeEndOfStream, "End of stream has already been sent");
 		}
 		if (isClosed()) {
@@ -544,7 +552,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 
 	@Override
 	public void closeEx(@NotNull Exception e) {
-		if (CHECK) checkState(eventloop.inEventloopThread());
+		if (CHECK) checkState(reactor.inReactorThread());
 		if (isClosed()) return;
 		doClose();
 		readBuf = nullify(readBuf, ByteBuf::recycle);
@@ -556,7 +564,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	}
 
 	private void doClose() {
-		eventloop.closeChannel(channel, key);
+		reactor.closeChannel(channel, key);
 		channel = null;
 		CONNECTION_COUNT.decrementAndGet();
 		if (inspector != null) inspector.onDisconnect(this);

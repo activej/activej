@@ -25,9 +25,6 @@ import io.activej.common.initializer.WithInitializer;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.dns.protocol.*;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
-import io.activej.eventloop.net.DatagramSocketSettings;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;
 import io.activej.net.socket.udp.AsyncUdpSocket;
@@ -35,6 +32,9 @@ import io.activej.net.socket.udp.AsyncUdpSocketNio;
 import io.activej.net.socket.udp.UdpPacket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.net.DatagramSocketSettings;
+import io.activej.reactor.nio.NioReactor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -55,7 +55,7 @@ import static io.activej.promise.Promises.timeout;
  * Implementation of {@link AsyncDnsClient} that asynchronously
  * connects to some <i>real</i> DNS server and gets the response from it.
  */
-public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxBeanWithStats, WithInitializer<RemoteAsyncDnsClient> {
+public final class RemoteAsyncDnsClient implements AsyncDnsClient, ReactorJmxBeanWithStats, WithInitializer<RemoteAsyncDnsClient> {
 	private final Logger logger = LoggerFactory.getLogger(RemoteAsyncDnsClient.class);
 	private static final boolean CHECK = Checks.isEnabled(RemoteAsyncDnsClient.class);
 
@@ -64,7 +64,7 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 	public static final InetSocketAddress GOOGLE_PUBLIC_DNS = new InetSocketAddress("8.8.8.8", DNS_SERVER_PORT);
 	public static final InetSocketAddress LOCAL_DNS = new InetSocketAddress("192.168.0.1", DNS_SERVER_PORT);
 
-	private final Eventloop eventloop;
+	private final NioReactor reactor;
 	private final Map<DnsTransaction, SettablePromise<DnsResponse>> transactions = new HashMap<>();
 
 	private DatagramSocketSettings datagramSocketSettings = DatagramSocketSettings.create();
@@ -77,12 +77,12 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 	private @Nullable Inspector inspector;
 
 	// region creators
-	private RemoteAsyncDnsClient(Eventloop eventloop) {
-		this.eventloop = eventloop;
+	private RemoteAsyncDnsClient(NioReactor reactor) {
+		this.reactor = reactor;
 	}
 
-	public static RemoteAsyncDnsClient create(Eventloop eventloop) {
-		return new RemoteAsyncDnsClient(eventloop);
+	public static RemoteAsyncDnsClient create(NioReactor reactor) {
+		return new RemoteAsyncDnsClient(reactor);
 	}
 
 	public RemoteAsyncDnsClient withDatagramSocketSetting(DatagramSocketSettings setting) {
@@ -118,13 +118,13 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 	// endregion
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull NioReactor getReactor() {
+		return reactor;
 	}
 
 	@Override
 	public void close() {
-		if (CHECK) checkState(eventloop.inEventloopThread());
+		if (CHECK) checkState(reactor.inReactorThread());
 		if (socket == null) {
 			return;
 		}
@@ -141,8 +141,8 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 		}
 		try {
 			logger.trace("Incoming query, opening UDP socket");
-			DatagramChannel channel = Eventloop.createDatagramChannel(datagramSocketSettings, null, dnsServerAddress);
-			return AsyncUdpSocketNio.connect(eventloop, channel)
+			DatagramChannel channel = NioReactor.createDatagramChannel(datagramSocketSettings, null, dnsServerAddress);
+			return AsyncUdpSocketNio.connect(reactor, channel)
 					.map(s -> {
 						if (socketInspector != null) {
 							socketInspector.onCreate(s);
@@ -158,7 +158,7 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 
 	@Override
 	public Promise<DnsResponse> resolve(DnsQuery query) {
-		if (CHECK) checkState(eventloop.inEventloopThread());
+		if (CHECK) checkState(reactor.inReactorThread());
 		DnsResponse fromQuery = AsyncDnsClient.resolveFromQuery(query);
 		if (fromQuery != null) {
 			logger.trace("{} already contained an IP address within itself", query);

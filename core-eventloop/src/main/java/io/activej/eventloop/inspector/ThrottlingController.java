@@ -19,10 +19,11 @@ package io.activej.eventloop.inspector;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.time.Stopwatch;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBean;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.jmx.ReactorJmxBean;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -33,7 +34,7 @@ import java.time.Duration;
 import static io.activej.common.Checks.checkArgument;
 import static java.lang.Math.pow;
 
-public final class ThrottlingController implements EventloopJmxBean, EventloopInspector, WithInitializer<ThrottlingController> {
+public final class ThrottlingController implements ReactorJmxBean, EventloopInspector, WithInitializer<ThrottlingController> {
 	private static int staticInstanceCounter = 0;
 
 	private final Logger logger = LoggerFactory.getLogger(ThrottlingController.class.getName() + "." + staticInstanceCounter++);
@@ -392,7 +393,7 @@ public final class ThrottlingController implements EventloopJmxBean, EventloopIn
 	}
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
+	public @NotNull Reactor getReactor() {
 		return eventloop;
 	}
 

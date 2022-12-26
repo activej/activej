@@ -16,8 +16,9 @@
 
 package io.activej.net;
 
-import io.activej.eventloop.Eventloop;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 
 import java.net.InetAddress;
 import java.util.function.Consumer;
@@ -29,17 +30,17 @@ import java.util.function.Consumer;
 public final class SimpleServer extends AbstractServer<SimpleServer> {
 	private final Consumer<AsyncTcpSocket> socketConsumer;
 
-	private SimpleServer(Eventloop eventloop, Consumer<AsyncTcpSocket> socketConsumer) {
-		super(eventloop);
+	private SimpleServer(NioReactor reactor, Consumer<AsyncTcpSocket> socketConsumer) {
+		super(reactor);
 		this.socketConsumer = socketConsumer;
 	}
 
-	public static SimpleServer create(Eventloop eventloop, Consumer<AsyncTcpSocket> socketConsumer) {
-		return new SimpleServer(eventloop, socketConsumer);
+	public static SimpleServer create(NioReactor reactor, Consumer<AsyncTcpSocket> socketConsumer) {
+		return new SimpleServer(reactor, socketConsumer);
 	}
 
 	public static SimpleServer create(Consumer<AsyncTcpSocket> socketConsumer) {
-		return new SimpleServer(Eventloop.getCurrentEventloop(), socketConsumer);
+		return new SimpleServer(Reactor.getCurrentReactor(), socketConsumer);
 	}
 
 	@Override

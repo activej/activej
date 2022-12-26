@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package io.activej.eventloop.jmx;
+package io.activej.reactor.jmx;
 
-import io.activej.eventloop.Eventloop;
 import io.activej.jmx.api.JmxBean;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 
-@JmxBean(EventloopJmxBeanAdapter.class)
-public interface EventloopJmxBean {
-	@NotNull Eventloop getEventloop();
+@JmxBean(ReactorJmxBeanAdapter.class)
+public interface ReactorJmxBean {
+	@NotNull Reactor getReactor();
 }

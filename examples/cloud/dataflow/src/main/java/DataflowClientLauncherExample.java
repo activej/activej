@@ -11,11 +11,11 @@ import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
-import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.launchers.dataflow.DataflowClientLauncher;
+import io.activej.reactor.Reactor;
 
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.graph.StreamSchemas.simple;
@@ -35,7 +35,7 @@ public final class DataflowClientLauncherExample extends DataflowClientLauncher 
 	DataflowGraph graph;
 
 	@Inject
-	Eventloop eventloop;
+	Reactor reactor;
 
 	@Override
 	protected Module getOverrideModule() {
@@ -54,7 +54,7 @@ public final class DataflowClientLauncherExample extends DataflowClientLauncher 
 	//[START REGION_2]
 	@Override
 	protected void run() throws InterruptedException {
-		eventloop.execute(() -> {
+		reactor.execute(() -> {
 			StringCountReducer reducer = new StringCountReducer();
 			ExtractStringFunction keyFunction = new ExtractStringFunction();
 

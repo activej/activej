@@ -24,11 +24,11 @@ import io.activej.dns.protocol.DnsProtocol.ResponseErrorCode;
 import io.activej.dns.protocol.DnsQuery;
 import io.activej.dns.protocol.DnsQueryException;
 import io.activej.dns.protocol.DnsResponse;
-import io.activej.eventloop.Eventloop;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -58,7 +58,7 @@ public final class DnsCache implements WithInitializer<DnsCache> {
 	public static final Duration DEFAULT_MAX_TTL = null;
 
 	private final Map<DnsQuery, CachedDnsQueryResult> cache = new ConcurrentHashMap<>();
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 
 	private long errorCacheExpiration = DEFAULT_ERROR_CACHE_EXPIRATION.toMillis();
 	private long timedOutExpiration = DEFAULT_TIMED_OUT_EXPIRATION.toMillis();
@@ -73,15 +73,15 @@ public final class DnsCache implements WithInitializer<DnsCache> {
 	/**
 	 * Creates a new DNS cache.
 	 *
-	 * @param eventloop eventloop
+	 * @param reactor reactor
 	 */
-	private DnsCache(@NotNull Eventloop eventloop) {
-		this.eventloop = eventloop;
-		this.now = eventloop;
+	private DnsCache(@NotNull Reactor reactor) {
+		this.reactor = reactor;
+		this.now = reactor;
 	}
 
-	public static DnsCache create(Eventloop eventloop) {
-		return new DnsCache(eventloop);
+	public static DnsCache create(Reactor reactor) {
+		return new DnsCache(reactor);
 	}
 
 	/**
@@ -159,7 +159,7 @@ public final class DnsCache implements WithInitializer<DnsCache> {
 	 * @param response response to add
 	 */
 	public void add(DnsQuery query, DnsResponse response) {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Concurrent cache adds are not allowed");
+		if (CHECK) checkState(reactor.inReactorThread(), "Concurrent cache adds are not allowed");
 		long expirationTime = now.currentTimeMillis();
 		if (response.isSuccessful()) {
 			assert response.getRecord() != null; // where are my advanced contracts so that the IDE would know it's true here without an assertion?
@@ -375,7 +375,7 @@ public final class DnsCache implements WithInitializer<DnsCache> {
 	@JmxOperation
 	public void clear() {
 		cache.clear();
-		eventloop.submit(expirations::clear);
+		reactor.submit(expirations::clear);
 	}
 
 	public static final class DnsQueryCacheResult {

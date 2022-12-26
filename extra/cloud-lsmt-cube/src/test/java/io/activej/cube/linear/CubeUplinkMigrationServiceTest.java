@@ -12,7 +12,6 @@ import io.activej.etl.LogDiff;
 import io.activej.etl.LogDiffCodec;
 import io.activej.etl.LogOT;
 import io.activej.etl.LogPositionDiff;
-import io.activej.eventloop.Eventloop;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
 import io.activej.ot.OTCommit;
@@ -20,6 +19,7 @@ import io.activej.ot.repository.OTRepositoryMySql;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.OTUplink.FetchData;
 import io.activej.ot.util.IdGenerator;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -62,10 +62,10 @@ public final class CubeUplinkMigrationServiceTest {
 	public void setUp() throws Exception {
 		dataSource = dataSource("test.properties");
 
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		Reactor reactor = Reactor.getCurrentReactor();
 		Executor executor = Executors.newCachedThreadPool();
 
-		cube = createEmptyCube(eventloop, executor)
+		cube = createEmptyCube(reactor, executor)
 				.withDimension("campaign", ofInt())
 				.withDimension("advertiser", ofInt())
 				.withMeasure("impressions", sum(ofLong()))
@@ -82,7 +82,7 @@ public final class CubeUplinkMigrationServiceTest {
 		IdGenerator<Long> idGenerator = new IdGeneratorStub();
 		LogDiffCodec<CubeDiff> diffCodec = LogDiffCodec.create(CubeDiffCodec.create(cube));
 
-		repo = OTRepositoryMySql.create(eventloop, executor, dataSource, idGenerator, OT_SYSTEM, diffCodec);
+		repo = OTRepositoryMySql.create(reactor, executor, dataSource, idGenerator, OT_SYSTEM, diffCodec);
 		initializeRepository(repo);
 
 		PrimaryKeyCodecs codecs = PrimaryKeyCodecs.ofCube(cube);

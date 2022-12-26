@@ -17,12 +17,12 @@
 package io.activej.memcache.client;
 
 import io.activej.config.Config;
-import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.memcache.protocol.MemcacheRpcMessage;
 import io.activej.memcache.protocol.MemcacheRpcMessage.Slice;
 import io.activej.memcache.protocol.SerializerDefSlice;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.RpcStrategyRendezvousHashing;
 import io.activej.serializer.SerializerBuilder;
@@ -42,8 +42,8 @@ public class MemcacheClientModule extends AbstractModule {
 	public static MemcacheClientModule create() {return new MemcacheClientModule();}
 
 	@Provides
-	RpcClient rpcClient(Eventloop eventloop, Config config) {
-		return RpcClient.create(eventloop)
+	RpcClient rpcClient(NioReactor reactor, Config config) {
+		return RpcClient.create(reactor)
 				.withStrategy(
 						RpcStrategyRendezvousHashing.create(HASH_FUNCTION)
 								.withMinActiveShards(config.get(ofInteger(), "client.minAliveConnections", 1))

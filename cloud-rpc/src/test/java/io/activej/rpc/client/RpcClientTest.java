@@ -6,6 +6,7 @@ import io.activej.common.ref.RefInt;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.reactor.Reactor;
 import io.activej.rpc.client.sender.RpcStrategy;
 import io.activej.rpc.client.sender.RpcStrategyFirstValidResult;
 import io.activej.rpc.client.sender.RpcStrategyRoundRobin;
@@ -92,7 +93,7 @@ public final class RpcClientTest {
 		clientEventloop.keepAlive(false);
 
 		for (RpcServer server : servers.values()) {
-			Eventloop serverEventloop = server.getEventloop();
+			Eventloop serverEventloop = (Eventloop) server.getReactor();
 			CompletableFuture<?> serverCloseFuture = serverEventloop.submit(server::close);
 			serverEventloop.keepAlive(false);
 			serverCloseFuture.get();
@@ -330,7 +331,7 @@ public final class RpcClientTest {
 			Promise<Void> changeStrategy = rpcClient.changeStrategy(RpcStrategyRoundRobin.create(getAddresses(6, 7)), true);
 
 			RefBoolean serversListen = new RefBoolean(false);
-			Eventloop.getCurrentEventloop().delay(Duration.ofMillis(100), () -> {
+			Reactor.getCurrentReactor().delay(Duration.ofMillis(100), () -> {
 				assertFalse(changeStrategy.isComplete());
 
 				listen(6);
@@ -365,7 +366,7 @@ public final class RpcClientTest {
 			Promise<Void> changeStrategy = rpcClient.changeStrategy(RpcStrategyRoundRobin.create(getAddresses(6, 7)), true);
 
 			RefBoolean clientStopped = new RefBoolean(false);
-			Eventloop.getCurrentEventloop().delay(Duration.ofMillis(100), () -> {
+			Reactor.getCurrentReactor().delay(Duration.ofMillis(100), () -> {
 				assertFalse(changeStrategy.isComplete());
 
 				rpcClient.stop();
@@ -388,7 +389,7 @@ public final class RpcClientTest {
 			Promise<Void> changeStrategy = rpcClient.changeStrategy(RpcStrategyRoundRobin.create(getAddresses(6, 7)), true);
 
 			RefBoolean strategyChanged = new RefBoolean(false);
-			Eventloop.getCurrentEventloop().delay(Duration.ofMillis(100), () -> {
+			Reactor.getCurrentReactor().delay(Duration.ofMillis(100), () -> {
 				assertFalse(changeStrategy.isComplete());
 
 				strategyChanged.set(true);
@@ -432,7 +433,7 @@ public final class RpcClientTest {
 
 	private void listen(int index) {
 		RpcServer server = servers.get(index);
-		server.getEventloop().submit(() -> {
+		server.getReactor().submit(() -> {
 			try {
 				server.listen();
 			} catch (IOException e) {

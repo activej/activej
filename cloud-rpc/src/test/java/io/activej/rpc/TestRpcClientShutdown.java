@@ -1,9 +1,10 @@
 package io.activej.rpc;
 
 import io.activej.async.exception.AsyncCloseException;
-import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.RpcClientConnection;
 import io.activej.rpc.server.RpcServer;
@@ -47,11 +48,11 @@ public final class TestRpcClientShutdown {
 
 	@Test
 	public void testServerOnClientShutdown() throws IOException {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		NioReactor reactor = Reactor.getCurrentReactor();
 		Executor executor = Executors.newSingleThreadExecutor();
 		List<Class<?>> messageTypes = List.of(Request.class, Response.class);
 
-		RpcServer rpcServer = RpcServer.create(eventloop)
+		RpcServer rpcServer = RpcServer.create(reactor)
 				.withMessageTypes(messageTypes)
 				.withHandler(Request.class,
 						request -> Promise.ofBlocking(executor, () -> {
@@ -60,7 +61,7 @@ public final class TestRpcClientShutdown {
 						}))
 				.withListenPort(port);
 
-		RpcClient rpcClient = RpcClient.create(eventloop)
+		RpcClient rpcClient = RpcClient.create(reactor)
 				.withMessageTypes(messageTypes)
 				.withStrategy(server(new InetSocketAddress(port)));
 

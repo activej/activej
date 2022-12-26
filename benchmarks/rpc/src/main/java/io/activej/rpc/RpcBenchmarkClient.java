@@ -12,6 +12,7 @@ import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.service.ServiceGraphModule;
 import org.jetbrains.annotations.Nullable;
@@ -39,20 +40,20 @@ public class RpcBenchmarkClient extends Launcher {
 
 	@Inject
 	@Named("client")
-	Eventloop eventloop;
+	NioReactor reactor;
 
 	@Inject
 	Config config;
 
 	@Provides
 	@Named("client")
-	Eventloop eventloopClient() {
+	NioReactor reactorClient() {
 		return Eventloop.create();
 	}
 
 	@Provides
-	public RpcClient rpcClient(@Named("client") Eventloop eventloop, Config config) {
-		return RpcClient.create(eventloop)
+	public RpcClient rpcClient(@Named("client") NioReactor reactor, Config config) {
+		return RpcClient.create(reactor)
 				.withStreamProtocol(
 						config.get(ofMemSize(), "rpc.defaultPacketSize", MemSize.kilobytes(256)),
 						config.get(ofFrameFormat(), "rpc.frameFormat", null))
@@ -136,7 +137,7 @@ public class RpcBenchmarkClient extends Launcher {
 	}
 
 	private long round() throws Exception {
-		return eventloop.submit(this::roundCall).get();
+		return reactor.submit(this::roundCall).get();
 	}
 
 	private Promise<Long> roundCall() {

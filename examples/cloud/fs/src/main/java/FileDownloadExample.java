@@ -7,6 +7,7 @@ import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
 
 import java.net.InetSocketAddress;
@@ -38,16 +39,16 @@ public final class FileDownloadExample extends Launcher {
 	private RemoteActiveFs client;
 
 	@Inject
-	private Eventloop eventloop;
+	private NioReactor reactor;
 
 	@Provides
-	Eventloop eventloop() {
+	NioReactor reactor() {
 		return Eventloop.create();
 	}
 
 	@Provides
-	RemoteActiveFs remoteFsClient(Eventloop eventloop) {
-		return RemoteActiveFs.create(eventloop, new InetSocketAddress(SERVER_PORT));
+	RemoteActiveFs remoteFsClient(NioReactor reactor) {
+		return RemoteActiveFs.create(reactor, new InetSocketAddress(SERVER_PORT));
 	}
 
 	@Override
@@ -59,7 +60,7 @@ public final class FileDownloadExample extends Launcher {
 	@Override
 	protected void run() throws Exception {
 		ExecutorService executor = newSingleThreadExecutor();
-		CompletableFuture<Void> future = eventloop.submit(() ->
+		CompletableFuture<Void> future = reactor.submit(() ->
 				ChannelSupplier.ofPromise(client.download(REQUIRED_FILE))
 						.streamTo(ChannelFileWriter.open(executor, clientStorage.resolve(DOWNLOADED_FILE)))
 						.whenResult(() -> System.out.printf("%nFile '%s' successfully downloaded to '%s'%n%n",

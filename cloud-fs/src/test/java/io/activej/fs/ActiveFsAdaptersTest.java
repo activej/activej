@@ -1,8 +1,8 @@
 package io.activej.fs;
 
 import io.activej.csp.ChannelConsumer;
-import io.activej.eventloop.Eventloop;
 import io.activej.fs.exception.ForbiddenPathException;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -42,7 +42,7 @@ public final class ActiveFsAdaptersTest {
 	@Before
 	public void setup() throws IOException {
 		Path path = temporaryFolder.newFolder("test").toPath();
-		LocalActiveFs localActiveFs = LocalActiveFs.create(Eventloop.getCurrentEventloop(), newSingleThreadExecutor(), path);
+		LocalActiveFs localActiveFs = LocalActiveFs.create(Reactor.getCurrentReactor(), newSingleThreadExecutor(), path);
 		await(localActiveFs.start());
 		this.local = localActiveFs;
 	}

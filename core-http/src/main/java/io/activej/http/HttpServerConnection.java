@@ -24,11 +24,11 @@ import io.activej.common.MemSize;
 import io.activej.common.Utils;
 import io.activej.common.recycle.Recyclable;
 import io.activej.csp.ChannelSupplier;
-import io.activej.eventloop.Eventloop;
 import io.activej.http.AsyncHttpServer.Inspector;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.net.socket.tcp.AsyncTcpSocketSsl;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -95,14 +95,14 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	/**
 	 * Creates a new instance of HttpServerConnection
 	 *
-	 * @param eventloop     eventloop which will handle its tasks
+	 * @param reactor     eventloop which will handle its tasks
 	 * @param remoteAddress an address of remote
 	 * @param server        server, which uses this connection
 	 * @param servlet       servlet for handling requests
 	 */
-	HttpServerConnection(Eventloop eventloop, AsyncTcpSocket asyncTcpSocket, InetAddress remoteAddress,
+	HttpServerConnection(Reactor reactor, AsyncTcpSocket asyncTcpSocket, InetAddress remoteAddress,
 			AsyncHttpServer server, AsyncServlet servlet) {
-		super(eventloop, asyncTcpSocket, server.maxBodySize);
+		super(reactor, asyncTcpSocket, server.maxBodySize);
 		this.remoteAddress = remoteAddress;
 		this.server = server;
 		this.servlet = servlet;
@@ -112,7 +112,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	void serve() {
 		if (inspector != null) inspector.onAccept(this);
 		(pool = server.poolNew).addLastNode(this);
-		poolTimestamp = eventloop.currentTimeMillis();
+		poolTimestamp = reactor.currentTimeMillis();
 		socket.read().run(readMessageConsumer);
 	}
 
@@ -368,7 +368,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			servletResult = Promise.ofException(e);
 		}
 		servletResult.run((response, e) -> {
-			if (CHECK) checkState(eventloop.inEventloopThread());
+			if (CHECK) checkState(reactor.inReactorThread());
 			if (isClosed()) {
 				request.recycle();
 				readBuf = nullify(readBuf, ByteBuf::recycle);

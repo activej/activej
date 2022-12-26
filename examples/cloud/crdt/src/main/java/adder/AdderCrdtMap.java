@@ -2,12 +2,12 @@ package adder;
 
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncRunnables;
-import io.activej.async.service.EventloopService;
+import io.activej.async.service.ReactorService;
 import io.activej.crdt.hash.CrdtMap;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.datastream.StreamConsumer;
-import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,15 +15,15 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class AdderCrdtMap implements CrdtMap<Long, SimpleSumsCrdtState>, EventloopService {
+public class AdderCrdtMap implements CrdtMap<Long, SimpleSumsCrdtState>, ReactorService {
 	private final Map<Long, SimpleSumsCrdtState> map = new TreeMap<>();
 
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 	private final String localServerId;
 	private final AsyncRunnable refresh;
 
-	public AdderCrdtMap(Eventloop eventloop, String localServerId, @NotNull CrdtStorage<Long, DetailedSumsCrdtState> storage) {
-		this.eventloop = eventloop;
+	public AdderCrdtMap(Reactor reactor, String localServerId, @NotNull CrdtStorage<Long, DetailedSumsCrdtState> storage) {
+		this.reactor = reactor;
 		this.localServerId = localServerId;
 		this.refresh = AsyncRunnables.reuse(() -> doRefresh(storage));
 	}
@@ -44,8 +44,8 @@ public class AdderCrdtMap implements CrdtMap<Long, SimpleSumsCrdtState>, Eventlo
 	}
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull Reactor getReactor() {
+		return reactor;
 	}
 
 	@Override

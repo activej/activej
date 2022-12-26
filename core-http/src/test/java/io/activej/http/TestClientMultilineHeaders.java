@@ -1,6 +1,6 @@
 package io.activej.http;
 
-import io.activej.eventloop.Eventloop;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -30,7 +30,7 @@ public final class TestClientMultilineHeaders {
 
 	@Test
 	public void testMultilineHeaders() throws IOException {
-		AsyncHttpServer.create(Eventloop.getCurrentEventloop(),
+		AsyncHttpServer.create(Reactor.getCurrentReactor(),
 				request -> {
 					HttpResponse response = HttpResponse.ok200();
 					response.addHeader(ALLOW, "GET,\r\n HEAD");
@@ -40,7 +40,7 @@ public final class TestClientMultilineHeaders {
 				.withAcceptOnce()
 				.listen();
 
-		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop());
+		AsyncHttpClient client = AsyncHttpClient.create(Reactor.getCurrentReactor());
 		String allowHeader = await(client.request(HttpRequest.get("http://127.0.0.1:" + port))
 				.map(response -> response.getHeader(ALLOW)));
 

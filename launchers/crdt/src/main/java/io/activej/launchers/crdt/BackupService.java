@@ -16,17 +16,17 @@
 
 package io.activej.launchers.crdt;
 
-import io.activej.async.service.EventloopService;
+import io.activej.async.service.ReactorService;
 import io.activej.crdt.storage.local.CrdtStorageFs;
 import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.datastream.StreamConsumer;
-import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class BackupService<K extends Comparable<K>, S> implements EventloopService {
-	private final Eventloop eventloop;
+public final class BackupService<K extends Comparable<K>, S> implements ReactorService {
+	private final Reactor reactor;
 	private final CrdtStorageMap<K, S> inMemory;
 	private final CrdtStorageFs<K, S> localFiles;
 
@@ -37,12 +37,12 @@ public final class BackupService<K extends Comparable<K>, S> implements Eventloo
 	public BackupService(CrdtStorageMap<K, S> inMemory, CrdtStorageFs<K, S> localFiles) {
 		this.inMemory = inMemory;
 		this.localFiles = localFiles;
-		this.eventloop = localFiles.getEventloop();
+		this.reactor = localFiles.getReactor();
 	}
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull Reactor getReactor() {
+		return reactor;
 	}
 
 	public Promise<Void> restore() {
@@ -56,7 +56,7 @@ public final class BackupService<K extends Comparable<K>, S> implements Eventloo
 			return backupPromise;
 		}
 		long lastTimestamp = this.lastTimestamp;
-		this.lastTimestamp = eventloop.currentTimeMillis();
+		this.lastTimestamp = reactor.currentTimeMillis();
 		return backupPromise = inMemory.download(lastTimestamp)
 				.then(supplierWithResult -> supplierWithResult
 						.streamTo(StreamConsumer.ofPromise(localFiles.upload()))

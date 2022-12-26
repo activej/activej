@@ -64,11 +64,11 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 		toBePreserved.clear();
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 
-		LocalActiveFs fs = LocalActiveFs.create(eventloop, EXECUTOR, aggregationsDir)
+		LocalActiveFs fs = LocalActiveFs.create(reactor, EXECUTOR, aggregationsDir)
 				.withTempDir(Files.createTempDirectory(""));
 		await(fs.start());
 		FrameFormat frameFormat = LZ4FrameFormat.create();
-		chunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), frameFormat, fs);
+		chunkStorage = ActiveFsChunkStorage.create(reactor, ChunkIdCodec.ofLong(), new IdGeneratorStub(), frameFormat, fs);
 
 		dateAggregation = id("date")
 				.withDimensions("date")
@@ -84,7 +84,7 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 
 		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(basicCube);
 		uplink = uplinkFactory.create(basicCube);
-		stateManager = OTStateManager.create(eventloop, LOG_OT, uplink, cubeDiffLogOTState);
+		stateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 		await(stateManager.checkout());
 	}
 
@@ -158,7 +158,7 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 
 		assertEquals(expectedChunks, basicCube.getAllChunks());
 
-		stateManager = OTStateManager.create(eventloop, LOG_OT, uplink, LogOTState.create(cube));
+		stateManager = OTStateManager.create(reactor, LOG_OT, uplink, LogOTState.create(cube));
 		await(stateManager.checkout());
 
 		Set<Object> irrelevantChunks = cube.getIrrelevantChunks()
@@ -186,7 +186,7 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 	}
 
 	private Cube createBasicCube() {
-		return Cube.create(eventloop, EXECUTOR, CLASS_LOADER, chunkStorage)
+		return Cube.create(reactor, EXECUTOR, CLASS_LOADER, chunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())
 				.withDimension("campaign", ofInt())

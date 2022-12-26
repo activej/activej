@@ -10,8 +10,11 @@ import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.Module;
+import io.activej.inject.module.ModuleBuilder;
 import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
 
 import java.net.InetSocketAddress;
@@ -29,7 +32,7 @@ public abstract class DataflowJdbcServerLauncher extends Launcher {
 	public static final String PROPERTIES_FILE = "dataflow-jdbc-server.properties";
 
 	@Inject
-	protected Eventloop eventloop;
+	protected Reactor reactor;
 
 	@Inject
 	protected SqlDataflow sqlDataflow;
@@ -42,7 +45,7 @@ public abstract class DataflowJdbcServerLauncher extends Launcher {
 	}
 
 	@Provides
-	Eventloop eventloop(Config config, OptionalDependency<ThrottlingController> throttlingController) {
+	NioReactor reactor(Config config, OptionalDependency<ThrottlingController> throttlingController) {
 		return Eventloop.create()
 				.withInitializer(ofEventloop(config.getChild("eventloop")))
 				.withInitializer(eventloop -> eventloop.withInspector(throttlingController.orElse(null)));
@@ -60,6 +63,9 @@ public abstract class DataflowJdbcServerLauncher extends Launcher {
 	@Override
 	protected final Module getModule() {
 		return combine(
+				ModuleBuilder.create()
+						.bind(Reactor.class).to(NioReactor.class)
+						.build(),
 				ServiceGraphModule.create(),
 				JmxModule.create(),
 				ConfigModule.create()
@@ -71,7 +77,7 @@ public abstract class DataflowJdbcServerLauncher extends Launcher {
 
 	@Override
 	protected final void onStart() throws Exception {
-		eventloop.submit(() -> sqlDataflow.query("SELECT 1")
+		reactor.submit(() -> sqlDataflow.query("SELECT 1")
 						.then(supplier -> supplier.streamTo(StreamConsumer.skip())))
 				.get();
 

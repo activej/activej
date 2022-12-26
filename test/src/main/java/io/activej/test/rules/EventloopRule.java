@@ -17,6 +17,7 @@
 package io.activej.test.rules;
 
 import io.activej.eventloop.Eventloop;
+import io.activej.reactor.Reactor;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -40,7 +41,8 @@ public final class EventloopRule implements TestRule {
 
 	@Override
 	public Statement apply(Statement base, Description description) {
-		if (!Eventloop.getCurrentEventloop().inEventloopThread()) {
+		Reactor currentReactor = Reactor.getCurrentReactor();
+		if (!(currentReactor instanceof Eventloop) || !currentReactor.inReactorThread()) {
 			createEventloop();
 		}
 		return base;

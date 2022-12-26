@@ -4,6 +4,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import io.activej.test.ExpectedException;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -19,9 +20,9 @@ import java.util.List;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.csp.ChannelConsumers.channelConsumerAsOutputStream;
 import static io.activej.csp.ChannelConsumers.outputStreamAsChannelConsumer;
-import static io.activej.eventloop.Eventloop.initWithEventloop;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
+import static io.activej.reactor.Reactor.initWithReactor;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -97,7 +98,7 @@ public class ChannelConsumerTest {
 					return Promise.complete();
 				});
 
-		Eventloop currentEventloop = Eventloop.getCurrentEventloop();
+		Eventloop currentEventloop = Reactor.getCurrentReactor();
 		await(Promise.ofBlocking(newSingleThreadExecutor(),
 				() -> {
 					OutputStream outputStream = channelConsumerAsOutputStream(currentEventloop, channelConsumer);
@@ -122,7 +123,7 @@ public class ChannelConsumerTest {
 			return Promise.complete();
 		});
 
-		Eventloop currentEventloop = Eventloop.getCurrentEventloop();
+		Eventloop currentEventloop = Reactor.getCurrentReactor();
 		await(Promise.ofBlocking(newSingleThreadExecutor(), () -> {
 			OutputStream outputStream = channelConsumerAsOutputStream(currentEventloop, channelConsumer);
 			outputStream.flush();
@@ -136,7 +137,7 @@ public class ChannelConsumerTest {
 			return Promise.ofException(new RuntimeException());
 		});
 
-		Eventloop currentEventloop = Eventloop.getCurrentEventloop();
+		Eventloop currentEventloop = Reactor.getCurrentReactor();
 		await(Promise.ofBlocking(newSingleThreadExecutor(), () -> {
 			try {
 				OutputStream outputStream = channelConsumerAsOutputStream(currentEventloop, channelConsumer);
@@ -153,8 +154,8 @@ public class ChannelConsumerTest {
 		Eventloop anotherEventloop = Eventloop.create().withFatalErrorHandler(rethrow());
 		List<Integer> expectedList = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 		List<Integer> actualList = new ArrayList<>();
-		ChannelConsumer<Integer> anotherEventloopConsumer = initWithEventloop(anotherEventloop, () -> ChannelConsumer.ofConsumer(actualList::add));
-		ChannelConsumer<Integer> consumer = ChannelConsumer.ofAnotherEventloop(anotherEventloop, anotherEventloopConsumer);
+		ChannelConsumer<Integer> anotherEventloopConsumer = initWithReactor(anotherEventloop, () -> ChannelConsumer.ofConsumer(actualList::add));
+		ChannelConsumer<Integer> consumer = ChannelConsumer.ofAnotherReactor(anotherEventloop, anotherEventloopConsumer);
 
 		startAnotherEventloop(anotherEventloop);
 		await(consumer.acceptAll(expectedList));
@@ -168,8 +169,8 @@ public class ChannelConsumerTest {
 		Eventloop anotherEventloop = Eventloop.create().withFatalErrorHandler(rethrow());
 		ExpectedException expectedException = new ExpectedException();
 		List<Integer> list = new ArrayList<>();
-		ChannelConsumer<Integer> anotherEventloopConsumer = initWithEventloop(anotherEventloop, () -> ChannelConsumer.ofConsumer(list::add));
-		ChannelConsumer<Integer> consumer = ChannelConsumer.ofAnotherEventloop(anotherEventloop, anotherEventloopConsumer);
+		ChannelConsumer<Integer> anotherEventloopConsumer = initWithReactor(anotherEventloop, () -> ChannelConsumer.ofConsumer(list::add));
+		ChannelConsumer<Integer> consumer = ChannelConsumer.ofAnotherReactor(anotherEventloop, anotherEventloopConsumer);
 
 		startAnotherEventloop(anotherEventloop);
 		Exception exception = awaitException(consumer.accept(1)

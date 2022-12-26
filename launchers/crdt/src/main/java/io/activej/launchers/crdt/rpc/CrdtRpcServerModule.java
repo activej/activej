@@ -16,7 +16,7 @@
 
 package io.activej.launchers.crdt.rpc;
 
-import io.activej.async.service.EventloopTaskScheduler;
+import io.activej.async.service.ReactorTaskScheduler;
 import io.activej.config.Config;
 import io.activej.crdt.wal.WriteAheadLog;
 import io.activej.eventloop.Eventloop;
@@ -24,6 +24,8 @@ import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.server.RpcRequestHandler;
 import io.activej.rpc.server.RpcServer;
 
@@ -32,11 +34,11 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
-import static io.activej.async.service.EventloopTaskScheduler.Schedule.ofInterval;
+import static io.activej.async.service.ReactorTaskScheduler.Schedule.ofInterval;
 import static io.activej.config.Config.ofClassPathProperties;
 import static io.activej.config.Config.ofSystemProperties;
-import static io.activej.config.converter.ConfigConverters.ofEventloopTaskSchedule;
 import static io.activej.config.converter.ConfigConverters.ofInetSocketAddress;
+import static io.activej.config.converter.ConfigConverters.ofReactorTaskSchedule;
 
 public abstract class CrdtRpcServerModule<K extends Comparable<K>, S> extends AbstractModule {
 	public static final int DEFAULT_PORT = 9000;
@@ -44,8 +46,13 @@ public abstract class CrdtRpcServerModule<K extends Comparable<K>, S> extends Ab
 
 	protected abstract List<Class<?>> getMessageTypes();
 
+	@Override
+	protected void configure() {
+		bind(Reactor.class).to(NioReactor.class);
+	}
+
 	@Provides
-	Eventloop eventloop() {
+	NioReactor reactor() {
 		return Eventloop.create();
 	}
 
@@ -60,8 +67,8 @@ public abstract class CrdtRpcServerModule<K extends Comparable<K>, S> extends Ab
 	@Provides
 	@Eager
 	@SuppressWarnings("unchecked")
-	RpcServer server(Eventloop eventloop, Map<Class<?>, RpcRequestHandler<?, ?>> handlers, Config config) {
-		RpcServer server = RpcServer.create(eventloop)
+	RpcServer server(NioReactor reactor, Map<Class<?>, RpcRequestHandler<?, ?>> handlers, Config config) {
+		RpcServer server = RpcServer.create(reactor)
 				.withListenAddress(config.get(ofInetSocketAddress(), "rpc.server.listenAddresses"))
 				.withMessageTypes(getMessageTypes());
 		for (Map.Entry<Class<?>, RpcRequestHandler<?, ?>> entry : handlers.entrySet()) {
@@ -73,9 +80,9 @@ public abstract class CrdtRpcServerModule<K extends Comparable<K>, S> extends Ab
 	@Provides
 	@Eager
 	@Named("WAL flush")
-	EventloopTaskScheduler walFlushScheduler(Eventloop eventloop, WriteAheadLog<K, S> wal, Config config) {
-		return EventloopTaskScheduler.create(eventloop, wal::flush)
-				.withSchedule(config.get(ofEventloopTaskSchedule(), "flush.schedule", ofInterval(Duration.ofMinutes(1))))
+	ReactorTaskScheduler walFlushScheduler(Reactor reactor, WriteAheadLog<K, S> wal, Config config) {
+		return ReactorTaskScheduler.create(reactor, wal::flush)
+				.withSchedule(config.get(ofReactorTaskSchedule(), "flush.schedule", ofInterval(Duration.ofMinutes(1))))
 				.withInitialDelay(Duration.ofMinutes(1));
 	}
 }

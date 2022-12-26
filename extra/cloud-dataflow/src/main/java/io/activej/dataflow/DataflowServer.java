@@ -47,7 +47,6 @@ import io.activej.dataflow.messaging.Version;
 import io.activej.dataflow.node.Node;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.csp.ChannelSerializer;
-import io.activej.eventloop.Eventloop;
 import io.activej.inject.ResourceLocator;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
@@ -55,6 +54,7 @@ import io.activej.net.AbstractServer;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.nio.NioReactor;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -94,15 +94,15 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 	private Function<DataflowRequest.Handshake, DataflowResponse.Handshake> handshakeHandler = $ ->
 			new DataflowResponse.Handshake(null);
 
-	private DataflowServer(Eventloop eventloop, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator serializers, ResourceLocator environment) {
-		super(eventloop);
+	private DataflowServer(NioReactor reactor, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator serializers, ResourceLocator environment) {
+		super(reactor);
 		this.codec = codec;
 		this.serializers = serializers;
 		this.environment = environment;
 	}
 
-	public static DataflowServer create(Eventloop eventloop, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator serializers, ResourceLocator environment) {
-		return new DataflowServer(eventloop, codec, serializers, environment);
+	public static DataflowServer create(NioReactor reactor, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator serializers, ResourceLocator environment) {
+		return new DataflowServer(reactor, codec, serializers, environment);
 	}
 
 	public DataflowServer withHandshakeHandler(Function<DataflowRequest.Handshake, DataflowResponse.Handshake> handshakeHandler) {

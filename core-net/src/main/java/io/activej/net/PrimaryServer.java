@@ -16,8 +16,8 @@
 
 package io.activej.net;
 
-import io.activej.eventloop.Eventloop;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.reactor.nio.NioReactor;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -36,8 +36,8 @@ public final class PrimaryServer extends AbstractServer<PrimaryServer> {
 	private int currentAcceptor = -1; // first server index is currentAcceptor + 1
 
 	// region builders
-	private PrimaryServer(Eventloop primaryEventloop, WorkerServer[] workerServers) {
-		super(primaryEventloop);
+	private PrimaryServer(NioReactor primaryReactor, WorkerServer[] workerServers) {
+		super(primaryReactor);
 		this.workerServers = workerServers;
 		for (WorkerServer workerServer : workerServers) {
 			if (workerServer instanceof AbstractServer) {
@@ -46,18 +46,18 @@ public final class PrimaryServer extends AbstractServer<PrimaryServer> {
 		}
 	}
 
-	public static PrimaryServer create(Eventloop primaryEventloop, List<? extends WorkerServer> workerServers) {
-		return create(primaryEventloop, workerServers.toArray(new WorkerServer[0]));
+	public static PrimaryServer create(NioReactor primaryReactor, List<? extends WorkerServer> workerServers) {
+		return create(primaryReactor, workerServers.toArray(new WorkerServer[0]));
 	}
 
-	public static PrimaryServer create(Eventloop primaryEventloop, Iterable<? extends WorkerServer> workerServers) {
+	public static PrimaryServer create(NioReactor primaryReactor, Iterable<? extends WorkerServer> workerServers) {
 		List<WorkerServer> list = new ArrayList<>();
 		workerServers.forEach(list::add);
-		return create(primaryEventloop, list);
+		return create(primaryReactor, list);
 	}
 
-	public static PrimaryServer create(Eventloop primaryEventloop, WorkerServer... workerServer) {
-		return new PrimaryServer(primaryEventloop, workerServer);
+	public static PrimaryServer create(NioReactor primaryReactor, WorkerServer... workerServer) {
+		return new PrimaryServer(primaryReactor, workerServer);
 	}
 	// endregion
 

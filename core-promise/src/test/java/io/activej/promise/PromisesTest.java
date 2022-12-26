@@ -2,7 +2,7 @@ package io.activej.promise;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.tuple.*;
-import io.activej.eventloop.Eventloop;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -405,7 +405,7 @@ public final class PromisesTest {
 		assertEquals(0, counter.get());
 		counter.incrementAndGet();
 		SettablePromise<Integer> promise = new SettablePromise<>();
-		Eventloop.getCurrentEventloop().post(() ->
+		Reactor.getCurrentReactor().post(() ->
 				promise.set(number));
 		return promise
 				.whenResult(() ->

@@ -16,12 +16,12 @@
 
 package io.activej.service.adapter;
 
-import io.activej.async.service.EventloopService;
+import io.activej.async.service.ReactorService;
 import io.activej.common.service.BlockingService;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.net.BlockingSocketServer;
 import io.activej.inject.binding.OptionalDependency;
-import io.activej.net.EventloopServer;
+import io.activej.net.NioReactorServer;
+import io.activej.reactor.net.BlockingSocketServer;
 import io.activej.service.Service;
 import org.slf4j.Logger;
 
@@ -32,7 +32,7 @@ import java.sql.Connection;
 import java.util.*;
 import java.util.concurrent.*;
 
-import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
+import static io.activej.reactor.util.RunnableWithContext.wrapContext;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @SuppressWarnings("WeakerAccess")
@@ -210,12 +210,12 @@ public final class ServiceAdapters {
 		};
 	}
 
-	public static ServiceAdapter<EventloopService> forEventloopService() {
+	public static ServiceAdapter<ReactorService> forReactorService() {
 		return new ServiceAdapter<>() {
 			@Override
-			public CompletableFuture<?> start(EventloopService instance, Executor executor) {
+			public CompletableFuture<?> start(ReactorService instance, Executor executor) {
 				CompletableFuture<Object> future = new CompletableFuture<>();
-				instance.getEventloop().execute(wrapContext(instance, () -> {
+				instance.getReactor().execute(wrapContext(instance, () -> {
 					try {
 						instance.start()
 								.whenResult(future::complete)
@@ -228,9 +228,9 @@ public final class ServiceAdapters {
 			}
 
 			@Override
-			public CompletableFuture<?> stop(EventloopService instance, Executor executor) {
+			public CompletableFuture<?> stop(ReactorService instance, Executor executor) {
 				CompletableFuture<Object> future = new CompletableFuture<>();
-				instance.getEventloop().execute(wrapContext(instance, () -> {
+				instance.getReactor().execute(wrapContext(instance, () -> {
 					try {
 						instance.stop()
 								.whenResult(future::complete)
@@ -244,12 +244,12 @@ public final class ServiceAdapters {
 		};
 	}
 
-	public static ServiceAdapter<EventloopServer> forEventloopServer() {
+	public static ServiceAdapter<NioReactorServer> forNioReactorServer() {
 		return new ServiceAdapter<>() {
 			@Override
-			public CompletableFuture<?> start(EventloopServer instance, Executor executor) {
+			public CompletableFuture<?> start(NioReactorServer instance, Executor executor) {
 				CompletableFuture<?> future = new CompletableFuture<>();
-				instance.getEventloop().execute(wrapContext(instance, () -> {
+				instance.getReactor().execute(wrapContext(instance, () -> {
 					try {
 						instance.listen();
 						future.complete(null);
@@ -261,9 +261,9 @@ public final class ServiceAdapters {
 			}
 
 			@Override
-			public CompletableFuture<?> stop(EventloopServer instance, Executor executor) {
+			public CompletableFuture<?> stop(NioReactorServer instance, Executor executor) {
 				CompletableFuture<Object> future = new CompletableFuture<>();
-				instance.getEventloop().execute(wrapContext(instance, () -> instance.close()
+				instance.getReactor().execute(wrapContext(instance, () -> instance.close()
 						.whenResult(future::complete)
 						.whenException(future::completeExceptionally)));
 				return future;

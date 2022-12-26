@@ -10,9 +10,9 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
-import io.activej.eventloop.Eventloop;
 import io.activej.fs.exception.*;
 import io.activej.promise.Promises;
+import io.activej.reactor.Reactor;
 import io.activej.test.ExpectedException;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -105,7 +105,7 @@ public final class TestLocalActiveFs {
 		} catch (IOException ignored) {
 		}
 
-		client = LocalActiveFs.create(Eventloop.getCurrentEventloop(), newCachedThreadPool(), storagePath);
+		client = LocalActiveFs.create(Reactor.getCurrentReactor(), newCachedThreadPool(), storagePath);
 		await(client.start());
 	}
 
@@ -539,7 +539,7 @@ public final class TestLocalActiveFs {
 
 		assertFalse(relativePath.isAbsolute());
 
-		client = LocalActiveFs.create(Eventloop.getCurrentEventloop(), newCachedThreadPool(), relativePath);
+		client = LocalActiveFs.create(Reactor.getCurrentReactor(), newCachedThreadPool(), relativePath);
 		await(client.start());
 
 		Map<String, FileMetadata> actual = await(client.list("**"));

@@ -3,11 +3,12 @@ package io.activej.https;
 import io.activej.dns.AsyncDnsClient;
 import io.activej.dns.CachedAsyncDnsClient;
 import io.activej.dns.RemoteAsyncDnsClient;
-import io.activej.eventloop.Eventloop;
 import io.activej.http.AcceptMediaType;
 import io.activej.http.AsyncHttpClient;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpResponse;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -36,13 +37,13 @@ public final class TestHttpsClient {
 	@Test
 	@Ignore("Connects to external URL, may fail on no internet connection")
 	public void testClient() throws NoSuchAlgorithmException {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		NioReactor reactor = Reactor.getCurrentReactor();
 
-		AsyncDnsClient dnsClient = CachedAsyncDnsClient.create(eventloop, RemoteAsyncDnsClient.create(eventloop)
+		AsyncDnsClient dnsClient = CachedAsyncDnsClient.create(reactor, RemoteAsyncDnsClient.create(reactor)
 				.withTimeout(Duration.ofMillis(500))
 				.withDnsServerAddress(inetAddress("8.8.8.8")));
 
-		AsyncHttpClient client = AsyncHttpClient.create(eventloop)
+		AsyncHttpClient client = AsyncHttpClient.create(reactor)
 				.withDnsClient(dnsClient)
 				.withSslEnabled(SSLContext.getDefault(), Executors.newSingleThreadExecutor());
 		Integer code = await(client.request(HttpRequest.get("https://en.wikipedia.org/wiki/Wikipedia")

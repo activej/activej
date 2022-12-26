@@ -27,18 +27,18 @@ import io.activej.common.initializer.WithInitializer;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.common.time.Stopwatch;
-import io.activej.eventloop.executor.EventloopExecutor;
 import io.activej.eventloop.inspector.EventloopInspector;
 import io.activej.eventloop.inspector.EventloopStats;
-import io.activej.eventloop.jmx.EventloopJmxBean;
-import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
-import io.activej.eventloop.net.DatagramSocketSettings;
-import io.activej.eventloop.net.ServerSocketSettings;
-import io.activej.eventloop.schedule.ScheduledRunnable;
-import io.activej.eventloop.schedule.Scheduler;
-import io.activej.eventloop.util.RunnableWithContext;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.jmx.ReactorJmxBean;
+import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.net.ServerSocketSettings;
+import io.activej.reactor.nio.NioChannelEventHandler;
+import io.activej.reactor.nio.NioReactor;
+import io.activej.reactor.schedule.ScheduledRunnable;
+import io.activej.reactor.util.RunnableWithContext;
 import org.jetbrains.annotations.Async;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -56,7 +56,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
@@ -83,7 +82,7 @@ import static java.util.Collections.emptyIterator;
  * and its queues with tasks are empty.
  */
 @SuppressWarnings("unused")
-public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, WithInitializer<Eventloop>, EventloopJmxBeanWithStats {
+public final class Eventloop implements Runnable, NioReactor, WithInitializer<Eventloop>, ReactorJmxBeanWithStats {
 	public static final Logger logger = LoggerFactory.getLogger(Eventloop.class);
 	private static final boolean CHECK = Checks.isEnabled(Eventloop.class);
 
@@ -145,14 +144,13 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 */
 	private @Nullable Thread eventloopThread;
 
-	private static final ThreadLocal<Eventloop> CURRENT_EVENTLOOP = new ThreadLocal<>();
 	/**
 	 * The desired name of the thread.
 	 */
 	private @Nullable String threadName;
 	private int threadPriority;
 
-	private @NotNull FatalErrorHandler fatalErrorHandler = Eventloop::logFatalError;
+	private @NotNull FatalErrorHandler fatalErrorHandler = this::logFatalError;
 
 	private volatile boolean keepAlive;
 	private volatile boolean breakEventloop;
@@ -289,7 +287,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * @return this {@link Eventloop}
 	 */
 	public @NotNull Eventloop withCurrentThread() {
-		CURRENT_EVENTLOOP.set(this);
+		Reactor.setCurrentReactor(this);
 		return this;
 	}
 	// endregion
@@ -300,79 +298,9 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * @return this {@link Eventloop}'s {@link Selector}
 	 * or {@code null} if no {@link Selector} has been opened yet, or it has already been closed
 	 */
+	@Override
 	public @Nullable Selector getSelector() {
 		return selector;
-	}
-
-	private static final String NO_CURRENT_EVENTLOOP_ERROR = """
-			Trying to start async operations prior eventloop.run(), or from outside of eventloop.run()\s
-			Possible solutions: 1) Eventloop.create().withCurrentThread() ... {your code block} ... eventloop.run()\s
-			2) try_with_resources Eventloop.useCurrentThread() ... {your code block}\s
-			3) refactor application so it starts async operations within eventloop.run(),\s
-			   i.e. by implementing EventloopService::start() {your code block} and using ServiceGraphModule""";
-
-	/**
-	 * Returns an {@link Eventloop} associated with the current thread
-	 * (e.g. the {@link Eventloop} registered to an inner Eventloop ThreadLocal).
-	 *
-	 * @return an {@link Eventloop} associated with the current thread
-	 * @throws IllegalStateException when there are no Eventloop associated with the current thread
-	 */
-	public static @NotNull Eventloop getCurrentEventloop() {
-		Eventloop eventloop = CURRENT_EVENTLOOP.get();
-		if (eventloop != null) return eventloop;
-		throw new IllegalStateException(NO_CURRENT_EVENTLOOP_ERROR);
-	}
-
-	/**
-	 * Returns an {@link Eventloop} associated with the current thread
-	 * (e.g. the {@link Eventloop} registered to an inner Eventloop ThreadLocal)
-	 * or {@code null} if no {@link Eventloop} is associated with the current thread.
-	 *
-	 * @return an {@link Eventloop} associated with the current thread
-	 * or {@code null} if no {@link Eventloop} is associated with the current thread
-	 * @see #getCurrentEventloop()
-	 */
-	public static @Nullable Eventloop getCurrentEventloopOrNull() {
-		return CURRENT_EVENTLOOP.get();
-	}
-
-	/**
-	 * Initializes a piece of code in a context of another {@link Eventloop}.
-	 * <p>
-	 * This method is useful for when you need to initialize a piece of code with another {@link Eventloop} context
-	 * (an {@link Eventloop} that runs in some other thread).
-	 *
-	 * @param anotherEventloop an {@link Eventloop} in context of which a piece of code should be initialized
-	 * @param runnable         a piece of code to be initialized in a context of another {@link Eventloop}
-	 */
-	public static void initWithEventloop(@NotNull Eventloop anotherEventloop, @NotNull Runnable runnable) {
-		Eventloop eventloop = CURRENT_EVENTLOOP.get();
-		try {
-			CURRENT_EVENTLOOP.set(anotherEventloop);
-			runnable.run();
-		} finally {
-			CURRENT_EVENTLOOP.set(eventloop);
-		}
-	}
-
-	/**
-	 * Initializes a component in a context of another {@link Eventloop}.
-	 * <p>
-	 * This method is useful for when you need to initialize some component with another {@link Eventloop} context
-	 * (an {@link Eventloop} that runs in some other thread).
-	 *
-	 * @param anotherEventloop an {@link Eventloop} in context of which a piece of code should be initialized
-	 * @param callable         a supplier of a component to be initialized in a context of another {@link Eventloop}
-	 */
-	public static <T> T initWithEventloop(@NotNull Eventloop anotherEventloop, @NotNull Supplier<T> callable) {
-		Eventloop eventloop = CURRENT_EVENTLOOP.get();
-		try {
-			CURRENT_EVENTLOOP.set(anotherEventloop);
-			return callable.get();
-		} finally {
-			CURRENT_EVENTLOOP.set(eventloop);
-		}
 	}
 
 	private void openSelector() {
@@ -406,6 +334,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 *
 	 * @return an existing {@link Selector} or newly opened one
 	 */
+	@Override
 	public @NotNull Selector ensureSelector() {
 		if (selector == null) {
 			openSelector();
@@ -419,6 +348,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * @param channel a channel to be closed, may be {@code null}
 	 * @param key     a key to be cancelled, may be {@code null}
 	 */
+	@Override
 	public void closeChannel(@Nullable SelectableChannel channel, @Nullable SelectionKey key) {
 		checkArgument(channel != null || key == null, "Either channel or key should be not null");
 		if (channel == null || !channel.isOpen()) return;
@@ -439,7 +369,8 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 *
 	 * @return {@code true} if this method is called from within an {@link Eventloop} thread, {@code false} otherwise
 	 */
-	public boolean inEventloopThread() {
+	@Override
+	public boolean inReactorThread() {
 		return eventloopThread == null || eventloopThread == Thread.currentThread();
 	}
 
@@ -497,7 +428,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			eventloopThread.setName(threadName);
 		if (threadPriority != 0)
 			eventloopThread.setPriority(threadPriority);
-		CURRENT_EVENTLOOP.set(this);
+		Reactor.setCurrentReactor(this);
 		setThreadFatalErrorHandler(fatalErrorHandler);
 		ensureSelector();
 		assert selector != null;
@@ -787,7 +718,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * @param key key of this action.
 	 */
 	private void onAccept(SelectionKey key) {
-		assert inEventloopThread();
+		assert inReactorThread();
 
 		ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
 		if (!serverSocketChannel.isOpen()) { // TODO - remove?
@@ -827,7 +758,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * @param key key of this action.
 	 */
 	private void onConnect(SelectionKey key) {
-		assert inEventloopThread();
+		assert inReactorThread();
 		@SuppressWarnings("unchecked") Callback<SocketChannel> cb = (Callback<SocketChannel>) key.attachment();
 		SocketChannel channel = (SocketChannel) key.channel();
 		boolean connected;
@@ -859,7 +790,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * @param key key of this action.
 	 */
 	private void onRead(SelectionKey key) {
-		assert inEventloopThread();
+		assert inReactorThread();
 		NioChannelEventHandler handler = (NioChannelEventHandler) key.attachment();
 		try {
 			handler.onReadReady();
@@ -876,7 +807,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * @param key key of this action.
 	 */
 	private void onWrite(SelectionKey key) {
-		assert inEventloopThread();
+		assert inReactorThread();
 		NioChannelEventHandler handler = (NioChannelEventHandler) key.attachment();
 		try {
 			handler.onWriteReady();
@@ -895,8 +826,9 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * @return server channel
 	 * @throws IOException If some I/O error occurs
 	 */
+	@Override
 	public @NotNull ServerSocketChannel listen(@Nullable InetSocketAddress address, @NotNull ServerSocketSettings serverSocketSettings, @NotNull Consumer<SocketChannel> acceptCallback) throws IOException {
-		if (CHECK) checkState(inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
 		ServerSocketChannel serverSocketChannel = null;
 		try {
 			serverSocketChannel = ServerSocketChannel.open();
@@ -917,45 +849,13 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	}
 
 	/**
-	 * Registers new UDP connection in this eventloop.
-	 *
-	 * @param bindAddress address for binding DatagramSocket for this connection.
-	 * @return DatagramSocket of this connection
-	 * @throws IOException if an I/O error occurs on opening DatagramChannel
-	 */
-	public static @NotNull DatagramChannel createDatagramChannel(DatagramSocketSettings datagramSocketSettings,
-			@Nullable InetSocketAddress bindAddress,
-			@Nullable InetSocketAddress connectAddress) throws IOException {
-		DatagramChannel datagramChannel = null;
-		try {
-			datagramChannel = DatagramChannel.open();
-			datagramSocketSettings.applySettings(datagramChannel);
-			datagramChannel.configureBlocking(false);
-			datagramChannel.bind(bindAddress);
-			if (connectAddress != null) {
-				datagramChannel.connect(connectAddress);
-			}
-			return datagramChannel;
-		} catch (IOException e) {
-			if (datagramChannel != null) {
-				try {
-					datagramChannel.close();
-				} catch (Exception nested) {
-					logger.error("Failed closing datagram channel after I/O error", nested);
-					e.addSuppressed(nested);
-				}
-			}
-			throw e;
-		}
-	}
-
-	/**
 	 * Asynchronously connects to a given socket address.
 	 *
 	 * @param address socketChannel's address
 	 * @param cb      a callback to be called when connection is successful
 	 *                or when {@link Eventloop} fails to connect to a given address
 	 */
+	@Override
 	public void connect(SocketAddress address, @NotNull Callback<SocketChannel> cb) {
 		connect(address, 0, cb);
 	}
@@ -968,6 +868,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * @param cb      a callback to be called when connection is successful
 	 *                or when {@link Eventloop} fails to connect to a given address
 	 */
+	@Override
 	public void connect(SocketAddress address, @Nullable Duration timeout, @NotNull Callback<SocketChannel> cb) {
 		connect(address, timeout == null ? 0L : timeout.toMillis(), cb);
 	}
@@ -981,8 +882,9 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * @param cb      a callback to be called when connection is successful
 	 *                or when {@link Eventloop} fails to connect to a given address
 	 */
+	@Override
 	public void connect(@NotNull SocketAddress address, long timeout, @NotNull Callback<SocketChannel> cb) {
-		if (CHECK) checkState(inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
 		SocketChannel channel;
 		try {
 			channel = SocketChannel.open();
@@ -1035,7 +937,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * @return a current tick of an {@link Eventloop}.
 	 */
 	public long tick() {
-		if (CHECK) checkState(inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
 		return (long) loop << 32 | tick;
 	}
 
@@ -1046,8 +948,9 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 *
 	 * @param runnable runnable of this task
 	 */
+	@Override
 	public void post(@NotNull @Async.Schedule Runnable runnable) {
-		if (CHECK) checkState(inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
 		localTasks.addFirst(runnable);
 	}
 
@@ -1056,8 +959,9 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 *
 	 * @param runnable runnable of this task
 	 */
+	@Override
 	public void postLast(@NotNull @Async.Schedule Runnable runnable) {
-		if (CHECK) checkState(inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
 		localTasks.addLast(runnable);
 	}
 
@@ -1066,8 +970,9 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 *
 	 * @param runnable runnable of this task
 	 */
+	@Override
 	public void postNext(@NotNull @Async.Schedule Runnable runnable) {
-		if (CHECK) checkState(inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
 		nextTasks.add(runnable);
 	}
 
@@ -1095,7 +1000,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 */
 	@Override
 	public @NotNull ScheduledRunnable schedule(long timestamp, @NotNull @Async.Schedule Runnable runnable) {
-		if (CHECK) checkState(inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
 		return addScheduledTask(timestamp, runnable, false);
 	}
 
@@ -1111,7 +1016,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	@Override
 	public @NotNull ScheduledRunnable scheduleBackground(long timestamp, @NotNull @Async.Schedule Runnable runnable) {
 		if (CHECK)
-			checkState(inEventloopThread(), "Not in eventloop thread");
+			checkState(inReactorThread(), "Not in eventloop thread");
 		return addScheduledTask(timestamp, runnable, true);
 	}
 
@@ -1126,6 +1031,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * Notifies the eventloop about concurrent operation in other threads.
 	 * Eventloop will not exit until all external tasks are complete.
 	 */
+	@Override
 	public void startExternalTask() {
 		externalTasksCount.incrementAndGet();
 	}
@@ -1134,6 +1040,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * Notifies the eventloop about completion of corresponding operation in other threads.
 	 * Failure to call this method will prevent the eventloop from exiting.
 	 */
+	@Override
 	public void completeExternalTask() {
 		externalTasksCount.decrementAndGet();
 	}
@@ -1166,12 +1073,12 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	/**
 	 * Returns itself
 	 * <p>
-	 * This method is needed as {@link Eventloop} implements {@link EventloopJmxBean} interface
+	 * This method is needed as {@link Eventloop} implements {@link ReactorJmxBean} interface
 	 *
 	 * @return this {@link Eventloop}
 	 */
 	@Override
-	public @NotNull Eventloop getEventloop() {
+	public @NotNull Eventloop getReactor() {
 		return this;
 	}
 
@@ -1264,15 +1171,16 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * @param e       a fatal error to be logged
 	 * @param context a context of a fatal error to be logged, may be {@code null} if a context is meaningless or unknown
 	 */
-	public static void logFatalError(@NotNull Throwable e, @Nullable Object context) {
+	@Override
+	public void logFatalError(@NotNull Throwable e, @Nullable Object context) {
 		if (e instanceof UncheckedException) {
 			e = e.getCause();
 		}
 
 		logger.error("Fatal error in {}", context, e);
 
-		Eventloop eventloop = getCurrentEventloopOrNull();
-		if (eventloop != null && eventloop.inspector != null) {
+		Reactor reactor = Reactor.getCurrentReactorOrNull();
+		if (reactor instanceof Eventloop eventloop && eventloop.inspector != null) {
 			eventloop.inspector.onFatalError(e, context);
 		}
 	}

@@ -18,10 +18,10 @@ package io.activej.redis;
 
 import io.activej.common.ApplicationSettings;
 import io.activej.common.initializer.WithInitializer;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.net.SocketSettings;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
+import io.activej.reactor.net.SocketSettings;
+import io.activej.reactor.nio.NioReactor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -49,7 +49,7 @@ public final class RedisClient implements WithInitializer<RedisClient> {
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(RedisClient.class, "connectTimeout", Duration.ZERO);
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
 
-	private final Eventloop eventloop;
+	private final NioReactor reactor;
 	private final InetSocketAddress address;
 
 	private SocketSettings socketSettings = DEFAULT_SOCKET_SETTINGS;
@@ -60,17 +60,17 @@ public final class RedisClient implements WithInitializer<RedisClient> {
 	private @Nullable Executor sslExecutor;
 
 	// region creators
-	private RedisClient(Eventloop eventloop, InetSocketAddress address) {
-		this.eventloop = eventloop;
+	private RedisClient(NioReactor reactor, InetSocketAddress address) {
+		this.reactor = reactor;
 		this.address = address;
 	}
 
-	public static RedisClient create(Eventloop eventloop) {
-		return new RedisClient(eventloop, DEFAULT_ADDRESS);
+	public static RedisClient create(NioReactor reactor) {
+		return new RedisClient(reactor, DEFAULT_ADDRESS);
 	}
 
-	public static RedisClient create(Eventloop eventloop, InetSocketAddress address) {
-		return new RedisClient(eventloop, address);
+	public static RedisClient create(NioReactor reactor, InetSocketAddress address) {
+		return new RedisClient(reactor, address);
 	}
 
 	public RedisClient withSocketSettings(SocketSettings socketSettings) {
@@ -96,8 +96,8 @@ public final class RedisClient implements WithInitializer<RedisClient> {
 	// endregion
 
 	// region getters
-	public Eventloop getEventloop() {
-		return eventloop;
+	public NioReactor getReactor() {
+		return reactor;
 	}
 
 	public InetSocketAddress getAddress() {
@@ -119,7 +119,7 @@ public final class RedisClient implements WithInitializer<RedisClient> {
 	 * @return promise of {@link RedisConnection}
 	 */
 	public Promise<RedisConnection> connect() {
-		return AsyncTcpSocketNio.connect(address, connectTimeoutMillis, socketSettings)
+		return AsyncTcpSocketNio.connect(reactor, address, connectTimeoutMillis, socketSettings)
 				.map(
 						socket -> {
 							RedisConnection connection = new RedisConnection(this,

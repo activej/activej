@@ -35,10 +35,10 @@ import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
 import static io.activej.common.Utils.first;
-import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.fs.Utils.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -84,11 +84,11 @@ public final class TestLocalActiveFsInvariants {
 		firstPath = tmpFolder.newFolder("first").toPath();
 		secondPath = tmpFolder.newFolder("second").toPath();
 
-		LocalActiveFs firstLocalFs = initializer.apply(LocalActiveFs.create(getCurrentEventloop(), newSingleThreadExecutor(), firstPath));
+		LocalActiveFs firstLocalFs = initializer.apply(LocalActiveFs.create(getCurrentReactor(), newSingleThreadExecutor(), firstPath));
 		await(firstLocalFs.start());
 		first = firstLocalFs;
 
-		LocalActiveFs secondLocalFs = initializer.apply(LocalActiveFs.create(getCurrentEventloop(), newSingleThreadExecutor(), secondPath));
+		LocalActiveFs secondLocalFs = initializer.apply(LocalActiveFs.create(getCurrentReactor(), newSingleThreadExecutor(), secondPath));
 		await(secondLocalFs.start());
 		second = new DefaultActiveFs(secondLocalFs);
 

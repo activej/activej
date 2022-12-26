@@ -28,6 +28,7 @@ import io.activej.inject.module.Module;
 import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraphModule;
 
@@ -46,7 +47,7 @@ public abstract class RpcServerLauncher extends Launcher {
 	RpcServer rpcServer;
 
 	@Provides
-	public Eventloop eventloop(Config config,
+	public NioReactor reactor(Config config,
 			OptionalDependency<ThrottlingController> throttlingController) {
 		return Eventloop.create()
 				.withInitializer(ofEventloop(config.getChild("eventloop")))
@@ -87,8 +88,8 @@ public abstract class RpcServerLauncher extends Launcher {
 			protected Module getBusinessLogicModule() {
 				return new AbstractModule() {
 					@Provides
-					RpcServer server(Eventloop eventloop, Config config) {
-						return RpcServer.create(eventloop)
+					RpcServer server(NioReactor reactor, Config config) {
+						return RpcServer.create(reactor)
 								.withListenAddress(config.get(ofInetSocketAddress(), "listenAddresses"))
 								.withMessageTypes(String.class)
 								.withHandler(String.class,

@@ -84,7 +84,7 @@ final class Utils {
 
 	private static void execute(ActiveFsChunkStorage<Long> storage, AsyncRunnable runnable, String errorMessage) throws IOException {
 		try {
-			storage.getEventloop().submit(runnable::run).get();
+			storage.getReactor().submit(runnable::run).get();
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 			throw new IOException("Eventloop thread was interrupted", e);

@@ -10,6 +10,7 @@ import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
 
 import java.util.function.Function;
@@ -18,14 +19,14 @@ import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
 
 public class TcpDataBenchmarkServer extends Launcher {
 	@Provides
-	Eventloop eventloop() {
+	NioReactor reactor() {
 		return Eventloop.create();
 	}
 
 	@Provides
 	@Eager
-	SimpleServer server(Eventloop eventloop) {
-		return SimpleServer.create(eventloop,
+	SimpleServer server(NioReactor reactor) {
+		return SimpleServer.create(reactor,
 				socket -> ChannelSupplier.ofSocket(socket)
 						.transformWith(ChannelDeserializer.create(INT_SERIALIZER))
 						.transformWith(StreamFilter.mapper(Function.identity()))

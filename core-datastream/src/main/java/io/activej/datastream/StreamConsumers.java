@@ -18,9 +18,9 @@ package io.activej.datastream;
 
 import io.activej.common.function.ConsumerEx;
 import io.activej.csp.ChannelConsumer;
-import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -232,7 +232,7 @@ final class StreamConsumers {
 
 	}
 
-	static final class OfAnotherEventloop<T> extends AbstractStreamConsumer<T> {
+	static final class OfAnotherReactor<T> extends AbstractStreamConsumer<T> {
 		private static final int MAX_BUFFER_SIZE = 100;
 		private static final Iterator<?> END_OF_STREAM = Collections.emptyIterator();
 
@@ -245,17 +245,17 @@ final class StreamConsumers {
 			}
 		};
 
-		private final StreamConsumer<T> anotherEventloopConsumer;
+		private final StreamConsumer<T> anotherReactorConsumer;
 		private final InternalSupplier internalSupplier;
 		private volatile boolean wakingUp;
 
-		public OfAnotherEventloop(@NotNull Eventloop anotherEventloop, @NotNull StreamConsumer<T> anotherEventloopConsumer) {
-			this.anotherEventloopConsumer = anotherEventloopConsumer;
-			this.internalSupplier = Eventloop.initWithEventloop(anotherEventloop, InternalSupplier::new);
+		public OfAnotherReactor(@NotNull Reactor anotherReactor, @NotNull StreamConsumer<T> anotherReactorConsumer) {
+			this.anotherReactorConsumer = anotherReactorConsumer;
+			this.internalSupplier = Reactor.initWithReactor(anotherReactor, InternalSupplier::new);
 		}
 
 		void execute(Runnable runnable) {
-			eventloop.execute(runnable);
+			reactor.execute(runnable);
 		}
 
 		void wakeUp() {
@@ -278,13 +278,13 @@ final class StreamConsumers {
 
 		@Override
 		protected void onInit() {
-			eventloop.startExternalTask();
+			reactor.startExternalTask();
 		}
 
 		@Override
 		protected void onStarted() {
 			internalSupplier.execute(() ->
-					internalSupplier.streamTo(anotherEventloopConsumer));
+					internalSupplier.streamTo(anotherReactorConsumer));
 		}
 
 		@Override
@@ -294,7 +294,7 @@ final class StreamConsumers {
 
 		@Override
 		protected void onComplete() {
-			eventloop.completeExternalTask();
+			reactor.completeExternalTask();
 		}
 
 		private void flush() {
@@ -327,7 +327,7 @@ final class StreamConsumers {
 			volatile boolean wakingUp;
 
 			void execute(Runnable runnable) {
-				eventloop.execute(runnable);
+				reactor.execute(runnable);
 			}
 
 			void wakeUp() {
@@ -344,7 +344,7 @@ final class StreamConsumers {
 
 			@Override
 			protected void onInit() {
-				eventloop.startExternalTask();
+				reactor.startExternalTask();
 			}
 
 			@Override
@@ -356,17 +356,17 @@ final class StreamConsumers {
 			@Override
 			protected void onSuspended() {
 				isReady = false;
-				OfAnotherEventloop.this.wakeUp();
+				OfAnotherReactor.this.wakeUp();
 			}
 
 			@Override
 			protected void onComplete() {
-				eventloop.completeExternalTask();
+				reactor.completeExternalTask();
 			}
 
 			private void flush() {
 				if (iterator == null) {
-					OfAnotherEventloop.this.wakeUp();
+					OfAnotherReactor.this.wakeUp();
 					return;
 				}
 				Iterator<T> iterator = this.iterator;
@@ -377,18 +377,18 @@ final class StreamConsumers {
 					sendEndOfStream();
 				} else if (!this.iterator.hasNext()) {
 					this.iterator = null;
-					OfAnotherEventloop.this.wakeUp();
+					OfAnotherReactor.this.wakeUp();
 				}
 			}
 
 			@Override
 			protected void onAcknowledge() {
-				OfAnotherEventloop.this.execute(OfAnotherEventloop.this::acknowledge);
+				OfAnotherReactor.this.execute(OfAnotherReactor.this::acknowledge);
 			}
 
 			@Override
 			protected void onError(Exception e) {
-				OfAnotherEventloop.this.execute(() -> OfAnotherEventloop.this.closeEx(e));
+				OfAnotherReactor.this.execute(() -> OfAnotherReactor.this.closeEx(e));
 			}
 
 			@Override

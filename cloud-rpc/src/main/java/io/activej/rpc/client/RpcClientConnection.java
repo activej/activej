@@ -23,12 +23,12 @@ import io.activej.common.Checks;
 import io.activej.common.recycle.Recyclers;
 import io.activej.common.time.Stopwatch;
 import io.activej.datastream.StreamDataAcceptor;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.schedule.ScheduledRunnable;
 import io.activej.jmx.api.JmxRefreshable;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.jmx.stats.EventStats;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.schedule.ScheduledRunnable;
 import io.activej.rpc.client.jmx.RpcRequestStats;
 import io.activej.rpc.client.sender.RpcSender;
 import io.activej.rpc.protocol.*;
@@ -57,7 +57,7 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 	private boolean overloaded = false;
 	private boolean closed;
 
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 	private final RpcClient rpcClient;
 	private final RpcStream stream;
 	private final InetSocketAddress address;
@@ -78,9 +78,9 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 	private final long keepAliveMillis;
 	private boolean pongReceived;
 
-	RpcClientConnection(Eventloop eventloop, RpcClient rpcClient, InetSocketAddress address, RpcStream stream,
+	RpcClientConnection(Reactor reactor, RpcClient rpcClient, InetSocketAddress address, RpcStream stream,
 			long keepAliveMillis) {
-		this.eventloop = eventloop;
+		this.reactor = reactor;
 		this.rpcClient = rpcClient;
 		this.stream = stream;
 		this.address = address;
@@ -95,7 +95,7 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 
 	@Override
 	public <I, O> void sendRequest(I request, int timeout, @NotNull Callback<O> cb) {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
 
 		// jmx
 		totalRequests.recordEvent();
@@ -113,7 +113,7 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 				activeRequests.put(cookie, cb);
 			} else {
 				ScheduledCallback<O> scheduledCallback = new ScheduledCallback<>(cookie, cb);
-				scheduledCallback.scheduledRunnable = eventloop.delayBackground(timeout, scheduledCallback);
+				scheduledCallback.scheduledRunnable = reactor.delayBackground(timeout, scheduledCallback);
 				activeRequests.put(cookie, scheduledCallback);
 			}
 
@@ -164,7 +164,7 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 
 	@Override
 	public <I, O> void sendRequest(I request, @NotNull Callback<O> cb) {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
 
 		// jmx
 		totalRequests.recordEvent();
@@ -252,7 +252,7 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 		if (keepAliveMillis == 0) return;
 		pongReceived = false;
 		downstreamDataAcceptor.accept(RpcMessage.of(-1, RpcControlMessage.PING));
-		eventloop.delayBackground(keepAliveMillis, () -> {
+		reactor.delayBackground(keepAliveMillis, () -> {
 			if (isClosed()) return;
 			if (!pongReceived) {
 				onReceiverError(CONNECTION_UNRESPONSIVE);
@@ -376,7 +376,7 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 			this.stopwatch = Stopwatch.createStarted();
 			this.callback = cb;
 			this.requestStatsPerClass = requestStatsPerClass;
-			this.dueTimestamp = eventloop.currentTimeMillis() + timeout;
+			this.dueTimestamp = reactor.currentTimeMillis() + timeout;
 		}
 
 		@Override

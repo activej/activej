@@ -21,7 +21,6 @@ import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingCodec;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
-import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.exception.FileNotFoundException;
 import io.activej.fs.exception.FsException;
@@ -34,6 +33,7 @@ import io.activej.net.AbstractServer;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.nio.NioReactor;
 
 import java.net.InetAddress;
 import java.time.Duration;
@@ -86,13 +86,13 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 	private final PromiseStats deleteAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	// endregion
 
-	private ActiveFsServer(Eventloop eventloop, ActiveFs fs) {
-		super(eventloop);
+	private ActiveFsServer(NioReactor reactor, ActiveFs fs) {
+		super(reactor);
 		this.fs = fs;
 	}
 
-	public static ActiveFsServer create(Eventloop eventloop, ActiveFs fs) {
-		return new ActiveFsServer(eventloop, fs);
+	public static ActiveFsServer create(NioReactor reactor, ActiveFs fs) {
+		return new ActiveFsServer(reactor, fs);
 	}
 
 	public ActiveFsServer withHandshakeHandler(Function<FsRequest.Handshake, FsResponse.Handshake> handshakeHandler) {

@@ -11,8 +11,8 @@ import io.activej.cube.bean.DataItemString2;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
-import io.activej.eventloop.Eventloop;
 import io.activej.fs.LocalActiveFs;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
@@ -51,15 +51,15 @@ public class StringDimensionTest {
 	@Test
 	public void testQuery() throws Exception {
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		Reactor reactor = Reactor.getCurrentReactor();
 		Executor executor = Executors.newCachedThreadPool();
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 
-		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, aggregationsDir);
+		LocalActiveFs fs = LocalActiveFs.create(reactor, executor, aggregationsDir);
 		await(fs.start());
-		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(),
+		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(reactor, ChunkIdCodec.ofLong(),
 				new IdGeneratorStub(), LZ4FrameFormat.create(), fs);
-		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
+		Cube cube = Cube.create(reactor, executor, classLoader, aggregationChunkStorage)
 				.withDimension("key1", ofString())
 				.withDimension("key2", ofInt())
 				.withMeasure("metric1", sum(ofLong()))

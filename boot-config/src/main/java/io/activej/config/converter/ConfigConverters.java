@@ -16,17 +16,17 @@
 
 package io.activej.config.converter;
 
-import io.activej.async.service.EventloopTaskScheduler.Schedule;
+import io.activej.async.service.ReactorTaskScheduler.Schedule;
 import io.activej.common.MemSize;
 import io.activej.common.StringFormatUtils;
 import io.activej.common.exception.FatalErrorHandler;
 import io.activej.config.Config;
-import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;
-import io.activej.eventloop.net.DatagramSocketSettings;
-import io.activej.eventloop.net.ServerSocketSettings;
-import io.activej.eventloop.net.SocketSettings;
 import io.activej.promise.RetryPolicy;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.net.DatagramSocketSettings;
+import io.activej.reactor.net.ServerSocketSettings;
+import io.activej.reactor.net.SocketSettings;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.InetAddress;
@@ -47,7 +47,7 @@ import static io.activej.common.Utils.not;
 import static io.activej.common.exception.FatalErrorHandler.*;
 import static io.activej.eventloop.inspector.ThrottlingController.INITIAL_KEYS_PER_SECOND;
 import static io.activej.eventloop.inspector.ThrottlingController.INITIAL_THROTTLING;
-import static io.activej.eventloop.net.ServerSocketSettings.DEFAULT_BACKLOG;
+import static io.activej.reactor.net.ServerSocketSettings.DEFAULT_BACKLOG;
 import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -346,9 +346,9 @@ public final class ConfigConverters {
 					case "loggingToEventloop":
 						FatalErrorHandler logging = logging();
 						return (e, context) -> {
-							Eventloop eventloop = Eventloop.getCurrentEventloopOrNull();
-							if (eventloop != null) {
-								eventloop.logFatalError(e, context);
+							Reactor reactor = Reactor.getCurrentReactorOrNull();
+							if (reactor != null) {
+								reactor.logFatalError(e, context);
 							} else {
 								logging.handle(e, context);
 							}
@@ -376,7 +376,7 @@ public final class ConfigConverters {
 		return list.stream().anyMatch(cl -> cl.isAssignableFrom(c));
 	}
 
-	public static ConfigConverter<Schedule> ofEventloopTaskSchedule() {
+	public static ConfigConverter<Schedule> ofReactorTaskSchedule() {
 		return new ConfigConverter<>() {
 			@Override
 			public @NotNull Schedule get(Config config) {
@@ -385,7 +385,8 @@ public final class ConfigConverters {
 					case "delay" -> Schedule.ofDelay(config.get(ofDuration(), "value"));
 					case "interval" -> Schedule.ofInterval(config.get(ofDuration(), "value"));
 					case "period" -> Schedule.ofPeriod(config.get(ofDuration(), "value"));
-					default -> throw new IllegalArgumentException("No eventloop task schedule type named " + config.getValue() + " exists!");
+					default ->
+							throw new IllegalArgumentException("No reactor task schedule type named " + config.getValue() + " exists!");
 				};
 			}
 
@@ -410,9 +411,11 @@ public final class ConfigConverters {
 				RetryPolicy retryPolicy = switch (config.getValue()) {
 					case "immediate" -> RetryPolicy.immediateRetry();
 					case "fixedDelay" -> RetryPolicy.fixedDelay(config.get(ofDuration(), "delay").toMillis());
-					case "exponentialBackoff" -> RetryPolicy.exponentialBackoff(config.get(ofDuration(), "initialDelay").toMillis(),
-							config.get(ofDuration(), "maxDelay").toMillis(), config.get(ofDouble(), "exponent", 2.0));
-					default -> throw new IllegalArgumentException("No retry policy named " + config.getValue() + " exists!");
+					case "exponentialBackoff" ->
+							RetryPolicy.exponentialBackoff(config.get(ofDuration(), "initialDelay").toMillis(),
+									config.get(ofDuration(), "maxDelay").toMillis(), config.get(ofDouble(), "exponent", 2.0));
+					default ->
+							throw new IllegalArgumentException("No retry policy named " + config.getValue() + " exists!");
 				};
 				int maxRetryCount = config.get(ofInteger(), "maxRetryCount", Integer.MAX_VALUE);
 				if (maxRetryCount != Integer.MAX_VALUE) {

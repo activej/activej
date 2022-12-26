@@ -16,7 +16,7 @@
 
 package io.activej.launchers.initializers;
 
-import io.activej.async.service.EventloopTaskScheduler;
+import io.activej.async.service.ReactorTaskScheduler;
 import io.activej.common.MemSize;
 import io.activej.common.initializer.Initializer;
 import io.activej.config.Config;
@@ -60,12 +60,12 @@ public class Initializers {
 				.withThreadPriority(config.get(ofInteger(), "threadPriority", eventloop.getThreadPriority()));
 	}
 
-	public static Initializer<EventloopTaskScheduler> ofEventloopTaskScheduler(Config config) {
+	public static Initializer<ReactorTaskScheduler> ofReactorTaskScheduler(Config config) {
 		return scheduler -> {
 			scheduler.setEnabled(!config.get(ofBoolean(), "disabled", false));
 			scheduler.withAbortOnError(config.get(ofBoolean(), "abortOnError", false))
 					.withInitialDelay(config.get(ofDuration(), "initialDelay", Duration.ZERO))
-					.withSchedule(config.get(ofEventloopTaskSchedule(), "schedule"))
+					.withSchedule(config.get(ofReactorTaskSchedule(), "schedule"))
 					.withRetryPolicy(config.get(ofRetryPolicy(), "retryPolicy"));
 		};
 	}
@@ -142,17 +142,17 @@ public class Initializers {
 								throttling -> throttling > throttlingHigh));
 	}
 
-	public static Initializer<TriggersModuleSettings> ofEventloopTaskSchedulerTriggers(Config config) {
+	public static Initializer<TriggersModuleSettings> ofReactorTaskSchedulerTriggers(Config config) {
 		Long delayError = config.get(ofDurationAsMillis(), "scheduler.delayError", null);
 		Long delayWarning = config.get(ofDurationAsMillis(), "scheduler.delayWarning", null);
 
 		return triggersSettings -> triggersSettings
-				.with(EventloopTaskScheduler.class, WARNING, "error", scheduler ->
+				.with(ReactorTaskScheduler.class, WARNING, "error", scheduler ->
 						TriggerResult.ofError(scheduler.getLastException()))
-				.with(EventloopTaskScheduler.class, INFORMATION, "error", scheduler ->
+				.with(ReactorTaskScheduler.class, INFORMATION, "error", scheduler ->
 						ofPromiseStatsLastSuccess(scheduler.getStats()))
 
-				.with(EventloopTaskScheduler.class, WARNING, "delay", scheduler -> {
+				.with(ReactorTaskScheduler.class, WARNING, "delay", scheduler -> {
 					Duration currentDuration = scheduler.getStats().getCurrentDuration();
 					Duration duration = getDuration(scheduler);
 					if (currentDuration == null || duration == null) {
@@ -161,7 +161,7 @@ public class Initializers {
 					return TriggerResult.ofInstant(scheduler.getStats().getLastStartTime(),
 							currentDuration.toMillis() > (delayWarning != null ? delayWarning : duration.toMillis() * 3));
 				})
-				.with(EventloopTaskScheduler.class, HIGH, "delay", scheduler -> {
+				.with(ReactorTaskScheduler.class, HIGH, "delay", scheduler -> {
 					Duration currentDuration = scheduler.getStats().getCurrentDuration();
 					Duration duration = getDuration(scheduler);
 					if (currentDuration == null || duration == null) {
@@ -172,7 +172,7 @@ public class Initializers {
 				});
 	}
 
-	private static Duration getDuration(EventloopTaskScheduler scheduler) {
+	private static Duration getDuration(ReactorTaskScheduler scheduler) {
 		return scheduler.getPeriod() != null ? scheduler.getPeriod() : scheduler.getInterval();
 	}
 }

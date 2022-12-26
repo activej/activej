@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package io.activej.eventloop.jmx;
+package io.activej.reactor.jmx;
 
-import io.activej.eventloop.Eventloop;
 import io.activej.jmx.api.JmxBeanAdapterWithRefresh;
 import io.activej.jmx.api.JmxRefreshable;
 import io.activej.jmx.stats.ValueStats;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.InvocationTargetException;
@@ -28,23 +28,23 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.activej.common.Checks.*;
-import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
+import static io.activej.reactor.util.RunnableWithContext.wrapContext;
 
-public final class EventloopJmxBeanAdapter implements JmxBeanAdapterWithRefresh {
+public final class ReactorJmxBeanAdapter implements JmxBeanAdapterWithRefresh {
 	private static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(1);
 
-	private final Map<Eventloop, List<JmxRefreshable>> eventloopToJmxRefreshables = new ConcurrentHashMap<>();
+	private final Map<Reactor, List<JmxRefreshable>> reactorToJmxRefreshables = new ConcurrentHashMap<>();
 	private final Set<JmxRefreshable> allRefreshables = Collections.newSetFromMap(new IdentityHashMap<>());
-	private final Map<Object, Eventloop> beanToEventloop = new IdentityHashMap<>();
+	private final Map<Object, Reactor> beanToReactor = new IdentityHashMap<>();
 
 	private volatile Duration refreshPeriod;
 	private int maxRefreshesPerCycle;
 
 	@Override
 	public synchronized void execute(Object bean, Runnable command) {
-		Eventloop eventloop = beanToEventloop.get(bean);
-		checkNotNull(eventloop, () -> "Unregistered bean " + bean);
-		eventloop.execute(wrapContext(bean, command));
+		Reactor reactor = beanToReactor.get(bean);
+		checkNotNull(reactor, () -> "Unregistered bean " + bean);
+		reactor.execute(wrapContext(bean, command));
 	}
 
 	@Override
@@ -53,7 +53,7 @@ public final class EventloopJmxBeanAdapter implements JmxBeanAdapterWithRefresh 
 		checkArgument(maxRefreshesPerCycle > 0);
 		this.refreshPeriod = refreshPeriod;
 		this.maxRefreshesPerCycle = maxRefreshesPerCycle;
-		for (Map.Entry<Eventloop, List<JmxRefreshable>> entry : eventloopToJmxRefreshables.entrySet()) {
+		for (Map.Entry<Reactor, List<JmxRefreshable>> entry : reactorToJmxRefreshables.entrySet()) {
 			entry.getKey().execute(() -> ((ValueStats) entry.getValue().get(0)).resetStats());
 		}
 	}
@@ -62,17 +62,19 @@ public final class EventloopJmxBeanAdapter implements JmxBeanAdapterWithRefresh 
 	public synchronized void registerRefreshableBean(Object bean, List<JmxRefreshable> beanRefreshables) {
 		checkNotNull(refreshPeriod, "Not initialized");
 
-		Eventloop eventloop = ensureEventloop(bean);
-		if (!eventloopToJmxRefreshables.containsKey(eventloop)) {
-			Duration smoothingWindows = eventloop.getSmoothingWindow();
+		Reactor reactor = ensureReactor(bean);
+		if (!reactorToJmxRefreshables.containsKey(reactor)) {
+			Duration smoothingWindows = reactor instanceof ReactorJmxBeanWithStats reactorJmxBeanWithStats ?
+					reactorJmxBeanWithStats.getSmoothingWindow() :
+					null;
 			if (smoothingWindows == null) {
 				smoothingWindows = DEFAULT_SMOOTHING_WINDOW;
 			}
 			ValueStats refreshStats = ValueStats.create(smoothingWindows).withRate().withUnit("ns");
 			List<JmxRefreshable> list = new ArrayList<>();
 			list.add(refreshStats);
-			eventloopToJmxRefreshables.put(eventloop, list);
-			eventloop.execute(() -> refresh(eventloop, list, 0, refreshStats));
+			reactorToJmxRefreshables.put(reactor, list);
+			reactor.execute(() -> refresh(reactor, list, 0, refreshStats));
 		}
 
 		Set<JmxRefreshable> beanRefreshablesFiltered = new HashSet<>();
@@ -82,48 +84,48 @@ public final class EventloopJmxBeanAdapter implements JmxBeanAdapterWithRefresh 
 			}
 		}
 
-		eventloop.submit(() -> {
-			List<JmxRefreshable> refreshables = eventloopToJmxRefreshables.get(eventloop);
+		reactor.submit(() -> {
+			List<JmxRefreshable> refreshables = reactorToJmxRefreshables.get(reactor);
 			refreshables.addAll(beanRefreshablesFiltered);
 		});
 	}
 
-	private Eventloop ensureEventloop(Object bean) {
-		Eventloop eventloop = beanToEventloop.get(bean);
-		if (eventloop == null) {
+	private Reactor ensureReactor(Object bean) {
+		Reactor reactor = beanToReactor.get(bean);
+		if (reactor == null) {
 			try {
-				eventloop = (Eventloop) bean.getClass().getMethod("getEventloop").invoke(bean);
+				reactor = (Reactor) bean.getClass().getMethod("getReactor").invoke(bean);
 			} catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-				throw new IllegalStateException("Class annotated with @EventloopJmxBean should have a 'getEventloop()' method");
+				throw new IllegalStateException("Class annotated with @ReactorJmxBean should have a 'getReactor()' method");
 			}
-			checkNotNull(eventloop);
-			beanToEventloop.put(bean, eventloop);
+			checkNotNull(reactor);
+			beanToReactor.put(bean, reactor);
 		}
-		return eventloop;
+		return reactor;
 	}
 
 	@Override
 	public List<String> getRefreshStats() {
 		List<String> result = new ArrayList<>();
-		if (eventloopToJmxRefreshables.size() > 1) {
+		if (reactorToJmxRefreshables.size() > 1) {
 			int count = 0;
 			ValueStats total = ValueStats.createAccumulator().withRate().withUnit("ms");
-			for (List<JmxRefreshable> refreshables : eventloopToJmxRefreshables.values()) {
+			for (List<JmxRefreshable> refreshables : reactorToJmxRefreshables.values()) {
 				total.add((ValueStats) refreshables.get(0));
 				count += refreshables.size();
 			}
 			result.add(getStatsString(count, total));
 		}
-		for (List<JmxRefreshable> refreshables : eventloopToJmxRefreshables.values()) {
+		for (List<JmxRefreshable> refreshables : reactorToJmxRefreshables.values()) {
 			result.add(getStatsString(refreshables.size(), (ValueStats) refreshables.get(0)));
 		}
 		return result;
 	}
 
-	private void refresh(@NotNull Eventloop eventloop, @NotNull List<JmxRefreshable> list, int startIndex, ValueStats refreshStats) {
-		checkState(eventloop.inEventloopThread());
+	private void refresh(@NotNull Reactor reactor, @NotNull List<JmxRefreshable> list, int startIndex, ValueStats refreshStats) {
+		checkState(reactor.inReactorThread());
 
-		long timestamp = eventloop.currentTimeMillis();
+		long timestamp = reactor.currentTimeMillis();
 
 		int index = startIndex < list.size() ? startIndex : 0;
 		int endIndex = Math.min(list.size(), index + maxRefreshesPerCycle);
@@ -136,7 +138,7 @@ public final class EventloopJmxBeanAdapter implements JmxBeanAdapterWithRefresh 
 		refreshStats.recordValue(refreshTimeNanos);
 
 		long nextTimestamp = timestamp + computeEffectiveRefreshPeriod(list.size());
-		eventloop.scheduleBackground(nextTimestamp, () -> refresh(eventloop, list, endIndex, refreshStats));
+		reactor.scheduleBackground(nextTimestamp, () -> refresh(reactor, list, endIndex, refreshStats));
 	}
 
 	private long computeEffectiveRefreshPeriod(int totalCount) {

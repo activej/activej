@@ -26,8 +26,8 @@ import io.activej.datastream.StreamConsumers.OfChannelConsumer;
 import io.activej.datastream.StreamConsumers.Skip;
 import io.activej.datastream.processor.StreamConsumerTransformer;
 import io.activej.datastream.processor.StreamTransformer;
-import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -134,12 +134,12 @@ public interface StreamConsumer<T> extends AsyncCloseable {
 				.withAcknowledgement(ack -> ack.both(extraAcknowledge));
 	}
 
-	static <T> StreamConsumer<T> ofAnotherEventloop(@NotNull Eventloop anotherEventloop,
-			@NotNull StreamConsumer<T> anotherEventloopConsumer) {
-		if (Eventloop.getCurrentEventloop() == anotherEventloop) {
-			return anotherEventloopConsumer;
+	static <T> StreamConsumer<T> ofAnotherReactor(@NotNull Reactor anotherReactor,
+			@NotNull StreamConsumer<T> anotherReactorConsumer) {
+		if (Reactor.getCurrentReactor() == anotherReactor) {
+			return anotherReactorConsumer;
 		}
-		return new StreamConsumers.OfAnotherEventloop<>(anotherEventloop, anotherEventloopConsumer);
+		return new StreamConsumers.OfAnotherReactor<>(anotherReactor, anotherReactorConsumer);
 	}
 
 	/**

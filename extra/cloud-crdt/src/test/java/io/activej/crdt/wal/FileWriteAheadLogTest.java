@@ -11,9 +11,9 @@ import io.activej.csp.file.ChannelFileWriter;
 import io.activej.csp.process.frames.ChannelFrameEncoder;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelSerializer;
-import io.activej.eventloop.Eventloop;
 import io.activej.fs.LocalActiveFs;
 import io.activej.promise.Promises;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import io.activej.test.time.TestCurrentTimeProvider;
@@ -77,14 +77,14 @@ public class FileWriteAheadLogTest {
 	@Before
 	public void setUp() throws Exception {
 		executor = Executors.newSingleThreadExecutor();
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		Reactor reactor = Reactor.getCurrentReactor();
 		path = temporaryFolder.newFolder().toPath();
-		LocalActiveFs storageFs = LocalActiveFs.create(eventloop, executor, temporaryFolder.newFolder().toPath());
+		LocalActiveFs storageFs = LocalActiveFs.create(reactor, executor, temporaryFolder.newFolder().toPath());
 		await(storageFs.start());
-		storage = CrdtStorageFs.create(eventloop, storageFs, serializer, function);
-		WalUploader<Long, GSet<Integer>> uploader = WalUploader.create(eventloop, executor, path, function, serializer, storage);
-		wal = FileWriteAheadLog.create(eventloop, executor, path, serializer, uploader)
-				.withCurrentTimeProvider(eventloop);
+		storage = CrdtStorageFs.create(reactor, storageFs, serializer, function);
+		WalUploader<Long, GSet<Integer>> uploader = WalUploader.create(reactor, executor, path, function, serializer, storage);
+		wal = FileWriteAheadLog.create(reactor, executor, path, serializer, uploader)
+				.withCurrentTimeProvider(reactor);
 	}
 
 	@Test
@@ -110,7 +110,7 @@ public class FileWriteAheadLogTest {
 	@Test
 	public void singleFlushConsecutive() {
 		await(wal.start());
-		long now = Eventloop.getCurrentEventloop().currentTimeMillis();
+		long now = Reactor.getCurrentReactor().currentTimeMillis();
 		List<CrdtData<Long, GSet<Integer>>> expected = List.of(
 				new CrdtData<>(1L, now, GSet.of(1, 2, 3, 6, 9, 10, 11)),
 				new CrdtData<>(2L, now, GSet.of(-12, 0, 2, 3, 100, 200))
@@ -160,7 +160,7 @@ public class FileWriteAheadLogTest {
 	@Test
 	public void multipleFlushesConsecutive() {
 		await(wal.start());
-		long now = Eventloop.getCurrentEventloop().currentTimeMillis();
+		long now = Reactor.getCurrentReactor().currentTimeMillis();
 		List<CrdtData<Long, GSet<Integer>>> expected = List.of(
 				new CrdtData<>(1L, now, GSet.of(1, 2, 3, 6, 9, 10, 11)),
 				new CrdtData<>(2L, now, GSet.of(-12, 0, 2, 3, 100, 200))
@@ -181,7 +181,7 @@ public class FileWriteAheadLogTest {
 
 	@Test
 	public void startupWithRemainingWALFiles() throws IOException {
-		long now = Eventloop.getCurrentEventloop().currentTimeMillis();
+		long now = Reactor.getCurrentReactor().currentTimeMillis();
 		List<CrdtData<Long, GSet<Integer>>> expected = List.of(
 				new CrdtData<>(1L, now, GSet.of(1, 2, 3, 6, 9, 10, 11)),
 				new CrdtData<>(2L, now, GSet.of(-12, 0, 2, 3, 100, 200))
@@ -216,7 +216,7 @@ public class FileWriteAheadLogTest {
 
 	@Test
 	public void startupWithMalformedWALFiles() throws IOException {
-		long now = Eventloop.getCurrentEventloop().currentTimeMillis();
+		long now = Reactor.getCurrentReactor().currentTimeMillis();
 		List<CrdtData<Long, GSet<Integer>>> expected = List.of(
 				new CrdtData<>(1L, now, GSet.of(1, 2, 3, 6, 9, 10, 11)),
 				new CrdtData<>(2L, now, GSet.of(-124, -12, 0, 2, 3, 4, 45, 100, 200))
@@ -257,7 +257,7 @@ public class FileWriteAheadLogTest {
 
 	@Test
 	public void startupWithEmptyWALFiles() throws IOException {
-		long now = Eventloop.getCurrentEventloop().currentTimeMillis();
+		long now = Reactor.getCurrentReactor().currentTimeMillis();
 		List<CrdtData<Long, GSet<Integer>>> expected = List.of(
 				new CrdtData<>(1L, now, GSet.of(-53, 1, 2, 3, 6, 23)),
 				new CrdtData<>(2L, now, GSet.of(-12, 0, 12, 100, 200))
@@ -292,7 +292,7 @@ public class FileWriteAheadLogTest {
 	}
 
 	@SafeVarargs
-	private final Path craftWALFile(CrdtData<Long, GSet<Integer>>... mockData) {
+	private Path craftWALFile(CrdtData<Long, GSet<Integer>>... mockData) {
 		Path file = path.resolve(UUID.randomUUID() + EXT_FINAL);
 		await(StreamSupplier.ofChannelSupplier(ChannelSupplier.of(mockData)
 						.mapAsync(data -> Promises.delay(Duration.ofMillis(1), data)))

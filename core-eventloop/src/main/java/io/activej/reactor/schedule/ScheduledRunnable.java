@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.eventloop.schedule;
+package io.activej.reactor.schedule;
 
 import io.activej.common.initializer.WithInitializer;
 import org.jetbrains.annotations.NotNull;

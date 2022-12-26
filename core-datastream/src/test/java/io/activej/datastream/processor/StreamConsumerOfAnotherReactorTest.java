@@ -26,7 +26,7 @@ import static io.activej.promise.TestUtils.awaitException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
-public class StreamConsumerOfAnotherEventloopTest {
+public class StreamConsumerOfAnotherReactorTest {
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -54,7 +54,7 @@ public class StreamConsumerOfAnotherEventloopTest {
 	public void testStreaming() throws ExecutionException, InterruptedException {
 		StreamSupplier<Integer> supplier = StreamSupplier.of(1, 2, 3, 4, 5);
 		StreamConsumerToList<Integer> listConsumer = fromAnotherEventloop(StreamConsumerToList::create);
-		StreamConsumer<Integer> consumer = StreamConsumer.ofAnotherEventloop(anotherEventloop, listConsumer);
+		StreamConsumer<Integer> consumer = StreamConsumer.ofAnotherReactor(anotherEventloop, listConsumer);
 
 		await(supplier.streamTo(consumer.transformWith(randomlySuspending())));
 
@@ -68,7 +68,7 @@ public class StreamConsumerOfAnotherEventloopTest {
 		ExpectedException expectedException = new ExpectedException();
 		StreamSupplier<Integer> supplier = StreamSupplier.concat(StreamSupplier.of(1, 2, 3), StreamSupplier.closingWithError(expectedException), StreamSupplier.of(4, 5, 6));
 		StreamConsumerToList<Integer> listConsumer = fromAnotherEventloop(StreamConsumerToList::create);
-		StreamConsumer<Integer> consumer = StreamConsumer.ofAnotherEventloop(anotherEventloop, listConsumer);
+		StreamConsumer<Integer> consumer = StreamConsumer.ofAnotherReactor(anotherEventloop, listConsumer);
 
 		Exception exception = awaitException(supplier.streamTo(consumer.transformWith(randomlySuspending())));
 
@@ -82,7 +82,7 @@ public class StreamConsumerOfAnotherEventloopTest {
 		ExpectedException expectedException = new ExpectedException();
 		StreamSupplier<Integer> supplier = StreamSupplier.of(1, 2, 3, 4, 5);
 		StreamConsumerToList<Integer> listConsumer = fromAnotherEventloop(StreamConsumerToList::create);
-		StreamConsumer<Integer> consumer = StreamConsumer.ofAnotherEventloop(anotherEventloop, listConsumer)
+		StreamConsumer<Integer> consumer = StreamConsumer.ofAnotherReactor(anotherEventloop, listConsumer)
 				.transformWith(decorate(promise -> promise
 						.then(item -> item == 4 ? Promise.ofException(expectedException) : Promise.of(item))))
 				.transformWith(randomlySuspending());
@@ -100,7 +100,7 @@ public class StreamConsumerOfAnotherEventloopTest {
 		int nItems = 10000;
 		StreamSupplier<byte[]> supplier = StreamSupplier.ofStream(Stream.generate(() -> new byte[1024 * 1024]).limit(nItems));
 		CountingStreamConsumer<byte[]> anotherEventloopConsumer = fromAnotherEventloop(CountingStreamConsumer::new);
-		StreamConsumer<byte[]> consumer = StreamConsumer.ofAnotherEventloop(anotherEventloop, anotherEventloopConsumer);
+		StreamConsumer<byte[]> consumer = StreamConsumer.ofAnotherReactor(anotherEventloop, anotherEventloopConsumer);
 
 		await(supplier.streamTo(consumer.transformWith(randomlySuspending())));
 

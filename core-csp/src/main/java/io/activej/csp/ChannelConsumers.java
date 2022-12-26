@@ -20,9 +20,9 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.recycle.Recyclable;
 import io.activej.common.recycle.Recyclers;
-import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -92,12 +92,12 @@ public final class ChannelConsumers {
 	 * Creates an asynchronous {@link ChannelConsumer<ByteBuf>} out of some {@link OutputStream}.
 	 * <p>
 	 * I/O operations are executed using a specified {@link Executor}, so that the channel consumer
-	 * operations does not block the eventloop thread.
+	 * operations does not block the reactor.
 	 * <p>
 	 * Passed {@link OutputStream} will be closed once a resulting {@link ChannelConsumer<ByteBuf>} is closed or
 	 * in case an error occurs during channel consumer operations.
 	 * <p>
-	 * <b>This method should be called from within eventloop thread</b>
+	 * <b>This method should be called from within reactor</b>
 	 *
 	 * @param executor     an executor that will execute blocking I/O
 	 * @param outputStream an {@link OutputStream} that is transformed into a {@link ChannelConsumer<ByteBuf>}
@@ -136,18 +136,18 @@ public final class ChannelConsumers {
 	/**
 	 * Creates an {@link OutputStream} out of a {@link ChannelConsumer<ByteBuf>}.
 	 * <p>
-	 * Asynchronous operations are executed in a context of a specified {@link Eventloop}
+	 * Asynchronous operations are executed in a context of a specified {@link Reactor}
 	 * <p>
 	 * Passed {@link ChannelSupplier<ByteBuf>} will be closed once a resulting {@link OutputStream} is closed or
 	 * in case an error occurs while reading data.
 	 * <p>
-	 * <b>{@link OutputStream}'s methods are blocking, so they should not be called from an eventloop thread</b>
+	 * <b>{@link OutputStream}'s methods are blocking, so they should not be called from a reactor</b>
 	 *
-	 * @param eventloop       an eventloop that will execute asynchronous operations
+	 * @param reactor       a reactor that will execute asynchronous operations
 	 * @param channelConsumer a {@link ChannelSupplier<ByteBuf>} that is transformed to an {@link OutputStream}
 	 * @return an {@link OutputStream} out ouf a {@link ChannelSupplier<ByteBuf>}
 	 */
-	public static OutputStream channelConsumerAsOutputStream(Eventloop eventloop, ChannelConsumer<ByteBuf> channelConsumer) {
+	public static OutputStream channelConsumerAsOutputStream(Reactor reactor, ChannelConsumer<ByteBuf> channelConsumer) {
 		return new OutputStream() {
 			private boolean isClosed;
 
@@ -161,7 +161,7 @@ public final class ChannelConsumers {
 				if (isClosed) {
 					throw new IOException("Stream Closed");
 				}
-				submit(eventloop,
+				submit(reactor,
 						() -> channelConsumer.accept(ByteBuf.wrap(b, off, off + len)),
 						this);
 			}
@@ -170,7 +170,7 @@ public final class ChannelConsumers {
 			public void close() throws IOException {
 				if (isClosed) return;
 				isClosed = true;
-				submit(eventloop,
+				submit(reactor,
 						() -> channelConsumer.acceptEndOfStream()
 								.whenComplete(channelConsumer::close),
 						this);
@@ -178,8 +178,8 @@ public final class ChannelConsumers {
 		};
 	}
 
-	static <T> T submit(Eventloop eventloop, AsyncSupplier<T> supplier, Closeable closeable) throws IOException {
-		CompletableFuture<T> future = eventloop.submit(supplier::get);
+	static <T> T submit(Reactor reactor, AsyncSupplier<T> supplier, Closeable closeable) throws IOException {
+		CompletableFuture<T> future = reactor.submit(supplier::get);
 		try {
 			return future.get();
 		} catch (InterruptedException e) {

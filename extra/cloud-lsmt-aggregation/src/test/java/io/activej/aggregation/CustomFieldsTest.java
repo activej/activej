@@ -10,8 +10,8 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.datastream.StreamSupplier;
-import io.activej.eventloop.Eventloop;
 import io.activej.fs.LocalActiveFs;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
@@ -79,14 +79,14 @@ public class CustomFieldsTest {
 	@Test
 	public void test() throws Exception {
 		Executor executor = Executors.newCachedThreadPool();
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		Reactor reactor = Reactor.getCurrentReactor();
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 
 		Path path = temporaryFolder.newFolder().toPath();
-		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, path);
+		LocalActiveFs fs = LocalActiveFs.create(reactor, executor, path);
 		await(fs.start());
 		FrameFormat frameFormat = LZ4FrameFormat.create();
-		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), frameFormat, fs);
+		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(reactor, ChunkIdCodec.ofLong(), new IdGeneratorStub(), frameFormat, fs);
 
 		AggregationStructure structure = AggregationStructure.create(ChunkIdCodec.ofLong())
 				.withKey("siteId", FieldTypes.ofInt())
@@ -97,7 +97,7 @@ public class CustomFieldsTest {
 				.withMeasure("uniqueUserIds", union(ofLong()))
 				.withMeasure("estimatedUniqueUserIdCount", hyperLogLog(1024));
 
-		Aggregation aggregation = Aggregation.create(eventloop, executor, classLoader, aggregationChunkStorage, frameFormat, structure)
+		Aggregation aggregation = Aggregation.create(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure)
 				.withTemporarySortDir(temporaryFolder.newFolder().toPath());
 
 		StreamSupplier<EventRecord> supplier = StreamSupplier.of(

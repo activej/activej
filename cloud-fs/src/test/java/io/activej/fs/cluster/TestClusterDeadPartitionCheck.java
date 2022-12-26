@@ -1,5 +1,6 @@
 package io.activej.fs.cluster;
 
+import io.activej.async.executor.ReactorExecutor;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelSupplier;
 import io.activej.eventloop.Eventloop;
@@ -15,6 +16,8 @@ import io.activej.http.AsyncHttpServer;
 import io.activej.net.AbstractServer;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.test.TestUtils;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -85,20 +88,20 @@ public final class TestClusterDeadPartitionCheck {
 				new Object[]{
 						new ClientServerFactory() {
 							@Override
-							public ActiveFs createClient(Eventloop eventloop, InetSocketAddress address) {
-								return RemoteActiveFs.create(eventloop, address);
+							public ActiveFs createClient(NioReactor reactor, InetSocketAddress address) {
+								return RemoteActiveFs.create(reactor, address);
 							}
 
 							@Override
 							public AbstractServer<?> createServer(LocalActiveFs localFs, InetSocketAddress address) {
-								return ActiveFsServer.create(localFs.getEventloop(), localFs)
+								return ActiveFsServer.create((NioReactor) localFs.getReactor(), localFs)
 										.withListenAddress(address);
 							}
 
 							@Override
 							public void closeServer(AbstractServer<?> server) {
 								server.close();
-								Selector selector = server.getEventloop().getSelector();
+								Selector selector = server.getReactor().getSelector();
 								if (selector == null) return;
 								for (SelectionKey key : selector.keys()) {
 									Object attachment = key.attachment();
@@ -119,13 +122,13 @@ public final class TestClusterDeadPartitionCheck {
 				new Object[]{
 						new ClientServerFactory() {
 							@Override
-							public ActiveFs createClient(Eventloop eventloop, InetSocketAddress address) {
-								return HttpActiveFs.create("http://localhost:" + address.getPort(), AsyncHttpClient.create(eventloop));
+							public ActiveFs createClient(NioReactor reactor, InetSocketAddress address) {
+								return HttpActiveFs.create("http://localhost:" + address.getPort(), AsyncHttpClient.create(reactor));
 							}
 
 							@Override
 							public AbstractServer<?> createServer(LocalActiveFs localFs, InetSocketAddress address) {
-								return AsyncHttpServer.create(localFs.getEventloop(), ActiveFsServlet.create(localFs))
+								return AsyncHttpServer.create((NioReactor) localFs.getReactor(), ActiveFsServlet.create(localFs))
 										.withReadWriteTimeout(Duration.ZERO, Duration.ZERO)
 										.withListenAddress(address);
 							}
@@ -149,7 +152,7 @@ public final class TestClusterDeadPartitionCheck {
 
 	@Before
 	public void setup() throws IOException, ExecutionException, InterruptedException {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		NioReactor reactor = Reactor.getCurrentReactor();
 
 		executor = newSingleThreadExecutor();
 		servers = new ArrayList<>(CLIENT_SERVER_PAIRS);
@@ -160,7 +163,7 @@ public final class TestClusterDeadPartitionCheck {
 
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
 			InetSocketAddress address = new InetSocketAddress("localhost", getFreePort());
-			partitions.put(i, factory.createClient(eventloop, address));
+			partitions.put(i, factory.createClient(reactor, address));
 
 			serverStorages[i] = storage.resolve("storage_" + i);
 
@@ -184,7 +187,7 @@ public final class TestClusterDeadPartitionCheck {
 			startFuture.get();
 		}
 
-		this.partitions = FsPartitions.create(eventloop, DiscoveryService.constant(partitions))
+		this.partitions = FsPartitions.create(reactor, DiscoveryService.constant(partitions))
 				.withServerSelector((fileName, shards) -> shards.stream().sorted().collect(toList()));
 		await(this.partitions.start());
 		this.fs = ClusterActiveFs.create(this.partitions)
@@ -260,10 +263,10 @@ public final class TestClusterDeadPartitionCheck {
 		try {
 			for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
 				AbstractServer<?> server = servers.get(i);
-				Eventloop eventloop = server.getEventloop();
+				ReactorExecutor reactorExecutor = server.getReactor();
 
 				int finalI = i;
-				eventloop.submit(() -> {
+				reactorExecutor.submit(() -> {
 					try {
 						if (alivePartitions.contains(finalI)) {
 							server.listen();
@@ -302,7 +305,7 @@ public final class TestClusterDeadPartitionCheck {
 	private void waitForServersToStop() {
 		try {
 			for (AbstractServer<?> server : servers) {
-				Eventloop serverEventloop = server.getEventloop();
+				Eventloop serverEventloop = (Eventloop) server.getReactor();
 				if (server.isRunning()) {
 					serverEventloop.submit(server::close).get();
 				}
@@ -324,7 +327,7 @@ public final class TestClusterDeadPartitionCheck {
 	}
 
 	private interface ClientServerFactory {
-		ActiveFs createClient(Eventloop eventloop, InetSocketAddress address);
+		ActiveFs createClient(NioReactor reactor, InetSocketAddress address);
 
 		AbstractServer<?> createServer(LocalActiveFs localFs, InetSocketAddress address);
 

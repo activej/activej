@@ -19,7 +19,6 @@ package io.activej.launchers.fs;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.initializer.Initializer;
 import io.activej.config.Config;
-import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.fs.cluster.ClusterActiveFs;
@@ -29,6 +28,7 @@ import io.activej.fs.http.HttpActiveFs;
 import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.fs.tcp.RemoteActiveFs;
 import io.activej.http.AsyncHttpClient;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.trigger.TriggersModuleSettings;
 import org.jetbrains.annotations.Nullable;
 
@@ -58,11 +58,11 @@ public final class Initializers {
 				.withReplicationCount(config.get(ofInteger(), "replicationCount", 1));
 	}
 
-	public static DiscoveryService constantDiscoveryService(Eventloop eventloop, Config config) throws MalformedDataException {
-		return constantDiscoveryService(eventloop, null, config);
+	public static DiscoveryService constantDiscoveryService(NioReactor reactor, Config config) throws MalformedDataException {
+		return constantDiscoveryService(reactor, null, config);
 	}
 
-	public static DiscoveryService constantDiscoveryService(Eventloop eventloop, @Nullable ActiveFs local, Config config) throws MalformedDataException {
+	public static DiscoveryService constantDiscoveryService(NioReactor reactor, @Nullable ActiveFs local, Config config) throws MalformedDataException {
 		Map<Object, ActiveFs> partitions = new LinkedHashMap<>();
 		partitions.put(config.get("activefs.repartition.localPartitionId"), local);
 
@@ -70,9 +70,9 @@ public final class Initializers {
 		for (String toAdd : partitionStrings) {
 			ActiveFs client;
 			if (toAdd.startsWith("http")) {
-				client = HttpActiveFs.create(toAdd, AsyncHttpClient.create(eventloop));
+				client = HttpActiveFs.create(toAdd, AsyncHttpClient.create(reactor));
 			} else {
-				client = RemoteActiveFs.create(eventloop, parseInetSocketAddress(toAdd));
+				client = RemoteActiveFs.create(reactor, parseInetSocketAddress(toAdd));
 			}
 			partitions.put(toAdd, client);
 		}

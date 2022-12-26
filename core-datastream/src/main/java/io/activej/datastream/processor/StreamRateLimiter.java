@@ -19,8 +19,8 @@ package io.activej.datastream.processor;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.process.ChannelRateLimiter;
 import io.activej.datastream.*;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.schedule.ScheduledRunnable;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.schedule.ScheduledRunnable;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayDeque;
@@ -33,7 +33,7 @@ import static io.activej.common.Utils.nullify;
  * which receives specified type and streams set of function's result  to the destination .
  */
 public final class StreamRateLimiter<T> implements StreamTransformer<T, T> {
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 	private final long refillRatePerSecond;
 
 	private long tokens;
@@ -45,8 +45,8 @@ public final class StreamRateLimiter<T> implements StreamTransformer<T, T> {
 
 	private @Nullable ScheduledRunnable scheduledRunnable;
 
-	private StreamRateLimiter(Eventloop eventloop, long refillRatePerSecond) {
-		this.eventloop = eventloop;
+	private StreamRateLimiter(Reactor reactor, long refillRatePerSecond) {
+		this.reactor = reactor;
 		this.refillRatePerSecond = refillRatePerSecond;
 		this.input = new Input();
 		this.output = new Output();
@@ -58,8 +58,8 @@ public final class StreamRateLimiter<T> implements StreamTransformer<T, T> {
 				.whenException(input::closeEx);
 	}
 
-	public static <T> StreamRateLimiter<T> create(Eventloop eventloop, long refillRatePerSecond) {
-		return new StreamRateLimiter<>(eventloop, refillRatePerSecond);
+	public static <T> StreamRateLimiter<T> create(Reactor reactor, long refillRatePerSecond) {
+		return new StreamRateLimiter<>(reactor, refillRatePerSecond);
 	}
 
 	public StreamRateLimiter<T> withInitialTokens(long initialTokens) {
@@ -87,7 +87,7 @@ public final class StreamRateLimiter<T> implements StreamTransformer<T, T> {
 
 		@Override
 		protected void onStarted() {
-			lastRefillTimestamp = eventloop.currentTimeMillis();
+			lastRefillTimestamp = reactor.currentTimeMillis();
 			resume(this);
 		}
 
@@ -120,7 +120,7 @@ public final class StreamRateLimiter<T> implements StreamTransformer<T, T> {
 			buffer.add(item);
 			input.suspend();
 
-			scheduledRunnable = eventloop.delay(calculateDelay(itemTokens), output::proceed);
+			scheduledRunnable = StreamRateLimiter.this.reactor.delay(calculateDelay(itemTokens), output::proceed);
 		}
 
 		public boolean flush() {
@@ -151,7 +151,7 @@ public final class StreamRateLimiter<T> implements StreamTransformer<T, T> {
 							.mapToLong(StreamRateLimiter.this::calculateDelay)
 							.sum();
 
-					scheduledRunnable = eventloop.delay(totalDelay, output::proceed);
+					scheduledRunnable = reactor.delay(totalDelay, output::proceed);
 				}
 				input.suspend();
 			}
@@ -169,7 +169,7 @@ public final class StreamRateLimiter<T> implements StreamTransformer<T, T> {
 	}
 
 	private void refill() {
-		long timestamp = eventloop.currentTimeMillis();
+		long timestamp = reactor.currentTimeMillis();
 		long passedMillis = timestamp - lastRefillTimestamp;
 
 		tokens += (long) (passedMillis / 1000.0d * refillRatePerSecond);

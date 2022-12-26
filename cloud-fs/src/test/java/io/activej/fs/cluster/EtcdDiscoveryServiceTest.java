@@ -2,10 +2,11 @@ package io.activej.fs.cluster;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.time.Stopwatch;
-import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.tcp.RemoteActiveFs;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.EventloopRule;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
@@ -43,9 +44,9 @@ public class EtcdDiscoveryServiceTest {
 
 	@BeforeClass
 	public static void beforeClass() {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
-		PARTITIONS.put("partition1", RemoteActiveFs.create(eventloop, new InetSocketAddress(0)));
-		PARTITIONS.put("partition2", RemoteActiveFs.create(eventloop, new InetSocketAddress(0)));
+		NioReactor reactor = Reactor.getCurrentReactor();
+		PARTITIONS.put("partition1", RemoteActiveFs.create(reactor, new InetSocketAddress(0)));
+		PARTITIONS.put("partition2", RemoteActiveFs.create(reactor, new InetSocketAddress(0)));
 	}
 
 	@Before
@@ -64,7 +65,7 @@ public class EtcdDiscoveryServiceTest {
 		bs = ByteSequence.from(key, UTF_8);
 		etcdClient = Client.builder().target("cluster://" + etcdCluster.clusterName()).build();
 		putValue(INITIAL_VALUE);
-		EtcdWatchService watchService = EtcdWatchService.create(Eventloop.getCurrentEventloop(), etcdClient, key);
+		EtcdWatchService watchService = EtcdWatchService.create(Reactor.getCurrentReactor(), etcdClient, key);
 		this.discoveryService = EtcdDiscoveryService.create(watchService, PARTITIONS::get);
 	}
 

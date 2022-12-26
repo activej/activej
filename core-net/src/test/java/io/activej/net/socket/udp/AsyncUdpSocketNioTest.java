@@ -1,9 +1,10 @@
 package io.activej.net.socket.udp;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.net.DatagramSocketSettings;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.net.DatagramSocketSettings;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -14,7 +15,6 @@ import java.net.InetSocketAddress;
 import java.nio.channels.DatagramChannel;
 import java.util.Arrays;
 
-import static io.activej.eventloop.Eventloop.createDatagramChannel;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertCompleteFn;
 import static org.junit.Assert.assertArrayEquals;
@@ -32,17 +32,17 @@ public final class AsyncUdpSocketNioTest {
 
 	@Test
 	public void testEchoUdpServer() throws IOException {
-		DatagramChannel serverDatagramChannel = createDatagramChannel(DatagramSocketSettings.create(), SERVER_ADDRESS, null);
+		DatagramChannel serverDatagramChannel = NioReactor.createDatagramChannel(DatagramSocketSettings.create(), SERVER_ADDRESS, null);
 
-		AsyncUdpSocketNio.connect(Eventloop.getCurrentEventloop(), serverDatagramChannel)
+		AsyncUdpSocketNio.connect(Reactor.getCurrentReactor(), serverDatagramChannel)
 				.then(serverSocket -> serverSocket.receive()
 						.then(serverSocket::send)
 						.whenComplete(serverSocket::close))
 				.whenComplete(assertCompleteFn());
 
-		DatagramChannel clientDatagramChannel = createDatagramChannel(DatagramSocketSettings.create(), null, null);
+		DatagramChannel clientDatagramChannel = NioReactor.createDatagramChannel(DatagramSocketSettings.create(), null, null);
 
-		Promise<AsyncUdpSocketNio> promise = AsyncUdpSocketNio.connect(Eventloop.getCurrentEventloop(), clientDatagramChannel)
+		Promise<AsyncUdpSocketNio> promise = AsyncUdpSocketNio.connect(Reactor.getCurrentReactor(), clientDatagramChannel)
 				.whenComplete(assertCompleteFn(clientSocket -> {
 
 					clientSocket.send(UdpPacket.of(ByteBuf.wrapForReading(bytesToSend), SERVER_ADDRESS))

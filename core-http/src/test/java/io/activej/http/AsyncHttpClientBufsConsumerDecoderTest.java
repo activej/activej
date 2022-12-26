@@ -2,7 +2,7 @@ package io.activej.http;
 
 import io.activej.common.StringFormatUtils;
 import io.activej.dns.RemoteAsyncDnsClient;
-import io.activej.eventloop.Eventloop;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.BeforeClass;
@@ -41,10 +41,10 @@ public class AsyncHttpClientBufsConsumerDecoderTest {
 
 	@BeforeClass
 	public static void init() throws NoSuchAlgorithmException, IOException {
-		RemoteAsyncDnsClient dnsClient = RemoteAsyncDnsClient.create(Eventloop.getCurrentEventloop())
+		RemoteAsyncDnsClient dnsClient = RemoteAsyncDnsClient.create(Reactor.getCurrentReactor())
 				.withDnsServerAddress(InetAddress.getByName("8.8.8.8"))
 				.withTimeout(StringFormatUtils.parseDuration("5 seconds"));
-		client = AsyncHttpClient.create(Eventloop.getCurrentEventloop())
+		client = AsyncHttpClient.create(Reactor.getCurrentReactor())
 				.withSslEnabled(SSLContext.getDefault(), newSingleThreadExecutor())
 				.withDnsClient(dnsClient);
 	}

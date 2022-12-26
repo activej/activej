@@ -17,7 +17,7 @@
 package io.activej.aggregation;
 
 import io.activej.aggregation.ot.AggregationStructure;
-import io.activej.async.service.EventloopService;
+import io.activej.async.service.ReactorService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.MemSize;
@@ -37,8 +37,6 @@ import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStatsBasic;
 import io.activej.datastream.stats.StreamStatsDetailed;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.fs.ActiveFs;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
@@ -48,6 +46,8 @@ import io.activej.jmx.stats.ValueStats;
 import io.activej.ot.util.IdGenerator;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -73,7 +73,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @SuppressWarnings("rawtypes") // JMX doesn't work with generic types
-public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>, EventloopService, WithInitializer<ActiveFsChunkStorage<C>>, EventloopJmxBeanWithStats {
+public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>, ReactorService, WithInitializer<ActiveFsChunkStorage<C>>, ReactorJmxBeanWithStats {
 	private static final Logger logger = getLogger(ActiveFsChunkStorage.class);
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(256);
 
@@ -83,7 +83,7 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 	public static final String LOG = ".log";
 	public static final String TEMP_LOG = ".temp";
 
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 	private final ChunkIdCodec<C> chunkIdCodec;
 	private final IdGenerator<C> idGenerator;
 	private final FrameFormat frameFormat;
@@ -127,18 +127,18 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 
 	private int finishChunks;
 
-	private ActiveFsChunkStorage(Eventloop eventloop, ChunkIdCodec<C> chunkIdCodec, IdGenerator<C> idGenerator, FrameFormat frameFormat, ActiveFs fs) {
-		this.eventloop = eventloop;
+	private ActiveFsChunkStorage(Reactor reactor, ChunkIdCodec<C> chunkIdCodec, IdGenerator<C> idGenerator, FrameFormat frameFormat, ActiveFs fs) {
+		this.reactor = reactor;
 		this.chunkIdCodec = chunkIdCodec;
 		this.idGenerator = idGenerator;
 		this.frameFormat = frameFormat;
 		this.fs = fs;
 	}
 
-	public static <C> ActiveFsChunkStorage<C> create(Eventloop eventloop,
+	public static <C> ActiveFsChunkStorage<C> create(Reactor reactor,
 			ChunkIdCodec<C> chunkIdCodec,
 			IdGenerator<C> idGenerator, FrameFormat frameFormat, ActiveFs fs) {
-		return new ActiveFsChunkStorage<>(eventloop, chunkIdCodec, idGenerator, frameFormat, fs);
+		return new ActiveFsChunkStorage<>(reactor, chunkIdCodec, idGenerator, frameFormat, fs);
 	}
 
 	public ActiveFsChunkStorage<C> withBufferSize(MemSize bufferSize) {
@@ -335,8 +335,8 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 	}
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull Reactor getReactor() {
+		return reactor;
 	}
 
 	@Override

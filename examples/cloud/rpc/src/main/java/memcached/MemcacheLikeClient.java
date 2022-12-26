@@ -11,6 +11,7 @@ import io.activej.launcher.Launcher;
 import io.activej.memcache.client.MemcacheClientModule;
 import io.activej.memcache.client.RawMemcacheClient;
 import io.activej.promise.Promises;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
 
 import java.util.concurrent.CompletableFuture;
@@ -22,7 +23,7 @@ import static java.util.stream.IntStream.range;
 //[START REGION_1]
 public class MemcacheLikeClient extends Launcher {
 	@Provides
-	Eventloop eventloop() {
+	NioReactor reactor() {
 		return Eventloop.create();
 	}
 
@@ -42,7 +43,7 @@ public class MemcacheLikeClient extends Launcher {
 	RawMemcacheClientAdapter client;
 
 	@Inject
-	Eventloop eventloop;
+	NioReactor reactor;
 
 	@Override
 	protected Module getModule() {
@@ -59,7 +60,7 @@ public class MemcacheLikeClient extends Launcher {
 		String message = "Hello, Memcached Server";
 
 		System.out.println();
-		CompletableFuture<Void> future = eventloop.submit(() ->
+		CompletableFuture<Void> future = reactor.submit(() ->
 				sequence(
 						() -> Promises.all(range(0, 25).mapToObj(i ->
 								client.put(i, message))),

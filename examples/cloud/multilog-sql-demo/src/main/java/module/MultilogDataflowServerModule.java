@@ -6,7 +6,6 @@ import io.activej.dataflow.calcite.inject.CalciteServerModule;
 import io.activej.dataflow.inject.DatasetId;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.StreamSupplierWithResult;
-import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.inject.annotation.Named;
@@ -18,6 +17,7 @@ import io.activej.multilog.LogNamingScheme;
 import io.activej.multilog.Multilog;
 import io.activej.multilog.MultilogImpl;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import io.activej.serializer.BinarySerializer;
 import misc.LogItem;
 
@@ -48,8 +48,8 @@ public class MultilogDataflowServerModule extends AbstractModule {
 	@Provides
 	@Transient
 	@DatasetId(LOG_ITEM_TABLE_NAME)
-	Promise<StreamSupplier<LogItem>> logItemDataset(@Named("Dataflow") Eventloop eventloop, Multilog<LogItem> logItemMultilog, @Named("partition") String partition) {
-		checkState(eventloop.inEventloopThread());
+	Promise<StreamSupplier<LogItem>> logItemDataset(@Named("Dataflow") Reactor reactor, Multilog<LogItem> logItemMultilog, @Named("partition") String partition) {
+		checkState(reactor.inReactorThread());
 
 		return logItemMultilog.read(partition, new LogFile("", 0), 0L, null)
 				.map(StreamSupplierWithResult::getSupplier);
@@ -63,14 +63,14 @@ public class MultilogDataflowServerModule extends AbstractModule {
 	}
 
 	@Provides
-	Multilog<LogItem> multilog(@Named("Dataflow") Eventloop eventloop, ActiveFs fs, FrameFormat frameFormat, BinarySerializer<LogItem> logItemSerializer, LogNamingScheme namingScheme) {
-		return MultilogImpl.create(eventloop, fs, frameFormat, logItemSerializer, namingScheme);
+	Multilog<LogItem> multilog(@Named("Dataflow") Reactor reactor, ActiveFs fs, FrameFormat frameFormat, BinarySerializer<LogItem> logItemSerializer, LogNamingScheme namingScheme) {
+		return MultilogImpl.create(reactor, fs, frameFormat, logItemSerializer, namingScheme);
 	}
 
 	@Provides
-	ActiveFs fs(@Named("Dataflow") Eventloop eventloop, Executor executor) throws IOException {
+	ActiveFs fs(@Named("Dataflow") Reactor reactor, Executor executor) throws IOException {
 		Path multilogPath = Files.createTempDirectory("multilog");
-		return LocalActiveFs.create(eventloop, executor, multilogPath);
+		return LocalActiveFs.create(reactor, executor, multilogPath);
 	}
 
 	@Provides

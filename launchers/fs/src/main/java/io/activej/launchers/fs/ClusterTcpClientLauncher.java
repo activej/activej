@@ -16,7 +16,7 @@
 
 package io.activej.launchers.fs;
 
-import io.activej.async.service.EventloopTaskScheduler;
+import io.activej.async.service.ReactorTaskScheduler;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
@@ -31,15 +31,18 @@ import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
+import io.activej.inject.module.ModuleBuilder;
 import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
 import io.activej.launchers.fs.gui.ActiveFsGuiServlet;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
 
 import static io.activej.inject.module.Modules.combine;
 import static io.activej.launchers.fs.Initializers.ofClusterActiveFs;
-import static io.activej.launchers.initializers.Initializers.ofEventloopTaskScheduler;
 import static io.activej.launchers.initializers.Initializers.ofHttpServer;
+import static io.activej.launchers.initializers.Initializers.ofReactorTaskScheduler;
 
 public class ClusterTcpClientLauncher extends Launcher {
 	public static final String PROPERTIES_FILE = "activefs-client.properties";
@@ -49,7 +52,7 @@ public class ClusterTcpClientLauncher extends Launcher {
 	public static final String DEFAULT_GUI_SERVER_LISTEN_ADDRESS = "*:8080";
 
 	@Provides
-	Eventloop eventloop() {
+	NioReactor reactor() {
 		return Eventloop.create();
 	}
 
@@ -57,15 +60,15 @@ public class ClusterTcpClientLauncher extends Launcher {
 	@Provides
 	@Eager
 	@Named("clusterDeadCheck")
-	EventloopTaskScheduler deadCheckScheduler(Config config, FsPartitions partitions) {
-		return EventloopTaskScheduler.create(partitions.getEventloop(), partitions::checkDeadPartitions)
-				.withInitializer(ofEventloopTaskScheduler(config.getChild("activefs.repartition.deadCheck")));
+	ReactorTaskScheduler deadCheckScheduler(Config config, FsPartitions partitions) {
+		return ReactorTaskScheduler.create(partitions.getReactor(), partitions::checkDeadPartitions)
+				.withInitializer(ofReactorTaskScheduler(config.getChild("activefs.repartition.deadCheck")));
 	}
 
 	@Provides
 	@Eager
-	AsyncHttpServer guiServer(Eventloop eventloop, AsyncServlet servlet, Config config) {
-		return AsyncHttpServer.create(eventloop, servlet)
+	AsyncHttpServer guiServer(NioReactor reactor, AsyncServlet servlet, Config config) {
+		return AsyncHttpServer.create(reactor, servlet)
 				.withInitializer(ofHttpServer(config.getChild("activefs.http.gui")));
 	}
 
@@ -75,19 +78,19 @@ public class ClusterTcpClientLauncher extends Launcher {
 	}
 
 	@Provides
-	ActiveFs remoteActiveFs(Eventloop eventloop, FsPartitions partitions, Config config) {
+	ActiveFs remoteActiveFs(FsPartitions partitions, Config config) {
 		return ClusterActiveFs.create(partitions)
 				.withInitializer(ofClusterActiveFs(config.getChild("activefs.cluster")));
 	}
 
 	@Provides
-	DiscoveryService discoveryService(Eventloop eventloop, Config config) throws MalformedDataException {
-		return Initializers.constantDiscoveryService(eventloop, config.getChild("activefs.cluster"));
+	DiscoveryService discoveryService(NioReactor reactor, Config config) throws MalformedDataException {
+		return Initializers.constantDiscoveryService(reactor, config.getChild("activefs.cluster"));
 	}
 
 	@Provides
-	FsPartitions fsPartitions(Eventloop eventloop, DiscoveryService discoveryService) {
-		return FsPartitions.create(eventloop, discoveryService);
+	FsPartitions fsPartitions(Reactor reactor, DiscoveryService discoveryService) {
+		return FsPartitions.create(reactor, discoveryService);
 	}
 	//[END EXAMPLE]
 
@@ -98,7 +101,7 @@ public class ClusterTcpClientLauncher extends Launcher {
 				.overrideWith(Config.ofSystemProperties("config"));
 	}
 
-	protected Config createConfig(){
+	protected Config createConfig() {
 		return Config.create()
 				.with("activefs.listenAddresses", DEFAULT_SERVER_LISTEN_ADDRESS)
 				.with("activefs.http.gui.listenAddresses", DEFAULT_GUI_SERVER_LISTEN_ADDRESS)
@@ -109,6 +112,9 @@ public class ClusterTcpClientLauncher extends Launcher {
 	@Override
 	protected final Module getModule() {
 		return combine(
+				ModuleBuilder.create()
+						.bind(Reactor.class).to(NioReactor.class)
+						.build(),
 				ServiceGraphModule.create(),
 				JmxModule.create(),
 				ConfigModule.create()

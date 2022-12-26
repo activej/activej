@@ -4,6 +4,7 @@ import io.activej.common.ref.RefLong;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.eventloop.Eventloop;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -24,7 +25,7 @@ public class ChannelRateLimiterTest {
 
 	@Test
 	public void testEmpty() {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		Eventloop eventloop = Reactor.getCurrentReactor();
 		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.create(eventloop, 100);
 
 		List<Integer> expected = IntStream.range(0, 200)
@@ -44,7 +45,7 @@ public class ChannelRateLimiterTest {
 
 	@Test
 	public void testHalfFull() {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		Eventloop eventloop = Reactor.getCurrentReactor();
 		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.<Integer>create(eventloop, 100)
 				.withInitialTokens(100L);
 
@@ -65,7 +66,7 @@ public class ChannelRateLimiterTest {
 
 	@Test
 	public void testFull() {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		Eventloop eventloop = Reactor.getCurrentReactor();
 		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.<Integer>create(eventloop, 100)
 				.withInitialTokens(200L);
 

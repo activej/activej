@@ -18,7 +18,7 @@ package io.activej.etl;
 
 import io.activej.async.AsyncAccumulator;
 import io.activej.async.function.AsyncSupplier;
-import io.activej.async.service.EventloopService;
+import io.activej.async.service.ReactorService;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.datastream.StreamConsumerWithResult;
 import io.activej.datastream.StreamSupplierWithResult;
@@ -26,14 +26,14 @@ import io.activej.datastream.processor.StreamUnion;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStatsBasic;
 import io.activej.datastream.stats.StreamStatsDetailed;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.multilog.LogPosition;
 import io.activej.multilog.Multilog;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,10 +49,10 @@ import static io.activej.async.function.AsyncSuppliers.reuse;
  * Processes logs. Creates new aggregation logs and persists to {@link LogDataConsumer} .
  */
 @SuppressWarnings("rawtypes") // JMX doesn't work with generic types
-public final class LogOTProcessor<T, D> implements EventloopService, EventloopJmxBeanWithStats, WithInitializer<LogOTProcessor<T, D>> {
+public final class LogOTProcessor<T, D> implements ReactorService, ReactorJmxBeanWithStats, WithInitializer<LogOTProcessor<T, D>> {
 	private static final Logger logger = LoggerFactory.getLogger(LogOTProcessor.class);
 
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 	private final Multilog<T> multilog;
 	private final LogDataConsumer<T, D> logStreamConsumer;
 
@@ -68,9 +68,9 @@ public final class LogOTProcessor<T, D> implements EventloopService, EventloopJm
 	private final StreamStatsDetailed<T> streamStatsDetailed = StreamStats.detailed();
 	private final PromiseStats promiseProcessLog = PromiseStats.create(Duration.ofMinutes(5));
 
-	private LogOTProcessor(Eventloop eventloop, Multilog<T> multilog, LogDataConsumer<T, D> logStreamConsumer,
+	private LogOTProcessor(Reactor reactor, Multilog<T> multilog, LogDataConsumer<T, D> logStreamConsumer,
 			String log, List<String> partitions, LogOTState<D> state) {
-		this.eventloop = eventloop;
+		this.reactor = reactor;
 		this.multilog = multilog;
 		this.logStreamConsumer = logStreamConsumer;
 		this.log = log;
@@ -78,15 +78,15 @@ public final class LogOTProcessor<T, D> implements EventloopService, EventloopJm
 		this.state = state;
 	}
 
-	public static <T, D> LogOTProcessor<T, D> create(Eventloop eventloop, Multilog<T> multilog,
+	public static <T, D> LogOTProcessor<T, D> create(Reactor reactor, Multilog<T> multilog,
 			LogDataConsumer<T, D> logStreamConsumer,
 			String log, List<String> partitions, LogOTState<D> state) {
-		return new LogOTProcessor<>(eventloop, multilog, logStreamConsumer, log, partitions, state);
+		return new LogOTProcessor<>(reactor, multilog, logStreamConsumer, log, partitions, state);
 	}
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull Reactor getReactor() {
+		return reactor;
 	}
 
 	@Override

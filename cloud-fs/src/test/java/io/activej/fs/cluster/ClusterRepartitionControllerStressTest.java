@@ -1,7 +1,6 @@
 package io.activej.fs.cluster;
 
-import io.activej.async.service.EventloopTaskScheduler;
-import io.activej.eventloop.Eventloop;
+import io.activej.async.service.ReactorTaskScheduler;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.LocalActiveFs;
@@ -9,6 +8,8 @@ import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.fs.tcp.RemoteActiveFs;
 import io.activej.net.AbstractServer;
 import io.activej.promise.Promises;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.test.TestUtils;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
@@ -54,13 +55,13 @@ public final class ClusterRepartitionControllerStressTest {
 	private Path localStorage;
 	private FsPartitions partitions;
 	private ClusterRepartitionController controller;
-	private EventloopTaskScheduler scheduler;
+	private ReactorTaskScheduler scheduler;
 
 	private boolean finished = false;
 
 	@Before
 	public void setup() throws IOException {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		NioReactor reactor = Reactor.getCurrentReactor();
 
 		Executor executor = Executors.newSingleThreadExecutor();
 		servers = new ArrayList<>(CLIENT_SERVER_PAIRS);
@@ -70,7 +71,7 @@ public final class ClusterRepartitionControllerStressTest {
 		Path storage = tmpFolder.newFolder().toPath();
 		localStorage = storage.resolve("local");
 		Files.createDirectories(localStorage);
-		LocalActiveFs localFsClient = LocalActiveFs.create(eventloop, executor, localStorage);
+		LocalActiveFs localFsClient = LocalActiveFs.create(reactor, executor, localStorage);
 
 		Object localPartitionId = "local";
 		partitions.put(localPartitionId, localFsClient);
@@ -82,27 +83,27 @@ public final class ClusterRepartitionControllerStressTest {
 
 			Files.createDirectories(serverStorages[i]);
 
-			partitions.put("server_" + i, RemoteActiveFs.create(eventloop, address));
+			partitions.put("server_" + i, RemoteActiveFs.create(reactor, address));
 
-			LocalActiveFs localFs = LocalActiveFs.create(eventloop, executor, serverStorages[i]);
+			LocalActiveFs localFs = LocalActiveFs.create(reactor, executor, serverStorages[i]);
 			await(localFs.start());
-			ActiveFsServer server = ActiveFsServer.create(eventloop, localFs).withListenAddress(address);
+			ActiveFsServer server = ActiveFsServer.create(reactor, localFs).withListenAddress(address);
 			server.listen();
 			servers.add(server);
 		}
 
-		this.partitions = FsPartitions.create(eventloop, DiscoveryService.constant(partitions))
+		this.partitions = FsPartitions.create(reactor, DiscoveryService.constant(partitions))
 				.withServerSelector(RENDEZVOUS_HASH_SHARDER);
 
 		controller = ClusterRepartitionController.create(localPartitionId, this.partitions)
 				.withReplicationCount(3);
 
-		scheduler = EventloopTaskScheduler.create(eventloop, this.partitions::checkDeadPartitions)
+		scheduler = ReactorTaskScheduler.create(reactor, this.partitions::checkDeadPartitions)
 				.withInterval(Duration.ofSeconds(1));
 
 		scheduler.start();
 
-		eventloop.delay(200, () -> {
+		reactor.delay(200, () -> {
 			System.out.println("Closing server_2");
 			servers.get(2).close().whenResult(() -> System.out.println("server_2 closed indeed"));
 			System.out.println("Closing server_4");
@@ -113,7 +114,7 @@ public final class ClusterRepartitionControllerStressTest {
 			servers.get(8).close().whenResult(() -> System.out.println("server_8 closed indeed"));
 			System.out.println("Closing server_9");
 			servers.get(9).close().whenResult(() -> System.out.println("server_9 closed indeed"));
-			eventloop.delay(200, () -> {
+			reactor.delay(200, () -> {
 				try {
 					if (finished) {
 						return;

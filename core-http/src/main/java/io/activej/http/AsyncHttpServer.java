@@ -21,8 +21,6 @@ import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.schedule.ScheduledRunnable;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.jmx.stats.EventStats;
@@ -31,6 +29,8 @@ import io.activej.net.AbstractServer;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.nio.NioReactor;
+import io.activej.reactor.schedule.ScheduledRunnable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -41,7 +41,7 @@ import java.util.List;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
- * This is an implementation of the asynchronous HTTP server on top of {@link Eventloop}.
+ * This is an implementation of the asynchronous HTTP server on top of {@link NioReactor}.
  * It has a root {@link AsyncServlet} that receives and handles all the responses that come to this server.
  */
 @SuppressWarnings({"UnusedReturnValue", "WeakerAccess", "unused"})
@@ -191,13 +191,13 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 	}
 
 	// region builders
-	private AsyncHttpServer(@NotNull Eventloop eventloop, @NotNull AsyncServlet servlet) {
-		super(eventloop);
+	private AsyncHttpServer(@NotNull NioReactor reactor, @NotNull AsyncServlet servlet) {
+		super(reactor);
 		this.servlet = servlet;
 	}
 
-	public static AsyncHttpServer create(@NotNull Eventloop eventloop, @NotNull AsyncServlet servlet) {
-		return new AsyncHttpServer(eventloop, servlet);
+	public static AsyncHttpServer create(@NotNull NioReactor reactor, @NotNull AsyncServlet servlet) {
+		return new AsyncHttpServer(reactor, servlet);
 	}
 
 	public AsyncHttpServer withKeepAliveTimeout(@NotNull Duration keepAliveTime) {
@@ -270,16 +270,16 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 
 	private void scheduleExpiredConnectionsCheck() {
 		assert expiredConnectionsCheck == null;
-		expiredConnectionsCheck = eventloop.delayBackground(1000L, () -> {
+		expiredConnectionsCheck = reactor.delayBackground(1000L, () -> {
 			expiredConnectionsCheck = null;
 			boolean isClosing = closeCallback != null;
 			if (readWriteTimeoutMillis != 0 || isClosing) {
-				poolReadWriteExpired += poolNew.closeExpiredConnections(eventloop.currentTimeMillis() -
+				poolReadWriteExpired += poolNew.closeExpiredConnections(reactor.currentTimeMillis() -
 						(!isClosing ? readWriteTimeoutMillis : readWriteTimeoutMillisShutdown));
-				poolReadWriteExpired += poolReadWrite.closeExpiredConnections(eventloop.currentTimeMillis() -
+				poolReadWriteExpired += poolReadWrite.closeExpiredConnections(reactor.currentTimeMillis() -
 						(!isClosing ? readWriteTimeoutMillis : readWriteTimeoutMillisShutdown), new AsyncTimeoutException("Read timeout"));
 			}
-			poolKeepAliveExpired += poolKeepAlive.closeExpiredConnections(eventloop.currentTimeMillis() - keepAliveTimeoutMillis);
+			poolKeepAliveExpired += poolKeepAlive.closeExpiredConnections(reactor.currentTimeMillis() - keepAliveTimeoutMillis);
 			if (getConnectionsCount() != 0) {
 				scheduleExpiredConnectionsCheck();
 				if (isClosing) {
@@ -294,7 +294,7 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 		if (expiredConnectionsCheck == null) {
 			scheduleExpiredConnectionsCheck();
 		}
-		HttpServerConnection connection = new HttpServerConnection(eventloop, socket, remoteAddress, this, servlet);
+		HttpServerConnection connection = new HttpServerConnection(reactor, socket, remoteAddress, this, servlet);
 		connection.serve();
 	}
 
@@ -318,7 +318,7 @@ public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
 			cb.set(null);
 		} else {
 			if (!poolServing.isEmpty() && serveTimeoutMillisShutdown != 0) {
-				eventloop.delayBackground(serveTimeoutMillisShutdown, poolServing::closeAllConnections);
+				reactor.delayBackground(serveTimeoutMillisShutdown, poolServing::closeAllConnections);
 			}
 			closeCallback = cb;
 			logger.info("Waiting for {}", this);

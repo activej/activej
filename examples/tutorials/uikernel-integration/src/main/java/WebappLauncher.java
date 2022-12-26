@@ -11,6 +11,7 @@ import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
 import io.activej.uikernel.UiKernelServlets;
 
@@ -39,7 +40,7 @@ public class WebappLauncher extends Launcher {
 	}
 
 	@Provides
-	Eventloop eventloop() {
+	NioReactor reactor() {
 		return Eventloop.create();
 	}
 
@@ -65,8 +66,8 @@ public class WebappLauncher extends Launcher {
 	}
 
 	@Provides
-	AsyncHttpServer server(Eventloop eventloop, Config config, AsyncServlet servlet) {
-		return AsyncHttpServer.create(eventloop, servlet)
+	AsyncHttpServer server(NioReactor reactor, Config config, AsyncServlet servlet) {
+		return AsyncHttpServer.create(reactor, servlet)
 				.withListenPort(config.get(ofInteger(), "port", DEFAULT_PORT));
 	}
 

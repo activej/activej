@@ -20,13 +20,13 @@ import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.storage.local.CrdtStorageMap;
-import io.activej.eventloop.Eventloop;
 import io.activej.http.*;
 import io.activej.http.loader.StaticLoader;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.promise.Promise;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.types.TypeT;
 
 import java.util.concurrent.Executor;
@@ -41,8 +41,8 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 	private final TypeT<CrdtData<K, S>> crdtDataManifest = new TypeT<>() {};
 
 	@Provides
-	AsyncHttpServer server(Eventloop eventloop, AsyncServlet servlet, Config config) {
-		return AsyncHttpServer.create(eventloop, servlet)
+	AsyncHttpServer server(NioReactor reactor, AsyncServlet servlet, Config config) {
+		return AsyncHttpServer.create(reactor, servlet)
 				.withInitializer(ofHttpServer(config.getChild("crdt.http")));
 	}
 

@@ -16,14 +16,14 @@
 
 package io.activej.cube.attributes;
 
-import io.activej.async.service.EventloopService;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBean;
-import io.activej.eventloop.schedule.ScheduledRunnable;
+import io.activej.async.service.ReactorService;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ValueStats;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.jmx.ReactorJmxBean;
+import io.activej.reactor.schedule.ScheduledRunnable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,8 +33,8 @@ import java.util.Map;
 
 import static io.activej.common.Utils.nullify;
 
-public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttributeResolver<K, A> implements EventloopService, EventloopJmxBean {
-	protected final Eventloop eventloop;
+public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttributeResolver<K, A> implements ReactorService, ReactorJmxBean {
+	protected final Reactor reactor;
 
 	private long timestamp;
 	private long reloadPeriod;
@@ -47,8 +47,8 @@ public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttribute
 	private K lastResolveErrorKey;
 	private final ValueStats reloadTime = ValueStats.create(Duration.ofHours(1)).withRate("reloads").withUnit("milliseconds");
 
-	protected ReloadingAttributeResolver(Eventloop eventloop) {
-		this.eventloop = eventloop;
+	protected ReloadingAttributeResolver(Reactor reactor) {
+		this.reactor = reactor;
 	}
 
 	@Override
@@ -66,10 +66,10 @@ public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttribute
 	private void doReload() {
 		reloads++;
 		scheduledRunnable = nullify(scheduledRunnable, ScheduledRunnable::cancel);
-		long reloadTimestamp = eventloop.currentTimeMillis();
+		long reloadTimestamp = reactor.currentTimeMillis();
         reload(timestamp)
                 .whenResult(result -> {
-                    reloadTime.recordValue((int) (eventloop.currentTimeMillis() - reloadTimestamp));
+                    reloadTime.recordValue((int) (reactor.currentTimeMillis() - reloadTimestamp));
                     cache.putAll(result);
                     timestamp = reloadTimestamp;
                 })
@@ -78,21 +78,21 @@ public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttribute
     }
 
 	private void scheduleReload(long period) {
-		scheduledRunnable = eventloop.delayBackground(period, this::doReload);
+		scheduledRunnable = reactor.delayBackground(period, this::doReload);
 	}
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull Reactor getReactor() {
+		return reactor;
 	}
 
 	@Override
 	public @NotNull Promise<Void> start() {
 		if (reloadPeriod == 0) return Promise.complete();
-		long reloadTimestamp = eventloop.currentTimeMillis();
+		long reloadTimestamp = reactor.currentTimeMillis();
 		return reload(timestamp)
 				.whenResult(result -> {
-					reloadTime.recordValue((int) (eventloop.currentTimeMillis() - reloadTimestamp));
+					reloadTime.recordValue((int) (reactor.currentTimeMillis() - reloadTimestamp));
 					cache.putAll(result);
 					timestamp = reloadTimestamp;
 					scheduleReload(reloadPeriod);

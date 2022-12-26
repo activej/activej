@@ -9,11 +9,11 @@ import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.crdt.wal.InMemoryWriteAheadLog;
 import io.activej.crdt.wal.WriteAheadLog;
-import io.activej.eventloop.Eventloop;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.ProvidesIntoSet;
 import io.activej.inject.module.AbstractModule;
+import io.activej.reactor.Reactor;
 import io.activej.rpc.server.RpcRequestHandler;
 import io.activej.service.ServiceGraphModuleSettings;
 
@@ -44,8 +44,8 @@ public class BannerServerModule extends AbstractModule {
 	}
 
 	@Provides
-	CrdtMap<Long, GSet<Integer>> map(Eventloop eventloop, CrdtStorage<Long, GSet<Integer>> storage) {
-		return new JavaCrdtMap<>(eventloop, GSet::merge, storage);
+	CrdtMap<Long, GSet<Integer>> map(Reactor reactor, CrdtStorage<Long, GSet<Integer>> storage) {
+		return new JavaCrdtMap<>(reactor, GSet::merge, storage);
 	}
 
 	@Provides
@@ -64,13 +64,13 @@ public class BannerServerModule extends AbstractModule {
 	}
 
 	@Provides
-	WriteAheadLog<Long, GSet<Integer>> writeAheadLog(Eventloop eventloop, CrdtFunction<GSet<Integer>> function, CrdtStorage<Long, GSet<Integer>> storage) {
-		return InMemoryWriteAheadLog.create(eventloop, function, storage);
+	WriteAheadLog<Long, GSet<Integer>> writeAheadLog(Reactor reactor, CrdtFunction<GSet<Integer>> function, CrdtStorage<Long, GSet<Integer>> storage) {
+		return InMemoryWriteAheadLog.create(reactor, function, storage);
 	}
 
 	@Provides
-	CrdtStorage<Long, GSet<Integer>> storage(Eventloop eventloop, CrdtFunction<GSet<Integer>> function) {
-		return CrdtStorageMap.create(eventloop, function);
+	CrdtStorage<Long, GSet<Integer>> storage(Reactor reactor, CrdtFunction<GSet<Integer>> function) {
+		return CrdtStorageMap.create(reactor, function);
 	}
 
 	@ProvidesIntoSet

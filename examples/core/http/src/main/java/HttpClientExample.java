@@ -9,6 +9,7 @@ import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
 
 import java.util.concurrent.CompletableFuture;
@@ -28,23 +29,23 @@ public final class HttpClientExample extends Launcher {
 	AsyncHttpClient httpClient;
 
 	@Inject
-	Eventloop eventloop;
+	NioReactor reactor;
 
 	@Provides
-	Eventloop eventloop() {
+	NioReactor reactor() {
 		return Eventloop.create();
 	}
 
 	//[START REGION_1]
 	@Provides
-	AsyncHttpClient client(Eventloop eventloop, AsyncDnsClient dnsClient) {
-		return AsyncHttpClient.create(eventloop)
+	AsyncHttpClient client(NioReactor reactor, AsyncDnsClient dnsClient) {
+		return AsyncHttpClient.create(reactor)
 				.withDnsClient(dnsClient);
 	}
 
 	@Provides
-	AsyncDnsClient dnsClient(Eventloop eventloop, Config config) {
-		return RemoteAsyncDnsClient.create(eventloop)
+	AsyncDnsClient dnsClient(NioReactor reactor, Config config) {
+		return RemoteAsyncDnsClient.create(reactor)
 				.withDnsServerAddress(config.get(ofInetAddress(), "dns.address"))
 				.withTimeout(config.get(ofDuration(), "dns.timeout"));
 	}
@@ -73,7 +74,7 @@ public final class HttpClientExample extends Launcher {
 	protected void run() throws ExecutionException, InterruptedException {
 		String url = args.length != 0 ? args[0] : "http://127.0.0.1:8080/";
 		System.out.println("\nHTTP request: " + url);
-		CompletableFuture<String> future = eventloop.submit(() ->
+		CompletableFuture<String> future = reactor.submit(() ->
 				httpClient.request(HttpRequest.get(url))
 						.then(response -> response.loadBody())
 						.map(body -> body.getString(UTF_8))

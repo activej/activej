@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.eventloop.net;
+package io.activej.reactor.net;
 
 import io.activej.common.initializer.WithInitializer;
 import org.slf4j.Logger;

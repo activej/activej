@@ -1,6 +1,6 @@
 package io.activej.service;
 
-import io.activej.async.service.EventloopService;
+import io.activej.async.service.ReactorService;
 import io.activej.common.service.BlockingService;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.Injector;
@@ -48,8 +48,8 @@ public class ServiceGraphTest {
 	@Test
 	public void testEventloopServiceStartStopWithRuntimeException() {
 		Injector injector = Injector.of(new FailingEventloopModule());
-		injector.getInstance(Key.of(EventloopService.class, "start"));
-		injector.getInstance(Key.of(EventloopService.class, "stop"));
+		injector.getInstance(Key.of(ReactorService.class, "start"));
+		injector.getInstance(Key.of(ReactorService.class, "stop"));
 		ServiceGraph graph = injector.getInstance(ServiceGraph.class);
 
 		try {
@@ -127,8 +127,8 @@ public class ServiceGraphTest {
 
 		@Provides
 		@Named("start")
-		EventloopService failedStart(Eventloop eventloop) {
-			return new EventloopServiceEmpty(eventloop) {
+		ReactorService failedStart(Eventloop eventloop) {
+			return new ReactorServiceEmpty(eventloop) {
 				@Override
 				public @NotNull Promise<?> start() {
 					throw ERROR;
@@ -138,8 +138,8 @@ public class ServiceGraphTest {
 
 		@Provides
 		@Named("stop")
-		EventloopService failStop(Eventloop eventloop) {
-			return new EventloopServiceEmpty(eventloop) {
+		ReactorService failStop(Eventloop eventloop) {
+			return new ReactorServiceEmpty(eventloop) {
 				@Override
 				public @NotNull Promise<?> stop() {
 					throw ERROR;
@@ -148,15 +148,15 @@ public class ServiceGraphTest {
 		}
 	}
 
-	public static class EventloopServiceEmpty implements EventloopService {
+	public static class ReactorServiceEmpty implements ReactorService {
 		private final Eventloop eventloop;
 
-		public EventloopServiceEmpty(Eventloop eventloop) {
+		public ReactorServiceEmpty(Eventloop eventloop) {
 			this.eventloop = eventloop;
 		}
 
 		@Override
-		public @NotNull Eventloop getEventloop() {
+		public @NotNull Eventloop getReactor() {
 			return eventloop;
 		}
 

@@ -18,9 +18,9 @@ package io.activej.csp.process;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.initializer.WithInitializer;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.schedule.ScheduledRunnable;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.schedule.ScheduledRunnable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,7 +28,7 @@ import static io.activej.common.Utils.nullify;
 
 public final class ChannelRateLimiter<T> extends AbstractChannelTransformer<ChannelRateLimiter<T>, T, T>
 		implements WithInitializer<ChannelRateLimiter<T>> {
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 	private final long refillRatePerSecond;
 
 	private long tokens;
@@ -37,14 +37,14 @@ public final class ChannelRateLimiter<T> extends AbstractChannelTransformer<Chan
 
 	private @Nullable ScheduledRunnable scheduledRunnable;
 
-	private ChannelRateLimiter(Eventloop eventloop, long refillRatePerSecond) {
-		this.eventloop = eventloop;
+	private ChannelRateLimiter(Reactor reactor, long refillRatePerSecond) {
+		this.reactor = reactor;
 		this.refillRatePerSecond = refillRatePerSecond;
-		this.lastRefillTimestamp = eventloop.currentTimeMillis();
+		this.lastRefillTimestamp = reactor.currentTimeMillis();
 	}
 
-	public static <T> ChannelRateLimiter<T> create(Eventloop eventloop, long refillRatePerSecond) {
-		return new ChannelRateLimiter<>(eventloop, refillRatePerSecond);
+	public static <T> ChannelRateLimiter<T> create(Reactor reactor, long refillRatePerSecond) {
+		return new ChannelRateLimiter<>(reactor, refillRatePerSecond);
 	}
 
 	public ChannelRateLimiter<T> withInitialTokens(long initialTokens) {
@@ -69,11 +69,11 @@ public final class ChannelRateLimiter<T> extends AbstractChannelTransformer<Chan
 			return send(item);
 		}
 
-		return Promise.ofCallback(cb -> scheduledRunnable = eventloop.delay(calculateDelay(itemTokens), () -> onItem(item).whenComplete(cb::accept)));
+		return Promise.ofCallback(cb -> scheduledRunnable = reactor.delay(calculateDelay(itemTokens), () -> onItem(item).whenComplete(cb::accept)));
 	}
 
 	private void refill() {
-		long timestamp = eventloop.currentTimeMillis();
+		long timestamp = reactor.currentTimeMillis();
 		long passedMillis = timestamp - lastRefillTimestamp;
 
 		tokens += (long) (passedMillis / 1000.0d * refillRatePerSecond);

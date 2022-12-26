@@ -31,6 +31,7 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.net.PrimaryServer;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
 import io.activej.worker.WorkerPool;
 import io.activej.worker.WorkerPoolModule;
@@ -61,14 +62,14 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 	PrimaryServer primaryServer;
 
 	@Provides
-	Eventloop primaryEventloop(Config config) {
+	NioReactor primaryReactor(Config config) {
 		return Eventloop.create()
 				.withInitializer(ofEventloop(config.getChild("eventloop.primary")));
 	}
 
 	@Provides
 	@Worker
-	Eventloop workerEventloop(Config config, OptionalDependency<ThrottlingController> throttlingController) {
+	NioReactor workerReactor(Config config, OptionalDependency<ThrottlingController> throttlingController) {
 		return Eventloop.create()
 				.withInitializer(ofEventloop(config.getChild("eventloop.worker")))
 				.withInitializer(eventloop -> eventloop.withInspector(throttlingController.orElse(null)));
@@ -80,15 +81,15 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 	}
 
 	@Provides
-	PrimaryServer primaryServer(Eventloop primaryEventloop, WorkerPool.Instances<AsyncHttpServer> workerServers, Config config) {
-		return PrimaryServer.create(primaryEventloop, workerServers.getList())
+	PrimaryServer primaryServer(NioReactor primaryReactor, WorkerPool.Instances<AsyncHttpServer> workerServers, Config config) {
+		return PrimaryServer.create(primaryReactor, workerServers.getList())
 				.withInitializer(ofPrimaryServer(config.getChild("http")));
 	}
 
 	@Provides
 	@Worker
-	AsyncHttpServer workerServer(Eventloop eventloop, AsyncServlet servlet, Config config) {
-		return AsyncHttpServer.create(eventloop, servlet)
+	AsyncHttpServer workerServer(NioReactor reactor, AsyncServlet servlet, Config config) {
+		return AsyncHttpServer.create(reactor, servlet)
 				.withInitializer(ofHttpWorker(config.getChild("http")));
 	}
 

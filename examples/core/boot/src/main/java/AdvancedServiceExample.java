@@ -1,10 +1,11 @@
-import io.activej.async.service.EventloopService;
+import io.activej.async.service.ReactorService;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import io.activej.service.Service;
 import io.activej.service.ServiceGraphModule;
 import org.jetbrains.annotations.NotNull;
@@ -30,12 +31,12 @@ public class AdvancedServiceExample extends Launcher {
 
 	@Provides
 	@Eager
-	AuthService authService(Eventloop eventloop, Executor executor, DBService dbService) {
-		return new AuthService(eventloop, executor, dbService);
+	AuthService authService(Reactor reactor, Executor executor, DBService dbService) {
+		return new AuthService(reactor, executor, dbService);
 	}
 
 	@Provides
-	Eventloop eventloop() {
+	Reactor reactor() {
 		return Eventloop.create().withCurrentThread();
 	}
 
@@ -50,20 +51,20 @@ public class AdvancedServiceExample extends Launcher {
 	}
 
 	@SuppressWarnings("FieldCanBeLocal")
-	private static class AuthService implements EventloopService {
-		private final Eventloop eventloop;
+	private static class AuthService implements ReactorService {
+		private final Reactor reactor;
 		private final Executor executor;
 		private final DBService dbService;
 
-		public AuthService(Eventloop eventloop, Executor executor, DBService dbService) {
+		public AuthService(Reactor reactor, Executor executor, DBService dbService) {
 			this.executor = executor;
-			this.eventloop = eventloop;
+			this.reactor = reactor;
 			this.dbService = dbService;
 		}
 
 		@Override
-		public @NotNull Eventloop getEventloop() {
-			return eventloop;
+		public @NotNull Reactor getReactor() {
+			return reactor;
 		}
 
 		@Override

@@ -20,6 +20,7 @@ import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.RpcStrategies;
 import io.activej.rpc.client.sender.RpcStrategy;
@@ -36,7 +37,7 @@ public class CrdtRpcClientModule extends AbstractModule {
 	public static final String PROPERTIES_FILE = "crdt-rpc-client.properties";
 
 	@Provides
-	Eventloop eventloop() {
+	NioReactor reactor() {
 		return Eventloop.create();
 	}
 
@@ -49,8 +50,8 @@ public class CrdtRpcClientModule extends AbstractModule {
 	}
 
 	@Provides
-	RpcClient client(Eventloop eventloop, RpcStrategy strategy, List<Class<?>> messageTypes) {
-		return RpcClient.create(eventloop)
+	RpcClient client(NioReactor reactor, RpcStrategy strategy, List<Class<?>> messageTypes) {
+		return RpcClient.create(reactor)
 				.withMessageTypes(messageTypes)
 				.withStrategy(strategy);
 	}

@@ -18,7 +18,7 @@ package io.activej.rpc.client;
 
 import io.activej.async.callback.Callback;
 import io.activej.async.exception.AsyncTimeoutException;
-import io.activej.async.service.EventloopService;
+import io.activej.async.service.ReactorService;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
@@ -26,9 +26,6 @@ import io.activej.common.MemSize;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.datastream.csp.ChannelSerializer;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
-import io.activej.eventloop.net.SocketSettings;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
@@ -38,6 +35,10 @@ import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio.JmxInspector;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.net.SocketSettings;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.jmx.RpcConnectStats;
 import io.activej.rpc.client.jmx.RpcRequestStats;
 import io.activej.rpc.client.sender.RpcSender;
@@ -60,7 +61,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Executor;
 
-import static io.activej.async.callback.Callback.toAnotherEventloop;
+import static io.activej.async.callback.Callback.toAnotherReactor;
 import static io.activej.common.Utils.nonNullElseGet;
 import static io.activej.common.Utils.not;
 import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
@@ -84,7 +85,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * @see RpcStrategies
  * @see RpcServer
  */
-public final class RpcClient implements IRpcClient, EventloopService, WithInitializer<RpcClient>, EventloopJmxBeanWithStats {
+public final class RpcClient implements IRpcClient, ReactorService, WithInitializer<RpcClient>, ReactorJmxBeanWithStats {
 	private static final boolean CHECK = Checks.isEnabled(RpcClient.class);
 
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
@@ -99,7 +100,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 
 	private Logger logger = getLogger(getClass());
 
-	private final Eventloop eventloop;
+	private final NioReactor reactor;
 	private SocketSettings socketSettings = DEFAULT_SOCKET_SETTINGS;
 
 	// SSL
@@ -145,12 +146,12 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	private final JmxInspector statsSocket = new JmxInspector();
 
 	// region builders
-	private RpcClient(Eventloop eventloop) {
-		this.eventloop = eventloop;
+	private RpcClient(NioReactor reactor) {
+		this.reactor = reactor;
 	}
 
-	public static RpcClient create(Eventloop eventloop) {
-		return new RpcClient(eventloop);
+	public static RpcClient create(NioReactor reactor) {
+		return new RpcClient(reactor);
 	}
 
 	public RpcClient withClassLoader(ClassLoader classLoader) {
@@ -272,13 +273,13 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	}
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull NioReactor getReactor() {
+		return reactor;
 	}
 
 	@Override
 	public @NotNull Promise<Void> start() {
-		if (CHECK) Checks.checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) Checks.checkState(reactor.inReactorThread(), "Not in reactor thread");
 		Checks.checkNotNull(messageTypes, "Message types must be specified");
 		Checks.checkState(stopPromise == null);
 
@@ -288,7 +289,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	}
 
 	public Promise<Void> changeStrategy(RpcStrategy newStrategy, boolean retry) {
-		if (CHECK) Checks.checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) Checks.checkState(reactor.inReactorThread(), "Not in reactor thread");
 
 		if (stopPromise != null) {
 			return Promise.ofException(CLIENT_IS_STOPPED);
@@ -324,7 +325,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 
 	@Override
 	public @NotNull Promise<Void> stop() {
-		if (CHECK) Checks.checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) Checks.checkState(reactor.inReactorThread(), "Not in reactor thread");
 		if (stopPromise != null) return stopPromise;
 
 		stopPromise = new SettablePromise<>();
@@ -342,7 +343,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	}
 
 	private void connect(InetSocketAddress address) {
-		AsyncTcpSocketNio.connect(address, connectTimeoutMillis, socketSettings)
+		AsyncTcpSocketNio.connect(reactor, address, connectTimeoutMillis, socketSettings)
 				.whenResult(asyncTcpSocketImpl -> {
 					newConnections.remove(address);
 					if (!pendingConnections.contains(address) || stopPromise != null) {
@@ -356,7 +357,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 							wrapClientSocket(asyncTcpSocketImpl, sslContext, sslExecutor);
 					RpcStream stream = new RpcStream(socket, serializer, defaultPacketSize,
 							autoFlushInterval, frameFormat, false); // , statsSerializer, statsDeserializer, statsCompressor, statsDecompressor);
-					RpcClientConnection connection = new RpcClientConnection(eventloop, this, address, stream, keepAliveInterval.toMillis());
+					RpcClientConnection connection = new RpcClientConnection(reactor, this, address, stream, keepAliveInterval.toMillis());
 					stream.setListener(connection);
 
 					// jmx
@@ -365,7 +366,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 					}
 
 					// jmx
-					connectsStatsPerAddress.computeIfAbsent(address, $ -> new RpcConnectStats(eventloop)).recordSuccessfulConnect();
+					connectsStatsPerAddress.computeIfAbsent(address, $ -> new RpcConnectStats(reactor)).recordSuccessfulConnect();
 					logger.info("Connection to {} established", address);
 
 					pendingConnections.remove(address);
@@ -378,7 +379,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 					if (!pendingConnections.contains(address) || stopPromise != null) {
 						return;
 					}
-					eventloop.delayBackground(reconnectIntervalMillis, () -> {
+					reactor.delayBackground(reconnectIntervalMillis, () -> {
 						if (!pendingConnections.contains(address) || stopPromise != null) {
 							return;
 						}
@@ -396,7 +397,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 		logger.info("Connection closed: {}", address);
 		if (stopPromise == null) {
 			pendingConnections.add(address);
-			eventloop.delayBackground(reconnectIntervalMillis, () -> {
+			reactor.delayBackground(reconnectIntervalMillis, () -> {
 				if (!pendingConnections.contains(address) || stopPromise != null) {
 					return;
 				}
@@ -471,14 +472,14 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	 * @param request request to a server
 	 * @param timeout timeout in milliseconds. If there is no answer from the server after the timeout passes,
 	 *                the request will end exceptionally with {@link AsyncTimeoutException}.
-	 *                Note, that setting a timeout schedules a task to the {@link Eventloop}, so a lot of
+	 *                Note, that setting a timeout schedules a task to the {@link Reactor}, so a lot of
 	 *                requests with large timeouts may degrade performance. In the most common scenarios
 	 *                timeouts for RPC requests should not be very big (a few seconds should be enough)
 	 * @param cb      a callback that will be completed after receiving a response or encountering some error
 	 */
 	@Override
 	public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
-		if (CHECK) Checks.checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) Checks.checkState(reactor.inReactorThread(), "Not in reactor thread");
 		if (timeout > 0) {
 			requestSender.sendRequest(request, timeout, cb);
 		} else {
@@ -488,21 +489,21 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 
 	@Override
 	public <I, O> void sendRequest(I request, Callback<O> cb) {
-		if (CHECK) Checks.checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) Checks.checkState(reactor.inReactorThread(), "Not in reactor thread");
 		requestSender.sendRequest(request, cb);
 	}
 
-	public IRpcClient adaptToAnotherEventloop(Eventloop anotherEventloop) {
-		if (anotherEventloop == this.eventloop) {
+	public IRpcClient adaptToAnotherReactor(NioReactor anotherReactor) {
+		if (anotherReactor == this.reactor) {
 			return this;
 		}
 
 		return new IRpcClient() {
 			@Override
 			public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
-				if (CHECK) Checks.checkState(anotherEventloop.inEventloopThread(), "Not in eventloop thread");
+				if (CHECK) Checks.checkState(anotherReactor.inReactorThread(), "Not in reactor thread");
 				if (timeout > 0) {
-					eventloop.execute(() -> requestSender.sendRequest(request, timeout, toAnotherEventloop(anotherEventloop, cb)));
+					reactor.execute(() -> requestSender.sendRequest(request, timeout, toAnotherReactor(anotherReactor, cb)));
 				} else {
 					cb.accept(null, new AsyncTimeoutException("RPC request has timed out"));
 				}

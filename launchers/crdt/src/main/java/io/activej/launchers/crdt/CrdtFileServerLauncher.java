@@ -26,8 +26,11 @@ import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
+import io.activej.inject.module.ModuleBuilder;
 import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
 import io.activej.trigger.TriggersModule;
 
@@ -47,7 +50,7 @@ public abstract class CrdtFileServerLauncher<K extends Comparable<K>, S> extends
 	CrdtServer<K, S> crdtServer;
 
 	@Provides
-	Eventloop eventloop() {
+	NioReactor reactor() {
 		return Eventloop.create();
 	}
 
@@ -57,8 +60,8 @@ public abstract class CrdtFileServerLauncher<K extends Comparable<K>, S> extends
 	}
 
 	@Provides
-	LocalActiveFs localFsClient(Eventloop eventloop, ExecutorService executor, Config config) {
-		return LocalActiveFs.create(eventloop, executor, config.get(ofPath(), "crdt.localPath"));
+	LocalActiveFs localFsClient(Reactor reactor, ExecutorService executor, Config config) {
+		return LocalActiveFs.create(reactor, executor, config.get(ofPath(), "crdt.localPath"));
 	}
 
 	@Provides
@@ -71,6 +74,9 @@ public abstract class CrdtFileServerLauncher<K extends Comparable<K>, S> extends
 	@Override
 	protected Module getModule() {
 		return combine(
+				ModuleBuilder.create()
+						.bind(Reactor.class).to(NioReactor.class)
+						.build(),
 				ServiceGraphModule.create(),
 				JmxModule.create(),
 				TriggersModule.create(),
@@ -83,14 +89,14 @@ public abstract class CrdtFileServerLauncher<K extends Comparable<K>, S> extends
 
 	public abstract static class CrdtFileServerLogicModule<K extends Comparable<K>, S> extends AbstractModule {
 		@Provides
-		CrdtServer<K, S> crdtServer(Eventloop eventloop, CrdtStorageFs<K, S> crdtClient, CrdtDescriptor<K, S> descriptor, Config config) {
-			return CrdtServer.create(eventloop, crdtClient, descriptor.serializer())
+		CrdtServer<K, S> crdtServer(NioReactor reactor, CrdtStorageFs<K, S> crdtClient, CrdtDescriptor<K, S> descriptor, Config config) {
+			return CrdtServer.create(reactor, crdtClient, descriptor.serializer())
 					.withInitializer(ofAbstractServer(config.getChild("crdt.server")));
 		}
 
 		@Provides
-		CrdtStorageFs<K, S> fsCrdtClient(Eventloop eventloop, LocalActiveFs localFsClient, CrdtDescriptor<K, S> descriptor) {
-			return CrdtStorageFs.create(eventloop, localFsClient, descriptor.serializer(), descriptor.crdtFunction());
+		CrdtStorageFs<K, S> fsCrdtClient(Reactor reactor, LocalActiveFs localFsClient, CrdtDescriptor<K, S> descriptor) {
+			return CrdtStorageFs.create(reactor, localFsClient, descriptor.serializer(), descriptor.crdtFunction());
 		}
 	}
 

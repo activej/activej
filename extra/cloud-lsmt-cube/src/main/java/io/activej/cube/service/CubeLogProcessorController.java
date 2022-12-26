@@ -28,8 +28,6 @@ import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.LogOTState;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ValueStats;
@@ -37,6 +35,8 @@ import io.activej.ot.OTStateManager;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,12 +52,12 @@ import static io.activej.promise.Promises.asPromises;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
-public final class CubeLogProcessorController<K, C> implements EventloopJmxBeanWithStats, WithInitializer<CubeLogProcessorController<K, C>> {
+public final class CubeLogProcessorController<K, C> implements ReactorJmxBeanWithStats, WithInitializer<CubeLogProcessorController<K, C>> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeLogProcessorController.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 	private final List<LogOTProcessor<?, CubeDiff>> logProcessors;
 	private final AggregationChunkStorage<C> chunkStorage;
 	private final OTStateManager<K, LogDiff<CubeDiff>> stateManager;
@@ -70,19 +70,19 @@ public final class CubeLogProcessorController<K, C> implements EventloopJmxBeanW
 	private final ValueStats addedChunks = ValueStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final ValueStats addedChunksRecords = ValueStats.create(DEFAULT_SMOOTHING_WINDOW).withRate();
 
-	CubeLogProcessorController(Eventloop eventloop,
+	CubeLogProcessorController(Reactor reactor,
 			List<LogOTProcessor<?, CubeDiff>> logProcessors,
 			AggregationChunkStorage<C> chunkStorage,
 			OTStateManager<K, LogDiff<CubeDiff>> stateManager,
 			AsyncPredicate<K> predicate) {
-		this.eventloop = eventloop;
+		this.reactor = reactor;
 		this.logProcessors = logProcessors;
 		this.chunkStorage = chunkStorage;
 		this.stateManager = stateManager;
 		this.predicate = predicate;
 	}
 
-	public static <K, C> CubeLogProcessorController<K, C> create(Eventloop eventloop,
+	public static <K, C> CubeLogProcessorController<K, C> create(Reactor reactor,
 			LogOTState<CubeDiff> state,
 			OTStateManager<K, LogDiff<CubeDiff>> stateManager,
 			AggregationChunkStorage<C> chunkStorage,
@@ -95,7 +95,7 @@ public final class CubeLogProcessorController<K, C> implements EventloopJmxBeanW
 			}
 			return true;
 		});
-		return new CubeLogProcessorController<>(eventloop, logProcessors, chunkStorage, stateManager, predicate);
+		return new CubeLogProcessorController<>(reactor, logProcessors, chunkStorage, stateManager, predicate);
 	}
 
 	public CubeLogProcessorController<K, C> withParallelRunner(boolean parallelRunner) {
@@ -180,8 +180,8 @@ public final class CubeLogProcessorController<K, C> implements EventloopJmxBeanW
 	}
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull Reactor getReactor() {
+		return reactor;
 	}
 
 	@JmxAttribute

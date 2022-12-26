@@ -9,6 +9,7 @@ import io.activej.jmx.stats.ExceptionStats;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -48,7 +49,7 @@ public final class AsyncHttpServerTest {
 
 	@Before
 	public void setUp() {
-		eventloop = Eventloop.getCurrentEventloop();
+		eventloop = Reactor.getCurrentReactor();
 		port = getFreePort();
 	}
 

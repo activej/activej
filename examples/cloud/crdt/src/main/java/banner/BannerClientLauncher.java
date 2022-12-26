@@ -2,10 +2,10 @@ package banner;
 
 import io.activej.common.Utils;
 import io.activej.crdt.primitives.GSet;
-import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Inject;
 import io.activej.launchers.crdt.rpc.CrdtRpcClientLauncher;
 import io.activej.promise.Promises;
+import io.activej.reactor.Reactor;
 import io.activej.rpc.client.RpcClient;
 import org.jetbrains.annotations.NotNull;
 
@@ -34,7 +34,7 @@ public final class BannerClientLauncher extends CrdtRpcClientLauncher {
 	private final Map<Long, Set<Integer>> controlMap = new TreeMap<>();
 
 	@Inject
-	Eventloop eventloop;
+	Reactor reactor;
 
 	@Inject
 	RpcClient client;
@@ -56,7 +56,7 @@ public final class BannerClientLauncher extends CrdtRpcClientLauncher {
 	}
 
 	private void uploadBannerIds() throws Exception {
-		eventloop.submit(() ->
+		reactor.submit(() ->
 				Promises.until(0, i -> Promises.all(USER_IDS.stream()
 								.map(userId -> {
 									int bannerId = RANDOM.nextInt(BANNER_SIZE) + 1;
@@ -70,7 +70,7 @@ public final class BannerClientLauncher extends CrdtRpcClientLauncher {
 	}
 
 	private @NotNull Set<Integer> fetchBannerIds(long randomUserId) throws Exception {
-		Set<Integer> fetchedBanners = eventloop.submit(() ->
+		Set<Integer> fetchedBanners = reactor.submit(() ->
 				client.<GetRequest, GetResponse>sendRequest(new GetRequest(randomUserId))
 						.map(GetResponse::bannerIds)
 		).get();
@@ -87,7 +87,7 @@ public final class BannerClientLauncher extends CrdtRpcClientLauncher {
 				.skip(RANDOM.nextInt(fetchedBanners.size()))
 				.findFirst()
 				.orElseThrow();
-		CompletableFuture<Boolean> shouldBeSeenFuture = eventloop.submit(() ->
+		CompletableFuture<Boolean> shouldBeSeenFuture = reactor.submit(() ->
 				client.sendRequest(new IsBannerSeenRequest(randomUserId, seenBannerId)));
 		System.out.println("Should be seen. Has banner with id '" + seenBannerId + "' been seen? : " + shouldBeSeenFuture.get());
 
@@ -96,7 +96,7 @@ public final class BannerClientLauncher extends CrdtRpcClientLauncher {
 				.filter(id -> !fetchedBanners.contains(id))
 				.findAny()
 				.orElseThrow(AssertionError::new);
-		CompletableFuture<Boolean> shouldNotBeSeenFuture = eventloop.submit(() ->
+		CompletableFuture<Boolean> shouldNotBeSeenFuture = reactor.submit(() ->
 				client.sendRequest(new IsBannerSeenRequest(randomUserId, unseenBannerId)));
 		System.out.println("Should NOT be seen. Has banner with id '" + unseenBannerId + "' been seen? : " + shouldNotBeSeenFuture.get() + '\n');
 	}

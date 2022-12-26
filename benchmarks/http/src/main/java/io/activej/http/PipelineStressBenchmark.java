@@ -5,6 +5,7 @@ import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
 
 import java.io.IOException;
@@ -41,13 +42,13 @@ public final class PipelineStressBenchmark extends Launcher {
 	AsyncHttpServer server;
 
 	@Provides
-	Eventloop eventloop() {
+	NioReactor eventloop() {
 		return Eventloop.create();
 	}
 
 	@Provides
-	AsyncHttpServer server(Eventloop eventloop) {
-		return AsyncHttpServer.create(eventloop, request -> HttpResponse.ok200().withPlainText("Hello, world!"))
+	AsyncHttpServer server(NioReactor reactor) {
+		return AsyncHttpServer.create(reactor, request -> HttpResponse.ok200().withPlainText("Hello, world!"))
 				.withListenPort(PORT);
 	}
 

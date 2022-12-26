@@ -11,6 +11,7 @@ import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.redis.RedisClient;
 import io.activej.redis.RedisConnection;
 import io.activej.redis.RedisRequest;
@@ -35,7 +36,7 @@ public abstract class AbstractRedisBenchmark extends Launcher {
 	RedisClient redisClient;
 
 	@Inject
-	Eventloop eventloop;
+	NioReactor reactor;
 
 	@Inject
 	Config config;
@@ -49,13 +50,13 @@ public abstract class AbstractRedisBenchmark extends Launcher {
 	protected String value;
 
 	@Provides
-	Eventloop eventloopClient() {
+	NioReactor nioReactorClient() {
 		return Eventloop.create();
 	}
 
 	@Provides
-	RedisClient redisClient(Eventloop eventloop, Config config) {
-		return RedisClient.create(eventloop, config.get(ofInetSocketAddress(), "redis.address"));
+	RedisClient redisClient(NioReactor reactor, Config config) {
+		return RedisClient.create(reactor, config.get(ofInetSocketAddress(), "redis.address"));
 	}
 
 	@Provides
@@ -161,7 +162,7 @@ public abstract class AbstractRedisBenchmark extends Launcher {
 	}
 
 	private long round() throws Exception {
-		return eventloop.submit(this::roundCall).get();
+		return reactor.submit(this::roundCall).get();
 	}
 
 	private Promise<Long> roundCall() {

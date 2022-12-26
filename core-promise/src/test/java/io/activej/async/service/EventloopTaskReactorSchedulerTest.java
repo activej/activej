@@ -4,6 +4,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.RetryPolicy;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -11,18 +12,18 @@ import org.junit.Test;
 import static io.activej.promise.TestUtils.await;
 import static org.junit.Assert.assertFalse;
 
-public final class EventloopTaskSchedulerTest {
+public final class EventloopTaskReactorSchedulerTest {
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
 	@Test
 	public void testStopping() {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		Eventloop eventloop = Reactor.getCurrentReactor();
 		SettablePromise<Void> settablePromise = new SettablePromise<>();
 
-		EventloopTaskScheduler scheduler = EventloopTaskScheduler.create(eventloop, () -> settablePromise)
-				.withSchedule(EventloopTaskScheduler.Schedule.immediate());
+		ReactorTaskScheduler scheduler = ReactorTaskScheduler.create(eventloop, () -> settablePromise)
+				.withSchedule(ReactorTaskScheduler.Schedule.immediate());
 		scheduler.start();
 
 		await(Promise.complete().async()
@@ -38,12 +39,12 @@ public final class EventloopTaskSchedulerTest {
 
 	@Test
 	public void testStoppingWithRetryPolicy() {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		Eventloop eventloop = Reactor.getCurrentReactor();
 		SettablePromise<Void> settablePromise = new SettablePromise<>();
 
-		EventloopTaskScheduler scheduler = EventloopTaskScheduler.create(eventloop, () -> Promise.ofException(new Exception()))
+		ReactorTaskScheduler scheduler = ReactorTaskScheduler.create(eventloop, () -> Promise.ofException(new Exception()))
 				.withRetryPolicy(RetryPolicy.immediateRetry())
-				.withSchedule(EventloopTaskScheduler.Schedule.immediate());
+				.withSchedule(ReactorTaskScheduler.Schedule.immediate());
 		scheduler.start();
 
 		await(Promise.complete().async()

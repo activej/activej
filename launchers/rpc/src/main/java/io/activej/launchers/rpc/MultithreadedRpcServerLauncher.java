@@ -29,6 +29,7 @@ import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
 import io.activej.net.PrimaryServer;
 import io.activej.promise.Promise;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraphModule;
 import io.activej.worker.WorkerPool;
@@ -56,14 +57,14 @@ public abstract class MultithreadedRpcServerLauncher extends Launcher {
 	PrimaryServer primaryServer;
 
 	@Provides
-	public Eventloop primaryEventloop(Config config) {
+	public NioReactor primaryReactor(Config config) {
 		return Eventloop.create()
 				.withInitializer(ofEventloop(config.getChild("eventloop.primary")));
 	}
 
 	@Provides
 	@Worker
-	public Eventloop workerEventloop(Config config,
+	public NioReactor workerReactor(Config config,
 			OptionalDependency<ThrottlingController> throttlingController) {
 		return Eventloop.create()
 				.withInitializer(ofEventloop(config.getChild("eventloop.worker")))
@@ -76,8 +77,8 @@ public abstract class MultithreadedRpcServerLauncher extends Launcher {
 	}
 
 	@Provides
-	PrimaryServer primaryServer(Eventloop primaryEventloop, WorkerPool.Instances<RpcServer> workerServers, Config config) {
-		return PrimaryServer.create(primaryEventloop, workerServers.getList())
+	PrimaryServer primaryServer(NioReactor primaryReactor, WorkerPool.Instances<RpcServer> workerServers, Config config) {
+		return PrimaryServer.create(primaryReactor, workerServers.getList())
 				.withInitializer(ofPrimaryServer(config));
 	}
 
@@ -118,8 +119,8 @@ public abstract class MultithreadedRpcServerLauncher extends Launcher {
 				return new AbstractModule() {
 					@Provides
 					@Worker
-					RpcServer server(Eventloop eventloop, Config config, @WorkerId int id) {
-						return RpcServer.create(eventloop)
+					RpcServer server(NioReactor reactor, Config config, @WorkerId int id) {
+						return RpcServer.create(reactor)
 								.withMessageTypes(String.class)
 								.withHandler(String.class,
 										req -> Promise.of("Request served by worker #" + id + ": " + req));

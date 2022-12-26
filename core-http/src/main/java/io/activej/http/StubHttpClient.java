@@ -18,8 +18,8 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.ChannelSupplier;
-import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 
 /**
  * A stub client which forwards requests straight to the underlying servlet without any real I/O operations.
@@ -48,13 +48,13 @@ public final class StubHttpClient implements IAsyncHttpClient {
 				.whenComplete(request::recycleBody)
 				.then(res -> {
 					ChannelSupplier<ByteBuf> bodyStream = res.bodyStream;
-					Eventloop eventloop = Eventloop.getCurrentEventloop();
+					Reactor reactor = Reactor.getCurrentReactor();
 					if (bodyStream != null) {
 						res.setBodyStream(bodyStream
 								.withEndOfStream(eos -> eos
-										.whenComplete(() -> eventloop.post(res::recycle))));
+										.whenComplete(() -> reactor.post(res::recycle))));
 					} else {
-						eventloop.post(res::recycle);
+						reactor.post(res::recycle);
 					}
 					return Promise.of(res);
 				});

@@ -11,6 +11,7 @@ import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
 import org.jetbrains.annotations.Nullable;
 
@@ -37,19 +38,19 @@ public class HttpServerWorkloadBenchmark extends Launcher {
 
 	@Provides
 	@Named("server")
-	Eventloop serverEventloop() { return Eventloop.create(); }
+	NioReactor serverReactor() { return Eventloop.create(); }
 
 	@Provides
 	@Named("client")
-	Eventloop clientEventloop() { return Eventloop.create(); }
+	NioReactor clientReactor() { return Eventloop.create(); }
 
 	@Inject
 	@Named("server")
-	Eventloop serverEventloop;
+	NioReactor serverReactor;
 
 	@Inject
 	@Named("client")
-	Eventloop clientEventloop;
+	NioReactor clientReactor;
 
 	@Inject
 	Config config;
@@ -62,7 +63,7 @@ public class HttpServerWorkloadBenchmark extends Launcher {
 
 	@Provides
 	AsyncHttpServer server() {
-		return AsyncHttpServer.create(serverEventloop,
+		return AsyncHttpServer.create(serverReactor,
 				request ->
 						HttpResponse.ok200().withPlainText("Response!!"))
 				.withListenAddresses(config.get(ofList(ofInetSocketAddress()), "address"));
@@ -70,7 +71,7 @@ public class HttpServerWorkloadBenchmark extends Launcher {
 
 	@Provides
 	AsyncHttpClient client() {
-		return AsyncHttpClient.create(clientEventloop)
+		return AsyncHttpClient.create(clientReactor)
 				.withKeepAliveTimeout(Duration.ofSeconds(config.get(ofInteger(),
 						"client.keepAlive", KEEP_ALIVE)));
 	}
@@ -138,7 +139,7 @@ public class HttpServerWorkloadBenchmark extends Launcher {
 	}
 
 	private long round() throws Exception {
-		return clientEventloop.submit(this::roundGet).get();
+		return clientReactor.submit(this::roundGet).get();
 	}
 
 	int sent;

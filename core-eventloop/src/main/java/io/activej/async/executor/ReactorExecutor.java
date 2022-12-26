@@ -14,32 +14,29 @@
  * limitations under the License.
  */
 
-package io.activej.eventloop.executor;
+package io.activej.async.executor;
 
 import io.activej.async.callback.AsyncComputation;
 import io.activej.common.function.RunnableEx;
 import io.activej.common.function.SupplierEx;
-import io.activej.eventloop.Eventloop;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 /**
- * An abstraction over the {@link Eventloop} that can receive, dispatch and run tasks in it.
- * <p>
- * As a plain case, {@link Eventloop} itself implements it and posts received tasks to its own queues.
+ * An abstraction over reactor that can receive, dispatch and run tasks in it.
  *
- * @see BlockingEventloopExecutor
+ * @see BlockingReactorExecutor
  */
-public interface EventloopExecutor extends Executor {
+public interface ReactorExecutor extends Executor {
 	/**
-	 * Executes the given computation at some time in the future in some underlying eventloop.
+	 * Executes the given computation at some time in the future in some underlying reactor.
 	 */
 	@NotNull CompletableFuture<Void> submit(@NotNull RunnableEx computation);
 
 	/**
-	 * Executes the given computation at some time in the future in some underlying eventloop
+	 * Executes the given computation at some time in the future in some underlying reactor
 	 * and returns its result in a {@link CompletableFuture future}.
 	 */
 	<T> @NotNull CompletableFuture<T> submit(AsyncComputation<? extends T> computation);

@@ -10,6 +10,7 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.launcher.Launcher;
 import io.activej.net.PrimaryServer;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
 import io.activej.worker.WorkerPool;
 import io.activej.worker.WorkerPoolModule;
@@ -76,27 +77,27 @@ public final class DoubleServersTwoPools extends Launcher {
 
 		@Provides
 		@Named("First")
-		Eventloop primaryEventloop() {
+		NioReactor primaryReactor() {
 			return Eventloop.create();
 		}
 
 		@Provides
 		@WorkerFirst
-		Eventloop workerEventloop() {
+		NioReactor workerReactor() {
 			return Eventloop.create();
 		}
 
 		@Provides
 		@Named("First")
-		PrimaryServer primaryServerFirst(@Named("First") Eventloop primaryEventloop, @Named("First") WorkerPool.Instances<AsyncHttpServer> workerServers) {
-			return PrimaryServer.create(primaryEventloop, workerServers)
+		PrimaryServer primaryServerFirst(@Named("First") NioReactor primaryReactor, @Named("First") WorkerPool.Instances<AsyncHttpServer> workerServers) {
+			return PrimaryServer.create(primaryReactor, workerServers)
 					.withListenAddresses(new InetSocketAddress("localhost", port));
 		}
 
 		@Provides
 		@WorkerFirst
-		AsyncHttpServer workerServerFirst(Eventloop eventloop, @WorkerId int workerId) {
-			return AsyncHttpServer.create(eventloop, request -> HttpResponse.ok200()
+		AsyncHttpServer workerServerFirst(NioReactor reactor, @WorkerId int workerId) {
+			return AsyncHttpServer.create(reactor, request -> HttpResponse.ok200()
 					.withPlainText("Hello from the first server, worker #" + workerId));
 		}
 
@@ -119,27 +120,27 @@ public final class DoubleServersTwoPools extends Launcher {
 
 		@Provides
 		@Named("Second")
-		Eventloop primaryEventloop() {
+		NioReactor primaryReactor() {
 			return Eventloop.create();
 		}
 
 		@Provides
 		@WorkerSecond
-		Eventloop workerEventloop() {
+		NioReactor workerReactor() {
 			return Eventloop.create();
 		}
 
 		@Provides
 		@Named("Second")
-		PrimaryServer primaryServerSecond(@Named("Second") Eventloop primaryEventloop, @Named("Second") WorkerPool.Instances<AsyncHttpServer> workerServers) {
-			return PrimaryServer.create(primaryEventloop, workerServers)
+		PrimaryServer primaryServerSecond(@Named("Second") NioReactor primaryReactor, @Named("Second") WorkerPool.Instances<AsyncHttpServer> workerServers) {
+			return PrimaryServer.create(primaryReactor, workerServers)
 					.withListenAddresses(new InetSocketAddress("localhost", port));
 		}
 
 		@Provides
 		@WorkerSecond
-		AsyncHttpServer workerServerSecond(Eventloop eventloop, @WorkerId int workerId) {
-			return AsyncHttpServer.create(eventloop, request -> HttpResponse.ok200()
+		AsyncHttpServer workerServerSecond(NioReactor reactor, @WorkerId int workerId) {
+			return AsyncHttpServer.create(reactor, request -> HttpResponse.ok200()
 					.withPlainText("Hello from the second server, worker #" + workerId));
 		}
 

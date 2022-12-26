@@ -14,11 +14,11 @@ import io.activej.cube.ot.CubeOT;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogDiffCodec;
 import io.activej.etl.LogOT;
-import io.activej.eventloop.Eventloop;
 import io.activej.fs.LocalActiveFs;
 import io.activej.ot.OTCommit;
 import io.activej.ot.repository.OTRepositoryMySql;
 import io.activej.ot.system.OTSystem;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -55,7 +55,7 @@ public class CubeCleanerControllerTest {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
-	private Eventloop eventloop;
+	private Reactor reactor;
 	private OTRepositoryMySql<LogDiff<CubeDiff>> repository;
 	private AggregationChunkStorage<Long> aggregationChunkStorage;
 
@@ -65,12 +65,12 @@ public class CubeCleanerControllerTest {
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 		Executor executor = Executors.newCachedThreadPool();
 
-		eventloop = Eventloop.getCurrentEventloop();
+		reactor = Reactor.getCurrentReactor();
 
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
-		aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(),
-				LZ4FrameFormat.create(), LocalActiveFs.create(eventloop, executor, aggregationsDir));
-		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
+		aggregationChunkStorage = ActiveFsChunkStorage.create(reactor, ChunkIdCodec.ofLong(), new IdGeneratorStub(),
+				LZ4FrameFormat.create(), LocalActiveFs.create(reactor, executor, aggregationsDir));
+		Cube cube = Cube.create(reactor, executor, classLoader, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
 				.withDimension("adv", ofInt())
 				.withMeasure("pubRequests", sum(ofLong()))
@@ -78,7 +78,7 @@ public class CubeCleanerControllerTest {
 				.withAggregation(id("pub").withDimensions("pub").withMeasures("pubRequests"))
 				.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests"));
 
-		repository = OTRepositoryMySql.create(eventloop, executor, dataSource, new IdGeneratorStub(),
+		repository = OTRepositoryMySql.create(reactor, executor, dataSource, new IdGeneratorStub(),
 				OT_SYSTEM, LogDiffCodec.create(CubeDiffCodec.create(cube)));
 		repository.initialize();
 		repository.truncateTables();
@@ -89,7 +89,7 @@ public class CubeCleanerControllerTest {
 		// 1S -> 2N -> 3N -> 4S -> 5N
 		initializeRepo();
 
-		CubeCleanerController<Long, LogDiff<CubeDiff>, Long> cleanerController = CubeCleanerController.create(eventloop,
+		CubeCleanerController<Long, LogDiff<CubeDiff>, Long> cleanerController = CubeCleanerController.create(reactor,
 						CubeDiffScheme.ofLogDiffs(), repository, OT_SYSTEM, (ActiveFsChunkStorage<Long>) aggregationChunkStorage)
 				.withFreezeTimeout(Duration.ofMillis(0))
 				.withExtraSnapshotsCount(1000);
@@ -102,7 +102,7 @@ public class CubeCleanerControllerTest {
 		// 1S -> 2N -> 3N -> 4S -> 5N
 		initializeRepo();
 
-		CubeCleanerController<Long, LogDiff<CubeDiff>, Long> cleanerController = CubeCleanerController.create(eventloop,
+		CubeCleanerController<Long, LogDiff<CubeDiff>, Long> cleanerController = CubeCleanerController.create(reactor,
 						CubeDiffScheme.ofLogDiffs(), repository, OT_SYSTEM, (ActiveFsChunkStorage<Long>) aggregationChunkStorage)
 				.withFreezeTimeout(Duration.ofSeconds(10));
 

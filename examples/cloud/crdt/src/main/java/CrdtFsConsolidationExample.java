@@ -8,6 +8,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.fs.LocalActiveFs;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.reactor.Reactor;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -57,7 +58,7 @@ public final class CrdtFsConsolidationExample {
 				.then(() -> {
 					//[START REGION_2]
 					// then upload two streams of items to it in parallel
-					long timestamp = Eventloop.getCurrentEventloop().currentTimeMillis();
+					long timestamp = Reactor.getCurrentReactor().currentTimeMillis();
 					Promise<Void> firstUpload =
 							StreamSupplier.ofStream(Stream.of(
 											new CrdtData<>("1_test_1", timestamp, Set.of(1, 2, 3)),

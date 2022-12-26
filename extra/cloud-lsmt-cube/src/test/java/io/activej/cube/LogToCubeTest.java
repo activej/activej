@@ -41,11 +41,11 @@ public final class LogToCubeTest extends CubeTestBase {
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 		Path logsDir = temporaryFolder.newFolder().toPath();
 
-		LocalActiveFs fs = LocalActiveFs.create(eventloop, EXECUTOR, aggregationsDir);
+		LocalActiveFs fs = LocalActiveFs.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
 		FrameFormat frameFormat = LZ4FrameFormat.create();
-		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(), frameFormat, fs);
-		Cube cube = Cube.create(eventloop, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
+		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(reactor, ChunkIdCodec.ofLong(), new IdGeneratorStub(), frameFormat, fs);
+		Cube cube = Cube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
 				.withDimension("adv", ofInt())
 				.withDimension("testEnum", ofEnum(TestPubRequest.TestEnum.class))
@@ -62,16 +62,16 @@ public final class LogToCubeTest extends CubeTestBase {
 		List<TestAdvResult> expected = List.of(new TestAdvResult(10, 2), new TestAdvResult(20, 1), new TestAdvResult(30, 1));
 
 		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cube);
-		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(eventloop, LOG_OT, uplink, cubeDiffLogOTState);
+		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
-		LocalActiveFs localFs = LocalActiveFs.create(eventloop, EXECUTOR, logsDir);
+		LocalActiveFs localFs = LocalActiveFs.create(reactor, EXECUTOR, logsDir);
 		await(localFs.start());
-		Multilog<TestPubRequest> multilog = MultilogImpl.create(eventloop, localFs,
+		Multilog<TestPubRequest> multilog = MultilogImpl.create(reactor, localFs,
 				frameFormat,
 				SerializerBuilder.create(CLASS_LOADER).build(TestPubRequest.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 
-		LogOTProcessor<TestPubRequest, CubeDiff> logOTProcessor = LogOTProcessor.create(eventloop,
+		LogOTProcessor<TestPubRequest, CubeDiff> logOTProcessor = LogOTProcessor.create(reactor,
 				multilog,
 				new TestAggregatorSplitter(cube), // TestAggregatorSplitter.create(EVENTLOOP, cube),
 				"testlog",

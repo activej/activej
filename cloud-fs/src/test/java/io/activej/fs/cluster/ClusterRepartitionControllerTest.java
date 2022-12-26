@@ -2,7 +2,6 @@ package io.activej.fs.cluster;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.ChannelConsumer;
-import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.ForwardingActiveFs;
 import io.activej.fs.LocalActiveFs;
@@ -10,6 +9,8 @@ import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.fs.tcp.RemoteActiveFs;
 import io.activej.net.AbstractServer;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.test.TestUtils;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
@@ -53,7 +54,7 @@ public final class ClusterRepartitionControllerTest {
 
 	@Test
 	public void testFailingUploadDoesNotMarkAllPartitionsDead() throws IOException {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		NioReactor reactor = Reactor.getCurrentReactor();
 
 		Executor executor = Executors.newSingleThreadExecutor();
 		List<ActiveFsServer> servers = new ArrayList<>();
@@ -71,7 +72,7 @@ public final class ClusterRepartitionControllerTest {
 		file.setLength(fileSize);
 		file.close();
 
-		LocalActiveFs localFsClient = LocalActiveFs.create(eventloop, executor, localStorage);
+		LocalActiveFs localFsClient = LocalActiveFs.create(reactor, executor, localStorage);
 		await(localFsClient.start());
 
 		Object localPartitionId = "local";
@@ -80,23 +81,23 @@ public final class ClusterRepartitionControllerTest {
 		InetSocketAddress regularPartitionAddress = new InetSocketAddress("localhost", getFreePort());
 		Path regularPath = storage.resolve("regular");
 		Files.createDirectories(regularPath);
-		partitions.put("regular", RemoteActiveFs.create(eventloop, regularPartitionAddress));
-		LocalActiveFs localFs = LocalActiveFs.create(eventloop, executor, regularPath);
+		partitions.put("regular", RemoteActiveFs.create(reactor, regularPartitionAddress));
+		LocalActiveFs localFs = LocalActiveFs.create(reactor, executor, regularPath);
 		await(localFs.start());
 
 
 		InetSocketAddress failingPartitionAddress = new InetSocketAddress("localhost", getFreePort());
 		Path failingPath = storage.resolve("failing");
 		Files.createDirectories(failingPath);
-		partitions.put("failing", RemoteActiveFs.create(eventloop, failingPartitionAddress));
-		LocalActiveFs peer = LocalActiveFs.create(eventloop, executor, failingPath);
+		partitions.put("failing", RemoteActiveFs.create(reactor, failingPartitionAddress));
+		LocalActiveFs peer = LocalActiveFs.create(reactor, executor, failingPath);
 		await(peer.start());
 
-		ActiveFsServer regularServer = ActiveFsServer.create(eventloop, localFs).withListenAddress(regularPartitionAddress);
+		ActiveFsServer regularServer = ActiveFsServer.create(reactor, localFs).withListenAddress(regularPartitionAddress);
 		regularServer.listen();
 		servers.add(regularServer);
 
-		ActiveFsServer failingServer = ActiveFsServer.create(eventloop,
+		ActiveFsServer failingServer = ActiveFsServer.create(reactor,
 				new ForwardingActiveFs(peer) {
 					@Override
 					public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
@@ -109,7 +110,7 @@ public final class ClusterRepartitionControllerTest {
 		servers.add(failingServer);
 
 		DiscoveryService discoveryService = DiscoveryService.constant(partitions);
-		FsPartitions fsPartitions = FsPartitions.create(eventloop, discoveryService)
+		FsPartitions fsPartitions = FsPartitions.create(reactor, discoveryService)
 				.withServerSelector(RENDEZVOUS_HASH_SHARDER);
 
 		Promise<Map<Object, ActiveFs>> discoverPromise = discoveryService.discover().get();

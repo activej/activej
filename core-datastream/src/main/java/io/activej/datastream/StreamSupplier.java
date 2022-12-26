@@ -25,8 +25,8 @@ import io.activej.datastream.StreamSuppliers.Idle;
 import io.activej.datastream.StreamSuppliers.OfIterator;
 import io.activej.datastream.processor.StreamSupplierTransformer;
 import io.activej.datastream.processor.StreamTransformer;
-import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
@@ -197,12 +197,12 @@ public interface StreamSupplier<T> extends AsyncCloseable {
 		return new StreamSuppliers.OfPromise<>(promise);
 	}
 
-	static <T> StreamSupplier<T> ofAnotherEventloop(@NotNull Eventloop anotherEventloop,
-			@NotNull StreamSupplier<T> anotherEventloopSupplier) {
-		if (Eventloop.getCurrentEventloop() == anotherEventloop) {
-			return anotherEventloopSupplier;
+	static <T> StreamSupplier<T> ofAnotherReactor(@NotNull Reactor anotherReactor,
+			@NotNull StreamSupplier<T> anotherReactorSupplier) {
+		if (Reactor.getCurrentReactor() == anotherReactor) {
+			return anotherReactorSupplier;
 		}
-		return new StreamSuppliers.OfAnotherEventloop<>(anotherEventloop, anotherEventloopSupplier);
+		return new StreamSuppliers.OfAnotherReactor<>(anotherReactor, anotherReactorSupplier);
 	}
 
 	/**

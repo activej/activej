@@ -19,16 +19,16 @@ package io.activej.crdt.storage.cluster;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncRunnables;
 import io.activej.common.initializer.WithInitializer;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 
-public final class CrdtRepartitionController<K extends Comparable<K>, S, P> implements EventloopJmxBeanWithStats, WithInitializer<CrdtRepartitionController<K, S, P>> {
+public final class CrdtRepartitionController<K extends Comparable<K>, S, P> implements ReactorJmxBeanWithStats, WithInitializer<CrdtRepartitionController<K, S, P>> {
 	private final P localPartitionId;
 	private final CrdtStorageCluster<K, S, P> cluster;
 
@@ -45,8 +45,8 @@ public final class CrdtRepartitionController<K extends Comparable<K>, S, P> impl
 	}
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return cluster.getEventloop();
+	public @NotNull Reactor getReactor() {
+		return cluster.getReactor();
 	}
 
 	// region JMX

@@ -31,13 +31,13 @@ import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStatsBasic;
 import io.activej.datastream.stats.StreamStatsDetailed;
-import io.activej.eventloop.Eventloop;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.net.AbstractServer;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.serializer.BinarySerializer;
 
 import java.net.InetAddress;
@@ -89,20 +89,20 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer
 	private final PromiseStats pingPromise = PromiseStats.create(Duration.ofMinutes(5));
 	// endregion
 
-	private CrdtServer(Eventloop eventloop, CrdtStorage<K, S> storage, CrdtDataSerializer<K, S> serializer) {
-		super(eventloop);
+	private CrdtServer(NioReactor reactor, CrdtStorage<K, S> storage, CrdtDataSerializer<K, S> serializer) {
+		super(reactor);
 		this.storage = storage;
 		this.serializer = serializer;
 
 		tombstoneSerializer = serializer.getTombstoneSerializer();
 	}
 
-	public static <K extends Comparable<K>, S> CrdtServer<K, S> create(Eventloop eventloop, CrdtStorage<K, S> storage, CrdtDataSerializer<K, S> serializer) {
-		return new CrdtServer<>(eventloop, storage, serializer);
+	public static <K extends Comparable<K>, S> CrdtServer<K, S> create(NioReactor reactor, CrdtStorage<K, S> storage, CrdtDataSerializer<K, S> serializer) {
+		return new CrdtServer<>(reactor, storage, serializer);
 	}
 
-	public static <K extends Comparable<K>, S> CrdtServer<K, S> create(Eventloop eventloop, CrdtStorage<K, S> storage, BinarySerializer<K> keySerializer, BinarySerializer<S> stateSerializer) {
-		return new CrdtServer<>(eventloop, storage, new CrdtDataSerializer<>(keySerializer, stateSerializer));
+	public static <K extends Comparable<K>, S> CrdtServer<K, S> create(NioReactor reactor, CrdtStorage<K, S> storage, BinarySerializer<K> keySerializer, BinarySerializer<S> stateSerializer) {
+		return new CrdtServer<>(reactor, storage, new CrdtDataSerializer<>(keySerializer, stateSerializer));
 	}
 
 	public CrdtServer<K, S> withHandshakeHandler(Function<CrdtRequest.Handshake, CrdtResponse.Handshake> handshakeHandler) {

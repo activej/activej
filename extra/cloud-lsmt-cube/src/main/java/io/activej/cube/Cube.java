@@ -52,8 +52,6 @@ import io.activej.datastream.processor.StreamReducer;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.datastream.processor.StreamSplitter;
 import io.activej.etl.LogDataConsumer;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.fs.exception.FileNotFoundException;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
@@ -61,6 +59,8 @@ import io.activej.jmx.stats.ValueStats;
 import io.activej.ot.OTState;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import org.jetbrains.annotations.NotNull;
@@ -101,13 +101,13 @@ import static java.util.stream.Collectors.toList;
  * Also provides functionality for managing aggregations.
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
-public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cube>, EventloopJmxBeanWithStats {
+public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cube>, ReactorJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(Cube.class);
 
 	public static final int DEFAULT_OVERLAPPING_CHUNKS_THRESHOLD = 300;
 	public static final FrameFormat DEFAULT_SORT_FRAME_FORMAT = LZ4FrameFormat.create();
 
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 	private final Executor executor;
 	private final DefiningClassLoader classLoader;
 	private final AggregationChunkStorage aggregationChunkStorage;
@@ -175,17 +175,17 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 	private long queryErrors;
 	private Exception queryLastError;
 
-	Cube(Eventloop eventloop, Executor executor, DefiningClassLoader classLoader,
+	Cube(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
 			AggregationChunkStorage aggregationChunkStorage) {
-		this.eventloop = eventloop;
+		this.reactor = reactor;
 		this.executor = executor;
 		this.classLoader = classLoader;
 		this.aggregationChunkStorage = aggregationChunkStorage;
 	}
 
-	public static Cube create(@NotNull Eventloop eventloop, @NotNull Executor executor, @NotNull DefiningClassLoader classLoader,
+	public static Cube create(@NotNull Reactor reactor, @NotNull Executor executor, @NotNull DefiningClassLoader classLoader,
 			@NotNull AggregationChunkStorage aggregationChunkStorage) {
-		return new Cube(eventloop, executor, classLoader, aggregationChunkStorage);
+		return new Cube(reactor, executor, classLoader, aggregationChunkStorage);
 	}
 
 	public Cube withAttribute(String attribute, AttributeResolver resolver) {
@@ -377,7 +377,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 				}))
 				.withPartitioningKey(config.partitioningKey);
 
-		Aggregation aggregation = Aggregation.create(eventloop, executor, classLoader, aggregationChunkStorage, sortFrameFormat, structure)
+		Aggregation aggregation = Aggregation.create(reactor, executor, classLoader, aggregationChunkStorage, sortFrameFormat, structure)
 				.withTemporarySortDir(temporarySortDir)
 				.withChunkSize(config.chunkSize != 0 ? config.chunkSize : aggregationsChunkSize)
 				.withReducerBufferSize(config.reducerBufferSize != 0 ? config.reducerBufferSize : aggregationsReducerBufferSize)
@@ -815,9 +815,9 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 				new LinkedHashSet<>(cubeQuery.getAttributes()),
 				new LinkedHashSet<>(cubeQuery.getMeasures()),
 				cubeQuery.getWhere().getDimensions()));
-		long queryStarted = eventloop.currentTimeMillis();
+		long queryStarted = reactor.currentTimeMillis();
 		return new RequestContext<>().execute(queryClassLoader, cubeQuery)
-				.whenResult(() -> queryTimes.recordValue((int) (eventloop.currentTimeMillis() - queryStarted)))
+				.whenResult(() -> queryTimes.recordValue((int) (reactor.currentTimeMillis() - queryStarted)))
 				.whenException(e -> {
 					queryErrors++;
 					queryLastError = e;
@@ -1387,8 +1387,8 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 	}
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull Reactor getReactor() {
+		return reactor;
 	}
 
 }

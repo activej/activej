@@ -2,9 +2,10 @@ package udp;
 
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.net.DatagramSocketSettings;
 import io.activej.net.socket.udp.AsyncUdpSocketNio;
 import io.activej.net.socket.udp.UdpPacket;
+import io.activej.reactor.net.DatagramSocketSettings;
+import io.activej.reactor.nio.NioReactor;
 
 import java.nio.channels.DatagramChannel;
 
@@ -22,7 +23,7 @@ public final class UdpPingClientExample {
 	public static void main(String[] args) throws Exception {
 		Eventloop eventloop = Eventloop.create().withCurrentThread();
 		DatagramSocketSettings socketSettings = DatagramSocketSettings.create();
-		DatagramChannel clientDatagramChannel = Eventloop.createDatagramChannel(socketSettings, null, null);
+		DatagramChannel clientDatagramChannel = NioReactor.createDatagramChannel(socketSettings, null, null);
 
 		AsyncUdpSocketNio.connect(eventloop, clientDatagramChannel)
 				.whenResult(socket -> {

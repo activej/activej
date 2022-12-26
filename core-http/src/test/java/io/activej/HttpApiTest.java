@@ -1,7 +1,7 @@
 package io.activej;
 
-import io.activej.eventloop.Eventloop;
 import io.activej.http.*;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -61,14 +61,14 @@ public final class HttpApiTest {
 	@Before
 	public void setUp() {
 		port = getFreePort();
-		server = AsyncHttpServer.create(Eventloop.getCurrentEventloop(),
+		server = AsyncHttpServer.create(Reactor.getCurrentReactor(),
 				request -> {
 					testRequest(request);
 					return createResponse();
 				})
 				.withListenPort(port);
 
-		client = AsyncHttpClient.create(Eventloop.getCurrentEventloop());
+		client = AsyncHttpClient.create(Reactor.getCurrentReactor());
 
 		// setup request and response data
 		requestAcceptContentTypes.add(AcceptMediaType.of(MediaTypes.ANY_AUDIO, 90));

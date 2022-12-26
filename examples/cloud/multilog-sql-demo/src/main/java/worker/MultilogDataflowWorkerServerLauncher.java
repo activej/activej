@@ -9,6 +9,7 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.launchers.dataflow.DataflowServerLauncher;
 import io.activej.multilog.Multilog;
+import io.activej.reactor.Reactor;
 import misc.LogItem;
 import module.MultilogDataflowServerModule;
 
@@ -16,7 +17,7 @@ public final class MultilogDataflowWorkerServerLauncher extends DataflowServerLa
 	public static final int NUMBER_OF_ITEMS = ApplicationSettings.getInt(MultilogDataflowWorkerServerLauncher.class, "numberOfItems", 100);
 
 	@Inject
-	Eventloop eventloop;
+	Reactor reactor;
 
 	@Inject
 	Multilog<LogItem> multilog;
@@ -26,7 +27,7 @@ public final class MultilogDataflowWorkerServerLauncher extends DataflowServerLa
 	String partitionId;
 
 	@Provides
-	Eventloop eventloop() {
+	Reactor eventloop() {
 		return Eventloop.create();
 	}
 
@@ -37,7 +38,7 @@ public final class MultilogDataflowWorkerServerLauncher extends DataflowServerLa
 
 	@Override
 	protected void run() throws Exception {
-		eventloop.submit(() ->
+		reactor.submit(() ->
 						StreamSupplier.ofIterable(LogItem.getListOfRandomLogItems(NUMBER_OF_ITEMS))
 								.streamTo(multilog.write(partitionId)))
 				.get();

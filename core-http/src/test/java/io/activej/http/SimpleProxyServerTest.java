@@ -3,8 +3,8 @@ package io.activej.http;
 import io.activej.dns.CachedAsyncDnsClient;
 import io.activej.dns.RemoteAsyncDnsClient;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.net.DatagramSocketSettings;
 import io.activej.promise.Promise;
+import io.activej.reactor.net.DatagramSocketSettings;
 import io.activej.test.rules.ByteBufRule;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -110,7 +110,7 @@ public final class SimpleProxyServerTest {
 				\r
 				FORWARDED: /hello""");
 
-		httpClient.getEventloop().execute(httpClient::stop);
+		httpClient.getReactor().execute(httpClient::stop);
 
 		echoServer.closeFuture().get();
 		proxyServer.closeFuture().get();

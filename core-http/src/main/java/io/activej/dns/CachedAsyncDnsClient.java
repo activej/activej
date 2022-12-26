@@ -22,11 +22,11 @@ import io.activej.dns.DnsCache.DnsQueryCacheResult;
 import io.activej.dns.protocol.DnsQuery;
 import io.activej.dns.protocol.DnsQueryException;
 import io.activej.dns.protocol.DnsResponse;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBean;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.jmx.ReactorJmxBean;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -37,35 +37,35 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
+import static io.activej.reactor.util.RunnableWithContext.wrapContext;
 
 /**
  * Implementation of {@link AsyncDnsClient} that asynchronously
  * connects to some DNS server and gets the response from it.
  */
-public final class CachedAsyncDnsClient implements AsyncDnsClient, EventloopJmxBean, WithInitializer<CachedAsyncDnsClient> {
+public final class CachedAsyncDnsClient implements AsyncDnsClient, ReactorJmxBean, WithInitializer<CachedAsyncDnsClient> {
 	private final Logger logger = LoggerFactory.getLogger(CachedAsyncDnsClient.class);
 	private static final boolean CHECK = Checks.isEnabled(CachedAsyncDnsClient.class);
 
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 	private final AsyncDnsClient client;
 
 	private DnsCache cache;
 	private final Map<DnsQuery, Promise<DnsResponse>> pending = new HashMap<>();
 	private final Set<DnsQuery> refreshingNow = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
-	private CachedAsyncDnsClient(Eventloop eventloop, AsyncDnsClient client, DnsCache cache) {
-		this.eventloop = eventloop;
+	private CachedAsyncDnsClient(Reactor reactor, AsyncDnsClient client, DnsCache cache) {
+		this.reactor = reactor;
 		this.client = client;
 		this.cache = cache;
 	}
 
-	public static CachedAsyncDnsClient create(Eventloop eventloop, AsyncDnsClient client, DnsCache cache) {
-		return new CachedAsyncDnsClient(eventloop, client, cache);
+	public static CachedAsyncDnsClient create(Reactor reactor, AsyncDnsClient client, DnsCache cache) {
+		return new CachedAsyncDnsClient(reactor, client, cache);
 	}
 
-	public static CachedAsyncDnsClient create(Eventloop eventloop, AsyncDnsClient client) {
-		return new CachedAsyncDnsClient(eventloop, client, DnsCache.create(eventloop));
+	public static CachedAsyncDnsClient create(Reactor reactor, AsyncDnsClient client) {
+		return new CachedAsyncDnsClient(reactor, client, DnsCache.create(reactor));
 	}
 
 	public CachedAsyncDnsClient withCache(DnsCache cache) {
@@ -85,14 +85,14 @@ public final class CachedAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 		return this;
 	}
 
-	public AsyncDnsClient adaptToAnotherEventloop(Eventloop anotherEventloop) {
-		if (anotherEventloop == eventloop) {
+	public AsyncDnsClient adaptToAnotherReactor(Reactor anotherReactor) {
+		if (anotherReactor == reactor) {
 			return this;
 		}
 		return new AsyncDnsClient() {
 			@Override
 			public Promise<DnsResponse> resolve(DnsQuery query) {
-				if (CHECK) checkState(anotherEventloop.inEventloopThread());
+				if (CHECK) checkState(anotherReactor.inReactorThread());
 				DnsResponse fromQuery = AsyncDnsClient.resolveFromQuery(query);
 				if (fromQuery != null) {
 					logger.trace("{} already contained an IP address within itself", query);
@@ -102,25 +102,25 @@ public final class CachedAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 				DnsQueryCacheResult cacheResult = cache.tryToResolve(query);
 				if (cacheResult != null) {
 					if (cacheResult.doesNeedRefreshing() && !refreshingNow.add(query)) {
-						eventloop.execute(() -> refresh(query));
+						reactor.execute(() -> refresh(query));
 					}
 					return cacheResult.getResponseAsPromise();
 				}
 
-				anotherEventloop.startExternalTask(); // keep other eventloop alive while we wait for an answer in main one
+				anotherReactor.startExternalTask(); // keep other reactor alive while we wait for an answer in main one
 				return Promise.ofCallback(cb ->
-						eventloop.execute(() ->
+						reactor.execute(() ->
 								CachedAsyncDnsClient.this.resolve(query)
 										.run((result, e) -> {
-											anotherEventloop.execute(wrapContext(cb, () -> cb.accept(result, e)));
-											anotherEventloop.completeExternalTask();
+											anotherReactor.execute(wrapContext(cb, () -> cb.accept(result, e)));
+											anotherReactor.completeExternalTask();
 										})));
 			}
 
 			@Override
 			public void close() {
-				if (CHECK) checkState(anotherEventloop.inEventloopThread());
-				eventloop.execute(CachedAsyncDnsClient.this::close);
+				if (CHECK) checkState(anotherReactor.inReactorThread());
+				reactor.execute(CachedAsyncDnsClient.this::close);
 			}
 		};
 	}
@@ -149,7 +149,7 @@ public final class CachedAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 	@Override
 	public Promise<DnsResponse> resolve(DnsQuery query) {
 		if (CHECK) {
-			checkState(eventloop.inEventloopThread(), "Concurrent resolves are not allowed, to reuse the cache use adaptToOtherEventloop");
+			checkState(reactor.inReactorThread(), "Concurrent resolves are not allowed, to reuse the cache use adaptToOtherReactor");
 		}
 
 		DnsResponse fromQuery = AsyncDnsClient.resolveFromQuery(query);
@@ -182,8 +182,8 @@ public final class CachedAsyncDnsClient implements AsyncDnsClient, EventloopJmxB
 	}
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull Reactor getReactor() {
+		return reactor;
 	}
 
 	@JmxAttribute(name = "")

@@ -6,7 +6,6 @@ import io.activej.csp.process.frames.FrameFormats;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
-import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.test.ExpectedException;
@@ -62,7 +61,7 @@ public final class StreamSorterTest {
 		source1.streamTo(writer1);
 //		source2.streamTo(writer2);
 
-		Eventloop.getCurrentEventloop().run();
+		await();
 
 		assertEndOfStream(source1);
 //		assertEndOfStream(source2);
@@ -71,7 +70,7 @@ public final class StreamSorterTest {
 //		StreamConsumerToList<Integer> consumer2 = StreamConsumerToList.create();
 		storage.readStream(1).streamTo(consumer1.transformWith(oneByOne()));
 //		storage.readStream(2).streamTo(consumer2.with(TestStreamConsumers.randomlySuspending()));
-		Eventloop.getCurrentEventloop().run();
+		await();
 
 		assertEquals(List.of(1, 2, 3, 4, 5, 6, 7), consumer1.getList());
 //		assertEquals(List.of(111), consumer2.getList());

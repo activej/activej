@@ -2,7 +2,6 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.config.Config;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
-import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.ForwardingActiveFs;
 import io.activej.fs.tcp.ActiveFsServer;
@@ -13,6 +12,7 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
+import io.activej.reactor.nio.NioReactor;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,8 +30,8 @@ public class DecoratedActiveFsExample extends ServerSetupExample {
 		return new AbstractModule() {
 			@Eager
 			@Provides
-			ActiveFsServer activeFsServer(Eventloop eventloop, @Named("decorated") ActiveFs decoratedFs, Config config) {
-				return ActiveFsServer.create(eventloop, decoratedFs)
+			ActiveFsServer activeFsServer(NioReactor reactor, @Named("decorated") ActiveFs decoratedFs, Config config) {
+				return ActiveFsServer.create(reactor, decoratedFs)
 						.withInitializer(ofActiveFsServer(config.getChild("activefs")));
 			}
 

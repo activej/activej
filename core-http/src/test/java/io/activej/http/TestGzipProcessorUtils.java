@@ -3,7 +3,7 @@ package io.activej.http;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufStrings;
-import io.activej.eventloop.Eventloop;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -104,7 +104,7 @@ public final class TestGzipProcessorUtils {
 
 	@Test
 	public void testGzippedCommunicationBetweenClientServer() throws IOException {
-		AsyncHttpServer server = AsyncHttpServer.create(Eventloop.getCurrentEventloop(),
+		AsyncHttpServer server = AsyncHttpServer.create(Reactor.getCurrentReactor(),
 						request -> request.loadBody(CHARACTERS_COUNT)
 								.map(body -> {
 									assertEquals("gzip", request.getHeader(CONTENT_ENCODING));
@@ -118,7 +118,7 @@ public final class TestGzipProcessorUtils {
 								}))
 				.withListenPort(port);
 
-		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop());
+		AsyncHttpClient client = AsyncHttpClient.create(Reactor.getCurrentReactor());
 
 		HttpRequest request = HttpRequest.get("http://127.0.0.1:" + port)
 				.withHeader(ACCEPT_ENCODING, "gzip")

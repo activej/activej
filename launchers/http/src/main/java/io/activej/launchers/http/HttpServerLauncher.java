@@ -29,6 +29,7 @@ import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
 
 import java.net.InetSocketAddress;
@@ -54,15 +55,15 @@ public abstract class HttpServerLauncher extends Launcher {
 	AsyncHttpServer httpServer;
 
 	@Provides
-	Eventloop eventloop(Config config, OptionalDependency<ThrottlingController> throttlingController) {
+	NioReactor reactor(Config config, OptionalDependency<ThrottlingController> throttlingController) {
 		return Eventloop.create()
 				.withInitializer(ofEventloop(config.getChild("eventloop")))
 				.withInitializer(eventloop -> eventloop.withInspector(throttlingController.orElse(null)));
 	}
 
 	@Provides
-	AsyncHttpServer server(Eventloop eventloop, AsyncServlet rootServlet, Config config) {
-		return AsyncHttpServer.create(eventloop, rootServlet)
+	AsyncHttpServer server(NioReactor reactor, AsyncServlet rootServlet, Config config) {
+		return AsyncHttpServer.create(reactor, rootServlet)
 				.withInitializer(ofHttpServer(config.getChild("http")));
 	}
 

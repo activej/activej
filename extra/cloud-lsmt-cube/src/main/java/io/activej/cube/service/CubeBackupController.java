@@ -22,8 +22,6 @@ import io.activej.common.Utils;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiffScheme;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.ot.OTCommit;
@@ -32,6 +30,8 @@ import io.activej.ot.system.OTSystem;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,12 +48,12 @@ import static io.activej.common.Utils.first;
 import static io.activej.cube.Utils.chunksInDiffs;
 import static io.activej.ot.OTAlgorithms.checkout;
 
-public final class CubeBackupController<K, D, C> implements EventloopJmxBeanWithStats, WithInitializer<CubeBackupController<K, D, C>> {
+public final class CubeBackupController<K, D, C> implements ReactorJmxBeanWithStats, WithInitializer<CubeBackupController<K, D, C>> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeBackupController.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 	private final OTSystem<D> otSystem;
 	private final OTRepository<K, D> repository;
 	private final ActiveFsChunkStorage<C> storage;
@@ -64,24 +64,24 @@ public final class CubeBackupController<K, D, C> implements EventloopJmxBeanWith
 	private final PromiseStats promiseBackupDb = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseBackupChunks = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 
-	CubeBackupController(Eventloop eventloop,
+	CubeBackupController(Reactor reactor,
 			CubeDiffScheme<D> cubeDiffScheme,
 			OTRepository<K, D> repository,
 			OTSystem<D> otSystem,
 			ActiveFsChunkStorage<C> storage) {
-		this.eventloop = eventloop;
+		this.reactor = reactor;
 		this.cubeDiffScheme = cubeDiffScheme;
 		this.otSystem = otSystem;
 		this.repository = repository;
 		this.storage = storage;
 	}
 
-	public static <K, D, C> CubeBackupController<K, D, C> create(Eventloop eventloop,
+	public static <K, D, C> CubeBackupController<K, D, C> create(Reactor reactor,
 			CubeDiffScheme<D> cubeDiffScheme,
 			OTRepository<K, D> otRepository,
 			OTSystem<D> otSystem,
 			ActiveFsChunkStorage<C> storage) {
-		return new CubeBackupController<>(eventloop, cubeDiffScheme, otRepository, otSystem, storage);
+		return new CubeBackupController<>(reactor, cubeDiffScheme, otRepository, otSystem, storage);
 	}
 
 	private final AsyncRunnable backup = reuse(this::backupHead);
@@ -128,8 +128,8 @@ public final class CubeBackupController<K, D, C> implements EventloopJmxBeanWith
 	}
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull Reactor getReactor() {
+		return reactor;
 	}
 
 	@JmxOperation

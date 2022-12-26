@@ -4,12 +4,11 @@ import adder.AdderCommands.AddRequest;
 import adder.AdderCommands.AddResponse;
 import adder.AdderCommands.GetRequest;
 import adder.AdderCommands.GetResponse;
-import io.activej.async.service.EventloopTaskScheduler;
+import io.activej.async.service.ReactorTaskScheduler;
 import io.activej.config.ConfigModule;
 import io.activej.crdt.hash.CrdtMap;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.datastream.StreamSupplier;
-import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
@@ -18,6 +17,7 @@ import io.activej.inject.module.Modules;
 import io.activej.launcher.Launcher;
 import io.activej.launchers.crdt.Local;
 import io.activej.launchers.crdt.rpc.CrdtRpcServerModule;
+import io.activej.reactor.Reactor;
 import io.activej.service.ServiceGraphModule;
 
 import java.time.Duration;
@@ -48,25 +48,23 @@ public final class AdderServerLauncher extends Launcher {
 	@Eager
 	@Provides
 	@Named("Print local data")
-	EventloopTaskScheduler printLocalMap(Eventloop eventloop, CrdtMap<Long, SimpleSumsCrdtState> map, @Local CrdtStorage<Long, DetailedSumsCrdtState> storage) {
+	ReactorTaskScheduler printLocalMap(Reactor reactor, CrdtMap<Long, SimpleSumsCrdtState> map, @Local CrdtStorage<Long, DetailedSumsCrdtState> storage) {
 		checkState((map instanceof AdderCrdtMap));
 
-		return EventloopTaskScheduler.create(eventloop, () -> storage.download()
+		return ReactorTaskScheduler.create(reactor, () -> storage.download()
 						.then(StreamSupplier::toList)
-						.whenResult(crdtData -> {
-							logger.info("""
+						.whenResult(crdtData -> logger.info("""
 
-											Local storage data:\s
-											{}
-											Local map data:\s
-											{}""",
-									crdtData.stream()
-											.map(data -> data.getKey() + ": " + data.getState().getSum())
-											.collect(Collectors.joining("\n")),
-									((AdderCrdtMap) map).getMap().entrySet().stream()
-											.map(data -> data.getKey() + ": " + data.getValue().value())
-											.collect(Collectors.joining("\n")));
-						}))
+										Local storage data:\s
+										{}
+										Local map data:\s
+										{}""",
+								crdtData.stream()
+										.map(data -> data.getKey() + ": " + data.getState().getSum())
+										.collect(Collectors.joining("\n")),
+								((AdderCrdtMap) map).getMap().entrySet().stream()
+										.map(data -> data.getKey() + ": " + data.getValue().value())
+										.collect(Collectors.joining("\n")))))
 				.withInterval(Duration.ofSeconds(10));
 	}
 

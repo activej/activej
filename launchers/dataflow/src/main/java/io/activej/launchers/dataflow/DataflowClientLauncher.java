@@ -25,8 +25,11 @@ import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.Module;
+import io.activej.inject.module.ModuleBuilder;
 import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
 
 import static io.activej.inject.module.Modules.combine;
@@ -39,7 +42,7 @@ public abstract class DataflowClientLauncher extends Launcher {
 	protected DataflowClient client;
 
 	@Provides
-	Eventloop eventloop(Config config, OptionalDependency<ThrottlingController> throttlingController) {
+	NioReactor reactor(Config config, OptionalDependency<ThrottlingController> throttlingController) {
 		return Eventloop.create()
 				.withInitializer(ofEventloop(config.getChild("eventloop")))
 				.withInitializer(eventloop -> eventloop.withInspector(throttlingController.orElse(null)));
@@ -55,6 +58,9 @@ public abstract class DataflowClientLauncher extends Launcher {
 	@Override
 	protected final Module getModule() {
 		return combine(
+				ModuleBuilder.create()
+						.bind(Reactor.class).to(NioReactor.class)
+						.build(),
 				ServiceGraphModule.create(),
 				JmxModule.create(),
 				DataflowClientModule.create(),

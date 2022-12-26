@@ -22,6 +22,7 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.memcache.protocol.SerializerDefSlice;
 import io.activej.promise.Promise;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.SerializerBuilder;
 
@@ -40,7 +41,7 @@ public class MemcacheServerModule extends AbstractModule {
 	}
 
 	@Provides
-	Eventloop eventloop() {
+	NioReactor reactor() {
 		return Eventloop.create();
 	}
 
@@ -52,8 +53,8 @@ public class MemcacheServerModule extends AbstractModule {
 	}
 
 	@Provides
-	RpcServer server(Eventloop eventloop, Config config, RingBuffer storage) {
-		return RpcServer.create(eventloop)
+	RpcServer server(NioReactor reactor, Config config, RingBuffer storage) {
+		return RpcServer.create(reactor)
 				.withHandler(GetRequest.class,
 						request -> Promise.of(new GetResponse(storage.get(request.getKey()))))
 				.withHandler(PutRequest.class,

@@ -25,13 +25,13 @@ import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.common.recycle.Recyclers;
 import io.activej.common.tuple.Tuple2;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.NioChannelEventHandler;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ValueStats;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.nio.NioChannelEventHandler;
+import io.activej.reactor.nio.NioReactor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -52,7 +52,7 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 	private static final int OP_POSTPONED = 1 << 7;  // SelectionKey constant
 	private static final MemSize DEFAULT_UDP_BUFFER_SIZE = MemSize.kilobytes(16);
 
-	private final Eventloop eventloop;
+	private final NioReactor reactor;
 
 	private @Nullable SelectionKey key;
 
@@ -163,15 +163,15 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 	}
 	// endregion
 
-	private AsyncUdpSocketNio(@NotNull Eventloop eventloop, @NotNull DatagramChannel channel) throws IOException {
-		this.eventloop = eventloop;
+	private AsyncUdpSocketNio(@NotNull NioReactor reactor, @NotNull DatagramChannel channel) throws IOException {
+		this.reactor = reactor;
 		this.channel = channel;
-		this.key = channel.register(eventloop.ensureSelector(), 0, this);
+		this.key = channel.register(reactor.ensureSelector(), 0, this);
 	}
 
-	public static Promise<AsyncUdpSocketNio> connect(Eventloop eventloop, DatagramChannel channel) {
+	public static Promise<AsyncUdpSocketNio> connect(NioReactor reactor, DatagramChannel channel) {
 		try {
-			return Promise.of(new AsyncUdpSocketNio(eventloop, channel));
+			return Promise.of(new AsyncUdpSocketNio(reactor, channel));
 		} catch (IOException e) {
 			return Promise.ofException(e);
 		}
@@ -191,7 +191,7 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 
 	@Override
 	public Promise<UdpPacket> receive() {
-		if (CHECK) checkState(eventloop.inEventloopThread());
+		if (CHECK) checkState(reactor.inReactorThread());
 		if (!isOpen()) {
 			return Promise.ofException(new AsyncCloseException());
 		}
@@ -244,7 +244,7 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 
 	@Override
 	public Promise<Void> send(UdpPacket packet) {
-		if (CHECK) checkState(eventloop.inEventloopThread());
+		if (CHECK) checkState(reactor.inReactorThread());
 		if (!isOpen()) {
 			return Promise.ofException(new AsyncCloseException());
 		}
@@ -307,14 +307,14 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 
 	@Override
 	public void close() {
-		if (CHECK) checkState(eventloop.inEventloopThread());
+		if (CHECK) checkState(reactor.inReactorThread());
 		SelectionKey key = this.key;
 		if (key == null) {
 			return;
 		}
 		this.key = null;
 		if (inspector != null) inspector.onClose(this);
-		eventloop.closeChannel(channel, key);
+		reactor.closeChannel(channel, key);
 		Recyclers.recycle(writeQueue);
 	}
 

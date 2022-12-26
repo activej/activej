@@ -1,4 +1,4 @@
-import io.activej.async.service.EventloopService;
+import io.activej.async.service.ReactorService;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Provides;
@@ -6,23 +6,24 @@ import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.reactor.Reactor;
 import io.activej.service.ServiceGraphModule;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 
 //[START EXAMPLE]
-public class EventloopServiceExample extends Launcher {
+public class ReactorServiceExample extends Launcher {
 
 	@Provides
-	Eventloop eventloop() {
+	Reactor reactor() {
 		return Eventloop.create();
 	}
 
 	@Provides
 	@Eager
-	CustomEventloopService customEventloopService(Eventloop eventloop) {
-		return new CustomEventloopService(eventloop);
+	CustomReactorService customEventloopService(Reactor reactor) {
+		return new CustomReactorService(reactor);
 	}
 
 	@Override
@@ -35,16 +36,16 @@ public class EventloopServiceExample extends Launcher {
 		System.out.println("|RUNNING|");
 	}
 
-	private static final class CustomEventloopService implements EventloopService {
-		private final Eventloop eventloop;
+	private static final class CustomReactorService implements ReactorService {
+		private final Reactor reactor;
 
-		public CustomEventloopService(Eventloop eventloop) {
-			this.eventloop = eventloop;
+		public CustomReactorService(Reactor reactor) {
+			this.reactor = reactor;
 		}
 
 		@Override
-		public @NotNull Eventloop getEventloop() {
-			return eventloop;
+		public @NotNull Reactor getReactor() {
+			return reactor;
 		}
 
 		@Override
@@ -63,7 +64,7 @@ public class EventloopServiceExample extends Launcher {
 	}
 
 	public static void main(String[] args) throws Exception {
-		EventloopServiceExample example = new EventloopServiceExample();
+		ReactorServiceExample example = new ReactorServiceExample();
 		example.launch(args);
 	}
 }

@@ -14,7 +14,6 @@ import java.net.InetSocketAddress;
 import java.util.Scanner;
 
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
-import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
@@ -49,7 +48,7 @@ public final class TcpClientExample {
 				System.out.println("Connected to server, enter some text and send it by pressing 'Enter'.");
 				AsyncTcpSocket socket;
 				try {
-					socket = AsyncTcpSocketNio.wrapChannel(getCurrentEventloop(), socketChannel, null);
+					socket = AsyncTcpSocketNio.wrapChannel(eventloop, socketChannel, null);
 				} catch (IOException ioException) {
 					throw new RuntimeException(ioException);
 				}

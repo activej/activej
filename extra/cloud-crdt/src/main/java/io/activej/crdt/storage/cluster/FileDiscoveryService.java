@@ -20,9 +20,9 @@ import com.sun.nio.file.SensitivityWatchEventModifier;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.crdt.CrdtException;
-import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.Reactor;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -36,34 +36,34 @@ import static java.nio.file.StandardWatchEventKinds.*;
 public final class FileDiscoveryService extends AbstractDiscoveryService<FileDiscoveryService> {
 	private static final SettablePromise<PartitionScheme<PartitionId>> UPDATE_CONSUMED = new SettablePromise<>();
 
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 	private final WatchService watchService;
 	private final Path pathToFile;
 
-	private FileDiscoveryService(Eventloop eventloop, WatchService watchService, Path pathToFile) {
-		this.eventloop = eventloop;
+	private FileDiscoveryService(Reactor reactor, WatchService watchService, Path pathToFile) {
+		this.reactor = reactor;
 		this.watchService = watchService;
 		this.pathToFile = pathToFile;
 	}
 
-	public static FileDiscoveryService create(Eventloop eventloop, WatchService watchService, Path pathToFile) throws CrdtException {
+	public static FileDiscoveryService create(Reactor reactor, WatchService watchService, Path pathToFile) throws CrdtException {
 		if (!Files.exists(pathToFile)) {
 			throw new CrdtException("File does not exist: " + pathToFile);
 		}
 		if (Files.isDirectory(pathToFile)) {
 			throw new CrdtException("File is a directory: " + pathToFile);
 		}
-		return new FileDiscoveryService(eventloop, watchService, pathToFile);
+		return new FileDiscoveryService(reactor, watchService, pathToFile);
 	}
 
-	public static FileDiscoveryService create(Eventloop eventloop, Path pathToFile) throws CrdtException {
+	public static FileDiscoveryService create(Reactor reactor, Path pathToFile) throws CrdtException {
 		WatchService watchService;
 		try {
 			watchService = pathToFile.getFileSystem().newWatchService();
 		} catch (IOException e) {
 			throw new CrdtException("Could not create a watch service", e);
 		}
-		return create(eventloop, watchService, pathToFile);
+		return create(reactor, watchService, pathToFile);
 	}
 
 	@Override
@@ -104,7 +104,7 @@ public final class FileDiscoveryService extends AbstractDiscoveryService<FileDis
 					if (cb == UPDATE_CONSUMED) {
 						SettablePromise<PartitionScheme<PartitionId>> newCb = new SettablePromise<>();
 						if (cbRef.compareAndSet(UPDATE_CONSUMED, newCb)) {
-							eventloop.startExternalTask();
+							reactor.startExternalTask();
 							return newCb;
 						}
 						cb = cbRef.get();
@@ -179,8 +179,8 @@ public final class FileDiscoveryService extends AbstractDiscoveryService<FileDis
 					SettablePromise<PartitionScheme<PartitionId>> prevCb = cbRef.getAndSet(UPDATE_CONSUMED);
 					assert !prevCb.isComplete();
 
-					eventloop.execute(() -> consumer.accept(prevCb));
-					eventloop.completeExternalTask();
+					reactor.execute(() -> consumer.accept(prevCb));
+					reactor.completeExternalTask();
 					return;
 				}
 			}

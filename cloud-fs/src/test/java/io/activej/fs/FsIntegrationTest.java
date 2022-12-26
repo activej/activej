@@ -9,7 +9,6 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.file.ChannelFileWriter;
-import io.activej.eventloop.Eventloop;
 import io.activej.fs.exception.ForbiddenPathException;
 import io.activej.fs.exception.FsException;
 import io.activej.fs.exception.FsIOException;
@@ -17,6 +16,7 @@ import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.fs.tcp.RemoteActiveFs;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -72,11 +72,11 @@ public final class FsIntegrationTest {
 		Executor executor = newCachedThreadPool();
 
 		storage = temporaryFolder.newFolder("server_storage").toPath();
-		LocalActiveFs localFs = LocalActiveFs.create(Eventloop.getCurrentEventloop(), executor, storage);
+		LocalActiveFs localFs = LocalActiveFs.create(Reactor.getCurrentReactor(), executor, storage);
 		await(localFs.start());
-		server = ActiveFsServer.create(Eventloop.getCurrentEventloop(), localFs).withListenAddress(address);
+		server = ActiveFsServer.create(Reactor.getCurrentReactor(), localFs).withListenAddress(address);
 		server.listen();
-		fs = RemoteActiveFs.create(Eventloop.getCurrentEventloop(), address);
+		fs = RemoteActiveFs.create(Reactor.getCurrentReactor(), address);
 	}
 
 	@Test

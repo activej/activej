@@ -7,6 +7,7 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.Modules;
 import io.activej.launcher.Launcher;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.server.RpcRequestHandler;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraphModule;
@@ -19,14 +20,14 @@ public final class ScopedRpcServerExample extends Launcher {
 	public static final int PORT = 9001;
 
 	@Provides
-	Eventloop eventloop() {
+	NioReactor reactor() {
 		return Eventloop.create().withFatalErrorHandler(FatalErrorHandler.rethrow());
 	}
 
 	@Provides
 	@Eager
-	RpcServer rpcServer(Eventloop eventloop, RpcRequestHandler<RpcRequest, RpcResponse> handler) {
-		return RpcServer.create(eventloop)
+	RpcServer rpcServer(NioReactor reactor, RpcRequestHandler<RpcRequest, RpcResponse> handler) {
+		return RpcServer.create(reactor)
 				.withMessageTypes(RpcRequest.class, RpcResponse.class)
 				.withHandler(RpcRequest.class, handler)
 				.withListenPort(PORT);

@@ -10,6 +10,7 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraphModule;
 
@@ -23,14 +24,14 @@ public class RpcBenchmarkServer extends Launcher {
 
 	@Provides
 	@Named("server")
-	Eventloop eventloopServer() {
+	NioReactor reactorServer() {
 		return Eventloop.create();
 	}
 
 	@Provides
 	@Eager
-	public RpcServer rpcServer(@Named("server") Eventloop eventloop, Config config) {
-		return RpcServer.create(eventloop)
+	public RpcServer rpcServer(@Named("server") NioReactor reactor, Config config) {
+		return RpcServer.create(reactor)
 				.withStreamProtocol(
 						config.get(ofMemSize(), "rpc.defaultPacketSize", MemSize.kilobytes(256)),
 						config.get(ofFrameFormat(), "rpc.compression", null))

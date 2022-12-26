@@ -16,18 +16,18 @@
 
 package io.activej.async.service;
 
-import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
 
 /**
  * This interface is for services that can be started and then stopped
- * in the context of eventloop, so it works with {@link Promise}
+ * in the context of reactor, so it works with {@link Promise}
  */
-public interface EventloopService {
-	@NotNull Eventloop getEventloop();
+public interface ReactorService {
+	@NotNull Reactor getReactor();
 
 	/**
 	 * Starts this component asynchronously.
@@ -36,7 +36,7 @@ public interface EventloopService {
 	@NotNull Promise<?> start();
 
 	default @NotNull CompletableFuture<?> startFuture() {
-		return getEventloop().submit(this::start);
+		return getReactor().submit(this::start);
 	}
 
 	/**
@@ -46,6 +46,6 @@ public interface EventloopService {
 	@NotNull Promise<?> stop();
 
 	default @NotNull CompletableFuture<?> stopFuture() {
-		return getEventloop().submit(this::stop);
+		return getReactor().submit(this::stop);
 	}
 }

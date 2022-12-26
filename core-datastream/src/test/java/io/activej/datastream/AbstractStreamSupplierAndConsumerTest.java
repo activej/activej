@@ -353,7 +353,7 @@ public final class AbstractStreamSupplierAndConsumerTest {
 		}
 
 		public Promise<Void> trySendEndOfStream() {
-			eventloop.post(() -> consumer.resume(dataAcceptor));
+			reactor.post(() -> consumer.resume(dataAcceptor));
 			return sendEndOfStream();
 		}
 

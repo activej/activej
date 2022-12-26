@@ -36,10 +36,10 @@ import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.datastream.processor.StreamSorter;
 import io.activej.datastream.processor.StreamSorterStorageImpl;
 import io.activej.datastream.stats.StreamStats;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
 import io.activej.serializer.BinarySerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -73,7 +73,7 @@ import static java.util.stream.Collectors.toSet;
  * Provides methods for loading and querying data.
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
-public class Aggregation implements IAggregation, WithInitializer<Aggregation>, EventloopJmxBeanWithStats {
+public class Aggregation implements IAggregation, WithInitializer<Aggregation>, ReactorJmxBeanWithStats {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	public static final int DEFAULT_CHUNK_SIZE = 1_000_000;
@@ -82,7 +82,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 	public static final Duration DEFAULT_MAX_INCREMENTAL_RELOAD_PERIOD = Duration.ofMinutes(10);
 	public static final int DEFAULT_MAX_CHUNKS_TO_CONSOLIDATE = 1000;
 
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 	private final Executor executor;
 	private final DefiningClassLoader classLoader;
 	private final AggregationChunkStorage<Object> aggregationChunkStorage;
@@ -109,10 +109,10 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 	private int consolidations;
 	private Exception consolidationLastError;
 
-	private Aggregation(Eventloop eventloop, Executor executor, DefiningClassLoader classLoader,
+	private Aggregation(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
 			AggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat, AggregationStructure structure,
 			AggregationState state) {
-		this.eventloop = eventloop;
+		this.reactor = reactor;
 		this.executor = executor;
 		this.classLoader = classLoader;
 		this.aggregationChunkStorage = aggregationChunkStorage;
@@ -122,22 +122,22 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 	}
 
 	/**
-	 * Instantiates an aggregation with the specified structure, that runs in a given event loop,
+	 * Instantiates an aggregation with the specified structure, that runs in a given reactor,
 	 * uses the specified class loader for creating dynamic classes, saves data and metadata to given storages.
 	 * Maximum size of chunk is 1,000,000 bytes.
 	 * No more than 1,000,000 records stay in memory while sorting.
 	 * Maximum duration of consolidation attempt is 30 minutes.
 	 * Consolidated chunks become available for removal in 10 minutes from consolidation.
 	 *
-	 * @param eventloop               event loop, in which the aggregation is to run
+	 * @param reactor                 reactor, in which the aggregation is to run
 	 * @param executor                executor, that is used for asynchronous work with files
 	 * @param classLoader             class loader for defining dynamic classes
 	 * @param aggregationChunkStorage storage for data chunks
 	 * @param frameFormat             frame format in which data is to be stored
 	 */
-	public static Aggregation create(Eventloop eventloop, Executor executor, DefiningClassLoader classLoader,
+	public static Aggregation create(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
 			AggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat, @NotNull AggregationStructure structure) {
-		return new Aggregation(eventloop, executor, classLoader, aggregationChunkStorage, frameFormat, structure, new AggregationState(structure));
+		return new Aggregation(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure, new AggregationState(structure));
 	}
 
 	public Aggregation withChunkSize(int chunkSize) {
@@ -549,13 +549,13 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 	public Promise<AggregationDiff> consolidate(List<AggregationChunk> chunks) {
 		checkArgument(state.getChunks().values().containsAll(chunks), "Consolidating unknown chunks");
 
-		consolidationStarted = eventloop.currentTimeMillis();
+		consolidationStarted = reactor.currentTimeMillis();
 		logger.info("Starting consolidation of aggregation '{}'", this);
 
 		return doConsolidation(chunks)
 				.map(newChunks -> AggregationDiff.of(new LinkedHashSet<>(newChunks), new LinkedHashSet<>(chunks)))
 				.whenResult(() -> {
-					consolidationLastTimeMillis = eventloop.currentTimeMillis() - consolidationStarted;
+					consolidationLastTimeMillis = reactor.currentTimeMillis() - consolidationStarted;
 					consolidations++;
 				})
 				.whenException(e -> {
@@ -648,7 +648,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 
 	@JmxAttribute
 	public @Nullable Integer getConsolidationSeconds() {
-		return consolidationStarted == 0 ? null : (int) ((eventloop.currentTimeMillis() - consolidationStarted) / 1000);
+		return consolidationStarted == 0 ? null : (int) ((reactor.currentTimeMillis() - consolidationStarted) / 1000);
 	}
 
 	@JmxAttribute
@@ -677,8 +677,8 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 	}
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull Reactor getReactor() {
+		return reactor;
 	}
 
 	@Override

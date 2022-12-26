@@ -5,6 +5,8 @@ import io.activej.config.converter.ConfigConverters;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.RpcStrategy;
 import io.activej.rpc.client.sender.RpcStrategyFirstAvailable;
@@ -26,9 +28,14 @@ public class AdvancedRpcClientModule extends AbstractModule {
 		return new AdvancedRpcClientModule();
 	}
 
+	@Override
+	protected void configure() {
+		bind(Reactor.class).to(NioReactor.class);
+	}
+
 	@Provides
-	RpcClient rpcClient(Eventloop eventloop, RpcStrategy strategy) {
-		return RpcClient.create(eventloop)
+	RpcClient rpcClient(NioReactor reactor, RpcStrategy strategy) {
+		return RpcClient.create(reactor)
 				.withConnectTimeout(Duration.ofSeconds(1))
 				.withSerializerBuilder(SerializerBuilder.create())
 				.withMessageTypes(Integer.class)
@@ -52,7 +59,7 @@ public class AdvancedRpcClientModule extends AbstractModule {
 	}
 
 	@Provides
-	Eventloop eventloop() {
+	NioReactor reactor() {
 		return Eventloop.create();
 	}
 

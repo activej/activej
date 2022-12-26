@@ -17,9 +17,9 @@
 package io.activej.datastream;
 
 import io.activej.common.Checks;
-import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -53,20 +53,20 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 
 	private @Nullable SettablePromise<Void> flushPromise;
 
-	protected final Eventloop eventloop = Eventloop.getCurrentEventloop();
+	protected final Reactor reactor = Reactor.getCurrentReactor();
 
 	{
 		dataAcceptorBuffered = buffer::addLast;
-		if (eventloop.inEventloopThread()) {
-			eventloop.post(this::ensureInitialized);
+		if (reactor.inReactorThread()) {
+			reactor.post(this::ensureInitialized);
 		} else {
-			eventloop.execute(this::ensureInitialized);
+			reactor.execute(this::ensureInitialized);
 		}
 	}
 
 	@Override
 	public final Promise<Void> streamTo(@NotNull StreamConsumer<T> consumer) {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
 		checkState(!isStarted());
 		ensureInitialized();
 		this.consumer = consumer;
@@ -84,7 +84,7 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 	}
 
 	/**
-	 * This method will be called exactly once: either in the next eventloop tick after creation of this supplier
+	 * This method will be called exactly once: either in the next reactor tick after creation of this supplier
 	 * or right before {@link #onStarted()} or {@link #onError(Exception)} calls
 	 */
 	protected void onInit() {
@@ -103,7 +103,7 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 
 	@Override
 	public final void updateDataAcceptor() {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
 		if (!isStarted()) return;
 		if (endOfStream.isComplete()) return;
 		StreamDataAcceptor<T> dataAcceptor = this.consumer.getDataAcceptor();
@@ -159,7 +159,7 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 	 * Only the first call causes any effect.
 	 */
 	public final Promise<Void> sendEndOfStream() {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
 		if (endOfStreamRequest) return flushPromise;
 		if (flushAsync > 0) {
 			asyncEnd();
@@ -202,7 +202,7 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 	 * Causes this supplier to try to supply its buffered items and updates the current state accordingly.
 	 */
 	private void flush() {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
 		flushRequest = true;
 		if (flushRunning || flushAsync > 0) return; // recursive call
 		if (endOfStream.isComplete()) return;
@@ -275,7 +275,7 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 
 	@Override
 	public final Promise<Void> getEndOfStream() {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
 		return endOfStream;
 	}
 
@@ -302,7 +302,7 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 
 	@Override
 	public final void closeEx(@NotNull Exception e) {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
 		ensureInitialized();
 		endOfStreamRequest = true;
 		dataAcceptor = null;
@@ -326,7 +326,7 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 
 	private void cleanup() {
 		onComplete();
-		eventloop.post(this::onCleanup);
+		reactor.post(this::onCleanup);
 		buffer.clear();
 		if (flushPromise != null) {
 			flushPromise.resetCallbacks();

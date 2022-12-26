@@ -26,10 +26,10 @@ import io.activej.common.MemSize;
 import io.activej.common.recycle.Recyclable;
 import io.activej.csp.*;
 import io.activej.csp.binary.BinaryChannelSupplier;
-import io.activej.eventloop.Eventloop;
 import io.activej.http.stream.*;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -61,7 +61,7 @@ public abstract class AbstractHttpConnection {
 	protected static final byte[] UPGRADE_WEBSOCKET = encodeAscii("websocket");
 	protected static final byte[] WEB_SOCKET_VERSION = encodeAscii("13");
 
-	protected final Eventloop eventloop;
+	protected final Reactor reactor;
 
 	protected final AsyncTcpSocket socket;
 	protected final int maxBodySize;
@@ -112,11 +112,11 @@ public abstract class AbstractHttpConnection {
 	/**
 	 * Creates a new instance of AbstractHttpConnection
 	 *
-	 * @param eventloop   eventloop which will handle its I/O operations
+	 * @param reactor   eventloop which will handle its I/O operations
 	 * @param maxBodySize - maximum size of message body
 	 */
-	protected AbstractHttpConnection(Eventloop eventloop, AsyncTcpSocket socket, int maxBodySize) {
-		this.eventloop = eventloop;
+	protected AbstractHttpConnection(Reactor reactor, AsyncTcpSocket socket, int maxBodySize) {
+		this.reactor = reactor;
 		this.socket = socket;
 		this.maxBodySize = maxBodySize;
 	}
@@ -562,7 +562,7 @@ public abstract class AbstractHttpConnection {
 		//noinspection ConstantConditions
 		pool.removeNode(this);
 		(pool = newPool).addLastNode(this);
-		poolTimestamp = eventloop.currentTimeMillis();
+		poolTimestamp = reactor.currentTimeMillis();
 	}
 
 	protected abstract class ReadConsumer implements Callback<ByteBuf> {

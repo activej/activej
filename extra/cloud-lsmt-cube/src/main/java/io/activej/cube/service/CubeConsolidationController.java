@@ -25,8 +25,6 @@ import io.activej.cube.Cube;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffScheme;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ValueStats;
@@ -34,6 +32,8 @@ import io.activej.ot.OTStateManager;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +51,7 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.transformMap;
 import static java.util.stream.Collectors.toSet;
 
-public final class CubeConsolidationController<K, D, C> implements EventloopJmxBeanWithStats, WithInitializer<CubeConsolidationController<K, D, C>> {
+public final class CubeConsolidationController<K, D, C> implements ReactorJmxBeanWithStats, WithInitializer<CubeConsolidationController<K, D, C>> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeConsolidationController.class);
 
 	private static final ChunkLocker<Object> NOOP_CHUNK_LOCKER = ChunkLockerNoOp.create();
@@ -68,7 +68,7 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 	private final CubeDiffScheme<D> cubeDiffScheme;
 	private final Cube cube;
 	private final OTStateManager<K, D> stateManager;
@@ -94,12 +94,12 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 	private boolean consolidating;
 	private boolean cleaning;
 
-	CubeConsolidationController(Eventloop eventloop,
+	CubeConsolidationController(Reactor reactor,
 			CubeDiffScheme<D> cubeDiffScheme, Cube cube,
 			OTStateManager<K, D> stateManager,
 			AggregationChunkStorage<C> aggregationChunkStorage,
 			Map<Aggregation, String> aggregationsMapReversed) {
-		this.eventloop = eventloop;
+		this.reactor = reactor;
 		this.cubeDiffScheme = cubeDiffScheme;
 		this.cube = cube;
 		this.stateManager = stateManager;
@@ -107,7 +107,7 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 		this.aggregationsMapReversed = aggregationsMapReversed;
 	}
 
-	public static <K, D, C> CubeConsolidationController<K, D, C> create(Eventloop eventloop,
+	public static <K, D, C> CubeConsolidationController<K, D, C> create(Reactor reactor,
 			CubeDiffScheme<D> cubeDiffScheme,
 			Cube cube,
 			OTStateManager<K, D> stateManager,
@@ -116,7 +116,7 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 		for (String aggregationId : cube.getAggregationIds()) {
 			map.put(cube.getAggregation(aggregationId), aggregationId);
 		}
-		return new CubeConsolidationController<>(eventloop, cubeDiffScheme, cube, stateManager, aggregationChunkStorage, map);
+		return new CubeConsolidationController<>(reactor, cubeDiffScheme, cube, stateManager, aggregationChunkStorage, map);
 	}
 
 	public CubeConsolidationController<K, D, C> withLockerStrategy(Supplier<AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>>> strategy) {
@@ -324,7 +324,7 @@ public final class CubeConsolidationController<K, D, C> implements EventloopJmxB
 	}
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull Reactor getReactor() {
+		return reactor;
 	}
 }

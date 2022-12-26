@@ -25,7 +25,6 @@ import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamReducers.MergeReducer;
 import io.activej.datastream.processor.StreamReducers.Reducer;
-import io.activej.eventloop.Eventloop;
 import io.activej.http.AsyncHttpClient;
 import io.activej.http.AsyncHttpServer;
 import io.activej.inject.Injector;
@@ -34,6 +33,8 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.Transient;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.serializer.annotations.SerializeRecord;
 import io.activej.streamcodecs.StreamCodec;
 import io.activej.streamcodecs.StreamCodecs;
@@ -738,11 +739,11 @@ public final class DataflowTest {
 				.install(DataflowModule.create())
 				.bind(Executor.class, SortingExecutor.class).toInstance(sortingExecutor)
 				.bind(Executor.class).toInstance(executor)
-				.bind(Eventloop.class).toInstance(Eventloop.getCurrentEventloop())
+				.bind(NioReactor.class).toInstance(Reactor.getCurrentReactor())
 				.scan(new Object() {
 					@Provides
-					DataflowServer server(Eventloop eventloop, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerModule.BinarySerializerLocator serializers, Injector environment) {
-						return DataflowServer.create(eventloop, codec, serializers, environment);
+					DataflowServer server(NioReactor reactor, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerModule.BinarySerializerLocator serializers, Injector environment) {
+						return DataflowServer.create(reactor, codec, serializers, environment);
 					}
 
 					@Provides
@@ -758,13 +759,13 @@ public final class DataflowTest {
 					}
 
 					@Provides
-					AsyncHttpClient httpClient(Eventloop eventloop) {
-						return AsyncHttpClient.create(eventloop);
+					AsyncHttpClient httpClient(NioReactor reactor) {
+						return AsyncHttpClient.create(reactor);
 					}
 
 					@Provides
-					AsyncHttpServer debugServer(Eventloop eventloop, Executor executor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, Injector env) {
-						return AsyncHttpServer.create(eventloop, new DataflowDebugServlet(graphPartitions, executor, codec, env));
+					AsyncHttpServer debugServer(NioReactor reactor, Executor executor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, Injector env) {
+						return AsyncHttpServer.create(reactor, new DataflowDebugServlet(graphPartitions, executor, codec, env));
 					}
 				});
 	}

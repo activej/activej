@@ -5,6 +5,7 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.SynchronousStreamConsumer;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import io.activej.test.rules.EventloopRule;
@@ -90,7 +91,7 @@ public class FrameFetcherTest {
 		FrameFetcher frameFetcher = new FrameFetcher(synchronousStreamConsumer, SCHEME.size());
 		Promise<Void> streamPromise = recordSupplier.streamTo(synchronousStreamConsumer);
 
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		Eventloop eventloop = Reactor.getCurrentReactor();
 		eventloop.keepAlive(true);
 
 		Thread readThread = new Thread(() -> {

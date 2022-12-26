@@ -16,13 +16,13 @@ import io.activej.dataflow.messaging.DataflowResponse;
 import io.activej.dataflow.node.NodeSort;
 import io.activej.datastream.processor.StreamSorterStorage;
 import io.activej.datastream.processor.StreamSorterStorageImpl;
-import io.activej.eventloop.Eventloop;
 import io.activej.inject.Injector;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.promise.Promise;
+import io.activej.reactor.nio.NioReactor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,8 +64,8 @@ public final class DataflowServerModule extends AbstractModule {
 	}
 
 	@Provides
-	DataflowServer server(@Named("Dataflow") Eventloop eventloop, Config config, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator serializers, Injector environment) {
-		return DataflowServer.create(eventloop, codec, serializers, environment)
+	DataflowServer server(@Named("Dataflow") NioReactor reactor, Config config, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator serializers, Injector environment) {
+		return DataflowServer.create(reactor, codec, serializers, environment)
 				.withInitializer(ofAbstractServer(config.getChild("dataflow.server")))
 				.withInitializer(s -> s.withSocketSettings(s.getSocketSettings().withTcpNoDelay(true)));
 	}

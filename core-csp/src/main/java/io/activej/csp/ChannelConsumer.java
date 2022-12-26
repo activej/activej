@@ -26,10 +26,10 @@ import io.activej.common.recycle.Recyclers;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.queue.ChannelQueue;
 import io.activej.csp.queue.ChannelZeroBuffer;
-import io.activej.eventloop.Eventloop;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -205,31 +205,31 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 		};
 	}
 
-	static <T> ChannelConsumer<T> ofAnotherEventloop(@NotNull Eventloop anotherEventloop,
-			@NotNull ChannelConsumer<T> anotherEventloopConsumer) {
-		if (Eventloop.getCurrentEventloop() == anotherEventloop) {
-			return anotherEventloopConsumer;
+	static <T> ChannelConsumer<T> ofAnotherReactor(@NotNull Reactor anotherReactor,
+			@NotNull ChannelConsumer<T> anotherReactorConsumer) {
+		if (Reactor.getCurrentReactor() == anotherReactor) {
+			return anotherReactorConsumer;
 		}
 		return new AbstractChannelConsumer<>() {
 			@Override
 			protected Promise<Void> doAccept(@Nullable T value) {
 				SettablePromise<Void> promise = new SettablePromise<>();
-				eventloop.startExternalTask();
-				anotherEventloop.execute(() ->
-						anotherEventloopConsumer.accept(value)
+				reactor.startExternalTask();
+				anotherReactor.execute(() ->
+						anotherReactorConsumer.accept(value)
 								.run((v, e) -> {
-									eventloop.execute(() -> promise.accept(v, e));
-									eventloop.completeExternalTask();
+									reactor.execute(() -> promise.accept(v, e));
+									reactor.completeExternalTask();
 								}));
 				return promise;
 			}
 
 			@Override
 			protected void onClosed(@NotNull Exception e) {
-				eventloop.startExternalTask();
-				anotherEventloop.execute(() -> {
-					anotherEventloopConsumer.closeEx(e);
-					eventloop.completeExternalTask();
+				reactor.startExternalTask();
+				anotherReactor.execute(() -> {
+					anotherReactorConsumer.closeEx(e);
+					reactor.completeExternalTask();
 				});
 			}
 		};

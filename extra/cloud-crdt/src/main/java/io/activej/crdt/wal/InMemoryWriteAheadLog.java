@@ -18,7 +18,7 @@ package io.activej.crdt.wal;
 
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncRunnables;
-import io.activej.async.service.EventloopService;
+import io.activej.async.service.ReactorService;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.crdt.CrdtData;
@@ -26,8 +26,8 @@ import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.CrdtType;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.datastream.StreamSupplier;
-import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,13 +38,13 @@ import java.util.TreeMap;
 import static io.activej.async.util.LogUtils.Level.INFO;
 import static io.activej.async.util.LogUtils.toLogger;
 
-public class InMemoryWriteAheadLog<K extends Comparable<K>, S> implements WriteAheadLog<K, S>, EventloopService,
+public class InMemoryWriteAheadLog<K extends Comparable<K>, S> implements WriteAheadLog<K, S>, ReactorService,
 		WithInitializer<InMemoryWriteAheadLog<K, S>> {
 	private static final Logger logger = LoggerFactory.getLogger(InMemoryWriteAheadLog.class);
 
 	private Map<K, CrdtData<K, S>> map = new TreeMap<>();
 
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 	private final CrdtFunction<S> function;
 	private final CrdtStorage<K, S> storage;
 
@@ -52,18 +52,18 @@ public class InMemoryWriteAheadLog<K extends Comparable<K>, S> implements WriteA
 
 	private CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
 
-	private InMemoryWriteAheadLog(Eventloop eventloop, CrdtFunction<S> function, CrdtStorage<K, S> storage) {
-		this.eventloop = eventloop;
+	private InMemoryWriteAheadLog(Reactor reactor, CrdtFunction<S> function, CrdtStorage<K, S> storage) {
+		this.reactor = reactor;
 		this.function = function;
 		this.storage = storage;
 	}
 
-	public static <K extends Comparable<K>, S> InMemoryWriteAheadLog<K, S> create(Eventloop eventloop, CrdtFunction<S> function, CrdtStorage<K, S> storage) {
-		return new InMemoryWriteAheadLog<>(eventloop, function, storage);
+	public static <K extends Comparable<K>, S> InMemoryWriteAheadLog<K, S> create(Reactor reactor, CrdtFunction<S> function, CrdtStorage<K, S> storage) {
+		return new InMemoryWriteAheadLog<>(reactor, function, storage);
 	}
 
-	public static <K extends Comparable<K>, S extends CrdtType<S>> InMemoryWriteAheadLog<K, S> create(Eventloop eventloop, CrdtStorage<K, S> storage) {
-		return new InMemoryWriteAheadLog<>(eventloop, CrdtFunction.ofCrdtType(), storage);
+	public static <K extends Comparable<K>, S extends CrdtType<S>> InMemoryWriteAheadLog<K, S> create(Reactor reactor, CrdtStorage<K, S> storage) {
+		return new InMemoryWriteAheadLog<>(reactor, CrdtFunction.ofCrdtType(), storage);
 	}
 
 	public InMemoryWriteAheadLog<K, S> withCurrentTimeProvider(CurrentTimeProvider now) {
@@ -102,8 +102,8 @@ public class InMemoryWriteAheadLog<K extends Comparable<K>, S> implements WriteA
 	}
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull Reactor getReactor() {
+		return reactor;
 	}
 
 	@Override

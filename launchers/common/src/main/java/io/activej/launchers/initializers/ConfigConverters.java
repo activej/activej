@@ -23,7 +23,7 @@ import io.activej.csp.process.frames.FrameFormats;
 import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.csp.process.frames.LZ4LegacyFrameFormat;
 import io.activej.dns.DnsCache;
-import io.activej.eventloop.Eventloop;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,7 +37,7 @@ import static io.activej.dns.DnsCache.*;
 
 public final class ConfigConverters {
 
-	public static ConfigConverter<DnsCache> ofDnsCache(Eventloop eventloop) {
+	public static ConfigConverter<DnsCache> ofDnsCache(Reactor reactor) {
 		return new ConfigConverter<>() {
 			@Override
 			public @NotNull DnsCache get(Config config) {
@@ -45,7 +45,7 @@ public final class ConfigConverters {
 				Duration timedOutExceptionTtl = config.get(ofDuration(), "timedOutExpiration", DEFAULT_TIMED_OUT_EXPIRATION);
 				Duration hardExpirationDelta = config.get(ofDuration(), "hardExpirationDelta", DEFAULT_HARD_EXPIRATION_DELTA);
 				Duration maxTtl = config.get(ofDuration(), "maxTtl", DEFAULT_MAX_TTL);
-				return DnsCache.create(eventloop)
+				return DnsCache.create(reactor)
 						.withErrorCacheExpiration(errorCacheExpiration)
 						.withTimedOutExpiration(timedOutExceptionTtl)
 						.withHardExpirationDelta(hardExpirationDelta)

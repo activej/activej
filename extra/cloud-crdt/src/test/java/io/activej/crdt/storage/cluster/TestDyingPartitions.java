@@ -13,6 +13,8 @@ import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.net.AbstractServer;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.After;
@@ -70,7 +72,7 @@ public final class TestDyingPartitions {
 			clients.put("server_" + i, CrdtStorageClient.create(eventloop, address, SERIALIZER));
 		}
 
-		cluster = CrdtStorageCluster.create(Eventloop.getCurrentEventloop(),
+		cluster = CrdtStorageCluster.create(Reactor.getCurrentReactor(),
 				DiscoveryService.of(
 						RendezvousPartitionScheme.<String>create()
 								.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet()).withReplicas(REPLICATION_COUNT).withRepartition(true))
@@ -87,7 +89,7 @@ public final class TestDyingPartitions {
 	@Test
 	public void testUploadWithDyingPartitions() {
 		List<CrdtData<String, Integer>> data = new ArrayList<>();
-		long now = Eventloop.getCurrentEventloop().currentTimeMillis();
+		long now = Reactor.getCurrentReactor().currentTimeMillis();
 		for (int i = 0; i < 100_000; i++) {
 			data.add(new CrdtData<>(String.valueOf(i), now, i + 1));
 		}
@@ -103,7 +105,7 @@ public final class TestDyingPartitions {
 	@Test
 	public void testDownloadWithDyingPartitions() {
 		List<CrdtData<String, Integer>> data = new ArrayList<>();
-		long now = Eventloop.getCurrentEventloop().currentTimeMillis();
+		long now = Reactor.getCurrentReactor().currentTimeMillis();
 		for (int i = 0; i < 500_000; i++) {
 			data.add(new CrdtData<>(String.valueOf(i), now, i + 1));
 		}
@@ -124,9 +126,9 @@ public final class TestDyingPartitions {
 		Iterator<AbstractServer<?>> serverIterator = servers.values().iterator();
 		for (int i = 0; i < 2; i++) {
 			AbstractServer<?> server = serverIterator.next();
-			Eventloop eventloop = server.getEventloop();
-			eventloop.execute(() -> {
-				for (SelectionKey key : eventloop.getSelector().keys()) {
+			NioReactor reactor = server.getReactor();
+			reactor.execute(() -> {
+				for (SelectionKey key : reactor.getSelector().keys()) {
 					Object attachment = key.attachment();
 					if (attachment instanceof AsyncCloseable) {
 						((AsyncCloseable) attachment).close();
@@ -138,7 +140,7 @@ public final class TestDyingPartitions {
 
 	private void shutdownAllEventloops() {
 		for (AbstractServer<?> server : servers.values()) {
-			Eventloop eventloop = server.getEventloop();
+			Eventloop eventloop = (Eventloop) server.getReactor();
 			eventloop.execute(() -> {
 				server.close();
 				eventloop.breakEventloop();

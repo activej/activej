@@ -15,11 +15,11 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.ot.OTAlgorithms.mergeAndPush;
 import static io.activej.ot.OTAlgorithms.mergeAndUpdateHeads;
 import static io.activej.ot.utils.Utils.*;
 import static io.activej.promise.TestUtils.await;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -75,7 +75,7 @@ public final class OTSystemTest {
 
 		TestOpState state = new TestOpState();
 		OTUplinkImpl<String, TestOp, OTCommit<String, TestOp>> node = OTUplinkImpl.create(repository, SYSTEM);
-		OTStateManager<String, TestOp> stateManager = OTStateManager.create(getCurrentEventloop(), SYSTEM, node, state);
+		OTStateManager<String, TestOp> stateManager = OTStateManager.create(getCurrentReactor(), SYSTEM, node, state);
 
 		await(stateManager.checkout());
 
@@ -130,7 +130,7 @@ public final class OTSystemTest {
 		});
 
 		OTUplinkImpl<String, TestOp, OTCommit<String, TestOp>> node = OTUplinkImpl.create(otSource, SYSTEM);
-		pullAndThenMergeAndPush(otSource, OTStateManager.create(getCurrentEventloop(), SYSTEM, node, new TestOpState()));
+		pullAndThenMergeAndPush(otSource, OTStateManager.create(getCurrentReactor(), SYSTEM, node, new TestOpState()));
 	}
 
 	@Test
@@ -146,7 +146,7 @@ public final class OTSystemTest {
 		});
 
 		OTUplinkImpl<String, TestOp, OTCommit<String, TestOp>> node = OTUplinkImpl.create(otSource, SYSTEM);
-		pullAndThenMergeAndPush(otSource, OTStateManager.create(getCurrentEventloop(), SYSTEM, node, new TestOpState()));
+		pullAndThenMergeAndPush(otSource, OTStateManager.create(getCurrentReactor(), SYSTEM, node, new TestOpState()));
 	}
 
 	private void pullAndThenMergeAndPush(OTRepository<String, TestOp> repository, OTStateManager<String, TestOp> stateManager) {

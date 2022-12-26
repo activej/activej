@@ -6,12 +6,12 @@ import io.activej.common.MemSize;
 import io.activej.common.initializer.Initializer;
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
-import io.activej.eventloop.Eventloop;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.ProvidesIntoSet;
 import io.activej.inject.module.Module;
+import io.activej.inject.module.ModuleBuilder;
 import io.activej.launcher.Launcher;
 import io.activej.memcache.client.MemcacheClientModule;
 import io.activej.memcache.client.RawMemcacheClient;
@@ -19,6 +19,8 @@ import io.activej.memcache.protocol.MemcacheRpcMessage.Slice;
 import io.activej.memcache.server.MemcacheServerModule;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraphModule;
@@ -47,7 +49,7 @@ public class MemcacheRpcBenchmark extends Launcher {
 	private int activeRequestsMin;
 
 	@Inject
-	Eventloop eventloop;
+	Reactor reactor;
 
 	@Inject
 	RawMemcacheClient client;
@@ -77,6 +79,9 @@ public class MemcacheRpcBenchmark extends Launcher {
 	@Override
 	protected Module getModule() {
 		return combine(
+				ModuleBuilder.create()
+						.bind(Reactor.class).to(NioReactor.class)
+						.build(),
 				ServiceGraphModule.create(),
 				ConfigModule.create()
 						.withEffectiveConfigLogger(),
@@ -136,7 +141,7 @@ public class MemcacheRpcBenchmark extends Launcher {
 	}
 
 	private long round(AsyncSupplier<Long> function) throws Exception {
-		return eventloop.submit(function::get).get();
+		return reactor.submit(function::get).get();
 	}
 
 	int sent;

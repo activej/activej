@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package io.activej.eventloop.executor;
+package io.activej.async.executor;
 
 import io.activej.async.callback.AsyncComputation;
 import io.activej.common.function.RunnableEx;
 import io.activej.common.initializer.WithInitializer;
-import io.activej.eventloop.Eventloop;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
@@ -31,13 +31,13 @@ import java.util.concurrent.locks.ReentrantLock;
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
 /**
- * An implementation of the {@link EventloopExecutor} which posts
- * only some tasks at a time to some underlying {@link Eventloop},
+ * An implementation of the {@link ReactorExecutor} which posts
+ * only some tasks at a time to some underlying {@link Reactor},
  * blocking when the queue is filled until some task completes and
  * frees place for a new ones.
  */
-public final class BlockingEventloopExecutor implements EventloopExecutor, WithInitializer<BlockingEventloopExecutor> {
-	private final Eventloop eventloop;
+public final class BlockingReactorExecutor implements ReactorExecutor, WithInitializer<BlockingReactorExecutor> {
+	private final ReactorExecutor reactorExecutor;
 	private final Lock lock = new ReentrantLock();
 	private final Condition notFull = lock.newCondition();
 	private final AtomicInteger tasks = new AtomicInteger();
@@ -45,13 +45,13 @@ public final class BlockingEventloopExecutor implements EventloopExecutor, WithI
 	private final int limit;
 
 	// region builders
-	private BlockingEventloopExecutor(Eventloop eventloop, int limit) {
-		this.eventloop = eventloop;
+	private BlockingReactorExecutor(ReactorExecutor reactorExecutor, int limit) {
+		this.reactorExecutor = reactorExecutor;
 		this.limit = limit;
 	}
 
-	public static BlockingEventloopExecutor create(Eventloop eventloop, int limit) {
-		return new BlockingEventloopExecutor(eventloop, limit);
+	public static BlockingReactorExecutor create(ReactorExecutor reactorExecutor, int limit) {
+		return new BlockingReactorExecutor(reactorExecutor, limit);
 	}
 	// endregion
 
@@ -66,7 +66,7 @@ public final class BlockingEventloopExecutor implements EventloopExecutor, WithI
 				notFull.await();
 			}
 			tasks.incrementAndGet();
-			eventloop.execute(runnable);
+			reactorExecutor.execute(runnable);
 		} finally {
 			lock.unlock();
 		}

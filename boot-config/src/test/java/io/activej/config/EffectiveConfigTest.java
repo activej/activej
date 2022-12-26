@@ -1,7 +1,7 @@
 package io.activej.config;
 
 import io.activej.config.converter.ConfigConverter;
-import io.activej.eventloop.net.ServerSocketSettings;
+import io.activej.reactor.net.ServerSocketSettings;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

@@ -12,6 +12,7 @@ import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraphModule;
@@ -40,28 +41,28 @@ public class RpcBenchmark extends Launcher {
 
 	@Inject
 	@Named("client")
-	Eventloop eventloop;
+	NioReactor reactor;
 
 	@Inject
 	Config config;
 
 	@Provides
 	@Named("client")
-	Eventloop eventloopClient() {
+	NioReactor reactorClient() {
 		return Eventloop.create();
 	}
 
 	@Provides
 	@Named("server")
-	Eventloop eventloopServer(@Named("client") Eventloop clientEventloop, Config config) {
+	NioReactor reactorServer(@Named("client") NioReactor clientReactor, Config config) {
 		return config.get(ofBoolean(), "multithreaded", true) ?
 				Eventloop.create() :
-				clientEventloop;
+				clientReactor;
 	}
 
 	@Provides
-	public RpcClient rpcClient(@Named("client") Eventloop eventloop, Config config) {
-		return RpcClient.create(eventloop)
+	public RpcClient rpcClient(@Named("client") NioReactor reactor, Config config) {
+		return RpcClient.create(reactor)
 				.withStreamProtocol(
 						config.get(ofMemSize(), "rpc.defaultPacketSize", MemSize.kilobytes(256)),
 						config.get(ofFrameFormat(), "rpc.compression", null))
@@ -71,8 +72,8 @@ public class RpcBenchmark extends Launcher {
 
 	@Provides
 	@Eager
-	public RpcServer rpcServer(@Named("server") Eventloop eventloop, Config config) {
-		return RpcServer.create(eventloop)
+	public RpcServer rpcServer(@Named("server") NioReactor reactor, Config config) {
+		return RpcServer.create(reactor)
 				.withStreamProtocol(
 						config.get(ofMemSize(), "rpc.defaultPacketSize", MemSize.kilobytes(256)),
 						config.get(ofFrameFormat(), "rpc.compression", null))
@@ -164,7 +165,7 @@ public class RpcBenchmark extends Launcher {
 	}
 
 	private long round() throws Exception {
-		return eventloop.submit(this::roundCall).get();
+		return reactor.submit(this::roundCall).get();
 	}
 
 	private Promise<Long> roundCall() {

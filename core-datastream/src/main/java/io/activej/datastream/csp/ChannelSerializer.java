@@ -339,12 +339,12 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T>
 		private void postFlush() {
 			flushPosted = true;
 			if (autoFlushIntervalMillis <= 0) {
-				eventloop.postLast(() -> {
+				reactor.postLast(() -> {
 					flushPosted = false;
 					flush();
 				});
 			} else if (autoFlushIntervalMillis < Integer.MAX_VALUE) {
-				eventloop.delayBackground(autoFlushIntervalMillis, () -> {
+				reactor.delayBackground(autoFlushIntervalMillis, () -> {
 					flushPosted = false;
 					flush();
 				});

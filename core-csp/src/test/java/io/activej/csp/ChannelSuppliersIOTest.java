@@ -20,9 +20,9 @@ import static io.activej.bytebuf.ByteBuf.wrapForReading;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.csp.ChannelSuppliers.channelSupplierAsInputStream;
 import static io.activej.csp.ChannelSuppliers.inputStreamAsChannelSupplier;
-import static io.activej.eventloop.Eventloop.initWithEventloop;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
+import static io.activej.reactor.Reactor.initWithReactor;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
@@ -96,7 +96,7 @@ public class ChannelSuppliersIOTest {
 		Thread eventloopThread = new Thread(eventloop);
 		eventloopThread.start();
 
-		ChannelSupplier<ByteBuf> supplier = initWithEventloop(eventloop, () -> ChannelSupplier.of(byteBuf));
+		ChannelSupplier<ByteBuf> supplier = initWithReactor(eventloop, () -> ChannelSupplier.of(byteBuf));
 
 		try (InputStream inputStream = inputStream();
 		     InputStream channelSupplierAsInputStream = channelSupplierAsInputStream(eventloop, supplier)) {
@@ -131,7 +131,7 @@ public class ChannelSuppliersIOTest {
 		Thread eventloopThread = new Thread(eventloop);
 		eventloopThread.start();
 
-		ChannelSupplier<ByteBuf> supplier = initWithEventloop(eventloop, () -> ChannelSupplier.of(byteBuf));
+		ChannelSupplier<ByteBuf> supplier = initWithReactor(eventloop, () -> ChannelSupplier.of(byteBuf));
 
 		try (InputStream inputStream = inputStream();
 		     InputStream channelSupplierAsInputStream = channelSupplierAsInputStream(eventloop, supplier)) {

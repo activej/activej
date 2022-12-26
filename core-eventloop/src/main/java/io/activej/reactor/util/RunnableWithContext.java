@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.eventloop.util;
+package io.activej.reactor.util;
 
 import io.activej.common.ApplicationSettings;
 

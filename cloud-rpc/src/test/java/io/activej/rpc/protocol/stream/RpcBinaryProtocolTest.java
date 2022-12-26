@@ -8,9 +8,9 @@ import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
-import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.reactor.Reactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.protocol.RpcMessage;
 import io.activej.rpc.server.RpcServer;
@@ -56,11 +56,11 @@ public final class RpcBinaryProtocolTest {
 	public void test() throws Exception {
 		String testMessage = "Test";
 
-		RpcClient client = RpcClient.create(Eventloop.getCurrentEventloop())
+		RpcClient client = RpcClient.create(Reactor.getCurrentReactor())
 				.withMessageTypes(String.class)
 				.withStrategy(server(new InetSocketAddress("localhost", listenPort)));
 
-		RpcServer server = RpcServer.create(Eventloop.getCurrentEventloop())
+		RpcServer server = RpcServer.create(Reactor.getCurrentReactor())
 				.withMessageTypes(String.class)
 				.withHandler(String.class, request -> Promise.of("Hello, " + request + "!"))
 				.withListenPort(listenPort);

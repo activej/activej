@@ -6,7 +6,6 @@ import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
-import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.http.AsyncHttpClient;
@@ -16,6 +15,7 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
 import io.activej.promise.Promises;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -92,8 +92,8 @@ public final class CrdtClusterTest {
 				}
 
 				@Provides
-				ActiveFs fs(Eventloop eventloop, Executor executor, Config config) {
-					return LocalActiveFs.create(eventloop, executor, config.get(ofPath(), "crdt.local.path"));
+				ActiveFs fs(Reactor reactor, Executor executor, Config config) {
+					return LocalActiveFs.create(reactor, executor, config.get(ofPath(), "crdt.local.path"));
 				}
 			};
 		}
@@ -160,7 +160,7 @@ public final class CrdtClusterTest {
 
 	@Test
 	public void uploadWithHTTP() {
-		AsyncHttpClient client = AsyncHttpClient.create(Eventloop.getCurrentEventloop());
+		AsyncHttpClient client = AsyncHttpClient.create(Reactor.getCurrentReactor());
 
 		PromiseStats uploadStat = PromiseStats.create(Duration.ofSeconds(5));
 
@@ -171,7 +171,7 @@ public final class CrdtClusterTest {
 								() -> client.request(HttpRequest.of(PUT, "http://127.0.0.1:7000")
 												.withBody(toJson(manifest, new CrdtData<>(
 														"value_" + i,
-														Eventloop.getCurrentEventloop().currentTimeMillis(),
+														Reactor.getCurrentReactor().currentTimeMillis(),
 														i
 												))))
 										.toVoid()))
@@ -189,12 +189,12 @@ public final class CrdtClusterTest {
 
 	@Test
 	public void uploadWithStreams() {
-		CrdtStorageClient<String, Integer> client = CrdtStorageClient.create(Eventloop.getCurrentEventloop(), new InetSocketAddress("localhost", 9000), UTF8_SERIALIZER, INT_SERIALIZER);
+		CrdtStorageClient<String, Integer> client = CrdtStorageClient.create(Reactor.getCurrentReactor(), new InetSocketAddress("localhost", 9000), UTF8_SERIALIZER, INT_SERIALIZER);
 
 		PromiseStats uploadStat = PromiseStats.create(Duration.ofSeconds(5));
 
 		StreamSupplier.ofStream(IntStream.range(0, 1000000)
-						.mapToObj(i -> new CrdtData<>("value_" + i, Eventloop.getCurrentEventloop().currentTimeMillis(), i))).streamTo(StreamConsumer.ofPromise(client.upload()))
+						.mapToObj(i -> new CrdtData<>("value_" + i, Reactor.getCurrentReactor().currentTimeMillis(), i))).streamTo(StreamConsumer.ofPromise(client.upload()))
 				.whenComplete(uploadStat.recordStats())
 				.whenComplete(assertCompleteFn($ -> {
 					System.out.println(uploadStat);
@@ -204,7 +204,7 @@ public final class CrdtClusterTest {
 
 	@Test
 	public void downloadStuff() {
-		CrdtStorageClient<String, Integer> client = CrdtStorageClient.create(Eventloop.getCurrentEventloop(), new InetSocketAddress(9001), UTF8_SERIALIZER, INT_SERIALIZER);
+		CrdtStorageClient<String, Integer> client = CrdtStorageClient.create(Reactor.getCurrentReactor(), new InetSocketAddress(9001), UTF8_SERIALIZER, INT_SERIALIZER);
 
 		await(client.download().then(supplier -> supplier.streamTo(StreamConsumer.ofConsumer(System.out::println))));
 	}

@@ -21,6 +21,7 @@ import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.OTUplink;
 import io.activej.ot.util.IdGenerator;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.slf4j.Logger;
@@ -116,8 +117,8 @@ final class CubeUplinkMigrationService {
 		return CubeUplinkMySql.create(executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
 	}
 
-	static Cube createEmptyCube(Eventloop eventloop, Executor executor) {
-		return Cube.create(eventloop, executor, DefiningClassLoader.create(), new AggregationChunkStorage<Long>() {
+	static Cube createEmptyCube(Reactor reactor, Executor executor) {
+		return Cube.create(reactor, executor, DefiningClassLoader.create(), new AggregationChunkStorage<Long>() {
 			@Override
 			public Promise<Long> createId() {
 				throw new AssertionError();

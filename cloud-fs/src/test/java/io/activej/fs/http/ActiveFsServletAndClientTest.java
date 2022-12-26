@@ -31,9 +31,9 @@ import java.util.Map;
 import java.util.Set;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
-import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -61,7 +61,7 @@ public final class ActiveFsServletAndClientTest {
 	public void setUp() throws Exception {
 		storage = tmpFolder.newFolder("storage").toPath();
 
-		LocalActiveFs localFs = LocalActiveFs.create(getCurrentEventloop(), newSingleThreadExecutor(), storage);
+		LocalActiveFs localFs = LocalActiveFs.create(getCurrentReactor(), newSingleThreadExecutor(), storage);
 		await(localFs.start());
 		AsyncServlet servlet = ActiveFsServlet.create(localFs);
 		this.fs = HttpActiveFs.create("http://localhost", StubHttpClient.of(servlet));

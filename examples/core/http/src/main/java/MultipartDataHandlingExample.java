@@ -2,7 +2,6 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.file.ChannelFileWriter;
-import io.activej.eventloop.Eventloop;
 import io.activej.http.*;
 import io.activej.http.MultipartDecoder.MultipartDataHandler;
 import io.activej.inject.Injector;
@@ -11,6 +10,8 @@ import io.activej.inject.annotation.Provides;
 import io.activej.launcher.Launcher;
 import io.activej.launchers.http.HttpServerLauncher;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Files;
@@ -60,7 +61,7 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 	}
 
 	@Inject
-	Eventloop eventloop;
+	Reactor reactor;
 
 	@Inject
 	Executor executor;
@@ -69,8 +70,8 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 	AsyncHttpClient client;
 
 	@Provides
-	AsyncHttpClient client(Eventloop eventloop) {
-		return AsyncHttpClient.create(eventloop);
+	AsyncHttpClient client(NioReactor reactor) {
+		return AsyncHttpClient.create(reactor);
 	}
 
 	@Provides
@@ -97,7 +98,7 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 
 	@Override
 	protected void run() throws ExecutionException, InterruptedException {
-		CompletableFuture<Integer> future = eventloop.submit(() ->
+		CompletableFuture<Integer> future = reactor.submit(() ->
 				client.request(HttpRequest.post("http://localhost:8080/handleMultipart")
 						.withHeader(HttpHeaders.CONTENT_TYPE, "multipart/form-data; boundary=" + BOUNDARY.substring(2))
 						.withBody(ByteBufStrings.encodeAscii(MULTIPART_REQUEST)))

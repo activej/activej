@@ -4,9 +4,9 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.ref.RefLong;
-import io.activej.eventloop.net.SocketSettings;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promises;
+import io.activej.reactor.net.SocketSettings;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -18,8 +18,8 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 
-import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.promise.TestUtils.await;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
@@ -42,7 +42,7 @@ public final class AbstractServerTest {
 		SimpleServer.create(socket -> Promises.repeat(
 						() -> socket.read()
 								.whenResult(buf ->
-										getCurrentEventloop().delay(delay.inc(),
+										getCurrentReactor().delay(delay.inc(),
 												() -> socket.write(buf)
 														.whenComplete(() -> {
 															if (buf == null) {

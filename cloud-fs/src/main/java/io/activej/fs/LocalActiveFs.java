@@ -16,7 +16,7 @@
 
 package io.activej.fs;
 
-import io.activej.async.service.EventloopService;
+import io.activej.async.service.ReactorService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
@@ -33,12 +33,12 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.fs.exception.*;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -73,7 +73,7 @@ import static java.nio.file.StandardOpenOption.*;
  * <p>
  * This implementation does not define new limitations, other than those defined in {@link ActiveFs} interface.
  */
-public final class LocalActiveFs implements ActiveFs, EventloopService, EventloopJmxBeanWithStats, WithInitializer<LocalActiveFs> {
+public final class LocalActiveFs implements ActiveFs, ReactorService, ReactorJmxBeanWithStats, WithInitializer<LocalActiveFs> {
 	private static final Logger logger = LoggerFactory.getLogger(LocalActiveFs.class);
 
 	public static final String DEFAULT_TEMP_DIR = ".upload";
@@ -84,7 +84,7 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	private static final Set<StandardOpenOption> DEFAULT_APPEND_OPTIONS = Set.of(WRITE);
 	private static final Set<StandardOpenOption> DEFAULT_APPEND_NEW_OPTIONS = Set.of(WRITE, CREATE);
 
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 	private final Path storage;
 	private final Executor executor;
 
@@ -120,13 +120,13 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	//endregion
 
 	// region creators
-	private LocalActiveFs(Eventloop eventloop, Path storage, Executor executor) {
-		this.eventloop = eventloop;
+	private LocalActiveFs(Reactor reactor, Path storage, Executor executor) {
+		this.reactor = reactor;
 		this.executor = executor;
 		this.storage = storage;
 		this.tempDir = storage.resolve(DEFAULT_TEMP_DIR);
 
-		now = eventloop;
+		now = reactor;
 
 		if (DEFAULT_FSYNC_APPENDS) {
 			appendOptions.add(SYNC);
@@ -134,8 +134,8 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 		}
 	}
 
-	public static LocalActiveFs create(Eventloop eventloop, Executor executor, Path storageDir) {
-		return new LocalActiveFs(eventloop, storageDir.normalize(), executor);
+	public static LocalActiveFs create(Reactor reactor, Executor executor, Path storageDir) {
+		return new LocalActiveFs(reactor, storageDir.normalize(), executor);
 	}
 
 	/**
@@ -419,8 +419,8 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	}
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull Reactor getReactor() {
+		return reactor;
 	}
 
 	@Override

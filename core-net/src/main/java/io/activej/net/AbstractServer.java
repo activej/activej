@@ -19,10 +19,6 @@ package io.activej.net;
 import io.activej.common.Checks;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.inspector.BaseInspector;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
-import io.activej.eventloop.net.ServerSocketSettings;
-import io.activej.eventloop.net.SocketSettings;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
@@ -30,6 +26,10 @@ import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio.Inspector;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.net.ServerSocketSettings;
+import io.activej.reactor.net.SocketSettings;
+import io.activej.reactor.nio.NioReactor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -49,25 +49,25 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.eventloop.net.ServerSocketSettings.DEFAULT_BACKLOG;
 import static io.activej.net.socket.tcp.AsyncTcpSocketNio.wrapChannel;
 import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapServerSocket;
+import static io.activej.reactor.net.ServerSocketSettings.DEFAULT_BACKLOG;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
- * This is an implementation of {@link EventloopServer}.
- * It is a non-blocking server which works on top of the eventloop.
- * Thus, it runs in the eventloop thread, and all events are fired on that thread.
+ * This is an implementation of {@link NioReactorServer}.
+ * It is a non-blocking server which works on top of the NIO reactor.
+ * Thus, it runs in the NIO reactor, and all events are fired on that reactor.
  * <p>
- * This is simply a higher-level wrapper around eventloop {@link Eventloop#listen} call.
+ * This is simply a higher-level wrapper around {@link NioReactor#listen} call.
  */
 @SuppressWarnings("WeakerAccess, unused")
-public abstract class AbstractServer<Self extends AbstractServer<Self>> implements EventloopServer, WorkerServer, WithInitializer<Self>, EventloopJmxBeanWithStats {
+public abstract class AbstractServer<Self extends AbstractServer<Self>> implements NioReactorServer, WorkerServer, WithInitializer<Self>, ReactorJmxBeanWithStats {
 	protected Logger logger = getLogger(getClass());
 	private static final boolean CHECK = Checks.isEnabled(AbstractServer.class);
 
-	protected final @NotNull Eventloop eventloop;
+	protected final @NotNull NioReactor reactor;
 
 	public static final ServerSocketSettings DEFAULT_SERVER_SOCKET_SETTINGS = ServerSocketSettings.create(DEFAULT_BACKLOG);
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
@@ -107,8 +107,8 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 	private final EventStats filteredAccepts = EventStats.create(SMOOTHING_WINDOW);
 
 	// region creators & builder methods
-	protected AbstractServer(@NotNull Eventloop eventloop) {
-		this.eventloop = eventloop;
+	protected AbstractServer(@NotNull NioReactor reactor) {
+		this.reactor = reactor;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -214,12 +214,12 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 	/**
 	 * Begins listening asynchronously for incoming connections.
 	 * Creates an {@link ServerSocketChannel} for each listening address and registers them in
-	 * {@link Eventloop Eventloop} {@link java.nio.channels.Selector selector}.
-	 * Eventloop then asynchronously listens for network events and dispatches them to their listeners (us).
+	 * {@link NioReactor NIO reactor} {@link java.nio.channels.Selector selector}.
+	 * Reactor then asynchronously listens for network events and dispatches them to their listeners (us).
 	 */
 	@Override
 	public final void listen() throws IOException {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
 		if (running) {
 			return;
 		}
@@ -243,7 +243,7 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 		List<ServerSocketChannel> channels = new ArrayList<>(addresses.size());
 		for (InetSocketAddress address : addresses) {
 			try {
-				channels.add(eventloop.listen(address, serverSocketSettings, channel -> doAccept(channel, address, ssl)));
+				channels.add(reactor.listen(address, serverSocketSettings, channel -> doAccept(channel, address, ssl)));
 			} catch (IOException e) {
 				logger.error("Can't listen on [" + address + "]: " + this, e);
 				close();
@@ -255,7 +255,7 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 
 	@Override
 	public final Promise<?> close() {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Cannot close server from different thread");
+		if (CHECK) checkState(reactor.inReactorThread(), "Cannot close server from different thread");
 		if (!running) return Promise.complete();
 		running = false;
 		closeServerSockets();
@@ -265,7 +265,7 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 	}
 
 	public final Future<?> closeFuture() {
-		return eventloop.submit(this::close);
+		return reactor.submit(this::close);
 	}
 
 	public final boolean isRunning() {
@@ -286,7 +286,7 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 			if (serverSocketChannel == null) {
 				continue;
 			}
-			eventloop.closeChannel(serverSocketChannel, serverSocketChannel.keyFor(eventloop.getSelector()));
+			reactor.closeChannel(serverSocketChannel, serverSocketChannel.keyFor(reactor.getSelector()));
 			it.remove();
 		}
 	}
@@ -304,7 +304,7 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 		try {
 			remoteSocketAddress = (InetSocketAddress) channel.getRemoteAddress();
 		} catch (IOException e) {
-			eventloop.closeChannel(channel, null);
+			reactor.closeChannel(channel, null);
 			return;
 		}
 		InetAddress remoteAddress = remoteSocketAddress.getAddress();
@@ -312,14 +312,14 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 		if (acceptFilter != null && acceptFilter.filterAccept(channel, localAddress, remoteAddress, ssl)) {
 			filteredAccepts.recordEvent();
 			onFilteredAccept(channel, localAddress, remoteAddress, ssl);
-			eventloop.closeChannel(channel, null);
+			reactor.closeChannel(channel, null);
 			return;
 		}
 
 		WorkerServer workerServer = getWorkerServer();
-		Eventloop workerServerEventloop = workerServer.getEventloop();
+		NioReactor workerServerReactor = workerServer.getReactor();
 
-		if (workerServerEventloop == eventloop) {
+		if (workerServerReactor == reactor) {
 			workerServer.doAccept(channel, localAddress, remoteSocketAddress, ssl, socketSettings);
 		} else {
 			if (logger.isTraceEnabled()) {
@@ -328,7 +328,7 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 			accepts.recordEvent();
 			if (ssl) acceptsSsl.recordEvent();
 			onAccept(channel, localAddress, remoteAddress, ssl);
-			workerServerEventloop.execute(() -> workerServer.doAccept(channel, localAddress, remoteSocketAddress, ssl, socketSettings));
+			workerServerReactor.execute(() -> workerServer.doAccept(channel, localAddress, remoteSocketAddress, ssl, socketSettings));
 		}
 
 		if (acceptOnce) {
@@ -339,14 +339,14 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 	@Override
 	public final void doAccept(SocketChannel socketChannel, InetSocketAddress localAddress, InetSocketAddress remoteSocketAddress,
 			boolean ssl, SocketSettings socketSettings) {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
 		accepts.recordEvent();
 		if (ssl) acceptsSsl.recordEvent();
 		InetAddress remoteAddress = remoteSocketAddress.getAddress();
 		onAccept(socketChannel, localAddress, remoteAddress, ssl);
 		AsyncTcpSocket asyncTcpSocket;
 		try {
-			AsyncTcpSocketNio socketNio = wrapChannel(eventloop, socketChannel, remoteSocketAddress, socketSettings);
+			AsyncTcpSocketNio socketNio = wrapChannel(reactor, socketChannel, remoteSocketAddress, socketSettings);
 			Inspector inspector = ssl ? socketSslInspector : socketInspector;
 			if (inspector != null) {
 				inspector.onConnect(socketNio);
@@ -355,7 +355,7 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 			asyncTcpSocket = socketNio;
 		} catch (IOException e) {
 			logger.warn("Failed to wrap channel {}", socketChannel, e);
-			eventloop.closeChannel(socketChannel, null);
+			reactor.closeChannel(socketChannel, null);
 			return;
 		}
 		asyncTcpSocket = ssl ? wrapServerSocket(asyncTcpSocket, sslContext, sslExecutor) : asyncTcpSocket;
@@ -413,8 +413,8 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 	}
 
 	@Override
-	public final @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public final @NotNull NioReactor getReactor() {
+		return reactor;
 	}
 
 	@JmxAttribute(extraSubAttributes = "totalCount")

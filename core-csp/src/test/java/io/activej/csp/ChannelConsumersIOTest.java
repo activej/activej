@@ -22,9 +22,9 @@ import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.csp.ChannelConsumers.channelConsumerAsOutputStream;
 import static io.activej.csp.ChannelConsumers.outputStreamAsChannelConsumer;
-import static io.activej.eventloop.Eventloop.initWithEventloop;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
+import static io.activej.reactor.Reactor.initWithReactor;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
@@ -98,7 +98,7 @@ public class ChannelConsumersIOTest {
 		List<ByteBuf> expected = List.of(wrapUtf8("Hello"), wrapUtf8("World"));
 		List<ByteBuf> bufs = new ArrayList<>();
 
-		ChannelConsumer<ByteBuf> consumer = initWithEventloop(eventloop, () -> ChannelConsumer.ofConsumer(bufs::add));
+		ChannelConsumer<ByteBuf> consumer = initWithReactor(eventloop, () -> ChannelConsumer.ofConsumer(bufs::add));
 
 		try (OutputStream outputStream = outputStream();
 		     OutputStream channelConsumerAsOutputStream = channelConsumerAsOutputStream(eventloop, consumer)) {
@@ -122,7 +122,7 @@ public class ChannelConsumersIOTest {
 		Thread eventloopThread = new Thread(eventloop);
 		eventloopThread.start();
 
-		ChannelConsumer<ByteBuf> consumer = initWithEventloop(eventloop, () -> ChannelConsumer.ofConsumer($ -> fail()));
+		ChannelConsumer<ByteBuf> consumer = initWithReactor(eventloop, () -> ChannelConsumer.ofConsumer($ -> fail()));
 
 		try (OutputStream outputStream = outputStream();
 		     OutputStream channelConsumerAsOutputStream = channelConsumerAsOutputStream(eventloop, consumer)) {

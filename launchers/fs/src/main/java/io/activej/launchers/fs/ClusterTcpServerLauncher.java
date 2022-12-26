@@ -16,10 +16,9 @@
 
 package io.activej.launchers.fs;
 
-import io.activej.async.service.EventloopTaskScheduler;
+import io.activej.async.service.ReactorTaskScheduler;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
-import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.cluster.ClusterRepartitionController;
 import io.activej.fs.cluster.DiscoveryService;
@@ -34,11 +33,13 @@ import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
 import io.activej.launchers.fs.gui.ActiveFsGuiServlet;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 
 import static io.activej.common.Utils.first;
 import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
 import static io.activej.launchers.fs.Initializers.ofClusterRepartitionController;
-import static io.activej.launchers.initializers.Initializers.ofEventloopTaskScheduler;
+import static io.activej.launchers.initializers.Initializers.ofReactorTaskScheduler;
 
 public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 	public static final String DEFAULT_DEAD_CHECK_INTERVAL = "1 seconds";
@@ -48,17 +49,17 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 	@Provides
 	@Eager
 	@Named("repartition")
-	EventloopTaskScheduler repartitionScheduler(Config config, ClusterRepartitionController controller) {
-		return EventloopTaskScheduler.create(controller.getEventloop(), controller::repartition)
-				.withInitializer(ofEventloopTaskScheduler(config.getChild("activefs.repartition")));
+	ReactorTaskScheduler repartitionScheduler(Config config, ClusterRepartitionController controller) {
+		return ReactorTaskScheduler.create(controller.getReactor(), controller::repartition)
+				.withInitializer(ofReactorTaskScheduler(config.getChild("activefs.repartition")));
 	}
 
 	@Provides
 	@Eager
 	@Named("clusterDeadCheck")
-	EventloopTaskScheduler deadCheckScheduler(Config config, FsPartitions partitions) {
-		return EventloopTaskScheduler.create(partitions.getEventloop(), partitions::checkDeadPartitions)
-				.withInitializer(ofEventloopTaskScheduler(config.getChild("activefs.repartition.deadCheck")));
+	ReactorTaskScheduler deadCheckScheduler(Config config, FsPartitions partitions) {
+		return ReactorTaskScheduler.create(partitions.getReactor(), partitions::checkDeadPartitions)
+				.withInitializer(ofReactorTaskScheduler(config.getChild("activefs.repartition.deadCheck")));
 	}
 
 	@Provides
@@ -71,13 +72,13 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 	}
 
 	@Provides
-	DiscoveryService discoveryService(Eventloop eventloop, ActiveFs activeFs, Config config) throws MalformedDataException {
-		return Initializers.constantDiscoveryService(eventloop, activeFs, config);
+	DiscoveryService discoveryService(NioReactor reactor, ActiveFs activeFs, Config config) throws MalformedDataException {
+		return Initializers.constantDiscoveryService(reactor, activeFs, config);
 	}
 
 	@Provides
-	FsPartitions fsPartitions(Eventloop eventloop, DiscoveryService discoveryService, OptionalDependency<ServerSelector> serverSelector) {
-		return FsPartitions.create(eventloop, discoveryService)
+	FsPartitions fsPartitions(Reactor reactor, DiscoveryService discoveryService, OptionalDependency<ServerSelector> serverSelector) {
+		return FsPartitions.create(reactor, discoveryService)
 				.withServerSelector(serverSelector.orElse(RENDEZVOUS_HASH_SHARDER));
 	}
 	//[END EXAMPLE]

@@ -30,9 +30,12 @@ import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.Module;
+import io.activej.inject.module.ModuleBuilder;
 import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
 import io.activej.launchers.fs.gui.ActiveFsGuiServlet;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
 
 import java.nio.file.Path;
@@ -52,7 +55,7 @@ public class SimpleTcpServerLauncher extends Launcher {
 	public static final String DEFAULT_GUI_SERVER_LISTEN_ADDRESS = "*:8080";
 
 	@Provides
-	public Eventloop eventloop(Config config, OptionalDependency<ThrottlingController> throttlingController) {
+	public NioReactor reactor(Config config, OptionalDependency<ThrottlingController> throttlingController) {
 		return Eventloop.create()
 				.withInitializer(ofEventloop(config.getChild("eventloop")))
 				.withInitializer(eventloop -> eventloop.withInspector(throttlingController.orElse(null)));
@@ -60,15 +63,15 @@ public class SimpleTcpServerLauncher extends Launcher {
 
 	@Eager
 	@Provides
-	ActiveFsServer activeFsServer(Eventloop eventloop, ActiveFs activeFs, Config config) {
-		return ActiveFsServer.create(eventloop, activeFs)
+	ActiveFsServer activeFsServer(NioReactor reactor, ActiveFs activeFs, Config config) {
+		return ActiveFsServer.create(reactor, activeFs)
 				.withInitializer(ofActiveFsServer(config.getChild("activefs")));
 	}
 
 	@Provides
 	@Eager
-	AsyncHttpServer guiServer(Eventloop eventloop, AsyncServlet servlet, Config config) {
-		return AsyncHttpServer.create(eventloop, servlet)
+	AsyncHttpServer guiServer(NioReactor reactor, AsyncServlet servlet, Config config) {
+		return AsyncHttpServer.create(reactor, servlet)
 				.withInitializer(ofHttpServer(config.getChild("activefs.http.gui")));
 	}
 
@@ -78,8 +81,8 @@ public class SimpleTcpServerLauncher extends Launcher {
 	}
 
 	@Provides
-	ActiveFs localActiveFs(Eventloop eventloop, Executor executor, Config config) {
-		return LocalActiveFs.create(eventloop, executor, config.get(ofPath(), "activefs.path", DEFAULT_PATH));
+	ActiveFs localActiveFs(Reactor reactor, Executor executor, Config config) {
+		return LocalActiveFs.create(reactor, executor, config.get(ofPath(), "activefs.path", DEFAULT_PATH));
 	}
 
 	@Provides
@@ -103,6 +106,9 @@ public class SimpleTcpServerLauncher extends Launcher {
 	@Override
 	protected final Module getModule() {
 		return combine(
+				ModuleBuilder.create()
+						.bind(Reactor.class).to(NioReactor.class)
+						.build(),
 				ServiceGraphModule.create(),
 				JmxModule.create(),
 				ConfigModule.create()

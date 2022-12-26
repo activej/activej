@@ -3,6 +3,7 @@ package io.activej.http;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -120,7 +121,7 @@ public final class HttpTolerantApplicationTest {
 		})
 				.start();
 
-		String header = await(AsyncHttpClient.create(Eventloop.getCurrentEventloop())
+		String header = await(AsyncHttpClient.create(Reactor.getCurrentReactor())
 				.request(HttpRequest.get("http://127.0.0.1:" + port))
 				.then(response -> response.loadBody()
 						.whenResult(body -> assertEquals(text, body.getString(UTF_8)))

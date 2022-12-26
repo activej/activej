@@ -26,10 +26,10 @@ import io.activej.common.function.FunctionEx;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.queue.ChannelBuffer;
 import io.activej.csp.queue.ChannelZeroBuffer;
-import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -324,14 +324,14 @@ public final class ChannelSuppliers {
 	 * Creates an asynchronous {@link ChannelSupplier<ByteBuf>} out of some {@link InputStream}.
 	 * <p>
 	 * I/O operations are executed using a specified {@link Executor}, so that the channel supplier
-	 * operations does not block the eventloop thread.
+	 * operations does not block the reactor.
 	 * <p>
 	 * A size of a {@link ByteBuf} returned by {@link ChannelSupplier#get()} will not exceed specified limit
 	 * <p>
 	 * Passed {@link InputStream} will be closed once a resulting {@link ChannelSupplier<ByteBuf>} is closed or
 	 * in case an error occurs during channel supplier operations.
 	 * <p>
-	 * <b>This method should be called from within eventloop thread</b>
+	 * <b>This method should be called from within reactor</b>
 	 *
 	 * @param executor    an executor that will execute blocking I/O
 	 * @param bufSize     a limit on a size of a byte buf supplied by returned {@link ChannelSupplier<ByteBuf>}
@@ -376,18 +376,18 @@ public final class ChannelSuppliers {
 	/**
 	 * Creates an {@link InputStream} out of a {@link ChannelSupplier<ByteBuf>}.
 	 * <p>
-	 * Asynchronous operations are executed in a context of a specified {@link Eventloop}
+	 * Asynchronous operations are executed in a context of a specified {@link Reactor}
 	 * <p>
 	 * Passed {@link ChannelSupplier<ByteBuf>} will be closed once a resulting {@link InputStream} is closed or
 	 * in case an error occurs while reading data.
 	 * <p>
-	 * <b>{@link InputStream}'s methods are blocking, so they should not be called from an eventloop thread</b>
+	 * <b>{@link InputStream}'s methods are blocking, so they should not be called from reactor</b>
 	 *
-	 * @param eventloop       an eventloop that will execute asynchronous operations
+	 * @param reactor       a reactor that will execute asynchronous operations
 	 * @param channelSupplier a {@link ChannelSupplier<ByteBuf>} that is transformed to an {@link InputStream}
 	 * @return an {@link InputStream} out ouf a {@link ChannelSupplier<ByteBuf>}
 	 */
-	public static InputStream channelSupplierAsInputStream(Eventloop eventloop, ChannelSupplier<ByteBuf> channelSupplier) {
+	public static InputStream channelSupplierAsInputStream(Reactor reactor, ChannelSupplier<ByteBuf> channelSupplier) {
 		return new InputStream() {
 			private @Nullable ByteBuf current = null;
 			private boolean isClosed;
@@ -412,7 +412,7 @@ public final class ChannelSuppliers {
 				if (peeked == null) {
 					ByteBuf buf;
 					do {
-						buf = submit(eventloop, channelSupplier::get, this);
+						buf = submit(reactor, channelSupplier::get, this);
 						if (buf == null) {
 							isEOS = true;
 							return -1;
@@ -435,7 +435,7 @@ public final class ChannelSuppliers {
 				if (isClosed) return;
 				isClosed = true;
 				current = nullify(current, ByteBuf::recycle);
-				submit(eventloop,
+				submit(reactor,
 						() -> {
 							channelSupplier.close();
 							return Promise.complete();

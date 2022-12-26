@@ -17,7 +17,7 @@
 package io.activej.http;
 
 import io.activej.async.exception.AsyncTimeoutException;
-import io.activej.async.service.EventloopService;
+import io.activej.async.service.ReactorService;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
@@ -28,10 +28,6 @@ import io.activej.dns.AsyncDnsClient;
 import io.activej.dns.RemoteAsyncDnsClient;
 import io.activej.dns.protocol.DnsQueryException;
 import io.activej.dns.protocol.DnsResponse;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
-import io.activej.eventloop.net.SocketSettings;
-import io.activej.eventloop.schedule.ScheduledRunnable;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
@@ -41,6 +37,10 @@ import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.net.SocketSettings;
+import io.activej.reactor.nio.NioReactor;
+import io.activej.reactor.schedule.ScheduledRunnable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -69,11 +69,11 @@ import static org.slf4j.LoggerFactory.getLogger;
  * Implementation of {@link IAsyncHttpClient} that asynchronously connects
  * to real HTTP servers and gets responses from them.
  * <p>
- * It is also an {@link EventloopService} that needs its close method to be called
+ * It is also an {@link ReactorService} that needs its close method to be called
  * to clean up the keep-alive connections etc.
  */
 @SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue"})
-public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketClient, EventloopService, EventloopJmxBeanWithStats, WithInitializer<AsyncHttpClient> {
+public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketClient, ReactorService, ReactorJmxBeanWithStats, WithInitializer<AsyncHttpClient> {
 	private static final Logger logger = getLogger(AsyncHttpClient.class);
 	private static final boolean CHECK = Checks.isEnabled(AsyncHttpClient.class);
 
@@ -86,7 +86,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 	public static final MemSize MAX_WEB_SOCKET_MESSAGE_SIZE = ApplicationSettings.getMemSize(AsyncHttpClient.class, "maxWebSocketMessageSize", MemSize.megabytes(1));
 	public static final int MAX_KEEP_ALIVE_REQUESTS = ApplicationSettings.getInt(AsyncHttpClient.class, "maxKeepAliveRequests", 0);
 
-	private final @NotNull Eventloop eventloop;
+	private final @NotNull NioReactor reactor;
 	private @NotNull AsyncDnsClient asyncDnsClient;
 	private @NotNull SocketSettings socketSettings = DEFAULT_SOCKET_SETTINGS;
 
@@ -286,14 +286,14 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 	private int inetAddressIdx = 0;
 
 	// region builders
-	private AsyncHttpClient(@NotNull Eventloop eventloop, @NotNull AsyncDnsClient asyncDnsClient) {
-		this.eventloop = eventloop;
+	private AsyncHttpClient(@NotNull NioReactor reactor, @NotNull AsyncDnsClient asyncDnsClient) {
+		this.reactor = reactor;
 		this.asyncDnsClient = asyncDnsClient;
 	}
 
-	public static AsyncHttpClient create(@NotNull Eventloop eventloop) {
-		AsyncDnsClient defaultDnsClient = RemoteAsyncDnsClient.create(eventloop);
-		return new AsyncHttpClient(eventloop, defaultDnsClient);
+	public static AsyncHttpClient create(@NotNull NioReactor reactor) {
+		AsyncDnsClient defaultDnsClient = RemoteAsyncDnsClient.create(reactor);
+		return new AsyncHttpClient(reactor, defaultDnsClient);
 	}
 
 	public AsyncHttpClient withSocketSettings(@NotNull SocketSettings socketSettings) {
@@ -375,12 +375,12 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 
 	private void scheduleExpiredConnectionsCheck() {
 		assert expiredConnectionsCheck == null;
-		expiredConnectionsCheck = eventloop.delayBackground(1000L, () -> {
+		expiredConnectionsCheck = reactor.delayBackground(1000L, () -> {
 			expiredConnectionsCheck = null;
-			poolKeepAliveExpired += poolKeepAlive.closeExpiredConnections(eventloop.currentTimeMillis() - keepAliveTimeoutMillis);
+			poolKeepAliveExpired += poolKeepAlive.closeExpiredConnections(reactor.currentTimeMillis() - keepAliveTimeoutMillis);
 			boolean isClosing = closePromise != null;
 			if (readWriteTimeoutMillis != 0 || isClosing) {
-				poolReadWriteExpired += poolReadWrite.closeExpiredConnections(eventloop.currentTimeMillis() -
+				poolReadWriteExpired += poolReadWrite.closeExpiredConnections(reactor.currentTimeMillis() -
 						(!isClosing ? readWriteTimeoutMillis : readWriteTimeoutMillisShutdown), new AsyncTimeoutException("Read timeout"));
 			}
 			if (getConnectionsCount() != 0) {
@@ -452,7 +452,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 	}
 
 	private @NotNull Promise<?> doRequest(HttpRequest request, boolean isWebSocket) {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
 		if (inspector != null) inspector.onRequest(request);
 		String host = request.getUrl().getHost();
 
@@ -498,7 +498,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 
 		if (inspector != null) inspector.onConnecting(request, address);
 
-		return AsyncTcpSocketNio.connect(address, connectTimeoutMillis, socketSettings)
+		return AsyncTcpSocketNio.connect(reactor, address, connectTimeoutMillis, socketSettings)
 				.then(
 						asyncTcpSocketImpl -> {
 							AsyncTcpSocketNio.Inspector socketInspector = isSecure ? this.socketInspector : socketSslInspector;
@@ -516,7 +516,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 											sslContext, sslExecutor) :
 									asyncTcpSocketImpl;
 
-							HttpClientConnection connection = new HttpClientConnection(eventloop, this, asyncTcpSocket, address);
+							HttpClientConnection connection = new HttpClientConnection(reactor, this, asyncTcpSocket, address);
 
 							if (inspector != null) inspector.onConnect(request, connection);
 
@@ -537,13 +537,13 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 	}
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull NioReactor getReactor() {
+		return reactor;
 	}
 
 	@Override
 	public @NotNull Promise<Void> start() {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
 		return Promise.complete();
 	}
 
@@ -558,7 +558,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 
 	@Override
 	public @NotNull Promise<Void> stop() {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
 
 		SettablePromise<Void> promise = new SettablePromise<>();
 

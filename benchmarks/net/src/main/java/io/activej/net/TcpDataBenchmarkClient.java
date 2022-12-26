@@ -16,6 +16,7 @@ import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
 
 import java.net.InetSocketAddress;
@@ -36,22 +37,22 @@ public class TcpDataBenchmarkClient extends Launcher {
 
 	@Inject
 	@Named("benchmark")
-	Eventloop benchmarkEventloop;
+	NioReactor benchmarkReactor;
 
 	@Inject
 	@Named("client")
-	Eventloop clientEventloop;
+	NioReactor clientReactor;
 
 	@Inject
 	Config config;
 
 	@Provides
 	@Named("benchmark")
-	Eventloop benchmarkEventloop() { return Eventloop.create(); }
+	NioReactor benchmarkReactor() { return Eventloop.create(); }
 
 	@Provides
 	@Named("client")
-	Eventloop clientEventloop() { return Eventloop.create(); }
+	NioReactor clientReactor() { return Eventloop.create(); }
 
 	@Provides
 	Config config() {
@@ -108,7 +109,7 @@ public class TcpDataBenchmarkClient extends Launcher {
 	}
 
 	private long round() throws Exception {
-		return benchmarkEventloop.submit(this::roundGet).get();
+		return benchmarkReactor.submit(this::roundGet).get();
 	}
 
 	private Promise<Long> roundGet() {
@@ -117,7 +118,7 @@ public class TcpDataBenchmarkClient extends Launcher {
 		InetSocketAddress address = config.get(ofInetSocketAddress(), "echo.address", new InetSocketAddress(9001));
 		int limit = config.get(ofInteger(), "benchmark.totalElements", TOTAL_ELEMENTS);
 
-		return AsyncTcpSocketNio.connect(address)
+		return AsyncTcpSocketNio.connect(clientReactor, address)
 				.then(socket -> {
 					StreamSupplierOfSequence.create(limit)
 							.transformWith(ChannelSerializer.create(INT_SERIALIZER))

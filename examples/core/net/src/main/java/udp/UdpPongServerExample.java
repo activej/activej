@@ -2,15 +2,15 @@ package udp;
 
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.net.DatagramSocketSettings;
 import io.activej.net.socket.udp.AsyncUdpSocketNio;
 import io.activej.net.socket.udp.UdpPacket;
 import io.activej.promise.Promises;
+import io.activej.reactor.net.DatagramSocketSettings;
+import io.activej.reactor.nio.NioReactor;
 
 import java.net.InetSocketAddress;
 import java.nio.channels.DatagramChannel;
 
-import static io.activej.eventloop.Eventloop.createDatagramChannel;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
@@ -25,7 +25,7 @@ public final class UdpPongServerExample {
 	public static void main(String[] args) throws Exception {
 		Eventloop eventloop = Eventloop.create().withCurrentThread();
 		DatagramSocketSettings socketSettings = DatagramSocketSettings.create();
-		DatagramChannel serverDatagramChannel = createDatagramChannel(socketSettings, SERVER_ADDRESS, null);
+		DatagramChannel serverDatagramChannel = NioReactor.createDatagramChannel(socketSettings, SERVER_ADDRESS, null);
 
 		AsyncUdpSocketNio.connect(eventloop, serverDatagramChannel)
 				.whenResult(() -> {

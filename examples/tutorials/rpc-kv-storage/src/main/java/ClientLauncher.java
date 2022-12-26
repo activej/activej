@@ -1,7 +1,7 @@
-import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
+import io.activej.reactor.Reactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.service.ServiceGraphModule;
 
@@ -17,7 +17,7 @@ public class ClientLauncher extends Launcher {
 	private RpcClient client;
 
 	@Inject
-	Eventloop eventloop;
+	Reactor reactor;
 
 	@Override
 	protected Module getModule() {
@@ -35,14 +35,14 @@ public class ClientLauncher extends Launcher {
 
 		switch (args[0]) {
 			case "--put" -> {
-				CompletableFuture<PutResponse> future1 = eventloop.submit(() ->
+				CompletableFuture<PutResponse> future1 = reactor.submit(() ->
 						client.sendRequest(new PutRequest(args[1], args[2]), TIMEOUT)
 				);
 				PutResponse putResponse = future1.get();
 				System.out.println("PutResponse: " + putResponse);
 			}
 			case "--get" -> {
-				CompletableFuture<GetResponse> future2 = eventloop.submit(() ->
+				CompletableFuture<GetResponse> future2 = reactor.submit(() ->
 						client.sendRequest(new GetRequest(args[1]), TIMEOUT)
 				);
 				GetResponse getResponse = future2.get();

@@ -1,6 +1,6 @@
 package io.activej.eventloop;
 
-import io.activej.eventloop.executor.BlockingEventloopExecutor;
+import io.activej.async.executor.BlockingReactorExecutor;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -11,7 +11,7 @@ import java.util.concurrent.ExecutionException;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static org.junit.Assert.assertEquals;
 
-public final class BlockingEventloopExecutorTest {
+public final class BlockingReactorExecutorTest {
 	private Eventloop eventloop;
 
 	@Before
@@ -22,7 +22,7 @@ public final class BlockingEventloopExecutorTest {
 	@Test
 	public void testExecute() throws InterruptedException {
 		int limit = 10;
-		BlockingEventloopExecutor eventloopExecutor = BlockingEventloopExecutor.create(eventloop, limit);
+		BlockingReactorExecutor eventloopExecutor = BlockingReactorExecutor.create(eventloop, limit);
 		eventloop.keepAlive(true);
 		Thread eventloopThread = new Thread(eventloop);
 		eventloopThread.start();
@@ -46,7 +46,7 @@ public final class BlockingEventloopExecutorTest {
 	@Test
 	public void testSubmitRunnable() throws InterruptedException, ExecutionException {
 		int limit = 10;
-		BlockingEventloopExecutor eventloopExecutor = BlockingEventloopExecutor.create(eventloop, limit);
+		BlockingReactorExecutor eventloopExecutor = BlockingReactorExecutor.create(eventloop, limit);
 		eventloop.keepAlive(true);
 		Thread eventloopThread = new Thread(eventloop);
 		eventloopThread.start();
@@ -70,7 +70,7 @@ public final class BlockingEventloopExecutorTest {
 	@Test
 	public void testSubmitSupplier() throws ExecutionException, InterruptedException {
 		int limit = 10;
-		BlockingEventloopExecutor eventloopExecutor = BlockingEventloopExecutor.create(eventloop, limit);
+		BlockingReactorExecutor eventloopExecutor = BlockingReactorExecutor.create(eventloop, limit);
 		eventloop.keepAlive(true);
 		Thread eventloopThread = new Thread(eventloop);
 		eventloopThread.start();

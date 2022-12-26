@@ -5,11 +5,11 @@ import io.activej.dataflow.calcite.CalciteSqlDataflow;
 import io.activej.dataflow.calcite.inject.CalciteClientModule;
 import io.activej.dataflow.calcite.jdbc.DataflowMeta;
 import io.activej.dataflow.calcite.jdbc.JdbcServerService;
-import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.launchers.dataflow.DataflowClientModule;
+import io.activej.reactor.Reactor;
 import org.apache.calcite.avatica.Meta;
 import org.apache.calcite.avatica.remote.LocalService;
 import org.apache.calcite.avatica.remote.Service;
@@ -77,7 +77,7 @@ public final class DataflowJdbcServerModule extends AbstractModule {
 	}
 
 	@Provides
-	Meta meta(Eventloop eventloop, CalciteSqlDataflow calciteSqlDataflow) {
-		return DataflowMeta.create(eventloop, calciteSqlDataflow);
+	Meta meta(Reactor reactor, CalciteSqlDataflow calciteSqlDataflow) {
+		return DataflowMeta.create(reactor, calciteSqlDataflow);
 	}
 }

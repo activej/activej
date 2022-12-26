@@ -5,8 +5,12 @@ import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.ProvidesIntoSet;
 import io.activej.inject.module.Module;
+import io.activej.inject.module.ModuleBuilder;
+import io.activej.inject.module.Modules;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraphModule;
@@ -29,16 +33,16 @@ public class RpcExample extends Launcher {
 	private RpcServer server;
 
 	@Inject
-	private Eventloop eventloop;
+	private Reactor reactor;
 
 	@Provides
-	Eventloop eventloop() {
+	NioReactor reactor() {
 		return Eventloop.create();
 	}
 
 	@Provides
-	RpcServer rpcServer(Eventloop eventloop) {
-		return RpcServer.create(eventloop)
+	RpcServer rpcServer(NioReactor reactor) {
+		return RpcServer.create(reactor)
 				.withMessageTypes(String.class)
 				.withHandler(String.class,
 						request -> Promise.of("Hello " + request))
@@ -46,8 +50,8 @@ public class RpcExample extends Launcher {
 	}
 
 	@Provides
-	RpcClient rpcClient(Eventloop eventloop) {
-		return RpcClient.create(eventloop)
+	RpcClient rpcClient(NioReactor reactor) {
+		return RpcClient.create(reactor)
 				.withMessageTypes(String.class)
 				.withStrategy(server(new InetSocketAddress(SERVICE_PORT)));
 	}
@@ -60,12 +64,17 @@ public class RpcExample extends Launcher {
 
 	@Override
 	protected Module getModule() {
-		return ServiceGraphModule.create();
+		return Modules.combine(
+				ModuleBuilder.create()
+						.bind(Reactor.class).to(NioReactor.class)
+						.build(),
+				ServiceGraphModule.create()
+		);
 	}
 
 	@Override
 	protected void run() throws ExecutionException, InterruptedException {
-		CompletableFuture<Object> future = eventloop.submit(() ->
+		CompletableFuture<Object> future = reactor.submit(() ->
 				client.sendRequest("World", 1000)
 		);
 		System.out.printf("%nRPC result: %s %n%n", future.get());

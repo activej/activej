@@ -1,7 +1,7 @@
 package io.activej.config;
 
 import io.activej.config.converter.ConfigConverters;
-import io.activej.eventloop.net.ServerSocketSettings;
+import io.activej.reactor.net.ServerSocketSettings;
 import org.junit.Test;
 
 import java.util.HashMap;

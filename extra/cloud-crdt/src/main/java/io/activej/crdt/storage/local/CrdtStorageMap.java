@@ -16,7 +16,7 @@
 
 package io.activej.crdt.storage.local;
 
-import io.activej.async.service.EventloopService;
+import io.activej.async.service.ReactorService;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.time.CurrentTimeProvider;
@@ -33,12 +33,12 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStatsBasic;
 import io.activej.datastream.stats.StreamStatsDetailed;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.EventStats;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -53,10 +53,10 @@ import static io.activej.common.Utils.nullify;
 import static io.activej.crdt.util.Utils.onItem;
 
 @SuppressWarnings("rawtypes")
-public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtStorage<K, S>, WithInitializer<CrdtStorageMap<K, S>>, EventloopService, EventloopJmxBeanWithStats {
+public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtStorage<K, S>, WithInitializer<CrdtStorageMap<K, S>>, ReactorService, ReactorJmxBeanWithStats {
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageMap.class, "smoothingWindow", Duration.ofMinutes(1));
 
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 	private final CrdtFunction<S> function;
 
 	private final NavigableMap<K, CrdtData<K, S>> map = new TreeMap<>();
@@ -91,17 +91,17 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 	private final EventStats singleRemoves = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
 	// endregion
 
-	private CrdtStorageMap(Eventloop eventloop, CrdtFunction<S> function) {
-		this.eventloop = eventloop;
+	private CrdtStorageMap(Reactor reactor, CrdtFunction<S> function) {
+		this.reactor = reactor;
 		this.function = function;
 	}
 
-	public static <K extends Comparable<K>, S> CrdtStorageMap<K, S> create(Eventloop eventloop, CrdtFunction<S> crdtFunction) {
-		return new CrdtStorageMap<>(eventloop, crdtFunction);
+	public static <K extends Comparable<K>, S> CrdtStorageMap<K, S> create(Reactor reactor, CrdtFunction<S> crdtFunction) {
+		return new CrdtStorageMap<>(reactor, crdtFunction);
 	}
 
-	public static <K extends Comparable<K>, S extends CrdtType<S>> CrdtStorageMap<K, S> create(Eventloop eventloop) {
-		return new CrdtStorageMap<>(eventloop, CrdtFunction.<S>ofCrdtType());
+	public static <K extends Comparable<K>, S extends CrdtType<S>> CrdtStorageMap<K, S> create(Reactor reactor) {
+		return new CrdtStorageMap<>(reactor, CrdtFunction.<S>ofCrdtType());
 	}
 
 	public CrdtStorageMap<K, S> withFilter(CrdtFilter<S> filter) {
@@ -115,8 +115,8 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 	}
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull Reactor getReactor() {
+		return reactor;
 	}
 
 	@Override

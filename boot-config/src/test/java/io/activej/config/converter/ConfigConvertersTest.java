@@ -2,9 +2,9 @@ package io.activej.config.converter;
 
 import io.activej.common.MemSize;
 import io.activej.config.Config;
-import io.activej.eventloop.net.DatagramSocketSettings;
-import io.activej.eventloop.net.ServerSocketSettings;
-import io.activej.eventloop.net.SocketSettings;
+import io.activej.reactor.net.DatagramSocketSettings;
+import io.activej.reactor.net.ServerSocketSettings;
+import io.activej.reactor.net.SocketSettings;
 import org.junit.Test;
 
 import java.net.InetAddress;

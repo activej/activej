@@ -48,6 +48,8 @@ import io.activej.inject.module.Modules;
 import io.activej.net.AbstractServer;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.streamcodecs.StreamCodec;
 import io.activej.streamcodecs.StreamCodecs;
 import io.activej.test.rules.ByteBufRule;
@@ -259,7 +261,7 @@ public final class PartitionedStreamTest {
 
 		Set<String> allTargetItems = new HashSet<>();
 		for (int i = 0; i < targetFsServers.size(); i++) {
-			ActiveFs fs = createClient(Eventloop.getCurrentEventloop(), targetFsServers.get(i));
+			ActiveFs fs = createClient(Reactor.getCurrentReactor(), targetFsServers.get(i));
 			List<String> items = new ArrayList<>();
 			await(fs.download(TARGET_FILENAME)
 					.then(supplier -> supplier.transformWith(new CSVDecoder())
@@ -274,7 +276,7 @@ public final class PartitionedStreamTest {
 		}
 
 		Set<String> sourceFiltered = await(Promises.toList(sourceFsServers.stream()
-						.map(server -> createClient(Eventloop.getCurrentEventloop(), server))
+						.map(server -> createClient(Reactor.getCurrentReactor(), server))
 						.map(client -> client.download(SOURCE_FILENAME)
 								.then(supplier -> supplier
 										.transformWith(new CSVDecoder())
@@ -295,25 +297,25 @@ public final class PartitionedStreamTest {
 				createSerializersModule(),
 				new AbstractModule() {
 					@Provides
-					Eventloop eventloop() {
+					NioReactor reactor() {
 						return serverEventloop;
 					}
 
 					@Provides
-					DataflowServer server(Eventloop eventloop, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator locator, Injector injector) {
-						return DataflowServer.create(eventloop, codec, locator, injector);
+					DataflowServer server(NioReactor reactor, ByteBufsCodec<DataflowRequest, DataflowResponse> codec, BinarySerializerLocator locator, Injector injector) {
+						return DataflowServer.create(reactor, codec, locator, injector);
 					}
 
 					@Provides
 					@Named("source")
-					List<ActiveFs> sourceFss(Eventloop eventloop) {
-						return createClients(eventloop, sourceFsServers);
+					List<ActiveFs> sourceFss(NioReactor reactor) {
+						return createClients(reactor, sourceFsServers);
 					}
 
 					@Provides
 					@Named("target")
-					List<ActiveFs> targetFss(Eventloop eventloop) {
-						return createClients(eventloop, targetFsServers);
+					List<ActiveFs> targetFss(NioReactor reactor) {
+						return createClients(reactor, targetFsServers);
 					}
 
 					@Provides
@@ -374,8 +376,8 @@ public final class PartitionedStreamTest {
 				createSerializersModule(),
 				new AbstractModule() {
 					@Provides
-					Eventloop eventloop() {
-						return Eventloop.getCurrentEventloop();
+					NioReactor reactor() {
+						return Reactor.getCurrentReactor();
 					}
 
 					@Provides
@@ -402,15 +404,15 @@ public final class PartitionedStreamTest {
 	// endregion
 
 	// region helpers
-	private static List<ActiveFs> createClients(Eventloop eventloop, List<AsyncHttpServer> servers) {
+	private static List<ActiveFs> createClients(NioReactor reactor, List<AsyncHttpServer> servers) {
 		return servers.stream()
-				.map(server -> createClient(eventloop, server))
+				.map(server -> createClient(reactor, server))
 				.collect(Collectors.toList());
 	}
 
-	private static ActiveFs createClient(Eventloop eventloop, AsyncHttpServer server) {
+	private static ActiveFs createClient(NioReactor reactor, AsyncHttpServer server) {
 		int port = server.getListenAddresses().get(0).getPort();
-		return HttpActiveFs.create("http://localhost:" + port, AsyncHttpClient.create(eventloop));
+		return HttpActiveFs.create("http://localhost:" + port, AsyncHttpClient.create(reactor));
 	}
 
 	private void assertSorted(Collection<List<String>> result) {

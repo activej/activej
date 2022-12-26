@@ -17,6 +17,8 @@ import io.activej.http.AsyncHttpClient;
 import io.activej.http.AsyncHttpServer;
 import io.activej.net.AbstractServer;
 import io.activej.promise.Promises;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.jetbrains.annotations.Nullable;
@@ -77,8 +79,8 @@ public final class TestClusterActiveFs {
 
 		Map<Object, ActiveFs> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
 
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
-		AsyncHttpClient httpClient = AsyncHttpClient.create(eventloop);
+		NioReactor reactor = Reactor.getCurrentReactor();
+		AsyncHttpClient httpClient = AsyncHttpClient.create(reactor);
 
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
 			int port = getFreePort();
@@ -112,7 +114,7 @@ public final class TestClusterActiveFs {
 		partitions.put("dead_two", HttpActiveFs.create("http://localhost:" + 5556, httpClient));
 		partitions.put("dead_three", HttpActiveFs.create("http://localhost:" + 5557, httpClient));
 
-		this.partitions = FsPartitions.create(eventloop, DiscoveryService.constant(partitions));
+		this.partitions = FsPartitions.create(reactor, DiscoveryService.constant(partitions));
 		client = ClusterActiveFs.create(this.partitions);
 		client.withReplicationCount(REPLICATION_COUNT); // there are those 3 dead nodes added above
 		await(this.partitions.start());
@@ -580,7 +582,7 @@ public final class TestClusterActiveFs {
 	private void waitForServersToStop() {
 		try {
 			for (AbstractServer<?> server : servers) {
-				Eventloop serverEventloop = server.getEventloop();
+				Eventloop serverEventloop = (Eventloop) server.getReactor();
 				if (server.isRunning()) {
 					serverEventloop.submit(server::close).get();
 				}

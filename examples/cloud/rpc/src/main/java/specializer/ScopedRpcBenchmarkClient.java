@@ -5,9 +5,13 @@ import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
+import io.activej.inject.module.ModuleBuilder;
+import io.activej.inject.module.Modules;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.service.ServiceGraphModule;
 import org.jetbrains.annotations.Nullable;
@@ -33,24 +37,29 @@ public final class ScopedRpcBenchmarkClient extends Launcher {
 	RpcClient client;
 
 	@Inject
-	Eventloop eventloop;
+	Reactor reactor;
 
 	@Provides
-	Eventloop eventloop() {
+	NioReactor reactor() {
 		return Eventloop.create()
 				.withFatalErrorHandler(rethrow());
 	}
 
 	@Provides
-	public RpcClient client(Eventloop eventloop) {
-		return RpcClient.create(eventloop)
+	public RpcClient client(NioReactor reactor) {
+		return RpcClient.create(reactor)
 				.withMessageTypes(RpcRequest.class, RpcResponse.class)
 				.withStrategy(server(new InetSocketAddress(PORT)));
 	}
 
 	@Override
 	protected Module getModule() {
-		return ServiceGraphModule.create();
+		return Modules.combine(
+				ModuleBuilder.create()
+						.bind(Reactor.class).to(NioReactor.class)
+						.build(),
+				ServiceGraphModule.create()
+		);
 	}
 
 	int sent;
@@ -94,7 +103,7 @@ public final class ScopedRpcBenchmarkClient extends Launcher {
 	}
 
 	private long round() throws Exception {
-		return eventloop.submit(this::roundCall).get();
+		return reactor.submit(this::roundCall).get();
 	}
 
 	private Promise<Long> roundCall() {

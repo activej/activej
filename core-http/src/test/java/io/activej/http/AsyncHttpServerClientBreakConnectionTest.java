@@ -1,7 +1,8 @@
 package io.activej.http;
 
-import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promises;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -26,7 +27,7 @@ public class AsyncHttpServerClientBreakConnectionTest {
 	@ClassRule
 	public static final ByteBufRule bufRule = new ByteBufRule();
 
-	private final Eventloop eventloop = Eventloop.getCurrentEventloop();
+	private final NioReactor reactor = Reactor.getCurrentReactor();
 	private AsyncHttpServer server;
 	private AsyncHttpClient client;
 	private int freePort;
@@ -34,10 +35,10 @@ public class AsyncHttpServerClientBreakConnectionTest {
 	@Before
 	public void init() throws IOException {
 		freePort = getFreePort();
-		server = AsyncHttpServer.create(eventloop,
+		server = AsyncHttpServer.create(reactor,
 				request -> {
 					logger.info("Closing server...");
-					eventloop.post(() ->
+					reactor.post(() ->
 							server.close().whenComplete(() -> logger.info("Server Closed")));
 					return Promises.delay(100L,
 							HttpResponse.ok200()
@@ -47,7 +48,7 @@ public class AsyncHttpServerClientBreakConnectionTest {
 				.withListenPort(freePort)
 				.withAcceptOnce();
 
-		client = AsyncHttpClient.create(eventloop);
+		client = AsyncHttpClient.create(reactor);
 		server.listen();
 	}
 

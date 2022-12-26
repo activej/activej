@@ -1,8 +1,8 @@
 package io.activej.rpc.protocol.stream;
 
 import io.activej.csp.process.frames.LZ4FrameFormat;
-import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.server.RpcServer;
 import io.activej.test.rules.ByteBufRule;
@@ -42,7 +42,7 @@ public class JmxMessagesRpcServerTest {
 	@Before
 	public void setup() throws IOException {
 		listenPort = getFreePort();
-		server = RpcServer.create(Eventloop.getCurrentEventloop())
+		server = RpcServer.create(Reactor.getCurrentReactor())
 				.withMessageTypes(String.class)
 				.withStreamProtocol(DEFAULT_INITIAL_BUFFER_SIZE, FRAME_FORMAT)
 				.withHandler(String.class, request ->
@@ -54,7 +54,7 @@ public class JmxMessagesRpcServerTest {
 
 	@Test
 	public void testWithoutProtocolError() {
-		RpcClient client = RpcClient.create(Eventloop.getCurrentEventloop())
+		RpcClient client = RpcClient.create(Reactor.getCurrentReactor())
 				.withMessageTypes(String.class)
 				.withStreamProtocol(DEFAULT_PACKET_SIZE, FRAME_FORMAT)
 				.withStrategy(server(new InetSocketAddress("localhost", listenPort)));
@@ -66,7 +66,7 @@ public class JmxMessagesRpcServerTest {
 
 	@Test
 	public void testWithProtocolError() {
-		RpcClient client = RpcClient.create(Eventloop.getCurrentEventloop())
+		RpcClient client = RpcClient.create(Reactor.getCurrentReactor())
 				.withMessageTypes(String.class)
 				.withStrategy(server(new InetSocketAddress("localhost", listenPort)));
 		await(client.start()
@@ -77,7 +77,7 @@ public class JmxMessagesRpcServerTest {
 
 	@Test
 	public void testWithProtocolError2() {
-		RpcClient client = RpcClient.create(Eventloop.getCurrentEventloop())
+		RpcClient client = RpcClient.create(Reactor.getCurrentReactor())
 				.withMessageTypes(String.class)
 				.withStrategy(server(new InetSocketAddress("localhost", listenPort)));
 		await(client.start()

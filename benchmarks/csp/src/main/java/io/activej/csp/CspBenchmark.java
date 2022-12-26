@@ -10,6 +10,7 @@ import io.activej.inject.annotation.Transient;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import io.activej.service.ServiceGraphModule;
 
 import static io.activej.config.converter.ConfigConverters.ofInteger;
@@ -37,7 +38,7 @@ public class CspBenchmark extends Launcher {
 
 	//region fields
 	@Inject
-	Eventloop eventloop;
+	Reactor reactor;
 
 	@Inject
 	Config config;
@@ -49,7 +50,7 @@ public class CspBenchmark extends Launcher {
 	InstanceProvider<ChannelConsumer<Integer>> outputProvider;
 
 	@Provides
-	Eventloop eventloop() {
+	Reactor reactor() {
 		return Eventloop.create();
 	}
 
@@ -126,7 +127,7 @@ public class CspBenchmark extends Launcher {
 	}
 
 	private long round() throws Exception {
-		return eventloop.submit(this::roundCall).get();
+		return reactor.submit(this::roundCall).get();
 	}
 
 	private Promise<Long> roundCall() {

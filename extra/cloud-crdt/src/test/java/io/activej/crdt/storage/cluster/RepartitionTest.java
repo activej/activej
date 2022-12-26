@@ -6,7 +6,7 @@ import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
-import io.activej.eventloop.Eventloop;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -37,18 +37,18 @@ public final class RepartitionTest {
 
 		Map<String, CrdtStorageMap<String, Long>> clients = new LinkedHashMap<>();
 		for (int i = 0; i < 10; i++) {
-			CrdtStorageMap<String, Long> client = CrdtStorageMap.create(Eventloop.getCurrentEventloop(), crdtFunction);
+			CrdtStorageMap<String, Long> client = CrdtStorageMap.create(Reactor.getCurrentReactor(), crdtFunction);
 			clients.put("client_" + i, client);
 		}
 		String localPartitionId = "client_0";
-		long now = Eventloop.getCurrentEventloop().currentTimeMillis();
+		long now = Reactor.getCurrentReactor().currentTimeMillis();
 		List<CrdtData<String, Long>> data = LongStream.range(1, 100)
 				.mapToObj(i -> new CrdtData<>("test" + i, now, i)).toList();
 		await(StreamSupplier.ofIterator(data.iterator())
 				.streamTo(StreamConsumer.ofPromise(clients.get(localPartitionId).upload())));
 
 		int replicationCount = 3;
-		CrdtStorageCluster<String, Long, String> cluster = CrdtStorageCluster.create(Eventloop.getCurrentEventloop(),
+		CrdtStorageCluster<String, Long, String> cluster = CrdtStorageCluster.create(Reactor.getCurrentReactor(),
 				DiscoveryService.of(
 						RendezvousPartitionScheme.<String>create()
 								.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet()).withReplicas(replicationCount))

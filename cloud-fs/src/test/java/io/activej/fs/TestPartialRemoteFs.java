@@ -5,11 +5,11 @@ import io.activej.bytebuf.ByteBufs;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.file.ChannelFileWriter;
-import io.activej.eventloop.Eventloop;
 import io.activej.fs.exception.IllegalOffsetException;
 import io.activej.fs.exception.MalformedGlobException;
 import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.fs.tcp.RemoteActiveFs;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -62,11 +62,11 @@ public final class TestPartialRemoteFs {
 
 		serverStorage = tempFolder.newFolder().toPath();
 		clientStorage = tempFolder.newFolder().toPath();
-		LocalActiveFs localFs = LocalActiveFs.create(Eventloop.getCurrentEventloop(), executor, serverStorage);
+		LocalActiveFs localFs = LocalActiveFs.create(Reactor.getCurrentReactor(), executor, serverStorage);
 		await(localFs.start());
-		server = ActiveFsServer.create(Eventloop.getCurrentEventloop(), localFs).withListenAddress(address);
+		server = ActiveFsServer.create(Reactor.getCurrentReactor(), localFs).withListenAddress(address);
 		server.listen();
-		client = RemoteActiveFs.create(Eventloop.getCurrentEventloop(), address);
+		client = RemoteActiveFs.create(Reactor.getCurrentReactor(), address);
 
 		Files.write(serverStorage.resolve(FILE), CONTENT);
 	}

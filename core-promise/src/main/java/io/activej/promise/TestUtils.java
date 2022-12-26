@@ -17,6 +17,7 @@
 package io.activej.promise;
 
 import io.activej.eventloop.Eventloop;
+import io.activej.reactor.Reactor;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -54,7 +55,8 @@ public class TestUtils {
 
 	private static <T> T compute(Promise<T> promise) throws ExecutionException {
 		Future<T> future = promise.toCompletableFuture();
-		Eventloop.getCurrentEventloop().run();
+		Eventloop eventloop = Reactor.getCurrentReactor();
+		eventloop.run();
 		try {
 			return future.get();
 		} catch (InterruptedException e) {

@@ -1,19 +1,19 @@
 package adder;
 
-import io.activej.async.service.EventloopTaskScheduler;
+import io.activej.async.service.ReactorTaskScheduler;
 import io.activej.common.initializer.Initializer;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.hash.CrdtMap;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.storage.cluster.PartitionId;
 import io.activej.crdt.wal.WriteAheadLog;
-import io.activej.eventloop.Eventloop;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.ProvidesIntoSet;
 import io.activej.inject.module.AbstractModule;
+import io.activej.reactor.Reactor;
 import io.activej.rpc.server.RpcRequestHandler;
 import io.activej.service.ServiceGraphModuleSettings;
 import org.slf4j.Logger;
@@ -77,8 +77,8 @@ public final class AdderServerModule extends AbstractModule {
 	}
 
 	@Provides
-	CrdtMap<Long, SimpleSumsCrdtState> map(Eventloop eventloop, PartitionId partitionId, CrdtStorage<Long, DetailedSumsCrdtState> storage) {
-		return new AdderCrdtMap(eventloop, partitionId.toString(), storage);
+	CrdtMap<Long, SimpleSumsCrdtState> map(Reactor reactor, PartitionId partitionId, CrdtStorage<Long, DetailedSumsCrdtState> storage) {
+		return new AdderCrdtMap(reactor, partitionId.toString(), storage);
 	}
 
 	@Provides
@@ -105,8 +105,8 @@ public final class AdderServerModule extends AbstractModule {
 	@Provides
 	@Eager
 	@Named("Map refresh")
-	EventloopTaskScheduler mapRefresh(Eventloop eventloop, CrdtMap<Long, SimpleSumsCrdtState> map) {
-		return EventloopTaskScheduler.create(eventloop, map::refresh)
+	ReactorTaskScheduler mapRefresh(Reactor reactor, CrdtMap<Long, SimpleSumsCrdtState> map) {
+		return ReactorTaskScheduler.create(reactor, map::refresh)
 				.withInterval(Duration.ofSeconds(10));
 	}
 }

@@ -10,6 +10,7 @@ import io.activej.inject.annotation.Transient;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import io.activej.service.ServiceGraphModule;
 
 import java.util.function.Function;
@@ -42,7 +43,7 @@ public class DatastreamBenchmark extends Launcher {
 
 	//region fields
 	@Inject
-	Eventloop eventloop;
+	Reactor reactor;
 
 	@Inject
 	Config config;
@@ -57,7 +58,7 @@ public class DatastreamBenchmark extends Launcher {
 	InstanceProvider<StreamConsumer<Integer>> outputProvider;
 
 	@Provides
-	Eventloop eventloop() {
+	Reactor reactor() {
 		return Eventloop.create().withCurrentThread();
 	}
 
@@ -141,7 +142,7 @@ public class DatastreamBenchmark extends Launcher {
 	}
 
 	private long round() throws Exception {
-		return eventloop.submit(this::roundCall).get();
+		return reactor.submit(this::roundCall).get();
 	}
 
 	private Promise<Long> roundCall() {

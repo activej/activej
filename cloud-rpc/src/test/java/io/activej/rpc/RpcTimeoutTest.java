@@ -1,8 +1,9 @@
 package io.activej.rpc;
 
 import io.activej.async.exception.AsyncTimeoutException;
-import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.server.RpcServer;
 import io.activej.test.rules.ActivePromisesRule;
@@ -49,11 +50,11 @@ public final class RpcTimeoutTest {
 	@Before
 	public void setUp() throws Exception {
 		int port = getFreePort();
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		NioReactor reactor = Reactor.getCurrentReactor();
 		Executor executor = Executors.newSingleThreadExecutor();
 		List<Class<?>> messageTypes = List.of(String.class);
 
-		server = RpcServer.create(eventloop)
+		server = RpcServer.create(reactor)
 				.withMessageTypes(messageTypes)
 				.withHandler(String.class,
 						request -> Promise.ofBlocking(executor, () -> {
@@ -62,7 +63,7 @@ public final class RpcTimeoutTest {
 						}))
 				.withListenPort(port);
 
-		client = RpcClient.create(eventloop)
+		client = RpcClient.create(reactor)
 				.withMessageTypes(messageTypes)
 				.withStrategy(server(new InetSocketAddress(port)));
 

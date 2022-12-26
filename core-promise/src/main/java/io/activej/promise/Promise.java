@@ -20,7 +20,7 @@ import io.activej.async.callback.AsyncComputation;
 import io.activej.async.callback.Callback;
 import io.activej.common.collection.Try;
 import io.activej.common.function.*;
-import io.activej.eventloop.Eventloop;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,7 +37,8 @@ import java.util.function.Supplier;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.exception.FatalErrorHandlers.getExceptionOrThrowError;
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
-import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
+import static io.activej.reactor.Reactor.getCurrentReactor;
+import static io.activej.reactor.util.RunnableWithContext.wrapContext;
 
 /**
  * Replacement of default Java {@link CompletionStage} interface with
@@ -163,17 +164,17 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	}
 
 	/**
-	 * Wraps Java {@link CompletionStage} in a {@code Promise}, running it in current eventloop.
+	 * Wraps Java {@link CompletionStage} in a {@code Promise}, running it in current reactor.
 	 *
 	 * @param completionStage completion stage itself
 	 * @return result of the given completionStage wrapped in a {@code Promise}
 	 */
 	static <T> @NotNull Promise<T> ofCompletionStage(CompletionStage<? extends T> completionStage) {
 		return ofCallback(cb -> {
-			Eventloop eventloop = Eventloop.getCurrentEventloop();
-			eventloop.startExternalTask();
+			Reactor reactor = getCurrentReactor();
+			reactor.startExternalTask();
 			completionStage.whenCompleteAsync((result, throwable) -> {
-				eventloop.execute(wrapContext(cb, () -> {
+				reactor.execute(wrapContext(cb, () -> {
 					if (throwable == null) {
 						cb.accept(result, null);
 					} else {
@@ -182,7 +183,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 						cb.accept(null, e);
 					}
 				}));
-				eventloop.completeExternalTask();
+				reactor.completeExternalTask();
 			});
 		});
 	}
@@ -196,36 +197,36 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 */
 	static <T> @NotNull Promise<T> ofFuture(@NotNull Executor executor, @NotNull Future<? extends T> future) {
 		return ofCallback(cb -> {
-			Eventloop eventloop = Eventloop.getCurrentEventloop();
-			eventloop.startExternalTask();
+			Reactor reactor = Reactor.getCurrentReactor();
+			reactor.startExternalTask();
 			try {
 				executor.execute(() -> {
 					try {
 						T value = future.get();
-						eventloop.execute(wrapContext(cb, () -> cb.set(value)));
+						reactor.execute(wrapContext(cb, () -> cb.set(value)));
 					} catch (ExecutionException ex) {
-						eventloop.execute(wrapContext(cb, () -> {
+						reactor.execute(wrapContext(cb, () -> {
 							Exception e = getExceptionOrThrowError(ex.getCause());
 							handleError(e, cb);
 							cb.setException(e);
 						}));
 					} catch (InterruptedException e) {
 						Thread.currentThread().interrupt();
-						eventloop.execute(wrapContext(cb, () -> cb.setException(e)));
+						reactor.execute(wrapContext(cb, () -> cb.setException(e)));
 					} catch (CancellationException e) {
-						eventloop.execute(wrapContext(cb, () -> cb.setException(e)));
+						reactor.execute(wrapContext(cb, () -> cb.setException(e)));
 					} catch (Throwable throwable) {
-						eventloop.execute(wrapContext(cb, () -> {
+						reactor.execute(wrapContext(cb, () -> {
 							Exception e = getExceptionOrThrowError(throwable);
 							handleError(e, cb);
 							cb.setException(e);
 						}));
 					} finally {
-						eventloop.completeExternalTask();
+						reactor.completeExternalTask();
 					}
 				});
 			} catch (RejectedExecutionException e) {
-				eventloop.completeExternalTask();
+				reactor.completeExternalTask();
 				cb.setException(e);
 			}
 		});
@@ -234,7 +235,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	/**
 	 * Runs some task in another thread (executed by a given {@code Executor})
 	 * and returns a {@code Promise} for it. Also manages external task count
-	 * for current eventloop, so it won't shut down until the task is complete.
+	 * for current reactor, so it won't shut down until the task is complete.
 	 *
 	 * @param executor executor to execute the task concurrently
 	 * @param supplier the task itself
@@ -242,25 +243,25 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 */
 	static <T> Promise<T> ofBlocking(@NotNull Executor executor, @NotNull SupplierEx<? extends T> supplier) {
 		return ofCallback(cb -> {
-			Eventloop eventloop = Eventloop.getCurrentEventloop();
-			eventloop.startExternalTask();
+			Reactor reactor = Reactor.getCurrentReactor();
+			reactor.startExternalTask();
 			try {
 				executor.execute(() -> {
 					try {
 						T result = supplier.get();
-						eventloop.execute(wrapContext(cb, () -> cb.set(result)));
+						reactor.execute(wrapContext(cb, () -> cb.set(result)));
 					} catch (Throwable throwable) {
-						eventloop.execute(wrapContext(cb, () -> {
+						reactor.execute(wrapContext(cb, () -> {
 							Exception e = getExceptionOrThrowError(throwable);
 							handleError(e, cb);
 							cb.setException(e);
 						}));
 					} finally {
-						eventloop.completeExternalTask();
+						reactor.completeExternalTask();
 					}
 				});
 			} catch (RejectedExecutionException e) {
-				eventloop.completeExternalTask();
+				reactor.completeExternalTask();
 				cb.setException(e);
 			}
 		});
@@ -305,7 +306,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	/**
 	 * Ensures that {@code Promise} completes asynchronously:
 	 * if this {@code Promise} is already completed, its
-	 * completion will be posted to the next eventloop tick.
+	 * completion will be posted to the next reactor tick.
 	 * Otherwise, does nothing.
 	 */
 	@Contract(pure = true)

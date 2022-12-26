@@ -19,7 +19,7 @@ package io.activej.crdt.storage.cluster;
 import io.activej.async.function.AsyncFunction;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.process.AsyncCloseable;
-import io.activej.async.service.EventloopService;
+import io.activej.async.service.ReactorService;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.collection.Try;
 import io.activej.common.initializer.WithInitializer;
@@ -38,13 +38,13 @@ import io.activej.datastream.processor.StreamSplitter;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStatsBasic;
 import io.activej.datastream.stats.StreamStatsDetailed;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.EventStats;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 
@@ -56,10 +56,10 @@ import static io.activej.crdt.util.Utils.onItem;
 import static java.util.stream.Collectors.toMap;
 
 @SuppressWarnings("rawtypes") // JMX
-public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements CrdtStorage<K, S>, WithInitializer<CrdtStorageCluster<K, S, P>>, EventloopService, EventloopJmxBeanWithStats {
+public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements CrdtStorage<K, S>, WithInitializer<CrdtStorageCluster<K, S, P>>, ReactorService, ReactorJmxBeanWithStats {
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageCluster.class, "smoothingWindow", Duration.ofMinutes(1));
 
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 	private final DiscoveryService<P> discoveryService;
 	private final CrdtFunction<S> crdtFunction;
 	private final Map<P, CrdtStorage<K, S>> crdtStorages = new LinkedHashMap<>();
@@ -91,16 +91,16 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 	// endregion
 
 	// region creators
-	private CrdtStorageCluster(Eventloop eventloop, DiscoveryService<P> discoveryService, CrdtFunction<S> crdtFunction) {
-		this.eventloop = eventloop;
+	private CrdtStorageCluster(Reactor reactor, DiscoveryService<P> discoveryService, CrdtFunction<S> crdtFunction) {
+		this.reactor = reactor;
 		this.discoveryService = discoveryService;
 		this.crdtFunction = crdtFunction;
 	}
 
-	public static <K extends Comparable<K>, S, P> CrdtStorageCluster<K, S, P> create(Eventloop eventloop,
+	public static <K extends Comparable<K>, S, P> CrdtStorageCluster<K, S, P> create(Reactor reactor,
 			DiscoveryService<P> discoveryService,
 			CrdtFunction<S> crdtFunction) {
-		return new CrdtStorageCluster<>(eventloop, discoveryService, crdtFunction);
+		return new CrdtStorageCluster<>(reactor, discoveryService, crdtFunction);
 	}
 
 	public CrdtStorageCluster<K, S, P> withForceStart(boolean forceStart) {
@@ -121,8 +121,8 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 	// endregion
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull Reactor getReactor() {
+		return reactor;
 	}
 
 	@Override

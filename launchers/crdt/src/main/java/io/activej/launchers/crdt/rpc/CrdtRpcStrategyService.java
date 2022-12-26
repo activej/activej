@@ -17,11 +17,11 @@
 package io.activej.launchers.crdt.rpc;
 
 import io.activej.async.function.AsyncSupplier;
-import io.activej.async.service.EventloopService;
+import io.activej.async.service.ReactorService;
 import io.activej.crdt.storage.cluster.DiscoveryService;
-import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.reactor.Reactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.RpcStrategy;
 import org.jetbrains.annotations.NotNull;
@@ -31,8 +31,8 @@ import java.util.function.Function;
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Checks.checkState;
 
-public final class CrdtRpcStrategyService<K extends Comparable<K>> implements EventloopService {
-	private final Eventloop eventloop;
+public final class CrdtRpcStrategyService<K extends Comparable<K>> implements ReactorService {
+	private final Reactor reactor;
 	private final DiscoveryService<?> discoveryService;
 	private final Function<Object, K> keyGetter;
 
@@ -41,14 +41,14 @@ public final class CrdtRpcStrategyService<K extends Comparable<K>> implements Ev
 
 	private boolean stopped;
 
-	private CrdtRpcStrategyService(Eventloop eventloop, DiscoveryService<?> discoveryService, Function<Object, K> keyGetter) {
-		this.eventloop = eventloop;
+	private CrdtRpcStrategyService(Reactor reactor, DiscoveryService<?> discoveryService, Function<Object, K> keyGetter) {
+		this.reactor = reactor;
 		this.discoveryService = discoveryService;
 		this.keyGetter = keyGetter;
 	}
 
-	public static <K extends Comparable<K>> CrdtRpcStrategyService<K> create(Eventloop eventloop, DiscoveryService<?> discoveryService, Function<Object, K> keyGetter) {
-		return new CrdtRpcStrategyService<>(eventloop, discoveryService, keyGetter);
+	public static <K extends Comparable<K>> CrdtRpcStrategyService<K> create(Reactor reactor, DiscoveryService<?> discoveryService, Function<Object, K> keyGetter) {
+		return new CrdtRpcStrategyService<>(reactor, discoveryService, keyGetter);
 	}
 
 	public CrdtRpcStrategyService<K> withStrategyMapping(Function<RpcStrategy, RpcStrategy> strategyMapFn) {
@@ -57,14 +57,14 @@ public final class CrdtRpcStrategyService<K extends Comparable<K>> implements Ev
 	}
 
 	public void setRpcClient(RpcClient rpcClient) {
-		checkState(this.rpcClient == null && rpcClient.getEventloop() == eventloop);
+		checkState(this.rpcClient == null && rpcClient.getReactor() == reactor);
 
 		this.rpcClient = rpcClient;
 	}
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull Reactor getReactor() {
+		return reactor;
 	}
 
 	@Override

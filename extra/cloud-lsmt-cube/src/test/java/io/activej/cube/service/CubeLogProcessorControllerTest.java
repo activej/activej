@@ -58,11 +58,11 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 		Path logsDir = temporaryFolder.newFolder().toPath();
 
-		LocalActiveFs aggregationFs = LocalActiveFs.create(eventloop, EXECUTOR, aggregationsDir);
+		LocalActiveFs aggregationFs = LocalActiveFs.create(reactor, EXECUTOR, aggregationsDir);
 		await(aggregationFs.start());
-		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(),
+		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(reactor, ChunkIdCodec.ofLong(), new IdGeneratorStub(),
 				LZ4FrameFormat.create(), aggregationFs);
-		Cube cube = Cube.create(eventloop, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
+		Cube cube = Cube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())
 				.withDimension("campaign", ofInt())
@@ -86,16 +86,16 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 		OTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
 		LogOTState<CubeDiff> logState = LogOTState.create(cube);
-		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(eventloop, LOG_OT, uplink, logState);
+		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, logState);
 
-		logsFs = LocalActiveFs.create(eventloop, EXECUTOR, logsDir);
+		logsFs = LocalActiveFs.create(reactor, EXECUTOR, logsDir);
 		await(logsFs.start());
 		BinarySerializer<LogItem> serializer = SerializerBuilder.create(CLASS_LOADER)
 				.build(LogItem.class);
-		multilog = MultilogImpl.create(eventloop, logsFs, LZ4FrameFormat.create(), serializer, NAME_PARTITION_REMAINDER_SEQ);
+		multilog = MultilogImpl.create(reactor, logsFs, LZ4FrameFormat.create(), serializer, NAME_PARTITION_REMAINDER_SEQ);
 
 		LogOTProcessor<LogItem, CubeDiff> logProcessor = LogOTProcessor.create(
-				eventloop,
+				reactor,
 				multilog,
 				cube.logStreamConsumer(LogItem.class),
 				"test",
@@ -103,7 +103,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 				logState);
 
 		controller = CubeLogProcessorController.create(
-				eventloop,
+				reactor,
 				logState,
 				stateManager,
 				aggregationChunkStorage,

@@ -2,6 +2,8 @@ package io.activej.rpc;
 
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.protocol.RpcException;
 import io.activej.rpc.server.RpcRequestHandler;
@@ -109,9 +111,9 @@ public final class RpcNoServerTest {
 			serverThread.start();
 		}
 
-		Eventloop eventloopClient = Eventloop.getCurrentEventloop();
+		NioReactor reactor = Reactor.getCurrentReactor();
 
-		RpcClient rpcClient = RpcClient.create(eventloopClient)
+		RpcClient rpcClient = RpcClient.create(reactor)
 				.withMessageTypes(HelloRequest.class, HelloResponse.class)
 				.withStrategy(server(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port)))
 				.withConnectTimeout(Duration.ofMillis(TIMEOUT));
@@ -131,7 +133,7 @@ public final class RpcNoServerTest {
 							serverThread.start();
 						}
 					})
-					.whenComplete(() -> System.err.println("Eventloop: " + eventloopClient))
+					.whenComplete(() -> System.err.println("Eventloop: " + reactor))
 			);
 		} finally {
 			eventloopServer.submit(server::close);

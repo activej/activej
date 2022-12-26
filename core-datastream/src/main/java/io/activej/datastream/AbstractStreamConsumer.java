@@ -17,9 +17,9 @@
 package io.activej.datastream;
 
 import io.activej.common.Checks;
-import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,19 +38,19 @@ public abstract class AbstractStreamConsumer<T> implements StreamConsumer<T> {
 	private boolean initialized;
 	private @Nullable StreamDataAcceptor<T> dataAcceptor;
 
-	protected final Eventloop eventloop = Eventloop.getCurrentEventloop();
+	protected final Reactor reactor = Reactor.getCurrentReactor();
 
 	{
-		if (eventloop.inEventloopThread()) {
-			eventloop.post(this::ensureInitialized);
+		if (reactor.inReactorThread()) {
+			reactor.post(this::ensureInitialized);
 		} else {
-			eventloop.execute(this::ensureInitialized);
+			reactor.execute(this::ensureInitialized);
 		}
 	}
 
 	@Override
 	public final void consume(@NotNull StreamSupplier<T> streamSupplier) {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
 		checkState(!isStarted());
 		ensureInitialized();
 		if (acknowledgement.isComplete()) return;
@@ -69,7 +69,7 @@ public abstract class AbstractStreamConsumer<T> implements StreamConsumer<T> {
 	}
 
 	/**
-	 * This method will be called exactly once: either in the next eventloop tick after creation of this supplier
+	 * This method will be called exactly once: either in the next reactor tick after creation of this supplier
 	 * or right before {@link #onStarted()} or {@link #onError(Exception)} calls
 	 */
 	protected void onInit() {
@@ -91,7 +91,7 @@ public abstract class AbstractStreamConsumer<T> implements StreamConsumer<T> {
 	}
 
 	private void endOfStream() {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
 		if (endOfStream) return;
 		endOfStream = true;
 		onEndOfStream();
@@ -107,7 +107,7 @@ public abstract class AbstractStreamConsumer<T> implements StreamConsumer<T> {
 	 * Begins receiving data into given acceptor, resumes the associated supplier to receive data from it.
 	 */
 	public final void resume(@Nullable StreamDataAcceptor<T> dataAcceptor) {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
 		if (endOfStream) return;
 		if (this.dataAcceptor == dataAcceptor) return;
 		this.dataAcceptor = dataAcceptor;
@@ -126,7 +126,7 @@ public abstract class AbstractStreamConsumer<T> implements StreamConsumer<T> {
 	 * Triggers the {@link #getAcknowledgement() acknowledgement} of this consumer.
 	 */
 	public final void acknowledge() {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
 		ensureInitialized();
 		endOfStream = true;
 		if (acknowledgement.trySet(null)) {
@@ -136,7 +136,7 @@ public abstract class AbstractStreamConsumer<T> implements StreamConsumer<T> {
 
 	@Override
 	public final Promise<Void> getAcknowledgement() {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
 		return acknowledgement;
 	}
 
@@ -146,7 +146,7 @@ public abstract class AbstractStreamConsumer<T> implements StreamConsumer<T> {
 
 	@Override
 	public final void closeEx(@NotNull Exception e) {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
+		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
 		ensureInitialized();
 		endOfStream = true;
 		if (acknowledgement.trySetException(e)) {
@@ -173,7 +173,7 @@ public abstract class AbstractStreamConsumer<T> implements StreamConsumer<T> {
 
 	private void cleanup() {
 		onComplete();
-		eventloop.post(this::onCleanup);
+		reactor.post(this::onCleanup);
 		acknowledgement.resetCallbacks();
 		dataAcceptor = null;
 	}

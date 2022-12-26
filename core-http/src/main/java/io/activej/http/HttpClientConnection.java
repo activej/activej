@@ -23,12 +23,12 @@ import io.activej.common.recycle.Recyclable;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.queue.ChannelZeroBuffer;
-import io.activej.eventloop.Eventloop;
 import io.activej.http.AsyncHttpClient.Inspector;
 import io.activej.http.stream.BufsConsumerGzipInflater;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -104,8 +104,8 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	@Nullable HttpClientConnection addressPrev;
 	HttpClientConnection addressNext;
 
-	HttpClientConnection(Eventloop eventloop, AsyncHttpClient client, AsyncTcpSocket asyncTcpSocket, InetSocketAddress remoteAddress) {
-		super(eventloop, asyncTcpSocket, client.maxBodySize);
+	HttpClientConnection(Reactor reactor, AsyncHttpClient client, AsyncTcpSocket asyncTcpSocket, InetSocketAddress remoteAddress) {
+		super(reactor, asyncTcpSocket, client.maxBodySize);
 		this.client = client;
 		this.inspector = client.inspector;
 		this.remoteAddress = remoteAddress;
@@ -273,7 +273,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		SettablePromise<HttpResponse> promise = new SettablePromise<>();
 		this.promise = promise;
 		(pool = client.poolReadWrite).addLastNode(this);
-		poolTimestamp = eventloop.currentTimeMillis();
+		poolTimestamp = reactor.currentTimeMillis();
 		flags |= WEB_SOCKET;
 
 		byte[] encodedKey = generateWebSocketKey();
@@ -343,7 +343,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		if (readBuf == null) {
 			read();
 		} else {
-			eventloop.post(() -> {
+			reactor.post(() -> {
 				if (isClosed()) return;
 				read();
 			});
@@ -399,7 +399,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		SettablePromise<HttpResponse> promise = new SettablePromise<>();
 		this.promise = promise;
 		(pool = client.poolReadWrite).addLastNode(this);
-		poolTimestamp = eventloop.currentTimeMillis();
+		poolTimestamp = reactor.currentTimeMillis();
 		HttpHeaderValue connectionHeader = CONNECTION_KEEP_ALIVE_HEADER;
 		if (++numberOfRequests >= client.maxKeepAliveRequests && client.maxKeepAliveRequests != 0
 				|| client.keepAliveTimeoutMillis == 0) {

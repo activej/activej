@@ -18,7 +18,7 @@ package io.activej.crdt.wal;
 
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncRunnables;
-import io.activej.async.service.EventloopService;
+import io.activej.async.service.ReactorService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.initializer.WithInitializer;
@@ -33,8 +33,6 @@ import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.datastream.AbstractStreamSupplier;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.csp.ChannelSerializer;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.EventStats;
@@ -43,6 +41,8 @@ import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -68,8 +68,8 @@ import static io.activej.crdt.wal.FileWriteAheadLog.FlushMode.*;
 import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
 import static java.util.stream.Collectors.toList;
 
-public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAheadLog<K, S>, EventloopService,
-		EventloopJmxBeanWithStats, WithInitializer<FileWriteAheadLog<K, S>> {
+public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAheadLog<K, S>, ReactorService,
+		ReactorJmxBeanWithStats, WithInitializer<FileWriteAheadLog<K, S>> {
 	private static final Logger logger = LoggerFactory.getLogger(FileWriteAheadLog.class);
 
 	public static final String EXT_FINAL = ".wal";
@@ -78,7 +78,7 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAhead
 
 	private static final Duration SMOOTHING_WINDOW = ApplicationSettings.getDuration(FileWriteAheadLog.class, "smoothingWindow", Duration.ofMinutes(5));
 
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 	private final Executor executor;
 	private final Path path;
 	private final CrdtDataSerializer<K, S> serializer;
@@ -105,14 +105,14 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAhead
 	// endregion
 
 	private FileWriteAheadLog(
-			Eventloop eventloop,
+			Reactor reactor,
 			Executor executor,
 			Path path,
 			CrdtDataSerializer<K, S> serializer,
 			FlushMode flushMode,
 			@Nullable WalUploader<K, S> uploader
 	) {
-		this.eventloop = eventloop;
+		this.reactor = reactor;
 		this.executor = executor;
 		this.path = path;
 		this.serializer = serializer;
@@ -121,24 +121,24 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAhead
 	}
 
 	public static <K extends Comparable<K>, S> FileWriteAheadLog<K, S> create(
-			Eventloop eventloop,
+			Reactor reactor,
 			Executor executor,
 			Path path,
 			CrdtDataSerializer<K, S> serializer,
 			WalUploader<K, S> uploader
 	) {
-		return new FileWriteAheadLog<>(eventloop, executor, path, serializer, UPLOAD_TO_STORAGE, uploader);
+		return new FileWriteAheadLog<>(reactor, executor, path, serializer, UPLOAD_TO_STORAGE, uploader);
 	}
 
 	public static <K extends Comparable<K>, S> FileWriteAheadLog<K, S> create(
-			Eventloop eventloop,
+			Reactor reactor,
 			Executor executor,
 			Path path,
 			CrdtDataSerializer<K, S> serializer,
 			FlushMode flushMode
 	) {
 		checkArgument(flushMode == ROTATE_FILE || flushMode == ROTATE_FILE_AWAIT);
-		return new FileWriteAheadLog<>(eventloop, executor, path, serializer, flushMode, null);
+		return new FileWriteAheadLog<>(reactor, executor, path, serializer, flushMode, null);
 	}
 
 	public FileWriteAheadLog<K, S> withCurrentTimeProvider(CurrentTimeProvider now) {
@@ -168,8 +168,8 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAhead
 	}
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull Reactor getReactor() {
+		return reactor;
 	}
 
 	@Override

@@ -4,7 +4,6 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.dslplatform.json.DslJson;
 import com.dslplatform.json.JsonWriter;
-import io.activej.eventloop.Eventloop;
 import io.activej.ot.IdGeneratorStub;
 import io.activej.ot.OTCommit;
 import io.activej.ot.system.OTSystem;
@@ -12,6 +11,7 @@ import io.activej.ot.utils.TestAdd;
 import io.activej.ot.utils.TestOp;
 import io.activej.ot.utils.TestOpState;
 import io.activej.ot.utils.TestSet;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -55,7 +55,7 @@ public class OTRepositoryMySqlTest {
 	@Before
 	public void before() throws IOException, SQLException {
 		idGenerator = new IdGeneratorStub();
-		repository = OTRepositoryMySql.create(Eventloop.getCurrentEventloop(), Executors.newFixedThreadPool(4), dataSource("test.properties"), idGenerator,
+		repository = OTRepositoryMySql.create(Reactor.getCurrentReactor(), Executors.newFixedThreadPool(4), dataSource("test.properties"), idGenerator,
 				createTestOp(), TestOp.class);
 		repository.initialize();
 		repository.truncateTables();

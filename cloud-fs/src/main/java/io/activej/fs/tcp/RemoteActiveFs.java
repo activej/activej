@@ -16,7 +16,7 @@
 
 package io.activej.fs.tcp;
 
-import io.activej.async.service.EventloopService;
+import io.activej.async.service.ReactorService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.TruncatedDataException;
@@ -31,9 +31,6 @@ import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingCodec;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
-import io.activej.eventloop.net.SocketSettings;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.exception.FsException;
@@ -44,6 +41,9 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.net.SocketSettings;
+import io.activej.reactor.nio.NioReactor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -69,7 +69,7 @@ import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
  * <p>
  * Inherits all the limitations of {@link ActiveFs} implementation located on {@link ActiveFsServer}.
  */
-public final class RemoteActiveFs implements ActiveFs, EventloopService, EventloopJmxBeanWithStats, WithInitializer<RemoteActiveFs> {
+public final class RemoteActiveFs implements ActiveFs, ReactorService, ReactorJmxBeanWithStats, WithInitializer<RemoteActiveFs> {
 	private static final Logger logger = LoggerFactory.getLogger(RemoteActiveFs.class);
 
 	public static final Duration DEFAULT_CONNECTION_TIMEOUT = ApplicationSettings.getDuration(RemoteActiveFs.class, "connectTimeout", Duration.ZERO);
@@ -79,7 +79,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 			RemoteFsUtils.FS_REQUEST_CODEC
 	);
 
-	private final Eventloop eventloop;
+	private final NioReactor reactor;
 	private final InetSocketAddress address;
 
 	private SocketSettings socketSettings = SocketSettings.createDefault();
@@ -107,13 +107,13 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 	//endregion
 
 	// region creators
-	private RemoteActiveFs(Eventloop eventloop, InetSocketAddress address) {
-		this.eventloop = eventloop;
+	private RemoteActiveFs(NioReactor reactor, InetSocketAddress address) {
+		this.reactor = reactor;
 		this.address = address;
 	}
 
-	public static RemoteActiveFs create(Eventloop eventloop, InetSocketAddress address) {
-		return new RemoteActiveFs(eventloop, address);
+	public static RemoteActiveFs create(NioReactor reactor, InetSocketAddress address) {
+		return new RemoteActiveFs(reactor, address);
 	}
 
 	public RemoteActiveFs withSocketSettings(SocketSettings socketSettings) {
@@ -128,8 +128,8 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 	// endregion
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull NioReactor getReactor() {
+		return reactor;
 	}
 
 	@Override
@@ -330,7 +330,7 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 	}
 
 	private Promise<MessagingWithBinaryStreaming<FsResponse, FsRequest>> doConnect(InetSocketAddress address, SocketSettings socketSettings) {
-		return AsyncTcpSocketNio.connect(address, connectionTimeout, socketSettings)
+		return AsyncTcpSocketNio.connect(reactor, address, connectionTimeout, socketSettings)
 				.map(socket -> MessagingWithBinaryStreaming.create(socket, SERIALIZER))
 				.whenResult(() -> logger.trace("connected to [{}]: {}", address, this))
 				.whenException(e -> logger.warn("failed connecting to [{}] : {}", address, this, e))

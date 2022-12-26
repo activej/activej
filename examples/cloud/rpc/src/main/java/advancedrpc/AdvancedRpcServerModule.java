@@ -5,6 +5,7 @@ import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.promise.Promise;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.SerializerBuilder;
 import io.activej.worker.WorkerPool;
@@ -26,7 +27,7 @@ public class AdvancedRpcServerModule extends AbstractModule {
 
 	@Provides
 	@Worker
-	Eventloop eventloop() {
+	NioReactor reactor() {
 		return Eventloop.create();
 	}
 
@@ -38,8 +39,8 @@ public class AdvancedRpcServerModule extends AbstractModule {
 
 	@Provides
 	@Worker
-	RpcServer rpcServer(Eventloop eventloop, Integer port) {
-		return RpcServer.create(eventloop)
+	RpcServer rpcServer(NioReactor reactor, Integer port) {
+		return RpcServer.create(reactor)
 				.withSerializerBuilder(SerializerBuilder.create())
 				.withMessageTypes(Integer.class)
 				.withHandler(Integer.class, in -> {

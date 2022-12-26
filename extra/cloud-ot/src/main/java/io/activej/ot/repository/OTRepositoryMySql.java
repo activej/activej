@@ -23,8 +23,6 @@ import com.dslplatform.json.runtime.Settings;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.initializer.WithInitializer;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.ot.OTCommit;
 import io.activej.ot.exception.NoCommitException;
@@ -34,6 +32,8 @@ import io.activej.ot.util.IdGenerator;
 import io.activej.promise.Promise;
 import io.activej.promise.RetryPolicy;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
 import io.activej.types.TypeT;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -62,14 +62,14 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.util.stream.Collectors.joining;
 
-public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmxBeanWithStats, WithInitializer<OTRepositoryMySql<D>> {
+public class OTRepositoryMySql<D> implements OTRepository<Long, D>, ReactorJmxBeanWithStats, WithInitializer<OTRepositoryMySql<D>> {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 	public static final String DEFAULT_REVISION_TABLE = "ot_revisions";
 	public static final String DEFAULT_DIFFS_TABLE = "ot_diffs";
 	public static final String DEFAULT_BACKUP_TABLE = "ot_revisions_backup";
 
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 	private final Executor executor;
 
 	private final DataSource dataSource;
@@ -97,9 +97,9 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 	private final PromiseStats promiseLoadSnapshot = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseSaveSnapshot = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 
-	private OTRepositoryMySql(Eventloop eventloop, Executor executor, DataSource dataSource, IdGenerator<Long> idGenerator,
+	private OTRepositoryMySql(Reactor reactor, Executor executor, DataSource dataSource, IdGenerator<Long> idGenerator,
 			OTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder) {
-		this.eventloop = eventloop;
+		this.reactor = reactor;
 		this.executor = executor;
 		this.dataSource = dataSource;
 		this.idGenerator = idGenerator;
@@ -108,35 +108,35 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 		this.encoder = indent((writer, value) -> writer.serialize(value, encoder));
 	}
 
-	public static <D> OTRepositoryMySql<D> create(Eventloop eventloop, Executor executor, DataSource dataSource, IdGenerator<Long> idGenerator,
+	public static <D> OTRepositoryMySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, IdGenerator<Long> idGenerator,
 			OTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder) {
-		return new OTRepositoryMySql<>(eventloop, executor, dataSource, idGenerator, otSystem, decoder, encoder);
+		return new OTRepositoryMySql<>(reactor, executor, dataSource, idGenerator, otSystem, decoder, encoder);
 	}
 
-	public static <D, F extends ReadObject<D> & WriteObject<D>> OTRepositoryMySql<D> create(Eventloop eventloop, Executor executor, DataSource dataSource, IdGenerator<Long> idGenerator,
+	public static <D, F extends ReadObject<D> & WriteObject<D>> OTRepositoryMySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, IdGenerator<Long> idGenerator,
 			OTSystem<D> otSystem, F format) {
-		return new OTRepositoryMySql<>(eventloop, executor, dataSource, idGenerator, otSystem, format, format);
+		return new OTRepositoryMySql<>(reactor, executor, dataSource, idGenerator, otSystem, format, format);
 	}
 
-	public static <D> OTRepositoryMySql<D> create(Eventloop eventloop, Executor executor, DataSource dataSource, IdGenerator<Long> idGenerator,
+	public static <D> OTRepositoryMySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, IdGenerator<Long> idGenerator,
 			OTSystem<D> otSystem, TypeT<? extends D> typeT) {
-		return create(eventloop, executor, dataSource, idGenerator, otSystem, typeT.getType());
+		return create(reactor, executor, dataSource, idGenerator, otSystem, typeT.getType());
 	}
 
-	public static <D> OTRepositoryMySql<D> create(Eventloop eventloop, Executor executor, DataSource dataSource, IdGenerator<Long> idGenerator,
+	public static <D> OTRepositoryMySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, IdGenerator<Long> idGenerator,
 			OTSystem<D> otSystem, Class<? extends D> diffClass) {
-		return create(eventloop, executor, dataSource, idGenerator, otSystem, (Type) diffClass);
+		return create(reactor, executor, dataSource, idGenerator, otSystem, (Type) diffClass);
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <D> OTRepositoryMySql<D> create(Eventloop eventloop, Executor executor, DataSource dataSource, IdGenerator<Long> idGenerator,
+	private static <D> OTRepositoryMySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, IdGenerator<Long> idGenerator,
 			OTSystem<D> otSystem, Type diffType) {
 		ReadObject<D> decoder = (ReadObject<D>) DSL_JSON.tryFindReader(diffType);
 		WriteObject<D> encoder = (WriteObject<D>) DSL_JSON.tryFindWriter(diffType);
 		if (decoder == null || encoder == null) {
 			throw new IllegalArgumentException("Unknown type: " + diffType);
 		}
-		return new OTRepositoryMySql<>(eventloop, executor, dataSource, idGenerator, otSystem, decoder, encoder);
+		return new OTRepositoryMySql<>(reactor, executor, dataSource, idGenerator, otSystem, decoder, encoder);
 	}
 
 	public OTRepositoryMySql<D> withCreatedBy(String createdBy) {
@@ -525,8 +525,8 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, EventloopJmx
 	}
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull Reactor getReactor() {
+		return reactor;
 	}
 
 	private void updateRevisions(Collection<Long> heads, Connection connection, String type) throws SQLException {

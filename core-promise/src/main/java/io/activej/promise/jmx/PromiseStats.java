@@ -20,25 +20,25 @@ import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.function.BiConsumerEx;
 import io.activej.common.initializer.WithInitializer;
-import io.activej.eventloop.Eventloop;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.ExceptionStats;
 import io.activej.jmx.stats.JmxHistogram;
 import io.activej.jmx.stats.ValueStats;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.time.Instant;
 
-import static io.activej.eventloop.Eventloop.getCurrentEventloop;
 import static io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 
 /**
  * Allows tracking stats of {@link Promise}s.
  */
 public class PromiseStats implements WithInitializer<PromiseStats> {
-	private @Nullable Eventloop eventloop;
+	private @Nullable Reactor reactor;
 
 	private int activePromises = 0;
 	private long lastStartTimestamp = 0;
@@ -46,13 +46,13 @@ public class PromiseStats implements WithInitializer<PromiseStats> {
 	private final ValueStats duration;
 	private final ExceptionStats exceptions = ExceptionStats.create();
 
-	protected PromiseStats(@Nullable Eventloop eventloop, ValueStats duration) {
-		this.eventloop = eventloop;
+	protected PromiseStats(@Nullable Reactor reactor, ValueStats duration) {
+		this.reactor = reactor;
 		this.duration = duration;
 	}
 
-	public static PromiseStats createMBean(Eventloop eventloop, Duration smoothingWindow) {
-		return new PromiseStats(eventloop, ValueStats.create(smoothingWindow));
+	public static PromiseStats createMBean(Reactor reactor, Duration smoothingWindow) {
+		return new PromiseStats(reactor, ValueStats.create(smoothingWindow));
 	}
 
 	public static PromiseStats create(Duration smoothingWindow) {
@@ -78,10 +78,10 @@ public class PromiseStats implements WithInitializer<PromiseStats> {
 	}
 
 	private long currentTimeMillis() {
-		if (eventloop == null) {
-			eventloop = getCurrentEventloop();
+		if (reactor == null) {
+			reactor = getCurrentReactor();
 		}
-		return eventloop.currentTimeMillis();
+		return reactor.currentTimeMillis();
 	}
 
 	public <T> AsyncSupplier<T> wrapper(AsyncSupplier<T> supplier) {

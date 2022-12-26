@@ -35,12 +35,12 @@ import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.datastream.stats.StreamRegistry;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStatsDetailed;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.exception.IllegalOffsetException;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
 import io.activej.serializer.BinarySerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -58,12 +58,12 @@ import static io.activej.datastream.stats.StreamStatsSizeCounter.forByteBufs;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 
-public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanWithStats, WithInitializer<MultilogImpl<T>> {
+public final class MultilogImpl<T> implements Multilog<T>, ReactorJmxBeanWithStats, WithInitializer<MultilogImpl<T>> {
 	private static final Logger logger = LoggerFactory.getLogger(MultilogImpl.class);
 
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(256);
 
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 	private final ActiveFs fs;
 	private final LogNamingScheme namingScheme;
 	private final BinarySerializer<T> serializer;
@@ -79,18 +79,18 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanWithS
 	private final StreamStatsDetailed<ByteBuf> streamReadStats = StreamStats.detailed(forByteBufs());
 	private final StreamStatsDetailed<ByteBuf> streamWriteStats = StreamStats.detailed(forByteBufs());
 
-	private MultilogImpl(Eventloop eventloop, ActiveFs fs, FrameFormat frameFormat, BinarySerializer<T> serializer,
+	private MultilogImpl(Reactor reactor, ActiveFs fs, FrameFormat frameFormat, BinarySerializer<T> serializer,
 			LogNamingScheme namingScheme) {
-		this.eventloop = eventloop;
+		this.reactor = reactor;
 		this.fs = fs;
 		this.frameFormat = frameFormat;
 		this.serializer = serializer;
 		this.namingScheme = namingScheme;
 	}
 
-	public static <T> MultilogImpl<T> create(Eventloop eventloop, ActiveFs fs, FrameFormat frameFormat, BinarySerializer<T> serializer,
+	public static <T> MultilogImpl<T> create(Reactor reactor, ActiveFs fs, FrameFormat frameFormat, BinarySerializer<T> serializer,
 			LogNamingScheme namingScheme) {
-		return new MultilogImpl<>(eventloop, fs, frameFormat, serializer, namingScheme);
+		return new MultilogImpl<>(reactor, fs, frameFormat, serializer, namingScheme);
 	}
 
 	public MultilogImpl<T> withBufferSize(int bufferSize) {
@@ -125,7 +125,7 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanWithS
 										.withSkipSerializationErrors())
 								.transformWith(streamWrites.register(logPartition))
 								.transformWith(streamWriteStats)
-								.bindTo(new LogStreamChunker(eventloop, fs, namingScheme, logPartition,
+								.bindTo(new LogStreamChunker(reactor, fs, namingScheme, logPartition,
 										consumer -> consumer.transformWith(
 												ChannelFrameEncoder.create(frameFormat)
 														.withEncoderResets()))))
@@ -270,7 +270,7 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanWithS
 	}
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull Reactor getReactor() {
+		return reactor;
 	}
 }

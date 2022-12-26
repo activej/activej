@@ -11,9 +11,9 @@ import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.StreamSupplierWithResult;
-import io.activej.eventloop.Eventloop;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.LocalActiveFs;
+import io.activej.reactor.Reactor;
 import io.activej.serializer.BinarySerializers;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -69,10 +69,10 @@ public class MultilogImplTest {
 
 	@Test
 	public void testConsumer() {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
-		LocalActiveFs fs = LocalActiveFs.create(eventloop, newSingleThreadExecutor(), temporaryFolder.getRoot().toPath());
+		Reactor reactor = Reactor.getCurrentReactor();
+		LocalActiveFs fs = LocalActiveFs.create(reactor, newSingleThreadExecutor(), temporaryFolder.getRoot().toPath());
 		await(fs.start());
-		Multilog<String> multilog = MultilogImpl.create(eventloop, fs, frameFormat, BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ);
+		Multilog<String> multilog = MultilogImpl.create(reactor, fs, frameFormat, BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ);
 		String testPartition = "testPartition";
 
 		List<String> values = List.of("test1", "test2", "test3");
@@ -85,11 +85,11 @@ public class MultilogImplTest {
 
 	@Test
 	public void testIgnoringTruncatedLogs() {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		Reactor reactor = Reactor.getCurrentReactor();
 		Path storage = temporaryFolder.getRoot().toPath();
-		LocalActiveFs fs = LocalActiveFs.create(eventloop, newSingleThreadExecutor(), storage);
+		LocalActiveFs fs = LocalActiveFs.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
-		Multilog<String> multilog = MultilogImpl.create(eventloop, fs,
+		Multilog<String> multilog = MultilogImpl.create(reactor, fs,
 				frameFormat,
 				BinarySerializers.UTF8_SERIALIZER,
 				NAME_PARTITION_REMAINDER_SEQ)
@@ -116,11 +116,11 @@ public class MultilogImplTest {
 
 	@Test
 	public void testIgnoringMalformedLogs() {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		Reactor reactor = Reactor.getCurrentReactor();
 		Path storage = temporaryFolder.getRoot().toPath();
-		LocalActiveFs fs = LocalActiveFs.create(eventloop, newSingleThreadExecutor(), storage);
+		LocalActiveFs fs = LocalActiveFs.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
-		Multilog<String> multilog = MultilogImpl.create(eventloop, fs,
+		Multilog<String> multilog = MultilogImpl.create(reactor, fs,
 				frameFormat,
 				BinarySerializers.UTF8_SERIALIZER,
 				NAME_PARTITION_REMAINDER_SEQ)
@@ -156,11 +156,11 @@ public class MultilogImplTest {
 
 	@Test
 	public void testIgnoringReadsPastFileSize() {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		Reactor reactor = Reactor.getCurrentReactor();
 		Path storage = temporaryFolder.getRoot().toPath();
-		LocalActiveFs fs = LocalActiveFs.create(eventloop, newSingleThreadExecutor(), storage);
+		LocalActiveFs fs = LocalActiveFs.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
-		Multilog<String> multilog = MultilogImpl.create(eventloop, fs,
+		Multilog<String> multilog = MultilogImpl.create(reactor, fs,
 				frameFormat,
 				BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ)
 				.withIgnoreMalformedLogs(true);
@@ -188,14 +188,14 @@ public class MultilogImplTest {
 
 	@Test
 	public void logPositionIsCountedCorrectly() {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		Reactor reactor = Reactor.getCurrentReactor();
 
-		LocalActiveFs fs = LocalActiveFs.create(eventloop, newSingleThreadExecutor(), temporaryFolder.getRoot().toPath())
+		LocalActiveFs fs = LocalActiveFs.create(reactor, newSingleThreadExecutor(), temporaryFolder.getRoot().toPath())
 				.withReaderBufferSize(MemSize.bytes(1));
 
 		await(fs.start());
 
-		Multilog<String> multilog = MultilogImpl.create(eventloop,
+		Multilog<String> multilog = MultilogImpl.create(reactor,
 				fs,
 				frameFormat,
 				BinarySerializers.UTF8_SERIALIZER,

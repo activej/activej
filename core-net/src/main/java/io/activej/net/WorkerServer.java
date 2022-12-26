@@ -16,8 +16,8 @@
 
 package io.activej.net;
 
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.net.SocketSettings;
+import io.activej.reactor.net.SocketSettings;
+import io.activej.reactor.nio.NioReactor;
 
 import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
@@ -28,7 +28,7 @@ import java.nio.channels.SocketChannel;
  * It should be eventloop-based and should be able to accept and manage client connections.
  */
 public interface WorkerServer {
-	Eventloop getEventloop();
+	NioReactor getReactor();
 
 	void doAccept(SocketChannel socketChannel, InetSocketAddress localAddress, InetSocketAddress remoteAddress,
 			boolean ssl, SocketSettings socketSettings);

@@ -17,9 +17,9 @@
 package io.activej.fs.cluster;
 
 import io.activej.async.function.AsyncSupplier;
-import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.Reactor;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
 import io.etcd.jetcd.KV;
@@ -41,18 +41,18 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public final class EtcdWatchService {
 	private static final SettablePromise<byte[]> UPDATE_CONSUMED = new SettablePromise<>();
 
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 	private final Client client;
 	private final String key;
 
-	private EtcdWatchService(Eventloop eventloop, Client client, String key) {
-		this.eventloop = eventloop;
+	private EtcdWatchService(Reactor reactor, Client client, String key) {
+		this.reactor = reactor;
 		this.client = client;
 		this.key = key;
 	}
 
-	public static EtcdWatchService create(Eventloop eventloop, Client client, String key) {
-		return new EtcdWatchService(eventloop, client, key);
+	public static EtcdWatchService create(Reactor reactor, Client client, String key) {
+		return new EtcdWatchService(reactor, client, key);
 	}
 
 	public AsyncSupplier<byte[]> watch() {
@@ -88,7 +88,7 @@ public final class EtcdWatchService {
 					if (cb == UPDATE_CONSUMED) {
 						SettablePromise<byte[]> newCb = new SettablePromise<>();
 						if (cbRef.compareAndSet(UPDATE_CONSUMED, newCb)) {
-							eventloop.startExternalTask();
+							reactor.startExternalTask();
 							return newCb;
 						}
 						cb = cbRef.get();
@@ -148,8 +148,8 @@ public final class EtcdWatchService {
 					SettablePromise<byte[]> prevCb = cbRef.getAndSet(UPDATE_CONSUMED);
 					assert !prevCb.isComplete();
 
-					eventloop.execute(() -> consumer.accept(prevCb));
-					eventloop.completeExternalTask();
+					reactor.execute(() -> consumer.accept(prevCb));
+					reactor.completeExternalTask();
 					return;
 				}
 			}

@@ -2,6 +2,7 @@ package io.activej.rpc.client.sender;
 
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.server.RpcRequestHandler;
 import io.activej.rpc.server.RpcServer;
@@ -47,7 +48,7 @@ public final class RpcBlockingTest {
 		port2 = getFreePort();
 		port3 = getFreePort();
 
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		Eventloop eventloop = Reactor.getCurrentReactor();
 
 		serverOne = RpcServer.create(eventloop)
 				.withMessageTypes(HelloRequest.class, HelloResponse.class)
@@ -85,7 +86,7 @@ public final class RpcBlockingTest {
 		InetSocketAddress address2 = new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port2);
 		InetSocketAddress address3 = new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port3);
 
-		RpcClient client = RpcClient.create(Eventloop.getCurrentEventloop())
+		RpcClient client = RpcClient.create(Reactor.getCurrentReactor())
 				.withMessageTypes(HelloRequest.class, HelloResponse.class)
 				.withStrategy(
 						RpcStrategyRoundRobin.create(
@@ -143,7 +144,7 @@ public final class RpcBlockingTest {
 
 	private static String blockingRequest(RpcClient rpcClient, String name) throws Exception {
 		try {
-			return rpcClient.getEventloop().submit(
+			return rpcClient.getReactor().submit(
 							() -> rpcClient
 									.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT))
 					.get()

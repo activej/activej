@@ -20,14 +20,14 @@ import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncRunnables;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.initializer.WithInitializer;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
-import io.activej.eventloop.schedule.ScheduledRunnable;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
 import io.activej.promise.RetryPolicy;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.schedule.ScheduledRunnable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -40,10 +40,10 @@ import static io.activej.common.Utils.nullify;
 import static io.activej.promise.Promises.retry;
 
 @SuppressWarnings("UnusedReturnValue")
-public final class EventloopTaskScheduler implements EventloopService, WithInitializer<EventloopTaskScheduler>, EventloopJmxBeanWithStats {
-	private static final Logger logger = LoggerFactory.getLogger(EventloopTaskScheduler.class);
+public final class ReactorTaskScheduler implements ReactorService, WithInitializer<ReactorTaskScheduler>, ReactorJmxBeanWithStats {
+	private static final Logger logger = LoggerFactory.getLogger(ReactorTaskScheduler.class);
 
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 	private final AsyncSupplier<Object> task;
 	private final PromiseStats stats = PromiseStats.create(Duration.ofMinutes(5));
 
@@ -58,7 +58,7 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 
 	@Override
 	public void resetStats() {
-		EventloopJmxBeanWithStats.super.resetStats();
+		ReactorJmxBeanWithStats.super.resetStats();
 		lastException = null;
 	}
 
@@ -127,22 +127,22 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 
 	private @Nullable Promise<Void> currentPromise;
 
-	private EventloopTaskScheduler(Eventloop eventloop, AsyncSupplier<?> task) {
-		this.eventloop = eventloop;
+	private ReactorTaskScheduler(Reactor reactor, AsyncSupplier<?> task) {
+		this.reactor = reactor;
 		//noinspection unchecked
 		this.task = (AsyncSupplier<Object>) task;
 	}
 
-	public static <T> EventloopTaskScheduler create(Eventloop eventloop, AsyncSupplier<T> task) {
-		return new EventloopTaskScheduler(eventloop, task);
+	public static <T> ReactorTaskScheduler create(Reactor reactor, AsyncSupplier<T> task) {
+		return new ReactorTaskScheduler(reactor, task);
 	}
 
-	public EventloopTaskScheduler withInitialDelay(Duration initialDelay) {
+	public ReactorTaskScheduler withInitialDelay(Duration initialDelay) {
 		this.initialDelay = initialDelay.toMillis();
 		return this;
 	}
 
-	public EventloopTaskScheduler withSchedule(Schedule schedule) {
+	public ReactorTaskScheduler withSchedule(Schedule schedule) {
 		this.schedule = checkNotNull(schedule);
 		// for JMX:
 		this.period = null;
@@ -150,35 +150,35 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 		return this;
 	}
 
-	public EventloopTaskScheduler withPeriod(Duration period) {
+	public ReactorTaskScheduler withPeriod(Duration period) {
 		setPeriod(period);
 		return this;
 	}
 
-	public EventloopTaskScheduler withInterval(Duration interval) {
+	public ReactorTaskScheduler withInterval(Duration interval) {
 		setInterval(interval);
 		return this;
 	}
 
-	public EventloopTaskScheduler withRetryPolicy(RetryPolicy<?> retryPolicy) {
+	public ReactorTaskScheduler withRetryPolicy(RetryPolicy<?> retryPolicy) {
 		//noinspection unchecked
 		this.retryPolicy = (RetryPolicy<Object>) retryPolicy;
 		return this;
 	}
 
-	public EventloopTaskScheduler withAbortOnError(boolean abortOnError) {
+	public ReactorTaskScheduler withAbortOnError(boolean abortOnError) {
 		this.abortOnError = abortOnError;
 		return this;
 	}
 
-	public EventloopTaskScheduler withStatsHistogramLevels(int[] levels) {
+	public ReactorTaskScheduler withStatsHistogramLevels(int[] levels) {
 		this.stats.setHistogram(levels);
 		return this;
 	}
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull Reactor getReactor() {
+		return reactor;
 	}
 
 	private void scheduleTask() {
@@ -187,7 +187,7 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 
 		if (!enabled) return;
 
-		long now = eventloop.currentTimeMillis();
+		long now = reactor.currentTimeMillis();
 		long timestamp;
 		if (lastStartTime == 0) {
 			timestamp = now + initialDelay;
@@ -195,18 +195,18 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 			timestamp = schedule.nextTimestamp(now, lastStartTime, lastCompleteTime);
 		}
 
-		scheduledTask = eventloop.scheduleBackground(timestamp, doCall::run);
+		scheduledTask = reactor.scheduleBackground(timestamp, doCall::run);
 	}
 
 	private final AsyncRunnable doCall = AsyncRunnables.reuse(this::doCall);
 
 	private Promise<Void> doCall() {
-		lastStartTime = eventloop.currentTimeMillis();
+		lastStartTime = reactor.currentTimeMillis();
 		return currentPromise = (retryPolicy == null ?
 				task.get() :
 				retry(task, ($, e) -> e == null || !enabled, retryPolicy))
 				.whenComplete(stats.recordStats())
-				.whenComplete(() -> lastCompleteTime = eventloop.currentTimeMillis())
+				.whenComplete(() -> lastCompleteTime = reactor.currentTimeMillis())
 				.when(($1, $2) -> enabled,
 						$ -> {
 							lastException = null;

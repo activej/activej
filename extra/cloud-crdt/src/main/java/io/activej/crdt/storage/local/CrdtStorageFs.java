@@ -18,7 +18,7 @@ package io.activej.crdt.storage.local;
 
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncRunnables;
-import io.activej.async.service.EventloopService;
+import io.activej.async.service.ReactorService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.initializer.WithInitializer;
@@ -43,8 +43,6 @@ import io.activej.datastream.processor.StreamReducers;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStatsBasic;
 import io.activej.datastream.stats.StreamStatsDetailed;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.exception.FileNotFoundException;
@@ -55,6 +53,8 @@ import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
 import io.activej.serializer.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -73,14 +73,14 @@ import static io.activej.crdt.util.Utils.onItem;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStorage<K, S>,
-		WithInitializer<CrdtStorageFs<K, S>>, EventloopService, EventloopJmxBeanWithStats {
+		WithInitializer<CrdtStorageFs<K, S>>, ReactorService, ReactorJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(CrdtStorageFs.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageFs.class, "smoothingWindow", Duration.ofMinutes(1));
 
 	public static final String FILE_EXTENSION = ".bin";
 
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 	private final ActiveFs fs;
 	private final CrdtFunction<S> function;
 	private final BinarySerializer<CrdtReducingData<K, S>> serializer;
@@ -115,29 +115,29 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 
 	// region creators
 	private CrdtStorageFs(
-			Eventloop eventloop,
+			Reactor reactor,
 			ActiveFs fs,
 			CrdtDataSerializer<K, S> serializer, CrdtFunction<S> function
 	) {
-		this.eventloop = eventloop;
+		this.reactor = reactor;
 		this.fs = fs;
 		this.function = function;
 		this.serializer = createSerializer(serializer);
 	}
 
 	public static <K extends Comparable<K>, S> CrdtStorageFs<K, S> create(
-			Eventloop eventloop, ActiveFs fs,
+			Reactor reactor, ActiveFs fs,
 			CrdtDataSerializer<K, S> serializer,
 			CrdtFunction<S> function
 	) {
-		return new CrdtStorageFs<>(eventloop, fs, serializer, function);
+		return new CrdtStorageFs<>(reactor, fs, serializer, function);
 	}
 
 	public static <K extends Comparable<K>, S extends CrdtType<S>> CrdtStorageFs<K, S> create(
-			Eventloop eventloop, ActiveFs fs,
+			Reactor reactor, ActiveFs fs,
 			CrdtDataSerializer<K, S> serializer
 	) {
-		return new CrdtStorageFs<>(eventloop, fs, serializer, CrdtFunction.ofCrdtType());
+		return new CrdtStorageFs<>(reactor, fs, serializer, CrdtFunction.ofCrdtType());
 	}
 
 	public CrdtStorageFs<K, S> withNamingStrategy(Supplier<String> namingStrategy) {
@@ -152,8 +152,8 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 	// endregion
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull Reactor getReactor() {
+		return reactor;
 	}
 
 	@Override

@@ -11,12 +11,13 @@ import io.activej.cube.ot.CubeOT;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogDiffCodec;
 import io.activej.etl.LogOT;
-import io.activej.eventloop.Eventloop;
 import io.activej.ot.OTCommit;
 import io.activej.ot.repository.OTRepositoryMySql;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.OTUplink;
 import io.activej.ot.uplink.OTUplinkImpl;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
@@ -67,11 +68,11 @@ public abstract class CubeTestBase {
 	public static final Executor EXECUTOR = Executors.newCachedThreadPool();
 	public static final DataSource DATA_SOURCE;
 
-	public Eventloop eventloop;
+	public NioReactor reactor;
 
 	@Before
 	public void setUp() throws Exception {
-		eventloop = Eventloop.getCurrentEventloop();
+		reactor = Reactor.getCurrentReactor();
 	}
 
 	static {
@@ -90,8 +91,8 @@ public abstract class CubeTestBase {
 						new UplinkFactory<OTUplinkImpl<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>>>() {
 							@Override
 							public OTUplinkImpl<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> createUninitialized(Cube cube) {
-								Eventloop eventloop = Eventloop.getCurrentEventloop();
-								OTRepositoryMySql<LogDiff<CubeDiff>> repository = OTRepositoryMySql.create(eventloop, EXECUTOR, DATA_SOURCE, new IdGeneratorStub(),
+								Reactor reactor = Reactor.getCurrentReactor();
+								OTRepositoryMySql<LogDiff<CubeDiff>> repository = OTRepositoryMySql.create(reactor, EXECUTOR, DATA_SOURCE, new IdGeneratorStub(),
 										LOG_OT, LogDiffCodec.create(CubeDiffCodec.create(cube)));
 								return OTUplinkImpl.create(repository, LOG_OT);
 							}

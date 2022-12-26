@@ -5,6 +5,7 @@ import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -125,7 +126,7 @@ public class ChannelSupplierTest {
 				ByteBuf.wrapForReading("Hello".getBytes()),
 				ByteBuf.wrapForReading("World".getBytes()));
 
-		Eventloop currentEventloop = Eventloop.getCurrentEventloop();
+		Eventloop currentEventloop = Reactor.getCurrentReactor();
 		await(Promise.ofBlocking(Executors.newSingleThreadExecutor(),
 				() -> {
 					InputStream inputStream = channelSupplierAsInputStream(currentEventloop, channelSupplier);
@@ -142,7 +143,7 @@ public class ChannelSupplierTest {
 	public void testEmptyInputStream() {
 		ChannelSupplier<ByteBuf> channelSupplier = ChannelSupplier.of(ByteBuf.empty(), ByteBuf.empty());
 
-		Eventloop currentEventloop = Eventloop.getCurrentEventloop();
+		Eventloop currentEventloop = Reactor.getCurrentReactor();
 		await(Promise.ofBlocking(Executors.newSingleThreadExecutor(),
 				() -> {
 					InputStream inputStream = channelSupplierAsInputStream(currentEventloop, channelSupplier);

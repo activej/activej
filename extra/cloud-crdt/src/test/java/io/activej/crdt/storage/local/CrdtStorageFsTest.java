@@ -5,9 +5,9 @@ import io.activej.crdt.CrdtTombstone;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.datastream.StreamSupplier;
-import io.activej.eventloop.Eventloop;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.LocalActiveFs;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -49,9 +49,9 @@ public final class CrdtStorageFsTest {
 
 	@Before
 	public void setup() throws IOException {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
-		fsClient = LocalActiveFs.create(eventloop, Executors.newCachedThreadPool(), temporaryFolder.newFolder().toPath());
-		client = CrdtStorageFs.create(eventloop, fsClient, SERIALIZER, CRDT_FUNCTION);
+		Reactor reactor = Reactor.getCurrentReactor();
+		fsClient = LocalActiveFs.create(reactor, Executors.newCachedThreadPool(), temporaryFolder.newFolder().toPath());
+		client = CrdtStorageFs.create(reactor, fsClient, SERIALIZER, CRDT_FUNCTION);
 		await(fsClient.start());
 		await(client.start());
 	}
@@ -76,7 +76,7 @@ public final class CrdtStorageFsTest {
 
 	@Test
 	public void testConsolidation() {
-		long timestamp = Eventloop.getCurrentEventloop().currentTimeMillis();
+		long timestamp = Reactor.getCurrentReactor().currentTimeMillis();
 
 		List<CrdtData<String, Set<Integer>>> expected = List.of(
 				new CrdtData<>("12_test_1", timestamp, Set.of(123, 124, 125, 2, 542)),

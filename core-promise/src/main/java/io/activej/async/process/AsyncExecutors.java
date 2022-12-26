@@ -17,11 +17,11 @@
 package io.activej.async.process;
 
 import io.activej.async.function.AsyncSupplier;
-import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.RetryPolicy;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayDeque;
@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.concurrent.RejectedExecutionException;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
+import static io.activej.reactor.util.RunnableWithContext.wrapContext;
 
 public class AsyncExecutors {
 
@@ -42,20 +42,20 @@ public class AsyncExecutors {
 		};
 	}
 
-	public static AsyncExecutor ofEventloop(@NotNull Eventloop eventloop) {
+	public static AsyncExecutor ofReactor(@NotNull Reactor reactor) {
 		return new AsyncExecutor() {
 			@Override
 			public <T> @NotNull Promise<T> execute(@NotNull AsyncSupplier<T> supplier) {
-				Eventloop currentEventloop = Eventloop.getCurrentEventloop();
-				if (eventloop == currentEventloop) {
+				Reactor currentReactor = Reactor.getCurrentReactor();
+				if (reactor == currentReactor) {
 					return supplier.get();
 				}
 				return Promise.ofCallback(cb -> {
-					currentEventloop.startExternalTask();
-					eventloop.execute(wrapContext(cb, () -> supplier.get()
+					currentReactor.startExternalTask();
+					reactor.execute(wrapContext(cb, () -> supplier.get()
 							.run((result, e) -> {
-								currentEventloop.execute(wrapContext(cb, () -> cb.accept(result, e)));
-								currentEventloop.completeExternalTask();
+								currentReactor.execute(wrapContext(cb, () -> cb.accept(result, e)));
+								currentReactor.completeExternalTask();
 							})));
 				});
 			}

@@ -2,8 +2,8 @@ package io.activej.fs.cluster;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.time.Stopwatch;
-import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.EventloopRule;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
@@ -54,7 +54,7 @@ public class EtcdWatchServiceTest {
 		bs = ByteSequence.from(key, UTF_8);
 		etcdClient = Client.builder().target("cluster://" + etcdCluster.clusterName()).build();
 		putValue(INITIAL_VALUE);
-		watchService = EtcdWatchService.create(Eventloop.getCurrentEventloop(), etcdClient, key);
+		watchService = EtcdWatchService.create(Reactor.getCurrentReactor(), etcdClient, key);
 	}
 
 	@After

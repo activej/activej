@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.eventloop.jmx;
+package io.activej.reactor.jmx;
 
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
@@ -23,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 
-public interface EventloopJmxBeanWithStats extends EventloopJmxBean {
+public interface ReactorJmxBeanWithStats extends ReactorJmxBean {
 
 	@JmxOperation
 	default void resetStats() {

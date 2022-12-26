@@ -4,8 +4,8 @@ import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.datastream.StreamSupplier;
-import io.activej.eventloop.Eventloop;
 import io.activej.fs.LocalActiveFs;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.test.rules.EventloopRule;
@@ -56,12 +56,12 @@ public class ActiveFsChunkStorageTest {
 
 	@Test
 	public void testAcknowledge() throws IOException {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
+		Reactor reactor = Reactor.getCurrentReactor();
 		Path storageDir = temporaryFolder.newFolder().toPath();
-		LocalActiveFs fs = LocalActiveFs.create(eventloop, newCachedThreadPool(), storageDir);
+		LocalActiveFs fs = LocalActiveFs.create(reactor, newCachedThreadPool(), storageDir);
 		await(fs.start());
 		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(
-				eventloop,
+				reactor,
 				ChunkIdCodec.ofLong(),
 				new IdGeneratorStub(),
 				LZ4FrameFormat.create(),

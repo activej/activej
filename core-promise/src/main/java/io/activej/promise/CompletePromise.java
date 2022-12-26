@@ -28,8 +28,8 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
-import static io.activej.eventloop.Eventloop.getCurrentEventloop;
-import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
+import static io.activej.reactor.Reactor.getCurrentReactor;
+import static io.activej.reactor.util.RunnableWithContext.wrapContext;
 
 /**
  * Represents a completed {@code Promise} with a result of unspecified type.
@@ -417,7 +417,7 @@ abstract class CompletePromise<T> implements Promise<T> {
 	@Override
 	public final @NotNull Promise<T> async() {
 		SettablePromise<T> result = new SettablePromise<>();
-		getCurrentEventloop().post(wrapContext(result, () -> result.set(getResult())));
+		getCurrentReactor().post(wrapContext(result, () -> result.set(getResult())));
 		return result;
 	}
 

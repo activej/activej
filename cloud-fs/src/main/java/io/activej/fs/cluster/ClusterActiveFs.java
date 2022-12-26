@@ -19,7 +19,7 @@ package io.activej.fs.cluster;
 import io.activej.async.function.AsyncBiFunction;
 import io.activej.async.function.AsyncFunction;
 import io.activej.async.process.AsyncCloseable;
-import io.activej.async.service.EventloopService;
+import io.activej.async.service.ReactorService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.collection.Try;
 import io.activej.common.function.FunctionEx;
@@ -29,8 +29,6 @@ import io.activej.common.ref.RefBoolean;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.exception.FsIOException;
@@ -39,6 +37,8 @@ import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -70,7 +70,7 @@ import static java.util.stream.Collectors.toList;
  *     <li>Paths should not contain existing filenames as part of the path</li>
  * </ul>
  */
-public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterActiveFs>, EventloopService, EventloopJmxBeanWithStats {
+public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterActiveFs>, ReactorService, ReactorJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(ClusterActiveFs.class);
 
 	private final FsPartitions partitions;
@@ -149,8 +149,8 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 	// endregion
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return partitions.getEventloop();
+	public @NotNull Reactor getReactor() {
+		return partitions.getReactor();
 	}
 
 	@Override

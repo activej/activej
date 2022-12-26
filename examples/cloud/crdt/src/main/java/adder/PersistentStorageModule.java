@@ -1,6 +1,6 @@
 package adder;
 
-import io.activej.async.service.EventloopTaskScheduler;
+import io.activej.async.service.ReactorTaskScheduler;
 import io.activej.config.Config;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.CrdtStorage;
@@ -9,7 +9,6 @@ import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.crdt.wal.FileWriteAheadLog;
 import io.activej.crdt.wal.WalUploader;
 import io.activej.crdt.wal.WriteAheadLog;
-import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.inject.Key;
@@ -18,15 +17,16 @@ import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.launchers.crdt.Local;
+import io.activej.reactor.Reactor;
 
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static io.activej.async.service.EventloopTaskScheduler.Schedule.ofInterval;
-import static io.activej.config.converter.ConfigConverters.ofEventloopTaskSchedule;
+import static io.activej.async.service.ReactorTaskScheduler.Schedule.ofInterval;
 import static io.activej.config.converter.ConfigConverters.ofPath;
+import static io.activej.config.converter.ConfigConverters.ofReactorTaskSchedule;
 
 public final class PersistentStorageModule extends AbstractModule {
 
@@ -38,19 +38,19 @@ public final class PersistentStorageModule extends AbstractModule {
 
 	@Provides
 	WriteAheadLog<Long, DetailedSumsCrdtState> writeAheadLog(
-			Eventloop eventloop,
+			Reactor reactor,
 			Executor executor,
 			CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer,
 			WalUploader<Long, DetailedSumsCrdtState> uploader,
 			Config config
 	) {
 		Path walPath = config.get(ofPath(), "wal-storage");
-		return FileWriteAheadLog.create(eventloop, executor, walPath, serializer, uploader);
+		return FileWriteAheadLog.create(reactor, executor, walPath, serializer, uploader);
 	}
 
 	@Provides
 	WalUploader<Long, DetailedSumsCrdtState> uploader(
-			Eventloop eventloop,
+			Reactor reactor,
 			Executor executor,
 			CrdtFunction<DetailedSumsCrdtState> function,
 			CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer,
@@ -58,22 +58,22 @@ public final class PersistentStorageModule extends AbstractModule {
 			Config config
 	) {
 		Path walPath = config.get(ofPath(), "wal-storage");
-		return WalUploader.create(eventloop, executor, walPath, function, serializer, storage);
+		return WalUploader.create(reactor, executor, walPath, function, serializer, storage);
 	}
 
 	@Provides
 	CrdtStorageFs<Long, DetailedSumsCrdtState> storage(
-			Eventloop eventloop,
+			Reactor reactor,
 			ActiveFs fs,
 			CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer,
 			CrdtFunction<DetailedSumsCrdtState> function
 	) {
-		return CrdtStorageFs.create(eventloop, fs, serializer, function);
+		return CrdtStorageFs.create(reactor, fs, serializer, function);
 	}
 
 	@Provides
-	ActiveFs activeFs(Eventloop eventloop, Executor executor, Config config) {
-		return LocalActiveFs.create(eventloop, executor, config.get(ofPath(), "storage"));
+	ActiveFs activeFs(Reactor reactor, Executor executor, Config config) {
+		return LocalActiveFs.create(reactor, executor, config.get(ofPath(), "storage"));
 	}
 
 	@Provides
@@ -84,9 +84,9 @@ public final class PersistentStorageModule extends AbstractModule {
 	@Provides
 	@Named("consolidate")
 	@Eager
-	EventloopTaskScheduler consolidateScheduler(Eventloop eventloop, CrdtStorageFs<Long, DetailedSumsCrdtState> storageFs, Config config) {
-		return EventloopTaskScheduler.create(eventloop, storageFs::consolidate)
-				.withSchedule(config.get(ofEventloopTaskSchedule(), "consolidate.schedule", ofInterval(Duration.ofMinutes(3))))
+	ReactorTaskScheduler consolidateScheduler(Reactor reactor, CrdtStorageFs<Long, DetailedSumsCrdtState> storageFs, Config config) {
+		return ReactorTaskScheduler.create(reactor, storageFs::consolidate)
+				.withSchedule(config.get(ofReactorTaskSchedule(), "consolidate.schedule", ofInterval(Duration.ofMinutes(3))))
 				.withInitialDelay(Duration.ofSeconds(10));
 	}
 

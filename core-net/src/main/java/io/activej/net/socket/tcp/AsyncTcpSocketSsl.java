@@ -22,9 +22,9 @@ import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.recycle.Recyclers;
-import io.activej.eventloop.net.CloseWithoutNotifyException;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.net.CloseWithoutNotifyException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

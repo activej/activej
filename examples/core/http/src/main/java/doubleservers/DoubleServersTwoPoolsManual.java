@@ -9,6 +9,7 @@ import io.activej.inject.Scope;
 import io.activej.inject.module.AbstractModule;
 import io.activej.launcher.Launcher;
 import io.activej.net.PrimaryServer;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
 import io.activej.worker.WorkerPool;
 import io.activej.worker.WorkerPoolModule;
@@ -80,16 +81,16 @@ public final class DoubleServersTwoPoolsManual extends Launcher {
 
 		@Override
 		protected void configure() {
-			bind(Eventloop.class, "First").to(Eventloop::create);
-			bind(Eventloop.class).to(Eventloop::create).in(WorkerFirst.class);
+			bind(NioReactor.class, "First").to(Eventloop::create);
+			bind(NioReactor.class).to(Eventloop::create).in(WorkerFirst.class);
 			bind(PrimaryServer.class, "First")
-					.to((primaryEventloop, workerServers) -> PrimaryServer.create(primaryEventloop, workerServers)
+					.to((primaryReactor, workerServers) -> PrimaryServer.create(primaryReactor, workerServers)
 									.withListenAddresses(new InetSocketAddress("localhost", port)),
-							Key.of(Eventloop.class, "First"), new Key<WorkerPool.Instances<AsyncHttpServer>>("First") {});
+							Key.of(NioReactor.class, "First"), new Key<WorkerPool.Instances<AsyncHttpServer>>("First") {});
 			bind(AsyncHttpServer.class)
-					.to((eventloop, workerId) -> AsyncHttpServer.create(eventloop, request -> HttpResponse.ok200()
+					.to((reactor, workerId) -> AsyncHttpServer.create(reactor, request -> HttpResponse.ok200()
 									.withPlainText("Hello from the first server, worker #" + workerId)),
-							Key.of(Eventloop.class), Key.of(int.class, WorkerId.class)).in(WorkerFirst.class);
+							Key.of(NioReactor.class), Key.of(int.class, WorkerId.class)).in(WorkerFirst.class);
 			bind(WorkerPool.class, "First")
 					.to(workerPools -> workerPools.createPool(Scope.of(WorkerFirst.class), WORKERS), WorkerPools.class);
 		}
@@ -106,16 +107,16 @@ public final class DoubleServersTwoPoolsManual extends Launcher {
 
 		@Override
 		protected void configure() {
-			bind(Eventloop.class, "Second").to(Eventloop::create);
-			bind(Eventloop.class).to(Eventloop::create).in(WorkerSecond.class);
+			bind(NioReactor.class, "Second").to(Eventloop::create);
+			bind(NioReactor.class).to(Eventloop::create).in(WorkerSecond.class);
 			bind(PrimaryServer.class, "Second")
-					.to((primaryEventloop, workerServers) -> PrimaryServer.create(primaryEventloop, workerServers)
+					.to((primaryReactor, workerServers) -> PrimaryServer.create(primaryReactor, workerServers)
 									.withListenAddresses(new InetSocketAddress("localhost", port)),
-							Key.of(Eventloop.class, "Second"), new Key<WorkerPool.Instances<AsyncHttpServer>>("Second") {});
+							Key.of(NioReactor.class, "Second"), new Key<WorkerPool.Instances<AsyncHttpServer>>("Second") {});
 			bind(AsyncHttpServer.class)
-					.to((eventloop, workerId) -> AsyncHttpServer.create(eventloop, request -> HttpResponse.ok200()
+					.to((reactor, workerId) -> AsyncHttpServer.create(reactor, request -> HttpResponse.ok200()
 									.withPlainText("Hello from the second server, worker #" + workerId)),
-							Key.of(Eventloop.class), Key.of(int.class, WorkerId.class)).in(WorkerSecond.class);
+							Key.of(NioReactor.class), Key.of(int.class, WorkerId.class)).in(WorkerSecond.class);
 			bind(WorkerPool.class, "Second")
 					.to(workerPools -> workerPools.createPool(Scope.of(WorkerSecond.class), WORKERS), WorkerPools.class);
 		}

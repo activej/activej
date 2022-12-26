@@ -16,22 +16,22 @@
 
 package io.activej.http;
 
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 
-public abstract class AsyncServletWithStats implements AsyncServlet, EventloopJmxBeanWithStats {
-	protected final @NotNull Eventloop eventloop;
+public abstract class AsyncServletWithStats implements AsyncServlet, ReactorJmxBeanWithStats {
+	protected final @NotNull Reactor reactor;
 
 	private final PromiseStats stats = PromiseStats.create(Duration.ofMinutes(5));
 
-	protected AsyncServletWithStats(@NotNull Eventloop eventloop) {
-		this.eventloop = eventloop;
+	protected AsyncServletWithStats(@NotNull Reactor reactor) {
+		this.reactor = reactor;
 	}
 
 	protected abstract @NotNull Promise<HttpResponse> doServe(@NotNull HttpRequest request);
@@ -43,8 +43,8 @@ public abstract class AsyncServletWithStats implements AsyncServlet, EventloopJm
 	}
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull Reactor getReactor() {
+		return reactor;
 	}
 
 	@JmxAttribute

@@ -1,8 +1,9 @@
 package io.activej.dns;
 
 import io.activej.dns.protocol.*;
-import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promises;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -40,8 +41,8 @@ public final class AsyncDnsClientTest {
 
 	@Before
 	public void setUp() {
-		Eventloop eventloop = Eventloop.getCurrentEventloop();
-		cachedDnsClient = CachedAsyncDnsClient.create(eventloop, RemoteAsyncDnsClient.create(eventloop).withDnsServerAddress(LOCAL_DNS));
+		NioReactor reactor = Reactor.getCurrentReactor();
+		cachedDnsClient = CachedAsyncDnsClient.create(reactor, RemoteAsyncDnsClient.create(reactor).withDnsServerAddress(LOCAL_DNS));
 	}
 
 	@Test
@@ -70,7 +71,7 @@ public final class AsyncDnsClientTest {
 
 	@Test
 	public void testDnsClient() {
-		AsyncDnsClient dnsClient = RemoteAsyncDnsClient.create(Eventloop.getCurrentEventloop());
+		AsyncDnsClient dnsClient = RemoteAsyncDnsClient.create(Reactor.getCurrentReactor());
 
 		List<DnsResponse> list = await(Promises.toList(Stream.of("www.google.com", "www.github.com", "www.kpi.ua")
 				.map(dnsClient::resolve4)));
@@ -80,7 +81,7 @@ public final class AsyncDnsClientTest {
 
 	@Test
 	public void testDnsClientTimeout() {
-		RemoteAsyncDnsClient dnsClient = RemoteAsyncDnsClient.create(Eventloop.getCurrentEventloop())
+		RemoteAsyncDnsClient dnsClient = RemoteAsyncDnsClient.create(Reactor.getCurrentReactor())
 				.withTimeout(Duration.ofMillis(20))
 				.withDnsServerAddress(UNREACHABLE_DNS);
 
@@ -90,7 +91,7 @@ public final class AsyncDnsClientTest {
 
 	@Test
 	public void testDnsNameError() {
-		AsyncDnsClient dnsClient = RemoteAsyncDnsClient.create(Eventloop.getCurrentEventloop());
+		AsyncDnsClient dnsClient = RemoteAsyncDnsClient.create(Reactor.getCurrentReactor());
 
 		DnsQueryException e = awaitException(dnsClient.resolve4("example.ensure-such-top-domain-it-will-never-exist"));
 		assertEquals(NAME_ERROR, e.getResult().getErrorCode());
@@ -98,7 +99,7 @@ public final class AsyncDnsClientTest {
 
 	@Test
 	public void testDnsLabelSize() {
-		AsyncDnsClient dnsClient = RemoteAsyncDnsClient.create(Eventloop.getCurrentEventloop());
+		AsyncDnsClient dnsClient = RemoteAsyncDnsClient.create(Reactor.getCurrentReactor());
 
 		String domainName = "example.huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label.com";
 		IllegalArgumentException e = awaitException(dnsClient.resolve4(domainName));

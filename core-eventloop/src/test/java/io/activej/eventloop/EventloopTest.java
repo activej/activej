@@ -2,7 +2,7 @@ package io.activej.eventloop;
 
 import io.activej.common.ref.Ref;
 import io.activej.eventloop.inspector.EventloopStats;
-import io.activej.eventloop.util.RunnableWithContext;
+import io.activej.reactor.util.RunnableWithContext;
 import org.junit.Test;
 
 import java.time.Duration;

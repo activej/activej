@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.activej.eventloop.schedule;
+package io.activej.reactor.schedule;
 
 import io.activej.common.time.CurrentTimeProvider;
 import org.jetbrains.annotations.NotNull;
@@ -23,7 +23,7 @@ import java.time.Duration;
 import java.time.Instant;
 
 @SuppressWarnings("unused")
-public interface Scheduler extends CurrentTimeProvider {
+public interface ReactorScheduler extends CurrentTimeProvider {
 	default @NotNull ScheduledRunnable schedule(@NotNull Instant instant, @NotNull Runnable runnable) {
 		return schedule(instant.toEpochMilli(), runnable);
 	}

@@ -8,13 +8,14 @@ import io.activej.crdt.CrdtException;
 import io.activej.crdt.storage.cluster.DiscoveryService;
 import io.activej.crdt.storage.cluster.FileDiscoveryService;
 import io.activej.crdt.storage.cluster.PartitionId;
-import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
 import io.activej.launchers.crdt.rpc.CrdtRpcClientLauncher;
 import io.activej.launchers.crdt.rpc.CrdtRpcStrategyService;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.RpcClient;
 
 import java.nio.file.Path;
@@ -31,7 +32,7 @@ import static io.activej.rpc.client.sender.RpcStrategies.server;
 
 public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 	@Inject
-	Eventloop eventloop;
+	Reactor reactor;
 
 	@Inject
 	RpcClient client;
@@ -45,8 +46,8 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 	protected Module getOverrideModule() {
 		return new AbstractModule() {
 			@Provides
-			RpcClient client(Eventloop eventloop, CrdtRpcStrategyService<Long> strategyService, List<Class<?>> messageTypes) {
-				RpcClient rpcClient = RpcClient.create(eventloop)
+			RpcClient client(NioReactor reactor, CrdtRpcStrategyService<Long> strategyService, List<Class<?>> messageTypes) {
+				RpcClient rpcClient = RpcClient.create(reactor)
 						.withMessageTypes(messageTypes);
 				strategyService.setRpcClient(rpcClient);
 				return rpcClient;
@@ -55,18 +56,18 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 	}
 
 	@Provides
-	DiscoveryService<PartitionId> discoveryServiceDiscoveryService(Eventloop eventloop, Config config) throws CrdtException {
+	DiscoveryService<PartitionId> discoveryServiceDiscoveryService(Reactor reactor, Config config) throws CrdtException {
 		Path pathToFile = config.get(ofPath(), "crdt.cluster.partitionFile", DEFAULT_PARTITIONS_FILE);
-		return FileDiscoveryService.create(eventloop, pathToFile)
+		return FileDiscoveryService.create(reactor, pathToFile)
 				.withRpcProvider(partitionId -> server(checkNotNull(partitionId.getRpcAddress())));
 	}
 
 	@Provides
 	CrdtRpcStrategyService<Long> rpcStrategyService(
-			Eventloop eventloop,
+			Reactor reactor,
 			DiscoveryService<PartitionId> discoveryService
 	) {
-		return CrdtRpcStrategyService.create(eventloop, discoveryService, AdderClientLauncher::extractKey);
+		return CrdtRpcStrategyService.create(reactor, discoveryService, AdderClientLauncher::extractKey);
 	}
 
 	@Override
@@ -91,14 +92,14 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 					}
 					long id = Long.parseLong(parts[1]);
 					float value = Float.parseFloat(parts[2]);
-					eventloop.submit(() -> client.sendRequest(new AddRequest(id, value))).get();
+					reactor.submit(() -> client.sendRequest(new AddRequest(id, value))).get();
 					System.out.println("---> OK");
 				} else if (parts[0].equalsIgnoreCase("get")) {
 					if (parts.length != 2) {
 						throw new MalformedDataException("2 parts expected");
 					}
 					long id = Long.parseLong(parts[1]);
-					GetResponse getResponse = eventloop.submit(() -> client.
+					GetResponse getResponse = reactor.submit(() -> client.
 							<GetRequest, GetResponse>sendRequest(new GetRequest(id))).get();
 					System.out.println("---> " + getResponse.sum());
 				} else {

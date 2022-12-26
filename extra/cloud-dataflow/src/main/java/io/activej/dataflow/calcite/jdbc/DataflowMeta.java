@@ -9,7 +9,7 @@ import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.exception.DataflowException;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.SynchronousStreamConsumer;
-import io.activej.eventloop.Eventloop;
+import io.activej.reactor.Reactor;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import io.activej.types.Types;
@@ -85,19 +85,19 @@ public final class DataflowMeta extends LimitedMeta {
 
 	private static final Calendar UTC_CALENDAR = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 	private final CalciteSqlDataflow sqlDataflow;
 	private final Map<String, Integer> statementIds = new ConcurrentHashMap<>();
 	private final Map<String, Map<Integer, FrameFetcher>> fetchers = new ConcurrentHashMap<>();
 	private final Map<String, Map<Integer, DatasetWithLimit>> unmaterializedDatasets = new ConcurrentHashMap<>();
 
-	private DataflowMeta(Eventloop eventloop, CalciteSqlDataflow sqlDataflow) {
-		this.eventloop = eventloop;
+	private DataflowMeta(Reactor reactor, CalciteSqlDataflow sqlDataflow) {
+		this.reactor = reactor;
 		this.sqlDataflow = sqlDataflow;
 	}
 
-	public static DataflowMeta create(Eventloop eventloop, CalciteSqlDataflow sqlDataflow) {
-		return new DataflowMeta(eventloop, sqlDataflow);
+	public static DataflowMeta create(Reactor reactor, CalciteSqlDataflow sqlDataflow) {
+		return new DataflowMeta(reactor, sqlDataflow);
 	}
 
 	@Override
@@ -171,7 +171,7 @@ public final class DataflowMeta extends LimitedMeta {
 		Frame firstFrame = frameFetcher.fetch(0, maxRowsInFirstFrame);
 
 		if (firstFrame.done) {
-			eventloop.submit(frameFetcher::close);
+			reactor.submit(frameFetcher::close);
 		} else {
 			fetchersMap.put(h.id, frameFetcher);
 		}
@@ -195,7 +195,7 @@ public final class DataflowMeta extends LimitedMeta {
 			} else if (upperCaseSql.startsWith(EXPLAIN_GRAPH)) {
 				explainString = sqlDataflow.explainGraph(sql.substring(EXPLAIN_GRAPH.length()));
 			} else if (upperCaseSql.startsWith(EXPLAIN_NODES)) {
-				explainString = eventloop.submit(AsyncComputation.of(() -> sqlDataflow.explainNodes(sql.substring(EXPLAIN_GRAPH.length())))).get();
+				explainString = reactor.submit(AsyncComputation.of(() -> sqlDataflow.explainNodes(sql.substring(EXPLAIN_GRAPH.length())))).get();
 			} else {
 				throw new RuntimeException("Unknown EXPLAIN query, only `EXPLAIN PLAN`, `EXPLAIN GRAPH` and `EXPLAIN NODES` queries are supported");
 			}
@@ -212,7 +212,7 @@ public final class DataflowMeta extends LimitedMeta {
 
 	private FrameFetcher createFrameFetcher(StatementHandle statement, Dataset<Record> dataset, long limit) {
 		try {
-			return eventloop.submit((AsyncComputation<FrameFetcher>) cb -> {
+			return reactor.submit((AsyncComputation<FrameFetcher>) cb -> {
 				StreamSupplier<Record> supplier = sqlDataflow.queryDataflow(dataset, limit);
 				SynchronousStreamConsumer<Record> recordConsumer = SynchronousStreamConsumer.create();
 				supplier.streamTo(recordConsumer);
@@ -341,7 +341,7 @@ public final class DataflowMeta extends LimitedMeta {
 
 		if (frame.done) {
 			connectionFetchers.remove(h.id);
-			eventloop.submit(frameFetcher::close);
+			reactor.submit(frameFetcher::close);
 		}
 
 		return frame;
@@ -375,7 +375,7 @@ public final class DataflowMeta extends LimitedMeta {
 		if (connectionFetchers == null) return;
 
 		try {
-			eventloop.submit(() -> {
+			reactor.submit(() -> {
 				for (FrameFetcher frameFetcher : connectionFetchers.values()) {
 					frameFetcher.close();
 				}
@@ -408,7 +408,7 @@ public final class DataflowMeta extends LimitedMeta {
 		if (frameFetcher == null) return;
 
 		try {
-			eventloop.submit(frameFetcher::close).get();
+			reactor.submit(frameFetcher::close).get();
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 			throw new RuntimeException(e);

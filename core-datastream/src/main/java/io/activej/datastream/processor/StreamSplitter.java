@@ -20,7 +20,7 @@ import io.activej.common.initializer.WithInitializer;
 import io.activej.datastream.*;
 import io.activej.datastream.dsl.HasStreamInput;
 import io.activej.datastream.dsl.HasStreamOutputs;
-import io.activej.eventloop.Eventloop;
+import io.activej.reactor.Reactor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,7 +59,7 @@ public final class StreamSplitter<I, O> implements HasStreamInput<I>, HasStreamO
 
 	public static <I, O> StreamSplitter<I, O> create(Function<StreamDataAcceptor<O>[], StreamDataAcceptor<I>> acceptorFactory) {
 		StreamSplitter<I, O> streamSplitter = new StreamSplitter<>(acceptorFactory);
-		Eventloop.getCurrentEventloop().post(streamSplitter::start);
+		Reactor.getCurrentReactor().post(streamSplitter::start);
 		return streamSplitter;
 	}
 

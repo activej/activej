@@ -7,6 +7,7 @@ import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
 
 import java.util.Scanner;
@@ -22,19 +23,19 @@ import java.util.concurrent.CompletableFuture;
 public final class WebSocketEchoClientExample extends Launcher {
 
 	@Inject
-	Eventloop eventloop;
+	NioReactor reactor;
 
 	@Inject
 	AsyncHttpClient client;
 
 	@Provides
-	Eventloop eventloop() {
+	NioReactor reactor() {
 		return Eventloop.create();
 	}
 
 	@Provides
-	AsyncHttpClient client(Eventloop eventloop) {
-		return AsyncHttpClient.create(eventloop);
+	AsyncHttpClient client(NioReactor reactor) {
+		return AsyncHttpClient.create(reactor);
 	}
 
 	@Override
@@ -48,17 +49,17 @@ public final class WebSocketEchoClientExample extends Launcher {
 		String url = args.length != 0 ? args[0] : "ws://127.0.0.1:8080/";
 		System.out.println("\nConnecting to WebSocket at: " + url);
 
-		WebSocket webSocket = eventloop.submit(() -> client.webSocketRequest(HttpRequest.get(url))).get();
+		WebSocket webSocket = reactor.submit(() -> client.webSocketRequest(HttpRequest.get(url))).get();
 
 		Scanner scanIn = new Scanner(System.in);
 		while (true) {
 			System.out.print("> ");
 			String line = scanIn.nextLine();
 			if (line.isEmpty()) {
-				eventloop.submit(webSocket::close);
+				reactor.submit(webSocket::close);
 				break;
 			}
-			CompletableFuture<?> future = eventloop.submit(() ->
+			CompletableFuture<?> future = reactor.submit(() ->
 					webSocket.writeMessage(Message.text(line))
 							.then(webSocket::readMessage)
 							.whenResult(message -> System.out.println("Response: " + message.getText())));

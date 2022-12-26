@@ -16,7 +16,7 @@
 
 package io.activej.crdt;
 
-import io.activej.async.service.EventloopService;
+import io.activej.async.service.ReactorService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.function.ConsumerEx;
@@ -38,14 +38,14 @@ import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStatsBasic;
 import io.activej.datastream.stats.StreamStatsDetailed;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
-import io.activej.eventloop.net.SocketSettings;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.EventStats;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
+import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.net.SocketSettings;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.serializer.BinarySerializer;
 import org.jetbrains.annotations.NotNull;
 
@@ -55,8 +55,8 @@ import java.time.Duration;
 import static io.activej.crdt.util.Utils.onItem;
 
 @SuppressWarnings("rawtypes")
-public final class CrdtStorageClient<K extends Comparable<K>, S> implements CrdtStorage<K, S>, EventloopService,
-		EventloopJmxBeanWithStats, WithInitializer<CrdtStorageClient<K, S>> {
+public final class CrdtStorageClient<K extends Comparable<K>, S> implements CrdtStorage<K, S>, ReactorService,
+		ReactorJmxBeanWithStats, WithInitializer<CrdtStorageClient<K, S>> {
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(CrdtStorageClient.class, "connectTimeout", Duration.ZERO);
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageClient.class, "smoothingWindow", Duration.ofMinutes(1));
@@ -66,7 +66,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 			Utils.CRDT_REQUEST_CODEC
 	);
 
-	private final Eventloop eventloop;
+	private final NioReactor reactor;
 	private final InetSocketAddress address;
 	private final CrdtDataSerializer<K, S> serializer;
 	private final BinarySerializer<CrdtTombstone<K>> tombstoneSerializer;
@@ -93,20 +93,20 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	// endregion
 
 	//region creators
-	private CrdtStorageClient(Eventloop eventloop, InetSocketAddress address, CrdtDataSerializer<K, S> serializer) {
-		this.eventloop = eventloop;
+	private CrdtStorageClient(NioReactor reactor, InetSocketAddress address, CrdtDataSerializer<K, S> serializer) {
+		this.reactor = reactor;
 		this.address = address;
 		this.serializer = serializer;
 
 		tombstoneSerializer = serializer.getTombstoneSerializer();
 	}
 
-	public static <K extends Comparable<K>, S> CrdtStorageClient<K, S> create(Eventloop eventloop, InetSocketAddress address, CrdtDataSerializer<K, S> serializer) {
-		return new CrdtStorageClient<>(eventloop, address, serializer);
+	public static <K extends Comparable<K>, S> CrdtStorageClient<K, S> create(NioReactor reactor, InetSocketAddress address, CrdtDataSerializer<K, S> serializer) {
+		return new CrdtStorageClient<>(reactor, address, serializer);
 	}
 
-	public static <K extends Comparable<K>, S> CrdtStorageClient<K, S> create(Eventloop eventloop, InetSocketAddress address, BinarySerializer<K> keySerializer, BinarySerializer<S> stateSerializer) {
-		return new CrdtStorageClient<>(eventloop, address, new CrdtDataSerializer<>(keySerializer, stateSerializer));
+	public static <K extends Comparable<K>, S> CrdtStorageClient<K, S> create(NioReactor reactor, InetSocketAddress address, BinarySerializer<K> keySerializer, BinarySerializer<S> stateSerializer) {
+		return new CrdtStorageClient<>(reactor, address, new CrdtDataSerializer<>(keySerializer, stateSerializer));
 	}
 
 	public CrdtStorageClient<K, S> withConnectTimeout(Duration connectTimeout) {
@@ -121,8 +121,8 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	//endregion
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull NioReactor getReactor() {
+		return reactor;
 	}
 
 	public InetSocketAddress getAddress() {
@@ -258,7 +258,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	}
 
 	private Promise<MessagingWithBinaryStreaming<CrdtResponse, CrdtRequest>> connect() {
-		return AsyncTcpSocketNio.connect(address, connectTimeoutMillis, socketSettings)
+		return AsyncTcpSocketNio.connect(reactor, address, connectTimeoutMillis, socketSettings)
 				.map(socket -> MessagingWithBinaryStreaming.create(socket, SERIALIZER))
 				.mapException(e -> new CrdtException("Failed to connect to " + address, e));
 	}

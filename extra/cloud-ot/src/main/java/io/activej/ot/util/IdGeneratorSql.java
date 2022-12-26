@@ -18,11 +18,11 @@ package io.activej.ot.util;
 
 import io.activej.async.function.AsyncRunnable;
 import io.activej.common.initializer.WithInitializer;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.jmx.EventloopJmxBeanWithStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 
 import javax.sql.DataSource;
@@ -37,9 +37,9 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.promise.PromisePredicates.isResultOrException;
 import static io.activej.promise.Promises.retry;
 
-public final class IdGeneratorSql implements IdGenerator<Long>, EventloopJmxBeanWithStats, WithInitializer<IdGeneratorSql> {
+public final class IdGeneratorSql implements IdGenerator<Long>, ReactorJmxBeanWithStats, WithInitializer<IdGeneratorSql> {
 
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 	private final Executor executor;
 	private final DataSource dataSource;
 
@@ -54,16 +54,16 @@ public final class IdGeneratorSql implements IdGenerator<Long>, EventloopJmxBean
 
 	private final AsyncRunnable reserveId = promiseCreateId.wrapper(reuse(this::doReserveId));
 
-	private IdGeneratorSql(Eventloop eventloop, Executor executor, DataSource dataSource, SqlAtomicSequence sequence) {
-		this.eventloop = eventloop;
+	private IdGeneratorSql(Reactor reactor, Executor executor, DataSource dataSource, SqlAtomicSequence sequence) {
+		this.reactor = reactor;
 		this.executor = executor;
 		this.dataSource = dataSource;
 		this.sequence = sequence;
 	}
 
-	public static IdGeneratorSql create(Eventloop eventloop, Executor executor, DataSource dataSource,
+	public static IdGeneratorSql create(Reactor reactor, Executor executor, DataSource dataSource,
 			SqlAtomicSequence sequence) {
-		return new IdGeneratorSql(eventloop, executor, dataSource, sequence);
+		return new IdGeneratorSql(reactor, executor, dataSource, sequence);
 	}
 
 	public IdGeneratorSql withStride(int stride) {
@@ -101,8 +101,8 @@ public final class IdGeneratorSql implements IdGenerator<Long>, EventloopJmxBean
 	}
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull Reactor getReactor() {
+		return reactor;
 	}
 
 	@JmxAttribute

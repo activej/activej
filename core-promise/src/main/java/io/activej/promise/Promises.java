@@ -26,8 +26,8 @@ import io.activej.common.function.BiConsumerEx;
 import io.activej.common.function.FunctionEx;
 import io.activej.common.recycle.Recyclers;
 import io.activej.common.tuple.*;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.schedule.ScheduledRunnable;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.schedule.ScheduledRunnable;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -45,9 +45,9 @@ import java.util.stream.Stream;
 
 import static io.activej.common.Utils.*;
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
-import static io.activej.eventloop.Eventloop.getCurrentEventloop;
-import static io.activej.eventloop.util.RunnableWithContext.wrapContext;
 import static io.activej.promise.PromisePredicates.isResult;
+import static io.activej.reactor.Reactor.getCurrentReactor;
+import static io.activej.reactor.util.RunnableWithContext.wrapContext;
 import static java.util.Arrays.asList;
 
 /**
@@ -76,7 +76,7 @@ public final class Promises {
 		if (promise.isComplete()) return promise;
 		if (delay <= 0) return Promise.ofException(new AsyncTimeoutException("Promise timeout"));
 		return promise.next(new NextPromise<>() {
-			@Nullable ScheduledRunnable schedule = getCurrentEventloop().delay(delay,
+			@Nullable ScheduledRunnable schedule = getCurrentReactor().delay(delay,
 					wrapContext(this, () -> {
 						promise.whenResult(Recyclers::recycle);
 						schedule = null;
@@ -114,7 +114,7 @@ public final class Promises {
 	public static <T> @NotNull Promise<T> delay(long delayMillis, T value) {
 		if (delayMillis <= 0) return Promise.of(value);
 		SettablePromise<T> cb = new SettablePromise<>();
-		getCurrentEventloop().delay(delayMillis, wrapContext(cb, () -> cb.set(value)));
+		getCurrentReactor().delay(delayMillis, wrapContext(cb, () -> cb.set(value)));
 		return cb;
 	}
 
@@ -138,7 +138,7 @@ public final class Promises {
 	public static <T> @NotNull Promise<T> delay(long delayMillis, @NotNull Promise<T> promise) {
 		if (delayMillis <= 0) return promise;
 		return Promise.ofCallback(cb ->
-				getCurrentEventloop().delay(delayMillis, wrapContext(cb, () -> promise.run(cb))));
+				getCurrentReactor().delay(delayMillis, wrapContext(cb, () -> promise.run(cb))));
 	}
 
 	@Contract(pure = true)
@@ -150,7 +150,7 @@ public final class Promises {
 	public static <T> @NotNull Promise<T> interval(long intervalMillis, @NotNull Promise<T> promise) {
 		return intervalMillis <= 0 ?
 				promise :
-				promise.then(value -> Promise.ofCallback(cb -> getCurrentEventloop().delay(intervalMillis, wrapContext(cb, () -> cb.set(value)))));
+				promise.then(value -> Promise.ofCallback(cb -> getCurrentReactor().delay(intervalMillis, wrapContext(cb, () -> cb.set(value)))));
 	}
 
 	/**
@@ -183,7 +183,7 @@ public final class Promises {
 	@Contract(pure = true)
 	public static <T> @NotNull Promise<T> schedule(T value, long timestamp) {
 		SettablePromise<T> cb = new SettablePromise<>();
-		getCurrentEventloop().schedule(timestamp, wrapContext(cb, () -> cb.set(value)));
+		getCurrentReactor().schedule(timestamp, wrapContext(cb, () -> cb.set(value)));
 		return cb;
 	}
 
@@ -203,7 +203,7 @@ public final class Promises {
 	@Contract(pure = true)
 	public static <T> @NotNull Promise<T> schedule(@NotNull Promise<T> promise, long timestamp) {
 		return Promise.ofCallback(cb ->
-				getCurrentEventloop().schedule(timestamp, wrapContext(cb, () -> promise.run(cb))));
+				getCurrentReactor().schedule(timestamp, wrapContext(cb, () -> promise.run(cb))));
 	}
 
 	/**
@@ -1044,14 +1044,14 @@ public final class Promises {
 					if (breakCondition.test(v, e)) {
 						cb.accept(v, e);
 					} else {
-						Eventloop eventloop = Eventloop.getCurrentEventloop();
-						long now = eventloop.currentTimeMillis();
+						Reactor reactor = getCurrentReactor();
+						long now = reactor.currentTimeMillis();
 						Object retryStateFinal = retryState != null ? retryState : retryPolicy.createRetryState();
 						long nextRetryTimestamp = retryPolicy.nextRetryTimestamp(now, e, retryStateFinal);
 						if (nextRetryTimestamp == 0) {
 							cb.setException(e != null ? e : new Exception("RetryPolicy: giving up " + retryState));
 						} else {
-							eventloop.schedule(nextRetryTimestamp,
+							reactor.schedule(nextRetryTimestamp,
 									wrapContext(cb, () -> retryImpl(next, breakCondition, retryPolicy, retryStateFinal, cb)));
 						}
 					}

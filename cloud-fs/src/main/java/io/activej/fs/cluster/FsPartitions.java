@@ -19,16 +19,16 @@ package io.activej.fs.cluster;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncRunnables;
 import io.activej.async.function.AsyncSupplier;
-import io.activej.async.service.EventloopService;
+import io.activej.async.service.ReactorService;
 import io.activej.common.function.ConsumerEx;
 import io.activej.common.initializer.WithInitializer;
-import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.exception.FsException;
 import io.activej.fs.exception.FsIOException;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -44,7 +44,7 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
 import static java.util.stream.Collectors.toList;
 
-public final class FsPartitions implements EventloopService, WithInitializer<FsPartitions> {
+public final class FsPartitions implements ReactorService, WithInitializer<FsPartitions> {
 	private static final Logger logger = LoggerFactory.getLogger(FsPartitions.class);
 
 	static final FsException LOCAL_EXCEPTION = new FsException("Local exception");
@@ -63,17 +63,17 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 	private final Map<Object, ActiveFs> partitions = new HashMap<>();
 	private final Map<Object, ActiveFs> partitionsView = Collections.unmodifiableMap(partitions);
 
-	private final Eventloop eventloop;
+	private final Reactor reactor;
 
 	private ServerSelector serverSelector = RENDEZVOUS_HASH_SHARDER;
 
-	private FsPartitions(Eventloop eventloop, DiscoveryService discoveryService) {
-		this.eventloop = eventloop;
+	private FsPartitions(Reactor reactor, DiscoveryService discoveryService) {
+		this.reactor = reactor;
 		this.discoveryService = discoveryService;
 	}
 
-	public static FsPartitions create(Eventloop eventloop, DiscoveryService discoveryService) {
-		return new FsPartitions(eventloop, discoveryService);
+	public static FsPartitions create(Reactor reactor, DiscoveryService discoveryService) {
+		return new FsPartitions(reactor, discoveryService);
 	}
 
 	/**
@@ -191,8 +191,8 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 	}
 
 	@Override
-	public @NotNull Eventloop getEventloop() {
-		return eventloop;
+	public @NotNull Reactor getReactor() {
+		return reactor;
 	}
 
 	public ServerSelector getServerSelector() {
@@ -230,7 +230,7 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 				})
 				.whenException(e -> {
 					logger.warn("Could not discover partitions", e);
-					eventloop.delayBackground(Duration.ofSeconds(1), () -> rediscover(discoverySupplier));
+					reactor.delayBackground(Duration.ofSeconds(1), () -> rediscover(discoverySupplier));
 				});
 	}
 

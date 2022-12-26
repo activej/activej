@@ -29,6 +29,8 @@ import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.QualifierAnnotation;
 import io.activej.inject.module.AbstractModule;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.types.Types;
 import org.jetbrains.annotations.NotNull;
 
@@ -60,27 +62,28 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 		bind(Key.ofType(supertype, Persistent.class))
 				.to(Key.ofType(Types.parameterizedType(CrdtStorageFs.class, typeArguments)));
 
-
 		Type[] clusterStorageTypes = Arrays.copyOf(typeArguments, 3);
 		clusterStorageTypes[2] = PartitionId.class;
 
 		bind((Key<?>) Key.ofType(supertype, Cluster.class))
 				.to(Key.ofType(Types.parameterizedType(CrdtStorageCluster.class, clusterStorageTypes)));
+
+		bind(Reactor.class).to(NioReactor.class);
 	}
 
 	@Provides
-	CrdtStorageMap<K, S> runtimeCrdtClient(Eventloop eventloop, CrdtDescriptor<K, S> descriptor) {
-		return CrdtStorageMap.create(eventloop, descriptor.crdtFunction());
+	CrdtStorageMap<K, S> runtimeCrdtClient(Reactor reactor, CrdtDescriptor<K, S> descriptor) {
+		return CrdtStorageMap.create(reactor, descriptor.crdtFunction());
 	}
 
 	@Provides
-	CrdtStorageFs<K, S> fsCrdtClient(Eventloop eventloop, ActiveFs activeFs, CrdtDescriptor<K, S> descriptor) {
-		return CrdtStorageFs.create(eventloop, activeFs, descriptor.serializer(), descriptor.crdtFunction());
+	CrdtStorageFs<K, S> fsCrdtClient(Reactor reactor, ActiveFs activeFs, CrdtDescriptor<K, S> descriptor) {
+		return CrdtStorageFs.create(reactor, activeFs, descriptor.serializer(), descriptor.crdtFunction());
 	}
 
 	@Provides
 	DiscoveryService<PartitionId> discoveryService(
-			Eventloop eventloop,
+			NioReactor reactor,
 			PartitionId localPartitionId,
 			CrdtStorageMap<K, S> localCrdtStorage,
 			CrdtDescriptor<K, S> descriptor,
@@ -92,7 +95,7 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 					if (partitionId.equals(localPartitionId)) return localCrdtStorage;
 
 					InetSocketAddress crdtAddress = checkNotNull(partitionId.getCrdtAddress());
-					return CrdtStorageClient.create(eventloop, crdtAddress, descriptor.serializer());
+					return CrdtStorageClient.create(reactor, crdtAddress, descriptor.serializer());
 				});
 
 		return DiscoveryService.of(scheme);
@@ -105,11 +108,11 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 
 	@Provides
 	CrdtStorageCluster<K, S, PartitionId> clusterCrdtClient(
-			Eventloop eventloop,
+			Reactor reactor,
 			DiscoveryService<PartitionId> discoveryService,
 			CrdtDescriptor<K, S> descriptor
 	) {
-		return CrdtStorageCluster.create(eventloop, discoveryService, descriptor.crdtFunction());
+		return CrdtStorageCluster.create(reactor, discoveryService, descriptor.crdtFunction());
 	}
 
 	@Provides
@@ -118,21 +121,21 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 	}
 
 	@Provides
-	CrdtServer<K, S> crdtServer(Eventloop eventloop, CrdtStorageMap<K, S> client, CrdtDescriptor<K, S> descriptor, PartitionId localPartitionId, Config config) {
-		return CrdtServer.create(eventloop, client, descriptor.serializer())
+	CrdtServer<K, S> crdtServer(NioReactor reactor, CrdtStorageMap<K, S> client, CrdtDescriptor<K, S> descriptor, PartitionId localPartitionId, Config config) {
+		return CrdtServer.create(reactor, client, descriptor.serializer())
 				.withInitializer(ofAbstractServer(config.getChild("crdt.server")))
 				.withListenAddress(localPartitionId.getCrdtAddress());
 	}
 
 	@Provides
 	@Cluster
-	CrdtServer<K, S> clusterServer(Eventloop eventloop, CrdtStorageCluster<K, S, PartitionId> client, CrdtDescriptor<K, S> descriptor, Config config) {
-		return CrdtServer.create(eventloop, client, descriptor.serializer())
+	CrdtServer<K, S> clusterServer(NioReactor reactor, CrdtStorageCluster<K, S, PartitionId> client, CrdtDescriptor<K, S> descriptor, Config config) {
+		return CrdtServer.create(reactor, client, descriptor.serializer())
 				.withInitializer(ofAbstractServer(config.getChild("crdt.cluster.server")));
 	}
 
 	@Provides
-	Eventloop eventloop(Config config) {
+	NioReactor reactor(Config config) {
 		return Eventloop.create()
 				.withInitializer(ofEventloop(config));
 	}

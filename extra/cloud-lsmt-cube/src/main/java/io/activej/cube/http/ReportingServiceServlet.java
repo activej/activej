@@ -24,9 +24,9 @@ import io.activej.common.time.Stopwatch;
 import io.activej.cube.CubeQuery;
 import io.activej.cube.ICube;
 import io.activej.cube.exception.QueryException;
-import io.activej.eventloop.Eventloop;
 import io.activej.http.*;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,18 +55,18 @@ public final class ReportingServiceServlet extends AsyncServletWithStats impleme
 
 	private DefiningClassLoader classLoader = DefiningClassLoader.create();
 
-	private ReportingServiceServlet(Eventloop eventloop, ICube cube) {
-		super(eventloop);
+	private ReportingServiceServlet(Reactor reactor, ICube cube) {
+		super(reactor);
 		this.cube = cube;
 	}
 
-	public static ReportingServiceServlet create(Eventloop eventloop, ICube cube) {
-		return new ReportingServiceServlet(eventloop, cube);
+	public static ReportingServiceServlet create(Reactor reactor, ICube cube) {
+		return new ReportingServiceServlet(reactor, cube);
 	}
 
-	public static RoutingServlet createRootServlet(Eventloop eventloop, ICube cube) {
+	public static RoutingServlet createRootServlet(Reactor reactor, ICube cube) {
 		return createRootServlet(
-				ReportingServiceServlet.create(eventloop, cube));
+				ReportingServiceServlet.create(reactor, cube));
 	}
 
 	public static RoutingServlet createRootServlet(ReportingServiceServlet reportingServiceServlet) {

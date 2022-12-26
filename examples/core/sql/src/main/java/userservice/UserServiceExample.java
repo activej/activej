@@ -7,6 +7,7 @@ import io.activej.inject.module.Module;
 import io.activej.inject.module.Modules;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promises;
+import io.activej.reactor.Reactor;
 import io.activej.service.ServiceGraphModule;
 import userservice.dao.User;
 import userservice.dao.UserDao;
@@ -30,13 +31,13 @@ import java.util.concurrent.Executors;
 public class UserServiceExample extends Launcher {
 
 	@Inject
-	Eventloop eventloop;
+	Reactor reactor;
 
 	@Inject
 	UserDao userDao;
 
 	@Provides
-	Eventloop eventloop() {
+	Reactor eventloop() {
 		return Eventloop.create();
 	}
 
@@ -61,7 +62,7 @@ public class UserServiceExample extends Launcher {
 	@Override
 	protected void run() throws ExecutionException, InterruptedException {
 		System.out.println();
-		CompletableFuture<?> future = eventloop.submit(() ->
+		CompletableFuture<?> future = reactor.submit(() ->
 				Promises.all(
 						userDao.addUser(new User("Kory", "Holloway")),
 						userDao.addUser(new User("Abraham", "Ventura")),

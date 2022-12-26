@@ -56,11 +56,11 @@ public final class SynchronousStreamConsumer<T> extends AbstractStreamConsumer<T
 			}
 
 			done = true;
-			eventloop.submit(this::acknowledge);
+			reactor.submit(this::acknowledge);
 			return Optional.empty();
 		}
 		if (suspended.compareAndSet(true, false)) {
-			eventloop.submit(this::doResume);
+			reactor.submit(this::doResume);
 		}
 
 		//noinspection unchecked

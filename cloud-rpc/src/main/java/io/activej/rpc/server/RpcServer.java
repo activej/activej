@@ -21,8 +21,6 @@ import io.activej.common.MemSize;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.datastream.csp.ChannelSerializer;
-import io.activej.eventloop.Eventloop;
-import io.activej.eventloop.net.ServerSocketSettings;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
@@ -33,6 +31,8 @@ import io.activej.net.AbstractServer;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.net.ServerSocketSettings;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.protocol.RpcControlMessage;
 import io.activej.rpc.protocol.RpcMessage;
@@ -55,7 +55,7 @@ import static io.activej.common.Checks.checkState;
  * performance.
  * <p>
  * In order to set up a server it's mandatory to create it using
- * {@link #create(Eventloop)}, indicate a types of messages, and specify
+ * {@link #create(NioReactor)}, indicate a types of messages, and specify
  * an appropriate {@link RpcRequestHandler request handlers} for that types.
  * <p>
  * There are two ways of starting a server:
@@ -109,12 +109,12 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 	// endregion
 
 	// region builders
-	private RpcServer(Eventloop eventloop) {
-		super(eventloop);
+	private RpcServer(NioReactor reactor) {
+		super(reactor);
 	}
 
-	public static RpcServer create(Eventloop eventloop) {
-		return new RpcServer(eventloop)
+	public static RpcServer create(NioReactor reactor) {
+		return new RpcServer(reactor)
 				.withServerSocketSettings(DEFAULT_SERVER_SOCKET_SETTINGS)
 				.withSocketSettings(DEFAULT_SOCKET_SETTINGS)
 				.withHandler(RpcControlMessage.class, request -> {
