@@ -136,7 +136,6 @@ public abstract class AbstractStreamConsumer<T> implements StreamConsumer<T> {
 
 	@Override
 	public final Promise<Void> getAcknowledgement() {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
 		return acknowledgement;
 	}
 

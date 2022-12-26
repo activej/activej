@@ -275,7 +275,6 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 
 	@Override
 	public final Promise<Void> getEndOfStream() {
-		if (CHECK) checkState(eventloop.inEventloopThread(), "Not in eventloop thread");
 		return endOfStream;
 	}
 
