@@ -1,6 +1,7 @@
 import io.activej.datastream.*;
 import io.activej.datastream.processor.StreamTransformer;
 import io.activej.eventloop.Eventloop;
+import io.activej.reactor.AbstractReactive;
 
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 
@@ -8,7 +9,7 @@ import static io.activej.common.exception.FatalErrorHandler.rethrow;
  * Example of creating custom StreamTransformer, which takes strings from input stream
  * and transforms strings to their length if particular length is less than MAX_LENGTH
  */
-public final class TransformerExample implements StreamTransformer<String, Integer> {
+public final class TransformerExample extends AbstractReactive implements StreamTransformer<String, Integer> {
 	private static final int MAX_LENGTH = 10;
 
 	//[START REGION_1]

@@ -1,12 +1,12 @@
 package io.activej.fs.cluster;
 
-import io.activej.async.service.ReactorTaskScheduler;
+import io.activej.async.service.ReactiveTaskScheduler;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.LocalActiveFs;
 import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.fs.tcp.RemoteActiveFs;
-import io.activej.net.AbstractServer;
+import io.activej.net.AbstractReactiveServer;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
@@ -55,7 +55,7 @@ public final class ClusterRepartitionControllerStressTest {
 	private Path localStorage;
 	private FsPartitions partitions;
 	private ClusterRepartitionController controller;
-	private ReactorTaskScheduler scheduler;
+	private ReactiveTaskScheduler scheduler;
 
 	private boolean finished = false;
 
@@ -98,7 +98,7 @@ public final class ClusterRepartitionControllerStressTest {
 		controller = ClusterRepartitionController.create(localPartitionId, this.partitions)
 				.withReplicationCount(3);
 
-		scheduler = ReactorTaskScheduler.create(reactor, this.partitions::checkDeadPartitions)
+		scheduler = ReactiveTaskScheduler.create(reactor, this.partitions::checkDeadPartitions)
 				.withInterval(Duration.ofSeconds(1));
 
 		scheduler.start();
@@ -161,7 +161,7 @@ public final class ClusterRepartitionControllerStressTest {
 								System.out.printf("%d overall bytes%n", bytes);
 								System.out.printf("Average speed was %.2f mbit/second%n", bytes / (1 << 17) * (1000 / ms));
 								finished = true;
-								servers.forEach(AbstractServer::close);
+								servers.forEach(AbstractReactiveServer::close);
 							}));
 				})));
 

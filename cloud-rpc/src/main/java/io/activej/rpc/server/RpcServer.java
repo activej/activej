@@ -27,7 +27,7 @@ import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ExceptionStats;
 import io.activej.jmx.stats.ValueStats;
-import io.activej.net.AbstractServer;
+import io.activej.net.AbstractReactiveServer;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -77,7 +77,7 @@ import static io.activej.common.Checks.checkState;
  * @see RpcRequestHandler
  * @see RpcClient
  */
-public final class RpcServer extends AbstractServer<RpcServer> {
+public final class RpcServer extends AbstractReactiveServer<RpcServer> {
 	public static final ServerSocketSettings DEFAULT_SERVER_SOCKET_SETTINGS = ServerSocketSettings.create(16384);
 	public static final MemSize DEFAULT_INITIAL_BUFFER_SIZE = ChannelSerializer.DEFAULT_INITIAL_BUFFER_SIZE;
 

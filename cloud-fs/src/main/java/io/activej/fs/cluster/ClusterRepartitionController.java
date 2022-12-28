@@ -17,7 +17,7 @@
 package io.activej.fs.cluster;
 
 import io.activej.async.function.AsyncRunnable;
-import io.activej.async.service.ReactorService;
+import io.activej.async.service.ReactiveService;
 import io.activej.common.Checks;
 import io.activej.common.collection.Try;
 import io.activej.common.initializer.WithInitializer;
@@ -36,7 +36,7 @@ import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.Reactor;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -58,7 +58,7 @@ import static io.activej.common.Utils.first;
 import static io.activej.fs.util.RemoteFsUtils.isWildcard;
 import static java.util.stream.Collectors.toMap;
 
-public final class ClusterRepartitionController implements WithInitializer<ClusterRepartitionController>, ReactorJmxBeanWithStats, ReactorService {
+public final class ClusterRepartitionController implements WithInitializer<ClusterRepartitionController>, ReactiveJmxBeanWithStats, ReactiveService {
 	private static final Logger logger = LoggerFactory.getLogger(ClusterRepartitionController.class);
 	private static final boolean CHECK = Checks.isEnabled(ClusterRepartitionController.class);
 
@@ -146,7 +146,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 
 	private @NotNull Promise<Void> doRepartition() {
 		if (CHECK)
-			checkState(partitions.getReactor().inReactorThread(), "Should be called from eventloop thread");
+			checkState(partitions.inReactorThread(), "Should be called from eventloop thread");
 
 		if (replicationCount == 1) {
 			Set<Object> partitions = this.partitions.getPartitions().keySet();

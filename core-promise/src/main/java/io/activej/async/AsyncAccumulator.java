@@ -22,6 +22,7 @@ import io.activej.common.initializer.WithInitializer;
 import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.AbstractReactive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,7 +30,7 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
 @SuppressWarnings("UnusedReturnValue")
-public final class AsyncAccumulator<A> implements AsyncCloseable, WithInitializer<AsyncAccumulator<A>> {
+public final class AsyncAccumulator<A> extends AbstractReactive implements AsyncCloseable, WithInitializer<AsyncAccumulator<A>> {
 	private final SettablePromise<A> resultPromise = new SettablePromise<>();
 	private boolean started;
 

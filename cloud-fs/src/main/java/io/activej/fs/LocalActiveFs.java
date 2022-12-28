@@ -16,7 +16,7 @@
 
 package io.activej.fs;
 
-import io.activej.async.service.ReactorService;
+import io.activej.async.service.ReactiveService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
@@ -38,7 +38,7 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.Reactor;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -73,7 +73,7 @@ import static java.nio.file.StandardOpenOption.*;
  * <p>
  * This implementation does not define new limitations, other than those defined in {@link ActiveFs} interface.
  */
-public final class LocalActiveFs implements ActiveFs, ReactorService, ReactorJmxBeanWithStats, WithInitializer<LocalActiveFs> {
+public final class LocalActiveFs implements ActiveFs, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<LocalActiveFs> {
 	private static final Logger logger = LoggerFactory.getLogger(LocalActiveFs.class);
 
 	public static final String DEFAULT_TEMP_DIR = ".upload";

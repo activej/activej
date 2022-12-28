@@ -17,6 +17,7 @@
 package io.activej.http;
 
 import io.activej.async.callback.Callback;
+import io.activej.async.process.AsyncCloseable;
 import io.activej.async.process.AsyncProcess;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
@@ -29,6 +30,7 @@ import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.http.stream.*;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
@@ -45,7 +47,7 @@ import static io.activej.http.HttpUtils.trimAndDecodePositiveLong;
 import static java.lang.Math.max;
 
 @SuppressWarnings({"WeakerAccess", "PointlessBitwiseExpression"})
-public abstract class AbstractHttpConnection {
+public abstract class AbstractHttpConnection extends AbstractReactive {
 	public static final MemSize MAX_HEADER_LINE_SIZE = MemSize.of(ApplicationSettings.getInt(HttpMessage.class, "maxHeaderLineSize", MemSize.kilobytes(8).toInt())); // http://stackoverflow.com/questions/686217/maximum-on-http-header-values
 	public static final int MAX_HEADER_LINE_SIZE_BYTES = MAX_HEADER_LINE_SIZE.toInt(); // http://stackoverflow.com/questions/686217/maximum-on-http-header-values
 	public static final int MAX_HEADERS = ApplicationSettings.getInt(HttpMessage.class, "maxHeaders", 100); // http://httpd.apache.org/docs/2.2/mod/core.html#limitrequestfields
@@ -60,8 +62,6 @@ public abstract class AbstractHttpConnection {
 
 	protected static final byte[] UPGRADE_WEBSOCKET = encodeAscii("websocket");
 	protected static final byte[] WEB_SOCKET_VERSION = encodeAscii("13");
-
-	protected final Reactor reactor;
 
 	protected final AsyncTcpSocket socket;
 	protected final int maxBodySize;
@@ -116,7 +116,7 @@ public abstract class AbstractHttpConnection {
 	 * @param maxBodySize - maximum size of message body
 	 */
 	protected AbstractHttpConnection(Reactor reactor, AsyncTcpSocket socket, int maxBodySize) {
-		this.reactor = reactor;
+		super(reactor);
 		this.socket = socket;
 		this.maxBodySize = maxBodySize;
 	}
@@ -433,7 +433,7 @@ public abstract class AbstractHttpConnection {
 									return Promise.ofException(e);
 								}),
 				Promise::complete,
-				e -> closeEx(translateToHttpException(e)));
+				AsyncCloseable.of(e -> closeEx(translateToHttpException(e))));
 
 		ChannelOutput<ByteBuf> bodyStream;
 		AsyncProcess process;
@@ -554,7 +554,7 @@ public abstract class AbstractHttpConnection {
 		supplier.streamTo(ChannelConsumer.of(
 						buf -> socket.write(buf)
 								.whenException(e -> closeEx(translateToHttpException(e))),
-						e -> closeEx(translateToHttpException(e))))
+						AsyncCloseable.of(e -> closeEx(translateToHttpException(e)))))
 				.whenResult(this::onBodySent);
 	}
 

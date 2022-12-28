@@ -25,8 +25,9 @@ import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamConsumerTransformer;
 import io.activej.datastream.processor.StreamSupplierTransformer;
+import io.activej.reactor.Reactive;
 
-public interface StreamStats<T> extends
+public interface StreamStats<T> extends Reactive,
 		StreamSupplierTransformer<T, StreamSupplier<T>>, StreamConsumerTransformer<T, StreamConsumer<T>>,
 		ChannelSupplierTransformer<T, ChannelSupplier<T>>, ChannelConsumerTransformer<T, ChannelConsumer<T>> {
 	StreamDataAcceptor<T> createDataAcceptor(StreamDataAcceptor<T> actualDataAcceptor);

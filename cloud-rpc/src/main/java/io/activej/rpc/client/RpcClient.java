@@ -18,7 +18,7 @@ package io.activej.rpc.client;
 
 import io.activej.async.callback.Callback;
 import io.activej.async.exception.AsyncTimeoutException;
-import io.activej.async.service.ReactorService;
+import io.activej.async.service.ReactiveService;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
@@ -36,7 +36,7 @@ import io.activej.net.socket.tcp.AsyncTcpSocketNio.JmxInspector;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.Reactor;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.reactor.net.SocketSettings;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.jmx.RpcConnectStats;
@@ -85,7 +85,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * @see RpcStrategies
  * @see RpcServer
  */
-public final class RpcClient implements IRpcClient, ReactorService, WithInitializer<RpcClient>, ReactorJmxBeanWithStats {
+public final class RpcClient implements IRpcClient, ReactiveService, WithInitializer<RpcClient>, ReactiveJmxBeanWithStats {
 	private static final boolean CHECK = Checks.isEnabled(RpcClient.class);
 
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
@@ -279,7 +279,7 @@ public final class RpcClient implements IRpcClient, ReactorService, WithInitiali
 
 	@Override
 	public @NotNull Promise<Void> start() {
-		if (CHECK) Checks.checkState(reactor.inReactorThread(), "Not in reactor thread");
+		if (CHECK) Checks.checkState(inReactorThread(), "Not in reactor thread");
 		Checks.checkNotNull(messageTypes, "Message types must be specified");
 		Checks.checkState(stopPromise == null);
 
@@ -289,7 +289,7 @@ public final class RpcClient implements IRpcClient, ReactorService, WithInitiali
 	}
 
 	public Promise<Void> changeStrategy(RpcStrategy newStrategy, boolean retry) {
-		if (CHECK) Checks.checkState(reactor.inReactorThread(), "Not in reactor thread");
+		if (CHECK) Checks.checkState(inReactorThread(), "Not in reactor thread");
 
 		if (stopPromise != null) {
 			return Promise.ofException(CLIENT_IS_STOPPED);
@@ -325,7 +325,7 @@ public final class RpcClient implements IRpcClient, ReactorService, WithInitiali
 
 	@Override
 	public @NotNull Promise<Void> stop() {
-		if (CHECK) Checks.checkState(reactor.inReactorThread(), "Not in reactor thread");
+		if (CHECK) Checks.checkState(inReactorThread(), "Not in reactor thread");
 		if (stopPromise != null) return stopPromise;
 
 		stopPromise = new SettablePromise<>();
@@ -479,7 +479,7 @@ public final class RpcClient implements IRpcClient, ReactorService, WithInitiali
 	 */
 	@Override
 	public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
-		if (CHECK) Checks.checkState(reactor.inReactorThread(), "Not in reactor thread");
+		if (CHECK) Checks.checkState(inReactorThread(), "Not in reactor thread");
 		if (timeout > 0) {
 			requestSender.sendRequest(request, timeout, cb);
 		} else {
@@ -489,7 +489,7 @@ public final class RpcClient implements IRpcClient, ReactorService, WithInitiali
 
 	@Override
 	public <I, O> void sendRequest(I request, Callback<O> cb) {
-		if (CHECK) Checks.checkState(reactor.inReactorThread(), "Not in reactor thread");
+		if (CHECK) Checks.checkState(inReactorThread(), "Not in reactor thread");
 		requestSender.sendRequest(request, cb);
 	}
 

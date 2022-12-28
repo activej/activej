@@ -75,8 +75,7 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 	private ChannelConsumer<ByteBuf> output;
 
 	// region creators
-	private BufsConsumerGzipInflater() {
-	}
+	private BufsConsumerGzipInflater() {}
 
 	public static BufsConsumerGzipInflater create() {
 		return new BufsConsumerGzipInflater();

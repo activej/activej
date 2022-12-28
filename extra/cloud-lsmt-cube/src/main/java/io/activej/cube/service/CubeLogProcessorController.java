@@ -36,7 +36,7 @@ import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.Reactor;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +52,7 @@ import static io.activej.promise.Promises.asPromises;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
-public final class CubeLogProcessorController<K, C> implements ReactorJmxBeanWithStats, WithInitializer<CubeLogProcessorController<K, C>> {
+public final class CubeLogProcessorController<K, C> implements ReactiveJmxBeanWithStats, WithInitializer<CubeLogProcessorController<K, C>> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeLogProcessorController.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);

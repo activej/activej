@@ -24,6 +24,7 @@ import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.AbstractReactive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -37,7 +38,7 @@ import java.util.concurrent.Executor;
 
 import static java.nio.file.StandardOpenOption.*;
 
-public final class ChannelFileBuffer implements ChannelQueue<ByteBuf>, WithInitializer<ChannelFileBuffer> {
+public final class ChannelFileBuffer extends AbstractReactive implements ChannelQueue<ByteBuf>, WithInitializer<ChannelFileBuffer> {
 	private static final Logger logger = LoggerFactory.getLogger(ChannelFileBuffer.class);
 
 	private final ChannelFileReader reader;

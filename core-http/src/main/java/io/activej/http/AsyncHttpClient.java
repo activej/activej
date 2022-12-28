@@ -17,7 +17,7 @@
 package io.activej.http;
 
 import io.activej.async.exception.AsyncTimeoutException;
-import io.activej.async.service.ReactorService;
+import io.activej.async.service.ReactiveService;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
@@ -37,7 +37,7 @@ import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.reactor.net.SocketSettings;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.reactor.schedule.ScheduledRunnable;
@@ -69,11 +69,11 @@ import static org.slf4j.LoggerFactory.getLogger;
  * Implementation of {@link IAsyncHttpClient} that asynchronously connects
  * to real HTTP servers and gets responses from them.
  * <p>
- * It is also an {@link ReactorService} that needs its close method to be called
+ * It is also an {@link ReactiveService} that needs its close method to be called
  * to clean up the keep-alive connections etc.
  */
 @SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue"})
-public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketClient, ReactorService, ReactorJmxBeanWithStats, WithInitializer<AsyncHttpClient> {
+public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketClient, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<AsyncHttpClient> {
 	private static final Logger logger = getLogger(AsyncHttpClient.class);
 	private static final boolean CHECK = Checks.isEnabled(AsyncHttpClient.class);
 
@@ -452,7 +452,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 	}
 
 	private @NotNull Promise<?> doRequest(HttpRequest request, boolean isWebSocket) {
-		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
+		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
 		if (inspector != null) inspector.onRequest(request);
 		String host = request.getUrl().getHost();
 
@@ -543,7 +543,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 
 	@Override
 	public @NotNull Promise<Void> start() {
-		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
+		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
 		return Promise.complete();
 	}
 
@@ -558,7 +558,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 
 	@Override
 	public @NotNull Promise<Void> stop() {
-		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
+		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
 
 		SettablePromise<Void> promise = new SettablePromise<>();
 

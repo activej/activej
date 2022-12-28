@@ -18,7 +18,7 @@ package io.activej.crdt.storage.local;
 
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncRunnables;
-import io.activej.async.service.ReactorService;
+import io.activej.async.service.ReactiveService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.initializer.WithInitializer;
@@ -54,7 +54,7 @@ import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.Reactor;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.serializer.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -73,7 +73,7 @@ import static io.activej.crdt.util.Utils.onItem;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStorage<K, S>,
-		WithInitializer<CrdtStorageFs<K, S>>, ReactorService, ReactorJmxBeanWithStats {
+		WithInitializer<CrdtStorageFs<K, S>>, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(CrdtStorageFs.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageFs.class, "smoothingWindow", Duration.ofMinutes(1));

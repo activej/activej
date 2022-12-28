@@ -2,7 +2,7 @@ package adder;
 
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncRunnables;
-import io.activej.async.service.ReactorService;
+import io.activej.async.service.ReactiveService;
 import io.activej.crdt.hash.CrdtMap;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.datastream.StreamConsumer;
@@ -15,7 +15,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class AdderCrdtMap implements CrdtMap<Long, SimpleSumsCrdtState>, ReactorService {
+public class AdderCrdtMap implements CrdtMap<Long, SimpleSumsCrdtState>, ReactiveService {
 	private final Map<Long, SimpleSumsCrdtState> map = new TreeMap<>();
 
 	private final Reactor reactor;

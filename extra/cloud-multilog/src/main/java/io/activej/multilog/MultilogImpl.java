@@ -40,7 +40,7 @@ import io.activej.fs.exception.IllegalOffsetException;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.Reactor;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.serializer.BinarySerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -58,7 +58,7 @@ import static io.activej.datastream.stats.StreamStatsSizeCounter.forByteBufs;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 
-public final class MultilogImpl<T> implements Multilog<T>, ReactorJmxBeanWithStats, WithInitializer<MultilogImpl<T>> {
+public final class MultilogImpl<T> implements Multilog<T>, ReactiveJmxBeanWithStats, WithInitializer<MultilogImpl<T>> {
 	private static final Logger logger = LoggerFactory.getLogger(MultilogImpl.class);
 
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(256);

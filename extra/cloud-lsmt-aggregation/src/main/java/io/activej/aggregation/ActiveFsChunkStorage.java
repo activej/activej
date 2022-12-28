@@ -17,7 +17,7 @@
 package io.activej.aggregation;
 
 import io.activej.aggregation.ot.AggregationStructure;
-import io.activej.async.service.ReactorService;
+import io.activej.async.service.ReactiveService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.MemSize;
@@ -47,7 +47,7 @@ import io.activej.ot.util.IdGenerator;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.Reactor;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -73,7 +73,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @SuppressWarnings("rawtypes") // JMX doesn't work with generic types
-public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>, ReactorService, WithInitializer<ActiveFsChunkStorage<C>>, ReactorJmxBeanWithStats {
+public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>, ReactiveService, WithInitializer<ActiveFsChunkStorage<C>>, ReactiveJmxBeanWithStats {
 	private static final Logger logger = getLogger(ActiveFsChunkStorage.class);
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(256);
 

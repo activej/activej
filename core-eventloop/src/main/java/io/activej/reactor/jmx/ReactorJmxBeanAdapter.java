@@ -64,7 +64,7 @@ public final class ReactorJmxBeanAdapter implements JmxBeanAdapterWithRefresh {
 
 		Reactor reactor = ensureReactor(bean);
 		if (!reactorToJmxRefreshables.containsKey(reactor)) {
-			Duration smoothingWindows = reactor instanceof ReactorJmxBeanWithStats reactorJmxBeanWithStats ?
+			Duration smoothingWindows = reactor instanceof ReactiveJmxBeanWithStats reactorJmxBeanWithStats ?
 					reactorJmxBeanWithStats.getSmoothingWindow() :
 					null;
 			if (smoothingWindows == null) {

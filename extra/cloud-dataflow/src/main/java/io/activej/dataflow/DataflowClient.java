@@ -46,6 +46,7 @@ import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.processor.StreamSupplierTransformer;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.net.SocketSettings;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -162,7 +163,7 @@ public final class DataflowClient {
 		}
 	}
 
-	public class Session implements AsyncCloseable {
+	public class Session extends AbstractReactive implements AsyncCloseable {
 		private final InetSocketAddress address;
 		private final Messaging<DataflowResponse, DataflowRequest> messaging;
 

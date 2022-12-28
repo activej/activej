@@ -16,7 +16,7 @@
 
 package io.activej.service;
 
-import io.activej.async.service.ReactorService;
+import io.activej.async.service.ReactiveService;
 import io.activej.common.initializer.Initializer;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.service.BlockingService;
@@ -32,7 +32,7 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.inject.util.ScopedKey;
 import io.activej.inject.util.Trie;
 import io.activej.launcher.LauncherService;
-import io.activej.net.NioReactorServer;
+import io.activej.net.ReactiveServer;
 import io.activej.reactor.net.BlockingSocketServer;
 import io.activej.service.adapter.ServiceAdapter;
 import io.activej.service.adapter.ServiceAdapters;
@@ -266,13 +266,13 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 			// 'eventloop' module is present
 			serviceGraphModule
 					.register(Eventloop.class, forEventloop())
-					.register(ReactorService.class, forReactorService());
+					.register(ReactiveService.class, forReactiveService());
 		}
 		if (isClassPresent("io.activej.net.NioReactorServer")) {
 			// 'net' module is present
 			serviceGraphModule
 					.register(BlockingSocketServer.class, forBlockingSocketServer())
-					.register(NioReactorServer.class, forNioReactorServer());
+					.register(ReactiveServer.class, forReactiveServer());
 		}
 	}
 

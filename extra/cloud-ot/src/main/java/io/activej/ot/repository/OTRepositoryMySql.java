@@ -33,7 +33,7 @@ import io.activej.promise.Promise;
 import io.activej.promise.RetryPolicy;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.Reactor;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.types.TypeT;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -62,7 +62,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.util.stream.Collectors.joining;
 
-public class OTRepositoryMySql<D> implements OTRepository<Long, D>, ReactorJmxBeanWithStats, WithInitializer<OTRepositoryMySql<D>> {
+public class OTRepositoryMySql<D> implements OTRepository<Long, D>, ReactiveJmxBeanWithStats, WithInitializer<OTRepositoryMySql<D>> {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 	public static final String DEFAULT_REVISION_TABLE = "ot_revisions";

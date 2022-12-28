@@ -16,7 +16,7 @@
 
 package io.activej.crdt.storage.local;
 
-import io.activej.async.service.ReactorService;
+import io.activej.async.service.ReactiveService;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.time.CurrentTimeProvider;
@@ -38,7 +38,7 @@ import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.EventStats;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -53,7 +53,7 @@ import static io.activej.common.Utils.nullify;
 import static io.activej.crdt.util.Utils.onItem;
 
 @SuppressWarnings("rawtypes")
-public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtStorage<K, S>, WithInitializer<CrdtStorageMap<K, S>>, ReactorService, ReactorJmxBeanWithStats {
+public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtStorage<K, S>, WithInitializer<CrdtStorageMap<K, S>>, ReactiveService, ReactiveJmxBeanWithStats {
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageMap.class, "smoothingWindow", Duration.ofMinutes(1));
 
 	private final Reactor reactor;

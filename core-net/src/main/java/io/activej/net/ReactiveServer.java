@@ -17,7 +17,7 @@
 package io.activej.net;
 
 import io.activej.promise.Promise;
-import io.activej.reactor.nio.NioReactor;
+import io.activej.reactor.NioReactive;
 
 import java.io.IOException;
 
@@ -25,9 +25,7 @@ import java.io.IOException;
  * Represents non-blocking server which listens to new connections and accepts them asynchronously.
  * It operates on eventloop in eventloop thread and uses eventloop integration with Java NIO.
  */
-public interface NioReactorServer {
-	NioReactor getReactor();
-
+public interface ReactiveServer extends NioReactive {
 	/**
 	 * Tells this server to start listening on its listen addresses.
 	 *

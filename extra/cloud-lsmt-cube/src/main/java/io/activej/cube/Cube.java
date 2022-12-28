@@ -60,7 +60,7 @@ import io.activej.ot.OTState;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import org.jetbrains.annotations.NotNull;
@@ -101,7 +101,7 @@ import static java.util.stream.Collectors.toList;
  * Also provides functionality for managing aggregations.
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
-public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cube>, ReactorJmxBeanWithStats {
+public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cube>, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(Cube.class);
 
 	public static final int DEFAULT_OVERLAPPING_CHUNKS_THRESHOLD = 300;

@@ -18,7 +18,7 @@ package io.activej.crdt.wal;
 
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncRunnables;
-import io.activej.async.service.ReactorService;
+import io.activej.async.service.ReactiveService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.initializer.WithInitializer;
@@ -42,7 +42,7 @@ import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.Reactor;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -68,8 +68,8 @@ import static io.activej.crdt.wal.FileWriteAheadLog.FlushMode.*;
 import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
 import static java.util.stream.Collectors.toList;
 
-public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAheadLog<K, S>, ReactorService,
-		ReactorJmxBeanWithStats, WithInitializer<FileWriteAheadLog<K, S>> {
+public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAheadLog<K, S>, ReactiveService,
+		ReactiveJmxBeanWithStats, WithInitializer<FileWriteAheadLog<K, S>> {
 	private static final Logger logger = LoggerFactory.getLogger(FileWriteAheadLog.class);
 
 	public static final String EXT_FINAL = ".wal";

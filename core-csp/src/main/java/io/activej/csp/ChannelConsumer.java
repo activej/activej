@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.function.*;
 
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 
 /**
  * This interface represents consumer of data items that should be used serially
@@ -98,7 +99,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	 * @see ChannelConsumer#of(AsyncConsumer, AsyncCloseable)
 	 */
 	static <T> ChannelConsumer<T> of(@NotNull AsyncConsumer<T> consumer) {
-		return of(consumer, e -> {});
+		return of(consumer, AsyncCloseable.of(e -> {}));
 	}
 
 	/**
@@ -207,7 +208,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 
 	static <T> ChannelConsumer<T> ofAnotherReactor(@NotNull Reactor anotherReactor,
 			@NotNull ChannelConsumer<T> anotherReactorConsumer) {
-		if (Reactor.getCurrentReactor() == anotherReactor) {
+		if (getCurrentReactor() == anotherReactor) {
 			return anotherReactorConsumer;
 		}
 		return new AbstractChannelConsumer<>() {

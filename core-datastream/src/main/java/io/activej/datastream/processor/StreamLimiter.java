@@ -17,10 +17,11 @@
 package io.activej.datastream.processor;
 
 import io.activej.datastream.*;
+import io.activej.reactor.AbstractReactive;
 
 import static io.activej.common.Checks.checkState;
 
-public final class StreamLimiter<T> implements StreamTransformer<T, T> {
+public final class StreamLimiter<T> extends AbstractReactive implements StreamTransformer<T, T> {
 	public static final long NO_LIMIT = -1;
 
 	private final Input input;

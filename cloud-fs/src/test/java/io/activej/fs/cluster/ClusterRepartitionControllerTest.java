@@ -7,7 +7,7 @@ import io.activej.fs.ForwardingActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.fs.tcp.RemoteActiveFs;
-import io.activej.net.AbstractServer;
+import io.activej.net.AbstractReactiveServer;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
@@ -125,7 +125,7 @@ public final class ClusterRepartitionControllerTest {
 		await(fsPartitions.start()
 				.then(controller::start)
 				.then(controller::repartition)
-				.whenComplete(TestUtils.assertCompleteFn($ -> servers.forEach(AbstractServer::close))));
+				.whenComplete(TestUtils.assertCompleteFn($ -> servers.forEach(AbstractReactiveServer::close))));
 
 		assertTrue(fsPartitions.getAlivePartitions().containsKey("regular"));
 		assertFalse(fsPartitions.getAlivePartitions().containsKey("failing"));

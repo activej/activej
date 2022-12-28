@@ -18,7 +18,7 @@ package io.activej.crdt.wal;
 
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncRunnables;
-import io.activej.async.service.ReactorService;
+import io.activej.async.service.ReactiveService;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.crdt.CrdtData;
@@ -38,7 +38,7 @@ import java.util.TreeMap;
 import static io.activej.async.util.LogUtils.Level.INFO;
 import static io.activej.async.util.LogUtils.toLogger;
 
-public class InMemoryWriteAheadLog<K extends Comparable<K>, S> implements WriteAheadLog<K, S>, ReactorService,
+public class InMemoryWriteAheadLog<K extends Comparable<K>, S> implements WriteAheadLog<K, S>, ReactiveService,
 		WithInitializer<InMemoryWriteAheadLog<K, S>> {
 	private static final Logger logger = LoggerFactory.getLogger(InMemoryWriteAheadLog.class);
 

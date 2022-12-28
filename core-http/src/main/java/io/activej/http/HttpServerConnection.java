@@ -368,7 +368,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			servletResult = Promise.ofException(e);
 		}
 		servletResult.run((response, e) -> {
-			if (CHECK) checkState(reactor.inReactorThread());
+			if (CHECK) checkState(inReactorThread());
 			if (isClosed()) {
 				request.recycle();
 				readBuf = nullify(readBuf, ByteBuf::recycle);

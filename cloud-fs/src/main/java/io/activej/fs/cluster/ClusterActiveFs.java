@@ -19,7 +19,7 @@ package io.activej.fs.cluster;
 import io.activej.async.function.AsyncBiFunction;
 import io.activej.async.function.AsyncFunction;
 import io.activej.async.process.AsyncCloseable;
-import io.activej.async.service.ReactorService;
+import io.activej.async.service.ReactiveService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.collection.Try;
 import io.activej.common.function.FunctionEx;
@@ -38,7 +38,7 @@ import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.Reactor;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -70,7 +70,7 @@ import static java.util.stream.Collectors.toList;
  *     <li>Paths should not contain existing filenames as part of the path</li>
  * </ul>
  */
-public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterActiveFs>, ReactorService, ReactorJmxBeanWithStats {
+public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterActiveFs>, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(ClusterActiveFs.class);
 
 	private final FsPartitions partitions;

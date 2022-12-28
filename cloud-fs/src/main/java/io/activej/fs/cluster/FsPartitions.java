@@ -19,7 +19,7 @@ package io.activej.fs.cluster;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncRunnables;
 import io.activej.async.function.AsyncSupplier;
-import io.activej.async.service.ReactorService;
+import io.activej.async.service.ReactiveService;
 import io.activej.common.function.ConsumerEx;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.fs.ActiveFs;
@@ -44,7 +44,7 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
 import static java.util.stream.Collectors.toList;
 
-public final class FsPartitions implements ReactorService, WithInitializer<FsPartitions> {
+public final class FsPartitions implements ReactiveService, WithInitializer<FsPartitions> {
 	private static final Logger logger = LoggerFactory.getLogger(FsPartitions.class);
 
 	static final FsException LOCAL_EXCEPTION = new FsException("Local exception");

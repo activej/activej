@@ -15,7 +15,7 @@ import io.activej.fs.http.ActiveFsServlet;
 import io.activej.fs.http.HttpActiveFs;
 import io.activej.http.AsyncHttpClient;
 import io.activej.http.AsyncHttpServer;
-import io.activej.net.AbstractServer;
+import io.activej.net.AbstractReactiveServer;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
@@ -581,7 +581,7 @@ public final class TestClusterActiveFs {
 
 	private void waitForServersToStop() {
 		try {
-			for (AbstractServer<?> server : servers) {
+			for (AbstractReactiveServer<?> server : servers) {
 				Eventloop serverEventloop = (Eventloop) server.getReactor();
 				if (server.isRunning()) {
 					serverEventloop.submit(server::close).get();

@@ -32,7 +32,7 @@ import io.activej.net.socket.udp.AsyncUdpSocketNio;
 import io.activej.net.socket.udp.UdpPacket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.reactor.net.DatagramSocketSettings;
 import io.activej.reactor.nio.NioReactor;
 import org.jetbrains.annotations.NotNull;
@@ -55,7 +55,7 @@ import static io.activej.promise.Promises.timeout;
  * Implementation of {@link AsyncDnsClient} that asynchronously
  * connects to some <i>real</i> DNS server and gets the response from it.
  */
-public final class RemoteAsyncDnsClient implements AsyncDnsClient, ReactorJmxBeanWithStats, WithInitializer<RemoteAsyncDnsClient> {
+public final class RemoteAsyncDnsClient implements AsyncDnsClient, ReactiveJmxBeanWithStats, WithInitializer<RemoteAsyncDnsClient> {
 	private final Logger logger = LoggerFactory.getLogger(RemoteAsyncDnsClient.class);
 	private static final boolean CHECK = Checks.isEnabled(RemoteAsyncDnsClient.class);
 
@@ -124,7 +124,7 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, ReactorJmxBea
 
 	@Override
 	public void close() {
-		if (CHECK) checkState(reactor.inReactorThread());
+		if (CHECK) checkState(inReactorThread());
 		if (socket == null) {
 			return;
 		}
@@ -158,7 +158,7 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, ReactorJmxBea
 
 	@Override
 	public Promise<DnsResponse> resolve(DnsQuery query) {
-		if (CHECK) checkState(reactor.inReactorThread());
+		if (CHECK) checkState(inReactorThread());
 		DnsResponse fromQuery = AsyncDnsClient.resolveFromQuery(query);
 		if (fromQuery != null) {
 			logger.trace("{} already contained an IP address within itself", query);

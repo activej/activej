@@ -9,6 +9,7 @@ import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.exception.DataflowException;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.SynchronousStreamConsumer;
+import io.activej.reactor.Reactive;
 import io.activej.reactor.Reactor;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
@@ -41,7 +42,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-public final class DataflowMeta extends LimitedMeta {
+public final class DataflowMeta extends LimitedMeta implements Reactive {
 	private static final String TABLE_CAT = "TABLE_CAT";
 	private static final String TABLE_SCHEM = "TABLE_SCHEM";
 	private static final String TABLE_NAME = "TABLE_NAME";
@@ -98,6 +99,11 @@ public final class DataflowMeta extends LimitedMeta {
 
 	public static DataflowMeta create(Reactor reactor, CalciteSqlDataflow sqlDataflow) {
 		return new DataflowMeta(reactor, sqlDataflow);
+	}
+
+	@Override
+	public Reactor getReactor() {
+		return reactor;
 	}
 
 	@Override

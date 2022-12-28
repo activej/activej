@@ -20,6 +20,7 @@ import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.dsl.HasStreamInput;
 import io.activej.datastream.dsl.HasStreamOutput;
+import io.activej.reactor.Reactive;
 
 import java.util.function.Function;
 
@@ -30,7 +31,8 @@ import java.util.function.Function;
  * @param <I> input elements type
  * @param <O> output elements type.
  */
-public interface StreamTransformer<I, O> extends HasStreamInput<I>, HasStreamOutput<O>,
+public interface StreamTransformer<I, O> extends Reactive,
+		HasStreamInput<I>, HasStreamOutput<O>,
 		StreamSupplierTransformer<I, StreamSupplier<O>>,
 		StreamConsumerTransformer<O, StreamConsumer<I>> {
 

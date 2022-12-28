@@ -28,6 +28,7 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -48,7 +49,7 @@ import static io.activej.common.Checks.checkState;
 /**
  * Represents a cache for storing resolved domains during it's time to live.
  */
-public final class DnsCache implements WithInitializer<DnsCache> {
+public final class DnsCache extends AbstractReactive implements WithInitializer<DnsCache> {
 	private static final Logger logger = LoggerFactory.getLogger(DnsCache.class);
 	private static final boolean CHECK = Checks.isEnabled(DnsCache.class);
 
@@ -58,7 +59,6 @@ public final class DnsCache implements WithInitializer<DnsCache> {
 	public static final Duration DEFAULT_MAX_TTL = null;
 
 	private final Map<DnsQuery, CachedDnsQueryResult> cache = new ConcurrentHashMap<>();
-	private final Reactor reactor;
 
 	private long errorCacheExpiration = DEFAULT_ERROR_CACHE_EXPIRATION.toMillis();
 	private long timedOutExpiration = DEFAULT_TIMED_OUT_EXPIRATION.toMillis();
@@ -76,7 +76,7 @@ public final class DnsCache implements WithInitializer<DnsCache> {
 	 * @param reactor reactor
 	 */
 	private DnsCache(@NotNull Reactor reactor) {
-		this.reactor = reactor;
+		super(reactor);
 		this.now = reactor;
 	}
 
@@ -159,7 +159,7 @@ public final class DnsCache implements WithInitializer<DnsCache> {
 	 * @param response response to add
 	 */
 	public void add(DnsQuery query, DnsResponse response) {
-		if (CHECK) checkState(reactor.inReactorThread(), "Concurrent cache adds are not allowed");
+		if (CHECK) checkState(inReactorThread(), "Concurrent cache adds are not allowed");
 		long expirationTime = now.currentTimeMillis();
 		if (response.isSuccessful()) {
 			assert response.getRecord() != null; // where are my advanced contracts so that the IDE would know it's true here without an assertion?

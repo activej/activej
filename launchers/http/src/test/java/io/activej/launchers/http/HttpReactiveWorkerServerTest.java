@@ -31,7 +31,7 @@ import static io.activej.config.converter.ConfigConverters.ofInetSocketAddress;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.assertEquals;
 
-public final class HttpWorkerServerTest {
+public final class HttpReactiveWorkerServerTest {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 

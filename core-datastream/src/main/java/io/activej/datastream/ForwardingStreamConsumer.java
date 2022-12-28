@@ -17,6 +17,7 @@
 package io.activej.datastream;
 
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -28,6 +29,11 @@ public abstract class ForwardingStreamConsumer<T> implements StreamConsumer<T> {
 
 	protected ForwardingStreamConsumer(StreamConsumer<T> consumer) {
 		this.consumer = consumer;
+	}
+
+	@Override
+	public Reactor getReactor() {
+		return consumer.getReactor();
 	}
 
 	@Override

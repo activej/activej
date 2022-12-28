@@ -32,8 +32,8 @@ import io.activej.eventloop.inspector.EventloopStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.reactor.Reactor;
-import io.activej.reactor.jmx.ReactorJmxBean;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBean;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.reactor.net.ServerSocketSettings;
 import io.activej.reactor.nio.NioChannelEventHandler;
 import io.activej.reactor.nio.NioReactor;
@@ -82,7 +82,7 @@ import static java.util.Collections.emptyIterator;
  * and its queues with tasks are empty.
  */
 @SuppressWarnings("unused")
-public final class Eventloop implements Runnable, NioReactor, WithInitializer<Eventloop>, ReactorJmxBeanWithStats {
+public final class Eventloop implements Runnable, NioReactor, WithInitializer<Eventloop>, ReactiveJmxBeanWithStats {
 	public static final Logger logger = LoggerFactory.getLogger(Eventloop.class);
 	private static final boolean CHECK = Checks.isEnabled(Eventloop.class);
 
@@ -1015,8 +1015,7 @@ public final class Eventloop implements Runnable, NioReactor, WithInitializer<Ev
 	 */
 	@Override
 	public @NotNull ScheduledRunnable scheduleBackground(long timestamp, @NotNull @Async.Schedule Runnable runnable) {
-		if (CHECK)
-			checkState(inReactorThread(), "Not in eventloop thread");
+		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
 		return addScheduledTask(timestamp, runnable, true);
 	}
 
@@ -1073,7 +1072,7 @@ public final class Eventloop implements Runnable, NioReactor, WithInitializer<Ev
 	/**
 	 * Returns itself
 	 * <p>
-	 * This method is needed as {@link Eventloop} implements {@link ReactorJmxBean} interface
+	 * This method is needed as {@link Eventloop} implements {@link ReactiveJmxBean} interface
 	 *
 	 * @return this {@link Eventloop}
 	 */

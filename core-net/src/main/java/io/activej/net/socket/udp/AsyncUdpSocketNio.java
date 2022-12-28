@@ -30,6 +30,7 @@ import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ValueStats;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.nio.NioChannelEventHandler;
 import io.activej.reactor.nio.NioReactor;
 import org.jetbrains.annotations.NotNull;
@@ -46,13 +47,11 @@ import java.util.ArrayDeque;
 
 import static io.activej.common.Checks.checkState;
 
-public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventHandler {
+public final class AsyncUdpSocketNio extends AbstractNioReactive implements AsyncUdpSocket, NioChannelEventHandler {
 	private static final boolean CHECK = Checks.isEnabled(AsyncUdpSocketNio.class);
 
 	private static final int OP_POSTPONED = 1 << 7;  // SelectionKey constant
 	private static final MemSize DEFAULT_UDP_BUFFER_SIZE = MemSize.kilobytes(16);
-
-	private final NioReactor reactor;
 
 	private @Nullable SelectionKey key;
 
@@ -164,7 +163,7 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 	// endregion
 
 	private AsyncUdpSocketNio(@NotNull NioReactor reactor, @NotNull DatagramChannel channel) throws IOException {
-		this.reactor = reactor;
+		super(reactor);
 		this.channel = channel;
 		this.key = channel.register(reactor.ensureSelector(), 0, this);
 	}
@@ -191,7 +190,7 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 
 	@Override
 	public Promise<UdpPacket> receive() {
-		if (CHECK) checkState(reactor.inReactorThread());
+		if (CHECK) checkState(inReactorThread());
 		if (!isOpen()) {
 			return Promise.ofException(new AsyncCloseException());
 		}
@@ -244,7 +243,7 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 
 	@Override
 	public Promise<Void> send(UdpPacket packet) {
-		if (CHECK) checkState(reactor.inReactorThread());
+		if (CHECK) checkState(inReactorThread());
 		if (!isOpen()) {
 			return Promise.ofException(new AsyncCloseException());
 		}
@@ -307,7 +306,7 @@ public final class AsyncUdpSocketNio implements AsyncUdpSocket, NioChannelEventH
 
 	@Override
 	public void close() {
-		if (CHECK) checkState(reactor.inReactorThread());
+		if (CHECK) checkState(inReactorThread());
 		SelectionKey key = this.key;
 		if (key == null) {
 			return;

@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 
 /**
  * This interface represents supplier of {@link Promise} of data that should be used serially
@@ -210,7 +211,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 
 	static <T> ChannelSupplier<T> ofAnotherReactor(@NotNull Reactor anotherReactor,
 			@NotNull ChannelSupplier<T> anotherReactorSupplier) {
-		if (Reactor.getCurrentReactor() == anotherReactor) {
+		if (getCurrentReactor() == anotherReactor) {
 			return anotherReactorSupplier;
 		}
 		return new AbstractChannelSupplier<>() {

@@ -23,8 +23,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 
-public interface ReactorJmxBeanWithStats extends ReactorJmxBean {
-
+public interface ReactiveJmxBeanWithStats extends ReactiveJmxBean {
 	@JmxOperation
 	default void resetStats() {
 		StatsUtils.resetStats(this);

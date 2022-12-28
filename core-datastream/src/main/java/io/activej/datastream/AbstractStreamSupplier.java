@@ -19,7 +19,7 @@ package io.activej.datastream;
 import io.activej.common.Checks;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
-import io.activej.reactor.Reactor;
+import io.activej.reactor.AbstractReactive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,7 +31,7 @@ import static io.activej.common.Checks.checkState;
  * This is a helper partial implementation of the {@link StreamSupplier}
  * which helps to deal with state transitions and helps to implement basic behaviours.
  */
-public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
+public abstract class AbstractStreamSupplier<T> extends AbstractReactive implements StreamSupplier<T> {
 	private static final boolean CHECK = Checks.isEnabled(AbstractStreamSupplier.class);
 
 	public static final StreamDataAcceptor<?> NO_ACCEPTOR = item -> {};
@@ -53,11 +53,9 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 
 	private @Nullable SettablePromise<Void> flushPromise;
 
-	protected final Reactor reactor = Reactor.getCurrentReactor();
-
 	{
 		dataAcceptorBuffered = buffer::addLast;
-		if (reactor.inReactorThread()) {
+		if (inReactorThread()) {
 			reactor.post(this::ensureInitialized);
 		} else {
 			reactor.execute(this::ensureInitialized);
@@ -66,7 +64,7 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 
 	@Override
 	public final Promise<Void> streamTo(@NotNull StreamConsumer<T> consumer) {
-		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
+		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
 		checkState(!isStarted());
 		ensureInitialized();
 		this.consumer = consumer;
@@ -103,7 +101,7 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 
 	@Override
 	public final void updateDataAcceptor() {
-		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
+		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
 		if (!isStarted()) return;
 		if (endOfStream.isComplete()) return;
 		StreamDataAcceptor<T> dataAcceptor = this.consumer.getDataAcceptor();
@@ -159,7 +157,7 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 	 * Only the first call causes any effect.
 	 */
 	public final Promise<Void> sendEndOfStream() {
-		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
+		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
 		if (endOfStreamRequest) return flushPromise;
 		if (flushAsync > 0) {
 			asyncEnd();
@@ -202,7 +200,7 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 	 * Causes this supplier to try to supply its buffered items and updates the current state accordingly.
 	 */
 	private void flush() {
-		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
+		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
 		flushRequest = true;
 		if (flushRunning || flushAsync > 0) return; // recursive call
 		if (endOfStream.isComplete()) return;
@@ -275,7 +273,7 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 
 	@Override
 	public final Promise<Void> getEndOfStream() {
-		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
+		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
 		return endOfStream;
 	}
 
@@ -302,7 +300,7 @@ public abstract class AbstractStreamSupplier<T> implements StreamSupplier<T> {
 
 	@Override
 	public final void closeEx(@NotNull Exception e) {
-		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
+		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
 		ensureInitialized();
 		endOfStreamRequest = true;
 		dataAcceptor = null;

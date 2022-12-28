@@ -1,6 +1,6 @@
 package adder;
 
-import io.activej.async.service.ReactorTaskScheduler;
+import io.activej.async.service.ReactiveTaskScheduler;
 import io.activej.config.Config;
 import io.activej.crdt.CrdtException;
 import io.activej.crdt.CrdtServer;
@@ -98,8 +98,8 @@ public final class ClusterStorageModule extends AbstractModule {
 	@Provides
 	@Eager
 	@Named("Repartition")
-	ReactorTaskScheduler repartitionController(Reactor reactor, CrdtRepartitionController<Long, DetailedSumsCrdtState, PartitionId> repartitionController) {
-		return ReactorTaskScheduler.create(reactor, repartitionController::repartition)
+	ReactiveTaskScheduler repartitionController(Reactor reactor, CrdtRepartitionController<Long, DetailedSumsCrdtState, PartitionId> repartitionController) {
+		return ReactiveTaskScheduler.create(reactor, repartitionController::repartition)
 				.withInterval(Duration.ofSeconds(10));
 	}
 }

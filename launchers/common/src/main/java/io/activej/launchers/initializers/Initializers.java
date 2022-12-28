@@ -16,7 +16,7 @@
 
 package io.activej.launchers.initializers;
 
-import io.activej.async.service.ReactorTaskScheduler;
+import io.activej.async.service.ReactiveTaskScheduler;
 import io.activej.common.MemSize;
 import io.activej.common.initializer.Initializer;
 import io.activej.config.Config;
@@ -26,7 +26,7 @@ import io.activej.http.AsyncHttpServer;
 import io.activej.inject.Key;
 import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
-import io.activej.net.AbstractServer;
+import io.activej.net.AbstractReactiveServer;
 import io.activej.net.PrimaryServer;
 import io.activej.trigger.TriggerResult;
 import io.activej.trigger.TriggersModuleSettings;
@@ -41,7 +41,7 @@ public class Initializers {
 	public static final String GLOBAL_EVENTLOOP_NAME = "GlobalEventloopStats";
 	public static final Key<Eventloop> GLOBAL_EVENTLOOP_KEY = Key.of(Eventloop.class, GLOBAL_EVENTLOOP_NAME);
 
-	public static <T extends AbstractServer<T>> Initializer<T> ofAbstractServer(Config config) {
+	public static <T extends AbstractReactiveServer<T>> Initializer<T> ofAbstractServer(Config config) {
 		return server -> server
 				.withListenAddresses(config.get(ofList(ofInetSocketAddress()), "listenAddresses"))
 				.withAcceptOnce(config.get(ofBoolean(), "acceptOnce", false))
@@ -60,7 +60,7 @@ public class Initializers {
 				.withThreadPriority(config.get(ofInteger(), "threadPriority", eventloop.getThreadPriority()));
 	}
 
-	public static Initializer<ReactorTaskScheduler> ofReactorTaskScheduler(Config config) {
+	public static Initializer<ReactiveTaskScheduler> ofReactorTaskScheduler(Config config) {
 		return scheduler -> {
 			scheduler.setEnabled(!config.get(ofBoolean(), "disabled", false));
 			scheduler.withAbortOnError(config.get(ofBoolean(), "abortOnError", false))
@@ -147,12 +147,12 @@ public class Initializers {
 		Long delayWarning = config.get(ofDurationAsMillis(), "scheduler.delayWarning", null);
 
 		return triggersSettings -> triggersSettings
-				.with(ReactorTaskScheduler.class, WARNING, "error", scheduler ->
+				.with(ReactiveTaskScheduler.class, WARNING, "error", scheduler ->
 						TriggerResult.ofError(scheduler.getLastException()))
-				.with(ReactorTaskScheduler.class, INFORMATION, "error", scheduler ->
+				.with(ReactiveTaskScheduler.class, INFORMATION, "error", scheduler ->
 						ofPromiseStatsLastSuccess(scheduler.getStats()))
 
-				.with(ReactorTaskScheduler.class, WARNING, "delay", scheduler -> {
+				.with(ReactiveTaskScheduler.class, WARNING, "delay", scheduler -> {
 					Duration currentDuration = scheduler.getStats().getCurrentDuration();
 					Duration duration = getDuration(scheduler);
 					if (currentDuration == null || duration == null) {
@@ -161,7 +161,7 @@ public class Initializers {
 					return TriggerResult.ofInstant(scheduler.getStats().getLastStartTime(),
 							currentDuration.toMillis() > (delayWarning != null ? delayWarning : duration.toMillis() * 3));
 				})
-				.with(ReactorTaskScheduler.class, HIGH, "delay", scheduler -> {
+				.with(ReactiveTaskScheduler.class, HIGH, "delay", scheduler -> {
 					Duration currentDuration = scheduler.getStats().getCurrentDuration();
 					Duration duration = getDuration(scheduler);
 					if (currentDuration == null || duration == null) {
@@ -172,7 +172,7 @@ public class Initializers {
 				});
 	}
 
-	private static Duration getDuration(ReactorTaskScheduler scheduler) {
+	private static Duration getDuration(ReactiveTaskScheduler scheduler) {
 		return scheduler.getPeriod() != null ? scheduler.getPeriod() : scheduler.getInterval();
 	}
 }

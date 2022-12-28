@@ -33,7 +33,7 @@ public final class TcpClientExample {
 			if (e == null) {
 				AsyncTcpSocket socket;
 				try {
-					socket = AsyncTcpSocketNio.wrapChannel(eventloop, socketChannel, null);
+					socket = AsyncTcpSocketNio.wrapChannel(socketChannel, null);
 				} catch (IOException ioEx) {
 					throw new RuntimeException(ioEx);
 				}

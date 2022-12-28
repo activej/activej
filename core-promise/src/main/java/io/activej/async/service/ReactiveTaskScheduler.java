@@ -26,7 +26,7 @@ import io.activej.promise.Promise;
 import io.activej.promise.RetryPolicy;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.Reactor;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.reactor.schedule.ScheduledRunnable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -40,8 +40,8 @@ import static io.activej.common.Utils.nullify;
 import static io.activej.promise.Promises.retry;
 
 @SuppressWarnings("UnusedReturnValue")
-public final class ReactorTaskScheduler implements ReactorService, WithInitializer<ReactorTaskScheduler>, ReactorJmxBeanWithStats {
-	private static final Logger logger = LoggerFactory.getLogger(ReactorTaskScheduler.class);
+public final class ReactiveTaskScheduler implements ReactiveService, WithInitializer<ReactiveTaskScheduler>, ReactiveJmxBeanWithStats {
+	private static final Logger logger = LoggerFactory.getLogger(ReactiveTaskScheduler.class);
 
 	private final Reactor reactor;
 	private final AsyncSupplier<Object> task;
@@ -58,7 +58,7 @@ public final class ReactorTaskScheduler implements ReactorService, WithInitializ
 
 	@Override
 	public void resetStats() {
-		ReactorJmxBeanWithStats.super.resetStats();
+		ReactiveJmxBeanWithStats.super.resetStats();
 		lastException = null;
 	}
 
@@ -127,22 +127,22 @@ public final class ReactorTaskScheduler implements ReactorService, WithInitializ
 
 	private @Nullable Promise<Void> currentPromise;
 
-	private ReactorTaskScheduler(Reactor reactor, AsyncSupplier<?> task) {
+	private ReactiveTaskScheduler(Reactor reactor, AsyncSupplier<?> task) {
 		this.reactor = reactor;
 		//noinspection unchecked
 		this.task = (AsyncSupplier<Object>) task;
 	}
 
-	public static <T> ReactorTaskScheduler create(Reactor reactor, AsyncSupplier<T> task) {
-		return new ReactorTaskScheduler(reactor, task);
+	public static <T> ReactiveTaskScheduler create(Reactor reactor, AsyncSupplier<T> task) {
+		return new ReactiveTaskScheduler(reactor, task);
 	}
 
-	public ReactorTaskScheduler withInitialDelay(Duration initialDelay) {
+	public ReactiveTaskScheduler withInitialDelay(Duration initialDelay) {
 		this.initialDelay = initialDelay.toMillis();
 		return this;
 	}
 
-	public ReactorTaskScheduler withSchedule(Schedule schedule) {
+	public ReactiveTaskScheduler withSchedule(Schedule schedule) {
 		this.schedule = checkNotNull(schedule);
 		// for JMX:
 		this.period = null;
@@ -150,28 +150,28 @@ public final class ReactorTaskScheduler implements ReactorService, WithInitializ
 		return this;
 	}
 
-	public ReactorTaskScheduler withPeriod(Duration period) {
+	public ReactiveTaskScheduler withPeriod(Duration period) {
 		setPeriod(period);
 		return this;
 	}
 
-	public ReactorTaskScheduler withInterval(Duration interval) {
+	public ReactiveTaskScheduler withInterval(Duration interval) {
 		setInterval(interval);
 		return this;
 	}
 
-	public ReactorTaskScheduler withRetryPolicy(RetryPolicy<?> retryPolicy) {
+	public ReactiveTaskScheduler withRetryPolicy(RetryPolicy<?> retryPolicy) {
 		//noinspection unchecked
 		this.retryPolicy = (RetryPolicy<Object>) retryPolicy;
 		return this;
 	}
 
-	public ReactorTaskScheduler withAbortOnError(boolean abortOnError) {
+	public ReactiveTaskScheduler withAbortOnError(boolean abortOnError) {
 		this.abortOnError = abortOnError;
 		return this;
 	}
 
-	public ReactorTaskScheduler withStatsHistogramLevels(int[] levels) {
+	public ReactiveTaskScheduler withStatsHistogramLevels(int[] levels) {
 		this.stats.setHistogram(levels);
 		return this;
 	}

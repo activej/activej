@@ -21,7 +21,7 @@ import io.activej.common.exception.MalformedDataException;
 import io.activej.http.WebSocket.Frame.FrameType;
 import io.activej.http.WebSocket.Message.MessageType;
 import io.activej.http.WebSocketConstants.OpCode;
-import io.activej.net.AbstractServer;
+import io.activej.net.AbstractReactiveServer;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.UnsupportedEncodingException;
@@ -365,7 +365,7 @@ public final class HttpUtils {
 				+ "/";
 	}
 
-	public static List<String> getHttpAddresses(AbstractServer<?> server) {
+	public static List<String> getHttpAddresses(AbstractReactiveServer<?> server) {
 		return Stream.concat(
 				server.getBoundAddresses().stream().map(address -> HttpUtils.formatUrl(address, false)),
 				server.getSslBoundAddresses().stream().map(address -> HttpUtils.formatUrl(address, true))

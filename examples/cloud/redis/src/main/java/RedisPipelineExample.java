@@ -18,7 +18,7 @@ public final class RedisPipelineExample {
 	public static void main(String[] args) {
 		Eventloop eventloop = Eventloop.create().withCurrentThread();
 
-		RedisClient client = RedisClient.create(eventloop, ADDRESS);
+		RedisClient client = RedisClient.create(ADDRESS);
 
 		client.connect()
 				.then(connection -> {

@@ -40,7 +40,7 @@ import io.activej.jmx.stats.ValueStats;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.Reactor;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -62,7 +62,7 @@ import static io.activej.crdt.wal.FileWriteAheadLog.FRAME_FORMAT;
 import static java.util.Comparator.naturalOrder;
 import static java.util.stream.Collectors.toList;
 
-public final class WalUploader<K extends Comparable<K>, S> implements ReactorJmxBeanWithStats, WithInitializer<WalUploader<K, S>> {
+public final class WalUploader<K extends Comparable<K>, S> implements ReactiveJmxBeanWithStats, WithInitializer<WalUploader<K, S>> {
 	private static final Logger logger = LoggerFactory.getLogger(WalUploader.class);
 
 	private static final int DEFAULT_SORT_ITEMS_IN_MEMORY = ApplicationSettings.getInt(WalUploader.class, "sortItemsInMemory", 100_000);

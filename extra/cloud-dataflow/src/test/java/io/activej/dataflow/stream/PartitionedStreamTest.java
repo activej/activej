@@ -45,7 +45,7 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.Modules;
-import io.activej.net.AbstractServer;
+import io.activej.net.AbstractReactiveServer;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
@@ -120,9 +120,9 @@ public final class PartitionedStreamTest {
 	@After
 	public void tearDown() throws Exception {
 		serverEventloop.submit(() -> {
-			sourceFsServers.forEach(AbstractServer::close);
-			targetFsServers.forEach(AbstractServer::close);
-			dataflowServers.forEach(AbstractServer::close);
+			sourceFsServers.forEach(AbstractReactiveServer::close);
+			targetFsServers.forEach(AbstractReactiveServer::close);
+			dataflowServers.forEach(AbstractReactiveServer::close);
 		}).get();
 		serverEventloop.keepAlive(false);
 		Thread serverEventloopThread = serverEventloop.getEventloopThread();
@@ -542,7 +542,7 @@ public final class PartitionedStreamTest {
 		return servers;
 	}
 
-	private void listen(AbstractServer<?> server) {
+	private void listen(AbstractReactiveServer<?> server) {
 		try {
 			serverEventloop.submit(() -> {
 				try {
@@ -561,7 +561,7 @@ public final class PartitionedStreamTest {
 
 	private static List<Partition> toPartitions(List<DataflowServer> servers) {
 		return servers.stream()
-				.map(AbstractServer::getListenAddresses)
+				.map(AbstractReactiveServer::getListenAddresses)
 				.flatMap(Collection::stream)
 				.map(Partition::new)
 				.collect(toList());

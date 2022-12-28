@@ -50,7 +50,7 @@ import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.inject.ResourceLocator;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
-import io.activej.net.AbstractServer;
+import io.activej.net.AbstractReactiveServer;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -71,7 +71,7 @@ import static java.util.stream.Collectors.toMap;
 /**
  * Server for processing JSON commands.
  */
-public final class DataflowServer extends AbstractServer<DataflowServer> {
+public final class DataflowServer extends AbstractReactiveServer<DataflowServer> {
 	public static final Version VERSION = new Version(1, 0);
 
 	private static final int MAX_LAST_RAN_TASKS = ApplicationSettings.getInt(DataflowServer.class, "maxLastRanTasks", 1000);

@@ -26,7 +26,8 @@ import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio.Inspector;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.AbstractNioReactive;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.reactor.net.ServerSocketSettings;
 import io.activej.reactor.net.SocketSettings;
 import io.activej.reactor.nio.NioReactor;
@@ -56,18 +57,16 @@ import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
- * This is an implementation of {@link NioReactorServer}.
+ * This is an implementation of {@link ReactiveServer}.
  * It is a non-blocking server which works on top of the NIO reactor.
  * Thus, it runs in the NIO reactor, and all events are fired on that reactor.
  * <p>
  * This is simply a higher-level wrapper around {@link NioReactor#listen} call.
  */
 @SuppressWarnings("WeakerAccess, unused")
-public abstract class AbstractServer<Self extends AbstractServer<Self>> implements NioReactorServer, WorkerServer, WithInitializer<Self>, ReactorJmxBeanWithStats {
+public abstract class AbstractReactiveServer<Self extends AbstractReactiveServer<Self>> extends AbstractNioReactive implements ReactiveServer, WorkerServer, WithInitializer<Self>, ReactiveJmxBeanWithStats {
 	protected Logger logger = getLogger(getClass());
-	private static final boolean CHECK = Checks.isEnabled(AbstractServer.class);
-
-	protected final @NotNull NioReactor reactor;
+	private static final boolean CHECK = Checks.isEnabled(AbstractReactiveServer.class);
 
 	public static final ServerSocketSettings DEFAULT_SERVER_SOCKET_SETTINGS = ServerSocketSettings.create(DEFAULT_BACKLOG);
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
@@ -98,7 +97,7 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 	// jmx
 	private static final Duration SMOOTHING_WINDOW = Duration.ofMinutes(1);
 
-	AbstractServer<?> acceptServer = this;
+	AbstractReactiveServer<?> acceptServer = this;
 
 	private @Nullable Inspector socketInspector;
 	private @Nullable Inspector socketSslInspector;
@@ -107,8 +106,8 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 	private final EventStats filteredAccepts = EventStats.create(SMOOTHING_WINDOW);
 
 	// region creators & builder methods
-	protected AbstractServer(@NotNull NioReactor reactor) {
-		this.reactor = reactor;
+	protected AbstractReactiveServer(@NotNull NioReactor reactor) {
+		super(reactor);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -219,7 +218,7 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 	 */
 	@Override
 	public final void listen() throws IOException {
-		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
+		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
 		if (running) {
 			return;
 		}
@@ -255,7 +254,7 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 
 	@Override
 	public final Promise<?> close() {
-		if (CHECK) checkState(reactor.inReactorThread(), "Cannot close server from different thread");
+		if (CHECK) checkState(inReactorThread(), "Cannot close server from different thread");
 		if (!running) return Promise.complete();
 		running = false;
 		closeServerSockets();
@@ -339,14 +338,14 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 	@Override
 	public final void doAccept(SocketChannel socketChannel, InetSocketAddress localAddress, InetSocketAddress remoteSocketAddress,
 			boolean ssl, SocketSettings socketSettings) {
-		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
+		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
 		accepts.recordEvent();
 		if (ssl) acceptsSsl.recordEvent();
 		InetAddress remoteAddress = remoteSocketAddress.getAddress();
 		onAccept(socketChannel, localAddress, remoteAddress, ssl);
 		AsyncTcpSocket asyncTcpSocket;
 		try {
-			AsyncTcpSocketNio socketNio = wrapChannel(reactor, socketChannel, remoteSocketAddress, socketSettings);
+			AsyncTcpSocketNio socketNio = wrapChannel(socketChannel, remoteSocketAddress, socketSettings);
 			Inspector inspector = ssl ? socketSslInspector : socketInspector;
 			if (inspector != null) {
 				inspector.onConnect(socketNio);
@@ -410,11 +409,6 @@ public abstract class AbstractServer<Self extends AbstractServer<Self>> implemen
 
 	public SocketSettings getSocketSettings() {
 		return socketSettings;
-	}
-
-	@Override
-	public final @NotNull NioReactor getReactor() {
-		return reactor;
 	}
 
 	@JmxAttribute(extraSubAttributes = "totalCount")

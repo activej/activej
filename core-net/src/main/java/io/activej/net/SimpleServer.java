@@ -24,10 +24,10 @@ import java.net.InetAddress;
 import java.util.function.Consumer;
 
 /**
- * This is a basic implementation of the {@link AbstractServer} which just dispatches
+ * This is a basic implementation of the {@link AbstractReactiveServer} which just dispatches
  * each {@link AsyncTcpSocket acync client connection} to a given consumer.
  */
-public final class SimpleServer extends AbstractServer<SimpleServer> {
+public final class SimpleServer extends AbstractReactiveServer<SimpleServer> {
 	private final Consumer<AsyncTcpSocket> socketConsumer;
 
 	private SimpleServer(NioReactor reactor, Consumer<AsyncTcpSocket> socketConsumer) {

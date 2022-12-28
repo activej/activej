@@ -1,6 +1,6 @@
 package adder;
 
-import io.activej.async.service.ReactorTaskScheduler;
+import io.activej.async.service.ReactiveTaskScheduler;
 import io.activej.common.initializer.Initializer;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.hash.CrdtMap;
@@ -105,8 +105,8 @@ public final class AdderServerModule extends AbstractModule {
 	@Provides
 	@Eager
 	@Named("Map refresh")
-	ReactorTaskScheduler mapRefresh(Reactor reactor, CrdtMap<Long, SimpleSumsCrdtState> map) {
-		return ReactorTaskScheduler.create(reactor, map::refresh)
+	ReactiveTaskScheduler mapRefresh(Reactor reactor, CrdtMap<Long, SimpleSumsCrdtState> map) {
+		return ReactiveTaskScheduler.create(reactor, map::refresh)
 				.withInterval(Duration.ofSeconds(10));
 	}
 }

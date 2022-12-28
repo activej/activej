@@ -16,7 +16,7 @@ public final class RedisSimpleExample {
 	public static void main(String[] args) {
 		Eventloop eventloop = Eventloop.create().withCurrentThread();
 
-		RedisClient client = RedisClient.create(eventloop, ADDRESS);
+		RedisClient client = RedisClient.create(ADDRESS);
 
 		client.connect()
 				.then(connection -> connection.cmd(RedisRequest.of("SET", KEY, VALUE), RedisResponse.OK)

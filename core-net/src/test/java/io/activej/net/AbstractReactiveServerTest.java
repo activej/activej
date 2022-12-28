@@ -25,7 +25,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-public final class AbstractServerTest {
+public final class AbstractReactiveServerTest {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
@@ -62,7 +62,7 @@ public final class AbstractServerTest {
 	@Test
 	public void testBoundAddressPortZero() throws IOException {
 		InetSocketAddress address = new InetSocketAddress("localhost", 0);
-		AbstractServer<?> server = createServer(address);
+		AbstractReactiveServer<?> server = createServer(address);
 
 		server.listen();
 
@@ -81,7 +81,7 @@ public final class AbstractServerTest {
 	@Test
 	public void testBoundAddressPortNonZero() throws IOException {
 		InetSocketAddress address = new InetSocketAddress("localhost", getFreePort());
-		AbstractServer<?> server = createServer(address);
+		AbstractReactiveServer<?> server = createServer(address);
 
 		server.listen();
 
@@ -94,7 +94,7 @@ public final class AbstractServerTest {
 		assertEquals(message, response.asString(UTF_8));
 	}
 
-	private static AbstractServer<?> createServer(InetSocketAddress address) {
+	private static AbstractReactiveServer<?> createServer(InetSocketAddress address) {
 		return SimpleServer.create(
 						socket -> Promises.repeat(
 								() -> socket.read().whenResult(

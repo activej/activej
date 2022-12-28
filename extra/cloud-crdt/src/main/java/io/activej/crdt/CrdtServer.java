@@ -33,7 +33,7 @@ import io.activej.datastream.stats.StreamStatsBasic;
 import io.activej.datastream.stats.StreamStatsDetailed;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
-import io.activej.net.AbstractServer;
+import io.activej.net.AbstractReactiveServer;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
@@ -50,7 +50,7 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.crdt.util.Utils.*;
 
 @SuppressWarnings("rawtypes")
-public final class CrdtServer<K extends Comparable<K>, S> extends AbstractServer<CrdtServer<K, S>> {
+public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReactiveServer<CrdtServer<K, S>> {
 	public static final Version VERSION = new Version(1, 0);
 
 	private static final ByteBufsCodec<CrdtRequest, CrdtResponse> SERIALIZER = MessagingCodec.create(

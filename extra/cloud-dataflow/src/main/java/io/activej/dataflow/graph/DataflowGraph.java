@@ -33,6 +33,7 @@ import io.activej.dataflow.node.NodeDownload;
 import io.activej.dataflow.node.NodeUpload;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.reactor.AbstractReactive;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -77,7 +78,7 @@ public final class DataflowGraph {
 				.collect(groupingBy(Map.Entry::getValue, mapping(Map.Entry::getKey, toList())));
 	}
 
-	private static class PartitionSession implements AsyncCloseable {
+	private static class PartitionSession extends AbstractReactive implements AsyncCloseable {
 		private final Partition partition;
 		private final Session session;
 

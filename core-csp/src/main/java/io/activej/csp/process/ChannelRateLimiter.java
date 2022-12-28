@@ -19,7 +19,6 @@ package io.activej.csp.process;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.promise.Promise;
-import io.activej.reactor.Reactor;
 import io.activej.reactor.schedule.ScheduledRunnable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,7 +27,6 @@ import static io.activej.common.Utils.nullify;
 
 public final class ChannelRateLimiter<T> extends AbstractChannelTransformer<ChannelRateLimiter<T>, T, T>
 		implements WithInitializer<ChannelRateLimiter<T>> {
-	private final Reactor reactor;
 	private final long refillRatePerSecond;
 
 	private long tokens;
@@ -37,14 +35,13 @@ public final class ChannelRateLimiter<T> extends AbstractChannelTransformer<Chan
 
 	private @Nullable ScheduledRunnable scheduledRunnable;
 
-	private ChannelRateLimiter(Reactor reactor, long refillRatePerSecond) {
-		this.reactor = reactor;
+	private ChannelRateLimiter(long refillRatePerSecond) {
 		this.refillRatePerSecond = refillRatePerSecond;
 		this.lastRefillTimestamp = reactor.currentTimeMillis();
 	}
 
-	public static <T> ChannelRateLimiter<T> create(Reactor reactor, long refillRatePerSecond) {
-		return new ChannelRateLimiter<>(reactor, refillRatePerSecond);
+	public static <T> ChannelRateLimiter<T> create(long refillRatePerSecond) {
+		return new ChannelRateLimiter<>(refillRatePerSecond);
 	}
 
 	public ChannelRateLimiter<T> withInitialTokens(long initialTokens) {

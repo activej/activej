@@ -48,7 +48,7 @@ public final class TcpClientExample {
 				System.out.println("Connected to server, enter some text and send it by pressing 'Enter'.");
 				AsyncTcpSocket socket;
 				try {
-					socket = AsyncTcpSocketNio.wrapChannel(eventloop, socketChannel, null);
+					socket = AsyncTcpSocketNio.wrapChannel(socketChannel, null);
 				} catch (IOException ioException) {
 					throw new RuntimeException(ioException);
 				}

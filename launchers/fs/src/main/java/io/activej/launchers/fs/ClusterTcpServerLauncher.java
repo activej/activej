@@ -16,7 +16,7 @@
 
 package io.activej.launchers.fs;
 
-import io.activej.async.service.ReactorTaskScheduler;
+import io.activej.async.service.ReactiveTaskScheduler;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import io.activej.fs.ActiveFs;
@@ -49,16 +49,16 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 	@Provides
 	@Eager
 	@Named("repartition")
-	ReactorTaskScheduler repartitionScheduler(Config config, ClusterRepartitionController controller) {
-		return ReactorTaskScheduler.create(controller.getReactor(), controller::repartition)
+	ReactiveTaskScheduler repartitionScheduler(Config config, ClusterRepartitionController controller) {
+		return ReactiveTaskScheduler.create(controller.getReactor(), controller::repartition)
 				.withInitializer(ofReactorTaskScheduler(config.getChild("activefs.repartition")));
 	}
 
 	@Provides
 	@Eager
 	@Named("clusterDeadCheck")
-	ReactorTaskScheduler deadCheckScheduler(Config config, FsPartitions partitions) {
-		return ReactorTaskScheduler.create(partitions.getReactor(), partitions::checkDeadPartitions)
+	ReactiveTaskScheduler deadCheckScheduler(Config config, FsPartitions partitions) {
+		return ReactiveTaskScheduler.create(partitions.getReactor(), partitions::checkDeadPartitions)
 				.withInitializer(ofReactorTaskScheduler(config.getChild("activefs.repartition.deadCheck")));
 	}
 

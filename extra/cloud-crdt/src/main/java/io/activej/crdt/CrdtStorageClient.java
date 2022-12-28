@@ -16,7 +16,7 @@
 
 package io.activej.crdt;
 
-import io.activej.async.service.ReactorService;
+import io.activej.async.service.ReactiveService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.function.ConsumerEx;
@@ -43,7 +43,7 @@ import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.EventStats;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.reactor.net.SocketSettings;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.serializer.BinarySerializer;
@@ -55,8 +55,8 @@ import java.time.Duration;
 import static io.activej.crdt.util.Utils.onItem;
 
 @SuppressWarnings("rawtypes")
-public final class CrdtStorageClient<K extends Comparable<K>, S> implements CrdtStorage<K, S>, ReactorService,
-		ReactorJmxBeanWithStats, WithInitializer<CrdtStorageClient<K, S>> {
+public final class CrdtStorageClient<K extends Comparable<K>, S> implements CrdtStorage<K, S>, ReactiveService,
+		ReactiveJmxBeanWithStats, WithInitializer<CrdtStorageClient<K, S>> {
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(CrdtStorageClient.class, "connectTimeout", Duration.ZERO);
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageClient.class, "smoothingWindow", Duration.ofMinutes(1));

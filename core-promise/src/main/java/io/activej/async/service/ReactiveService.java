@@ -17,7 +17,7 @@
 package io.activej.async.service;
 
 import io.activej.promise.Promise;
-import io.activej.reactor.Reactor;
+import io.activej.reactor.Reactive;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
@@ -26,9 +26,7 @@ import java.util.concurrent.CompletableFuture;
  * This interface is for services that can be started and then stopped
  * in the context of reactor, so it works with {@link Promise}
  */
-public interface ReactorService {
-	@NotNull Reactor getReactor();
-
+public interface ReactiveService extends Reactive {
 	/**
 	 * Starts this component asynchronously.
 	 * Callback completes immediately if the component is already running.

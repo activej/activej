@@ -20,12 +20,12 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.Reactor;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 
-public abstract class AsyncServletWithStats implements AsyncServlet, ReactorJmxBeanWithStats {
+public abstract class AsyncServletWithStats implements AsyncServlet, ReactiveJmxBeanWithStats {
 	protected final @NotNull Reactor reactor;
 
 	private final PromiseStats stats = PromiseStats.create(Duration.ofMinutes(5));

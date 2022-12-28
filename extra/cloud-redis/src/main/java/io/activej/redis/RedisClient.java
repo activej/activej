@@ -20,8 +20,8 @@ import io.activej.common.ApplicationSettings;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.net.SocketSettings;
-import io.activej.reactor.nio.NioReactor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -40,7 +40,7 @@ import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
  * A client for Redis.
  * Allows connecting to Redis server, supports SSL.
  */
-public final class RedisClient implements WithInitializer<RedisClient> {
+public final class RedisClient extends AbstractNioReactive implements WithInitializer<RedisClient> {
 	private static final Logger logger = LoggerFactory.getLogger(RedisClient.class);
 
 	public static final InetSocketAddress DEFAULT_ADDRESS = ApplicationSettings.getInetSocketAddress(
@@ -49,7 +49,6 @@ public final class RedisClient implements WithInitializer<RedisClient> {
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(RedisClient.class, "connectTimeout", Duration.ZERO);
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
 
-	private final NioReactor reactor;
 	private final InetSocketAddress address;
 
 	private SocketSettings socketSettings = DEFAULT_SOCKET_SETTINGS;
@@ -60,17 +59,16 @@ public final class RedisClient implements WithInitializer<RedisClient> {
 	private @Nullable Executor sslExecutor;
 
 	// region creators
-	private RedisClient(NioReactor reactor, InetSocketAddress address) {
-		this.reactor = reactor;
+	private RedisClient(InetSocketAddress address) {
 		this.address = address;
 	}
 
-	public static RedisClient create(NioReactor reactor) {
-		return new RedisClient(reactor, DEFAULT_ADDRESS);
+	public static RedisClient create() {
+		return new RedisClient(DEFAULT_ADDRESS);
 	}
 
-	public static RedisClient create(NioReactor reactor, InetSocketAddress address) {
-		return new RedisClient(reactor, address);
+	public static RedisClient create(InetSocketAddress address) {
+		return new RedisClient(address);
 	}
 
 	public RedisClient withSocketSettings(SocketSettings socketSettings) {
@@ -96,10 +94,6 @@ public final class RedisClient implements WithInitializer<RedisClient> {
 	// endregion
 
 	// region getters
-	public NioReactor getReactor() {
-		return reactor;
-	}
-
 	public InetSocketAddress getAddress() {
 		return address;
 	}

@@ -29,7 +29,7 @@ import io.activej.fs.tcp.messaging.FsResponse;
 import io.activej.fs.tcp.messaging.Version;
 import io.activej.fs.util.RemoteFsUtils;
 import io.activej.jmx.api.attribute.JmxAttribute;
-import io.activej.net.AbstractServer;
+import io.activej.net.AbstractReactiveServer;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
@@ -47,12 +47,12 @@ import static io.activej.fs.util.RemoteFsUtils.castError;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 
 /**
- * An implementation of {@link AbstractServer} that works with {@link RemoteActiveFs} client.
+ * An implementation of {@link AbstractReactiveServer} that works with {@link RemoteActiveFs} client.
  * It exposes some given {@link ActiveFs} via TCP.
  * <p>
  * <b>This server should not be launched as a publicly available server, it is meant for private networks.</b>
  */
-public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
+public final class ActiveFsServer extends AbstractReactiveServer<ActiveFsServer> {
 	public static final Version VERSION = new Version(1, 0);
 
 	private static final ByteBufsCodec<FsRequest, FsResponse> SERIALIZER = MessagingCodec.create(

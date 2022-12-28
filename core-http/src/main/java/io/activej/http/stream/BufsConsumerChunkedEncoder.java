@@ -43,8 +43,7 @@ public final class BufsConsumerChunkedEncoder extends AbstractCommunicatingProce
 	private ChannelConsumer<ByteBuf> output;
 
 	// region creators
-	private BufsConsumerChunkedEncoder() {
-	}
+	private BufsConsumerChunkedEncoder() {}
 
 	public static BufsConsumerChunkedEncoder create() {
 		return new BufsConsumerChunkedEncoder();

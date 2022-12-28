@@ -58,8 +58,7 @@ public final class BufsConsumerGzipDeflater extends AbstractCommunicatingProcess
 	private ChannelConsumer<ByteBuf> output;
 
 	// region creators
-	private BufsConsumerGzipDeflater() {
-	}
+	private BufsConsumerGzipDeflater() {}
 
 	public static BufsConsumerGzipDeflater create() {
 		return new BufsConsumerGzipDeflater();

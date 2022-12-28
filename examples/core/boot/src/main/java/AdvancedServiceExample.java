@@ -1,4 +1,4 @@
-import io.activej.async.service.ReactorService;
+import io.activej.async.service.ReactiveService;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Provides;
@@ -51,7 +51,7 @@ public class AdvancedServiceExample extends Launcher {
 	}
 
 	@SuppressWarnings("FieldCanBeLocal")
-	private static class AuthService implements ReactorService {
+	private static class AuthService implements ReactiveService {
 		private final Reactor reactor;
 		private final Executor executor;
 		private final DBService dbService;

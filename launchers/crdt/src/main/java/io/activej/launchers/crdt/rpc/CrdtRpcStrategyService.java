@@ -17,7 +17,7 @@
 package io.activej.launchers.crdt.rpc;
 
 import io.activej.async.function.AsyncSupplier;
-import io.activej.async.service.ReactorService;
+import io.activej.async.service.ReactiveService;
 import io.activej.crdt.storage.cluster.DiscoveryService;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -31,7 +31,7 @@ import java.util.function.Function;
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Checks.checkState;
 
-public final class CrdtRpcStrategyService<K extends Comparable<K>> implements ReactorService {
+public final class CrdtRpcStrategyService<K extends Comparable<K>> implements ReactiveService {
 	private final Reactor reactor;
 	private final DiscoveryService<?> discoveryService;
 	private final Function<Object, K> keyGetter;

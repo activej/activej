@@ -30,6 +30,7 @@ import io.activej.jmx.stats.ExceptionStats;
 import io.activej.jmx.stats.ValueStats;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.net.SocketSettings;
 import io.activej.reactor.nio.NioChannelEventHandler;
 import io.activej.reactor.nio.NioReactor;
@@ -52,7 +53,7 @@ import static io.activej.common.Utils.nullify;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 
 @SuppressWarnings("WeakerAccess")
-public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventHandler {
+public final class AsyncTcpSocketNio extends AbstractNioReactive implements AsyncTcpSocket, NioChannelEventHandler {
 	private static final boolean CHECK = Checks.isEnabled(AsyncTcpSocketNio.class);
 
 	private static final int DEBUG_READ_OFFSET = ApplicationSettings.getInt(AsyncTcpSocketNio.class, "debugReadOffset", 0);
@@ -62,7 +63,6 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 
 	private static final AtomicInteger CONNECTION_COUNT = new AtomicInteger(0);
 
-	private final NioReactor reactor;
 	private final InetSocketAddress remoteAddress;
 
 	private @Nullable SocketChannel channel;
@@ -225,8 +225,8 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		}
 	}
 
-	public static AsyncTcpSocketNio wrapChannel(NioReactor reactor, SocketChannel socketChannel, @NotNull InetSocketAddress remoteAddress, @Nullable SocketSettings socketSettings) throws IOException {
-		AsyncTcpSocketNio asyncTcpSocket = new AsyncTcpSocketNio(reactor, socketChannel, remoteAddress);
+	public static AsyncTcpSocketNio wrapChannel(SocketChannel socketChannel, @NotNull InetSocketAddress remoteAddress, @Nullable SocketSettings socketSettings) throws IOException {
+		AsyncTcpSocketNio asyncTcpSocket = new AsyncTcpSocketNio(socketChannel, remoteAddress);
 		if (socketSettings == null) return asyncTcpSocket;
 		socketSettings.applySettings(socketChannel);
 		if (socketSettings.hasImplReadTimeout()) {
@@ -241,8 +241,8 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		return asyncTcpSocket;
 	}
 
-	public static AsyncTcpSocketNio wrapChannel(NioReactor reactor, SocketChannel socketChannel, @Nullable SocketSettings socketSettings) throws IOException {
-		return wrapChannel(reactor, socketChannel, ((InetSocketAddress) socketChannel.getRemoteAddress()), socketSettings);
+	public static AsyncTcpSocketNio wrapChannel(SocketChannel socketChannel, @Nullable SocketSettings socketSettings) throws IOException {
+		return wrapChannel(socketChannel, ((InetSocketAddress) socketChannel.getRemoteAddress()), socketSettings);
 	}
 
 	public static Promise<AsyncTcpSocketNio> connect(InetSocketAddress address) {
@@ -266,7 +266,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		return Promise.<SocketChannel>ofCallback(cb -> reactor.connect(address, timeout, cb))
 				.map(channel -> {
 					try {
-						return wrapChannel(reactor, channel, address, socketSettings);
+						return wrapChannel(channel, address, socketSettings);
 					} catch (IOException e) {
 						reactor.closeChannel(channel, null);
 						throw e;
@@ -278,8 +278,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 		this.inspector = inspector;
 	}
 
-	private AsyncTcpSocketNio(NioReactor reactor, @NotNull SocketChannel socketChannel, InetSocketAddress remoteAddress) {
-		this.reactor = reactor;
+	private AsyncTcpSocketNio(@NotNull SocketChannel socketChannel, InetSocketAddress remoteAddress) {
 		this.channel = socketChannel;
 		this.remoteAddress = remoteAddress;
 	}
@@ -346,7 +345,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 
 	@Override
 	public @NotNull Promise<ByteBuf> read() {
-		if (CHECK) checkState(reactor.inReactorThread());
+		if (CHECK) checkState(inReactorThread());
 		if (isClosed()) return Promise.ofException(new AsyncCloseException());
 		read = null;
 		if (readBuf != null || readEndOfStream) {
@@ -443,7 +442,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 	@Override
 	public @NotNull Promise<Void> write(@Nullable ByteBuf buf) {
 		if (CHECK) {
-			checkState(reactor.inReactorThread());
+			checkState(inReactorThread());
 			checkState(!writeEndOfStream, "End of stream has already been sent");
 		}
 		if (isClosed()) {
@@ -552,7 +551,7 @@ public final class AsyncTcpSocketNio implements AsyncTcpSocket, NioChannelEventH
 
 	@Override
 	public void closeEx(@NotNull Exception e) {
-		if (CHECK) checkState(reactor.inReactorThread());
+		if (CHECK) checkState(inReactorThread());
 		if (isClosed()) return;
 		doClose();
 		readBuf = nullify(readBuf, ByteBuf::recycle);

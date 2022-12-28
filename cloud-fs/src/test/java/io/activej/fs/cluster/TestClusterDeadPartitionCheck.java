@@ -13,7 +13,7 @@ import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.fs.tcp.RemoteActiveFs;
 import io.activej.http.AsyncHttpClient;
 import io.activej.http.AsyncHttpServer;
-import io.activej.net.AbstractServer;
+import io.activej.net.AbstractReactiveServer;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
@@ -66,7 +66,7 @@ public final class TestClusterDeadPartitionCheck {
 	private static final int CLIENT_SERVER_PAIRS = 10;
 
 	private final Path[] serverStorages = new Path[CLIENT_SERVER_PAIRS];
-	private List<AbstractServer<?>> servers;
+	private List<AbstractReactiveServer<?>> servers;
 	private ExecutorService executor;
 
 	@ClassRule
@@ -93,13 +93,13 @@ public final class TestClusterDeadPartitionCheck {
 							}
 
 							@Override
-							public AbstractServer<?> createServer(LocalActiveFs localFs, InetSocketAddress address) {
+							public AbstractReactiveServer<?> createServer(LocalActiveFs localFs, InetSocketAddress address) {
 								return ActiveFsServer.create((NioReactor) localFs.getReactor(), localFs)
 										.withListenAddress(address);
 							}
 
 							@Override
-							public void closeServer(AbstractServer<?> server) {
+							public void closeServer(AbstractReactiveServer<?> server) {
 								server.close();
 								Selector selector = server.getReactor().getSelector();
 								if (selector == null) return;
@@ -127,14 +127,14 @@ public final class TestClusterDeadPartitionCheck {
 							}
 
 							@Override
-							public AbstractServer<?> createServer(LocalActiveFs localFs, InetSocketAddress address) {
+							public AbstractReactiveServer<?> createServer(LocalActiveFs localFs, InetSocketAddress address) {
 								return AsyncHttpServer.create((NioReactor) localFs.getReactor(), ActiveFsServlet.create(localFs))
 										.withReadWriteTimeout(Duration.ZERO, Duration.ZERO)
 										.withListenAddress(address);
 							}
 
 							@Override
-							public void closeServer(AbstractServer<?> server) {
+							public void closeServer(AbstractReactiveServer<?> server) {
 								server.close();
 							}
 
@@ -173,7 +173,7 @@ public final class TestClusterDeadPartitionCheck {
 			serverEventloop.keepAlive(true);
 
 			LocalActiveFs localFs = LocalActiveFs.create(serverEventloop, executor, serverStorages[i]);
-			AbstractServer<?> server = factory.createServer(localFs, address);
+			AbstractReactiveServer<?> server = factory.createServer(localFs, address);
 			CompletableFuture<Void> startFuture = serverEventloop.submit(() -> {
 				try {
 					server.listen();
@@ -262,7 +262,7 @@ public final class TestClusterDeadPartitionCheck {
 		Set<Integer> alivePartitions = Arrays.stream(indexes).collect(toSet());
 		try {
 			for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
-				AbstractServer<?> server = servers.get(i);
+				AbstractReactiveServer<?> server = servers.get(i);
 				ReactorExecutor reactorExecutor = server.getReactor();
 
 				int finalI = i;
@@ -304,7 +304,7 @@ public final class TestClusterDeadPartitionCheck {
 
 	private void waitForServersToStop() {
 		try {
-			for (AbstractServer<?> server : servers) {
+			for (AbstractReactiveServer<?> server : servers) {
 				Eventloop serverEventloop = (Eventloop) server.getReactor();
 				if (server.isRunning()) {
 					serverEventloop.submit(server::close).get();
@@ -329,8 +329,8 @@ public final class TestClusterDeadPartitionCheck {
 	private interface ClientServerFactory {
 		ActiveFs createClient(NioReactor reactor, InetSocketAddress address);
 
-		AbstractServer<?> createServer(LocalActiveFs localFs, InetSocketAddress address);
+		AbstractReactiveServer<?> createServer(LocalActiveFs localFs, InetSocketAddress address);
 
-		void closeServer(AbstractServer<?> server) throws IOException;
+		void closeServer(AbstractReactiveServer<?> server) throws IOException;
 	}
 }

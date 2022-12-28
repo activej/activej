@@ -1,6 +1,6 @@
 package io.activej.service;
 
-import io.activej.async.service.ReactorService;
+import io.activej.async.service.ReactiveService;
 import io.activej.common.service.BlockingService;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.Injector;
@@ -48,8 +48,8 @@ public class ServiceGraphTest {
 	@Test
 	public void testEventloopServiceStartStopWithRuntimeException() {
 		Injector injector = Injector.of(new FailingEventloopModule());
-		injector.getInstance(Key.of(ReactorService.class, "start"));
-		injector.getInstance(Key.of(ReactorService.class, "stop"));
+		injector.getInstance(Key.of(ReactiveService.class, "start"));
+		injector.getInstance(Key.of(ReactiveService.class, "stop"));
 		ServiceGraph graph = injector.getInstance(ServiceGraph.class);
 
 		try {
@@ -127,8 +127,8 @@ public class ServiceGraphTest {
 
 		@Provides
 		@Named("start")
-		ReactorService failedStart(Eventloop eventloop) {
-			return new ReactorServiceEmpty(eventloop) {
+		ReactiveService failedStart(Eventloop eventloop) {
+			return new ReactiveServiceEmpty(eventloop) {
 				@Override
 				public @NotNull Promise<?> start() {
 					throw ERROR;
@@ -138,8 +138,8 @@ public class ServiceGraphTest {
 
 		@Provides
 		@Named("stop")
-		ReactorService failStop(Eventloop eventloop) {
-			return new ReactorServiceEmpty(eventloop) {
+		ReactiveService failStop(Eventloop eventloop) {
+			return new ReactiveServiceEmpty(eventloop) {
 				@Override
 				public @NotNull Promise<?> stop() {
 					throw ERROR;
@@ -148,10 +148,10 @@ public class ServiceGraphTest {
 		}
 	}
 
-	public static class ReactorServiceEmpty implements ReactorService {
+	public static class ReactiveServiceEmpty implements ReactiveService {
 		private final Eventloop eventloop;
 
-		public ReactorServiceEmpty(Eventloop eventloop) {
+		public ReactiveServiceEmpty(Eventloop eventloop) {
 			this.eventloop = eventloop;
 		}
 

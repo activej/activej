@@ -1,4 +1,4 @@
-import io.activej.async.service.ReactorService;
+import io.activej.async.service.ReactiveService;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Provides;
@@ -22,8 +22,8 @@ public class ReactorServiceExample extends Launcher {
 
 	@Provides
 	@Eager
-	CustomReactorService customEventloopService(Reactor reactor) {
-		return new CustomReactorService(reactor);
+	CustomReactiveService customEventloopService(Reactor reactor) {
+		return new CustomReactiveService(reactor);
 	}
 
 	@Override
@@ -36,10 +36,10 @@ public class ReactorServiceExample extends Launcher {
 		System.out.println("|RUNNING|");
 	}
 
-	private static final class CustomReactorService implements ReactorService {
+	private static final class CustomReactiveService implements ReactiveService {
 		private final Reactor reactor;
 
-		public CustomReactorService(Reactor reactor) {
+		public CustomReactiveService(Reactor reactor) {
 			this.reactor = reactor;
 		}
 

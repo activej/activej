@@ -56,8 +56,7 @@ public final class BufsConsumerChunkedDecoder extends AbstractCommunicatingProce
 	int chunkLength;
 
 	// region creators
-	private BufsConsumerChunkedDecoder() {
-	}
+	private BufsConsumerChunkedDecoder() {}
 
 	public static BufsConsumerChunkedDecoder create() {
 		return new BufsConsumerChunkedDecoder();

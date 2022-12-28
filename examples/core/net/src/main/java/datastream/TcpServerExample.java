@@ -30,7 +30,7 @@ public final class TcpServerExample {
 			AsyncTcpSocket socket;
 
 			try {
-				socket = AsyncTcpSocketNio.wrapChannel(eventloop, channel, null);
+				socket = AsyncTcpSocketNio.wrapChannel(channel, null);
 				System.out.println("Client connected: " + channel.getRemoteAddress());
 			} catch (IOException e) {
 				throw new RuntimeException(e);

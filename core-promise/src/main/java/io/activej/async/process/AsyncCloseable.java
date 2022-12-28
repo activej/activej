@@ -18,7 +18,13 @@ package io.activej.async.process;
 
 import io.activej.async.exception.AsyncCloseException;
 import io.activej.common.recycle.Recyclers;
+import io.activej.reactor.Reactive;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.function.Consumer;
+
+import static io.activej.reactor.Reactor.getCurrentReactor;
 
 /**
  * Describes methods that are used to handle exceptional behaviour or to handle closing.
@@ -31,7 +37,7 @@ import org.jetbrains.annotations.NotNull;
  * </ul>
  * All operations of this interface are idempotent.
  */
-public interface AsyncCloseable {
+public interface AsyncCloseable extends Reactive {
 	Object STATIC = new Object() {{
 		Recyclers.register(AsyncCloseable.class, AsyncCloseable::close);
 	}};
@@ -51,4 +57,19 @@ public interface AsyncCloseable {
 	 */
 	void closeEx(@NotNull Exception e);
 
+	static AsyncCloseable of(Consumer<Exception> exceptionConsumer) {
+		return new AsyncCloseable() {
+			private final Reactor reactor = getCurrentReactor();
+
+			@Override
+			public void closeEx(@NotNull Exception e) {
+				exceptionConsumer.accept(e);
+			}
+
+			@Override
+			public Reactor getReactor() {
+				return reactor;
+			}
+		};
+	}
 }

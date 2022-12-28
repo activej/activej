@@ -12,7 +12,7 @@ import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
-import io.activej.net.AbstractServer;
+import io.activej.net.AbstractReactiveServer;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ByteBufRule;
@@ -49,7 +49,7 @@ public final class TestDyingPartitions {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
-	private Map<Integer, AbstractServer<?>> servers;
+	private Map<Integer, AbstractReactiveServer<?>> servers;
 	private CrdtStorageCluster<String, Integer, String> cluster;
 
 	@Before
@@ -123,9 +123,9 @@ public final class TestDyingPartitions {
 
 	@SuppressWarnings("ConstantConditions")
 	private void shutdown2Servers() {
-		Iterator<AbstractServer<?>> serverIterator = servers.values().iterator();
+		Iterator<AbstractReactiveServer<?>> serverIterator = servers.values().iterator();
 		for (int i = 0; i < 2; i++) {
-			AbstractServer<?> server = serverIterator.next();
+			AbstractReactiveServer<?> server = serverIterator.next();
 			NioReactor reactor = server.getReactor();
 			reactor.execute(() -> {
 				for (SelectionKey key : reactor.getSelector().keys()) {
@@ -139,7 +139,7 @@ public final class TestDyingPartitions {
 	}
 
 	private void shutdownAllEventloops() {
-		for (AbstractServer<?> server : servers.values()) {
+		for (AbstractReactiveServer<?> server : servers.values()) {
 			Eventloop eventloop = (Eventloop) server.getReactor();
 			eventloop.execute(() -> {
 				server.close();

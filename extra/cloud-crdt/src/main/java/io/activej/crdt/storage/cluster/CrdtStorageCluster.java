@@ -19,7 +19,7 @@ package io.activej.crdt.storage.cluster;
 import io.activej.async.function.AsyncFunction;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.process.AsyncCloseable;
-import io.activej.async.service.ReactorService;
+import io.activej.async.service.ReactiveService;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.collection.Try;
 import io.activej.common.initializer.WithInitializer;
@@ -44,7 +44,7 @@ import io.activej.jmx.stats.EventStats;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 
@@ -56,7 +56,7 @@ import static io.activej.crdt.util.Utils.onItem;
 import static java.util.stream.Collectors.toMap;
 
 @SuppressWarnings("rawtypes") // JMX
-public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements CrdtStorage<K, S>, WithInitializer<CrdtStorageCluster<K, S, P>>, ReactorService, ReactorJmxBeanWithStats {
+public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements CrdtStorage<K, S>, WithInitializer<CrdtStorageCluster<K, S, P>>, ReactiveService, ReactiveJmxBeanWithStats {
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageCluster.class, "smoothingWindow", Duration.ofMinutes(1));
 
 	private final Reactor reactor;

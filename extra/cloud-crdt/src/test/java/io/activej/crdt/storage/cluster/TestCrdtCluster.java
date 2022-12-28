@@ -9,7 +9,7 @@ import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
-import io.activej.net.AbstractServer;
+import io.activej.net.AbstractReactiveServer;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.serializer.BinarySerializer;
@@ -89,7 +89,7 @@ public final class TestCrdtCluster {
 		await(cluster.start()
 				.then(() -> StreamSupplier.ofIterator(localStorage.iterator())
 						.streamTo(StreamConsumer.ofPromise(cluster.upload())))
-				.whenComplete(() -> servers.forEach(AbstractServer::close)));
+				.whenComplete(() -> servers.forEach(AbstractReactiveServer::close)));
 
 		Map<CrdtData<String, Integer>, Integer> result = new HashMap<>();
 
@@ -149,7 +149,7 @@ public final class TestCrdtCluster {
 				.then(() -> cluster.download())
 				.then(supplier -> supplier
 						.streamTo(StreamConsumer.ofConsumer(localStorage::put)))
-				.whenComplete(() -> servers.forEach(AbstractServer::close)));
+				.whenComplete(() -> servers.forEach(AbstractReactiveServer::close)));
 
 		assertEquals(Set.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), localStorage.get(key1));
 		assertEquals(Set.of(0, 1, 2, 3, 4), localStorage.get(key2));

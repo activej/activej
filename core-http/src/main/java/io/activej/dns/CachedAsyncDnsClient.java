@@ -26,7 +26,7 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
-import io.activej.reactor.jmx.ReactorJmxBean;
+import io.activej.reactor.jmx.ReactiveJmxBean;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -43,7 +43,7 @@ import static io.activej.reactor.util.RunnableWithContext.wrapContext;
  * Implementation of {@link AsyncDnsClient} that asynchronously
  * connects to some DNS server and gets the response from it.
  */
-public final class CachedAsyncDnsClient implements AsyncDnsClient, ReactorJmxBean, WithInitializer<CachedAsyncDnsClient> {
+public final class CachedAsyncDnsClient implements AsyncDnsClient, ReactiveJmxBean, WithInitializer<CachedAsyncDnsClient> {
 	private final Logger logger = LoggerFactory.getLogger(CachedAsyncDnsClient.class);
 	private static final boolean CHECK = Checks.isEnabled(CachedAsyncDnsClient.class);
 
@@ -149,7 +149,7 @@ public final class CachedAsyncDnsClient implements AsyncDnsClient, ReactorJmxBea
 	@Override
 	public Promise<DnsResponse> resolve(DnsQuery query) {
 		if (CHECK) {
-			checkState(reactor.inReactorThread(), "Concurrent resolves are not allowed, to reuse the cache use adaptToOtherReactor");
+			checkState(inReactorThread(), "Concurrent resolves are not allowed, to reuse the cache use adaptToOtherReactor");
 		}
 
 		DnsResponse fromQuery = AsyncDnsClient.resolveFromQuery(query);

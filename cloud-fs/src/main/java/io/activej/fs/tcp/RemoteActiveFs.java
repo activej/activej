@@ -16,7 +16,7 @@
 
 package io.activej.fs.tcp;
 
-import io.activej.async.service.ReactorService;
+import io.activej.async.service.ReactiveService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.exception.TruncatedDataException;
@@ -41,7 +41,7 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.net.socket.tcp.AsyncTcpSocketNio;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.reactor.net.SocketSettings;
 import io.activej.reactor.nio.NioReactor;
 import org.jetbrains.annotations.NotNull;
@@ -69,7 +69,7 @@ import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
  * <p>
  * Inherits all the limitations of {@link ActiveFs} implementation located on {@link ActiveFsServer}.
  */
-public final class RemoteActiveFs implements ActiveFs, ReactorService, ReactorJmxBeanWithStats, WithInitializer<RemoteActiveFs> {
+public final class RemoteActiveFs implements ActiveFs, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<RemoteActiveFs> {
 	private static final Logger logger = LoggerFactory.getLogger(RemoteActiveFs.class);
 
 	public static final Duration DEFAULT_CONNECTION_TIMEOUT = ApplicationSettings.getDuration(RemoteActiveFs.class, "connectTimeout", Duration.ZERO);

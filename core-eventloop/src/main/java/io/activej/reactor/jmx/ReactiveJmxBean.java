@@ -17,10 +17,8 @@
 package io.activej.reactor.jmx;
 
 import io.activej.jmx.api.JmxBean;
-import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
+import io.activej.reactor.Reactive;
 
 @JmxBean(ReactorJmxBeanAdapter.class)
-public interface ReactorJmxBean {
-	@NotNull Reactor getReactor();
+public interface ReactiveJmxBean extends Reactive {
 }

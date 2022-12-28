@@ -163,10 +163,10 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 	public final <T> ChannelSupplier<T> decodeStream(ByteBufsDecoder<T> decoder) {
 		return ChannelSupplier.of(
 				() -> doDecode(decoder,
-						e -> {
+						AsyncCloseable.of(e -> {
 							if (e instanceof TruncatedDataException && bufs.isEmpty()) return;
 							closeEx(e);
-						})
+						}))
 						.map(identity(),
 								e -> {
 									if (e instanceof TruncatedDataException && bufs.isEmpty()) return null;

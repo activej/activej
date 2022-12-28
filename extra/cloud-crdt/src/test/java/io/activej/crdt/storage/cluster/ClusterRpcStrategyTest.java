@@ -3,6 +3,7 @@ package io.activej.crdt.storage.cluster;
 import io.activej.async.callback.Callback;
 import io.activej.common.ref.Ref;
 import io.activej.common.ref.RefBoolean;
+import io.activej.reactor.AbstractReactive;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import io.activej.rpc.client.sender.RpcSender;
 import io.activej.rpc.client.sender.RpcStrategy;
@@ -259,7 +260,7 @@ public class ClusterRpcStrategyTest {
 		}
 	}
 
-	private static final class RpcSenderStub implements RpcSender {
+	private static final class RpcSenderStub extends AbstractReactive implements RpcSender {
 		private final Map<Integer, Integer> counters = new HashMap<>();
 
 		@Override

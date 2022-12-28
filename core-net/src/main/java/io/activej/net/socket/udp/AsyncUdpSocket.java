@@ -17,6 +17,7 @@
 package io.activej.net.socket.udp;
 
 import io.activej.promise.Promise;
+import io.activej.reactor.NioReactive;
 
 /**
  * Common interface for datagram-oriented transport protocols.
@@ -28,7 +29,7 @@ import io.activej.promise.Promise;
  * <li>Each request to the socket after it was closed should complete exceptionally.
  * </ul>
  */
-public interface AsyncUdpSocket {
+public interface AsyncUdpSocket extends NioReactive {
 	Promise<UdpPacket> receive();
 
 	Promise<Void> send(UdpPacket packet);

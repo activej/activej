@@ -33,7 +33,7 @@ import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.Reactor;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +51,7 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.transformMap;
 import static java.util.stream.Collectors.toSet;
 
-public final class CubeConsolidationController<K, D, C> implements ReactorJmxBeanWithStats, WithInitializer<CubeConsolidationController<K, D, C>> {
+public final class CubeConsolidationController<K, D, C> implements ReactiveJmxBeanWithStats, WithInitializer<CubeConsolidationController<K, D, C>> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeConsolidationController.class);
 
 	private static final ChunkLocker<Object> NOOP_CHUNK_LOCKER = ChunkLockerNoOp.create();

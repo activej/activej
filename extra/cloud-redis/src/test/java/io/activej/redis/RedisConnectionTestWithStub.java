@@ -2,7 +2,6 @@ package io.activej.redis;
 
 import ai.grakn.redismock.RedisServer;
 import io.activej.async.function.AsyncFunction;
-import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.*;
@@ -29,7 +28,7 @@ public class RedisConnectionTestWithStub {
 	public void setUp() throws IOException {
 		server = RedisServer.newRedisServer();
 		server.start();
-		client = RedisClient.create(Reactor.getCurrentReactor(), new InetSocketAddress(server.getHost(), server.getBindPort()));
+		client = RedisClient.create(new InetSocketAddress(server.getHost(), server.getBindPort()));
 	}
 
 	@After

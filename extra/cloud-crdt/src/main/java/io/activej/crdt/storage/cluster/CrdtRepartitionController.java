@@ -23,12 +23,12 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.Reactor;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 
-public final class CrdtRepartitionController<K extends Comparable<K>, S, P> implements ReactorJmxBeanWithStats, WithInitializer<CrdtRepartitionController<K, S, P>> {
+public final class CrdtRepartitionController<K extends Comparable<K>, S, P> implements ReactiveJmxBeanWithStats, WithInitializer<CrdtRepartitionController<K, S, P>> {
 	private final P localPartitionId;
 	private final CrdtStorageCluster<K, S, P> cluster;
 

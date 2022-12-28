@@ -45,8 +45,7 @@ final class ChannelByteCombiner extends AbstractCommunicatingProcess
 	private long outputOffset;
 	private long errorCount;
 
-	private ChannelByteCombiner() {
-	}
+	private ChannelByteCombiner() {}
 
 	public static ChannelByteCombiner create() {
 		return new ChannelByteCombiner();

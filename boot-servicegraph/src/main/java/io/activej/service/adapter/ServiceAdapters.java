@@ -16,11 +16,11 @@
 
 package io.activej.service.adapter;
 
-import io.activej.async.service.ReactorService;
+import io.activej.async.service.ReactiveService;
 import io.activej.common.service.BlockingService;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.binding.OptionalDependency;
-import io.activej.net.NioReactorServer;
+import io.activej.net.ReactiveServer;
 import io.activej.reactor.net.BlockingSocketServer;
 import io.activej.service.Service;
 import org.slf4j.Logger;
@@ -210,10 +210,10 @@ public final class ServiceAdapters {
 		};
 	}
 
-	public static ServiceAdapter<ReactorService> forReactorService() {
+	public static ServiceAdapter<ReactiveService> forReactiveService() {
 		return new ServiceAdapter<>() {
 			@Override
-			public CompletableFuture<?> start(ReactorService instance, Executor executor) {
+			public CompletableFuture<?> start(ReactiveService instance, Executor executor) {
 				CompletableFuture<Object> future = new CompletableFuture<>();
 				instance.getReactor().execute(wrapContext(instance, () -> {
 					try {
@@ -228,7 +228,7 @@ public final class ServiceAdapters {
 			}
 
 			@Override
-			public CompletableFuture<?> stop(ReactorService instance, Executor executor) {
+			public CompletableFuture<?> stop(ReactiveService instance, Executor executor) {
 				CompletableFuture<Object> future = new CompletableFuture<>();
 				instance.getReactor().execute(wrapContext(instance, () -> {
 					try {
@@ -244,10 +244,10 @@ public final class ServiceAdapters {
 		};
 	}
 
-	public static ServiceAdapter<NioReactorServer> forNioReactorServer() {
+	public static ServiceAdapter<ReactiveServer> forReactiveServer() {
 		return new ServiceAdapter<>() {
 			@Override
-			public CompletableFuture<?> start(NioReactorServer instance, Executor executor) {
+			public CompletableFuture<?> start(ReactiveServer instance, Executor executor) {
 				CompletableFuture<?> future = new CompletableFuture<>();
 				instance.getReactor().execute(wrapContext(instance, () -> {
 					try {
@@ -261,7 +261,7 @@ public final class ServiceAdapters {
 			}
 
 			@Override
-			public CompletableFuture<?> stop(NioReactorServer instance, Executor executor) {
+			public CompletableFuture<?> stop(ReactiveServer instance, Executor executor) {
 				CompletableFuture<Object> future = new CompletableFuture<>();
 				instance.getReactor().execute(wrapContext(instance, () -> instance.close()
 						.whenResult(future::complete)

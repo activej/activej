@@ -21,7 +21,7 @@ import io.activej.async.function.AsyncRunnables;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.function.AsyncSuppliers;
 import io.activej.async.process.AsyncExecutors;
-import io.activej.async.service.ReactorService;
+import io.activej.async.service.ReactiveService;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.ot.exception.TransformException;
 import io.activej.ot.system.OTSystem;
@@ -47,7 +47,7 @@ import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.nonNullElseEmpty;
 import static io.activej.promise.Promises.sequence;
 
-public final class OTStateManager<K, D> implements ReactorService, WithInitializer<OTStateManager<K, D>> {
+public final class OTStateManager<K, D> implements ReactiveService, WithInitializer<OTStateManager<K, D>> {
 	private static final Logger logger = LoggerFactory.getLogger(OTStateManager.class);
 
 	private final Reactor reactor;

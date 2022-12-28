@@ -25,7 +25,7 @@ public class StreamRateLimiterTest {
 	@Test
 	public void testEmpty() {
 		Reactor reactor = Reactor.getCurrentReactor();
-		StreamRateLimiter<Integer> limiter = StreamRateLimiter.create(reactor, 100);
+		StreamRateLimiter<Integer> limiter = StreamRateLimiter.create(100);
 
 		List<Integer> expected = IntStream.range(0, 200)
 				.boxed().collect(toList());
@@ -45,7 +45,7 @@ public class StreamRateLimiterTest {
 	@Test
 	public void testHalfFull() {
 		Reactor reactor = Reactor.getCurrentReactor();
-		StreamRateLimiter<Integer> limiter = StreamRateLimiter.<Integer>create(reactor, 100)
+		StreamRateLimiter<Integer> limiter = StreamRateLimiter.<Integer>create(100)
 				.withInitialTokens(100L);
 
 		List<Integer> expected = IntStream.range(0, 200)
@@ -66,7 +66,7 @@ public class StreamRateLimiterTest {
 	@Test
 	public void testFull() {
 		Reactor reactor = Reactor.getCurrentReactor();
-		StreamRateLimiter<Integer> limiter = StreamRateLimiter.<Integer>create(reactor, 100)
+		StreamRateLimiter<Integer> limiter = StreamRateLimiter.<Integer>create(100)
 				.withInitialTokens(200L);
 
 		List<Integer> expected = IntStream.range(0, 200)

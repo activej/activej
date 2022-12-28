@@ -22,7 +22,7 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.Reactor;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 
 import javax.sql.DataSource;
@@ -37,7 +37,7 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.promise.PromisePredicates.isResultOrException;
 import static io.activej.promise.Promises.retry;
 
-public final class IdGeneratorSql implements IdGenerator<Long>, ReactorJmxBeanWithStats, WithInitializer<IdGeneratorSql> {
+public final class IdGeneratorSql implements IdGenerator<Long>, ReactiveJmxBeanWithStats, WithInitializer<IdGeneratorSql> {
 
 	private final Reactor reactor;
 	private final Executor executor;

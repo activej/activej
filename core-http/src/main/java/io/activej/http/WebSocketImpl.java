@@ -178,7 +178,7 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 	// region sanitizers
 	private <T> Promise<T> doRead(AsyncSupplier<T> supplier) {
 		if (CHECK) {
-			checkState(reactor.inReactorThread());
+			checkState(inReactorThread());
 			checkState(readPromise == null, "Concurrent reads");
 		}
 
@@ -196,7 +196,7 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 
 	private Promise<Void> doWrite(AsyncRunnable runnable, @Nullable Recyclable recyclable) {
 		if (CHECK) {
-			checkState(reactor.inReactorThread());
+			checkState(inReactorThread());
 			checkState(writePromise == null, "Concurrent writes");
 		}
 

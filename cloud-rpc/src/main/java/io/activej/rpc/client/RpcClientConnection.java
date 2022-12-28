@@ -27,6 +27,7 @@ import io.activej.jmx.api.JmxRefreshable;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.jmx.stats.EventStats;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.schedule.ScheduledRunnable;
 import io.activej.rpc.client.jmx.RpcRequestStats;
@@ -46,7 +47,7 @@ import java.util.concurrent.TimeUnit;
 import static io.activej.common.Checks.checkState;
 import static org.slf4j.LoggerFactory.getLogger;
 
-public final class RpcClientConnection implements RpcStream.Listener, RpcSender, JmxRefreshable {
+public final class RpcClientConnection extends AbstractReactive implements RpcStream.Listener, RpcSender, JmxRefreshable {
 	private static final Logger logger = getLogger(RpcClientConnection.class);
 	private static final boolean CHECK = Checks.isEnabled(RpcClientConnection.class);
 
@@ -57,7 +58,6 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 	private boolean overloaded = false;
 	private boolean closed;
 
-	private final Reactor reactor;
 	private final RpcClient rpcClient;
 	private final RpcStream stream;
 	private final InetSocketAddress address;
@@ -80,7 +80,7 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 
 	RpcClientConnection(Reactor reactor, RpcClient rpcClient, InetSocketAddress address, RpcStream stream,
 			long keepAliveMillis) {
-		this.reactor = reactor;
+		super(reactor);
 		this.rpcClient = rpcClient;
 		this.stream = stream;
 		this.address = address;
@@ -95,7 +95,7 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 
 	@Override
 	public <I, O> void sendRequest(I request, int timeout, @NotNull Callback<O> cb) {
-		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
+		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
 
 		// jmx
 		totalRequests.recordEvent();
@@ -164,7 +164,7 @@ public final class RpcClientConnection implements RpcStream.Listener, RpcSender,
 
 	@Override
 	public <I, O> void sendRequest(I request, @NotNull Callback<O> cb) {
-		if (CHECK) checkState(reactor.inReactorThread(), "Not in reactor thread");
+		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
 
 		// jmx
 		totalRequests.recordEvent();

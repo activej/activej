@@ -56,7 +56,7 @@ public abstract class AbstractRedisBenchmark extends Launcher {
 
 	@Provides
 	RedisClient redisClient(NioReactor reactor, Config config) {
-		return RedisClient.create(reactor, config.get(ofInetSocketAddress(), "redis.address"));
+		return RedisClient.create(config.get(ofInetSocketAddress(), "redis.address"));
 	}
 
 	@Provides

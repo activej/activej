@@ -23,6 +23,7 @@ import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -43,7 +44,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * @param <K> type of keys
  * @param <T> type of objects
  */
-public final class StreamSorter<K, T> implements StreamTransformer<T, T>, WithInitializer<StreamSorter<K, T>> {
+public final class StreamSorter<K, T> extends AbstractReactive implements StreamTransformer<T, T>, WithInitializer<StreamSorter<K, T>> {
 	private static final Logger logger = getLogger(StreamSorter.class);
 	private final AsyncAccumulator<? extends List<Integer>> temporaryStreamsAccumulator;
 	private final StreamSorterStorage<T> storage;

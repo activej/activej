@@ -36,7 +36,7 @@ import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.Reactor;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +54,7 @@ import static io.activej.cube.Utils.chunksInDiffs;
 import static io.activej.ot.OTAlgorithms.*;
 import static java.util.stream.Collectors.toSet;
 
-public final class CubeCleanerController<K, D, C> implements ReactorJmxBeanWithStats, WithInitializer<CubeCleanerController<K, D, C>> {
+public final class CubeCleanerController<K, D, C> implements ReactiveJmxBeanWithStats, WithInitializer<CubeCleanerController<K, D, C>> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeCleanerController.class);
 
 	public static final Duration DEFAULT_CHUNKS_CLEANUP_DELAY = Duration.ofMinutes(1);

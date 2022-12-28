@@ -20,6 +20,7 @@ import io.activej.common.Checks;
 import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.AbstractReactive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,7 +35,7 @@ import static java.lang.Math.max;
  *
  * @param <T> the type of values that are stored in the buffer
  */
-public final class ChannelBuffer<T> implements ChannelQueue<T> {
+public final class ChannelBuffer<T> extends AbstractReactive implements ChannelQueue<T> {
 	private static final boolean CHECK = Checks.isEnabled(ChannelBuffer.class);
 
 	private Exception exception;

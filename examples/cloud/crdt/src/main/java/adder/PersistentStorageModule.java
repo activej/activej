@@ -1,6 +1,6 @@
 package adder;
 
-import io.activej.async.service.ReactorTaskScheduler;
+import io.activej.async.service.ReactiveTaskScheduler;
 import io.activej.config.Config;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.CrdtStorage;
@@ -24,7 +24,7 @@ import java.time.Duration;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static io.activej.async.service.ReactorTaskScheduler.Schedule.ofInterval;
+import static io.activej.async.service.ReactiveTaskScheduler.Schedule.ofInterval;
 import static io.activej.config.converter.ConfigConverters.ofPath;
 import static io.activej.config.converter.ConfigConverters.ofReactorTaskSchedule;
 
@@ -84,8 +84,8 @@ public final class PersistentStorageModule extends AbstractModule {
 	@Provides
 	@Named("consolidate")
 	@Eager
-	ReactorTaskScheduler consolidateScheduler(Reactor reactor, CrdtStorageFs<Long, DetailedSumsCrdtState> storageFs, Config config) {
-		return ReactorTaskScheduler.create(reactor, storageFs::consolidate)
+	ReactiveTaskScheduler consolidateScheduler(Reactor reactor, CrdtStorageFs<Long, DetailedSumsCrdtState> storageFs, Config config) {
+		return ReactiveTaskScheduler.create(reactor, storageFs::consolidate)
 				.withSchedule(config.get(ofReactorTaskSchedule(), "consolidate.schedule", ofInterval(Duration.ofMinutes(3))))
 				.withInitialDelay(Duration.ofSeconds(10));
 	}

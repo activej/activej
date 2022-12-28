@@ -29,7 +29,7 @@ import java.util.List;
  * <p>
  * When an incoming connection takes place, it forwards the request to one of them with a round-robin algorithm.
  */
-public final class PrimaryServer extends AbstractServer<PrimaryServer> {
+public final class PrimaryServer extends AbstractReactiveServer<PrimaryServer> {
 
 	private final WorkerServer[] workerServers;
 
@@ -40,8 +40,8 @@ public final class PrimaryServer extends AbstractServer<PrimaryServer> {
 		super(primaryReactor);
 		this.workerServers = workerServers;
 		for (WorkerServer workerServer : workerServers) {
-			if (workerServer instanceof AbstractServer) {
-				((AbstractServer<?>) workerServer).acceptServer = this;
+			if (workerServer instanceof AbstractReactiveServer) {
+				((AbstractReactiveServer<?>) workerServer).acceptServer = this;
 			}
 		}
 	}

@@ -32,7 +32,7 @@ public final class StreamStatsDetailed<T> extends StreamStatsBasic<T> implements
 	private long totalSize;
 
 	@SuppressWarnings("unchecked")
-	StreamStatsDetailed(@Nullable StreamStatsSizeCounter<?> sizeCounter) {
+	StreamStatsDetailed(@Nullable StreamStatsSizeCounter<?>sizeCounter) {
 		this.sizeCounter = (StreamStatsSizeCounter<Object>) sizeCounter;
 	}
 

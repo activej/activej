@@ -3,7 +3,6 @@ package io.activej.redis;
 import io.activej.common.ApplicationSettings;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
-import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.hamcrest.Matchers;
@@ -41,7 +40,7 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 
 	@Before
 	public void setUp() {
-		client = RedisClient.create(Reactor.getCurrentReactor(), ADDRESS);
+		client = RedisClient.create(ADDRESS);
 		await(connection -> connection.cmd(RedisRequest.of("FLUSHALL"), OK));
 	}
 

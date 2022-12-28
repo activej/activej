@@ -18,7 +18,7 @@ package io.activej.etl;
 
 import io.activej.async.AsyncAccumulator;
 import io.activej.async.function.AsyncSupplier;
-import io.activej.async.service.ReactorService;
+import io.activej.async.service.ReactiveService;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.datastream.StreamConsumerWithResult;
 import io.activej.datastream.StreamSupplierWithResult;
@@ -33,7 +33,7 @@ import io.activej.multilog.Multilog;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.Reactor;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +49,7 @@ import static io.activej.async.function.AsyncSuppliers.reuse;
  * Processes logs. Creates new aggregation logs and persists to {@link LogDataConsumer} .
  */
 @SuppressWarnings("rawtypes") // JMX doesn't work with generic types
-public final class LogOTProcessor<T, D> implements ReactorService, ReactorJmxBeanWithStats, WithInitializer<LogOTProcessor<T, D>> {
+public final class LogOTProcessor<T, D> implements ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<LogOTProcessor<T, D>> {
 	private static final Logger logger = LoggerFactory.getLogger(LogOTProcessor.class);
 
 	private final Reactor reactor;

@@ -22,8 +22,7 @@ import org.jetbrains.annotations.NotNull;
 public final class StreamCounter<T> extends StreamFilter<T, T> {
 	private long itemCount;
 
-	private StreamCounter() {
-	}
+	private StreamCounter() {}
 
 	public static <T> StreamCounter<T> create() {
 		return new StreamCounter<>();

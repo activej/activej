@@ -26,7 +26,7 @@ public class ChannelRateLimiterTest {
 	@Test
 	public void testEmpty() {
 		Eventloop eventloop = Reactor.getCurrentReactor();
-		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.create(eventloop, 100);
+		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.create(100);
 
 		List<Integer> expected = IntStream.range(0, 200)
 				.boxed().collect(toList());
@@ -46,7 +46,7 @@ public class ChannelRateLimiterTest {
 	@Test
 	public void testHalfFull() {
 		Eventloop eventloop = Reactor.getCurrentReactor();
-		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.<Integer>create(eventloop, 100)
+		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.<Integer>create(100)
 				.withInitialTokens(100L);
 
 		List<Integer> expected = IntStream.range(0, 200)
@@ -67,7 +67,7 @@ public class ChannelRateLimiterTest {
 	@Test
 	public void testFull() {
 		Eventloop eventloop = Reactor.getCurrentReactor();
-		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.<Integer>create(eventloop, 100)
+		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.<Integer>create(100)
 				.withInitialTokens(200L);
 
 		List<Integer> expected = IntStream.range(0, 200)

@@ -19,16 +19,14 @@ package io.activej.async.process;
 import io.activej.common.Checks;
 import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
-import io.activej.reactor.Reactor;
+import io.activej.reactor.AbstractReactive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Checks.checkState;
 
-public abstract class AbstractAsyncCloseable implements AsyncCloseable {
+public abstract class AbstractAsyncCloseable extends AbstractReactive implements AsyncCloseable {
 	private static final boolean CHECK = Checks.isEnabled(AbstractAsyncCloseable.class);
-
-	protected final Reactor reactor = Reactor.getCurrentReactor();
 
 	private @Nullable AsyncCloseable closeable;
 
@@ -50,7 +48,7 @@ public abstract class AbstractAsyncCloseable implements AsyncCloseable {
 
 	@Override
 	public final void closeEx(@NotNull Exception e) {
-		if (CHECK) checkState(reactor.inReactorThread(), "Not in eventloop thread");
+		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
 		if (isClosed()) return;
 		exception = e;
 		reactor.post(this::onCleanup);

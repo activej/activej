@@ -18,7 +18,7 @@ package io.activej.crdt.hash;
 
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncRunnables;
-import io.activej.async.service.ReactorService;
+import io.activej.async.service.ReactiveService;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.datastream.StreamConsumer;
 import io.activej.promise.Promise;
@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.BinaryOperator;
 
-public class JavaCrdtMap<K extends Comparable<K>, S> implements CrdtMap<K, S>, ReactorService {
+public class JavaCrdtMap<K extends Comparable<K>, S> implements CrdtMap<K, S>, ReactiveService {
 	private final Map<K, S> map = new TreeMap<>();
 
 	private final Reactor reactor;

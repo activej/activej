@@ -16,13 +16,13 @@
 
 package io.activej.cube.attributes;
 
-import io.activej.async.service.ReactorService;
+import io.activej.async.service.ReactiveService;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ValueStats;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
-import io.activej.reactor.jmx.ReactorJmxBean;
+import io.activej.reactor.jmx.ReactiveJmxBean;
 import io.activej.reactor.schedule.ScheduledRunnable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -33,7 +33,7 @@ import java.util.Map;
 
 import static io.activej.common.Utils.nullify;
 
-public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttributeResolver<K, A> implements ReactorService, ReactorJmxBean {
+public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttributeResolver<K, A> implements ReactiveService, ReactiveJmxBean {
 	protected final Reactor reactor;
 
 	private long timestamp;

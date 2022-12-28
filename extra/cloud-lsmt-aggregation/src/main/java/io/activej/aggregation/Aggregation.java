@@ -39,7 +39,7 @@ import io.activej.datastream.stats.StreamStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
-import io.activej.reactor.jmx.ReactorJmxBeanWithStats;
+import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.serializer.BinarySerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -73,7 +73,7 @@ import static java.util.stream.Collectors.toSet;
  * Provides methods for loading and querying data.
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
-public class Aggregation implements IAggregation, WithInitializer<Aggregation>, ReactorJmxBeanWithStats {
+public class Aggregation implements IAggregation, WithInitializer<Aggregation>, ReactiveJmxBeanWithStats {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	public static final int DEFAULT_CHUNK_SIZE = 1_000_000;

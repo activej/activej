@@ -25,7 +25,7 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ExceptionStats;
-import io.activej.net.AbstractServer;
+import io.activej.net.AbstractReactiveServer;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -45,7 +45,7 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
  * It has a root {@link AsyncServlet} that receives and handles all the responses that come to this server.
  */
 @SuppressWarnings({"UnusedReturnValue", "WeakerAccess", "unused"})
-public final class AsyncHttpServer extends AbstractServer<AsyncHttpServer> {
+public final class AsyncHttpServer extends AbstractReactiveServer<AsyncHttpServer> {
 	public static final Duration READ_WRITE_TIMEOUT = ApplicationSettings.getDuration(AsyncHttpServer.class, "readWriteTimeout", Duration.ZERO);
 	public static final Duration READ_WRITE_TIMEOUT_SHUTDOWN = ApplicationSettings.getDuration(AsyncHttpServer.class, "readWriteTimeout_Shutdown", Duration.ofSeconds(3));
 	public static final Duration SERVE_TIMEOUT_SHUTDOWN = ApplicationSettings.getDuration(AsyncHttpServer.class, "serveTimeout_Shutdown", Duration.ofSeconds(0));

@@ -27,6 +27,7 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.AbstractReactive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,7 +41,7 @@ import org.jetbrains.annotations.Nullable;
  * New process can't be started before the previous one ends.
  * Process can be cancelled or closed manually.
  */
-public abstract class AbstractCommunicatingProcess implements AsyncProcess {
+public abstract class AbstractCommunicatingProcess extends AbstractReactive implements AsyncProcess {
 	private boolean processStarted;
 	private boolean processComplete;
 	private final SettablePromise<Void> processCompletion = new SettablePromise<>();
