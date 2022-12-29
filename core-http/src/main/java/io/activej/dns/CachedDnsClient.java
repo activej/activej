@@ -25,9 +25,9 @@ import io.activej.dns.protocol.DnsResponse;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBean;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,41 +43,40 @@ import static io.activej.reactor.util.RunnableWithContext.wrapContext;
  * Implementation of {@link AsyncDnsClient} that asynchronously
  * connects to some DNS server and gets the response from it.
  */
-public final class CachedAsyncDnsClient implements AsyncDnsClient, ReactiveJmxBean, WithInitializer<CachedAsyncDnsClient> {
-	private final Logger logger = LoggerFactory.getLogger(CachedAsyncDnsClient.class);
-	private static final boolean CHECK = Checks.isEnabled(CachedAsyncDnsClient.class);
+public final class CachedDnsClient extends AbstractReactive implements AsyncDnsClient, ReactiveJmxBean, WithInitializer<CachedDnsClient> {
+	private final Logger logger = LoggerFactory.getLogger(CachedDnsClient.class);
+	private static final boolean CHECK = Checks.isEnabled(CachedDnsClient.class);
 
-	private final Reactor reactor;
 	private final AsyncDnsClient client;
 
 	private DnsCache cache;
 	private final Map<DnsQuery, Promise<DnsResponse>> pending = new HashMap<>();
 	private final Set<DnsQuery> refreshingNow = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
-	private CachedAsyncDnsClient(Reactor reactor, AsyncDnsClient client, DnsCache cache) {
-		this.reactor = reactor;
+	private CachedDnsClient(Reactor reactor, AsyncDnsClient client, DnsCache cache) {
+		super(reactor);
 		this.client = client;
 		this.cache = cache;
 	}
 
-	public static CachedAsyncDnsClient create(Reactor reactor, AsyncDnsClient client, DnsCache cache) {
-		return new CachedAsyncDnsClient(reactor, client, cache);
+	public static CachedDnsClient create(Reactor reactor, AsyncDnsClient client, DnsCache cache) {
+		return new CachedDnsClient(reactor, client, cache);
 	}
 
-	public static CachedAsyncDnsClient create(Reactor reactor, AsyncDnsClient client) {
-		return new CachedAsyncDnsClient(reactor, client, DnsCache.create(reactor));
+	public static CachedDnsClient create(Reactor reactor, AsyncDnsClient client) {
+		return new CachedDnsClient(reactor, client, DnsCache.create(reactor));
 	}
 
-	public CachedAsyncDnsClient withCache(DnsCache cache) {
+	public CachedDnsClient withCache(DnsCache cache) {
 		this.cache = cache;
 		return this;
 	}
 
-	public CachedAsyncDnsClient withExpiration(Duration errorCacheExpiration, Duration hardExpirationDelta) {
+	public CachedDnsClient withExpiration(Duration errorCacheExpiration, Duration hardExpirationDelta) {
 		return withExpiration(errorCacheExpiration, hardExpirationDelta, DnsCache.DEFAULT_TIMED_OUT_EXPIRATION);
 	}
 
-	public CachedAsyncDnsClient withExpiration(Duration errorCacheExpiration, Duration hardExpirationDelta, Duration timedOutExceptionTtl) {
+	public CachedDnsClient withExpiration(Duration errorCacheExpiration, Duration hardExpirationDelta, Duration timedOutExceptionTtl) {
 		cache
 				.withErrorCacheExpiration(errorCacheExpiration)
 				.withHardExpirationDelta(hardExpirationDelta)
@@ -110,7 +109,7 @@ public final class CachedAsyncDnsClient implements AsyncDnsClient, ReactiveJmxBe
 				anotherReactor.startExternalTask(); // keep other reactor alive while we wait for an answer in main one
 				return Promise.ofCallback(cb ->
 						reactor.execute(() ->
-								CachedAsyncDnsClient.this.resolve(query)
+								CachedDnsClient.this.resolve(query)
 										.run((result, e) -> {
 											anotherReactor.execute(wrapContext(cb, () -> cb.accept(result, e)));
 											anotherReactor.completeExternalTask();
@@ -120,7 +119,7 @@ public final class CachedAsyncDnsClient implements AsyncDnsClient, ReactiveJmxBe
 			@Override
 			public void close() {
 				if (CHECK) checkState(anotherReactor.inReactorThread());
-				reactor.execute(CachedAsyncDnsClient.this::close);
+				reactor.execute(CachedDnsClient.this::close);
 			}
 		};
 	}
@@ -179,11 +178,6 @@ public final class CachedAsyncDnsClient implements AsyncDnsClient, ReactiveJmxBe
 	@Override
 	public void close() {
 		client.close();
-	}
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
 	}
 
 	@JmxAttribute(name = "")

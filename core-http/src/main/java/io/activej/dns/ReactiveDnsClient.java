@@ -32,10 +32,10 @@ import io.activej.net.socket.udp.AsyncUdpSocketNio;
 import io.activej.net.socket.udp.UdpPacket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.reactor.net.DatagramSocketSettings;
 import io.activej.reactor.nio.NioReactor;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,16 +55,15 @@ import static io.activej.promise.Promises.timeout;
  * Implementation of {@link AsyncDnsClient} that asynchronously
  * connects to some <i>real</i> DNS server and gets the response from it.
  */
-public final class RemoteAsyncDnsClient implements AsyncDnsClient, ReactiveJmxBeanWithStats, WithInitializer<RemoteAsyncDnsClient> {
-	private final Logger logger = LoggerFactory.getLogger(RemoteAsyncDnsClient.class);
-	private static final boolean CHECK = Checks.isEnabled(RemoteAsyncDnsClient.class);
+public final class ReactiveDnsClient extends AbstractNioReactive implements AsyncDnsClient, ReactiveJmxBeanWithStats, WithInitializer<ReactiveDnsClient> {
+	private final Logger logger = LoggerFactory.getLogger(ReactiveDnsClient.class);
+	private static final boolean CHECK = Checks.isEnabled(ReactiveDnsClient.class);
 
 	public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(3);
 	private static final int DNS_SERVER_PORT = 53;
 	public static final InetSocketAddress GOOGLE_PUBLIC_DNS = new InetSocketAddress("8.8.8.8", DNS_SERVER_PORT);
 	public static final InetSocketAddress LOCAL_DNS = new InetSocketAddress("192.168.0.1", DNS_SERVER_PORT);
 
-	private final NioReactor reactor;
 	private final Map<DnsTransaction, SettablePromise<DnsResponse>> transactions = new HashMap<>();
 
 	private DatagramSocketSettings datagramSocketSettings = DatagramSocketSettings.create();
@@ -77,50 +76,45 @@ public final class RemoteAsyncDnsClient implements AsyncDnsClient, ReactiveJmxBe
 	private @Nullable Inspector inspector;
 
 	// region creators
-	private RemoteAsyncDnsClient(NioReactor reactor) {
-		this.reactor = reactor;
+	private ReactiveDnsClient(NioReactor reactor) {
+		super(reactor);
 	}
 
-	public static RemoteAsyncDnsClient create(NioReactor reactor) {
-		return new RemoteAsyncDnsClient(reactor);
+	public static ReactiveDnsClient create(NioReactor reactor) {
+		return new ReactiveDnsClient(reactor);
 	}
 
-	public RemoteAsyncDnsClient withDatagramSocketSetting(DatagramSocketSettings setting) {
+	public ReactiveDnsClient withDatagramSocketSetting(DatagramSocketSettings setting) {
 		this.datagramSocketSettings = setting;
 		return this;
 	}
 
-	public RemoteAsyncDnsClient withTimeout(Duration timeout) {
+	public ReactiveDnsClient withTimeout(Duration timeout) {
 		this.timeout = timeout;
 		return this;
 	}
 
-	public RemoteAsyncDnsClient withDnsServerAddress(InetSocketAddress address) {
+	public ReactiveDnsClient withDnsServerAddress(InetSocketAddress address) {
 		this.dnsServerAddress = address;
 		return this;
 	}
 
-	public RemoteAsyncDnsClient withDnsServerAddress(InetAddress address) {
+	public ReactiveDnsClient withDnsServerAddress(InetAddress address) {
 		this.dnsServerAddress = new InetSocketAddress(address, DNS_SERVER_PORT);
 		return this;
 	}
 
-	public RemoteAsyncDnsClient withInspector(Inspector inspector) {
+	public ReactiveDnsClient withInspector(Inspector inspector) {
 		this.inspector = inspector;
 		return this;
 	}
 
-	public RemoteAsyncDnsClient setSocketInspector(AsyncUdpSocketNio.Inspector socketInspector) {
+	public ReactiveDnsClient setSocketInspector(AsyncUdpSocketNio.Inspector socketInspector) {
 		this.socketInspector = socketInspector;
 		return this;
 	}
 
 	// endregion
-
-	@Override
-	public @NotNull NioReactor getReactor() {
-		return reactor;
-	}
 
 	@Override
 	public void close() {

@@ -70,7 +70,7 @@ public final class HttpStreamTest {
 				.whenComplete(TestUtils.assertCompleteFn(buf -> assertEquals(requestBody, buf.asString(UTF_8))))
 				.then(s -> Promise.of(HttpResponse.ok200())));
 
-		Integer code = await(AsyncHttpClient.create(Reactor.getCurrentReactor())
+		Integer code = await(ReactiveHttpClient.create(Reactor.getCurrentReactor())
 				.request(HttpRequest.post("http://127.0.0.1:" + port)
 						.withBodyStream(ChannelSupplier.ofList(expectedList)
 								.mapAsync(item -> Promises.delay(200L, item))))
@@ -87,7 +87,7 @@ public final class HttpStreamTest {
 						.withBodyStream(ChannelSupplier.ofList(expectedList)
 								.mapAsync(item -> Promises.delay(1L, item))));
 
-		ByteBuf body = await(AsyncHttpClient.create(Reactor.getCurrentReactor())
+		ByteBuf body = await(ReactiveHttpClient.create(Reactor.getCurrentReactor())
 				.request(HttpRequest.post("http://127.0.0.1:" + port))
 				.async()
 				.whenComplete(TestUtils.assertCompleteFn(response -> assertEquals(200, response.getCode())))
@@ -105,7 +105,7 @@ public final class HttpStreamTest {
 				.map(ChannelSupplier::ofList)
 				.then(bodyStream -> Promise.of(HttpResponse.ok200().withBodyStream(bodyStream.async()))));
 
-		ByteBuf body = await(AsyncHttpClient.create(Reactor.getCurrentReactor())
+		ByteBuf body = await(ReactiveHttpClient.create(Reactor.getCurrentReactor())
 				.request(HttpRequest.post("http://127.0.0.1:" + port)
 						.withBodyStream(ChannelSupplier.ofList(expectedList)
 								.mapAsync(item -> Promises.delay(1L, item))))
@@ -123,7 +123,7 @@ public final class HttpStreamTest {
 
 		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.ofList(expectedList);
 
-		ByteBuf body = await(AsyncHttpClient.create(Reactor.getCurrentReactor())
+		ByteBuf body = await(ReactiveHttpClient.create(Reactor.getCurrentReactor())
 				.request(HttpRequest.post("http://127.0.0.1:" + port)
 						.withBodyStream(supplier))
 				.then(response -> response.takeBodyStream().toCollector(ByteBufs.collector())));
@@ -219,7 +219,7 @@ public final class HttpStreamTest {
 		startTestServer(request -> request.loadBody().map(body -> HttpResponse.ok200().withBody(body.slice())));
 
 		Exception e = awaitException(
-				AsyncHttpClient.create(Reactor.getCurrentReactor())
+				ReactiveHttpClient.create(Reactor.getCurrentReactor())
 						.request(HttpRequest.post("http://127.0.0.1:" + port)
 								.withBodyStream(ChannelSuppliers.concat(
 										ChannelSupplier.ofList(expectedList),

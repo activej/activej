@@ -52,15 +52,15 @@ import static io.activej.http.HttpHeaders.CONTENT_LENGTH;
  * Inherits all the limitations of {@link ActiveFs} implementation located on server.
  */
 public final class HttpActiveFs implements ActiveFs, WithInitializer<HttpActiveFs> {
-	private final IAsyncHttpClient client;
+	private final AsyncHttpClient client;
 	private final String url;
 
-	private HttpActiveFs(String url, IAsyncHttpClient client) {
+	private HttpActiveFs(String url, AsyncHttpClient client) {
 		this.url = url;
 		this.client = client;
 	}
 
-	public static HttpActiveFs create(String url, IAsyncHttpClient client) {
+	public static HttpActiveFs create(String url, AsyncHttpClient client) {
 		return new HttpActiveFs(url.endsWith("/") ? url : url + '/', client);
 	}
 

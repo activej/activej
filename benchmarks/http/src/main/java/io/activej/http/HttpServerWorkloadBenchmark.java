@@ -59,7 +59,7 @@ public class HttpServerWorkloadBenchmark extends Launcher {
 	AsyncHttpServer server;
 
 	@Inject
-	AsyncHttpClient client;
+	ReactiveHttpClient client;
 
 	@Provides
 	AsyncHttpServer server() {
@@ -70,8 +70,8 @@ public class HttpServerWorkloadBenchmark extends Launcher {
 	}
 
 	@Provides
-	AsyncHttpClient client() {
-		return AsyncHttpClient.create(clientReactor)
+	ReactiveHttpClient client() {
+		return ReactiveHttpClient.create(clientReactor)
 				.withKeepAliveTimeout(Duration.ofSeconds(config.get(ofInteger(),
 						"client.keepAlive", KEEP_ALIVE)));
 	}

@@ -29,7 +29,7 @@ public class AsyncHttpServerClientBreakConnectionTest {
 
 	private final NioReactor reactor = Reactor.getCurrentReactor();
 	private AsyncHttpServer server;
-	private AsyncHttpClient client;
+	private ReactiveHttpClient client;
 	private int freePort;
 
 	@Before
@@ -48,7 +48,7 @@ public class AsyncHttpServerClientBreakConnectionTest {
 				.withListenPort(freePort)
 				.withAcceptOnce();
 
-		client = AsyncHttpClient.create(reactor);
+		client = ReactiveHttpClient.create(reactor);
 		server.listen();
 	}
 
