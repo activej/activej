@@ -42,16 +42,16 @@ import static javax.net.ssl.SSLEngineResult.Status.BUFFER_UNDERFLOW;
 import static javax.net.ssl.SSLEngineResult.Status.CLOSED;
 
 /**
- * This is an SSL proxy around {@link AsyncTcpSocket}.
+ * This is an SSL proxy around {@link ReactiveTcpSocket}.
  * <p>
  * It allows SSL connections using Java {@link SSLEngine}.
  */
-public final class AsyncTcpSocketSsl extends AbstractReactive implements AsyncTcpSocket, WithInitializer<AsyncTcpSocketSsl> {
-	public static final boolean ERROR_ON_CLOSE_WITHOUT_NOTIFY = ApplicationSettings.getBoolean(AsyncTcpSocketSsl.class, "errorOnCloseWithoutNotify", false);
+public final class ReactiveTcpSocketSsl extends AbstractReactive implements ReactiveTcpSocket, WithInitializer<ReactiveTcpSocketSsl> {
+	public static final boolean ERROR_ON_CLOSE_WITHOUT_NOTIFY = ApplicationSettings.getBoolean(ReactiveTcpSocketSsl.class, "errorOnCloseWithoutNotify", false);
 
 	private final SSLEngine engine;
 	private final Executor executor;
-	private final AsyncTcpSocket upstream;
+	private final ReactiveTcpSocket upstream;
 
 	private ByteBuf net2engine = ByteBuf.empty();
 	private ByteBuf engine2app = ByteBuf.empty();
@@ -62,7 +62,7 @@ public final class AsyncTcpSocketSsl extends AbstractReactive implements AsyncTc
 	private @Nullable SettablePromise<Void> write;
 	private @Nullable Promise<Void> pendingUpstreamWrite;
 
-	public static AsyncTcpSocketSsl wrapClientSocket(AsyncTcpSocket asyncTcpSocket,
+	public static ReactiveTcpSocketSsl wrapClientSocket(ReactiveTcpSocket asyncTcpSocket,
 			String host, int port,
 			SSLContext sslContext, Executor executor) {
 		SSLEngine sslEngine = sslContext.createSSLEngine(host, port);
@@ -70,30 +70,30 @@ public final class AsyncTcpSocketSsl extends AbstractReactive implements AsyncTc
 		return create(asyncTcpSocket, sslEngine, executor);
 	}
 
-	public static AsyncTcpSocketSsl wrapClientSocket(AsyncTcpSocket asyncTcpSocket,
+	public static ReactiveTcpSocketSsl wrapClientSocket(ReactiveTcpSocket asyncTcpSocket,
 			SSLContext sslContext, Executor executor) {
 		SSLEngine sslEngine = sslContext.createSSLEngine();
 		sslEngine.setUseClientMode(true);
 		return create(asyncTcpSocket, sslEngine, executor);
 	}
 
-	public static AsyncTcpSocketSsl wrapServerSocket(AsyncTcpSocket asyncTcpSocket,
+	public static ReactiveTcpSocketSsl wrapServerSocket(ReactiveTcpSocket asyncTcpSocket,
 			SSLContext sslContext, Executor executor) {
 		SSLEngine sslEngine = sslContext.createSSLEngine();
 		sslEngine.setUseClientMode(false);
 		return create(asyncTcpSocket, sslEngine, executor);
 	}
 
-	private AsyncTcpSocketSsl(AsyncTcpSocket asyncTcpSocket, SSLEngine engine, Executor executor) {
+	private ReactiveTcpSocketSsl(ReactiveTcpSocket asyncTcpSocket, SSLEngine engine, Executor executor) {
 		this.engine = engine;
 		this.executor = executor;
 		this.upstream = asyncTcpSocket;
 		startHandShake();
 	}
 
-	public static AsyncTcpSocketSsl create(AsyncTcpSocket asyncTcpSocket,
+	public static ReactiveTcpSocketSsl create(ReactiveTcpSocket asyncTcpSocket,
 			SSLEngine engine, Executor executor) {
-		return new AsyncTcpSocketSsl(asyncTcpSocket, engine, executor);
+		return new ReactiveTcpSocketSsl(asyncTcpSocket, engine, executor);
 	}
 
 	@Override

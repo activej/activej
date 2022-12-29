@@ -18,7 +18,7 @@ package io.activej.crdt.storage.cluster;
 
 import io.activej.async.function.AsyncFunction;
 import io.activej.async.function.AsyncSupplier;
-import io.activej.async.process.AsyncCloseable;
+import io.activej.async.process.ReactiveCloseable;
 import io.activej.async.service.ReactiveService;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.collection.Try;
@@ -241,8 +241,8 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 			}
 
 			private void close() {
-				downloader.ifSuccess(AsyncCloseable::close);
-				uploaders.values().forEach(AsyncCloseable::close);
+				downloader.ifSuccess(ReactiveCloseable::close);
+				uploaders.values().forEach(ReactiveCloseable::close);
 			}
 		}
 

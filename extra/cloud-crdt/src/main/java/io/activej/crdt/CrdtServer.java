@@ -34,7 +34,7 @@ import io.activej.datastream.stats.StreamStatsDetailed;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.net.AbstractReactiveServer;
-import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.net.socket.tcp.ReactiveTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.nio.NioReactor;
@@ -111,7 +111,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 	}
 
 	@Override
-	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
+	protected void serve(ReactiveTcpSocket socket, InetAddress remoteAddress) {
 		MessagingWithBinaryStreaming<CrdtRequest, CrdtResponse> messaging =
 				MessagingWithBinaryStreaming.create(socket, SERIALIZER);
 		messaging.receive()

@@ -16,7 +16,7 @@
 
 package io.activej.etl;
 
-import io.activej.async.AsyncAccumulator;
+import io.activej.async.ReactiveAccumulator;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.ReactiveService;
 import io.activej.common.initializer.WithInitializer;
@@ -119,7 +119,7 @@ public final class LogOTProcessor<T, D> implements ReactiveService, ReactiveJmxB
 	}
 
 	private StreamSupplierWithResult<T, Map<String, LogPositionDiff>> getSupplier() {
-		AsyncAccumulator<Map<String, LogPositionDiff>> logPositionsAccumulator = AsyncAccumulator.create(new HashMap<>());
+		ReactiveAccumulator<Map<String, LogPositionDiff>> logPositionsAccumulator = ReactiveAccumulator.create(new HashMap<>());
 		StreamUnion<T> streamUnion = StreamUnion.create();
 		for (String partition : partitions) {
 			String logName = logName(partition);

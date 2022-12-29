@@ -41,7 +41,7 @@ import io.activej.datastream.stats.StreamStatsDetailed;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.EventStats;
-import io.activej.net.socket.tcp.AsyncTcpSocketNio;
+import io.activej.net.socket.tcp.ReactiveTcpSocketNio;
 import io.activej.promise.Promise;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.reactor.net.SocketSettings;
@@ -258,7 +258,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 	}
 
 	private Promise<MessagingWithBinaryStreaming<CrdtResponse, CrdtRequest>> connect() {
-		return AsyncTcpSocketNio.connect(reactor, address, connectTimeoutMillis, socketSettings)
+		return ReactiveTcpSocketNio.connect(reactor, address, connectTimeoutMillis, socketSettings)
 				.map(socket -> MessagingWithBinaryStreaming.create(socket, SERIALIZER))
 				.mapException(e -> new CrdtException("Failed to connect to " + address, e));
 	}

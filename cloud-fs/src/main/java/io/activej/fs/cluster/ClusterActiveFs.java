@@ -18,7 +18,7 @@ package io.activej.fs.cluster;
 
 import io.activej.async.function.AsyncBiFunction;
 import io.activej.async.function.AsyncFunction;
-import io.activej.async.process.AsyncCloseable;
+import io.activej.async.process.ReactiveCloseable;
 import io.activej.async.service.ReactiveService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.collection.Try;
@@ -179,7 +179,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 									.withEndOfStream(eos -> eos
 											.whenException(partitions.wrapDeathFn(id))));
 				},
-				AsyncCloseable::close)
+				ReactiveCloseable::close)
 				.map(filterErrorsFn(() -> {
 					throw new FsIOException("Could not download file '" + name + "' from any server");
 				}))
@@ -342,7 +342,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 														.map(consumer -> new Container<>(id, consumer.withAcknowledgement(ack -> ack.whenException(partitions.wrapDeathFn(id))))))))
 								.limit(uploadTargetsMax))
 				.whenException(() -> {
-					consumers.forEach(AsyncCloseable::close);
+					consumers.forEach(ReactiveCloseable::close);
 					failed.set(true);
 					throw new FsIOException("Didn't connect to enough partitions to upload '" + name + '\'');
 				});

@@ -1,6 +1,6 @@
 package io.activej.dataflow.calcite.jdbc;
 
-import io.activej.async.process.AsyncCloseable;
+import io.activej.async.process.ReactiveCloseable;
 import io.activej.datastream.SynchronousStreamConsumer;
 import io.activej.reactor.AbstractReactive;
 import io.activej.record.Record;
@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-final class FrameFetcher extends AbstractReactive implements AsyncCloseable {
+final class FrameFetcher extends AbstractReactive implements ReactiveCloseable {
 	private final SynchronousStreamConsumer<Record> synchronousConsumer;
 	private final int columnSize;
 

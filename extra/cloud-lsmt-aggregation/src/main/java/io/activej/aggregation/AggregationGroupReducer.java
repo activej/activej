@@ -18,7 +18,7 @@ package io.activej.aggregation;
 
 import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.aggregation.util.PartitionPredicate;
-import io.activej.async.AsyncAccumulator;
+import io.activej.async.ReactiveAccumulator;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.datastream.AbstractStreamConsumer;
 import io.activej.datastream.StreamDataAcceptor;
@@ -45,7 +45,7 @@ public final class AggregationGroupReducer<C, T, K extends Comparable> extends A
 	private final Class<T> recordClass;
 	private final Function<T, K> keyFunction;
 	private final Aggregate<T, Object> aggregate;
-	private final AsyncAccumulator<List<AggregationChunk>> chunksAccumulator;
+	private final ReactiveAccumulator<List<AggregationChunk>> chunksAccumulator;
 	private final DefiningClassLoader classLoader;
 	private final int chunkSize;
 
@@ -64,7 +64,7 @@ public final class AggregationGroupReducer<C, T, K extends Comparable> extends A
 		this.aggregate = aggregate;
 		this.chunkSize = chunkSize;
 		this.aggregation = aggregation;
-		this.chunksAccumulator = AsyncAccumulator.create(new ArrayList<>());
+		this.chunksAccumulator = ReactiveAccumulator.create(new ArrayList<>());
 		this.classLoader = classLoader;
 	}
 

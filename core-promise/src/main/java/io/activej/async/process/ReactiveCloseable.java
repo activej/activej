@@ -37,9 +37,9 @@ import static io.activej.reactor.Reactor.getCurrentReactor;
  * </ul>
  * All operations of this interface are idempotent.
  */
-public interface AsyncCloseable extends Reactive {
+public interface ReactiveCloseable extends Reactive {
 	Object STATIC = new Object() {{
-		Recyclers.register(AsyncCloseable.class, AsyncCloseable::close);
+		Recyclers.register(ReactiveCloseable.class, ReactiveCloseable::close);
 	}};
 
 	/**
@@ -57,8 +57,8 @@ public interface AsyncCloseable extends Reactive {
 	 */
 	void closeEx(@NotNull Exception e);
 
-	static AsyncCloseable of(Consumer<Exception> exceptionConsumer) {
-		return new AsyncCloseable() {
+	static ReactiveCloseable of(Consumer<Exception> exceptionConsumer) {
+		return new ReactiveCloseable() {
 			private final Reactor reactor = getCurrentReactor();
 
 			@Override

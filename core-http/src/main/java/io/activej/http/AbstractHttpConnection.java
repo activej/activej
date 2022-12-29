@@ -17,8 +17,8 @@
 package io.activej.http;
 
 import io.activej.async.callback.Callback;
-import io.activej.async.process.AsyncCloseable;
-import io.activej.async.process.AsyncProcess;
+import io.activej.async.process.ReactiveCloseable;
+import io.activej.async.process.ReactiveProcess;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufs;
@@ -28,7 +28,7 @@ import io.activej.common.recycle.Recyclable;
 import io.activej.csp.*;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.http.stream.*;
-import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.net.socket.tcp.ReactiveTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
@@ -63,7 +63,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 	protected static final byte[] UPGRADE_WEBSOCKET = encodeAscii("websocket");
 	protected static final byte[] WEB_SOCKET_VERSION = encodeAscii("13");
 
-	protected final AsyncTcpSocket socket;
+	protected final ReactiveTcpSocket socket;
 	protected final int maxBodySize;
 
 	protected static final byte KEEP_ALIVE = 1 << 0;
@@ -115,7 +115,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 	 * @param reactor   eventloop which will handle its I/O operations
 	 * @param maxBodySize - maximum size of message body
 	 */
-	protected AbstractHttpConnection(Reactor reactor, AsyncTcpSocket socket, int maxBodySize) {
+	protected AbstractHttpConnection(Reactor reactor, ReactiveTcpSocket socket, int maxBodySize) {
 		super(reactor);
 		this.socket = socket;
 		this.maxBodySize = maxBodySize;
@@ -433,10 +433,10 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 									return Promise.ofException(e);
 								}),
 				Promise::complete,
-				AsyncCloseable.of(e -> closeEx(translateToHttpException(e))));
+				ReactiveCloseable.of(e -> closeEx(translateToHttpException(e))));
 
 		ChannelOutput<ByteBuf> bodyStream;
-		AsyncProcess process;
+		ReactiveProcess process;
 
 		if ((flags & CHUNKED) == 0) {
 			BufsConsumerDelimiter decoder = BufsConsumerDelimiter.create(contentLength);
@@ -554,7 +554,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 		supplier.streamTo(ChannelConsumer.of(
 						buf -> socket.write(buf)
 								.whenException(e -> closeEx(translateToHttpException(e))),
-						AsyncCloseable.of(e -> closeEx(translateToHttpException(e)))))
+						ReactiveCloseable.of(e -> closeEx(translateToHttpException(e)))))
 				.whenResult(this::onBodySent);
 	}
 

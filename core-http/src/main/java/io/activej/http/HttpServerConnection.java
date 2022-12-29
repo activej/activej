@@ -25,8 +25,8 @@ import io.activej.common.Utils;
 import io.activej.common.recycle.Recyclable;
 import io.activej.csp.ChannelSupplier;
 import io.activej.http.AsyncHttpServer.Inspector;
-import io.activej.net.socket.tcp.AsyncTcpSocket;
-import io.activej.net.socket.tcp.AsyncTcpSocketSsl;
+import io.activej.net.socket.tcp.ReactiveTcpSocket;
+import io.activej.net.socket.tcp.ReactiveTcpSocketSsl;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
@@ -100,7 +100,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	 * @param server        server, which uses this connection
 	 * @param servlet       servlet for handling requests
 	 */
-	HttpServerConnection(Reactor reactor, AsyncTcpSocket asyncTcpSocket, InetAddress remoteAddress,
+	HttpServerConnection(Reactor reactor, ReactiveTcpSocket asyncTcpSocket, InetAddress remoteAddress,
 			AsyncHttpServer server, AsyncServlet servlet) {
 		super(reactor, asyncTcpSocket, server.maxBodySize);
 		this.remoteAddress = remoteAddress;
@@ -350,7 +350,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		if (WebSocket.ENABLED && isWebSocket()) {
 			if (!processWebSocketRequest(body)) return;
 		} else {
-			request.setProtocol(socket instanceof AsyncTcpSocketSsl ? HTTPS : HTTP);
+			request.setProtocol(socket instanceof ReactiveTcpSocketSsl ? HTTPS : HTTP);
 		}
 		request.setRemoteAddress(remoteAddress);
 
@@ -416,7 +416,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			ChannelSupplier<ByteBuf> ofSocketSupplier = ChannelSupplier.ofSocket(socket);
 			request.bodyStream = sanitize(concat(ofReadBufSupplier, ofSocketSupplier)
 					.withEndOfStream(eos -> eos.whenException(this::closeWebSocketConnection)));
-			request.setProtocol(socket instanceof AsyncTcpSocketSsl ? WSS : WS);
+			request.setProtocol(socket instanceof ReactiveTcpSocketSsl ? WSS : WS);
 			request.maxBodySize = server.maxWebSocketMessageSize;
 			return true;
 		} else {

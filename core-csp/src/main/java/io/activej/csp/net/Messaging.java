@@ -16,13 +16,13 @@
 
 package io.activej.csp.net;
 
-import io.activej.async.process.AsyncCloseable;
+import io.activej.async.process.ReactiveCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.promise.Promise;
 
-public interface Messaging<I, O> extends AsyncCloseable {
+public interface Messaging<I, O> extends ReactiveCloseable {
 	Promise<I> receive();
 
 	Promise<Void> send(O msg);

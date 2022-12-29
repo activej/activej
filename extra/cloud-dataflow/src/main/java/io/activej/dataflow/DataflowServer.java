@@ -17,7 +17,7 @@
 package io.activej.dataflow;
 
 import io.activej.async.exception.AsyncCloseException;
-import io.activej.async.process.AsyncCloseable;
+import io.activej.async.process.ReactiveCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
@@ -51,7 +51,7 @@ import io.activej.inject.ResourceLocator;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.net.AbstractReactiveServer;
-import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.net.socket.tcp.ReactiveTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.nio.NioReactor;
@@ -152,7 +152,7 @@ public final class DataflowServer extends AbstractReactiveServer<DataflowServer>
 	}
 
 	@Override
-	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
+	protected void serve(ReactiveTcpSocket socket, InetAddress remoteAddress) {
 		Messaging<DataflowRequest, DataflowResponse> messaging = MessagingWithBinaryStreaming.create(socket, codec);
 		messaging.receive()
 				.then(request -> {
@@ -279,7 +279,7 @@ public final class DataflowServer extends AbstractReactiveServer<DataflowServer>
 	protected void onClose(SettablePromise<Void> cb) {
 		List<ChannelQueue<ByteBuf>> pending = new ArrayList<>(pendingStreams.values());
 		pendingStreams.clear();
-		pending.forEach(AsyncCloseable::close);
+		pending.forEach(ReactiveCloseable::close);
 		cb.set(null);
 	}
 

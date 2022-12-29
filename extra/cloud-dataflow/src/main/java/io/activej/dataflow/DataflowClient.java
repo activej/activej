@@ -16,7 +16,7 @@
 
 package io.activej.dataflow;
 
-import io.activej.async.process.AsyncCloseable;
+import io.activej.async.process.ReactiveCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnknownFormatException;
@@ -44,7 +44,7 @@ import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.processor.StreamSupplierTransformer;
-import io.activej.net.socket.tcp.AsyncTcpSocketNio;
+import io.activej.net.socket.tcp.ReactiveTcpSocketNio;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.net.SocketSettings;
@@ -79,7 +79,7 @@ public final class DataflowClient {
 	}
 
 	public <T> StreamSupplier<T> download(InetSocketAddress address, StreamId streamId, StreamSchema<T> streamSchema, ChannelTransformer<ByteBuf, ByteBuf> transformer) {
-		return StreamSupplier.ofPromise(AsyncTcpSocketNio.connect(address, 0, socketSettings)
+		return StreamSupplier.ofPromise(ReactiveTcpSocketNio.connect(address, 0, socketSettings)
 				.mapException(IOException.class, e -> new DataflowStacklessException("Failed to connect to " + address, e))
 				.then(socket -> {
 					Messaging<DataflowResponse, DataflowRequest> messaging = MessagingWithBinaryStreaming.create(socket, codec);
@@ -163,11 +163,11 @@ public final class DataflowClient {
 		}
 	}
 
-	public class Session extends AbstractReactive implements AsyncCloseable {
+	public class Session extends AbstractReactive implements ReactiveCloseable {
 		private final InetSocketAddress address;
 		private final Messaging<DataflowResponse, DataflowRequest> messaging;
 
-		private Session(InetSocketAddress address, AsyncTcpSocketNio socket) {
+		private Session(InetSocketAddress address, ReactiveTcpSocketNio socket) {
 			this.address = address;
 			this.messaging = MessagingWithBinaryStreaming.create(socket, codec);
 		}
@@ -210,7 +210,7 @@ public final class DataflowClient {
 	}
 
 	public Promise<Session> connect(InetSocketAddress address) {
-		return AsyncTcpSocketNio.connect(address, 0, socketSettings)
+		return ReactiveTcpSocketNio.connect(address, 0, socketSettings)
 				.map(socket -> new Session(address, socket))
 				.mapException(e -> new DataflowException("Could not connect to " + address, e));
 	}

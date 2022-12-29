@@ -18,13 +18,13 @@ package io.activej.redis;
 
 import io.activej.async.callback.Callback;
 import io.activej.async.exception.AsyncCloseException;
-import io.activej.async.process.AbstractAsyncCloseable;
+import io.activej.async.process.AbstractReactiveCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.net.socket.tcp.ReactiveTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import org.jetbrains.annotations.NotNull;
@@ -41,7 +41,7 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nullify;
 import static java.lang.Math.max;
 
-public final class RedisConnection extends AbstractAsyncCloseable {
+public final class RedisConnection extends AbstractReactiveCloseable {
 	private static final Logger logger = LoggerFactory.getLogger(RedisConnection.class);
 	public static final boolean CHECK = Checks.isEnabled(RedisConnection.class);
 
@@ -51,7 +51,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 
 	private ByteBuf readBuf = ByteBuf.empty();
 
-	private final AsyncTcpSocket socket;
+	private final ReactiveTcpSocket socket;
 
 	private int estimatedSize;
 	private int requiredRemainingSize;
@@ -67,7 +67,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 	private boolean flushPosted;
 	private final int autoFlushIntervalMillis;
 
-	RedisConnection(RedisClient client, AsyncTcpSocket socket, @NotNull Duration autoFlushInterval) {
+	RedisConnection(RedisClient client, ReactiveTcpSocket socket, @NotNull Duration autoFlushInterval) {
 		this.client = client;
 		this.socket = socket;
 		this.autoFlushIntervalMillis = (int) autoFlushInterval.toMillis();

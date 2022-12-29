@@ -16,8 +16,8 @@
 
 package io.activej.promise;
 
-import io.activej.async.AsyncAccumulator;
 import io.activej.async.AsyncBuffer;
+import io.activej.async.ReactiveAccumulator;
 import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.async.function.AsyncFunction;
 import io.activej.async.function.AsyncRunnable;
@@ -1125,7 +1125,7 @@ public final class Promises {
 	 * @return a {@code Promise} of the accumulated result of the reduction.
 	 */
 	public static <T, A, R> @NotNull Promise<R> reduce(@Nullable A accumulator, @NotNull BiConsumerEx<A, T> combiner, @NotNull FunctionEx<A, R> finisher, @NotNull Iterator<Promise<T>> promises) {
-		AsyncAccumulator<A> asyncAccumulator = AsyncAccumulator.create(accumulator);
+		ReactiveAccumulator<A> asyncAccumulator = ReactiveAccumulator.create(accumulator);
 		while (promises.hasNext()) {
 			asyncAccumulator.addPromise(promises.next(), combiner);
 		}
@@ -1180,14 +1180,14 @@ public final class Promises {
 	 * @return a {@code Promise} of the accumulated result of the reduction.
 	 */
 	public static <T, A, R> @NotNull Promise<R> reduce(@Nullable A accumulator, @NotNull BiConsumerEx<A, T> combiner, @NotNull FunctionEx<A, R> finisher, int maxCalls, @NotNull Iterator<Promise<T>> promises) {
-		AsyncAccumulator<A> asyncAccumulator = AsyncAccumulator.create(accumulator);
+		ReactiveAccumulator<A> asyncAccumulator = ReactiveAccumulator.create(accumulator);
 		for (int i = 0; promises.hasNext() && i < maxCalls; i++) {
 			reduceImpl(asyncAccumulator, combiner, promises);
 		}
 		return asyncAccumulator.run().map(finisher);
 	}
 
-	private static <T, A> void reduceImpl(AsyncAccumulator<A> asyncAccumulator, BiConsumerEx<A, T> combiner, Iterator<Promise<T>> promises) {
+	private static <T, A> void reduceImpl(ReactiveAccumulator<A> asyncAccumulator, BiConsumerEx<A, T> combiner, Iterator<Promise<T>> promises) {
 		while (promises.hasNext()) {
 			Promise<T> promise = promises.next();
 			if (promise.isComplete()) {

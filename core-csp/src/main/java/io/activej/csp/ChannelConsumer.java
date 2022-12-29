@@ -17,8 +17,8 @@
 package io.activej.csp;
 
 import io.activej.async.function.AsyncConsumer;
-import io.activej.async.process.AsyncCloseable;
 import io.activej.async.process.AsyncExecutor;
+import io.activej.async.process.ReactiveCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.function.ConsumerEx;
 import io.activej.common.function.FunctionEx;
@@ -26,7 +26,7 @@ import io.activej.common.recycle.Recyclers;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.queue.ChannelQueue;
 import io.activej.csp.queue.ChannelZeroBuffer;
-import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.net.socket.tcp.ReactiveTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.Reactor;
@@ -57,7 +57,7 @@ import static io.activej.reactor.Reactor.getCurrentReactor;
  * and means that no additional data should be consumed.
  */
 
-public interface ChannelConsumer<T> extends AsyncCloseable {
+public interface ChannelConsumer<T> extends ReactiveCloseable {
 	/**
 	 * Consumes a provided value and returns a
 	 * {@link Promise} as a marker of success.
@@ -96,10 +96,10 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	/**
 	 * Wraps {@link AsyncConsumer} in {@code ChannelConsumer}.
 	 *
-	 * @see ChannelConsumer#of(AsyncConsumer, AsyncCloseable)
+	 * @see ChannelConsumer#of(AsyncConsumer, ReactiveCloseable)
 	 */
 	static <T> ChannelConsumer<T> of(@NotNull AsyncConsumer<T> consumer) {
-		return of(consumer, AsyncCloseable.of(e -> {}));
+		return of(consumer, ReactiveCloseable.of(e -> {}));
 	}
 
 	/**
@@ -110,7 +110,7 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	 * @param <T>       type of data to be consumed
 	 * @return AbstractChannelConsumer which wraps AsyncConsumer
 	 */
-	static <T> ChannelConsumer<T> of(@NotNull AsyncConsumer<T> consumer, @Nullable AsyncCloseable closeable) {
+	static <T> ChannelConsumer<T> of(@NotNull AsyncConsumer<T> consumer, @Nullable ReactiveCloseable closeable) {
 		return new AbstractChannelConsumer<>(closeable) {
 			final AsyncConsumer<T> thisConsumer = consumer;
 
@@ -263,11 +263,11 @@ public interface ChannelConsumer<T> extends AsyncCloseable {
 	}
 
 	/**
-	 * Wraps {@link AsyncTcpSocket#write(ByteBuf)} operation into {@link ChannelConsumer}.
+	 * Wraps {@link ReactiveTcpSocket#write(ByteBuf)} operation into {@link ChannelConsumer}.
 	 *
 	 * @return {@link ChannelConsumer} of ByteBufs that will be sent to network
 	 */
-	static ChannelConsumer<ByteBuf> ofSocket(AsyncTcpSocket socket) {
+	static ChannelConsumer<ByteBuf> ofSocket(ReactiveTcpSocket socket) {
 		return ChannelConsumer.of(socket::write, socket)
 				.withAcknowledgement(ack -> ack
 						.then(() -> socket.write(null)));

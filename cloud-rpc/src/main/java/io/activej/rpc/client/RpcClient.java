@@ -30,9 +30,9 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.jmx.stats.ExceptionStats;
-import io.activej.net.socket.tcp.AsyncTcpSocket;
-import io.activej.net.socket.tcp.AsyncTcpSocketNio;
-import io.activej.net.socket.tcp.AsyncTcpSocketNio.JmxInspector;
+import io.activej.net.socket.tcp.ReactiveTcpSocket;
+import io.activej.net.socket.tcp.ReactiveTcpSocketNio;
+import io.activej.net.socket.tcp.ReactiveTcpSocketNio.JmxInspector;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.Reactor;
@@ -64,7 +64,7 @@ import java.util.concurrent.Executor;
 import static io.activej.async.callback.Callback.toAnotherReactor;
 import static io.activej.common.Utils.nonNullElseGet;
 import static io.activej.common.Utils.not;
-import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
+import static io.activej.net.socket.tcp.ReactiveTcpSocketSsl.wrapClientSocket;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -343,7 +343,7 @@ public final class RpcClient implements IRpcClient, ReactiveService, WithInitial
 	}
 
 	private void connect(InetSocketAddress address) {
-		AsyncTcpSocketNio.connect(reactor, address, connectTimeoutMillis, socketSettings)
+		ReactiveTcpSocketNio.connect(reactor, address, connectTimeoutMillis, socketSettings)
 				.whenResult(asyncTcpSocketImpl -> {
 					newConnections.remove(address);
 					if (!pendingConnections.contains(address) || stopPromise != null) {
@@ -352,7 +352,7 @@ public final class RpcClient implements IRpcClient, ReactiveService, WithInitial
 					}
 					statsSocket.onConnect(asyncTcpSocketImpl);
 					asyncTcpSocketImpl.setInspector(statsSocket);
-					AsyncTcpSocket socket = sslContext == null ?
+					ReactiveTcpSocket socket = sslContext == null ?
 							asyncTcpSocketImpl :
 							wrapClientSocket(asyncTcpSocketImpl, sslContext, sslExecutor);
 					RpcStream stream = new RpcStream(socket, serializer, defaultPacketSize,

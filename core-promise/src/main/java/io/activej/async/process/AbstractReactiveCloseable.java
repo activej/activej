@@ -25,10 +25,10 @@ import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Checks.checkState;
 
-public abstract class AbstractAsyncCloseable extends AbstractReactive implements AsyncCloseable {
-	private static final boolean CHECK = Checks.isEnabled(AbstractAsyncCloseable.class);
+public abstract class AbstractReactiveCloseable extends AbstractReactive implements ReactiveCloseable {
+	private static final boolean CHECK = Checks.isEnabled(AbstractReactiveCloseable.class);
 
-	private @Nullable AsyncCloseable closeable;
+	private @Nullable ReactiveCloseable closeable;
 
 	private Exception exception;
 
@@ -36,7 +36,7 @@ public abstract class AbstractAsyncCloseable extends AbstractReactive implements
 		return exception;
 	}
 
-	public final void setCloseable(@Nullable AsyncCloseable closeable) {
+	public final void setCloseable(@Nullable ReactiveCloseable closeable) {
 		this.closeable = closeable;
 	}
 
@@ -70,8 +70,8 @@ public abstract class AbstractAsyncCloseable extends AbstractReactive implements
 	protected final <T> @NotNull Promise<T> doSanitize(T value, @Nullable Exception e) {
 		if (exception != null) {
 			Recyclers.recycle(value);
-			if (value instanceof AsyncCloseable) {
-				((AsyncCloseable) value).closeEx(exception);
+			if (value instanceof ReactiveCloseable) {
+				((ReactiveCloseable) value).closeEx(exception);
 			}
 			return Promise.ofException(exception);
 		}

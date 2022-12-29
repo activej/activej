@@ -4,7 +4,7 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.binary.ByteBufsDecoder;
 import io.activej.net.SimpleServer;
-import io.activej.net.socket.tcp.AsyncTcpSocketNio;
+import io.activej.net.socket.tcp.ReactiveTcpSocketNio;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -67,7 +67,7 @@ public final class PingPongSocketConnectionTest {
 				.withAcceptOnce()
 				.listen();
 
-		await(AsyncTcpSocketNio.connect(address)
+		await(ReactiveTcpSocketNio.connect(address)
 				.then(socket -> {
 					BinaryChannelSupplier bufsSupplier = BinaryChannelSupplier.of(ChannelSupplier.ofSocket(socket));
 					return loop(ITERATIONS,

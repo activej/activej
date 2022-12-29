@@ -7,8 +7,8 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.eventloop.Eventloop;
-import io.activej.net.socket.tcp.AsyncTcpSocket;
-import io.activej.net.socket.tcp.AsyncTcpSocketNio;
+import io.activej.net.socket.tcp.ReactiveTcpSocket;
+import io.activej.net.socket.tcp.ReactiveTcpSocketNio;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -31,9 +31,9 @@ public final class TcpClientExample {
 
 		eventloop.connect(new InetSocketAddress("localhost", PORT), (socketChannel, e) -> {
 			if (e == null) {
-				AsyncTcpSocket socket;
+				ReactiveTcpSocket socket;
 				try {
-					socket = AsyncTcpSocketNio.wrapChannel(socketChannel, null);
+					socket = ReactiveTcpSocketNio.wrapChannel(socketChannel, null);
 				} catch (IOException ioEx) {
 					throw new RuntimeException(ioEx);
 				}

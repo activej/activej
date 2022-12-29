@@ -53,12 +53,12 @@ import static io.activej.common.Utils.nullify;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 
 @SuppressWarnings("WeakerAccess")
-public final class AsyncTcpSocketNio extends AbstractNioReactive implements AsyncTcpSocket, NioChannelEventHandler {
-	private static final boolean CHECK = Checks.isEnabled(AsyncTcpSocketNio.class);
+public final class ReactiveTcpSocketNio extends AbstractNioReactive implements ReactiveTcpSocket, NioChannelEventHandler {
+	private static final boolean CHECK = Checks.isEnabled(ReactiveTcpSocketNio.class);
 
-	private static final int DEBUG_READ_OFFSET = ApplicationSettings.getInt(AsyncTcpSocketNio.class, "debugReadOffset", 0);
+	private static final int DEBUG_READ_OFFSET = ApplicationSettings.getInt(ReactiveTcpSocketNio.class, "debugReadOffset", 0);
 
-	public static final int DEFAULT_READ_BUFFER_SIZE = ApplicationSettings.getMemSize(AsyncTcpSocketNio.class, "readBufferSize", kilobytes(16)).toInt();
+	public static final int DEFAULT_READ_BUFFER_SIZE = ApplicationSettings.getMemSize(ReactiveTcpSocketNio.class, "readBufferSize", kilobytes(16)).toInt();
 	public static final int NO_TIMEOUT = 0;
 
 	private static final AtomicInteger CONNECTION_COUNT = new AtomicInteger(0);
@@ -89,23 +89,23 @@ public final class AsyncTcpSocketNio extends AbstractNioReactive implements Asyn
 	private @Nullable Object userData;
 
 	public interface Inspector extends BaseInspector<Inspector> {
-		void onConnect(AsyncTcpSocketNio socket);
+		void onConnect(ReactiveTcpSocketNio socket);
 
-		void onReadTimeout(AsyncTcpSocketNio socket);
+		void onReadTimeout(ReactiveTcpSocketNio socket);
 
-		void onRead(AsyncTcpSocketNio socket, ByteBuf buf);
+		void onRead(ReactiveTcpSocketNio socket, ByteBuf buf);
 
-		void onReadEndOfStream(AsyncTcpSocketNio socket);
+		void onReadEndOfStream(ReactiveTcpSocketNio socket);
 
-		void onReadError(AsyncTcpSocketNio socket, IOException e);
+		void onReadError(ReactiveTcpSocketNio socket, IOException e);
 
-		void onWriteTimeout(AsyncTcpSocketNio socket);
+		void onWriteTimeout(ReactiveTcpSocketNio socket);
 
-		void onWrite(AsyncTcpSocketNio socket, ByteBuf buf, int bytes);
+		void onWrite(ReactiveTcpSocketNio socket, ByteBuf buf, int bytes);
 
-		void onWriteError(AsyncTcpSocketNio socket, IOException e);
+		void onWriteError(ReactiveTcpSocketNio socket, IOException e);
 
-		void onDisconnect(AsyncTcpSocketNio socket);
+		void onDisconnect(ReactiveTcpSocketNio socket);
 	}
 
 	public static class JmxInspector extends AbstractInspector<Inspector> implements Inspector {
@@ -123,49 +123,49 @@ public final class AsyncTcpSocketNio extends AbstractNioReactive implements Asyn
 		private final EventStats disconnects = EventStats.create(SMOOTHING_WINDOW);
 
 		@Override
-		public void onConnect(AsyncTcpSocketNio socket) {
+		public void onConnect(ReactiveTcpSocketNio socket) {
 			connects.recordEvent();
 		}
 
 		@Override
-		public void onReadTimeout(AsyncTcpSocketNio socket) {
+		public void onReadTimeout(ReactiveTcpSocketNio socket) {
 			readTimeouts.recordEvent();
 		}
 
 		@Override
-		public void onRead(AsyncTcpSocketNio socket, ByteBuf buf) {
+		public void onRead(ReactiveTcpSocketNio socket, ByteBuf buf) {
 			reads.recordValue(buf.readRemaining());
 		}
 
 		@Override
-		public void onReadEndOfStream(AsyncTcpSocketNio socket) {
+		public void onReadEndOfStream(ReactiveTcpSocketNio socket) {
 			readEndOfStreams.recordEvent();
 		}
 
 		@Override
-		public void onReadError(AsyncTcpSocketNio socket, IOException e) {
+		public void onReadError(ReactiveTcpSocketNio socket, IOException e) {
 			readErrors.recordException(e, socket.getRemoteAddress());
 		}
 
 		@Override
-		public void onWriteTimeout(AsyncTcpSocketNio socket) {
+		public void onWriteTimeout(ReactiveTcpSocketNio socket) {
 			writeTimeouts.recordEvent();
 		}
 
 		@Override
-		public void onWrite(AsyncTcpSocketNio socket, ByteBuf buf, int bytes) {
+		public void onWrite(ReactiveTcpSocketNio socket, ByteBuf buf, int bytes) {
 			writes.recordValue(bytes);
 			if (buf.readRemaining() != bytes)
 				writeOverloaded.recordEvent();
 		}
 
 		@Override
-		public void onWriteError(AsyncTcpSocketNio socket, IOException e) {
+		public void onWriteError(ReactiveTcpSocketNio socket, IOException e) {
 			writeErrors.recordException(e, socket.getRemoteAddress());
 		}
 
 		@Override
-		public void onDisconnect(AsyncTcpSocketNio socket) {
+		public void onDisconnect(ReactiveTcpSocketNio socket) {
 			disconnects.recordEvent();
 		}
 
@@ -225,8 +225,8 @@ public final class AsyncTcpSocketNio extends AbstractNioReactive implements Asyn
 		}
 	}
 
-	public static AsyncTcpSocketNio wrapChannel(SocketChannel socketChannel, @NotNull InetSocketAddress remoteAddress, @Nullable SocketSettings socketSettings) throws IOException {
-		AsyncTcpSocketNio asyncTcpSocket = new AsyncTcpSocketNio(socketChannel, remoteAddress);
+	public static ReactiveTcpSocketNio wrapChannel(SocketChannel socketChannel, @NotNull InetSocketAddress remoteAddress, @Nullable SocketSettings socketSettings) throws IOException {
+		ReactiveTcpSocketNio asyncTcpSocket = new ReactiveTcpSocketNio(socketChannel, remoteAddress);
 		if (socketSettings == null) return asyncTcpSocket;
 		socketSettings.applySettings(socketChannel);
 		if (socketSettings.hasImplReadTimeout()) {
@@ -241,28 +241,28 @@ public final class AsyncTcpSocketNio extends AbstractNioReactive implements Asyn
 		return asyncTcpSocket;
 	}
 
-	public static AsyncTcpSocketNio wrapChannel(SocketChannel socketChannel, @Nullable SocketSettings socketSettings) throws IOException {
+	public static ReactiveTcpSocketNio wrapChannel(SocketChannel socketChannel, @Nullable SocketSettings socketSettings) throws IOException {
 		return wrapChannel(socketChannel, ((InetSocketAddress) socketChannel.getRemoteAddress()), socketSettings);
 	}
 
-	public static Promise<AsyncTcpSocketNio> connect(InetSocketAddress address) {
+	public static Promise<ReactiveTcpSocketNio> connect(InetSocketAddress address) {
 		return connect(address, null, null);
 	}
 
-	public static Promise<AsyncTcpSocketNio> connect(NioReactor reactor, InetSocketAddress address) {
+	public static Promise<ReactiveTcpSocketNio> connect(NioReactor reactor, InetSocketAddress address) {
 		return connect(reactor, address, 0, null);
 	}
 
-	public static Promise<AsyncTcpSocketNio> connect(InetSocketAddress address, @Nullable Duration duration, @Nullable SocketSettings socketSettings) {
+	public static Promise<ReactiveTcpSocketNio> connect(InetSocketAddress address, @Nullable Duration duration, @Nullable SocketSettings socketSettings) {
 		return connect(address, duration == null ? 0 : duration.toMillis(), socketSettings);
 	}
 
-	public static Promise<AsyncTcpSocketNio> connect(InetSocketAddress address, long timeout, @Nullable SocketSettings socketSettings) {
+	public static Promise<ReactiveTcpSocketNio> connect(InetSocketAddress address, long timeout, @Nullable SocketSettings socketSettings) {
 		NioReactor reactor = getCurrentReactor();
 		return connect(reactor, address, timeout, socketSettings);
 	}
 
-	public static Promise<AsyncTcpSocketNio> connect(NioReactor reactor, InetSocketAddress address, long timeout, @Nullable SocketSettings socketSettings) {
+	public static Promise<ReactiveTcpSocketNio> connect(NioReactor reactor, InetSocketAddress address, long timeout, @Nullable SocketSettings socketSettings) {
 		return Promise.<SocketChannel>ofCallback(cb -> reactor.connect(address, timeout, cb))
 				.map(channel -> {
 					try {
@@ -278,7 +278,7 @@ public final class AsyncTcpSocketNio extends AbstractNioReactive implements Asyn
 		this.inspector = inspector;
 	}
 
-	private AsyncTcpSocketNio(@NotNull SocketChannel socketChannel, InetSocketAddress remoteAddress) {
+	private ReactiveTcpSocketNio(@NotNull SocketChannel socketChannel, InetSocketAddress remoteAddress) {
 		this.channel = socketChannel;
 		this.remoteAddress = remoteAddress;
 	}

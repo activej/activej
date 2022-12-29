@@ -14,7 +14,7 @@ import io.activej.fs.tcp.RemoteActiveFs;
 import io.activej.http.AsyncHttpClient;
 import io.activej.http.AsyncHttpServer;
 import io.activej.net.AbstractReactiveServer;
-import io.activej.net.socket.tcp.AsyncTcpSocketNio;
+import io.activej.net.socket.tcp.ReactiveTcpSocketNio;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
@@ -105,8 +105,8 @@ public final class TestClusterDeadPartitionCheck {
 								if (selector == null) return;
 								for (SelectionKey key : selector.keys()) {
 									Object attachment = key.attachment();
-									if (attachment instanceof AsyncTcpSocketNio) {
-										((AsyncTcpSocketNio) attachment).close();
+									if (attachment instanceof ReactiveTcpSocketNio) {
+										((ReactiveTcpSocketNio) attachment).close();
 									}
 								}
 							}

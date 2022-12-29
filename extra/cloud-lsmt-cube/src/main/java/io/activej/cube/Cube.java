@@ -22,7 +22,7 @@ import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.ot.AggregationStructure;
-import io.activej.async.AsyncAccumulator;
+import io.activej.async.ReactiveAccumulator;
 import io.activej.async.function.AsyncFunction;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.codegen.ClassBuilder;
@@ -544,7 +544,7 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 			}
 		});
 
-		AsyncAccumulator<Map<String, AggregationDiff>> diffsAccumulator = AsyncAccumulator.create(new HashMap<>());
+		ReactiveAccumulator<Map<String, AggregationDiff>> diffsAccumulator = ReactiveAccumulator.create(new HashMap<>());
 		Map<String, AggregationPredicate> compatibleAggregations = getCompatibleAggregationsForDataInput(dimensionFields, measureFields, dataPredicate);
 		if (compatibleAggregations.size() == 0) {
 			throw new IllegalArgumentException(format("No compatible aggregation for " +

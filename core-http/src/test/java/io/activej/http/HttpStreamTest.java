@@ -6,7 +6,7 @@ import io.activej.bytebuf.ByteBufs;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
-import io.activej.net.socket.tcp.AsyncTcpSocketNio;
+import io.activej.net.socket.tcp.ReactiveTcpSocketNio;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
@@ -147,7 +147,7 @@ public final class HttpStreamTest {
 						"Content-Length: 4" + CRLF + CRLF +
 						"Test";
 
-		ByteBuf body = await(AsyncTcpSocketNio.connect(new InetSocketAddress(port))
+		ByteBuf body = await(ReactiveTcpSocketNio.connect(new InetSocketAddress(port))
 				.then(socket -> socket.write(ByteBuf.wrapForReading(chunkedRequest.getBytes(UTF_8)))
 						.then(() -> socket.write(null))
 						.then(() -> ChannelSupplier.ofSocket(socket).toCollector(ByteBufs.collector()))
@@ -169,7 +169,7 @@ public final class HttpStreamTest {
 						"Transfer-Encoding: chunked" + CRLF + CRLF +
 						"ffffffffff";
 
-		ByteBuf body = await(AsyncTcpSocketNio.connect(new InetSocketAddress(port))
+		ByteBuf body = await(ReactiveTcpSocketNio.connect(new InetSocketAddress(port))
 				.then(socket -> socket.write(ByteBuf.wrapForReading(chunkedRequest.getBytes(UTF_8)))
 						.then(socket::read)
 						.whenComplete(socket::close)));
@@ -196,7 +196,7 @@ public final class HttpStreamTest {
 						"Transfer-Encoding: chunked" + CRLF + CRLF +
 						"3";
 
-		ByteBuf body = await(AsyncTcpSocketNio.connect(new InetSocketAddress(port))
+		ByteBuf body = await(ReactiveTcpSocketNio.connect(new InetSocketAddress(port))
 				.then(socket -> socket.write(ByteBuf.wrapForReading(chunkedRequest.getBytes(UTF_8)))
 						.then(() -> socket.write(null))
 						.then(socket::read)

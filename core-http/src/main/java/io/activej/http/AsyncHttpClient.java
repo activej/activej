@@ -33,8 +33,8 @@ import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ExceptionStats;
-import io.activej.net.socket.tcp.AsyncTcpSocket;
-import io.activej.net.socket.tcp.AsyncTcpSocketNio;
+import io.activej.net.socket.tcp.ReactiveTcpSocket;
+import io.activej.net.socket.tcp.ReactiveTcpSocketNio;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
@@ -61,7 +61,7 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.http.HttpUtils.translateToHttpException;
 import static io.activej.http.Protocol.*;
 import static io.activej.jmx.stats.MBeanFormat.formatListAsMultilineString;
-import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapClientSocket;
+import static io.activej.net.socket.tcp.ReactiveTcpSocketSsl.wrapClientSocket;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -111,8 +111,8 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 	private SSLContext sslContext;
 	private Executor sslExecutor;
 
-	private @Nullable AsyncTcpSocketNio.Inspector socketInspector;
-	private @Nullable AsyncTcpSocketNio.Inspector socketSslInspector;
+	private @Nullable ReactiveTcpSocketNio.Inspector socketInspector;
+	private @Nullable ReactiveTcpSocketNio.Inspector socketSslInspector;
 	@Nullable Inspector inspector;
 
 	public interface Inspector extends BaseInspector<Inspector> {
@@ -362,12 +362,12 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 		return this;
 	}
 
-	public AsyncHttpClient withSocketInspector(AsyncTcpSocketNio.Inspector socketInspector) {
+	public AsyncHttpClient withSocketInspector(ReactiveTcpSocketNio.Inspector socketInspector) {
 		this.socketInspector = socketInspector;
 		return this;
 	}
 
-	public AsyncHttpClient withSocketSslInspector(AsyncTcpSocketNio.Inspector socketSslInspector) {
+	public AsyncHttpClient withSocketSslInspector(ReactiveTcpSocketNio.Inspector socketSslInspector) {
 		this.socketSslInspector = socketSslInspector;
 		return this;
 	}
@@ -498,10 +498,10 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 
 		if (inspector != null) inspector.onConnecting(request, address);
 
-		return AsyncTcpSocketNio.connect(reactor, address, connectTimeoutMillis, socketSettings)
+		return ReactiveTcpSocketNio.connect(reactor, address, connectTimeoutMillis, socketSettings)
 				.then(
 						asyncTcpSocketImpl -> {
-							AsyncTcpSocketNio.Inspector socketInspector = isSecure ? this.socketInspector : socketSslInspector;
+							ReactiveTcpSocketNio.Inspector socketInspector = isSecure ? this.socketInspector : socketSslInspector;
 							if (socketInspector != null) {
 								socketInspector.onConnect(asyncTcpSocketImpl);
 								asyncTcpSocketImpl.setInspector(socketInspector);
@@ -510,7 +510,7 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 							String host = request.getUrl().getHost();
 							assert host != null;
 
-							AsyncTcpSocket asyncTcpSocket = isSecure ?
+							ReactiveTcpSocket asyncTcpSocket = isSecure ?
 									wrapClientSocket(asyncTcpSocketImpl,
 											host, request.getUrl().getPort(),
 											sslContext, sslExecutor) :
@@ -616,13 +616,13 @@ public final class AsyncHttpClient implements IAsyncHttpClient, IAsyncWebSocketC
 	}
 
 	@JmxAttribute
-	public @Nullable AsyncTcpSocketNio.JmxInspector getSocketStats() {
-		return BaseInspector.lookup(socketInspector, AsyncTcpSocketNio.JmxInspector.class);
+	public @Nullable ReactiveTcpSocketNio.JmxInspector getSocketStats() {
+		return BaseInspector.lookup(socketInspector, ReactiveTcpSocketNio.JmxInspector.class);
 	}
 
 	@JmxAttribute
-	public @Nullable AsyncTcpSocketNio.JmxInspector getSocketStatsSsl() {
-		return BaseInspector.lookup(socketSslInspector, AsyncTcpSocketNio.JmxInspector.class);
+	public @Nullable ReactiveTcpSocketNio.JmxInspector getSocketStatsSsl() {
+		return BaseInspector.lookup(socketSslInspector, ReactiveTcpSocketNio.JmxInspector.class);
 	}
 
 	@JmxAttribute(name = "")

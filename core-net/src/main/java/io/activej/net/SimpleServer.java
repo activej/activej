@@ -16,7 +16,7 @@
 
 package io.activej.net;
 
-import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.net.socket.tcp.ReactiveTcpSocket;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 
@@ -25,26 +25,26 @@ import java.util.function.Consumer;
 
 /**
  * This is a basic implementation of the {@link AbstractReactiveServer} which just dispatches
- * each {@link AsyncTcpSocket acync client connection} to a given consumer.
+ * each {@link ReactiveTcpSocket acync client connection} to a given consumer.
  */
 public final class SimpleServer extends AbstractReactiveServer<SimpleServer> {
-	private final Consumer<AsyncTcpSocket> socketConsumer;
+	private final Consumer<ReactiveTcpSocket> socketConsumer;
 
-	private SimpleServer(NioReactor reactor, Consumer<AsyncTcpSocket> socketConsumer) {
+	private SimpleServer(NioReactor reactor, Consumer<ReactiveTcpSocket> socketConsumer) {
 		super(reactor);
 		this.socketConsumer = socketConsumer;
 	}
 
-	public static SimpleServer create(NioReactor reactor, Consumer<AsyncTcpSocket> socketConsumer) {
+	public static SimpleServer create(NioReactor reactor, Consumer<ReactiveTcpSocket> socketConsumer) {
 		return new SimpleServer(reactor, socketConsumer);
 	}
 
-	public static SimpleServer create(Consumer<AsyncTcpSocket> socketConsumer) {
+	public static SimpleServer create(Consumer<ReactiveTcpSocket> socketConsumer) {
 		return new SimpleServer(Reactor.getCurrentReactor(), socketConsumer);
 	}
 
 	@Override
-	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
+	protected void serve(ReactiveTcpSocket socket, InetAddress remoteAddress) {
 		socketConsumer.accept(socket);
 	}
 }

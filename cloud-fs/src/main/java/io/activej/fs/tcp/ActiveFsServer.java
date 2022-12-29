@@ -30,7 +30,7 @@ import io.activej.fs.tcp.messaging.Version;
 import io.activej.fs.util.RemoteFsUtils;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.net.AbstractReactiveServer;
-import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.net.socket.tcp.ReactiveTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.nio.NioReactor;
@@ -105,7 +105,7 @@ public final class ActiveFsServer extends AbstractReactiveServer<ActiveFsServer>
 	}
 
 	@Override
-	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
+	protected void serve(ReactiveTcpSocket socket, InetAddress remoteAddress) {
 		MessagingWithBinaryStreaming<FsRequest, FsResponse> messaging =
 				MessagingWithBinaryStreaming.create(socket, SERIALIZER);
 		messaging.receive()

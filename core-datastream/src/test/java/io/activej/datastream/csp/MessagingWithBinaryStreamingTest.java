@@ -8,7 +8,7 @@ import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.datastream.StreamSupplier;
 import io.activej.net.SimpleServer;
-import io.activej.net.socket.tcp.AsyncTcpSocketNio;
+import io.activej.net.socket.tcp.ReactiveTcpSocketNio;
 import io.activej.promise.Promise;
 import io.activej.test.TestUtils;
 import io.activej.test.rules.ActivePromisesRule;
@@ -98,7 +98,7 @@ public final class MessagingWithBinaryStreamingTest {
 				.withAcceptOnce()
 				.listen();
 
-		await(AsyncTcpSocketNio.connect(address)
+		await(ReactiveTcpSocketNio.connect(address)
 				.whenComplete(TestUtils.assertCompleteFn(socket -> ping(3, MessagingWithBinaryStreaming.create(socket, INTEGER_SERIALIZER)))));
 	}
 
@@ -124,7 +124,7 @@ public final class MessagingWithBinaryStreamingTest {
 				.withAcceptOnce()
 				.listen();
 
-		List<Long> list = await(AsyncTcpSocketNio.connect(address)
+		List<Long> list = await(ReactiveTcpSocketNio.connect(address)
 				.then(socket -> {
 					MessagingWithBinaryStreaming<String, String> messaging =
 							MessagingWithBinaryStreaming.create(socket, STRING_SERIALIZER);
@@ -164,7 +164,7 @@ public final class MessagingWithBinaryStreamingTest {
 				.withAcceptOnce()
 				.listen();
 
-		await(AsyncTcpSocketNio.connect(address)
+		await(ReactiveTcpSocketNio.connect(address)
 				.whenResult(socket -> {
 					MessagingWithBinaryStreaming<String, String> messaging =
 							MessagingWithBinaryStreaming.create(socket, serializer);
@@ -204,7 +204,7 @@ public final class MessagingWithBinaryStreamingTest {
 				.withAcceptOnce()
 				.listen();
 
-		String msg = await(AsyncTcpSocketNio.connect(address)
+		String msg = await(ReactiveTcpSocketNio.connect(address)
 				.then(socket -> {
 					MessagingWithBinaryStreaming<String, String> messaging =
 							MessagingWithBinaryStreaming.create(socket, serializer);
@@ -243,7 +243,7 @@ public final class MessagingWithBinaryStreamingTest {
 				.withAcceptOnce()
 				.listen();
 
-		await(AsyncTcpSocketNio.connect(address)
+		await(ReactiveTcpSocketNio.connect(address)
 				.whenResult(socket -> {
 					MessagingWithBinaryStreaming<String, String> messaging =
 							MessagingWithBinaryStreaming.create(socket, STRING_SERIALIZER);

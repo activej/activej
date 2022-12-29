@@ -1,6 +1,6 @@
 package io.activej.http.stream;
 
-import io.activej.async.process.AsyncProcess;
+import io.activej.async.process.ReactiveProcess;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.http.TestUtils.AssertingConsumer;
@@ -97,7 +97,7 @@ public final class BufsConsumerIntegrationTest {
 		toBeSplit.recycle();
 	}
 
-	private void doTest(AsyncProcess process1, AsyncProcess process2) {
+	private void doTest(ReactiveProcess process1, ReactiveProcess process2) {
 		await(Promises.all(process1.getProcessCompletion(), process2.getProcessCompletion()));
 		assertTrue(consumer.executed);
 	}

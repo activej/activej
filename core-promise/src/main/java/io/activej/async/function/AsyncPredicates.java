@@ -16,7 +16,7 @@
 
 package io.activej.async.function;
 
-import io.activej.async.AsyncAccumulator;
+import io.activej.async.ReactiveAccumulator;
 import io.activej.async.process.AsyncExecutor;
 import io.activej.async.process.AsyncExecutors;
 import io.activej.common.ref.RefBoolean;
@@ -58,7 +58,7 @@ public final class AsyncPredicates {
 	 */
 	public static <T> @NotNull AsyncPredicate<T> and(Collection<AsyncPredicate<? super T>> predicates) {
 		return t -> {
-			AsyncAccumulator<RefBoolean> asyncAccumulator = AsyncAccumulator.create(new RefBoolean(true));
+			ReactiveAccumulator<RefBoolean> asyncAccumulator = ReactiveAccumulator.create(new RefBoolean(true));
 			for (AsyncPredicate<? super T> predicate : predicates) {
 				asyncAccumulator.addPromise(predicate.test(t), (ref, result) -> ref.set(ref.get() && result));
 			}
@@ -125,7 +125,7 @@ public final class AsyncPredicates {
 	 */
 	public static <T> @NotNull AsyncPredicate<T> or(Collection<AsyncPredicate<? super T>> predicates) {
 		return t -> {
-			AsyncAccumulator<RefBoolean> asyncAccumulator = AsyncAccumulator.create(new RefBoolean(false));
+			ReactiveAccumulator<RefBoolean> asyncAccumulator = ReactiveAccumulator.create(new RefBoolean(false));
 			for (AsyncPredicate<? super T> predicate : predicates) {
 				asyncAccumulator.addPromise(predicate.test(t), (ref, result) -> ref.set(ref.get() || result));
 			}

@@ -17,8 +17,8 @@
 package io.activej.csp.binary;
 
 import io.activej.async.function.AsyncRunnable;
-import io.activej.async.process.AbstractAsyncCloseable;
-import io.activej.async.process.AsyncCloseable;
+import io.activej.async.process.AbstractReactiveCloseable;
+import io.activej.async.process.ReactiveCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.MalformedDataException;
@@ -34,7 +34,7 @@ import java.util.Objects;
 
 import static io.activej.common.function.FunctionEx.identity;
 
-public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
+public abstract class BinaryChannelSupplier extends AbstractReactiveCloseable {
 	protected final ByteBufs bufs;
 
 	protected BinaryChannelSupplier(ByteBufs bufs) {
@@ -103,7 +103,7 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 	}
 
 	public static BinaryChannelSupplier ofProvidedBufs(ByteBufs bufs,
-			AsyncRunnable get, AsyncRunnable complete, AsyncCloseable closeable) {
+			AsyncRunnable get, AsyncRunnable complete, ReactiveCloseable closeable) {
 		return new BinaryChannelSupplier(bufs) {
 			@Override
 			public Promise<Void> needMoreData() {
@@ -126,7 +126,7 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 		return doDecode(decoder, this);
 	}
 
-	private <T> @NotNull Promise<T> doDecode(ByteBufsDecoder<T> decoder, AsyncCloseable closeable) {
+	private <T> @NotNull Promise<T> doDecode(ByteBufsDecoder<T> decoder, ReactiveCloseable closeable) {
 		while (true) {
 			if (!bufs.isEmpty()) {
 				T result;
@@ -163,7 +163,7 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 	public final <T> ChannelSupplier<T> decodeStream(ByteBufsDecoder<T> decoder) {
 		return ChannelSupplier.of(
 				() -> doDecode(decoder,
-						AsyncCloseable.of(e -> {
+						ReactiveCloseable.of(e -> {
 							if (e instanceof TruncatedDataException && bufs.isEmpty()) return;
 							closeEx(e);
 						}))

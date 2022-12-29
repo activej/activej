@@ -22,7 +22,7 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import io.activej.async.process.AsyncCloseable;
+import io.activej.async.process.ReactiveCloseable;
 import io.activej.common.collection.Try;
 import io.activej.common.ref.RefInt;
 import io.activej.dataflow.DataflowClient;
@@ -78,7 +78,7 @@ public final class DataflowGraph {
 				.collect(groupingBy(Map.Entry::getValue, mapping(Map.Entry::getKey, toList())));
 	}
 
-	private static class PartitionSession extends AbstractReactive implements AsyncCloseable {
+	private static class PartitionSession extends AbstractReactive implements ReactiveCloseable {
 		private final Partition partition;
 		private final Session session;
 

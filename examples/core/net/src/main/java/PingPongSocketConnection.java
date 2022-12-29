@@ -3,7 +3,7 @@ import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.binary.ByteBufsDecoder;
 import io.activej.eventloop.Eventloop;
 import io.activej.net.SimpleServer;
-import io.activej.net.socket.tcp.AsyncTcpSocketNio;
+import io.activej.net.socket.tcp.ReactiveTcpSocketNio;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -41,7 +41,7 @@ public final class PingPongSocketConnection {
 
 		server.listen();
 
-		AsyncTcpSocketNio.connect(ADDRESS)
+		ReactiveTcpSocketNio.connect(ADDRESS)
 				.whenResult(socket -> {
 					BinaryChannelSupplier bufsSupplier = BinaryChannelSupplier.of(ChannelSupplier.ofSocket(socket));
 					loop(0,

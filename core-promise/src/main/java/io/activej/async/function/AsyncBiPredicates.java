@@ -16,7 +16,7 @@
 
 package io.activej.async.function;
 
-import io.activej.async.AsyncAccumulator;
+import io.activej.async.ReactiveAccumulator;
 import io.activej.async.process.AsyncExecutor;
 import io.activej.async.process.AsyncExecutors;
 import io.activej.common.ref.RefBoolean;
@@ -58,7 +58,7 @@ public final class AsyncBiPredicates {
 	 */
 	public static <T, U> @NotNull AsyncBiPredicate<T, U> and(Collection<AsyncBiPredicate<? super T, ? super U>> predicates) {
 		return (t, u) -> {
-			AsyncAccumulator<RefBoolean> asyncAccumulator = AsyncAccumulator.create(new RefBoolean(true));
+			ReactiveAccumulator<RefBoolean> asyncAccumulator = ReactiveAccumulator.create(new RefBoolean(true));
 			for (AsyncBiPredicate<? super T, ? super U> predicate : predicates) {
 				asyncAccumulator.addPromise(predicate.test(t, u), (ref, result) -> ref.set(ref.get() && result));
 			}
@@ -125,7 +125,7 @@ public final class AsyncBiPredicates {
 	 */
 	public static <T, U> @NotNull AsyncBiPredicate<T, U> or(Collection<AsyncBiPredicate<? super T, ? super U>> predicates) {
 		return (t, u) -> {
-			AsyncAccumulator<RefBoolean> asyncAccumulator = AsyncAccumulator.create(new RefBoolean(false));
+			ReactiveAccumulator<RefBoolean> asyncAccumulator = ReactiveAccumulator.create(new RefBoolean(false));
 			for (AsyncBiPredicate<? super T, ? super U> predicate : predicates) {
 				asyncAccumulator.addPromise(predicate.test(t, u), (ref, result) -> ref.set(ref.get() || result));
 			}

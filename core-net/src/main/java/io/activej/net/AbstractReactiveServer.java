@@ -21,9 +21,9 @@ import io.activej.common.initializer.WithInitializer;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;
-import io.activej.net.socket.tcp.AsyncTcpSocket;
-import io.activej.net.socket.tcp.AsyncTcpSocketNio;
-import io.activej.net.socket.tcp.AsyncTcpSocketNio.Inspector;
+import io.activej.net.socket.tcp.ReactiveTcpSocket;
+import io.activej.net.socket.tcp.ReactiveTcpSocketNio;
+import io.activej.net.socket.tcp.ReactiveTcpSocketNio.Inspector;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.AbstractNioReactive;
@@ -50,8 +50,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.net.socket.tcp.AsyncTcpSocketNio.wrapChannel;
-import static io.activej.net.socket.tcp.AsyncTcpSocketSsl.wrapServerSocket;
+import static io.activej.net.socket.tcp.ReactiveTcpSocketNio.wrapChannel;
+import static io.activej.net.socket.tcp.ReactiveTcpSocketSsl.wrapServerSocket;
 import static io.activej.reactor.net.ServerSocketSettings.DEFAULT_BACKLOG;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -195,7 +195,7 @@ public abstract class AbstractReactiveServer<Self extends AbstractReactiveServer
 	}
 	// endregion
 
-	protected abstract void serve(AsyncTcpSocket socket, InetAddress remoteAddress);
+	protected abstract void serve(ReactiveTcpSocket socket, InetAddress remoteAddress);
 
 	protected void onListen() {
 	}
@@ -343,9 +343,9 @@ public abstract class AbstractReactiveServer<Self extends AbstractReactiveServer
 		if (ssl) acceptsSsl.recordEvent();
 		InetAddress remoteAddress = remoteSocketAddress.getAddress();
 		onAccept(socketChannel, localAddress, remoteAddress, ssl);
-		AsyncTcpSocket asyncTcpSocket;
+		ReactiveTcpSocket asyncTcpSocket;
 		try {
-			AsyncTcpSocketNio socketNio = wrapChannel(socketChannel, remoteSocketAddress, socketSettings);
+			ReactiveTcpSocketNio socketNio = wrapChannel(socketChannel, remoteSocketAddress, socketSettings);
 			Inspector inspector = ssl ? socketSslInspector : socketInspector;
 			if (inspector != null) {
 				inspector.onConnect(socketNio);
@@ -427,15 +427,15 @@ public abstract class AbstractReactiveServer<Self extends AbstractReactiveServer
 	}
 
 	@JmxAttribute
-	public final @Nullable AsyncTcpSocketNio.JmxInspector getSocketStats() {
+	public final @Nullable ReactiveTcpSocketNio.JmxInspector getSocketStats() {
 		return this instanceof PrimaryServer || acceptServer.listenAddresses.isEmpty() ? null :
-				BaseInspector.lookup(socketInspector, AsyncTcpSocketNio.JmxInspector.class);
+				BaseInspector.lookup(socketInspector, ReactiveTcpSocketNio.JmxInspector.class);
 	}
 
 	@JmxAttribute
-	public final @Nullable AsyncTcpSocketNio.JmxInspector getSocketStatsSsl() {
+	public final @Nullable ReactiveTcpSocketNio.JmxInspector getSocketStatsSsl() {
 		return this instanceof PrimaryServer || acceptServer.sslListenAddresses.isEmpty() ? null :
-				BaseInspector.lookup(socketSslInspector, AsyncTcpSocketNio.JmxInspector.class);
+				BaseInspector.lookup(socketSslInspector, ReactiveTcpSocketNio.JmxInspector.class);
 	}
 
 	@Override

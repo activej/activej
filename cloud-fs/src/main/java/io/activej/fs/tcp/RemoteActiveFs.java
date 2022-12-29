@@ -38,7 +38,7 @@ import io.activej.fs.tcp.messaging.FsRequest;
 import io.activej.fs.tcp.messaging.FsResponse;
 import io.activej.fs.util.RemoteFsUtils;
 import io.activej.jmx.api.attribute.JmxAttribute;
-import io.activej.net.socket.tcp.AsyncTcpSocketNio;
+import io.activej.net.socket.tcp.ReactiveTcpSocketNio;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
@@ -330,7 +330,7 @@ public final class RemoteActiveFs implements ActiveFs, ReactiveService, Reactive
 	}
 
 	private Promise<MessagingWithBinaryStreaming<FsResponse, FsRequest>> doConnect(InetSocketAddress address, SocketSettings socketSettings) {
-		return AsyncTcpSocketNio.connect(reactor, address, connectionTimeout, socketSettings)
+		return ReactiveTcpSocketNio.connect(reactor, address, connectionTimeout, socketSettings)
 				.map(socket -> MessagingWithBinaryStreaming.create(socket, SERIALIZER))
 				.whenResult(() -> logger.trace("connected to [{}]: {}", address, this))
 				.whenException(e -> logger.warn("failed connecting to [{}] : {}", address, this, e))

@@ -16,7 +16,7 @@
 
 package io.activej.datastream.processor;
 
-import io.activej.async.AsyncAccumulator;
+import io.activej.async.ReactiveAccumulator;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.datastream.AbstractStreamConsumer;
 import io.activej.datastream.StreamConsumer;
@@ -46,7 +46,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  */
 public final class StreamSorter<K, T> extends AbstractReactive implements StreamTransformer<T, T>, WithInitializer<StreamSorter<K, T>> {
 	private static final Logger logger = getLogger(StreamSorter.class);
-	private final AsyncAccumulator<? extends List<Integer>> temporaryStreamsAccumulator;
+	private final ReactiveAccumulator<? extends List<Integer>> temporaryStreamsAccumulator;
 	private final StreamSorterStorage<T> storage;
 	private final Function<T, K> keyFunction;
 	private final Comparator<K> keyComparator;
@@ -76,7 +76,7 @@ public final class StreamSorter<K, T> extends AbstractReactive implements Stream
 		List<Integer> partitionIds = new ArrayList<>();
 		this.input = new Input(partitionIds);
 		this.output = StreamSupplier.ofPromise(
-				(this.temporaryStreamsAccumulator = AsyncAccumulator.create(partitionIds))
+				(this.temporaryStreamsAccumulator = ReactiveAccumulator.create(partitionIds))
 						.get()
 						.then(streamIds -> {
 							ArrayList<T> sortedList = input.list;

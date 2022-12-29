@@ -16,7 +16,7 @@
 
 package io.activej.async;
 
-import io.activej.async.process.AsyncCloseable;
+import io.activej.async.process.ReactiveCloseable;
 import io.activej.common.function.BiConsumerEx;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.recycle.Recyclers;
@@ -30,7 +30,7 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
 @SuppressWarnings("UnusedReturnValue")
-public final class AsyncAccumulator<A> extends AbstractReactive implements AsyncCloseable, WithInitializer<AsyncAccumulator<A>> {
+public final class ReactiveAccumulator<A> extends AbstractReactive implements ReactiveCloseable, WithInitializer<ReactiveAccumulator<A>> {
 	private final SettablePromise<A> resultPromise = new SettablePromise<>();
 	private boolean started;
 
@@ -38,15 +38,15 @@ public final class AsyncAccumulator<A> extends AbstractReactive implements Async
 
 	private int activePromises;
 
-	private AsyncAccumulator(@Nullable A accumulator) {
+	private ReactiveAccumulator(@Nullable A accumulator) {
 		this.accumulator = accumulator;
 	}
 
-	public static <A> AsyncAccumulator<A> create(@Nullable A accumulator) {
-		return new AsyncAccumulator<>(accumulator);
+	public static <A> ReactiveAccumulator<A> create(@Nullable A accumulator) {
+		return new ReactiveAccumulator<>(accumulator);
 	}
 
-	public <T> AsyncAccumulator<A> withPromise(@NotNull Promise<T> promise, @NotNull BiConsumerEx<A, T> accumulator) {
+	public <T> ReactiveAccumulator<A> withPromise(@NotNull Promise<T> promise, @NotNull BiConsumerEx<A, T> accumulator) {
 		addPromise(promise, accumulator);
 		return this;
 	}

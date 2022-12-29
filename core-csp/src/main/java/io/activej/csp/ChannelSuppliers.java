@@ -16,7 +16,7 @@
 
 package io.activej.csp;
 
-import io.activej.async.process.AsyncCloseable;
+import io.activej.async.process.ReactiveCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.MemSize;
@@ -184,8 +184,8 @@ public final class ChannelSuppliers {
 			return streamTo(supplier.get(), consumer.get());
 		}
 		Exception exception = new Exception("Channel stream failed");
-		supplier.consume(AsyncCloseable::close, exception::addSuppressed);
-		consumer.consume(AsyncCloseable::close, exception::addSuppressed);
+		supplier.consume(ReactiveCloseable::close, exception::addSuppressed);
+		consumer.consume(ReactiveCloseable::close, exception::addSuppressed);
 		return Promise.ofException(exception);
 	}
 

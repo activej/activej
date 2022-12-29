@@ -17,8 +17,8 @@
 package io.activej.csp.process;
 
 import io.activej.async.exception.AsyncCloseException;
-import io.activej.async.process.AsyncCloseable;
-import io.activej.async.process.AsyncProcess;
+import io.activej.async.process.ReactiveCloseable;
+import io.activej.async.process.ReactiveProcess;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.AbstractChannelConsumer;
 import io.activej.csp.AbstractChannelSupplier;
@@ -41,7 +41,7 @@ import org.jetbrains.annotations.Nullable;
  * New process can't be started before the previous one ends.
  * Process can be cancelled or closed manually.
  */
-public abstract class AbstractCommunicatingProcess extends AbstractReactive implements AsyncProcess {
+public abstract class AbstractCommunicatingProcess extends AbstractReactive implements ReactiveProcess {
 	private boolean processStarted;
 	private boolean processComplete;
 	private final SettablePromise<Void> processCompletion = new SettablePromise<>();
@@ -135,7 +135,7 @@ public abstract class AbstractCommunicatingProcess extends AbstractReactive impl
 	 */
 	@Override
 	public final void close() {
-		AsyncProcess.super.close();
+		ReactiveProcess.super.close();
 	}
 
 	protected final <T> ChannelSupplier<T> sanitize(ChannelSupplier<T> supplier) {
@@ -210,8 +210,8 @@ public abstract class AbstractCommunicatingProcess extends AbstractReactive impl
 		if (isProcessComplete()) {
 			Recyclers.recycle(value);
 			ProcessCompleteException processCompleteException = new ProcessCompleteException();
-			if (value instanceof AsyncCloseable) {
-				((AsyncCloseable) value).closeEx(processCompleteException);
+			if (value instanceof ReactiveCloseable) {
+				((ReactiveCloseable) value).closeEx(processCompleteException);
 			}
 			return Promise.ofException(processCompleteException);
 		}

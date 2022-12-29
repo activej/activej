@@ -17,15 +17,15 @@
 package io.activej.csp;
 
 import io.activej.async.function.AsyncSupplier;
-import io.activej.async.process.AsyncCloseable;
 import io.activej.async.process.AsyncExecutor;
+import io.activej.async.process.ReactiveCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.function.BiConsumerEx;
 import io.activej.common.function.FunctionEx;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.dsl.ChannelSupplierTransformer;
 import io.activej.csp.queue.ChannelQueue;
-import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.net.socket.tcp.ReactiveTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.Reactor;
@@ -58,11 +58,11 @@ import static io.activej.reactor.Reactor.getCurrentReactor;
  * If {@link #get()} returns {@link Promise} of {@code null}, it represents end-of-stream
  * and means that no additional data should be queried.
  */
-public interface ChannelSupplier<T> extends AsyncCloseable {
+public interface ChannelSupplier<T> extends ReactiveCloseable {
 	@NotNull Promise<T> get();
 
 	/**
-	 * @see #of(AsyncSupplier, AsyncCloseable)
+	 * @see #of(AsyncSupplier, ReactiveCloseable)
 	 */
 	static <T> ChannelSupplier<T> of(AsyncSupplier<T> supplier) {
 		return of(supplier, null);
@@ -78,7 +78,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 * @param <T>       data type wrapped in {@code AsyncSupplier} and ChannelSupplier
 	 * @return ChannelSupplier which wraps {@code AsyncSupplier}
 	 */
-	static <T> ChannelSupplier<T> of(AsyncSupplier<T> supplier, @Nullable AsyncCloseable closeable) {
+	static <T> ChannelSupplier<T> of(AsyncSupplier<T> supplier, @Nullable ReactiveCloseable closeable) {
 		return new AbstractChannelSupplier<>(closeable) {
 			@Override
 			protected Promise<T> doGet() {
@@ -163,11 +163,11 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	}
 
 	/**
-	 * Wraps {@link AsyncTcpSocket#read()} operation into {@link ChannelSupplier}
+	 * Wraps {@link ReactiveTcpSocket#read()} operation into {@link ChannelSupplier}
 	 *
 	 * @return {@link ChannelSupplier} of ByteBufs that are read from network
 	 */
-	static ChannelSupplier<ByteBuf> ofSocket(AsyncTcpSocket socket) {
+	static ChannelSupplier<ByteBuf> ofSocket(ReactiveTcpSocket socket) {
 		return ChannelSuppliers.prefetch(ChannelSupplier.of(socket::read, socket));
 	}
 

@@ -18,7 +18,7 @@ package io.activej.aggregation;
 
 import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.aggregation.util.PartitionPredicate;
-import io.activej.async.AsyncAccumulator;
+import io.activej.async.ReactiveAccumulator;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.datastream.ForwardingStreamConsumer;
@@ -40,7 +40,7 @@ public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> 
 	private final Class<T> recordClass;
 	private final PartitionPredicate<T> partitionPredicate;
 	private final AggregationChunkStorage<C> storage;
-	private final AsyncAccumulator<List<AggregationChunk>> chunksAccumulator;
+	private final ReactiveAccumulator<List<AggregationChunk>> chunksAccumulator;
 	private final DefiningClassLoader classLoader;
 
 	private final int chunkSize;
@@ -60,7 +60,7 @@ public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> 
 		this.storage = storage;
 		this.classLoader = classLoader;
 		this.chunkSize = chunkSize;
-		(this.chunksAccumulator = AsyncAccumulator.create(new ArrayList<>()))
+		(this.chunksAccumulator = ReactiveAccumulator.create(new ArrayList<>()))
 				.run(getAcknowledgement())
 				.whenComplete(result::trySet);
 	}
