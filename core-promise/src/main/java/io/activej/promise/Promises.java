@@ -29,7 +29,6 @@ import io.activej.common.tuple.*;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.schedule.ScheduledRunnable;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Array;
@@ -59,7 +58,7 @@ public final class Promises {
 	 * @see #timeout(long, Promise)
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T> timeout(@NotNull Duration delay, @NotNull Promise<T> promise) {
+	public static <T> Promise<T> timeout(Duration delay, Promise<T> promise) {
 		return timeout(delay.toMillis(), promise);
 	}
 
@@ -72,7 +71,7 @@ public final class Promises {
 	 * @return {@code Promise}
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T> timeout(long delay, @NotNull Promise<T> promise) {
+	public static <T> Promise<T> timeout(long delay, Promise<T> promise) {
 		if (promise.isComplete()) return promise;
 		if (delay <= 0) return Promise.ofException(new AsyncTimeoutException("Promise timeout"));
 		return promise.next(new NextPromise<>() {
@@ -96,22 +95,22 @@ public final class Promises {
 	}
 
 	@Contract(pure = true)
-	public static @NotNull Promise<Void> delay(@NotNull Duration delay) {
+	public static Promise<Void> delay(Duration delay) {
 		return delay(delay.toMillis(), (Void) null);
 	}
 
 	@Contract(pure = true)
-	public static @NotNull Promise<Void> delay(long delayMillis) {
+	public static Promise<Void> delay(long delayMillis) {
 		return delay(delayMillis, (Void) null);
 	}
 
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T> delay(@NotNull Duration delay, T value) {
+	public static <T> Promise<T> delay(Duration delay, T value) {
 		return delay(delay.toMillis(), value);
 	}
 
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T> delay(long delayMillis, T value) {
+	public static <T> Promise<T> delay(long delayMillis, T value) {
 		if (delayMillis <= 0) return Promise.of(value);
 		SettablePromise<T> cb = new SettablePromise<>();
 		getCurrentReactor().delay(delayMillis, wrapContext(cb, () -> cb.set(value)));
@@ -122,7 +121,7 @@ public final class Promises {
 	 * @see #delay(long, Promise)
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T> delay(@NotNull Duration delay, @NotNull Promise<T> promise) {
+	public static <T> Promise<T> delay(Duration delay, Promise<T> promise) {
 		return delay(delay.toMillis(), promise);
 	}
 
@@ -135,19 +134,19 @@ public final class Promises {
 	 * @return completed {@code Promise}
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T> delay(long delayMillis, @NotNull Promise<T> promise) {
+	public static <T> Promise<T> delay(long delayMillis, Promise<T> promise) {
 		if (delayMillis <= 0) return promise;
 		return Promise.ofCallback(cb ->
 				getCurrentReactor().delay(delayMillis, wrapContext(cb, () -> promise.run(cb))));
 	}
 
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T> interval(@NotNull Duration interval, @NotNull Promise<T> promise) {
+	public static <T> Promise<T> interval(Duration interval, Promise<T> promise) {
 		return interval(interval.toMillis(), promise);
 	}
 
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T> interval(long intervalMillis, @NotNull Promise<T> promise) {
+	public static <T> Promise<T> interval(long intervalMillis, Promise<T> promise) {
 		return intervalMillis <= 0 ?
 				promise :
 				promise.then(value -> Promise.ofCallback(cb -> getCurrentReactor().delay(intervalMillis, wrapContext(cb, () -> cb.set(value)))));
@@ -157,7 +156,7 @@ public final class Promises {
 	 * @see #schedule(Promise, long)
 	 */
 	@Contract(pure = true)
-	public static @NotNull Promise<Void> schedule(@NotNull Instant instant) {
+	public static Promise<Void> schedule(Instant instant) {
 		return schedule((Void) null, instant.toEpochMilli());
 	}
 
@@ -165,7 +164,7 @@ public final class Promises {
 	 * @see #schedule(Promise, long)
 	 */
 	@Contract(pure = true)
-	public static @NotNull Promise<Void> schedule(long timestamp) {
+	public static Promise<Void> schedule(long timestamp) {
 		return schedule((Void) null, timestamp);
 	}
 
@@ -173,7 +172,7 @@ public final class Promises {
 	 * @see #schedule(Promise, long)
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T> schedule(T value, @NotNull Instant instant) {
+	public static <T> Promise<T> schedule(T value, Instant instant) {
 		return schedule(value, instant.toEpochMilli());
 	}
 
@@ -181,7 +180,7 @@ public final class Promises {
 	 * @see #schedule(Promise, long)
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T> schedule(T value, long timestamp) {
+	public static <T> Promise<T> schedule(T value, long timestamp) {
 		SettablePromise<T> cb = new SettablePromise<>();
 		getCurrentReactor().schedule(timestamp, wrapContext(cb, () -> cb.set(value)));
 		return cb;
@@ -191,7 +190,7 @@ public final class Promises {
 	 * @see #schedule(Promise, long)
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T> schedule(@NotNull Promise<T> promise, @NotNull Instant instant) {
+	public static <T> Promise<T> schedule(Promise<T> promise, Instant instant) {
 		return schedule(promise, instant.toEpochMilli());
 	}
 
@@ -201,7 +200,7 @@ public final class Promises {
 	 * were completed earlier.
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T> schedule(@NotNull Promise<T> promise, long timestamp) {
+	public static <T> Promise<T> schedule(Promise<T> promise, long timestamp) {
 		return Promise.ofCallback(cb ->
 				getCurrentReactor().schedule(timestamp, wrapContext(cb, () -> promise.run(cb))));
 	}
@@ -210,7 +209,7 @@ public final class Promises {
 	 * @see Promises#all(List)
 	 */
 	@Contract(pure = true)
-	public static @NotNull Promise<Void> all() {
+	public static Promise<Void> all() {
 		return Promise.complete();
 	}
 
@@ -218,7 +217,7 @@ public final class Promises {
 	 * @see Promises#all(List)
 	 */
 	@Contract(pure = true)
-	public static @NotNull Promise<Void> all(@NotNull Promise<?> promise1) {
+	public static Promise<Void> all(Promise<?> promise1) {
 		return promise1.toVoid();
 	}
 
@@ -228,7 +227,7 @@ public final class Promises {
 	 * @see Promises#all(List)
 	 */
 	@Contract(pure = true)
-	public static @NotNull Promise<Void> all(@NotNull Promise<?> promise1, @NotNull Promise<?> promise2) {
+	public static Promise<Void> all(Promise<?> promise1, Promise<?> promise2) {
 		return promise1.both(promise2);
 	}
 
@@ -236,7 +235,7 @@ public final class Promises {
 	 * @see Promises#all(List)
 	 */
 	@Contract(pure = true)
-	public static @NotNull Promise<Void> all(Promise<?>... promises) {
+	public static Promise<Void> all(Promise<?>... promises) {
 		return all(List.of(promises));
 	}
 
@@ -245,7 +244,7 @@ public final class Promises {
 	 * all of the {@code promises} are completed.
 	 */
 	@Contract(pure = true)
-	public static @NotNull Promise<Void> all(@NotNull List<? extends Promise<?>> promises) {
+	public static Promise<Void> all(List<? extends Promise<?>> promises) {
 		int size = promises.size();
 		if (size == 0) return Promise.complete();
 		if (size == 1) return promises.get(0).map(AbstractPromise::recycleToVoid);
@@ -258,7 +257,7 @@ public final class Promises {
 	 * @see Promises#all(List)
 	 */
 	@Contract(pure = true)
-	public static @NotNull Promise<Void> all(@NotNull Stream<? extends Promise<?>> promises) {
+	public static Promise<Void> all(Stream<? extends Promise<?>> promises) {
 		return all(promises.iterator());
 	}
 
@@ -267,11 +266,11 @@ public final class Promises {
 	 * are completed. If at least one of the {@code promises} completes
 	 * exceptionally, a {@link CompleteExceptionallyPromise} will be returned.
 	 */
-	public static @NotNull Promise<Void> all(@NotNull Iterator<? extends Promise<?>> promises) {
+	public static Promise<Void> all(Iterator<? extends Promise<?>> promises) {
 		return allIterator(promises, false);
 	}
 
-	private static @NotNull Promise<Void> allIterator(@NotNull Iterator<? extends Promise<?>> promises, boolean ownership) {
+	private static Promise<Void> allIterator(Iterator<? extends Promise<?>> promises, boolean ownership) {
 		if (!promises.hasNext()) return all();
 		PromiseAll<Object> resultPromise = new PromiseAll<>();
 		while (promises.hasNext()) {
@@ -302,7 +301,7 @@ public final class Promises {
 	 * @see #any(Iterator)
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T> any() {
+	public static <T> Promise<T> any() {
 		return Promise.ofException(new Exception("There are no promises to be complete"));
 	}
 
@@ -310,7 +309,7 @@ public final class Promises {
 	 * @see #any(Iterator)
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T> any(@NotNull Promise<? extends T> promise1) {
+	public static <T> Promise<T> any(Promise<? extends T> promise1) {
 		return (Promise<T>) promise1;
 	}
 
@@ -320,7 +319,7 @@ public final class Promises {
 	 * @see #any(Iterator)
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T> any(@NotNull Promise<? extends T> promise1, @NotNull Promise<? extends T> promise2) {
+	public static <T> Promise<T> any(Promise<? extends T> promise1, Promise<? extends T> promise2) {
 		return ((Promise<T>) promise1).either(promise2);
 	}
 
@@ -329,7 +328,7 @@ public final class Promises {
 	 */
 	@Contract(pure = true)
 	@SafeVarargs
-	public static <T> @NotNull Promise<T> any(Promise<? extends T>... promises) {
+	public static <T> Promise<T> any(Promise<? extends T>... promises) {
 		return any(isResult(), List.of(promises));
 	}
 
@@ -337,7 +336,7 @@ public final class Promises {
 	 * @see #any(Iterator)
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T> any(@NotNull List<? extends Promise<? extends T>> promises) {
+	public static <T> Promise<T> any(List<? extends Promise<? extends T>> promises) {
 		int size = promises.size();
 		if (size == 0) return any();
 		if (size == 1) return (Promise<T>) promises.get(0);
@@ -349,46 +348,46 @@ public final class Promises {
 	 * @see #any(Iterator)
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T> any(@NotNull Stream<? extends Promise<? extends T>> promises) {
+	public static <T> Promise<T> any(Stream<? extends Promise<? extends T>> promises) {
 		return any(isResult(), promises.iterator());
 	}
 
-	public static <T> @NotNull Promise<T> any(@NotNull Iterator<? extends Promise<? extends T>> promises) {
+	public static <T> Promise<T> any(Iterator<? extends Promise<? extends T>> promises) {
 		return any(isResult(), promises);
 	}
 
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T> any(@NotNull BiPredicate<? super T, Exception> predicate, @NotNull Promise<? extends T> promise1) {
+	public static <T> Promise<T> any(BiPredicate<? super T, Exception> predicate, Promise<? extends T> promise1) {
 		return any(predicate, List.of(promise1));
 	}
 
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T> any(@NotNull BiPredicate<? super T, Exception> predicate, @NotNull Promise<? extends T> promise1, @NotNull Promise<? extends T> promise2) {
+	public static <T> Promise<T> any(BiPredicate<? super T, Exception> predicate, Promise<? extends T> promise1, Promise<? extends T> promise2) {
 		return any(predicate, List.of(promise1, promise2));
 	}
 
 	@Contract(pure = true)
 	@SafeVarargs
-	public static <T> @NotNull Promise<T> any(@NotNull BiPredicate<? super T, Exception> predicate, Promise<? extends T>... promises) {
+	public static <T> Promise<T> any(BiPredicate<? super T, Exception> predicate, Promise<? extends T>... promises) {
 		return any(predicate, List.of(promises));
 	}
 
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T> any(@NotNull BiPredicate<? super T, Exception> predicate, @NotNull Stream<? extends Promise<? extends T>> promises) {
+	public static <T> Promise<T> any(BiPredicate<? super T, Exception> predicate, Stream<? extends Promise<? extends T>> promises) {
 		return any(predicate, promises.iterator());
 	}
 
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T> any(@NotNull BiPredicate<? super T, Exception> predicate, @NotNull List<? extends Promise<? extends T>> promises) {
+	public static <T> Promise<T> any(BiPredicate<? super T, Exception> predicate, List<? extends Promise<? extends T>> promises) {
 		return anyIterator(predicate, promises.iterator(), true);
 	}
 
-	public static <T> @NotNull Promise<T> any(@NotNull BiPredicate<? super T, Exception> predicate, @NotNull Iterator<? extends Promise<? extends T>> promises) {
+	public static <T> Promise<T> any(BiPredicate<? super T, Exception> predicate, Iterator<? extends Promise<? extends T>> promises) {
 		return anyIterator(predicate, promises, false);
 	}
 
-	private static <T> @NotNull Promise<T> anyIterator(@NotNull BiPredicate<? super T, Exception> predicate,
-			@NotNull Iterator<? extends Promise<? extends T>> promises, boolean ownership) {
+	private static <T> Promise<T> anyIterator(BiPredicate<? super T, Exception> predicate,
+			Iterator<? extends Promise<? extends T>> promises, boolean ownership) {
 		if (!promises.hasNext()) return any();
 		PromiseAny<T> resultPromise = new PromiseAny<>(predicate);
 		while (promises.hasNext()) {
@@ -418,7 +417,7 @@ public final class Promises {
 	 * with an empty list as the result.
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<List<T>> toList() {
+	public static <T> Promise<List<T>> toList() {
 		return Promise.of(List.of());
 	}
 
@@ -427,7 +426,7 @@ public final class Promises {
 	 * with a result wrapped in {@code List}.
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<List<T>> toList(@NotNull Promise<? extends T> promise1) {
+	public static <T> Promise<List<T>> toList(Promise<? extends T> promise1) {
 		return promise1.map(t -> List.of(t));
 	}
 
@@ -435,7 +434,7 @@ public final class Promises {
 	 * Returns {@code Promise} with a list of {@code promise1} and {@code promise2} results.
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<List<T>> toList(@NotNull Promise<? extends T> promise1, @NotNull Promise<? extends T> promise2) {
+	public static <T> Promise<List<T>> toList(Promise<? extends T> promise1, Promise<? extends T> promise2) {
 		return promise1.combine(promise2, List::of);
 	}
 
@@ -444,7 +443,7 @@ public final class Promises {
 	 */
 	@Contract(pure = true)
 	@SafeVarargs
-	public static <T> @NotNull Promise<List<T>> toList(Promise<? extends T>... promises) {
+	public static <T> Promise<List<T>> toList(Promise<? extends T>... promises) {
 		return toList(List.of(promises));
 	}
 
@@ -452,7 +451,7 @@ public final class Promises {
 	 * Reduces list of {@code Promise}s into Promise&lt;List&gt;.
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<List<T>> toList(@NotNull List<? extends Promise<? extends T>> promises) {
+	public static <T> Promise<List<T>> toList(List<? extends Promise<? extends T>> promises) {
 		int size = promises.size();
 		if (size == 0) return Promise.of(List.of());
 		if (size == 1) return promises.get(0).map(t -> List.of(t));
@@ -464,7 +463,7 @@ public final class Promises {
 	 * @see Promises#toList(List)
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<List<T>> toList(@NotNull Stream<? extends Promise<? extends T>> promises) {
+	public static <T> Promise<List<T>> toList(Stream<? extends Promise<? extends T>> promises) {
 		return toList(promises.iterator());
 	}
 
@@ -472,7 +471,7 @@ public final class Promises {
 	 * @see Promises#toList(List)
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<List<T>> toList(@NotNull Iterable<? extends Promise<? extends T>> promises) {
+	public static <T> Promise<List<T>> toList(Iterable<? extends Promise<? extends T>> promises) {
 		return toList(promises.iterator());
 	}
 
@@ -480,7 +479,7 @@ public final class Promises {
 	 * @see Promises#toList(List)
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<List<T>> toList(@NotNull Iterator<? extends Promise<? extends T>> promises) {
+	public static <T> Promise<List<T>> toList(Iterator<? extends Promise<? extends T>> promises) {
 		return toListImpl(promises, 10, false);
 	}
 
@@ -488,7 +487,7 @@ public final class Promises {
 	 * @see Promises#toList(List)
 	 */
 	@Contract(pure = true)
-	private static <T> @NotNull Promise<List<T>> toListImpl(@NotNull Iterator<? extends Promise<? extends T>> promises, int initialSize, boolean ownership) {
+	private static <T> Promise<List<T>> toListImpl(Iterator<? extends Promise<? extends T>> promises, int initialSize, boolean ownership) {
 		PromisesToList<T> resultPromise = new PromisesToList<>(initialSize);
 
 		for (int i = 0; promises.hasNext() && !resultPromise.isComplete(); i++) {
@@ -511,7 +510,7 @@ public final class Promises {
 	 * wrapped in {@code Promise}.
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T[]> toArray(@NotNull Class<T> type) {
+	public static <T> Promise<T[]> toArray(Class<T> type) {
 		return Promise.of((T[]) Array.newInstance(type, 0));
 	}
 
@@ -519,7 +518,7 @@ public final class Promises {
 	 * Returns an array with {@code promise1} result.
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T[]> toArray(@NotNull Class<T> type, @NotNull Promise<? extends T> promise1) {
+	public static <T> Promise<T[]> toArray(Class<T> type, Promise<? extends T> promise1) {
 		return promise1.map(value -> {
 			T[] array = (T[]) Array.newInstance(type, 1);
 			array[0] = value;
@@ -531,7 +530,7 @@ public final class Promises {
 	 * Returns an array with {@code promise1} and {@code promise2} results.
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T[]> toArray(@NotNull Class<T> type, @NotNull Promise<? extends T> promise1, @NotNull Promise<? extends T> promise2) {
+	public static <T> Promise<T[]> toArray(Class<T> type, Promise<? extends T> promise1, Promise<? extends T> promise2) {
 		return promise1.combine(promise2, (value1, value2) -> {
 			T[] array = (T[]) Array.newInstance(type, 2);
 			array[0] = value1;
@@ -545,7 +544,7 @@ public final class Promises {
 	 */
 	@Contract(pure = true)
 	@SafeVarargs
-	public static <T> @NotNull Promise<T[]> toArray(@NotNull Class<T> type, Promise<? extends T>... promises) {
+	public static <T> Promise<T[]> toArray(Class<T> type, Promise<? extends T>... promises) {
 		return toList(promises).map(list -> list.toArray((T[]) Array.newInstance(type, list.size())));
 	}
 
@@ -553,7 +552,7 @@ public final class Promises {
 	 * Reduces promises into Promise&lt;Array&gt;
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T[]> toArray(@NotNull Class<T> type, @NotNull List<? extends Promise<? extends T>> promises) {
+	public static <T> Promise<T[]> toArray(Class<T> type, List<? extends Promise<? extends T>> promises) {
 		int size = promises.size();
 		if (size == 0) return toArray(type);
 		if (size == 1) return toArray(type, promises.get(0));
@@ -565,7 +564,7 @@ public final class Promises {
 	 * @see Promises#toArray(Class, List)
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T[]> toArray(@NotNull Class<T> type, @NotNull Stream<? extends Promise<? extends T>> promises) {
+	public static <T> Promise<T[]> toArray(Class<T> type, Stream<? extends Promise<? extends T>> promises) {
 		return toList(promises).map(list -> list.toArray((T[]) Array.newInstance(type, list.size())));
 	}
 
@@ -573,7 +572,7 @@ public final class Promises {
 	 * @see Promises#toArray(Class, List)
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T[]> toArray(@NotNull Class<T> type, @NotNull Iterable<? extends Promise<? extends T>> promises) {
+	public static <T> Promise<T[]> toArray(Class<T> type, Iterable<? extends Promise<? extends T>> promises) {
 		return toList(promises).map(list -> list.toArray((T[]) Array.newInstance(type, list.size())));
 	}
 
@@ -581,138 +580,138 @@ public final class Promises {
 	 * @see Promises#toArray(Class, List)
 	 */
 	@Contract(pure = true)
-	public static <T> @NotNull Promise<T[]> toArray(@NotNull Class<T> type, @NotNull Iterator<? extends Promise<? extends T>> promises) {
+	public static <T> Promise<T[]> toArray(Class<T> type, Iterator<? extends Promise<? extends T>> promises) {
 		return toList(promises).map(list -> list.toArray((T[]) Array.newInstance(type, list.size())));
 	}
 
 	@Contract(pure = true)
-	public static <T1, R> @NotNull Promise<R> toTuple(@NotNull TupleConstructor1<T1, R> constructor, @NotNull Promise<? extends T1> promise1) {
+	public static <T1, R> Promise<R> toTuple(TupleConstructor1<T1, R> constructor, Promise<? extends T1> promise1) {
 		return promise1.map(constructor::create);
 	}
 
 	@Contract(pure = true)
-	public static <T1, T2, R> @NotNull Promise<R> toTuple(@NotNull TupleConstructor2<T1, T2, R> constructor,
-			@NotNull Promise<? extends T1> promise1,
-			@NotNull Promise<? extends T2> promise2) {
+	public static <T1, T2, R> Promise<R> toTuple(TupleConstructor2<T1, T2, R> constructor,
+			Promise<? extends T1> promise1,
+			Promise<? extends T2> promise2) {
 		return promise1.combine(promise2, constructor::create);
 	}
 
 	@Contract(pure = true)
-	public static <T1, T2, T3, R> @NotNull Promise<R> toTuple(@NotNull TupleConstructor3<T1, T2, T3, R> constructor,
-			@NotNull Promise<? extends T1> promise1,
-			@NotNull Promise<? extends T2> promise2,
-			@NotNull Promise<? extends T3> promise3) {
+	public static <T1, T2, T3, R> Promise<R> toTuple(TupleConstructor3<T1, T2, T3, R> constructor,
+			Promise<? extends T1> promise1,
+			Promise<? extends T2> promise2,
+			Promise<? extends T3> promise3) {
 		return toList(promise1, promise2, promise3)
 				.map(list -> constructor.create((T1) list.get(0), (T2) list.get(1), (T3) list.get(2)));
 	}
 
 	@Contract(pure = true)
-	public static <T1, T2, T3, T4, R> @NotNull Promise<R> toTuple(@NotNull TupleConstructor4<T1, T2, T3, T4, R> constructor,
-			@NotNull Promise<? extends T1> promise1,
-			@NotNull Promise<? extends T2> promise2,
-			@NotNull Promise<? extends T3> promise3,
-			@NotNull Promise<? extends T4> promise4) {
+	public static <T1, T2, T3, T4, R> Promise<R> toTuple(TupleConstructor4<T1, T2, T3, T4, R> constructor,
+			Promise<? extends T1> promise1,
+			Promise<? extends T2> promise2,
+			Promise<? extends T3> promise3,
+			Promise<? extends T4> promise4) {
 		return toList(promise1, promise2, promise3, promise4)
 				.map(list -> constructor.create((T1) list.get(0), (T2) list.get(1), (T3) list.get(2), (T4) list.get(3)));
 	}
 
 	@Contract(pure = true)
-	public static <T1, T2, T3, T4, T5, R> @NotNull Promise<R> toTuple(@NotNull TupleConstructor5<T1, T2, T3, T4, T5, R> constructor,
-			@NotNull Promise<? extends T1> promise1,
-			@NotNull Promise<? extends T2> promise2,
-			@NotNull Promise<? extends T3> promise3,
-			@NotNull Promise<? extends T4> promise4,
-			@NotNull Promise<? extends T5> promise5) {
+	public static <T1, T2, T3, T4, T5, R> Promise<R> toTuple(TupleConstructor5<T1, T2, T3, T4, T5, R> constructor,
+			Promise<? extends T1> promise1,
+			Promise<? extends T2> promise2,
+			Promise<? extends T3> promise3,
+			Promise<? extends T4> promise4,
+			Promise<? extends T5> promise5) {
 		return toList(promise1, promise2, promise3, promise4, promise5)
 				.map(list -> constructor.create((T1) list.get(0), (T2) list.get(1), (T3) list.get(2), (T4) list.get(3), (T5) list.get(4)));
 	}
 
 	@Contract(pure = true)
-	public static <T1, T2, T3, T4, T5, T6, R> @NotNull Promise<R> toTuple(@NotNull TupleConstructor6<T1, T2, T3, T4, T5, T6, R> constructor,
-			@NotNull Promise<? extends T1> promise1,
-			@NotNull Promise<? extends T2> promise2,
-			@NotNull Promise<? extends T3> promise3,
-			@NotNull Promise<? extends T4> promise4,
-			@NotNull Promise<? extends T5> promise5,
-			@NotNull Promise<? extends T6> promise6) {
+	public static <T1, T2, T3, T4, T5, T6, R> Promise<R> toTuple(TupleConstructor6<T1, T2, T3, T4, T5, T6, R> constructor,
+			Promise<? extends T1> promise1,
+			Promise<? extends T2> promise2,
+			Promise<? extends T3> promise3,
+			Promise<? extends T4> promise4,
+			Promise<? extends T5> promise5,
+			Promise<? extends T6> promise6) {
 		return toList(promise1, promise2, promise3, promise4, promise5, promise6)
 				.map(list -> constructor.create((T1) list.get(0), (T2) list.get(1), (T3) list.get(2), (T4) list.get(3), (T5) list.get(4),
 						(T6) list.get(5)));
 	}
 
 	@Contract(pure = true)
-	public static <T1> @NotNull Promise<Tuple1<T1>> toTuple(@NotNull Promise<? extends T1> promise1) {
+	public static <T1> Promise<Tuple1<T1>> toTuple(Promise<? extends T1> promise1) {
 		return promise1.map(Tuple1::new);
 	}
 
 	@Contract(pure = true)
-	public static <T1, T2> @NotNull Promise<Tuple2<T1, T2>> toTuple(@NotNull Promise<? extends T1> promise1, @NotNull Promise<? extends T2> promise2) {
+	public static <T1, T2> Promise<Tuple2<T1, T2>> toTuple(Promise<? extends T1> promise1, Promise<? extends T2> promise2) {
 		return promise1.combine(promise2, Tuple2::new);
 	}
 
 	@Contract(pure = true)
-	public static <T1, T2, T3> @NotNull Promise<Tuple3<T1, T2, T3>> toTuple(
-			@NotNull Promise<? extends T1> promise1,
-			@NotNull Promise<? extends T2> promise2,
-			@NotNull Promise<? extends T3> promise3) {
+	public static <T1, T2, T3> Promise<Tuple3<T1, T2, T3>> toTuple(
+			Promise<? extends T1> promise1,
+			Promise<? extends T2> promise2,
+			Promise<? extends T3> promise3) {
 		return toList(promise1, promise2, promise3)
 				.map(list -> new Tuple3<>((T1) list.get(0), (T2) list.get(1), (T3) list.get(2)));
 	}
 
 	@Contract(pure = true)
-	public static <T1, T2, T3, T4> @NotNull Promise<Tuple4<T1, T2, T3, T4>> toTuple(
-			@NotNull Promise<? extends T1> promise1,
-			@NotNull Promise<? extends T2> promise2,
-			@NotNull Promise<? extends T3> promise3,
-			@NotNull Promise<? extends T4> promise4) {
+	public static <T1, T2, T3, T4> Promise<Tuple4<T1, T2, T3, T4>> toTuple(
+			Promise<? extends T1> promise1,
+			Promise<? extends T2> promise2,
+			Promise<? extends T3> promise3,
+			Promise<? extends T4> promise4) {
 		return toList(promise1, promise2, promise3, promise4)
 				.map(list -> new Tuple4<>((T1) list.get(0), (T2) list.get(1), (T3) list.get(2), (T4) list.get(3)));
 	}
 
 	@Contract(pure = true)
-	public static <T1, T2, T3, T4, T5> @NotNull Promise<Tuple5<T1, T2, T3, T4, T5>> toTuple(
-			@NotNull Promise<? extends T1> promise1,
-			@NotNull Promise<? extends T2> promise2,
-			@NotNull Promise<? extends T3> promise3,
-			@NotNull Promise<? extends T4> promise4,
-			@NotNull Promise<? extends T5> promise5) {
+	public static <T1, T2, T3, T4, T5> Promise<Tuple5<T1, T2, T3, T4, T5>> toTuple(
+			Promise<? extends T1> promise1,
+			Promise<? extends T2> promise2,
+			Promise<? extends T3> promise3,
+			Promise<? extends T4> promise4,
+			Promise<? extends T5> promise5) {
 		return toList(promise1, promise2, promise3, promise4, promise5)
 				.map(list -> new Tuple5<>((T1) list.get(0), (T2) list.get(1), (T3) list.get(2), (T4) list.get(3), (T5) list.get(4)));
 	}
 
 	@Contract(pure = true)
-	public static <T1, T2, T3, T4, T5, T6> @NotNull Promise<Tuple6<T1, T2, T3, T4, T5, T6>> toTuple(
-			@NotNull Promise<? extends T1> promise1,
-			@NotNull Promise<? extends T2> promise2,
-			@NotNull Promise<? extends T3> promise3,
-			@NotNull Promise<? extends T4> promise4,
-			@NotNull Promise<? extends T5> promise5,
-			@NotNull Promise<? extends T6> promise6) {
+	public static <T1, T2, T3, T4, T5, T6> Promise<Tuple6<T1, T2, T3, T4, T5, T6>> toTuple(
+			Promise<? extends T1> promise1,
+			Promise<? extends T2> promise2,
+			Promise<? extends T3> promise3,
+			Promise<? extends T4> promise4,
+			Promise<? extends T5> promise5,
+			Promise<? extends T6> promise6) {
 		return toList(promise1, promise2, promise3, promise4, promise5, promise6)
 				.map(list -> new Tuple6<>((T1) list.get(0), (T2) list.get(1), (T3) list.get(2), (T4) list.get(3), (T5) list.get(4), (T6) list.get(5)));
 	}
 
 	@Contract(pure = true)
-	public static <T, T1, R, R1> @NotNull AsyncFunction<T, R> mapTuple(@NotNull TupleConstructor1<R1, R> constructor,
-			@NotNull Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1) {
+	public static <T, T1, R, R1> AsyncFunction<T, R> mapTuple(TupleConstructor1<R1, R> constructor,
+			Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1) {
 		return t -> toTuple(constructor,
 				fn1.apply(getter1.apply(t)));
 	}
 
 	@Contract(pure = true)
-	public static <T, T1, T2, R, R1, R2> @NotNull AsyncFunction<T, R> mapTuple(@NotNull TupleConstructor2<R1, R2, R> constructor,
-			@NotNull Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1,
-			@NotNull Function<? super T, T2> getter2, Function<T2, Promise<R2>> fn2) {
+	public static <T, T1, T2, R, R1, R2> AsyncFunction<T, R> mapTuple(TupleConstructor2<R1, R2, R> constructor,
+			Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1,
+			Function<? super T, T2> getter2, Function<T2, Promise<R2>> fn2) {
 		return t -> toTuple(constructor,
 				fn1.apply(getter1.apply(t)),
 				fn2.apply(getter2.apply(t)));
 	}
 
 	@Contract(pure = true)
-	public static <T, T1, T2, T3, R, R1, R2, R3> @NotNull AsyncFunction<T, R> mapTuple(@NotNull TupleConstructor3<R1, R2, R3, R> constructor,
-			@NotNull Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1,
-			@NotNull Function<? super T, T2> getter2, Function<T2, Promise<R2>> fn2,
-			@NotNull Function<? super T, T3> getter3, Function<T3, Promise<R3>> fn3) {
+	public static <T, T1, T2, T3, R, R1, R2, R3> AsyncFunction<T, R> mapTuple(TupleConstructor3<R1, R2, R3, R> constructor,
+			Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1,
+			Function<? super T, T2> getter2, Function<T2, Promise<R2>> fn2,
+			Function<? super T, T3> getter3, Function<T3, Promise<R3>> fn3) {
 		return t -> toTuple(constructor,
 				fn1.apply(getter1.apply(t)),
 				fn2.apply(getter2.apply(t)),
@@ -720,11 +719,11 @@ public final class Promises {
 	}
 
 	@Contract(pure = true)
-	public static <T, T1, T2, T3, T4, R, R1, R2, R3, R4> @NotNull AsyncFunction<T, R> mapTuple(@NotNull TupleConstructor4<R1, R2, R3, R4, R> constructor,
-			@NotNull Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1,
-			@NotNull Function<? super T, T2> getter2, Function<T2, Promise<R2>> fn2,
-			@NotNull Function<? super T, T3> getter3, Function<T3, Promise<R3>> fn3,
-			@NotNull Function<? super T, T4> getter4, Function<T4, Promise<R4>> fn4) {
+	public static <T, T1, T2, T3, T4, R, R1, R2, R3, R4> AsyncFunction<T, R> mapTuple(TupleConstructor4<R1, R2, R3, R4, R> constructor,
+			Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1,
+			Function<? super T, T2> getter2, Function<T2, Promise<R2>> fn2,
+			Function<? super T, T3> getter3, Function<T3, Promise<R3>> fn3,
+			Function<? super T, T4> getter4, Function<T4, Promise<R4>> fn4) {
 		return t -> toTuple(constructor,
 				fn1.apply(getter1.apply(t)),
 				fn2.apply(getter2.apply(t)),
@@ -733,12 +732,12 @@ public final class Promises {
 	}
 
 	@Contract(pure = true)
-	public static <T, T1, T2, T3, T4, T5, R, R1, R2, R3, R4, R5> @NotNull AsyncFunction<T, R> mapTuple(@NotNull TupleConstructor5<R1, R2, R3, R4, R5, R> constructor,
-			@NotNull Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1,
-			@NotNull Function<? super T, T2> getter2, Function<T2, Promise<R2>> fn2,
-			@NotNull Function<? super T, T3> getter3, Function<T3, Promise<R3>> fn3,
-			@NotNull Function<? super T, T4> getter4, Function<T4, Promise<R4>> fn4,
-			@NotNull Function<? super T, T5> getter5, Function<T5, Promise<R5>> fn5) {
+	public static <T, T1, T2, T3, T4, T5, R, R1, R2, R3, R4, R5> AsyncFunction<T, R> mapTuple(TupleConstructor5<R1, R2, R3, R4, R5, R> constructor,
+			Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1,
+			Function<? super T, T2> getter2, Function<T2, Promise<R2>> fn2,
+			Function<? super T, T3> getter3, Function<T3, Promise<R3>> fn3,
+			Function<? super T, T4> getter4, Function<T4, Promise<R4>> fn4,
+			Function<? super T, T5> getter5, Function<T5, Promise<R5>> fn5) {
 		return t -> toTuple(constructor,
 				fn1.apply(getter1.apply(t)),
 				fn2.apply(getter2.apply(t)),
@@ -748,13 +747,13 @@ public final class Promises {
 	}
 
 	@Contract(pure = true)
-	public static <T, T1, T2, T3, T4, T5, T6, R, R1, R2, R3, R4, R5, R6> @NotNull AsyncFunction<T, R> mapTuple(@NotNull TupleConstructor6<R1, R2, R3, R4, R5, R6, R> constructor,
-			@NotNull Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1,
-			@NotNull Function<? super T, T2> getter2, Function<T2, Promise<R2>> fn2,
-			@NotNull Function<? super T, T3> getter3, Function<T3, Promise<R3>> fn3,
-			@NotNull Function<? super T, T4> getter4, Function<T4, Promise<R4>> fn4,
-			@NotNull Function<? super T, T5> getter5, Function<T5, Promise<R5>> fn5,
-			@NotNull Function<? super T, T6> getter6, Function<T6, Promise<R6>> fn6) {
+	public static <T, T1, T2, T3, T4, T5, T6, R, R1, R2, R3, R4, R5, R6> AsyncFunction<T, R> mapTuple(TupleConstructor6<R1, R2, R3, R4, R5, R6, R> constructor,
+			Function<? super T, T1> getter1, Function<T1, Promise<R1>> fn1,
+			Function<? super T, T2> getter2, Function<T2, Promise<R2>> fn2,
+			Function<? super T, T3> getter3, Function<T3, Promise<R3>> fn3,
+			Function<? super T, T4> getter4, Function<T4, Promise<R4>> fn4,
+			Function<? super T, T5> getter5, Function<T5, Promise<R5>> fn5,
+			Function<? super T, T6> getter6, Function<T6, Promise<R6>> fn6) {
 		return t -> toTuple(constructor,
 				fn1.apply(getter1.apply(t)),
 				fn2.apply(getter2.apply(t)),
@@ -767,7 +766,7 @@ public final class Promises {
 	/**
 	 * Returns a {@link CompleteNullPromise}
 	 */
-	public static @NotNull Promise<Void> sequence() {
+	public static Promise<Void> sequence() {
 		return Promise.complete();
 	}
 
@@ -775,7 +774,7 @@ public final class Promises {
 	 * Executes an {@link AsyncRunnable}, returning a {@link Promise<Void>}
 	 * as a mark for completion
 	 */
-	public static @NotNull Promise<Void> sequence(@NotNull AsyncRunnable runnable) {
+	public static Promise<Void> sequence(AsyncRunnable runnable) {
 		return runnable.run();
 	}
 
@@ -783,28 +782,28 @@ public final class Promises {
 	 * Executes both {@link AsyncRunnable}s consequently, returning a {@link Promise<Void>}
 	 * as a mark for completion
 	 */
-	public static @NotNull Promise<Void> sequence(@NotNull AsyncRunnable runnable1, @NotNull AsyncRunnable runnable2) {
+	public static Promise<Void> sequence(AsyncRunnable runnable1, AsyncRunnable runnable2) {
 		return runnable1.run().then(runnable2::run);
 	}
 
 	/**
 	 * @see Promises#sequence(Iterator)
 	 */
-	public static @NotNull Promise<Void> sequence(AsyncRunnable... runnables) {
+	public static Promise<Void> sequence(AsyncRunnable... runnables) {
 		return sequence(List.of(runnables));
 	}
 
 	/**
 	 * @see Promises#sequence(Iterator)
 	 */
-	public static @NotNull Promise<Void> sequence(@NotNull Iterable<? extends AsyncRunnable> runnables) {
+	public static Promise<Void> sequence(Iterable<? extends AsyncRunnable> runnables) {
 		return sequence(transformIterator(runnables.iterator(), AsyncRunnable::run));
 	}
 
 	/**
 	 * @see Promises#sequence(Iterator)
 	 */
-	public static @NotNull Promise<Void> sequence(@NotNull Stream<? extends AsyncRunnable> runnables) {
+	public static Promise<Void> sequence(Stream<? extends AsyncRunnable> runnables) {
 		return sequence(transformIterator(runnables.iterator(), AsyncRunnable::run));
 	}
 
@@ -815,12 +814,12 @@ public final class Promises {
 	 *
 	 * @return {@code Promise} that completes when all {@code promises} are completed
 	 */
-	public static @NotNull Promise<Void> sequence(@NotNull Iterator<? extends Promise<Void>> promises) {
+	public static Promise<Void> sequence(Iterator<? extends Promise<Void>> promises) {
 		return Promise.ofCallback(cb ->
 				sequenceImpl(promises, cb));
 	}
 
-	private static void sequenceImpl(@NotNull Iterator<? extends Promise<Void>> promises, SettablePromise<Void> cb) {
+	private static void sequenceImpl(Iterator<? extends Promise<Void>> promises, SettablePromise<Void> cb) {
 		while (promises.hasNext()) {
 			Promise<?> promise = promises.next();
 			if (promise.isResult()) continue;
@@ -842,7 +841,7 @@ public final class Promises {
 	 * @see Promises#first(BiPredicate, Iterator)
 	 */
 	@SafeVarargs
-	public static <T> @NotNull Promise<T> first(AsyncSupplier<? extends T>... promises) {
+	public static <T> Promise<T> first(AsyncSupplier<? extends T>... promises) {
 		return first(isResult(), promises);
 	}
 
@@ -850,7 +849,7 @@ public final class Promises {
 	 * @see #first(AsyncSupplier[])
 	 * @see Promises#first(BiPredicate, Iterator)
 	 */
-	public static <T> @NotNull Promise<T> first(@NotNull Iterable<? extends AsyncSupplier<? extends T>> promises) {
+	public static <T> Promise<T> first(Iterable<? extends AsyncSupplier<? extends T>> promises) {
 		return first(isResult(), promises);
 	}
 
@@ -858,7 +857,7 @@ public final class Promises {
 	 * @see #first(AsyncSupplier[])
 	 * @see Promises#first(BiPredicate, Iterator)
 	 */
-	public static <T> @NotNull Promise<T> first(@NotNull Stream<? extends AsyncSupplier<? extends T>> promises) {
+	public static <T> Promise<T> first(Stream<? extends AsyncSupplier<? extends T>> promises) {
 		return first(isResult(), promises);
 	}
 
@@ -866,7 +865,7 @@ public final class Promises {
 	 * @see #first(AsyncSupplier[])
 	 * @see Promises#first(BiPredicate, Iterator)
 	 */
-	public static <T> @NotNull Promise<T> first(@NotNull Iterator<? extends Promise<? extends T>> promises) {
+	public static <T> Promise<T> first(Iterator<? extends Promise<? extends T>> promises) {
 		return first(isResult(), promises);
 	}
 
@@ -874,7 +873,7 @@ public final class Promises {
 	 * @see Promises#first(BiPredicate, Iterator)
 	 */
 	@SafeVarargs
-	public static <T> @NotNull Promise<T> first(@NotNull BiPredicate<? super T, ? super Exception> predicate,
+	public static <T> Promise<T> first(BiPredicate<? super T, ? super Exception> predicate,
 			AsyncSupplier<? extends T>... promises) {
 		return first(predicate, List.of(promises));
 	}
@@ -882,16 +881,16 @@ public final class Promises {
 	/**
 	 * @see Promises#first(BiPredicate, Iterator)
 	 */
-	public static <T> @NotNull Promise<T> first(@NotNull BiPredicate<? super T, ? super Exception> predicate,
-			@NotNull Iterable<? extends AsyncSupplier<? extends T>> promises) {
+	public static <T> Promise<T> first(BiPredicate<? super T, ? super Exception> predicate,
+			Iterable<? extends AsyncSupplier<? extends T>> promises) {
 		return first(predicate, asPromises(promises));
 	}
 
 	/**
 	 * @see Promises#first(BiPredicate, Iterator)
 	 */
-	public static <T> @NotNull Promise<T> first(@NotNull BiPredicate<? super T, ? super Exception> predicate,
-			@NotNull Stream<? extends AsyncSupplier<? extends T>> promises) {
+	public static <T> Promise<T> first(BiPredicate<? super T, ? super Exception> predicate,
+			Stream<? extends AsyncSupplier<? extends T>> promises) {
 		return first(predicate, asPromises(promises));
 	}
 
@@ -899,14 +898,14 @@ public final class Promises {
 	 * @param predicate filters results, consumes result of {@code Promise}
 	 * @return first completed result of {@code Promise} that satisfies predicate
 	 */
-	public static <T> @NotNull Promise<T> first(@NotNull BiPredicate<? super T, ? super Exception> predicate,
-			@NotNull Iterator<? extends Promise<? extends T>> promises) {
+	public static <T> Promise<T> first(BiPredicate<? super T, ? super Exception> predicate,
+			Iterator<? extends Promise<? extends T>> promises) {
 		return Promise.ofCallback(cb ->
 				firstImpl(promises, predicate, cb));
 	}
 
 	private static <T> void firstImpl(Iterator<? extends Promise<? extends T>> promises,
-			@NotNull BiPredicate<? super T, ? super Exception> predicate,
+			BiPredicate<? super T, ? super Exception> predicate,
 			SettablePromise<T> cb) {
 		while (promises.hasNext()) {
 			Promise<? extends T> nextPromise = promises.next();
@@ -937,13 +936,13 @@ public final class Promises {
 	 * Repeats the operations of provided {@link AsyncSupplier<Boolean>} infinitely,
 	 * until one of the {@code Promise}s completes exceptionally or supplier returns a promise of {@code false}.
 	 */
-	public static @NotNull Promise<Void> repeat(@NotNull AsyncSupplier<Boolean> supplier) {
+	public static Promise<Void> repeat(AsyncSupplier<Boolean> supplier) {
 		SettablePromise<Void> cb = new SettablePromise<>();
 		repeatImpl(supplier, cb);
 		return cb;
 	}
 
-	private static void repeatImpl(@NotNull AsyncSupplier<Boolean> supplier, SettablePromise<Void> cb) {
+	private static void repeatImpl(AsyncSupplier<Boolean> supplier, SettablePromise<Void> cb) {
 		while (true) {
 			Promise<Boolean> promise = supplier.get();
 			if (promise.isResult()) {
@@ -978,17 +977,17 @@ public final class Promises {
 	 * with an exception. In both situations returned {@code Promise}
 	 * is a marker of completion of the loop.
 	 */
-	public static <T> Promise<T> loop(@Nullable T seed, @NotNull Predicate<T> loopCondition, @NotNull FunctionEx<T, Promise<T>> next) {
+	public static <T> Promise<T> loop(@Nullable T seed, Predicate<T> loopCondition, FunctionEx<T, Promise<T>> next) {
 		if (!loopCondition.test(seed)) return Promise.of(seed);
 		return until(seed, next, v -> !loopCondition.test(v));
 	}
 
-	public static <T> Promise<T> until(@Nullable T seed, @NotNull FunctionEx<T, Promise<T>> next, @NotNull Predicate<T> breakCondition) {
+	public static <T> Promise<T> until(@Nullable T seed, FunctionEx<T, Promise<T>> next, Predicate<T> breakCondition) {
 		return Promise.ofCallback(cb ->
 				untilImpl(seed, next, breakCondition, cb));
 	}
 
-	private static <T> void untilImpl(@Nullable T value, @NotNull FunctionEx<T, Promise<T>> next, @NotNull Predicate<T> breakCondition, SettablePromise<T> cb) throws Exception {
+	private static <T> void untilImpl(@Nullable T value, FunctionEx<T, Promise<T>> next, Predicate<T> breakCondition, SettablePromise<T> cb) throws Exception {
 		while (true) {
 			Promise<T> promise = next.apply(value);
 			if (promise.isResult()) {
@@ -1027,17 +1026,17 @@ public final class Promises {
 		return first(breakCondition, Stream.generate(() -> asyncSupplier));
 	}
 
-	public static <T> Promise<T> retry(AsyncSupplier<T> asyncSupplier, @NotNull RetryPolicy<?> retryPolicy) {
+	public static <T> Promise<T> retry(AsyncSupplier<T> asyncSupplier, RetryPolicy<?> retryPolicy) {
 		return retry(asyncSupplier, (v, e) -> e == null, retryPolicy);
 	}
 
-	public static <T> Promise<T> retry(AsyncSupplier<T> asyncSupplier, BiPredicate<T, Exception> breakCondition, @NotNull RetryPolicy<?> retryPolicy) {
+	public static <T> Promise<T> retry(AsyncSupplier<T> asyncSupplier, BiPredicate<T, Exception> breakCondition, RetryPolicy<?> retryPolicy) {
 		return Promise.ofCallback(cb ->
 				retryImpl(asyncSupplier, breakCondition, (RetryPolicy<Object>) retryPolicy, null, cb));
 	}
 
-	private static <T> void retryImpl(@NotNull AsyncSupplier<? extends T> next, BiPredicate<T, Exception> breakCondition,
-			@NotNull RetryPolicy<Object> retryPolicy, Object retryState,
+	private static <T> void retryImpl(AsyncSupplier<? extends T> next, BiPredicate<T, Exception> breakCondition,
+			RetryPolicy<Object> retryPolicy, Object retryState,
 			SettablePromise<T> cb) {
 		next.get()
 				.run((v, e) -> {
@@ -1062,7 +1061,7 @@ public final class Promises {
 	 * Transforms a collection of {@link AsyncSupplier}
 	 * {@code tasks} to a collection of {@code Promise}s.
 	 */
-	public static <T> @NotNull Iterator<Promise<T>> asPromises(@NotNull Iterator<? extends AsyncSupplier<? extends T>> tasks) {
+	public static <T> Iterator<Promise<T>> asPromises(Iterator<? extends AsyncSupplier<? extends T>> tasks) {
 		return transformIterator((Iterator<AsyncSupplier<T>>) tasks, AsyncSupplier::get);
 	}
 
@@ -1070,7 +1069,7 @@ public final class Promises {
 	 * Transforms a {@link Stream} of {@link AsyncSupplier}
 	 * {@code tasks} to a collection of {@code Promise}s.
 	 */
-	public static <T> Iterator<Promise<T>> asPromises(@NotNull Stream<? extends AsyncSupplier<? extends T>> tasks) {
+	public static <T> Iterator<Promise<T>> asPromises(Stream<? extends AsyncSupplier<? extends T>> tasks) {
 		return asPromises(tasks.iterator());
 	}
 
@@ -1078,7 +1077,7 @@ public final class Promises {
 	 * Transforms an {@link Iterable} of {@link AsyncSupplier}
 	 * {@code tasks} to a collection of {@code Promise}s.
 	 */
-	public static <T> Iterator<Promise<T>> asPromises(@NotNull Iterable<? extends AsyncSupplier<? extends T>> tasks) {
+	public static <T> Iterator<Promise<T>> asPromises(Iterable<? extends AsyncSupplier<? extends T>> tasks) {
 		return asPromises(tasks.iterator());
 	}
 
@@ -1094,14 +1093,14 @@ public final class Promises {
 	/**
 	 * @see #reduce(A, BiConsumerEx, FunctionEx, Iterator)
 	 */
-	public static <T, A, R> @NotNull Promise<R> reduce(@Nullable A accumulator, @NotNull BiConsumerEx<A, T> combiner, @NotNull FunctionEx<A, R> finisher, @NotNull Collection<Promise<T>> promises) {
+	public static <T, A, R> Promise<R> reduce(@Nullable A accumulator, BiConsumerEx<A, T> combiner, FunctionEx<A, R> finisher, Collection<Promise<T>> promises) {
 		return reduce(accumulator, combiner, finisher, promises.iterator());
 	}
 
 	/**
 	 * @see #reduce(A, BiConsumerEx, FunctionEx, Iterator)
 	 */
-	public static <T, A, R> @NotNull Promise<R> reduce(@Nullable A accumulator, @NotNull BiConsumerEx<A, T> combiner, @NotNull FunctionEx<A, R> finisher, @NotNull Stream<Promise<T>> promises) {
+	public static <T, A, R> Promise<R> reduce(@Nullable A accumulator, BiConsumerEx<A, T> combiner, FunctionEx<A, R> finisher, Stream<Promise<T>> promises) {
 		return reduce(accumulator, combiner, finisher, promises.iterator());
 	}
 
@@ -1124,7 +1123,7 @@ public final class Promises {
 	 * @param <R>         the result type of the reduction
 	 * @return a {@code Promise} of the accumulated result of the reduction.
 	 */
-	public static <T, A, R> @NotNull Promise<R> reduce(@Nullable A accumulator, @NotNull BiConsumerEx<A, T> combiner, @NotNull FunctionEx<A, R> finisher, @NotNull Iterator<Promise<T>> promises) {
+	public static <T, A, R> Promise<R> reduce(@Nullable A accumulator, BiConsumerEx<A, T> combiner, FunctionEx<A, R> finisher, Iterator<Promise<T>> promises) {
 		ReactiveAccumulator<A> asyncAccumulator = ReactiveAccumulator.create(accumulator);
 		while (promises.hasNext()) {
 			asyncAccumulator.addPromise(promises.next(), combiner);
@@ -1151,8 +1150,8 @@ public final class Promises {
 	 * @param <R>       the result type of the reduction
 	 * @return a {@code Promise} of the accumulated result of the reduction.
 	 */
-	public static <T, A, R> @NotNull Promise<R> reduce(@NotNull Collector<T, A, R> collector, int maxCalls,
-			@NotNull Iterator<Promise<T>> promises) {
+	public static <T, A, R> Promise<R> reduce(Collector<T, A, R> collector, int maxCalls,
+			Iterator<Promise<T>> promises) {
 		return reduce(collector.supplier().get(), BiConsumerEx.of(collector.accumulator()), FunctionEx.of(collector.finisher()),
 				maxCalls, promises);
 	}
@@ -1179,7 +1178,7 @@ public final class Promises {
 	 * @param <R>         the result type of the reduction
 	 * @return a {@code Promise} of the accumulated result of the reduction.
 	 */
-	public static <T, A, R> @NotNull Promise<R> reduce(@Nullable A accumulator, @NotNull BiConsumerEx<A, T> combiner, @NotNull FunctionEx<A, R> finisher, int maxCalls, @NotNull Iterator<Promise<T>> promises) {
+	public static <T, A, R> Promise<R> reduce(@Nullable A accumulator, BiConsumerEx<A, T> combiner, FunctionEx<A, R> finisher, int maxCalls, Iterator<Promise<T>> promises) {
 		ReactiveAccumulator<A> asyncAccumulator = ReactiveAccumulator.create(accumulator);
 		for (int i = 0; promises.hasNext() && i < maxCalls; i++) {
 			reduceImpl(asyncAccumulator, combiner, promises);
@@ -1202,8 +1201,8 @@ public final class Promises {
 	}
 
 	@Contract(pure = true)
-	public static <T, A, R> @NotNull AsyncFunction<T, R> coalesce(@NotNull Supplier<A> argumentAccumulatorSupplier, @NotNull BiConsumer<A, T> argumentAccumulatorFn,
-			@NotNull AsyncFunction<A, R> fn) {
+	public static <T, A, R> AsyncFunction<T, R> coalesce(Supplier<A> argumentAccumulatorSupplier, BiConsumer<A, T> argumentAccumulatorFn,
+			AsyncFunction<A, R> fn) {
 		AsyncBuffer<A, R> buffer = new AsyncBuffer<>(fn, argumentAccumulatorSupplier);
 		return v -> {
 			Promise<R> promise = buffer.add(argumentAccumulatorFn, v);

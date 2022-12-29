@@ -18,7 +18,6 @@ package io.activej.async.function;
 
 import io.activej.common.function.BiConsumerEx;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
@@ -32,7 +31,7 @@ public interface AsyncBiConsumer<T, U> {
 	 * @param consumer a {@link BiConsumerEx}
 	 * @return {@link AsyncBiConsumer} that works on top of {@link BiConsumerEx} interface
 	 */
-	static <T, U> @NotNull AsyncBiConsumer<T, U> of(@NotNull BiConsumerEx<? super T, ? super U> consumer) {
+	static <T, U> AsyncBiConsumer<T, U> of(BiConsumerEx<? super T, ? super U> consumer) {
 		return (t, u) -> {
 			try {
 				consumer.accept(t, u);

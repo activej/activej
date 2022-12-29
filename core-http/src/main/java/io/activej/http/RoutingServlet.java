@@ -17,7 +17,6 @@
 package io.activej.http;
 
 import io.activej.common.initializer.WithInitializer;
-import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -153,7 +152,7 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	}
 
 	@Override
-	public Promisable<HttpResponse> serve(HttpRequest request) throws Exception {
+	public Promise<HttpResponse> serve(HttpRequest request) throws Exception {
 		Promise<HttpResponse> processed = tryServe(request);
 		return processed != null ?
 				processed :

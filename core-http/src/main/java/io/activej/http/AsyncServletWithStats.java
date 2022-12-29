@@ -17,7 +17,6 @@
 package io.activej.http;
 
 import io.activej.jmx.api.attribute.JmxAttribute;
-import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.AbstractReactive;
@@ -37,7 +36,7 @@ public abstract class AsyncServletWithStats extends AbstractReactive
 	protected abstract Promise<HttpResponse> doServe(HttpRequest request);
 
 	@Override
-	public final Promisable<HttpResponse> serve(HttpRequest request) {
+	public final Promise<HttpResponse> serve(HttpRequest request) {
 		return doServe(request)
 				.whenComplete(stats.recordStats());
 	}

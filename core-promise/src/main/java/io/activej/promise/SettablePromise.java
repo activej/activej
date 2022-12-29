@@ -18,7 +18,6 @@ package io.activej.promise;
 
 import io.activej.async.callback.Callback;
 import org.jetbrains.annotations.Async;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.reactor.Reactor.getCurrentReactor;
@@ -76,7 +75,7 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Call
 	 * @param e exception
 	 */
 	@Async.Execute
-	public void setException(@NotNull Exception e) {
+	public void setException(Exception e) {
 		completeExceptionally(e);
 	}
 
@@ -100,7 +99,7 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Call
 	 * Otherwise, does nothing.
 	 */
 	@Async.Execute
-	public boolean trySetException(@NotNull Exception e) {
+	public boolean trySetException(Exception e) {
 		if (!isComplete()) {
 			setException(e);
 			return true;
@@ -129,7 +128,7 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Call
 		getCurrentReactor().post(wrapContext(this, () -> set(result)));
 	}
 
-	public void postException(@NotNull Exception e) {
+	public void postException(Exception e) {
 		getCurrentReactor().post(wrapContext(this, () -> setException(e)));
 	}
 
@@ -141,7 +140,7 @@ public final class SettablePromise<T> extends AbstractPromise<T> implements Call
 		getCurrentReactor().post(wrapContext(this, () -> trySet(result)));
 	}
 
-	public void tryPostException(@NotNull Exception e) {
+	public void tryPostException(Exception e) {
 		getCurrentReactor().post(wrapContext(this, () -> trySetException(e)));
 	}
 

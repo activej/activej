@@ -19,22 +19,21 @@ package io.activej.async.function;
 import io.activej.async.process.AsyncExecutor;
 import io.activej.async.process.AsyncExecutors;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
 public final class AsyncBiConsumers {
 
 	@Contract(pure = true)
-	public static <T, U> @NotNull AsyncBiConsumer<T, U> buffer(@NotNull AsyncBiConsumer<T, U> actual) {
+	public static <T, U> AsyncBiConsumer<T, U> buffer(AsyncBiConsumer<T, U> actual) {
 		return buffer(1, Integer.MAX_VALUE, actual);
 	}
 
 	@Contract(pure = true)
-	public static <T, U> @NotNull AsyncBiConsumer<T, U> buffer(int maxParallelCalls, int maxBufferedCalls, @NotNull AsyncBiConsumer<T, U> asyncConsumer) {
+	public static <T, U> AsyncBiConsumer<T, U> buffer(int maxParallelCalls, int maxBufferedCalls, AsyncBiConsumer<T, U> asyncConsumer) {
 		return ofExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls), asyncConsumer);
 	}
 
 	@Contract(pure = true)
-	public static <T, U> @NotNull AsyncBiConsumer<T, U> ofExecutor(@NotNull AsyncExecutor asyncExecutor, @NotNull AsyncBiConsumer<T, U> consumer) {
+	public static <T, U> AsyncBiConsumer<T, U> ofExecutor(AsyncExecutor asyncExecutor, AsyncBiConsumer<T, U> consumer) {
 		return (t, u) -> asyncExecutor.execute(() -> consumer.accept(t, u));
 	}
 }

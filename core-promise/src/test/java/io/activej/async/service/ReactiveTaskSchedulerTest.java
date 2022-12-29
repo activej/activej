@@ -28,7 +28,7 @@ public final class ReactiveTaskSchedulerTest {
 
 		await(Promise.complete().async()
 				.then(() -> {
-					Promise<Void> stopPromise = scheduler.stop();
+					Promise<?> stopPromise = scheduler.stop();
 					assertFalse(stopPromise.isComplete());
 					settablePromise.set(null);
 					return stopPromise;
@@ -49,7 +49,7 @@ public final class ReactiveTaskSchedulerTest {
 
 		await(Promise.complete().async()
 				.then(() -> {
-					Promise<Void> stopPromise = scheduler.stop();
+					Promise<?> stopPromise = scheduler.stop();
 					assertFalse(stopPromise.isComplete());
 					settablePromise.set(null);
 					return stopPromise;

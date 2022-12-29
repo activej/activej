@@ -273,7 +273,7 @@ public final class RpcClient extends AbstractNioReactive
 	}
 
 	@Override
-	public Promise<?> start() {
+	public Promise<Void> start() {
 		if (CHECK) Checks.checkState(inReactorThread(), "Not in reactor thread");
 		Checks.checkNotNull(messageTypes, "Message types must be specified");
 		Checks.checkState(stopPromise == null);
@@ -319,7 +319,7 @@ public final class RpcClient extends AbstractNioReactive
 	}
 
 	@Override
-	public Promise<?> stop() {
+	public Promise<Void> stop() {
 		if (CHECK) Checks.checkState(inReactorThread(), "Not in reactor thread");
 		if (stopPromise != null) return stopPromise;
 

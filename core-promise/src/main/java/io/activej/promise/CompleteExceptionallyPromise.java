@@ -20,7 +20,6 @@ import io.activej.async.callback.Callback;
 import io.activej.common.collection.Try;
 import io.activej.common.function.*;
 import io.activej.common.recycle.Recyclers;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.CompletableFuture;
@@ -36,9 +35,9 @@ import static io.activej.reactor.util.RunnableWithContext.wrapContext;
  */
 @SuppressWarnings("unchecked")
 final class CompleteExceptionallyPromise<T> implements Promise<T> {
-	private final @NotNull Exception exception;
+	private final Exception exception;
 
-	public CompleteExceptionallyPromise(@NotNull Exception e) {
+	public CompleteExceptionallyPromise(Exception e) {
 		this.exception = e;
 	}
 
@@ -73,39 +72,39 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> @NotNull Promise<U> next(@NotNull NextPromise<T, U> promise) {
+	public <U> Promise<U> next(NextPromise<T, U> promise) {
 		promise.accept(null, exception);
 		return promise;
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <U> @NotNull Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn) {
-		return (Promise<U>) this;
-	}
-
-    @Override
-    public @NotNull <U> Promise<U> mapIfElse(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<? super T, ? extends U> fnElse) {
+	public <U> Promise<U> map(FunctionEx<? super T, ? extends U> fn) {
 		return (Promise<U>) this;
 	}
 
 	@Override
-	public @NotNull Promise<T> mapIf(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, ? extends T> fn) {
+	public <U> Promise<U> mapIfElse(Predicate<? super T> predicate, FunctionEx<? super T, ? extends U> fn, FunctionEx<? super T, ? extends U> fnElse) {
+		return (Promise<U>) this;
+	}
+
+	@Override
+	public Promise<T> mapIf(Predicate<? super T> predicate, FunctionEx<? super T, ? extends T> fn) {
 		return this;
 	}
 
 	@Override
-	public @NotNull Promise<T> mapIfNull(@NotNull SupplierEx<? extends T> supplier) {
+	public Promise<T> mapIfNull(SupplierEx<? extends T> supplier) {
 		return this;
 	}
 
 	@Override
-	public @NotNull <U> Promise<U> mapIfNonNull(@NotNull FunctionEx<? super @NotNull T, ? extends U> fn) {
+	public <U> Promise<U> mapIfNonNull(FunctionEx<? super T, ? extends U> fn) {
 		return (Promise<U>) this;
 	}
 
 	@Override
-	public <U> @NotNull Promise<U> map(@NotNull BiFunctionEx<? super T, Exception, ? extends U> fn) {
+	public <U> Promise<U> map(BiFunctionEx<? super T, Exception, ? extends U> fn) {
 		try {
 			return Promise.of(fn.apply(null, exception));
 		} catch (Exception ex) {
@@ -115,7 +114,7 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> @NotNull Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<@NotNull Exception, ? extends U> exceptionFn) {
+	public <U> Promise<U> map(FunctionEx<? super T, ? extends U> fn, FunctionEx<Exception, ? extends U> exceptionFn) {
 		try {
 			return Promise.of(exceptionFn.apply(exception));
 		} catch (Exception ex) {
@@ -125,7 +124,7 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> mapException(@NotNull FunctionEx<@NotNull Exception, @NotNull Exception> exceptionFn) {
+	public Promise<T> mapException(FunctionEx<Exception, Exception> exceptionFn) {
 		try {
 			return Promise.ofException(exceptionFn.apply(exception));
 		} catch (Exception ex) {
@@ -135,7 +134,7 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> mapException(@NotNull Predicate<Exception> predicate, @NotNull FunctionEx<@NotNull Exception, @NotNull Exception> exceptionFn) {
+	public Promise<T> mapException(Predicate<Exception> predicate, FunctionEx<Exception, Exception> exceptionFn) {
 		try {
 			return predicate.test(exception) ? Promise.ofException(exceptionFn.apply(exception)) : this;
 		} catch (Exception ex) {
@@ -145,7 +144,7 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull <E extends Exception> Promise<T> mapException(@NotNull Class<E> clazz, @NotNull FunctionEx<@NotNull E, @NotNull Exception> exceptionFn) {
+	public <E extends Exception> Promise<T> mapException(Class<E> clazz, FunctionEx<E, Exception> exceptionFn) {
 		try {
 			return clazz.isAssignableFrom(exception.getClass()) ? Promise.ofException(exceptionFn.apply((E) exception)) : this;
 		} catch (Exception ex) {
@@ -155,37 +154,37 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> @NotNull Promise<U> then(@NotNull FunctionEx<? super T, Promise<? extends U>> fn) {
+	public <U> Promise<U> then(FunctionEx<? super T, Promise<? extends U>> fn) {
 		return (Promise<U>) this;
 	}
 
 	@Override
-	public @NotNull <U> Promise<U> thenIfElse(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, Promise<? extends U>> fn, @NotNull FunctionEx<? super T, Promise<? extends U>> fnElse) {
+	public <U> Promise<U> thenIfElse(Predicate<? super T> predicate, FunctionEx<? super T, Promise<? extends U>> fn, FunctionEx<? super T, Promise<? extends U>> fnElse) {
 		return (Promise<U>) this;
 	}
 
 	@Override
-	public @NotNull Promise<T> thenIf(@NotNull Predicate<? super T> predicate, @NotNull FunctionEx<? super T, Promise<? extends T>> fn) {
+	public Promise<T> thenIf(Predicate<? super T> predicate, FunctionEx<? super T, Promise<? extends T>> fn) {
 		return this;
 	}
 
 	@Override
-	public @NotNull Promise<T> thenIfNull(@NotNull SupplierEx<Promise<? extends T>> supplier) {
+	public Promise<T> thenIfNull(SupplierEx<Promise<? extends T>> supplier) {
 		return this;
 	}
 
 	@Override
-	public @NotNull <U> Promise<U> thenIfNonNull(@NotNull FunctionEx<? super @NotNull T, Promise<? extends U>> fn) {
+	public <U> Promise<U> thenIfNonNull(FunctionEx<? super T, Promise<? extends U>> fn) {
 		return (Promise<U>) this;
 	}
 
 	@Override
-	public <U> @NotNull Promise<U> then(@NotNull SupplierEx<Promise<? extends U>> fn) {
+	public <U> Promise<U> then(SupplierEx<Promise<? extends U>> fn) {
 		return (Promise<U>) this;
 	}
 
 	@Override
-	public <U> @NotNull Promise<U> then(@NotNull BiFunctionEx<? super T, Exception, Promise<? extends U>> fn) {
+	public <U> Promise<U> then(BiFunctionEx<? super T, Exception, Promise<? extends U>> fn) {
 		try {
 			return (Promise<U>) fn.apply(null, exception);
 		} catch (Exception ex) {
@@ -195,9 +194,9 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U> @NotNull Promise<U> then(
-			@NotNull FunctionEx<? super T, Promise<? extends U>> fn,
-			@NotNull FunctionEx<@NotNull Exception, Promise<? extends U>> exceptionFn) {
+	public <U> Promise<U> then(
+			FunctionEx<? super T, Promise<? extends U>> fn,
+			FunctionEx<Exception, Promise<? extends U>> exceptionFn) {
 		try {
 			return (Promise<U>) exceptionFn.apply(exception);
 		} catch (Exception ex) {
@@ -207,7 +206,7 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> when(@NotNull BiPredicate<? super T, @Nullable Exception> predicate, @NotNull BiConsumerEx<? super T, Exception> fn) {
+	public Promise<T> when(BiPredicate<? super T, @Nullable Exception> predicate, BiConsumerEx<? super T, Exception> fn) {
 		try {
 			if (predicate.test(null, exception)) {
 				fn.accept(null, exception);
@@ -220,7 +219,7 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> when(@NotNull BiPredicate<? super T, @Nullable Exception> predicate, @Nullable ConsumerEx<? super T> fn, @Nullable ConsumerEx<@NotNull Exception> exceptionFn) {
+	public Promise<T> when(BiPredicate<? super T, @Nullable Exception> predicate, @Nullable ConsumerEx<? super T> fn, @Nullable ConsumerEx<Exception> exceptionFn) {
 		try {
 			if (predicate.test(null, exception)) {
 				//noinspection ConstantConditions
@@ -234,7 +233,7 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> when(@NotNull BiPredicate<? super T, @Nullable Exception> predicate, @NotNull RunnableEx action) {
+	public Promise<T> when(BiPredicate<? super T, @Nullable Exception> predicate, RunnableEx action) {
 		try {
 			if (predicate.test(null, exception)) {
 				action.run();
@@ -247,7 +246,7 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> whenComplete(@NotNull BiConsumerEx<? super T, Exception> fn) {
+	public Promise<T> whenComplete(BiConsumerEx<? super T, Exception> fn) {
 		try {
 			fn.accept(null, exception);
 			return this;
@@ -258,7 +257,7 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> whenComplete(@NotNull ConsumerEx<? super T> fn, @NotNull ConsumerEx<@NotNull Exception> exceptionFn) {
+	public Promise<T> whenComplete(ConsumerEx<? super T> fn, ConsumerEx<Exception> exceptionFn) {
 		try {
 			exceptionFn.accept(exception);
 			return this;
@@ -269,7 +268,7 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> whenComplete(@NotNull RunnableEx action) {
+	public Promise<T> whenComplete(RunnableEx action) {
 		try {
 			action.run();
 			return this;
@@ -280,27 +279,27 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> whenResult(ConsumerEx<? super T> fn) {
+	public Promise<T> whenResult(ConsumerEx<? super T> fn) {
 		return this;
 	}
 
 	@Override
-	public @NotNull Promise<T> whenResult(@NotNull Predicate<? super T> predicate, ConsumerEx<? super T> fn) {
+	public Promise<T> whenResult(Predicate<? super T> predicate, ConsumerEx<? super T> fn) {
 		return this;
 	}
 
 	@Override
-	public @NotNull Promise<T> whenResult(@NotNull RunnableEx action) {
+	public Promise<T> whenResult(RunnableEx action) {
 		return this;
 	}
 
 	@Override
-	public @NotNull Promise<T> whenResult(@NotNull Predicate<? super T> predicate, @NotNull RunnableEx action) {
+	public Promise<T> whenResult(Predicate<? super T> predicate, RunnableEx action) {
 		return this;
 	}
 
 	@Override
-	public @NotNull Promise<T> whenException(@NotNull ConsumerEx<Exception> fn) {
+	public Promise<T> whenException(ConsumerEx<Exception> fn) {
 		try {
 			fn.accept(exception);
 			return this;
@@ -311,7 +310,7 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> whenException(@NotNull Predicate<Exception> predicate, @NotNull ConsumerEx<@NotNull Exception> fn) {
+	public Promise<T> whenException(Predicate<Exception> predicate, ConsumerEx<Exception> fn) {
 		try {
 			if (predicate.test(exception)) {
 				fn.accept(exception);
@@ -324,7 +323,7 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull <E extends Exception> Promise<T> whenException(@NotNull Class<E> clazz, @NotNull ConsumerEx<@NotNull E> fn) {
+	public <E extends Exception> Promise<T> whenException(Class<E> clazz, ConsumerEx<E> fn) {
 		try {
 			if (clazz.isAssignableFrom(exception.getClass())) {
 				fn.accept((E) exception);
@@ -337,7 +336,7 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> whenException(@NotNull RunnableEx action) {
+	public Promise<T> whenException(RunnableEx action) {
 		try {
 			action.run();
 			return this;
@@ -348,7 +347,7 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> whenException(@NotNull Predicate<Exception> predicate, @NotNull RunnableEx action) {
+	public Promise<T> whenException(Predicate<Exception> predicate, RunnableEx action) {
 		try {
 			if (predicate.test(exception)) {
 				action.run();
@@ -361,7 +360,7 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull Promise<T> whenException(@NotNull Class<? extends Exception> clazz, @NotNull RunnableEx action) {
+	public Promise<T> whenException(Class<? extends Exception> clazz, RunnableEx action) {
 		try {
 			if (clazz.isAssignableFrom(exception.getClass())) {
 				action.run();
@@ -374,46 +373,46 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public <U, V> @NotNull Promise<V> combine(@NotNull Promise<? extends U> other, @NotNull BiFunctionEx<? super T, ? super U, ? extends V> fn) {
+	public <U, V> Promise<V> combine(Promise<? extends U> other, BiFunctionEx<? super T, ? super U, ? extends V> fn) {
 		other.whenResult(Recyclers::recycle);
 		return (Promise<V>) this;
 	}
 
 	@Override
-	public @NotNull Promise<Void> both(@NotNull Promise<?> other) {
+	public Promise<Void> both(Promise<?> other) {
 		other.whenResult(Recyclers::recycle);
 		return (Promise<Void>) this;
 	}
 
 	@Override
-	public @NotNull Promise<T> either(@NotNull Promise<? extends T> other) {
+	public Promise<T> either(Promise<? extends T> other) {
 		return (Promise<T>) other;
 	}
 
 	@Override
-	public @NotNull Promise<T> async() {
+	public Promise<T> async() {
 		SettablePromise<T> result = new SettablePromise<>();
 		getCurrentReactor().post(wrapContext(result, () -> result.setException(exception)));
 		return result;
 	}
 
 	@Override
-	public @NotNull Promise<Try<T>> toTry() {
+	public Promise<Try<T>> toTry() {
 		return Promise.of(Try.ofException(exception));
 	}
 
 	@Override
-	public @NotNull Promise<Void> toVoid() {
+	public Promise<Void> toVoid() {
 		return (Promise<Void>) this;
 	}
 
 	@Override
-	public void run(@NotNull Callback<? super T> cb) {
+	public void run(Callback<? super T> cb) {
 		cb.accept(null, exception);
 	}
 
 	@Override
-	public @NotNull CompletableFuture<T> toCompletableFuture() {
+	public CompletableFuture<T> toCompletableFuture() {
 		CompletableFuture<T> future = new CompletableFuture<>();
 		future.completeExceptionally(exception);
 		return future;

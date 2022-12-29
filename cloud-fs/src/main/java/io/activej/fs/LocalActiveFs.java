@@ -420,13 +420,13 @@ public final class LocalActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public Promise<?> start() {
+	public Promise<Void> start() {
 		return execute(() -> LocalFileUtils.init(storage, tempDir, fsyncDirectories))
 				.whenResult(() -> started = true);
 	}
 
 	@Override
-	public Promise<?> stop() {
+	public Promise<Void> stop() {
 		return Promise.complete();
 	}
 

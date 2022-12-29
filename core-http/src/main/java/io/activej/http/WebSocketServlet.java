@@ -55,7 +55,7 @@ public abstract class WebSocketServlet implements AsyncServlet {
 	protected abstract void onWebSocket(WebSocket webSocket);
 
 	@Override
-	public final Promisable<HttpResponse> serve(HttpRequest request) {
+	public final Promise<HttpResponse> serve(HttpRequest request) {
 		return validateHeaders(request)
 				.then(() -> processAnswer(request))
 				.then(answer -> {

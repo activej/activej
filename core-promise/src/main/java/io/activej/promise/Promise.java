@@ -22,7 +22,6 @@ import io.activej.common.collection.Try;
 import io.activej.common.function.*;
 import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.NoSuchElementException;
@@ -63,7 +62,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * Creates successfully completed {@code Promise}
 	 */
 	@SuppressWarnings("unchecked")
-	static @NotNull Promise<Void> complete() {
+	static Promise<Void> complete() {
 		return (Promise<Void>) CompleteNullPromise.INSTANCE;
 	}
 
@@ -74,7 +73,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *              returns {@link CompleteNullPromise}, otherwise
 	 *              {@link CompleteResultPromise}
 	 */
-	static <T> @NotNull Promise<T> of(@Nullable T value) {
+	static <T> Promise<T> of(@Nullable T value) {
 		return value != null ? new CompleteResultPromise<>(value) : CompleteNullPromise.instance();
 	}
 
@@ -83,7 +82,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *
 	 * @param e Exception
 	 */
-	static <T> @NotNull Promise<T> ofException(@NotNull Exception e) {
+	static <T> Promise<T> ofException(Exception e) {
 		return new CompleteExceptionallyPromise<>(e);
 	}
 
@@ -92,7 +91,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * that is accepted by the provided {@link ConsumerEx} of
 	 * {@link SettablePromise}
 	 */
-	static <T> @NotNull Promise<T> ofCallback(@NotNull ConsumerEx<@NotNull SettablePromise<T>> callbackConsumer) {
+	static <T> Promise<T> ofCallback(ConsumerEx<SettablePromise<T>> callbackConsumer) {
 		SettablePromise<T> cb = new SettablePromise<>();
 		try {
 			callbackConsumer.accept(cb);
@@ -109,7 +108,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @see #ofOptional(Optional, Supplier)
 	 */
 	@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-	static <T> @NotNull Promise<T> ofOptional(@NotNull Optional<T> optional) {
+	static <T> Promise<T> ofOptional(Optional<T> optional) {
 		return ofOptional(optional, NoSuchElementException::new);
 	}
 
@@ -126,7 +125,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * {@code errorSupplier} exception.
 	 */
 	@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "OptionalIsPresent"})
-	static <T> @NotNull Promise<T> ofOptional(@NotNull Optional<T> optional, @NotNull Supplier<? extends @NotNull Exception> errorSupplier) {
+	static <T> Promise<T> ofOptional(Optional<T> optional, Supplier<? extends Exception> errorSupplier) {
 		if (optional.isPresent()) return Promise.of(optional.get());
 		return Promise.ofException(errorSupplier.get());
 	}
@@ -140,7 +139,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param value value to wrap when exception is null
 	 * @param e     possibly-null exception, determines type of promise completion
 	 */
-	static <T> @NotNull Promise<T> of(@Nullable T value, @Nullable Exception e) {
+	static <T> Promise<T> of(@Nullable T value, @Nullable Exception e) {
 		checkArgument(!(value != null && e != null), "Either value or exception should be 'null'");
 		return e == null ? of(value) : ofException(e);
 	}
@@ -149,7 +148,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * Returns a new {@link CompletePromise} or {@link CompleteExceptionallyPromise}
 	 * based on the provided {@link Try}.
 	 */
-	static <T> @NotNull Promise<T> ofTry(@NotNull Try<T> t) {
+	static <T> Promise<T> ofTry(Try<T> t) {
 		return t.reduce(Promise::of, Promise::ofException);
 	}
 
@@ -159,7 +158,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *
 	 * @return a new {@code Promise} with a result of the given future
 	 */
-	static <T> @NotNull Promise<T> ofFuture(@NotNull CompletableFuture<? extends T> future) {
+	static <T> Promise<T> ofFuture(CompletableFuture<? extends T> future) {
 		return ofCompletionStage(future);
 	}
 
@@ -169,7 +168,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param completionStage completion stage itself
 	 * @return result of the given completionStage wrapped in a {@code Promise}
 	 */
-	static <T> @NotNull Promise<T> ofCompletionStage(CompletionStage<? extends T> completionStage) {
+	static <T> Promise<T> ofCompletionStage(CompletionStage<? extends T> completionStage) {
 		return ofCallback(cb -> {
 			Reactor reactor = getCurrentReactor();
 			reactor.startExternalTask();
@@ -195,7 +194,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param future   the future itself
 	 * @return a new {@code Promise} of the future result
 	 */
-	static <T> @NotNull Promise<T> ofFuture(@NotNull Executor executor, @NotNull Future<? extends T> future) {
+	static <T> Promise<T> ofFuture(Executor executor, Future<? extends T> future) {
 		return ofCallback(cb -> {
 			Reactor reactor = Reactor.getCurrentReactor();
 			reactor.startExternalTask();
@@ -241,7 +240,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param supplier the task itself
 	 * @return {@code Promise} for the given task
 	 */
-	static <T> Promise<T> ofBlocking(@NotNull Executor executor, @NotNull SupplierEx<? extends T> supplier) {
+	static <T> Promise<T> ofBlocking(Executor executor, SupplierEx<? extends T> supplier) {
 		return ofCallback(cb -> {
 			Reactor reactor = Reactor.getCurrentReactor();
 			reactor.startExternalTask();
@@ -271,7 +270,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * Same as {@link #ofBlocking(Executor, SupplierEx)}, but without a result
 	 * (returned {@code Promise} is only a marker of completion).
 	 */
-	static @NotNull Promise<Void> ofBlocking(@NotNull Executor executor, @NotNull RunnableEx runnable) {
+	static Promise<Void> ofBlocking(Executor executor, RunnableEx runnable) {
 		return Promise.ofBlocking(executor, () -> {
 			runnable.run();
 			return null;
@@ -310,7 +309,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * Otherwise, does nothing.
 	 */
 	@Contract(pure = true)
-	@NotNull Promise<T> async();
+	Promise<T> async();
 
 	/**
 	 * Executes given {@link NextPromise} after execution
@@ -321,7 +320,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return subscribed {@code Promise}
 	 */
 	@Contract("_ -> param1")
-	<U> @NotNull Promise<U> next(@NotNull NextPromise<T, U> promise);
+	<U> Promise<U> next(NextPromise<T, U> promise);
 
 	/**
 	 * Returns a new {@code Promise} which is obtained by mapping
@@ -340,7 +339,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * applied to the result of {@code this} promise
 	 * @see CompletionStage#thenApply(Function)
 	 */
-	<U> @NotNull Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn);
+	<U> Promise<U> map(FunctionEx<? super T, ? extends U> fn);
 
 	/**
 	 * Returns a new {@code Promise} which is obtained by mapping
@@ -368,8 +367,8 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise} whose result is the result of one of two
 	 * mapping functions applied to the result of {@code this} promise
 	 */
-	default <U> @NotNull Promise<U> mapIfElse(@NotNull Predicate<? super T> predicate,
-			@NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<? super T, ? extends U> elseFn) {
+	default <U> Promise<U> mapIfElse(Predicate<? super T> predicate,
+			FunctionEx<? super T, ? extends U> fn, FunctionEx<? super T, ? extends U> elseFn) {
 		return map(t -> predicate.test(t) ? fn.apply(t) : elseFn.apply(t));
 	}
 
@@ -396,8 +395,8 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise} whose result is either the original result of a promise
 	 * or a mapped result of {@code this} promise
 	 */
-	default @NotNull Promise<T> mapIf(@NotNull Predicate<? super T> predicate,
-			@NotNull FunctionEx<? super T, ? extends T> fn) {
+	default Promise<T> mapIf(Predicate<? super T> predicate,
+			FunctionEx<? super T, ? extends T> fn) {
 		return mapIfElse(predicate, fn, FunctionEx.identity());
 	}
 
@@ -419,7 +418,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise} where {@code null} result is replaced with a
 	 * result supplied by a given supplier
 	 */
-	default @NotNull Promise<T> mapIfNull(@NotNull SupplierEx<? extends T> supplier) {
+	default Promise<T> mapIfNull(SupplierEx<? extends T> supplier) {
 		return mapIf(Objects::isNull, $ -> supplier.get());
 	}
 
@@ -442,7 +441,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *           to a new value if a result of {@code this} promise is {@code null}
 	 * @return new {@code Promise} whose result is either {@code null} or a mapped result
 	 */
-	default <U> @NotNull Promise<U> mapIfNonNull(@NotNull FunctionEx<? super @NotNull T, ? extends U> fn) {
+	default <U> Promise<U> mapIfNonNull(FunctionEx<? super T, ? extends U> fn) {
 		return mapIfElse(Objects::nonNull, fn, $ -> null);
 	}
 
@@ -462,7 +461,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise} whose result is the result of function
 	 * applied to the result and exception of {@code this} promise
 	 */
-	<U> @NotNull Promise<U> map(@NotNull BiFunctionEx<? super T, @Nullable Exception, ? extends U> fn);
+	<U> Promise<U> map(BiFunctionEx<? super T, @Nullable Exception, ? extends U> fn);
 
 	/**
 	 * Returns a new {@code Promise} which is obtained by mapping
@@ -481,7 +480,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise} whose result is the result of either first or second
 	 * function applied either to a result or an exception of {@code this} promise.
 	 */
-	default <U> @NotNull Promise<U> map(@NotNull FunctionEx<? super T, ? extends U> fn, @NotNull FunctionEx<@NotNull Exception, ? extends U> exceptionFn) {
+	default <U> Promise<U> map(FunctionEx<? super T, ? extends U> fn, FunctionEx<Exception, ? extends U> exceptionFn) {
 		return map((v, e) -> e == null ? fn.apply(v) : exceptionFn.apply(e));
 	}
 
@@ -500,7 +499,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise} whose result is the result of a mapping
 	 * function applied either to an exception of {@code this} promise.
 	 */
-	default @NotNull Promise<T> mapException(@NotNull FunctionEx<@NotNull Exception, @NotNull Exception> exceptionFn) {
+	default Promise<T> mapException(FunctionEx<Exception, Exception> exceptionFn) {
 		return then(Promise::of, e -> Promise.ofException(exceptionFn.apply(e)));
 	}
 
@@ -520,8 +519,8 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise} whose result is the result of a mapping
 	 * function applied either to an exception of {@code this} promise.
 	 */
-	default @NotNull Promise<T> mapException(@NotNull Predicate<Exception> predicate,
-			@NotNull FunctionEx<@NotNull Exception, @NotNull Exception> exceptionFn) {
+	default Promise<T> mapException(Predicate<Exception> predicate,
+			FunctionEx<Exception, Exception> exceptionFn) {
 		return mapException(e -> predicate.test(e) ? exceptionFn.apply(e) : e);
 	}
 
@@ -542,8 +541,8 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise} whose result is the result of a mapping
 	 * function applied either to an exception of {@code this} promise.
 	 */
-	default @NotNull <E extends Exception> Promise<T> mapException(@NotNull Class<E> clazz,
-			@NotNull FunctionEx<@NotNull E, @NotNull Exception> exceptionFn) {
+	default <E extends Exception> Promise<T> mapException(Class<E> clazz,
+			FunctionEx<E, Exception> exceptionFn) {
 		//noinspection unchecked
 		return mapException(e -> clazz.isAssignableFrom(e.getClass()), (FunctionEx<Exception, Exception>) exceptionFn);
 	}
@@ -561,7 +560,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param fn a supplier of a new promise which will be called
 	 *           if {@code this} promise completes successfully
 	 */
-	<U> @NotNull Promise<U> then(@NotNull SupplierEx<Promise<? extends U>> fn);
+	<U> Promise<U> then(SupplierEx<Promise<? extends U>> fn);
 
 	/**
 	 * Returns a new {@code Promise} which is obtained by mapping
@@ -580,7 +579,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * applied to the result of {@code this} promise
 	 * @see CompletionStage#thenCompose(Function)
 	 */
-	<U> @NotNull Promise<U> then(@NotNull FunctionEx<? super T, Promise<? extends U>> fn);
+	<U> Promise<U> then(FunctionEx<? super T, Promise<? extends U>> fn);
 
 	/**
 	 * Returns a new {@code Promise} which is obtained by mapping
@@ -608,8 +607,8 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise} which is the result of one of two
 	 * mapping functions applied to the result of {@code this} promise
 	 */
-	default <U> @NotNull Promise<U> thenIfElse(@NotNull Predicate<? super T> predicate,
-			@NotNull FunctionEx<? super T, Promise<? extends U>> fn, @NotNull FunctionEx<? super T, Promise<? extends U>> elseFn) {
+	default <U> Promise<U> thenIfElse(Predicate<? super T> predicate,
+			FunctionEx<? super T, Promise<? extends U>> fn, FunctionEx<? super T, Promise<? extends U>> elseFn) {
 		return then(t -> predicate.test(t) ? fn.apply(t) : elseFn.apply(t));
 	}
 
@@ -636,8 +635,8 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise} which either has the original result or is a promise
 	 * obtained by mapping the result of {@code this} promise to a new promise
 	 */
-	default @NotNull Promise<T> thenIf(@NotNull Predicate<? super T> predicate,
-			@NotNull FunctionEx<? super T, Promise<? extends T>> fn) {
+	default Promise<T> thenIf(Predicate<? super T> predicate,
+			FunctionEx<? super T, Promise<? extends T>> fn) {
 		return thenIfElse(predicate, fn, Promise::of);
 	}
 
@@ -660,7 +659,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise} where {@code null} result is replaced with a
 	 * a new promise supplied by a given supplier
 	 */
-	default @NotNull Promise<T> thenIfNull(@NotNull SupplierEx<Promise<? extends T>> supplier) {
+	default Promise<T> thenIfNull(SupplierEx<Promise<? extends T>> supplier) {
 		return thenIfElse(Objects::isNull, $ -> supplier.get(), Promise::of);
 	}
 
@@ -684,7 +683,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise} which is either obtained by mapping a {@code null}
 	 * result of {@code this} promise or is a promise with a {@code null} result
 	 */
-	default <U> @NotNull Promise<U> thenIfNonNull(@NotNull FunctionEx<? super @NotNull T, Promise<? extends U>> fn) {
+	default <U> Promise<U> thenIfNonNull(FunctionEx<? super T, Promise<? extends U>> fn) {
 		return thenIfElse(Objects::nonNull, fn, $ -> Promise.of(null));
 	}
 
@@ -704,7 +703,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise} which is the result of function
 	 * applied to the result and exception of {@code this} promise
 	 */
-	<U> @NotNull Promise<U> then(@NotNull BiFunctionEx<? super T, @Nullable Exception, Promise<? extends U>> fn);
+	<U> Promise<U> then(BiFunctionEx<? super T, @Nullable Exception, Promise<? extends U>> fn);
 
 	/**
 	 * Returns a new {@code Promise} which is obtained by mapping
@@ -723,9 +722,9 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise} which is a result of either first or second
 	 * function applied either to a result or an exception of {@code this} promise.
 	 */
-	default <U> @NotNull Promise<U> then(
-			@NotNull FunctionEx<? super T, Promise<? extends U>> fn,
-			@NotNull FunctionEx<@NotNull Exception, Promise<? extends U>> exceptionFn) {
+	default <U> Promise<U> then(
+			FunctionEx<? super T, Promise<? extends U>> fn,
+			FunctionEx<Exception, Promise<? extends U>> exceptionFn) {
 		return then((v, e) -> e == null ? fn.apply(v) : exceptionFn.apply(e));
 	}
 
@@ -744,7 +743,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param fn        a consumer that consumes a result
 	 *                  and an exception of {@code this} promise
 	 */
-	default @NotNull Promise<T> when(@NotNull BiPredicate<? super T, @Nullable Exception> predicate, @NotNull BiConsumerEx<? super T, Exception> fn) {
+	default Promise<T> when(BiPredicate<? super T, @Nullable Exception> predicate, BiConsumerEx<? super T, Exception> fn) {
 		return then((v, e) -> {
 			if (predicate.test(v, e)) {
 				fn.accept(v, e);
@@ -770,9 +769,9 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param fn          consumer that consumes a result of {@code this} promise
 	 * @param exceptionFn consumer that consumes an exception of {@code this} promise
 	 */
-	default @NotNull Promise<T> when(@NotNull BiPredicate<? super T, @Nullable Exception> predicate,
+	default Promise<T> when(BiPredicate<? super T, @Nullable Exception> predicate,
 			@Nullable ConsumerEx<? super T> fn,
-			@Nullable ConsumerEx<@NotNull Exception> exceptionFn) {
+			@Nullable ConsumerEx<Exception> exceptionFn) {
 		return when(predicate, (v, e) -> {
 			if (e == null) {
 				//noinspection ConstantConditions
@@ -799,7 +798,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param action    runnable to be executed after {@code this} promise completes
 	 *                  and promise result and exception satisfy a given {@link BiPredicate}
 	 */
-	default @NotNull Promise<T> when(@NotNull BiPredicate<? super T, @Nullable Exception> predicate, @NotNull RunnableEx action) {
+	default Promise<T> when(BiPredicate<? super T, @Nullable Exception> predicate, RunnableEx action) {
 		return when(predicate, (v, e) -> action.run());
 	}
 
@@ -816,7 +815,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param fn a consumer that consumes a result
 	 *           and an exception of {@code this} promise
 	 */
-	default @NotNull Promise<T> whenComplete(@NotNull BiConsumerEx<? super T, Exception> fn) {
+	default Promise<T> whenComplete(BiConsumerEx<? super T, Exception> fn) {
 		return when(P.isComplete(), fn);
 	}
 
@@ -835,7 +834,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param fn          consumer that consumes a result of {@code this} promise
 	 * @param exceptionFn consumer that consumes an exception of {@code this} promise
 	 */
-	default @NotNull Promise<T> whenComplete(ConsumerEx<? super T> fn, ConsumerEx<@NotNull Exception> exceptionFn) {
+	default Promise<T> whenComplete(ConsumerEx<? super T> fn, ConsumerEx<Exception> exceptionFn) {
 		return when(P.isComplete(), fn, exceptionFn);
 	}
 
@@ -851,7 +850,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *
 	 * @param action runnable to be executed after {@code this} promise completes
 	 */
-	default @NotNull Promise<T> whenComplete(@NotNull RunnableEx action) {
+	default Promise<T> whenComplete(RunnableEx action) {
 		return when(P.isComplete(), action);
 	}
 
@@ -867,7 +866,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *
 	 * @param fn consumer that consumes a result of {@code this} promise
 	 */
-	default @NotNull Promise<T> whenResult(ConsumerEx<? super T> fn) {
+	default Promise<T> whenResult(ConsumerEx<? super T> fn) {
 		return when(P.isResult(), fn, null);
 	}
 
@@ -885,7 +884,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param predicate a predicate that tests a result of {@code this} promise
 	 * @param fn        consumer that consumes a result of {@code this} promise
 	 */
-	default @NotNull Promise<T> whenResult(@NotNull Predicate<? super T> predicate, ConsumerEx<? super T> fn) {
+	default Promise<T> whenResult(Predicate<? super T> predicate, ConsumerEx<? super T> fn) {
 		return when(P.isResult(predicate), fn, null);
 	}
 
@@ -903,7 +902,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param action runnable to be executed after {@code this} promise
 	 *               completes successfully
 	 */
-	default @NotNull Promise<T> whenResult(@NotNull RunnableEx action) {
+	default Promise<T> whenResult(RunnableEx action) {
 		return when(P.isResult(), action);
 	}
 
@@ -923,7 +922,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *                  completes successfully and a result of this {@code Promise}
 	 *                  satisfy a given {@link Predicate}
 	 */
-	default @NotNull Promise<T> whenResult(@NotNull Predicate<? super T> predicate, @NotNull RunnableEx action) {
+	default Promise<T> whenResult(Predicate<? super T> predicate, RunnableEx action) {
 		return when(P.isResult(predicate), action);
 	}
 
@@ -939,7 +938,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *
 	 * @param fn consumer that consumes an exception of {@code this} promise
 	 */
-	default @NotNull Promise<T> whenException(@NotNull ConsumerEx<@NotNull Exception> fn) {
+	default Promise<T> whenException(ConsumerEx<Exception> fn) {
 		return when(P.isException(), null, fn);
 	}
 
@@ -957,7 +956,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param predicate a predicate that tests an exception of {@code this} promise
 	 * @param fn        consumer that consumes an exception of {@code this} promise
 	 */
-	default @NotNull Promise<T> whenException(@NotNull Predicate<Exception> predicate, @NotNull ConsumerEx<@NotNull Exception> fn) {
+	default Promise<T> whenException(Predicate<Exception> predicate, ConsumerEx<Exception> fn) {
 		return when(P.isException(predicate), null, fn);
 	}
 
@@ -976,7 +975,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *              only if an exception of {@code this} promise is an instance of the specified class
 	 * @param fn    consumer that consumes an exception of {@code this} promise
 	 */
-	default @NotNull <E extends Exception> Promise<T> whenException(@NotNull Class<E> clazz, @NotNull ConsumerEx<@NotNull E> fn) {
+	default <E extends Exception> Promise<T> whenException(Class<E> clazz, ConsumerEx<E> fn) {
 		//noinspection unchecked
 		return when(P.isException(clazz), null, (ConsumerEx<Exception>) fn);
 	}
@@ -994,7 +993,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param action runnable to be executed after {@code this} promise
 	 *               completes exceptionally
 	 */
-	default @NotNull Promise<T> whenException(@NotNull RunnableEx action) {
+	default Promise<T> whenException(RunnableEx action) {
 		return when(P.isException(), action);
 	}
 
@@ -1014,7 +1013,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *                  completes exceptionally and an exception of this {@code Promise}
 	 *                  satisfies a given {@link Predicate}.
 	 */
-	default @NotNull Promise<T> whenException(@NotNull Predicate<Exception> predicate, @NotNull RunnableEx action) {
+	default Promise<T> whenException(Predicate<Exception> predicate, RunnableEx action) {
 		return when(P.isException(predicate), action);
 	}
 
@@ -1035,7 +1034,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *               completes exceptionally and an exception of this {@code Promise}
 	 *               is an instance of a given exception {@link Class}.
 	 */
-	default @NotNull Promise<T> whenException(@NotNull Class<? extends Exception> clazz, @NotNull RunnableEx action) {
+	default Promise<T> whenException(Class<? extends Exception> clazz, RunnableEx action) {
 		return when(P.isException(clazz), action);
 	}
 
@@ -1056,7 +1055,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *                            and a cast could not be made
 	 */
 	@SuppressWarnings("unchecked")
-	default @NotNull <U> Promise<U> cast() {
+	default <U> Promise<U> cast() {
 		return (Promise<U>) this;
 	}
 
@@ -1078,7 +1077,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *                            and a cast could not be made
 	 */
 	@SuppressWarnings("unchecked")
-	default @NotNull <U> Promise<U> cast(Class<? extends U> cls) {
+	default <U> Promise<U> cast(Class<? extends U> cls) {
 		return (Promise<U>) this;
 	}
 
@@ -1093,7 +1092,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return new {@code Promise}
 	 */
 	@Contract(pure = true)
-	<U, V> @NotNull Promise<V> combine(@NotNull Promise<? extends U> other, @NotNull BiFunctionEx<? super T, ? super U, ? extends V> fn);
+	<U, V> Promise<V> combine(Promise<? extends U> other, BiFunctionEx<? super T, ? super U, ? extends V> fn);
 
 	/**
 	 * Returns a new {@code Promise} when both
@@ -1106,7 +1105,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * {@code Promise} complete
 	 */
 	@Contract(pure = true)
-	@NotNull Promise<Void> both(@NotNull Promise<?> other);
+	Promise<Void> both(Promise<?> other);
 
 	/**
 	 * Returns the {@code Promise} which was completed first.
@@ -1115,20 +1114,20 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @return the first completed {@code Promise}
 	 */
 	@Contract(pure = true)
-	@NotNull Promise<T> either(@NotNull Promise<? extends T> other);
+	Promise<T> either(Promise<? extends T> other);
 
 	/**
 	 * Returns {@code Promise} that always completes successfully
 	 * with result or exception wrapped in {@link Try}.
 	 */
 	@Contract(pure = true)
-	@NotNull Promise<Try<T>> toTry();
+	Promise<Try<T>> toTry();
 
 	/**
 	 * Waits for result and discards it.
 	 */
 	@Contract(pure = true)
-	@NotNull Promise<Void> toVoid();
+	Promise<Void> toVoid();
 
 	/**
 	 * Calls a {@code callback} after {@code this} promise is completed, passing
@@ -1143,12 +1142,12 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * @param cb a callback to be called once a promise completes
 	 */
 	@Override
-	void run(@NotNull Callback<? super T> cb);
+	void run(Callback<? super T> cb);
 
 	/**
 	 * Wraps {@code Promise} into {@link CompletableFuture}.
 	 */
 	@Contract(pure = true)
-	@NotNull CompletableFuture<T> toCompletableFuture();
+	CompletableFuture<T> toCompletableFuture();
 
 }

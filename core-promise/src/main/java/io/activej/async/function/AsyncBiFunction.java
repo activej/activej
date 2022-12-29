@@ -18,7 +18,6 @@ package io.activej.async.function;
 
 import io.activej.common.function.BiFunctionEx;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
@@ -32,7 +31,7 @@ public interface AsyncBiFunction<T, U, R> {
 	 * @param function a {@link BiFunctionEx}
 	 * @return {@link AsyncBiFunction} that works on top of {@link BiFunctionEx} interface
 	 */
-	static <T, U, R> @NotNull AsyncBiFunction<T, U, R> of(@NotNull BiFunctionEx<? super T, ? super U, ? extends R> function) {
+	static <T, U, R> AsyncBiFunction<T, U, R> of(BiFunctionEx<? super T, ? super U, ? extends R> function) {
 		return (t, u) -> {
 			try {
 				return Promise.of(function.apply(t, u));
