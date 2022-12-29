@@ -18,7 +18,6 @@ package io.activej.datastream;
 
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * A wrapper class that delegates all calls to underlying {@link StreamConsumer}.
@@ -37,7 +36,7 @@ public abstract class ForwardingStreamConsumer<T> implements StreamConsumer<T> {
 	}
 
 	@Override
-	public void consume(@NotNull StreamSupplier<T> streamSupplier) {
+	public void consume(StreamSupplier<T> streamSupplier) {
 		consumer.consume(streamSupplier);
 	}
 
@@ -52,7 +51,7 @@ public abstract class ForwardingStreamConsumer<T> implements StreamConsumer<T> {
 	}
 
 	@Override
-	public void closeEx(@NotNull Exception e) {
+	public void closeEx(Exception e) {
 		consumer.closeEx(e);
 	}
 }

@@ -19,7 +19,6 @@ package io.activej.ot.system;
 import io.activej.common.tuple.*;
 import io.activej.ot.TransformResult;
 import io.activej.ot.exception.TransformException;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.function.Function;
@@ -173,13 +172,13 @@ public final class MergedOTSystem<D, D1, D2> implements OTSystem<D> {
 				.collect(toList());
 	}
 
-	private static <D, D1, D2> @NotNull List<D> combineLists2(List<D1> list1, List<D2> list2, TupleConstructor2<List<D1>, List<D2>, D> constructor) {
+	private static <D, D1, D2> List<D> combineLists2(List<D1> list1, List<D2> list2, TupleConstructor2<List<D1>, List<D2>, D> constructor) {
 		return list1.isEmpty() && list2.isEmpty() ?
 				List.of() :
 				List.of(constructor.create(list1, list2));
 	}
 
-	private static <D, D1, D2, D3> @NotNull List<D> combineLists3(List<D1> list1, List<D2> list2, List<D3> list3, TupleConstructor3<List<D1>, List<D2>, List<D3>, D> constructor) {
+	private static <D, D1, D2, D3> List<D> combineLists3(List<D1> list1, List<D2> list2, List<D3> list3, TupleConstructor3<List<D1>, List<D2>, List<D3>, D> constructor) {
 		return list1.isEmpty() && list2.isEmpty() && list3.isEmpty() ?
 				List.of() :
 				List.of(constructor.create(list1, list2, list3));

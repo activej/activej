@@ -13,7 +13,6 @@ import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
 import io.activej.reactor.nio.NioReactor;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +57,7 @@ public class DecoratedActiveFsExample extends ServerSetupExample {
 		}
 
 		@Override
-		public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
+		public Promise<ChannelConsumer<ByteBuf>> upload(String name, long size) {
 			return super.upload(name)
 					.map(consumer -> {
 						logger.info("Starting upload of file: {}. File size is {} bytes", name, size);
@@ -69,7 +68,7 @@ public class DecoratedActiveFsExample extends ServerSetupExample {
 		}
 
 		@Override
-		public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
+		public Promise<ChannelSupplier<ByteBuf>> download(String name, long offset, long limit) {
 			return super.download(name, offset, limit)
 					.map(supplier -> {
 						logger.info("Starting downloading file: {}", name);

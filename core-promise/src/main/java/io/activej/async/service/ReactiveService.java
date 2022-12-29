@@ -18,7 +18,6 @@ package io.activej.async.service;
 
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactive;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -33,7 +32,7 @@ public interface ReactiveService extends Reactive {
 	 */
 	Promise<?> start();
 
-	default @NotNull CompletableFuture<?> startFuture() {
+	default CompletableFuture<?> startFuture() {
 		return getReactor().submit(this::start);
 	}
 
@@ -43,7 +42,7 @@ public interface ReactiveService extends Reactive {
 	 */
 	Promise<?> stop();
 
-	default @NotNull CompletableFuture<?> stopFuture() {
+	default CompletableFuture<?> stopFuture() {
 		return getReactor().submit(this::stop);
 	}
 }

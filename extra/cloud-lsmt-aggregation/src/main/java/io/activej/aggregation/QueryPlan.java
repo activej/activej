@@ -16,8 +16,6 @@
 
 package io.activej.aggregation;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -30,7 +28,7 @@ import static java.util.Collections.unmodifiableSet;
 public final class QueryPlan {
 	private final List<Sequence> sequences;
 
-	public QueryPlan(@NotNull List<Sequence> sequences) {
+	public QueryPlan(List<Sequence> sequences) {
 		this.sequences = sequences;
 	}
 

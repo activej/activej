@@ -21,7 +21,6 @@ import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.ImplicitlyReactive;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Checks.checkState;
@@ -139,7 +138,7 @@ public final class ChannelZeroBuffer<T> extends ImplicitlyReactive implements Ch
 	 * @param e exception that is used to close buffer with
 	 */
 	@Override
-	public void closeEx(@NotNull Exception e) {
+	public void closeEx(Exception e) {
 		if (exception != null) return;
 		exception = e;
 		if (put != null) {

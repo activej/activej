@@ -25,7 +25,6 @@ import io.activej.csp.file.ChannelFileWriter;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.ImplicitlyReactive;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,7 +126,7 @@ public final class ChannelFileBuffer extends ImplicitlyReactive implements Chann
 	}
 
 	@Override
-	public void closeEx(@NotNull Exception e) {
+	public void closeEx(Exception e) {
 		if (exception != null) {
 			return;
 		}

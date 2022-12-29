@@ -19,7 +19,6 @@ package io.activej.datastream;
 import io.activej.csp.ChannelSupplier;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -61,7 +60,7 @@ final class StreamSuppliers {
 		 *
 		 * @param iterator iterator with object which need to send
 		 */
-		public OfIterator(@NotNull Iterator<T> iterator) {
+		public OfIterator(Iterator<T> iterator) {
 			this.iterator = iterator;
 		}
 

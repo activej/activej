@@ -5,7 +5,6 @@ import io.activej.datastream.SynchronousStreamConsumer;
 import io.activej.reactor.ImplicitlyReactive;
 import io.activej.record.Record;
 import org.apache.calcite.avatica.Meta.Frame;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,7 +57,7 @@ final class FrameFetcher extends ImplicitlyReactive implements ReactiveCloseable
 	}
 
 	@Override
-	public void closeEx(@NotNull Exception e) {
+	public void closeEx(Exception e) {
 		synchronousConsumer.closeEx(e);
 	}
 }

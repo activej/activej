@@ -39,7 +39,6 @@ import io.activej.rpc.protocol.RpcMessage;
 import io.activej.rpc.protocol.RpcStream;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerBuilder;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetAddress;
@@ -147,7 +146,7 @@ public final class RpcServer extends AbstractReactiveServer<RpcServer> {
 	 * @param messageTypes a list of message types processed by a server
 	 * @return server instance capable for handling provided message types
 	 */
-	public RpcServer withMessageTypes(@NotNull List<Class<?>> messageTypes) {
+	public RpcServer withMessageTypes(List<Class<?>> messageTypes) {
 		checkArgument(new HashSet<>(messageTypes).size() == messageTypes.size(), "Message types must be unique");
 		this.messageTypes = messageTypes;
 		return this;
@@ -178,11 +177,11 @@ public final class RpcServer extends AbstractReactiveServer<RpcServer> {
 	/**
 	 * Adds a handler for a specified request-response pair.
 	 *
-	 * @param requestClass  a class representing a request structure
-	 * @param handler       a class containing logic of request processing and
-	 *                      creating a response
-	 * @param <I>           class of request
-	 * @param <O>           class of response
+	 * @param requestClass a class representing a request structure
+	 * @param handler      a class containing logic of request processing and
+	 *                     creating a response
+	 * @param <I>          class of request
+	 * @param <O>          class of response
 	 * @return server instance capable for handling requests of concrete types
 	 */
 	public <I, O> RpcServer withHandler(Class<I> requestClass, RpcRequestHandler<I, O> handler) {

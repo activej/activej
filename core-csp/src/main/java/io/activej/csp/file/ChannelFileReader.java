@@ -25,7 +25,6 @@ import io.activej.common.MemSize;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.AbstractChannelSupplier;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -153,7 +152,7 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> im
 	}
 
 	@Override
-	protected void onClosed(@NotNull Exception e) {
+	protected void onClosed(Exception e) {
 		try {
 			if (!channel.isOpen()) {
 				throw new AsyncCloseException("File has been closed");

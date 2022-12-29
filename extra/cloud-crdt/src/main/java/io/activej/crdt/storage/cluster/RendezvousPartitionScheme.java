@@ -6,7 +6,6 @@ import io.activej.crdt.storage.cluster.DiscoveryService.PartitionScheme;
 import io.activej.rpc.client.sender.RpcStrategy;
 import io.activej.rpc.client.sender.RpcStrategyRendezvousHashing;
 import io.activej.rpc.client.sender.RpcStrategySharding;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
@@ -23,8 +22,8 @@ public final class RendezvousPartitionScheme<P> implements PartitionScheme<P>, W
 	private ToIntFunction<?> keyHashFn = Object::hashCode;
 	@SuppressWarnings("unchecked")
 	private Function<P, Object> partitionIdGetter = (Function<P, Object>) Function.identity();
-	private Function<P, @NotNull RpcStrategy> rpcProvider;
-	private Function<P, @NotNull CrdtStorage<?, ?>> crdtProvider;
+	private Function<P, RpcStrategy> rpcProvider;
+	private Function<P, CrdtStorage<?, ?>> crdtProvider;
 
 	@SafeVarargs
 	public static <P> RendezvousPartitionScheme<P> create(RendezvousPartitionGroup<P>... partitionGroups) {
@@ -73,7 +72,6 @@ public final class RendezvousPartitionScheme<P> implements PartitionScheme<P>, W
 	}
 
 	@Override
-	@NotNull
 	public RpcStrategy provideRpcConnection(P partition) {
 		return rpcProvider.apply(partition);
 	}

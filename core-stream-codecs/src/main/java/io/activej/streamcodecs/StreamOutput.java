@@ -2,7 +2,6 @@ package io.activej.streamcodecs;
 
 import io.activej.common.initializer.WithInitializer;
 import io.activej.serializer.BinaryOutput;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Closeable;
@@ -166,21 +165,21 @@ public class StreamOutput implements Closeable, WithInitializer<StreamOutput> {
 		out.writeChar(v);
 	}
 
-	public final void writeString(@NotNull String s) throws IOException {
+	public final void writeString(String s) throws IOException {
 		writeUTF8(s);
 	}
 
-	public final void writeUTF8(@NotNull String s) throws IOException {
+	public final void writeUTF8(String s) throws IOException {
 		ensure(5 + s.length() * 3);
 		out.writeUTF8(s);
 	}
 
-	public final void writeIso88591(@NotNull String s) throws IOException {
+	public final void writeIso88591(String s) throws IOException {
 		ensure(5 + s.length() * 3);
 		out.writeIso88591(s);
 	}
 
-	public final void writeUTF16(@NotNull String s) throws IOException {
+	public final void writeUTF16(String s) throws IOException {
 		ensure(5 + s.length() * 2);
 		out.writeUTF16(s);
 	}

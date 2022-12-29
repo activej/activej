@@ -19,7 +19,6 @@ package io.activej.uikernel;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Map;
@@ -28,7 +27,7 @@ public final class UpdateResponse<K, R extends AbstractRecord<K>> {
 	private final List<R> changes;
 	private final Map<K, Map<String, List<String>>> errors;
 
-	private UpdateResponse(@NotNull List<R> changes, @NotNull Map<K, Map<String, List<String>>> errors) {
+	private UpdateResponse(List<R> changes, Map<K, Map<String, List<String>>> errors) {
 		this.changes = changes;
 		this.errors = errors;
 	}

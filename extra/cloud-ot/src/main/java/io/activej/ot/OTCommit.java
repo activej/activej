@@ -17,7 +17,6 @@
 package io.activej.ot;
 
 import io.activej.ot.OTCommitFactory.DiffsWithLevel;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
@@ -50,11 +49,11 @@ public final class OTCommit<K, D> {
 		this.level = parents.values().stream().mapToLong(DiffsWithLevel::getLevel).max().orElse(0L) + 1L;
 	}
 
-	public static <K, D> OTCommit<K, D> ofRoot(@NotNull K id) {
+	public static <K, D> OTCommit<K, D> ofRoot(K id) {
 		return new OTCommit<>(INITIAL_EPOCH, id, Map.of());
 	}
 
-	public static <K, D> OTCommit<K, D> of(int epoch, @NotNull K id, @NotNull Map<K, DiffsWithLevel<D>> parents) {
+	public static <K, D> OTCommit<K, D> of(int epoch, K id, Map<K, DiffsWithLevel<D>> parents) {
 		return new OTCommit<>(epoch, id, parents);
 	}
 
@@ -62,7 +61,7 @@ public final class OTCommit<K, D> {
 		return of(epoch, id, keysToMap(parents.stream(), parent -> new DiffsWithLevel<>(levels.applyAsLong(parent), diffs.apply(parent))));
 	}
 
-	public static <K, D> OTCommit<K, D> ofCommit(int epoch, @NotNull K id, @NotNull K parent, @NotNull DiffsWithLevel<D> diffs) {
+	public static <K, D> OTCommit<K, D> ofCommit(int epoch, K id, K parent, DiffsWithLevel<D> diffs) {
 		return new OTCommit<>(epoch, id, Map.of(parent, diffs));
 	}
 

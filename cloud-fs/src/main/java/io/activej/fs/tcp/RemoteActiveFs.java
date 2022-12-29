@@ -129,7 +129,7 @@ public final class RemoteActiveFs extends AbstractNioReactive
 	// endregion
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
+	public Promise<ChannelConsumer<ByteBuf>> upload(String name) {
 		return connectForStreaming(address)
 				.then(this::performHandshake)
 				.then(messaging -> doUpload(messaging, name, null))
@@ -138,7 +138,7 @@ public final class RemoteActiveFs extends AbstractNioReactive
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
+	public Promise<ChannelConsumer<ByteBuf>> upload(String name, long size) {
 		return connect(address)
 				.then(this::performHandshake)
 				.then(messaging -> doUpload(messaging, name, size))
@@ -170,7 +170,7 @@ public final class RemoteActiveFs extends AbstractNioReactive
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
+	public Promise<ChannelConsumer<ByteBuf>> append(String name, long offset) {
 		return connect(address)
 				.then(this::performHandshake)
 				.then(messaging ->
@@ -192,7 +192,7 @@ public final class RemoteActiveFs extends AbstractNioReactive
 	}
 
 	@Override
-	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
+	public Promise<ChannelSupplier<ByteBuf>> download(String name, long offset, long limit) {
 		checkArgument(offset >= 0, "Data offset must be greater than or equal to zero");
 		checkArgument(limit >= 0, "Data limit must be greater than or equal to zero");
 
@@ -238,7 +238,7 @@ public final class RemoteActiveFs extends AbstractNioReactive
 	}
 
 	@Override
-	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
+	public Promise<Void> copy(String name, String target) {
 		return simpleCommand(new FsRequest.Copy(name, target), FsResponse.CopyFinished.class)
 				.whenComplete(toLogger(logger, "copy", name, target, this))
 				.whenComplete(copyPromise.recordStats());
@@ -255,7 +255,7 @@ public final class RemoteActiveFs extends AbstractNioReactive
 	}
 
 	@Override
-	public Promise<Void> move(@NotNull String name, @NotNull String target) {
+	public Promise<Void> move(String name, String target) {
 		return simpleCommand(new FsRequest.Move(name, target), FsResponse.MoveFinished.class)
 				.whenComplete(toLogger(logger, "move", name, target, this))
 				.whenComplete(movePromise.recordStats());
@@ -272,7 +272,7 @@ public final class RemoteActiveFs extends AbstractNioReactive
 	}
 
 	@Override
-	public Promise<Void> delete(@NotNull String name) {
+	public Promise<Void> delete(String name) {
 		return simpleCommand(new FsRequest.Delete(name), FsResponse.DeleteFinished.class)
 				.whenComplete(toLogger(logger, "delete", name, this))
 				.whenComplete(deletePromise.recordStats());
@@ -288,21 +288,21 @@ public final class RemoteActiveFs extends AbstractNioReactive
 	}
 
 	@Override
-	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
+	public Promise<Map<String, FileMetadata>> list(String glob) {
 		return simpleCommand(new FsRequest.List(glob), FsResponse.ListFinished.class, FsResponse.ListFinished::files)
 				.whenComplete(toLogger(logger, "list", glob, this))
 				.whenComplete(listPromise.recordStats());
 	}
 
 	@Override
-	public Promise<@Nullable FileMetadata> info(@NotNull String name) {
+	public Promise<@Nullable FileMetadata> info(String name) {
 		return simpleCommand(new FsRequest.Info(name), FsResponse.InfoFinished.class, FsResponse.InfoFinished::fileMetadata)
 				.whenComplete(toLogger(logger, "info", name, this))
 				.whenComplete(infoPromise.recordStats());
 	}
 
 	@Override
-	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
+	public Promise<Map<String, @NotNull FileMetadata>> infoAll(Set<String> names) {
 		if (names.isEmpty()) return Promise.of(Map.of());
 
 		return simpleCommand(new FsRequest.InfoAll(names), FsResponse.InfoAllFinished.class, FsResponse.InfoAllFinished::files)
@@ -386,12 +386,12 @@ public final class RemoteActiveFs extends AbstractNioReactive
 	}
 
 	@Override
-	public @NotNull Promise<Void> start() {
+	public Promise<?> start() {
 		return ping();
 	}
 
 	@Override
-	public @NotNull Promise<Void> stop() {
+	public Promise<?> stop() {
 		return Promise.complete();
 	}
 

@@ -18,7 +18,6 @@ package io.activej.datastream;
 
 import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
 
@@ -34,11 +33,11 @@ public final class StreamConsumerWithResult<T, X> {
 		});
 	}
 
-	private final @NotNull StreamConsumer<T> consumer;
+	private final StreamConsumer<T> consumer;
 
-	private final @NotNull Promise<X> result;
+	private final Promise<X> result;
 
-	private StreamConsumerWithResult(@NotNull StreamConsumer<T> consumer, @NotNull Promise<X> result) {
+	private StreamConsumerWithResult(StreamConsumer<T> consumer, Promise<X> result) {
 		this.consumer = consumer;
 		this.result = result;
 	}
@@ -74,11 +73,11 @@ public final class StreamConsumerWithResult<T, X> {
 				promise.then(StreamConsumerWithResult::getResult));
 	}
 
-	public @NotNull StreamConsumer<T> getConsumer() {
+	public StreamConsumer<T> getConsumer() {
 		return consumer;
 	}
 
-	public @NotNull Promise<X> getResult() {
+	public Promise<X> getResult() {
 		return result;
 	}
 }

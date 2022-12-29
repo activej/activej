@@ -18,7 +18,6 @@ package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
 import io.activej.rpc.client.RpcClientConnectionPool;
-import org.jetbrains.annotations.NotNull;
 
 import java.net.InetSocketAddress;
 import java.util.*;
@@ -99,7 +98,7 @@ public class RpcStrategyRandomSampling implements RpcStrategy {
 		}
 
 		@Override
-		public <I, O> void sendRequest(I request, int timeout, @NotNull Callback<O> cb) {
+		public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
 			lastRandomLong ^= (lastRandomLong << 21);
 			lastRandomLong ^= (lastRandomLong >>> 35);
 			lastRandomLong ^= (lastRandomLong << 4);

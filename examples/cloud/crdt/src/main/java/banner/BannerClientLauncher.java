@@ -7,7 +7,6 @@ import io.activej.launchers.crdt.rpc.CrdtRpcClientLauncher;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
 import io.activej.rpc.client.RpcClient;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Map;
@@ -58,18 +57,18 @@ public final class BannerClientLauncher extends CrdtRpcClientLauncher {
 	private void uploadBannerIds() throws Exception {
 		reactor.submit(() ->
 				Promises.until(0, i -> Promises.all(USER_IDS.stream()
-								.map(userId -> {
-									int bannerId = RANDOM.nextInt(BANNER_SIZE) + 1;
-									return client.sendRequest(new PutRequest(userId, GSet.of(bannerId)))
-											.whenResult(() -> controlMap.merge(userId, Set.of(bannerId), Utils::union));
-								}))
+										.map(userId -> {
+											int bannerId = RANDOM.nextInt(BANNER_SIZE) + 1;
+											return client.sendRequest(new PutRequest(userId, GSet.of(bannerId)))
+													.whenResult(() -> controlMap.merge(userId, Set.of(bannerId), Utils::union));
+										}))
 								.map($ -> i + 1),
 						i -> i == BANNER_SIZE / 2
 				)).get();
 		System.out.println("Banners are uploaded\n");
 	}
 
-	private @NotNull Set<Integer> fetchBannerIds(long randomUserId) throws Exception {
+	private Set<Integer> fetchBannerIds(long randomUserId) throws Exception {
 		Set<Integer> fetchedBanners = reactor.submit(() ->
 				client.<GetRequest, GetResponse>sendRequest(new GetRequest(randomUserId))
 						.map(GetResponse::bannerIds)

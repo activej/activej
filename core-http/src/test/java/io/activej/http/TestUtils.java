@@ -7,7 +7,6 @@ import io.activej.csp.AbstractChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelByteChunker;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.DataInputStream;
@@ -127,7 +126,7 @@ public class TestUtils {
 		}
 
 		@Override
-		protected void onClosed(@NotNull Exception e) {
+		protected void onClosed(Exception e) {
 			executed = true;
 			if (expectedExceptionType != null) {
 				assertThat(e, instanceOf(expectedExceptionType));

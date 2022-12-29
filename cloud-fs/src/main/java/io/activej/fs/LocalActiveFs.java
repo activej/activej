@@ -187,7 +187,7 @@ public final class LocalActiveFs extends AbstractReactive
 	}
 
 	/**
-	 * If set to {@code true}, each write to {@link #append} consumer will be synchronously written to the storage device.
+	 * If set to {@code true}, each write to {@link ActiveFs#append} consumer will be synchronously written to the storage device.
 	 * <p>
 	 * <b>Note: significantly slows down appends</b>
 	 */
@@ -217,21 +217,21 @@ public final class LocalActiveFs extends AbstractReactive
 	// endregion
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
+	public Promise<ChannelConsumer<ByteBuf>> upload(String name) {
 		checkStarted();
 		return uploadImpl(name, identity())
 				.whenComplete(toLogger(logger, TRACE, "upload", name, this));
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
+	public Promise<ChannelConsumer<ByteBuf>> upload(String name, long size) {
 		checkStarted();
 		return uploadImpl(name, ofFixedSize(size))
 				.whenComplete(toLogger(logger, TRACE, "upload", name, size, this));
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
+	public Promise<ChannelConsumer<ByteBuf>> append(String name, long offset) {
 		checkStarted();
 		checkArgument(offset >= 0, "Offset cannot be less than 0");
 		return execute(
@@ -270,7 +270,7 @@ public final class LocalActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
+	public Promise<ChannelSupplier<ByteBuf>> download(String name, long offset, long limit) {
 		checkStarted();
 		checkArgument(offset >= 0, "offset < 0");
 		checkArgument(limit >= 0, "limit < 0");
@@ -298,7 +298,7 @@ public final class LocalActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
+	public Promise<Map<String, FileMetadata>> list(String glob) {
 		checkStarted();
 		if (glob.isEmpty()) return Promise.of(Map.of());
 
@@ -327,7 +327,7 @@ public final class LocalActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
+	public Promise<Void> copy(String name, String target) {
 		checkStarted();
 		return execute(() -> forEachPair(Map.of(name, target), this::doCopy))
 				.then(translateScalarErrorsFn())
@@ -347,7 +347,7 @@ public final class LocalActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Void> move(@NotNull String name, @NotNull String target) {
+	public Promise<Void> move(String name, String target) {
 		checkStarted();
 		return execute(() -> forEachPair(Map.of(name, target), this::doMove))
 				.then(translateScalarErrorsFn())
@@ -367,7 +367,7 @@ public final class LocalActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Void> delete(@NotNull String name) {
+	public Promise<Void> delete(String name) {
 		checkStarted();
 		return execute(() -> deleteImpl(Set.of(name)))
 				.then(translateScalarErrorsFn(name))
@@ -392,7 +392,7 @@ public final class LocalActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public Promise<@Nullable FileMetadata> info(@NotNull String name) {
+	public Promise<@Nullable FileMetadata> info(String name) {
 		checkStarted();
 		return execute(() -> toFileMetadata(resolve(name)))
 				.whenComplete(toLogger(logger, TRACE, "info", name, this))
@@ -400,7 +400,7 @@ public final class LocalActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
+	public Promise<Map<String, @NotNull FileMetadata>> infoAll(Set<String> names) {
 		checkStarted();
 		if (names.isEmpty()) return Promise.of(Map.of());
 
@@ -420,13 +420,13 @@ public final class LocalActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public @NotNull Promise<Void> start() {
+	public Promise<?> start() {
 		return execute(() -> LocalFileUtils.init(storage, tempDir, fsyncDirectories))
 				.whenResult(() -> started = true);
 	}
 
 	@Override
-	public @NotNull Promise<Void> stop() {
+	public Promise<?> stop() {
 		return Promise.complete();
 	}
 

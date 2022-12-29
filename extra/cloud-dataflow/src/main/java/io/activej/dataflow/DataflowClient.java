@@ -50,7 +50,6 @@ import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.ImplicitlyReactive;
 import io.activej.reactor.net.SocketSettings;
 import io.activej.reactor.nio.NioReactor;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -194,7 +193,7 @@ public final class DataflowClient extends AbstractNioReactive {
 		}
 
 		@Override
-		public void closeEx(@NotNull Exception e) {
+		public void closeEx(Exception e) {
 			messaging.closeEx(e);
 		}
 

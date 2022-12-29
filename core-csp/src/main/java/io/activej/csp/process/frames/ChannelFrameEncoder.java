@@ -24,26 +24,25 @@ import io.activej.csp.ChannelOutput;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.WithChannelTransformer;
 import io.activej.csp.process.AbstractCommunicatingProcess;
-import org.jetbrains.annotations.NotNull;
 
 public final class ChannelFrameEncoder extends AbstractCommunicatingProcess
 		implements WithChannelTransformer<ChannelFrameEncoder, ByteBuf, ByteBuf>, WithInitializer<ChannelFrameEncoder> {
 
-	private final @NotNull BlockEncoder encoder;
+	private final BlockEncoder encoder;
 	private boolean encoderResets;
 
 	private ChannelSupplier<ByteBuf> input;
 	private ChannelConsumer<ByteBuf> output;
 
-	private ChannelFrameEncoder(@NotNull BlockEncoder encoder) {
+	private ChannelFrameEncoder(BlockEncoder encoder) {
 		this.encoder = encoder;
 	}
 
-	public static ChannelFrameEncoder create(@NotNull FrameFormat format) {
+	public static ChannelFrameEncoder create(FrameFormat format) {
 		return create(format.createEncoder());
 	}
 
-	public static ChannelFrameEncoder create(@NotNull BlockEncoder encoder) {
+	public static ChannelFrameEncoder create(BlockEncoder encoder) {
 		return new ChannelFrameEncoder(encoder);
 	}
 

@@ -6,7 +6,6 @@ import io.activej.rpc.client.sender.RpcStrategyFirstValidResult.ResultValidator;
 import io.activej.rpc.client.sender.helper.RpcClientConnectionPoolStub;
 import io.activej.rpc.client.sender.helper.RpcSenderStub;
 import io.activej.test.ExpectedException;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -158,7 +157,7 @@ public class RpcStrategyFirstValidResultTest {
 
 	private static final class SenderOnResultWithNullCaller implements RpcSender {
 		@Override
-		public <I, O> void sendRequest(I request, int timeout, @NotNull Callback<O> cb) {
+		public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
 			cb.accept(null, null);
 		}
 	}
@@ -172,7 +171,7 @@ public class RpcStrategyFirstValidResultTest {
 
 		@SuppressWarnings("unchecked")
 		@Override
-		public <I, O> void sendRequest(I request, int timeout, @NotNull Callback<O> cb) {
+		public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
 			cb.accept((O) data, null);
 		}
 	}

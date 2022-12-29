@@ -6,7 +6,6 @@ import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.rpc.client.sender.RpcStrategy;
 import io.activej.types.TypeT;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -18,8 +17,8 @@ public abstract class AbstractDiscoveryService<D extends AbstractDiscoveryServic
 		implements DiscoveryService<PartitionId> {
 	protected static final TypeT<List<RendezvousPartitionGroup<PartitionId>>> PARTITION_GROUPS_TYPE = new TypeT<>() {};
 
-	protected @Nullable Function<PartitionId, @NotNull RpcStrategy> rpcProvider;
-	protected @Nullable Function<PartitionId, @NotNull CrdtStorage<?, ?>> crdtProvider;
+	protected @Nullable Function<PartitionId, RpcStrategy> rpcProvider;
+	protected @Nullable Function<PartitionId, CrdtStorage<?, ?>> crdtProvider;
 
 	public AbstractDiscoveryService(Reactor reactor) {
 		super(reactor);

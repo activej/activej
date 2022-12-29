@@ -18,7 +18,6 @@ package io.activej.datastream.processor;
 
 import io.activej.datastream.*;
 import io.activej.reactor.ImplicitlyReactive;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -45,7 +44,7 @@ public abstract class StreamFilter<I, O> extends ImplicitlyReactive implements S
 	public static <T> StreamFilter<T, T> create(Predicate<T> predicate) {
 		return new StreamFilter<>() {
 			@Override
-			protected @NotNull StreamDataAcceptor<T> onResumed(@NotNull StreamDataAcceptor<T> output) {
+			protected StreamDataAcceptor<T> onResumed(StreamDataAcceptor<T> output) {
 				return item -> {if (predicate.test(item)) output.accept(item);};
 			}
 		};
@@ -54,7 +53,7 @@ public abstract class StreamFilter<I, O> extends ImplicitlyReactive implements S
 	public static <I, O> StreamFilter<I, O> mapper(Function<I, O> function) {
 		return new StreamFilter<>() {
 			@Override
-			protected @NotNull StreamDataAcceptor<I> onResumed(@NotNull StreamDataAcceptor<O> output) {
+			protected StreamDataAcceptor<I> onResumed(StreamDataAcceptor<O> output) {
 				return item -> output.accept(function.apply(item));
 			}
 		};
@@ -109,12 +108,12 @@ public abstract class StreamFilter<I, O> extends ImplicitlyReactive implements S
 		return false;
 	}
 
-	protected void onStarted(@NotNull StreamDataAcceptor<O> output) {
+	protected void onStarted(StreamDataAcceptor<O> output) {
 	}
 
-	protected void onEndOfStream(@NotNull StreamDataAcceptor<O> output) {
+	protected void onEndOfStream(StreamDataAcceptor<O> output) {
 	}
 
-	protected abstract @NotNull StreamDataAcceptor<I> onResumed(@NotNull StreamDataAcceptor<O> output);
+	protected abstract StreamDataAcceptor<I> onResumed(StreamDataAcceptor<O> output);
 
 }

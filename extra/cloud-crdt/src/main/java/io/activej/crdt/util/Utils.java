@@ -27,7 +27,6 @@ import io.activej.streamcodecs.StreamCodec;
 import io.activej.streamcodecs.StreamCodecs;
 import io.activej.streamcodecs.StreamCodecs.SubtypeBuilder;
 import io.activej.streamcodecs.StructuredStreamCodec;
-import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -75,7 +74,7 @@ public final class Utils {
 	public static <T> StreamTransformer<T, T> onItem(Runnable consumer) {
 		return new StreamFilter<>() {
 			@Override
-			protected @NotNull StreamDataAcceptor<T> onResumed(@NotNull StreamDataAcceptor<T> output) {
+			protected StreamDataAcceptor<T> onResumed(StreamDataAcceptor<T> output) {
 				return item -> {
 					consumer.run();
 					output.accept(item);

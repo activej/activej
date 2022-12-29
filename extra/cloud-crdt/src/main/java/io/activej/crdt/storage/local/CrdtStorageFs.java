@@ -57,7 +57,6 @@ import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.serializer.*;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.slf4j.Logger;
@@ -225,12 +224,12 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> extends AbstractRea
 	}
 
 	@Override
-	public @NotNull Promise<Void> start() {
+	public Promise<?> start() {
 		return Promise.complete();
 	}
 
 	@Override
-	public @NotNull Promise<Void> stop() {
+	public Promise<?> stop() {
 		return Promise.complete();
 	}
 
@@ -410,7 +409,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> extends AbstractRea
 		}
 
 		@Override
-		protected @NotNull StreamDataAcceptor<T> onResumed(@NotNull StreamDataAcceptor<T> output) {
+		protected StreamDataAcceptor<T> onResumed(StreamDataAcceptor<T> output) {
 			return item -> {
 				if (empty) {
 					empty = false;

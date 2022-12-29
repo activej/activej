@@ -2,7 +2,6 @@ package io.activej.dataflow.calcite.aggregation;
 
 import io.activej.record.Record;
 import io.activej.types.Primitives;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class AbstractMinMaxReducer<I extends Comparable<I>> extends FieldReducer<I, I, I> {
@@ -11,7 +10,7 @@ public abstract class AbstractMinMaxReducer<I extends Comparable<I>> extends Fie
 		super(fieldIndex, fieldAlias);
 	}
 
-	protected abstract I compare(@NotNull I current, @NotNull I candidate);
+	protected abstract I compare(I current, I candidate);
 
 	@Override
 	public final Class<I> getResultClass(Class<I> accumulatorClass) {
@@ -29,7 +28,7 @@ public abstract class AbstractMinMaxReducer<I extends Comparable<I>> extends Fie
 	}
 
 	@Override
-	protected final I doAccumulate(I accumulator, @NotNull I fieldValue) {
+	protected final I doAccumulate(I accumulator, I fieldValue) {
 		if (accumulator == null) return fieldValue;
 
 		return compare(accumulator, fieldValue);

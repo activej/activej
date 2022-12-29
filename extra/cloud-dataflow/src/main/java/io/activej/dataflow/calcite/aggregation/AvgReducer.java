@@ -3,7 +3,6 @@ package io.activej.dataflow.calcite.aggregation;
 import io.activej.record.Record;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class AvgReducer extends FieldReducer<Number, Double, AvgReducer.AvgAccumulator> {
@@ -32,7 +31,7 @@ public class AvgReducer extends FieldReducer<Number, Double, AvgReducer.AvgAccum
 	}
 
 	@Override
-	protected AvgAccumulator doAccumulate(AvgAccumulator accumulator, @NotNull Number fieldValue) {
+	protected AvgAccumulator doAccumulate(AvgAccumulator accumulator, Number fieldValue) {
 		accumulator.add(fieldValue.doubleValue());
 		return accumulator;
 	}

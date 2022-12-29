@@ -28,7 +28,6 @@ import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.net.socket.tcp.ReactiveTcpSocket;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Represents a simple binary protocol over for communication a TCP connection.
@@ -129,7 +128,7 @@ public final class MessagingWithBinaryStreaming<I, O> extends AbstractReactiveCl
 	}
 
 	@Override
-	protected void onClosed(@NotNull Exception e) {
+	protected void onClosed(Exception e) {
 		socket.closeEx(e);
 		bufs.recycle();
 	}

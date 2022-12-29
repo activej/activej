@@ -20,7 +20,6 @@ import io.activej.common.Checks;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.ImplicitlyReactive;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Checks.checkState;
@@ -47,7 +46,7 @@ public abstract class AbstractStreamConsumer<T> extends ImplicitlyReactive imple
 	}
 
 	@Override
-	public final void consume(@NotNull StreamSupplier<T> streamSupplier) {
+	public final void consume(StreamSupplier<T> streamSupplier) {
 		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
 		checkState(!isStarted());
 		ensureInitialized();
@@ -143,7 +142,7 @@ public abstract class AbstractStreamConsumer<T> extends ImplicitlyReactive imple
 	}
 
 	@Override
-	public final void closeEx(@NotNull Exception e) {
+	public final void closeEx(Exception e) {
 		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
 		ensureInitialized();
 		endOfStream = true;

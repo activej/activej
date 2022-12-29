@@ -17,7 +17,6 @@
 package io.activej.datastream.processor;
 
 import io.activej.datastream.StreamDataAcceptor;
-import org.jetbrains.annotations.NotNull;
 
 public final class StreamCounter<T> extends StreamFilter<T, T> {
 	private long itemCount;
@@ -29,7 +28,7 @@ public final class StreamCounter<T> extends StreamFilter<T, T> {
 	}
 
 	@Override
-	protected @NotNull StreamDataAcceptor<T> onResumed(@NotNull StreamDataAcceptor<T> output) {
+	protected StreamDataAcceptor<T> onResumed(StreamDataAcceptor<T> output) {
 		return item -> {
 			itemCount++;
 			output.accept(item);

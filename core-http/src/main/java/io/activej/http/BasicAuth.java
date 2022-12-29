@@ -17,8 +17,8 @@
 package io.activej.http;
 
 import io.activej.async.function.AsyncBiPredicate;
+import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Base64;
 import java.util.Map;
@@ -79,7 +79,7 @@ public final class BasicAuth implements AsyncServlet {
 	}
 
 	@Override
-	public @NotNull Promise<HttpResponse> serve(@NotNull HttpRequest request) throws HttpError {
+	public Promisable<HttpResponse> serve(HttpRequest request) throws HttpError {
 		String header = request.getHeader(AUTHORIZATION);
 		if (header == null || !header.startsWith(PREFIX)) {
 			return Promise.of(failureResponse.apply(HttpResponse.unauthorized401(challenge)));

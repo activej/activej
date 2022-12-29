@@ -20,7 +20,6 @@ import io.activej.common.recycle.Recyclers;
 import io.activej.common.tuple.Tuple2;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
 
@@ -36,10 +35,10 @@ public final class StreamSupplierWithResult<T, X> {
 		});
 	}
 
-	private final @NotNull StreamSupplier<T> supplier;
-	private final @NotNull Promise<X> result;
+	private final StreamSupplier<T> supplier;
+	private final Promise<X> result;
 
-	private StreamSupplierWithResult(@NotNull StreamSupplier<T> supplier, @NotNull Promise<X> result) {
+	private StreamSupplierWithResult(StreamSupplier<T> supplier, Promise<X> result) {
 		this.supplier = supplier;
 		this.result = result;
 	}
@@ -86,11 +85,11 @@ public final class StreamSupplierWithResult<T, X> {
 				promise.then(StreamSupplierWithResult::getResult));
 	}
 
-	public @NotNull StreamSupplier<T> getSupplier() {
+	public StreamSupplier<T> getSupplier() {
 		return supplier;
 	}
 
-	public @NotNull Promise<X> getResult() {
+	public Promise<X> getResult() {
 		return result;
 	}
 }

@@ -20,7 +20,6 @@ import io.activej.common.Checks;
 import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import io.activej.reactor.ImplicitlyReactive;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Checks.checkState;
@@ -40,14 +39,14 @@ public abstract class AbstractReactiveCloseable extends ImplicitlyReactive imple
 		this.closeable = closeable;
 	}
 
-	protected void onClosed(@NotNull Exception e) {
+	protected void onClosed(Exception e) {
 	}
 
 	protected void onCleanup() {
 	}
 
 	@Override
-	public final void closeEx(@NotNull Exception e) {
+	public final void closeEx(Exception e) {
 		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
 		if (isClosed()) return;
 		exception = e;
@@ -62,12 +61,12 @@ public abstract class AbstractReactiveCloseable extends ImplicitlyReactive imple
 		return exception != null;
 	}
 
-	public final <T> @NotNull Promise<T> sanitize(Promise<T> promise) {
+	public final <T> Promise<T> sanitize(Promise<T> promise) {
 		return promise.async()
 				.then(this::doSanitize);
 	}
 
-	protected final <T> @NotNull Promise<T> doSanitize(T value, @Nullable Exception e) {
+	protected final <T> Promise<T> doSanitize(T value, @Nullable Exception e) {
 		if (exception != null) {
 			Recyclers.recycle(value);
 			if (value instanceof ReactiveCloseable) {

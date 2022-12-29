@@ -18,7 +18,6 @@ package io.activej.ot.reducers;
 
 import io.activej.ot.OTCommit;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -39,18 +38,18 @@ public abstract class AbstractGraphReducer<K, D, A, R> implements GraphReducer<K
 	}
 
 	@Override
-	public void onStart(@NotNull Collection<OTCommit<K, D>> queue) {
+	public void onStart(Collection<OTCommit<K, D>> queue) {
 		for (OTCommit<K, D> headCommit : queue) {
 			this.headCommits.put(headCommit.getId(), headCommit);
 			this.accumulators.put(headCommit.getId(), new HashMap<>(singletonMap(headCommit.getId(), diffsReducer.initialValue())));
 		}
 	}
 
-	protected abstract @NotNull Promise<Optional<R>> tryGetResult(OTCommit<K, D> commit, Map<K, Map<K, A>> accumulators,
+	protected abstract Promise<Optional<R>> tryGetResult(OTCommit<K, D> commit, Map<K, Map<K, A>> accumulators,
 			Map<K, OTCommit<K, D>> headCommits);
 
 	@Override
-	public final @NotNull Promise<Result<R>> onCommit(@NotNull OTCommit<K, D> commit) {
+	public final Promise<Result<R>> onCommit(OTCommit<K, D> commit) {
 		//noinspection OptionalGetWithoutIsPresent
 		return tryGetResult(commit, accumulators, headCommits)
 				.thenIfElse(Optional::isPresent,

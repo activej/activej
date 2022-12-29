@@ -126,7 +126,7 @@ public final class ReactiveAccumulator<A> extends ImplicitlyReactive implements 
 	}
 
 	@Override
-	public void closeEx(@NotNull Exception e) {
+	public void closeEx(Exception e) {
 		if (resultPromise.trySetException(e)) {
 			Recyclers.recycle(accumulator);
 		}

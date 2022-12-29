@@ -432,8 +432,8 @@ abstract class CompletePromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public void run(@NotNull Callback<? super T> callback) {
-		callback.accept(getResult(), null);
+	public void run(@NotNull Callback<? super T> cb) {
+		cb.accept(getResult(), null);
 	}
 
 	@Override

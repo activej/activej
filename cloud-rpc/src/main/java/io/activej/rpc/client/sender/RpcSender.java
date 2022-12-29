@@ -17,12 +17,11 @@
 package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
-import org.jetbrains.annotations.NotNull;
 
 public interface RpcSender {
-	<I, O> void sendRequest(I request, int timeout, @NotNull Callback<O> cb);
+	<I, O> void sendRequest(I request, int timeout, Callback<O> cb);
 
-	default <I, O> void sendRequest(I request, @NotNull Callback<O> cb) {
+	default <I, O> void sendRequest(I request, Callback<O> cb) {
 		sendRequest(request, Integer.MAX_VALUE, cb);
 	}
 }

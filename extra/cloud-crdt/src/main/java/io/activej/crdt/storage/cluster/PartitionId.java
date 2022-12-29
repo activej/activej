@@ -18,7 +18,6 @@ package io.activej.crdt.storage.cluster;
 
 import com.dslplatform.json.CompiledJson;
 import io.activej.common.exception.MalformedDataException;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
@@ -50,11 +49,11 @@ public final class PartitionId {
 		return new PartitionId(id, crdtAddress, rpcAddress);
 	}
 
-	public static PartitionId ofCrdtAddress(@NotNull String id, @NotNull InetSocketAddress crdtAddress) {
+	public static PartitionId ofCrdtAddress(String id, InetSocketAddress crdtAddress) {
 		return new PartitionId(id, crdtAddress, null);
 	}
 
-	public static PartitionId ofRpcAddress(@NotNull String id, @NotNull InetSocketAddress rpcAddress) {
+	public static PartitionId ofRpcAddress(String id, InetSocketAddress rpcAddress) {
 		return new PartitionId(id, null, rpcAddress);
 	}
 

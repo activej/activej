@@ -24,7 +24,6 @@ import io.activej.datastream.AbstractStreamConsumer;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,11 +50,11 @@ public final class AggregationGroupReducer<C, T, K extends Comparable> extends A
 
 	private final HashMap<K, Object> map = new HashMap<>();
 
-	public AggregationGroupReducer(@NotNull AggregationChunkStorage<C> storage,
-			@NotNull AggregationStructure aggregation, @NotNull List<String> measures,
-			@NotNull Class<T> recordClass, @NotNull PartitionPredicate<T> partitionPredicate,
-			@NotNull Function<T, K> keyFunction, @NotNull Aggregate<T, Object> aggregate,
-			int chunkSize, @NotNull DefiningClassLoader classLoader) {
+	public AggregationGroupReducer(AggregationChunkStorage<C> storage,
+			AggregationStructure aggregation, List<String> measures,
+			Class<T> recordClass, PartitionPredicate<T> partitionPredicate,
+			Function<T, K> keyFunction, Aggregate<T, Object> aggregate,
+			int chunkSize, DefiningClassLoader classLoader) {
 		this.storage = storage;
 		this.measures = measures;
 		this.partitionPredicate = partitionPredicate;

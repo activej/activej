@@ -541,7 +541,7 @@ public final class ReactiveTcpSocketNio extends AbstractNioReactive implements R
 	}
 
 	@Override
-	public void closeEx(@NotNull Exception e) {
+	public void closeEx(Exception e) {
 		if (CHECK) checkState(inReactorThread());
 		if (isClosed()) return;
 		doClose();

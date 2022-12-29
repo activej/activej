@@ -1,7 +1,6 @@
 package io.activej.dataflow.calcite.aggregation;
 
 import io.activej.record.Record;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class SumReducerDecimal<I extends Number> extends AbstractSumReducer<I, Double> {
@@ -20,7 +19,7 @@ public final class SumReducerDecimal<I extends Number> extends AbstractSumReduce
 	}
 
 	@Override
-	protected Double doAccumulate(Double accumulator, @NotNull I fieldValue) {
+	protected Double doAccumulate(Double accumulator, I fieldValue) {
 		return accumulator + fieldValue.doubleValue();
 	}
 

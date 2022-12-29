@@ -9,7 +9,6 @@ import io.activej.datastream.StreamConsumer;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
@@ -44,12 +43,12 @@ public class AdderCrdtMap extends AbstractReactive implements CrdtMap<Long, Simp
 	}
 
 	@Override
-	public @NotNull Promise<?> start() {
+	public Promise<?> start() {
 		return refresh();
 	}
 
 	@Override
-	public @NotNull Promise<?> stop() {
+	public Promise<?> stop() {
 		return Promise.complete();
 	}
 

@@ -20,7 +20,6 @@ import io.activej.async.process.AbstractReactiveCloseable;
 import io.activej.async.process.ReactiveCloseable;
 import io.activej.common.Checks;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Checks.checkState;
@@ -41,7 +40,7 @@ public abstract class AbstractChannelSupplier<T> extends AbstractReactiveCloseab
 	protected abstract Promise<T> doGet();
 
 	@Override
-	public final @NotNull Promise<T> get() {
+	public final Promise<T> get() {
 		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
 		return isClosed() ? Promise.ofException(getException()) : doGet();
 	}

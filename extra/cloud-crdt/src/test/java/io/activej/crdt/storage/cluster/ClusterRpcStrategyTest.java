@@ -6,7 +6,6 @@ import io.activej.common.ref.RefBoolean;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import io.activej.rpc.client.sender.RpcSender;
 import io.activej.rpc.client.sender.RpcStrategy;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
@@ -254,7 +253,7 @@ public class ClusterRpcStrategyTest {
 		}
 
 		@Override
-		public RpcSender get(@NotNull InetSocketAddress address) {
+		public RpcSender get(InetSocketAddress address) {
 			return connections.get(address);
 		}
 	}
@@ -263,7 +262,7 @@ public class ClusterRpcStrategyTest {
 		private final Map<Integer, Integer> counters = new HashMap<>();
 
 		@Override
-		public <I, O> void sendRequest(I request, int timeout, @NotNull Callback<O> cb) {
+		public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
 			//noinspection SuspiciousMethodCalls
 			Integer count = counters.getOrDefault(request, 0);
 			counters.put((Integer) request, ++count);

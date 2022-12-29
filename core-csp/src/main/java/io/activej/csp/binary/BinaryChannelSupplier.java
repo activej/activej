@@ -26,7 +26,6 @@ import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnexpectedDataException;
 import io.activej.csp.ChannelSupplier;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
 import java.util.List;
@@ -96,7 +95,7 @@ public abstract class BinaryChannelSupplier extends AbstractReactiveCloseable {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Exception e) {
+			protected void onClosed(Exception e) {
 				input.closeEx(e);
 			}
 		};
@@ -116,7 +115,7 @@ public abstract class BinaryChannelSupplier extends AbstractReactiveCloseable {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Exception e) {
+			protected void onClosed(Exception e) {
 				closeable.closeEx(e);
 			}
 		};
@@ -126,7 +125,7 @@ public abstract class BinaryChannelSupplier extends AbstractReactiveCloseable {
 		return doDecode(decoder, this);
 	}
 
-	private <T> @NotNull Promise<T> doDecode(ByteBufsDecoder<T> decoder, ReactiveCloseable closeable) {
+	private <T> Promise<T> doDecode(ByteBufsDecoder<T> decoder, ReactiveCloseable closeable) {
 		while (true) {
 			if (!bufs.isEmpty()) {
 				T result;

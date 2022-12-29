@@ -19,7 +19,6 @@ package io.activej.async.executor;
 import io.activej.async.callback.AsyncComputation;
 import io.activej.common.function.RunnableEx;
 import io.activej.common.function.SupplierEx;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -33,19 +32,19 @@ public interface ReactorExecutor extends Executor {
 	/**
 	 * Executes the given computation at some time in the future in some underlying reactor.
 	 */
-	@NotNull CompletableFuture<Void> submit(@NotNull RunnableEx computation);
+	CompletableFuture<Void> submit(RunnableEx computation);
 
 	/**
 	 * Executes the given computation at some time in the future in some underlying reactor
 	 * and returns its result in a {@link CompletableFuture future}.
 	 */
-	<T> @NotNull CompletableFuture<T> submit(AsyncComputation<? extends T> computation);
+	<T> CompletableFuture<T> submit(AsyncComputation<? extends T> computation);
 
 	/**
 	 * Executes the given computation at some time in the future in some underlying eventloop
 	 * and returns its result in a {@link CompletableFuture future}.
 	 */
-	default <T> @NotNull CompletableFuture<T> submit(SupplierEx<? extends AsyncComputation<? extends T>> computation) {
+	default <T> CompletableFuture<T> submit(SupplierEx<? extends AsyncComputation<? extends T>> computation) {
 		return submit(AsyncComputation.ofDeferred(computation));
 	}
 }

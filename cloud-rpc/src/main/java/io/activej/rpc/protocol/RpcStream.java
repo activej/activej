@@ -30,7 +30,6 @@ import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.net.socket.tcp.ReactiveTcpSocket;
 import io.activej.serializer.BinarySerializer;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
@@ -63,13 +62,13 @@ public final class RpcStream {
 	public interface Listener extends StreamDataAcceptor<RpcMessage> {
 		void onReceiverEndOfStream();
 
-		void onReceiverError(@NotNull Exception e);
+		void onReceiverError(Exception e);
 
-		void onSenderError(@NotNull Exception e);
+		void onSenderError(Exception e);
 
-		void onSerializationError(RpcMessage message, @NotNull Exception e);
+		void onSerializationError(RpcMessage message, Exception e);
 
-		void onSenderReady(@NotNull StreamDataAcceptor<RpcMessage> acceptor);
+		void onSenderReady(StreamDataAcceptor<RpcMessage> acceptor);
 
 		void onSenderSuspended();
 	}
@@ -137,7 +136,7 @@ public final class RpcStream {
 		closeEx(new AsyncCloseException("RPC Channel Closed"));
 	}
 
-	public void closeEx(@NotNull Exception e) {
+	public void closeEx(Exception e) {
 		socket.closeEx(e);
 		serializer.closeEx(e);
 		deserializer.closeEx(e);

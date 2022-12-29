@@ -1732,12 +1732,12 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public void run(@NotNull Callback<? super T> callback) {
+	public void run(@NotNull Callback<? super T> cb) {
 		if (isComplete()) {
-			callback.accept(result, exception);
+			cb.accept(result, exception);
 			return;
 		}
-		subscribe(callback);
+		subscribe(cb);
 	}
 
 	@Override

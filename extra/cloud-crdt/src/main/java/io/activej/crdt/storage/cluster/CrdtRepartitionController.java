@@ -25,7 +25,6 @@ import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
-import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 
@@ -56,7 +55,7 @@ public final class CrdtRepartitionController<K extends Comparable<K>, S, P> exte
 		return repartition.run();
 	}
 
-	private @NotNull Promise<Void> doRepartition() {
+	private Promise<Void> doRepartition() {
 		return cluster.repartition(localPartitionId)
 				.whenComplete(repartitionPromise.recordStats());
 	}

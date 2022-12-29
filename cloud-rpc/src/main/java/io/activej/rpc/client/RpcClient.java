@@ -51,7 +51,6 @@ import io.activej.rpc.protocol.RpcStream;
 import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerBuilder;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.slf4j.Logger;
@@ -274,7 +273,7 @@ public final class RpcClient extends AbstractNioReactive
 	}
 
 	@Override
-	public @NotNull Promise<Void> start() {
+	public Promise<?> start() {
 		if (CHECK) Checks.checkState(inReactorThread(), "Not in reactor thread");
 		Checks.checkNotNull(messageTypes, "Message types must be specified");
 		Checks.checkState(stopPromise == null);
@@ -320,7 +319,7 @@ public final class RpcClient extends AbstractNioReactive
 	}
 
 	@Override
-	public @NotNull Promise<Void> stop() {
+	public Promise<?> stop() {
 		if (CHECK) Checks.checkState(inReactorThread(), "Not in reactor thread");
 		if (stopPromise != null) return stopPromise;
 
@@ -520,7 +519,7 @@ public final class RpcClient extends AbstractNioReactive
 
 	private static final class NoSenderAvailable implements RpcSender {
 		@Override
-		public <I, O> void sendRequest(I request, int timeout, @NotNull Callback<O> cb) {
+		public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
 			cb.accept(null, NO_SENDER_AVAILABLE_EXCEPTION);
 		}
 	}

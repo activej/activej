@@ -15,7 +15,6 @@ import io.activej.test.TestUtils;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
-import org.jetbrains.annotations.NotNull;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -100,7 +99,7 @@ public final class ClusterRepartitionControllerTest {
 		ActiveFsServer failingServer = ActiveFsServer.create(reactor,
 				new ForwardingActiveFs(peer) {
 					@Override
-					public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
+					public Promise<ChannelConsumer<ByteBuf>> upload(String name, long size) {
 						return super.upload(name)
 								.map(consumer -> consumer.transformWith(ofFixedSize(fileSize / 2)));
 					}

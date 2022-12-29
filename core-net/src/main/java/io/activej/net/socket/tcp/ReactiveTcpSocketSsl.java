@@ -394,7 +394,7 @@ public final class ReactiveTcpSocketSsl extends AbstractNioReactive implements R
 	}
 
 	@Override
-	public void closeEx(@NotNull Exception e) {
+	public void closeEx(Exception e) {
 		if (isClosed()) return;
 		Recyclers.recycle(net2engine);
 		Recyclers.recycle(engine2app);

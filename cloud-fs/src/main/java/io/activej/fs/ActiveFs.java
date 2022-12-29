@@ -73,7 +73,7 @@ public interface ActiveFs {
 	 * @param name name of the file to upload
 	 * @return promise for stream consumer of byte buffers
 	 */
-	Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name);
+	Promise<ChannelConsumer<ByteBuf>> upload(String name);
 
 	/**
 	 * Returns a consumer of bytebufs which are written (or sent) to the file.
@@ -96,7 +96,7 @@ public interface ActiveFs {
 	 * @param name name of the file to upload
 	 * @return promise for stream consumer of byte buffers
 	 */
-	Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size);
+	Promise<ChannelConsumer<ByteBuf>> upload(String name, long size);
 
 	/**
 	 * Returns a consumer of bytebufs which are appended to an existing file.
@@ -117,7 +117,7 @@ public interface ActiveFs {
 	 * @param name name of the file to upload
 	 * @return promise for stream consumer of byte buffers
 	 */
-	Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset);
+	Promise<ChannelConsumer<ByteBuf>> append(String name, long offset);
 
 	/**
 	 * Returns a supplier of bytebufs which are read (or received) from the file.
@@ -133,7 +133,7 @@ public interface ActiveFs {
 	 * @return promise for stream supplier of byte buffers
 	 * @see #download(String)
 	 */
-	Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit);
+	Promise<ChannelSupplier<ByteBuf>> download(String name, long offset, long limit);
 
 	// region download shortcuts
 
@@ -144,7 +144,7 @@ public interface ActiveFs {
 	 * @return stream supplier of byte buffers
 	 * @see #download(String, long, long)
 	 */
-	default Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name) {
+	default Promise<ChannelSupplier<ByteBuf>> download(String name) {
 		return download(name, 0, Long.MAX_VALUE);
 	}
 	// endregion
@@ -156,7 +156,7 @@ public interface ActiveFs {
 	 * @param name name of the file to be deleted
 	 * @return marker promise that completes when deletion completes
 	 */
-	Promise<Void> delete(@NotNull String name);
+	Promise<Void> delete(String name);
 
 	/**
 	 * Tries to delete specified files. Basically, calls {@link #delete} for each file.
@@ -180,7 +180,7 @@ public interface ActiveFs {
 	 * @param name   file to be copied
 	 * @param target file name of copy
 	 */
-	default Promise<Void> copy(@NotNull String name, @NotNull String target) {
+	default Promise<Void> copy(String name, String target) {
 		return download(name).then(supplier -> supplier.streamTo(upload(target)));
 	}
 
@@ -203,7 +203,7 @@ public interface ActiveFs {
 
 		Set<Entry<String, String>> entrySet = sourceToTarget.entrySet();
 		return Promises.toList(entrySet.stream()
-				.map(entry -> copy(entry.getKey(), entry.getValue()).toTry()))
+						.map(entry -> copy(entry.getKey(), entry.getValue()).toTry()))
 				.whenResult(tries -> reduceErrors(tries, transformIterator(entrySet.iterator(), Entry::getKey)))
 				.toVoid();
 	}
@@ -216,7 +216,7 @@ public interface ActiveFs {
 	 * @param name   file to be moved
 	 * @param target new file name
 	 */
-	default Promise<Void> move(@NotNull String name, @NotNull String target) {
+	default Promise<Void> move(String name, String target) {
 		return copy(name, target)
 				.then(() -> name.equals(target) ? Promise.complete() : delete(name));
 	}
@@ -255,7 +255,7 @@ public interface ActiveFs {
 	 * @param glob specified in {@link java.nio.file.FileSystem#getPathMatcher NIO path matcher} documentation for glob patterns
 	 * @return map of filenames to {@link FileMetadata file metadata}
 	 */
-	Promise<Map<String, FileMetadata>> list(@NotNull String glob);
+	Promise<Map<String, FileMetadata>> list(String glob);
 
 	/**
 	 * Shortcut to get {@link FileMetadata metadata} of a single file.
@@ -263,7 +263,7 @@ public interface ActiveFs {
 	 * @param name name of a file to fetch its metadata.
 	 * @return promise of file description or <code>null</code>
 	 */
-	default Promise<@Nullable FileMetadata> info(@NotNull String name) {
+	default Promise<@Nullable FileMetadata> info(String name) {
 		return list(escapeGlob(name))
 				.map(list -> list.get(name));
 	}
@@ -275,13 +275,13 @@ public interface ActiveFs {
 	 * @return map of filenames to their corresponding {@link FileMetadata metadata}.
 	 * Map contains metadata for existing files only
 	 */
-	default Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
+	default Promise<Map<String, @NotNull FileMetadata>> infoAll(Set<String> names) {
 		if (names.isEmpty()) return Promise.of(Map.of());
 
 		Map<String, FileMetadata> result = new HashMap<>();
 		return Promises.all(names.stream()
-				.map(name -> info(name)
-						.whenResult(Objects::nonNull, metadata -> result.put(name, metadata))))
+						.map(name -> info(name)
+								.whenResult(Objects::nonNull, metadata -> result.put(name, metadata))))
 				.map($ -> result);
 	}
 

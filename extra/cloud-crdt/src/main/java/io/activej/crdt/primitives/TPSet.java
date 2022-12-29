@@ -19,13 +19,13 @@ package io.activej.crdt.primitives;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.BinaryOutput;
 import io.activej.serializer.BinarySerializer;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.stream.Stream;
 
 import static io.activej.common.Utils.not;
 
+@SuppressWarnings("NullableProblems")
 public final class TPSet<E> implements Set<E>, CrdtMergable<TPSet<E>> {
 	private final GSet<E> adds;
 	private final GSet<E> removes;
@@ -73,19 +73,19 @@ public final class TPSet<E> implements Set<E>, CrdtMergable<TPSet<E>> {
 	}
 
 	@Override
-	public @NotNull Iterator<E> iterator() {
+	public Iterator<E> iterator() {
 		return stream().iterator();
 	}
 
 	@Override
-	public Object @NotNull [] toArray() {
+	public Object[] toArray() {
 		//noinspection SimplifyStreamApiCallChains
 		return stream().toArray();
 	}
 
 	@SuppressWarnings({"SuspiciousToArrayCall", "SimplifyStreamApiCallChains"})
 	@Override
-	public <T> T @NotNull [] toArray(T @NotNull [] a) {
+	public <T> T[] toArray(T[] a) {
 		return stream().toArray($ -> a);
 	}
 
@@ -101,17 +101,17 @@ public final class TPSet<E> implements Set<E>, CrdtMergable<TPSet<E>> {
 	}
 
 	@Override
-	public boolean containsAll(@NotNull Collection<?> c) {
+	public boolean containsAll(Collection<?> c) {
 		return adds.containsAll(c) && removes.stream().noneMatch(c::contains);
 	}
 
 	@Override
-	public boolean addAll(@NotNull Collection<? extends E> c) {
+	public boolean addAll(Collection<? extends E> c) {
 		return adds.addAll(c);
 	}
 
 	@Override
-	public boolean retainAll(@NotNull Collection<?> c) {
+	public boolean retainAll(Collection<?> c) {
 		boolean removed = false;
 		for (E item : adds) {
 			if (!c.contains(item)) {
@@ -124,7 +124,7 @@ public final class TPSet<E> implements Set<E>, CrdtMergable<TPSet<E>> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public boolean removeAll(@NotNull Collection<?> c) {
+	public boolean removeAll(Collection<?> c) {
 		return removes.addAll((Collection<? extends E>) c);
 	}
 

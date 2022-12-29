@@ -1,7 +1,6 @@
 package io.activej.dataflow.calcite.aggregation;
 
 import io.activej.record.Record;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class CountReducer<I> extends FieldReducer<I, Long, Long> {
@@ -30,7 +29,7 @@ public class CountReducer<I> extends FieldReducer<I, Long, Long> {
 	}
 
 	@Override
-	protected Long doAccumulate(Long accumulator, @NotNull Object fieldValue) {
+	protected Long doAccumulate(Long accumulator, I fieldValue) {
 		return accumulator + 1;
 	}
 

@@ -22,7 +22,6 @@ import io.activej.common.MemSize;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
-import org.jetbrains.annotations.NotNull;
 
 import static io.activej.common.Checks.checkArgument;
 import static java.lang.Math.min;
@@ -44,7 +43,7 @@ public final class ChannelByteChunker extends AbstractChannelTransformer<Channel
 	}
 
 	@Override
-	protected @NotNull Promise<Void> onItem(ByteBuf item) {
+	protected Promise<Void> onItem(ByteBuf item) {
 		bufs.add(item);
 		return Promises.repeat(
 				() -> {

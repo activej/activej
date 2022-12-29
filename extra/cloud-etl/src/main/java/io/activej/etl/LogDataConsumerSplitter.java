@@ -20,7 +20,6 @@ import io.activej.async.ReactiveAccumulator;
 import io.activej.datastream.StreamConsumerWithResult;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.processor.StreamSplitter;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -69,6 +68,6 @@ public abstract class LogDataConsumerSplitter<T, D> implements LogDataConsumer<T
 		return StreamConsumerWithResult.of(splitter.getInput(), diffsAccumulator.run().promise());
 	}
 
-	protected abstract StreamDataAcceptor<T> createSplitter(@NotNull Context ctx);
+	protected abstract StreamDataAcceptor<T> createSplitter(Context ctx);
 
 }

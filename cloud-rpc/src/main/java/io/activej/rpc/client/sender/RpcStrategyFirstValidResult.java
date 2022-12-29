@@ -18,7 +18,6 @@ package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
 import io.activej.rpc.client.RpcClientConnectionPool;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
@@ -53,11 +52,11 @@ public final class RpcStrategyFirstValidResult implements RpcStrategy {
 		return new RpcStrategyFirstValidResult(list, DEFAULT_RESULT_VALIDATOR, null);
 	}
 
-	public RpcStrategyFirstValidResult withResultValidator(@NotNull ResultValidator<?> resultValidator) {
+	public RpcStrategyFirstValidResult withResultValidator(ResultValidator<?> resultValidator) {
 		return new RpcStrategyFirstValidResult(list, resultValidator, noValidResultException);
 	}
 
-	public RpcStrategyFirstValidResult withNoValidResultException(@NotNull Exception e) {
+	public RpcStrategyFirstValidResult withNoValidResultException(Exception e) {
 		return new RpcStrategyFirstValidResult(list, resultValidator, e);
 	}
 
@@ -79,7 +78,7 @@ public final class RpcStrategyFirstValidResult implements RpcStrategy {
 		private final ResultValidator<?> resultValidator;
 		private final @Nullable Exception noValidResultException;
 
-		Sender(@NotNull List<RpcSender> senders, @NotNull ResultValidator<?> resultValidator,
+		Sender(List<RpcSender> senders, ResultValidator<?> resultValidator,
 				@Nullable Exception noValidResultException) {
 			assert !senders.isEmpty();
 			this.subSenders = senders.toArray(new RpcSender[0]);
@@ -89,7 +88,7 @@ public final class RpcStrategyFirstValidResult implements RpcStrategy {
 
 		@SuppressWarnings("unchecked")
 		@Override
-		public <I, O> void sendRequest(I request, int timeout, @NotNull Callback<O> cb) {
+		public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
 			FirstResultCallback<O> firstResultCallback = new FirstResultCallback<>(subSenders.length, (ResultValidator<O>) resultValidator, cb, noValidResultException);
 			for (RpcSender sender : subSenders) {
 				sender.sendRequest(request, timeout, firstResultCallback);
@@ -100,15 +99,15 @@ public final class RpcStrategyFirstValidResult implements RpcStrategy {
 	static final class FirstResultCallback<T> implements Callback<T> {
 		private int expectedCalls;
 		private final ResultValidator<T> resultValidator;
-		private final Callback<T> resultCallback;
+		private final Callback<T> cb;
 		private Exception lastException;
 		private final @Nullable Exception noValidResultException;
 
-		FirstResultCallback(int expectedCalls, @NotNull ResultValidator<T> resultValidator, @NotNull Callback<T> resultCallback,
+		FirstResultCallback(int expectedCalls, ResultValidator<T> resultValidator, Callback<T> cb,
 				@Nullable Exception noValidResultException) {
 			assert expectedCalls > 0;
 			this.expectedCalls = expectedCalls;
-			this.resultCallback = resultCallback;
+			this.cb = cb;
 			this.resultValidator = resultValidator;
 			this.noValidResultException = noValidResultException;
 		}
@@ -119,17 +118,17 @@ public final class RpcStrategyFirstValidResult implements RpcStrategy {
 				if (--expectedCalls >= 0) {
 					if (resultValidator.isValidResult(result)) {
 						expectedCalls = 0;
-						resultCallback.accept(result, null);
+						cb.accept(result, null);
 					} else {
 						if (expectedCalls == 0) {
-							resultCallback.accept(null, lastException != null ? lastException : noValidResultException);
+							cb.accept(null, lastException != null ? lastException : noValidResultException);
 						}
 					}
 				}
 			} else {
 				lastException = e; // last Exception
 				if (--expectedCalls == 0) {
-					resultCallback.accept(null, lastException);
+					cb.accept(null, lastException);
 				}
 			}
 		}

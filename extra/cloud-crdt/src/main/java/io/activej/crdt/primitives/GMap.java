@@ -19,7 +19,6 @@ package io.activej.crdt.primitives;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.BinaryOutput;
 import io.activej.serializer.BinarySerializer;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -79,7 +78,7 @@ public final class GMap<K, V extends CrdtMergable<V>> implements Map<K, V>, Crdt
 	}
 
 	@Override
-	public void putAll(@NotNull Map<? extends K, ? extends V> m) {
+	public void putAll(Map<? extends K, ? extends V> m) {
 		m.forEach(this::put);
 	}
 
@@ -89,17 +88,17 @@ public final class GMap<K, V extends CrdtMergable<V>> implements Map<K, V>, Crdt
 	}
 
 	@Override
-	public @NotNull Set<K> keySet() {
+	public Set<K> keySet() {
 		throw new UnsupportedOperationException("GMap#keySet is not implemented yet");
 	}
 
 	@Override
-	public @NotNull Collection<V> values() {
+	public Collection<V> values() {
 		throw new UnsupportedOperationException("GMap#values is not implemented yet");
 	}
 
 	@Override
-	public @NotNull Set<Entry<K, V>> entrySet() {
+	public Set<Entry<K, V>> entrySet() {
 		throw new UnsupportedOperationException("GMap#entrySet is not implemented yet");
 	}
 

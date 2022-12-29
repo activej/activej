@@ -44,7 +44,6 @@ import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -162,14 +161,14 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> extends AbstractReact
 	}
 
 	@Override
-	public @NotNull Promise<Void> start() {
+	public Promise<?> start() {
 		return scanLostFiles()
 				.then(this::flushFiles)
 				.whenResult(() -> this.consumer = createConsumer());
 	}
 
 	@Override
-	public @NotNull Promise<?> stop() {
+	public Promise<?> stop() {
 		stopping = true;
 		if (flushRequired) return flush();
 

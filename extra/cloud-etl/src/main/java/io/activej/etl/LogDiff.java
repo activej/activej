@@ -16,8 +16,6 @@
 
 package io.activej.etl;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -32,7 +30,7 @@ public class LogDiff<D> {
 		this.diffs = diffs;
 	}
 
-	public static <D> LogDiff<D> of(@NotNull Map<String, LogPositionDiff> positions, @NotNull List<D> diffs) {
+	public static <D> LogDiff<D> of(Map<String, LogPositionDiff> positions, List<D> diffs) {
 		return new LogDiff<>(positions, diffs);
 	}
 

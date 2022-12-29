@@ -21,7 +21,6 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -108,7 +107,7 @@ final class StreamConsumers {
 			}
 		}
 
-		public OfPromise(@NotNull Promise<? extends StreamConsumer<T>> promise) {
+		public OfPromise(Promise<? extends StreamConsumer<T>> promise) {
 			this.promise = promise;
 		}
 

@@ -21,7 +21,6 @@ import io.activej.async.process.ReactiveCloseable;
 import io.activej.common.Checks;
 import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Checks.checkState;
@@ -42,7 +41,7 @@ public abstract class AbstractChannelConsumer<T> extends AbstractReactiveCloseab
 	protected abstract Promise<Void> doAccept(@Nullable T value);
 
 	@Override
-	public final @NotNull Promise<Void> accept(@Nullable T value) {
+	public final Promise<Void> accept(@Nullable T value) {
 		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
 		if (isClosed()) {
 			Recyclers.recycle(value);

@@ -9,7 +9,6 @@ import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.service.Service;
 import io.activej.service.ServiceGraphModule;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -63,14 +62,14 @@ public class AdvancedServiceExample extends Launcher {
 		}
 
 		@Override
-		public @NotNull Promise<?> start() {
+		public Promise<?> start() {
 			System.out.println("AuthService starting");
 			return Promise.ofBlocking(executor,
 					() -> System.out.println("AuthService started"));
 		}
 
 		@Override
-		public @NotNull Promise<?> stop() {
+		public Promise<?> stop() {
 			return Promise.ofBlocking(executor,
 					() -> System.out.println("AuthService stopped"));
 		}

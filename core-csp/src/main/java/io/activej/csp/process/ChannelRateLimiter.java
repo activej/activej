@@ -20,7 +20,6 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.promise.Promise;
 import io.activej.reactor.schedule.ScheduledRunnable;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Utils.nullify;
@@ -55,7 +54,7 @@ public final class ChannelRateLimiter<T> extends AbstractChannelTransformer<Chan
 	}
 
 	@Override
-	protected @NotNull Promise<Void> onItem(T item) {
+	protected Promise<Void> onItem(T item) {
 		scheduledRunnable = null;
 
 		refill();

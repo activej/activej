@@ -21,7 +21,6 @@ import io.activej.ot.OTCommit;
 import io.activej.ot.OTCommitFactory;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.stream.IntStream;
@@ -55,23 +54,23 @@ public interface OTRepository<K, D> extends OTCommitFactory<K, D> {
 				.then(() -> updateHeads(heads, parents));
 	}
 
-	default @NotNull Promise<Long> getLevel(@NotNull K commitId) {
+	default Promise<Long> getLevel(K commitId) {
 		return loadCommit(commitId)
 				.map(OTCommit::getLevel);
 	}
 
-	default @NotNull Promise<Map<K, Long>> getLevels(@NotNull Set<K> commitIds) {
+	default Promise<Map<K, Long>> getLevels(Set<K> commitIds) {
 		ArrayList<K> ids = new ArrayList<>(commitIds);
 		return Promises.toList(ids.stream().map(this::getLevel))
 				.map(list -> IntStream.range(0, ids.size()).boxed().collect(toMap(ids::get, list::get)));
 	}
 
-	default @NotNull Promise<Set<K>> getHeads() {
+	default Promise<Set<K>> getHeads() {
 		return getHeadCommits()
 				.map(headCommits -> headCommits.stream().map(OTCommit::getId).collect(toSet()));
 	}
 
-	default @NotNull Promise<Collection<OTCommit<K, D>>> getHeadCommits() {
+	default Promise<Collection<OTCommit<K, D>>> getHeadCommits() {
 		return getAllHeadCommits()
 				.map(allHeadCommits -> {
 					int maxEpoch = allHeadCommits.stream().mapToInt(OTCommit::getEpoch).max().orElse(0);
@@ -79,28 +78,28 @@ public interface OTRepository<K, D> extends OTCommitFactory<K, D> {
 				});
 	}
 
-	@NotNull Promise<Set<K>> getAllHeads();
+	Promise<Set<K>> getAllHeads();
 
-	default @NotNull Promise<Collection<OTCommit<K, D>>> getAllHeadCommits() {
+	default Promise<Collection<OTCommit<K, D>>> getAllHeadCommits() {
 		return getAllHeads()
 				.then(allHeads -> Promises.toList(allHeads.stream().map(this::loadCommit)));
 	}
 
-	default @NotNull AsyncSupplier<Set<K>> pollHeads() {
+	default AsyncSupplier<Set<K>> pollHeads() {
 		return this::getHeads;
 	}
 
-	@NotNull Promise<Boolean> hasCommit(@NotNull K revisionId);
+	Promise<Boolean> hasCommit(K revisionId);
 
-	@NotNull Promise<OTCommit<K, D>> loadCommit(@NotNull K revisionId);
+	Promise<OTCommit<K, D>> loadCommit(K revisionId);
 
-	default @NotNull Promise<Boolean> hasSnapshot(@NotNull K revisionId) {
+	default Promise<Boolean> hasSnapshot(K revisionId) {
 		return loadSnapshot(revisionId).map(Optional::isPresent);
 	}
 
-	@NotNull Promise<Optional<List<D>>> loadSnapshot(@NotNull K revisionId);
+	Promise<Optional<List<D>>> loadSnapshot(K revisionId);
 
-	@NotNull Promise<Void> saveSnapshot(@NotNull K revisionId, @NotNull List<D> diffs);
+	Promise<Void> saveSnapshot(K revisionId, List<D> diffs);
 
 	default Promise<Void> cleanup(K revisionId) {
 		throw new UnsupportedOperationException();

@@ -20,7 +20,6 @@ import io.activej.async.exception.AsyncCloseException;
 import io.activej.common.recycle.Recyclers;
 import io.activej.reactor.Reactive;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
 
@@ -55,14 +54,14 @@ public interface ReactiveCloseable extends Reactive {
 	 *
 	 * @param e exception that is used to close process with
 	 */
-	void closeEx(@NotNull Exception e);
+	void closeEx(Exception e);
 
 	static ReactiveCloseable of(Consumer<Exception> exceptionConsumer) {
 		return new ReactiveCloseable() {
 			private final Reactor reactor = getCurrentReactor();
 
 			@Override
-			public void closeEx(@NotNull Exception e) {
+			public void closeEx(Exception e) {
 				exceptionConsumer.accept(e);
 			}
 

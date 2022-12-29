@@ -27,7 +27,6 @@ import io.activej.datastream.processor.StreamSupplierTransformer;
 import io.activej.datastream.processor.StreamTransformer;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
 import java.util.List;
@@ -51,7 +50,7 @@ public interface StreamSupplier<T> extends ReactiveCloseable {
 	 * Bind this supplier to given {@link StreamConsumer} and start streaming
 	 * data through them following all the contracts.
 	 */
-	Promise<Void> streamTo(@NotNull StreamConsumer<T> consumer);
+	Promise<Void> streamTo(StreamConsumer<T> consumer);
 
 	Promise<Void> getAcknowledgement();
 
@@ -89,7 +88,7 @@ public interface StreamSupplier<T> extends ReactiveCloseable {
 	/**
 	 * A shortcut for {@link #streamTo(StreamConsumer)} for {@link StreamConsumerWithResult}.
 	 */
-	default <X> Promise<X> streamTo(@NotNull StreamConsumerWithResult<T, X> consumerWithResult) {
+	default <X> Promise<X> streamTo(StreamConsumerWithResult<T, X> consumerWithResult) {
 		return streamTo(consumerWithResult.getConsumer())
 				.then(consumerWithResult::getResult);
 	}

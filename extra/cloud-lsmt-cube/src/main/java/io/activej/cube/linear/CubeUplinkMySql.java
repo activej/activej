@@ -35,7 +35,6 @@ import io.activej.ot.exception.OTException;
 import io.activej.ot.uplink.OTUplink;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.slf4j.Logger;
@@ -155,7 +154,7 @@ public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, 
 	}
 
 	@Override
-	public Promise<FetchData<Long, LogDiff<CubeDiff>>> fetch(@NotNull Long currentCommitId) {
+	public Promise<FetchData<Long, LogDiff<CubeDiff>>> fetch(Long currentCommitId) {
 		return Promise.ofBlocking(executor,
 						() -> {
 							try (Connection connection = dataSource.getConnection()) {

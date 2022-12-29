@@ -22,6 +22,7 @@ import io.activej.common.initializer.WithInitializer;
 import io.activej.http.loader.ResourceIsADirectoryException;
 import io.activej.http.loader.ResourceNotFoundException;
 import io.activej.http.loader.StaticLoader;
+import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import org.jetbrains.annotations.NotNull;
@@ -147,7 +148,7 @@ public final class StaticServlet implements AsyncServlet, WithInitializer<Static
 	}
 
 	@Override
-	public @NotNull Promise<HttpResponse> serve(@NotNull HttpRequest request) {
+	public Promisable<HttpResponse> serve(HttpRequest request) {
 		String mappedPath = pathMapper.apply(request);
 		if (mappedPath == null) return Promise.ofException(HttpError.notFound404());
 		ContentType contentType = contentTypeResolver.apply(mappedPath);

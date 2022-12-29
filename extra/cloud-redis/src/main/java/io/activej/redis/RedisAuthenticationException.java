@@ -16,10 +16,8 @@
 
 package io.activej.redis;
 
-import org.jetbrains.annotations.NotNull;
-
 public class RedisAuthenticationException extends ServerError {
-	public RedisAuthenticationException(@NotNull String message) {
+	public RedisAuthenticationException(String message) {
 		super(message);
 	}
 }

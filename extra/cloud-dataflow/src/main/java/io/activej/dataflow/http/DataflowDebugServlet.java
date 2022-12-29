@@ -43,7 +43,6 @@ import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.ImplicitlyReactive;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
@@ -204,7 +203,7 @@ public final class DataflowDebugServlet extends ImplicitlyReactive implements As
 	}
 
 	@Override
-	public @NotNull Promisable<HttpResponse> serve(@NotNull HttpRequest request) throws Exception {
+	public Promisable<HttpResponse> serve(HttpRequest request) throws Exception {
 		return servlet.serve(request);
 	}
 }

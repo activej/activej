@@ -27,7 +27,6 @@ import io.activej.cube.exception.QueryException;
 import io.activej.http.*;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,7 +93,7 @@ public final class ReportingServiceServlet extends AsyncServletWithStats impleme
 	}
 
 	@Override
-	public @NotNull Promise<HttpResponse> doServe(@NotNull HttpRequest httpRequest) {
+	public Promise<HttpResponse> doServe(HttpRequest httpRequest) {
 		logger.info("Received request: {}", httpRequest);
 		try {
 			Stopwatch totalTimeStopwatch = Stopwatch.createStarted();

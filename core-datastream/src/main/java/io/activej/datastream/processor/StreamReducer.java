@@ -22,7 +22,6 @@ import io.activej.datastream.dsl.HasStreamInputs;
 import io.activej.datastream.dsl.HasStreamOutput;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.reactor.ImplicitlyReactive;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -55,7 +54,7 @@ public final class StreamReducer<K, O, A> extends ImplicitlyReactive implements 
 	private int streamsAwaiting;
 	private int streamsOpen;
 
-	private StreamReducer(@NotNull PriorityQueue<Input<?>> priorityQueue) {
+	private StreamReducer(PriorityQueue<Input<?>> priorityQueue) {
 		this.output = new Output();
 		this.priorityQueue = priorityQueue;
 	}

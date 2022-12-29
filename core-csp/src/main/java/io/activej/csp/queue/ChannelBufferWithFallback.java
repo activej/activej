@@ -21,7 +21,6 @@ import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.ImplicitlyReactive;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
@@ -149,7 +148,7 @@ public final class ChannelBufferWithFallback<T> extends ImplicitlyReactive imple
 	}
 
 	@Override
-	public void closeEx(@NotNull Exception e) {
+	public void closeEx(Exception e) {
 		if (exception != null) return;
 		exception = e;
 		queue.closeEx(e);

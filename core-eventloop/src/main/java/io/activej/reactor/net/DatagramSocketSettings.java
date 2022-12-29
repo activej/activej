@@ -18,7 +18,6 @@ package io.activej.reactor.net;
 
 import io.activej.common.MemSize;
 import io.activej.common.initializer.WithInitializer;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.channels.DatagramChannel;
@@ -51,11 +50,11 @@ public final class DatagramSocketSettings implements WithInitializer<DatagramSoc
 		return new DatagramSocketSettings(0, 0, DEF_BOOL, DEF_BOOL);
 	}
 
-	public DatagramSocketSettings withReceiveBufferSize(@NotNull MemSize receiveBufferSize) {
+	public DatagramSocketSettings withReceiveBufferSize(MemSize receiveBufferSize) {
 		return new DatagramSocketSettings(receiveBufferSize.toInt(), sendBufferSize, reuseAddress, broadcast);
 	}
 
-	public DatagramSocketSettings withSendBufferSize(@NotNull MemSize sendBufferSize) {
+	public DatagramSocketSettings withSendBufferSize(MemSize sendBufferSize) {
 		return new DatagramSocketSettings(receiveBufferSize, sendBufferSize.toInt(), reuseAddress, broadcast);
 	}
 
@@ -68,7 +67,7 @@ public final class DatagramSocketSettings implements WithInitializer<DatagramSoc
 	}
 	// endregion
 
-	public void applySettings(@NotNull DatagramChannel channel) throws IOException {
+	public void applySettings(DatagramChannel channel) throws IOException {
 		if (receiveBufferSize != 0) {
 			channel.setOption(SO_RCVBUF, receiveBufferSize);
 		}
@@ -87,7 +86,7 @@ public final class DatagramSocketSettings implements WithInitializer<DatagramSoc
 		return receiveBufferSize != 0;
 	}
 
-	public @NotNull MemSize getReceiveBufferSize() {
+	public MemSize getReceiveBufferSize() {
 		return MemSize.of(getReceiveBufferSizeBytes());
 	}
 
@@ -109,7 +108,7 @@ public final class DatagramSocketSettings implements WithInitializer<DatagramSoc
 		return sendBufferSize != 0;
 	}
 
-	public @NotNull MemSize getSendBufferSize() {
+	public MemSize getSendBufferSize() {
 		return MemSize.of(getSendBufferSizeBytes());
 	}
 

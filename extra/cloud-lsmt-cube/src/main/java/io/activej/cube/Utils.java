@@ -35,7 +35,6 @@ import io.activej.cube.attributes.AttributeResolver.KeyFunction;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -143,7 +142,7 @@ public final class Utils {
 	private static final ThreadLocal<JsonReader<?>> READERS = ThreadLocal.withInitial(CUBE_DSL_JSON::newReader);
 
 	@SuppressWarnings("unchecked")
-	public static @NotNull JsonCodec<Object> getJsonCodec(Type type) {
+	public static JsonCodec<Object> getJsonCodec(Type type) {
 		ReadObject<Object> readObject = (ReadObject<Object>) CUBE_DSL_JSON.tryFindReader(type);
 		if (readObject == null) {
 			throw new IllegalArgumentException("Cannot serialize " + type);
@@ -155,30 +154,30 @@ public final class Utils {
 		return JsonCodec.of(readObject, writeObject);
 	}
 
-	public static <T> String toJson(@NotNull WriteObject<T> writeObject, @Nullable T object) {
+	public static <T> String toJson(WriteObject<T> writeObject, @Nullable T object) {
 		return toJsonWriter(writeObject, object).toString();
 	}
 
-	public static <T> ByteBuf toJsonBuf(@NotNull WriteObject<T> writeObject, @Nullable T object) {
+	public static <T> ByteBuf toJsonBuf(WriteObject<T> writeObject, @Nullable T object) {
 		return ByteBuf.wrapForReading(toJsonWriter(writeObject, object).toByteArray());
 	}
 
-	private static <T> JsonWriter toJsonWriter(@NotNull WriteObject<T> writeObject, @Nullable T object) {
+	private static <T> JsonWriter toJsonWriter(WriteObject<T> writeObject, @Nullable T object) {
 		JsonWriter jsonWriter = WRITERS.get();
 		jsonWriter.reset();
 		writeObject.write(jsonWriter, object);
 		return jsonWriter;
 	}
 
-	public static <T> T fromJson(@NotNull ReadObject<T> readObject, @NotNull ByteBuf jsonBuf) throws MalformedDataException {
+	public static <T> T fromJson(ReadObject<T> readObject, ByteBuf jsonBuf) throws MalformedDataException {
 		return fromJson(readObject, jsonBuf.getArray());
 	}
 
-	public static <T> T fromJson(@NotNull ReadObject<T> readObject, String json) throws MalformedDataException {
+	public static <T> T fromJson(ReadObject<T> readObject, String json) throws MalformedDataException {
 		return fromJson(readObject, json.getBytes(UTF_8));
 	}
 
-	private static <T> T fromJson(@NotNull ReadObject<T> readObject, byte[] bytes) throws MalformedDataException {
+	private static <T> T fromJson(ReadObject<T> readObject, byte[] bytes) throws MalformedDataException {
 		JsonReader<?> jsonReader = READERS.get().process(bytes, bytes.length);
 		try {
 			jsonReader.getNextToken();

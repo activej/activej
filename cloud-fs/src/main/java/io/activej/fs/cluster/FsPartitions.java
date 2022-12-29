@@ -195,7 +195,7 @@ public final class FsPartitions extends AbstractReactive
 	}
 
 	@Override
-	public @NotNull Promise<?> start() {
+	public Promise<?> start() {
 		AsyncSupplier<Map<Object, ActiveFs>> discoverySupplier = discoveryService.discover();
 		return discoverySupplier.get()
 				.whenResult(result -> {
@@ -207,7 +207,7 @@ public final class FsPartitions extends AbstractReactive
 	}
 
 	@Override
-	public @NotNull Promise<?> stop() {
+	public Promise<?> stop() {
 		return Promise.complete();
 	}
 

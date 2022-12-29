@@ -24,7 +24,6 @@ import io.activej.datastream.StreamConsumer;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -67,12 +66,12 @@ public class JavaCrdtMap<K extends Comparable<K>, S> extends AbstractReactive
 	}
 
 	@Override
-	public @NotNull Promise<?> start() {
+	public Promise<?> start() {
 		return refresh();
 	}
 
 	@Override
-	public @NotNull Promise<?> stop() {
+	public Promise<?> stop() {
 		return Promise.complete();
 	}
 

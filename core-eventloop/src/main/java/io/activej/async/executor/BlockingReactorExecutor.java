@@ -20,7 +20,6 @@ import io.activej.async.callback.AsyncComputation;
 import io.activej.common.function.RunnableEx;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -92,7 +91,7 @@ public final class BlockingReactorExecutor implements ReactorExecutor, WithIniti
 	}
 
 	@Override
-	public void execute(@NotNull Runnable runnable) {
+	public void execute(Runnable runnable) {
 		try {
 			post(() -> {
 				try {
@@ -107,7 +106,7 @@ public final class BlockingReactorExecutor implements ReactorExecutor, WithIniti
 	}
 
 	@Override
-	public @NotNull CompletableFuture<Void> submit(@NotNull RunnableEx computation) {
+	public CompletableFuture<Void> submit(RunnableEx computation) {
 		CompletableFuture<Void> future = new CompletableFuture<>();
 		post(() -> {
 			try {
@@ -125,7 +124,7 @@ public final class BlockingReactorExecutor implements ReactorExecutor, WithIniti
 	}
 
 	@Override
-	public <T> @NotNull CompletableFuture<T> submit(AsyncComputation<? extends T> computation) {
+	public <T> CompletableFuture<T> submit(AsyncComputation<? extends T> computation) {
 		CompletableFuture<T> future = new CompletableFuture<>();
 		post(() -> {
 			try {

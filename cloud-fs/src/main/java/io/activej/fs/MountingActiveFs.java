@@ -68,38 +68,38 @@ final class MountingActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
+	public Promise<ChannelConsumer<ByteBuf>> upload(String name) {
 		return findMount(name).upload(name);
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
+	public Promise<ChannelConsumer<ByteBuf>> upload(String name, long size) {
 		return findMount(name).upload(name, size);
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
+	public Promise<ChannelConsumer<ByteBuf>> append(String name, long offset) {
 		return findMount(name).append(name, offset);
 	}
 
 	@Override
-	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
+	public Promise<ChannelSupplier<ByteBuf>> download(String name, long offset, long limit) {
 		return findMount(name).download(name, offset, limit);
 	}
 
 	@Override
-	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
+	public Promise<Map<String, FileMetadata>> list(String glob) {
 		return Promises.toList(Stream.concat(Stream.of(root), mounts.values().stream()).map(f -> f.list(glob)))
 				.map(listOfMaps -> FileMetadata.flatten(listOfMaps.stream()));
 	}
 
 	@Override
-	public Promise<@Nullable FileMetadata> info(@NotNull String name) {
+	public Promise<@Nullable FileMetadata> info(String name) {
 		return findMount(name).info(name);
 	}
 
 	@Override
-	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
+	public Promise<Map<String, @NotNull FileMetadata>> infoAll(Set<String> names) {
 		Map<String, @NotNull FileMetadata> result = new HashMap<>();
 		return Promises.all(names.stream()
 				.collect(groupingBy(this::findMount, toSet()))
@@ -111,7 +111,7 @@ final class MountingActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
+	public Promise<Void> copy(String name, String target) {
 		return transfer(name, target, (s, t) -> fs -> fs.copy(s, t), false);
 	}
 
@@ -124,7 +124,7 @@ final class MountingActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<Void> move(@NotNull String name, @NotNull String target) {
+	public Promise<Void> move(String name, String target) {
 		return transfer(name, target, (s, t) -> fs -> fs.move(s, t), true);
 	}
 
@@ -137,7 +137,7 @@ final class MountingActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<Void> delete(@NotNull String name) {
+	public Promise<Void> delete(String name) {
 		return findMount(name).delete(name);
 	}
 

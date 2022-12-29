@@ -4,7 +4,6 @@ import io.activej.csp.AbstractChannelConsumer;
 import io.activej.csp.ChannelConsumer;
 import io.activej.datastream.processor.StreamConsumerTransformer;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Random;
@@ -64,7 +63,7 @@ public class TestStreamTransformers {
 		}
 
 		@Override
-		protected void onClosed(@NotNull Exception e) {
+		protected void onClosed(Exception e) {
 			internalSupplier.closeEx(e);
 		}
 	}

@@ -17,7 +17,6 @@
 package io.activej.rpc.client.sender;
 
 import io.activej.rpc.protocol.RpcException;
-import org.jetbrains.annotations.NotNull;
 
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -37,7 +36,7 @@ import static java.util.stream.Collectors.toList;
 public final class RpcStrategies {
 	static final RpcException NO_SENDER_AVAILABLE_EXCEPTION = new RpcException("No senders available");
 
-	public static RpcStrategySingleServer server(@NotNull InetSocketAddress address) {
+	public static RpcStrategySingleServer server(InetSocketAddress address) {
 		return RpcStrategySingleServer.create(address);
 	}
 

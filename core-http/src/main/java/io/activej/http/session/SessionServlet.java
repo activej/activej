@@ -20,8 +20,7 @@ import io.activej.common.initializer.WithInitializer;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpResponse;
-import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
+import io.activej.promise.Promisable;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -61,7 +60,7 @@ public final class SessionServlet<T> implements AsyncServlet, WithInitializer<Se
 	}
 
 	@Override
-	public @NotNull Promise<HttpResponse> serve(@NotNull HttpRequest request) throws Exception {
+	public Promisable<HttpResponse> serve(HttpRequest request) throws Exception {
 		String id = sessionIdExtractor.apply(request);
 
 		if (id == null) {

@@ -23,7 +23,6 @@ import io.activej.promise.Promise;
 import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.net.SocketSettings;
 import io.activej.reactor.nio.NioReactor;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,7 +82,7 @@ public final class RedisClient extends AbstractNioReactive implements WithInitia
 		return this;
 	}
 
-	public RedisClient withSslEnabled(@NotNull SSLContext sslContext, @NotNull Executor sslExecutor) {
+	public RedisClient withSslEnabled(SSLContext sslContext, Executor sslExecutor) {
 		this.sslContext = sslContext;
 		this.sslExecutor = sslExecutor;
 		return this;

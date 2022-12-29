@@ -22,46 +22,46 @@ import io.activej.common.function.SupplierEx;
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
 public interface AsyncComputation<T> {
-	void run(Callback<? super T> callback);
+	void run(Callback<? super T> cb);
 
 	static AsyncComputation<Void> of(RunnableEx runnable) {
-		return callback -> {
+		return cb -> {
 			try {
 				runnable.run();
 			} catch (Exception ex) {
 				handleError(ex, runnable);
-				callback.accept(null, ex);
+				cb.accept(null, ex);
 				return;
 			}
-			callback.accept(null, null);
+			cb.accept(null, null);
 		};
 	}
 
 	static <T> AsyncComputation<T> of(SupplierEx<? extends T> runnable) {
-		return callback -> {
+		return cb -> {
 			T result;
 			try {
 				result = runnable.get();
 			} catch (Exception ex) {
 				handleError(ex, runnable);
-				callback.accept(null, ex);
+				cb.accept(null, ex);
 				return;
 			}
-			callback.accept(result, null);
+			cb.accept(result, null);
 		};
 	}
 
 	static <T> AsyncComputation<T> ofDeferred(SupplierEx<? extends AsyncComputation<? extends T>> computationSupplier) {
-		return callback -> {
+		return cb -> {
 			AsyncComputation<? extends T> computation;
 			try {
 				computation = computationSupplier.get();
 			} catch (Exception ex) {
 				handleError(ex, computationSupplier);
-				callback.accept(null, ex);
+				cb.accept(null, ex);
 				return;
 			}
-			computation.run(callback);
+			computation.run(cb);
 		};
 	}
 }

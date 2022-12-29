@@ -1,7 +1,6 @@
 package io.activej.dataflow.calcite.aggregation;
 
 import io.activej.record.Record;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
@@ -37,7 +36,7 @@ public final class KeyReducer<K> extends FieldReducer<K, K, K> {
 	}
 
 	@Override
-	protected K doAccumulate(K accumulator, @NotNull K fieldValue) {
+	protected K doAccumulate(K accumulator, K fieldValue) {
 		assert Objects.equals(accumulator, fieldValue);
 		return accumulator;
 	}

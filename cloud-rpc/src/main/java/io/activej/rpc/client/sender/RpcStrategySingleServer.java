@@ -17,7 +17,6 @@
 package io.activej.rpc.client.sender;
 
 import io.activej.rpc.client.RpcClientConnectionPool;
-import org.jetbrains.annotations.NotNull;
 
 import java.net.InetSocketAddress;
 import java.util.Set;
@@ -26,7 +25,7 @@ public final class RpcStrategySingleServer implements RpcStrategy {
 
 	private final InetSocketAddress address;
 
-	private RpcStrategySingleServer(@NotNull InetSocketAddress address) {
+	private RpcStrategySingleServer(InetSocketAddress address) {
 		this.address = address;
 	}
 

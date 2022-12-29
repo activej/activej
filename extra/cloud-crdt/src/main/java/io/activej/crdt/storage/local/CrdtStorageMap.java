@@ -40,7 +40,6 @@ import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
@@ -178,12 +177,12 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> extends AbstractRe
 	}
 
 	@Override
-	public @NotNull Promise<Void> start() {
+	public Promise<?> start() {
 		return Promise.complete();
 	}
 
 	@Override
-	public @NotNull Promise<Void> stop() {
+	public Promise<?> stop() {
 		return Promise.complete();
 	}
 

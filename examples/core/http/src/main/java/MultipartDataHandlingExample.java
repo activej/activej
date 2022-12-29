@@ -12,7 +12,6 @@ import io.activej.launchers.http.HttpServerLauncher;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
-import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -100,8 +99,8 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 	protected void run() throws ExecutionException, InterruptedException {
 		CompletableFuture<Integer> future = reactor.submit(() ->
 				client.request(HttpRequest.post("http://localhost:8080/handleMultipart")
-						.withHeader(HttpHeaders.CONTENT_TYPE, "multipart/form-data; boundary=" + BOUNDARY.substring(2))
-						.withBody(ByteBufStrings.encodeAscii(MULTIPART_REQUEST)))
+								.withHeader(HttpHeaders.CONTENT_TYPE, "multipart/form-data; boundary=" + BOUNDARY.substring(2))
+								.withBody(ByteBufStrings.encodeAscii(MULTIPART_REQUEST)))
 						.map(HttpResponse::getCode));
 
 		int code = future.get();
@@ -112,7 +111,7 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 	}
 
 	//[START UPLOAD]
-	private @NotNull Promise<ChannelConsumer<ByteBuf>> upload(String filename) {
+	private Promise<ChannelConsumer<ByteBuf>> upload(String filename) {
 		logger.info("Uploading file '{}' to {}", filename, path);
 		return ChannelFileWriter.open(executor, path.resolve(filename))
 				.map(writer -> writer.withAcknowledgement(ack ->

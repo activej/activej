@@ -17,7 +17,6 @@
 package io.activej.aggregation.ot;
 
 import io.activej.aggregation.AggregationChunk;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.LinkedHashSet;
 import java.util.Objects;
@@ -34,7 +33,7 @@ public final class AggregationDiff {
 		this.removedChunks = removedChunks;
 	}
 
-	public static AggregationDiff of(@NotNull Set<AggregationChunk> addedChunks, @NotNull Set<AggregationChunk> removedChunks) {
+	public static AggregationDiff of(Set<AggregationChunk> addedChunks, Set<AggregationChunk> removedChunks) {
 		return new AggregationDiff(addedChunks, removedChunks);
 	}
 

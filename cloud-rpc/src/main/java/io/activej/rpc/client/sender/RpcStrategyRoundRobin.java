@@ -18,7 +18,6 @@ package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
 import io.activej.rpc.client.RpcClientConnectionPool;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
@@ -67,14 +66,14 @@ public final class RpcStrategyRoundRobin implements RpcStrategy {
 		private int nextSender;
 		private final RpcSender[] subSenders;
 
-		Sender(@NotNull List<RpcSender> senders) {
+		Sender(List<RpcSender> senders) {
 			assert !senders.isEmpty();
 			this.subSenders = senders.toArray(new RpcSender[0]);
 			this.nextSender = 0;
 		}
 
 		@Override
-		public <I, O> void sendRequest(I request, int timeout, @NotNull Callback<O> cb) {
+		public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
 			RpcSender sender = subSenders[nextSender];
 			nextSender = (nextSender + 1) % subSenders.length;
 			sender.sendRequest(request, timeout, cb);

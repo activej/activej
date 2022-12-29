@@ -28,7 +28,6 @@ import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.promise.Promise;
 import io.activej.serializer.BinarySerializer;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -228,7 +227,7 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T>
 		private boolean flushPosted;
 		private final BiConsumer<T, Exception> serializationErrorHandler;
 
-		public Input(@NotNull BinarySerializer<T> serializer, int initialBufferSize, BiConsumer<T, Exception> serializationErrorHandler) {
+		public Input(BinarySerializer<T> serializer, int initialBufferSize, BiConsumer<T, Exception> serializationErrorHandler) {
 			this.serializer = serializer;
 			this.initialBufferSize = initialBufferSize;
 			this.autoFlushIntervalMillis = autoFlushInterval == null ? Integer.MAX_VALUE : (int) autoFlushInterval.toMillis();

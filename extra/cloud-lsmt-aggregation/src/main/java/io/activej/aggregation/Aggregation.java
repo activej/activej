@@ -42,7 +42,6 @@ import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.serializer.BinarySerializer;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,7 +136,7 @@ public class Aggregation extends AbstractReactive
 	 * @param frameFormat             frame format in which data is to be stored
 	 */
 	public static Aggregation create(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
-			AggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat, @NotNull AggregationStructure structure) {
+			AggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat, AggregationStructure structure) {
 		return new Aggregation(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure, new AggregationState(structure));
 	}
 

@@ -23,7 +23,6 @@ import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Closeable;
@@ -122,7 +121,7 @@ public final class ChannelConsumers {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Exception e) {
+			protected void onClosed(Exception e) {
 				executor.execute(() -> {
 					try {
 						outputStream.close();
@@ -143,7 +142,7 @@ public final class ChannelConsumers {
 	 * <p>
 	 * <b>{@link OutputStream}'s methods are blocking, so they should not be called from a reactor</b>
 	 *
-	 * @param reactor       a reactor that will execute asynchronous operations
+	 * @param reactor         a reactor that will execute asynchronous operations
 	 * @param channelConsumer a {@link ChannelSupplier<ByteBuf>} that is transformed to an {@link OutputStream}
 	 * @return an {@link OutputStream} out ouf a {@link ChannelSupplier<ByteBuf>}
 	 */
@@ -157,7 +156,7 @@ public final class ChannelConsumers {
 			}
 
 			@Override
-			public void write(byte @NotNull [] b, int off, int len) throws IOException {
+			public void write(byte[] b, int off, int len) throws IOException {
 				if (isClosed) {
 					throw new IOException("Stream Closed");
 				}

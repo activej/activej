@@ -12,7 +12,6 @@ import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -898,32 +897,32 @@ public final class TestLocalActiveFsInvariants {
 		}
 
 		@Override
-		public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
+		public Promise<ChannelConsumer<ByteBuf>> upload(String name) {
 			return peer.upload(name);
 		}
 
 		@Override
-		public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
+		public Promise<ChannelConsumer<ByteBuf>> upload(String name, long size) {
 			return peer.upload(name, size);
 		}
 
 		@Override
-		public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
+		public Promise<ChannelConsumer<ByteBuf>> append(String name, long offset) {
 			return peer.append(name, offset);
 		}
 
 		@Override
-		public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
+		public Promise<ChannelSupplier<ByteBuf>> download(String name, long offset, long limit) {
 			return peer.download(name, offset, limit);
 		}
 
 		@Override
-		public Promise<Void> delete(@NotNull String name) {
+		public Promise<Void> delete(String name) {
 			return peer.delete(name);
 		}
 
 		@Override
-		public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
+		public Promise<Map<String, FileMetadata>> list(String glob) {
 			return peer.list(glob);
 		}
 	}

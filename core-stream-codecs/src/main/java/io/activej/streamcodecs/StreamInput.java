@@ -256,11 +256,11 @@ public class StreamInput implements Closeable, WithInitializer<StreamInput> {
 		return in.readChar();
 	}
 
-	public final @NotNull String readString() throws IOException {
+	public final String readString() throws IOException {
 		return readUTF8();
 	}
 
-	public final @NotNull String readUTF8() throws IOException {
+	public final String readUTF8() throws IOException {
 		int length = readVarInt();
 		if (length == 0) return "";
 		ensure(length);
@@ -269,7 +269,7 @@ public class StreamInput implements Closeable, WithInitializer<StreamInput> {
 		return str;
 	}
 
-	public final @NotNull String readIso88591() throws IOException {
+	public final String readIso88591() throws IOException {
 		int length = readVarInt();
 		if (length == 0) return "";
 		ensure(length);

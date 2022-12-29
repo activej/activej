@@ -5,7 +5,6 @@ import io.activej.common.exception.UncheckedException;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.channels.FileChannel;
@@ -34,7 +33,7 @@ public final class AsyncFileServiceExample {
 	}
 
 	//[START REGION_1]
-	private static @NotNull Promise<Void> writeToFile() {
+	private static Promise<Void> writeToFile() {
 		try {
 			FileChannel channel = FileChannel.open(PATH, Set.of(WRITE, APPEND));
 
@@ -51,7 +50,7 @@ public final class AsyncFileServiceExample {
 		}
 	}
 
-	private static @NotNull Promise<ByteBuf> readFromFile() {
+	private static Promise<ByteBuf> readFromFile() {
 		byte[] array = new byte[1024];
 		FileChannel channel;
 		try {

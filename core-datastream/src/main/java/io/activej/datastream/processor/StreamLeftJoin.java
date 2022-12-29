@@ -21,7 +21,6 @@ import io.activej.datastream.*;
 import io.activej.datastream.dsl.HasStreamInputs;
 import io.activej.datastream.dsl.HasStreamOutput;
 import io.activej.reactor.ImplicitlyReactive;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayDeque;
@@ -114,9 +113,9 @@ public final class StreamLeftJoin<K, L, R, V> extends ImplicitlyReactive impleme
 
 	private final LeftJoiner<K, L, R, V> leftJoiner;
 
-	private StreamLeftJoin(@NotNull Comparator<K> keyComparator,
-			@NotNull Function<L, K> leftKeyFunction, @NotNull Function<R, K> rightKeyFunction,
-			@NotNull StreamLeftJoin.LeftJoiner<K, L, R, V> leftJoiner) {
+	private StreamLeftJoin(Comparator<K> keyComparator,
+			Function<L, K> leftKeyFunction, Function<R, K> rightKeyFunction,
+			StreamLeftJoin.LeftJoiner<K, L, R, V> leftJoiner) {
 		this.keyComparator = keyComparator;
 		this.leftJoiner = leftJoiner;
 		this.left = new Input<>(leftDeque);
@@ -132,7 +131,7 @@ public final class StreamLeftJoin<K, L, R, V> extends ImplicitlyReactive impleme
 	 * @param keyComparator    comparator for compare keys
 	 * @param leftKeyFunction  function for counting keys of left stream
 	 * @param rightKeyFunction function for counting keys of right stream
-	 * @param leftJoiner           joiner which will join streams
+	 * @param leftJoiner       joiner which will join streams
 	 */
 	public static <K, L, R, V> StreamLeftJoin<K, L, R, V> create(Comparator<K> keyComparator,
 			Function<L, K> leftKeyFunction, Function<R, K> rightKeyFunction,

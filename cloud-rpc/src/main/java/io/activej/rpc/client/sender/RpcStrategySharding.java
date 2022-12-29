@@ -18,7 +18,6 @@ package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
 import io.activej.rpc.client.RpcClientConnectionPool;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
@@ -33,13 +32,13 @@ public final class RpcStrategySharding implements RpcStrategy {
 	private final ToIntFunction<?> shardingFunction;
 	private final int minActiveSubStrategies;
 
-	private RpcStrategySharding(@NotNull ToIntFunction<?> shardingFunction, @NotNull List<RpcStrategy> list, int minActiveSubStrategies) {
+	private RpcStrategySharding(ToIntFunction<?> shardingFunction, List<RpcStrategy> list, int minActiveSubStrategies) {
 		this.shardingFunction = shardingFunction;
 		this.list = list;
 		this.minActiveSubStrategies = minActiveSubStrategies;
 	}
 
-	public static <T> RpcStrategySharding create(ToIntFunction<T> shardingFunction, @NotNull List<RpcStrategy> list) {
+	public static <T> RpcStrategySharding create(ToIntFunction<T> shardingFunction, List<RpcStrategy> list) {
 		return new RpcStrategySharding(shardingFunction, list, 0);
 	}
 
@@ -78,7 +77,7 @@ public final class RpcStrategySharding implements RpcStrategy {
 		private final ToIntFunction<Object> shardingFunction;
 		private final RpcSender[] subSenders;
 
-		Sender(@NotNull ToIntFunction<?> shardingFunction, @NotNull List<RpcSender> senders) {
+		Sender(ToIntFunction<?> shardingFunction, List<RpcSender> senders) {
 			assert !senders.isEmpty();
 			//noinspection unchecked
 			this.shardingFunction = (ToIntFunction<Object>) shardingFunction;
@@ -86,7 +85,7 @@ public final class RpcStrategySharding implements RpcStrategy {
 		}
 
 		@Override
-		public <I, O> void sendRequest(I request, int timeout, @NotNull Callback<O> cb) {
+		public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
 			int shardIndex = shardingFunction.applyAsInt(request);
 			RpcSender sender = subSenders[shardIndex];
 			if (sender != null) {

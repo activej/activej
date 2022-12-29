@@ -300,7 +300,7 @@ public final class ChannelSuppliers {
 		};
 	}
 
-	private static final @NotNull MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(8);
+	private static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(8);
 
 	/**
 	 * @see #inputStreamAsChannelSupplier(Executor, int, InputStream)
@@ -362,7 +362,7 @@ public final class ChannelSuppliers {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Exception e) {
+			protected void onClosed(Exception e) {
 				executor.execute(() -> {
 					try {
 						inputStream.close();
@@ -383,7 +383,7 @@ public final class ChannelSuppliers {
 	 * <p>
 	 * <b>{@link InputStream}'s methods are blocking, so they should not be called from reactor</b>
 	 *
-	 * @param reactor       a reactor that will execute asynchronous operations
+	 * @param reactor         a reactor that will execute asynchronous operations
 	 * @param channelSupplier a {@link ChannelSupplier<ByteBuf>} that is transformed to an {@link InputStream}
 	 * @return an {@link InputStream} out ouf a {@link ChannelSupplier<ByteBuf>}
 	 */
@@ -399,7 +399,7 @@ public final class ChannelSuppliers {
 			}
 
 			@Override
-			public int read(byte @NotNull [] b, int off, int len) throws IOException {
+			public int read(byte[] b, int off, int len) throws IOException {
 				return doRead(buf -> buf.read(b, off, min(buf.readRemaining(), len)));
 			}
 
@@ -568,7 +568,7 @@ public final class ChannelSuppliers {
 		}
 
 		@Override
-		protected void onClosed(@NotNull Exception e) {
+		protected void onClosed(Exception e) {
 			current.closeEx(e);
 			if (ownership) {
 				iterator.forEachRemaining(Recyclers::recycle);

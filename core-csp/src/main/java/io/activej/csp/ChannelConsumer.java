@@ -30,7 +30,6 @@ import io.activej.net.socket.tcp.ReactiveTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
@@ -62,7 +61,7 @@ public interface ChannelConsumer<T> extends ReactiveCloseable {
 	 * Consumes a provided value and returns a
 	 * {@link Promise} as a marker of success.
 	 */
-	@NotNull Promise<Void> accept(@Nullable T value);
+	Promise<Void> accept(@Nullable T value);
 
 	default Promise<Void> acceptEndOfStream() {
 		return accept(null);
@@ -75,21 +74,21 @@ public interface ChannelConsumer<T> extends ReactiveCloseable {
 	 * {@code Promise} of exception will be returned.
 	 */
 	@SuppressWarnings("unchecked")
-	default @NotNull Promise<Void> acceptAll(T... items) {
+	default Promise<Void> acceptAll(T... items) {
 		return acceptAll(Arrays.asList(items));
 	}
 
 	/**
 	 * @see ChannelConsumers#acceptAll(ChannelConsumer, Iterator)
 	 */
-	default @NotNull Promise<Void> acceptAll(@NotNull Iterator<? extends T> it) {
+	default Promise<Void> acceptAll(Iterator<? extends T> it) {
 		return ChannelConsumers.acceptAll(this, it);
 	}
 
 	/**
 	 * @see #acceptAll(Iterator)
 	 */
-	default Promise<Void> acceptAll(@NotNull List<T> list) {
+	default Promise<Void> acceptAll(List<T> list) {
 		return ChannelConsumers.acceptAll(this, list);
 	}
 
@@ -98,7 +97,7 @@ public interface ChannelConsumer<T> extends ReactiveCloseable {
 	 *
 	 * @see ChannelConsumer#of(AsyncConsumer, ReactiveCloseable)
 	 */
-	static <T> ChannelConsumer<T> of(@NotNull AsyncConsumer<T> consumer) {
+	static <T> ChannelConsumer<T> of(AsyncConsumer<T> consumer) {
 		return of(consumer, ReactiveCloseable.of(e -> {}));
 	}
 
@@ -110,7 +109,7 @@ public interface ChannelConsumer<T> extends ReactiveCloseable {
 	 * @param <T>       type of data to be consumed
 	 * @return AbstractChannelConsumer which wraps AsyncConsumer
 	 */
-	static <T> ChannelConsumer<T> of(@NotNull AsyncConsumer<T> consumer, @Nullable ReactiveCloseable closeable) {
+	static <T> ChannelConsumer<T> of(AsyncConsumer<T> consumer, @Nullable ReactiveCloseable closeable) {
 		return new AbstractChannelConsumer<>(closeable) {
 			final AsyncConsumer<T> thisConsumer = consumer;
 
@@ -127,7 +126,7 @@ public interface ChannelConsumer<T> extends ReactiveCloseable {
 	/**
 	 * Wraps a {@link ConsumerEx} in {@code ChannelConsumer}.
 	 */
-	static <T> ChannelConsumer<T> ofConsumer(@NotNull ConsumerEx<T> consumer) {
+	static <T> ChannelConsumer<T> ofConsumer(ConsumerEx<T> consumer) {
 		return of(AsyncConsumer.of(consumer));
 	}
 
@@ -199,7 +198,7 @@ public interface ChannelConsumer<T> extends ReactiveCloseable {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Exception e) {
+			protected void onClosed(Exception e) {
 				exception = e;
 				promise.whenResult(supplier -> supplier.closeEx(e));
 			}
@@ -225,7 +224,7 @@ public interface ChannelConsumer<T> extends ReactiveCloseable {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Exception e) {
+			protected void onClosed(Exception e) {
 				reactor.startExternalTask();
 				anotherReactor.execute(() -> {
 					anotherReactorConsumer.closeEx(e);
@@ -253,7 +252,7 @@ public interface ChannelConsumer<T> extends ReactiveCloseable {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Exception e) {
+			protected void onClosed(Exception e) {
 				if (consumer != null) {
 					consumer.closeEx(e);
 				}
@@ -435,7 +434,7 @@ public interface ChannelConsumer<T> extends ReactiveCloseable {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Exception e) {
+			protected void onClosed(Exception e) {
 				acknowledgement.trySetException(e);
 			}
 		};

@@ -19,7 +19,6 @@ package io.activej.csp.process;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.dsl.ChannelTransformer;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Drops exactly N bytes from a csp stream of byte buffers and limits that stream to exactly M bytes in length
@@ -51,7 +50,7 @@ public final class ChannelByteRanger extends AbstractChannelTransformer<ChannelB
 	}
 
 	@Override
-	protected @NotNull Promise<Void> onItem(ByteBuf item) {
+	protected Promise<Void> onItem(ByteBuf item) {
 		int size = item.readRemaining();
 		long oldPos = position;
 		position += size;

@@ -21,7 +21,6 @@ import io.activej.common.HashUtils;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import io.activej.rpc.protocol.RpcException;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
@@ -46,7 +45,7 @@ public final class RpcStrategyRendezvousHashing implements RpcStrategy, WithInit
 	private int minActiveShards = DEFAULT_MIN_ACTIVE_SHARDS;
 	private int reshardings = DEFAULT_MAX_RESHARDINGS;
 
-	private RpcStrategyRendezvousHashing(@NotNull ToIntFunction<?> hashFn) {
+	private RpcStrategyRendezvousHashing(ToIntFunction<?> hashFn) {
 		this.hashFn = hashFn;
 	}
 
@@ -75,7 +74,7 @@ public final class RpcStrategyRendezvousHashing implements RpcStrategy, WithInit
 		return this;
 	}
 
-	public RpcStrategyRendezvousHashing withShard(Object shardId, @NotNull RpcStrategy strategy) {
+	public RpcStrategyRendezvousHashing withShard(Object shardId, RpcStrategy strategy) {
 		shards.put(shardId, strategy);
 		return this;
 	}
@@ -122,7 +121,7 @@ public final class RpcStrategyRendezvousHashing implements RpcStrategy, WithInit
 
 		//noinspection NullableProblems
 		class ShardIdAndSender {
-			final @NotNull Object shardId;
+			final Object shardId;
 			final @Nullable RpcSender rpcSender;
 			private long hash;
 
@@ -165,14 +164,14 @@ public final class RpcStrategyRendezvousHashing implements RpcStrategy, WithInit
 		private final ToIntFunction<Object> hashFunction;
 		private final @Nullable RpcSender[] hashBuckets;
 
-		Sender(@NotNull ToIntFunction<?> hashFunction, @Nullable RpcSender[] hashBuckets) {
+		Sender(ToIntFunction<?> hashFunction, @Nullable RpcSender[] hashBuckets) {
 			//noinspection unchecked
 			this.hashFunction = (ToIntFunction<Object>) hashFunction;
 			this.hashBuckets = hashBuckets;
 		}
 
 		@Override
-		public <I, O> void sendRequest(I request, int timeout, @NotNull Callback<O> cb) {
+		public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
 			int hash = hashFunction.applyAsInt(request);
 			RpcSender sender = hashBuckets[hash & (hashBuckets.length - 1)];
 

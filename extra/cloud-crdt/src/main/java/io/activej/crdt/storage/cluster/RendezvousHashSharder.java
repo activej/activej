@@ -19,7 +19,6 @@ package io.activej.crdt.storage.cluster;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.HashUtils;
 import io.activej.common.initializer.WithInitializer;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -54,7 +53,7 @@ public final class RendezvousHashSharder<K> implements Sharder<K>, WithInitializ
 
 		//noinspection NullableProblems
 		class ObjWithIndex {
-			final @NotNull P partitionId;
+			final P partitionId;
 			final @Nullable Integer aliveIndex;
 			private long hash;
 

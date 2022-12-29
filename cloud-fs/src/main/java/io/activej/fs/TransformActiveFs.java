@@ -58,7 +58,7 @@ final class TransformActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
+	public Promise<ChannelConsumer<ByteBuf>> upload(String name) {
 		Optional<String> transformed = into.apply(name);
 		if (transformed.isEmpty()) {
 			return Promise.ofException(new ForbiddenPathException());
@@ -67,7 +67,7 @@ final class TransformActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
+	public Promise<ChannelConsumer<ByteBuf>> upload(String name, long size) {
 		Optional<String> transformed = into.apply(name);
 		if (transformed.isEmpty()) {
 			return Promise.ofException(new ForbiddenPathException());
@@ -76,7 +76,7 @@ final class TransformActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
+	public Promise<ChannelConsumer<ByteBuf>> append(String name, long offset) {
 		Optional<String> transformed = into.apply(name);
 		if (transformed.isEmpty()) {
 			return Promise.ofException(new ForbiddenPathException());
@@ -85,7 +85,7 @@ final class TransformActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
+	public Promise<ChannelSupplier<ByteBuf>> download(String name, long offset, long limit) {
 		Optional<String> transformed = into.apply(name);
 		if (transformed.isEmpty()) {
 			return Promise.ofException(new ForbiddenPathException());
@@ -94,7 +94,7 @@ final class TransformActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
+	public Promise<Void> copy(String name, String target) {
 		return transfer(name, target, parent::copy);
 	}
 
@@ -107,7 +107,7 @@ final class TransformActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<Void> move(@NotNull String name, @NotNull String target) {
+	public Promise<Void> move(String name, String target) {
 		return transfer(name, target, parent::move);
 	}
 
@@ -120,7 +120,7 @@ final class TransformActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
+	public Promise<Map<String, FileMetadata>> list(String glob) {
 		return globInto.apply(glob)
 				.map(transformedGlob -> parent.list(transformedGlob)
 						.map(transformMap($ -> true)))
@@ -129,14 +129,14 @@ final class TransformActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<@Nullable FileMetadata> info(@NotNull String name) {
+	public Promise<@Nullable FileMetadata> info(String name) {
 		return into.apply(name)
 				.map(parent::info)
 				.orElse(Promise.of(null));
 	}
 
 	@Override
-	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
+	public Promise<Map<String, @NotNull FileMetadata>> infoAll(Set<String> names) {
 		Map<String, FileMetadata> result = new HashMap<>();
 		Set<String> transformed = names.stream()
 				.map(into)
@@ -160,7 +160,7 @@ final class TransformActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<Void> delete(@NotNull String name) {
+	public Promise<Void> delete(String name) {
 		Optional<String> transformed = into.apply(name);
 		if (transformed.isEmpty()) {
 			return Promise.complete();

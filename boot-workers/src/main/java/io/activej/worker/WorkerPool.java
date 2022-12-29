@@ -92,11 +92,11 @@ public final class WorkerPool {
 		return scope;
 	}
 
-	public <T> @NotNull Instances<T> getInstances(Class<T> type) {
+	public <T> Instances<T> getInstances(Class<T> type) {
 		return getInstances(Key.of(type));
 	}
 
-	public <T> @NotNull Instances<T> getInstances(Key<T> key) {
+	public <T> Instances<T> getInstances(Key<T> key) {
 		Object[] instances = new Object[scopeInjectors.length];
 		for (int i = 0; i < scopeInjectors.length; i++) {
 			instances[i] = scopeInjectors[i].getInstance(key);
@@ -120,7 +120,7 @@ public final class WorkerPool {
 		return new Instances<>(instances);
 	}
 
-	public @NotNull Map<Key<?>, Instances<?>> peekInstances() {
+	public Map<Key<?>, Instances<?>> peekInstances() {
 		Map<Key<?>, Instances<?>> map = new HashMap<>();
 		for (Map.Entry<Key<?>, Binding<?>> entry : scopeBindings.entrySet()) {
 			if (entry.getValue().getType() == TRANSIENT) {

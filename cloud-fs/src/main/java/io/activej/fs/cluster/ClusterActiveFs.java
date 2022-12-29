@@ -152,22 +152,22 @@ public final class ClusterActiveFs extends AbstractReactive
 	// endregion
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
+	public Promise<ChannelConsumer<ByteBuf>> upload(String name) {
 		return doUpload(name, fs -> fs.upload(name), identity(), uploadStartPromise, uploadFinishPromise);
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
+	public Promise<ChannelConsumer<ByteBuf>> upload(String name, long size) {
 		return doUpload(name, fs -> fs.upload(name, size), ofFixedSize(size), uploadStartPromise, uploadFinishPromise);
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
+	public Promise<ChannelConsumer<ByteBuf>> append(String name, long offset) {
 		return doUpload(name, fs -> fs.append(name, offset), identity(), appendStartPromise, appendFinishPromise);
 	}
 
 	@Override
-	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
+	public Promise<ChannelSupplier<ByteBuf>> download(String name, long offset, long limit) {
 		return broadcast(
 				(id, fs) -> {
 					logger.trace("downloading file {} from {}", name, id);
@@ -192,7 +192,7 @@ public final class ClusterActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
+	public Promise<Void> copy(String name, String target) {
 		return ActiveFs.super.copy(name, target)
 				.whenComplete(copyPromise.recordStats());
 	}
@@ -204,7 +204,7 @@ public final class ClusterActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Void> move(@NotNull String name, @NotNull String target) {
+	public Promise<Void> move(String name, String target) {
 		return ActiveFs.super.move(name, target)
 				.whenComplete(movePromise.recordStats());
 	}
@@ -216,7 +216,7 @@ public final class ClusterActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Void> delete(@NotNull String name) {
+	public Promise<Void> delete(String name) {
 		return broadcast(fs -> fs.delete(name))
 				.whenComplete(deletePromise.recordStats())
 				.toVoid();
@@ -230,7 +230,7 @@ public final class ClusterActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
+	public Promise<Map<String, FileMetadata>> list(String glob) {
 		return broadcast(fs -> fs.list(glob))
 				.map(filterErrorsFn())
 				.map(maps -> FileMetadata.flatten(maps.stream()))
@@ -238,7 +238,7 @@ public final class ClusterActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public Promise<@Nullable FileMetadata> info(@NotNull String name) {
+	public Promise<@Nullable FileMetadata> info(String name) {
 		return broadcast(fs -> fs.info(name))
 				.map(filterErrorsFn())
 				.map(meta -> meta.stream().max(FileMetadata.COMPARATOR).orElse(null))
@@ -246,7 +246,7 @@ public final class ClusterActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
+	public Promise<Map<String, @NotNull FileMetadata>> infoAll(Set<String> names) {
 		if (names.isEmpty()) return Promise.of(Map.of());
 
 		return broadcast(fs -> fs.infoAll(names))
@@ -262,7 +262,7 @@ public final class ClusterActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public @NotNull Promise<Void> start() {
+	public Promise<?> start() {
 		checkArgument(deadPartitionsThreshold < partitions.getPartitions().size(),
 				"Dead partitions threshold should be less than number of partitions");
 		checkArgument(uploadTargetsMax <= partitions.getPartitions().size(),
@@ -272,7 +272,7 @@ public final class ClusterActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public @NotNull Promise<Void> stop() {
+	public Promise<?> stop() {
 		return Promise.complete();
 	}
 

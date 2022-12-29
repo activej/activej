@@ -19,11 +19,10 @@ package io.activej.async.process;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactive;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
 public interface ReactiveProcess extends Reactive, ReactiveCloseable {
-	@Contract(pure = true)
-	@NotNull Promise<Void> getProcessCompletion();
+	Promise<Void> startProcess();
 
-	@NotNull Promise<Void> startProcess();
+	@Contract(pure = true)
+	Promise<Void> getProcessCompletion();
 }

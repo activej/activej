@@ -33,7 +33,6 @@ import io.activej.reactor.schedule.ScheduledRunnable;
 import io.activej.rpc.client.jmx.RpcRequestStats;
 import io.activej.rpc.client.sender.RpcSender;
 import io.activej.rpc.protocol.*;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -94,7 +93,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 	}
 
 	@Override
-	public <I, O> void sendRequest(I request, int timeout, @NotNull Callback<O> cb) {
+	public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
 		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
 
 		// jmx
@@ -128,7 +127,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 		final Callback<O> cb;
 		final int cookie;
 
-		ScheduledCallback(int cookie, @NotNull Callback<O> cb) {
+		ScheduledCallback(int cookie, Callback<O> cb) {
 			this.cookie = cookie;
 			this.cb = cb;
 		}
@@ -163,7 +162,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 	}
 
 	@Override
-	public <I, O> void sendRequest(I request, @NotNull Callback<O> cb) {
+	public <I, O> void sendRequest(I request, Callback<O> cb) {
 		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
 
 		// jmx
@@ -186,13 +185,13 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 		}
 	}
 
-	private <I, O> Callback<O> doJmxMonitoring(I request, int timeout, @NotNull Callback<O> cb) {
+	private <I, O> Callback<O> doJmxMonitoring(I request, int timeout, Callback<O> cb) {
 		RpcRequestStats requestStatsPerClass = rpcClient.ensureRequestStatsPerClass(request.getClass());
 		requestStatsPerClass.getTotalRequests().recordEvent();
 		return new JmxConnectionMonitoringResultCallback<>(requestStatsPerClass, cb, timeout);
 	}
 
-	private <O> void doProcessOverloaded(@NotNull Callback<O> cb) {
+	private <O> void doProcessOverloaded(Callback<O> cb) {
 		// jmx
 		rpcClient.getGeneralRequestsStats().getRejectedRequests().recordEvent();
 		connectionStats.getRejectedRequests().recordEvent();
@@ -271,7 +270,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 	}
 
 	@Override
-	public void onReceiverError(@NotNull Exception e) {
+	public void onReceiverError(Exception e) {
 		if (isClosed()) return;
 		logger.error("Receiver error: {}", address, e);
 		rpcClient.getLastProtocolError().recordException(e, address);
@@ -280,7 +279,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 	}
 
 	@Override
-	public void onSenderError(@NotNull Exception e) {
+	public void onSenderError(Exception e) {
 		if (isClosed()) return;
 		logger.error("Sender error: {}", address, e);
 		rpcClient.getLastProtocolError().recordException(e, address);
@@ -289,7 +288,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 	}
 
 	@Override
-	public void onSerializationError(RpcMessage message, @NotNull Exception e) {
+	public void onSerializationError(RpcMessage message, Exception e) {
 		if (isClosed()) return;
 		logger.error("Serialization error: {} for data {}", address, message.getData(), e);
 		rpcClient.getLastProtocolError().recordException(e, address);
@@ -297,7 +296,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 	}
 
 	@Override
-	public void onSenderReady(@NotNull StreamDataAcceptor<RpcMessage> acceptor) {
+	public void onSenderReady(StreamDataAcceptor<RpcMessage> acceptor) {
 		if (isClosed()) return;
 		downstreamDataAcceptor = acceptor;
 		overloaded = false;
@@ -397,7 +396,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 			callback.accept(result, null);
 		}
 
-		private void onException(@NotNull Exception e) {
+		private void onException(Exception e) {
 			if (e instanceof RpcRemoteException) {
 				int responseTime = timeElapsed();
 				connectionStats.getFailedRequests().recordEvent();

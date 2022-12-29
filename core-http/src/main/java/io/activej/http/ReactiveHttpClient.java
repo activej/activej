@@ -538,7 +538,7 @@ public final class ReactiveHttpClient extends AbstractNioReactive
 	}
 
 	@Override
-	public @NotNull Promise<Void> start() {
+	public Promise<?> start() {
 		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
 		return Promise.complete();
 	}
@@ -553,7 +553,7 @@ public final class ReactiveHttpClient extends AbstractNioReactive
 	}
 
 	@Override
-	public @NotNull Promise<Void> stop() {
+	public Promise<?> stop() {
 		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
 
 		SettablePromise<Void> promise = new SettablePromise<>();

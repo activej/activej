@@ -23,7 +23,6 @@ import io.activej.datastream.StreamConsumer;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class BackupService<K extends Comparable<K>, S> extends AbstractReactive implements ReactiveService {
@@ -63,12 +62,12 @@ public final class BackupService<K extends Comparable<K>, S> extends AbstractRea
 	}
 
 	@Override
-	public @NotNull Promise<Void> start() {
+	public Promise<?> start() {
 		return restore().then(localFiles::consolidate);
 	}
 
 	@Override
-	public @NotNull Promise<Void> stop() {
+	public Promise<?> stop() {
 		return backup();
 	}
 }

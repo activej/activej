@@ -1140,10 +1140,10 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * only if you expect a performance hit from constantly calling {@link #whenComplete(BiConsumerEx)}
 	 * and creating new promises as a result.
 	 *
-	 * @param callback a callback to be called once a promise completes
+	 * @param cb a callback to be called once a promise completes
 	 */
 	@Override
-	void run(@NotNull Callback<? super T> callback);
+	void run(@NotNull Callback<? super T> cb);
 
 	/**
 	 * Wraps {@code Promise} into {@link CompletableFuture}.

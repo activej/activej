@@ -18,7 +18,6 @@ package io.activej.uikernel;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Map;
@@ -27,7 +26,7 @@ public final class CreateResponse<K> {
 	private final K id;
 	private final Map<String, List<String>> errors;
 
-	private CreateResponse(@NotNull K id, @NotNull Map<String, List<String>> errors) {
+	private CreateResponse(K id, Map<String, List<String>> errors) {
 		this.id = id;
 		this.errors = errors;
 	}

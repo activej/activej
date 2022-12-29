@@ -29,7 +29,6 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,12 +101,12 @@ public class InMemoryWriteAheadLog<K extends Comparable<K>, S> extends AbstractR
 	}
 
 	@Override
-	public @NotNull Promise<?> start() {
+	public Promise<?> start() {
 		return Promise.complete();
 	}
 
 	@Override
-	public @NotNull Promise<?> stop() {
+	public Promise<?> stop() {
 		return flush();
 	}
 

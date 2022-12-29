@@ -408,8 +408,8 @@ final class CompleteExceptionallyPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public void run(@NotNull Callback<? super T> callback) {
-		callback.accept(null, exception);
+	public void run(@NotNull Callback<? super T> cb) {
+		cb.accept(null, exception);
 	}
 
 	@Override

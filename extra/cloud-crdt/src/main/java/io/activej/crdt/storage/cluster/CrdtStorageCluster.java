@@ -46,7 +46,6 @@ import io.activej.promise.Promises;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 
 import java.time.Duration;
@@ -122,7 +121,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> extends Abs
 	// endregion
 
 	@Override
-	public @NotNull Promise<?> start() {
+	public Promise<?> start() {
 		AsyncSupplier<PartitionScheme<P>> discoverySupplier = discoveryService.discover();
 		return discoverySupplier.get()
 				.then(result -> {
@@ -148,7 +147,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> extends Abs
 	}
 
 	@Override
-	public @NotNull Promise<?> stop() {
+	public Promise<?> stop() {
 		this.stopped = true;
 		return Promise.complete();
 	}
@@ -223,7 +222,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> extends Abs
 				});
 	}
 
-	public @NotNull Promise<Void> repartition(P sourcePartitionId) {
+	public Promise<Void> repartition(P sourcePartitionId) {
 		PartitionScheme<P> partitionScheme = this.currentPartitionScheme;
 		CrdtStorage<K, S> source = crdtStorages.get(sourcePartitionId);
 
@@ -303,7 +302,6 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> extends Abs
 				.toVoid();
 	}
 
-	@NotNull
 	private <T> Promise<Map<P, T>> execute(PartitionScheme<P> partitionScheme, AsyncFunction<CrdtStorage<K, S>, T> method) {
 		Set<P> partitions = partitionScheme.getPartitions();
 		Map<P, T> map = new HashMap<>();

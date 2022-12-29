@@ -9,7 +9,6 @@ import io.activej.promise.Promises;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.service.ServiceGraphModule;
-import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 
@@ -43,14 +42,14 @@ public class ReactorServiceExample extends Launcher {
 		}
 
 		@Override
-		public @NotNull Promise<?> start() {
+		public Promise<?> start() {
 			System.out.println("|CUSTOM EVENTLOOP SERVICE STARTING|");
 			return Promises.delay(Duration.ofMillis(10))
 					.whenResult(() -> System.out.println("|CUSTOM EVENTLOOP SERVICE STARTED|"));
 		}
 
 		@Override
-		public @NotNull Promise<?> stop() {
+		public Promise<?> stop() {
 			System.out.println("|CUSTOM EVENTLOOP SERVICE STOPPING|");
 			return Promises.delay(Duration.ofMillis(10))
 					.whenResult(() -> System.out.println("|CUSTOM EVENTLOOP SERVICE STOPPED|"));

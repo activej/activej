@@ -48,7 +48,6 @@ import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.reactor.net.SocketSettings;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.serializer.BinarySerializer;
-import org.jetbrains.annotations.NotNull;
 
 import java.net.InetSocketAddress;
 import java.time.Duration;
@@ -226,12 +225,12 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> extends Abstrac
 	}
 
 	@Override
-	public @NotNull Promise<Void> start() {
+	public Promise<?> start() {
 		return ping();
 	}
 
 	@Override
-	public @NotNull Promise<Void> stop() {
+	public Promise<?> stop() {
 		return Promise.complete();
 	}
 

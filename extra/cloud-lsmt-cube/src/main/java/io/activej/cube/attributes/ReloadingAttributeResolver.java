@@ -24,7 +24,6 @@ import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBean;
 import io.activej.reactor.schedule.ScheduledRunnable;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
@@ -81,7 +80,7 @@ public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttribute
 	}
 
 	@Override
-	public @NotNull Promise<Void> start() {
+	public Promise<?> start() {
 		if (reloadPeriod == 0) return Promise.complete();
 		long reloadTimestamp = reactor.currentTimeMillis();
 		return reload(timestamp)
@@ -95,7 +94,7 @@ public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttribute
 	}
 
 	@Override
-	public @NotNull Promise<Void> stop() {
+	public Promise<?> stop() {
 		scheduledRunnable = nullify(scheduledRunnable, ScheduledRunnable::cancel);
 		return Promise.complete();
 	}

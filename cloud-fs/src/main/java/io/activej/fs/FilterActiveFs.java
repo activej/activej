@@ -55,7 +55,7 @@ final class FilterActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
+	public Promise<ChannelConsumer<ByteBuf>> upload(String name) {
 		if (!predicate.test(name)) {
 			return Promise.ofException(new ForbiddenPathException());
 		}
@@ -63,7 +63,7 @@ final class FilterActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
+	public Promise<ChannelConsumer<ByteBuf>> upload(String name, long size) {
 		if (!predicate.test(name)) {
 			return Promise.ofException(new ForbiddenPathException());
 		}
@@ -71,7 +71,7 @@ final class FilterActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
+	public Promise<ChannelConsumer<ByteBuf>> append(String name, long offset) {
 		if (!predicate.test(name)) {
 			return Promise.ofException(new ForbiddenPathException());
 		}
@@ -79,7 +79,7 @@ final class FilterActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
+	public Promise<ChannelSupplier<ByteBuf>> download(String name, long offset, long limit) {
 		if (!predicate.test(name)) {
 			return Promise.ofException(new ForbiddenPathException());
 		}
@@ -87,7 +87,7 @@ final class FilterActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
+	public Promise<Void> copy(String name, String target) {
 		return filteringOp(name, target, parent::copy);
 	}
 
@@ -100,7 +100,7 @@ final class FilterActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<Void> move(@NotNull String name, @NotNull String target) {
+	public Promise<Void> move(String name, String target) {
 		return filteringOp(name, target, parent::move);
 	}
 
@@ -113,7 +113,7 @@ final class FilterActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
+	public Promise<Map<String, FileMetadata>> list(String glob) {
 		return parent.list(glob)
 				.map(map -> map.entrySet().stream()
 						.filter(entry -> predicate.test(entry.getKey()))
@@ -121,7 +121,7 @@ final class FilterActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<@Nullable FileMetadata> info(@NotNull String name) {
+	public Promise<@Nullable FileMetadata> info(String name) {
 		if (!predicate.test(name)) {
 			return Promise.of(null);
 		}
@@ -129,7 +129,7 @@ final class FilterActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
+	public Promise<Map<String, @NotNull FileMetadata>> infoAll(Set<String> names) {
 		Map<Boolean, Set<String>> partitioned = names.stream().collect(partitioningBy(predicate, toSet()));
 		Set<String> query = partitioned.get(TRUE);
 		return query.isEmpty() ?
@@ -143,7 +143,7 @@ final class FilterActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<Void> delete(@NotNull String name) {
+	public Promise<Void> delete(String name) {
 		if (!predicate.test(name)) {
 			return Promise.complete();
 		}

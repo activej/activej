@@ -29,7 +29,6 @@ import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.reactor.schedule.ScheduledRunnable;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -224,7 +223,7 @@ public final class ReactiveTaskScheduler extends AbstractReactive
 	}
 
 	@Override
-	public @NotNull Promise<Void> start() {
+	public Promise<?> start() {
 		checkNotNull(schedule, "Schedule is not set");
 
 		scheduleTask();
@@ -232,7 +231,7 @@ public final class ReactiveTaskScheduler extends AbstractReactive
 	}
 
 	@Override
-	public @NotNull Promise<Void> stop() {
+	public Promise<?> stop() {
 		enabled = false;
 		scheduledTask = nullify(scheduledTask, ScheduledRunnable::cancel);
 		if (currentPromise == null) {

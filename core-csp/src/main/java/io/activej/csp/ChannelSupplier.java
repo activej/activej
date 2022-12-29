@@ -59,7 +59,7 @@ import static io.activej.reactor.Reactor.getCurrentReactor;
  * and means that no additional data should be queried.
  */
 public interface ChannelSupplier<T> extends ReactiveCloseable {
-	@NotNull Promise<T> get();
+	Promise<T> get();
 
 	/**
 	 * @see #of(AsyncSupplier, ReactiveCloseable)
@@ -202,7 +202,7 @@ public interface ChannelSupplier<T> extends ReactiveCloseable {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Exception e) {
+			protected void onClosed(Exception e) {
 				exception = e;
 				promise.whenResult(supplier -> supplier.closeEx(e));
 			}
@@ -228,7 +228,7 @@ public interface ChannelSupplier<T> extends ReactiveCloseable {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Exception e) {
+			protected void onClosed(Exception e) {
 				reactor.startExternalTask();
 				anotherReactor.execute(() -> {
 					anotherReactorSupplier.closeEx(e);
@@ -257,7 +257,7 @@ public interface ChannelSupplier<T> extends ReactiveCloseable {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Exception e) {
+			protected void onClosed(Exception e) {
 				if (supplier != null) {
 					supplier.closeEx(e);
 				}
@@ -479,7 +479,7 @@ public interface ChannelSupplier<T> extends ReactiveCloseable {
 			}
 
 			@Override
-			protected void onClosed(@NotNull Exception e) {
+			protected void onClosed(Exception e) {
 				endOfStream.trySetException(e);
 			}
 		};

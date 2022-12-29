@@ -25,7 +25,6 @@ import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.RpcStrategy;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
 
@@ -63,7 +62,7 @@ public final class CrdtRpcStrategyService<K extends Comparable<K>> extends Abstr
 	}
 
 	@Override
-	public @NotNull Promise<?> start() {
+	public Promise<?> start() {
 		checkNotNull(rpcClient);
 
 		AsyncSupplier<? extends DiscoveryService.PartitionScheme<?>> discoverySupplier = discoveryService.discover();
@@ -87,7 +86,7 @@ public final class CrdtRpcStrategyService<K extends Comparable<K>> extends Abstr
 	}
 
 	@Override
-	public @NotNull Promise<?> stop() {
+	public Promise<?> stop() {
 		this.stopped = true;
 		return Promise.complete();
 	}

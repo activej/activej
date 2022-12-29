@@ -28,7 +28,6 @@ import io.activej.datastream.processor.StreamConsumerTransformer;
 import io.activej.datastream.processor.StreamTransformer;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
@@ -47,7 +46,7 @@ public interface StreamConsumer<T> extends ReactiveCloseable {
 	 * <p>
 	 * This method must have no effect after {@link #getAcknowledgement() the acknowledgement} is set.
 	 */
-	void consume(@NotNull StreamSupplier<T> streamSupplier);
+	void consume(StreamSupplier<T> streamSupplier);
 
 	@Nullable StreamDataAcceptor<T> getDataAcceptor();
 

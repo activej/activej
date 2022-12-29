@@ -27,7 +27,6 @@ import io.activej.common.exception.MalformedDataException;
 import io.activej.net.socket.tcp.ReactiveTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +66,7 @@ public final class RedisConnection extends AbstractReactiveCloseable {
 	private boolean flushPosted;
 	private final int autoFlushIntervalMillis;
 
-	RedisConnection(RedisClient client, ReactiveTcpSocket socket, @NotNull Duration autoFlushInterval) {
+	RedisConnection(RedisClient client, ReactiveTcpSocket socket, Duration autoFlushInterval) {
 		this.client = client;
 		this.socket = socket;
 		this.autoFlushIntervalMillis = (int) autoFlushInterval.toMillis();
@@ -386,7 +385,7 @@ public final class RedisConnection extends AbstractReactiveCloseable {
 
 	@Override
 	@SuppressWarnings({"unchecked", "ConstantConditions"})
-	protected void onClosed(@NotNull Exception e) {
+	protected void onClosed(Exception e) {
 		socket.closeEx(e);
 		writeBuf = nullify(writeBuf, ByteBuf::recycle);
 		readBuf = nullify(readBuf, ByteBuf::recycle);

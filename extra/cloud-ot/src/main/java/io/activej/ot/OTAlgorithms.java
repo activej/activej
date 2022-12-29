@@ -29,7 +29,6 @@ import io.activej.ot.system.OTSystem;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,14 +97,14 @@ public final class OTAlgorithms {
 
 	public static final class FindResult<K, A> {
 		private final int epoch;
-		private final @NotNull K commit;
+		private final K commit;
 		private final Set<K> commitParents;
 		private final long commitLevel;
 		private final K child;
 		private final long childLevel;
 		private final A accumulatedDiffs;
 
-		private FindResult(int epoch, @NotNull K commit, Set<K> commitParents, long commitLevel, K child, long childLevel, A accumulatedDiffs) {
+		private FindResult(int epoch, K commit, Set<K> commitParents, long commitLevel, K child, long childLevel, A accumulatedDiffs) {
 			this.epoch = epoch;
 			this.commit = commit;
 			this.commitParents = commitParents;
@@ -119,7 +118,7 @@ public final class OTAlgorithms {
 			return epoch;
 		}
 
-		public @NotNull K getCommit() {
+		public K getCommit() {
 			return commit;
 		}
 
@@ -161,13 +160,13 @@ public final class OTAlgorithms {
 					int epoch;
 
 					@Override
-					public void onStart(@NotNull Collection<OTCommit<K, D>> queue) {
+					public void onStart(Collection<OTCommit<K, D>> queue) {
 						this.epoch = queue.iterator().next().getEpoch();
 						super.onStart(queue);
 					}
 
 					@Override
-					protected @NotNull Promise<Optional<FindResult<K, A>>> tryGetResult(OTCommit<K, D> commit,
+					protected Promise<Optional<FindResult<K, A>>> tryGetResult(OTCommit<K, D> commit,
 							Map<K, Map<K, A>> accumulators, Map<K, OTCommit<K, D>> headCommits) {
 						return matchPredicate.test(commit)
 								.mapIfElse(matched -> matched,
@@ -190,7 +189,7 @@ public final class OTAlgorithms {
 				.whenComplete(toLogger(logger, thisMethod()));
 	}
 
-	public static <K, D> Promise<K> mergeAndPush(OTRepository<K, D> repository, OTSystem<D> system, @NotNull Set<K> heads) {
+	public static <K, D> Promise<K> mergeAndPush(OTRepository<K, D> repository, OTSystem<D> system, Set<K> heads) {
 		if (heads.size() == 1) return Promise.of(first(heads)); // nothing to merge
 		return merge(repository, system, heads)
 				.then(mergeCommit -> repository.push(mergeCommit)
@@ -210,7 +209,7 @@ public final class OTAlgorithms {
 				.whenComplete(toLogger(logger, thisMethod()));
 	}
 
-	public static <K, D> @NotNull Promise<OTCommit<K, D>> merge(OTRepository<K, D> repository, OTSystem<D> system, @NotNull Set<K> heads) {
+	public static <K, D> Promise<OTCommit<K, D>> merge(OTRepository<K, D> repository, OTSystem<D> system, Set<K> heads) {
 		checkArgument(heads.size() >= 2, "Cannot merge less than 2 heads");
 		return repository.getLevels(heads)
 				.then(levels ->
@@ -240,12 +239,12 @@ public final class OTAlgorithms {
 					private Collection<OTCommit<K, D>> queue;
 
 					@Override
-					public void onStart(@NotNull Collection<OTCommit<K, D>> queue) {
+					public void onStart(Collection<OTCommit<K, D>> queue) {
 						this.queue = queue;
 					}
 
 					@Override
-					public @NotNull Promise<Result<Set<K>>> onCommit(@NotNull OTCommit<K, D> commit) {
+					public Promise<Result<Set<K>>> onCommit(OTCommit<K, D> commit) {
 						if (matchPredicate.test(queue)) {
 							return completePromise(queue.stream().map(OTCommit::getId).collect(toSet()));
 						}
@@ -288,13 +287,13 @@ public final class OTAlgorithms {
 					final Set<K> nodes = new HashSet<>(startNodes);
 
 					@Override
-					public void onStart(@NotNull Collection<OTCommit<K, D>> queue) {
+					public void onStart(Collection<OTCommit<K, D>> queue) {
 						//noinspection OptionalGetWithoutIsPresent
 						minLevel = queue.stream().mapToLong(OTCommit::getLevel).min().getAsLong();
 					}
 
 					@Override
-					public @NotNull Promise<Result<Set<K>>> onCommit(@NotNull OTCommit<K, D> commit) {
+					public Promise<Result<Set<K>>> onCommit(OTCommit<K, D> commit) {
 						nodes.removeAll(commit.getParentIds());
 						if (commit.getLevel() <= minLevel) {
 							return completePromise(nodes);
@@ -311,7 +310,7 @@ public final class OTAlgorithms {
 		}
 
 		@Override
-		protected @NotNull Promise<Optional<Map.Entry<K, Map<K, A>>>> tryGetResult(OTCommit<K, D> commit,
+		protected Promise<Optional<Map.Entry<K, Map<K, A>>>> tryGetResult(OTCommit<K, D> commit,
 				Map<K, Map<K, A>> accumulators, Map<K, OTCommit<K, D>> headCommits) {
 			return Promise.of(accumulators.entrySet()
 					.stream()
@@ -327,7 +326,7 @@ public final class OTAlgorithms {
 		}
 
 		@Override
-		protected @NotNull Promise<Optional<Map<K, Map<K, A>>>> tryGetResult(OTCommit<K, D> commit, Map<K, Map<K, A>> accumulators,
+		protected Promise<Optional<Map<K, Map<K, A>>>> tryGetResult(OTCommit<K, D> commit, Map<K, Map<K, A>> accumulators,
 				Map<K, OTCommit<K, D>> headCommits) {
 			return Promise.of(
 					accumulators.values()
@@ -342,7 +341,7 @@ public final class OTAlgorithms {
 			DiffsReducer<A, D> diffAccumulator) {
 		return reduce(repository, system, heads, new AbstractGraphReducer<>(diffAccumulator) {
 			@Override
-			protected @NotNull Promise<Optional<Map<K, A>>> tryGetResult(OTCommit<K, D> commit, Map<K, Map<K, A>> accumulators, Map<K, OTCommit<K, D>> headCommits) {
+			protected Promise<Optional<Map<K, A>>> tryGetResult(OTCommit<K, D> commit, Map<K, Map<K, A>> accumulators, Map<K, OTCommit<K, D>> headCommits) {
 				if (accumulators.containsKey(parentNode)) {
 					Map<K, A> toHeads = accumulators.get(parentNode);
 					if (Objects.equals(heads, toHeads.keySet())) {
@@ -394,7 +393,7 @@ public final class OTAlgorithms {
 		}
 
 		@Override
-		public void onStart(@NotNull Collection<OTCommit<K, D>> queue) {
+		public void onStart(Collection<OTCommit<K, D>> queue) {
 			for (OTCommit<K, D> headCommit : queue) {
 				K head = headCommit.getId();
 				head2roots.put(head, new HashSet<>(List.of(head)));
@@ -403,7 +402,7 @@ public final class OTAlgorithms {
 		}
 
 		@Override
-		public @NotNull Promise<Result<OTLoadedGraph<K, D>>> onCommit(@NotNull OTCommit<K, D> commit) {
+		public Promise<Result<OTLoadedGraph<K, D>>> onCommit(OTCommit<K, D> commit) {
 			K node = commit.getId();
 			Map<K, List<D>> parents = commit.getParents();
 

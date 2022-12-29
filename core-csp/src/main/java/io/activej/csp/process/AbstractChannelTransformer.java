@@ -22,7 +22,6 @@ import io.activej.csp.ChannelOutput;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.WithChannelTransformer;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 
 import static io.activej.common.Checks.checkState;
 
@@ -40,7 +39,7 @@ public abstract class AbstractChannelTransformer<S extends AbstractChannelTransf
 		return output.acceptEndOfStream();
 	}
 
-	protected abstract @NotNull Promise<Void> onItem(I item);
+	protected abstract Promise<Void> onItem(I item);
 
 	protected Promise<Void> onProcessFinish() {
 		return sendEndOfStream();
@@ -86,7 +85,7 @@ public abstract class AbstractChannelTransformer<S extends AbstractChannelTransf
 	}
 
 	@Override
-	protected final void doClose(@NotNull Exception e) {
+	protected final void doClose(Exception e) {
 		reactor.post(this::onCleanup);
 		input.closeEx(e);
 		output.closeEx(e);

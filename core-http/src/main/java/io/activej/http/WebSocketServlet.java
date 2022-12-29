@@ -22,7 +22,6 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 
@@ -56,7 +55,7 @@ public abstract class WebSocketServlet implements AsyncServlet {
 	protected abstract void onWebSocket(WebSocket webSocket);
 
 	@Override
-	public final @NotNull Promisable<HttpResponse> serve(@NotNull HttpRequest request) {
+	public final Promisable<HttpResponse> serve(HttpRequest request) {
 		return validateHeaders(request)
 				.then(() -> processAnswer(request))
 				.then(answer -> {

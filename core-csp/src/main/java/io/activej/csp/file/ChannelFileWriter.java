@@ -22,7 +22,6 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.AbstractChannelConsumer;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,7 +102,7 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> im
 	}
 
 	@Override
-	protected void onClosed(@NotNull Exception e) {
+	protected void onClosed(Exception e) {
 		try {
 			closeFile();
 		} catch (IOException ex) {

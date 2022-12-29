@@ -1090,7 +1090,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 * @return {@code CompletableFuture} that completes when runnable completes
 	 */
 	@Override
-	public @NotNull CompletableFuture<Void> submit(@NotNull RunnableEx computation) {
+	public CompletableFuture<Void> submit(RunnableEx computation) {
 		CompletableFuture<Void> future = new CompletableFuture<>();
 		execute(() -> {
 			try {
@@ -1113,7 +1113,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 * @return {@code CompletableFuture} that completes when runnable completes
 	 */
 	@Override
-	public <T> @NotNull CompletableFuture<T> submit(AsyncComputation<? extends T> computation) {
+	public <T> CompletableFuture<T> submit(AsyncComputation<? extends T> computation) {
 		CompletableFuture<T> future = new CompletableFuture<>();
 		execute(() -> {
 			try {

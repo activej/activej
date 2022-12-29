@@ -35,7 +35,6 @@ import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,12 +86,12 @@ public final class LogOTProcessor<T, D> extends AbstractReactive
 	}
 
 	@Override
-	public @NotNull Promise<Void> start() {
+	public Promise<?> start() {
 		return Promise.complete();
 	}
 
 	@Override
-	public @NotNull Promise<Void> stop() {
+	public Promise<?> stop() {
 		return Promise.complete();
 	}
 
@@ -102,7 +101,7 @@ public final class LogOTProcessor<T, D> extends AbstractReactive
 		return processLog.get();
 	}
 
-	private @NotNull Promise<LogDiff<D>> doProcessLog() {
+	private Promise<LogDiff<D>> doProcessLog() {
 		if (!enabled) return Promise.of(LogDiff.of(Map.of(), List.of()));
 		logger.trace("processLog_gotPositions called. Positions: {}", state.getPositions());
 

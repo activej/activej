@@ -18,12 +18,11 @@ package io.activej.ot.reducers;
 
 import io.activej.ot.OTCommit;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 
 public interface GraphReducer<K, D, R> {
-	default void onStart(@NotNull Collection<OTCommit<K, D>> queue) {
+	default void onStart(Collection<OTCommit<K, D>> queue) {
 	}
 
 	@SuppressWarnings("WeakerAccess")
@@ -82,5 +81,5 @@ public interface GraphReducer<K, D, R> {
 		}
 	}
 
-	@NotNull Promise<Result<R>> onCommit(@NotNull OTCommit<K, D> commit);
+	Promise<Result<R>> onCommit(OTCommit<K, D> commit);
 }

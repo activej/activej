@@ -391,7 +391,7 @@ public final class Cube extends AbstractReactive
 		logger.info("Added aggregation {} for id '{}'", aggregation, config.id);
 	}
 
-	public @NotNull Class<?> getAttributeInternalType(String attribute) {
+	public Class<?> getAttributeInternalType(String attribute) {
 		if (dimensionTypes.containsKey(attribute))
 			return dimensionTypes.get(attribute).getInternalDataType();
 		if (attributeTypes.containsKey(attribute))
@@ -399,7 +399,7 @@ public final class Cube extends AbstractReactive
 		throw new IllegalArgumentException("No attribute: " + attribute);
 	}
 
-	public @NotNull Class<?> getMeasureInternalType(String field) {
+	public Class<?> getMeasureInternalType(String field) {
 		if (measures.containsKey(field))
 			return measures.get(field).getFieldType().getInternalDataType();
 		if (computedMeasures.containsKey(field))
@@ -407,7 +407,7 @@ public final class Cube extends AbstractReactive
 		throw new IllegalArgumentException("No measure: " + field);
 	}
 
-	public @NotNull Type getAttributeType(String attribute) {
+	public Type getAttributeType(String attribute) {
 		if (dimensionTypes.containsKey(attribute))
 			return dimensionTypes.get(attribute).getDataType();
 		if (attributeTypes.containsKey(attribute))
@@ -415,7 +415,7 @@ public final class Cube extends AbstractReactive
 		throw new IllegalArgumentException("No attribute: " + attribute);
 	}
 
-	public @NotNull Type getMeasureType(String field) {
+	public Type getMeasureType(String field) {
 		if (measures.containsKey(field))
 			return measures.get(field).getFieldType().getDataType();
 		if (computedMeasures.containsKey(field))

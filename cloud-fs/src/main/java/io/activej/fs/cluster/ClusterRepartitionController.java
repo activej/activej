@@ -388,13 +388,13 @@ public final class ClusterRepartitionController extends AbstractReactive
 	}
 
 	@Override
-	public @NotNull Promise<Void> start() {
+	public Promise<?> start() {
 		this.localFs = checkNotNull(partitions.getPartitions().get(localPartitionId), "Partitions do not contain local partition ID");
 		return Promise.complete();
 	}
 
 	@Override
-	public @NotNull Promise<Void> stop() {
+	public Promise<?> stop() {
 		return isRepartitioning() ?
 				Promise.ofCallback(cb -> this.closeCallback = cb) :
 				Promise.complete();

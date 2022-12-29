@@ -18,7 +18,6 @@ package io.activej.datastream;
 
 import io.activej.common.initializer.WithInitializer;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -44,7 +43,7 @@ public final class StreamConsumerSwitcher<T> extends AbstractStreamConsumer<T> i
 		return new StreamConsumerSwitcher<>();
 	}
 
-	public Promise<Void> switchTo(@NotNull StreamConsumer<T> consumer) {
+	public Promise<Void> switchTo(StreamConsumer<T> consumer) {
 		checkState(!isComplete());
 		checkState(!isEndOfStream());
 		assert this.internalSupplier != null;

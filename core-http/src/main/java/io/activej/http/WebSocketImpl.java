@@ -156,7 +156,7 @@ final class WebSocketImpl extends AbstractReactiveCloseable implements WebSocket
 	}
 
 	@Override
-	protected void onClosed(@NotNull Exception e) {
+	protected void onClosed(Exception e) {
 		frameOutput.closeEx(e);
 		frameInput.closeEx(e);
 		readPromise = nullify(readPromise, SettablePromise::setException, e);
@@ -223,7 +223,7 @@ final class WebSocketImpl extends AbstractReactiveCloseable implements WebSocket
 			}
 
 			@Override
-			protected void onClosed(@NotNull Exception e) {
+			protected void onClosed(Exception e) {
 				WebSocketImpl.this.closeEx(e);
 			}
 		};
@@ -237,7 +237,7 @@ final class WebSocketImpl extends AbstractReactiveCloseable implements WebSocket
 			}
 
 			@Override
-			protected void onClosed(@NotNull Exception e) {
+			protected void onClosed(Exception e) {
 				WebSocketImpl.this.closeEx(e);
 			}
 		};

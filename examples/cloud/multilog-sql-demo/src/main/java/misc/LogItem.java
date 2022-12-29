@@ -2,7 +2,6 @@ package misc;
 
 import io.activej.serializer.annotations.Serialize;
 import io.activej.serializer.annotations.SerializeNullable;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -55,7 +54,7 @@ public class LogItem {
 		this.revenue = revenue;
 	}
 
-	public LogItem(long impressions, long clicks, long conversions, double revenue, String testString) {
+	public LogItem(long impressions, long clicks, long conversions, double revenue, @Nullable String testString) {
 		this.impressions = impressions;
 		this.clicks = clicks;
 		this.conversions = conversions;
@@ -63,7 +62,7 @@ public class LogItem {
 		this.testString = testString;
 	}
 
-	public LogItem(@NotNull String testString) {
+	public LogItem(@Nullable String testString) {
 		this.testString = testString;
 	}
 

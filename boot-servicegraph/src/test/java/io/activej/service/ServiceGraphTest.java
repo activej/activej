@@ -130,7 +130,7 @@ public class ServiceGraphTest {
 		ReactiveService failedStart(Eventloop eventloop) {
 			return new ReactiveServiceEmpty(eventloop) {
 				@Override
-				public @NotNull Promise<?> start() {
+				public Promise<?> start() {
 					throw ERROR;
 				}
 			};
@@ -141,7 +141,7 @@ public class ServiceGraphTest {
 		ReactiveService failStop(Eventloop eventloop) {
 			return new ReactiveServiceEmpty(eventloop) {
 				@Override
-				public @NotNull Promise<?> stop() {
+				public Promise<?> stop() {
 					throw ERROR;
 				}
 			};
@@ -161,12 +161,12 @@ public class ServiceGraphTest {
 		}
 
 		@Override
-		public @NotNull Promise<?> start() {
+		public Promise<?> start() {
 			return Promise.complete();
 		}
 
 		@Override
-		public @NotNull Promise<?> stop() {
+		public Promise<?> stop() {
 			return Promise.complete();
 		}
 	}

@@ -93,7 +93,7 @@ public final class OTRepositoryStub<K, D> implements OTRepository<K, D> {
 	}
 
 	@Override
-	public @NotNull Promise<Set<K>> getAllHeads() {
+	public Promise<Set<K>> getAllHeads() {
 		return Promise.of(new HashSet<>(heads));
 	}
 
@@ -102,23 +102,23 @@ public final class OTRepositoryStub<K, D> implements OTRepository<K, D> {
 	}
 
 	@Override
-	public @NotNull Promise<Boolean> hasCommit(@NotNull K revisionId) {
+	public Promise<Boolean> hasCommit(K revisionId) {
 		return Promise.of(commits.containsKey(revisionId));
 	}
 
 	@Override
-	public @NotNull Promise<OTCommit<K, D>> loadCommit(@NotNull K revisionId) {
+	public Promise<OTCommit<K, D>> loadCommit(K revisionId) {
 		return Promise.of(doLoadCommit(revisionId));
 	}
 
 	@Override
-	public @NotNull Promise<Void> saveSnapshot(@NotNull K revisionId, @NotNull List<D> diffs) {
+	public Promise<Void> saveSnapshot(K revisionId, List<D> diffs) {
 		doSaveSnapshot(revisionId, diffs);
 		return Promise.complete();
 	}
 
 	@Override
-	public @NotNull Promise<Optional<List<D>>> loadSnapshot(@NotNull K revisionId) {
+	public Promise<Optional<List<D>>> loadSnapshot(K revisionId) {
 		return Promise.of(Optional.ofNullable(snapshots.get(revisionId)));
 	}
 

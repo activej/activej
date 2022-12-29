@@ -30,7 +30,6 @@ import io.activej.promise.Promise;
 import io.activej.promise.RetryPolicy;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,13 +102,13 @@ public final class OTStateManager<K, D> extends AbstractReactive implements Reac
 	}
 
 	@Override
-	public Promise<Void> start() {
+	public Promise<?> start() {
 		return checkout()
 				.whenResult(this::poll);
 	}
 
 	@Override
-	public Promise<Void> stop() {
+	public Promise<?> stop() {
 		poll = null;
 		return isValid() ?
 				sync().whenComplete(this::invalidateInternalState) :
@@ -139,7 +138,7 @@ public final class OTStateManager<K, D> extends AbstractReactive implements Reac
 		return isPolling;
 	}
 
-	public @NotNull Promise<Void> sync() {
+	public Promise<Void> sync() {
 		return sync.run();
 	}
 
@@ -162,7 +161,7 @@ public final class OTStateManager<K, D> extends AbstractReactive implements Reac
 		originDiffs = otSystem.squash(concat(originDiffs, fetchData.getDiffs()));
 	}
 
-	private @NotNull Promise<Void> doSync() {
+	private Promise<Void> doSync() {
 		checkState(isValid());
 		isSyncing = true;
 		return sequence(
@@ -189,14 +188,14 @@ public final class OTStateManager<K, D> extends AbstractReactive implements Reac
 		}
 	}
 
-	private @NotNull Promise<Void> pull() {
+	private Promise<Void> pull() {
 		return fetch()
 				.whenResult(this::rebase)
 				.toVoid()
 				.whenComplete(toLogger(logger, thisMethod(), this));
 	}
 
-	private @NotNull Promise<Void> doPoll() {
+	private Promise<Void> doPoll() {
 		if (!isValid()) return Promise.complete();
 		K pollCommitId = this.originCommitId;
 		return uplink.poll(pollCommitId)
@@ -252,7 +251,7 @@ public final class OTStateManager<K, D> extends AbstractReactive implements Reac
 		originDiffs = List.of();
 	}
 
-	private @NotNull Promise<Void> commit() {
+	private Promise<Void> commit() {
 		assert pendingProtoCommit == null;
 		if (workingDiffs.isEmpty()) return Promise.complete();
 		int originalSize = workingDiffs.size();
@@ -269,7 +268,7 @@ public final class OTStateManager<K, D> extends AbstractReactive implements Reac
 				.whenComplete(toLogger(logger, thisMethod(), this));
 	}
 
-	private @NotNull Promise<Void> push() {
+	private Promise<Void> push() {
 		if (pendingProtoCommit == null) return Promise.complete();
 		return uplink.push(pendingProtoCommit)
 				.whenResult(fetchData -> {
@@ -300,12 +299,12 @@ public final class OTStateManager<K, D> extends AbstractReactive implements Reac
 		originDiffs = List.of();
 	}
 
-	public void add(@NotNull D diff) {
+	public void add(D diff) {
 		checkState(isValid());
 		addAll(List.of(diff));
 	}
 
-	public void addAll(@NotNull List<? extends D> diffs) {
+	public void addAll(List<? extends D> diffs) {
 		checkState(isValid());
 		try {
 			for (D diff : diffs) {

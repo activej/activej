@@ -19,10 +19,10 @@ package io.activej.crdt.primitives;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.BinaryOutput;
 import io.activej.serializer.BinarySerializer;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
+@SuppressWarnings("NullableProblems")
 public final class GSet<E> implements Set<E>, CrdtMergable<GSet<E>> {
 	private final Set<E> set;
 
@@ -68,18 +68,18 @@ public final class GSet<E> implements Set<E>, CrdtMergable<GSet<E>> {
 	}
 
 	@Override
-	public @NotNull Iterator<E> iterator() {
+	public Iterator<E> iterator() {
 		return set.iterator();
 	}
 
 	@Override
-	public Object @NotNull [] toArray() {
+	public Object[] toArray() {
 		return set.toArray();
 	}
 
 	@Override
 	@SuppressWarnings("SuspiciousToArrayCall")
-	public <T> T @NotNull [] toArray(T @NotNull [] a) {
+	public <T> T[] toArray(T[] a) {
 		return set.toArray(a);
 	}
 
@@ -89,12 +89,12 @@ public final class GSet<E> implements Set<E>, CrdtMergable<GSet<E>> {
 	}
 
 	@Override
-	public boolean containsAll(@NotNull Collection<?> c) {
+	public boolean containsAll(Collection<?> c) {
 		return set.containsAll(c);
 	}
 
 	@Override
-	public boolean addAll(@NotNull Collection<? extends E> c) {
+	public boolean addAll(Collection<? extends E> c) {
 		return set.addAll(c);
 	}
 
@@ -104,12 +104,12 @@ public final class GSet<E> implements Set<E>, CrdtMergable<GSet<E>> {
 	}
 
 	@Override
-	public boolean retainAll(@NotNull Collection<?> c) {
+	public boolean retainAll(Collection<?> c) {
 		throw new UnsupportedOperationException("GSet is a grow-only set");
 	}
 
 	@Override
-	public boolean removeAll(@NotNull Collection<?> c) {
+	public boolean removeAll(Collection<?> c) {
 		throw new UnsupportedOperationException("GSet is a grow-only set");
 	}
 

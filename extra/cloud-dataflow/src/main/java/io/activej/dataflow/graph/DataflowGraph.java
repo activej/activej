@@ -36,7 +36,6 @@ import io.activej.promise.Promises;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.ImplicitlyReactive;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -95,7 +94,7 @@ public final class DataflowGraph extends AbstractReactive {
 		}
 
 		@Override
-		public void closeEx(@NotNull Exception e) {
+		public void closeEx(Exception e) {
 			session.closeEx(e);
 		}
 	}

@@ -16,10 +16,8 @@
 
 package io.activej.redis;
 
-import org.jetbrains.annotations.NotNull;
-
 public class RedisPermissionException extends ServerError {
-	public RedisPermissionException(@NotNull String message) {
+	public RedisPermissionException(String message) {
 		super(message);
 	}
 }

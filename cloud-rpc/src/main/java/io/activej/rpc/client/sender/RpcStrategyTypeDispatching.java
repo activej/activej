@@ -18,7 +18,6 @@ package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
 import io.activej.rpc.client.RpcClientConnectionPool;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
@@ -38,7 +37,7 @@ public final class RpcStrategyTypeDispatching implements RpcStrategy {
 
 	public static RpcStrategyTypeDispatching create() {return new RpcStrategyTypeDispatching();}
 
-	public RpcStrategyTypeDispatching on(@NotNull Class<?> dataType, @NotNull RpcStrategy strategy) {
+	public RpcStrategyTypeDispatching on(Class<?> dataType, RpcStrategy strategy) {
 		checkState(!dataTypeToStrategy.containsKey(dataType),
 				() -> "Strategy for type " + dataType.toString() + " is already set");
 		dataTypeToStrategy.put(dataType, strategy);
@@ -85,13 +84,13 @@ public final class RpcStrategyTypeDispatching implements RpcStrategy {
 		private final HashMap<Class<?>, RpcSender> typeToSender;
 		private final @Nullable RpcSender defaultSender;
 
-		Sender(@NotNull HashMap<Class<?>, RpcSender> typeToSender, @Nullable RpcSender defaultSender) {
+		Sender(HashMap<Class<?>, RpcSender> typeToSender, @Nullable RpcSender defaultSender) {
 			this.typeToSender = typeToSender;
 			this.defaultSender = defaultSender;
 		}
 
 		@Override
-		public <I, O> void sendRequest(I request, int timeout, @NotNull Callback<O> cb) {
+		public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
 			RpcSender sender = typeToSender.get(request.getClass());
 			if (sender == null) {
 				sender = defaultSender;

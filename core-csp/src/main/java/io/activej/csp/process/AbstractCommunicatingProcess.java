@@ -28,7 +28,6 @@ import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.ImplicitlyReactive;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -77,7 +76,7 @@ public abstract class AbstractCommunicatingProcess extends ImplicitlyReactive im
 	}
 
 	@Override
-	public final @NotNull Promise<Void> getProcessCompletion() {
+	public final Promise<Void> getProcessCompletion() {
 		return processCompletion;
 	}
 
@@ -90,7 +89,7 @@ public abstract class AbstractCommunicatingProcess extends ImplicitlyReactive im
 	 * of completion of the process
 	 */
 	@Override
-	public final @NotNull Promise<Void> startProcess() {
+	public final Promise<Void> startProcess() {
 		if (!processStarted) {
 			processStarted = true;
 			beforeProcess();
@@ -114,7 +113,7 @@ public abstract class AbstractCommunicatingProcess extends ImplicitlyReactive im
 	 * @param e exception that is used to close process with
 	 */
 	@Override
-	public final void closeEx(@NotNull Exception e) {
+	public final void closeEx(Exception e) {
 		if (isProcessComplete()) return;
 		processComplete = true;
 		doClose(e);
@@ -146,7 +145,7 @@ public abstract class AbstractCommunicatingProcess extends ImplicitlyReactive im
 			}
 
 			@Override
-			protected void onClosed(@NotNull Exception e) {
+			protected void onClosed(Exception e) {
 				supplier.closeEx(e);
 				AbstractCommunicatingProcess.this.closeEx(e);
 			}
@@ -161,7 +160,7 @@ public abstract class AbstractCommunicatingProcess extends ImplicitlyReactive im
 			}
 
 			@Override
-			protected void onClosed(@NotNull Exception e) {
+			protected void onClosed(Exception e) {
 				consumer.closeEx(e);
 				AbstractCommunicatingProcess.this.closeEx(e);
 			}
@@ -181,7 +180,7 @@ public abstract class AbstractCommunicatingProcess extends ImplicitlyReactive im
 			}
 
 			@Override
-			public void onClosed(@NotNull Exception e) {
+			public void onClosed(Exception e) {
 				supplier.closeEx(e);
 				AbstractCommunicatingProcess.this.closeEx(e);
 			}

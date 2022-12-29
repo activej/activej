@@ -69,17 +69,17 @@ public final class HttpActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
+	public Promise<ChannelConsumer<ByteBuf>> upload(String name) {
 		return doUpload(name, null);
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
+	public Promise<ChannelConsumer<ByteBuf>> upload(String name, long size) {
 		return doUpload(name, size);
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
+	public Promise<ChannelConsumer<ByteBuf>> append(String name, long offset) {
 		checkArgument(offset >= 0, "Offset cannot be less than 0");
 		UrlBuilder urlBuilder = UrlBuilder.relative()
 				.appendPathPart(APPEND)
@@ -91,7 +91,7 @@ public final class HttpActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public Promise<ChannelSupplier<ByteBuf>> download(@NotNull String name, long offset, long limit) {
+	public Promise<ChannelSupplier<ByteBuf>> download(String name, long offset, long limit) {
 		checkArgument(offset >= 0 && limit >= 0);
 		UrlBuilder urlBuilder = UrlBuilder.relative()
 				.appendPathPart(DOWNLOAD)
@@ -111,7 +111,7 @@ public final class HttpActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Map<String, FileMetadata>> list(@NotNull String glob) {
+	public Promise<Map<String, FileMetadata>> list(String glob) {
 		return client.request(
 						HttpRequest.get(
 								url + UrlBuilder.relative()
@@ -124,7 +124,7 @@ public final class HttpActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public Promise<@Nullable FileMetadata> info(@NotNull String name) {
+	public Promise<@Nullable FileMetadata> info(String name) {
 		return client.request(
 						HttpRequest.get(
 								url + UrlBuilder.relative()
@@ -137,7 +137,7 @@ public final class HttpActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Map<String, @NotNull FileMetadata>> infoAll(@NotNull Set<String> names) {
+	public Promise<Map<String, @NotNull FileMetadata>> infoAll(Set<String> names) {
 		return client.request(
 						HttpRequest.get(
 										url + UrlBuilder.relative()
@@ -161,7 +161,7 @@ public final class HttpActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Void> move(@NotNull String name, @NotNull String target) {
+	public Promise<Void> move(String name, String target) {
 		return client.request(
 						HttpRequest.post(
 								url + UrlBuilder.relative()
@@ -189,7 +189,7 @@ public final class HttpActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Void> copy(@NotNull String name, @NotNull String target) {
+	public Promise<Void> copy(String name, String target) {
 		return client.request(
 						HttpRequest.post(
 								url + UrlBuilder.relative()
@@ -217,7 +217,7 @@ public final class HttpActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Void> delete(@NotNull String name) {
+	public Promise<Void> delete(String name) {
 		return client.request(
 						HttpRequest.of(HttpMethod.DELETE,
 								url + UrlBuilder.relative()

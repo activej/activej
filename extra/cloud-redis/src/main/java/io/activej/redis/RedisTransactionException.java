@@ -17,7 +17,6 @@
 package io.activej.redis;
 
 import io.activej.common.ApplicationSettings;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * A base exception for any transaction-related exceptions
@@ -25,7 +24,7 @@ import org.jetbrains.annotations.NotNull;
 public class RedisTransactionException extends ExpectedRedisException {
 	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(RedisTransactionException.class, "withStackTrace", false);
 
-	public RedisTransactionException(@NotNull String message) {
+	public RedisTransactionException(String message) {
 		super(message);
 	}
 

@@ -20,7 +20,6 @@ import io.activej.common.Checks;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.ImplicitlyReactive;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayDeque;
@@ -63,7 +62,7 @@ public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive imple
 	}
 
 	@Override
-	public final Promise<Void> streamTo(@NotNull StreamConsumer<T> consumer) {
+	public final Promise<Void> streamTo(StreamConsumer<T> consumer) {
 		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
 		checkState(!isStarted());
 		ensureInitialized();
@@ -173,7 +172,7 @@ public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive imple
 	 * Returns a promise that will be completed when all data items are propagated
 	 * to the actual data acceptor
 	 */
-	public final @NotNull Promise<Void> getFlushPromise() {
+	public final Promise<Void> getFlushPromise() {
 		if (isEndOfStream()) {
 			return endOfStream;
 		} else if (flushPromise != null) {
@@ -259,7 +258,7 @@ public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive imple
 		return dataAcceptor;
 	}
 
-	public final @NotNull StreamDataAcceptor<T> getBufferedDataAcceptor() {
+	public final StreamDataAcceptor<T> getBufferedDataAcceptor() {
 		return dataAcceptorBuffered;
 	}
 
@@ -299,7 +298,7 @@ public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive imple
 	}
 
 	@Override
-	public final void closeEx(@NotNull Exception e) {
+	public final void closeEx(Exception e) {
 		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
 		ensureInitialized();
 		endOfStreamRequest = true;

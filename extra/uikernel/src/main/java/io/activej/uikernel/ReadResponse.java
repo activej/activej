@@ -19,7 +19,6 @@ package io.activej.uikernel;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -30,7 +29,7 @@ public final class ReadResponse<K, R extends AbstractRecord<K>> {
 	private final List<R> extra;
 	private final @Nullable R totals;
 
-	private ReadResponse(@NotNull List<R> records, int count, @NotNull List<R> extra, @Nullable R totals) {
+	private ReadResponse(List<R> records, int count, List<R> extra, @Nullable R totals) {
 		this.records = records;
 		this.count = count;
 		this.extra = extra;

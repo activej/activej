@@ -2,7 +2,6 @@ package io.activej.rpc.client.sender.helper;
 
 import io.activej.rpc.client.RpcClientConnectionPool;
 import io.activej.rpc.client.sender.RpcSender;
-import org.jetbrains.annotations.NotNull;
 
 import java.net.InetSocketAddress;
 import java.util.HashMap;
@@ -20,7 +19,7 @@ public class RpcClientConnectionPoolStub implements RpcClientConnectionPool {
 	}
 
 	@Override
-	public RpcSender get(@NotNull InetSocketAddress address) {
+	public RpcSender get(InetSocketAddress address) {
 		return connections.get(address);
 	}
 }

@@ -2,7 +2,6 @@ package io.activej.dataflow.calcite.aggregation;
 
 import io.activej.datastream.processor.StreamReducers;
 import io.activej.record.Record;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class FieldReducer<I, O, A> extends StreamReducers.ReducerToResult<Record, Record, O, A> {
@@ -20,7 +19,7 @@ public abstract class FieldReducer<I, O, A> extends StreamReducers.ReducerToResu
 
 	public abstract String doGetName(String fieldName);
 
-	protected abstract A doAccumulate(A accumulator, @NotNull I fieldValue);
+	protected abstract A doAccumulate(A accumulator, I fieldValue);
 
 	public final String getName(String fieldName) {
 		if (fieldAlias != null) return fieldAlias;

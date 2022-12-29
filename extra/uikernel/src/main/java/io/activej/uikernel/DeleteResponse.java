@@ -18,7 +18,6 @@ package io.activej.uikernel;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -27,7 +26,7 @@ public final class DeleteResponse {
 
 	private final List<String> errors;
 
-	private DeleteResponse(@NotNull List<String> errors) {
+	private DeleteResponse(List<String> errors) {
 		this.errors = errors;
 	}
 
