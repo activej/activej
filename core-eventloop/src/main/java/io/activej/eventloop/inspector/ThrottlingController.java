@@ -95,7 +95,7 @@ public final class ThrottlingController
 				.withInitialThrottling(INITIAL_THROTTLING);
 	}
 
-	public @NotNull ThrottlingController withEventloop(@NotNull Eventloop eventloop) {
+	public ThrottlingController withEventloop(@NotNull Eventloop eventloop) {
 		setEventloop(eventloop);
 		return this;
 	}
@@ -104,33 +104,33 @@ public final class ThrottlingController
 		this.eventloop = eventloop;
 	}
 
-	public @NotNull ThrottlingController withTargetTime(@NotNull Duration targetTime) {
+	public ThrottlingController withTargetTime(Duration targetTime) {
 		setTargetTime(targetTime);
 		return this;
 	}
 
-	public @NotNull ThrottlingController withGcTime(@NotNull Duration gcTime) {
+	public ThrottlingController withGcTime(Duration gcTime) {
 		setGcTime(gcTime);
 		return this;
 	}
 
-	public @NotNull ThrottlingController withSmoothingWindow(@NotNull Duration smoothingWindow) {
+	public ThrottlingController withSmoothingWindow(Duration smoothingWindow) {
 		setSmoothingWindow(smoothingWindow);
 		return this;
 	}
 
-	public @NotNull ThrottlingController withThrottlingDecrease(double throttlingDecrease) {
+	public ThrottlingController withThrottlingDecrease(double throttlingDecrease) {
 		setThrottlingDecrease(throttlingDecrease);
 		return this;
 	}
 
-	public @NotNull ThrottlingController withInitialKeysPerSecond(double initialKeysPerSecond) {
+	public ThrottlingController withInitialKeysPerSecond(double initialKeysPerSecond) {
 		checkArgument(initialKeysPerSecond > 0, "Initial keys per second should not be zero or less");
 		this.smoothedTimePerKeyMillis = 1000.0 / initialKeysPerSecond;
 		return this;
 	}
 
-	public @NotNull ThrottlingController withInitialThrottling(double initialThrottling) {
+	public ThrottlingController withInitialThrottling(double initialThrottling) {
 		checkArgument(initialThrottling >= 0, "Initial throttling should not be zero or less");
 		this.smoothedThrottling = initialThrottling;
 		return this;
@@ -165,7 +165,7 @@ public final class ThrottlingController
 	}
 
 	@Override
-	public void onUpdateScheduledTaskDuration(@NotNull Runnable runnable, @Nullable Stopwatch sw, boolean background) {
+	public void onUpdateScheduledTaskDuration(Runnable runnable, @Nullable Stopwatch sw, boolean background) {
 
 	}
 
@@ -175,7 +175,7 @@ public final class ThrottlingController
 	}
 
 	@Override
-	public void onFatalError(@NotNull Throwable e, @Nullable Object context) {
+	public void onFatalError(Throwable e, @Nullable Object context) {
 
 	}
 
@@ -190,7 +190,7 @@ public final class ThrottlingController
 	}
 
 	@Override
-	public void onUpdateLocalTaskDuration(@NotNull Runnable runnable, @Nullable Stopwatch sw) {
+	public void onUpdateLocalTaskDuration(Runnable runnable, @Nullable Stopwatch sw) {
 	}
 
 	@Override
@@ -198,7 +198,7 @@ public final class ThrottlingController
 	}
 
 	@Override
-	public void onUpdateConcurrentTaskDuration(@NotNull Runnable runnable, @Nullable Stopwatch sw) {
+	public void onUpdateConcurrentTaskDuration(Runnable runnable, @Nullable Stopwatch sw) {
 	}
 
 	@Override
@@ -271,7 +271,7 @@ public final class ThrottlingController
 	}
 
 	@Override
-	public void onUpdateSelectedKeyDuration(@NotNull Stopwatch sw) {
+	public void onUpdateSelectedKeyDuration(Stopwatch sw) {
 	}
 
 	public double getAvgTimePerKeyMillis() {
@@ -294,7 +294,7 @@ public final class ThrottlingController
 	}
 
 	@JmxAttribute
-	public void setTargetTime(@NotNull Duration targetTime) {
+	public void setTargetTime(Duration targetTime) {
 		checkArgument(targetTime.toMillis() > 0, "Target time should not be zero or less");
 		this.targetTimeMillis = (int) targetTime.toMillis();
 	}
@@ -305,7 +305,7 @@ public final class ThrottlingController
 	}
 
 	@JmxAttribute
-	public void setGcTime(@NotNull Duration gcTime) {
+	public void setGcTime(Duration gcTime) {
 		checkArgument(gcTime.toMillis() > 0, "GC time should not be zero or less");
 		this.gcTimeMillis = (int) gcTime.toMillis();
 	}
@@ -327,7 +327,7 @@ public final class ThrottlingController
 	}
 
 	@JmxAttribute
-	public void setSmoothingWindow(@NotNull Duration smoothingWindow) {
+	public void setSmoothingWindow(Duration smoothingWindow) {
 		checkArgument(smoothingWindow.toMillis() > 0, "Smoothing window should not be zero or less");
 		this.smoothingWindow = (int) smoothingWindow.toMillis();
 	}

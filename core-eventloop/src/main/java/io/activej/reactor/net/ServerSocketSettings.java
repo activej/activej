@@ -18,7 +18,6 @@ package io.activej.reactor.net;
 
 import io.activej.common.MemSize;
 import io.activej.common.initializer.WithInitializer;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.channels.ServerSocketChannel;
@@ -56,7 +55,7 @@ public final class ServerSocketSettings implements WithInitializer<ServerSocketS
 		return new ServerSocketSettings(backlog, receiveBufferSize, reuseAddress);
 	}
 
-	public ServerSocketSettings withReceiveBufferSize(@NotNull MemSize receiveBufferSize) {
+	public ServerSocketSettings withReceiveBufferSize(MemSize receiveBufferSize) {
 		return new ServerSocketSettings(backlog, receiveBufferSize.toInt(), reuseAddress);
 	}
 
@@ -65,7 +64,7 @@ public final class ServerSocketSettings implements WithInitializer<ServerSocketS
 	}
 	// endregion
 
-	public void applySettings(@NotNull ServerSocketChannel channel) throws IOException {
+	public void applySettings(ServerSocketChannel channel) throws IOException {
 		if (receiveBufferSize != 0) {
 			channel.setOption(SO_RCVBUF, receiveBufferSize);
 		}
@@ -82,7 +81,7 @@ public final class ServerSocketSettings implements WithInitializer<ServerSocketS
 		return receiveBufferSize != 0;
 	}
 
-	public @NotNull MemSize getReceiveBufferSize() {
+	public MemSize getReceiveBufferSize() {
 		return MemSize.of(getReceiveBufferSizeBytes());
 	}
 

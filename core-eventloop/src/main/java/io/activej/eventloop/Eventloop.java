@@ -41,7 +41,6 @@ import io.activej.reactor.nio.NioReactor;
 import io.activej.reactor.schedule.ScheduledRunnable;
 import io.activej.reactor.util.RunnableWithContext;
 import org.jetbrains.annotations.Async;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -130,7 +129,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 */
 	private long timestamp;
 
-	private final @NotNull CurrentTimeProvider timeProvider;
+	private CurrentTimeProvider timeProvider = CurrentTimeProvider.ofSystem();
 
 	/**
 	 * The NIO selector which selects a set of keys whose
@@ -151,7 +150,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	private @Nullable String threadName;
 	private int threadPriority;
 
-	private @NotNull FatalErrorHandler fatalErrorHandler = this::logFatalError;
+	private FatalErrorHandler fatalErrorHandler = this::logFatalError;
 
 	private volatile boolean keepAlive;
 	private volatile boolean breakEventloop;
@@ -172,9 +171,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	private boolean monitoring = false;
 
 	// region builders
-	private Eventloop(@NotNull CurrentTimeProvider timeProvider) {
-		this.timeProvider = timeProvider;
-		refreshTimestamp();
+	private Eventloop() {
 	}
 
 	/**
@@ -183,18 +180,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 * @return a new instance of {@link Eventloop}
 	 */
 	public static Eventloop create() {
-		return create(CurrentTimeProvider.ofSystem());
-	}
-
-	/**
-	 * Creates a new {@link Eventloop} with a custom {@link CurrentTimeProvider}
-	 * <p>
-	 * Useful for tests when passed time should be precisely controlled
-	 *
-	 * @return a new instance of {@link Eventloop} with a custom {@link CurrentTimeProvider}
-	 */
-	public static Eventloop create(@NotNull CurrentTimeProvider currentTimeProvider) {
-		return new Eventloop(currentTimeProvider);
+		return new Eventloop();
 	}
 
 	/**
@@ -203,7 +189,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 * @param threadName a thread name for this {@link Eventloop} thread
 	 * @return this {@link Eventloop}
 	 */
-	public @NotNull Eventloop withThreadName(@Nullable String threadName) {
+	public Eventloop withThreadName(@Nullable String threadName) {
 		this.threadName = threadName;
 		return this;
 	}
@@ -215,7 +201,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 * @return this {@link Eventloop}
 	 */
 	@SuppressWarnings("UnusedReturnValue")
-	public @NotNull Eventloop withThreadPriority(int threadPriority) {
+	public Eventloop withThreadPriority(int threadPriority) {
 		this.threadPriority = threadPriority;
 		return this;
 	}
@@ -229,7 +215,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 * @param inspector an inspector for this {@link Eventloop}
 	 * @return this {@link Eventloop}
 	 */
-	public @NotNull Eventloop withInspector(@Nullable EventloopInspector inspector) {
+	public Eventloop withInspector(@Nullable EventloopInspector inspector) {
 		this.inspector = inspector;
 		return this;
 	}
@@ -241,7 +227,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 * @param fatalErrorHandler a fatal error handler on an event loop level
 	 * @return this {@link Eventloop}
 	 */
-	public @NotNull Eventloop withFatalErrorHandler(@NotNull FatalErrorHandler fatalErrorHandler) {
+	public Eventloop withFatalErrorHandler(FatalErrorHandler fatalErrorHandler) {
 		this.fatalErrorHandler = fatalErrorHandler;
 		return this;
 	}
@@ -254,8 +240,20 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 * @param selectorProvider a custom selector provider
 	 * @return this {@link Eventloop}
 	 */
-	public @NotNull Eventloop withSelectorProvider(@Nullable SelectorProvider selectorProvider) {
+	public Eventloop withSelectorProvider(@Nullable SelectorProvider selectorProvider) {
 		this.selectorProvider = selectorProvider;
+		return this;
+	}
+
+	/**
+	 * Creates a new {@link Eventloop} with a custom {@link CurrentTimeProvider}
+	 * <p>
+	 * Useful for tests when passed time should be precisely controlled
+	 *
+	 * @return a new instance of {@link Eventloop} with a custom {@link CurrentTimeProvider}
+	 */
+	public Eventloop withTimeProvider(CurrentTimeProvider currentTimeProvider) {
+		this.timeProvider = currentTimeProvider;
 		return this;
 	}
 
@@ -269,7 +267,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 * @param idleInterval an idle interval for the {@link Selector} to block for on {@link Selector#select(long)} calls
 	 * @return this {@link Eventloop}
 	 */
-	public @NotNull Eventloop withIdleInterval(@NotNull Duration idleInterval) {
+	public Eventloop withIdleInterval(Duration idleInterval) {
 		this.idleInterval = idleInterval;
 		return this;
 	}
@@ -287,7 +285,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 *
 	 * @return this {@link Eventloop}
 	 */
-	public @NotNull Eventloop withCurrentThread() {
+	public Eventloop withCurrentThread() {
 		Reactor.setCurrentReactor(this);
 		return this;
 	}
@@ -336,7 +334,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 * @return an existing {@link Selector} or newly opened one
 	 */
 	@Override
-	public @NotNull Selector ensureSelector() {
+	public Selector ensureSelector() {
 		if (selector == null) {
 			openSelector();
 		}
@@ -435,6 +433,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 		assert selector != null;
 		breakEventloop = false;
 
+		refreshTimestamp();
 		long timeAfterSelectorSelect;
 		long timeAfterBusinessLogic = 0;
 		while (isAlive()) {
@@ -454,7 +453,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 				recordIoError(e, selector);
 			}
 
-			timeAfterSelectorSelect = refreshTimestampAndGet();
+			timeAfterSelectorSelect = refreshTimestamp();
 			int keys = processSelectedKeys(selector.selectedKeys());
 			int concurrentTasks = executeConcurrentTasks();
 			int scheduledTasks = executeScheduledTasks();
@@ -512,7 +511,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 *
 	 * @param selectedKeys set that contains all selected keys, returned from NIO Selector.select()
 	 */
-	private int processSelectedKeys(@NotNull Set<SelectionKey> selectedKeys) {
+	private int processSelectedKeys(Set<SelectionKey> selectedKeys) {
 		long startTimestamp = timestamp;
 		Stopwatch sw = monitoring ? Stopwatch.createUnstarted() : null;
 
@@ -559,7 +558,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 		int keys = acceptKeys + connectKeys + readKeys + writeKeys + invalidKeys;
 
 		if (keys != 0) {
-			long loopTime = refreshTimestampAndGet() - startTimestamp;
+			long loopTime = refreshTimestamp() - startTimestamp;
 			if (inspector != null)
 				inspector.onUpdateSelectedKeysStats(lastSelectedKeys, invalidKeys, acceptKeys, connectKeys, readKeys, writeKeys, loopTime);
 		}
@@ -606,7 +605,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 		this.nextTasks.clear();
 
 		if (localTasks != 0) {
-			long loopTime = refreshTimestampAndGet() - startTimestamp;
+			long loopTime = refreshTimestamp() - startTimestamp;
 			if (inspector != null) inspector.onUpdateLocalTasksStats(localTasks, loopTime);
 		}
 
@@ -644,7 +643,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 		}
 
 		if (concurrentTasks != 0) {
-			long loopTime = refreshTimestampAndGet() - startTimestamp;
+			long loopTime = refreshTimestamp() - startTimestamp;
 			if (inspector != null) inspector.onUpdateConcurrentTasksStats(concurrentTasks, loopTime);
 		}
 
@@ -706,7 +705,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 		}
 
 		if (scheduledTasks != 0) {
-			long loopTime = refreshTimestampAndGet() - startTimestamp;
+			long loopTime = refreshTimestamp() - startTimestamp;
 			if (inspector != null) inspector.onUpdateScheduledTasksStats(scheduledTasks, loopTime, background);
 		}
 
@@ -828,7 +827,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 * @throws IOException If some I/O error occurs
 	 */
 	@Override
-	public @NotNull ServerSocketChannel listen(@Nullable InetSocketAddress address, @NotNull ServerSocketSettings serverSocketSettings, @NotNull Consumer<SocketChannel> acceptCallback) throws IOException {
+	public ServerSocketChannel listen(@Nullable InetSocketAddress address, ServerSocketSettings serverSocketSettings, Consumer<SocketChannel> acceptCallback) throws IOException {
 		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
 		ServerSocketChannel serverSocketChannel = null;
 		try {
@@ -857,7 +856,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 *                or when {@link Eventloop} fails to connect to a given address
 	 */
 	@Override
-	public void connect(SocketAddress address, @NotNull Callback<SocketChannel> cb) {
+	public void connect(SocketAddress address, Callback<SocketChannel> cb) {
 		connect(address, 0, cb);
 	}
 
@@ -870,7 +869,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 *                or when {@link Eventloop} fails to connect to a given address
 	 */
 	@Override
-	public void connect(SocketAddress address, @Nullable Duration timeout, @NotNull Callback<SocketChannel> cb) {
+	public void connect(SocketAddress address, @Nullable Duration timeout, Callback<SocketChannel> cb) {
 		connect(address, timeout == null ? 0L : timeout.toMillis(), cb);
 	}
 
@@ -884,7 +883,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 *                or when {@link Eventloop} fails to connect to a given address
 	 */
 	@Override
-	public void connect(@NotNull SocketAddress address, long timeout, @NotNull Callback<SocketChannel> cb) {
+	public void connect(SocketAddress address, long timeout, Callback<SocketChannel> cb) {
 		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
 		SocketChannel channel;
 		try {
@@ -950,7 +949,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 * @param runnable runnable of this task
 	 */
 	@Override
-	public void post(@NotNull @Async.Schedule Runnable runnable) {
+	public void post(@Async.Schedule Runnable runnable) {
 		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
 		localTasks.addFirst(runnable);
 	}
@@ -961,7 +960,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 * @param runnable runnable of this task
 	 */
 	@Override
-	public void postLast(@NotNull @Async.Schedule Runnable runnable) {
+	public void postLast(@Async.Schedule Runnable runnable) {
 		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
 		localTasks.addLast(runnable);
 	}
@@ -972,7 +971,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 * @param runnable runnable of this task
 	 */
 	@Override
-	public void postNext(@NotNull @Async.Schedule Runnable runnable) {
+	public void postNext(@Async.Schedule Runnable runnable) {
 		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
 		nextTasks.add(runnable);
 	}
@@ -985,7 +984,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 * @param runnable runnable of this task
 	 */
 	@Override
-	public void execute(@NotNull @Async.Schedule Runnable runnable) {
+	public void execute(@Async.Schedule Runnable runnable) {
 		concurrentTasks.offer(runnable);
 		if (selector != null) {
 			selector.wakeup();
@@ -1000,7 +999,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 * @return scheduledRunnable, which could used for cancelling the task
 	 */
 	@Override
-	public @NotNull ScheduledRunnable schedule(long timestamp, @NotNull @Async.Schedule Runnable runnable) {
+	public ScheduledRunnable schedule(long timestamp, @Async.Schedule Runnable runnable) {
 		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
 		return addScheduledTask(timestamp, runnable, false);
 	}
@@ -1015,12 +1014,12 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 * @return scheduledRunnable, which could used for cancelling the task
 	 */
 	@Override
-	public @NotNull ScheduledRunnable scheduleBackground(long timestamp, @NotNull @Async.Schedule Runnable runnable) {
+	public ScheduledRunnable scheduleBackground(long timestamp, @Async.Schedule Runnable runnable) {
 		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
 		return addScheduledTask(timestamp, runnable, true);
 	}
 
-	private @NotNull ScheduledRunnable addScheduledTask(long timestamp, Runnable runnable, boolean background) {
+	private ScheduledRunnable addScheduledTask(long timestamp, Runnable runnable, boolean background) {
 		ScheduledRunnable scheduledTask = ScheduledRunnable.create(timestamp, runnable);
 		PriorityQueue<ScheduledRunnable> taskQueue = background ? backgroundTasks : scheduledTasks;
 		taskQueue.offer(scheduledTask);
@@ -1050,16 +1049,8 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 *
 	 * @return a refreshed timestamp of this {@link Eventloop}
 	 */
-	public long refreshTimestampAndGet() {
-		refreshTimestamp();
-		return timestamp;
-	}
-
-	/**
-	 * Refreshes a cached timestamp of this {@link Eventloop}
-	 */
-	private void refreshTimestamp() {
-		timestamp = timeProvider.currentTimeMillis();
+	private long refreshTimestamp() {
+		return timestamp = timeProvider.currentTimeMillis();
 	}
 
 	/**
@@ -1078,7 +1069,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 * @return this {@link Eventloop}
 	 */
 	@Override
-	public @NotNull Eventloop getReactor() {
+	public Eventloop getReactor() {
 		return this;
 	}
 
@@ -1153,11 +1144,11 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 		return monitoring;
 	}
 
-	private void recordIoError(@NotNull Exception e, @Nullable Object context) {
+	private void recordIoError(Exception e, @Nullable Object context) {
 		logger.warn("IO Error in {}", context, e);
 	}
 
-	private void onFatalError(@NotNull Throwable e, @Nullable Runnable runnable) {
+	private void onFatalError(Throwable e, @Nullable Runnable runnable) {
 		if (runnable instanceof RunnableWithContext) {
 			handleError(fatalErrorHandler, e, ((RunnableWithContext) runnable).getContext());
 		} else {
@@ -1172,7 +1163,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 * @param context a context of a fatal error to be logged, may be {@code null} if a context is meaningless or unknown
 	 */
 	@Override
-	public void logFatalError(@NotNull Throwable e, @Nullable Object context) {
+	public void logFatalError(Throwable e, @Nullable Object context) {
 		if (e instanceof UncheckedException) {
 			e = e.getCause();
 		}
@@ -1201,7 +1192,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 * @return this {@link Eventloop} fatal error handler
 	 * @see #withFatalErrorHandler(FatalErrorHandler)
 	 */
-	public @NotNull FatalErrorHandler getFatalErrorHandler() {
+	public FatalErrorHandler getFatalErrorHandler() {
 		return fatalErrorHandler;
 	}
 

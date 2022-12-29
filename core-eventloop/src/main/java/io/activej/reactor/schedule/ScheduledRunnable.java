@@ -17,7 +17,6 @@
 package io.activej.reactor.schedule;
 
 import io.activej.common.initializer.WithInitializer;
-import org.jetbrains.annotations.NotNull;
 
 public final class ScheduledRunnable implements Comparable<ScheduledRunnable>, WithInitializer<ScheduledRunnable> {
 	private final long timestamp;
@@ -26,12 +25,12 @@ public final class ScheduledRunnable implements Comparable<ScheduledRunnable>, W
 	private boolean complete;
 
 	// region builders
-	private ScheduledRunnable(long timestamp, @NotNull Runnable runnable) {
+	private ScheduledRunnable(long timestamp, Runnable runnable) {
 		this.timestamp = timestamp;
 		this.runnable = runnable;
 	}
 
-	public static ScheduledRunnable create(long timestamp, @NotNull Runnable runnable) {
+	public static ScheduledRunnable create(long timestamp, Runnable runnable) {
 		return new ScheduledRunnable(timestamp, runnable);
 	}
 	// endregion

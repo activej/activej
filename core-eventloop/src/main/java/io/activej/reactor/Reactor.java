@@ -46,8 +46,8 @@ public interface Reactor extends ReactorExecutor, ReactorScheduler {
 	 * This method is useful for when you need to initialize a piece of code with another {@link Reactor} context
 	 * (a {@link Reactor} that runs in some other thread).
 	 *
-	 * @param reactor a {@link Reactor} in context of which a piece of code should be initialized
-	 * @param runnable       a piece of code to be initialized in a context of another {@link Reactor}
+	 * @param reactor  a {@link Reactor} in context of which a piece of code should be initialized
+	 * @param runnable a piece of code to be initialized in a context of another {@link Reactor}
 	 */
 	static void executeWithReactor(Reactor reactor, Runnable runnable) {
 		ThreadLocalReactor.executeWithReactor(reactor, runnable);
@@ -59,8 +59,8 @@ public interface Reactor extends ReactorExecutor, ReactorScheduler {
 	 * This method is useful for when you need to initialize some component with another {@link Reactor} context
 	 * (a {@link Reactor} that runs in some other thread).
 	 *
-	 * @param reactor a {@link Reactor} in context of which a piece of code should be initialized
-	 * @param callable       a supplier of a component to be initialized in a context of another {@link Reactor}
+	 * @param reactor  a {@link Reactor} in context of which a piece of code should be initialized
+	 * @param callable a supplier of a component to be initialized in a context of another {@link Reactor}
 	 */
 	static <T> T executeWithReactor(Reactor reactor, Supplier<T> callable) {
 		return ThreadLocalReactor.executeWithReactor(reactor, callable);
@@ -68,15 +68,15 @@ public interface Reactor extends ReactorExecutor, ReactorScheduler {
 
 	boolean inReactorThread();
 
-	void post(@NotNull @Async.Schedule Runnable runnable);
+	void post(@Async.Schedule Runnable runnable);
 
-	void postLast(@NotNull @Async.Schedule Runnable runnable);
+	void postLast(@Async.Schedule Runnable runnable);
 
-	void postNext(@NotNull @Async.Schedule Runnable runnable);
+	void postNext(@Async.Schedule Runnable runnable);
 
 	void startExternalTask();
 
 	void completeExternalTask();
 
-	void logFatalError(@NotNull Throwable e, @Nullable Object context);
+	void logFatalError(Throwable e, @Nullable Object context);
 }

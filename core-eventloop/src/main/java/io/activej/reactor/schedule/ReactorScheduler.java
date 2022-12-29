@@ -17,38 +17,37 @@
 package io.activej.reactor.schedule;
 
 import io.activej.common.time.CurrentTimeProvider;
-import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 import java.time.Instant;
 
 @SuppressWarnings("unused")
 public interface ReactorScheduler extends CurrentTimeProvider {
-	default @NotNull ScheduledRunnable schedule(@NotNull Instant instant, @NotNull Runnable runnable) {
+	default ScheduledRunnable schedule(Instant instant, Runnable runnable) {
 		return schedule(instant.toEpochMilli(), runnable);
 	}
 
-	@NotNull ScheduledRunnable schedule(long timestamp, @NotNull Runnable runnable);
+	ScheduledRunnable schedule(long timestamp, Runnable runnable);
 
-	default @NotNull ScheduledRunnable delay(@NotNull Duration delay, @NotNull Runnable runnable) {
+	default ScheduledRunnable delay(Duration delay, Runnable runnable) {
 		return delay(delay.toMillis(), runnable);
 	}
 
-	default @NotNull ScheduledRunnable delay(long delayMillis, @NotNull Runnable runnable) {
+	default ScheduledRunnable delay(long delayMillis, Runnable runnable) {
 		return schedule(currentTimeMillis() + delayMillis, runnable);
 	}
 
-	default @NotNull ScheduledRunnable scheduleBackground(@NotNull Instant instant, @NotNull Runnable runnable) {
+	default ScheduledRunnable scheduleBackground(Instant instant, Runnable runnable) {
 		return scheduleBackground(instant.toEpochMilli(), runnable);
 	}
 
-	@NotNull ScheduledRunnable scheduleBackground(long timestamp, @NotNull Runnable runnable);
+	ScheduledRunnable scheduleBackground(long timestamp, Runnable runnable);
 
-	default @NotNull ScheduledRunnable delayBackground(@NotNull Duration delay, @NotNull Runnable runnable) {
+	default ScheduledRunnable delayBackground(Duration delay, Runnable runnable) {
 		return delayBackground(delay.toMillis(), runnable);
 	}
 
-	default @NotNull ScheduledRunnable delayBackground(long delayMillis, @NotNull Runnable runnable) {
+	default ScheduledRunnable delayBackground(long delayMillis, Runnable runnable) {
 		return scheduleBackground(currentTimeMillis() + delayMillis, runnable);
 	}
 }

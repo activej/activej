@@ -20,7 +20,6 @@ import io.activej.jmx.api.JmxBeanAdapterWithRefresh;
 import io.activej.jmx.api.JmxRefreshable;
 import io.activej.jmx.stats.ValueStats;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
@@ -48,7 +47,7 @@ public final class ReactorJmxBeanAdapter implements JmxBeanAdapterWithRefresh {
 	}
 
 	@Override
-	public void setRefreshParameters(@NotNull Duration refreshPeriod, int maxRefreshesPerCycle) {
+	public void setRefreshParameters(Duration refreshPeriod, int maxRefreshesPerCycle) {
 		checkArgument(refreshPeriod.toMillis() > 0);
 		checkArgument(maxRefreshesPerCycle > 0);
 		this.refreshPeriod = refreshPeriod;

@@ -18,7 +18,6 @@ package io.activej.reactor.net;
 
 import io.activej.common.MemSize;
 import io.activej.common.initializer.WithInitializer;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -75,11 +74,11 @@ public final class SocketSettings implements WithInitializer<SocketSettings> {
 		return new SocketSettings(0, 0, DEF_BOOL, DEF_BOOL, TRUE, 0, 0, 0, -1);
 	}
 
-	public SocketSettings withSendBufferSize(@NotNull MemSize sendBufferSize) {
+	public SocketSettings withSendBufferSize(MemSize sendBufferSize) {
 		return new SocketSettings(sendBufferSize.toInt(), receiveBufferSize, keepAlive, reuseAddress, tcpNoDelay, implReadTimeout, implWriteTimeout, implReadBufferSize, lingerTimeout);
 	}
 
-	public SocketSettings withReceiveBufferSize(@NotNull MemSize receiveBufferSize) {
+	public SocketSettings withReceiveBufferSize(MemSize receiveBufferSize) {
 		return new SocketSettings(sendBufferSize, receiveBufferSize.toInt(), keepAlive, reuseAddress, tcpNoDelay, implReadTimeout, implWriteTimeout, implReadBufferSize, lingerTimeout);
 	}
 
@@ -95,15 +94,15 @@ public final class SocketSettings implements WithInitializer<SocketSettings> {
 		return new SocketSettings(sendBufferSize, receiveBufferSize, keepAlive, reuseAddress, tcpNoDelay ? TRUE : FALSE, implReadTimeout, implWriteTimeout, implReadBufferSize, lingerTimeout);
 	}
 
-	public SocketSettings withImplReadTimeout(@NotNull Duration implReadTimeout) {
+	public SocketSettings withImplReadTimeout(Duration implReadTimeout) {
 		return new SocketSettings(sendBufferSize, receiveBufferSize, keepAlive, reuseAddress, tcpNoDelay, (int) implReadTimeout.toMillis(), implWriteTimeout, implReadBufferSize, lingerTimeout);
 	}
 
-	public SocketSettings withImplWriteTimeout(@NotNull Duration implWriteTimeout) {
+	public SocketSettings withImplWriteTimeout(Duration implWriteTimeout) {
 		return new SocketSettings(sendBufferSize, receiveBufferSize, keepAlive, reuseAddress, tcpNoDelay, implReadTimeout, (int) implWriteTimeout.toMillis(), implReadBufferSize, lingerTimeout);
 	}
 
-	public SocketSettings withImplReadBufferSize(@NotNull MemSize implReadBufferSize) {
+	public SocketSettings withImplReadBufferSize(MemSize implReadBufferSize) {
 		return new SocketSettings(sendBufferSize, receiveBufferSize, keepAlive, reuseAddress, tcpNoDelay, implReadTimeout, implWriteTimeout, implReadBufferSize.toInt(), lingerTimeout);
 	}
 
@@ -113,7 +112,7 @@ public final class SocketSettings implements WithInitializer<SocketSettings> {
 
 	// endregion
 
-	public void applySettings(@NotNull SocketChannel channel) throws IOException {
+	public void applySettings(SocketChannel channel) throws IOException {
 		if (sendBufferSize != 0) {
 			channel.setOption(SO_SNDBUF, sendBufferSize);
 		}
@@ -138,7 +137,7 @@ public final class SocketSettings implements WithInitializer<SocketSettings> {
 		return sendBufferSize != 0;
 	}
 
-	public @NotNull MemSize getSendBufferSize() {
+	public MemSize getSendBufferSize() {
 		return MemSize.of(getSendBufferSizeBytes());
 	}
 
@@ -151,7 +150,7 @@ public final class SocketSettings implements WithInitializer<SocketSettings> {
 		return receiveBufferSize != 0;
 	}
 
-	public @NotNull MemSize getReceiveBufferSize() {
+	public MemSize getReceiveBufferSize() {
 		return MemSize.of(getReceiveBufferSizeBytes());
 	}
 
@@ -191,7 +190,7 @@ public final class SocketSettings implements WithInitializer<SocketSettings> {
 		return implReadTimeout != 0;
 	}
 
-	public @NotNull Duration getImplReadTimeout() {
+	public Duration getImplReadTimeout() {
 		return Duration.ofMillis(getImplReadTimeoutMillis());
 	}
 
@@ -204,7 +203,7 @@ public final class SocketSettings implements WithInitializer<SocketSettings> {
 		return implWriteTimeout != 0;
 	}
 
-	public @NotNull Duration getImplWriteTimeout() {
+	public Duration getImplWriteTimeout() {
 		return Duration.ofMillis(getImplWriteTimeoutMillis());
 	}
 
@@ -217,7 +216,7 @@ public final class SocketSettings implements WithInitializer<SocketSettings> {
 		return implReadBufferSize != 0;
 	}
 
-	public @NotNull MemSize getImplReadBufferSize() {
+	public MemSize getImplReadBufferSize() {
 		return MemSize.of(getImplReadBufferSizeBytes());
 	}
 

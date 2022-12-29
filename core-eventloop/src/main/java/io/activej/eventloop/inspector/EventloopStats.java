@@ -22,7 +22,6 @@ import io.activej.common.time.Stopwatch;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.jmx.stats.*;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -92,7 +91,7 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 	}
 
 	@Override
-	public void onUpdateSelectedKeyDuration(@NotNull Stopwatch sw) {
+	public void onUpdateSelectedKeyDuration(Stopwatch sw) {
 		keys.oneKeyTime.recordValue((int) sw.elapsed(TimeUnit.MICROSECONDS));
 	}
 
@@ -119,7 +118,7 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 	}
 
 	@Override
-	public void onUpdateLocalTaskDuration(@NotNull Runnable runnable, @Nullable Stopwatch sw) {
+	public void onUpdateLocalTaskDuration(Runnable runnable, @Nullable Stopwatch sw) {
 		updateTaskDuration(tasks.local.oneTaskTime, tasks.local.longestTask, runnable, sw);
 	}
 
@@ -130,7 +129,7 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 	}
 
 	@Override
-	public void onUpdateConcurrentTaskDuration(@NotNull Runnable runnable, @Nullable Stopwatch sw) {
+	public void onUpdateConcurrentTaskDuration(Runnable runnable, @Nullable Stopwatch sw) {
 		updateTaskDuration(tasks.concurrent.oneTaskTime, tasks.concurrent.longestTask, runnable, sw);
 	}
 
@@ -141,7 +140,7 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 	}
 
 	@Override
-	public void onUpdateScheduledTaskDuration(@NotNull Runnable runnable, @Nullable Stopwatch sw, boolean background) {
+	public void onUpdateScheduledTaskDuration(Runnable runnable, @Nullable Stopwatch sw, boolean background) {
 		if (background) {
 			updateTaskDuration(tasks.background.getOneTaskTime(), tasks.background.getLongestTask(), runnable, sw);
 		} else {
@@ -161,7 +160,7 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 	}
 
 	@Override
-	public void onFatalError(@NotNull Throwable e, Object context) {
+	public void onFatalError(Throwable e, Object context) {
 		fatalErrors.recordException(e, context);
 
 		Class<? extends Throwable> type = e.getClass();

@@ -4,7 +4,6 @@ import io.activej.async.callback.Callback;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.net.DatagramSocketSettings;
 import io.activej.reactor.net.ServerSocketSettings;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +25,7 @@ public interface NioReactor extends Reactor {
 	 * @return DatagramSocket of this connection
 	 * @throws IOException if an I/O error occurs on opening DatagramChannel
 	 */
-	static @NotNull DatagramChannel createDatagramChannel(DatagramSocketSettings datagramSocketSettings,
+	static DatagramChannel createDatagramChannel(DatagramSocketSettings datagramSocketSettings,
 			@Nullable InetSocketAddress bindAddress,
 			@Nullable InetSocketAddress connectAddress) throws IOException {
 		DatagramChannel datagramChannel = null;
@@ -54,15 +53,15 @@ public interface NioReactor extends Reactor {
 
 	@Nullable Selector getSelector();
 
-	@NotNull Selector ensureSelector();
+	Selector ensureSelector();
 
 	void closeChannel(@Nullable SelectableChannel channel, @Nullable SelectionKey key);
 
-	@NotNull ServerSocketChannel listen(@Nullable InetSocketAddress address, @NotNull ServerSocketSettings serverSocketSettings, @NotNull Consumer<SocketChannel> acceptCallback) throws IOException;
+	ServerSocketChannel listen(@Nullable InetSocketAddress address, ServerSocketSettings serverSocketSettings, Consumer<SocketChannel> acceptCallback) throws IOException;
 
-	void connect(SocketAddress address, @NotNull Callback<SocketChannel> cb);
+	void connect(SocketAddress address, Callback<SocketChannel> cb);
 
-	void connect(SocketAddress address, @Nullable Duration timeout, @NotNull Callback<SocketChannel> cb);
+	void connect(SocketAddress address, @Nullable Duration timeout, Callback<SocketChannel> cb);
 
-	void connect(@NotNull SocketAddress address, long timeout, @NotNull Callback<SocketChannel> cb);
+	void connect(SocketAddress address, long timeout, Callback<SocketChannel> cb);
 }

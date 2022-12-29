@@ -18,7 +18,6 @@ package io.activej.eventloop.inspector;
 
 import io.activej.common.inspector.BaseInspector;
 import io.activej.common.time.Stopwatch;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public interface EventloopInspector extends BaseInspector<EventloopInspector> {
@@ -28,23 +27,23 @@ public interface EventloopInspector extends BaseInspector<EventloopInspector> {
 
 	void onUpdateSelectorSelectTimeout(long selectorSelectTimeout);
 
-	void onUpdateSelectedKeyDuration(@NotNull Stopwatch sw);
+	void onUpdateSelectedKeyDuration(Stopwatch sw);
 
 	void onUpdateSelectedKeysStats(int lastSelectedKeys, int invalidKeys, int acceptKeys, int connectKeys, int readKeys, int writeKeys, long loopTime);
 
-	void onUpdateLocalTaskDuration(@NotNull Runnable runnable, @Nullable Stopwatch sw);
+	void onUpdateLocalTaskDuration(Runnable runnable, @Nullable Stopwatch sw);
 
 	void onUpdateLocalTasksStats(int localTasks, long loopTime);
 
-	void onUpdateConcurrentTaskDuration(@NotNull Runnable runnable, @Nullable Stopwatch sw);
+	void onUpdateConcurrentTaskDuration(Runnable runnable, @Nullable Stopwatch sw);
 
 	void onUpdateConcurrentTasksStats(int newConcurrentTasks, long loopTime);
 
-	void onUpdateScheduledTaskDuration(@NotNull Runnable runnable, @Nullable Stopwatch sw, boolean background);
+	void onUpdateScheduledTaskDuration(Runnable runnable, @Nullable Stopwatch sw, boolean background);
 
 	void onUpdateScheduledTasksStats(int scheduledTasks, long loopTime, boolean background);
 
-	void onFatalError(@NotNull Throwable e, @Nullable Object context);
+	void onFatalError(Throwable e, @Nullable Object context);
 
 	void onScheduledTaskOverdue(int overdue, boolean background);
 }
