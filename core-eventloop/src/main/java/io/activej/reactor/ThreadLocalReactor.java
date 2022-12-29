@@ -27,11 +27,11 @@ final class ThreadLocalReactor {
 		return CURRENT_REACTOR.get();
 	}
 
-	static void setCurrentReactor(@NotNull Reactor reactor) {
+	static void setCurrentReactor(Reactor reactor) {
 		CURRENT_REACTOR.set(reactor);
 	}
 
-	static void initWithReactor(@NotNull Reactor anotherReactor, @NotNull Runnable runnable) {
+	static void executeWithReactor(Reactor anotherReactor, Runnable runnable) {
 		Reactor reactor = CURRENT_REACTOR.get();
 		try {
 			CURRENT_REACTOR.set(anotherReactor);
@@ -41,7 +41,7 @@ final class ThreadLocalReactor {
 		}
 	}
 
-	static <T> T initWithReactor(@NotNull Reactor anotherReactor, @NotNull Supplier<T> callable) {
+	static <T> T executeWithReactor(Reactor anotherReactor, Supplier<T> callable) {
 		Reactor reactor = CURRENT_REACTOR.get();
 		try {
 			CURRENT_REACTOR.set(anotherReactor);

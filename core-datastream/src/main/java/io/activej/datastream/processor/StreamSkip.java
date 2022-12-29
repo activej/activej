@@ -17,11 +17,11 @@
 package io.activej.datastream.processor;
 
 import io.activej.datastream.*;
-import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.ImplicitlyReactive;
 
 import static io.activej.common.Checks.checkState;
 
-public final class StreamSkip<T> extends AbstractReactive implements StreamTransformer<T, T> {
+public final class StreamSkip<T> extends ImplicitlyReactive implements StreamTransformer<T, T> {
 	public static final long NO_SKIP = 0;
 
 	private final Input input;

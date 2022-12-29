@@ -18,7 +18,6 @@ package io.activej.http;
 
 import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.Executor;
 
@@ -28,16 +27,16 @@ import java.util.concurrent.Executor;
  */
 @FunctionalInterface
 public interface AsyncServlet {
-	@NotNull Promisable<HttpResponse> serve(@NotNull HttpRequest request) throws Exception;
+	Promisable<HttpResponse> serve(HttpRequest request) throws Exception;
 
-	default @NotNull Promise<HttpResponse> serveAsync(@NotNull HttpRequest request) throws Exception {
+	default Promise<HttpResponse> serveAsync(HttpRequest request) throws Exception {
 		return serve(request).promise();
 	}
 
 	/**
 	 * Wraps given {@link BlockingServlet} into async one using given {@link Executor}.
 	 */
-	static @NotNull AsyncServlet ofBlocking(@NotNull Executor executor, @NotNull BlockingServlet blockingServlet) {
+	static AsyncServlet ofBlocking(Executor executor, BlockingServlet blockingServlet) {
 		return request -> request.loadBody()
 				.then(() -> Promise.ofBlocking(executor,
 						() -> blockingServlet.serve(request)));

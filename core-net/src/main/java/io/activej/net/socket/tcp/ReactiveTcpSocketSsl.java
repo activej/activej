@@ -24,8 +24,9 @@ import io.activej.common.initializer.WithInitializer;
 import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
-import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.net.CloseWithoutNotifyException;
+import io.activej.reactor.nio.NioReactor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -46,7 +47,7 @@ import static javax.net.ssl.SSLEngineResult.Status.CLOSED;
  * <p>
  * It allows SSL connections using Java {@link SSLEngine}.
  */
-public final class ReactiveTcpSocketSsl extends AbstractReactive implements ReactiveTcpSocket, WithInitializer<ReactiveTcpSocketSsl> {
+public final class ReactiveTcpSocketSsl extends AbstractNioReactive implements ReactiveTcpSocket, WithInitializer<ReactiveTcpSocketSsl> {
 	public static final boolean ERROR_ON_CLOSE_WITHOUT_NOTIFY = ApplicationSettings.getBoolean(ReactiveTcpSocketSsl.class, "errorOnCloseWithoutNotify", false);
 
 	private final SSLEngine engine;
@@ -62,38 +63,40 @@ public final class ReactiveTcpSocketSsl extends AbstractReactive implements Reac
 	private @Nullable SettablePromise<Void> write;
 	private @Nullable Promise<Void> pendingUpstreamWrite;
 
-	public static ReactiveTcpSocketSsl wrapClientSocket(ReactiveTcpSocket asyncTcpSocket,
-			String host, int port,
-			SSLContext sslContext, Executor executor) {
-		SSLEngine sslEngine = sslContext.createSSLEngine(host, port);
-		sslEngine.setUseClientMode(true);
-		return create(asyncTcpSocket, sslEngine, executor);
-	}
-
-	public static ReactiveTcpSocketSsl wrapClientSocket(ReactiveTcpSocket asyncTcpSocket,
-			SSLContext sslContext, Executor executor) {
-		SSLEngine sslEngine = sslContext.createSSLEngine();
-		sslEngine.setUseClientMode(true);
-		return create(asyncTcpSocket, sslEngine, executor);
-	}
-
-	public static ReactiveTcpSocketSsl wrapServerSocket(ReactiveTcpSocket asyncTcpSocket,
-			SSLContext sslContext, Executor executor) {
-		SSLEngine sslEngine = sslContext.createSSLEngine();
-		sslEngine.setUseClientMode(false);
-		return create(asyncTcpSocket, sslEngine, executor);
-	}
-
-	private ReactiveTcpSocketSsl(ReactiveTcpSocket asyncTcpSocket, SSLEngine engine, Executor executor) {
+	private ReactiveTcpSocketSsl(NioReactor reactor, ReactiveTcpSocket asyncTcpSocket,
+			SSLEngine engine, Executor executor) {
+		super(reactor);
 		this.engine = engine;
 		this.executor = executor;
 		this.upstream = asyncTcpSocket;
 		startHandShake();
 	}
 
-	public static ReactiveTcpSocketSsl create(ReactiveTcpSocket asyncTcpSocket,
+	public static ReactiveTcpSocketSsl wrapClientSocket(NioReactor reactor, ReactiveTcpSocket asyncTcpSocket,
+			String host, int port,
+			SSLContext sslContext, Executor executor) {
+		SSLEngine sslEngine = sslContext.createSSLEngine(host, port);
+		sslEngine.setUseClientMode(true);
+		return create(reactor, asyncTcpSocket, sslEngine, executor);
+	}
+
+	public static ReactiveTcpSocketSsl wrapClientSocket(NioReactor reactor, ReactiveTcpSocket asyncTcpSocket,
+			SSLContext sslContext, Executor executor) {
+		SSLEngine sslEngine = sslContext.createSSLEngine();
+		sslEngine.setUseClientMode(true);
+		return create(reactor, asyncTcpSocket, sslEngine, executor);
+	}
+
+	public static ReactiveTcpSocketSsl wrapServerSocket(NioReactor reactor, ReactiveTcpSocket asyncTcpSocket,
+			SSLContext sslContext, Executor executor) {
+		SSLEngine sslEngine = sslContext.createSSLEngine();
+		sslEngine.setUseClientMode(false);
+		return create(reactor, asyncTcpSocket, sslEngine, executor);
+	}
+
+	public static ReactiveTcpSocketSsl create(NioReactor reactor, ReactiveTcpSocket asyncTcpSocket,
 			SSLEngine engine, Executor executor) {
-		return new ReactiveTcpSocketSsl(asyncTcpSocket, engine, executor);
+		return new ReactiveTcpSocketSsl(reactor, asyncTcpSocket, engine, executor);
 	}
 
 	@Override

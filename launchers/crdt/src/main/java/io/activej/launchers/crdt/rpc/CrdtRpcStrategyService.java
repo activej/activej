@@ -21,6 +21,7 @@ import io.activej.async.service.ReactiveService;
 import io.activej.crdt.storage.cluster.DiscoveryService;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.RpcStrategy;
@@ -31,8 +32,7 @@ import java.util.function.Function;
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Checks.checkState;
 
-public final class CrdtRpcStrategyService<K extends Comparable<K>> implements ReactiveService {
-	private final Reactor reactor;
+public final class CrdtRpcStrategyService<K extends Comparable<K>> extends AbstractReactive implements ReactiveService {
 	private final DiscoveryService<?> discoveryService;
 	private final Function<Object, K> keyGetter;
 
@@ -42,7 +42,7 @@ public final class CrdtRpcStrategyService<K extends Comparable<K>> implements Re
 	private boolean stopped;
 
 	private CrdtRpcStrategyService(Reactor reactor, DiscoveryService<?> discoveryService, Function<Object, K> keyGetter) {
-		this.reactor = reactor;
+		super(reactor);
 		this.discoveryService = discoveryService;
 		this.keyGetter = keyGetter;
 	}
@@ -60,11 +60,6 @@ public final class CrdtRpcStrategyService<K extends Comparable<K>> implements Re
 		checkState(this.rpcClient == null && rpcClient.getReactor() == reactor);
 
 		this.rpcClient = rpcClient;
-	}
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
 	}
 
 	@Override

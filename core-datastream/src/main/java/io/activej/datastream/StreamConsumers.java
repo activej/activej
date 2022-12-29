@@ -249,9 +249,9 @@ final class StreamConsumers {
 		private final InternalSupplier internalSupplier;
 		private volatile boolean wakingUp;
 
-		public OfAnotherReactor(@NotNull Reactor anotherReactor, @NotNull StreamConsumer<T> anotherReactorConsumer) {
+		public OfAnotherReactor(Reactor anotherReactor, StreamConsumer<T> anotherReactorConsumer) {
 			this.anotherReactorConsumer = anotherReactorConsumer;
-			this.internalSupplier = Reactor.initWithReactor(anotherReactor, InternalSupplier::new);
+			this.internalSupplier = Reactor.executeWithReactor(anotherReactor, InternalSupplier::new);
 		}
 
 		void execute(Runnable runnable) {

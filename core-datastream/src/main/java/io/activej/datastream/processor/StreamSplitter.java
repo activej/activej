@@ -20,7 +20,7 @@ import io.activej.common.initializer.WithInitializer;
 import io.activej.datastream.*;
 import io.activej.datastream.dsl.HasStreamInput;
 import io.activej.datastream.dsl.HasStreamOutputs;
-import io.activej.reactor.Reactor;
+import io.activej.reactor.ImplicitlyReactive;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,7 +38,7 @@ import static io.activej.common.Checks.checkState;
  * @param <O> type of output items
  */
 @SuppressWarnings("unchecked")
-public final class StreamSplitter<I, O> implements HasStreamInput<I>, HasStreamOutputs<O>, WithInitializer<StreamSplitter<I, O>> {
+public final class StreamSplitter<I, O> extends ImplicitlyReactive implements HasStreamInput<I>, HasStreamOutputs<O>, WithInitializer<StreamSplitter<I, O>> {
 	private final Function<StreamDataAcceptor<O>[], StreamDataAcceptor<I>> acceptorFactory;
 	private final Input input;
 	private final List<Output> outputs = new ArrayList<>();
@@ -59,7 +59,7 @@ public final class StreamSplitter<I, O> implements HasStreamInput<I>, HasStreamO
 
 	public static <I, O> StreamSplitter<I, O> create(Function<StreamDataAcceptor<O>[], StreamDataAcceptor<I>> acceptorFactory) {
 		StreamSplitter<I, O> streamSplitter = new StreamSplitter<>(acceptorFactory);
-		Reactor.getCurrentReactor().post(streamSplitter::start);
+		streamSplitter.getReactor().post(streamSplitter::start);
 		return streamSplitter;
 	}
 

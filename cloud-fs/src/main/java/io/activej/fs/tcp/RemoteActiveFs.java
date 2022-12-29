@@ -41,6 +41,7 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.net.socket.tcp.ReactiveTcpSocketNio;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.reactor.net.SocketSettings;
 import io.activej.reactor.nio.NioReactor;
@@ -69,7 +70,8 @@ import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
  * <p>
  * Inherits all the limitations of {@link ActiveFs} implementation located on {@link ActiveFsServer}.
  */
-public final class RemoteActiveFs implements ActiveFs, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<RemoteActiveFs> {
+public final class RemoteActiveFs extends AbstractNioReactive
+		implements ActiveFs, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<RemoteActiveFs> {
 	private static final Logger logger = LoggerFactory.getLogger(RemoteActiveFs.class);
 
 	public static final Duration DEFAULT_CONNECTION_TIMEOUT = ApplicationSettings.getDuration(RemoteActiveFs.class, "connectTimeout", Duration.ZERO);
@@ -79,7 +81,6 @@ public final class RemoteActiveFs implements ActiveFs, ReactiveService, Reactive
 			RemoteFsUtils.FS_REQUEST_CODEC
 	);
 
-	private final NioReactor reactor;
 	private final InetSocketAddress address;
 
 	private SocketSettings socketSettings = SocketSettings.createDefault();
@@ -108,7 +109,7 @@ public final class RemoteActiveFs implements ActiveFs, ReactiveService, Reactive
 
 	// region creators
 	private RemoteActiveFs(NioReactor reactor, InetSocketAddress address) {
-		this.reactor = reactor;
+		super(reactor);
 		this.address = address;
 	}
 
@@ -126,11 +127,6 @@ public final class RemoteActiveFs implements ActiveFs, ReactiveService, Reactive
 		return this;
 	}
 	// endregion
-
-	@Override
-	public @NotNull NioReactor getReactor() {
-		return reactor;
-	}
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {

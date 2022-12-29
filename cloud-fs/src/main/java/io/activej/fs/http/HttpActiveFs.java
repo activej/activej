@@ -29,6 +29,8 @@ import io.activej.fs.exception.FsException;
 import io.activej.http.*;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -51,17 +53,19 @@ import static io.activej.http.HttpHeaders.CONTENT_LENGTH;
  * <p>
  * Inherits all the limitations of {@link ActiveFs} implementation located on server.
  */
-public final class HttpActiveFs implements ActiveFs, WithInitializer<HttpActiveFs> {
+public final class HttpActiveFs extends AbstractReactive
+		implements ActiveFs, WithInitializer<HttpActiveFs> {
 	private final AsyncHttpClient client;
 	private final String url;
 
-	private HttpActiveFs(String url, AsyncHttpClient client) {
+	private HttpActiveFs(Reactor reactor, String url, AsyncHttpClient client) {
+		super(reactor);
 		this.url = url;
 		this.client = client;
 	}
 
-	public static HttpActiveFs create(String url, AsyncHttpClient client) {
-		return new HttpActiveFs(url.endsWith("/") ? url : url + '/', client);
+	public static HttpActiveFs create(Reactor reactor, String url, AsyncHttpClient client) {
+		return new HttpActiveFs(reactor, url.endsWith("/") ? url : url + '/', client);
 	}
 
 	@Override

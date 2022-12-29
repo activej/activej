@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static org.junit.Assert.*;
 
 public class RedisConnectionTestWithStub {
@@ -28,7 +29,7 @@ public class RedisConnectionTestWithStub {
 	public void setUp() throws IOException {
 		server = RedisServer.newRedisServer();
 		server.start();
-		client = RedisClient.create(new InetSocketAddress(server.getHost(), server.getBindPort()));
+		client = RedisClient.create(getCurrentReactor(), new InetSocketAddress(server.getHost(), server.getBindPort()));
 	}
 
 	@After

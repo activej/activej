@@ -70,7 +70,7 @@ public final class Initializers {
 		for (String toAdd : partitionStrings) {
 			ActiveFs client;
 			if (toAdd.startsWith("http")) {
-				client = HttpActiveFs.create(toAdd, ReactiveHttpClient.create(reactor));
+				client = HttpActiveFs.create(reactor, toAdd, ReactiveHttpClient.create(reactor));
 			} else {
 				client = RemoteActiveFs.create(reactor, parseInetSocketAddress(toAdd));
 			}

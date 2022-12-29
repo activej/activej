@@ -3,6 +3,7 @@ package io.activej.rpc;
 import io.activej.common.time.Stopwatch;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.RpcClient;
@@ -77,12 +78,11 @@ public final class RpcHelloWorldTest {
 				.withListenPort(port);
 	}
 
-	private static class BlockingHelloClient implements HelloService, AutoCloseable {
-		private final NioReactor reactor;
+	private static class BlockingHelloClient extends AbstractNioReactive implements HelloService, AutoCloseable {
 		private final RpcClient rpcClient;
 
 		public BlockingHelloClient(NioReactor reactor) throws Exception {
-			this.reactor = reactor;
+			super(reactor);
 			this.rpcClient = RpcClient.create(reactor)
 					.withMessageTypes(HelloRequest.class, HelloResponse.class)
 					.withStrategy(server(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port)));
@@ -94,8 +94,8 @@ public final class RpcHelloWorldTest {
 		public String hello(String name) throws Exception {
 			try {
 				return rpcClient.getReactor().submit(
-						() -> rpcClient
-								.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT))
+								() -> rpcClient
+										.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT))
 						.get()
 						.message;
 			} catch (ExecutionException e) {
@@ -142,7 +142,7 @@ public final class RpcHelloWorldTest {
 			CountDownLatch latch = new CountDownLatch(requestCount);
 			for (int i = 0; i < requestCount; i++) {
 				String name = "World" + i;
-				client.reactor.execute(() -> client.rpcClient.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT)
+				client.getReactor().execute(() -> client.rpcClient.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT)
 						.whenComplete(latch::countDown)
 						.whenComplete(assertCompleteFn(response -> assertEquals("Hello, " + name + "!", response.message))));
 			}
@@ -185,11 +185,11 @@ public final class RpcHelloWorldTest {
 
 			for (int i = 0; i < requestCount; i++) {
 				String name = "world" + i;
-				client1.reactor.execute(() ->
+				client1.getReactor().execute(() ->
 						client1.rpcClient.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT)
 								.whenComplete(latch::countDown)
 								.whenComplete(assertCompleteFn(response -> assertEquals("Hello, " + name + "!", response.message))));
-				client2.reactor.execute(() ->
+				client2.getReactor().execute(() ->
 						client2.rpcClient.<HelloRequest, HelloResponse>sendRequest(new HelloRequest(name), TIMEOUT)
 								.whenComplete(latch::countDown)
 								.whenComplete(assertCompleteFn(response -> assertEquals("Hello, " + name + "!", response.message))));
@@ -212,7 +212,7 @@ public final class RpcHelloWorldTest {
 				CountDownLatch latch = new CountDownLatch(count);
 				Stopwatch stopwatch = Stopwatch.createStarted();
 				for (int i = 0; i < count; i++) {
-					client.reactor.execute(() ->
+					client.getReactor().execute(() ->
 							client.rpcClient.<HelloRequest, HelloResponse>sendRequest(new HelloRequest("benchmark"), TIMEOUT)
 									.whenComplete(($, e) -> {
 										latch.countDown();

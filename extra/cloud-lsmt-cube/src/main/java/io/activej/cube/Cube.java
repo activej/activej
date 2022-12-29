@@ -59,6 +59,7 @@ import io.activej.jmx.stats.ValueStats;
 import io.activej.ot.OTState;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.record.Record;
@@ -101,13 +102,13 @@ import static java.util.stream.Collectors.toList;
  * Also provides functionality for managing aggregations.
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
-public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cube>, ReactiveJmxBeanWithStats {
+public final class Cube extends AbstractReactive
+		implements ICube, OTState<CubeDiff>, WithInitializer<Cube>, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(Cube.class);
 
 	public static final int DEFAULT_OVERLAPPING_CHUNKS_THRESHOLD = 300;
 	public static final FrameFormat DEFAULT_SORT_FRAME_FORMAT = LZ4FrameFormat.create();
 
-	private final Reactor reactor;
 	private final Executor executor;
 	private final DefiningClassLoader classLoader;
 	private final AggregationChunkStorage aggregationChunkStorage;
@@ -177,14 +178,14 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 
 	Cube(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
 			AggregationChunkStorage aggregationChunkStorage) {
-		this.reactor = reactor;
+		super(reactor);
 		this.executor = executor;
 		this.classLoader = classLoader;
 		this.aggregationChunkStorage = aggregationChunkStorage;
 	}
 
-	public static Cube create(@NotNull Reactor reactor, @NotNull Executor executor, @NotNull DefiningClassLoader classLoader,
-			@NotNull AggregationChunkStorage aggregationChunkStorage) {
+	public static Cube create(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
+			AggregationChunkStorage aggregationChunkStorage) {
 		return new Cube(reactor, executor, classLoader, aggregationChunkStorage);
 	}
 
@@ -1385,10 +1386,4 @@ public final class Cube implements ICube, OTState<CubeDiff>, WithInitializer<Cub
 				.map(chunk -> String.valueOf(chunk.getChunkId()))
 				.collect(Collectors.joining(", ")));
 	}
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
-	}
-
 }

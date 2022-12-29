@@ -22,6 +22,7 @@ import io.activej.async.service.ReactiveService;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.datastream.StreamConsumer;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,22 +31,22 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.BinaryOperator;
 
-public class JavaCrdtMap<K extends Comparable<K>, S> implements CrdtMap<K, S>, ReactiveService {
+public class JavaCrdtMap<K extends Comparable<K>, S> extends AbstractReactive
+		implements CrdtMap<K, S>, ReactiveService {
 	private final Map<K, S> map = new TreeMap<>();
 
-	private final Reactor reactor;
 	private final BinaryOperator<S> mergeFn;
 
 	private final AsyncRunnable refresh;
 
 	public JavaCrdtMap(Reactor reactor, BinaryOperator<S> mergeFn) {
-		this.reactor = reactor;
+		super(reactor);
 		this.mergeFn = mergeFn;
 		this.refresh = Promise::complete;
 	}
 
-	public JavaCrdtMap(Reactor reactor, BinaryOperator<S> mergeFn, @NotNull CrdtStorage<K, S> storage) {
-		this.reactor = reactor;
+	public JavaCrdtMap(Reactor reactor, BinaryOperator<S> mergeFn, CrdtStorage<K, S> storage) {
+		super(reactor);
 		this.mergeFn = mergeFn;
 		this.refresh = AsyncRunnables.reuse(() -> doRefresh(storage));
 	}
@@ -63,11 +64,6 @@ public class JavaCrdtMap<K extends Comparable<K>, S> implements CrdtMap<K, S>, R
 	@Override
 	public Promise<@Nullable S> put(K key, S value) {
 		return Promise.of(map.merge(key, value, mergeFn));
-	}
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
 	}
 
 	@Override

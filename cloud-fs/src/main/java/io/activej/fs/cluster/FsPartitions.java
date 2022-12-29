@@ -28,6 +28,7 @@ import io.activej.fs.exception.FsIOException;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -44,7 +45,8 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
 import static java.util.stream.Collectors.toList;
 
-public final class FsPartitions implements ReactiveService, WithInitializer<FsPartitions> {
+public final class FsPartitions extends AbstractReactive
+		implements ReactiveService, WithInitializer<FsPartitions> {
 	private static final Logger logger = LoggerFactory.getLogger(FsPartitions.class);
 
 	static final FsException LOCAL_EXCEPTION = new FsException("Local exception");
@@ -63,12 +65,10 @@ public final class FsPartitions implements ReactiveService, WithInitializer<FsPa
 	private final Map<Object, ActiveFs> partitions = new HashMap<>();
 	private final Map<Object, ActiveFs> partitionsView = Collections.unmodifiableMap(partitions);
 
-	private final Reactor reactor;
-
 	private ServerSelector serverSelector = RENDEZVOUS_HASH_SHARDER;
 
 	private FsPartitions(Reactor reactor, DiscoveryService discoveryService) {
-		this.reactor = reactor;
+		super(reactor);
 		this.discoveryService = discoveryService;
 	}
 
@@ -188,11 +188,6 @@ public final class FsPartitions implements ReactiveService, WithInitializer<FsPa
 
 	public List<Object> select(String filename) {
 		return serverSelector.selectFrom(filename, alivePartitions.keySet());
-	}
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
 	}
 
 	public ServerSelector getServerSelector() {

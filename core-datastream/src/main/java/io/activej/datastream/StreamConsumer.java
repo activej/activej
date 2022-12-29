@@ -134,8 +134,7 @@ public interface StreamConsumer<T> extends ReactiveCloseable {
 				.withAcknowledgement(ack -> ack.both(extraAcknowledge));
 	}
 
-	static <T> StreamConsumer<T> ofAnotherReactor(@NotNull Reactor anotherReactor,
-			@NotNull StreamConsumer<T> anotherReactorConsumer) {
+	static <T> StreamConsumer<T> ofAnotherReactor(Reactor anotherReactor, StreamConsumer<T> anotherReactorConsumer) {
 		if (Reactor.getCurrentReactor() == anotherReactor) {
 			return anotherReactorConsumer;
 		}

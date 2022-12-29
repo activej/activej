@@ -17,10 +17,11 @@
 package io.activej.datastream.dsl;
 
 import io.activej.datastream.StreamSupplier;
+import io.activej.reactor.Reactive;
 
 /**
  * A separate interface for components that have some kind of output represented with a {@link StreamSupplier}.
  */
-public interface HasStreamOutput<O> {
+public interface HasStreamOutput<O> extends Reactive {
 	StreamSupplier<O> getOutput();
 }

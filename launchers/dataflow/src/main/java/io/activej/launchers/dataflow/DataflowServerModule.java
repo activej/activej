@@ -72,10 +72,10 @@ public final class DataflowServerModule extends AbstractModule {
 
 	@Provides
 	@Eager
-	DataflowClient client(ByteBufsCodec<DataflowResponse, DataflowRequest> codec,
+	DataflowClient client(NioReactor reactor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec,
 			BinarySerializerLocator serializers
 	) {
-		return DataflowClient.create(codec, serializers);
+		return DataflowClient.create(reactor, codec, serializers);
 	}
 
 	@Provides

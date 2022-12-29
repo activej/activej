@@ -30,7 +30,6 @@ import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,14 +67,14 @@ public final class DnsCache extends AbstractReactive implements WithInitializer<
 	private final AtomicBoolean cleaningUpNow = new AtomicBoolean(false);
 	private final PriorityQueue<CachedDnsQueryResult> expirations = new PriorityQueue<>();
 
-	@NotNull CurrentTimeProvider now;
+	final CurrentTimeProvider now;
 
 	/**
 	 * Creates a new DNS cache.
 	 *
 	 * @param reactor reactor
 	 */
-	private DnsCache(@NotNull Reactor reactor) {
+	private DnsCache(Reactor reactor) {
 		super(reactor);
 		this.now = reactor;
 	}

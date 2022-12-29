@@ -31,7 +31,7 @@ public interface ReactiveService extends Reactive {
 	 * Starts this component asynchronously.
 	 * Callback completes immediately if the component is already running.
 	 */
-	@NotNull Promise<?> start();
+	Promise<?> start();
 
 	default @NotNull CompletableFuture<?> startFuture() {
 		return getReactor().submit(this::start);
@@ -41,7 +41,7 @@ public interface ReactiveService extends Reactive {
 	 * Stops this component asynchronously.
 	 * Callback completes immediately if the component is not running / already stopped.
 	 */
-	@NotNull Promise<?> stop();
+	Promise<?> stop();
 
 	default @NotNull CompletableFuture<?> stopFuture() {
 		return getReactor().submit(this::stop);

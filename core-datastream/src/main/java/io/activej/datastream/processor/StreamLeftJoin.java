@@ -20,6 +20,7 @@ import io.activej.common.initializer.WithInitializer;
 import io.activej.datastream.*;
 import io.activej.datastream.dsl.HasStreamInputs;
 import io.activej.datastream.dsl.HasStreamOutput;
+import io.activej.reactor.ImplicitlyReactive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -36,7 +37,7 @@ import java.util.function.Function;
  * It is a {@link StreamLeftJoin} which receives specified type and streams
  * set of join's result to the destination.
  */
-public final class StreamLeftJoin<K, L, R, V> implements HasStreamInputs, HasStreamOutput<V>, WithInitializer<StreamLeftJoin<K, L, R, V>> {
+public final class StreamLeftJoin<K, L, R, V> extends ImplicitlyReactive implements HasStreamInputs, HasStreamOutput<V>, WithInitializer<StreamLeftJoin<K, L, R, V>> {
 
 	/**
 	 * It is the primary interface of a left joiner. It contains methods which will left join streams

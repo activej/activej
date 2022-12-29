@@ -20,13 +20,13 @@ import io.activej.async.exception.AsyncCloseException;
 import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
-import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.ImplicitlyReactive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
 
-public final class ChannelBufferWithFallback<T> extends AbstractReactive implements ChannelQueue<T> {
+public final class ChannelBufferWithFallback<T> extends ImplicitlyReactive implements ChannelQueue<T> {
 	private final ChannelQueue<T> queue;
 	private final Supplier<Promise<? extends ChannelQueue<T>>> bufferFactory;
 

@@ -5,7 +5,6 @@ import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
-import io.activej.reactor.Reactor;
 import io.activej.test.ExpectedException;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -174,7 +173,7 @@ public class StreamSplitterTest {
 						resume(item -> {
 							if (item == 2) {
 								consumer.suspend();
-								Reactor.getCurrentReactor().post(() -> consumer.resume(list::add));
+								reactor.post(() -> consumer.resume(list::add));
 							}
 						});
 					}

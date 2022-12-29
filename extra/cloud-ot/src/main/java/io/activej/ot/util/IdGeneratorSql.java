@@ -21,9 +21,9 @@ import io.activej.common.initializer.WithInitializer;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
-import org.jetbrains.annotations.NotNull;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -37,9 +37,8 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.promise.PromisePredicates.isResultOrException;
 import static io.activej.promise.Promises.retry;
 
-public final class IdGeneratorSql implements IdGenerator<Long>, ReactiveJmxBeanWithStats, WithInitializer<IdGeneratorSql> {
-
-	private final Reactor reactor;
+public final class IdGeneratorSql extends AbstractReactive
+		implements IdGenerator<Long>, ReactiveJmxBeanWithStats, WithInitializer<IdGeneratorSql> {
 	private final Executor executor;
 	private final DataSource dataSource;
 
@@ -55,7 +54,7 @@ public final class IdGeneratorSql implements IdGenerator<Long>, ReactiveJmxBeanW
 	private final AsyncRunnable reserveId = promiseCreateId.wrapper(reuse(this::doReserveId));
 
 	private IdGeneratorSql(Reactor reactor, Executor executor, DataSource dataSource, SqlAtomicSequence sequence) {
-		this.reactor = reactor;
+		super(reactor);
 		this.executor = executor;
 		this.dataSource = dataSource;
 		this.sequence = sequence;
@@ -98,11 +97,6 @@ public final class IdGeneratorSql implements IdGenerator<Long>, ReactiveJmxBeanW
 				isResultOrException(Objects::nonNull),
 				() -> reserveId.run()
 						.map($ -> next < limit ? next++ : null));
-	}
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
 	}
 
 	@JmxAttribute

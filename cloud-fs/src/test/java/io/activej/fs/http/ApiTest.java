@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 import static io.activej.promise.TestUtils.await;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
@@ -41,7 +42,7 @@ public final class ApiTest {
 	private static final long dataSize = 799;
 
 	private final StubHttpClient stubClient = StubHttpClient.of(getServlet());
-	private final HttpActiveFs client = HttpActiveFs.create("http://localhost", stubClient);
+	private final HttpActiveFs client = HttpActiveFs.create(getCurrentReactor(), "http://localhost", stubClient);
 
 	private final LinkedList<Object> params = new LinkedList<>();
 

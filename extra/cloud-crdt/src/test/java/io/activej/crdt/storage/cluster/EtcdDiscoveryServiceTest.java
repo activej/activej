@@ -5,7 +5,6 @@ import io.activej.common.time.Stopwatch;
 import io.activej.crdt.storage.cluster.DiscoveryService.PartitionScheme;
 import io.activej.fs.cluster.EtcdWatchService;
 import io.activej.promise.Promise;
-import io.activej.reactor.Reactor;
 import io.activej.test.rules.EventloopRule;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
@@ -24,6 +23,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static io.activej.promise.TestUtils.await;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.*;
 
@@ -132,8 +132,8 @@ public class EtcdDiscoveryServiceTest {
 		bs = ByteSequence.from(key, UTF_8);
 		etcdClient = Client.builder().target("cluster://" + etcdCluster.clusterName()).build();
 		putValue("[]".getBytes(UTF_8));
-		EtcdWatchService watchService = EtcdWatchService.create(Reactor.getCurrentReactor(), etcdClient, key);
-		discoveryService = EtcdDiscoveryService.create(watchService);
+		EtcdWatchService watchService = EtcdWatchService.create(getCurrentReactor(), etcdClient, key);
+		discoveryService = EtcdDiscoveryService.create(getCurrentReactor(), watchService);
 	}
 
 	@After

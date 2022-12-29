@@ -34,6 +34,8 @@ import io.activej.dataflow.node.NodeUpload;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.ImplicitlyReactive;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -44,7 +46,7 @@ import static java.util.stream.Collectors.*;
 /**
  * Represents a graph of partitions, nodeStats and streams in datagraph system.
  */
-public final class DataflowGraph {
+public final class DataflowGraph extends AbstractReactive {
 	private static final ObjectWriter OBJECT_WRITER = new ObjectMapper()
 			.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
 			.writerFor(new TypeReference<List<Node>>() {})
@@ -56,7 +58,8 @@ public final class DataflowGraph {
 	private final DataflowClient client;
 	private final List<Partition> availablePartitions;
 
-	public DataflowGraph(DataflowClient client, List<Partition> availablePartitions) {
+	public DataflowGraph(Reactor reactor, DataflowClient client, List<Partition> availablePartitions) {
+		super(reactor);
 		this.client = client;
 		this.availablePartitions = availablePartitions;
 	}
@@ -78,7 +81,7 @@ public final class DataflowGraph {
 				.collect(groupingBy(Map.Entry::getValue, mapping(Map.Entry::getKey, toList())));
 	}
 
-	private static class PartitionSession extends AbstractReactive implements ReactiveCloseable {
+	private static class PartitionSession extends ImplicitlyReactive implements ReactiveCloseable {
 		private final Partition partition;
 		private final Session session;
 

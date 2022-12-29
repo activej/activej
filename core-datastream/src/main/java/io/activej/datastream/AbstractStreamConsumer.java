@@ -19,7 +19,7 @@ package io.activej.datastream;
 import io.activej.common.Checks;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
-import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.ImplicitlyReactive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,7 +29,7 @@ import static io.activej.common.Checks.checkState;
  * This is a helper partial implementation of the {@link StreamConsumer}
  * which helps to deal with state transitions and helps to implement basic behaviours.
  */
-public abstract class AbstractStreamConsumer<T> extends AbstractReactive implements StreamConsumer<T> {
+public abstract class AbstractStreamConsumer<T> extends ImplicitlyReactive implements StreamConsumer<T> {
 	private static final boolean CHECK = Checks.isEnabled(AbstractStreamConsumer.class);
 
 	private StreamSupplier<T> supplier;

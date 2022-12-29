@@ -27,6 +27,7 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.promise.Promise;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
 import io.activej.streamcodecs.StreamCodec;
@@ -351,13 +352,13 @@ public class DataflowServerTest {
 				.bind(new Key<StreamCodec<ReducerToResult>>() {}).toInstance(StreamCodecs.singleton(new TestReducer()))
 				.scan(new Object() {
 					@Provides
-					DataflowClient client(ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator serializers) {
-						return DataflowClient.create(codec, serializers);
+					DataflowClient client(NioReactor reactor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator serializers) {
+						return DataflowClient.create(reactor, codec, serializers);
 					}
 
 					@Provides
-					DataflowGraph graph(DataflowClient client) {
-						return new DataflowGraph(client, partitions);
+					DataflowGraph graph(NioReactor reactor, DataflowClient client) {
+						return new DataflowGraph(reactor, client, partitions);
 					}
 				})
 				.build();

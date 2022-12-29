@@ -64,7 +64,8 @@ import static org.slf4j.LoggerFactory.getLogger;
  * This is simply a higher-level wrapper around {@link NioReactor#listen} call.
  */
 @SuppressWarnings("WeakerAccess, unused")
-public abstract class AbstractReactiveServer<Self extends AbstractReactiveServer<Self>> extends AbstractNioReactive implements ReactiveServer, WorkerServer, WithInitializer<Self>, ReactiveJmxBeanWithStats {
+public abstract class AbstractReactiveServer<Self extends AbstractReactiveServer<Self>> extends AbstractNioReactive
+		implements ReactiveServer, WorkerServer, WithInitializer<Self>, ReactiveJmxBeanWithStats {
 	protected Logger logger = getLogger(getClass());
 	private static final boolean CHECK = Checks.isEnabled(AbstractReactiveServer.class);
 
@@ -345,7 +346,7 @@ public abstract class AbstractReactiveServer<Self extends AbstractReactiveServer
 		onAccept(socketChannel, localAddress, remoteAddress, ssl);
 		ReactiveTcpSocket asyncTcpSocket;
 		try {
-			ReactiveTcpSocketNio socketNio = wrapChannel(socketChannel, remoteSocketAddress, socketSettings);
+			ReactiveTcpSocketNio socketNio = wrapChannel(reactor, socketChannel, remoteSocketAddress, socketSettings);
 			Inspector inspector = ssl ? socketSslInspector : socketInspector;
 			if (inspector != null) {
 				inspector.onConnect(socketNio);
@@ -357,7 +358,7 @@ public abstract class AbstractReactiveServer<Self extends AbstractReactiveServer
 			reactor.closeChannel(socketChannel, null);
 			return;
 		}
-		asyncTcpSocket = ssl ? wrapServerSocket(asyncTcpSocket, sslContext, sslExecutor) : asyncTcpSocket;
+		asyncTcpSocket = ssl ? wrapServerSocket(reactor, asyncTcpSocket, sslContext, sslExecutor) : asyncTcpSocket;
 		serve(asyncTcpSocket, remoteAddress);
 	}
 

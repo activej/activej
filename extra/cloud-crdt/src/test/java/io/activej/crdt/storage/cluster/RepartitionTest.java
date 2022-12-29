@@ -20,6 +20,7 @@ import java.util.stream.LongStream;
 
 import static io.activej.crdt.function.CrdtFunction.ignoringTimestamp;
 import static io.activej.promise.TestUtils.await;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static java.util.stream.Collectors.toMap;
 import static org.junit.Assert.assertEquals;
 
@@ -33,22 +34,23 @@ public final class RepartitionTest {
 
 	@Test
 	public void test() {
+		Reactor reactor = getCurrentReactor();
 		CrdtFunction<Long> crdtFunction = ignoringTimestamp(Long::max);
 
 		Map<String, CrdtStorageMap<String, Long>> clients = new LinkedHashMap<>();
 		for (int i = 0; i < 10; i++) {
-			CrdtStorageMap<String, Long> client = CrdtStorageMap.create(Reactor.getCurrentReactor(), crdtFunction);
+			CrdtStorageMap<String, Long> client = CrdtStorageMap.create(reactor, crdtFunction);
 			clients.put("client_" + i, client);
 		}
 		String localPartitionId = "client_0";
-		long now = Reactor.getCurrentReactor().currentTimeMillis();
+		long now = reactor.currentTimeMillis();
 		List<CrdtData<String, Long>> data = LongStream.range(1, 100)
 				.mapToObj(i -> new CrdtData<>("test" + i, now, i)).toList();
 		await(StreamSupplier.ofIterator(data.iterator())
 				.streamTo(StreamConsumer.ofPromise(clients.get(localPartitionId).upload())));
 
 		int replicationCount = 3;
-		CrdtStorageCluster<String, Long, String> cluster = CrdtStorageCluster.create(Reactor.getCurrentReactor(),
+		CrdtStorageCluster<String, Long, String> cluster = CrdtStorageCluster.create(reactor,
 				DiscoveryService.of(
 						RendezvousPartitionScheme.<String>create()
 								.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet()).withReplicas(replicationCount))
@@ -56,7 +58,7 @@ public final class RepartitionTest {
 				crdtFunction);
 		await(cluster.start());
 
-		await(CrdtRepartitionController.create(cluster, localPartitionId).repartition());
+		await(CrdtRepartitionController.create(reactor, cluster, localPartitionId).repartition());
 
 		Map<String, Integer> counts = new HashMap<>();
 		Map<String, Long> states = new HashMap<>();

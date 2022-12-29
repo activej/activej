@@ -18,7 +18,6 @@ package io.activej.async.process;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.RejectedExecutionException;
@@ -26,16 +25,16 @@ import java.util.concurrent.RejectedExecutionException;
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
 public interface AsyncExecutor {
-	<T> @NotNull Promise<T> execute(@NotNull AsyncSupplier<T> supplier) throws RejectedExecutionException;
+	<T> Promise<T> execute(AsyncSupplier<T> supplier) throws RejectedExecutionException;
 
-	default @NotNull Promise<Void> run(@NotNull Runnable runnable) throws RejectedExecutionException {
+	default Promise<Void> run(Runnable runnable) throws RejectedExecutionException {
 		return execute(() -> {
 			runnable.run();
 			return Promise.complete();
 		});
 	}
 
-	default <T> @NotNull Promise<T> call(@NotNull Callable<T> callable) throws RejectedExecutionException {
+	default <T> Promise<T> call(Callable<T> callable) throws RejectedExecutionException {
 		return execute(() -> {
 			T result;
 			try {

@@ -32,6 +32,7 @@ import io.activej.ot.util.IdGenerator;
 import io.activej.promise.Promise;
 import io.activej.promise.RetryPolicy;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.types.TypeT;
@@ -62,14 +63,14 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.util.stream.Collectors.joining;
 
-public class OTRepositoryMySql<D> implements OTRepository<Long, D>, ReactiveJmxBeanWithStats, WithInitializer<OTRepositoryMySql<D>> {
+public class OTRepositoryMySql<D> extends AbstractReactive
+		implements OTRepository<Long, D>, ReactiveJmxBeanWithStats, WithInitializer<OTRepositoryMySql<D>> {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 	public static final String DEFAULT_REVISION_TABLE = "ot_revisions";
 	public static final String DEFAULT_DIFFS_TABLE = "ot_diffs";
 	public static final String DEFAULT_BACKUP_TABLE = "ot_revisions_backup";
 
-	private final Reactor reactor;
 	private final Executor executor;
 
 	private final DataSource dataSource;
@@ -99,7 +100,7 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, ReactiveJmxB
 
 	private OTRepositoryMySql(Reactor reactor, Executor executor, DataSource dataSource, IdGenerator<Long> idGenerator,
 			OTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder) {
-		this.reactor = reactor;
+		super(reactor);
 		this.executor = executor;
 		this.dataSource = dataSource;
 		this.idGenerator = idGenerator;
@@ -522,11 +523,6 @@ public class OTRepositoryMySql<D> implements OTRepository<Long, D>, ReactiveJmxB
 					}
 				})
 				.whenComplete(toLogger(logger, thisMethod(), commit.getId(), snapshot));
-	}
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
 	}
 
 	private void updateRevisions(Collection<Long> heads, Connection connection, String type) throws SQLException {

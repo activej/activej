@@ -78,8 +78,8 @@ public class ClusterTcpClientLauncher extends Launcher {
 	}
 
 	@Provides
-	ActiveFs remoteActiveFs(FsPartitions partitions, Config config) {
-		return ClusterActiveFs.create(partitions)
+	ActiveFs remoteActiveFs(Reactor reactor, FsPartitions partitions, Config config) {
+		return ClusterActiveFs.create(reactor, partitions)
 				.withInitializer(ofClusterActiveFs(config.getChild("activefs.cluster")));
 	}
 

@@ -22,11 +22,11 @@ import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamTransformer;
 import io.activej.promise.Promise;
-import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.ImplicitlyReactive;
 
 import java.util.function.UnaryOperator;
 
-final class StreamAckTransformer<T> extends AbstractReactive implements StreamTransformer<T, T> {
+final class StreamAckTransformer<T> extends ImplicitlyReactive implements StreamTransformer<T, T> {
 	private final Input input;
 	private final Output output;
 

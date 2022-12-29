@@ -41,6 +41,7 @@ import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
@@ -68,8 +69,8 @@ import static io.activej.crdt.wal.FileWriteAheadLog.FlushMode.*;
 import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
 import static java.util.stream.Collectors.toList;
 
-public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAheadLog<K, S>, ReactiveService,
-		ReactiveJmxBeanWithStats, WithInitializer<FileWriteAheadLog<K, S>> {
+public class FileWriteAheadLog<K extends Comparable<K>, S> extends AbstractReactive
+		implements WriteAheadLog<K, S>, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<FileWriteAheadLog<K, S>> {
 	private static final Logger logger = LoggerFactory.getLogger(FileWriteAheadLog.class);
 
 	public static final String EXT_FINAL = ".wal";
@@ -78,7 +79,6 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAhead
 
 	private static final Duration SMOOTHING_WINDOW = ApplicationSettings.getDuration(FileWriteAheadLog.class, "smoothingWindow", Duration.ofMinutes(5));
 
-	private final Reactor reactor;
 	private final Executor executor;
 	private final Path path;
 	private final CrdtDataSerializer<K, S> serializer;
@@ -104,15 +104,9 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAhead
 	private boolean detailedMonitoring;
 	// endregion
 
-	private FileWriteAheadLog(
-			Reactor reactor,
-			Executor executor,
-			Path path,
-			CrdtDataSerializer<K, S> serializer,
-			FlushMode flushMode,
-			@Nullable WalUploader<K, S> uploader
-	) {
-		this.reactor = reactor;
+	private FileWriteAheadLog(Reactor reactor, Executor executor,
+			Path path, CrdtDataSerializer<K, S> serializer, FlushMode flushMode, @Nullable WalUploader<K, S> uploader) {
+		super(reactor);
 		this.executor = executor;
 		this.path = path;
 		this.serializer = serializer;
@@ -165,11 +159,6 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> implements WriteAhead
 		logger.trace("Flush called");
 		return flush.run()
 				.whenComplete(flushPromise.recordStats());
-	}
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
 	}
 
 	@Override

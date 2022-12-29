@@ -32,6 +32,7 @@ import io.activej.multilog.LogPosition;
 import io.activej.multilog.Multilog;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
@@ -49,10 +50,10 @@ import static io.activej.async.function.AsyncSuppliers.reuse;
  * Processes logs. Creates new aggregation logs and persists to {@link LogDataConsumer} .
  */
 @SuppressWarnings("rawtypes") // JMX doesn't work with generic types
-public final class LogOTProcessor<T, D> implements ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<LogOTProcessor<T, D>> {
+public final class LogOTProcessor<T, D> extends AbstractReactive
+		implements ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<LogOTProcessor<T, D>> {
 	private static final Logger logger = LoggerFactory.getLogger(LogOTProcessor.class);
 
-	private final Reactor reactor;
 	private final Multilog<T> multilog;
 	private final LogDataConsumer<T, D> logStreamConsumer;
 
@@ -68,9 +69,10 @@ public final class LogOTProcessor<T, D> implements ReactiveService, ReactiveJmxB
 	private final StreamStatsDetailed<T> streamStatsDetailed = StreamStats.detailed();
 	private final PromiseStats promiseProcessLog = PromiseStats.create(Duration.ofMinutes(5));
 
-	private LogOTProcessor(Reactor reactor, Multilog<T> multilog, LogDataConsumer<T, D> logStreamConsumer,
+	private LogOTProcessor(Reactor reactor,
+			Multilog<T> multilog, LogDataConsumer<T, D> logStreamConsumer,
 			String log, List<String> partitions, LogOTState<D> state) {
-		this.reactor = reactor;
+		super(reactor);
 		this.multilog = multilog;
 		this.logStreamConsumer = logStreamConsumer;
 		this.log = log;
@@ -82,11 +84,6 @@ public final class LogOTProcessor<T, D> implements ReactiveService, ReactiveJmxB
 			LogDataConsumer<T, D> logStreamConsumer,
 			String log, List<String> partitions, LogOTState<D> state) {
 		return new LogOTProcessor<>(reactor, multilog, logStreamConsumer, log, partitions, state);
-	}
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
 	}
 
 	@Override

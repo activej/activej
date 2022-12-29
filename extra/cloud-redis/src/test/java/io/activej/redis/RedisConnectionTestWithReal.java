@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static io.activej.promise.TestUtils.awaitException;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.redis.RedisResponse.*;
 import static io.activej.redis.TestUtils.assertDeepEquals;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -40,7 +41,7 @@ public final class RedisConnectionTestWithReal extends RedisConnectionTestWithSt
 
 	@Before
 	public void setUp() {
-		client = RedisClient.create(ADDRESS);
+		client = RedisClient.create(getCurrentReactor(), ADDRESS);
 		await(connection -> connection.cmd(RedisRequest.of("FLUSHALL"), OK));
 	}
 

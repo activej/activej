@@ -19,6 +19,7 @@ import java.net.InetSocketAddress;
 import static io.activej.bytebuf.ByteBufStrings.wrapAscii;
 import static io.activej.promise.Promises.loop;
 import static io.activej.promise.TestUtils.await;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.test.TestUtils.assertCompleteFn;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -67,7 +68,7 @@ public final class PingPongSocketConnectionTest {
 				.withAcceptOnce()
 				.listen();
 
-		await(ReactiveTcpSocketNio.connect(address)
+		await(ReactiveTcpSocketNio.connect(getCurrentReactor(), address)
 				.then(socket -> {
 					BinaryChannelSupplier bufsSupplier = BinaryChannelSupplier.of(ChannelSupplier.ofSocket(socket));
 					return loop(ITERATIONS,

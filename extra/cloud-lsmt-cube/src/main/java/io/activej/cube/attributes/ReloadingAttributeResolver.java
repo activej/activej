@@ -33,9 +33,8 @@ import java.util.Map;
 
 import static io.activej.common.Utils.nullify;
 
-public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttributeResolver<K, A> implements ReactiveService, ReactiveJmxBean {
-	protected final Reactor reactor;
-
+public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttributeResolver<K, A>
+		implements ReactiveService, ReactiveJmxBean {
 	private long timestamp;
 	private long reloadPeriod;
 	private long retryPeriod = 1000L;
@@ -48,7 +47,7 @@ public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttribute
 	private final ValueStats reloadTime = ValueStats.create(Duration.ofHours(1)).withRate("reloads").withUnit("milliseconds");
 
 	protected ReloadingAttributeResolver(Reactor reactor) {
-		this.reactor = reactor;
+		super(reactor);
 	}
 
 	@Override
@@ -79,11 +78,6 @@ public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttribute
 
 	private void scheduleReload(long period) {
 		scheduledRunnable = reactor.delayBackground(period, this::doReload);
-	}
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
 	}
 
 	@Override

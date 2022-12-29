@@ -13,7 +13,6 @@ import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.net.AbstractReactiveServer;
-import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -29,6 +28,7 @@ import java.util.*;
 import static io.activej.crdt.function.CrdtFunction.ignoringTimestamp;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
 import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
 import static io.activej.test.TestUtils.getFreePort;
@@ -72,7 +72,7 @@ public final class TestDyingPartitions {
 			clients.put("server_" + i, CrdtStorageClient.create(eventloop, address, SERIALIZER));
 		}
 
-		cluster = CrdtStorageCluster.create(Reactor.getCurrentReactor(),
+		cluster = CrdtStorageCluster.create(getCurrentReactor(),
 				DiscoveryService.of(
 						RendezvousPartitionScheme.<String>create()
 								.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet()).withReplicas(REPLICATION_COUNT).withRepartition(true))
@@ -89,7 +89,7 @@ public final class TestDyingPartitions {
 	@Test
 	public void testUploadWithDyingPartitions() {
 		List<CrdtData<String, Integer>> data = new ArrayList<>();
-		long now = Reactor.getCurrentReactor().currentTimeMillis();
+		long now = getCurrentReactor().currentTimeMillis();
 		for (int i = 0; i < 100_000; i++) {
 			data.add(new CrdtData<>(String.valueOf(i), now, i + 1));
 		}
@@ -105,7 +105,7 @@ public final class TestDyingPartitions {
 	@Test
 	public void testDownloadWithDyingPartitions() {
 		List<CrdtData<String, Integer>> data = new ArrayList<>();
-		long now = Reactor.getCurrentReactor().currentTimeMillis();
+		long now = getCurrentReactor().currentTimeMillis();
 		for (int i = 0; i < 500_000; i++) {
 			data.add(new CrdtData<>(String.valueOf(i), now, i + 1));
 		}

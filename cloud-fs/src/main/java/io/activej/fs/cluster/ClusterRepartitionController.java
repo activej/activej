@@ -35,6 +35,7 @@ import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
@@ -58,7 +59,8 @@ import static io.activej.common.Utils.first;
 import static io.activej.fs.util.RemoteFsUtils.isWildcard;
 import static java.util.stream.Collectors.toMap;
 
-public final class ClusterRepartitionController implements WithInitializer<ClusterRepartitionController>, ReactiveJmxBeanWithStats, ReactiveService {
+public final class ClusterRepartitionController extends AbstractReactive
+		implements WithInitializer<ClusterRepartitionController>, ReactiveJmxBeanWithStats, ReactiveService {
 	private static final Logger logger = LoggerFactory.getLogger(ClusterRepartitionController.class);
 	private static final boolean CHECK = Checks.isEnabled(ClusterRepartitionController.class);
 
@@ -90,13 +92,14 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 	private final PromiseStats repartitionPromiseStats = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats singleFileRepartitionPromiseStats = PromiseStats.create(Duration.ofMinutes(5));
 
-	private ClusterRepartitionController(Object localPartitionId, FsPartitions partitions) {
+	private ClusterRepartitionController(Reactor reactor, Object localPartitionId, FsPartitions partitions) {
+		super(reactor);
 		this.localPartitionId = localPartitionId;
 		this.partitions = partitions;
 	}
 
-	public static ClusterRepartitionController create(Object localPartitionId, FsPartitions partitions) {
-		return new ClusterRepartitionController(localPartitionId, partitions);
+	public static ClusterRepartitionController create(Reactor reactor, Object localPartitionId, FsPartitions partitions) {
+		return new ClusterRepartitionController(reactor, localPartitionId, partitions);
 	}
 
 	public ClusterRepartitionController withGlob(@NotNull String glob) {
@@ -125,11 +128,6 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 	public ClusterRepartitionController withPlanRecalculationInterval(Duration planRecalculationInterval) {
 		this.planRecalculationInterval = planRecalculationInterval.toMillis();
 		return this;
-	}
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return partitions.getReactor();
 	}
 
 	public Object getLocalPartitionId() {

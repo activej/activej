@@ -28,6 +28,7 @@ import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.OTUplink;
 import io.activej.promise.Promise;
 import io.activej.promise.RetryPolicy;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -47,10 +48,9 @@ import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.nonNullElseEmpty;
 import static io.activej.promise.Promises.sequence;
 
-public final class OTStateManager<K, D> implements ReactiveService, WithInitializer<OTStateManager<K, D>> {
+public final class OTStateManager<K, D> extends AbstractReactive implements ReactiveService, WithInitializer<OTStateManager<K, D>> {
 	private static final Logger logger = LoggerFactory.getLogger(OTStateManager.class);
 
-	private final Reactor reactor;
 	private final OTSystem<D> otSystem;
 	private final OTUplink<K, D, Object> uplink;
 
@@ -78,50 +78,45 @@ public final class OTStateManager<K, D> implements ReactiveService, WithInitiali
 
 	@SuppressWarnings("unchecked")
 	private OTStateManager(Reactor reactor, OTSystem<D> otSystem, OTUplink<K, D, ?> uplink, OTState<D> state) {
-		this.reactor = reactor;
+		super(reactor);
 		this.otSystem = otSystem;
 		this.uplink = (OTUplink<K, D, Object>) uplink;
 		this.state = state;
 	}
 
-	public static <K, D> @NotNull OTStateManager<K, D> create(@NotNull Reactor reactor, @NotNull OTSystem<D> otSystem,
-			@NotNull OTUplink<K, D, ?> repository, @NotNull OTState<D> state) {
+	public static <K, D> OTStateManager<K, D> create(Reactor reactor, OTSystem<D> otSystem,
+			OTUplink<K, D, ?> repository, OTState<D> state) {
 		return new OTStateManager<>(reactor, otSystem, repository, state);
 	}
 
-	public @NotNull OTStateManager<K, D> withPoll() {
+	public OTStateManager<K, D> withPoll() {
 		return withPoll(UnaryOperator.identity());
 	}
 
-	public @NotNull OTStateManager<K, D> withPoll(@NotNull RetryPolicy<?> pollRetryPolicy) {
+	public OTStateManager<K, D> withPoll(RetryPolicy<?> pollRetryPolicy) {
 		return withPoll(poll -> ofExecutor(AsyncExecutors.retry(pollRetryPolicy), poll));
 	}
 
-	public @NotNull OTStateManager<K, D> withPoll(@NotNull UnaryOperator<AsyncRunnable> pollPolicy) {
+	public OTStateManager<K, D> withPoll(UnaryOperator<AsyncRunnable> pollPolicy) {
 		this.poll = pollPolicy.apply(this::doPoll);
 		return this;
 	}
 
 	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
-	}
-
-	@Override
-	public @NotNull Promise<Void> start() {
+	public Promise<Void> start() {
 		return checkout()
 				.whenResult(this::poll);
 	}
 
 	@Override
-	public @NotNull Promise<Void> stop() {
+	public Promise<Void> stop() {
 		poll = null;
 		return isValid() ?
 				sync().whenComplete(this::invalidateInternalState) :
 				Promise.complete();
 	}
 
-	public @NotNull Promise<Void> checkout() {
+	public Promise<Void> checkout() {
 		checkState(commitId == null);
 		return uplink.checkout()
 				.whenResult(checkoutData -> {

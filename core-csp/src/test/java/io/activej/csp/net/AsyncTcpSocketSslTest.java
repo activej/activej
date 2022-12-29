@@ -13,6 +13,7 @@ import io.activej.net.socket.tcp.ReactiveTcpSocketNio;
 import io.activej.net.socket.tcp.ReactiveTcpSocketSsl;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -40,6 +41,7 @@ import java.util.function.Consumer;
 import static io.activej.bytebuf.ByteBufStrings.wrapAscii;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.test.TestUtils.assertCompleteFn;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -55,7 +57,6 @@ public final class AsyncTcpSocketSslTest {
 	private static final String TRUSTSTORE_PASS = "testtest";
 
 	private static final String TEST_STRING = "Hello world";
-
 
 	private static final ByteBufsDecoder<String> DECODER = ByteBufsDecoder.ofFixedSize(TEST_STRING.length())
 			.andThen(ByteBuf::asArray)
@@ -78,6 +79,7 @@ public final class AsyncTcpSocketSslTest {
 	@Rule
 	public final ActivePromisesRule activePromisesRule = new ActivePromisesRule();
 
+	private NioReactor reactor;
 	private Executor executor;
 	private SSLContext sslContext;
 	private StringBuilder sentData;
@@ -85,6 +87,7 @@ public final class AsyncTcpSocketSslTest {
 
 	@Before
 	public void setUp() throws Exception {
+		reactor = getCurrentReactor();
 		executor = Executors.newSingleThreadExecutor();
 		sslContext = createSslContext();
 		sentData = new StringBuilder();
@@ -98,8 +101,8 @@ public final class AsyncTcpSocketSslTest {
 				.whenComplete(sslSocket::close)
 				.whenComplete(assertCompleteFn(result -> assertEquals(TEST_STRING, result))));
 
-		await(ReactiveTcpSocketNio.connect(address)
-				.map(socket -> ReactiveTcpSocketSsl.wrapClientSocket(socket, sslContext, executor))
+		await(ReactiveTcpSocketNio.connect(reactor, address)
+				.map(socket -> ReactiveTcpSocketSsl.wrapClientSocket(reactor, socket, sslContext, executor))
 				.then(sslSocket ->
 						sslSocket.write(wrapAscii(TEST_STRING))
 								.whenComplete(sslSocket::close)));
@@ -111,8 +114,8 @@ public final class AsyncTcpSocketSslTest {
 				sslSocket.write(wrapAscii(TEST_STRING))
 						.whenComplete(assertCompleteFn()));
 
-		String result = await(ReactiveTcpSocketNio.connect(address)
-				.map(socket -> ReactiveTcpSocketSsl.wrapClientSocket(socket, sslContext, executor))
+		String result = await(ReactiveTcpSocketNio.connect(reactor, address)
+				.map(socket -> ReactiveTcpSocketSsl.wrapClientSocket(reactor, socket, sslContext, executor))
 				.then(sslSocket -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(sslSocket))
 						.decode(DECODER)
 						.whenComplete(sslSocket::close)));
@@ -128,8 +131,8 @@ public final class AsyncTcpSocketSslTest {
 				.whenComplete(serverSsl::close)
 				.whenComplete(assertCompleteFn()));
 
-		String result = await(ReactiveTcpSocketNio.connect(address)
-				.map(socket -> ReactiveTcpSocketSsl.wrapClientSocket(socket, sslContext, executor))
+		String result = await(ReactiveTcpSocketNio.connect(reactor, address)
+				.map(socket -> ReactiveTcpSocketSsl.wrapClientSocket(reactor, socket, sslContext, executor))
 				.then(sslSocket ->
 						sslSocket.write(wrapAscii(TEST_STRING))
 								.then(() -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(sslSocket))
@@ -150,8 +153,8 @@ public final class AsyncTcpSocketSslTest {
 				.whenComplete(serverSsl::close)
 				.whenComplete(assertCompleteFn()));
 
-		String result = await(ReactiveTcpSocketNio.connect(address)
-				.map(socket -> ReactiveTcpSocketSsl.wrapClientSocket(socket, sslContext, executor))
+		String result = await(ReactiveTcpSocketNio.connect(reactor, address)
+				.map(socket -> ReactiveTcpSocketSsl.wrapClientSocket(reactor, socket, sslContext, executor))
 				.then(sslSocket ->
 						sslSocket.write(wrapAscii(TEST_STRING_PART_1))
 								.then(() -> sslSocket.write(ByteBuf.empty()))
@@ -170,8 +173,8 @@ public final class AsyncTcpSocketSslTest {
 				.whenComplete(serverSsl::close)
 				.whenComplete(assertCompleteFn(result -> assertEquals(result, sentData.toString()))));
 
-		await(ReactiveTcpSocketNio.connect(address)
-				.map(socket -> ReactiveTcpSocketSsl.wrapClientSocket(socket, sslContext, executor))
+		await(ReactiveTcpSocketNio.connect(reactor, address)
+				.map(socket -> ReactiveTcpSocketSsl.wrapClientSocket(reactor, socket, sslContext, executor))
 				.whenResult(sslSocket ->
 						sendData(sslSocket)
 								.whenComplete(sslSocket::close)));
@@ -184,8 +187,8 @@ public final class AsyncTcpSocketSslTest {
 						.whenComplete(serverSsl::close)
 						.whenComplete(assertCompleteFn()));
 
-		String result = await(ReactiveTcpSocketNio.connect(address)
-				.map(socket -> ReactiveTcpSocketSsl.wrapClientSocket(socket, sslContext, executor))
+		String result = await(ReactiveTcpSocketNio.connect(reactor, address)
+				.map(socket -> ReactiveTcpSocketSsl.wrapClientSocket(reactor, socket, sslContext, executor))
 				.then(sslSocket -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(sslSocket))
 						.decode(DECODER_LARGE)
 						.whenComplete(sslSocket::close)));
@@ -201,8 +204,8 @@ public final class AsyncTcpSocketSslTest {
 						.then(() -> socket.write(wrapAscii("ello")))
 						.whenComplete(($, e) -> assertThat(e, instanceOf(AsyncCloseException.class))));
 
-		Exception e = awaitException(ReactiveTcpSocketNio.connect(address)
-				.map(socket -> ReactiveTcpSocketSsl.wrapClientSocket(socket, sslContext, executor))
+		Exception e = awaitException(ReactiveTcpSocketNio.connect(reactor, address)
+				.map(socket -> ReactiveTcpSocketSsl.wrapClientSocket(reactor, socket, sslContext, executor))
 				.then(sslSocket -> {
 					BinaryChannelSupplier supplier = BinaryChannelSupplier.of(ChannelSupplier.ofSocket(sslSocket));
 					return supplier.decode(DECODER)
@@ -225,7 +228,7 @@ public final class AsyncTcpSocketSslTest {
 
 		serverThread.start();
 
-		Exception exception = awaitException(ReactiveTcpSocketNio.connect(address)
+		Exception exception = awaitException(ReactiveTcpSocketNio.connect(reactor, address)
 				.whenResult(asyncTcpSocket -> {
 					try {
 						// noinspection ConstantConditions - Imitating a suddenly closed channel
@@ -234,7 +237,7 @@ public final class AsyncTcpSocketSslTest {
 						throw new AssertionError();
 					}
 				})
-				.map(tcpSocket -> ReactiveTcpSocketSsl.wrapClientSocket(tcpSocket, sslContext, executor))
+				.map(tcpSocket -> ReactiveTcpSocketSsl.wrapClientSocket(reactor, tcpSocket, sslContext, executor))
 				.then(socket -> socket.write(ByteBufStrings.wrapUtf8("hello"))));
 		assertThat(exception, instanceOf(AsyncCloseException.class));
 	}

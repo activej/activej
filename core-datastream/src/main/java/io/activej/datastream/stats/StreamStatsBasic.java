@@ -21,11 +21,11 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ExceptionStats;
-import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.ImplicitlyReactive;
 
 import java.time.Duration;
 
-public class StreamStatsBasic<T> extends AbstractReactive implements StreamStats<T> {
+public class StreamStatsBasic<T> extends ImplicitlyReactive implements StreamStats<T> {
 	public static final Duration DEFAULT_BASIC_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 
 	private final EventStats started = EventStats.create(DEFAULT_BASIC_SMOOTHING_WINDOW);

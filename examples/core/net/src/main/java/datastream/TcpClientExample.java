@@ -33,7 +33,7 @@ public final class TcpClientExample {
 			if (e == null) {
 				ReactiveTcpSocket socket;
 				try {
-					socket = ReactiveTcpSocketNio.wrapChannel(socketChannel, null);
+					socket = ReactiveTcpSocketNio.wrapChannel(eventloop, socketChannel, null);
 				} catch (IOException ioEx) {
 					throw new RuntimeException(ioEx);
 				}

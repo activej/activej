@@ -17,7 +17,8 @@
 package io.activej.csp.dsl;
 
 import io.activej.csp.ChannelOutput;
+import io.activej.reactor.Reactive;
 
-public interface HasChannelOutput<T> {
+public interface HasChannelOutput<T> extends Reactive {
 	ChannelOutput<T> getOutput();
 }

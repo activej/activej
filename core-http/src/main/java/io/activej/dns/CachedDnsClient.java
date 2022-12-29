@@ -43,7 +43,8 @@ import static io.activej.reactor.util.RunnableWithContext.wrapContext;
  * Implementation of {@link AsyncDnsClient} that asynchronously
  * connects to some DNS server and gets the response from it.
  */
-public final class CachedDnsClient extends AbstractReactive implements AsyncDnsClient, ReactiveJmxBean, WithInitializer<CachedDnsClient> {
+public final class CachedDnsClient extends AbstractReactive
+		implements AsyncDnsClient, ReactiveJmxBean, WithInitializer<CachedDnsClient> {
 	private final Logger logger = LoggerFactory.getLogger(CachedDnsClient.class);
 	private static final boolean CHECK = Checks.isEnabled(CachedDnsClient.class);
 

@@ -14,6 +14,7 @@ import java.net.InetSocketAddress;
 import java.util.Scanner;
 
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
@@ -48,7 +49,7 @@ public final class TcpClientExample {
 				System.out.println("Connected to server, enter some text and send it by pressing 'Enter'.");
 				ReactiveTcpSocket socket;
 				try {
-					socket = ReactiveTcpSocketNio.wrapChannel(socketChannel, null);
+					socket = ReactiveTcpSocketNio.wrapChannel(getCurrentReactor(), socketChannel, null);
 				} catch (IOException ioException) {
 					throw new RuntimeException(ioException);
 				}

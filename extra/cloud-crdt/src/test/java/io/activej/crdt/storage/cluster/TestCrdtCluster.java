@@ -10,7 +10,6 @@ import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.net.AbstractReactiveServer;
-import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.BinarySerializers;
@@ -26,6 +25,7 @@ import java.util.*;
 
 import static io.activej.crdt.function.CrdtFunction.ignoringTimestamp;
 import static io.activej.promise.TestUtils.await;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
 import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
 import static io.activej.test.TestUtils.getFreePort;
@@ -44,7 +44,7 @@ public final class TestCrdtCluster {
 
 	@Test
 	public void testUpload() throws IOException {
-		NioReactor reactor = Reactor.getCurrentReactor();
+		NioReactor reactor = getCurrentReactor();
 
 		CrdtDataSerializer<String, Integer> serializer = new CrdtDataSerializer<>(UTF8_SERIALIZER, INT_SERIALIZER);
 
@@ -104,7 +104,7 @@ public final class TestCrdtCluster {
 
 	@Test
 	public void testDownload() throws IOException {
-		NioReactor reactor = Reactor.getCurrentReactor();
+		NioReactor reactor = getCurrentReactor();
 
 		List<CrdtServer<String, Set<Integer>>> servers = new ArrayList<>();
 		Map<String, CrdtStorage<String, Set<Integer>>> clients = new HashMap<>();

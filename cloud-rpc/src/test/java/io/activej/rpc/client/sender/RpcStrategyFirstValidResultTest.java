@@ -1,7 +1,6 @@
 package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
-import io.activej.reactor.AbstractReactive;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import io.activej.rpc.client.sender.RpcStrategyFirstValidResult.ResultValidator;
 import io.activej.rpc.client.sender.helper.RpcClientConnectionPoolStub;
@@ -157,14 +156,14 @@ public class RpcStrategyFirstValidResultTest {
 		assertNull(firstValidResult.createSender(pool));
 	}
 
-	private static final class SenderOnResultWithNullCaller extends AbstractReactive implements RpcSender {
+	private static final class SenderOnResultWithNullCaller implements RpcSender {
 		@Override
 		public <I, O> void sendRequest(I request, int timeout, @NotNull Callback<O> cb) {
 			cb.accept(null, null);
 		}
 	}
 
-	static final class SenderOnResultWithValueCaller extends AbstractReactive implements RpcSender {
+	static final class SenderOnResultWithValueCaller implements RpcSender {
 		private final Object data;
 
 		public SenderOnResultWithValueCaller(Object data) {

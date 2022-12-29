@@ -95,7 +95,7 @@ public final class ClusterRepartitionControllerStressTest {
 		this.partitions = FsPartitions.create(reactor, DiscoveryService.constant(partitions))
 				.withServerSelector(RENDEZVOUS_HASH_SHARDER);
 
-		controller = ClusterRepartitionController.create(localPartitionId, this.partitions)
+		controller = ClusterRepartitionController.create(reactor, localPartitionId, this.partitions)
 				.withReplicationCount(3);
 
 		scheduler = ReactiveTaskScheduler.create(reactor, this.partitions::checkDeadPartitions)

@@ -5,7 +5,6 @@ import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
-import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -18,6 +17,7 @@ import java.net.InetSocketAddress;
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.crdt.function.CrdtFunction.ignoringTimestamp;
 import static io.activej.promise.TestUtils.await;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
 import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
 import static io.activej.test.TestUtils.getFreePort;
@@ -37,7 +37,7 @@ public final class TestSimpleCrdt {
 
 	@Before
 	public void setup() throws IOException {
-		remoteStorage = CrdtStorageMap.create(Reactor.getCurrentReactor(), ignoringTimestamp(Integer::max));
+		remoteStorage = CrdtStorageMap.create(getCurrentReactor(), ignoringTimestamp(Integer::max));
 		remoteStorage.put("mx", 2);
 		remoteStorage.put("test", 3);
 		remoteStorage.put("test", 5);
@@ -45,11 +45,11 @@ public final class TestSimpleCrdt {
 		remoteStorage.put("only_remote", 4);
 
 		CrdtDataSerializer<String, Integer> serializer = new CrdtDataSerializer<>(UTF8_SERIALIZER, INT_SERIALIZER);
-		server = CrdtServer.create(Reactor.getCurrentReactor(), remoteStorage, serializer);
+		server = CrdtServer.create(getCurrentReactor(), remoteStorage, serializer);
 		int port = getFreePort();
 		server.withListenAddress(new InetSocketAddress(port)).listen();
 
-		client = CrdtStorageClient.create(Reactor.getCurrentReactor(), new InetSocketAddress(port), serializer);
+		client = CrdtStorageClient.create(getCurrentReactor(), new InetSocketAddress(port), serializer);
 	}
 
 	@Test
@@ -59,7 +59,7 @@ public final class TestSimpleCrdt {
 
 	@Test
 	public void testUpload() {
-		CrdtStorageMap<String, Integer> localStorage = CrdtStorageMap.create(Reactor.getCurrentReactor(), ignoringTimestamp(Integer::max));
+		CrdtStorageMap<String, Integer> localStorage = CrdtStorageMap.create(getCurrentReactor(), ignoringTimestamp(Integer::max));
 		localStorage.put("mx", 22);
 		localStorage.put("mx", 2);
 		localStorage.put("mx", 23);
@@ -85,7 +85,7 @@ public final class TestSimpleCrdt {
 
 	@Test
 	public void testDownload() {
-		CrdtStorageMap<String, Integer> localStorage = CrdtStorageMap.create(Reactor.getCurrentReactor(), ignoringTimestamp(Integer::max));
+		CrdtStorageMap<String, Integer> localStorage = CrdtStorageMap.create(getCurrentReactor(), ignoringTimestamp(Integer::max));
 
 		await(client.download().then(supplier -> supplier
 				.streamTo(StreamConsumer.ofConsumer(localStorage::put))
@@ -101,7 +101,7 @@ public final class TestSimpleCrdt {
 
 	@Test
 	public void testTake() {
-		CrdtStorageMap<String, Integer> localStorage = CrdtStorageMap.create(Reactor.getCurrentReactor(), ignoringTimestamp(Integer::max));
+		CrdtStorageMap<String, Integer> localStorage = CrdtStorageMap.create(getCurrentReactor(), ignoringTimestamp(Integer::max));
 
 		await(client.take().then(supplier -> supplier
 				.streamTo(StreamConsumer.ofConsumer(localStorage::put))

@@ -19,7 +19,7 @@ package io.activej.datastream.processor;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.process.ChannelRateLimiter;
 import io.activej.datastream.*;
-import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.ImplicitlyReactive;
 import io.activej.reactor.schedule.ScheduledRunnable;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,7 +32,7 @@ import static io.activej.common.Utils.nullify;
  * Provides you apply function before sending data to the destination. It is a {@link StreamRateLimiter}
  * which receives specified type and streams set of function's result  to the destination .
  */
-public final class StreamRateLimiter<T> extends AbstractReactive implements StreamTransformer<T, T> {
+public final class StreamRateLimiter<T> extends ImplicitlyReactive implements StreamTransformer<T, T> {
 	private final long refillRatePerSecond;
 
 	private long tokens;

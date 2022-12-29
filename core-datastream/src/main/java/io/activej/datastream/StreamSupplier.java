@@ -197,8 +197,7 @@ public interface StreamSupplier<T> extends ReactiveCloseable {
 		return new StreamSuppliers.OfPromise<>(promise);
 	}
 
-	static <T> StreamSupplier<T> ofAnotherReactor(@NotNull Reactor anotherReactor,
-			@NotNull StreamSupplier<T> anotherReactorSupplier) {
+	static <T> StreamSupplier<T> ofAnotherReactor(Reactor anotherReactor, StreamSupplier<T> anotherReactorSupplier) {
 		if (Reactor.getCurrentReactor() == anotherReactor) {
 			return anotherReactorSupplier;
 		}

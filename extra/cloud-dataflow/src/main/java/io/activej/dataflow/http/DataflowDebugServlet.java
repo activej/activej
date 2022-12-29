@@ -42,6 +42,7 @@ import io.activej.net.socket.tcp.ReactiveTcpSocketNio;
 import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.reactor.ImplicitlyReactive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -52,10 +53,11 @@ import java.util.stream.Collectors;
 
 import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpResponse.ok200;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.types.Types.parameterizedType;
 import static java.util.stream.Collectors.toList;
 
-public final class DataflowDebugServlet implements AsyncServlet {
+public final class DataflowDebugServlet extends ImplicitlyReactive implements AsyncServlet {
 	private final AsyncServlet servlet;
 	private final ByteBufsCodec<DataflowResponse, DataflowRequest> codec;
 
@@ -162,7 +164,7 @@ public final class DataflowDebugServlet implements AsyncServlet {
 	}
 
 	private Promise<PartitionData> getPartitionData(InetSocketAddress address) {
-		return ReactiveTcpSocketNio.connect(address)
+		return ReactiveTcpSocketNio.connect(getCurrentReactor(), address)
 				.then(socket -> {
 					Messaging<DataflowResponse, DataflowRequest> messaging = MessagingWithBinaryStreaming.create(socket, codec);
 					return DataflowClient.performHandshake(messaging)
@@ -182,7 +184,7 @@ public final class DataflowDebugServlet implements AsyncServlet {
 	}
 
 	private Promise<TaskData> getTask(InetSocketAddress address, long taskId) {
-		return ReactiveTcpSocketNio.connect(address)
+		return ReactiveTcpSocketNio.connect(getCurrentReactor(), address)
 				.then(socket -> {
 					Messaging<DataflowResponse, DataflowRequest> messaging = MessagingWithBinaryStreaming.create(socket, codec);
 					return DataflowClient.performHandshake(messaging)

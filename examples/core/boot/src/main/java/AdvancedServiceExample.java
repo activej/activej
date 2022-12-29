@@ -5,6 +5,7 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.service.Service;
 import io.activej.service.ServiceGraphModule;
@@ -51,20 +52,14 @@ public class AdvancedServiceExample extends Launcher {
 	}
 
 	@SuppressWarnings("FieldCanBeLocal")
-	private static class AuthService implements ReactiveService {
-		private final Reactor reactor;
+	private static class AuthService extends AbstractReactive implements ReactiveService {
 		private final Executor executor;
 		private final DBService dbService;
 
 		public AuthService(Reactor reactor, Executor executor, DBService dbService) {
+			super(reactor);
 			this.executor = executor;
-			this.reactor = reactor;
 			this.dbService = dbService;
-		}
-
-		@Override
-		public @NotNull Reactor getReactor() {
-			return reactor;
 		}
 
 		@Override

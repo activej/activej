@@ -17,10 +17,11 @@
 package io.activej.datastream.dsl;
 
 import io.activej.datastream.StreamConsumer;
+import io.activej.reactor.Reactive;
 
 /**
  * A separate interface for components that have some kind of input represented with a {@link StreamConsumer}.
  */
-public interface HasStreamInput<I> {
+public interface HasStreamInput<I> extends Reactive {
 	StreamConsumer<I> getInput();
 }

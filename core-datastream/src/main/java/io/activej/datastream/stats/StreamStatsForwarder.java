@@ -22,9 +22,9 @@ import io.activej.datastream.AbstractStreamSupplier;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamTransformer;
-import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.ImplicitlyReactive;
 
-public class StreamStatsForwarder<T> extends AbstractReactive implements StreamTransformer<T, T>, WithInitializer<StreamStatsForwarder<T>> {
+public class StreamStatsForwarder<T> extends ImplicitlyReactive implements StreamTransformer<T, T>, WithInitializer<StreamStatsForwarder<T>> {
 	private final Input input;
 	private final Output output;
 

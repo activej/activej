@@ -19,32 +19,26 @@ package io.activej.http;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
-import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 
-public abstract class AsyncServletWithStats implements AsyncServlet, ReactiveJmxBeanWithStats {
-	protected final @NotNull Reactor reactor;
-
+public abstract class AsyncServletWithStats extends AbstractReactive
+		implements AsyncServlet, ReactiveJmxBeanWithStats {
 	private final PromiseStats stats = PromiseStats.create(Duration.ofMinutes(5));
 
-	protected AsyncServletWithStats(@NotNull Reactor reactor) {
-		this.reactor = reactor;
+	protected AsyncServletWithStats(Reactor reactor) {
+		super(reactor);
 	}
 
-	protected abstract @NotNull Promise<HttpResponse> doServe(@NotNull HttpRequest request);
+	protected abstract Promise<HttpResponse> doServe(HttpRequest request);
 
 	@Override
-	public final @NotNull Promise<HttpResponse> serve(@NotNull HttpRequest request) {
+	public final Promise<HttpResponse> serve(HttpRequest request) {
 		return doServe(request)
 				.whenComplete(stats.recordStats());
-	}
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
 	}
 
 	@JmxAttribute

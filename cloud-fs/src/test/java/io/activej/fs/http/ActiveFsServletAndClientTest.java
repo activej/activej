@@ -64,7 +64,7 @@ public final class ActiveFsServletAndClientTest {
 		LocalActiveFs localFs = LocalActiveFs.create(getCurrentReactor(), newSingleThreadExecutor(), storage);
 		await(localFs.start());
 		AsyncServlet servlet = ActiveFsServlet.create(localFs);
-		this.fs = HttpActiveFs.create("http://localhost", StubHttpClient.of(servlet));
+		this.fs = HttpActiveFs.create(getCurrentReactor(), "http://localhost", StubHttpClient.of(servlet));
 
 		initializeDirs();
 	}

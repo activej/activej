@@ -53,6 +53,7 @@ import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.serializer.*;
@@ -72,15 +73,14 @@ import static io.activej.crdt.util.CrdtDataSerializer.TIMESTAMP_SERIALIZER;
 import static io.activej.crdt.util.Utils.onItem;
 
 @SuppressWarnings("rawtypes")
-public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStorage<K, S>,
-		WithInitializer<CrdtStorageFs<K, S>>, ReactiveService, ReactiveJmxBeanWithStats {
+public final class CrdtStorageFs<K extends Comparable<K>, S> extends AbstractReactive
+		implements CrdtStorage<K, S>, WithInitializer<CrdtStorageFs<K, S>>, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(CrdtStorageFs.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageFs.class, "smoothingWindow", Duration.ofMinutes(1));
 
 	public static final String FILE_EXTENSION = ".bin";
 
-	private final Reactor reactor;
 	private final ActiveFs fs;
 	private final CrdtFunction<S> function;
 	private final BinarySerializer<CrdtReducingData<K, S>> serializer;
@@ -114,12 +114,8 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 	// endregion
 
 	// region creators
-	private CrdtStorageFs(
-			Reactor reactor,
-			ActiveFs fs,
-			CrdtDataSerializer<K, S> serializer, CrdtFunction<S> function
-	) {
-		this.reactor = reactor;
+	private CrdtStorageFs(Reactor reactor, ActiveFs fs, CrdtDataSerializer<K, S> serializer, CrdtFunction<S> function) {
+		super(reactor);
 		this.fs = fs;
 		this.function = function;
 		this.serializer = createSerializer(serializer);
@@ -150,11 +146,6 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> implements CrdtStor
 		return this;
 	}
 	// endregion
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
-	}
 
 	@Override
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {

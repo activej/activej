@@ -110,7 +110,7 @@ public final class AbstractReactiveServerTest {
 	}
 
 	private static ByteBuf sendMessage(InetSocketAddress address, String message) {
-		return await(ReactiveTcpSocketNio.connect(address)
+		return await(ReactiveTcpSocketNio.connect(getCurrentReactor(), address)
 				.then(socket ->
 						socket.write(ByteBufStrings.wrapAscii(message))
 								.then(() -> socket.write(null))

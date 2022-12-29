@@ -5,7 +5,6 @@ import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
-import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -21,6 +20,7 @@ import static io.activej.csp.ChannelSuppliers.channelSupplierAsInputStream;
 import static io.activej.csp.ChannelSuppliers.inputStreamAsChannelSupplier;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -126,7 +126,7 @@ public class ChannelSupplierTest {
 				ByteBuf.wrapForReading("Hello".getBytes()),
 				ByteBuf.wrapForReading("World".getBytes()));
 
-		Eventloop currentEventloop = Reactor.getCurrentReactor();
+		Eventloop currentEventloop = getCurrentReactor();
 		await(Promise.ofBlocking(Executors.newSingleThreadExecutor(),
 				() -> {
 					InputStream inputStream = channelSupplierAsInputStream(currentEventloop, channelSupplier);
@@ -143,7 +143,7 @@ public class ChannelSupplierTest {
 	public void testEmptyInputStream() {
 		ChannelSupplier<ByteBuf> channelSupplier = ChannelSupplier.of(ByteBuf.empty(), ByteBuf.empty());
 
-		Eventloop currentEventloop = Reactor.getCurrentReactor();
+		Eventloop currentEventloop = getCurrentReactor();
 		await(Promise.ofBlocking(Executors.newSingleThreadExecutor(),
 				() -> {
 					InputStream inputStream = channelSupplierAsInputStream(currentEventloop, channelSupplier);

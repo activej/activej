@@ -31,6 +31,7 @@ import io.activej.eventloop.inspector.EventloopInspector;
 import io.activej.eventloop.inspector.EventloopStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
+import io.activej.reactor.NioReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBean;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
@@ -82,7 +83,7 @@ import static java.util.Collections.emptyIterator;
  * and its queues with tasks are empty.
  */
 @SuppressWarnings("unused")
-public final class Eventloop implements Runnable, NioReactor, WithInitializer<Eventloop>, ReactiveJmxBeanWithStats {
+public final class Eventloop implements NioReactor, NioReactive, Runnable, WithInitializer<Eventloop>, ReactiveJmxBeanWithStats {
 	public static final Logger logger = LoggerFactory.getLogger(Eventloop.class);
 	private static final boolean CHECK = Checks.isEnabled(Eventloop.class);
 

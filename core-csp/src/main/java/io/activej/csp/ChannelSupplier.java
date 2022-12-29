@@ -209,8 +209,7 @@ public interface ChannelSupplier<T> extends ReactiveCloseable {
 		};
 	}
 
-	static <T> ChannelSupplier<T> ofAnotherReactor(@NotNull Reactor anotherReactor,
-			@NotNull ChannelSupplier<T> anotherReactorSupplier) {
+	static <T> ChannelSupplier<T> ofAnotherReactor(Reactor anotherReactor, ChannelSupplier<T> anotherReactorSupplier) {
 		if (getCurrentReactor() == anotherReactor) {
 			return anotherReactorSupplier;
 		}

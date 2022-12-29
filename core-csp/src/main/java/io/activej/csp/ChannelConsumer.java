@@ -206,8 +206,7 @@ public interface ChannelConsumer<T> extends ReactiveCloseable {
 		};
 	}
 
-	static <T> ChannelConsumer<T> ofAnotherReactor(@NotNull Reactor anotherReactor,
-			@NotNull ChannelConsumer<T> anotherReactorConsumer) {
+	static <T> ChannelConsumer<T> ofAnotherReactor(Reactor anotherReactor, ChannelConsumer<T> anotherReactorConsumer) {
 		if (getCurrentReactor() == anotherReactor) {
 			return anotherReactorConsumer;
 		}

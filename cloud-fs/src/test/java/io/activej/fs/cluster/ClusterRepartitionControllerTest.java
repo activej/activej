@@ -116,7 +116,7 @@ public final class ClusterRepartitionControllerTest {
 		Promise<Map<Object, ActiveFs>> discoverPromise = discoveryService.discover().get();
 		Map<Object, ActiveFs> discovered = discoverPromise.getResult();
 
-		ClusterRepartitionController controller = ClusterRepartitionController.create(localPartitionId, fsPartitions)
+		ClusterRepartitionController controller = ClusterRepartitionController.create(reactor, localPartitionId, fsPartitions)
 				.withReplicationCount(partitions.size());    // full replication
 
 		assertTrue(discovered.containsKey("regular"));

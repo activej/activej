@@ -39,9 +39,9 @@ import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ValueStats;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +62,8 @@ import static io.activej.crdt.wal.FileWriteAheadLog.FRAME_FORMAT;
 import static java.util.Comparator.naturalOrder;
 import static java.util.stream.Collectors.toList;
 
-public final class WalUploader<K extends Comparable<K>, S> implements ReactiveJmxBeanWithStats, WithInitializer<WalUploader<K, S>> {
+public final class WalUploader<K extends Comparable<K>, S> extends AbstractReactive
+		implements ReactiveJmxBeanWithStats, WithInitializer<WalUploader<K, S>> {
 	private static final Logger logger = LoggerFactory.getLogger(WalUploader.class);
 
 	private static final int DEFAULT_SORT_ITEMS_IN_MEMORY = ApplicationSettings.getInt(WalUploader.class, "sortItemsInMemory", 100_000);
@@ -70,7 +71,6 @@ public final class WalUploader<K extends Comparable<K>, S> implements ReactiveJm
 
 	private final AsyncRunnable uploadToStorage = coalesce(this::doUploadToStorage);
 
-	private final Reactor reactor;
 	private final Executor executor;
 	private final Path path;
 	private final CrdtFunction<S> function;
@@ -86,7 +86,7 @@ public final class WalUploader<K extends Comparable<K>, S> implements ReactiveJm
 	private int sortItemsInMemory = DEFAULT_SORT_ITEMS_IN_MEMORY;
 
 	private WalUploader(Reactor reactor, Executor executor, Path path, CrdtFunction<S> function, CrdtDataSerializer<K, S> serializer, CrdtStorage<K, S> storage) {
-		this.reactor = reactor;
+		super(reactor);
 		this.executor = executor;
 		this.path = path;
 		this.function = function;
@@ -203,11 +203,6 @@ public final class WalUploader<K extends Comparable<K>, S> implements ReactiveJm
 		}
 
 		return reducer;
-	}
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
 	}
 
 	// region JMX

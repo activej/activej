@@ -17,7 +17,7 @@
 package io.activej.datastream.processor;
 
 import io.activej.datastream.*;
-import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.ImplicitlyReactive;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
@@ -27,7 +27,7 @@ import java.util.function.Predicate;
  * Provides you apply function before sending data to the destination. It is a {@link StreamFilter}
  * which receives specified type and streams set of function's result  to the destination .
  */
-public abstract class StreamFilter<I, O> extends AbstractReactive implements StreamTransformer<I, O> {
+public abstract class StreamFilter<I, O> extends ImplicitlyReactive implements StreamTransformer<I, O> {
 	private final Input input;
 	private final Output output;
 

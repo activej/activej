@@ -46,11 +46,11 @@ public interface Reactor extends ReactorExecutor, ReactorScheduler {
 	 * This method is useful for when you need to initialize a piece of code with another {@link Reactor} context
 	 * (a {@link Reactor} that runs in some other thread).
 	 *
-	 * @param anotherReactor a {@link Reactor} in context of which a piece of code should be initialized
+	 * @param reactor a {@link Reactor} in context of which a piece of code should be initialized
 	 * @param runnable       a piece of code to be initialized in a context of another {@link Reactor}
 	 */
-	static void initWithReactor(@NotNull Reactor anotherReactor, @NotNull Runnable runnable) {
-		ThreadLocalReactor.initWithReactor(anotherReactor, runnable);
+	static void executeWithReactor(Reactor reactor, Runnable runnable) {
+		ThreadLocalReactor.executeWithReactor(reactor, runnable);
 	}
 
 	/**
@@ -59,11 +59,11 @@ public interface Reactor extends ReactorExecutor, ReactorScheduler {
 	 * This method is useful for when you need to initialize some component with another {@link Reactor} context
 	 * (a {@link Reactor} that runs in some other thread).
 	 *
-	 * @param anotherReactor a {@link Reactor} in context of which a piece of code should be initialized
+	 * @param reactor a {@link Reactor} in context of which a piece of code should be initialized
 	 * @param callable       a supplier of a component to be initialized in a context of another {@link Reactor}
 	 */
-	static <T> T initWithReactor(@NotNull Reactor anotherReactor, @NotNull Supplier<T> callable) {
-		return ThreadLocalReactor.initWithReactor(anotherReactor, callable);
+	static <T> T executeWithReactor(Reactor reactor, Supplier<T> callable) {
+		return ThreadLocalReactor.executeWithReactor(reactor, callable);
 	}
 
 	boolean inReactorThread();

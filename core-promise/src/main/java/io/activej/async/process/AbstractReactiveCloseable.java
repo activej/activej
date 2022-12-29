@@ -19,13 +19,13 @@ package io.activej.async.process;
 import io.activej.common.Checks;
 import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
-import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.ImplicitlyReactive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Checks.checkState;
 
-public abstract class AbstractReactiveCloseable extends AbstractReactive implements ReactiveCloseable {
+public abstract class AbstractReactiveCloseable extends ImplicitlyReactive implements ReactiveCloseable {
 	private static final boolean CHECK = Checks.isEnabled(AbstractReactiveCloseable.class);
 
 	private @Nullable ReactiveCloseable closeable;

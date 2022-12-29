@@ -37,6 +37,7 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.EventStats;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
@@ -53,10 +54,10 @@ import static io.activej.common.Utils.nullify;
 import static io.activej.crdt.util.Utils.onItem;
 
 @SuppressWarnings("rawtypes")
-public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtStorage<K, S>, WithInitializer<CrdtStorageMap<K, S>>, ReactiveService, ReactiveJmxBeanWithStats {
+public final class CrdtStorageMap<K extends Comparable<K>, S> extends AbstractReactive
+		implements CrdtStorage<K, S>, WithInitializer<CrdtStorageMap<K, S>>, ReactiveService, ReactiveJmxBeanWithStats {
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageMap.class, "smoothingWindow", Duration.ofMinutes(1));
 
-	private final Reactor reactor;
 	private final CrdtFunction<S> function;
 
 	private final NavigableMap<K, CrdtData<K, S>> map = new TreeMap<>();
@@ -92,7 +93,7 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 	// endregion
 
 	private CrdtStorageMap(Reactor reactor, CrdtFunction<S> function) {
-		this.reactor = reactor;
+		super(reactor);
 		this.function = function;
 	}
 
@@ -112,11 +113,6 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> implements CrdtSto
 	public CrdtStorageMap<K, S> withCurrentTimeProvide(CurrentTimeProvider now) {
 		this.now = now;
 		return this;
-	}
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
 	}
 
 	@Override

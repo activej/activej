@@ -30,7 +30,7 @@ public final class TcpServerExample {
 			ReactiveTcpSocket socket;
 
 			try {
-				socket = ReactiveTcpSocketNio.wrapChannel(channel, null);
+				socket = ReactiveTcpSocketNio.wrapChannel(eventloop, channel, null);
 				System.out.println("Client connected: " + channel.getRemoteAddress());
 			} catch (IOException e) {
 				throw new RuntimeException(e);

@@ -44,34 +44,23 @@ public final class ClusterStorageModule extends AbstractModule {
 	}
 
 	@Provides
-	CrdtStorageCluster<Long, DetailedSumsCrdtState, PartitionId> clusterStorage(
-			Reactor reactor,
-			DiscoveryService<PartitionId> discoveryService,
-			CrdtFunction<DetailedSumsCrdtState> crdtFunction
-	) {
+	CrdtStorageCluster<Long, DetailedSumsCrdtState, PartitionId> clusterStorage(Reactor reactor,
+			DiscoveryService<PartitionId> discoveryService, CrdtFunction<DetailedSumsCrdtState> crdtFunction) {
 		return CrdtStorageCluster.create(reactor, discoveryService, crdtFunction);
 	}
 
 	@Provides
 	@Eager
-	CrdtServer<Long, DetailedSumsCrdtState> crdtServer(
-			NioReactor reactor,
-			@Local CrdtStorage<Long, DetailedSumsCrdtState> localStorage,
-			CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer,
-			Config config
-	) {
+	CrdtServer<Long, DetailedSumsCrdtState> crdtServer(NioReactor reactor,
+			@Local CrdtStorage<Long, DetailedSumsCrdtState> localStorage, CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer, Config config) {
 		return CrdtServer.create(reactor, localStorage, serializer)
 				.withInitializer(ofAbstractServer(config.getChild("crdt.server")));
 	}
 
 	@Provides
-	DiscoveryService<PartitionId> discoveryService(
-			NioReactor reactor,
-			PartitionId localPartitionId,
-			@Local CrdtStorage<Long, DetailedSumsCrdtState> localStorage,
-			CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer,
-			Config config
-	) throws CrdtException {
+	DiscoveryService<PartitionId> discoveryService(NioReactor reactor,
+			@Local CrdtStorage<Long, DetailedSumsCrdtState> localStorage, CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer, Config config,
+			PartitionId localPartitionId) throws CrdtException {
 		Path pathToFile = config.get(ofPath(), "crdt.cluster.partitionFile", DEFAULT_PARTITIONS_FILE);
 		return FileDiscoveryService.create(reactor, pathToFile)
 				.withCrdtProvider(partitionId -> {
@@ -88,17 +77,17 @@ public final class ClusterStorageModule extends AbstractModule {
 	}
 
 	@Provides
-	CrdtRepartitionController<Long, DetailedSumsCrdtState, PartitionId> repartitionController(
+	CrdtRepartitionController<Long, DetailedSumsCrdtState, PartitionId> repartitionController(Reactor reactor,
 			CrdtStorageCluster<Long, DetailedSumsCrdtState, PartitionId> cluster,
-			PartitionId partitionId
-	) {
-		return CrdtRepartitionController.create(cluster, partitionId);
+			PartitionId partitionId) {
+		return CrdtRepartitionController.create(reactor, cluster, partitionId);
 	}
 
 	@Provides
 	@Eager
 	@Named("Repartition")
-	ReactiveTaskScheduler repartitionController(Reactor reactor, CrdtRepartitionController<Long, DetailedSumsCrdtState, PartitionId> repartitionController) {
+	ReactiveTaskScheduler repartitionController(Reactor reactor,
+			CrdtRepartitionController<Long, DetailedSumsCrdtState, PartitionId> repartitionController) {
 		return ReactiveTaskScheduler.create(reactor, repartitionController::repartition)
 				.withInterval(Duration.ofSeconds(10));
 	}

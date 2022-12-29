@@ -36,6 +36,7 @@ import java.util.concurrent.Executors;
 import static io.activej.crdt.function.CrdtFunction.ignoringTimestamp;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
 import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
 import static org.junit.Assert.assertEquals;
@@ -81,7 +82,7 @@ public class CrdtStorageAPITest {
 				new Object[]{
 						"FsCrdtClient",
 						(ICrdtClientFactory) (executor, testFolder) -> {
-							Reactor reactor = Reactor.getCurrentReactor();
+							Reactor reactor = getCurrentReactor();
 							LocalActiveFs fs = LocalActiveFs.create(reactor, executor, testFolder);
 							await(fs.start());
 							return CrdtStorageFs.create(reactor, fs, SERIALIZER, CRDT_FUNCTION);
@@ -90,12 +91,12 @@ public class CrdtStorageAPITest {
 				new Object[]{
 						"CrdtStorageMap",
 						(ICrdtClientFactory) (executor, testFolder) ->
-								CrdtStorageMap.create(Reactor.getCurrentReactor(), CRDT_FUNCTION)
+								CrdtStorageMap.create(getCurrentReactor(), CRDT_FUNCTION)
 				},
 				new Object[]{
 						"CrdtStorageCluster",
 						(ICrdtClientFactory) (executor, testFolder) -> {
-							Reactor reactor = Reactor.getCurrentReactor();
+							Reactor reactor = getCurrentReactor();
 							Map<Integer, CrdtStorage<String, Integer>> map = new HashMap<>();
 
 							int i = 0;

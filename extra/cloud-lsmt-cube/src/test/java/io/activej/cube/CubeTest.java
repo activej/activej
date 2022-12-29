@@ -14,7 +14,6 @@ import io.activej.http.AsyncHttpServer;
 import io.activej.http.ReactiveHttpClient;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
-import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
@@ -39,6 +38,7 @@ import static io.activej.codegen.DefiningClassLoader.create;
 import static io.activej.common.Utils.keysToMap;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.promise.TestUtils.await;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.function.Function.identity;
@@ -71,14 +71,14 @@ public final class CubeTest {
 	@Before
 	public void setUp() throws Exception {
 		listenPort = getFreePort();
-		LocalActiveFs fs = LocalActiveFs.create(Reactor.getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
+		LocalActiveFs fs = LocalActiveFs.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
 		await(fs.start());
-		chunkStorage = ActiveFsChunkStorage.create(Reactor.getCurrentReactor(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, fs);
+		chunkStorage = ActiveFsChunkStorage.create(getCurrentReactor(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, fs);
 		cube = newCube(executor, classLoader, chunkStorage);
 	}
 
 	private static Cube newCube(Executor executor, DefiningClassLoader classLoader, AggregationChunkStorage chunkStorage) {
-		return Cube.create(Reactor.getCurrentReactor(), executor, classLoader, chunkStorage)
+		return Cube.create(getCurrentReactor(), executor, classLoader, chunkStorage)
 				.withDimension("key1", ofInt())
 				.withDimension("key2", ofInt())
 				.withMeasure("metric1", sum(ofLong()))
@@ -88,7 +88,7 @@ public final class CubeTest {
 	}
 
 	private static Cube newSophisticatedCube(Executor executor, DefiningClassLoader classLoader, AggregationChunkStorage chunkStorage) {
-		return Cube.create(Reactor.getCurrentReactor(), executor, classLoader, chunkStorage)
+		return Cube.create(getCurrentReactor(), executor, classLoader, chunkStorage)
 				.withDimension("key1", ofInt())
 				.withDimension("key2", ofInt())
 				.withDimension("key3", ofInt())
@@ -117,17 +117,17 @@ public final class CubeTest {
 				consume(cube, chunkStorage, new DataItem2(1, 3, 10, 20), new DataItem2(1, 4, 10, 20))
 		);
 		List<DataItemResult> list = await(cube.queryRawStream(
-				List.of("key1", "key2"),
-				List.of("metric1", "metric2", "metric3"),
-				and(eq("key1", 1), eq("key2", 3)),
-				DataItemResult.class, classLoader)
+						List.of("key1", "key2"),
+						List.of("metric1", "metric2", "metric3"),
+						and(eq("key1", 1), eq("key2", 3)),
+						DataItemResult.class, classLoader)
 				.toList());
 
 		assertEquals(expected, list);
 	}
 
 	private AsyncHttpServer startServer(Executor executor, Path serverStorage) throws IOException {
-		NioReactor reactor = Reactor.getCurrentReactor();
+		NioReactor reactor = getCurrentReactor();
 		LocalActiveFs fs = LocalActiveFs.create(reactor, executor, serverStorage);
 		await(fs.start());
 		AsyncHttpServer server = AsyncHttpServer.create(reactor, ActiveFsServlet.create(fs))
@@ -141,24 +141,24 @@ public final class CubeTest {
 
 		Path serverStorage = temporaryFolder.newFolder("storage").toPath();
 		AsyncHttpServer server1 = startServer(executor, serverStorage);
-		ReactiveHttpClient httpClient = ReactiveHttpClient.create(Reactor.getCurrentReactor());
-		HttpActiveFs storage = HttpActiveFs.create("http://localhost:" + listenPort, httpClient);
-		AggregationChunkStorage<Long> chunkStorage = ActiveFsChunkStorage.create(Reactor.getCurrentReactor(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, storage);
+		ReactiveHttpClient httpClient = ReactiveHttpClient.create(getCurrentReactor());
+		HttpActiveFs storage = HttpActiveFs.create(getCurrentReactor(), "http://localhost:" + listenPort, httpClient);
+		AggregationChunkStorage<Long> chunkStorage = ActiveFsChunkStorage.create(getCurrentReactor(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, storage);
 		Cube cube = newCube(executor, classLoader, chunkStorage);
 
 		List<DataItemResult> expected = List.of(new DataItemResult(1, 3, 10, 30, 20));
 
 		await(
 				Promises.all(consume(cube, chunkStorage, new DataItem1(1, 2, 10, 20), new DataItem1(1, 3, 10, 20)),
-						consume(cube, chunkStorage, new DataItem2(1, 3, 10, 20), new DataItem2(1, 4, 10, 20)))
+								consume(cube, chunkStorage, new DataItem2(1, 3, 10, 20), new DataItem2(1, 4, 10, 20)))
 						.whenComplete(server1::close)
 		);
 		AsyncHttpServer server2 = startServer(executor, serverStorage);
 
 		List<DataItemResult> list = await(cube.queryRawStream(
-				List.of("key1", "key2"), List.of("metric1", "metric2", "metric3"),
-				and(eq("key1", 1), eq("key2", 3)),
-				DataItemResult.class, classLoader)
+						List.of("key1", "key2"), List.of("metric1", "metric2", "metric3"),
+						and(eq("key1", 1), eq("key2", 3)),
+						DataItemResult.class, classLoader)
 				.toList()
 				.whenComplete(server2::close));
 
@@ -425,9 +425,9 @@ public final class CubeTest {
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		Executor executor = newSingleThreadExecutor();
 
-		LocalActiveFs storage = LocalActiveFs.create(Reactor.getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
+		LocalActiveFs storage = LocalActiveFs.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
 		await(storage.start());
-		AggregationChunkStorage<Long> chunkStorage = ActiveFsChunkStorage.create(Reactor.getCurrentReactor(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, storage);
+		AggregationChunkStorage<Long> chunkStorage = ActiveFsChunkStorage.create(getCurrentReactor(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, storage);
 		Cube cube = newCube(executor, classLoader, chunkStorage);
 
 		cube.consume(DataItem1.class,
@@ -441,9 +441,9 @@ public final class CubeTest {
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		Executor executor = newSingleThreadExecutor();
 
-		LocalActiveFs storage = LocalActiveFs.create(Reactor.getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
+		LocalActiveFs storage = LocalActiveFs.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
 		await(storage.start());
-		AggregationChunkStorage<Long> chunkStorage = ActiveFsChunkStorage.create(Reactor.getCurrentReactor(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, storage);
+		AggregationChunkStorage<Long> chunkStorage = ActiveFsChunkStorage.create(getCurrentReactor(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, storage);
 		Cube cube = newCube(executor, classLoader, chunkStorage);
 
 		cube.consume(DataItem1.class,

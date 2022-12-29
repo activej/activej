@@ -5,7 +5,6 @@ import io.activej.crdt.storage.cluster.DiscoveryService.PartitionScheme;
 import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
-import io.activej.reactor.Reactor;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -23,6 +22,7 @@ import java.util.Set;
 
 import static io.activej.crdt.function.CrdtFunction.ignoringTimestamp;
 import static io.activej.promise.TestUtils.await;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
@@ -143,7 +143,7 @@ public class FileDiscoveryServiceTest {
 		file = temporaryFolder.newFile().toPath();
 		Files.writeString(file, "[]");
 		watchService = file.getFileSystem().newWatchService();
-		discoveryService = FileDiscoveryService.create(Reactor.getCurrentReactor(), watchService, file);
+		discoveryService = FileDiscoveryService.create(getCurrentReactor(), watchService, file);
 	}
 
 	@Test
@@ -222,13 +222,13 @@ public class FileDiscoveryServiceTest {
 
 	@Test
 	public void testPartitionChange() throws IOException {
-		discoveryService.withCrdtProvider(partitionId -> CrdtStorageMap.create(Reactor.getCurrentReactor()));
+		discoveryService.withCrdtProvider(partitionId -> CrdtStorageMap.create(getCurrentReactor()));
 
 		Files.write(file, TEST_PARTITIONS_1);
 
 		NotifyingDiscoveryService notifyingDiscoveryService = new NotifyingDiscoveryService();
 
-		CrdtStorageCluster<String, Integer, PartitionId> cluster = CrdtStorageCluster.create(Reactor.getCurrentReactor(), notifyingDiscoveryService, ignoringTimestamp(Integer::max));
+		CrdtStorageCluster<String, Integer, PartitionId> cluster = CrdtStorageCluster.create(getCurrentReactor(), notifyingDiscoveryService, ignoringTimestamp(Integer::max));
 
 		await(cluster.start()
 				.whenResult(() -> assertEquals(Set.of("a", "b", "c"), cluster.getCrdtStorages().keySet()

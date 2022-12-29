@@ -35,9 +35,9 @@ import io.activej.ot.OTStateManager;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,12 +52,12 @@ import static io.activej.promise.Promises.asPromises;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
-public final class CubeLogProcessorController<K, C> implements ReactiveJmxBeanWithStats, WithInitializer<CubeLogProcessorController<K, C>> {
+public final class CubeLogProcessorController<K, C> extends AbstractReactive
+		implements ReactiveJmxBeanWithStats, WithInitializer<CubeLogProcessorController<K, C>> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeLogProcessorController.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 
-	private final Reactor reactor;
 	private final List<LogOTProcessor<?, CubeDiff>> logProcessors;
 	private final AggregationChunkStorage<C> chunkStorage;
 	private final OTStateManager<K, LogDiff<CubeDiff>> stateManager;
@@ -71,11 +71,8 @@ public final class CubeLogProcessorController<K, C> implements ReactiveJmxBeanWi
 	private final ValueStats addedChunksRecords = ValueStats.create(DEFAULT_SMOOTHING_WINDOW).withRate();
 
 	CubeLogProcessorController(Reactor reactor,
-			List<LogOTProcessor<?, CubeDiff>> logProcessors,
-			AggregationChunkStorage<C> chunkStorage,
-			OTStateManager<K, LogDiff<CubeDiff>> stateManager,
-			AsyncPredicate<K> predicate) {
-		this.reactor = reactor;
+			List<LogOTProcessor<?, CubeDiff>> logProcessors, AggregationChunkStorage<C> chunkStorage, OTStateManager<K, LogDiff<CubeDiff>> stateManager, AsyncPredicate<K> predicate) {
+		super(reactor);
 		this.logProcessors = logProcessors;
 		this.chunkStorage = chunkStorage;
 		this.stateManager = stateManager;
@@ -177,11 +174,6 @@ public final class CubeLogProcessorController<K, C> implements ReactiveJmxBeanWi
 				.flatMap(CubeDiff::addedChunks)
 				.map(id -> (C) id)
 				.collect(toSet());
-	}
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
 	}
 
 	@JmxAttribute

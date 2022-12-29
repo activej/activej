@@ -55,7 +55,8 @@ import static io.activej.promise.Promises.timeout;
  * Implementation of {@link AsyncDnsClient} that asynchronously
  * connects to some <i>real</i> DNS server and gets the response from it.
  */
-public final class ReactiveDnsClient extends AbstractNioReactive implements AsyncDnsClient, ReactiveJmxBeanWithStats, WithInitializer<ReactiveDnsClient> {
+public final class ReactiveDnsClient extends AbstractNioReactive
+		implements AsyncDnsClient, ReactiveJmxBeanWithStats, WithInitializer<ReactiveDnsClient> {
 	private final Logger logger = LoggerFactory.getLogger(ReactiveDnsClient.class);
 	private static final boolean CHECK = Checks.isEnabled(ReactiveDnsClient.class);
 

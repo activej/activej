@@ -25,6 +25,7 @@ import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
 import io.activej.promise.RetryPolicy;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.reactor.schedule.ScheduledRunnable;
@@ -40,10 +41,10 @@ import static io.activej.common.Utils.nullify;
 import static io.activej.promise.Promises.retry;
 
 @SuppressWarnings("UnusedReturnValue")
-public final class ReactiveTaskScheduler implements ReactiveService, WithInitializer<ReactiveTaskScheduler>, ReactiveJmxBeanWithStats {
+public final class ReactiveTaskScheduler extends AbstractReactive
+		implements ReactiveService, WithInitializer<ReactiveTaskScheduler>, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(ReactiveTaskScheduler.class);
 
-	private final Reactor reactor;
 	private final AsyncSupplier<Object> task;
 	private final PromiseStats stats = PromiseStats.create(Duration.ofMinutes(5));
 
@@ -128,7 +129,7 @@ public final class ReactiveTaskScheduler implements ReactiveService, WithInitial
 	private @Nullable Promise<Void> currentPromise;
 
 	private ReactiveTaskScheduler(Reactor reactor, AsyncSupplier<?> task) {
-		this.reactor = reactor;
+		super(reactor);
 		//noinspection unchecked
 		this.task = (AsyncSupplier<Object>) task;
 	}
@@ -174,11 +175,6 @@ public final class ReactiveTaskScheduler implements ReactiveService, WithInitial
 	public ReactiveTaskScheduler withStatsHistogramLevels(int[] levels) {
 		this.stats.setHistogram(levels);
 		return this;
-	}
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
 	}
 
 	private void scheduleTask() {

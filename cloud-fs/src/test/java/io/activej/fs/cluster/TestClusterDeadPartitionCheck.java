@@ -123,7 +123,7 @@ public final class TestClusterDeadPartitionCheck {
 						new ClientServerFactory() {
 							@Override
 							public ActiveFs createClient(NioReactor reactor, InetSocketAddress address) {
-								return HttpActiveFs.create("http://localhost:" + address.getPort(), ReactiveHttpClient.create(reactor));
+								return HttpActiveFs.create(reactor, "http://localhost:" + address.getPort(), ReactiveHttpClient.create(reactor));
 							}
 
 							@Override
@@ -190,7 +190,7 @@ public final class TestClusterDeadPartitionCheck {
 		this.partitions = FsPartitions.create(reactor, DiscoveryService.constant(partitions))
 				.withServerSelector((fileName, shards) -> shards.stream().sorted().collect(toList()));
 		await(this.partitions.start());
-		this.fs = ClusterActiveFs.create(this.partitions)
+		this.fs = ClusterActiveFs.create(reactor, this.partitions)
 				.withReplicationCount(CLIENT_SERVER_PAIRS / 2);
 	}
 

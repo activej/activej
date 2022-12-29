@@ -17,6 +17,8 @@ import io.activej.dataflow.graph.Partition;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamLimiter;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractNioReactive;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.record.Record;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.plan.RelOptPlanner;
@@ -43,7 +45,7 @@ import java.util.List;
 
 import static io.activej.common.Checks.checkNotNull;
 
-public final class CalciteSqlDataflow implements SqlDataflow {
+public final class CalciteSqlDataflow extends AbstractNioReactive implements SqlDataflow {
 	private final DataflowClient client;
 	private final List<Partition> partitions;
 
@@ -55,8 +57,9 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 
 	private RelTraitSet traits = RelTraitSet.createEmpty();
 
-	private CalciteSqlDataflow(DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
+	private CalciteSqlDataflow(NioReactor reactor, DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
 			SqlToRelConverter converter, RelOptPlanner planner, RelToDatasetConverter relToDatasetConverter) {
+		super(reactor);
 		this.client = client;
 		this.partitions = partitions;
 		this.parserConfig = parserConfig;
@@ -66,9 +69,9 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 		this.relToDatasetConverter = relToDatasetConverter;
 	}
 
-	public static CalciteSqlDataflow create(DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
+	public static CalciteSqlDataflow create(NioReactor reactor, DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
 			SqlToRelConverter converter, RelOptPlanner planner, RelToDatasetConverter relToDatasetConverter) {
-		return new CalciteSqlDataflow(client, partitions, parserConfig, converter, planner, relToDatasetConverter);
+		return new CalciteSqlDataflow(reactor, client, partitions, parserConfig, converter, planner, relToDatasetConverter);
 	}
 
 	public CalciteSqlDataflow withTraits(RelTraitSet traits) {
@@ -122,7 +125,7 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 
 		Collector<Record> calciteCollector = createCollector(dataset, limit);
 
-		DataflowGraph graph = new DataflowGraph(client, partitions);
+		DataflowGraph graph = new DataflowGraph(reactor, client, partitions);
 		StreamSupplier<Record> result = calciteCollector.compile(graph);
 
 		graph.execute();
@@ -167,7 +170,7 @@ public final class CalciteSqlDataflow implements SqlDataflow {
 		Dataset<Record> dataset = convertToDataset(query);
 		Collector<Record> calciteCollector = createCollector(dataset, StreamLimiter.NO_LIMIT);
 
-		DataflowGraph graph = new DataflowGraph(client, partitions);
+		DataflowGraph graph = new DataflowGraph(reactor, client, partitions);
 		calciteCollector.compile(graph);
 
 		return graph.toGraphViz();

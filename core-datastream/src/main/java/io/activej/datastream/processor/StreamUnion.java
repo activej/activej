@@ -23,7 +23,7 @@ import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.dsl.HasStreamInputs;
 import io.activej.datastream.dsl.HasStreamOutput;
-import io.activej.reactor.Reactor;
+import io.activej.reactor.ImplicitlyReactive;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +36,7 @@ import static io.activej.common.Checks.checkState;
  *
  * @param <T> type of output data
  */
-public final class StreamUnion<T> implements HasStreamOutput<T>, HasStreamInputs, WithInitializer<StreamUnion<T>> {
+public final class StreamUnion<T> extends ImplicitlyReactive implements HasStreamOutput<T>, HasStreamInputs, WithInitializer<StreamUnion<T>> {
 	private final List<Input> inputs = new ArrayList<>();
 	private final Output output;
 	private boolean started;
@@ -47,7 +47,7 @@ public final class StreamUnion<T> implements HasStreamOutput<T>, HasStreamInputs
 
 	public static <T> StreamUnion<T> create() {
 		StreamUnion<T> union = new StreamUnion<>();
-		Reactor.getCurrentReactor().post(union::start);
+		union.getReactor().post(union::start);
 		return union;
 	}
 

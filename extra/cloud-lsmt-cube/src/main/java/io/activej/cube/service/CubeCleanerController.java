@@ -35,9 +35,9 @@ import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,14 +54,13 @@ import static io.activej.cube.Utils.chunksInDiffs;
 import static io.activej.ot.OTAlgorithms.*;
 import static java.util.stream.Collectors.toSet;
 
-public final class CubeCleanerController<K, D, C> implements ReactiveJmxBeanWithStats, WithInitializer<CubeCleanerController<K, D, C>> {
+public final class CubeCleanerController<K, D, C> extends AbstractReactive
+		implements ReactiveJmxBeanWithStats, WithInitializer<CubeCleanerController<K, D, C>> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeCleanerController.class);
 
 	public static final Duration DEFAULT_CHUNKS_CLEANUP_DELAY = Duration.ofMinutes(1);
 	public static final int DEFAULT_SNAPSHOTS_COUNT = 1;
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
-
-	private final Reactor reactor;
 
 	private final OTSystem<D> otSystem;
 	private final OTRepository<K, D> repository;
@@ -80,11 +79,8 @@ public final class CubeCleanerController<K, D, C> implements ReactiveJmxBeanWith
 	private final PromiseStats promiseCleanupChunks = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 
 	CubeCleanerController(Reactor reactor,
-			CubeDiffScheme<D> cubeDiffScheme,
-			OTRepository<K, D> repository,
-			OTSystem<D> otSystem,
-			ActiveFsChunkStorage<C> chunksStorage) {
-		this.reactor = reactor;
+			CubeDiffScheme<D> cubeDiffScheme, OTRepository<K, D> repository, OTSystem<D> otSystem, ActiveFsChunkStorage<C> chunksStorage) {
+		super(reactor);
 		this.cubeDiffScheme = cubeDiffScheme;
 		this.otSystem = otSystem;
 		this.repository = repository;
@@ -278,11 +274,6 @@ public final class CubeCleanerController<K, D, C> implements ReactiveJmxBeanWith
 	@JmxOperation
 	public void cleanupNow() {
 		cleanup();
-	}
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
 	}
 
 	private static <T, R> BiConsumerEx<R, Exception> transform(FunctionEx<? super R, ? extends T> fn, BiConsumerEx<? super T, Exception> toConsumer) {

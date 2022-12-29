@@ -19,7 +19,7 @@ package io.activej.datastream;
 import io.activej.common.Checks;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
-import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.ImplicitlyReactive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,7 +31,7 @@ import static io.activej.common.Checks.checkState;
  * This is a helper partial implementation of the {@link StreamSupplier}
  * which helps to deal with state transitions and helps to implement basic behaviours.
  */
-public abstract class AbstractStreamSupplier<T> extends AbstractReactive implements StreamSupplier<T> {
+public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive implements StreamSupplier<T> {
 	private static final boolean CHECK = Checks.isEnabled(AbstractStreamSupplier.class);
 
 	public static final StreamDataAcceptor<?> NO_ACCEPTOR = item -> {};

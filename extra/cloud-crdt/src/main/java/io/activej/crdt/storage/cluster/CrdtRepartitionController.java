@@ -22,31 +22,30 @@ import io.activej.common.initializer.WithInitializer;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 
-public final class CrdtRepartitionController<K extends Comparable<K>, S, P> implements ReactiveJmxBeanWithStats, WithInitializer<CrdtRepartitionController<K, S, P>> {
+public final class CrdtRepartitionController<K extends Comparable<K>, S, P> extends AbstractReactive
+		implements ReactiveJmxBeanWithStats, WithInitializer<CrdtRepartitionController<K, S, P>> {
 	private final P localPartitionId;
 	private final CrdtStorageCluster<K, S, P> cluster;
 
 	private final AsyncRunnable repartition = AsyncRunnables.reuse(this::doRepartition);
 
-	private CrdtRepartitionController(CrdtStorageCluster<K, S, P> cluster, P localPartitionId) {
+	private CrdtRepartitionController(Reactor reactor,
+			CrdtStorageCluster<K, S, P> cluster, P localPartitionId) {
+		super(reactor);
 		this.cluster = cluster;
 		this.localPartitionId = localPartitionId;
 	}
 
-	public static <K extends Comparable<K>, S, P> CrdtRepartitionController<K, S, P> create(
+	public static <K extends Comparable<K>, S, P> CrdtRepartitionController<K, S, P> create(Reactor reactor,
 			CrdtStorageCluster<K, S, P> cluster, P localPartitionId) {
-		return new CrdtRepartitionController<>(cluster, localPartitionId);
-	}
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return cluster.getReactor();
+		return new CrdtRepartitionController<>(reactor, cluster, localPartitionId);
 	}
 
 	// region JMX

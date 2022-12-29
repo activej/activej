@@ -39,6 +39,7 @@ import static io.activej.common.Utils.first;
 import static io.activej.crdt.wal.FileWriteAheadLog.EXT_FINAL;
 import static io.activej.crdt.wal.FileWriteAheadLog.FRAME_FORMAT;
 import static io.activej.promise.TestUtils.await;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
 import static io.activej.serializer.BinarySerializers.LONG_SERIALIZER;
 import static java.nio.file.StandardOpenOption.WRITE;
@@ -77,7 +78,7 @@ public class FileWriteAheadLogTest {
 	@Before
 	public void setUp() throws Exception {
 		executor = Executors.newSingleThreadExecutor();
-		Reactor reactor = Reactor.getCurrentReactor();
+		Reactor reactor = getCurrentReactor();
 		path = temporaryFolder.newFolder().toPath();
 		LocalActiveFs storageFs = LocalActiveFs.create(reactor, executor, temporaryFolder.newFolder().toPath());
 		await(storageFs.start());
@@ -110,7 +111,7 @@ public class FileWriteAheadLogTest {
 	@Test
 	public void singleFlushConsecutive() {
 		await(wal.start());
-		long now = Reactor.getCurrentReactor().currentTimeMillis();
+		long now = getCurrentReactor().currentTimeMillis();
 		List<CrdtData<Long, GSet<Integer>>> expected = List.of(
 				new CrdtData<>(1L, now, GSet.of(1, 2, 3, 6, 9, 10, 11)),
 				new CrdtData<>(2L, now, GSet.of(-12, 0, 2, 3, 100, 200))
@@ -160,7 +161,7 @@ public class FileWriteAheadLogTest {
 	@Test
 	public void multipleFlushesConsecutive() {
 		await(wal.start());
-		long now = Reactor.getCurrentReactor().currentTimeMillis();
+		long now = getCurrentReactor().currentTimeMillis();
 		List<CrdtData<Long, GSet<Integer>>> expected = List.of(
 				new CrdtData<>(1L, now, GSet.of(1, 2, 3, 6, 9, 10, 11)),
 				new CrdtData<>(2L, now, GSet.of(-12, 0, 2, 3, 100, 200))
@@ -181,7 +182,7 @@ public class FileWriteAheadLogTest {
 
 	@Test
 	public void startupWithRemainingWALFiles() throws IOException {
-		long now = Reactor.getCurrentReactor().currentTimeMillis();
+		long now = getCurrentReactor().currentTimeMillis();
 		List<CrdtData<Long, GSet<Integer>>> expected = List.of(
 				new CrdtData<>(1L, now, GSet.of(1, 2, 3, 6, 9, 10, 11)),
 				new CrdtData<>(2L, now, GSet.of(-12, 0, 2, 3, 100, 200))
@@ -216,7 +217,7 @@ public class FileWriteAheadLogTest {
 
 	@Test
 	public void startupWithMalformedWALFiles() throws IOException {
-		long now = Reactor.getCurrentReactor().currentTimeMillis();
+		long now = getCurrentReactor().currentTimeMillis();
 		List<CrdtData<Long, GSet<Integer>>> expected = List.of(
 				new CrdtData<>(1L, now, GSet.of(1, 2, 3, 6, 9, 10, 11)),
 				new CrdtData<>(2L, now, GSet.of(-124, -12, 0, 2, 3, 4, 45, 100, 200))
@@ -257,7 +258,7 @@ public class FileWriteAheadLogTest {
 
 	@Test
 	public void startupWithEmptyWALFiles() throws IOException {
-		long now = Reactor.getCurrentReactor().currentTimeMillis();
+		long now = getCurrentReactor().currentTimeMillis();
 		List<CrdtData<Long, GSet<Integer>>> expected = List.of(
 				new CrdtData<>(1L, now, GSet.of(-53, 1, 2, 3, 6, 23)),
 				new CrdtData<>(2L, now, GSet.of(-12, 0, 12, 100, 200))

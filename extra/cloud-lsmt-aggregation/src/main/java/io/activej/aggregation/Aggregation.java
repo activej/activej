@@ -38,6 +38,7 @@ import io.activej.datastream.processor.StreamSorterStorageImpl;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.serializer.BinarySerializer;
@@ -73,7 +74,8 @@ import static java.util.stream.Collectors.toSet;
  * Provides methods for loading and querying data.
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
-public class Aggregation implements IAggregation, WithInitializer<Aggregation>, ReactiveJmxBeanWithStats {
+public class Aggregation extends AbstractReactive
+		implements IAggregation, WithInitializer<Aggregation>, ReactiveJmxBeanWithStats {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	public static final int DEFAULT_CHUNK_SIZE = 1_000_000;
@@ -82,7 +84,6 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 	public static final Duration DEFAULT_MAX_INCREMENTAL_RELOAD_PERIOD = Duration.ofMinutes(10);
 	public static final int DEFAULT_MAX_CHUNKS_TO_CONSOLIDATE = 1000;
 
-	private final Reactor reactor;
 	private final Executor executor;
 	private final DefiningClassLoader classLoader;
 	private final AggregationChunkStorage<Object> aggregationChunkStorage;
@@ -112,7 +113,7 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 	private Aggregation(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
 			AggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat, AggregationStructure structure,
 			AggregationState state) {
-		this.reactor = reactor;
+		super(reactor);
 		this.executor = executor;
 		this.classLoader = classLoader;
 		this.aggregationChunkStorage = aggregationChunkStorage;
@@ -674,11 +675,6 @@ public class Aggregation implements IAggregation, WithInitializer<Aggregation>, 
 	@JmxAttribute
 	public AggregationStats getStats() {
 		return stats;
-	}
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
 	}
 
 	@Override

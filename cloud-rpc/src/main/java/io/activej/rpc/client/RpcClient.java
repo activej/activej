@@ -35,6 +35,7 @@ import io.activej.net.socket.tcp.ReactiveTcpSocketNio;
 import io.activej.net.socket.tcp.ReactiveTcpSocketNio.JmxInspector;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.reactor.net.SocketSettings;
@@ -85,7 +86,8 @@ import static org.slf4j.LoggerFactory.getLogger;
  * @see RpcStrategies
  * @see RpcServer
  */
-public final class RpcClient implements IRpcClient, ReactiveService, WithInitializer<RpcClient>, ReactiveJmxBeanWithStats {
+public final class RpcClient extends AbstractNioReactive
+		implements IRpcClient, ReactiveService, WithInitializer<RpcClient>, ReactiveJmxBeanWithStats {
 	private static final boolean CHECK = Checks.isEnabled(RpcClient.class);
 
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
@@ -100,7 +102,6 @@ public final class RpcClient implements IRpcClient, ReactiveService, WithInitial
 
 	private Logger logger = getLogger(getClass());
 
-	private final NioReactor reactor;
 	private SocketSettings socketSettings = DEFAULT_SOCKET_SETTINGS;
 
 	// SSL
@@ -147,7 +148,7 @@ public final class RpcClient implements IRpcClient, ReactiveService, WithInitial
 
 	// region builders
 	private RpcClient(NioReactor reactor) {
-		this.reactor = reactor;
+		super(reactor);
 	}
 
 	public static RpcClient create(NioReactor reactor) {
@@ -273,11 +274,6 @@ public final class RpcClient implements IRpcClient, ReactiveService, WithInitial
 	}
 
 	@Override
-	public @NotNull NioReactor getReactor() {
-		return reactor;
-	}
-
-	@Override
 	public @NotNull Promise<Void> start() {
 		if (CHECK) Checks.checkState(inReactorThread(), "Not in reactor thread");
 		Checks.checkNotNull(messageTypes, "Message types must be specified");
@@ -354,7 +350,7 @@ public final class RpcClient implements IRpcClient, ReactiveService, WithInitial
 					asyncTcpSocketImpl.setInspector(statsSocket);
 					ReactiveTcpSocket socket = sslContext == null ?
 							asyncTcpSocketImpl :
-							wrapClientSocket(asyncTcpSocketImpl, sslContext, sslExecutor);
+							wrapClientSocket(reactor, asyncTcpSocketImpl, sslContext, sslExecutor);
 					RpcStream stream = new RpcStream(socket, serializer, defaultPacketSize,
 							autoFlushInterval, frameFormat, false); // , statsSerializer, statsDeserializer, statsCompressor, statsDecompressor);
 					RpcClientConnection connection = new RpcClientConnection(reactor, this, address, stream, keepAliveInterval.toMillis());

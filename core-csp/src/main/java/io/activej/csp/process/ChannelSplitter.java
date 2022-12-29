@@ -33,7 +33,6 @@ import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.reactor.Reactor.getCurrentReactor;
 
 public final class ChannelSplitter<T> extends AbstractCommunicatingProcess
 		implements WithChannelInput<ChannelSplitter<T>, T>, WithChannelOutputs<T>, WithInitializer<ChannelSplitter<T>> {
@@ -91,7 +90,7 @@ public final class ChannelSplitter<T> extends AbstractCommunicatingProcess
 
 	private void tryStart() {
 		if (input != null && outputs.stream().allMatch(Objects::nonNull)) {
-			getCurrentReactor().post(this::startProcess);
+			reactor.post(this::startProcess);
 		}
 	}
 

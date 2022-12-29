@@ -37,6 +37,7 @@ import io.activej.net.socket.tcp.ReactiveTcpSocket;
 import io.activej.net.socket.tcp.ReactiveTcpSocketNio;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.reactor.net.SocketSettings;
 import io.activej.reactor.nio.NioReactor;
@@ -73,7 +74,8 @@ import static org.slf4j.LoggerFactory.getLogger;
  * to clean up the keep-alive connections etc.
  */
 @SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue"})
-public final class ReactiveHttpClient implements AsyncHttpClient, AsyncWebSocketClient, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<ReactiveHttpClient> {
+public final class ReactiveHttpClient extends AbstractNioReactive
+		implements AsyncHttpClient, AsyncWebSocketClient, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<ReactiveHttpClient> {
 	private static final Logger logger = getLogger(ReactiveHttpClient.class);
 	private static final boolean CHECK = Checks.isEnabled(ReactiveHttpClient.class);
 
@@ -86,7 +88,6 @@ public final class ReactiveHttpClient implements AsyncHttpClient, AsyncWebSocket
 	public static final MemSize MAX_WEB_SOCKET_MESSAGE_SIZE = ApplicationSettings.getMemSize(ReactiveHttpClient.class, "maxWebSocketMessageSize", MemSize.megabytes(1));
 	public static final int MAX_KEEP_ALIVE_REQUESTS = ApplicationSettings.getInt(ReactiveHttpClient.class, "maxKeepAliveRequests", 0);
 
-	private final @NotNull NioReactor reactor;
 	private @NotNull AsyncDnsClient asyncDnsClient;
 	private @NotNull SocketSettings socketSettings = DEFAULT_SOCKET_SETTINGS;
 
@@ -287,7 +288,7 @@ public final class ReactiveHttpClient implements AsyncHttpClient, AsyncWebSocket
 
 	// region builders
 	private ReactiveHttpClient(@NotNull NioReactor reactor, @NotNull AsyncDnsClient asyncDnsClient) {
-		this.reactor = reactor;
+		super(reactor);
 		this.asyncDnsClient = asyncDnsClient;
 	}
 
@@ -511,7 +512,7 @@ public final class ReactiveHttpClient implements AsyncHttpClient, AsyncWebSocket
 							assert host != null;
 
 							ReactiveTcpSocket asyncTcpSocket = isSecure ?
-									wrapClientSocket(asyncTcpSocketImpl,
+									wrapClientSocket(reactor, asyncTcpSocketImpl,
 											host, request.getUrl().getPort(),
 											sslContext, sslExecutor) :
 									asyncTcpSocketImpl;
@@ -534,11 +535,6 @@ public final class ReactiveHttpClient implements AsyncHttpClient, AsyncWebSocket
 							request.recycleBody();
 							return Promise.ofException(translateToHttpException(e));
 						});
-	}
-
-	@Override
-	public @NotNull NioReactor getReactor() {
-		return reactor;
 	}
 
 	@Override

@@ -43,6 +43,7 @@ import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.EventStats;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
@@ -56,10 +57,10 @@ import static io.activej.crdt.util.Utils.onItem;
 import static java.util.stream.Collectors.toMap;
 
 @SuppressWarnings("rawtypes") // JMX
-public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements CrdtStorage<K, S>, WithInitializer<CrdtStorageCluster<K, S, P>>, ReactiveService, ReactiveJmxBeanWithStats {
+public final class CrdtStorageCluster<K extends Comparable<K>, S, P> extends AbstractReactive
+		implements CrdtStorage<K, S>, WithInitializer<CrdtStorageCluster<K, S, P>>, ReactiveService, ReactiveJmxBeanWithStats {
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageCluster.class, "smoothingWindow", Duration.ofMinutes(1));
 
-	private final Reactor reactor;
 	private final DiscoveryService<P> discoveryService;
 	private final CrdtFunction<S> crdtFunction;
 	private final Map<P, CrdtStorage<K, S>> crdtStorages = new LinkedHashMap<>();
@@ -92,7 +93,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 
 	// region creators
 	private CrdtStorageCluster(Reactor reactor, DiscoveryService<P> discoveryService, CrdtFunction<S> crdtFunction) {
-		this.reactor = reactor;
+		super(reactor);
 		this.discoveryService = discoveryService;
 		this.crdtFunction = crdtFunction;
 	}
@@ -119,11 +120,6 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> implements 
 */
 
 	// endregion
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
-	}
 
 	@Override
 	public @NotNull Promise<?> start() {

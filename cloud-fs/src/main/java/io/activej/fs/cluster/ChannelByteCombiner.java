@@ -34,7 +34,6 @@ import java.util.Objects;
 
 import static io.activej.common.Checks.checkState;
 import static io.activej.fs.cluster.FsPartitions.LOCAL_EXCEPTION;
-import static io.activej.reactor.Reactor.getCurrentReactor;
 
 final class ChannelByteCombiner extends AbstractCommunicatingProcess
 		implements WithChannelInputs<ByteBuf>, WithChannelOutput<ChannelByteCombiner, ByteBuf> {
@@ -62,7 +61,7 @@ final class ChannelByteCombiner extends AbstractCommunicatingProcess
 
 	private void tryStart() {
 		if (output != null && inputs.stream().allMatch(Objects::nonNull)) {
-			getCurrentReactor().post(this::startProcess);
+			reactor.post(this::startProcess);
 		}
 	}
 

@@ -21,12 +21,12 @@ import io.activej.crdt.storage.local.CrdtStorageFs;
 import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.datastream.StreamConsumer;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class BackupService<K extends Comparable<K>, S> implements ReactiveService {
-	private final Reactor reactor;
+public final class BackupService<K extends Comparable<K>, S> extends AbstractReactive implements ReactiveService {
 	private final CrdtStorageMap<K, S> inMemory;
 	private final CrdtStorageFs<K, S> localFiles;
 
@@ -34,15 +34,10 @@ public final class BackupService<K extends Comparable<K>, S> implements Reactive
 
 	private @Nullable Promise<Void> backupPromise = null;
 
-	public BackupService(CrdtStorageMap<K, S> inMemory, CrdtStorageFs<K, S> localFiles) {
+	public BackupService(Reactor reactor, CrdtStorageMap<K, S> inMemory, CrdtStorageFs<K, S> localFiles) {
+		super(reactor);
 		this.inMemory = inMemory;
 		this.localFiles = localFiles;
-		this.reactor = localFiles.getReactor();
-	}
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
 	}
 
 	public Promise<Void> restore() {

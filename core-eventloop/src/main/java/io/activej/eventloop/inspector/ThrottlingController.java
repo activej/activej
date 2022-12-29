@@ -22,7 +22,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
-import io.activej.reactor.Reactor;
+import io.activej.reactor.Reactive;
 import io.activej.reactor.jmx.ReactiveJmxBean;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,9 +32,11 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkNotNull;
 import static java.lang.Math.pow;
 
-public final class ThrottlingController implements ReactiveJmxBean, EventloopInspector, WithInitializer<ThrottlingController> {
+public final class ThrottlingController
+		implements Reactive, ReactiveJmxBean, EventloopInspector, WithInitializer<ThrottlingController> {
 	private static int staticInstanceCounter = 0;
 
 	private final Logger logger = LoggerFactory.getLogger(ThrottlingController.class.getName() + "." + staticInstanceCounter++);
@@ -82,8 +84,6 @@ public final class ThrottlingController implements ReactiveJmxBean, EventloopIns
 	private float throttling;
 
 	// region creators
-	private ThrottlingController() {
-	}
 
 	public static @NotNull ThrottlingController create() {
 		return new ThrottlingController()
@@ -393,8 +393,8 @@ public final class ThrottlingController implements ReactiveJmxBean, EventloopIns
 	}
 
 	@Override
-	public @NotNull Reactor getReactor() {
-		return eventloop;
+	public @NotNull Eventloop getReactor() {
+		return checkNotNull(eventloop);
 	}
 
 	@Override

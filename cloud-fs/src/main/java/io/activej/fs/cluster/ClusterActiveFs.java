@@ -37,6 +37,7 @@ import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
@@ -70,7 +71,8 @@ import static java.util.stream.Collectors.toList;
  *     <li>Paths should not contain existing filenames as part of the path</li>
  * </ul>
  */
-public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterActiveFs>, ReactiveService, ReactiveJmxBeanWithStats {
+public final class ClusterActiveFs extends AbstractReactive
+		implements ActiveFs, WithInitializer<ClusterActiveFs>, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(ClusterActiveFs.class);
 
 	private final FsPartitions partitions;
@@ -110,12 +112,13 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 	// endregion
 
 	// region creators
-	private ClusterActiveFs(FsPartitions partitions) {
+	private ClusterActiveFs(Reactor reactor, FsPartitions partitions) {
+		super(reactor);
 		this.partitions = partitions;
 	}
 
-	public static ClusterActiveFs create(FsPartitions partitions) {
-		return new ClusterActiveFs(partitions);
+	public static ClusterActiveFs create(Reactor reactor, FsPartitions partitions) {
+		return new ClusterActiveFs(reactor, partitions);
 	}
 
 	/**
@@ -147,11 +150,6 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 		return this;
 	}
 	// endregion
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return partitions.getReactor();
-	}
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {

@@ -43,6 +43,7 @@ import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.EventStats;
 import io.activej.net.socket.tcp.ReactiveTcpSocketNio;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.reactor.net.SocketSettings;
 import io.activej.reactor.nio.NioReactor;
@@ -55,8 +56,8 @@ import java.time.Duration;
 import static io.activej.crdt.util.Utils.onItem;
 
 @SuppressWarnings("rawtypes")
-public final class CrdtStorageClient<K extends Comparable<K>, S> implements CrdtStorage<K, S>, ReactiveService,
-		ReactiveJmxBeanWithStats, WithInitializer<CrdtStorageClient<K, S>> {
+public final class CrdtStorageClient<K extends Comparable<K>, S> extends AbstractNioReactive
+		implements CrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<CrdtStorageClient<K, S>> {
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(CrdtStorageClient.class, "connectTimeout", Duration.ZERO);
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageClient.class, "smoothingWindow", Duration.ofMinutes(1));
@@ -66,7 +67,6 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 			Utils.CRDT_REQUEST_CODEC
 	);
 
-	private final NioReactor reactor;
 	private final InetSocketAddress address;
 	private final CrdtDataSerializer<K, S> serializer;
 	private final BinarySerializer<CrdtTombstone<K>> tombstoneSerializer;
@@ -94,7 +94,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 
 	//region creators
 	private CrdtStorageClient(NioReactor reactor, InetSocketAddress address, CrdtDataSerializer<K, S> serializer) {
-		this.reactor = reactor;
+		super(reactor);
 		this.address = address;
 		this.serializer = serializer;
 
@@ -119,11 +119,6 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> implements Crdt
 		return this;
 	}
 	//endregion
-
-	@Override
-	public @NotNull NioReactor getReactor() {
-		return reactor;
-	}
 
 	public InetSocketAddress getAddress() {
 		return address;

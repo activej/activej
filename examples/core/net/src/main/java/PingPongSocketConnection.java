@@ -41,7 +41,7 @@ public final class PingPongSocketConnection {
 
 		server.listen();
 
-		ReactiveTcpSocketNio.connect(ADDRESS)
+		ReactiveTcpSocketNio.connect(eventloop, ADDRESS)
 				.whenResult(socket -> {
 					BinaryChannelSupplier bufsSupplier = BinaryChannelSupplier.of(ChannelSupplier.ofSocket(socket));
 					loop(0,

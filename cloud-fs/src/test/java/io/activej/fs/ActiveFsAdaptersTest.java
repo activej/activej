@@ -2,7 +2,6 @@ package io.activej.fs;
 
 import io.activej.csp.ChannelConsumer;
 import io.activej.fs.exception.ForbiddenPathException;
-import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -19,6 +18,7 @@ import java.util.regex.Pattern;
 
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.stream.Collectors.toSet;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -42,7 +42,7 @@ public final class ActiveFsAdaptersTest {
 	@Before
 	public void setup() throws IOException {
 		Path path = temporaryFolder.newFolder("test").toPath();
-		LocalActiveFs localActiveFs = LocalActiveFs.create(Reactor.getCurrentReactor(), newSingleThreadExecutor(), path);
+		LocalActiveFs localActiveFs = LocalActiveFs.create(getCurrentReactor(), newSingleThreadExecutor(), path);
 		await(localActiveFs.start());
 		this.local = localActiveFs;
 	}

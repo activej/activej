@@ -32,9 +32,9 @@ import io.activej.ot.OTStateManager;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +51,8 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.transformMap;
 import static java.util.stream.Collectors.toSet;
 
-public final class CubeConsolidationController<K, D, C> implements ReactiveJmxBeanWithStats, WithInitializer<CubeConsolidationController<K, D, C>> {
+public final class CubeConsolidationController<K, D, C> extends AbstractReactive
+		implements ReactiveJmxBeanWithStats, WithInitializer<CubeConsolidationController<K, D, C>> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeConsolidationController.class);
 
 	private static final ChunkLocker<Object> NOOP_CHUNK_LOCKER = ChunkLockerNoOp.create();
@@ -68,7 +69,6 @@ public final class CubeConsolidationController<K, D, C> implements ReactiveJmxBe
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 
-	private final Reactor reactor;
 	private final CubeDiffScheme<D> cubeDiffScheme;
 	private final Cube cube;
 	private final OTStateManager<K, D> stateManager;
@@ -95,11 +95,8 @@ public final class CubeConsolidationController<K, D, C> implements ReactiveJmxBe
 	private boolean cleaning;
 
 	CubeConsolidationController(Reactor reactor,
-			CubeDiffScheme<D> cubeDiffScheme, Cube cube,
-			OTStateManager<K, D> stateManager,
-			AggregationChunkStorage<C> aggregationChunkStorage,
-			Map<Aggregation, String> aggregationsMapReversed) {
-		this.reactor = reactor;
+			CubeDiffScheme<D> cubeDiffScheme, Cube cube, OTStateManager<K, D> stateManager, AggregationChunkStorage<C> aggregationChunkStorage, Map<Aggregation, String> aggregationsMapReversed) {
+		super(reactor);
 		this.cubeDiffScheme = cubeDiffScheme;
 		this.cube = cube;
 		this.stateManager = stateManager;
@@ -323,8 +320,4 @@ public final class CubeConsolidationController<K, D, C> implements ReactiveJmxBe
 		cleanupIrrelevantChunks();
 	}
 
-	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
-	}
 }

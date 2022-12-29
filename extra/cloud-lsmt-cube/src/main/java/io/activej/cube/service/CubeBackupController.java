@@ -30,9 +30,9 @@ import io.activej.ot.system.OTSystem;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,12 +48,12 @@ import static io.activej.common.Utils.first;
 import static io.activej.cube.Utils.chunksInDiffs;
 import static io.activej.ot.OTAlgorithms.checkout;
 
-public final class CubeBackupController<K, D, C> implements ReactiveJmxBeanWithStats, WithInitializer<CubeBackupController<K, D, C>> {
+public final class CubeBackupController<K, D, C> extends AbstractReactive
+		implements ReactiveJmxBeanWithStats, WithInitializer<CubeBackupController<K, D, C>> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeBackupController.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 
-	private final Reactor reactor;
 	private final OTSystem<D> otSystem;
 	private final OTRepository<K, D> repository;
 	private final ActiveFsChunkStorage<C> storage;
@@ -65,11 +65,8 @@ public final class CubeBackupController<K, D, C> implements ReactiveJmxBeanWithS
 	private final PromiseStats promiseBackupChunks = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 
 	CubeBackupController(Reactor reactor,
-			CubeDiffScheme<D> cubeDiffScheme,
-			OTRepository<K, D> repository,
-			OTSystem<D> otSystem,
-			ActiveFsChunkStorage<C> storage) {
-		this.reactor = reactor;
+			CubeDiffScheme<D> cubeDiffScheme, OTRepository<K, D> repository, OTSystem<D> otSystem, ActiveFsChunkStorage<C> storage) {
+		super(reactor);
 		this.cubeDiffScheme = cubeDiffScheme;
 		this.otSystem = otSystem;
 		this.repository = repository;
@@ -125,11 +122,6 @@ public final class CubeBackupController<K, D, C> implements ReactiveJmxBeanWithS
 				.mapException(e -> new CubeException("Failed to backup chunks in repository: " + repository, e))
 				.whenComplete(promiseBackupDb.recordStats())
 				.whenComplete(toLogger(logger, thisMethod(), commit, snapshot));
-	}
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
 	}
 
 	@JmxOperation

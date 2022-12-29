@@ -20,16 +20,18 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.crdt.CrdtException;
 import io.activej.fs.cluster.EtcdWatchService;
+import io.activej.reactor.Reactor;
 
 public final class EtcdDiscoveryService extends AbstractDiscoveryService<EtcdDiscoveryService> {
 	private final EtcdWatchService watchService;
 
-	private EtcdDiscoveryService(EtcdWatchService watchService) {
+	private EtcdDiscoveryService(Reactor reactor, EtcdWatchService watchService) {
+		super(reactor);
 		this.watchService = watchService;
 	}
 
-	public static EtcdDiscoveryService create(EtcdWatchService watchService) {
-		return new EtcdDiscoveryService(watchService);
+	public static EtcdDiscoveryService create(Reactor reactor, EtcdWatchService watchService) {
+		return new EtcdDiscoveryService(reactor, watchService);
 	}
 
 	@Override

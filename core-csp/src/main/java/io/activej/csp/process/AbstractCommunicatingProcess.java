@@ -27,7 +27,7 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
-import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.ImplicitlyReactive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -41,7 +41,7 @@ import org.jetbrains.annotations.Nullable;
  * New process can't be started before the previous one ends.
  * Process can be cancelled or closed manually.
  */
-public abstract class AbstractCommunicatingProcess extends AbstractReactive implements ReactiveProcess {
+public abstract class AbstractCommunicatingProcess extends ImplicitlyReactive implements ReactiveProcess {
 	private boolean processStarted;
 	private boolean processComplete;
 	private final SettablePromise<Void> processCompletion = new SettablePromise<>();

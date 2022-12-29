@@ -46,8 +46,10 @@ import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.processor.StreamSupplierTransformer;
 import io.activej.net.socket.tcp.ReactiveTcpSocketNio;
 import io.activej.promise.Promise;
-import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.AbstractNioReactive;
+import io.activej.reactor.ImplicitlyReactive;
 import io.activej.reactor.net.SocketSettings;
+import io.activej.reactor.nio.NioReactor;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
@@ -61,7 +63,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * Client for datagraph server.
  * Sends JSON commands for performing certain actions on server.
  */
-public final class DataflowClient {
+public final class DataflowClient extends AbstractNioReactive {
 	private static final Logger logger = getLogger(DataflowClient.class);
 
 	private final SocketSettings socketSettings = SocketSettings.createDefault();
@@ -69,17 +71,18 @@ public final class DataflowClient {
 	private final ByteBufsCodec<DataflowResponse, DataflowRequest> codec;
 	private final BinarySerializerLocator serializers;
 
-	private DataflowClient(ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator serializers) {
+	private DataflowClient(NioReactor reactor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator serializers) {
+		super(reactor);
 		this.codec = codec;
 		this.serializers = serializers;
 	}
 
-	public static DataflowClient create(ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator serializers) {
-		return new DataflowClient(codec, serializers);
+	public static DataflowClient create(NioReactor reactor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator serializers) {
+		return new DataflowClient(reactor, codec, serializers);
 	}
 
 	public <T> StreamSupplier<T> download(InetSocketAddress address, StreamId streamId, StreamSchema<T> streamSchema, ChannelTransformer<ByteBuf, ByteBuf> transformer) {
-		return StreamSupplier.ofPromise(ReactiveTcpSocketNio.connect(address, 0, socketSettings)
+		return StreamSupplier.ofPromise(ReactiveTcpSocketNio.connect(reactor, address, 0, socketSettings)
 				.mapException(IOException.class, e -> new DataflowStacklessException("Failed to connect to " + address, e))
 				.then(socket -> {
 					Messaging<DataflowResponse, DataflowRequest> messaging = MessagingWithBinaryStreaming.create(socket, codec);
@@ -163,7 +166,7 @@ public final class DataflowClient {
 		}
 	}
 
-	public class Session extends AbstractReactive implements ReactiveCloseable {
+	public class Session extends ImplicitlyReactive implements ReactiveCloseable {
 		private final InetSocketAddress address;
 		private final Messaging<DataflowResponse, DataflowRequest> messaging;
 
@@ -210,7 +213,7 @@ public final class DataflowClient {
 	}
 
 	public Promise<Session> connect(InetSocketAddress address) {
-		return ReactiveTcpSocketNio.connect(address, 0, socketSettings)
+		return ReactiveTcpSocketNio.connect(reactor, address, 0, socketSettings)
 				.map(socket -> new Session(address, socket))
 				.mapException(e -> new DataflowException("Could not connect to " + address, e));
 	}

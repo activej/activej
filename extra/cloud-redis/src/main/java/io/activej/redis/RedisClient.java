@@ -22,6 +22,7 @@ import io.activej.net.socket.tcp.ReactiveTcpSocketNio;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.net.SocketSettings;
+import io.activej.reactor.nio.NioReactor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -59,16 +60,17 @@ public final class RedisClient extends AbstractNioReactive implements WithInitia
 	private @Nullable Executor sslExecutor;
 
 	// region creators
-	private RedisClient(InetSocketAddress address) {
+	private RedisClient(NioReactor reactor, InetSocketAddress address) {
+		super(reactor);
 		this.address = address;
 	}
 
-	public static RedisClient create() {
-		return new RedisClient(DEFAULT_ADDRESS);
+	public static RedisClient create(NioReactor reactor) {
+		return new RedisClient(reactor, DEFAULT_ADDRESS);
 	}
 
-	public static RedisClient create(InetSocketAddress address) {
-		return new RedisClient(address);
+	public static RedisClient create(NioReactor reactor, InetSocketAddress address) {
+		return new RedisClient(reactor, address);
 	}
 
 	public RedisClient withSocketSettings(SocketSettings socketSettings) {
@@ -118,7 +120,7 @@ public final class RedisClient extends AbstractNioReactive implements WithInitia
 						socket -> {
 							RedisConnection connection = new RedisConnection(this,
 									sslContext != null ?
-											wrapClientSocket(socket,
+											wrapClientSocket(reactor, socket,
 													address.getHostName(), address.getPort(),
 													sslContext, sslExecutor) :
 											socket,

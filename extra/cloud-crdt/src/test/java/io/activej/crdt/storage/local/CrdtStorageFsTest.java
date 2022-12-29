@@ -28,6 +28,7 @@ import static io.activej.common.Utils.first;
 import static io.activej.common.Utils.transformMap;
 import static io.activej.crdt.function.CrdtFunction.ignoringTimestamp;
 import static io.activej.promise.TestUtils.await;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.serializer.BinarySerializers.*;
 import static org.junit.Assert.*;
 
@@ -49,7 +50,7 @@ public final class CrdtStorageFsTest {
 
 	@Before
 	public void setup() throws IOException {
-		Reactor reactor = Reactor.getCurrentReactor();
+		Reactor reactor = getCurrentReactor();
 		fsClient = LocalActiveFs.create(reactor, Executors.newCachedThreadPool(), temporaryFolder.newFolder().toPath());
 		client = CrdtStorageFs.create(reactor, fsClient, SERIALIZER, CRDT_FUNCTION);
 		await(fsClient.start());
@@ -76,7 +77,7 @@ public final class CrdtStorageFsTest {
 
 	@Test
 	public void testConsolidation() {
-		long timestamp = Reactor.getCurrentReactor().currentTimeMillis();
+		long timestamp = getCurrentReactor().currentTimeMillis();
 
 		List<CrdtData<String, Set<Integer>>> expected = List.of(
 				new CrdtData<>("12_test_1", timestamp, Set.of(123, 124, 125, 2, 542)),

@@ -21,6 +21,7 @@ import io.activej.datastream.*;
 import io.activej.datastream.dsl.HasStreamInputs;
 import io.activej.datastream.dsl.HasStreamOutput;
 import io.activej.datastream.processor.StreamReducers.Reducer;
+import io.activej.reactor.ImplicitlyReactive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,7 +39,7 @@ import static io.activej.common.Checks.checkArgument;
  * because it represents few consumers and one supplier.
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
-public final class StreamReducer<K, O, A> implements HasStreamInputs, HasStreamOutput<O>, WithInitializer<StreamReducer<K, O, A>> {
+public final class StreamReducer<K, O, A> extends ImplicitlyReactive implements HasStreamInputs, HasStreamOutput<O>, WithInitializer<StreamReducer<K, O, A>> {
 	public static final int DEFAULT_BUFFER_SIZE = 2000;
 
 	private final List<Input> inputs = new ArrayList<>();

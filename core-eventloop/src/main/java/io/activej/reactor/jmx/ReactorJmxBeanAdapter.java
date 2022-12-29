@@ -122,7 +122,7 @@ public final class ReactorJmxBeanAdapter implements JmxBeanAdapterWithRefresh {
 		return result;
 	}
 
-	private void refresh(@NotNull Reactor reactor, @NotNull List<JmxRefreshable> list, int startIndex, ValueStats refreshStats) {
+	private void refresh(Reactor reactor, List<JmxRefreshable> list, int startIndex, ValueStats refreshStats) {
 		checkState(reactor.inReactorThread());
 
 		long timestamp = reactor.currentTimeMillis();

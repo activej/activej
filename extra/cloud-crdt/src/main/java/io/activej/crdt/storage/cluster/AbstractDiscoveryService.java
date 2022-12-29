@@ -2,6 +2,8 @@ package io.activej.crdt.storage.cluster;
 
 import io.activej.common.exception.MalformedDataException;
 import io.activej.crdt.storage.CrdtStorage;
+import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.Reactor;
 import io.activej.rpc.client.sender.RpcStrategy;
 import io.activej.types.TypeT;
 import org.jetbrains.annotations.NotNull;
@@ -12,11 +14,16 @@ import java.util.function.Function;
 
 import static io.activej.fs.util.JsonUtils.fromJson;
 
-public abstract class AbstractDiscoveryService<D extends AbstractDiscoveryService<D>> implements DiscoveryService {
+public abstract class AbstractDiscoveryService<D extends AbstractDiscoveryService<D>> extends AbstractReactive
+		implements DiscoveryService<PartitionId> {
 	protected static final TypeT<List<RendezvousPartitionGroup<PartitionId>>> PARTITION_GROUPS_TYPE = new TypeT<>() {};
 
 	protected @Nullable Function<PartitionId, @NotNull RpcStrategy> rpcProvider;
 	protected @Nullable Function<PartitionId, @NotNull CrdtStorage<?, ?>> crdtProvider;
+
+	public AbstractDiscoveryService(Reactor reactor) {
+		super(reactor);
+	}
 
 	public D withCrdtProvider(Function<PartitionId, CrdtStorage<?, ?>> crdtProvider) {
 		this.crdtProvider = crdtProvider;

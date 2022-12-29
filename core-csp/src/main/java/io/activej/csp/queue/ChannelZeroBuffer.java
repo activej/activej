@@ -20,7 +20,7 @@ import io.activej.common.Checks;
 import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
-import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.ImplicitlyReactive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,7 +35,7 @@ import static io.activej.common.Checks.checkState;
  *
  * @param <T> type of data passed through the buffer
  */
-public final class ChannelZeroBuffer<T> extends AbstractReactive implements ChannelQueue<T> {
+public final class ChannelZeroBuffer<T> extends ImplicitlyReactive implements ChannelQueue<T> {
 	private static final boolean CHECK = Checks.isEnabled(ChannelZeroBuffer.class);
 
 	private Exception exception;

@@ -2,7 +2,6 @@ package io.activej.aggregation;
 
 import io.activej.ot.util.IdGeneratorSql;
 import io.activej.ot.util.SqlAtomicSequence;
-import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -16,6 +15,7 @@ import java.sql.SQLException;
 
 import static io.activej.common.sql.SqlUtils.executeScript;
 import static io.activej.promise.TestUtils.await;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.test.TestUtils.dataSource;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.junit.Assert.assertEquals;
@@ -53,7 +53,7 @@ public class IdGeneratorSqlTest {
 
 	@Test
 	public void testIdGeneratorSql() {
-		IdGeneratorSql idGeneratorSql = IdGeneratorSql.create(Reactor.getCurrentReactor(), newSingleThreadExecutor(), dataSource, sequence);
+		IdGeneratorSql idGeneratorSql = IdGeneratorSql.create(getCurrentReactor(), newSingleThreadExecutor(), dataSource, sequence);
 
 		assertEquals(1, (long) await(idGeneratorSql.createId()));
 		assertEquals(2, (long) await(idGeneratorSql.createId()));
@@ -62,7 +62,7 @@ public class IdGeneratorSqlTest {
 
 	@Test
 	public void testIdGeneratorSql10() {
-		IdGeneratorSql idGeneratorSql = IdGeneratorSql.create(Reactor.getCurrentReactor(), newSingleThreadExecutor(), dataSource, sequence)
+		IdGeneratorSql idGeneratorSql = IdGeneratorSql.create(getCurrentReactor(), newSingleThreadExecutor(), dataSource, sequence)
 				.withStride(10);
 		for (int i = 1; i <= 25; i++) {
 			assertEquals(i, (long) await(idGeneratorSql.createId()));

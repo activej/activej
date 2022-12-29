@@ -17,7 +17,8 @@
 package io.activej.csp.dsl;
 
 import io.activej.csp.ChannelInput;
+import io.activej.reactor.Reactive;
 
-public interface HasChannelInput<T> {
+public interface HasChannelInput<T> extends Reactive {
 	ChannelInput<T> getInput();
 }

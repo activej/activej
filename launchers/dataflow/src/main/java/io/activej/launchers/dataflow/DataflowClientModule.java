@@ -27,6 +27,7 @@ import io.activej.dataflow.messaging.DataflowRequest;
 import io.activej.dataflow.messaging.DataflowResponse;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
+import io.activej.reactor.nio.NioReactor;
 
 import java.util.List;
 
@@ -47,15 +48,15 @@ public final class DataflowClientModule extends AbstractModule {
 	}
 
 	@Provides
-	DataflowClient client(ByteBufsCodec<DataflowResponse, DataflowRequest> codec,
+	DataflowClient client(NioReactor reactor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec,
 			BinarySerializerLocator serializers
 	) {
-		return DataflowClient.create(codec, serializers);
+		return DataflowClient.create(reactor, codec, serializers);
 	}
 
 	@Provides
-	DataflowGraph graph(DataflowClient client, List<Partition> partitions) {
-		return new DataflowGraph(client, partitions);
+	DataflowGraph graph(NioReactor reactor, DataflowClient client, List<Partition> partitions) {
+		return new DataflowGraph(reactor, client, partitions);
 	}
 
 	@Provides

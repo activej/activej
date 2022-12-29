@@ -85,7 +85,7 @@ public final class TestClusterActiveFs {
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
 			int port = getFreePort();
 
-			partitions.put("server_" + i, HttpActiveFs.create("http://localhost:" + port, httpClient));
+			partitions.put("server_" + i, HttpActiveFs.create(reactor, "http://localhost:" + port, httpClient));
 
 			Path path = Paths.get(tmpFolder.newFolder("storage_" + i).toURI());
 			serverStorages.add(path);
@@ -110,12 +110,12 @@ public final class TestClusterActiveFs {
 			listenFuture.get();
 		}
 
-		partitions.put("dead_one", HttpActiveFs.create("http://localhost:" + 5555, httpClient));
-		partitions.put("dead_two", HttpActiveFs.create("http://localhost:" + 5556, httpClient));
-		partitions.put("dead_three", HttpActiveFs.create("http://localhost:" + 5557, httpClient));
+		partitions.put("dead_one", HttpActiveFs.create(reactor, "http://localhost:" + 5555, httpClient));
+		partitions.put("dead_two", HttpActiveFs.create(reactor, "http://localhost:" + 5556, httpClient));
+		partitions.put("dead_three", HttpActiveFs.create(reactor, "http://localhost:" + 5557, httpClient));
 
 		this.partitions = FsPartitions.create(reactor, DiscoveryService.constant(partitions));
-		client = ClusterActiveFs.create(this.partitions);
+		client = ClusterActiveFs.create(reactor, this.partitions);
 		client.withReplicationCount(REPLICATION_COUNT); // there are those 3 dead nodes added above
 		await(this.partitions.start());
 		await(this.client.start());

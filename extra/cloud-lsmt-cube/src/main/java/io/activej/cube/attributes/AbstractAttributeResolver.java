@@ -17,10 +17,16 @@
 package io.activej.cube.attributes;
 
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.Reactor;
 
 import java.util.List;
 
-public abstract class AbstractAttributeResolver<K, A> implements AttributeResolver {
+public abstract class AbstractAttributeResolver<K, A> extends AbstractReactive implements AttributeResolver {
+
+	public AbstractAttributeResolver(Reactor reactor) {
+		super(reactor);
+	}
 
 	protected abstract K toKey(Object[] keyArray);
 

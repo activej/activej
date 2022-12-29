@@ -17,11 +17,12 @@
 package io.activej.net;
 
 import io.activej.net.socket.tcp.ReactiveTcpSocket;
-import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 
 import java.net.InetAddress;
 import java.util.function.Consumer;
+
+import static io.activej.reactor.Reactor.getCurrentReactor;
 
 /**
  * This is a basic implementation of the {@link AbstractReactiveServer} which just dispatches
@@ -40,7 +41,7 @@ public final class SimpleServer extends AbstractReactiveServer<SimpleServer> {
 	}
 
 	public static SimpleServer create(Consumer<ReactiveTcpSocket> socketConsumer) {
-		return new SimpleServer(Reactor.getCurrentReactor(), socketConsumer);
+		return new SimpleServer(getCurrentReactor(), socketConsumer);
 	}
 
 	@Override

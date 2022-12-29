@@ -49,7 +49,9 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 	@Provides
 	@Eager
 	@Named("repartition")
-	ReactiveTaskScheduler repartitionScheduler(Config config, ClusterRepartitionController controller) {
+	ReactiveTaskScheduler repartitionScheduler(
+			ClusterRepartitionController controller,
+			Config config) {
 		return ReactiveTaskScheduler.create(controller.getReactor(), controller::repartition)
 				.withInitializer(ofReactorTaskScheduler(config.getChild("activefs.repartition")));
 	}
@@ -63,16 +65,20 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 	}
 
 	@Provides
-	ClusterRepartitionController repartitionController(Config config, ActiveFsServer localServer, FsPartitions partitions) {
+	ClusterRepartitionController repartitionController(Reactor reactor,
+			ActiveFsServer localServer, FsPartitions partitions,
+			Config config) {
 		String localPartitionId = first(partitions.getAllPartitions());
 		assert localPartitionId != null;
 
-		return ClusterRepartitionController.create(localPartitionId, partitions)
+		return ClusterRepartitionController.create(reactor, localPartitionId, partitions)
 				.withInitializer(ofClusterRepartitionController(config.getChild("activefs.repartition")));
 	}
 
 	@Provides
-	DiscoveryService discoveryService(NioReactor reactor, ActiveFs activeFs, Config config) throws MalformedDataException {
+	DiscoveryService discoveryService(NioReactor reactor,
+			ActiveFs activeFs,
+			Config config) throws MalformedDataException {
 		return Initializers.constantDiscoveryService(reactor, activeFs, config);
 	}
 

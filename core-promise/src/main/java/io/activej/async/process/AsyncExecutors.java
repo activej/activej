@@ -36,16 +36,16 @@ public class AsyncExecutors {
 	public static AsyncExecutor direct() {
 		return new AsyncExecutor() {
 			@Override
-			public <T> @NotNull Promise<T> execute(@NotNull AsyncSupplier<T> supplier) {
+			public <T> Promise<T> execute(AsyncSupplier<T> supplier) {
 				return supplier.get();
 			}
 		};
 	}
 
-	public static AsyncExecutor ofReactor(@NotNull Reactor reactor) {
+	public static AsyncExecutor ofReactor(Reactor reactor) {
 		return new AsyncExecutor() {
 			@Override
-			public <T> @NotNull Promise<T> execute(@NotNull AsyncSupplier<T> supplier) {
+			public <T> Promise<T> execute(AsyncSupplier<T> supplier) {
 				Reactor currentReactor = Reactor.getCurrentReactor();
 				if (reactor == currentReactor) {
 					return supplier.get();
@@ -62,12 +62,12 @@ public class AsyncExecutors {
 		};
 	}
 
-	public static AsyncExecutor roundRobin(@NotNull List<AsyncExecutor> executors) {
+	public static AsyncExecutor roundRobin(List<AsyncExecutor> executors) {
 		return new AsyncExecutor() {
 			int index;
 
 			@Override
-			public <T> @NotNull Promise<T> execute(@NotNull AsyncSupplier<T> supplier) {
+			public <T> Promise<T> execute(AsyncSupplier<T> supplier) {
 				AsyncExecutor executor = executors.get(index);
 				index = (index + 1) % executors.size();
 				return executor.execute(supplier);

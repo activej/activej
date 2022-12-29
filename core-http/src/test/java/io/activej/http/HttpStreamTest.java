@@ -27,6 +27,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.lang.Math.min;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -147,7 +148,7 @@ public final class HttpStreamTest {
 						"Content-Length: 4" + CRLF + CRLF +
 						"Test";
 
-		ByteBuf body = await(ReactiveTcpSocketNio.connect(new InetSocketAddress(port))
+		ByteBuf body = await(ReactiveTcpSocketNio.connect(getCurrentReactor(), new InetSocketAddress(port))
 				.then(socket -> socket.write(ByteBuf.wrapForReading(chunkedRequest.getBytes(UTF_8)))
 						.then(() -> socket.write(null))
 						.then(() -> ChannelSupplier.ofSocket(socket).toCollector(ByteBufs.collector()))
@@ -169,7 +170,7 @@ public final class HttpStreamTest {
 						"Transfer-Encoding: chunked" + CRLF + CRLF +
 						"ffffffffff";
 
-		ByteBuf body = await(ReactiveTcpSocketNio.connect(new InetSocketAddress(port))
+		ByteBuf body = await(ReactiveTcpSocketNio.connect(getCurrentReactor(), new InetSocketAddress(port))
 				.then(socket -> socket.write(ByteBuf.wrapForReading(chunkedRequest.getBytes(UTF_8)))
 						.then(socket::read)
 						.whenComplete(socket::close)));
@@ -196,7 +197,7 @@ public final class HttpStreamTest {
 						"Transfer-Encoding: chunked" + CRLF + CRLF +
 						"3";
 
-		ByteBuf body = await(ReactiveTcpSocketNio.connect(new InetSocketAddress(port))
+		ByteBuf body = await(ReactiveTcpSocketNio.connect(getCurrentReactor(), new InetSocketAddress(port))
 				.then(socket -> socket.write(ByteBuf.wrapForReading(chunkedRequest.getBytes(UTF_8)))
 						.then(() -> socket.write(null))
 						.then(socket::read)

@@ -50,7 +50,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.MemSize.kilobytes;
 import static io.activej.common.Utils.nullify;
-import static io.activej.reactor.Reactor.getCurrentReactor;
 
 @SuppressWarnings("WeakerAccess")
 public final class ReactiveTcpSocketNio extends AbstractNioReactive implements ReactiveTcpSocket, NioChannelEventHandler {
@@ -225,8 +224,14 @@ public final class ReactiveTcpSocketNio extends AbstractNioReactive implements R
 		}
 	}
 
-	public static ReactiveTcpSocketNio wrapChannel(SocketChannel socketChannel, @NotNull InetSocketAddress remoteAddress, @Nullable SocketSettings socketSettings) throws IOException {
-		ReactiveTcpSocketNio asyncTcpSocket = new ReactiveTcpSocketNio(socketChannel, remoteAddress);
+	private ReactiveTcpSocketNio(NioReactor reactor, SocketChannel socketChannel, InetSocketAddress remoteAddress) {
+		super(reactor);
+		this.channel = socketChannel;
+		this.remoteAddress = remoteAddress;
+	}
+
+	public static ReactiveTcpSocketNio wrapChannel(NioReactor reactor, SocketChannel socketChannel, InetSocketAddress remoteAddress, @Nullable SocketSettings socketSettings) throws IOException {
+		ReactiveTcpSocketNio asyncTcpSocket = new ReactiveTcpSocketNio(reactor, socketChannel, remoteAddress);
 		if (socketSettings == null) return asyncTcpSocket;
 		socketSettings.applySettings(socketChannel);
 		if (socketSettings.hasImplReadTimeout()) {
@@ -241,32 +246,23 @@ public final class ReactiveTcpSocketNio extends AbstractNioReactive implements R
 		return asyncTcpSocket;
 	}
 
-	public static ReactiveTcpSocketNio wrapChannel(SocketChannel socketChannel, @Nullable SocketSettings socketSettings) throws IOException {
-		return wrapChannel(socketChannel, ((InetSocketAddress) socketChannel.getRemoteAddress()), socketSettings);
-	}
-
-	public static Promise<ReactiveTcpSocketNio> connect(InetSocketAddress address) {
-		return connect(address, null, null);
+	public static ReactiveTcpSocketNio wrapChannel(NioReactor reactor, SocketChannel socketChannel, @Nullable SocketSettings socketSettings) throws IOException {
+		return wrapChannel(reactor, socketChannel, ((InetSocketAddress) socketChannel.getRemoteAddress()), socketSettings);
 	}
 
 	public static Promise<ReactiveTcpSocketNio> connect(NioReactor reactor, InetSocketAddress address) {
-		return connect(reactor, address, 0, null);
+		return connect(reactor, address, null, null);
 	}
 
-	public static Promise<ReactiveTcpSocketNio> connect(InetSocketAddress address, @Nullable Duration duration, @Nullable SocketSettings socketSettings) {
-		return connect(address, duration == null ? 0 : duration.toMillis(), socketSettings);
-	}
-
-	public static Promise<ReactiveTcpSocketNio> connect(InetSocketAddress address, long timeout, @Nullable SocketSettings socketSettings) {
-		NioReactor reactor = getCurrentReactor();
-		return connect(reactor, address, timeout, socketSettings);
+	public static Promise<ReactiveTcpSocketNio> connect(NioReactor reactor, InetSocketAddress address, @Nullable Duration duration, @Nullable SocketSettings socketSettings) {
+		return connect(reactor, address, duration == null ? 0 : duration.toMillis(), socketSettings);
 	}
 
 	public static Promise<ReactiveTcpSocketNio> connect(NioReactor reactor, InetSocketAddress address, long timeout, @Nullable SocketSettings socketSettings) {
 		return Promise.<SocketChannel>ofCallback(cb -> reactor.connect(address, timeout, cb))
 				.map(channel -> {
 					try {
-						return wrapChannel(channel, address, socketSettings);
+						return wrapChannel(reactor, channel, address, socketSettings);
 					} catch (IOException e) {
 						reactor.closeChannel(channel, null);
 						throw e;
@@ -276,11 +272,6 @@ public final class ReactiveTcpSocketNio extends AbstractNioReactive implements R
 
 	public void setInspector(@Nullable Inspector inspector) {
 		this.inspector = inspector;
-	}
-
-	private ReactiveTcpSocketNio(@NotNull SocketChannel socketChannel, InetSocketAddress remoteAddress) {
-		this.channel = socketChannel;
-		this.remoteAddress = remoteAddress;
 	}
 	// endregion
 

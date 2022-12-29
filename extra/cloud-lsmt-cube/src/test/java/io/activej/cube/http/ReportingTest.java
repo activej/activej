@@ -23,6 +23,7 @@ import io.activej.multilog.Multilog;
 import io.activej.multilog.MultilogImpl;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.uplink.OTUplink;
+import io.activej.reactor.Reactor;
 import io.activej.record.Record;
 import io.activej.serializer.SerializerBuilder;
 import io.activej.serializer.annotations.Serialize;
@@ -98,6 +99,10 @@ public final class ReportingTest extends CubeTestBase {
 			Map.entry("errors", sum(ofLong()))));
 
 	private static class AdvertiserResolver extends AbstractAttributeResolver<Integer, String> {
+		public AdvertiserResolver(Reactor reactor) {
+			super(reactor);
+		}
+
 		@Override
 		public Class<?>[] getKeyTypes() {
 			return new Class[]{int.class};
@@ -256,7 +261,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withRelation("campaign", "advertiser")
 				.withRelation("banner", "campaign")
 				.withRelation("site", "affiliate")
-				.withAttribute("advertiser.name", new AdvertiserResolver())
+				.withAttribute("advertiser.name", new AdvertiserResolver(reactor))
 				.withComputedMeasure("ctr", percent(measure("clicks"), measure("impressions")))
 				.withComputedMeasure("uniqueUserPercent", percent(div(measure("uniqueUserIdsCount"), measure("eventCount"))))
 				.withComputedMeasure("errorsPercent", percent(div(measure("errors"), measure("impressions"))))

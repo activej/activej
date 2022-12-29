@@ -37,6 +37,7 @@ import io.activej.fs.exception.*;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
@@ -73,7 +74,8 @@ import static java.nio.file.StandardOpenOption.*;
  * <p>
  * This implementation does not define new limitations, other than those defined in {@link ActiveFs} interface.
  */
-public final class LocalActiveFs implements ActiveFs, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<LocalActiveFs> {
+public final class LocalActiveFs extends AbstractReactive
+		implements ActiveFs, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<LocalActiveFs> {
 	private static final Logger logger = LoggerFactory.getLogger(LocalActiveFs.class);
 
 	public static final String DEFAULT_TEMP_DIR = ".upload";
@@ -84,7 +86,6 @@ public final class LocalActiveFs implements ActiveFs, ReactiveService, ReactiveJ
 	private static final Set<StandardOpenOption> DEFAULT_APPEND_OPTIONS = Set.of(WRITE);
 	private static final Set<StandardOpenOption> DEFAULT_APPEND_NEW_OPTIONS = Set.of(WRITE, CREATE);
 
-	private final Reactor reactor;
 	private final Path storage;
 	private final Executor executor;
 
@@ -121,7 +122,7 @@ public final class LocalActiveFs implements ActiveFs, ReactiveService, ReactiveJ
 
 	// region creators
 	private LocalActiveFs(Reactor reactor, Path storage, Executor executor) {
-		this.reactor = reactor;
+		super(reactor);
 		this.executor = executor;
 		this.storage = storage;
 		this.tempDir = storage.resolve(DEFAULT_TEMP_DIR);
@@ -416,11 +417,6 @@ public final class LocalActiveFs implements ActiveFs, ReactiveService, ReactiveJ
 				})
 				.whenComplete(toLogger(logger, TRACE, "infoAll", names, this))
 				.whenComplete(infoAllPromise.recordStats());
-	}
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
 	}
 
 	@Override

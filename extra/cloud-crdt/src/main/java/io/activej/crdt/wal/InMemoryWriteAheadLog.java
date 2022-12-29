@@ -27,6 +27,7 @@ import io.activej.crdt.primitives.CrdtType;
 import io.activej.crdt.storage.CrdtStorage;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -38,13 +39,12 @@ import java.util.TreeMap;
 import static io.activej.async.util.LogUtils.Level.INFO;
 import static io.activej.async.util.LogUtils.toLogger;
 
-public class InMemoryWriteAheadLog<K extends Comparable<K>, S> implements WriteAheadLog<K, S>, ReactiveService,
-		WithInitializer<InMemoryWriteAheadLog<K, S>> {
+public class InMemoryWriteAheadLog<K extends Comparable<K>, S> extends AbstractReactive
+		implements WriteAheadLog<K, S>, ReactiveService, WithInitializer<InMemoryWriteAheadLog<K, S>> {
 	private static final Logger logger = LoggerFactory.getLogger(InMemoryWriteAheadLog.class);
 
 	private Map<K, CrdtData<K, S>> map = new TreeMap<>();
 
-	private final Reactor reactor;
 	private final CrdtFunction<S> function;
 	private final CrdtStorage<K, S> storage;
 
@@ -53,7 +53,7 @@ public class InMemoryWriteAheadLog<K extends Comparable<K>, S> implements WriteA
 	private CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
 
 	private InMemoryWriteAheadLog(Reactor reactor, CrdtFunction<S> function, CrdtStorage<K, S> storage) {
-		this.reactor = reactor;
+		super(reactor);
 		this.function = function;
 		this.storage = storage;
 	}
@@ -99,11 +99,6 @@ public class InMemoryWriteAheadLog<K extends Comparable<K>, S> implements WriteA
 						.streamTo(consumer))
 				.whenException(e -> map.forEach(this::doPut))
 				.whenComplete(toLogger(logger, INFO, INFO, "flush", map.size()));
-	}
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
 	}
 
 	@Override

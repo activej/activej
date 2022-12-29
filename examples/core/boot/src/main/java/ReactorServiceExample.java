@@ -6,6 +6,7 @@ import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.service.ServiceGraphModule;
 import org.jetbrains.annotations.NotNull;
@@ -36,16 +37,9 @@ public class ReactorServiceExample extends Launcher {
 		System.out.println("|RUNNING|");
 	}
 
-	private static final class CustomReactiveService implements ReactiveService {
-		private final Reactor reactor;
-
+	private static final class CustomReactiveService extends AbstractReactive implements ReactiveService {
 		public CustomReactiveService(Reactor reactor) {
-			this.reactor = reactor;
-		}
-
-		@Override
-		public @NotNull Reactor getReactor() {
-			return reactor;
+			super(reactor);
 		}
 
 		@Override

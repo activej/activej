@@ -747,15 +747,15 @@ public final class DataflowTest {
 					}
 
 					@Provides
-					DataflowClient client(ByteBufsCodec<DataflowResponse, DataflowRequest> codec,
+					DataflowClient client(NioReactor reactor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec,
 							BinarySerializerModule.BinarySerializerLocator serializers) {
-						return DataflowClient.create(codec, serializers);
+						return DataflowClient.create(reactor, codec, serializers);
 					}
 
 					@Provides
 					@Transient
-					DataflowGraph graph(DataflowClient client) {
-						return new DataflowGraph(client, graphPartitions);
+					DataflowGraph graph(NioReactor reactor, DataflowClient client) {
+						return new DataflowGraph(reactor, client, graphPartitions);
 					}
 
 					@Provides

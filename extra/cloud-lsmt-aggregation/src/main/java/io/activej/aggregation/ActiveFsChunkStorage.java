@@ -46,6 +46,7 @@ import io.activej.jmx.stats.ValueStats;
 import io.activej.ot.util.IdGenerator;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import org.jetbrains.annotations.NotNull;
@@ -73,7 +74,8 @@ import static java.util.stream.Collectors.toSet;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @SuppressWarnings("rawtypes") // JMX doesn't work with generic types
-public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>, ReactiveService, WithInitializer<ActiveFsChunkStorage<C>>, ReactiveJmxBeanWithStats {
+public final class ActiveFsChunkStorage<C> extends AbstractReactive
+		implements AggregationChunkStorage<C>, ReactiveService, WithInitializer<ActiveFsChunkStorage<C>>, ReactiveJmxBeanWithStats {
 	private static final Logger logger = getLogger(ActiveFsChunkStorage.class);
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(256);
 
@@ -83,7 +85,6 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 	public static final String LOG = ".log";
 	public static final String TEMP_LOG = ".temp";
 
-	private final Reactor reactor;
 	private final ChunkIdCodec<C> chunkIdCodec;
 	private final IdGenerator<C> idGenerator;
 	private final FrameFormat frameFormat;
@@ -128,7 +129,7 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 	private int finishChunks;
 
 	private ActiveFsChunkStorage(Reactor reactor, ChunkIdCodec<C> chunkIdCodec, IdGenerator<C> idGenerator, FrameFormat frameFormat, ActiveFs fs) {
-		this.reactor = reactor;
+		super(reactor);
 		this.chunkIdCodec = chunkIdCodec;
 		this.idGenerator = idGenerator;
 		this.frameFormat = frameFormat;
@@ -332,11 +333,6 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 			logger.warn("Invalid chunk filename: {}", path);
 			return null;
 		}
-	}
-
-	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
 	}
 
 	@Override

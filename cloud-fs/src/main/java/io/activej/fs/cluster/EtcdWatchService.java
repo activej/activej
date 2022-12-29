@@ -19,6 +19,7 @@ package io.activej.fs.cluster;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
@@ -38,15 +39,14 @@ import static io.etcd.jetcd.watch.WatchEvent.EventType.DELETE;
 import static io.etcd.jetcd.watch.WatchEvent.EventType.PUT;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public final class EtcdWatchService {
+public final class EtcdWatchService extends AbstractReactive {
 	private static final SettablePromise<byte[]> UPDATE_CONSUMED = new SettablePromise<>();
 
-	private final Reactor reactor;
 	private final Client client;
 	private final String key;
 
 	private EtcdWatchService(Reactor reactor, Client client, String key) {
-		this.reactor = reactor;
+		super(reactor);
 		this.client = client;
 		this.key = key;
 	}

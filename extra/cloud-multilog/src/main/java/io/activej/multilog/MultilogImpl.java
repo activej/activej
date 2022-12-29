@@ -39,6 +39,7 @@ import io.activej.fs.ActiveFs;
 import io.activej.fs.exception.IllegalOffsetException;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.serializer.BinarySerializer;
@@ -58,12 +59,12 @@ import static io.activej.datastream.stats.StreamStatsSizeCounter.forByteBufs;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 
-public final class MultilogImpl<T> implements Multilog<T>, ReactiveJmxBeanWithStats, WithInitializer<MultilogImpl<T>> {
+public final class MultilogImpl<T> extends AbstractReactive
+		implements Multilog<T>, ReactiveJmxBeanWithStats, WithInitializer<MultilogImpl<T>> {
 	private static final Logger logger = LoggerFactory.getLogger(MultilogImpl.class);
 
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(256);
 
-	private final Reactor reactor;
 	private final ActiveFs fs;
 	private final LogNamingScheme namingScheme;
 	private final BinarySerializer<T> serializer;
@@ -81,7 +82,7 @@ public final class MultilogImpl<T> implements Multilog<T>, ReactiveJmxBeanWithSt
 
 	private MultilogImpl(Reactor reactor, ActiveFs fs, FrameFormat frameFormat, BinarySerializer<T> serializer,
 			LogNamingScheme namingScheme) {
-		this.reactor = reactor;
+		super(reactor);
 		this.fs = fs;
 		this.frameFormat = frameFormat;
 		this.serializer = serializer;
@@ -269,8 +270,4 @@ public final class MultilogImpl<T> implements Multilog<T>, ReactiveJmxBeanWithSt
 		checkArgument(!logPartition.contains("-"), "Using dash (-) in log partition name is not allowed");
 	}
 
-	@Override
-	public @NotNull Reactor getReactor() {
-		return reactor;
-	}
 }

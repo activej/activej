@@ -36,12 +36,11 @@ import static java.nio.file.StandardWatchEventKinds.*;
 public final class FileDiscoveryService extends AbstractDiscoveryService<FileDiscoveryService> {
 	private static final SettablePromise<PartitionScheme<PartitionId>> UPDATE_CONSUMED = new SettablePromise<>();
 
-	private final Reactor reactor;
 	private final WatchService watchService;
 	private final Path pathToFile;
 
 	private FileDiscoveryService(Reactor reactor, WatchService watchService, Path pathToFile) {
-		this.reactor = reactor;
+		super(reactor);
 		this.watchService = watchService;
 		this.pathToFile = pathToFile;
 	}

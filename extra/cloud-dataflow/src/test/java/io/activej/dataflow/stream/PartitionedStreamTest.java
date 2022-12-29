@@ -48,7 +48,6 @@ import io.activej.inject.module.Modules;
 import io.activej.net.AbstractReactiveServer;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
-import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.streamcodecs.StreamCodec;
 import io.activej.streamcodecs.StreamCodecs;
@@ -77,6 +76,7 @@ import static io.activej.dataflow.graph.StreamSchemas.simple;
 import static io.activej.datastream.StreamSupplier.ofChannelSupplier;
 import static io.activej.datastream.processor.StreamReducers.mergeReducer;
 import static io.activej.promise.TestUtils.await;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -261,7 +261,7 @@ public final class PartitionedStreamTest {
 
 		Set<String> allTargetItems = new HashSet<>();
 		for (int i = 0; i < targetFsServers.size(); i++) {
-			ActiveFs fs = createClient(Reactor.getCurrentReactor(), targetFsServers.get(i));
+			ActiveFs fs = createClient(getCurrentReactor(), targetFsServers.get(i));
 			List<String> items = new ArrayList<>();
 			await(fs.download(TARGET_FILENAME)
 					.then(supplier -> supplier.transformWith(new CSVDecoder())
@@ -276,7 +276,7 @@ public final class PartitionedStreamTest {
 		}
 
 		Set<String> sourceFiltered = await(Promises.toList(sourceFsServers.stream()
-						.map(server -> createClient(Reactor.getCurrentReactor(), server))
+						.map(server -> createClient(getCurrentReactor(), server))
 						.map(client -> client.download(SOURCE_FILENAME)
 								.then(supplier -> supplier
 										.transformWith(new CSVDecoder())
@@ -377,12 +377,12 @@ public final class PartitionedStreamTest {
 				new AbstractModule() {
 					@Provides
 					NioReactor reactor() {
-						return Reactor.getCurrentReactor();
+						return getCurrentReactor();
 					}
 
 					@Provides
-					DataflowClient client(ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator locator) {
-						return DataflowClient.create(codec, locator);
+					DataflowClient client(NioReactor reactor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator locator) {
+						return DataflowClient.create(reactor, codec, locator);
 					}
 
 					@Provides
@@ -412,7 +412,7 @@ public final class PartitionedStreamTest {
 
 	private static ActiveFs createClient(NioReactor reactor, AsyncHttpServer server) {
 		int port = server.getListenAddresses().get(0).getPort();
-		return HttpActiveFs.create("http://localhost:" + port, ReactiveHttpClient.create(reactor));
+		return HttpActiveFs.create(reactor, "http://localhost:" + port, ReactiveHttpClient.create(reactor));
 	}
 
 	private void assertSorted(Collection<List<String>> result) {
@@ -450,7 +450,7 @@ public final class PartitionedStreamTest {
 	private Map<Partition, List<String>> collectToMap(boolean sorted) {
 		Injector injector = Injector.of(createClientModule());
 		DataflowClient client = injector.getInstance(DataflowClient.class);
-		DataflowGraph graph = new DataflowGraph(client, toPartitions(dataflowServers));
+		DataflowGraph graph = new DataflowGraph(getCurrentReactor(), client, toPartitions(dataflowServers));
 		Dataset<String> compoundDataset = datasetOfId(sorted ? "sorted data source" : "data source", simple(String.class));
 
 		PartitionedCollector<String> collector = new PartitionedCollector<>(compoundDataset, client);
@@ -463,7 +463,7 @@ public final class PartitionedStreamTest {
 	private void filterOddAndPropagateToTarget() {
 		Injector injector = Injector.of(createClientModule());
 		DataflowClient client = injector.getInstance(DataflowClient.class);
-		DataflowGraph graph = new DataflowGraph(client, toPartitions(dataflowServers));
+		DataflowGraph graph = new DataflowGraph(getCurrentReactor(), client, toPartitions(dataflowServers));
 		Dataset<String> compoundDataset = datasetOfId("data source", simple(String.class));
 		Dataset<String> filteredDataset = filter(compoundDataset, new IsEven());
 		Dataset<String> consumerDataset = consumerOfId(filteredDataset, "data target");
