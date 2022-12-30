@@ -1,7 +1,7 @@
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.LWWSet;
-import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.storage.cluster.CrdtStorageCluster;
 import io.activej.crdt.storage.cluster.DiscoveryService;
 import io.activej.crdt.storage.cluster.RendezvousPartitionGroup;
@@ -38,7 +38,7 @@ public final class CrdtClusterExample {
 		//[START REGION_1]
 		// we create a list of 10 local partitions with string partition ids and string keys
 		// normally all of them would be network clients for remote partitions
-		Map<String, CrdtStorage<String, LWWSet<String>>> clients = new HashMap<>();
+		Map<String, ICrdtStorage<String, LWWSet<String>>> clients = new HashMap<>();
 		List<Promise<Void>> fsStartPromises = new ArrayList<>();
 		for (int i = 0; i < 10; i++) {
 			String id = "partition" + i;
@@ -49,8 +49,8 @@ public final class CrdtClusterExample {
 		}
 
 		// grab a couple of them to work with
-		CrdtStorage<String, LWWSet<String>> partition3 = clients.get("partition3");
-		CrdtStorage<String, LWWSet<String>> partition6 = clients.get("partition6");
+		ICrdtStorage<String, LWWSet<String>> partition3 = clients.get("partition3");
+		ICrdtStorage<String, LWWSet<String>> partition6 = clients.get("partition6");
 
 		// create a cluster with string keys, string partition ids,
 		// and with replication count of 5 meaning that uploading items to the

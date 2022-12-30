@@ -29,8 +29,8 @@ import io.activej.common.ref.RefBoolean;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
-import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
+import io.activej.fs.IActiveFs;
 import io.activej.fs.exception.FsIOException;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
@@ -59,11 +59,11 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 /**
- * An implementation of {@link ActiveFs} which operates on other partitions as a cluster.
+ * An implementation of {@link IActiveFs} which operates on other partitions as a cluster.
  * Contains some redundancy and fail-safety capabilities.
  * <p>
  * This implementation inherits the most strict limitations of all the file systems in cluster,
- * as well as defines several limitations over those specified in {@link ActiveFs} interface:
+ * as well as defines several limitations over those specified in {@link IActiveFs} interface:
  * <ul>
  *     <li>Uploaded files should be immutable</li>
  *     <li>Deletion of files is not guaranteed</li>
@@ -72,7 +72,7 @@ import static java.util.stream.Collectors.toList;
  * </ul>
  */
 public final class ClusterActiveFs extends AbstractReactive
-		implements ActiveFs, WithInitializer<ClusterActiveFs>, ReactiveService, ReactiveJmxBeanWithStats {
+		implements IActiveFs, WithInitializer<ClusterActiveFs>, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(ClusterActiveFs.class);
 
 	private final FsPartitions partitions;
@@ -193,25 +193,25 @@ public final class ClusterActiveFs extends AbstractReactive
 
 	@Override
 	public Promise<Void> copy(String name, String target) {
-		return ActiveFs.super.copy(name, target)
+		return IActiveFs.super.copy(name, target)
 				.whenComplete(copyPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> copyAll(Map<String, String> sourceToTarget) {
-		return ActiveFs.super.copyAll(sourceToTarget)
+		return IActiveFs.super.copyAll(sourceToTarget)
 				.whenComplete(copyAllPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> move(String name, String target) {
-		return ActiveFs.super.move(name, target)
+		return IActiveFs.super.move(name, target)
 				.whenComplete(movePromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> moveAll(Map<String, String> sourceToTarget) {
-		return ActiveFs.super.moveAll(sourceToTarget)
+		return IActiveFs.super.moveAll(sourceToTarget)
 				.whenComplete(moveAllPromise.recordStats());
 	}
 
@@ -294,7 +294,7 @@ public final class ClusterActiveFs extends AbstractReactive
 
 	private Promise<ChannelConsumer<ByteBuf>> doUpload(
 			String name,
-			AsyncFunction<ActiveFs, ChannelConsumer<ByteBuf>> action,
+			AsyncFunction<IActiveFs, ChannelConsumer<ByteBuf>> action,
 			ChannelConsumerTransformer<ByteBuf, ChannelConsumer<ByteBuf>> transformer,
 			PromiseStats startStats,
 			PromiseStats finishStats) {
@@ -321,7 +321,7 @@ public final class ClusterActiveFs extends AbstractReactive
 
 	private Promise<List<Container<ChannelConsumer<ByteBuf>>>> collect(
 			String name,
-			AsyncFunction<ActiveFs, ChannelConsumer<ByteBuf>> action
+			AsyncFunction<IActiveFs, ChannelConsumer<ByteBuf>> action
 	) {
 		Iterator<Object> idIterator = partitions.select(name).iterator();
 		Set<ChannelConsumer<ByteBuf>> consumers = new HashSet<>();
@@ -346,12 +346,12 @@ public final class ClusterActiveFs extends AbstractReactive
 				});
 	}
 
-	private <T> Promise<T> call(Object id, AsyncFunction<ActiveFs, T> action) {
+	private <T> Promise<T> call(Object id, AsyncFunction<IActiveFs, T> action) {
 		return call(id, ($, fs) -> action.apply(fs));
 	}
 
-	private <T> Promise<T> call(Object id, AsyncBiFunction<Object, ActiveFs, T> action) {
-		ActiveFs fs = partitions.get(id);
+	private <T> Promise<T> call(Object id, AsyncBiFunction<Object, IActiveFs, T> action) {
+		IActiveFs fs = partitions.get(id);
 		if (fs == null) {  // marked as dead already by somebody
 			return Promise.ofException(new FsIOException("Partition '" + id + "' is not alive"));
 		}
@@ -359,7 +359,7 @@ public final class ClusterActiveFs extends AbstractReactive
 				.whenException(partitions.wrapDeathFn(id));
 	}
 
-	private <T> Promise<List<Try<T>>> broadcast(AsyncBiFunction<Object, ActiveFs, T> action, Consumer<T> cleanup) {
+	private <T> Promise<List<Try<T>>> broadcast(AsyncBiFunction<Object, IActiveFs, T> action, Consumer<T> cleanup) {
 		return ensureIsAlive()
 				.then(() -> Promise.ofCallback(cb ->
 						Promises.toList(partitions.getAlivePartitions().entrySet().stream()
@@ -395,7 +395,7 @@ public final class ClusterActiveFs extends AbstractReactive
 		};
 	}
 
-	private <T> Promise<List<Try<T>>> broadcast(AsyncFunction<ActiveFs, T> action) {
+	private <T> Promise<List<Try<T>>> broadcast(AsyncFunction<IActiveFs, T> action) {
 		return broadcast(($, fs) -> action.apply(fs), $ -> {});
 	}
 

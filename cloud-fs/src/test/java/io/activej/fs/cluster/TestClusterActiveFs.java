@@ -7,8 +7,8 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
+import io.activej.fs.IActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.fs.exception.FsException;
 import io.activej.fs.http.ActiveFsServlet;
@@ -77,7 +77,7 @@ public final class TestClusterActiveFs {
 
 		Files.createDirectories(clientStorage);
 
-		Map<Object, ActiveFs> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
+		Map<Object, IActiveFs> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
 
 		NioReactor reactor = Reactor.getCurrentReactor();
 		AsyncHttpClient httpClient = AsyncHttpClient.create(reactor);

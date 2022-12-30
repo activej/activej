@@ -51,7 +51,7 @@ import io.activej.inject.ResourceLocator;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.net.AbstractReactiveServer;
-import io.activej.net.socket.tcp.ReactiveTcpSocket;
+import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.nio.NioReactor;
@@ -152,7 +152,7 @@ public final class DataflowServer extends AbstractReactiveServer<DataflowServer>
 	}
 
 	@Override
-	protected void serve(ReactiveTcpSocket socket, InetAddress remoteAddress) {
+	protected void serve(ITcpSocket socket, InetAddress remoteAddress) {
 		Messaging<DataflowRequest, DataflowResponse> messaging = MessagingWithBinaryStreaming.create(socket, codec);
 		messaging.receive()
 				.then(request -> {

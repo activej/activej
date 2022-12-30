@@ -18,7 +18,7 @@ package io.activej.fs.cluster;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.fs.ActiveFs;
+import io.activej.fs.IActiveFs;
 import io.activej.fs.exception.FsException;
 import io.activej.types.TypeT;
 import org.jetbrains.annotations.NotNull;
@@ -34,19 +34,19 @@ public final class EtcdDiscoveryService implements DiscoveryService {
 	private final TypeT<Set<String>> PARTITION_IDS_TYPE_T = new TypeT<>() {};
 
 	private final EtcdWatchService watchService;
-	private final Function<String, @NotNull ActiveFs> activeFsProvider;
+	private final Function<String, @NotNull IActiveFs> activeFsProvider;
 
-	private EtcdDiscoveryService(EtcdWatchService watchService, Function<String, @NotNull ActiveFs> activeFsProvider) {
+	private EtcdDiscoveryService(EtcdWatchService watchService, Function<String, @NotNull IActiveFs> activeFsProvider) {
 		this.watchService = watchService;
 		this.activeFsProvider = activeFsProvider;
 	}
 
-	public static EtcdDiscoveryService create(EtcdWatchService watchService, Function<String, @NotNull ActiveFs> activeFsProvider) {
+	public static EtcdDiscoveryService create(EtcdWatchService watchService, Function<String, @NotNull IActiveFs> activeFsProvider) {
 		return new EtcdDiscoveryService(watchService, activeFsProvider);
 	}
 
 	@Override
-	public AsyncSupplier<Map<Object, ActiveFs>> discover() {
+	public AsyncSupplier<Map<Object, IActiveFs>> discover() {
 		AsyncSupplier<byte[]> watchSupplier = watchService.watch();
 		return () -> watchSupplier.get()
 				.map(bytes -> {
@@ -56,7 +56,7 @@ public final class EtcdDiscoveryService implements DiscoveryService {
 					} catch (MalformedDataException e){
 						throw new FsException("Could not parse partition ids: " + e.getMessage());
 					}
-					Map<Object, ActiveFs> result = new HashMap<>();
+					Map<Object, IActiveFs> result = new HashMap<>();
 					for (String partitionId : partitionIds) {
 						result.put(partitionId, activeFsProvider.apply(partitionId));
 					}

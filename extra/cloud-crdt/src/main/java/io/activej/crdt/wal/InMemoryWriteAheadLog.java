@@ -24,7 +24,7 @@ import io.activej.common.time.CurrentTimeProvider;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.CrdtType;
-import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
@@ -45,23 +45,23 @@ public class InMemoryWriteAheadLog<K extends Comparable<K>, S> extends AbstractR
 	private Map<K, CrdtData<K, S>> map = new TreeMap<>();
 
 	private final CrdtFunction<S> function;
-	private final CrdtStorage<K, S> storage;
+	private final ICrdtStorage<K, S> storage;
 
 	private final AsyncRunnable flush = AsyncRunnables.coalesce(this::doFlush);
 
 	private CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
 
-	private InMemoryWriteAheadLog(Reactor reactor, CrdtFunction<S> function, CrdtStorage<K, S> storage) {
+	private InMemoryWriteAheadLog(Reactor reactor, CrdtFunction<S> function, ICrdtStorage<K, S> storage) {
 		super(reactor);
 		this.function = function;
 		this.storage = storage;
 	}
 
-	public static <K extends Comparable<K>, S> InMemoryWriteAheadLog<K, S> create(Reactor reactor, CrdtFunction<S> function, CrdtStorage<K, S> storage) {
+	public static <K extends Comparable<K>, S> InMemoryWriteAheadLog<K, S> create(Reactor reactor, CrdtFunction<S> function, ICrdtStorage<K, S> storage) {
 		return new InMemoryWriteAheadLog<>(reactor, function, storage);
 	}
 
-	public static <K extends Comparable<K>, S extends CrdtType<S>> InMemoryWriteAheadLog<K, S> create(Reactor reactor, CrdtStorage<K, S> storage) {
+	public static <K extends Comparable<K>, S extends CrdtType<S>> InMemoryWriteAheadLog<K, S> create(Reactor reactor, ICrdtStorage<K, S> storage) {
 		return new InMemoryWriteAheadLog<>(reactor, CrdtFunction.ofCrdtType(), storage);
 	}
 

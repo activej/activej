@@ -6,7 +6,7 @@ import io.activej.dataflow.calcite.inject.CalciteServerModule;
 import io.activej.dataflow.inject.DatasetId;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.StreamSupplierWithResult;
-import io.activej.fs.ActiveFs;
+import io.activej.fs.IActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
@@ -63,12 +63,12 @@ public class MultilogDataflowServerModule extends AbstractModule {
 	}
 
 	@Provides
-	Multilog<LogItem> multilog(@Named("Dataflow") Reactor reactor, ActiveFs fs, FrameFormat frameFormat, BinarySerializer<LogItem> logItemSerializer, LogNamingScheme namingScheme) {
+	Multilog<LogItem> multilog(@Named("Dataflow") Reactor reactor, IActiveFs fs, FrameFormat frameFormat, BinarySerializer<LogItem> logItemSerializer, LogNamingScheme namingScheme) {
 		return MultilogImpl.create(reactor, fs, frameFormat, logItemSerializer, namingScheme);
 	}
 
 	@Provides
-	ActiveFs fs(@Named("Dataflow") Reactor reactor, Executor executor) throws IOException {
+	IActiveFs fs(@Named("Dataflow") Reactor reactor, Executor executor) throws IOException {
 		Path multilogPath = Files.createTempDirectory("multilog");
 		return LocalActiveFs.create(reactor, executor, multilogPath);
 	}

@@ -14,7 +14,7 @@ import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
-import io.activej.net.socket.tcp.ReactiveTcpSocketNio;
+import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
@@ -118,7 +118,7 @@ public class TcpDataBenchmarkClient extends Launcher {
 		InetSocketAddress address = config.get(ofInetSocketAddress(), "echo.address", new InetSocketAddress(9001));
 		int limit = config.get(ofInteger(), "benchmark.totalElements", TOTAL_ELEMENTS);
 
-		return ReactiveTcpSocketNio.connect(clientReactor, address)
+		return TcpSocket.connect(clientReactor, address)
 				.then(socket -> {
 					StreamSupplierOfSequence.create(limit)
 							.transformWith(ChannelSerializer.create(INT_SERIALIZER))

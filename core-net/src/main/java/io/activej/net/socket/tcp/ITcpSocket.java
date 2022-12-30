@@ -34,7 +34,7 @@ import org.jetbrains.annotations.Nullable;
  * call to {@link #read()} or {@link #write(ByteBuf)}<i/></li>
  * </ul>
  */
-public interface ReactiveTcpSocket extends AsyncCloseable {
+public interface ITcpSocket extends AsyncCloseable {
 	/**
 	 * Operation to read some data from network. Returns a promise of a bytebuf that represents some data received
 	 * from network.

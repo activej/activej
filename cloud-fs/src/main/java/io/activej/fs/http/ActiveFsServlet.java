@@ -21,7 +21,7 @@ import io.activej.common.function.FunctionEx;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
-import io.activej.fs.ActiveFs;
+import io.activej.fs.IActiveFs;
 import io.activej.fs.exception.FileNotFoundException;
 import io.activej.fs.exception.FsException;
 import io.activej.http.*;
@@ -46,7 +46,7 @@ import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpMethod.POST;
 
 /**
- * An HTTP servlet that exposes some given {@link ActiveFs}.
+ * An HTTP servlet that exposes some given {@link IActiveFs}.
  * <p>
  * Servlet is fully compatible with {@link HttpActiveFs} client.
  * <p>
@@ -60,11 +60,11 @@ public final class ActiveFsServlet implements WithInitializer<ActiveFsServlet> {
 	private ActiveFsServlet() {
 	}
 
-	public static RoutingServlet create(ActiveFs fs) {
+	public static RoutingServlet create(IActiveFs fs) {
 		return create(fs, true);
 	}
 
-	public static RoutingServlet create(ActiveFs fs, boolean inline) {
+	public static RoutingServlet create(IActiveFs fs, boolean inline) {
 		return RoutingServlet.create()
 				.map(POST, "/" + UPLOAD + "/*", request -> {
 					String contentLength = request.getHeader(CONTENT_LENGTH);
@@ -148,7 +148,7 @@ public final class ActiveFsServlet implements WithInitializer<ActiveFsServlet> {
 						.map(voidResponseFn(), errorResponseFn()));
 	}
 
-	private static @NotNull Promise<HttpResponse> rangeDownload(ActiveFs fs, boolean inline, String name, String rangeHeader) {
+	private static @NotNull Promise<HttpResponse> rangeDownload(IActiveFs fs, boolean inline, String name, String rangeHeader) {
 		//noinspection ConstantConditions
 		return fs.info(name)
 				.whenResult(Objects::isNull, $ -> {

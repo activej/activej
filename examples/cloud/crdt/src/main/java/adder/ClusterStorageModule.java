@@ -6,7 +6,7 @@ import io.activej.crdt.CrdtException;
 import io.activej.crdt.CrdtServer;
 import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.function.CrdtFunction;
-import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.storage.cluster.*;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.inject.Key;
@@ -34,7 +34,7 @@ public final class ClusterStorageModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		bind(new Key<CrdtStorage<Long, DetailedSumsCrdtState>>() {})
+		bind(new Key<ICrdtStorage<Long, DetailedSumsCrdtState>>() {})
 				.to(new Key<CrdtStorageCluster<Long, DetailedSumsCrdtState, PartitionId>>() {});
 	}
 
@@ -52,14 +52,14 @@ public final class ClusterStorageModule extends AbstractModule {
 	@Provides
 	@Eager
 	CrdtServer<Long, DetailedSumsCrdtState> crdtServer(NioReactor reactor,
-			@Local CrdtStorage<Long, DetailedSumsCrdtState> localStorage, CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer, Config config) {
+			@Local ICrdtStorage<Long, DetailedSumsCrdtState> localStorage, CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer, Config config) {
 		return CrdtServer.create(reactor, localStorage, serializer)
 				.withInitializer(ofAbstractServer(config.getChild("crdt.server")));
 	}
 
 	@Provides
 	DiscoveryService<PartitionId> discoveryService(NioReactor reactor,
-			@Local CrdtStorage<Long, DetailedSumsCrdtState> localStorage, CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer, Config config,
+			@Local ICrdtStorage<Long, DetailedSumsCrdtState> localStorage, CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer, Config config,
 			PartitionId localPartitionId) throws CrdtException {
 		Path pathToFile = config.get(ofPath(), "crdt.cluster.partitionFile", DEFAULT_PARTITIONS_FILE);
 		return FileDiscoveryService.create(reactor, pathToFile)

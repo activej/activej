@@ -19,7 +19,7 @@ package io.activej.crdt;
 import io.activej.crdt.messaging.CrdtRequest;
 import io.activej.crdt.messaging.CrdtResponse;
 import io.activej.crdt.messaging.Version;
-import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.Messaging;
@@ -34,7 +34,7 @@ import io.activej.datastream.stats.StreamStatsDetailed;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.net.AbstractReactiveServer;
-import io.activej.net.socket.tcp.ReactiveTcpSocket;
+import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.nio.NioReactor;
@@ -61,7 +61,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 	private Function<CrdtRequest.Handshake, CrdtResponse.Handshake> handshakeHandler = $ ->
 			new CrdtResponse.Handshake(null);
 
-	private final CrdtStorage<K, S> storage;
+	private final ICrdtStorage<K, S> storage;
 	private final CrdtDataSerializer<K, S> serializer;
 	private final BinarySerializer<CrdtTombstone<K>> tombstoneSerializer;
 
@@ -89,7 +89,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 	private final PromiseStats pingPromise = PromiseStats.create(Duration.ofMinutes(5));
 	// endregion
 
-	private CrdtServer(NioReactor reactor, CrdtStorage<K, S> storage, CrdtDataSerializer<K, S> serializer) {
+	private CrdtServer(NioReactor reactor, ICrdtStorage<K, S> storage, CrdtDataSerializer<K, S> serializer) {
 		super(reactor);
 		this.storage = storage;
 		this.serializer = serializer;
@@ -97,11 +97,11 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 		tombstoneSerializer = serializer.getTombstoneSerializer();
 	}
 
-	public static <K extends Comparable<K>, S> CrdtServer<K, S> create(NioReactor reactor, CrdtStorage<K, S> storage, CrdtDataSerializer<K, S> serializer) {
+	public static <K extends Comparable<K>, S> CrdtServer<K, S> create(NioReactor reactor, ICrdtStorage<K, S> storage, CrdtDataSerializer<K, S> serializer) {
 		return new CrdtServer<>(reactor, storage, serializer);
 	}
 
-	public static <K extends Comparable<K>, S> CrdtServer<K, S> create(NioReactor reactor, CrdtStorage<K, S> storage, BinarySerializer<K> keySerializer, BinarySerializer<S> stateSerializer) {
+	public static <K extends Comparable<K>, S> CrdtServer<K, S> create(NioReactor reactor, ICrdtStorage<K, S> storage, BinarySerializer<K> keySerializer, BinarySerializer<S> stateSerializer) {
 		return new CrdtServer<>(reactor, storage, new CrdtDataSerializer<>(keySerializer, stateSerializer));
 	}
 
@@ -111,7 +111,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 	}
 
 	@Override
-	protected void serve(ReactiveTcpSocket socket, InetAddress remoteAddress) {
+	protected void serve(ITcpSocket socket, InetAddress remoteAddress) {
 		MessagingWithBinaryStreaming<CrdtRequest, CrdtResponse> messaging =
 				MessagingWithBinaryStreaming.create(socket, SERIALIZER);
 		messaging.receive()

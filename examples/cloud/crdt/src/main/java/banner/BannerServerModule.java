@@ -5,7 +5,7 @@ import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.hash.CrdtMap;
 import io.activej.crdt.hash.JavaCrdtMap;
 import io.activej.crdt.primitives.GSet;
-import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.crdt.wal.InMemoryWriteAheadLog;
 import io.activej.crdt.wal.WriteAheadLog;
@@ -44,7 +44,7 @@ public class BannerServerModule extends AbstractModule {
 	}
 
 	@Provides
-	CrdtMap<Long, GSet<Integer>> map(Reactor reactor, CrdtStorage<Long, GSet<Integer>> storage) {
+	CrdtMap<Long, GSet<Integer>> map(Reactor reactor, ICrdtStorage<Long, GSet<Integer>> storage) {
 		return new JavaCrdtMap<>(reactor, GSet::merge, storage);
 	}
 
@@ -64,12 +64,12 @@ public class BannerServerModule extends AbstractModule {
 	}
 
 	@Provides
-	WriteAheadLog<Long, GSet<Integer>> writeAheadLog(Reactor reactor, CrdtFunction<GSet<Integer>> function, CrdtStorage<Long, GSet<Integer>> storage) {
+	WriteAheadLog<Long, GSet<Integer>> writeAheadLog(Reactor reactor, CrdtFunction<GSet<Integer>> function, ICrdtStorage<Long, GSet<Integer>> storage) {
 		return InMemoryWriteAheadLog.create(reactor, function, storage);
 	}
 
 	@Provides
-	CrdtStorage<Long, GSet<Integer>> storage(Reactor reactor, CrdtFunction<GSet<Integer>> function) {
+	ICrdtStorage<Long, GSet<Integer>> storage(Reactor reactor, CrdtFunction<GSet<Integer>> function) {
 		return CrdtStorageMap.create(reactor, function);
 	}
 

@@ -25,7 +25,7 @@ import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.http.AsyncHttpClient.Inspector;
 import io.activej.http.stream.BufsConsumerGzipInflater;
-import io.activej.net.socket.tcp.ReactiveTcpSocket;
+import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.Reactor;
@@ -104,7 +104,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	@Nullable HttpClientConnection addressPrev;
 	HttpClientConnection addressNext;
 
-	HttpClientConnection(Reactor reactor, AsyncHttpClient client, ReactiveTcpSocket asyncTcpSocket, InetSocketAddress remoteAddress) {
+	HttpClientConnection(Reactor reactor, AsyncHttpClient client, ITcpSocket asyncTcpSocket, InetSocketAddress remoteAddress) {
 		super(reactor, asyncTcpSocket, client.maxBodySize);
 		this.client = client;
 		this.inspector = client.inspector;

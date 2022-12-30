@@ -1,8 +1,8 @@
 package io.activej.fs.cluster;
 
 import io.activej.async.service.ReactiveTaskScheduler;
-import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
+import io.activej.fs.IActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.fs.tcp.RemoteActiveFs;
@@ -66,7 +66,7 @@ public final class ClusterRepartitionControllerStressTest {
 		Executor executor = Executors.newSingleThreadExecutor();
 		servers = new ArrayList<>(CLIENT_SERVER_PAIRS);
 
-		Map<Object, ActiveFs> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
+		Map<Object, IActiveFs> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
 
 		Path storage = tmpFolder.newFolder().toPath();
 		localStorage = storage.resolve("local");

@@ -3,13 +3,13 @@ package adder;
 import io.activej.async.service.ReactiveTaskScheduler;
 import io.activej.config.Config;
 import io.activej.crdt.function.CrdtFunction;
-import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.storage.local.CrdtStorageFs;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.crdt.wal.FileWriteAheadLog;
 import io.activej.crdt.wal.WalUploader;
 import io.activej.crdt.wal.WriteAheadLog;
-import io.activej.fs.ActiveFs;
+import io.activej.fs.IActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Eager;
@@ -32,7 +32,7 @@ public final class PersistentStorageModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		bind(new Key<CrdtStorage<Long, DetailedSumsCrdtState>>(Local.class) {})
+		bind(new Key<ICrdtStorage<Long, DetailedSumsCrdtState>>(Local.class) {})
 				.to(new Key<CrdtStorageFs<Long, DetailedSumsCrdtState>>() {});
 	}
 
@@ -54,7 +54,7 @@ public final class PersistentStorageModule extends AbstractModule {
 			Executor executor,
 			CrdtFunction<DetailedSumsCrdtState> function,
 			CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer,
-			CrdtStorage<Long, DetailedSumsCrdtState> storage,
+			ICrdtStorage<Long, DetailedSumsCrdtState> storage,
 			Config config
 	) {
 		Path walPath = config.get(ofPath(), "wal-storage");
@@ -64,7 +64,7 @@ public final class PersistentStorageModule extends AbstractModule {
 	@Provides
 	CrdtStorageFs<Long, DetailedSumsCrdtState> storage(
 			Reactor reactor,
-			ActiveFs fs,
+			IActiveFs fs,
 			CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer,
 			CrdtFunction<DetailedSumsCrdtState> function
 	) {
@@ -72,7 +72,7 @@ public final class PersistentStorageModule extends AbstractModule {
 	}
 
 	@Provides
-	ActiveFs activeFs(Reactor reactor, Executor executor, Config config) {
+	IActiveFs activeFs(Reactor reactor, Executor executor, Config config) {
 		return LocalActiveFs.create(reactor, executor, config.get(ofPath(), "storage"));
 	}
 

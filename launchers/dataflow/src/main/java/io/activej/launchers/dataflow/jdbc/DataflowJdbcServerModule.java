@@ -1,7 +1,7 @@
 package io.activej.launchers.dataflow.jdbc;
 
 import io.activej.config.Config;
-import io.activej.dataflow.calcite.CalciteSqlDataflow;
+import io.activej.dataflow.calcite.SqlDataflow;
 import io.activej.dataflow.calcite.inject.CalciteClientModule;
 import io.activej.dataflow.calcite.jdbc.DataflowMeta;
 import io.activej.dataflow.calcite.jdbc.JdbcServerService;
@@ -77,7 +77,7 @@ public final class DataflowJdbcServerModule extends AbstractModule {
 	}
 
 	@Provides
-	Meta meta(Reactor reactor, CalciteSqlDataflow calciteSqlDataflow) {
-		return DataflowMeta.create(reactor, calciteSqlDataflow);
+	Meta meta(Reactor reactor, SqlDataflow sqlDataflow) {
+		return DataflowMeta.create(reactor, sqlDataflow);
 	}
 }

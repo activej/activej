@@ -28,7 +28,7 @@ import io.activej.crdt.CrdtException;
 import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.CrdtTombstone;
 import io.activej.crdt.function.CrdtFunction;
-import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.storage.cluster.DiscoveryService.PartitionScheme;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
@@ -57,12 +57,12 @@ import static java.util.stream.Collectors.toMap;
 
 @SuppressWarnings("rawtypes") // JMX
 public final class CrdtStorageCluster<K extends Comparable<K>, S, P> extends AbstractReactive
-		implements CrdtStorage<K, S>, WithInitializer<CrdtStorageCluster<K, S, P>>, ReactiveService, ReactiveJmxBeanWithStats {
+		implements ICrdtStorage<K, S>, WithInitializer<CrdtStorageCluster<K, S, P>>, ReactiveService, ReactiveJmxBeanWithStats {
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageCluster.class, "smoothingWindow", Duration.ofMinutes(1));
 
 	private final DiscoveryService<P> discoveryService;
 	private final CrdtFunction<S> crdtFunction;
-	private final Map<P, CrdtStorage<K, S>> crdtStorages = new LinkedHashMap<>();
+	private final Map<P, ICrdtStorage<K, S>> crdtStorages = new LinkedHashMap<>();
 
 	private PartitionScheme<P> currentPartitionScheme;
 	private boolean forceStart;
@@ -155,7 +155,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> extends Abs
 	@Override
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
 		PartitionScheme<P> partitionScheme = this.currentPartitionScheme;
-		return execute(partitionScheme, CrdtStorage::upload)
+		return execute(partitionScheme, ICrdtStorage::upload)
 				.then(map -> {
 					List<P> alive = new ArrayList<>(map.keySet());
 					Sharder<K> sharder = partitionScheme.createSharder(alive);
@@ -189,7 +189,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> extends Abs
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> take() {
-		return getData(CrdtStorage::take)
+		return getData(ICrdtStorage::take)
 				.map(supplier -> supplier
 						.transformWith(detailedStats ? takeStatsDetailed : takeStats)
 						.transformWith(onItem(takenItems::recordEvent)));
@@ -198,7 +198,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> extends Abs
 	@Override
 	public Promise<StreamConsumer<CrdtTombstone<K>>> remove() {
 		PartitionScheme<P> partitionScheme = currentPartitionScheme;
-		return execute(partitionScheme, CrdtStorage::remove)
+		return execute(partitionScheme, ICrdtStorage::remove)
 				.map(map -> {
 					List<P> alive = new ArrayList<>(map.keySet());
 					Sharder<K> sharder = partitionScheme.createSharder(alive);
@@ -224,7 +224,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> extends Abs
 
 	public Promise<Void> repartition(P sourcePartitionId) {
 		PartitionScheme<P> partitionScheme = this.currentPartitionScheme;
-		CrdtStorage<K, S> source = crdtStorages.get(sourcePartitionId);
+		ICrdtStorage<K, S> source = crdtStorages.get(sourcePartitionId);
 
 		class Tuple {
 			private final Try<StreamSupplier<CrdtData<K, S>>> downloader;
@@ -243,7 +243,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> extends Abs
 
 		return Promises.toTuple(Tuple::new,
 						source.take().toTry(),
-						execute(partitionScheme, CrdtStorage::upload))
+						execute(partitionScheme, ICrdtStorage::upload))
 				.whenResult(tuple -> {
 					if (!tuple.uploaders.containsKey(sourcePartitionId)) {
 						tuple.close();
@@ -292,7 +292,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> extends Abs
 	@Override
 	public Promise<Void> ping() {
 		PartitionScheme<P> partitionScheme = this.currentPartitionScheme;
-		return execute(partitionScheme, CrdtStorage::ping)
+		return execute(partitionScheme, ICrdtStorage::ping)
 				.whenResult(map -> {
 					Sharder<K> sharder = partitionScheme.createSharder(new ArrayList<>(map.keySet()));
 					if (sharder == null) {
@@ -302,7 +302,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> extends Abs
 				.toVoid();
 	}
 
-	private <T> Promise<Map<P, T>> execute(PartitionScheme<P> partitionScheme, AsyncFunction<CrdtStorage<K, S>, T> method) {
+	private <T> Promise<Map<P, T>> execute(PartitionScheme<P> partitionScheme, AsyncFunction<ICrdtStorage<K, S>, T> method) {
 		Set<P> partitions = partitionScheme.getPartitions();
 		Map<P, T> map = new HashMap<>();
 		return Promises.all(
@@ -313,7 +313,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> extends Abs
 				.map($ -> map);
 	}
 
-	private Promise<StreamSupplier<CrdtData<K, S>>> getData(AsyncFunction<CrdtStorage<K, S>, StreamSupplier<CrdtData<K, S>>> method) {
+	private Promise<StreamSupplier<CrdtData<K, S>>> getData(AsyncFunction<ICrdtStorage<K, S>, StreamSupplier<CrdtData<K, S>>> method) {
 		PartitionScheme<P> partitionScheme = currentPartitionScheme;
 		return execute(partitionScheme, method)
 				.map(map -> {
@@ -344,12 +344,12 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> extends Abs
 		for (P partition : partitionScheme.getPartitions()) {
 			//noinspection unchecked
 			crdtStorages.computeIfAbsent(partition,
-					(Function) (Function<P, CrdtStorage<?, ?>>) partitionScheme::provideCrdtConnection);
+					(Function) (Function<P, ICrdtStorage<?, ?>>) partitionScheme::provideCrdtConnection);
 		}
 	}
 
 	@VisibleForTesting
-	Map<P, CrdtStorage<K, S>> getCrdtStorages() {
+	Map<P, ICrdtStorage<K, S>> getCrdtStorages() {
 		return crdtStorages;
 	}
 
@@ -389,7 +389,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> extends Abs
 	@JmxOperation
 	public void startDetailedMonitoring() {
 		detailedStats = true;
-		for (CrdtStorage<K, S> storage : crdtStorages.values()) {
+		for (ICrdtStorage<K, S> storage : crdtStorages.values()) {
 			if (storage instanceof CrdtStorageClient) {
 				((CrdtStorageClient<K, S>) storage).startDetailedMonitoring();
 			}
@@ -399,7 +399,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> extends Abs
 	@JmxOperation
 	public void stopDetailedMonitoring() {
 		detailedStats = false;
-		for (CrdtStorage<K, S> storage : crdtStorages.values()) {
+		for (ICrdtStorage<K, S> storage : crdtStorages.values()) {
 			if (storage instanceof CrdtStorageClient) {
 				((CrdtStorageClient<K, S>) storage).stopDetailedMonitoring();
 			}

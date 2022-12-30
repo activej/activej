@@ -35,7 +35,7 @@ import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.datastream.stats.StreamRegistry;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStatsDetailed;
-import io.activej.fs.ActiveFs;
+import io.activej.fs.IActiveFs;
 import io.activej.fs.exception.IllegalOffsetException;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -65,7 +65,7 @@ public final class MultilogImpl<T> extends AbstractReactive
 
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(256);
 
-	private final ActiveFs fs;
+	private final IActiveFs fs;
 	private final LogNamingScheme namingScheme;
 	private final BinarySerializer<T> serializer;
 
@@ -80,7 +80,7 @@ public final class MultilogImpl<T> extends AbstractReactive
 	private final StreamStatsDetailed<ByteBuf> streamReadStats = StreamStats.detailed(forByteBufs());
 	private final StreamStatsDetailed<ByteBuf> streamWriteStats = StreamStats.detailed(forByteBufs());
 
-	private MultilogImpl(Reactor reactor, ActiveFs fs, FrameFormat frameFormat, BinarySerializer<T> serializer,
+	private MultilogImpl(Reactor reactor, IActiveFs fs, FrameFormat frameFormat, BinarySerializer<T> serializer,
 			LogNamingScheme namingScheme) {
 		super(reactor);
 		this.fs = fs;
@@ -89,7 +89,7 @@ public final class MultilogImpl<T> extends AbstractReactive
 		this.namingScheme = namingScheme;
 	}
 
-	public static <T> MultilogImpl<T> create(Reactor reactor, ActiveFs fs, FrameFormat frameFormat, BinarySerializer<T> serializer,
+	public static <T> MultilogImpl<T> create(Reactor reactor, IActiveFs fs, FrameFormat frameFormat, BinarySerializer<T> serializer,
 			LogNamingScheme namingScheme) {
 		return new MultilogImpl<>(reactor, fs, frameFormat, serializer, namingScheme);
 	}

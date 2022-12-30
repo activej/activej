@@ -16,7 +16,7 @@ import static io.activej.fs.util.RemoteFsUtils.escapeGlob;
 import static java.util.stream.Collectors.toSet;
 
 public interface BlockingFs {
-	String SEPARATOR = ActiveFs.SEPARATOR;
+	String SEPARATOR = IActiveFs.SEPARATOR;
 
 	OutputStream upload(@NotNull String name) throws IOException;
 

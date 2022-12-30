@@ -21,7 +21,7 @@ import io.activej.config.ConfigModule;
 import io.activej.config.converter.ConfigConverters;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;
-import io.activej.fs.ActiveFs;
+import io.activej.fs.IActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.http.AsyncHttpServer;
@@ -63,7 +63,7 @@ public class SimpleTcpServerLauncher extends Launcher {
 
 	@Eager
 	@Provides
-	ActiveFsServer activeFsServer(NioReactor reactor, ActiveFs activeFs, Config config) {
+	ActiveFsServer activeFsServer(NioReactor reactor, IActiveFs activeFs, Config config) {
 		return ActiveFsServer.create(reactor, activeFs)
 				.withInitializer(ofActiveFsServer(config.getChild("activefs")));
 	}
@@ -76,12 +76,12 @@ public class SimpleTcpServerLauncher extends Launcher {
 	}
 
 	@Provides
-	AsyncServlet guiServlet(ActiveFs activeFs) {
+	AsyncServlet guiServlet(IActiveFs activeFs) {
 		return ActiveFsGuiServlet.create(activeFs);
 	}
 
 	@Provides
-	ActiveFs localActiveFs(Reactor reactor, Executor executor, Config config) {
+	IActiveFs localActiveFs(Reactor reactor, Executor executor, Config config) {
 		return LocalActiveFs.create(reactor, executor, config.get(ofPath(), "activefs.path", DEFAULT_PATH));
 	}
 

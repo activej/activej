@@ -27,15 +27,15 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * An implementation of {@link ActiveFs} that forwards all the calls to the underlying {@link ActiveFs}.
+ * An implementation of {@link IActiveFs} that forwards all the calls to the underlying {@link IActiveFs}.
  * May be suitable for creating decorators that override certain behaviour of file system.
  * <p>
- * Inherits all the limitations of underlying {@link ActiveFs}
+ * Inherits all the limitations of underlying {@link IActiveFs}
  */
-public abstract class ForwardingActiveFs implements ActiveFs {
-	private final ActiveFs peer;
+public abstract class ForwardingActiveFs implements IActiveFs {
+	private final IActiveFs peer;
 
-	protected ForwardingActiveFs(ActiveFs peer) {
+	protected ForwardingActiveFs(IActiveFs peer) {
 		this.peer = peer;
 	}
 

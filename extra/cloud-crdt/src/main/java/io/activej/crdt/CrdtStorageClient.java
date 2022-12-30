@@ -24,7 +24,7 @@ import io.activej.common.function.FunctionEx;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.crdt.messaging.CrdtRequest;
 import io.activej.crdt.messaging.CrdtResponse;
-import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.crdt.util.Utils;
 import io.activej.csp.ChannelConsumer;
@@ -41,7 +41,7 @@ import io.activej.datastream.stats.StreamStatsDetailed;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.EventStats;
-import io.activej.net.socket.tcp.ReactiveTcpSocketNio;
+import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
@@ -56,7 +56,7 @@ import static io.activej.crdt.util.Utils.onItem;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtStorageClient<K extends Comparable<K>, S> extends AbstractNioReactive
-		implements CrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<CrdtStorageClient<K, S>> {
+		implements ICrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<CrdtStorageClient<K, S>> {
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(CrdtStorageClient.class, "connectTimeout", Duration.ZERO);
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageClient.class, "smoothingWindow", Duration.ofMinutes(1));
@@ -252,7 +252,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> extends Abstrac
 	}
 
 	private Promise<MessagingWithBinaryStreaming<CrdtResponse, CrdtRequest>> connect() {
-		return ReactiveTcpSocketNio.connect(reactor, address, connectTimeoutMillis, socketSettings)
+		return TcpSocket.connect(reactor, address, connectTimeoutMillis, socketSettings)
 				.map(socket -> MessagingWithBinaryStreaming.create(socket, SERIALIZER))
 				.mapException(e -> new CrdtException("Failed to connect to " + address, e));
 	}

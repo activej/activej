@@ -25,7 +25,7 @@ import io.activej.common.initializer.WithInitializer;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.dns.AsyncDnsClient;
-import io.activej.dns.ReactiveDnsClient;
+import io.activej.dns.IAsyncDnsClient;
 import io.activej.dns.protocol.DnsQueryException;
 import io.activej.dns.protocol.DnsResponse;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -33,8 +33,8 @@ import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ExceptionStats;
-import io.activej.net.socket.tcp.ReactiveTcpSocket;
-import io.activej.net.socket.tcp.ReactiveTcpSocketNio;
+import io.activej.net.socket.tcp.ITcpSocket;
+import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.AbstractNioReactive;
@@ -62,7 +62,7 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.http.HttpUtils.translateToHttpException;
 import static io.activej.http.Protocol.*;
 import static io.activej.jmx.stats.MBeanFormat.formatListAsMultilineString;
-import static io.activej.net.socket.tcp.ReactiveTcpSocketSsl.wrapClientSocket;
+import static io.activej.net.socket.tcp.TcpSocketSsl.wrapClientSocket;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -88,7 +88,7 @@ public final class AsyncHttpClient extends AbstractNioReactive
 	public static final MemSize MAX_WEB_SOCKET_MESSAGE_SIZE = ApplicationSettings.getMemSize(AsyncHttpClient.class, "maxWebSocketMessageSize", MemSize.megabytes(1));
 	public static final int MAX_KEEP_ALIVE_REQUESTS = ApplicationSettings.getInt(AsyncHttpClient.class, "maxKeepAliveRequests", 0);
 
-	private @NotNull AsyncDnsClient asyncDnsClient;
+	private @NotNull IAsyncDnsClient asyncDnsClient;
 	private @NotNull SocketSettings socketSettings = DEFAULT_SOCKET_SETTINGS;
 
 	final HashMap<InetSocketAddress, AddressLinkedList> addresses = new HashMap<>();
@@ -112,8 +112,8 @@ public final class AsyncHttpClient extends AbstractNioReactive
 	private SSLContext sslContext;
 	private Executor sslExecutor;
 
-	private @Nullable ReactiveTcpSocketNio.Inspector socketInspector;
-	private @Nullable ReactiveTcpSocketNio.Inspector socketSslInspector;
+	private @Nullable TcpSocket.Inspector socketInspector;
+	private @Nullable TcpSocket.Inspector socketSslInspector;
 	@Nullable Inspector inspector;
 
 	public interface Inspector extends BaseInspector<Inspector> {
@@ -287,13 +287,13 @@ public final class AsyncHttpClient extends AbstractNioReactive
 	private int inetAddressIdx = 0;
 
 	// region builders
-	private AsyncHttpClient(@NotNull NioReactor reactor, @NotNull AsyncDnsClient asyncDnsClient) {
+	private AsyncHttpClient(@NotNull NioReactor reactor, @NotNull IAsyncDnsClient asyncDnsClient) {
 		super(reactor);
 		this.asyncDnsClient = asyncDnsClient;
 	}
 
 	public static AsyncHttpClient create(@NotNull NioReactor reactor) {
-		AsyncDnsClient defaultDnsClient = ReactiveDnsClient.create(reactor);
+		IAsyncDnsClient defaultDnsClient = AsyncDnsClient.create(reactor);
 		return new AsyncHttpClient(reactor, defaultDnsClient);
 	}
 
@@ -302,7 +302,7 @@ public final class AsyncHttpClient extends AbstractNioReactive
 		return this;
 	}
 
-	public AsyncHttpClient withDnsClient(@NotNull AsyncDnsClient asyncDnsClient) {
+	public AsyncHttpClient withDnsClient(@NotNull IAsyncDnsClient asyncDnsClient) {
 		this.asyncDnsClient = asyncDnsClient;
 		return this;
 	}
@@ -363,12 +363,12 @@ public final class AsyncHttpClient extends AbstractNioReactive
 		return this;
 	}
 
-	public AsyncHttpClient withSocketInspector(ReactiveTcpSocketNio.Inspector socketInspector) {
+	public AsyncHttpClient withSocketInspector(TcpSocket.Inspector socketInspector) {
 		this.socketInspector = socketInspector;
 		return this;
 	}
 
-	public AsyncHttpClient withSocketSslInspector(ReactiveTcpSocketNio.Inspector socketSslInspector) {
+	public AsyncHttpClient withSocketSslInspector(TcpSocket.Inspector socketSslInspector) {
 		this.socketSslInspector = socketSslInspector;
 		return this;
 	}
@@ -499,10 +499,10 @@ public final class AsyncHttpClient extends AbstractNioReactive
 
 		if (inspector != null) inspector.onConnecting(request, address);
 
-		return ReactiveTcpSocketNio.connect(reactor, address, connectTimeoutMillis, socketSettings)
+		return TcpSocket.connect(reactor, address, connectTimeoutMillis, socketSettings)
 				.then(
 						asyncTcpSocketImpl -> {
-							ReactiveTcpSocketNio.Inspector socketInspector = isSecure ? this.socketInspector : socketSslInspector;
+							TcpSocket.Inspector socketInspector = isSecure ? this.socketInspector : socketSslInspector;
 							if (socketInspector != null) {
 								socketInspector.onConnect(asyncTcpSocketImpl);
 								asyncTcpSocketImpl.setInspector(socketInspector);
@@ -511,7 +511,7 @@ public final class AsyncHttpClient extends AbstractNioReactive
 							String host = request.getUrl().getHost();
 							assert host != null;
 
-							ReactiveTcpSocket asyncTcpSocket = isSecure ?
+							ITcpSocket asyncTcpSocket = isSecure ?
 									wrapClientSocket(reactor, asyncTcpSocketImpl,
 											host, request.getUrl().getPort(),
 											sslContext, sslExecutor) :
@@ -612,13 +612,13 @@ public final class AsyncHttpClient extends AbstractNioReactive
 	}
 
 	@JmxAttribute
-	public @Nullable ReactiveTcpSocketNio.JmxInspector getSocketStats() {
-		return BaseInspector.lookup(socketInspector, ReactiveTcpSocketNio.JmxInspector.class);
+	public @Nullable TcpSocket.JmxInspector getSocketStats() {
+		return BaseInspector.lookup(socketInspector, TcpSocket.JmxInspector.class);
 	}
 
 	@JmxAttribute
-	public @Nullable ReactiveTcpSocketNio.JmxInspector getSocketStatsSsl() {
-		return BaseInspector.lookup(socketSslInspector, ReactiveTcpSocketNio.JmxInspector.class);
+	public @Nullable TcpSocket.JmxInspector getSocketStatsSsl() {
+		return BaseInspector.lookup(socketSslInspector, TcpSocket.JmxInspector.class);
 	}
 
 	@JmxAttribute(name = "")

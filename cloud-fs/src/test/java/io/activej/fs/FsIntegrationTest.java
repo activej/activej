@@ -64,7 +64,7 @@ public final class FsIntegrationTest {
 
 	private Path storage;
 	private ActiveFsServer server;
-	private ActiveFs fs;
+	private IActiveFs fs;
 
 	@Before
 	public void setup() throws IOException {

@@ -18,7 +18,7 @@ import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogPositionDiff;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.ActiveFs;
+import io.activej.fs.IActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
@@ -64,7 +64,7 @@ public class CubeBackupControllerTest {
 	private Eventloop eventloop;
 	private Thread eventloopThread;
 	private DataSource dataSource;
-	private ActiveFs activeFs;
+	private IActiveFs activeFs;
 	private CubeUplinkMySql uplink;
 	private CubeBackupController backupController;
 
@@ -233,7 +233,7 @@ public class CubeBackupControllerTest {
 			throw new AssertionError(e);
 		}
 
-		String prefix = "backups" + ActiveFs.SEPARATOR + backupId + ActiveFs.SEPARATOR;
+		String prefix = "backups" + IActiveFs.SEPARATOR + backupId + IActiveFs.SEPARATOR;
 		Set<Long> actualChunks = await(() -> activeFs.list(prefix + "*" + LOG))
 				.keySet()
 				.stream()

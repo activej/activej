@@ -4,7 +4,7 @@ import io.activej.async.executor.ReactorExecutor;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelSupplier;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.ActiveFs;
+import io.activej.fs.IActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.fs.exception.FsException;
 import io.activej.fs.http.ActiveFsServlet;
@@ -14,7 +14,7 @@ import io.activej.fs.tcp.RemoteActiveFs;
 import io.activej.http.AsyncHttpClient;
 import io.activej.http.AsyncHttpServer;
 import io.activej.net.AbstractReactiveServer;
-import io.activej.net.socket.tcp.ReactiveTcpSocketNio;
+import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
@@ -88,7 +88,7 @@ public final class TestClusterDeadPartitionCheck {
 				new Object[]{
 						new ClientServerFactory() {
 							@Override
-							public ActiveFs createClient(NioReactor reactor, InetSocketAddress address) {
+							public IActiveFs createClient(NioReactor reactor, InetSocketAddress address) {
 								return RemoteActiveFs.create(reactor, address);
 							}
 
@@ -105,8 +105,8 @@ public final class TestClusterDeadPartitionCheck {
 								if (selector == null) return;
 								for (SelectionKey key : selector.keys()) {
 									Object attachment = key.attachment();
-									if (attachment instanceof ReactiveTcpSocketNio) {
-										((ReactiveTcpSocketNio) attachment).close();
+									if (attachment instanceof TcpSocket) {
+										((TcpSocket) attachment).close();
 									}
 								}
 							}
@@ -122,7 +122,7 @@ public final class TestClusterDeadPartitionCheck {
 				new Object[]{
 						new ClientServerFactory() {
 							@Override
-							public ActiveFs createClient(NioReactor reactor, InetSocketAddress address) {
+							public IActiveFs createClient(NioReactor reactor, InetSocketAddress address) {
 								return HttpActiveFs.create(reactor, "http://localhost:" + address.getPort(), AsyncHttpClient.create(reactor));
 							}
 
@@ -157,7 +157,7 @@ public final class TestClusterDeadPartitionCheck {
 		executor = newSingleThreadExecutor();
 		servers = new ArrayList<>(CLIENT_SERVER_PAIRS);
 
-		Map<Object, ActiveFs> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
+		Map<Object, IActiveFs> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
 
 		Path storage = tmpFolder.newFolder().toPath();
 
@@ -327,7 +327,7 @@ public final class TestClusterDeadPartitionCheck {
 	}
 
 	private interface ClientServerFactory {
-		ActiveFs createClient(NioReactor reactor, InetSocketAddress address);
+		IActiveFs createClient(NioReactor reactor, InetSocketAddress address);
 
 		AbstractReactiveServer<?> createServer(LocalActiveFs localFs, InetSocketAddress address);
 

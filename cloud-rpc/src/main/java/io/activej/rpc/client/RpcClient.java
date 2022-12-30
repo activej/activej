@@ -30,9 +30,9 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.jmx.stats.ExceptionStats;
-import io.activej.net.socket.tcp.ReactiveTcpSocket;
-import io.activej.net.socket.tcp.ReactiveTcpSocketNio;
-import io.activej.net.socket.tcp.ReactiveTcpSocketNio.JmxInspector;
+import io.activej.net.socket.tcp.ITcpSocket;
+import io.activej.net.socket.tcp.TcpSocket;
+import io.activej.net.socket.tcp.TcpSocket.JmxInspector;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.AbstractNioReactive;
@@ -64,7 +64,7 @@ import java.util.concurrent.Executor;
 import static io.activej.async.callback.Callback.toAnotherReactor;
 import static io.activej.common.Utils.nonNullElseGet;
 import static io.activej.common.Utils.not;
-import static io.activej.net.socket.tcp.ReactiveTcpSocketSsl.wrapClientSocket;
+import static io.activej.net.socket.tcp.TcpSocketSsl.wrapClientSocket;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -338,7 +338,7 @@ public final class RpcClient extends AbstractNioReactive
 	}
 
 	private void connect(InetSocketAddress address) {
-		ReactiveTcpSocketNio.connect(reactor, address, connectTimeoutMillis, socketSettings)
+		TcpSocket.connect(reactor, address, connectTimeoutMillis, socketSettings)
 				.whenResult(asyncTcpSocketImpl -> {
 					newConnections.remove(address);
 					if (!pendingConnections.contains(address) || stopPromise != null) {
@@ -347,7 +347,7 @@ public final class RpcClient extends AbstractNioReactive
 					}
 					statsSocket.onConnect(asyncTcpSocketImpl);
 					asyncTcpSocketImpl.setInspector(statsSocket);
-					ReactiveTcpSocket socket = sslContext == null ?
+					ITcpSocket socket = sslContext == null ?
 							asyncTcpSocketImpl :
 							wrapClientSocket(reactor, asyncTcpSocketImpl, sslContext, sslExecutor);
 					RpcStream stream = new RpcStream(socket, serializer, defaultPacketSize,

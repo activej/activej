@@ -482,14 +482,14 @@ public final class TestLocalActiveFs {
 	public void testUploadToSameNewDir() {
 		String dir = "newDir";
 		Set<String> filenames = IntStream.range(0, 5)
-				.mapToObj(i -> dir + ActiveFs.SEPARATOR + i + ".txt")
+				.mapToObj(i -> dir + IActiveFs.SEPARATOR + i + ".txt")
 				.collect(toSet());
 
 		await(Promises.all(filenames.stream()
 				.map(filename -> client.upload(filename)
 						.then(ChannelConsumer::acceptEndOfStream))));
 
-		Map<String, FileMetadata> files = await(client.list(dir + ActiveFs.SEPARATOR + '*'));
+		Map<String, FileMetadata> files = await(client.list(dir + IActiveFs.SEPARATOR + '*'));
 		assertEquals(filenames, files.keySet());
 		for (FileMetadata meta : files.values()) {
 			assertEquals(0, meta.getSize());

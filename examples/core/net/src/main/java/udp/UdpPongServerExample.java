@@ -2,8 +2,8 @@ package udp;
 
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.eventloop.Eventloop;
-import io.activej.net.socket.udp.AsyncUdpSocketNio;
 import io.activej.net.socket.udp.UdpPacket;
+import io.activej.net.socket.udp.UdpSocket;
 import io.activej.promise.Promises;
 import io.activej.reactor.net.DatagramSocketSettings;
 import io.activej.reactor.nio.NioReactor;
@@ -27,7 +27,7 @@ public final class UdpPongServerExample {
 		DatagramSocketSettings socketSettings = DatagramSocketSettings.create();
 		DatagramChannel serverDatagramChannel = NioReactor.createDatagramChannel(socketSettings, SERVER_ADDRESS, null);
 
-		AsyncUdpSocketNio.connect(eventloop, serverDatagramChannel)
+		UdpSocket.connect(eventloop, serverDatagramChannel)
 				.whenResult(() -> {
 					System.out.println("UDP server socket is up");
 					System.out.println("You can run UdpPingClientExample");

@@ -38,7 +38,7 @@ import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStatsBasic;
 import io.activej.datastream.stats.StreamStatsDetailed;
-import io.activej.fs.ActiveFs;
+import io.activej.fs.IActiveFs;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ExceptionStats;
@@ -88,7 +88,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	private final AsyncSupplier<C> idGenerator;
 	private final FrameFormat frameFormat;
 
-	private final ActiveFs fs;
+	private final IActiveFs fs;
 	private String chunksPath = "";
 	private String tempPath = "";
 	private String backupPath = DEFAULT_BACKUP_PATH;
@@ -127,7 +127,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 
 	private int finishChunks;
 
-	private AggregationChunkStorage(Reactor reactor, ChunkIdCodec<C> chunkIdCodec, AsyncSupplier<C> idGenerator, FrameFormat frameFormat, ActiveFs fs) {
+	private AggregationChunkStorage(Reactor reactor, ChunkIdCodec<C> chunkIdCodec, AsyncSupplier<C> idGenerator, FrameFormat frameFormat, IActiveFs fs) {
 		super(reactor);
 		this.chunkIdCodec = chunkIdCodec;
 		this.idGenerator = idGenerator;
@@ -137,7 +137,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 
 	public static <C> AggregationChunkStorage<C> create(Reactor reactor,
 			ChunkIdCodec<C> chunkIdCodec,
-			AsyncSupplier<C> idGenerator, FrameFormat frameFormat, ActiveFs fs) {
+			AsyncSupplier<C> idGenerator, FrameFormat frameFormat, IActiveFs fs) {
 		return new AggregationChunkStorage<>(reactor, chunkIdCodec, idGenerator, frameFormat, fs);
 	}
 
@@ -314,12 +314,12 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	}
 
 	private String toBackupPath(String backupId, @Nullable C chunkId) {
-		return toDir(backupPath) + backupId + ActiveFs.SEPARATOR +
+		return toDir(backupPath) + backupId + IActiveFs.SEPARATOR +
 				(chunkId != null ? chunkIdCodec.toFileName(chunkId) + LOG : SUCCESSFUL_BACKUP_FILE);
 	}
 
 	private String toDir(String path) {
-		return path.isEmpty() || path.endsWith(ActiveFs.SEPARATOR) ? path : path + ActiveFs.SEPARATOR;
+		return path.isEmpty() || path.endsWith(IActiveFs.SEPARATOR) ? path : path + IActiveFs.SEPARATOR;
 	}
 
 	private @Nullable C fromPath(String path) {

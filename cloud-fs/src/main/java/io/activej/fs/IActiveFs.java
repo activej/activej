@@ -49,7 +49,7 @@ import static java.util.stream.Collectors.toSet;
  * Most operations are executed in the same manner as would be expected from a regular file system,
  * however, some implementations may have certain limitations.
  */
-public interface ActiveFs {
+public interface IActiveFs {
 	String SEPARATOR = "/";
 
 	/**

@@ -62,7 +62,7 @@ public class CrdtStorageAPITest {
 	@Parameter(1)
 	public ICrdtClientFactory clientFactory;
 
-	private CrdtStorage<String, Integer> client;
+	private ICrdtStorage<String, Integer> client;
 
 	@Before
 	public void setup() throws Exception {
@@ -73,7 +73,7 @@ public class CrdtStorageAPITest {
 
 	@FunctionalInterface
 	private interface ICrdtClientFactory {
-		CrdtStorage<String, Integer> create(Executor executor, Path testFolder) throws Exception;
+		ICrdtStorage<String, Integer> create(Executor executor, Path testFolder) throws Exception;
 	}
 
 	@Parameters(name = "{0}")
@@ -97,7 +97,7 @@ public class CrdtStorageAPITest {
 						"CrdtStorageCluster",
 						(ICrdtClientFactory) (executor, testFolder) -> {
 							Reactor reactor = getCurrentReactor();
-							Map<Integer, CrdtStorage<String, Integer>> map = new HashMap<>();
+							Map<Integer, ICrdtStorage<String, Integer>> map = new HashMap<>();
 
 							int i = 0;
 							Set<Integer> partitions = new HashSet<>();

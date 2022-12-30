@@ -23,8 +23,8 @@ import io.activej.bytebuf.util.ByteBufWriter;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.ref.Ref;
 import io.activej.csp.ChannelSupplier;
-import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
+import io.activej.fs.IActiveFs;
 import io.activej.fs.exception.FsException;
 import io.activej.fs.http.ActiveFsServlet;
 import io.activej.http.HttpRequest;
@@ -51,11 +51,11 @@ public final class ActiveFsGuiServlet implements WithInitializer<ActiveFsGuiServ
 	private ActiveFsGuiServlet() {
 	}
 
-	public static RoutingServlet create(ActiveFs fs) {
+	public static RoutingServlet create(IActiveFs fs) {
 		return create(fs, "ActiveJ FS");
 	}
 
-	public static RoutingServlet create(ActiveFs fs, String title) {
+	public static RoutingServlet create(IActiveFs fs, String title) {
 		Mustache mustache = new DefaultMustacheFactory().compile("fs/gui/static/index.html");
 		RoutingServlet fsServlet = ActiveFsServlet.create(fs);
 

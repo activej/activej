@@ -1,7 +1,7 @@
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
 import io.activej.dns.AsyncDnsClient;
-import io.activej.dns.ReactiveDnsClient;
+import io.activej.dns.IAsyncDnsClient;
 import io.activej.eventloop.Eventloop;
 import io.activej.http.AsyncHttpClient;
 import io.activej.http.HttpRequest;
@@ -38,14 +38,14 @@ public final class HttpClientExample extends Launcher {
 
 	//[START REGION_1]
 	@Provides
-	AsyncHttpClient client(NioReactor reactor, AsyncDnsClient dnsClient) {
+	AsyncHttpClient client(NioReactor reactor, IAsyncDnsClient dnsClient) {
 		return AsyncHttpClient.create(reactor)
 				.withDnsClient(dnsClient);
 	}
 
 	@Provides
-	AsyncDnsClient dnsClient(NioReactor reactor, Config config) {
-		return ReactiveDnsClient.create(reactor)
+	IAsyncDnsClient dnsClient(NioReactor reactor, Config config) {
+		return AsyncDnsClient.create(reactor)
 				.withDnsServerAddress(config.get(ofInetAddress(), "dns.address"))
 				.withTimeout(config.get(ofDuration(), "dns.timeout"));
 	}

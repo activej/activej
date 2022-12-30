@@ -1,7 +1,7 @@
 package io.activej.crdt.storage.cluster;
 
 import io.activej.common.exception.MalformedDataException;
-import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.rpc.client.sender.RpcStrategy;
@@ -18,13 +18,13 @@ public abstract class AbstractDiscoveryService<D extends AbstractDiscoveryServic
 	protected static final TypeT<List<RendezvousPartitionGroup<PartitionId>>> PARTITION_GROUPS_TYPE = new TypeT<>() {};
 
 	protected @Nullable Function<PartitionId, RpcStrategy> rpcProvider;
-	protected @Nullable Function<PartitionId, CrdtStorage<?, ?>> crdtProvider;
+	protected @Nullable Function<PartitionId, ICrdtStorage<?, ?>> crdtProvider;
 
 	public AbstractDiscoveryService(Reactor reactor) {
 		super(reactor);
 	}
 
-	public D withCrdtProvider(Function<PartitionId, CrdtStorage<?, ?>> crdtProvider) {
+	public D withCrdtProvider(Function<PartitionId, ICrdtStorage<?, ?>> crdtProvider) {
 		this.crdtProvider = crdtProvider;
 		//noinspection unchecked
 		return (D) this;

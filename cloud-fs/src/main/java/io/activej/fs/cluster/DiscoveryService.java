@@ -17,40 +17,40 @@
 package io.activej.fs.cluster;
 
 import io.activej.async.function.AsyncSupplier;
-import io.activej.fs.ActiveFs;
+import io.activej.fs.IActiveFs;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 
 import java.util.Map;
 
 /**
- * A service that allows to discover actual {@link ActiveFs} partitions in a cluster
+ * A service that allows to discover actual {@link IActiveFs} partitions in a cluster
  */
 public interface DiscoveryService {
 
 	/**
-	 * Discovers actual {@link ActiveFs} partitions in a cluster
+	 * Discovers actual {@link IActiveFs} partitions in a cluster
 	 * <p>
 	 * A previous partitions are supplied. Whenever a set of actual partitions changes
 	 * and is not the same as previous partitions, a callback will be completed
 	 * with new partitions as a result. A callback will also be completed if an error occurs.
 	 * <p>
 	 */
-	AsyncSupplier<Map<Object, ActiveFs>> discover();
+	AsyncSupplier<Map<Object, IActiveFs>> discover();
 
 	/**
 	 * A {@code DiscoveryService} that consists of given partitions that never change
 	 *
-	 * @param partitions constant {@link ActiveFs} partitions
+	 * @param partitions constant {@link IActiveFs} partitions
 	 * @return a constant discovery service
 	 */
-	static DiscoveryService constant(Map<Object, ActiveFs> partitions) {
-		Map<Object, ActiveFs> constant = Map.copyOf(partitions);
+	static DiscoveryService constant(Map<Object, IActiveFs> partitions) {
+		Map<Object, IActiveFs> constant = Map.copyOf(partitions);
 		return () -> new AsyncSupplier<>() {
 			int i = 0;
 
 			@Override
-			public Promise<Map<Object, ActiveFs>> get() {
+			public Promise<Map<Object, IActiveFs>> get() {
 				return i++ == 0 ? Promise.of(constant) : new SettablePromise<>();
 			}
 		};

@@ -4,7 +4,7 @@ import io.activej.async.service.ReactiveTaskScheduler;
 import io.activej.common.initializer.Initializer;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.hash.CrdtMap;
-import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.storage.cluster.PartitionId;
 import io.activej.crdt.wal.WriteAheadLog;
 import io.activej.inject.Key;
@@ -77,7 +77,7 @@ public final class AdderServerModule extends AbstractModule {
 	}
 
 	@Provides
-	CrdtMap<Long, SimpleSumsCrdtState> map(Reactor reactor, PartitionId partitionId, CrdtStorage<Long, DetailedSumsCrdtState> storage) {
+	CrdtMap<Long, SimpleSumsCrdtState> map(Reactor reactor, PartitionId partitionId, ICrdtStorage<Long, DetailedSumsCrdtState> storage) {
 		return new AdderCrdtMap(reactor, partitionId.toString(), storage);
 	}
 

@@ -4,7 +4,7 @@ import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncRunnables;
 import io.activej.async.service.ReactiveService;
 import io.activej.crdt.hash.CrdtMap;
-import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.datastream.StreamConsumer;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
@@ -21,7 +21,7 @@ public class AdderCrdtMap extends AbstractReactive implements CrdtMap<Long, Simp
 	private final String localServerId;
 	private final AsyncRunnable refresh;
 
-	public AdderCrdtMap(Reactor reactor, String localServerId, CrdtStorage<Long, DetailedSumsCrdtState> storage) {
+	public AdderCrdtMap(Reactor reactor, String localServerId, ICrdtStorage<Long, DetailedSumsCrdtState> storage) {
 		super(reactor);
 		this.localServerId = localServerId;
 		this.refresh = AsyncRunnables.reuse(() -> doRefresh(storage));
@@ -56,7 +56,7 @@ public class AdderCrdtMap extends AbstractReactive implements CrdtMap<Long, Simp
 		return Collections.unmodifiableMap(map);
 	}
 
-	private Promise<Void> doRefresh(CrdtStorage<Long, DetailedSumsCrdtState> storage) {
+	private Promise<Void> doRefresh(ICrdtStorage<Long, DetailedSumsCrdtState> storage) {
 		return storage.download()
 				.then(supplier -> supplier.streamTo(
 						StreamConsumer.ofConsumer(crdtData -> {

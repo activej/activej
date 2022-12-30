@@ -16,7 +16,7 @@
 
 package io.activej.net;
 
-import io.activej.net.socket.tcp.ReactiveTcpSocket;
+import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.reactor.nio.NioReactor;
 
 import java.net.InetAddress;
@@ -62,7 +62,7 @@ public final class PrimaryServer extends AbstractReactiveServer<PrimaryServer> {
 	// endregion
 
 	@Override
-	protected void serve(ReactiveTcpSocket socket, InetAddress remoteAddress) {
+	protected void serve(ITcpSocket socket, InetAddress remoteAddress) {
 		throw new UnsupportedOperationException();
 	}
 

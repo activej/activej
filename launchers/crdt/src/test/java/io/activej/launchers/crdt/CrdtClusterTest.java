@@ -6,7 +6,7 @@ import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
-import io.activej.fs.ActiveFs;
+import io.activej.fs.IActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.http.AsyncHttpClient;
 import io.activej.http.HttpRequest;
@@ -92,7 +92,7 @@ public final class CrdtClusterTest {
 				}
 
 				@Provides
-				ActiveFs fs(Reactor reactor, Executor executor, Config config) {
+				IActiveFs fs(Reactor reactor, Executor executor, Config config) {
 					return LocalActiveFs.create(reactor, executor, config.get(ofPath(), "crdt.local.path"));
 				}
 			};

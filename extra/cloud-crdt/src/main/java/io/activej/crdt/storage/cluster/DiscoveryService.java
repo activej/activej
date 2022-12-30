@@ -17,7 +17,7 @@
 package io.activej.crdt.storage.cluster;
 
 import io.activej.async.function.AsyncSupplier;
-import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.rpc.client.sender.RpcStrategy;
@@ -35,7 +35,7 @@ public interface DiscoveryService<P> {
 	interface PartitionScheme<P> {
 		Set<P> getPartitions();
 
-		CrdtStorage<?, ?> provideCrdtConnection(P partition);
+		ICrdtStorage<?, ?> provideCrdtConnection(P partition);
 
 		RpcStrategy provideRpcConnection(P partition);
 

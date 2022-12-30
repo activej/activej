@@ -33,7 +33,7 @@ import io.activej.datastream.processor.StreamReducer;
 import io.activej.datastream.processor.StreamSplitter;
 import io.activej.datastream.processor.StreamUnion;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.ActiveFs;
+import io.activej.fs.IActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.fs.http.ActiveFsServlet;
 import io.activej.fs.http.HttpActiveFs;
@@ -261,7 +261,7 @@ public final class PartitionedStreamTest {
 
 		Set<String> allTargetItems = new HashSet<>();
 		for (int i = 0; i < targetFsServers.size(); i++) {
-			ActiveFs fs = createClient(getCurrentReactor(), targetFsServers.get(i));
+			IActiveFs fs = createClient(getCurrentReactor(), targetFsServers.get(i));
 			List<String> items = new ArrayList<>();
 			await(fs.download(TARGET_FILENAME)
 					.then(supplier -> supplier.transformWith(new CSVDecoder())
@@ -308,19 +308,19 @@ public final class PartitionedStreamTest {
 
 					@Provides
 					@Named("source")
-					List<ActiveFs> sourceFss(NioReactor reactor) {
+					List<IActiveFs> sourceFss(NioReactor reactor) {
 						return createClients(reactor, sourceFsServers);
 					}
 
 					@Provides
 					@Named("target")
-					List<ActiveFs> targetFss(NioReactor reactor) {
+					List<IActiveFs> targetFss(NioReactor reactor) {
 						return createClients(reactor, targetFsServers);
 					}
 
 					@Provides
 					@DatasetId("data source")
-					PartitionedStreamSupplierFactory<String> data(@Named("source") List<ActiveFs> activeFss) {
+					PartitionedStreamSupplierFactory<String> data(@Named("source") List<IActiveFs> activeFss) {
 						return (partitionIndex, maxPartitions) -> {
 							StreamUnion<String> union = StreamUnion.create();
 							for (int i = partitionIndex; i < activeFss.size(); i += maxPartitions) {
@@ -334,7 +334,7 @@ public final class PartitionedStreamTest {
 
 					@Provides
 					@DatasetId("sorted data source")
-					PartitionedStreamSupplierFactory<String> dataSorted(@Named("source") List<ActiveFs> activeFss) {
+					PartitionedStreamSupplierFactory<String> dataSorted(@Named("source") List<IActiveFs> activeFss) {
 						return (partitionIndex, maxPartitions) -> {
 							StreamReducer<Integer, String, Void> merger = StreamReducer.create();
 
@@ -349,7 +349,7 @@ public final class PartitionedStreamTest {
 
 					@Provides
 					@DatasetId("data target")
-					PartitionedStreamConsumerFactory<String> dataUpload(@Named("target") List<ActiveFs> activeFss) {
+					PartitionedStreamConsumerFactory<String> dataUpload(@Named("target") List<IActiveFs> activeFss) {
 						return (partitionIndex, maxPartitions) -> {
 							StreamSplitter<String, String> splitter = StreamSplitter.create((item, acceptors) ->
 									acceptors[item.hashCode() % acceptors.length].accept(item));
@@ -404,13 +404,13 @@ public final class PartitionedStreamTest {
 	// endregion
 
 	// region helpers
-	private static List<ActiveFs> createClients(NioReactor reactor, List<AsyncHttpServer> servers) {
+	private static List<IActiveFs> createClients(NioReactor reactor, List<AsyncHttpServer> servers) {
 		return servers.stream()
 				.map(server -> createClient(reactor, server))
 				.collect(Collectors.toList());
 	}
 
-	private static ActiveFs createClient(NioReactor reactor, AsyncHttpServer server) {
+	private static IActiveFs createClient(NioReactor reactor, AsyncHttpServer server) {
 		int port = server.getListenAddresses().get(0).getPort();
 		return HttpActiveFs.create(reactor, "http://localhost:" + port, AsyncHttpClient.create(reactor));
 	}

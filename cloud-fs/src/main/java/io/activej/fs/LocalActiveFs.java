@@ -68,14 +68,14 @@ import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 import static java.nio.file.StandardOpenOption.*;
 
 /**
- * An implementation of {@link ActiveFs} which operates on a real underlying filesystem, no networking involved.
+ * An implementation of {@link IActiveFs} which operates on a real underlying filesystem, no networking involved.
  * <p>
  * Only permits file operations to be made within a specified storage path.
  * <p>
- * This implementation does not define new limitations, other than those defined in {@link ActiveFs} interface.
+ * This implementation does not define new limitations, other than those defined in {@link IActiveFs} interface.
  */
 public final class LocalActiveFs extends AbstractReactive
-		implements ActiveFs, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<LocalActiveFs> {
+		implements IActiveFs, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<LocalActiveFs> {
 	private static final Logger logger = LoggerFactory.getLogger(LocalActiveFs.class);
 
 	public static final String DEFAULT_TEMP_DIR = ".upload";
@@ -187,7 +187,7 @@ public final class LocalActiveFs extends AbstractReactive
 	}
 
 	/**
-	 * If set to {@code true}, each write to {@link ActiveFs#append} consumer will be synchronously written to the storage device.
+	 * If set to {@code true}, each write to {@link IActiveFs#append} consumer will be synchronously written to the storage device.
 	 * <p>
 	 * <b>Note: significantly slows down appends</b>
 	 */

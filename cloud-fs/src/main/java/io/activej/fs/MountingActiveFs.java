@@ -41,24 +41,24 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toSet;
 
 /**
- * A file system that allows to mount several {@link ActiveFs} implementations to correspond to different filenames.
+ * A file system that allows to mount several {@link IActiveFs} implementations to correspond to different filenames.
  * <p>
  * Inherits the most strict limitations of all the mounted file systems implementations and root file system.
  */
-final class MountingActiveFs implements ActiveFs {
-	private final ActiveFs root;
-	private final Map<String, ActiveFs> mounts;
+final class MountingActiveFs implements IActiveFs {
+	private final IActiveFs root;
+	private final Map<String, IActiveFs> mounts;
 
-	MountingActiveFs(ActiveFs root, Map<String, ActiveFs> mounts) {
+	MountingActiveFs(IActiveFs root, Map<String, IActiveFs> mounts) {
 		this.root = root;
 		this.mounts = mounts;
 	}
 
-	private ActiveFs findMount(String filename) {
+	private IActiveFs findMount(String filename) {
 		int idx = filename.lastIndexOf('/');
 		while (idx != -1) {
 			String path = filename.substring(0, idx);
-			ActiveFs mount = mounts.get(path);
+			IActiveFs mount = mounts.get(path);
 			if (mount != null) {
 				return mount;
 			}
@@ -120,7 +120,7 @@ final class MountingActiveFs implements ActiveFs {
 		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
-		return transfer(sourceToTarget, ActiveFs::copyAll, false);
+		return transfer(sourceToTarget, IActiveFs::copyAll, false);
 	}
 
 	@Override
@@ -133,7 +133,7 @@ final class MountingActiveFs implements ActiveFs {
 		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
-		return transfer(sourceToTarget, ActiveFs::moveAll, true);
+		return transfer(sourceToTarget, IActiveFs::moveAll, true);
 	}
 
 	@Override
@@ -149,9 +149,9 @@ final class MountingActiveFs implements ActiveFs {
 				.map(entry -> entry.getKey().deleteAll(entry.getValue())));
 	}
 
-	private Promise<Void> transfer(String source, String target, BiFunction<String, String, AsyncConsumer<ActiveFs>> action, boolean deleteSource) {
-		ActiveFs first = findMount(source);
-		ActiveFs second = findMount(target);
+	private Promise<Void> transfer(String source, String target, BiFunction<String, String, AsyncConsumer<IActiveFs>> action, boolean deleteSource) {
+		IActiveFs first = findMount(source);
+		IActiveFs second = findMount(target);
 		if (first == second) {
 			return action.apply(source, target).accept(first);
 		}
@@ -160,16 +160,16 @@ final class MountingActiveFs implements ActiveFs {
 				.then(() -> deleteSource ? first.delete(source) : Promise.complete());
 	}
 
-	private Promise<Void> transfer(Map<String, String> sourceToTarget, AsyncBiConsumer<ActiveFs, Map<String, String>> action, boolean deleteSource) {
+	private Promise<Void> transfer(Map<String, String> sourceToTarget, AsyncBiConsumer<IActiveFs, Map<String, String>> action, boolean deleteSource) {
 		List<AsyncSupplier<Tuple2<String, Try<Void>>>> movePromises = new ArrayList<>();
 
-		Map<ActiveFs, Map<String, String>> groupedBySameFs = new IdentityHashMap<>();
+		Map<IActiveFs, Map<String, String>> groupedBySameFs = new IdentityHashMap<>();
 
 		for (Map.Entry<String, String> entry : sourceToTarget.entrySet()) {
 			String source = entry.getKey();
 			String target = entry.getValue();
-			ActiveFs first = findMount(source);
-			ActiveFs second = findMount(target);
+			IActiveFs first = findMount(source);
+			IActiveFs second = findMount(target);
 			if (first == second) {
 				groupedBySameFs
 						.computeIfAbsent(first, $ -> new HashMap<>())
@@ -182,7 +182,7 @@ final class MountingActiveFs implements ActiveFs {
 						.map(aTry -> new Tuple2<>(source, aTry)));
 			}
 		}
-		for (Map.Entry<ActiveFs, Map<String, String>> entry : groupedBySameFs.entrySet()) {
+		for (Map.Entry<IActiveFs, Map<String, String>> entry : groupedBySameFs.entrySet()) {
 			movePromises.add(() -> action.accept(entry.getKey(), entry.getValue()).toTry().map(aTry -> new Tuple2<>("", aTry)));
 		}
 

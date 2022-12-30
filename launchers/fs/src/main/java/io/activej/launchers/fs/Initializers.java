@@ -19,7 +19,7 @@ package io.activej.launchers.fs;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.initializer.Initializer;
 import io.activej.config.Config;
-import io.activej.fs.ActiveFs;
+import io.activej.fs.IActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.fs.cluster.ClusterActiveFs;
 import io.activej.fs.cluster.ClusterRepartitionController;
@@ -62,13 +62,13 @@ public final class Initializers {
 		return constantDiscoveryService(reactor, null, config);
 	}
 
-	public static DiscoveryService constantDiscoveryService(NioReactor reactor, @Nullable ActiveFs local, Config config) throws MalformedDataException {
-		Map<Object, ActiveFs> partitions = new LinkedHashMap<>();
+	public static DiscoveryService constantDiscoveryService(NioReactor reactor, @Nullable IActiveFs local, Config config) throws MalformedDataException {
+		Map<Object, IActiveFs> partitions = new LinkedHashMap<>();
 		partitions.put(config.get("activefs.repartition.localPartitionId"), local);
 
 		List<String> partitionStrings = config.get(ofList(ofString()), "partitions", List.of());
 		for (String toAdd : partitionStrings) {
-			ActiveFs client;
+			IActiveFs client;
 			if (toAdd.startsWith("http")) {
 				client = HttpActiveFs.create(reactor, toAdd, AsyncHttpClient.create(reactor));
 			} else {

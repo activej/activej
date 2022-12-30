@@ -37,7 +37,7 @@ public final class ActiveFsAdaptersTest {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
-	private ActiveFs local;
+	private IActiveFs local;
 
 	@Before
 	public void setup() throws IOException {
@@ -47,11 +47,11 @@ public final class ActiveFsAdaptersTest {
 		this.local = localActiveFs;
 	}
 
-	private void upload(ActiveFs fs, String filename) {
+	private void upload(IActiveFs fs, String filename) {
 		await(fs.upload(filename).then(ChannelConsumer::acceptEndOfStream));
 	}
 
-	private void uploadForbidden(ActiveFs fs, String filename) {
+	private void uploadForbidden(IActiveFs fs, String filename) {
 		Exception exception = awaitException(fs.upload(filename).then(ChannelConsumer::acceptEndOfStream));
 		assertThat(exception, instanceOf(ForbiddenPathException.class));
 	}
@@ -62,7 +62,7 @@ public final class ActiveFsAdaptersTest {
 
 	@Test
 	public void addingPrefix() {
-		ActiveFs prefixed = ActiveFsAdapters.addPrefix(local, "prefix/");
+		IActiveFs prefixed = ActiveFsAdapters.addPrefix(local, "prefix/");
 
 		upload(prefixed, "test.txt");
 		upload(prefixed, "deeper/test.txt");
@@ -72,7 +72,7 @@ public final class ActiveFsAdaptersTest {
 
 	@Test
 	public void strippingPrefix() {
-		ActiveFs prefixed = ActiveFsAdapters.removePrefix(local, "prefix/");
+		IActiveFs prefixed = ActiveFsAdapters.removePrefix(local, "prefix/");
 
 		upload(prefixed, "prefix/test.txt");
 		upload(prefixed, "prefix/deeper/test.txt");
@@ -89,12 +89,12 @@ public final class ActiveFsAdaptersTest {
 
 	@Test
 	public void mountingClient() {
-		ActiveFs root = ActiveFsAdapters.subdirectory(local, "root");
-		ActiveFs first = ActiveFsAdapters.subdirectory(local, "first");
-		ActiveFs second = ActiveFsAdapters.subdirectory(local, "second");
-		ActiveFs third = ActiveFsAdapters.subdirectory(local, "third");
+		IActiveFs root = ActiveFsAdapters.subdirectory(local, "root");
+		IActiveFs first = ActiveFsAdapters.subdirectory(local, "first");
+		IActiveFs second = ActiveFsAdapters.subdirectory(local, "second");
+		IActiveFs third = ActiveFsAdapters.subdirectory(local, "third");
 
-        ActiveFs mounted = ActiveFsAdapters.mount(root, Map.of(
+        IActiveFs mounted = ActiveFsAdapters.mount(root, Map.of(
 				"hello", first,
 				"test/inner", second,
 				"last", third));
@@ -115,7 +115,7 @@ public final class ActiveFsAdaptersTest {
 
 	@Test
 	public void filterClient() {
-		ActiveFs filtered = ActiveFsAdapters.filter(local, s -> s.endsWith(".txt") && Pattern.compile("\\d{2}").matcher(s).find());
+		IActiveFs filtered = ActiveFsAdapters.filter(local, s -> s.endsWith(".txt") && Pattern.compile("\\d{2}").matcher(s).find());
 
 		uploadForbidden(filtered, "test2.txt");
 		upload(filtered, "test22.txt");

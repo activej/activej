@@ -18,7 +18,7 @@ package io.activej.redis;
 
 import io.activej.common.ApplicationSettings;
 import io.activej.common.initializer.WithInitializer;
-import io.activej.net.socket.tcp.ReactiveTcpSocketNio;
+import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.net.SocketSettings;
@@ -34,7 +34,7 @@ import java.util.concurrent.Executor;
 
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.net.socket.tcp.ReactiveTcpSocketSsl.wrapClientSocket;
+import static io.activej.net.socket.tcp.TcpSocketSsl.wrapClientSocket;
 
 /**
  * A client for Redis.
@@ -114,7 +114,7 @@ public final class RedisClient extends AbstractNioReactive implements WithInitia
 	 * @return promise of {@link RedisConnection}
 	 */
 	public Promise<RedisConnection> connect() {
-		return ReactiveTcpSocketNio.connect(reactor, address, connectTimeoutMillis, socketSettings)
+		return TcpSocket.connect(reactor, address, connectTimeoutMillis, socketSettings)
 				.map(
 						socket -> {
 							RedisConnection connection = new RedisConnection(this,

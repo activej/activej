@@ -26,14 +26,14 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.binary.ByteBufsCodec;
-import io.activej.net.socket.tcp.ReactiveTcpSocket;
+import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.promise.Promise;
 
 /**
  * Represents a simple binary protocol over for communication a TCP connection.
  */
 public final class MessagingWithBinaryStreaming<I, O> extends AbstractAsyncCloseable implements Messaging<I, O>, WithInitializer<MessagingWithBinaryStreaming<I, O>> {
-	private final ReactiveTcpSocket socket;
+	private final ITcpSocket socket;
 
 	private final ByteBufsCodec<I, O> codec;
 
@@ -44,7 +44,7 @@ public final class MessagingWithBinaryStreaming<I, O> extends AbstractAsyncClose
 	private boolean writeDone;
 
 	// region creators
-	private MessagingWithBinaryStreaming(ReactiveTcpSocket socket, ByteBufsCodec<I, O> codec) {
+	private MessagingWithBinaryStreaming(ITcpSocket socket, ByteBufsCodec<I, O> codec) {
 		this.socket = socket;
 		this.codec = codec;
 		this.bufsSupplier = BinaryChannelSupplier.ofProvidedBufs(bufs,
@@ -62,7 +62,7 @@ public final class MessagingWithBinaryStreaming<I, O> extends AbstractAsyncClose
 				this);
 	}
 
-	public static <I, O> MessagingWithBinaryStreaming<I, O> create(ReactiveTcpSocket socket,
+	public static <I, O> MessagingWithBinaryStreaming<I, O> create(ITcpSocket socket,
 			ByteBufsCodec<I, O> serializer) {
 		MessagingWithBinaryStreaming<I, O> messaging = new MessagingWithBinaryStreaming<>(socket, serializer);
 		messaging.prefetch();
