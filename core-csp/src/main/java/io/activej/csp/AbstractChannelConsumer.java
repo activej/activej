@@ -16,8 +16,8 @@
 
 package io.activej.csp;
 
-import io.activej.async.process.AbstractReactiveCloseable;
-import io.activej.async.process.ReactiveCloseable;
+import io.activej.async.process.AbstractAsyncCloseable;
+import io.activej.async.process.AsyncCloseable;
 import io.activej.common.Checks;
 import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
@@ -25,7 +25,7 @@ import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Checks.checkState;
 
-public abstract class AbstractChannelConsumer<T> extends AbstractReactiveCloseable implements ChannelConsumer<T> {
+public abstract class AbstractChannelConsumer<T> extends AbstractAsyncCloseable implements ChannelConsumer<T> {
 	protected static final boolean CHECK = Checks.isEnabled(AbstractChannelConsumer.class);
 
 	// region creators
@@ -33,7 +33,7 @@ public abstract class AbstractChannelConsumer<T> extends AbstractReactiveCloseab
 		setCloseable(null);
 	}
 
-	protected AbstractChannelConsumer(@Nullable ReactiveCloseable closeable) {
+	protected AbstractChannelConsumer(@Nullable AsyncCloseable closeable) {
 		setCloseable(closeable);
 	}
 	// endregion

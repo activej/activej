@@ -17,8 +17,8 @@
 package io.activej.csp;
 
 import io.activej.async.function.AsyncConsumer;
+import io.activej.async.process.AsyncCloseable;
 import io.activej.async.process.AsyncExecutor;
-import io.activej.async.process.ReactiveCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.function.ConsumerEx;
 import io.activej.common.function.FunctionEx;
@@ -56,7 +56,7 @@ import static io.activej.reactor.Reactor.getCurrentReactor;
  * and means that no additional data should be consumed.
  */
 
-public interface ChannelConsumer<T> extends ReactiveCloseable {
+public interface ChannelConsumer<T> extends AsyncCloseable {
 	/**
 	 * Consumes a provided value and returns a
 	 * {@link Promise} as a marker of success.
@@ -95,10 +95,10 @@ public interface ChannelConsumer<T> extends ReactiveCloseable {
 	/**
 	 * Wraps {@link AsyncConsumer} in {@code ChannelConsumer}.
 	 *
-	 * @see ChannelConsumer#of(AsyncConsumer, ReactiveCloseable)
+	 * @see ChannelConsumer#of(AsyncConsumer, AsyncCloseable)
 	 */
 	static <T> ChannelConsumer<T> of(AsyncConsumer<T> consumer) {
-		return of(consumer, ReactiveCloseable.of(e -> {}));
+		return of(consumer, AsyncCloseable.of(e -> {}));
 	}
 
 	/**
@@ -109,7 +109,7 @@ public interface ChannelConsumer<T> extends ReactiveCloseable {
 	 * @param <T>       type of data to be consumed
 	 * @return AbstractChannelConsumer which wraps AsyncConsumer
 	 */
-	static <T> ChannelConsumer<T> of(AsyncConsumer<T> consumer, @Nullable ReactiveCloseable closeable) {
+	static <T> ChannelConsumer<T> of(AsyncConsumer<T> consumer, @Nullable AsyncCloseable closeable) {
 		return new AbstractChannelConsumer<>(closeable) {
 			final AsyncConsumer<T> thisConsumer = consumer;
 

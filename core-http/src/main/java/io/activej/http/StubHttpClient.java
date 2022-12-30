@@ -25,7 +25,7 @@ import io.activej.reactor.Reactor;
  * A stub client which forwards requests straight to the underlying servlet without any real I/O operations.
  * Used for testing.
  */
-public final class StubHttpClient implements AsyncHttpClient {
+public final class StubHttpClient implements IAsyncHttpClient {
 	private final AsyncServlet servlet;
 
 	private StubHttpClient(AsyncServlet servlet) {

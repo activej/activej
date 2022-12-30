@@ -47,7 +47,7 @@ import static io.activej.http.Protocol.WS;
 import static io.activej.http.Protocol.WSS;
 
 /**
- * Represents the HTTP request which {@link ReactiveHttpClient} sends to
+ * Represents the HTTP request which {@link AsyncHttpClient} sends to
  * {@link AsyncHttpServer}. It must have only one owner in each  part of time.
  * After creating an {@link HttpResponse} in a server, it will be recycled and
  * can not be used later.

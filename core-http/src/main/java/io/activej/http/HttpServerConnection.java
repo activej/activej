@@ -54,7 +54,7 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * It represents server connection. It can receive {@link HttpRequest requests}
- * from {@link ReactiveHttpClient clients} and respond to them with
+ * from {@link AsyncHttpClient clients} and respond to them with
  * {@link AsyncServlet<HttpRequest> async servlet}.
  */
 public final class HttpServerConnection extends AbstractHttpConnection {

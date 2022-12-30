@@ -14,22 +14,10 @@
  * limitations under the License.
  */
 
-package io.activej.csp.net;
+package io.activej.http;
 
-import io.activej.async.process.AsyncCloseable;
-import io.activej.bytebuf.ByteBuf;
-import io.activej.csp.ChannelConsumer;
-import io.activej.csp.ChannelSupplier;
 import io.activej.promise.Promise;
 
-public interface Messaging<I, O> extends AsyncCloseable {
-	Promise<I> receive();
-
-	Promise<Void> send(O msg);
-
-	Promise<Void> sendEndOfStream();
-
-	ChannelSupplier<ByteBuf> receiveBinaryStream();
-
-	ChannelConsumer<ByteBuf> sendBinaryStream();
+public interface IAsyncWebSocketClient {
+	Promise<WebSocket> webSocketRequest(HttpRequest request);
 }

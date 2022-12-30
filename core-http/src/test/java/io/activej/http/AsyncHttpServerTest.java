@@ -1,6 +1,6 @@
 package io.activej.http;
 
-import io.activej.async.process.ReactiveCloseable;
+import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.csp.ChannelSupplier;
@@ -221,7 +221,7 @@ public final class AsyncHttpServerTest {
 	@Test
 	public void testBodySupplierClosingOnDisconnect() throws Exception {
 		SettablePromise<Exception> exceptionPromise = new SettablePromise<>();
-		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.of(() -> Promise.of(wrapAscii("Hello")), ReactiveCloseable.of(exceptionPromise::set));
+		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.of(() -> Promise.of(wrapAscii("Hello")), AsyncCloseable.of(exceptionPromise::set));
 		AsyncHttpServer server = AsyncHttpServer.create(eventloop, req -> HttpResponse.ok200().withBodyStream(supplier))
 				.withListenPort(port)
 				.withAcceptOnce();

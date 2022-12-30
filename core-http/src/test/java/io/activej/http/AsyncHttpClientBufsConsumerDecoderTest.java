@@ -22,7 +22,7 @@ import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertNotNull;
 
 @Ignore
-public class ReactiveHttpClientBufsConsumerDecoderTest {
+public class AsyncHttpClientBufsConsumerDecoderTest {
 	private static final String URL_WITH_BIG_CHUNK = "https://o7planning.org/ru/10399/jsoup-java-html-parser-tutorial";
 	private static final String URL_WITHOUT_REQUIRED_SSL = "http://paypal.com";
 	private static final String URL_WITH_REQUIRED_SSL = "https://paypal.com";
@@ -37,14 +37,14 @@ public class ReactiveHttpClientBufsConsumerDecoderTest {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
-	private static ReactiveHttpClient client;
+	private static AsyncHttpClient client;
 
 	@BeforeClass
 	public static void init() throws NoSuchAlgorithmException, IOException {
 		ReactiveDnsClient dnsClient = ReactiveDnsClient.create(Reactor.getCurrentReactor())
 				.withDnsServerAddress(InetAddress.getByName("8.8.8.8"))
 				.withTimeout(StringFormatUtils.parseDuration("5 seconds"));
-		client = ReactiveHttpClient.create(Reactor.getCurrentReactor())
+		client = AsyncHttpClient.create(Reactor.getCurrentReactor())
 				.withSslEnabled(SSLContext.getDefault(), newSingleThreadExecutor())
 				.withDnsClient(dnsClient);
 	}

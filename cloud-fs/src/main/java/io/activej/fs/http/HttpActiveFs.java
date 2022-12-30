@@ -55,16 +55,16 @@ import static io.activej.http.HttpHeaders.CONTENT_LENGTH;
  */
 public final class HttpActiveFs extends AbstractReactive
 		implements ActiveFs, WithInitializer<HttpActiveFs> {
-	private final AsyncHttpClient client;
+	private final IAsyncHttpClient client;
 	private final String url;
 
-	private HttpActiveFs(Reactor reactor, String url, AsyncHttpClient client) {
+	private HttpActiveFs(Reactor reactor, String url, IAsyncHttpClient client) {
 		super(reactor);
 		this.url = url;
 		this.client = client;
 	}
 
-	public static HttpActiveFs create(Reactor reactor, String url, AsyncHttpClient client) {
+	public static HttpActiveFs create(Reactor reactor, String url, IAsyncHttpClient client) {
 		return new HttpActiveFs(reactor, url.endsWith("/") ? url : url + '/', client);
 	}
 

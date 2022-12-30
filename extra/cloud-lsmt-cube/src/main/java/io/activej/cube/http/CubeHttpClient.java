@@ -26,7 +26,7 @@ import io.activej.cube.exception.CubeException;
 import io.activej.http.AsyncHttpClient;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpUtils;
-import io.activej.http.ReactiveHttpClient;
+import io.activej.http.IAsyncHttpClient;
 import io.activej.promise.Promise;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +46,7 @@ public final class CubeHttpClient implements ICube, WithInitializer<CubeHttpClie
 	private static final Logger logger = LoggerFactory.getLogger(CubeHttpClient.class);
 
 	private final String url;
-	private final AsyncHttpClient httpClient;
+	private final IAsyncHttpClient httpClient;
 	private QueryResultCodec queryResultCodec;
 	private AggregationPredicateCodec aggregationPredicateCodec;
 	private final Map<String, Type> attributeTypes = new LinkedHashMap<>();
@@ -54,16 +54,16 @@ public final class CubeHttpClient implements ICube, WithInitializer<CubeHttpClie
 
 	private DefiningClassLoader classLoader = DefiningClassLoader.create();
 
-	private CubeHttpClient(AsyncHttpClient httpClient, String url) {
+	private CubeHttpClient(IAsyncHttpClient httpClient, String url) {
 		this.url = url.replaceAll("/$", "");
 		this.httpClient = httpClient;
 	}
 
-	public static CubeHttpClient create(ReactiveHttpClient httpClient, String cubeServletUrl) {
+	public static CubeHttpClient create(AsyncHttpClient httpClient, String cubeServletUrl) {
 		return new CubeHttpClient(httpClient, cubeServletUrl);
 	}
 
-	public static CubeHttpClient create(ReactiveHttpClient httpClient, URI cubeServletUrl) {
+	public static CubeHttpClient create(AsyncHttpClient httpClient, URI cubeServletUrl) {
 		return create(httpClient, cubeServletUrl.toString());
 	}
 

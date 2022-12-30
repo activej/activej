@@ -25,8 +25,8 @@ import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamReducers.MergeReducer;
 import io.activej.datastream.processor.StreamReducers.Reducer;
+import io.activej.http.AsyncHttpClient;
 import io.activej.http.AsyncHttpServer;
-import io.activej.http.ReactiveHttpClient;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
@@ -759,8 +759,8 @@ public final class DataflowTest {
 					}
 
 					@Provides
-					ReactiveHttpClient httpClient(NioReactor reactor) {
-						return ReactiveHttpClient.create(reactor);
+					AsyncHttpClient httpClient(NioReactor reactor) {
+						return AsyncHttpClient.create(reactor);
 					}
 
 					@Provides

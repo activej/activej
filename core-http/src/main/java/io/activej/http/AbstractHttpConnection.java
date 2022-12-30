@@ -17,7 +17,7 @@
 package io.activej.http;
 
 import io.activej.async.callback.Callback;
-import io.activej.async.process.ReactiveCloseable;
+import io.activej.async.process.AsyncCloseable;
 import io.activej.async.process.ReactiveProcess;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
@@ -433,7 +433,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 									return Promise.ofException(e);
 								}),
 				Promise::complete,
-				ReactiveCloseable.of(e -> closeEx(translateToHttpException(e))));
+				AsyncCloseable.of(e -> closeEx(translateToHttpException(e))));
 
 		ChannelOutput<ByteBuf> bodyStream;
 		ReactiveProcess process;
@@ -554,7 +554,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 		supplier.streamTo(ChannelConsumer.of(
 						buf -> socket.write(buf)
 								.whenException(e -> closeEx(translateToHttpException(e))),
-						ReactiveCloseable.of(e -> closeEx(translateToHttpException(e)))))
+						AsyncCloseable.of(e -> closeEx(translateToHttpException(e)))))
 				.whenResult(this::onBodySent);
 	}
 

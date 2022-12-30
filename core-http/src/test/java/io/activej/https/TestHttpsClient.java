@@ -4,9 +4,9 @@ import io.activej.dns.AsyncDnsClient;
 import io.activej.dns.CachedDnsClient;
 import io.activej.dns.ReactiveDnsClient;
 import io.activej.http.AcceptMediaType;
+import io.activej.http.AsyncHttpClient;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpResponse;
-import io.activej.http.ReactiveHttpClient;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ByteBufRule;
@@ -43,7 +43,7 @@ public final class TestHttpsClient {
 				.withTimeout(Duration.ofMillis(500))
 				.withDnsServerAddress(inetAddress("8.8.8.8")));
 
-		ReactiveHttpClient client = ReactiveHttpClient.create(reactor)
+		AsyncHttpClient client = AsyncHttpClient.create(reactor)
 				.withDnsClient(dnsClient)
 				.withSslEnabled(SSLContext.getDefault(), Executors.newSingleThreadExecutor());
 		Integer code = await(client.request(HttpRequest.get("https://en.wikipedia.org/wiki/Wikipedia")

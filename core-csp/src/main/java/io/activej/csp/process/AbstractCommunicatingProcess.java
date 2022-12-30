@@ -17,7 +17,7 @@
 package io.activej.csp.process;
 
 import io.activej.async.exception.AsyncCloseException;
-import io.activej.async.process.ReactiveCloseable;
+import io.activej.async.process.AsyncCloseable;
 import io.activej.async.process.ReactiveProcess;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.AbstractChannelConsumer;
@@ -209,8 +209,8 @@ public abstract class AbstractCommunicatingProcess extends ImplicitlyReactive im
 		if (isProcessComplete()) {
 			Recyclers.recycle(value);
 			ProcessCompleteException processCompleteException = new ProcessCompleteException();
-			if (value instanceof ReactiveCloseable) {
-				((ReactiveCloseable) value).closeEx(processCompleteException);
+			if (value instanceof AsyncCloseable) {
+				((AsyncCloseable) value).closeEx(processCompleteException);
 			}
 			return Promise.ofException(processCompleteException);
 		}

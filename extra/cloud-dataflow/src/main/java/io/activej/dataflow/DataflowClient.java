@@ -16,7 +16,7 @@
 
 package io.activej.dataflow;
 
-import io.activej.async.process.ReactiveCloseable;
+import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnknownFormatException;
@@ -165,7 +165,7 @@ public final class DataflowClient extends AbstractNioReactive {
 		}
 	}
 
-	public class Session extends ImplicitlyReactive implements ReactiveCloseable {
+	public class Session extends ImplicitlyReactive implements AsyncCloseable {
 		private final InetSocketAddress address;
 		private final Messaging<DataflowResponse, DataflowRequest> messaging;
 

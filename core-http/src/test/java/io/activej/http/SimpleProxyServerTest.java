@@ -61,7 +61,7 @@ public final class SimpleProxyServerTest {
 
 		Eventloop eventloop2 = Eventloop.create().withFatalErrorHandler(rethrow()).withCurrentThread();
 
-		ReactiveHttpClient httpClient = ReactiveHttpClient.create(eventloop2)
+		AsyncHttpClient httpClient = AsyncHttpClient.create(eventloop2)
 				.withDnsClient(CachedDnsClient.create(eventloop2, ReactiveDnsClient.create(eventloop2)
 						.withDatagramSocketSetting(DatagramSocketSettings.create())
 						.withDnsServerAddress(HttpUtils.inetAddress("8.8.8.8"))));

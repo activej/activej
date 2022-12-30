@@ -1,6 +1,6 @@
 package io.activej.crdt.storage.cluster;
 
-import io.activej.async.process.ReactiveCloseable;
+import io.activej.async.process.AsyncCloseable;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtException;
 import io.activej.crdt.CrdtServer;
@@ -130,8 +130,8 @@ public final class TestDyingPartitions {
 			reactor.execute(() -> {
 				for (SelectionKey key : reactor.getSelector().keys()) {
 					Object attachment = key.attachment();
-					if (attachment instanceof ReactiveCloseable) {
-						((ReactiveCloseable) attachment).close();
+					if (attachment instanceof AsyncCloseable) {
+						((AsyncCloseable) attachment).close();
 					}
 				}
 			});

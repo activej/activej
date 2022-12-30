@@ -10,8 +10,8 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.fs.LocalActiveFs;
 import io.activej.fs.http.ActiveFsServlet;
 import io.activej.fs.http.HttpActiveFs;
+import io.activej.http.AsyncHttpClient;
 import io.activej.http.AsyncHttpServer;
-import io.activej.http.ReactiveHttpClient;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.nio.NioReactor;
@@ -141,7 +141,7 @@ public final class CubeTest {
 
 		Path serverStorage = temporaryFolder.newFolder("storage").toPath();
 		AsyncHttpServer server1 = startServer(executor, serverStorage);
-		ReactiveHttpClient httpClient = ReactiveHttpClient.create(getCurrentReactor());
+		AsyncHttpClient httpClient = AsyncHttpClient.create(getCurrentReactor());
 		HttpActiveFs storage = HttpActiveFs.create(getCurrentReactor(), "http://localhost:" + listenPort, httpClient);
 		AggregationChunkStorage<Long> chunkStorage = ActiveFsChunkStorage.create(getCurrentReactor(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, storage);
 		Cube cube = newCube(executor, classLoader, chunkStorage);

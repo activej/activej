@@ -18,7 +18,7 @@ package io.activej.redis;
 
 import io.activej.async.callback.Callback;
 import io.activej.async.exception.AsyncCloseException;
-import io.activej.async.process.AbstractReactiveCloseable;
+import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ApplicationSettings;
@@ -40,7 +40,7 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nullify;
 import static java.lang.Math.max;
 
-public final class RedisConnection extends AbstractReactiveCloseable {
+public final class RedisConnection extends AbstractAsyncCloseable {
 	private static final Logger logger = LoggerFactory.getLogger(RedisConnection.class);
 	public static final boolean CHECK = Checks.isEnabled(RedisConnection.class);
 

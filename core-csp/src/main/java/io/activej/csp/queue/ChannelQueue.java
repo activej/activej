@@ -16,7 +16,7 @@
 
 package io.activej.csp.queue;
 
-import io.activej.async.process.ReactiveCloseable;
+import io.activej.async.process.AsyncCloseable;
 import io.activej.csp.AbstractChannelConsumer;
 import io.activej.csp.AbstractChannelSupplier;
 import io.activej.csp.ChannelConsumer;
@@ -32,7 +32,7 @@ import org.jetbrains.annotations.Nullable;
  *
  * @param <T> type of values stored in the queue
  */
-public interface ChannelQueue<T> extends ChannelTransformer<T, T>, ReactiveCloseable {
+public interface ChannelQueue<T> extends ChannelTransformer<T, T>, AsyncCloseable {
 	/**
 	 * Puts an item in the queue and returns a
 	 * {@code promise} of {@code null} as a marker of completion.

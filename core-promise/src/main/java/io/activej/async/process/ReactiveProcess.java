@@ -20,7 +20,7 @@ import io.activej.promise.Promise;
 import io.activej.reactor.Reactive;
 import org.jetbrains.annotations.Contract;
 
-public interface ReactiveProcess extends Reactive, ReactiveCloseable {
+public interface ReactiveProcess extends Reactive, AsyncCloseable {
 	Promise<Void> startProcess();
 
 	@Contract(pure = true)

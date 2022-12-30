@@ -17,7 +17,7 @@
 package io.activej.datastream;
 
 import io.activej.async.function.AsyncConsumer;
-import io.activej.async.process.ReactiveCloseable;
+import io.activej.async.process.AsyncCloseable;
 import io.activej.common.function.ConsumerEx;
 import io.activej.csp.ChannelConsumer;
 import io.activej.datastream.StreamConsumers.ClosingWithError;
@@ -27,6 +27,7 @@ import io.activej.datastream.StreamConsumers.Skip;
 import io.activej.datastream.processor.StreamConsumerTransformer;
 import io.activej.datastream.processor.StreamTransformer;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactive;
 import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,7 +40,7 @@ import java.util.function.UnaryOperator;
  * Implementors of this interface might want to extend {@link AbstractStreamConsumer}
  * instead of this interface, since it makes the threading and state management easier.
  */
-public interface StreamConsumer<T> extends ReactiveCloseable {
+public interface StreamConsumer<T> extends Reactive, AsyncCloseable {
 	/**
 	 * Begins streaming data from the given supplier into this consumer.
 	 * This method may not be called directly, use {@link StreamSupplier#streamTo} instead.

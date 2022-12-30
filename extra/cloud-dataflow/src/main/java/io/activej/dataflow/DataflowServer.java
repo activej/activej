@@ -17,7 +17,7 @@
 package io.activej.dataflow;
 
 import io.activej.async.exception.AsyncCloseException;
-import io.activej.async.process.ReactiveCloseable;
+import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
@@ -279,7 +279,7 @@ public final class DataflowServer extends AbstractReactiveServer<DataflowServer>
 	protected void onClose(SettablePromise<Void> cb) {
 		List<ChannelQueue<ByteBuf>> pending = new ArrayList<>(pendingStreams.values());
 		pendingStreams.clear();
-		pending.forEach(ReactiveCloseable::close);
+		pending.forEach(AsyncCloseable::close);
 		cb.set(null);
 	}
 

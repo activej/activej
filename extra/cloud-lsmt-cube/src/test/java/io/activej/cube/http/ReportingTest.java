@@ -17,8 +17,8 @@ import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.LogOTState;
 import io.activej.fs.LocalActiveFs;
+import io.activej.http.AsyncHttpClient;
 import io.activej.http.AsyncHttpServer;
-import io.activej.http.ReactiveHttpClient;
 import io.activej.multilog.Multilog;
 import io.activej.multilog.MultilogImpl;
 import io.activej.ot.OTStateManager;
@@ -331,7 +331,7 @@ public final class ReportingTest extends CubeTestBase {
 
 		cubeHttpServer = startHttpServer();
 
-		ReactiveHttpClient httpClient = ReactiveHttpClient.create(reactor)
+		AsyncHttpClient httpClient = AsyncHttpClient.create(reactor)
 				.withNoKeepAlive();
 		cubeHttpClient = CubeHttpClient.create(httpClient, "http://127.0.0.1:" + serverPort)
 				.withAttribute("date", LocalDate.class)

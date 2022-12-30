@@ -18,7 +18,7 @@ package io.activej.http;
 
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.function.AsyncSupplier;
-import io.activej.async.process.AbstractReactiveCloseable;
+import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.Checks;
@@ -48,7 +48,7 @@ import static io.activej.http.WebSocket.Message.MessageType.TEXT;
 import static io.activej.http.WebSocketConstants.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-final class WebSocketImpl extends AbstractReactiveCloseable implements WebSocket {
+final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 	private static final boolean CHECK = Checks.isEnabled(WebSocketImpl.class);
 
 	private final HttpRequest request;

@@ -16,7 +16,7 @@
 
 package io.activej.datastream;
 
-import io.activej.async.process.ReactiveCloseable;
+import io.activej.async.process.AsyncCloseable;
 import io.activej.common.function.SupplierEx;
 import io.activej.csp.ChannelSupplier;
 import io.activej.datastream.StreamSuppliers.Closing;
@@ -26,6 +26,7 @@ import io.activej.datastream.StreamSuppliers.OfIterator;
 import io.activej.datastream.processor.StreamSupplierTransformer;
 import io.activej.datastream.processor.StreamTransformer;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactive;
 import io.activej.reactor.Reactor;
 
 import java.util.Iterator;
@@ -45,7 +46,7 @@ import static java.util.Arrays.asList;
  * Implementors of this interface might want to extend {@link AbstractStreamSupplier}
  * instead of this interface, since it makes the threading and state management easier.
  */
-public interface StreamSupplier<T> extends ReactiveCloseable {
+public interface StreamSupplier<T> extends Reactive, AsyncCloseable {
 	/**
 	 * Bind this supplier to given {@link StreamConsumer} and start streaming
 	 * data through them following all the contracts.

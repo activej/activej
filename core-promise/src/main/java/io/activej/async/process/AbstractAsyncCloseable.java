@@ -24,10 +24,10 @@ import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Checks.checkState;
 
-public abstract class AbstractReactiveCloseable extends ImplicitlyReactive implements ReactiveCloseable {
-	private static final boolean CHECK = Checks.isEnabled(AbstractReactiveCloseable.class);
+public abstract class AbstractAsyncCloseable extends ImplicitlyReactive implements AsyncCloseable {
+	private static final boolean CHECK = Checks.isEnabled(AbstractAsyncCloseable.class);
 
-	private @Nullable ReactiveCloseable closeable;
+	private @Nullable AsyncCloseable closeable;
 
 	private Exception exception;
 
@@ -35,7 +35,7 @@ public abstract class AbstractReactiveCloseable extends ImplicitlyReactive imple
 		return exception;
 	}
 
-	public final void setCloseable(@Nullable ReactiveCloseable closeable) {
+	public final void setCloseable(@Nullable AsyncCloseable closeable) {
 		this.closeable = closeable;
 	}
 
@@ -69,8 +69,8 @@ public abstract class AbstractReactiveCloseable extends ImplicitlyReactive imple
 	protected final <T> Promise<T> doSanitize(T value, @Nullable Exception e) {
 		if (exception != null) {
 			Recyclers.recycle(value);
-			if (value instanceof ReactiveCloseable) {
-				((ReactiveCloseable) value).closeEx(exception);
+			if (value instanceof AsyncCloseable) {
+				((AsyncCloseable) value).closeEx(exception);
 			}
 			return Promise.ofException(exception);
 		}
