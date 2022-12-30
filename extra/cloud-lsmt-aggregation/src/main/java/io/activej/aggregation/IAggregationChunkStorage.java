@@ -20,7 +20,6 @@ import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
-import io.activej.ot.util.IdGenerator;
 import io.activej.promise.Promise;
 
 import java.util.List;
@@ -29,7 +28,9 @@ import java.util.Set;
 /**
  * Manages persistence of aggregations (chunks of data).
  */
-public interface IAggregationChunkStorage<C> extends IdGenerator<C> {
+public interface IAggregationChunkStorage<C> {
+	Promise<C> createId();
+
 	/**
 	 * Creates a {@code StreamSupplier} that streams records contained in the chunk.
 	 * The chunk to read is determined by {@code aggregationId} and {@code id}.

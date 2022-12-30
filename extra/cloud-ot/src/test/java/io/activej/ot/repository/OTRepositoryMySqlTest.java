@@ -4,7 +4,8 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.dslplatform.json.DslJson;
 import com.dslplatform.json.JsonWriter;
-import io.activej.ot.IdGeneratorStub;
+import io.activej.async.function.AsyncSupplier;
+import io.activej.common.ref.RefLong;
 import io.activej.ot.OTCommit;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.utils.TestAdd;
@@ -45,7 +46,7 @@ public class OTRepositoryMySqlTest {
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
 	private OTRepositoryMySql<TestOp> repository;
-	private IdGeneratorStub idGenerator;
+	private RefLong id = new RefLong(0);
 
 	static {
 		Logger rootLogger = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
@@ -54,8 +55,8 @@ public class OTRepositoryMySqlTest {
 
 	@Before
 	public void before() throws IOException, SQLException {
-		idGenerator = new IdGeneratorStub();
-		repository = OTRepositoryMySql.create(Reactor.getCurrentReactor(), Executors.newFixedThreadPool(4), dataSource("test.properties"), idGenerator,
+		repository = OTRepositoryMySql.create(Reactor.getCurrentReactor(), Executors.newFixedThreadPool(4), dataSource("test.properties"),
+				AsyncSupplier.of(id::inc),
 				createTestOp(), TestOp.class);
 		repository.initialize();
 		repository.truncateTables();
@@ -143,7 +144,7 @@ public class OTRepositoryMySqlTest {
 					g.add(1, 3, add(1));
 					g.add(1, 4, add(1));
 				}))));
-		idGenerator.set(4);
+		id.set(4);
 
 		Set<Long> heads = await(repository.getHeads());
 		assertEquals(3, heads.size());
@@ -232,7 +233,7 @@ public class OTRepositoryMySqlTest {
 					g.add(5, 7, add(1));
 					g.add(6, 8, add(1));
 				}))));
-		idGenerator.set(8);
+		id.set(8);
 
 		await(mergeAndUpdateHeads(repository, SYSTEM));
 		//		assertEquals(searchSurface, rootNodesFuture.get());

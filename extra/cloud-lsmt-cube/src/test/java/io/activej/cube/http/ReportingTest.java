@@ -5,6 +5,8 @@ import io.activej.aggregation.annotation.Key;
 import io.activej.aggregation.annotation.Measures;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
+import io.activej.async.function.AsyncSupplier;
+import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.*;
 import io.activej.cube.attributes.AbstractAttributeResolver;
@@ -253,7 +255,7 @@ public final class ReportingTest extends CubeTestBase {
 		LocalActiveFs fs = LocalActiveFs.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
 		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor,
-				ChunkIdCodec.ofLong(), new IdGeneratorStub(), LZ4FrameFormat.create(), fs);
+				ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), LZ4FrameFormat.create(), fs);
 		cube = Cube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withClassLoaderCache(CubeClassLoaderCache.create(CLASS_LOADER, 5))
 				.withInitializer(cube -> DIMENSIONS_CUBE.forEach(cube::addDimension))

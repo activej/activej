@@ -3,16 +3,17 @@ package io.activej.cube.service;
 import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ChunkIdCodec;
 import io.activej.aggregation.IAggregationChunkStorage;
+import io.activej.async.function.AsyncSupplier;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.UnknownFormatException;
+import io.activej.common.ref.RefLong;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.frames.ChannelFrameDecoder;
 import io.activej.csp.process.frames.ChannelFrameEncoder;
 import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.Cube;
 import io.activej.cube.CubeTestBase;
-import io.activej.cube.IdGeneratorStub;
 import io.activej.cube.LogItem;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
@@ -60,7 +61,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 
 		LocalActiveFs aggregationFs = LocalActiveFs.create(reactor, EXECUTOR, aggregationsDir);
 		await(aggregationFs.start());
-		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), new IdGeneratorStub(),
+		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
 				LZ4FrameFormat.create(), aggregationFs);
 		Cube cube = Cube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
@@ -109,7 +110,6 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 				aggregationChunkStorage,
 				List.of(logProcessor));
 
-
 		await(stateManager.checkout());
 	}
 
@@ -120,7 +120,6 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 
 		Map<String, FileMetadata> files = await(logsFs.list("**"));
 		assertEquals(1, files.size());
-
 
 		String logFile = first(files.keySet());
 		ByteBuf serializedData = await(logsFs.download(logFile).then(supplier -> supplier

@@ -3,10 +3,11 @@ package io.activej.cube.service;
 import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ChunkIdCodec;
 import io.activej.aggregation.IAggregationChunkStorage;
+import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.Cube;
-import io.activej.cube.IdGeneratorStub;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffCodec;
 import io.activej.cube.ot.CubeDiffScheme;
@@ -68,7 +69,7 @@ public class CubeCleanerControllerTest {
 		reactor = Reactor.getCurrentReactor();
 
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
-		aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), new IdGeneratorStub(),
+		aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
 				LZ4FrameFormat.create(), LocalActiveFs.create(reactor, executor, aggregationsDir));
 		Cube cube = Cube.create(reactor, executor, classLoader, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
@@ -78,7 +79,7 @@ public class CubeCleanerControllerTest {
 				.withAggregation(id("pub").withDimensions("pub").withMeasures("pubRequests"))
 				.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests"));
 
-		repository = OTRepositoryMySql.create(reactor, executor, dataSource, new IdGeneratorStub(),
+		repository = OTRepositoryMySql.create(reactor, executor, dataSource, AsyncSupplier.of(new RefLong(0)::inc),
 				OT_SYSTEM, LogDiffCodec.create(CubeDiffCodec.create(cube)));
 		repository.initialize();
 		repository.truncateTables();

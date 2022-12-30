@@ -3,7 +3,9 @@ package io.activej.cube;
 import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ChunkIdCodec;
 import io.activej.aggregation.IAggregationChunkStorage;
+import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.bean.DataItemResultString;
 import io.activej.cube.bean.DataItemString1;
@@ -58,7 +60,7 @@ public class StringDimensionTest {
 		LocalActiveFs fs = LocalActiveFs.create(reactor, executor, aggregationsDir);
 		await(fs.start());
 		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(),
-				new IdGeneratorStub(), LZ4FrameFormat.create(), fs);
+				AsyncSupplier.of(new RefLong(0)::inc), LZ4FrameFormat.create(), fs);
 		Cube cube = Cube.create(reactor, executor, classLoader, aggregationChunkStorage)
 				.withDimension("key1", ofString())
 				.withDimension("key2", ofInt())

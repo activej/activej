@@ -17,6 +17,7 @@
 package io.activej.ot.util;
 
 import io.activej.async.function.AsyncRunnable;
+import io.activej.async.function.AsyncSupplier;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
@@ -38,7 +39,7 @@ import static io.activej.promise.PromisePredicates.isResultOrException;
 import static io.activej.promise.Promises.retry;
 
 public final class IdGeneratorSql extends AbstractReactive
-		implements IdGenerator<Long>, ReactiveJmxBeanWithStats, WithInitializer<IdGeneratorSql> {
+		implements AsyncSupplier<Long>, ReactiveJmxBeanWithStats, WithInitializer<IdGeneratorSql> {
 	private final Executor executor;
 	private final DataSource dataSource;
 
@@ -88,7 +89,7 @@ public final class IdGeneratorSql extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Long> createId() {
+	public Promise<Long> get() {
 		checkState(next <= limit, "Cannot create id larger than the limit of " + limit);
 		if (next < limit) {
 			return Promise.of(next++);

@@ -3,8 +3,9 @@ package io.activej.cube.linear;
 import io.activej.aggregation.AggregationChunk;
 import io.activej.aggregation.PrimaryKey;
 import io.activej.aggregation.ot.AggregationDiff;
+import io.activej.async.function.AsyncSupplier;
+import io.activej.common.ref.RefLong;
 import io.activej.cube.Cube;
-import io.activej.cube.IdGeneratorStub;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffCodec;
 import io.activej.cube.ot.CubeOT;
@@ -18,7 +19,6 @@ import io.activej.ot.OTCommit;
 import io.activej.ot.repository.OTRepositoryMySql;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.OTUplink.FetchData;
-import io.activej.ot.util.IdGenerator;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -79,10 +79,9 @@ public final class CubeUplinkMigrationServiceTest {
 						.withDimensions("advertiser", "campaign")
 						.withMeasures("impressions", "clicks", "conversions", "revenue"));
 
-		IdGenerator<Long> idGenerator = new IdGeneratorStub();
 		LogDiffCodec<CubeDiff> diffCodec = LogDiffCodec.create(CubeDiffCodec.create(cube));
 
-		repo = OTRepositoryMySql.create(reactor, executor, dataSource, idGenerator, OT_SYSTEM, diffCodec);
+		repo = OTRepositoryMySql.create(reactor, executor, dataSource, AsyncSupplier.of(new RefLong(0)::inc), OT_SYSTEM, diffCodec);
 		initializeRepository(repo);
 
 		PrimaryKeyCodecs codecs = PrimaryKeyCodecs.ofCube(cube);

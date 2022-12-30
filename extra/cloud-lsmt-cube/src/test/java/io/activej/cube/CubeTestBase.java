@@ -1,6 +1,8 @@
 package io.activej.cube;
 
+import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
+import io.activej.common.ref.RefLong;
 import io.activej.cube.linear.CubeUplinkMySql;
 import io.activej.cube.linear.MeasuresValidator;
 import io.activej.cube.linear.PrimaryKeyCodecs;
@@ -92,7 +94,7 @@ public abstract class CubeTestBase {
 							@Override
 							public OTUplinkImpl<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> createUninitialized(Cube cube) {
 								Reactor reactor = Reactor.getCurrentReactor();
-								OTRepositoryMySql<LogDiff<CubeDiff>> repository = OTRepositoryMySql.create(reactor, EXECUTOR, DATA_SOURCE, new IdGeneratorStub(),
+								OTRepositoryMySql<LogDiff<CubeDiff>> repository = OTRepositoryMySql.create(reactor, EXECUTOR, DATA_SOURCE, AsyncSupplier.of(new RefLong(0)::inc),
 										LOG_OT, LogDiffCodec.create(CubeDiffCodec.create(cube)));
 								return OTUplinkImpl.create(repository, LOG_OT);
 							}

@@ -17,6 +17,7 @@
 package io.activej.aggregation;
 
 import io.activej.aggregation.ot.AggregationStructure;
+import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.ReactiveService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.codegen.DefiningClassLoader;
@@ -43,7 +44,6 @@ import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ExceptionStats;
 import io.activej.jmx.stats.StatsUtils;
 import io.activej.jmx.stats.ValueStats;
-import io.activej.ot.util.IdGenerator;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.AbstractReactive;
@@ -85,7 +85,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	public static final String TEMP_LOG = ".temp";
 
 	private final ChunkIdCodec<C> chunkIdCodec;
-	private final IdGenerator<C> idGenerator;
+	private final AsyncSupplier<C> idGenerator;
 	private final FrameFormat frameFormat;
 
 	private final ActiveFs fs;
@@ -96,7 +96,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	private MemSize bufferSize = DEFAULT_BUFFER_SIZE;
 
 	private final ValueStats chunksCount = ValueStats.create(DEFAULT_SMOOTHING_WINDOW);
-	private final PromiseStats promiseIdGenerator = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
+	private final PromiseStats promiseAsyncSupplier = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseOpenR = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseOpenW = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseFinishChunks = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
@@ -127,7 +127,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 
 	private int finishChunks;
 
-	private AggregationChunkStorage(Reactor reactor, ChunkIdCodec<C> chunkIdCodec, IdGenerator<C> idGenerator, FrameFormat frameFormat, ActiveFs fs) {
+	private AggregationChunkStorage(Reactor reactor, ChunkIdCodec<C> chunkIdCodec, AsyncSupplier<C> idGenerator, FrameFormat frameFormat, ActiveFs fs) {
 		super(reactor);
 		this.chunkIdCodec = chunkIdCodec;
 		this.idGenerator = idGenerator;
@@ -137,7 +137,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 
 	public static <C> AggregationChunkStorage<C> create(Reactor reactor,
 			ChunkIdCodec<C> chunkIdCodec,
-			IdGenerator<C> idGenerator, FrameFormat frameFormat, ActiveFs fs) {
+			AsyncSupplier<C> idGenerator, FrameFormat frameFormat, ActiveFs fs) {
 		return new AggregationChunkStorage<>(reactor, chunkIdCodec, idGenerator, frameFormat, fs);
 	}
 
@@ -215,9 +215,9 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 
 	@Override
 	public Promise<C> createId() {
-		return idGenerator.createId()
+		return idGenerator.get()
 				.mapException(e -> new AggregationException("Could not create ID", e))
-				.whenComplete(promiseIdGenerator.recordStats());
+				.whenComplete(promiseAsyncSupplier.recordStats());
 	}
 
 	public Promise<Void> backup(String backupId, Set<C> chunkIds) {
@@ -348,8 +348,8 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	// region JMX
 
 	@JmxAttribute
-	public PromiseStats getPromiseIdGenerator() {
-		return promiseIdGenerator;
+	public PromiseStats getPromiseAsyncSupplier() {
+		return promiseAsyncSupplier;
 	}
 
 	@JmxAttribute

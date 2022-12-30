@@ -28,7 +28,6 @@ import io.activej.ot.OTCommit;
 import io.activej.ot.exception.NoCommitException;
 import io.activej.ot.repository.JsonIndentUtils.OnelineOutputStream;
 import io.activej.ot.system.OTSystem;
-import io.activej.ot.util.IdGenerator;
 import io.activej.promise.Promise;
 import io.activej.promise.RetryPolicy;
 import io.activej.promise.jmx.PromiseStats;
@@ -73,7 +72,7 @@ public class OTRepositoryMySql<D> extends AbstractReactive
 	private final Executor executor;
 
 	private final DataSource dataSource;
-	private final IdGenerator<Long> idGenerator;
+	private final AsyncSupplier<Long> idGenerator;
 
 	private final OTSystem<D> otSystem;
 
@@ -97,7 +96,7 @@ public class OTRepositoryMySql<D> extends AbstractReactive
 	private final PromiseStats promiseLoadSnapshot = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseSaveSnapshot = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 
-	private OTRepositoryMySql(Reactor reactor, Executor executor, DataSource dataSource, IdGenerator<Long> idGenerator,
+	private OTRepositoryMySql(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder) {
 		super(reactor);
 		this.executor = executor;
@@ -108,28 +107,28 @@ public class OTRepositoryMySql<D> extends AbstractReactive
 		this.encoder = indent((writer, value) -> writer.serialize(value, encoder));
 	}
 
-	public static <D> OTRepositoryMySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, IdGenerator<Long> idGenerator,
+	public static <D> OTRepositoryMySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder) {
 		return new OTRepositoryMySql<>(reactor, executor, dataSource, idGenerator, otSystem, decoder, encoder);
 	}
 
-	public static <D, F extends ReadObject<D> & WriteObject<D>> OTRepositoryMySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, IdGenerator<Long> idGenerator,
+	public static <D, F extends ReadObject<D> & WriteObject<D>> OTRepositoryMySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, F format) {
 		return new OTRepositoryMySql<>(reactor, executor, dataSource, idGenerator, otSystem, format, format);
 	}
 
-	public static <D> OTRepositoryMySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, IdGenerator<Long> idGenerator,
+	public static <D> OTRepositoryMySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, TypeT<? extends D> typeT) {
 		return create(reactor, executor, dataSource, idGenerator, otSystem, typeT.getType());
 	}
 
-	public static <D> OTRepositoryMySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, IdGenerator<Long> idGenerator,
+	public static <D> OTRepositoryMySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, Class<? extends D> diffClass) {
 		return create(reactor, executor, dataSource, idGenerator, otSystem, (Type) diffClass);
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <D> OTRepositoryMySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, IdGenerator<Long> idGenerator,
+	private static <D> OTRepositoryMySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, Type diffType) {
 		ReadObject<D> decoder = (ReadObject<D>) DSL_JSON.tryFindReader(diffType);
 		WriteObject<D> encoder = (WriteObject<D>) DSL_JSON.tryFindWriter(diffType);
@@ -203,7 +202,7 @@ public class OTRepositoryMySql<D> extends AbstractReactive
 	}
 
 	public Promise<Long> createCommitId() {
-		return idGenerator.createId();
+		return idGenerator.get();
 	}
 
 	@Override

@@ -55,9 +55,9 @@ public class IdGeneratorSqlTest {
 	public void testIdGeneratorSql() {
 		IdGeneratorSql idGeneratorSql = IdGeneratorSql.create(getCurrentReactor(), newSingleThreadExecutor(), dataSource, sequence);
 
-		assertEquals(1, (long) await(idGeneratorSql.createId()));
-		assertEquals(2, (long) await(idGeneratorSql.createId()));
-		assertEquals(3, (long) await(idGeneratorSql.createId()));
+		assertEquals(1, (long) await(idGeneratorSql.get()));
+		assertEquals(2, (long) await(idGeneratorSql.get()));
+		assertEquals(3, (long) await(idGeneratorSql.get()));
 	}
 
 	@Test
@@ -65,7 +65,7 @@ public class IdGeneratorSqlTest {
 		IdGeneratorSql idGeneratorSql = IdGeneratorSql.create(getCurrentReactor(), newSingleThreadExecutor(), dataSource, sequence)
 				.withStride(10);
 		for (int i = 1; i <= 25; i++) {
-			assertEquals(i, (long) await(idGeneratorSql.createId()));
+			assertEquals(i, (long) await(idGeneratorSql.get()));
 		}
 		assertEquals(31, idGeneratorSql.getLimit());
 	}
