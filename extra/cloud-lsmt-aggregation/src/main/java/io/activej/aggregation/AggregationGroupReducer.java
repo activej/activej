@@ -18,7 +18,7 @@ package io.activej.aggregation;
 
 import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.aggregation.util.PartitionPredicate;
-import io.activej.async.ReactiveAccumulator;
+import io.activej.async.AsyncAccumulator;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.datastream.AbstractStreamConsumer;
 import io.activej.datastream.StreamDataAcceptor;
@@ -37,20 +37,20 @@ import java.util.function.Function;
 public final class AggregationGroupReducer<C, T, K extends Comparable> extends AbstractStreamConsumer<T> implements StreamDataAcceptor<T> {
 	private static final Logger logger = LoggerFactory.getLogger(AggregationGroupReducer.class);
 
-	private final AggregationChunkStorage<C> storage;
+	private final IAggregationChunkStorage<C> storage;
 	private final AggregationStructure aggregation;
 	private final List<String> measures;
 	private final PartitionPredicate<T> partitionPredicate;
 	private final Class<T> recordClass;
 	private final Function<T, K> keyFunction;
 	private final Aggregate<T, Object> aggregate;
-	private final ReactiveAccumulator<List<AggregationChunk>> chunksAccumulator;
+	private final AsyncAccumulator<List<AggregationChunk>> chunksAccumulator;
 	private final DefiningClassLoader classLoader;
 	private final int chunkSize;
 
 	private final HashMap<K, Object> map = new HashMap<>();
 
-	public AggregationGroupReducer(AggregationChunkStorage<C> storage,
+	public AggregationGroupReducer(IAggregationChunkStorage<C> storage,
 			AggregationStructure aggregation, List<String> measures,
 			Class<T> recordClass, PartitionPredicate<T> partitionPredicate,
 			Function<T, K> keyFunction, Aggregate<T, Object> aggregate,
@@ -63,7 +63,7 @@ public final class AggregationGroupReducer<C, T, K extends Comparable> extends A
 		this.aggregate = aggregate;
 		this.chunkSize = chunkSize;
 		this.aggregation = aggregation;
-		this.chunksAccumulator = ReactiveAccumulator.create(new ArrayList<>());
+		this.chunksAccumulator = AsyncAccumulator.create(new ArrayList<>());
 		this.classLoader = classLoader;
 	}
 

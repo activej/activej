@@ -1,6 +1,6 @@
 package io.activej.cube.linear;
 
-import io.activej.aggregation.AggregationChunkStorage;
+import io.activej.aggregation.IAggregationChunkStorage;
 import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.Utils;
@@ -118,7 +118,7 @@ final class CubeUplinkMigrationService {
 	}
 
 	static Cube createEmptyCube(Reactor reactor, Executor executor) {
-		return Cube.create(reactor, executor, DefiningClassLoader.create(), new AggregationChunkStorage<Long>() {
+		return Cube.create(reactor, executor, DefiningClassLoader.create(), new IAggregationChunkStorage<Long>() {
 			@Override
 			public Promise<Long> createId() {
 				throw new AssertionError();

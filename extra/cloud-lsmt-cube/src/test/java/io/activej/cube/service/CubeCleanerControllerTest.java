@@ -1,8 +1,8 @@
 package io.activej.cube.service;
 
-import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ChunkIdCodec;
+import io.activej.aggregation.IAggregationChunkStorage;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.Cube;
@@ -57,7 +57,7 @@ public class CubeCleanerControllerTest {
 
 	private Reactor reactor;
 	private OTRepositoryMySql<LogDiff<CubeDiff>> repository;
-	private AggregationChunkStorage<Long> aggregationChunkStorage;
+	private IAggregationChunkStorage<Long> aggregationChunkStorage;
 
 	@Before
 	public void setUp() throws Exception {
@@ -68,7 +68,7 @@ public class CubeCleanerControllerTest {
 		reactor = Reactor.getCurrentReactor();
 
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
-		aggregationChunkStorage = ActiveFsChunkStorage.create(reactor, ChunkIdCodec.ofLong(), new IdGeneratorStub(),
+		aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), new IdGeneratorStub(),
 				LZ4FrameFormat.create(), LocalActiveFs.create(reactor, executor, aggregationsDir));
 		Cube cube = Cube.create(reactor, executor, classLoader, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
@@ -90,7 +90,7 @@ public class CubeCleanerControllerTest {
 		initializeRepo();
 
 		CubeCleanerController<Long, LogDiff<CubeDiff>, Long> cleanerController = CubeCleanerController.create(reactor,
-						CubeDiffScheme.ofLogDiffs(), repository, OT_SYSTEM, (ActiveFsChunkStorage<Long>) aggregationChunkStorage)
+						CubeDiffScheme.ofLogDiffs(), repository, OT_SYSTEM, (AggregationChunkStorage<Long>) aggregationChunkStorage)
 				.withFreezeTimeout(Duration.ofMillis(0))
 				.withExtraSnapshotsCount(1000);
 
@@ -103,7 +103,7 @@ public class CubeCleanerControllerTest {
 		initializeRepo();
 
 		CubeCleanerController<Long, LogDiff<CubeDiff>, Long> cleanerController = CubeCleanerController.create(reactor,
-						CubeDiffScheme.ofLogDiffs(), repository, OT_SYSTEM, (ActiveFsChunkStorage<Long>) aggregationChunkStorage)
+						CubeDiffScheme.ofLogDiffs(), repository, OT_SYSTEM, (AggregationChunkStorage<Long>) aggregationChunkStorage)
 				.withFreezeTimeout(Duration.ofSeconds(10));
 
 		await(cleanerController.cleanup());

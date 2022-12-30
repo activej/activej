@@ -64,7 +64,7 @@ public final class CubeTest {
 	private final DefiningClassLoader classLoader = create();
 	private final Executor executor = newSingleThreadExecutor();
 
-	private AggregationChunkStorage<Long> chunkStorage;
+	private IAggregationChunkStorage<Long> chunkStorage;
 	private Cube cube;
 	private int listenPort;
 
@@ -73,11 +73,11 @@ public final class CubeTest {
 		listenPort = getFreePort();
 		LocalActiveFs fs = LocalActiveFs.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
 		await(fs.start());
-		chunkStorage = ActiveFsChunkStorage.create(getCurrentReactor(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, fs);
+		chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, fs);
 		cube = newCube(executor, classLoader, chunkStorage);
 	}
 
-	private static Cube newCube(Executor executor, DefiningClassLoader classLoader, AggregationChunkStorage chunkStorage) {
+	private static Cube newCube(Executor executor, DefiningClassLoader classLoader, IAggregationChunkStorage chunkStorage) {
 		return Cube.create(getCurrentReactor(), executor, classLoader, chunkStorage)
 				.withDimension("key1", ofInt())
 				.withDimension("key2", ofInt())
@@ -87,7 +87,7 @@ public final class CubeTest {
 				.withAggregation(id("detailedAggregation").withDimensions("key1", "key2").withMeasures("metric1", "metric2", "metric3"));
 	}
 
-	private static Cube newSophisticatedCube(Executor executor, DefiningClassLoader classLoader, AggregationChunkStorage chunkStorage) {
+	private static Cube newSophisticatedCube(Executor executor, DefiningClassLoader classLoader, IAggregationChunkStorage chunkStorage) {
 		return Cube.create(getCurrentReactor(), executor, classLoader, chunkStorage)
 				.withDimension("key1", ofInt())
 				.withDimension("key2", ofInt())
@@ -101,7 +101,7 @@ public final class CubeTest {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <T> Promise<Void> consume(Cube cube, AggregationChunkStorage<Long> chunkStorage, T item, T... items) {
+	private static <T> Promise<Void> consume(Cube cube, IAggregationChunkStorage<Long> chunkStorage, T item, T... items) {
 		return StreamSupplier.concat(StreamSupplier.of(item), StreamSupplier.of(items))
 				.streamTo(cube.consume(((Class<T>) item.getClass())))
 				.then(cubeDiff -> chunkStorage.finish(cubeDiff.<Long>addedChunks().collect(toSet()))
@@ -143,7 +143,7 @@ public final class CubeTest {
 		AsyncHttpServer server1 = startServer(executor, serverStorage);
 		AsyncHttpClient httpClient = AsyncHttpClient.create(getCurrentReactor());
 		HttpActiveFs storage = HttpActiveFs.create(getCurrentReactor(), "http://localhost:" + listenPort, httpClient);
-		AggregationChunkStorage<Long> chunkStorage = ActiveFsChunkStorage.create(getCurrentReactor(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, storage);
+		IAggregationChunkStorage<Long> chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, storage);
 		Cube cube = newCube(executor, classLoader, chunkStorage);
 
 		List<DataItemResult> expected = List.of(new DataItemResult(1, 3, 10, 30, 20));
@@ -427,7 +427,7 @@ public final class CubeTest {
 
 		LocalActiveFs storage = LocalActiveFs.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
 		await(storage.start());
-		AggregationChunkStorage<Long> chunkStorage = ActiveFsChunkStorage.create(getCurrentReactor(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, storage);
+		IAggregationChunkStorage<Long> chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, storage);
 		Cube cube = newCube(executor, classLoader, chunkStorage);
 
 		cube.consume(DataItem1.class,
@@ -443,7 +443,7 @@ public final class CubeTest {
 
 		LocalActiveFs storage = LocalActiveFs.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
 		await(storage.start());
-		AggregationChunkStorage<Long> chunkStorage = ActiveFsChunkStorage.create(getCurrentReactor(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, storage);
+		IAggregationChunkStorage<Long> chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, storage);
 		Cube cube = newCube(executor, classLoader, chunkStorage);
 
 		cube.consume(DataItem1.class,

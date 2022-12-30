@@ -1,7 +1,7 @@
 package io.activej.cube.linear;
 
-import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.aggregation.AggregationChunk;
+import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ChunkIdCodec;
 import io.activej.aggregation.PrimaryKey;
 import io.activej.aggregation.ot.AggregationDiff;
@@ -37,7 +37,7 @@ import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static io.activej.aggregation.ActiveFsChunkStorage.LOG;
+import static io.activej.aggregation.AggregationChunkStorage.LOG;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.aggregation.measure.Measures.sum;
@@ -86,7 +86,7 @@ public class CubeBackupControllerTest {
 		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, aggregationsDir);
 		eventloop.submit(fs::start).get();
 		activeFs = fs;
-		ActiveFsChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(),
+		AggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(),
 				LZ4FrameFormat.create(), fs);
 		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
 				.withDimension("pub", ofInt())

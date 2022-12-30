@@ -85,7 +85,7 @@ public class Aggregation extends AbstractReactive
 
 	private final Executor executor;
 	private final DefiningClassLoader classLoader;
-	private final AggregationChunkStorage<Object> aggregationChunkStorage;
+	private final IAggregationChunkStorage<Object> aggregationChunkStorage;
 	private final FrameFormat frameFormat;
 	private Path temporarySortDir;
 
@@ -110,7 +110,7 @@ public class Aggregation extends AbstractReactive
 	private Exception consolidationLastError;
 
 	private Aggregation(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
-			AggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat, AggregationStructure structure,
+			IAggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat, AggregationStructure structure,
 			AggregationState state) {
 		super(reactor);
 		this.executor = executor;
@@ -136,7 +136,7 @@ public class Aggregation extends AbstractReactive
 	 * @param frameFormat             frame format in which data is to be stored
 	 */
 	public static Aggregation create(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
-			AggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat, AggregationStructure structure) {
+			IAggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat, AggregationStructure structure) {
 		return new Aggregation(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure, new AggregationState(structure));
 	}
 

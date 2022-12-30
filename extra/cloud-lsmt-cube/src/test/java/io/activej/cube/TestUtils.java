@@ -1,6 +1,6 @@
 package io.activej.cube;
 
-import io.activej.aggregation.AggregationChunkStorage;
+import io.activej.aggregation.IAggregationChunkStorage;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.cube.linear.CubeUplinkMySql;
 import io.activej.cube.ot.CubeDiff;
@@ -38,7 +38,7 @@ public final class TestUtils {
 		await(repository.saveSnapshot(id, List.of()));
 	}
 
-	public static <T> void runProcessLogs(AggregationChunkStorage<Long> aggregationChunkStorage, OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager, LogOTProcessor<T, CubeDiff> logOTProcessor) {
+	public static <T> void runProcessLogs(IAggregationChunkStorage<Long> aggregationChunkStorage, OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager, LogOTProcessor<T, CubeDiff> logOTProcessor) {
 		LogDiff<CubeDiff> logDiff = await(logOTProcessor.processLog());
 		await(aggregationChunkStorage
 				.finish(logDiff.diffs().flatMap(CubeDiff::addedChunks).map(id -> (long) id).collect(toSet())));

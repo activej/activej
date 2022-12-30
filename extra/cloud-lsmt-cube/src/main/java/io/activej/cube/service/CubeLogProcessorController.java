@@ -17,7 +17,7 @@
 package io.activej.cube.service;
 
 import io.activej.aggregation.AggregationChunk;
-import io.activej.aggregation.AggregationChunkStorage;
+import io.activej.aggregation.IAggregationChunkStorage;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.async.function.AsyncPredicate;
 import io.activej.async.function.AsyncSupplier;
@@ -59,7 +59,7 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 
 	private final List<LogOTProcessor<?, CubeDiff>> logProcessors;
-	private final AggregationChunkStorage<C> chunkStorage;
+	private final IAggregationChunkStorage<C> chunkStorage;
 	private final OTStateManager<K, LogDiff<CubeDiff>> stateManager;
 	private final AsyncPredicate<K> predicate;
 
@@ -71,7 +71,7 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 	private final ValueStats addedChunksRecords = ValueStats.create(DEFAULT_SMOOTHING_WINDOW).withRate();
 
 	CubeLogProcessorController(Reactor reactor,
-			List<LogOTProcessor<?, CubeDiff>> logProcessors, AggregationChunkStorage<C> chunkStorage, OTStateManager<K, LogDiff<CubeDiff>> stateManager, AsyncPredicate<K> predicate) {
+			List<LogOTProcessor<?, CubeDiff>> logProcessors, IAggregationChunkStorage<C> chunkStorage, OTStateManager<K, LogDiff<CubeDiff>> stateManager, AsyncPredicate<K> predicate) {
 		super(reactor);
 		this.logProcessors = logProcessors;
 		this.chunkStorage = chunkStorage;
@@ -82,7 +82,7 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 	public static <K, C> CubeLogProcessorController<K, C> create(Reactor reactor,
 			LogOTState<CubeDiff> state,
 			OTStateManager<K, LogDiff<CubeDiff>> stateManager,
-			AggregationChunkStorage<C> chunkStorage,
+			IAggregationChunkStorage<C> chunkStorage,
 			List<LogOTProcessor<?, CubeDiff>> logProcessors) {
 		Cube cube = (Cube) state.getDataState();
 		AsyncPredicate<K> predicate = AsyncPredicate.of(commitId -> {

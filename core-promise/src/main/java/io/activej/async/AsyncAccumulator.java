@@ -30,7 +30,7 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
 @SuppressWarnings("UnusedReturnValue")
-public final class ReactiveAccumulator<A> extends ImplicitlyReactive implements AsyncCloseable, WithInitializer<ReactiveAccumulator<A>> {
+public final class AsyncAccumulator<A> extends ImplicitlyReactive implements AsyncCloseable, WithInitializer<AsyncAccumulator<A>> {
 	private final SettablePromise<A> resultPromise = new SettablePromise<>();
 	private boolean started;
 
@@ -38,15 +38,15 @@ public final class ReactiveAccumulator<A> extends ImplicitlyReactive implements 
 
 	private int activePromises;
 
-	private ReactiveAccumulator(@Nullable A accumulator) {
+	private AsyncAccumulator(@Nullable A accumulator) {
 		this.accumulator = accumulator;
 	}
 
-	public static <A> ReactiveAccumulator<A> create(@Nullable A accumulator) {
-		return new ReactiveAccumulator<>(accumulator);
+	public static <A> AsyncAccumulator<A> create(@Nullable A accumulator) {
+		return new AsyncAccumulator<>(accumulator);
 	}
 
-	public <T> ReactiveAccumulator<A> withPromise(@NotNull Promise<T> promise, @NotNull BiConsumerEx<A, T> accumulator) {
+	public <T> AsyncAccumulator<A> withPromise(@NotNull Promise<T> promise, @NotNull BiConsumerEx<A, T> accumulator) {
 		addPromise(promise, accumulator);
 		return this;
 	}

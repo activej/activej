@@ -1,6 +1,6 @@
 package io.activej.cube;
 
-import io.activej.aggregation.ActiveFsChunkStorage;
+import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.AggregationPredicate;
 import io.activej.aggregation.ChunkIdCodec;
 import io.activej.csp.process.frames.FrameFormat;
@@ -55,7 +55,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 	private static final int LOWER_DATE_BOUNDARY_DAYS = (int) LOWER_DATE_BOUNDARY.toEpochDay();
 	private static final AggregationPredicate DATE_PREDICATE = gt("date", LOWER_DATE_BOUNDARY);
 
-	private ActiveFsChunkStorage<Long> chunkStorage;
+	private AggregationChunkStorage<Long> chunkStorage;
 	private AggregationConfig dateAggregation;
 	private AggregationConfig advertiserDateAggregation;
 	private AggregationConfig campaignBannerDateAggregation;
@@ -70,7 +70,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 				.withTempDir(Files.createTempDirectory(""));
 		await(fs.start());
 		FrameFormat frameFormat = LZ4FrameFormat.create();
-		chunkStorage = ActiveFsChunkStorage.create(reactor, ChunkIdCodec.ofLong(), new IdGeneratorStub(), frameFormat, fs);
+		chunkStorage = AggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), new IdGeneratorStub(), frameFormat, fs);
 
 		dateAggregation = id("date")
 				.withDimensions("date")

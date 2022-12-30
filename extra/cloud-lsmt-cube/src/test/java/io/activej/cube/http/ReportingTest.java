@@ -252,7 +252,7 @@ public final class ReportingTest extends CubeTestBase {
 
 		LocalActiveFs fs = LocalActiveFs.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
-		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(reactor,
+		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor,
 				ChunkIdCodec.ofLong(), new IdGeneratorStub(), LZ4FrameFormat.create(), fs);
 		cube = Cube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withClassLoaderCache(CubeClassLoaderCache.create(CLASS_LOADER, 5))

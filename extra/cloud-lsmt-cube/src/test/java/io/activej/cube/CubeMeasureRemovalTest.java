@@ -47,7 +47,7 @@ import static org.junit.Assert.*;
 public class CubeMeasureRemovalTest extends CubeTestBase {
 	private static final FrameFormat FRAME_FORMAT = LZ4FrameFormat.create();
 
-	private AggregationChunkStorage<Long> aggregationChunkStorage;
+	private IAggregationChunkStorage<Long> aggregationChunkStorage;
 	private Multilog<LogItem> multilog;
 	private Path aggregationsDir;
 	private Path logsDir;
@@ -59,7 +59,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 		LocalActiveFs fs = LocalActiveFs.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
-		aggregationChunkStorage = ActiveFsChunkStorage.create(reactor, ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, fs);
+		aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, fs);
 		BinarySerializer<LogItem> serializer = SerializerBuilder.create(CLASS_LOADER).build(LogItem.class);
 		LocalActiveFs localFs = LocalActiveFs.create(reactor, EXECUTOR, logsDir);
 		await(localFs.start());
@@ -74,7 +74,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 	public void test() {
 		LocalActiveFs fs = LocalActiveFs.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
-		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(reactor, ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, fs);
+		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), new IdGeneratorStub(), FRAME_FORMAT, fs);
 		Cube cube = Cube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())

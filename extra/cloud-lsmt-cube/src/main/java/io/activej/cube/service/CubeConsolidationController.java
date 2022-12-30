@@ -72,7 +72,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 	private final CubeDiffScheme<D> cubeDiffScheme;
 	private final Cube cube;
 	private final OTStateManager<K, D> stateManager;
-	private final AggregationChunkStorage<C> aggregationChunkStorage;
+	private final IAggregationChunkStorage<C> aggregationChunkStorage;
 
 	private final Map<Aggregation, String> aggregationsMapReversed;
 
@@ -95,7 +95,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 	private boolean cleaning;
 
 	CubeConsolidationController(Reactor reactor,
-			CubeDiffScheme<D> cubeDiffScheme, Cube cube, OTStateManager<K, D> stateManager, AggregationChunkStorage<C> aggregationChunkStorage, Map<Aggregation, String> aggregationsMapReversed) {
+			CubeDiffScheme<D> cubeDiffScheme, Cube cube, OTStateManager<K, D> stateManager, IAggregationChunkStorage<C> aggregationChunkStorage, Map<Aggregation, String> aggregationsMapReversed) {
 		super(reactor);
 		this.cubeDiffScheme = cubeDiffScheme;
 		this.cube = cube;
@@ -108,7 +108,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 			CubeDiffScheme<D> cubeDiffScheme,
 			Cube cube,
 			OTStateManager<K, D> stateManager,
-			AggregationChunkStorage<C> aggregationChunkStorage) {
+			IAggregationChunkStorage<C> aggregationChunkStorage) {
 		Map<Aggregation, String> map = new IdentityHashMap<>();
 		for (String aggregationId : cube.getAggregationIds()) {
 			map.put(cube.getAggregation(aggregationId), aggregationId);

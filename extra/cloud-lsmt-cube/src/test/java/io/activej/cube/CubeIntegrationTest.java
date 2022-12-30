@@ -1,7 +1,7 @@
 package io.activej.cube;
 
-import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.aggregation.Aggregation;
+import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ChunkIdCodec;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.csp.process.frames.FrameFormat;
@@ -52,7 +52,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 				.withTempDir(Files.createTempDirectory(""));
 		await(fs.start());
 		FrameFormat frameFormat = LZ4FrameFormat.create();
-		ActiveFsChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(reactor, ChunkIdCodec.ofLong(), new IdGeneratorStub(), frameFormat, fs);
+		AggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), new IdGeneratorStub(), frameFormat, fs);
 		Cube cube = Cube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())

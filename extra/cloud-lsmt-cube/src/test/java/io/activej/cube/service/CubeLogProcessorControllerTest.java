@@ -1,8 +1,8 @@
 package io.activej.cube.service;
 
-import io.activej.aggregation.ActiveFsChunkStorage;
 import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ChunkIdCodec;
+import io.activej.aggregation.IAggregationChunkStorage;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.UnknownFormatException;
@@ -60,7 +60,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 
 		LocalActiveFs aggregationFs = LocalActiveFs.create(reactor, EXECUTOR, aggregationsDir);
 		await(aggregationFs.start());
-		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(reactor, ChunkIdCodec.ofLong(), new IdGeneratorStub(),
+		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), new IdGeneratorStub(),
 				LZ4FrameFormat.create(), aggregationFs);
 		Cube cube = Cube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())

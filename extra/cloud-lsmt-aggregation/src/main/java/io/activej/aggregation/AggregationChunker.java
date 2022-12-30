@@ -18,7 +18,7 @@ package io.activej.aggregation;
 
 import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.aggregation.util.PartitionPredicate;
-import io.activej.async.ReactiveAccumulator;
+import io.activej.async.AsyncAccumulator;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.datastream.ForwardingStreamConsumer;
@@ -39,8 +39,8 @@ public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> 
 	private final List<String> fields;
 	private final Class<T> recordClass;
 	private final PartitionPredicate<T> partitionPredicate;
-	private final AggregationChunkStorage<C> storage;
-	private final ReactiveAccumulator<List<AggregationChunk>> chunksAccumulator;
+	private final IAggregationChunkStorage<C> storage;
+	private final AsyncAccumulator<List<AggregationChunk>> chunksAccumulator;
 	private final DefiningClassLoader classLoader;
 
 	private final int chunkSize;
@@ -48,7 +48,7 @@ public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> 
 	private AggregationChunker(StreamConsumerSwitcher<T> switcher,
 			AggregationStructure aggregation, List<String> fields,
 			Class<T> recordClass, PartitionPredicate<T> partitionPredicate,
-			AggregationChunkStorage<C> storage,
+			IAggregationChunkStorage<C> storage,
 			DefiningClassLoader classLoader,
 			int chunkSize) {
 		super(switcher);
@@ -60,14 +60,14 @@ public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> 
 		this.storage = storage;
 		this.classLoader = classLoader;
 		this.chunkSize = chunkSize;
-		(this.chunksAccumulator = ReactiveAccumulator.create(new ArrayList<>()))
+		(this.chunksAccumulator = AsyncAccumulator.create(new ArrayList<>()))
 				.run(getAcknowledgement())
 				.whenComplete(result::trySet);
 	}
 
 	public static <C, T> AggregationChunker<C, T> create(AggregationStructure aggregation, List<String> fields,
 			Class<T> recordClass, PartitionPredicate<T> partitionPredicate,
-			AggregationChunkStorage<C> storage,
+			IAggregationChunkStorage<C> storage,
 			DefiningClassLoader classLoader,
 			int chunkSize) {
 

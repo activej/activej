@@ -59,7 +59,7 @@ public class AddedMeasuresTest {
 	private Executor executor;
 	private Reactor reactor;
 	private DefiningClassLoader classLoader;
-	private AggregationChunkStorage<Long> aggregationChunkStorage;
+	private IAggregationChunkStorage<Long> aggregationChunkStorage;
 	private AggregationConfig basicConfig;
 	private List<CubeDiff> initialDiffs;
 
@@ -72,7 +72,7 @@ public class AddedMeasuresTest {
 		LocalActiveFs fs = LocalActiveFs.create(reactor, executor, path);
 		await(fs.start());
 		FrameFormat frameFormat = LZ4FrameFormat.create();
-		aggregationChunkStorage = ActiveFsChunkStorage.create(reactor, ChunkIdCodec.ofLong(), new IdGeneratorStub(), frameFormat, fs);
+		aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), new IdGeneratorStub(), frameFormat, fs);
 		basicConfig = id(AGGREGATION_ID)
 				.withDimensions("siteId")
 				.withMeasures("eventCount", "sumRevenue", "minRevenue", "maxRevenue");

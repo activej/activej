@@ -16,7 +16,7 @@
 
 package io.activej.etl;
 
-import io.activej.async.ReactiveAccumulator;
+import io.activej.async.AsyncAccumulator;
 import io.activej.datastream.StreamConsumerWithResult;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.processor.StreamSplitter;
@@ -47,7 +47,7 @@ public abstract class LogDataConsumerSplitter<T, D> implements LogDataConsumer<T
 
 	@Override
 	public StreamConsumerWithResult<T, List<D>> consume() {
-		ReactiveAccumulator<List<D>> diffsAccumulator = ReactiveAccumulator.create(new ArrayList<>());
+		AsyncAccumulator<List<D>> diffsAccumulator = AsyncAccumulator.create(new ArrayList<>());
 
 		Context ctx = new Context();
 		createSplitter(ctx);

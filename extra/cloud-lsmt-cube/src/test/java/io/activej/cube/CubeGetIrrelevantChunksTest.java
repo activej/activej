@@ -45,7 +45,7 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 	private static final AggregationPredicate ADVERTISER_PREDICATE = gt("advertiser", LOWER_NUMBER_BOUNDARY);
 
 	private OTStateManager<Long, LogDiff<CubeDiff>> stateManager;
-	private ActiveFsChunkStorage<Long> chunkStorage;
+	private AggregationChunkStorage<Long> chunkStorage;
 	private Cube.AggregationConfig dateAggregation;
 	private Cube.AggregationConfig advertiserDateAggregation;
 	private OTUplink<Long, LogDiff<CubeDiff>, ?> uplink;
@@ -68,7 +68,7 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 				.withTempDir(Files.createTempDirectory(""));
 		await(fs.start());
 		FrameFormat frameFormat = LZ4FrameFormat.create();
-		chunkStorage = ActiveFsChunkStorage.create(reactor, ChunkIdCodec.ofLong(), new IdGeneratorStub(), frameFormat, fs);
+		chunkStorage = AggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), new IdGeneratorStub(), frameFormat, fs);
 
 		dateAggregation = id("date")
 				.withDimensions("date")

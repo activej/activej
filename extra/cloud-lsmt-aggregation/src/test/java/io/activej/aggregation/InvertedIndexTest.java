@@ -94,7 +94,7 @@ public class InvertedIndexTest {
 		LocalActiveFs fs = LocalActiveFs.create(reactor, executor, path);
 		await(fs.start());
 		FrameFormat frameFormat = LZ4FrameFormat.create();
-		AggregationChunkStorage<Long> aggregationChunkStorage = ActiveFsChunkStorage.create(reactor, ChunkIdCodec.ofLong(), new IdGeneratorStub(), frameFormat, fs);
+		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), new IdGeneratorStub(), frameFormat, fs);
 
 		AggregationStructure structure = AggregationStructure.create(ChunkIdCodec.ofLong())
 				.withKey("word", ofString())
@@ -141,7 +141,7 @@ public class InvertedIndexTest {
 		assertEquals(expectedResult, list);
 	}
 
-	public void doProcess(AggregationChunkStorage<Long> aggregationChunkStorage, Aggregation aggregation, StreamSupplier<InvertedIndexRecord> supplier) {
+	public void doProcess(IAggregationChunkStorage<Long> aggregationChunkStorage, Aggregation aggregation, StreamSupplier<InvertedIndexRecord> supplier) {
 		AggregationDiff diff = await(supplier.streamTo(aggregation.consume(InvertedIndexRecord.class)));
 		aggregation.getState().apply(diff);
 		await(aggregationChunkStorage.finish(getAddedChunks(diff)));

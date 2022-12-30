@@ -1,6 +1,6 @@
 package io.activej.cube.linear;
 
-import io.activej.aggregation.ActiveFsChunkStorage;
+import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ChunkIdCodec;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
@@ -44,7 +44,7 @@ public class CubeCleanerControllerTest {
 	private Thread eventloopThread;
 	private DataSource dataSource;
 	private CubeUplinkMySql uplink;
-	private ActiveFsChunkStorage<Long> aggregationChunkStorage;
+	private AggregationChunkStorage<Long> aggregationChunkStorage;
 
 	@Before
 	public void setUp() throws Exception {
@@ -63,7 +63,7 @@ public class CubeCleanerControllerTest {
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, aggregationsDir);
 		await(fs::start);
-		aggregationChunkStorage = ActiveFsChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(),
+		aggregationChunkStorage = AggregationChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), new IdGeneratorStub(),
 				LZ4FrameFormat.create(), fs);
 		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
 				.withDimension("pub", ofInt())

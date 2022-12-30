@@ -22,7 +22,7 @@ import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.ot.AggregationStructure;
-import io.activej.async.ReactiveAccumulator;
+import io.activej.async.AsyncAccumulator;
 import io.activej.async.function.AsyncFunction;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.codegen.ClassBuilder;
@@ -111,7 +111,7 @@ public final class Cube extends AbstractReactive
 
 	private final Executor executor;
 	private final DefiningClassLoader classLoader;
-	private final AggregationChunkStorage aggregationChunkStorage;
+	private final IAggregationChunkStorage aggregationChunkStorage;
 
 	private FrameFormat sortFrameFormat = DEFAULT_SORT_FRAME_FORMAT;
 	private Path temporarySortDir;
@@ -177,7 +177,7 @@ public final class Cube extends AbstractReactive
 	private Exception queryLastError;
 
 	Cube(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
-			AggregationChunkStorage aggregationChunkStorage) {
+			IAggregationChunkStorage aggregationChunkStorage) {
 		super(reactor);
 		this.executor = executor;
 		this.classLoader = classLoader;
@@ -185,7 +185,7 @@ public final class Cube extends AbstractReactive
 	}
 
 	public static Cube create(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
-			AggregationChunkStorage aggregationChunkStorage) {
+			IAggregationChunkStorage aggregationChunkStorage) {
 		return new Cube(reactor, executor, classLoader, aggregationChunkStorage);
 	}
 
@@ -545,7 +545,7 @@ public final class Cube extends AbstractReactive
 			}
 		});
 
-		ReactiveAccumulator<Map<String, AggregationDiff>> diffsAccumulator = ReactiveAccumulator.create(new HashMap<>());
+		AsyncAccumulator<Map<String, AggregationDiff>> diffsAccumulator = AsyncAccumulator.create(new HashMap<>());
 		Map<String, AggregationPredicate> compatibleAggregations = getCompatibleAggregationsForDataInput(dimensionFields, measureFields, dataPredicate);
 		if (compatibleAggregations.size() == 0) {
 			throw new IllegalArgumentException(format("No compatible aggregation for " +
