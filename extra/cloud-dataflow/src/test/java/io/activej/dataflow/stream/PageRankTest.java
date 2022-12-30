@@ -14,7 +14,7 @@ import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.processor.StreamLeftJoin.LeftInnerLeftJoiner;
 import io.activej.datastream.processor.StreamLeftJoin.LeftJoiner;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult;
-import io.activej.http.AsyncHttpServer;
+import io.activej.http.HttpServer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.module.Module;
@@ -265,7 +265,7 @@ public class PageRankTest {
 	@Test
 	public void runDebugServer() throws Exception {
 		Injector env = Injector.of(createModule(new Partition(addressForDebug1), new Partition(addressForDebug2)));
-		env.getInstance(AsyncHttpServer.class).withListenPort(8080).listen();
+		env.getInstance(HttpServer.class).withListenPort(8080).listen();
 		await();
 	}
 

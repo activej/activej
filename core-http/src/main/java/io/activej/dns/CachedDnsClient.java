@@ -40,31 +40,31 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.reactor.util.RunnableWithContext.wrapContext;
 
 /**
- * Implementation of {@link IAsyncDnsClient} that asynchronously
+ * Implementation of {@link IDnsClient} that asynchronously
  * connects to some DNS server and gets the response from it.
  */
 public final class CachedDnsClient extends AbstractReactive
-		implements IAsyncDnsClient, ReactiveJmxBean, WithInitializer<CachedDnsClient> {
+		implements IDnsClient, ReactiveJmxBean, WithInitializer<CachedDnsClient> {
 	private final Logger logger = LoggerFactory.getLogger(CachedDnsClient.class);
 	private static final boolean CHECK = Checks.isEnabled(CachedDnsClient.class);
 
-	private final IAsyncDnsClient client;
+	private final IDnsClient client;
 
 	private DnsCache cache;
 	private final Map<DnsQuery, Promise<DnsResponse>> pending = new HashMap<>();
 	private final Set<DnsQuery> refreshingNow = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
-	private CachedDnsClient(Reactor reactor, IAsyncDnsClient client, DnsCache cache) {
+	private CachedDnsClient(Reactor reactor, IDnsClient client, DnsCache cache) {
 		super(reactor);
 		this.client = client;
 		this.cache = cache;
 	}
 
-	public static CachedDnsClient create(Reactor reactor, IAsyncDnsClient client, DnsCache cache) {
+	public static CachedDnsClient create(Reactor reactor, IDnsClient client, DnsCache cache) {
 		return new CachedDnsClient(reactor, client, cache);
 	}
 
-	public static CachedDnsClient create(Reactor reactor, IAsyncDnsClient client) {
+	public static CachedDnsClient create(Reactor reactor, IDnsClient client) {
 		return new CachedDnsClient(reactor, client, DnsCache.create(reactor));
 	}
 
@@ -85,15 +85,15 @@ public final class CachedDnsClient extends AbstractReactive
 		return this;
 	}
 
-	public IAsyncDnsClient adaptToAnotherReactor(Reactor anotherReactor) {
+	public IDnsClient adaptToAnotherReactor(Reactor anotherReactor) {
 		if (anotherReactor == reactor) {
 			return this;
 		}
-		return new IAsyncDnsClient() {
+		return new IDnsClient() {
 			@Override
 			public Promise<DnsResponse> resolve(DnsQuery query) {
 				if (CHECK) checkState(anotherReactor.inReactorThread());
-				DnsResponse fromQuery = IAsyncDnsClient.resolveFromQuery(query);
+				DnsResponse fromQuery = IDnsClient.resolveFromQuery(query);
 				if (fromQuery != null) {
 					logger.trace("{} already contained an IP address within itself", query);
 					return Promise.of(fromQuery);
@@ -152,7 +152,7 @@ public final class CachedDnsClient extends AbstractReactive
 			checkState(inReactorThread(), "Concurrent resolves are not allowed, to reuse the cache use adaptToOtherReactor");
 		}
 
-		DnsResponse fromQuery = IAsyncDnsClient.resolveFromQuery(query);
+		DnsResponse fromQuery = IDnsClient.resolveFromQuery(query);
 		if (fromQuery != null) {
 			logger.trace("{} already contained an IP address within itself", query);
 			return Promise.of(fromQuery);

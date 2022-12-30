@@ -12,8 +12,8 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.fs.LocalActiveFs;
 import io.activej.fs.http.ActiveFsServlet;
 import io.activej.fs.http.HttpActiveFs;
-import io.activej.http.AsyncHttpClient;
-import io.activej.http.AsyncHttpServer;
+import io.activej.http.HttpClient;
+import io.activej.http.HttpServer;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.nio.NioReactor;
@@ -128,11 +128,11 @@ public final class CubeTest {
 		assertEquals(expected, list);
 	}
 
-	private AsyncHttpServer startServer(Executor executor, Path serverStorage) throws IOException {
+	private HttpServer startServer(Executor executor, Path serverStorage) throws IOException {
 		NioReactor reactor = getCurrentReactor();
 		LocalActiveFs fs = LocalActiveFs.create(reactor, executor, serverStorage);
 		await(fs.start());
-		AsyncHttpServer server = AsyncHttpServer.create(reactor, ActiveFsServlet.create(fs))
+		HttpServer server = HttpServer.create(reactor, ActiveFsServlet.create(fs))
 				.withListenPort(listenPort);
 		server.listen();
 		return server;
@@ -142,8 +142,8 @@ public final class CubeTest {
 	public void testRemoteFsAggregationStorage() throws Exception {
 
 		Path serverStorage = temporaryFolder.newFolder("storage").toPath();
-		AsyncHttpServer server1 = startServer(executor, serverStorage);
-		AsyncHttpClient httpClient = AsyncHttpClient.create(getCurrentReactor());
+		HttpServer server1 = startServer(executor, serverStorage);
+		HttpClient httpClient = HttpClient.create(getCurrentReactor());
 		HttpActiveFs storage = HttpActiveFs.create(getCurrentReactor(), "http://localhost:" + listenPort, httpClient);
 		IAggregationChunkStorage<Long> chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
 		Cube cube = newCube(executor, classLoader, chunkStorage);
@@ -155,7 +155,7 @@ public final class CubeTest {
 								consume(cube, chunkStorage, new DataItem2(1, 3, 10, 20), new DataItem2(1, 4, 10, 20)))
 						.whenComplete(server1::close)
 		);
-		AsyncHttpServer server2 = startServer(executor, serverStorage);
+		HttpServer server2 = startServer(executor, serverStorage);
 
 		List<DataItemResult> list = await(cube.queryRawStream(
 						List.of("key1", "key2"), List.of("metric1", "metric2", "metric3"),

@@ -25,8 +25,8 @@ import io.activej.fs.IActiveFs;
 import io.activej.fs.cluster.ClusterActiveFs;
 import io.activej.fs.cluster.DiscoveryService;
 import io.activej.fs.cluster.FsPartitions;
-import io.activej.http.AsyncHttpServer;
 import io.activej.http.AsyncServlet;
+import io.activej.http.HttpServer;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
@@ -67,8 +67,8 @@ public class ClusterTcpClientLauncher extends Launcher {
 
 	@Provides
 	@Eager
-	AsyncHttpServer guiServer(NioReactor reactor, AsyncServlet servlet, Config config) {
-		return AsyncHttpServer.create(reactor, servlet)
+	HttpServer guiServer(NioReactor reactor, AsyncServlet servlet, Config config) {
+		return HttpServer.create(reactor, servlet)
 				.withInitializer(ofHttpServer(config.getChild("activefs.http.gui")));
 	}
 

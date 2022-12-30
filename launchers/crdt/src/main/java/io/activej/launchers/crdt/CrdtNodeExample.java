@@ -21,7 +21,7 @@ import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.fs.IActiveFs;
 import io.activej.fs.LocalActiveFs;
-import io.activej.http.AsyncHttpServer;
+import io.activej.http.HttpServer;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
@@ -39,7 +39,7 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 public final class CrdtNodeExample extends CrdtNodeLauncher<String, Integer> {
 	@Inject
-	AsyncHttpServer httpServer;
+	HttpServer httpServer;
 
 	@Override
 	protected CrdtNodeLogicModule<String, Integer> getBusinessLogicModule() {

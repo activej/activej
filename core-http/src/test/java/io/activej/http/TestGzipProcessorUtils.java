@@ -104,7 +104,7 @@ public final class TestGzipProcessorUtils {
 
 	@Test
 	public void testGzippedCommunicationBetweenClientServer() throws IOException {
-		AsyncHttpServer server = AsyncHttpServer.create(Reactor.getCurrentReactor(),
+		HttpServer server = HttpServer.create(Reactor.getCurrentReactor(),
 						request -> request.loadBody(CHARACTERS_COUNT)
 								.map(body -> {
 									assertEquals("gzip", request.getHeader(CONTENT_ENCODING));
@@ -118,7 +118,7 @@ public final class TestGzipProcessorUtils {
 								}))
 				.withListenPort(port);
 
-		AsyncHttpClient client = AsyncHttpClient.create(Reactor.getCurrentReactor());
+		HttpClient client = HttpClient.create(Reactor.getCurrentReactor());
 
 		HttpRequest request = HttpRequest.get("http://127.0.0.1:" + port)
 				.withHeader(ACCEPT_ENCODING, "gzip")

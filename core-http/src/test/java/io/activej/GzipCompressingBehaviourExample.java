@@ -22,14 +22,14 @@ public final class GzipCompressingBehaviourExample {
 				.map(GET, "/nogzip/",
 						request -> HttpResponse.ok200().withBody(encodeAscii("Hello!")));
 
-		AsyncHttpServer server = AsyncHttpServer.create(eventloop, servlet).withListenPort(getFreePort());
+		HttpServer server = HttpServer.create(eventloop, servlet).withListenPort(getFreePort());
 
 		server.listen();
 		eventloop.run();
 
 		// this is how you should send an http request with gzipped body.
 		// if the content of the response is gzipped - it would be decompressed automatically
-		AsyncHttpClient client = AsyncHttpClient.create(eventloop);
+		HttpClient client = HttpClient.create(eventloop);
 
 		// !sic, you should call withAcceptEncodingGzip for your request if you want to get the response gzipped
 		client.request(

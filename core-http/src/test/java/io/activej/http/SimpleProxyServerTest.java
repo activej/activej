@@ -1,7 +1,7 @@
 package io.activej.http;
 
-import io.activej.dns.AsyncDnsClient;
 import io.activej.dns.CachedDnsClient;
+import io.activej.dns.DnsClient;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.reactor.net.DatagramSocketSettings;
@@ -50,7 +50,7 @@ public final class SimpleProxyServerTest {
 	public void testSimpleProxyServer() throws Exception {
 		Eventloop eventloop1 = Eventloop.create().withFatalErrorHandler(rethrow()).withCurrentThread();
 
-		AsyncHttpServer echoServer = AsyncHttpServer.create(eventloop1,
+		HttpServer echoServer = HttpServer.create(eventloop1,
 				request -> HttpResponse.ok200()
 						.withBody(encodeAscii(request.getUrl().getPathAndQuery())))
 				.withListenPort(echoServerPort);
@@ -61,12 +61,12 @@ public final class SimpleProxyServerTest {
 
 		Eventloop eventloop2 = Eventloop.create().withFatalErrorHandler(rethrow()).withCurrentThread();
 
-		AsyncHttpClient httpClient = AsyncHttpClient.create(eventloop2)
-				.withDnsClient(CachedDnsClient.create(eventloop2, AsyncDnsClient.create(eventloop2)
+		HttpClient httpClient = HttpClient.create(eventloop2)
+				.withDnsClient(CachedDnsClient.create(eventloop2, DnsClient.create(eventloop2)
 						.withDatagramSocketSetting(DatagramSocketSettings.create())
 						.withDnsServerAddress(HttpUtils.inetAddress("8.8.8.8"))));
 
-		AsyncHttpServer proxyServer = AsyncHttpServer.create(eventloop2,
+		HttpServer proxyServer = HttpServer.create(eventloop2,
 				request -> {
 					String path = echoServerPort + request.getUrl().getPath();
 					return httpClient.request(HttpRequest.get("http://127.0.0.1:" + path))

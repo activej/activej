@@ -33,8 +33,8 @@ public final class HttpApiTest {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
-	private AsyncHttpServer server;
-	private AsyncHttpClient client;
+	private HttpServer server;
+	private HttpClient client;
 
 	private int port;
 
@@ -61,14 +61,14 @@ public final class HttpApiTest {
 	@Before
 	public void setUp() {
 		port = getFreePort();
-		server = AsyncHttpServer.create(Reactor.getCurrentReactor(),
+		server = HttpServer.create(Reactor.getCurrentReactor(),
 				request -> {
 					testRequest(request);
 					return createResponse();
 				})
 				.withListenPort(port);
 
-		client = AsyncHttpClient.create(Reactor.getCurrentReactor());
+		client = HttpClient.create(Reactor.getCurrentReactor());
 
 		// setup request and response data
 		requestAcceptContentTypes.add(AcceptMediaType.of(MediaTypes.ANY_AUDIO, 90));

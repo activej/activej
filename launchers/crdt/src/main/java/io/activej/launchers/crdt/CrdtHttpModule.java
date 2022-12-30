@@ -41,8 +41,8 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 	private final TypeT<CrdtData<K, S>> crdtDataManifest = new TypeT<>() {};
 
 	@Provides
-	AsyncHttpServer server(NioReactor reactor, AsyncServlet servlet, Config config) {
-		return AsyncHttpServer.create(reactor, servlet)
+	HttpServer server(NioReactor reactor, AsyncServlet servlet, Config config) {
+		return HttpServer.create(reactor, servlet)
 				.withInitializer(ofHttpServer(config.getChild("crdt.http")));
 	}
 

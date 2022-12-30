@@ -45,14 +45,14 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
  * It has a root {@link AsyncServlet} that receives and handles all the responses that come to this server.
  */
 @SuppressWarnings({"UnusedReturnValue", "WeakerAccess", "unused"})
-public final class AsyncHttpServer extends AbstractReactiveServer<AsyncHttpServer> {
-	public static final Duration READ_WRITE_TIMEOUT = ApplicationSettings.getDuration(AsyncHttpServer.class, "readWriteTimeout", Duration.ZERO);
-	public static final Duration READ_WRITE_TIMEOUT_SHUTDOWN = ApplicationSettings.getDuration(AsyncHttpServer.class, "readWriteTimeout_Shutdown", Duration.ofSeconds(3));
-	public static final Duration SERVE_TIMEOUT_SHUTDOWN = ApplicationSettings.getDuration(AsyncHttpServer.class, "serveTimeout_Shutdown", Duration.ofSeconds(0));
-	public static final Duration KEEP_ALIVE_TIMEOUT = ApplicationSettings.getDuration(AsyncHttpServer.class, "keepAliveTimeout", Duration.ofSeconds(30));
-	public static final MemSize MAX_BODY_SIZE = ApplicationSettings.getMemSize(AsyncHttpServer.class, "maxBodySize", MemSize.ZERO);
-	public static final MemSize MAX_WEB_SOCKET_MESSAGE_SIZE = ApplicationSettings.getMemSize(AsyncHttpServer.class, "maxWebSocketMessageSize", MemSize.megabytes(1));
-	public static final int MAX_KEEP_ALIVE_REQUESTS = ApplicationSettings.getInt(AsyncHttpServer.class, "maxKeepAliveRequests", 0);
+public final class HttpServer extends AbstractReactiveServer<HttpServer> {
+	public static final Duration READ_WRITE_TIMEOUT = ApplicationSettings.getDuration(HttpServer.class, "readWriteTimeout", Duration.ZERO);
+	public static final Duration READ_WRITE_TIMEOUT_SHUTDOWN = ApplicationSettings.getDuration(HttpServer.class, "readWriteTimeout_Shutdown", Duration.ofSeconds(3));
+	public static final Duration SERVE_TIMEOUT_SHUTDOWN = ApplicationSettings.getDuration(HttpServer.class, "serveTimeout_Shutdown", Duration.ofSeconds(0));
+	public static final Duration KEEP_ALIVE_TIMEOUT = ApplicationSettings.getDuration(HttpServer.class, "keepAliveTimeout", Duration.ofSeconds(30));
+	public static final MemSize MAX_BODY_SIZE = ApplicationSettings.getMemSize(HttpServer.class, "maxBodySize", MemSize.ZERO);
+	public static final MemSize MAX_WEB_SOCKET_MESSAGE_SIZE = ApplicationSettings.getMemSize(HttpServer.class, "maxWebSocketMessageSize", MemSize.megabytes(1));
+	public static final int MAX_KEEP_ALIVE_REQUESTS = ApplicationSettings.getInt(HttpServer.class, "maxKeepAliveRequests", 0);
 
 	private final @NotNull AsyncServlet servlet;
 	private @NotNull HttpExceptionFormatter errorFormatter = HttpExceptionFormatter.COMMON_FORMATTER;
@@ -191,65 +191,65 @@ public final class AsyncHttpServer extends AbstractReactiveServer<AsyncHttpServe
 	}
 
 	// region builders
-	private AsyncHttpServer(@NotNull NioReactor reactor, @NotNull AsyncServlet servlet) {
+	private HttpServer(@NotNull NioReactor reactor, @NotNull AsyncServlet servlet) {
 		super(reactor);
 		this.servlet = servlet;
 	}
 
-	public static AsyncHttpServer create(@NotNull NioReactor reactor, @NotNull AsyncServlet servlet) {
-		return new AsyncHttpServer(reactor, servlet);
+	public static HttpServer create(@NotNull NioReactor reactor, @NotNull AsyncServlet servlet) {
+		return new HttpServer(reactor, servlet);
 	}
 
-	public AsyncHttpServer withKeepAliveTimeout(@NotNull Duration keepAliveTime) {
+	public HttpServer withKeepAliveTimeout(@NotNull Duration keepAliveTime) {
 		keepAliveTimeoutMillis = (int) keepAliveTime.toMillis();
 		return this;
 	}
 
-	public AsyncHttpServer withMaxKeepAliveRequests(int maxKeepAliveRequests) {
+	public HttpServer withMaxKeepAliveRequests(int maxKeepAliveRequests) {
 		this.maxKeepAliveRequests = maxKeepAliveRequests;
 		return this;
 	}
 
-	public AsyncHttpServer withNoKeepAlive() {
+	public HttpServer withNoKeepAlive() {
 		return withKeepAliveTimeout(Duration.ZERO);
 	}
 
-	public AsyncHttpServer withReadWriteTimeout(@NotNull Duration readWriteTimeout) {
+	public HttpServer withReadWriteTimeout(@NotNull Duration readWriteTimeout) {
 		this.readWriteTimeoutMillis = (int) readWriteTimeout.toMillis();
 		return this;
 	}
 
-	public AsyncHttpServer withReadWriteTimeout(@NotNull Duration readWriteTimeout, @NotNull Duration readWriteTimeoutShutdown) {
+	public HttpServer withReadWriteTimeout(@NotNull Duration readWriteTimeout, @NotNull Duration readWriteTimeoutShutdown) {
 		this.readWriteTimeoutMillis = (int) readWriteTimeout.toMillis();
 		this.readWriteTimeoutMillisShutdown = (int) readWriteTimeoutShutdown.toMillis();
 		return this;
 	}
 
-	public AsyncHttpServer withServeTimeoutShutdown(@NotNull Duration serveTimeoutShutdown) {
+	public HttpServer withServeTimeoutShutdown(@NotNull Duration serveTimeoutShutdown) {
 		this.serveTimeoutMillisShutdown = (int) serveTimeoutShutdown.toMillis();
 		return this;
 	}
 
-	public AsyncHttpServer withMaxBodySize(MemSize maxBodySize) {
+	public HttpServer withMaxBodySize(MemSize maxBodySize) {
 		return withMaxBodySize(maxBodySize.toInt());
 	}
 
-	public AsyncHttpServer withMaxBodySize(int maxBodySize) {
+	public HttpServer withMaxBodySize(int maxBodySize) {
 		this.maxBodySize = maxBodySize;
 		return this;
 	}
 
-	public AsyncHttpServer withMaxWebSocketMessageSize(MemSize maxWebSocketMessageSize) {
+	public HttpServer withMaxWebSocketMessageSize(MemSize maxWebSocketMessageSize) {
 		this.maxWebSocketMessageSize = maxWebSocketMessageSize.toInt();
 		return this;
 	}
 
-	public AsyncHttpServer withHttpErrorFormatter(@NotNull HttpExceptionFormatter httpExceptionFormatter) {
+	public HttpServer withHttpErrorFormatter(@NotNull HttpExceptionFormatter httpExceptionFormatter) {
 		errorFormatter = httpExceptionFormatter;
 		return this;
 	}
 
-	public AsyncHttpServer withInspector(Inspector inspector) {
+	public HttpServer withInspector(Inspector inspector) {
 		this.inspector = inspector;
 		return this;
 	}

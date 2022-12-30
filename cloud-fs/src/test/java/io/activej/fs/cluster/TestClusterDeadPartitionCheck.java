@@ -11,8 +11,8 @@ import io.activej.fs.http.ActiveFsServlet;
 import io.activej.fs.http.HttpActiveFs;
 import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.fs.tcp.RemoteActiveFs;
-import io.activej.http.AsyncHttpClient;
-import io.activej.http.AsyncHttpServer;
+import io.activej.http.HttpClient;
+import io.activej.http.HttpServer;
 import io.activej.net.AbstractReactiveServer;
 import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
@@ -123,12 +123,12 @@ public final class TestClusterDeadPartitionCheck {
 						new ClientServerFactory() {
 							@Override
 							public IActiveFs createClient(NioReactor reactor, InetSocketAddress address) {
-								return HttpActiveFs.create(reactor, "http://localhost:" + address.getPort(), AsyncHttpClient.create(reactor));
+								return HttpActiveFs.create(reactor, "http://localhost:" + address.getPort(), HttpClient.create(reactor));
 							}
 
 							@Override
 							public AbstractReactiveServer<?> createServer(LocalActiveFs localFs, InetSocketAddress address) {
-								return AsyncHttpServer.create((NioReactor) localFs.getReactor(), ActiveFsServlet.create(localFs))
+								return HttpServer.create((NioReactor) localFs.getReactor(), ActiveFsServlet.create(localFs))
 										.withReadWriteTimeout(Duration.ZERO, Duration.ZERO)
 										.withListenAddress(address);
 							}

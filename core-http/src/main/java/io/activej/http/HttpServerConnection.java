@@ -24,7 +24,7 @@ import io.activej.common.MemSize;
 import io.activej.common.Utils;
 import io.activej.common.recycle.Recyclable;
 import io.activej.csp.ChannelSupplier;
-import io.activej.http.AsyncHttpServer.Inspector;
+import io.activej.http.HttpServer.Inspector;
 import io.activej.net.socket.tcp.ITcpSocket;
 import io.activej.net.socket.tcp.TcpSocketSsl;
 import io.activej.promise.Promise;
@@ -54,7 +54,7 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * It represents server connection. It can receive {@link HttpRequest requests}
- * from {@link AsyncHttpClient clients} and respond to them with
+ * from {@link HttpClient clients} and respond to them with
  * {@link AsyncServlet<HttpRequest> async servlet}.
  */
 public final class HttpServerConnection extends AbstractHttpConnection {
@@ -81,7 +81,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 
 	private final InetAddress remoteAddress;
 
-	private final AsyncHttpServer server;
+	private final HttpServer server;
 	private final AsyncServlet servlet;
 	private @Nullable HttpRequest request;
 	private final @Nullable Inspector inspector;
@@ -101,7 +101,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	 * @param servlet       servlet for handling requests
 	 */
 	HttpServerConnection(Reactor reactor, ITcpSocket asyncTcpSocket, InetAddress remoteAddress,
-			AsyncHttpServer server, AsyncServlet servlet) {
+			HttpServer server, AsyncServlet servlet) {
 		super(reactor, asyncTcpSocket, server.maxBodySize);
 		this.remoteAddress = remoteAddress;
 		this.server = server;

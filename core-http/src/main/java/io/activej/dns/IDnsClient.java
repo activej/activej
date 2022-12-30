@@ -29,7 +29,7 @@ import java.net.InetAddress;
  * If host is not recognized or connection to DNS server timed out it will
  * fail with a respective {@link DnsQueryException}.
  */
-public interface IAsyncDnsClient {
+public interface IDnsClient {
 	/**
 	 * Searches for an IPv4 for the given domain
 	 *

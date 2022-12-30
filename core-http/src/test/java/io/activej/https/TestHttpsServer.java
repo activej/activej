@@ -3,9 +3,9 @@ package io.activej.https;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import io.activej.eventloop.Eventloop;
-import io.activej.http.AsyncHttpServer;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
+import io.activej.http.HttpServer;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.KeyManager;
@@ -38,7 +38,7 @@ public class TestHttpsServer {
 		KeyManager[] keyManagers = createKeyManagers(new File("./src/test/resources/keystore.jks"), "testtest", "testtest");
 		TrustManager[] trustManagers = createTrustManagers(new File("./src/test/resources/truststore.jks"), "testtest");
 
-		AsyncHttpServer server = AsyncHttpServer.create(eventloop, bobServlet)
+		HttpServer server = HttpServer.create(eventloop, bobServlet)
 				.withSslListenPort(createSslContext("TLSv1", keyManagers, trustManagers, new SecureRandom()), executor, PORT)
 				.withListenPort(getFreePort());
 

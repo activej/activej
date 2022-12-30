@@ -27,7 +27,7 @@ import io.activej.fs.cluster.DiscoveryService;
 import io.activej.fs.http.HttpActiveFs;
 import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.fs.tcp.RemoteActiveFs;
-import io.activej.http.AsyncHttpClient;
+import io.activej.http.HttpClient;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.trigger.TriggersModuleSettings;
 import org.jetbrains.annotations.Nullable;
@@ -70,7 +70,7 @@ public final class Initializers {
 		for (String toAdd : partitionStrings) {
 			IActiveFs client;
 			if (toAdd.startsWith("http")) {
-				client = HttpActiveFs.create(reactor, toAdd, AsyncHttpClient.create(reactor));
+				client = HttpActiveFs.create(reactor, toAdd, HttpClient.create(reactor));
 			} else {
 				client = RemoteActiveFs.create(reactor, parseInetSocketAddress(toAdd));
 			}

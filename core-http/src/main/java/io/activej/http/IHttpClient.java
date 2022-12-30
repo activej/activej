@@ -25,6 +25,6 @@ import io.activej.promise.Promise;
  * and returns an {@link HttpResponse} for it,
  * so it is basically a reciprocal of the {@link AsyncServlet}.
  */
-public interface IAsyncHttpClient {
+public interface IHttpClient {
 	Promise<HttpResponse> request(HttpRequest request);
 }

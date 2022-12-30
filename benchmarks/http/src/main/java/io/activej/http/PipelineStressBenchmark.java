@@ -39,7 +39,7 @@ public final class PipelineStressBenchmark extends Launcher {
 	public static final int PORT = 8080;
 
 	@Inject
-	AsyncHttpServer server;
+	HttpServer server;
 
 	@Provides
 	NioReactor eventloop() {
@@ -47,8 +47,8 @@ public final class PipelineStressBenchmark extends Launcher {
 	}
 
 	@Provides
-	AsyncHttpServer server(NioReactor reactor) {
-		return AsyncHttpServer.create(reactor, request -> HttpResponse.ok200().withPlainText("Hello, world!"))
+	HttpServer server(NioReactor reactor) {
+		return HttpServer.create(reactor, request -> HttpResponse.ok200().withPlainText("Hello, world!"))
 				.withListenPort(PORT);
 	}
 

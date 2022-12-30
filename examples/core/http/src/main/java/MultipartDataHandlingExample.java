@@ -66,11 +66,11 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 	Executor executor;
 
 	@Inject
-	AsyncHttpClient client;
+	HttpClient client;
 
 	@Provides
-	AsyncHttpClient client(NioReactor reactor) {
-		return AsyncHttpClient.create(reactor);
+	HttpClient client(NioReactor reactor) {
+		return HttpClient.create(reactor);
 	}
 
 	@Provides

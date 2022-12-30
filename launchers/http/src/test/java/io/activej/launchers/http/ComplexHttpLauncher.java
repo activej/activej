@@ -1,9 +1,9 @@
 package io.activej.launchers.http;
 
 import io.activej.eventloop.Eventloop;
-import io.activej.http.AsyncHttpServer;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
+import io.activej.http.HttpServer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.Scope;
@@ -87,7 +87,7 @@ public final class ComplexHttpLauncher extends Launcher {
 	@Provides
 	@Eager
 	@Named("First")
-	PrimaryServer server1(Eventloop eventloop, @Named("First") WorkerPool.Instances<AsyncHttpServer> serverInstances) {
+	PrimaryServer server1(Eventloop eventloop, @Named("First") WorkerPool.Instances<HttpServer> serverInstances) {
 		return PrimaryServer.create(eventloop, serverInstances)
 				.withListenAddress(new InetSocketAddress(SERVER_ONE_PORT));
 	}
@@ -95,7 +95,7 @@ public final class ComplexHttpLauncher extends Launcher {
 	@Provides
 	@Eager
 	@Named("Second")
-	PrimaryServer server2(@Named("Second") Eventloop eventloop, @Named("Second") WorkerPool.Instances<AsyncHttpServer> serverInstances) {
+	PrimaryServer server2(@Named("Second") Eventloop eventloop, @Named("Second") WorkerPool.Instances<HttpServer> serverInstances) {
 		return PrimaryServer.create(eventloop, serverInstances)
 				.withListenAddress(new InetSocketAddress(SERVER_TWO_PORT));
 	}
@@ -103,7 +103,7 @@ public final class ComplexHttpLauncher extends Launcher {
 	@Provides
 	@Eager
 	@Named("Third")
-	PrimaryServer server3(@Named("Third") Eventloop eventloop, @Named("Third") WorkerPool.Instances<AsyncHttpServer> serverInstances) {
+	PrimaryServer server3(@Named("Third") Eventloop eventloop, @Named("Third") WorkerPool.Instances<HttpServer> serverInstances) {
 		return PrimaryServer.create(eventloop, serverInstances)
 				.withListenAddress(new InetSocketAddress(SERVER_THREE_PORT));
 	}
@@ -118,8 +118,8 @@ public final class ComplexHttpLauncher extends Launcher {
 
 	@Provides
 	@Worker
-	AsyncHttpServer workerServer(Eventloop eventloop, AsyncServlet servlet) {
-		return AsyncHttpServer.create(eventloop, servlet);
+	HttpServer workerServer(Eventloop eventloop, AsyncServlet servlet) {
+		return HttpServer.create(eventloop, servlet);
 	}
 
 	@Provides
@@ -138,8 +138,8 @@ public final class ComplexHttpLauncher extends Launcher {
 
 	@Provides
 	@MyWorker
-	AsyncHttpServer myWorkerServer(Eventloop eventloop, AsyncServlet servlet) {
-		return AsyncHttpServer.create(eventloop, servlet);
+	HttpServer myWorkerServer(Eventloop eventloop, AsyncServlet servlet) {
+		return HttpServer.create(eventloop, servlet);
 	}
 
 	@Provides

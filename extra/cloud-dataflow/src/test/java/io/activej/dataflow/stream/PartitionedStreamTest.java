@@ -37,8 +37,8 @@ import io.activej.fs.IActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.fs.http.ActiveFsServlet;
 import io.activej.fs.http.HttpActiveFs;
-import io.activej.http.AsyncHttpClient;
-import io.activej.http.AsyncHttpServer;
+import io.activej.http.HttpClient;
+import io.activej.http.HttpServer;
 import io.activej.inject.Injector;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
@@ -103,8 +103,8 @@ public final class PartitionedStreamTest {
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();
 
 	private Eventloop serverEventloop;
-	private List<AsyncHttpServer> sourceFsServers;
-	private List<AsyncHttpServer> targetFsServers;
+	private List<HttpServer> sourceFsServers;
+	private List<HttpServer> targetFsServers;
 	private List<DataflowServer> dataflowServers;
 
 	@Before
@@ -404,15 +404,15 @@ public final class PartitionedStreamTest {
 	// endregion
 
 	// region helpers
-	private static List<IActiveFs> createClients(NioReactor reactor, List<AsyncHttpServer> servers) {
+	private static List<IActiveFs> createClients(NioReactor reactor, List<HttpServer> servers) {
 		return servers.stream()
 				.map(server -> createClient(reactor, server))
 				.collect(Collectors.toList());
 	}
 
-	private static IActiveFs createClient(NioReactor reactor, AsyncHttpServer server) {
+	private static IActiveFs createClient(NioReactor reactor, HttpServer server) {
 		int port = server.getListenAddresses().get(0).getPort();
-		return HttpActiveFs.create(reactor, "http://localhost:" + port, AsyncHttpClient.create(reactor));
+		return HttpActiveFs.create(reactor, "http://localhost:" + port, HttpClient.create(reactor));
 	}
 
 	private void assertSorted(Collection<List<String>> result) {
@@ -478,32 +478,32 @@ public final class PartitionedStreamTest {
 		dataflowServers.addAll(launchDataflowServers(nDataflowServers));
 	}
 
-	private List<AsyncHttpServer> launchSourceFsServers(int nServers, boolean sorted) throws IOException {
-		List<AsyncHttpServer> servers = new ArrayList<>();
+	private List<HttpServer> launchSourceFsServers(int nServers, boolean sorted) throws IOException {
+		List<HttpServer> servers = new ArrayList<>();
 		for (int i = 0; i < nServers; i++) {
 			Path tmp = tempDir.newFolder("source_server_" + i + "_").toPath();
 			writeDataFile(tmp, i, sorted);
 			LocalActiveFs fsClient = LocalActiveFs.create(serverEventloop, newSingleThreadExecutor(), tmp);
 			await(fsClient.start());
-			AsyncHttpServer server = AsyncHttpServer.create(serverEventloop, ActiveFsServlet.create(fsClient));
+			HttpServer server = HttpServer.create(serverEventloop, ActiveFsServlet.create(fsClient));
 			servers.add(server);
 		}
-		for (AsyncHttpServer server : servers) {
+		for (HttpServer server : servers) {
 			listen(server.withListenPort(getFreePort()));
 		}
 		return servers;
 	}
 
-	private List<AsyncHttpServer> launchTargetFsServers(int nServers) throws IOException {
-		List<AsyncHttpServer> servers = new ArrayList<>();
+	private List<HttpServer> launchTargetFsServers(int nServers) throws IOException {
+		List<HttpServer> servers = new ArrayList<>();
 		for (int i = 0; i < nServers; i++) {
 			Path tmp = tempDir.newFolder("target_server_" + i + "_").toPath();
 			LocalActiveFs fsClient = LocalActiveFs.create(serverEventloop, newSingleThreadExecutor(), tmp);
 			await(fsClient.start());
-			AsyncHttpServer server = AsyncHttpServer.create(serverEventloop, ActiveFsServlet.create(fsClient));
+			HttpServer server = HttpServer.create(serverEventloop, ActiveFsServlet.create(fsClient));
 			servers.add(server);
 		}
-		for (AsyncHttpServer server : servers) {
+		for (HttpServer server : servers) {
 			listen(server.withListenPort(getFreePort()));
 		}
 		return servers;

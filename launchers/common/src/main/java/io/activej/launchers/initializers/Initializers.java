@@ -22,7 +22,7 @@ import io.activej.common.initializer.Initializer;
 import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;
-import io.activej.http.AsyncHttpServer;
+import io.activej.http.HttpServer;
 import io.activej.inject.Key;
 import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
@@ -70,13 +70,13 @@ public class Initializers {
 		};
 	}
 
-	public static Initializer<AsyncHttpServer> ofHttpServer(Config config) {
+	public static Initializer<HttpServer> ofHttpServer(Config config) {
 		return server -> server
 				.withInitializer(ofAbstractServer(config))
 				.withInitializer(ofHttpWorker(config));
 	}
 
-	public static Initializer<AsyncHttpServer> ofHttpWorker(Config config) {
+	public static Initializer<HttpServer> ofHttpWorker(Config config) {
 		return server -> server
 				.withKeepAliveTimeout(config.get(ofDuration(), "keepAliveTimeout", server.getKeepAliveTimeout()))
 				.withReadWriteTimeout(config.get(ofDuration(), "readWriteTimeout", server.getReadWriteTimeout()))

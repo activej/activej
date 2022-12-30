@@ -52,13 +52,13 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.promise.Promises.timeout;
 
 /**
- * Implementation of {@link IAsyncDnsClient} that asynchronously
+ * Implementation of {@link IDnsClient} that asynchronously
  * connects to some <i>real</i> DNS server and gets the response from it.
  */
-public final class AsyncDnsClient extends AbstractNioReactive
-		implements IAsyncDnsClient, ReactiveJmxBeanWithStats, WithInitializer<AsyncDnsClient> {
-	private final Logger logger = LoggerFactory.getLogger(AsyncDnsClient.class);
-	private static final boolean CHECK = Checks.isEnabled(AsyncDnsClient.class);
+public final class DnsClient extends AbstractNioReactive
+		implements IDnsClient, ReactiveJmxBeanWithStats, WithInitializer<DnsClient> {
+	private final Logger logger = LoggerFactory.getLogger(DnsClient.class);
+	private static final boolean CHECK = Checks.isEnabled(DnsClient.class);
 
 	public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(3);
 	private static final int DNS_SERVER_PORT = 53;
@@ -77,40 +77,40 @@ public final class AsyncDnsClient extends AbstractNioReactive
 	private @Nullable Inspector inspector;
 
 	// region creators
-	private AsyncDnsClient(NioReactor reactor) {
+	private DnsClient(NioReactor reactor) {
 		super(reactor);
 	}
 
-	public static AsyncDnsClient create(NioReactor reactor) {
-		return new AsyncDnsClient(reactor);
+	public static DnsClient create(NioReactor reactor) {
+		return new DnsClient(reactor);
 	}
 
-	public AsyncDnsClient withDatagramSocketSetting(DatagramSocketSettings setting) {
+	public DnsClient withDatagramSocketSetting(DatagramSocketSettings setting) {
 		this.datagramSocketSettings = setting;
 		return this;
 	}
 
-	public AsyncDnsClient withTimeout(Duration timeout) {
+	public DnsClient withTimeout(Duration timeout) {
 		this.timeout = timeout;
 		return this;
 	}
 
-	public AsyncDnsClient withDnsServerAddress(InetSocketAddress address) {
+	public DnsClient withDnsServerAddress(InetSocketAddress address) {
 		this.dnsServerAddress = address;
 		return this;
 	}
 
-	public AsyncDnsClient withDnsServerAddress(InetAddress address) {
+	public DnsClient withDnsServerAddress(InetAddress address) {
 		this.dnsServerAddress = new InetSocketAddress(address, DNS_SERVER_PORT);
 		return this;
 	}
 
-	public AsyncDnsClient withInspector(Inspector inspector) {
+	public DnsClient withInspector(Inspector inspector) {
 		this.inspector = inspector;
 		return this;
 	}
 
-	public AsyncDnsClient setSocketInspector(UdpSocket.Inspector socketInspector) {
+	public DnsClient setSocketInspector(UdpSocket.Inspector socketInspector) {
 		this.socketInspector = socketInspector;
 		return this;
 	}
@@ -154,7 +154,7 @@ public final class AsyncDnsClient extends AbstractNioReactive
 	@Override
 	public Promise<DnsResponse> resolve(DnsQuery query) {
 		if (CHECK) checkState(inReactorThread());
-		DnsResponse fromQuery = IAsyncDnsClient.resolveFromQuery(query);
+		DnsResponse fromQuery = IDnsClient.resolveFromQuery(query);
 		if (fromQuery != null) {
 			logger.trace("{} already contained an IP address within itself", query);
 			return Promise.of(fromQuery);

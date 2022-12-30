@@ -55,16 +55,16 @@ public class HttpThrottlingServer {
 		}
 	}
 
-	private final AsyncHttpServer server;
+	private final HttpServer server;
 
 	public HttpThrottlingServer(Eventloop eventloop, ServerOptions options) {
 		server = buildHttpServer(eventloop, options.getLoadBusinessLogic());
 	}
 
-	private static AsyncHttpServer buildHttpServer(Eventloop eventloop, int loadBusinessLogic) {
+	private static HttpServer buildHttpServer(Eventloop eventloop, int loadBusinessLogic) {
 //		final ByteBufPool byteBufferPool = new ByteBufPool(16, 65536);
 		AsyncServlet servlet = request -> longBusinessLogic(TEST_RESPONSE, loadBusinessLogic);
-		return AsyncHttpServer.create(eventloop, servlet).withListenPort(SERVER_PORT);
+		return HttpServer.create(eventloop, servlet).withListenPort(SERVER_PORT);
 	}
 
 	@SuppressWarnings("SameParameterValue")

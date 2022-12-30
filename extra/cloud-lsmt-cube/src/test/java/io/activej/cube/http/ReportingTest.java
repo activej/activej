@@ -19,8 +19,8 @@ import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.LogOTState;
 import io.activej.fs.LocalActiveFs;
-import io.activej.http.AsyncHttpClient;
-import io.activej.http.AsyncHttpServer;
+import io.activej.http.HttpClient;
+import io.activej.http.HttpServer;
 import io.activej.multilog.Multilog;
 import io.activej.multilog.MultilogImpl;
 import io.activej.ot.OTStateManager;
@@ -62,7 +62,7 @@ import static org.junit.Assert.*;
 public final class ReportingTest extends CubeTestBase {
 	public static final double DELTA = 1E-3;
 
-	private AsyncHttpServer cubeHttpServer;
+	private HttpServer cubeHttpServer;
 	private CubeHttpClient cubeHttpClient;
 	private Cube cube;
 	private int serverPort;
@@ -333,7 +333,7 @@ public final class ReportingTest extends CubeTestBase {
 
 		cubeHttpServer = startHttpServer();
 
-		AsyncHttpClient httpClient = AsyncHttpClient.create(reactor)
+		HttpClient httpClient = HttpClient.create(reactor)
 				.withNoKeepAlive();
 		cubeHttpClient = CubeHttpClient.create(httpClient, "http://127.0.0.1:" + serverPort)
 				.withAttribute("date", LocalDate.class)
@@ -357,8 +357,8 @@ public final class ReportingTest extends CubeTestBase {
 				.withMeasure("errorsPercent", double.class);
 	}
 
-	private AsyncHttpServer startHttpServer() {
-		AsyncHttpServer server = AsyncHttpServer.create(reactor, ReportingServiceServlet.createRootServlet(reactor, cube))
+	private HttpServer startHttpServer() {
+		HttpServer server = HttpServer.create(reactor, ReportingServiceServlet.createRootServlet(reactor, cube))
 				.withListenPort(serverPort)
 				.withAcceptOnce();
 		try {

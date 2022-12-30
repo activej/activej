@@ -42,7 +42,7 @@ public final class HttpTolerantApplicationTest {
 
 		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrow());
 
-		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
+		HttpServer server = HttpServer.create(eventloop,
 						request ->
 								Promise.ofCallback(cb ->
 										eventloop.post(() -> cb.set(
@@ -121,7 +121,7 @@ public final class HttpTolerantApplicationTest {
 		})
 				.start();
 
-		String header = await(AsyncHttpClient.create(Reactor.getCurrentReactor())
+		String header = await(HttpClient.create(Reactor.getCurrentReactor())
 				.request(HttpRequest.get("http://127.0.0.1:" + port))
 				.then(response -> response.loadBody()
 						.whenResult(body -> assertEquals(text, body.getString(UTF_8)))

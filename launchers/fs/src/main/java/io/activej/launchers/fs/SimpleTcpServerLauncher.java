@@ -24,8 +24,8 @@ import io.activej.eventloop.inspector.ThrottlingController;
 import io.activej.fs.IActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.fs.tcp.ActiveFsServer;
-import io.activej.http.AsyncHttpServer;
 import io.activej.http.AsyncServlet;
+import io.activej.http.HttpServer;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.OptionalDependency;
@@ -70,8 +70,8 @@ public class SimpleTcpServerLauncher extends Launcher {
 
 	@Provides
 	@Eager
-	AsyncHttpServer guiServer(NioReactor reactor, AsyncServlet servlet, Config config) {
-		return AsyncHttpServer.create(reactor, servlet)
+	HttpServer guiServer(NioReactor reactor, AsyncServlet servlet, Config config) {
+		return HttpServer.create(reactor, servlet)
 				.withInitializer(ofHttpServer(config.getChild("activefs.http.gui")));
 	}
 

@@ -13,8 +13,8 @@ import io.activej.fs.LocalActiveFs;
 import io.activej.fs.exception.FsException;
 import io.activej.fs.http.ActiveFsServlet;
 import io.activej.fs.http.HttpActiveFs;
-import io.activej.http.AsyncHttpClient;
-import io.activej.http.AsyncHttpServer;
+import io.activej.http.HttpClient;
+import io.activej.http.HttpServer;
 import io.activej.net.AbstractReactiveServer;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
@@ -64,7 +64,7 @@ public final class TestClusterActiveFs {
 	private final List<Path> serverStorages = new ArrayList<>();
 
 	private ExecutorService executor;
-	private List<AsyncHttpServer> servers;
+	private List<HttpServer> servers;
 	private Path clientStorage;
 	private FsPartitions partitions;
 	private ClusterActiveFs client;
@@ -80,7 +80,7 @@ public final class TestClusterActiveFs {
 		Map<Object, IActiveFs> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
 
 		NioReactor reactor = Reactor.getCurrentReactor();
-		AsyncHttpClient httpClient = AsyncHttpClient.create(reactor);
+		HttpClient httpClient = HttpClient.create(reactor);
 
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
 			int port = getFreePort();
@@ -95,7 +95,7 @@ public final class TestClusterActiveFs {
 			serverEventloop.keepAlive(true);
 			LocalActiveFs localClient = LocalActiveFs.create(serverEventloop, executor, path);
 			CompletableFuture<Void> startFuture = serverEventloop.submit(localClient::start);
-			AsyncHttpServer server = AsyncHttpServer.create(serverEventloop, ActiveFsServlet.create(localClient))
+			HttpServer server = HttpServer.create(serverEventloop, ActiveFsServlet.create(localClient))
 					.withListenPort(port);
 			CompletableFuture<Void> listenFuture = serverEventloop.submit(() -> {
 				try {

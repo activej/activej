@@ -18,6 +18,6 @@ package io.activej.http;
 
 import io.activej.promise.Promise;
 
-public interface IAsyncWebSocketClient {
+public interface IWebSocketClient {
 	Promise<WebSocket> webSocketRequest(HttpRequest request);
 }

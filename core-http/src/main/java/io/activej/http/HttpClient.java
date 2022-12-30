@@ -24,8 +24,8 @@ import io.activej.common.MemSize;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
-import io.activej.dns.AsyncDnsClient;
-import io.activej.dns.IAsyncDnsClient;
+import io.activej.dns.DnsClient;
+import io.activej.dns.IDnsClient;
 import io.activej.dns.protocol.DnsQueryException;
 import io.activej.dns.protocol.DnsResponse;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -67,28 +67,28 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
- * Implementation of {@link IAsyncHttpClient} that asynchronously connects
+ * Implementation of {@link IHttpClient} that asynchronously connects
  * to real HTTP servers and gets responses from them.
  * <p>
  * It is also an {@link ReactiveService} that needs its close method to be called
  * to clean up the keep-alive connections etc.
  */
 @SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue"})
-public final class AsyncHttpClient extends AbstractNioReactive
-		implements IAsyncHttpClient, IAsyncWebSocketClient, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<AsyncHttpClient> {
-	private static final Logger logger = getLogger(AsyncHttpClient.class);
-	private static final boolean CHECK = Checks.isEnabled(AsyncHttpClient.class);
+public final class HttpClient extends AbstractNioReactive
+		implements IHttpClient, IWebSocketClient, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<HttpClient> {
+	private static final Logger logger = getLogger(HttpClient.class);
+	private static final boolean CHECK = Checks.isEnabled(HttpClient.class);
 
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
-	public static final Duration CONNECT_TIMEOUT = ApplicationSettings.getDuration(AsyncHttpClient.class, "connectTimeout", Duration.ZERO);
-	public static final Duration READ_WRITE_TIMEOUT = ApplicationSettings.getDuration(AsyncHttpClient.class, "readWriteTimeout", Duration.ZERO);
-	public static final Duration READ_WRITE_TIMEOUT_SHUTDOWN = ApplicationSettings.getDuration(AsyncHttpClient.class, "readWriteTimeout_Shutdown", Duration.ofSeconds(3));
-	public static final Duration KEEP_ALIVE_TIMEOUT = ApplicationSettings.getDuration(AsyncHttpClient.class, "keepAliveTimeout", Duration.ZERO);
-	public static final MemSize MAX_BODY_SIZE = ApplicationSettings.getMemSize(AsyncHttpClient.class, "maxBodySize", MemSize.ZERO);
-	public static final MemSize MAX_WEB_SOCKET_MESSAGE_SIZE = ApplicationSettings.getMemSize(AsyncHttpClient.class, "maxWebSocketMessageSize", MemSize.megabytes(1));
-	public static final int MAX_KEEP_ALIVE_REQUESTS = ApplicationSettings.getInt(AsyncHttpClient.class, "maxKeepAliveRequests", 0);
+	public static final Duration CONNECT_TIMEOUT = ApplicationSettings.getDuration(HttpClient.class, "connectTimeout", Duration.ZERO);
+	public static final Duration READ_WRITE_TIMEOUT = ApplicationSettings.getDuration(HttpClient.class, "readWriteTimeout", Duration.ZERO);
+	public static final Duration READ_WRITE_TIMEOUT_SHUTDOWN = ApplicationSettings.getDuration(HttpClient.class, "readWriteTimeout_Shutdown", Duration.ofSeconds(3));
+	public static final Duration KEEP_ALIVE_TIMEOUT = ApplicationSettings.getDuration(HttpClient.class, "keepAliveTimeout", Duration.ZERO);
+	public static final MemSize MAX_BODY_SIZE = ApplicationSettings.getMemSize(HttpClient.class, "maxBodySize", MemSize.ZERO);
+	public static final MemSize MAX_WEB_SOCKET_MESSAGE_SIZE = ApplicationSettings.getMemSize(HttpClient.class, "maxWebSocketMessageSize", MemSize.megabytes(1));
+	public static final int MAX_KEEP_ALIVE_REQUESTS = ApplicationSettings.getInt(HttpClient.class, "maxKeepAliveRequests", 0);
 
-	private @NotNull IAsyncDnsClient asyncDnsClient;
+	private @NotNull IDnsClient asyncDnsClient;
 	private @NotNull SocketSettings socketSettings = DEFAULT_SOCKET_SETTINGS;
 
 	final HashMap<InetSocketAddress, AddressLinkedList> addresses = new HashMap<>();
@@ -287,88 +287,88 @@ public final class AsyncHttpClient extends AbstractNioReactive
 	private int inetAddressIdx = 0;
 
 	// region builders
-	private AsyncHttpClient(@NotNull NioReactor reactor, @NotNull IAsyncDnsClient asyncDnsClient) {
+	private HttpClient(@NotNull NioReactor reactor, @NotNull IDnsClient asyncDnsClient) {
 		super(reactor);
 		this.asyncDnsClient = asyncDnsClient;
 	}
 
-	public static AsyncHttpClient create(@NotNull NioReactor reactor) {
-		IAsyncDnsClient defaultDnsClient = AsyncDnsClient.create(reactor);
-		return new AsyncHttpClient(reactor, defaultDnsClient);
+	public static HttpClient create(@NotNull NioReactor reactor) {
+		IDnsClient defaultDnsClient = DnsClient.create(reactor);
+		return new HttpClient(reactor, defaultDnsClient);
 	}
 
-	public AsyncHttpClient withSocketSettings(@NotNull SocketSettings socketSettings) {
+	public HttpClient withSocketSettings(@NotNull SocketSettings socketSettings) {
 		this.socketSettings = socketSettings;
 		return this;
 	}
 
-	public AsyncHttpClient withDnsClient(@NotNull IAsyncDnsClient asyncDnsClient) {
+	public HttpClient withDnsClient(@NotNull IDnsClient asyncDnsClient) {
 		this.asyncDnsClient = asyncDnsClient;
 		return this;
 	}
 
-	public AsyncHttpClient withSslEnabled(@NotNull SSLContext sslContext, @NotNull Executor sslExecutor) {
+	public HttpClient withSslEnabled(@NotNull SSLContext sslContext, @NotNull Executor sslExecutor) {
 		this.sslContext = sslContext;
 		this.sslExecutor = sslExecutor;
 		return this;
 	}
 
-	public AsyncHttpClient withKeepAliveTimeout(@NotNull Duration keepAliveTime) {
+	public HttpClient withKeepAliveTimeout(@NotNull Duration keepAliveTime) {
 		this.keepAliveTimeoutMillis = (int) keepAliveTime.toMillis();
 		return this;
 	}
 
-	public AsyncHttpClient withNoKeepAlive() {
+	public HttpClient withNoKeepAlive() {
 		return withKeepAliveTimeout(Duration.ZERO);
 	}
 
-	public AsyncHttpClient withMaxKeepAliveRequests(int maxKeepAliveRequests) {
+	public HttpClient withMaxKeepAliveRequests(int maxKeepAliveRequests) {
 		checkArgument(maxKeepAliveRequests >= 0, "Maximum number of requests per keep-alive connection should not be less than zero");
 		this.maxKeepAliveRequests = maxKeepAliveRequests;
 		return this;
 	}
 
-	public AsyncHttpClient withReadWriteTimeout(@NotNull Duration readWriteTimeout) {
+	public HttpClient withReadWriteTimeout(@NotNull Duration readWriteTimeout) {
 		this.readWriteTimeoutMillis = (int) readWriteTimeout.toMillis();
 		return this;
 	}
 
-	public AsyncHttpClient withReadWriteTimeout(@NotNull Duration readWriteTimeout, @NotNull Duration readWriteTimeoutShutdown) {
+	public HttpClient withReadWriteTimeout(@NotNull Duration readWriteTimeout, @NotNull Duration readWriteTimeoutShutdown) {
 		this.readWriteTimeoutMillis = (int) readWriteTimeout.toMillis();
 		this.readWriteTimeoutMillisShutdown = (int) readWriteTimeoutShutdown.toMillis();
 		return this;
 	}
 
-	public AsyncHttpClient withConnectTimeout(@NotNull Duration connectTimeout) {
+	public HttpClient withConnectTimeout(@NotNull Duration connectTimeout) {
 		this.connectTimeoutMillis = (int) connectTimeout.toMillis();
 		return this;
 	}
 
-	public AsyncHttpClient withMaxBodySize(MemSize maxBodySize) {
+	public HttpClient withMaxBodySize(MemSize maxBodySize) {
 		return withMaxBodySize(maxBodySize.toInt());
 	}
 
-	public AsyncHttpClient withMaxBodySize(int maxBodySize) {
+	public HttpClient withMaxBodySize(int maxBodySize) {
 		this.maxBodySize = maxBodySize != 0 ? maxBodySize : Integer.MAX_VALUE;
 		return this;
 	}
 
-	public AsyncHttpClient withMaxWebSocketMessageSize(MemSize maxWebSocketMessageSize) {
+	public HttpClient withMaxWebSocketMessageSize(MemSize maxWebSocketMessageSize) {
 		this.maxWebSocketMessageSize = maxWebSocketMessageSize.toInt();
 		return this;
 	}
 
-	public AsyncHttpClient withInspector(Inspector inspector) {
+	public HttpClient withInspector(Inspector inspector) {
 		this.inspector = inspector;
 		return this;
 	}
 
-	public AsyncHttpClient withSocketInspector(TcpSocket.Inspector socketInspector) {
+	public HttpClient withSocketInspector(TcpSocket.Inspector socketInspector) {
 		this.socketInspector = socketInspector;
 		return this;
 	}
 
-	public AsyncHttpClient withSocketSslInspector(TcpSocket.Inspector socketSslInspector) {
+	public HttpClient withSocketSslInspector(TcpSocket.Inspector socketSslInspector) {
 		this.socketSslInspector = socketSslInspector;
 		return this;
 	}

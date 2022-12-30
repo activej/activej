@@ -20,9 +20,9 @@ import io.activej.config.Config;
 import io.activej.config.ConfigModule;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;
-import io.activej.http.AsyncHttpServer;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
+import io.activej.http.HttpServer;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.OptionalDependency;
@@ -52,7 +52,7 @@ public abstract class HttpServerLauncher extends Launcher {
 	public static final String PROPERTIES_FILE = "http-server.properties";
 
 	@Inject
-	AsyncHttpServer httpServer;
+	HttpServer httpServer;
 
 	@Provides
 	NioReactor reactor(Config config, OptionalDependency<ThrottlingController> throttlingController) {
@@ -62,8 +62,8 @@ public abstract class HttpServerLauncher extends Launcher {
 	}
 
 	@Provides
-	AsyncHttpServer server(NioReactor reactor, AsyncServlet rootServlet, Config config) {
-		return AsyncHttpServer.create(reactor, rootServlet)
+	HttpServer server(NioReactor reactor, AsyncServlet rootServlet, Config config) {
+		return HttpServer.create(reactor, rootServlet)
 				.withInitializer(ofHttpServer(config.getChild("http")));
 	}
 

@@ -8,7 +8,7 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.binary.ByteBufsDecoder;
 import io.activej.eventloop.Eventloop;
-import io.activej.http.AsyncHttpClient.JmxInspector;
+import io.activej.http.HttpClient.JmxInspector;
 import io.activej.jmx.stats.ExceptionStats;
 import io.activej.net.SimpleServer;
 import io.activej.promise.Promise;
@@ -56,7 +56,7 @@ public final class AsyncHttpClientTest {
 	private int port;
 
 	public void startServer() throws IOException {
-		AsyncHttpServer.create(Reactor.getCurrentReactor(),
+		HttpServer.create(Reactor.getCurrentReactor(),
 						request -> HttpResponse.ok200()
 								.withBodyStream(ChannelSupplier.ofStream(
 										IntStream.range(0, HELLO_WORLD.length)
@@ -79,7 +79,7 @@ public final class AsyncHttpClientTest {
 	public void testAsyncClient() throws Exception {
 		startServer();
 
-		AsyncHttpClient client = AsyncHttpClient.create(Reactor.getCurrentReactor());
+		HttpClient client = HttpClient.create(Reactor.getCurrentReactor());
 		await(client.request(HttpRequest.get("http://127.0.0.1:" + port))
 				.then(response -> response.loadBody()
 						.whenComplete(assertCompleteFn(body -> assertEquals(decodeAscii(HELLO_WORLD), body.getString(UTF_8))))));
@@ -88,7 +88,7 @@ public final class AsyncHttpClientTest {
 	@Test
 	@Ignore("Requires DNS look up, may flood remote server")
 	public void testClientTimeoutConnect() {
-		AsyncHttpClient client = AsyncHttpClient.create(Reactor.getCurrentReactor())
+		HttpClient client = HttpClient.create(Reactor.getCurrentReactor())
 				.withConnectTimeout(Duration.ofMillis(1));
 		Exception e = awaitException(client.request(HttpRequest.get("http://google.com")));
 		assertThat(e, instanceOf(HttpException.class));
@@ -101,7 +101,7 @@ public final class AsyncHttpClientTest {
 
 		int maxBodySize = HELLO_WORLD.length - 1;
 
-		AsyncHttpClient client = AsyncHttpClient.create(Reactor.getCurrentReactor());
+		HttpClient client = HttpClient.create(Reactor.getCurrentReactor());
 		MalformedHttpException e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + port))
 				.then(response -> response.loadBody(maxBodySize)));
 		assertThat(e.getMessage(), containsString("HTTP body size exceeds load limit " + maxBodySize));
@@ -118,7 +118,7 @@ public final class AsyncHttpClientTest {
 				.withAcceptOnce()
 				.listen();
 
-		AsyncHttpClient client = AsyncHttpClient.create(Reactor.getCurrentReactor());
+		HttpClient client = HttpClient.create(Reactor.getCurrentReactor());
 		Exception e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + port))
 				.then(response -> response.loadBody()));
 
@@ -131,14 +131,14 @@ public final class AsyncHttpClientTest {
 
 		List<SettablePromise<HttpResponse>> responses = new ArrayList<>();
 
-		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
+		HttpServer server = HttpServer.create(eventloop,
 						request -> Promise.ofCallback(responses::add))
 				.withListenPort(port);
 
 		server.listen();
 
 		JmxInspector inspector = new JmxInspector();
-		AsyncHttpClient httpClient = AsyncHttpClient.create(eventloop)
+		HttpClient httpClient = HttpClient.create(eventloop)
 				.withNoKeepAlive()
 				.withConnectTimeout(Duration.ofMillis(20))
 				.withReadWriteTimeout(Duration.ofMillis(20))
@@ -173,7 +173,7 @@ public final class AsyncHttpClientTest {
 	public void testActiveRequestsCounterWithoutRefresh() throws IOException {
 		Eventloop eventloop = Reactor.getCurrentReactor();
 
-		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
+		HttpServer server = HttpServer.create(eventloop,
 						request -> HttpResponse.ok200())
 				.withAcceptOnce()
 				.withListenPort(port);
@@ -181,7 +181,7 @@ public final class AsyncHttpClientTest {
 		server.listen();
 
 		JmxInspector inspector = new JmxInspector();
-		AsyncHttpClient httpClient = AsyncHttpClient.create(eventloop)
+		HttpClient httpClient = HttpClient.create(eventloop)
 				.withInspector(inspector);
 
 		Promise<HttpResponse> requestPromise = httpClient.request(HttpRequest.get("http://127.0.0.1:" + port));
@@ -268,7 +268,7 @@ public final class AsyncHttpClientTest {
 			}
 		}).start();
 
-		AsyncHttpClient client = AsyncHttpClient.create(Reactor.getCurrentReactor())
+		HttpClient client = HttpClient.create(Reactor.getCurrentReactor())
 				.withKeepAliveTimeout(Duration.ofSeconds(30));
 
 		int code = await(client
@@ -315,7 +315,7 @@ public final class AsyncHttpClientTest {
 				.listen();
 
 		JmxInspector inspector = new JmxInspector();
-		AsyncHttpClient client = AsyncHttpClient.create(Reactor.getCurrentReactor())
+		HttpClient client = HttpClient.create(Reactor.getCurrentReactor())
 				.withInspector(inspector);
 
 		Exception e = awaitException(client.request(HttpRequest.get("http://127.0.0.1:" + port))
@@ -360,7 +360,7 @@ public final class AsyncHttpClientTest {
 			server.withListenAddress(new InetSocketAddress(port));
 		}
 		server.listen();
-		return AsyncHttpClient.create(Reactor.getCurrentReactor())
+		return HttpClient.create(Reactor.getCurrentReactor())
 				.withSslEnabled(createTestSslContext(), Executors.newSingleThreadExecutor())
 				.request(HttpRequest.get("http" + (ssl ? "s" : "") + "://127.0.0.1:" + port));
 	}

@@ -1,7 +1,7 @@
 package io.activej.http;
 
 import io.activej.common.StringFormatUtils;
-import io.activej.dns.AsyncDnsClient;
+import io.activej.dns.DnsClient;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -37,14 +37,14 @@ public class AsyncHttpClientBufsConsumerDecoderTest {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
-	private static AsyncHttpClient client;
+	private static HttpClient client;
 
 	@BeforeClass
 	public static void init() throws NoSuchAlgorithmException, IOException {
-		AsyncDnsClient dnsClient = AsyncDnsClient.create(Reactor.getCurrentReactor())
+		DnsClient dnsClient = DnsClient.create(Reactor.getCurrentReactor())
 				.withDnsServerAddress(InetAddress.getByName("8.8.8.8"))
 				.withTimeout(StringFormatUtils.parseDuration("5 seconds"));
-		client = AsyncHttpClient.create(Reactor.getCurrentReactor())
+		client = HttpClient.create(Reactor.getCurrentReactor())
 				.withSslEnabled(SSLContext.getDefault(), newSingleThreadExecutor())
 				.withDnsClient(dnsClient);
 	}

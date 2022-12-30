@@ -1,9 +1,9 @@
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
-import io.activej.dns.AsyncDnsClient;
-import io.activej.dns.IAsyncDnsClient;
+import io.activej.dns.DnsClient;
+import io.activej.dns.IDnsClient;
 import io.activej.eventloop.Eventloop;
-import io.activej.http.AsyncHttpClient;
+import io.activej.http.HttpClient;
 import io.activej.http.HttpRequest;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
@@ -26,7 +26,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 public final class HttpClientExample extends Launcher {
 	@Inject
-	AsyncHttpClient httpClient;
+	HttpClient httpClient;
 
 	@Inject
 	NioReactor reactor;
@@ -38,14 +38,14 @@ public final class HttpClientExample extends Launcher {
 
 	//[START REGION_1]
 	@Provides
-	AsyncHttpClient client(NioReactor reactor, IAsyncDnsClient dnsClient) {
-		return AsyncHttpClient.create(reactor)
+	HttpClient client(NioReactor reactor, IDnsClient dnsClient) {
+		return HttpClient.create(reactor)
 				.withDnsClient(dnsClient);
 	}
 
 	@Provides
-	IAsyncDnsClient dnsClient(NioReactor reactor, Config config) {
-		return AsyncDnsClient.create(reactor)
+	IDnsClient dnsClient(NioReactor reactor, Config config) {
+		return DnsClient.create(reactor)
 				.withDnsServerAddress(config.get(ofInetAddress(), "dns.address"))
 				.withTimeout(config.get(ofDuration(), "dns.timeout"));
 	}

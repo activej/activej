@@ -56,22 +56,22 @@ public class HttpServerWorkloadBenchmark extends Launcher {
 	Config config;
 
 	@Inject
-	AsyncHttpServer server;
+	HttpServer server;
 
 	@Inject
-	AsyncHttpClient client;
+	HttpClient client;
 
 	@Provides
-	AsyncHttpServer server() {
-		return AsyncHttpServer.create(serverReactor,
+	HttpServer server() {
+		return HttpServer.create(serverReactor,
 				request ->
 						HttpResponse.ok200().withPlainText("Response!!"))
 				.withListenAddresses(config.get(ofList(ofInetSocketAddress()), "address"));
 	}
 
 	@Provides
-	AsyncHttpClient client() {
-		return AsyncHttpClient.create(clientReactor)
+	HttpClient client() {
+		return HttpClient.create(clientReactor)
 				.withKeepAliveTimeout(Duration.ofSeconds(config.get(ofInteger(),
 						"client.keepAlive", KEEP_ALIVE)));
 	}

@@ -1,7 +1,7 @@
 import io.activej.eventloop.Eventloop;
-import io.activej.http.AsyncHttpServer;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
+import io.activej.http.HttpServer;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
@@ -26,8 +26,8 @@ public final class CustomHttpServerExample extends Launcher {
 
 	@Provides
 	@Eager
-	AsyncHttpServer server(NioReactor reactor, AsyncServlet servlet) {
-		return AsyncHttpServer.create(reactor, servlet).withListenPort(PORT);
+	HttpServer server(NioReactor reactor, AsyncServlet servlet) {
+		return HttpServer.create(reactor, servlet).withListenPort(PORT);
 	}
 
 	@Override

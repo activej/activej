@@ -1,6 +1,6 @@
 import io.activej.eventloop.Eventloop;
-import io.activej.http.AsyncHttpServer;
 import io.activej.http.HttpResponse;
+import io.activej.http.HttpServer;
 
 import java.io.IOException;
 
@@ -9,7 +9,7 @@ public final class HelloWorldExample {
 
 	public static void main(String[] args) throws IOException {
 		Eventloop eventloop = Eventloop.create();
-		AsyncHttpServer server = AsyncHttpServer.create(eventloop,
+		HttpServer server = HttpServer.create(eventloop,
 				request -> HttpResponse.ok200()
 						.withPlainText("Hello world!"))
 				.withListenPort(8080);

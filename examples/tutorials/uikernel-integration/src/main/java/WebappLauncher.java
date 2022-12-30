@@ -2,8 +2,8 @@ import com.google.gson.Gson;
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
 import io.activej.eventloop.Eventloop;
-import io.activej.http.AsyncHttpServer;
 import io.activej.http.AsyncServlet;
+import io.activej.http.HttpServer;
 import io.activej.http.RoutingServlet;
 import io.activej.http.StaticServlet;
 import io.activej.http.loader.StaticLoader;
@@ -27,7 +27,7 @@ public class WebappLauncher extends Launcher {
 	private static final String DEFAULT_PATH_TO_RESOURCES = "/static";
 
 	@Inject
-	AsyncHttpServer server;
+	HttpServer server;
 
 	@Provides
 	Gson gson() {
@@ -66,8 +66,8 @@ public class WebappLauncher extends Launcher {
 	}
 
 	@Provides
-	AsyncHttpServer server(NioReactor reactor, Config config, AsyncServlet servlet) {
-		return AsyncHttpServer.create(reactor, servlet)
+	HttpServer server(NioReactor reactor, Config config, AsyncServlet servlet) {
+		return HttpServer.create(reactor, servlet)
 				.withListenPort(config.get(ofInteger(), "port", DEFAULT_PORT));
 	}
 

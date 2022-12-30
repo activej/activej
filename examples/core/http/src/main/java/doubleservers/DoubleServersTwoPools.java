@@ -1,8 +1,8 @@
 package doubleservers;
 
 import io.activej.eventloop.Eventloop;
-import io.activej.http.AsyncHttpServer;
 import io.activej.http.HttpResponse;
+import io.activej.http.HttpServer;
 import io.activej.inject.Scope;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Named;
@@ -89,15 +89,15 @@ public final class DoubleServersTwoPools extends Launcher {
 
 		@Provides
 		@Named("First")
-		PrimaryServer primaryServerFirst(@Named("First") NioReactor primaryReactor, @Named("First") WorkerPool.Instances<AsyncHttpServer> workerServers) {
+		PrimaryServer primaryServerFirst(@Named("First") NioReactor primaryReactor, @Named("First") WorkerPool.Instances<HttpServer> workerServers) {
 			return PrimaryServer.create(primaryReactor, workerServers)
 					.withListenAddresses(new InetSocketAddress("localhost", port));
 		}
 
 		@Provides
 		@WorkerFirst
-		AsyncHttpServer workerServerFirst(NioReactor reactor, @WorkerId int workerId) {
-			return AsyncHttpServer.create(reactor, request -> HttpResponse.ok200()
+		HttpServer workerServerFirst(NioReactor reactor, @WorkerId int workerId) {
+			return HttpServer.create(reactor, request -> HttpResponse.ok200()
 					.withPlainText("Hello from the first server, worker #" + workerId));
 		}
 
@@ -132,15 +132,15 @@ public final class DoubleServersTwoPools extends Launcher {
 
 		@Provides
 		@Named("Second")
-		PrimaryServer primaryServerSecond(@Named("Second") NioReactor primaryReactor, @Named("Second") WorkerPool.Instances<AsyncHttpServer> workerServers) {
+		PrimaryServer primaryServerSecond(@Named("Second") NioReactor primaryReactor, @Named("Second") WorkerPool.Instances<HttpServer> workerServers) {
 			return PrimaryServer.create(primaryReactor, workerServers)
 					.withListenAddresses(new InetSocketAddress("localhost", port));
 		}
 
 		@Provides
 		@WorkerSecond
-		AsyncHttpServer workerServerSecond(NioReactor reactor, @WorkerId int workerId) {
-			return AsyncHttpServer.create(reactor, request -> HttpResponse.ok200()
+		HttpServer workerServerSecond(NioReactor reactor, @WorkerId int workerId) {
+			return HttpServer.create(reactor, request -> HttpResponse.ok200()
 					.withPlainText("Hello from the second server, worker #" + workerId));
 		}
 

@@ -20,9 +20,9 @@ import io.activej.config.Config;
 import io.activej.config.ConfigModule;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;
-import io.activej.http.AsyncHttpServer;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
+import io.activej.http.HttpServer;
 import io.activej.http.HttpUtils;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
@@ -81,15 +81,15 @@ public abstract class MultithreadedHttpServerLauncher extends Launcher {
 	}
 
 	@Provides
-	PrimaryServer primaryServer(NioReactor primaryReactor, WorkerPool.Instances<AsyncHttpServer> workerServers, Config config) {
+	PrimaryServer primaryServer(NioReactor primaryReactor, WorkerPool.Instances<HttpServer> workerServers, Config config) {
 		return PrimaryServer.create(primaryReactor, workerServers.getList())
 				.withInitializer(ofPrimaryServer(config.getChild("http")));
 	}
 
 	@Provides
 	@Worker
-	AsyncHttpServer workerServer(NioReactor reactor, AsyncServlet servlet, Config config) {
-		return AsyncHttpServer.create(reactor, servlet)
+	HttpServer workerServer(NioReactor reactor, AsyncServlet servlet, Config config) {
+		return HttpServer.create(reactor, servlet)
 				.withInitializer(ofHttpWorker(config.getChild("http")));
 	}
 

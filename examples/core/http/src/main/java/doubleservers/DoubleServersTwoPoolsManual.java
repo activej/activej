@@ -1,8 +1,8 @@
 package doubleservers;
 
 import io.activej.eventloop.Eventloop;
-import io.activej.http.AsyncHttpServer;
 import io.activej.http.HttpResponse;
+import io.activej.http.HttpServer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.Scope;
@@ -86,9 +86,9 @@ public final class DoubleServersTwoPoolsManual extends Launcher {
 			bind(PrimaryServer.class, "First")
 					.to((primaryReactor, workerServers) -> PrimaryServer.create(primaryReactor, workerServers)
 									.withListenAddresses(new InetSocketAddress("localhost", port)),
-							Key.of(NioReactor.class, "First"), new Key<WorkerPool.Instances<AsyncHttpServer>>("First") {});
-			bind(AsyncHttpServer.class)
-					.to((reactor, workerId) -> AsyncHttpServer.create(reactor, request -> HttpResponse.ok200()
+							Key.of(NioReactor.class, "First"), new Key<WorkerPool.Instances<HttpServer>>("First") {});
+			bind(HttpServer.class)
+					.to((reactor, workerId) -> HttpServer.create(reactor, request -> HttpResponse.ok200()
 									.withPlainText("Hello from the first server, worker #" + workerId)),
 							Key.of(NioReactor.class), Key.of(int.class, WorkerId.class)).in(WorkerFirst.class);
 			bind(WorkerPool.class, "First")
@@ -112,9 +112,9 @@ public final class DoubleServersTwoPoolsManual extends Launcher {
 			bind(PrimaryServer.class, "Second")
 					.to((primaryReactor, workerServers) -> PrimaryServer.create(primaryReactor, workerServers)
 									.withListenAddresses(new InetSocketAddress("localhost", port)),
-							Key.of(NioReactor.class, "Second"), new Key<WorkerPool.Instances<AsyncHttpServer>>("Second") {});
-			bind(AsyncHttpServer.class)
-					.to((reactor, workerId) -> AsyncHttpServer.create(reactor, request -> HttpResponse.ok200()
+							Key.of(NioReactor.class, "Second"), new Key<WorkerPool.Instances<HttpServer>>("Second") {});
+			bind(HttpServer.class)
+					.to((reactor, workerId) -> HttpServer.create(reactor, request -> HttpResponse.ok200()
 									.withPlainText("Hello from the second server, worker #" + workerId)),
 							Key.of(NioReactor.class), Key.of(int.class, WorkerId.class)).in(WorkerSecond.class);
 			bind(WorkerPool.class, "Second")

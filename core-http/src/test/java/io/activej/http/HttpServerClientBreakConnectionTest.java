@@ -18,8 +18,8 @@ import static io.activej.test.TestUtils.getFreePort;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 
-public class AsyncHttpServerClientBreakConnectionTest {
-	private final Logger logger = LoggerFactory.getLogger(AsyncHttpServerClientBreakConnectionTest.class);
+public class HttpServerClientBreakConnectionTest {
+	private final Logger logger = LoggerFactory.getLogger(HttpServerClientBreakConnectionTest.class);
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -28,14 +28,14 @@ public class AsyncHttpServerClientBreakConnectionTest {
 	public static final ByteBufRule bufRule = new ByteBufRule();
 
 	private final NioReactor reactor = Reactor.getCurrentReactor();
-	private AsyncHttpServer server;
-	private AsyncHttpClient client;
+	private HttpServer server;
+	private HttpClient client;
 	private int freePort;
 
 	@Before
 	public void init() throws IOException {
 		freePort = getFreePort();
-		server = AsyncHttpServer.create(reactor,
+		server = HttpServer.create(reactor,
 				request -> {
 					logger.info("Closing server...");
 					reactor.post(() ->
@@ -48,7 +48,7 @@ public class AsyncHttpServerClientBreakConnectionTest {
 				.withListenPort(freePort)
 				.withAcceptOnce();
 
-		client = AsyncHttpClient.create(reactor);
+		client = HttpClient.create(reactor);
 		server.listen();
 	}
 
