@@ -6,7 +6,7 @@ import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.hash.CrdtMap;
 import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.storage.cluster.PartitionId;
-import io.activej.crdt.wal.WriteAheadLog;
+import io.activej.crdt.wal.IWriteAheadLog;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
@@ -44,7 +44,7 @@ public final class AdderServerModule extends AbstractModule {
 	Map<Class<?>, RpcRequestHandler<?, ?>> handlers(
 			PartitionId partitionId,
 			CrdtMap<Long, SimpleSumsCrdtState> map,
-			WriteAheadLog<Long, DetailedSumsCrdtState> writeAheadLog,
+			IWriteAheadLog<Long, DetailedSumsCrdtState> writeAheadLog,
 			IdSequentialExecutor<Long> seqExecutor
 	) {
 		return Map.of(
@@ -99,7 +99,7 @@ public final class AdderServerModule extends AbstractModule {
 	@ProvidesIntoSet
 	Initializer<ServiceGraphModuleSettings> configureServiceGraph() {
 		// add logical dependency so that service graph starts CrdtMap only after it has started the WriteAheadLog
-		return settings -> settings.addDependency(new Key<CrdtMap<Long, SimpleSumsCrdtState>>() {}, new Key<WriteAheadLog<Long, DetailedSumsCrdtState>>() {});
+		return settings -> settings.addDependency(new Key<CrdtMap<Long, SimpleSumsCrdtState>>() {}, new Key<IWriteAheadLog<Long, DetailedSumsCrdtState>>() {});
 	}
 
 	@Provides

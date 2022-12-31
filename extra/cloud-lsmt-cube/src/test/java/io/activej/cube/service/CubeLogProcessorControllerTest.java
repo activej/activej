@@ -24,8 +24,8 @@ import io.activej.etl.LogOTProcessor;
 import io.activej.etl.LogOTState;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.LocalActiveFs;
+import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
-import io.activej.multilog.MultilogImpl;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.uplink.OTUplink;
 import io.activej.serializer.BinarySerializer;
@@ -49,7 +49,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 
 public final class CubeLogProcessorControllerTest extends CubeTestBase {
-	private Multilog<LogItem> multilog;
+	private IMultilog<LogItem> multilog;
 	private LocalActiveFs logsFs;
 	private CubeLogProcessorController<Long, Long> controller;
 
@@ -93,7 +93,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 		await(logsFs.start());
 		BinarySerializer<LogItem> serializer = SerializerBuilder.create(CLASS_LOADER)
 				.build(LogItem.class);
-		multilog = MultilogImpl.create(reactor, logsFs, LZ4FrameFormat.create(), serializer, NAME_PARTITION_REMAINDER_SEQ);
+		multilog = Multilog.create(reactor, logsFs, LZ4FrameFormat.create(), serializer, NAME_PARTITION_REMAINDER_SEQ);
 
 		LogOTProcessor<LogItem, CubeDiff> logProcessor = LogOTProcessor.create(
 				reactor,

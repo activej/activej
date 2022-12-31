@@ -3,7 +3,7 @@ package io.activej.ot.system;
 import io.activej.ot.OTCommit;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.TransformResult;
-import io.activej.ot.repository.OTRepository;
+import io.activej.ot.repository.IOTRepository;
 import io.activej.ot.uplink.OTUplinkImpl;
 import io.activej.ot.utils.OTRepositoryStub;
 import io.activej.ot.utils.TestAdd;
@@ -149,7 +149,7 @@ public final class OTSystemTest {
 		pullAndThenMergeAndPush(otSource, OTStateManager.create(getCurrentReactor(), SYSTEM, node, new TestOpState()));
 	}
 
-	private void pullAndThenMergeAndPush(OTRepository<String, TestOp> repository, OTStateManager<String, TestOp> stateManager) {
+	private void pullAndThenMergeAndPush(IOTRepository<String, TestOp> repository, OTStateManager<String, TestOp> stateManager) {
 		await(stateManager.checkout());
 
 		await(stateManager.sync());

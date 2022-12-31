@@ -36,7 +36,7 @@ import io.activej.common.ref.Ref;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.CubeQuery.Ordering;
-import io.activej.cube.attributes.AttributeResolver;
+import io.activej.cube.attributes.IAttributeResolver;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.exception.QueryException;
 import io.activej.cube.function.MeasuresFunction;
@@ -124,9 +124,9 @@ public final class Cube extends AbstractReactive
 	private static final class AttributeResolverContainer {
 		private final List<String> attributes = new ArrayList<>();
 		private final List<String> dimensions;
-		private final AttributeResolver resolver;
+		private final IAttributeResolver resolver;
 
-		private AttributeResolverContainer(List<String> dimensions, AttributeResolver resolver) {
+		private AttributeResolverContainer(List<String> dimensions, IAttributeResolver resolver) {
 			this.dimensions = dimensions;
 			this.resolver = resolver;
 		}
@@ -189,7 +189,7 @@ public final class Cube extends AbstractReactive
 		return new Cube(reactor, executor, classLoader, aggregationChunkStorage);
 	}
 
-	public Cube withAttribute(String attribute, AttributeResolver resolver) {
+	public Cube withAttribute(String attribute, IAttributeResolver resolver) {
 		checkArgument(!attributes.containsKey(attribute), "Attribute %s has already been defined", attribute);
 		int pos = attribute.indexOf('.');
 		if (pos == -1)

@@ -15,7 +15,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class AdderCrdtMap extends AbstractReactive implements CrdtMap<Long, SimpleSumsCrdtState>, ReactiveService {
+public class AdderCrdtMap extends AbstractReactive
+		implements CrdtMap<Long, SimpleSumsCrdtState>, ReactiveService {
 	private final Map<Long, SimpleSumsCrdtState> map = new TreeMap<>();
 
 	private final String localServerId;

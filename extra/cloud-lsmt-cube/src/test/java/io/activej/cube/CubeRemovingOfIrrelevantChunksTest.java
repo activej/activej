@@ -16,8 +16,8 @@ import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.LogOTState;
 import io.activej.fs.LocalActiveFs;
+import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
-import io.activej.multilog.MultilogImpl;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.uplink.OTUplink;
 import io.activej.serializer.SerializerBuilder;
@@ -98,7 +98,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 
 		LocalActiveFs localFs = LocalActiveFs.create(reactor, EXECUTOR, logsDir);
 		await(localFs.start());
-		Multilog<LogItem> multilog = MultilogImpl.create(reactor,
+		IMultilog<LogItem> multilog = Multilog.create(reactor,
 				localFs,
 				frameFormat,
 				SerializerBuilder.create(CLASS_LOADER).build(LogItem.class),

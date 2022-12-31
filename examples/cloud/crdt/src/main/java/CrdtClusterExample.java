@@ -3,7 +3,7 @@ import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.LWWSet;
 import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.storage.cluster.CrdtStorageCluster;
-import io.activej.crdt.storage.cluster.DiscoveryService;
+import io.activej.crdt.storage.cluster.IDiscoveryService;
 import io.activej.crdt.storage.cluster.RendezvousPartitionGroup;
 import io.activej.crdt.storage.cluster.RendezvousPartitionScheme;
 import io.activej.crdt.storage.local.CrdtStorageFs;
@@ -57,7 +57,7 @@ public final class CrdtClusterExample {
 		// cluster will make 5 copies of them across known partitions
 		CrdtStorageCluster<String, LWWSet<String>, String> cluster = CrdtStorageCluster.<String, LWWSet<String>, String>create(
 				eventloop,
-				DiscoveryService.of(RendezvousPartitionScheme.<String>create()
+				IDiscoveryService.of(RendezvousPartitionScheme.<String>create()
 						.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet())
 								.withReplicas(5))
 						.withCrdtProvider(clients::get)),

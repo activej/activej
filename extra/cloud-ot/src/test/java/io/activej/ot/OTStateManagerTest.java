@@ -1,7 +1,7 @@
 package io.activej.ot;
 
 import io.activej.async.function.AsyncSupplier;
-import io.activej.ot.repository.OTRepository;
+import io.activej.ot.repository.IOTRepository;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.OTUplink;
 import io.activej.ot.uplink.OTUplinkImpl;
@@ -476,7 +476,7 @@ public class OTStateManagerTest {
 		}
 	}
 
-	private void initializeRepository(OTRepository<Integer, TestOp> repository, OTStateManager<Integer, TestOp> stateManager) {
+	private void initializeRepository(IOTRepository<Integer, TestOp> repository, OTStateManager<Integer, TestOp> stateManager) {
 		await(repository.pushAndUpdateHead(ofRoot(0)), repository.saveSnapshot(0, List.of()));
 		await(stateManager.checkout());
 	}

@@ -7,8 +7,8 @@ import io.activej.crdt.hash.JavaCrdtMap;
 import io.activej.crdt.primitives.GSet;
 import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.storage.local.CrdtStorageMap;
+import io.activej.crdt.wal.IWriteAheadLog;
 import io.activej.crdt.wal.InMemoryWriteAheadLog;
-import io.activej.crdt.wal.WriteAheadLog;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.ProvidesIntoSet;
@@ -26,7 +26,7 @@ public class BannerServerModule extends AbstractModule {
 	@Provides
 	Map<Class<?>, RpcRequestHandler<?, ?>> handlers(
 			CrdtMap<Long, GSet<Integer>> map,
-			WriteAheadLog<Long, GSet<Integer>> writeAheadLog
+			IWriteAheadLog<Long, GSet<Integer>> writeAheadLog
 	) {
 		return Map.of(
 				PutRequest.class, (RpcRequestHandler<PutRequest, PutResponse>) request -> {
@@ -64,7 +64,7 @@ public class BannerServerModule extends AbstractModule {
 	}
 
 	@Provides
-	WriteAheadLog<Long, GSet<Integer>> writeAheadLog(Reactor reactor, CrdtFunction<GSet<Integer>> function, ICrdtStorage<Long, GSet<Integer>> storage) {
+	IWriteAheadLog<Long, GSet<Integer>> writeAheadLog(Reactor reactor, CrdtFunction<GSet<Integer>> function, ICrdtStorage<Long, GSet<Integer>> storage) {
 		return InMemoryWriteAheadLog.create(reactor, function, storage);
 	}
 
@@ -76,6 +76,6 @@ public class BannerServerModule extends AbstractModule {
 	@ProvidesIntoSet
 	Initializer<ServiceGraphModuleSettings> configureServiceGraph() {
 		// add logical dependency so that service graph starts CrdtMap only after it has started the WriteAheadLog
-		return settings -> settings.addDependency(new Key<CrdtMap<Long, GSet<Integer>>>() {}, new Key<WriteAheadLog<Long, GSet<Integer>>>() {});
+		return settings -> settings.addDependency(new Key<CrdtMap<Long, GSet<Integer>>>() {}, new Key<IWriteAheadLog<Long, GSet<Integer>>>() {});
 	}
 }

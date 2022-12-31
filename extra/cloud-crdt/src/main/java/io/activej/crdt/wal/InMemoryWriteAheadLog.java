@@ -39,7 +39,7 @@ import static io.activej.async.util.LogUtils.Level.INFO;
 import static io.activej.async.util.LogUtils.toLogger;
 
 public class InMemoryWriteAheadLog<K extends Comparable<K>, S> extends AbstractReactive
-		implements WriteAheadLog<K, S>, ReactiveService, WithInitializer<InMemoryWriteAheadLog<K, S>> {
+		implements IWriteAheadLog<K, S>, ReactiveService, WithInitializer<InMemoryWriteAheadLog<K, S>> {
 	private static final Logger logger = LoggerFactory.getLogger(InMemoryWriteAheadLog.class);
 
 	private Map<K, CrdtData<K, S>> map = new TreeMap<>();

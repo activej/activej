@@ -48,7 +48,8 @@ import static io.activej.common.Checks.checkState;
 /**
  * Represents a cache for storing resolved domains during it's time to live.
  */
-public final class DnsCache extends AbstractReactive implements WithInitializer<DnsCache> {
+public final class DnsCache extends AbstractReactive
+		implements WithInitializer<DnsCache> {
 	private static final Logger logger = LoggerFactory.getLogger(DnsCache.class);
 	private static final boolean CHECK = Checks.isEnabled(DnsCache.class);
 

@@ -17,8 +17,8 @@ import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.LogOTState;
 import io.activej.fs.LocalActiveFs;
+import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
-import io.activej.multilog.MultilogImpl;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.uplink.OTUplink;
 import io.activej.serializer.SerializerBuilder;
@@ -68,7 +68,7 @@ public final class LogToCubeTest extends CubeTestBase {
 
 		LocalActiveFs localFs = LocalActiveFs.create(reactor, EXECUTOR, logsDir);
 		await(localFs.start());
-		Multilog<TestPubRequest> multilog = MultilogImpl.create(reactor, localFs,
+		IMultilog<TestPubRequest> multilog = Multilog.create(reactor, localFs,
 				frameFormat,
 				SerializerBuilder.create(CLASS_LOADER).build(TestPubRequest.class),
 				NAME_PARTITION_REMAINDER_SEQ);

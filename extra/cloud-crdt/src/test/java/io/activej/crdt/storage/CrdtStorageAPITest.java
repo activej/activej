@@ -4,7 +4,7 @@ import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtTombstone;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.cluster.CrdtStorageCluster;
-import io.activej.crdt.storage.cluster.DiscoveryService;
+import io.activej.crdt.storage.cluster.IDiscoveryService;
 import io.activej.crdt.storage.cluster.RendezvousPartitionGroup;
 import io.activej.crdt.storage.cluster.RendezvousPartitionScheme;
 import io.activej.crdt.storage.local.CrdtStorageFs;
@@ -116,7 +116,7 @@ public class CrdtStorageAPITest {
 
 							RendezvousPartitionScheme<Integer> partitionScheme = RendezvousPartitionScheme.create(partitionGroup1, partitionGroup2)
 									.withCrdtProvider(map::get);
-							DiscoveryService<Integer> discoveryService = DiscoveryService.of(partitionScheme);
+							IDiscoveryService<Integer> discoveryService = IDiscoveryService.of(partitionScheme);
 							CrdtStorageCluster<String, Integer, Integer> storageCluster = CrdtStorageCluster.create(reactor, discoveryService, CRDT_FUNCTION);
 
 							await(storageCluster.start());

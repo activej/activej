@@ -73,7 +73,7 @@ public final class TestDyingPartitions {
 		}
 
 		cluster = CrdtStorageCluster.create(getCurrentReactor(),
-				DiscoveryService.of(
+				IDiscoveryService.of(
 						RendezvousPartitionScheme.<String>create()
 								.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet()).withReplicas(REPLICATION_COUNT).withRepartition(true))
 								.withCrdtProvider(clients::get)),

@@ -29,7 +29,7 @@ import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.CrdtTombstone;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.ICrdtStorage;
-import io.activej.crdt.storage.cluster.DiscoveryService.PartitionScheme;
+import io.activej.crdt.storage.cluster.IDiscoveryService.PartitionScheme;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamReducer;
@@ -60,7 +60,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> extends Abs
 		implements ICrdtStorage<K, S>, WithInitializer<CrdtStorageCluster<K, S, P>>, ReactiveService, ReactiveJmxBeanWithStats {
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageCluster.class, "smoothingWindow", Duration.ofMinutes(1));
 
-	private final DiscoveryService<P> discoveryService;
+	private final IDiscoveryService<P> discoveryService;
 	private final CrdtFunction<S> crdtFunction;
 	private final Map<P, ICrdtStorage<K, S>> crdtStorages = new LinkedHashMap<>();
 
@@ -91,14 +91,14 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> extends Abs
 	// endregion
 
 	// region creators
-	private CrdtStorageCluster(Reactor reactor, DiscoveryService<P> discoveryService, CrdtFunction<S> crdtFunction) {
+	private CrdtStorageCluster(Reactor reactor, IDiscoveryService<P> discoveryService, CrdtFunction<S> crdtFunction) {
 		super(reactor);
 		this.discoveryService = discoveryService;
 		this.crdtFunction = crdtFunction;
 	}
 
 	public static <K extends Comparable<K>, S, P> CrdtStorageCluster<K, S, P> create(Reactor reactor,
-			DiscoveryService<P> discoveryService,
+			IDiscoveryService<P> discoveryService,
 			CrdtFunction<S> crdtFunction) {
 		return new CrdtStorageCluster<>(reactor, discoveryService, crdtFunction);
 	}

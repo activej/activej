@@ -2,7 +2,7 @@ package io.activej.ot.utils;
 
 import io.activej.ot.OTCommit;
 import io.activej.ot.OTCommitFactory;
-import io.activej.ot.repository.OTRepository;
+import io.activej.ot.repository.IOTRepository;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 
@@ -15,7 +15,7 @@ import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.not;
 import static java.util.stream.Collectors.toSet;
 
-public final class OTRepositoryStub<K, D> implements OTRepository<K, D> {
+public final class OTRepositoryStub<K, D> implements IOTRepository<K, D> {
 	public Supplier<K> revisionIdSupplier;
 	private OTCommitFactory<K, D> commitFactory;
 

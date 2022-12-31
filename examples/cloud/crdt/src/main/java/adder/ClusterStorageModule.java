@@ -45,7 +45,7 @@ public final class ClusterStorageModule extends AbstractModule {
 
 	@Provides
 	CrdtStorageCluster<Long, DetailedSumsCrdtState, PartitionId> clusterStorage(Reactor reactor,
-			DiscoveryService<PartitionId> discoveryService, CrdtFunction<DetailedSumsCrdtState> crdtFunction) {
+			IDiscoveryService<PartitionId> discoveryService, CrdtFunction<DetailedSumsCrdtState> crdtFunction) {
 		return CrdtStorageCluster.create(reactor, discoveryService, crdtFunction);
 	}
 
@@ -58,7 +58,7 @@ public final class ClusterStorageModule extends AbstractModule {
 	}
 
 	@Provides
-	DiscoveryService<PartitionId> discoveryService(NioReactor reactor,
+	IDiscoveryService<PartitionId> discoveryService(NioReactor reactor,
 			@Local ICrdtStorage<Long, DetailedSumsCrdtState> localStorage, CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer, Config config,
 			PartitionId localPartitionId) throws CrdtException {
 		Path pathToFile = config.get(ofPath(), "crdt.cluster.partitionFile", DEFAULT_PARTITIONS_FILE);

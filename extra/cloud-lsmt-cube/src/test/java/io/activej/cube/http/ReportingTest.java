@@ -21,8 +21,8 @@ import io.activej.etl.LogOTState;
 import io.activej.fs.LocalActiveFs;
 import io.activej.http.HttpClient;
 import io.activej.http.HttpServer;
+import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
-import io.activej.multilog.MultilogImpl;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.uplink.OTUplink;
 import io.activej.reactor.Reactor;
@@ -289,7 +289,7 @@ public final class ReportingTest extends CubeTestBase {
 
 		LocalActiveFs activeFs = LocalActiveFs.create(reactor, EXECUTOR, temporaryFolder.newFolder().toPath());
 		await(activeFs.start());
-		Multilog<LogItem> multilog = MultilogImpl.create(reactor,
+		IMultilog<LogItem> multilog = Multilog.create(reactor,
 				activeFs,
 				LZ4FrameFormat.create(),
 				SerializerBuilder.create(CLASS_LOADER).build(LogItem.class),

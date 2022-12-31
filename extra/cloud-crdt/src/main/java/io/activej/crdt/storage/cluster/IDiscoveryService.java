@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
-public interface DiscoveryService<P> {
+public interface IDiscoveryService<P> {
 
 	AsyncSupplier<PartitionScheme<P>> discover();
 
@@ -46,7 +46,7 @@ public interface DiscoveryService<P> {
 		boolean isReadValid(Collection<P> alive);
 	}
 
-	static <P> DiscoveryService<P> of(PartitionScheme<P> partitionScheme) {
+	static <P> IDiscoveryService<P> of(PartitionScheme<P> partitionScheme) {
 		return () -> new AsyncSupplier<>() {
 			int i = 0;
 

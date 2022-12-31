@@ -2,7 +2,7 @@ package io.activej.crdt.storage.cluster;
 
 import io.activej.common.initializer.WithInitializer;
 import io.activej.crdt.storage.ICrdtStorage;
-import io.activej.crdt.storage.cluster.DiscoveryService.PartitionScheme;
+import io.activej.crdt.storage.cluster.IDiscoveryService.PartitionScheme;
 import io.activej.rpc.client.sender.RpcStrategy;
 import io.activej.rpc.client.sender.RpcStrategyRendezvousHashing;
 import io.activej.rpc.client.sender.RpcStrategySharding;

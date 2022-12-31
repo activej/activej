@@ -40,7 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
-public class MultilogImplTest {
+public class MultilogTest {
 	@Rule
 	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
@@ -72,7 +72,7 @@ public class MultilogImplTest {
 		Reactor reactor = Reactor.getCurrentReactor();
 		LocalActiveFs fs = LocalActiveFs.create(reactor, newSingleThreadExecutor(), temporaryFolder.getRoot().toPath());
 		await(fs.start());
-		Multilog<String> multilog = MultilogImpl.create(reactor, fs, frameFormat, BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ);
+		IMultilog<String> multilog = Multilog.create(reactor, fs, frameFormat, BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ);
 		String testPartition = "testPartition";
 
 		List<String> values = List.of("test1", "test2", "test3");
@@ -89,7 +89,7 @@ public class MultilogImplTest {
 		Path storage = temporaryFolder.getRoot().toPath();
 		LocalActiveFs fs = LocalActiveFs.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
-		Multilog<String> multilog = MultilogImpl.create(reactor, fs,
+		IMultilog<String> multilog = Multilog.create(reactor, fs,
 				frameFormat,
 				BinarySerializers.UTF8_SERIALIZER,
 				NAME_PARTITION_REMAINDER_SEQ)
@@ -120,7 +120,7 @@ public class MultilogImplTest {
 		Path storage = temporaryFolder.getRoot().toPath();
 		LocalActiveFs fs = LocalActiveFs.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
-		Multilog<String> multilog = MultilogImpl.create(reactor, fs,
+		IMultilog<String> multilog = Multilog.create(reactor, fs,
 				frameFormat,
 				BinarySerializers.UTF8_SERIALIZER,
 				NAME_PARTITION_REMAINDER_SEQ)
@@ -160,7 +160,7 @@ public class MultilogImplTest {
 		Path storage = temporaryFolder.getRoot().toPath();
 		LocalActiveFs fs = LocalActiveFs.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
-		Multilog<String> multilog = MultilogImpl.create(reactor, fs,
+		IMultilog<String> multilog = Multilog.create(reactor, fs,
 				frameFormat,
 				BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ)
 				.withIgnoreMalformedLogs(true);
@@ -195,7 +195,7 @@ public class MultilogImplTest {
 
 		await(fs.start());
 
-		Multilog<String> multilog = MultilogImpl.create(reactor,
+		IMultilog<String> multilog = Multilog.create(reactor,
 				fs,
 				frameFormat,
 				BinarySerializers.UTF8_SERIALIZER,
@@ -233,7 +233,7 @@ public class MultilogImplTest {
 		assertEquals(position, await(supplierWithResult.getResult()).getPosition());
 	}
 
-	private static <T> List<T> readLog(Multilog<T> multilog, String partition) {
+	private static <T> List<T> readLog(IMultilog<T> multilog, String partition) {
 		StreamConsumerToList<T> listConsumer = StreamConsumerToList.create();
 		await(StreamSupplierWithResult.ofPromise(
 				multilog.read(partition, new LogFile("", 0), 0, null))

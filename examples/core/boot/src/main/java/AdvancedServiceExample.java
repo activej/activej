@@ -51,7 +51,8 @@ public class AdvancedServiceExample extends Launcher {
 	}
 
 	@SuppressWarnings("FieldCanBeLocal")
-	private static class AuthService extends AbstractReactive implements ReactiveService {
+	private static class AuthService extends AbstractReactive
+			implements ReactiveService {
 		private final Executor executor;
 		private final DBService dbService;
 

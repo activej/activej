@@ -76,7 +76,7 @@ public final class TestCrdtCluster {
 		}
 		CrdtStorageCluster<String, Integer, String> cluster = CrdtStorageCluster.create(
 				reactor,
-				DiscoveryService.of(
+				IDiscoveryService.of(
 						RendezvousPartitionScheme.<String>create()
 								.withPartitionGroup(
 										RendezvousPartitionGroup.create(clients.keySet())
@@ -139,7 +139,7 @@ public final class TestCrdtCluster {
 
 		CrdtStorageMap<String, Set<Integer>> localStorage = CrdtStorageMap.create(reactor, union);
 		CrdtStorageCluster<String, Set<Integer>, String> cluster = CrdtStorageCluster.create(reactor,
-				DiscoveryService.of(
+				IDiscoveryService.of(
 						RendezvousPartitionScheme.<String>create()
 								.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet()).withReplicas(REPLICATION_COUNT).withRepartition(true))
 								.withCrdtProvider(clients::get)),

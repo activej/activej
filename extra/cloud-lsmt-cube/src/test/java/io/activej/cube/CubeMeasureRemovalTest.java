@@ -17,8 +17,8 @@ import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.LogOTState;
 import io.activej.fs.LocalActiveFs;
+import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
-import io.activej.multilog.MultilogImpl;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.uplink.OTUplink;
 import io.activej.serializer.BinarySerializer;
@@ -50,7 +50,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 	private static final FrameFormat FRAME_FORMAT = LZ4FrameFormat.create();
 
 	private IAggregationChunkStorage<Long> aggregationChunkStorage;
-	private Multilog<LogItem> multilog;
+	private IMultilog<LogItem> multilog;
 	private Path aggregationsDir;
 	private Path logsDir;
 
@@ -65,7 +65,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		BinarySerializer<LogItem> serializer = SerializerBuilder.create(CLASS_LOADER).build(LogItem.class);
 		LocalActiveFs localFs = LocalActiveFs.create(reactor, EXECUTOR, logsDir);
 		await(localFs.start());
-		multilog = MultilogImpl.create(reactor,
+		multilog = Multilog.create(reactor,
 				localFs,
 				LZ4FrameFormat.create(),
 				serializer,
@@ -102,7 +102,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 		LocalActiveFs localFs = LocalActiveFs.create(reactor, EXECUTOR, logsDir);
 		await(localFs.start());
-		Multilog<LogItem> multilog = MultilogImpl.create(reactor,
+		IMultilog<LogItem> multilog = Multilog.create(reactor,
 				localFs,
 				LZ4FrameFormat.create(),
 				SerializerBuilder.create(CLASS_LOADER).build(LogItem.class),

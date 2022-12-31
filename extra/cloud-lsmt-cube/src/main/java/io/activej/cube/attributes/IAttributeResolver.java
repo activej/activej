@@ -21,7 +21,7 @@ import io.activej.promise.Promise;
 import java.util.List;
 import java.util.Map;
 
-public interface AttributeResolver {
+public interface IAttributeResolver {
 	Class<?>[] getKeyTypes();
 
 	Map<String, Class<?>> getAttributeTypes();

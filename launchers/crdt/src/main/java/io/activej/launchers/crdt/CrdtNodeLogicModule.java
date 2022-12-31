@@ -82,7 +82,7 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 	}
 
 	@Provides
-	DiscoveryService<PartitionId> discoveryService(NioReactor reactor,
+	IDiscoveryService<PartitionId> discoveryService(NioReactor reactor,
 			PartitionId localPartitionId, CrdtStorageMap<K, S> localCrdtStorage, CrdtDescriptor<K, S> descriptor,
 			Config config) {
 		RendezvousPartitionScheme<PartitionId> scheme = config.get(ofRendezvousPartitionScheme(ofPartitionId()), "crdt.cluster")
@@ -94,7 +94,7 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 					return CrdtStorageClient.create(reactor, crdtAddress, descriptor.serializer());
 				});
 
-		return DiscoveryService.of(scheme);
+		return IDiscoveryService.of(scheme);
 	}
 
 	@Provides
@@ -104,7 +104,7 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 
 	@Provides
 	CrdtStorageCluster<K, S, PartitionId> clusterCrdtClient(Reactor reactor,
-			DiscoveryService<PartitionId> discoveryService, CrdtDescriptor<K, S> descriptor) {
+			IDiscoveryService<PartitionId> discoveryService, CrdtDescriptor<K, S> descriptor) {
 		return CrdtStorageCluster.create(reactor, discoveryService, descriptor.crdtFunction());
 	}
 

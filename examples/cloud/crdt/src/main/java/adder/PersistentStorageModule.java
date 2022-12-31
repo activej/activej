@@ -7,8 +7,8 @@ import io.activej.crdt.storage.ICrdtStorage;
 import io.activej.crdt.storage.local.CrdtStorageFs;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.crdt.wal.FileWriteAheadLog;
+import io.activej.crdt.wal.IWriteAheadLog;
 import io.activej.crdt.wal.WalUploader;
-import io.activej.crdt.wal.WriteAheadLog;
 import io.activej.fs.IActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.inject.Key;
@@ -37,7 +37,7 @@ public final class PersistentStorageModule extends AbstractModule {
 	}
 
 	@Provides
-	WriteAheadLog<Long, DetailedSumsCrdtState> writeAheadLog(
+	IWriteAheadLog<Long, DetailedSumsCrdtState> writeAheadLog(
 			Reactor reactor,
 			Executor executor,
 			CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer,

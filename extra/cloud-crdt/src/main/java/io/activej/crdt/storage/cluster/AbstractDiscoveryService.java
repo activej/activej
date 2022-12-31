@@ -14,7 +14,7 @@ import java.util.function.Function;
 import static io.activej.fs.util.JsonUtils.fromJson;
 
 public abstract class AbstractDiscoveryService<D extends AbstractDiscoveryService<D>> extends AbstractReactive
-		implements DiscoveryService<PartitionId> {
+		implements IDiscoveryService<PartitionId> {
 	protected static final TypeT<List<RendezvousPartitionGroup<PartitionId>>> PARTITION_GROUPS_TYPE = new TypeT<>() {};
 
 	protected @Nullable Function<PartitionId, RpcStrategy> rpcProvider;

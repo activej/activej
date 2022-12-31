@@ -47,7 +47,8 @@ import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.nonNullElseEmpty;
 import static io.activej.promise.Promises.sequence;
 
-public final class OTStateManager<K, D> extends AbstractReactive implements ReactiveService, WithInitializer<OTStateManager<K, D>> {
+public final class OTStateManager<K, D> extends AbstractReactive
+		implements ReactiveService, WithInitializer<OTStateManager<K, D>> {
 	private static final Logger logger = LoggerFactory.getLogger(OTStateManager.class);
 
 	private final OTSystem<D> otSystem;
