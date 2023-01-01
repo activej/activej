@@ -28,7 +28,7 @@ public class RpcStrategySingleServerTest {
 		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
 		RpcSenderStub connection = new RpcSenderStub();
 		pool.put(address, connection);
-		RpcStrategySingleServer strategySingleServer = RpcStrategySingleServer.create(address);
+		RpcStrategies.SingleServer strategySingleServer = RpcStrategies.SingleServer.create(address);
 
 		RpcSender sender = strategySingleServer.createSender(pool);
 
@@ -39,7 +39,7 @@ public class RpcStrategySingleServerTest {
 	public void itShouldNotBeCreatedWhenThereIsNoConnectionInPool() {
 		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
 		// no connections were added to pool
-		RpcStrategySingleServer strategySingleServer = RpcStrategySingleServer.create(address);
+		RpcStrategies.SingleServer strategySingleServer = RpcStrategies.SingleServer.create(address);
 
 		RpcSender sender = strategySingleServer.createSender(pool);
 
@@ -51,7 +51,7 @@ public class RpcStrategySingleServerTest {
 		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
 		RpcSenderStub connection = new RpcSenderStub();
 		pool.put(address, connection);
-		RpcStrategySingleServer strategySingleServer = RpcStrategySingleServer.create(address);
+		RpcStrategies.SingleServer strategySingleServer = RpcStrategies.SingleServer.create(address);
 		RpcSender sender = strategySingleServer.createSender(pool);
 		int calls = 100;
 		int timeout = 50;

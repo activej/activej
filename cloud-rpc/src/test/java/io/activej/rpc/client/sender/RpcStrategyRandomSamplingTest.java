@@ -19,20 +19,20 @@ public class RpcStrategyRandomSamplingTest {
 	public void distributesRequestsProperlyAccordingToWeights() {
 		// init subStrategies
 		RpcSenderStub sender_1 = new RpcSenderStub();
-		RpcStrategyStub strategy_1 = new RpcStrategyStub(sender_1);
+		StubRpcStrategy strategy_1 = new StubRpcStrategy(sender_1);
 		int strategy_1_weight = 2;
 
 		RpcSenderStub sender_2 = new RpcSenderStub();
-		RpcStrategyStub strategy_2 = new RpcStrategyStub(sender_2);
+		StubRpcStrategy strategy_2 = new StubRpcStrategy(sender_2);
 		int strategy_2_weight = 3;
 
 		RpcSenderStub sender_3 = new RpcSenderStub();
-		RpcStrategyStub strategy_3 = new RpcStrategyStub(sender_3);
+		StubRpcStrategy strategy_3 = new StubRpcStrategy(sender_3);
 		int strategy_3_weight = 7;
 
 		// init RandomSamplingStrategy
-		RpcStrategyRandomSampling randomSamplingStrategy =
-				RpcStrategyRandomSampling.create()
+		RpcStrategies.RandomSampling randomSamplingStrategy =
+				RpcStrategies.RandomSampling.create()
 						.add(strategy_1_weight, strategy_1)
 						.add(strategy_2_weight, strategy_2)
 						.add(strategy_3_weight, strategy_3);
@@ -65,20 +65,20 @@ public class RpcStrategyRandomSamplingTest {
 	public void doesNotSendRequestsToStrategiesWithWeightZero() {
 		// init subStrategies
 		RpcSenderStub sender_1 = new RpcSenderStub();
-		RpcStrategyStub strategy_1 = new RpcStrategyStub(sender_1);
+		StubRpcStrategy strategy_1 = new StubRpcStrategy(sender_1);
 		int strategy_1_weight = 2;
 
 		RpcSenderStub sender_2 = new RpcSenderStub();
-		RpcStrategyStub strategy_2 = new RpcStrategyStub(sender_2);
+		StubRpcStrategy strategy_2 = new StubRpcStrategy(sender_2);
 		int zero_weight = 0;
 
 		RpcSenderStub sender_3 = new RpcSenderStub();
-		RpcStrategyStub strategy_3 = new RpcStrategyStub(sender_3);
+		StubRpcStrategy strategy_3 = new StubRpcStrategy(sender_3);
 		int strategy_3_weight = 8;
 
 		// init RandomSamplingStrategy
-		RpcStrategyRandomSampling randomSamplingStrategy =
-				RpcStrategyRandomSampling.create()
+		RpcStrategies.RandomSampling randomSamplingStrategy =
+				RpcStrategies.RandomSampling.create()
 						.add(strategy_1_weight, strategy_1)
 						.add(zero_weight, strategy_2)
 						.add(strategy_3_weight, strategy_3);
@@ -97,10 +97,10 @@ public class RpcStrategyRandomSamplingTest {
 
 	}
 
-	private static final class RpcStrategyStub implements RpcStrategy {
+	private static final class StubRpcStrategy implements RpcStrategy {
 		private final RpcSender sender;
 
-		public RpcStrategyStub(RpcSender sender) {
+		public StubRpcStrategy(RpcSender sender) {
 			this.sender = sender;
 		}
 

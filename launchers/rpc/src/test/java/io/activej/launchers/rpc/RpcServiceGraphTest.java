@@ -11,7 +11,6 @@ import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.AsyncRpcClient;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.RpcStrategies;
-import io.activej.rpc.client.sender.RpcStrategyRoundRobin;
 import io.activej.rpc.protocol.RpcException;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraph;
@@ -75,7 +74,7 @@ public class RpcServiceGraphTest {
 					AsyncRpcClient client(NioReactor reactor) {
 						return RpcClient.create(reactor)
 								.withMessageTypes(String.class)
-								.withStrategy(RpcStrategyRoundRobin.create(
+								.withStrategy(RpcStrategies.RoundRobin.create(
 												RpcStrategies.servers(
 														new InetSocketAddress(port),
 														new InetSocketAddress(getFreePort())

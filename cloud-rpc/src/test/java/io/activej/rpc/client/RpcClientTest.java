@@ -7,9 +7,8 @@ import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
+import io.activej.rpc.client.sender.RpcStrategies;
 import io.activej.rpc.client.sender.RpcStrategy;
-import io.activej.rpc.client.sender.RpcStrategyFirstValidResult;
-import io.activej.rpc.client.sender.RpcStrategyRoundRobin;
 import io.activej.rpc.protocol.RpcException;
 import io.activej.rpc.server.RpcServer;
 import io.activej.test.rules.ActivePromisesRule;
@@ -112,7 +111,7 @@ public final class RpcClientTest {
 
 	@Test
 	public void testSendRequest() {
-		initRpcClient(RpcStrategyRoundRobin.create(getAddresses(0, 2, 4)));
+		initRpcClient(RpcStrategies.RoundRobin.create(getAddresses(0, 2, 4)));
 
 		int response1 = await(() -> rpcClient.sendRequest(REQUEST));
 		int response2 = await(() -> rpcClient.sendRequest(REQUEST));
@@ -127,7 +126,7 @@ public final class RpcClientTest {
 
 	@Test
 	public void testChangeStrategyNewAddresses() {
-		initRpcClient(RpcStrategyRoundRobin.create(getAddresses(0, 1)));
+		initRpcClient(RpcStrategies.RoundRobin.create(getAddresses(0, 1)));
 
 		int response1 = await(() -> rpcClient.sendRequest(REQUEST));
 		int response2 = await(() -> rpcClient.sendRequest(REQUEST));
@@ -135,7 +134,7 @@ public final class RpcClientTest {
 		assertEquals(0, response1);
 		assertEquals(1, response2);
 
-		await(() -> rpcClient.changeStrategy(RpcStrategyRoundRobin.create(getAddresses(2, 3)), false));
+		await(() -> rpcClient.changeStrategy(RpcStrategies.RoundRobin.create(getAddresses(2, 3)), false));
 
 		int response3 = await(() -> rpcClient.sendRequest(REQUEST));
 		int response4 = await(() -> rpcClient.sendRequest(REQUEST));
@@ -146,7 +145,7 @@ public final class RpcClientTest {
 
 	@Test
 	public void testChangeStrategyAdditionalAddresses() {
-		initRpcClient(RpcStrategyRoundRobin.create(getAddresses(0, 1)));
+		initRpcClient(RpcStrategies.RoundRobin.create(getAddresses(0, 1)));
 
 		int response1 = await(() -> rpcClient.sendRequest(REQUEST));
 		int response2 = await(() -> rpcClient.sendRequest(REQUEST));
@@ -154,7 +153,7 @@ public final class RpcClientTest {
 		assertEquals(0, response1);
 		assertEquals(1, response2);
 
-		await(() -> rpcClient.changeStrategy(RpcStrategyRoundRobin.create(getAddresses(0, 1, 2, 3)), false));
+		await(() -> rpcClient.changeStrategy(RpcStrategies.RoundRobin.create(getAddresses(0, 1, 2, 3)), false));
 
 		int response3 = await(() -> rpcClient.sendRequest(REQUEST));
 		int response4 = await(() -> rpcClient.sendRequest(REQUEST));
@@ -169,7 +168,7 @@ public final class RpcClientTest {
 
 	@Test
 	public void testChangeStrategyMixedAddresses() {
-		initRpcClient(RpcStrategyRoundRobin.create(getAddresses(0, 1)));
+		initRpcClient(RpcStrategies.RoundRobin.create(getAddresses(0, 1)));
 
 		int response1 = await(() -> rpcClient.sendRequest(REQUEST));
 		int response2 = await(() -> rpcClient.sendRequest(REQUEST));
@@ -177,7 +176,7 @@ public final class RpcClientTest {
 		assertEquals(0, response1);
 		assertEquals(1, response2);
 
-		await(() -> rpcClient.changeStrategy(RpcStrategyRoundRobin.create(getAddresses(0, 2, 3)), false));
+		await(() -> rpcClient.changeStrategy(RpcStrategies.RoundRobin.create(getAddresses(0, 2, 3)), false));
 
 		int response3 = await(() -> rpcClient.sendRequest(REQUEST));
 		int response4 = await(() -> rpcClient.sendRequest(REQUEST));
@@ -190,11 +189,11 @@ public final class RpcClientTest {
 
 	@Test
 	public void testChangeStrategyOngoingRequests() {
-		initRpcClient(RpcStrategyRoundRobin.create(getAddresses(0, 1)));
+		initRpcClient(RpcStrategies.RoundRobin.create(getAddresses(0, 1)));
 
 		await(() -> {
 			RefBoolean changed = new RefBoolean(false);
-			rpcClient.changeStrategy(RpcStrategyRoundRobin.create(getAddresses(0, 3)), false)
+			rpcClient.changeStrategy(RpcStrategies.RoundRobin.create(getAddresses(0, 3)), false)
 					.whenResult(() -> changed.set(true));
 
 			RefInt counter = new RefInt(100);
@@ -205,13 +204,13 @@ public final class RpcClientTest {
 
 	@Test
 	public void testChangeStrategySameAddresses() {
-		initRpcClient(RpcStrategyRoundRobin.create(getAddresses(0, 1)));
+		initRpcClient(RpcStrategies.RoundRobin.create(getAddresses(0, 1)));
 
 		await(() -> {
-			Promise<Void> changePromiseSame = rpcClient.changeStrategy(RpcStrategyFirstValidResult.create(getAddresses(0, 1)), false);
+			Promise<Void> changePromiseSame = rpcClient.changeStrategy(RpcStrategies.FirstValidResult.create(getAddresses(0, 1)), false);
 			assertTrue(changePromiseSame.isResult());
 
-			Promise<Void> changePromiseDifferent = rpcClient.changeStrategy(RpcStrategyFirstValidResult.create(getAddresses(0, 1, 2)), false);
+			Promise<Void> changePromiseDifferent = rpcClient.changeStrategy(RpcStrategies.FirstValidResult.create(getAddresses(0, 1, 2)), false);
 			assertFalse(changePromiseDifferent.isComplete());
 
 			return changePromiseDifferent;
@@ -220,12 +219,12 @@ public final class RpcClientTest {
 
 	@Test
 	public void testChangeStrategyMultipleTimes() {
-		initRpcClient(RpcStrategyRoundRobin.create(getAddresses(0, 1)));
+		initRpcClient(RpcStrategies.RoundRobin.create(getAddresses(0, 1)));
 
 		await(() -> {
-			Promise<Void> first = rpcClient.changeStrategy(RpcStrategyRoundRobin.create(getAddresses(0, 1, 2)), false);
-			Promise<Void> second = rpcClient.changeStrategy(RpcStrategyRoundRobin.create(getAddresses(0, 1, 2, 3)), false);
-			Promise<Void> third = rpcClient.changeStrategy(RpcStrategyRoundRobin.create(getAddresses(1, 3, 4, 5)), false);
+			Promise<Void> first = rpcClient.changeStrategy(RpcStrategies.RoundRobin.create(getAddresses(0, 1, 2)), false);
+			Promise<Void> second = rpcClient.changeStrategy(RpcStrategies.RoundRobin.create(getAddresses(0, 1, 2, 3)), false);
+			Promise<Void> third = rpcClient.changeStrategy(RpcStrategies.RoundRobin.create(getAddresses(1, 3, 4, 5)), false);
 
 			assertTrue(first.isException());
 			assertTrue(first.getException() instanceof RpcException);
@@ -251,10 +250,10 @@ public final class RpcClientTest {
 
 	@Test
 	public void testChangeStrategyClientStop() {
-		initRpcClient(RpcStrategyRoundRobin.create(getAddresses(0, 1)));
+		initRpcClient(RpcStrategies.RoundRobin.create(getAddresses(0, 1)));
 
 		Exception exception = awaitException(() -> {
-			Promise<Void> changeStrategyPromise = rpcClient.changeStrategy(RpcStrategyRoundRobin.create(getAddresses(1, 2)), false);
+			Promise<Void> changeStrategyPromise = rpcClient.changeStrategy(RpcStrategies.RoundRobin.create(getAddresses(1, 2)), false);
 			rpcClient.stop();
 			return changeStrategyPromise;
 		});
@@ -265,7 +264,7 @@ public final class RpcClientTest {
 
 	@Test
 	public void testChangeStrategyFailingServers() {
-		initRpcClient(RpcStrategyRoundRobin.create(getAddresses(0, 1)));
+		initRpcClient(RpcStrategies.RoundRobin.create(getAddresses(0, 1)));
 
 		int response1 = await(() -> rpcClient.sendRequest(REQUEST));
 		int response2 = await(() -> rpcClient.sendRequest(REQUEST));
@@ -273,7 +272,7 @@ public final class RpcClientTest {
 		assertEquals(0, response1);
 		assertEquals(1, response2);
 
-		Exception exception = awaitException(() -> rpcClient.changeStrategy(RpcStrategyRoundRobin.create(getAddresses(6, 7)), false));
+		Exception exception = awaitException(() -> rpcClient.changeStrategy(RpcStrategies.RoundRobin.create(getAddresses(6, 7)), false));
 
 		assertTrue(exception instanceof RpcException);
 		assertEquals("Could not establish connection", exception.getMessage());
@@ -287,7 +286,7 @@ public final class RpcClientTest {
 
 	@Test
 	public void testMultipleChangeStrategyFailingServers() {
-		initRpcClient(RpcStrategyRoundRobin.create(getAddresses(0, 1)));
+		initRpcClient(RpcStrategies.RoundRobin.create(getAddresses(0, 1)));
 
 		int response1 = await(() -> rpcClient.sendRequest(REQUEST));
 		int response2 = await(() -> rpcClient.sendRequest(REQUEST));
@@ -295,20 +294,19 @@ public final class RpcClientTest {
 		assertEquals(0, response1);
 		assertEquals(1, response2);
 
-		await(() -> rpcClient.changeStrategy(RpcStrategyRoundRobin.create(getAddresses(6, 7)), false)
+		await(() -> rpcClient.changeStrategy(RpcStrategies.RoundRobin.create(getAddresses(6, 7)), false)
 				.then(($, e) -> {
 					assertTrue(e instanceof RpcException);
 					assertEquals("Could not establish connection", e.getMessage());
 
-					return rpcClient.changeStrategy(RpcStrategyRoundRobin.create(getAddresses(8, 9)), false);
+					return rpcClient.changeStrategy(RpcStrategies.RoundRobin.create(getAddresses(8, 9)), false);
 				})
 				.then(($, e) -> {
 					assertTrue(e instanceof RpcException);
 					assertEquals("Could not establish connection", e.getMessage());
 
-					return rpcClient.changeStrategy(RpcStrategyRoundRobin.create(getAddresses(3, 4)), false);
+					return rpcClient.changeStrategy(RpcStrategies.RoundRobin.create(getAddresses(3, 4)), false);
 				}));
-
 
 		int response3 = await(() -> rpcClient.sendRequest(REQUEST));
 		int response4 = await(() -> rpcClient.sendRequest(REQUEST));
@@ -319,7 +317,7 @@ public final class RpcClientTest {
 
 	@Test
 	public void testChangeStrategyRetry() {
-		initRpcClient(RpcStrategyRoundRobin.create(getAddresses(0, 1)));
+		initRpcClient(RpcStrategies.RoundRobin.create(getAddresses(0, 1)));
 
 		int response1 = await(() -> rpcClient.sendRequest(REQUEST));
 		int response2 = await(() -> rpcClient.sendRequest(REQUEST));
@@ -328,7 +326,7 @@ public final class RpcClientTest {
 		assertEquals(1, response2);
 
 		await(() -> {
-			Promise<Void> changeStrategy = rpcClient.changeStrategy(RpcStrategyRoundRobin.create(getAddresses(6, 7)), true);
+			Promise<Void> changeStrategy = rpcClient.changeStrategy(RpcStrategies.RoundRobin.create(getAddresses(6, 7)), true);
 
 			RefBoolean serversListen = new RefBoolean(false);
 			Reactor.getCurrentReactor().delay(Duration.ofMillis(100), () -> {
@@ -360,10 +358,10 @@ public final class RpcClientTest {
 
 	@Test
 	public void testChangeStrategyRetryClientStop() {
-		initRpcClient(RpcStrategyRoundRobin.create(getAddresses(0, 1)));
+		initRpcClient(RpcStrategies.RoundRobin.create(getAddresses(0, 1)));
 
 		Exception exception = awaitException(() -> {
-			Promise<Void> changeStrategy = rpcClient.changeStrategy(RpcStrategyRoundRobin.create(getAddresses(6, 7)), true);
+			Promise<Void> changeStrategy = rpcClient.changeStrategy(RpcStrategies.RoundRobin.create(getAddresses(6, 7)), true);
 
 			RefBoolean clientStopped = new RefBoolean(false);
 			Reactor.getCurrentReactor().delay(Duration.ofMillis(100), () -> {
@@ -383,17 +381,17 @@ public final class RpcClientTest {
 
 	@Test
 	public void testChangeStrategyRetryChangedStrategy() {
-		initRpcClient(RpcStrategyRoundRobin.create(getAddresses(0, 1)));
+		initRpcClient(RpcStrategies.RoundRobin.create(getAddresses(0, 1)));
 
 		Exception exception = awaitException(() -> {
-			Promise<Void> changeStrategy = rpcClient.changeStrategy(RpcStrategyRoundRobin.create(getAddresses(6, 7)), true);
+			Promise<Void> changeStrategy = rpcClient.changeStrategy(RpcStrategies.RoundRobin.create(getAddresses(6, 7)), true);
 
 			RefBoolean strategyChanged = new RefBoolean(false);
 			Reactor.getCurrentReactor().delay(Duration.ofMillis(100), () -> {
 				assertFalse(changeStrategy.isComplete());
 
 				strategyChanged.set(true);
-				rpcClient.changeStrategy(RpcStrategyRoundRobin.create(getAddresses(1, 2, 3, 4)), false);
+				rpcClient.changeStrategy(RpcStrategies.RoundRobin.create(getAddresses(1, 2, 3, 4)), false);
 			});
 
 			return changeStrategy

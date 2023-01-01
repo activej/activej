@@ -89,9 +89,9 @@ public final class RpcBlockingTest {
 		RpcClient client = RpcClient.create(Reactor.getCurrentReactor())
 				.withMessageTypes(HelloRequest.class, HelloResponse.class)
 				.withStrategy(
-						RpcStrategyRoundRobin.create(
+						RpcStrategies.RoundRobin.create(
 								server(address1),
-								RpcStrategySharding.create((HelloRequest item) -> {
+								RpcStrategies.Sharding.create((HelloRequest item) -> {
 											int shard = 0;
 											if (item.name.startsWith("S")) {
 												shard = 1;
