@@ -542,7 +542,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 * function applied either to an exception of {@code this} promise.
 	 */
 	default @NotNull <E extends Exception> Promise<T> mapException(@NotNull Class<E> clazz,
-			@NotNull FunctionEx<@NotNull E, @NotNull Exception> exceptionFn) {
+			@NotNull FunctionEx<? super @NotNull E, ? extends @NotNull Exception> exceptionFn) {
 		//noinspection unchecked
 		return mapException(e -> clazz.isAssignableFrom(e.getClass()), (FunctionEx<Exception, Exception>) exceptionFn);
 	}
@@ -975,7 +975,7 @@ public interface Promise<T> extends Promisable<T>, AsyncComputation<T> {
 	 *              only if an exception of {@code this} promise is an instance of the specified class
 	 * @param fn    consumer that consumes an exception of {@code this} promise
 	 */
-	default @NotNull <E extends Exception> Promise<T> whenException(@NotNull Class<E> clazz, @NotNull ConsumerEx<@NotNull E> fn) {
+	default @NotNull <E extends Exception> Promise<T> whenException(@NotNull Class<E> clazz, @NotNull ConsumerEx<? super @NotNull E> fn) {
 		//noinspection unchecked
 		return when(P.isException(clazz), null, (ConsumerEx<Exception>) fn);
 	}

@@ -511,7 +511,8 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull <E extends Exception> Promise<T> mapException(@NotNull Class<E> clazz, @NotNull FunctionEx<@NotNull E, @NotNull Exception> exceptionFn) {
+	public @NotNull <E extends Exception> Promise<T> mapException(@NotNull Class<E> clazz,
+			@NotNull FunctionEx<? super @NotNull E, ? extends @NotNull Exception> exceptionFn) {
 		if (isComplete()) {
 			try {
 				return exception == null ?
@@ -1342,7 +1343,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	@Override
-	public @NotNull <E extends Exception> Promise<T> whenException(@NotNull Class<E> clazz, @NotNull ConsumerEx<@NotNull E> fn) {
+	public @NotNull <E extends Exception> Promise<T> whenException(@NotNull Class<E> clazz, @NotNull ConsumerEx<? super @NotNull E> fn) {
 		if (isComplete()) {
 			try {
 				if (exception != null && clazz.isAssignableFrom(exception.getClass())) {
