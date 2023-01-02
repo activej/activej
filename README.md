@@ -55,7 +55,7 @@ ActiveJ consists of several modules, which can be logically grouped into the fol
 Paste this snippet into your terminal...
 
 ```
-mvn archetype:generate -DarchetypeGroupId=io.activej -DarchetypeArtifactId=archetype-http -DarchetypeVersion=5.5-rc1
+mvn archetype:generate -DarchetypeGroupId=io.activej -DarchetypeArtifactId=archetype-http -DarchetypeVersion=5.5-rc2
 ```
 
 ... and open the project in your favorite  IDE. Then build the application and run it. Open your browser
