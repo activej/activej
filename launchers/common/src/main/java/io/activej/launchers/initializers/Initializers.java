@@ -32,6 +32,8 @@ import io.activej.trigger.TriggerResult;
 import io.activej.trigger.TriggersModuleSettings;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.launchers.initializers.TriggersHelper.ofPromiseStatsLastSuccess;
@@ -113,7 +115,6 @@ public class Initializers {
 								TriggerResult.ofError(eventloop.getStats().getFatalErrors()));
 	}
 
-
 	public static Initializer<TriggersModuleSettings> ofEventloopBusinessLogicTriggers(Config config) {
 		long businessLogicTimeLow = config.get(ofDurationAsMillis(), "businessLogicTimeLow", 10L);
 		long businessLogicTimeHigh = config.get(ofDurationAsMillis(), "businessLogicTimeHigh", 100L);
@@ -169,6 +170,40 @@ public class Initializers {
 					}
 					return TriggerResult.ofInstant(scheduler.getStats().getLastStartTime(),
 							currentDuration.toMillis() > (delayError != null ? delayError : duration.toMillis() * 10));
+				});
+	}
+
+	public static Initializer<JmxModule> renamedClassNames(Map<Class<?>, String> classToOldName) {
+		Map<String, Map<String, String>> byPackageAndClassMap = new HashMap<>();
+
+		for (Map.Entry<Class<?>, String> entry : classToOldName.entrySet()) {
+			Class<?> cls = entry.getKey();
+			byPackageAndClassMap
+					.computeIfAbsent(cls.getPackageName(), $ -> new HashMap<>())
+					.put(cls.getSimpleName(), entry.getValue());
+		}
+
+		return jmxModule ->
+				jmxModule.withObjectNameMapping(protoObjectName -> {
+					Map<String, String> packageMap = byPackageAndClassMap.get(protoObjectName.getPackageName());
+					if (packageMap == null) return protoObjectName;
+
+					String oldClassName = packageMap.get(protoObjectName.getClassName());
+
+					if (oldClassName == null) return protoObjectName;
+
+					int lastDotIndex = oldClassName.lastIndexOf(".");
+
+					if (lastDotIndex == -1) {
+						return protoObjectName.withClassName(oldClassName);
+					}
+
+					String packageName = oldClassName.substring(0, lastDotIndex);
+					String className = oldClassName.substring(lastDotIndex + 1);
+
+					return protoObjectName
+							.withPackageName(packageName)
+							.withClassName(className);
 				});
 	}
 
