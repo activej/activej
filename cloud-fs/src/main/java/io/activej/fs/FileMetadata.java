@@ -18,7 +18,6 @@ package io.activej.fs;
 
 import com.dslplatform.json.CompiledJson;
 import io.activej.common.exception.InvalidSizeException;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
@@ -95,7 +94,7 @@ public final class FileMetadata {
 		return first == null ? second : second == null ? first : COMPARATOR.compare(first, second) > 0 ? first : second;
 	}
 
-	public static Map<String, FileMetadata> flatten(Stream<Map<String, @NotNull FileMetadata>> streamOfMaps) {
+	public static Map<String, FileMetadata> flatten(Stream<Map<String, FileMetadata>> streamOfMaps) {
 		Map<String, FileMetadata> result = new HashMap<>();
 		streamOfMaps
 				.flatMap(map -> map.entrySet().stream())

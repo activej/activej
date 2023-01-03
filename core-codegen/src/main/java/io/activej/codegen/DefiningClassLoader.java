@@ -17,7 +17,6 @@
 package io.activej.codegen;
 
 import io.activej.common.initializer.WithInitializer;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.FileOutputStream;
@@ -143,7 +142,7 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	 *
 	 * @see #ensureClass(String, BiFunction)
 	 */
-	public <T> @NotNull Class<T> ensureClass(String className, Supplier<ClassBuilder<T>> classBuilder) {
+	public <T> Class<T> ensureClass(String className, Supplier<ClassBuilder<T>> classBuilder) {
 		return ensureClass(className, (cl, s) -> classBuilder.get().toBytecode(cl, s));
 	}
 
@@ -152,7 +151,7 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	 *
 	 * @see #ensureClass(String, BiFunction)
 	 */
-	public <T> @NotNull Class<T> ensureClass(ClassKey<T> key, Supplier<ClassBuilder<T>> classBuilder) {
+	public <T> Class<T> ensureClass(ClassKey<T> key, Supplier<ClassBuilder<T>> classBuilder) {
 		return ensureClass(key, classLoader -> classBuilder.get().toBytecode(classLoader));
 	}
 
@@ -161,7 +160,7 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	 *
 	 * @see #ensureClass(String, BiFunction)
 	 */
-	public <T> @NotNull T ensureClassAndCreateInstance(String className, Supplier<ClassBuilder<T>> classBuilder,
+	public <T> T ensureClassAndCreateInstance(String className, Supplier<ClassBuilder<T>> classBuilder,
 			Object... arguments) {
 		return createInstance(ensureClass(className, classBuilder), arguments);
 	}
@@ -171,7 +170,7 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	 *
 	 * @see #ensureClass(String, BiFunction)
 	 */
-	public <T> @NotNull T ensureClassAndCreateInstance(ClassKey<T> key, Supplier<ClassBuilder<T>> classBuilder,
+	public <T> T ensureClassAndCreateInstance(ClassKey<T> key, Supplier<ClassBuilder<T>> classBuilder,
 			Object... arguments) {
 		Class<T> aClass = ensureClass(key, classBuilder);
 		return createInstance(aClass, arguments);
@@ -194,7 +193,7 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	 * @return an ensured class
 	 */
 	@SuppressWarnings("unchecked")
-	public <T> @NotNull Class<T> ensureClass(String className, BiFunction<ClassLoader, String, GeneratedBytecode> bytecodeBuilder) {
+	public <T> Class<T> ensureClass(String className, BiFunction<ClassLoader, String, GeneratedBytecode> bytecodeBuilder) {
 		try {
 			return (Class<T>) loadClass(className, false);
 		} catch (ClassNotFoundException ignored) {
@@ -234,7 +233,7 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	 * @param <T>             type parameter that represents ensured class
 	 * @return an ensured class
 	 */
-	public <T> @NotNull Class<T> ensureClass(ClassKey<T> key, Function<ClassLoader, GeneratedBytecode> bytecodeBuilder) {
+	public <T> Class<T> ensureClass(ClassKey<T> key, Function<ClassLoader, GeneratedBytecode> bytecodeBuilder) {
 		AtomicReference<Class<?>> reference = cachedClasses.computeIfAbsent(key, k -> new AtomicReference<>());
 		Class<?> aClass = reference.get();
 		if (aClass == null) {
@@ -257,13 +256,13 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	 *
 	 * @see #ensureClass(ClassKey, Function)
 	 */
-	public <T> @NotNull T ensureClassAndCreateInstance(ClassKey<T> key, Function<ClassLoader, GeneratedBytecode> bytecodeBuilder,
+	public <T> T ensureClassAndCreateInstance(ClassKey<T> key, Function<ClassLoader, GeneratedBytecode> bytecodeBuilder,
 			Object... arguments) {
 		Class<T> aClass = ensureClass(key, bytecodeBuilder);
 		return createInstance(aClass, arguments);
 	}
 
-	static <T> @NotNull T createInstance(Class<T> aClass, Object[] arguments) {
+	static <T> T createInstance(Class<T> aClass, Object[] arguments) {
 		try {
 			return aClass
 					.getConstructor(Arrays.stream(arguments).map(Object::getClass).toArray(Class<?>[]::new))
@@ -279,7 +278,7 @@ public final class DefiningClassLoader extends ClassLoader implements DefiningCl
 	 * @param key a class key
 	 * @return a cached class
 	 */
-	public @Nullable Class<?> getCachedClass(@NotNull ClassKey<?> key) {
+	public @Nullable Class<?> getCachedClass(ClassKey<?> key) {
 		return Optional.ofNullable(cachedClasses.get(key)).map(AtomicReference::get).orElse(null);
 	}
 

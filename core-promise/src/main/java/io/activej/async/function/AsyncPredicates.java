@@ -21,7 +21,6 @@ import io.activej.async.process.AsyncExecutor;
 import io.activej.async.process.AsyncExecutors;
 import io.activej.common.ref.RefBoolean;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.List;
@@ -30,17 +29,17 @@ import java.util.function.Predicate;
 public final class AsyncPredicates {
 
 	@Contract(pure = true)
-	public static <T> @NotNull AsyncPredicate<T> buffer(@NotNull AsyncPredicate<T> actual) {
+	public static <T> AsyncPredicate<T> buffer(AsyncPredicate<T> actual) {
 		return buffer(1, Integer.MAX_VALUE, actual);
 	}
 
 	@Contract(pure = true)
-	public static <T> @NotNull AsyncPredicate<T> buffer(int maxParallelCalls, int maxBufferedCalls, @NotNull AsyncPredicate<T> asyncPredicate) {
+	public static <T> AsyncPredicate<T> buffer(int maxParallelCalls, int maxBufferedCalls, AsyncPredicate<T> asyncPredicate) {
 		return ofExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls), asyncPredicate);
 	}
 
 	@Contract(pure = true)
-	public static <T> @NotNull AsyncPredicate<T> ofExecutor(@NotNull AsyncExecutor asyncExecutor, @NotNull AsyncPredicate<T> predicate) {
+	public static <T> AsyncPredicate<T> ofExecutor(AsyncExecutor asyncExecutor, AsyncPredicate<T> predicate) {
 		return t -> asyncExecutor.execute(() -> predicate.test(t));
 	}
 
@@ -56,7 +55,7 @@ public final class AsyncPredicates {
 	 * @return a composed {@link AsyncPredicate} that represents a logical AND of asynchronous predicates
 	 * in a given collection
 	 */
-	public static <T> @NotNull AsyncPredicate<T> and(Collection<AsyncPredicate<? super T>> predicates) {
+	public static <T> AsyncPredicate<T> and(Collection<AsyncPredicate<? super T>> predicates) {
 		return t -> {
 			AsyncAccumulator<RefBoolean> asyncAccumulator = AsyncAccumulator.create(new RefBoolean(true));
 			for (AsyncPredicate<? super T> predicate : predicates) {
@@ -71,7 +70,7 @@ public final class AsyncPredicates {
 	 *
 	 * @see #and(Collection)
 	 */
-	public static <T> @NotNull AsyncPredicate<T> and() {
+	public static <T> AsyncPredicate<T> and() {
 		return AsyncPredicate.alwaysTrue();
 	}
 
@@ -83,7 +82,7 @@ public final class AsyncPredicates {
 	 * @see #and(Collection)
 	 * @see #and(AsyncPredicate[])
 	 */
-	public static <T> @NotNull AsyncPredicate<T> and(AsyncPredicate<? super T> predicate1) {
+	public static <T> AsyncPredicate<T> and(AsyncPredicate<? super T> predicate1) {
 		//noinspection unchecked
 		return (AsyncPredicate<T>) predicate1;
 	}
@@ -94,7 +93,7 @@ public final class AsyncPredicates {
 	 * @see #and(Collection)
 	 * @see #and(AsyncPredicate[])
 	 */
-	public static <T> @NotNull AsyncPredicate<T> and(AsyncPredicate<? super T> predicate1, AsyncPredicate<? super T> predicate2) {
+	public static <T> AsyncPredicate<T> and(AsyncPredicate<? super T> predicate1, AsyncPredicate<? super T> predicate2) {
 		//noinspection unchecked
 		return ((AsyncPredicate<T>) predicate1).and(predicate2);
 	}
@@ -106,7 +105,7 @@ public final class AsyncPredicates {
 	 * @see #and(Collection)
 	 */
 	@SafeVarargs
-	public static <T> @NotNull AsyncPredicate<T> and(AsyncPredicate<? super T>... predicates) {
+	public static <T> AsyncPredicate<T> and(AsyncPredicate<? super T>... predicates) {
 		//noinspection RedundantCast
 		return and(((List<AsyncPredicate<? super T>>) List.of(predicates)));
 	}
@@ -123,7 +122,7 @@ public final class AsyncPredicates {
 	 * @return a composed {@link AsyncPredicate} that represents a logical OR of asynchronous predicates
 	 * in a given collection
 	 */
-	public static <T> @NotNull AsyncPredicate<T> or(Collection<AsyncPredicate<? super T>> predicates) {
+	public static <T> AsyncPredicate<T> or(Collection<AsyncPredicate<? super T>> predicates) {
 		return t -> {
 			AsyncAccumulator<RefBoolean> asyncAccumulator = AsyncAccumulator.create(new RefBoolean(false));
 			for (AsyncPredicate<? super T> predicate : predicates) {
@@ -137,7 +136,7 @@ public final class AsyncPredicates {
 	 * @return an {@link AsyncPredicate} that always returns promise of {@code false}
 	 * @see #or(Collection)
 	 */
-	public static <T> @NotNull AsyncPredicate<T> or() {
+	public static <T> AsyncPredicate<T> or() {
 		return AsyncPredicate.alwaysFalse();
 	}
 
@@ -149,7 +148,7 @@ public final class AsyncPredicates {
 	 * @see #or(Collection)
 	 * @see #or(AsyncPredicate[])
 	 */
-	public static <T> @NotNull AsyncPredicate<T> or(AsyncPredicate<? super T> predicate1) {
+	public static <T> AsyncPredicate<T> or(AsyncPredicate<? super T> predicate1) {
 		//noinspection unchecked
 		return (AsyncPredicate<T>) predicate1;
 	}
@@ -160,7 +159,7 @@ public final class AsyncPredicates {
 	 * @see #or(Collection)
 	 * @see #or(AsyncPredicate[])
 	 */
-	public static <T> @NotNull AsyncPredicate<T> or(AsyncPredicate<? super T> predicate1, AsyncPredicate<? super T> predicate2) {
+	public static <T> AsyncPredicate<T> or(AsyncPredicate<? super T> predicate1, AsyncPredicate<? super T> predicate2) {
 		//noinspection unchecked
 		return ((AsyncPredicate<T>) predicate1).or(predicate2);
 	}
@@ -172,7 +171,7 @@ public final class AsyncPredicates {
 	 * @see #or(Collection)
 	 */
 	@SafeVarargs
-	public static <T> @NotNull AsyncPredicate<T> or(AsyncPredicate<? super T>... predicates) {
+	public static <T> AsyncPredicate<T> or(AsyncPredicate<? super T>... predicates) {
 		//noinspection RedundantCast
 		return or(((List<AsyncPredicate<? super T>>) List.of(predicates)));
 	}

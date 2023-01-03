@@ -23,7 +23,6 @@ import io.activej.inject.annotation.ProvidesIntoSet;
 import io.activej.inject.binding.*;
 import io.activej.inject.util.ReflectionUtils;
 import io.activej.inject.util.Trie;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.StackWalker.StackFrame;
@@ -79,7 +78,7 @@ public abstract class AbstractModule implements Module {
 	 *
 	 * @see ModuleBuilder#bind(Key)
 	 */
-	protected final <T> ModuleBuilder0<T> bind(@NotNull Key<T> key) {
+	protected final <T> ModuleBuilder0<T> bind(Key<T> key) {
 		checkState(builder != null, "Cannot add bindings before or after configure() call");
 		return builder.bind(key);
 	}
@@ -104,32 +103,32 @@ public abstract class AbstractModule implements Module {
 		return builder.bind(type, qualifier);
 	}
 
-	protected final <T> void bindInstanceProvider(@NotNull Class<T> key) {
+	protected final <T> void bindInstanceProvider(Class<T> key) {
 		checkState(builder != null, "Cannot add bindings before or after configure() call");
 		builder.bindInstanceProvider(key);
 	}
 
-	protected final <T> void bindInstanceProvider(@NotNull Key<T> key) {
+	protected final <T> void bindInstanceProvider(Key<T> key) {
 		checkState(builder != null, "Cannot add bindings before or after configure() call");
 		builder.bindInstanceProvider(key);
 	}
 
-	protected final <T> void bindInstanceInjector(@NotNull Class<T> key) {
+	protected final <T> void bindInstanceInjector(Class<T> key) {
 		checkState(builder != null, "Cannot add bindings before or after configure() call");
 		builder.bindInstanceInjector(key);
 	}
 
-	protected final <T> void bindInstanceInjector(@NotNull Key<T> key) {
+	protected final <T> void bindInstanceInjector(Key<T> key) {
 		checkState(builder != null, "Cannot add bindings before or after configure() call");
 		builder.bindInstanceInjector(key);
 	}
 
-	protected final <T> void bindOptionalDependency(@NotNull Class<T> key) {
+	protected final <T> void bindOptionalDependency(Class<T> key) {
 		checkState(builder != null, "Cannot add bindings before or after configure() call");
 		builder.bindOptionalDependency(key);
 	}
 
-	protected final <T> void bindOptionalDependency(@NotNull Key<T> key) {
+	protected final <T> void bindOptionalDependency(Key<T> key) {
 		checkState(builder != null, "Cannot add bindings before or after configure() call");
 		builder.bindOptionalDependency(key);
 	}
@@ -239,7 +238,7 @@ public abstract class AbstractModule implements Module {
 	 *
 	 * @see ModuleBuilder#bindIntoSet(Key, Binding)
 	 */
-	protected final <S, T extends S> void bindIntoSet(@NotNull Key<S> setOf, @NotNull T element) {
+	protected final <S, T extends S> void bindIntoSet(Key<S> setOf, T element) {
 		bindIntoSet(setOf, Binding.toInstance(element));
 	}
 

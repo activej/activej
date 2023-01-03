@@ -18,7 +18,6 @@ package io.activej.async.function;
 
 import io.activej.common.function.BiPredicateEx;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Predicate;
 
@@ -34,7 +33,7 @@ public interface AsyncBiPredicate<T, U> {
 	 * @param predicate a {@link BiPredicateEx}
 	 * @return {@link AsyncBiPredicate} that works on top of {@link BiPredicateEx} interface
 	 */
-	static <T, U> @NotNull AsyncBiPredicate<T, U> of(@NotNull BiPredicateEx<? super T, ? super U> predicate) {
+	static <T, U> AsyncBiPredicate<T, U> of(BiPredicateEx<? super T, ? super U> predicate) {
 		return (t, u) -> {
 			try {
 				return Promise.of(predicate.test(t, u));

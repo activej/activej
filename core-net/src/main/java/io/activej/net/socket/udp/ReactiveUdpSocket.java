@@ -33,7 +33,6 @@ import io.activej.promise.SettablePromise;
 import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.nio.NioChannelEventHandler;
 import io.activej.reactor.nio.NioReactor;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -162,7 +161,7 @@ public final class ReactiveUdpSocket extends AbstractNioReactive implements UdpS
 	}
 	// endregion
 
-	private ReactiveUdpSocket(@NotNull NioReactor reactor, @NotNull DatagramChannel channel) throws IOException {
+	private ReactiveUdpSocket(NioReactor reactor, DatagramChannel channel) throws IOException {
 		super(reactor);
 		this.channel = channel;
 		this.key = channel.register(reactor.ensureSelector(), 0, this);

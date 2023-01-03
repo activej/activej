@@ -32,7 +32,6 @@ import io.activej.csp.dsl.WithBinaryChannelInput;
 import io.activej.csp.dsl.WithChannelTransformer;
 import io.activej.csp.process.AbstractCommunicatingProcess;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.zip.CRC32;
 import java.util.zip.DataFormatException;
@@ -81,7 +80,7 @@ public final class BufsConsumerGzipInflater extends AbstractCommunicatingProcess
 		return new BufsConsumerGzipInflater();
 	}
 
-	public BufsConsumerGzipInflater withInflater(@NotNull Inflater inflater) {
+	public BufsConsumerGzipInflater withInflater(Inflater inflater) {
 		this.inflater = inflater;
 		return this;
 	}

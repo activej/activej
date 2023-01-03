@@ -19,7 +19,6 @@ package io.activej.serializer.impl;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 import io.activej.serializer.util.BinaryOutputUtils;
-import org.jetbrains.annotations.NotNull;
 
 import static io.activej.codegen.expression.Expressions.*;
 
@@ -53,7 +52,7 @@ public final class SerializerExpressions {
 		BIG_ENDIAN = bigEndian;
 	}
 
-	private static @NotNull Expression getUnsafe() {
+	private static Expression getUnsafe() {
 		return staticCall(JDK_UNSAFE, "getUnsafe");
 	}
 

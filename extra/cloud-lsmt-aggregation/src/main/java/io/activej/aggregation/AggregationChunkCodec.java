@@ -57,7 +57,7 @@ public class AggregationChunkCodec implements JsonCodec<AggregationChunk>, WithI
 
 
 	@Override
-	public AggregationChunk read(@NotNull JsonReader reader) throws IOException {
+	public AggregationChunk read(JsonReader reader) throws IOException {
 		if (reader.wasNull()) return null;
 
 		if (reader.last() != OBJECT_START) throw reader.newParseError("Expected '{'");

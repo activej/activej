@@ -16,8 +16,6 @@
 
 package io.activej.jmx.stats;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.Arrays;
 
 import static io.activej.common.Checks.checkArgument;
@@ -73,5 +71,5 @@ public interface JmxHistogram {
 
 	JmxHistogram createAccumulator();
 
-	void add(@NotNull JmxHistogram another);
+	void add(JmxHistogram another);
 }

@@ -5,7 +5,6 @@ import io.activej.inject.Injector;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.launcher.annotation.OnStart;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import java.util.Objects;
@@ -98,7 +97,7 @@ public class ConfigsModuleTest {
 
 		ConfigConverter<TestClass> configConverter = new ConfigConverter<>() {
 			@Override
-			public @NotNull TestClass get(Config config) {
+			public TestClass get(Config config) {
 				return get(config, null);
 			}
 

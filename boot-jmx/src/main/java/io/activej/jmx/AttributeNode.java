@@ -17,7 +17,6 @@
 package io.activej.jmx;
 
 import io.activej.jmx.api.JmxRefreshable;
-import org.jetbrains.annotations.NotNull;
 
 import javax.management.openmbean.OpenType;
 import java.util.List;
@@ -35,19 +34,19 @@ interface AttributeNode {
 
 	Map<String, OpenType<?>> getOpenTypes();
 
-	Map<String, Object> aggregateAttributes(@NotNull Set<String> attrNames, @NotNull List<?> sources);
+	Map<String, Object> aggregateAttributes(Set<String> attrNames, List<?> sources);
 
-	List<JmxRefreshable> getAllRefreshables(@NotNull Object source);
+	List<JmxRefreshable> getAllRefreshables(Object source);
 
-	boolean isSettable(@NotNull String attrName);
+	boolean isSettable(String attrName);
 
-	void setAttribute(@NotNull String attrName, @NotNull Object value, @NotNull List<?> targets) throws SetterException;
+	void setAttribute(String attrName, Object value, List<?> targets) throws SetterException;
 
 	boolean isVisible();
 
-	void setVisible(@NotNull String attrName);
+	void setVisible(String attrName);
 
-	void hideNullPojos(@NotNull List<?> sources);
+	void hideNullPojos(List<?> sources);
 
-	void applyModifier(@NotNull String attrName, @NotNull AttributeModifier<?> modifier, @NotNull List<?> target);
+	void applyModifier(String attrName, AttributeModifier<?> modifier, List<?> target);
 }

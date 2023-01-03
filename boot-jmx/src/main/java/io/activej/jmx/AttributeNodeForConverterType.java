@@ -17,7 +17,6 @@
 package io.activej.jmx;
 
 import io.activej.jmx.api.JmxRefreshable;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,17 +82,17 @@ public class AttributeNodeForConverterType<T> extends AbstractAttributeNodeForLe
 	}
 
 	@Override
-	public List<JmxRefreshable> getAllRefreshables(@NotNull Object source) {
+	public List<JmxRefreshable> getAllRefreshables(Object source) {
 		return List.of();
 	}
 
 	@Override
-	public boolean isSettable(@NotNull String attrName) {
+	public boolean isSettable(String attrName) {
 		return setter != null && from != null;
 	}
 
 	@Override
-	public void setAttribute(@NotNull String attrName, @NotNull Object value, @NotNull List<?> targets) throws SetterException {
+	public void setAttribute(String attrName, Object value, List<?> targets) throws SetterException {
 		if (!isSettable("")) {
 			throw new SetterException(new IllegalAccessException("Cannot set non writable attribute " + name));
 		}

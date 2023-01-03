@@ -24,7 +24,6 @@ import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.reactor.Reactive;
 import io.activej.reactor.jmx.ReactiveJmxBean;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,7 +84,7 @@ public final class ThrottlingController
 
 	// region creators
 
-	public static @NotNull ThrottlingController create() {
+	public static ThrottlingController create() {
 		return new ThrottlingController()
 				.withTargetTime(TARGET_TIME)
 				.withGcTime(GC_TIME)
@@ -95,12 +94,12 @@ public final class ThrottlingController
 				.withInitialThrottling(INITIAL_THROTTLING);
 	}
 
-	public ThrottlingController withEventloop(@NotNull Eventloop eventloop) {
+	public ThrottlingController withEventloop(Eventloop eventloop) {
 		setEventloop(eventloop);
 		return this;
 	}
 
-	public void setEventloop(@NotNull Eventloop eventloop) {
+	public void setEventloop(Eventloop eventloop) {
 		this.eventloop = eventloop;
 	}
 
@@ -393,7 +392,7 @@ public final class ThrottlingController
 	}
 
 	@Override
-	public @NotNull Eventloop getReactor() {
+	public Eventloop getReactor() {
 		return checkNotNull(eventloop);
 	}
 

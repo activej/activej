@@ -1,6 +1,5 @@
 package io.activej.reactor;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
@@ -17,7 +16,7 @@ final class ThreadLocalReactor {
 //					   i.e. by implementing EventloopService::start() {your code block} and using ServiceGraphModule""";
 			"No reactor in current thread";
 
-	static @NotNull Reactor getCurrentReactor() {
+	static Reactor getCurrentReactor() {
 		Reactor reactor = ThreadLocalReactor.CURRENT_REACTOR.get();
 		if (reactor != null) return reactor;
 		throw new IllegalStateException(NO_CURRENT_REACTOR_ERROR);

@@ -1,7 +1,5 @@
 package io.activej.types;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -22,7 +20,7 @@ public class IsAssignableUtils {
 	 * @param from a 'from' type that should be checked for possible assignment
 	 * @return whether an object of type {@code from} is assignable to an object of type {@code to}
 	 */
-	public static boolean isAssignable(@NotNull Type to, @NotNull Type from) {
+	public static boolean isAssignable(Type to, Type from) {
 		// shortcut
 		if (to instanceof Class && from instanceof Class) return ((Class<?>) to).isAssignableFrom((Class<?>) from);
 		return isAssignable(to, from, false);

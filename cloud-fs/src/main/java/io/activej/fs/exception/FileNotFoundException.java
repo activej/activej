@@ -16,18 +16,16 @@
 
 package io.activej.fs.exception;
 
-import org.jetbrains.annotations.NotNull;
-
 public final class FileNotFoundException extends FsScalarException {
 	public FileNotFoundException() {
 		super("File not found");
 	}
 
-	public FileNotFoundException(@NotNull String message) {
+	public FileNotFoundException(String message) {
 		super(message);
 	}
 
-	FileNotFoundException(@NotNull String message, boolean withStack) {
+	FileNotFoundException(String message, boolean withStack) {
 		super(message, withStack);
 	}
 }

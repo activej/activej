@@ -4,7 +4,6 @@ import io.activej.ot.OTCommit;
 import io.activej.ot.OTCommitFactory;
 import io.activej.ot.repository.OTRepository;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -86,7 +85,7 @@ public final class OTRepositoryStub<K, D> implements OTRepository<K, D> {
 	}
 
 	@Override
-	public @NotNull Promise<Void> updateHeads(Set<K> newHeads, Set<K> excludedHeads) {
+	public Promise<Void> updateHeads(Set<K> newHeads, Set<K> excludedHeads) {
 		heads.addAll(newHeads);
 		heads.removeAll(excludedHeads);
 		return Promise.complete();

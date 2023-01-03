@@ -19,7 +19,6 @@ package io.activej.serializer;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 import io.activej.types.Types;
-import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -57,7 +56,7 @@ public abstract class SimpleSerializerDef<T> extends AbstractSerializerDef {
 		return call(serializer, "decode", in);
 	}
 
-	private static @NotNull Type getSuperclassTypeParameter(@NotNull Class<?> subclass) {
+	private static Type getSuperclassTypeParameter(Class<?> subclass) {
 		Type superclass = subclass.getGenericSuperclass();
 		if (superclass instanceof ParameterizedType) {
 			return ((ParameterizedType) superclass).getActualTypeArguments()[0];

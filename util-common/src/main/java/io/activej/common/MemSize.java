@@ -16,8 +16,6 @@
 
 package io.activej.common;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.function.LongUnaryOperator;
 
 import static io.activej.common.Checks.checkArgument;
@@ -45,7 +43,7 @@ public final class MemSize implements Comparable<MemSize> {
 	 * @param bytes a number of bytes
 	 * @return a new instance of {@link MemSize} of n bytes
 	 */
-	public static @NotNull MemSize of(long bytes) {
+	public static MemSize of(long bytes) {
 		checkArgument(bytes >= 0, "Cannot create MemSize of negative value");
 		return new MemSize(bytes);
 	}
@@ -57,7 +55,7 @@ public final class MemSize implements Comparable<MemSize> {
 	 * @return a new instance of {@link MemSize} of n bytes
 	 * @see #of(long)
 	 */
-	public static @NotNull MemSize bytes(long bytes) {
+	public static MemSize bytes(long bytes) {
 		return MemSize.of(bytes);
 	}
 
@@ -67,7 +65,7 @@ public final class MemSize implements Comparable<MemSize> {
 	 * @param kilobytes a number of kilobytes
 	 * @return a new instance of {@link MemSize} of n kilobytes
 	 */
-	public static @NotNull MemSize kilobytes(long kilobytes) {
+	public static MemSize kilobytes(long kilobytes) {
 		checkArgument(kilobytes <= Long.MAX_VALUE / KB, "Resulting number of bytes exceeds Long.MAX_VALUE");
 		return of(kilobytes * KB);
 	}
@@ -78,7 +76,7 @@ public final class MemSize implements Comparable<MemSize> {
 	 * @param megabytes a number of megabytes
 	 * @return a new instance of {@link MemSize} of n megabytes
 	 */
-	public static @NotNull MemSize megabytes(long megabytes) {
+	public static MemSize megabytes(long megabytes) {
 		checkArgument(megabytes <= Long.MAX_VALUE / MB, "Resulting number of bytes exceeds Long.MAX_VALUE");
 		return of(megabytes * MB);
 	}
@@ -89,7 +87,7 @@ public final class MemSize implements Comparable<MemSize> {
 	 * @param gigabytes a number of gigabytes
 	 * @return a new instance of {@link MemSize} of n gigabytes
 	 */
-	public static @NotNull MemSize gigabytes(long gigabytes) {
+	public static MemSize gigabytes(long gigabytes) {
 		checkArgument(gigabytes <= Long.MAX_VALUE / GB, "Resulting number of bytes exceeds Long.MAX_VALUE");
 		return of(gigabytes * GB);
 	}
@@ -100,7 +98,7 @@ public final class MemSize implements Comparable<MemSize> {
 	 * @param terabytes a number of terabytes
 	 * @return a new instance of {@link MemSize} of n terabytes
 	 */
-	public static @NotNull MemSize terabytes(long terabytes) {
+	public static MemSize terabytes(long terabytes) {
 		checkArgument(terabytes <= Long.MAX_VALUE / TB, "Resulting number of bytes exceeds Long.MAX_VALUE");
 		return of(terabytes * TB);
 	}
@@ -129,7 +127,7 @@ public final class MemSize implements Comparable<MemSize> {
 	 * @param fn a mapping function that maps current size to a new one
 	 * @return a new {@link MemSize} with mapped number of bytes
 	 */
-	public @NotNull MemSize map(@NotNull LongUnaryOperator fn) {
+	public MemSize map(LongUnaryOperator fn) {
 		return MemSize.of(fn.applyAsLong(bytes));
 	}
 
@@ -141,7 +139,7 @@ public final class MemSize implements Comparable<MemSize> {
 	 * @throws IllegalArgumentException on malformed string
 	 * @see StringFormatUtils#parseMemSize(String)
 	 */
-	public static @NotNull MemSize valueOf(@NotNull String string) {
+	public static MemSize valueOf(String string) {
 		return StringFormatUtils.parseMemSize(string);
 	}
 
@@ -153,12 +151,12 @@ public final class MemSize implements Comparable<MemSize> {
 	 * @return a string that represents a {@link MemSize}
 	 * @see StringFormatUtils#formatMemSize(MemSize)
 	 */
-	public @NotNull String format() {
+	public String format() {
 		return StringFormatUtils.formatMemSize(this);
 	}
 
 	@Override
-	public int compareTo(@NotNull MemSize o) {
+	public int compareTo(MemSize o) {
 		return Long.compare(bytes, o.bytes);
 	}
 
@@ -178,7 +176,7 @@ public final class MemSize implements Comparable<MemSize> {
 	}
 
 	@Override
-	public @NotNull String toString() {
+	public String toString() {
 		return "" + toLong();
 	}
 }

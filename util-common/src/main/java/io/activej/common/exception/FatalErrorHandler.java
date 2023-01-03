@@ -16,7 +16,6 @@
 
 package io.activej.common.exception;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +36,7 @@ public interface FatalErrorHandler {
 	 * @param e       the caught exception
 	 * @param context the context in which exception was caught in, possibly {@code null}
 	 */
-	void handle(@NotNull Throwable e, @Nullable Object context);
+	void handle(Throwable e, @Nullable Object context);
 
 	/**
 	 * Called when an unchecked exception is caught during execution of some task
@@ -45,7 +44,7 @@ public interface FatalErrorHandler {
 	 * @param e the caught exception
 	 * @see #handle(Throwable, Object)
 	 */
-	default void handle(@NotNull Throwable e) {
+	default void handle(Throwable e) {
 		handle(e, null);
 	}
 

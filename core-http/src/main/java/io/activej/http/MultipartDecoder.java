@@ -32,7 +32,6 @@ import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.binary.ByteBufsDecoder;
 import io.activej.http.MultipartDecoder.MultipartFrame;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -214,7 +213,7 @@ public final class MultipartDecoder implements ByteBufsDecoder<MultipartFrame>, 
 		return MultipartFrame.of(data);
 	}
 
-	private @NotNull MultipartFrame getFalseTermFrame(ByteBuf term) {
+	private MultipartFrame getFalseTermFrame(ByteBuf term) {
 		ByteBuf buf = ByteBufPool.allocate(term.readRemaining() + 2);
 		buf.writeByte((byte) '\r');
 		buf.writeByte((byte) '\n');

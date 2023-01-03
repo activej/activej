@@ -6,7 +6,6 @@ import io.activej.cube.bean.TestPubRequest.TestEnum;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.etl.LogDataConsumerSplitter;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -55,7 +54,7 @@ public class TestAggregatorSplitter extends LogDataConsumerSplitter<TestPubReque
 	}
 
 	@Override
-	protected StreamDataAcceptor<TestPubRequest> createSplitter(@NotNull Context ctx) {
+	protected StreamDataAcceptor<TestPubRequest> createSplitter(Context ctx) {
 		return new StreamDataAcceptor<>() {
 			private final AggregationItem outputItem = new AggregationItem();
 

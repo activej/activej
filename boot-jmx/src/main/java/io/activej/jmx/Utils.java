@@ -18,7 +18,6 @@ package io.activej.jmx;
 
 import io.activej.jmx.api.JmxBean;
 import io.activej.jmx.api.JmxBeanAdapter;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.management.DynamicMBean;
@@ -64,7 +63,7 @@ class Utils {
 		return deepFindAnnotation(aClass, JmxBean.class).map(JmxBean::value);
 	}
 
-	static String getQualifierString(@NotNull Object qualifier) throws ReflectiveOperationException {
+	static String getQualifierString(Object qualifier) throws ReflectiveOperationException {
 		if (qualifier instanceof Class<?> qualifierClass) {
 			if (qualifierClass.isAnnotation()) {
 				return qualifierClass.getSimpleName();
@@ -75,9 +74,9 @@ class Utils {
 		return qualifier.toString();
 	}
 
-	static <T> ProtoObjectNameMapper doMap(Function<@NotNull ProtoObjectName, @Nullable T> extractor,
-			UnaryOperator<@NotNull T> mapper,
-			BiFunction<@NotNull ProtoObjectName, @Nullable T, @NotNull ProtoObjectName> result) {
+	static <T> ProtoObjectNameMapper doMap(Function<ProtoObjectName, @Nullable T> extractor,
+			UnaryOperator<T> mapper,
+			BiFunction<ProtoObjectName, @Nullable T, ProtoObjectName> result) {
 		return protoObjectName -> {
 			T value = extractor.apply(protoObjectName);
 			if (value == null) return protoObjectName;

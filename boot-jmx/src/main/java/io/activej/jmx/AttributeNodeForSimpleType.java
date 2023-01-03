@@ -18,7 +18,6 @@ package io.activej.jmx;
 
 import io.activej.jmx.api.JmxRefreshable;
 import io.activej.jmx.api.attribute.JmxReducer;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.management.openmbean.OpenType;
@@ -40,7 +39,7 @@ final class AttributeNodeForSimpleType extends AbstractAttributeNodeForLeaf {
 
 	public AttributeNodeForSimpleType(String name, @Nullable String description, boolean visible,
 			ValueFetcher fetcher, @Nullable Method setter,
-			Class<?> attributeType, @NotNull JmxReducer reducer) {
+			Class<?> attributeType, JmxReducer reducer) {
 		super(name, description, fetcher, visible);
 		this.setter = setter;
 		this.type = attributeType;
@@ -65,18 +64,18 @@ final class AttributeNodeForSimpleType extends AbstractAttributeNodeForLeaf {
 	}
 
 	@Override
-	public List<JmxRefreshable> getAllRefreshables(@NotNull Object source) {
+	public List<JmxRefreshable> getAllRefreshables(Object source) {
 		return List.of();
 	}
 
 	@Override
-	public boolean isSettable(@NotNull String attrName) {
+	public boolean isSettable(String attrName) {
 		checkArgument(attrName.equals(name), "Attribute names do not match");
 		return setter != null;
 	}
 
 	@Override
-	public void setAttribute(@NotNull String attrName, @NotNull Object value, @NotNull List<?> targets) throws SetterException {
+	public void setAttribute(String attrName, Object value, List<?> targets) throws SetterException {
 		checkArgument(attrName.equals(name), "Attribute names do not match");
 		if (setter == null) return;
 

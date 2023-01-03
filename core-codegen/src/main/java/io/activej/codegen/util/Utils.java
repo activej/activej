@@ -18,7 +18,6 @@ package io.activej.codegen.util;
 
 import io.activej.codegen.Context;
 import io.activej.types.Primitives;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
@@ -102,7 +101,7 @@ public final class Utils {
 		};
 	}
 
-	public static Type unwrap(@NotNull Type type) {
+	public static Type unwrap(Type type) {
 		if (type.getSort() != OBJECT)
 			throw new IllegalArgumentException("Cannot unwrap type that is not an object reference");
 		@Nullable Type reference = WRAPPER_TO_PRIMITIVE.get(type.getClassName());

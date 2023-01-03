@@ -29,7 +29,6 @@ import io.activej.net.socket.tcp.ReactiveTcpSocketSsl;
 import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetAddress;
@@ -147,14 +146,14 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	}
 
 	@Override
-	protected void onClosedWithError(@NotNull Exception e) {
+	protected void onClosedWithError(Exception e) {
 		if (inspector != null) {
 			inspector.onHttpError(this, e);
 		}
 	}
 
 	@Override
-	protected void onMalformedHttpException(@NotNull MalformedHttpException e) {
+	protected void onMalformedHttpException(MalformedHttpException e) {
 		if (inspector != null) {
 			inspector.onMalformedHttpRequest(this, e, readBuf.getArray());
 		}

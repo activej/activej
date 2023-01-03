@@ -21,18 +21,17 @@ import io.activej.async.process.AsyncExecutors;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class AsyncRunnables {
 
 	@Contract(pure = true)
-	public static @NotNull AsyncRunnable reuse(@NotNull AsyncRunnable actual) {
+	public static AsyncRunnable reuse(AsyncRunnable actual) {
 		return new AsyncRunnable() {
 			@Nullable Promise<Void> runningPromise;
 
 			@Override
-			public @NotNull Promise<Void> run() {
+			public Promise<Void> run() {
 				if (runningPromise != null) return runningPromise;
 				runningPromise = actual.run();
 				Promise<Void> runningPromise = this.runningPromise;
@@ -43,23 +42,23 @@ public final class AsyncRunnables {
 	}
 
 	@Contract(pure = true)
-	public static @NotNull AsyncRunnable coalesce(@NotNull AsyncRunnable actual) {
+	public static AsyncRunnable coalesce(AsyncRunnable actual) {
 		AsyncFunction<Void, Void> fn = Promises.coalesce(() -> null, (a, v) -> {}, a -> actual.run());
 		return () -> fn.apply(null);
 	}
 
 	@Contract(pure = true)
-	public static @NotNull AsyncRunnable buffer(@NotNull AsyncRunnable actual) {
+	public static AsyncRunnable buffer(AsyncRunnable actual) {
 		return buffer(1, Integer.MAX_VALUE, actual);
 	}
 
 	@Contract(pure = true)
-	public static @NotNull AsyncRunnable buffer(int maxParallelCalls, int maxBufferedCalls, @NotNull AsyncRunnable asyncRunnable) {
+	public static AsyncRunnable buffer(int maxParallelCalls, int maxBufferedCalls, AsyncRunnable asyncRunnable) {
 		return ofExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls), asyncRunnable);
 	}
 
 	@Contract(pure = true)
-	public static @NotNull AsyncRunnable ofExecutor(@NotNull AsyncExecutor asyncExecutor, @NotNull AsyncRunnable runnable) {
+	public static AsyncRunnable ofExecutor(AsyncExecutor asyncExecutor, AsyncRunnable runnable) {
 		return () -> asyncExecutor.execute(runnable::run);
 	}
 }

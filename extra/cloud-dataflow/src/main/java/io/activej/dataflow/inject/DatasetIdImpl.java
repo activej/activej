@@ -17,15 +17,14 @@
 package io.activej.dataflow.inject;
 
 import io.activej.inject.Key;
-import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.Annotation;
 
 @SuppressWarnings("ClassExplicitlyAnnotation")
 public final class DatasetIdImpl implements DatasetId {
-	private final @NotNull String value;
+	private final String value;
 
-	private DatasetIdImpl(@NotNull String value) {
+	private DatasetIdImpl(String value) {
 		this.value = value;
 	}
 
@@ -34,7 +33,7 @@ public final class DatasetIdImpl implements DatasetId {
 	}
 
 	@Override
-	public @NotNull String value() {
+	public String value() {
 		return value;
 	}
 
@@ -52,12 +51,12 @@ public final class DatasetIdImpl implements DatasetId {
 	}
 
 	@Override
-	public @NotNull String toString() {
+	public String toString() {
 		return "@" + DatasetId.class.getName() + "(" + value + ")";
 	}
 
 	@Override
-	public @NotNull Class<? extends Annotation> annotationType() {
+	public Class<? extends Annotation> annotationType() {
 		return DatasetId.class;
 	}
 }

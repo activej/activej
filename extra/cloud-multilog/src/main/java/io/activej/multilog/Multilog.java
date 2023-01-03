@@ -19,7 +19,6 @@ package io.activej.multilog;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplierWithResult;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -32,7 +31,7 @@ public interface Multilog<T> {
 	 * @param logPartition log partition name
 	 * @return StreamConsumer, which will write records, streamed from wired supplier.
 	 */
-	Promise<StreamConsumer<T>> write(@NotNull String logPartition);
+	Promise<StreamConsumer<T>> write(String logPartition);
 
 	/**
 	 * Creates a {@code StreamSupplier} that streams items, contained in a given partition and file, starting at the specified position.
@@ -42,8 +41,8 @@ public interface Multilog<T> {
 	 * @param startPosition position
 	 * @return StreamSupplier, which will stream read items to its wired consumer.
 	 */
-	Promise<StreamSupplierWithResult<T, LogPosition>> read(@NotNull String logPartition,
-			@NotNull LogFile startLogFile, long startPosition,
+	Promise<StreamSupplierWithResult<T, LogPosition>> read(String logPartition,
+			LogFile startLogFile, long startPosition,
 			@Nullable LogFile endLogFile);
 
 }

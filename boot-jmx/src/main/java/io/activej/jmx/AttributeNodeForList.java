@@ -17,7 +17,6 @@
 package io.activej.jmx;
 
 import io.activej.jmx.api.JmxRefreshable;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.management.openmbean.*;
@@ -144,7 +143,7 @@ final class AttributeNodeForList extends AbstractAttributeNodeForLeaf {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public List<JmxRefreshable> getAllRefreshables(@NotNull Object source) {
+	public List<JmxRefreshable> getAllRefreshables(Object source) {
 		if (!isListOfJmxRefreshables) {
 			return List.of();
 		}
@@ -158,12 +157,12 @@ final class AttributeNodeForList extends AbstractAttributeNodeForLeaf {
 	}
 
 	@Override
-	public boolean isSettable(@NotNull String attrName) {
+	public boolean isSettable(String attrName) {
 		return false;
 	}
 
 	@Override
-	public void setAttribute(@NotNull String attrName, @NotNull Object value, @NotNull List<?> targets) {
+	public void setAttribute(String attrName, Object value, List<?> targets) {
 		throw new UnsupportedOperationException("Cannot set attributes for list attribute node");
 	}
 

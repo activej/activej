@@ -8,7 +8,6 @@ import com.dslplatform.json.runtime.ExplicitDescription;
 import io.activej.ot.OTCommit;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.system.OTSystemImpl;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -94,7 +93,7 @@ public class Utils {
 
 			private static class TestOpWriteObject implements WriteObject<TestOp>, ExplicitDescription {
 				@Override
-				public void write(@NotNull JsonWriter writer, TestOp value) {
+				public void write(JsonWriter writer, TestOp value) {
 					if (value instanceof TestAdd) {
 						writer.writeByte(OBJECT_START);
 						writer.writeString("add");

@@ -31,7 +31,6 @@ import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.reactor.net.ServerSocketSettings;
 import io.activej.reactor.net.SocketSettings;
 import io.activej.reactor.nio.NioReactor;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -107,7 +106,7 @@ public abstract class AbstractReactiveServer<Self extends AbstractReactiveServer
 	private final EventStats filteredAccepts = EventStats.create(SMOOTHING_WINDOW);
 
 	// region creators & builder methods
-	protected AbstractReactiveServer(@NotNull NioReactor reactor) {
+	protected AbstractReactiveServer(NioReactor reactor) {
 		super(reactor);
 	}
 

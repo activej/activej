@@ -17,7 +17,6 @@
 package io.activej.http;
 
 import org.intellij.lang.annotations.Language;
-import org.jetbrains.annotations.NotNull;
 
 import static io.activej.http.HttpHeaders.*;
 
@@ -51,7 +50,7 @@ public interface HttpExceptionFormatter {
 			.replace("{title}", "Internal Server Error")
 			.replace("<p style=\"text-align: center\">{message}</p><hr>", "");
 
-	@NotNull HttpResponse formatException(@NotNull Exception e);
+	HttpResponse formatException(Exception e);
 
 	/**
 	 * Standard formatter maps all exceptions except HttpException to an empty response with 500 status code.

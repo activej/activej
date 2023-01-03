@@ -6,7 +6,6 @@ import io.activej.serializer.annotations.SerializeNullable;
 import io.activej.serializer.annotations.SerializeVarLength;
 import io.activej.test.rules.ClassBuilderConstantsRule;
 import io.activej.types.TypeT;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -72,19 +71,19 @@ public class SerializerBuilder2Test {
 	public void testList() {
 		{
 			List<Integer> testData1 = Arrays.asList(1, 2, 3);
-			List<Integer> testData2 = doTest(new TypeT<@NotNull List<Integer>>() {}, testData1);
+			List<Integer> testData2 = doTest(new TypeT<List<Integer>>() {}, testData1);
 			assertEquals(testData1, testData2);
 		}
 
 		{
 			List<Integer> testData1 = Arrays.asList(1, 2, null, 3);
-			List<Integer> testData2 = doTest(new TypeT<@NotNull List<@SerializeNullable Integer>>() {}, testData1);
+			List<Integer> testData2 = doTest(new TypeT<List<@SerializeNullable Integer>>() {}, testData1);
 			assertEquals(testData1, testData2);
 		}
 
 		{
 			List<String> testData1 = Arrays.asList("1", "2", null, "3");
-			List<String> testData2 = doTest(new TypeT<@NotNull List<@SerializeNullable String>>() {}, testData1);
+			List<String> testData2 = doTest(new TypeT<List<@SerializeNullable String>>() {}, testData1);
 			assertEquals(testData1, testData2);
 		}
 
@@ -104,7 +103,7 @@ public class SerializerBuilder2Test {
 		}
 		{
 			int[] testData1 = new int[]{1, 2, 3};
-			int[] testData2 = doTest(new TypeT<@SerializeVarLength int @NotNull []>() {}, testData1);
+			int[] testData2 = doTest(new TypeT<@SerializeVarLength int []>() {}, testData1);
 			assertArrayEquals(testData1, testData2);
 		}
 		{
@@ -114,7 +113,7 @@ public class SerializerBuilder2Test {
 		}
 		{
 			Integer[] testData1 = new Integer[]{1, 2, 3};
-			Integer[] testData2 = doTest(new TypeT<@SerializeVarLength Integer @NotNull []>() {}, testData1);
+			Integer[] testData2 = doTest(new TypeT<@SerializeVarLength Integer []>() {}, testData1);
 			assertArrayEquals(testData1, testData2);
 		}
 		{
@@ -125,13 +124,13 @@ public class SerializerBuilder2Test {
 
 		{
 			Integer[] testData1 = new Integer[]{1, 2, null, 3};
-			Integer[] testData2 = doTest(new TypeT<@SerializeNullable @SerializeVarLength Integer @NotNull []>() {}, testData1);
+			Integer[] testData2 = doTest(new TypeT<@SerializeNullable @SerializeVarLength Integer []>() {}, testData1);
 			assertArrayEquals(testData1, testData2);
 		}
 
 		{
 			Integer[][] testData1 = new Integer[][]{null, new Integer[]{null, 0}, new Integer[]{1, 2, 3}, new Integer[]{4, 5, 6}};
-			Integer[][] testData2 = doTest(new TypeT<@SerializeVarLength @SerializeNullable Integer @NotNull [] @SerializeNullable []>() {}, testData1);
+			Integer[][] testData2 = doTest(new TypeT<@SerializeVarLength @SerializeNullable Integer [] @SerializeNullable []>() {}, testData1);
 			assertArrayEquals(testData1, testData2);
 		}
 	}

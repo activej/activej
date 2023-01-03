@@ -43,7 +43,6 @@ import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.serializer.BinarySerializer;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,7 +114,7 @@ public final class ReactiveMultilog<T> extends AbstractReactive
 	}
 
 	@Override
-	public Promise<StreamConsumer<T>> write(@NotNull String logPartition) {
+	public Promise<StreamConsumer<T>> write(String logPartition) {
 		validateLogPartition(logPartition);
 
 		return Promise.of(StreamConsumer.<T>ofSupplier(
@@ -135,8 +134,8 @@ public final class ReactiveMultilog<T> extends AbstractReactive
 	}
 
 	@Override
-	public Promise<StreamSupplierWithResult<T, LogPosition>> read(@NotNull String logPartition,
-			@NotNull LogFile startLogFile, long startOffset,
+	public Promise<StreamSupplierWithResult<T, LogPosition>> read(String logPartition,
+			LogFile startLogFile, long startOffset,
 			@Nullable LogFile endLogFile) {
 		validateLogPartition(logPartition);
 		LogPosition startPosition = LogPosition.create(startLogFile, startOffset);
@@ -171,7 +170,7 @@ public final class ReactiveMultilog<T> extends AbstractReactive
 				.mapException(e -> new MultilogException("Failed to read logs from partition '" + logPartition + '\'', e));
 	}
 
-	private StreamSupplierWithResult<T, LogPosition> readLogFiles(@NotNull String logPartition, @NotNull LogPosition startPosition, @NotNull List<LogPosition> logFiles, boolean lastFile) {
+	private StreamSupplierWithResult<T, LogPosition> readLogFiles(String logPartition, LogPosition startPosition, List<LogPosition> logFiles, boolean lastFile) {
 		SettablePromise<LogPosition> positionPromise = new SettablePromise<>();
 
 		Iterator<StreamSupplier<T>> logFileStreams = new Iterator<StreamSupplier<T>>() {
@@ -266,7 +265,7 @@ public final class ReactiveMultilog<T> extends AbstractReactive
 		return StreamSupplierWithResult.of(StreamSupplier.concat(logFileStreams), positionPromise);
 	}
 
-	private static void validateLogPartition(@NotNull String logPartition) {
+	private static void validateLogPartition(String logPartition) {
 		checkArgument(!logPartition.contains("-"), "Using dash (-) in log partition name is not allowed");
 	}
 

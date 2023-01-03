@@ -3,7 +3,6 @@ package io.activej.streamcodecs;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.CorruptedDataException;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Closeable;
@@ -282,7 +281,7 @@ public class StreamInput implements Closeable, WithInitializer<StreamInput> {
 		return new String(chars, 0, length);
 	}
 
-	public final @NotNull String readUTF16() throws IOException {
+	public final String readUTF16() throws IOException {
 		int length = readVarInt();
 		if (length == 0) return "";
 		ensure(length * 2);

@@ -20,7 +20,6 @@ import io.activej.common.Checks;
 import io.activej.common.Utils;
 import io.activej.common.recycle.Recyclable;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -58,9 +57,9 @@ public class ByteBuf implements Recyclable {
 	 * You still have to recycle original {@code ByteBuf} as well as all of its slices.
 	 */
 	static final class ByteBufSlice extends ByteBuf {
-		private final @NotNull ByteBuf root;
+		private final ByteBuf root;
 
-		private ByteBufSlice(@NotNull ByteBuf buf, int head, int tail) {
+		private ByteBufSlice(ByteBuf buf, int head, int tail) {
 			super(buf.array, head, tail);
 			this.root = buf;
 		}
@@ -76,7 +75,7 @@ public class ByteBuf implements Recyclable {
 		}
 
 		@Override
-		public @NotNull ByteBuf slice(int offset, int length) {
+		public ByteBuf slice(int offset, int length) {
 			return root.slice(offset, length);
 		}
 
@@ -163,7 +162,7 @@ public class ByteBuf implements Recyclable {
 	 * @return {@code ByteBuf} over underlying byte array that is ready for writing
 	 */
 	@Contract("_ -> new")
-	public static @NotNull ByteBuf wrapForWriting(byte[] bytes) {
+	public static ByteBuf wrapForWriting(byte[] bytes) {
 		return wrap(bytes, 0, 0);
 	}
 
@@ -174,7 +173,7 @@ public class ByteBuf implements Recyclable {
 	 * @return {@code ByteBuf} over underlying byte array that is ready for reading
 	 */
 	@Contract("_ -> new")
-	public static @NotNull ByteBuf wrapForReading(byte[] bytes) {
+	public static ByteBuf wrapForReading(byte[] bytes) {
 		return wrap(bytes, 0, bytes.length);
 	}
 
@@ -188,7 +187,7 @@ public class ByteBuf implements Recyclable {
 	 * @return {@code ByteBuf} over underlying byte array with given {@link #tail} and {@link #head}
 	 */
 	@Contract("_, _, _ -> new")
-	public static @NotNull ByteBuf wrap(byte[] bytes, int head, int tail) {
+	public static ByteBuf wrap(byte[] bytes, int head, int tail) {
 		return new ByteBuf(bytes, head, tail);
 	}
 
@@ -203,7 +202,7 @@ public class ByteBuf implements Recyclable {
 	 * @return a {@link ByteBufSlice} of this {@code ByteBuf}
 	 */
 	@Contract("-> new")
-	public @NotNull ByteBuf slice() {
+	public ByteBuf slice() {
 		return slice(head, readRemaining());
 	}
 
@@ -217,7 +216,7 @@ public class ByteBuf implements Recyclable {
 	 * @return a {@code ByteBufSlice} of this {@code ByteBuf}.
 	 */
 	@Contract("_ -> new")
-	public @NotNull ByteBuf slice(int length) {
+	public ByteBuf slice(int length) {
 		return slice(head, length);
 	}
 
@@ -229,7 +228,7 @@ public class ByteBuf implements Recyclable {
 	 * @return a {@code ByteBufSlice} of this {@code ByteBuf} with the given offset and length.
 	 */
 	@Contract("_, _ -> new")
-	public @NotNull ByteBuf slice(int offset, int length) {
+	public ByteBuf slice(int offset, int length) {
 		if (CHECK_RECYCLE && isRecycled()) throw ByteBufPool.onByteBufRecycled(this);
 		if (!isRecycleNeeded()) {
 			return ByteBuf.wrap(array, offset, offset + length);
@@ -571,7 +570,7 @@ public class ByteBuf implements Recyclable {
 	 *
 	 * @see #drainTo(byte[], int, int)
 	 */
-	public int drainTo(@NotNull ByteBuf buf, int length) {
+	public int drainTo(ByteBuf buf, int length) {
 		if (CHECK_RECYCLE && isRecycled()) throw ByteBufPool.onByteBufRecycled(this);
 		if (CHECK) {
 			checkArgument(buf.tail + length <= buf.array.length,
@@ -616,7 +615,7 @@ public class ByteBuf implements Recyclable {
 	 *
 	 * @param buf the ByteBuf which will be put to the {@code ByteBuf}
 	 */
-	public void put(@NotNull ByteBuf buf) {
+	public void put(ByteBuf buf) {
 		put(buf.array, buf.head, buf.tail - buf.head);
 		buf.head = buf.tail;
 	}
@@ -732,7 +731,7 @@ public class ByteBuf implements Recyclable {
 	 * otherwise {@code false}
 	 */
 	@Contract(pure = true)
-	public boolean isContentEqual(@NotNull ByteBuf other) {
+	public boolean isContentEqual(ByteBuf other) {
 		return isContentEqual(other.array, other.head, other.readRemaining());
 	}
 
@@ -781,7 +780,7 @@ public class ByteBuf implements Recyclable {
 	 * @return {@code String} from this {@code ByteBuf} in a given charset.
 	 */
 	@Contract(pure = true)
-	public String getString(@NotNull Charset charset) {
+	public String getString(Charset charset) {
 		return new String(array, head, readRemaining(), charset);
 	}
 
@@ -793,7 +792,7 @@ public class ByteBuf implements Recyclable {
 	 * @return {@code String} from this {@code ByteBuf} in a given charset.
 	 */
 	@Contract(pure = false)
-	public String asString(@NotNull Charset charset) {
+	public String asString(Charset charset) {
 		String string = getString(charset);
 		recycle();
 		return string;

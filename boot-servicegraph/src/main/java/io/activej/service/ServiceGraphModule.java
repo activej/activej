@@ -39,7 +39,6 @@ import io.activej.service.adapter.ServiceAdapters;
 import io.activej.worker.WorkerPool;
 import io.activej.worker.WorkerPools;
 import io.activej.worker.annotation.Worker;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -199,25 +198,25 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 	}
 
 	private static final class ServiceKey implements ServiceGraph.Key {
-		private final @NotNull Key<?> key;
+		private final Key<?> key;
 		private final @Nullable WorkerPool workerPool;
 
-		private ServiceKey(@NotNull Key<?> key) {
+		private ServiceKey(Key<?> key) {
 			this.key = key;
 			this.workerPool = null;
 		}
 
-		private ServiceKey(@NotNull Key<?> key, @NotNull WorkerPool workerPool) {
+		private ServiceKey(Key<?> key, @Nullable WorkerPool workerPool) {
 			this.key = key;
 			this.workerPool = workerPool;
 		}
 
-		public @NotNull Key<?> getKey() {
+		public Key<?> getKey() {
 			return key;
 		}
 
 		@Override
-		public @NotNull Type getType() {
+		public Type getType() {
 			return key.getType();
 		}
 
@@ -522,7 +521,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T> @Nullable Service getServiceOrNull(IdentityHashMap<Object, CachedService> cache, Key<T> key, @NotNull T instance) {
+	private <T> @Nullable Service getServiceOrNull(IdentityHashMap<Object, CachedService> cache, Key<T> key, T instance) {
 		Object cacheKey = instance;
 		if (cacheKey instanceof OptionalDependency<?> optionalDependency) {
 			if (!optionalDependency.isPresent()) {

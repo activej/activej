@@ -16,7 +16,6 @@
 
 package io.activej.serializer;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.atomic.AtomicReference;
@@ -236,7 +235,7 @@ public final class BinaryInput {
 		return Double.longBitsToDouble(readLong());
 	}
 
-	public @NotNull String readUTF8() {
+	public String readUTF8() {
 		int length = readVarInt();
 		String s = new String(array, pos, length, UTF_8);
 		pos += length;
@@ -252,7 +251,7 @@ public final class BinaryInput {
 		return s;
 	}
 
-	public @NotNull String readIso88591() {
+	public String readIso88591() {
 		int length = readVarInt();
 		String s = new String(array, pos, length, ISO_8859_1);
 		pos += length;
@@ -268,7 +267,7 @@ public final class BinaryInput {
 		return s;
 	}
 
-	public @NotNull String readUTF16() {
+	public String readUTF16() {
 		int length = readVarInt();
 		if (length == 0) return "";
 		if (length >= 40) return readUTF16buf(length);
@@ -280,7 +279,7 @@ public final class BinaryInput {
 		return new String(chars, 0, length);
 	}
 
-	public @NotNull String readUTF16LE() {
+	public String readUTF16LE() {
 		int length = readVarInt();
 		if (length == 0) return "";
 		if (length >= 40) return readUTF16LEbuf(length);
@@ -320,7 +319,7 @@ public final class BinaryInput {
 		return new String(chars, 0, length);
 	}
 
-	private @NotNull String readUTF16buf(int length) {
+	private String readUTF16buf(int length) {
 		char[] chars = BUF.getAndSet(null);
 		if (chars == null || chars.length < length) chars = new char[length + length / 4];
 		for (int i = 0; i < length; i++) {
@@ -332,7 +331,7 @@ public final class BinaryInput {
 		return s;
 	}
 
-	private @NotNull String readUTF16LEbuf(int length) {
+	private String readUTF16LEbuf(int length) {
 		char[] chars = BUF.getAndSet(null);
 		if (chars == null || chars.length < length) chars = new char[length + length / 4];
 		for (int i = 0; i < length; i++) {
@@ -345,7 +344,7 @@ public final class BinaryInput {
 	}
 
 	@Deprecated
-	public @NotNull String readUTF8mb3() {
+	public String readUTF8mb3() {
 		int length = readVarInt();
 		if (length == 0) return "";
 		if (length >= 40) return readUTF8mb3buf(length);
@@ -387,7 +386,7 @@ public final class BinaryInput {
 	}
 
 	@Deprecated
-	private @NotNull String readUTF8mb3buf(int length) {
+	private String readUTF8mb3buf(int length) {
 		char[] chars = BUF.getAndSet(null);
 		if (chars == null || chars.length < length) chars = new char[length + length / 4];
 		for (int i = 0; i < length; i++) {

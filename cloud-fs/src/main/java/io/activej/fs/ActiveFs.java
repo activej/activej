@@ -22,7 +22,6 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.fs.exception.IllegalOffsetException;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -275,7 +274,7 @@ public interface ActiveFs {
 	 * @return map of filenames to their corresponding {@link FileMetadata metadata}.
 	 * Map contains metadata for existing files only
 	 */
-	default Promise<Map<String, @NotNull FileMetadata>> infoAll(Set<String> names) {
+	default Promise<Map<String, FileMetadata>> infoAll(Set<String> names) {
 		if (names.isEmpty()) return Promise.of(Map.of());
 
 		Map<String, FileMetadata> result = new HashMap<>();

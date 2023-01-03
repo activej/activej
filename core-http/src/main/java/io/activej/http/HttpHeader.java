@@ -17,7 +17,6 @@
 package io.activej.http;
 
 import io.activej.http.CaseInsensitiveTokenMap.Token;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.bytebuf.ByteBufStrings.decodeAscii;
@@ -65,7 +64,7 @@ public final class HttpHeader extends Token {
 	}
 
 	@Override
-	public @NotNull String toString() {
+	public String toString() {
 		return decodeAscii(bytes, offset, length);
 	}
 }

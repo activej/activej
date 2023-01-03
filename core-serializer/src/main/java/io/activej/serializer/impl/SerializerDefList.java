@@ -19,7 +19,6 @@ package io.activej.serializer.impl;
 import io.activej.codegen.expression.Expression;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,17 +37,17 @@ public final class SerializerDefList extends SerializerDefRegularCollection {
 	}
 
 	@Override
-	protected @NotNull SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
+	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
 		return new SerializerDefList(valueSerializer, true);
 	}
 
 	@Override
-	protected @NotNull Expression doIterate(Expression collection, UnaryOperator<Expression> action) {
+	protected Expression doIterate(Expression collection, UnaryOperator<Expression> action) {
 		return let(collection, v -> iterateList(v, action));
 	}
 
 	@Override
-	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
+	protected Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
 		return ifEq(length, value(0),
                 staticCall(Collections.class, "emptyList"),
 				ifEq(length, value(1),
@@ -57,17 +56,17 @@ public final class SerializerDefList extends SerializerDefRegularCollection {
 	}
 
 	@Override
-	protected @NotNull Expression createBuilder(Expression length) {
+	protected Expression createBuilder(Expression length) {
 		return arrayNew(Object[].class, length);
 	}
 
 	@Override
-	protected @NotNull Expression addToBuilder(Expression array, Expression i, Expression element) {
+	protected Expression addToBuilder(Expression array, Expression i, Expression element) {
 		return arraySet(array, i, element);
 	}
 
 	@Override
-	protected @NotNull Expression build(Expression array) {
+	protected Expression build(Expression array) {
 		return staticCall(Arrays.class, "asList", array);
 	}
 }

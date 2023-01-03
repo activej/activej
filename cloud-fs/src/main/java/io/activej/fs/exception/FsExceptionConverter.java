@@ -20,7 +20,6 @@ import com.dslplatform.json.JsonConverter;
 import com.dslplatform.json.JsonReader;
 import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.ParsingException;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -133,7 +132,7 @@ public abstract class FsExceptionConverter {
 		writer.writeByte(OBJECT_END);
 	}
 
-	private static @NotNull FsScalarException readScalarException(JsonReader<?> reader) throws IOException {
+	private static FsScalarException readScalarException(JsonReader<?> reader) throws IOException {
 		FsException exception = readFsException(reader);
 		if (exception instanceof FsScalarException) return (FsScalarException) exception;
 		throw ParsingException.create("Expected exception to be instance of FsScalarException", true);

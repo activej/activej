@@ -9,7 +9,6 @@ import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import static org.junit.Assert.assertSame;
@@ -156,7 +155,7 @@ public class ServiceGraphTest {
 		}
 
 		@Override
-		public @NotNull Eventloop getReactor() {
+		public Eventloop getReactor() {
 			return eventloop;
 		}
 

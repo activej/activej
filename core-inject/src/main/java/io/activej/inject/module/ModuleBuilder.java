@@ -22,7 +22,6 @@ import io.activej.inject.Key;
 import io.activej.inject.KeyPattern;
 import io.activej.inject.annotation.ProvidesIntoSet;
 import io.activej.inject.binding.*;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
@@ -66,7 +65,7 @@ public interface ModuleBuilder {
 	 * so that exports do not interfere between classes.
 	 * Class parameter is used to specify from which class in the hierarchy to start.
 	 */
-	ModuleBuilder scan(@NotNull Class<?> containerClass, @Nullable Object container);
+	ModuleBuilder scan(Class<?> containerClass, @Nullable Object container);
 
 	/**
 	 * Same as {@link #scan}, with staring class defaulting to the class of the object instance.
@@ -108,7 +107,7 @@ public interface ModuleBuilder {
 	 * And you need to subclass the module at the usage point to 'bake' those generics
 	 * into subclass bytecode so that they could be fetched by this bind call.
 	 */
-	<T> ModuleBuilder0<T> bind(@NotNull Key<T> key);
+	<T> ModuleBuilder0<T> bind(Key<T> key);
 
 	default <T> ModuleBuilder bindInstanceProvider(Class<T> type) {
 		return bindInstanceProvider(Key.of(type));

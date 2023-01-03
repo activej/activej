@@ -21,7 +21,6 @@ import io.activej.async.process.AsyncExecutor;
 import io.activej.async.process.AsyncExecutors;
 import io.activej.common.ref.RefBoolean;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.List;
@@ -30,17 +29,17 @@ import java.util.function.Predicate;
 public final class AsyncBiPredicates {
 
 	@Contract(pure = true)
-	public static <T, U> @NotNull AsyncBiPredicate<T, U> buffer(@NotNull AsyncBiPredicate<T, U> actual) {
+	public static <T, U> AsyncBiPredicate<T, U> buffer(AsyncBiPredicate<T, U> actual) {
 		return buffer(1, Integer.MAX_VALUE, actual);
 	}
 
 	@Contract(pure = true)
-	public static <T, U> @NotNull AsyncBiPredicate<T, U> buffer(int maxParallelCalls, int maxBufferedCalls, @NotNull AsyncBiPredicate<T, U> asyncPredicate) {
+	public static <T, U> AsyncBiPredicate<T, U> buffer(int maxParallelCalls, int maxBufferedCalls, AsyncBiPredicate<T, U> asyncPredicate) {
 		return ofExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls), asyncPredicate);
 	}
 
 	@Contract(pure = true)
-	public static <T, U> @NotNull AsyncBiPredicate<T, U> ofExecutor(@NotNull AsyncExecutor asyncExecutor, @NotNull AsyncBiPredicate<T, U> predicate) {
+	public static <T, U> AsyncBiPredicate<T, U> ofExecutor(AsyncExecutor asyncExecutor, AsyncBiPredicate<T, U> predicate) {
 		return (t, u) -> asyncExecutor.execute(() -> predicate.test(t, u));
 	}
 
@@ -56,7 +55,7 @@ public final class AsyncBiPredicates {
 	 * @return a composed {@link AsyncBiPredicate} that represents a logical AND of asynchronous predicates
 	 * in a given collection
 	 */
-	public static <T, U> @NotNull AsyncBiPredicate<T, U> and(Collection<AsyncBiPredicate<? super T, ? super U>> predicates) {
+	public static <T, U> AsyncBiPredicate<T, U> and(Collection<AsyncBiPredicate<? super T, ? super U>> predicates) {
 		return (t, u) -> {
 			AsyncAccumulator<RefBoolean> asyncAccumulator = AsyncAccumulator.create(new RefBoolean(true));
 			for (AsyncBiPredicate<? super T, ? super U> predicate : predicates) {
@@ -71,7 +70,7 @@ public final class AsyncBiPredicates {
 	 *
 	 * @see #and(Collection)
 	 */
-	public static <T, U> @NotNull AsyncBiPredicate<T, U> and() {
+	public static <T, U> AsyncBiPredicate<T, U> and() {
 		return AsyncBiPredicate.alwaysTrue();
 	}
 
@@ -83,7 +82,7 @@ public final class AsyncBiPredicates {
 	 * @see #and(Collection)
 	 * @see #and(AsyncBiPredicate[])
 	 */
-	public static <T, U> @NotNull AsyncBiPredicate<T, U> and(AsyncBiPredicate<? super T, ? super U> predicate1) {
+	public static <T, U> AsyncBiPredicate<T, U> and(AsyncBiPredicate<? super T, ? super U> predicate1) {
 		//noinspection unchecked
 		return (AsyncBiPredicate<T, U>) predicate1;
 	}
@@ -94,7 +93,7 @@ public final class AsyncBiPredicates {
 	 * @see #and(Collection)
 	 * @see #and(AsyncBiPredicate[])
 	 */
-	public static <T, U> @NotNull AsyncBiPredicate<T, U> and(AsyncBiPredicate<? super T, ? super U> predicate1, AsyncBiPredicate<? super T, ? super U> predicate2) {
+	public static <T, U> AsyncBiPredicate<T, U> and(AsyncBiPredicate<? super T, ? super U> predicate1, AsyncBiPredicate<? super T, ? super U> predicate2) {
 		//noinspection unchecked
 		return ((AsyncBiPredicate<T, U>) predicate1).and(predicate2);
 	}
@@ -106,7 +105,7 @@ public final class AsyncBiPredicates {
 	 * @see #and(Collection)
 	 */
 	@SafeVarargs
-	public static <T, U> @NotNull AsyncBiPredicate<T, U> and(AsyncBiPredicate<? super T, ? super U>... predicates) {
+	public static <T, U> AsyncBiPredicate<T, U> and(AsyncBiPredicate<? super T, ? super U>... predicates) {
 		//noinspection RedundantCast
 		return and(((List<AsyncBiPredicate<? super T, ? super U>>) List.of(predicates)));
 	}
@@ -123,7 +122,7 @@ public final class AsyncBiPredicates {
 	 * @return a composed {@link AsyncBiPredicate} that represents a logical OR of asynchronous predicates
 	 * in a given collection
 	 */
-	public static <T, U> @NotNull AsyncBiPredicate<T, U> or(Collection<AsyncBiPredicate<? super T, ? super U>> predicates) {
+	public static <T, U> AsyncBiPredicate<T, U> or(Collection<AsyncBiPredicate<? super T, ? super U>> predicates) {
 		return (t, u) -> {
 			AsyncAccumulator<RefBoolean> asyncAccumulator = AsyncAccumulator.create(new RefBoolean(false));
 			for (AsyncBiPredicate<? super T, ? super U> predicate : predicates) {
@@ -138,7 +137,7 @@ public final class AsyncBiPredicates {
 	 *
 	 * @see #or(Collection)
 	 */
-	public static <T, U> @NotNull AsyncBiPredicate<T, U> or() {
+	public static <T, U> AsyncBiPredicate<T, U> or() {
 		return AsyncBiPredicate.alwaysFalse();
 	}
 
@@ -150,7 +149,7 @@ public final class AsyncBiPredicates {
 	 * @see #or(Collection)
 	 * @see #or(AsyncBiPredicate[])
 	 */
-	public static <T, U> @NotNull AsyncBiPredicate<T, U> or(AsyncBiPredicate<? super T, ? super U> predicate1) {
+	public static <T, U> AsyncBiPredicate<T, U> or(AsyncBiPredicate<? super T, ? super U> predicate1) {
 		//noinspection unchecked
 		return (AsyncBiPredicate<T, U>) predicate1;
 	}
@@ -161,7 +160,7 @@ public final class AsyncBiPredicates {
 	 * @see #or(Collection)
 	 * @see #or(AsyncBiPredicate[])
 	 */
-	public static <T, U> @NotNull AsyncBiPredicate<T, U> or(AsyncBiPredicate<? super T, ? super U> predicate1, AsyncBiPredicate<? super T, ? super U> predicate2) {
+	public static <T, U> AsyncBiPredicate<T, U> or(AsyncBiPredicate<? super T, ? super U> predicate1, AsyncBiPredicate<? super T, ? super U> predicate2) {
 		//noinspection unchecked
 		return ((AsyncBiPredicate<T, U>) predicate1).or(predicate2);
 	}
@@ -173,7 +172,7 @@ public final class AsyncBiPredicates {
 	 * @see #or(Collection)
 	 */
 	@SafeVarargs
-	public static <T, U> @NotNull AsyncBiPredicate<T, U> or(AsyncBiPredicate<? super T, ? super U>... predicates) {
+	public static <T, U> AsyncBiPredicate<T, U> or(AsyncBiPredicate<? super T, ? super U>... predicates) {
 		//noinspection RedundantCast
 		return or(((List<AsyncBiPredicate<? super T, ? super U>>) List.of(predicates)));
 	}

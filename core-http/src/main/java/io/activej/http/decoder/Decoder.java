@@ -19,7 +19,6 @@ package io.activej.http.decoder;
 import io.activej.common.collection.Either;
 import io.activej.common.tuple.*;
 import io.activej.http.HttpRequest;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -34,13 +33,13 @@ public interface Decoder<T> {
 	/**
 	 * Either return the decoded type or format
 	 */
-	Either<T, DecodeErrors> decode(@NotNull HttpRequest request);
+	Either<T, DecodeErrors> decode(HttpRequest request);
 
-	default @Nullable T decodeOrNull(@NotNull HttpRequest request) {
+	default @Nullable T decodeOrNull(HttpRequest request) {
 		return decode(request).getLeft();
 	}
 
-	default T decodeOrThrow(@NotNull HttpRequest request) throws DecodeException {
+	default T decodeOrThrow(HttpRequest request) throws DecodeException {
 		Either<T, DecodeErrors> either = decode(request);
 		if (either.isLeft()) return either.getLeft();
 		//noinspection ConstantConditions - not 'left', hence 'right'
@@ -55,7 +54,7 @@ public interface Decoder<T> {
 	default Decoder<T> withId(String id) {
 		return new Decoder<>() {
 			@Override
-			public Either<T, DecodeErrors> decode(@NotNull HttpRequest request) {
+			public Either<T, DecodeErrors> decode(HttpRequest request) {
 				return Decoder.this.decode(request);
 			}
 
@@ -73,7 +72,7 @@ public interface Decoder<T> {
 	default <V> Decoder<V> map(Mapper<T, V> fn) {
 		return new AbstractDecoder<>(getId()) {
 			@Override
-			public Either<V, DecodeErrors> decode(@NotNull HttpRequest request) {
+			public Either<V, DecodeErrors> decode(HttpRequest request) {
 				return Decoder.this.decode(request)
 						.flatMapLeft(value ->
 								fn.map(value)
@@ -94,7 +93,7 @@ public interface Decoder<T> {
 	default Decoder<T> validate(Validator<T> validator) {
 		return new AbstractDecoder<>(getId()) {
 			@Override
-			public Either<T, DecodeErrors> decode(@NotNull HttpRequest request) {
+			public Either<T, DecodeErrors> decode(HttpRequest request) {
 				Either<T, DecodeErrors> decodedValue = Decoder.this.decode(request);
 				if (decodedValue.isRight()) return decodedValue;
 				List<DecodeError> errors = validator.validate(decodedValue.getLeft());
@@ -108,10 +107,10 @@ public interface Decoder<T> {
 	 * Plainly combines given decoders (they are called on the same request) into one, mapping the result
 	 * with the supplied mapper.
 	 */
-	static <V> @NotNull Decoder<V> create(Mapper<Object[], V> fn, Decoder<?>... decoders) {
+	static <V> Decoder<V> create(Mapper<Object[], V> fn, Decoder<?>... decoders) {
 		return new AbstractDecoder<>("") {
 			@Override
-			public Either<V, DecodeErrors> decode(@NotNull HttpRequest request) {
+			public Either<V, DecodeErrors> decode(HttpRequest request) {
 				Object[] args = new Object[decoders.length];
 				DecodeErrors errors = DecodeErrors.create();
 				for (int i = 0; i < decoders.length; i++) {
@@ -134,13 +133,13 @@ public interface Decoder<T> {
 	}
 
 	@SuppressWarnings("unchecked")
-	static <R, T1> @NotNull Decoder<R> of(TupleConstructor1<T1, R> constructor, Decoder<T1> decoder1) {
+	static <R, T1> Decoder<R> of(TupleConstructor1<T1, R> constructor, Decoder<T1> decoder1) {
 		return create(Mapper.of(params -> constructor.create((T1) params[0])),
 				decoder1);
 	}
 
 	@SuppressWarnings("unchecked")
-	static <R, T1, T2> @NotNull Decoder<R> of(TupleConstructor2<T1, T2, R> constructor,
+	static <R, T1, T2> Decoder<R> of(TupleConstructor2<T1, T2, R> constructor,
 			Decoder<T1> decoder1,
 			Decoder<T2> decoder2) {
 		return create(Mapper.of(params -> constructor.create((T1) params[0], (T2) params[1])),
@@ -149,7 +148,7 @@ public interface Decoder<T> {
 	}
 
 	@SuppressWarnings("unchecked")
-	static <R, T1, T2, T3> @NotNull Decoder<R> of(TupleConstructor3<T1, T2, T3, R> constructor,
+	static <R, T1, T2, T3> Decoder<R> of(TupleConstructor3<T1, T2, T3, R> constructor,
 			Decoder<T1> decoder1,
 			Decoder<T2> decoder2,
 			Decoder<T3> decoder3) {
@@ -160,7 +159,7 @@ public interface Decoder<T> {
 	}
 
 	@SuppressWarnings("unchecked")
-	static <R, T1, T2, T3, T4> @NotNull Decoder<R> of(TupleConstructor4<T1, T2, T3, T4, R> constructor,
+	static <R, T1, T2, T3, T4> Decoder<R> of(TupleConstructor4<T1, T2, T3, T4, R> constructor,
 			Decoder<T1> decoder1,
 			Decoder<T2> decoder2,
 			Decoder<T3> decoder3,
@@ -173,7 +172,7 @@ public interface Decoder<T> {
 	}
 
 	@SuppressWarnings("unchecked")
-	static <R, T1, T2, T3, T4, T5> @NotNull Decoder<R> of(TupleConstructor5<T1, T2, T3, T4, T5, R> constructor,
+	static <R, T1, T2, T3, T4, T5> Decoder<R> of(TupleConstructor5<T1, T2, T3, T4, T5, R> constructor,
 			Decoder<T1> decoder1,
 			Decoder<T2> decoder2,
 			Decoder<T3> decoder3,
@@ -188,7 +187,7 @@ public interface Decoder<T> {
 	}
 
 	@SuppressWarnings("unchecked")
-	static <R, T1, T2, T3, T4, T5, T6> @NotNull Decoder<R> of(TupleConstructor6<T1, T2, T3, T4, T5, T6, R> constructor,
+	static <R, T1, T2, T3, T4, T5, T6> Decoder<R> of(TupleConstructor6<T1, T2, T3, T4, T5, T6, R> constructor,
 			Decoder<T1> decoder1,
 			Decoder<T2> decoder2,
 			Decoder<T3> decoder3,

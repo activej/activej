@@ -12,7 +12,6 @@ import io.activej.inject.module.ModuleBuilder;
 import io.activej.inject.module.Modules;
 import io.activej.inject.util.Trie;
 import io.activej.inject.util.Utils;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -799,7 +798,7 @@ public final class TestDI {
 				.collect(toSet()), flattened.get().keySet());
 	}
 
-	private static @NotNull Trie<Scope, Map<Key<?>, Binding<?>>> reduceModuleBindings(Module module) {
+	private static Trie<Scope, Map<Key<?>, Binding<?>>> reduceModuleBindings(Module module) {
 		return Preprocessor.reduce(
 				module.getBindings(),
 				combinedMultibinder(module.getMultibinders()),

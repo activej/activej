@@ -29,7 +29,6 @@ import io.activej.reactor.Reactor;
 import io.activej.record.Record;
 import io.activej.serializer.SerializerBuilder;
 import io.activej.serializer.annotations.Serialize;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.After;
 import org.junit.Before;
@@ -221,7 +220,7 @@ public final class ReportingTest extends CubeTestBase {
 		}
 
 		@Override
-		protected StreamDataAcceptor<LogItem> createSplitter(@NotNull Context ctx) {
+		protected StreamDataAcceptor<LogItem> createSplitter(Context ctx) {
 			return new StreamDataAcceptor<>() {
 				private final StreamDataAcceptor<LogItem> dateAggregator = ctx.addOutput(
 						cube.logStreamConsumer(

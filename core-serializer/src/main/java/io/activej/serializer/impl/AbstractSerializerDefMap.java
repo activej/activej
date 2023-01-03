@@ -21,7 +21,6 @@ import io.activej.codegen.expression.Variable;
 import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.function.BinaryOperator;
 
@@ -38,7 +37,7 @@ public abstract class AbstractSerializerDefMap extends AbstractSerializerDef imp
 	protected final Class<?> valueType;
 	protected final boolean nullable;
 
-	protected AbstractSerializerDefMap(@NotNull SerializerDef keySerializer, @NotNull SerializerDef valueSerializer, @NotNull Class<?> encodeType, @NotNull Class<?> decodeType, @NotNull Class<?> keyType, @NotNull Class<?> valueType, boolean nullable) {
+	protected AbstractSerializerDefMap(SerializerDef keySerializer, SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, Class<?> keyType, Class<?> valueType, boolean nullable) {
 		this.keySerializer = keySerializer;
 		this.valueSerializer = valueSerializer;
 		this.encodeType = encodeType;
@@ -92,7 +91,7 @@ public abstract class AbstractSerializerDefMap extends AbstractSerializerDef imp
 		}
 	}
 
-	protected @NotNull Expression doEncode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+	protected Expression doEncode(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
 		return doIterateMap(value,
 				(k, v) -> sequence(
 						keySerializer.defineEncoder(staticEncoders, buf, pos, cast(k, keySerializer.getEncodeType()), version, compatibilityLevel),
@@ -109,7 +108,7 @@ public abstract class AbstractSerializerDefMap extends AbstractSerializerDef imp
 								let(dec(length), len -> doDecode(staticDecoders, in, version, compatibilityLevel, len))));
 	}
 
-	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
+	protected Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
 		return let(createBuilder(length), builder -> sequence(
 				iterate(value(0), length,
 						i -> putToBuilder(builder, i,
@@ -118,13 +117,13 @@ public abstract class AbstractSerializerDefMap extends AbstractSerializerDef imp
 				build(builder)));
 	}
 
-	protected abstract @NotNull SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel);
+	protected abstract SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel);
 
-	protected abstract @NotNull Expression doIterateMap(Expression collection, BinaryOperator<Expression> keyValueAction);
+	protected abstract Expression doIterateMap(Expression collection, BinaryOperator<Expression> keyValueAction);
 
-	protected abstract @NotNull Expression createBuilder(Expression length);
+	protected abstract Expression createBuilder(Expression length);
 
-	protected abstract @NotNull Expression putToBuilder(Expression builder, Expression index, Expression key, Expression value);
+	protected abstract Expression putToBuilder(Expression builder, Expression index, Expression key, Expression value);
 
-	protected abstract @NotNull Expression build(Expression builder);
+	protected abstract Expression build(Expression builder);
 }

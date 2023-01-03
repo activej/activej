@@ -30,7 +30,6 @@ import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,7 +78,7 @@ public final class FsPartitions extends AbstractReactive
 	/**
 	 * Sets the server selection strategy based on file name and alive partitions
 	 */
-	public FsPartitions withServerSelector(@NotNull ServerSelector serverSelector) {
+	public FsPartitions withServerSelector(ServerSelector serverSelector) {
 		this.serverSelector = serverSelector;
 		return this;
 	}

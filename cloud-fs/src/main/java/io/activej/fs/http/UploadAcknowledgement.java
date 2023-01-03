@@ -18,7 +18,6 @@ package io.activej.fs.http;
 
 import com.dslplatform.json.CompiledJson;
 import io.activej.fs.exception.FsException;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class UploadAcknowledgement {
@@ -33,7 +32,7 @@ public final class UploadAcknowledgement {
 		return new UploadAcknowledgement(null);
 	}
 
-	static UploadAcknowledgement ofError(@NotNull FsException error) {
+	static UploadAcknowledgement ofError(FsException error) {
 		return new UploadAcknowledgement(error);
 	}
 

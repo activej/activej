@@ -17,7 +17,6 @@
 package io.activej.jmx;
 
 import io.activej.common.initializer.WithInitializer;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -25,14 +24,14 @@ import java.util.List;
 
 public final class ProtoObjectName implements WithInitializer<ProtoObjectName> {
 	private final @Nullable String className;
-	private final @NotNull String packageName;
+	private final String packageName;
 	private final @Nullable Object qualifier;
 	private final @Nullable String scope;
 	private final @Nullable String workerPoolQualifier;
 	private final @Nullable String workerId;
 	private final @Nullable List<String> genericParameters;
 
-	public ProtoObjectName(@Nullable String className, @NotNull String packageName, @Nullable Object qualifier,
+	public ProtoObjectName(@Nullable String className, String packageName, @Nullable Object qualifier,
 			@Nullable String scope, @Nullable String workerPoolQualifier, @Nullable String workerId,
 			@Nullable List<String> genericParameters) {
 		this.className = className;
@@ -44,7 +43,7 @@ public final class ProtoObjectName implements WithInitializer<ProtoObjectName> {
 		this.genericParameters = genericParameters;
 	}
 
-	public static ProtoObjectName create(@Nullable String className, @NotNull String packageName) {
+	public static ProtoObjectName create(@Nullable String className, String packageName) {
 		return new ProtoObjectName(className, packageName, null, null, null, null, null);
 	}
 
@@ -52,7 +51,7 @@ public final class ProtoObjectName implements WithInitializer<ProtoObjectName> {
 		return new ProtoObjectName(className, packageName, qualifier, scope, workerPoolQualifier, workerId, genericParameters);
 	}
 
-	public ProtoObjectName withPackageName(@NotNull String packageName) {
+	public ProtoObjectName withPackageName(String packageName) {
 		return new ProtoObjectName(className, packageName, qualifier, scope, workerPoolQualifier, workerId, genericParameters);
 	}
 
@@ -82,7 +81,7 @@ public final class ProtoObjectName implements WithInitializer<ProtoObjectName> {
 		return className;
 	}
 
-	public @NotNull String getPackageName() {
+	public String getPackageName() {
 		return packageName;
 	}
 

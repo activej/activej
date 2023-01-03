@@ -24,7 +24,6 @@ import io.activej.inject.binding.Binding;
 import io.activej.inject.binding.BindingType;
 import io.activej.inject.binding.DIException;
 import io.activej.inject.binding.Multibinder;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
@@ -224,7 +223,7 @@ public final class Utils {
 		return nameOffset + (key.getDisplayString().length() - nameOffset) / 2;
 	}
 
-	public static @NotNull String getDisplayString(@NotNull Class<? extends Annotation> annotationType, @Nullable Annotation annotation) {
+	public static String getDisplayString(Class<? extends Annotation> annotationType, @Nullable Annotation annotation) {
 		if (annotation == null) {
 			return "@" + ReflectionUtils.getDisplayName(annotationType);
 		}
@@ -233,7 +232,7 @@ public final class Utils {
 		return str.startsWith("@" + typeName) ? "@" + ReflectionUtils.getDisplayName(annotationType) + str.substring(typeName.length() + 1) : str;
 	}
 
-	public static String getDisplayString(@NotNull Object object) {
+	public static String getDisplayString(Object object) {
 		if (object instanceof Class && ((Class<?>) object).isAnnotation()) {
 			//noinspection unchecked
 			return getDisplayString((Class<? extends Annotation>) object, null);

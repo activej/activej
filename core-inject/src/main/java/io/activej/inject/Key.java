@@ -19,7 +19,6 @@ package io.activej.inject;
 import io.activej.inject.util.ReflectionUtils;
 import io.activej.inject.util.Utils;
 import io.activej.types.Types;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.ParameterizedType;
@@ -42,7 +41,7 @@ import static io.activej.inject.util.TypeUtils.simplifyType;
  * parameterized type and give it to a {@link #ofType Key.ofType} constructor.
  */
 public abstract class Key<T> {
-	private final @NotNull Type type;
+	private final Type type;
 	private final @Nullable Object qualifier;
 
 	private int hash;
@@ -57,7 +56,7 @@ public abstract class Key<T> {
 		this.qualifier = qualifier;
 	}
 
-	Key(@NotNull Type type, @Nullable Object qualifier) {
+	Key(Type type, @Nullable Object qualifier) {
 		this.type = simplifyType(type);
 		this.qualifier = qualifier;
 	}
@@ -68,19 +67,19 @@ public abstract class Key<T> {
 		}
 	}
 
-	public static <T> @NotNull Key<T> of(@NotNull Class<T> type) {
+	public static <T> Key<T> of(Class<T> type) {
 		return new KeyImpl<>(type, null);
 	}
 
-	public static <T> @NotNull Key<T> of(@NotNull Class<T> type, @Nullable Object qualifier) {
+	public static <T> Key<T> of(Class<T> type, @Nullable Object qualifier) {
 		return new KeyImpl<>(type, qualifier);
 	}
 
-	public static <T> @NotNull Key<T> ofType(@NotNull Type type) {
+	public static <T> Key<T> ofType(Type type) {
 		return new KeyImpl<>(type, null);
 	}
 
-	public static <T> @NotNull Key<T> ofType(@NotNull Type type, @Nullable Object qualifier) {
+	public static <T> Key<T> ofType(Type type, @Nullable Object qualifier) {
 		return new KeyImpl<>(type, qualifier);
 	}
 
@@ -91,7 +90,7 @@ public abstract class Key<T> {
 		return new KeyImpl<>(type, qualifier);
 	}
 
-	private @NotNull Type getTypeParameter() {
+	private Type getTypeParameter() {
 		// this cannot possibly fail so not even a check here
 		Type typeArgument = ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
 		Object outerInstance = ReflectionUtils.getOuterClassInstance(this);
@@ -99,7 +98,7 @@ public abstract class Key<T> {
 		return outerInstance != null ? Types.bind(typeArgument, Types.getAllTypeBindings(outerInstance.getClass())) : typeArgument;
 	}
 
-	public @NotNull Type getType() {
+	public Type getType() {
 		return type;
 	}
 
@@ -108,7 +107,7 @@ public abstract class Key<T> {
 	 * Also casts the result to a properly parameterized class.
 	 */
 	@SuppressWarnings("unchecked")
-	public @NotNull Class<T> getRawType() {
+	public Class<T> getRawType() {
 		return (Class<T>) Types.getRawType(type);
 	}
 

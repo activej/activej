@@ -5,7 +5,6 @@ import io.activej.fs.BlockingFs;
 import io.activej.fs.FileMetadata;
 import io.activej.state.StateManager;
 import io.activej.streamcodecs.*;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -70,7 +69,7 @@ public final class FileStateManager<T> implements StateManager<T, Long>, WithIni
 	}
 
 	@Override
-	public @NotNull Long newRevision() throws IOException {
+	public Long newRevision() throws IOException {
 		Long lastSnapshotRevision = getLastSnapshotRevision();
 		return lastSnapshotRevision == null ? 1L : lastSnapshotRevision + 1;
 	}
@@ -83,14 +82,14 @@ public final class FileStateManager<T> implements StateManager<T, Long>, WithIni
 	}
 
 	@Override
-	public @Nullable Long getLastDiffRevision(@NotNull Long currentRevision) throws IOException {
+	public @Nullable Long getLastDiffRevision(Long currentRevision) throws IOException {
 		Map<String, FileMetadata> list = fs.list(fileNamingScheme.diffGlob(currentRevision));
 		OptionalLong max = list.keySet().stream().map(fileNamingScheme::decodeDiff).filter(Objects::nonNull).mapToLong(FileNamingScheme.Diff::getTo).max();
 		return max.isPresent() ? max.getAsLong() : null;
 	}
 
 	@Override
-	public @NotNull T loadSnapshot(@NotNull Long revision) throws IOException {
+	public T loadSnapshot(Long revision) throws IOException {
 		T loaded = tryLoadSnapshot(revision);
 		if (loaded == null) {
 			throw new IOException("Cannot find snapshot with revision " + revision);
@@ -99,7 +98,7 @@ public final class FileStateManager<T> implements StateManager<T, Long>, WithIni
 	}
 
 	@Override
-	public @Nullable T tryLoadSnapshot(@NotNull Long revision) throws IOException {
+	public @Nullable T tryLoadSnapshot(Long revision) throws IOException {
 		String filename = fileNamingScheme.encodeSnapshot(revision);
 		if (fs.info(filename) == null) return null;
 
@@ -110,7 +109,7 @@ public final class FileStateManager<T> implements StateManager<T, Long>, WithIni
 	}
 
 	@Override
-	public @NotNull T loadDiff(@NotNull T state, @NotNull Long revisionFrom, @NotNull Long revisionTo) throws IOException {
+	public T loadDiff(T state, Long revisionFrom, Long revisionTo) throws IOException {
 		T loaded = tryLoadDiff(state, revisionFrom, revisionTo);
 		if (loaded == null) {
 			throw new IOException("Cannot find diffs between revision " + revisionFrom + " and " + revisionTo);
@@ -119,7 +118,7 @@ public final class FileStateManager<T> implements StateManager<T, Long>, WithIni
 	}
 
 	@Override
-	public @Nullable T tryLoadDiff(@NotNull T state, @NotNull Long revisionFrom, @NotNull Long revisionTo) throws IOException {
+	public @Nullable T tryLoadDiff(T state, Long revisionFrom, Long revisionTo) throws IOException {
 		if (revisionFrom.equals(revisionTo)) return state;
 		if (!(this.decoder instanceof DiffStreamDecoder)) {
 			throw new UnsupportedOperationException();
@@ -134,18 +133,18 @@ public final class FileStateManager<T> implements StateManager<T, Long>, WithIni
 	}
 
 	@Override
-	public void saveSnapshot(@NotNull T state, @NotNull Long revision) throws IOException {
+	public void saveSnapshot(T state, Long revision) throws IOException {
 		String filename = fileNamingScheme.encodeSnapshot(revision);
 		safeUpload(filename, output -> encoder.encode(output, state));
 	}
 
 	@Override
-	public void saveDiff(@NotNull T state, @NotNull Long revision, @NotNull T stateFrom, @NotNull Long revisionFrom) throws IOException {
+	public void saveDiff(T state, Long revision, T stateFrom, Long revisionFrom) throws IOException {
 		String filenameDiff = fileNamingScheme.encodeDiff(revisionFrom, revision);
 		safeUpload(filenameDiff, output -> ((DiffStreamEncoder<T>) this.encoder).encodeDiff(output, stateFrom, state));
 	}
 
-	public @NotNull FileState<T> load() throws IOException {
+	public FileState<T> load() throws IOException {
 		FileState<T> state = tryLoad();
 		if (state == null) {
 			throw new IOException("State is empty");
@@ -161,7 +160,7 @@ public final class FileStateManager<T> implements StateManager<T, Long>, WithIni
 		return null;
 	}
 
-	public @NotNull FileState<T> load(@NotNull T stateFrom, @NotNull Long revisionFrom) throws IOException {
+	public FileState<T> load(T stateFrom, Long revisionFrom) throws IOException {
 		FileState<T> state = tryLoad(stateFrom, revisionFrom);
 		if (state == null) {
 			throw new IOException("State is empty");
@@ -169,7 +168,7 @@ public final class FileStateManager<T> implements StateManager<T, Long>, WithIni
 		return state;
 	}
 
-	public @Nullable FileState<T> tryLoad(@NotNull T stateFrom, @NotNull Long revisionFrom) throws IOException {
+	public @Nullable FileState<T> tryLoad(T stateFrom, Long revisionFrom) throws IOException {
 		Long lastRevision = getLastSnapshotRevision();
 		if (revisionFrom.equals(lastRevision)) {
 			return new FileState<>(stateFrom, revisionFrom);
@@ -188,13 +187,13 @@ public final class FileStateManager<T> implements StateManager<T, Long>, WithIni
 		return null;
 	}
 
-	public @NotNull Long save(@NotNull T state) throws IOException {
+	public Long save(T state) throws IOException {
 		long revision = newRevision();
 		doSave(state, revision);
 		return revision;
 	}
 
-	public void save(@NotNull T state, Long revision) throws IOException {
+	public void save(T state, Long revision) throws IOException {
 		Long lastRevision = getLastSnapshotRevision();
 		if (lastRevision != null && lastRevision >= revision) {
 			throw new IllegalArgumentException("Revision cannot be less than last revision [" + lastRevision + ']');
@@ -202,7 +201,7 @@ public final class FileStateManager<T> implements StateManager<T, Long>, WithIni
 		doSave(state, revision);
 	}
 
-	private void doSave(@NotNull T state, long revision) throws IOException {
+	private void doSave(T state, long revision) throws IOException {
 		if (maxSaveDiffs != 0) {
 			Map<String, FileMetadata> list = fs.list(fileNamingScheme.snapshotGlob());
 			long[] revisionsFrom = list.keySet().stream()

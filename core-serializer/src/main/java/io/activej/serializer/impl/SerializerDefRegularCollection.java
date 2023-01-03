@@ -19,7 +19,6 @@ package io.activej.serializer.impl;
 import io.activej.codegen.expression.Expression;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.function.UnaryOperator;
 
@@ -31,32 +30,32 @@ public class SerializerDefRegularCollection extends AbstractSerializerDefCollect
 		this(valueSerializer, encodeType, decodeType, Object.class, false);
 	}
 
-	protected SerializerDefRegularCollection(SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, @NotNull Class<?> elementType, boolean nullable) {
+	protected SerializerDefRegularCollection(SerializerDef valueSerializer, Class<?> encodeType, Class<?> decodeType, Class<?> elementType, boolean nullable) {
 		super(valueSerializer, encodeType, decodeType, elementType, nullable);
 	}
 
 	@Override
-	protected @NotNull SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
+	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
 		return new SerializerDefRegularCollection(valueSerializer, encodeType, decodeType, elementType, true);
 	}
 
 	@Override
-	protected @NotNull Expression doIterate(Expression collection, UnaryOperator<Expression> action) {
+	protected Expression doIterate(Expression collection, UnaryOperator<Expression> action) {
 		return iterateIterable(collection, action);
 	}
 
 	@Override
-	protected @NotNull Expression createBuilder(Expression length) {
+	protected Expression createBuilder(Expression length) {
 		return constructor(decodeType, length);
 	}
 
 	@Override
-	protected @NotNull Expression addToBuilder(Expression builder, Expression index, Expression element) {
+	protected Expression addToBuilder(Expression builder, Expression index, Expression element) {
 		return call(builder, "add", element);
 	}
 
 	@Override
-	protected @NotNull Expression build(Expression builder) {
+	protected Expression build(Expression builder) {
 		return builder;
 	}
 }

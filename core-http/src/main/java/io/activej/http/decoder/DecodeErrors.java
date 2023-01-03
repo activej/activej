@@ -17,7 +17,6 @@
 package io.activej.http.decoder;
 
 import io.activej.common.initializer.WithInitializer;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -45,27 +44,27 @@ public final class DecodeErrors implements WithInitializer<DecodeErrors> {
 		return create().with(DecodeError.of(message, args));
 	}
 
-	public static DecodeErrors of(@NotNull DecodeError error) {
+	public static DecodeErrors of(DecodeError error) {
 		return create().with(error);
 	}
 
-	public static DecodeErrors of(@NotNull List<DecodeError> errors) {
+	public static DecodeErrors of(List<DecodeError> errors) {
 		return create().with(errors);
 	}
 
-	public DecodeErrors with(@NotNull DecodeError error) {
+	public DecodeErrors with(DecodeError error) {
 		if (this.errors == null) this.errors = new ArrayList<>();
 		this.errors.add(error);
 		return this;
 	}
 
-	public DecodeErrors with(@NotNull List<DecodeError> errors) {
+	public DecodeErrors with(List<DecodeError> errors) {
 		if (this.errors == null) this.errors = new ArrayList<>();
 		this.errors.addAll(errors);
 		return this;
 	}
 
-	public DecodeErrors with(@NotNull String id, @NotNull DecodeErrors nestedError) {
+	public DecodeErrors with(String id, DecodeErrors nestedError) {
 		if (children == null) children = new HashMap<>();
 		children.merge(id, nestedError, DecodeErrors::merge);
 		return this;
@@ -91,7 +90,7 @@ public final class DecodeErrors implements WithInitializer<DecodeErrors> {
 		return this;
 	}
 
-	public DecodeErrors with(@NotNull String id, @NotNull DecodeError nestedError) {
+	public DecodeErrors with(String id, DecodeError nestedError) {
 		if (children == null) children = new HashMap<>();
 		children.computeIfAbsent(id, $ -> new DecodeErrors()).with(nestedError);
 		return this;
@@ -101,11 +100,11 @@ public final class DecodeErrors implements WithInitializer<DecodeErrors> {
 		return errors != null || children != null;
 	}
 
-	public @NotNull List<DecodeError> getErrors() {
+	public List<DecodeError> getErrors() {
 		return errors != null ? errors : List.of();
 	}
 
-	public @NotNull Set<String> getChildren() {
+	public Set<String> getChildren() {
 		return children != null ? children.keySet() : Set.of();
 	}
 

@@ -19,22 +19,21 @@ package io.activej.async.function;
 import io.activej.async.process.AsyncExecutor;
 import io.activej.async.process.AsyncExecutors;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
 public final class AsyncFunctions {
 
 	@Contract(pure = true)
-	public static <T, R> @NotNull AsyncFunction<T, R> buffer(@NotNull AsyncFunction<T, R> actual) {
+	public static <T, R> AsyncFunction<T, R> buffer(AsyncFunction<T, R> actual) {
 		return buffer(1, Integer.MAX_VALUE, actual);
 	}
 
 	@Contract(pure = true)
-	public static <T, R> @NotNull AsyncFunction<T, R> buffer(int maxParallelCalls, int maxBufferedCalls, @NotNull AsyncFunction<T, R> asyncFunction) {
+	public static <T, R> AsyncFunction<T, R> buffer(int maxParallelCalls, int maxBufferedCalls, AsyncFunction<T, R> asyncFunction) {
 		return ofExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls), asyncFunction);
 	}
 
 	@Contract(pure = true)
-	public static <T, R> @NotNull AsyncFunction<T, R> ofExecutor(@NotNull AsyncExecutor asyncExecutor, @NotNull AsyncFunction<T, R> function) {
+	public static <T, R> AsyncFunction<T, R> ofExecutor(AsyncExecutor asyncExecutor, AsyncFunction<T, R> function) {
 		return t -> asyncExecutor.execute(() -> function.apply(t));
 	}
 }

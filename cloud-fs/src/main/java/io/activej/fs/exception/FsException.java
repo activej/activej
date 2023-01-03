@@ -16,14 +16,12 @@
 
 package io.activej.fs.exception;
 
-import org.jetbrains.annotations.NotNull;
-
 public class FsException extends Exception {
-	public FsException(@NotNull String message) {
+	public FsException(String message) {
 		this(message, true);
 	}
 
-	FsException(@NotNull String message, boolean withStack) {
+	FsException(String message, boolean withStack) {
 		super(message);
 		if (withStack) super.fillInStackTrace();
 	}

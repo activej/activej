@@ -6,7 +6,6 @@ import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
 import io.activej.test.rules.EventloopRule;
-import org.jetbrains.annotations.NotNull;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -69,7 +68,7 @@ public class LogDataConsumerSplitterTest {
 	public void testIncorrectImplementation() {
 		LogDataConsumerSplitter<Integer, Integer> splitter = new LogDataConsumerSplitter<>() {
 			@Override
-			protected StreamDataAcceptor<Integer> createSplitter(@NotNull Context ctx) {
+			protected StreamDataAcceptor<Integer> createSplitter(Context ctx) {
 				return item -> {};
 			}
 		};
@@ -85,7 +84,7 @@ public class LogDataConsumerSplitterTest {
 		}
 
 		@Override
-		protected StreamDataAcceptor<T> createSplitter(@NotNull Context ctx) {
+		protected StreamDataAcceptor<T> createSplitter(Context ctx) {
 			return ctx.addOutput(logConsumer);
 		}
 	}

@@ -2,7 +2,6 @@ package io.activej.fs;
 
 import io.activej.common.function.ConsumerEx;
 import io.activej.fs.LocalFileUtils.IORunnable;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -915,32 +914,32 @@ public final class TestLocalBlockingFsInvariants {
 		}
 
 		@Override
-		public OutputStream upload(@NotNull String name) throws IOException {
+		public OutputStream upload(String name) throws IOException {
 			return peer.upload(name);
 		}
 
 		@Override
-		public OutputStream upload(@NotNull String name, long size) throws IOException {
+		public OutputStream upload(String name, long size) throws IOException {
 			return peer.upload(name, size);
 		}
 
 		@Override
-		public OutputStream append(@NotNull String name, long offset) throws IOException {
+		public OutputStream append(String name, long offset) throws IOException {
 			return peer.append(name, offset);
 		}
 
 		@Override
-		public InputStream download(@NotNull String name, long offset, long limit) throws IOException {
+		public InputStream download(String name, long offset, long limit) throws IOException {
 			return peer.download(name, offset, limit);
 		}
 
 		@Override
-		public void delete(@NotNull String name) throws IOException {
+		public void delete(String name) throws IOException {
 			peer.delete(name);
 		}
 
 		@Override
-		public Map<String, FileMetadata> list(@NotNull String glob) throws IOException {
+		public Map<String, FileMetadata> list(String glob) throws IOException {
 			return peer.list(glob);
 		}
 	}

@@ -16,15 +16,13 @@
 
 package io.activej.jmx;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 final class ValueFetcherFromGetter implements ValueFetcher {
 	private final Method getter;
 
-	public ValueFetcherFromGetter(@NotNull Method getter) {
+	public ValueFetcherFromGetter(Method getter) {
 		this.getter = getter;
 	}
 

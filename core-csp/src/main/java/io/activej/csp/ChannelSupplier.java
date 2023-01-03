@@ -29,7 +29,6 @@ import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
@@ -323,7 +322,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 * based on current ChannelSupplier and when its Promise completes,
 	 * applies provided {@code fn} to the result.
 	 */
-	default <V> ChannelSupplier<V> map(FunctionEx<? super @NotNull T, ? extends V> fn) {
+	default <V> ChannelSupplier<V> map(FunctionEx<? super T, ? extends V> fn) {
 		return new AbstractChannelSupplier<>(this) {
 			@Override
 			protected Promise<V> doGet() {
@@ -346,7 +345,7 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	 * based on current ChannelSupplier and applies provided {@code fn}
 	 * to its Promise asynchronously.
 	 */
-	default <V> ChannelSupplier<V> mapAsync(Function<? super @NotNull T, Promise<V>> fn) {
+	default <V> ChannelSupplier<V> mapAsync(Function<? super T, Promise<V>> fn) {
 		return new AbstractChannelSupplier<>(this) {
 			@Override
 			protected Promise<V> doGet() {

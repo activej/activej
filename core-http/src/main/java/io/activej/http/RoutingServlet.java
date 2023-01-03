@@ -19,7 +19,6 @@ package io.activej.http;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.UnsupportedEncodingException;
@@ -68,7 +67,7 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	/**
 	 * Maps given servlet on some path. Fails when such path already has a servlet mapped to it.
 	 */
-	public RoutingServlet map(@NotNull String path, @NotNull AsyncServlet servlet) {
+	public RoutingServlet map(String path, AsyncServlet servlet) {
 		return map(null, path, servlet);
 	}
 
@@ -76,7 +75,7 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	 * @see #map(HttpMethod, String, AsyncServlet)
 	 */
 	@Contract("_, _, _ -> this")
-	public RoutingServlet map(@Nullable HttpMethod method, @NotNull String path, @NotNull AsyncServlet servlet) {
+	public RoutingServlet map(@Nullable HttpMethod method, String path, AsyncServlet servlet) {
 		return doMap(method == null ? ANY_HTTP_ORDINAL : method.ordinal(), path, servlet);
 	}
 
@@ -85,7 +84,7 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	 * Fails if there is already a web socket servlet mapped on this path.
 	 */
 	@Contract("_, _ -> this")
-	public RoutingServlet mapWebSocket(@NotNull String path, Consumer<WebSocket> webSocketConsumer) {
+	public RoutingServlet mapWebSocket(String path, Consumer<WebSocket> webSocketConsumer) {
 		return mapWebSocket(path, new WebSocketServlet() {
 			@Override
 			protected void onWebSocket(WebSocket webSocket) {
@@ -95,12 +94,12 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	}
 
 	@Contract("_, _ -> this")
-	public @NotNull RoutingServlet mapWebSocket(@NotNull String path, WebSocketServlet servlet) {
+	public RoutingServlet mapWebSocket(String path, WebSocketServlet servlet) {
 		return doMap(WS_ORDINAL, path, servlet);
 	}
 
 	@Contract("_, _, _ -> this")
-	private RoutingServlet doMap(int ordinal, @NotNull String path, @NotNull AsyncServlet servlet) {
+	private RoutingServlet doMap(int ordinal, String path, AsyncServlet servlet) {
 		checkArgument(path.startsWith(ROOT) && (path.endsWith(WILDCARD) || !path.contains(STAR)), "Invalid path: " + path);
 		if (path.endsWith(WILDCARD)) {
 			makeSubtree(path.substring(0, path.length() - 2)).mapFallback(ordinal, servlet);
@@ -159,11 +158,11 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 				Promise.ofException(HttpError.notFound404());
 	}
 
-	private void map(int ordinal, @NotNull AsyncServlet servlet) {
+	private void map(int ordinal, AsyncServlet servlet) {
 		doMerge(rootServlets, ordinal, servlet);
 	}
 
-	private void mapFallback(int ordinal, @NotNull AsyncServlet servlet) {
+	private void mapFallback(int ordinal, AsyncServlet servlet) {
 		doMerge(fallbackServlets, ordinal, servlet);
 	}
 
@@ -225,7 +224,7 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 						servlet.routes.computeIfAbsent(name, $ -> new RoutingServlet()));
 	}
 
-	private RoutingServlet getOrCreateSubtree(@NotNull String path, BiFunction<RoutingServlet, String, @Nullable RoutingServlet> childGetter) {
+	private RoutingServlet getOrCreateSubtree(String path, BiFunction<RoutingServlet, String, @Nullable RoutingServlet> childGetter) {
 		if (path.isEmpty() || path.equals(ROOT)) {
 			return this;
 		}

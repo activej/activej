@@ -21,7 +21,6 @@ import io.activej.common.exception.MalformedDataException;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.exception.FsException;
 import io.activej.types.TypeT;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,14 +33,14 @@ public final class EtcdDiscoveryService implements DiscoveryService {
 	private final TypeT<Set<String>> PARTITION_IDS_TYPE_T = new TypeT<>() {};
 
 	private final EtcdWatchService watchService;
-	private final Function<String, @NotNull ActiveFs> activeFsProvider;
+	private final Function<String, ActiveFs> activeFsProvider;
 
-	private EtcdDiscoveryService(EtcdWatchService watchService, Function<String, @NotNull ActiveFs> activeFsProvider) {
+	private EtcdDiscoveryService(EtcdWatchService watchService, Function<String, ActiveFs> activeFsProvider) {
 		this.watchService = watchService;
 		this.activeFsProvider = activeFsProvider;
 	}
 
-	public static EtcdDiscoveryService create(EtcdWatchService watchService, Function<String, @NotNull ActiveFs> activeFsProvider) {
+	public static EtcdDiscoveryService create(EtcdWatchService watchService, Function<String, ActiveFs> activeFsProvider) {
 		return new EtcdDiscoveryService(watchService, activeFsProvider);
 	}
 

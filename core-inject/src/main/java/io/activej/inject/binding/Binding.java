@@ -21,7 +21,6 @@ import io.activej.inject.Key;
 import io.activej.inject.binding.Bindings.*;
 import io.activej.inject.impl.*;
 import io.activej.inject.util.LocationInfo;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -53,17 +52,17 @@ public abstract class Binding<T> {
 
 	private @Nullable LocationInfo location;
 
-	protected Binding(@NotNull Set<Key<?>> dependencies) {
+	protected Binding(Set<Key<?>> dependencies) {
 		this(dependencies, BindingType.REGULAR, null);
 	}
 
-	protected Binding(@NotNull Set<Key<?>> dependencies, BindingType type, @Nullable LocationInfo location) {
+	protected Binding(Set<Key<?>> dependencies, BindingType type, @Nullable LocationInfo location) {
 		this.dependencies = dependencies;
 		this.type = type;
 		this.location = location;
 	}
 
-	public static <T> Binding<T> toInstance(@NotNull T instance) {
+	public static <T> Binding<T> toInstance(T instance) {
 		return new BindingToInstance<>(instance);
 	}
 
@@ -77,84 +76,84 @@ public abstract class Binding<T> {
 		return new BindingToKey<>(key);
 	}
 
-	public static <R> Binding<R> to(@NotNull TupleConstructorN<R> constructor, Class<?>[] types) {
+	public static <R> Binding<R> to(TupleConstructorN<R> constructor, Class<?>[] types) {
 		return Binding.to(constructor, Stream.of(types).map(Key::of).toArray(Key<?>[]::new));
 	}
 
 	@SuppressWarnings("Duplicates")
-	public static <R> Binding<R> to(@NotNull TupleConstructorN<R> constructor, Key<?>[] dependencies) {
+	public static <R> Binding<R> to(TupleConstructorN<R> constructor, Key<?>[] dependencies) {
 		if (dependencies.length == 0) {
 			return to(constructor::create);
 		}
 		return new BindingToConstructorN<>(constructor, dependencies);
 	}
 
-	public static <T1, R> Binding<R> to(@NotNull TupleConstructor1<T1, R> constructor,
-			@NotNull Class<T1> dependency1) {
+	public static <T1, R> Binding<R> to(TupleConstructor1<T1, R> constructor,
+			Class<T1> dependency1) {
 		return Binding.to(constructor, Key.of(dependency1));
 	}
 
-	public static <T1, T2, R> Binding<R> to(@NotNull TupleConstructor2<T1, T2, R> constructor,
-			@NotNull Class<T1> dependency1, @NotNull Class<T2> dependency2) {
+	public static <T1, T2, R> Binding<R> to(TupleConstructor2<T1, T2, R> constructor,
+			Class<T1> dependency1, Class<T2> dependency2) {
 		return Binding.to(constructor, Key.of(dependency1), Key.of(dependency2));
 	}
 
-	public static <T1, T2, T3, R> Binding<R> to(@NotNull TupleConstructor3<T1, T2, T3, R> constructor,
-			@NotNull Class<T1> dependency1, @NotNull Class<T2> dependency2, @NotNull Class<T3> dependency3) {
+	public static <T1, T2, T3, R> Binding<R> to(TupleConstructor3<T1, T2, T3, R> constructor,
+			Class<T1> dependency1, Class<T2> dependency2, Class<T3> dependency3) {
 		return Binding.to(constructor, Key.of(dependency1), Key.of(dependency2), Key.of(dependency3));
 	}
 
-	public static <T1, T2, T3, T4, R> Binding<R> to(@NotNull TupleConstructor4<T1, T2, T3, T4, R> constructor,
-			@NotNull Class<T1> dependency1, @NotNull Class<T2> dependency2, @NotNull Class<T3> dependency3, @NotNull Class<T4> dependency4) {
+	public static <T1, T2, T3, T4, R> Binding<R> to(TupleConstructor4<T1, T2, T3, T4, R> constructor,
+			Class<T1> dependency1, Class<T2> dependency2, Class<T3> dependency3, Class<T4> dependency4) {
 		return Binding.to(constructor, Key.of(dependency1), Key.of(dependency2), Key.of(dependency3), Key.of(dependency4));
 	}
 
-	public static <T1, T2, T3, T4, T5, R> Binding<R> to(@NotNull TupleConstructor5<T1, T2, T3, T4, T5, R> constructor,
-			@NotNull Class<T1> dependency1, @NotNull Class<T2> dependency2, @NotNull Class<T3> dependency3, @NotNull Class<T4> dependency4, @NotNull Class<T5> dependency5) {
+	public static <T1, T2, T3, T4, T5, R> Binding<R> to(TupleConstructor5<T1, T2, T3, T4, T5, R> constructor,
+			Class<T1> dependency1, Class<T2> dependency2, Class<T3> dependency3, Class<T4> dependency4, Class<T5> dependency5) {
 		return Binding.to(constructor, Key.of(dependency1), Key.of(dependency2), Key.of(dependency3), Key.of(dependency4), Key.of(dependency5));
 	}
 
-	public static <T1, T2, T3, T4, T5, T6, R> Binding<R> to(@NotNull TupleConstructor6<T1, T2, T3, T4, T5, T6, R> constructor,
-			@NotNull Class<T1> dependency1, @NotNull Class<T2> dependency2, @NotNull Class<T3> dependency3, @NotNull Class<T4> dependency4, @NotNull Class<T5> dependency5, @NotNull Class<T6> dependency6) {
+	public static <T1, T2, T3, T4, T5, T6, R> Binding<R> to(TupleConstructor6<T1, T2, T3, T4, T5, T6, R> constructor,
+			Class<T1> dependency1, Class<T2> dependency2, Class<T3> dependency3, Class<T4> dependency4, Class<T5> dependency5, Class<T6> dependency6) {
 		return Binding.to(constructor, Key.of(dependency1), Key.of(dependency2), Key.of(dependency3), Key.of(dependency4), Key.of(dependency5), Key.of(dependency6));
 	}
 
-	public static <R> Binding<R> to(@NotNull TupleConstructor0<R> constructor) {
+	public static <R> Binding<R> to(TupleConstructor0<R> constructor) {
 		return new BindingToConstructor0<>(constructor);
 	}
 
-	public static <T1, R> Binding<R> to(@NotNull TupleConstructor1<T1, R> constructor,
-			@NotNull Key<T1> dependency1) {
+	public static <T1, R> Binding<R> to(TupleConstructor1<T1, R> constructor,
+			Key<T1> dependency1) {
 		return new BindingToConstructor1<>(constructor, dependency1);
 	}
 
 	@SuppressWarnings("Duplicates")
-	public static <T1, T2, R> Binding<R> to(@NotNull TupleConstructor2<T1, T2, R> constructor,
-			@NotNull Key<T1> dependency1, @NotNull Key<T2> dependency2) {
+	public static <T1, T2, R> Binding<R> to(TupleConstructor2<T1, T2, R> constructor,
+			Key<T1> dependency1, Key<T2> dependency2) {
 		return new BindingToConstructor2<>(dependency1, dependency2, constructor);
 	}
 
 	@SuppressWarnings("Duplicates")
-	public static <T1, T2, T3, R> Binding<R> to(@NotNull TupleConstructor3<T1, T2, T3, R> constructor,
-			@NotNull Key<T1> dependency1, @NotNull Key<T2> dependency2, @NotNull Key<T3> dependency3) {
+	public static <T1, T2, T3, R> Binding<R> to(TupleConstructor3<T1, T2, T3, R> constructor,
+			Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3) {
 		return new BindingToConstructor3<>(constructor, dependency1, dependency2, dependency3);
 	}
 
 	@SuppressWarnings("Duplicates")
-	public static <T1, T2, T3, T4, R> Binding<R> to(@NotNull TupleConstructor4<T1, T2, T3, T4, R> constructor,
-			@NotNull Key<T1> dependency1, @NotNull Key<T2> dependency2, @NotNull Key<T3> dependency3, @NotNull Key<T4> dependency4) {
+	public static <T1, T2, T3, T4, R> Binding<R> to(TupleConstructor4<T1, T2, T3, T4, R> constructor,
+			Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4) {
 		return new BindingToConstructor4<>(constructor, dependency1, dependency2, dependency3, dependency4);
 	}
 
 	@SuppressWarnings("Duplicates")
-	public static <T1, T2, T3, T4, T5, R> Binding<R> to(@NotNull TupleConstructor5<T1, T2, T3, T4, T5, R> constructor,
-			@NotNull Key<T1> dependency1, @NotNull Key<T2> dependency2, @NotNull Key<T3> dependency3, @NotNull Key<T4> dependency4, @NotNull Key<T5> dependency5) {
+	public static <T1, T2, T3, T4, T5, R> Binding<R> to(TupleConstructor5<T1, T2, T3, T4, T5, R> constructor,
+			Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4, Key<T5> dependency5) {
 		return new BindingToConstructor5<>(constructor, dependency1, dependency2, dependency3, dependency4, dependency5);
 	}
 
 	@SuppressWarnings("Duplicates")
-	public static <T1, T2, T3, T4, T5, T6, R> Binding<R> to(@NotNull TupleConstructor6<T1, T2, T3, T4, T5, T6, R> constructor,
-			@NotNull Key<T1> dependency1, @NotNull Key<T2> dependency2, @NotNull Key<T3> dependency3, @NotNull Key<T4> dependency4, @NotNull Key<T5> dependency5, @NotNull Key<T6> dependency6) {
+	public static <T1, T2, T3, T4, T5, T6, R> Binding<R> to(TupleConstructor6<T1, T2, T3, T4, T5, T6, R> constructor,
+			Key<T1> dependency1, Key<T2> dependency2, Key<T3> dependency3, Key<T4> dependency4, Key<T5> dependency5, Key<T6> dependency6) {
 		return new BindingToConstructor6<>(constructor, dependency1, dependency2, dependency3, dependency4, dependency5, dependency6);
 	}
 
@@ -170,14 +169,14 @@ public abstract class Binding<T> {
 		return this;
 	}
 
-	public Binding<T> onInstance(@NotNull Consumer<? super @NotNull T> consumer) {
+	public Binding<T> onInstance(Consumer<? super T> consumer) {
 		return mapInstance(instance -> {
 			consumer.accept(instance);
 			return instance;
 		});
 	}
 
-	public <R> Binding<R> mapInstance(@NotNull Function<? super @NotNull T, ? extends @NotNull R> fn) {
+	public <R> Binding<R> mapInstance(Function<? super T, ? extends R> fn) {
 		return new Binding<>(dependencies, type, location) {
 			@Override
 			public CompiledBinding<R> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
@@ -185,14 +184,14 @@ public abstract class Binding<T> {
 				return slot != null ?
 						new AbstractCompiledBinding<>(scope, slot) {
 							@Override
-							protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							protected R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								T instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
 								return fn.apply(instance);
 							}
 						} :
 						new CompiledBinding<>() {
 							@Override
-							public @NotNull R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							public R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								T instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
 								return fn.apply(instance);
 							}
@@ -202,7 +201,7 @@ public abstract class Binding<T> {
 	}
 
 	@SuppressWarnings("Duplicates")
-	public <R> Binding<R> mapInstance(@NotNull List<Key<?>> dependencies, @NotNull BiFunction<Object[], ? super @NotNull T, ? extends @NotNull R> fn) {
+	public <R> Binding<R> mapInstance(List<Key<?>> dependencies, BiFunction<Object[], ? super T, ? extends R> fn) {
 		Set<Key<?>> missing = dependencies.stream()
 				.filter(required -> !this.dependencies.contains(required))
 				.collect(toSet());
@@ -222,7 +221,7 @@ public abstract class Binding<T> {
 				return slot != null ?
 						new AbstractCompiledBinding<>(scope, slot) {
 							@Override
-							protected @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							protected R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								Object[] args = new Object[bindings.length];
 								for (int i = 0; i < bindings.length; i++) {
 									args[i] = bindings[i].getInstance(scopedInstances, synchronizedScope);
@@ -233,7 +232,7 @@ public abstract class Binding<T> {
 						} :
 						new CompiledBinding<>() {
 							@Override
-							public @NotNull R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							public R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								Object[] args = new Object[bindings.length];
 								for (int i = 0; i < bindings.length; i++) {
 									args[i] = bindings[i].getInstance(scopedInstances, synchronizedScope);
@@ -246,34 +245,34 @@ public abstract class Binding<T> {
 		};
 	}
 
-	public <K> Binding<T> onDependency(@NotNull Class<K> dependency, @NotNull Consumer<? super K> consumer) {
+	public <K> Binding<T> onDependency(Class<K> dependency, Consumer<? super K> consumer) {
 		return onDependency(Key.of(dependency), consumer);
 	}
 
-	public <K> Binding<T> onDependency(@NotNull Key<K> dependency, @NotNull Consumer<? super K> consumer) {
+	public <K> Binding<T> onDependency(Key<K> dependency, Consumer<? super K> consumer) {
 		return mapDependency(dependency, v -> {
 			consumer.accept(v);
 			return v;
 		});
 	}
 
-	public <K> Binding<T> mapDependency(@NotNull Class<K> dependency, @NotNull Function<? super K, ? extends K> fn) {
+	public <K> Binding<T> mapDependency(Class<K> dependency, Function<? super K, ? extends K> fn) {
 		return mapDependency(Key.of(dependency), fn);
 	}
 
 	@SuppressWarnings("unchecked")
-	public <K> Binding<T> mapDependency(@NotNull Key<K> dependency, @NotNull Function<? super K, ? extends K> fn) {
+	public <K> Binding<T> mapDependency(Key<K> dependency, Function<? super K, ? extends K> fn) {
 		return new Binding<>(this.dependencies, this.type, this.location) {
 			@Override
 			public CompiledBinding<T> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot) {
 				return Binding.this.compile(new CompiledBindingLocator() {
 					@Override
-					public <Q> @NotNull CompiledBinding<Q> get(Key<Q> key) {
+					public <Q> CompiledBinding<Q> get(Key<Q> key) {
 						CompiledBinding<Q> originalBinding = compiledBindings.get(key);
 						if (!key.equals(dependency)) return originalBinding;
 						return new CompiledBinding<>() {
 							@Override
-							public @NotNull Q getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							public Q getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								Q instance = originalBinding.getInstance(scopedInstances, synchronizedScope);
 								return (Q) fn.apply((K) instance);
 							}
@@ -292,7 +291,7 @@ public abstract class Binding<T> {
 		return addDependencies(Stream.of(extraDependencies).collect(Collectors.toSet()));
 	}
 
-	public Binding<T> addDependencies(@NotNull Set<Key<?>> extraDependencies) {
+	public Binding<T> addDependencies(Set<Key<?>> extraDependencies) {
 		return extraDependencies.isEmpty() ?
 				this :
 				new Binding<>(union(this.dependencies, extraDependencies), this.type, this.location) {
@@ -302,7 +301,7 @@ public abstract class Binding<T> {
 						CompiledBinding<?>[] compiledExtraBindings = extraDependencies.stream().map(compiledBindings::get).toArray(CompiledBinding[]::new);
 						return new CompiledBinding<>() {
 							@Override
-							public @NotNull T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							public T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								//noinspection ForLoopReplaceableByForEach
 								for (int i = 0; i < compiledExtraBindings.length; i++) {
 									compiledExtraBindings[i].getInstance(scopedInstances, synchronizedScope);
@@ -326,7 +325,7 @@ public abstract class Binding<T> {
 						return slot != null ?
 								new AbstractCompiledBinding<>(scope, slot) {
 									@Override
-									protected @NotNull T doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+									protected T doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 										T instance = compiledBinding.getInstance(scopedInstances, synchronizedScope);
 										consumer.initInstance(instance, scopedInstances, synchronizedScope);
 										return instance;
@@ -334,7 +333,7 @@ public abstract class Binding<T> {
 								} :
 								new CompiledBinding<>() {
 									@Override
-									public @NotNull T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+									public T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 										T instance = compiledBinding.getInstance(scopedInstances, synchronizedScope);
 										consumer.initInstance(instance, scopedInstances, synchronizedScope);
 										return instance;
@@ -346,7 +345,7 @@ public abstract class Binding<T> {
 
 	public abstract CompiledBinding<T> compile(CompiledBindingLocator compiledBindings, boolean threadsafe, int scope, @Nullable Integer slot);
 
-	public @NotNull Set<Key<?>> getDependencies() {
+	public Set<Key<?>> getDependencies() {
 		return dependencies;
 	}
 

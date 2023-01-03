@@ -24,7 +24,6 @@ import io.activej.http.loader.ResourceNotFoundException;
 import io.activej.http.loader.StaticLoader;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.charset.Charset;
@@ -169,7 +168,7 @@ public final class StaticServlet implements AsyncServlet, WithInitializer<Static
 								Promise.ofException(HttpError.ofCode(400, e)));
 	}
 
-	private @NotNull Promise<HttpResponse> tryLoadIndexResource(String mappedPath) {
+	private Promise<HttpResponse> tryLoadIndexResource(String mappedPath) {
 		String dirPath = mappedPath.endsWith("/") || mappedPath.isEmpty() ? mappedPath : (mappedPath + '/');
 		return Promises.first(
 						indexResources.stream()
@@ -179,7 +178,7 @@ public final class StaticServlet implements AsyncServlet, WithInitializer<Static
 				.mapException(e -> new ResourceNotFoundException("Could not find '" + mappedPath + '\'', e));
 	}
 
-	private @NotNull Promise<? extends HttpResponse> tryLoadDefaultResource() {
+	private Promise<? extends HttpResponse> tryLoadDefaultResource() {
 		return defaultResource != null ?
 				resourceLoader.load(defaultResource)
 						.map(buf -> createHttpResponse(buf, contentTypeResolver.apply(defaultResource))) :

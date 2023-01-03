@@ -1,12 +1,10 @@
 package io.activej.state.file;
 
-import org.jetbrains.annotations.NotNull;
-
 public final class FileState<T> {
-	private final @NotNull T state;
+	private final T state;
 	private final long revision;
 
-	public FileState(@NotNull T state, long revision) {
+	public FileState(T state, long revision) {
 		this.state = state;
 		this.revision = revision;
 	}
@@ -15,7 +13,7 @@ public final class FileState<T> {
 		return revision;
 	}
 
-	public @NotNull T getState() {
+	public T getState() {
 		return state;
 	}
 }

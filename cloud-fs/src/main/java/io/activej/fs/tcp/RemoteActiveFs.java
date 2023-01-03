@@ -45,7 +45,6 @@ import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.reactor.net.SocketSettings;
 import io.activej.reactor.nio.NioReactor;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -146,7 +145,7 @@ public final class RemoteActiveFs extends AbstractNioReactive
 				.whenComplete(toLogger(logger, "upload", name, size, this));
 	}
 
-	private @NotNull Promise<ChannelConsumer<ByteBuf>> doUpload(Messaging<FsResponse, FsRequest> messaging, @NotNull String name, @Nullable Long size) {
+	private Promise<ChannelConsumer<ByteBuf>> doUpload(Messaging<FsResponse, FsRequest> messaging, String name, @Nullable Long size) {
 		return messaging.send(new FsRequest.Upload(name, size == null ? -1 : size))
 				.then(messaging::receive)
 				.whenResult(validateFn(FsResponse.UploadAck.class))
@@ -302,7 +301,7 @@ public final class RemoteActiveFs extends AbstractNioReactive
 	}
 
 	@Override
-	public Promise<Map<String, @NotNull FileMetadata>> infoAll(Set<String> names) {
+	public Promise<Map<String, FileMetadata>> infoAll(Set<String> names) {
 		if (names.isEmpty()) return Promise.of(Map.of());
 
 		return simpleCommand(new FsRequest.InfoAll(names), FsResponse.InfoAllFinished.class, FsResponse.InfoAllFinished::files)

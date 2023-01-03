@@ -18,7 +18,6 @@ package io.activej.http;
 
 import io.activej.common.ApplicationSettings;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -34,7 +33,7 @@ final class HttpHeadersMultimap<K, V> {
 		return size;
 	}
 
-	public void add(@NotNull K key, @NotNull V value) {
+	public void add(K key, V value) {
 		if (size++ > kvPairs.length / 4) {
 			resize();
 		}
@@ -69,7 +68,7 @@ final class HttpHeadersMultimap<K, V> {
 
 	@Contract(pure = true)
 	@SuppressWarnings("unchecked")
-	public @Nullable V get(@NotNull K key) {
+	public @Nullable V get(K key) {
 		for (int i = key.hashCode() & (kvPairs.length - 2); ; i = (i + 2) & (kvPairs.length - 2)) {
 			K k = (K) kvPairs[i];
 			if (k == null) {
@@ -89,7 +88,7 @@ final class HttpHeadersMultimap<K, V> {
 			}
 
 			@Override
-			public @NotNull Iterator<Map.Entry<K, V>> iterator() {
+			public Iterator<Map.Entry<K, V>> iterator() {
 				return new Iterator<>() {
 					int i = 0;
 					@Nullable K k;

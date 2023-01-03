@@ -22,7 +22,6 @@ import io.activej.promise.Promises;
 import io.activej.promise.RetryPolicy;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayDeque;
 import java.util.List;
@@ -110,7 +109,7 @@ public class AsyncExecutors {
 			}
 
 			@Override
-			public <T> @NotNull Promise<T> execute(@NotNull AsyncSupplier<T> supplier) throws RejectedExecutionException {
+			public <T> Promise<T> execute(AsyncSupplier<T> supplier) throws RejectedExecutionException {
 				if (pendingCalls < maxParallelCalls) {
 					pendingCalls++;
 					return supplier.get().whenComplete(() -> {
@@ -129,10 +128,10 @@ public class AsyncExecutors {
 		};
 	}
 
-	public static AsyncExecutor retry(@NotNull RetryPolicy<?> retryPolicy) {
+	public static AsyncExecutor retry(RetryPolicy<?> retryPolicy) {
 		return new AsyncExecutor() {
 			@Override
-			public <T> @NotNull Promise<T> execute(@NotNull AsyncSupplier<T> supplier) {
+			public <T> Promise<T> execute(AsyncSupplier<T> supplier) {
 				return Promises.retry(supplier, retryPolicy);
 			}
 		};
@@ -145,7 +144,7 @@ public class AsyncExecutors {
 			private int counter = 0;
 
 			@Override
-			public <T> @NotNull Promise<T> execute(@NotNull AsyncSupplier<T> supplier) {
+			public <T> Promise<T> execute(AsyncSupplier<T> supplier) {
 				Promise<T> promise = supplier.get();
 				if (promise.isComplete()) {
 					if (++counter % maxCalls == 0) {

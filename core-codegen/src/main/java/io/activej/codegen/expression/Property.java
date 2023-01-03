@@ -18,7 +18,6 @@ package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
 import io.activej.types.Primitives;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
@@ -45,7 +44,7 @@ final class Property implements Variable {
 	private final Expression owner;
 	private final String property;
 
-	Property(@NotNull Expression owner, @NotNull String property) {
+	Property(Expression owner, String property) {
 		this.owner = owner;
 		this.property = property;
 	}

@@ -24,7 +24,6 @@ import io.activej.crdt.storage.cluster.RendezvousPartitionGroup;
 import io.activej.crdt.storage.cluster.RendezvousPartitionScheme;
 import io.activej.rpc.client.sender.RpcStrategy;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -44,11 +43,11 @@ public final class ConfigConverters {
 	 * @return a config converter for {@link RendezvousPartitionScheme}
 	 */
 	public static <P> ConfigConverter<RendezvousPartitionScheme<P>> ofRendezvousPartitionScheme(
-			@NotNull ConfigConverter<P> partitionIdConverter
+			ConfigConverter<P> partitionIdConverter
 	) {
 		return new ConfigConverter<>() {
 			@Override
-			public @NotNull RendezvousPartitionScheme<P> get(Config config) {
+			public RendezvousPartitionScheme<P> get(Config config) {
 				Collection<Config> partitionGroupsConfig = config.getChild("partitionGroup").getChildren().values();
 
 				List<RendezvousPartitionGroup<P>> partitionGroups = new ArrayList<>();
@@ -74,7 +73,7 @@ public final class ConfigConverters {
 	public static <P> ConfigConverter<RendezvousPartitionGroup<P>> ofPartitionGroup(ConfigConverter<P> partitionIdConverter) {
 		return new ConfigConverter<>() {
 			@Override
-			public @NotNull RendezvousPartitionGroup<P> get(Config config) {
+			public RendezvousPartitionGroup<P> get(Config config) {
 				Set<P> ids = Set.copyOf(config.get(ofList(partitionIdConverter), "ids"));
 				checkArgument(!ids.isEmpty(), "Empty partition ids");
 

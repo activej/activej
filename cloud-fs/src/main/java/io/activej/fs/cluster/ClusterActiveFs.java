@@ -40,7 +40,6 @@ import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -246,7 +245,7 @@ public final class ClusterActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Map<String, @NotNull FileMetadata>> infoAll(Set<String> names) {
+	public Promise<Map<String, FileMetadata>> infoAll(Set<String> names) {
 		if (names.isEmpty()) return Promise.of(Map.of());
 
 		return broadcast(fs -> fs.infoAll(names))

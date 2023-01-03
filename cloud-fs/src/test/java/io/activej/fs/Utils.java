@@ -3,7 +3,6 @@ package io.activej.fs;
 import io.activej.common.function.ConsumerEx;
 import io.activej.fs.exception.FsBatchException;
 import io.activej.fs.exception.FsScalarException;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,11 +25,11 @@ import static org.junit.Assert.*;
 
 public final class Utils {
 
-	public static void assertBatchException(@NotNull Exception e, String name, Class<? extends FsScalarException> exceptionClass) {
+	public static void assertBatchException(Exception e, String name, Class<? extends FsScalarException> exceptionClass) {
 		assertBatchException(e, Map.of(name, exceptionClass));
 	}
 
-	public static void assertBatchException(@NotNull Exception e, Map<String, Class<? extends FsScalarException>> exceptionClasses) {
+	public static void assertBatchException(Exception e, Map<String, Class<? extends FsScalarException>> exceptionClasses) {
 		assertThat(e, instanceOf(FsBatchException.class));
 		FsBatchException batchEx = (FsBatchException) e;
 
@@ -41,7 +40,7 @@ public final class Utils {
 		}
 	}
 
-	public static void assertBatchException(@NotNull Exception e, int minExpected, int maxExpected, BiConsumer<String, FsScalarException> exceptionAssertFn) {
+	public static void assertBatchException(Exception e, int minExpected, int maxExpected, BiConsumer<String, FsScalarException> exceptionAssertFn) {
 		assertThat(e, instanceOf(FsBatchException.class));
 		FsBatchException batchEx = (FsBatchException) e;
 

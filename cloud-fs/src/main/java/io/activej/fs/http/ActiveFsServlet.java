@@ -27,7 +27,6 @@ import io.activej.fs.exception.FsException;
 import io.activej.http.*;
 import io.activej.http.MultipartDecoder.MultipartDataHandler;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
@@ -148,7 +147,7 @@ public final class ActiveFsServlet implements WithInitializer<ActiveFsServlet> {
 						.map(voidResponseFn(), errorResponseFn()));
 	}
 
-	private static @NotNull Promise<HttpResponse> rangeDownload(ActiveFs fs, boolean inline, String name, String rangeHeader) {
+	private static Promise<HttpResponse> rangeDownload(ActiveFs fs, boolean inline, String name, String rangeHeader) {
 		//noinspection ConstantConditions
 		return fs.info(name)
 				.whenResult(Objects::isNull, $ -> {
@@ -205,7 +204,7 @@ public final class ActiveFsServlet implements WithInitializer<ActiveFsServlet> {
 		return $ -> HttpResponse.ok200().withHeader(CONTENT_TYPE, ofContentType(PLAIN_TEXT_UTF_8));
 	}
 
-	private static FunctionEx<ChannelConsumer<ByteBuf>, HttpResponse> uploadAcknowledgeFn(@NotNull HttpRequest request) {
+	private static FunctionEx<ChannelConsumer<ByteBuf>, HttpResponse> uploadAcknowledgeFn(HttpRequest request) {
 		return consumer -> HttpResponse.ok200()
 				.withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
 				.withBodyStream(ChannelSupplier.ofPromise(request.takeBodyStream()

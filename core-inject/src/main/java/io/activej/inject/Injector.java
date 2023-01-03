@@ -23,7 +23,6 @@ import io.activej.inject.impl.Preprocessor;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.Modules;
 import io.activej.inject.util.Trie;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Constructor;
@@ -131,7 +130,7 @@ public final class Injector implements ResourceLocator {
 	 * This constructor is a shortcut for threadsafe {@link #compile(Injector, Scope[], Trie, Multibinder, BindingTransformer, BindingGenerator) compile}
 	 * with no instance overrides and no multibinders, transformers or generators.
 	 */
-	public static Injector of(@NotNull Trie<Scope, Map<Key<?>, Binding<?>>> bindings) {
+	public static Injector of(Trie<Scope, Map<Key<?>, Binding<?>>> bindings) {
 		return compile(null, UNSCOPED,
 				bindings.map(map -> map.entrySet().stream().collect(toMap(Entry::getKey, entry -> Set.of(entry.getValue())))),
 				errorOnDuplicate(),
@@ -167,10 +166,10 @@ public final class Injector implements ResourceLocator {
 	 */
 	public static Injector compile(@Nullable Injector parent,
 			Scope[] scope,
-			@NotNull Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindingsMultimap,
-			@NotNull Multibinder<?> multibinder,
-			@NotNull BindingTransformer<?> transformer,
-			@NotNull BindingGenerator<?> generator) {
+			Trie<Scope, Map<Key<?>, Set<Binding<?>>>> bindingsMultimap,
+			Multibinder<?> multibinder,
+			BindingTransformer<?> transformer,
+			BindingGenerator<?> generator) {
 
 		Trie<Scope, Map<Key<?>, Binding<?>>> bindings = Preprocessor.reduce(bindingsMultimap, multibinder, transformer, generator);
 
@@ -223,7 +222,7 @@ public final class Injector implements ResourceLocator {
 					volatile Object instance;
 
 					@Override
-					public @NotNull Object getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+					public Object getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 						Object instance = this.instance;
 						if (instance != null) return instance;
 						this.instance = scopedInstances[scope].get(0);
@@ -232,7 +231,7 @@ public final class Injector implements ResourceLocator {
 				} :
 				new CompiledBinding<>() {
 					@Override
-					public @NotNull Object getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+					public Object getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 						return scopedInstances[scope].get(0);
 					}
 				}));
@@ -309,7 +308,7 @@ public final class Injector implements ResourceLocator {
 				new CompiledBindingLocator() {
 					@SuppressWarnings("unchecked")
 					@Override
-					public <Q> @NotNull CompiledBinding<Q> get(Key<Q> key) {
+					public <Q> CompiledBinding<Q> get(Key<Q> key) {
 						return (CompiledBinding<Q>) compileBinding(
 								postprocessor,
 								scope,
@@ -349,7 +348,7 @@ public final class Injector implements ResourceLocator {
 	 */
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> @NotNull T getInstance(@NotNull Key<T> key) {
+	public <T> T getInstance(Key<T> key) {
 		CompiledBinding<?> binding = localCompiledBindings.get(key);
 		if (binding == null) {
 			throw DIException.cannotConstruct(key, null);
@@ -366,7 +365,7 @@ public final class Injector implements ResourceLocator {
 	 * @see #getInstance(Key)
 	 */
 	@Override
-	public <T> @NotNull T getInstance(@NotNull Class<T> type) {
+	public <T> T getInstance(Class<T> type) {
 		return getInstance(Key.ofType(type));
 	}
 
@@ -375,7 +374,7 @@ public final class Injector implements ResourceLocator {
 	 */
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> @Nullable T getInstanceOrNull(@NotNull Key<T> key) {
+	public <T> @Nullable T getInstanceOrNull(Key<T> key) {
 		CompiledBinding<?> binding = localCompiledBindings.get(key);
 		return binding != null ? (T) binding.getInstance(scopeCaches, -1) : null;
 	}
@@ -384,7 +383,7 @@ public final class Injector implements ResourceLocator {
 	 * @see #getInstanceOrNull(Key)
 	 */
 	@Override
-	public <T> @Nullable T getInstanceOrNull(@NotNull Class<T> type) {
+	public <T> @Nullable T getInstanceOrNull(Class<T> type) {
 		return getInstanceOrNull(Key.of(type));
 	}
 
@@ -392,7 +391,7 @@ public final class Injector implements ResourceLocator {
 	 * Same as {@link #getInstanceOrNull(Key)}, but replaces <code>null</code> with given default value.
 	 */
 	@Override
-	public <T> T getInstanceOr(@NotNull Key<T> key, T defaultValue) {
+	public <T> T getInstanceOr(Key<T> key, T defaultValue) {
 		T instance = getInstanceOrNull(key);
 		return instance != null ? instance : defaultValue;
 	}
@@ -401,14 +400,14 @@ public final class Injector implements ResourceLocator {
 	 * @see #getInstanceOr(Key, Object)
 	 */
 	@Override
-	public <T> T getInstanceOr(@NotNull Class<T> type, T defaultValue) {
+	public <T> T getInstanceOr(Class<T> type, T defaultValue) {
 		return getInstanceOr(Key.of(type), defaultValue);
 	}
 
 	/**
 	 * A shortcut for <code>getInstance(new Key&lt;InstanceProvider&lt;T&gt;&gt;(){})</code>
 	 */
-	public <T> @NotNull InstanceProvider<T> getInstanceProvider(@NotNull Key<T> key) {
+	public <T> InstanceProvider<T> getInstanceProvider(Key<T> key) {
 		return getInstance(Key.ofType(parameterizedType(InstanceProvider.class, key.getType()), key.getQualifier()));
 	}
 
@@ -417,14 +416,14 @@ public final class Injector implements ResourceLocator {
 	 *
 	 * @see #getInstanceProvider(Key)
 	 */
-	public <T> @NotNull InstanceProvider<T> getInstanceProvider(@NotNull Class<T> type) {
+	public <T> InstanceProvider<T> getInstanceProvider(Class<T> type) {
 		return getInstanceProvider(Key.of(type));
 	}
 
 	/**
 	 * A shortcut for <code>getInstance(new Key&lt;InstanceInjector&lt;T&gt;&gt;(){})</code>
 	 */
-	public <T> @NotNull InstanceInjector<T> getInstanceInjector(@NotNull Key<T> key) {
+	public <T> InstanceInjector<T> getInstanceInjector(Key<T> key) {
 		return getInstance(Key.ofType(parameterizedType(InstanceInjector.class, key.getType()), key.getQualifier()));
 	}
 
@@ -433,14 +432,14 @@ public final class Injector implements ResourceLocator {
 	 *
 	 * @see #getInstanceInjector(Key)
 	 */
-	public <T> @NotNull InstanceInjector<T> getInstanceInjector(@NotNull Class<T> type) {
+	public <T> InstanceInjector<T> getInstanceInjector(Class<T> type) {
 		return getInstanceInjector(Key.of(type));
 	}
 
 	/**
 	 * A shortcut for <code>getInstance(new Key&lt;OptionalDependency&lt;T&gt;&gt;(){})</code>
 	 */
-	public <T> @NotNull OptionalDependency<T> getOptionalDependency(@NotNull Key<T> key) {
+	public <T> OptionalDependency<T> getOptionalDependency(Key<T> key) {
 		return getInstance(Key.ofType(parameterizedType(OptionalDependency.class, key.getType()), key.getQualifier()));
 	}
 
@@ -449,7 +448,7 @@ public final class Injector implements ResourceLocator {
 	 *
 	 * @see #getOptionalDependency(Key)
 	 */
-	public <T> @NotNull OptionalDependency<T> getOptionalDependency(@NotNull Class<T> type) {
+	public <T> OptionalDependency<T> getOptionalDependency(Class<T> type) {
 		return getOptionalDependency(Key.of(type));
 	}
 
@@ -464,7 +463,7 @@ public final class Injector implements ResourceLocator {
 	 * it does not trigger instance creation.
 	 */
 	@SuppressWarnings("unchecked")
-	public <T> @Nullable T peekInstance(@NotNull Key<T> key) {
+	public <T> @Nullable T peekInstance(Key<T> key) {
 		Integer index = localSlotMapping.get(key);
 		return index != null ? (T) scopeCaches[scopeCaches.length - 1].get(index) : null;
 	}
@@ -475,14 +474,14 @@ public final class Injector implements ResourceLocator {
 	 *
 	 * @see #peekInstance(Key)
 	 */
-	public <T> @Nullable T peekInstance(@NotNull Class<T> type) {
+	public <T> @Nullable T peekInstance(Class<T> type) {
 		return peekInstance(Key.of(type));
 	}
 
 	/**
 	 * This method checks if an instance for this key was created by a {@link #getInstance} call before.
 	 */
-	public boolean hasInstance(@NotNull Key<?> key) {
+	public boolean hasInstance(Key<?> key) {
 		return peekInstance(key) != null;
 	}
 
@@ -491,7 +490,7 @@ public final class Injector implements ResourceLocator {
 	 *
 	 * @see #hasInstance(Key)
 	 */
-	public boolean hasInstance(@NotNull Class<?> type) {
+	public boolean hasInstance(Class<?> type) {
 		return peekInstance(type) != null;
 	}
 
@@ -564,7 +563,7 @@ public final class Injector implements ResourceLocator {
 	/**
 	 * Creates an injector that operates on a binding graph at a given prefix (scope) of the binding graph trie and this injector as its parent.
 	 */
-	public Injector enterScope(@NotNull Scope scope) {
+	public Injector enterScope(Scope scope) {
 		return new Injector(this, scopeDataTree.get(scope));
 	}
 

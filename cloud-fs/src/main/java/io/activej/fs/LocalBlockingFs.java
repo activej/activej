@@ -25,7 +25,6 @@ import io.activej.fs.util.ForwardingOutputStream;
 import io.activej.fs.util.LimitedInputStream;
 import io.activej.fs.util.UploadOutputStream;
 import io.activej.jmx.api.ConcurrentJmxBean;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -159,14 +158,14 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	// endregion
 
 	@Override
-	public OutputStream upload(@NotNull String name) throws IOException {
+	public OutputStream upload(String name) throws IOException {
 		checkStarted();
 		Path tempPath = LocalFileUtils.createTempUploadFile(tempDir);
 		return new UploadOutputStream(tempPath, resolve(name), fsyncUploads, fsyncDirectories, this::doMove);
 	}
 
 	@Override
-	public OutputStream upload(@NotNull String name, long size) throws IOException {
+	public OutputStream upload(String name, long size) throws IOException {
 		checkStarted();
 		Path tempPath = LocalFileUtils.createTempUploadFile(tempDir);
 		return new UploadOutputStream(tempPath, resolve(name), fsyncUploads, fsyncDirectories, this::doMove) {
@@ -185,7 +184,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	}
 
 	@Override
-	public OutputStream append(@NotNull String name, long offset) throws IOException {
+	public OutputStream append(String name, long offset) throws IOException {
 		checkStarted();
 		checkArgument(offset >= 0, "Offset cannot be less than 0");
 
@@ -219,7 +218,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	}
 
 	@Override
-	public InputStream download(@NotNull String name, long offset, long limit) throws IOException {
+	public InputStream download(String name, long offset, long limit) throws IOException {
 		checkStarted();
 		Path path = resolve(name);
 		if (!Files.exists(path)) {
@@ -236,7 +235,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	}
 
 	@Override
-	public void delete(@NotNull String name) throws IOException {
+	public void delete(String name) throws IOException {
 		checkStarted();
 		Path path = resolve(name);
 		// cannot delete storage
@@ -246,7 +245,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	}
 
 	@Override
-	public void copy(@NotNull String name, @NotNull String target) throws IOException {
+	public void copy(String name, String target) throws IOException {
 		checkStarted();
 		copyImpl(Map.of(name, target));
 	}
@@ -259,7 +258,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	}
 
 	@Override
-	public void move(@NotNull String name, @NotNull String target) throws IOException {
+	public void move(String name, String target) throws IOException {
 		checkStarted();
 		moveImpl(Map.of(name, target));
 	}
@@ -272,7 +271,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	}
 
 	@Override
-	public Map<String, FileMetadata> list(@NotNull String glob) throws IOException {
+	public Map<String, FileMetadata> list(String glob) throws IOException {
 		checkStarted();
 		if (glob.isEmpty()) return Map.of();
 
@@ -295,7 +294,7 @@ public final class LocalBlockingFs implements BlockingFs, BlockingService, Concu
 	}
 
 	@Override
-	public @Nullable FileMetadata info(@NotNull String name) throws IOException {
+	public @Nullable FileMetadata info(String name) throws IOException {
 		checkStarted();
 		return toFileMetadata(resolve(name));
 	}

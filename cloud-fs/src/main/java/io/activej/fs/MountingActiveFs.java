@@ -28,7 +28,6 @@ import io.activej.fs.exception.FsBatchException;
 import io.activej.fs.exception.FsScalarException;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -99,8 +98,8 @@ final class MountingActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<Map<String, @NotNull FileMetadata>> infoAll(Set<String> names) {
-		Map<String, @NotNull FileMetadata> result = new HashMap<>();
+	public Promise<Map<String, FileMetadata>> infoAll(Set<String> names) {
+		Map<String, FileMetadata> result = new HashMap<>();
 		return Promises.all(names.stream()
 				.collect(groupingBy(this::findMount, toSet()))
 				.entrySet().stream()

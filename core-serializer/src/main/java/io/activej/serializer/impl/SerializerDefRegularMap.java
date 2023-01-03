@@ -19,7 +19,6 @@ package io.activej.serializer.impl;
 import io.activej.codegen.expression.Expression;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.function.BinaryOperator;
 
@@ -35,27 +34,27 @@ public class SerializerDefRegularMap extends AbstractSerializerDefMap {
 	}
 
 	@Override
-	protected @NotNull SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
+	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
 		return new SerializerDefRegularMap(keySerializer, valueSerializer, encodeType, decodeType, keyType, valueType, true);
 	}
 
 	@Override
-	protected @NotNull Expression doIterateMap(Expression collection, BinaryOperator<Expression> keyValueAction) {
+	protected Expression doIterateMap(Expression collection, BinaryOperator<Expression> keyValueAction) {
 		return iterateMap(collection, keyValueAction);
 	}
 
 	@Override
-	protected @NotNull Expression createBuilder(Expression length) {
+	protected Expression createBuilder(Expression length) {
 		return constructor(decodeType, length);
 	}
 
 	@Override
-	protected @NotNull Expression putToBuilder(Expression builder, Expression index, Expression key, Expression value) {
+	protected Expression putToBuilder(Expression builder, Expression index, Expression key, Expression value) {
 		return call(builder, "put", key, value);
 	}
 
 	@Override
-	protected @NotNull Expression build(Expression builder) {
+	protected Expression build(Expression builder) {
 		return builder;
 	}
 }

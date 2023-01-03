@@ -16,8 +16,6 @@
 
 package io.activej.jmx;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.List;
 import java.util.function.UnaryOperator;
 
@@ -31,31 +29,31 @@ public interface ProtoObjectNameMapper {
 		return protoObjectName -> protoObjectName;
 	}
 
-	static ProtoObjectNameMapper mapClassName(UnaryOperator<@NotNull String> mapper) {
+	static ProtoObjectNameMapper mapClassName(UnaryOperator<String> mapper) {
 		return doMap(ProtoObjectName::getClassName, mapper, ProtoObjectName::withClassName);
 	}
 
-	static ProtoObjectNameMapper mapPackageName(UnaryOperator<@NotNull String> mapper) {
+	static ProtoObjectNameMapper mapPackageName(UnaryOperator<String> mapper) {
 		return doMap(ProtoObjectName::getPackageName, mapper, ProtoObjectName::withPackageName);
 	}
 
-	static ProtoObjectNameMapper mapQualifier(UnaryOperator<@NotNull Object> mapper) {
+	static ProtoObjectNameMapper mapQualifier(UnaryOperator<Object> mapper) {
 		return doMap(ProtoObjectName::getQualifier, mapper, ProtoObjectName::withQualifier);
 	}
 
-	static ProtoObjectNameMapper mapScope(UnaryOperator<@NotNull String> mapper) {
+	static ProtoObjectNameMapper mapScope(UnaryOperator<String> mapper) {
 		return doMap(ProtoObjectName::getScope, mapper, ProtoObjectName::withScope);
 	}
 
-	static ProtoObjectNameMapper mapWorkerPoolQualifier(UnaryOperator<@NotNull String> mapper) {
+	static ProtoObjectNameMapper mapWorkerPoolQualifier(UnaryOperator<String> mapper) {
 		return doMap(ProtoObjectName::getWorkerPoolQualifier, mapper, ProtoObjectName::withWorkerPoolQualifier);
 	}
 
-	static ProtoObjectNameMapper mapWorkerId(UnaryOperator<@NotNull String> mapper) {
+	static ProtoObjectNameMapper mapWorkerId(UnaryOperator<String> mapper) {
 		return doMap(ProtoObjectName::getWorkerId, mapper, ProtoObjectName::withWorkerId);
 	}
 
-	static ProtoObjectNameMapper mapGenericParameters(UnaryOperator<@NotNull List<String>> mapper) {
+	static ProtoObjectNameMapper mapGenericParameters(UnaryOperator<List<String>> mapper) {
 		return doMap(ProtoObjectName::getGenericParameters, mapper, ProtoObjectName::withGenericParameters);
 	}
 

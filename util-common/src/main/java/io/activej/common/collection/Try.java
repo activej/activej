@@ -21,7 +21,6 @@ import io.activej.common.function.RunnableEx;
 import io.activej.common.function.SupplierEx;
 import io.activej.common.recycle.Recyclers;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
@@ -86,7 +85,7 @@ public final class Try<T> {
 	 * @param <T> a type of result
 	 * @return a new instance of a failed {@link Try}
 	 */
-	public static <T> Try<T> ofException(@NotNull Exception e) {
+	public static <T> Try<T> ofException(Exception e) {
 		return new Try<>(null, e);
 	}
 
@@ -101,7 +100,7 @@ public final class Try<T> {
 	 * @param <T>         a type of result
 	 * @return a new instance of a {@link Try} that is either successful or failed
 	 */
-	public static <T> Try<T> wrap(@NotNull SupplierEx<T> computation) {
+	public static <T> Try<T> wrap(SupplierEx<T> computation) {
 		try {
 			return new Try<>(computation.get(), null);
 		} catch (Exception ex) {
@@ -121,7 +120,7 @@ public final class Try<T> {
 	 * @param <T>         a type of result
 	 * @return a new instance of a {@link Try} that is either successful or failed
 	 */
-	public static <T> Try<T> wrap(@NotNull RunnableEx computation) {
+	public static <T> Try<T> wrap(RunnableEx computation) {
 		try {
 			computation.run();
 			return new Try<>(null, null);
@@ -142,7 +141,7 @@ public final class Try<T> {
 	 * @param <T>         a type of result
 	 * @return a new instance of a {@link Try} that is either successful or failed
 	 */
-	public static <T> Try<T> wrap(@NotNull Callable<? extends T> computation) {
+	public static <T> Try<T> wrap(Callable<? extends T> computation) {
 		try {
 			@Nullable T result = computation.call();
 			return new Try<>(result, null);
@@ -196,7 +195,7 @@ public final class Try<T> {
 	 * @return a result of this {@link Try} or a supplied default value
 	 */
 	@Contract(pure = true)
-	public T getElseGet(@NotNull Supplier<? extends T> defaultValueSupplier) {
+	public T getElseGet(Supplier<? extends T> defaultValueSupplier) {
 		return exception == null ? result : defaultValueSupplier.get();
 	}
 
@@ -217,7 +216,7 @@ public final class Try<T> {
 	 * @param resultConsumer a consumer of a result
 	 * @return this {@link Try}
 	 */
-	public @NotNull Try<T> ifSuccess(@NotNull Consumer<? super T> resultConsumer) {
+	public Try<T> ifSuccess(Consumer<? super T> resultConsumer) {
 		if (isSuccess()) {
 			resultConsumer.accept(result);
 		}
@@ -233,7 +232,7 @@ public final class Try<T> {
 	 * @param exceptionConsumer a consumer of an exception
 	 * @return this {@link Try}
 	 */
-	public @NotNull Try<T> ifException(@NotNull Consumer<Exception> exceptionConsumer) {
+	public Try<T> ifException(Consumer<Exception> exceptionConsumer) {
 		if (isException()) {
 			exceptionConsumer.accept(exception);
 		}
@@ -248,7 +247,7 @@ public final class Try<T> {
 	 * @param consumer a consumer of a result and an exception
 	 * @return this {@link Try}
 	 */
-	public @NotNull Try<T> consume(@NotNull BiConsumer<? super T, Exception> consumer) {
+	public Try<T> consume(BiConsumer<? super T, Exception> consumer) {
 		consumer.accept(result, exception);
 		return this;
 	}
@@ -263,7 +262,7 @@ public final class Try<T> {
 	 * @param exceptionConsumer a consumer of an exception
 	 * @return this {@link Try}
 	 */
-	public @NotNull Try<T> consume(@NotNull Consumer<? super T> resultConsumer, @NotNull Consumer<Exception> exceptionConsumer) {
+	public Try<T> consume(Consumer<? super T> resultConsumer, Consumer<Exception> exceptionConsumer) {
 		if (isSuccess()) {
 			resultConsumer.accept(result);
 		} else {
@@ -280,7 +279,7 @@ public final class Try<T> {
 	 */
 	@SuppressWarnings("unchecked")
 	@Contract(pure = true)
-	private <U> @NotNull Try<U> mold() {
+	private <U> Try<U> mold() {
 		checkState(isException());
 		return (Try<U>) this;
 	}
@@ -294,7 +293,7 @@ public final class Try<T> {
 	 * @return a result of mapping of either a result or an exception of a {@link Try}
 	 */
 	@Contract(pure = true)
-	public <U> U reduce(@NotNull Function<? super T, ? extends U> function, @NotNull Function<@NotNull Exception, ? extends U> exceptionFunction) {
+	public <U> U reduce(Function<? super T, ? extends U> function, Function<Exception, ? extends U> exceptionFunction) {
 		return exception == null ? function.apply(result) : exceptionFunction.apply(exception);
 	}
 
@@ -306,7 +305,7 @@ public final class Try<T> {
 	 * @return a result of mapping of a result and an exception of a {@link Try}
 	 */
 	@Contract(pure = true)
-	public <U> U reduce(@NotNull BiFunction<? super T, Exception, ? extends U> fn) {
+	public <U> U reduce(BiFunction<? super T, Exception, ? extends U> fn) {
 		return fn.apply(result, exception);
 	}
 
@@ -319,7 +318,7 @@ public final class Try<T> {
 	 * @return a {@link Try} with a mapped result
 	 */
 	@Contract(pure = true)
-	public <U> @NotNull Try<U> map(@NotNull FunctionEx<T, U> function) {
+	public <U> Try<U> map(FunctionEx<T, U> function) {
 		if (exception == null) {
 			try {
 				return new Try<>(function.apply(result), null);
@@ -340,7 +339,7 @@ public final class Try<T> {
 	 * @return a mapped {@link Try}
 	 */
 	@Contract(pure = true)
-	public <U> @NotNull Try<U> flatMap(@NotNull Function<T, Try<U>> function) {
+	public <U> Try<U> flatMap(Function<T, Try<U>> function) {
 		return exception == null ? function.apply(result) : mold();
 	}
 
@@ -350,7 +349,7 @@ public final class Try<T> {
 	 * @return an {@link Either} which represents either a result or an exception of this {@link Try}
 	 */
 	@Contract(pure = true)
-	public @NotNull Either<T, Exception> toEither() {
+	public Either<T, Exception> toEither() {
 		return exception == null ? Either.left(result) : Either.right(exception);
 	}
 

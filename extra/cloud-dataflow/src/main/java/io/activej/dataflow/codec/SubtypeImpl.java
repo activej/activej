@@ -16,8 +16,6 @@
 
 package io.activej.dataflow.codec;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.lang.annotation.Annotation;
 import java.util.Objects;
 
@@ -52,12 +50,12 @@ public final class SubtypeImpl implements Subtype {
 	}
 
 	@Override
-	public @NotNull String toString() {
+	public String toString() {
 		return "@" + Subtype.class.getName() + "(value=" + value + ")";
 	}
 
 	@Override
-	public @NotNull Class<? extends Annotation> annotationType() {
+	public Class<? extends Annotation> annotationType() {
 		return Subtype.class;
 	}
 }

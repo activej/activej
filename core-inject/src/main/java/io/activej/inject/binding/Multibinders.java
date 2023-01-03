@@ -5,7 +5,6 @@ import io.activej.inject.impl.AbstractCompiledBinding;
 import io.activej.inject.impl.CompiledBinding;
 import io.activej.inject.impl.CompiledBindingLocator;
 import io.activej.inject.util.Utils;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -66,7 +65,7 @@ public final class Multibinders {
 								new CompiledBinding<>() {
 									@SuppressWarnings("unchecked")
 									@Override
-									public @NotNull T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+									public T getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 										return reducerFunction.apply(key, Arrays.stream(compiledBindings)
 												.map(binding -> (T) binding.getInstance(scopedInstances, synchronizedScope)));
 									}
@@ -74,7 +73,7 @@ public final class Multibinders {
 								new AbstractCompiledBinding<>(scope, slot) {
 									@SuppressWarnings("unchecked")
 									@Override
-									protected @NotNull T doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+									protected T doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 										return reducerFunction.apply(key, Arrays.stream(compiledBindings)
 												.map(binding -> (T) binding.getInstance(scopedInstances, synchronizedScope)));
 									}

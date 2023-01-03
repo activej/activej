@@ -16,8 +16,6 @@
 
 package io.activej.jmx;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -27,7 +25,7 @@ import java.util.List;
 final class ValueFetcherFromGetterArrayAdapter implements ValueFetcher {
 	private final Method getter;
 
-	public ValueFetcherFromGetterArrayAdapter(@NotNull Method getter) {
+	public ValueFetcherFromGetterArrayAdapter(Method getter) {
 		this.getter = getter;
 	}
 

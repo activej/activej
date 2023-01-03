@@ -16,7 +16,6 @@
 
 package io.activej.inject.util;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Method;
@@ -34,15 +33,15 @@ public final class LocationInfo {
 		this.provider = provider;
 	}
 
-	public static LocationInfo from(@NotNull Object module, @NotNull Method provider) {
+	public static LocationInfo from(Object module, Method provider) {
 		return new LocationInfo(module, provider);
 	}
 
-	public static LocationInfo from(@NotNull Object module) {
+	public static LocationInfo from(Object module) {
 		return new LocationInfo(module, null);
 	}
 
-	public @NotNull Object getModule() {
+	public Object getModule() {
 		return module;
 	}
 

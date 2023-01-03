@@ -86,7 +86,7 @@ final class QueryResultCodec implements JsonCodec<QueryResult>, WithInitializer<
 
 
 	@Override
-	public QueryResult read(@NotNull JsonReader reader) throws IOException {
+	public QueryResult read(JsonReader reader) throws IOException {
 		if (reader.last() != OBJECT_START) throw reader.newParseError("Expected '{'");
 
 		RecordScheme recordScheme = null;

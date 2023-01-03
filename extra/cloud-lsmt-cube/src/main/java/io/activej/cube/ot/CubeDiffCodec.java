@@ -25,7 +25,6 @@ import io.activej.aggregation.ot.AggregationDiffCodec;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.cube.ReactiveCube;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -53,7 +52,7 @@ public class CubeDiffCodec implements JsonCodec<CubeDiff>, WithInitializer<CubeD
 	}
 
 	@Override
-	public void write(@NotNull JsonWriter writer, CubeDiff cubeDiff) {
+	public void write(JsonWriter writer, CubeDiff cubeDiff) {
 		assert cubeDiff != null;
 		writer.writeByte(OBJECT_START);
 		if (cubeDiff.isEmpty() || aggregationDiffCodecs.isEmpty()) {
@@ -83,7 +82,7 @@ public class CubeDiffCodec implements JsonCodec<CubeDiff>, WithInitializer<CubeD
 	}
 
 	@Override
-	public CubeDiff read(@NotNull JsonReader reader) throws IOException {
+	public CubeDiff read(JsonReader reader) throws IOException {
 		if (reader.last() != OBJECT_START) throw reader.newParseError("Expected '{'");
 
 		if (reader.getNextToken() == OBJECT_END) {

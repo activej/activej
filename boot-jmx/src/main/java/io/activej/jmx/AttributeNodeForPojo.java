@@ -18,7 +18,6 @@ package io.activej.jmx;
 
 import io.activej.jmx.api.JmxRefreshable;
 import io.activej.jmx.api.attribute.JmxReducer;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.management.openmbean.OpenType;
@@ -126,7 +125,7 @@ final class AttributeNodeForPojo implements AttributeNode {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Map<String, Object> aggregateAttributes(@NotNull Set<String> attrNames, @NotNull List<?> sources) {
+	public Map<String, Object> aggregateAttributes(Set<String> attrNames, List<?> sources) {
 		List<?> notNullSources = sources.stream().filter(Objects::nonNull).collect(Collectors.toList());
 		if (notNullSources.isEmpty() || attrNames.isEmpty()) {
 			Map<String, Object> nullMap = new HashMap<>();
@@ -216,7 +215,7 @@ final class AttributeNodeForPojo implements AttributeNode {
 	}
 
 	@Override
-	public List<JmxRefreshable> getAllRefreshables(@NotNull Object source) {
+	public List<JmxRefreshable> getAllRefreshables(Object source) {
 		Object pojo = fetcher.fetchFrom(source);
 
 		if (pojo == null) {
@@ -235,7 +234,7 @@ final class AttributeNodeForPojo implements AttributeNode {
 	}
 
 	@Override
-	public boolean isSettable(@NotNull String attrName) {
+	public boolean isSettable(String attrName) {
 		if (!fullNameToNode.containsKey(attrName)) {
 			throw new IllegalArgumentException("There is no attribute with name: " + attrName);
 		}
@@ -245,7 +244,7 @@ final class AttributeNodeForPojo implements AttributeNode {
 	}
 
 	@Override
-	public void setAttribute(@NotNull String attrName, @NotNull Object value, @NotNull List<?> targets) throws SetterException {
+	public void setAttribute(String attrName, Object value, List<?> targets) throws SetterException {
 		List<?> notNullTargets = targets.stream().filter(Objects::nonNull).toList();
 		if (notNullTargets.isEmpty()) {
 			return;
@@ -265,7 +264,7 @@ final class AttributeNodeForPojo implements AttributeNode {
 	}
 
 	@Override
-	public void setVisible(@NotNull String attrName) {
+	public void setVisible(String attrName) {
 		if (attrName.equals(name)) {
 			this.visible = true;
 			return;
@@ -280,7 +279,7 @@ final class AttributeNodeForPojo implements AttributeNode {
 	}
 
 	@Override
-	public void hideNullPojos(@NotNull List<?> sources) {
+	public void hideNullPojos(List<?> sources) {
 		List<?> innerPojos = fetchInnerPojos(sources);
 		if (innerPojos.isEmpty()) {
 			this.visible = false;
@@ -294,7 +293,7 @@ final class AttributeNodeForPojo implements AttributeNode {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public void applyModifier(@NotNull String attrName, @NotNull AttributeModifier<?> modifier, @NotNull List<?> target) {
+	public void applyModifier(String attrName, AttributeModifier<?> modifier, List<?> target) {
 		if (attrName.equals(name)) {
 			AttributeModifier<Object> attrModifierObject = (AttributeModifier<Object>) modifier;
 			List<Object> attributes = fetchInnerPojos(target);

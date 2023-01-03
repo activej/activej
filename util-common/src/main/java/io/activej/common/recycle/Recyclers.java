@@ -1,6 +1,5 @@
 package io.activej.common.recycle;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -74,19 +73,19 @@ public class Recyclers {
 	 * @return an ensured recycler for a given type
 	 * @throws IllegalArgumentException if there are conflicting recyclers that match given type
 	 */
-	public static @NotNull Recycler<?> ensureRecycler(@NotNull Class<?> type) {
+	public static Recycler<?> ensureRecycler(Class<?> type) {
 		Recycler<?> recycler = CACHED_RECYCLERS.get(type);
 		if (recycler != null) return recycler;
 		return doCache(type);
 	}
 
-	private static synchronized @NotNull Recycler<?> doCache(@NotNull Class<?> type) {
+	private static synchronized Recycler<?> doCache(Class<?> type) {
 		Recycler<?> recycler = lookup(type);
 		CACHED_RECYCLERS.put(type, recycler);
 		return recycler;
 	}
 
-	private static Recycler<?> lookup(@NotNull Class<?> type) {
+	private static Recycler<?> lookup(Class<?> type) {
 		if (type.isArray()) {
 			Class<?> componentType = type.getComponentType();
 			while (componentType.isArray()) {
@@ -101,7 +100,7 @@ public class Recyclers {
 		else throw new IllegalArgumentException("Conflicting recyclers for " + type + " : " + recyclers.keySet());
 	}
 
-	private static @NotNull Map<Class<?>, Recycler<?>> doLookup(@NotNull Class<?> type) {
+	private static Map<Class<?>, Recycler<?>> doLookup(Class<?> type) {
 		@Nullable Recycler<?> recycler = REGISTRY.get(type);
 		if (recycler != null) return Map.of(type, recycler);
 		Map<Class<?>, Recycler<?>> map = new HashMap<>();

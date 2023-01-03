@@ -16,8 +16,6 @@
 
 package io.activej.service;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -48,7 +46,7 @@ public class Utils {
 		return result;
 	}
 
-	public static <T> @NotNull CompletableFuture<T> completedExceptionallyFuture(Throwable e) {
+	public static <T> CompletableFuture<T> completedExceptionallyFuture(Throwable e) {
 		CompletableFuture<T> future = new CompletableFuture<>();
 		future.completeExceptionally(e);
 		return future;

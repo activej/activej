@@ -35,7 +35,6 @@ import io.activej.reactor.net.SocketSettings;
 import io.activej.reactor.nio.NioChannelEventHandler;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.reactor.schedule.ScheduledRunnable;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -224,7 +223,7 @@ public final class ReactiveTcpSocket extends AbstractNioReactive implements TcpS
 		}
 	}
 
-	private ReactiveTcpSocket(NioReactor reactor, SocketChannel socketChannel, InetSocketAddress remoteAddress) {
+	private ReactiveTcpSocket(NioReactor reactor, @Nullable SocketChannel socketChannel, InetSocketAddress remoteAddress) {
 		super(reactor);
 		this.channel = socketChannel;
 		this.remoteAddress = remoteAddress;
@@ -335,7 +334,7 @@ public final class ReactiveTcpSocket extends AbstractNioReactive implements TcpS
 	}
 
 	@Override
-	public @NotNull Promise<ByteBuf> read() {
+	public Promise<ByteBuf> read() {
 		if (CHECK) checkState(inReactorThread());
 		if (isClosed()) return Promise.ofException(new AsyncCloseException());
 		read = null;
@@ -431,7 +430,7 @@ public final class ReactiveTcpSocket extends AbstractNioReactive implements TcpS
 
 	// write cycle
 	@Override
-	public @NotNull Promise<Void> write(@Nullable ByteBuf buf) {
+	public Promise<Void> write(@Nullable ByteBuf buf) {
 		if (CHECK) {
 			checkState(inReactorThread());
 			checkState(!writeEndOfStream, "End of stream has already been sent");

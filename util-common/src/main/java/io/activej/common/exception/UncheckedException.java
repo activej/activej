@@ -17,7 +17,6 @@
 package io.activej.common.exception;
 
 import io.activej.common.ApplicationSettings;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * A wrapper exception that wraps checked exceptions into a runtime exception,
@@ -29,11 +28,11 @@ import org.jetbrains.annotations.NotNull;
 public final class UncheckedException extends RuntimeException {
 	public static final boolean WITH_STACK_TRACE = ApplicationSettings.getBoolean(UncheckedException.class, "withStackTrace", false);
 
-	private UncheckedException(@NotNull Exception cause) {
+	private UncheckedException(Exception cause) {
 		super(cause);
 	}
 
-	public static UncheckedException of(@NotNull Exception cause) {
+	public static UncheckedException of(Exception cause) {
 		if (cause.getClass() == UncheckedException.class) {
 			return (UncheckedException) cause;
 		}

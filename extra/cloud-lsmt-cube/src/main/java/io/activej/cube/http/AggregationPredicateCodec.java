@@ -258,7 +258,7 @@ final class AggregationPredicateCodec implements JsonCodec<AggregationPredicate>
 	}
 
 	@Override
-	public AggregationPredicate read(@NotNull JsonReader reader) throws IOException {
+	public AggregationPredicate read(JsonReader reader) throws IOException {
 		if (reader.last() == OBJECT_START) {
 			reader.getNextToken();
 			return readObjectWithAlgebraOfSetsOperator(reader);

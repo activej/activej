@@ -17,7 +17,6 @@
 package io.activej.async.file;
 
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -28,7 +27,7 @@ import static io.activej.promise.Promise.ofBlocking;
 public final class ExecutorAsyncFileService implements AsyncFileService {
 	private final Executor executor;
 
-	public ExecutorAsyncFileService(@NotNull Executor executor) {
+	public ExecutorAsyncFileService(Executor executor) {
 		this.executor = executor;
 	}
 

@@ -16,11 +16,9 @@
 
 package io.activej.http;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * A blocking version of {@link AsyncServlet}.
  */
 public interface BlockingServlet {
-	@NotNull HttpResponse serve(@NotNull HttpRequest request) throws Exception;
+	HttpResponse serve(HttpRequest request) throws Exception;
 }

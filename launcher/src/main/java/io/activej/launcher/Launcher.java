@@ -28,7 +28,6 @@ import io.activej.launcher.annotation.Args;
 import io.activej.launcher.annotation.OnComplete;
 import io.activej.launcher.annotation.OnRun;
 import io.activej.launcher.annotation.OnStart;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -269,12 +268,12 @@ public abstract class Launcher {
 		latch.await();
 	}
 
-	public final @NotNull Injector createInjector(String[] args) {
+	public final Injector createInjector(String[] args) {
 		this.args = args;
 		return createInjector();
 	}
 
-	public final @NotNull Injector createInjector() {
+	public final Injector createInjector() {
 		return Injector.of(getInternalModule().combineWith(getModule()).overrideWith(getOverrideModule()));
 	}
 
@@ -374,7 +373,7 @@ public abstract class Launcher {
 		shutdownLatch.countDown();
 	}
 
-	public final @NotNull Thread getMainThread() {
+	public final Thread getMainThread() {
 		return mainThread;
 	}
 

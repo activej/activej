@@ -18,7 +18,6 @@ package io.activej.async.function;
 
 import io.activej.common.function.FunctionEx;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
@@ -32,7 +31,7 @@ public interface AsyncFunction<T, R> {
 	 * @param function a {@link FunctionEx}
 	 * @return {@link AsyncFunction} that works on top of {@link FunctionEx} interface
 	 */
-	static <T, R> @NotNull AsyncFunction<T, R> of(@NotNull FunctionEx<? super T, ? extends R> function) {
+	static <T, R> AsyncFunction<T, R> of(FunctionEx<? super T, ? extends R> function) {
 		return value -> {
 			try {
 				return Promise.of(function.apply(value));

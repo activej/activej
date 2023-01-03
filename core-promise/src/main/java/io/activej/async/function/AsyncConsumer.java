@@ -18,7 +18,6 @@ package io.activej.async.function;
 
 import io.activej.common.function.ConsumerEx;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
@@ -33,7 +32,7 @@ public interface AsyncConsumer<T> {
 	 * @param value value to be consumed
 	 * @return {@link Promise} of {@link Void} that represents successful consumption of data
 	 */
-	@NotNull Promise<Void> accept(T value);
+	Promise<Void> accept(T value);
 
 	/**
 	 * Wraps a {@link ConsumerEx} interface.
@@ -41,7 +40,7 @@ public interface AsyncConsumer<T> {
 	 * @param consumer a {@link ConsumerEx}
 	 * @return {@link AsyncConsumer} that works on top of {@link ConsumerEx} interface
 	 */
-	static <T> @NotNull AsyncConsumer<T> of(@NotNull ConsumerEx<? super T> consumer) {
+	static <T> AsyncConsumer<T> of(ConsumerEx<? super T> consumer) {
 		return value -> {
 			try {
 				consumer.accept(value);

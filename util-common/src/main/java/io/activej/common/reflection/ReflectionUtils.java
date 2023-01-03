@@ -17,7 +17,6 @@
 package io.activej.common.reflection;
 
 import io.activej.common.exception.UncheckedException;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
@@ -205,11 +204,11 @@ public final class ReflectionUtils {
 		return walkClassHierarchy(aClass, clazz -> Optional.ofNullable(clazz.getAnnotation(annotation)));
 	}
 
-	public static <T> Optional<T> walkClassHierarchy(@NotNull Class<?> aClass, @NotNull Function<Class<?>, Optional<T>> finder) {
+	public static <T> Optional<T> walkClassHierarchy(Class<?> aClass, Function<Class<?>, Optional<T>> finder) {
 		return walkClassHierarchy(aClass, finder, new HashSet<>());
 	}
 
-	private static <T> Optional<T> walkClassHierarchy(@Nullable Class<?> aClass, @NotNull Function<Class<?>, Optional<T>> finder, @NotNull Set<Class<?>> visited) {
+	private static <T> Optional<T> walkClassHierarchy(@Nullable Class<?> aClass, Function<Class<?>, Optional<T>> finder, Set<Class<?>> visited) {
 		if (aClass == null || !visited.add(aClass)) return Optional.empty();
 		Optional<T> maybeResult = finder.apply(aClass);
 		if (maybeResult.isPresent()) return maybeResult;

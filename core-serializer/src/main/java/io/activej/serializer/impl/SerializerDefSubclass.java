@@ -22,7 +22,6 @@ import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.CorruptedDataException;
 import io.activej.serializer.SerializerDef;
-import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Modifier;
 import java.util.*;
@@ -39,7 +38,7 @@ public final class SerializerDefSubclass extends AbstractSerializerDef implement
 	private final boolean nullable;
 	private final int startIndex;
 
-	public SerializerDefSubclass(@NotNull Class<?> dataType, LinkedHashMap<Class<?>, SerializerDef> subclassSerializers, int startIndex) {
+	public SerializerDefSubclass(Class<?> dataType, LinkedHashMap<Class<?>, SerializerDef> subclassSerializers, int startIndex) {
 		checkSubclasses(subclassSerializers.keySet());
 
 		this.startIndex = startIndex;
@@ -48,7 +47,7 @@ public final class SerializerDefSubclass extends AbstractSerializerDef implement
 		this.nullable = false;
 	}
 
-	private SerializerDefSubclass(@NotNull Class<?> dataType, LinkedHashMap<Class<?>, SerializerDef> subclassSerializers, boolean nullable, int startIndex) {
+	private SerializerDefSubclass(Class<?> dataType, LinkedHashMap<Class<?>, SerializerDef> subclassSerializers, boolean nullable, int startIndex) {
 		checkSubclasses(subclassSerializers.keySet());
 
 		this.startIndex = startIndex;

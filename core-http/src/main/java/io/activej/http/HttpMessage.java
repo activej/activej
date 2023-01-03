@@ -25,7 +25,6 @@ import io.activej.csp.ChannelSuppliers;
 import io.activej.promise.Promise;
 import io.activej.types.TypeT;
 import org.intellij.lang.annotations.MagicConstant;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
@@ -81,22 +80,22 @@ public abstract class HttpMessage {
 		return version;
 	}
 
-	public void addHeader(@NotNull HttpHeader header, @NotNull String string) {
+	public void addHeader(HttpHeader header, String string) {
 		if (CHECK) checkState(!isRecycled());
 		addHeader(header, HttpHeaderValue.of(string));
 	}
 
-	public void addHeader(@NotNull HttpHeader header, byte[] value) {
+	public void addHeader(HttpHeader header, byte[] value) {
 		if (CHECK) checkState(!isRecycled());
 		addHeader(header, HttpHeaderValue.ofBytes(value, 0, value.length));
 	}
 
-	public void addHeader(@NotNull HttpHeader header, byte[] array, int off, int len) {
+	public void addHeader(HttpHeader header, byte[] array, int off, int len) {
 		if (CHECK) checkState(!isRecycled());
 		addHeader(header, HttpHeaderValue.ofBytes(array, off, len));
 	}
 
-	public void addHeader(@NotNull HttpHeader header, @NotNull HttpHeaderValue value) {
+	public void addHeader(HttpHeader header, HttpHeaderValue value) {
 		if (CHECK) checkState(!isRecycled());
 		headers.add(header, value);
 	}
@@ -106,7 +105,7 @@ public abstract class HttpMessage {
 		return headers.getEntries();
 	}
 
-	public final <T> @NotNull List<T> getHeader(@NotNull HttpHeader header, @NotNull HttpHeaderValue.DecoderIntoList<T> decoder) {
+	public final <T> List<T> getHeader(HttpHeader header, HttpHeaderValue.DecoderIntoList<T> decoder) {
 		if (CHECK) checkState(!isRecycled());
 		List<T> list = new ArrayList<>();
 		for (int i = header.hashCode() & (headers.kvPairs.length - 2); ; i = (i + 2) & (headers.kvPairs.length - 2)) {
@@ -137,13 +136,13 @@ public abstract class HttpMessage {
 		return null;
 	}
 
-	public final @Nullable String getHeader(@NotNull HttpHeader header) {
+	public final @Nullable String getHeader(HttpHeader header) {
 		if (CHECK) checkState(!isRecycled());
 		HttpHeaderValue headerValue = headers.get(header);
 		return headerValue != null ? headerValue.toString() : null;
 	}
 
-	public final @Nullable ByteBuf getHeaderBuf(@NotNull HttpHeader header) {
+	public final @Nullable ByteBuf getHeaderBuf(HttpHeader header) {
 		if (CHECK) checkState(!isRecycled());
 		HttpHeaderValue headerBuf = headers.get(header);
 		return headerBuf != null ? headerBuf.getBuf() : null;
@@ -154,11 +153,11 @@ public abstract class HttpMessage {
 		addCookies(List.of(cookies));
 	}
 
-	public abstract void addCookies(@NotNull List<HttpCookie> cookies);
+	public abstract void addCookies(List<HttpCookie> cookies);
 
-	public abstract void addCookie(@NotNull HttpCookie cookie);
+	public abstract void addCookie(HttpCookie cookie);
 
-	public void setBodyStream(@NotNull ChannelSupplier<ByteBuf> bodySupplier) {
+	public void setBodyStream(ChannelSupplier<ByteBuf> bodySupplier) {
 		if (CHECK) checkState(!isRecycled());
 		this.bodyStream = bodySupplier;
 	}
@@ -197,7 +196,7 @@ public abstract class HttpMessage {
 		throw new IllegalStateException("Body stream is missing or already consumed");
 	}
 
-	public void setBody(@NotNull ByteBuf body) {
+	public void setBody(ByteBuf body) {
 		if (CHECK) checkState(!isRecycled());
 		this.body = body;
 	}
@@ -257,7 +256,7 @@ public abstract class HttpMessage {
 	/**
 	 * @see #loadBody(int)
 	 */
-	public Promise<ByteBuf> loadBody(@NotNull MemSize maxBodySize) {
+	public Promise<ByteBuf> loadBody(MemSize maxBodySize) {
 		if (CHECK) checkState(!isRecycled());
 		return loadBody(maxBodySize.toInt());
 	}
@@ -444,7 +443,7 @@ public abstract class HttpMessage {
 		bodyStream = nullify(bodyStream, stream -> stream.streamTo(recycling()));
 	}
 
-	protected void writeHeaders(@NotNull ByteBuf buf) {
+	protected void writeHeaders(ByteBuf buf) {
 		if (CHECK) checkState(!isRecycled());
 		byte[] array = buf.array();
 		int offset = buf.tail();
@@ -485,7 +484,7 @@ public abstract class HttpMessage {
 
 	protected abstract int estimateSize();
 
-	protected abstract void writeTo(@NotNull ByteBuf buf);
+	protected abstract void writeTo(ByteBuf buf);
 
 	public interface HttpDecoderFunction<T> {
 		T decode(ByteBuf value) throws MalformedHttpException;

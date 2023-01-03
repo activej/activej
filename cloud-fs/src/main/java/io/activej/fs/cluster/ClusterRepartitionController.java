@@ -102,12 +102,12 @@ public final class ClusterRepartitionController extends AbstractReactive
 		return new ClusterRepartitionController(reactor, localPartitionId, partitions);
 	}
 
-	public ClusterRepartitionController withGlob(@NotNull String glob) {
+	public ClusterRepartitionController withGlob(String glob) {
 		this.glob = glob;
 		return this;
 	}
 
-	public ClusterRepartitionController withNegativeGlob(@NotNull String negativeGlob) {
+	public ClusterRepartitionController withNegativeGlob(String negativeGlob) {
 		if (negativeGlob.isEmpty()) {
 			return this;
 		}
@@ -138,11 +138,11 @@ public final class ClusterRepartitionController extends AbstractReactive
 		return localFs;
 	}
 
-	public @NotNull Promise<Void> repartition() {
+	public Promise<Void> repartition() {
 		return repartition.run();
 	}
 
-	private @NotNull Promise<Void> doRepartition() {
+	private Promise<Void> doRepartition() {
 		if (CHECK)
 			checkState(partitions.inReactorThread(), "Should be called from eventloop thread");
 
@@ -467,7 +467,7 @@ public final class ClusterRepartitionController extends AbstractReactive
 		final FileMetadata localMetadata;
 		final List<@Nullable FileMetadata> remoteMetadata = new ArrayList<>();
 
-		private InfoResults(@NotNull String name, @NotNull FileMetadata localMetadata) {
+		private InfoResults(String name, FileMetadata localMetadata) {
 			this.name = name;
 			this.localMetadata = localMetadata;
 		}
@@ -504,7 +504,7 @@ public final class ClusterRepartitionController extends AbstractReactive
 		}
 
 		@Override
-		public int compareTo(@NotNull ClusterRepartitionController.InfoResults o) {
+		public int compareTo(ClusterRepartitionController.@NotNull InfoResults o) {
 			return INFO_RESULTS_COMPARATOR.compare(this, o);
 		}
 	}

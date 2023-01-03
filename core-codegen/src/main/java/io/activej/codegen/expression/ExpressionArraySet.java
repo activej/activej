@@ -17,7 +17,6 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
-import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
@@ -29,7 +28,7 @@ final class ExpressionArraySet implements Expression {
 	private final Expression position;
 	private final Expression newElement;
 
-	ExpressionArraySet(@NotNull Expression array, @NotNull Expression position, @NotNull Expression newElement) {
+	ExpressionArraySet(Expression array, Expression position, Expression newElement) {
 		this.array = array;
 		this.position = position;
 		this.newElement = newElement;

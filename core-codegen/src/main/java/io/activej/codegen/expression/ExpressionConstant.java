@@ -18,7 +18,6 @@ package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
 import io.activej.types.Primitives;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
@@ -33,17 +32,17 @@ import static org.objectweb.asm.Type.getType;
 public final class ExpressionConstant implements Expression {
 	private static final AtomicInteger COUNTER = new AtomicInteger();
 
-	private final @NotNull Object value;
+	private final Object value;
 	private final @Nullable Class<?> cls;
 
 	private final int id = COUNTER.incrementAndGet();
 
-	ExpressionConstant(@NotNull Object value) {
+	ExpressionConstant(Object value) {
 		this.value = value;
 		this.cls = null;
 	}
 
-	ExpressionConstant(@NotNull Object value, Class<?> cls) {
+	ExpressionConstant(Object value, Class<?> cls) {
 		if (!cls.isInstance(value)) {
 			throw new IllegalArgumentException(value + " is not an instance of " + cls);
 		}
@@ -52,7 +51,7 @@ public final class ExpressionConstant implements Expression {
 		this.cls = cls;
 	}
 
-	public @NotNull Object getValue() {
+	public Object getValue() {
 		return value;
 	}
 

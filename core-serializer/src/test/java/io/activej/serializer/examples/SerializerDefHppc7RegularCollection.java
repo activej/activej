@@ -5,7 +5,6 @@ import io.activej.common.exception.UncheckedException;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 import io.activej.serializer.impl.SerializerDefRegularCollection;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.function.UnaryOperator;
 
@@ -22,12 +21,12 @@ public class SerializerDefHppc7RegularCollection extends SerializerDefRegularCol
 	}
 
 	@Override
-	protected @NotNull SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
+	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
 		return new SerializerDefHppc7RegularCollection(valueSerializer, encodeType, decodeType, elementType, true);
 	}
 
 	@Override
-	protected @NotNull Expression doIterate(Expression collection, UnaryOperator<Expression> action) {
+	protected Expression doIterate(Expression collection, UnaryOperator<Expression> action) {
 		try {
 			String prefix = capitalize(elementType.getSimpleName());
 			Class<?> iteratorType = Class.forName("com.carrotsearch.hppc.cursors." + prefix + "Cursor");

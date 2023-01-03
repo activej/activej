@@ -18,7 +18,6 @@ package io.activej.config.converter;
 
 import io.activej.common.function.FunctionEx;
 import io.activej.config.Config;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Function;
@@ -27,7 +26,7 @@ import static io.activej.common.Checks.checkNotNull;
 
 public abstract class SimpleConfigConverter<T> implements ConfigConverter<T> {
 	@Override
-	public final @NotNull T get(Config config) {
+	public final T get(Config config) {
 		return fromString(checkNotNull(config.getValue()));
 	}
 

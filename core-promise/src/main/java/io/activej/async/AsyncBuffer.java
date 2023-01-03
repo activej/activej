@@ -20,7 +20,6 @@ import io.activej.async.function.AsyncFunction;
 import io.activej.common.function.FunctionEx;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
@@ -86,7 +85,7 @@ public final class AsyncBuffer<A, R> {
 		return bufferedPromise;
 	}
 
-	public void cancelBufferedPromise(@NotNull Exception e) {
+	public void cancelBufferedPromise(Exception e) {
 		if (bufferedPromise != null) {
 			SettablePromise<R> bufferedPromise = this.bufferedPromise;
 			this.bufferedPromise = null;

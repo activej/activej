@@ -21,7 +21,6 @@ import io.activej.async.process.AsyncExecutors;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayDeque;
@@ -29,13 +28,13 @@ import java.util.ArrayDeque;
 public final class AsyncSuppliers {
 
 	@Contract(pure = true)
-	public static <T> @NotNull AsyncSupplier<T> reuse(@NotNull AsyncSupplier<? extends T> actual) {
+	public static <T> AsyncSupplier<T> reuse(AsyncSupplier<? extends T> actual) {
 		return new AsyncSupplier<>() {
 			@Nullable Promise<T> runningPromise;
 
 			@SuppressWarnings("unchecked")
 			@Override
-			public @NotNull Promise<T> get() {
+			public Promise<T> get() {
 				if (runningPromise != null) return runningPromise;
 				runningPromise = (Promise<T>) actual.get();
 				Promise<T> runningPromise = this.runningPromise;
@@ -46,36 +45,36 @@ public final class AsyncSuppliers {
 	}
 
 	@Contract(pure = true)
-	public static <T> @NotNull AsyncSupplier<T> coalesce(@NotNull AsyncSupplier<T> actual) {
+	public static <T> AsyncSupplier<T> coalesce(AsyncSupplier<T> actual) {
 		AsyncFunction<Void, T> fn = Promises.coalesce(() -> null, (a, v) -> {}, a -> actual.get());
 		return () -> fn.apply(null);
 	}
 
 	@Contract(pure = true)
-	public static <T> @NotNull AsyncSupplier<T> buffer(@NotNull AsyncSupplier<T> actual) {
+	public static <T> AsyncSupplier<T> buffer(AsyncSupplier<T> actual) {
 		return buffer(1, Integer.MAX_VALUE, actual);
 	}
 
 	@Contract(pure = true)
-	public static <T> @NotNull AsyncSupplier<T> buffer(int maxParallelCalls, int maxBufferedCalls, @NotNull AsyncSupplier<T> actualSupplier) {
+	public static <T> AsyncSupplier<T> buffer(int maxParallelCalls, int maxBufferedCalls, AsyncSupplier<T> actualSupplier) {
 		return ofExecutor(AsyncExecutors.buffered(maxParallelCalls, maxBufferedCalls), actualSupplier);
 	}
 
 	@Contract(pure = true)
-	public static <T> @NotNull AsyncSupplier<T> ofExecutor(@NotNull AsyncExecutor asyncExecutor, @NotNull AsyncSupplier<T> supplier) {
+	public static <T> AsyncSupplier<T> ofExecutor(AsyncExecutor asyncExecutor, AsyncSupplier<T> supplier) {
 		return () -> asyncExecutor.execute(supplier);
 	}
 
 	@Contract(pure = true)
-	public static <T> AsyncSupplier<T> prefetch(int count, @NotNull AsyncSupplier<? extends T> asyncSupplier) {
+	public static <T> AsyncSupplier<T> prefetch(int count, AsyncSupplier<? extends T> asyncSupplier) {
 		return prefetch(count, asyncSupplier, asyncSupplier);
 	}
 
 	@Contract(pure = true)
 	@SuppressWarnings("unchecked")
 	public static <T> AsyncSupplier<T> prefetch(int count,
-			@NotNull AsyncSupplier<? extends T> actualSupplier,
-			@NotNull AsyncSupplier<? extends T> prefetchSupplier) {
+			AsyncSupplier<? extends T> actualSupplier,
+			AsyncSupplier<? extends T> prefetchSupplier) {
 		if (count == 0) return (AsyncSupplier<T>) actualSupplier;
 		return new AsyncSupplier<T>() {
 			final ArrayDeque<T> prefetched = new ArrayDeque<>();
@@ -83,7 +82,7 @@ public final class AsyncSuppliers {
 
 			@SuppressWarnings("unchecked")
 			@Override
-			public @NotNull Promise<T> get() {
+			public Promise<T> get() {
 				Promise<? extends T> result = prefetched.isEmpty() ? actualSupplier.get() : Promise.of(prefetched.pollFirst());
 				prefetch();
 				return (Promise<T>) result;

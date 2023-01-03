@@ -27,7 +27,6 @@ import io.activej.reactor.Reactor;
 import io.activej.reactor.net.DatagramSocketSettings;
 import io.activej.reactor.net.ServerSocketSettings;
 import io.activej.reactor.net.SocketSettings;
-import org.jetbrains.annotations.NotNull;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -108,7 +107,7 @@ public final class ConfigConverters {
 			}
 
 			@Override
-			public @NotNull String get(Config config) {
+			public String get(Config config) {
 				return config.getValue();
 			}
 		};
@@ -311,7 +310,7 @@ public final class ConfigConverters {
 	public static ConfigConverter<FatalErrorHandler> ofFatalErrorHandler() {
 		return new ConfigConverter<>() {
 			@Override
-			public @NotNull FatalErrorHandler get(Config config) {
+			public FatalErrorHandler get(Config config) {
 				switch (config.getValue()) {
 					case "rethrow":
 						return rethrow();
@@ -379,7 +378,7 @@ public final class ConfigConverters {
 	public static ConfigConverter<Schedule> ofReactorTaskSchedule() {
 		return new ConfigConverter<>() {
 			@Override
-			public @NotNull Schedule get(Config config) {
+			public Schedule get(Config config) {
 				return switch (config.get("type")) {
 					case "immediate" -> Schedule.immediate();
 					case "delay" -> Schedule.ofDelay(config.get(ofDuration(), "value"));
@@ -404,7 +403,7 @@ public final class ConfigConverters {
 	public static ConfigConverter<RetryPolicy> ofRetryPolicy() {
 		return new ConfigConverter<>() {
 			@Override
-			public @NotNull RetryPolicy get(Config config) {
+			public RetryPolicy get(Config config) {
 				if (!config.hasValue() || config.getValue().equals("no")) {
 					return RetryPolicy.noRetry();
 				}
@@ -488,7 +487,7 @@ public final class ConfigConverters {
 	public static ConfigConverter<ExecutorService> ofExecutor() {
 		return new ConfigConverter<>() {
 			@Override
-			public @NotNull ExecutorService get(Config config) {
+			public ExecutorService get(Config config) {
 				return getExecutor(config);
 			}
 

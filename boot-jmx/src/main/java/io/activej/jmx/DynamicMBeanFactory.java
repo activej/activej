@@ -31,7 +31,6 @@ import io.activej.jmx.api.attribute.JmxReducer;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerDistinct;
 import io.activej.jmx.stats.JmxRefreshableStats;
 import io.activej.jmx.stats.JmxStats;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,7 +76,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 	private static final DynamicMBeanFactory INSTANCE_WITH_DEFAULT_REFRESH_PERIOD = new DynamicMBeanFactory(DEFAULT_REFRESH_PERIOD_IN_SECONDS, MAX_JMX_REFRESHES_PER_ONE_CYCLE_DEFAULT);
 
 	// region constructor and factory methods
-	private DynamicMBeanFactory(@NotNull Duration refreshPeriod, int maxJmxRefreshesPerOneCycle) {
+	private DynamicMBeanFactory(Duration refreshPeriod, int maxJmxRefreshesPerOneCycle) {
 		this.specifiedRefreshPeriod = refreshPeriod;
 		this.maxJmxRefreshesPerOneCycle = maxJmxRefreshesPerOneCycle;
 	}
@@ -123,7 +122,7 @@ public final class DynamicMBeanFactory implements WithInitializer<DynamicMBeanFa
 	/**
 	 * Creates Jmx MBean for beans with operations and attributes.
 	 */
-	public DynamicMBean createDynamicMBean(@NotNull List<?> beans, @NotNull JmxBeanSettings setting, boolean enableRefresh) {
+	public DynamicMBean createDynamicMBean(List<?> beans, JmxBeanSettings setting, boolean enableRefresh) {
 		checkArgument(!beans.isEmpty(), "List of beans should not be empty");
 		checkArgument(beans.stream().noneMatch(Objects::isNull), "Bean can not be null");
 		checkArgument(beans.stream().map(Object::getClass).collect(toSet()).size() == 1, "Beans should be of the same type");

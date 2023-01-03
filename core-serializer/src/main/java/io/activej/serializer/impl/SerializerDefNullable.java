@@ -21,7 +21,6 @@ import io.activej.codegen.expression.Variable;
 import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
-import org.jetbrains.annotations.NotNull;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.impl.SerializerExpressions.readByte;
@@ -30,7 +29,7 @@ import static io.activej.serializer.impl.SerializerExpressions.writeByte;
 public final class SerializerDefNullable extends AbstractSerializerDef implements SerializerDef {
 	private final SerializerDef serializer;
 
-	public SerializerDefNullable(@NotNull SerializerDef serializer) {
+	public SerializerDefNullable(SerializerDef serializer) {
 		this.serializer = serializer;
 	}
 

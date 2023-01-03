@@ -17,7 +17,6 @@
 package io.activej.inject;
 
 import io.activej.inject.annotation.ScopeAnnotation;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
@@ -28,10 +27,10 @@ import static io.activej.inject.util.Utils.isMarker;
 public final class Scope {
 	public static final Scope[] UNSCOPED = new Scope[0];
 
-	private final @NotNull Class<? extends Annotation> annotationType;
+	private final Class<? extends Annotation> annotationType;
 	private final boolean threadsafe;
 
-	private Scope(@NotNull Class<? extends Annotation> annotationType, boolean threadsafe) {
+	private Scope(Class<? extends Annotation> annotationType, boolean threadsafe) {
 		this.annotationType = annotationType;
 		this.threadsafe = threadsafe;
 	}
@@ -53,7 +52,7 @@ public final class Scope {
 		return of(annotation.annotationType());
 	}
 
-	public @NotNull Class<? extends Annotation> getAnnotationType() {
+	public Class<? extends Annotation> getAnnotationType() {
 		return annotationType;
 	}
 

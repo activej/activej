@@ -17,7 +17,6 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
-import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 
 import java.util.List;
@@ -26,7 +25,7 @@ final class ExpressionStaticCallSelf implements Expression {
 	private final String methodName;
 	private final List<Expression> arguments;
 
-	public ExpressionStaticCallSelf(@NotNull String methodName, @NotNull List<Expression> expressions) {
+	public ExpressionStaticCallSelf(String methodName, List<Expression> expressions) {
 		this.methodName = methodName;
 		this.arguments = expressions;
 	}

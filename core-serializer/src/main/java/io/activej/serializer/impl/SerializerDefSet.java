@@ -19,7 +19,6 @@ package io.activej.serializer.impl;
 import io.activej.codegen.expression.Expression;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.EnumSet;
@@ -39,12 +38,12 @@ public final class SerializerDefSet extends SerializerDefRegularCollection {
 	}
 
 	@Override
-	protected @NotNull SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
+	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
 		return new SerializerDefSet(valueSerializer, true);
 	}
 
 	@Override
-	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
+	protected Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
 		return ifEq(length, value(0),
 				staticCall(Collections.class, "emptySet"),
 				ifEq(length, value(1),
@@ -53,7 +52,7 @@ public final class SerializerDefSet extends SerializerDefRegularCollection {
 	}
 
 	@Override
-	protected @NotNull Expression createBuilder(Expression length) {
+	protected Expression createBuilder(Expression length) {
 		if (valueSerializer.getDecodeType().isEnum()) {
 			return staticCall(EnumSet.class, "noneOf", value(valueSerializer.getEncodeType()));
 		}

@@ -59,7 +59,7 @@ public final class LogDiffCodec<D> implements ReadObject<LogDiff<D>>, WriteObjec
 	}
 
 	@Override
-	public LogDiff<D> read(@NotNull JsonReader reader) throws IOException {
+	public LogDiff<D> read(JsonReader reader) throws IOException {
 		if (reader.last() != OBJECT_START) throw reader.newParseError("Expected '{'");
 		Map<String, LogPositionDiff> positions = readValue(reader, POSITIONS, $ -> {
 			if (reader.last() != ARRAY_START) throw reader.newParseError("Expected '['");
@@ -149,7 +149,7 @@ public final class LogDiffCodec<D> implements ReadObject<LogDiff<D>>, WriteObjec
 
 		@Override
 		@SuppressWarnings("ConstantConditions")
-		public LogPosition read(@NotNull JsonReader reader) throws IOException {
+		public LogPosition read(JsonReader reader) throws IOException {
 			if (reader.last() != ARRAY_START) throw reader.newParseError("Expected '['");
 			reader.getNextToken();
 			String name = reader.readString();

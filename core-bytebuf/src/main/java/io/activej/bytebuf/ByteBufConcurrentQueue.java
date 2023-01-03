@@ -16,7 +16,6 @@
 
 package io.activej.bytebuf;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -77,7 +76,7 @@ final class ByteBufConcurrentQueue {
 		}
 	}
 
-	public void offer(@NotNull ByteBuf buf) {
+	public void offer(ByteBuf buf) {
 		long pos1, pos2;
 		do {
 			pos1 = pos.get();

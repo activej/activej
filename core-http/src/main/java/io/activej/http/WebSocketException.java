@@ -17,7 +17,6 @@
 package io.activej.http;
 
 import io.activej.common.ApplicationSettings;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Checks.checkArgument;
@@ -49,7 +48,7 @@ public class WebSocketException extends HttpException {
 	/**
 	 * An empty exception with a close code but no close reason.
 	 */
-	public WebSocketException(@NotNull Integer code) {
+	public WebSocketException(@Nullable Integer code) {
 		super("");
 		this.code = code;
 	}
@@ -57,7 +56,7 @@ public class WebSocketException extends HttpException {
 	/**
 	 * An exception with a close code and a close reason. Length of the reason string should not exceed 123 characters.
 	 */
-	public WebSocketException(@NotNull Integer code, @NotNull String reason) {
+	public WebSocketException(@Nullable Integer code, String reason) {
 		super(checkArgument(reason, r -> r.length() <= 123, "Reason too long"));
 		this.code = code;
 	}

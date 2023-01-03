@@ -5,7 +5,6 @@ import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -67,7 +66,7 @@ public abstract class RecordProjection implements UnaryOperator<Record>, BiConsu
 		return projection(DefiningClassLoader.create(classLoaderChild), null, schemeFrom, schemeTo, mapping);
 	}
 
-	public static @NotNull RecordProjection projection(DefiningClassLoader classLoader, @Nullable Object classKey,
+	public static RecordProjection projection(DefiningClassLoader classLoader, @Nullable Object classKey,
 			RecordScheme schemeFrom, RecordScheme schemeTo,
 			Map<String, UnaryOperator<Expression>> mapping) {
 		schemeFrom.build();

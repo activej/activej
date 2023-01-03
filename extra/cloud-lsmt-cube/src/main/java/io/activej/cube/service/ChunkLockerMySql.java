@@ -22,7 +22,6 @@ import io.activej.aggregation.ChunksAlreadyLockedException;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +53,7 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C>, WithInitialize
 	private final ChunkIdCodec<C> idCodec;
 	private final String aggregationId;
 
-	private @NotNull String lockedBy = DEFAULT_LOCKED_BY == null ? UUID.randomUUID().toString() : DEFAULT_LOCKED_BY;
+	private String lockedBy = DEFAULT_LOCKED_BY == null ? UUID.randomUUID().toString() : DEFAULT_LOCKED_BY;
 
 	private String tableChunk = CHUNK_TABLE;
 	private long lockTtlSeconds = DEFAULT_LOCK_TTL.getSeconds();
@@ -85,7 +84,7 @@ public final class ChunkLockerMySql<C> implements ChunkLocker<C>, WithInitialize
 		return this;
 	}
 
-	public ChunkLockerMySql<C> withLockedBy(@NotNull String lockedBy) {
+	public ChunkLockerMySql<C> withLockedBy(String lockedBy) {
 		this.lockedBy = lockedBy;
 		return this;
 	}

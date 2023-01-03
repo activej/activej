@@ -20,12 +20,11 @@ import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.Scope;
 import io.activej.inject.impl.BindingLocator;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * This is a transformation function that is applied by the {@link Injector injector} to each binding once.
  */
 @FunctionalInterface
 public interface BindingTransformer<T> {
-	@NotNull Binding<T> transform(BindingLocator bindings, Scope[] scope, Key<T> key, Binding<T> binding);
+	Binding<T> transform(BindingLocator bindings, Scope[] scope, Key<T> key, Binding<T> binding);
 }

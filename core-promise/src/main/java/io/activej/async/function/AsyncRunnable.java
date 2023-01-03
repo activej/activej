@@ -18,7 +18,6 @@ package io.activej.async.function;
 
 import io.activej.common.function.RunnableEx;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
@@ -32,7 +31,7 @@ public interface AsyncRunnable {
 	 * @param runnable a {@link RunnableEx}
 	 * @return {@link AsyncRunnable} that works on top of {@link RunnableEx} interface
 	 */
-	static @NotNull AsyncRunnable of(@NotNull RunnableEx runnable) {
+	static AsyncRunnable of(RunnableEx runnable) {
 		return () -> {
 			try {
 				runnable.run();

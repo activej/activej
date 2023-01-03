@@ -22,7 +22,6 @@ import io.activej.codegen.expression.Variable;
 import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
-import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 
 import java.lang.reflect.Constructor;
@@ -95,17 +94,17 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 		this.decodeType = decodeType;
 	}
 
-	public static SerializerDefClass create(@NotNull Class<?> type) {
+	public static SerializerDefClass create(Class<?> type) {
 		return new SerializerDefClass(type, type);
 	}
 
-	public static SerializerDefClass create(@NotNull Class<?> encodeType, @NotNull Class<?> decodeType) {
+	public static SerializerDefClass create(Class<?> encodeType, Class<?> decodeType) {
 		if (!encodeType.isAssignableFrom(decodeType))
 			throw new IllegalArgumentException(format("Class should be assignable from %s", decodeType));
 		return new SerializerDefClass(encodeType, decodeType);
 	}
 
-	public void addSetter(@NotNull Method method, @NotNull List<String> fields) {
+	public void addSetter(Method method, List<String> fields) {
 		if (decodeType.isInterface())
 			throw new IllegalStateException("Class should either implement an interface or be an interface");
 		if (isPrivate(method.getModifiers()))
@@ -116,7 +115,7 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 		setters.put(method, fields);
 	}
 
-	public void setStaticFactoryMethod(@NotNull Method staticFactoryMethod, @NotNull List<String> fields) {
+	public void setStaticFactoryMethod(Method staticFactoryMethod, List<String> fields) {
 		if (decodeType.isInterface())
 			throw new IllegalStateException("Class should either implement an interface or be an interface");
 		if (this.staticFactoryMethod != null)
@@ -131,7 +130,7 @@ public final class SerializerDefClass extends AbstractSerializerDef {
 		this.staticFactoryMethodParams = fields;
 	}
 
-	public void setConstructor(@NotNull Constructor<?> constructor, @NotNull List<String> fields) {
+	public void setConstructor(Constructor<?> constructor, List<String> fields) {
 		if (decodeType.isInterface())
 			throw new IllegalStateException("Class should either implement an interface or be an interface");
 		if (this.constructor != null)

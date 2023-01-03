@@ -22,7 +22,6 @@ import io.activej.inject.module.UniqueQualifierImpl;
 import io.activej.inject.util.ReflectionUtils;
 import io.activej.inject.util.Trie;
 import io.activej.inject.util.Utils;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Modifier;
@@ -204,7 +203,7 @@ public final class Preprocessor {
 	}
 
 	@SuppressWarnings({"rawtypes", "Convert2Lambda"})
-	private static @NotNull Binding<?> resolveOptionalDependency(Map<Key<?>, Binding<?>> upper, Map<Key<?>, Set<Binding<?>>> localBindings, Map<Key<?>, Binding<?>> resolvedBindings, Scope[] scope, Key<?> key, Multibinder<?> multibinder, BindingTransformer<?> transformer, BindingGenerator<?> generator) {
+	private static Binding<?> resolveOptionalDependency(Map<Key<?>, Binding<?>> upper, Map<Key<?>, Set<Binding<?>>> localBindings, Map<Key<?>, Binding<?>> resolvedBindings, Scope[] scope, Key<?> key, Multibinder<?> multibinder, BindingTransformer<?> transformer, BindingGenerator<?> generator) {
 		Key<?> instanceKey = key.getTypeParameter(0).qualified(key.getQualifier());
 		if (instanceKey.getRawType() == OptionalDependency.class) {
 			throw new DIException("Nested optional dependencies are not allowed");
@@ -217,14 +216,14 @@ public final class Preprocessor {
 				return slot != null ?
 						new AbstractCompiledBinding<>(scope, slot) {
 							@Override
-							protected @NotNull OptionalDependency<?> doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							protected OptionalDependency<?> doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								CompiledBinding<?> compiledBinding = compiledBindings.get(instanceKey);
 								return OptionalDependency.of(compiledBinding.getInstance(scopedInstances, synchronizedScope));
 							}
 						} :
 						new CompiledBinding<>() {
 							@Override
-							public @NotNull OptionalDependency<?> getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							public OptionalDependency<?> getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								CompiledBinding<?> compiledBinding = compiledBindings.get(instanceKey);
 								return OptionalDependency.of(compiledBinding.getInstance(scopedInstances, synchronizedScope));
 							}
@@ -244,7 +243,7 @@ public final class Preprocessor {
 				return slot != null ?
 						new AbstractCompiledBinding<>(scope, slot) {
 							@Override
-							protected @NotNull InstanceProvider<?> doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							protected InstanceProvider<?> doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								CompiledBinding<Object> compiledBinding = compiledBindings.get(instanceKey);
 								// ^ this only gets already compiled binding, that's not a binding compilation after injector is compiled
 								return new InstanceProviderImpl<>(instanceKey, compiledBinding, scopedInstances, synchronizedScope);
@@ -252,7 +251,7 @@ public final class Preprocessor {
 						} :
 						new CompiledBinding<>() {
 							@Override
-							public @NotNull InstanceProvider<?> getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							public InstanceProvider<?> getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 
 								// transient bindings for instance provider are useless and nobody should make ones
 								// however, things like mapInstance create an intermediate transient compiled bindings of their peers
@@ -269,7 +268,7 @@ public final class Preprocessor {
 	}
 
 	@SuppressWarnings({"rawtypes", "Convert2Lambda"})
-	private static @NotNull Binding<?> resolveInstanceInjector(Key<?> key) {
+	private static Binding<?> resolveInstanceInjector(Key<?> key) {
 		Key<Object> instanceKey = key.getTypeParameter(0).qualified(key.getQualifier());
 		BindingInitializer<Object> bindingInitializer = generateInjectingInitializer(instanceKey);
 		return new Binding<InstanceInjector<?>>(bindingInitializer.getDependencies(), SYNTHETIC, null) {
@@ -278,14 +277,14 @@ public final class Preprocessor {
 				return slot != null ?
 						new AbstractCompiledBinding<>(synchronizedScope, slot) {
 							@Override
-							protected @NotNull InstanceInjector<?> doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							protected InstanceInjector<?> doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								CompiledBindingInitializer<Object> compiledBindingInitializer = bindingInitializer.compile(compiledBindings);
 								return new InstanceInjectorImpl<>(instanceKey, compiledBindingInitializer, scopedInstances, synchronizedScope);
 							}
 						} :
 						new CompiledBinding<>() {
 							@Override
-							public @NotNull InstanceInjector<?> getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+							public InstanceInjector<?> getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 								CompiledBindingInitializer<Object> compiledBindingInitializer = bindingInitializer.compile(compiledBindings);
 								// same as with instance providers
 								return new InstanceInjectorImpl<>(instanceKey, compiledBindingInitializer, scopedInstances, synchronizedScope);

@@ -23,7 +23,6 @@ import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.ImplicitlyReactive;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Checks.checkState;
@@ -46,7 +45,7 @@ public final class AsyncAccumulator<A> extends ImplicitlyReactive implements Asy
 		return new AsyncAccumulator<>(accumulator);
 	}
 
-	public <T> AsyncAccumulator<A> withPromise(@NotNull Promise<T> promise, @NotNull BiConsumerEx<A, T> accumulator) {
+	public <T> AsyncAccumulator<A> withPromise(Promise<T> promise, BiConsumerEx<A, T> accumulator) {
 		addPromise(promise, accumulator);
 		return this;
 	}
@@ -61,12 +60,12 @@ public final class AsyncAccumulator<A> extends ImplicitlyReactive implements Asy
 		return resultPromise;
 	}
 
-	public Promise<A> run(@NotNull Promise<Void> runtimePromise) {
+	public Promise<A> run(Promise<Void> runtimePromise) {
 		addPromise(runtimePromise, (result, v) -> {});
 		return run();
 	}
 
-	public <T> void addPromise(@NotNull Promise<T> promise, @NotNull BiConsumerEx<A, T> consumer) {
+	public <T> void addPromise(Promise<T> promise, BiConsumerEx<A, T> consumer) {
 		if (resultPromise.isComplete()) {
 			promise.whenResult(Recyclers::recycle);
 			return;
@@ -97,13 +96,13 @@ public final class AsyncAccumulator<A> extends ImplicitlyReactive implements Asy
 		});
 	}
 
-	public <V> SettablePromise<V> newPromise(@NotNull BiConsumerEx<A, V> consumer) {
+	public <V> SettablePromise<V> newPromise(BiConsumerEx<A, V> consumer) {
 		SettablePromise<V> resultPromise = new SettablePromise<>();
 		addPromise(resultPromise, consumer);
 		return resultPromise;
 	}
 
-	public @NotNull Promise<A> get() {
+	public Promise<A> get() {
 		return resultPromise;
 	}
 

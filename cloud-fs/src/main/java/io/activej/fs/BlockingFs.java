@@ -1,6 +1,5 @@
 package io.activej.fs;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -18,19 +17,19 @@ import static java.util.stream.Collectors.toSet;
 public interface BlockingFs {
 	String SEPARATOR = ActiveFs.SEPARATOR;
 
-	OutputStream upload(@NotNull String name) throws IOException;
+	OutputStream upload(String name) throws IOException;
 
-	OutputStream upload(@NotNull String name, long size) throws IOException;
+	OutputStream upload(String name, long size) throws IOException;
 
-	OutputStream append(@NotNull String name, long offset) throws IOException;
+	OutputStream append(String name, long offset) throws IOException;
 
-	InputStream download(@NotNull String name, long offset, long limit) throws IOException;
+	InputStream download(String name, long offset, long limit) throws IOException;
 
-	default InputStream download(@NotNull String name) throws IOException {
+	default InputStream download(String name) throws IOException {
 		return download(name, 0, Long.MAX_VALUE);
 	}
 
-	void delete(@NotNull String name) throws IOException;
+	void delete(String name) throws IOException;
 
 	default void deleteAll(Set<String> toDelete) throws IOException {
 		for (String file : toDelete) {
@@ -44,7 +43,7 @@ public interface BlockingFs {
 	 * @param name   file to be copied
 	 * @param target file name of copy
 	 */
-	default void copy(@NotNull String name, @NotNull String target) throws IOException {
+	default void copy(String name, String target) throws IOException {
 		try (InputStream from = download(name)) {
 			OutputStream to = upload(target);
 			//noinspection TryFinallyCanBeTryWithResources
@@ -64,7 +63,7 @@ public interface BlockingFs {
 		}
 	}
 
-	default void move(@NotNull String name, @NotNull String target) throws IOException {
+	default void move(String name, String target) throws IOException {
 		copy(name, target);
 		if (!name.equals(target)) {
 			delete(name);
@@ -82,14 +81,14 @@ public interface BlockingFs {
 				.collect(toSet()));
 	}
 
-	Map<String, FileMetadata> list(@NotNull String glob) throws IOException;
+	Map<String, FileMetadata> list(String glob) throws IOException;
 
-	default @Nullable FileMetadata info(@NotNull String name) throws IOException {
+	default @Nullable FileMetadata info(String name) throws IOException {
 		return list(escapeGlob(name)).get(name);
 	}
 
-	default Map<String, @NotNull FileMetadata> infoAll(@NotNull Set<String> names) throws IOException {
-		Map<String, @NotNull FileMetadata> result = new LinkedHashMap<>();
+	default Map<String, FileMetadata> infoAll(Set<String> names) throws IOException {
+		Map<String, FileMetadata> result = new LinkedHashMap<>();
 		for (String name : names) {
 			FileMetadata info = info(name);
 			if (info != null) {

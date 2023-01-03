@@ -22,7 +22,6 @@ import io.activej.inject.Scope;
 import io.activej.inject.module.UniqueQualifierImpl;
 import io.activej.jmx.DynamicMBeanFactory.JmxCustomTypeAdapter;
 import io.activej.worker.WorkerPool;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +62,7 @@ public final class JmxRegistry implements JmxRegistryMXBean, WithInitializer<Jmx
 	private int registeredPools;
 	private int totallyRegisteredMBeans;
 
-	private JmxRegistry(@NotNull MBeanServer mbs,
+	private JmxRegistry(MBeanServer mbs,
 			DynamicMBeanFactory mbeanFactory,
 			Map<Type, JmxCustomTypeAdapter<?>> customTypes) {
 		this.mbs = mbs;
@@ -101,7 +100,7 @@ public final class JmxRegistry implements JmxRegistryMXBean, WithInitializer<Jmx
 		workerPoolKeys.put(workerPool, workerPoolKey);
 	}
 
-	public void registerSingleton(@NotNull Key<?> key, @NotNull Object singletonInstance, @NotNull JmxBeanSettings settings) {
+	public void registerSingleton(Key<?> key, Object singletonInstance, JmxBeanSettings settings) {
 		Class<?> instanceClass = singletonInstance.getClass();
 		Object mbean;
 		if (isJmxBean(instanceClass)) {
@@ -150,7 +149,7 @@ public final class JmxRegistry implements JmxRegistryMXBean, WithInitializer<Jmx
 		}
 	}
 
-	public void unregisterSingleton(@NotNull Key<?> key, Object singletonInstance) {
+	public void unregisterSingleton(Key<?> key, Object singletonInstance) {
 		if (isMBean(singletonInstance.getClass())) {
 			try {
 				ProtoObjectName name = createProtoObjectNameForKey(key);
@@ -166,7 +165,7 @@ public final class JmxRegistry implements JmxRegistryMXBean, WithInitializer<Jmx
 		}
 	}
 
-	public void registerWorkers(@NotNull WorkerPool pool, Key<?> key, @NotNull List<?> poolInstances, JmxBeanSettings settings) {
+	public void registerWorkers(WorkerPool pool, Key<?> key, List<?> poolInstances, JmxBeanSettings settings) {
 		if (poolInstances.isEmpty()) {
 			logger.info("Pool of instances with key {} is empty", key);
 			return;
@@ -239,7 +238,7 @@ public final class JmxRegistry implements JmxRegistryMXBean, WithInitializer<Jmx
 		}
 	}
 
-	public void unregisterWorkers(WorkerPool pool, @NotNull Key<?> key, List<?> poolInstances) {
+	public void unregisterWorkers(WorkerPool pool, Key<?> key, List<?> poolInstances) {
 		if (poolInstances.isEmpty()) {
 			return;
 		}

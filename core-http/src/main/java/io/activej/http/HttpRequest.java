@@ -24,7 +24,6 @@ import io.activej.http.HttpHeaderValue.HttpHeaderValueOfSimpleCookies;
 import io.activej.http.MultipartDecoder.MultipartDataHandler;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetAddress;
@@ -70,14 +69,14 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	private Map<String, String> postParameters;
 
 	// region creators
-	HttpRequest(@NotNull HttpVersion version, @NotNull HttpMethod method, @NotNull UrlParser url, @Nullable HttpServerConnection connection) {
+	HttpRequest(HttpVersion version, HttpMethod method, UrlParser url, @Nullable HttpServerConnection connection) {
 		super(version);
 		this.method = method;
 		this.url = url;
 		this.connection = connection;
 	}
 
-	public static @NotNull HttpRequest of(@NotNull HttpMethod method, @NotNull String url) {
+	public static HttpRequest of(HttpMethod method, String url) {
 		UrlParser urlParser = UrlParser.of(url);
 		HttpRequest request = new HttpRequest(HttpVersion.HTTP_1_1, method, urlParser, null);
 		String hostAndPort = urlParser.getHostAndPort();
@@ -93,83 +92,83 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		return request;
 	}
 
-	public static @NotNull HttpRequest get(@NotNull String url) {
+	public static HttpRequest get(String url) {
 		return HttpRequest.of(GET, url);
 	}
 
-	public static @NotNull HttpRequest post(@NotNull String url) {
+	public static HttpRequest post(String url) {
 		return HttpRequest.of(POST, url);
 	}
 
-	public static @NotNull HttpRequest put(@NotNull String url) {
+	public static HttpRequest put(String url) {
 		return HttpRequest.of(PUT, url);
 	}
 
-	public @NotNull HttpRequest withHeader(@NotNull HttpHeader header, @NotNull String value) {
+	public HttpRequest withHeader(HttpHeader header, String value) {
 		addHeader(header, value);
 		return this;
 	}
 
-	public @NotNull HttpRequest withHeader(@NotNull HttpHeader header, byte[] value) {
+	public HttpRequest withHeader(HttpHeader header, byte[] value) {
 		addHeader(header, value);
 		return this;
 	}
 
-	public @NotNull HttpRequest withHeader(@NotNull HttpHeader header, @NotNull HttpHeaderValue value) {
+	public HttpRequest withHeader(HttpHeader header, HttpHeaderValue value) {
 		addHeader(header, value);
 		return this;
 	}
 
-	public @NotNull HttpRequest withBody(byte[] array) {
+	public HttpRequest withBody(byte[] array) {
 		setBody(array);
 		return this;
 	}
 
-	public @NotNull HttpRequest withBody(@NotNull ByteBuf body) {
+	public HttpRequest withBody(ByteBuf body) {
 		setBody(body);
 		return this;
 	}
 
-	public @NotNull HttpRequest withBodyStream(@NotNull ChannelSupplier<ByteBuf> stream) {
+	public HttpRequest withBodyStream(ChannelSupplier<ByteBuf> stream) {
 		setBodyStream(stream);
 		return this;
 	}
 
-	public @NotNull HttpRequest withCookies(@NotNull List<HttpCookie> cookies) {
+	public HttpRequest withCookies(List<HttpCookie> cookies) {
 		addCookies(cookies);
 		return this;
 	}
 
-	public @NotNull HttpRequest withCookies(HttpCookie... cookie) {
+	public HttpRequest withCookies(HttpCookie... cookie) {
 		addCookies(cookie);
 		return this;
 	}
 
-	public @NotNull HttpRequest withCookie(@NotNull HttpCookie cookie) {
+	public HttpRequest withCookie(HttpCookie cookie) {
 		addCookie(cookie);
 		return this;
 	}
 
-	public @NotNull HttpRequest withBodyGzipCompression() {
+	public HttpRequest withBodyGzipCompression() {
 		setBodyGzipCompression();
 		return this;
 	}
 	// endregion
 
 	@Override
-	public void addCookies(@NotNull List<HttpCookie> cookies) {
+	public void addCookies(List<HttpCookie> cookies) {
 		if (CHECK) checkState(!isRecycled());
 		headers.add(COOKIE, new HttpHeaderValueOfSimpleCookies(cookies));
 	}
 
 	@Override
-	public void addCookie(@NotNull HttpCookie cookie) {
+	public void addCookie(HttpCookie cookie) {
 		if (CHECK) checkState(!isRecycled());
 		addCookies(List.of(cookie));
 	}
 
 	@Contract(pure = true)
-	public @NotNull HttpMethod getMethod() {
+	public HttpMethod getMethod() {
 		return method;
 	}
 
@@ -180,7 +179,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		return remoteAddress;
 	}
 
-	void setRemoteAddress(@NotNull InetAddress inetAddress) {
+	void setRemoteAddress(InetAddress inetAddress) {
 		if (CHECK) checkState(!isRecycled());
 		remoteAddress = inetAddress;
 	}
@@ -207,19 +206,19 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		return url.getHostAndPort();
 	}
 
-	public @NotNull String getPath() {
+	public String getPath() {
 		if (CHECK) checkState(!isRecycled());
 		return url.getPath();
 	}
 
-	public @NotNull String getPathAndQuery() {
+	public String getPathAndQuery() {
 		if (CHECK) checkState(!isRecycled());
 		return url.getPathAndQuery();
 	}
 
 	private @Nullable Map<String, String> parsedCookies;
 
-	public @NotNull Map<String, String> getCookies() {
+	public Map<String, String> getCookies() {
 		if (CHECK) checkState(!isRecycled());
 		if (parsedCookies != null) {
 			return parsedCookies;
@@ -235,22 +234,22 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		return connection;
 	}
 
-	public @Nullable String getCookie(@NotNull String cookie) {
+	public @Nullable String getCookie(String cookie) {
 		if (CHECK) checkState(!isRecycled());
 		return getCookies().get(cookie);
 	}
 
-	public @NotNull String getQuery() {
+	public String getQuery() {
 		if (CHECK) checkState(!isRecycled());
 		return url.getQuery();
 	}
 
-	public @NotNull String getFragment() {
+	public String getFragment() {
 		if (CHECK) checkState(!isRecycled());
 		return url.getFragment();
 	}
 
-	public @NotNull Map<String, String> getQueryParameters() {
+	public Map<String, String> getQueryParameters() {
 		if (CHECK) checkState(!isRecycled());
 		if (queryParameters != null) {
 			return queryParameters;
@@ -259,17 +258,17 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		return queryParameters;
 	}
 
-	public @Nullable String getQueryParameter(@NotNull String key) {
+	public @Nullable String getQueryParameter(String key) {
 		if (CHECK) checkState(!isRecycled());
 		return url.getQueryParameter(key);
 	}
 
-	public @NotNull List<String> getQueryParameters(@NotNull String key) {
+	public List<String> getQueryParameters(String key) {
 		if (CHECK) checkState(!isRecycled());
 		return url.getQueryParameters(key);
 	}
 
-	public @NotNull Iterable<QueryParameter> getQueryParametersIterable() {
+	public Iterable<QueryParameter> getQueryParametersIterable() {
 		if (CHECK) checkState(!isRecycled());
 		return url.getQueryParametersIterable();
 	}
@@ -279,7 +278,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		return getPostParameters().get(name);
 	}
 
-	public @NotNull Map<String, String> getPostParameters() {
+	public Map<String, String> getPostParameters() {
 		if (CHECK) checkState(!isRecycled());
 		if (postParameters != null) return postParameters;
 		if (body == null) throw new NullPointerException("Body must be loaded to decode post parameters");
@@ -307,12 +306,12 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		return contentType != null && contentType.startsWith("multipart/form-data; boundary=");
 	}
 
-	public @NotNull Map<String, String> getPathParameters() {
+	public Map<String, String> getPathParameters() {
 		if (CHECK) checkState(!isRecycled());
 		return pathParameters != null ? pathParameters : Map.of();
 	}
 
-	public @NotNull String getPathParameter(@NotNull String key) {
+	public String getPathParameter(String key) {
 		if (CHECK) checkState(!isRecycled());
 		if (pathParameters != null) {
 			String pathParameter = pathParameters.get(key);
@@ -347,7 +346,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		url.pos = (short) pos;
 	}
 
-	public @NotNull String getRelativePath() {
+	public String getRelativePath() {
 		if (CHECK) checkState(!isRecycled());
 		String partialPath = url.getPartialPath();
 		return partialPath.startsWith("/") ? partialPath.substring(1) : partialPath; // strip first '/'
@@ -363,7 +362,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		pathParameters.remove(key);
 	}
 
-	void putPathParameter(String key, @NotNull String value) {
+	void putPathParameter(String key, String value) {
 		if (CHECK) checkState(!isRecycled());
 		if (pathParameters == null) {
 			pathParameters = new HashMap<>();
@@ -380,7 +379,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 	}
 
 	@Override
-	protected void writeTo(@NotNull ByteBuf buf) {
+	protected void writeTo(ByteBuf buf) {
 		method.write(buf);
 		buf.put(SP);
 		url.writePathAndQuery(buf);

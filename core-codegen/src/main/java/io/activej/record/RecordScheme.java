@@ -23,7 +23,6 @@ import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.expression.Variable;
 import io.activej.common.initializer.WithInitializer;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
@@ -57,10 +56,10 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 
 	private @Nullable List<String> comparedFields;
 
-	private final @NotNull DefiningClassLoader classLoader;
+	private final DefiningClassLoader classLoader;
 	private Class<? extends Record> generatedClass;
 
-	private RecordScheme(@NotNull DefiningClassLoader classLoader) {
+	private RecordScheme(DefiningClassLoader classLoader) {
 		this.classLoader = classLoader;
 	}
 
@@ -68,12 +67,12 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 		return new RecordScheme(DefiningClassLoader.create());
 	}
 
-	public static RecordScheme create(@NotNull DefiningClassLoader classLoader) {
+	public static RecordScheme create(DefiningClassLoader classLoader) {
 		return new RecordScheme(classLoader);
 	}
 
 	@SuppressWarnings("UnusedReturnValue")
-	public RecordScheme withField(@NotNull String field, @NotNull Type type) {
+	public RecordScheme withField(String field, Type type) {
 		addField(field, type);
 		return this;
 	}
@@ -100,7 +99,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 		return withComparator(List.of(comparedFields));
 	}
 
-	public void addField(@NotNull String field, @NotNull Type type) {
+	public void addField(String field, Type type) {
 		if (factory != null) throw new IllegalStateException("Already initialized");
 		if (fieldTypes.containsKey(field)) throw new IllegalArgumentException("Duplicate field");
 		fieldTypes.put(field, type);
@@ -156,7 +155,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 		return record;
 	}
 
-	public @NotNull DefiningClassLoader getClassLoader() {
+	public DefiningClassLoader getClassLoader() {
 		return classLoader;
 	}
 

@@ -21,7 +21,6 @@ import io.activej.common.time.Stopwatch;
 import io.activej.jmx.api.ConcurrentJmxBean;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +52,7 @@ public final class ServiceGraph implements WithInitializer<ServiceGraph>, Concur
 	private static final Logger logger = LoggerFactory.getLogger(ServiceGraph.class);
 
 	public interface Key {
-		@NotNull Type getType();
+		Type getType();
 
 		@Nullable Object getQualifier();
 

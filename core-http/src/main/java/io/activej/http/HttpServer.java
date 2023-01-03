@@ -31,7 +31,6 @@ import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.reactor.schedule.ScheduledRunnable;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetAddress;
@@ -54,8 +53,8 @@ public final class HttpServer extends AbstractReactiveServer<HttpServer> {
 	public static final MemSize MAX_WEB_SOCKET_MESSAGE_SIZE = ApplicationSettings.getMemSize(HttpServer.class, "maxWebSocketMessageSize", MemSize.megabytes(1));
 	public static final int MAX_KEEP_ALIVE_REQUESTS = ApplicationSettings.getInt(HttpServer.class, "maxKeepAliveRequests", 0);
 
-	private final @NotNull AsyncServlet servlet;
-	private @NotNull HttpExceptionFormatter errorFormatter = HttpExceptionFormatter.COMMON_FORMATTER;
+	private final AsyncServlet servlet;
+	private HttpExceptionFormatter errorFormatter = HttpExceptionFormatter.COMMON_FORMATTER;
 
 	int readWriteTimeoutMillis = (int) READ_WRITE_TIMEOUT.toMillis();
 	int readWriteTimeoutMillisShutdown = (int) READ_WRITE_TIMEOUT_SHUTDOWN.toMillis();
@@ -191,16 +190,16 @@ public final class HttpServer extends AbstractReactiveServer<HttpServer> {
 	}
 
 	// region builders
-	private HttpServer(@NotNull NioReactor reactor, @NotNull AsyncServlet servlet) {
+	private HttpServer(NioReactor reactor, AsyncServlet servlet) {
 		super(reactor);
 		this.servlet = servlet;
 	}
 
-	public static HttpServer create(@NotNull NioReactor reactor, @NotNull AsyncServlet servlet) {
+	public static HttpServer create(NioReactor reactor, AsyncServlet servlet) {
 		return new HttpServer(reactor, servlet);
 	}
 
-	public HttpServer withKeepAliveTimeout(@NotNull Duration keepAliveTime) {
+	public HttpServer withKeepAliveTimeout(Duration keepAliveTime) {
 		keepAliveTimeoutMillis = (int) keepAliveTime.toMillis();
 		return this;
 	}
@@ -214,18 +213,18 @@ public final class HttpServer extends AbstractReactiveServer<HttpServer> {
 		return withKeepAliveTimeout(Duration.ZERO);
 	}
 
-	public HttpServer withReadWriteTimeout(@NotNull Duration readWriteTimeout) {
+	public HttpServer withReadWriteTimeout(Duration readWriteTimeout) {
 		this.readWriteTimeoutMillis = (int) readWriteTimeout.toMillis();
 		return this;
 	}
 
-	public HttpServer withReadWriteTimeout(@NotNull Duration readWriteTimeout, @NotNull Duration readWriteTimeoutShutdown) {
+	public HttpServer withReadWriteTimeout(Duration readWriteTimeout, Duration readWriteTimeoutShutdown) {
 		this.readWriteTimeoutMillis = (int) readWriteTimeout.toMillis();
 		this.readWriteTimeoutMillisShutdown = (int) readWriteTimeoutShutdown.toMillis();
 		return this;
 	}
 
-	public HttpServer withServeTimeoutShutdown(@NotNull Duration serveTimeoutShutdown) {
+	public HttpServer withServeTimeoutShutdown(Duration serveTimeoutShutdown) {
 		this.serveTimeoutMillisShutdown = (int) serveTimeoutShutdown.toMillis();
 		return this;
 	}
@@ -244,7 +243,7 @@ public final class HttpServer extends AbstractReactiveServer<HttpServer> {
 		return this;
 	}
 
-	public HttpServer withHttpErrorFormatter(@NotNull HttpExceptionFormatter httpExceptionFormatter) {
+	public HttpServer withHttpErrorFormatter(HttpExceptionFormatter httpExceptionFormatter) {
 		errorFormatter = httpExceptionFormatter;
 		return this;
 	}

@@ -17,22 +17,21 @@
 package io.activej.multilog;
 
 import io.activej.common.initializer.WithInitializer;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
 public final class LogPosition implements Comparable<LogPosition>, WithInitializer<LogPosition> {
 	private static final LogPosition INITIAL_LOG_POSITION = new LogPosition(new LogFile("", 0), 0);
 
-	private final @NotNull LogFile logFile;
+	private final LogFile logFile;
 	private final long position;
 
-	private LogPosition(@NotNull LogFile logFile, long position) {
+	private LogPosition(LogFile logFile, long position) {
 		this.logFile = logFile;
 		this.position = position;
 	}
 
-	public static LogPosition create(@NotNull LogFile logFile, long position) {
+	public static LogPosition create(LogFile logFile, long position) {
 		return new LogPosition(logFile, position);
 	}
 
@@ -48,7 +47,7 @@ public final class LogPosition implements Comparable<LogPosition>, WithInitializ
 		return INITIAL_LOG_POSITION.equals(this);
 	}
 
-	public @NotNull LogFile getLogFile() {
+	public LogFile getLogFile() {
 		return logFile;
 	}
 
@@ -76,7 +75,7 @@ public final class LogPosition implements Comparable<LogPosition>, WithInitializ
 	}
 
 	@Override
-	public int compareTo(@NotNull LogPosition o) {
+	public int compareTo(LogPosition o) {
 		int result = this.logFile.compareTo(o.logFile);
 		return result != 0 ? result : Long.compare(this.position, o.position);
 	}

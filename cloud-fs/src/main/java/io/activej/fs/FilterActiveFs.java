@@ -25,7 +25,6 @@ import io.activej.fs.exception.ForbiddenPathException;
 import io.activej.fs.exception.FsBatchException;
 import io.activej.fs.exception.FsScalarException;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -129,7 +128,7 @@ final class FilterActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<Map<String, @NotNull FileMetadata>> infoAll(Set<String> names) {
+	public Promise<Map<String, FileMetadata>> infoAll(Set<String> names) {
 		Map<Boolean, Set<String>> partitioned = names.stream().collect(partitioningBy(predicate, toSet()));
 		Set<String> query = partitioned.get(TRUE);
 		return query.isEmpty() ?

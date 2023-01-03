@@ -21,7 +21,6 @@ import io.activej.codegen.expression.ExpressionConstant;
 import io.activej.codegen.util.DefiningClassWriter;
 import io.activej.common.initializer.WithInitializer;
 import org.jetbrains.annotations.ApiStatus.Internal;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
@@ -77,7 +76,7 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 
 	// region builders
 
-	private ClassBuilder(Class<?> superclass, List<Class<?>> interfaces, @NotNull String className) {
+	private ClassBuilder(Class<?> superclass, List<Class<?>> interfaces, String className) {
 		this.superclass = superclass;
 		this.interfaces = interfaces;
 		this.autoClassName = PACKAGE_PREFIX + className;
@@ -349,7 +348,7 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 	 * @param classLoader a class loader that would be used to define a class
 	 * @return a defined class
 	 */
-	public Class<T> defineClass(@NotNull DefiningClassLoader classLoader) {
+	public Class<T> defineClass(DefiningClassLoader classLoader) {
 		GeneratedBytecode generatedBytecode = toBytecode(classLoader);
 		//noinspection unchecked
 		return (Class<T>) generatedBytecode.defineClass(classLoader);

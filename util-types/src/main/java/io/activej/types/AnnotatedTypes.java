@@ -1,7 +1,5 @@
 package io.activej.types;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.Arrays;
@@ -86,7 +84,7 @@ public class AnnotatedTypes {
 	 * @param annotationCombinerFn a combiner function to combine annotations of a given annotated type
 	 *                             with annotations of bound actual annotated type
 	 */
-	public static @NotNull AnnotatedType bind(AnnotatedType annotatedType, Function<TypeVariable<?>, AnnotatedType> bindings,
+	public static AnnotatedType bind(AnnotatedType annotatedType, Function<TypeVariable<?>, AnnotatedType> bindings,
 			BinaryOperator<Annotation[]> annotationCombinerFn) {
 		if (annotatedType.getType() instanceof Class) return annotatedType;
 		Annotation[] annotations = annotatedType.getAnnotations();
@@ -150,7 +148,7 @@ public class AnnotatedTypes {
 	 * @param type a type to construct annotated type from
 	 * @return a new instance of {@link  AnnotatedType}
 	 */
-	public static @NotNull AnnotatedType annotatedTypeOf(Type type) {
+	public static AnnotatedType annotatedTypeOf(Type type) {
 		return annotatedTypeOf(type, NO_ANNOTATIONS);
 	}
 
@@ -161,7 +159,7 @@ public class AnnotatedTypes {
 	 * @param annotations an array of annotations for a given type
 	 * @return a new instance of {@link  AnnotatedType}
 	 */
-	public static @NotNull AnnotatedType annotatedTypeOf(Type type, Annotation[] annotations) {
+	public static AnnotatedType annotatedTypeOf(Type type, Annotation[] annotations) {
 		return annotatedTypeOf(type, ($, ints) -> ints.length == 0 ? annotations : NO_ANNOTATIONS);
 	}
 
@@ -175,11 +173,11 @@ public class AnnotatedTypes {
 	 * @param annotationsFn a function that transforms a type and a path to the type into annotations for this type
 	 * @return a new instance of {@link  AnnotatedType}
 	 */
-	public static @NotNull AnnotatedType annotatedTypeOf(Type type, BiFunction<Type, int[], Annotation[]> annotationsFn) {
+	public static AnnotatedType annotatedTypeOf(Type type, BiFunction<Type, int[], Annotation[]> annotationsFn) {
 		return annotatedTypeOf(type, new int[]{}, annotationsFn);
 	}
 
-	private static @NotNull AnnotatedType annotatedTypeOf(Type type, int[] path, BiFunction<Type, int[], Annotation[]> annotationsFn) {
+	private static AnnotatedType annotatedTypeOf(Type type, int[] path, BiFunction<Type, int[], Annotation[]> annotationsFn) {
 		Annotation[] annotations = annotationsFn.apply(type, path);
 		if (type instanceof Class) {
 			if (((Class<?>) type).isArray()) {
@@ -267,7 +265,7 @@ public class AnnotatedTypes {
 
 		@SuppressWarnings("unchecked")
 		@Override
-		public <T extends Annotation> T getAnnotation(@NotNull Class<T> annotationClass) {
+		public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
 			return (T) Arrays.stream(annotations).filter(a -> a.annotationType() == annotationClass).findFirst().orElse(null);
 		}
 

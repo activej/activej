@@ -18,7 +18,6 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufStrings;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
@@ -152,7 +151,7 @@ public final class HttpCookie {
 		return this;
 	}
 
-	public HttpCookie withSameSite(@NotNull SameSite sameSite) {
+	public HttpCookie withSameSite(SameSite sameSite) {
 		setSameSite(sameSite);
 		return this;
 	}
@@ -232,7 +231,7 @@ public final class HttpCookie {
 		return sameSite;
 	}
 
-	public void setSameSite(@NotNull SameSite sameSite) {
+	public void setSameSite(@Nullable SameSite sameSite) {
 		this.sameSite = sameSite;
 	}
 

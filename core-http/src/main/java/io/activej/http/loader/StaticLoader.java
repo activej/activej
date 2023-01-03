@@ -18,7 +18,6 @@ package io.activej.http.loader;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -71,15 +70,15 @@ public interface StaticLoader {
 		return new StaticLoaderCache(loader, get, put);
 	}
 
-	static StaticLoader ofClassPath(@NotNull Executor executor, String root) {
+	static StaticLoader ofClassPath(Executor executor, String root) {
 		return StaticLoaderClassPath.create(executor, root);
 	}
 
-	static StaticLoader ofClassPath(@NotNull Executor executor, ClassLoader classLoader, String root) {
+	static StaticLoader ofClassPath(Executor executor, ClassLoader classLoader, String root) {
 		return StaticLoaderClassPath.create(executor, classLoader, root);
 	}
 
-	static StaticLoader ofPath(@NotNull Executor executor, Path dir) {
+	static StaticLoader ofPath(Executor executor, Path dir) {
 		return StaticLoaderFileReader.create(executor, dir);
 	}
 

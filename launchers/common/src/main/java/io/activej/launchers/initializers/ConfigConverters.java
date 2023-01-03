@@ -25,7 +25,6 @@ import io.activej.csp.process.frames.LZ4LegacyFrameFormat;
 import io.activej.dns.DnsCache;
 import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
@@ -40,7 +39,7 @@ public final class ConfigConverters {
 	public static ConfigConverter<DnsCache> ofDnsCache(Reactor reactor) {
 		return new ConfigConverter<>() {
 			@Override
-			public @NotNull DnsCache get(Config config) {
+			public DnsCache get(Config config) {
 				Duration errorCacheExpiration = config.get(ofDuration(), "errorCacheExpiration", DEFAULT_ERROR_CACHE_EXPIRATION);
 				Duration timedOutExceptionTtl = config.get(ofDuration(), "timedOutExpiration", DEFAULT_TIMED_OUT_EXPIRATION);
 				Duration hardExpirationDelta = config.get(ofDuration(), "hardExpirationDelta", DEFAULT_HARD_EXPIRATION_DELTA);
@@ -67,7 +66,7 @@ public final class ConfigConverters {
 	public static ConfigConverter<FrameFormat> ofFrameFormat() {
 		return new ConfigConverter<>() {
 			@Override
-			public @NotNull FrameFormat get(Config config) {
+			public FrameFormat get(Config config) {
 				return doGet(config, config.getValue());
 			}
 

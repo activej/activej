@@ -18,7 +18,6 @@ package io.activej.config;
 
 import io.activej.config.converter.ConfigConverter;
 import io.activej.config.converter.ConfigConverters;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -458,7 +457,7 @@ public interface Config {
 	 * @param path path
 	 * @return new {@code Config} with value in path
 	 */
-	default Config with(@NotNull String path, @NotNull String value) {
+	default Config with(String path, String value) {
 		checkPath(path);
 		return with(path, new Config() {
 			@Override
@@ -486,7 +485,7 @@ public interface Config {
 	 * @return new {@code Config} with overridden value in path
 	 * this method returns new config instead of changing the old one.
 	 */
-	default Config with(@NotNull String path, @NotNull Config config) {
+	default Config with(String path, Config config) {
 		checkPath(path);
 		String[] keys = path.split(Pattern.quote(DELIMITER));
 		for (int i = keys.length - 1; i >= 0; i--) {

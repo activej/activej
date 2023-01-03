@@ -17,7 +17,6 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
-import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
@@ -31,7 +30,7 @@ final class ExpressionIfNonNull implements Expression {
 	private final Expression expressionTrue;
 	private final Expression expressionFalse;
 
-	ExpressionIfNonNull(@NotNull Expression expression, Expression expressionTrue, Expression expressionFalse) {
+	ExpressionIfNonNull(Expression expression, Expression expressionTrue, Expression expressionFalse) {
 		this.expression = expression;
 		this.expressionTrue = expressionTrue;
 		this.expressionFalse = expressionFalse;

@@ -11,7 +11,6 @@ import io.activej.http.StubHttpClient;
 import io.activej.promise.Promise;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -183,7 +182,7 @@ public final class ApiTest {
 		assertTrue(params.isEmpty());
 	}
 
-	private @NotNull RoutingServlet getServlet() {
+	private RoutingServlet getServlet() {
 		return ActiveFsServlet.create(new ActiveFs() {
 			<T> Promise<T> resultOf(@Nullable T result, Object... args) {
 				params.clear();
@@ -274,8 +273,8 @@ public final class ApiTest {
 			}
 
 			@Override
-			public Promise<Map<String, @NotNull FileMetadata>> infoAll(Set<String> names) {
-				Map<String, @NotNull FileMetadata> result = new HashMap<>();
+			public Promise<Map<String, FileMetadata>> infoAll(Set<String> names) {
+				Map<String, FileMetadata> result = new HashMap<>();
 				Iterator<String> iterator = names.iterator();
 				for (int i = 0; i < names.size(); i++) {
 					String name = iterator.next();

@@ -29,7 +29,6 @@ import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
@@ -127,7 +126,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	}
 
 	@Override
-	protected void onClosedWithError(@NotNull Exception e) {
+	protected void onClosedWithError(Exception e) {
 		if (inspector != null) inspector.onHttpError(this, e);
 		if (promise != null) {
 			SettablePromise<HttpResponse> promise = this.promise;
@@ -137,7 +136,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	}
 
 	@Override
-	protected void onMalformedHttpException(@NotNull MalformedHttpException e) {
+	protected void onMalformedHttpException(MalformedHttpException e) {
 		if (inspector != null) {
 			inspector.onMalformedHttpResponse(this, e, readBuf.getArray());
 		}
@@ -268,7 +267,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 				});
 	}
 
-	@NotNull Promise<WebSocket> sendWebSocketRequest(HttpRequest request) {
+	Promise<WebSocket> sendWebSocketRequest(HttpRequest request) {
 		assert !isClosed();
 		SettablePromise<HttpResponse> promise = new SettablePromise<>();
 		this.promise = promise;

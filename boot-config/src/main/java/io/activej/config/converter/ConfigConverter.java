@@ -17,7 +17,6 @@
 package io.activej.config.converter;
 
 import io.activej.config.Config;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Function;
@@ -28,7 +27,7 @@ import static io.activej.common.Checks.checkArgument;
 public interface ConfigConverter<T> {
 	T get(Config config, @Nullable T defaultValue);
 
-	@NotNull T get(Config config);
+	T get(Config config);
 
 	/**
 	 * Applies given converter function to the converted value
@@ -48,7 +47,7 @@ public interface ConfigConverter<T> {
 			}
 
 			@Override
-			public @NotNull V get(Config config) {
+			public V get(Config config) {
 				return to.apply(thisConverter.get(config));
 			}
 		};
@@ -64,7 +63,7 @@ public interface ConfigConverter<T> {
 			}
 
 			@Override
-			public @NotNull T get(Config config) {
+			public T get(Config config) {
 				T value = thisConverter.get(config);
 				return checkArgument(value, predicate, () -> "Constraint violation: " + value);
 			}

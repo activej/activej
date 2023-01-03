@@ -19,7 +19,6 @@ package io.activej.bytebuf;
 import io.activej.bytebuf.ByteBuf.ByteBufSlice;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.MemSize;
-import org.jetbrains.annotations.NotNull;
 
 import java.lang.StackWalker.StackFrame;
 import java.time.Duration;
@@ -210,7 +209,7 @@ public final class ByteBufPool {
 	 * @param size returned byte buffer size is guaranteed to be bigger or equal to requested size
 	 * @return byte buffer from this pool
 	 */
-	public static @NotNull ByteBuf allocate(int size) {
+	public static ByteBuf allocate(int size) {
 		assert size >= 0 : "Allocating ByteBuf with negative size";
 		if (MIN_MAX_CHECKS) {
 			if ((MIN_SIZE != 0 && size < MIN_SIZE) || (MAX_SIZE != 0 && size >= MAX_SIZE)) {
@@ -244,12 +243,12 @@ public final class ByteBufPool {
 		reused[index].incrementAndGet();
 	}
 
-	private static Entry buildRegistryEntry(@NotNull ByteBuf buf) {
+	private static Entry buildRegistryEntry(ByteBuf buf) {
 		return new Entry(buf.array.length, currentTimeMillis(), Thread.currentThread(),
 				StackWalker.getInstance().walk(frames -> frames.skip(3).toList()));
 	}
 
-	static AssertionError onByteBufRecycled(@NotNull ByteBuf buf) {
+	static AssertionError onByteBufRecycled(ByteBuf buf) {
 		int slab = 32 - numberOfLeadingZeros(buf.array.length - 1);
 		ByteBufConcurrentQueue queue = slabs[slab];
 		queue.clear();
@@ -257,7 +256,7 @@ public final class ByteBufPool {
 				(REGISTRY ? ByteBufPool.getByteBufTrace(buf) : ""));
 	}
 
-	static String getByteBufTrace(@NotNull ByteBuf buf) {
+	static String getByteBufTrace(ByteBuf buf) {
 		Entry allocated = allocateRegistry.get(buf);
 		Entry recycled = recycleRegistry.get(buf);
 		if (allocated == null && recycled == null) return "";
@@ -277,7 +276,7 @@ public final class ByteBufPool {
 	 * @param size requested size
 	 * @return byte buffer from this pool with appropriate positions set
 	 */
-	public static @NotNull ByteBuf allocateExact(int size) {
+	public static ByteBuf allocateExact(int size) {
 		ByteBuf buf = allocate(size);
 		int d = buf.writeRemaining() - size;
 		buf.tail(d);
@@ -285,11 +284,11 @@ public final class ByteBufPool {
 		return buf;
 	}
 
-	public static @NotNull ByteBuf allocate(@NotNull MemSize size) {
+	public static ByteBuf allocate(MemSize size) {
 		return allocate(size.toInt());
 	}
 
-	public static @NotNull ByteBuf allocateExact(@NotNull MemSize size) {
+	public static ByteBuf allocateExact(MemSize size) {
 		return allocateExact(size.toInt());
 	}
 
@@ -298,7 +297,7 @@ public final class ByteBufPool {
 	 *
 	 * @param buf the ByteBuf to be recycled
 	 */
-	static void recycle(@NotNull ByteBuf buf) {
+	static void recycle(ByteBuf buf) {
 		int slab = 32 - numberOfLeadingZeros(buf.array.length - 1);
 		ByteBufConcurrentQueue queue = slabs[slab];
 		if (CLEAR_ON_RECYCLE) Arrays.fill(buf.array(), (byte) 0);
@@ -309,7 +308,7 @@ public final class ByteBufPool {
 		queue.offer(buf);
 	}
 
-	public static @NotNull ByteBuf ensureWriteRemaining(@NotNull ByteBuf buf, int newWriteRemaining) {
+	public static ByteBuf ensureWriteRemaining(ByteBuf buf, int newWriteRemaining) {
 		return ensureWriteRemaining(buf, 0, newWriteRemaining);
 	}
 
@@ -328,7 +327,7 @@ public final class ByteBufPool {
 	 * @param newWriteRemaining amount of needed writable bytes
 	 * @return a ByteBuf which fits the parameters
 	 */
-	public static @NotNull ByteBuf ensureWriteRemaining(@NotNull ByteBuf buf, int minSize, int newWriteRemaining) {
+	public static ByteBuf ensureWriteRemaining(ByteBuf buf, int minSize, int newWriteRemaining) {
 		if (newWriteRemaining == 0) return buf;
 		if (buf.writeRemaining() < newWriteRemaining || buf instanceof ByteBufSlice) {
 			ByteBuf newBuf = allocate(max(minSize, newWriteRemaining + buf.readRemaining()));
@@ -354,7 +353,7 @@ public final class ByteBufPool {
 	 * @param from the source ByteBuf to be appended
 	 * @return ByteBuf which contains the result of the appending
 	 */
-	public static @NotNull ByteBuf append(@NotNull ByteBuf to, @NotNull ByteBuf from) {
+	public static ByteBuf append(ByteBuf to, ByteBuf from) {
 		checkArgument(!to.isRecycled() && !from.isRecycled());
 		if (to.readRemaining() == 0) {
 			to.recycle();
@@ -382,14 +381,14 @@ public final class ByteBufPool {
 	 *               be greater than the whole length of the byte array
 	 * @return ByteBuf which contains the result of the appending
 	 */
-	public static @NotNull ByteBuf append(@NotNull ByteBuf to, byte[] from, int offset, int length) {
+	public static ByteBuf append(ByteBuf to, byte[] from, int offset, int length) {
 		checkArgument(!to.isRecycled());
 		to = ensureWriteRemaining(to, length);
 		to.put(from, offset, length);
 		return to;
 	}
 
-	public static @NotNull ByteBuf append(@NotNull ByteBuf to, byte[] from) {
+	public static ByteBuf append(ByteBuf to, byte[] from) {
 		return append(to, from, 0, from.length);
 	}
 
@@ -407,7 +406,7 @@ public final class ByteBufPool {
 		recycleRegistry.clear();
 	}
 
-	public static @NotNull ByteBufPoolStats getStats() {
+	public static ByteBufPoolStats getStats() {
 		return stats;
 	}
 

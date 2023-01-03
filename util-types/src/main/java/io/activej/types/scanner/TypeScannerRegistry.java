@@ -20,7 +20,6 @@ import io.activej.types.AnnotatedTypes;
 import io.activej.types.AnnotationUtils;
 import io.activej.types.TypeT;
 import io.activej.types.Types;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
@@ -313,7 +312,7 @@ public final class TypeScannerRegistry<R> {
 		return this;
 	}
 
-	private @NotNull Mapping<R> match(Type type) {
+	private Mapping<R> match(Type type) {
 		MappingEntry<R> best = null;
 		for (MappingEntry<R> found : entries) {
 			if (isAssignable(found.type, type)) {

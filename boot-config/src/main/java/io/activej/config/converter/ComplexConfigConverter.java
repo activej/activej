@@ -17,7 +17,6 @@
 package io.activej.config.converter;
 
 import io.activej.config.Config;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class ComplexConfigConverter<T> implements ConfigConverter<T> {
@@ -28,7 +27,7 @@ public abstract class ComplexConfigConverter<T> implements ConfigConverter<T> {
 	}
 
 	@Override
-	public final @NotNull T get(Config config) {
+	public final T get(Config config) {
 		return provide(config, defaultValue);
 	}
 

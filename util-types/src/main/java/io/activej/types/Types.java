@@ -1,6 +1,5 @@
 package io.activej.types;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.*;
@@ -144,7 +143,7 @@ public class Types {
 	 * @param type     a type to be bound
 	 * @param bindings a map of actual types
 	 */
-	public static @NotNull Type bind(Type type, Map<TypeVariable<?>, Type> bindings) {
+	public static Type bind(Type type, Map<TypeVariable<?>, Type> bindings) {
 		return bind(type, bindings::get);
 	}
 
@@ -154,7 +153,7 @@ public class Types {
 	 * @param type     a type to be bound
 	 * @param bindings a lookup function for actual types
 	 */
-	public static @NotNull Type bind(Type type, Function<TypeVariable<?>, @Nullable Type> bindings) {
+	public static Type bind(Type type, Function<TypeVariable<?>, @Nullable Type> bindings) {
 		if (type instanceof Class) return type;
 		if (type instanceof TypeVariable<?> typeVariable) {
 			Type actualType = bindings.apply(typeVariable);
@@ -225,12 +224,12 @@ public class Types {
 		}
 
 		@Override
-		public @NotNull Type getRawType() {
+		public Type getRawType() {
 			return rawType;
 		}
 
 		@Override
-		public Type @NotNull [] getActualTypeArguments() {
+		public Type [] getActualTypeArguments() {
 			return actualTypeArguments;
 		}
 

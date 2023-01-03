@@ -18,7 +18,6 @@ package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
 import io.activej.codegen.operation.CompareOperation;
-import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
@@ -33,7 +32,7 @@ final class ExpressionIfZCmp implements Expression {
 	private final Expression expressionTrue;
 	private final Expression expressionFalse;
 
-	ExpressionIfZCmp(Expression value, CompareOperation operation, @NotNull Expression expressionTrue, @NotNull Expression expressionFalse) {
+	ExpressionIfZCmp(Expression value, CompareOperation operation, Expression expressionTrue, Expression expressionFalse) {
 		this.value = value;
 		this.operation = operation;
 		this.expressionTrue = expressionTrue;

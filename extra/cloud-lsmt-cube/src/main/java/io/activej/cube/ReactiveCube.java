@@ -64,7 +64,6 @@ import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -731,7 +730,7 @@ public final class ReactiveCube extends AbstractReactive
 		}
 
 		@Override
-		public int compareTo(@NotNull AggregationContainerWithScore o) {
+		public int compareTo(AggregationContainerWithScore o) {
 			int result;
 			result = -Integer.compare(aggregationContainer.measures.size(), o.aggregationContainer.measures.size());
 			if (result != 0) return result;

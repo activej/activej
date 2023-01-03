@@ -20,7 +20,6 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -105,7 +104,7 @@ public abstract class ForwardingActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<Map<String, @NotNull FileMetadata>> infoAll(Set<String> names) {
+	public Promise<Map<String, FileMetadata>> infoAll(Set<String> names) {
 		return peer.infoAll(names);
 	}
 

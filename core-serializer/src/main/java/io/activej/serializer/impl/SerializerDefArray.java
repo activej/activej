@@ -21,7 +21,6 @@ import io.activej.codegen.expression.Variable;
 import io.activej.serializer.AbstractSerializerDef;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
-import org.jetbrains.annotations.NotNull;
 
 import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
@@ -40,7 +39,7 @@ public final class SerializerDefArray extends AbstractSerializerDef implements S
 		this.nullable = false;
 	}
 
-	private SerializerDefArray(@NotNull SerializerDef serializer, int fixedSize, Class<?> type, boolean nullable) {
+	private SerializerDefArray(SerializerDef serializer, int fixedSize, Class<?> type, boolean nullable) {
 		this.valueSerializer = serializer;
 		this.fixedSize = fixedSize;
 		this.type = type;

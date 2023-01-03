@@ -16,7 +16,6 @@
 
 package io.activej.common;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Function;
@@ -102,7 +101,7 @@ public final class Checks {
 	 * @return a checked object
 	 * @throws NullPointerException if an object is null
 	 */
-	public static <T> @NotNull T checkNotNull(@Nullable T reference) {
+	public static <T> T checkNotNull(@Nullable T reference) {
 		if (reference != null) {
 			return reference;
 		}
@@ -121,7 +120,7 @@ public final class Checks {
 	 * @return a checked object
 	 * @throws NullPointerException if an object is null
 	 */
-	public static <T> @NotNull T checkNotNull(@Nullable T reference, Object message) {
+	public static <T> T checkNotNull(@Nullable T reference, Object message) {
 		if (reference != null) {
 			return reference;
 		}
@@ -140,7 +139,7 @@ public final class Checks {
 	 * @return a checked object
 	 * @throws NullPointerException if an object is null
 	 */
-	public static <T> @NotNull T checkNotNull(@Nullable T reference, Supplier<String> message) {
+	public static <T> T checkNotNull(@Nullable T reference, Supplier<String> message) {
 		if (reference != null) {
 			return reference;
 		}
@@ -161,7 +160,7 @@ public final class Checks {
 	 * @throws NullPointerException if an object is null
 	 * @see String#format(String, Object...)
 	 */
-	public static <T> @NotNull T checkNotNull(@Nullable T reference, String template, Object... args) {
+	public static <T> T checkNotNull(@Nullable T reference, String template, Object... args) {
 		if (reference != null) {
 			return reference;
 		}

@@ -12,7 +12,6 @@ import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.schema.Table;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -59,7 +58,7 @@ public class DataflowTableScan extends TableScan {
 		return new DataflowTableScan(getCluster(), traitSet, table, hintList, condition, offset, limit);
 	}
 
-	public void setCondition(@NotNull RexNode condition) {
+	public void setCondition(@Nullable RexNode condition) {
 		this.condition = condition;
 	}
 
@@ -67,7 +66,7 @@ public class DataflowTableScan extends TableScan {
 		return condition;
 	}
 
-	public void setOffset(@NotNull RexNode offset) {
+	public void setOffset(@Nullable RexNode offset) {
 		this.offset = offset;
 	}
 
@@ -75,7 +74,7 @@ public class DataflowTableScan extends TableScan {
 		return offset;
 	}
 
-	public void setLimit(@NotNull RexNode limit) {
+	public void setLimit(@Nullable RexNode limit) {
 		this.limit = limit;
 	}
 

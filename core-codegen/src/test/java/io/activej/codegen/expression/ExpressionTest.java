@@ -4,7 +4,6 @@ import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.operation.ArithmeticOperation;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
@@ -114,7 +113,7 @@ public class ExpressionTest {
 		boolean equals(Object obj);
 
 		@Override
-		int compareTo(@NotNull Test o);
+		int compareTo(Test o);
 
 		@Override
 		String toString();
@@ -764,7 +763,7 @@ public class ExpressionTest {
 		}
 
 		@Override
-		public int compareTo(@NotNull ExpressionTest.TestInterface o) {
+		public int compareTo(ExpressionTest.TestInterface o) {
 			return Double.compare(returnDouble(), o.returnDouble());
 		}
 
@@ -780,7 +779,7 @@ public class ExpressionTest {
 		private final TestInterface interface1;
 		private final TestInterface interface2;
 
-		public InterfaceHolder(@Nullable TestInterface interface1, @NotNull TestInterface interface2) {
+		public InterfaceHolder(@Nullable TestInterface interface1, TestInterface interface2) {
 			this.interface1 = interface1;
 			this.interface2 = interface2;
 		}
@@ -790,7 +789,6 @@ public class ExpressionTest {
 			return interface1;
 		}
 
-		@NotNull
 		public TestInterface getInterface2() {
 			return interface2;
 		}

@@ -31,7 +31,6 @@ import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -137,7 +136,7 @@ public final class HttpActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Map<String, @NotNull FileMetadata>> infoAll(Set<String> names) {
+	public Promise<Map<String, FileMetadata>> infoAll(Set<String> names) {
 		return client.request(
 						HttpRequest.get(
 										url + UrlBuilder.relative()
@@ -255,7 +254,7 @@ public final class HttpActiveFs extends AbstractReactive
 		};
 	}
 
-	private @NotNull Promise<ChannelConsumer<ByteBuf>> doUpload(@NotNull String filename, @Nullable Long size) {
+	private Promise<ChannelConsumer<ByteBuf>> doUpload(String filename, @Nullable Long size) {
 		UrlBuilder urlBuilder = UrlBuilder.relative().appendPathPart(UPLOAD).appendPath(filename);
 		HttpRequest request = HttpRequest.post(url + urlBuilder.build());
 

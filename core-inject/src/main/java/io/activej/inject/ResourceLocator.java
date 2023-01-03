@@ -16,19 +16,18 @@
 
 package io.activej.inject;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public interface ResourceLocator {
-	<T> @NotNull T getInstance(@NotNull Key<T> key);
+	<T> T getInstance(Key<T> key);
 
-	<T> @NotNull T getInstance(@NotNull Class<T> type);
+	<T> T getInstance(Class<T> type);
 
-	<T> @Nullable T getInstanceOrNull(@NotNull Key<T> key);
+	<T> @Nullable T getInstanceOrNull(Key<T> key);
 
-	<T> @Nullable T getInstanceOrNull(@NotNull Class<T> type);
+	<T> @Nullable T getInstanceOrNull(Class<T> type);
 
-	<T> T getInstanceOr(@NotNull Key<T> key, T defaultValue);
+	<T> T getInstanceOr(Key<T> key, T defaultValue);
 
-	<T> T getInstanceOr(@NotNull Class<T> type, T defaultValue);
+	<T> T getInstanceOr(Class<T> type, T defaultValue);
 }

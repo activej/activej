@@ -1,7 +1,5 @@
 package io.activej.promise;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
@@ -19,11 +17,11 @@ public class PromisePredicates {
 		return (BiPredicate<? super T, Exception>) IS_RESULT;
 	}
 
-	public static <T> BiPredicate<? super T, Exception> isResult(@NotNull Predicate<? super T> predicate) {
+	public static <T> BiPredicate<? super T, Exception> isResult(Predicate<? super T> predicate) {
 		return (t, e) -> e == null && predicate.test(t);
 	}
 
-	public static <T> BiPredicate<? super T, Exception> isResultOrException(@NotNull Predicate<? super T> predicate) {
+	public static <T> BiPredicate<? super T, Exception> isResultOrException(Predicate<? super T> predicate) {
 		return (t, e) -> e != null || predicate.test(t);
 	}
 
@@ -31,11 +29,11 @@ public class PromisePredicates {
 		return (BiPredicate<? super T, Exception>) IS_EXCEPTION;
 	}
 
-	public static <T> BiPredicate<? super T, Exception> isException(@NotNull Predicate<@NotNull Exception> predicate) {
+	public static <T> BiPredicate<? super T, Exception> isException(Predicate<Exception> predicate) {
 		return (t, e) -> e != null && predicate.test(e);
 	}
 
-	public static <T> BiPredicate<? super T, Exception> isException(@NotNull Class<? extends Exception> errorClass) {
+	public static <T> BiPredicate<? super T, Exception> isException(Class<? extends Exception> errorClass) {
 		return isException(e -> errorClass.isAssignableFrom(e.getClass()));
 	}
 }

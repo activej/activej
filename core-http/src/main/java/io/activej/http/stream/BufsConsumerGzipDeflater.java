@@ -27,7 +27,6 @@ import io.activej.csp.ChannelOutput;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.WithChannelTransformer;
 import io.activej.csp.process.AbstractCommunicatingProcess;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.zip.CRC32;
 import java.util.zip.Deflater;
@@ -64,7 +63,7 @@ public final class BufsConsumerGzipDeflater extends AbstractCommunicatingProcess
 		return new BufsConsumerGzipDeflater();
 	}
 
-	public BufsConsumerGzipDeflater withDeflater(@NotNull Deflater deflater) {
+	public BufsConsumerGzipDeflater withDeflater(Deflater deflater) {
 		this.deflater = deflater;
 		return this;
 	}

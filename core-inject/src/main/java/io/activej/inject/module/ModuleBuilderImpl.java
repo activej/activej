@@ -22,7 +22,6 @@ import io.activej.inject.Scope;
 import io.activej.inject.binding.*;
 import io.activej.inject.util.LocationInfo;
 import io.activej.inject.util.Trie;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.StackWalker.StackFrame;
@@ -82,7 +81,7 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <U> ModuleBuilder0<U> bind(@NotNull Key<U> key) {
+	public <U> ModuleBuilder0<U> bind(Key<U> key) {
 		completePreviousStep();
 		current = new BindingDesc(key, null);
 		return (ModuleBuilder0<U>) this;
@@ -105,7 +104,7 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
 	}
 
 	@Override
-	public ModuleBuilder1<T> in(@NotNull Scope scope, Scope... scopes) {
+	public ModuleBuilder1<T> in(Scope scope, Scope... scopes) {
 		Scope[] joined = new Scope[scopes.length + 1];
 		joined[0] = scope;
 		System.arraycopy(scopes, 0, joined, 1, scopes.length);
@@ -114,12 +113,12 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public ModuleBuilder1<T> in(@NotNull Class<? extends Annotation> annotationClass, Class<?>... annotationClasses) {
+	public ModuleBuilder1<T> in(Class<? extends Annotation> annotationClass, Class<?>... annotationClasses) {
 		return in(Stream.concat(Stream.of(annotationClass), Arrays.stream((Class<? extends Annotation>[]) annotationClasses)).map(Scope::of).toArray(Scope[]::new));
 	}
 
 	@Override
-	public ModuleBuilder1<T> to(@NotNull Binding<? extends T> binding) {
+	public ModuleBuilder1<T> to(Binding<? extends T> binding) {
 		BindingDesc desc = ensureCurrent();
 		checkState(desc.binding == null, "Already mapped to a binding");
 		if (binding.getLocation() == null) {
@@ -138,7 +137,7 @@ final class ModuleBuilderImpl<T> implements ModuleBuilder1<T> {
 	}
 
 	@Override
-	public ModuleBuilder scan(@NotNull Class<?> moduleClass, @Nullable Object module) {
+	public ModuleBuilder scan(Class<?> moduleClass, @Nullable Object module) {
 		return install(scanClassHierarchy(moduleClass, module).values());
 	}
 

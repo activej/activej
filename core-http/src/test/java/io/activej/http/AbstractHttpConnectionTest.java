@@ -21,7 +21,6 @@ import io.activej.test.TestUtils;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
-import org.jetbrains.annotations.NotNull;
 import org.junit.*;
 
 import java.io.IOException;
@@ -438,7 +437,7 @@ public final class AbstractHttpConnectionTest {
 		assertSame(fatalError, errorRef.get());
 	}
 
-	private @NotNull FunctionEx<HttpResponse, Promise<? extends ByteBuf>> ensureHelloWorldAsyncFn() {
+	private FunctionEx<HttpResponse, Promise<? extends ByteBuf>> ensureHelloWorldAsyncFn() {
 		return response -> response.loadBody()
 				.whenComplete(assertCompleteFn(body -> assertEquals(decodeAscii(HELLO_WORLD), body.getString(UTF_8))))
 				.then(AbstractHttpConnectionTest::post);

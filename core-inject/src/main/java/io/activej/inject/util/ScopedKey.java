@@ -18,7 +18,6 @@ package io.activej.inject.util;
 
 import io.activej.inject.Key;
 import io.activej.inject.Scope;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 
@@ -37,15 +36,15 @@ public final class ScopedKey {
 		this.key = key;
 	}
 
-	public static ScopedKey of(@NotNull Key<?> key) {
+	public static ScopedKey of(Key<?> key) {
 		return new ScopedKey(UNSCOPED, key);
 	}
 
-	public static ScopedKey of(@NotNull Scope scope, @NotNull Key<?> key) {
+	public static ScopedKey of(Scope scope, Key<?> key) {
 		return new ScopedKey(new Scope[]{scope}, key);
 	}
 
-	public static ScopedKey of(Scope[] scope, @NotNull Key<?> key) {
+	public static ScopedKey of(Scope[] scope, Key<?> key) {
 		return new ScopedKey(scope.length != 0 ? scope : UNSCOPED, key);
 	}
 
@@ -54,7 +53,7 @@ public final class ScopedKey {
 		return scope;
 	}
 
-	public @NotNull Key<?> getKey() {
+	public Key<?> getKey() {
 		return key;
 	}
 

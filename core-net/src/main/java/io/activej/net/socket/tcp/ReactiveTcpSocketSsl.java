@@ -27,7 +27,6 @@ import io.activej.promise.SettablePromise;
 import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.net.CloseWithoutNotifyException;
 import io.activej.reactor.nio.NioReactor;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.net.ssl.SSLContext;
@@ -100,7 +99,7 @@ public final class ReactiveTcpSocketSsl extends AbstractNioReactive implements T
 	}
 
 	@Override
-	public @NotNull Promise<ByteBuf> read() {
+	public Promise<ByteBuf> read() {
 		read = null;
 		if (shouldReturnEndOfStream) {
 			shouldReturnEndOfStream = false;
@@ -119,7 +118,7 @@ public final class ReactiveTcpSocketSsl extends AbstractNioReactive implements T
 	}
 
 	@Override
-	public @NotNull Promise<Void> write(@Nullable ByteBuf buf) {
+	public Promise<Void> write(@Nullable ByteBuf buf) {
 		if (isClosed()) {
 			if (buf != null) {
 				buf.recycle();

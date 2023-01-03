@@ -40,7 +40,6 @@ import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -400,7 +399,7 @@ public final class LocalActiveFs extends AbstractReactive
 	}
 
 	@Override
-	public Promise<Map<String, @NotNull FileMetadata>> infoAll(Set<String> names) {
+	public Promise<Map<String, FileMetadata>> infoAll(Set<String> names) {
 		checkStarted();
 		if (names.isEmpty()) return Promise.of(Map.of());
 
@@ -652,11 +651,11 @@ public final class LocalActiveFs extends AbstractReactive
 		}
 	}
 
-	private void translateBatchErrors(@NotNull String first, IOScalarRunnable runnable) throws FsBatchException, FsIOException {
+	private void translateBatchErrors(String first, IOScalarRunnable runnable) throws FsBatchException, FsIOException {
 		translateBatchErrors(new AbstractMap.SimpleEntry<>(first, null), runnable);
 	}
 
-	private void checkIfDirectories(@NotNull String first, @Nullable String second) throws FsBatchException {
+	private void checkIfDirectories(String first, @Nullable String second) throws FsBatchException {
 		try {
 			if (Files.isDirectory(resolve(first))) {
 				throw fsBatchException(first, isADirectoryException(first));
@@ -673,7 +672,7 @@ public final class LocalActiveFs extends AbstractReactive
 		}
 	}
 
-	private void checkIfExists(@NotNull String file) throws FsBatchException {
+	private void checkIfExists(String file) throws FsBatchException {
 		try {
 			if (!Files.exists(resolve(file))) {
 				throw fsBatchException(file, new FileNotFoundException("File '" + file + "' not found"));

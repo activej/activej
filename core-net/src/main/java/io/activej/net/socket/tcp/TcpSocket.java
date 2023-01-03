@@ -19,7 +19,6 @@ package io.activej.net.socket.tcp;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -44,7 +43,7 @@ public interface TcpSocket extends AsyncCloseable {
 	 *
 	 * @return promise of ByteBuf that represents data received from network
 	 */
-	@NotNull Promise<ByteBuf> read();
+	Promise<ByteBuf> read();
 
 	/**
 	 * Operation to write some data to network. Returns a promise of void that represents successful write.
@@ -54,7 +53,7 @@ public interface TcpSocket extends AsyncCloseable {
 	 * @param buf data to be sent to network
 	 * @return promise that represents successful write operation
 	 */
-	@NotNull Promise<Void> write(@Nullable ByteBuf buf);
+	Promise<Void> write(@Nullable ByteBuf buf);
 
 	boolean isReadAvailable();
 

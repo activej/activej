@@ -16,8 +16,6 @@
 
 package io.activej.jmx.stats;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.Arrays;
 
 import static io.activej.common.Checks.checkArgument;
@@ -69,7 +67,7 @@ public final class JmxHistograms {
 		}
 
 		@Override
-		public void add(@NotNull JmxHistogram another) {
+		public void add(JmxHistogram another) {
 			AbstractJmxHistogram anotherImpl = (AbstractJmxHistogram) another;
 			checkArgument(Arrays.equals(anotherImpl.levels, levels) && anotherImpl.counters.length == counters.length, "Histograms mismatch");
 			for (int i = 0; i < counters.length; i++) {

@@ -16,8 +16,6 @@
 
 package io.activej.types;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashMap;
@@ -54,7 +52,7 @@ public final class Primitives {
 		return PRIMITIVE.keySet();
 	}
 
-	public static boolean isPrimitiveType(@NotNull Type type) {
+	public static boolean isPrimitiveType(Type type) {
 		//noinspection SuspiciousMethodCalls
 		return PRIMITIVE.containsKey(type);
 	}
@@ -63,19 +61,19 @@ public final class Primitives {
 		return WRAPPER.keySet();
 	}
 
-	public static boolean isWrapperType(@NotNull Type type) {
+	public static boolean isWrapperType(Type type) {
 		//noinspection SuspiciousMethodCalls
 		return WRAPPER.containsKey(type);
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> Class<T> wrap(@NotNull Class<T> type) {
+	public static <T> Class<T> wrap(Class<T> type) {
 		Class<T> wrapped = (Class<T>) PRIMITIVE.get(type);
 		return wrapped == null ? type : wrapped;
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> Class<T> unwrap(@NotNull Class<T> type) {
+	public static <T> Class<T> unwrap(Class<T> type) {
 		Class<T> unwrapped = (Class<T>) WRAPPER.get(type);
 		return unwrapped == null ? type : unwrapped;
 	}

@@ -18,7 +18,6 @@ package io.activej.async.function;
 
 import io.activej.common.function.SupplierEx;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 
@@ -38,7 +37,7 @@ public interface AsyncSupplier<T> {
 	 * @param supplier a {@link SupplierEx}
 	 * @return {@link AsyncSupplier} that works on top of {@link SupplierEx} interface
 	 */
-	static <T> AsyncSupplier<T> of(@NotNull SupplierEx<T> supplier) {
+	static <T> AsyncSupplier<T> of(SupplierEx<T> supplier) {
 		return () -> {
 			try {
 				return Promise.of(supplier.get());

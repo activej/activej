@@ -16,14 +16,12 @@
 
 package io.activej.fs.exception;
 
-import org.jetbrains.annotations.NotNull;
-
 public final class FsIOException extends FsException {
-	public FsIOException(@NotNull String message) {
+	public FsIOException(String message) {
 		super(message);
 	}
 
-	FsIOException(@NotNull String message, boolean withStack) {
+	FsIOException(String message, boolean withStack) {
 		super(message, withStack);
 	}
 }

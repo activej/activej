@@ -16,8 +16,6 @@
 
 package io.activej.fs.exception;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.Map;
 
 import static java.util.stream.Collectors.joining;
@@ -25,12 +23,12 @@ import static java.util.stream.Collectors.joining;
 public final class FsBatchException extends FsStateException {
 	private final Map<String, FsScalarException> exceptions;
 
-	public FsBatchException(@NotNull Map<String, FsScalarException> exceptions) {
+	public FsBatchException(Map<String, FsScalarException> exceptions) {
 		super("Operation failed");
 		this.exceptions = exceptions;
 	}
 
-	FsBatchException(@NotNull Map<String, FsScalarException> exceptions, boolean withStack) {
+	FsBatchException(Map<String, FsScalarException> exceptions, boolean withStack) {
 		super("Operation failed", withStack);
 		this.exceptions = exceptions;
 	}

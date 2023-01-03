@@ -23,7 +23,6 @@ import io.activej.common.recycle.Recyclable;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Checks.checkNotNull;
@@ -56,7 +55,7 @@ public interface WebSocket extends AsyncCloseable {
 	 * @return a complete web socket message or {@code null}
 	 * @see Message
 	 */
-	@NotNull Promise<Message> readMessage();
+	Promise<Message> readMessage();
 
 	/**
 	 * Returns a promise of a web socket data frame. It may contain the whole web socket message or just some
@@ -71,7 +70,7 @@ public interface WebSocket extends AsyncCloseable {
 	 * @return a web socket data frame or {@code null}
 	 * @see Frame
 	 */
-	@NotNull Promise<Frame> readFrame();
+	Promise<Frame> readFrame();
 
 	/**
 	 * A shortcut that allows to obtain a channel supplier of {@link Frame}s.
@@ -80,7 +79,7 @@ public interface WebSocket extends AsyncCloseable {
 	 * @see #readFrame()
 	 * @see Frame
 	 */
-	default @NotNull ChannelSupplier<Frame> frameReadChannel() {
+	default ChannelSupplier<Frame> frameReadChannel() {
 		return ChannelSupplier.of(this::readFrame, this);
 	}
 
@@ -91,7 +90,7 @@ public interface WebSocket extends AsyncCloseable {
 	 * @see #readMessage()
 	 * @see Message
 	 */
-	default @NotNull ChannelSupplier<Message> messageReadChannel() {
+	default ChannelSupplier<Message> messageReadChannel() {
 		return ChannelSupplier.of(this::readMessage, this);
 	}
 
@@ -107,7 +106,7 @@ public interface WebSocket extends AsyncCloseable {
 	 * @param msg a web socket message to be sent
 	 * @return a promise that indicates whether web socket message was successfully sent
 	 */
-	@NotNull Promise<Void> writeMessage(@Nullable Message msg);
+	Promise<Void> writeMessage(@Nullable Message msg);
 
 	/**
 	 * A method for sending web socket data frames.
@@ -121,7 +120,7 @@ public interface WebSocket extends AsyncCloseable {
 	 * @param frame a web socket data frame to be sent
 	 * @return a promise that indicates whether data frame was successfully sent
 	 */
-	@NotNull Promise<Void> writeFrame(@Nullable Frame frame);
+	Promise<Void> writeFrame(@Nullable Frame frame);
 
 	/**
 	 * A shortcut that allows to obtain a channel consumer of {@link Frame}s.
@@ -130,7 +129,7 @@ public interface WebSocket extends AsyncCloseable {
 	 * @see #writeFrame(Frame)
 	 * @see Frame
 	 */
-	default @NotNull ChannelConsumer<Frame> frameWriteChannel() {
+	default ChannelConsumer<Frame> frameWriteChannel() {
 		return ChannelConsumer.of(this::writeFrame, this)
 				.withAcknowledgement(ack -> ack.then(() -> writeFrame(null)));
 	}
@@ -142,7 +141,7 @@ public interface WebSocket extends AsyncCloseable {
 	 * @see #writeMessage(Message)
 	 * @see Message
 	 */
-	default @NotNull ChannelConsumer<Message> messageWriteChannel() {
+	default ChannelConsumer<Message> messageWriteChannel() {
 		return ChannelConsumer.of(this::writeMessage, this)
 				.withAcknowledgement(ack -> ack
 						.then(() -> writeMessage(null)));

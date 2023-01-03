@@ -32,7 +32,6 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.types.Types;
-import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -55,7 +54,7 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 		Type genericSuperclass = getClass().getGenericSuperclass();
 		Type[] typeArguments = ((ParameterizedType) genericSuperclass).getActualTypeArguments();
 
-		@NotNull Type supertype = Types.parameterizedType(CrdtStorage.class, typeArguments);
+		Type supertype = Types.parameterizedType(CrdtStorage.class, typeArguments);
 
 		bind(Key.ofType(supertype, InMemory.class))
 				.to(Key.ofType(Types.parameterizedType(CrdtStorageMap.class, typeArguments)));

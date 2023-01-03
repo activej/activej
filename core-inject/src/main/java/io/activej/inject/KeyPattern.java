@@ -18,7 +18,6 @@ package io.activej.inject;
 
 import io.activej.inject.util.ReflectionUtils;
 import io.activej.types.Types;
-import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -37,7 +36,7 @@ import static io.activej.types.IsAssignableUtils.isAssignable;
  */
 @SuppressWarnings("unused") // <T> is required to obtain type from type parameter
 public abstract class KeyPattern<T> {
-	private final @NotNull Type type;
+	private final Type type;
 	private final Predicate<?> qualifier;
 
 	protected KeyPattern() {
@@ -55,7 +54,7 @@ public abstract class KeyPattern<T> {
 		this.qualifier = qualifier;
 	}
 
-	KeyPattern(@NotNull Type type, Predicate<?> qualifier) {
+	KeyPattern(Type type, Predicate<?> qualifier) {
 		this.type = simplifyType(type);
 		this.qualifier = qualifier;
 	}
@@ -69,31 +68,31 @@ public abstract class KeyPattern<T> {
 		}
 	}
 
-	public static <T> @NotNull KeyPattern<T> create(@NotNull Type type, Predicate<?> qualifier) {
+	public static <T> KeyPattern<T> create(Type type, Predicate<?> qualifier) {
 		return new KeyImpl<>(type, qualifier);
 	}
 
-	public static <T> @NotNull KeyPattern<T> of(@NotNull Class<T> type) {
+	public static <T> KeyPattern<T> of(Class<T> type) {
 		return new KeyImpl<>(type, null);
 	}
 
-	public static <T> @NotNull KeyPattern<T> of(@NotNull Class<T> type, Object qualifier) {
+	public static <T> KeyPattern<T> of(Class<T> type, Object qualifier) {
 		return new KeyImpl<>(type, predicateOf(qualifier));
 	}
 
-	public static <T> @NotNull KeyPattern<T> ofType(@NotNull Type type) {
+	public static <T> KeyPattern<T> ofType(Type type) {
 		return new KeyImpl<>(type, null);
 	}
 
-	public static <T> @NotNull KeyPattern<T> ofType(@NotNull Type type, Object qualifier) {
+	public static <T> KeyPattern<T> ofType(Type type, Object qualifier) {
 		return new KeyImpl<>(type, predicateOf(qualifier));
 	}
 
-	private static @NotNull Predicate<Object> predicateOf(Object qualifier) {
+	private static Predicate<Object> predicateOf(Object qualifier) {
 		return q -> Objects.equals(q, qualifier);
 	}
 
-	public @NotNull Type getType() {
+	public Type getType() {
 		return type;
 	}
 
@@ -107,7 +106,7 @@ public abstract class KeyPattern<T> {
 				(this.qualifier == null || ((Predicate<Object>) this.qualifier).test(key.getQualifier()));
 	}
 
-	private @NotNull Type getTypeParameter() {
+	private Type getTypeParameter() {
 		// this cannot possibly fail so not even a check here
 		Type typeArgument = ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
 		Object outerInstance = ReflectionUtils.getOuterClassInstance(this);

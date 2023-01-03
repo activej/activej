@@ -16,7 +16,6 @@
 
 package io.activej.dns.protocol;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /***
@@ -28,7 +27,7 @@ public final class DnsQuery {
 
 	private @Nullable Object userData;
 
-	private DnsQuery(@NotNull String domainName, @NotNull DnsProtocol.RecordType recordType) {
+	private DnsQuery(String domainName, DnsProtocol.RecordType recordType) {
 		this.domainName = domainName;
 		this.recordType = recordType;
 	}

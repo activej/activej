@@ -17,7 +17,6 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
-import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 
 import java.util.List;
@@ -29,7 +28,7 @@ final class ExpressionStaticCall implements Expression {
 	private final String name;
 	private final List<Expression> arguments;
 
-	ExpressionStaticCall(@NotNull Class<?> owner, @NotNull String name, @NotNull List<Expression> arguments) {
+	ExpressionStaticCall(Class<?> owner, String name, List<Expression> arguments) {
 		this.owner = owner;
 		this.name = name;
 		this.arguments = arguments;

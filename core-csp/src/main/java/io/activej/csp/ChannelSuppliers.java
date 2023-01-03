@@ -399,7 +399,7 @@ public final class ChannelSuppliers {
 			}
 
 			@Override
-			public int read(byte[] b, int off, int len) throws IOException {
+			public int read(byte @NotNull [] b, int off, int len) throws IOException {
 				return doRead(buf -> buf.read(b, off, min(buf.readRemaining(), len)));
 			}
 
@@ -473,7 +473,7 @@ public final class ChannelSuppliers {
 			return item;
 		}
 
-		public ChannelSupplierOfValue(@NotNull T item) {
+		public ChannelSupplierOfValue(T item) {
 			this.item = item;
 		}
 

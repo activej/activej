@@ -16,14 +16,12 @@
 
 package io.activej.fs.exception;
 
-import org.jetbrains.annotations.NotNull;
-
 public final class IsADirectoryException extends FsScalarException {
-	public IsADirectoryException(@NotNull String message) {
+	public IsADirectoryException(String message) {
 		super(message);
 	}
 
-	IsADirectoryException(@NotNull String message, boolean withStack) {
+	IsADirectoryException(String message, boolean withStack) {
 		super(message, withStack);
 	}
 }

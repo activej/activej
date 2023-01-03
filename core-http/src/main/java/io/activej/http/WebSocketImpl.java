@@ -32,7 +32,6 @@ import io.activej.http.WebSocket.Message.MessageType;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.charset.CharacterCodingException;
@@ -77,7 +76,7 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 	}
 
 	@Override
-	public @NotNull Promise<Message> readMessage() {
+	public Promise<Message> readMessage() {
 		return doRead(() -> {
 			ByteBufs messageBufs = new ByteBufs();
 			Ref<MessageType> typeRef = new Ref<>();
@@ -122,12 +121,12 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 	}
 
 	@Override
-	public @NotNull Promise<Frame> readFrame() {
+	public Promise<Frame> readFrame() {
 		return doRead(frameInput::get);
 	}
 
 	@Override
-	public @NotNull Promise<Void> writeMessage(@Nullable Message msg) {
+	public Promise<Void> writeMessage(@Nullable Message msg) {
 		return doWrite(() -> {
 			if (msg == null) {
 				return frameOutput.accept(null);
@@ -141,7 +140,7 @@ final class WebSocketImpl extends AbstractAsyncCloseable implements WebSocket {
 	}
 
 	@Override
-	public @NotNull Promise<Void> writeFrame(@Nullable Frame frame) {
+	public Promise<Void> writeFrame(@Nullable Frame frame) {
 		return doWrite(() -> frameOutput.accept(frame), frame);
 	}
 

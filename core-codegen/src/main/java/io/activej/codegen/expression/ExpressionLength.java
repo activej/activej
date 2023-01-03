@@ -17,7 +17,6 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
-import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
@@ -26,7 +25,7 @@ import static io.activej.codegen.util.TypeChecks.*;
 final class ExpressionLength implements Expression {
 	private final Expression value;
 
-	ExpressionLength(@NotNull Expression value) {
+	ExpressionLength(Expression value) {
 		this.value = value;
 	}
 

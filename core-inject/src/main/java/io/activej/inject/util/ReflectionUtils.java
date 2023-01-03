@@ -26,7 +26,6 @@ import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.inject.module.ModuleBuilder1;
 import io.activej.types.Types;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
@@ -379,12 +378,12 @@ public final class ReflectionUtils {
 				dependencies);
 	}
 
-	public static Module scanClass(@NotNull Class<?> moduleClass, @Nullable Object module) {
+	public static Module scanClass(Class<?> moduleClass, @Nullable Object module) {
 		return scanClassInto(moduleClass, module, ModuleBuilder.create());
 	}
 
 	@SuppressWarnings("unchecked")
-	public static Module scanClassInto(@NotNull Class<?> moduleClass, @Nullable Object module, ModuleBuilder builder) {
+	public static Module scanClassInto(Class<?> moduleClass, @Nullable Object module, ModuleBuilder builder) {
 		for (Method method : moduleClass.getDeclaredMethods()) {
 			if (method.isAnnotationPresent(Provides.class)) {
 				if (module == null && !Modifier.isStatic(method.getModifiers())) {
@@ -465,7 +464,7 @@ public final class ReflectionUtils {
 		return builder.build();
 	}
 
-	public static Map<Class<?>, Module> scanClassHierarchy(@NotNull Class<?> moduleClass, @Nullable Object module) {
+	public static Map<Class<?>, Module> scanClassHierarchy(Class<?> moduleClass, @Nullable Object module) {
 		Map<Class<?>, Module> result = new HashMap<>();
 		Class<?> cls = moduleClass;
 		while (cls != Object.class && cls != null) {

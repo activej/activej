@@ -18,7 +18,6 @@ package io.activej.common;
 
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -80,7 +79,7 @@ public class Utils {
 		return nonNullElse(map, Map.of());
 	}
 
-	public static <T, E extends Throwable> @NotNull T nonNullOrException(@Nullable T value, Supplier<@NotNull E> exceptionSupplier) throws E {
+	public static <T, E extends Throwable> T nonNullOrException(@Nullable T value, Supplier<E> exceptionSupplier) throws E {
 		if (value != null) {
 			return value;
 		}
@@ -88,12 +87,12 @@ public class Utils {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> Predicate<T> not(@NotNull Predicate<? super T> target) {
+	public static <T> Predicate<T> not(Predicate<? super T> target) {
 		return (Predicate<T>) target.negate();
 	}
 
 	@Contract("_, _ -> null")
-	public static <V> @Nullable V nullify(@Nullable V value, @NotNull Consumer<? super @NotNull V> action) {
+	public static <V> @Nullable V nullify(@Nullable V value, Consumer<? super V> action) {
 		if (value != null) {
 			action.accept(value);
 		}
@@ -101,21 +100,21 @@ public class Utils {
 	}
 
 	@Contract("_, _, _ -> null")
-	public static <V, A> @Nullable V nullify(@Nullable V value, @NotNull BiConsumer<? super @NotNull V, A> action, A actionArg) {
+	public static <V, A> @Nullable V nullify(@Nullable V value, BiConsumer<? super V, A> action, A actionArg) {
 		if (value != null) {
 			action.accept(value, actionArg);
 		}
 		return null;
 	}
 
-	public static <V> @Nullable V replace(@Nullable V value, @Nullable V newValue, @NotNull Consumer<? super @NotNull V> action) {
+	public static <V> @Nullable V replace(@Nullable V value, @Nullable V newValue, Consumer<? super V> action) {
 		if (value != null && value != newValue) {
 			action.accept(value);
 		}
 		return newValue;
 	}
 
-	public static <V, A> @Nullable V replace(@Nullable V value, @Nullable V newValue, @NotNull BiConsumer<? super @NotNull V, A> action, A actionArg) {
+	public static <V, A> @Nullable V replace(@Nullable V value, @Nullable V newValue, BiConsumer<? super V, A> action, A actionArg) {
 		if (value != null && value != newValue) {
 			action.accept(value, actionArg);
 		}
@@ -333,11 +332,11 @@ public class Utils {
 		return new HashSet<>(map.values()).size() == map.size();
 	}
 
-	public static <T> Stream<T> iterate(@NotNull Supplier<? extends T> supplier, @NotNull Predicate<? super T> hasNext) {
+	public static <T> Stream<T> iterate(Supplier<? extends T> supplier, Predicate<? super T> hasNext) {
 		return iterate(supplier.get(), hasNext, $ -> supplier.get());
 	}
 
-	public static <T> Stream<T> iterate(T seed, @NotNull Predicate<? super T> hasNext, @NotNull UnaryOperator<T> f) {
+	public static <T> Stream<T> iterate(T seed, Predicate<? super T> hasNext, UnaryOperator<T> f) {
 		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
 				new Iterator<>() {
 					T item = seed;

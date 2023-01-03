@@ -17,7 +17,6 @@
 package io.activej.codegen.expression;
 
 import io.activej.codegen.Context;
-import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 
 import static io.activej.codegen.util.TypeChecks.checkType;
@@ -35,7 +34,7 @@ final class ExpressionCast implements Expression {
 	private final Expression expression;
 	private final Type targetType;
 
-	ExpressionCast(@NotNull Expression expression, @NotNull Type type) {
+	ExpressionCast(Expression expression, Type type) {
 		this.expression = expression;
 		this.targetType = type;
 	}

@@ -19,7 +19,6 @@ package io.activej.serializer.impl;
 import io.activej.codegen.expression.Expression;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.EnumMap;
@@ -39,12 +38,12 @@ public final class SerializerDefMap extends SerializerDefRegularMap {
 	}
 
 	@Override
-	protected @NotNull SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
+	protected SerializerDef doEnsureNullable(CompatibilityLevel compatibilityLevel) {
 		return new SerializerDefMap(keySerializer, valueSerializer, true);
 	}
 
 	@Override
-	protected @NotNull Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
+	protected Expression doDecode(StaticDecoders staticDecoders, Expression in, int version, CompatibilityLevel compatibilityLevel, Expression length) {
 		return ifEq(length, value(0),
 				staticCall(Collections.class, "emptyMap"),
 				ifEq(length, value(1),
@@ -55,7 +54,7 @@ public final class SerializerDefMap extends SerializerDefRegularMap {
 	}
 
 	@Override
-	protected @NotNull Expression createBuilder(Expression length) {
+	protected Expression createBuilder(Expression length) {
 		Class<?> rawType = keySerializer.getDecodeType();
 		if (rawType.isEnum()) {
 			return constructor(EnumMap.class, value(rawType));

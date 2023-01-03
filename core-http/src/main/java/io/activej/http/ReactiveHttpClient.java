@@ -42,7 +42,6 @@ import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.reactor.net.SocketSettings;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.reactor.schedule.ScheduledRunnable;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -88,8 +87,8 @@ public final class ReactiveHttpClient extends AbstractNioReactive
 	public static final MemSize MAX_WEB_SOCKET_MESSAGE_SIZE = ApplicationSettings.getMemSize(ReactiveHttpClient.class, "maxWebSocketMessageSize", MemSize.megabytes(1));
 	public static final int MAX_KEEP_ALIVE_REQUESTS = ApplicationSettings.getInt(ReactiveHttpClient.class, "maxKeepAliveRequests", 0);
 
-	private @NotNull DnsClient asyncDnsClient;
-	private @NotNull SocketSettings socketSettings = DEFAULT_SOCKET_SETTINGS;
+	private DnsClient asyncDnsClient;
+	private SocketSettings socketSettings = DEFAULT_SOCKET_SETTINGS;
 
 	final HashMap<InetSocketAddress, AddressLinkedList> addresses = new HashMap<>();
 	final ConnectionsLinkedList poolKeepAlive = new ConnectionsLinkedList();
@@ -287,33 +286,33 @@ public final class ReactiveHttpClient extends AbstractNioReactive
 	private int inetAddressIdx = 0;
 
 	// region builders
-	private ReactiveHttpClient(@NotNull NioReactor reactor, @NotNull DnsClient asyncDnsClient) {
+	private ReactiveHttpClient(NioReactor reactor, DnsClient asyncDnsClient) {
 		super(reactor);
 		this.asyncDnsClient = asyncDnsClient;
 	}
 
-	public static ReactiveHttpClient create(@NotNull NioReactor reactor) {
+	public static ReactiveHttpClient create(NioReactor reactor) {
 		DnsClient defaultDnsClient = ReactiveDnsClient.create(reactor);
 		return new ReactiveHttpClient(reactor, defaultDnsClient);
 	}
 
-	public ReactiveHttpClient withSocketSettings(@NotNull SocketSettings socketSettings) {
+	public ReactiveHttpClient withSocketSettings(SocketSettings socketSettings) {
 		this.socketSettings = socketSettings;
 		return this;
 	}
 
-	public ReactiveHttpClient withDnsClient(@NotNull DnsClient asyncDnsClient) {
+	public ReactiveHttpClient withDnsClient(DnsClient asyncDnsClient) {
 		this.asyncDnsClient = asyncDnsClient;
 		return this;
 	}
 
-	public ReactiveHttpClient withSslEnabled(@NotNull SSLContext sslContext, @NotNull Executor sslExecutor) {
+	public ReactiveHttpClient withSslEnabled(SSLContext sslContext, Executor sslExecutor) {
 		this.sslContext = sslContext;
 		this.sslExecutor = sslExecutor;
 		return this;
 	}
 
-	public ReactiveHttpClient withKeepAliveTimeout(@NotNull Duration keepAliveTime) {
+	public ReactiveHttpClient withKeepAliveTimeout(Duration keepAliveTime) {
 		this.keepAliveTimeoutMillis = (int) keepAliveTime.toMillis();
 		return this;
 	}
@@ -328,18 +327,18 @@ public final class ReactiveHttpClient extends AbstractNioReactive
 		return this;
 	}
 
-	public ReactiveHttpClient withReadWriteTimeout(@NotNull Duration readWriteTimeout) {
+	public ReactiveHttpClient withReadWriteTimeout(Duration readWriteTimeout) {
 		this.readWriteTimeoutMillis = (int) readWriteTimeout.toMillis();
 		return this;
 	}
 
-	public ReactiveHttpClient withReadWriteTimeout(@NotNull Duration readWriteTimeout, @NotNull Duration readWriteTimeoutShutdown) {
+	public ReactiveHttpClient withReadWriteTimeout(Duration readWriteTimeout, Duration readWriteTimeoutShutdown) {
 		this.readWriteTimeoutMillis = (int) readWriteTimeout.toMillis();
 		this.readWriteTimeoutMillisShutdown = (int) readWriteTimeoutShutdown.toMillis();
 		return this;
 	}
 
-	public ReactiveHttpClient withConnectTimeout(@NotNull Duration connectTimeout) {
+	public ReactiveHttpClient withConnectTimeout(Duration connectTimeout) {
 		this.connectTimeoutMillis = (int) connectTimeout.toMillis();
 		return this;
 	}
@@ -452,7 +451,7 @@ public final class ReactiveHttpClient extends AbstractNioReactive
 		return (Promise<WebSocket>) doRequest(request, true);
 	}
 
-	private @NotNull Promise<?> doRequest(HttpRequest request, boolean isWebSocket) {
+	private Promise<?> doRequest(HttpRequest request, boolean isWebSocket) {
 		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
 		if (inspector != null) inspector.onRequest(request);
 		String host = request.getUrl().getHost();

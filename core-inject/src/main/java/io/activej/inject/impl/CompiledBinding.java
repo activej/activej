@@ -16,11 +16,9 @@
 
 package io.activej.inject.impl;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 @SuppressWarnings("rawtypes")
 public interface CompiledBinding<R> {
-	@NotNull R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope);
+	R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope);
 }

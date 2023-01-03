@@ -16,8 +16,6 @@
 
 package io.activej.inject.impl;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 @SuppressWarnings("rawtypes")
@@ -31,7 +29,7 @@ public abstract class AbstractRootCompiledBinding<R> implements CompiledBinding<
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public final @NotNull R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
+	public final R getInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope) {
 		R localInstance = instance;
 		if (localInstance != null) return localInstance;
 		synchronized (this) {
@@ -45,5 +43,5 @@ public abstract class AbstractRootCompiledBinding<R> implements CompiledBinding<
 		return instance;
 	}
 
-	protected abstract @NotNull R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope);
+	protected abstract R doCreateInstance(AtomicReferenceArray[] scopedInstances, int synchronizedScope);
 }

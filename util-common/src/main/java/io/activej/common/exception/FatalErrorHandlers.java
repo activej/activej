@@ -16,7 +16,6 @@
 
 package io.activej.common.exception;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -46,7 +45,7 @@ public final class FatalErrorHandlers {
 	 *
 	 * @param handler a global fatal error handler
 	 */
-	public static void setGlobalFatalErrorHandler(@NotNull FatalErrorHandler handler) {
+	public static void setGlobalFatalErrorHandler(FatalErrorHandler handler) {
 		globalFatalErrorHandler = handler;
 	}
 
@@ -57,7 +56,7 @@ public final class FatalErrorHandlers {
 	 *
 	 * @return a thread fatal error handler or a global fatal error handler if thread's handler was not set
 	 */
-	public static @NotNull FatalErrorHandler getFatalErrorHandler() {
+	public static FatalErrorHandler getFatalErrorHandler() {
 		FatalErrorHandler handler = CURRENT_HANDLER.get();
 		return handler != null ? handler : globalFatalErrorHandler;
 	}
@@ -74,7 +73,7 @@ public final class FatalErrorHandlers {
 	 * @param context           an optional context that provides additional debug information
 	 * @see #getFatalErrorHandler()
 	 */
-	public static void handleError(@NotNull FatalErrorHandler fatalErrorHandler, @NotNull Throwable e, @Nullable Object context) {
+	public static void handleError(FatalErrorHandler fatalErrorHandler, Throwable e, @Nullable Object context) {
 		if (e instanceof RuntimeException || !(e instanceof Exception)) {
 			fatalErrorHandler.handle(e, context);
 		}
@@ -93,7 +92,7 @@ public final class FatalErrorHandlers {
 	 * @param context an optional context that provides additional debug information
 	 * @see #getFatalErrorHandler()
 	 */
-	public static void handleError(@NotNull Throwable e, @Nullable Object context) {
+	public static void handleError(Throwable e, @Nullable Object context) {
 		if (e instanceof RuntimeException || !(e instanceof Exception)) {
 			getFatalErrorHandler().handle(e, context);
 		}
@@ -104,11 +103,11 @@ public final class FatalErrorHandlers {
 	 *
 	 * @see #handleError(Throwable, Object)
 	 */
-	public static void handleError(@NotNull Throwable e) {
+	public static void handleError(Throwable e) {
 		handleError(e, null);
 	}
 
-	public static @NotNull Exception getExceptionOrThrowError(@NotNull Throwable t) {
+	public static Exception getExceptionOrThrowError(Throwable t) {
 		if (t instanceof Exception) {
 			return (Exception) t;
 		}

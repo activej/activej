@@ -3,7 +3,6 @@ package io.activej.reactor;
 import io.activej.async.executor.ReactorExecutor;
 import io.activej.reactor.schedule.ReactorScheduler;
 import org.jetbrains.annotations.Async;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
@@ -17,7 +16,7 @@ public interface Reactor extends ReactorExecutor, ReactorScheduler {
 	 * @return an {@link Reactor} associated with the current thread
 	 * @throws IllegalStateException when there are no Reactor associated with the current thread
 	 */
-	static @NotNull <R extends Reactor> R getCurrentReactor() {
+	static <R extends Reactor> R getCurrentReactor() {
 		//noinspection unchecked
 		return (R) ThreadLocalReactor.getCurrentReactor();
 	}
@@ -36,7 +35,7 @@ public interface Reactor extends ReactorExecutor, ReactorScheduler {
 		return (R) ThreadLocalReactor.getCurrentReactorOrNull();
 	}
 
-	static void setCurrentReactor(@NotNull Reactor reactor) {
+	static void setCurrentReactor(Reactor reactor) {
 		ThreadLocalReactor.setCurrentReactor(reactor);
 	}
 

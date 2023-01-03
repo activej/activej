@@ -4,7 +4,6 @@ import io.activej.serializer.BinaryInput;
 import io.activej.serializer.BinaryOutput;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.CorruptedDataException;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -726,7 +725,7 @@ public final class StreamCodecs {
 		return builder.build();
 	}
 
-	public static <T> StreamCodec<@Nullable T> ofNullable(StreamCodec<@NotNull T> codec) {
+	public static <T> StreamCodec<@Nullable T> ofNullable(StreamCodec<T> codec) {
 		return new StreamCodec<>() {
 			@Override
 			public void encode(StreamOutput output, @Nullable T item) throws IOException {

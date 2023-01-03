@@ -33,7 +33,6 @@ import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import org.intellij.lang.annotations.MagicConstant;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
@@ -135,9 +134,9 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 
 	protected abstract void onClosed();
 
-	protected abstract void onClosedWithError(@NotNull Exception e);
+	protected abstract void onClosedWithError(Exception e);
 
-	protected abstract void onMalformedHttpException(@NotNull MalformedHttpException e);
+	protected abstract void onMalformedHttpException(MalformedHttpException e);
 
 	public final boolean isClosed() {
 		return flags < 0;
@@ -211,7 +210,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 		socket.close();
 	}
 
-	protected final void closeEx(@NotNull Exception e) {
+	protected final void closeEx(Exception e) {
 		if (isClosed()) return;
 		flags |= CLOSED;
 		onClosedWithError(e);
@@ -607,7 +606,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 		protected abstract void thenRun() throws MalformedHttpException;
 	}
 
-	protected final void stashBuf(@NotNull ByteBuf buf) {
+	protected final void stashBuf(ByteBuf buf) {
 		if (stashedBufs == null) {
 			stashedBufs = buf;
 		} else {

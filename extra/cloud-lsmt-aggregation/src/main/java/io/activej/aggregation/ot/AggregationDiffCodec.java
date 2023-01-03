@@ -24,7 +24,6 @@ import io.activej.aggregation.PrimaryKey;
 import io.activej.aggregation.PrimaryKeyCodec;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.common.initializer.WithInitializer;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.Set;
@@ -52,7 +51,7 @@ public class AggregationDiffCodec implements JsonCodec<AggregationDiff>, WithIni
 	}
 
 	@Override
-	public void write(@NotNull JsonWriter writer, AggregationDiff diff) {
+	public void write(JsonWriter writer, AggregationDiff diff) {
 		assert diff != null;
 		writer.writeByte(OBJECT_START);
 		writer.writeString(ADDED);
@@ -68,7 +67,7 @@ public class AggregationDiffCodec implements JsonCodec<AggregationDiff>, WithIni
 	}
 
 	@Override
-	public AggregationDiff read(@NotNull JsonReader reader) throws IOException {
+	public AggregationDiff read(JsonReader reader) throws IOException {
 		if (reader.last() != OBJECT_START) throw reader.newParseError("Expected '{'");
 		reader.getNextToken();
 		String key = reader.readKey();

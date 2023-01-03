@@ -18,7 +18,6 @@ package io.activej.http.loader;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,21 +32,21 @@ import java.util.concurrent.Executor;
 class StaticLoaderClassPath implements StaticLoader {
 	private static final String ROOT = "/";
 	private static final int ROOT_OFFSET = 1;
-	private final @NotNull Executor executor;
+	private final Executor executor;
 	private final ClassLoader classLoader;
 	private final String root;
 
-	private StaticLoaderClassPath(@NotNull Executor executor, @NotNull ClassLoader classLoader, @NotNull String root) {
+	private StaticLoaderClassPath(Executor executor, ClassLoader classLoader, String root) {
 		this.root = root;
 		this.executor = executor;
 		this.classLoader = classLoader;
 	}
 
-	public static StaticLoaderClassPath create(@NotNull Executor executor, String root) {
+	public static StaticLoaderClassPath create(Executor executor, String root) {
 		return create(executor, Thread.currentThread().getContextClassLoader(), root);
 	}
 
-	public static StaticLoaderClassPath create(@NotNull Executor executor, @NotNull ClassLoader classLoader, @NotNull String root) {
+	public static StaticLoaderClassPath create(Executor executor, ClassLoader classLoader, String root) {
 		if (root.startsWith(ROOT)) {
 			root = root.substring(ROOT_OFFSET);
 		}

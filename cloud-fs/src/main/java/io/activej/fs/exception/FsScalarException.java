@@ -16,14 +16,12 @@
 
 package io.activej.fs.exception;
 
-import org.jetbrains.annotations.NotNull;
-
 public class FsScalarException extends FsStateException {
-	public FsScalarException(@NotNull String message) {
+	public FsScalarException(String message) {
 		super(message);
 	}
 
-	FsScalarException(@NotNull String message, boolean withStack) {
+	FsScalarException(String message, boolean withStack) {
 		super(message, withStack);
 	}
 }

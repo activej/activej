@@ -16,8 +16,6 @@
 
 package io.activej.types;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.lang.reflect.AnnotatedParameterizedType;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Type;
@@ -32,7 +30,7 @@ import java.lang.reflect.Type;
  * @param <T> actual type
  */
 public abstract class TypeT<T> {
-	private final @NotNull AnnotatedType annotatedType;
+	private final AnnotatedType annotatedType;
 
 	/**
 	 * Creates a new type token. A type argument {@link T} <b>must</b> be specified.
@@ -46,18 +44,18 @@ public abstract class TypeT<T> {
 		this.annotatedType = getSuperclassTypeParameter(this.getClass());
 	}
 
-	private TypeT(@NotNull AnnotatedType annotatedType) {
+	private TypeT(AnnotatedType annotatedType) {
 		this.annotatedType = annotatedType;
 	}
 
 	/**
 	 * Constructs a new {@link TypeT} out of given {@link AnnotatedType}
 	 */
-	public static <T> @NotNull TypeT<T> ofAnnotatedType(@NotNull AnnotatedType annotatedType) {
+	public static <T> TypeT<T> ofAnnotatedType(AnnotatedType annotatedType) {
 		return new TypeT<>(annotatedType) {};
 	}
 
-	private static @NotNull AnnotatedType getSuperclassTypeParameter(@NotNull Class<?> subclass) {
+	private static AnnotatedType getSuperclassTypeParameter(Class<?> subclass) {
 		AnnotatedType superclass = subclass.getAnnotatedSuperclass();
 		if (superclass instanceof AnnotatedParameterizedType) {
 			return ((AnnotatedParameterizedType) superclass).getAnnotatedActualTypeArguments()[0];
@@ -68,14 +66,14 @@ public abstract class TypeT<T> {
 	/**
 	 * Returns an {@link AnnotatedType} of a {@link T}
 	 */
-	public final @NotNull AnnotatedType getAnnotatedType() {
+	public final AnnotatedType getAnnotatedType() {
 		return annotatedType;
 	}
 
 	/**
 	 * Returns a {@link Type} of a {@link T}
 	 */
-	public final @NotNull Type getType() {
+	public final Type getType() {
 		return annotatedType.getType();
 	}
 
