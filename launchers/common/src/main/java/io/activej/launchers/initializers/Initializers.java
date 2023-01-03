@@ -16,7 +16,7 @@
 
 package io.activej.launchers.initializers;
 
-import io.activej.async.service.ReactiveTaskScheduler;
+import io.activej.async.service.TaskScheduler;
 import io.activej.common.MemSize;
 import io.activej.common.initializer.Initializer;
 import io.activej.config.Config;
@@ -60,7 +60,7 @@ public class Initializers {
 				.withThreadPriority(config.get(ofInteger(), "threadPriority", eventloop.getThreadPriority()));
 	}
 
-	public static Initializer<ReactiveTaskScheduler> ofReactorTaskScheduler(Config config) {
+	public static Initializer<TaskScheduler> ofReactorTaskScheduler(Config config) {
 		return scheduler -> {
 			scheduler.setEnabled(!config.get(ofBoolean(), "disabled", false));
 			scheduler.withAbortOnError(config.get(ofBoolean(), "abortOnError", false))
@@ -147,12 +147,12 @@ public class Initializers {
 		Long delayWarning = config.get(ofDurationAsMillis(), "scheduler.delayWarning", null);
 
 		return triggersSettings -> triggersSettings
-				.with(ReactiveTaskScheduler.class, WARNING, "error", scheduler ->
+				.with(TaskScheduler.class, WARNING, "error", scheduler ->
 						TriggerResult.ofError(scheduler.getLastException()))
-				.with(ReactiveTaskScheduler.class, INFORMATION, "error", scheduler ->
+				.with(TaskScheduler.class, INFORMATION, "error", scheduler ->
 						ofPromiseStatsLastSuccess(scheduler.getStats()))
 
-				.with(ReactiveTaskScheduler.class, WARNING, "delay", scheduler -> {
+				.with(TaskScheduler.class, WARNING, "delay", scheduler -> {
 					Duration currentDuration = scheduler.getStats().getCurrentDuration();
 					Duration duration = getDuration(scheduler);
 					if (currentDuration == null || duration == null) {
@@ -161,7 +161,7 @@ public class Initializers {
 					return TriggerResult.ofInstant(scheduler.getStats().getLastStartTime(),
 							currentDuration.toMillis() > (delayWarning != null ? delayWarning : duration.toMillis() * 3));
 				})
-				.with(ReactiveTaskScheduler.class, HIGH, "delay", scheduler -> {
+				.with(TaskScheduler.class, HIGH, "delay", scheduler -> {
 					Duration currentDuration = scheduler.getStats().getCurrentDuration();
 					Duration duration = getDuration(scheduler);
 					if (currentDuration == null || duration == null) {
@@ -172,7 +172,7 @@ public class Initializers {
 				});
 	}
 
-	private static Duration getDuration(ReactiveTaskScheduler scheduler) {
+	private static Duration getDuration(TaskScheduler scheduler) {
 		return scheduler.getPeriod() != null ? scheduler.getPeriod() : scheduler.getInterval();
 	}
 }

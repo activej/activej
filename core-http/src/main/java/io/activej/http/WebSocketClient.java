@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-package io.activej.crdt.wal;
+package io.activej.http;
 
 import io.activej.promise.Promise;
 
-public interface IWriteAheadLog<K extends Comparable<K>, S> {
-	Promise<Void> put(K key, S value);
-
-	Promise<Void> flush();
+public interface WebSocketClient {
+	Promise<WebSocket> webSocketRequest(HttpRequest request);
 }

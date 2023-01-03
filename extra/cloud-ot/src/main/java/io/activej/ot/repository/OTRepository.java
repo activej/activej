@@ -28,7 +28,7 @@ import java.util.stream.IntStream;
 import static io.activej.common.Utils.not;
 import static java.util.stream.Collectors.*;
 
-public interface IOTRepository<K, D> extends OTCommitFactory<K, D> {
+public interface OTRepository<K, D> extends OTCommitFactory<K, D> {
 	Promise<Void> push(Collection<OTCommit<K, D>> commits);
 
 	default Promise<Void> push(OTCommit<K, D> commit) {

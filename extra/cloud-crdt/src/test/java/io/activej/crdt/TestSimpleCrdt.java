@@ -1,6 +1,6 @@
 package io.activej.crdt;
 
-import io.activej.crdt.storage.ICrdtStorage;
+import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.datastream.StreamConsumer;
@@ -27,7 +27,7 @@ import static org.junit.Assert.assertTrue;
 public final class TestSimpleCrdt {
 	private CrdtStorageMap<String, Integer> remoteStorage;
 	private CrdtServer<String, Integer> server;
-	private ICrdtStorage<String, Integer> client;
+	private CrdtStorage<String, Integer> client;
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();

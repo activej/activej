@@ -2,8 +2,8 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.config.Config;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
+import io.activej.fs.ActiveFs;
 import io.activej.fs.ForwardingActiveFs;
-import io.activej.fs.IActiveFs;
 import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
@@ -29,14 +29,14 @@ public class DecoratedActiveFsExample extends ServerSetupExample {
 		return new AbstractModule() {
 			@Eager
 			@Provides
-			ActiveFsServer activeFsServer(NioReactor reactor, @Named("decorated") IActiveFs decoratedFs, Config config) {
+			ActiveFsServer activeFsServer(NioReactor reactor, @Named("decorated") ActiveFs decoratedFs, Config config) {
 				return ActiveFsServer.create(reactor, decoratedFs)
 						.withInitializer(ofActiveFsServer(config.getChild("activefs")));
 			}
 
 			@Provides
 			@Named("decorated")
-			IActiveFs decoratedActiveFs(IActiveFs fs) {
+			ActiveFs decoratedActiveFs(ActiveFs fs) {
 				return new LoggingActiveFs(fs);
 			}
 		};
@@ -52,7 +52,7 @@ public class DecoratedActiveFsExample extends ServerSetupExample {
 	private static final class LoggingActiveFs extends ForwardingActiveFs {
 		private static final Logger logger = LoggerFactory.getLogger(LoggingActiveFs.class);
 
-		public LoggingActiveFs(IActiveFs peer) {
+		public LoggingActiveFs(ActiveFs peer) {
 			super(peer);
 		}
 

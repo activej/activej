@@ -6,7 +6,7 @@ import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.datastream.processor.StreamFilter;
 import io.activej.eventloop.Eventloop;
-import io.activej.net.socket.tcp.ITcpSocket;
+import io.activej.net.socket.tcp.ReactiveTcpSocket;
 import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.reactor.net.ServerSocketSettings;
 
@@ -27,10 +27,10 @@ public final class TcpServerExample {
 		Eventloop eventloop = Eventloop.create();
 
 		eventloop.listen(new InetSocketAddress("localhost", TcpClientExample.PORT), ServerSocketSettings.create(100), channel -> {
-			ITcpSocket socket;
+			TcpSocket socket;
 
 			try {
-				socket = TcpSocket.wrapChannel(eventloop, channel, null);
+				socket = ReactiveTcpSocket.wrapChannel(eventloop, channel, null);
 				System.out.println("Client connected: " + channel.getRemoteAddress());
 			} catch (IOException e) {
 				throw new RuntimeException(e);

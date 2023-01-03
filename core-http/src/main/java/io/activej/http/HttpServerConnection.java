@@ -25,8 +25,8 @@ import io.activej.common.Utils;
 import io.activej.common.recycle.Recyclable;
 import io.activej.csp.ChannelSupplier;
 import io.activej.http.HttpServer.Inspector;
-import io.activej.net.socket.tcp.ITcpSocket;
-import io.activej.net.socket.tcp.TcpSocketSsl;
+import io.activej.net.socket.tcp.ReactiveTcpSocketSsl;
+import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.NotNull;
@@ -54,7 +54,7 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * It represents server connection. It can receive {@link HttpRequest requests}
- * from {@link HttpClient clients} and respond to them with
+ * from {@link ReactiveHttpClient clients} and respond to them with
  * {@link AsyncServlet<HttpRequest> async servlet}.
  */
 public final class HttpServerConnection extends AbstractHttpConnection {
@@ -100,7 +100,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 	 * @param server        server, which uses this connection
 	 * @param servlet       servlet for handling requests
 	 */
-	HttpServerConnection(Reactor reactor, ITcpSocket asyncTcpSocket, InetAddress remoteAddress,
+	HttpServerConnection(Reactor reactor, TcpSocket asyncTcpSocket, InetAddress remoteAddress,
 			HttpServer server, AsyncServlet servlet) {
 		super(reactor, asyncTcpSocket, server.maxBodySize);
 		this.remoteAddress = remoteAddress;
@@ -350,7 +350,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 		if (WebSocket.ENABLED && isWebSocket()) {
 			if (!processWebSocketRequest(body)) return;
 		} else {
-			request.setProtocol(socket instanceof TcpSocketSsl ? HTTPS : HTTP);
+			request.setProtocol(socket instanceof ReactiveTcpSocketSsl ? HTTPS : HTTP);
 		}
 		request.setRemoteAddress(remoteAddress);
 
@@ -416,7 +416,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			ChannelSupplier<ByteBuf> ofSocketSupplier = ChannelSupplier.ofSocket(socket);
 			request.bodyStream = sanitize(concat(ofReadBufSupplier, ofSocketSupplier)
 					.withEndOfStream(eos -> eos.whenException(this::closeWebSocketConnection)));
-			request.setProtocol(socket instanceof TcpSocketSsl ? WSS : WS);
+			request.setProtocol(socket instanceof ReactiveTcpSocketSsl ? WSS : WS);
 			request.maxBodySize = server.maxWebSocketMessageSize;
 			return true;
 		} else {

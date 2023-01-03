@@ -1,7 +1,7 @@
 package plain;
 
 import io.activej.config.Config;
-import io.activej.dataflow.ISqlDataflow;
+import io.activej.dataflow.SqlDataflow;
 import io.activej.dataflow.exception.DataflowException;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.inject.annotation.Inject;
@@ -25,7 +25,7 @@ public final class MultilogDataflowPlainClientLauncher extends DataflowClientLau
 	Reactor reactor;
 
 	@Inject
-	ISqlDataflow sqlDataflow;
+	SqlDataflow sqlDataflow;
 
 	@Override
 	protected Module getBusinessLogicModule() {

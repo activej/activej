@@ -16,7 +16,7 @@
 
 package io.activej.config.converter;
 
-import io.activej.async.service.ReactiveTaskScheduler.Schedule;
+import io.activej.async.service.TaskScheduler.Schedule;
 import io.activej.common.MemSize;
 import io.activej.common.StringFormatUtils;
 import io.activej.common.exception.FatalErrorHandler;

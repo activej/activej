@@ -18,14 +18,14 @@ package io.activej.memcache.client;
 
 import io.activej.common.initializer.WithInitializer;
 import io.activej.memcache.protocol.MemcacheRpcMessage.Slice;
-import io.activej.rpc.client.IRpcClient;
+import io.activej.rpc.client.RpcClient;
 
 public class RawMemcacheClient extends AbstractMemcacheClient<byte[], Slice> implements WithInitializer<RawMemcacheClient> {
-	private RawMemcacheClient(IRpcClient rpcClient) {
+	private RawMemcacheClient(RpcClient rpcClient) {
 		super(rpcClient);
 	}
 
-	public static RawMemcacheClient create(IRpcClient rpcClient) {
+	public static RawMemcacheClient create(RpcClient rpcClient) {
 		return new RawMemcacheClient(rpcClient);
 	}
 

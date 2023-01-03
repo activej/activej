@@ -4,7 +4,7 @@ import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtTombstone;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.cluster.CrdtStorageCluster;
-import io.activej.crdt.storage.cluster.IDiscoveryService;
+import io.activej.crdt.storage.cluster.DiscoveryService;
 import io.activej.crdt.storage.cluster.RendezvousPartitionGroup;
 import io.activej.crdt.storage.cluster.RendezvousPartitionScheme;
 import io.activej.crdt.storage.local.CrdtStorageFs;
@@ -60,9 +60,9 @@ public class CrdtStorageAPITest {
 	public String testName;
 
 	@Parameter(1)
-	public ICrdtClientFactory clientFactory;
+	public CrdtClientFactory clientFactory;
 
-	private ICrdtStorage<String, Integer> client;
+	private CrdtStorage<String, Integer> client;
 
 	@Before
 	public void setup() throws Exception {
@@ -72,8 +72,8 @@ public class CrdtStorageAPITest {
 	}
 
 	@FunctionalInterface
-	private interface ICrdtClientFactory {
-		ICrdtStorage<String, Integer> create(Executor executor, Path testFolder) throws Exception;
+	private interface CrdtClientFactory {
+		CrdtStorage<String, Integer> create(Executor executor, Path testFolder) throws Exception;
 	}
 
 	@Parameters(name = "{0}")
@@ -81,7 +81,7 @@ public class CrdtStorageAPITest {
 		return List.of(
 				new Object[]{
 						"FsCrdtClient",
-						(ICrdtClientFactory) (executor, testFolder) -> {
+						(CrdtClientFactory) (executor, testFolder) -> {
 							Reactor reactor = getCurrentReactor();
 							LocalActiveFs fs = LocalActiveFs.create(reactor, executor, testFolder);
 							await(fs.start());
@@ -90,14 +90,14 @@ public class CrdtStorageAPITest {
 				},
 				new Object[]{
 						"CrdtStorageMap",
-						(ICrdtClientFactory) (executor, testFolder) ->
+						(CrdtClientFactory) (executor, testFolder) ->
 								CrdtStorageMap.create(getCurrentReactor(), CRDT_FUNCTION)
 				},
 				new Object[]{
 						"CrdtStorageCluster",
-						(ICrdtClientFactory) (executor, testFolder) -> {
+						(CrdtClientFactory) (executor, testFolder) -> {
 							Reactor reactor = getCurrentReactor();
-							Map<Integer, ICrdtStorage<String, Integer>> map = new HashMap<>();
+							Map<Integer, CrdtStorage<String, Integer>> map = new HashMap<>();
 
 							int i = 0;
 							Set<Integer> partitions = new HashSet<>();
@@ -116,7 +116,7 @@ public class CrdtStorageAPITest {
 
 							RendezvousPartitionScheme<Integer> partitionScheme = RendezvousPartitionScheme.create(partitionGroup1, partitionGroup2)
 									.withCrdtProvider(map::get);
-							IDiscoveryService<Integer> discoveryService = IDiscoveryService.of(partitionScheme);
+							DiscoveryService<Integer> discoveryService = DiscoveryService.of(partitionScheme);
 							CrdtStorageCluster<String, Integer, Integer> storageCluster = CrdtStorageCluster.create(reactor, discoveryService, CRDT_FUNCTION);
 
 							await(storageCluster.start());

@@ -2,7 +2,7 @@ package io.activej.launchers.dataflow.jdbc;
 
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
-import io.activej.dataflow.ISqlDataflow;
+import io.activej.dataflow.SqlDataflow;
 import io.activej.datastream.StreamConsumer;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;
@@ -35,7 +35,7 @@ public abstract class DataflowJdbcServerLauncher extends Launcher {
 	protected Reactor reactor;
 
 	@Inject
-	protected ISqlDataflow sqlDataflow;
+	protected SqlDataflow sqlDataflow;
 
 	/**
 	 * Override this method to supply your dataflow schema.

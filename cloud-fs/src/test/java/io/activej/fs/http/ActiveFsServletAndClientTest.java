@@ -7,8 +7,8 @@ import io.activej.common.exception.UnexpectedDataException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
+import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
-import io.activej.fs.IActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.fs.exception.FileNotFoundException;
 import io.activej.fs.exception.ForbiddenPathException;
@@ -55,7 +55,7 @@ public final class ActiveFsServletAndClientTest {
 
 	private Path storage;
 
-	private IActiveFs fs;
+	private ActiveFs fs;
 
 	@Before
 	public void setUp() throws Exception {

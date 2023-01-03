@@ -23,7 +23,7 @@ import static java.util.stream.Collectors.joining;
 import static org.junit.Assert.*;
 
 @Ignore
-public final class AsyncDnsClientTest {
+public final class ReactiveDnsClientTest {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
@@ -42,7 +42,7 @@ public final class AsyncDnsClientTest {
 	@Before
 	public void setUp() {
 		NioReactor reactor = Reactor.getCurrentReactor();
-		cachedDnsClient = CachedDnsClient.create(reactor, DnsClient.create(reactor).withDnsServerAddress(LOCAL_DNS));
+		cachedDnsClient = CachedDnsClient.create(reactor, ReactiveDnsClient.create(reactor).withDnsServerAddress(LOCAL_DNS));
 	}
 
 	@Test
@@ -71,7 +71,7 @@ public final class AsyncDnsClientTest {
 
 	@Test
 	public void testDnsClient() {
-		IDnsClient dnsClient = DnsClient.create(Reactor.getCurrentReactor());
+		DnsClient dnsClient = ReactiveDnsClient.create(Reactor.getCurrentReactor());
 
 		List<DnsResponse> list = await(Promises.toList(Stream.of("www.google.com", "www.github.com", "www.kpi.ua")
 				.map(dnsClient::resolve4)));
@@ -81,7 +81,7 @@ public final class AsyncDnsClientTest {
 
 	@Test
 	public void testDnsClientTimeout() {
-		DnsClient dnsClient = DnsClient.create(Reactor.getCurrentReactor())
+		ReactiveDnsClient dnsClient = ReactiveDnsClient.create(Reactor.getCurrentReactor())
 				.withTimeout(Duration.ofMillis(20))
 				.withDnsServerAddress(UNREACHABLE_DNS);
 
@@ -91,7 +91,7 @@ public final class AsyncDnsClientTest {
 
 	@Test
 	public void testDnsNameError() {
-		IDnsClient dnsClient = DnsClient.create(Reactor.getCurrentReactor());
+		DnsClient dnsClient = ReactiveDnsClient.create(Reactor.getCurrentReactor());
 
 		DnsQueryException e = awaitException(dnsClient.resolve4("example.ensure-such-top-domain-it-will-never-exist"));
 		assertEquals(NAME_ERROR, e.getResult().getErrorCode());
@@ -99,7 +99,7 @@ public final class AsyncDnsClientTest {
 
 	@Test
 	public void testDnsLabelSize() {
-		IDnsClient dnsClient = DnsClient.create(Reactor.getCurrentReactor());
+		DnsClient dnsClient = ReactiveDnsClient.create(Reactor.getCurrentReactor());
 
 		String domainName = "example.huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label.com";
 		IllegalArgumentException e = awaitException(dnsClient.resolve4(domainName));

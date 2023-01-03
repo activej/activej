@@ -1,7 +1,7 @@
 package io.activej.crdt.storage.cluster;
 
 import io.activej.async.function.AsyncSupplier;
-import io.activej.crdt.storage.cluster.IDiscoveryService.PartitionScheme;
+import io.activej.crdt.storage.cluster.DiscoveryService.PartitionScheme;
 import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -302,7 +302,7 @@ public class FileDiscoveryServiceTest {
 		), group1.getPartitionIds());
 	}
 
-	private class NotifyingDiscoveryService implements IDiscoveryService<PartitionId> {
+	private class NotifyingDiscoveryService implements DiscoveryService<PartitionId> {
 		private SettablePromise<Void> onChangePromise;
 
 		@Override

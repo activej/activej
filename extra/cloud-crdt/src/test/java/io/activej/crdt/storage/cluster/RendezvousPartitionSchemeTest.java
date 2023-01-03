@@ -1,6 +1,6 @@
 package io.activej.crdt.storage.cluster;
 
-import io.activej.crdt.storage.cluster.IDiscoveryService.PartitionScheme;
+import io.activej.crdt.storage.cluster.DiscoveryService.PartitionScheme;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;

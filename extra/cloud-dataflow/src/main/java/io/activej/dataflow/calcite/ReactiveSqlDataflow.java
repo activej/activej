@@ -1,7 +1,7 @@
 package io.activej.dataflow.calcite;
 
 import io.activej.dataflow.DataflowClient;
-import io.activej.dataflow.ISqlDataflow;
+import io.activej.dataflow.SqlDataflow;
 import io.activej.dataflow.calcite.RelToDatasetConverter.ConversionResult;
 import io.activej.dataflow.calcite.optimizer.FilterScanTableRule;
 import io.activej.dataflow.calcite.optimizer.SortScanTableRule;
@@ -45,7 +45,7 @@ import java.util.List;
 
 import static io.activej.common.Checks.checkNotNull;
 
-public final class SqlDataflow extends AbstractNioReactive implements ISqlDataflow {
+public final class ReactiveSqlDataflow extends AbstractNioReactive implements SqlDataflow {
 	private final DataflowClient client;
 	private final List<Partition> partitions;
 
@@ -57,7 +57,7 @@ public final class SqlDataflow extends AbstractNioReactive implements ISqlDatafl
 
 	private RelTraitSet traits = RelTraitSet.createEmpty();
 
-	private SqlDataflow(NioReactor reactor, DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
+	private ReactiveSqlDataflow(NioReactor reactor, DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
 			SqlToRelConverter converter, RelOptPlanner planner, RelToDatasetConverter relToDatasetConverter) {
 		super(reactor);
 		this.client = client;
@@ -69,12 +69,12 @@ public final class SqlDataflow extends AbstractNioReactive implements ISqlDatafl
 		this.relToDatasetConverter = relToDatasetConverter;
 	}
 
-	public static SqlDataflow create(NioReactor reactor, DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
+	public static ReactiveSqlDataflow create(NioReactor reactor, DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
 			SqlToRelConverter converter, RelOptPlanner planner, RelToDatasetConverter relToDatasetConverter) {
-		return new SqlDataflow(reactor, client, partitions, parserConfig, converter, planner, relToDatasetConverter);
+		return new ReactiveSqlDataflow(reactor, client, partitions, parserConfig, converter, planner, relToDatasetConverter);
 	}
 
-	public SqlDataflow withTraits(RelTraitSet traits) {
+	public ReactiveSqlDataflow withTraits(RelTraitSet traits) {
 		this.traits = traits;
 		return this;
 	}

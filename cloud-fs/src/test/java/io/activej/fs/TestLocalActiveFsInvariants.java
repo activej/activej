@@ -66,8 +66,8 @@ public final class TestLocalActiveFsInvariants {
 	private Path firstPath;
 	private Path secondPath;
 
-	private IActiveFs first;
-	private IActiveFs second;
+	private ActiveFs first;
+	private ActiveFs second;
 
 	@Before
 	public void setUp() throws Exception {
@@ -889,10 +889,10 @@ public final class TestLocalActiveFsInvariants {
 	// endregion
 
 	// Default methods are not overridden
-	private static class DefaultActiveFs implements IActiveFs {
-		private final IActiveFs peer;
+	private static class DefaultActiveFs implements ActiveFs {
+		private final ActiveFs peer;
 
-		private DefaultActiveFs(IActiveFs peer) {
+		private DefaultActiveFs(ActiveFs peer) {
 			this.peer = peer;
 		}
 
@@ -927,7 +927,7 @@ public final class TestLocalActiveFsInvariants {
 		}
 	}
 
-	private void both(Consumer<IActiveFs> fsConsumer) {
+	private void both(Consumer<ActiveFs> fsConsumer) {
 		fsConsumer.accept(first);
 		fsConsumer.accept(second);
 	}

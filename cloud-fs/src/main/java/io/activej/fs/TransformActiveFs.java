@@ -42,15 +42,15 @@ import static java.util.stream.Collectors.toSet;
 /**
  * A file system that can be configured to transform paths and filename via mapping functions.
  * <p>
- * Inherits all the limitations of parent {@link IActiveFs}
+ * Inherits all the limitations of parent {@link ActiveFs}
  */
-final class TransformActiveFs implements IActiveFs {
-	private final IActiveFs parent;
+final class TransformActiveFs implements ActiveFs {
+	private final ActiveFs parent;
 	private final Function<String, Optional<String>> into;
 	private final Function<String, Optional<String>> from;
 	private final Function<String, Optional<String>> globInto;
 
-	TransformActiveFs(IActiveFs parent, Function<String, Optional<String>> into, Function<String, Optional<String>> from, Function<String, Optional<String>> globInto) {
+	TransformActiveFs(ActiveFs parent, Function<String, Optional<String>> into, Function<String, Optional<String>> from, Function<String, Optional<String>> globInto) {
 		this.parent = parent;
 		this.into = into;
 		this.from = from;

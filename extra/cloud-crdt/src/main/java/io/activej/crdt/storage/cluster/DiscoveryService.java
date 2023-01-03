@@ -17,7 +17,7 @@
 package io.activej.crdt.storage.cluster;
 
 import io.activej.async.function.AsyncSupplier;
-import io.activej.crdt.storage.ICrdtStorage;
+import io.activej.crdt.storage.CrdtStorage;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.rpc.client.sender.RpcStrategy;
@@ -28,14 +28,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
-public interface IDiscoveryService<P> {
+public interface DiscoveryService<P> {
 
 	AsyncSupplier<PartitionScheme<P>> discover();
 
 	interface PartitionScheme<P> {
 		Set<P> getPartitions();
 
-		ICrdtStorage<?, ?> provideCrdtConnection(P partition);
+		CrdtStorage<?, ?> provideCrdtConnection(P partition);
 
 		RpcStrategy provideRpcConnection(P partition);
 
@@ -46,7 +46,7 @@ public interface IDiscoveryService<P> {
 		boolean isReadValid(Collection<P> alive);
 	}
 
-	static <P> IDiscoveryService<P> of(PartitionScheme<P> partitionScheme) {
+	static <P> DiscoveryService<P> of(PartitionScheme<P> partitionScheme) {
 		return () -> new AsyncSupplier<>() {
 			int i = 0;
 

@@ -29,9 +29,9 @@ import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.cube.attributes.IAttributeResolver;
-import io.activej.cube.attributes.IAttributeResolver.AttributesFunction;
-import io.activej.cube.attributes.IAttributeResolver.KeyFunction;
+import io.activej.cube.attributes.AttributeResolver;
+import io.activej.cube.attributes.AttributeResolver.AttributesFunction;
+import io.activej.cube.attributes.AttributeResolver.KeyFunction;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.promise.Promise;
@@ -48,7 +48,7 @@ import static java.util.stream.Collectors.toSet;
 public final class Utils {
 
 	public static <R> Class<R> createResultClass(Collection<String> attributes, Collection<String> measures,
-			Cube cube, DefiningClassLoader classLoader) {
+			ReactiveCube cube, DefiningClassLoader classLoader) {
 		return classLoader.ensureClass(
 				ClassKey.of(Object.class, new HashSet<>(attributes), new HashSet<>(measures)),
 				() -> {
@@ -78,7 +78,7 @@ public final class Utils {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <R> Promise<Void> resolveAttributes(List<R> results, IAttributeResolver attributeResolver,
+	public static <R> Promise<Void> resolveAttributes(List<R> results, AttributeResolver attributeResolver,
 			List<String> recordDimensions, List<String> recordAttributes,
 			Map<String, Object> fullySpecifiedDimensions,
 			Class<R> recordClass, DefiningClassLoader classLoader) {

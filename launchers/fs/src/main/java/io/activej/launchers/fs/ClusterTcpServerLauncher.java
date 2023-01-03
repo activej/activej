@@ -16,10 +16,10 @@
 
 package io.activej.launchers.fs;
 
-import io.activej.async.service.ReactiveTaskScheduler;
+import io.activej.async.service.TaskScheduler;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
-import io.activej.fs.IActiveFs;
+import io.activej.fs.ActiveFs;
 import io.activej.fs.cluster.ClusterRepartitionController;
 import io.activej.fs.cluster.DiscoveryService;
 import io.activej.fs.cluster.FsPartitions;
@@ -49,18 +49,18 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 	@Provides
 	@Eager
 	@Named("repartition")
-	ReactiveTaskScheduler repartitionScheduler(
+	TaskScheduler repartitionScheduler(
 			ClusterRepartitionController controller,
 			Config config) {
-		return ReactiveTaskScheduler.create(controller.getReactor(), controller::repartition)
+		return TaskScheduler.create(controller.getReactor(), controller::repartition)
 				.withInitializer(ofReactorTaskScheduler(config.getChild("activefs.repartition")));
 	}
 
 	@Provides
 	@Eager
 	@Named("clusterDeadCheck")
-	ReactiveTaskScheduler deadCheckScheduler(Config config, FsPartitions partitions) {
-		return ReactiveTaskScheduler.create(partitions.getReactor(), partitions::checkDeadPartitions)
+	TaskScheduler deadCheckScheduler(Config config, FsPartitions partitions) {
+		return TaskScheduler.create(partitions.getReactor(), partitions::checkDeadPartitions)
 				.withInitializer(ofReactorTaskScheduler(config.getChild("activefs.repartition.deadCheck")));
 	}
 
@@ -77,7 +77,7 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 
 	@Provides
 	DiscoveryService discoveryService(NioReactor reactor,
-			IActiveFs activeFs,
+			ActiveFs activeFs,
 			Config config) throws MalformedDataException {
 		return Initializers.constantDiscoveryService(reactor, activeFs, config);
 	}
@@ -93,7 +93,7 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 	protected Module getOverrideModule() {
 		return new AbstractModule() {
 			@Provides
-			AsyncServlet guiServlet(IActiveFs fs, ClusterRepartitionController controller) {
+			AsyncServlet guiServlet(ActiveFs fs, ClusterRepartitionController controller) {
 				return ActiveFsGuiServlet.create(fs, "Cluster server [" + controller.getLocalPartitionId() + ']');
 			}
 		};

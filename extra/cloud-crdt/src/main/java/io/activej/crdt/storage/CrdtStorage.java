@@ -29,7 +29,7 @@ import io.activej.promise.Promise;
  * @param <K> type of crdt keys
  * @param <S> type of crdt states
  */
-public interface ICrdtStorage<K extends Comparable<K>, S> {
+public interface CrdtStorage<K extends Comparable<K>, S> {
 
 	/**
 	 * Returns a promise of a stream consumer of key-state pairs to be added to the CRDT storage.

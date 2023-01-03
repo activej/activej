@@ -36,7 +36,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.regex.PatternSyntaxException;
 
-import static io.activej.fs.IActiveFs.SEPARATOR;
+import static io.activej.fs.ActiveFs.SEPARATOR;
 import static io.activej.fs.util.RemoteFsUtils.isWildcard;
 import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.FileVisitResult.SKIP_SUBTREE;

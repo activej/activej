@@ -31,14 +31,14 @@ import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingCodec;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
+import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
-import io.activej.fs.IActiveFs;
 import io.activej.fs.exception.FsException;
 import io.activej.fs.tcp.messaging.FsRequest;
 import io.activej.fs.tcp.messaging.FsResponse;
 import io.activej.fs.util.RemoteFsUtils;
 import io.activej.jmx.api.attribute.JmxAttribute;
-import io.activej.net.socket.tcp.TcpSocket;
+import io.activej.net.socket.tcp.ReactiveTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.AbstractNioReactive;
@@ -68,10 +68,10 @@ import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
  * <p>
  * <b>This client should only be used on private networks.</b>
  * <p>
- * Inherits all the limitations of {@link IActiveFs} implementation located on {@link ActiveFsServer}.
+ * Inherits all the limitations of {@link ActiveFs} implementation located on {@link ActiveFsServer}.
  */
 public final class RemoteActiveFs extends AbstractNioReactive
-		implements IActiveFs, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<RemoteActiveFs> {
+		implements ActiveFs, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<RemoteActiveFs> {
 	private static final Logger logger = LoggerFactory.getLogger(RemoteActiveFs.class);
 
 	public static final Duration DEFAULT_CONNECTION_TIMEOUT = ApplicationSettings.getDuration(RemoteActiveFs.class, "connectTimeout", Duration.ZERO);
@@ -326,7 +326,7 @@ public final class RemoteActiveFs extends AbstractNioReactive
 	}
 
 	private Promise<MessagingWithBinaryStreaming<FsResponse, FsRequest>> doConnect(InetSocketAddress address, SocketSettings socketSettings) {
-		return TcpSocket.connect(reactor, address, connectionTimeout, socketSettings)
+		return ReactiveTcpSocket.connect(reactor, address, connectionTimeout, socketSettings)
 				.map(socket -> MessagingWithBinaryStreaming.create(socket, SERIALIZER))
 				.whenResult(() -> logger.trace("connected to [{}]: {}", address, this))
 				.whenException(e -> logger.warn("failed connecting to [{}] : {}", address, this, e))

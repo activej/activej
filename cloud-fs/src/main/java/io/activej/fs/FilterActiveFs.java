@@ -42,14 +42,14 @@ import static java.util.stream.Collectors.*;
 /**
  * A file system that can be configured to forbid certain paths and filenames.
  * <p>
- * Inherits all the limitations of parent {@link IActiveFs}
+ * Inherits all the limitations of parent {@link ActiveFs}
  */
-final class FilterActiveFs implements IActiveFs {
+final class FilterActiveFs implements ActiveFs {
 
-	private final IActiveFs parent;
+	private final ActiveFs parent;
 	private final Predicate<String> predicate;
 
-	FilterActiveFs(IActiveFs parent, Predicate<String> predicate) {
+	FilterActiveFs(ActiveFs parent, Predicate<String> predicate) {
 		this.parent = parent;
 		this.predicate = predicate;
 	}

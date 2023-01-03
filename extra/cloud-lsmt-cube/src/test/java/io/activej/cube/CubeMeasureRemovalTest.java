@@ -17,8 +17,8 @@ import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.LogOTState;
 import io.activej.fs.LocalActiveFs;
-import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
+import io.activej.multilog.ReactiveMultilog;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.uplink.OTUplink;
 import io.activej.serializer.BinarySerializer;
@@ -36,7 +36,7 @@ import java.util.stream.Stream;
 import static io.activej.aggregation.AggregationPredicates.alwaysTrue;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
-import static io.activej.cube.Cube.AggregationConfig.id;
+import static io.activej.cube.ReactiveCube.AggregationConfig.id;
 import static io.activej.cube.TestUtils.runProcessLogs;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
@@ -49,8 +49,8 @@ import static org.junit.Assert.*;
 public class CubeMeasureRemovalTest extends CubeTestBase {
 	private static final FrameFormat FRAME_FORMAT = LZ4FrameFormat.create();
 
-	private IAggregationChunkStorage<Long> aggregationChunkStorage;
-	private IMultilog<LogItem> multilog;
+	private AggregationChunkStorage<Long> aggregationChunkStorage;
+	private Multilog<LogItem> multilog;
 	private Path aggregationsDir;
 	private Path logsDir;
 
@@ -61,11 +61,11 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 		LocalActiveFs fs = LocalActiveFs.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
-		aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, fs);
+		aggregationChunkStorage = ReactiveAggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, fs);
 		BinarySerializer<LogItem> serializer = SerializerBuilder.create(CLASS_LOADER).build(LogItem.class);
 		LocalActiveFs localFs = LocalActiveFs.create(reactor, EXECUTOR, logsDir);
 		await(localFs.start());
-		multilog = Multilog.create(reactor,
+		multilog = ReactiveMultilog.create(reactor,
 				localFs,
 				LZ4FrameFormat.create(),
 				serializer,
@@ -76,8 +76,8 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 	public void test() {
 		LocalActiveFs fs = LocalActiveFs.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
-		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, fs);
-		Cube cube = Cube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
+		AggregationChunkStorage<Long> aggregationChunkStorage = ReactiveAggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, fs);
+		ReactiveCube cube = ReactiveCube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())
 				.withDimension("campaign", ofInt())
@@ -102,7 +102,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 		LocalActiveFs localFs = LocalActiveFs.create(reactor, EXECUTOR, logsDir);
 		await(localFs.start());
-		IMultilog<LogItem> multilog = Multilog.create(reactor,
+		Multilog<LogItem> multilog = ReactiveMultilog.create(reactor,
 				localFs,
 				LZ4FrameFormat.create(),
 				SerializerBuilder.create(CLASS_LOADER).build(LogItem.class),
@@ -130,7 +130,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		assertTrue(chunks.get(0).getMeasures().contains("revenue"));
 
 		// Initialize cube with new structure (removed measure)
-		cube = Cube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
+		cube = ReactiveCube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())
 				.withDimension("campaign", ofInt())
@@ -195,7 +195,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		assertTrue(map.isEmpty());
 
 		// Consolidate
-		CubeDiff consolidatingCubeDiff = await(cube.consolidate(Aggregation::consolidateHotSegment));
+		CubeDiff consolidatingCubeDiff = await(cube.consolidate(ReactiveAggregation::consolidateHotSegment));
 		await(aggregationChunkStorage.finish(consolidatingCubeDiff.addedChunks().map(id -> (long) id).collect(toSet())));
 		assertFalse(consolidatingCubeDiff.isEmpty());
 
@@ -227,7 +227,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 	@Test
 	public void testNewUnknownMeasureInAggregationDiffOnDeserialization() {
 		{
-			Cube cube1 = Cube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
+			ReactiveCube cube1 = ReactiveCube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 					.withDimension("date", ofLocalDate())
 					.withMeasure("impressions", sum(ofLong()))
 					.withMeasure("clicks", sum(ofLong()))
@@ -254,7 +254,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		}
 
 		// Initialize cube with new structure (remove "clicks" from cube configuration)
-		Cube cube2 = Cube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
+		ReactiveCube cube2 = ReactiveCube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withMeasure("impressions", sum(ofLong()))
 				.withAggregation(id("date")
@@ -280,7 +280,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 	@Test
 	public void testUnknownAggregation() {
 		{
-			Cube cube1 = Cube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
+			ReactiveCube cube1 = ReactiveCube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 					.withDimension("date", ofLocalDate())
 					.withMeasure("impressions", sum(ofLong()))
 					.withMeasure("clicks", sum(ofLong()))
@@ -313,7 +313,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		}
 
 		// Initialize cube with new structure (remove "impressions" aggregation from cube configuration)
-		Cube cube2 = Cube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
+		ReactiveCube cube2 = ReactiveCube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withMeasure("impressions", sum(ofLong()))
 				.withMeasure("clicks", sum(ofLong()))

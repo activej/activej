@@ -1,15 +1,15 @@
 package adder;
 
-import io.activej.async.service.ReactiveTaskScheduler;
+import io.activej.async.service.TaskScheduler;
 import io.activej.config.Config;
 import io.activej.crdt.function.CrdtFunction;
-import io.activej.crdt.storage.ICrdtStorage;
+import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.storage.local.CrdtStorageFs;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.crdt.wal.FileWriteAheadLog;
-import io.activej.crdt.wal.IWriteAheadLog;
 import io.activej.crdt.wal.WalUploader;
-import io.activej.fs.IActiveFs;
+import io.activej.crdt.wal.WriteAheadLog;
+import io.activej.fs.ActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Eager;
@@ -24,7 +24,7 @@ import java.time.Duration;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static io.activej.async.service.ReactiveTaskScheduler.Schedule.ofInterval;
+import static io.activej.async.service.TaskScheduler.Schedule.ofInterval;
 import static io.activej.config.converter.ConfigConverters.ofPath;
 import static io.activej.config.converter.ConfigConverters.ofReactorTaskSchedule;
 
@@ -32,12 +32,12 @@ public final class PersistentStorageModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		bind(new Key<ICrdtStorage<Long, DetailedSumsCrdtState>>(Local.class) {})
+		bind(new Key<CrdtStorage<Long, DetailedSumsCrdtState>>(Local.class) {})
 				.to(new Key<CrdtStorageFs<Long, DetailedSumsCrdtState>>() {});
 	}
 
 	@Provides
-	IWriteAheadLog<Long, DetailedSumsCrdtState> writeAheadLog(
+	WriteAheadLog<Long, DetailedSumsCrdtState> writeAheadLog(
 			Reactor reactor,
 			Executor executor,
 			CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer,
@@ -54,7 +54,7 @@ public final class PersistentStorageModule extends AbstractModule {
 			Executor executor,
 			CrdtFunction<DetailedSumsCrdtState> function,
 			CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer,
-			ICrdtStorage<Long, DetailedSumsCrdtState> storage,
+			CrdtStorage<Long, DetailedSumsCrdtState> storage,
 			Config config
 	) {
 		Path walPath = config.get(ofPath(), "wal-storage");
@@ -64,7 +64,7 @@ public final class PersistentStorageModule extends AbstractModule {
 	@Provides
 	CrdtStorageFs<Long, DetailedSumsCrdtState> storage(
 			Reactor reactor,
-			IActiveFs fs,
+			ActiveFs fs,
 			CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer,
 			CrdtFunction<DetailedSumsCrdtState> function
 	) {
@@ -72,7 +72,7 @@ public final class PersistentStorageModule extends AbstractModule {
 	}
 
 	@Provides
-	IActiveFs activeFs(Reactor reactor, Executor executor, Config config) {
+	ActiveFs activeFs(Reactor reactor, Executor executor, Config config) {
 		return LocalActiveFs.create(reactor, executor, config.get(ofPath(), "storage"));
 	}
 
@@ -84,8 +84,8 @@ public final class PersistentStorageModule extends AbstractModule {
 	@Provides
 	@Named("consolidate")
 	@Eager
-	ReactiveTaskScheduler consolidateScheduler(Reactor reactor, CrdtStorageFs<Long, DetailedSumsCrdtState> storageFs, Config config) {
-		return ReactiveTaskScheduler.create(reactor, storageFs::consolidate)
+	TaskScheduler consolidateScheduler(Reactor reactor, CrdtStorageFs<Long, DetailedSumsCrdtState> storageFs, Config config) {
+		return TaskScheduler.create(reactor, storageFs::consolidate)
 				.withSchedule(config.get(ofReactorTaskSchedule(), "consolidate.schedule", ofInterval(Duration.ofMinutes(3))))
 				.withInitialDelay(Duration.ofSeconds(10));
 	}

@@ -1,7 +1,7 @@
 package io.activej.http;
 
 import io.activej.dns.CachedDnsClient;
-import io.activej.dns.DnsClient;
+import io.activej.dns.ReactiveDnsClient;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.reactor.net.DatagramSocketSettings;
@@ -61,8 +61,8 @@ public final class SimpleProxyServerTest {
 
 		Eventloop eventloop2 = Eventloop.create().withFatalErrorHandler(rethrow()).withCurrentThread();
 
-		HttpClient httpClient = HttpClient.create(eventloop2)
-				.withDnsClient(CachedDnsClient.create(eventloop2, DnsClient.create(eventloop2)
+		ReactiveHttpClient httpClient = ReactiveHttpClient.create(eventloop2)
+				.withDnsClient(CachedDnsClient.create(eventloop2, ReactiveDnsClient.create(eventloop2)
 						.withDatagramSocketSetting(DatagramSocketSettings.create())
 						.withDnsServerAddress(HttpUtils.inetAddress("8.8.8.8"))));
 

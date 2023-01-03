@@ -34,7 +34,7 @@ import static io.activej.test.TestUtils.assertCompleteFn;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.*;
 
-public final class RpcClientTest {
+public final class ReactiveRpcClientTest {
 	private static final int NUMBER_OF_WORKING_SERVERS = 6;
 	private static final int NUMBER_OF_FAILING_SERVERS = 4;
 
@@ -47,7 +47,7 @@ public final class RpcClientTest {
 
 	private Map<Integer, RpcServer> servers;
 	private Eventloop clientEventloop;
-	private RpcClient rpcClient;
+	private ReactiveRpcClient rpcClient;
 
 	@Before
 	public void setUp() throws Exception {
@@ -418,7 +418,7 @@ public final class RpcClientTest {
 	}
 
 	private void initRpcClient(RpcStrategy strategy) {
-		this.rpcClient = RpcClient.create(clientEventloop)
+		this.rpcClient = ReactiveRpcClient.create(clientEventloop)
 				.withMessageTypes(Request.class, Integer.class)
 				.withStrategy(strategy);
 		await(rpcClient::start);

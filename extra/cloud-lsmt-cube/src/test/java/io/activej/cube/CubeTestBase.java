@@ -92,7 +92,7 @@ public abstract class CubeTestBase {
 						"OT graph",
 						new UplinkFactory<OTUplinkImpl<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>>>() {
 							@Override
-							public OTUplinkImpl<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> createUninitialized(Cube cube) {
+							public OTUplinkImpl<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> createUninitialized(ReactiveCube cube) {
 								Reactor reactor = Reactor.getCurrentReactor();
 								OTRepositoryMySql<LogDiff<CubeDiff>> repository = OTRepositoryMySql.create(reactor, EXECUTOR, DATA_SOURCE, AsyncSupplier.of(new RefLong(0)::inc),
 										LOG_OT, LogDiffCodec.create(CubeDiffCodec.create(cube)));
@@ -110,7 +110,7 @@ public abstract class CubeTestBase {
 						"Linear graph",
 						new UplinkFactory<CubeUplinkMySql>() {
 							@Override
-							public CubeUplinkMySql createUninitialized(Cube cube) {
+							public CubeUplinkMySql createUninitialized(ReactiveCube cube) {
 								return CubeUplinkMySql.create(EXECUTOR, DATA_SOURCE, PrimaryKeyCodecs.ofCube(cube))
 										.withMeasuresValidator(MeasuresValidator.ofCube(cube));
 							}
@@ -125,13 +125,13 @@ public abstract class CubeTestBase {
 	}
 
 	protected interface UplinkFactory<U extends OTUplink<Long, LogDiff<CubeDiff>, ?>> {
-		default U create(Cube cube) {
+		default U create(ReactiveCube cube) {
 			U uplink = createUninitialized(cube);
 			initialize(uplink);
 			return uplink;
 		}
 
-		U createUninitialized(Cube cube);
+		U createUninitialized(ReactiveCube cube);
 
 		void initialize(U uplink);
 	}

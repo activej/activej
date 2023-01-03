@@ -12,7 +12,7 @@ import org.junit.Test;
 import static io.activej.promise.TestUtils.await;
 import static org.junit.Assert.assertFalse;
 
-public final class ReactiveTaskSchedulerTest {
+public final class TaskSchedulerTest {
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -22,8 +22,8 @@ public final class ReactiveTaskSchedulerTest {
 		Eventloop eventloop = Reactor.getCurrentReactor();
 		SettablePromise<Void> settablePromise = new SettablePromise<>();
 
-		ReactiveTaskScheduler scheduler = ReactiveTaskScheduler.create(eventloop, () -> settablePromise)
-				.withSchedule(ReactiveTaskScheduler.Schedule.immediate());
+		TaskScheduler scheduler = TaskScheduler.create(eventloop, () -> settablePromise)
+				.withSchedule(TaskScheduler.Schedule.immediate());
 		scheduler.start();
 
 		await(Promise.complete().async()
@@ -42,9 +42,9 @@ public final class ReactiveTaskSchedulerTest {
 		Eventloop eventloop = Reactor.getCurrentReactor();
 		SettablePromise<Void> settablePromise = new SettablePromise<>();
 
-		ReactiveTaskScheduler scheduler = ReactiveTaskScheduler.create(eventloop, () -> Promise.ofException(new Exception()))
+		TaskScheduler scheduler = TaskScheduler.create(eventloop, () -> Promise.ofException(new Exception()))
 				.withRetryPolicy(RetryPolicy.immediateRetry())
-				.withSchedule(ReactiveTaskScheduler.Schedule.immediate());
+				.withSchedule(TaskScheduler.Schedule.immediate());
 		scheduler.start();
 
 		await(Promise.complete().async()

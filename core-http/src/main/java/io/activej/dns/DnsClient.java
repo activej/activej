@@ -16,302 +16,67 @@
 
 package io.activej.dns;
 
-import io.activej.async.exception.AsyncCloseException;
-import io.activej.async.exception.AsyncTimeoutException;
-import io.activej.bytebuf.ByteBuf;
-import io.activej.common.Checks;
-import io.activej.common.exception.MalformedDataException;
-import io.activej.common.initializer.WithInitializer;
-import io.activej.common.inspector.AbstractInspector;
-import io.activej.common.inspector.BaseInspector;
 import io.activej.dns.protocol.*;
-import io.activej.jmx.api.attribute.JmxAttribute;
-import io.activej.jmx.stats.EventStats;
-import io.activej.net.socket.udp.IUdpSocket;
-import io.activej.net.socket.udp.UdpPacket;
-import io.activej.net.socket.udp.UdpSocket;
+import io.activej.http.HttpUtils;
 import io.activej.promise.Promise;
-import io.activej.promise.SettablePromise;
-import io.activej.reactor.AbstractNioReactive;
-import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
-import io.activej.reactor.net.DatagramSocketSettings;
-import io.activej.reactor.nio.NioReactor;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.nio.channels.DatagramChannel;
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-
-import static io.activej.common.Checks.checkState;
-import static io.activej.promise.Promises.timeout;
 
 /**
- * Implementation of {@link IDnsClient} that asynchronously
- * connects to some <i>real</i> DNS server and gets the response from it.
+ * Components implementing this interface can resolve given domain names into
+ * their respective IP addresses.
+ * If host is not recognized or connection to DNS server timed out it will
+ * fail with a respective {@link DnsQueryException}.
  */
-public final class DnsClient extends AbstractNioReactive
-		implements IDnsClient, ReactiveJmxBeanWithStats, WithInitializer<DnsClient> {
-	private final Logger logger = LoggerFactory.getLogger(DnsClient.class);
-	private static final boolean CHECK = Checks.isEnabled(DnsClient.class);
-
-	public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(3);
-	private static final int DNS_SERVER_PORT = 53;
-	public static final InetSocketAddress GOOGLE_PUBLIC_DNS = new InetSocketAddress("8.8.8.8", DNS_SERVER_PORT);
-	public static final InetSocketAddress LOCAL_DNS = new InetSocketAddress("192.168.0.1", DNS_SERVER_PORT);
-
-	private final Map<DnsTransaction, SettablePromise<DnsResponse>> transactions = new HashMap<>();
-
-	private DatagramSocketSettings datagramSocketSettings = DatagramSocketSettings.create();
-	private InetSocketAddress dnsServerAddress = GOOGLE_PUBLIC_DNS;
-	private Duration timeout = DEFAULT_TIMEOUT;
-
-	private @Nullable IUdpSocket socket;
-
-	private @Nullable UdpSocket.Inspector socketInspector;
-	private @Nullable Inspector inspector;
-
-	// region creators
-	private DnsClient(NioReactor reactor) {
-		super(reactor);
+public interface DnsClient {
+	/**
+	 * Searches for an IPv4 for the given domain
+	 *
+	 * @param domainName domain name for to get IP for
+	 */
+	default Promise<DnsResponse> resolve4(String domainName) {
+		return resolve(DnsQuery.ipv4(domainName));
 	}
 
-	public static DnsClient create(NioReactor reactor) {
-		return new DnsClient(reactor);
+	/**
+	 * Searches for an IPv6 for the given domain
+	 *
+	 * @param domainName domain name for to get IP for
+	 */
+	default Promise<DnsResponse> resolve6(String domainName) {
+		return resolve(DnsQuery.ipv6(domainName));
 	}
 
-	public DnsClient withDatagramSocketSetting(DatagramSocketSettings setting) {
-		this.datagramSocketSettings = setting;
-		return this;
-	}
+	/**
+	 * Searches for an IP for the given query
+	 *
+	 * @param query domain and IP version
+	 */
+	Promise<DnsResponse> resolve(DnsQuery query);
 
-	public DnsClient withTimeout(Duration timeout) {
-		this.timeout = timeout;
-		return this;
-	}
+	/**
+	 * Closes the underlying UDP socket if it's open.
+	 * Note that on next {@link #resolve} call it will be created again.
+	 * Any pending requests will be completed with timeout exception.
+	 */
+	void close();
 
-	public DnsClient withDnsServerAddress(InetSocketAddress address) {
-		this.dnsServerAddress = address;
-		return this;
-	}
-
-	public DnsClient withDnsServerAddress(InetAddress address) {
-		this.dnsServerAddress = new InetSocketAddress(address, DNS_SERVER_PORT);
-		return this;
-	}
-
-	public DnsClient withInspector(Inspector inspector) {
-		this.inspector = inspector;
-		return this;
-	}
-
-	public DnsClient setSocketInspector(UdpSocket.Inspector socketInspector) {
-		this.socketInspector = socketInspector;
-		return this;
-	}
-
-	// endregion
-
-	@Override
-	public void close() {
-		if (CHECK) checkState(inReactorThread());
-		if (socket == null) {
-			return;
+	/**
+	 * Checks if query already contains an IP and returns fake {@link DnsResponse} for it and <code>null</code> otherwise.
+	 *
+	 * @param query query which might contain an IP
+	 * @return fake query response if is does and <code>null</code> if it does not
+	 */
+	static @Nullable DnsResponse resolveFromQuery(DnsQuery query) {
+		if ("localhost".equals(query.getDomainName())) {
+			InetAddress[] ips = {InetAddress.getLoopbackAddress()};
+			return DnsResponse.of(DnsTransaction.of((short) 0, query), DnsResourceRecord.of(ips, 0));
 		}
-		socket.close();
-		socket = null;
-		AsyncCloseException asyncCloseException = new AsyncCloseException();
-		transactions.values().forEach(s -> s.setException(asyncCloseException));
-	}
-
-	private Promise<IUdpSocket> getSocket() {
-		IUdpSocket socket = this.socket;
-		if (socket != null) {
-			return Promise.of(socket);
+		if (HttpUtils.isInetAddress(query.getDomainName())) {
+			InetAddress[] ips = {HttpUtils.inetAddress(query.getDomainName())};
+			return DnsResponse.of(DnsTransaction.of((short) 0, query), DnsResourceRecord.of(ips, 0));
 		}
-		try {
-			logger.trace("Incoming query, opening UDP socket");
-			DatagramChannel channel = NioReactor.createDatagramChannel(datagramSocketSettings, null, dnsServerAddress);
-			return UdpSocket.connect(reactor, channel)
-					.map(s -> {
-						if (socketInspector != null) {
-							socketInspector.onCreate(s);
-							s.setInspector(socketInspector);
-						}
-						return this.socket = s;
-					});
-		} catch (IOException e) {
-			logger.error("UDP socket creation failed.", e);
-			return Promise.ofException(e);
-		}
-	}
-
-	@Override
-	public Promise<DnsResponse> resolve(DnsQuery query) {
-		if (CHECK) checkState(inReactorThread());
-		DnsResponse fromQuery = IDnsClient.resolveFromQuery(query);
-		if (fromQuery != null) {
-			logger.trace("{} already contained an IP address within itself", query);
-			return Promise.of(fromQuery);
-		}
-
-		int labelSize = 0;
-		String domainName = query.getDomainName();
-		for (int i = 0; i < domainName.length(); i++) {
-			if (domainName.charAt(i) == '.') {
-				labelSize = 0;
-			} else if (++labelSize > 63) {
-				// Domain Implementation and Specification - Size limits
-				// https://www.ietf.org/rfc/rfc1035.html#section-2.3.4
-				return Promise.ofException(new IllegalArgumentException("Label size cannot exceed 63 octets"));
-			}
-		}
-
-		// ignore the result because sooner or later it will be sent and just completed
-		// here we use that transactions map because it easily could go completely out of order, and we should be ok with that
-		return getSocket()
-				.then(socket -> {
-					logger.trace("Resolving {} with DNS server {}", query, dnsServerAddress);
-
-					DnsTransaction transaction = DnsTransaction.of(DnsProtocol.generateTransactionId(), query);
-					SettablePromise<DnsResponse> promise = new SettablePromise<>();
-
-					transactions.put(transaction, promise);
-
-					ByteBuf payload = DnsProtocol.createDnsQueryPayload(transaction);
-					if (inspector != null) {
-						inspector.onDnsQuery(query, payload);
-					}
-
-					// ignore the result because soon, or later it will be sent and just completed
-					socket.send(UdpPacket.of(payload, dnsServerAddress));
-
-					// here we use that transactions map because it easily could go completely out of order, and we should be ok with that
-					socket.receive()
-							.whenResult(packet -> {
-								try {
-									DnsResponse queryResult = DnsProtocol.readDnsResponse(packet.getBuf());
-									SettablePromise<DnsResponse> cb = transactions.remove(queryResult.getTransaction());
-									if (cb == null) {
-										logger.warn("Received a DNS response that had no listener (most likely because it timed out) : {}", queryResult);
-										return;
-									}
-									if (queryResult.isSuccessful()) {
-										cb.set(queryResult);
-									} else {
-										cb.setException(new DnsQueryException(queryResult));
-									}
-									closeIfDone();
-								} catch (MalformedDataException e) {
-									logger.warn("Received a UDP packet than cannot be decoded as a DNS server response.", e);
-								} finally {
-									packet.recycle();
-								}
-							});
-
-					return timeout(timeout, promise)
-							.then(
-									queryResult -> {
-										if (inspector != null) {
-											inspector.onDnsQueryResult(query, queryResult);
-										}
-										logger.trace("DNS query {} resolved as {}", query, queryResult.getRecord());
-										return Promise.of(queryResult);
-									},
-									e -> {
-										if (e instanceof AsyncTimeoutException) {
-											if (inspector != null) {
-												inspector.onDnsQueryExpiration(query);
-											}
-											logger.trace("{} timed out", query);
-											e = new DnsQueryException(DnsResponse.ofFailure(transaction, DnsProtocol.ResponseErrorCode.TIMED_OUT));
-											transactions.remove(transaction);
-											closeIfDone();
-										} else if (inspector != null) {
-											inspector.onDnsQueryError(query, e);
-										}
-										return Promise.ofException(e);
-									});
-				});
-	}
-
-	private void closeIfDone() {
-		if (!transactions.isEmpty()) {
-			return;
-		}
-		logger.trace("All queries are completed, closing UDP socket");
-		close(); // transactions are empty so no loops here
-	}
-
-	// region JMX
-	public interface Inspector extends BaseInspector<Inspector> {
-		void onDnsQuery(DnsQuery query, ByteBuf payload);
-
-		void onDnsQueryResult(DnsQuery query, DnsResponse result);
-
-		void onDnsQueryError(DnsQuery query, Exception e);
-
-		void onDnsQueryExpiration(DnsQuery query);
-	}
-
-	public static class JmxInspector extends AbstractInspector<Inspector> implements Inspector {
-		private static final Duration SMOOTHING_WINDOW = Duration.ofMinutes(1);
-
-		private final EventStats queries = EventStats.create(SMOOTHING_WINDOW);
-		private final EventStats failedQueries = EventStats.create(SMOOTHING_WINDOW);
-		private final EventStats expirations = EventStats.create(SMOOTHING_WINDOW);
-
-		@Override
-		public void onDnsQuery(DnsQuery query, ByteBuf payload) {
-			queries.recordEvent();
-		}
-
-		@Override
-		public void onDnsQueryResult(DnsQuery query, DnsResponse result) {
-			if (!result.isSuccessful()) {
-				failedQueries.recordEvent();
-			}
-		}
-
-		@Override
-		public void onDnsQueryError(DnsQuery query, Exception e) {
-			failedQueries.recordEvent();
-		}
-
-		@Override
-		public void onDnsQueryExpiration(DnsQuery query) {
-			expirations.recordEvent();
-		}
-
-		@JmxAttribute
-		public EventStats getQueries() {
-			return queries;
-		}
-
-		@JmxAttribute
-		public EventStats getFailedQueries() {
-			return failedQueries;
-		}
-
-		@JmxAttribute
-		public EventStats getExpirations() {
-			return expirations;
-		}
-	}
-	// endregion
-
-	@JmxAttribute
-	public @Nullable UdpSocket.JmxInspector getSocketStats() {
-		return BaseInspector.lookup(socketInspector, UdpSocket.JmxInspector.class);
-	}
-
-	@JmxAttribute(name = "")
-	public @Nullable JmxInspector getStats() {
-		return BaseInspector.lookup(inspector, JmxInspector.class);
+		return null;
 	}
 }

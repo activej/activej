@@ -28,7 +28,7 @@ import io.activej.crdt.CrdtTombstone;
 import io.activej.crdt.function.CrdtFilter;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.CrdtType;
-import io.activej.crdt.storage.ICrdtStorage;
+import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelConsumers;
@@ -43,8 +43,8 @@ import io.activej.datastream.processor.StreamReducers;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStatsBasic;
 import io.activej.datastream.stats.StreamStatsDetailed;
+import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
-import io.activej.fs.IActiveFs;
 import io.activej.fs.exception.FileNotFoundException;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
@@ -73,14 +73,14 @@ import static io.activej.crdt.util.Utils.onItem;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtStorageFs<K extends Comparable<K>, S> extends AbstractReactive
-		implements ICrdtStorage<K, S>, WithInitializer<CrdtStorageFs<K, S>>, ReactiveService, ReactiveJmxBeanWithStats {
+		implements CrdtStorage<K, S>, WithInitializer<CrdtStorageFs<K, S>>, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(CrdtStorageFs.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageFs.class, "smoothingWindow", Duration.ofMinutes(1));
 
 	public static final String FILE_EXTENSION = ".bin";
 
-	private final IActiveFs fs;
+	private final ActiveFs fs;
 	private final CrdtFunction<S> function;
 	private final BinarySerializer<CrdtReducingData<K, S>> serializer;
 
@@ -113,7 +113,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> extends AbstractRea
 	// endregion
 
 	// region creators
-	private CrdtStorageFs(Reactor reactor, IActiveFs fs, CrdtDataSerializer<K, S> serializer, CrdtFunction<S> function) {
+	private CrdtStorageFs(Reactor reactor, ActiveFs fs, CrdtDataSerializer<K, S> serializer, CrdtFunction<S> function) {
 		super(reactor);
 		this.fs = fs;
 		this.function = function;
@@ -121,7 +121,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> extends AbstractRea
 	}
 
 	public static <K extends Comparable<K>, S> CrdtStorageFs<K, S> create(
-			Reactor reactor, IActiveFs fs,
+			Reactor reactor, ActiveFs fs,
 			CrdtDataSerializer<K, S> serializer,
 			CrdtFunction<S> function
 	) {
@@ -129,7 +129,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> extends AbstractRea
 	}
 
 	public static <K extends Comparable<K>, S extends CrdtType<S>> CrdtStorageFs<K, S> create(
-			Reactor reactor, IActiveFs fs,
+			Reactor reactor, ActiveFs fs,
 			CrdtDataSerializer<K, S> serializer
 	) {
 		return new CrdtStorageFs<>(reactor, fs, serializer, CrdtFunction.ofCrdtType());

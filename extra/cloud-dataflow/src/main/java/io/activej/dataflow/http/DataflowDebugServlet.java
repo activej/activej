@@ -38,7 +38,7 @@ import io.activej.dataflow.stats.StatReducer;
 import io.activej.http.*;
 import io.activej.inject.Key;
 import io.activej.inject.ResourceLocator;
-import io.activej.net.socket.tcp.TcpSocket;
+import io.activej.net.socket.tcp.ReactiveTcpSocket;
 import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -163,7 +163,7 @@ public final class DataflowDebugServlet extends ImplicitlyReactive implements As
 	}
 
 	private Promise<PartitionData> getPartitionData(InetSocketAddress address) {
-		return TcpSocket.connect(getCurrentReactor(), address)
+		return ReactiveTcpSocket.connect(getCurrentReactor(), address)
 				.then(socket -> {
 					Messaging<DataflowResponse, DataflowRequest> messaging = MessagingWithBinaryStreaming.create(socket, codec);
 					return DataflowClient.performHandshake(messaging)
@@ -183,7 +183,7 @@ public final class DataflowDebugServlet extends ImplicitlyReactive implements As
 	}
 
 	private Promise<TaskData> getTask(InetSocketAddress address, long taskId) {
-		return TcpSocket.connect(getCurrentReactor(), address)
+		return ReactiveTcpSocket.connect(getCurrentReactor(), address)
 				.then(socket -> {
 					Messaging<DataflowResponse, DataflowRequest> messaging = MessagingWithBinaryStreaming.create(socket, codec);
 					return DataflowClient.performHandshake(messaging)

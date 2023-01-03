@@ -21,7 +21,7 @@ import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingCodec;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
-import io.activej.fs.IActiveFs;
+import io.activej.fs.ActiveFs;
 import io.activej.fs.exception.FileNotFoundException;
 import io.activej.fs.exception.FsException;
 import io.activej.fs.tcp.messaging.FsRequest;
@@ -30,7 +30,7 @@ import io.activej.fs.tcp.messaging.Version;
 import io.activej.fs.util.RemoteFsUtils;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.net.AbstractReactiveServer;
-import io.activej.net.socket.tcp.ITcpSocket;
+import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.nio.NioReactor;
@@ -48,7 +48,7 @@ import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 
 /**
  * An implementation of {@link AbstractReactiveServer} that works with {@link RemoteActiveFs} client.
- * It exposes some given {@link IActiveFs} via TCP.
+ * It exposes some given {@link ActiveFs} via TCP.
  * <p>
  * <b>This server should not be launched as a publicly available server, it is meant for private networks.</b>
  */
@@ -60,7 +60,7 @@ public final class ActiveFsServer extends AbstractReactiveServer<ActiveFsServer>
 			RemoteFsUtils.FS_RESPONSE_CODEC
 	);
 
-	private final IActiveFs fs;
+	private final ActiveFs fs;
 
 	private Function<FsRequest.Handshake, FsResponse.Handshake> handshakeHandler = $ ->
 			new FsResponse.Handshake(null);
@@ -86,12 +86,12 @@ public final class ActiveFsServer extends AbstractReactiveServer<ActiveFsServer>
 	private final PromiseStats deleteAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	// endregion
 
-	private ActiveFsServer(NioReactor reactor, IActiveFs fs) {
+	private ActiveFsServer(NioReactor reactor, ActiveFs fs) {
 		super(reactor);
 		this.fs = fs;
 	}
 
-	public static ActiveFsServer create(NioReactor reactor, IActiveFs fs) {
+	public static ActiveFsServer create(NioReactor reactor, ActiveFs fs) {
 		return new ActiveFsServer(reactor, fs);
 	}
 
@@ -100,12 +100,12 @@ public final class ActiveFsServer extends AbstractReactiveServer<ActiveFsServer>
 		return this;
 	}
 
-	public IActiveFs getFs() {
+	public ActiveFs getFs() {
 		return fs;
 	}
 
 	@Override
-	protected void serve(ITcpSocket socket, InetAddress remoteAddress) {
+	protected void serve(TcpSocket socket, InetAddress remoteAddress) {
 		MessagingWithBinaryStreaming<FsRequest, FsResponse> messaging =
 				MessagingWithBinaryStreaming.create(socket, SERIALIZER);
 		messaging.receive()

@@ -2,8 +2,8 @@ package io.activej.fs.cluster;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.ChannelConsumer;
+import io.activej.fs.ActiveFs;
 import io.activej.fs.ForwardingActiveFs;
-import io.activej.fs.IActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.fs.tcp.RemoteActiveFs;
@@ -57,7 +57,7 @@ public final class ClusterRepartitionControllerTest {
 
 		Executor executor = Executors.newSingleThreadExecutor();
 		List<ActiveFsServer> servers = new ArrayList<>();
-		Map<Object, IActiveFs> partitions = new HashMap<>();
+		Map<Object, ActiveFs> partitions = new HashMap<>();
 
 		Path storage = tmpFolder.newFolder().toPath();
 		Path localStorage = storage.resolve("local");
@@ -112,8 +112,8 @@ public final class ClusterRepartitionControllerTest {
 		FsPartitions fsPartitions = FsPartitions.create(reactor, discoveryService)
 				.withServerSelector(RENDEZVOUS_HASH_SHARDER);
 
-		Promise<Map<Object, IActiveFs>> discoverPromise = discoveryService.discover().get();
-		Map<Object, IActiveFs> discovered = discoverPromise.getResult();
+		Promise<Map<Object, ActiveFs>> discoverPromise = discoveryService.discover().get();
+		Map<Object, ActiveFs> discovered = discoverPromise.getResult();
 
 		ClusterRepartitionController controller = ClusterRepartitionController.create(reactor, localPartitionId, fsPartitions)
 				.withReplicationCount(partitions.size());    // full replication

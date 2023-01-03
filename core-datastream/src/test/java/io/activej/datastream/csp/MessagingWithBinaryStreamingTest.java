@@ -8,7 +8,7 @@ import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.datastream.StreamSupplier;
 import io.activej.net.SimpleServer;
-import io.activej.net.socket.tcp.TcpSocket;
+import io.activej.net.socket.tcp.ReactiveTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.test.TestUtils;
 import io.activej.test.rules.ActivePromisesRule;
@@ -99,7 +99,7 @@ public final class MessagingWithBinaryStreamingTest {
 				.withAcceptOnce()
 				.listen();
 
-		await(TcpSocket.connect(getCurrentReactor(), address)
+		await(ReactiveTcpSocket.connect(getCurrentReactor(), address)
 				.whenComplete(TestUtils.assertCompleteFn(socket -> ping(3, MessagingWithBinaryStreaming.create(socket, INTEGER_SERIALIZER)))));
 	}
 
@@ -125,7 +125,7 @@ public final class MessagingWithBinaryStreamingTest {
 				.withAcceptOnce()
 				.listen();
 
-		List<Long> list = await(TcpSocket.connect(getCurrentReactor(), address)
+		List<Long> list = await(ReactiveTcpSocket.connect(getCurrentReactor(), address)
 				.then(socket -> {
 					MessagingWithBinaryStreaming<String, String> messaging =
 							MessagingWithBinaryStreaming.create(socket, STRING_SERIALIZER);
@@ -165,7 +165,7 @@ public final class MessagingWithBinaryStreamingTest {
 				.withAcceptOnce()
 				.listen();
 
-		await(TcpSocket.connect(getCurrentReactor(), address)
+		await(ReactiveTcpSocket.connect(getCurrentReactor(), address)
 				.whenResult(socket -> {
 					MessagingWithBinaryStreaming<String, String> messaging =
 							MessagingWithBinaryStreaming.create(socket, serializer);
@@ -205,7 +205,7 @@ public final class MessagingWithBinaryStreamingTest {
 				.withAcceptOnce()
 				.listen();
 
-		String msg = await(TcpSocket.connect(getCurrentReactor(), address)
+		String msg = await(ReactiveTcpSocket.connect(getCurrentReactor(), address)
 				.then(socket -> {
 					MessagingWithBinaryStreaming<String, String> messaging =
 							MessagingWithBinaryStreaming.create(socket, serializer);
@@ -244,7 +244,7 @@ public final class MessagingWithBinaryStreamingTest {
 				.withAcceptOnce()
 				.listen();
 
-		await(TcpSocket.connect(getCurrentReactor(), address)
+		await(ReactiveTcpSocket.connect(getCurrentReactor(), address)
 				.whenResult(socket -> {
 					MessagingWithBinaryStreaming<String, String> messaging =
 							MessagingWithBinaryStreaming.create(socket, STRING_SERIALIZER);

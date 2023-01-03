@@ -19,14 +19,14 @@ package io.activej.cube.http;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.initializer.WithInitializer;
+import io.activej.cube.Cube;
 import io.activej.cube.CubeQuery;
-import io.activej.cube.ICube;
 import io.activej.cube.QueryResult;
 import io.activej.cube.exception.CubeException;
 import io.activej.http.HttpClient;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpUtils;
-import io.activej.http.IHttpClient;
+import io.activej.http.ReactiveHttpClient;
 import io.activej.promise.Promise;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,11 +42,11 @@ import static io.activej.cube.Utils.toJson;
 import static io.activej.cube.http.Utils.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public final class CubeHttpClient implements ICube, WithInitializer<CubeHttpClient> {
+public final class CubeHttpClient implements Cube, WithInitializer<CubeHttpClient> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeHttpClient.class);
 
 	private final String url;
-	private final IHttpClient httpClient;
+	private final HttpClient httpClient;
 	private QueryResultCodec queryResultCodec;
 	private AggregationPredicateCodec aggregationPredicateCodec;
 	private final Map<String, Type> attributeTypes = new LinkedHashMap<>();
@@ -54,16 +54,16 @@ public final class CubeHttpClient implements ICube, WithInitializer<CubeHttpClie
 
 	private DefiningClassLoader classLoader = DefiningClassLoader.create();
 
-	private CubeHttpClient(IHttpClient httpClient, String url) {
+	private CubeHttpClient(HttpClient httpClient, String url) {
 		this.url = url.replaceAll("/$", "");
 		this.httpClient = httpClient;
 	}
 
-	public static CubeHttpClient create(HttpClient httpClient, String cubeServletUrl) {
+	public static CubeHttpClient create(ReactiveHttpClient httpClient, String cubeServletUrl) {
 		return new CubeHttpClient(httpClient, cubeServletUrl);
 	}
 
-	public static CubeHttpClient create(HttpClient httpClient, URI cubeServletUrl) {
+	public static CubeHttpClient create(ReactiveHttpClient httpClient, URI cubeServletUrl) {
 		return create(httpClient, cubeServletUrl.toString());
 	}
 

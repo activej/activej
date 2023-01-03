@@ -6,7 +6,7 @@ import io.activej.promise.Promise;
 import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
-import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.client.ReactiveRpcClient;
 import io.activej.rpc.protocol.RpcRemoteException;
 import io.activej.rpc.server.RpcRequestHandler;
 import io.activej.rpc.server.RpcServer;
@@ -79,11 +79,11 @@ public final class RpcHelloWorldTest {
 	}
 
 	private static class BlockingHelloClient extends AbstractNioReactive implements HelloService, AutoCloseable {
-		private final RpcClient rpcClient;
+		private final ReactiveRpcClient rpcClient;
 
 		public BlockingHelloClient(NioReactor reactor) throws Exception {
 			super(reactor);
-			this.rpcClient = RpcClient.create(reactor)
+			this.rpcClient = ReactiveRpcClient.create(reactor)
 					.withMessageTypes(HelloRequest.class, HelloResponse.class)
 					.withStrategy(server(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port)));
 

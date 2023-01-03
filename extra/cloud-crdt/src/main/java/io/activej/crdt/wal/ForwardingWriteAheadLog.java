@@ -18,10 +18,10 @@ package io.activej.crdt.wal;
 
 import io.activej.promise.Promise;
 
-public abstract class ForwardingWriteAheadLog<K extends Comparable<K>, S> implements IWriteAheadLog<K, S> {
-	private final IWriteAheadLog<K, S> peer;
+public abstract class ForwardingWriteAheadLog<K extends Comparable<K>, S> implements WriteAheadLog<K, S> {
+	private final WriteAheadLog<K, S> peer;
 
-	protected ForwardingWriteAheadLog(IWriteAheadLog<K, S> peer) {
+	protected ForwardingWriteAheadLog(WriteAheadLog<K, S> peer) {
 		this.peer = peer;
 	}
 

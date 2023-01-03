@@ -1,13 +1,13 @@
 package io.activej.cube;
 
-import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.AggregationPredicate;
 import io.activej.aggregation.ChunkIdCodec;
+import io.activej.aggregation.ReactiveAggregationChunkStorage;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.LZ4FrameFormat;
-import io.activej.cube.Cube.AggregationConfig;
+import io.activej.cube.ReactiveCube.AggregationConfig;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.service.CubeConsolidationController;
 import io.activej.datastream.StreamConsumer;
@@ -16,8 +16,8 @@ import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.LogOTState;
 import io.activej.fs.LocalActiveFs;
-import io.activej.multilog.IMultilog;
 import io.activej.multilog.Multilog;
+import io.activej.multilog.ReactiveMultilog;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.uplink.OTUplink;
 import io.activej.serializer.SerializerBuilder;
@@ -39,7 +39,7 @@ import static io.activej.aggregation.AggregationPredicates.gt;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.common.Utils.keysToMap;
-import static io.activej.cube.Cube.AggregationConfig.id;
+import static io.activej.cube.ReactiveCube.AggregationConfig.id;
 import static io.activej.cube.TestUtils.runProcessLogs;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
@@ -57,7 +57,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 	private static final int LOWER_DATE_BOUNDARY_DAYS = (int) LOWER_DATE_BOUNDARY.toEpochDay();
 	private static final AggregationPredicate DATE_PREDICATE = gt("date", LOWER_DATE_BOUNDARY);
 
-	private AggregationChunkStorage<Long> chunkStorage;
+	private ReactiveAggregationChunkStorage<Long> chunkStorage;
 	private AggregationConfig dateAggregation;
 	private AggregationConfig advertiserDateAggregation;
 	private AggregationConfig campaignBannerDateAggregation;
@@ -72,7 +72,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 				.withTempDir(Files.createTempDirectory(""));
 		await(fs.start());
 		FrameFormat frameFormat = LZ4FrameFormat.create();
-		chunkStorage = AggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		chunkStorage = ReactiveAggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 
 		dateAggregation = id("date")
 				.withDimensions("date")
@@ -86,7 +86,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 				.withDimensions("campaign", "banner", "date")
 				.withMeasures("impressions", "clicks", "conversions", "revenue");
 
-		Cube basicCube = createBasicCube()
+		ReactiveCube basicCube = createBasicCube()
 				.withAggregation(dateAggregation)
 				.withAggregation(advertiserDateAggregation)
 				.withAggregation(campaignBannerDateAggregation);
@@ -98,7 +98,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 
 		LocalActiveFs localFs = LocalActiveFs.create(reactor, EXECUTOR, logsDir);
 		await(localFs.start());
-		IMultilog<LogItem> multilog = Multilog.create(reactor,
+		Multilog<LogItem> multilog = ReactiveMultilog.create(reactor,
 				localFs,
 				frameFormat,
 				SerializerBuilder.create(CLASS_LOADER).build(LogItem.class),
@@ -144,7 +144,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 
 	@Test
 	public void test() {
-		Cube cube = createBasicCube()
+		ReactiveCube cube = createBasicCube()
 				.withAggregation(dateAggregation.withPredicate(DATE_PREDICATE))
 				.withAggregation(advertiserDateAggregation.withPredicate(DATE_PREDICATE))
 				.withAggregation(campaignBannerDateAggregation.withPredicate(DATE_PREDICATE));
@@ -168,12 +168,12 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 		}
 	}
 
-	private static Map<String, Integer> getChunksByAggregation(Cube cube) {
+	private static Map<String, Integer> getChunksByAggregation(ReactiveCube cube) {
 		return keysToMap(cube.getAggregationIds().stream(), id -> cube.getAggregation(id).getChunks());
 	}
 
-	private Cube createBasicCube() {
-		return Cube.create(reactor, EXECUTOR, CLASS_LOADER, chunkStorage)
+	private ReactiveCube createBasicCube() {
+		return ReactiveCube.create(reactor, EXECUTOR, CLASS_LOADER, chunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())
 				.withDimension("campaign", ofInt())

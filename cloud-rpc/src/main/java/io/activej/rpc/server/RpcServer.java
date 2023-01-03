@@ -28,12 +28,12 @@ import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ExceptionStats;
 import io.activej.jmx.stats.ValueStats;
 import io.activej.net.AbstractReactiveServer;
-import io.activej.net.socket.tcp.ITcpSocket;
+import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.net.ServerSocketSettings;
 import io.activej.reactor.nio.NioReactor;
-import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.client.ReactiveRpcClient;
 import io.activej.rpc.protocol.RpcControlMessage;
 import io.activej.rpc.protocol.RpcMessage;
 import io.activej.rpc.protocol.RpcStream;
@@ -65,7 +65,7 @@ import static io.activej.common.Checks.checkState;
  * </ul>
  * <p>
  * Example. Here are the steps, intended to supplement the example, listed in
- * {@link RpcClient}:
+ * {@link ReactiveRpcClient}:
  * <ul>
  * <li>Create a {@code RequestHandler} for {@code RequestClass} and
  * {@code ResponseClass}</li>
@@ -74,7 +74,7 @@ import static io.activej.common.Checks.checkState;
  * </ul>
  *
  * @see RpcRequestHandler
- * @see RpcClient
+ * @see ReactiveRpcClient
  */
 public final class RpcServer extends AbstractReactiveServer<RpcServer> {
 	public static final ServerSocketSettings DEFAULT_SERVER_SOCKET_SETTINGS = ServerSocketSettings.create(16384);
@@ -193,7 +193,7 @@ public final class RpcServer extends AbstractReactiveServer<RpcServer> {
 	// endregion
 
 	@Override
-	protected void serve(ITcpSocket socket, InetAddress remoteAddress) {
+	protected void serve(TcpSocket socket, InetAddress remoteAddress) {
 		RpcStream stream = new RpcStream(socket, serializer, initialBufferSize,
 				autoFlushInterval, frameFormat, true); // , statsSerializer, statsDeserializer, statsCompressor, statsDecompressor);
 		RpcServerConnection connection = new RpcServerConnection(this, remoteAddress, handlers, stream);

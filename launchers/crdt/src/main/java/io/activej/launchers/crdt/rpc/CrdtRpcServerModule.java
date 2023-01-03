@@ -16,9 +16,9 @@
 
 package io.activej.launchers.crdt.rpc;
 
-import io.activej.async.service.ReactiveTaskScheduler;
+import io.activej.async.service.TaskScheduler;
 import io.activej.config.Config;
-import io.activej.crdt.wal.IWriteAheadLog;
+import io.activej.crdt.wal.WriteAheadLog;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
@@ -34,7 +34,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
-import static io.activej.async.service.ReactiveTaskScheduler.Schedule.ofInterval;
+import static io.activej.async.service.TaskScheduler.Schedule.ofInterval;
 import static io.activej.config.Config.ofClassPathProperties;
 import static io.activej.config.Config.ofSystemProperties;
 import static io.activej.config.converter.ConfigConverters.ofInetSocketAddress;
@@ -80,8 +80,8 @@ public abstract class CrdtRpcServerModule<K extends Comparable<K>, S> extends Ab
 	@Provides
 	@Eager
 	@Named("WAL flush")
-	ReactiveTaskScheduler walFlushScheduler(Reactor reactor, IWriteAheadLog<K, S> wal, Config config) {
-		return ReactiveTaskScheduler.create(reactor, wal::flush)
+	TaskScheduler walFlushScheduler(Reactor reactor, WriteAheadLog<K, S> wal, Config config) {
+		return TaskScheduler.create(reactor, wal::flush)
 				.withSchedule(config.get(ofReactorTaskSchedule(), "flush.schedule", ofInterval(Duration.ofMinutes(1))))
 				.withInitialDelay(Duration.ofMinutes(1));
 	}

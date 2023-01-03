@@ -40,9 +40,9 @@ import static io.activej.common.Utils.nullify;
 import static io.activej.promise.Promises.retry;
 
 @SuppressWarnings("UnusedReturnValue")
-public final class ReactiveTaskScheduler extends AbstractReactive
-		implements ReactiveService, WithInitializer<ReactiveTaskScheduler>, ReactiveJmxBeanWithStats {
-	private static final Logger logger = LoggerFactory.getLogger(ReactiveTaskScheduler.class);
+public final class TaskScheduler extends AbstractReactive
+		implements ReactiveService, WithInitializer<TaskScheduler>, ReactiveJmxBeanWithStats {
+	private static final Logger logger = LoggerFactory.getLogger(TaskScheduler.class);
 
 	private final AsyncSupplier<Object> task;
 	private final PromiseStats stats = PromiseStats.create(Duration.ofMinutes(5));
@@ -127,22 +127,22 @@ public final class ReactiveTaskScheduler extends AbstractReactive
 
 	private @Nullable Promise<Void> currentPromise;
 
-	private ReactiveTaskScheduler(Reactor reactor, AsyncSupplier<?> task) {
+	private TaskScheduler(Reactor reactor, AsyncSupplier<?> task) {
 		super(reactor);
 		//noinspection unchecked
 		this.task = (AsyncSupplier<Object>) task;
 	}
 
-	public static <T> ReactiveTaskScheduler create(Reactor reactor, AsyncSupplier<T> task) {
-		return new ReactiveTaskScheduler(reactor, task);
+	public static <T> TaskScheduler create(Reactor reactor, AsyncSupplier<T> task) {
+		return new TaskScheduler(reactor, task);
 	}
 
-	public ReactiveTaskScheduler withInitialDelay(Duration initialDelay) {
+	public TaskScheduler withInitialDelay(Duration initialDelay) {
 		this.initialDelay = initialDelay.toMillis();
 		return this;
 	}
 
-	public ReactiveTaskScheduler withSchedule(Schedule schedule) {
+	public TaskScheduler withSchedule(Schedule schedule) {
 		this.schedule = checkNotNull(schedule);
 		// for JMX:
 		this.period = null;
@@ -150,28 +150,28 @@ public final class ReactiveTaskScheduler extends AbstractReactive
 		return this;
 	}
 
-	public ReactiveTaskScheduler withPeriod(Duration period) {
+	public TaskScheduler withPeriod(Duration period) {
 		setPeriod(period);
 		return this;
 	}
 
-	public ReactiveTaskScheduler withInterval(Duration interval) {
+	public TaskScheduler withInterval(Duration interval) {
 		setInterval(interval);
 		return this;
 	}
 
-	public ReactiveTaskScheduler withRetryPolicy(RetryPolicy<?> retryPolicy) {
+	public TaskScheduler withRetryPolicy(RetryPolicy<?> retryPolicy) {
 		//noinspection unchecked
 		this.retryPolicy = (RetryPolicy<Object>) retryPolicy;
 		return this;
 	}
 
-	public ReactiveTaskScheduler withAbortOnError(boolean abortOnError) {
+	public TaskScheduler withAbortOnError(boolean abortOnError) {
 		this.abortOnError = abortOnError;
 		return this;
 	}
 
-	public ReactiveTaskScheduler withStatsHistogramLevels(int[] levels) {
+	public TaskScheduler withStatsHistogramLevels(int[] levels) {
 		this.stats.setHistogram(levels);
 		return this;
 	}

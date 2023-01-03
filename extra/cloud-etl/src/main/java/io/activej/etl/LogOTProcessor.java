@@ -28,8 +28,8 @@ import io.activej.datastream.stats.StreamStatsBasic;
 import io.activej.datastream.stats.StreamStatsDetailed;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
-import io.activej.multilog.IMultilog;
 import io.activej.multilog.LogPosition;
+import io.activej.multilog.Multilog;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.AbstractReactive;
@@ -53,7 +53,7 @@ public final class LogOTProcessor<T, D> extends AbstractReactive
 		implements ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<LogOTProcessor<T, D>> {
 	private static final Logger logger = LoggerFactory.getLogger(LogOTProcessor.class);
 
-	private final IMultilog<T> multilog;
+	private final Multilog<T> multilog;
 	private final LogDataConsumer<T, D> logStreamConsumer;
 
 	private final String log;
@@ -69,7 +69,7 @@ public final class LogOTProcessor<T, D> extends AbstractReactive
 	private final PromiseStats promiseProcessLog = PromiseStats.create(Duration.ofMinutes(5));
 
 	private LogOTProcessor(Reactor reactor,
-			IMultilog<T> multilog, LogDataConsumer<T, D> logStreamConsumer,
+			Multilog<T> multilog, LogDataConsumer<T, D> logStreamConsumer,
 			String log, List<String> partitions, LogOTState<D> state) {
 		super(reactor);
 		this.multilog = multilog;
@@ -79,7 +79,7 @@ public final class LogOTProcessor<T, D> extends AbstractReactive
 		this.state = state;
 	}
 
-	public static <T, D> LogOTProcessor<T, D> create(Reactor reactor, IMultilog<T> multilog,
+	public static <T, D> LogOTProcessor<T, D> create(Reactor reactor, Multilog<T> multilog,
 			LogDataConsumer<T, D> logStreamConsumer,
 			String log, List<String> partitions, LogOTState<D> state) {
 		return new LogOTProcessor<>(reactor, multilog, logStreamConsumer, log, partitions, state);

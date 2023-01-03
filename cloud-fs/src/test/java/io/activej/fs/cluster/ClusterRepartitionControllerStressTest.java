@@ -1,8 +1,8 @@
 package io.activej.fs.cluster;
 
-import io.activej.async.service.ReactiveTaskScheduler;
+import io.activej.async.service.TaskScheduler;
+import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
-import io.activej.fs.IActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.fs.tcp.RemoteActiveFs;
@@ -55,7 +55,7 @@ public final class ClusterRepartitionControllerStressTest {
 	private Path localStorage;
 	private FsPartitions partitions;
 	private ClusterRepartitionController controller;
-	private ReactiveTaskScheduler scheduler;
+	private TaskScheduler scheduler;
 
 	private boolean finished = false;
 
@@ -66,7 +66,7 @@ public final class ClusterRepartitionControllerStressTest {
 		Executor executor = Executors.newSingleThreadExecutor();
 		servers = new ArrayList<>(CLIENT_SERVER_PAIRS);
 
-		Map<Object, IActiveFs> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
+		Map<Object, ActiveFs> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
 
 		Path storage = tmpFolder.newFolder().toPath();
 		localStorage = storage.resolve("local");
@@ -98,7 +98,7 @@ public final class ClusterRepartitionControllerStressTest {
 		controller = ClusterRepartitionController.create(reactor, localPartitionId, this.partitions)
 				.withReplicationCount(3);
 
-		scheduler = ReactiveTaskScheduler.create(reactor, this.partitions::checkDeadPartitions)
+		scheduler = TaskScheduler.create(reactor, this.partitions::checkDeadPartitions)
 				.withInterval(Duration.ofSeconds(1));
 
 		scheduler.start();

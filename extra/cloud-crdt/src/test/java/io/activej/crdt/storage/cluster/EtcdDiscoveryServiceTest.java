@@ -2,7 +2,7 @@ package io.activej.crdt.storage.cluster;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.time.Stopwatch;
-import io.activej.crdt.storage.cluster.IDiscoveryService.PartitionScheme;
+import io.activej.crdt.storage.cluster.DiscoveryService.PartitionScheme;
 import io.activej.fs.cluster.EtcdWatchService;
 import io.activej.promise.Promise;
 import io.activej.test.rules.EventloopRule;

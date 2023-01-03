@@ -1,15 +1,15 @@
 package io.activej.cube.linear;
 
 import io.activej.aggregation.AggregationChunk;
-import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ChunkIdCodec;
 import io.activej.aggregation.PrimaryKey;
+import io.activej.aggregation.ReactiveAggregationChunkStorage;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frames.LZ4FrameFormat;
-import io.activej.cube.Cube;
+import io.activej.cube.ReactiveCube;
 import io.activej.cube.TestUtils;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.linear.CubeBackupController.ChunksBackupService;
@@ -18,7 +18,7 @@ import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogPositionDiff;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.IActiveFs;
+import io.activej.fs.ActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
@@ -37,13 +37,13 @@ import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static io.activej.aggregation.AggregationChunkStorage.LOG;
+import static io.activej.aggregation.ReactiveAggregationChunkStorage.LOG;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
-import static io.activej.cube.Cube.AggregationConfig.id;
+import static io.activej.cube.ReactiveCube.AggregationConfig.id;
 import static io.activej.test.TestUtils.dataSource;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
@@ -64,7 +64,7 @@ public class CubeBackupControllerTest {
 	private Eventloop eventloop;
 	private Thread eventloopThread;
 	private DataSource dataSource;
-	private IActiveFs activeFs;
+	private ActiveFs activeFs;
 	private CubeUplinkMySql uplink;
 	private CubeBackupController backupController;
 
@@ -86,9 +86,9 @@ public class CubeBackupControllerTest {
 		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, aggregationsDir);
 		eventloop.submit(fs::start).get();
 		activeFs = fs;
-		AggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
+		ReactiveAggregationChunkStorage<Long> aggregationChunkStorage = ReactiveAggregationChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
 				LZ4FrameFormat.create(), fs);
-		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
+		ReactiveCube cube = ReactiveCube.create(eventloop, executor, classLoader, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
 				.withDimension("adv", ofInt())
 				.withMeasure("pubRequests", sum(ofLong()))
@@ -233,7 +233,7 @@ public class CubeBackupControllerTest {
 			throw new AssertionError(e);
 		}
 
-		String prefix = "backups" + IActiveFs.SEPARATOR + backupId + IActiveFs.SEPARATOR;
+		String prefix = "backups" + ActiveFs.SEPARATOR + backupId + ActiveFs.SEPARATOR;
 		Set<Long> actualChunks = await(() -> activeFs.list(prefix + "*" + LOG))
 				.keySet()
 				.stream()

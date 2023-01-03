@@ -1,8 +1,8 @@
 package io.activej.crdt.storage.cluster;
 
 import io.activej.common.initializer.WithInitializer;
-import io.activej.crdt.storage.ICrdtStorage;
-import io.activej.crdt.storage.cluster.IDiscoveryService.PartitionScheme;
+import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.cluster.DiscoveryService.PartitionScheme;
 import io.activej.rpc.client.sender.RpcStrategy;
 import io.activej.rpc.client.sender.RpcStrategyRendezvousHashing;
 import io.activej.rpc.client.sender.RpcStrategySharding;
@@ -23,7 +23,7 @@ public final class RendezvousPartitionScheme<P> implements PartitionScheme<P>, W
 	@SuppressWarnings("unchecked")
 	private Function<P, Object> partitionIdGetter = (Function<P, Object>) Function.identity();
 	private Function<P, RpcStrategy> rpcProvider;
-	private Function<P, ICrdtStorage<?, ?>> crdtProvider;
+	private Function<P, CrdtStorage<?, ?>> crdtProvider;
 
 	@SafeVarargs
 	public static <P> RendezvousPartitionScheme<P> create(RendezvousPartitionGroup<P>... partitionGroups) {
@@ -41,7 +41,7 @@ public final class RendezvousPartitionScheme<P> implements PartitionScheme<P>, W
 		return this;
 	}
 
-	public RendezvousPartitionScheme<P> withCrdtProvider(Function<P, ICrdtStorage<?, ?>> crdtProvider) {
+	public RendezvousPartitionScheme<P> withCrdtProvider(Function<P, CrdtStorage<?, ?>> crdtProvider) {
 		this.crdtProvider = crdtProvider;
 		return this;
 	}
@@ -67,7 +67,7 @@ public final class RendezvousPartitionScheme<P> implements PartitionScheme<P>, W
 	}
 
 	@Override
-	public ICrdtStorage<?, ?> provideCrdtConnection(P partition) {
+	public CrdtStorage<?, ?> provideCrdtConnection(P partition) {
 		return crdtProvider.apply(partition);
 	}
 

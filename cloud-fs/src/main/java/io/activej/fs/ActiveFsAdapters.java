@@ -10,16 +10,16 @@ import static io.activej.fs.util.RemoteFsUtils.escapeGlob;
 
 public class ActiveFsAdapters {
 
-	public static IActiveFs transform(IActiveFs originalFs, Function<String, Optional<String>> into, Function<String, Optional<String>> from, Function<String, Optional<String>> globInto) {
+	public static ActiveFs transform(ActiveFs originalFs, Function<String, Optional<String>> into, Function<String, Optional<String>> from, Function<String, Optional<String>> globInto) {
 		return new TransformActiveFs(originalFs, into, from, globInto);
 	}
 
-	public static IActiveFs transform(IActiveFs originalFs, Function<String, Optional<String>> into, Function<String, Optional<String>> from) {
+	public static ActiveFs transform(ActiveFs originalFs, Function<String, Optional<String>> into, Function<String, Optional<String>> from) {
 		return transform(originalFs, into, from, $ -> Optional.empty());
 	}
 
 	// similar to 'chroot'
-	public static IActiveFs addPrefix(IActiveFs originalFs, String prefix) {
+	public static ActiveFs addPrefix(ActiveFs originalFs, String prefix) {
 		if (prefix.length() == 0) {
 			return originalFs;
 		}
@@ -32,14 +32,14 @@ public class ActiveFsAdapters {
 	}
 
 	// similar to 'cd'
-	public static IActiveFs subdirectory(IActiveFs originalFs, String dir) {
+	public static ActiveFs subdirectory(ActiveFs originalFs, String dir) {
 		if (dir.length() == 0) {
 			return originalFs;
 		}
 		return addPrefix(originalFs, dir.endsWith("/") ? dir : dir + '/');
 	}
 
-	public static IActiveFs removePrefix(IActiveFs originalFs, String prefix) {
+	public static ActiveFs removePrefix(ActiveFs originalFs, String prefix) {
 		if (prefix.length() == 0) {
 			return originalFs;
 		}
@@ -51,11 +51,11 @@ public class ActiveFsAdapters {
 		);
 	}
 
-	public static IActiveFs filter(IActiveFs originalFs, Predicate<String> predicate) {
+	public static ActiveFs filter(ActiveFs originalFs, Predicate<String> predicate) {
 		return new FilterActiveFs(originalFs, predicate);
 	}
 
-	public static IActiveFs mount(IActiveFs root, Map<String, IActiveFs> mounts) {
+	public static ActiveFs mount(ActiveFs root, Map<String, ActiveFs> mounts) {
 		return new MountingActiveFs(root,
 				mounts.entrySet().stream()
 						.collect(Collectors.toMap(

@@ -37,7 +37,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 
-public class AggregationChunkStorageTest {
+public class ReactiveAggregationChunkStorageTest {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
@@ -62,7 +62,7 @@ public class AggregationChunkStorageTest {
 		Path storageDir = temporaryFolder.newFolder().toPath();
 		LocalActiveFs fs = LocalActiveFs.create(reactor, newCachedThreadPool(), storageDir);
 		await(fs.start());
-		IAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(
+		AggregationChunkStorage<Long> aggregationChunkStorage = ReactiveAggregationChunkStorage.create(
 				reactor,
 				ChunkIdCodec.ofLong(),
 				AsyncSupplier.of(new RefLong(0)::inc),

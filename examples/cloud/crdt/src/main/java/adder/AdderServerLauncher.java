@@ -4,10 +4,10 @@ import adder.AdderCommands.AddRequest;
 import adder.AdderCommands.AddResponse;
 import adder.AdderCommands.GetRequest;
 import adder.AdderCommands.GetResponse;
-import io.activej.async.service.ReactiveTaskScheduler;
+import io.activej.async.service.TaskScheduler;
 import io.activej.config.ConfigModule;
 import io.activej.crdt.hash.CrdtMap;
-import io.activej.crdt.storage.ICrdtStorage;
+import io.activej.crdt.storage.CrdtStorage;
 import io.activej.datastream.StreamSupplier;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
@@ -48,10 +48,10 @@ public final class AdderServerLauncher extends Launcher {
 	@Eager
 	@Provides
 	@Named("Print local data")
-	ReactiveTaskScheduler printLocalMap(Reactor reactor, CrdtMap<Long, SimpleSumsCrdtState> map, @Local ICrdtStorage<Long, DetailedSumsCrdtState> storage) {
+	TaskScheduler printLocalMap(Reactor reactor, CrdtMap<Long, SimpleSumsCrdtState> map, @Local CrdtStorage<Long, DetailedSumsCrdtState> storage) {
 		checkState((map instanceof AdderCrdtMap));
 
-		return ReactiveTaskScheduler.create(reactor, () -> storage.download()
+		return TaskScheduler.create(reactor, () -> storage.download()
 						.then(StreamSupplier::toList)
 						.whenResult(crdtData -> logger.info("""
 

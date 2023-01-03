@@ -16,7 +16,7 @@
 
 package io.activej.cube.service;
 
-import io.activej.aggregation.AggregationChunkStorage;
+import io.activej.aggregation.ReactiveAggregationChunkStorage;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.common.Utils;
 import io.activej.common.function.BiConsumerEx;
@@ -29,7 +29,7 @@ import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.ot.OTCommit;
 import io.activej.ot.exception.GraphExhaustedException;
 import io.activej.ot.reducers.DiffsReducer;
-import io.activej.ot.repository.IOTRepository;
+import io.activej.ot.repository.OTRepository;
 import io.activej.ot.system.OTSystem;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -63,8 +63,8 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 
 	private final OTSystem<D> otSystem;
-	private final IOTRepository<K, D> repository;
-	private final AggregationChunkStorage<C> chunksStorage;
+	private final OTRepository<K, D> repository;
+	private final ReactiveAggregationChunkStorage<C> chunksStorage;
 
 	private final CubeDiffScheme<D> cubeDiffScheme;
 
@@ -79,7 +79,7 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 	private final PromiseStats promiseCleanupChunks = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 
 	CubeCleanerController(Reactor reactor,
-			CubeDiffScheme<D> cubeDiffScheme, IOTRepository<K, D> repository, OTSystem<D> otSystem, AggregationChunkStorage<C> chunksStorage) {
+			CubeDiffScheme<D> cubeDiffScheme, OTRepository<K, D> repository, OTSystem<D> otSystem, ReactiveAggregationChunkStorage<C> chunksStorage) {
 		super(reactor);
 		this.cubeDiffScheme = cubeDiffScheme;
 		this.otSystem = otSystem;
@@ -89,9 +89,9 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 
 	public static <K, D, C> CubeCleanerController<K, D, C> create(Reactor reactor,
 			CubeDiffScheme<D> cubeDiffScheme,
-			IOTRepository<K, D> repository,
+			OTRepository<K, D> repository,
 			OTSystem<D> otSystem,
-			AggregationChunkStorage<C> storage) {
+			ReactiveAggregationChunkStorage<C> storage) {
 		return new CubeCleanerController<>(reactor, cubeDiffScheme, repository, otSystem, storage);
 	}
 

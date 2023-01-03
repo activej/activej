@@ -11,7 +11,7 @@ import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
-import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.client.ReactiveRpcClient;
 import io.activej.rpc.protocol.RpcMessage;
 import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.BinarySerializer;
@@ -56,7 +56,7 @@ public final class RpcBinaryProtocolTest {
 	public void test() throws Exception {
 		String testMessage = "Test";
 
-		RpcClient client = RpcClient.create(Reactor.getCurrentReactor())
+		ReactiveRpcClient client = ReactiveRpcClient.create(Reactor.getCurrentReactor())
 				.withMessageTypes(String.class)
 				.withStrategy(server(new InetSocketAddress("localhost", listenPort)));
 

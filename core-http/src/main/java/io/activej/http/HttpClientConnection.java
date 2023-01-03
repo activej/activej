@@ -23,9 +23,9 @@ import io.activej.common.recycle.Recyclable;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.queue.ChannelZeroBuffer;
-import io.activej.http.HttpClient.Inspector;
+import io.activej.http.ReactiveHttpClient.Inspector;
 import io.activej.http.stream.BufsConsumerGzipInflater;
-import io.activej.net.socket.tcp.ITcpSocket;
+import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.Reactor;
@@ -51,7 +51,7 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
  * This class is responsible for sending and receiving HTTP requests.
  * It's made so that one instance of it corresponds to one networking socket.
  * That's why instances of those classes are all stored in one of three pools in their
- * respective {@link HttpClient} instance.
+ * respective {@link ReactiveHttpClient} instance.
  * </p>
  * <p>
  * Those pools are: <code>poolKeepAlive</code>, <code>poolReading</code>, and <code>poolWriting</code>.
@@ -97,14 +97,14 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 
 	private @Nullable SettablePromise<HttpResponse> promise;
 	private @Nullable HttpResponse response;
-	private final HttpClient client;
+	private final ReactiveHttpClient client;
 	private final @Nullable Inspector inspector;
 
 	final InetSocketAddress remoteAddress;
 	@Nullable HttpClientConnection addressPrev;
 	HttpClientConnection addressNext;
 
-	HttpClientConnection(Reactor reactor, HttpClient client, ITcpSocket asyncTcpSocket, InetSocketAddress remoteAddress) {
+	HttpClientConnection(Reactor reactor, ReactiveHttpClient client, TcpSocket asyncTcpSocket, InetSocketAddress remoteAddress) {
 		super(reactor, asyncTcpSocket, client.maxBodySize);
 		this.client = client;
 		this.inspector = client.inspector;

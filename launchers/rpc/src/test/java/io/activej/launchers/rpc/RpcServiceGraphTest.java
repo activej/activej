@@ -7,7 +7,7 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
-import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.client.ReactiveRpcClient;
 import io.activej.rpc.client.sender.RpcStrategies;
 import io.activej.rpc.client.sender.RpcStrategyRoundRobin;
 import io.activej.rpc.protocol.RpcException;
@@ -70,8 +70,8 @@ public class RpcServiceGraphTest {
 
 					@Provides
 					@Eager
-					RpcClient client(Eventloop eventloop) {
-						return RpcClient.create(eventloop)
+					ReactiveRpcClient client(Eventloop eventloop) {
+						return ReactiveRpcClient.create(eventloop)
 								.withMessageTypes(String.class)
 								.withStrategy(RpcStrategyRoundRobin.create(
 												RpcStrategies.servers(

@@ -14,17 +14,12 @@
  * limitations under the License.
  */
 
-package io.activej.http;
+package io.activej.crdt.wal;
 
 import io.activej.promise.Promise;
 
-/**
- * An interface for an asynchronous HTTP client.
- * <p>
- * It is as simple as an asynchronous function that accepts {@link HttpRequest}
- * and returns an {@link HttpResponse} for it,
- * so it is basically a reciprocal of the {@link AsyncServlet}.
- */
-public interface IHttpClient {
-	Promise<HttpResponse> request(HttpRequest request);
+public interface WriteAheadLog<K extends Comparable<K>, S> {
+	Promise<Void> put(K key, S value);
+
+	Promise<Void> flush();
 }

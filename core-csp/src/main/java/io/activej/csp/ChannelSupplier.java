@@ -25,7 +25,7 @@ import io.activej.common.function.FunctionEx;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.dsl.ChannelSupplierTransformer;
 import io.activej.csp.queue.ChannelQueue;
-import io.activej.net.socket.tcp.ITcpSocket;
+import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.Reactor;
@@ -163,11 +163,11 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	}
 
 	/**
-	 * Wraps {@link ITcpSocket#read()} operation into {@link ChannelSupplier}
+	 * Wraps {@link TcpSocket#read()} operation into {@link ChannelSupplier}
 	 *
 	 * @return {@link ChannelSupplier} of ByteBufs that are read from network
 	 */
-	static ChannelSupplier<ByteBuf> ofSocket(ITcpSocket socket) {
+	static ChannelSupplier<ByteBuf> ofSocket(TcpSocket socket) {
 		return ChannelSuppliers.prefetch(ChannelSupplier.of(socket::read, socket));
 	}
 

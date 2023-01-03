@@ -16,12 +16,12 @@
 
 package io.activej.launchers.fs;
 
-import io.activej.async.service.ReactiveTaskScheduler;
+import io.activej.async.service.TaskScheduler;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.IActiveFs;
+import io.activej.fs.ActiveFs;
 import io.activej.fs.cluster.ClusterActiveFs;
 import io.activej.fs.cluster.DiscoveryService;
 import io.activej.fs.cluster.FsPartitions;
@@ -60,8 +60,8 @@ public class ClusterTcpClientLauncher extends Launcher {
 	@Provides
 	@Eager
 	@Named("clusterDeadCheck")
-	ReactiveTaskScheduler deadCheckScheduler(Config config, FsPartitions partitions) {
-		return ReactiveTaskScheduler.create(partitions.getReactor(), partitions::checkDeadPartitions)
+	TaskScheduler deadCheckScheduler(Config config, FsPartitions partitions) {
+		return TaskScheduler.create(partitions.getReactor(), partitions::checkDeadPartitions)
 				.withInitializer(ofReactorTaskScheduler(config.getChild("activefs.repartition.deadCheck")));
 	}
 
@@ -73,12 +73,12 @@ public class ClusterTcpClientLauncher extends Launcher {
 	}
 
 	@Provides
-	AsyncServlet guiServlet(IActiveFs activeFs) {
+	AsyncServlet guiServlet(ActiveFs activeFs) {
 		return ActiveFsGuiServlet.create(activeFs, "Cluster FS Client");
 	}
 
 	@Provides
-	IActiveFs remoteActiveFs(Reactor reactor, FsPartitions partitions, Config config) {
+	ActiveFs remoteActiveFs(Reactor reactor, FsPartitions partitions, Config config) {
 		return ClusterActiveFs.create(reactor, partitions)
 				.withInitializer(ofClusterActiveFs(config.getChild("activefs.cluster")));
 	}

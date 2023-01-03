@@ -12,7 +12,7 @@ import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
-import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.client.ReactiveRpcClient;
 import io.activej.service.ServiceGraphModule;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,7 +34,7 @@ public final class ScopedRpcBenchmarkClient extends Launcher {
 	private static final int ACTIVE_REQUESTS_MAX = 10_000;
 
 	@Inject
-	RpcClient client;
+	ReactiveRpcClient client;
 
 	@Inject
 	Reactor reactor;
@@ -46,8 +46,8 @@ public final class ScopedRpcBenchmarkClient extends Launcher {
 	}
 
 	@Provides
-	public RpcClient client(NioReactor reactor) {
-		return RpcClient.create(reactor)
+	public ReactiveRpcClient client(NioReactor reactor) {
+		return ReactiveRpcClient.create(reactor)
 				.withMessageTypes(RpcRequest.class, RpcResponse.class)
 				.withStrategy(server(new InetSocketAddress(PORT)));
 	}

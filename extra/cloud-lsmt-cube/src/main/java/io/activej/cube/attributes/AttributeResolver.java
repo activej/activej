@@ -14,10 +14,27 @@
  * limitations under the License.
  */
 
-package io.activej.http;
+package io.activej.cube.attributes;
 
 import io.activej.promise.Promise;
 
-public interface IWebSocketClient {
-	Promise<WebSocket> webSocketRequest(HttpRequest request);
+import java.util.List;
+import java.util.Map;
+
+public interface AttributeResolver {
+	Class<?>[] getKeyTypes();
+
+	Map<String, Class<?>> getAttributeTypes();
+
+	Promise<Void> resolveAttributes(List<Object> results, KeyFunction keyFunction, AttributesFunction attributesFunction);
+
+	@FunctionalInterface
+	interface KeyFunction {
+		Object[] extractKey(Object result);
+	}
+
+	@FunctionalInterface
+	interface AttributesFunction {
+		void applyAttributes(Object result, Object[] attributes);
+	}
 }

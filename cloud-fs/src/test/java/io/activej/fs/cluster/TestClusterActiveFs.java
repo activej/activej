@@ -7,14 +7,14 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.eventloop.Eventloop;
+import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
-import io.activej.fs.IActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.fs.exception.FsException;
 import io.activej.fs.http.ActiveFsServlet;
 import io.activej.fs.http.HttpActiveFs;
-import io.activej.http.HttpClient;
 import io.activej.http.HttpServer;
+import io.activej.http.ReactiveHttpClient;
 import io.activej.net.AbstractReactiveServer;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
@@ -77,10 +77,10 @@ public final class TestClusterActiveFs {
 
 		Files.createDirectories(clientStorage);
 
-		Map<Object, IActiveFs> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
+		Map<Object, ActiveFs> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
 
 		NioReactor reactor = Reactor.getCurrentReactor();
-		HttpClient httpClient = HttpClient.create(reactor);
+		ReactiveHttpClient httpClient = ReactiveHttpClient.create(reactor);
 
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
 			int port = getFreePort();

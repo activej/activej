@@ -1,6 +1,6 @@
 import io.activej.eventloop.Eventloop;
-import io.activej.http.HttpClient;
 import io.activej.http.HttpRequest;
+import io.activej.http.ReactiveHttpClient;
 import io.activej.http.WebSocket.Message;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
@@ -14,7 +14,7 @@ import java.util.concurrent.ExecutionException;
 
 public final class WebSocketPingClientExample extends Launcher {
 	@Inject
-	HttpClient httpClient;
+	ReactiveHttpClient httpClient;
 
 	@Inject
 	NioReactor reactor;
@@ -25,8 +25,8 @@ public final class WebSocketPingClientExample extends Launcher {
 	}
 
 	@Provides
-	HttpClient client(NioReactor reactor) {
-		return HttpClient.create(reactor);
+	ReactiveHttpClient client(NioReactor reactor) {
+		return ReactiveHttpClient.create(reactor);
 	}
 
 	@Override

@@ -4,17 +4,17 @@ import io.activej.async.executor.ReactorExecutor;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelSupplier;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.IActiveFs;
+import io.activej.fs.ActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.fs.exception.FsException;
 import io.activej.fs.http.ActiveFsServlet;
 import io.activej.fs.http.HttpActiveFs;
 import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.fs.tcp.RemoteActiveFs;
-import io.activej.http.HttpClient;
 import io.activej.http.HttpServer;
+import io.activej.http.ReactiveHttpClient;
 import io.activej.net.AbstractReactiveServer;
-import io.activej.net.socket.tcp.TcpSocket;
+import io.activej.net.socket.tcp.ReactiveTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
@@ -88,7 +88,7 @@ public final class TestClusterDeadPartitionCheck {
 				new Object[]{
 						new ClientServerFactory() {
 							@Override
-							public IActiveFs createClient(NioReactor reactor, InetSocketAddress address) {
+							public ActiveFs createClient(NioReactor reactor, InetSocketAddress address) {
 								return RemoteActiveFs.create(reactor, address);
 							}
 
@@ -105,8 +105,8 @@ public final class TestClusterDeadPartitionCheck {
 								if (selector == null) return;
 								for (SelectionKey key : selector.keys()) {
 									Object attachment = key.attachment();
-									if (attachment instanceof TcpSocket) {
-										((TcpSocket) attachment).close();
+									if (attachment instanceof ReactiveTcpSocket) {
+										((ReactiveTcpSocket) attachment).close();
 									}
 								}
 							}
@@ -122,8 +122,8 @@ public final class TestClusterDeadPartitionCheck {
 				new Object[]{
 						new ClientServerFactory() {
 							@Override
-							public IActiveFs createClient(NioReactor reactor, InetSocketAddress address) {
-								return HttpActiveFs.create(reactor, "http://localhost:" + address.getPort(), HttpClient.create(reactor));
+							public ActiveFs createClient(NioReactor reactor, InetSocketAddress address) {
+								return HttpActiveFs.create(reactor, "http://localhost:" + address.getPort(), ReactiveHttpClient.create(reactor));
 							}
 
 							@Override
@@ -157,7 +157,7 @@ public final class TestClusterDeadPartitionCheck {
 		executor = newSingleThreadExecutor();
 		servers = new ArrayList<>(CLIENT_SERVER_PAIRS);
 
-		Map<Object, IActiveFs> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
+		Map<Object, ActiveFs> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
 
 		Path storage = tmpFolder.newFolder().toPath();
 
@@ -327,7 +327,7 @@ public final class TestClusterDeadPartitionCheck {
 	}
 
 	private interface ClientServerFactory {
-		IActiveFs createClient(NioReactor reactor, InetSocketAddress address);
+		ActiveFs createClient(NioReactor reactor, InetSocketAddress address);
 
 		AbstractReactiveServer<?> createServer(LocalActiveFs localFs, InetSocketAddress address);
 

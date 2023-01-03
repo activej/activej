@@ -23,8 +23,8 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.queue.ChannelZeroBuffer;
+import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
-import io.activej.fs.IActiveFs;
 import io.activej.fs.exception.FsException;
 import io.activej.http.*;
 import io.activej.promise.Promise;
@@ -51,20 +51,20 @@ import static io.activej.http.HttpHeaders.CONTENT_LENGTH;
  * A client to the remote server with {@link ActiveFsServlet}.
  * This client can be used to connect to publicly available servers.
  * <p>
- * Inherits all the limitations of {@link IActiveFs} implementation located on server.
+ * Inherits all the limitations of {@link ActiveFs} implementation located on server.
  */
 public final class HttpActiveFs extends AbstractReactive
-		implements IActiveFs, WithInitializer<HttpActiveFs> {
-	private final IHttpClient client;
+		implements ActiveFs, WithInitializer<HttpActiveFs> {
+	private final HttpClient client;
 	private final String url;
 
-	private HttpActiveFs(Reactor reactor, String url, IHttpClient client) {
+	private HttpActiveFs(Reactor reactor, String url, HttpClient client) {
 		super(reactor);
 		this.url = url;
 		this.client = client;
 	}
 
-	public static HttpActiveFs create(Reactor reactor, String url, IHttpClient client) {
+	public static HttpActiveFs create(Reactor reactor, String url, HttpClient client) {
 		return new HttpActiveFs(reactor, url.endsWith("/") ? url : url + '/', client);
 	}
 

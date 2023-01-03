@@ -4,7 +4,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.ref.RefLong;
-import io.activej.net.socket.tcp.TcpSocket;
+import io.activej.net.socket.tcp.ReactiveTcpSocket;
 import io.activej.promise.Promises;
 import io.activej.reactor.net.SocketSettings;
 import io.activej.test.rules.ByteBufRule;
@@ -110,7 +110,7 @@ public final class AbstractReactiveServerTest {
 	}
 
 	private static ByteBuf sendMessage(InetSocketAddress address, String message) {
-		return await(TcpSocket.connect(getCurrentReactor(), address)
+		return await(ReactiveTcpSocket.connect(getCurrentReactor(), address)
 				.then(socket ->
 						socket.write(ByteBufStrings.wrapAscii(message))
 								.then(() -> socket.write(null))

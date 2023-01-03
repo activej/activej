@@ -6,7 +6,7 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.binary.ByteBufsDecoder;
 import io.activej.eventloop.Eventloop;
-import io.activej.net.socket.tcp.ITcpSocket;
+import io.activej.net.socket.tcp.ReactiveTcpSocket;
 import io.activej.net.socket.tcp.TcpSocket;
 
 import java.io.IOException;
@@ -25,7 +25,7 @@ public final class TcpClientExample {
 	private final Eventloop eventloop = Eventloop.create();
 
 	/* Thread, which reads user input */
-	private void startCommandLineInterface(ITcpSocket socket) {
+	private void startCommandLineInterface(TcpSocket socket) {
 		Thread thread = new Thread(() -> {
 			Scanner scanIn = new Scanner(System.in);
 			while (true) {
@@ -47,9 +47,9 @@ public final class TcpClientExample {
 		eventloop.connect(new InetSocketAddress("localhost", 9922), (socketChannel, e) -> {
 			if (e == null) {
 				System.out.println("Connected to server, enter some text and send it by pressing 'Enter'.");
-				ITcpSocket socket;
+				TcpSocket socket;
 				try {
-					socket = TcpSocket.wrapChannel(getCurrentReactor(), socketChannel, null);
+					socket = ReactiveTcpSocket.wrapChannel(getCurrentReactor(), socketChannel, null);
 				} catch (IOException ioException) {
 					throw new RuntimeException(ioException);
 				}

@@ -24,7 +24,7 @@ import io.activej.ot.OTCommit;
 import io.activej.ot.OTCommitFactory.DiffsWithLevel;
 import io.activej.ot.PollSanitizer;
 import io.activej.ot.reducers.DiffsReducer;
-import io.activej.ot.repository.IOTRepository;
+import io.activej.ot.repository.OTRepository;
 import io.activej.ot.system.OTSystem;
 import io.activej.promise.Promise;
 import org.slf4j.Logger;
@@ -46,11 +46,11 @@ public final class OTUplinkImpl<K, D, PC> implements OTUplink<K, D, PC>, WithIni
 	private static final Logger logger = LoggerFactory.getLogger(OTUplinkImpl.class);
 
 	private final OTSystem<D> otSystem;
-	private final IOTRepository<K, D> repository;
+	private final OTRepository<K, D> repository;
 	private final FunctionEx<OTCommit<K, D>, PC> protoCommitEncoder;
 	private final FunctionEx<PC, OTCommit<K, D>> protoCommitDecoder;
 
-	private OTUplinkImpl(IOTRepository<K, D> repository, OTSystem<D> otSystem, FunctionEx<OTCommit<K, D>, PC> protoCommitEncoder,
+	private OTUplinkImpl(OTRepository<K, D> repository, OTSystem<D> otSystem, FunctionEx<OTCommit<K, D>, PC> protoCommitEncoder,
 			FunctionEx<PC, OTCommit<K, D>> protoCommitDecoder) {
 		this.otSystem = otSystem;
 		this.repository = repository;
@@ -58,16 +58,16 @@ public final class OTUplinkImpl<K, D, PC> implements OTUplink<K, D, PC>, WithIni
 		this.protoCommitDecoder = protoCommitDecoder;
 	}
 
-	public static <K, D, C> OTUplinkImpl<K, D, C> create(IOTRepository<K, D> repository, OTSystem<D> otSystem,
+	public static <K, D, C> OTUplinkImpl<K, D, C> create(OTRepository<K, D> repository, OTSystem<D> otSystem,
 			FunctionEx<OTCommit<K, D>, C> commitToObject, FunctionEx<C, OTCommit<K, D>> objectToCommit) {
 		return new OTUplinkImpl<>(repository, otSystem, commitToObject, objectToCommit);
 	}
 
-	public static <K, D> OTUplinkImpl<K, D, OTCommit<K, D>> create(IOTRepository<K, D> repository, OTSystem<D> otSystem) {
+	public static <K, D> OTUplinkImpl<K, D, OTCommit<K, D>> create(OTRepository<K, D> repository, OTSystem<D> otSystem) {
 		return new OTUplinkImpl<>(repository, otSystem, commit -> commit, object -> object);
 	}
 
-	public IOTRepository<K, D> getRepository() {
+	public OTRepository<K, D> getRepository() {
 		return repository;
 	}
 

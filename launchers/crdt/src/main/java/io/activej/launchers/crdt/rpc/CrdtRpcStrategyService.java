@@ -18,12 +18,12 @@ package io.activej.launchers.crdt.rpc;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.ReactiveService;
-import io.activej.crdt.storage.cluster.IDiscoveryService;
+import io.activej.crdt.storage.cluster.DiscoveryService;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
-import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.client.ReactiveRpcClient;
 import io.activej.rpc.client.sender.RpcStrategy;
 
 import java.util.function.Function;
@@ -33,21 +33,21 @@ import static io.activej.common.Checks.checkState;
 
 public final class CrdtRpcStrategyService<K extends Comparable<K>> extends AbstractReactive
 		implements ReactiveService {
-	private final IDiscoveryService<?> discoveryService;
+	private final DiscoveryService<?> discoveryService;
 	private final Function<Object, K> keyGetter;
 
-	private RpcClient rpcClient;
+	private ReactiveRpcClient rpcClient;
 	private Function<RpcStrategy, RpcStrategy> strategyMapFn = Function.identity();
 
 	private boolean stopped;
 
-	private CrdtRpcStrategyService(Reactor reactor, IDiscoveryService<?> discoveryService, Function<Object, K> keyGetter) {
+	private CrdtRpcStrategyService(Reactor reactor, DiscoveryService<?> discoveryService, Function<Object, K> keyGetter) {
 		super(reactor);
 		this.discoveryService = discoveryService;
 		this.keyGetter = keyGetter;
 	}
 
-	public static <K extends Comparable<K>> CrdtRpcStrategyService<K> create(Reactor reactor, IDiscoveryService<?> discoveryService, Function<Object, K> keyGetter) {
+	public static <K extends Comparable<K>> CrdtRpcStrategyService<K> create(Reactor reactor, DiscoveryService<?> discoveryService, Function<Object, K> keyGetter) {
 		return new CrdtRpcStrategyService<>(reactor, discoveryService, keyGetter);
 	}
 
@@ -56,7 +56,7 @@ public final class CrdtRpcStrategyService<K extends Comparable<K>> extends Abstr
 		return this;
 	}
 
-	public void setRpcClient(RpcClient rpcClient) {
+	public void setRpcClient(ReactiveRpcClient rpcClient) {
 		checkState(this.rpcClient == null && rpcClient.getReactor() == reactor);
 
 		this.rpcClient = rpcClient;
@@ -66,7 +66,7 @@ public final class CrdtRpcStrategyService<K extends Comparable<K>> extends Abstr
 	public Promise<?> start() {
 		checkNotNull(rpcClient);
 
-		AsyncSupplier<? extends IDiscoveryService.PartitionScheme<?>> discoverySupplier = discoveryService.discover();
+		AsyncSupplier<? extends DiscoveryService.PartitionScheme<?>> discoverySupplier = discoveryService.discover();
 		return discoverySupplier.get()
 				.whenResult(partitionScheme -> {
 					RpcStrategy rpcStrategy = partitionScheme.createRpcStrategy(keyGetter);

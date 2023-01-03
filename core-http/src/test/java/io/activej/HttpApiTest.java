@@ -34,7 +34,7 @@ public final class HttpApiTest {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	private HttpServer server;
-	private HttpClient client;
+	private ReactiveHttpClient client;
 
 	private int port;
 
@@ -68,7 +68,7 @@ public final class HttpApiTest {
 				})
 				.withListenPort(port);
 
-		client = HttpClient.create(Reactor.getCurrentReactor());
+		client = ReactiveHttpClient.create(Reactor.getCurrentReactor());
 
 		// setup request and response data
 		requestAcceptContentTypes.add(AcceptMediaType.of(MediaTypes.ANY_AUDIO, 90));

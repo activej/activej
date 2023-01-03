@@ -43,16 +43,16 @@ import static javax.net.ssl.SSLEngineResult.Status.BUFFER_UNDERFLOW;
 import static javax.net.ssl.SSLEngineResult.Status.CLOSED;
 
 /**
- * This is an SSL proxy around {@link ITcpSocket}.
+ * This is an SSL proxy around {@link TcpSocket}.
  * <p>
  * It allows SSL connections using Java {@link SSLEngine}.
  */
-public final class TcpSocketSsl extends AbstractNioReactive implements ITcpSocket, WithInitializer<TcpSocketSsl> {
-	public static final boolean ERROR_ON_CLOSE_WITHOUT_NOTIFY = ApplicationSettings.getBoolean(TcpSocketSsl.class, "errorOnCloseWithoutNotify", false);
+public final class ReactiveTcpSocketSsl extends AbstractNioReactive implements TcpSocket, WithInitializer<ReactiveTcpSocketSsl> {
+	public static final boolean ERROR_ON_CLOSE_WITHOUT_NOTIFY = ApplicationSettings.getBoolean(ReactiveTcpSocketSsl.class, "errorOnCloseWithoutNotify", false);
 
 	private final SSLEngine engine;
 	private final Executor executor;
-	private final ITcpSocket upstream;
+	private final TcpSocket upstream;
 
 	private ByteBuf net2engine = ByteBuf.empty();
 	private ByteBuf engine2app = ByteBuf.empty();
@@ -63,7 +63,7 @@ public final class TcpSocketSsl extends AbstractNioReactive implements ITcpSocke
 	private @Nullable SettablePromise<Void> write;
 	private @Nullable Promise<Void> pendingUpstreamWrite;
 
-	private TcpSocketSsl(NioReactor reactor, ITcpSocket asyncTcpSocket,
+	private ReactiveTcpSocketSsl(NioReactor reactor, TcpSocket asyncTcpSocket,
 			SSLEngine engine, Executor executor) {
 		super(reactor);
 		this.engine = engine;
@@ -72,7 +72,7 @@ public final class TcpSocketSsl extends AbstractNioReactive implements ITcpSocke
 		startHandShake();
 	}
 
-	public static TcpSocketSsl wrapClientSocket(NioReactor reactor, ITcpSocket asyncTcpSocket,
+	public static ReactiveTcpSocketSsl wrapClientSocket(NioReactor reactor, TcpSocket asyncTcpSocket,
 			String host, int port,
 			SSLContext sslContext, Executor executor) {
 		SSLEngine sslEngine = sslContext.createSSLEngine(host, port);
@@ -80,23 +80,23 @@ public final class TcpSocketSsl extends AbstractNioReactive implements ITcpSocke
 		return create(reactor, asyncTcpSocket, sslEngine, executor);
 	}
 
-	public static TcpSocketSsl wrapClientSocket(NioReactor reactor, ITcpSocket asyncTcpSocket,
+	public static ReactiveTcpSocketSsl wrapClientSocket(NioReactor reactor, TcpSocket asyncTcpSocket,
 			SSLContext sslContext, Executor executor) {
 		SSLEngine sslEngine = sslContext.createSSLEngine();
 		sslEngine.setUseClientMode(true);
 		return create(reactor, asyncTcpSocket, sslEngine, executor);
 	}
 
-	public static TcpSocketSsl wrapServerSocket(NioReactor reactor, ITcpSocket asyncTcpSocket,
+	public static ReactiveTcpSocketSsl wrapServerSocket(NioReactor reactor, TcpSocket asyncTcpSocket,
 			SSLContext sslContext, Executor executor) {
 		SSLEngine sslEngine = sslContext.createSSLEngine();
 		sslEngine.setUseClientMode(false);
 		return create(reactor, asyncTcpSocket, sslEngine, executor);
 	}
 
-	public static TcpSocketSsl create(NioReactor reactor, ITcpSocket asyncTcpSocket,
+	public static ReactiveTcpSocketSsl create(NioReactor reactor, TcpSocket asyncTcpSocket,
 			SSLEngine engine, Executor executor) {
-		return new TcpSocketSsl(reactor, asyncTcpSocket, engine, executor);
+		return new ReactiveTcpSocketSsl(reactor, asyncTcpSocket, engine, executor);
 	}
 
 	@Override

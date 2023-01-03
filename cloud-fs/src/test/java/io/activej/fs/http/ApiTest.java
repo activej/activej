@@ -4,8 +4,8 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
+import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
-import io.activej.fs.IActiveFs;
 import io.activej.http.RoutingServlet;
 import io.activej.http.StubHttpClient;
 import io.activej.promise.Promise;
@@ -184,7 +184,7 @@ public final class ApiTest {
 	}
 
 	private @NotNull RoutingServlet getServlet() {
-		return ActiveFsServlet.create(new IActiveFs() {
+		return ActiveFsServlet.create(new ActiveFs() {
 			<T> Promise<T> resultOf(@Nullable T result, Object... args) {
 				params.clear();
 				params.add(result);

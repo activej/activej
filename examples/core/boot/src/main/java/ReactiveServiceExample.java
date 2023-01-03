@@ -13,7 +13,7 @@ import io.activej.service.ServiceGraphModule;
 import java.time.Duration;
 
 //[START EXAMPLE]
-public class ReactorServiceExample extends Launcher {
+public class ReactiveServiceExample extends Launcher {
 
 	@Provides
 	Reactor reactor() {
@@ -57,7 +57,7 @@ public class ReactorServiceExample extends Launcher {
 	}
 
 	public static void main(String[] args) throws Exception {
-		ReactorServiceExample example = new ReactorServiceExample();
+		ReactiveServiceExample example = new ReactiveServiceExample();
 		example.launch(args);
 	}
 }

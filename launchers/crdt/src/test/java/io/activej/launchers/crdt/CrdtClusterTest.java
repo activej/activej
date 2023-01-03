@@ -6,10 +6,10 @@ import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
-import io.activej.fs.IActiveFs;
+import io.activej.fs.ActiveFs;
 import io.activej.fs.LocalActiveFs;
-import io.activej.http.HttpClient;
 import io.activej.http.HttpRequest;
+import io.activej.http.ReactiveHttpClient;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
@@ -92,7 +92,7 @@ public final class CrdtClusterTest {
 				}
 
 				@Provides
-				IActiveFs fs(Reactor reactor, Executor executor, Config config) {
+				ActiveFs fs(Reactor reactor, Executor executor, Config config) {
 					return LocalActiveFs.create(reactor, executor, config.get(ofPath(), "crdt.local.path"));
 				}
 			};
@@ -160,7 +160,7 @@ public final class CrdtClusterTest {
 
 	@Test
 	public void uploadWithHTTP() {
-		HttpClient client = HttpClient.create(Reactor.getCurrentReactor());
+		ReactiveHttpClient client = ReactiveHttpClient.create(Reactor.getCurrentReactor());
 
 		PromiseStats uploadStat = PromiseStats.create(Duration.ofSeconds(5));
 

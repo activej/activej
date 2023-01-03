@@ -19,7 +19,7 @@ package io.activej.launchers.fs;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.initializer.Initializer;
 import io.activej.config.Config;
-import io.activej.fs.IActiveFs;
+import io.activej.fs.ActiveFs;
 import io.activej.fs.LocalActiveFs;
 import io.activej.fs.cluster.ClusterActiveFs;
 import io.activej.fs.cluster.ClusterRepartitionController;
@@ -27,7 +27,7 @@ import io.activej.fs.cluster.DiscoveryService;
 import io.activej.fs.http.HttpActiveFs;
 import io.activej.fs.tcp.ActiveFsServer;
 import io.activej.fs.tcp.RemoteActiveFs;
-import io.activej.http.HttpClient;
+import io.activej.http.ReactiveHttpClient;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.trigger.TriggersModuleSettings;
 import org.jetbrains.annotations.Nullable;
@@ -62,15 +62,15 @@ public final class Initializers {
 		return constantDiscoveryService(reactor, null, config);
 	}
 
-	public static DiscoveryService constantDiscoveryService(NioReactor reactor, @Nullable IActiveFs local, Config config) throws MalformedDataException {
-		Map<Object, IActiveFs> partitions = new LinkedHashMap<>();
+	public static DiscoveryService constantDiscoveryService(NioReactor reactor, @Nullable ActiveFs local, Config config) throws MalformedDataException {
+		Map<Object, ActiveFs> partitions = new LinkedHashMap<>();
 		partitions.put(config.get("activefs.repartition.localPartitionId"), local);
 
 		List<String> partitionStrings = config.get(ofList(ofString()), "partitions", List.of());
 		for (String toAdd : partitionStrings) {
-			IActiveFs client;
+			ActiveFs client;
 			if (toAdd.startsWith("http")) {
-				client = HttpActiveFs.create(reactor, toAdd, HttpClient.create(reactor));
+				client = HttpActiveFs.create(reactor, toAdd, ReactiveHttpClient.create(reactor));
 			} else {
 				client = RemoteActiveFs.create(reactor, parseInetSocketAddress(toAdd));
 			}

@@ -18,7 +18,7 @@ public class WriteAheadLogAdaptersTest {
 	public void testFlushOnUpdatesCount() {
 		WriteAheadLogStub walStub = new WriteAheadLogStub();
 		int updatesCount = 100;
-		IWriteAheadLog<Integer, Integer> wal = WriteAheadLogAdapters.flushOnUpdatesCount(walStub, updatesCount);
+		WriteAheadLog<Integer, Integer> wal = WriteAheadLogAdapters.flushOnUpdatesCount(walStub, updatesCount);
 
 		for (int i = 0; i < 100; i++) {
 			int j = 0;
@@ -31,7 +31,7 @@ public class WriteAheadLogAdaptersTest {
 		}
 	}
 
-	private static final class WriteAheadLogStub implements IWriteAheadLog<Integer, Integer> {
+	private static final class WriteAheadLogStub implements WriteAheadLog<Integer, Integer> {
 		private int updatesCount;
 
 		@Override
