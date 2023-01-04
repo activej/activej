@@ -55,7 +55,7 @@ public final class JsonUtils {
 		return fromJson(manifest, bytes);
 	}
 
-	public static <T> T fromJson(TypeT<T> type, byte [] bytes) throws MalformedDataException {
+	public static <T> T fromJson(TypeT<T> type, byte[] bytes) throws MalformedDataException {
 		return fromJson(type.getType(), bytes);
 	}
 

@@ -116,7 +116,7 @@ public abstract class RedisResponse<T> {
 	/**
 	 * Parses a Redis Bulk String as an array of bytes (may parse {@code null} indicating Redis Nil)
 	 */
-	public static final RedisResponse<byte []> BYTES = new RedisResponse<>() {
+	public static final RedisResponse<byte[]> BYTES = new RedisResponse<>() {
 		@Override
 		public byte @Nullable [] parse(RESPv2 data) throws MalformedDataException {
 			return data.readBytes();

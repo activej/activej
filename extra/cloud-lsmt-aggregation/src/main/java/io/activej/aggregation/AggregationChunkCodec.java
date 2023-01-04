@@ -20,7 +20,6 @@ import com.dslplatform.json.*;
 import com.dslplatform.json.JsonReader.ReadObject;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.common.initializer.WithInitializer;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -83,8 +82,9 @@ public class AggregationChunkCodec implements JsonCodec<AggregationChunk>, WithI
 		return AggregationChunk.create(id, measures, from, to, count);
 	}
 
+	@SuppressWarnings("NullableProblems")
 	@Override
-	public void write(@NotNull JsonWriter writer, AggregationChunk chunk) {
+	public void write(JsonWriter writer, AggregationChunk chunk) {
 		if (chunk == null) {
 			writer.writeNull();
 			return;

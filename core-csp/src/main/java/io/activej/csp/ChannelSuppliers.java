@@ -30,7 +30,6 @@ import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -398,8 +397,9 @@ public final class ChannelSuppliers {
 				return doRead(ByteBuf::readByte);
 			}
 
+			@SuppressWarnings("NullableProblems")
 			@Override
-			public int read(byte @NotNull [] b, int off, int len) throws IOException {
+			public int read(byte[] b, int off, int len) throws IOException {
 				return doRead(buf -> buf.read(b, off, min(buf.readRemaining(), len)));
 			}
 

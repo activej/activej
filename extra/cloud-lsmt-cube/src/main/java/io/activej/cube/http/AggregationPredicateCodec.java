@@ -24,7 +24,6 @@ import io.activej.aggregation.AggregationPredicate;
 import io.activej.aggregation.AggregationPredicates;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.common.initializer.WithInitializer;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -153,8 +152,9 @@ final class AggregationPredicateCodec implements JsonCodec<AggregationPredicate>
 		write(writer, predicate.getPredicate());
 	}
 
+	@SuppressWarnings("NullableProblems")
 	@Override
-	public void write(@NotNull JsonWriter writer, AggregationPredicate predicate) {
+	public void write(JsonWriter writer, AggregationPredicate predicate) {
 		if (predicate instanceof PredicateEq predicateEq) {
 			writer.writeByte(OBJECT_START);
 			writeEq(writer, predicateEq);
@@ -353,8 +353,7 @@ final class AggregationPredicateCodec implements JsonCodec<AggregationPredicate>
 		reader.getNextToken();
 		Comparable<?> value = (Comparable<?>) readObject.read(reader);
 		reader.getNextToken();
-		AttributeAndValue attributeAndValue = new AttributeAndValue(attribute, value);
-		return attributeAndValue;
+		return new AttributeAndValue(attribute, value);
 	}
 
 	private AggregationPredicate readIn(JsonReader reader) throws IOException {

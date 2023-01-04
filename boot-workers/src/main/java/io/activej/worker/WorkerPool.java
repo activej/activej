@@ -23,7 +23,6 @@ import io.activej.inject.annotation.ShortTypeName;
 import io.activej.inject.binding.Binding;
 import io.activej.inject.util.Trie;
 import io.activej.worker.annotation.WorkerId;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -63,8 +62,9 @@ public final class WorkerPool {
 			return instances.length;
 		}
 
+		@SuppressWarnings("NullableProblems")
 		@Override
-		public @NotNull Iterator<T> iterator() {
+		public Iterator<T> iterator() {
 			return list.iterator();
 		}
 	}

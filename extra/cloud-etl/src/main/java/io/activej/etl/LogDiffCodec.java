@@ -24,7 +24,6 @@ import io.activej.common.initializer.WithInitializer;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
 import io.activej.ot.repository.JsonIndentUtils;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.*;
@@ -32,7 +31,7 @@ import java.util.*;
 import static com.dslplatform.json.JsonWriter.*;
 import static com.dslplatform.json.NumberConverter.serialize;
 
-@SuppressWarnings({"unchecked", "rawtypes"})
+@SuppressWarnings({"unchecked", "rawtypes", "NullableProblems"})
 public final class LogDiffCodec<D> implements ReadObject<LogDiff<D>>, WriteObject<LogDiff<D>>, WithInitializer<LogDiffCodec<D>> {
 	public static final String POSITIONS = "positions";
 	public static final String LOG = "log";
@@ -91,7 +90,7 @@ public final class LogDiffCodec<D> implements ReadObject<LogDiff<D>>, WriteObjec
 	}
 
 	@Override
-	public void write(@NotNull JsonWriter writer, LogDiff<D> value) {
+	public void write(JsonWriter writer, LogDiff<D> value) {
 		if (value == null) {
 			writer.writeNull();
 			return;
@@ -143,7 +142,7 @@ public final class LogDiffCodec<D> implements ReadObject<LogDiff<D>>, WriteObjec
 		});
 
 		@Override
-		public void write(@NotNull JsonWriter writer, LogPosition value) {
+		public void write(JsonWriter writer, LogPosition value) {
 			onelined.write(writer, value);
 		}
 

@@ -19,7 +19,6 @@ package io.activej.bytebuf.util;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.MemSize;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -35,6 +34,7 @@ import java.nio.charset.StandardCharsets;
  * <p>
  * This is a useful proxy between ActiveJ {@link ByteBuf ByteBufs} and API's that use standard Java {@link Writer writers}.
  */
+@SuppressWarnings("NullableProblems")
 public final class ByteBufWriter extends Writer {
 	public static final MemSize INITIAL_BUF_SIZE = MemSize.kilobytes(2);
 
@@ -61,7 +61,7 @@ public final class ByteBufWriter extends Writer {
 	}
 
 	@Override
-	public void write(char @NotNull [] cbuf, int off, int len) {
+	public void write(char[] cbuf, int off, int len) {
 		ByteBuffer buffer = charset.encode(CharBuffer.wrap(cbuf, off, len));
 		this.byteBuf = ByteBufPool.append(byteBuf, buffer.array(), buffer.position(), buffer.limit());
 	}
@@ -90,7 +90,7 @@ public final class ByteBufWriter extends Writer {
 	}
 
 	@Override
-	public void write(char @NotNull [] cbuf) {
+	public void write(char[] cbuf) {
 		try {
 			super.write(cbuf);
 		} catch (IOException ignored) {
@@ -99,7 +99,7 @@ public final class ByteBufWriter extends Writer {
 	}
 
 	@Override
-	public void write(@NotNull String str) {
+	public void write(String str) {
 		try {
 			super.write(str);
 		} catch (IOException ignored) {
@@ -108,7 +108,7 @@ public final class ByteBufWriter extends Writer {
 	}
 
 	@Override
-	public void write(@NotNull String str, int off, int len) {
+	public void write(String str, int off, int len) {
 		try {
 			super.write(str, off, len);
 		} catch (IOException ignored) {

@@ -20,7 +20,6 @@ import io.activej.async.callback.AsyncComputation;
 import io.activej.common.function.RunnableEx;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -91,8 +90,9 @@ public final class BlockingReactorExecutor implements ReactorExecutor, WithIniti
 		}
 	}
 
+	@SuppressWarnings("NullableProblems")
 	@Override
-	public void execute(@NotNull Runnable runnable) {
+	public void execute(Runnable runnable) {
 		try {
 			post(() -> {
 				try {

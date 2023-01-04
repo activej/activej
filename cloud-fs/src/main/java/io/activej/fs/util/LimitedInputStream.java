@@ -16,11 +16,10 @@
 
 package io.activej.fs.util;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.io.IOException;
 import java.io.InputStream;
 
+@SuppressWarnings("NullableProblems")
 public final class LimitedInputStream extends InputStream {
 	private final InputStream peer;
 	private long remaining;
@@ -41,7 +40,7 @@ public final class LimitedInputStream extends InputStream {
 	}
 
 	@Override
-	public int read(byte @NotNull [] buf, int off, int len) throws IOException {
+	public int read(byte[] buf, int off, int len) throws IOException {
 		if (remaining > 0) {
 			int nRead = peer.read(
 					buf, off, (int) Math.min(len, remaining));
@@ -55,7 +54,7 @@ public final class LimitedInputStream extends InputStream {
 	}
 
 	@Override
-	public int read(byte @NotNull [] buf) throws IOException {
+	public int read(byte[] buf) throws IOException {
 		return this.read(buf, 0, buf.length);
 	}
 

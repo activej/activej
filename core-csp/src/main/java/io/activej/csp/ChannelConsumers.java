@@ -23,7 +23,6 @@ import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.Reactor;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Closeable;
@@ -156,8 +155,9 @@ public final class ChannelConsumers {
 				write(new byte[]{(byte) b}, 0, 1);
 			}
 
+			@SuppressWarnings("NullableProblems")
 			@Override
-			public void write(byte @NotNull [] b, int off, int len) throws IOException {
+			public void write(byte[] b, int off, int len) throws IOException {
 				if (isClosed) {
 					throw new IOException("Stream Closed");
 				}

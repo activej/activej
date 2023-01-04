@@ -21,7 +21,6 @@ import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.NumberConverter;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.common.exception.MalformedDataException;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
@@ -30,6 +29,7 @@ public interface ChunkIdCodec<C> extends JsonCodec<C> {
 
 	C fromFileName(String chunkFileName) throws MalformedDataException;
 
+	@SuppressWarnings("NullableProblems")
 	static ChunkIdCodec<Long> ofLong() {
 		return new ChunkIdCodec<>() {
 			@Override
@@ -47,17 +47,18 @@ public interface ChunkIdCodec<C> extends JsonCodec<C> {
 			}
 
 			@Override
-			public Long read(@NotNull JsonReader reader) throws IOException {
+			public Long read(JsonReader reader) throws IOException {
 				return NumberConverter.deserializeLong(reader);
 			}
 
 			@Override
-			public void write(@NotNull JsonWriter writer, Long value) {
+			public void write(JsonWriter writer, Long value) {
 				NumberConverter.serialize(value, writer);
 			}
 		};
 	}
 
+	@SuppressWarnings("NullableProblems")
 	static ChunkIdCodec<String> ofString() {
 		return new ChunkIdCodec<>() {
 			@Override
@@ -71,12 +72,12 @@ public interface ChunkIdCodec<C> extends JsonCodec<C> {
 			}
 
 			@Override
-			public String read(@NotNull JsonReader reader) throws IOException {
+			public String read(JsonReader reader) throws IOException {
 				return reader.readString();
 			}
 
 			@Override
-			public void write(@NotNull JsonWriter writer, String value) {
+			public void write(JsonWriter writer, String value) {
 				writer.writeString(value);
 			}
 		};

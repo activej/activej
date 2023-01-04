@@ -41,7 +41,6 @@ import io.activej.reactor.nio.NioReactor;
 import io.activej.reactor.schedule.ScheduledRunnable;
 import io.activej.reactor.util.RunnableWithContext;
 import org.jetbrains.annotations.Async;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -984,8 +983,9 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 *
 	 * @param runnable runnable of this task
 	 */
+	@SuppressWarnings("NullableProblems")
 	@Override
-	public void execute(@Async.Schedule @NotNull Runnable runnable) {
+	public void execute(@Async.Schedule Runnable runnable) {
 		concurrentTasks.offer(runnable);
 		if (selector != null) {
 			selector.wakeup();

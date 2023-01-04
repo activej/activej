@@ -17,7 +17,6 @@
 package io.activej.aggregation;
 
 import io.activej.common.Checks;
-import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -106,9 +105,9 @@ public class PrimaryKey implements Comparable<PrimaryKey> {
 		return Arrays.hashCode(values);
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "NullableProblems"})
 	@Override
-	public int compareTo(@NotNull PrimaryKey o) {
+	public int compareTo(PrimaryKey o) {
 		if (CHECK) checkArgument(values.length == o.values.length);
 
 		for (int i = 0; i < values.length; i++) {

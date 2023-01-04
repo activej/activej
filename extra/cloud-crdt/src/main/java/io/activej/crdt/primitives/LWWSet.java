@@ -20,7 +20,6 @@ import io.activej.common.time.CurrentTimeProvider;
 import io.activej.serializer.BinaryInput;
 import io.activej.serializer.BinaryOutput;
 import io.activej.serializer.BinarySerializer;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -31,6 +30,7 @@ import java.util.stream.Stream;
 import static java.lang.Math.max;
 import static java.util.stream.Collectors.toMap;
 
+@SuppressWarnings("NullableProblems")
 public final class LWWSet<E> implements Set<E>, CrdtType<LWWSet<E>> {
 	private final Map<E, Timestamps> set;
 
@@ -95,19 +95,19 @@ public final class LWWSet<E> implements Set<E>, CrdtType<LWWSet<E>> {
 	}
 
 	@Override
-	public @NotNull Iterator<E> iterator() {
+	public Iterator<E> iterator() {
 		return stream().iterator();
 	}
 
 	@Override
-	public Object @NotNull [] toArray() {
+	public Object[] toArray() {
 		//noinspection SimplifyStreamApiCallChains
 		return stream().toArray();
 	}
 
-	@SuppressWarnings({"SuspiciousToArrayCall", "SimplifyStreamApiCallChains"})
+	@SuppressWarnings("SimplifyStreamApiCallChains")
 	@Override
-	public <T> T @NotNull [] toArray(T @NotNull [] a) {
+	public <T> T[] toArray(T[] a) {
 		return stream().toArray($ -> a);
 	}
 
@@ -152,7 +152,7 @@ public final class LWWSet<E> implements Set<E>, CrdtType<LWWSet<E>> {
 	}
 
 	@Override
-	public boolean retainAll(@NotNull Collection<?> c) {
+	public boolean retainAll(Collection<?> c) {
 		boolean removed = false;
 		for (E item : this) {
 			if (!c.contains(item)) {

@@ -29,7 +29,6 @@ import io.activej.datastream.processor.StreamSupplierTransformer;
 import io.activej.datastream.stats.IntrusiveLinkedList.Node;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -119,8 +118,9 @@ public final class StreamRegistry<V> implements Iterable<V>, WithInitializer<Str
 				.whenComplete(() -> list.removeNode(node));
 	}
 
+	@SuppressWarnings("NullableProblems")
 	@Override
-	public @NotNull Iterator<V> iterator() {
+	public Iterator<V> iterator() {
 		Iterator<Entry<V>> iterator = list.iterator();
 		return new Iterator<>() {
 			@Override

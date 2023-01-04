@@ -229,7 +229,7 @@ public class Types {
 		}
 
 		@Override
-		public Type [] getActualTypeArguments() {
+		public Type[] getActualTypeArguments() {
 			return actualTypeArguments;
 		}
 

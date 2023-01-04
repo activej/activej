@@ -28,7 +28,6 @@ import io.activej.cube.QueryResult;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
 import io.activej.types.Types;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -232,8 +231,9 @@ final class QueryResultCodec implements JsonCodec<QueryResult>, WithInitializer<
 		return strings;
 	}
 
+	@SuppressWarnings("NullableProblems")
 	@Override
-	public void write(@NotNull JsonWriter writer, QueryResult result) {
+	public void write(JsonWriter writer, QueryResult result) {
 		if (result == null) {
 			writer.writeNull();
 			return;

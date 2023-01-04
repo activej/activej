@@ -21,6 +21,7 @@ import static io.activej.serializer.Utils.DEFINING_CLASS_LOADER;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
+@SuppressWarnings("Convert2Diamond")
 public class SerializerBuilder2Test {
 	@Rule
 	public final ClassBuilderConstantsRule classBuilderConstantsRule = new ClassBuilderConstantsRule();

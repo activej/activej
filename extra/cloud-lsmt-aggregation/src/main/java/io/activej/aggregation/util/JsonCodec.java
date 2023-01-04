@@ -20,21 +20,22 @@ import com.dslplatform.json.JsonReader;
 import com.dslplatform.json.JsonReader.ReadObject;
 import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.JsonWriter.WriteObject;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 
 public interface JsonCodec<T> extends ReadObject<T>, WriteObject<T> {
+
+	@SuppressWarnings("NullableProblems")
 	static <T> JsonCodec<T> of(ReadObject<T> readObject, WriteObject<T> writeObject) {
 		return new JsonCodec<>() {
 			@Override
-			public T read(@NotNull JsonReader reader) throws IOException {
+			public T read(JsonReader reader) throws IOException {
 				return readObject.read(reader);
 			}
 
 			@Override
-			public void write(@NotNull JsonWriter writer, T value) {
+			public void write(JsonWriter writer, T value) {
 				writeObject.write(writer, value);
 			}
 		};

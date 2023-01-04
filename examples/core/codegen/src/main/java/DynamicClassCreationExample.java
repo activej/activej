@@ -2,7 +2,6 @@ import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.ExpressionHashCode;
 import io.activej.codegen.expression.ExpressionToString;
-import org.jetbrains.annotations.NotNull;
 
 import static io.activej.codegen.expression.Expressions.*;
 
@@ -66,7 +65,7 @@ public class DynamicClassCreationExample {
 	}
 
 	//[START REGION_1]
-	@SuppressWarnings("unused")
+	@SuppressWarnings({"unused", "NullableProblems"})
 	public interface Person extends Comparable<Person> {
 		void setIdAndName(int id, String name);
 
@@ -79,7 +78,7 @@ public class DynamicClassCreationExample {
 		int hash();
 
 		@Override
-		int compareTo(@NotNull Person o);
+		int compareTo(Person o);
 
 		@Override
 		String toString();

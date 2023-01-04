@@ -21,7 +21,6 @@ import com.dslplatform.json.JsonReader;
 import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.NumberConverter;
 import io.activej.aggregation.util.JsonCodec;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -69,15 +68,16 @@ class JsonCodecs {
 			}, (writer, value) -> writer.writeString(value.toString())
 	);
 
+	@SuppressWarnings("NullableProblems")
 	static <T> JsonCodec<Set<T>> ofSet(JsonCodec<T> codec) {
 		return new JsonCodec<>() {
 			@Override
-			public Set<T> read(@NotNull JsonReader reader) throws IOException {
+			public Set<T> read(JsonReader reader) throws IOException {
 				return ((JsonReader<?>) reader).readSet(codec);
 			}
 
 			@Override
-			public void write(@NotNull JsonWriter writer, Set<T> value) {
+			public void write(JsonWriter writer, Set<T> value) {
 				writer.serialize(value, codec);
 			}
 		};

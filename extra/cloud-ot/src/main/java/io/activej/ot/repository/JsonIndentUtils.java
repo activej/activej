@@ -2,7 +2,6 @@ package io.activej.ot.repository;
 
 import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.JsonWriter.WriteObject;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -10,6 +9,7 @@ import java.io.OutputStream;
 import static com.dslplatform.json.JsonWriter.ESCAPE;
 import static com.dslplatform.json.JsonWriter.QUOTE;
 
+@SuppressWarnings("NullableProblems")
 public class JsonIndentUtils {
 	static final ThreadLocal<OnelineOutputStream> BYTE_STREAM = new ThreadLocal<>();
 
@@ -31,7 +31,7 @@ public class JsonIndentUtils {
 		}
 
 		@Override
-		public void write(@NotNull JsonWriter writer, T value) {
+		public void write(JsonWriter writer, T value) {
 			OnelineOutputStream onelineOutputStream = BYTE_STREAM.get();
 			if (!onelineOutputStream.enabled) {
 				writeObject.write(writer, value);
@@ -53,7 +53,7 @@ public class JsonIndentUtils {
 		}
 
 		@Override
-		public void write(@NotNull JsonWriter writer, T value) {
+		public void write(JsonWriter writer, T value) {
 			OnelineOutputStream onelineOutputStream = BYTE_STREAM.get();
 			if (onelineOutputStream.enabled) {
 				writeObject.write(writer, value);
@@ -113,7 +113,7 @@ public class JsonIndentUtils {
 		}
 
 		@Override
-		public void write(byte @NotNull [] bytes, int off, int len) throws IOException {
+		public void write(byte[] bytes, int off, int len) throws IOException {
 			int start = off;
 
 			for (int i = off; i < off + len; i++) {

@@ -38,7 +38,6 @@ import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -503,8 +502,9 @@ public final class ClusterRepartitionController extends AbstractReactive
 			return localMetadata.getSize() >= maxSize;
 		}
 
+		@SuppressWarnings("NullableProblems")
 		@Override
-		public int compareTo(ClusterRepartitionController.@NotNull InfoResults o) {
+		public int compareTo(ClusterRepartitionController.InfoResults o) {
 			return INFO_RESULTS_COMPARATOR.compare(this, o);
 		}
 	}
