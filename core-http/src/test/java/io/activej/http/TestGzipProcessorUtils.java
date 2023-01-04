@@ -118,7 +118,7 @@ public final class TestGzipProcessorUtils {
 								}))
 				.withListenPort(port);
 
-		ReactiveHttpClient client = ReactiveHttpClient.create(Reactor.getCurrentReactor());
+		HttpClient client = ReactiveHttpClient.create(Reactor.getCurrentReactor());
 
 		HttpRequest request = HttpRequest.get("http://127.0.0.1:" + port)
 				.withHeader(ACCEPT_ENCODING, "gzip")
@@ -131,10 +131,7 @@ public final class TestGzipProcessorUtils {
 				.whenComplete(assertCompleteFn(response -> assertEquals("gzip", response.getHeader(CONTENT_ENCODING))))
 				.then(response -> response.loadBody(CHARACTERS_COUNT))
 				.map(buf -> buf.slice())
-				.whenComplete(() -> {
-					server.close();
-					client.stop();
-				}));
+				.whenComplete(server::close));
 
 		assertEquals(text, body.asString(UTF_8));
 	}

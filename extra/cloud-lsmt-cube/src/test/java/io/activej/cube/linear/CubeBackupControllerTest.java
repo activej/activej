@@ -96,7 +96,7 @@ public class CubeBackupControllerTest {
 				.withAggregation(id("pub").withDimensions("pub").withMeasures("pubRequests"))
 				.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests", "pubRequests"));
 
-		ChunksBackupService chunksBackupService = ChunksBackupService.ofActiveFsChunkStorage(aggregationChunkStorage);
+		ChunksBackupService chunksBackupService = ChunksBackupService.ofReactiveAggregationChunkStorage(aggregationChunkStorage);
 		backupController = CubeBackupController.create(dataSource, chunksBackupService);
 		uplink = CubeUplinkMySql.create(executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
 		backupController.initialize();

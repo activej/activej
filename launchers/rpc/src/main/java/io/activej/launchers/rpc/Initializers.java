@@ -44,7 +44,7 @@ public final class Initializers {
 				.withAutoFlushInterval(config.get(ofDuration(), "rpc.flushDelay", Duration.ZERO));
 	}
 
-	public static Initializer<TriggersModuleSettings> ofRpcClient() {
+	public static Initializer<TriggersModuleSettings> ofReactiveRpcClient() {
 		return triggersSettings -> triggersSettings
 				.with(ReactiveRpcClient.class, HIGH, "unresponsiveServers",
 						rpcClient -> {

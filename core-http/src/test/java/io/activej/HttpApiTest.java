@@ -34,7 +34,7 @@ public final class HttpApiTest {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	private HttpServer server;
-	private ReactiveHttpClient client;
+	private HttpClient client;
 
 	private int port;
 
@@ -100,7 +100,6 @@ public final class HttpApiTest {
 				.whenComplete((response, e) -> {
 					testResponse(response);
 					server.close();
-					client.stop();
 				}));
 	}
 

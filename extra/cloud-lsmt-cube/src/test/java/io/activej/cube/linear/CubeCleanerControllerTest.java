@@ -89,7 +89,7 @@ public class CubeCleanerControllerTest {
 		// 1S -> 2N -> 3N -> 4S -> 5N
 		initializeRepo();
 
-		ChunksCleanerService cleanerService = ChunksCleanerService.ofActiveFsChunkStorage(aggregationChunkStorage);
+		ChunksCleanerService cleanerService = ChunksCleanerService.ofReactiveAggregationChunkStorage(aggregationChunkStorage);
 		CubeCleanerController cleanerController = CubeCleanerController.create(dataSource, cleanerService)
 				.withChunksCleanupDelay(Duration.ofMillis(0));
 
@@ -101,7 +101,7 @@ public class CubeCleanerControllerTest {
 		// 1S -> 2N -> 3N -> 4S -> 5N
 		initializeRepo();
 
-		ChunksCleanerService cleanerService = ChunksCleanerService.ofActiveFsChunkStorage(aggregationChunkStorage);
+		ChunksCleanerService cleanerService = ChunksCleanerService.ofReactiveAggregationChunkStorage(aggregationChunkStorage);
 		CubeCleanerController cleanerController = CubeCleanerController.create(dataSource, cleanerService)
 				.withChunksCleanupDelay(Duration.ofSeconds(10));
 

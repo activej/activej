@@ -408,7 +408,7 @@ public final class CubeCleanerController implements ConcurrentJmxBean, WithIniti
 
 		void cleanup(Set<Long> chunkIds, Instant safePoint) throws IOException;
 
-		static ChunksCleanerService ofActiveFsChunkStorage(ReactiveAggregationChunkStorage<Long> storage) {
+		static ChunksCleanerService ofReactiveAggregationChunkStorage(ReactiveAggregationChunkStorage<Long> storage) {
 			return Utils.cleanerServiceOfStorage(storage);
 		}
 	}

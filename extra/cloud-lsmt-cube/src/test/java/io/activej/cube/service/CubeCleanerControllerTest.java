@@ -1,6 +1,5 @@
 package io.activej.cube.service;
 
-import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ChunkIdCodec;
 import io.activej.aggregation.ReactiveAggregationChunkStorage;
 import io.activej.async.function.AsyncSupplier;
@@ -58,7 +57,7 @@ public class CubeCleanerControllerTest {
 
 	private Reactor reactor;
 	private OTRepositoryMySql<LogDiff<CubeDiff>> repository;
-	private AggregationChunkStorage<Long> aggregationChunkStorage;
+	private ReactiveAggregationChunkStorage<Long> aggregationChunkStorage;
 
 	@Before
 	public void setUp() throws Exception {
@@ -91,7 +90,7 @@ public class CubeCleanerControllerTest {
 		initializeRepo();
 
 		CubeCleanerController<Long, LogDiff<CubeDiff>, Long> cleanerController = CubeCleanerController.create(reactor,
-						CubeDiffScheme.ofLogDiffs(), repository, OT_SYSTEM, (ReactiveAggregationChunkStorage<Long>) aggregationChunkStorage)
+						CubeDiffScheme.ofLogDiffs(), repository, OT_SYSTEM, aggregationChunkStorage)
 				.withFreezeTimeout(Duration.ofMillis(0))
 				.withExtraSnapshotsCount(1000);
 
@@ -104,7 +103,7 @@ public class CubeCleanerControllerTest {
 		initializeRepo();
 
 		CubeCleanerController<Long, LogDiff<CubeDiff>, Long> cleanerController = CubeCleanerController.create(reactor,
-						CubeDiffScheme.ofLogDiffs(), repository, OT_SYSTEM, (ReactiveAggregationChunkStorage<Long>) aggregationChunkStorage)
+						CubeDiffScheme.ofLogDiffs(), repository, OT_SYSTEM, aggregationChunkStorage)
 				.withFreezeTimeout(Duration.ofSeconds(10));
 
 		await(cleanerController.cleanup());

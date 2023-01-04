@@ -14,6 +14,7 @@ import io.activej.etl.LogDiff;
 import io.activej.etl.LogDiffCodec;
 import io.activej.etl.LogOT;
 import io.activej.ot.OTCommit;
+import io.activej.ot.repository.OTRepository;
 import io.activej.ot.repository.OTRepositoryMySql;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.OTUplink;
@@ -94,7 +95,7 @@ public abstract class CubeTestBase {
 							@Override
 							public OTUplinkImpl<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> createUninitialized(ReactiveCube cube) {
 								Reactor reactor = Reactor.getCurrentReactor();
-								OTRepositoryMySql<LogDiff<CubeDiff>> repository = OTRepositoryMySql.create(reactor, EXECUTOR, DATA_SOURCE, AsyncSupplier.of(new RefLong(0)::inc),
+								OTRepository<Long, LogDiff<CubeDiff>> repository = OTRepositoryMySql.create(reactor, EXECUTOR, DATA_SOURCE, AsyncSupplier.of(new RefLong(0)::inc),
 										LOG_OT, LogDiffCodec.create(CubeDiffCodec.create(cube)));
 								return OTUplinkImpl.create(repository, LOG_OT);
 							}

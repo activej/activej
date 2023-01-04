@@ -3,6 +3,7 @@ import io.activej.config.ConfigModule;
 import io.activej.dns.DnsClient;
 import io.activej.dns.ReactiveDnsClient;
 import io.activej.eventloop.Eventloop;
+import io.activej.http.HttpClient;
 import io.activej.http.HttpRequest;
 import io.activej.http.ReactiveHttpClient;
 import io.activej.inject.annotation.Inject;
@@ -26,7 +27,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 public final class HttpClientExample extends Launcher {
 	@Inject
-	ReactiveHttpClient httpClient;
+	HttpClient httpClient;
 
 	@Inject
 	NioReactor reactor;
@@ -38,7 +39,7 @@ public final class HttpClientExample extends Launcher {
 
 	//[START REGION_1]
 	@Provides
-	ReactiveHttpClient client(NioReactor reactor, DnsClient dnsClient) {
+	HttpClient client(NioReactor reactor, DnsClient dnsClient) {
 		return ReactiveHttpClient.create(reactor)
 				.withDnsClient(dnsClient);
 	}

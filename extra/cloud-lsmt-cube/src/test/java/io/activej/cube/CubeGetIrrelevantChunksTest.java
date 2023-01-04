@@ -47,7 +47,7 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 	private static final AggregationPredicate ADVERTISER_PREDICATE = gt("advertiser", LOWER_NUMBER_BOUNDARY);
 
 	private OTStateManager<Long, LogDiff<CubeDiff>> stateManager;
-	private ReactiveAggregationChunkStorage<Long> chunkStorage;
+	private AggregationChunkStorage<Long> chunkStorage;
 	private ReactiveCube.AggregationConfig dateAggregation;
 	private ReactiveCube.AggregationConfig advertiserDateAggregation;
 	private OTUplink<Long, LogDiff<CubeDiff>, ?> uplink;

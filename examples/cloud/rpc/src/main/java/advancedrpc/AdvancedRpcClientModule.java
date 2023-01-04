@@ -8,6 +8,7 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.ReactiveRpcClient;
+import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.RpcStrategy;
 import io.activej.rpc.client.sender.RpcStrategyFirstAvailable;
 import io.activej.rpc.client.sender.RpcStrategyRendezvousHashing;
@@ -34,7 +35,7 @@ public class AdvancedRpcClientModule extends AbstractModule {
 	}
 
 	@Provides
-	ReactiveRpcClient rpcClient(NioReactor reactor, RpcStrategy strategy) {
+	RpcClient rpcClient(NioReactor reactor, RpcStrategy strategy) {
 		return ReactiveRpcClient.create(reactor)
 				.withConnectTimeout(Duration.ofSeconds(1))
 				.withSerializerBuilder(SerializerBuilder.create())

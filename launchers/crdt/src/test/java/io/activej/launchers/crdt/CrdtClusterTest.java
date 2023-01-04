@@ -3,11 +3,13 @@ package io.activej.launchers.crdt;
 import io.activej.config.Config;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtStorageClient;
+import io.activej.crdt.storage.CrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.LocalActiveFs;
+import io.activej.http.HttpClient;
 import io.activej.http.HttpRequest;
 import io.activej.http.ReactiveHttpClient;
 import io.activej.inject.annotation.Provides;
@@ -160,7 +162,7 @@ public final class CrdtClusterTest {
 
 	@Test
 	public void uploadWithHTTP() {
-		ReactiveHttpClient client = ReactiveHttpClient.create(Reactor.getCurrentReactor());
+		HttpClient client = ReactiveHttpClient.create(Reactor.getCurrentReactor());
 
 		PromiseStats uploadStat = PromiseStats.create(Duration.ofSeconds(5));
 
@@ -189,7 +191,7 @@ public final class CrdtClusterTest {
 
 	@Test
 	public void uploadWithStreams() {
-		CrdtStorageClient<String, Integer> client = CrdtStorageClient.create(Reactor.getCurrentReactor(), new InetSocketAddress("localhost", 9000), UTF8_SERIALIZER, INT_SERIALIZER);
+		CrdtStorage<String, Integer> client = CrdtStorageClient.create(Reactor.getCurrentReactor(), new InetSocketAddress("localhost", 9000), UTF8_SERIALIZER, INT_SERIALIZER);
 
 		PromiseStats uploadStat = PromiseStats.create(Duration.ofSeconds(5));
 
@@ -204,7 +206,7 @@ public final class CrdtClusterTest {
 
 	@Test
 	public void downloadStuff() {
-		CrdtStorageClient<String, Integer> client = CrdtStorageClient.create(Reactor.getCurrentReactor(), new InetSocketAddress(9001), UTF8_SERIALIZER, INT_SERIALIZER);
+		CrdtStorage<String, Integer> client = CrdtStorageClient.create(Reactor.getCurrentReactor(), new InetSocketAddress(9001), UTF8_SERIALIZER, INT_SERIALIZER);
 
 		await(client.download().then(supplier -> supplier.streamTo(StreamConsumer.ofConsumer(System.out::println))));
 	}

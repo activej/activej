@@ -81,7 +81,7 @@ public final class ReactiveDnsClientTest {
 
 	@Test
 	public void testDnsClientTimeout() {
-		ReactiveDnsClient dnsClient = ReactiveDnsClient.create(Reactor.getCurrentReactor())
+		DnsClient dnsClient = ReactiveDnsClient.create(Reactor.getCurrentReactor())
 				.withTimeout(Duration.ofMillis(20))
 				.withDnsServerAddress(UNREACHABLE_DNS);
 

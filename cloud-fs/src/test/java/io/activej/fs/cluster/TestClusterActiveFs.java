@@ -13,6 +13,7 @@ import io.activej.fs.LocalActiveFs;
 import io.activej.fs.exception.FsException;
 import io.activej.fs.http.ActiveFsServlet;
 import io.activej.fs.http.HttpActiveFs;
+import io.activej.http.HttpClient;
 import io.activej.http.HttpServer;
 import io.activej.http.ReactiveHttpClient;
 import io.activej.net.AbstractReactiveServer;
@@ -80,7 +81,7 @@ public final class TestClusterActiveFs {
 		Map<Object, ActiveFs> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
 
 		NioReactor reactor = Reactor.getCurrentReactor();
-		ReactiveHttpClient httpClient = ReactiveHttpClient.create(reactor);
+		HttpClient httpClient = ReactiveHttpClient.create(reactor);
 
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
 			int port = getFreePort();

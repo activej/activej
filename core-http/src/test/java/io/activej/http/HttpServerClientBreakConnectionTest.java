@@ -29,7 +29,7 @@ public class HttpServerClientBreakConnectionTest {
 
 	private final NioReactor reactor = Reactor.getCurrentReactor();
 	private HttpServer server;
-	private ReactiveHttpClient client;
+	private HttpClient client;
 	private int freePort;
 
 	@Before

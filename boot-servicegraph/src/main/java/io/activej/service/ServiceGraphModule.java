@@ -267,7 +267,7 @@ public final class ServiceGraphModule extends AbstractModule implements ServiceG
 					.register(Eventloop.class, forEventloop())
 					.register(ReactiveService.class, forReactiveService());
 		}
-		if (isClassPresent("io.activej.net.NioReactorServer")) {
+		if (isClassPresent("io.activej.net.ReactiveServer")) {
 			// 'net' module is present
 			serviceGraphModule
 					.register(BlockingSocketServer.class, forBlockingSocketServer())

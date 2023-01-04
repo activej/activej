@@ -17,6 +17,7 @@ import io.activej.launchers.crdt.rpc.CrdtRpcStrategyService;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.ReactiveRpcClient;
+import io.activej.rpc.client.RpcClient;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -35,7 +36,7 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 	Reactor reactor;
 
 	@Inject
-	ReactiveRpcClient client;
+	RpcClient client;
 
 	@Override
 	protected List<Class<?>> getMessageTypes() {
@@ -46,7 +47,7 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 	protected Module getOverrideModule() {
 		return new AbstractModule() {
 			@Provides
-			ReactiveRpcClient client(NioReactor reactor, CrdtRpcStrategyService<Long> strategyService, List<Class<?>> messageTypes) {
+			RpcClient client(NioReactor reactor, CrdtRpcStrategyService<Long> strategyService, List<Class<?>> messageTypes) {
 				ReactiveRpcClient rpcClient = ReactiveRpcClient.create(reactor)
 						.withMessageTypes(messageTypes);
 				strategyService.setRpcClient(rpcClient);

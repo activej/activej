@@ -1,5 +1,6 @@
 package io.activej.cube;
 
+import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.AggregationPredicate;
 import io.activej.aggregation.ChunkIdCodec;
 import io.activej.aggregation.ReactiveAggregationChunkStorage;
@@ -57,7 +58,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 	private static final int LOWER_DATE_BOUNDARY_DAYS = (int) LOWER_DATE_BOUNDARY.toEpochDay();
 	private static final AggregationPredicate DATE_PREDICATE = gt("date", LOWER_DATE_BOUNDARY);
 
-	private ReactiveAggregationChunkStorage<Long> chunkStorage;
+	private AggregationChunkStorage<Long> chunkStorage;
 	private AggregationConfig dateAggregation;
 	private AggregationConfig advertiserDateAggregation;
 	private AggregationConfig campaignBannerDateAggregation;

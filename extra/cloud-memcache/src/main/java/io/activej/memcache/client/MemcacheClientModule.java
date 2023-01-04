@@ -24,6 +24,7 @@ import io.activej.memcache.protocol.MemcacheRpcMessage.Slice;
 import io.activej.memcache.protocol.SerializerDefSlice;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.ReactiveRpcClient;
+import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.RpcStrategyRendezvousHashing;
 import io.activej.serializer.SerializerBuilder;
 
@@ -42,7 +43,7 @@ public class MemcacheClientModule extends AbstractModule {
 	public static MemcacheClientModule create() {return new MemcacheClientModule();}
 
 	@Provides
-	ReactiveRpcClient rpcClient(NioReactor reactor, Config config) {
+	RpcClient rpcClient(NioReactor reactor, Config config) {
 		return ReactiveRpcClient.create(reactor)
 				.withStrategy(
 						RpcStrategyRendezvousHashing.create(HASH_FUNCTION)
@@ -61,7 +62,7 @@ public class MemcacheClientModule extends AbstractModule {
 	}
 
 	@Provides
-	RawMemcacheClient memcacheClient(ReactiveRpcClient client) {
+	RawMemcacheClient memcacheClient(RpcClient client) {
 		return RawMemcacheClient.create(client);
 	}
 

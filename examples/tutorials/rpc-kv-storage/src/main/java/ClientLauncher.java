@@ -2,7 +2,7 @@ import io.activej.inject.annotation.Inject;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
 import io.activej.reactor.Reactor;
-import io.activej.rpc.client.ReactiveRpcClient;
+import io.activej.rpc.client.RpcClient;
 import io.activej.service.ServiceGraphModule;
 
 import java.util.concurrent.CompletableFuture;
@@ -14,7 +14,7 @@ public class ClientLauncher extends Launcher {
 	private static final int TIMEOUT = 1000;
 
 	@Inject
-	private ReactiveRpcClient client;
+	private RpcClient client;
 
 	@Inject
 	Reactor reactor;

@@ -6,7 +6,7 @@ import io.activej.inject.module.ModuleBuilder;
 import io.activej.launcher.Launcher;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
-import io.activej.rpc.client.ReactiveRpcClient;
+import io.activej.rpc.client.RpcClient;
 import io.activej.service.ServiceGraphModule;
 
 import java.util.concurrent.CompletableFuture;
@@ -16,7 +16,7 @@ import static java.util.stream.IntStream.range;
 
 public class AdvancedRpcClientApp extends Launcher {
 	@Inject
-	ReactiveRpcClient client;
+	RpcClient client;
 
 	@Inject
 	Reactor reactor;

@@ -3,6 +3,7 @@ import io.activej.http.HttpRequest;
 import io.activej.http.ReactiveHttpClient;
 import io.activej.http.WebSocket;
 import io.activej.http.WebSocket.Message;
+import io.activej.http.WebSocketClient;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
@@ -26,7 +27,7 @@ public final class WebSocketEchoClientExample extends Launcher {
 	NioReactor reactor;
 
 	@Inject
-	ReactiveHttpClient client;
+	WebSocketClient client;
 
 	@Provides
 	NioReactor reactor() {
@@ -34,7 +35,7 @@ public final class WebSocketEchoClientExample extends Launcher {
 	}
 
 	@Provides
-	ReactiveHttpClient client(NioReactor reactor) {
+	WebSocketClient client(NioReactor reactor) {
 		return ReactiveHttpClient.create(reactor);
 	}
 

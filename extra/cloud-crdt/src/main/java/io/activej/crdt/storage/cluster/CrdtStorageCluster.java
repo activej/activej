@@ -390,8 +390,8 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> extends Abs
 	public void startDetailedMonitoring() {
 		detailedStats = true;
 		for (CrdtStorage<K, S> storage : crdtStorages.values()) {
-			if (storage instanceof CrdtStorageClient) {
-				((CrdtStorageClient<K, S>) storage).startDetailedMonitoring();
+			if (storage instanceof CrdtStorageClient<K, S> client) {
+				client.startDetailedMonitoring();
 			}
 		}
 	}
@@ -400,8 +400,8 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> extends Abs
 	public void stopDetailedMonitoring() {
 		detailedStats = false;
 		for (CrdtStorage<K, S> storage : crdtStorages.values()) {
-			if (storage instanceof CrdtStorageClient) {
-				((CrdtStorageClient<K, S>) storage).stopDetailedMonitoring();
+			if (storage instanceof CrdtStorageClient<K, S> client) {
+				client.stopDetailedMonitoring();
 			}
 		}
 	}

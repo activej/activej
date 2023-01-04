@@ -12,6 +12,7 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.fs.LocalActiveFs;
 import io.activej.fs.http.ActiveFsServlet;
 import io.activej.fs.http.HttpActiveFs;
+import io.activej.http.HttpClient;
 import io.activej.http.HttpServer;
 import io.activej.http.ReactiveHttpClient;
 import io.activej.promise.Promise;
@@ -48,7 +49,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
 @SuppressWarnings("rawtypes")
-public final class CubeTest {
+public final class ReactiveCubeTest {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
@@ -143,7 +144,7 @@ public final class CubeTest {
 
 		Path serverStorage = temporaryFolder.newFolder("storage").toPath();
 		HttpServer server1 = startServer(executor, serverStorage);
-		ReactiveHttpClient httpClient = ReactiveHttpClient.create(getCurrentReactor());
+		HttpClient httpClient = ReactiveHttpClient.create(getCurrentReactor());
 		HttpActiveFs storage = HttpActiveFs.create(getCurrentReactor(), "http://localhost:" + listenPort, httpClient);
 		AggregationChunkStorage<Long> chunkStorage = ReactiveAggregationChunkStorage.create(getCurrentReactor(), ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
 		ReactiveCube cube = newCube(executor, classLoader, chunkStorage);

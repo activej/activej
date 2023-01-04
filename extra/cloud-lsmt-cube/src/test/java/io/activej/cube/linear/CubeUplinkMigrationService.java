@@ -17,6 +17,7 @@ import io.activej.etl.LogDiffCodec;
 import io.activej.etl.LogOT;
 import io.activej.eventloop.Eventloop;
 import io.activej.ot.OTAlgorithms;
+import io.activej.ot.repository.OTRepository;
 import io.activej.ot.repository.OTRepositoryMySql;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.OTUplink;
@@ -60,7 +61,7 @@ final class CubeUplinkMigrationService {
 	}
 
 	private void doMigrate(DataSource repoDataSource, DataSource uplinkDataSource, @Nullable Long startRevision) throws ExecutionException, InterruptedException {
-		OTRepositoryMySql<LogDiff<CubeDiff>> repo = createRepo(repoDataSource);
+		OTRepository<Long, LogDiff<CubeDiff>> repo = createRepo(repoDataSource);
 		CubeUplinkMySql uplink = createUplink(uplinkDataSource);
 
 		CompletableFuture<OTUplink.FetchData<Long, LogDiff<CubeDiff>>> future = eventloop.submit(() ->
@@ -105,7 +106,7 @@ final class CubeUplinkMigrationService {
 		service.doMigrate(repoDataSource, uplinkDataSource, startRevision);
 	}
 
-	private OTRepositoryMySql<LogDiff<CubeDiff>> createRepo(DataSource dataSource) {
+	private OTRepository<Long, LogDiff<CubeDiff>> createRepo(DataSource dataSource) {
 		LogDiffCodec<CubeDiff> codec = LogDiffCodec.create(CubeDiffCodec.create(cube));
 		AsyncSupplier<Long> idGenerator = () -> {throw new AssertionError();};
 		return OTRepositoryMySql.create(eventloop, executor, dataSource, idGenerator, OT_SYSTEM, codec);

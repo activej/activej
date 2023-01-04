@@ -22,6 +22,7 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.ReactiveRpcClient;
+import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.RpcStrategies;
 import io.activej.rpc.client.sender.RpcStrategy;
 
@@ -50,7 +51,7 @@ public class CrdtRpcClientModule extends AbstractModule {
 	}
 
 	@Provides
-	ReactiveRpcClient client(NioReactor reactor, RpcStrategy strategy, List<Class<?>> messageTypes) {
+	RpcClient client(NioReactor reactor, RpcStrategy strategy, List<Class<?>> messageTypes) {
 		return ReactiveRpcClient.create(reactor)
 				.withMessageTypes(messageTypes)
 				.withStrategy(strategy);

@@ -26,7 +26,6 @@ import io.activej.cube.exception.CubeException;
 import io.activej.http.HttpClient;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpUtils;
-import io.activej.http.ReactiveHttpClient;
 import io.activej.promise.Promise;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,11 +58,11 @@ public final class CubeHttpClient implements Cube, WithInitializer<CubeHttpClien
 		this.httpClient = httpClient;
 	}
 
-	public static CubeHttpClient create(ReactiveHttpClient httpClient, String cubeServletUrl) {
+	public static CubeHttpClient create(HttpClient httpClient, String cubeServletUrl) {
 		return new CubeHttpClient(httpClient, cubeServletUrl);
 	}
 
-	public static CubeHttpClient create(ReactiveHttpClient httpClient, URI cubeServletUrl) {
+	public static CubeHttpClient create(HttpClient httpClient, URI cubeServletUrl) {
 		return create(httpClient, cubeServletUrl.toString());
 	}
 

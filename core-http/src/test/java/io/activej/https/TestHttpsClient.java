@@ -3,10 +3,7 @@ package io.activej.https;
 import io.activej.dns.CachedDnsClient;
 import io.activej.dns.DnsClient;
 import io.activej.dns.ReactiveDnsClient;
-import io.activej.http.AcceptMediaType;
-import io.activej.http.HttpRequest;
-import io.activej.http.HttpResponse;
-import io.activej.http.ReactiveHttpClient;
+import io.activej.http.*;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ByteBufRule;
@@ -43,7 +40,7 @@ public final class TestHttpsClient {
 				.withTimeout(Duration.ofMillis(500))
 				.withDnsServerAddress(inetAddress("8.8.8.8")));
 
-		ReactiveHttpClient client = ReactiveHttpClient.create(reactor)
+		HttpClient client = ReactiveHttpClient.create(reactor)
 				.withDnsClient(dnsClient)
 				.withSslEnabled(SSLContext.getDefault(), Executors.newSingleThreadExecutor());
 		Integer code = await(client.request(HttpRequest.get("https://en.wikipedia.org/wiki/Wikipedia")
@@ -57,8 +54,7 @@ public final class TestHttpsClient {
 						AcceptMediaType.of(XML_APP, 90),
 						AcceptMediaType.of(WEBP),
 						AcceptMediaType.of(ANY, 80))))
-				.map(HttpResponse::getCode)
-				.whenComplete(client::stop));
+				.map(HttpResponse::getCode));
 
 		assertEquals((Integer) 200, code);
 	}

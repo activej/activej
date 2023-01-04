@@ -110,11 +110,10 @@ public final class ReactiveDnsClient extends AbstractNioReactive
 		return this;
 	}
 
-	public ReactiveDnsClient setSocketInspector(ReactiveUdpSocket.Inspector socketInspector) {
+	public ReactiveDnsClient withSocketInspector(ReactiveUdpSocket.Inspector socketInspector) {
 		this.socketInspector = socketInspector;
 		return this;
 	}
-
 	// endregion
 
 	@Override

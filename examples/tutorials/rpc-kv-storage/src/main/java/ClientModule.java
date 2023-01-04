@@ -4,6 +4,7 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.ReactiveRpcClient;
+import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.RpcStrategies;
 import io.activej.serializer.SerializerBuilder;
 
@@ -29,7 +30,7 @@ public class ClientModule extends AbstractModule {
 	}
 
 	@Provides
-	ReactiveRpcClient rpcClient(NioReactor reactor) {
+	RpcClient rpcClient(NioReactor reactor) {
 		return ReactiveRpcClient.create(reactor)
 				.withConnectTimeout(Duration.ofSeconds(1))
 				.withSerializerBuilder(SerializerBuilder.create())
