@@ -13,6 +13,7 @@ import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
 import io.activej.net.AbstractReactiveServer;
+import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -69,7 +70,7 @@ public final class TestDyingPartitions {
 			assertNull(servers.put(port, server));
 			new Thread(eventloop).start();
 
-			clients.put("server_" + i, CrdtStorageClient.create(eventloop, address, SERIALIZER));
+			clients.put("server_" + i, CrdtStorageClient.create(Reactor.getCurrentReactor(), address, SERIALIZER));
 		}
 
 		cluster = CrdtStorageCluster.create(getCurrentReactor(),

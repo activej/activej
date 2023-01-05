@@ -20,13 +20,13 @@ import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamReducers.ReducerToAccumulator;
 import io.activej.datastream.processor.StreamReducers.ReducerToResult;
-import io.activej.eventloop.Eventloop;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
@@ -45,7 +45,6 @@ import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.dataflow.codec.SubtypeImpl.subtype;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.graph.StreamSchemas.simple;
@@ -350,6 +349,7 @@ public class DataflowServerTest {
 
 				.bind(new Key<StreamCodec<Comparator<?>>>() {}).toInstance(StreamCodecs.singleton(new TestComparator()))
 				.bind(new Key<StreamCodec<ReducerToResult>>() {}).toInstance(StreamCodecs.singleton(new TestReducer()))
+				.bind(NioReactor.class).to(Reactor::getCurrentReactor)
 				.scan(new Object() {
 					@Provides
 					DataflowClient client(NioReactor reactor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, BinarySerializerLocator serializers) {
@@ -385,9 +385,11 @@ public class DataflowServerTest {
 					.overrideWith(ModuleBuilder.create()
 							.bind(datasetId(malformed ? "" : "items")).toInstance(words)
 							.bind(Config.class).toInstance(Config.create().with("dataflow.server.listenAddresses", String.valueOf(port)))
-							.bind(Eventloop.class).toInstance(Eventloop.create().withCurrentThread().withFatalErrorHandler(rethrow()))
 							.bind(Executor.class).toInstance(Executors.newSingleThreadExecutor())
-							.bind(datasetId("result")).toInstance(StreamConsumerToList.create(result))
+							.bind(datasetId("result")).to(reactor ->
+											Reactor.executeWithReactor(reactor, () ->
+													StreamConsumerToList.create(result)),
+									NioReactor.class)
 							.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 							.build());
 		}

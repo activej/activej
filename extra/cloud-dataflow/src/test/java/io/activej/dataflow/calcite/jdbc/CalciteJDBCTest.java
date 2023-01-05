@@ -9,6 +9,7 @@ import io.activej.dataflow.jdbc.driver.utils.InstantHolder;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.test.TestUtils;
 import org.apache.calcite.avatica.remote.LocalService;
 import org.apache.calcite.avatica.server.AvaticaJsonHandler;
@@ -36,12 +37,13 @@ public class CalciteJDBCTest extends AbstractCalciteTest {
 		return ModuleBuilder.create()
 				.install(CalciteClientModule.create())
 				.bind(int.class).to(TestUtils::getFreePort)
-				.bind(HttpServer.class).to((eventloop, port, calciteSqlDataflow) -> new HttpServer.Builder<>()
-								.withHandler(new AvaticaJsonHandler(new LocalService(DataflowMeta.create(eventloop, calciteSqlDataflow))))
+				.bind(HttpServer.class).to((reactor, port, calciteSqlDataflow) -> new HttpServer.Builder<>()
+								.withHandler(new AvaticaJsonHandler(new LocalService(DataflowMeta.create(reactor, calciteSqlDataflow))))
 								.withPort(port)
 								.build(),
-						Eventloop.class, int.class, ReactiveSqlDataflow.class)
+						NioReactor.class, int.class, ReactiveSqlDataflow.class)
 				.bind(Eventloop.class).to(() -> Eventloop.create().withFatalErrorHandler(FatalErrorHandler.rethrow()))
+				.bind(NioReactor.class).to(Eventloop.class)
 				.build();
 	}
 
