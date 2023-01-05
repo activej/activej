@@ -3,8 +3,8 @@ package io.activej.ot.system;
 import io.activej.ot.OTCommit;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.TransformResult;
-import io.activej.ot.repository.OTRepository;
-import io.activej.ot.uplink.OTUplinkImpl;
+import io.activej.ot.repository.AsyncOTRepository;
+import io.activej.ot.uplink.ReactiveOTUplink;
 import io.activej.ot.utils.OTRepositoryStub;
 import io.activej.ot.utils.TestAdd;
 import io.activej.ot.utils.TestOp;
@@ -74,7 +74,7 @@ public final class OTSystemTest {
 		});
 
 		TestOpState state = new TestOpState();
-		OTUplinkImpl<String, TestOp, OTCommit<String, TestOp>> node = OTUplinkImpl.create(repository, SYSTEM);
+		ReactiveOTUplink<String, TestOp, OTCommit<String, TestOp>> node = ReactiveOTUplink.create(repository, SYSTEM);
 		OTStateManager<String, TestOp> stateManager = OTStateManager.create(getCurrentReactor(), SYSTEM, node, state);
 
 		await(stateManager.checkout());
@@ -129,7 +129,7 @@ public final class OTSystemTest {
 			g.add("a2", "b1", add(10));
 		});
 
-		OTUplinkImpl<String, TestOp, OTCommit<String, TestOp>> node = OTUplinkImpl.create(otSource, SYSTEM);
+		ReactiveOTUplink<String, TestOp, OTCommit<String, TestOp>> node = ReactiveOTUplink.create(otSource, SYSTEM);
 		pullAndThenMergeAndPush(otSource, OTStateManager.create(getCurrentReactor(), SYSTEM, node, new TestOpState()));
 	}
 
@@ -145,11 +145,11 @@ public final class OTSystemTest {
 			g.add("b1", "b2", add(1));
 		});
 
-		OTUplinkImpl<String, TestOp, OTCommit<String, TestOp>> node = OTUplinkImpl.create(otSource, SYSTEM);
+		ReactiveOTUplink<String, TestOp, OTCommit<String, TestOp>> node = ReactiveOTUplink.create(otSource, SYSTEM);
 		pullAndThenMergeAndPush(otSource, OTStateManager.create(getCurrentReactor(), SYSTEM, node, new TestOpState()));
 	}
 
-	private void pullAndThenMergeAndPush(OTRepository<String, TestOp> repository, OTStateManager<String, TestOp> stateManager) {
+	private void pullAndThenMergeAndPush(AsyncOTRepository<String, TestOp> repository, OTStateManager<String, TestOp> stateManager) {
 		await(stateManager.checkout());
 
 		await(stateManager.sync());

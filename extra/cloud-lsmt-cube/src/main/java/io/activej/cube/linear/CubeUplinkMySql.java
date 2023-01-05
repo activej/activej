@@ -32,7 +32,7 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
 import io.activej.ot.exception.OTException;
-import io.activej.ot.uplink.OTUplink;
+import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import org.jetbrains.annotations.Nullable;
@@ -60,7 +60,7 @@ import static java.util.Collections.nCopies;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
-public final class CubeUplinkMySql implements OTUplink<Long, LogDiff<CubeDiff>, CubeUplinkMySql.UplinkProtoCommit>,
+public final class CubeUplinkMySql implements AsyncOTUplink<Long, LogDiff<CubeDiff>, CubeUplinkMySql.UplinkProtoCommit>,
 		WithInitializer<CubeUplinkMySql> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeUplinkMySql.class);
 

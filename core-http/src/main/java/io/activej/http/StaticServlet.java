@@ -21,7 +21,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.http.loader.ResourceIsADirectoryException;
 import io.activej.http.loader.ResourceNotFoundException;
-import io.activej.http.loader.StaticLoader;
+import io.activej.http.loader.AsyncStaticLoader;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import org.jetbrains.annotations.Nullable;
@@ -45,7 +45,7 @@ import static io.activej.http.HttpHeaders.CONTENT_TYPE;
 public final class StaticServlet implements AsyncServlet, WithInitializer<StaticServlet> {
 	public static final Charset DEFAULT_TXT_ENCODING = StandardCharsets.UTF_8;
 
-	private final StaticLoader resourceLoader;
+	private final AsyncStaticLoader resourceLoader;
 	private Function<String, ContentType> contentTypeResolver = StaticServlet::getContentType;
 	private Function<HttpRequest, @Nullable String> pathMapper = HttpRequest::getRelativePath;
 	private Supplier<HttpResponse> responseSupplier = HttpResponse::ok200;
@@ -53,24 +53,24 @@ public final class StaticServlet implements AsyncServlet, WithInitializer<Static
 
 	private @Nullable String defaultResource;
 
-	private StaticServlet(StaticLoader resourceLoader) {
+	private StaticServlet(AsyncStaticLoader resourceLoader) {
 		this.resourceLoader = resourceLoader;
 	}
 
-	public static StaticServlet create(StaticLoader resourceLoader) {
+	public static StaticServlet create(AsyncStaticLoader resourceLoader) {
 		return new StaticServlet(resourceLoader);
 	}
 
-	public static StaticServlet create(StaticLoader resourceLoader, String page) {
+	public static StaticServlet create(AsyncStaticLoader resourceLoader, String page) {
 		return create(resourceLoader).withMappingTo(page);
 	}
 
 	public static StaticServlet ofClassPath(Executor executor, String path) {
-		return new StaticServlet(StaticLoader.ofClassPath(executor, path));
+		return new StaticServlet(AsyncStaticLoader.ofClassPath(executor, path));
 	}
 
 	public static StaticServlet ofPath(Executor executor, Path path) {
-		return new StaticServlet(StaticLoader.ofPath(executor, path));
+		return new StaticServlet(AsyncStaticLoader.ofPath(executor, path));
 	}
 
 	@SuppressWarnings("UnusedReturnValue")

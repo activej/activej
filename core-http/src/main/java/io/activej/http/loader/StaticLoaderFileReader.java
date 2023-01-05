@@ -25,7 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.Executor;
 
-class StaticLoaderFileReader implements StaticLoader {
+class StaticLoaderFileReader implements AsyncStaticLoader {
 	private final Executor executor;
 	private final Path root;
 
@@ -34,7 +34,7 @@ class StaticLoaderFileReader implements StaticLoader {
 		this.root = root;
 	}
 
-	public static StaticLoader create(Executor executor, Path dir) {
+	public static AsyncStaticLoader create(Executor executor, Path dir) {
 		return new StaticLoaderFileReader(executor, dir);
 	}
 

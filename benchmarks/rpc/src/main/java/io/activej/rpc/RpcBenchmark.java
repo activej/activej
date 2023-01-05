@@ -14,7 +14,7 @@ import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.ReactiveRpcClient;
-import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.client.AsyncRpcClient;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraphModule;
 import io.activej.service.ServiceGraphModuleSettings;
@@ -38,7 +38,7 @@ public class RpcBenchmark extends Launcher {
 	private static final int ACTIVE_REQUESTS_MAX = 10000;
 
 	@Inject
-	RpcClient rpcClient;
+	AsyncRpcClient rpcClient;
 
 	@Inject
 	@Named("client")
@@ -62,7 +62,7 @@ public class RpcBenchmark extends Launcher {
 	}
 
 	@Provides
-	RpcClient rpcClient(@Named("client") NioReactor reactor, Config config) {
+	AsyncRpcClient rpcClient(@Named("client") NioReactor reactor, Config config) {
 		return ReactiveRpcClient.create(reactor)
 				.withStreamProtocol(
 						config.get(ofMemSize(), "rpc.defaultPacketSize", MemSize.kilobytes(256)),
@@ -87,7 +87,7 @@ public class RpcBenchmark extends Launcher {
 	@ProvidesIntoSet
 	Initializer<ServiceGraphModuleSettings> configureServiceGraph() {
 		// add logical dependency so that service graph starts client only after it started the server
-		return settings -> settings.addDependency(Key.of(RpcClient.class), Key.of(RpcServer.class));
+		return settings -> settings.addDependency(Key.of(AsyncRpcClient.class), Key.of(RpcServer.class));
 	}
 
 	@Provides

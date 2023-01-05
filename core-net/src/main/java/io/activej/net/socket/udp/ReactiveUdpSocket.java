@@ -46,7 +46,7 @@ import java.util.ArrayDeque;
 
 import static io.activej.common.Checks.checkState;
 
-public final class ReactiveUdpSocket extends AbstractNioReactive implements UdpSocket, NioChannelEventHandler {
+public final class ReactiveUdpSocket extends AbstractNioReactive implements AsyncUdpSocket, NioChannelEventHandler {
 	private static final boolean CHECK = Checks.isEnabled(ReactiveUdpSocket.class);
 
 	private static final int OP_POSTPONED = 1 << 7;  // SelectionKey constant

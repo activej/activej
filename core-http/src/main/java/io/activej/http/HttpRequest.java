@@ -21,7 +21,7 @@ import io.activej.common.Checks;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.http.HttpHeaderValue.HttpHeaderValueOfSimpleCookies;
-import io.activej.http.MultipartDecoder.MultipartDataHandler;
+import io.activej.http.MultipartDecoder.AsyncMultipartDataHandler;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
@@ -46,7 +46,7 @@ import static io.activej.http.Protocol.WS;
 import static io.activej.http.Protocol.WSS;
 
 /**
- * Represents the HTTP request which {@link HttpClient} sends to
+ * Represents the HTTP request which {@link AsyncHttpClient} sends to
  * {@link HttpServer}. It must have only one owner in each  part of time.
  * After creating an {@link HttpResponse} in a server, it will be recycled and
  * can not be used later.
@@ -322,7 +322,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		throw new IllegalArgumentException("No path parameter '" + key + "' found");
 	}
 
-	public Promise<Void> handleMultipart(MultipartDataHandler multipartDataHandler) {
+	public Promise<Void> handleMultipart(AsyncMultipartDataHandler multipartDataHandler) {
 		if (CHECK) checkState(!isRecycled());
 		String contentType = getHeader(CONTENT_TYPE);
 		if (contentType == null || !contentType.startsWith("multipart/form-data; boundary=")) {

@@ -6,7 +6,7 @@ import io.activej.inject.annotation.Inject;
 import io.activej.launchers.crdt.rpc.CrdtRpcClientLauncher;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
-import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.client.AsyncRpcClient;
 
 import java.util.List;
 import java.util.Map;
@@ -36,7 +36,7 @@ public final class BannerClientLauncher extends CrdtRpcClientLauncher {
 	Reactor reactor;
 
 	@Inject
-	RpcClient client;
+	AsyncRpcClient client;
 
 	@Override
 	protected List<Class<?>> getMessageTypes() {

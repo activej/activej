@@ -28,7 +28,7 @@ import io.activej.common.recycle.Recyclable;
 import io.activej.csp.*;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.http.stream.*;
-import io.activej.net.socket.tcp.TcpSocket;
+import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
@@ -62,7 +62,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 	protected static final byte[] UPGRADE_WEBSOCKET = encodeAscii("websocket");
 	protected static final byte[] WEB_SOCKET_VERSION = encodeAscii("13");
 
-	protected final TcpSocket socket;
+	protected final AsyncTcpSocket socket;
 	protected final int maxBodySize;
 
 	protected static final byte KEEP_ALIVE = 1 << 0;
@@ -114,7 +114,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 	 * @param reactor   eventloop which will handle its I/O operations
 	 * @param maxBodySize - maximum size of message body
 	 */
-	protected AbstractHttpConnection(Reactor reactor, TcpSocket socket, int maxBodySize) {
+	protected AbstractHttpConnection(Reactor reactor, AsyncTcpSocket socket, int maxBodySize) {
 		super(reactor);
 		this.socket = socket;
 		this.maxBodySize = maxBodySize;
@@ -371,7 +371,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 		} else if (header == CONNECTION) {
 			flags = (byte) ((flags & ~KEEP_ALIVE) |
 					(equalsLowerCaseAscii(CONNECTION_KEEP_ALIVE, array, pos, len) ? KEEP_ALIVE : 0));
-		} else if (WebSocket.ENABLED && header == HttpHeaders.UPGRADE) {
+		} else if (AsyncWebSocket.ENABLED && header == HttpHeaders.UPGRADE) {
 			flags |= equalsLowerCaseAscii(UPGRADE_WEBSOCKET, array, pos, len) ? WEB_SOCKET : 0;
 		} else if (header == TRANSFER_ENCODING) {
 			flags |= equalsLowerCaseAscii(TRANSFER_ENCODING_CHUNKED, array, pos, len) ? CHUNKED : 0;
@@ -515,7 +515,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 		assert bodyStream != null;
 		httpMessage.bodyStream = null;
 
-		if (!WebSocket.ENABLED || !isWebSocket()) {
+		if (!AsyncWebSocket.ENABLED || !isWebSocket()) {
 			if ((httpMessage.flags & HttpMessage.USE_GZIP) != 0) {
 				httpMessage.addHeader(CONTENT_ENCODING, ofBytes(CONTENT_ENCODING_GZIP));
 				BufsConsumerGzipDeflater deflater = BufsConsumerGzipDeflater.create();
@@ -657,7 +657,7 @@ public abstract class AbstractHttpConnection extends AbstractReactive {
 				", keepAlive=" + isKeepAlive() +
 				", gzipped=" + isGzipped() +
 				", chunked=" + isChunked() +
-				", webSocket=" + (WebSocket.ENABLED && isWebSocket()) +
+				", webSocket=" + (AsyncWebSocket.ENABLED && isWebSocket()) +
 				", contentLengthRemaining=" + contentLength +
 				", poolTimestamp=" + poolTimestamp;
 	}

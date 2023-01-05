@@ -12,8 +12,8 @@ import io.activej.csp.file.ChannelFileWriter;
 import io.activej.fs.exception.ForbiddenPathException;
 import io.activej.fs.exception.FsException;
 import io.activej.fs.exception.FsIOException;
-import io.activej.fs.tcp.ActiveFsServer;
-import io.activej.fs.tcp.RemoteActiveFs;
+import io.activej.fs.tcp.FsServer;
+import io.activej.fs.tcp.RemoteFs;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
@@ -63,8 +63,8 @@ public final class FsIntegrationTest {
 	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	private Path storage;
-	private ActiveFsServer server;
-	private ActiveFs fs;
+	private FsServer server;
+	private AsyncFs fs;
 
 	@Before
 	public void setup() throws IOException {
@@ -72,11 +72,11 @@ public final class FsIntegrationTest {
 		Executor executor = newCachedThreadPool();
 
 		storage = temporaryFolder.newFolder("server_storage").toPath();
-		LocalActiveFs localFs = LocalActiveFs.create(Reactor.getCurrentReactor(), executor, storage);
+		LocalFs localFs = LocalFs.create(Reactor.getCurrentReactor(), executor, storage);
 		await(localFs.start());
-		server = ActiveFsServer.create(Reactor.getCurrentReactor(), localFs).withListenAddress(address);
+		server = FsServer.create(Reactor.getCurrentReactor(), localFs).withListenAddress(address);
 		server.listen();
-		fs = RemoteActiveFs.create(Reactor.getCurrentReactor(), address);
+		fs = RemoteFs.create(Reactor.getCurrentReactor(), address);
 	}
 
 	@Test
@@ -318,7 +318,7 @@ public final class FsIntegrationTest {
 		expected2.add("subsubdirectory/first file.txt");
 
 		Tuple2<Map<String, FileMetadata>, Map<String, FileMetadata>> tuple = await(
-				Promises.toTuple(ActiveFsAdapters.subdirectory(fs, "subdirectory1").list("**"), ActiveFsAdapters.subdirectory(fs, "subdirectory2").list("**"))
+				Promises.toTuple(FsAdapters.subdirectory(fs, "subdirectory1").list("**"), FsAdapters.subdirectory(fs, "subdirectory2").list("**"))
 						.whenComplete(server::close)
 		);
 

@@ -7,8 +7,8 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.fs.exception.IllegalOffsetException;
 import io.activej.fs.exception.MalformedGlobException;
-import io.activej.fs.tcp.ActiveFsServer;
-import io.activej.fs.tcp.RemoteActiveFs;
+import io.activej.fs.tcp.FsServer;
+import io.activej.fs.tcp.RemoteFs;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -49,8 +49,8 @@ public final class TestPartialRemoteFs {
 	@Rule
 	public final TemporaryFolder tempFolder = new TemporaryFolder();
 
-	private ActiveFsServer server;
-	private RemoteActiveFs client;
+	private FsServer server;
+	private RemoteFs client;
 
 	private Path serverStorage;
 	private Path clientStorage;
@@ -62,11 +62,11 @@ public final class TestPartialRemoteFs {
 
 		serverStorage = tempFolder.newFolder().toPath();
 		clientStorage = tempFolder.newFolder().toPath();
-		LocalActiveFs localFs = LocalActiveFs.create(Reactor.getCurrentReactor(), executor, serverStorage);
+		LocalFs localFs = LocalFs.create(Reactor.getCurrentReactor(), executor, serverStorage);
 		await(localFs.start());
-		server = ActiveFsServer.create(Reactor.getCurrentReactor(), localFs).withListenAddress(address);
+		server = FsServer.create(Reactor.getCurrentReactor(), localFs).withListenAddress(address);
 		server.listen();
-		client = RemoteActiveFs.create(Reactor.getCurrentReactor(), address);
+		client = RemoteFs.create(Reactor.getCurrentReactor(), address);
 
 		Files.write(serverStorage.resolve(FILE), CONTENT);
 	}

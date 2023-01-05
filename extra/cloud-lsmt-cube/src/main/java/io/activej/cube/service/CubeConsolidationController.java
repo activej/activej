@@ -55,7 +55,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 		implements ReactiveJmxBeanWithStats, WithInitializer<CubeConsolidationController<K, D, C>> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeConsolidationController.class);
 
-	private static final ChunkLocker<Object> NOOP_CHUNK_LOCKER = ChunkLockerNoOp.create();
+	private static final AsyncChunkLocker<Object> NOOP_CHUNK_LOCKER = ChunkLockerNoOp.create();
 
 	public static final Supplier<AsyncBiFunction<ReactiveAggregation, Set<Object>, List<AggregationChunk>>> DEFAULT_LOCKER_STRATEGY = new Supplier<>() {
 		private boolean hotSegment = false;
@@ -72,7 +72,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 	private final CubeDiffScheme<D> cubeDiffScheme;
 	private final ReactiveCube cube;
 	private final OTStateManager<K, D> stateManager;
-	private final AggregationChunkStorage<C> aggregationChunkStorage;
+	private final AsyncAggregationChunkStorage<C> aggregationChunkStorage;
 
 	private final Map<ReactiveAggregation, String> aggregationsMapReversed;
 
@@ -85,17 +85,17 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 	private final ValueStats addedChunks = ValueStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final ValueStats addedChunksRecords = ValueStats.create(DEFAULT_SMOOTHING_WINDOW).withRate();
 
-	private final Map<String, ChunkLocker<Object>> lockers = new HashMap<>();
+	private final Map<String, AsyncChunkLocker<Object>> lockers = new HashMap<>();
 
 	private Supplier<AsyncBiFunction<ReactiveAggregation, Set<Object>, List<AggregationChunk>>> strategy = DEFAULT_LOCKER_STRATEGY;
 	@SuppressWarnings("unchecked")
-	private Function<String, ChunkLocker<C>> chunkLockerFactory = $ -> (ChunkLocker<C>) NOOP_CHUNK_LOCKER;
+	private Function<String, AsyncChunkLocker<C>> chunkLockerFactory = $ -> (AsyncChunkLocker<C>) NOOP_CHUNK_LOCKER;
 
 	private boolean consolidating;
 	private boolean cleaning;
 
 	CubeConsolidationController(Reactor reactor,
-			CubeDiffScheme<D> cubeDiffScheme, ReactiveCube cube, OTStateManager<K, D> stateManager, AggregationChunkStorage<C> aggregationChunkStorage, Map<ReactiveAggregation, String> aggregationsMapReversed) {
+			CubeDiffScheme<D> cubeDiffScheme, ReactiveCube cube, OTStateManager<K, D> stateManager, AsyncAggregationChunkStorage<C> aggregationChunkStorage, Map<ReactiveAggregation, String> aggregationsMapReversed) {
 		super(reactor);
 		this.cubeDiffScheme = cubeDiffScheme;
 		this.cube = cube;
@@ -108,7 +108,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 			CubeDiffScheme<D> cubeDiffScheme,
 			ReactiveCube cube,
 			OTStateManager<K, D> stateManager,
-			AggregationChunkStorage<C> aggregationChunkStorage) {
+			AsyncAggregationChunkStorage<C> aggregationChunkStorage) {
 		Map<ReactiveAggregation, String> map = new IdentityHashMap<>();
 		for (String aggregationId : cube.getAggregationIds()) {
 			map.put(cube.getAggregation(aggregationId), aggregationId);
@@ -121,7 +121,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 		return this;
 	}
 
-	public CubeConsolidationController<K, D, C> withChunkLockerFactory(Function<String, ChunkLocker<C>> factory) {
+	public CubeConsolidationController<K, D, C> withChunkLockerFactory(Function<String, AsyncChunkLocker<C>> factory) {
 		this.chunkLockerFactory = factory;
 		return this;
 	}
@@ -177,7 +177,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 
 	private Promise<List<AggregationChunk>> findAndLockChunksForConsolidation(String aggregationId,
 			AsyncBiFunction<ReactiveAggregation, Set<Object>, List<AggregationChunk>> chunksFn) {
-		ChunkLocker<Object> locker = ensureLocker(aggregationId);
+		AsyncChunkLocker<Object> locker = ensureLocker(aggregationId);
 		ReactiveAggregation aggregation = cube.getAggregation(aggregationId);
 
 		return Promises.retry(($, e) -> !(e instanceof ChunksAlreadyLockedException),
@@ -270,9 +270,9 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 		else logger.info("Consolidation finished. Launching consolidation task again.");
 	}
 
-	private ChunkLocker<Object> ensureLocker(String aggregationId) {
+	private AsyncChunkLocker<Object> ensureLocker(String aggregationId) {
 		//noinspection unchecked
-		return lockers.computeIfAbsent(aggregationId, $ -> (ChunkLocker<Object>) chunkLockerFactory.apply(aggregationId));
+		return lockers.computeIfAbsent(aggregationId, $ -> (AsyncChunkLocker<Object>) chunkLockerFactory.apply(aggregationId));
 	}
 
 	@JmxAttribute

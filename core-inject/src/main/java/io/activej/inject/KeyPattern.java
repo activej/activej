@@ -62,30 +62,30 @@ public abstract class KeyPattern<T> {
 	/**
 	 * A default subclass to be used by {@link #of KeyPattern.of*} and {@link #ofType KeyPattern.ofType*} constructors
 	 */
-	private static final class KeyImpl<T> extends KeyPattern<T> {
-		private KeyImpl(Type type, Predicate<?> qualifierPredicate) {
+	private static final class KeyPatternImpl<T> extends KeyPattern<T> {
+		private KeyPatternImpl(Type type, Predicate<?> qualifierPredicate) {
 			super(type, qualifierPredicate);
 		}
 	}
 
 	public static <T> KeyPattern<T> create(Type type, Predicate<?> qualifier) {
-		return new KeyImpl<>(type, qualifier);
+		return new KeyPatternImpl<>(type, qualifier);
 	}
 
 	public static <T> KeyPattern<T> of(Class<T> type) {
-		return new KeyImpl<>(type, null);
+		return new KeyPatternImpl<>(type, null);
 	}
 
 	public static <T> KeyPattern<T> of(Class<T> type, Object qualifier) {
-		return new KeyImpl<>(type, predicateOf(qualifier));
+		return new KeyPatternImpl<>(type, predicateOf(qualifier));
 	}
 
 	public static <T> KeyPattern<T> ofType(Type type) {
-		return new KeyImpl<>(type, null);
+		return new KeyPatternImpl<>(type, null);
 	}
 
 	public static <T> KeyPattern<T> ofType(Type type, Object qualifier) {
-		return new KeyImpl<>(type, predicateOf(qualifier));
+		return new KeyPatternImpl<>(type, predicateOf(qualifier));
 	}
 
 	private static Predicate<Object> predicateOf(Object qualifier) {

@@ -39,7 +39,7 @@ public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> 
 	private final List<String> fields;
 	private final Class<T> recordClass;
 	private final PartitionPredicate<T> partitionPredicate;
-	private final AggregationChunkStorage<C> storage;
+	private final AsyncAggregationChunkStorage<C> storage;
 	private final AsyncAccumulator<List<AggregationChunk>> chunksAccumulator;
 	private final DefiningClassLoader classLoader;
 
@@ -48,7 +48,7 @@ public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> 
 	private AggregationChunker(StreamConsumerSwitcher<T> switcher,
 			AggregationStructure aggregation, List<String> fields,
 			Class<T> recordClass, PartitionPredicate<T> partitionPredicate,
-			AggregationChunkStorage<C> storage,
+			AsyncAggregationChunkStorage<C> storage,
 			DefiningClassLoader classLoader,
 			int chunkSize) {
 		super(switcher);
@@ -67,7 +67,7 @@ public final class AggregationChunker<C, T> extends ForwardingStreamConsumer<T> 
 
 	public static <C, T> AggregationChunker<C, T> create(AggregationStructure aggregation, List<String> fields,
 			Class<T> recordClass, PartitionPredicate<T> partitionPredicate,
-			AggregationChunkStorage<C> storage,
+			AsyncAggregationChunkStorage<C> storage,
 			DefiningClassLoader classLoader,
 			int chunkSize) {
 

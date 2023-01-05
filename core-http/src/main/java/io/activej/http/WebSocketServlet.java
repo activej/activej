@@ -38,21 +38,21 @@ import static io.activej.http.WebSocketConstants.REGULAR_CLOSE;
  * with a corresponding HTTP response.
  * <p>
  * If a response has a code {@code 101} it is considered successful and the resulted promise of a web socket will be
- * completed with a {@link WebSocket}. A successful response must have no body or body stream.
+ * completed with a {@link AsyncWebSocket}. A successful response must have no body or body stream.
  * <p>
  * If a response has code different than {@code 101}, it will be sent as is and the resulted promise will be completed
  * exceptionally.
  */
 public abstract class WebSocketServlet implements AsyncServlet {
 	protected WebSocketServlet() {
-		checkState(WebSocket.ENABLED, "Web sockets are disabled by application settings");
+		checkState(AsyncWebSocket.ENABLED, "Web sockets are disabled by application settings");
 	}
 
 	protected Promisable<HttpResponse> onRequest(HttpRequest request) {
 		return HttpResponse.ofCode(101);
 	}
 
-	protected abstract void onWebSocket(WebSocket webSocket);
+	protected abstract void onWebSocket(AsyncWebSocket webSocket);
 
 	@Override
 	public final Promise<HttpResponse> serve(HttpRequest request) {
@@ -88,7 +88,7 @@ public abstract class WebSocketServlet implements AsyncServlet {
 
 								bindWebSocketTransformers(rawStream, encoder, decoder);
 
-								onWebSocket(new WebSocketImpl(
+								onWebSocket(new ReactiveWebSocket(
 										request,
 										response,
 										rawStream.transformWith(decoder),

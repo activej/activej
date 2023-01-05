@@ -21,7 +21,7 @@ import io.activej.config.ConfigModule;
 import io.activej.crdt.CrdtServer;
 import io.activej.crdt.storage.local.CrdtStorageFs;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.LocalActiveFs;
+import io.activej.fs.LocalFs;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
@@ -60,8 +60,8 @@ public abstract class CrdtFileServerLauncher<K extends Comparable<K>, S> extends
 	}
 
 	@Provides
-	LocalActiveFs localFsClient(Reactor reactor, ExecutorService executor, Config config) {
-		return LocalActiveFs.create(reactor, executor, config.get(ofPath(), "crdt.localPath"));
+	LocalFs localFsClient(Reactor reactor, ExecutorService executor, Config config) {
+		return LocalFs.create(reactor, executor, config.get(ofPath(), "crdt.localPath"));
 	}
 
 	@Provides
@@ -95,7 +95,7 @@ public abstract class CrdtFileServerLauncher<K extends Comparable<K>, S> extends
 		}
 
 		@Provides
-		CrdtStorageFs<K, S> fsCrdtClient(Reactor reactor, LocalActiveFs localFsClient, CrdtDescriptor<K, S> descriptor) {
+		CrdtStorageFs<K, S> fsCrdtClient(Reactor reactor, LocalFs localFsClient, CrdtDescriptor<K, S> descriptor) {
 			return CrdtStorageFs.create(reactor, localFsClient, descriptor.serializer(), descriptor.crdtFunction());
 		}
 	}

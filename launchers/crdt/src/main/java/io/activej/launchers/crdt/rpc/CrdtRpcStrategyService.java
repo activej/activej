@@ -18,7 +18,7 @@ package io.activej.launchers.crdt.rpc;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.ReactiveService;
-import io.activej.crdt.storage.cluster.DiscoveryService;
+import io.activej.crdt.storage.cluster.AsyncDiscoveryService;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.AbstractReactive;
@@ -33,7 +33,7 @@ import static io.activej.common.Checks.checkState;
 
 public final class CrdtRpcStrategyService<K extends Comparable<K>> extends AbstractReactive
 		implements ReactiveService {
-	private final DiscoveryService<?> discoveryService;
+	private final AsyncDiscoveryService<?> discoveryService;
 	private final Function<Object, K> keyGetter;
 
 	private ReactiveRpcClient rpcClient;
@@ -41,13 +41,13 @@ public final class CrdtRpcStrategyService<K extends Comparable<K>> extends Abstr
 
 	private boolean stopped;
 
-	private CrdtRpcStrategyService(Reactor reactor, DiscoveryService<?> discoveryService, Function<Object, K> keyGetter) {
+	private CrdtRpcStrategyService(Reactor reactor, AsyncDiscoveryService<?> discoveryService, Function<Object, K> keyGetter) {
 		super(reactor);
 		this.discoveryService = discoveryService;
 		this.keyGetter = keyGetter;
 	}
 
-	public static <K extends Comparable<K>> CrdtRpcStrategyService<K> create(Reactor reactor, DiscoveryService<?> discoveryService, Function<Object, K> keyGetter) {
+	public static <K extends Comparable<K>> CrdtRpcStrategyService<K> create(Reactor reactor, AsyncDiscoveryService<?> discoveryService, Function<Object, K> keyGetter) {
 		return new CrdtRpcStrategyService<>(reactor, discoveryService, keyGetter);
 	}
 
@@ -66,7 +66,7 @@ public final class CrdtRpcStrategyService<K extends Comparable<K>> extends Abstr
 	public Promise<?> start() {
 		checkNotNull(rpcClient);
 
-		AsyncSupplier<? extends DiscoveryService.PartitionScheme<?>> discoverySupplier = discoveryService.discover();
+		AsyncSupplier<? extends AsyncDiscoveryService.PartitionScheme<?>> discoverySupplier = discoveryService.discover();
 		return discoverySupplier.get()
 				.whenResult(partitionScheme -> {
 					RpcStrategy rpcStrategy = partitionScheme.createRpcStrategy(keyGetter);

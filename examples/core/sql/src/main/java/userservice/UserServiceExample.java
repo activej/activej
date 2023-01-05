@@ -10,7 +10,7 @@ import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
 import io.activej.service.ServiceGraphModule;
 import userservice.dao.User;
-import userservice.dao.UserDao;
+import userservice.dao.AsyncUserDao;
 import userservice.dao.UserDaoSql;
 
 import javax.sql.DataSource;
@@ -34,7 +34,7 @@ public class UserServiceExample extends Launcher {
 	Reactor reactor;
 
 	@Inject
-	UserDao userDao;
+	AsyncUserDao userDao;
 
 	@Provides
 	Reactor eventloop() {
@@ -47,7 +47,7 @@ public class UserServiceExample extends Launcher {
 	}
 
 	@Provides
-	UserDao userDao(DataSource dataSource, Executor executor) {
+	AsyncUserDao userDao(DataSource dataSource, Executor executor) {
 		return new UserDaoSql(dataSource, executor);
 	}
 

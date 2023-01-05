@@ -19,12 +19,12 @@ package io.activej.launchers.fs;
 import io.activej.async.service.TaskScheduler;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
-import io.activej.fs.ActiveFs;
+import io.activej.fs.AsyncFs;
 import io.activej.fs.cluster.ClusterRepartitionController;
-import io.activej.fs.cluster.DiscoveryService;
+import io.activej.fs.cluster.AsyncDiscoveryService;
 import io.activej.fs.cluster.FsPartitions;
 import io.activej.fs.cluster.ServerSelector;
-import io.activej.fs.tcp.ActiveFsServer;
+import io.activej.fs.tcp.FsServer;
 import io.activej.http.AsyncServlet;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
@@ -32,7 +32,7 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.inject.module.Module;
-import io.activej.launchers.fs.gui.ActiveFsGuiServlet;
+import io.activej.launchers.fs.gui.FsGuiServlet;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 
@@ -66,7 +66,7 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 
 	@Provides
 	ClusterRepartitionController repartitionController(Reactor reactor,
-			ActiveFsServer localServer, FsPartitions partitions,
+			FsServer localServer, FsPartitions partitions,
 			Config config) {
 		String localPartitionId = first(partitions.getAllPartitions());
 		assert localPartitionId != null;
@@ -76,14 +76,14 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 	}
 
 	@Provides
-	DiscoveryService discoveryService(NioReactor reactor,
-			ActiveFs activeFs,
+	AsyncDiscoveryService discoveryService(NioReactor reactor,
+			AsyncFs activeFs,
 			Config config) throws MalformedDataException {
 		return Initializers.constantDiscoveryService(reactor, activeFs, config);
 	}
 
 	@Provides
-	FsPartitions fsPartitions(Reactor reactor, DiscoveryService discoveryService, OptionalDependency<ServerSelector> serverSelector) {
+	FsPartitions fsPartitions(Reactor reactor, AsyncDiscoveryService discoveryService, OptionalDependency<ServerSelector> serverSelector) {
 		return FsPartitions.create(reactor, discoveryService)
 				.withServerSelector(serverSelector.orElse(RENDEZVOUS_HASH_SHARDER));
 	}
@@ -93,8 +93,8 @@ public class ClusterTcpServerLauncher extends SimpleTcpServerLauncher {
 	protected Module getOverrideModule() {
 		return new AbstractModule() {
 			@Provides
-			AsyncServlet guiServlet(ActiveFs fs, ClusterRepartitionController controller) {
-				return ActiveFsGuiServlet.create(fs, "Cluster server [" + controller.getLocalPartitionId() + ']');
+			AsyncServlet guiServlet(AsyncFs fs, ClusterRepartitionController controller) {
+				return FsGuiServlet.create(fs, "Cluster server [" + controller.getLocalPartitionId() + ']');
 			}
 		};
 	}

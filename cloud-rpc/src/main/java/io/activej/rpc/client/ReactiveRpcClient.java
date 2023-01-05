@@ -32,7 +32,7 @@ import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.jmx.stats.ExceptionStats;
 import io.activej.net.socket.tcp.ReactiveTcpSocket;
 import io.activej.net.socket.tcp.ReactiveTcpSocket.JmxInspector;
-import io.activej.net.socket.tcp.TcpSocket;
+import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.AbstractNioReactive;
@@ -86,7 +86,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * @see RpcServer
  */
 public final class ReactiveRpcClient extends AbstractNioReactive
-		implements RpcClient, ReactiveService, WithInitializer<ReactiveRpcClient>, ReactiveJmxBeanWithStats {
+		implements AsyncRpcClient, ReactiveService, WithInitializer<ReactiveRpcClient>, ReactiveJmxBeanWithStats {
 	private static final boolean CHECK = Checks.isEnabled(ReactiveRpcClient.class);
 
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
@@ -347,7 +347,7 @@ public final class ReactiveRpcClient extends AbstractNioReactive
 					}
 					statsSocket.onConnect(asyncTcpSocketImpl);
 					asyncTcpSocketImpl.setInspector(statsSocket);
-					TcpSocket socket = sslContext == null ?
+					AsyncTcpSocket socket = sslContext == null ?
 							asyncTcpSocketImpl :
 							wrapClientSocket(reactor, asyncTcpSocketImpl, sslContext, sslExecutor);
 					RpcStream stream = new RpcStream(socket, serializer, defaultPacketSize,
@@ -488,12 +488,12 @@ public final class ReactiveRpcClient extends AbstractNioReactive
 		requestSender.sendRequest(request, cb);
 	}
 
-	public RpcClient adaptToAnotherReactor(NioReactor anotherReactor) {
+	public AsyncRpcClient adaptToAnotherReactor(NioReactor anotherReactor) {
 		if (anotherReactor == this.reactor) {
 			return this;
 		}
 
-		return new RpcClient() {
+		return new AsyncRpcClient() {
 			@Override
 			public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
 				if (CHECK) Checks.checkState(anotherReactor.inReactorThread(), "Not in reactor thread");

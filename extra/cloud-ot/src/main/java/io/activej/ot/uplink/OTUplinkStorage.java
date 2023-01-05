@@ -18,7 +18,7 @@ package io.activej.ot.uplink;
 
 import io.activej.ot.TransformResult;
 import io.activej.ot.system.OTSystem;
-import io.activej.ot.uplink.OTUplinkStorage.Storage.SyncData;
+import io.activej.ot.uplink.OTUplinkStorage.AsyncStorage.SyncData;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
@@ -33,7 +33,7 @@ import static io.activej.promise.PromisePredicates.isResultOrException;
 import static io.activej.promise.Promises.retry;
 
 @SuppressWarnings("WeakerAccess")
-public final class OTUplinkStorage<K, D> implements OTUplink<Long, D, OTUplinkStorage.ProtoCommit<D>> {
+public final class OTUplinkStorage<K, D> implements AsyncOTUplink<Long, D, OTUplinkStorage.ProtoCommit<D>> {
 
 	public static final long FIRST_COMMIT_ID = 1L;
 	public static final int NO_LEVEL = 0;
@@ -56,7 +56,7 @@ public final class OTUplinkStorage<K, D> implements OTUplink<Long, D, OTUplinkSt
 		}
 	}
 
-	public interface Storage<K, D> {
+	public interface AsyncStorage<K, D> {
 		Promise<Boolean> init(long commitId, List<D> snapshot, K uplinkCommitId, long uplinkLevel);
 
 		Promise<@Nullable FetchData<Long, D>> getSnapshot();
@@ -136,16 +136,16 @@ public final class OTUplinkStorage<K, D> implements OTUplink<Long, D, OTUplinkSt
 		Promise<Boolean> completeSync(long commitId, List<D> diffs, K uplinkCommitId, long uplinkLevel, List<D> uplinkDiffs);
 	}
 
-	private final Storage<K, D> storage;
+	private final AsyncStorage<K, D> storage;
 
 	private final OTSystem<D> otSystem;
-	private final OTUplink<K, D, Object> uplink;
+	private final AsyncOTUplink<K, D, Object> uplink;
 
-	private OTUplinkStorage(Storage<K, D> storage, OTSystem<D> otSystem, OTUplink<K, D, ?> uplink) {
+	private OTUplinkStorage(AsyncStorage<K, D> storage, OTSystem<D> otSystem, AsyncOTUplink<K, D, ?> uplink) {
 		this.otSystem = otSystem;
 		this.storage = storage;
 		//noinspection unchecked
-		this.uplink = (OTUplink<K, D, Object>) uplink;
+		this.uplink = (AsyncOTUplink<K, D, Object>) uplink;
 	}
 
 	public Promise<Void> sync() {

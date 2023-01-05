@@ -23,8 +23,8 @@ import io.activej.common.exception.UnknownFormatException;
 import io.activej.common.function.FunctionEx;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.dsl.ChannelTransformer;
-import io.activej.csp.net.Messaging;
-import io.activej.csp.net.MessagingWithBinaryStreaming;
+import io.activej.csp.net.AsyncMessaging;
+import io.activej.csp.net.ReactiveMessaging;
 import io.activej.dataflow.exception.DataflowException;
 import io.activej.dataflow.exception.DataflowStacklessException;
 import io.activej.dataflow.graph.StreamId;
@@ -45,7 +45,7 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.processor.StreamSupplierTransformer;
 import io.activej.net.socket.tcp.ReactiveTcpSocket;
-import io.activej.net.socket.tcp.TcpSocket;
+import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.ImplicitlyReactive;
@@ -85,7 +85,7 @@ public final class DataflowClient extends AbstractNioReactive {
 		return StreamSupplier.ofPromise(ReactiveTcpSocket.connect(reactor, address, 0, socketSettings)
 				.mapException(IOException.class, e -> new DataflowStacklessException("Failed to connect to " + address, e))
 				.then(socket -> {
-					Messaging<DataflowResponse, DataflowRequest> messaging = MessagingWithBinaryStreaming.create(socket, codec);
+					AsyncMessaging<DataflowResponse, DataflowRequest> messaging = ReactiveMessaging.create(socket, codec);
 					return performHandshake(messaging)
 							.then(() -> messaging.send(new Download(streamId))
 									.mapException(IOException.class, e -> new DataflowException("Failed to download from " + address, e)))
@@ -168,11 +168,11 @@ public final class DataflowClient extends AbstractNioReactive {
 
 	public class Session extends ImplicitlyReactive implements AsyncCloseable {
 		private final InetSocketAddress address;
-		private final Messaging<DataflowResponse, DataflowRequest> messaging;
+		private final AsyncMessaging<DataflowResponse, DataflowRequest> messaging;
 
-		private Session(InetSocketAddress address, TcpSocket socket) {
+		private Session(InetSocketAddress address, AsyncTcpSocket socket) {
 			this.address = address;
-			this.messaging = MessagingWithBinaryStreaming.create(socket, codec);
+			this.messaging = ReactiveMessaging.create(socket, codec);
 		}
 
 		public Promise<Void> execute(long taskId, List<Node> nodes) {
@@ -218,7 +218,7 @@ public final class DataflowClient extends AbstractNioReactive {
 				.mapException(e -> new DataflowException("Could not connect to " + address, e));
 	}
 
-	public static Promise<Void> performHandshake(Messaging<DataflowResponse, DataflowRequest> messaging) {
+	public static Promise<Void> performHandshake(AsyncMessaging<DataflowResponse, DataflowRequest> messaging) {
 		return messaging.send(new Handshake(DataflowServer.VERSION))
 				.then(messaging::receive)
 				.map(expectResponse(DataflowResponse.Handshake.class))

@@ -12,7 +12,7 @@ import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.StreamSupplierWithResult;
 import io.activej.fs.FileMetadata;
-import io.activej.fs.LocalActiveFs;
+import io.activej.fs.LocalFs;
 import io.activej.reactor.Reactor;
 import io.activej.serializer.BinarySerializers;
 import io.activej.test.rules.ByteBufRule;
@@ -70,9 +70,9 @@ public class ReactiveMultilogTest {
 	@Test
 	public void testConsumer() {
 		Reactor reactor = Reactor.getCurrentReactor();
-		LocalActiveFs fs = LocalActiveFs.create(reactor, newSingleThreadExecutor(), temporaryFolder.getRoot().toPath());
+		LocalFs fs = LocalFs.create(reactor, newSingleThreadExecutor(), temporaryFolder.getRoot().toPath());
 		await(fs.start());
-		Multilog<String> multilog = ReactiveMultilog.create(reactor, fs, frameFormat, BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ);
+		AsyncMultilog<String> multilog = ReactiveMultilog.create(reactor, fs, frameFormat, BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ);
 		String testPartition = "testPartition";
 
 		List<String> values = List.of("test1", "test2", "test3");
@@ -87,9 +87,9 @@ public class ReactiveMultilogTest {
 	public void testIgnoringTruncatedLogs() {
 		Reactor reactor = Reactor.getCurrentReactor();
 		Path storage = temporaryFolder.getRoot().toPath();
-		LocalActiveFs fs = LocalActiveFs.create(reactor, newSingleThreadExecutor(), storage);
+		LocalFs fs = LocalFs.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
-		Multilog<String> multilog = ReactiveMultilog.create(reactor, fs,
+		AsyncMultilog<String> multilog = ReactiveMultilog.create(reactor, fs,
 				frameFormat,
 				BinarySerializers.UTF8_SERIALIZER,
 				NAME_PARTITION_REMAINDER_SEQ)
@@ -118,9 +118,9 @@ public class ReactiveMultilogTest {
 	public void testIgnoringMalformedLogs() {
 		Reactor reactor = Reactor.getCurrentReactor();
 		Path storage = temporaryFolder.getRoot().toPath();
-		LocalActiveFs fs = LocalActiveFs.create(reactor, newSingleThreadExecutor(), storage);
+		LocalFs fs = LocalFs.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
-		Multilog<String> multilog = ReactiveMultilog.create(reactor, fs,
+		AsyncMultilog<String> multilog = ReactiveMultilog.create(reactor, fs,
 				frameFormat,
 				BinarySerializers.UTF8_SERIALIZER,
 				NAME_PARTITION_REMAINDER_SEQ)
@@ -158,9 +158,9 @@ public class ReactiveMultilogTest {
 	public void testIgnoringReadsPastFileSize() {
 		Reactor reactor = Reactor.getCurrentReactor();
 		Path storage = temporaryFolder.getRoot().toPath();
-		LocalActiveFs fs = LocalActiveFs.create(reactor, newSingleThreadExecutor(), storage);
+		LocalFs fs = LocalFs.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
-		Multilog<String> multilog = ReactiveMultilog.create(reactor, fs,
+		AsyncMultilog<String> multilog = ReactiveMultilog.create(reactor, fs,
 				frameFormat,
 				BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ)
 				.withIgnoreMalformedLogs(true);
@@ -190,12 +190,12 @@ public class ReactiveMultilogTest {
 	public void logPositionIsCountedCorrectly() {
 		Reactor reactor = Reactor.getCurrentReactor();
 
-		LocalActiveFs fs = LocalActiveFs.create(reactor, newSingleThreadExecutor(), temporaryFolder.getRoot().toPath())
+		LocalFs fs = LocalFs.create(reactor, newSingleThreadExecutor(), temporaryFolder.getRoot().toPath())
 				.withReaderBufferSize(MemSize.bytes(1));
 
 		await(fs.start());
 
-		Multilog<String> multilog = ReactiveMultilog.create(reactor,
+		AsyncMultilog<String> multilog = ReactiveMultilog.create(reactor,
 				fs,
 				frameFormat,
 				BinarySerializers.UTF8_SERIALIZER,
@@ -233,7 +233,7 @@ public class ReactiveMultilogTest {
 		assertEquals(position, await(supplierWithResult.getResult()).getPosition());
 	}
 
-	private static <T> List<T> readLog(Multilog<T> multilog, String partition) {
+	private static <T> List<T> readLog(AsyncMultilog<T> multilog, String partition) {
 		StreamConsumerToList<T> listConsumer = StreamConsumerToList.create();
 		await(StreamSupplierWithResult.ofPromise(
 				multilog.read(partition, new LogFile("", 0), 0, null))

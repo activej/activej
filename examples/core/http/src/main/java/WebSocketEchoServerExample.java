@@ -1,7 +1,7 @@
 import io.activej.http.AsyncServlet;
 import io.activej.http.RoutingServlet;
-import io.activej.http.WebSocket.Message;
-import io.activej.http.WebSocket.Message.MessageType;
+import io.activej.http.AsyncWebSocket.Message;
+import io.activej.http.AsyncWebSocket.Message.MessageType;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
 

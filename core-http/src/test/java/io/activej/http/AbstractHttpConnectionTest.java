@@ -168,7 +168,7 @@ public final class AbstractHttpConnectionTest {
 				.withReceiveBufferSize(MemSize.of(1))
 				.withImplReadBufferSize(MemSize.of(1));
 
-		HttpClient client = ReactiveHttpClient.create(Reactor.getCurrentReactor())
+		AsyncHttpClient client = ReactiveHttpClient.create(Reactor.getCurrentReactor())
 				.withSocketSettings(socketSettings);
 
 		// regular
@@ -184,7 +184,7 @@ public final class AbstractHttpConnectionTest {
 	@Test
 	@Ignore("Takes a long time")
 	public void testContentLengthPastMaxInt() throws IOException {
-		HttpClient client = ReactiveHttpClient.create(Reactor.getCurrentReactor());
+		AsyncHttpClient client = ReactiveHttpClient.create(Reactor.getCurrentReactor());
 
 		Checksum inChecksum = new CRC32();
 		Checksum outChecksum = new CRC32();
@@ -426,7 +426,7 @@ public final class AbstractHttpConnectionTest {
 
 		server.listen();
 
-		HttpClient client = ReactiveHttpClient.create(eventloop)
+		AsyncHttpClient client = ReactiveHttpClient.create(eventloop)
 				.withKeepAliveTimeout(Duration.ofSeconds(10));
 
 		int responseCode = await(client.request(HttpRequest.get("http://127.0.0.1:" + port))
@@ -481,7 +481,7 @@ public final class AbstractHttpConnectionTest {
 		}
 	}
 
-	private void doTestHugeStreams(HttpClient client, SocketSettings socketSettings, int size, Consumer<HttpMessage> decorator) throws IOException {
+	private void doTestHugeStreams(AsyncHttpClient client, SocketSettings socketSettings, int size, Consumer<HttpMessage> decorator) throws IOException {
 		ByteBuf expected = ByteBufPool.allocate(size);
 		HttpServer server = HttpServer.create(Reactor.getCurrentReactor(),
 						request -> request.loadBody()

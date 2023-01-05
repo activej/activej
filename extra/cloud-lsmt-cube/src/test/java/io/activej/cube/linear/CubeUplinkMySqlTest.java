@@ -18,7 +18,7 @@ import io.activej.multilog.LogPosition;
 import io.activej.ot.OTState;
 import io.activej.ot.exception.OTException;
 import io.activej.ot.system.OTSystem;
-import io.activej.ot.uplink.OTUplink.FetchData;
+import io.activej.ot.uplink.AsyncOTUplink.FetchData;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
 import org.junit.ClassRule;

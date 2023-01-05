@@ -37,7 +37,7 @@ import java.util.function.Function;
 public final class AggregationGroupReducer<C, T, K extends Comparable> extends AbstractStreamConsumer<T> implements StreamDataAcceptor<T> {
 	private static final Logger logger = LoggerFactory.getLogger(AggregationGroupReducer.class);
 
-	private final AggregationChunkStorage<C> storage;
+	private final AsyncAggregationChunkStorage<C> storage;
 	private final AggregationStructure aggregation;
 	private final List<String> measures;
 	private final PartitionPredicate<T> partitionPredicate;
@@ -50,7 +50,7 @@ public final class AggregationGroupReducer<C, T, K extends Comparable> extends A
 
 	private final HashMap<K, Object> map = new HashMap<>();
 
-	public AggregationGroupReducer(AggregationChunkStorage<C> storage,
+	public AggregationGroupReducer(AsyncAggregationChunkStorage<C> storage,
 			AggregationStructure aggregation, List<String> measures,
 			Class<T> recordClass, PartitionPredicate<T> partitionPredicate,
 			Function<T, K> keyFunction, Aggregate<T, Object> aggregate,

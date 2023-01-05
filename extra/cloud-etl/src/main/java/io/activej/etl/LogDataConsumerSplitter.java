@@ -28,13 +28,13 @@ import java.util.List;
 import static io.activej.common.Checks.checkState;
 
 @SuppressWarnings("unchecked")
-public abstract class LogDataConsumerSplitter<T, D> implements LogDataConsumer<T, D> {
+public abstract class LogDataConsumerSplitter<T, D> implements AsyncLogDataConsumer<T, D> {
 
 	public final class Context {
-		private final List<LogDataConsumer<?, D>> logDataConsumers = new ArrayList<>();
+		private final List<AsyncLogDataConsumer<?, D>> logDataConsumers = new ArrayList<>();
 		private Iterator<? extends StreamDataAcceptor<?>> acceptors;
 
-		public <X> StreamDataAcceptor<X> addOutput(LogDataConsumer<X, D> logDataConsumer) {
+		public <X> StreamDataAcceptor<X> addOutput(AsyncLogDataConsumer<X, D> logDataConsumer) {
 			if (acceptors == null) {
 				// initial run, recording scheme
 				logDataConsumers.add(logDataConsumer);
@@ -59,9 +59,9 @@ public abstract class LogDataConsumerSplitter<T, D> implements LogDataConsumer<T
 
 		checkState(!ctx.logDataConsumers.isEmpty());
 
-		for (LogDataConsumer<?, D> logDataConsumer : ctx.logDataConsumers) {
+		for (AsyncLogDataConsumer<?, D> logDataConsumer : ctx.logDataConsumers) {
 			diffsAccumulator.addPromise(
-					splitter.newOutput().streamTo(((LogDataConsumer<Object, D>) logDataConsumer).consume()),
+					splitter.newOutput().streamTo(((AsyncLogDataConsumer<Object, D>) logDataConsumer).consume()),
 					List::addAll);
 		}
 

@@ -18,8 +18,8 @@ import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogPositionDiff;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.ActiveFs;
-import io.activej.fs.LocalActiveFs;
+import io.activej.fs.AsyncFs;
+import io.activej.fs.LocalFs;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
 import io.activej.promise.Promises;
@@ -64,7 +64,7 @@ public class CubeBackupControllerTest {
 	private Eventloop eventloop;
 	private Thread eventloopThread;
 	private DataSource dataSource;
-	private ActiveFs activeFs;
+	private AsyncFs activeFs;
 	private CubeUplinkMySql uplink;
 	private CubeBackupController backupController;
 
@@ -83,7 +83,7 @@ public class CubeBackupControllerTest {
 		eventloopThread.start();
 
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
-		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, aggregationsDir);
+		LocalFs fs = LocalFs.create(eventloop, executor, aggregationsDir);
 		eventloop.submit(fs::start).get();
 		activeFs = fs;
 		ReactiveAggregationChunkStorage<Long> aggregationChunkStorage = ReactiveAggregationChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
@@ -233,7 +233,7 @@ public class CubeBackupControllerTest {
 			throw new AssertionError(e);
 		}
 
-		String prefix = "backups" + ActiveFs.SEPARATOR + backupId + ActiveFs.SEPARATOR;
+		String prefix = "backups" + AsyncFs.SEPARATOR + backupId + AsyncFs.SEPARATOR;
 		Set<Long> actualChunks = await(() -> activeFs.list(prefix + "*" + LOG))
 				.keySet()
 				.stream()

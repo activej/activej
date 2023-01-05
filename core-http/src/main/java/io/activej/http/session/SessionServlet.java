@@ -35,25 +35,25 @@ import java.util.function.Function;
  * could then receive and use it.
  */
 public final class SessionServlet<T> implements AsyncServlet, WithInitializer<SessionServlet<T>> {
-	private final SessionStore<T> store;
+	private final AsyncSessionStore<T> store;
 	private final Function<HttpRequest, String> sessionIdExtractor;
 	private final AsyncServlet publicServlet;
 	private final AsyncServlet privateServlet;
 
-	private SessionServlet(SessionStore<T> store, Function<HttpRequest, String> sessionIdExtractor, AsyncServlet publicServlet, AsyncServlet privateServlet) {
+	private SessionServlet(AsyncSessionStore<T> store, Function<HttpRequest, String> sessionIdExtractor, AsyncServlet publicServlet, AsyncServlet privateServlet) {
 		this.store = store;
 		this.sessionIdExtractor = sessionIdExtractor;
 		this.publicServlet = publicServlet;
 		this.privateServlet = privateServlet;
 	}
 
-	public static <T> SessionServlet<T> create(SessionStore<T> store, String sessionIdCookie,
+	public static <T> SessionServlet<T> create(AsyncSessionStore<T> store, String sessionIdCookie,
 			AsyncServlet publicServlet,
 			AsyncServlet privateServlet) {
 		return new SessionServlet<>(store, request -> request.getCookie(sessionIdCookie), publicServlet, privateServlet);
 	}
 
-	public static <T> SessionServlet<T> create(SessionStore<T> store, Function<HttpRequest, String> sessionIdExtractor,
+	public static <T> SessionServlet<T> create(AsyncSessionStore<T> store, Function<HttpRequest, String> sessionIdExtractor,
 			AsyncServlet publicServlet,
 			AsyncServlet privateServlet) {
 		return new SessionServlet<>(store, sessionIdExtractor, publicServlet, privateServlet);

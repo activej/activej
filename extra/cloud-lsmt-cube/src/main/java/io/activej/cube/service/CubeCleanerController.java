@@ -29,7 +29,7 @@ import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.ot.OTCommit;
 import io.activej.ot.exception.GraphExhaustedException;
 import io.activej.ot.reducers.DiffsReducer;
-import io.activej.ot.repository.OTRepository;
+import io.activej.ot.repository.AsyncOTRepository;
 import io.activej.ot.system.OTSystem;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -63,7 +63,7 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 
 	private final OTSystem<D> otSystem;
-	private final OTRepository<K, D> repository;
+	private final AsyncOTRepository<K, D> repository;
 	private final ReactiveAggregationChunkStorage<C> chunksStorage;
 
 	private final CubeDiffScheme<D> cubeDiffScheme;
@@ -79,7 +79,7 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 	private final PromiseStats promiseCleanupChunks = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 
 	CubeCleanerController(Reactor reactor,
-			CubeDiffScheme<D> cubeDiffScheme, OTRepository<K, D> repository, OTSystem<D> otSystem, ReactiveAggregationChunkStorage<C> chunksStorage) {
+			CubeDiffScheme<D> cubeDiffScheme, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem, ReactiveAggregationChunkStorage<C> chunksStorage) {
 		super(reactor);
 		this.cubeDiffScheme = cubeDiffScheme;
 		this.otSystem = otSystem;
@@ -89,7 +89,7 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 
 	public static <K, D, C> CubeCleanerController<K, D, C> create(Reactor reactor,
 			CubeDiffScheme<D> cubeDiffScheme,
-			OTRepository<K, D> repository,
+			AsyncOTRepository<K, D> repository,
 			OTSystem<D> otSystem,
 			ReactiveAggregationChunkStorage<C> storage) {
 		return new CubeCleanerController<>(reactor, cubeDiffScheme, repository, otSystem, storage);

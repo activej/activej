@@ -1,6 +1,6 @@
 package io.activej.cube.service;
 
-import io.activej.aggregation.AggregationChunkStorage;
+import io.activej.aggregation.AsyncAggregationChunkStorage;
 import io.activej.aggregation.ChunkIdCodec;
 import io.activej.aggregation.ReactiveAggregationChunkStorage;
 import io.activej.async.function.AsyncSupplier;
@@ -23,11 +23,11 @@ import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.LogOTState;
 import io.activej.fs.FileMetadata;
-import io.activej.fs.LocalActiveFs;
-import io.activej.multilog.Multilog;
+import io.activej.fs.LocalFs;
+import io.activej.multilog.AsyncMultilog;
 import io.activej.multilog.ReactiveMultilog;
 import io.activej.ot.OTStateManager;
-import io.activej.ot.uplink.OTUplink;
+import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerBuilder;
 import org.junit.Before;
@@ -49,8 +49,8 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 
 public final class CubeLogProcessorControllerTest extends CubeTestBase {
-	private Multilog<LogItem> multilog;
-	private LocalActiveFs logsFs;
+	private AsyncMultilog<LogItem> multilog;
+	private LocalFs logsFs;
 	private CubeLogProcessorController<Long, Long> controller;
 
 	@Before
@@ -59,9 +59,9 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 		Path logsDir = temporaryFolder.newFolder().toPath();
 
-		LocalActiveFs aggregationFs = LocalActiveFs.create(reactor, EXECUTOR, aggregationsDir);
+		LocalFs aggregationFs = LocalFs.create(reactor, EXECUTOR, aggregationsDir);
 		await(aggregationFs.start());
-		AggregationChunkStorage<Long> aggregationChunkStorage = ReactiveAggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
+		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = ReactiveAggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
 				LZ4FrameFormat.create(), aggregationFs);
 		ReactiveCube cube = ReactiveCube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
@@ -84,12 +84,12 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 						.withDimensions("advertiser")
 						.withMeasures("impressions", "clicks", "conversions", "revenue"));
 
-		OTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
+		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
 		LogOTState<CubeDiff> logState = LogOTState.create(cube);
 		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, logState);
 
-		logsFs = LocalActiveFs.create(reactor, EXECUTOR, logsDir);
+		logsFs = LocalFs.create(reactor, EXECUTOR, logsDir);
 		await(logsFs.start());
 		BinarySerializer<LogItem> serializer = SerializerBuilder.create(CLASS_LOADER)
 				.build(LogItem.class);

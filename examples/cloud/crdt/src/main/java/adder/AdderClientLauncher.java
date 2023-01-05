@@ -5,7 +5,7 @@ import adder.AdderCommands.HasUserId;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import io.activej.crdt.CrdtException;
-import io.activej.crdt.storage.cluster.DiscoveryService;
+import io.activej.crdt.storage.cluster.AsyncDiscoveryService;
 import io.activej.crdt.storage.cluster.FileDiscoveryService;
 import io.activej.crdt.storage.cluster.PartitionId;
 import io.activej.inject.annotation.Inject;
@@ -17,7 +17,7 @@ import io.activej.launchers.crdt.rpc.CrdtRpcStrategyService;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.ReactiveRpcClient;
-import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.client.AsyncRpcClient;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -36,7 +36,7 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 	Reactor reactor;
 
 	@Inject
-	RpcClient client;
+	AsyncRpcClient client;
 
 	@Override
 	protected List<Class<?>> getMessageTypes() {
@@ -47,7 +47,7 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 	protected Module getOverrideModule() {
 		return new AbstractModule() {
 			@Provides
-			RpcClient client(NioReactor reactor, CrdtRpcStrategyService<Long> strategyService, List<Class<?>> messageTypes) {
+			AsyncRpcClient client(NioReactor reactor, CrdtRpcStrategyService<Long> strategyService, List<Class<?>> messageTypes) {
 				ReactiveRpcClient rpcClient = ReactiveRpcClient.create(reactor)
 						.withMessageTypes(messageTypes);
 				strategyService.setRpcClient(rpcClient);
@@ -57,7 +57,7 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 	}
 
 	@Provides
-	DiscoveryService<PartitionId> discoveryServiceDiscoveryService(Reactor reactor, Config config) throws CrdtException {
+	AsyncDiscoveryService<PartitionId> discoveryServiceDiscoveryService(Reactor reactor, Config config) throws CrdtException {
 		Path pathToFile = config.get(ofPath(), "crdt.cluster.partitionFile", DEFAULT_PARTITIONS_FILE);
 		return FileDiscoveryService.create(reactor, pathToFile)
 				.withRpcProvider(partitionId -> server(checkNotNull(partitionId.getRpcAddress())));
@@ -66,7 +66,7 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 	@Provides
 	CrdtRpcStrategyService<Long> rpcStrategyService(
 			Reactor reactor,
-			DiscoveryService<PartitionId> discoveryService
+			AsyncDiscoveryService<PartitionId> discoveryService
 	) {
 		return CrdtRpcStrategyService.create(reactor, discoveryService, AdderClientLauncher::extractKey);
 	}

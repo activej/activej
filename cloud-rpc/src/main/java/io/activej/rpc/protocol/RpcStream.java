@@ -28,7 +28,7 @@ import io.activej.datastream.AbstractStreamSupplier;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
-import io.activej.net.socket.tcp.TcpSocket;
+import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.serializer.BinarySerializer;
 import org.jetbrains.annotations.Nullable;
 
@@ -74,9 +74,9 @@ public final class RpcStream {
 	}
 
 	private final boolean server;
-	private final TcpSocket socket;
+	private final AsyncTcpSocket socket;
 
-	public RpcStream(TcpSocket socket,
+	public RpcStream(AsyncTcpSocket socket,
 			BinarySerializer<RpcMessage> messageSerializer,
 			MemSize initialBufferSize,
 			Duration autoFlushInterval, @Nullable FrameFormat frameFormat, boolean server) {

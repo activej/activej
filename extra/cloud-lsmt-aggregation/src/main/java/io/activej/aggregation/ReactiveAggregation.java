@@ -34,7 +34,7 @@ import io.activej.datastream.processor.StreamFilter;
 import io.activej.datastream.processor.StreamReducer;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.datastream.processor.StreamSorter;
-import io.activej.datastream.processor.StreamSorterStorageImpl;
+import io.activej.datastream.processor.ReactiveStreamSorterStorage;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
@@ -74,7 +74,7 @@ import static java.util.stream.Collectors.toSet;
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class ReactiveAggregation extends AbstractReactive
-		implements Aggregation, WithInitializer<ReactiveAggregation>, ReactiveJmxBeanWithStats {
+		implements AsyncAggregation, WithInitializer<ReactiveAggregation>, ReactiveJmxBeanWithStats {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	public static final int DEFAULT_CHUNK_SIZE = 1_000_000;
@@ -85,7 +85,7 @@ public class ReactiveAggregation extends AbstractReactive
 
 	private final Executor executor;
 	private final DefiningClassLoader classLoader;
-	private final AggregationChunkStorage<Object> aggregationChunkStorage;
+	private final AsyncAggregationChunkStorage<Object> aggregationChunkStorage;
 	private final FrameFormat frameFormat;
 	private Path temporarySortDir;
 
@@ -110,7 +110,7 @@ public class ReactiveAggregation extends AbstractReactive
 	private Exception consolidationLastError;
 
 	private ReactiveAggregation(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
-			AggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat, AggregationStructure structure,
+			AsyncAggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat, AggregationStructure structure,
 			AggregationState state) {
 		super(reactor);
 		this.executor = executor;
@@ -136,7 +136,7 @@ public class ReactiveAggregation extends AbstractReactive
 	 * @param frameFormat             frame format in which data is to be stored
 	 */
 	public static ReactiveAggregation create(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
-			AggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat, AggregationStructure structure) {
+			AsyncAggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat, AggregationStructure structure) {
 		return new ReactiveAggregation(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure, new AggregationState(structure));
 	}
 
@@ -318,7 +318,7 @@ public class ReactiveAggregation extends AbstractReactive
 			}
 		}
 		StreamSorter<T, T> sorter = StreamSorter.create(
-				StreamSorterStorageImpl.create(executor, binarySerializer, frameFormat, sortDir),
+				ReactiveStreamSorterStorage.create(executor, binarySerializer, frameFormat, sortDir),
 				Function.identity(), keyComparator, false, sorterItemsInMemory);
 		sorter.getInput().getAcknowledgement()
 				.whenComplete(() -> {

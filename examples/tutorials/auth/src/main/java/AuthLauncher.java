@@ -1,7 +1,7 @@
 import io.activej.http.*;
-import io.activej.http.loader.StaticLoader;
+import io.activej.http.loader.AsyncStaticLoader;
 import io.activej.http.session.SessionServlet;
-import io.activej.http.session.SessionStore;
+import io.activej.http.session.AsyncSessionStore;
 import io.activej.http.session.SessionStoreInMemory;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
@@ -32,18 +32,18 @@ public final class AuthLauncher extends HttpServerLauncher {
 	}
 
 	@Provides
-	StaticLoader staticLoader(Executor executor) {
-		return StaticLoader.ofClassPath(executor, "site/");
+	AsyncStaticLoader staticLoader(Executor executor) {
+		return AsyncStaticLoader.ofClassPath(executor, "site/");
 	}
 
 	@Provides
-	SessionStore<String> sessionStore() {
+	AsyncSessionStore<String> sessionStore() {
 		return SessionStoreInMemory.<String>create()
 				.withLifetime(Duration.ofDays(30));
 	}
 
 	@Provides
-	AsyncServlet servlet(SessionStore<String> sessionStore,
+	AsyncServlet servlet(AsyncSessionStore<String> sessionStore,
 			@Named("public") AsyncServlet publicServlet, @Named("private") AsyncServlet privateServlet) {
 		return SessionServlet.create(sessionStore, SESSION_ID, publicServlet, privateServlet);
 	}
@@ -52,7 +52,7 @@ public final class AuthLauncher extends HttpServerLauncher {
 	//[START REGION_2]
 	@Provides
 	@Named("public")
-	AsyncServlet publicServlet(AuthService authService, SessionStore<String> store, StaticLoader staticLoader) {
+	AsyncServlet publicServlet(AuthService authService, AsyncSessionStore<String> store, AsyncStaticLoader staticLoader) {
 		StaticServlet staticServlet = StaticServlet.create(staticLoader, "errorPage.html");
 		return RoutingServlet.create()
 				//[START REGION_3]
@@ -93,7 +93,7 @@ public final class AuthLauncher extends HttpServerLauncher {
 	//[START REGION_5]
 	@Provides
 	@Named("private")
-	AsyncServlet privateServlet(StaticLoader staticLoader) {
+	AsyncServlet privateServlet(AsyncStaticLoader staticLoader) {
 		return RoutingServlet.create()
 				//[START REGION_6]
 				.map("/", request -> HttpResponse.redirect302("/members"))

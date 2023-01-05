@@ -1,11 +1,11 @@
 package io.activej.fs.cluster;
 
 import io.activej.async.service.TaskScheduler;
-import io.activej.fs.ActiveFs;
+import io.activej.fs.AsyncFs;
 import io.activej.fs.FileMetadata;
-import io.activej.fs.LocalActiveFs;
-import io.activej.fs.tcp.ActiveFsServer;
-import io.activej.fs.tcp.RemoteActiveFs;
+import io.activej.fs.LocalFs;
+import io.activej.fs.tcp.FsServer;
+import io.activej.fs.tcp.RemoteFs;
 import io.activej.net.AbstractReactiveServer;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
@@ -38,7 +38,7 @@ public final class ClusterRepartitionControllerStressTest {
 	private static final int CLIENT_SERVER_PAIRS = 10;
 
 	private final Path[] serverStorages = new Path[CLIENT_SERVER_PAIRS];
-	private List<ActiveFsServer> servers;
+	private List<FsServer> servers;
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -66,12 +66,12 @@ public final class ClusterRepartitionControllerStressTest {
 		Executor executor = Executors.newSingleThreadExecutor();
 		servers = new ArrayList<>(CLIENT_SERVER_PAIRS);
 
-		Map<Object, ActiveFs> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
+		Map<Object, AsyncFs> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
 
 		Path storage = tmpFolder.newFolder().toPath();
 		localStorage = storage.resolve("local");
 		Files.createDirectories(localStorage);
-		LocalActiveFs localFsClient = LocalActiveFs.create(reactor, executor, localStorage);
+		LocalFs localFsClient = LocalFs.create(reactor, executor, localStorage);
 
 		Object localPartitionId = "local";
 		partitions.put(localPartitionId, localFsClient);
@@ -83,16 +83,16 @@ public final class ClusterRepartitionControllerStressTest {
 
 			Files.createDirectories(serverStorages[i]);
 
-			partitions.put("server_" + i, RemoteActiveFs.create(reactor, address));
+			partitions.put("server_" + i, RemoteFs.create(reactor, address));
 
-			LocalActiveFs localFs = LocalActiveFs.create(reactor, executor, serverStorages[i]);
+			LocalFs localFs = LocalFs.create(reactor, executor, serverStorages[i]);
 			await(localFs.start());
-			ActiveFsServer server = ActiveFsServer.create(reactor, localFs).withListenAddress(address);
+			FsServer server = FsServer.create(reactor, localFs).withListenAddress(address);
 			server.listen();
 			servers.add(server);
 		}
 
-		this.partitions = FsPartitions.create(reactor, DiscoveryService.constant(partitions))
+		this.partitions = FsPartitions.create(reactor, AsyncDiscoveryService.constant(partitions))
 				.withServerSelector(RENDEZVOUS_HASH_SHARDER);
 
 		controller = ClusterRepartitionController.create(reactor, localPartitionId, this.partitions)

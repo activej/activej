@@ -1,6 +1,6 @@
 package io.activej.fs;
 
-import io.activej.fs.exception.ActiveFsStructureException;
+import io.activej.fs.exception.FsStructureException;
 import io.activej.fs.exception.GlobException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -532,27 +532,27 @@ public final class TestLocalBlockingFs {
 			inputStream.transferTo(outputStream);
 		}
 
-		Path tempDir = storagePath.resolve(LocalActiveFs.DEFAULT_TEMP_DIR);
+		Path tempDir = storagePath.resolve(LocalFs.DEFAULT_TEMP_DIR);
 		Files.delete(tempDir);
 
 		try {
 			client.copy("test.txt", "test.txt.copy");
 			fail();
-		} catch (ActiveFsStructureException e) {
+		} catch (FsStructureException e) {
 			assertEquals(e.getMessage(), "Temporary directory " + tempDir + " not found");
 		}
 	}
 
 	@Test
 	public void testUploadWithDeletedTempDir() throws IOException {
-		Path tempDir = storagePath.resolve(LocalActiveFs.DEFAULT_TEMP_DIR);
+		Path tempDir = storagePath.resolve(LocalFs.DEFAULT_TEMP_DIR);
 		Files.delete(tempDir);
 
 		try (InputStream inputStream = new ByteArrayInputStream("Test content".getBytes(UTF_8));
 			 OutputStream outputStream = client.upload("test.txt")) {
 			inputStream.transferTo(outputStream);
 			fail();
-		} catch (ActiveFsStructureException e) {
+		} catch (FsStructureException e) {
 			assertEquals(e.getMessage(), "Temporary directory " + tempDir + " not found");
 		}
 	}

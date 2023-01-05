@@ -51,7 +51,7 @@ import static io.activej.common.MemSize.kilobytes;
 import static io.activej.common.Utils.nullify;
 
 @SuppressWarnings("WeakerAccess")
-public final class ReactiveTcpSocket extends AbstractNioReactive implements TcpSocket, NioChannelEventHandler {
+public final class ReactiveTcpSocket extends AbstractNioReactive implements AsyncTcpSocket, NioChannelEventHandler {
 	private static final boolean CHECK = Checks.isEnabled(ReactiveTcpSocket.class);
 
 	private static final int DEBUG_READ_OFFSET = ApplicationSettings.getInt(ReactiveTcpSocket.class, "debugReadOffset", 0);

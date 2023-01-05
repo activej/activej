@@ -19,8 +19,8 @@ package io.activej.launchers.crdt;
 import io.activej.config.Config;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.util.CrdtDataSerializer;
-import io.activej.fs.ActiveFs;
-import io.activej.fs.LocalActiveFs;
+import io.activej.fs.AsyncFs;
+import io.activej.fs.LocalFs;
 import io.activej.http.HttpServer;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
@@ -64,8 +64,8 @@ public final class CrdtNodeExample extends CrdtNodeLauncher<String, Integer> {
 			}
 
 			@Provides
-			ActiveFs fs(Reactor reactor, Executor executor, Config config) {
-				return LocalActiveFs.create(reactor, executor, config.get(ofPath(), "crdt.local.path"));
+			AsyncFs fs(Reactor reactor, Executor executor, Config config) {
+				return LocalFs.create(reactor, executor, config.get(ofPath(), "crdt.local.path"));
 			}
 		};
 	}

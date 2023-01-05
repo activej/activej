@@ -99,7 +99,7 @@ public final class MultipartDecoderTest {
 		ByteBuf buf = ByteBufStrings.wrapUtf8(BOUNDARY + "--" + CRLF);
 		MultipartDecoder decoder = MultipartDecoder.create(BOUNDARY.substring(2));
 
-		await(decoder.split(ChannelSupplier.of(buf), new MultipartDecoder.MultipartDataHandler() {
+		await(decoder.split(ChannelSupplier.of(buf), new MultipartDecoder.AsyncMultipartDataHandler() {
 			@Override
 			public Promise<? extends ChannelConsumer<ByteBuf>> handleField(String fieldName) {
 				return Promise.ofException(new ExpectedException());

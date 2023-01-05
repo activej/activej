@@ -3,7 +3,7 @@ import io.activej.bytebuf.ByteBufStrings;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.http.*;
-import io.activej.http.MultipartDecoder.MultipartDataHandler;
+import io.activej.http.MultipartDecoder.AsyncMultipartDataHandler;
 import io.activej.inject.Injector;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
@@ -66,10 +66,10 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 	Executor executor;
 
 	@Inject
-	HttpClient client;
+	AsyncHttpClient client;
 
 	@Provides
-	HttpClient client(NioReactor reactor) {
+	AsyncHttpClient client(NioReactor reactor) {
 		return ReactiveHttpClient.create(reactor);
 	}
 
@@ -85,7 +85,7 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 				.map(POST, "/handleMultipart", request -> {
 					Map<String, String> fields = new HashMap<>();
 
-					return request.handleMultipart(MultipartDataHandler.fieldsToMap(fields, this::upload))
+					return request.handleMultipart(AsyncMultipartDataHandler.fieldsToMap(fields, this::upload))
 							.map($ -> {
 								logger.info("Received fields: {}", fields);
 								logger.info("Uploaded {} files total", fileUploadsCount);

@@ -23,7 +23,7 @@ import io.activej.common.initializer.WithInitializer;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.CrdtType;
-import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.file.ChannelFileReader;
@@ -33,7 +33,7 @@ import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.processor.StreamReducer;
 import io.activej.datastream.processor.StreamReducers;
 import io.activej.datastream.processor.StreamSorter;
-import io.activej.datastream.processor.StreamSorterStorageImpl;
+import io.activej.datastream.processor.ReactiveStreamSorterStorage;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ValueStats;
@@ -75,7 +75,7 @@ public final class WalUploader<K extends Comparable<K>, S> extends AbstractReact
 	private final Path path;
 	private final CrdtFunction<S> function;
 	private final CrdtDataSerializer<K, S> serializer;
-	private final CrdtStorage<K, S> storage;
+	private final AsyncCrdtStorage<K, S> storage;
 
 	private final PromiseStats uploadPromise = PromiseStats.create(SMOOTHING_WINDOW);
 	private final ValueStats totalFilesUploaded = ValueStats.create(SMOOTHING_WINDOW);
@@ -85,7 +85,7 @@ public final class WalUploader<K extends Comparable<K>, S> extends AbstractReact
 	private @Nullable Path sortDir;
 	private int sortItemsInMemory = DEFAULT_SORT_ITEMS_IN_MEMORY;
 
-	private WalUploader(Reactor reactor, Executor executor, Path path, CrdtFunction<S> function, CrdtDataSerializer<K, S> serializer, CrdtStorage<K, S> storage) {
+	private WalUploader(Reactor reactor, Executor executor, Path path, CrdtFunction<S> function, CrdtDataSerializer<K, S> serializer, AsyncCrdtStorage<K, S> storage) {
 		super(reactor);
 		this.executor = executor;
 		this.path = path;
@@ -94,11 +94,11 @@ public final class WalUploader<K extends Comparable<K>, S> extends AbstractReact
 		this.storage = storage;
 	}
 
-	public static <K extends Comparable<K>, S> WalUploader<K, S> create(Reactor reactor, Executor executor, Path path, CrdtFunction<S> function, CrdtDataSerializer<K, S> serializer, CrdtStorage<K, S> storage) {
+	public static <K extends Comparable<K>, S> WalUploader<K, S> create(Reactor reactor, Executor executor, Path path, CrdtFunction<S> function, CrdtDataSerializer<K, S> serializer, AsyncCrdtStorage<K, S> storage) {
 		return new WalUploader<>(reactor, executor, path, function, serializer, storage);
 	}
 
-	public static <K extends Comparable<K>, S extends CrdtType<S>> WalUploader<K, S> create(Reactor reactor, Executor executor, Path path, CrdtDataSerializer<K, S> serializer, CrdtStorage<K, S> storage) {
+	public static <K extends Comparable<K>, S extends CrdtType<S>> WalUploader<K, S> create(Reactor reactor, Executor executor, Path path, CrdtDataSerializer<K, S> serializer, AsyncCrdtStorage<K, S> storage) {
 		return new WalUploader<>(reactor, executor, path, CrdtFunction.ofCrdtType(), serializer, storage);
 	}
 
@@ -169,7 +169,7 @@ public final class WalUploader<K extends Comparable<K>, S> extends AbstractReact
 	}
 
 	private StreamSorter<K, CrdtData<K, S>> createSorter(Path sortDir) {
-		StreamSorterStorageImpl<CrdtData<K, S>> sorterStorage = StreamSorterStorageImpl.create(executor, serializer, FRAME_FORMAT, sortDir);
+		ReactiveStreamSorterStorage<CrdtData<K, S>> sorterStorage = ReactiveStreamSorterStorage.create(executor, serializer, FRAME_FORMAT, sortDir);
 		Function<CrdtData<K, S>, K> keyFn = CrdtData::getKey;
 		return StreamSorter.create(sorterStorage, keyFn, naturalOrder(), false, sortItemsInMemory);
 	}

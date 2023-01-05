@@ -24,13 +24,13 @@ import io.activej.common.function.FunctionEx;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.crdt.messaging.CrdtRequest;
 import io.activej.crdt.messaging.CrdtResponse;
-import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.crdt.util.Utils;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.MessagingCodec;
-import io.activej.csp.net.MessagingWithBinaryStreaming;
+import io.activej.csp.net.ReactiveMessaging;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
@@ -56,7 +56,7 @@ import static io.activej.crdt.util.Utils.onItem;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtStorageClient<K extends Comparable<K>, S> extends AbstractNioReactive
-		implements CrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<CrdtStorageClient<K, S>> {
+		implements AsyncCrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<CrdtStorageClient<K, S>> {
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(CrdtStorageClient.class, "connectTimeout", Duration.ZERO);
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageClient.class, "smoothingWindow", Duration.ofMinutes(1));
@@ -251,13 +251,13 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> extends Abstrac
 		return response -> castFn(expectedCls).apply(response);
 	}
 
-	private Promise<MessagingWithBinaryStreaming<CrdtResponse, CrdtRequest>> connect() {
+	private Promise<ReactiveMessaging<CrdtResponse, CrdtRequest>> connect() {
 		return ReactiveTcpSocket.connect(reactor, address, connectTimeoutMillis, socketSettings)
-				.map(socket -> MessagingWithBinaryStreaming.create(socket, SERIALIZER))
+				.map(socket -> ReactiveMessaging.create(socket, SERIALIZER))
 				.mapException(e -> new CrdtException("Failed to connect to " + address, e));
 	}
 
-	private static Promise<MessagingWithBinaryStreaming<CrdtResponse, CrdtRequest>> performHandshake(MessagingWithBinaryStreaming<CrdtResponse, CrdtRequest> messaging) {
+	private static Promise<ReactiveMessaging<CrdtResponse, CrdtRequest>> performHandshake(ReactiveMessaging<CrdtResponse, CrdtRequest> messaging) {
 		return messaging.send(new CrdtRequest.Handshake(CrdtServer.VERSION))
 				.then(messaging::receive)
 				.map(castFn(CrdtResponse.Handshake.class))

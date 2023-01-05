@@ -28,7 +28,7 @@ import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ExceptionStats;
 import io.activej.jmx.stats.ValueStats;
 import io.activej.net.AbstractReactiveServer;
-import io.activej.net.socket.tcp.TcpSocket;
+import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.net.ServerSocketSettings;
@@ -193,7 +193,7 @@ public final class RpcServer extends AbstractReactiveServer<RpcServer> {
 	// endregion
 
 	@Override
-	protected void serve(TcpSocket socket, InetAddress remoteAddress) {
+	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
 		RpcStream stream = new RpcStream(socket, serializer, initialBufferSize,
 				autoFlushInterval, frameFormat, true); // , statsSerializer, statsDeserializer, statsCompressor, statsDecompressor);
 		RpcServerConnection connection = new RpcServerConnection(this, remoteAddress, handlers, stream);

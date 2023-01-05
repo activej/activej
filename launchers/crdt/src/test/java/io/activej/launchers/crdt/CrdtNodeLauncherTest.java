@@ -1,11 +1,11 @@
 package io.activej.launchers.crdt;
 
 import io.activej.crdt.function.CrdtFunction;
-import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.ActiveFs;
-import io.activej.fs.LocalActiveFs;
+import io.activej.fs.AsyncFs;
+import io.activej.fs.LocalFs;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.crdt.CrdtNodeLogicModule.Cluster;
@@ -32,15 +32,15 @@ public class CrdtNodeLauncherTest {
 
 			@Inject
 			@InMemory
-			CrdtStorage<String, Integer> inMemory;
+			AsyncCrdtStorage<String, Integer> inMemory;
 
 			@Inject
 			@Persistent
-			CrdtStorage<String, Integer> persistent;
+			AsyncCrdtStorage<String, Integer> persistent;
 
 			@Inject
 			@Cluster
-			CrdtStorage<String, Integer> cluster;
+			AsyncCrdtStorage<String, Integer> cluster;
 
 			@Override
 			protected CrdtNodeLogicModule<String, Integer> getBusinessLogicModule() {
@@ -55,8 +55,8 @@ public class CrdtNodeLauncherTest {
 					}
 
 					@Provides
-					ActiveFs fs() {
-						return LocalActiveFs.create(Eventloop.create(), newSingleThreadExecutor(), Paths.get(""));
+					AsyncFs fs() {
+						return LocalFs.create(Eventloop.create(), newSingleThreadExecutor(), Paths.get(""));
 					}
 				};
 			}

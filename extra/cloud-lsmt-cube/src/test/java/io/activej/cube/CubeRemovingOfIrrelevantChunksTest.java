@@ -1,6 +1,6 @@
 package io.activej.cube;
 
-import io.activej.aggregation.AggregationChunkStorage;
+import io.activej.aggregation.AsyncAggregationChunkStorage;
 import io.activej.aggregation.AggregationPredicate;
 import io.activej.aggregation.ChunkIdCodec;
 import io.activej.aggregation.ReactiveAggregationChunkStorage;
@@ -16,11 +16,11 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.LogOTState;
-import io.activej.fs.LocalActiveFs;
-import io.activej.multilog.Multilog;
+import io.activej.fs.LocalFs;
+import io.activej.multilog.AsyncMultilog;
 import io.activej.multilog.ReactiveMultilog;
 import io.activej.ot.OTStateManager;
-import io.activej.ot.uplink.OTUplink;
+import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.serializer.SerializerBuilder;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,18 +58,18 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 	private static final int LOWER_DATE_BOUNDARY_DAYS = (int) LOWER_DATE_BOUNDARY.toEpochDay();
 	private static final AggregationPredicate DATE_PREDICATE = gt("date", LOWER_DATE_BOUNDARY);
 
-	private AggregationChunkStorage<Long> chunkStorage;
+	private AsyncAggregationChunkStorage<Long> chunkStorage;
 	private AggregationConfig dateAggregation;
 	private AggregationConfig advertiserDateAggregation;
 	private AggregationConfig campaignBannerDateAggregation;
-	private OTUplink<Long, LogDiff<CubeDiff>, ?> uplink;
+	private AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink;
 
 	@Before
 	public void before() throws Exception {
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 		Path logsDir = temporaryFolder.newFolder().toPath();
 
-		LocalActiveFs fs = LocalActiveFs.create(reactor, EXECUTOR, aggregationsDir)
+		LocalFs fs = LocalFs.create(reactor, EXECUTOR, aggregationsDir)
 				.withTempDir(Files.createTempDirectory(""));
 		await(fs.start());
 		FrameFormat frameFormat = LZ4FrameFormat.create();
@@ -97,9 +97,9 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 
 		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
-		LocalActiveFs localFs = LocalActiveFs.create(reactor, EXECUTOR, logsDir);
+		LocalFs localFs = LocalFs.create(reactor, EXECUTOR, logsDir);
 		await(localFs.start());
-		Multilog<LogItem> multilog = ReactiveMultilog.create(reactor,
+		AsyncMultilog<LogItem> multilog = ReactiveMultilog.create(reactor,
 				localFs,
 				frameFormat,
 				SerializerBuilder.create(CLASS_LOADER).build(LogItem.class),

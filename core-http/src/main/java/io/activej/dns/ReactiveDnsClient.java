@@ -29,7 +29,7 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;
 import io.activej.net.socket.udp.ReactiveUdpSocket;
 import io.activej.net.socket.udp.UdpPacket;
-import io.activej.net.socket.udp.UdpSocket;
+import io.activej.net.socket.udp.AsyncUdpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.AbstractNioReactive;
@@ -52,11 +52,11 @@ import static io.activej.common.Checks.checkState;
 import static io.activej.promise.Promises.timeout;
 
 /**
- * Implementation of {@link DnsClient} that asynchronously
+ * Implementation of {@link AsyncDnsClient} that asynchronously
  * connects to some <i>real</i> DNS server and gets the response from it.
  */
 public final class ReactiveDnsClient extends AbstractNioReactive
-		implements DnsClient, ReactiveJmxBeanWithStats, WithInitializer<ReactiveDnsClient> {
+		implements AsyncDnsClient, ReactiveJmxBeanWithStats, WithInitializer<ReactiveDnsClient> {
 	private final Logger logger = LoggerFactory.getLogger(ReactiveDnsClient.class);
 	private static final boolean CHECK = Checks.isEnabled(ReactiveDnsClient.class);
 
@@ -71,7 +71,7 @@ public final class ReactiveDnsClient extends AbstractNioReactive
 	private InetSocketAddress dnsServerAddress = GOOGLE_PUBLIC_DNS;
 	private Duration timeout = DEFAULT_TIMEOUT;
 
-	private @Nullable UdpSocket socket;
+	private @Nullable AsyncUdpSocket socket;
 
 	private @Nullable ReactiveUdpSocket.Inspector socketInspector;
 	private @Nullable Inspector inspector;
@@ -128,8 +128,8 @@ public final class ReactiveDnsClient extends AbstractNioReactive
 		transactions.values().forEach(s -> s.setException(asyncCloseException));
 	}
 
-	private Promise<UdpSocket> getSocket() {
-		UdpSocket socket = this.socket;
+	private Promise<AsyncUdpSocket> getSocket() {
+		AsyncUdpSocket socket = this.socket;
 		if (socket != null) {
 			return Promise.of(socket);
 		}
@@ -153,7 +153,7 @@ public final class ReactiveDnsClient extends AbstractNioReactive
 	@Override
 	public Promise<DnsResponse> resolve(DnsQuery query) {
 		if (CHECK) checkState(inReactorThread());
-		DnsResponse fromQuery = DnsClient.resolveFromQuery(query);
+		DnsResponse fromQuery = AsyncDnsClient.resolveFromQuery(query);
 		if (fromQuery != null) {
 			logger.trace("{} already contained an IP address within itself", query);
 			return Promise.of(fromQuery);

@@ -3,7 +3,7 @@ package io.activej.dataflow.stream;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowServer;
-import io.activej.dataflow.collector.Collector;
+import io.activej.dataflow.collector.AsyncCollector;
 import io.activej.dataflow.collector.ConcatCollector;
 import io.activej.dataflow.collector.MergeCollector;
 import io.activej.dataflow.dataset.Dataset;
@@ -25,7 +25,7 @@ import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamReducers.MergeReducer;
 import io.activej.datastream.processor.StreamReducers.Reducer;
-import io.activej.http.HttpClient;
+import io.activej.http.AsyncHttpClient;
 import io.activej.http.HttpServer;
 import io.activej.http.ReactiveHttpClient;
 import io.activej.inject.Injector;
@@ -425,7 +425,7 @@ public final class DataflowTest {
 		Dataset<TestItem> filterDataset = filter(datasetOfId("items", simple(TestItem.class)), new TestPredicate());
 		LocallySortedDataset<Long, TestItem> sortedDataset = localSort(filterDataset, long.class, new TestKeyFunction(), new TestComparator());
 
-		Collector<TestItem> collector = ConcatCollector.create(sortedDataset, client);
+		AsyncCollector<TestItem> collector = ConcatCollector.create(sortedDataset, client);
 		StreamSupplier<TestItem> resultSupplier = collector.compile(graph);
 
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
@@ -488,7 +488,7 @@ public final class DataflowTest {
 		LocallySortedDataset<Long, TestItem> sortedDataset = localSort(dataset, long.class, new TestKeyFunction(), new TestComparator());
 		SortedDataset<Long, TestItem> afterOffsetAndLimitApplied = offsetLimit(sortedDataset, 3, 4);
 
-		Collector<TestItem> collector = MergeCollector.create(afterOffsetAndLimitApplied, client, false);
+		AsyncCollector<TestItem> collector = MergeCollector.create(afterOffsetAndLimitApplied, client, false);
 		StreamSupplier<TestItem> resultSupplier = collector.compile(graph);
 
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
@@ -760,7 +760,7 @@ public final class DataflowTest {
 					}
 
 					@Provides
-					HttpClient httpClient(NioReactor reactor) {
+					AsyncHttpClient httpClient(NioReactor reactor) {
 						return ReactiveHttpClient.create(reactor);
 					}
 

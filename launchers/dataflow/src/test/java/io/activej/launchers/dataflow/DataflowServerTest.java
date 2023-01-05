@@ -3,7 +3,7 @@ package io.activej.launchers.dataflow;
 import io.activej.config.Config;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.dataflow.DataflowClient;
-import io.activej.dataflow.collector.Collector;
+import io.activej.dataflow.collector.AsyncCollector;
 import io.activej.dataflow.collector.ConcatCollector;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.impl.DatasetConsumerOfId;
@@ -196,7 +196,7 @@ public class DataflowServerTest {
 		Dataset<String> items = datasetOfId("items", simple(String.class));
 		Dataset<StringCount> mappedItems = map(items, new TestMapFunction(), simple(StringCount.class));
 		Dataset<StringCount> reducedItems = splitSortReduceRepartitionReduce(mappedItems, new TestReducer(), new TestKeyFunction(), new TestComparator());
-		Collector<StringCount> collector = ConcatCollector.create(reducedItems, client);
+		AsyncCollector<StringCount> collector = ConcatCollector.create(reducedItems, client);
 		StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
 		StreamConsumerToList<StringCount> resultConsumer = StreamConsumerToList.create(result);
 

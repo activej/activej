@@ -12,7 +12,7 @@ import io.activej.cube.exception.CubeException;
 import io.activej.cube.linear.CubeCleanerController.ChunksCleanerService;
 import io.activej.cube.linear.CubeUplinkMySql.UplinkProtoCommit;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.LocalActiveFs;
+import io.activej.fs.LocalFs;
 import io.activej.test.rules.ByteBufRule;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
@@ -61,7 +61,7 @@ public class CubeCleanerControllerTest {
 		eventloopThread.start();
 
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
-		LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, aggregationsDir);
+		LocalFs fs = LocalFs.create(eventloop, executor, aggregationsDir);
 		await(fs::start);
 		aggregationChunkStorage = ReactiveAggregationChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
 				LZ4FrameFormat.create(), fs);

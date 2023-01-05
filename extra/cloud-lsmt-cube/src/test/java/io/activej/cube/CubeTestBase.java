@@ -14,11 +14,11 @@ import io.activej.etl.LogDiff;
 import io.activej.etl.LogDiffCodec;
 import io.activej.etl.LogOT;
 import io.activej.ot.OTCommit;
-import io.activej.ot.repository.OTRepository;
+import io.activej.ot.repository.AsyncOTRepository;
 import io.activej.ot.repository.OTRepositoryMySql;
 import io.activej.ot.system.OTSystem;
-import io.activej.ot.uplink.OTUplink;
-import io.activej.ot.uplink.OTUplinkImpl;
+import io.activej.ot.uplink.AsyncOTUplink;
+import io.activej.ot.uplink.ReactiveOTUplink;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ByteBufRule;
@@ -66,7 +66,7 @@ public abstract class CubeTestBase {
 	public String testName;
 
 	@Parameter(1)
-	public UplinkFactory<OTUplink<Long, LogDiff<CubeDiff>, ?>> uplinkFactory;
+	public UplinkFactory<AsyncOTUplink<Long, LogDiff<CubeDiff>, ?>> uplinkFactory;
 
 	public static final Executor EXECUTOR = Executors.newCachedThreadPool();
 	public static final DataSource DATA_SOURCE;
@@ -91,17 +91,17 @@ public abstract class CubeTestBase {
 		return List.of(
 				new Object[]{
 						"OT graph",
-						new UplinkFactory<OTUplinkImpl<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>>>() {
+						new UplinkFactory<ReactiveOTUplink<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>>>() {
 							@Override
-							public OTUplinkImpl<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> createUninitialized(ReactiveCube cube) {
+							public ReactiveOTUplink<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> createUninitialized(ReactiveCube cube) {
 								Reactor reactor = Reactor.getCurrentReactor();
-								OTRepository<Long, LogDiff<CubeDiff>> repository = OTRepositoryMySql.create(reactor, EXECUTOR, DATA_SOURCE, AsyncSupplier.of(new RefLong(0)::inc),
+								AsyncOTRepository<Long, LogDiff<CubeDiff>> repository = OTRepositoryMySql.create(reactor, EXECUTOR, DATA_SOURCE, AsyncSupplier.of(new RefLong(0)::inc),
 										LOG_OT, LogDiffCodec.create(CubeDiffCodec.create(cube)));
-								return OTUplinkImpl.create(repository, LOG_OT);
+								return ReactiveOTUplink.create(repository, LOG_OT);
 							}
 
 							@Override
-							public void initialize(OTUplinkImpl<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> uplink) {
+							public void initialize(ReactiveOTUplink<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> uplink) {
 								noFail(() -> initializeRepository((OTRepositoryMySql<LogDiff<CubeDiff>>) uplink.getRepository()));
 							}
 						}},
@@ -125,7 +125,7 @@ public abstract class CubeTestBase {
 		);
 	}
 
-	protected interface UplinkFactory<U extends OTUplink<Long, LogDiff<CubeDiff>, ?>> {
+	protected interface UplinkFactory<U extends AsyncOTUplink<Long, LogDiff<CubeDiff>, ?>> {
 		default U create(ReactiveCube cube) {
 			U uplink = createUninitialized(cube);
 			initialize(uplink);

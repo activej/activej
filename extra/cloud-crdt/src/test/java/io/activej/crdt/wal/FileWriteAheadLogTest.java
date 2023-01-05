@@ -3,7 +3,7 @@ package io.activej.crdt.wal;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.GSet;
-import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.crdt.storage.local.CrdtStorageFs;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.csp.ChannelSupplier;
@@ -11,7 +11,7 @@ import io.activej.csp.file.ChannelFileWriter;
 import io.activej.csp.process.frames.ChannelFrameEncoder;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelSerializer;
-import io.activej.fs.LocalActiveFs;
+import io.activej.fs.LocalFs;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
@@ -71,7 +71,7 @@ public class FileWriteAheadLogTest {
 	};
 
 	private FileWriteAheadLog<Long, GSet<Integer>> wal;
-	private CrdtStorage<Long, GSet<Integer>> storage;
+	private AsyncCrdtStorage<Long, GSet<Integer>> storage;
 	private Executor executor;
 	private Path path;
 
@@ -80,7 +80,7 @@ public class FileWriteAheadLogTest {
 		executor = Executors.newSingleThreadExecutor();
 		Reactor reactor = getCurrentReactor();
 		path = temporaryFolder.newFolder().toPath();
-		LocalActiveFs storageFs = LocalActiveFs.create(reactor, executor, temporaryFolder.newFolder().toPath());
+		LocalFs storageFs = LocalFs.create(reactor, executor, temporaryFolder.newFolder().toPath());
 		await(storageFs.start());
 		storage = CrdtStorageFs.create(reactor, storageFs, serializer, function);
 		WalUploader<Long, GSet<Integer>> uploader = WalUploader.create(reactor, executor, path, function, serializer, storage);

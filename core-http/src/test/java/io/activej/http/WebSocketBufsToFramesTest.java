@@ -3,7 +3,7 @@ package io.activej.http;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
-import io.activej.http.WebSocket.Frame;
+import io.activej.http.AsyncWebSocket.Frame;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -11,7 +11,7 @@ import org.junit.Test;
 
 import static io.activej.bytebuf.ByteBuf.wrapForReading;
 import static io.activej.http.TestUtils.*;
-import static io.activej.http.WebSocket.Frame.FrameType.*;
+import static io.activej.http.AsyncWebSocket.Frame.FrameType.*;
 import static io.activej.promise.TestUtils.await;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.*;

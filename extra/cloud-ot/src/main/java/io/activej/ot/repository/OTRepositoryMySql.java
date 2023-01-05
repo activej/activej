@@ -62,7 +62,7 @@ import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.util.stream.Collectors.joining;
 
 public class OTRepositoryMySql<D> extends AbstractReactive
-		implements OTRepository<Long, D>, ReactiveJmxBeanWithStats, WithInitializer<OTRepositoryMySql<D>> {
+		implements AsyncOTRepository<Long, D>, ReactiveJmxBeanWithStats, WithInitializer<OTRepositoryMySql<D>> {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 	public static final String DEFAULT_REVISION_TABLE = "ot_revisions";

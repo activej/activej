@@ -25,7 +25,7 @@ import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelByteRanger;
-import io.activej.fs.ActiveFs;
+import io.activej.fs.AsyncFs;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.exception.FsIOException;
 import io.activej.fs.exception.PathContainsFileException;
@@ -71,7 +71,7 @@ public final class ClusterRepartitionController extends AbstractReactive
 
 	private final List<String> processedFiles = new ArrayList<>();
 
-	private ActiveFs localFs;
+	private AsyncFs localFs;
 	private String glob = "**";
 	private Predicate<String> negativeGlobPredicate = $ -> true;
 	private int replicationCount = 1;
@@ -133,7 +133,7 @@ public final class ClusterRepartitionController extends AbstractReactive
 		return localPartitionId;
 	}
 
-	public ActiveFs getLocalFs() {
+	public AsyncFs getLocalFs() {
 		return localFs;
 	}
 
@@ -302,7 +302,7 @@ public final class ClusterRepartitionController extends AbstractReactive
 													return Promise.of(Try.of(null));
 												}
 												// upload file to this partition
-												ActiveFs fs = partitions.get(partitionId);
+												AsyncFs fs = partitions.get(partitionId);
 												if (fs == null) {
 													return Promise.ofException(new FsIOException("File system '" + partitionId + "' is not alive"));
 												}

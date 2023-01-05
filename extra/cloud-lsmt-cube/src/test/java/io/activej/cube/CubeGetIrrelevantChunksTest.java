@@ -9,9 +9,9 @@ import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTState;
-import io.activej.fs.LocalActiveFs;
+import io.activej.fs.LocalFs;
 import io.activej.ot.OTStateManager;
-import io.activej.ot.uplink.OTUplink;
+import io.activej.ot.uplink.AsyncOTUplink;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -47,10 +47,10 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 	private static final AggregationPredicate ADVERTISER_PREDICATE = gt("advertiser", LOWER_NUMBER_BOUNDARY);
 
 	private OTStateManager<Long, LogDiff<CubeDiff>> stateManager;
-	private AggregationChunkStorage<Long> chunkStorage;
+	private AsyncAggregationChunkStorage<Long> chunkStorage;
 	private ReactiveCube.AggregationConfig dateAggregation;
 	private ReactiveCube.AggregationConfig advertiserDateAggregation;
-	private OTUplink<Long, LogDiff<CubeDiff>, ?> uplink;
+	private AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink;
 	private ReactiveCube basicCube;
 	private ReactiveCube cube;
 
@@ -66,7 +66,7 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 		toBePreserved.clear();
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 
-		LocalActiveFs fs = LocalActiveFs.create(reactor, EXECUTOR, aggregationsDir)
+		LocalFs fs = LocalFs.create(reactor, EXECUTOR, aggregationsDir)
 				.withTempDir(Files.createTempDirectory(""));
 		await(fs.start());
 		FrameFormat frameFormat = LZ4FrameFormat.create();

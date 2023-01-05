@@ -8,7 +8,7 @@ import io.activej.common.ref.RefBoolean;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
-import io.activej.http.WebSocket.Message;
+import io.activej.http.AsyncWebSocket.Message;
 import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -158,7 +158,7 @@ public final class WebSocketClientServerTest {
 					}
 
 					@Override
-					protected void onWebSocket(WebSocket webSocket) {
+					protected void onWebSocket(AsyncWebSocket webSocket) {
 					}
 				}))
 				.withListenPort(port)
@@ -180,7 +180,7 @@ public final class WebSocketClientServerTest {
 					}
 
 					@Override
-					protected void onWebSocket(WebSocket webSocket) {
+					protected void onWebSocket(AsyncWebSocket webSocket) {
 					}
 				}))
 				.withListenPort(port)
@@ -370,7 +370,7 @@ public final class WebSocketClientServerTest {
 		assertEquals(404, responseCode);
 	}
 
-	private void startTestServer(Consumer<WebSocket> webSocketConsumer) throws IOException {
+	private void startTestServer(Consumer<AsyncWebSocket> webSocketConsumer) throws IOException {
 		HttpServer.create(Reactor.getCurrentReactor(), RoutingServlet.create()
 				.mapWebSocket("/", webSocketConsumer))
 				.withListenPort(port)
@@ -378,7 +378,7 @@ public final class WebSocketClientServerTest {
 				.listen();
 	}
 
-	private void startSecureTestServer(Consumer<WebSocket> webSocketConsumer) throws IOException {
+	private void startSecureTestServer(Consumer<AsyncWebSocket> webSocketConsumer) throws IOException {
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 		HttpServer server = HttpServer.create(Reactor.getCurrentReactor(), RoutingServlet.create()
 				.mapWebSocket("/", webSocketConsumer))

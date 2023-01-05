@@ -2,8 +2,8 @@ package io.activej.fs.cluster;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.time.Stopwatch;
-import io.activej.fs.ActiveFs;
-import io.activej.fs.tcp.RemoteActiveFs;
+import io.activej.fs.AsyncFs;
+import io.activej.fs.tcp.RemoteFs;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
@@ -40,13 +40,13 @@ public class EtcdDiscoveryServiceTest {
 	private static final byte[] PARTITIONS_1 = "[\"partition1\"]".getBytes(UTF_8);
 	private static final byte[] PARTITIONS_2 = "[\"partition1\", \"partition2\"]".getBytes(UTF_8);
 
-	private static final Map<Object, ActiveFs> PARTITIONS = new HashMap<>();
+	private static final Map<Object, AsyncFs> PARTITIONS = new HashMap<>();
 
 	@BeforeClass
 	public static void beforeClass() {
 		NioReactor reactor = Reactor.getCurrentReactor();
-		PARTITIONS.put("partition1", RemoteActiveFs.create(reactor, new InetSocketAddress(0)));
-		PARTITIONS.put("partition2", RemoteActiveFs.create(reactor, new InetSocketAddress(0)));
+		PARTITIONS.put("partition1", RemoteFs.create(reactor, new InetSocketAddress(0)));
+		PARTITIONS.put("partition2", RemoteFs.create(reactor, new InetSocketAddress(0)));
 	}
 
 	@Before
@@ -77,19 +77,19 @@ public class EtcdDiscoveryServiceTest {
 
 	@Test
 	public void testEmptyFileChange() {
-		AsyncSupplier<Map<Object, ActiveFs>> supplier = discoveryService.discover();
+		AsyncSupplier<Map<Object, AsyncFs>> supplier = discoveryService.discover();
 
-		Map<Object, ActiveFs> initialPartitions = await(supplier.get());
+		Map<Object, AsyncFs> initialPartitions = await(supplier.get());
 
 		assertTrue(initialPartitions.isEmpty());
 
-		Promise<Map<Object, ActiveFs>> nextPromise = supplier.get();
+		Promise<Map<Object, AsyncFs>> nextPromise = supplier.get();
 
 		assertFalse(nextPromise.isComplete());
 
 		putValue(PARTITIONS_1);
 
-		Map<Object, ActiveFs> partitions1 = await(nextPromise);
+		Map<Object, AsyncFs> partitions1 = await(nextPromise);
 		assertEquals(Set.of("partition1"), partitions1.keySet());
 		assertSame(partitions1.get("partition1"), PARTITIONS.get("partition1"));
 	}
@@ -98,19 +98,19 @@ public class EtcdDiscoveryServiceTest {
 	public void testNonEmptyFileChange() {
 		putValue(PARTITIONS_1);
 
-		AsyncSupplier<Map<Object, ActiveFs>> supplier = discoveryService.discover();
+		AsyncSupplier<Map<Object, AsyncFs>> supplier = discoveryService.discover();
 
-		Map<Object, ActiveFs> partitions1 = await(supplier.get());
+		Map<Object, AsyncFs> partitions1 = await(supplier.get());
 		assertEquals(Set.of("partition1"), partitions1.keySet());
 		assertSame(partitions1.get("partition1"), PARTITIONS.get("partition1"));
 
-		Promise<Map<Object, ActiveFs>> nextPromise = supplier.get();
+		Promise<Map<Object, AsyncFs>> nextPromise = supplier.get();
 
 		assertFalse(nextPromise.isComplete());
 
 		putValue(PARTITIONS_2);
 
-		Map<Object, ActiveFs> partitions2 = await(nextPromise);
+		Map<Object, AsyncFs> partitions2 = await(nextPromise);
 		assertEquals(Set.of("partition1", "partition2"), partitions2.keySet());
 		assertSame(partitions2.get("partition1"), PARTITIONS.get("partition1"));
 		assertSame(partitions2.get("partition2"), PARTITIONS.get("partition2"));

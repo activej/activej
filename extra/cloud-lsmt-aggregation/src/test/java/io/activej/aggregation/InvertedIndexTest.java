@@ -8,7 +8,7 @@ import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.datastream.StreamSupplier;
-import io.activej.fs.LocalActiveFs;
+import io.activej.fs.LocalFs;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
@@ -93,10 +93,10 @@ public class InvertedIndexTest {
 		Reactor reactor = Reactor.getCurrentReactor();
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		Path path = temporaryFolder.newFolder().toPath();
-		LocalActiveFs fs = LocalActiveFs.create(reactor, executor, path);
+		LocalFs fs = LocalFs.create(reactor, executor, path);
 		await(fs.start());
 		FrameFormat frameFormat = LZ4FrameFormat.create();
-		AggregationChunkStorage<Long> aggregationChunkStorage = ReactiveAggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = ReactiveAggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 
 		AggregationStructure structure = AggregationStructure.create(ChunkIdCodec.ofLong())
 				.withKey("word", ofString())
@@ -143,7 +143,7 @@ public class InvertedIndexTest {
 		assertEquals(expectedResult, list);
 	}
 
-	public void doProcess(AggregationChunkStorage<Long> aggregationChunkStorage, ReactiveAggregation aggregation, StreamSupplier<InvertedIndexRecord> supplier) {
+	public void doProcess(AsyncAggregationChunkStorage<Long> aggregationChunkStorage, ReactiveAggregation aggregation, StreamSupplier<InvertedIndexRecord> supplier) {
 		AggregationDiff diff = await(supplier.streamTo(aggregation.consume(InvertedIndexRecord.class)));
 		aggregation.getState().apply(diff);
 		await(aggregationChunkStorage.finish(getAddedChunks(diff)));

@@ -24,7 +24,7 @@ import io.activej.common.MemSize;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
-import io.activej.dns.DnsClient;
+import io.activej.dns.AsyncDnsClient;
 import io.activej.dns.ReactiveDnsClient;
 import io.activej.dns.protocol.DnsQueryException;
 import io.activej.dns.protocol.DnsResponse;
@@ -34,7 +34,7 @@ import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ExceptionStats;
 import io.activej.net.socket.tcp.ReactiveTcpSocket;
-import io.activej.net.socket.tcp.TcpSocket;
+import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.AbstractNioReactive;
@@ -66,7 +66,7 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
- * Implementation of {@link HttpClient} that asynchronously connects
+ * Implementation of {@link AsyncHttpClient} that asynchronously connects
  * to real HTTP servers and gets responses from them.
  * <p>
  * It is also an {@link ReactiveService} that needs its close method to be called
@@ -74,7 +74,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  */
 @SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue"})
 public final class ReactiveHttpClient extends AbstractNioReactive
-		implements HttpClient, WebSocketClient, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<ReactiveHttpClient> {
+		implements AsyncHttpClient, AsyncWebSocketClient, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<ReactiveHttpClient> {
 	private static final Logger logger = getLogger(ReactiveHttpClient.class);
 	private static final boolean CHECK = Checks.isEnabled(ReactiveHttpClient.class);
 
@@ -87,7 +87,7 @@ public final class ReactiveHttpClient extends AbstractNioReactive
 	public static final MemSize MAX_WEB_SOCKET_MESSAGE_SIZE = ApplicationSettings.getMemSize(ReactiveHttpClient.class, "maxWebSocketMessageSize", MemSize.megabytes(1));
 	public static final int MAX_KEEP_ALIVE_REQUESTS = ApplicationSettings.getInt(ReactiveHttpClient.class, "maxKeepAliveRequests", 0);
 
-	private DnsClient asyncDnsClient;
+	private AsyncDnsClient asyncDnsClient;
 	private SocketSettings socketSettings = DEFAULT_SOCKET_SETTINGS;
 
 	final HashMap<InetSocketAddress, AddressLinkedList> addresses = new HashMap<>();
@@ -286,13 +286,13 @@ public final class ReactiveHttpClient extends AbstractNioReactive
 	private int inetAddressIdx = 0;
 
 	// region builders
-	private ReactiveHttpClient(NioReactor reactor, DnsClient asyncDnsClient) {
+	private ReactiveHttpClient(NioReactor reactor, AsyncDnsClient asyncDnsClient) {
 		super(reactor);
 		this.asyncDnsClient = asyncDnsClient;
 	}
 
 	public static ReactiveHttpClient create(NioReactor reactor) {
-		DnsClient defaultDnsClient = ReactiveDnsClient.create(reactor);
+		AsyncDnsClient defaultDnsClient = ReactiveDnsClient.create(reactor);
 		return new ReactiveHttpClient(reactor, defaultDnsClient);
 	}
 
@@ -301,7 +301,7 @@ public final class ReactiveHttpClient extends AbstractNioReactive
 		return this;
 	}
 
-	public ReactiveHttpClient withDnsClient(DnsClient asyncDnsClient) {
+	public ReactiveHttpClient withDnsClient(AsyncDnsClient asyncDnsClient) {
 		this.asyncDnsClient = asyncDnsClient;
 		return this;
 	}
@@ -435,20 +435,20 @@ public final class ReactiveHttpClient extends AbstractNioReactive
 	 * <p>
 	 * Sent request must not have a body or body stream.
 	 * <p>
-	 * After receiving a {@link WebSocket}, caller can inspect server response via calling {@link WebSocket#getResponse()}.
+	 * After receiving a {@link AsyncWebSocket}, caller can inspect server response via calling {@link AsyncWebSocket#getResponse()}.
 	 * If a response does not satisfy a caller, it may close the web socket with an appropriate exception.
 	 *
 	 * @param request web socket request
 	 * @return promise of a web socket
 	 */
 	@Override
-	public Promise<WebSocket> webSocketRequest(HttpRequest request) {
-		checkState(WebSocket.ENABLED, "Web sockets are disabled by application settings");
+	public Promise<AsyncWebSocket> webSocketRequest(HttpRequest request) {
+		checkState(AsyncWebSocket.ENABLED, "Web sockets are disabled by application settings");
 		checkArgument(request.getProtocol() == WS || request.getProtocol() == WSS, "Wrong protocol");
 		checkArgument(request.body == null && request.bodyStream == null, "No body should be present");
 
 		//noinspection unchecked
-		return (Promise<WebSocket>) doRequest(request, true);
+		return (Promise<AsyncWebSocket>) doRequest(request, true);
 	}
 
 	private Promise<?> doRequest(HttpRequest request, boolean isWebSocket) {
@@ -510,7 +510,7 @@ public final class ReactiveHttpClient extends AbstractNioReactive
 							String host = request.getUrl().getHost();
 							assert host != null;
 
-							TcpSocket asyncTcpSocket = isSecure ?
+							AsyncTcpSocket asyncTcpSocket = isSecure ?
 									wrapClientSocket(reactor, asyncTcpSocketImpl,
 											host, request.getUrl().getPort(),
 											sslContext, sslExecutor) :

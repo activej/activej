@@ -18,14 +18,14 @@ import io.activej.etl.LogDataConsumerSplitter;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.LogOTState;
-import io.activej.fs.LocalActiveFs;
-import io.activej.http.HttpClient;
+import io.activej.fs.LocalFs;
+import io.activej.http.AsyncHttpClient;
 import io.activej.http.HttpServer;
 import io.activej.http.ReactiveHttpClient;
-import io.activej.multilog.Multilog;
+import io.activej.multilog.AsyncMultilog;
 import io.activej.multilog.ReactiveMultilog;
 import io.activej.ot.OTStateManager;
-import io.activej.ot.uplink.OTUplink;
+import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.reactor.Reactor;
 import io.activej.record.Record;
 import io.activej.serializer.SerializerBuilder;
@@ -252,9 +252,9 @@ public final class ReportingTest extends CubeTestBase {
 		serverPort = getFreePort();
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 
-		LocalActiveFs fs = LocalActiveFs.create(reactor, EXECUTOR, aggregationsDir);
+		LocalFs fs = LocalFs.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
-		AggregationChunkStorage<Long> aggregationChunkStorage = ReactiveAggregationChunkStorage.create(reactor,
+		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = ReactiveAggregationChunkStorage.create(reactor,
 				ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), LZ4FrameFormat.create(), fs);
 		cube = ReactiveCube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withClassLoaderCache(CubeClassLoaderCache.create(CLASS_LOADER, 5))
@@ -282,14 +282,14 @@ public final class ReportingTest extends CubeTestBase {
 						.withDimensions(DIMENSIONS_DATE_AGGREGATION.keySet())
 						.withMeasures(MEASURES.keySet()));
 
-		OTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
+		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
 		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cube);
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
-		LocalActiveFs activeFs = LocalActiveFs.create(reactor, EXECUTOR, temporaryFolder.newFolder().toPath());
+		LocalFs activeFs = LocalFs.create(reactor, EXECUTOR, temporaryFolder.newFolder().toPath());
 		await(activeFs.start());
-		Multilog<LogItem> multilog = ReactiveMultilog.create(reactor,
+		AsyncMultilog<LogItem> multilog = ReactiveMultilog.create(reactor,
 				activeFs,
 				LZ4FrameFormat.create(),
 				SerializerBuilder.create(CLASS_LOADER).build(LogItem.class),
@@ -333,7 +333,7 @@ public final class ReportingTest extends CubeTestBase {
 
 		cubeHttpServer = startHttpServer();
 
-		HttpClient httpClient = ReactiveHttpClient.create(reactor)
+		AsyncHttpClient httpClient = ReactiveHttpClient.create(reactor)
 				.withNoKeepAlive();
 		cubeHttpClient = CubeHttpClient.create(httpClient, "http://127.0.0.1:" + serverPort)
 				.withAttribute("date", LocalDate.class)

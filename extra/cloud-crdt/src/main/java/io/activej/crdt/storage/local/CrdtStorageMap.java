@@ -26,7 +26,7 @@ import io.activej.crdt.CrdtTombstone;
 import io.activej.crdt.function.CrdtFilter;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.CrdtType;
-import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
@@ -54,7 +54,7 @@ import static io.activej.crdt.util.Utils.onItem;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtStorageMap<K extends Comparable<K>, S> extends AbstractReactive
-		implements CrdtStorage<K, S>, WithInitializer<CrdtStorageMap<K, S>>, ReactiveService, ReactiveJmxBeanWithStats {
+		implements AsyncCrdtStorage<K, S>, WithInitializer<CrdtStorageMap<K, S>>, ReactiveService, ReactiveJmxBeanWithStats {
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageMap.class, "smoothingWindow", Duration.ofMinutes(1));
 
 	private final CrdtFunction<S> function;

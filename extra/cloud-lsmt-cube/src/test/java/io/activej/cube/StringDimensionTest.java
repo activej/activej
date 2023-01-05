@@ -1,6 +1,6 @@
 package io.activej.cube;
 
-import io.activej.aggregation.AggregationChunkStorage;
+import io.activej.aggregation.AsyncAggregationChunkStorage;
 import io.activej.aggregation.ChunkIdCodec;
 import io.activej.aggregation.ReactiveAggregationChunkStorage;
 import io.activej.async.function.AsyncSupplier;
@@ -13,7 +13,7 @@ import io.activej.cube.bean.DataItemString2;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
-import io.activej.fs.LocalActiveFs;
+import io.activej.fs.LocalFs;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
@@ -57,9 +57,9 @@ public class StringDimensionTest {
 		Executor executor = Executors.newCachedThreadPool();
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 
-		LocalActiveFs fs = LocalActiveFs.create(reactor, executor, aggregationsDir);
+		LocalFs fs = LocalFs.create(reactor, executor, aggregationsDir);
 		await(fs.start());
-		AggregationChunkStorage<Long> aggregationChunkStorage = ReactiveAggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(),
+		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = ReactiveAggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(),
 				AsyncSupplier.of(new RefLong(0)::inc), LZ4FrameFormat.create(), fs);
 		ReactiveCube cube = ReactiveCube.create(reactor, executor, classLoader, aggregationChunkStorage)
 				.withDimension("key1", ofString())

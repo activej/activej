@@ -103,7 +103,7 @@ public final class MultipartDecoder implements ByteBufsDecoder<MultipartFrame>, 
 	}
 
 	private Promise<Void> doSplit(MultipartFrame headerFrame, ChannelSupplier<MultipartFrame> frames,
-			MultipartDataHandler dataHandler) {
+			AsyncMultipartDataHandler dataHandler) {
 		return getContentDispositionFields(headerFrame)
 				.then(contentDispositionFields -> {
 					String fieldName = contentDispositionFields.get("name");
@@ -134,7 +134,7 @@ public final class MultipartDecoder implements ByteBufsDecoder<MultipartFrame>, 
 	 * Complex operation that streams this channel of multipart frames into multiple binary consumers,
 	 * as specified by the Content-Disposition multipart header.
 	 */
-	public Promise<Void> split(ChannelSupplier<ByteBuf> source, MultipartDataHandler dataHandler) {
+	public Promise<Void> split(ChannelSupplier<ByteBuf> source, AsyncMultipartDataHandler dataHandler) {
 		ChannelSupplier<MultipartFrame> frames = BinaryChannelSupplier.of(source).decodeStream(this);
 		return frames.get()
 				.thenIfNonNull(frame -> {
@@ -281,23 +281,23 @@ public final class MultipartDecoder implements ByteBufsDecoder<MultipartFrame>, 
 		}
 	}
 
-	public interface MultipartDataHandler {
+	public interface AsyncMultipartDataHandler {
 		Promise<? extends ChannelConsumer<ByteBuf>> handleField(String fieldName);
 
 		Promise<? extends ChannelConsumer<ByteBuf>> handleFile(String fieldName, String fileName);
 
-		static MultipartDataHandler fieldsToMap(Map<String, String> fields) {
+		static AsyncMultipartDataHandler fieldsToMap(Map<String, String> fields) {
 			return fieldsToMap(fields, ($1, $2) -> Promise.of(ChannelConsumers.recycling()));
 		}
 
-		static MultipartDataHandler fieldsToMap(Map<String, String> fields,
+		static AsyncMultipartDataHandler fieldsToMap(Map<String, String> fields,
 				Function<String, Promise<? extends ChannelConsumer<ByteBuf>>> uploader) {
 			return fieldsToMap(fields, ($, fileName) -> uploader.apply(fileName));
 		}
 
-		static MultipartDataHandler fieldsToMap(Map<String, String> fields,
+		static AsyncMultipartDataHandler fieldsToMap(Map<String, String> fields,
 				BiFunction<String, String, Promise<? extends ChannelConsumer<ByteBuf>>> uploader) {
-			return new MultipartDataHandler() {
+			return new AsyncMultipartDataHandler() {
 				@Override
 				public Promise<? extends ChannelConsumer<ByteBuf>> handleField(String fieldName) {
 					return Promise.of(ChannelConsumer.ofSupplier(supplier -> supplier.toCollector(ByteBufs.collector())
@@ -314,12 +314,12 @@ public final class MultipartDecoder implements ByteBufsDecoder<MultipartFrame>, 
 			};
 		}
 
-		static MultipartDataHandler file(Function<String, Promise<? extends ChannelConsumer<ByteBuf>>> uploader) {
+		static AsyncMultipartDataHandler file(Function<String, Promise<? extends ChannelConsumer<ByteBuf>>> uploader) {
 			return files(($, fileName) -> uploader.apply(fileName));
 		}
 
-		static MultipartDataHandler files(BiFunction<String, String, Promise<? extends ChannelConsumer<ByteBuf>>> uploader) {
-			return new MultipartDataHandler() {
+		static AsyncMultipartDataHandler files(BiFunction<String, String, Promise<? extends ChannelConsumer<ByteBuf>>> uploader) {
+			return new AsyncMultipartDataHandler() {
 				@Override
 				public Promise<? extends ChannelConsumer<ByteBuf>> handleField(String fieldName) {
 					return Promise.of(ChannelConsumers.recycling());

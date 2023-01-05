@@ -84,10 +84,10 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 	 * Fails if there is already a web socket servlet mapped on this path.
 	 */
 	@Contract("_, _ -> this")
-	public RoutingServlet mapWebSocket(String path, Consumer<WebSocket> webSocketConsumer) {
+	public RoutingServlet mapWebSocket(String path, Consumer<AsyncWebSocket> webSocketConsumer) {
 		return mapWebSocket(path, new WebSocketServlet() {
 			@Override
-			protected void onWebSocket(WebSocket webSocket) {
+			protected void onWebSocket(AsyncWebSocket webSocket) {
 				webSocketConsumer.accept(webSocket);
 			}
 		});

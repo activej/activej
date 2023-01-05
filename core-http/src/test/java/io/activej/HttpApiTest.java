@@ -34,7 +34,7 @@ public final class HttpApiTest {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	private HttpServer server;
-	private HttpClient client;
+	private AsyncHttpClient client;
 
 	private int port;
 

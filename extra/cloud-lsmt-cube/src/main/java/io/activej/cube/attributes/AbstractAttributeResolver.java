@@ -23,7 +23,7 @@ import io.activej.reactor.Reactor;
 import java.util.List;
 
 public abstract class AbstractAttributeResolver<K, A> extends AbstractReactive
-		implements AttributeResolver {
+		implements AsyncAttributeResolver {
 
 	public AbstractAttributeResolver(Reactor reactor) {
 		super(reactor);

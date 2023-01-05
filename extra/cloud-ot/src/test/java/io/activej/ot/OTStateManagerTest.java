@@ -1,10 +1,10 @@
 package io.activej.ot;
 
 import io.activej.async.function.AsyncSupplier;
-import io.activej.ot.repository.OTRepository;
+import io.activej.ot.repository.AsyncOTRepository;
 import io.activej.ot.system.OTSystem;
-import io.activej.ot.uplink.OTUplink;
-import io.activej.ot.uplink.OTUplinkImpl;
+import io.activej.ot.uplink.AsyncOTUplink;
+import io.activej.ot.uplink.ReactiveOTUplink;
 import io.activej.ot.utils.OTRepositoryStub;
 import io.activej.ot.utils.TestOp;
 import io.activej.ot.utils.TestOpState;
@@ -36,7 +36,7 @@ public class OTStateManagerTest {
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
 	private OTRepositoryStub<Integer, TestOp> repository;
-	private OTUplinkImpl<Integer, TestOp, OTCommit<Integer, TestOp>> uplink;
+	private ReactiveOTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> uplink;
 	private OTStateManager<Integer, TestOp> stateManager;
 	private TestOpState testOpState;
 	private boolean alreadyFailed = false;
@@ -47,7 +47,7 @@ public class OTStateManagerTest {
 		repository = OTRepositoryStub.create();
 		repository.revisionIdSupplier = () -> random.nextInt(1000) + 1000;
 		testOpState = new TestOpState();
-		uplink = OTUplinkImpl.create(this.repository, SYSTEM);
+		uplink = ReactiveOTUplink.create(this.repository, SYSTEM);
 		stateManager = OTStateManager.create(getCurrentReactor(), SYSTEM, uplink, testOpState);
 
 		initializeRepository(this.repository, stateManager);
@@ -56,7 +56,7 @@ public class OTStateManagerTest {
 	@Test
 	public void testSyncBeforeSyncFinished() {
 		repository.revisionIdSupplier = () -> 2;
-		OTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> uplink = new OTUplinkDecorator(OTStateManagerTest.this.uplink) {
+		AsyncOTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> uplink = new OTUplinkDecorator(OTStateManagerTest.this.uplink) {
 			@Override
 			public Promise<FetchData<Integer, TestOp>> fetch(Integer currentCommitId) {
 				return super.fetch(currentCommitId)
@@ -181,7 +181,7 @@ public class OTStateManagerTest {
 	@Test
 	public void testSyncAfterFailedCommit() {
 		repository.revisionIdSupplier = () -> 1;
-		OTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> uplink = new OTUplinkDecorator(OTStateManagerTest.this.uplink) {
+		AsyncOTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> uplink = new OTUplinkDecorator(OTStateManagerTest.this.uplink) {
 			@Override
 			public Promise<OTCommit<Integer, TestOp>> createProtoCommit(Integer parent, List<TestOp> diffs, long parentLevel) {
 				return failOnce(() -> super.createProtoCommit(parent, diffs, parentLevel));
@@ -214,7 +214,7 @@ public class OTStateManagerTest {
 	@Test
 	public void testSyncAfterFailedPull() {
 		repository.revisionIdSupplier = () -> 3;
-		OTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> uplink = new OTUplinkDecorator(OTStateManagerTest.this.uplink) {
+		AsyncOTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> uplink = new OTUplinkDecorator(OTStateManagerTest.this.uplink) {
 			@Override
 			public Promise<FetchData<Integer, TestOp>> fetch(Integer currentCommitId) {
 				return failOnce(() -> super.fetch(currentCommitId));
@@ -251,7 +251,7 @@ public class OTStateManagerTest {
 	@Test
 	public void testSyncAfterFailedPush() {
 		repository.revisionIdSupplier = List.of(3, 4, 5).iterator()::next;
-		OTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> uplink = new OTUplinkDecorator(OTStateManagerTest.this.uplink) {
+		AsyncOTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> uplink = new OTUplinkDecorator(OTStateManagerTest.this.uplink) {
 			@Override
 			public Promise<FetchData<Integer, TestOp>> push(OTCommit<Integer, TestOp> protoCommit) {
 				return failOnce(() -> super.push(protoCommit));
@@ -403,7 +403,7 @@ public class OTStateManagerTest {
 	@Test
 	public void fetchWithPendingCommit() {
 		repository.revisionIdSupplier = List.of(1, 6).iterator()::next;
-		OTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> uplink = new OTUplinkDecorator(OTStateManagerTest.this.uplink) {
+		AsyncOTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> uplink = new OTUplinkDecorator(OTStateManagerTest.this.uplink) {
 			@Override
 			public Promise<FetchData<Integer, TestOp>> push(OTCommit<Integer, TestOp> protoCommit) {
 				return failOnce(() -> super.push(protoCommit));
@@ -434,10 +434,10 @@ public class OTStateManagerTest {
 		assertEquals(41, testOpState.getValue());
 	}
 
-	static class OTUplinkDecorator implements OTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> {
-		private final OTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> node;
+	static class OTUplinkDecorator implements AsyncOTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> {
+		private final AsyncOTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> node;
 
-		OTUplinkDecorator(OTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> node) {
+		OTUplinkDecorator(AsyncOTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> node) {
 			this.node = node;
 		}
 
@@ -476,7 +476,7 @@ public class OTStateManagerTest {
 		}
 	}
 
-	private void initializeRepository(OTRepository<Integer, TestOp> repository, OTStateManager<Integer, TestOp> stateManager) {
+	private void initializeRepository(AsyncOTRepository<Integer, TestOp> repository, OTStateManager<Integer, TestOp> stateManager) {
 		await(repository.pushAndUpdateHead(ofRoot(0)), repository.saveSnapshot(0, List.of()));
 		await(stateManager.checkout());
 	}

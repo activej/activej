@@ -47,7 +47,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 public final class StreamSorter<K, T> extends ImplicitlyReactive implements StreamTransformer<T, T>, WithInitializer<StreamSorter<K, T>> {
 	private static final Logger logger = getLogger(StreamSorter.class);
 	private final AsyncAccumulator<? extends List<Integer>> temporaryStreamsAccumulator;
-	private final StreamSorterStorage<T> storage;
+	private final AsyncStreamSorterStorage<T> storage;
 	private final Function<T, K> keyFunction;
 	private final Comparator<K> keyComparator;
 	private final Comparator<T> itemComparator;
@@ -59,7 +59,7 @@ public final class StreamSorter<K, T> extends ImplicitlyReactive implements Stre
 
 	private Executor sortingExecutor = Runnable::run;
 
-	private StreamSorter(StreamSorterStorage<T> storage,
+	private StreamSorter(AsyncStreamSorterStorage<T> storage,
 			Function<T, K> keyFunction, Comparator<K> keyComparator, boolean deduplicate,
 			int itemsInMemory) {
 		this.storage = storage;
@@ -150,7 +150,7 @@ public final class StreamSorter<K, T> extends ImplicitlyReactive implements Stre
 	 * @param itemsInMemorySize size of elements which can be saved in RAM
 	 *                          before sorting
 	 */
-	public static <K, T> StreamSorter<K, T> create(StreamSorterStorage<T> storage,
+	public static <K, T> StreamSorter<K, T> create(AsyncStreamSorterStorage<T> storage,
 			Function<T, K> keyFunction, Comparator<K> keyComparator, boolean distinct,
 			int itemsInMemorySize) {
 		return new StreamSorter<>(storage, keyFunction, keyComparator, distinct, itemsInMemorySize);

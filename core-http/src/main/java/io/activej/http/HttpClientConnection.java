@@ -25,7 +25,7 @@ import io.activej.csp.ChannelSuppliers;
 import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.http.ReactiveHttpClient.Inspector;
 import io.activej.http.stream.BufsConsumerGzipInflater;
-import io.activej.net.socket.tcp.TcpSocket;
+import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.Reactor;
@@ -103,7 +103,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	@Nullable HttpClientConnection addressPrev;
 	HttpClientConnection addressNext;
 
-	HttpClientConnection(Reactor reactor, ReactiveHttpClient client, TcpSocket asyncTcpSocket, InetSocketAddress remoteAddress) {
+	HttpClientConnection(Reactor reactor, ReactiveHttpClient client, AsyncTcpSocket asyncTcpSocket, InetSocketAddress remoteAddress) {
 		super(reactor, asyncTcpSocket, client.maxBodySize);
 		this.client = client;
 		this.inspector = client.inspector;
@@ -202,7 +202,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 		response.flags |= MUST_LOAD_BODY;
 		response.body = body;
 		response.bodyStream = bodySupplier == null ? null : sanitize(bodySupplier);
-		if (WebSocket.ENABLED && isWebSocket()) {
+		if (AsyncWebSocket.ENABLED && isWebSocket()) {
 			if (!processWebSocketResponse(body)) return;
 		}
 		if (inspector != null) inspector.onHttpResponse(response);
@@ -267,7 +267,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 				});
 	}
 
-	Promise<WebSocket> sendWebSocketRequest(HttpRequest request) {
+	Promise<AsyncWebSocket> sendWebSocketRequest(HttpRequest request) {
 		assert !isClosed();
 		SettablePromise<HttpResponse> promise = new SettablePromise<>();
 		this.promise = promise;
@@ -304,7 +304,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 
 					bindWebSocketTransformers(encoder, decoder);
 
-					return Promise.of((WebSocket) new WebSocketImpl(
+					return Promise.of((AsyncWebSocket) new ReactiveWebSocket(
 							request,
 							res,
 							res.takeBodyStream().transformWith(decoder),
@@ -350,7 +350,7 @@ public final class HttpClientConnection extends AbstractHttpConnection {
 	}
 
 	private void onHttpMessageComplete() {
-		if (WebSocket.ENABLED && isWebSocket()) return;
+		if (AsyncWebSocket.ENABLED && isWebSocket()) return;
 
 		//noinspection ConstantConditions
 		response.recycle();

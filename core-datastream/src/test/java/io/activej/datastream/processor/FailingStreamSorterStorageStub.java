@@ -9,21 +9,21 @@ import java.util.List;
 
 import static io.activej.common.Checks.checkNotNull;
 
-public final class FailingStreamSorterStorageStub<T> implements StreamSorterStorage<T> {
+public final class FailingStreamSorterStorageStub<T> implements AsyncStreamSorterStorage<T> {
 	static final Exception STORAGE_EXCEPTION = new ExpectedException("failing storage");
 
-	private StreamSorterStorage<T> storage;
+	private AsyncStreamSorterStorage<T> storage;
 
 	boolean failNewPartition;
 	boolean failWrite;
 	boolean failRead;
 	boolean failCleanup;
 
-	private FailingStreamSorterStorageStub(StreamSorterStorage<T> storage) {
+	private FailingStreamSorterStorageStub(AsyncStreamSorterStorage<T> storage) {
 		this.storage = storage;
 	}
 
-	public static <T> FailingStreamSorterStorageStub<T> create(StreamSorterStorage<T> storage) {
+	public static <T> FailingStreamSorterStorageStub<T> create(AsyncStreamSorterStorage<T> storage) {
 		return new FailingStreamSorterStorageStub<>(storage);
 	}
 
@@ -51,7 +51,7 @@ public final class FailingStreamSorterStorageStub<T> implements StreamSorterStor
 		return this;
 	}
 
-	public void setStorage(StreamSorterStorage<T> storage){
+	public void setStorage(AsyncStreamSorterStorage<T> storage){
 		this.storage = storage;
 	}
 

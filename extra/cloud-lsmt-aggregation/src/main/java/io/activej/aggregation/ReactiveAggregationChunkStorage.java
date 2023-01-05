@@ -38,7 +38,7 @@ import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStatsBasic;
 import io.activej.datastream.stats.StreamStatsDetailed;
-import io.activej.fs.ActiveFs;
+import io.activej.fs.AsyncFs;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ExceptionStats;
@@ -74,7 +74,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 @SuppressWarnings("rawtypes") // JMX doesn't work with generic types
 public final class ReactiveAggregationChunkStorage<C> extends AbstractReactive
-		implements AggregationChunkStorage<C>, ReactiveService, WithInitializer<ReactiveAggregationChunkStorage<C>>, ReactiveJmxBeanWithStats {
+		implements AsyncAggregationChunkStorage<C>, ReactiveService, WithInitializer<ReactiveAggregationChunkStorage<C>>, ReactiveJmxBeanWithStats {
 	private static final Logger logger = getLogger(ReactiveAggregationChunkStorage.class);
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(256);
 
@@ -88,7 +88,7 @@ public final class ReactiveAggregationChunkStorage<C> extends AbstractReactive
 	private final AsyncSupplier<C> idGenerator;
 	private final FrameFormat frameFormat;
 
-	private final ActiveFs fs;
+	private final AsyncFs fs;
 	private String chunksPath = "";
 	private String tempPath = "";
 	private String backupPath = DEFAULT_BACKUP_PATH;
@@ -127,7 +127,7 @@ public final class ReactiveAggregationChunkStorage<C> extends AbstractReactive
 
 	private int finishChunks;
 
-	private ReactiveAggregationChunkStorage(Reactor reactor, ChunkIdCodec<C> chunkIdCodec, AsyncSupplier<C> idGenerator, FrameFormat frameFormat, ActiveFs fs) {
+	private ReactiveAggregationChunkStorage(Reactor reactor, ChunkIdCodec<C> chunkIdCodec, AsyncSupplier<C> idGenerator, FrameFormat frameFormat, AsyncFs fs) {
 		super(reactor);
 		this.chunkIdCodec = chunkIdCodec;
 		this.idGenerator = idGenerator;
@@ -137,7 +137,7 @@ public final class ReactiveAggregationChunkStorage<C> extends AbstractReactive
 
 	public static <C> ReactiveAggregationChunkStorage<C> create(Reactor reactor,
 			ChunkIdCodec<C> chunkIdCodec,
-			AsyncSupplier<C> idGenerator, FrameFormat frameFormat, ActiveFs fs) {
+			AsyncSupplier<C> idGenerator, FrameFormat frameFormat, AsyncFs fs) {
 		return new ReactiveAggregationChunkStorage<>(reactor, chunkIdCodec, idGenerator, frameFormat, fs);
 	}
 
@@ -314,12 +314,12 @@ public final class ReactiveAggregationChunkStorage<C> extends AbstractReactive
 	}
 
 	private String toBackupPath(String backupId, @Nullable C chunkId) {
-		return toDir(backupPath) + backupId + ActiveFs.SEPARATOR +
+		return toDir(backupPath) + backupId + AsyncFs.SEPARATOR +
 				(chunkId != null ? chunkIdCodec.toFileName(chunkId) + LOG : SUCCESSFUL_BACKUP_FILE);
 	}
 
 	private String toDir(String path) {
-		return path.isEmpty() || path.endsWith(ActiveFs.SEPARATOR) ? path : path + ActiveFs.SEPARATOR;
+		return path.isEmpty() || path.endsWith(AsyncFs.SEPARATOR) ? path : path + AsyncFs.SEPARATOR;
 	}
 
 	private @Nullable C fromPath(String path) {

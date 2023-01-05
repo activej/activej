@@ -9,10 +9,10 @@ import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.cube.bean.*;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamSupplier;
-import io.activej.fs.LocalActiveFs;
-import io.activej.fs.http.ActiveFsServlet;
-import io.activej.fs.http.HttpActiveFs;
-import io.activej.http.HttpClient;
+import io.activej.fs.LocalFs;
+import io.activej.fs.http.FsServlet;
+import io.activej.fs.http.HttpFs;
+import io.activej.http.AsyncHttpClient;
 import io.activej.http.HttpServer;
 import io.activej.http.ReactiveHttpClient;
 import io.activej.promise.Promise;
@@ -67,20 +67,20 @@ public final class ReactiveCubeTest {
 	private final DefiningClassLoader classLoader = create();
 	private final Executor executor = newSingleThreadExecutor();
 
-	private AggregationChunkStorage<Long> chunkStorage;
+	private AsyncAggregationChunkStorage<Long> chunkStorage;
 	private ReactiveCube cube;
 	private int listenPort;
 
 	@Before
 	public void setUp() throws Exception {
 		listenPort = getFreePort();
-		LocalActiveFs fs = LocalActiveFs.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
+		LocalFs fs = LocalFs.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
 		await(fs.start());
 		chunkStorage = ReactiveAggregationChunkStorage.create(getCurrentReactor(), ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, fs);
 		cube = newCube(executor, classLoader, chunkStorage);
 	}
 
-	private static ReactiveCube newCube(Executor executor, DefiningClassLoader classLoader, AggregationChunkStorage chunkStorage) {
+	private static ReactiveCube newCube(Executor executor, DefiningClassLoader classLoader, AsyncAggregationChunkStorage chunkStorage) {
 		return ReactiveCube.create(getCurrentReactor(), executor, classLoader, chunkStorage)
 				.withDimension("key1", ofInt())
 				.withDimension("key2", ofInt())
@@ -90,7 +90,7 @@ public final class ReactiveCubeTest {
 				.withAggregation(id("detailedAggregation").withDimensions("key1", "key2").withMeasures("metric1", "metric2", "metric3"));
 	}
 
-	private static ReactiveCube newSophisticatedCube(Executor executor, DefiningClassLoader classLoader, AggregationChunkStorage chunkStorage) {
+	private static ReactiveCube newSophisticatedCube(Executor executor, DefiningClassLoader classLoader, AsyncAggregationChunkStorage chunkStorage) {
 		return ReactiveCube.create(getCurrentReactor(), executor, classLoader, chunkStorage)
 				.withDimension("key1", ofInt())
 				.withDimension("key2", ofInt())
@@ -104,7 +104,7 @@ public final class ReactiveCubeTest {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <T> Promise<Void> consume(ReactiveCube cube, AggregationChunkStorage<Long> chunkStorage, T item, T... items) {
+	private static <T> Promise<Void> consume(ReactiveCube cube, AsyncAggregationChunkStorage<Long> chunkStorage, T item, T... items) {
 		return StreamSupplier.concat(StreamSupplier.of(item), StreamSupplier.of(items))
 				.streamTo(cube.consume(((Class<T>) item.getClass())))
 				.then(cubeDiff -> chunkStorage.finish(cubeDiff.<Long>addedChunks().collect(toSet()))
@@ -131,9 +131,9 @@ public final class ReactiveCubeTest {
 
 	private HttpServer startServer(Executor executor, Path serverStorage) throws IOException {
 		NioReactor reactor = getCurrentReactor();
-		LocalActiveFs fs = LocalActiveFs.create(reactor, executor, serverStorage);
+		LocalFs fs = LocalFs.create(reactor, executor, serverStorage);
 		await(fs.start());
-		HttpServer server = HttpServer.create(reactor, ActiveFsServlet.create(fs))
+		HttpServer server = HttpServer.create(reactor, FsServlet.create(fs))
 				.withListenPort(listenPort);
 		server.listen();
 		return server;
@@ -144,9 +144,9 @@ public final class ReactiveCubeTest {
 
 		Path serverStorage = temporaryFolder.newFolder("storage").toPath();
 		HttpServer server1 = startServer(executor, serverStorage);
-		HttpClient httpClient = ReactiveHttpClient.create(getCurrentReactor());
-		HttpActiveFs storage = HttpActiveFs.create(getCurrentReactor(), "http://localhost:" + listenPort, httpClient);
-		AggregationChunkStorage<Long> chunkStorage = ReactiveAggregationChunkStorage.create(getCurrentReactor(), ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
+		AsyncHttpClient httpClient = ReactiveHttpClient.create(getCurrentReactor());
+		HttpFs storage = HttpFs.create(getCurrentReactor(), "http://localhost:" + listenPort, httpClient);
+		AsyncAggregationChunkStorage<Long> chunkStorage = ReactiveAggregationChunkStorage.create(getCurrentReactor(), ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
 		ReactiveCube cube = newCube(executor, classLoader, chunkStorage);
 
 		List<DataItemResult> expected = List.of(new DataItemResult(1, 3, 10, 30, 20));
@@ -428,9 +428,9 @@ public final class ReactiveCubeTest {
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		Executor executor = newSingleThreadExecutor();
 
-		LocalActiveFs storage = LocalActiveFs.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
+		LocalFs storage = LocalFs.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
 		await(storage.start());
-		AggregationChunkStorage<Long> chunkStorage = ReactiveAggregationChunkStorage.create(getCurrentReactor(), ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
+		AsyncAggregationChunkStorage<Long> chunkStorage = ReactiveAggregationChunkStorage.create(getCurrentReactor(), ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
 		ReactiveCube cube = newCube(executor, classLoader, chunkStorage);
 
 		cube.consume(DataItem1.class,
@@ -444,9 +444,9 @@ public final class ReactiveCubeTest {
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		Executor executor = newSingleThreadExecutor();
 
-		LocalActiveFs storage = LocalActiveFs.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
+		LocalFs storage = LocalFs.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
 		await(storage.start());
-		AggregationChunkStorage<Long> chunkStorage = ReactiveAggregationChunkStorage.create(getCurrentReactor(), ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
+		AsyncAggregationChunkStorage<Long> chunkStorage = ReactiveAggregationChunkStorage.create(getCurrentReactor(), ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
 		ReactiveCube cube = newCube(executor, classLoader, chunkStorage);
 
 		cube.consume(DataItem1.class,

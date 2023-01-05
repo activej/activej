@@ -35,7 +35,7 @@ import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.datastream.stats.StreamRegistry;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStatsDetailed;
-import io.activej.fs.ActiveFs;
+import io.activej.fs.AsyncFs;
 import io.activej.fs.exception.IllegalOffsetException;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -59,12 +59,12 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 
 public final class ReactiveMultilog<T> extends AbstractReactive
-		implements Multilog<T>, ReactiveJmxBeanWithStats, WithInitializer<ReactiveMultilog<T>> {
+		implements AsyncMultilog<T>, ReactiveJmxBeanWithStats, WithInitializer<ReactiveMultilog<T>> {
 	private static final Logger logger = LoggerFactory.getLogger(ReactiveMultilog.class);
 
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(256);
 
-	private final ActiveFs fs;
+	private final AsyncFs fs;
 	private final LogNamingScheme namingScheme;
 	private final BinarySerializer<T> serializer;
 
@@ -79,7 +79,7 @@ public final class ReactiveMultilog<T> extends AbstractReactive
 	private final StreamStatsDetailed<ByteBuf> streamReadStats = StreamStats.detailed(forByteBufs());
 	private final StreamStatsDetailed<ByteBuf> streamWriteStats = StreamStats.detailed(forByteBufs());
 
-	private ReactiveMultilog(Reactor reactor, ActiveFs fs, FrameFormat frameFormat, BinarySerializer<T> serializer,
+	private ReactiveMultilog(Reactor reactor, AsyncFs fs, FrameFormat frameFormat, BinarySerializer<T> serializer,
 			LogNamingScheme namingScheme) {
 		super(reactor);
 		this.fs = fs;
@@ -88,7 +88,7 @@ public final class ReactiveMultilog<T> extends AbstractReactive
 		this.namingScheme = namingScheme;
 	}
 
-	public static <T> ReactiveMultilog<T> create(Reactor reactor, ActiveFs fs, FrameFormat frameFormat, BinarySerializer<T> serializer,
+	public static <T> ReactiveMultilog<T> create(Reactor reactor, AsyncFs fs, FrameFormat frameFormat, BinarySerializer<T> serializer,
 			LogNamingScheme namingScheme) {
 		return new ReactiveMultilog<>(reactor, fs, frameFormat, serializer, namingScheme);
 	}

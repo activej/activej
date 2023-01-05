@@ -2,11 +2,11 @@ package io.activej.fs.cluster;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.ChannelConsumer;
-import io.activej.fs.ActiveFs;
-import io.activej.fs.ForwardingActiveFs;
-import io.activej.fs.LocalActiveFs;
-import io.activej.fs.tcp.ActiveFsServer;
-import io.activej.fs.tcp.RemoteActiveFs;
+import io.activej.fs.AsyncFs;
+import io.activej.fs.ForwardingFs;
+import io.activej.fs.LocalFs;
+import io.activej.fs.tcp.FsServer;
+import io.activej.fs.tcp.RemoteFs;
 import io.activej.net.AbstractReactiveServer;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
@@ -56,8 +56,8 @@ public final class ClusterRepartitionControllerTest {
 		NioReactor reactor = Reactor.getCurrentReactor();
 
 		Executor executor = Executors.newSingleThreadExecutor();
-		List<ActiveFsServer> servers = new ArrayList<>();
-		Map<Object, ActiveFs> partitions = new HashMap<>();
+		List<FsServer> servers = new ArrayList<>();
+		Map<Object, AsyncFs> partitions = new HashMap<>();
 
 		Path storage = tmpFolder.newFolder().toPath();
 		Path localStorage = storage.resolve("local");
@@ -71,7 +71,7 @@ public final class ClusterRepartitionControllerTest {
 		file.setLength(fileSize);
 		file.close();
 
-		LocalActiveFs localFsClient = LocalActiveFs.create(reactor, executor, localStorage);
+		LocalFs localFsClient = LocalFs.create(reactor, executor, localStorage);
 		await(localFsClient.start());
 
 		Object localPartitionId = "local";
@@ -80,24 +80,24 @@ public final class ClusterRepartitionControllerTest {
 		InetSocketAddress regularPartitionAddress = new InetSocketAddress("localhost", getFreePort());
 		Path regularPath = storage.resolve("regular");
 		Files.createDirectories(regularPath);
-		partitions.put("regular", RemoteActiveFs.create(reactor, regularPartitionAddress));
-		LocalActiveFs localFs = LocalActiveFs.create(reactor, executor, regularPath);
+		partitions.put("regular", RemoteFs.create(reactor, regularPartitionAddress));
+		LocalFs localFs = LocalFs.create(reactor, executor, regularPath);
 		await(localFs.start());
 
 
 		InetSocketAddress failingPartitionAddress = new InetSocketAddress("localhost", getFreePort());
 		Path failingPath = storage.resolve("failing");
 		Files.createDirectories(failingPath);
-		partitions.put("failing", RemoteActiveFs.create(reactor, failingPartitionAddress));
-		LocalActiveFs peer = LocalActiveFs.create(reactor, executor, failingPath);
+		partitions.put("failing", RemoteFs.create(reactor, failingPartitionAddress));
+		LocalFs peer = LocalFs.create(reactor, executor, failingPath);
 		await(peer.start());
 
-		ActiveFsServer regularServer = ActiveFsServer.create(reactor, localFs).withListenAddress(regularPartitionAddress);
+		FsServer regularServer = FsServer.create(reactor, localFs).withListenAddress(regularPartitionAddress);
 		regularServer.listen();
 		servers.add(regularServer);
 
-		ActiveFsServer failingServer = ActiveFsServer.create(reactor,
-				new ForwardingActiveFs(peer) {
+		FsServer failingServer = FsServer.create(reactor,
+				new ForwardingFs(peer) {
 					@Override
 					public Promise<ChannelConsumer<ByteBuf>> upload(String name, long size) {
 						return super.upload(name)
@@ -108,12 +108,12 @@ public final class ClusterRepartitionControllerTest {
 		failingServer.listen();
 		servers.add(failingServer);
 
-		DiscoveryService discoveryService = DiscoveryService.constant(partitions);
+		AsyncDiscoveryService discoveryService = AsyncDiscoveryService.constant(partitions);
 		FsPartitions fsPartitions = FsPartitions.create(reactor, discoveryService)
 				.withServerSelector(RENDEZVOUS_HASH_SHARDER);
 
-		Promise<Map<Object, ActiveFs>> discoverPromise = discoveryService.discover().get();
-		Map<Object, ActiveFs> discovered = discoverPromise.getResult();
+		Promise<Map<Object, AsyncFs>> discoverPromise = discoveryService.discover().get();
+		Map<Object, AsyncFs> discovered = discoverPromise.getResult();
 
 		ClusterRepartitionController controller = ClusterRepartitionController.create(reactor, localPartitionId, fsPartitions)
 				.withReplicationCount(partitions.size());    // full replication

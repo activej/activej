@@ -4,7 +4,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
-import io.activej.fs.ActiveFs;
+import io.activej.fs.AsyncFs;
 import io.activej.fs.FileMetadata;
 import io.activej.http.RoutingServlet;
 import io.activej.http.StubHttpClient;
@@ -41,7 +41,7 @@ public final class ApiTest {
 	private static final long dataSize = 799;
 
 	private final StubHttpClient stubClient = StubHttpClient.of(getServlet());
-	private final HttpActiveFs client = HttpActiveFs.create(getCurrentReactor(), "http://localhost", stubClient);
+	private final HttpFs client = HttpFs.create(getCurrentReactor(), "http://localhost", stubClient);
 
 	private final LinkedList<Object> params = new LinkedList<>();
 
@@ -183,7 +183,7 @@ public final class ApiTest {
 	}
 
 	private RoutingServlet getServlet() {
-		return ActiveFsServlet.create(new ActiveFs() {
+		return FsServlet.create(new AsyncFs() {
 			<T> Promise<T> resultOf(@Nullable T result, Object... args) {
 				params.clear();
 				params.add(result);

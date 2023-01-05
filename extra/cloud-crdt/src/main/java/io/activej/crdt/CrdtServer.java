@@ -19,12 +19,12 @@ package io.activej.crdt;
 import io.activej.crdt.messaging.CrdtRequest;
 import io.activej.crdt.messaging.CrdtResponse;
 import io.activej.crdt.messaging.Version;
-import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.csp.binary.ByteBufsCodec;
-import io.activej.csp.net.Messaging;
+import io.activej.csp.net.AsyncMessaging;
 import io.activej.csp.net.MessagingCodec;
-import io.activej.csp.net.MessagingWithBinaryStreaming;
+import io.activej.csp.net.ReactiveMessaging;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
@@ -34,7 +34,7 @@ import io.activej.datastream.stats.StreamStatsDetailed;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.net.AbstractReactiveServer;
-import io.activej.net.socket.tcp.TcpSocket;
+import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.nio.NioReactor;
@@ -61,7 +61,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 	private Function<CrdtRequest.Handshake, CrdtResponse.Handshake> handshakeHandler = $ ->
 			new CrdtResponse.Handshake(null);
 
-	private final CrdtStorage<K, S> storage;
+	private final AsyncCrdtStorage<K, S> storage;
 	private final CrdtDataSerializer<K, S> serializer;
 	private final BinarySerializer<CrdtTombstone<K>> tombstoneSerializer;
 
@@ -89,7 +89,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 	private final PromiseStats pingPromise = PromiseStats.create(Duration.ofMinutes(5));
 	// endregion
 
-	private CrdtServer(NioReactor reactor, CrdtStorage<K, S> storage, CrdtDataSerializer<K, S> serializer) {
+	private CrdtServer(NioReactor reactor, AsyncCrdtStorage<K, S> storage, CrdtDataSerializer<K, S> serializer) {
 		super(reactor);
 		this.storage = storage;
 		this.serializer = serializer;
@@ -97,11 +97,11 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 		tombstoneSerializer = serializer.getTombstoneSerializer();
 	}
 
-	public static <K extends Comparable<K>, S> CrdtServer<K, S> create(NioReactor reactor, CrdtStorage<K, S> storage, CrdtDataSerializer<K, S> serializer) {
+	public static <K extends Comparable<K>, S> CrdtServer<K, S> create(NioReactor reactor, AsyncCrdtStorage<K, S> storage, CrdtDataSerializer<K, S> serializer) {
 		return new CrdtServer<>(reactor, storage, serializer);
 	}
 
-	public static <K extends Comparable<K>, S> CrdtServer<K, S> create(NioReactor reactor, CrdtStorage<K, S> storage, BinarySerializer<K> keySerializer, BinarySerializer<S> stateSerializer) {
+	public static <K extends Comparable<K>, S> CrdtServer<K, S> create(NioReactor reactor, AsyncCrdtStorage<K, S> storage, BinarySerializer<K> keySerializer, BinarySerializer<S> stateSerializer) {
 		return new CrdtServer<>(reactor, storage, new CrdtDataSerializer<>(keySerializer, stateSerializer));
 	}
 
@@ -111,9 +111,9 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 	}
 
 	@Override
-	protected void serve(TcpSocket socket, InetAddress remoteAddress) {
-		MessagingWithBinaryStreaming<CrdtRequest, CrdtResponse> messaging =
-				MessagingWithBinaryStreaming.create(socket, SERIALIZER);
+	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
+		ReactiveMessaging<CrdtRequest, CrdtResponse> messaging =
+				ReactiveMessaging.create(socket, SERIALIZER);
 		messaging.receive()
 				.then(request -> {
 					if (!(request instanceof CrdtRequest.Handshake handshake)) {
@@ -131,7 +131,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 				});
 	}
 
-	private Promise<Void> dispatch(MessagingWithBinaryStreaming<CrdtRequest, CrdtResponse> messaging, CrdtRequest msg) {
+	private Promise<Void> dispatch(ReactiveMessaging<CrdtRequest, CrdtResponse> messaging, CrdtRequest msg) {
 		if (msg instanceof CrdtRequest.Download download) {
 			return handleDownload(messaging, download);
 		}
@@ -153,13 +153,13 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 		throw new AssertionError();
 	}
 
-	private Promise<Void> handleHandshake(Messaging<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Handshake handshake) {
+	private Promise<Void> handleHandshake(AsyncMessaging<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Handshake handshake) {
 		return messaging.send(handshakeHandler.apply(handshake))
 				.whenComplete(handshakePromise.recordStats())
 				.whenComplete(toLogger(logger, TRACE, thisMethod(), messaging, handshake, this));
 	}
 
-	private Promise<Void> handleTake(MessagingWithBinaryStreaming<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Take take) {
+	private Promise<Void> handleTake(ReactiveMessaging<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Take take) {
 		return storage.take()
 				.whenComplete(takeBeginPromise.recordStats())
 				.whenResult(() -> messaging.send(new CrdtResponse.TakeStarted()))
@@ -182,7 +182,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 				.whenComplete(toLogger(logger, TRACE, thisMethod(), messaging, take, this));
 	}
 
-	private Promise<Void> handlePing(MessagingWithBinaryStreaming<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Ping ping) {
+	private Promise<Void> handlePing(ReactiveMessaging<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Ping ping) {
 		return messaging.send(new CrdtResponse.Pong())
 				.then(messaging::sendEndOfStream)
 				.whenResult(messaging::close)
@@ -190,7 +190,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 				.whenComplete(toLogger(logger, TRACE, thisMethod(), messaging, ping, this));
 	}
 
-	private Promise<Void> handleRemove(MessagingWithBinaryStreaming<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Remove remove) {
+	private Promise<Void> handleRemove(ReactiveMessaging<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Remove remove) {
 		return messaging.receiveBinaryStream()
 				.transformWith(ChannelDeserializer.create(tombstoneSerializer))
 				.streamTo(StreamConsumer.ofPromise(storage.remove()
@@ -203,7 +203,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 				.whenComplete(toLogger(logger, TRACE, thisMethod(), messaging, remove, this));
 	}
 
-	private Promise<Void> handleUpload(MessagingWithBinaryStreaming<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Upload upload) {
+	private Promise<Void> handleUpload(ReactiveMessaging<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Upload upload) {
 		return messaging.receiveBinaryStream()
 				.transformWith(ChannelDeserializer.create(serializer))
 				.streamTo(StreamConsumer.ofPromise(storage.upload()
@@ -216,7 +216,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 				.whenComplete(toLogger(logger, TRACE, thisMethod(), messaging, upload, this));
 	}
 
-	private Promise<Void> handleDownload(MessagingWithBinaryStreaming<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Download download) {
+	private Promise<Void> handleDownload(ReactiveMessaging<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Download download) {
 		return storage.download(download.token())
 				.map(consumer -> consumer.transformWith(detailedStats ? downloadStatsDetailed : downloadStats))
 				.whenComplete(downloadBeginPromise.recordStats())

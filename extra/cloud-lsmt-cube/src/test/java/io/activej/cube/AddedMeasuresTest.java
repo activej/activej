@@ -14,7 +14,7 @@ import io.activej.cube.ReactiveCube.AggregationConfig;
 import io.activej.cube.exception.QueryException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamSupplier;
-import io.activej.fs.LocalActiveFs;
+import io.activej.fs.LocalFs;
 import io.activej.reactor.Reactor;
 import io.activej.record.Record;
 import io.activej.test.rules.ByteBufRule;
@@ -61,7 +61,7 @@ public class AddedMeasuresTest {
 	private Executor executor;
 	private Reactor reactor;
 	private DefiningClassLoader classLoader;
-	private AggregationChunkStorage<Long> aggregationChunkStorage;
+	private AsyncAggregationChunkStorage<Long> aggregationChunkStorage;
 	private AggregationConfig basicConfig;
 	private List<CubeDiff> initialDiffs;
 
@@ -71,7 +71,7 @@ public class AddedMeasuresTest {
 		reactor = Reactor.getCurrentReactor();
 		classLoader = DefiningClassLoader.create();
 		Path path = temporaryFolder.newFolder().toPath();
-		LocalActiveFs fs = LocalActiveFs.create(reactor, executor, path);
+		LocalFs fs = LocalFs.create(reactor, executor, path);
 		await(fs.start());
 		FrameFormat frameFormat = LZ4FrameFormat.create();
 		aggregationChunkStorage = ReactiveAggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);

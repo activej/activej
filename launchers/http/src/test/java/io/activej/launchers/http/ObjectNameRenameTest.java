@@ -2,7 +2,7 @@ package io.activej.launchers.http;
 
 import io.activej.async.service.TaskScheduler;
 import io.activej.eventloop.Eventloop;
-import io.activej.http.HttpClient;
+import io.activej.http.AsyncHttpClient;
 import io.activej.http.HttpResponse;
 import io.activej.http.HttpServer;
 import io.activej.http.ReactiveHttpClient;
@@ -45,7 +45,7 @@ public class ObjectNameRenameTest {
 						.withInitializer(Initializers.renamedClassNames(
 								Map.of(
 										HttpServer.class, "AsyncHttpServer",
-										HttpClient.class, "AsyncHttpClient",
+										AsyncHttpClient.class, "AsyncHttpClient",
 										TaskScheduler.class, "EventloopTaskScheduler",
 										Reactor.class, Eventloop.class.getName(),
 										NioReactor.class, Eventloop.class.getName()
@@ -101,7 +101,7 @@ public class ObjectNameRenameTest {
 		@Provides
 		@Named("Test")
 		@Eager
-		HttpClient httpClient(NioReactor reactor) {
+		AsyncHttpClient httpClient(NioReactor reactor) {
 			return ReactiveHttpClient.create(reactor);
 		}
 

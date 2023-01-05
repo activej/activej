@@ -58,7 +58,7 @@ public final class AggregationChunkerTest {
 	@Test
 	public void test() {
 		List<KeyValuePair> items = new ArrayList<>();
-		AggregationChunkStorage<Long> aggregationChunkStorage = new AggregationChunkStorage<>() {
+		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = new AsyncAggregationChunkStorage<>() {
 			long chunkId;
 
 			@Override
@@ -119,7 +119,7 @@ public final class AggregationChunkerTest {
 	@Test
 	public void testSupplierWithError() {
 		List<StreamConsumer> listConsumers = new ArrayList<>();
-		AggregationChunkStorage<Long> aggregationChunkStorage = new AggregationChunkStorage<>() {
+		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = new AsyncAggregationChunkStorage<>() {
 			long chunkId;
 			final List items = new ArrayList();
 
@@ -196,7 +196,7 @@ public final class AggregationChunkerTest {
 	@Test
 	public void testStorageConsumerWithError() {
 		List<StreamConsumer> listConsumers = new ArrayList<>();
-		AggregationChunkStorage<Long> aggregationChunkStorage = new AggregationChunkStorage<>() {
+		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = new AsyncAggregationChunkStorage<>() {
 			long chunkId;
 			final List items = new ArrayList();
 

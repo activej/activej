@@ -185,11 +185,11 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 		return new HttpResponse(HTTP_1_1, 404);
 	}
 
-	public static Promise<HttpResponse> file(FileSliceSupplier downloader, String name, long size, @Nullable String rangeHeader) {
+	public static Promise<HttpResponse> file(AsyncFileSliceSupplier downloader, String name, long size, @Nullable String rangeHeader) {
 		return file(downloader, name, size, rangeHeader, false);
 	}
 
-	public static Promise<HttpResponse> file(FileSliceSupplier downloader, String name, long size, @Nullable String rangeHeader, boolean inline) {
+	public static Promise<HttpResponse> file(AsyncFileSliceSupplier downloader, String name, long size, @Nullable String rangeHeader, boolean inline) {
 		HttpResponse response = new HttpResponse(HTTP_1_1, rangeHeader == null ? 200 : 206);
 
 		String localName = name.substring(name.lastIndexOf('/') + 1);
@@ -242,7 +242,7 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 		return Promise.of(response);
 	}
 
-	public static Promise<HttpResponse> file(FileSliceSupplier downloader, String name, long size) {
+	public static Promise<HttpResponse> file(AsyncFileSliceSupplier downloader, String name, long size) {
 		return file(downloader, name, size, null);
 	}
 	// endregion
@@ -320,7 +320,7 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 	}
 
 	@FunctionalInterface
-	public interface FileSliceSupplier {
+	public interface AsyncFileSliceSupplier {
 
 		Promise<ChannelSupplier<ByteBuf>> getFileSlice(long offset, long limit);
 	}

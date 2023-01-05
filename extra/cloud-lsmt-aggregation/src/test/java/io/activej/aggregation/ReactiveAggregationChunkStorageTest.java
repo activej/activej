@@ -6,7 +6,7 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frames.LZ4FrameFormat;
 import io.activej.datastream.StreamSupplier;
-import io.activej.fs.LocalActiveFs;
+import io.activej.fs.LocalFs;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
@@ -60,9 +60,9 @@ public class ReactiveAggregationChunkStorageTest {
 	public void testAcknowledge() throws IOException {
 		Reactor reactor = Reactor.getCurrentReactor();
 		Path storageDir = temporaryFolder.newFolder().toPath();
-		LocalActiveFs fs = LocalActiveFs.create(reactor, newCachedThreadPool(), storageDir);
+		LocalFs fs = LocalFs.create(reactor, newCachedThreadPool(), storageDir);
 		await(fs.start());
-		AggregationChunkStorage<Long> aggregationChunkStorage = ReactiveAggregationChunkStorage.create(
+		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = ReactiveAggregationChunkStorage.create(
 				reactor,
 				ChunkIdCodec.ofLong(),
 				AsyncSupplier.of(new RefLong(0)::inc),

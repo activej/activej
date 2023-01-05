@@ -1,7 +1,7 @@
 package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.http.loader.StaticLoader;
+import io.activej.http.loader.AsyncStaticLoader;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.BeforeClass;
@@ -14,8 +14,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
-import static io.activej.http.loader.StaticLoader.ofClassPath;
-import static io.activej.http.loader.StaticLoader.ofPath;
+import static io.activej.http.loader.AsyncStaticLoader.ofClassPath;
+import static io.activej.http.loader.AsyncStaticLoader.ofPath;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -91,7 +91,7 @@ public final class StaticServletTest {
 
 	@Test
 	public void testRelativeClassPathWithInnerPath() {
-		StaticLoader resourceLoader = ofClassPath(newCachedThreadPool(), getClass().getClassLoader(), "/dir/");
+		AsyncStaticLoader resourceLoader = ofClassPath(newCachedThreadPool(), getClass().getClassLoader(), "/dir/");
 		StaticServlet staticServlet = StaticServlet.create(resourceLoader);
 		HttpResponse response = await(staticServlet.serve(HttpRequest.get("http://test.com:8080/test.txt")));
 		await(response.loadBody());
@@ -102,7 +102,7 @@ public final class StaticServletTest {
 
 	@Test
 	public void testFileNotFoundRelativeClassPath() {
-		StaticLoader resourceLoader = ofClassPath(newCachedThreadPool(), getClass().getClassLoader(), "/");
+		AsyncStaticLoader resourceLoader = ofClassPath(newCachedThreadPool(), getClass().getClassLoader(), "/");
 		StaticServlet staticServlet = StaticServlet.create(resourceLoader);
 		HttpError e = awaitException(staticServlet.serve(HttpRequest.get("http://test.com:8080/unknownFile.txt")));
 

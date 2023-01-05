@@ -118,7 +118,7 @@ public final class TestGzipProcessorUtils {
 								}))
 				.withListenPort(port);
 
-		HttpClient client = ReactiveHttpClient.create(Reactor.getCurrentReactor());
+		AsyncHttpClient client = ReactiveHttpClient.create(Reactor.getCurrentReactor());
 
 		HttpRequest request = HttpRequest.get("http://127.0.0.1:" + port)
 				.withHeader(ACCEPT_ENCODING, "gzip")

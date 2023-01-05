@@ -1,8 +1,8 @@
 package io.activej.ot.utils;
 
 import io.activej.ot.OTCommit;
-import io.activej.ot.OTCommitFactory;
-import io.activej.ot.repository.OTRepository;
+import io.activej.ot.AsyncOTCommitFactory;
+import io.activej.ot.repository.AsyncOTRepository;
 import io.activej.promise.Promise;
 
 import java.util.*;
@@ -14,9 +14,9 @@ import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.not;
 import static java.util.stream.Collectors.toSet;
 
-public final class OTRepositoryStub<K, D> implements OTRepository<K, D> {
+public final class OTRepositoryStub<K, D> implements AsyncOTRepository<K, D> {
 	public Supplier<K> revisionIdSupplier;
-	private OTCommitFactory<K, D> commitFactory;
+	private AsyncOTCommitFactory<K, D> commitFactory;
 
 	public final Map<K, OTCommit<K, D>> commits = new LinkedHashMap<>();
 	public final Set<K> heads = new HashSet<>();
@@ -42,7 +42,7 @@ public final class OTRepositoryStub<K, D> implements OTRepository<K, D> {
 		return new OTRepositoryStub<>(newIds::next);
 	}
 
-	public void setCommitFactory(OTCommitFactory<K, D> commitFactory) {
+	public void setCommitFactory(AsyncOTCommitFactory<K, D> commitFactory) {
 		this.commitFactory = commitFactory;
 	}
 

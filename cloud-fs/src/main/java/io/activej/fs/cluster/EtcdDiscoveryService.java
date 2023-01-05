@@ -18,7 +18,7 @@ package io.activej.fs.cluster;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.fs.ActiveFs;
+import io.activej.fs.AsyncFs;
 import io.activej.fs.exception.FsException;
 import io.activej.types.TypeT;
 
@@ -29,23 +29,23 @@ import java.util.function.Function;
 
 import static io.activej.fs.util.JsonUtils.fromJson;
 
-public final class EtcdDiscoveryService implements DiscoveryService {
+public final class EtcdDiscoveryService implements AsyncDiscoveryService {
 	private final TypeT<Set<String>> PARTITION_IDS_TYPE_T = new TypeT<>() {};
 
 	private final EtcdWatchService watchService;
-	private final Function<String, ActiveFs> activeFsProvider;
+	private final Function<String, AsyncFs> activeFsProvider;
 
-	private EtcdDiscoveryService(EtcdWatchService watchService, Function<String, ActiveFs> activeFsProvider) {
+	private EtcdDiscoveryService(EtcdWatchService watchService, Function<String, AsyncFs> activeFsProvider) {
 		this.watchService = watchService;
 		this.activeFsProvider = activeFsProvider;
 	}
 
-	public static EtcdDiscoveryService create(EtcdWatchService watchService, Function<String, ActiveFs> activeFsProvider) {
+	public static EtcdDiscoveryService create(EtcdWatchService watchService, Function<String, AsyncFs> activeFsProvider) {
 		return new EtcdDiscoveryService(watchService, activeFsProvider);
 	}
 
 	@Override
-	public AsyncSupplier<Map<Object, ActiveFs>> discover() {
+	public AsyncSupplier<Map<Object, AsyncFs>> discover() {
 		AsyncSupplier<byte[]> watchSupplier = watchService.watch();
 		return () -> watchSupplier.get()
 				.map(bytes -> {
@@ -55,7 +55,7 @@ public final class EtcdDiscoveryService implements DiscoveryService {
 					} catch (MalformedDataException e){
 						throw new FsException("Could not parse partition ids: " + e.getMessage());
 					}
-					Map<Object, ActiveFs> result = new HashMap<>();
+					Map<Object, AsyncFs> result = new HashMap<>();
 					for (String partitionId : partitionIds) {
 						result.put(partitionId, activeFsProvider.apply(partitionId));
 					}

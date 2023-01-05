@@ -2,13 +2,13 @@ package banner;
 
 import io.activej.common.initializer.Initializer;
 import io.activej.crdt.function.CrdtFunction;
-import io.activej.crdt.hash.CrdtMap;
+import io.activej.crdt.hash.AsyncCrdtMap;
 import io.activej.crdt.hash.JavaCrdtMap;
 import io.activej.crdt.primitives.GSet;
-import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.crdt.wal.InMemoryWriteAheadLog;
-import io.activej.crdt.wal.WriteAheadLog;
+import io.activej.crdt.wal.AsyncWriteAheadLog;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.ProvidesIntoSet;
@@ -25,8 +25,8 @@ public class BannerServerModule extends AbstractModule {
 
 	@Provides
 	Map<Class<?>, RpcRequestHandler<?, ?>> handlers(
-			CrdtMap<Long, GSet<Integer>> map,
-			WriteAheadLog<Long, GSet<Integer>> writeAheadLog
+			AsyncCrdtMap<Long, GSet<Integer>> map,
+			AsyncWriteAheadLog<Long, GSet<Integer>> writeAheadLog
 	) {
 		return Map.of(
 				PutRequest.class, (RpcRequestHandler<PutRequest, PutResponse>) request -> {
@@ -44,7 +44,7 @@ public class BannerServerModule extends AbstractModule {
 	}
 
 	@Provides
-	CrdtMap<Long, GSet<Integer>> map(Reactor reactor, CrdtStorage<Long, GSet<Integer>> storage) {
+	AsyncCrdtMap<Long, GSet<Integer>> map(Reactor reactor, AsyncCrdtStorage<Long, GSet<Integer>> storage) {
 		return new JavaCrdtMap<>(reactor, GSet::merge, storage);
 	}
 
@@ -64,18 +64,18 @@ public class BannerServerModule extends AbstractModule {
 	}
 
 	@Provides
-	WriteAheadLog<Long, GSet<Integer>> writeAheadLog(Reactor reactor, CrdtFunction<GSet<Integer>> function, CrdtStorage<Long, GSet<Integer>> storage) {
+	AsyncWriteAheadLog<Long, GSet<Integer>> writeAheadLog(Reactor reactor, CrdtFunction<GSet<Integer>> function, AsyncCrdtStorage<Long, GSet<Integer>> storage) {
 		return InMemoryWriteAheadLog.create(reactor, function, storage);
 	}
 
 	@Provides
-	CrdtStorage<Long, GSet<Integer>> storage(Reactor reactor, CrdtFunction<GSet<Integer>> function) {
+	AsyncCrdtStorage<Long, GSet<Integer>> storage(Reactor reactor, CrdtFunction<GSet<Integer>> function) {
 		return CrdtStorageMap.create(reactor, function);
 	}
 
 	@ProvidesIntoSet
 	Initializer<ServiceGraphModuleSettings> configureServiceGraph() {
 		// add logical dependency so that service graph starts CrdtMap only after it has started the WriteAheadLog
-		return settings -> settings.addDependency(new Key<CrdtMap<Long, GSet<Integer>>>() {}, new Key<WriteAheadLog<Long, GSet<Integer>>>() {});
+		return settings -> settings.addDependency(new Key<AsyncCrdtMap<Long, GSet<Integer>>>() {}, new Key<AsyncWriteAheadLog<Long, GSet<Integer>>>() {});
 	}
 }

@@ -71,7 +71,7 @@ public final class ReactiveDnsClientTest {
 
 	@Test
 	public void testDnsClient() {
-		DnsClient dnsClient = ReactiveDnsClient.create(Reactor.getCurrentReactor());
+		AsyncDnsClient dnsClient = ReactiveDnsClient.create(Reactor.getCurrentReactor());
 
 		List<DnsResponse> list = await(Promises.toList(Stream.of("www.google.com", "www.github.com", "www.kpi.ua")
 				.map(dnsClient::resolve4)));
@@ -81,7 +81,7 @@ public final class ReactiveDnsClientTest {
 
 	@Test
 	public void testDnsClientTimeout() {
-		DnsClient dnsClient = ReactiveDnsClient.create(Reactor.getCurrentReactor())
+		AsyncDnsClient dnsClient = ReactiveDnsClient.create(Reactor.getCurrentReactor())
 				.withTimeout(Duration.ofMillis(20))
 				.withDnsServerAddress(UNREACHABLE_DNS);
 
@@ -91,7 +91,7 @@ public final class ReactiveDnsClientTest {
 
 	@Test
 	public void testDnsNameError() {
-		DnsClient dnsClient = ReactiveDnsClient.create(Reactor.getCurrentReactor());
+		AsyncDnsClient dnsClient = ReactiveDnsClient.create(Reactor.getCurrentReactor());
 
 		DnsQueryException e = awaitException(dnsClient.resolve4("example.ensure-such-top-domain-it-will-never-exist"));
 		assertEquals(NAME_ERROR, e.getResult().getErrorCode());
@@ -99,7 +99,7 @@ public final class ReactiveDnsClientTest {
 
 	@Test
 	public void testDnsLabelSize() {
-		DnsClient dnsClient = ReactiveDnsClient.create(Reactor.getCurrentReactor());
+		AsyncDnsClient dnsClient = ReactiveDnsClient.create(Reactor.getCurrentReactor());
 
 		String domainName = "example.huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label-huge-dns-label.com";
 		IllegalArgumentException e = awaitException(dnsClient.resolve4(domainName));

@@ -21,9 +21,9 @@ import io.activej.config.ConfigModule;
 import io.activej.config.converter.ConfigConverters;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;
-import io.activej.fs.ActiveFs;
-import io.activej.fs.LocalActiveFs;
-import io.activej.fs.tcp.ActiveFsServer;
+import io.activej.fs.AsyncFs;
+import io.activej.fs.LocalFs;
+import io.activej.fs.tcp.FsServer;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpServer;
 import io.activej.inject.annotation.Eager;
@@ -33,7 +33,7 @@ import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
-import io.activej.launchers.fs.gui.ActiveFsGuiServlet;
+import io.activej.launchers.fs.gui.FsGuiServlet;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
@@ -44,7 +44,7 @@ import java.util.concurrent.Executor;
 
 import static io.activej.config.converter.ConfigConverters.ofPath;
 import static io.activej.inject.module.Modules.combine;
-import static io.activej.launchers.fs.Initializers.ofActiveFsServer;
+import static io.activej.launchers.fs.Initializers.ofFsServer;
 import static io.activej.launchers.initializers.Initializers.ofEventloop;
 import static io.activej.launchers.initializers.Initializers.ofHttpServer;
 
@@ -63,9 +63,9 @@ public class SimpleTcpServerLauncher extends Launcher {
 
 	@Eager
 	@Provides
-	ActiveFsServer activeFsServer(NioReactor reactor, ActiveFs activeFs, Config config) {
-		return ActiveFsServer.create(reactor, activeFs)
-				.withInitializer(ofActiveFsServer(config.getChild("activefs")));
+	FsServer activeFsServer(NioReactor reactor, AsyncFs activeFs, Config config) {
+		return FsServer.create(reactor, activeFs)
+				.withInitializer(ofFsServer(config.getChild("activefs")));
 	}
 
 	@Provides
@@ -76,13 +76,13 @@ public class SimpleTcpServerLauncher extends Launcher {
 	}
 
 	@Provides
-	AsyncServlet guiServlet(ActiveFs activeFs) {
-		return ActiveFsGuiServlet.create(activeFs);
+	AsyncServlet guiServlet(AsyncFs activeFs) {
+		return FsGuiServlet.create(activeFs);
 	}
 
 	@Provides
-	ActiveFs localActiveFs(Reactor reactor, Executor executor, Config config) {
-		return LocalActiveFs.create(reactor, executor, config.get(ofPath(), "activefs.path", DEFAULT_PATH));
+	AsyncFs localFs(Reactor reactor, Executor executor, Config config) {
+		return LocalFs.create(reactor, executor, config.get(ofPath(), "activefs.path", DEFAULT_PATH));
 	}
 
 	@Provides

@@ -20,8 +20,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.activej.csp.binary.ByteBufsCodec;
-import io.activej.csp.net.Messaging;
-import io.activej.csp.net.MessagingWithBinaryStreaming;
+import io.activej.csp.net.AsyncMessaging;
+import io.activej.csp.net.ReactiveMessaging;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.exception.DataflowException;
 import io.activej.dataflow.graph.Partition;
@@ -165,7 +165,7 @@ public final class DataflowDebugServlet extends ImplicitlyReactive implements As
 	private Promise<PartitionData> getPartitionData(InetSocketAddress address) {
 		return ReactiveTcpSocket.connect(getCurrentReactor(), address)
 				.then(socket -> {
-					Messaging<DataflowResponse, DataflowRequest> messaging = MessagingWithBinaryStreaming.create(socket, codec);
+					AsyncMessaging<DataflowResponse, DataflowRequest> messaging = ReactiveMessaging.create(socket, codec);
 					return DataflowClient.performHandshake(messaging)
 							.then(() -> messaging.send(new GetTasks(null)))
 							.then(messaging::receive)
@@ -185,7 +185,7 @@ public final class DataflowDebugServlet extends ImplicitlyReactive implements As
 	private Promise<TaskData> getTask(InetSocketAddress address, long taskId) {
 		return ReactiveTcpSocket.connect(getCurrentReactor(), address)
 				.then(socket -> {
-					Messaging<DataflowResponse, DataflowRequest> messaging = MessagingWithBinaryStreaming.create(socket, codec);
+					AsyncMessaging<DataflowResponse, DataflowRequest> messaging = ReactiveMessaging.create(socket, codec);
 					return DataflowClient.performHandshake(messaging)
 							.then(() -> messaging.send(new GetTasks(taskId)))
 							.then($ -> messaging.receive())

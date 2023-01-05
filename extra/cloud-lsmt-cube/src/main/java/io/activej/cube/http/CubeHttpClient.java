@@ -19,11 +19,11 @@ package io.activej.cube.http;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.initializer.WithInitializer;
-import io.activej.cube.Cube;
+import io.activej.cube.AsyncCube;
 import io.activej.cube.CubeQuery;
 import io.activej.cube.QueryResult;
 import io.activej.cube.exception.CubeException;
-import io.activej.http.HttpClient;
+import io.activej.http.AsyncHttpClient;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpUtils;
 import io.activej.promise.Promise;
@@ -41,11 +41,11 @@ import static io.activej.cube.Utils.toJson;
 import static io.activej.cube.http.Utils.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public final class CubeHttpClient implements Cube, WithInitializer<CubeHttpClient> {
+public final class CubeHttpClient implements AsyncCube, WithInitializer<CubeHttpClient> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeHttpClient.class);
 
 	private final String url;
-	private final HttpClient httpClient;
+	private final AsyncHttpClient httpClient;
 	private QueryResultCodec queryResultCodec;
 	private AggregationPredicateCodec aggregationPredicateCodec;
 	private final Map<String, Type> attributeTypes = new LinkedHashMap<>();
@@ -53,16 +53,16 @@ public final class CubeHttpClient implements Cube, WithInitializer<CubeHttpClien
 
 	private DefiningClassLoader classLoader = DefiningClassLoader.create();
 
-	private CubeHttpClient(HttpClient httpClient, String url) {
+	private CubeHttpClient(AsyncHttpClient httpClient, String url) {
 		this.url = url.replaceAll("/$", "");
 		this.httpClient = httpClient;
 	}
 
-	public static CubeHttpClient create(HttpClient httpClient, String cubeServletUrl) {
+	public static CubeHttpClient create(AsyncHttpClient httpClient, String cubeServletUrl) {
 		return new CubeHttpClient(httpClient, cubeServletUrl);
 	}
 
-	public static CubeHttpClient create(HttpClient httpClient, URI cubeServletUrl) {
+	public static CubeHttpClient create(AsyncHttpClient httpClient, URI cubeServletUrl) {
 		return create(httpClient, cubeServletUrl.toString());
 	}
 

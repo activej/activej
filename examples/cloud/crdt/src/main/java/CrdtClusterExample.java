@@ -1,9 +1,9 @@
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.LWWSet;
-import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.crdt.storage.cluster.CrdtStorageCluster;
-import io.activej.crdt.storage.cluster.DiscoveryService;
+import io.activej.crdt.storage.cluster.AsyncDiscoveryService;
 import io.activej.crdt.storage.cluster.RendezvousPartitionGroup;
 import io.activej.crdt.storage.cluster.RendezvousPartitionScheme;
 import io.activej.crdt.storage.local.CrdtStorageFs;
@@ -11,7 +11,7 @@ import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.LocalActiveFs;
+import io.activej.fs.LocalFs;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 
@@ -38,26 +38,26 @@ public final class CrdtClusterExample {
 		//[START REGION_1]
 		// we create a list of 10 local partitions with string partition ids and string keys
 		// normally all of them would be network clients for remote partitions
-		Map<String, CrdtStorage<String, LWWSet<String>>> clients = new HashMap<>();
+		Map<String, AsyncCrdtStorage<String, LWWSet<String>>> clients = new HashMap<>();
 		List<Promise<Void>> fsStartPromises = new ArrayList<>();
 		for (int i = 0; i < 10; i++) {
 			String id = "partition" + i;
 			Path storage = Files.createTempDirectory("storage_" + id);
-			LocalActiveFs fs = LocalActiveFs.create(eventloop, executor, storage);
+			LocalFs fs = LocalFs.create(eventloop, executor, storage);
 			fsStartPromises.add(fs.start());
 			clients.put(id, CrdtStorageFs.create(eventloop, fs, SERIALIZER));
 		}
 
 		// grab a couple of them to work with
-		CrdtStorage<String, LWWSet<String>> partition3 = clients.get("partition3");
-		CrdtStorage<String, LWWSet<String>> partition6 = clients.get("partition6");
+		AsyncCrdtStorage<String, LWWSet<String>> partition3 = clients.get("partition3");
+		AsyncCrdtStorage<String, LWWSet<String>> partition6 = clients.get("partition6");
 
 		// create a cluster with string keys, string partition ids,
 		// and with replication count of 5 meaning that uploading items to the
 		// cluster will make 5 copies of them across known partitions
 		CrdtStorageCluster<String, LWWSet<String>, String> cluster = CrdtStorageCluster.<String, LWWSet<String>, String>create(
 				eventloop,
-				DiscoveryService.of(RendezvousPartitionScheme.<String>create()
+				AsyncDiscoveryService.of(RendezvousPartitionScheme.<String>create()
 						.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet())
 								.withReplicas(5))
 						.withCrdtProvider(clients::get)),

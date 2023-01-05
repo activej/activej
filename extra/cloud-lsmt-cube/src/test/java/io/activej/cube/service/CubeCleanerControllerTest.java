@@ -14,7 +14,7 @@ import io.activej.cube.ot.CubeOT;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogDiffCodec;
 import io.activej.etl.LogOT;
-import io.activej.fs.LocalActiveFs;
+import io.activej.fs.LocalFs;
 import io.activej.ot.OTCommit;
 import io.activej.ot.repository.OTRepositoryMySql;
 import io.activej.ot.system.OTSystem;
@@ -69,7 +69,7 @@ public class CubeCleanerControllerTest {
 
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		aggregationChunkStorage = ReactiveAggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
-				LZ4FrameFormat.create(), LocalActiveFs.create(reactor, executor, aggregationsDir));
+				LZ4FrameFormat.create(), LocalFs.create(reactor, executor, aggregationsDir));
 		ReactiveCube cube = ReactiveCube.create(reactor, executor, classLoader, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
 				.withDimension("adv", ofInt())

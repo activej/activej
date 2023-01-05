@@ -3,10 +3,10 @@ package adder;
 import io.activej.async.service.TaskScheduler;
 import io.activej.common.initializer.Initializer;
 import io.activej.crdt.function.CrdtFunction;
-import io.activej.crdt.hash.CrdtMap;
-import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.hash.AsyncCrdtMap;
+import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.crdt.storage.cluster.PartitionId;
-import io.activej.crdt.wal.WriteAheadLog;
+import io.activej.crdt.wal.AsyncWriteAheadLog;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
@@ -43,8 +43,8 @@ public final class AdderServerModule extends AbstractModule {
 	@Provides
 	Map<Class<?>, RpcRequestHandler<?, ?>> handlers(
 			PartitionId partitionId,
-			CrdtMap<Long, SimpleSumsCrdtState> map,
-			WriteAheadLog<Long, DetailedSumsCrdtState> writeAheadLog,
+			AsyncCrdtMap<Long, SimpleSumsCrdtState> map,
+			AsyncWriteAheadLog<Long, DetailedSumsCrdtState> writeAheadLog,
 			IdSequentialExecutor<Long> seqExecutor
 	) {
 		return Map.of(
@@ -77,7 +77,7 @@ public final class AdderServerModule extends AbstractModule {
 	}
 
 	@Provides
-	CrdtMap<Long, SimpleSumsCrdtState> map(Reactor reactor, PartitionId partitionId, CrdtStorage<Long, DetailedSumsCrdtState> storage) {
+	AsyncCrdtMap<Long, SimpleSumsCrdtState> map(Reactor reactor, PartitionId partitionId, AsyncCrdtStorage<Long, DetailedSumsCrdtState> storage) {
 		return new AdderCrdtMap(reactor, partitionId.toString(), storage);
 	}
 
@@ -99,13 +99,13 @@ public final class AdderServerModule extends AbstractModule {
 	@ProvidesIntoSet
 	Initializer<ServiceGraphModuleSettings> configureServiceGraph() {
 		// add logical dependency so that service graph starts CrdtMap only after it has started the WriteAheadLog
-		return settings -> settings.addDependency(new Key<CrdtMap<Long, SimpleSumsCrdtState>>() {}, new Key<WriteAheadLog<Long, DetailedSumsCrdtState>>() {});
+		return settings -> settings.addDependency(new Key<AsyncCrdtMap<Long, SimpleSumsCrdtState>>() {}, new Key<AsyncWriteAheadLog<Long, DetailedSumsCrdtState>>() {});
 	}
 
 	@Provides
 	@Eager
 	@Named("Map refresh")
-	TaskScheduler mapRefresh(Reactor reactor, CrdtMap<Long, SimpleSumsCrdtState> map) {
+	TaskScheduler mapRefresh(Reactor reactor, AsyncCrdtMap<Long, SimpleSumsCrdtState> map) {
 		return TaskScheduler.create(reactor, map::refresh)
 				.withInterval(Duration.ofSeconds(10));
 	}

@@ -4,7 +4,7 @@ import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtServer;
 import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.function.CrdtFunction;
-import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.crdt.storage.local.CrdtStorageMap;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.datastream.StreamConsumer;
@@ -49,7 +49,7 @@ public final class TestCrdtCluster {
 		CrdtDataSerializer<String, Integer> serializer = new CrdtDataSerializer<>(UTF8_SERIALIZER, INT_SERIALIZER);
 
 		List<CrdtServer<String, Integer>> servers = new ArrayList<>();
-		Map<String, CrdtStorage<String, Integer>> clients = new HashMap<>();
+		Map<String, AsyncCrdtStorage<String, Integer>> clients = new HashMap<>();
 		Map<String, CrdtStorageMap<String, Integer>> remoteStorages = new LinkedHashMap<>();
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
 			CrdtStorageMap<String, Integer> storage = CrdtStorageMap.create(reactor, ignoringTimestamp(Math::max));
@@ -76,7 +76,7 @@ public final class TestCrdtCluster {
 		}
 		CrdtStorageCluster<String, Integer, String> cluster = CrdtStorageCluster.create(
 				reactor,
-				DiscoveryService.of(
+				AsyncDiscoveryService.of(
 						RendezvousPartitionScheme.<String>create()
 								.withPartitionGroup(
 										RendezvousPartitionGroup.create(clients.keySet())
@@ -107,7 +107,7 @@ public final class TestCrdtCluster {
 		NioReactor reactor = getCurrentReactor();
 
 		List<CrdtServer<String, Set<Integer>>> servers = new ArrayList<>();
-		Map<String, CrdtStorage<String, Set<Integer>>> clients = new HashMap<>();
+		Map<String, AsyncCrdtStorage<String, Set<Integer>>> clients = new HashMap<>();
 
 		CrdtFunction<Set<Integer>> union = ignoringTimestamp((a, b) -> {
 			a.addAll(b);
@@ -139,7 +139,7 @@ public final class TestCrdtCluster {
 
 		CrdtStorageMap<String, Set<Integer>> localStorage = CrdtStorageMap.create(reactor, union);
 		CrdtStorageCluster<String, Set<Integer>, String> cluster = CrdtStorageCluster.create(reactor,
-				DiscoveryService.of(
+				AsyncDiscoveryService.of(
 						RendezvousPartitionScheme.<String>create()
 								.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet()).withReplicas(REPLICATION_COUNT).withRepartition(true))
 								.withCrdtProvider(clients::get)),

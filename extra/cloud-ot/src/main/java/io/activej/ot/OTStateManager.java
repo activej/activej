@@ -25,7 +25,7 @@ import io.activej.async.service.ReactiveService;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.ot.exception.TransformException;
 import io.activej.ot.system.OTSystem;
-import io.activej.ot.uplink.OTUplink;
+import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.promise.Promise;
 import io.activej.promise.RetryPolicy;
 import io.activej.reactor.AbstractReactive;
@@ -52,7 +52,7 @@ public final class OTStateManager<K, D> extends AbstractReactive
 	private static final Logger logger = LoggerFactory.getLogger(OTStateManager.class);
 
 	private final OTSystem<D> otSystem;
-	private final OTUplink<K, D, Object> uplink;
+	private final AsyncOTUplink<K, D, Object> uplink;
 
 	private final AsyncSupplier<Boolean> fetch = AsyncSuppliers.reuse(this::doFetch);
 
@@ -77,15 +77,15 @@ public final class OTStateManager<K, D> extends AbstractReactive
 	private boolean isPolling;
 
 	@SuppressWarnings("unchecked")
-	private OTStateManager(Reactor reactor, OTSystem<D> otSystem, OTUplink<K, D, ?> uplink, OTState<D> state) {
+	private OTStateManager(Reactor reactor, OTSystem<D> otSystem, AsyncOTUplink<K, D, ?> uplink, OTState<D> state) {
 		super(reactor);
 		this.otSystem = otSystem;
-		this.uplink = (OTUplink<K, D, Object>) uplink;
+		this.uplink = (AsyncOTUplink<K, D, Object>) uplink;
 		this.state = state;
 	}
 
 	public static <K, D> OTStateManager<K, D> create(Reactor reactor, OTSystem<D> otSystem,
-			OTUplink<K, D, ?> repository, OTState<D> state) {
+			AsyncOTUplink<K, D, ?> repository, OTState<D> state) {
 		return new OTStateManager<>(reactor, otSystem, repository, state);
 	}
 
@@ -155,7 +155,7 @@ public final class OTStateManager<K, D> extends AbstractReactive
 		return fetch.get();
 	}
 
-	private void updateOrigin(OTUplink.FetchData<K, D> fetchData) {
+	private void updateOrigin(AsyncOTUplink.FetchData<K, D> fetchData) {
 		assert pendingProtoCommit == null;
 		originCommitId = fetchData.getCommitId();
 		originLevel = fetchData.getLevel();

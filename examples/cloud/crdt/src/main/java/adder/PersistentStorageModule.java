@@ -3,14 +3,14 @@ package adder;
 import io.activej.async.service.TaskScheduler;
 import io.activej.config.Config;
 import io.activej.crdt.function.CrdtFunction;
-import io.activej.crdt.storage.CrdtStorage;
+import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.crdt.storage.local.CrdtStorageFs;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.crdt.wal.FileWriteAheadLog;
 import io.activej.crdt.wal.WalUploader;
-import io.activej.crdt.wal.WriteAheadLog;
-import io.activej.fs.ActiveFs;
-import io.activej.fs.LocalActiveFs;
+import io.activej.crdt.wal.AsyncWriteAheadLog;
+import io.activej.fs.AsyncFs;
+import io.activej.fs.LocalFs;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
@@ -32,12 +32,12 @@ public final class PersistentStorageModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		bind(new Key<CrdtStorage<Long, DetailedSumsCrdtState>>(Local.class) {})
+		bind(new Key<AsyncCrdtStorage<Long, DetailedSumsCrdtState>>(Local.class) {})
 				.to(new Key<CrdtStorageFs<Long, DetailedSumsCrdtState>>() {});
 	}
 
 	@Provides
-	WriteAheadLog<Long, DetailedSumsCrdtState> writeAheadLog(
+	AsyncWriteAheadLog<Long, DetailedSumsCrdtState> writeAheadLog(
 			Reactor reactor,
 			Executor executor,
 			CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer,
@@ -54,7 +54,7 @@ public final class PersistentStorageModule extends AbstractModule {
 			Executor executor,
 			CrdtFunction<DetailedSumsCrdtState> function,
 			CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer,
-			CrdtStorage<Long, DetailedSumsCrdtState> storage,
+			AsyncCrdtStorage<Long, DetailedSumsCrdtState> storage,
 			Config config
 	) {
 		Path walPath = config.get(ofPath(), "wal-storage");
@@ -64,7 +64,7 @@ public final class PersistentStorageModule extends AbstractModule {
 	@Provides
 	CrdtStorageFs<Long, DetailedSumsCrdtState> storage(
 			Reactor reactor,
-			ActiveFs fs,
+			AsyncFs fs,
 			CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer,
 			CrdtFunction<DetailedSumsCrdtState> function
 	) {
@@ -72,8 +72,8 @@ public final class PersistentStorageModule extends AbstractModule {
 	}
 
 	@Provides
-	ActiveFs activeFs(Reactor reactor, Executor executor, Config config) {
-		return LocalActiveFs.create(reactor, executor, config.get(ofPath(), "storage"));
+	AsyncFs activeFs(Reactor reactor, Executor executor, Config config) {
+		return LocalFs.create(reactor, executor, config.get(ofPath(), "storage"));
 	}
 
 	@Provides

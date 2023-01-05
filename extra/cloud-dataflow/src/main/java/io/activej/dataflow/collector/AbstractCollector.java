@@ -30,7 +30,7 @@ import io.activej.datastream.processor.StreamLimiter;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class AbstractCollector<T, A, C extends AbstractCollector<T, A, C>> implements Collector<T> {
+public abstract class AbstractCollector<T, A, C extends AbstractCollector<T, A, C>> implements AsyncCollector<T> {
 	protected final Dataset<T> input;
 	protected final DataflowClient client;
 

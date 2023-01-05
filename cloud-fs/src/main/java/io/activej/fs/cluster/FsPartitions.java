@@ -22,7 +22,7 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.async.service.ReactiveService;
 import io.activej.common.function.ConsumerEx;
 import io.activej.common.initializer.WithInitializer;
-import io.activej.fs.ActiveFs;
+import io.activej.fs.AsyncFs;
 import io.activej.fs.exception.FsException;
 import io.activej.fs.exception.FsIOException;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -50,28 +50,28 @@ public final class FsPartitions extends AbstractReactive
 
 	static final FsException LOCAL_EXCEPTION = new FsException("Local exception");
 
-	private final DiscoveryService discoveryService;
+	private final AsyncDiscoveryService discoveryService;
 
-	private final Map<Object, ActiveFs> alivePartitions = new HashMap<>();
-	private final Map<Object, ActiveFs> alivePartitionsView = Collections.unmodifiableMap(alivePartitions);
+	private final Map<Object, AsyncFs> alivePartitions = new HashMap<>();
+	private final Map<Object, AsyncFs> alivePartitionsView = Collections.unmodifiableMap(alivePartitions);
 
-	private final Map<Object, ActiveFs> deadPartitions = new HashMap<>();
-	private final Map<Object, ActiveFs> deadPartitionsView = Collections.unmodifiableMap(deadPartitions);
+	private final Map<Object, AsyncFs> deadPartitions = new HashMap<>();
+	private final Map<Object, AsyncFs> deadPartitionsView = Collections.unmodifiableMap(deadPartitions);
 
 	private final AsyncRunnable checkAllPartitions = AsyncRunnables.reuse(this::doCheckAllPartitions);
 	private final AsyncRunnable checkDeadPartitions = AsyncRunnables.reuse(this::doCheckDeadPartitions);
 
-	private final Map<Object, ActiveFs> partitions = new HashMap<>();
-	private final Map<Object, ActiveFs> partitionsView = Collections.unmodifiableMap(partitions);
+	private final Map<Object, AsyncFs> partitions = new HashMap<>();
+	private final Map<Object, AsyncFs> partitionsView = Collections.unmodifiableMap(partitions);
 
 	private ServerSelector serverSelector = RENDEZVOUS_HASH_SHARDER;
 
-	private FsPartitions(Reactor reactor, DiscoveryService discoveryService) {
+	private FsPartitions(Reactor reactor, AsyncDiscoveryService discoveryService) {
 		super(reactor);
 		this.discoveryService = discoveryService;
 	}
 
-	public static FsPartitions create(Reactor reactor, DiscoveryService discoveryService) {
+	public static FsPartitions create(Reactor reactor, AsyncDiscoveryService discoveryService) {
 		return new FsPartitions(reactor, discoveryService);
 	}
 
@@ -86,31 +86,31 @@ public final class FsPartitions extends AbstractReactive
 	/**
 	 * Returns an unmodifiable view of all partitions
 	 */
-	public Map<Object, ActiveFs> getPartitions() {
+	public Map<Object, AsyncFs> getPartitions() {
 		return partitionsView;
 	}
 
 	/**
 	 * Returns an unmodifiable view of alive partitions
 	 */
-	public Map<Object, ActiveFs> getAlivePartitions() {
+	public Map<Object, AsyncFs> getAlivePartitions() {
 		return alivePartitionsView;
 	}
 
 	/**
 	 * Returns an unmodifiable view of dead partitions
 	 */
-	public Map<Object, ActiveFs> getDeadPartitions() {
+	public Map<Object, AsyncFs> getDeadPartitions() {
 		return deadPartitionsView;
 	}
 
 	/**
-	 * Returns alive {@link ActiveFs} by given id
+	 * Returns alive {@link AsyncFs} by given id
 	 *
-	 * @param partitionId id of {@link ActiveFs}
-	 * @return alive {@link ActiveFs}
+	 * @param partitionId id of {@link AsyncFs}
+	 * @return alive {@link AsyncFs}
 	 */
-	public @Nullable ActiveFs get(Object partitionId) {
+	public @Nullable AsyncFs get(Object partitionId) {
 		return alivePartitions.get(partitionId);
 	}
 
@@ -147,7 +147,7 @@ public final class FsPartitions extends AbstractReactive
 	 */
 	@SuppressWarnings("UnusedReturnValue")
 	public boolean markDead(Object partitionId, @Nullable Exception e) {
-		ActiveFs partition = alivePartitions.remove(partitionId);
+		AsyncFs partition = alivePartitions.remove(partitionId);
 		if (partition != null) {
 			logger.warn("marking {} as dead ", partitionId, e);
 			deadPartitions.put(partitionId, partition);
@@ -157,7 +157,7 @@ public final class FsPartitions extends AbstractReactive
 	}
 
 	public void markAlive(Object partitionId) {
-		ActiveFs partition = deadPartitions.remove(partitionId);
+		AsyncFs partition = deadPartitions.remove(partitionId);
 		if (partition != null) {
 			logger.info("Partition {} is alive again!", partitionId);
 			alivePartitions.put(partitionId, partition);
@@ -195,7 +195,7 @@ public final class FsPartitions extends AbstractReactive
 
 	@Override
 	public Promise<?> start() {
-		AsyncSupplier<Map<Object, ActiveFs>> discoverySupplier = discoveryService.discover();
+		AsyncSupplier<Map<Object, AsyncFs>> discoverySupplier = discoveryService.discover();
 		return discoverySupplier.get()
 				.whenResult(result -> {
 					this.partitions.putAll(result);
@@ -215,7 +215,7 @@ public final class FsPartitions extends AbstractReactive
 		return "FsPartitions{partitions=" + partitions + ", deadPartitions=" + deadPartitions + '}';
 	}
 
-	private void rediscover(AsyncSupplier<Map<Object, ActiveFs>> discoverySupplier) {
+	private void rediscover(AsyncSupplier<Map<Object, AsyncFs>> discoverySupplier) {
 		discoverySupplier.get()
 				.whenResult(result -> {
 					updatePartitions(result);
@@ -228,18 +228,18 @@ public final class FsPartitions extends AbstractReactive
 				});
 	}
 
-	private void updatePartitions(Map<Object, ActiveFs> newPartitions) {
+	private void updatePartitions(Map<Object, AsyncFs> newPartitions) {
 		this.partitions.clear();
 		this.partitions.putAll(newPartitions);
 
 		alivePartitions.keySet().retainAll(this.partitions.keySet());
 		deadPartitions.keySet().retainAll(this.partitions.keySet());
 
-		for (Map.Entry<Object, ActiveFs> entry : this.partitions.entrySet()) {
+		for (Map.Entry<Object, AsyncFs> entry : this.partitions.entrySet()) {
 			Object partitionId = entry.getKey();
-			ActiveFs fs = entry.getValue();
+			AsyncFs fs = entry.getValue();
 
-			ActiveFs deadFs = deadPartitions.get(partitionId);
+			AsyncFs deadFs = deadPartitions.get(partitionId);
 			if (deadFs != null) {
 				if (deadFs == fs) continue;
 

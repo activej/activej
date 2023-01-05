@@ -1,6 +1,6 @@
 package io.activej.cube;
 
-import io.activej.aggregation.AggregationChunkStorage;
+import io.activej.aggregation.AsyncAggregationChunkStorage;
 import io.activej.aggregation.AggregationPredicates;
 import io.activej.aggregation.ChunkIdCodec;
 import io.activej.aggregation.ReactiveAggregationChunkStorage;
@@ -16,11 +16,11 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.LogOTState;
-import io.activej.fs.LocalActiveFs;
-import io.activej.multilog.Multilog;
+import io.activej.fs.LocalFs;
+import io.activej.multilog.AsyncMultilog;
 import io.activej.multilog.ReactiveMultilog;
 import io.activej.ot.OTStateManager;
-import io.activej.ot.uplink.OTUplink;
+import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.serializer.SerializerBuilder;
 import org.junit.Test;
 
@@ -43,10 +43,10 @@ public final class LogToCubeTest extends CubeTestBase {
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 		Path logsDir = temporaryFolder.newFolder().toPath();
 
-		LocalActiveFs fs = LocalActiveFs.create(reactor, EXECUTOR, aggregationsDir);
+		LocalFs fs = LocalFs.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
 		FrameFormat frameFormat = LZ4FrameFormat.create();
-		AggregationChunkStorage<Long> aggregationChunkStorage = ReactiveAggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = ReactiveAggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 		ReactiveCube cube = ReactiveCube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
 				.withDimension("adv", ofInt())
@@ -59,16 +59,16 @@ public final class LogToCubeTest extends CubeTestBase {
 				)
 				.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests"));
 
-		OTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
+		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
 		List<TestAdvResult> expected = List.of(new TestAdvResult(10, 2), new TestAdvResult(20, 1), new TestAdvResult(30, 1));
 
 		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cube);
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
-		LocalActiveFs localFs = LocalActiveFs.create(reactor, EXECUTOR, logsDir);
+		LocalFs localFs = LocalFs.create(reactor, EXECUTOR, logsDir);
 		await(localFs.start());
-		Multilog<TestPubRequest> multilog = ReactiveMultilog.create(reactor, localFs,
+		AsyncMultilog<TestPubRequest> multilog = ReactiveMultilog.create(reactor, localFs,
 				frameFormat,
 				SerializerBuilder.create(CLASS_LOADER).build(TestPubRequest.class),
 				NAME_PARTITION_REMAINDER_SEQ);

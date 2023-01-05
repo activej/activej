@@ -21,7 +21,7 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.time.Stopwatch;
-import io.activej.cube.Cube;
+import io.activej.cube.AsyncCube;
 import io.activej.cube.CubeQuery;
 import io.activej.cube.exception.QueryException;
 import io.activej.http.*;
@@ -48,22 +48,22 @@ import static java.util.stream.Collectors.toList;
 public final class ReportingServiceServlet extends AsyncServletWithStats implements WithInitializer<ReportingServiceServlet> {
 	private static final Logger logger = LoggerFactory.getLogger(ReportingServiceServlet.class);
 
-	private final Cube cube;
+	private final AsyncCube cube;
 	private QueryResultCodec queryResultCodec;
 	private AggregationPredicateCodec aggregationPredicateCodec;
 
 	private DefiningClassLoader classLoader = DefiningClassLoader.create();
 
-	private ReportingServiceServlet(Reactor reactor, Cube cube) {
+	private ReportingServiceServlet(Reactor reactor, AsyncCube cube) {
 		super(reactor);
 		this.cube = cube;
 	}
 
-	public static ReportingServiceServlet create(Reactor reactor, Cube cube) {
+	public static ReportingServiceServlet create(Reactor reactor, AsyncCube cube) {
 		return new ReportingServiceServlet(reactor, cube);
 	}
 
-	public static RoutingServlet createRootServlet(Reactor reactor, Cube cube) {
+	public static RoutingServlet createRootServlet(Reactor reactor, AsyncCube cube) {
 		return createRootServlet(
 				ReportingServiceServlet.create(reactor, cube));
 	}

@@ -12,9 +12,9 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 
 /**
- * Implementation of {@link UserDao} which uses generic SQL commands for operation
+ * Implementation of {@link AsyncUserDao} which uses generic SQL commands for operation
  */
-public final class UserDaoSql implements UserDao {
+public final class UserDaoSql implements AsyncUserDao {
 	private final DataSource dataSource;
 	private final Executor executor;
 

@@ -21,9 +21,9 @@ import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.ActiveFs;
-import io.activej.fs.cluster.ClusterActiveFs;
-import io.activej.fs.cluster.DiscoveryService;
+import io.activej.fs.AsyncFs;
+import io.activej.fs.cluster.ClusterFs;
+import io.activej.fs.cluster.AsyncDiscoveryService;
 import io.activej.fs.cluster.FsPartitions;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpServer;
@@ -34,13 +34,13 @@ import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
-import io.activej.launchers.fs.gui.ActiveFsGuiServlet;
+import io.activej.launchers.fs.gui.FsGuiServlet;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
 
 import static io.activej.inject.module.Modules.combine;
-import static io.activej.launchers.fs.Initializers.ofClusterActiveFs;
+import static io.activej.launchers.fs.Initializers.ofClusterFs;
 import static io.activej.launchers.initializers.Initializers.ofHttpServer;
 import static io.activej.launchers.initializers.Initializers.ofReactorTaskScheduler;
 
@@ -73,23 +73,23 @@ public class ClusterTcpClientLauncher extends Launcher {
 	}
 
 	@Provides
-	AsyncServlet guiServlet(ActiveFs activeFs) {
-		return ActiveFsGuiServlet.create(activeFs, "Cluster FS Client");
+	AsyncServlet guiServlet(AsyncFs activeFs) {
+		return FsGuiServlet.create(activeFs, "Cluster FS Client");
 	}
 
 	@Provides
-	ActiveFs remoteActiveFs(Reactor reactor, FsPartitions partitions, Config config) {
-		return ClusterActiveFs.create(reactor, partitions)
-				.withInitializer(ofClusterActiveFs(config.getChild("activefs.cluster")));
+	AsyncFs asyncFs(Reactor reactor, FsPartitions partitions, Config config) {
+		return ClusterFs.create(reactor, partitions)
+				.withInitializer(ofClusterFs(config.getChild("activefs.cluster")));
 	}
 
 	@Provides
-	DiscoveryService discoveryService(NioReactor reactor, Config config) throws MalformedDataException {
+	AsyncDiscoveryService discoveryService(NioReactor reactor, Config config) throws MalformedDataException {
 		return Initializers.constantDiscoveryService(reactor, config.getChild("activefs.cluster"));
 	}
 
 	@Provides
-	FsPartitions fsPartitions(Reactor reactor, DiscoveryService discoveryService) {
+	FsPartitions fsPartitions(Reactor reactor, AsyncDiscoveryService discoveryService) {
 		return FsPartitions.create(reactor, discoveryService);
 	}
 	//[END EXAMPLE]

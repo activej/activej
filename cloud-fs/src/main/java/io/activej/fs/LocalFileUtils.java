@@ -17,7 +17,7 @@
 package io.activej.fs;
 
 import io.activej.common.time.CurrentTimeProvider;
-import io.activej.fs.exception.ActiveFsStructureException;
+import io.activej.fs.exception.FsStructureException;
 import io.activej.fs.exception.ForbiddenPathException;
 import io.activej.fs.exception.GlobException;
 import org.jetbrains.annotations.Nullable;
@@ -36,7 +36,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.regex.PatternSyntaxException;
 
-import static io.activej.fs.ActiveFs.SEPARATOR;
+import static io.activej.fs.AsyncFs.SEPARATOR;
 import static io.activej.fs.util.RemoteFsUtils.isWildcard;
 import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
@@ -131,7 +131,7 @@ public final class LocalFileUtils {
 				if (Files.exists(tempDir)) {
 					throw e;
 				}
-				throw new ActiveFsStructureException("Temporary directory " + tempDir + " not found");
+				throw new FsStructureException("Temporary directory " + tempDir + " not found");
 			} catch (FileAlreadyExistsException ignored) {
 				continue;
 			}
@@ -325,7 +325,7 @@ public final class LocalFileUtils {
 			if (Files.exists(tempDir)) {
 				throw e;
 			}
-			throw new ActiveFsStructureException("Temporary directory " + tempDir + " not found");
+			throw new FsStructureException("Temporary directory " + tempDir + " not found");
 		}
 	}
 

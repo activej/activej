@@ -29,7 +29,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.Executor;
 
-class StaticLoaderClassPath implements StaticLoader {
+class StaticLoaderClassPath implements AsyncStaticLoader {
 	private static final String ROOT = "/";
 	private static final int ROOT_OFFSET = 1;
 	private final Executor executor;

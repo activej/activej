@@ -21,12 +21,12 @@ import io.activej.memcache.protocol.MemcacheRpcMessage.GetResponse;
 import io.activej.memcache.protocol.MemcacheRpcMessage.PutRequest;
 import io.activej.memcache.protocol.MemcacheRpcMessage.Slice;
 import io.activej.promise.Promise;
-import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.client.AsyncRpcClient;
 
-public abstract class AbstractMemcacheClient<K, V> implements MemcacheClient<K, V> {
-	private final RpcClient rpcClient;
+public abstract class AbstractMemcacheClient<K, V> implements AsyncMemcacheClient<K, V> {
+	private final AsyncRpcClient rpcClient;
 
-	protected AbstractMemcacheClient(RpcClient rpcClient) {
+	protected AbstractMemcacheClient(AsyncRpcClient rpcClient) {
 		this.rpcClient = rpcClient;
 	}
 

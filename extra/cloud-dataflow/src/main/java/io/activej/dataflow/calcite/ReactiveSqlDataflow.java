@@ -1,12 +1,12 @@
 package io.activej.dataflow.calcite;
 
 import io.activej.dataflow.DataflowClient;
-import io.activej.dataflow.SqlDataflow;
+import io.activej.dataflow.AsyncSqlDataflow;
 import io.activej.dataflow.calcite.RelToDatasetConverter.ConversionResult;
 import io.activej.dataflow.calcite.optimizer.FilterScanTableRule;
 import io.activej.dataflow.calcite.optimizer.SortScanTableRule;
 import io.activej.dataflow.collector.AbstractCollector;
-import io.activej.dataflow.collector.Collector;
+import io.activej.dataflow.collector.AsyncCollector;
 import io.activej.dataflow.collector.MergeCollector;
 import io.activej.dataflow.collector.UnionCollector;
 import io.activej.dataflow.dataset.Dataset;
@@ -45,7 +45,7 @@ import java.util.List;
 
 import static io.activej.common.Checks.checkNotNull;
 
-public final class ReactiveSqlDataflow extends AbstractNioReactive implements SqlDataflow {
+public final class ReactiveSqlDataflow extends AbstractNioReactive implements AsyncSqlDataflow {
 	private final DataflowClient client;
 	private final List<Partition> partitions;
 
@@ -123,7 +123,7 @@ public final class ReactiveSqlDataflow extends AbstractNioReactive implements Sq
 			return StreamSupplier.of();
 		}
 
-		Collector<Record> calciteCollector = createCollector(dataset, limit);
+		AsyncCollector<Record> calciteCollector = createCollector(dataset, limit);
 
 		DataflowGraph graph = new DataflowGraph(reactor, client, partitions);
 		StreamSupplier<Record> result = calciteCollector.compile(graph);
@@ -168,7 +168,7 @@ public final class ReactiveSqlDataflow extends AbstractNioReactive implements Sq
 
 	public String explainNodes(String query) throws SqlParseException, DataflowException {
 		Dataset<Record> dataset = convertToDataset(query);
-		Collector<Record> calciteCollector = createCollector(dataset, StreamLimiter.NO_LIMIT);
+		AsyncCollector<Record> calciteCollector = createCollector(dataset, StreamLimiter.NO_LIMIT);
 
 		DataflowGraph graph = new DataflowGraph(reactor, client, partitions);
 		calciteCollector.compile(graph);
@@ -176,7 +176,7 @@ public final class ReactiveSqlDataflow extends AbstractNioReactive implements Sq
 		return graph.toGraphViz();
 	}
 
-	private Collector<Record> createCollector(Dataset<Record> dataset, long limit) {
+	private AsyncCollector<Record> createCollector(Dataset<Record> dataset, long limit) {
 		AbstractCollector<Record, ?, ?> collector = dataset instanceof LocallySortedDataset<?, Record> sortedDataset ?
 				MergeCollector.create(sortedDataset, client, false) :
 				UnionCollector.create(dataset, client);

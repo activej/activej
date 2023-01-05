@@ -6,7 +6,7 @@ import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.fs.FileMetadata;
-import io.activej.fs.LocalActiveFs;
+import io.activej.fs.LocalFs;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -45,13 +45,13 @@ public final class CrdtStorageFsTest {
 	@Rule
 	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-	private LocalActiveFs fsClient;
+	private LocalFs fsClient;
 	private CrdtStorageFs<String, Set<Integer>> client;
 
 	@Before
 	public void setup() throws IOException {
 		Reactor reactor = getCurrentReactor();
-		fsClient = LocalActiveFs.create(reactor, Executors.newCachedThreadPool(), temporaryFolder.newFolder().toPath());
+		fsClient = LocalFs.create(reactor, Executors.newCachedThreadPool(), temporaryFolder.newFolder().toPath());
 		client = CrdtStorageFs.create(reactor, fsClient, SERIALIZER, CRDT_FUNCTION);
 		await(fsClient.start());
 		await(client.start());

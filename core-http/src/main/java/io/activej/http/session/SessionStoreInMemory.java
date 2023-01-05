@@ -28,7 +28,7 @@ import java.util.Map;
 /**
  * A simple reference implementation of the session storage over a hash map.
  */
-public final class SessionStoreInMemory<T> implements SessionStore<T>, WithInitializer<SessionStoreInMemory<T>> {
+public final class SessionStoreInMemory<T> implements AsyncSessionStore<T>, WithInitializer<SessionStoreInMemory<T>> {
 	private final Map<String, TWithTimestamp> store = new HashMap<>();
 
 	private @Nullable Duration sessionLifetime;

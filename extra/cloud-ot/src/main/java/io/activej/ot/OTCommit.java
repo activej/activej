@@ -16,7 +16,7 @@
 
 package io.activej.ot;
 
-import io.activej.ot.OTCommitFactory.DiffsWithLevel;
+import io.activej.ot.AsyncOTCommitFactory.DiffsWithLevel;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
