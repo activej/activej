@@ -1,6 +1,6 @@
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
-import io.activej.crdt.storage.local.CrdtStorageFs;
+import io.activej.crdt.storage.local.FsCrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
@@ -49,8 +49,8 @@ public final class CrdtFsConsolidationExample {
 				new CrdtDataSerializer<>(UTF8_SERIALIZER, ofSet(INT_SERIALIZER));
 
 		// create an FS-based CRDT client
-		CrdtStorageFs<String, Set<Integer>> client =
-				CrdtStorageFs.create(eventloop, fsClient, serializer, crdtFunction);
+		FsCrdtStorage<String, Set<Integer>> client =
+				FsCrdtStorage.create(eventloop, fsClient, serializer, crdtFunction);
 		//[END REGION_1]
 
 		// wait for LocalActiveFs instance to start

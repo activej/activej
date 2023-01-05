@@ -2,11 +2,11 @@ import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.LWWSet;
 import io.activej.crdt.storage.AsyncCrdtStorage;
-import io.activej.crdt.storage.cluster.CrdtStorageCluster;
 import io.activej.crdt.storage.cluster.AsyncDiscoveryService;
+import io.activej.crdt.storage.cluster.ClusterCrdtStorage;
 import io.activej.crdt.storage.cluster.RendezvousPartitionGroup;
 import io.activej.crdt.storage.cluster.RendezvousPartitionScheme;
-import io.activej.crdt.storage.local.CrdtStorageFs;
+import io.activej.crdt.storage.local.FsCrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
@@ -45,7 +45,7 @@ public final class CrdtClusterExample {
 			Path storage = Files.createTempDirectory("storage_" + id);
 			LocalFs fs = LocalFs.create(eventloop, executor, storage);
 			fsStartPromises.add(fs.start());
-			clients.put(id, CrdtStorageFs.create(eventloop, fs, SERIALIZER));
+			clients.put(id, FsCrdtStorage.create(eventloop, fs, SERIALIZER));
 		}
 
 		// grab a couple of them to work with
@@ -55,7 +55,7 @@ public final class CrdtClusterExample {
 		// create a cluster with string keys, string partition ids,
 		// and with replication count of 5 meaning that uploading items to the
 		// cluster will make 5 copies of them across known partitions
-		CrdtStorageCluster<String, LWWSet<String>, String> cluster = CrdtStorageCluster.<String, LWWSet<String>, String>create(
+		ClusterCrdtStorage<String, LWWSet<String>, String> cluster = ClusterCrdtStorage.<String, LWWSet<String>, String>create(
 				eventloop,
 				AsyncDiscoveryService.of(RendezvousPartitionScheme.<String>create()
 						.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet())

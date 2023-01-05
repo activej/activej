@@ -5,7 +5,7 @@ import io.activej.ot.repository.AsyncOTRepository;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.ot.uplink.OTUplink;
-import io.activej.ot.utils.OTRepositoryStub;
+import io.activej.ot.utils.StubOTRepository;
 import io.activej.ot.utils.TestOp;
 import io.activej.ot.utils.TestOpState;
 import io.activej.promise.Promise;
@@ -35,7 +35,7 @@ public class OTStateManagerTest {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
-	private OTRepositoryStub<Integer, TestOp> repository;
+	private StubOTRepository<Integer, TestOp> repository;
 	private OTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> uplink;
 	private OTStateManager<Integer, TestOp> stateManager;
 	private TestOpState testOpState;
@@ -44,7 +44,7 @@ public class OTStateManagerTest {
 	@Before
 	public void before() {
 		Random random = new Random();
-		repository = OTRepositoryStub.create();
+		repository = StubOTRepository.create();
 		repository.revisionIdSupplier = () -> random.nextInt(1000) + 1000;
 		testOpState = new TestOpState();
 		uplink = OTUplink.create(this.repository, SYSTEM);

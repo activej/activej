@@ -16,8 +16,8 @@
 
 package io.activej.cube.service;
 
-import io.activej.aggregation.ChunkIdCodec;
 import io.activej.aggregation.AsyncChunkLocker;
+import io.activej.aggregation.ChunkIdCodec;
 import io.activej.aggregation.ChunksAlreadyLockedException;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.initializer.WithInitializer;
@@ -41,12 +41,12 @@ import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.util.Collections.nCopies;
 import static java.util.stream.Collectors.joining;
 
-public final class ChunkLockerMySql<C> implements AsyncChunkLocker<C>, WithInitializer<ChunkLockerMySql<C>> {
-	private static final Logger logger = LoggerFactory.getLogger(ChunkLockerMySql.class);
+public final class MySqlChunkLocker<C> implements AsyncChunkLocker<C>, WithInitializer<MySqlChunkLocker<C>> {
+	private static final Logger logger = LoggerFactory.getLogger(MySqlChunkLocker.class);
 
-	public static final String CHUNK_TABLE = ApplicationSettings.getString(ChunkLockerMySql.class, "chunkTable", "cube_chunk");
-	public static final Duration DEFAULT_LOCK_TTL = ApplicationSettings.getDuration(ChunkLockerMySql.class, "lockTtl", Duration.ofMinutes(5));
-	public static final String DEFAULT_LOCKED_BY = ApplicationSettings.getString(ChunkLockerMySql.class, "lockedBy", null);
+	public static final String CHUNK_TABLE = ApplicationSettings.getString(MySqlChunkLocker.class, "chunkTable", "cube_chunk");
+	public static final Duration DEFAULT_LOCK_TTL = ApplicationSettings.getDuration(MySqlChunkLocker.class, "lockTtl", Duration.ofMinutes(5));
+	public static final String DEFAULT_LOCKED_BY = ApplicationSettings.getString(MySqlChunkLocker.class, "lockedBy", null);
 
 	private final Executor executor;
 	private final DataSource dataSource;
@@ -58,7 +58,7 @@ public final class ChunkLockerMySql<C> implements AsyncChunkLocker<C>, WithIniti
 	private String tableChunk = CHUNK_TABLE;
 	private long lockTtlSeconds = DEFAULT_LOCK_TTL.getSeconds();
 
-	private ChunkLockerMySql(
+	private MySqlChunkLocker(
 			Executor executor,
 			DataSource dataSource,
 			ChunkIdCodec<C> idCodec,
@@ -70,26 +70,26 @@ public final class ChunkLockerMySql<C> implements AsyncChunkLocker<C>, WithIniti
 		this.aggregationId = aggregationId;
 	}
 
-	public static <C> ChunkLockerMySql<C> create(
+	public static <C> MySqlChunkLocker<C> create(
 			Executor executor,
 			DataSource dataSource,
 			ChunkIdCodec<C> idCodec,
 			String aggregationId
 	) {
-		return new ChunkLockerMySql<>(executor, dataSource, idCodec, aggregationId);
+		return new MySqlChunkLocker<>(executor, dataSource, idCodec, aggregationId);
 	}
 
-	public ChunkLockerMySql<C> withLockTableName(String tableLock) {
+	public MySqlChunkLocker<C> withLockTableName(String tableLock) {
 		this.tableChunk = tableLock;
 		return this;
 	}
 
-	public ChunkLockerMySql<C> withLockedBy(String lockedBy) {
+	public MySqlChunkLocker<C> withLockedBy(String lockedBy) {
 		this.lockedBy = lockedBy;
 		return this;
 	}
 
-	public ChunkLockerMySql<C> withLockedTtl(Duration lockTtl) {
+	public MySqlChunkLocker<C> withLockedTtl(Duration lockTtl) {
 		this.lockTtlSeconds = lockTtl.getSeconds();
 		return this;
 	}

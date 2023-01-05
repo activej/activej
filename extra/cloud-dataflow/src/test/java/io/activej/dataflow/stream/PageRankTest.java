@@ -42,7 +42,7 @@ import java.util.function.Function;
 import static io.activej.dataflow.codec.SubtypeImpl.subtype;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.graph.StreamSchemas.simple;
-import static io.activej.dataflow.helper.StreamMergeSorterStorageStub.FACTORY_STUB;
+import static io.activej.dataflow.helper.MeergeStubStreamSorterStorage.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.dataflow.stream.DataflowTest.createCommon;
 import static io.activej.promise.TestUtils.await;

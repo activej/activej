@@ -18,8 +18,8 @@ import java.util.concurrent.Executors;
 import java.util.stream.LongStream;
 
 import static io.activej.common.Utils.union;
-import static io.activej.cube.service.ChunkLockerMySql.CHUNK_TABLE;
-import static io.activej.cube.service.ChunkLockerMySql.DEFAULT_LOCK_TTL;
+import static io.activej.cube.service.MySqlChunkLocker.CHUNK_TABLE;
+import static io.activej.cube.service.MySqlChunkLocker.DEFAULT_LOCK_TTL;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.dataSource;
@@ -30,22 +30,22 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class ChunkLockerMySqlTest {
+public class MySqlChunkLockerTest {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 	public static final String AGGREGATION_ID = "test_aggregation";
 
 	private DataSource dataSource;
-	private ChunkLockerMySql<Long> lockerA;
-	private ChunkLockerMySql<Long> lockerB;
+	private MySqlChunkLocker<Long> lockerA;
+	private MySqlChunkLocker<Long> lockerB;
 
 	@Before
 	public void before() throws IOException, SQLException {
 		dataSource = dataSource("test.properties");
 		Executor executor = Executors.newSingleThreadExecutor();
 
-		lockerA = ChunkLockerMySql.create(executor, dataSource, ChunkIdCodec.ofLong(), AGGREGATION_ID);
-		lockerB = ChunkLockerMySql.create(executor, dataSource, ChunkIdCodec.ofLong(), AGGREGATION_ID);
+		lockerA = MySqlChunkLocker.create(executor, dataSource, ChunkIdCodec.ofLong(), AGGREGATION_ID);
+		lockerB = MySqlChunkLocker.create(executor, dataSource, ChunkIdCodec.ofLong(), AGGREGATION_ID);
 
 		lockerA.initialize();
 		lockerA.truncateTables();

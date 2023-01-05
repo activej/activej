@@ -32,8 +32,8 @@ import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.serializer.BinarySerializers.*;
 import static org.junit.Assert.*;
 
-public final class CrdtStorageFsTest {
-	private static final CrdtFunction<Set<Integer>> CRDT_FUNCTION = ignoringTimestamp(CrdtStorageFsTest::union);
+public final class FsCrdtStorageTest {
+	private static final CrdtFunction<Set<Integer>> CRDT_FUNCTION = ignoringTimestamp(FsCrdtStorageTest::union);
 	private static final CrdtDataSerializer<String, Set<Integer>> SERIALIZER = new CrdtDataSerializer<>(UTF8_SERIALIZER, ofSet(INT_SERIALIZER));
 
 	@ClassRule
@@ -46,13 +46,13 @@ public final class CrdtStorageFsTest {
 	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	private LocalFs fsClient;
-	private CrdtStorageFs<String, Set<Integer>> client;
+	private FsCrdtStorage<String, Set<Integer>> client;
 
 	@Before
 	public void setup() throws IOException {
 		Reactor reactor = getCurrentReactor();
 		fsClient = LocalFs.create(reactor, Executors.newCachedThreadPool(), temporaryFolder.newFolder().toPath());
-		client = CrdtStorageFs.create(reactor, fsClient, SERIALIZER, CRDT_FUNCTION);
+		client = FsCrdtStorage.create(reactor, fsClient, SERIALIZER, CRDT_FUNCTION);
 		await(fsClient.start());
 		await(client.start());
 	}
@@ -211,7 +211,7 @@ public final class CrdtStorageFsTest {
 
 	private static void testPickFilesForConsolidation(Set<String> expected, Map<String, Integer> fileToSizeMap) {
 		Map<String, FileMetadata> files = transformMap(fileToSizeMap, size -> FileMetadata.of(size, 0));
-		Set<String> filesForConsolidation = CrdtStorageFs.pickFilesForConsolidation(files);
+		Set<String> filesForConsolidation = FsCrdtStorage.pickFilesForConsolidation(files);
 
 		assertEquals(expected, filesForConsolidation);
 	}

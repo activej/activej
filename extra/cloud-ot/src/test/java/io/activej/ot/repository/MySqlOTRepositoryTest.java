@@ -39,13 +39,13 @@ import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 
 @Ignore
-public class OTRepositoryMySqlTest {
+public class MySqlOTRepositoryTest {
 	private static final OTSystem<TestOp> SYSTEM = createTestOp();
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
-	private OTRepositoryMySql<TestOp> repository;
+	private MySqlOTRepository<TestOp> repository;
 	private RefLong id = new RefLong(0);
 
 	static {
@@ -55,7 +55,7 @@ public class OTRepositoryMySqlTest {
 
 	@Before
 	public void before() throws IOException, SQLException {
-		repository = OTRepositoryMySql.create(Reactor.getCurrentReactor(), Executors.newFixedThreadPool(4), dataSource("test.properties"),
+		repository = MySqlOTRepository.create(Reactor.getCurrentReactor(), Executors.newFixedThreadPool(4), dataSource("test.properties"),
 				AsyncSupplier.of(id::inc),
 				createTestOp(), TestOp.class);
 		repository.initialize();

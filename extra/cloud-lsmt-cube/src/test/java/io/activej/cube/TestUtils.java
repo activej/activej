@@ -2,7 +2,7 @@ package io.activej.cube;
 
 import io.activej.aggregation.AsyncAggregationChunkStorage;
 import io.activej.async.function.AsyncSupplier;
-import io.activej.cube.linear.CubeUplinkMySql;
+import io.activej.cube.linear.CubeMySqlOTUplink;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
@@ -10,7 +10,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.ot.OTCommit;
 import io.activej.ot.OTState;
 import io.activej.ot.OTStateManager;
-import io.activej.ot.repository.OTRepositoryMySql;
+import io.activej.ot.repository.MySqlOTRepository;
 import org.junit.function.ThrowingRunnable;
 
 import java.util.List;
@@ -21,14 +21,14 @@ import static java.util.stream.Collectors.toSet;
 
 public final class TestUtils {
 
-	public static void initializeUplink(CubeUplinkMySql uplink) {
+	public static void initializeUplink(CubeMySqlOTUplink uplink) {
 		noFail(() -> {
 			uplink.initialize();
 			uplink.truncateTables();
 		});
 	}
 
-	public static void initializeRepository(OTRepositoryMySql<LogDiff<CubeDiff>> repository) {
+	public static void initializeRepository(MySqlOTRepository<LogDiff<CubeDiff>> repository) {
 		noFail(() -> {
 			repository.initialize();
 			repository.truncateTables();

@@ -19,7 +19,7 @@ package io.activej.launchers.crdt;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.config.Config;
 import io.activej.crdt.CrdtData;
-import io.activej.crdt.storage.local.CrdtStorageMap;
+import io.activej.crdt.storage.local.MapCrdtStorage;
 import io.activej.http.*;
 import io.activej.http.loader.AsyncStaticLoader;
 import io.activej.inject.annotation.Provides;
@@ -54,7 +54,7 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 	@Provides
 	AsyncServlet servlet(
 			CrdtDescriptor<K, S> descriptor,
-			CrdtStorageMap<K, S> client,
+			MapCrdtStorage<K, S> client,
 			OptionalDependency<BackupService<K, S>> backupServiceOpt
 	) {
 		RoutingServlet servlet = RoutingServlet.create()

@@ -7,7 +7,7 @@ import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.cube.exception.StateFarAheadException;
-import io.activej.cube.linear.CubeUplinkMySql.UplinkProtoCommit;
+import io.activej.cube.linear.CubeMySqlOTUplink.UplinkProtoCommit;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeOT;
 import io.activej.etl.LogDiff;
@@ -36,7 +36,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.intersection;
 import static io.activej.cube.TestUtils.initializeUplink;
-import static io.activej.cube.linear.CubeUplinkMySqlTest.SimplePositionDiff.diff;
+import static io.activej.cube.linear.CubeMySqlOTUplinkTest.SimplePositionDiff.diff;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.dataSource;
@@ -46,7 +46,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class CubeUplinkMySqlTest {
+public class CubeMySqlOTUplinkTest {
 	public static final Random RANDOM = ThreadLocalRandom.current();
 
 	private static final List<String> MEASURES = List.of("a", "b", "c", "d");
@@ -59,7 +59,7 @@ public class CubeUplinkMySqlTest {
 	public static final OTSystem<LogDiff<CubeDiff>> OT_SYSTEM = LogOT.createLogOT(CubeOT.createCubeOT());
 
 	private DataSource dataSource;
-	private CubeUplinkMySql uplink;
+	private CubeMySqlOTUplink uplink;
 
 	@SuppressWarnings({"unchecked", "rawtypes", "ConstantConditions"})
 	@Before
@@ -72,7 +72,7 @@ public class CubeUplinkMySqlTest {
 		);
 
 		PrimaryKeyCodecs codecs = PrimaryKeyCodecs.ofLookUp($ -> primaryKeyCodec);
-		uplink = CubeUplinkMySql.create(Executors.newCachedThreadPool(), dataSource, codecs);
+		uplink = CubeMySqlOTUplink.create(Executors.newCachedThreadPool(), dataSource, codecs);
 
 		initializeUplink(uplink);
 	}
@@ -568,7 +568,7 @@ public class CubeUplinkMySqlTest {
 
 		try (Connection connection = dataSource.getConnection()) {
 			try (Statement statement = connection.createStatement()) {
-				statement.execute("DELETE FROM " + CubeUplinkMySql.REVISION_TABLE +
+				statement.execute("DELETE FROM " + CubeMySqlOTUplink.REVISION_TABLE +
 						" WHERE `revision` IN (0,1,2)");
 			}
 		}

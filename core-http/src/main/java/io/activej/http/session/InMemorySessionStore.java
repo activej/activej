@@ -28,21 +28,21 @@ import java.util.Map;
 /**
  * A simple reference implementation of the session storage over a hash map.
  */
-public final class SessionStoreInMemory<T> implements AsyncSessionStore<T>, WithInitializer<SessionStoreInMemory<T>> {
+public final class InMemorySessionStore<T> implements AsyncSessionStore<T>, WithInitializer<InMemorySessionStore<T>> {
 	private final Map<String, TWithTimestamp> store = new HashMap<>();
 
 	private @Nullable Duration sessionLifetime;
 
 	CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
 
-	private SessionStoreInMemory() {
+	private InMemorySessionStore() {
 	}
 
-	public static <T> SessionStoreInMemory<T> create() {
-		return new SessionStoreInMemory<>();
+	public static <T> InMemorySessionStore<T> create() {
+		return new InMemorySessionStore<>();
 	}
 
-	public SessionStoreInMemory<T> withLifetime(Duration sessionLifetime) {
+	public InMemorySessionStore<T> withLifetime(Duration sessionLifetime) {
 		this.sessionLifetime = sessionLifetime;
 		return this;
 	}

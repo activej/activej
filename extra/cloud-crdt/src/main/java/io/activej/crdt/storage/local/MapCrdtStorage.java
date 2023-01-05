@@ -53,9 +53,9 @@ import static io.activej.common.Utils.nullify;
 import static io.activej.crdt.util.Utils.onItem;
 
 @SuppressWarnings("rawtypes")
-public final class CrdtStorageMap<K extends Comparable<K>, S> extends AbstractReactive
-		implements AsyncCrdtStorage<K, S>, WithInitializer<CrdtStorageMap<K, S>>, ReactiveService, ReactiveJmxBeanWithStats {
-	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageMap.class, "smoothingWindow", Duration.ofMinutes(1));
+public final class MapCrdtStorage<K extends Comparable<K>, S> extends AbstractReactive
+		implements AsyncCrdtStorage<K, S>, WithInitializer<MapCrdtStorage<K, S>>, ReactiveService, ReactiveJmxBeanWithStats {
+	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(MapCrdtStorage.class, "smoothingWindow", Duration.ofMinutes(1));
 
 	private final CrdtFunction<S> function;
 
@@ -91,25 +91,25 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> extends AbstractRe
 	private final EventStats singleRemoves = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
 	// endregion
 
-	private CrdtStorageMap(Reactor reactor, CrdtFunction<S> function) {
+	private MapCrdtStorage(Reactor reactor, CrdtFunction<S> function) {
 		super(reactor);
 		this.function = function;
 	}
 
-	public static <K extends Comparable<K>, S> CrdtStorageMap<K, S> create(Reactor reactor, CrdtFunction<S> crdtFunction) {
-		return new CrdtStorageMap<>(reactor, crdtFunction);
+	public static <K extends Comparable<K>, S> MapCrdtStorage<K, S> create(Reactor reactor, CrdtFunction<S> crdtFunction) {
+		return new MapCrdtStorage<>(reactor, crdtFunction);
 	}
 
-	public static <K extends Comparable<K>, S extends CrdtType<S>> CrdtStorageMap<K, S> create(Reactor reactor) {
-		return new CrdtStorageMap<>(reactor, CrdtFunction.<S>ofCrdtType());
+	public static <K extends Comparable<K>, S extends CrdtType<S>> MapCrdtStorage<K, S> create(Reactor reactor) {
+		return new MapCrdtStorage<>(reactor, CrdtFunction.<S>ofCrdtType());
 	}
 
-	public CrdtStorageMap<K, S> withFilter(CrdtFilter<S> filter) {
+	public MapCrdtStorage<K, S> withFilter(CrdtFilter<S> filter) {
 		this.filter = filter;
 		return this;
 	}
 
-	public CrdtStorageMap<K, S> withCurrentTimeProvide(CurrentTimeProvider now) {
+	public MapCrdtStorage<K, S> withCurrentTimeProvide(CurrentTimeProvider now) {
 		this.now = now;
 		return this;
 	}
@@ -298,7 +298,7 @@ public final class CrdtStorageMap<K extends Comparable<K>, S> extends AbstractRe
 			@Override
 			public void remove() {
 				if (current != null) {
-					CrdtStorageMap.this.remove(current.getKey());
+					MapCrdtStorage.this.remove(current.getKey());
 				}
 				iterator.remove();
 			}

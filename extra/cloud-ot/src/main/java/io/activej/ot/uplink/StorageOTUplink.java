@@ -18,7 +18,7 @@ package io.activej.ot.uplink;
 
 import io.activej.ot.TransformResult;
 import io.activej.ot.system.OTSystem;
-import io.activej.ot.uplink.OTUplinkStorage.AsyncStorage.SyncData;
+import io.activej.ot.uplink.StorageOTUplink.AsyncStorage.SyncData;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
@@ -33,7 +33,7 @@ import static io.activej.promise.PromisePredicates.isResultOrException;
 import static io.activej.promise.Promises.retry;
 
 @SuppressWarnings("WeakerAccess")
-public final class OTUplinkStorage<K, D> implements AsyncOTUplink<Long, D, OTUplinkStorage.ProtoCommit<D>> {
+public final class StorageOTUplink<K, D> implements AsyncOTUplink<Long, D, StorageOTUplink.ProtoCommit<D>> {
 
 	public static final long FIRST_COMMIT_ID = 1L;
 	public static final int NO_LEVEL = 0;
@@ -141,7 +141,7 @@ public final class OTUplinkStorage<K, D> implements AsyncOTUplink<Long, D, OTUpl
 	private final OTSystem<D> otSystem;
 	private final AsyncOTUplink<K, D, Object> uplink;
 
-	private OTUplinkStorage(AsyncStorage<K, D> storage, OTSystem<D> otSystem, AsyncOTUplink<K, D, ?> uplink) {
+	private StorageOTUplink(AsyncStorage<K, D> storage, OTSystem<D> otSystem, AsyncOTUplink<K, D, ?> uplink) {
 		this.otSystem = otSystem;
 		this.storage = storage;
 		//noinspection unchecked

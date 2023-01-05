@@ -31,19 +31,19 @@ import java.time.Duration;
 public final class CrdtRepartitionController<K extends Comparable<K>, S, P> extends AbstractReactive
 		implements ReactiveJmxBeanWithStats, WithInitializer<CrdtRepartitionController<K, S, P>> {
 	private final P localPartitionId;
-	private final CrdtStorageCluster<K, S, P> cluster;
+	private final ClusterCrdtStorage<K, S, P> cluster;
 
 	private final AsyncRunnable repartition = AsyncRunnables.reuse(this::doRepartition);
 
 	private CrdtRepartitionController(Reactor reactor,
-			CrdtStorageCluster<K, S, P> cluster, P localPartitionId) {
+			ClusterCrdtStorage<K, S, P> cluster, P localPartitionId) {
 		super(reactor);
 		this.cluster = cluster;
 		this.localPartitionId = localPartitionId;
 	}
 
 	public static <K extends Comparable<K>, S, P> CrdtRepartitionController<K, S, P> create(Reactor reactor,
-			CrdtStorageCluster<K, S, P> cluster, P localPartitionId) {
+			ClusterCrdtStorage<K, S, P> cluster, P localPartitionId) {
 		return new CrdtRepartitionController<>(reactor, cluster, localPartitionId);
 	}
 

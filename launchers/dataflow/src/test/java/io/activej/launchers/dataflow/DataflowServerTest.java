@@ -49,7 +49,7 @@ import static io.activej.dataflow.codec.SubtypeImpl.subtype;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.graph.StreamSchemas.simple;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
-import static io.activej.launchers.dataflow.StreamMergeSorterStorageStub.FACTORY_STUB;
+import static io.activej.launchers.dataflow.MergeStubStreamSorterStorage.FACTORY_STUB;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.getFreePort;

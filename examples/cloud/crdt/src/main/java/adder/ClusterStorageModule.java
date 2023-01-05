@@ -2,9 +2,9 @@ package adder;
 
 import io.activej.async.service.TaskScheduler;
 import io.activej.config.Config;
+import io.activej.crdt.ClientCrdtStorage;
 import io.activej.crdt.CrdtException;
 import io.activej.crdt.CrdtServer;
-import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.crdt.storage.cluster.*;
@@ -35,7 +35,7 @@ public final class ClusterStorageModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		bind(new Key<AsyncCrdtStorage<Long, DetailedSumsCrdtState>>() {})
-				.to(new Key<CrdtStorageCluster<Long, DetailedSumsCrdtState, PartitionId>>() {});
+				.to(new Key<ClusterCrdtStorage<Long, DetailedSumsCrdtState, PartitionId>>() {});
 	}
 
 	@Provides
@@ -44,9 +44,9 @@ public final class ClusterStorageModule extends AbstractModule {
 	}
 
 	@Provides
-	CrdtStorageCluster<Long, DetailedSumsCrdtState, PartitionId> clusterStorage(Reactor reactor,
+	ClusterCrdtStorage<Long, DetailedSumsCrdtState, PartitionId> clusterStorage(Reactor reactor,
 			AsyncDiscoveryService<PartitionId> discoveryService, CrdtFunction<DetailedSumsCrdtState> crdtFunction) {
-		return CrdtStorageCluster.create(reactor, discoveryService, crdtFunction);
+		return ClusterCrdtStorage.create(reactor, discoveryService, crdtFunction);
 	}
 
 	@Provides
@@ -67,7 +67,7 @@ public final class ClusterStorageModule extends AbstractModule {
 					if (partitionId.equals(localPartitionId)) return localStorage;
 
 					InetSocketAddress crdtAddress = checkNotNull(partitionId.getCrdtAddress());
-					return CrdtStorageClient.create(reactor, crdtAddress, serializer);
+					return ClientCrdtStorage.create(reactor, crdtAddress, serializer);
 				});
 	}
 
@@ -78,7 +78,7 @@ public final class ClusterStorageModule extends AbstractModule {
 
 	@Provides
 	CrdtRepartitionController<Long, DetailedSumsCrdtState, PartitionId> repartitionController(Reactor reactor,
-			CrdtStorageCluster<Long, DetailedSumsCrdtState, PartitionId> cluster,
+			ClusterCrdtStorage<Long, DetailedSumsCrdtState, PartitionId> cluster,
 			PartitionId partitionId) {
 		return CrdtRepartitionController.create(reactor, cluster, partitionId);
 	}

@@ -1,8 +1,8 @@
 import io.activej.http.*;
 import io.activej.http.loader.AsyncStaticLoader;
-import io.activej.http.session.SessionServlet;
 import io.activej.http.session.AsyncSessionStore;
-import io.activej.http.session.SessionStoreInMemory;
+import io.activej.http.session.InMemorySessionStore;
+import io.activej.http.session.SessionServlet;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
@@ -38,7 +38,7 @@ public final class AuthLauncher extends HttpServerLauncher {
 
 	@Provides
 	AsyncSessionStore<String> sessionStore() {
-		return SessionStoreInMemory.<String>create()
+		return InMemorySessionStore.<String>create()
 				.withLifetime(Duration.ofDays(30));
 	}
 

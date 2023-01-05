@@ -2,7 +2,7 @@ package io.activej.crdt.storage.cluster;
 
 import io.activej.async.function.AsyncSupplier;
 import io.activej.crdt.storage.cluster.AsyncDiscoveryService.PartitionScheme;
-import io.activej.crdt.storage.local.CrdtStorageMap;
+import io.activej.crdt.storage.local.MapCrdtStorage;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.test.rules.EventloopRule;
@@ -222,13 +222,13 @@ public class FileDiscoveryServiceTest {
 
 	@Test
 	public void testPartitionChange() throws IOException {
-		discoveryService.withCrdtProvider(partitionId -> CrdtStorageMap.create(getCurrentReactor()));
+		discoveryService.withCrdtProvider(partitionId -> MapCrdtStorage.create(getCurrentReactor()));
 
 		Files.write(file, TEST_PARTITIONS_1);
 
 		NotifyingDiscoveryService notifyingDiscoveryService = new NotifyingDiscoveryService();
 
-		CrdtStorageCluster<String, Integer, PartitionId> cluster = CrdtStorageCluster.create(getCurrentReactor(), notifyingDiscoveryService, ignoringTimestamp(Integer::max));
+		ClusterCrdtStorage<String, Integer, PartitionId> cluster = ClusterCrdtStorage.create(getCurrentReactor(), notifyingDiscoveryService, ignoringTimestamp(Integer::max));
 
 		await(cluster.start()
 				.whenResult(() -> assertEquals(Set.of("a", "b", "c"), cluster.getCrdtStorages().keySet()

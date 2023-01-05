@@ -29,7 +29,7 @@ import java.util.stream.Stream;
 import static io.activej.datastream.TestStreamTransformers.*;
 import static io.activej.datastream.TestUtils.assertClosedWithError;
 import static io.activej.datastream.TestUtils.assertEndOfStream;
-import static io.activej.datastream.processor.FailingStreamSorterStorageStub.STORAGE_EXCEPTION;
+import static io.activej.datastream.processor.FailingStubStreamSorterStorage.STORAGE_EXCEPTION;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
@@ -185,7 +185,7 @@ public final class StreamSorterTest {
 
 	@Test
 	public void testErrorsOnStorage() throws IOException {
-		FailingStreamSorterStorageStub<Integer> failingNewPartitionStorage = FailingStreamSorterStorageStub.<Integer>create().withFailNewPartition();
+		FailingStubStreamSorterStorage<Integer> failingNewPartitionStorage = FailingStubStreamSorterStorage.<Integer>create().withFailNewPartition();
 		doTestFailingStorage(failingNewPartitionStorage, (streamPromise, sorter, supplier, consumerToList) -> {
 			Exception exception = awaitException(streamPromise);
 			assertSame(STORAGE_EXCEPTION, exception);
@@ -194,7 +194,7 @@ public final class StreamSorterTest {
 			assertTrue(consumerToList.getList().isEmpty());
 		});
 
-		FailingStreamSorterStorageStub<Integer> failingWriteStorage = FailingStreamSorterStorageStub.<Integer>create().withFailWrite();
+		FailingStubStreamSorterStorage<Integer> failingWriteStorage = FailingStubStreamSorterStorage.<Integer>create().withFailWrite();
 		doTestFailingStorage(failingWriteStorage, (streamPromise, sorter, supplier, consumerToList) -> {
 			Exception exception = awaitException(streamPromise);
 			assertSame(STORAGE_EXCEPTION, exception);
@@ -203,7 +203,7 @@ public final class StreamSorterTest {
 			assertTrue(consumerToList.getList().isEmpty());
 		});
 
-		FailingStreamSorterStorageStub<Integer> failingReadStorage = FailingStreamSorterStorageStub.<Integer>create().withFailRead();
+		FailingStubStreamSorterStorage<Integer> failingReadStorage = FailingStubStreamSorterStorage.<Integer>create().withFailRead();
 		doTestFailingStorage(failingReadStorage, (streamPromise, sorter, supplier, consumerToList) -> {
 			Exception exception = awaitException(streamPromise);
 			assertSame(STORAGE_EXCEPTION, exception);
@@ -213,7 +213,7 @@ public final class StreamSorterTest {
 			assertTrue(consumerToList.getList().isEmpty());
 		});
 
-		FailingStreamSorterStorageStub<Integer> failingCleanup = FailingStreamSorterStorageStub.<Integer>create().withFailCleanup();
+		FailingStubStreamSorterStorage<Integer> failingCleanup = FailingStubStreamSorterStorage.<Integer>create().withFailCleanup();
 		doTestFailingStorage(failingCleanup, (streamPromise, sorter, supplier, consumerToList) -> {
 			await(streamPromise);
 			assertEndOfStream(sorter);
@@ -222,7 +222,7 @@ public final class StreamSorterTest {
 		});
 	}
 
-	private void doTestFailingStorage(FailingStreamSorterStorageStub<Integer> failingStorage, StreamSorterValidator<Integer, Integer> validator) throws IOException {
+	private void doTestFailingStorage(FailingStubStreamSorterStorage<Integer> failingStorage, StreamSorterValidator<Integer, Integer> validator) throws IOException {
 		StreamSupplier<Integer> source = StreamSupplier.of(3, 1, 3, 2, 5, 1, 4, 3, 2);
 
 		Executor executor = Executors.newSingleThreadExecutor();

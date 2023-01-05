@@ -4,7 +4,7 @@ import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.GSet;
 import io.activej.crdt.storage.AsyncCrdtStorage;
-import io.activej.crdt.storage.local.CrdtStorageFs;
+import io.activej.crdt.storage.local.FsCrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.file.ChannelFileWriter;
@@ -82,7 +82,7 @@ public class FileWriteAheadLogTest {
 		path = temporaryFolder.newFolder().toPath();
 		LocalFs storageFs = LocalFs.create(reactor, executor, temporaryFolder.newFolder().toPath());
 		await(storageFs.start());
-		storage = CrdtStorageFs.create(reactor, storageFs, serializer, function);
+		storage = FsCrdtStorage.create(reactor, storageFs, serializer, function);
 		WalUploader<Long, GSet<Integer>> uploader = WalUploader.create(reactor, executor, path, function, serializer, storage);
 		wal = FileWriteAheadLog.create(reactor, executor, path, serializer, uploader)
 				.withCurrentTimeProvider(reactor);

@@ -1,9 +1,9 @@
 package io.activej.cube.linear;
 
 import io.activej.aggregation.AggregationChunk;
+import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ChunkIdCodec;
 import io.activej.aggregation.PrimaryKey;
-import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
@@ -13,7 +13,7 @@ import io.activej.cube.Cube;
 import io.activej.cube.TestUtils;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.linear.CubeBackupController.ChunksBackupService;
-import io.activej.cube.linear.CubeUplinkMySql.UplinkProtoCommit;
+import io.activej.cube.linear.CubeMySqlOTUplink.UplinkProtoCommit;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogPositionDiff;
@@ -65,7 +65,7 @@ public class CubeBackupControllerTest {
 	private Thread eventloopThread;
 	private DataSource dataSource;
 	private AsyncFs activeFs;
-	private CubeUplinkMySql uplink;
+	private CubeMySqlOTUplink uplink;
 	private CubeBackupController backupController;
 
 	@Before
@@ -98,7 +98,7 @@ public class CubeBackupControllerTest {
 
 		ChunksBackupService chunksBackupService = ChunksBackupService.ofReactiveAggregationChunkStorage(aggregationChunkStorage);
 		backupController = CubeBackupController.create(dataSource, chunksBackupService);
-		uplink = CubeUplinkMySql.create(executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
+		uplink = CubeMySqlOTUplink.create(executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
 		backupController.initialize();
 		backupController.truncateTables();
 	}

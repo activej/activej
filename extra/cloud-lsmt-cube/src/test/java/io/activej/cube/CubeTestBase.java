@@ -3,7 +3,7 @@ package io.activej.cube;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
-import io.activej.cube.linear.CubeUplinkMySql;
+import io.activej.cube.linear.CubeMySqlOTUplink;
 import io.activej.cube.linear.MeasuresValidator;
 import io.activej.cube.linear.PrimaryKeyCodecs;
 import io.activej.cube.ot.CubeDiff;
@@ -15,7 +15,7 @@ import io.activej.etl.LogDiffCodec;
 import io.activej.etl.LogOT;
 import io.activej.ot.OTCommit;
 import io.activej.ot.repository.AsyncOTRepository;
-import io.activej.ot.repository.OTRepositoryMySql;
+import io.activej.ot.repository.MySqlOTRepository;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.ot.uplink.OTUplink;
@@ -95,29 +95,29 @@ public abstract class CubeTestBase {
 							@Override
 							public OTUplink<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> createUninitialized(Cube cube) {
 								Reactor reactor = Reactor.getCurrentReactor();
-								AsyncOTRepository<Long, LogDiff<CubeDiff>> repository = OTRepositoryMySql.create(reactor, EXECUTOR, DATA_SOURCE, AsyncSupplier.of(new RefLong(0)::inc),
+								AsyncOTRepository<Long, LogDiff<CubeDiff>> repository = MySqlOTRepository.create(reactor, EXECUTOR, DATA_SOURCE, AsyncSupplier.of(new RefLong(0)::inc),
 										LOG_OT, LogDiffCodec.create(CubeDiffCodec.create(cube)));
 								return OTUplink.create(repository, LOG_OT);
 							}
 
 							@Override
 							public void initialize(OTUplink<Long, LogDiff<CubeDiff>, OTCommit<Long, LogDiff<CubeDiff>>> uplink) {
-								noFail(() -> initializeRepository((OTRepositoryMySql<LogDiff<CubeDiff>>) uplink.getRepository()));
+								noFail(() -> initializeRepository((MySqlOTRepository<LogDiff<CubeDiff>>) uplink.getRepository()));
 							}
 						}},
 
 				// Linear
 				new Object[]{
 						"Linear graph",
-						new UplinkFactory<CubeUplinkMySql>() {
+						new UplinkFactory<CubeMySqlOTUplink>() {
 							@Override
-							public CubeUplinkMySql createUninitialized(Cube cube) {
-								return CubeUplinkMySql.create(EXECUTOR, DATA_SOURCE, PrimaryKeyCodecs.ofCube(cube))
+							public CubeMySqlOTUplink createUninitialized(Cube cube) {
+								return CubeMySqlOTUplink.create(EXECUTOR, DATA_SOURCE, PrimaryKeyCodecs.ofCube(cube))
 										.withMeasuresValidator(MeasuresValidator.ofCube(cube));
 							}
 
 							@Override
-							public void initialize(CubeUplinkMySql uplink) {
+							public void initialize(CubeMySqlOTUplink uplink) {
 								noFail(() -> initializeUplink(uplink));
 							}
 						}

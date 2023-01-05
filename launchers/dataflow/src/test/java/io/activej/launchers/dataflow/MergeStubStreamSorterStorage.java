@@ -1,3 +1,5 @@
+package io.activej.launchers.dataflow;
+
 import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
@@ -12,19 +14,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class StreamMergeSorterStorageStub<T> implements AsyncStreamSorterStorage<T> {
+public class MergeStubStreamSorterStorage<T> implements AsyncStreamSorterStorage<T> {
 
 	public static final StreamSorterStorageFactory FACTORY_STUB = new StreamSorterStorageFactory() {
 		@Override
 		public <C> AsyncStreamSorterStorage<C> create(StreamSchema<C> streamSchema, Task context, Promise<Void> taskExecuted) {
-			return new StreamMergeSorterStorageStub<>();
+			return new MergeStubStreamSorterStorage<>();
 		}
 	};
 
 	private final Map<Integer, List<T>> storage = new HashMap<>();
 	private int partition;
 
-	private StreamMergeSorterStorageStub() {
+	private MergeStubStreamSorterStorage() {
 	}
 
 	@Override

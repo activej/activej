@@ -23,9 +23,9 @@ import io.activej.async.service.ReactiveService;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.collection.Try;
 import io.activej.common.initializer.WithInitializer;
+import io.activej.crdt.ClientCrdtStorage;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtException;
-import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.CrdtTombstone;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.AsyncCrdtStorage;
@@ -56,9 +56,9 @@ import static io.activej.crdt.util.Utils.onItem;
 import static java.util.stream.Collectors.toMap;
 
 @SuppressWarnings("rawtypes") // JMX
-public final class CrdtStorageCluster<K extends Comparable<K>, S, P> extends AbstractReactive
-		implements AsyncCrdtStorage<K, S>, WithInitializer<CrdtStorageCluster<K, S, P>>, ReactiveService, ReactiveJmxBeanWithStats {
-	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageCluster.class, "smoothingWindow", Duration.ofMinutes(1));
+public final class ClusterCrdtStorage<K extends Comparable<K>, S, P> extends AbstractReactive
+		implements AsyncCrdtStorage<K, S>, WithInitializer<ClusterCrdtStorage<K, S, P>>, ReactiveService, ReactiveJmxBeanWithStats {
+	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(ClusterCrdtStorage.class, "smoothingWindow", Duration.ofMinutes(1));
 
 	private final AsyncDiscoveryService<P> discoveryService;
 	private final CrdtFunction<S> crdtFunction;
@@ -91,19 +91,19 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> extends Abs
 	// endregion
 
 	// region creators
-	private CrdtStorageCluster(Reactor reactor, AsyncDiscoveryService<P> discoveryService, CrdtFunction<S> crdtFunction) {
+	private ClusterCrdtStorage(Reactor reactor, AsyncDiscoveryService<P> discoveryService, CrdtFunction<S> crdtFunction) {
 		super(reactor);
 		this.discoveryService = discoveryService;
 		this.crdtFunction = crdtFunction;
 	}
 
-	public static <K extends Comparable<K>, S, P> CrdtStorageCluster<K, S, P> create(Reactor reactor,
+	public static <K extends Comparable<K>, S, P> ClusterCrdtStorage<K, S, P> create(Reactor reactor,
 			AsyncDiscoveryService<P> discoveryService,
 			CrdtFunction<S> crdtFunction) {
-		return new CrdtStorageCluster<>(reactor, discoveryService, crdtFunction);
+		return new ClusterCrdtStorage<>(reactor, discoveryService, crdtFunction);
 	}
 
-	public CrdtStorageCluster<K, S, P> withForceStart(boolean forceStart) {
+	public ClusterCrdtStorage<K, S, P> withForceStart(boolean forceStart) {
 		this.forceStart = forceStart;
 		return this;
 	}
@@ -390,7 +390,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> extends Abs
 	public void startDetailedMonitoring() {
 		detailedStats = true;
 		for (AsyncCrdtStorage<K, S> storage : crdtStorages.values()) {
-			if (storage instanceof CrdtStorageClient<K, S> client) {
+			if (storage instanceof ClientCrdtStorage<K, S> client) {
 				client.startDetailedMonitoring();
 			}
 		}
@@ -400,7 +400,7 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> extends Abs
 	public void stopDetailedMonitoring() {
 		detailedStats = false;
 		for (AsyncCrdtStorage<K, S> storage : crdtStorages.values()) {
-			if (storage instanceof CrdtStorageClient<K, S> client) {
+			if (storage instanceof ClientCrdtStorage<K, S> client) {
 				client.stopDetailedMonitoring();
 			}
 		}
@@ -457,10 +457,10 @@ public final class CrdtStorageCluster<K extends Comparable<K>, S, P> extends Abs
 	}
 
 	@JmxAttribute
-	public Map<P, CrdtStorageClient> getCrdtStorageClients() {
+	public Map<P, ClientCrdtStorage> getCrdtStorageClients() {
 		return crdtStorages.entrySet().stream()
-				.filter(entry -> entry.getValue() instanceof CrdtStorageClient)
-				.collect(toMap(Map.Entry::getKey, e -> (CrdtStorageClient) e.getValue()));
+				.filter(entry -> entry.getValue() instanceof ClientCrdtStorage)
+				.collect(toMap(Map.Entry::getKey, e -> (ClientCrdtStorage) e.getValue()));
 	}
 
 	@JmxAttribute

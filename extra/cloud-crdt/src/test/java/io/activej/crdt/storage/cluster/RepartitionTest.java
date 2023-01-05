@@ -3,7 +3,7 @@ package io.activej.crdt.storage.cluster;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtEntity;
 import io.activej.crdt.function.CrdtFunction;
-import io.activej.crdt.storage.local.CrdtStorageMap;
+import io.activej.crdt.storage.local.MapCrdtStorage;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.reactor.Reactor;
@@ -37,9 +37,9 @@ public final class RepartitionTest {
 		Reactor reactor = getCurrentReactor();
 		CrdtFunction<Long> crdtFunction = ignoringTimestamp(Long::max);
 
-		Map<String, CrdtStorageMap<String, Long>> clients = new LinkedHashMap<>();
+		Map<String, MapCrdtStorage<String, Long>> clients = new LinkedHashMap<>();
 		for (int i = 0; i < 10; i++) {
-			CrdtStorageMap<String, Long> client = CrdtStorageMap.create(reactor, crdtFunction);
+			MapCrdtStorage<String, Long> client = MapCrdtStorage.create(reactor, crdtFunction);
 			clients.put("client_" + i, client);
 		}
 		String localPartitionId = "client_0";
@@ -50,7 +50,7 @@ public final class RepartitionTest {
 				.streamTo(StreamConsumer.ofPromise(clients.get(localPartitionId).upload())));
 
 		int replicationCount = 3;
-		CrdtStorageCluster<String, Long, String> cluster = CrdtStorageCluster.create(reactor,
+		ClusterCrdtStorage<String, Long, String> cluster = ClusterCrdtStorage.create(reactor,
 				AsyncDiscoveryService.of(
 						RendezvousPartitionScheme.<String>create()
 								.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet()).withReplicas(replicationCount))

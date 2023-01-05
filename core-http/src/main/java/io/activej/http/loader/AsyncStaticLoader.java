@@ -67,19 +67,19 @@ public interface AsyncStaticLoader {
 	}
 
 	static AsyncStaticLoader cacheOf(AsyncStaticLoader loader, Function<String, byte[]> get, BiConsumer<String, byte[]> put) {
-		return new StaticLoaderCache(loader, get, put);
+		return new CacheStaticLoader(loader, get, put);
 	}
 
 	static AsyncStaticLoader ofClassPath(Executor executor, String root) {
-		return StaticLoaderClassPath.create(executor, root);
+		return ClassPathStaticLoader.create(executor, root);
 	}
 
 	static AsyncStaticLoader ofClassPath(Executor executor, ClassLoader classLoader, String root) {
-		return StaticLoaderClassPath.create(executor, classLoader, root);
+		return ClassPathStaticLoader.create(executor, classLoader, root);
 	}
 
 	static AsyncStaticLoader ofPath(Executor executor, Path dir) {
-		return StaticLoaderFileReader.create(executor, dir);
+		return FileReaderStaticLoader.create(executor, dir);
 	}
 
 }

@@ -6,9 +6,9 @@ import io.activej.crdt.hash.AsyncCrdtMap;
 import io.activej.crdt.hash.JavaCrdtMap;
 import io.activej.crdt.primitives.GSet;
 import io.activej.crdt.storage.AsyncCrdtStorage;
-import io.activej.crdt.storage.local.CrdtStorageMap;
-import io.activej.crdt.wal.InMemoryWriteAheadLog;
+import io.activej.crdt.storage.local.MapCrdtStorage;
 import io.activej.crdt.wal.AsyncWriteAheadLog;
+import io.activej.crdt.wal.InMemoryWriteAheadLog;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.ProvidesIntoSet;
@@ -70,7 +70,7 @@ public class BannerServerModule extends AbstractModule {
 
 	@Provides
 	AsyncCrdtStorage<Long, GSet<Integer>> storage(Reactor reactor, CrdtFunction<GSet<Integer>> function) {
-		return CrdtStorageMap.create(reactor, function);
+		return MapCrdtStorage.create(reactor, function);
 	}
 
 	@ProvidesIntoSet

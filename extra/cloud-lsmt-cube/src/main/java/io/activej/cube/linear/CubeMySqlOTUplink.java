@@ -60,14 +60,14 @@ import static java.util.Collections.nCopies;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
-public final class CubeUplinkMySql implements AsyncOTUplink<Long, LogDiff<CubeDiff>, CubeUplinkMySql.UplinkProtoCommit>,
-		WithInitializer<CubeUplinkMySql> {
-	private static final Logger logger = LoggerFactory.getLogger(CubeUplinkMySql.class);
+public final class CubeMySqlOTUplink implements AsyncOTUplink<Long, LogDiff<CubeDiff>, CubeMySqlOTUplink.UplinkProtoCommit>,
+		WithInitializer<CubeMySqlOTUplink> {
+	private static final Logger logger = LoggerFactory.getLogger(CubeMySqlOTUplink.class);
 
-	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CubeUplinkMySql.class, "smoothingWindow", Duration.ofMinutes(5));
-	public static final String REVISION_TABLE = ApplicationSettings.getString(CubeUplinkMySql.class, "revisionTable", "cube_revision");
-	public static final String POSITION_TABLE = ApplicationSettings.getString(CubeUplinkMySql.class, "positionTable", "cube_position");
-	public static final String CHUNK_TABLE = ApplicationSettings.getString(CubeUplinkMySql.class, "chunkTable", "cube_chunk");
+	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CubeMySqlOTUplink.class, "smoothingWindow", Duration.ofMinutes(5));
+	public static final String REVISION_TABLE = ApplicationSettings.getString(CubeMySqlOTUplink.class, "revisionTable", "cube_revision");
+	public static final String POSITION_TABLE = ApplicationSettings.getString(CubeMySqlOTUplink.class, "positionTable", "cube_position");
+	public static final String CHUNK_TABLE = ApplicationSettings.getString(CubeMySqlOTUplink.class, "chunkTable", "cube_chunk");
 
 	public static final long ROOT_REVISION = 0L;
 
@@ -92,29 +92,29 @@ public final class CubeUplinkMySql implements AsyncOTUplink<Long, LogDiff<CubeDi
 	private final PromiseStats promisePush = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	// endregion
 
-	private CubeUplinkMySql(Executor executor, DataSource dataSource, PrimaryKeyCodecs primaryKeyCodecs) {
+	private CubeMySqlOTUplink(Executor executor, DataSource dataSource, PrimaryKeyCodecs primaryKeyCodecs) {
 		this.executor = executor;
 		this.dataSource = dataSource;
 		this.primaryKeyCodecs = primaryKeyCodecs;
 	}
 
-	public static CubeUplinkMySql create(Executor executor, DataSource dataSource, PrimaryKeyCodecs primaryKeyCodecs) {
-		return new CubeUplinkMySql(executor, dataSource, primaryKeyCodecs);
+	public static CubeMySqlOTUplink create(Executor executor, DataSource dataSource, PrimaryKeyCodecs primaryKeyCodecs) {
+		return new CubeMySqlOTUplink(executor, dataSource, primaryKeyCodecs);
 	}
 
-	public CubeUplinkMySql withMeasuresValidator(MeasuresValidator measuresValidator) {
+	public CubeMySqlOTUplink withMeasuresValidator(MeasuresValidator measuresValidator) {
 		this.measuresValidator = measuresValidator;
 		return this;
 	}
 
-	public CubeUplinkMySql withCustomTableNames(String tableRevision, String tablePosition, String tableChunk) {
+	public CubeMySqlOTUplink withCustomTableNames(String tableRevision, String tablePosition, String tableChunk) {
 		this.tableRevision = tableRevision;
 		this.tablePosition = tablePosition;
 		this.tableChunk = tableChunk;
 		return this;
 	}
 
-	public CubeUplinkMySql withCreatedBy(String createdBy) {
+	public CubeMySqlOTUplink withCreatedBy(String createdBy) {
 		this.createdBy = createdBy;
 		return this;
 	}

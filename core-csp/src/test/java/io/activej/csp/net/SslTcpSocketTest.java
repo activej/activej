@@ -8,9 +8,9 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.binary.ByteBufsDecoder;
 import io.activej.net.SimpleServer;
-import io.activej.net.socket.tcp.TcpSocket;
-import io.activej.net.socket.tcp.TcpSocketSsl;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.net.socket.tcp.SslTcpSocket;
+import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.nio.NioReactor;
@@ -48,7 +48,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 
-public final class TcpSocketSslTest {
+public final class SslTcpSocketTest {
 	private static final String KEYSTORE_PATH = "./src/test/resources/keystore.jks";
 	private static final String KEYSTORE_PASS = "testtest";
 	private static final String KEY_PASS = "testtest";
@@ -102,7 +102,7 @@ public final class TcpSocketSslTest {
 				.whenComplete(assertCompleteFn(result -> assertEquals(TEST_STRING, result))));
 
 		await(TcpSocket.connect(reactor, address)
-				.map(socket -> TcpSocketSsl.wrapClientSocket(reactor, socket, sslContext, executor))
+				.map(socket -> SslTcpSocket.wrapClientSocket(reactor, socket, sslContext, executor))
 				.then(sslSocket ->
 						sslSocket.write(wrapAscii(TEST_STRING))
 								.whenComplete(sslSocket::close)));
@@ -115,7 +115,7 @@ public final class TcpSocketSslTest {
 						.whenComplete(assertCompleteFn()));
 
 		String result = await(TcpSocket.connect(reactor, address)
-				.map(socket -> TcpSocketSsl.wrapClientSocket(reactor, socket, sslContext, executor))
+				.map(socket -> SslTcpSocket.wrapClientSocket(reactor, socket, sslContext, executor))
 				.then(sslSocket -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(sslSocket))
 						.decode(DECODER)
 						.whenComplete(sslSocket::close)));
@@ -132,7 +132,7 @@ public final class TcpSocketSslTest {
 				.whenComplete(assertCompleteFn()));
 
 		String result = await(TcpSocket.connect(reactor, address)
-				.map(socket -> TcpSocketSsl.wrapClientSocket(reactor, socket, sslContext, executor))
+				.map(socket -> SslTcpSocket.wrapClientSocket(reactor, socket, sslContext, executor))
 				.then(sslSocket ->
 						sslSocket.write(wrapAscii(TEST_STRING))
 								.then(() -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(sslSocket))
@@ -154,7 +154,7 @@ public final class TcpSocketSslTest {
 				.whenComplete(assertCompleteFn()));
 
 		String result = await(TcpSocket.connect(reactor, address)
-				.map(socket -> TcpSocketSsl.wrapClientSocket(reactor, socket, sslContext, executor))
+				.map(socket -> SslTcpSocket.wrapClientSocket(reactor, socket, sslContext, executor))
 				.then(sslSocket ->
 						sslSocket.write(wrapAscii(TEST_STRING_PART_1))
 								.then(() -> sslSocket.write(ByteBuf.empty()))
@@ -174,7 +174,7 @@ public final class TcpSocketSslTest {
 				.whenComplete(assertCompleteFn(result -> assertEquals(result, sentData.toString()))));
 
 		await(TcpSocket.connect(reactor, address)
-				.map(socket -> TcpSocketSsl.wrapClientSocket(reactor, socket, sslContext, executor))
+				.map(socket -> SslTcpSocket.wrapClientSocket(reactor, socket, sslContext, executor))
 				.whenResult(sslSocket ->
 						sendData(sslSocket)
 								.whenComplete(sslSocket::close)));
@@ -188,7 +188,7 @@ public final class TcpSocketSslTest {
 						.whenComplete(assertCompleteFn()));
 
 		String result = await(TcpSocket.connect(reactor, address)
-				.map(socket -> TcpSocketSsl.wrapClientSocket(reactor, socket, sslContext, executor))
+				.map(socket -> SslTcpSocket.wrapClientSocket(reactor, socket, sslContext, executor))
 				.then(sslSocket -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(sslSocket))
 						.decode(DECODER_LARGE)
 						.whenComplete(sslSocket::close)));
@@ -205,7 +205,7 @@ public final class TcpSocketSslTest {
 						.whenComplete(($, e) -> assertThat(e, instanceOf(AsyncCloseException.class))));
 
 		Exception e = awaitException(TcpSocket.connect(reactor, address)
-				.map(socket -> TcpSocketSsl.wrapClientSocket(reactor, socket, sslContext, executor))
+				.map(socket -> SslTcpSocket.wrapClientSocket(reactor, socket, sslContext, executor))
 				.then(sslSocket -> {
 					BinaryChannelSupplier supplier = BinaryChannelSupplier.of(ChannelSupplier.ofSocket(sslSocket));
 					return supplier.decode(DECODER)
@@ -237,7 +237,7 @@ public final class TcpSocketSslTest {
 						throw new AssertionError();
 					}
 				})
-				.map(tcpSocket -> TcpSocketSsl.wrapClientSocket(reactor, tcpSocket, sslContext, executor))
+				.map(tcpSocket -> SslTcpSocket.wrapClientSocket(reactor, tcpSocket, sslContext, executor))
 				.then(socket -> socket.write(ByteBufStrings.wrapUtf8("hello"))));
 		assertThat(exception, instanceOf(AsyncCloseException.class));
 	}

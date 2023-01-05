@@ -1,8 +1,8 @@
+import io.activej.crdt.ClientCrdtStorage;
 import io.activej.crdt.CrdtServer;
-import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.AsyncCrdtStorage;
-import io.activej.crdt.storage.local.CrdtStorageMap;
+import io.activej.crdt.storage.local.MapCrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
@@ -29,7 +29,7 @@ public final class CrdtExample {
 
 		//[START REGION_1]
 		// create the 'remote' storage
-		CrdtStorageMap<String, Integer> remoteStorage = CrdtStorageMap.create(eventloop, CRDT_FUNCTION);
+		MapCrdtStorage<String, Integer> remoteStorage = MapCrdtStorage.create(eventloop, CRDT_FUNCTION);
 
 		// put some default data into that storage
 		remoteStorage.put("mx", 2);
@@ -52,11 +52,11 @@ public final class CrdtExample {
 		//[START REGION_3]
 		// now crate the client for that 'remote' storage
 		AsyncCrdtStorage<String, Integer> client =
-				CrdtStorageClient.create(eventloop, ADDRESS, INTEGER_SERIALIZER);
+				ClientCrdtStorage.create(eventloop, ADDRESS, INTEGER_SERIALIZER);
 
 		// and also create the local storage
-		CrdtStorageMap<String, Integer> localStorage =
-				CrdtStorageMap.create(eventloop, CRDT_FUNCTION);
+		MapCrdtStorage<String, Integer> localStorage =
+				MapCrdtStorage.create(eventloop, CRDT_FUNCTION);
 
 		// and fill it with some other values
 		localStorage.put("mx", 22);

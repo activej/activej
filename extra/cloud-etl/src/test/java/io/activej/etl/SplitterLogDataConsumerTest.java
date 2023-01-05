@@ -17,7 +17,7 @@ import java.util.stream.IntStream;
 import static io.activej.promise.TestUtils.await;
 import static org.junit.Assert.assertEquals;
 
-public class LogDataConsumerSplitterTest {
+public class SplitterLogDataConsumerTest {
 	private static final List<Integer> VALUES_1 = IntStream.range(1, 100).boxed().collect(Collectors.toList());
 	private static final List<Integer> VALUES_2 = IntStream.range(-100, 0).boxed().collect(Collectors.toList());
 
@@ -37,7 +37,7 @@ public class LogDataConsumerSplitterTest {
 				StreamConsumerToList.create());
 
 		Iterator<StreamConsumerToList<Integer>> iterator = consumers.iterator();
-		LogDataConsumerSplitter<Integer, Integer> splitter =
+		SplitterLogDataConsumer<Integer, Integer> splitter =
 				new LogDataConsumerSplitterStub<>(() -> {
 					StreamConsumerToList<Integer> next = iterator.next();
 					return StreamConsumerWithResult.of(next, next.getResult());
@@ -54,7 +54,7 @@ public class LogDataConsumerSplitterTest {
 				StreamConsumerToList.create());
 
 		Iterator<StreamConsumerToList<Integer>> iterator = consumers.iterator();
-		LogDataConsumerSplitter<Integer, Integer> splitter =
+		SplitterLogDataConsumer<Integer, Integer> splitter =
 				new LogDataConsumerSplitterStub<>(() -> {
 					StreamConsumerToList<Integer> next = iterator.next();
 					return StreamConsumerWithResult.of(next, next.getResult());
@@ -66,7 +66,7 @@ public class LogDataConsumerSplitterTest {
 
 	@Test(expected = IllegalStateException.class)
 	public void testIncorrectImplementation() {
-		LogDataConsumerSplitter<Integer, Integer> splitter = new LogDataConsumerSplitter<>() {
+		SplitterLogDataConsumer<Integer, Integer> splitter = new SplitterLogDataConsumer<>() {
 			@Override
 			protected StreamDataAcceptor<Integer> createSplitter(Context ctx) {
 				return item -> {};
@@ -76,7 +76,7 @@ public class LogDataConsumerSplitterTest {
 		StreamSupplier.ofIterable(VALUES_1).streamTo(splitter.consume().getConsumer());
 	}
 
-	private static class LogDataConsumerSplitterStub<T, D> extends LogDataConsumerSplitter<T, D> {
+	private static class LogDataConsumerSplitterStub<T, D> extends SplitterLogDataConsumer<T, D> {
 		private final AsyncLogDataConsumer<T, D> logConsumer;
 
 		private LogDataConsumerSplitterStub(AsyncLogDataConsumer<T, D> logConsumer) {

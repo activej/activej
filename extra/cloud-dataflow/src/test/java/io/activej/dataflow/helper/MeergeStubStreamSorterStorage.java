@@ -14,19 +14,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class StreamMergeSorterStorageStub<T> implements AsyncStreamSorterStorage<T> {
+public class MeergeStubStreamSorterStorage<T> implements AsyncStreamSorterStorage<T> {
 
 	public static final StreamSorterStorageFactory FACTORY_STUB = new StreamSorterStorageFactory() {
 		@Override
 		public <C> AsyncStreamSorterStorage<C> create(StreamSchema<C> streamSchema, Task context, Promise<Void> taskExecuted) {
-			return new StreamMergeSorterStorageStub<>();
+			return new MeergeStubStreamSorterStorage<>();
 		}
 	};
 
 	private final Map<Integer, List<T>> storage = new HashMap<>();
 	private int partition;
 
-	private StreamMergeSorterStorageStub() {
+	private MeergeStubStreamSorterStorage() {
 	}
 
 	@Override

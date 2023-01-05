@@ -1,8 +1,8 @@
 package io.activej.dataflow.calcite;
 
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.AsyncSqlDataflow;
+import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.calcite.inject.CalciteClientModule;
 import io.activej.dataflow.calcite.inject.CalciteServerModule;
 import io.activej.dataflow.calcite.operand.Operand;
@@ -49,7 +49,7 @@ import static io.activej.dataflow.calcite.AbstractCalciteTest.MatchType.TYPE_1;
 import static io.activej.dataflow.calcite.AbstractCalciteTest.MatchType.TYPE_2;
 import static io.activej.dataflow.calcite.AbstractCalciteTest.State.OFF;
 import static io.activej.dataflow.calcite.AbstractCalciteTest.State.ON;
-import static io.activej.dataflow.helper.StreamMergeSorterStorageStub.FACTORY_STUB;
+import static io.activej.dataflow.helper.MeergeStubStreamSorterStorage.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.dataflow.stream.DataflowTest.createCommon;
 import static io.activej.dataflow.stream.DataflowTest.getFreeListenAddress;

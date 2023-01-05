@@ -1,7 +1,7 @@
 package io.activej.cube.service;
 
-import io.activej.aggregation.ChunkIdCodec;
 import io.activej.aggregation.AsyncChunkLocker;
+import io.activej.aggregation.ChunkIdCodec;
 import io.activej.aggregation.ChunksAlreadyLockedException;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
@@ -24,26 +24,26 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.LongStream;
 
 import static io.activej.common.exception.FatalErrorHandler.haltOnError;
-import static io.activej.cube.service.ChunkLockerMySql.CHUNK_TABLE;
+import static io.activej.cube.service.MySqlChunkLocker.CHUNK_TABLE;
 import static io.activej.test.TestUtils.dataSource;
 import static java.util.stream.Collectors.toSet;
 
-public class ChunkLockerMySqlDeadlockTest {
+public class MySqlChunkLockerDeadlockTest {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 	public static final String AGGREGATION_ID = "test_aggregation";
 	public static final int MAX_CHUNK_ID = 1000;
 
-	private ChunkLockerMySql<Long> lockerA;
-	private ChunkLockerMySql<Long> lockerB;
+	private MySqlChunkLocker<Long> lockerA;
+	private MySqlChunkLocker<Long> lockerB;
 
 	@Before
 	public void before() throws IOException, SQLException {
 		DataSource dataSource = dataSource("test.properties");
 
-		lockerA = ChunkLockerMySql.create(Executors.newSingleThreadExecutor(), dataSource, ChunkIdCodec.ofLong(), AGGREGATION_ID)
+		lockerA = MySqlChunkLocker.create(Executors.newSingleThreadExecutor(), dataSource, ChunkIdCodec.ofLong(), AGGREGATION_ID)
 				.withLockedTtl(Duration.ofSeconds(1));
-		lockerB = ChunkLockerMySql.create(Executors.newSingleThreadExecutor(), dataSource, ChunkIdCodec.ofLong(), AGGREGATION_ID)
+		lockerB = MySqlChunkLocker.create(Executors.newSingleThreadExecutor(), dataSource, ChunkIdCodec.ofLong(), AGGREGATION_ID)
 				.withLockedTtl(Duration.ofSeconds(1));
 
 		lockerA.initialize();

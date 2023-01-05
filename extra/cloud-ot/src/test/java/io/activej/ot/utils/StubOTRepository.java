@@ -1,7 +1,7 @@
 package io.activej.ot.utils;
 
-import io.activej.ot.OTCommit;
 import io.activej.ot.AsyncOTCommitFactory;
+import io.activej.ot.OTCommit;
 import io.activej.ot.repository.AsyncOTRepository;
 import io.activej.promise.Promise;
 
@@ -14,7 +14,7 @@ import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.not;
 import static java.util.stream.Collectors.toSet;
 
-public final class OTRepositoryStub<K, D> implements AsyncOTRepository<K, D> {
+public final class StubOTRepository<K, D> implements AsyncOTRepository<K, D> {
 	public Supplier<K> revisionIdSupplier;
 	private AsyncOTCommitFactory<K, D> commitFactory;
 
@@ -22,24 +22,24 @@ public final class OTRepositoryStub<K, D> implements AsyncOTRepository<K, D> {
 	public final Set<K> heads = new HashSet<>();
 	public final Map<K, List<D>> snapshots = new LinkedHashMap<>();
 
-	private OTRepositoryStub(Supplier<K> revisionIdSupplier) {
+	private StubOTRepository(Supplier<K> revisionIdSupplier) {
 		this.revisionIdSupplier = revisionIdSupplier;
 	}
 
-	public static <K, D> OTRepositoryStub<K, D> create() {
-		return new OTRepositoryStub<>(null);
+	public static <K, D> StubOTRepository<K, D> create() {
+		return new StubOTRepository<>(null);
 	}
 
-	public static <K, D> OTRepositoryStub<K, D> create(Stream<K> newIds) {
+	public static <K, D> StubOTRepository<K, D> create(Stream<K> newIds) {
 		return create(newIds.iterator());
 	}
 
-	public static <K, D> OTRepositoryStub<K, D> create(Iterable<K> newIds) {
+	public static <K, D> StubOTRepository<K, D> create(Iterable<K> newIds) {
 		return create(newIds.iterator());
 	}
 
-	public static <K, D> OTRepositoryStub<K, D> create(Iterator<K> newIds) {
-		return new OTRepositoryStub<>(newIds::next);
+	public static <K, D> StubOTRepository<K, D> create(Iterator<K> newIds) {
+		return new StubOTRepository<>(newIds::next);
 	}
 
 	public void setCommitFactory(AsyncOTCommitFactory<K, D> commitFactory) {

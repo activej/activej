@@ -1,7 +1,7 @@
 package io.activej.cube.service;
 
-import io.activej.aggregation.ChunkIdCodec;
 import io.activej.aggregation.AggregationChunkStorage;
+import io.activej.aggregation.ChunkIdCodec;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
@@ -16,7 +16,7 @@ import io.activej.etl.LogDiffCodec;
 import io.activej.etl.LogOT;
 import io.activej.fs.LocalFs;
 import io.activej.ot.OTCommit;
-import io.activej.ot.repository.OTRepositoryMySql;
+import io.activej.ot.repository.MySqlOTRepository;
 import io.activej.ot.system.OTSystem;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
@@ -56,7 +56,7 @@ public class CubeCleanerControllerTest {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	private Reactor reactor;
-	private OTRepositoryMySql<LogDiff<CubeDiff>> repository;
+	private MySqlOTRepository<LogDiff<CubeDiff>> repository;
 	private AggregationChunkStorage<Long> aggregationChunkStorage;
 
 	@Before
@@ -78,7 +78,7 @@ public class CubeCleanerControllerTest {
 				.withAggregation(id("pub").withDimensions("pub").withMeasures("pubRequests"))
 				.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests"));
 
-		repository = OTRepositoryMySql.create(reactor, executor, dataSource, AsyncSupplier.of(new RefLong(0)::inc),
+		repository = MySqlOTRepository.create(reactor, executor, dataSource, AsyncSupplier.of(new RefLong(0)::inc),
 				OT_SYSTEM, LogDiffCodec.create(CubeDiffCodec.create(cube)));
 		repository.initialize();
 		repository.truncateTables();

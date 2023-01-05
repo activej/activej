@@ -14,11 +14,11 @@ import java.util.concurrent.Executor;
 /**
  * Implementation of {@link AsyncUserDao} which uses generic SQL commands for operation
  */
-public final class UserDaoSql implements AsyncUserDao {
+public final class SqlUserDao implements AsyncUserDao {
 	private final DataSource dataSource;
 	private final Executor executor;
 
-	public UserDaoSql(DataSource dataSource, Executor executor) {
+	public SqlUserDao(DataSource dataSource, Executor executor) {
 		this.dataSource = dataSource;
 		this.executor = executor;
 	}

@@ -3,12 +3,12 @@ package io.activej.crdt.storage;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtTombstone;
 import io.activej.crdt.function.CrdtFunction;
-import io.activej.crdt.storage.cluster.CrdtStorageCluster;
 import io.activej.crdt.storage.cluster.AsyncDiscoveryService;
+import io.activej.crdt.storage.cluster.ClusterCrdtStorage;
 import io.activej.crdt.storage.cluster.RendezvousPartitionGroup;
 import io.activej.crdt.storage.cluster.RendezvousPartitionScheme;
-import io.activej.crdt.storage.local.CrdtStorageFs;
-import io.activej.crdt.storage.local.CrdtStorageMap;
+import io.activej.crdt.storage.local.FsCrdtStorage;
+import io.activej.crdt.storage.local.MapCrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
@@ -85,13 +85,13 @@ public class AsyncCrdtStorageAPITest {
 							Reactor reactor = getCurrentReactor();
 							LocalFs fs = LocalFs.create(reactor, executor, testFolder);
 							await(fs.start());
-							return CrdtStorageFs.create(reactor, fs, SERIALIZER, CRDT_FUNCTION);
+							return FsCrdtStorage.create(reactor, fs, SERIALIZER, CRDT_FUNCTION);
 						}
 				},
 				new Object[]{
 						"CrdtStorageMap",
 						(CrdtClientFactory) (executor, testFolder) ->
-								CrdtStorageMap.create(getCurrentReactor(), CRDT_FUNCTION)
+								MapCrdtStorage.create(getCurrentReactor(), CRDT_FUNCTION)
 				},
 				new Object[]{
 						"CrdtStorageCluster",
@@ -102,14 +102,14 @@ public class AsyncCrdtStorageAPITest {
 							int i = 0;
 							Set<Integer> partitions = new HashSet<>();
 							for (; i < 10; i++) {
-								map.put(i, CrdtStorageMap.create(reactor, CRDT_FUNCTION));
+								map.put(i, MapCrdtStorage.create(reactor, CRDT_FUNCTION));
 								partitions.add(i);
 							}
 							RendezvousPartitionGroup<Integer> partitionGroup1 = RendezvousPartitionGroup.create(partitions, 3, true, true);
 
 							partitions = new HashSet<>();
 							for (; i < 20; i++) {
-								map.put(i, CrdtStorageMap.create(reactor, CRDT_FUNCTION));
+								map.put(i, MapCrdtStorage.create(reactor, CRDT_FUNCTION));
 								partitions.add(i);
 							}
 							RendezvousPartitionGroup<Integer> partitionGroup2 = RendezvousPartitionGroup.create(partitions, 4, false, true);
@@ -117,7 +117,7 @@ public class AsyncCrdtStorageAPITest {
 							RendezvousPartitionScheme<Integer> partitionScheme = RendezvousPartitionScheme.create(partitionGroup1, partitionGroup2)
 									.withCrdtProvider(map::get);
 							AsyncDiscoveryService<Integer> discoveryService = AsyncDiscoveryService.of(partitionScheme);
-							CrdtStorageCluster<String, Integer, Integer> storageCluster = CrdtStorageCluster.create(reactor, discoveryService, CRDT_FUNCTION);
+							ClusterCrdtStorage<String, Integer, Integer> storageCluster = ClusterCrdtStorage.create(reactor, discoveryService, CRDT_FUNCTION);
 
 							await(storageCluster.start());
 							return storageCluster;

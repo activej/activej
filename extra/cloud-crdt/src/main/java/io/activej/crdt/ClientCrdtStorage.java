@@ -29,8 +29,8 @@ import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.crdt.util.Utils;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.binary.ByteBufsCodec;
-import io.activej.csp.net.MessagingCodec;
 import io.activej.csp.net.Messaging;
+import io.activej.csp.net.MessagingCodec;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
@@ -55,11 +55,11 @@ import java.time.Duration;
 import static io.activej.crdt.util.Utils.onItem;
 
 @SuppressWarnings("rawtypes")
-public final class CrdtStorageClient<K extends Comparable<K>, S> extends AbstractNioReactive
-		implements AsyncCrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<CrdtStorageClient<K, S>> {
+public final class ClientCrdtStorage<K extends Comparable<K>, S> extends AbstractNioReactive
+		implements AsyncCrdtStorage<K, S>, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<ClientCrdtStorage<K, S>> {
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
-	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(CrdtStorageClient.class, "connectTimeout", Duration.ZERO);
-	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageClient.class, "smoothingWindow", Duration.ofMinutes(1));
+	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(ClientCrdtStorage.class, "connectTimeout", Duration.ZERO);
+	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(ClientCrdtStorage.class, "smoothingWindow", Duration.ofMinutes(1));
 
 	private static final ByteBufsCodec<CrdtResponse, CrdtRequest> SERIALIZER = MessagingCodec.create(
 			Utils.CRDT_RESPONSE_CODEC,
@@ -92,7 +92,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> extends Abstrac
 	// endregion
 
 	//region creators
-	private CrdtStorageClient(NioReactor reactor, InetSocketAddress address, CrdtDataSerializer<K, S> serializer) {
+	private ClientCrdtStorage(NioReactor reactor, InetSocketAddress address, CrdtDataSerializer<K, S> serializer) {
 		super(reactor);
 		this.address = address;
 		this.serializer = serializer;
@@ -100,20 +100,20 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> extends Abstrac
 		tombstoneSerializer = serializer.getTombstoneSerializer();
 	}
 
-	public static <K extends Comparable<K>, S> CrdtStorageClient<K, S> create(NioReactor reactor, InetSocketAddress address, CrdtDataSerializer<K, S> serializer) {
-		return new CrdtStorageClient<>(reactor, address, serializer);
+	public static <K extends Comparable<K>, S> ClientCrdtStorage<K, S> create(NioReactor reactor, InetSocketAddress address, CrdtDataSerializer<K, S> serializer) {
+		return new ClientCrdtStorage<>(reactor, address, serializer);
 	}
 
-	public static <K extends Comparable<K>, S> CrdtStorageClient<K, S> create(NioReactor reactor, InetSocketAddress address, BinarySerializer<K> keySerializer, BinarySerializer<S> stateSerializer) {
-		return new CrdtStorageClient<>(reactor, address, new CrdtDataSerializer<>(keySerializer, stateSerializer));
+	public static <K extends Comparable<K>, S> ClientCrdtStorage<K, S> create(NioReactor reactor, InetSocketAddress address, BinarySerializer<K> keySerializer, BinarySerializer<S> stateSerializer) {
+		return new ClientCrdtStorage<>(reactor, address, new CrdtDataSerializer<>(keySerializer, stateSerializer));
 	}
 
-	public CrdtStorageClient<K, S> withConnectTimeout(Duration connectTimeout) {
+	public ClientCrdtStorage<K, S> withConnectTimeout(Duration connectTimeout) {
 		this.connectTimeoutMillis = connectTimeout.toMillis();
 		return this;
 	}
 
-	public CrdtStorageClient<K, S> withSocketSettings(SocketSettings socketSettings) {
+	public ClientCrdtStorage<K, S> withSocketSettings(SocketSettings socketSettings) {
 		this.socketSettings = socketSettings;
 		return this;
 	}
@@ -126,7 +126,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> extends Abstrac
 	@Override
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
 		return connect()
-				.then(CrdtStorageClient::performHandshake)
+				.then(ClientCrdtStorage::performHandshake)
 				.then(messaging -> messaging.send(new CrdtRequest.Upload())
 						.mapException(e -> new CrdtException("Failed to send 'Upload' request", e))
 						.map($ -> messaging.sendBinaryStream()
@@ -146,7 +146,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> extends Abstrac
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
 		return connect()
-				.then(CrdtStorageClient::performHandshake)
+				.then(ClientCrdtStorage::performHandshake)
 				.then(messaging -> messaging.send(new CrdtRequest.Download(timestamp))
 						.mapException(e -> new CrdtException("Failed to send 'Download' request", e))
 						.then(() -> messaging.receive()
@@ -167,7 +167,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> extends Abstrac
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> take() {
 		return connect()
-				.then(CrdtStorageClient::performHandshake)
+				.then(ClientCrdtStorage::performHandshake)
 				.then(messaging -> messaging.send(new CrdtRequest.Take())
 						.mapException(e -> new CrdtException("Failed to send 'Take' request", e))
 						.then(() -> messaging.receive()
@@ -191,7 +191,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> extends Abstrac
 	@Override
 	public Promise<StreamConsumer<CrdtTombstone<K>>> remove() {
 		return connect()
-				.then(CrdtStorageClient::performHandshake)
+				.then(ClientCrdtStorage::performHandshake)
 				.then(messaging -> messaging.send(new CrdtRequest.Remove())
 						.mapException(e -> new CrdtException("Failed to send 'Remove' request", e))
 						.map($ -> {
@@ -213,7 +213,7 @@ public final class CrdtStorageClient<K extends Comparable<K>, S> extends Abstrac
 	@Override
 	public Promise<Void> ping() {
 		return connect()
-				.then(CrdtStorageClient::performHandshake)
+				.then(ClientCrdtStorage::performHandshake)
 				.then(messaging -> messaging.send(new CrdtRequest.Ping())
 						.mapException(e -> new CrdtException("Failed to send 'Ping'", e))
 						.then(() -> messaging.receive()

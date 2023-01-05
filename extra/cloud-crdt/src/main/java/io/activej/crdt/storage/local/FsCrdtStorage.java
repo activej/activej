@@ -72,11 +72,11 @@ import static io.activej.crdt.util.CrdtDataSerializer.TIMESTAMP_SERIALIZER;
 import static io.activej.crdt.util.Utils.onItem;
 
 @SuppressWarnings("rawtypes")
-public final class CrdtStorageFs<K extends Comparable<K>, S> extends AbstractReactive
-		implements AsyncCrdtStorage<K, S>, WithInitializer<CrdtStorageFs<K, S>>, ReactiveService, ReactiveJmxBeanWithStats {
-	private static final Logger logger = LoggerFactory.getLogger(CrdtStorageFs.class);
+public final class FsCrdtStorage<K extends Comparable<K>, S> extends AbstractReactive
+		implements AsyncCrdtStorage<K, S>, WithInitializer<FsCrdtStorage<K, S>>, ReactiveService, ReactiveJmxBeanWithStats {
+	private static final Logger logger = LoggerFactory.getLogger(FsCrdtStorage.class);
 
-	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(CrdtStorageFs.class, "smoothingWindow", Duration.ofMinutes(1));
+	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(FsCrdtStorage.class, "smoothingWindow", Duration.ofMinutes(1));
 
 	public static final String FILE_EXTENSION = ".bin";
 
@@ -113,34 +113,34 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> extends AbstractRea
 	// endregion
 
 	// region creators
-	private CrdtStorageFs(Reactor reactor, AsyncFs fs, CrdtDataSerializer<K, S> serializer, CrdtFunction<S> function) {
+	private FsCrdtStorage(Reactor reactor, AsyncFs fs, CrdtDataSerializer<K, S> serializer, CrdtFunction<S> function) {
 		super(reactor);
 		this.fs = fs;
 		this.function = function;
 		this.serializer = createSerializer(serializer);
 	}
 
-	public static <K extends Comparable<K>, S> CrdtStorageFs<K, S> create(
+	public static <K extends Comparable<K>, S> FsCrdtStorage<K, S> create(
 			Reactor reactor, AsyncFs fs,
 			CrdtDataSerializer<K, S> serializer,
 			CrdtFunction<S> function
 	) {
-		return new CrdtStorageFs<>(reactor, fs, serializer, function);
+		return new FsCrdtStorage<>(reactor, fs, serializer, function);
 	}
 
-	public static <K extends Comparable<K>, S extends CrdtType<S>> CrdtStorageFs<K, S> create(
+	public static <K extends Comparable<K>, S extends CrdtType<S>> FsCrdtStorage<K, S> create(
 			Reactor reactor, AsyncFs fs,
 			CrdtDataSerializer<K, S> serializer
 	) {
-		return new CrdtStorageFs<>(reactor, fs, serializer, CrdtFunction.ofCrdtType());
+		return new FsCrdtStorage<>(reactor, fs, serializer, CrdtFunction.ofCrdtType());
 	}
 
-	public CrdtStorageFs<K, S> withNamingStrategy(Supplier<String> namingStrategy) {
+	public FsCrdtStorage<K, S> withNamingStrategy(Supplier<String> namingStrategy) {
 		this.namingStrategy = namingStrategy;
 		return this;
 	}
 
-	public CrdtStorageFs<K, S> withFilter(CrdtFilter<S> filter) {
+	public FsCrdtStorage<K, S> withFilter(CrdtFilter<S> filter) {
 		this.filter = filter;
 		return this;
 	}
@@ -243,7 +243,7 @@ public final class CrdtStorageFs<K extends Comparable<K>, S> extends AbstractRea
 				.map(fileMap -> taken == null ?
 						fileMap :
 						entriesToMap(fileMap.entrySet().stream().filter(entry -> !taken.contains(entry.getKey()))))
-				.map(CrdtStorageFs::pickFilesForConsolidation)
+				.map(FsCrdtStorage::pickFilesForConsolidation)
 				.then(filesToConsolidate -> {
 					if (filesToConsolidate.isEmpty()) {
 						logger.info("No files to consolidate");

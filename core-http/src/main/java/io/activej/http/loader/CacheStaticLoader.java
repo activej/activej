@@ -24,14 +24,14 @@ import java.util.function.Function;
 
 import static io.activej.bytebuf.ByteBuf.wrapForReading;
 
-class StaticLoaderCache implements AsyncStaticLoader {
+class CacheStaticLoader implements AsyncStaticLoader {
 	public static final byte[] NOT_FOUND = {};
 
 	private final AsyncStaticLoader resourceLoader;
 	private final Function<String, byte[]> get;
 	private final BiConsumer<String, byte[]> put;
 
-	public StaticLoaderCache(AsyncStaticLoader resourceLoader, Function<String, byte[]> get, BiConsumer<String, byte[]> put) {
+	public CacheStaticLoader(AsyncStaticLoader resourceLoader, Function<String, byte[]> get, BiConsumer<String, byte[]> put) {
 		this.resourceLoader = resourceLoader;
 		this.get = get;
 		this.put = put;

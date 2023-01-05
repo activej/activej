@@ -1,13 +1,13 @@
 package io.activej.crdt.storage.cluster;
 
 import io.activej.async.process.AsyncCloseable;
+import io.activej.crdt.ClientCrdtStorage;
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.CrdtException;
 import io.activej.crdt.CrdtServer;
-import io.activej.crdt.CrdtStorageClient;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.AsyncCrdtStorage;
-import io.activej.crdt.storage.local.CrdtStorageMap;
+import io.activej.crdt.storage.local.MapCrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
@@ -51,7 +51,7 @@ public final class TestDyingPartitions {
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	private Map<Integer, AbstractReactiveServer<?>> servers;
-	private CrdtStorageCluster<String, Integer, String> cluster;
+	private ClusterCrdtStorage<String, Integer, String> cluster;
 
 	@Before
 	public void setUp() throws Exception {
@@ -62,7 +62,7 @@ public final class TestDyingPartitions {
 		for (int i = 0; i < SERVER_COUNT; i++) {
 			int port = getFreePort();
 			Eventloop eventloop = Eventloop.create();
-			CrdtStorageMap<String, Integer> storage = CrdtStorageMap.create(eventloop, CRDT_FUNCTION);
+			MapCrdtStorage<String, Integer> storage = MapCrdtStorage.create(eventloop, CRDT_FUNCTION);
 			InetSocketAddress address = new InetSocketAddress(port);
 			CrdtServer<String, Integer> server = CrdtServer.create(eventloop, storage, SERIALIZER)
 					.withListenAddresses(address);
@@ -70,10 +70,10 @@ public final class TestDyingPartitions {
 			assertNull(servers.put(port, server));
 			new Thread(eventloop).start();
 
-			clients.put("server_" + i, CrdtStorageClient.create(Reactor.getCurrentReactor(), address, SERIALIZER));
+			clients.put("server_" + i, ClientCrdtStorage.create(Reactor.getCurrentReactor(), address, SERIALIZER));
 		}
 
-		cluster = CrdtStorageCluster.create(getCurrentReactor(),
+		cluster = ClusterCrdtStorage.create(getCurrentReactor(),
 				AsyncDiscoveryService.of(
 						RendezvousPartitionScheme.<String>create()
 								.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet()).withReplicas(REPLICATION_COUNT).withRepartition(true))

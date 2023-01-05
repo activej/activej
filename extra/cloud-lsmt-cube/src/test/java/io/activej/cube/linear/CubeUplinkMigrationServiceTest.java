@@ -16,7 +16,7 @@ import io.activej.etl.LogPositionDiff;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
 import io.activej.ot.OTCommit;
-import io.activej.ot.repository.OTRepositoryMySql;
+import io.activej.ot.repository.MySqlOTRepository;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.AsyncOTUplink.FetchData;
 import io.activej.reactor.Reactor;
@@ -55,8 +55,8 @@ public final class CubeUplinkMigrationServiceTest {
 	private DataSource dataSource;
 	private Cube cube;
 
-	private OTRepositoryMySql<LogDiff<CubeDiff>> repo;
-	private CubeUplinkMySql uplink;
+	private MySqlOTRepository<LogDiff<CubeDiff>> repo;
+	private CubeMySqlOTUplink uplink;
 
 	@Before
 	public void setUp() throws Exception {
@@ -81,11 +81,11 @@ public final class CubeUplinkMigrationServiceTest {
 
 		LogDiffCodec<CubeDiff> diffCodec = LogDiffCodec.create(CubeDiffCodec.create(cube));
 
-		repo = OTRepositoryMySql.create(reactor, executor, dataSource, AsyncSupplier.of(new RefLong(0)::inc), OT_SYSTEM, diffCodec);
+		repo = MySqlOTRepository.create(reactor, executor, dataSource, AsyncSupplier.of(new RefLong(0)::inc), OT_SYSTEM, diffCodec);
 		initializeRepository(repo);
 
 		PrimaryKeyCodecs codecs = PrimaryKeyCodecs.ofCube(cube);
-		uplink = CubeUplinkMySql.create(executor, dataSource, codecs)
+		uplink = CubeMySqlOTUplink.create(executor, dataSource, codecs)
 				.withMeasuresValidator(MeasuresValidator.ofCube(cube));
 
 		uplink.initialize();

@@ -55,7 +55,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 		implements ReactiveJmxBeanWithStats, WithInitializer<CubeConsolidationController<K, D, C>> {
 	private static final Logger logger = LoggerFactory.getLogger(CubeConsolidationController.class);
 
-	private static final AsyncChunkLocker<Object> NOOP_CHUNK_LOCKER = ChunkLockerNoOp.create();
+	private static final AsyncChunkLocker<Object> NOOP_CHUNK_LOCKER = NoOpChunkLocker.create();
 
 	public static final Supplier<AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>>> DEFAULT_LOCKER_STRATEGY = new Supplier<>() {
 		private boolean hotSegment = false;

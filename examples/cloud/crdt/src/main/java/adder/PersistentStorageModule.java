@@ -4,11 +4,11 @@ import io.activej.async.service.TaskScheduler;
 import io.activej.config.Config;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.AsyncCrdtStorage;
-import io.activej.crdt.storage.local.CrdtStorageFs;
+import io.activej.crdt.storage.local.FsCrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
+import io.activej.crdt.wal.AsyncWriteAheadLog;
 import io.activej.crdt.wal.FileWriteAheadLog;
 import io.activej.crdt.wal.WalUploader;
-import io.activej.crdt.wal.AsyncWriteAheadLog;
 import io.activej.fs.AsyncFs;
 import io.activej.fs.LocalFs;
 import io.activej.inject.Key;
@@ -33,7 +33,7 @@ public final class PersistentStorageModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		bind(new Key<AsyncCrdtStorage<Long, DetailedSumsCrdtState>>(Local.class) {})
-				.to(new Key<CrdtStorageFs<Long, DetailedSumsCrdtState>>() {});
+				.to(new Key<FsCrdtStorage<Long, DetailedSumsCrdtState>>() {});
 	}
 
 	@Provides
@@ -62,13 +62,13 @@ public final class PersistentStorageModule extends AbstractModule {
 	}
 
 	@Provides
-	CrdtStorageFs<Long, DetailedSumsCrdtState> storage(
+	FsCrdtStorage<Long, DetailedSumsCrdtState> storage(
 			Reactor reactor,
 			AsyncFs fs,
 			CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer,
 			CrdtFunction<DetailedSumsCrdtState> function
 	) {
-		return CrdtStorageFs.create(reactor, fs, serializer, function);
+		return FsCrdtStorage.create(reactor, fs, serializer, function);
 	}
 
 	@Provides
@@ -84,7 +84,7 @@ public final class PersistentStorageModule extends AbstractModule {
 	@Provides
 	@Named("consolidate")
 	@Eager
-	TaskScheduler consolidateScheduler(Reactor reactor, CrdtStorageFs<Long, DetailedSumsCrdtState> storageFs, Config config) {
+	TaskScheduler consolidateScheduler(Reactor reactor, FsCrdtStorage<Long, DetailedSumsCrdtState> storageFs, Config config) {
 		return TaskScheduler.create(reactor, storageFs::consolidate)
 				.withSchedule(config.get(ofReactorTaskSchedule(), "consolidate.schedule", ofInterval(Duration.ofMinutes(3))))
 				.withInitialDelay(Duration.ofSeconds(10));

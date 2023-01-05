@@ -4,7 +4,7 @@ import io.activej.ot.OTCommit;
 import io.activej.ot.exception.GraphExhaustedException;
 import io.activej.ot.uplink.AsyncOTUplink.FetchData;
 import io.activej.ot.utils.OTGraphBuilder;
-import io.activej.ot.utils.OTRepositoryStub;
+import io.activej.ot.utils.StubOTRepository;
 import io.activej.ot.utils.TestOp;
 import io.activej.ot.utils.TestOpState;
 import io.activej.test.rules.EventloopRule;
@@ -32,7 +32,7 @@ public class OTUplinkTest {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
-	private final OTRepositoryStub<Integer, TestOp> REPOSITORY = OTRepositoryStub.create();
+	private final StubOTRepository<Integer, TestOp> REPOSITORY = StubOTRepository.create();
 
 	private AsyncOTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> node;
 

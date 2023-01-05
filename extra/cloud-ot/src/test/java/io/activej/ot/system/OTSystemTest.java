@@ -5,7 +5,7 @@ import io.activej.ot.OTStateManager;
 import io.activej.ot.TransformResult;
 import io.activej.ot.repository.AsyncOTRepository;
 import io.activej.ot.uplink.OTUplink;
-import io.activej.ot.utils.OTRepositoryStub;
+import io.activej.ot.utils.StubOTRepository;
 import io.activej.ot.utils.TestAdd;
 import io.activej.ot.utils.TestOp;
 import io.activej.ot.utils.TestOpState;
@@ -64,7 +64,7 @@ public final class OTSystemTest {
 
 	@Test
 	public void testOtSource2() {
-		OTRepositoryStub<String, TestOp> repository = OTRepositoryStub.create(List.of("m", "x", "y", "m2"));
+		StubOTRepository<String, TestOp> repository = StubOTRepository.create(List.of("m", "x", "y", "m2"));
 		repository.setGraph(g -> {
 			g.add("*", "a1", add(1));
 			g.add("a1", "a2", add(2));
@@ -121,7 +121,7 @@ public final class OTSystemTest {
 
 	@Test
 	public void testOtSource3() {
-		OTRepositoryStub<String, TestOp> otSource = OTRepositoryStub.create(List.of("m"));
+		StubOTRepository<String, TestOp> otSource = StubOTRepository.create(List.of("m"));
 		otSource.setGraph(g -> {
 			g.add("*", "a1", add(1));
 			g.add("a1", "a2", add(2));
@@ -135,7 +135,7 @@ public final class OTSystemTest {
 
 	@Test
 	public void testOtSource4() {
-		OTRepositoryStub<String, TestOp> otSource = OTRepositoryStub.create(List.of("m"));
+		StubOTRepository<String, TestOp> otSource = StubOTRepository.create(List.of("m"));
 		otSource.setGraph(g -> {
 			g.add("*", "a1", add(1));
 			g.add("*", "b1", add(10));

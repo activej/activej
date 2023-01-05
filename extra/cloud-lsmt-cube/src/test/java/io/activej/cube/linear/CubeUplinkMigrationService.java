@@ -6,7 +6,7 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.Utils;
 import io.activej.cube.Cube;
-import io.activej.cube.linear.CubeUplinkMySql.UplinkProtoCommit;
+import io.activej.cube.linear.CubeMySqlOTUplink.UplinkProtoCommit;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffCodec;
 import io.activej.cube.ot.CubeOT;
@@ -18,7 +18,7 @@ import io.activej.etl.LogOT;
 import io.activej.eventloop.Eventloop;
 import io.activej.ot.OTAlgorithms;
 import io.activej.ot.repository.AsyncOTRepository;
-import io.activej.ot.repository.OTRepositoryMySql;
+import io.activej.ot.repository.MySqlOTRepository;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.promise.Promise;
@@ -62,7 +62,7 @@ final class CubeUplinkMigrationService {
 
 	private void doMigrate(DataSource repoDataSource, DataSource uplinkDataSource, @Nullable Long startRevision) throws ExecutionException, InterruptedException {
 		AsyncOTRepository<Long, LogDiff<CubeDiff>> repo = createRepo(repoDataSource);
-		CubeUplinkMySql uplink = createUplink(uplinkDataSource);
+		CubeMySqlOTUplink uplink = createUplink(uplinkDataSource);
 
 		CompletableFuture<AsyncOTUplink.FetchData<Long, LogDiff<CubeDiff>>> future = eventloop.submit(() ->
 				uplink.checkout()
@@ -109,11 +109,11 @@ final class CubeUplinkMigrationService {
 	private AsyncOTRepository<Long, LogDiff<CubeDiff>> createRepo(DataSource dataSource) {
 		LogDiffCodec<CubeDiff> codec = LogDiffCodec.create(CubeDiffCodec.create(cube));
 		AsyncSupplier<Long> idGenerator = () -> {throw new AssertionError();};
-		return OTRepositoryMySql.create(eventloop, executor, dataSource, idGenerator, OT_SYSTEM, codec);
+		return MySqlOTRepository.create(eventloop, executor, dataSource, idGenerator, OT_SYSTEM, codec);
 	}
 
-	private CubeUplinkMySql createUplink(DataSource dataSource) {
-		return CubeUplinkMySql.create(executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
+	private CubeMySqlOTUplink createUplink(DataSource dataSource) {
+		return CubeMySqlOTUplink.create(executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
 	}
 
 	static Cube createEmptyCube(Reactor reactor, Executor executor) {

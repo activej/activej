@@ -14,14 +14,14 @@ import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.StreamSupplier;
-import io.activej.etl.LogDataConsumerSplitter;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.LogOTState;
+import io.activej.etl.SplitterLogDataConsumer;
 import io.activej.fs.LocalFs;
 import io.activej.http.AsyncHttpClient;
-import io.activej.http.HttpServer;
 import io.activej.http.HttpClient;
+import io.activej.http.HttpServer;
 import io.activej.multilog.AsyncMultilog;
 import io.activej.multilog.Multilog;
 import io.activej.ot.OTStateManager;
@@ -47,8 +47,8 @@ import static io.activej.aggregation.measure.Measures.*;
 import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.entriesToMap;
 import static io.activej.cube.ComputedMeasures.*;
-import static io.activej.cube.CubeQuery.Ordering.asc;
 import static io.activej.cube.Cube.AggregationConfig.id;
+import static io.activej.cube.CubeQuery.Ordering.asc;
 import static io.activej.cube.ReportType.DATA;
 import static io.activej.cube.ReportType.DATA_WITH_TOTALS;
 import static io.activej.cube.http.ReportingTest.LogItem.*;
@@ -63,7 +63,7 @@ public final class ReportingTest extends CubeTestBase {
 	public static final double DELTA = 1E-3;
 
 	private HttpServer cubeHttpServer;
-	private CubeHttpClient cubeHttpClient;
+	private HttpCube httpCube;
 	private Cube cube;
 	private int serverPort;
 
@@ -213,7 +213,7 @@ public final class ReportingTest extends CubeTestBase {
 		}
 	}
 
-	public static class LogItemSplitter extends LogDataConsumerSplitter<LogItem, CubeDiff> {
+	public static class LogItemSplitter extends SplitterLogDataConsumer<LogItem, CubeDiff> {
 		private final Cube cube;
 
 		public LogItemSplitter(Cube cube) {
@@ -335,7 +335,7 @@ public final class ReportingTest extends CubeTestBase {
 
 		AsyncHttpClient httpClient = HttpClient.create(reactor)
 				.withNoKeepAlive();
-		cubeHttpClient = CubeHttpClient.create(httpClient, "http://127.0.0.1:" + serverPort)
+		httpCube = HttpCube.create(httpClient, "http://127.0.0.1:" + serverPort)
 				.withAttribute("date", LocalDate.class)
 				.withAttribute("advertiser", int.class)
 				.withAttribute("campaign", int.class)
@@ -384,7 +384,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withWhere(and(between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-03"))))
 				.withReportType(DATA_WITH_TOTALS);
 
-		QueryResult queryResult = await(cubeHttpClient.query(query));
+		QueryResult queryResult = await(httpCube.query(query));
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(2, records.size());
@@ -415,7 +415,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withWhere(and(between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-03"))))
 				.withReportType(DATA_WITH_TOTALS);
 
-		QueryResult queryResult1 = await(cubeHttpClient.query(query));
+		QueryResult queryResult1 = await(httpCube.query(query));
 
 		List<Record> records1 = queryResult1.getRecords();
 		assertEquals(2, records1.size());
@@ -437,7 +437,7 @@ public final class ReportingTest extends CubeTestBase {
 		assertEquals(Set.of("date"), new HashSet<>(queryResult1.getSortedBy()));
 
 		startHttpServer();
-		QueryResult queryResult2 = await(cubeHttpClient.query(query));
+		QueryResult queryResult2 = await(httpCube.query(query));
 		List<Record> records2 = queryResult2.getRecords();
 		assertEquals(records1.size(), records2.size());
 		assertEquals(queryResult1.getAttributes(), queryResult2.getAttributes());
@@ -467,7 +467,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withWhere(and(le("date", LocalDate.parse("2000-01-03"))))
 				.withReportType(DATA_WITH_TOTALS);
 
-		QueryResult queryResult = await(cubeHttpClient.query(query));
+		QueryResult queryResult = await(httpCube.query(query));
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(2, records.size());
@@ -501,7 +501,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withOrderings(asc("ctr"))
 				.withReportType(DATA_WITH_TOTALS);
 
-		QueryResult queryResult = await(cubeHttpClient.query(query));
+		QueryResult queryResult = await(httpCube.query(query));
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(2, records.size());
@@ -530,7 +530,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withMeasures("impressions")
 				.withReportType(DATA);
 
-		QueryResult queryResult = await(cubeHttpClient.query(query));
+		QueryResult queryResult = await(httpCube.query(query));
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(3, records.size());
@@ -562,7 +562,7 @@ public final class ReportingTest extends CubeTestBase {
 						between("date", LocalDate.parse("2000-01-01"), LocalDate.parse("2000-01-03"))))
 				.withReportType(DATA_WITH_TOTALS);
 
-		QueryResult queryResult = await(cubeHttpClient.query(query));
+		QueryResult queryResult = await(httpCube.query(query));
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(3, records.size());
@@ -599,7 +599,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withHaving(or(between("advertiser.name", "a", "z"), eq("advertiser.name", null)))
 				.withReportType(DATA);
 
-		QueryResult queryResult = await(cubeHttpClient.query(query));
+		QueryResult queryResult = await(httpCube.query(query));
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(3, records.size());
@@ -617,7 +617,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withOrderings(asc("advertiser.name"))
 				.withHaving(eq("advertiser.name", null));
 
-		QueryResult queryResult = await(cubeHttpClient.query(query));
+		QueryResult queryResult = await(httpCube.query(query));
 
 		Map<String, Object> filterAttributes = queryResult.getFilterAttributes();
 		assertEquals(1, filterAttributes.size());
@@ -632,7 +632,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withMeasures("impressions")
 				.withWhere(and(eq("advertiser", 1), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER)));
 
-		QueryResult queryResult = await(cubeHttpClient.query(query));
+		QueryResult queryResult = await(httpCube.query(query));
 
 		assertEquals(3, queryResult.getRecords().size());
 		assertEquals("first", queryResult.getRecords().get(0).get("advertiser.name"));
@@ -649,7 +649,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withHaving(or(regexp("advertiser.name", ".*s.*"), eq("advertiser.name", null)))
 				.withReportType(DATA);
 
-		QueryResult queryResult = await(cubeHttpClient.query(query));
+		QueryResult queryResult = await(httpCube.query(query));
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(2, records.size());
@@ -668,7 +668,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withOrderings(asc("date"), asc("uniqueUserIdsCount"))
 				.withReportType(DATA_WITH_TOTALS);
 
-		QueryResult queryResult = await(cubeHttpClient.query(query));
+		QueryResult queryResult = await(httpCube.query(query));
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(Set.of("eventCount", "minRevenue", "maxRevenue", "uniqueUserIdsCount", "uniqueUserPercent", "clicks"),
@@ -722,7 +722,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withOrderingAsc("advertiser.name")
 				.withReportType(ReportType.METADATA);
 
-		QueryResult metadata = await(cubeHttpClient.query(onlyMetaQuery));
+		QueryResult metadata = await(httpCube.query(onlyMetaQuery));
 
 		assertEquals(6, metadata.getRecordScheme().getFields().size());
 		assertEquals(0, metadata.getTotalCount());
@@ -743,7 +743,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withReportType(DATA_WITH_TOTALS)
 				.withHaving(in("advertiser", List.of(1, 2)));
 
-		QueryResult in = await(cubeHttpClient.query(queryWithPredicateIn));
+		QueryResult in = await(httpCube.query(queryWithPredicateIn));
 
 		List<String> expectedRecordFields = List.of("advertiser", "clicks", "ctr", "conversions");
 		assertEquals(expectedRecordFields.size(), in.getRecordScheme().getFields().size());
@@ -760,7 +760,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withMeasures("errors", "errorsPercent")
 				.withReportType(ReportType.METADATA);
 
-		QueryResult metadata = await(cubeHttpClient.query(queryAffectingNonCompatibleAggregations));
+		QueryResult metadata = await(httpCube.query(queryAffectingNonCompatibleAggregations));
 		assertEquals(0, metadata.getMeasures().size());
 	}
 
@@ -775,7 +775,7 @@ public final class ReportingTest extends CubeTestBase {
 						notEq("banner", EXCLUDE_BANNER)))
 				.withReportType(ReportType.METADATA);
 
-		QueryResult metadata = await(cubeHttpClient.query(queryAffectingNonCompatibleAggregations));
+		QueryResult metadata = await(httpCube.query(queryAffectingNonCompatibleAggregations));
 		List<String> expectedMeasures = List.of("impressions", "clicks");
 		assertEquals(expectedMeasures, metadata.getMeasures());
 	}
@@ -807,7 +807,7 @@ public final class ReportingTest extends CubeTestBase {
 						between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02"))))
 				.withReportType(DATA_WITH_TOTALS);
 
-		QueryResult resultByAdvertisers = await(cubeHttpClient.query(queryAdvertisers));
+		QueryResult resultByAdvertisers = await(httpCube.query(queryAdvertisers));
 
 		Record advertisersTotals = resultByAdvertisers.getTotals();
 		long advertisersImpressions = advertisersTotals.get("impressions");
@@ -829,7 +829,7 @@ public final class ReportingTest extends CubeTestBase {
 						between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02"))))
 				.withReportType(DATA_WITH_TOTALS);
 
-		QueryResult resultByAffiliates = await(cubeHttpClient.query(queryAffiliates));
+		QueryResult resultByAffiliates = await(httpCube.query(queryAffiliates));
 
 		Record affiliatesTotals = resultByAffiliates.getTotals();
 		long affiliatesImpressions = affiliatesTotals.get("impressions");
@@ -850,7 +850,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withWhere(between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02")))
 				.withReportType(DATA_WITH_TOTALS);
 
-		QueryResult resultByDate = await(cubeHttpClient.query(queryDate));
+		QueryResult resultByDate = await(httpCube.query(queryDate));
 
 		Record dailyTotals = resultByDate.getTotals();
 		long dailyImpressions = dailyTotals.get("impressions");
@@ -875,7 +875,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withWhere(between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02")))
 				.withReportType(DATA_WITH_TOTALS);
 
-		QueryResult resultByDate = await(cubeHttpClient.query(queryDate));
+		QueryResult resultByDate = await(httpCube.query(queryDate));
 
 		assertEquals(dateDimension, resultByDate.getAttributes());
 		assertEquals(measures, resultByDate.getMeasures());
@@ -902,7 +902,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withWhere(between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02")))
 				.withReportType(DATA_WITH_TOTALS);
 
-		QueryResult resultByDate = await(cubeHttpClient.query(queryDate));
+		QueryResult resultByDate = await(httpCube.query(queryDate));
 
 		assertEquals(1, resultByDate.getAttributes().size());
 		assertEquals("date", resultByDate.getAttributes().get(0));

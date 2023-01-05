@@ -34,7 +34,7 @@ import java.util.concurrent.Executor;
 
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.net.socket.tcp.TcpSocketSsl.wrapClientSocket;
+import static io.activej.net.socket.tcp.SslTcpSocket.wrapClientSocket;
 
 /**
  * A client for Redis.

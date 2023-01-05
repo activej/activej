@@ -42,7 +42,7 @@ public final class DataflowClientLauncherExample extends DataflowClientLauncher 
 		return ModuleBuilder.create()
 				.install(new DataflowSerializersModule())
 
-				.bind(StreamSorterStorageFactory.class).toInstance(StreamMergeSorterStorageStub.FACTORY_STUB)
+				.bind(StreamSorterStorageFactory.class).toInstance(MergeStubStreamSorterStorage.FACTORY_STUB)
 
 				.bind(Config.class).toInstance(
 						Config.create()

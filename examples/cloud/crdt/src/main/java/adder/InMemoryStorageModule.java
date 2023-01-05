@@ -2,9 +2,9 @@ package adder;
 
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.AsyncCrdtStorage;
-import io.activej.crdt.storage.local.CrdtStorageMap;
-import io.activej.crdt.wal.InMemoryWriteAheadLog;
+import io.activej.crdt.storage.local.MapCrdtStorage;
 import io.activej.crdt.wal.AsyncWriteAheadLog;
+import io.activej.crdt.wal.InMemoryWriteAheadLog;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.launchers.crdt.Local;
@@ -24,6 +24,6 @@ public final class InMemoryStorageModule extends AbstractModule {
 	@Provides
 	@Local
 	AsyncCrdtStorage<Long, DetailedSumsCrdtState> storage(Reactor reactor, CrdtFunction<DetailedSumsCrdtState> function) {
-		return CrdtStorageMap.create(reactor, function);
+		return MapCrdtStorage.create(reactor, function);
 	}
 }

@@ -29,24 +29,24 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.Executor;
 
-class StaticLoaderClassPath implements AsyncStaticLoader {
+class ClassPathStaticLoader implements AsyncStaticLoader {
 	private static final String ROOT = "/";
 	private static final int ROOT_OFFSET = 1;
 	private final Executor executor;
 	private final ClassLoader classLoader;
 	private final String root;
 
-	private StaticLoaderClassPath(Executor executor, ClassLoader classLoader, String root) {
+	private ClassPathStaticLoader(Executor executor, ClassLoader classLoader, String root) {
 		this.root = root;
 		this.executor = executor;
 		this.classLoader = classLoader;
 	}
 
-	public static StaticLoaderClassPath create(Executor executor, String root) {
+	public static ClassPathStaticLoader create(Executor executor, String root) {
 		return create(executor, Thread.currentThread().getContextClassLoader(), root);
 	}
 
-	public static StaticLoaderClassPath create(Executor executor, ClassLoader classLoader, String root) {
+	public static ClassPathStaticLoader create(Executor executor, ClassLoader classLoader, String root) {
 		if (root.startsWith(ROOT)) {
 			root = root.substring(ROOT_OFFSET);
 		}
@@ -54,7 +54,7 @@ class StaticLoaderClassPath implements AsyncStaticLoader {
 			root = root + ROOT;
 		}
 
-		return new StaticLoaderClassPath(executor, classLoader, root);
+		return new ClassPathStaticLoader(executor, classLoader, root);
 	}
 
 	@Override

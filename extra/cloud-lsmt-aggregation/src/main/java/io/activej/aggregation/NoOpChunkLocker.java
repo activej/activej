@@ -21,13 +21,13 @@ import io.activej.promise.Promise;
 
 import java.util.Set;
 
-public final class ChunkLockerNoOp<C> implements AsyncChunkLocker<C>, WithInitializer<ChunkLockerNoOp<C>> {
+public final class NoOpChunkLocker<C> implements AsyncChunkLocker<C>, WithInitializer<NoOpChunkLocker<C>> {
 
-	private ChunkLockerNoOp() {
+	private NoOpChunkLocker() {
 	}
 
-	public static <C> ChunkLockerNoOp<C> create() {
-		return new ChunkLockerNoOp<>();
+	public static <C> NoOpChunkLocker<C> create() {
+		return new NoOpChunkLocker<>();
 	}
 
 	@Override

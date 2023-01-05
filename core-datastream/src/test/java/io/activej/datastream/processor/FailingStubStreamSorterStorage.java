@@ -9,7 +9,7 @@ import java.util.List;
 
 import static io.activej.common.Checks.checkNotNull;
 
-public final class FailingStreamSorterStorageStub<T> implements AsyncStreamSorterStorage<T> {
+public final class FailingStubStreamSorterStorage<T> implements AsyncStreamSorterStorage<T> {
 	static final Exception STORAGE_EXCEPTION = new ExpectedException("failing storage");
 
 	private AsyncStreamSorterStorage<T> storage;
@@ -19,34 +19,34 @@ public final class FailingStreamSorterStorageStub<T> implements AsyncStreamSorte
 	boolean failRead;
 	boolean failCleanup;
 
-	private FailingStreamSorterStorageStub(AsyncStreamSorterStorage<T> storage) {
+	private FailingStubStreamSorterStorage(AsyncStreamSorterStorage<T> storage) {
 		this.storage = storage;
 	}
 
-	public static <T> FailingStreamSorterStorageStub<T> create(AsyncStreamSorterStorage<T> storage) {
-		return new FailingStreamSorterStorageStub<>(storage);
+	public static <T> FailingStubStreamSorterStorage<T> create(AsyncStreamSorterStorage<T> storage) {
+		return new FailingStubStreamSorterStorage<>(storage);
 	}
 
-	public static <T> FailingStreamSorterStorageStub<T> create() {
-		return new FailingStreamSorterStorageStub<>(null);
+	public static <T> FailingStubStreamSorterStorage<T> create() {
+		return new FailingStubStreamSorterStorage<>(null);
 	}
 
-	public FailingStreamSorterStorageStub<T> withFailNewPartition(){
+	public FailingStubStreamSorterStorage<T> withFailNewPartition(){
 		this.failNewPartition = true;
 		return this;
 	}
 
-	public FailingStreamSorterStorageStub<T> withFailWrite(){
+	public FailingStubStreamSorterStorage<T> withFailWrite(){
 		this.failWrite = true;
 		return this;
 	}
 
-	public FailingStreamSorterStorageStub<T> withFailRead(){
+	public FailingStubStreamSorterStorage<T> withFailRead(){
 		this.failRead = true;
 		return this;
 	}
 
-	public FailingStreamSorterStorageStub<T> withFailCleanup(){
+	public FailingStubStreamSorterStorage<T> withFailCleanup(){
 		this.failCleanup = true;
 		return this;
 	}

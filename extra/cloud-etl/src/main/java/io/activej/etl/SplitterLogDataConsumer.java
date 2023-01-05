@@ -28,7 +28,7 @@ import java.util.List;
 import static io.activej.common.Checks.checkState;
 
 @SuppressWarnings("unchecked")
-public abstract class LogDataConsumerSplitter<T, D> implements AsyncLogDataConsumer<T, D> {
+public abstract class SplitterLogDataConsumer<T, D> implements AsyncLogDataConsumer<T, D> {
 
 	public final class Context {
 		private final List<AsyncLogDataConsumer<?, D>> logDataConsumers = new ArrayList<>();

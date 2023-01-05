@@ -61,8 +61,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.util.stream.Collectors.joining;
 
-public class OTRepositoryMySql<D> extends AbstractReactive
-		implements AsyncOTRepository<Long, D>, ReactiveJmxBeanWithStats, WithInitializer<OTRepositoryMySql<D>> {
+public class MySqlOTRepository<D> extends AbstractReactive
+		implements AsyncOTRepository<Long, D>, ReactiveJmxBeanWithStats, WithInitializer<MySqlOTRepository<D>> {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 	public static final String DEFAULT_REVISION_TABLE = "ot_revisions";
@@ -96,7 +96,7 @@ public class OTRepositoryMySql<D> extends AbstractReactive
 	private final PromiseStats promiseLoadSnapshot = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseSaveSnapshot = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 
-	private OTRepositoryMySql(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+	private MySqlOTRepository(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder) {
 		super(reactor);
 		this.executor = executor;
@@ -107,43 +107,43 @@ public class OTRepositoryMySql<D> extends AbstractReactive
 		this.encoder = indent((writer, value) -> writer.serialize(value, encoder));
 	}
 
-	public static <D> OTRepositoryMySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+	public static <D> MySqlOTRepository<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, ReadObject<D> decoder, WriteObject<D> encoder) {
-		return new OTRepositoryMySql<>(reactor, executor, dataSource, idGenerator, otSystem, decoder, encoder);
+		return new MySqlOTRepository<>(reactor, executor, dataSource, idGenerator, otSystem, decoder, encoder);
 	}
 
-	public static <D, F extends ReadObject<D> & WriteObject<D>> OTRepositoryMySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+	public static <D, F extends ReadObject<D> & WriteObject<D>> MySqlOTRepository<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, F format) {
-		return new OTRepositoryMySql<>(reactor, executor, dataSource, idGenerator, otSystem, format, format);
+		return new MySqlOTRepository<>(reactor, executor, dataSource, idGenerator, otSystem, format, format);
 	}
 
-	public static <D> OTRepositoryMySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+	public static <D> MySqlOTRepository<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, TypeT<? extends D> typeT) {
 		return create(reactor, executor, dataSource, idGenerator, otSystem, typeT.getType());
 	}
 
-	public static <D> OTRepositoryMySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+	public static <D> MySqlOTRepository<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, Class<? extends D> diffClass) {
 		return create(reactor, executor, dataSource, idGenerator, otSystem, (Type) diffClass);
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <D> OTRepositoryMySql<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
+	private static <D> MySqlOTRepository<D> create(Reactor reactor, Executor executor, DataSource dataSource, AsyncSupplier<Long> idGenerator,
 			OTSystem<D> otSystem, Type diffType) {
 		ReadObject<D> decoder = (ReadObject<D>) DSL_JSON.tryFindReader(diffType);
 		WriteObject<D> encoder = (WriteObject<D>) DSL_JSON.tryFindWriter(diffType);
 		if (decoder == null || encoder == null) {
 			throw new IllegalArgumentException("Unknown type: " + diffType);
 		}
-		return new OTRepositoryMySql<>(reactor, executor, dataSource, idGenerator, otSystem, decoder, encoder);
+		return new MySqlOTRepository<>(reactor, executor, dataSource, idGenerator, otSystem, decoder, encoder);
 	}
 
-	public OTRepositoryMySql<D> withCreatedBy(String createdBy) {
+	public MySqlOTRepository<D> withCreatedBy(String createdBy) {
 		this.createdBy = createdBy;
 		return this;
 	}
 
-	public OTRepositoryMySql<D> withCustomTableNames(String tableRevision, String tableDiffs, @Nullable String tableBackup) {
+	public MySqlOTRepository<D> withCustomTableNames(String tableRevision, String tableDiffs, @Nullable String tableBackup) {
 		this.tableRevision = tableRevision;
 		this.tableDiffs = tableDiffs;
 		this.tableBackup = tableBackup;
