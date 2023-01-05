@@ -25,10 +25,8 @@ import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.Module;
-import io.activej.inject.module.ModuleBuilder;
 import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
-import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
 
@@ -58,9 +56,6 @@ public abstract class DataflowClientLauncher extends Launcher {
 	@Override
 	protected final Module getModule() {
 		return combine(
-				ModuleBuilder.create()
-						.bind(Reactor.class).to(NioReactor.class)
-						.build(),
 				ServiceGraphModule.create(),
 				JmxModule.create(),
 				DataflowClientModule.create(),

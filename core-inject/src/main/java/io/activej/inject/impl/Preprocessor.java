@@ -31,6 +31,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.stream.Stream;
 
+import static io.activej.common.Utils.first;
 import static io.activej.common.Utils.union;
 import static io.activej.inject.Scope.UNSCOPED;
 import static io.activej.inject.binding.BindingType.SYNTHETIC;
@@ -109,33 +110,7 @@ public final class Preprocessor {
 		if (bindingSet != null) {
 			switch (bindingSet.size()) {
 				case 0 -> {
-					// try to recursively generate a requested binding
-					binding = ((BindingGenerator<Object>) generator).generate(recursiveLocator, scope, (Key<Object>) key);
-
-					// try to resolve OptionalDependency
-					if (binding == null && rawType == OptionalDependency.class) {
-						binding = resolveOptionalDependency(upper, localBindings, resolvedBindings, scope, key, multibinder, transformer, generator);
-					}
-
-					// try to resolve InstanceProvider
-					if (binding == null && rawType == InstanceProvider.class) {
-						binding = resolveInstanceProvider(upper, localBindings, resolvedBindings, scope, key, multibinder, transformer, generator);
-					}
-
-					// try to resolve InstanceInjector
-					if (binding == null && rawType == InstanceInjector.class) {
-						binding = resolveInstanceInjector(key);
-					}
-
-					// try to resolve Key
-					if (binding == null && rawType == Key.class) {
-						binding = Binding.toInstance(key.getTypeParameter(0)).as(SYNTHETIC);
-					}
-
-					// try to resolve bindings for classes that may have @Inject constructors/factory methods
-					if (binding == null) {
-						binding = ReflectionUtils.generateImplicitBinding(key);
-					}
+					binding = tryResolve(upper, localBindings, resolvedBindings, scope, key, multibinder, transformer, generator, recursiveLocator, rawType);
 
 					// fail fast because this generation was explicitly requested (though plain `bind(...)` call)
 					if (binding == null) {
@@ -144,7 +119,7 @@ public final class Preprocessor {
 				}
 				case 1 -> binding = bindingSet.iterator().next();
 				default ->
-						//noinspection rawtypes
+					//noinspection rawtypes
 						binding = ((Multibinder) multibinder).multibind(key, bindingSet);
 			}
 		} else { // or if it was never bound
@@ -153,33 +128,8 @@ public final class Preprocessor {
 			if (fromUpper != null) {
 				return fromUpper;
 			}
-			// try to generate it
-			binding = ((BindingGenerator<Object>) generator).generate(recursiveLocator, scope, (Key<Object>) key);
 
-			// try to resolve OptionalDependency
-			if (binding == null && rawType == OptionalDependency.class) {
-				binding = resolveOptionalDependency(upper, localBindings, resolvedBindings, scope, key, multibinder, transformer, generator);
-			}
-
-			// try to resolve InstanceProvider
-			if (binding == null && rawType == InstanceProvider.class) {
-				binding = resolveInstanceProvider(upper, localBindings, resolvedBindings, scope, key, multibinder, transformer, generator);
-			}
-
-			// try to resolve InstanceInjector
-			if (binding == null && rawType == InstanceInjector.class) {
-				binding = resolveInstanceInjector(key);
-			}
-
-			// try to resolve Key
-			if (binding == null && rawType == Key.class) {
-				binding = Binding.toInstance(key.getTypeParameter(0)).as(SYNTHETIC);
-			}
-
-			// try to resolve bindings for classes that may have @Inject constructors/factory methods
-			if (binding == null) {
-				binding = ReflectionUtils.generateImplicitBinding(key);
-			}
+			binding = tryResolve(upper, localBindings, resolvedBindings, scope, key, multibinder, transformer, generator, recursiveLocator, rawType);
 
 			// if it was not resolved then it's simply unsatisfied and later will be checked
 			if (binding == null) {
@@ -200,6 +150,85 @@ public final class Preprocessor {
 		}
 
 		return transformed;
+	}
+
+	private static @Nullable Binding<?> tryResolve(Map<Key<?>, Binding<?>> upper, Map<Key<?>, Set<Binding<?>>> localBindings, Map<Key<?>, Binding<?>> resolvedBindings, Scope[] scope, Key<?> key, Multibinder<?> multibinder, BindingTransformer<?> transformer, BindingGenerator<?> generator, BindingLocator recursiveLocator, Class<?> rawType) {
+		Binding<?> binding;
+		// try to recursively generate a requested binding
+		//noinspection unchecked
+		binding = ((BindingGenerator<Object>) generator).generate(recursiveLocator, scope, (Key<Object>) key);
+
+		// try to resolve OptionalDependency
+		if (binding == null && rawType == OptionalDependency.class) {
+			binding = resolveOptionalDependency(upper, localBindings, resolvedBindings, scope, key, multibinder, transformer, generator);
+		}
+
+		// try to resolve InstanceProvider
+		if (binding == null && rawType == InstanceProvider.class) {
+			binding = resolveInstanceProvider(upper, localBindings, resolvedBindings, scope, key, multibinder, transformer, generator);
+		}
+
+		// try to resolve InstanceInjector
+		if (binding == null && rawType == InstanceInjector.class) {
+			binding = resolveInstanceInjector(key);
+		}
+
+		// try to resolve Key
+		if (binding == null && rawType == Key.class) {
+			binding = Binding.toInstance(key.getTypeParameter(0)).as(SYNTHETIC);
+		}
+
+		// try to resolve bindings for classes that may have @Inject constructors/factory methods
+		if (binding == null) {
+			binding = ReflectionUtils.generateImplicitBinding(key);
+		}
+
+		// try to automatically resolve child bindings
+		if (binding == null) {
+			binding = resolveChildBindings(localBindings, key);
+		}
+
+		return binding;
+	}
+
+	private static @Nullable Binding<?> resolveChildBindings(Map<Key<?>, Set<Binding<?>>> localBindings, Key<?> key) {
+		KeyPattern<?> pattern = KeyPattern.ofType(key.getType(), key.getQualifier());
+
+		Map<Key<?>, Set<Binding<?>>> candidates = new HashMap<>();
+		for (Entry<Key<?>, Set<Binding<?>>> entry : localBindings.entrySet()) {
+			Key<?> localKey = entry.getKey();
+			if (!key.equals(localKey) && pattern.match(localKey)) {
+				candidates.put(localKey, entry.getValue());
+			}
+		}
+
+		Key<?> result = tryReduceCandidates(candidates);
+
+		if (result == null) {
+			return null;
+		}
+
+		return Binding.to(result).as(SYNTHETIC);
+	}
+
+	private static @Nullable Key<?> tryReduceCandidates(Map<Key<?>, Set<Binding<?>>> candidates) {
+		Set<Key<?>> candidateKeys = candidates.keySet();
+		Set<Key<?>> keysCopy = new HashSet<>(candidateKeys);
+		for (Entry<Key<?>, Set<Binding<?>>> entry : candidates.entrySet()) {
+			Set<Binding<?>> bindingSet = entry.getValue();
+			if (bindingSet.size() == 1) {
+				Binding<?> binding = first(bindingSet);
+				if (binding instanceof BindingToKey<?> bindingToKey && candidateKeys.contains(bindingToKey.getKey())) {
+					keysCopy.remove(entry.getKey());
+				}
+			}
+		}
+
+		if (keysCopy.size() == 1) {
+			return first(keysCopy);
+		}
+
+		return null;
 	}
 
 	@SuppressWarnings({"rawtypes", "Convert2Lambda"})

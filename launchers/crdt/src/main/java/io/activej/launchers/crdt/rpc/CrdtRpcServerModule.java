@@ -46,11 +46,6 @@ public abstract class CrdtRpcServerModule<K extends Comparable<K>, S> extends Ab
 
 	protected abstract List<Class<?>> getMessageTypes();
 
-	@Override
-	protected void configure() {
-		bind(Reactor.class).to(NioReactor.class);
-	}
-
 	@Provides
 	NioReactor reactor() {
 		return Eventloop.create();

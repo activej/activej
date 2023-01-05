@@ -66,8 +66,6 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 
 		bind((Key<?>) Key.ofType(supertype, Cluster.class))
 				.to(Key.ofType(Types.parameterizedType(ClusterCrdtStorage.class, clusterStorageTypes)));
-
-		bind(Reactor.class).to(NioReactor.class);
 	}
 
 	@Provides

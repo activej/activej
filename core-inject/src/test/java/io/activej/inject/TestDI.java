@@ -1021,6 +1021,24 @@ public final class TestDI {
 		}
 	}
 
+	public static class StringInterface2 extends StringInterface {
+		public StringInterface2(String obj) {
+			super(obj);
+		}
+	}
+
+	public static class StringInterface3 extends StringInterface2 {
+		public StringInterface3(String obj) {
+			super(obj);
+		}
+	}
+
+	public static class StringInterface4 extends StringInterface3 {
+		public StringInterface4(String obj) {
+			super(obj);
+		}
+	}
+
 	@Test
 	public void bindIntoSetBug() {
 		Injector injector = Injector.of(
@@ -1396,6 +1414,50 @@ public final class TestDI {
 							"inject annotation on class with factory method",
 					e.getMessage());
 		}
+	}
+
+	@Test
+	public void automaticInterfaceGeneration() {
+		Injector injector = Injector.of(ModuleBuilder.create()
+				.bind(new Key<TestInterface<String>>() {})
+				.bind(StringInterface.class).to(() -> new StringInterface("test"))
+				.build()
+		);
+
+		TestInterface<String> instance = injector.getInstance(new Key<>() {});
+
+		assertEquals("test", instance.getObj());
+	}
+
+	@Test
+	public void automaticInterfaceGenerationAmbiguous() {
+		Module module = ModuleBuilder.create()
+				.bind(new Key<TestInterface<String>>() {})
+				.bind(StringInterface.class).to(() -> new StringInterface("test"))
+				.bind(StringInterface2.class).to(() -> new StringInterface2("test2"))
+				.build();
+
+		try {
+			Injector.of(module);
+			fail();
+		} catch (DIException e) {
+			assertEquals("Refused to generate an explicitly requested binding for key TestInterface<String>", e.getMessage());
+		}
+	}
+
+	@Test
+	public void automaticInterfaceGenerationNotAmbiguous() {
+		Injector injector = Injector.of(ModuleBuilder.create()
+				.bind(new Key<TestInterface<String>>() {})
+				.bind(StringInterface.class).to(StringInterface2.class)
+				.bind(StringInterface2.class).to(StringInterface3.class)
+				.bind(StringInterface3.class).to(StringInterface4.class)
+				.bind(StringInterface4.class).to(() -> new StringInterface4("test4"))
+				.build());
+
+		TestInterface<String> instance = injector.getInstance(new Key<>() {});
+
+		assertEquals("test4", instance.getObj());
 	}
 
 	public static final class SingleInjectConstructor {

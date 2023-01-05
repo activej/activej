@@ -22,8 +22,8 @@ import io.activej.config.Config;
 import io.activej.config.ConfigModule;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.AsyncFs;
-import io.activej.fs.cluster.ClusterFs;
 import io.activej.fs.cluster.AsyncDiscoveryService;
+import io.activej.fs.cluster.ClusterFs;
 import io.activej.fs.cluster.FsPartitions;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpServer;
@@ -31,7 +31,6 @@ import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
-import io.activej.inject.module.ModuleBuilder;
 import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
 import io.activej.launchers.fs.gui.FsGuiServlet;
@@ -112,9 +111,6 @@ public class ClusterTcpClientLauncher extends Launcher {
 	@Override
 	protected final Module getModule() {
 		return combine(
-				ModuleBuilder.create()
-						.bind(Reactor.class).to(NioReactor.class)
-						.build(),
 				ServiceGraphModule.create(),
 				JmxModule.create(),
 				ConfigModule.create()

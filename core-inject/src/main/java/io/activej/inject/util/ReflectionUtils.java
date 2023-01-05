@@ -170,7 +170,7 @@ public final class ReflectionUtils {
 		return result;
 	}
 
-	public static <T> Binding<T> generateImplicitBinding(Key<T> key) {
+	public static <T> @Nullable Binding<T> generateImplicitBinding(Key<T> key) {
 		Binding<T> binding = generateConstructorBinding(key);
 		return binding != null ?
 				binding.initializeWith(generateInjectingInitializer(key)).as(SYNTHETIC) :
