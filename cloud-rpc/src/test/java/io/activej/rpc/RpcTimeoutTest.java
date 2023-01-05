@@ -4,7 +4,7 @@ import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
-import io.activej.rpc.client.ReactiveRpcClient;
+import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.server.RpcServer;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
@@ -44,7 +44,7 @@ public final class RpcTimeoutTest {
 
 	private static final int SERVER_DELAY = 100;
 
-	private ReactiveRpcClient client;
+	private RpcClient client;
 	private RpcServer server;
 
 	@Before
@@ -63,7 +63,7 @@ public final class RpcTimeoutTest {
 						}))
 				.withListenPort(port);
 
-		client = ReactiveRpcClient.create(reactor)
+		client = RpcClient.create(reactor)
 				.withMessageTypes(messageTypes)
 				.withStrategy(server(new InetSocketAddress(port)));
 

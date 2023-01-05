@@ -21,9 +21,9 @@ import io.activej.etl.LogOTState;
 import io.activej.fs.LocalFs;
 import io.activej.http.AsyncHttpClient;
 import io.activej.http.HttpServer;
-import io.activej.http.ReactiveHttpClient;
+import io.activej.http.HttpClient;
 import io.activej.multilog.AsyncMultilog;
-import io.activej.multilog.ReactiveMultilog;
+import io.activej.multilog.Multilog;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.reactor.Reactor;
@@ -48,7 +48,7 @@ import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.entriesToMap;
 import static io.activej.cube.ComputedMeasures.*;
 import static io.activej.cube.CubeQuery.Ordering.asc;
-import static io.activej.cube.ReactiveCube.AggregationConfig.id;
+import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.ReportType.DATA;
 import static io.activej.cube.ReportType.DATA_WITH_TOTALS;
 import static io.activej.cube.http.ReportingTest.LogItem.*;
@@ -64,7 +64,7 @@ public final class ReportingTest extends CubeTestBase {
 
 	private HttpServer cubeHttpServer;
 	private CubeHttpClient cubeHttpClient;
-	private ReactiveCube cube;
+	private Cube cube;
 	private int serverPort;
 
 	private static final Map<String, FieldType> DIMENSIONS_CUBE = entriesToMap(Stream.of(
@@ -214,9 +214,9 @@ public final class ReportingTest extends CubeTestBase {
 	}
 
 	public static class LogItemSplitter extends LogDataConsumerSplitter<LogItem, CubeDiff> {
-		private final ReactiveCube cube;
+		private final Cube cube;
 
-		public LogItemSplitter(ReactiveCube cube) {
+		public LogItemSplitter(Cube cube) {
 			this.cube = cube;
 		}
 
@@ -254,9 +254,9 @@ public final class ReportingTest extends CubeTestBase {
 
 		LocalFs fs = LocalFs.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
-		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = ReactiveAggregationChunkStorage.create(reactor,
+		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor,
 				ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), LZ4FrameFormat.create(), fs);
-		cube = ReactiveCube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
+		cube = Cube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withClassLoaderCache(CubeClassLoaderCache.create(CLASS_LOADER, 5))
 				.withInitializer(cube -> DIMENSIONS_CUBE.forEach(cube::addDimension))
 				.withInitializer(cube -> MEASURES.forEach(cube::addMeasure))
@@ -289,7 +289,7 @@ public final class ReportingTest extends CubeTestBase {
 
 		LocalFs activeFs = LocalFs.create(reactor, EXECUTOR, temporaryFolder.newFolder().toPath());
 		await(activeFs.start());
-		AsyncMultilog<LogItem> multilog = ReactiveMultilog.create(reactor,
+		AsyncMultilog<LogItem> multilog = Multilog.create(reactor,
 				activeFs,
 				LZ4FrameFormat.create(),
 				SerializerBuilder.create(CLASS_LOADER).build(LogItem.class),
@@ -333,7 +333,7 @@ public final class ReportingTest extends CubeTestBase {
 
 		cubeHttpServer = startHttpServer();
 
-		AsyncHttpClient httpClient = ReactiveHttpClient.create(reactor)
+		AsyncHttpClient httpClient = HttpClient.create(reactor)
 				.withNoKeepAlive();
 		cubeHttpClient = CubeHttpClient.create(httpClient, "http://127.0.0.1:" + serverPort)
 				.withAttribute("date", LocalDate.class)
@@ -782,17 +782,17 @@ public final class ReportingTest extends CubeTestBase {
 
 	@Test
 	public void testDataCorrectlyLoadedIntoAggregations() {
-		ReactiveAggregation daily = cube.getAggregation("daily");
+		Aggregation daily = cube.getAggregation("daily");
 		assert daily != null;
 		int dailyAggregationItemsCount = getAggregationItemsCount(daily);
 		assertEquals(6, dailyAggregationItemsCount);
 
-		ReactiveAggregation advertisers = cube.getAggregation("advertisers");
+		Aggregation advertisers = cube.getAggregation("advertisers");
 		assert advertisers != null;
 		int advertisersAggregationItemsCount = getAggregationItemsCount(advertisers);
 		assertEquals(5, advertisersAggregationItemsCount);
 
-		ReactiveAggregation affiliates = cube.getAggregation("affiliates");
+		Aggregation affiliates = cube.getAggregation("affiliates");
 		assert affiliates != null;
 		int affiliatesAggregationItemsCount = getAggregationItemsCount(affiliates);
 		assertEquals(6, affiliatesAggregationItemsCount);
@@ -918,7 +918,7 @@ public final class ReportingTest extends CubeTestBase {
 		assertEquals(27, dailyErrors);
 	}
 
-	private static int getAggregationItemsCount(ReactiveAggregation aggregation) {
+	private static int getAggregationItemsCount(Aggregation aggregation) {
 		int count = 0;
 		for (Map.Entry<Object, AggregationChunk> chunk : aggregation.getState().getChunks().entrySet()) {
 			count += chunk.getValue().getCount();

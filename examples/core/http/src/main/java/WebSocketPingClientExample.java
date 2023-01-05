@@ -1,7 +1,7 @@
 import io.activej.eventloop.Eventloop;
 import io.activej.http.AsyncHttpClient;
 import io.activej.http.HttpRequest;
-import io.activej.http.ReactiveHttpClient;
+import io.activej.http.HttpClient;
 import io.activej.http.AsyncWebSocket.Message;
 import io.activej.http.AsyncWebSocketClient;
 import io.activej.inject.annotation.Inject;
@@ -28,7 +28,7 @@ public final class WebSocketPingClientExample extends Launcher {
 
 	@Provides
 	AsyncHttpClient client(NioReactor reactor) {
-		return ReactiveHttpClient.create(reactor);
+		return HttpClient.create(reactor);
 	}
 
 	@Override

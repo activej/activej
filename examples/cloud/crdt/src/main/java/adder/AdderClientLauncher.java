@@ -16,7 +16,7 @@ import io.activej.launchers.crdt.rpc.CrdtRpcClientLauncher;
 import io.activej.launchers.crdt.rpc.CrdtRpcStrategyService;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
-import io.activej.rpc.client.ReactiveRpcClient;
+import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.AsyncRpcClient;
 
 import java.nio.file.Path;
@@ -48,7 +48,7 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 		return new AbstractModule() {
 			@Provides
 			AsyncRpcClient client(NioReactor reactor, CrdtRpcStrategyService<Long> strategyService, List<Class<?>> messageTypes) {
-				ReactiveRpcClient rpcClient = ReactiveRpcClient.create(reactor)
+				RpcClient rpcClient = RpcClient.create(reactor)
 						.withMessageTypes(messageTypes);
 				strategyService.setRpcClient(rpcClient);
 				return rpcClient;

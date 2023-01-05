@@ -27,7 +27,7 @@ import io.activej.common.inspector.BaseInspector;
 import io.activej.dns.protocol.*;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;
-import io.activej.net.socket.udp.ReactiveUdpSocket;
+import io.activej.net.socket.udp.UdpSocket;
 import io.activej.net.socket.udp.UdpPacket;
 import io.activej.net.socket.udp.AsyncUdpSocket;
 import io.activej.promise.Promise;
@@ -55,10 +55,10 @@ import static io.activej.promise.Promises.timeout;
  * Implementation of {@link AsyncDnsClient} that asynchronously
  * connects to some <i>real</i> DNS server and gets the response from it.
  */
-public final class ReactiveDnsClient extends AbstractNioReactive
-		implements AsyncDnsClient, ReactiveJmxBeanWithStats, WithInitializer<ReactiveDnsClient> {
-	private final Logger logger = LoggerFactory.getLogger(ReactiveDnsClient.class);
-	private static final boolean CHECK = Checks.isEnabled(ReactiveDnsClient.class);
+public final class DnsClient extends AbstractNioReactive
+		implements AsyncDnsClient, ReactiveJmxBeanWithStats, WithInitializer<DnsClient> {
+	private final Logger logger = LoggerFactory.getLogger(DnsClient.class);
+	private static final boolean CHECK = Checks.isEnabled(DnsClient.class);
 
 	public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(3);
 	private static final int DNS_SERVER_PORT = 53;
@@ -73,44 +73,44 @@ public final class ReactiveDnsClient extends AbstractNioReactive
 
 	private @Nullable AsyncUdpSocket socket;
 
-	private @Nullable ReactiveUdpSocket.Inspector socketInspector;
+	private @Nullable UdpSocket.Inspector socketInspector;
 	private @Nullable Inspector inspector;
 
 	// region creators
-	private ReactiveDnsClient(NioReactor reactor) {
+	private DnsClient(NioReactor reactor) {
 		super(reactor);
 	}
 
-	public static ReactiveDnsClient create(NioReactor reactor) {
-		return new ReactiveDnsClient(reactor);
+	public static DnsClient create(NioReactor reactor) {
+		return new DnsClient(reactor);
 	}
 
-	public ReactiveDnsClient withDatagramSocketSetting(DatagramSocketSettings setting) {
+	public DnsClient withDatagramSocketSetting(DatagramSocketSettings setting) {
 		this.datagramSocketSettings = setting;
 		return this;
 	}
 
-	public ReactiveDnsClient withTimeout(Duration timeout) {
+	public DnsClient withTimeout(Duration timeout) {
 		this.timeout = timeout;
 		return this;
 	}
 
-	public ReactiveDnsClient withDnsServerAddress(InetSocketAddress address) {
+	public DnsClient withDnsServerAddress(InetSocketAddress address) {
 		this.dnsServerAddress = address;
 		return this;
 	}
 
-	public ReactiveDnsClient withDnsServerAddress(InetAddress address) {
+	public DnsClient withDnsServerAddress(InetAddress address) {
 		this.dnsServerAddress = new InetSocketAddress(address, DNS_SERVER_PORT);
 		return this;
 	}
 
-	public ReactiveDnsClient withInspector(Inspector inspector) {
+	public DnsClient withInspector(Inspector inspector) {
 		this.inspector = inspector;
 		return this;
 	}
 
-	public ReactiveDnsClient withSocketInspector(ReactiveUdpSocket.Inspector socketInspector) {
+	public DnsClient withSocketInspector(UdpSocket.Inspector socketInspector) {
 		this.socketInspector = socketInspector;
 		return this;
 	}
@@ -136,7 +136,7 @@ public final class ReactiveDnsClient extends AbstractNioReactive
 		try {
 			logger.trace("Incoming query, opening UDP socket");
 			DatagramChannel channel = NioReactor.createDatagramChannel(datagramSocketSettings, null, dnsServerAddress);
-			return ReactiveUdpSocket.connect(reactor, channel)
+			return UdpSocket.connect(reactor, channel)
 					.map(s -> {
 						if (socketInspector != null) {
 							socketInspector.onCreate(s);
@@ -305,8 +305,8 @@ public final class ReactiveDnsClient extends AbstractNioReactive
 	// endregion
 
 	@JmxAttribute
-	public @Nullable ReactiveUdpSocket.JmxInspector getSocketStats() {
-		return BaseInspector.lookup(socketInspector, ReactiveUdpSocket.JmxInspector.class);
+	public @Nullable UdpSocket.JmxInspector getSocketStats() {
+		return BaseInspector.lookup(socketInspector, UdpSocket.JmxInspector.class);
 	}
 
 	@JmxAttribute(name = "")

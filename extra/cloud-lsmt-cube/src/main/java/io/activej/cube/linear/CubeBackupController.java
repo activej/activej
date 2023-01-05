@@ -16,7 +16,7 @@
 
 package io.activej.cube.linear;
 
-import io.activej.aggregation.ReactiveAggregationChunkStorage;
+import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.cube.exception.CubeException;
@@ -400,7 +400,7 @@ public final class CubeBackupController implements ConcurrentJmxBean, WithInitia
 	public interface ChunksBackupService {
 		void backup(long revisionId, Set<Long> chunkIds) throws IOException;
 
-		static ChunksBackupService ofReactiveAggregationChunkStorage(ReactiveAggregationChunkStorage<Long> storage) {
+		static ChunksBackupService ofReactiveAggregationChunkStorage(AggregationChunkStorage<Long> storage) {
 			return Utils.backupServiceOfStorage(storage);
 		}
 	}

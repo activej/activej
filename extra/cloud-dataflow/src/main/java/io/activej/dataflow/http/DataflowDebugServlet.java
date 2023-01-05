@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.AsyncMessaging;
-import io.activej.csp.net.ReactiveMessaging;
+import io.activej.csp.net.Messaging;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.exception.DataflowException;
 import io.activej.dataflow.graph.Partition;
@@ -38,7 +38,7 @@ import io.activej.dataflow.stats.StatReducer;
 import io.activej.http.*;
 import io.activej.inject.Key;
 import io.activej.inject.ResourceLocator;
-import io.activej.net.socket.tcp.ReactiveTcpSocket;
+import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -163,9 +163,9 @@ public final class DataflowDebugServlet extends ImplicitlyReactive implements As
 	}
 
 	private Promise<PartitionData> getPartitionData(InetSocketAddress address) {
-		return ReactiveTcpSocket.connect(getCurrentReactor(), address)
+		return TcpSocket.connect(getCurrentReactor(), address)
 				.then(socket -> {
-					AsyncMessaging<DataflowResponse, DataflowRequest> messaging = ReactiveMessaging.create(socket, codec);
+					AsyncMessaging<DataflowResponse, DataflowRequest> messaging = Messaging.create(socket, codec);
 					return DataflowClient.performHandshake(messaging)
 							.then(() -> messaging.send(new GetTasks(null)))
 							.then(messaging::receive)
@@ -183,9 +183,9 @@ public final class DataflowDebugServlet extends ImplicitlyReactive implements As
 	}
 
 	private Promise<TaskData> getTask(InetSocketAddress address, long taskId) {
-		return ReactiveTcpSocket.connect(getCurrentReactor(), address)
+		return TcpSocket.connect(getCurrentReactor(), address)
 				.then(socket -> {
-					AsyncMessaging<DataflowResponse, DataflowRequest> messaging = ReactiveMessaging.create(socket, codec);
+					AsyncMessaging<DataflowResponse, DataflowRequest> messaging = Messaging.create(socket, codec);
 					return DataflowClient.performHandshake(messaging)
 							.then(() -> messaging.send(new GetTasks(taskId)))
 							.then($ -> messaging.receive())

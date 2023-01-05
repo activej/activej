@@ -1,12 +1,12 @@
 package io.activej.cube.service;
 
 import io.activej.aggregation.ChunkIdCodec;
-import io.activej.aggregation.ReactiveAggregationChunkStorage;
+import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frames.LZ4FrameFormat;
-import io.activej.cube.ReactiveCube;
+import io.activej.cube.Cube;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffCodec;
 import io.activej.cube.ot.CubeDiffScheme;
@@ -39,7 +39,7 @@ import java.util.concurrent.Executors;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.aggregation.measure.Measures.sum;
-import static io.activej.cube.ReactiveCube.AggregationConfig.id;
+import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.dataSource;
 
@@ -57,7 +57,7 @@ public class CubeCleanerControllerTest {
 
 	private Reactor reactor;
 	private OTRepositoryMySql<LogDiff<CubeDiff>> repository;
-	private ReactiveAggregationChunkStorage<Long> aggregationChunkStorage;
+	private AggregationChunkStorage<Long> aggregationChunkStorage;
 
 	@Before
 	public void setUp() throws Exception {
@@ -68,9 +68,9 @@ public class CubeCleanerControllerTest {
 		reactor = Reactor.getCurrentReactor();
 
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
-		aggregationChunkStorage = ReactiveAggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
+		aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
 				LZ4FrameFormat.create(), LocalFs.create(reactor, executor, aggregationsDir));
-		ReactiveCube cube = ReactiveCube.create(reactor, executor, classLoader, aggregationChunkStorage)
+		Cube cube = Cube.create(reactor, executor, classLoader, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
 				.withDimension("adv", ofInt())
 				.withMeasure("pubRequests", sum(ofLong()))

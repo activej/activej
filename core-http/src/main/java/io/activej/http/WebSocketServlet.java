@@ -88,7 +88,7 @@ public abstract class WebSocketServlet implements AsyncServlet {
 
 								bindWebSocketTransformers(rawStream, encoder, decoder);
 
-								onWebSocket(new ReactiveWebSocket(
+								onWebSocket(new WebSocket(
 										request,
 										response,
 										rawStream.transformWith(decoder),

@@ -19,7 +19,7 @@ import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertCompleteFn;
 import static org.junit.Assert.assertArrayEquals;
 
-public final class ReactiveUdpSocketTest {
+public final class UdpSocketTest {
 	private static final InetSocketAddress SERVER_ADDRESS = new InetSocketAddress("localhost", 45555);
 
 	@ClassRule
@@ -34,7 +34,7 @@ public final class ReactiveUdpSocketTest {
 	public void testEchoUdpServer() throws IOException {
 		DatagramChannel serverDatagramChannel = NioReactor.createDatagramChannel(DatagramSocketSettings.create(), SERVER_ADDRESS, null);
 
-		ReactiveUdpSocket.connect(Reactor.getCurrentReactor(), serverDatagramChannel)
+		UdpSocket.connect(Reactor.getCurrentReactor(), serverDatagramChannel)
 				.then(serverSocket -> serverSocket.receive()
 						.then(serverSocket::send)
 						.whenComplete(serverSocket::close))
@@ -42,7 +42,7 @@ public final class ReactiveUdpSocketTest {
 
 		DatagramChannel clientDatagramChannel = NioReactor.createDatagramChannel(DatagramSocketSettings.create(), null, null);
 
-		Promise<ReactiveUdpSocket> promise = ReactiveUdpSocket.connect(Reactor.getCurrentReactor(), clientDatagramChannel)
+		Promise<UdpSocket> promise = UdpSocket.connect(Reactor.getCurrentReactor(), clientDatagramChannel)
 				.whenComplete(assertCompleteFn(clientSocket -> {
 
 					clientSocket.send(UdpPacket.of(ByteBuf.wrapForReading(bytesToSend), SERVER_ADDRESS))

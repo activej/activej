@@ -47,7 +47,7 @@ public final class ReactiveRpcClientTest {
 
 	private Map<Integer, RpcServer> servers;
 	private Eventloop clientEventloop;
-	private ReactiveRpcClient rpcClient;
+	private RpcClient rpcClient;
 
 	@Before
 	public void setUp() throws Exception {
@@ -418,7 +418,7 @@ public final class ReactiveRpcClientTest {
 	}
 
 	private void initRpcClient(RpcStrategy strategy) {
-		this.rpcClient = ReactiveRpcClient.create(clientEventloop)
+		this.rpcClient = RpcClient.create(clientEventloop)
 				.withMessageTypes(Request.class, Integer.class)
 				.withStrategy(strategy);
 		await(rpcClient::start);

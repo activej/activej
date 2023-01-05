@@ -1,6 +1,6 @@
 import io.activej.eventloop.Eventloop;
 import io.activej.http.HttpRequest;
-import io.activej.http.ReactiveHttpClient;
+import io.activej.http.HttpClient;
 import io.activej.http.AsyncWebSocket;
 import io.activej.http.AsyncWebSocket.Message;
 import io.activej.http.AsyncWebSocketClient;
@@ -36,7 +36,7 @@ public final class WebSocketEchoClientExample extends Launcher {
 
 	@Provides
 	AsyncWebSocketClient client(NioReactor reactor) {
-		return ReactiveHttpClient.create(reactor);
+		return HttpClient.create(reactor);
 	}
 
 	@Override

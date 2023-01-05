@@ -40,7 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
-public class ReactiveMultilogTest {
+public class MultilogTest {
 	@Rule
 	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
@@ -72,7 +72,7 @@ public class ReactiveMultilogTest {
 		Reactor reactor = Reactor.getCurrentReactor();
 		LocalFs fs = LocalFs.create(reactor, newSingleThreadExecutor(), temporaryFolder.getRoot().toPath());
 		await(fs.start());
-		AsyncMultilog<String> multilog = ReactiveMultilog.create(reactor, fs, frameFormat, BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ);
+		AsyncMultilog<String> multilog = Multilog.create(reactor, fs, frameFormat, BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ);
 		String testPartition = "testPartition";
 
 		List<String> values = List.of("test1", "test2", "test3");
@@ -89,7 +89,7 @@ public class ReactiveMultilogTest {
 		Path storage = temporaryFolder.getRoot().toPath();
 		LocalFs fs = LocalFs.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
-		AsyncMultilog<String> multilog = ReactiveMultilog.create(reactor, fs,
+		AsyncMultilog<String> multilog = Multilog.create(reactor, fs,
 				frameFormat,
 				BinarySerializers.UTF8_SERIALIZER,
 				NAME_PARTITION_REMAINDER_SEQ)
@@ -120,7 +120,7 @@ public class ReactiveMultilogTest {
 		Path storage = temporaryFolder.getRoot().toPath();
 		LocalFs fs = LocalFs.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
-		AsyncMultilog<String> multilog = ReactiveMultilog.create(reactor, fs,
+		AsyncMultilog<String> multilog = Multilog.create(reactor, fs,
 				frameFormat,
 				BinarySerializers.UTF8_SERIALIZER,
 				NAME_PARTITION_REMAINDER_SEQ)
@@ -160,7 +160,7 @@ public class ReactiveMultilogTest {
 		Path storage = temporaryFolder.getRoot().toPath();
 		LocalFs fs = LocalFs.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
-		AsyncMultilog<String> multilog = ReactiveMultilog.create(reactor, fs,
+		AsyncMultilog<String> multilog = Multilog.create(reactor, fs,
 				frameFormat,
 				BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ)
 				.withIgnoreMalformedLogs(true);
@@ -195,7 +195,7 @@ public class ReactiveMultilogTest {
 
 		await(fs.start());
 
-		AsyncMultilog<String> multilog = ReactiveMultilog.create(reactor,
+		AsyncMultilog<String> multilog = Multilog.create(reactor,
 				fs,
 				frameFormat,
 				BinarySerializers.UTF8_SERIALIZER,

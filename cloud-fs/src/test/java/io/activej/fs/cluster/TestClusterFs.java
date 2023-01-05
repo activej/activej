@@ -15,7 +15,7 @@ import io.activej.fs.http.FsServlet;
 import io.activej.fs.http.HttpFs;
 import io.activej.http.AsyncHttpClient;
 import io.activej.http.HttpServer;
-import io.activej.http.ReactiveHttpClient;
+import io.activej.http.HttpClient;
 import io.activej.net.AbstractReactiveServer;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
@@ -81,7 +81,7 @@ public final class TestClusterFs {
 		Map<Object, AsyncFs> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
 
 		NioReactor reactor = Reactor.getCurrentReactor();
-		AsyncHttpClient httpClient = ReactiveHttpClient.create(reactor);
+		AsyncHttpClient httpClient = HttpClient.create(reactor);
 
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
 			int port = getFreePort();

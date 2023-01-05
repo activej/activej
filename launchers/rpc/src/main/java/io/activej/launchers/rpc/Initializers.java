@@ -18,7 +18,7 @@ package io.activej.launchers.rpc;
 
 import io.activej.common.initializer.Initializer;
 import io.activej.config.Config;
-import io.activej.rpc.client.ReactiveRpcClient;
+import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.server.RpcServer;
 import io.activej.trigger.TriggerResult;
 import io.activej.trigger.TriggersModuleSettings;
@@ -46,7 +46,7 @@ public final class Initializers {
 
 	public static Initializer<TriggersModuleSettings> ofReactiveRpcClient() {
 		return triggersSettings -> triggersSettings
-				.with(ReactiveRpcClient.class, HIGH, "unresponsiveServers",
+				.with(RpcClient.class, HIGH, "unresponsiveServers",
 						rpcClient -> {
 							List<String> unresponsiveServers = rpcClient.getUnresponsiveServers();
 							return unresponsiveServers.isEmpty() ? TriggerResult.none() :

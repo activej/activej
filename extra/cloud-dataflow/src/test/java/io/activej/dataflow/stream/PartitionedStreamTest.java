@@ -38,7 +38,7 @@ import io.activej.fs.LocalFs;
 import io.activej.fs.http.FsServlet;
 import io.activej.fs.http.HttpFs;
 import io.activej.http.HttpServer;
-import io.activej.http.ReactiveHttpClient;
+import io.activej.http.HttpClient;
 import io.activej.inject.Injector;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
@@ -412,7 +412,7 @@ public final class PartitionedStreamTest {
 
 	private static AsyncFs createClient(NioReactor reactor, HttpServer server) {
 		int port = server.getListenAddresses().get(0).getPort();
-		return HttpFs.create(reactor, "http://localhost:" + port, ReactiveHttpClient.create(reactor));
+		return HttpFs.create(reactor, "http://localhost:" + port, HttpClient.create(reactor));
 	}
 
 	private void assertSorted(Collection<List<String>> result) {

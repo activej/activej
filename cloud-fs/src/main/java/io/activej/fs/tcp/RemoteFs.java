@@ -30,7 +30,7 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.AsyncMessaging;
 import io.activej.csp.net.MessagingCodec;
-import io.activej.csp.net.ReactiveMessaging;
+import io.activej.csp.net.Messaging;
 import io.activej.fs.AsyncFs;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.exception.FsException;
@@ -38,7 +38,7 @@ import io.activej.fs.tcp.messaging.FsRequest;
 import io.activej.fs.tcp.messaging.FsResponse;
 import io.activej.fs.util.RemoteFsUtils;
 import io.activej.jmx.api.attribute.JmxAttribute;
-import io.activej.net.socket.tcp.ReactiveTcpSocket;
+import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.AbstractNioReactive;
@@ -316,17 +316,17 @@ public final class RemoteFs extends AbstractNioReactive
 				.whenComplete(pingPromise.recordStats());
 	}
 
-	private Promise<ReactiveMessaging<FsResponse, FsRequest>> connect(InetSocketAddress address) {
+	private Promise<Messaging<FsResponse, FsRequest>> connect(InetSocketAddress address) {
 		return doConnect(address, socketSettings);
 	}
 
-	private Promise<ReactiveMessaging<FsResponse, FsRequest>> connectForStreaming(InetSocketAddress address) {
+	private Promise<Messaging<FsResponse, FsRequest>> connectForStreaming(InetSocketAddress address) {
 		return doConnect(address, socketSettings.withLingerTimeout(Duration.ZERO));
 	}
 
-	private Promise<ReactiveMessaging<FsResponse, FsRequest>> doConnect(InetSocketAddress address, SocketSettings socketSettings) {
-		return ReactiveTcpSocket.connect(reactor, address, connectionTimeout, socketSettings)
-				.map(socket -> ReactiveMessaging.create(socket, SERIALIZER))
+	private Promise<Messaging<FsResponse, FsRequest>> doConnect(InetSocketAddress address, SocketSettings socketSettings) {
+		return TcpSocket.connect(reactor, address, connectionTimeout, socketSettings)
+				.map(socket -> Messaging.create(socket, SERIALIZER))
 				.whenResult(() -> logger.trace("connected to [{}]: {}", address, this))
 				.whenException(e -> logger.warn("failed connecting to [{}] : {}", address, this, e))
 				.whenComplete(connectPromise.recordStats());

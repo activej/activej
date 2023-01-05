@@ -5,7 +5,7 @@ import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
-import io.activej.rpc.client.ReactiveRpcClient;
+import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.RpcClientConnection;
 import io.activej.rpc.server.RpcServer;
 import io.activej.test.ExpectedException;
@@ -61,7 +61,7 @@ public final class TestReactiveRpcClientShutdown {
 						}))
 				.withListenPort(port);
 
-		ReactiveRpcClient rpcClient = ReactiveRpcClient.create(reactor)
+		RpcClient rpcClient = RpcClient.create(reactor)
 				.withMessageTypes(messageTypes)
 				.withStrategy(server(new InetSocketAddress(port)));
 

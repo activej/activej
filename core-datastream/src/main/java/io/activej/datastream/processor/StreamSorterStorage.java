@@ -51,8 +51,8 @@ import static java.lang.String.format;
  *
  * @param <T> type of storing data
  */
-public final class ReactiveStreamSorterStorage<T> implements AsyncStreamSorterStorage<T>, WithInitializer<ReactiveStreamSorterStorage<T>> {
-	private static final Logger logger = LoggerFactory.getLogger(ReactiveStreamSorterStorage.class);
+public final class StreamSorterStorage<T> implements AsyncStreamSorterStorage<T>, WithInitializer<StreamSorterStorage<T>> {
+	private static final Logger logger = LoggerFactory.getLogger(StreamSorterStorage.class);
 
 	public static final String DEFAULT_FILE_PATTERN = "%d";
 	public static final MemSize DEFAULT_SORTER_BLOCK_SIZE = MemSize.kilobytes(256);
@@ -69,7 +69,7 @@ public final class ReactiveStreamSorterStorage<T> implements AsyncStreamSorterSt
 	private MemSize writeBlockSize = DEFAULT_SORTER_BLOCK_SIZE;
 
 	// region creators
-	private ReactiveStreamSorterStorage(Executor executor, BinarySerializer<T> serializer,
+	private StreamSorterStorage(Executor executor, BinarySerializer<T> serializer,
 			FrameFormat frameFormat, Path path) {
 		this.executor = executor;
 		this.serializer = serializer;
@@ -84,7 +84,7 @@ public final class ReactiveStreamSorterStorage<T> implements AsyncStreamSorterSt
 	 * @param serializer for serialization to bytes
 	 * @param path       path in which will store received data
 	 */
-	public static <T> ReactiveStreamSorterStorage<T> create(Executor executor,
+	public static <T> StreamSorterStorage<T> create(Executor executor,
 			BinarySerializer<T> serializer, FrameFormat frameFormat, Path path) {
 		checkArgument(!path.getFileName().toString().contains("%d"), "Filename should not contain '%d'");
 		try {
@@ -92,21 +92,21 @@ public final class ReactiveStreamSorterStorage<T> implements AsyncStreamSorterSt
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}
-		return new ReactiveStreamSorterStorage<>(executor, serializer, frameFormat, path);
+		return new StreamSorterStorage<>(executor, serializer, frameFormat, path);
 	}
 
-	public ReactiveStreamSorterStorage<T> withFilePattern(String filePattern) {
+	public StreamSorterStorage<T> withFilePattern(String filePattern) {
 		checkArgument(!filePattern.contains("%d"), "File pattern should not contain '%d'");
 		this.filePattern = filePattern;
 		return this;
 	}
 
-	public ReactiveStreamSorterStorage<T> withReadBlockSize(MemSize readBlockSize) {
+	public StreamSorterStorage<T> withReadBlockSize(MemSize readBlockSize) {
 		this.readBlockSize = readBlockSize;
 		return this;
 	}
 
-	public ReactiveStreamSorterStorage<T> withWriteBlockSize(MemSize writeBlockSize) {
+	public StreamSorterStorage<T> withWriteBlockSize(MemSize writeBlockSize) {
 		this.writeBlockSize = writeBlockSize;
 		return this;
 	}

@@ -4,7 +4,7 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.ot.repository.AsyncOTRepository;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.AsyncOTUplink;
-import io.activej.ot.uplink.ReactiveOTUplink;
+import io.activej.ot.uplink.OTUplink;
 import io.activej.ot.utils.OTRepositoryStub;
 import io.activej.ot.utils.TestOp;
 import io.activej.ot.utils.TestOpState;
@@ -36,7 +36,7 @@ public class OTStateManagerTest {
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
 	private OTRepositoryStub<Integer, TestOp> repository;
-	private ReactiveOTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> uplink;
+	private OTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> uplink;
 	private OTStateManager<Integer, TestOp> stateManager;
 	private TestOpState testOpState;
 	private boolean alreadyFailed = false;
@@ -47,7 +47,7 @@ public class OTStateManagerTest {
 		repository = OTRepositoryStub.create();
 		repository.revisionIdSupplier = () -> random.nextInt(1000) + 1000;
 		testOpState = new TestOpState();
-		uplink = ReactiveOTUplink.create(this.repository, SYSTEM);
+		uplink = OTUplink.create(this.repository, SYSTEM);
 		stateManager = OTStateManager.create(getCurrentReactor(), SYSTEM, uplink, testOpState);
 
 		initializeRepository(this.repository, stateManager);

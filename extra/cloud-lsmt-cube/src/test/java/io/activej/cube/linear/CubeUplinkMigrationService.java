@@ -5,7 +5,7 @@ import io.activej.aggregation.ot.AggregationStructure;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.Utils;
-import io.activej.cube.ReactiveCube;
+import io.activej.cube.Cube;
 import io.activej.cube.linear.CubeUplinkMySql.UplinkProtoCommit;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffCodec;
@@ -48,7 +48,7 @@ final class CubeUplinkMigrationService {
 	private final Executor executor = newSingleThreadExecutor();
 
 	@VisibleForTesting
-	ReactiveCube cube = createEmptyCube(eventloop, executor)
+	Cube cube = createEmptyCube(eventloop, executor)
 			// .withAggregation(...) - CONFIGURE CUBE STRUCTURE!
 			;
 
@@ -116,8 +116,8 @@ final class CubeUplinkMigrationService {
 		return CubeUplinkMySql.create(executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
 	}
 
-	static ReactiveCube createEmptyCube(Reactor reactor, Executor executor) {
-		return ReactiveCube.create(reactor, executor, DefiningClassLoader.create(), new AsyncAggregationChunkStorage<Long>() {
+	static Cube createEmptyCube(Reactor reactor, Executor executor) {
+		return Cube.create(reactor, executor, DefiningClassLoader.create(), new AsyncAggregationChunkStorage<Long>() {
 			@Override
 			public Promise<Long> createId() {
 				throw new AssertionError();

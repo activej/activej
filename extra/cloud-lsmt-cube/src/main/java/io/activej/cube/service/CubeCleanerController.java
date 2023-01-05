@@ -16,7 +16,7 @@
 
 package io.activej.cube.service;
 
-import io.activej.aggregation.ReactiveAggregationChunkStorage;
+import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.common.Utils;
 import io.activej.common.function.BiConsumerEx;
@@ -64,7 +64,7 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 
 	private final OTSystem<D> otSystem;
 	private final AsyncOTRepository<K, D> repository;
-	private final ReactiveAggregationChunkStorage<C> chunksStorage;
+	private final AggregationChunkStorage<C> chunksStorage;
 
 	private final CubeDiffScheme<D> cubeDiffScheme;
 
@@ -79,7 +79,7 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 	private final PromiseStats promiseCleanupChunks = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 
 	CubeCleanerController(Reactor reactor,
-			CubeDiffScheme<D> cubeDiffScheme, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem, ReactiveAggregationChunkStorage<C> chunksStorage) {
+			CubeDiffScheme<D> cubeDiffScheme, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem, AggregationChunkStorage<C> chunksStorage) {
 		super(reactor);
 		this.cubeDiffScheme = cubeDiffScheme;
 		this.otSystem = otSystem;
@@ -91,7 +91,7 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 			CubeDiffScheme<D> cubeDiffScheme,
 			AsyncOTRepository<K, D> repository,
 			OTSystem<D> otSystem,
-			ReactiveAggregationChunkStorage<C> storage) {
+			AggregationChunkStorage<C> storage) {
 		return new CubeCleanerController<>(reactor, cubeDiffScheme, repository, otSystem, storage);
 	}
 

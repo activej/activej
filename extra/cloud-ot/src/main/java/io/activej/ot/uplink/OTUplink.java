@@ -42,15 +42,15 @@ import static io.activej.ot.reducers.DiffsReducer.toSquashedList;
 import static io.activej.promise.PromisePredicates.isResultOrException;
 import static io.activej.promise.Promises.retry;
 
-public final class ReactiveOTUplink<K, D, PC> implements AsyncOTUplink<K, D, PC>, WithInitializer<ReactiveOTUplink<K, D, PC>> {
-	private static final Logger logger = LoggerFactory.getLogger(ReactiveOTUplink.class);
+public final class OTUplink<K, D, PC> implements AsyncOTUplink<K, D, PC>, WithInitializer<OTUplink<K, D, PC>> {
+	private static final Logger logger = LoggerFactory.getLogger(OTUplink.class);
 
 	private final OTSystem<D> otSystem;
 	private final AsyncOTRepository<K, D> repository;
 	private final FunctionEx<OTCommit<K, D>, PC> protoCommitEncoder;
 	private final FunctionEx<PC, OTCommit<K, D>> protoCommitDecoder;
 
-	private ReactiveOTUplink(AsyncOTRepository<K, D> repository, OTSystem<D> otSystem, FunctionEx<OTCommit<K, D>, PC> protoCommitEncoder,
+	private OTUplink(AsyncOTRepository<K, D> repository, OTSystem<D> otSystem, FunctionEx<OTCommit<K, D>, PC> protoCommitEncoder,
 			FunctionEx<PC, OTCommit<K, D>> protoCommitDecoder) {
 		this.otSystem = otSystem;
 		this.repository = repository;
@@ -58,13 +58,13 @@ public final class ReactiveOTUplink<K, D, PC> implements AsyncOTUplink<K, D, PC>
 		this.protoCommitDecoder = protoCommitDecoder;
 	}
 
-	public static <K, D, C> ReactiveOTUplink<K, D, C> create(AsyncOTRepository<K, D> repository, OTSystem<D> otSystem,
+	public static <K, D, C> OTUplink<K, D, C> create(AsyncOTRepository<K, D> repository, OTSystem<D> otSystem,
 			FunctionEx<OTCommit<K, D>, C> commitToObject, FunctionEx<C, OTCommit<K, D>> objectToCommit) {
-		return new ReactiveOTUplink<>(repository, otSystem, commitToObject, objectToCommit);
+		return new OTUplink<>(repository, otSystem, commitToObject, objectToCommit);
 	}
 
-	public static <K, D> ReactiveOTUplink<K, D, OTCommit<K, D>> create(AsyncOTRepository<K, D> repository, OTSystem<D> otSystem) {
-		return new ReactiveOTUplink<>(repository, otSystem, commit -> commit, object -> object);
+	public static <K, D> OTUplink<K, D, OTCommit<K, D>> create(AsyncOTRepository<K, D> repository, OTSystem<D> otSystem) {
+		return new OTUplink<>(repository, otSystem, commit -> commit, object -> object);
 	}
 
 	public AsyncOTRepository<K, D> getRepository() {

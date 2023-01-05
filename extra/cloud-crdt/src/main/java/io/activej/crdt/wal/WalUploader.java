@@ -33,7 +33,7 @@ import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.processor.StreamReducer;
 import io.activej.datastream.processor.StreamReducers;
 import io.activej.datastream.processor.StreamSorter;
-import io.activej.datastream.processor.ReactiveStreamSorterStorage;
+import io.activej.datastream.processor.StreamSorterStorage;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ValueStats;
@@ -169,7 +169,7 @@ public final class WalUploader<K extends Comparable<K>, S> extends AbstractReact
 	}
 
 	private StreamSorter<K, CrdtData<K, S>> createSorter(Path sortDir) {
-		ReactiveStreamSorterStorage<CrdtData<K, S>> sorterStorage = ReactiveStreamSorterStorage.create(executor, serializer, FRAME_FORMAT, sortDir);
+		StreamSorterStorage<CrdtData<K, S>> sorterStorage = StreamSorterStorage.create(executor, serializer, FRAME_FORMAT, sortDir);
 		Function<CrdtData<K, S>, K> keyFn = CrdtData::getKey;
 		return StreamSorter.create(sorterStorage, keyFn, naturalOrder(), false, sortItemsInMemory);
 	}

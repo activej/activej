@@ -68,7 +68,7 @@ public final class HttpApiTest {
 				})
 				.withListenPort(port);
 
-		client = ReactiveHttpClient.create(Reactor.getCurrentReactor());
+		client = HttpClient.create(Reactor.getCurrentReactor());
 
 		// setup request and response data
 		requestAcceptContentTypes.add(AcceptMediaType.of(MediaTypes.ANY_AUDIO, 90));

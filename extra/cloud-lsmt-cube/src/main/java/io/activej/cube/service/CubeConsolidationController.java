@@ -21,7 +21,7 @@ import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.async.function.AsyncBiFunction;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.common.initializer.WithInitializer;
-import io.activej.cube.ReactiveCube;
+import io.activej.cube.Cube;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffScheme;
@@ -57,11 +57,11 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 
 	private static final AsyncChunkLocker<Object> NOOP_CHUNK_LOCKER = ChunkLockerNoOp.create();
 
-	public static final Supplier<AsyncBiFunction<ReactiveAggregation, Set<Object>, List<AggregationChunk>>> DEFAULT_LOCKER_STRATEGY = new Supplier<>() {
+	public static final Supplier<AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>>> DEFAULT_LOCKER_STRATEGY = new Supplier<>() {
 		private boolean hotSegment = false;
 
 		@Override
-		public AsyncBiFunction<ReactiveAggregation, Set<Object>, List<AggregationChunk>> get() {
+		public AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>> get() {
 			hotSegment = !hotSegment;
 			return (aggregation, chunkLocker) -> Promise.of(aggregation.getChunksForConsolidation(chunkLocker, hotSegment));
 		}
@@ -70,11 +70,11 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 
 	private final CubeDiffScheme<D> cubeDiffScheme;
-	private final ReactiveCube cube;
+	private final Cube cube;
 	private final OTStateManager<K, D> stateManager;
 	private final AsyncAggregationChunkStorage<C> aggregationChunkStorage;
 
-	private final Map<ReactiveAggregation, String> aggregationsMapReversed;
+	private final Map<Aggregation, String> aggregationsMapReversed;
 
 	private final PromiseStats promiseConsolidate = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final PromiseStats promiseConsolidateImpl = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
@@ -87,7 +87,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 
 	private final Map<String, AsyncChunkLocker<Object>> lockers = new HashMap<>();
 
-	private Supplier<AsyncBiFunction<ReactiveAggregation, Set<Object>, List<AggregationChunk>>> strategy = DEFAULT_LOCKER_STRATEGY;
+	private Supplier<AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>>> strategy = DEFAULT_LOCKER_STRATEGY;
 	@SuppressWarnings("unchecked")
 	private Function<String, AsyncChunkLocker<C>> chunkLockerFactory = $ -> (AsyncChunkLocker<C>) NOOP_CHUNK_LOCKER;
 
@@ -95,7 +95,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 	private boolean cleaning;
 
 	CubeConsolidationController(Reactor reactor,
-			CubeDiffScheme<D> cubeDiffScheme, ReactiveCube cube, OTStateManager<K, D> stateManager, AsyncAggregationChunkStorage<C> aggregationChunkStorage, Map<ReactiveAggregation, String> aggregationsMapReversed) {
+			CubeDiffScheme<D> cubeDiffScheme, Cube cube, OTStateManager<K, D> stateManager, AsyncAggregationChunkStorage<C> aggregationChunkStorage, Map<Aggregation, String> aggregationsMapReversed) {
 		super(reactor);
 		this.cubeDiffScheme = cubeDiffScheme;
 		this.cube = cube;
@@ -106,17 +106,17 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 
 	public static <K, D, C> CubeConsolidationController<K, D, C> create(Reactor reactor,
 			CubeDiffScheme<D> cubeDiffScheme,
-			ReactiveCube cube,
+			Cube cube,
 			OTStateManager<K, D> stateManager,
 			AsyncAggregationChunkStorage<C> aggregationChunkStorage) {
-		Map<ReactiveAggregation, String> map = new IdentityHashMap<>();
+		Map<Aggregation, String> map = new IdentityHashMap<>();
 		for (String aggregationId : cube.getAggregationIds()) {
 			map.put(cube.getAggregation(aggregationId), aggregationId);
 		}
 		return new CubeConsolidationController<>(reactor, cubeDiffScheme, cube, stateManager, aggregationChunkStorage, map);
 	}
 
-	public CubeConsolidationController<K, D, C> withLockerStrategy(Supplier<AsyncBiFunction<ReactiveAggregation, Set<Object>, List<AggregationChunk>>> strategy) {
+	public CubeConsolidationController<K, D, C> withLockerStrategy(Supplier<AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>>> strategy) {
 		this.strategy = strategy;
 		return this;
 	}
@@ -142,7 +142,7 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 	Promise<Void> doConsolidate() {
 		checkState(!cleaning, "Cannot consolidate and clean up irrelevant chunks at the same time");
 		consolidating = true;
-		AsyncBiFunction<ReactiveAggregation, Set<Object>, List<AggregationChunk>> chunksFn = strategy.get();
+		AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>> chunksFn = strategy.get();
 		Map<String, List<AggregationChunk>> chunksForConsolidation = new HashMap<>();
 		return Promise.complete()
 				.then(stateManager::sync)
@@ -176,9 +176,9 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 	}
 
 	private Promise<List<AggregationChunk>> findAndLockChunksForConsolidation(String aggregationId,
-			AsyncBiFunction<ReactiveAggregation, Set<Object>, List<AggregationChunk>> chunksFn) {
+			AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>> chunksFn) {
 		AsyncChunkLocker<Object> locker = ensureLocker(aggregationId);
-		ReactiveAggregation aggregation = cube.getAggregation(aggregationId);
+		Aggregation aggregation = cube.getAggregation(aggregationId);
 
 		return Promises.retry(($, e) -> !(e instanceof ChunksAlreadyLockedException),
 				() -> locker.getLockedChunks()

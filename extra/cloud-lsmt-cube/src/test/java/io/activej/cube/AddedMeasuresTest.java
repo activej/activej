@@ -10,7 +10,7 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.LZ4FrameFormat;
-import io.activej.cube.ReactiveCube.AggregationConfig;
+import io.activej.cube.Cube.AggregationConfig;
 import io.activej.cube.exception.QueryException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamSupplier;
@@ -38,7 +38,7 @@ import static io.activej.aggregation.fieldtype.FieldTypes.ofDouble;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.aggregation.measure.Measures.*;
 import static io.activej.common.Utils.first;
-import static io.activej.cube.ReactiveCube.AggregationConfig.id;
+import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.promise.TestUtils.await;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
@@ -74,12 +74,12 @@ public class AddedMeasuresTest {
 		LocalFs fs = LocalFs.create(reactor, executor, path);
 		await(fs.start());
 		FrameFormat frameFormat = LZ4FrameFormat.create();
-		aggregationChunkStorage = ReactiveAggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 		basicConfig = id(AGGREGATION_ID)
 				.withDimensions("siteId")
 				.withMeasures("eventCount", "sumRevenue", "minRevenue", "maxRevenue");
 
-		ReactiveCube basicCube = ReactiveCube.create(reactor, executor, classLoader, aggregationChunkStorage)
+		Cube basicCube = Cube.create(reactor, executor, classLoader, aggregationChunkStorage)
 				.withDimension("siteId", FieldTypes.ofInt())
 				.withMeasure("eventCount", count(ofLong()))
 				.withMeasure("sumRevenue", sum(ofDouble()))
@@ -121,7 +121,7 @@ public class AddedMeasuresTest {
 
 	@Test
 	public void consolidation() {
-		ReactiveCube cube = ReactiveCube.create(reactor, executor, classLoader, aggregationChunkStorage)
+		Cube cube = Cube.create(reactor, executor, classLoader, aggregationChunkStorage)
 				.withDimension("siteId", FieldTypes.ofInt())
 				.withMeasure("eventCount", count(ofLong()))
 				.withMeasure("sumRevenue", sum(ofDouble()))
@@ -141,7 +141,7 @@ public class AddedMeasuresTest {
 		await(aggregationChunkStorage.finish(diff.addedChunks().map(id -> (long) id).collect(toSet())));
 		cube.apply(diff);
 
-		CubeDiff cubeDiff = await(cube.consolidate(ReactiveAggregation::consolidateHotSegment));
+		CubeDiff cubeDiff = await(cube.consolidate(Aggregation::consolidateHotSegment));
 		assertEquals(Set.of("test"), cubeDiff.keySet());
 		AggregationDiff aggregationDiff = cubeDiff.get("test");
 
@@ -161,7 +161,7 @@ public class AddedMeasuresTest {
 
 	@Test
 	public void query() throws QueryException {
-		ReactiveCube cube = ReactiveCube.create(reactor, executor, classLoader, aggregationChunkStorage)
+		Cube cube = Cube.create(reactor, executor, classLoader, aggregationChunkStorage)
 				.withDimension("siteId", FieldTypes.ofInt())
 				.withMeasure("eventCount", count(ofLong()))
 				.withMeasure("sumRevenue", sum(ofDouble()))
@@ -184,7 +184,7 @@ public class AddedMeasuresTest {
 
 	@Test
 	public void secondAggregation() throws QueryException {
-		ReactiveCube cube = ReactiveCube.create(reactor, executor, classLoader, aggregationChunkStorage)
+		Cube cube = Cube.create(reactor, executor, classLoader, aggregationChunkStorage)
 				.withDimension("siteId", FieldTypes.ofInt())
 				.withMeasure("eventCount", count(ofLong()))
 				.withMeasure("sumRevenue", sum(ofDouble()))

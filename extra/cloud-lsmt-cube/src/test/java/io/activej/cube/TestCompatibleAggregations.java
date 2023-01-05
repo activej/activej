@@ -1,11 +1,11 @@
 package io.activej.cube;
 
 import io.activej.aggregation.AggregationPredicate;
-import io.activej.aggregation.ReactiveAggregation;
+import io.activej.aggregation.Aggregation;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
-import io.activej.cube.ReactiveCube.AggregationConfig;
-import io.activej.cube.ReactiveCube.AggregationContainer;
+import io.activej.cube.Cube.AggregationConfig;
+import io.activej.cube.Cube.AggregationContainer;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -19,7 +19,7 @@ import static io.activej.aggregation.AggregationPredicates.*;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.*;
 import static io.activej.common.Utils.entriesToMap;
-import static io.activej.cube.ReactiveCube.AggregationConfig.id;
+import static io.activej.cube.Cube.AggregationConfig.id;
 import static java.util.stream.Stream.of;
 import static org.junit.Assert.*;
 
@@ -118,12 +118,12 @@ public class TestCompatibleAggregations {
 			.withMeasures(MEASURES.keySet())
 			.withPredicate(LIMITED_DATES_AGGREGATION_PREDICATE);
 
-	private ReactiveCube cube;
-	private ReactiveCube cubeWithDetailedAggregation;
+	private Cube cube;
+	private Cube cubeWithDetailedAggregation;
 
 	@Before
 	public void setUp() {
-		cube = new ReactiveCube(null, null, null, null)
+		cube = new Cube(null, null, null, null)
 				.withInitializer(cube -> {
 					MEASURES.forEach(cube::addMeasure);
 
@@ -134,7 +134,7 @@ public class TestCompatibleAggregations {
 					List.of(DAILY_AGGREGATION, ADVERTISERS_AGGREGATION, AFFILIATES_AGGREGATION).forEach(cube::addAggregation);
 				});
 
-		cubeWithDetailedAggregation = new ReactiveCube(null, null, null, null)
+		cubeWithDetailedAggregation = new Cube(null, null, null, null)
 				.withInitializer(cube -> {
 					MEASURES.forEach(cube::addMeasure);
 					DIMENSIONS_DAILY_AGGREGATION.forEach(cube::addDimension);
@@ -225,7 +225,7 @@ public class TestCompatibleAggregations {
 		List<AggregationContainer> actualAggregations = cube.getCompatibleAggregationsForQuery(
 				List.of("date"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
-		ReactiveAggregation expected = cube.getAggregation(DAILY_AGGREGATION.getId());
+		Aggregation expected = cube.getAggregation(DAILY_AGGREGATION.getId());
 
 		assertEquals(1, actualAggregations.size());
 		assertEquals(expected.toString(), actualAggregations.get(0).toString());
@@ -241,7 +241,7 @@ public class TestCompatibleAggregations {
 		List<AggregationContainer> actualAggregations = cube.getCompatibleAggregationsForQuery(
 				List.of("advertiser", "campaign", "banner"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
-		ReactiveAggregation expected = cube.getAggregation(ADVERTISERS_AGGREGATION.getId());
+		Aggregation expected = cube.getAggregation(ADVERTISERS_AGGREGATION.getId());
 
 		assertEquals(1, actualAggregations.size());
 		assertEquals(expected.toString(), actualAggregations.get(0).toString());
@@ -254,7 +254,7 @@ public class TestCompatibleAggregations {
 		List<AggregationContainer> actualAggregations = cube.getCompatibleAggregationsForQuery(
 				List.of("affiliate", "site"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
-		ReactiveAggregation expected = cube.getAggregation(AFFILIATES_AGGREGATION.getId());
+		Aggregation expected = cube.getAggregation(AFFILIATES_AGGREGATION.getId());
 
 		assertEquals(1, actualAggregations.size());
 		assertEquals(expected.toString(), actualAggregations.get(0).toString());
@@ -271,7 +271,7 @@ public class TestCompatibleAggregations {
 				cubeWithDetailedAggregation.getCompatibleAggregationsForQuery(
 						List.of("affiliate", "site", "placement"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
-		ReactiveAggregation expected = cubeWithDetailedAggregation.getAggregation(DETAILED_AFFILIATES_AGGREGATION.getId());
+		Aggregation expected = cubeWithDetailedAggregation.getAggregation(DETAILED_AFFILIATES_AGGREGATION.getId());
 
 		assertEquals(1, actualAggregations.size());
 		assertEquals(expected.toString(), actualAggregations.get(0).toString());
@@ -285,7 +285,7 @@ public class TestCompatibleAggregations {
 				cubeWithDetailedAggregation.getCompatibleAggregationsForQuery(
 						List.of("affiliate", "site", "placement"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
-		ReactiveAggregation expected = cubeWithDetailedAggregation.getAggregation(DETAILED_AFFILIATES_AGGREGATION.getId());
+		Aggregation expected = cubeWithDetailedAggregation.getAggregation(DETAILED_AFFILIATES_AGGREGATION.getId());
 
 		assertEquals(1, actualAggregations.size());
 		assertEquals(expected.toString(), actualAggregations.get(0).toString());
@@ -299,8 +299,8 @@ public class TestCompatibleAggregations {
 				cubeWithDetailedAggregation.getCompatibleAggregationsForQuery(
 						List.of("date"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
-		ReactiveAggregation expected = cubeWithDetailedAggregation.getAggregation(DAILY_AGGREGATION.getId());
-		ReactiveAggregation expected2 = cubeWithDetailedAggregation.getAggregation(LIMITED_DATES_AGGREGATION.getId());
+		Aggregation expected = cubeWithDetailedAggregation.getAggregation(DAILY_AGGREGATION.getId());
+		Aggregation expected2 = cubeWithDetailedAggregation.getAggregation(LIMITED_DATES_AGGREGATION.getId());
 
 		assertEquals(2, actualAggregations.size());
 		assertEquals(expected.toString(), actualAggregations.get(0).toString());
@@ -317,7 +317,7 @@ public class TestCompatibleAggregations {
 				cubeWithDetailedAggregation.getCompatibleAggregationsForQuery(
 						List.of("date"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
-		ReactiveAggregation expected = cubeWithDetailedAggregation.getAggregation(ADVERTISERS_AGGREGATION.getId());
+		Aggregation expected = cubeWithDetailedAggregation.getAggregation(ADVERTISERS_AGGREGATION.getId());
 
 		assertEquals(1, actualAggregations.size());
 		assertEquals(expected.toString(), actualAggregations.get(0).toString());
@@ -331,8 +331,8 @@ public class TestCompatibleAggregations {
 				cubeWithDetailedAggregation.getCompatibleAggregationsForQuery(
 						List.of("date"), new ArrayList<>(MEASURES.keySet()), whereQueryPredicate);
 
-		ReactiveAggregation expected = cubeWithDetailedAggregation.getAggregation(DAILY_AGGREGATION.getId());
-		ReactiveAggregation expected2 = cubeWithDetailedAggregation.getAggregation(LIMITED_DATES_AGGREGATION.getId());
+		Aggregation expected = cubeWithDetailedAggregation.getAggregation(DAILY_AGGREGATION.getId());
+		Aggregation expected2 = cubeWithDetailedAggregation.getAggregation(LIMITED_DATES_AGGREGATION.getId());
 
 		assertEquals(2, actualAggregations.size());
 		assertEquals(expected.toString(), actualAggregations.get(0).toString());

@@ -5,10 +5,10 @@ import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.MemSize;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.AsyncMessaging;
-import io.activej.csp.net.ReactiveMessaging;
+import io.activej.csp.net.Messaging;
 import io.activej.datastream.StreamSupplier;
 import io.activej.net.SimpleServer;
-import io.activej.net.socket.tcp.ReactiveTcpSocket;
+import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.test.TestUtils;
 import io.activej.test.rules.ActivePromisesRule;
@@ -94,13 +94,13 @@ public final class MessagingWithBinaryStreamingTest {
 	@Test
 	public void testPing() throws Exception {
 		SimpleServer.create(socket ->
-						pong(ReactiveMessaging.create(socket, INTEGER_SERIALIZER)))
+						pong(Messaging.create(socket, INTEGER_SERIALIZER)))
 				.withListenPort(listenPort)
 				.withAcceptOnce()
 				.listen();
 
-		await(ReactiveTcpSocket.connect(getCurrentReactor(), address)
-				.whenComplete(TestUtils.assertCompleteFn(socket -> ping(3, ReactiveMessaging.create(socket, INTEGER_SERIALIZER)))));
+		await(TcpSocket.connect(getCurrentReactor(), address)
+				.whenComplete(TestUtils.assertCompleteFn(socket -> ping(3, Messaging.create(socket, INTEGER_SERIALIZER)))));
 	}
 
 	@Test
@@ -109,8 +109,8 @@ public final class MessagingWithBinaryStreamingTest {
 
 		SimpleServer.create(
 						socket -> {
-							ReactiveMessaging<String, String> messaging =
-									ReactiveMessaging.create(socket, STRING_SERIALIZER);
+							Messaging<String, String> messaging =
+									Messaging.create(socket, STRING_SERIALIZER);
 
 							messaging.receive()
 									.whenResult(msg -> {
@@ -125,10 +125,10 @@ public final class MessagingWithBinaryStreamingTest {
 				.withAcceptOnce()
 				.listen();
 
-		List<Long> list = await(ReactiveTcpSocket.connect(getCurrentReactor(), address)
+		List<Long> list = await(TcpSocket.connect(getCurrentReactor(), address)
 				.then(socket -> {
-					ReactiveMessaging<String, String> messaging =
-							ReactiveMessaging.create(socket, STRING_SERIALIZER);
+					Messaging<String, String> messaging =
+							Messaging.create(socket, STRING_SERIALIZER);
 
 					return messaging.send("start")
 							.then(messaging::sendEndOfStream)
@@ -148,8 +148,8 @@ public final class MessagingWithBinaryStreamingTest {
 
 		SimpleServer.create(
 						socket -> {
-							ReactiveMessaging<String, String> messaging =
-									ReactiveMessaging.create(socket, serializer);
+							Messaging<String, String> messaging =
+									Messaging.create(socket, serializer);
 
 							messaging.receive()
 									.whenComplete(TestUtils.assertCompleteFn(msg -> assertEquals("start", msg)))
@@ -165,10 +165,10 @@ public final class MessagingWithBinaryStreamingTest {
 				.withAcceptOnce()
 				.listen();
 
-		await(ReactiveTcpSocket.connect(getCurrentReactor(), address)
+		await(TcpSocket.connect(getCurrentReactor(), address)
 				.whenResult(socket -> {
-					ReactiveMessaging<String, String> messaging =
-							ReactiveMessaging.create(socket, serializer);
+					Messaging<String, String> messaging =
+							Messaging.create(socket, serializer);
 
 					messaging.send("start");
 
@@ -187,7 +187,7 @@ public final class MessagingWithBinaryStreamingTest {
 
 		SimpleServer.create(
 						socket -> {
-							ReactiveMessaging<String, String> messaging = ReactiveMessaging.create(socket, serializer);
+							Messaging<String, String> messaging = Messaging.create(socket, serializer);
 
 							messaging.receive()
 									.whenResult(msg -> assertEquals("start", msg))
@@ -205,10 +205,10 @@ public final class MessagingWithBinaryStreamingTest {
 				.withAcceptOnce()
 				.listen();
 
-		String msg = await(ReactiveTcpSocket.connect(getCurrentReactor(), address)
+		String msg = await(TcpSocket.connect(getCurrentReactor(), address)
 				.then(socket -> {
-					ReactiveMessaging<String, String> messaging =
-							ReactiveMessaging.create(socket, serializer);
+					Messaging<String, String> messaging =
+							Messaging.create(socket, serializer);
 
 					return messaging.send("start")
 							.then(() -> StreamSupplier.ofIterable(source)
@@ -228,8 +228,8 @@ public final class MessagingWithBinaryStreamingTest {
 
 		SimpleServer.create(
 						socket -> {
-							ReactiveMessaging<String, String> messaging =
-									ReactiveMessaging.create(socket, STRING_SERIALIZER);
+							Messaging<String, String> messaging =
+									Messaging.create(socket, STRING_SERIALIZER);
 
 							messaging.receive()
 									.whenComplete(TestUtils.assertCompleteFn(msg -> assertEquals("start", msg)))
@@ -244,10 +244,10 @@ public final class MessagingWithBinaryStreamingTest {
 				.withAcceptOnce()
 				.listen();
 
-		await(ReactiveTcpSocket.connect(getCurrentReactor(), address)
+		await(TcpSocket.connect(getCurrentReactor(), address)
 				.whenResult(socket -> {
-					ReactiveMessaging<String, String> messaging =
-							ReactiveMessaging.create(socket, STRING_SERIALIZER);
+					Messaging<String, String> messaging =
+							Messaging.create(socket, STRING_SERIALIZER);
 
 					messaging.send("start");
 

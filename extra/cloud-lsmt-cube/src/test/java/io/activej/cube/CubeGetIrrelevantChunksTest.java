@@ -28,7 +28,7 @@ import static io.activej.aggregation.AggregationPredicates.gt;
 import static io.activej.aggregation.PrimaryKey.ofArray;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
-import static io.activej.cube.ReactiveCube.AggregationConfig.id;
+import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.promise.TestUtils.await;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
@@ -48,11 +48,11 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 
 	private OTStateManager<Long, LogDiff<CubeDiff>> stateManager;
 	private AsyncAggregationChunkStorage<Long> chunkStorage;
-	private ReactiveCube.AggregationConfig dateAggregation;
-	private ReactiveCube.AggregationConfig advertiserDateAggregation;
+	private Cube.AggregationConfig dateAggregation;
+	private Cube.AggregationConfig advertiserDateAggregation;
 	private AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink;
-	private ReactiveCube basicCube;
-	private ReactiveCube cube;
+	private Cube basicCube;
+	private Cube cube;
 
 	private long chunkId;
 
@@ -70,7 +70,7 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 				.withTempDir(Files.createTempDirectory(""));
 		await(fs.start());
 		FrameFormat frameFormat = LZ4FrameFormat.create();
-		chunkStorage = ReactiveAggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		chunkStorage = AggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 
 		dateAggregation = id("date")
 				.withDimensions("date")
@@ -187,8 +187,8 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 		return chunkId;
 	}
 
-	private ReactiveCube createBasicCube() {
-		return ReactiveCube.create(reactor, EXECUTOR, CLASS_LOADER, chunkStorage)
+	private Cube createBasicCube() {
+		return Cube.create(reactor, EXECUTOR, CLASS_LOADER, chunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())
 				.withDimension("campaign", ofInt())

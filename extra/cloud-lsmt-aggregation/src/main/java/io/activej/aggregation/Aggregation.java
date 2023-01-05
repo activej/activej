@@ -34,7 +34,7 @@ import io.activej.datastream.processor.StreamFilter;
 import io.activej.datastream.processor.StreamReducer;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.datastream.processor.StreamSorter;
-import io.activej.datastream.processor.ReactiveStreamSorterStorage;
+import io.activej.datastream.processor.StreamSorterStorage;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
@@ -73,8 +73,8 @@ import static java.util.stream.Collectors.toSet;
  * Provides methods for loading and querying data.
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
-public class ReactiveAggregation extends AbstractReactive
-		implements AsyncAggregation, WithInitializer<ReactiveAggregation>, ReactiveJmxBeanWithStats {
+public class Aggregation extends AbstractReactive
+		implements AsyncAggregation, WithInitializer<Aggregation>, ReactiveJmxBeanWithStats {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	public static final int DEFAULT_CHUNK_SIZE = 1_000_000;
@@ -109,7 +109,7 @@ public class ReactiveAggregation extends AbstractReactive
 	private int consolidations;
 	private Exception consolidationLastError;
 
-	private ReactiveAggregation(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
+	private Aggregation(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
 			AsyncAggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat, AggregationStructure structure,
 			AggregationState state) {
 		super(reactor);
@@ -135,47 +135,47 @@ public class ReactiveAggregation extends AbstractReactive
 	 * @param aggregationChunkStorage storage for data chunks
 	 * @param frameFormat             frame format in which data is to be stored
 	 */
-	public static ReactiveAggregation create(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
+	public static Aggregation create(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
 			AsyncAggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat, AggregationStructure structure) {
-		return new ReactiveAggregation(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure, new AggregationState(structure));
+		return new Aggregation(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure, new AggregationState(structure));
 	}
 
-	public ReactiveAggregation withChunkSize(int chunkSize) {
+	public Aggregation withChunkSize(int chunkSize) {
 		this.chunkSize = chunkSize;
 		return this;
 	}
 
-	public ReactiveAggregation withReducerBufferSize(int reducerBufferSize) {
+	public Aggregation withReducerBufferSize(int reducerBufferSize) {
 		this.reducerBufferSize = reducerBufferSize;
 		return this;
 	}
 
-	public ReactiveAggregation withSorterItemsInMemory(int sorterItemsInMemory) {
+	public Aggregation withSorterItemsInMemory(int sorterItemsInMemory) {
 		this.sorterItemsInMemory = sorterItemsInMemory;
 		return this;
 	}
 
-	public ReactiveAggregation withMaxIncrementalReloadPeriod(Duration maxIncrementalReloadPeriod) {
+	public Aggregation withMaxIncrementalReloadPeriod(Duration maxIncrementalReloadPeriod) {
 		this.maxIncrementalReloadPeriod = maxIncrementalReloadPeriod;
 		return this;
 	}
 
-	public ReactiveAggregation withIgnoreChunkReadingExceptions(boolean ignoreChunkReadingExceptions) {
+	public Aggregation withIgnoreChunkReadingExceptions(boolean ignoreChunkReadingExceptions) {
 		this.ignoreChunkReadingExceptions = ignoreChunkReadingExceptions;
 		return this;
 	}
 
-	public ReactiveAggregation withMaxChunksToConsolidate(int maxChunksToConsolidate) {
+	public Aggregation withMaxChunksToConsolidate(int maxChunksToConsolidate) {
 		this.maxChunksToConsolidate = maxChunksToConsolidate;
 		return this;
 	}
 
-	public ReactiveAggregation withTemporarySortDir(Path temporarySortDir) {
+	public Aggregation withTemporarySortDir(Path temporarySortDir) {
 		this.temporarySortDir = temporarySortDir;
 		return this;
 	}
 
-	public ReactiveAggregation withStats(AggregationStats stats) {
+	public Aggregation withStats(AggregationStats stats) {
 		this.stats = stats;
 		return this;
 	}
@@ -318,7 +318,7 @@ public class ReactiveAggregation extends AbstractReactive
 			}
 		}
 		StreamSorter<T, T> sorter = StreamSorter.create(
-				ReactiveStreamSorterStorage.create(executor, binarySerializer, frameFormat, sortDir),
+				StreamSorterStorage.create(executor, binarySerializer, frameFormat, sortDir),
 				Function.identity(), keyComparator, false, sorterItemsInMemory);
 		sorter.getInput().getAcknowledgement()
 				.whenComplete(() -> {

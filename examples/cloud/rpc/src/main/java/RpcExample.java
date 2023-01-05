@@ -11,7 +11,7 @@ import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
-import io.activej.rpc.client.ReactiveRpcClient;
+import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.AsyncRpcClient;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraphModule;
@@ -52,7 +52,7 @@ public class RpcExample extends Launcher {
 
 	@Provides
 	AsyncRpcClient rpcClient(NioReactor reactor) {
-		return ReactiveRpcClient.create(reactor)
+		return RpcClient.create(reactor)
 				.withMessageTypes(String.class)
 				.withStrategy(server(new InetSocketAddress(SERVICE_PORT)));
 	}

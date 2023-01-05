@@ -12,9 +12,9 @@ import io.activej.fs.http.HttpFs;
 import io.activej.fs.tcp.FsServer;
 import io.activej.fs.tcp.RemoteFs;
 import io.activej.http.HttpServer;
-import io.activej.http.ReactiveHttpClient;
+import io.activej.http.HttpClient;
 import io.activej.net.AbstractReactiveServer;
-import io.activej.net.socket.tcp.ReactiveTcpSocket;
+import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
@@ -105,8 +105,8 @@ public final class TestClusterDeadPartitionCheck {
 								if (selector == null) return;
 								for (SelectionKey key : selector.keys()) {
 									Object attachment = key.attachment();
-									if (attachment instanceof ReactiveTcpSocket) {
-										((ReactiveTcpSocket) attachment).close();
+									if (attachment instanceof TcpSocket) {
+										((TcpSocket) attachment).close();
 									}
 								}
 							}
@@ -123,7 +123,7 @@ public final class TestClusterDeadPartitionCheck {
 						new ClientServerFactory() {
 							@Override
 							public AsyncFs createClient(NioReactor reactor, InetSocketAddress address) {
-								return HttpFs.create(reactor, "http://localhost:" + address.getPort(), ReactiveHttpClient.create(reactor));
+								return HttpFs.create(reactor, "http://localhost:" + address.getPort(), HttpClient.create(reactor));
 							}
 
 							@Override

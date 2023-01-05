@@ -57,7 +57,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 	private boolean overloaded = false;
 	private boolean closed;
 
-	private final ReactiveRpcClient rpcClient;
+	private final RpcClient rpcClient;
 	private final RpcStream stream;
 	private final InetSocketAddress address;
 	private final Map<Integer, Callback<?>> activeRequests = new HashMap<>();
@@ -77,7 +77,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 	private final long keepAliveMillis;
 	private boolean pongReceived;
 
-	RpcClientConnection(Reactor reactor, ReactiveRpcClient rpcClient, InetSocketAddress address, RpcStream stream,
+	RpcClientConnection(Reactor reactor, RpcClient rpcClient, InetSocketAddress address, RpcStream stream,
 			long keepAliveMillis) {
 		super(reactor);
 		this.rpcClient = rpcClient;
@@ -87,7 +87,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 
 		// JMX
 		this.monitoring = false;
-		this.connectionStats = RpcRequestStats.create(ReactiveRpcClient.SMOOTHING_WINDOW);
+		this.connectionStats = RpcRequestStats.create(RpcClient.SMOOTHING_WINDOW);
 		this.connectionRequests = connectionStats.getTotalRequests();
 		this.totalRequests = rpcClient.getGeneralRequestsStats().getTotalRequests();
 	}

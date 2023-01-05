@@ -6,7 +6,7 @@ import io.activej.bytebuf.ByteBufs;
 import io.activej.common.recycle.Recyclers;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
-import io.activej.net.socket.tcp.ReactiveTcpSocket;
+import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
@@ -71,7 +71,7 @@ public final class HttpStreamTest {
 				.whenComplete(TestUtils.assertCompleteFn(buf -> assertEquals(requestBody, buf.asString(UTF_8))))
 				.then(s -> Promise.of(HttpResponse.ok200())));
 
-		Integer code = await(ReactiveHttpClient.create(Reactor.getCurrentReactor())
+		Integer code = await(HttpClient.create(Reactor.getCurrentReactor())
 				.request(HttpRequest.post("http://127.0.0.1:" + port)
 						.withBodyStream(ChannelSupplier.ofList(expectedList)
 								.mapAsync(item -> Promises.delay(200L, item))))
@@ -88,7 +88,7 @@ public final class HttpStreamTest {
 						.withBodyStream(ChannelSupplier.ofList(expectedList)
 								.mapAsync(item -> Promises.delay(1L, item))));
 
-		ByteBuf body = await(ReactiveHttpClient.create(Reactor.getCurrentReactor())
+		ByteBuf body = await(HttpClient.create(Reactor.getCurrentReactor())
 				.request(HttpRequest.post("http://127.0.0.1:" + port))
 				.async()
 				.whenComplete(TestUtils.assertCompleteFn(response -> assertEquals(200, response.getCode())))
@@ -106,7 +106,7 @@ public final class HttpStreamTest {
 				.map(ChannelSupplier::ofList)
 				.then(bodyStream -> Promise.of(HttpResponse.ok200().withBodyStream(bodyStream.async()))));
 
-		ByteBuf body = await(ReactiveHttpClient.create(Reactor.getCurrentReactor())
+		ByteBuf body = await(HttpClient.create(Reactor.getCurrentReactor())
 				.request(HttpRequest.post("http://127.0.0.1:" + port)
 						.withBodyStream(ChannelSupplier.ofList(expectedList)
 								.mapAsync(item -> Promises.delay(1L, item))))
@@ -124,7 +124,7 @@ public final class HttpStreamTest {
 
 		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.ofList(expectedList);
 
-		ByteBuf body = await(ReactiveHttpClient.create(Reactor.getCurrentReactor())
+		ByteBuf body = await(HttpClient.create(Reactor.getCurrentReactor())
 				.request(HttpRequest.post("http://127.0.0.1:" + port)
 						.withBodyStream(supplier))
 				.then(response -> response.takeBodyStream().toCollector(ByteBufs.collector())));
@@ -148,7 +148,7 @@ public final class HttpStreamTest {
 						"Content-Length: 4" + CRLF + CRLF +
 						"Test";
 
-		ByteBuf body = await(ReactiveTcpSocket.connect(getCurrentReactor(), new InetSocketAddress(port))
+		ByteBuf body = await(TcpSocket.connect(getCurrentReactor(), new InetSocketAddress(port))
 				.then(socket -> socket.write(ByteBuf.wrapForReading(chunkedRequest.getBytes(UTF_8)))
 						.then(() -> socket.write(null))
 						.then(() -> ChannelSupplier.ofSocket(socket).toCollector(ByteBufs.collector()))
@@ -170,7 +170,7 @@ public final class HttpStreamTest {
 						"Transfer-Encoding: chunked" + CRLF + CRLF +
 						"ffffffffff";
 
-		ByteBuf body = await(ReactiveTcpSocket.connect(getCurrentReactor(), new InetSocketAddress(port))
+		ByteBuf body = await(TcpSocket.connect(getCurrentReactor(), new InetSocketAddress(port))
 				.then(socket -> socket.write(ByteBuf.wrapForReading(chunkedRequest.getBytes(UTF_8)))
 						.then(socket::read)
 						.whenComplete(socket::close)));
@@ -197,7 +197,7 @@ public final class HttpStreamTest {
 						"Transfer-Encoding: chunked" + CRLF + CRLF +
 						"3";
 
-		ByteBuf body = await(ReactiveTcpSocket.connect(getCurrentReactor(), new InetSocketAddress(port))
+		ByteBuf body = await(TcpSocket.connect(getCurrentReactor(), new InetSocketAddress(port))
 				.then(socket -> socket.write(ByteBuf.wrapForReading(chunkedRequest.getBytes(UTF_8)))
 						.then(() -> socket.write(null))
 						.then(socket::read)
@@ -220,7 +220,7 @@ public final class HttpStreamTest {
 		startTestServer(request -> request.loadBody().map(body -> HttpResponse.ok200().withBody(body.slice())));
 
 		Exception e = awaitException(
-				ReactiveHttpClient.create(Reactor.getCurrentReactor())
+				HttpClient.create(Reactor.getCurrentReactor())
 						.request(HttpRequest.post("http://127.0.0.1:" + port)
 								.withBodyStream(ChannelSuppliers.concat(
 										ChannelSupplier.ofList(expectedList),

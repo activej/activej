@@ -30,8 +30,8 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.jmx.stats.ExceptionStats;
-import io.activej.net.socket.tcp.ReactiveTcpSocket;
-import io.activej.net.socket.tcp.ReactiveTcpSocket.JmxInspector;
+import io.activej.net.socket.tcp.TcpSocket;
+import io.activej.net.socket.tcp.TcpSocket.JmxInspector;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -64,7 +64,7 @@ import java.util.concurrent.Executor;
 import static io.activej.async.callback.Callback.toAnotherReactor;
 import static io.activej.common.Utils.nonNullElseGet;
 import static io.activej.common.Utils.not;
-import static io.activej.net.socket.tcp.ReactiveTcpSocketSsl.wrapClientSocket;
+import static io.activej.net.socket.tcp.TcpSocketSsl.wrapClientSocket;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -85,14 +85,14 @@ import static org.slf4j.LoggerFactory.getLogger;
  * @see RpcStrategies
  * @see RpcServer
  */
-public final class ReactiveRpcClient extends AbstractNioReactive
-		implements AsyncRpcClient, ReactiveService, WithInitializer<ReactiveRpcClient>, ReactiveJmxBeanWithStats {
-	private static final boolean CHECK = Checks.isEnabled(ReactiveRpcClient.class);
+public final class RpcClient extends AbstractNioReactive
+		implements AsyncRpcClient, ReactiveService, WithInitializer<RpcClient>, ReactiveJmxBeanWithStats {
+	private static final boolean CHECK = Checks.isEnabled(RpcClient.class);
 
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
-	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(ReactiveRpcClient.class, "connectTimeout", Duration.ZERO);
-	public static final Duration DEFAULT_RECONNECT_INTERVAL = ApplicationSettings.getDuration(ReactiveRpcClient.class, "reconnectInterval", Duration.ZERO);
-	public static final MemSize DEFAULT_PACKET_SIZE = ApplicationSettings.getMemSize(ReactiveRpcClient.class, "packetSize", ChannelSerializer.DEFAULT_INITIAL_BUFFER_SIZE);
+	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(RpcClient.class, "connectTimeout", Duration.ZERO);
+	public static final Duration DEFAULT_RECONNECT_INTERVAL = ApplicationSettings.getDuration(RpcClient.class, "reconnectInterval", Duration.ZERO);
+	public static final MemSize DEFAULT_PACKET_SIZE = ApplicationSettings.getMemSize(RpcClient.class, "packetSize", ChannelSerializer.DEFAULT_INITIAL_BUFFER_SIZE);
 
 	private static final RpcException CONNECTION_EXCEPTION = new RpcException("Could not establish connection");
 	private static final RpcException SET_STRATEGY_EXCEPTION = new RpcException("Could not change strategy");
@@ -146,15 +146,15 @@ public final class ReactiveRpcClient extends AbstractNioReactive
 	private final JmxInspector statsSocket = new JmxInspector();
 
 	// region builders
-	private ReactiveRpcClient(NioReactor reactor) {
+	private RpcClient(NioReactor reactor) {
 		super(reactor);
 	}
 
-	public static ReactiveRpcClient create(NioReactor reactor) {
-		return new ReactiveRpcClient(reactor);
+	public static RpcClient create(NioReactor reactor) {
+		return new RpcClient(reactor);
 	}
 
-	public ReactiveRpcClient withClassLoader(ClassLoader classLoader) {
+	public RpcClient withClassLoader(ClassLoader classLoader) {
 		this.classLoader = classLoader;
 		this.serializerBuilder = SerializerBuilder.create(DefiningClassLoader.create(classLoader));
 		return this;
@@ -166,7 +166,7 @@ public final class ReactiveRpcClient extends AbstractNioReactive
 	 * @param socketSettings settings for socket
 	 * @return the RPC client with specified socket settings
 	 */
-	public ReactiveRpcClient withSocketSettings(SocketSettings socketSettings) {
+	public RpcClient withSocketSettings(SocketSettings socketSettings) {
 		this.socketSettings = socketSettings;
 		return this;
 	}
@@ -177,7 +177,7 @@ public final class ReactiveRpcClient extends AbstractNioReactive
 	 * @param messageTypes classes of messages processed by a server
 	 * @return client instance capable for handling provided message types
 	 */
-	public ReactiveRpcClient withMessageTypes(Class<?>... messageTypes) {
+	public RpcClient withMessageTypes(Class<?>... messageTypes) {
 		return withMessageTypes(List.of(messageTypes));
 	}
 
@@ -188,7 +188,7 @@ public final class ReactiveRpcClient extends AbstractNioReactive
 	 * @return client instance capable for handling provided
 	 * message types
 	 */
-	public ReactiveRpcClient withMessageTypes(List<Class<?>> messageTypes) {
+	public RpcClient withMessageTypes(List<Class<?>> messageTypes) {
 		Checks.checkArgument(new HashSet<>(messageTypes).size() == messageTypes.size(), "Message types must be unique");
 		this.messageTypes = messageTypes;
 		return this;
@@ -201,7 +201,7 @@ public final class ReactiveRpcClient extends AbstractNioReactive
 	 * @param serializerBuilder serializer builder, used at runtime
 	 * @return the RPC client with provided serializer builder
 	 */
-	public ReactiveRpcClient withSerializerBuilder(SerializerBuilder serializerBuilder) {
+	public RpcClient withSerializerBuilder(SerializerBuilder serializerBuilder) {
 		this.serializerBuilder = serializerBuilder;
 		return this;
 	}
@@ -213,29 +213,29 @@ public final class ReactiveRpcClient extends AbstractNioReactive
 	 * @param requestSendingStrategy strategy of sending requests
 	 * @return the RPC client, which sends requests according to given strategy
 	 */
-	public ReactiveRpcClient withStrategy(RpcStrategy requestSendingStrategy) {
+	public RpcClient withStrategy(RpcStrategy requestSendingStrategy) {
 		this.newStrategy = requestSendingStrategy;
 
 		return this;
 	}
 
-	public ReactiveRpcClient withStreamProtocol(MemSize defaultPacketSize) {
+	public RpcClient withStreamProtocol(MemSize defaultPacketSize) {
 		this.defaultPacketSize = defaultPacketSize;
 		return this;
 	}
 
-	public ReactiveRpcClient withStreamProtocol(MemSize defaultPacketSize, @Nullable FrameFormat frameFormat) {
+	public RpcClient withStreamProtocol(MemSize defaultPacketSize, @Nullable FrameFormat frameFormat) {
 		this.defaultPacketSize = defaultPacketSize;
 		this.frameFormat = frameFormat;
 		return this;
 	}
 
-	public ReactiveRpcClient withAutoFlush(Duration autoFlushInterval) {
+	public RpcClient withAutoFlush(Duration autoFlushInterval) {
 		this.autoFlushInterval = autoFlushInterval;
 		return this;
 	}
 
-	public ReactiveRpcClient withKeepAlive(Duration keepAliveInterval) {
+	public RpcClient withKeepAlive(Duration keepAliveInterval) {
 		this.keepAliveInterval = keepAliveInterval;
 		return this;
 	}
@@ -246,23 +246,23 @@ public final class ReactiveRpcClient extends AbstractNioReactive
 	 * @param connectTimeout time before connecting
 	 * @return the RPC client with connect timeout settings
 	 */
-	public ReactiveRpcClient withConnectTimeout(Duration connectTimeout) {
+	public RpcClient withConnectTimeout(Duration connectTimeout) {
 		this.connectTimeoutMillis = connectTimeout.toMillis();
 		return this;
 	}
 
-	public ReactiveRpcClient withReconnectInterval(Duration reconnectInterval) {
+	public RpcClient withReconnectInterval(Duration reconnectInterval) {
 		this.reconnectIntervalMillis = reconnectInterval.toMillis();
 		return this;
 	}
 
-	public ReactiveRpcClient withSslEnabled(SSLContext sslContext, Executor sslExecutor) {
+	public RpcClient withSslEnabled(SSLContext sslContext, Executor sslExecutor) {
 		this.sslContext = sslContext;
 		this.sslExecutor = sslExecutor;
 		return this;
 	}
 
-	public ReactiveRpcClient withLogger(Logger logger) {
+	public RpcClient withLogger(Logger logger) {
 		this.logger = logger;
 		return this;
 	}
@@ -338,7 +338,7 @@ public final class ReactiveRpcClient extends AbstractNioReactive
 	}
 
 	private void connect(InetSocketAddress address) {
-		ReactiveTcpSocket.connect(reactor, address, connectTimeoutMillis, socketSettings)
+		TcpSocket.connect(reactor, address, connectTimeoutMillis, socketSettings)
 				.whenResult(asyncTcpSocketImpl -> {
 					newConnections.remove(address);
 					if (!pendingConnections.contains(address) || stopPromise != null) {

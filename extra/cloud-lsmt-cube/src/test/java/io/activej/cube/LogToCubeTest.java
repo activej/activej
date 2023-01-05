@@ -3,7 +3,7 @@ package io.activej.cube;
 import io.activej.aggregation.AsyncAggregationChunkStorage;
 import io.activej.aggregation.AggregationPredicates;
 import io.activej.aggregation.ChunkIdCodec;
-import io.activej.aggregation.ReactiveAggregationChunkStorage;
+import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frames.FrameFormat;
@@ -18,7 +18,7 @@ import io.activej.etl.LogOTProcessor;
 import io.activej.etl.LogOTState;
 import io.activej.fs.LocalFs;
 import io.activej.multilog.AsyncMultilog;
-import io.activej.multilog.ReactiveMultilog;
+import io.activej.multilog.Multilog;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.serializer.SerializerBuilder;
@@ -30,7 +30,7 @@ import java.util.List;
 import static io.activej.aggregation.AggregationPredicates.alwaysTrue;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
-import static io.activej.cube.ReactiveCube.AggregationConfig.id;
+import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.TestUtils.runProcessLogs;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
@@ -46,8 +46,8 @@ public final class LogToCubeTest extends CubeTestBase {
 		LocalFs fs = LocalFs.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
 		FrameFormat frameFormat = LZ4FrameFormat.create();
-		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = ReactiveAggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
-		ReactiveCube cube = ReactiveCube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
+		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		Cube cube = Cube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
 				.withDimension("adv", ofInt())
 				.withDimension("testEnum", ofEnum(TestPubRequest.TestEnum.class))
@@ -68,7 +68,7 @@ public final class LogToCubeTest extends CubeTestBase {
 
 		LocalFs localFs = LocalFs.create(reactor, EXECUTOR, logsDir);
 		await(localFs.start());
-		AsyncMultilog<TestPubRequest> multilog = ReactiveMultilog.create(reactor, localFs,
+		AsyncMultilog<TestPubRequest> multilog = Multilog.create(reactor, localFs,
 				frameFormat,
 				SerializerBuilder.create(CLASS_LOADER).build(TestPubRequest.class),
 				NAME_PARTITION_REMAINDER_SEQ);

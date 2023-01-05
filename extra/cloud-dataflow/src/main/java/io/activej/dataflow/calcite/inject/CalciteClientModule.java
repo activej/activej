@@ -5,7 +5,7 @@ import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.AsyncSqlDataflow;
 import io.activej.dataflow.calcite.DataflowSchema;
 import io.activej.dataflow.calcite.DataflowSqlValidator;
-import io.activej.dataflow.calcite.ReactiveSqlDataflow;
+import io.activej.dataflow.calcite.SqlDataflow;
 import io.activej.dataflow.calcite.RelToDatasetConverter;
 import io.activej.dataflow.calcite.rel.DataflowSqlToRelConverter;
 import io.activej.dataflow.graph.Partition;
@@ -56,7 +56,7 @@ public final class CalciteClientModule extends AbstractModule {
 		install(new CalciteCommonModule());
 		install(new SqlFunctionModule());
 
-		bind(AsyncSqlDataflow.class).to(ReactiveSqlDataflow.class);
+		bind(AsyncSqlDataflow.class).to(SqlDataflow.class);
 	}
 
 	@Provides
@@ -125,8 +125,8 @@ public final class CalciteClientModule extends AbstractModule {
 	}
 
 	@Provides
-	ReactiveSqlDataflow calciteSqlDataflow(NioReactor reactor, DataflowClient client, SqlParser.Config parserConfig, SqlToRelConverter sqlToRelConverter, RelOptPlanner planner,
+	SqlDataflow calciteSqlDataflow(NioReactor reactor, DataflowClient client, SqlParser.Config parserConfig, SqlToRelConverter sqlToRelConverter, RelOptPlanner planner,
 			List<Partition> partitions, RelToDatasetConverter relToDatasetConverter) {
-		return ReactiveSqlDataflow.create(reactor, client, partitions, parserConfig, sqlToRelConverter, planner, relToDatasetConverter);
+		return SqlDataflow.create(reactor, client, partitions, parserConfig, sqlToRelConverter, planner, relToDatasetConverter);
 	}
 }

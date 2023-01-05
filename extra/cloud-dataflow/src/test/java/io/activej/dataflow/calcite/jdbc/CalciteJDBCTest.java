@@ -2,7 +2,7 @@ package io.activej.dataflow.calcite.jdbc;
 
 import io.activej.common.exception.FatalErrorHandler;
 import io.activej.dataflow.calcite.AbstractCalciteTest;
-import io.activej.dataflow.calcite.ReactiveSqlDataflow;
+import io.activej.dataflow.calcite.SqlDataflow;
 import io.activej.dataflow.calcite.inject.CalciteClientModule;
 import io.activej.dataflow.jdbc.driver.Driver;
 import io.activej.dataflow.jdbc.driver.utils.InstantHolder;
@@ -41,7 +41,7 @@ public class CalciteJDBCTest extends AbstractCalciteTest {
 								.withHandler(new AvaticaJsonHandler(new LocalService(DataflowMeta.create(reactor, calciteSqlDataflow))))
 								.withPort(port)
 								.build(),
-						NioReactor.class, int.class, ReactiveSqlDataflow.class)
+						NioReactor.class, int.class, SqlDataflow.class)
 				.bind(Eventloop.class).to(() -> Eventloop.create().withFatalErrorHandler(FatalErrorHandler.rethrow()))
 				.bind(NioReactor.class).to(Eventloop.class)
 				.build();

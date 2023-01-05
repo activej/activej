@@ -23,7 +23,7 @@ import io.activej.memcache.protocol.MemcacheRpcMessage;
 import io.activej.memcache.protocol.MemcacheRpcMessage.Slice;
 import io.activej.memcache.protocol.SerializerDefSlice;
 import io.activej.reactor.nio.NioReactor;
-import io.activej.rpc.client.ReactiveRpcClient;
+import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.AsyncRpcClient;
 import io.activej.rpc.client.sender.RpcStrategyRendezvousHashing;
 import io.activej.serializer.SerializerBuilder;
@@ -34,7 +34,7 @@ import static io.activej.common.MemSize.kilobytes;
 import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.launchers.initializers.ConfigConverters.ofFrameFormat;
 import static io.activej.memcache.protocol.MemcacheRpcMessage.HASH_FUNCTION;
-import static io.activej.rpc.client.ReactiveRpcClient.DEFAULT_SOCKET_SETTINGS;
+import static io.activej.rpc.client.RpcClient.DEFAULT_SOCKET_SETTINGS;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public class MemcacheClientModule extends AbstractModule {
@@ -44,7 +44,7 @@ public class MemcacheClientModule extends AbstractModule {
 
 	@Provides
 	AsyncRpcClient rpcClient(NioReactor reactor, Config config) {
-		return ReactiveRpcClient.create(reactor)
+		return RpcClient.create(reactor)
 				.withStrategy(
 						RpcStrategyRendezvousHashing.create(HASH_FUNCTION)
 								.withMinActiveShards(config.get(ofInteger(), "client.minAliveConnections", 1))
