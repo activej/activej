@@ -23,8 +23,8 @@ import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.crdt.util.CrdtDataSerializer;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.AsyncMessaging;
-import io.activej.csp.net.MessagingCodec;
 import io.activej.csp.net.Messaging;
+import io.activej.csp.net.MessagingCodec;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
@@ -68,14 +68,14 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 	// region JMX
 	private boolean detailedStats;
 
-	private final StreamStatsBasic<CrdtData<K, S>> uploadStats = StreamStats.basic();
-	private final StreamStatsDetailed<CrdtData<K, S>> uploadStatsDetailed = StreamStats.detailed();
-	private final StreamStatsBasic<CrdtData<K, S>> downloadStats = StreamStats.basic();
-	private final StreamStatsDetailed<CrdtData<K, S>> downloadStatsDetailed = StreamStats.detailed();
-	private final StreamStatsBasic<CrdtData<K, S>> takeStats = StreamStats.basic();
-	private final StreamStatsDetailed<CrdtData<K, S>> takeStatsDetailed = StreamStats.detailed();
-	private final StreamStatsBasic<CrdtTombstone<K>> removeStats = StreamStats.basic();
-	private final StreamStatsDetailed<CrdtTombstone<K>> removeStatsDetailed = StreamStats.detailed();
+	private final StreamStatsBasic<CrdtData<K, S>> uploadStats = StreamStats.basic(reactor);
+	private final StreamStatsDetailed<CrdtData<K, S>> uploadStatsDetailed = StreamStats.detailed(reactor);
+	private final StreamStatsBasic<CrdtData<K, S>> downloadStats = StreamStats.basic(reactor);
+	private final StreamStatsDetailed<CrdtData<K, S>> downloadStatsDetailed = StreamStats.detailed(reactor);
+	private final StreamStatsBasic<CrdtData<K, S>> takeStats = StreamStats.basic(reactor);
+	private final StreamStatsDetailed<CrdtData<K, S>> takeStatsDetailed = StreamStats.detailed(reactor);
+	private final StreamStatsBasic<CrdtTombstone<K>> removeStats = StreamStats.basic(reactor);
+	private final StreamStatsDetailed<CrdtTombstone<K>> removeStatsDetailed = StreamStats.detailed(reactor);
 
 	private final PromiseStats handshakePromise = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats downloadBeginPromise = PromiseStats.create(Duration.ofMinutes(5));

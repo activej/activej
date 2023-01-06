@@ -170,7 +170,7 @@ public final class Cube extends AbstractReactive
 	private CubeClassLoaderCache classLoaderCache;
 
 	// JMX
-	private final AggregationStats aggregationStats = new AggregationStats();
+	private final AggregationStats aggregationStats = new AggregationStats(reactor);
 	private final ValueStats queryTimes = ValueStats.create(Duration.ofMinutes(10));
 	private long queryErrors;
 	private Exception queryLastError;

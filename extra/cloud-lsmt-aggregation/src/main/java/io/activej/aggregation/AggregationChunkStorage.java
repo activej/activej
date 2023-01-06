@@ -107,16 +107,16 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 
 	private boolean detailed;
 
-	private final StreamStatsDetailed<ByteBuf> readFile = StreamStats.detailed(forByteBufs());
-	private final StreamStatsDetailed<ByteBuf> readDecompress = StreamStats.detailed(forByteBufs());
-	private final StreamStatsBasic<?> readDeserialize = StreamStats.basic();
-	private final StreamStatsDetailed<?> readDeserializeDetailed = StreamStats.detailed();
+	private final StreamStatsDetailed<ByteBuf> readFile = StreamStats.detailed(reactor, forByteBufs());
+	private final StreamStatsDetailed<ByteBuf> readDecompress = StreamStats.detailed(reactor, forByteBufs());
+	private final StreamStatsBasic<?> readDeserialize = StreamStats.basic(reactor);
+	private final StreamStatsDetailed<?> readDeserializeDetailed = StreamStats.detailed(reactor);
 
-	private final StreamStatsBasic<?> writeSerialize = StreamStats.basic();
-	private final StreamStatsDetailed<?> writeSerializeDetailed = StreamStats.detailed();
-	private final StreamStatsDetailed<ByteBuf> writeCompress = StreamStats.detailed(forByteBufs());
-	private final StreamStatsDetailed<ByteBuf> writeChunker = StreamStats.detailed(forByteBufs());
-	private final StreamStatsDetailed<ByteBuf> writeFile = StreamStats.detailed(forByteBufs());
+	private final StreamStatsBasic<?> writeSerialize = StreamStats.basic(reactor);
+	private final StreamStatsDetailed<?> writeSerializeDetailed = StreamStats.detailed(reactor);
+	private final StreamStatsDetailed<ByteBuf> writeCompress = StreamStats.detailed(reactor, forByteBufs());
+	private final StreamStatsDetailed<ByteBuf> writeChunker = StreamStats.detailed(reactor, forByteBufs());
+	private final StreamStatsDetailed<ByteBuf> writeFile = StreamStats.detailed(reactor, forByteBufs());
 
 	private final ExceptionStats chunkNameWarnings = ExceptionStats.create();
 	private int cleanupPreservedFiles;

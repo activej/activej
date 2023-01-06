@@ -95,14 +95,14 @@ public final class FsCrdtStorage<K extends Comparable<K>, S> extends AbstractRea
 
 	private final AsyncRunnable consolidate = AsyncRunnables.reuse(this::doConsolidate);
 
-	private final StreamStatsBasic<CrdtData<K, S>> uploadStats = StreamStats.basic();
-	private final StreamStatsDetailed<CrdtData<K, S>> uploadStatsDetailed = StreamStats.detailed();
-	private final StreamStatsBasic<CrdtData<K, S>> downloadStats = StreamStats.basic();
-	private final StreamStatsDetailed<CrdtData<K, S>> downloadStatsDetailed = StreamStats.detailed();
-	private final StreamStatsBasic<CrdtData<K, S>> takeStats = StreamStats.basic();
-	private final StreamStatsDetailed<CrdtData<K, S>> takeStatsDetailed = StreamStats.detailed();
-	private final StreamStatsBasic<CrdtTombstone<K>> removeStats = StreamStats.basic();
-	private final StreamStatsDetailed<CrdtTombstone<K>> removeStatsDetailed = StreamStats.detailed();
+	private final StreamStatsBasic<CrdtData<K, S>> uploadStats = StreamStats.basic(reactor);
+	private final StreamStatsDetailed<CrdtData<K, S>> uploadStatsDetailed = StreamStats.detailed(reactor);
+	private final StreamStatsBasic<CrdtData<K, S>> downloadStats = StreamStats.basic(reactor);
+	private final StreamStatsDetailed<CrdtData<K, S>> downloadStatsDetailed = StreamStats.detailed(reactor);
+	private final StreamStatsBasic<CrdtData<K, S>> takeStats = StreamStats.basic(reactor);
+	private final StreamStatsDetailed<CrdtData<K, S>> takeStatsDetailed = StreamStats.detailed(reactor);
+	private final StreamStatsBasic<CrdtTombstone<K>> removeStats = StreamStats.basic(reactor);
+	private final StreamStatsDetailed<CrdtTombstone<K>> removeStatsDetailed = StreamStats.detailed(reactor);
 
 	private final EventStats uploadedItems = EventStats.create(DEFAULT_SMOOTHING_WINDOW);
 	private final EventStats downloadedItems = EventStats.create(DEFAULT_SMOOTHING_WINDOW);

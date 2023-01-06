@@ -28,8 +28,8 @@ import io.activej.datastream.stats.StreamStatsBasic;
 import io.activej.datastream.stats.StreamStatsDetailed;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
-import io.activej.multilog.LogPosition;
 import io.activej.multilog.AsyncMultilog;
+import io.activej.multilog.LogPosition;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 import io.activej.reactor.AbstractReactive;
@@ -64,8 +64,8 @@ public final class LogOTProcessor<T, D> extends AbstractReactive
 	// JMX
 	private boolean enabled = true;
 	private boolean detailed;
-	private final StreamStatsBasic<T> streamStatsBasic = StreamStats.basic();
-	private final StreamStatsDetailed<T> streamStatsDetailed = StreamStats.detailed();
+	private final StreamStatsBasic<T> streamStatsBasic = StreamStats.basic(reactor);
+	private final StreamStatsDetailed<T> streamStatsDetailed = StreamStats.detailed(reactor);
 	private final PromiseStats promiseProcessLog = PromiseStats.create(Duration.ofMinutes(5));
 
 	private LogOTProcessor(Reactor reactor,
