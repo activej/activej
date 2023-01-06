@@ -115,6 +115,7 @@ public final class Multilog<T> extends AbstractReactive
 
 	@Override
 	public Promise<StreamConsumer<T>> write(String logPartition) {
+		checkInReactorThread();
 		validateLogPartition(logPartition);
 
 		return Promise.of(StreamConsumer.<T>ofSupplier(
@@ -137,6 +138,7 @@ public final class Multilog<T> extends AbstractReactive
 	public Promise<StreamSupplierWithResult<T, LogPosition>> read(String logPartition,
 			LogFile startLogFile, long startOffset,
 			@Nullable LogFile endLogFile) {
+		checkInReactorThread();
 		validateLogPartition(logPartition);
 		LogPosition startPosition = LogPosition.create(startLogFile, startOffset);
 		return fs.list(namingScheme.getListGlob(logPartition))

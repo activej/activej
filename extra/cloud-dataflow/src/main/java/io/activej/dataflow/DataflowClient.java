@@ -44,8 +44,8 @@ import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.processor.StreamSupplierTransformer;
-import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.ImplicitlyReactive;
@@ -82,6 +82,7 @@ public final class DataflowClient extends AbstractNioReactive {
 	}
 
 	public <T> StreamSupplier<T> download(InetSocketAddress address, StreamId streamId, StreamSchema<T> streamSchema, ChannelTransformer<ByteBuf, ByteBuf> transformer) {
+		checkInReactorThread();
 		return StreamSupplier.ofPromise(TcpSocket.connect(reactor, address, 0, socketSettings)
 				.mapException(IOException.class, e -> new DataflowStacklessException("Failed to connect to " + address, e))
 				.then(socket -> {
@@ -105,6 +106,7 @@ public final class DataflowClient extends AbstractNioReactive {
 	}
 
 	public <T> StreamSupplier<T> download(InetSocketAddress address, StreamId streamId, StreamSchema<T> streamSchema) {
+		checkInReactorThread();
 		return download(address, streamId, streamSchema, ChannelTransformer.identity());
 	}
 
@@ -176,6 +178,7 @@ public final class DataflowClient extends AbstractNioReactive {
 		}
 
 		public Promise<Void> execute(long taskId, List<Node> nodes) {
+			checkInReactorThread();
 			return performHandshake(messaging)
 					.then(() -> messaging.send(new Execute(taskId, nodes))
 							.mapException(IOException.class, e -> new DataflowStacklessException("Failed to send command to " + address, e)))
@@ -195,6 +198,7 @@ public final class DataflowClient extends AbstractNioReactive {
 
 		@Override
 		public void closeEx(Exception e) {
+			checkInReactorThread();
 			messaging.closeEx(e);
 		}
 
@@ -213,6 +217,7 @@ public final class DataflowClient extends AbstractNioReactive {
 	}
 
 	public Promise<Session> connect(InetSocketAddress address) {
+		checkInReactorThread();
 		return TcpSocket.connect(reactor, address, 0, socketSettings)
 				.map(socket -> new Session(address, socket))
 				.mapException(e -> new DataflowException("Could not connect to " + address, e));

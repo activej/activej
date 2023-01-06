@@ -65,6 +65,7 @@ public abstract class AbstractCommunicatingProcess extends ImplicitlyReactive im
 	}
 
 	protected final void completeProcessEx(@Nullable Exception e) {
+		checkInReactorThread();
 		if (isProcessComplete()) return;
 		if (e == null) {
 			processComplete = true; // setting flag here only, as closeEx() method sets it on its own
@@ -90,6 +91,7 @@ public abstract class AbstractCommunicatingProcess extends ImplicitlyReactive im
 	 */
 	@Override
 	public final Promise<Void> startProcess() {
+		checkInReactorThread();
 		if (!processStarted) {
 			processStarted = true;
 			beforeProcess();
@@ -114,6 +116,7 @@ public abstract class AbstractCommunicatingProcess extends ImplicitlyReactive im
 	 */
 	@Override
 	public final void closeEx(Exception e) {
+		checkInReactorThread();
 		if (isProcessComplete()) return;
 		processComplete = true;
 		doClose(e);

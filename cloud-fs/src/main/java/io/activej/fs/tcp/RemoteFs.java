@@ -29,8 +29,8 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.AsyncMessaging;
-import io.activej.csp.net.MessagingCodec;
 import io.activej.csp.net.Messaging;
+import io.activej.csp.net.MessagingCodec;
 import io.activej.fs.AsyncFs;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.exception.FsException;
@@ -129,6 +129,7 @@ public final class RemoteFs extends AbstractNioReactive
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(String name) {
+		checkInReactorThread();
 		return connectForStreaming(address)
 				.then(this::performHandshake)
 				.then(messaging -> doUpload(messaging, name, null))
@@ -138,6 +139,7 @@ public final class RemoteFs extends AbstractNioReactive
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(String name, long size) {
+		checkInReactorThread();
 		return connect(address)
 				.then(this::performHandshake)
 				.then(messaging -> doUpload(messaging, name, size))
@@ -170,6 +172,7 @@ public final class RemoteFs extends AbstractNioReactive
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> append(String name, long offset) {
+		checkInReactorThread();
 		return connect(address)
 				.then(this::performHandshake)
 				.then(messaging ->
@@ -192,6 +195,7 @@ public final class RemoteFs extends AbstractNioReactive
 
 	@Override
 	public Promise<ChannelSupplier<ByteBuf>> download(String name, long offset, long limit) {
+		checkInReactorThread();
 		checkArgument(offset >= 0, "Data offset must be greater than or equal to zero");
 		checkArgument(limit >= 0, "Data limit must be greater than or equal to zero");
 
@@ -238,6 +242,7 @@ public final class RemoteFs extends AbstractNioReactive
 
 	@Override
 	public Promise<Void> copy(String name, String target) {
+		checkInReactorThread();
 		return simpleCommand(new FsRequest.Copy(name, target), FsResponse.CopyFinished.class)
 				.whenComplete(toLogger(logger, "copy", name, target, this))
 				.whenComplete(copyPromise.recordStats());
@@ -245,6 +250,7 @@ public final class RemoteFs extends AbstractNioReactive
 
 	@Override
 	public Promise<Void> copyAll(Map<String, String> sourceToTarget) {
+		checkInReactorThread();
 		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
@@ -255,6 +261,7 @@ public final class RemoteFs extends AbstractNioReactive
 
 	@Override
 	public Promise<Void> move(String name, String target) {
+		checkInReactorThread();
 		return simpleCommand(new FsRequest.Move(name, target), FsResponse.MoveFinished.class)
 				.whenComplete(toLogger(logger, "move", name, target, this))
 				.whenComplete(movePromise.recordStats());
@@ -262,6 +269,7 @@ public final class RemoteFs extends AbstractNioReactive
 
 	@Override
 	public Promise<Void> moveAll(Map<String, String> sourceToTarget) {
+		checkInReactorThread();
 		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
@@ -272,6 +280,7 @@ public final class RemoteFs extends AbstractNioReactive
 
 	@Override
 	public Promise<Void> delete(String name) {
+		checkInReactorThread();
 		return simpleCommand(new FsRequest.Delete(name), FsResponse.DeleteFinished.class)
 				.whenComplete(toLogger(logger, "delete", name, this))
 				.whenComplete(deletePromise.recordStats());
@@ -279,6 +288,7 @@ public final class RemoteFs extends AbstractNioReactive
 
 	@Override
 	public Promise<Void> deleteAll(Set<String> toDelete) {
+		checkInReactorThread();
 		if (toDelete.isEmpty()) return Promise.complete();
 
 		return simpleCommand(new FsRequest.DeleteAll(toDelete), FsResponse.DeleteAllFinished.class)
@@ -288,6 +298,7 @@ public final class RemoteFs extends AbstractNioReactive
 
 	@Override
 	public Promise<Map<String, FileMetadata>> list(String glob) {
+		checkInReactorThread();
 		return simpleCommand(new FsRequest.List(glob), FsResponse.ListFinished.class, FsResponse.ListFinished::files)
 				.whenComplete(toLogger(logger, "list", glob, this))
 				.whenComplete(listPromise.recordStats());
@@ -295,6 +306,7 @@ public final class RemoteFs extends AbstractNioReactive
 
 	@Override
 	public Promise<@Nullable FileMetadata> info(String name) {
+		checkInReactorThread();
 		return simpleCommand(new FsRequest.Info(name), FsResponse.InfoFinished.class, FsResponse.InfoFinished::fileMetadata)
 				.whenComplete(toLogger(logger, "info", name, this))
 				.whenComplete(infoPromise.recordStats());
@@ -302,6 +314,7 @@ public final class RemoteFs extends AbstractNioReactive
 
 	@Override
 	public Promise<Map<String, FileMetadata>> infoAll(Set<String> names) {
+		checkInReactorThread();
 		if (names.isEmpty()) return Promise.of(Map.of());
 
 		return simpleCommand(new FsRequest.InfoAll(names), FsResponse.InfoAllFinished.class, FsResponse.InfoAllFinished::files)
@@ -311,6 +324,7 @@ public final class RemoteFs extends AbstractNioReactive
 
 	@Override
 	public Promise<Void> ping() {
+		checkInReactorThread();
 		return simpleCommand(new FsRequest.Ping(), FsResponse.Pong.class)
 				.whenComplete(toLogger(logger, "ping", this))
 				.whenComplete(pingPromise.recordStats());
@@ -386,11 +400,13 @@ public final class RemoteFs extends AbstractNioReactive
 
 	@Override
 	public Promise<?> start() {
+		checkInReactorThread();
 		return ping();
 	}
 
 	@Override
 	public Promise<?> stop() {
+		checkInReactorThread();
 		return Promise.complete();
 	}
 

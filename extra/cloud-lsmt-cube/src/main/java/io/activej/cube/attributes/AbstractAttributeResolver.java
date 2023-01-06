@@ -37,6 +37,7 @@ public abstract class AbstractAttributeResolver<K, A> extends AbstractReactive
 
 	@SuppressWarnings("unused")
 	protected Promise<Void> prepareToResolveAttributes(List<Object> results, KeyFunction keyFunction, AttributesFunction attributesFunction) {
+		checkInReactorThread();
 		return Promise.complete();
 	}
 
@@ -53,6 +54,7 @@ public abstract class AbstractAttributeResolver<K, A> extends AbstractReactive
 
 	@Override
 	public final Promise<Void> resolveAttributes(List<Object> results, KeyFunction keyFunction, AttributesFunction attributesFunction) {
+		checkInReactorThread();
 		return prepareToResolveAttributes(results, keyFunction, attributesFunction)
 				.then(() -> doResolveAttributes(results, keyFunction, attributesFunction));
 	}

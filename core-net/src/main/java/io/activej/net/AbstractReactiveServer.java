@@ -66,7 +66,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 public abstract class AbstractReactiveServer<Self extends AbstractReactiveServer<Self>> extends AbstractNioReactive
 		implements ReactiveServer, WorkerServer, WithInitializer<Self>, ReactiveJmxBeanWithStats {
 	protected Logger logger = getLogger(getClass());
-	private static final boolean CHECK = Checks.isEnabled(AbstractReactiveServer.class);
 
 	public static final ServerSocketSettings DEFAULT_SERVER_SOCKET_SETTINGS = ServerSocketSettings.create(DEFAULT_BACKLOG);
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
@@ -218,7 +217,7 @@ public abstract class AbstractReactiveServer<Self extends AbstractReactiveServer
 	 */
 	@Override
 	public final void listen() throws IOException {
-		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
+		checkInReactorThread();
 		if (running) {
 			return;
 		}
@@ -254,7 +253,7 @@ public abstract class AbstractReactiveServer<Self extends AbstractReactiveServer
 
 	@Override
 	public final Promise<?> close() {
-		if (CHECK) checkState(inReactorThread(), "Cannot close server from different thread");
+		checkInReactorThread();
 		if (!running) return Promise.complete();
 		running = false;
 		closeServerSockets();
@@ -338,7 +337,7 @@ public abstract class AbstractReactiveServer<Self extends AbstractReactiveServer
 	@Override
 	public final void doAccept(SocketChannel socketChannel, InetSocketAddress localAddress, InetSocketAddress remoteSocketAddress,
 			boolean ssl, SocketSettings socketSettings) {
-		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
+		checkInReactorThread();
 		accepts.recordEvent();
 		if (ssl) acceptsSsl.recordEvent();
 		InetAddress remoteAddress = remoteSocketAddress.getAddress();

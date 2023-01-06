@@ -217,6 +217,7 @@ public final class LocalFs extends AbstractReactive
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(String name) {
+		checkInReactorThread();
 		checkStarted();
 		return uploadImpl(name, identity())
 				.whenComplete(toLogger(logger, TRACE, "upload", name, this));
@@ -224,6 +225,7 @@ public final class LocalFs extends AbstractReactive
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(String name, long size) {
+		checkInReactorThread();
 		checkStarted();
 		return uploadImpl(name, ofFixedSize(size))
 				.whenComplete(toLogger(logger, TRACE, "upload", name, size, this));
@@ -231,6 +233,7 @@ public final class LocalFs extends AbstractReactive
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> append(String name, long offset) {
+		checkInReactorThread();
 		checkStarted();
 		checkArgument(offset >= 0, "Offset cannot be less than 0");
 		return execute(
@@ -270,6 +273,7 @@ public final class LocalFs extends AbstractReactive
 
 	@Override
 	public Promise<ChannelSupplier<ByteBuf>> download(String name, long offset, long limit) {
+		checkInReactorThread();
 		checkStarted();
 		checkArgument(offset >= 0, "offset < 0");
 		checkArgument(limit >= 0, "limit < 0");
@@ -298,6 +302,7 @@ public final class LocalFs extends AbstractReactive
 
 	@Override
 	public Promise<Map<String, FileMetadata>> list(String glob) {
+		checkInReactorThread();
 		checkStarted();
 		if (glob.isEmpty()) return Promise.of(Map.of());
 
@@ -327,6 +332,7 @@ public final class LocalFs extends AbstractReactive
 
 	@Override
 	public Promise<Void> copy(String name, String target) {
+		checkInReactorThread();
 		checkStarted();
 		return execute(() -> forEachPair(Map.of(name, target), this::doCopy))
 				.then(translateScalarErrorsFn())
@@ -336,6 +342,7 @@ public final class LocalFs extends AbstractReactive
 
 	@Override
 	public Promise<Void> copyAll(Map<String, String> sourceToTarget) {
+		checkInReactorThread();
 		checkStarted();
 		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
@@ -347,6 +354,7 @@ public final class LocalFs extends AbstractReactive
 
 	@Override
 	public Promise<Void> move(String name, String target) {
+		checkInReactorThread();
 		checkStarted();
 		return execute(() -> forEachPair(Map.of(name, target), this::doMove))
 				.then(translateScalarErrorsFn())
@@ -356,6 +364,7 @@ public final class LocalFs extends AbstractReactive
 
 	@Override
 	public Promise<Void> moveAll(Map<String, String> sourceToTarget) {
+		checkInReactorThread();
 		checkStarted();
 		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
@@ -367,6 +376,7 @@ public final class LocalFs extends AbstractReactive
 
 	@Override
 	public Promise<Void> delete(String name) {
+		checkInReactorThread();
 		checkStarted();
 		return execute(() -> deleteImpl(Set.of(name)))
 				.then(translateScalarErrorsFn(name))
@@ -376,6 +386,7 @@ public final class LocalFs extends AbstractReactive
 
 	@Override
 	public Promise<Void> deleteAll(Set<String> toDelete) {
+		checkInReactorThread();
 		checkStarted();
 		if (toDelete.isEmpty()) return Promise.complete();
 
@@ -386,12 +397,14 @@ public final class LocalFs extends AbstractReactive
 
 	@Override
 	public Promise<Void> ping() {
+		checkInReactorThread();
 		checkStarted();
 		return Promise.complete(); // local fs is always available
 	}
 
 	@Override
 	public Promise<@Nullable FileMetadata> info(String name) {
+		checkInReactorThread();
 		checkStarted();
 		return execute(() -> toFileMetadata(resolve(name)))
 				.whenComplete(toLogger(logger, TRACE, "info", name, this))
@@ -400,6 +413,7 @@ public final class LocalFs extends AbstractReactive
 
 	@Override
 	public Promise<Map<String, FileMetadata>> infoAll(Set<String> names) {
+		checkInReactorThread();
 		checkStarted();
 		if (names.isEmpty()) return Promise.of(Map.of());
 
@@ -420,12 +434,14 @@ public final class LocalFs extends AbstractReactive
 
 	@Override
 	public Promise<Void> start() {
+		checkInReactorThread();
 		return execute(() -> LocalFileUtils.init(storage, tempDir, fsyncDirectories))
 				.whenResult(() -> started = true);
 	}
 
 	@Override
 	public Promise<Void> stop() {
+		checkInReactorThread();
 		return Promise.complete();
 	}
 

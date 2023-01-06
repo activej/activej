@@ -145,6 +145,7 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> extends AbstractReact
 
 	@Override
 	public Promise<Void> put(K key, S value) {
+		checkInReactorThread();
 		logger.trace("Putting value {} at key {}", value, key);
 		totalPuts.recordEvent();
 
@@ -155,6 +156,7 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> extends AbstractReact
 
 	@Override
 	public Promise<Void> flush() {
+		checkInReactorThread();
 		logger.trace("Flush called");
 		return flush.run()
 				.whenComplete(flushPromise.recordStats());
@@ -162,6 +164,7 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> extends AbstractReact
 
 	@Override
 	public Promise<?> start() {
+		checkInReactorThread();
 		return scanLostFiles()
 				.then(this::flushFiles)
 				.whenResult(() -> this.consumer = createConsumer());
@@ -169,6 +172,7 @@ public class FileWriteAheadLog<K extends Comparable<K>, S> extends AbstractReact
 
 	@Override
 	public Promise<?> stop() {
+		checkInReactorThread();
 		stopping = true;
 		if (flushRequired) return flush();
 

@@ -84,7 +84,6 @@ import static java.util.Collections.emptyIterator;
 @SuppressWarnings("unused")
 public final class Eventloop implements NioReactor, NioReactive, Runnable, WithInitializer<Eventloop>, ReactiveJmxBeanWithStats {
 	public static final Logger logger = LoggerFactory.getLogger(Eventloop.class);
-	private static final boolean CHECK = Checks.isEnabled(Eventloop.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(1);
 	public static final Duration DEFAULT_IDLE_INTERVAL = Duration.ofSeconds(1);
@@ -828,7 +827,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 */
 	@Override
 	public ServerSocketChannel listen(@Nullable InetSocketAddress address, ServerSocketSettings serverSocketSettings, Consumer<SocketChannel> acceptCallback) throws IOException {
-		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
+		checkInReactorThread();
 		ServerSocketChannel serverSocketChannel = null;
 		try {
 			serverSocketChannel = ServerSocketChannel.open();
@@ -884,7 +883,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 */
 	@Override
 	public void connect(SocketAddress address, long timeout, Callback<SocketChannel> cb) {
-		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
+		checkInReactorThread();
 		SocketChannel channel;
 		try {
 			channel = SocketChannel.open();
@@ -937,7 +936,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 * @return a current tick of an {@link Eventloop}.
 	 */
 	public long tick() {
-		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
+		checkInReactorThread();
 		return (long) loop << 32 | tick;
 	}
 
@@ -950,7 +949,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 */
 	@Override
 	public void post(@Async.Schedule Runnable runnable) {
-		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
+		checkInReactorThread();
 		localTasks.addFirst(runnable);
 	}
 
@@ -961,7 +960,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 */
 	@Override
 	public void postLast(@Async.Schedule Runnable runnable) {
-		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
+		checkInReactorThread();
 		localTasks.addLast(runnable);
 	}
 
@@ -972,7 +971,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 */
 	@Override
 	public void postNext(@Async.Schedule Runnable runnable) {
-		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
+		checkInReactorThread();
 		nextTasks.add(runnable);
 	}
 
@@ -1001,7 +1000,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 */
 	@Override
 	public ScheduledRunnable schedule(long timestamp, @Async.Schedule Runnable runnable) {
-		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
+		checkInReactorThread();
 		return addScheduledTask(timestamp, runnable, false);
 	}
 
@@ -1016,7 +1015,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 */
 	@Override
 	public ScheduledRunnable scheduleBackground(long timestamp, @Async.Schedule Runnable runnable) {
-		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
+		checkInReactorThread();
 		return addScheduledTask(timestamp, runnable, true);
 	}
 

@@ -64,6 +64,7 @@ public final class CrdtRpcStrategyService<K extends Comparable<K>> extends Abstr
 
 	@Override
 	public Promise<?> start() {
+		checkInReactorThread();
 		checkNotNull(rpcClient);
 
 		AsyncSupplier<? extends AsyncDiscoveryService.PartitionScheme<?>> discoverySupplier = discoveryService.discover();
@@ -88,6 +89,7 @@ public final class CrdtRpcStrategyService<K extends Comparable<K>> extends Abstr
 
 	@Override
 	public Promise<?> stop() {
+		checkInReactorThread();
 		this.stopped = true;
 		return Promise.complete();
 	}

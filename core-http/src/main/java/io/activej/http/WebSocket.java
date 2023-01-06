@@ -41,9 +41,9 @@ import static io.activej.bytebuf.ByteBuf.wrapForReading;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nullify;
 import static io.activej.csp.ChannelSuppliers.prefetch;
+import static io.activej.http.AsyncWebSocket.Message.MessageType.TEXT;
 import static io.activej.http.HttpUtils.frameToMessageType;
 import static io.activej.http.HttpUtils.getUTF8;
-import static io.activej.http.AsyncWebSocket.Message.MessageType.TEXT;
 import static io.activej.http.WebSocketConstants.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -77,6 +77,7 @@ final class WebSocket extends AbstractAsyncCloseable implements AsyncWebSocket {
 
 	@Override
 	public Promise<Message> readMessage() {
+		checkInReactorThread();
 		return doRead(() -> {
 			ByteBufs messageBufs = new ByteBufs();
 			Ref<MessageType> typeRef = new Ref<>();
@@ -122,11 +123,13 @@ final class WebSocket extends AbstractAsyncCloseable implements AsyncWebSocket {
 
 	@Override
 	public Promise<Frame> readFrame() {
+		checkInReactorThread();
 		return doRead(frameInput::get);
 	}
 
 	@Override
 	public Promise<Void> writeMessage(@Nullable Message msg) {
+		checkInReactorThread();
 		return doWrite(() -> {
 			if (msg == null) {
 				return frameOutput.accept(null);
@@ -141,6 +144,7 @@ final class WebSocket extends AbstractAsyncCloseable implements AsyncWebSocket {
 
 	@Override
 	public Promise<Void> writeFrame(@Nullable Frame frame) {
+		checkInReactorThread();
 		return doWrite(() -> frameOutput.accept(frame), frame);
 	}
 
@@ -176,8 +180,8 @@ final class WebSocket extends AbstractAsyncCloseable implements AsyncWebSocket {
 
 	// region sanitizers
 	private <T> Promise<T> doRead(AsyncSupplier<T> supplier) {
+		checkInReactorThread();
 		if (CHECK) {
-			checkState(inReactorThread());
 			checkState(readPromise == null, "Concurrent reads");
 		}
 
@@ -194,8 +198,8 @@ final class WebSocket extends AbstractAsyncCloseable implements AsyncWebSocket {
 	}
 
 	private Promise<Void> doWrite(AsyncRunnable runnable, @Nullable Recyclable recyclable) {
+		checkInReactorThread();
 		if (CHECK) {
-			checkState(inReactorThread());
 			checkState(writePromise == null, "Concurrent writes");
 		}
 

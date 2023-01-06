@@ -236,6 +236,7 @@ public class Aggregation extends AbstractReactive
 	@SuppressWarnings("unchecked")
 	public <T, C, K extends Comparable> StreamConsumerWithResult<T, AggregationDiff> consume(
 			Class<T> inputClass, Map<String, String> keyFields, Map<String, String> measureFields) {
+		checkInReactorThread();
 		checkArgument(new HashSet<>(getKeys()).equals(keyFields.keySet()), "Expected keys: %s, actual keyFields: %s", getKeys(), keyFields);
 		checkArgument(getMeasureTypes().keySet().containsAll(measureFields.keySet()), "Unknown measures: %s", difference(measureFields.keySet(),
 				getMeasureTypes().keySet()));
@@ -269,6 +270,7 @@ public class Aggregation extends AbstractReactive
 	}
 
 	public <T> StreamConsumerWithResult<T, AggregationDiff> consume(Class<T> inputClass) {
+		checkInReactorThread();
 		return consume(inputClass, scanKeyFields(inputClass), scanMeasureFields(inputClass));
 	}
 
@@ -279,6 +281,7 @@ public class Aggregation extends AbstractReactive
 	}
 
 	public <T> StreamSupplier<T> query(AggregationQuery query, Class<T> outputClass) {
+		checkInReactorThread();
 		return query(query, outputClass, classLoader);
 	}
 
@@ -292,6 +295,7 @@ public class Aggregation extends AbstractReactive
 	 */
 	@Override
 	public <T> StreamSupplier<T> query(AggregationQuery query, Class<T> outputClass, DefiningClassLoader queryClassLoader) {
+		checkInReactorThread();
 		checkArgument(iterate(queryClassLoader, Objects::nonNull, ClassLoader::getParent).anyMatch(isEqual(classLoader)),
 				"Unrelated queryClassLoader");
 		List<String> fields = getMeasures().stream().filter(query.getMeasures()::contains).collect(toList());
@@ -531,22 +535,27 @@ public class Aggregation extends AbstractReactive
 	}
 
 	public Promise<AggregationDiff> consolidateMinKey() {
+		checkInReactorThread();
 		return consolidateMinKey(Set.of());
 	}
 
 	public Promise<AggregationDiff> consolidateMinKey(Set<Object> lockedChunkIds) {
+		checkInReactorThread();
 		return consolidate(getChunksForConsolidation(lockedChunkIds, false));
 	}
 
 	public Promise<AggregationDiff> consolidateHotSegment() {
+		checkInReactorThread();
 		return consolidateHotSegment(Set.of());
 	}
 
 	public Promise<AggregationDiff> consolidateHotSegment(Set<Object> lockedChunkIds) {
+		checkInReactorThread();
 		return consolidate(getChunksForConsolidation(lockedChunkIds, true));
 	}
 
 	public Promise<AggregationDiff> consolidate(List<AggregationChunk> chunks) {
+		checkInReactorThread();
 		checkArgument(state.getChunks().values().containsAll(chunks), "Consolidating unknown chunks");
 
 		consolidationStarted = reactor.currentTimeMillis();

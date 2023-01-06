@@ -122,6 +122,7 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 	}
 
 	public final <T> Promise<T> decode(ByteBufsDecoder<T> decoder) {
+		checkInReactorThread();
 		return doDecode(decoder, this);
 	}
 
@@ -148,6 +149,7 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 	}
 
 	public final <T> Promise<T> decodeRemaining(ByteBufsDecoder<T> decoder) {
+		checkInReactorThread();
 		return decode(decoder)
 				.then(result -> {
 					if (!bufs.isEmpty()) {
@@ -160,6 +162,7 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 	}
 
 	public final <T> ChannelSupplier<T> decodeStream(ByteBufsDecoder<T> decoder) {
+		checkInReactorThread();
 		return ChannelSupplier.of(
 				() -> doDecode(decoder,
 						AsyncCloseable.of(e -> {
@@ -176,6 +179,7 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 
 	@SuppressWarnings("UnusedReturnValue")
 	public Promise<Void> bindTo(BinaryChannelInput input) {
+		checkInReactorThread();
 		return input.set(this);
 	}
 

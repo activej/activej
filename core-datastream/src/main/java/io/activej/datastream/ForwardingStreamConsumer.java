@@ -37,6 +37,7 @@ public abstract class ForwardingStreamConsumer<T> implements StreamConsumer<T> {
 
 	@Override
 	public void consume(StreamSupplier<T> streamSupplier) {
+		checkInReactorThread();
 		consumer.consume(streamSupplier);
 	}
 

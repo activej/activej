@@ -25,8 +25,6 @@ import org.jetbrains.annotations.Nullable;
 import static io.activej.common.Checks.checkState;
 
 public abstract class AbstractAsyncCloseable extends ImplicitlyReactive implements AsyncCloseable {
-	private static final boolean CHECK = Checks.isEnabled(AbstractAsyncCloseable.class);
-
 	private @Nullable AsyncCloseable closeable;
 
 	private Exception exception;
@@ -47,7 +45,7 @@ public abstract class AbstractAsyncCloseable extends ImplicitlyReactive implemen
 
 	@Override
 	public final void closeEx(Exception e) {
-		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
+		checkInReactorThread();
 		if (isClosed()) return;
 		exception = e;
 		reactor.post(this::onCleanup);

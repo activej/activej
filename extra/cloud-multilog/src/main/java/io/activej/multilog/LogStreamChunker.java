@@ -50,6 +50,7 @@ final class LogStreamChunker extends AbstractCommunicatingProcess implements Cha
 
 	@Override
 	public Promise<Void> set(ChannelSupplier<ByteBuf> input) {
+		checkInReactorThread();
 		this.input = sanitize(input);
 		startProcess();
 		return getProcessCompletion();

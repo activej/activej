@@ -64,6 +64,7 @@ public final class StreamSplitter<I, O> extends ImplicitlyReactive implements Ha
 	}
 
 	public StreamSupplier<O> newOutput() {
+		checkInReactorThread();
 		return addOutput(new Output());
 	}
 

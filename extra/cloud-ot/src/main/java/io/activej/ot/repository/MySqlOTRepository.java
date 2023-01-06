@@ -168,6 +168,7 @@ public class MySqlOTRepository<D> extends AbstractReactive
 	}
 
 	public void initialize() throws IOException, SQLException {
+		checkInReactorThread();
 		logger.trace("Initializing tables");
 		execute(dataSource, sql(new String(loadResource("sql/ot_diffs.sql"), UTF_8)));
 		execute(dataSource, sql(new String(loadResource("sql/ot_revisions.sql"), UTF_8)));
@@ -192,6 +193,7 @@ public class MySqlOTRepository<D> extends AbstractReactive
 	}
 
 	public void truncateTables() throws SQLException {
+		checkInReactorThread();
 		logger.trace("Truncate tables");
 		try (Connection connection = dataSource.getConnection()) {
 			try (Statement statement = connection.createStatement()) {
@@ -202,11 +204,13 @@ public class MySqlOTRepository<D> extends AbstractReactive
 	}
 
 	public Promise<Long> createCommitId() {
+		checkInReactorThread();
 		return idGenerator.get();
 	}
 
 	@Override
 	public Promise<OTCommit<Long, D>> createCommit(Map<Long, DiffsWithLevel<D>> parentDiffs) {
+		checkInReactorThread();
 		return createCommitId()
 				.map(newId -> OTCommit.of(0, newId, parentDiffs));
 	}
@@ -248,6 +252,7 @@ public class MySqlOTRepository<D> extends AbstractReactive
 
 	@Override
 	public Promise<Void> push(Collection<OTCommit<Long, D>> commits) {
+		checkInReactorThread();
 		if (commits.isEmpty()) return Promise.complete();
 		return retryRollbacks(() -> doPush(commits));
 	}
@@ -292,6 +297,7 @@ public class MySqlOTRepository<D> extends AbstractReactive
 
 	@Override
 	public Promise<Void> updateHeads(Set<Long> newHeads, Set<Long> excludedHeads) {
+		checkInReactorThread();
 		return retryRollbacks(() -> doUpdateHeads(newHeads, excludedHeads));
 	}
 
@@ -314,6 +320,7 @@ public class MySqlOTRepository<D> extends AbstractReactive
 
 	@Override
 	public Promise<Set<Long>> getAllHeads() {
+		checkInReactorThread();
 		return Promise.ofBlocking(executor,
 						() -> {
 							try (Connection connection = dataSource.getConnection()) {
@@ -336,6 +343,7 @@ public class MySqlOTRepository<D> extends AbstractReactive
 
 	@Override
 	public Promise<Boolean> hasCommit(Long revisionId) {
+		checkInReactorThread();
 		return Promise.ofBlocking(executor,
 						() -> {
 							try (Connection connection = dataSource.getConnection()) {
@@ -357,6 +365,7 @@ public class MySqlOTRepository<D> extends AbstractReactive
 
 	@Override
 	public Promise<OTCommit<Long, D>> loadCommit(Long revisionId) {
+		checkInReactorThread();
 		return Promise.ofBlocking(executor,
 						() -> {
 							try (Connection connection = dataSource.getConnection()) {
@@ -406,6 +415,7 @@ public class MySqlOTRepository<D> extends AbstractReactive
 
 	@Override
 	public Promise<Boolean> hasSnapshot(Long revisionId) {
+		checkInReactorThread();
 		return Promise.ofBlocking(executor,
 						() -> {
 							try (Connection connection = dataSource.getConnection()) {
@@ -425,6 +435,7 @@ public class MySqlOTRepository<D> extends AbstractReactive
 
 	@Override
 	public Promise<Optional<List<D>>> loadSnapshot(Long revisionId) {
+		checkInReactorThread();
 		return Promise.ofBlocking(executor,
 						() -> {
 							try (Connection connection = dataSource.getConnection()) {
@@ -449,6 +460,7 @@ public class MySqlOTRepository<D> extends AbstractReactive
 
 	@Override
 	public Promise<Void> saveSnapshot(Long revisionId, List<D> diffs) {
+		checkInReactorThread();
 		return Promise.ofBlocking(executor,
 						() -> {
 							try (Connection connection = dataSource.getConnection()) {
@@ -471,6 +483,7 @@ public class MySqlOTRepository<D> extends AbstractReactive
 
 	@Override
 	public Promise<Void> cleanup(Long minId) {
+		checkInReactorThread();
 		return retryRollbacks(() -> doCleanup(minId));
 	}
 
@@ -505,6 +518,7 @@ public class MySqlOTRepository<D> extends AbstractReactive
 
 	@Override
 	public Promise<Void> backup(OTCommit<Long, D> commit, List<D> snapshot) {
+		checkInReactorThread();
 		checkNotNull(tableBackup, "Cannot backup when backup table is null");
 		return Promise.ofBlocking(executor,
 						() -> {

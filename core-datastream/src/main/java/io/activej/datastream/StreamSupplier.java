@@ -261,6 +261,7 @@ public interface StreamSupplier<T> extends Reactive, AsyncCloseable {
 	 * Creates a supplier from this one with its <i>end of stream</i> signal modified by the given function.
 	 */
 	default StreamSupplier<T> withEndOfStream(UnaryOperator<Promise<Void>> fn) {
+		checkInReactorThread();
 		Promise<Void> endOfStream = getEndOfStream();
 		Promise<Void> suppliedEndOfStream = fn.apply(endOfStream);
 		if (endOfStream == suppliedEndOfStream) {

@@ -40,12 +40,14 @@ public final class BackupService<K extends Comparable<K>, S> extends AbstractRea
 	}
 
 	public Promise<Void> restore() {
+		checkInReactorThread();
 		return localFiles.download()
 				.then(supplierWithResult ->
 						supplierWithResult.streamTo(StreamConsumer.ofPromise(inMemory.upload())));
 	}
 
 	public Promise<Void> backup() {
+		checkInReactorThread();
 		if (backupPromise != null) {
 			return backupPromise;
 		}
@@ -63,11 +65,13 @@ public final class BackupService<K extends Comparable<K>, S> extends AbstractRea
 
 	@Override
 	public Promise<?> start() {
+		checkInReactorThread();
 		return restore().then(localFiles::consolidate);
 	}
 
 	@Override
 	public Promise<?> stop() {
+		checkInReactorThread();
 		return backup();
 	}
 }

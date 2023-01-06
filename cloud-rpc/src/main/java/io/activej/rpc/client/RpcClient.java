@@ -87,8 +87,6 @@ import static org.slf4j.LoggerFactory.getLogger;
  */
 public final class RpcClient extends AbstractNioReactive
 		implements AsyncRpcClient, ReactiveService, WithInitializer<RpcClient>, ReactiveJmxBeanWithStats {
-	private static final boolean CHECK = Checks.isEnabled(RpcClient.class);
-
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(RpcClient.class, "connectTimeout", Duration.ZERO);
 	public static final Duration DEFAULT_RECONNECT_INTERVAL = ApplicationSettings.getDuration(RpcClient.class, "reconnectInterval", Duration.ZERO);
@@ -215,7 +213,6 @@ public final class RpcClient extends AbstractNioReactive
 	 */
 	public RpcClient withStrategy(RpcStrategy requestSendingStrategy) {
 		this.newStrategy = requestSendingStrategy;
-
 		return this;
 	}
 
@@ -274,7 +271,7 @@ public final class RpcClient extends AbstractNioReactive
 
 	@Override
 	public Promise<Void> start() {
-		if (CHECK) Checks.checkState(inReactorThread(), "Not in reactor thread");
+		checkInReactorThread();
 		Checks.checkNotNull(messageTypes, "Message types must be specified");
 		Checks.checkState(stopPromise == null);
 
@@ -284,8 +281,7 @@ public final class RpcClient extends AbstractNioReactive
 	}
 
 	public Promise<Void> changeStrategy(RpcStrategy newStrategy, boolean retry) {
-		if (CHECK) Checks.checkState(inReactorThread(), "Not in reactor thread");
-
+		checkInReactorThread();
 		if (stopPromise != null) {
 			return Promise.ofException(CLIENT_IS_STOPPED);
 		}
@@ -320,7 +316,7 @@ public final class RpcClient extends AbstractNioReactive
 
 	@Override
 	public Promise<Void> stop() {
-		if (CHECK) Checks.checkState(inReactorThread(), "Not in reactor thread");
+		checkInReactorThread();
 		if (stopPromise != null) return stopPromise;
 
 		stopPromise = new SettablePromise<>();
@@ -474,7 +470,7 @@ public final class RpcClient extends AbstractNioReactive
 	 */
 	@Override
 	public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
-		if (CHECK) Checks.checkState(inReactorThread(), "Not in reactor thread");
+		checkInReactorThread();
 		if (timeout > 0) {
 			requestSender.sendRequest(request, timeout, cb);
 		} else {
@@ -484,7 +480,7 @@ public final class RpcClient extends AbstractNioReactive
 
 	@Override
 	public <I, O> void sendRequest(I request, Callback<O> cb) {
-		if (CHECK) Checks.checkState(inReactorThread(), "Not in reactor thread");
+		checkInReactorThread();
 		requestSender.sendRequest(request, cb);
 	}
 
@@ -496,7 +492,7 @@ public final class RpcClient extends AbstractNioReactive
 		return new AsyncRpcClient() {
 			@Override
 			public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
-				if (CHECK) Checks.checkState(anotherReactor.inReactorThread(), "Not in reactor thread");
+				if (CHECK_IN_REACTOR_THREAD) Checks.checkState(anotherReactor.inReactorThread(), "Not in reactor thread");
 				if (timeout > 0) {
 					reactor.execute(() -> requestSender.sendRequest(request, timeout, toAnotherReactor(anotherReactor, cb)));
 				} else {

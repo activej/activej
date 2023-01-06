@@ -52,6 +52,7 @@ public final class CrdtRepartitionController<K extends Comparable<K>, S, P> exte
 	// endregion
 
 	public Promise<Void> repartition() {
+		checkInReactorThread();
 		return repartition.run();
 	}
 

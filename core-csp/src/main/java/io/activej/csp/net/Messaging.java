@@ -87,6 +87,7 @@ public final class Messaging<I, O> extends AbstractAsyncCloseable implements Asy
 
 	@Override
 	public Promise<I> receive() {
+		checkInReactorThread();
 		return bufsSupplier.decode(codec::tryDecode)
 				.whenResult(this::prefetch)
 				.whenException(this::closeEx);
@@ -94,11 +95,13 @@ public final class Messaging<I, O> extends AbstractAsyncCloseable implements Asy
 
 	@Override
 	public Promise<Void> send(O msg) {
+		checkInReactorThread();
 		return socket.write(codec.encode(msg));
 	}
 
 	@Override
 	public Promise<Void> sendEndOfStream() {
+		checkInReactorThread();
 		return socket.write(null)
 				.whenResult(() -> {
 					writeDone = true;
@@ -109,6 +112,7 @@ public final class Messaging<I, O> extends AbstractAsyncCloseable implements Asy
 
 	@Override
 	public ChannelConsumer<ByteBuf> sendBinaryStream() {
+		checkInReactorThread();
 		return ChannelConsumer.ofSocket(socket)
 				.withAcknowledgement(ack -> ack
 						.whenResult(() -> {
@@ -119,6 +123,7 @@ public final class Messaging<I, O> extends AbstractAsyncCloseable implements Asy
 
 	@Override
 	public ChannelSupplier<ByteBuf> receiveBinaryStream() {
+		checkInReactorThread();
 		return ChannelSuppliers.concat(ChannelSupplier.ofIterator(bufs.asIterator()), ChannelSupplier.ofSocket(socket))
 				.withEndOfStream(eos -> eos
 						.whenResult(() -> {

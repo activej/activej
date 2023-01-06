@@ -514,6 +514,7 @@ public final class Cube extends AbstractReactive
 
 	public <T> AsyncLogDataConsumer<T, CubeDiff> logStreamConsumer(Class<T> inputClass, Map<String, String> dimensionFields, Map<String, String> measureFields,
 			AggregationPredicate predicate) {
+		checkInReactorThread();
 		return () -> consume(inputClass, dimensionFields, measureFields, predicate)
 				.transformResult(result -> result.map(cubeDiff -> List.of(cubeDiff)));
 	}
@@ -536,6 +537,7 @@ public final class Cube extends AbstractReactive
 	 */
 	public <T> StreamConsumerWithResult<T, CubeDiff> consume(Class<T> inputClass, Map<String, String> dimensionFields, Map<String, String> measureFields,
 			AggregationPredicate dataPredicate) {
+		checkInReactorThread();
 		logger.info("Started consuming data. Dimensions: {}. Measures: {}", dimensionFields.keySet(), measureFields.keySet());
 
 		StreamSplitter<T, T> streamSplitter = StreamSplitter.create((item, acceptors) -> {
@@ -638,6 +640,7 @@ public final class Cube extends AbstractReactive
 	private <T, K extends Comparable, S, A> StreamSupplier<T> queryRawStream(List<String> dimensions, List<String> storedMeasures, AggregationPredicate where,
 			Class<T> resultClass, DefiningClassLoader queryClassLoader,
 			List<AggregationContainer> compatibleAggregations) {
+		checkInReactorThread();
 		List<AggregationContainerWithScore> containerWithScores = new ArrayList<>();
 		for (AggregationContainer compatibleAggregation : compatibleAggregations) {
 			AggregationQuery aggregationQuery = AggregationQuery.create(dimensions, storedMeasures, where);
@@ -758,6 +761,7 @@ public final class Cube extends AbstractReactive
 	}
 
 	public Promise<CubeDiff> consolidate(AsyncFunction<Aggregation, AggregationDiff> strategy) {
+		checkInReactorThread();
 		logger.info("Launching consolidation");
 
 		Map<String, AggregationDiff> map = new HashMap<>();
@@ -811,6 +815,7 @@ public final class Cube extends AbstractReactive
 	// region temp query() method
 	@Override
 	public Promise<QueryResult> query(CubeQuery cubeQuery) throws QueryException {
+		checkInReactorThread();
 		DefiningClassLoader queryClassLoader = getQueryClassLoader(new CubeClassLoaderCache.Key(
 				new LinkedHashSet<>(cubeQuery.getAttributes()),
 				new LinkedHashSet<>(cubeQuery.getMeasures()),

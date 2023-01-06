@@ -42,7 +42,6 @@ import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
-import io.activej.reactor.ImplicitlyReactive;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
@@ -56,7 +55,7 @@ import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.types.Types.parameterizedType;
 import static java.util.stream.Collectors.toList;
 
-public final class DataflowDebugServlet extends ImplicitlyReactive implements AsyncServlet {
+public final class DataflowDebugServlet implements AsyncServlet {
 	private final AsyncServlet servlet;
 	private final ByteBufsCodec<DataflowResponse, DataflowRequest> codec;
 

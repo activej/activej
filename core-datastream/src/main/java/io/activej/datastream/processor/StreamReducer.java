@@ -83,6 +83,7 @@ public final class StreamReducer<K, O, A> extends ImplicitlyReactive implements 
 	}
 
 	public <I> StreamConsumer<I> newInput(Function<I, K> keyFunction, Reducer<K, I, O, A> reducer) {
+		checkInReactorThread();
 		return addInput(new SimpleInput(keyFunction, reducer));
 	}
 

@@ -16,7 +16,6 @@
 
 package io.activej.dns;
 
-import io.activej.common.Checks;
 import io.activej.common.StringFormatUtils;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.time.CurrentTimeProvider;
@@ -43,15 +42,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static io.activej.common.Checks.checkState;
-
 /**
  * Represents a cache for storing resolved domains during it's time to live.
  */
 public final class DnsCache extends AbstractReactive
 		implements WithInitializer<DnsCache> {
 	private static final Logger logger = LoggerFactory.getLogger(DnsCache.class);
-	private static final boolean CHECK = Checks.isEnabled(DnsCache.class);
 
 	public static final Duration DEFAULT_ERROR_CACHE_EXPIRATION = Duration.ofMinutes(1);
 	public static final Duration DEFAULT_TIMED_OUT_EXPIRATION = Duration.ofSeconds(1);
@@ -120,6 +116,7 @@ public final class DnsCache extends AbstractReactive
 	 * @return DnsQueryCacheResult for this query
 	 */
 	public @Nullable DnsCache.DnsQueryCacheResult tryToResolve(DnsQuery query) {
+		checkInReactorThread();
 		CachedDnsQueryResult cachedResult = cache.get(query);
 
 		if (cachedResult == null) {
@@ -159,7 +156,7 @@ public final class DnsCache extends AbstractReactive
 	 * @param response response to add
 	 */
 	public void add(DnsQuery query, DnsResponse response) {
-		if (CHECK) checkState(inReactorThread(), "Concurrent cache adds are not allowed");
+		checkInReactorThread();
 		long expirationTime = now.currentTimeMillis();
 		if (response.isSuccessful()) {
 			assert response.getRecord() != null; // where are my advanced contracts so that the IDE would know it's true here without an assertion?
@@ -186,6 +183,7 @@ public final class DnsCache extends AbstractReactive
 	}
 
 	public void performCleanup() {
+		checkInReactorThread();
 		if (!cleaningUpNow.compareAndSet(false, true)) {
 			return;
 		}

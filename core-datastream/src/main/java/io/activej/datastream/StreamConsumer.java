@@ -152,6 +152,7 @@ public interface StreamConsumer<T> extends Reactive, AsyncCloseable {
 	 * Creates a consumer from this one with its <i>acknowledge</i> signal modified by the given function.
 	 */
 	default StreamConsumer<T> withAcknowledgement(UnaryOperator<Promise<Void>> fn) {
+		checkInReactorThread();
 		Promise<Void> acknowledgement = getAcknowledgement();
 		Promise<Void> newAcknowledgement = fn.apply(acknowledgement);
 		if (acknowledgement == newAcknowledgement) return this;

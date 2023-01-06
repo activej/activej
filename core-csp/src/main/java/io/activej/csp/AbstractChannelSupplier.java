@@ -25,8 +25,6 @@ import org.jetbrains.annotations.Nullable;
 import static io.activej.common.Checks.checkState;
 
 public abstract class AbstractChannelSupplier<T> extends AbstractAsyncCloseable implements ChannelSupplier<T> {
-	protected static final boolean CHECK = Checks.isEnabled(AbstractChannelSupplier.class);
-
 	// region creators
 	protected AbstractChannelSupplier() {
 		setCloseable(null);
@@ -41,7 +39,7 @@ public abstract class AbstractChannelSupplier<T> extends AbstractAsyncCloseable 
 
 	@Override
 	public final Promise<T> get() {
-		if (CHECK) checkState(inReactorThread(), "Not in eventloop thread");
+		checkInReactorThread();
 		return isClosed() ? Promise.ofException(getException()) : doGet();
 	}
 }

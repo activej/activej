@@ -85,10 +85,12 @@ public final class CubeBackupController<K, D, C> extends AbstractReactive
 
 	@SuppressWarnings("UnusedReturnValue")
 	public Promise<Void> backup() {
+		checkInReactorThread();
 		return backup.run();
 	}
 
 	public Promise<Void> backupHead() {
+		checkInReactorThread();
 		return repository.getHeads()
 				.mapException(e -> new CubeException("Failed to get heads", e))
 				.whenResult(Set::isEmpty, $ -> {
@@ -100,6 +102,7 @@ public final class CubeBackupController<K, D, C> extends AbstractReactive
 	}
 
 	public Promise<Void> backup(K commitId) {
+		checkInReactorThread();
 		return Promises.toTuple(repository.loadCommit(commitId), checkout(repository, otSystem, commitId))
 				.mapException(e -> new CubeException("Failed to check out commit '" + commitId + '\'', e))
 				.then(tuple -> Promises.sequence(

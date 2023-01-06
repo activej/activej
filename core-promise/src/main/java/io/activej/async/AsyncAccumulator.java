@@ -51,6 +51,7 @@ public final class AsyncAccumulator<A> extends ImplicitlyReactive implements Asy
 	}
 
 	public Promise<A> run() {
+		checkInReactorThread();
 		checkState(!started);
 		this.started = true;
 		if (resultPromise.isComplete()) return resultPromise;
@@ -61,11 +62,13 @@ public final class AsyncAccumulator<A> extends ImplicitlyReactive implements Asy
 	}
 
 	public Promise<A> run(Promise<Void> runtimePromise) {
+		checkInReactorThread();
 		addPromise(runtimePromise, (result, v) -> {});
 		return run();
 	}
 
 	public <T> void addPromise(Promise<T> promise, BiConsumerEx<A, T> consumer) {
+		checkInReactorThread();
 		if (resultPromise.isComplete()) {
 			promise.whenResult(Recyclers::recycle);
 			return;
@@ -97,6 +100,7 @@ public final class AsyncAccumulator<A> extends ImplicitlyReactive implements Asy
 	}
 
 	public <V> SettablePromise<V> newPromise(BiConsumerEx<A, V> consumer) {
+		checkInReactorThread();
 		SettablePromise<V> resultPromise = new SettablePromise<>();
 		addPromise(resultPromise, consumer);
 		return resultPromise;
@@ -115,10 +119,12 @@ public final class AsyncAccumulator<A> extends ImplicitlyReactive implements Asy
 	}
 
 	public void complete() {
+		checkInReactorThread();
 		resultPromise.trySet(accumulator);
 	}
 
 	public void complete(A result) {
+		checkInReactorThread();
 		if (resultPromise.trySet(result) && result != accumulator) {
 			Recyclers.recycle(accumulator);
 		}
@@ -126,6 +132,7 @@ public final class AsyncAccumulator<A> extends ImplicitlyReactive implements Asy
 
 	@Override
 	public void closeEx(Exception e) {
+		checkInReactorThread();
 		if (resultPromise.trySetException(e)) {
 			Recyclers.recycle(accumulator);
 		}

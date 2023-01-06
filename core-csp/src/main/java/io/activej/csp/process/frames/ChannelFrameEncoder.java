@@ -59,6 +59,7 @@ public final class ChannelFrameEncoder extends AbstractCommunicatingProcess
 	@Override
 	public ChannelInput<ByteBuf> getInput() {
 		return input -> {
+			checkInReactorThread();
 			this.input = sanitize(input);
 			//noinspection ConstantConditions
 			if (this.input != null && this.output != null) startProcess();
@@ -70,6 +71,7 @@ public final class ChannelFrameEncoder extends AbstractCommunicatingProcess
 	@Override
 	public ChannelOutput<ByteBuf> getOutput() {
 		return output -> {
+			checkInReactorThread();
 			this.output = sanitize(output);
 			if (this.input != null && this.output != null) startProcess();
 		};

@@ -72,6 +72,7 @@ public class InMemoryWriteAheadLog<K extends Comparable<K>, S> extends AbstractR
 
 	@Override
 	public Promise<Void> put(K key, S value) {
+		checkInReactorThread();
 		if (logger.isTraceEnabled()) {
 			logger.trace("{} value for key {}", map.containsKey(key) ? "Merging" : "Putting new", key);
 		}
@@ -81,6 +82,7 @@ public class InMemoryWriteAheadLog<K extends Comparable<K>, S> extends AbstractR
 
 	@Override
 	public Promise<Void> flush() {
+		checkInReactorThread();
 		return flush.run();
 	}
 
@@ -102,11 +104,13 @@ public class InMemoryWriteAheadLog<K extends Comparable<K>, S> extends AbstractR
 
 	@Override
 	public Promise<?> start() {
+		checkInReactorThread();
 		return Promise.complete();
 	}
 
 	@Override
 	public Promise<?> stop() {
+		checkInReactorThread();
 		return flush();
 	}
 

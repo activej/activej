@@ -53,6 +53,7 @@ final class ChannelByteSplitter extends AbstractCommunicatingProcess
 	@Override
 	public ChannelInput<ByteBuf> getInput() {
 		return input -> {
+			checkInReactorThread();
 			checkState(!isProcessStarted(), "Can't configure splitter while it is running");
 			this.input = sanitize(input);
 			tryStart();
@@ -65,6 +66,7 @@ final class ChannelByteSplitter extends AbstractCommunicatingProcess
 		int index = outputs.size();
 		outputs.add(null);
 		return output -> {
+			checkInReactorThread();
 			outputs.set(index, output);
 			tryStart();
 		};

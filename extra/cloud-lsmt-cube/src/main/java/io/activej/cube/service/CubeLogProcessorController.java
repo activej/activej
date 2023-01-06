@@ -103,16 +103,19 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 	private final AsyncSupplier<Boolean> processLogs = coalesce(this::doProcessLogs);
 
 	public Promise<Boolean> processLogs() {
+		checkInReactorThread();
 		return processLogs.get();
 	}
 
 	Promise<Boolean> doProcessLogs() {
+		checkInReactorThread();
 		return process()
 				.whenComplete(promiseProcessLogs.recordStats())
 				.whenComplete(toLogger(logger, thisMethod(), stateManager));
 	}
 
 	Promise<Boolean> process() {
+		checkInReactorThread();
 		return Promise.complete()
 				.then(stateManager::sync)
 				.mapException(e -> new CubeException("Failed to synchronize state prior to log processing", e))

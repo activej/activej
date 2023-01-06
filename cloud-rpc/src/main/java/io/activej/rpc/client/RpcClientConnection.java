@@ -19,7 +19,6 @@ package io.activej.rpc.client;
 import io.activej.async.callback.Callback;
 import io.activej.async.exception.AsyncCloseException;
 import io.activej.async.exception.AsyncTimeoutException;
-import io.activej.common.Checks;
 import io.activej.common.recycle.Recyclers;
 import io.activej.common.time.Stopwatch;
 import io.activej.datastream.StreamDataAcceptor;
@@ -43,12 +42,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static io.activej.common.Checks.checkState;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public final class RpcClientConnection extends AbstractReactive implements RpcStream.Listener, RpcSender, JmxRefreshable {
 	private static final Logger logger = getLogger(RpcClientConnection.class);
-	private static final boolean CHECK = Checks.isEnabled(RpcClientConnection.class);
 
 	private static final RpcException CONNECTION_UNRESPONSIVE = new RpcException("Unresponsive connection");
 	private static final RpcOverloadException RPC_OVERLOAD_EXCEPTION = new RpcOverloadException("RPC client is overloaded");
@@ -94,8 +91,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 
 	@Override
 	public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
-		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
-
+		checkInReactorThread();
 		// jmx
 		totalRequests.recordEvent();
 		connectionRequests.recordEvent();
@@ -163,8 +159,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 
 	@Override
 	public <I, O> void sendRequest(I request, Callback<O> cb) {
-		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
-
+		checkInReactorThread();
 		// jmx
 		totalRequests.recordEvent();
 		connectionRequests.recordEvent();
@@ -202,6 +197,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 
 	@Override
 	public void accept(RpcMessage message) {
+		checkInReactorThread();
 		if (message.getData().getClass() == RpcRemoteException.class) {
 			processErrorMessage(message);
 		} else if (message.getData().getClass() == RpcControlMessage.class) {

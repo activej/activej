@@ -100,6 +100,7 @@ public final class SslTcpSocket extends AbstractNioReactive implements AsyncTcpS
 
 	@Override
 	public Promise<ByteBuf> read() {
+		checkInReactorThread();
 		read = null;
 		if (shouldReturnEndOfStream) {
 			shouldReturnEndOfStream = false;
@@ -119,6 +120,7 @@ public final class SslTcpSocket extends AbstractNioReactive implements AsyncTcpS
 
 	@Override
 	public Promise<Void> write(@Nullable ByteBuf buf) {
+		checkInReactorThread();
 		if (isClosed()) {
 			if (buf != null) {
 				buf.recycle();
@@ -394,6 +396,7 @@ public final class SslTcpSocket extends AbstractNioReactive implements AsyncTcpS
 
 	@Override
 	public void closeEx(Exception e) {
+		checkInReactorThread();
 		if (isClosed()) return;
 		Recyclers.recycle(net2engine);
 		Recyclers.recycle(engine2app);

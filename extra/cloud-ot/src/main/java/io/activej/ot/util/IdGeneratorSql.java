@@ -90,6 +90,7 @@ public final class IdGeneratorSql extends AbstractReactive
 
 	@Override
 	public Promise<Long> get() {
+		checkInReactorThread();
 		checkState(next <= limit, "Cannot create id larger than the limit of " + limit);
 		if (next < limit) {
 			return Promise.of(next++);

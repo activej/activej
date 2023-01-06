@@ -16,7 +16,6 @@
 
 package io.activej.datastream;
 
-import io.activej.common.Checks;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.ImplicitlyReactive;
@@ -29,8 +28,6 @@ import static io.activej.common.Checks.checkState;
  * which helps to deal with state transitions and helps to implement basic behaviours.
  */
 public abstract class AbstractStreamConsumer<T> extends ImplicitlyReactive implements StreamConsumer<T> {
-	private static final boolean CHECK = Checks.isEnabled(AbstractStreamConsumer.class);
-
 	private StreamSupplier<T> supplier;
 	private final SettablePromise<Void> acknowledgement = new SettablePromise<>();
 	private boolean endOfStream;
@@ -47,7 +44,7 @@ public abstract class AbstractStreamConsumer<T> extends ImplicitlyReactive imple
 
 	@Override
 	public final void consume(StreamSupplier<T> streamSupplier) {
-		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
+		checkInReactorThread();
 		checkState(!isStarted());
 		ensureInitialized();
 		if (acknowledgement.isComplete()) return;
@@ -88,7 +85,7 @@ public abstract class AbstractStreamConsumer<T> extends ImplicitlyReactive imple
 	}
 
 	private void endOfStream() {
-		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
+		checkInReactorThread();
 		if (endOfStream) return;
 		endOfStream = true;
 		onEndOfStream();
@@ -104,7 +101,7 @@ public abstract class AbstractStreamConsumer<T> extends ImplicitlyReactive imple
 	 * Begins receiving data into given acceptor, resumes the associated supplier to receive data from it.
 	 */
 	public final void resume(@Nullable StreamDataAcceptor<T> dataAcceptor) {
-		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
+		checkInReactorThread();
 		if (endOfStream) return;
 		if (this.dataAcceptor == dataAcceptor) return;
 		this.dataAcceptor = dataAcceptor;
@@ -123,7 +120,7 @@ public abstract class AbstractStreamConsumer<T> extends ImplicitlyReactive imple
 	 * Triggers the {@link #getAcknowledgement() acknowledgement} of this consumer.
 	 */
 	public final void acknowledge() {
-		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
+		checkInReactorThread();
 		ensureInitialized();
 		endOfStream = true;
 		if (acknowledgement.trySet(null)) {
@@ -133,7 +130,6 @@ public abstract class AbstractStreamConsumer<T> extends ImplicitlyReactive imple
 
 	@Override
 	public final Promise<Void> getAcknowledgement() {
-		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
 		return acknowledgement;
 	}
 
@@ -143,7 +139,7 @@ public abstract class AbstractStreamConsumer<T> extends ImplicitlyReactive imple
 
 	@Override
 	public final void closeEx(Exception e) {
-		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
+		checkInReactorThread();
 		ensureInitialized();
 		endOfStream = true;
 		if (acknowledgement.trySetException(e)) {

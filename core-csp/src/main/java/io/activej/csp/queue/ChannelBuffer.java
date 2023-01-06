@@ -144,6 +144,7 @@ public final class ChannelBuffer<T> extends ImplicitlyReactive implements Channe
 	 * Adds provided item to the buffer and resets current {@code take}.
 	 */
 	public void add(@Nullable T item) throws Exception {
+		checkInReactorThread();
 		if (exception == null) {
 			if (take != null) {
 				assert isEmpty();
@@ -182,6 +183,7 @@ public final class ChannelBuffer<T> extends ImplicitlyReactive implements Channe
 	 *                   is not {@code null}
 	 */
 	public @Nullable T poll() throws Exception {
+		checkInReactorThread();
 		if (exception != null) throw exception;
 
 		if (put != null && willBeExhausted()) {
@@ -222,6 +224,7 @@ public final class ChannelBuffer<T> extends ImplicitlyReactive implements Channe
 	 */
 	@Override
 	public Promise<Void> put(@Nullable T item) {
+		checkInReactorThread();
 		if (CHECK) checkState(put == null, "Previous put() has not finished yet");
 		if (exception == null) {
 			if (take != null) {
@@ -262,6 +265,7 @@ public final class ChannelBuffer<T> extends ImplicitlyReactive implements Channe
 	 */
 	@Override
 	public Promise<T> take() {
+		checkInReactorThread();
 		if (CHECK) checkState(take == null, "Previous take() has not finished yet");
 		if (exception == null) {
 			if (put != null && willBeExhausted()) {
@@ -294,6 +298,7 @@ public final class ChannelBuffer<T> extends ImplicitlyReactive implements Channe
 	 */
 	@Override
 	public void closeEx(Exception e) {
+		checkInReactorThread();
 		if (exception != null) return;
 		exception = e;
 		if (put != null) {

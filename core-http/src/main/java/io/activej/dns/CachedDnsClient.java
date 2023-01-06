@@ -16,7 +16,6 @@
 
 package io.activej.dns;
 
-import io.activej.common.Checks;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.dns.DnsCache.DnsQueryCacheResult;
 import io.activej.dns.protocol.DnsQuery;
@@ -46,7 +45,6 @@ import static io.activej.reactor.util.RunnableWithContext.wrapContext;
 public final class CachedDnsClient extends AbstractReactive
 		implements AsyncDnsClient, ReactiveJmxBean, WithInitializer<CachedDnsClient> {
 	private final Logger logger = LoggerFactory.getLogger(CachedDnsClient.class);
-	private static final boolean CHECK = Checks.isEnabled(CachedDnsClient.class);
 
 	private final AsyncDnsClient client;
 
@@ -92,7 +90,7 @@ public final class CachedDnsClient extends AbstractReactive
 		return new AsyncDnsClient() {
 			@Override
 			public Promise<DnsResponse> resolve(DnsQuery query) {
-				if (CHECK) checkState(anotherReactor.inReactorThread());
+				if (CHECK_IN_REACTOR_THREAD) checkState(anotherReactor.inReactorThread());
 				DnsResponse fromQuery = AsyncDnsClient.resolveFromQuery(query);
 				if (fromQuery != null) {
 					logger.trace("{} already contained an IP address within itself", query);
@@ -119,7 +117,7 @@ public final class CachedDnsClient extends AbstractReactive
 
 			@Override
 			public void close() {
-				if (CHECK) checkState(anotherReactor.inReactorThread());
+				if (CHECK_IN_REACTOR_THREAD) checkState(anotherReactor.inReactorThread());
 				reactor.execute(CachedDnsClient.this::close);
 			}
 		};
@@ -148,10 +146,7 @@ public final class CachedDnsClient extends AbstractReactive
 
 	@Override
 	public Promise<DnsResponse> resolve(DnsQuery query) {
-		if (CHECK) {
-			checkState(inReactorThread(), "Concurrent resolves are not allowed, to reuse the cache use adaptToOtherReactor");
-		}
-
+		checkInReactorThread();
 		DnsResponse fromQuery = AsyncDnsClient.resolveFromQuery(query);
 		if (fromQuery != null) {
 			logger.trace("{} already contained an IP address within itself", query);

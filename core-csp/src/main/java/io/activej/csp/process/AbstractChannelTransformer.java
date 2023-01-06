@@ -69,6 +69,7 @@ public abstract class AbstractChannelTransformer<S extends AbstractChannelTransf
 	@Override
 	public ChannelInput<I> getInput() {
 		return input -> {
+			checkInReactorThread();
 			this.input = sanitize(input);
 			if (this.input != null && this.output != null) startProcess();
 			return getProcessCompletion();
@@ -79,6 +80,7 @@ public abstract class AbstractChannelTransformer<S extends AbstractChannelTransf
 	@Override
 	public ChannelOutput<O> getOutput() {
 		return output -> {
+			checkInReactorThread();
 			this.output = sanitize(output);
 			if (this.input != null && this.output != null) startProcess();
 		};

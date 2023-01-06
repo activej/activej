@@ -113,6 +113,7 @@ public final class WalUploader<K extends Comparable<K>, S> extends AbstractReact
 	}
 
 	public Promise<Void> uploadToStorage() {
+		checkInReactorThread();
 		return uploadToStorage.run()
 				.whenComplete(uploadPromise.recordStats());
 	}

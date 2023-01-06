@@ -120,6 +120,7 @@ public final class FsPartitions extends AbstractReactive
 	 * @return promise of the check
 	 */
 	public Promise<Void> checkAllPartitions() {
+		checkInReactorThread();
 		return checkAllPartitions.run()
 				.whenComplete(toLogger(logger, "checkAllPartitions"));
 	}
@@ -132,6 +133,7 @@ public final class FsPartitions extends AbstractReactive
 	 * @return promise of the check
 	 */
 	public Promise<Void> checkDeadPartitions() {
+		checkInReactorThread();
 		return checkDeadPartitions.run()
 				.whenComplete(toLogger(logger, "checkDeadPartitions"));
 	}
@@ -147,6 +149,7 @@ public final class FsPartitions extends AbstractReactive
 	 */
 	@SuppressWarnings("UnusedReturnValue")
 	public boolean markDead(Object partitionId, @Nullable Exception e) {
+		checkInReactorThread();
 		AsyncFs partition = alivePartitions.remove(partitionId);
 		if (partition != null) {
 			logger.warn("marking {} as dead ", partitionId, e);
@@ -157,6 +160,7 @@ public final class FsPartitions extends AbstractReactive
 	}
 
 	public void markAlive(Object partitionId) {
+		checkInReactorThread();
 		AsyncFs partition = deadPartitions.remove(partitionId);
 		if (partition != null) {
 			logger.info("Partition {} is alive again!", partitionId);
@@ -169,6 +173,7 @@ public final class FsPartitions extends AbstractReactive
 	 * or that there were no response at all
 	 */
 	public void markIfDead(Object partitionId, Exception e) {
+		checkInReactorThread();
 		if (!(e instanceof FsException) || e instanceof FsIOException) {
 			markDead(partitionId, e);
 		}
@@ -176,6 +181,7 @@ public final class FsPartitions extends AbstractReactive
 
 	public ConsumerEx<Exception> wrapDeathFn(Object partitionId) {
 		return e -> {
+			checkInReactorThread();
 			markIfDead(partitionId, e);
 			if (e instanceof FsException) {
 				throw e;
@@ -186,6 +192,7 @@ public final class FsPartitions extends AbstractReactive
 	}
 
 	public List<Object> select(String filename) {
+		checkInReactorThread();
 		return serverSelector.selectFrom(filename, alivePartitions.keySet());
 	}
 
@@ -195,6 +202,7 @@ public final class FsPartitions extends AbstractReactive
 
 	@Override
 	public Promise<?> start() {
+		checkInReactorThread();
 		AsyncSupplier<Map<Object, AsyncFs>> discoverySupplier = discoveryService.discover();
 		return discoverySupplier.get()
 				.whenResult(result -> {
@@ -207,6 +215,7 @@ public final class FsPartitions extends AbstractReactive
 
 	@Override
 	public Promise<?> stop() {
+		checkInReactorThread();
 		return Promise.complete();
 	}
 

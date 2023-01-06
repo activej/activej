@@ -62,6 +62,7 @@ public final class StreamUnion<T> extends ImplicitlyReactive implements HasStrea
 	}
 
 	public StreamConsumer<T> newInput() {
+		checkInReactorThread();
 		checkState(!started, "Cannot add new inputs after StreamUnion has been started");
 		Input input = new Input();
 		inputs.add(input);

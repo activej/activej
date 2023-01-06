@@ -44,6 +44,7 @@ public final class StreamConsumerSwitcher<T> extends AbstractStreamConsumer<T> i
 	}
 
 	public Promise<Void> switchTo(StreamConsumer<T> consumer) {
+		checkInReactorThread();
 		checkState(!isComplete());
 		checkState(!isEndOfStream());
 		assert this.internalSupplier != null;

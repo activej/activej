@@ -131,15 +131,18 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 
 	@SuppressWarnings("UnusedReturnValue")
 	public Promise<Void> consolidate() {
+		checkInReactorThread();
 		return consolidate.run();
 	}
 
 	@SuppressWarnings("UnusedReturnValue")
 	public Promise<Void> cleanupIrrelevantChunks() {
+		checkInReactorThread();
 		return cleanupIrrelevantChunks.run();
 	}
 
 	Promise<Void> doConsolidate() {
+		checkInReactorThread();
 		checkState(!cleaning, "Cannot consolidate and clean up irrelevant chunks at the same time");
 		consolidating = true;
 		AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>> chunksFn = strategy.get();

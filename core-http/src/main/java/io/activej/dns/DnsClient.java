@@ -58,7 +58,6 @@ import static io.activej.promise.Promises.timeout;
 public final class DnsClient extends AbstractNioReactive
 		implements AsyncDnsClient, ReactiveJmxBeanWithStats, WithInitializer<DnsClient> {
 	private final Logger logger = LoggerFactory.getLogger(DnsClient.class);
-	private static final boolean CHECK = Checks.isEnabled(DnsClient.class);
 
 	public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(3);
 	private static final int DNS_SERVER_PORT = 53;
@@ -118,7 +117,7 @@ public final class DnsClient extends AbstractNioReactive
 
 	@Override
 	public void close() {
-		if (CHECK) checkState(inReactorThread());
+		checkInReactorThread();
 		if (socket == null) {
 			return;
 		}
@@ -152,7 +151,7 @@ public final class DnsClient extends AbstractNioReactive
 
 	@Override
 	public Promise<DnsResponse> resolve(DnsQuery query) {
-		if (CHECK) checkState(inReactorThread());
+		checkInReactorThread();
 		DnsResponse fromQuery = AsyncDnsClient.resolveFromQuery(query);
 		if (fromQuery != null) {
 			logger.trace("{} already contained an IP address within itself", query);

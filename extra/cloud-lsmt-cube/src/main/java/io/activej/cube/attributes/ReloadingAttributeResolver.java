@@ -62,6 +62,7 @@ public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttribute
 	protected abstract Promise<Map<K, A>> reload(long lastTimestamp);
 
 	private void doReload() {
+		checkInReactorThread();
 		reloads++;
 		scheduledRunnable = nullify(scheduledRunnable, ScheduledRunnable::cancel);
 		long reloadTimestamp = reactor.currentTimeMillis();
@@ -81,6 +82,7 @@ public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttribute
 
 	@Override
 	public Promise<?> start() {
+		checkInReactorThread();
 		if (reloadPeriod == 0) return Promise.complete();
 		long reloadTimestamp = reactor.currentTimeMillis();
 		return reload(timestamp)
@@ -95,6 +97,7 @@ public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttribute
 
 	@Override
 	public Promise<?> stop() {
+		checkInReactorThread();
 		scheduledRunnable = nullify(scheduledRunnable, ScheduledRunnable::cancel);
 		return Promise.complete();
 	}

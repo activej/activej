@@ -56,12 +56,14 @@ public final class EtcdWatchService extends AbstractReactive {
 	}
 
 	public AsyncSupplier<byte[]> watch() {
+		checkInReactorThread();
 		return new AsyncSupplier<>() {
 			final AtomicReference<SettablePromise<byte[]>> cbRef = new AtomicReference<>(UPDATE_CONSUMED);
 			@Nullable Watcher watcher;
 
 			@Override
 			public Promise<byte[]> get() {
+				checkInReactorThread();
 				if (watcher == null) {
 					ByteSequence bsKey = ByteSequence.from(key, UTF_8);
 					watcher = client.getWatchClient().watch(bsKey, this::onResponse, this::onError);

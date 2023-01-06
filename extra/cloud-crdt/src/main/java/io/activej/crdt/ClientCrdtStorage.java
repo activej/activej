@@ -125,6 +125,7 @@ public final class ClientCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 
 	@Override
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
+		checkInReactorThread();
 		return connect()
 				.then(ClientCrdtStorage::performHandshake)
 				.then(messaging -> messaging.send(new CrdtRequest.Upload())
@@ -145,6 +146,7 @@ public final class ClientCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
+		checkInReactorThread();
 		return connect()
 				.then(ClientCrdtStorage::performHandshake)
 				.then(messaging -> messaging.send(new CrdtRequest.Download(timestamp))
@@ -166,6 +168,7 @@ public final class ClientCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> take() {
+		checkInReactorThread();
 		return connect()
 				.then(ClientCrdtStorage::performHandshake)
 				.then(messaging -> messaging.send(new CrdtRequest.Take())
@@ -190,6 +193,7 @@ public final class ClientCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 
 	@Override
 	public Promise<StreamConsumer<CrdtTombstone<K>>> remove() {
+		checkInReactorThread();
 		return connect()
 				.then(ClientCrdtStorage::performHandshake)
 				.then(messaging -> messaging.send(new CrdtRequest.Remove())
@@ -212,6 +216,7 @@ public final class ClientCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 
 	@Override
 	public Promise<Void> ping() {
+		checkInReactorThread();
 		return connect()
 				.then(ClientCrdtStorage::performHandshake)
 				.then(messaging -> messaging.send(new CrdtRequest.Ping())
@@ -226,11 +231,13 @@ public final class ClientCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 
 	@Override
 	public Promise<?> start() {
+		checkInReactorThread();
 		return ping();
 	}
 
 	@Override
 	public Promise<?> stop() {
+		checkInReactorThread();
 		return Promise.complete();
 	}
 

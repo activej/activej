@@ -16,7 +16,6 @@
 
 package io.activej.datastream;
 
-import io.activej.common.Checks;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.ImplicitlyReactive;
@@ -31,8 +30,6 @@ import static io.activej.common.Checks.checkState;
  * which helps to deal with state transitions and helps to implement basic behaviours.
  */
 public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive implements StreamSupplier<T> {
-	private static final boolean CHECK = Checks.isEnabled(AbstractStreamSupplier.class);
-
 	public static final StreamDataAcceptor<?> NO_ACCEPTOR = item -> {};
 
 	private @Nullable StreamDataAcceptor<T> dataAcceptor;
@@ -63,7 +60,7 @@ public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive imple
 
 	@Override
 	public final Promise<Void> streamTo(StreamConsumer<T> consumer) {
-		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
+		checkInReactorThread();
 		checkState(!isStarted());
 		ensureInitialized();
 		this.consumer = consumer;
@@ -100,7 +97,7 @@ public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive imple
 
 	@Override
 	public final void updateDataAcceptor() {
-		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
+		checkInReactorThread();
 		if (!isStarted()) return;
 		if (endOfStream.isComplete()) return;
 		StreamDataAcceptor<T> dataAcceptor = this.consumer.getDataAcceptor();
@@ -147,6 +144,7 @@ public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive imple
 	 * and must never be called when supplier reaches {@link #sendEndOfStream() end of stream}.
 	 */
 	public final void send(T item) {
+		checkInReactorThread();
 		dataAcceptorBuffered.accept(item);
 	}
 
@@ -156,7 +154,7 @@ public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive imple
 	 * Only the first call causes any effect.
 	 */
 	public final Promise<Void> sendEndOfStream() {
-		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
+		checkInReactorThread();
 		if (endOfStreamRequest) return flushPromise;
 		if (flushAsync > 0) {
 			asyncEnd();
@@ -199,7 +197,6 @@ public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive imple
 	 * Causes this supplier to try to supply its buffered items and updates the current state accordingly.
 	 */
 	private void flush() {
-		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
 		flushRequest = true;
 		if (flushRunning || flushAsync > 0) return; // recursive call
 		if (endOfStream.isComplete()) return;
@@ -272,7 +269,6 @@ public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive imple
 
 	@Override
 	public final Promise<Void> getEndOfStream() {
-		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
 		return endOfStream;
 	}
 
@@ -299,7 +295,7 @@ public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive imple
 
 	@Override
 	public final void closeEx(Exception e) {
-		if (CHECK) checkState(inReactorThread(), "Not in reactor thread");
+		checkInReactorThread();
 		ensureInitialized();
 		endOfStreamRequest = true;
 		dataAcceptor = null;

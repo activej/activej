@@ -87,17 +87,20 @@ public final class LogOTProcessor<T, D> extends AbstractReactive
 
 	@Override
 	public Promise<?> start() {
+		checkInReactorThread();
 		return Promise.complete();
 	}
 
 	@Override
 	public Promise<?> stop() {
+		checkInReactorThread();
 		return Promise.complete();
 	}
 
 	private final AsyncSupplier<LogDiff<D>> processLog = reuse(this::doProcessLog);
 
 	public Promise<LogDiff<D>> processLog() {
+		checkInReactorThread();
 		return processLog.get();
 	}
 

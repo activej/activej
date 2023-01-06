@@ -104,12 +104,14 @@ public final class OTStateManager<K, D> extends AbstractReactive
 
 	@Override
 	public Promise<?> start() {
+		checkInReactorThread();
 		return checkout()
 				.whenResult(this::poll);
 	}
 
 	@Override
 	public Promise<?> stop() {
+		checkInReactorThread();
 		poll = null;
 		return isValid() ?
 				sync().whenComplete(this::invalidateInternalState) :
@@ -117,6 +119,7 @@ public final class OTStateManager<K, D> extends AbstractReactive
 	}
 
 	public Promise<Void> checkout() {
+		checkInReactorThread();
 		checkState(commitId == null);
 		return uplink.checkout()
 				.whenResult(checkoutData -> {
@@ -151,6 +154,7 @@ public final class OTStateManager<K, D> extends AbstractReactive
 	 * and <b>origin</b> commit ID has been moved forward
 	 */
 	public Promise<Boolean> fetch() {
+		checkInReactorThread();
 		checkState(isValid());
 		return fetch.get();
 	}
@@ -285,6 +289,7 @@ public final class OTStateManager<K, D> extends AbstractReactive
 	}
 
 	public void reset() {
+		checkInReactorThread();
 		checkState(!isSyncing());
 		apply(otSystem.invert(
 				concat(nonNullElseEmpty(pendingProtoCommitDiffs), workingDiffs)));
@@ -306,6 +311,7 @@ public final class OTStateManager<K, D> extends AbstractReactive
 	}
 
 	public void addAll(List<? extends D> diffs) {
+		checkInReactorThread();
 		checkState(isValid());
 		try {
 			for (D diff : diffs) {
@@ -321,6 +327,7 @@ public final class OTStateManager<K, D> extends AbstractReactive
 	}
 
 	private void apply(List<D> diffs) {
+		checkInReactorThread();
 		try {
 			for (D op : diffs) {
 				state.apply(op);
@@ -333,6 +340,7 @@ public final class OTStateManager<K, D> extends AbstractReactive
 
 	@SuppressWarnings("AssignmentToNull") // state is invalid, no further calls should be made
 	public void invalidateInternalState() {
+		checkInReactorThread();
 		state = null;
 
 		commitId = null;

@@ -1,7 +1,7 @@
 package io.activej.dataflow.calcite;
 
-import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.AsyncSqlDataflow;
+import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.calcite.RelToDatasetConverter.ConversionResult;
 import io.activej.dataflow.calcite.optimizer.FilterScanTableRule;
 import io.activej.dataflow.calcite.optimizer.SortScanTableRule;
@@ -81,6 +81,7 @@ public final class SqlDataflow extends AbstractNioReactive implements AsyncSqlDa
 
 	@Override
 	public Promise<StreamSupplier<Record>> query(String sql) {
+		checkInReactorThread();
 		try {
 			return Promise.of(queryDataflow(convertToDataset(sql)));
 		} catch (DataflowException | SqlParseException e) {
@@ -115,10 +116,12 @@ public final class SqlDataflow extends AbstractNioReactive implements AsyncSqlDa
 	}
 
 	public StreamSupplier<Record> queryDataflow(Dataset<Record> dataset) {
+		checkInReactorThread();
 		return queryDataflow(dataset, StreamLimiter.NO_LIMIT);
 	}
 
 	public StreamSupplier<Record> queryDataflow(Dataset<Record> dataset, long limit) {
+		checkInReactorThread();
 		if (limit == 0) {
 			return StreamSupplier.of();
 		}

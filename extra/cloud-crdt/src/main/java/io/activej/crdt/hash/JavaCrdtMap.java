@@ -52,26 +52,31 @@ public class JavaCrdtMap<K extends Comparable<K>, S> extends AbstractReactive
 
 	@Override
 	public Promise<@Nullable S> get(K key) {
+		checkInReactorThread();
 		return Promise.of(map.get(key));
 	}
 
 	@Override
 	public Promise<Void> refresh() {
+		checkInReactorThread();
 		return refresh.run();
 	}
 
 	@Override
 	public Promise<@Nullable S> put(K key, S value) {
+		checkInReactorThread();
 		return Promise.of(map.merge(key, value, mergeFn));
 	}
 
 	@Override
 	public Promise<?> start() {
+		checkInReactorThread();
 		return refresh();
 	}
 
 	@Override
 	public Promise<?> stop() {
+		checkInReactorThread();
 		return Promise.complete();
 	}
 

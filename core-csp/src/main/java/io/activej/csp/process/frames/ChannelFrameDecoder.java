@@ -67,6 +67,7 @@ public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 	@Override
 	public BinaryChannelInput getInput() {
 		return input -> {
+			checkInReactorThread();
 			this.input = input;
 			this.bufs = input.getBufs();
 			if (this.input != null && this.output != null) startProcess();
@@ -78,6 +79,7 @@ public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 	@Override
 	public ChannelOutput<ByteBuf> getOutput() {
 		return output -> {
+			checkInReactorThread();
 			this.output = sanitize(output);
 			if (this.input != null && this.output != null) startProcess();
 		};

@@ -224,6 +224,7 @@ public final class TaskScheduler extends AbstractReactive
 
 	@Override
 	public Promise<?> start() {
+		checkInReactorThread();
 		checkNotNull(schedule, "Schedule is not set");
 
 		scheduleTask();
@@ -232,6 +233,7 @@ public final class TaskScheduler extends AbstractReactive
 
 	@Override
 	public Promise<?> stop() {
+		checkInReactorThread();
 		enabled = false;
 		scheduledTask = nullify(scheduledTask, ScheduledRunnable::cancel);
 		if (currentPromise == null) {
@@ -241,6 +243,7 @@ public final class TaskScheduler extends AbstractReactive
 	}
 
 	public void setSchedule(Schedule schedule) {
+		checkInReactorThread();
 		this.schedule = checkNotNull(schedule);
 		if (stats.getActivePromises() != 0 && scheduledTask != null && !scheduledTask.isCancelled()) {
 			scheduledTask = nullify(scheduledTask, ScheduledRunnable::cancel);

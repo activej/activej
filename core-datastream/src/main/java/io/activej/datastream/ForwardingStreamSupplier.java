@@ -37,6 +37,7 @@ public abstract class ForwardingStreamSupplier<T> implements StreamSupplier<T> {
 
 	@Override
 	public Promise<Void> streamTo(StreamConsumer<T> consumer) {
+		checkInReactorThread();
 		return supplier.streamTo(new ForwardingStreamConsumer<>(consumer) {
 			@Override
 			public void consume(StreamSupplier<T> streamSupplier) {

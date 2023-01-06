@@ -57,8 +57,6 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
  * {@link AsyncServlet<HttpRequest> async servlet}.
  */
 public final class HttpServerConnection extends AbstractHttpConnection {
-	private static final boolean CHECK = Checks.isEnabled(HttpServerConnection.class);
-
 	private static final boolean DETAILED_ERROR_MESSAGES = ApplicationSettings.getBoolean(HttpServerConnection.class, "detailedErrorMessages", false);
 	private static final int INITIAL_WRITE_BUFFER_SIZE = ApplicationSettings.getMemSize(HttpServerConnection.class, "initialWriteBufferSize", MemSize.ZERO).toInt();
 
@@ -367,7 +365,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			servletResult = Promise.ofException(e);
 		}
 		servletResult.run((response, e) -> {
-			if (CHECK) checkState(inReactorThread());
+			checkInReactorThread();
 			if (isClosed()) {
 				request.recycle();
 				readBuf = nullify(readBuf, ByteBuf::recycle);

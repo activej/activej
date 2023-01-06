@@ -67,6 +67,7 @@ public final class FileDiscoveryService extends AbstractDiscoveryService<FileDis
 
 	@Override
 	public AsyncSupplier<PartitionScheme<PartitionId>> discover() {
+		checkInReactorThread();
 		try {
 			pathToFile.getParent().register(
 					watchService,

@@ -43,6 +43,7 @@ public final class ChannelBufferWithFallback<T> extends ImplicitlyReactive imple
 
 	@Override
 	public Promise<Void> put(@Nullable T item) {
+		checkInReactorThread();
 		if (exception != null) {
 			Recyclers.recycle(item);
 			return Promise.ofException(exception);
@@ -52,6 +53,7 @@ public final class ChannelBufferWithFallback<T> extends ImplicitlyReactive imple
 
 	@Override
 	public Promise<T> take() {
+		checkInReactorThread();
 		if (exception != null) {
 			return Promise.ofException(exception);
 		}
@@ -85,7 +87,8 @@ public final class ChannelBufferWithFallback<T> extends ImplicitlyReactive imple
 				});
 	}
 
-	public Promise<T> doTake() {
+	private Promise<T> doTake() {
+		checkInReactorThread();
 		if (buffer != null) {
 			return secondaryTake();
 		}
@@ -149,6 +152,7 @@ public final class ChannelBufferWithFallback<T> extends ImplicitlyReactive imple
 
 	@Override
 	public void closeEx(Exception e) {
+		checkInReactorThread();
 		if (exception != null) return;
 		exception = e;
 		queue.closeEx(e);

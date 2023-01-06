@@ -53,6 +53,7 @@ final class ChannelByteCombiner extends AbstractCommunicatingProcess
 	@Override
 	public ChannelOutput<ByteBuf> getOutput() {
 		return output -> {
+			checkInReactorThread();
 			checkState(!isProcessStarted());
 			this.output = sanitize(output);
 			tryStart();
@@ -70,6 +71,7 @@ final class ChannelByteCombiner extends AbstractCommunicatingProcess
 		int index = inputs.size();
 		inputs.add(null);
 		return input -> {
+			checkInReactorThread();
 			inputs.set(index, input);
 			return getProcessCompletion();
 		};

@@ -68,6 +68,7 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T>
 	@Override
 	public ChannelInput<ByteBuf> getInput() {
 		return input -> {
+			checkInReactorThread();
 			this.input = input;
 			return getAcknowledgement();
 		};

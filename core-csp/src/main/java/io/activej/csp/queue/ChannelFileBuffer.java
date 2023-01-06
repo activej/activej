@@ -82,6 +82,7 @@ public final class ChannelFileBuffer extends ImplicitlyReactive implements Chann
 
 	@Override
 	public Promise<Void> put(@Nullable ByteBuf item) {
+		checkInReactorThread();
 		if (exception != null) {
 			return Promise.ofException(exception);
 		}
@@ -101,6 +102,7 @@ public final class ChannelFileBuffer extends ImplicitlyReactive implements Chann
 
 	@Override
 	public Promise<ByteBuf> take() {
+		checkInReactorThread();
 		if (exception != null) {
 			return Promise.ofException(exception);
 		}
@@ -127,6 +129,7 @@ public final class ChannelFileBuffer extends ImplicitlyReactive implements Chann
 
 	@Override
 	public void closeEx(Exception e) {
+		checkInReactorThread();
 		if (exception != null) {
 			return;
 		}

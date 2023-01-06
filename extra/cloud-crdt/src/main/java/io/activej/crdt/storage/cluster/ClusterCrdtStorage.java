@@ -122,6 +122,7 @@ public final class ClusterCrdtStorage<K extends Comparable<K>, S, P> extends Abs
 
 	@Override
 	public Promise<?> start() {
+		checkInReactorThread();
 		AsyncSupplier<PartitionScheme<P>> discoverySupplier = discoveryService.discover();
 		return discoverySupplier.get()
 				.then(result -> {
@@ -148,12 +149,14 @@ public final class ClusterCrdtStorage<K extends Comparable<K>, S, P> extends Abs
 
 	@Override
 	public Promise<?> stop() {
+		checkInReactorThread();
 		this.stopped = true;
 		return Promise.complete();
 	}
 
 	@Override
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
+		checkInReactorThread();
 		PartitionScheme<P> partitionScheme = this.currentPartitionScheme;
 		return execute(partitionScheme, AsyncCrdtStorage::upload)
 				.then(map -> {
@@ -181,6 +184,7 @@ public final class ClusterCrdtStorage<K extends Comparable<K>, S, P> extends Abs
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
+		checkInReactorThread();
 		return getData(storage -> storage.download(timestamp))
 				.map(supplier -> supplier
 						.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
@@ -189,6 +193,7 @@ public final class ClusterCrdtStorage<K extends Comparable<K>, S, P> extends Abs
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> take() {
+		checkInReactorThread();
 		return getData(AsyncCrdtStorage::take)
 				.map(supplier -> supplier
 						.transformWith(detailedStats ? takeStatsDetailed : takeStats)
@@ -197,6 +202,7 @@ public final class ClusterCrdtStorage<K extends Comparable<K>, S, P> extends Abs
 
 	@Override
 	public Promise<StreamConsumer<CrdtTombstone<K>>> remove() {
+		checkInReactorThread();
 		PartitionScheme<P> partitionScheme = currentPartitionScheme;
 		return execute(partitionScheme, AsyncCrdtStorage::remove)
 				.map(map -> {
@@ -223,6 +229,7 @@ public final class ClusterCrdtStorage<K extends Comparable<K>, S, P> extends Abs
 	}
 
 	public Promise<Void> repartition(P sourcePartitionId) {
+		checkInReactorThread();
 		PartitionScheme<P> partitionScheme = this.currentPartitionScheme;
 		AsyncCrdtStorage<K, S> source = crdtStorages.get(sourcePartitionId);
 
@@ -291,6 +298,7 @@ public final class ClusterCrdtStorage<K extends Comparable<K>, S, P> extends Abs
 
 	@Override
 	public Promise<Void> ping() {
+		checkInReactorThread();
 		PartitionScheme<P> partitionScheme = this.currentPartitionScheme;
 		return execute(partitionScheme, AsyncCrdtStorage::ping)
 				.whenResult(map -> {

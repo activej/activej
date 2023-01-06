@@ -2,7 +2,6 @@ package io.activej.dataflow.calcite.jdbc;
 
 import io.activej.async.process.AsyncCloseable;
 import io.activej.datastream.SynchronousStreamConsumer;
-import io.activej.reactor.ImplicitlyReactive;
 import io.activej.record.Record;
 import org.apache.calcite.avatica.Meta.Frame;
 
@@ -10,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-final class FrameFetcher extends ImplicitlyReactive implements AsyncCloseable {
+final class FrameFetcher implements AsyncCloseable {
 	private final SynchronousStreamConsumer<Record> synchronousConsumer;
 	private final int columnSize;
 

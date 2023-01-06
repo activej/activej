@@ -37,8 +37,8 @@ import io.activej.fs.AsyncFs;
 import io.activej.fs.LocalFs;
 import io.activej.fs.http.FsServlet;
 import io.activej.fs.http.HttpFs;
-import io.activej.http.HttpServer;
 import io.activej.http.HttpClient;
+import io.activej.http.HttpServer;
 import io.activej.inject.Injector;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
@@ -484,7 +484,7 @@ public final class PartitionedStreamTest {
 			Path tmp = tempDir.newFolder("source_server_" + i + "_").toPath();
 			writeDataFile(tmp, i, sorted);
 			LocalFs fsClient = LocalFs.create(serverEventloop, newSingleThreadExecutor(), tmp);
-			await(fsClient.start());
+			startClient(fsClient);
 			HttpServer server = HttpServer.create(serverEventloop, FsServlet.create(fsClient));
 			servers.add(server);
 		}
@@ -499,7 +499,7 @@ public final class PartitionedStreamTest {
 		for (int i = 0; i < nServers; i++) {
 			Path tmp = tempDir.newFolder("target_server_" + i + "_").toPath();
 			LocalFs fsClient = LocalFs.create(serverEventloop, newSingleThreadExecutor(), tmp);
-			await(fsClient.start());
+			startClient(fsClient);
 			HttpServer server = HttpServer.create(serverEventloop, FsServlet.create(fsClient));
 			servers.add(server);
 		}
@@ -507,6 +507,17 @@ public final class PartitionedStreamTest {
 			listen(server.withListenPort(getFreePort()));
 		}
 		return servers;
+	}
+
+	private void startClient(LocalFs fsClient) {
+		try {
+			serverEventloop.submit(fsClient::start).get();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new AssertionError(e);
+		} catch (ExecutionException e) {
+			throw new AssertionError(e);
+		}
 	}
 
 	private static void writeDataFile(Path serverFsPath, int serverIdx, boolean sorted) throws IOException {

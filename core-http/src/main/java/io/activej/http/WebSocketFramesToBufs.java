@@ -36,8 +36,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.http.HttpUtils.frameToOpType;
 import static io.activej.http.AsyncWebSocket.Frame.FrameType.*;
+import static io.activej.http.HttpUtils.frameToOpType;
 import static io.activej.http.WebSocketConstants.*;
 import static io.activej.http.WebSocketConstants.OpCode.OP_CLOSE;
 import static io.activej.http.WebSocketConstants.OpCode.OP_PONG;
@@ -71,6 +71,7 @@ final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 	@Override
 	public ChannelInput<Frame> getInput() {
 		return input -> {
+			checkInReactorThread();
 			checkState(this.input == null, "Input already set");
 			this.input = sanitize(input);
 			if (this.input != null && this.output != null) startProcess();
@@ -82,6 +83,7 @@ final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 	@Override
 	public ChannelOutput<ByteBuf> getOutput() {
 		return output -> {
+			checkInReactorThread();
 			checkState(this.output == null, "Output already set");
 			this.output = sanitize(output);
 			if (this.input != null && this.output != null) startProcess();
@@ -179,10 +181,12 @@ final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 	}
 
 	void sendPong(ByteBuf payload) {
+		checkInReactorThread();
 		doAccept(encodePong(payload));
 	}
 
 	Promise<Void> sendCloseFrame(WebSocketException e) {
+		checkInReactorThread();
 		if (closing) return Promise.complete();
 		closing = true;
 		return doAccept(encodeClose(e == STATUS_CODE_MISSING ? EMPTY_CLOSE : e))

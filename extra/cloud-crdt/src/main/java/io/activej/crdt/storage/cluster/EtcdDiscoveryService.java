@@ -36,6 +36,7 @@ public final class EtcdDiscoveryService extends AbstractDiscoveryService<EtcdDis
 
 	@Override
 	public AsyncSupplier<PartitionScheme<PartitionId>> discover() {
+		checkInReactorThread();
 		AsyncSupplier<byte[]> watchSupplier = watchService.watch();
 		return () -> watchSupplier.get()
 				.map(bytes -> {

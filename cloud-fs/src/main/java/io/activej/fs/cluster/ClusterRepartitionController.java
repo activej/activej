@@ -18,7 +18,6 @@ package io.activej.fs.cluster;
 
 import io.activej.async.function.AsyncRunnable;
 import io.activej.async.service.ReactiveService;
-import io.activej.common.Checks;
 import io.activej.common.collection.Try;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.ref.RefInt;
@@ -53,7 +52,8 @@ import java.util.function.Predicate;
 import static io.activej.async.function.AsyncRunnables.reuse;
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
-import static io.activej.common.Checks.*;
+import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.first;
 import static io.activej.fs.util.RemoteFsUtils.isWildcard;
 import static java.util.stream.Collectors.toMap;
@@ -61,7 +61,6 @@ import static java.util.stream.Collectors.toMap;
 public final class ClusterRepartitionController extends AbstractReactive
 		implements WithInitializer<ClusterRepartitionController>, ReactiveJmxBeanWithStats, ReactiveService {
 	private static final Logger logger = LoggerFactory.getLogger(ClusterRepartitionController.class);
-	private static final boolean CHECK = Checks.isEnabled(ClusterRepartitionController.class);
 
 	private static final Duration DEFAULT_PLAN_RECALCULATION_INTERVAL = Duration.ofMinutes(1);
 
@@ -138,13 +137,11 @@ public final class ClusterRepartitionController extends AbstractReactive
 	}
 
 	public Promise<Void> repartition() {
+		checkInReactorThread();
 		return repartition.run();
 	}
 
 	private Promise<Void> doRepartition() {
-		if (CHECK)
-			checkState(partitions.inReactorThread(), "Should be called from eventloop thread");
-
 		if (replicationCount == 1) {
 			Set<Object> partitions = this.partitions.getPartitions().keySet();
 			if (partitions.size() == 1 && first(partitions).equals(localPartitionId)) {
@@ -388,12 +385,14 @@ public final class ClusterRepartitionController extends AbstractReactive
 
 	@Override
 	public Promise<Void> start() {
+		checkInReactorThread();
 		this.localFs = checkNotNull(partitions.getPartitions().get(localPartitionId), "Partitions do not contain local partition ID");
 		return Promise.complete();
 	}
 
 	@Override
 	public Promise<Void> stop() {
+		checkInReactorThread();
 		return isRepartitioning() ?
 				Promise.ofCallback(cb -> this.closeCallback = cb) :
 				Promise.complete();

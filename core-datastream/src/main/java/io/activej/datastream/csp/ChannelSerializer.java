@@ -142,6 +142,7 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T>
 	@Override
 	public ChannelOutput<ByteBuf> getOutput() {
 		return output -> {
+			checkInReactorThread();
 			this.output = output;
 			resume(input);
 		};

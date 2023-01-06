@@ -113,6 +113,7 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 	private final AsyncRunnable cleanup = reuse(this::doCleanup);
 
 	public Promise<Void> cleanup() {
+		checkInReactorThread();
 		return cleanup.run();
 	}
 

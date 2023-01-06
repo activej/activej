@@ -148,6 +148,7 @@ public final class FsCrdtStorage<K extends Comparable<K>, S> extends AbstractRea
 
 	@Override
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
+		checkInReactorThread();
 		String filename = namingStrategy.get() + FILE_EXTENSION;
 		return Promise.of(this.<CrdtData<K, S>>uploadNonEmpty(filename, CrdtReducingData::ofData)
 				.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
@@ -158,6 +159,7 @@ public final class FsCrdtStorage<K extends Comparable<K>, S> extends AbstractRea
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
+		checkInReactorThread();
 		return Promises.retry(($, e) -> !(e instanceof FileNotFoundException),
 						() -> fs.list("*")
 								.then(fileMap -> doDownload(fileMap.keySet(), timestamp, false))
@@ -170,6 +172,7 @@ public final class FsCrdtStorage<K extends Comparable<K>, S> extends AbstractRea
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> take() {
+		checkInReactorThread();
 		if (taken != null) {
 			return Promise.ofException(new CrdtException("Data is already being taken"));
 		}
@@ -209,6 +212,7 @@ public final class FsCrdtStorage<K extends Comparable<K>, S> extends AbstractRea
 
 	@Override
 	public Promise<StreamConsumer<CrdtTombstone<K>>> remove() {
+		checkInReactorThread();
 		String filename = namingStrategy.get() + FILE_EXTENSION;
 		return Promise.of(this.<CrdtTombstone<K>>uploadNonEmpty(filename, CrdtReducingData::ofTombstone)
 				.transformWith(detailedStats ? removeStatsDetailed : removeStats)
@@ -219,21 +223,25 @@ public final class FsCrdtStorage<K extends Comparable<K>, S> extends AbstractRea
 
 	@Override
 	public Promise<Void> ping() {
+		checkInReactorThread();
 		return fs.ping()
 				.mapException(e -> new CrdtException("Failed to PING file system", e));
 	}
 
 	@Override
 	public Promise<?> start() {
+		checkInReactorThread();
 		return Promise.complete();
 	}
 
 	@Override
 	public Promise<?> stop() {
+		checkInReactorThread();
 		return Promise.complete();
 	}
 
 	public Promise<Void> consolidate() {
+		checkInReactorThread();
 		return consolidate.run()
 				.whenComplete(consolidationStats.recordStats());
 	}

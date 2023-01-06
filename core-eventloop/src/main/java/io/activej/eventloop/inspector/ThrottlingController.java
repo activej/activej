@@ -22,7 +22,6 @@ import io.activej.eventloop.Eventloop;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
-import io.activej.reactor.Reactive;
 import io.activej.reactor.jmx.ReactiveJmxBean;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -35,7 +34,7 @@ import static io.activej.common.Checks.checkNotNull;
 import static java.lang.Math.pow;
 
 public final class ThrottlingController
-		implements Reactive, ReactiveJmxBean, EventloopInspector, WithInitializer<ThrottlingController> {
+		implements ReactiveJmxBean, EventloopInspector, WithInitializer<ThrottlingController> {
 	private static int staticInstanceCounter = 0;
 
 	private final Logger logger = LoggerFactory.getLogger(ThrottlingController.class.getName() + "." + staticInstanceCounter++);

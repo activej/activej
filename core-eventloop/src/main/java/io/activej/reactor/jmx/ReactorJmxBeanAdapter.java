@@ -26,7 +26,8 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static io.activej.common.Checks.*;
+import static io.activej.common.Checks.checkArgument;
+import static io.activej.common.Checks.checkNotNull;
 import static io.activej.reactor.util.RunnableWithContext.wrapContext;
 
 public final class ReactorJmxBeanAdapter implements JmxBeanAdapterWithRefresh {
@@ -122,7 +123,7 @@ public final class ReactorJmxBeanAdapter implements JmxBeanAdapterWithRefresh {
 	}
 
 	private void refresh(Reactor reactor, List<JmxRefreshable> list, int startIndex, ValueStats refreshStats) {
-		checkState(reactor.inReactorThread());
+		assert reactor.inReactorThread();
 
 		long timestamp = reactor.currentTimeMillis();
 

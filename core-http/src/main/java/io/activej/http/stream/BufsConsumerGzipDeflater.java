@@ -78,6 +78,7 @@ public final class BufsConsumerGzipDeflater extends AbstractCommunicatingProcess
 	@Override
 	public ChannelInput<ByteBuf> getInput() {
 		return input -> {
+			checkInReactorThread();
 			checkState(this.input == null, "Input already set");
 			this.input = sanitize(input);
 			if (this.input != null && this.output != null) startProcess();
@@ -89,6 +90,7 @@ public final class BufsConsumerGzipDeflater extends AbstractCommunicatingProcess
 	@Override
 	public ChannelOutput<ByteBuf> getOutput() {
 		return output -> {
+			checkInReactorThread();
 			checkState(this.output == null, "Output already set");
 			this.output = sanitize(output);
 			if (this.input != null && this.output != null) startProcess();
