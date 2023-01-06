@@ -56,11 +56,7 @@ public final class CoreExample {
 	static class ApplicationModule extends AbstractModule {
 		@Override
 		protected void configure() {
-
-			// we *bind* the interface to its implementation, just like any other DI
-			bind(MessageSender.class).to(ConsoleMessageSenderImpl.class);
-
-			// and also teach it how to make an application instance
+			// we teach DI how to make an application instance
 			bind(Application.class).to(Application::new, MessageSender.class);
 		}
 	}

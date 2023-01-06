@@ -1,4 +1,3 @@
-import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
 import io.activej.http.RoutingServlet;
 import io.activej.inject.Key;
@@ -52,7 +51,6 @@ public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 				new ModuleB(),
 				new ModuleC(),
 				ModuleBuilder.create()
-						.bind(AsyncServlet.class).to(RoutingServlet.class)
 						.multibind(Key.of(RoutingServlet.class), SERVLET_MULTIBINDER)
 						.build()
 		);

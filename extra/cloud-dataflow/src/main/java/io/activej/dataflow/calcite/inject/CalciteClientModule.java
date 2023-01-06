@@ -1,12 +1,12 @@
 package io.activej.dataflow.calcite.inject;
 
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.AsyncSqlDataflow;
+import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.calcite.DataflowSchema;
 import io.activej.dataflow.calcite.DataflowSqlValidator;
-import io.activej.dataflow.calcite.SqlDataflow;
 import io.activej.dataflow.calcite.RelToDatasetConverter;
+import io.activej.dataflow.calcite.SqlDataflow;
 import io.activej.dataflow.calcite.rel.DataflowSqlToRelConverter;
 import io.activej.dataflow.graph.Partition;
 import io.activej.inject.annotation.Provides;
@@ -56,7 +56,7 @@ public final class CalciteClientModule extends AbstractModule {
 		install(new CalciteCommonModule());
 		install(new SqlFunctionModule());
 
-		bind(AsyncSqlDataflow.class).to(SqlDataflow.class);
+		bind(AsyncSqlDataflow.class);
 	}
 
 	@Provides

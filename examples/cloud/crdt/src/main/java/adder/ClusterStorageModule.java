@@ -9,7 +9,6 @@ import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.crdt.storage.cluster.*;
 import io.activej.crdt.util.CrdtDataSerializer;
-import io.activej.inject.Key;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
@@ -31,12 +30,6 @@ import static io.activej.serializer.BinarySerializers.LONG_SERIALIZER;
 
 public final class ClusterStorageModule extends AbstractModule {
 	public static final Path DEFAULT_PARTITIONS_FILE = Paths.get("adder-partitions.json");
-
-	@Override
-	protected void configure() {
-		bind(new Key<AsyncCrdtStorage<Long, DetailedSumsCrdtState>>() {})
-				.to(new Key<ClusterCrdtStorage<Long, DetailedSumsCrdtState, PartitionId>>() {});
-	}
 
 	@Provides
 	CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer() {

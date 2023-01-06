@@ -11,12 +11,10 @@ import io.activej.crdt.wal.FileWriteAheadLog;
 import io.activej.crdt.wal.WalUploader;
 import io.activej.fs.AsyncFs;
 import io.activej.fs.LocalFs;
-import io.activej.inject.Key;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
-import io.activej.launchers.crdt.Local;
 import io.activej.reactor.Reactor;
 
 import java.nio.file.Path;
@@ -29,12 +27,6 @@ import static io.activej.config.converter.ConfigConverters.ofPath;
 import static io.activej.config.converter.ConfigConverters.ofReactorTaskSchedule;
 
 public final class PersistentStorageModule extends AbstractModule {
-
-	@Override
-	protected void configure() {
-		bind(new Key<AsyncCrdtStorage<Long, DetailedSumsCrdtState>>(Local.class) {})
-				.to(new Key<FsCrdtStorage<Long, DetailedSumsCrdtState>>() {});
-	}
 
 	@Provides
 	AsyncWriteAheadLog<Long, DetailedSumsCrdtState> writeAheadLog(
