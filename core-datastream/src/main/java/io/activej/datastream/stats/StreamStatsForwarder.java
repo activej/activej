@@ -17,10 +17,7 @@
 package io.activej.datastream.stats;
 
 import io.activej.common.initializer.WithInitializer;
-import io.activej.datastream.AbstractStreamConsumer;
-import io.activej.datastream.AbstractStreamSupplier;
-import io.activej.datastream.StreamConsumer;
-import io.activej.datastream.StreamSupplier;
+import io.activej.datastream.*;
 import io.activej.datastream.processor.StreamTransformer;
 import io.activej.reactor.ImplicitlyReactive;
 
@@ -59,7 +56,10 @@ public class StreamStatsForwarder<T> extends ImplicitlyReactive implements Strea
 		@Override
 		protected void onStarted() {
 			stats.onStarted();
-			resume(output.getDataAcceptor());
+			StreamDataAcceptor<T> dataAcceptor = output.getDataAcceptor();
+			if (dataAcceptor != null) {
+				resume(stats.createDataAcceptor(dataAcceptor));
+			}
 		}
 
 		@Override
@@ -78,7 +78,7 @@ public class StreamStatsForwarder<T> extends ImplicitlyReactive implements Strea
 		@Override
 		protected void onResumed() {
 			stats.onResume();
-			input.resume(getDataAcceptor());
+			input.resume(stats.createDataAcceptor(getDataAcceptor()));
 		}
 
 		@Override
