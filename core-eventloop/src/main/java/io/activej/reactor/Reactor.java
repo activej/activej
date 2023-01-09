@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
 
-public interface Reactor extends ReactorExecutor, ReactorScheduler {
+public interface Reactor extends Reactive, ReactorExecutor, ReactorScheduler {
 
 	/**
 	 * Returns a {@link Reactor} associated with the current thread
@@ -63,6 +63,11 @@ public interface Reactor extends ReactorExecutor, ReactorScheduler {
 	 */
 	static <T> T executeWithReactor(Reactor reactor, Supplier<T> callable) {
 		return ThreadLocalReactor.executeWithReactor(reactor, callable);
+	}
+
+	@Override
+	default Reactor getReactor() {
+		return this;
 	}
 
 	boolean inReactorThread();

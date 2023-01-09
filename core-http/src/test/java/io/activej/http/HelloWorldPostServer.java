@@ -1,6 +1,7 @@
 package io.activej.http;
 
 import io.activej.eventloop.Eventloop;
+import io.activej.reactor.nio.NioReactor;
 
 import static io.activej.bytebuf.ByteBufStrings.encodeAscii;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
@@ -11,8 +12,8 @@ public final class HelloWorldPostServer {
 	public static final int PORT = getFreePort();
 	public static final String HELLO_WORLD = "Hello, World!";
 
-	public static HttpServer helloWorldServer(Eventloop primaryEventloop, int port) {
-		return HttpServer.create(primaryEventloop,
+	public static HttpServer helloWorldServer(NioReactor reactor, int port) {
+		return HttpServer.create(reactor,
 				request -> request.loadBody()
 						.map(body -> HttpResponse.ok200()
 								.withBody(encodeAscii(HELLO_WORLD + body.getString(UTF_8)))))

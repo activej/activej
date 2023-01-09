@@ -7,13 +7,9 @@ public interface Reactive {
 
 	Reactor getReactor();
 
-	default boolean inReactorThread() {
-		return getReactor().inReactorThread();
-	}
-
 	default void checkInReactorThread() {
 		if (CHECK_IN_REACTOR_THREAD) {
-			Checks.checkState(inReactorThread(), "Not in reactor thread");
+			Checks.checkState(getReactor().inReactorThread(), "Not in reactor thread");
 		}
 	}
 }

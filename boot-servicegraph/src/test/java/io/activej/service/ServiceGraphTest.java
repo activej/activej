@@ -9,6 +9,7 @@ import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import org.junit.Test;
 
 import static org.junit.Assert.assertSame;
@@ -120,14 +121,14 @@ public class ServiceGraphTest {
 		}
 
 		@Provides
-		Eventloop eventloop() {
+		Reactor reactor() {
 			return Eventloop.create();
 		}
 
 		@Provides
 		@Named("start")
-		ReactiveService failedStart(Eventloop eventloop) {
-			return new ReactiveServiceEmpty(eventloop) {
+		ReactiveService failedStart(Reactor reactor) {
+			return new EmptyService(reactor) {
 				@Override
 				public Promise<?> start() {
 					throw ERROR;
@@ -137,8 +138,8 @@ public class ServiceGraphTest {
 
 		@Provides
 		@Named("stop")
-		ReactiveService failStop(Eventloop eventloop) {
-			return new ReactiveServiceEmpty(eventloop) {
+		ReactiveService failStop(Reactor reactor) {
+			return new EmptyService(reactor) {
 				@Override
 				public Promise<?> stop() {
 					throw ERROR;
@@ -147,16 +148,16 @@ public class ServiceGraphTest {
 		}
 	}
 
-	public static class ReactiveServiceEmpty implements ReactiveService {
-		private final Eventloop eventloop;
+	public static class EmptyService implements ReactiveService {
+		private final Reactor reactor;
 
-		public ReactiveServiceEmpty(Eventloop eventloop) {
-			this.eventloop = eventloop;
+		public EmptyService(Reactor reactor) {
+			this.reactor = reactor;
 		}
 
 		@Override
-		public Eventloop getReactor() {
-			return eventloop;
+		public Reactor getReactor() {
+			return reactor;
 		}
 
 		@Override

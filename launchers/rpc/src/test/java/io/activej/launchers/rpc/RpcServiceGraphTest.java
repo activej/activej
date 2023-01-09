@@ -7,6 +7,7 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.AsyncRpcClient;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.RpcStrategies;
@@ -65,14 +66,14 @@ public class RpcServiceGraphTest {
 				ServiceGraphModule.create(),
 				new AbstractModule() {
 					@Provides
-					Eventloop eventloop() {
+					NioReactor reactor() {
 						return Eventloop.create();
 					}
 
 					@Provides
 					@Eager
-					AsyncRpcClient client(Eventloop eventloop) {
-						return RpcClient.create(eventloop)
+					AsyncRpcClient client(NioReactor reactor) {
+						return RpcClient.create(reactor)
 								.withMessageTypes(String.class)
 								.withStrategy(RpcStrategyRoundRobin.create(
 												RpcStrategies.servers(

@@ -51,7 +51,7 @@ public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive imple
 
 	{
 		dataAcceptorBuffered = buffer::addLast;
-		if (inReactorThread()) {
+		if (reactor.inReactorThread()) {
 			reactor.post(this::ensureInitialized);
 		} else {
 			reactor.execute(this::ensureInitialized);

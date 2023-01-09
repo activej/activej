@@ -3,8 +3,8 @@ package io.activej.csp;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.bytebuf.ByteBufs;
-import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
@@ -126,16 +126,17 @@ public class ChannelSupplierTest {
 				ByteBuf.wrapForReading("Hello".getBytes()),
 				ByteBuf.wrapForReading("World".getBytes()));
 
-		Eventloop currentEventloop = getCurrentReactor();
+		Reactor reactor = getCurrentReactor();
 		await(Promise.ofBlocking(Executors.newSingleThreadExecutor(),
 				() -> {
-					InputStream inputStream = channelSupplierAsInputStream(currentEventloop, channelSupplier);
-					int b;
-					ByteBuf buf = ByteBufPool.allocate(100);
-					while ((b = inputStream.read()) != -1) {
-						buf.writeByte((byte) b);
+					try (InputStream inputStream = channelSupplierAsInputStream(reactor, channelSupplier)) {
+						int b;
+						ByteBuf buf = ByteBufPool.allocate(100);
+						while ((b = inputStream.read()) != -1) {
+							buf.writeByte((byte) b);
+						}
+						assertEquals("HelloWorld", buf.asString(UTF_8));
 					}
-					assertEquals("HelloWorld", buf.asString(UTF_8));
 				}));
 	}
 
@@ -143,16 +144,17 @@ public class ChannelSupplierTest {
 	public void testEmptyInputStream() {
 		ChannelSupplier<ByteBuf> channelSupplier = ChannelSupplier.of(ByteBuf.empty(), ByteBuf.empty());
 
-		Eventloop currentEventloop = getCurrentReactor();
+		Reactor reactor = getCurrentReactor();
 		await(Promise.ofBlocking(Executors.newSingleThreadExecutor(),
 				() -> {
-					InputStream inputStream = channelSupplierAsInputStream(currentEventloop, channelSupplier);
-					int b;
-					ByteBuf buf = ByteBufPool.allocate(100);
-					while ((b = inputStream.read()) != -1) {
-						buf.writeByte((byte) b);
+					try (InputStream inputStream = channelSupplierAsInputStream(reactor, channelSupplier)) {
+						int b;
+						ByteBuf buf = ByteBufPool.allocate(100);
+						while ((b = inputStream.read()) != -1) {
+							buf.writeByte((byte) b);
+						}
+						assertTrue(buf.asString(UTF_8).isEmpty());
 					}
-					assertTrue(buf.asString(UTF_8).isEmpty());
 				}));
 	}
 }

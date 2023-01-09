@@ -6,11 +6,11 @@ import io.activej.cube.linear.CubeMySqlOTUplink;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
-import io.activej.eventloop.Eventloop;
 import io.activej.ot.OTCommit;
 import io.activej.ot.OTState;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.repository.MySqlOTRepository;
+import io.activej.reactor.Reactor;
 import org.junit.function.ThrowingRunnable;
 
 import java.util.List;
@@ -56,9 +56,9 @@ public final class TestUtils {
 		}
 	};
 
-	public static <T> T asyncAwait(Eventloop eventloop, AsyncSupplier<T> supplier) {
+	public static <T> T asyncAwait(Reactor reactor, AsyncSupplier<T> supplier) {
 		try {
-			return eventloop.submit(supplier::get).get();
+			return reactor.submit(supplier::get).get();
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 			throw new AssertionError(e);

@@ -492,7 +492,7 @@ public final class RpcClient extends AbstractNioReactive
 		return new AsyncRpcClient() {
 			@Override
 			public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
-				if (CHECK_IN_REACTOR_THREAD) Checks.checkState(anotherReactor.inReactorThread(), "Not in reactor thread");
+				anotherReactor.checkInReactorThread();
 				if (timeout > 0) {
 					reactor.execute(() -> requestSender.sendRequest(request, timeout, toAnotherReactor(anotherReactor, cb)));
 				} else {

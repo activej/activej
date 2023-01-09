@@ -3,7 +3,7 @@ package io.activej.csp.process;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
-import io.activej.eventloop.Eventloop;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -25,18 +25,18 @@ public class ChannelRateLimiterTest {
 
 	@Test
 	public void testEmpty() {
-		Eventloop eventloop = getCurrentReactor();
+		Reactor reactor = getCurrentReactor();
 		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.create(100);
 
 		List<Integer> expected = IntStream.range(0, 200)
 				.boxed().collect(toList());
 		List<Integer> actual = new ArrayList<>();
 
-		RefLong passed = new RefLong(eventloop.currentTimeMillis());
+		RefLong passed = new RefLong(reactor.currentTimeMillis());
 		await(ChannelSupplier.ofList(expected)
 				.transformWith(limiter)
 				.streamTo(ChannelConsumer.ofConsumer(actual::add))
-				.whenResult(() -> passed.value = eventloop.currentTimeMillis() - passed.value));
+				.whenResult(() -> passed.value = reactor.currentTimeMillis() - passed.value));
 
 
 		assertEquals(expected, actual);
@@ -45,7 +45,7 @@ public class ChannelRateLimiterTest {
 
 	@Test
 	public void testHalfFull() {
-		Eventloop eventloop = getCurrentReactor();
+		Reactor reactor = getCurrentReactor();
 		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.<Integer>create(100)
 				.withInitialTokens(100L);
 
@@ -53,11 +53,11 @@ public class ChannelRateLimiterTest {
 				.boxed().collect(toList());
 		List<Integer> actual = new ArrayList<>();
 
-		RefLong passed = new RefLong(eventloop.currentTimeMillis());
+		RefLong passed = new RefLong(reactor.currentTimeMillis());
 		await(ChannelSupplier.ofList(expected)
 				.transformWith(limiter)
 				.streamTo(ChannelConsumer.ofConsumer(actual::add))
-				.whenResult(() -> passed.value = eventloop.currentTimeMillis() - passed.value));
+				.whenResult(() -> passed.value = reactor.currentTimeMillis() - passed.value));
 
 
 		assertEquals(expected, actual);
@@ -66,7 +66,7 @@ public class ChannelRateLimiterTest {
 
 	@Test
 	public void testFull() {
-		Eventloop eventloop = getCurrentReactor();
+		Reactor reactor = getCurrentReactor();
 		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.<Integer>create(100)
 				.withInitialTokens(200L);
 
@@ -74,11 +74,11 @@ public class ChannelRateLimiterTest {
 				.boxed().collect(toList());
 		List<Integer> actual = new ArrayList<>();
 
-		RefLong passed = new RefLong(eventloop.currentTimeMillis());
+		RefLong passed = new RefLong(reactor.currentTimeMillis());
 		await(ChannelSupplier.ofList(expected)
 				.transformWith(limiter)
 				.streamTo(ChannelConsumer.ofConsumer(actual::add))
-				.whenResult(() -> passed.value = eventloop.currentTimeMillis() - passed.value));
+				.whenResult(() -> passed.value = reactor.currentTimeMillis() - passed.value));
 
 
 		assertEquals(expected, actual);

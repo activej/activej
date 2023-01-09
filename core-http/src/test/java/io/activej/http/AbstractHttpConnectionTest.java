@@ -17,6 +17,7 @@ import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.net.SocketSettings;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.test.TestUtils;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
@@ -411,14 +412,14 @@ public final class AbstractHttpConnectionTest {
 		RuntimeException fatalError = new RuntimeException("test");
 		Ref<Throwable> errorRef = new Ref<>();
 
-		Eventloop eventloop = Eventloop.create()
+		NioReactor reactor = Eventloop.create()
 				.withCurrentThread()
 				.withFatalErrorHandler((e, context) -> {
 					assertNull(errorRef.get());
 					errorRef.set(e);
 				});
 
-		HttpServer server = HttpServer.create(eventloop,
+		HttpServer server = HttpServer.create(reactor,
 						request -> {
 							throw fatalError;
 						})
@@ -426,7 +427,7 @@ public final class AbstractHttpConnectionTest {
 
 		server.listen();
 
-		AsyncHttpClient client = HttpClient.create(eventloop)
+		AsyncHttpClient client = HttpClient.create(reactor)
 				.withKeepAliveTimeout(Duration.ofSeconds(10));
 
 		int responseCode = await(client.request(HttpRequest.get("http://127.0.0.1:" + port))
@@ -444,12 +445,12 @@ public final class AbstractHttpConnectionTest {
 	}
 
 	private void doTestEmptyRequestResponsePermutations(List<Consumer<HttpMessage>> messageDecorators) {
-		Eventloop eventloop = Reactor.getCurrentReactor();
+		NioReactor reactor = Reactor.getCurrentReactor();
 		for (int i = 0; i < messageDecorators.size(); i++) {
 			for (int j = 0; j < messageDecorators.size(); j++) {
 				try {
 					Consumer<HttpMessage> responseDecorator = messageDecorators.get(j);
-					HttpServer server = HttpServer.create(eventloop,
+					HttpServer server = HttpServer.create(reactor,
 									$ -> {
 										HttpResponse response = HttpResponse.ok200();
 										responseDecorator.accept(response);

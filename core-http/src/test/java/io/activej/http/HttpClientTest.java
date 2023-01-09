@@ -7,7 +7,6 @@ import io.activej.common.ref.Ref;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.binary.ByteBufsDecoder;
-import io.activej.eventloop.Eventloop;
 import io.activej.http.HttpClient.JmxInspector;
 import io.activej.jmx.stats.ExceptionStats;
 import io.activej.net.SimpleServer;
@@ -15,6 +14,7 @@ import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -127,18 +127,18 @@ public final class HttpClientTest {
 
 	@Test
 	public void testActiveRequestsCounter() throws IOException {
-		Eventloop eventloop = Reactor.getCurrentReactor();
+		NioReactor reactor = Reactor.getCurrentReactor();
 
 		List<SettablePromise<HttpResponse>> responses = new ArrayList<>();
 
-		HttpServer server = HttpServer.create(eventloop,
+		HttpServer server = HttpServer.create(reactor,
 						request -> Promise.ofCallback(responses::add))
 				.withListenPort(port);
 
 		server.listen();
 
 		JmxInspector inspector = new JmxInspector();
-		AsyncHttpClient httpClient = HttpClient.create(eventloop)
+		AsyncHttpClient httpClient = HttpClient.create(reactor)
 				.withNoKeepAlive()
 				.withConnectTimeout(Duration.ofMillis(20))
 				.withReadWriteTimeout(Duration.ofMillis(20))
@@ -154,8 +154,8 @@ public final class HttpClientTest {
 					server.close();
 					responses.forEach(response -> response.set(HttpResponse.ok200()));
 
-					inspector.getTotalRequests().refresh(eventloop.currentTimeMillis());
-					inspector.getHttpTimeouts().refresh(eventloop.currentTimeMillis());
+					inspector.getTotalRequests().refresh(reactor.currentTimeMillis());
+					inspector.getHttpTimeouts().refresh(reactor.currentTimeMillis());
 
 					System.out.println(inspector.getTotalRequests().getTotalCount());
 					System.out.println();
@@ -171,9 +171,9 @@ public final class HttpClientTest {
 
 	@Test
 	public void testActiveRequestsCounterWithoutRefresh() throws IOException {
-		Eventloop eventloop = Reactor.getCurrentReactor();
+		NioReactor reactor = Reactor.getCurrentReactor();
 
-		HttpServer server = HttpServer.create(eventloop,
+		HttpServer server = HttpServer.create(reactor,
 						request -> HttpResponse.ok200())
 				.withAcceptOnce()
 				.withListenPort(port);
@@ -181,7 +181,7 @@ public final class HttpClientTest {
 		server.listen();
 
 		JmxInspector inspector = new JmxInspector();
-		AsyncHttpClient httpClient = HttpClient.create(eventloop)
+		AsyncHttpClient httpClient = HttpClient.create(reactor)
 				.withInspector(inspector);
 
 		Promise<HttpResponse> requestPromise = httpClient.request(HttpRequest.get("http://127.0.0.1:" + port));

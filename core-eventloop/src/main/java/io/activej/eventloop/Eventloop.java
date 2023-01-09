@@ -32,7 +32,6 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.reactor.NioReactive;
 import io.activej.reactor.Reactor;
-import io.activej.reactor.jmx.ReactiveJmxBean;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 import io.activej.reactor.net.ServerSocketSettings;
 import io.activej.reactor.nio.NioChannelEventHandler;
@@ -1057,18 +1056,6 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	@Override
 	public long currentTimeMillis() {
 		return timestamp;
-	}
-
-	/**
-	 * Returns itself
-	 * <p>
-	 * This method is needed as {@link Eventloop} implements {@link ReactiveJmxBean} interface
-	 *
-	 * @return this {@link Eventloop}
-	 */
-	@Override
-	public Eventloop getReactor() {
-		return this;
 	}
 
 	/**

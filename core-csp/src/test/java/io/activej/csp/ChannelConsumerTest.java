@@ -4,6 +4,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import io.activej.test.ExpectedException;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -98,14 +99,14 @@ public class ChannelConsumerTest {
 					return Promise.complete();
 				});
 
-		Eventloop reactor = getCurrentReactor();
+		Reactor reactor = getCurrentReactor();
 		await(Promise.ofBlocking(newSingleThreadExecutor(),
 				() -> {
-					OutputStream outputStream = channelConsumerAsOutputStream(reactor, channelConsumer);
-					for (int i = 0; i < expectedSize; i++) {
-						outputStream.write(i);
+					try (OutputStream outputStream = channelConsumerAsOutputStream(reactor, channelConsumer)) {
+						for (int i = 0; i < expectedSize; i++) {
+							outputStream.write(i);
+						}
 					}
-					outputStream.flush();
 				}));
 
 		for (int i = 0; i < expectedSize; i++) {
@@ -123,10 +124,11 @@ public class ChannelConsumerTest {
 			return Promise.complete();
 		});
 
-		Eventloop reactor = getCurrentReactor();
+		Reactor reactor = getCurrentReactor();
 		await(Promise.ofBlocking(newSingleThreadExecutor(), () -> {
-			OutputStream outputStream = channelConsumerAsOutputStream(reactor, channelConsumer);
-			outputStream.flush();
+			//noinspection EmptyTryBlock
+			try (OutputStream ignored = channelConsumerAsOutputStream(reactor, channelConsumer)) {
+			}
 		}));
 	}
 
@@ -137,11 +139,12 @@ public class ChannelConsumerTest {
 			return Promise.ofException(new RuntimeException());
 		});
 
-		Eventloop reactor = getCurrentReactor();
+		Reactor reactor = getCurrentReactor();
 		await(Promise.ofBlocking(newSingleThreadExecutor(), () -> {
 			try {
-				OutputStream outputStream = channelConsumerAsOutputStream(reactor, channelConsumer);
-				outputStream.write(0);
+				try (OutputStream outputStream = channelConsumerAsOutputStream(reactor, channelConsumer)) {
+					outputStream.write(0);
+				}
 				fail();
 			} catch (Exception e) {
 				assertThat(e, instanceOf(RuntimeException.class));
@@ -150,39 +153,38 @@ public class ChannelConsumerTest {
 	}
 
 	@Test
-	public void testOfAnotherEventloop() {
-		Eventloop anotherEventloop = Eventloop.create().withFatalErrorHandler(rethrow());
+	public void testOfAnotherReactor() {
+		Eventloop anotherReactor = Eventloop.create().withFatalErrorHandler(rethrow());
 		List<Integer> expectedList = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 		List<Integer> actualList = new ArrayList<>();
-		ChannelConsumer<Integer> anotherEventloopConsumer = executeWithReactor(anotherEventloop, () -> ChannelConsumer.ofConsumer(actualList::add));
-		ChannelConsumer<Integer> consumer = ChannelConsumer.ofAnotherReactor(anotherEventloop, anotherEventloopConsumer);
+		ChannelConsumer<Integer> anotherEventloopConsumer = executeWithReactor(anotherReactor, () -> ChannelConsumer.ofConsumer(actualList::add));
+		ChannelConsumer<Integer> consumer = ChannelConsumer.ofAnotherReactor(anotherReactor, anotherEventloopConsumer);
 
-		startAnotherEventloop(anotherEventloop);
+		startAnotherEventloop(anotherReactor);
 		await(consumer.acceptAll(expectedList));
-		stopAnotherEventloop(anotherEventloop);
+		stopAnotherEventloop(anotherReactor);
 
 		assertEquals(expectedList, actualList);
 	}
 
 	@Test
-	public void testOfAnotherEventloopException() {
-		Eventloop anotherEventloop = Eventloop.create().withFatalErrorHandler(rethrow());
+	public void testOfAnotherReactorException() {
+		Eventloop anotherReactor = Eventloop.create().withFatalErrorHandler(rethrow());
 		ExpectedException expectedException = new ExpectedException();
 		List<Integer> list = new ArrayList<>();
-		ChannelConsumer<Integer> anotherEventloopConsumer = executeWithReactor(anotherEventloop, () -> ChannelConsumer.ofConsumer(list::add));
-		ChannelConsumer<Integer> consumer = ChannelConsumer.ofAnotherReactor(anotherEventloop, anotherEventloopConsumer);
+		ChannelConsumer<Integer> anotherEventloopConsumer = executeWithReactor(anotherReactor, () -> ChannelConsumer.ofConsumer(list::add));
+		ChannelConsumer<Integer> consumer = ChannelConsumer.ofAnotherReactor(anotherReactor, anotherEventloopConsumer);
 
-		startAnotherEventloop(anotherEventloop);
+		startAnotherEventloop(anotherReactor);
 		Exception exception = awaitException(consumer.accept(1)
 				.then(() -> consumer.accept(2))
 				.whenComplete(() -> consumer.closeEx(expectedException))
 				.then(() -> consumer.accept(3)));
-		stopAnotherEventloop(anotherEventloop);
+		stopAnotherEventloop(anotherReactor);
 
 		assertSame(expectedException, exception);
 		assertEquals(List.of(1, 2), list);
 	}
-
 
 	private void startAnotherEventloop(Eventloop anotherEventloop) {
 		anotherEventloop.keepAlive(true);

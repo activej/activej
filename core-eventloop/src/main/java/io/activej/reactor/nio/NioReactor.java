@@ -1,6 +1,7 @@
 package io.activej.reactor.nio;
 
 import io.activej.async.callback.Callback;
+import io.activej.reactor.NioReactive;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.net.DatagramSocketSettings;
 import io.activej.reactor.net.ServerSocketSettings;
@@ -15,7 +16,7 @@ import java.nio.channels.*;
 import java.time.Duration;
 import java.util.function.Consumer;
 
-public interface NioReactor extends Reactor {
+public interface NioReactor extends Reactor, NioReactive {
 	Logger logger = LoggerFactory.getLogger(NioReactor.class);
 
 	/**
@@ -49,6 +50,11 @@ public interface NioReactor extends Reactor {
 			}
 			throw e;
 		}
+	}
+
+	@Override
+	default NioReactor getReactor() {
+		return this;
 	}
 
 	@Nullable Selector getSelector();

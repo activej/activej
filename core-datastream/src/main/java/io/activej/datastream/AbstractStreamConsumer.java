@@ -35,7 +35,7 @@ public abstract class AbstractStreamConsumer<T> extends ImplicitlyReactive imple
 	private @Nullable StreamDataAcceptor<T> dataAcceptor;
 
 	{
-		if (inReactorThread()) {
+		if (reactor.inReactorThread()) {
 			reactor.post(this::ensureInitialized);
 		} else {
 			reactor.execute(this::ensureInitialized);

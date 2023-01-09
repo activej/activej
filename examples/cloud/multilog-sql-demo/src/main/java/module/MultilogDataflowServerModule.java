@@ -27,7 +27,6 @@ import java.nio.file.Path;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static io.activej.common.Checks.checkState;
 import static module.MultilogDataflowSchemaModule.LOG_ITEM_TABLE_NAME;
 
 public class MultilogDataflowServerModule extends AbstractModule {
@@ -49,8 +48,7 @@ public class MultilogDataflowServerModule extends AbstractModule {
 	@Transient
 	@DatasetId(LOG_ITEM_TABLE_NAME)
 	Promise<StreamSupplier<LogItem>> logItemDataset(@Named("Dataflow") Reactor reactor, AsyncMultilog<LogItem> logItemMultilog, @Named("partition") String partition) {
-		checkState(reactor.inReactorThread());
-
+		reactor.checkInReactorThread();
 		return logItemMultilog.read(partition, new LogFile("", 0), 0L, null)
 				.map(StreamSupplierWithResult::getSupplier);
 	}

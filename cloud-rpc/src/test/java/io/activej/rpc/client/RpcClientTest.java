@@ -34,7 +34,7 @@ import static io.activej.test.TestUtils.assertCompleteFn;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.*;
 
-public final class ReactiveRpcClientTest {
+public final class RpcClientTest {
 	private static final int NUMBER_OF_WORKING_SERVERS = 6;
 	private static final int NUMBER_OF_FAILING_SERVERS = 4;
 

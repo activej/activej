@@ -16,6 +16,7 @@ import io.activej.inject.module.Modules;
 import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
 import io.activej.net.PrimaryServer;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
 import io.activej.trigger.Severity;
 import io.activej.trigger.TriggerResult;
@@ -44,21 +45,21 @@ public final class ComplexHttpLauncher extends Launcher {
 	public @interface MyWorker {
 	}
 
-	// region primary eventloops
+	// region primary reactors
 	@Provides
-	Eventloop eventloop1() {
+	NioReactor reactor1() {
 		return Eventloop.create();
 	}
 
 	@Provides
 	@Named("Second")
-	Eventloop eventloop2() {
+	NioReactor reactor2() {
 		return Eventloop.create();
 	}
 
 	@Provides
 	@Named("Third")
-	Eventloop eventloop3() {
+	NioReactor reactor3() {
 		return Eventloop.create();
 	}
 	// endregion
@@ -87,24 +88,24 @@ public final class ComplexHttpLauncher extends Launcher {
 	@Provides
 	@Eager
 	@Named("First")
-	PrimaryServer server1(Eventloop eventloop, @Named("First") WorkerPool.Instances<HttpServer> serverInstances) {
-		return PrimaryServer.create(eventloop, serverInstances)
+	PrimaryServer server1(NioReactor reactor, @Named("First") WorkerPool.Instances<HttpServer> serverInstances) {
+		return PrimaryServer.create(reactor, serverInstances)
 				.withListenAddress(new InetSocketAddress(SERVER_ONE_PORT));
 	}
 
 	@Provides
 	@Eager
 	@Named("Second")
-	PrimaryServer server2(@Named("Second") Eventloop eventloop, @Named("Second") WorkerPool.Instances<HttpServer> serverInstances) {
-		return PrimaryServer.create(eventloop, serverInstances)
+	PrimaryServer server2(@Named("Second") NioReactor reactor, @Named("Second") WorkerPool.Instances<HttpServer> serverInstances) {
+		return PrimaryServer.create(reactor, serverInstances)
 				.withListenAddress(new InetSocketAddress(SERVER_TWO_PORT));
 	}
 
 	@Provides
 	@Eager
 	@Named("Third")
-	PrimaryServer server3(@Named("Third") Eventloop eventloop, @Named("Third") WorkerPool.Instances<HttpServer> serverInstances) {
-		return PrimaryServer.create(eventloop, serverInstances)
+	PrimaryServer server3(@Named("Third") NioReactor reactor, @Named("Third") WorkerPool.Instances<HttpServer> serverInstances) {
+		return PrimaryServer.create(reactor, serverInstances)
 				.withListenAddress(new InetSocketAddress(SERVER_THREE_PORT));
 	}
 	// endregion
@@ -112,14 +113,14 @@ public final class ComplexHttpLauncher extends Launcher {
 	// region Worker scope
 	@Provides
 	@Worker
-	Eventloop workerEventloop() {
+	NioReactor workerReactor() {
 		return Eventloop.create();
 	}
 
 	@Provides
 	@Worker
-	HttpServer workerServer(Eventloop eventloop, AsyncServlet servlet) {
-		return HttpServer.create(eventloop, servlet);
+	HttpServer workerServer(NioReactor reactor, AsyncServlet servlet) {
+		return HttpServer.create(reactor, servlet);
 	}
 
 	@Provides
@@ -132,14 +133,14 @@ public final class ComplexHttpLauncher extends Launcher {
 	// region MyWorker scope
 	@Provides
 	@MyWorker
-	Eventloop myWorkerEventloop() {
+	NioReactor myWorkerReactor() {
 		return Eventloop.create();
 	}
 
 	@Provides
 	@MyWorker
-	HttpServer myWorkerServer(Eventloop eventloop, AsyncServlet servlet) {
-		return HttpServer.create(eventloop, servlet);
+	HttpServer myWorkerServer(NioReactor reactor, AsyncServlet servlet) {
+		return HttpServer.create(reactor, servlet);
 	}
 
 	@Provides

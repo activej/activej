@@ -66,8 +66,8 @@ public final class RpcNoServerTest {
 		};
 	}
 
-	private RpcServer createServer(Eventloop eventloop) {
-		return RpcServer.create(eventloop)
+	private RpcServer createServer(NioReactor reactor) {
+		return RpcServer.create(reactor)
 				.withMessageTypes(HelloRequest.class, HelloResponse.class)
 				.withHandler(HelloRequest.class, helloServiceRequestHandler(name -> {
 					if (name.equals("--")) {
