@@ -27,7 +27,6 @@ import io.activej.datastream.StreamConsumers.Skip;
 import io.activej.datastream.processor.StreamConsumerTransformer;
 import io.activej.datastream.processor.StreamTransformer;
 import io.activej.promise.Promise;
-import io.activej.reactor.Reactive;
 import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,7 +39,7 @@ import java.util.function.UnaryOperator;
  * Implementors of this interface might want to extend {@link AbstractStreamConsumer}
  * instead of this interface, since it makes the threading and state management easier.
  */
-public interface StreamConsumer<T> extends Reactive, AsyncCloseable {
+public interface StreamConsumer<T> extends AsyncCloseable {
 	/**
 	 * Begins streaming data from the given supplier into this consumer.
 	 * This method may not be called directly, use {@link StreamSupplier#streamTo} instead.
@@ -152,7 +151,6 @@ public interface StreamConsumer<T> extends Reactive, AsyncCloseable {
 	 * Creates a consumer from this one with its <i>acknowledge</i> signal modified by the given function.
 	 */
 	default StreamConsumer<T> withAcknowledgement(UnaryOperator<Promise<Void>> fn) {
-		checkInReactorThread();
 		Promise<Void> acknowledgement = getAcknowledgement();
 		Promise<Void> newAcknowledgement = fn.apply(acknowledgement);
 		if (acknowledgement == newAcknowledgement) return this;

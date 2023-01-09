@@ -26,7 +26,6 @@ import io.activej.datastream.StreamSuppliers.OfIterator;
 import io.activej.datastream.processor.StreamSupplierTransformer;
 import io.activej.datastream.processor.StreamTransformer;
 import io.activej.promise.Promise;
-import io.activej.reactor.Reactive;
 import io.activej.reactor.Reactor;
 
 import java.util.Iterator;
@@ -46,7 +45,7 @@ import static java.util.Arrays.asList;
  * Implementors of this interface might want to extend {@link AbstractStreamSupplier}
  * instead of this interface, since it makes the threading and state management easier.
  */
-public interface StreamSupplier<T> extends Reactive, AsyncCloseable {
+public interface StreamSupplier<T> extends AsyncCloseable {
 	/**
 	 * Bind this supplier to given {@link StreamConsumer} and start streaming
 	 * data through them following all the contracts.
@@ -261,7 +260,6 @@ public interface StreamSupplier<T> extends Reactive, AsyncCloseable {
 	 * Creates a supplier from this one with its <i>end of stream</i> signal modified by the given function.
 	 */
 	default StreamSupplier<T> withEndOfStream(UnaryOperator<Promise<Void>> fn) {
-		checkInReactorThread();
 		Promise<Void> endOfStream = getEndOfStream();
 		Promise<Void> suppliedEndOfStream = fn.apply(endOfStream);
 		if (endOfStream == suppliedEndOfStream) {

@@ -17,7 +17,6 @@
 package io.activej.datastream;
 
 import io.activej.promise.Promise;
-import io.activej.reactor.Reactor;
 
 /**
  * A wrapper class that delegates all calls to underlying {@link StreamConsumer}.
@@ -31,13 +30,7 @@ public abstract class ForwardingStreamConsumer<T> implements StreamConsumer<T> {
 	}
 
 	@Override
-	public Reactor getReactor() {
-		return consumer.getReactor();
-	}
-
-	@Override
 	public void consume(StreamSupplier<T> streamSupplier) {
-		checkInReactorThread();
 		consumer.consume(streamSupplier);
 	}
 
