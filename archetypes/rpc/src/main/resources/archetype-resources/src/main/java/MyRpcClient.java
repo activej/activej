@@ -7,6 +7,9 @@ import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
+import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
+import io.activej.rpc.client.AsyncRpcClient;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.RpcStrategies;
 import io.activej.serializer.SerializerBuilder;
@@ -22,10 +25,10 @@ public class MyRpcClient extends Launcher {
     private static final int RPC_LISTENER_PORT = 5353;
 
     @Inject
-    Eventloop eventloop;
+    Reactor reactor;
 
     @Inject
-    RpcClient client;
+    AsyncRpcClient client;
 
     @Provides
     Config config() {
@@ -38,8 +41,8 @@ public class MyRpcClient extends Launcher {
     }
 
     @Provides
-    RpcClient rpcClient(Eventloop eventloop, Config config) {
-        return RpcClient.create(eventloop)
+    AsyncRpcClient rpcClient(NioReactor reactor, Config config) {
+        return RpcClient.create(reactor)
                 .withSerializerBuilder(SerializerBuilder.create(DefiningClassLoader.create(Thread.currentThread().getContextClassLoader())))
                 .withMessageTypes(String.class)
                 .withStrategy(RpcStrategies.server(
@@ -60,7 +63,7 @@ public class MyRpcClient extends Launcher {
             if (line.equalsIgnoreCase("exit")) {
                 return;
             }
-            eventloop.submit(() -> client.sendRequest(line))
+            reactor.submit(() -> client.sendRequest(line))
                     .thenAccept(string -> System.out.println("Response: " + string + "\n"))
                     .get();
         }
