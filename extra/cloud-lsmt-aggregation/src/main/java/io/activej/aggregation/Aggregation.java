@@ -103,7 +103,7 @@ public class Aggregation extends AbstractReactive
 
 	// jmx
 
-	private AggregationStats stats = new AggregationStats(reactor);
+	private AggregationStats stats = new AggregationStats();
 	private long consolidationStarted;
 	private long consolidationLastTimeMillis;
 	private int consolidations;

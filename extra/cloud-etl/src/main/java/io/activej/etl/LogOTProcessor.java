@@ -64,8 +64,8 @@ public final class LogOTProcessor<T, D> extends AbstractReactive
 	// JMX
 	private boolean enabled = true;
 	private boolean detailed;
-	private final StreamStatsBasic<T> streamStatsBasic = StreamStats.basic(reactor);
-	private final StreamStatsDetailed<T> streamStatsDetailed = StreamStats.detailed(reactor);
+	private final StreamStatsBasic<T> streamStatsBasic = StreamStats.basic();
+	private final StreamStatsDetailed<T> streamStatsDetailed = StreamStats.detailed();
 	private final PromiseStats promiseProcessLog = PromiseStats.create(Duration.ofMinutes(5));
 
 	private LogOTProcessor(Reactor reactor,

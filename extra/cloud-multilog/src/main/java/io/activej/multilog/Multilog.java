@@ -76,8 +76,8 @@ public final class Multilog<T> extends AbstractReactive
 	private final StreamRegistry<String> streamReads = StreamRegistry.create();
 	private final StreamRegistry<String> streamWrites = StreamRegistry.create();
 
-	private final StreamStatsDetailed<ByteBuf> streamReadStats = StreamStats.detailed(reactor, forByteBufs());
-	private final StreamStatsDetailed<ByteBuf> streamWriteStats = StreamStats.detailed(reactor, forByteBufs());
+	private final StreamStatsDetailed<ByteBuf> streamReadStats = StreamStats.detailed(forByteBufs());
+	private final StreamStatsDetailed<ByteBuf> streamWriteStats = StreamStats.detailed(forByteBufs());
 
 	private Multilog(Reactor reactor, AsyncFs fs, FrameFormat frameFormat, BinarySerializer<T> serializer,
 			LogNamingScheme namingScheme) {

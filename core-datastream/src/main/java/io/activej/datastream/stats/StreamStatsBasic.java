@@ -21,12 +21,10 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ExceptionStats;
-import io.activej.reactor.AbstractReactive;
-import io.activej.reactor.Reactor;
 
 import java.time.Duration;
 
-public class StreamStatsBasic<T> extends AbstractReactive implements StreamStats<T> {
+public class StreamStatsBasic<T> implements StreamStats<T> {
 	public static final Duration DEFAULT_BASIC_SMOOTHING_WINDOW = Duration.ofMinutes(5);
 
 	private final EventStats started = EventStats.create(DEFAULT_BASIC_SMOOTHING_WINDOW);
@@ -34,10 +32,6 @@ public class StreamStatsBasic<T> extends AbstractReactive implements StreamStats
 	private final EventStats suspend = EventStats.create(DEFAULT_BASIC_SMOOTHING_WINDOW);
 	private final EventStats endOfStream = EventStats.create(DEFAULT_BASIC_SMOOTHING_WINDOW);
 	private final ExceptionStats error = ExceptionStats.create();
-
-	public StreamStatsBasic(Reactor reactor) {
-		super(reactor);
-	}
 
 	public StreamStatsBasic<T> withBasicSmoothingWindow(Duration smoothingWindow) {
 		started.setSmoothingWindow(smoothingWindow);

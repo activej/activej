@@ -21,7 +21,6 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.jmx.stats.JmxStatsWithReset;
 import io.activej.jmx.stats.StatsUtils;
-import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
@@ -33,8 +32,7 @@ public final class StreamStatsDetailed<T> extends StreamStatsBasic<T> implements
 	private long totalSize;
 
 	@SuppressWarnings("unchecked")
-	StreamStatsDetailed(Reactor reactor, @Nullable StreamStatsSizeCounter<?>sizeCounter) {
-		super(reactor);
+	StreamStatsDetailed(@Nullable StreamStatsSizeCounter<?>sizeCounter) {
 		this.sizeCounter = (StreamStatsSizeCounter<Object>) sizeCounter;
 	}
 

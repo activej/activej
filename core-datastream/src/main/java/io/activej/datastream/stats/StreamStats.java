@@ -25,10 +25,8 @@ import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamConsumerTransformer;
 import io.activej.datastream.processor.StreamSupplierTransformer;
-import io.activej.reactor.Reactive;
-import io.activej.reactor.Reactor;
 
-public interface StreamStats<T> extends Reactive,
+public interface StreamStats<T> extends
 		StreamSupplierTransformer<T, StreamSupplier<T>>, StreamConsumerTransformer<T, StreamConsumer<T>>,
 		ChannelSupplierTransformer<T, ChannelSupplier<T>>, ChannelConsumerTransformer<T, ChannelConsumer<T>> {
 	StreamDataAcceptor<T> createDataAcceptor(StreamDataAcceptor<T> actualDataAcceptor);
@@ -63,15 +61,15 @@ public interface StreamStats<T> extends Reactive,
 		return consumer; // TODO
 	}
 
-	static <T> StreamStatsBasic<T> basic(Reactor reactor) {
-		return new StreamStatsBasic<>(reactor);
+	static <T> StreamStatsBasic<T> basic() {
+		return new StreamStatsBasic<>();
 	}
 
-	static <T> StreamStatsDetailed<T> detailed(Reactor reactor) {
-		return new StreamStatsDetailed<>(reactor, null);
+	static <T> StreamStatsDetailed<T> detailed() {
+		return new StreamStatsDetailed<>(null);
 	}
 
-	static <T> StreamStatsDetailed<T> detailed(Reactor reactor, StreamStatsSizeCounter<T> sizeCounter) {
-		return new StreamStatsDetailed<>(reactor, sizeCounter);
+	static <T> StreamStatsDetailed<T> detailed(StreamStatsSizeCounter<T> sizeCounter) {
+		return new StreamStatsDetailed<>(sizeCounter);
 	}
 }

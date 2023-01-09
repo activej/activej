@@ -19,19 +19,13 @@ package io.activej.aggregation;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStatsBasic;
 import io.activej.jmx.api.attribute.JmxAttribute;
-import io.activej.reactor.AbstractReactive;
-import io.activej.reactor.Reactor;
 
 @SuppressWarnings("rawtypes") // JMX doesn't work with generic types
-public class AggregationStats extends AbstractReactive {
-	final StreamStatsBasic<?> mergeMapInput = StreamStats.basic(reactor);
-	final StreamStatsBasic<?> mergeMapOutput = StreamStats.basic(reactor);
-	final StreamStatsBasic<?> mergeReducerInput = StreamStats.basic(reactor);
-	final StreamStatsBasic<?> mergeReducerOutput = StreamStats.basic(reactor);
-
-	public AggregationStats(Reactor reactor) {
-		super(reactor);
-	}
+public class AggregationStats {
+	final StreamStatsBasic<?> mergeMapInput = StreamStats.basic();
+	final StreamStatsBasic<?> mergeMapOutput = StreamStats.basic();
+	final StreamStatsBasic<?> mergeReducerInput = StreamStats.basic();
+	final StreamStatsBasic<?> mergeReducerOutput = StreamStats.basic();
 
 	@JmxAttribute
 	public StreamStatsBasic getMergeReducerInput() {

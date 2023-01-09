@@ -2,7 +2,6 @@ package io.activej.datastream.stats;
 
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
-import io.activej.reactor.Reactor;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -17,7 +16,7 @@ public class StreamStatsForwarderTest {
 
 	@Test
 	public void testDetailedStats() {
-		StreamStatsDetailed<Integer> stats = StreamStats.detailed(Reactor.getCurrentReactor(), number -> number);
+		StreamStatsDetailed<Integer> stats = StreamStats.detailed(number -> number);
 
 		await(StreamSupplier.of(1, 2, 3, 4, 5)
 				.transformWith(stats)
