@@ -85,10 +85,5 @@ public class StreamStatsForwarder<T> implements StreamTransformer<T, T>, WithIni
 			stats.onSuspend();
 			input.suspend();
 		}
-
-		@Override
-		protected void onError(Exception e) {
-			stats.onError(e);
-		}
 	}
 }
