@@ -86,10 +86,5 @@ public class StreamStatsForwarder<T> extends ImplicitlyReactive implements Strea
 			stats.onSuspend();
 			input.suspend();
 		}
-
-		@Override
-		protected void onError(Exception e) {
-			stats.onError(e);
-		}
 	}
 }
