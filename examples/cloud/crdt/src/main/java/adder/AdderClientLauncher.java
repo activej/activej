@@ -16,8 +16,8 @@ import io.activej.launchers.crdt.rpc.CrdtRpcClientLauncher;
 import io.activej.launchers.crdt.rpc.CrdtRpcStrategyService;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
-import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.AsyncRpcClient;
+import io.activej.rpc.client.RpcClient;
 
 import java.nio.file.Path;
 import java.util.List;

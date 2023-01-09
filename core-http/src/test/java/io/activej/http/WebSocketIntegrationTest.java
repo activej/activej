@@ -13,8 +13,8 @@ import java.util.List;
 
 import static io.activej.bytebuf.ByteBuf.wrapForReading;
 import static io.activej.csp.dsl.ChannelSupplierTransformer.identity;
-import static io.activej.http.TestUtils.*;
 import static io.activej.http.AsyncWebSocket.Frame.FrameType.BINARY;
+import static io.activej.http.TestUtils.*;
 import static io.activej.promise.TestUtils.await;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;

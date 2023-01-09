@@ -16,13 +16,10 @@
 
 package io.activej.async.process;
 
-import io.activej.common.Checks;
 import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import io.activej.reactor.ImplicitlyReactive;
 import org.jetbrains.annotations.Nullable;
-
-import static io.activej.common.Checks.checkState;
 
 public abstract class AbstractAsyncCloseable extends ImplicitlyReactive implements AsyncCloseable {
 	private @Nullable AsyncCloseable closeable;

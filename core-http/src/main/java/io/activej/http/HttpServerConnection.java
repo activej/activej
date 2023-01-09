@@ -19,7 +19,6 @@ package io.activej.http;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufPool;
 import io.activej.common.ApplicationSettings;
-import io.activej.common.Checks;
 import io.activej.common.MemSize;
 import io.activej.common.Utils;
 import io.activej.common.recycle.Recyclable;
@@ -34,7 +33,6 @@ import org.jetbrains.annotations.Nullable;
 import java.net.InetAddress;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
-import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nullify;
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 import static io.activej.csp.ChannelSuppliers.concat;

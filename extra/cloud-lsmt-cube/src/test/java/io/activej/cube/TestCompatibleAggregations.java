@@ -1,7 +1,7 @@
 package io.activej.cube;
 
-import io.activej.aggregation.AggregationPredicate;
 import io.activej.aggregation.Aggregation;
+import io.activej.aggregation.AggregationPredicate;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
 import io.activej.cube.Cube.AggregationConfig;

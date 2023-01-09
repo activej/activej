@@ -1,8 +1,8 @@
 package io.activej.cube.service;
 
+import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.AsyncAggregationChunkStorage;
 import io.activej.aggregation.ChunkIdCodec;
-import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
@@ -12,9 +12,9 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.frames.ChannelFrameDecoder;
 import io.activej.csp.process.frames.ChannelFrameEncoder;
 import io.activej.csp.process.frames.LZ4FrameFormat;
+import io.activej.cube.Cube;
 import io.activej.cube.CubeTestBase;
 import io.activej.cube.LogItem;
-import io.activej.cube.Cube;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamConsumer;

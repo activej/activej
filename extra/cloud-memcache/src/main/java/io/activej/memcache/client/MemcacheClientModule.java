@@ -23,8 +23,8 @@ import io.activej.memcache.protocol.MemcacheRpcMessage;
 import io.activej.memcache.protocol.MemcacheRpcMessage.Slice;
 import io.activej.memcache.protocol.SerializerDefSlice;
 import io.activej.reactor.nio.NioReactor;
-import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.AsyncRpcClient;
+import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.RpcStrategyRendezvousHashing;
 import io.activej.serializer.SerializerBuilder;
 

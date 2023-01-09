@@ -7,8 +7,8 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.eventloop.Eventloop;
-import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
+import io.activej.net.socket.tcp.TcpSocket;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

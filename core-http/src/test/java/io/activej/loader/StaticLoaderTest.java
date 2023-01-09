@@ -1,8 +1,8 @@
 package io.activej.loader;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.http.loader.ResourceNotFoundException;
 import io.activej.http.loader.AsyncStaticLoader;
+import io.activej.http.loader.ResourceNotFoundException;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;

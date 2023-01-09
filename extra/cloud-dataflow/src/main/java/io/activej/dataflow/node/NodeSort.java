@@ -20,8 +20,8 @@ import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.StreamSchema;
 import io.activej.dataflow.graph.Task;
 import io.activej.dataflow.inject.SortingExecutor;
-import io.activej.datastream.processor.StreamSorter;
 import io.activej.datastream.processor.AsyncStreamSorterStorage;
+import io.activej.datastream.processor.StreamSorter;
 import io.activej.inject.Key;
 import io.activej.promise.Promise;
 

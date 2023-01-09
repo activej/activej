@@ -18,12 +18,9 @@ package io.activej.csp;
 
 import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.async.process.AsyncCloseable;
-import io.activej.common.Checks;
 import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;
-
-import static io.activej.common.Checks.checkState;
 
 public abstract class AbstractChannelConsumer<T> extends AbstractAsyncCloseable implements ChannelConsumer<T> {
 	// region creators

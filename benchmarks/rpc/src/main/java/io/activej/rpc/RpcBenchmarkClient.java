@@ -13,8 +13,8 @@ import io.activej.launcher.Launcher;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.nio.NioReactor;
-import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.AsyncRpcClient;
+import io.activej.rpc.client.RpcClient;
 import io.activej.service.ServiceGraphModule;
 import org.jetbrains.annotations.Nullable;
 

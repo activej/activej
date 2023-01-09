@@ -17,8 +17,8 @@
 package io.activej.fs;
 
 import io.activej.common.time.CurrentTimeProvider;
-import io.activej.fs.exception.FsStructureException;
 import io.activej.fs.exception.ForbiddenPathException;
+import io.activej.fs.exception.FsStructureException;
 import io.activej.fs.exception.GlobException;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;

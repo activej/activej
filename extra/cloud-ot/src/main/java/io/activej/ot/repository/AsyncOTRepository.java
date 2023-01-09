@@ -17,8 +17,8 @@
 package io.activej.ot.repository;
 
 import io.activej.async.function.AsyncSupplier;
-import io.activej.ot.OTCommit;
 import io.activej.ot.AsyncOTCommitFactory;
+import io.activej.ot.OTCommit;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 

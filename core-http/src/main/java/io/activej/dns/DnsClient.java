@@ -19,7 +19,6 @@ package io.activej.dns;
 import io.activej.async.exception.AsyncCloseException;
 import io.activej.async.exception.AsyncTimeoutException;
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.Checks;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.inspector.AbstractInspector;
@@ -27,9 +26,9 @@ import io.activej.common.inspector.BaseInspector;
 import io.activej.dns.protocol.*;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;
-import io.activej.net.socket.udp.UdpSocket;
-import io.activej.net.socket.udp.UdpPacket;
 import io.activej.net.socket.udp.AsyncUdpSocket;
+import io.activej.net.socket.udp.UdpPacket;
+import io.activej.net.socket.udp.UdpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.AbstractNioReactive;
@@ -48,7 +47,6 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
-import static io.activej.common.Checks.checkState;
 import static io.activej.promise.Promises.timeout;
 
 /**

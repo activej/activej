@@ -16,7 +16,6 @@
 
 package io.activej.net;
 
-import io.activej.common.Checks;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -48,7 +47,6 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 
-import static io.activej.common.Checks.checkState;
 import static io.activej.net.socket.tcp.SslTcpSocket.wrapServerSocket;
 import static io.activej.net.socket.tcp.TcpSocket.wrapChannel;
 import static io.activej.reactor.net.ServerSocketSettings.DEFAULT_BACKLOG;

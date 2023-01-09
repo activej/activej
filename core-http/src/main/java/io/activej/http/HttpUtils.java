@@ -36,9 +36,9 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Stream;
 
 import static io.activej.bytebuf.ByteBufStrings.*;
+import static io.activej.http.AsyncWebSocket.Frame.FrameType.*;
 import static io.activej.http.HttpHeaders.HOST;
 import static io.activej.http.HttpHeaders.SEC_WEBSOCKET_ACCEPT;
-import static io.activej.http.AsyncWebSocket.Frame.FrameType.*;
 import static io.activej.http.WebSocketConstants.MAGIC_STRING;
 import static io.activej.http.WebSocketConstants.OpCode.*;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;

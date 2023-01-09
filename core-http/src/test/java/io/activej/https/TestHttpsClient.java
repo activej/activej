@@ -1,7 +1,7 @@
 package io.activej.https;
 
-import io.activej.dns.CachedDnsClient;
 import io.activej.dns.AsyncDnsClient;
+import io.activej.dns.CachedDnsClient;
 import io.activej.dns.DnsClient;
 import io.activej.http.*;
 import io.activej.reactor.Reactor;

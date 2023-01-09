@@ -19,7 +19,6 @@ package io.activej.eventloop;
 import io.activej.async.callback.AsyncComputation;
 import io.activej.async.callback.Callback;
 import io.activej.async.exception.AsyncTimeoutException;
-import io.activej.common.Checks;
 import io.activej.common.exception.FatalErrorHandler;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.function.RunnableEx;
@@ -58,7 +57,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import static io.activej.common.Checks.checkArgument;
-import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.nonNullElseGet;
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
 import static io.activej.common.exception.FatalErrorHandlers.setThreadFatalErrorHandler;

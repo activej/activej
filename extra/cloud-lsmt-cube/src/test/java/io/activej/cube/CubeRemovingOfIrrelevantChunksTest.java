@@ -1,9 +1,9 @@
 package io.activej.cube;
 
-import io.activej.aggregation.AsyncAggregationChunkStorage;
-import io.activej.aggregation.AggregationPredicate;
-import io.activej.aggregation.ChunkIdCodec;
 import io.activej.aggregation.AggregationChunkStorage;
+import io.activej.aggregation.AggregationPredicate;
+import io.activej.aggregation.AsyncAggregationChunkStorage;
+import io.activej.aggregation.ChunkIdCodec;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frames.FrameFormat;

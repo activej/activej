@@ -10,8 +10,8 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 import static io.activej.bytebuf.ByteBuf.wrapForReading;
-import static io.activej.http.TestUtils.*;
 import static io.activej.http.AsyncWebSocket.Frame.FrameType.*;
+import static io.activej.http.TestUtils.*;
 import static io.activej.promise.TestUtils.await;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.*;

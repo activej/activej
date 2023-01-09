@@ -16,9 +16,9 @@
 
 package io.activej.cube.linear;
 
+import io.activej.aggregation.Aggregation;
 import io.activej.aggregation.PrimaryKey;
 import io.activej.aggregation.PrimaryKeyCodec;
-import io.activej.aggregation.Aggregation;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.cube.Cube;
 import org.jetbrains.annotations.Nullable;
