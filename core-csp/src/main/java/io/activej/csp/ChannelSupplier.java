@@ -189,7 +189,6 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 		if (promise.isResult()) return promise.getResult();
 		return new AbstractChannelSupplier<>() {
 			ChannelSupplier<T> supplier;
-			Exception exception;
 
 			@Override
 			protected Promise<T> doGet() {
@@ -202,7 +201,6 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 
 			@Override
 			protected void onClosed(Exception e) {
-				exception = e;
 				promise.whenResult(supplier -> supplier.closeEx(e));
 			}
 		};
