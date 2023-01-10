@@ -83,7 +83,6 @@ final class QueryResultCodec implements JsonCodec<QueryResult>, WithInitializer<
 		return new QueryResultCodec(classLoader, attributeCodecs, measureCodecs, attributeRawTypes, measureRawTypes);
 	}
 
-
 	@Override
 	public QueryResult read(JsonReader reader) throws IOException {
 		if (reader.last() != OBJECT_START) throw reader.newParseError("Expected '{'");

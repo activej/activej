@@ -1,13 +1,13 @@
 package io.activej.state;
 
 import io.activej.fs.LocalBlockingFs;
+import io.activej.serializer.stream.DiffStreamCodec;
+import io.activej.serializer.stream.StreamInput;
+import io.activej.serializer.stream.StreamOutput;
 import io.activej.state.file.FileNamingScheme;
 import io.activej.state.file.FileNamingSchemes;
 import io.activej.state.file.FileState;
 import io.activej.state.file.FileStateManager;
-import io.activej.streamcodecs.DiffStreamCodec;
-import io.activej.streamcodecs.StreamInput;
-import io.activej.streamcodecs.StreamOutput;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -186,7 +186,7 @@ public class FileStateManagerTest {
 		try {
 			manager.save(500, 25L);
 			fail();
-		} catch (IllegalArgumentException ignored){
+		} catch (IllegalArgumentException ignored) {
 		}
 
 		FileState<Integer> load1 = manager.load();

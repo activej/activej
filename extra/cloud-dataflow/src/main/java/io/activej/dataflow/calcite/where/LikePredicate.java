@@ -28,7 +28,6 @@ public final class LikePredicate implements WherePredicate {
 			compiledPattern = new CompiledPattern(compiled, patternValue);
 		}
 
-
 		String value = this.value.getValue(record);
 		if (value == null) return false;
 

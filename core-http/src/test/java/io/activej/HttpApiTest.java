@@ -62,10 +62,10 @@ public final class HttpApiTest {
 	public void setUp() {
 		port = getFreePort();
 		server = HttpServer.create(Reactor.getCurrentReactor(),
-				request -> {
-					testRequest(request);
-					return createResponse();
-				})
+						request -> {
+							testRequest(request);
+							return createResponse();
+						})
 				.withListenPort(port);
 
 		client = HttpClient.create(Reactor.getCurrentReactor());

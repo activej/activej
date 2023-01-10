@@ -222,12 +222,12 @@ public class AddedMeasuresTest {
 
 	@Measures("eventCount")
 	public record EventRecord(@Key int siteId,
-	                          @Measures({"sumRevenue", "minRevenue", "maxRevenue"}) double revenue) {
+							  @Measures({"sumRevenue", "minRevenue", "maxRevenue"}) double revenue) {
 	}
 
 	@Measures("eventCount")
 	public record EventRecord2(@Key int siteId,
-	                           @Measures({"sumRevenue", "minRevenue", "maxRevenue"}) double revenue,
-	                           @Measures({"uniqueUserIds", "estimatedUniqueUserIdCount"}) long userId) {
+							   @Measures({"sumRevenue", "minRevenue", "maxRevenue"}) double revenue,
+							   @Measures({"uniqueUserIds", "estimatedUniqueUserIdCount"}) long userId) {
 	}
 }

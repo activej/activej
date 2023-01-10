@@ -60,7 +60,6 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 				.to(Key.ofType(Types.parameterizedType(MapCrdtStorage.class, typeArguments)));
 		bind(Key.ofType(supertype, Persistent.class))
 				.to(Key.ofType(Types.parameterizedType(FsCrdtStorage.class, typeArguments)));
-
 		Type[] clusterStorageTypes = Arrays.copyOf(typeArguments, 3);
 		clusterStorageTypes[2] = PartitionId.class;
 

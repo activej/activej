@@ -82,7 +82,8 @@ final class LZ4BlockDecoder implements BlockDecoder {
 
 	private boolean readHeader(ByteBufs bufs) throws MalformedDataException {
 		return bufs.consumeBytes((index, value) -> {
-			if (value != MAGIC[index]) throw new UnknownFormatException("Expected stream to start with bytes: " + Arrays.toString(MAGIC));
+			if (value != MAGIC[index])
+				throw new UnknownFormatException("Expected stream to start with bytes: " + Arrays.toString(MAGIC));
 			return index == MAGIC_LENGTH - 1;
 		}) != 0;
 	}

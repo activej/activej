@@ -6,9 +6,8 @@ import io.activej.dataflow.messaging.DataflowResponse.*;
 import io.activej.dataflow.stats.NodeStat;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
-import io.activej.streamcodecs.StreamCodec;
-import io.activej.streamcodecs.StreamCodecs;
-import io.activej.streamcodecs.StructuredStreamCodec;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamCodecs;
 
 import static io.activej.dataflow.codec.Utils.INSTANT_STREAM_CODEC;
 import static io.activej.dataflow.codec.Utils.VERSION_STREAM_CODEC;
@@ -22,9 +21,9 @@ final class DataflowResponseCodecsModule extends AbstractModule {
 	@Provides
 	@Subtype(0)
 	StreamCodec<Handshake> handshake() {
-		return StructuredStreamCodec.create(Handshake::new,
+		return StreamCodec.create(Handshake::new,
 				Handshake::handshakeFailure, StreamCodecs.ofNullable(
-						StructuredStreamCodec.create(HandshakeFailure::new,
+						StreamCodec.create(HandshakeFailure::new,
 								HandshakeFailure::minimalVersion, VERSION_STREAM_CODEC,
 								HandshakeFailure::message, StreamCodecs.ofString())
 				)
@@ -34,13 +33,13 @@ final class DataflowResponseCodecsModule extends AbstractModule {
 	@Provides
 	@Subtype(1)
 	StreamCodec<PartitionData> partitionData() {
-		return StructuredStreamCodec.create(PartitionData::new,
+		return StreamCodec.create(PartitionData::new,
 				PartitionData::running, StreamCodecs.ofVarInt(),
 				PartitionData::succeeded, StreamCodecs.ofVarInt(),
 				PartitionData::failed, StreamCodecs.ofVarInt(),
 				PartitionData::cancelled, StreamCodecs.ofVarInt(),
 				PartitionData::lastTasks, StreamCodecs.ofList(
-						StructuredStreamCodec.create(TaskDescription::new,
+						StreamCodec.create(TaskDescription::new,
 								TaskDescription::id, StreamCodecs.ofVarLong(),
 								TaskDescription::status, StreamCodecs.ofEnum(TaskStatus.class)
 						)
@@ -51,7 +50,7 @@ final class DataflowResponseCodecsModule extends AbstractModule {
 	@Provides
 	@Subtype(2)
 	StreamCodec<Result> result() {
-		return StructuredStreamCodec.create(Result::new,
+		return StreamCodec.create(Result::new,
 				Result::error, StreamCodecs.ofNullable(StreamCodecs.ofString())
 		);
 	}
@@ -61,7 +60,7 @@ final class DataflowResponseCodecsModule extends AbstractModule {
 	StreamCodec<TaskData> taskData(
 			StreamCodec<NodeStat> nodeStatStreamCodec
 	) {
-		return StructuredStreamCodec.create(TaskData::new,
+		return StreamCodec.create(TaskData::new,
 				TaskData::status, StreamCodecs.ofEnum(TaskStatus.class),
 				TaskData::startTime, StreamCodecs.ofNullable(INSTANT_STREAM_CODEC),
 				TaskData::finishTime, StreamCodecs.ofNullable(INSTANT_STREAM_CODEC),

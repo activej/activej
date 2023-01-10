@@ -44,16 +44,16 @@ public final class TestHttpsClient {
 				.withDnsClient(dnsClient)
 				.withSslEnabled(SSLContext.getDefault(), Executors.newSingleThreadExecutor());
 		Integer code = await(client.request(HttpRequest.get("https://en.wikipedia.org/wiki/Wikipedia")
-				.withHeader(CACHE_CONTROL, "max-age=0")
-				.withHeader(ACCEPT_ENCODING, "gzip, deflate, sdch")
-				.withHeader(ACCEPT_LANGUAGE, "en-US,en;q=0.8")
-				.withHeader(USER_AGENT, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.87 Safari/537.36")
-				.withHeader(ACCEPT, ofAcceptMediaTypes(
-						AcceptMediaType.of(HTML),
-						AcceptMediaType.of(XHTML_APP),
-						AcceptMediaType.of(XML_APP, 90),
-						AcceptMediaType.of(WEBP),
-						AcceptMediaType.of(ANY, 80))))
+						.withHeader(CACHE_CONTROL, "max-age=0")
+						.withHeader(ACCEPT_ENCODING, "gzip, deflate, sdch")
+						.withHeader(ACCEPT_LANGUAGE, "en-US,en;q=0.8")
+						.withHeader(USER_AGENT, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.87 Safari/537.36")
+						.withHeader(ACCEPT, ofAcceptMediaTypes(
+								AcceptMediaType.of(HTML),
+								AcceptMediaType.of(XHTML_APP),
+								AcceptMediaType.of(XML_APP, 90),
+								AcceptMediaType.of(WEBP),
+								AcceptMediaType.of(ANY, 80))))
 				.map(HttpResponse::getCode));
 
 		assertEquals((Integer) 200, code);

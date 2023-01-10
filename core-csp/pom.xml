@@ -31,7 +31,7 @@
 
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-stream-codecs</artifactId>
+      <artifactId>activej-serializer</artifactId>
       <version>${project.version}</version>
       <optional>true</optional>
     </dependency>

@@ -151,16 +151,16 @@ public final class WebSocketClientServerTest {
 	@Test
 	public void testRejectedHandshake() throws IOException {
 		HttpServer.create(Reactor.getCurrentReactor(), RoutingServlet.create()
-				.mapWebSocket("/", new WebSocketServlet() {
-					@Override
-					protected Promisable<HttpResponse> onRequest(HttpRequest request) {
-						return HttpResponse.ofCode(400).withBody(ByteBufPool.allocate(1000));
-					}
+						.mapWebSocket("/", new WebSocketServlet() {
+							@Override
+							protected Promisable<HttpResponse> onRequest(HttpRequest request) {
+								return HttpResponse.ofCode(400).withBody(ByteBufPool.allocate(1000));
+							}
 
-					@Override
-					protected void onWebSocket(AsyncWebSocket webSocket) {
-					}
-				}))
+							@Override
+							protected void onWebSocket(AsyncWebSocket webSocket) {
+							}
+						}))
 				.withListenPort(port)
 				.withAcceptOnce()
 				.listen();
@@ -173,16 +173,16 @@ public final class WebSocketClientServerTest {
 	@Test
 	public void testRejectedWithException() throws IOException {
 		HttpServer.create(Reactor.getCurrentReactor(), RoutingServlet.create()
-				.mapWebSocket("/", new WebSocketServlet() {
-					@Override
-					protected Promisable<HttpResponse> onRequest(HttpRequest request) {
-						return Promise.ofException(new MalformedDataException());
-					}
+						.mapWebSocket("/", new WebSocketServlet() {
+							@Override
+							protected Promisable<HttpResponse> onRequest(HttpRequest request) {
+								return Promise.ofException(new MalformedDataException());
+							}
 
-					@Override
-					protected void onWebSocket(AsyncWebSocket webSocket) {
-					}
-				}))
+							@Override
+							protected void onWebSocket(AsyncWebSocket webSocket) {
+							}
+						}))
 				.withListenPort(port)
 				.withAcceptOnce()
 				.listen();
@@ -344,7 +344,7 @@ public final class WebSocketClientServerTest {
 	@Test
 	public void testNonWebSocketServlet() throws IOException {
 		HttpServer.create(Reactor.getCurrentReactor(), RoutingServlet.create()
-				.map("/", $ -> HttpResponse.ok200()))
+						.map("/", $ -> HttpResponse.ok200()))
 				.withListenPort(port)
 				.withAcceptOnce()
 				.listen();
@@ -358,7 +358,7 @@ public final class WebSocketClientServerTest {
 	@Test
 	public void testNonWebSocketClient() throws IOException {
 		HttpServer.create(Reactor.getCurrentReactor(), RoutingServlet.create()
-				.mapWebSocket("/", ws -> fail()))
+						.mapWebSocket("/", ws -> fail()))
 				.withListenPort(port)
 				.withAcceptOnce()
 				.listen();
@@ -372,7 +372,7 @@ public final class WebSocketClientServerTest {
 
 	private void startTestServer(Consumer<AsyncWebSocket> webSocketConsumer) throws IOException {
 		HttpServer.create(Reactor.getCurrentReactor(), RoutingServlet.create()
-				.mapWebSocket("/", webSocketConsumer))
+						.mapWebSocket("/", webSocketConsumer))
 				.withListenPort(port)
 				.withAcceptOnce()
 				.listen();
@@ -381,7 +381,7 @@ public final class WebSocketClientServerTest {
 	private void startSecureTestServer(Consumer<AsyncWebSocket> webSocketConsumer) throws IOException {
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 		HttpServer server = HttpServer.create(Reactor.getCurrentReactor(), RoutingServlet.create()
-				.mapWebSocket("/", webSocketConsumer))
+						.mapWebSocket("/", webSocketConsumer))
 				.withSslListenPort(createTestSslContext(), executor, port)
 				.withAcceptOnce();
 		server.getCloseNotification().whenComplete(executor::shutdown);

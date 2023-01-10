@@ -5,9 +5,8 @@ import io.activej.dataflow.calcite.where.*;
 import io.activej.dataflow.codec.Subtype;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
-import io.activej.streamcodecs.StreamCodec;
-import io.activej.streamcodecs.StreamCodecs;
-import io.activej.streamcodecs.StructuredStreamCodec;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamCodecs;
 
 final class WherePredicateCodecModule extends AbstractModule {
 	@Provides
@@ -15,7 +14,7 @@ final class WherePredicateCodecModule extends AbstractModule {
 	StreamCodec<AndPredicate> andPredicate(
 			StreamCodec<WherePredicate> wherePredicateStreamCodec
 	) {
-		return StructuredStreamCodec.create(AndPredicate::new,
+		return StreamCodec.create(AndPredicate::new,
 				AndPredicate::getPredicates, StreamCodecs.ofList(wherePredicateStreamCodec)
 		);
 	}
@@ -25,7 +24,7 @@ final class WherePredicateCodecModule extends AbstractModule {
 	StreamCodec<OrPredicate> orPredicate(
 			StreamCodec<WherePredicate> wherePredicateStreamCodec
 	) {
-		return StructuredStreamCodec.create(OrPredicate::new,
+		return StreamCodec.create(OrPredicate::new,
 				OrPredicate::getPredicates, StreamCodecs.ofList(wherePredicateStreamCodec)
 		);
 	}
@@ -35,7 +34,7 @@ final class WherePredicateCodecModule extends AbstractModule {
 	StreamCodec<EqPredicate> eqPredicate(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StructuredStreamCodec.create(EqPredicate::new,
+		return StreamCodec.create(EqPredicate::new,
 				EqPredicate::getLeft, operandStreamCodec,
 				EqPredicate::getRight, operandStreamCodec
 		);
@@ -46,7 +45,7 @@ final class WherePredicateCodecModule extends AbstractModule {
 	StreamCodec<NotEqPredicate> notEqPredicate(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StructuredStreamCodec.create(NotEqPredicate::new,
+		return StreamCodec.create(NotEqPredicate::new,
 				NotEqPredicate::getLeft, operandStreamCodec,
 				NotEqPredicate::getRight, operandStreamCodec
 		);
@@ -57,7 +56,7 @@ final class WherePredicateCodecModule extends AbstractModule {
 	StreamCodec<GePredicate> gePredicate(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StructuredStreamCodec.create(GePredicate::new,
+		return StreamCodec.create(GePredicate::new,
 				GePredicate::getLeft, operandStreamCodec,
 				GePredicate::getRight, operandStreamCodec
 		);
@@ -68,7 +67,7 @@ final class WherePredicateCodecModule extends AbstractModule {
 	StreamCodec<GtPredicate> gtPredicate(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StructuredStreamCodec.create(GtPredicate::new,
+		return StreamCodec.create(GtPredicate::new,
 				GtPredicate::getLeft, operandStreamCodec,
 				GtPredicate::getRight, operandStreamCodec
 		);
@@ -79,7 +78,7 @@ final class WherePredicateCodecModule extends AbstractModule {
 	StreamCodec<LePredicate> lePredicate(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StructuredStreamCodec.create(LePredicate::new,
+		return StreamCodec.create(LePredicate::new,
 				LePredicate::getLeft, operandStreamCodec,
 				LePredicate::getRight, operandStreamCodec
 		);
@@ -90,7 +89,7 @@ final class WherePredicateCodecModule extends AbstractModule {
 	StreamCodec<LtPredicate> ltPredicate(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StructuredStreamCodec.create(LtPredicate::new,
+		return StreamCodec.create(LtPredicate::new,
 				LtPredicate::getLeft, operandStreamCodec,
 				LtPredicate::getRight, operandStreamCodec
 		);
@@ -101,7 +100,7 @@ final class WherePredicateCodecModule extends AbstractModule {
 	StreamCodec<BetweenPredicate> betweenPredicate(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StructuredStreamCodec.create(BetweenPredicate::new,
+		return StreamCodec.create(BetweenPredicate::new,
 				BetweenPredicate::getValue, operandStreamCodec,
 				BetweenPredicate::getFrom, operandStreamCodec,
 				BetweenPredicate::getTo, operandStreamCodec
@@ -113,7 +112,7 @@ final class WherePredicateCodecModule extends AbstractModule {
 	StreamCodec<LikePredicate> likePredicate(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StructuredStreamCodec.create(LikePredicate::new,
+		return StreamCodec.create(LikePredicate::new,
 				LikePredicate::getValue, operandStreamCodec,
 				LikePredicate::getPattern, operandStreamCodec
 		);
@@ -124,7 +123,7 @@ final class WherePredicateCodecModule extends AbstractModule {
 	StreamCodec<InPredicate> inPredicate(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StructuredStreamCodec.create(InPredicate::new,
+		return StreamCodec.create(InPredicate::new,
 				InPredicate::getValue, operandStreamCodec,
 				InPredicate::getOptions, StreamCodecs.ofList(operandStreamCodec)
 		);
@@ -135,7 +134,7 @@ final class WherePredicateCodecModule extends AbstractModule {
 	StreamCodec<IsNullPredicate> isNullPredicate(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StructuredStreamCodec.create(IsNullPredicate::new,
+		return StreamCodec.create(IsNullPredicate::new,
 				IsNullPredicate::getValue, operandStreamCodec
 		);
 	}
@@ -145,7 +144,7 @@ final class WherePredicateCodecModule extends AbstractModule {
 	StreamCodec<IsNotNullPredicate> isNotNullPredicate(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StructuredStreamCodec.create(IsNotNullPredicate::new,
+		return StreamCodec.create(IsNotNullPredicate::new,
 				IsNotNullPredicate::getValue, operandStreamCodec
 		);
 	}

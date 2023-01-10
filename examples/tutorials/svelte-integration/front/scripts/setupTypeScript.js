@@ -2,20 +2,20 @@
 
 /** This script modifies the project to support TS code in .svelte files like:
 
-  <script lang="ts">
-  	export let name: string;
-  </script>
- 
-  As well as validating the code for CI.
-  */
+ <script lang="ts">
+ export let name: string;
+ </script>
+
+ As well as validating the code for CI.
+ */
 
 /**  To work on this script:
-  rm -rf test-template template && git clone sveltejs/template test-template && node scripts/setupTypeScript.js test-template
-*/
+ rm -rf test-template template && git clone sveltejs/template test-template && node scripts/setupTypeScript.js test-template
+ */
 
 const fs = require("fs")
 const path = require("path")
-const { argv } = require("process")
+const {argv} = require("process")
 
 const projectRoot = argv[2] || path.join(__dirname, "..")
 
@@ -82,11 +82,11 @@ const tsconfig = `{
   "include": ["src/**/*"],
   "exclude": ["node_modules/*", "__sapper__/*", "public/*"]
 }`
-const tsconfigPath =  path.join(projectRoot, "tsconfig.json")
+const tsconfigPath = path.join(projectRoot, "tsconfig.json")
 fs.writeFileSync(tsconfigPath, tsconfig)
 
 // Add global.d.ts
-const dtsPath =  path.join(projectRoot, "src", "global.d.ts")
+const dtsPath = path.join(projectRoot, "src", "global.d.ts")
 fs.writeFileSync(dtsPath, `/// <reference types="svelte" />`)
 
 // Delete this script, but not during testing
@@ -108,7 +108,7 @@ if (!argv[2]) {
 }
 
 // Adds the extension recommendation
-fs.mkdirSync(path.join(projectRoot, ".vscode"), { recursive: true })
+fs.mkdirSync(path.join(projectRoot, ".vscode"), {recursive: true})
 fs.writeFileSync(path.join(projectRoot, ".vscode", "extensions.json"), `{
   "recommendations": ["svelte.svelte-vscode"]
 }

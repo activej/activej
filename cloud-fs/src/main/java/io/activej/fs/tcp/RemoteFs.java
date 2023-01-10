@@ -30,7 +30,6 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.AsyncMessaging;
 import io.activej.csp.net.Messaging;
-import io.activej.csp.net.MessagingCodec;
 import io.activej.fs.AsyncFs;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.exception.FsException;
@@ -75,7 +74,7 @@ public final class RemoteFs extends AbstractNioReactive
 
 	public static final Duration DEFAULT_CONNECTION_TIMEOUT = ApplicationSettings.getDuration(RemoteFs.class, "connectTimeout", Duration.ZERO);
 
-	private static final ByteBufsCodec<FsResponse, FsRequest> SERIALIZER = MessagingCodec.create(
+	private static final ByteBufsCodec<FsResponse, FsRequest> SERIALIZER = ByteBufsCodec.ofStreamCodecs(
 			RemoteFsUtils.FS_RESPONSE_CODEC,
 			RemoteFsUtils.FS_REQUEST_CODEC
 	);

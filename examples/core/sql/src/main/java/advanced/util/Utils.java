@@ -21,7 +21,6 @@ public final class Utils {
 				for (String table : tables) {
 					ResultSet resultSet = statement.executeQuery("SELECT * FROM " + table);
 
-
 					System.out.println('\"' + table + "\":\n" + HORIZONTAL_BORDER);
 					ResultSetMetaData metaData = resultSet.getMetaData();
 					System.out.printf("|%3s|%12s|%12s|%n",

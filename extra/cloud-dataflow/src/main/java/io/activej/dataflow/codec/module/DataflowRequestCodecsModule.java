@@ -8,9 +8,8 @@ import io.activej.dataflow.messaging.DataflowRequest.Handshake;
 import io.activej.dataflow.node.Node;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
-import io.activej.streamcodecs.StreamCodec;
-import io.activej.streamcodecs.StreamCodecs;
-import io.activej.streamcodecs.StructuredStreamCodec;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamCodecs;
 
 import static io.activej.dataflow.codec.Utils.STREAM_ID_STREAM_CODEC;
 import static io.activej.dataflow.codec.Utils.VERSION_STREAM_CODEC;
@@ -24,7 +23,7 @@ final class DataflowRequestCodecsModule extends AbstractModule {
 	@Provides
 	@Subtype(0)
 	StreamCodec<Handshake> handshake() {
-		return StructuredStreamCodec.create(Handshake::new,
+		return StreamCodec.create(Handshake::new,
 				Handshake::version, VERSION_STREAM_CODEC
 		);
 	}
@@ -32,7 +31,7 @@ final class DataflowRequestCodecsModule extends AbstractModule {
 	@Provides
 	@Subtype(1)
 	StreamCodec<Download> download() {
-		return StructuredStreamCodec.create(Download::new,
+		return StreamCodec.create(Download::new,
 				Download::streamId, STREAM_ID_STREAM_CODEC
 		);
 	}
@@ -42,7 +41,7 @@ final class DataflowRequestCodecsModule extends AbstractModule {
 	StreamCodec<Execute> execute(
 			StreamCodec<Node> nodeStreamCodec
 	) {
-		return StructuredStreamCodec.create(Execute::new,
+		return StreamCodec.create(Execute::new,
 				Execute::taskId, StreamCodecs.ofVarLong(),
 				Execute::nodes, StreamCodecs.ofList(nodeStreamCodec)
 		);
@@ -51,7 +50,7 @@ final class DataflowRequestCodecsModule extends AbstractModule {
 	@Provides
 	@Subtype(3)
 	StreamCodec<GetTasks> getTasks() {
-		return StructuredStreamCodec.create(GetTasks::new,
+		return StreamCodec.create(GetTasks::new,
 				GetTasks::taskId, StreamCodecs.ofNullable(StreamCodecs.ofVarLong())
 		);
 	}

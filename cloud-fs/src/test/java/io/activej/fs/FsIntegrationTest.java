@@ -142,8 +142,8 @@ public final class FsIntegrationTest {
 		int files = 10;
 
 		await(Promises.all(IntStream.range(0, 10)
-				.mapToObj(i -> ChannelSupplier.of(ByteBuf.wrapForReading(CONTENT))
-						.streamTo(ChannelConsumer.ofPromise(fs.upload("file" + i, CONTENT.length)))))
+						.mapToObj(i -> ChannelSupplier.of(ByteBuf.wrapForReading(CONTENT))
+								.streamTo(ChannelConsumer.ofPromise(fs.upload("file" + i, CONTENT.length)))))
 				.whenComplete(server::close));
 
 		for (int i = 0; i < files; i++) {

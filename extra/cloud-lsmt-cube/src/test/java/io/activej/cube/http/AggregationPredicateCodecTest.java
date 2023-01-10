@@ -17,7 +17,7 @@ public class AggregationPredicateCodecTest {
 					"campaign", int.class,
 					"site", String.class,
 					"hourOfDay", int.class),
-            Map.of(
+			Map.of(
 					"eventCount", int.class,
 					"ctr", double.class)
 	);

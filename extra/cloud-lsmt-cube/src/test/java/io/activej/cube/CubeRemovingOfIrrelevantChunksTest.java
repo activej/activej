@@ -133,7 +133,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 		}
 
 		List<LogItem> logItems = await(basicCube.queryRawStream(List.of("date"), List.of("clicks"), alwaysTrue(),
-				LogItem.class, CLASS_LOADER)
+						LogItem.class, CLASS_LOADER)
 				.toList());
 
 		// Aggregate manually
@@ -165,7 +165,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 			Integer before = chunksBefore.get(key);
 			Integer after = afterEntry.getValue();
 			assertTrue(after < before);
-			System.out.println("Removed " + (before - after) + " chunks form aggregation'" + key +'\'');
+			System.out.println("Removed " + (before - after) + " chunks form aggregation'" + key + '\'');
 		}
 	}
 

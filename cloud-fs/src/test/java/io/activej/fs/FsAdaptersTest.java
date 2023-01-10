@@ -94,7 +94,7 @@ public final class FsAdaptersTest {
 		AsyncFs second = FsAdapters.subdirectory(local, "second");
 		AsyncFs third = FsAdapters.subdirectory(local, "third");
 
-        AsyncFs mounted = FsAdapters.mount(root, Map.of(
+		AsyncFs mounted = FsAdapters.mount(root, Map.of(
 				"hello", first,
 				"test/inner", second,
 				"last", third));

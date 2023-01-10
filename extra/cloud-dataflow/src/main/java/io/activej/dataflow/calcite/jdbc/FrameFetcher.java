@@ -1,22 +1,23 @@
 package io.activej.dataflow.calcite.jdbc;
 
 import io.activej.async.process.AsyncCloseable;
-import io.activej.datastream.SynchronousStreamConsumer;
+import io.activej.datastream.BlockingStreamConsumer;
 import io.activej.record.Record;
 import org.apache.calcite.avatica.Meta.Frame;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 final class FrameFetcher implements AsyncCloseable {
-	private final SynchronousStreamConsumer<Record> synchronousConsumer;
+	private final BlockingStreamConsumer<Record> blockingConsumer;
 	private final int columnSize;
 
 	private int taken;
 
-	FrameFetcher(SynchronousStreamConsumer<Record> synchronousConsumer, int columnSize) {
-		this.synchronousConsumer = synchronousConsumer;
+	FrameFetcher(BlockingStreamConsumer<Record> blockingConsumer, int columnSize) {
+		this.blockingConsumer = blockingConsumer;
 		this.columnSize = columnSize;
 	}
 
@@ -26,25 +27,43 @@ final class FrameFetcher implements AsyncCloseable {
 		}
 
 		int fetchSize = fetchMaxRowCount == -1 ?
-				synchronousConsumer.getBufferSize() :
-				Math.min(fetchMaxRowCount, synchronousConsumer.getBufferSize());
+				blockingConsumer.getBufferCapacity() :
+				Math.min(fetchMaxRowCount, blockingConsumer.getBufferCapacity());
 
 		List<Object> rows = new ArrayList<>(fetchSize);
 
+		boolean done = false;
 		for (int i = 0; i < fetchSize; i++) {
-			Optional<Record> maybeRecord = synchronousConsumer.fetch();
+			@Nullable Record maybeRecord;
+			try {
+				maybeRecord = blockingConsumer.take();
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				throw new RuntimeException(e);
+			} catch (ExecutionException e) {
+				throw new RuntimeException(e.getCause());
+			}
 
-			if (maybeRecord.isEmpty()) {
+			if (maybeRecord == null) {
+				done = true;
+				try {
+					blockingConsumer.submitAcknowledgement().get();
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+					throw new RuntimeException(e);
+				} catch (ExecutionException e) {
+					throw new RuntimeException(e);
+				}
 				break;
 			}
 
-			Object[] row = recordToRow(maybeRecord.get());
+			Object[] row = recordToRow(maybeRecord);
 			rows.add(row);
 		}
 
 		taken += rows.size();
 
-		return Frame.create(offset, synchronousConsumer.isDone(), rows);
+		return Frame.create(offset, done, rows);
 	}
 
 	private Object[] recordToRow(Record record) {
@@ -57,6 +76,6 @@ final class FrameFetcher implements AsyncCloseable {
 
 	@Override
 	public void closeEx(Exception e) {
-		synchronousConsumer.closeEx(e);
+		blockingConsumer.closeEx(e);
 	}
 }

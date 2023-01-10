@@ -101,7 +101,7 @@ public class ChannelConsumersIOTest {
 		ChannelConsumer<ByteBuf> consumer = executeWithReactor(eventloop, () -> ChannelConsumer.ofConsumer(bufs::add));
 
 		try (OutputStream outputStream = outputStream();
-		     OutputStream channelConsumerAsOutputStream = channelConsumerAsOutputStream(eventloop, consumer)) {
+			 OutputStream channelConsumerAsOutputStream = channelConsumerAsOutputStream(eventloop, consumer)) {
 			for (ByteBuf byteBuf : expected) {
 				outputStream.write(byteBuf.getArray());
 				channelConsumerAsOutputStream.write(byteBuf.asArray());
@@ -125,7 +125,7 @@ public class ChannelConsumersIOTest {
 		ChannelConsumer<ByteBuf> consumer = executeWithReactor(eventloop, () -> ChannelConsumer.ofConsumer($ -> fail()));
 
 		try (OutputStream outputStream = outputStream();
-		     OutputStream channelConsumerAsOutputStream = channelConsumerAsOutputStream(eventloop, consumer)) {
+			 OutputStream channelConsumerAsOutputStream = channelConsumerAsOutputStream(eventloop, consumer)) {
 			outputStream.close();
 			channelConsumerAsOutputStream.close();
 

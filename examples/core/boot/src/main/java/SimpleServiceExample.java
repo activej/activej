@@ -14,7 +14,8 @@ public class SimpleServiceExample extends Launcher {
 		example.launch(args);
 	}
 
-	@Inject CustomService customService;
+	@Inject
+	CustomService customService;
 
 	@Override
 	protected Module getModule() {

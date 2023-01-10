@@ -82,7 +82,6 @@ class DataflowResultSet extends AvaticaResultSet {
 		return MAPPER.convertValue(result, javaType);
 	}
 
-
 	private static JavaType getJavaType(ColumnMetaData.AvaticaType avaticaType) {
 		String name = avaticaType.getName();
 		JavaType javaType = JAVA_TYPE_CACHE.get(name);

@@ -117,7 +117,7 @@ public final class HttpHeaders {
 	public static final HttpHeader SEC_WEBSOCKET_ACCEPT = headers.register("Sec-WebSocket-Accept");
 	public static final HttpHeader SEC_WEBSOCKET_VERSION = headers.register("Sec-WebSocket-Version");
 
-	public static HttpHeader register(String headerName){
+	public static HttpHeader register(String headerName) {
 		return headers.register(headerName);
 	}
 

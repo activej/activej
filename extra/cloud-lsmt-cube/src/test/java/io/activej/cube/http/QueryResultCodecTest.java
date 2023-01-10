@@ -19,11 +19,11 @@ public class QueryResultCodecTest {
 
 	@Test
 	public void test() throws MalformedDataException {
-        QueryResultCodec codec = QueryResultCodec.create(DefiningClassLoader.create(),
-                Map.of(
+		QueryResultCodec codec = QueryResultCodec.create(DefiningClassLoader.create(),
+				Map.of(
 						"campaign", int.class,
 						"site", String.class),
-                Map.of(
+				Map.of(
 						"impressions", long.class,
 						"clicks", long.class));
 
@@ -50,14 +50,14 @@ public class QueryResultCodecTest {
 		totals.set("clicks", 5555L);
 		totals.set("impressions", 66756L);
 
-        QueryResult queryResult = QueryResult.create(recordScheme,
+		QueryResult queryResult = QueryResult.create(recordScheme,
 				List.of("campaign", "site"),
 				List.of("clicks", "impressions"),
 				List.of("campaign", "clicks"),
 				List.of(record1, record2),
 				totals,
 				123,
-                Map.of(
+				Map.of(
 						"campaign", 555,
 						"site", "filtered"),
 				DATA_WITH_TOTALS
@@ -78,14 +78,14 @@ public class QueryResultCodecTest {
 		assertEquals(queryResult.getReportType(), decoded.getReportType());
 	}
 
-	private void assertRecords(List<Record> expected, List<Record> actual){
+	private void assertRecords(List<Record> expected, List<Record> actual) {
 		assertEquals(expected.size(), actual.size());
 		for (int i = 0; i < expected.size(); i++) {
 			assertRecord(expected.get(i), actual.get(i));
 		}
 	}
 
-	private void assertRecord(Record expected, Record actual){
+	private void assertRecord(Record expected, Record actual) {
 		assertEquals(expected.getScheme(), actual.getScheme());
 		for (int i = 0; i < expected.getScheme().size(); i++) {
 			Object expectedValue = expected.get(i);

@@ -109,14 +109,14 @@ public final class DataflowGraph extends AbstractReactive {
 		return connect(nodesByPartition.keySet())
 				.then(sessions ->
 						Promises.all(
-								sessions.stream()
-										.map(session -> session.execute(taskId, nodesByPartition.get(session.partition))))
+										sessions.stream()
+												.map(session -> session.execute(taskId, nodesByPartition.get(session.partition))))
 								.whenException(() -> sessions.forEach(PartitionSession::close)));
 	}
 
 	private Promise<List<PartitionSession>> connect(Set<Partition> partitions) {
 		return Promises.toList(partitions.stream()
-				.map(partition -> client.connect(partition.getAddress()).map(session -> new PartitionSession(partition, session)).toTry()))
+						.map(partition -> client.connect(partition.getAddress()).map(session -> new PartitionSession(partition, session)).toTry()))
 				.map(tries -> {
 					List<PartitionSession> sessions = tries.stream()
 							.filter(Try::isSuccess)

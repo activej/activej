@@ -3,7 +3,6 @@ import io.activej.serializer.SerializerBuilder;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
 
-
 /**
  * Example of serialization and deserialization of a simple object with no {@code null}
  * fields, generics or complex objects (such as maps or arrays) as fields.
@@ -29,7 +28,6 @@ public final class SimpleObjectExample {
 		System.out.println(john.getSurname() + " " + johnCopy.getSurname());
 		//[END REGION_4]
 	}
-
 
 	//[START REGION_1]
 	public static class Person {

@@ -6,9 +6,13 @@ import java.util.Set;
 //[START EXAMPLE]
 public interface PollDao {
 	Poll find(int id);
+
 	Map<Integer, Poll> findAll();
+
 	int add(Poll poll);
+
 	void update(int id, Poll poll);
+
 	void remove(int id);
 
 	class Poll {

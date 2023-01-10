@@ -7,8 +7,8 @@ import io.activej.dataflow.calcite.SqlDataflow;
 import io.activej.dataflow.calcite.utils.JavaRecordType;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.exception.DataflowException;
+import io.activej.datastream.BlockingStreamConsumer;
 import io.activej.datastream.StreamSupplier;
-import io.activej.datastream.SynchronousStreamConsumer;
 import io.activej.reactor.Reactor;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
@@ -214,7 +214,7 @@ public final class DataflowMeta extends LimitedMeta {
 		try {
 			return reactor.submit((AsyncComputation<FrameFetcher>) cb -> {
 				StreamSupplier<Record> supplier = sqlDataflow.queryDataflow(dataset, limit);
-				SynchronousStreamConsumer<Record> recordConsumer = SynchronousStreamConsumer.create();
+				BlockingStreamConsumer<Record> recordConsumer = BlockingStreamConsumer.create();
 				supplier.streamTo(recordConsumer);
 				cb.accept(new FrameFetcher(recordConsumer, statement.signature.columns.size()), null);
 			}).get();

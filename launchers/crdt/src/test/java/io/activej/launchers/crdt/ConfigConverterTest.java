@@ -177,7 +177,7 @@ public class ConfigConverterTest {
 		Iterator<PartitionId> expectedIt = expected.iterator();
 		Iterator<PartitionId> actualIt = actual.iterator();
 
-		while (expectedIt.hasNext()){
+		while (expectedIt.hasNext()) {
 			assertPartitionsFullyEquals(expectedIt.next(), actualIt.next());
 		}
 

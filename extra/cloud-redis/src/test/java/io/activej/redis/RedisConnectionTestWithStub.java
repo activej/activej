@@ -37,7 +37,6 @@ public class RedisConnectionTestWithStub {
 		if (server != null) server.stop();
 	}
 
-
 	@Test
 	public void getNil() {
 		String dummy = await(redis -> redis.cmd(RedisRequest.of("GET", "dummy"), RedisResponse.BYTES_UTF8));

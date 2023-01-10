@@ -37,7 +37,6 @@
     <module>core-codegen</module>
     <module>core-serializer</module>
     <module>core-specializer</module>
-    <module>core-stream-codecs</module>
     <module>core-promise</module>
     <module>core-csp</module>
     <module>core-net</module>
@@ -93,11 +92,6 @@
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <version>4.13.2</version>
-      </dependency>
-      <dependency>
-        <groupId>org.junit.jupiter</groupId>
-        <artifactId>junit-jupiter-engine</artifactId>
-        <version>5.8.2</version>
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
@@ -170,43 +164,28 @@
         <version>23.0.0</version>
       </dependency>
       <dependency>
-        <groupId>io.etcd</groupId>
-        <artifactId>jetcd-core</artifactId>
-        <version>0.7.0</version>
-      </dependency>
-      <dependency>
-        <groupId>io.etcd</groupId>
-        <artifactId>jetcd-test</artifactId>
-        <version>0.7.0</version>
-      </dependency>
-      <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
-        <version>2.13.4</version>
+        <version>2.14.1</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-annotations</artifactId>
-        <version>2.13.4</version>
+        <version>2.14.1</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-core</artifactId>
-        <version>2.13.4</version>
+        <version>2.14.1</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.datatype</groupId>
         <artifactId>jackson-datatype-jsr310</artifactId>
-        <version>2.13.4</version>
+        <version>2.14.1</version>
       </dependency>
       <dependency>
         <groupId>org.apache.calcite</groupId>
         <artifactId>calcite-core</artifactId>
-        <version>1.32.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.calcite</groupId>
-        <artifactId>calcite-file</artifactId>
         <version>1.32.0</version>
       </dependency>
       <dependency>
@@ -218,11 +197,6 @@
         <groupId>org.apache.calcite.avatica</groupId>
         <artifactId>avatica-server</artifactId>
         <version>1.22.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.immutables</groupId>
-        <artifactId>value</artifactId>
-        <version>2.9.0</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -242,11 +216,6 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-engine</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

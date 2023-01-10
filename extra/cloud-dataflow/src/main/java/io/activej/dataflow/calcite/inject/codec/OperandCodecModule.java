@@ -6,15 +6,14 @@ import io.activej.dataflow.calcite.utils.Utils;
 import io.activej.dataflow.codec.Subtype;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
-import io.activej.streamcodecs.StreamCodec;
-import io.activej.streamcodecs.StreamCodecs;
-import io.activej.streamcodecs.StructuredStreamCodec;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamCodecs;
 
 final class OperandCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(0)
 	StreamCodec<OperandScalar> operandScalar() {
-		return StructuredStreamCodec.create(OperandScalar::new,
+		return StreamCodec.create(OperandScalar::new,
 				OperandScalar::getValue, StreamCodecs.ofNullable(Utils.VALUE_STREAM_CODEC)
 		);
 	}
@@ -25,7 +24,7 @@ final class OperandCodecModule extends AbstractModule {
 			StreamCodec<Operand<?>> operandStreamCodec,
 			DefiningClassLoader classLoader
 	) {
-		return StructuredStreamCodec.create((a, b) -> new OperandFieldAccess(a, b, classLoader),
+		return StreamCodec.create((a, b) -> new OperandFieldAccess(a, b, classLoader),
 				OperandFieldAccess::getObjectOperand, operandStreamCodec,
 				OperandFieldAccess::getFieldName, StreamCodecs.ofString()
 		);
@@ -34,7 +33,7 @@ final class OperandCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(2)
 	StreamCodec<OperandRecordField> operandRecordField() {
-		return StructuredStreamCodec.create(OperandRecordField::new,
+		return StreamCodec.create(OperandRecordField::new,
 				OperandRecordField::getIndex, StreamCodecs.ofVarInt()
 		);
 	}
@@ -44,7 +43,7 @@ final class OperandCodecModule extends AbstractModule {
 	StreamCodec<OperandCast> operandCast(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StructuredStreamCodec.create(OperandCast::new,
+		return StreamCodec.create(OperandCast::new,
 				OperandCast::getValueOperand, operandStreamCodec,
 				OperandCast::getType, StreamCodecs.ofVarInt()
 		);
@@ -55,7 +54,7 @@ final class OperandCodecModule extends AbstractModule {
 	StreamCodec<OperandIfNull> operandIfNull(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StructuredStreamCodec.create(OperandIfNull::new,
+		return StreamCodec.create(OperandIfNull::new,
 				OperandIfNull::getCheckedOperand, operandStreamCodec,
 				OperandIfNull::getDefaultValueOperand, operandStreamCodec
 		);
@@ -66,7 +65,7 @@ final class OperandCodecModule extends AbstractModule {
 	StreamCodec<OperandListGet> operandListGet(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StructuredStreamCodec.create(OperandListGet::new,
+		return StreamCodec.create(OperandListGet::new,
 				OperandListGet::getListOperand, operandStreamCodec,
 				OperandListGet::getIndexOperand, operandStreamCodec
 		);
@@ -77,7 +76,7 @@ final class OperandCodecModule extends AbstractModule {
 	StreamCodec<OperandMapGet> operandMapGet(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StructuredStreamCodec.create(OperandMapGet::new,
+		return StreamCodec.create(OperandMapGet::new,
 				OperandMapGet::getMapOperand, operandStreamCodec,
 				OperandMapGet::getKeyOperand, operandStreamCodec
 		);

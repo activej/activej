@@ -304,7 +304,7 @@ public final class RoutingServlet implements AsyncServlet, WithInitializer<Routi
 			return URLDecoder.decode(pattern, UTF_8.name());
 		} catch (UnsupportedEncodingException e) {
 			throw new AssertionError();
-		} catch (IllegalArgumentException e){
+		} catch (IllegalArgumentException e) {
 			throw new IllegalArgumentException("Pattern contains bad percent encoding", e);
 		}
 	}

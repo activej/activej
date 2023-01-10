@@ -8,6 +8,7 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -26,7 +27,7 @@ public class ChannelRateLimiterTest {
 	@Test
 	public void testEmpty() {
 		Reactor reactor = getCurrentReactor();
-		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.create(100);
+		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.create(100, ChronoUnit.SECONDS);
 
 		List<Integer> expected = IntStream.range(0, 200)
 				.boxed().collect(toList());
@@ -37,7 +38,6 @@ public class ChannelRateLimiterTest {
 				.transformWith(limiter)
 				.streamTo(ChannelConsumer.ofConsumer(actual::add))
 				.whenResult(() -> passed.value = reactor.currentTimeMillis() - passed.value));
-
 
 		assertEquals(expected, actual);
 		assertTrue(passed.value > 2_000);
@@ -46,8 +46,8 @@ public class ChannelRateLimiterTest {
 	@Test
 	public void testHalfFull() {
 		Reactor reactor = getCurrentReactor();
-		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.<Integer>create(100)
-				.withInitialTokens(100L);
+		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.<Integer>create(0.0001, ChronoUnit.MICROS)
+				.withInitialTokens(100);
 
 		List<Integer> expected = IntStream.range(0, 200)
 				.boxed().collect(toList());
@@ -58,7 +58,6 @@ public class ChannelRateLimiterTest {
 				.transformWith(limiter)
 				.streamTo(ChannelConsumer.ofConsumer(actual::add))
 				.whenResult(() -> passed.value = reactor.currentTimeMillis() - passed.value));
-
 
 		assertEquals(expected, actual);
 		assertTrue(passed.value > 1_000 && passed.value < 2_000);
@@ -67,8 +66,8 @@ public class ChannelRateLimiterTest {
 	@Test
 	public void testFull() {
 		Reactor reactor = getCurrentReactor();
-		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.<Integer>create(100)
-				.withInitialTokens(200L);
+		ChannelRateLimiter<Integer> limiter = ChannelRateLimiter.<Integer>create(0.1, ChronoUnit.MILLIS)
+				.withInitialTokens(200);
 
 		List<Integer> expected = IntStream.range(0, 200)
 				.boxed().collect(toList());
@@ -79,7 +78,6 @@ public class ChannelRateLimiterTest {
 				.transformWith(limiter)
 				.streamTo(ChannelConsumer.ofConsumer(actual::add))
 				.whenResult(() -> passed.value = reactor.currentTimeMillis() - passed.value));
-
 
 		assertEquals(expected, actual);
 		assertTrue(passed.value < 1_000);

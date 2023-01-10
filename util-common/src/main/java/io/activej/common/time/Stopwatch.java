@@ -28,9 +28,9 @@ public final class Stopwatch {
 
 	private Stopwatch() {}
 
-	public static Stopwatch createUnstarted() { return new Stopwatch(); }
+	public static Stopwatch createUnstarted() {return new Stopwatch();}
 
-	public static Stopwatch createStarted() {return new Stopwatch().start(); }
+	public static Stopwatch createStarted() {return new Stopwatch().start();}
 
 	public Stopwatch start() {
 		checkState(!isRunning, "This stopwatch is already running.");

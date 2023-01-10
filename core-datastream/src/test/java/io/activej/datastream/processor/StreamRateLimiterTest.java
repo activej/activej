@@ -8,6 +8,7 @@ import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -25,7 +26,7 @@ public class StreamRateLimiterTest {
 	@Test
 	public void testEmpty() {
 		Reactor reactor = Reactor.getCurrentReactor();
-		StreamRateLimiter<Integer> limiter = StreamRateLimiter.create(100);
+		StreamRateLimiter<Integer> limiter = StreamRateLimiter.create(100, ChronoUnit.SECONDS);
 
 		List<Integer> expected = IntStream.range(0, 200)
 				.boxed().collect(toList());
@@ -37,7 +38,6 @@ public class StreamRateLimiterTest {
 				.streamTo(StreamConsumer.ofConsumer(actual::add))
 				.whenResult(() -> passed.value = reactor.currentTimeMillis() - passed.value));
 
-
 		assertEquals(expected, actual);
 		assertTrue(passed.value > 2_000);
 	}
@@ -45,7 +45,7 @@ public class StreamRateLimiterTest {
 	@Test
 	public void testHalfFull() {
 		Reactor reactor = Reactor.getCurrentReactor();
-		StreamRateLimiter<Integer> limiter = StreamRateLimiter.<Integer>create(100)
+		StreamRateLimiter<Integer> limiter = StreamRateLimiter.<Integer>create(0.1, ChronoUnit.MILLIS)
 				.withInitialTokens(100L);
 
 		List<Integer> expected = IntStream.range(0, 200)
@@ -58,7 +58,6 @@ public class StreamRateLimiterTest {
 				.streamTo(StreamConsumer.ofConsumer(actual::add))
 				.whenResult(() -> passed.value = reactor.currentTimeMillis() - passed.value));
 
-
 		assertEquals(expected, actual);
 		assertTrue(passed.value > 1_000 && passed.value < 2_000);
 	}
@@ -66,7 +65,7 @@ public class StreamRateLimiterTest {
 	@Test
 	public void testFull() {
 		Reactor reactor = Reactor.getCurrentReactor();
-		StreamRateLimiter<Integer> limiter = StreamRateLimiter.<Integer>create(100)
+		StreamRateLimiter<Integer> limiter = StreamRateLimiter.<Integer>create(0.0001, ChronoUnit.MICROS)
 				.withInitialTokens(200L);
 
 		List<Integer> expected = IntStream.range(0, 200)
@@ -78,7 +77,6 @@ public class StreamRateLimiterTest {
 				.transformWith(limiter)
 				.streamTo(StreamConsumer.ofConsumer(actual::add))
 				.whenResult(() -> passed.value = reactor.currentTimeMillis() - passed.value));
-
 
 		assertEquals(expected, actual);
 		assertTrue(passed.value < 1_000);

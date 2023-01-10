@@ -83,7 +83,7 @@ public final class TPSet<E> implements Set<E>, CrdtMergable<TPSet<E>> {
 		return stream().toArray();
 	}
 
-	@SuppressWarnings({"SuspiciousToArrayCall", "SimplifyStreamApiCallChains"})
+	@SuppressWarnings("SimplifyStreamApiCallChains")
 	@Override
 	public <T> T[] toArray(T[] a) {
 		return stream().toArray($ -> a);

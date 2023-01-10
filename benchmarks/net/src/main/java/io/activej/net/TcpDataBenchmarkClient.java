@@ -48,11 +48,11 @@ public class TcpDataBenchmarkClient extends Launcher {
 
 	@Provides
 	@Named("benchmark")
-	NioReactor benchmarkReactor() { return Eventloop.create(); }
+	NioReactor benchmarkReactor() {return Eventloop.create();}
 
 	@Provides
 	@Named("client")
-	NioReactor clientReactor() { return Eventloop.create(); }
+	NioReactor clientReactor() {return Eventloop.create();}
 
 	@Provides
 	Config config() {

@@ -46,7 +46,6 @@ public final class TransformerExample extends ImplicitlyReactive implements Stre
 				.whenException(input::closeEx);
 	}
 
-
 	@Override
 	public StreamConsumer<String> getInput() {
 		return input;

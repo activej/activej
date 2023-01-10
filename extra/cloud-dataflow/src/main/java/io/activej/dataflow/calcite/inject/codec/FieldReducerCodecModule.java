@@ -5,9 +5,8 @@ import io.activej.dataflow.calcite.aggregation.*;
 import io.activej.dataflow.codec.Subtype;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
-import io.activej.streamcodecs.StreamCodec;
-import io.activej.streamcodecs.StreamCodecs;
-import io.activej.streamcodecs.StructuredStreamCodec;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamCodecs;
 
 final class FieldReducerCodecModule extends AbstractModule {
 	@Provides
@@ -53,7 +52,7 @@ final class FieldReducerCodecModule extends AbstractModule {
 	}
 
 	private static <R extends FieldReducer<?, ?, ?>> StreamCodec<R> fieldReducerCodec(TupleConstructor2<Integer, String, R> constructor) {
-		return StructuredStreamCodec.create(constructor,
+		return StreamCodec.create(constructor,
 				R::getFieldIndex, StreamCodecs.ofVarInt(),
 				R::getFieldAlias, StreamCodecs.ofNullable(StreamCodecs.ofString())
 		);

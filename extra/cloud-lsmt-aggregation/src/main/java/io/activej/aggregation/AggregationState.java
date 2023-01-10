@@ -227,8 +227,8 @@ public final class AggregationState implements OTState<AggregationDiff> {
 	}
 
 	private record PickedChunks(PickingStrategy strategy,
-	                            @Nullable RangeTree<PrimaryKey, AggregationChunk> partitionTree,
-	                            List<AggregationChunk> chunks) {
+								@Nullable RangeTree<PrimaryKey, AggregationChunk> partitionTree,
+								List<AggregationChunk> chunks) {
 	}
 
 	private record ChunksAndStrategy(PickingStrategy strategy, List<AggregationChunk> chunks) {}
@@ -417,9 +417,9 @@ public final class AggregationState implements OTState<AggregationDiff> {
 	}
 
 	public record ConsolidationDebugInfo(PrimaryKey key,
-	                                     Set<AggregationChunk> segmentSet,
-	                                     Set<AggregationChunk> segmentClosingSet,
-	                                     int overlaps) {
+										 Set<AggregationChunk> segmentSet,
+										 Set<AggregationChunk> segmentClosingSet,
+										 int overlaps) {
 	}
 
 	@VisibleForTesting

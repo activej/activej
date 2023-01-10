@@ -90,9 +90,9 @@ public class MultilogTest {
 		LocalFs fs = LocalFs.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
 		AsyncMultilog<String> multilog = Multilog.create(reactor, fs,
-				frameFormat,
-				BinarySerializers.UTF8_SERIALIZER,
-				NAME_PARTITION_REMAINDER_SEQ)
+						frameFormat,
+						BinarySerializers.UTF8_SERIALIZER,
+						NAME_PARTITION_REMAINDER_SEQ)
 				.withBufferSize(1);
 
 		String partition = "partition";
@@ -121,9 +121,9 @@ public class MultilogTest {
 		LocalFs fs = LocalFs.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
 		AsyncMultilog<String> multilog = Multilog.create(reactor, fs,
-				frameFormat,
-				BinarySerializers.UTF8_SERIALIZER,
-				NAME_PARTITION_REMAINDER_SEQ)
+						frameFormat,
+						BinarySerializers.UTF8_SERIALIZER,
+						NAME_PARTITION_REMAINDER_SEQ)
 				.withIgnoreMalformedLogs(true);
 
 		String partition1 = "partition1";
@@ -161,8 +161,8 @@ public class MultilogTest {
 		LocalFs fs = LocalFs.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
 		AsyncMultilog<String> multilog = Multilog.create(reactor, fs,
-				frameFormat,
-				BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ)
+						frameFormat,
+						BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ)
 				.withIgnoreMalformedLogs(true);
 
 		String partition = "partition";
@@ -178,7 +178,7 @@ public class MultilogTest {
 					assert partitionAndFile != null;
 					LogFile logFile = partitionAndFile.getLogFile();
 					return StreamSupplierWithResult.ofPromise(
-							multilog.read(partition, logFile, first(map.values()).getSize() * 2, null))
+									multilog.read(partition, logFile, first(map.values()).getSize() * 2, null))
 							.getSupplier()
 							.streamTo(listConsumer);
 				}));
@@ -196,10 +196,10 @@ public class MultilogTest {
 		await(fs.start());
 
 		AsyncMultilog<String> multilog = Multilog.create(reactor,
-				fs,
-				frameFormat,
-				BinarySerializers.UTF8_SERIALIZER,
-				NAME_PARTITION_REMAINDER_SEQ)
+						fs,
+						frameFormat,
+						BinarySerializers.UTF8_SERIALIZER,
+						NAME_PARTITION_REMAINDER_SEQ)
 				.withBufferSize(MemSize.bytes(1));
 
 		String testPartition = "partition";
@@ -236,7 +236,7 @@ public class MultilogTest {
 	private static <T> List<T> readLog(AsyncMultilog<T> multilog, String partition) {
 		StreamConsumerToList<T> listConsumer = StreamConsumerToList.create();
 		await(StreamSupplierWithResult.ofPromise(
-				multilog.read(partition, new LogFile("", 0), 0, null))
+						multilog.read(partition, new LogFile("", 0), 0, null))
 				.getSupplier()
 				.streamTo(listConsumer));
 

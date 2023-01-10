@@ -19,7 +19,7 @@ package io.activej.datastream.processor;
 import io.activej.datastream.StreamDataAcceptor;
 
 public final class StreamCounter<T> extends StreamFilter<T, T> {
-	private long itemCount;
+	private CounterDataAcceptor acceptor = new CounterDataAcceptor(null, 0L);
 
 	private StreamCounter() {}
 
@@ -29,13 +29,27 @@ public final class StreamCounter<T> extends StreamFilter<T, T> {
 
 	@Override
 	protected StreamDataAcceptor<T> onResumed(StreamDataAcceptor<T> output) {
-		return item -> {
-			itemCount++;
-			output.accept(item);
-		};
+		acceptor = new CounterDataAcceptor(output, acceptor.itemCount);
+		return acceptor;
 	}
 
 	public long getItemCount() {
-		return itemCount;
+		return acceptor.itemCount;
+	}
+
+	private class CounterDataAcceptor implements StreamDataAcceptor<T> {
+		private final StreamDataAcceptor<T> output;
+		private long itemCount;
+
+		public CounterDataAcceptor(StreamDataAcceptor<T> output, long itemCount) {
+			this.output = output;
+			this.itemCount = itemCount;
+		}
+
+		@Override
+		public void accept(T item) {
+			itemCount++;
+			output.accept(item);
+		}
 	}
 }

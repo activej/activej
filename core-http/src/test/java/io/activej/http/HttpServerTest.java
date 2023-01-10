@@ -601,7 +601,6 @@ public final class HttpServerTest {
 		Thread thread = new Thread(eventloop);
 		thread.start();
 
-
 		// malformed header
 		String malformedHeaderRequest = """
 				GET / HTTP/1.1\r
@@ -702,7 +701,6 @@ public final class HttpServerTest {
 							Content-Length: 0\r
 							\r
 							""");
-
 
 			assertEmpty(socket.getInputStream());
 		}

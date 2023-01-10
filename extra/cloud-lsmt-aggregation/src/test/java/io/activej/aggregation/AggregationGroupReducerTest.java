@@ -29,7 +29,7 @@ import static io.activej.common.Utils.keysToMap;
 import static io.activej.promise.TestUtils.await;
 import static org.junit.Assert.assertEquals;
 
-@SuppressWarnings({"Duplicates", "unchecked", "rawtypes"})
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class AggregationGroupReducerTest {
 
 	@ClassRule

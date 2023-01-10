@@ -30,7 +30,6 @@ import io.activej.crdt.util.Utils;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.Messaging;
-import io.activej.csp.net.MessagingCodec;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
@@ -61,7 +60,7 @@ public final class ClientCrdtStorage<K extends Comparable<K>, S> extends Abstrac
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(ClientCrdtStorage.class, "connectTimeout", Duration.ZERO);
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = ApplicationSettings.getDuration(ClientCrdtStorage.class, "smoothingWindow", Duration.ofMinutes(1));
 
-	private static final ByteBufsCodec<CrdtResponse, CrdtRequest> SERIALIZER = MessagingCodec.create(
+	private static final ByteBufsCodec<CrdtResponse, CrdtRequest> SERIALIZER = ByteBufsCodec.ofStreamCodecs(
 			Utils.CRDT_RESPONSE_CODEC,
 			Utils.CRDT_REQUEST_CODEC
 	);

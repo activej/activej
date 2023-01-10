@@ -10,15 +10,14 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.record.Record;
 import io.activej.serializer.CorruptedDataException;
-import io.activej.streamcodecs.StreamCodec;
-import io.activej.streamcodecs.StreamCodecs;
-import io.activej.streamcodecs.StructuredStreamCodec;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamCodecs;
 
 final class ReducerCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(6)
 	StreamCodec<NamedReducer> namedReducer(DataflowSchema dataflowSchema) {
-		return StructuredStreamCodec.create(tableName -> {
+		return StreamCodec.create(tableName -> {
 					DataflowTable dataflowTable = dataflowSchema.getDataflowTableMap().get(tableName);
 					if (dataflowTable == null) {
 						throw new CorruptedDataException("Unknown table: " + tableName);

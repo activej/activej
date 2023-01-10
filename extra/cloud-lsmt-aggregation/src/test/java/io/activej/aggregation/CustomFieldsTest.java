@@ -50,8 +50,8 @@ public class CustomFieldsTest {
 
 	@Measures("eventCount")
 	public record EventRecord(@Key int siteId,
-	                          @Measures({"sumRevenue", "minRevenue", "maxRevenue"}) double revenue,
-	                          @Measures({"uniqueUserIds", "estimatedUniqueUserIdCount"}) long userId) {
+							  @Measures({"sumRevenue", "minRevenue", "maxRevenue"}) double revenue,
+							  @Measures({"uniqueUserIds", "estimatedUniqueUserIdCount"}) long userId) {
 	}
 
 	public static class QueryResult {

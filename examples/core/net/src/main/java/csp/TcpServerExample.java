@@ -27,15 +27,15 @@ public final class TcpServerExample {
 		Eventloop eventloop = Eventloop.create().withCurrentThread();
 
 		SimpleServer server = SimpleServer.create(socket ->
-				BinaryChannelSupplier.of(ChannelSupplier.ofSocket(socket))
-						.decodeStream(ByteBufsDecoder.ofCrlfTerminatedBytes())
-						.peek(buf -> System.out.println("client:" + buf.getString(UTF_8)))
-						.map(buf -> {
-							ByteBuf serverBuf = ByteBufStrings.wrapUtf8("Server> ");
-							return ByteBufPool.append(serverBuf, buf);
-						})
-						.map(buf -> ByteBufPool.append(buf, CRLF))
-						.streamTo(ChannelConsumer.ofSocket(socket)))
+						BinaryChannelSupplier.of(ChannelSupplier.ofSocket(socket))
+								.decodeStream(ByteBufsDecoder.ofCrlfTerminatedBytes())
+								.peek(buf -> System.out.println("client:" + buf.getString(UTF_8)))
+								.map(buf -> {
+									ByteBuf serverBuf = ByteBufStrings.wrapUtf8("Server> ");
+									return ByteBufPool.append(serverBuf, buf);
+								})
+								.map(buf -> ByteBufPool.append(buf, CRLF))
+								.streamTo(ChannelConsumer.ofSocket(socket)))
 				.withListenPort(PORT);
 
 		server.listen();

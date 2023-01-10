@@ -20,7 +20,6 @@ import io.activej.common.function.SupplierEx;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.AsyncMessaging;
 import io.activej.csp.net.Messaging;
-import io.activej.csp.net.MessagingCodec;
 import io.activej.fs.AsyncFs;
 import io.activej.fs.exception.FileNotFoundException;
 import io.activej.fs.exception.FsException;
@@ -55,7 +54,7 @@ import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 public final class FsServer extends AbstractReactiveServer<FsServer> {
 	public static final Version VERSION = new Version(1, 0);
 
-	private static final ByteBufsCodec<FsRequest, FsResponse> SERIALIZER = MessagingCodec.create(
+	private static final ByteBufsCodec<FsRequest, FsResponse> SERIALIZER = ByteBufsCodec.ofStreamCodecs(
 			RemoteFsUtils.FS_REQUEST_CODEC,
 			RemoteFsUtils.FS_RESPONSE_CODEC
 	);

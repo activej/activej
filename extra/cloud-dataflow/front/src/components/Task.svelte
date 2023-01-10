@@ -1,6 +1,5 @@
 <script>
-    import {onMount, onDestroy} from 'svelte';
-    import {derived} from 'svelte/store';
+    import {onDestroy, onMount} from 'svelte';
     import Graph from './Graph.svelte';
     import {updating} from '../App.svelte'
 

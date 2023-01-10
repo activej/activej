@@ -69,13 +69,13 @@ public final class SerializerDefEnum extends AbstractSerializerDef implements Se
 						!nullable ?
 								arrayGet(staticCall(enumType, "values"), b) :
 								ifEq(b, value((byte) 0),
-                                        nullRef(enumType),
+										nullRef(enumType),
 										arrayGet(staticCall(enumType, "values"), dec(b)))) :
 				let(readVarInt(in), value ->
 						!nullable ?
 								arrayGet(staticCall(enumType, "values"), value) :
 								ifEq(value, value(0),
-                                        nullRef(enumType),
+										nullRef(enumType),
 										arrayGet(staticCall(enumType, "values"), dec(value))));
 	}
 

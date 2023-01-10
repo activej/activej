@@ -460,14 +460,14 @@ public final class RoutingServletTest {
 		try {
 			main.serve(HttpRequest.get("http://example.com/a%2"));
 			fail();
-		} catch (HttpError e){
+		} catch (HttpError e) {
 			assertEquals("HTTP code 400: Path contains bad percent encoding", e.getMessage());
 		}
 
 		try {
 			router.map(GET, "/a%2", servlet);
 			fail();
-		} catch (IllegalArgumentException e){
+		} catch (IllegalArgumentException e) {
 			assertEquals("Pattern contains bad percent encoding", e.getMessage());
 		}
 	}

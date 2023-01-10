@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 @SuppressWarnings("NullableProblems")
-public class ForwardingOutputStream extends OutputStream{
+public class ForwardingOutputStream extends OutputStream {
 	protected final OutputStream peer;
 
 	public ForwardingOutputStream(OutputStream peer) {

@@ -86,7 +86,7 @@ public class ActiveJDirectScopebindBenchmark {
 		private float weight;
 		private String name;
 
-		public Flour() { }
+		public Flour() {}
 
 		public Flour(String name, float weight) {
 			this.weight = weight;

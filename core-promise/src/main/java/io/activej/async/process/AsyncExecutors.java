@@ -94,7 +94,7 @@ public class AsyncExecutors {
 					SettablePromise<Object> cb = (SettablePromise<Object>) deque.pollFirst();
 					pendingCalls++;
 					Promise<Object> promise = supplier.get();
-					if (promise.isComplete()){
+					if (promise.isComplete()) {
 						pendingCalls--;
 						cb.accept(promise.getResult(), promise.getException());
 						continue;

@@ -38,11 +38,11 @@ public class HttpServerWorkloadBenchmark extends Launcher {
 
 	@Provides
 	@Named("server")
-	NioReactor serverReactor() { return Eventloop.create(); }
+	NioReactor serverReactor() {return Eventloop.create();}
 
 	@Provides
 	@Named("client")
-	NioReactor clientReactor() { return Eventloop.create(); }
+	NioReactor clientReactor() {return Eventloop.create();}
 
 	@Inject
 	@Named("server")
@@ -64,8 +64,8 @@ public class HttpServerWorkloadBenchmark extends Launcher {
 	@Provides
 	HttpServer server() {
 		return HttpServer.create(serverReactor,
-				request ->
-						HttpResponse.ok200().withPlainText("Response!!"))
+						request ->
+								HttpResponse.ok200().withPlainText("Response!!"))
 				.withListenAddresses(config.get(ofList(ofInetSocketAddress()), "address"));
 	}
 

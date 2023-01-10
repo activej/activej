@@ -12,9 +12,8 @@ import io.activej.dataflow.dataset.SortedDataset;
 import io.activej.dataflow.graph.StreamSchema;
 import io.activej.record.Record;
 import io.activej.record.RecordScheme;
-import io.activej.streamcodecs.StreamCodec;
-import io.activej.streamcodecs.StreamCodecs;
-import io.activej.streamcodecs.StructuredStreamCodec;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamCodecs;
 import io.activej.types.Primitives;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -42,7 +41,7 @@ public final class Utils {
 
 	private static final StreamSchema<Record> EMPTY_STREAM_SCHEME = RecordStreamSchema.create(RecordScheme.create().build());
 
-	private static final StreamCodec<BigDecimal> BIG_DECIMAL_STREAM_CODEC = StructuredStreamCodec.create((scale, bytes) -> {
+	private static final StreamCodec<BigDecimal> BIG_DECIMAL_STREAM_CODEC = StreamCodec.create((scale, bytes) -> {
 				BigInteger unscaledValue = new BigInteger(bytes);
 				return new BigDecimal(unscaledValue, scale);
 			},
@@ -50,20 +49,20 @@ public final class Utils {
 			bigDecimal -> bigDecimal.unscaledValue().toByteArray(), StreamCodecs.ofByteArray()
 	);
 
-	private static final StreamCodec<LocalDate> LOCAL_DATE_STREAM_CODEC = StructuredStreamCodec.create(LocalDate::of,
+	private static final StreamCodec<LocalDate> LOCAL_DATE_STREAM_CODEC = StreamCodec.create(LocalDate::of,
 			LocalDate::getYear, StreamCodecs.ofVarInt(),
 			LocalDate::getMonthValue, StreamCodecs.ofVarInt(),
 			LocalDate::getDayOfMonth, StreamCodecs.ofVarInt()
 	);
 
-	private static final StreamCodec<LocalTime> LOCAL_TIME_STREAM_CODEC = StructuredStreamCodec.create(LocalTime::of,
+	private static final StreamCodec<LocalTime> LOCAL_TIME_STREAM_CODEC = StreamCodec.create(LocalTime::of,
 			LocalTime::getHour, StreamCodecs.ofVarInt(),
 			LocalTime::getMinute, StreamCodecs.ofVarInt(),
 			LocalTime::getSecond, StreamCodecs.ofVarInt(),
 			LocalTime::getNano, StreamCodecs.ofVarInt()
 	);
 
-	private static final StreamCodec<Instant> INSTANT_STREAM_CODEC = StructuredStreamCodec.create(Instant::ofEpochSecond,
+	private static final StreamCodec<Instant> INSTANT_STREAM_CODEC = StreamCodec.create(Instant::ofEpochSecond,
 			Instant::getEpochSecond, StreamCodecs.ofVarLong(),
 			Instant::getNano, StreamCodecs.ofVarInt()
 	);

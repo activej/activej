@@ -36,15 +36,15 @@ public class HttpServerClientBreakConnectionTest {
 	public void init() throws IOException {
 		freePort = getFreePort();
 		server = HttpServer.create(reactor,
-				request -> {
-					logger.info("Closing server...");
-					reactor.post(() ->
-							server.close().whenComplete(() -> logger.info("Server Closed")));
-					return Promises.delay(100L,
-							HttpResponse.ok200()
-									.withBody("Hello World".getBytes())
-					);
-				})
+						request -> {
+							logger.info("Closing server...");
+							reactor.post(() ->
+									server.close().whenComplete(() -> logger.info("Server Closed")));
+							return Promises.delay(100L,
+									HttpResponse.ok200()
+											.withBody("Hello World".getBytes())
+							);
+						})
 				.withListenPort(freePort)
 				.withAcceptOnce();
 

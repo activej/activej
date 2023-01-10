@@ -1,4 +1,4 @@
-package io.activej.streamcodecs;
+package io.activej.serializer.stream;
 
 import io.activej.common.initializer.WithInitializer;
 import io.activej.serializer.BinaryInput;
@@ -6,7 +6,6 @@ import io.activej.serializer.CorruptedDataException;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Closeable;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -97,7 +96,7 @@ public class StreamInput implements Closeable, WithInitializer<StreamInput> {
 			int bytesRead = inputStream.read(in.array(), limit, in.array().length - limit);
 			if (bytesRead == -1) {
 				close();
-				throw new EOFException("Unexpected end of data");
+				throw new EOSException();
 			}
 			limit += bytesRead;
 		}
@@ -160,7 +159,7 @@ public class StreamInput implements Closeable, WithInitializer<StreamInput> {
 			int bytesRead = inputStream.read(b, off, len);
 			if (bytesRead == -1) {
 				close();
-				throw new EOFException("Unexpected end of data");
+				throw new EOSException();
 			}
 			off += bytesRead;
 			len -= bytesRead;

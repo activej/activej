@@ -1,6 +1,6 @@
-package io.activej.streamcodecs;
+package io.activej.serializer.stream;
 
-import io.activej.streamcodecs.StreamCodecs.SubtypeBuilder;
+import io.activej.serializer.stream.StreamCodecs.SubtypeBuilder;
 import org.junit.Test;
 import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.FromDataPoints;

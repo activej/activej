@@ -345,7 +345,6 @@ public class Types {
 		}
 	}
 
-
 	/**
 	 * Creates an instance of {@link GenericArrayType} with a given component type
 	 * <p>

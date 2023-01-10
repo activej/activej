@@ -23,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
 public interface DecoderFunction<T, R> {
 	R decode(T value) throws MalformedDataException;
 
-	default R decodeElse(@Nullable T value, R defaultResult) {
+	default R decodeOrElse(@Nullable T value, R defaultResult) {
 		try {
 			if (value != null) {
 				return decode(value);

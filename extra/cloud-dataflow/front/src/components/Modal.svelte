@@ -1,5 +1,5 @@
 <script>
-    import {onMount, getContext} from 'svelte';
+    import {getContext, onMount} from 'svelte';
     import {graphKey} from './Graph.svelte';
 
     export let x, y;

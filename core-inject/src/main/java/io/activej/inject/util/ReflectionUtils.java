@@ -182,27 +182,17 @@ public final class ReflectionUtils {
 		Class<?> cls = key.getRawType();
 
 		Inject classInjectAnnotation = cls.getAnnotation(Inject.class);
-		Set<Constructor<?>> injectConstructors = new HashSet<>();
-		Set<Constructor<?>> constructors = new HashSet<>();
-		for (Constructor<?> c : cls.getDeclaredConstructors()) {
-			if (c.isAnnotationPresent(Inject.class)) {
-				injectConstructors.add(c);
-			}
-			constructors.add(c);
-		}
+		List<Constructor<?>> constructors = Arrays.asList(cls.getDeclaredConstructors());
+		List<Constructor<?>> injectConstructors = constructors.stream()
+				.filter(c -> c.isAnnotationPresent(Inject.class))
+				.toList();
 
-		Set<Method> injectFactoryMethods = new HashSet<>();
-		Set<Method> factoryMethods = new HashSet<>();
-
-		for (Method method : cls.getDeclaredMethods()) {
-			if (method.getReturnType() == cls
-					&& Modifier.isStatic(method.getModifiers())) {
-				if (method.isAnnotationPresent(Inject.class)) {
-					injectFactoryMethods.add(method);
-				}
-				factoryMethods.add(method);
-			}
-		}
+		List<Method> factoryMethods = Arrays.stream(cls.getDeclaredMethods())
+				.filter(method -> method.getReturnType() == cls && Modifier.isStatic(method.getModifiers()))
+				.toList();
+		List<Method> injectFactoryMethods = factoryMethods.stream()
+				.filter(method -> method.isAnnotationPresent(Inject.class))
+				.toList();
 
 		if (classInjectAnnotation != null) {
 			if (!injectConstructors.isEmpty()) {

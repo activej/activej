@@ -81,11 +81,11 @@ public interface SerializerDef {
 	 * @param compatibilityLevel defines the {@link CompatibilityLevel compatibility level} of the serializer
 	 * @return serialized to byte array value
 	 */
-	 default Expression defineEncoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
-		 return isInline(version, compatibilityLevel) ?
-				 encoder(staticEncoders, buf, pos, value, version, compatibilityLevel) :
-				 staticEncoders.define(this, buf, pos, value);
-	 }
+	default Expression defineEncoder(StaticEncoders staticEncoders, Expression buf, Variable pos, Expression value, int version, CompatibilityLevel compatibilityLevel) {
+		return isInline(version, compatibilityLevel) ?
+				encoder(staticEncoders, buf, pos, value, version, compatibilityLevel) :
+				staticEncoders.define(this, buf, pos, value);
+	}
 
 	/**
 	 * Deserializes object from byte array

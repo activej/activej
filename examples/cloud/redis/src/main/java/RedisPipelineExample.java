@@ -43,7 +43,6 @@ public final class RedisPipelineExample {
 				})
 				.whenException(Exception::printStackTrace);
 
-
 		eventloop.run();
 	}
 }

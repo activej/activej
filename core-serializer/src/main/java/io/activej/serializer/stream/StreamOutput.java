@@ -1,4 +1,4 @@
-package io.activej.streamcodecs;
+package io.activej.serializer.stream;
 
 import io.activej.common.initializer.WithInitializer;
 import io.activej.serializer.BinaryOutput;

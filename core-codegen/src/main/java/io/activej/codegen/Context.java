@@ -188,32 +188,24 @@ public final class Context {
 		if (type.equals(getSelfType()))
 			throw new IllegalArgumentException();
 		int sort = type.getSort();
-		switch (sort) {
-			case BOOLEAN:
-				return boolean.class;
-			case CHAR:
-				return char.class;
-			case BYTE:
-				return byte.class;
-			case SHORT:
-				return short.class;
-			case INT:
-				return int.class;
-			case FLOAT:
-				return float.class;
-			case LONG:
-				return long.class;
-			case DOUBLE:
-				return double.class;
-			case VOID:
-				return void.class;
-			case OBJECT:
+		return switch (sort) {
+			case BOOLEAN -> boolean.class;
+			case CHAR -> char.class;
+			case BYTE -> byte.class;
+			case SHORT -> short.class;
+			case INT -> int.class;
+			case FLOAT -> float.class;
+			case LONG -> long.class;
+			case DOUBLE -> double.class;
+			case VOID -> void.class;
+			case OBJECT -> {
 				try {
-					return classLoader.loadClass(type.getClassName());
+					yield classLoader.loadClass(type.getClassName());
 				} catch (ClassNotFoundException e) {
 					throw new IllegalArgumentException(format("No class %s in class loader", type.getClassName()), e);
 				}
-			case ARRAY:
+			}
+			case ARRAY -> {
 				Class<?> result;
 				if (type.equals(getType(Object[].class))) {
 					result = Object[].class;
@@ -225,10 +217,10 @@ public final class Context {
 						throw new IllegalArgumentException(format("No class %s in Class.forName", className), e);
 					}
 				}
-				return result;
-			default:
-				throw new IllegalArgumentException(format("No Java type for %s", type.getClassName()));
-		}
+				yield result;
+			}
+			default -> throw new IllegalArgumentException(format("No Java type for %s", type.getClassName()));
+		};
 	}
 
 	public void cast(Type typeFrom, Type typeTo) {

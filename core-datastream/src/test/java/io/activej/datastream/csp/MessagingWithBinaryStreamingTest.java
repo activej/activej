@@ -42,10 +42,10 @@ public final class MessagingWithBinaryStreamingTest {
 						buf1.put((byte) 0);
 						return buf1;
 					})
-			.andThen(
+			.transform(
 					buf -> buf.asString(UTF_8),
 					str -> ByteBuf.wrapForReading(str.getBytes(UTF_8)));
-	private static final ByteBufsCodec<Integer, Integer> INTEGER_SERIALIZER = STRING_SERIALIZER.andThen(Integer::parseInt, n -> Integer.toString(n));
+	private static final ByteBufsCodec<Integer, Integer> INTEGER_SERIALIZER = STRING_SERIALIZER.transform(Integer::parseInt, n -> Integer.toString(n));
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();

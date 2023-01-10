@@ -51,8 +51,8 @@ public final class SimpleProxyServerTest {
 		Eventloop eventloop1 = Eventloop.create().withFatalErrorHandler(rethrow()).withCurrentThread();
 
 		HttpServer echoServer = HttpServer.create(eventloop1,
-				request -> HttpResponse.ok200()
-						.withBody(encodeAscii(request.getUrl().getPathAndQuery())))
+						request -> HttpResponse.ok200()
+								.withBody(encodeAscii(request.getUrl().getPathAndQuery())))
 				.withListenPort(echoServerPort);
 		echoServer.listen();
 
@@ -67,14 +67,14 @@ public final class SimpleProxyServerTest {
 						.withDnsServerAddress(HttpUtils.inetAddress("8.8.8.8"))));
 
 		HttpServer proxyServer = HttpServer.create(eventloop2,
-				request -> {
-					String path = echoServerPort + request.getUrl().getPath();
-					return httpClient.request(HttpRequest.get("http://127.0.0.1:" + path))
-							.then(result -> result.loadBody()
-									.then(body -> Promise.of(HttpResponse.ofCode(result.getCode())
-											.withBody(encodeAscii("FORWARDED: " + body
-													.getString(UTF_8))))));
-				})
+						request -> {
+							String path = echoServerPort + request.getUrl().getPath();
+							return httpClient.request(HttpRequest.get("http://127.0.0.1:" + path))
+									.then(result -> result.loadBody()
+											.then(body -> Promise.of(HttpResponse.ofCode(result.getCode())
+													.withBody(encodeAscii("FORWARDED: " + body
+															.getString(UTF_8))))));
+						})
 				.withListenPort(proxyServerPort);
 		proxyServer.listen();
 

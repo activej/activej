@@ -127,7 +127,7 @@ public final class RecordJoiner implements LeftJoiner<Record, Record, Record, Re
 		List<Type> types = fromScheme.getTypes();
 		for (int i = 0; i < types.size(); i++) {
 			Type type = types.get(i);
-			if (forceNullability && type instanceof Class<?> cls && cls.isPrimitive()){
+			if (forceNullability && type instanceof Class<?> cls && cls.isPrimitive()) {
 				type = Primitives.wrap(cls);
 			}
 			toScheme.addField(fieldNames.get(i + offset), type);

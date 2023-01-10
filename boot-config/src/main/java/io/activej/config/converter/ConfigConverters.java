@@ -311,40 +311,29 @@ public final class ConfigConverters {
 		return new ConfigConverter<>() {
 			@Override
 			public FatalErrorHandler get(Config config) {
-				switch (config.getValue()) {
-					case "rethrow":
-						return rethrow();
-					case "ignore":
-						return ignore();
-					case "halt":
-						return halt();
-					case "haltOnError":
-						return haltOnError();
-					case "haltOnVirtualMachineError":
-						return haltOnVirtualMachineError();
-					case "haltOnOutOfMemoryError":
-						return haltOnOutOfMemoryError();
-					case "rethrowOn":
-						return rethrowOn(
-								toThrowablePredicate(
-										config.get(OF_CLASSES, "whitelist", List.of()),
-										config.get(OF_CLASSES, "blacklist", List.of())
-								));
-					case "haltOn":
-						return haltOn(
-								toThrowablePredicate(
-										config.get(OF_CLASSES, "whitelist", List.of()),
-										config.get(OF_CLASSES, "blacklist", List.of())
-								));
-					case "logging":
-						return logging();
-					case "loggingToSystemOut":
-						return loggingToSystemOut();
-					case "loggingToSystemErr":
-						return loggingToSystemErr();
-					case "loggingToEventloop":
+				return switch (config.getValue()) {
+					case "rethrow" -> rethrow();
+					case "ignore" -> ignore();
+					case "halt" -> halt();
+					case "haltOnError" -> haltOnError();
+					case "haltOnVirtualMachineError" -> haltOnVirtualMachineError();
+					case "haltOnOutOfMemoryError" -> haltOnOutOfMemoryError();
+					case "rethrowOn" -> rethrowOn(
+							toThrowablePredicate(
+									config.get(OF_CLASSES, "whitelist", List.of()),
+									config.get(OF_CLASSES, "blacklist", List.of())
+							));
+					case "haltOn" -> haltOn(
+							toThrowablePredicate(
+									config.get(OF_CLASSES, "whitelist", List.of()),
+									config.get(OF_CLASSES, "blacklist", List.of())
+							));
+					case "logging" -> logging();
+					case "loggingToSystemOut" -> loggingToSystemOut();
+					case "loggingToSystemErr" -> loggingToSystemErr();
+					case "loggingToEventloop" -> {
 						FatalErrorHandler logging = logging();
-						return (e, context) -> {
+						yield (e, context) -> {
 							Reactor reactor = Reactor.getCurrentReactorOrNull();
 							if (reactor != null) {
 								reactor.logFatalError(e, context);
@@ -352,9 +341,10 @@ public final class ConfigConverters {
 								logging.handle(e, context);
 							}
 						};
-					default:
-						throw new IllegalArgumentException("No fatal error handler named " + config.getValue() + " exists!");
-				}
+					}
+					default ->
+							throw new IllegalArgumentException("No fatal error handler named " + config.getValue() + " exists!");
+				};
 			}
 
 			@Override

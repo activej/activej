@@ -82,7 +82,8 @@ public final class Utils {
 			case FLOAT -> getMethod("float floatValue()");
 			case LONG -> getMethod("long longValue()");
 			case DOUBLE -> getMethod("double doubleValue()");
-			default -> throw new IllegalArgumentException(format("No primitive value method for %s ", primitiveType.getClassName()));
+			default ->
+					throw new IllegalArgumentException(format("No primitive value method for %s ", primitiveType.getClassName()));
 		};
 	}
 

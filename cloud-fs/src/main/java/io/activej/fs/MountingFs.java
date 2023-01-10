@@ -101,11 +101,11 @@ final class MountingFs implements AsyncFs {
 	public Promise<Map<String, FileMetadata>> infoAll(Set<String> names) {
 		Map<String, FileMetadata> result = new HashMap<>();
 		return Promises.all(names.stream()
-				.collect(groupingBy(this::findMount, toSet()))
-				.entrySet().stream()
-				.map(entry -> entry.getKey()
-						.infoAll(entry.getValue())
-						.whenResult(result::putAll)))
+						.collect(groupingBy(this::findMount, toSet()))
+						.entrySet().stream()
+						.map(entry -> entry.getKey()
+								.infoAll(entry.getValue())
+								.whenResult(result::putAll)))
 				.map($ -> result);
 	}
 

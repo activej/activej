@@ -27,7 +27,6 @@ public final class RedisSimpleExample {
 				)
 				.whenException(Exception::printStackTrace);
 
-
 		eventloop.run();
 	}
 }

@@ -3,9 +3,8 @@ package io.activej.dataflow.codec;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.messaging.Version;
 import io.activej.serializer.CorruptedDataException;
-import io.activej.streamcodecs.StreamCodec;
-import io.activej.streamcodecs.StreamCodecs;
-import io.activej.streamcodecs.StructuredStreamCodec;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamCodecs;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -15,16 +14,17 @@ public final class Utils {
 	private static final Map<Integer, Class<?>> INDEX_TO_CLASS = new HashMap<>();
 	private static final Map<Class<?>, Integer> CLASS_TO_INDEX = new HashMap<>();
 
-	public static final StreamCodec<StreamId> STREAM_ID_STREAM_CODEC = StructuredStreamCodec.create(StreamId::new,
+	public static final StreamCodec<StreamId> STREAM_ID_STREAM_CODEC = StreamCodec.create(StreamId::new,
 			StreamId::getId, StreamCodecs.ofVarLong()
 	);
-	public static final StreamCodec<Version> VERSION_STREAM_CODEC = StructuredStreamCodec.create(Version::new,
+	public static final StreamCodec<Version> VERSION_STREAM_CODEC = StreamCodec.create(Version::new,
 			Version::major, StreamCodecs.ofVarInt(),
 			Version::minor, StreamCodecs.ofVarInt()
 	);
-	public static final StreamCodec<Instant> INSTANT_STREAM_CODEC = StructuredStreamCodec.create(Instant::ofEpochSecond,
+	public static final StreamCodec<Instant> INSTANT_STREAM_CODEC = StreamCodec.create(Instant::ofEpochSecond,
 			Instant::getEpochSecond, StreamCodecs.ofVarLong(),
-			Instant::getNano, StreamCodecs.ofVarInt());
+			Instant::getNano, StreamCodecs.ofVarInt()
+	);
 	public static final StreamCodec<Class<?>> CLASS_STREAM_CODEC = StreamCodec.of(
 			(output, item) -> {
 				Integer index = CLASS_TO_INDEX.getOrDefault(item, 0);

@@ -131,7 +131,7 @@ public class DynamicMBeanRegistrationTest {
 	static class NonPublicMBeanSubclass extends PublicMBean {
 	}
 
-	public static class PublicMBeanSubclass extends PublicMBean{
+	public static class PublicMBeanSubclass extends PublicMBean {
 		@JmxAttribute
 		public int getValue() {
 			return 321;

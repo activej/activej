@@ -31,27 +31,27 @@ public final class FailingStubStreamSorterStorage<T> implements AsyncStreamSorte
 		return new FailingStubStreamSorterStorage<>(null);
 	}
 
-	public FailingStubStreamSorterStorage<T> withFailNewPartition(){
+	public FailingStubStreamSorterStorage<T> withFailNewPartition() {
 		this.failNewPartition = true;
 		return this;
 	}
 
-	public FailingStubStreamSorterStorage<T> withFailWrite(){
+	public FailingStubStreamSorterStorage<T> withFailWrite() {
 		this.failWrite = true;
 		return this;
 	}
 
-	public FailingStubStreamSorterStorage<T> withFailRead(){
+	public FailingStubStreamSorterStorage<T> withFailRead() {
 		this.failRead = true;
 		return this;
 	}
 
-	public FailingStubStreamSorterStorage<T> withFailCleanup(){
+	public FailingStubStreamSorterStorage<T> withFailCleanup() {
 		this.failCleanup = true;
 		return this;
 	}
 
-	public void setStorage(AsyncStreamSorterStorage<T> storage){
+	public void setStorage(AsyncStreamSorterStorage<T> storage) {
 		this.storage = storage;
 	}
 

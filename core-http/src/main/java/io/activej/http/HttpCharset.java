@@ -53,7 +53,7 @@ public final class HttpCharset extends Token {
 		super(hashCodeCI, bytes, offset, length, lowerCaseBytes);
 	}
 
-	public static HttpCharset register(String charsetName, Charset charset){
+	public static HttpCharset register(String charsetName, Charset charset) {
 		return charsets.register(charsetName).addCharset(charset);
 	}
 

@@ -66,15 +66,15 @@ public abstract class ReloadingAttributeResolver<K, A> extends AbstractAttribute
 		reloads++;
 		scheduledRunnable = nullify(scheduledRunnable, ScheduledRunnable::cancel);
 		long reloadTimestamp = reactor.currentTimeMillis();
-        reload(timestamp)
-                .whenResult(result -> {
-                    reloadTime.recordValue((int) (reactor.currentTimeMillis() - reloadTimestamp));
-                    cache.putAll(result);
-                    timestamp = reloadTimestamp;
-                })
-                .whenException(e -> reloadErrors++)
+		reload(timestamp)
+				.whenResult(result -> {
+					reloadTime.recordValue((int) (reactor.currentTimeMillis() - reloadTimestamp));
+					cache.putAll(result);
+					timestamp = reloadTimestamp;
+				})
+				.whenException(e -> reloadErrors++)
 				.whenComplete(() -> scheduleReload(retryPeriod));
-    }
+	}
 
 	private void scheduleReload(long period) {
 		scheduledRunnable = reactor.delayBackground(period, this::doReload);

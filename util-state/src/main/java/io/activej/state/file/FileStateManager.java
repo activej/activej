@@ -3,8 +3,8 @@ package io.activej.state.file;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.fs.BlockingFs;
 import io.activej.fs.FileMetadata;
+import io.activej.serializer.stream.*;
 import io.activej.state.StateManager;
-import io.activej.streamcodecs.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;

@@ -70,28 +70,26 @@ public final class SerializerDefString extends AbstractSerializerDef implements 
 						staticCall(BinaryOutputUtils.class, "writeUTF8mb3Nullable", buf, pos, string) :
 						staticCall(BinaryOutputUtils.class, "writeUTF8mb3", buf, pos, string);
 			}
-			switch (format) {
-				case ISO_8859_1:
-					return nullable ?
-							staticCall(BinaryOutputUtils.class, "writeIso88591Nullable", buf, pos, string) :
-							staticCall(BinaryOutputUtils.class, "writeIso88591", buf, pos, string);
-				case UTF8:
-					return nullable ?
-							staticCall(BinaryOutputUtils.class, "writeUTF8Nullable", buf, pos, string) :
-							staticCall(BinaryOutputUtils.class, "writeUTF8", buf, pos, string);
-				case UTF16:
+			return switch (format) {
+				case ISO_8859_1 -> nullable ?
+						staticCall(BinaryOutputUtils.class, "writeIso88591Nullable", buf, pos, string) :
+						staticCall(BinaryOutputUtils.class, "writeIso88591", buf, pos, string);
+				case UTF8 -> nullable ?
+						staticCall(BinaryOutputUtils.class, "writeUTF8Nullable", buf, pos, string) :
+						staticCall(BinaryOutputUtils.class, "writeUTF8", buf, pos, string);
+				case UTF16 -> {
 					String LE = compatibilityLevel.isLittleEndian() ? "LE" : "";
-					return nullable ?
+					yield nullable ?
 							staticCall(BinaryOutputUtils.class, "writeUTF16Nullable" + LE, buf, pos, string) :
 							staticCall(BinaryOutputUtils.class, "writeUTF16" + LE, buf, pos, string);
+				}
 				//noinspection deprecation
-				case UTF8_MB3:
-					return nullable ?
+				case UTF8_MB3 -> {
+					yield nullable ?
 							staticCall(BinaryOutputUtils.class, "writeUTF8mb3Nullable", buf, pos, string) :
 							staticCall(BinaryOutputUtils.class, "writeUTF8mb3", buf, pos, string);
-				default:
-					throw new AssertionError();
-			}
+				}
+			};
 		}));
 	}
 
@@ -103,26 +101,22 @@ public final class SerializerDefString extends AbstractSerializerDef implements 
 					call(in, "readUTF8mb3Nullable") :
 					call(in, "readUTF8mb3");
 		}
-		switch (format) {
-			case ISO_8859_1:
-				return nullable ?
-						call(in, "readIso88591Nullable") :
-						call(in, "readIso88591");
-			case UTF8:
-				return nullable ?
-						call(in, "readUTF8Nullable") :
-						call(in, "readUTF8");
-			case UTF16:
+		return switch (format) {
+			case ISO_8859_1 -> nullable ?
+					call(in, "readIso88591Nullable") :
+					call(in, "readIso88591");
+			case UTF8 -> nullable ?
+					call(in, "readUTF8Nullable") :
+					call(in, "readUTF8");
+			case UTF16 -> {
 				String LE = compatibilityLevel.isLittleEndian() ? "LE" : "";
-				return nullable ?
+				yield nullable ?
 						call(in, "readUTF16Nullable" + LE) :
 						call(in, "readUTF16" + LE);
-			case UTF8_MB3:
-				return nullable ?
-						call(in, "readUTF8mb3Nullable") :
-						call(in, "readUTF8mb3");
-			default:
-				throw new AssertionError();
-		}
+			}
+			case UTF8_MB3 -> nullable ?
+					call(in, "readUTF8mb3Nullable") :
+					call(in, "readUTF8mb3");
+		};
 	}
 }

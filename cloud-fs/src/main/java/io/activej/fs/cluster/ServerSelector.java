@@ -52,8 +52,8 @@ public interface ServerSelector {
 	/**
 	 * Selects partitions where given file should belong.
 	 *
-	 * @param fileName  name of the file
-	 * @param shards    set of partition ids to choose from
+	 * @param fileName name of the file
+	 * @param shards   set of partition ids to choose from
 	 * @return list of keys of servers ordered by priority where file with given name should be
 	 */
 	List<Object> selectFrom(String fileName, Set<Object> shards);

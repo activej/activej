@@ -70,7 +70,7 @@ public class StreamBufferTest {
 		StreamSupplier<Integer> supplier = StreamSupplier.concat(
 				StreamSupplier.of(1, 2, 3, 4, 5),
 				closingWithError(expectedException),
-				StreamSupplier.of(6,7,8,9,10)
+				StreamSupplier.of(6, 7, 8, 9, 10)
 		);
 		StreamConsumerToList<Integer> consumer = StreamConsumerToList.create();
 

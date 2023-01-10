@@ -59,7 +59,6 @@ public class FrameFormatTest {
 	@Parameter(3)
 	public boolean resetsAllowed;
 
-
 	@Parameters(name = "{0}")
 	public static Collection<Object[]> getParameters() {
 		return List.of(

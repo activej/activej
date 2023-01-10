@@ -45,7 +45,6 @@ public class PrimaryKeyCodec implements JsonCodec<PrimaryKey>, WithInitializer<P
 		return new PrimaryKeyCodec(codecs);
 	}
 
-
 	@Override
 	public PrimaryKey read(JsonReader reader) throws IOException {
 		if (reader.last() != ARRAY_START) throw reader.newParseError("Expected '['");

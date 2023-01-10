@@ -9,9 +9,8 @@ import io.activej.dataflow.calcite.utils.NamedRecordFunction;
 import io.activej.dataflow.codec.Subtype;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
-import io.activej.streamcodecs.StreamCodec;
-import io.activej.streamcodecs.StreamCodecs;
-import io.activej.streamcodecs.StructuredStreamCodec;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamCodecs;
 
 final class FunctionCodecModule extends AbstractModule {
 	@Provides
@@ -29,9 +28,9 @@ final class FunctionCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(2)
 	StreamCodec<RecordProjectionFn> recordProjectionFn(StreamCodec<Operand<?>> operandStreamCodec) {
-		return StructuredStreamCodec.create(RecordProjectionFn::create,
+		return StreamCodec.create(RecordProjectionFn::create,
 				RecordProjectionFn::getFieldProjections, StreamCodecs.ofList(
-						StructuredStreamCodec.create(FieldProjection::new,
+						StreamCodec.create(FieldProjection::new,
 								FieldProjection::operand, operandStreamCodec,
 								FieldProjection::fieldName, StreamCodecs.ofNullable(StreamCodecs.ofString())
 						)

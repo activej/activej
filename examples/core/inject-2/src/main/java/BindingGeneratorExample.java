@@ -62,7 +62,7 @@ public class BindingGeneratorExample {
 		private String name;
 
 		@Inject
-		public Flour() { }
+		public Flour() {}
 
 		public Flour(String name, float weight) {
 			this.weight = weight;
@@ -137,13 +137,13 @@ public class BindingGeneratorExample {
 			//[END REGION_2]
 
 			@Provides
-			Sugar sugar() { return new Sugar("WhiteSugar", 10.f); }
+			Sugar sugar() {return new Sugar("WhiteSugar", 10.f);}
 
 			@Provides
-			Flour flour() { return new Flour("PerfectButter", 20.0f); }
+			Flour flour() {return new Flour("PerfectButter", 20.0f);}
 
 			@Provides
-			Butter butter() { return new Butter("PerfectButter", 10.0f); }
+			Butter butter() {return new Butter("PerfectButter", 10.0f);}
 
 			@Provides
 			Pastry pastry(Sugar sugar, Butter butter, Flour flour) {

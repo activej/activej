@@ -100,11 +100,11 @@ final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 	@Override
 	protected void doProcess() {
 		input.streamTo(ChannelConsumer.of(
-				frame -> {
-					if (CHECK) checkFrameOrder(frame);
+						frame -> {
+							if (CHECK) checkFrameOrder(frame);
 
-					return doAccept(encodeData(frame));
-				}))
+							return doAccept(encodeData(frame));
+						}))
 				.then(() -> sendCloseFrame(REGULAR_CLOSE))
 				.whenResult(this::completeProcess);
 	}

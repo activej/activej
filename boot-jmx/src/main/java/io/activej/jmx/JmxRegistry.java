@@ -90,7 +90,7 @@ public final class JmxRegistry implements JmxRegistryMXBean, WithInitializer<Jmx
 		return this;
 	}
 
-	public JmxRegistry withWorkerPredicate(BiPredicate<Key<?>, Integer> predicate){
+	public JmxRegistry withWorkerPredicate(BiPredicate<Key<?>, Integer> predicate) {
 		this.workerPredicate = predicate;
 		return this;
 	}

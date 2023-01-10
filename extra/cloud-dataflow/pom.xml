@@ -26,11 +26,6 @@
     </dependency>
     <dependency>
       <groupId>io.activej</groupId>
-      <artifactId>activej-stream-codecs</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.activej</groupId>
       <artifactId>activej-inject</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -52,21 +47,12 @@
       <artifactId>calcite-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.calcite</groupId>
-      <artifactId>calcite-file</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.calcite.avatica</groupId>
       <artifactId>avatica-core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.calcite.avatica</groupId>
       <artifactId>avatica-server</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.immutables</groupId>
-      <artifactId>value</artifactId>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>io.activej</groupId>

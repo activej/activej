@@ -6,18 +6,17 @@ import io.activej.dataflow.calcite.utils.RecordSortComparator.FieldSort;
 import io.activej.dataflow.codec.Subtype;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
-import io.activej.streamcodecs.StreamCodec;
-import io.activej.streamcodecs.StreamCodecs;
-import io.activej.streamcodecs.StructuredStreamCodec;
+import io.activej.serializer.stream.StreamCodec;
+import io.activej.serializer.stream.StreamCodecs;
 import org.apache.calcite.rel.RelFieldCollation.NullDirection;
 
 final class ComparatorCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(0)
 	StreamCodec<RecordSortComparator> recordSortComparator() {
-		return StructuredStreamCodec.create(RecordSortComparator::new,
+		return StreamCodec.create(RecordSortComparator::new,
 				RecordSortComparator::getSorts, StreamCodecs.ofList(
-						StructuredStreamCodec.create(FieldSort::new,
+						StreamCodec.create(FieldSort::new,
 								FieldSort::index, StreamCodecs.ofVarInt(),
 								FieldSort::asc, StreamCodecs.ofBoolean(),
 								FieldSort::nullDirection, StreamCodecs.ofEnum(NullDirection.class)

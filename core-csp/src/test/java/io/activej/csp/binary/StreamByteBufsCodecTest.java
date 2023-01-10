@@ -1,11 +1,10 @@
-package io.activej.csp.net;
+package io.activej.csp.binary;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.csp.binary.ByteBufsCodec;
-import io.activej.streamcodecs.StreamCodecs;
-import io.activej.streamcodecs.StreamInput;
+import io.activej.serializer.stream.StreamCodecs;
+import io.activej.serializer.stream.StreamInput;
 import io.activej.test.rules.ByteBufRule;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -15,14 +14,14 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.Assert.*;
 
-public class MessagingCodecTest {
+public class StreamByteBufsCodecTest {
 
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
 	@Test
 	public void testCodec() throws MalformedDataException {
-		ByteBufsCodec<String, String> codec = MessagingCodec.create(
+		ByteBufsCodec<String, String> codec = new StreamByteBufsCodec<>(
 				StreamCodecs.ofString(),
 				StreamCodecs.ofString()
 		);
@@ -48,7 +47,7 @@ public class MessagingCodecTest {
 
 	@Test
 	public void testCodecLargeMessages() throws MalformedDataException {
-		ByteBufsCodec<byte[], byte[]> codec = MessagingCodec.create(
+		ByteBufsCodec<byte[], byte[]> codec = ByteBufsCodec.ofStreamCodecs(
 				StreamCodecs.ofByteArray(),
 				StreamCodecs.ofByteArray()
 		);

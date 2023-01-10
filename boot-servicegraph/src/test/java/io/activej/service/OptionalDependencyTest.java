@@ -106,7 +106,6 @@ public class OptionalDependencyTest {
 		assertEquals(1, service2.stopCounter());
 	}
 
-
 	public interface TestInterface {
 		int startCounter();
 

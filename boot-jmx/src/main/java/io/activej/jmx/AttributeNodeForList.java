@@ -109,7 +109,7 @@ final class AttributeNodeForList extends AbstractAttributeNodeForLeaf {
 			}
 		}
 
-		return attributesFromAllElements.isEmpty() ? null : createArrayFrom(attributesFromAllElements) ;
+		return attributesFromAllElements.isEmpty() ? null : createArrayFrom(attributesFromAllElements);
 	}
 
 	private Object[] createArrayFrom(List<Map<String, Object>> attributesFromAllElements) {

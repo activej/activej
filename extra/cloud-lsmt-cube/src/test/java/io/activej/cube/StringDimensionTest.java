@@ -70,13 +70,13 @@ public class StringDimensionTest {
 				.withAggregation(id("detailedAggregation").withDimensions("key1", "key2").withMeasures("metric1", "metric2", "metric3"));
 
 		CubeDiff consumer1Result = await(StreamSupplier.of(
-				new DataItemString1("str1", 2, 10, 20),
-				new DataItemString1("str2", 3, 10, 20))
+						new DataItemString1("str1", 2, 10, 20),
+						new DataItemString1("str2", 3, 10, 20))
 				.streamTo(cube.consume(DataItemString1.class)));
 
 		CubeDiff consumer2Result = await(StreamSupplier.of(
-				new DataItemString2("str2", 3, 10, 20),
-				new DataItemString2("str1", 4, 10, 20))
+						new DataItemString2("str2", 3, 10, 20),
+						new DataItemString2("str1", 4, 10, 20))
 				.streamTo(cube.consume(DataItemString2.class)));
 
 		await(aggregationChunkStorage.finish(consumer1Result.addedChunks().map(id -> (long) id).collect(toSet())));
@@ -87,8 +87,8 @@ public class StringDimensionTest {
 
 		StreamConsumerToList<DataItemResultString> consumerToList = StreamConsumerToList.create();
 		await(cube.queryRawStream(List.of("key1", "key2"), List.of("metric1", "metric2", "metric3"),
-				and(eq("key1", "str2"), eq("key2", 3)),
-				DataItemResultString.class, DefiningClassLoader.create(classLoader))
+						and(eq("key1", "str2"), eq("key2", 3)),
+						DataItemResultString.class, DefiningClassLoader.create(classLoader))
 				.streamTo(consumerToList));
 
 		List<DataItemResultString> actual = consumerToList.getList();
