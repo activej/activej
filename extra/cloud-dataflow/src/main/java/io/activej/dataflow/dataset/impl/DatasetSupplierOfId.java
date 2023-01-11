@@ -18,7 +18,7 @@ package io.activej.dataflow.dataset.impl;
 
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.graph.*;
-import io.activej.dataflow.node.NodeSupplierOfId;
+import io.activej.dataflow.node.Node_SupplierOfId;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -42,7 +42,7 @@ public final class DatasetSupplierOfId<T> extends Dataset<T> {
 		int index = context.generateNodeIndex();
 		for (int i = 0, size = partitions.size(); i < size; i++) {
 			Partition partition = partitions.get(i);
-			NodeSupplierOfId<T> node = new NodeSupplierOfId<>(index, id, i, size);
+			Node_SupplierOfId<T> node = new Node_SupplierOfId<>(index, id, i, size);
 			graph.addNode(partition, node);
 			outputStreamIds.add(node.getOutput());
 		}

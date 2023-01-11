@@ -1,24 +1,24 @@
 package io.activej.cube;
 
-import io.activej.aggregation.AggregationChunkStorage;
+import io.activej.aggregation.AggregationChunkStorage_Reactive;
 import io.activej.aggregation.AggregationPredicate;
 import io.activej.aggregation.AsyncAggregationChunkStorage;
-import io.activej.aggregation.ChunkIdCodec;
+import io.activej.aggregation.JsonCodec_ChunkId;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frames.FrameFormat;
-import io.activej.csp.process.frames.LZ4FrameFormat;
-import io.activej.cube.Cube.AggregationConfig;
+import io.activej.csp.process.frames.FrameFormat_LZ4;
+import io.activej.cube.Cube_Reactive.AggregationConfig;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.service.CubeConsolidationController;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
-import io.activej.etl.LogOTState;
-import io.activej.fs.LocalFs;
+import io.activej.etl.OTState_Log;
+import io.activej.fs.Fs_Local;
 import io.activej.multilog.AsyncMultilog;
-import io.activej.multilog.Multilog;
+import io.activej.multilog.Multilog_Reactive;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.serializer.SerializerBuilder;
@@ -40,7 +40,7 @@ import static io.activej.aggregation.AggregationPredicates.gt;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.common.Utils.keysToMap;
-import static io.activej.cube.Cube.AggregationConfig.id;
+import static io.activej.cube.Cube_Reactive.AggregationConfig.id;
 import static io.activej.cube.TestUtils.runProcessLogs;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
@@ -69,11 +69,11 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 		Path logsDir = temporaryFolder.newFolder().toPath();
 
-		LocalFs fs = LocalFs.create(reactor, EXECUTOR, aggregationsDir)
+		Fs_Local fs = Fs_Local.create(reactor, EXECUTOR, aggregationsDir)
 				.withTempDir(Files.createTempDirectory(""));
 		await(fs.start());
-		FrameFormat frameFormat = LZ4FrameFormat.create();
-		chunkStorage = AggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		FrameFormat frameFormat = FrameFormat_LZ4.create();
+		chunkStorage = AggregationChunkStorage_Reactive.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 
 		dateAggregation = id("date")
 				.withDimensions("date")
@@ -87,19 +87,19 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 				.withDimensions("campaign", "banner", "date")
 				.withMeasures("impressions", "clicks", "conversions", "revenue");
 
-		Cube basicCube = createBasicCube()
+		Cube_Reactive basicCube = createBasicCube()
 				.withAggregation(dateAggregation)
 				.withAggregation(advertiserDateAggregation)
 				.withAggregation(campaignBannerDateAggregation);
 
-		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(basicCube);
+		OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(basicCube);
 		uplink = uplinkFactory.create(basicCube);
 
 		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
-		LocalFs localFs = LocalFs.create(reactor, EXECUTOR, logsDir);
+		Fs_Local localFs = Fs_Local.create(reactor, EXECUTOR, logsDir);
 		await(localFs.start());
-		AsyncMultilog<LogItem> multilog = Multilog.create(reactor,
+		AsyncMultilog<LogItem> multilog = Multilog_Reactive.create(reactor,
 				localFs,
 				frameFormat,
 				SerializerBuilder.create(CLASS_LOADER).build(LogItem.class),
@@ -145,11 +145,11 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 
 	@Test
 	public void test() {
-		Cube cube = createBasicCube()
+		Cube_Reactive cube = createBasicCube()
 				.withAggregation(dateAggregation.withPredicate(DATE_PREDICATE))
 				.withAggregation(advertiserDateAggregation.withPredicate(DATE_PREDICATE))
 				.withAggregation(campaignBannerDateAggregation.withPredicate(DATE_PREDICATE));
-		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, LogOTState.create(cube));
+		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, OTState_Log.create(cube));
 		await(stateManager.checkout());
 
 		CubeConsolidationController<Long, LogDiff<CubeDiff>, Long> consolidationController =
@@ -169,12 +169,12 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 		}
 	}
 
-	private static Map<String, Integer> getChunksByAggregation(Cube cube) {
+	private static Map<String, Integer> getChunksByAggregation(Cube_Reactive cube) {
 		return keysToMap(cube.getAggregationIds().stream(), id -> cube.getAggregation(id).getChunks());
 	}
 
-	private Cube createBasicCube() {
-		return Cube.create(reactor, EXECUTOR, CLASS_LOADER, chunkStorage)
+	private Cube_Reactive createBasicCube() {
+		return Cube_Reactive.create(reactor, EXECUTOR, CLASS_LOADER, chunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())
 				.withDimension("campaign", ofInt())

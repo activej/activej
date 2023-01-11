@@ -79,14 +79,14 @@ public final class MeasureHyperLogLog extends Measure implements WithInitializer
 	}
 
 	private static Expression add(Expression accumulator, Expression value) {
-		return new ExpressionHyperLogLog(value, accumulator);
+		return new Expression_HyperLogLog(value, accumulator);
 	}
 
-	private static class ExpressionHyperLogLog implements Expression {
+	private static class Expression_HyperLogLog implements Expression {
 		private final Expression value;
 		private final Expression accumulator;
 
-		public ExpressionHyperLogLog(Expression value, Expression accumulator) {
+		public Expression_HyperLogLog(Expression value, Expression accumulator) {
 			this.value = value;
 			this.accumulator = accumulator;
 		}

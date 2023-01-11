@@ -2,10 +2,10 @@ package io.activej.launchers.crdt;
 
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.AsyncCrdtStorage;
-import io.activej.crdt.util.CrdtDataSerializer;
+import io.activej.crdt.util.BinarySerializer_CrdtData;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.AsyncFs;
-import io.activej.fs.LocalFs;
+import io.activej.fs.Fs_Local;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.crdt.CrdtNodeLogicModule.Cluster;
@@ -49,14 +49,14 @@ public class CrdtNodeLauncherTest {
 					CrdtDescriptor<String, Integer> descriptor() {
 						return new CrdtDescriptor<>(
 								CrdtFunction.ignoringTimestamp(Integer::max),
-								new CrdtDataSerializer<>(UTF8_SERIALIZER, INT_SERIALIZER),
+								new BinarySerializer_CrdtData<>(UTF8_SERIALIZER, INT_SERIALIZER),
 								String.class,
 								Integer.class);
 					}
 
 					@Provides
 					AsyncFs fs() {
-						return LocalFs.create(Eventloop.create(), newSingleThreadExecutor(), Paths.get(""));
+						return Fs_Local.create(Eventloop.create(), newSingleThreadExecutor(), Paths.get(""));
 					}
 				};
 			}

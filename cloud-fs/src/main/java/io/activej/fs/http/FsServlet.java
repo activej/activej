@@ -24,8 +24,8 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.fs.AsyncFs;
 import io.activej.fs.exception.FileNotFoundException;
 import io.activej.fs.exception.FsException;
+import io.activej.http.ByteBufsDecoder_Multipart.AsyncMultipartDataHandler;
 import io.activej.http.*;
-import io.activej.http.MultipartDecoder.AsyncMultipartDataHandler;
 import io.activej.promise.Promise;
 
 import java.util.Objects;
@@ -47,7 +47,7 @@ import static io.activej.http.HttpMethod.POST;
 /**
  * An HTTP servlet that exposes some given {@link AsyncFs}.
  * <p>
- * Servlet is fully compatible with {@link HttpFs} client.
+ * Servlet is fully compatible with {@link Fs_Http} client.
  * <p>
  * It also defines additional endpoints that can be useful for accessing via web browser,
  * such as uploading multiple files using <i>multipart/form-data</i> content type
@@ -59,12 +59,12 @@ public final class FsServlet implements WithInitializer<FsServlet> {
 	private FsServlet() {
 	}
 
-	public static RoutingServlet create(AsyncFs fs) {
+	public static Servlet_Routing create(AsyncFs fs) {
 		return create(fs, true);
 	}
 
-	public static RoutingServlet create(AsyncFs fs, boolean inline) {
-		return RoutingServlet.create()
+	public static Servlet_Routing create(AsyncFs fs, boolean inline) {
+		return Servlet_Routing.create()
 				.map(POST, "/" + UPLOAD + "/*", request -> {
 					String contentLength = request.getHeader(CONTENT_LENGTH);
 					Long size = contentLength == null ? null : Long.valueOf(contentLength);

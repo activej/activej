@@ -29,7 +29,7 @@ import io.activej.fs.exception.FsException;
 import io.activej.fs.http.FsServlet;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpResponse;
-import io.activej.http.RoutingServlet;
+import io.activej.http.Servlet_Routing;
 import io.activej.promise.Promise;
 
 import java.util.*;
@@ -51,19 +51,19 @@ public final class FsGuiServlet implements WithInitializer<FsGuiServlet> {
 	private FsGuiServlet() {
 	}
 
-	public static RoutingServlet create(AsyncFs fs) {
+	public static Servlet_Routing create(AsyncFs fs) {
 		return create(fs, "ActiveJ FS");
 	}
 
-	public static RoutingServlet create(AsyncFs fs, String title) {
+	public static Servlet_Routing create(AsyncFs fs, String title) {
 		Mustache mustache = new DefaultMustacheFactory().compile("fs/gui/static/index.html");
-		RoutingServlet fsServlet = FsServlet.create(fs);
+		Servlet_Routing fsServlet = FsServlet.create(fs);
 
-		RoutingServlet uploadServlet = fsServlet.getSubtree("/" + UPLOAD);
-		RoutingServlet downloadServlet = fsServlet.getSubtree("/" + DOWNLOAD);
+		Servlet_Routing uploadServlet = fsServlet.getSubtree("/" + UPLOAD);
+		Servlet_Routing downloadServlet = fsServlet.getSubtree("/" + DOWNLOAD);
 		assert uploadServlet != null && downloadServlet != null;
 
-		return RoutingServlet.create()
+		return Servlet_Routing.create()
 				.map("/api/upload", uploadServlet)
 				.map("/api/download/*", downloadServlet)
 				.map(POST, "/api/newDir", request -> request.loadBody()

@@ -24,8 +24,8 @@ import io.activej.datastream.StreamConsumerWithResult;
 import io.activej.datastream.StreamSupplierWithResult;
 import io.activej.datastream.processor.StreamUnion;
 import io.activej.datastream.stats.StreamStats;
-import io.activej.datastream.stats.StreamStatsBasic;
-import io.activej.datastream.stats.StreamStatsDetailed;
+import io.activej.datastream.stats.StreamStats_Basic;
+import io.activej.datastream.stats.StreamStats_Detailed;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.multilog.AsyncMultilog;
@@ -59,18 +59,18 @@ public final class LogOTProcessor<T, D> extends AbstractReactive
 	private final String log;
 	private final List<String> partitions;
 
-	private final LogOTState<D> state;
+	private final OTState_Log<D> state;
 
 	// JMX
 	private boolean enabled = true;
 	private boolean detailed;
-	private final StreamStatsBasic<T> streamStatsBasic = StreamStats.basic();
-	private final StreamStatsDetailed<T> streamStatsDetailed = StreamStats.detailed();
+	private final StreamStats_Basic<T> streamStatsBasic = StreamStats.basic();
+	private final StreamStats_Detailed<T> streamStatsDetailed = StreamStats.detailed();
 	private final PromiseStats promiseProcessLog = PromiseStats.create(Duration.ofMinutes(5));
 
 	private LogOTProcessor(Reactor reactor,
 			AsyncMultilog<T> multilog, AsyncLogDataConsumer<T, D> logStreamConsumer,
-			String log, List<String> partitions, LogOTState<D> state) {
+			String log, List<String> partitions, OTState_Log<D> state) {
 		super(reactor);
 		this.multilog = multilog;
 		this.logStreamConsumer = logStreamConsumer;
@@ -81,7 +81,7 @@ public final class LogOTProcessor<T, D> extends AbstractReactive
 
 	public static <T, D> LogOTProcessor<T, D> create(Reactor reactor, AsyncMultilog<T> multilog,
 			AsyncLogDataConsumer<T, D> logStreamConsumer,
-			String log, List<String> partitions, LogOTState<D> state) {
+			String log, List<String> partitions, OTState_Log<D> state) {
 		return new LogOTProcessor<>(reactor, multilog, logStreamConsumer, log, partitions, state);
 	}
 
@@ -165,12 +165,12 @@ public final class LogOTProcessor<T, D> extends AbstractReactive
 	}
 
 	@JmxAttribute
-	public StreamStatsBasic getStreamStatsBasic() {
+	public StreamStats_Basic getStreamStatsBasic() {
 		return streamStatsBasic;
 	}
 
 	@JmxAttribute
-	public StreamStatsDetailed getStreamStatsDetailed() {
+	public StreamStats_Detailed getStreamStatsDetailed() {
 		return streamStatsDetailed;
 	}
 

@@ -38,8 +38,8 @@ public class UiKernelServlets {
 
 	private static final String ID_PARAMETER_NAME = "id";
 
-	public static <K, R extends AbstractRecord<K>> RoutingServlet apiServlet(AsyncGridModel<K, R> model, Gson gson) {
-		return RoutingServlet.create()
+	public static <K, R extends AbstractRecord<K>> Servlet_Routing apiServlet(AsyncGridModel<K, R> model, Gson gson) {
+		return Servlet_Routing.create()
 				.map(POST, "/", create(model, gson))
 				.map(GET, "/", read(model, gson))
 				.map(PUT, "/", update(model, gson))

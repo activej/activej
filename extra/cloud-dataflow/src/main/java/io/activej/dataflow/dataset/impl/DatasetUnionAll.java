@@ -21,7 +21,7 @@ import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.graph.StreamId;
-import io.activej.dataflow.node.NodeUnion;
+import io.activej.dataflow.node.Node_Union;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -62,7 +62,7 @@ public final class DatasetUnionAll<T> extends Dataset<T> {
 				continue;
 			}
 
-			NodeUnion<T> nodeUnion = new NodeUnion<>(index, streamIds);
+			Node_Union<T> nodeUnion = new Node_Union<>(index, streamIds);
 			graph.addNode(entry.getKey(), nodeUnion);
 
 			outputStreamIds.add(nodeUnion.getOutput());

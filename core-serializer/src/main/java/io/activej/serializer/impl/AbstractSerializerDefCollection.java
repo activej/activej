@@ -28,7 +28,7 @@ import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 import static io.activej.serializer.impl.SerializerExpressions.*;
 
-public abstract class AbstractSerializerDefCollection extends AbstractSerializerDef implements SerializerDefWithNullable {
+public abstract class AbstractSerializerDefCollection extends AbstractSerializerDef implements SerializerDef_WithNullable {
 	protected final SerializerDef valueSerializer;
 	protected final Class<?> encodeType;
 	protected final Class<?> decodeType;
@@ -66,7 +66,7 @@ public abstract class AbstractSerializerDefCollection extends AbstractSerializer
 	@Override
 	public final SerializerDef ensureNullable(CompatibilityLevel compatibilityLevel) {
 		if (compatibilityLevel.getLevel() < LEVEL_3.getLevel()) {
-			return new SerializerDefNullable(this);
+			return new SerializerDef_Nullable(this);
 		}
 		return doEnsureNullable(compatibilityLevel);
 	}

@@ -14,7 +14,7 @@ import static io.activej.test.TestUtils.getFreePort;
 public final class GzipCompressingBehaviourExample {
 	public static void main(String[] args) throws IOException {
 		Eventloop eventloop = Eventloop.create().withFatalErrorHandler(rethrow()).withCurrentThread();
-		RoutingServlet servlet = RoutingServlet.create()
+		Servlet_Routing servlet = Servlet_Routing.create()
 				// always responds in gzip
 				.map(GET, "/gzip/",
 						request -> HttpResponse.ok200().withBodyGzipCompression().withBody(encodeAscii("Hello!")))
@@ -29,7 +29,7 @@ public final class GzipCompressingBehaviourExample {
 
 		// this is how you should send an http request with gzipped body.
 		// if the content of the response is gzipped - it would be decompressed automatically
-		AsyncHttpClient client = HttpClient.create(eventloop);
+		AsyncHttpClient client = HttpClient_Reactive.create(eventloop);
 
 		// !sic, you should call withAcceptEncodingGzip for your request if you want to get the response gzipped
 		client.request(

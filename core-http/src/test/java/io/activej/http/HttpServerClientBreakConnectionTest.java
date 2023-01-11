@@ -48,7 +48,7 @@ public class HttpServerClientBreakConnectionTest {
 				.withListenPort(freePort)
 				.withAcceptOnce();
 
-		client = HttpClient.create(reactor);
+		client = HttpClient_Reactive.create(reactor);
 		server.listen();
 	}
 

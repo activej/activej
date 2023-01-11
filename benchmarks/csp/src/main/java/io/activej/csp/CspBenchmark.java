@@ -21,11 +21,11 @@ public class CspBenchmark extends Launcher {
 	private static final int WARMUP_ROUNDS = 3;
 	private static final int BENCHMARK_ROUNDS = 10;
 
-	static final class IntegerChannelSupplier extends AbstractChannelSupplier<Integer> {
+	static final class ChannelSupplier_Integer extends AbstractChannelSupplier<Integer> {
 		private Integer integer;
 		private final int limit;
 
-		public IntegerChannelSupplier(int limit) {
+		public ChannelSupplier_Integer(int limit) {
 			this.integer = 0;
 			this.limit = limit;
 		}
@@ -63,7 +63,7 @@ public class CspBenchmark extends Launcher {
 	@Provides
 	@Transient
 	ChannelSupplier<Integer> channelSupplier(Config config) {
-		return new IntegerChannelSupplier(config.get(ofInteger(), "benchmark.totalElements", TOTAL_ELEMENTS));
+		return new ChannelSupplier_Integer(config.get(ofInteger(), "benchmark.totalElements", TOTAL_ELEMENTS));
 	}
 
 	@Provides

@@ -4,8 +4,8 @@ import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.collector.AsyncCollector;
-import io.activej.dataflow.collector.ConcatCollector;
-import io.activej.dataflow.collector.MergeCollector;
+import io.activej.dataflow.collector.Collector_Concat;
+import io.activej.dataflow.collector.Collector_Merge;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.dataset.SortedDataset;
@@ -13,20 +13,20 @@ import io.activej.dataflow.dataset.impl.DatasetConsumerOfId;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
-import io.activej.dataflow.http.DataflowDebugServlet;
+import io.activej.dataflow.http.Servlet_DataflowDebug;
 import io.activej.dataflow.inject.BinarySerializerModule;
 import io.activej.dataflow.inject.DataflowModule;
 import io.activej.dataflow.inject.DatasetIdModule;
 import io.activej.dataflow.inject.SortingExecutor;
 import io.activej.dataflow.messaging.DataflowRequest;
 import io.activej.dataflow.messaging.DataflowResponse;
-import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
+import io.activej.dataflow.node.Node_Sort.StreamSorterStorageFactory;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamReducers.MergeReducer;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.http.AsyncHttpClient;
-import io.activej.http.HttpClient;
+import io.activej.http.HttpClient_Reactive;
 import io.activej.http.HttpServer;
 import io.activej.inject.Injector;
 import io.activej.inject.Key;
@@ -58,7 +58,7 @@ import java.util.function.Predicate;
 import static io.activej.common.Utils.concat;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.graph.StreamSchemas.simple;
-import static io.activej.dataflow.helper.MeergeStubStreamSorterStorage.FACTORY_STUB;
+import static io.activej.dataflow.helper.StreamSorterStorage_MergeStub.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.assertCompleteFn;
@@ -425,7 +425,7 @@ public final class DataflowTest {
 		Dataset<TestItem> filterDataset = filter(datasetOfId("items", simple(TestItem.class)), new TestPredicate());
 		LocallySortedDataset<Long, TestItem> sortedDataset = localSort(filterDataset, long.class, new TestKeyFunction(), new TestComparator());
 
-		AsyncCollector<TestItem> collector = ConcatCollector.create(sortedDataset, client);
+		AsyncCollector<TestItem> collector = Collector_Concat.create(sortedDataset, client);
 		StreamSupplier<TestItem> resultSupplier = collector.compile(graph);
 
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
@@ -488,7 +488,7 @@ public final class DataflowTest {
 		LocallySortedDataset<Long, TestItem> sortedDataset = localSort(dataset, long.class, new TestKeyFunction(), new TestComparator());
 		SortedDataset<Long, TestItem> afterOffsetAndLimitApplied = offsetLimit(sortedDataset, 3, 4);
 
-		AsyncCollector<TestItem> collector = MergeCollector.create(afterOffsetAndLimitApplied, client, false);
+		AsyncCollector<TestItem> collector = Collector_Merge.create(afterOffsetAndLimitApplied, client, false);
 		StreamSupplier<TestItem> resultSupplier = collector.compile(graph);
 
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
@@ -605,7 +605,7 @@ public final class DataflowTest {
 
 		SortedDataset<Long, TestItem> union = union(sorted1, sorted2);
 
-		MergeCollector<Long, TestItem> collector = MergeCollector.create(union, client, false);
+		Collector_Merge<Long, TestItem> collector = Collector_Merge.create(union, client, false);
 		StreamSupplier<TestItem> resultSupplier = collector.compile(graph);
 
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
@@ -684,7 +684,7 @@ public final class DataflowTest {
 
 		SortedDataset<Long, TestItem> sortedUnion = repartitionSort(localSort(union, Long.class, new TestKeyFunction(), Comparator.naturalOrder()));
 
-		MergeCollector<Long, TestItem> collector = MergeCollector.create(sortedUnion, client, false);
+		Collector_Merge<Long, TestItem> collector = Collector_Merge.create(sortedUnion, client, false);
 		StreamSupplier<TestItem> resultSupplier = collector.compile(graph);
 
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
@@ -761,12 +761,12 @@ public final class DataflowTest {
 
 					@Provides
 					AsyncHttpClient httpClient(NioReactor reactor) {
-						return HttpClient.create(reactor);
+						return HttpClient_Reactive.create(reactor);
 					}
 
 					@Provides
 					HttpServer debugServer(NioReactor reactor, Executor executor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, Injector env) {
-						return HttpServer.create(reactor, new DataflowDebugServlet(graphPartitions, executor, codec, env));
+						return HttpServer.create(reactor, new Servlet_DataflowDebug(graphPartitions, executor, codec, env));
 					}
 				});
 	}

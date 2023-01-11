@@ -13,7 +13,7 @@ import io.activej.fs.exception.ForbiddenPathException;
 import io.activej.fs.exception.FsException;
 import io.activej.fs.exception.FsIOException;
 import io.activej.fs.tcp.FsServer;
-import io.activej.fs.tcp.RemoteFs;
+import io.activej.fs.tcp.Fs_Remote;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
@@ -72,11 +72,11 @@ public final class FsIntegrationTest {
 		Executor executor = newCachedThreadPool();
 
 		storage = temporaryFolder.newFolder("server_storage").toPath();
-		LocalFs localFs = LocalFs.create(Reactor.getCurrentReactor(), executor, storage);
+		Fs_Local localFs = Fs_Local.create(Reactor.getCurrentReactor(), executor, storage);
 		await(localFs.start());
 		server = FsServer.create(Reactor.getCurrentReactor(), localFs).withListenAddress(address);
 		server.listen();
-		fs = RemoteFs.create(Reactor.getCurrentReactor(), address);
+		fs = Fs_Remote.create(Reactor.getCurrentReactor(), address);
 	}
 
 	@Test

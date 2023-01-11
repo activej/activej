@@ -14,7 +14,7 @@ import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.AsyncRpcClient;
-import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.client.RpcClient_Reactive;
 import io.activej.service.ServiceGraphModule;
 import org.jetbrains.annotations.Nullable;
 
@@ -54,7 +54,7 @@ public class RpcBenchmarkClient extends Launcher {
 
 	@Provides
 	AsyncRpcClient rpcClient(@Named("client") NioReactor reactor, Config config) {
-		return RpcClient.create(reactor)
+		return RpcClient_Reactive.create(reactor)
 				.withStreamProtocol(
 						config.get(ofMemSize(), "rpc.defaultPacketSize", MemSize.kilobytes(256)),
 						config.get(ofFrameFormat(), "rpc.frameFormat", null))

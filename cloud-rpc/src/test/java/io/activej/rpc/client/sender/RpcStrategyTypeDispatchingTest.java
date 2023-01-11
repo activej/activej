@@ -43,10 +43,10 @@ public class RpcStrategyTypeDispatchingTest {
 		pool.put(address1, connection1);
 		pool.put(address2, connection2);
 		pool.put(address3, connection3);
-		RpcStrategies.SingleServer server1 = server(address1);
-		RpcStrategies.SingleServer server2 = server(address2);
-		RpcStrategies.SingleServer server3 = server(address3);
-		RpcStrategy typeDispatchingStrategy = RpcStrategies.TypeDispatching.create()
+		RpcStrategy_SingleServer server1 = server(address1);
+		RpcStrategy_SingleServer server2 = server(address2);
+		RpcStrategy_SingleServer server3 = server(address3);
+		RpcStrategy typeDispatchingStrategy = RpcStrategy_TypeDispatching.create()
 				.on(RpcMessageDataTypeOne.class, server1)
 				.on(RpcMessageDataTypeTwo.class, server2)
 				.on(RpcMessageDataTypeThree.class, server3);
@@ -81,11 +81,11 @@ public class RpcStrategyTypeDispatchingTest {
 		pool.put(address2, connection2);
 		pool.put(address3, connection3);
 		pool.put(address4, connection4);
-		RpcStrategies.SingleServer server1 = server(address1);
-		RpcStrategies.SingleServer server2 = server(address2);
-		RpcStrategies.SingleServer server3 = server(address3);
-		RpcStrategies.SingleServer defaultServer = server(address4);
-		RpcStrategy typeDispatchingStrategy = RpcStrategies.TypeDispatching.create()
+		RpcStrategy_SingleServer server1 = server(address1);
+		RpcStrategy_SingleServer server2 = server(address2);
+		RpcStrategy_SingleServer server3 = server(address3);
+		RpcStrategy_SingleServer defaultServer = server(address4);
+		RpcStrategy typeDispatchingStrategy = RpcStrategy_TypeDispatching.create()
 				.on(RpcMessageDataTypeOne.class, server1)
 				.on(RpcMessageDataTypeTwo.class, server2)
 				.on(RpcMessageDataTypeThree.class, server3)
@@ -110,10 +110,10 @@ public class RpcStrategyTypeDispatchingTest {
 		pool.put(address1, connection1);
 		pool.put(address2, connection2);
 		pool.put(address3, connection3);
-		RpcStrategies.SingleServer server1 = RpcStrategies.SingleServer.create(address1);
-		RpcStrategies.SingleServer server2 = RpcStrategies.SingleServer.create(address2);
-		RpcStrategies.SingleServer server3 = RpcStrategies.SingleServer.create(address3);
-		RpcStrategy typeDispatchingStrategy = RpcStrategies.TypeDispatching.create()
+		RpcStrategy_SingleServer server1 = RpcStrategy_SingleServer.create(address1);
+		RpcStrategy_SingleServer server2 = RpcStrategy_SingleServer.create(address2);
+		RpcStrategy_SingleServer server3 = RpcStrategy_SingleServer.create(address3);
+		RpcStrategy typeDispatchingStrategy = RpcStrategy_TypeDispatching.create()
 				.on(RpcMessageDataTypeOne.class, server1)
 				.on(RpcMessageDataTypeTwo.class, server2)
 				.on(RpcMessageDataTypeThree.class, server3);
@@ -131,10 +131,10 @@ public class RpcStrategyTypeDispatchingTest {
 		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
 		RpcSenderStub connection1 = new RpcSenderStub();
 		RpcSenderStub connection3 = new RpcSenderStub();
-		RpcStrategies.SingleServer server1 = RpcStrategies.SingleServer.create(address1);
-		RpcStrategies.SingleServer server2 = RpcStrategies.SingleServer.create(address2);
-		RpcStrategies.SingleServer server3 = RpcStrategies.SingleServer.create(address3);
-		RpcStrategy typeDispatchingStrategy = RpcStrategies.TypeDispatching.create()
+		RpcStrategy_SingleServer server1 = RpcStrategy_SingleServer.create(address1);
+		RpcStrategy_SingleServer server2 = RpcStrategy_SingleServer.create(address2);
+		RpcStrategy_SingleServer server3 = RpcStrategy_SingleServer.create(address3);
+		RpcStrategy typeDispatchingStrategy = RpcStrategy_TypeDispatching.create()
 				.on(RpcMessageDataTypeOne.class, server1)
 				.on(RpcMessageDataTypeTwo.class, server2)
 				.on(RpcMessageDataTypeThree.class, server3);
@@ -152,11 +152,11 @@ public class RpcStrategyTypeDispatchingTest {
 		RpcSenderStub connection1 = new RpcSenderStub();
 		RpcSenderStub connection2 = new RpcSenderStub();
 		RpcSenderStub connection3 = new RpcSenderStub();
-		RpcStrategies.SingleServer server1 = RpcStrategies.SingleServer.create(address1);
-		RpcStrategies.SingleServer server2 = RpcStrategies.SingleServer.create(address2);
-		RpcStrategies.SingleServer server3 = RpcStrategies.SingleServer.create(address3);
-		RpcStrategies.SingleServer defaultServer = RpcStrategies.SingleServer.create(address4);
-		RpcStrategy typeDispatchingStrategy = RpcStrategies.TypeDispatching.create()
+		RpcStrategy_SingleServer server1 = RpcStrategy_SingleServer.create(address1);
+		RpcStrategy_SingleServer server2 = RpcStrategy_SingleServer.create(address2);
+		RpcStrategy_SingleServer server3 = RpcStrategy_SingleServer.create(address3);
+		RpcStrategy_SingleServer defaultServer = RpcStrategy_SingleServer.create(address4);
+		RpcStrategy typeDispatchingStrategy = RpcStrategy_TypeDispatching.create()
 				.on(RpcMessageDataTypeOne.class, server1)
 				.on(RpcMessageDataTypeTwo.class, server2)
 				.on(RpcMessageDataTypeThree.class, server3)

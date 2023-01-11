@@ -4,7 +4,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.util.ByteBufWriter;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
-import io.activej.http.RoutingServlet;
+import io.activej.http.Servlet_Routing;
 import io.activej.inject.annotation.Provides;
 import io.activej.launcher.Launcher;
 import io.activej.launchers.http.HttpServerLauncher;
@@ -40,7 +40,7 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 		Mustache singlePollCreate = new DefaultMustacheFactory().compile("templates/singlePollCreate.html");
 		Mustache listPolls = new DefaultMustacheFactory().compile("templates/listPolls.html");
 
-		return RoutingServlet.create()
+		return Servlet_Routing.create()
 				.map(GET, "/", request -> HttpResponse.ok200()
 						.withBody(applyTemplate(listPolls, Map.of("polls", pollDao.findAll().entrySet()))))
 				//[END REGION_2]

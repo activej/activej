@@ -49,7 +49,7 @@ public final class AdderServerLauncher extends Launcher {
 	@Provides
 	@Named("Print local data")
 	TaskScheduler printLocalMap(Reactor reactor, AsyncCrdtMap<Long, SimpleSumsCrdtState> map, @Local AsyncCrdtStorage<Long, DetailedSumsCrdtState> storage) {
-		checkState((map instanceof AdderCrdtMap));
+		checkState((map instanceof CrdtMap_Adder));
 
 		return TaskScheduler.create(reactor, () -> storage.download()
 						.then(StreamSupplier::toList)
@@ -62,7 +62,7 @@ public final class AdderServerLauncher extends Launcher {
 								crdtData.stream()
 										.map(data -> data.getKey() + ": " + data.getState().getSum())
 										.collect(Collectors.joining("\n")),
-								((AdderCrdtMap) map).getMap().entrySet().stream()
+								((CrdtMap_Adder) map).getMap().entrySet().stream()
 										.map(data -> data.getKey() + ": " + data.getValue().value())
 										.collect(Collectors.joining("\n")))))
 				.withInterval(Duration.ofSeconds(10));

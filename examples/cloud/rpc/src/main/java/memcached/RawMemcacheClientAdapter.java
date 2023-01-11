@@ -1,15 +1,15 @@
 package memcached;
 
-import io.activej.memcache.client.RawMemcacheClient;
+import io.activej.memcache.client.MemcacheClient_Raw;
 import io.activej.memcache.protocol.MemcacheRpcMessage.Slice;
 import io.activej.promise.Promise;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class RawMemcacheClientAdapter {
-	private final RawMemcacheClient client;
+	private final MemcacheClient_Raw client;
 
-	RawMemcacheClientAdapter(RawMemcacheClient client) {
+	RawMemcacheClientAdapter(MemcacheClient_Raw client) {
 		this.client = client;
 	}
 

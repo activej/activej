@@ -10,9 +10,9 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frames.FrameFormat;
-import io.activej.csp.process.frames.LZ4FrameFormat;
+import io.activej.csp.process.frames.FrameFormat_LZ4;
 import io.activej.datastream.StreamSupplier;
-import io.activej.fs.LocalFs;
+import io.activej.fs.Fs_Local;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
@@ -85,12 +85,12 @@ public class CustomFieldsTest {
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 
 		Path path = temporaryFolder.newFolder().toPath();
-		LocalFs fs = LocalFs.create(reactor, executor, path);
+		Fs_Local fs = Fs_Local.create(reactor, executor, path);
 		await(fs.start());
-		FrameFormat frameFormat = LZ4FrameFormat.create();
-		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		FrameFormat frameFormat = FrameFormat_LZ4.create();
+		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage_Reactive.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 
-		AggregationStructure structure = AggregationStructure.create(ChunkIdCodec.ofLong())
+		AggregationStructure structure = AggregationStructure.create(JsonCodec_ChunkId.ofLong())
 				.withKey("siteId", FieldTypes.ofInt())
 				.withMeasure("eventCount", count(ofLong()))
 				.withMeasure("sumRevenue", sum(ofDouble()))
@@ -99,7 +99,7 @@ public class CustomFieldsTest {
 				.withMeasure("uniqueUserIds", union(ofLong()))
 				.withMeasure("estimatedUniqueUserIdCount", hyperLogLog(1024));
 
-		Aggregation aggregation = Aggregation.create(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure)
+		Aggregation_Reactive aggregation = Aggregation_Reactive.create(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure)
 				.withTemporarySortDir(temporaryFolder.newFolder().toPath());
 
 		StreamSupplier<EventRecord> supplier = StreamSupplier.of(

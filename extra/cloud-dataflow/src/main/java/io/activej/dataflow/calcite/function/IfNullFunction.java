@@ -1,8 +1,8 @@
 package io.activej.dataflow.calcite.function;
 
 import io.activej.dataflow.calcite.operand.Operand;
-import io.activej.dataflow.calcite.operand.OperandFunction;
-import io.activej.dataflow.calcite.operand.OperandIfNull;
+import io.activej.dataflow.calcite.operand.Operand_Function;
+import io.activej.dataflow.calcite.operand.Operand_IfNull;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.type.InferTypes;
@@ -20,11 +20,11 @@ public final class IfNullFunction extends ProjectionFunction {
 	}
 
 	@Override
-	public OperandFunction<?> toOperandFunction(List<Operand<?>> operands) {
+	public Operand_Function<?> toOperandFunction(List<Operand<?>> operands) {
 		checkArgument(operands.size() == 2);
 
 		Operand<?> checkedOperand = operands.get(0);
 		Operand<?> defaultValueOperand = operands.get(1);
-		return new OperandIfNull(checkedOperand, defaultValueOperand);
+		return new Operand_IfNull(checkedOperand, defaultValueOperand);
 	}
 }

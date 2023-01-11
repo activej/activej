@@ -36,9 +36,9 @@ public abstract class AbstractDiscoveryService<D extends AbstractDiscoveryServic
 		return (D) this;
 	}
 
-	protected final RendezvousPartitionScheme<PartitionId> parseScheme(byte[] bytes) throws MalformedDataException {
+	protected final PartitionScheme_Rendezvous<PartitionId> parseScheme(byte[] bytes) throws MalformedDataException {
 		List<RendezvousPartitionGroup<PartitionId>> partitionGroups = fromJson(PARTITION_GROUPS_TYPE, bytes);
-		RendezvousPartitionScheme<PartitionId> scheme = RendezvousPartitionScheme.create(partitionGroups)
+		PartitionScheme_Rendezvous<PartitionId> scheme = PartitionScheme_Rendezvous.create(partitionGroups)
 				.withPartitionIdGetter(PartitionId::getId);
 
 		if (rpcProvider != null) scheme.withRpcProvider(rpcProvider);

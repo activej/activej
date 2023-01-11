@@ -55,19 +55,19 @@ import static java.util.stream.Collectors.toList;
 public final class ConfigConverters {
 
 	public static ConfigConverter<LocalDate> ofLocalDate() {
-		return SimpleConfigConverter.of(LocalDate::parse, LocalDate::toString);
+		return ConfigConverter_Simple.of(LocalDate::parse, LocalDate::toString);
 	}
 
 	public static ConfigConverter<LocalTime> ofLocalTime() {
-		return SimpleConfigConverter.of(LocalTime::parse, LocalTime::toString);
+		return ConfigConverter_Simple.of(LocalTime::parse, LocalTime::toString);
 	}
 
 	public static ConfigConverter<LocalDateTime> ofLocalDateTime() {
-		return SimpleConfigConverter.of(StringFormatUtils::parseLocalDateTime, StringFormatUtils::formatLocalDateTime);
+		return ConfigConverter_Simple.of(StringFormatUtils::parseLocalDateTime, StringFormatUtils::formatLocalDateTime);
 	}
 
 	public static ConfigConverter<Period> ofPeriod() {
-		return SimpleConfigConverter.of(StringFormatUtils::parsePeriod, StringFormatUtils::formatPeriod);
+		return ConfigConverter_Simple.of(StringFormatUtils::parsePeriod, StringFormatUtils::formatPeriod);
 	}
 
 	/**
@@ -78,7 +78,7 @@ public final class ConfigConverters {
 	}
 
 	public static ConfigConverter<Duration> ofDuration() {
-		return SimpleConfigConverter.of(StringFormatUtils::parseDuration, StringFormatUtils::formatDuration);
+		return ConfigConverter_Simple.of(StringFormatUtils::parseDuration, StringFormatUtils::formatDuration);
 	}
 
 	/**
@@ -89,7 +89,7 @@ public final class ConfigConverters {
 	}
 
 	public static ConfigConverter<Instant> ofInstant() {
-		return SimpleConfigConverter.of(StringFormatUtils::parseInstant, StringFormatUtils::formatInstant);
+		return ConfigConverter_Simple.of(StringFormatUtils::parseInstant, StringFormatUtils::formatInstant);
 	}
 
 	/**
@@ -114,54 +114,54 @@ public final class ConfigConverters {
 	}
 
 	public static ConfigConverter<Byte> ofByte() {
-		return SimpleConfigConverter.of(Byte::valueOf, aByte -> Byte.toString(aByte));
+		return ConfigConverter_Simple.of(Byte::valueOf, aByte -> Byte.toString(aByte));
 	}
 
 	public static ConfigConverter<Integer> ofInteger() {
-		return SimpleConfigConverter.of(Integer::valueOf, anInteger -> Integer.toString(anInteger));
+		return ConfigConverter_Simple.of(Integer::valueOf, anInteger -> Integer.toString(anInteger));
 	}
 
 	public static ConfigConverter<Long> ofLong() {
-		return SimpleConfigConverter.of(Long::valueOf, aLong -> Long.toString(aLong));
+		return ConfigConverter_Simple.of(Long::valueOf, aLong -> Long.toString(aLong));
 	}
 
 	public static ConfigConverter<Float> ofFloat() {
-		return SimpleConfigConverter.of(Float::valueOf, aFloat -> Float.toString(aFloat));
+		return ConfigConverter_Simple.of(Float::valueOf, aFloat -> Float.toString(aFloat));
 	}
 
 	public static ConfigConverter<Double> ofDouble() {
-		return SimpleConfigConverter.of(Double::valueOf, aDouble -> Double.toString(aDouble));
+		return ConfigConverter_Simple.of(Double::valueOf, aDouble -> Double.toString(aDouble));
 	}
 
 	public static ConfigConverter<Boolean> ofBoolean() {
-		return SimpleConfigConverter.of(Boolean::valueOf, aBoolean -> Boolean.toString(aBoolean));
+		return ConfigConverter_Simple.of(Boolean::valueOf, aBoolean -> Boolean.toString(aBoolean));
 	}
 
-	public static <E extends Enum<E>> SimpleConfigConverter<E> ofEnum(Class<E> enumClass) {
-		return SimpleConfigConverter.of(string -> Enum.valueOf(enumClass, string), Enum::name);
+	public static <E extends Enum<E>> ConfigConverter_Simple<E> ofEnum(Class<E> enumClass) {
+		return ConfigConverter_Simple.of(string -> Enum.valueOf(enumClass, string), Enum::name);
 	}
 
 	public static ConfigConverter<Class<?>> ofClass() {
-		return SimpleConfigConverter.of(Class::forName, Class::getName);
+		return ConfigConverter_Simple.of(Class::forName, Class::getName);
 	}
 
 	public static ConfigConverter<InetAddress> ofInetAddress() {
-		return SimpleConfigConverter.of(InetAddress::getByName, InetAddress::getHostAddress);
+		return ConfigConverter_Simple.of(InetAddress::getByName, InetAddress::getHostAddress);
 	}
 
 	public static ConfigConverter<InetSocketAddress> ofInetSocketAddress() {
-		return SimpleConfigConverter.of(
+		return ConfigConverter_Simple.of(
 				StringFormatUtils::parseInetSocketAddress,
 				value -> value.getAddress().getHostAddress() + ":" + value.getPort()
 		);
 	}
 
 	public static ConfigConverter<Path> ofPath() {
-		return SimpleConfigConverter.of(Paths::get, value -> value.toAbsolutePath().normalize().toString());
+		return ConfigConverter_Simple.of(Paths::get, value -> value.toAbsolutePath().normalize().toString());
 	}
 
 	public static ConfigConverter<MemSize> ofMemSize() {
-		return SimpleConfigConverter.of(MemSize::valueOf, MemSize::format);
+		return ConfigConverter_Simple.of(MemSize::valueOf, MemSize::format);
 	}
 
 	/**
@@ -179,7 +179,7 @@ public final class ConfigConverters {
 	}
 
 	public static <T> ConfigConverter<List<T>> ofList(ConfigConverter<T> elementConverter, CharSequence separators) {
-		return new SimpleConfigConverter<>() {
+		return new ConfigConverter_Simple<>() {
 			private final Pattern pattern = compile(separators.chars()
 					.mapToObj(c -> "\\" + (char) c)
 					.collect(joining("", "[", "]")));
@@ -214,7 +214,7 @@ public final class ConfigConverters {
 
 	// compound
 	public static ConfigConverter<ServerSocketSettings> ofServerSocketSettings() {
-		return new ComplexConfigConverter<>(ServerSocketSettings.create(DEFAULT_BACKLOG)) {
+		return new ConfigConverter_Complex<>(ServerSocketSettings.create(DEFAULT_BACKLOG)) {
 			@Override
 			protected ServerSocketSettings provide(Config config, ServerSocketSettings defaultValue) {
 				return Function.<ServerSocketSettings>identity()
@@ -235,7 +235,7 @@ public final class ConfigConverters {
 	}
 
 	public static ConfigConverter<SocketSettings> ofSocketSettings() {
-		return new ComplexConfigConverter<>(SocketSettings.create()) {
+		return new ConfigConverter_Complex<>(SocketSettings.create()) {
 			@Override
 			protected SocketSettings provide(Config config, SocketSettings defaultValue) {
 				return Function.<SocketSettings>identity()
@@ -280,7 +280,7 @@ public final class ConfigConverters {
 	}
 
 	public static ConfigConverter<DatagramSocketSettings> ofDatagramSocketSettings() {
-		return new ComplexConfigConverter<>(DatagramSocketSettings.create()) {
+		return new ConfigConverter_Complex<>(DatagramSocketSettings.create()) {
 			@Override
 			protected DatagramSocketSettings provide(Config config, DatagramSocketSettings defaultValue) {
 				return Function.<DatagramSocketSettings>identity()
@@ -429,7 +429,7 @@ public final class ConfigConverters {
 	}
 
 	public static ConfigConverter<ThrottlingController> ofThrottlingController() {
-		return new ComplexConfigConverter<>(ThrottlingController.create()) {
+		return new ConfigConverter_Complex<>(ThrottlingController.create()) {
 			@Override
 			protected ThrottlingController provide(Config config, ThrottlingController defaultValue) {
 				return ThrottlingController.create()

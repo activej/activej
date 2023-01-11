@@ -3,8 +3,8 @@ package io.activej.launchers.crdt;
 import io.activej.config.Config;
 import io.activej.config.converter.ConfigConverter;
 import io.activej.crdt.storage.cluster.PartitionId;
+import io.activej.crdt.storage.cluster.PartitionScheme_Rendezvous;
 import io.activej.crdt.storage.cluster.RendezvousPartitionGroup;
-import io.activej.crdt.storage.cluster.RendezvousPartitionScheme;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
@@ -123,9 +123,9 @@ public class ConfigConverterTest {
 		properties.put("partitionGroup.2.active", "false");
 
 		Config config = Config.ofMap(properties);
-		ConfigConverter<RendezvousPartitionScheme<PartitionId>> converter = ofRendezvousPartitionScheme(ofPartitionId());
+		ConfigConverter<PartitionScheme_Rendezvous<PartitionId>> converter = ofRendezvousPartitionScheme(ofPartitionId());
 
-		RendezvousPartitionScheme<PartitionId> partitionScheme = converter.get(config);
+		PartitionScheme_Rendezvous<PartitionId> partitionScheme = converter.get(config);
 		Set<PartitionId> partitions = partitionScheme.getPartitions();
 
 		Set<PartitionId> expectedPartitionIds = Set.of(

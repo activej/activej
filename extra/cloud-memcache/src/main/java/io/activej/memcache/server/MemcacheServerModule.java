@@ -20,7 +20,7 @@ import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
-import io.activej.memcache.protocol.SerializerDefSlice;
+import io.activej.memcache.protocol.SerializerDef_Slice;
 import io.activej.promise.Promise;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.server.RpcServer;
@@ -64,7 +64,7 @@ public class MemcacheServerModule extends AbstractModule {
 							return Promise.of(PutResponse.INSTANCE);
 						})
 				.withSerializerBuilder(SerializerBuilder.create()
-						.with(Slice.class, ctx -> new SerializerDefSlice()))
+						.with(Slice.class, ctx -> new SerializerDef_Slice()))
 				.withMessageTypes(MESSAGE_TYPES)
 				.withStreamProtocol(
 						config.get(ofMemSize(), "protocol.packetSize", kilobytes(64)),

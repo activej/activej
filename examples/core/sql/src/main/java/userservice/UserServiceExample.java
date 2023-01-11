@@ -10,8 +10,8 @@ import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
 import io.activej.service.ServiceGraphModule;
 import userservice.dao.AsyncUserDao;
-import userservice.dao.SqlUserDao;
 import userservice.dao.User;
+import userservice.dao.UserDao_Sql;
 
 import javax.sql.DataSource;
 import java.util.Map;
@@ -48,7 +48,7 @@ public class UserServiceExample extends Launcher {
 
 	@Provides
 	AsyncUserDao userDao(DataSource dataSource, Executor executor) {
-		return new SqlUserDao(dataSource, executor);
+		return new UserDao_Sql(dataSource, executor);
 	}
 
 	@Override

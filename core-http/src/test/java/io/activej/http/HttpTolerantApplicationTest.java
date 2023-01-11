@@ -121,7 +121,7 @@ public final class HttpTolerantApplicationTest {
 		})
 				.start();
 
-		String header = await(HttpClient.create(Reactor.getCurrentReactor())
+		String header = await(HttpClient_Reactive.create(Reactor.getCurrentReactor())
 				.request(HttpRequest.get("http://127.0.0.1:" + port))
 				.then(response -> response.loadBody()
 						.whenResult(body -> assertEquals(text, body.getString(UTF_8)))

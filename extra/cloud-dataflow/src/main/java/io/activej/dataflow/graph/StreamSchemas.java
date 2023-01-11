@@ -4,14 +4,14 @@ import io.activej.dataflow.inject.BinarySerializerModule;
 import io.activej.serializer.BinarySerializer;
 
 public final class StreamSchemas {
-	public static <T> Simple<T> simple(Class<T> cls) {
-		return new Simple<>(cls);
+	public static <T> StreamSchema_Simple<T> simple(Class<T> cls) {
+		return new StreamSchema_Simple<>(cls);
 	}
 
-	public static class Simple<T> implements StreamSchema<T> {
+	public static class StreamSchema_Simple<T> implements StreamSchema<T> {
 		private final Class<T> cls;
 
-		private Simple(Class<T> cls) {
+		private StreamSchema_Simple(Class<T> cls) {
 			this.cls = cls;
 		}
 

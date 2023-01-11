@@ -1,7 +1,7 @@
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpHeaders;
 import io.activej.http.HttpResponse;
-import io.activej.http.RoutingServlet;
+import io.activej.http.Servlet_Routing;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
@@ -21,7 +21,7 @@ public final class HostRoutingExample extends HttpServerLauncher {
 
 	@Provides
 	AsyncServlet mainServlet(@Named("Test") AsyncServlet testServlet, @Named("Example") AsyncServlet exampleServlet) {
-		return RoutingServlet.create()
+		return Servlet_Routing.create()
 				.map("/*", request -> {
 					String hostHeader = request.getHeader(HttpHeaders.HOST);
 					if (hostHeader == null) {

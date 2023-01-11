@@ -43,7 +43,7 @@ public class FrameFormats {
 	 * @return a compound frame format that consists of several other frame formats
 	 */
 	public static FrameFormat compound(FrameFormat mainFormat, FrameFormat... otherFormats) {
-		return new Compound(mainFormat, List.of(otherFormats));
+		return new FrameFormat_Compound(mainFormat, List.of(otherFormats));
 	}
 
 	/**
@@ -57,7 +57,7 @@ public class FrameFormats {
 	 * </b>
 	 */
 	public static FrameFormat identity() {
-		return new IdentityFrameFormat();
+		return new FrameFormat_Identity();
 	}
 
 	/**
@@ -71,7 +71,7 @@ public class FrameFormats {
 	 * </b>
 	 */
 	public static FrameFormat sizePrefixed() {
-		return new SizePrefixedFrameFormat();
+		return new FrameFormat_SizePrefixed();
 	}
 
 	/**
@@ -83,10 +83,10 @@ public class FrameFormats {
 	}
 
 	// region implementations
-	private static final class Compound implements FrameFormat {
+	private static final class FrameFormat_Compound implements FrameFormat {
 		private final List<FrameFormat> formats = new ArrayList<>();
 
-		Compound(FrameFormat mainFormat, List<FrameFormat> otherFormats) {
+		FrameFormat_Compound(FrameFormat mainFormat, List<FrameFormat> otherFormats) {
 			formats.add(mainFormat);
 			formats.addAll(otherFormats);
 		}
@@ -149,7 +149,7 @@ public class FrameFormats {
 		}
 	}
 
-	private static final class IdentityFrameFormat implements FrameFormat {
+	private static final class FrameFormat_Identity implements FrameFormat {
 		@Override
 		public BlockEncoder createEncoder() {
 			return new BlockEncoder() {
@@ -190,7 +190,7 @@ public class FrameFormats {
 		}
 	}
 
-	private static final class SizePrefixedFrameFormat implements FrameFormat {
+	private static final class FrameFormat_SizePrefixed implements FrameFormat {
 		private static final byte[] ZERO_BYTE_ARRAY = {0};
 
 		@Override
@@ -219,7 +219,7 @@ public class FrameFormats {
 		@Override
 		public BlockDecoder createDecoder() {
 			return new BlockDecoder() {
-				private final LengthScanner lengthScanner = new LengthScanner();
+				private final ByteScanner_Length lengthScanner = new ByteScanner_Length();
 
 				@Override
 				public @Nullable ByteBuf decode(ByteBufs bufs) throws MalformedDataException {
@@ -246,7 +246,7 @@ public class FrameFormats {
 			};
 		}
 
-		private static final class LengthScanner implements ByteBufs.ByteScanner {
+		private static final class ByteScanner_Length implements ByteBufs.ByteScanner {
 			int value;
 
 			@Override

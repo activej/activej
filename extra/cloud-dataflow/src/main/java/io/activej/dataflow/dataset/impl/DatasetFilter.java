@@ -20,7 +20,7 @@ import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.StreamId;
-import io.activej.dataflow.node.NodeFilter;
+import io.activej.dataflow.node.Node_Filter;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,7 +44,7 @@ public final class DatasetFilter<T> extends Dataset<T> {
 		List<StreamId> streamIds = input.channels(context);
 		int index = context.generateNodeIndex();
 		for (StreamId streamId : streamIds) {
-			NodeFilter<T> node = new NodeFilter<>(index, predicate, streamId);
+			Node_Filter<T> node = new Node_Filter<>(index, predicate, streamId);
 			graph.addNode(graph.getPartition(streamId), node);
 			outputStreamIds.add(node.getOutput());
 		}

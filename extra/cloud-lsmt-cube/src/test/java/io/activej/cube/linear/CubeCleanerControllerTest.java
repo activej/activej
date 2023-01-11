@@ -1,18 +1,18 @@
 package io.activej.cube.linear;
 
-import io.activej.aggregation.AggregationChunkStorage;
-import io.activej.aggregation.ChunkIdCodec;
+import io.activej.aggregation.AggregationChunkStorage_Reactive;
+import io.activej.aggregation.JsonCodec_ChunkId;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
-import io.activej.csp.process.frames.LZ4FrameFormat;
-import io.activej.cube.Cube;
+import io.activej.csp.process.frames.FrameFormat_LZ4;
+import io.activej.cube.Cube_Reactive;
 import io.activej.cube.TestUtils;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.linear.CubeCleanerController.ChunksCleanerService;
-import io.activej.cube.linear.CubeMySqlOTUplink.UplinkProtoCommit;
+import io.activej.cube.linear.OTUplink_CubeMySql.UplinkProtoCommit;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.LocalFs;
+import io.activej.fs.Fs_Local;
 import io.activej.test.rules.ByteBufRule;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
@@ -28,7 +28,7 @@ import static io.activej.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
-import static io.activej.cube.Cube.AggregationConfig.id;
+import static io.activej.cube.Cube_Reactive.AggregationConfig.id;
 import static io.activej.cube.TestUtils.initializeUplink;
 import static io.activej.test.TestUtils.dataSource;
 
@@ -43,8 +43,8 @@ public class CubeCleanerControllerTest {
 	private Eventloop eventloop;
 	private Thread eventloopThread;
 	private DataSource dataSource;
-	private CubeMySqlOTUplink uplink;
-	private AggregationChunkStorage<Long> aggregationChunkStorage;
+	private OTUplink_CubeMySql uplink;
+	private AggregationChunkStorage_Reactive<Long> aggregationChunkStorage;
 
 	@Before
 	public void setUp() throws Exception {
@@ -61,11 +61,11 @@ public class CubeCleanerControllerTest {
 		eventloopThread.start();
 
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
-		LocalFs fs = LocalFs.create(eventloop, executor, aggregationsDir);
+		Fs_Local fs = Fs_Local.create(eventloop, executor, aggregationsDir);
 		await(fs::start);
-		aggregationChunkStorage = AggregationChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
-				LZ4FrameFormat.create(), fs);
-		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
+		aggregationChunkStorage = AggregationChunkStorage_Reactive.create(eventloop, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
+				FrameFormat_LZ4.create(), fs);
+		Cube_Reactive cube = Cube_Reactive.create(eventloop, executor, classLoader, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
 				.withDimension("adv", ofInt())
 				.withMeasure("pubRequests", sum(ofLong()))
@@ -73,7 +73,7 @@ public class CubeCleanerControllerTest {
 				.withAggregation(id("pub").withDimensions("pub").withMeasures("pubRequests"))
 				.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests"));
 
-		uplink = CubeMySqlOTUplink.create(executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
+		uplink = OTUplink_CubeMySql.create(executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
 		uplink.initialize();
 		uplink.truncateTables();
 	}

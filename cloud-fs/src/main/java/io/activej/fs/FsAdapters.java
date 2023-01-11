@@ -11,7 +11,7 @@ import static io.activej.fs.util.RemoteFsUtils.escapeGlob;
 public class FsAdapters {
 
 	public static AsyncFs transform(AsyncFs originalFs, Function<String, Optional<String>> into, Function<String, Optional<String>> from, Function<String, Optional<String>> globInto) {
-		return new TransformFs(originalFs, into, from, globInto);
+		return new Fs_Transform(originalFs, into, from, globInto);
 	}
 
 	public static AsyncFs transform(AsyncFs originalFs, Function<String, Optional<String>> into, Function<String, Optional<String>> from) {
@@ -52,11 +52,11 @@ public class FsAdapters {
 	}
 
 	public static AsyncFs filter(AsyncFs originalFs, Predicate<String> predicate) {
-		return new FilterFs(originalFs, predicate);
+		return new Fs_Filter(originalFs, predicate);
 	}
 
 	public static AsyncFs mount(AsyncFs root, Map<String, AsyncFs> mounts) {
-		return new MountingFs(root,
+		return new Fs_Mounting(root,
 				mounts.entrySet().stream()
 						.collect(Collectors.toMap(
 								Map.Entry::getKey,

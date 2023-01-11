@@ -4,7 +4,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
-import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.client.RpcClient_Reactive;
 import io.activej.rpc.protocol.RpcException;
 import io.activej.rpc.server.RpcRequestHandler;
 import io.activej.rpc.server.RpcServer;
@@ -113,7 +113,7 @@ public final class RpcNoServerTest {
 
 		NioReactor reactor = Reactor.getCurrentReactor();
 
-		RpcClient rpcClient = RpcClient.create(reactor)
+		RpcClient_Reactive rpcClient = RpcClient_Reactive.create(reactor)
 				.withMessageTypes(HelloRequest.class, HelloResponse.class)
 				.withStrategy(server(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port)))
 				.withConnectTimeout(Duration.ofMillis(TIMEOUT));

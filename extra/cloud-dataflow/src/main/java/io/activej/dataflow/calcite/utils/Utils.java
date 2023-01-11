@@ -2,7 +2,7 @@ package io.activej.dataflow.calcite.utils;
 
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.exception.ToDoException;
-import io.activej.dataflow.calcite.RecordStreamSchema;
+import io.activej.dataflow.calcite.StreamSchema_Record;
 import io.activej.dataflow.calcite.Value;
 import io.activej.dataflow.calcite.function.ProjectionFunction;
 import io.activej.dataflow.calcite.inject.CalciteServerModule;
@@ -39,7 +39,7 @@ import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 
 public final class Utils {
 
-	private static final StreamSchema<Record> EMPTY_STREAM_SCHEME = RecordStreamSchema.create(RecordScheme.create().build());
+	private static final StreamSchema<Record> EMPTY_STREAM_SCHEME = StreamSchema_Record.create(RecordScheme.create().build());
 
 	private static final StreamCodec<BigDecimal> BIG_DECIMAL_STREAM_CODEC = StreamCodec.create((scale, bytes) -> {
 				BigInteger unscaledValue = new BigInteger(bytes);
@@ -122,13 +122,13 @@ public final class Utils {
 
 	public static Operand<?> toOperand(RexNode node, DefiningClassLoader classLoader) {
 		if (node instanceof RexDynamicParam dynamicParam) {
-			return new OperandScalar(Value.unmaterializedValue(dynamicParam));
+			return new Operand_Scalar(Value.unmaterializedValue(dynamicParam));
 		} else if (node instanceof RexCall call) {
 			switch (call.getKind()) {
 				case CAST -> {
 					int castType = call.getType().getSqlTypeName().getJdbcOrdinal();
 					Operand<?> operand = toOperand(call.getOperands().get(0), classLoader);
-					return new OperandCast(operand, castType);
+					return new Operand_Cast(operand, castType);
 				}
 				case OTHER_FUNCTION -> {
 					SqlOperator operator = call.getOperator();
@@ -144,12 +144,12 @@ public final class Utils {
 			}
 		} else if (node instanceof RexLiteral literal) {
 			Value value = Value.materializedValue(literal);
-			return new OperandScalar(value);
+			return new Operand_Scalar(value);
 		} else if (node instanceof RexInputRef inputRef) {
-			return new OperandRecordField(inputRef.getIndex());
+			return new Operand_RecordField(inputRef.getIndex());
 		} else if (node instanceof RexFieldAccess fieldAccess) {
 			Operand<?> objectOperand = toOperand(fieldAccess.getReferenceExpr(), classLoader);
-			return new OperandFieldAccess(objectOperand, fieldAccess.getField().getName(), classLoader);
+			return new Operand_FieldAccess(objectOperand, fieldAccess.getField().getName(), classLoader);
 		}
 		throw new IllegalArgumentException("Unknown node: " + node);
 	}

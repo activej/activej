@@ -17,7 +17,7 @@
 package io.activej.codegen;
 
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.ExpressionConstant;
+import io.activej.codegen.expression.Expression_Constant;
 import io.activej.codegen.util.DefiningClassWriter;
 import io.activej.common.initializer.WithInitializer;
 import org.jetbrains.annotations.ApiStatus.Internal;
@@ -305,8 +305,8 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 		this.fields.put(field, type);
 		this.fieldsStatic.add(field);
 		this.fieldsFinal.add(field);
-		if (value instanceof ExpressionConstant && !((ExpressionConstant) value).isJvmPrimitive()) {
-			STATIC_CONSTANTS.put(((ExpressionConstant) value).getId(), ((ExpressionConstant) value).getValue());
+		if (value instanceof Expression_Constant && !((Expression_Constant) value).isJvmPrimitive()) {
+			STATIC_CONSTANTS.put(((Expression_Constant) value).getId(), ((Expression_Constant) value).getValue());
 		}
 		this.fieldExpressions.put(field, value);
 		return this;
@@ -506,9 +506,9 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 				if (!this.fieldsStatic.contains(field)) continue;
 				Expression expression = entry.getValue();
 
-				if (expression instanceof ExpressionConstant && !((ExpressionConstant) expression).isJvmPrimitive()) {
+				if (expression instanceof Expression_Constant && !((Expression_Constant) expression).isJvmPrimitive()) {
 					set(staticField(field), cast(
-							staticCall(ClassBuilder.class, "getStaticConstant", value(((ExpressionConstant) expression).getId())),
+							staticCall(ClassBuilder.class, "getStaticConstant", value(((Expression_Constant) expression).getId())),
 							this.fields.get(field)))
 							.load(ctx);
 				} else {
@@ -531,8 +531,8 @@ public final class ClassBuilder<T> implements WithInitializer<ClassBuilder<T>> {
 
 	private void cleanup() {
 		for (Expression expression : this.fieldExpressions.values()) {
-			if (expression instanceof ExpressionConstant) {
-				STATIC_CONSTANTS.remove(((ExpressionConstant) expression).getId());
+			if (expression instanceof Expression_Constant) {
+				STATIC_CONSTANTS.remove(((Expression_Constant) expression).getId());
 			}
 		}
 	}

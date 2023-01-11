@@ -19,7 +19,7 @@ package io.activej.fs.tcp;
 import io.activej.common.function.SupplierEx;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.AsyncMessaging;
-import io.activej.csp.net.Messaging;
+import io.activej.csp.net.Messaging_Reactive;
 import io.activej.fs.AsyncFs;
 import io.activej.fs.exception.FileNotFoundException;
 import io.activej.fs.exception.FsException;
@@ -46,7 +46,7 @@ import static io.activej.fs.util.RemoteFsUtils.castError;
 import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 
 /**
- * An implementation of {@link AbstractReactiveServer} that works with {@link RemoteFs} client.
+ * An implementation of {@link AbstractReactiveServer} that works with {@link Fs_Remote} client.
  * It exposes some given {@link AsyncFs} via TCP.
  * <p>
  * <b>This server should not be launched as a publicly available server, it is meant for private networks.</b>
@@ -105,8 +105,8 @@ public final class FsServer extends AbstractReactiveServer<FsServer> {
 
 	@Override
 	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
-		Messaging<FsRequest, FsResponse> messaging =
-				Messaging.create(socket, SERIALIZER);
+		Messaging_Reactive<FsRequest, FsResponse> messaging =
+				Messaging_Reactive.create(socket, SERIALIZER);
 		messaging.receive()
 				.then(request -> {
 					if (!(request instanceof FsRequest.Handshake handshake)) {
@@ -125,7 +125,7 @@ public final class FsServer extends AbstractReactiveServer<FsServer> {
 				});
 	}
 
-	private Promise<Void> dispatch(Messaging<FsRequest, FsResponse> messaging, FsRequest msg) throws Exception {
+	private Promise<Void> dispatch(Messaging_Reactive<FsRequest, FsResponse> messaging, FsRequest msg) throws Exception {
 		if (msg instanceof FsRequest.Upload upload) {
 			return handleUpload(messaging, upload);
 		}

@@ -4,8 +4,8 @@ import io.activej.config.ConfigModule;
 import io.activej.eventloop.Eventloop;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpServer;
-import io.activej.http.RoutingServlet;
-import io.activej.http.StaticServlet;
+import io.activej.http.Servlet_Routing;
+import io.activej.http.Servlet_Static;
 import io.activej.http.loader.AsyncStaticLoader;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
@@ -55,12 +55,12 @@ public class WebappLauncher extends Launcher {
 	}
 
 	@Provides
-	AsyncServlet servlet(AsyncStaticLoader staticLoader, Gson gson, PersonGridModel model, Config config) {
-		StaticServlet staticServlet = StaticServlet.create(staticLoader)
+	AsyncServlet servlet(AsyncStaticLoader staticLoader, Gson gson, GridModel_Person model, Config config) {
+		Servlet_Static staticServlet = Servlet_Static.create(staticLoader)
 				.withIndexHtml();
 		AsyncServlet usersApiServlet = UiKernelServlets.apiServlet(model, gson);
 
-		return RoutingServlet.create()
+		return Servlet_Routing.create()
 				.map("/*", staticServlet)              // serves request if no other servlet matches
 				.map("/api/users/*", usersApiServlet); // our rest crud servlet that would serve the grid
 	}

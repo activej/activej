@@ -4,11 +4,11 @@ import dto.StringCount;
 import dto.StringCountReducer;
 import io.activej.config.Config;
 import io.activej.dataflow.collector.AsyncCollector;
-import io.activej.dataflow.collector.MergeCollector;
+import io.activej.dataflow.collector.Collector_Merge;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.dataflow.graph.DataflowGraph;
-import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
+import io.activej.dataflow.node.Node_Sort.StreamSorterStorageFactory;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.inject.annotation.Inject;
@@ -42,7 +42,7 @@ public final class DataflowClientLauncherExample extends DataflowClientLauncher 
 		return ModuleBuilder.create()
 				.install(new DataflowSerializersModule())
 
-				.bind(StreamSorterStorageFactory.class).toInstance(MergeStubStreamSorterStorage.FACTORY_STUB)
+				.bind(StreamSorterStorageFactory.class).toInstance(StreamSorterStorage_MergeStub.FACTORY_STUB)
 
 				.bind(Config.class).toInstance(
 						Config.create()
@@ -68,7 +68,7 @@ public final class DataflowClientLauncherExample extends DataflowClientLauncher 
 
 			Dataset<StringCount> reducedItems = repartitionReduce(locallyReduced, reducer.accumulatorToOutput(), simple(StringCount.class));
 
-			AsyncCollector<StringCount> collector = MergeCollector.create(reducedItems, client, keyFunction, naturalOrder(), false);
+			AsyncCollector<StringCount> collector = Collector_Merge.create(reducedItems, client, keyFunction, naturalOrder(), false);
 
 			StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
 

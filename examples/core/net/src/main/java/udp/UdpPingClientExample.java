@@ -3,7 +3,7 @@ package udp;
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.eventloop.Eventloop;
 import io.activej.net.socket.udp.UdpPacket;
-import io.activej.net.socket.udp.UdpSocket;
+import io.activej.net.socket.udp.UdpSocket_Reactive;
 import io.activej.reactor.net.DatagramSocketSettings;
 import io.activej.reactor.nio.NioReactor;
 
@@ -25,7 +25,7 @@ public final class UdpPingClientExample {
 		DatagramSocketSettings socketSettings = DatagramSocketSettings.create();
 		DatagramChannel clientDatagramChannel = NioReactor.createDatagramChannel(socketSettings, null, null);
 
-		UdpSocket.connect(eventloop, clientDatagramChannel)
+		UdpSocket_Reactive.connect(eventloop, clientDatagramChannel)
 				.whenResult(socket -> {
 					System.out.println("Sending PING to UDP server " + SERVER_ADDRESS);
 

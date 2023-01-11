@@ -17,12 +17,12 @@
 package io.activej.launchers.crdt;
 
 import io.activej.crdt.function.CrdtFunction;
-import io.activej.crdt.util.CrdtDataSerializer;
+import io.activej.crdt.util.BinarySerializer_CrdtData;
 
 import java.lang.reflect.Type;
 
 public record CrdtDescriptor<K extends Comparable<K>, S>(CrdtFunction<S> crdtFunction,
-														 CrdtDataSerializer<K, S> serializer,
+														 BinarySerializer_CrdtData<K, S> serializer,
 														 Type keyManifest,
 														 Type stateManifest) {
 }

@@ -5,8 +5,8 @@ import io.activej.aggregation.PrimaryKey;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOT;
-import io.activej.etl.LogOTState;
 import io.activej.etl.LogPositionDiff;
+import io.activej.etl.OTState_Log;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
 import io.activej.ot.TransformResult;
@@ -89,7 +89,7 @@ public class CubeOTTest {
 
 	@Test
 	public void testInversion() {
-		LogOTState<CubeDiff> state = LogOTState.create(STUB_CUBE_STATE);
+		OTState_Log<CubeDiff> state = OTState_Log.create(STUB_CUBE_STATE);
 		state.init();
 
 		assertTrue(state.getPositions().isEmpty());

@@ -3,7 +3,7 @@ import io.activej.bytebuf.ByteBufStrings;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.http.*;
-import io.activej.http.MultipartDecoder.AsyncMultipartDataHandler;
+import io.activej.http.ByteBufsDecoder_Multipart.AsyncMultipartDataHandler;
 import io.activej.inject.Injector;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
@@ -70,7 +70,7 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 
 	@Provides
 	AsyncHttpClient client(NioReactor reactor) {
-		return HttpClient.create(reactor);
+		return HttpClient_Reactive.create(reactor);
 	}
 
 	@Provides
@@ -81,7 +81,7 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 	//[START SERVLET]
 	@Provides
 	AsyncServlet servlet() {
-		return RoutingServlet.create()
+		return Servlet_Routing.create()
 				.map(POST, "/handleMultipart", request -> {
 					Map<String, String> fields = new HashMap<>();
 

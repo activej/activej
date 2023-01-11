@@ -16,7 +16,7 @@ public class WriteAheadLogAdaptersTest {
 
 	@Test
 	public void testFlushOnUpdatesCount() {
-		StubWriteAheadLog walStub = new StubWriteAheadLog();
+		WriteAheadLog_Stub walStub = new WriteAheadLog_Stub();
 		int updatesCount = 100;
 		AsyncWriteAheadLog<Integer, Integer> wal = WriteAheadLogAdapters.flushOnUpdatesCount(walStub, updatesCount);
 
@@ -31,7 +31,7 @@ public class WriteAheadLogAdaptersTest {
 		}
 	}
 
-	private static final class StubWriteAheadLog implements AsyncWriteAheadLog<Integer, Integer> {
+	private static final class WriteAheadLog_Stub implements AsyncWriteAheadLog<Integer, Integer> {
 		private int updatesCount;
 
 		@Override

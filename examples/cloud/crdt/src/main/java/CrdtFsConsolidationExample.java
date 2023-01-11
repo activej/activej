@@ -1,11 +1,11 @@
 import io.activej.crdt.CrdtData;
 import io.activej.crdt.function.CrdtFunction;
-import io.activej.crdt.storage.local.FsCrdtStorage;
-import io.activej.crdt.util.CrdtDataSerializer;
+import io.activej.crdt.storage.local.CrdtStorage_Fs;
+import io.activej.crdt.util.BinarySerializer_CrdtData;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.LocalFs;
+import io.activej.fs.Fs_Local;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
@@ -37,7 +37,7 @@ public final class CrdtFsConsolidationExample {
 		//[START REGION_1]
 		// create our storage dir and an FS client which operates on that dir
 		Path storage = Files.createTempDirectory("storage");
-		LocalFs fsClient = LocalFs.create(eventloop, executor, storage);
+		Fs_Local fsClient = Fs_Local.create(eventloop, executor, storage);
 
 		// our item is a set of integers, so we create a CRDT function for it
 		// also each CRDT item needs to have a timestamp, so we wrap the sets
@@ -45,12 +45,12 @@ public final class CrdtFsConsolidationExample {
 		CrdtFunction<Set<Integer>> crdtFunction = CrdtFunction.ignoringTimestamp(CrdtFsConsolidationExample::union);
 
 		// same with serializer for the timestamp container of the set of integers
-		CrdtDataSerializer<String, Set<Integer>> serializer =
-				new CrdtDataSerializer<>(UTF8_SERIALIZER, ofSet(INT_SERIALIZER));
+		BinarySerializer_CrdtData<String, Set<Integer>> serializer =
+				new BinarySerializer_CrdtData<>(UTF8_SERIALIZER, ofSet(INT_SERIALIZER));
 
 		// create an FS-based CRDT client
-		FsCrdtStorage<String, Set<Integer>> client =
-				FsCrdtStorage.create(eventloop, fsClient, serializer, crdtFunction);
+		CrdtStorage_Fs<String, Set<Integer>> client =
+				CrdtStorage_Fs.create(eventloop, fsClient, serializer, crdtFunction);
 		//[END REGION_1]
 
 		// wait for LocalActiveFs instance to start

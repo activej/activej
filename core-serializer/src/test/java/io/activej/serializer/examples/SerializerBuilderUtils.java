@@ -123,7 +123,7 @@ public class SerializerBuilderUtils {
 				throw new NullPointerException();
 			if (keySerializer == null)
 				throw new NullPointerException();
-			return new SerializerDefHppc7HashMap(keySerializer, valueSerializer, mapType, mapImplType, keyType, valueType);
+			return new SerializerDef_Hppc7HashMap(keySerializer, valueSerializer, mapType, mapImplType, keyType, valueType);
 		};
 	}
 
@@ -144,9 +144,9 @@ public class SerializerBuilderUtils {
 			if (valueSerializer == null)
 				throw new NullPointerException();
 			if (isHashSet) {
-				return new SerializerDefHppc7HashSet(valueSerializer, collectionType, collectionImplType, valueType);
+				return new SerializerDef_Hppc7HashSet(valueSerializer, collectionType, collectionImplType, valueType);
 			}
-			return new SerializerDefHppc7RegularCollection(valueSerializer, collectionType, collectionImplType, valueType);
+			return new SerializerDef_Hppc7RegularCollection(valueSerializer, collectionType, collectionImplType, valueType);
 		};
 	}
 }

@@ -3,12 +3,12 @@ package io.activej.dataflow.stream;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.collector.AsyncCollector;
-import io.activej.dataflow.collector.MergeCollector;
+import io.activej.dataflow.collector.Collector_Merge;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.inject.DatasetIdModule;
-import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
+import io.activej.dataflow.node.Node_Sort.StreamSorterStorageFactory;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamReducers.ReducerToAccumulator;
@@ -35,7 +35,7 @@ import java.util.function.Function;
 import static io.activej.dataflow.codec.SubtypeImpl.subtype;
 import static io.activej.dataflow.dataset.Datasets.*;
 import static io.activej.dataflow.graph.StreamSchemas.simple;
-import static io.activej.dataflow.helper.MeergeStubStreamSorterStorage.FACTORY_STUB;
+import static io.activej.dataflow.helper.StreamSorterStorage_MergeStub.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.dataflow.stream.DataflowTest.createCommon;
 import static io.activej.dataflow.stream.DataflowTest.getFreeListenAddress;
@@ -142,7 +142,7 @@ public class MapReduceTest {
 		Dataset<StringCount> mappedItems = map(items, new StringMapFunction(), simple(StringCount.class));
 		Dataset<StringCount> reducedItems = sortReduceRepartitionReduce(mappedItems,
 				new StringReducer(), String.class, new StringKeyFunction(), Comparator.naturalOrder());
-		AsyncCollector<StringCount> collector = MergeCollector.create(reducedItems, client, new StringKeyFunction(), naturalOrder(), false);
+		AsyncCollector<StringCount> collector = Collector_Merge.create(reducedItems, client, new StringKeyFunction(), naturalOrder(), false);
 		StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
 		StreamConsumerToList<StringCount> resultConsumer = StreamConsumerToList.create();
 

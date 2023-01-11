@@ -3,7 +3,7 @@ package io.activej.launchers.http;
 import io.activej.async.service.TaskScheduler;
 import io.activej.eventloop.Eventloop;
 import io.activej.http.AsyncHttpClient;
-import io.activej.http.HttpClient;
+import io.activej.http.HttpClient_Reactive;
 import io.activej.http.HttpResponse;
 import io.activej.http.HttpServer;
 import io.activej.inject.Injector;
@@ -102,7 +102,7 @@ public class ObjectNameRenameTest {
 		@Named("Test")
 		@Eager
 		AsyncHttpClient httpClient(NioReactor reactor) {
-			return HttpClient.create(reactor);
+			return HttpClient_Reactive.create(reactor);
 		}
 
 		@Provides

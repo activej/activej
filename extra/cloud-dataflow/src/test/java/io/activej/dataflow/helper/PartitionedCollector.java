@@ -3,7 +3,7 @@ package io.activej.dataflow.helper;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.graph.*;
-import io.activej.dataflow.node.NodeUpload;
+import io.activej.dataflow.node.Node_Upload;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
@@ -30,7 +30,7 @@ public final class PartitionedCollector<T> {
 
 		List<Promise<Void>> streamingPromises = new ArrayList<>();
 		for (StreamId streamId : input.channels(DataflowContext.of(graph))) {
-			NodeUpload<String> nodeUpload = new NodeUpload<>(0, StreamSchemas.simple(String.class), streamId);
+			Node_Upload<String> nodeUpload = new Node_Upload<>(0, StreamSchemas.simple(String.class), streamId);
 			Partition partition = graph.getPartition(streamId);
 			graph.addNode(partition, nodeUpload);
 			StreamSupplier<T> supplier = client.download(partition.getAddress(), streamId, input.streamSchema());

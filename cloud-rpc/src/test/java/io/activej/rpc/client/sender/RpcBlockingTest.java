@@ -3,7 +3,7 @@ package io.activej.rpc.client.sender;
 import io.activej.eventloop.Eventloop;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
-import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.client.RpcClient_Reactive;
 import io.activej.rpc.server.RpcRequestHandler;
 import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.annotations.SerializeRecord;
@@ -86,12 +86,12 @@ public final class RpcBlockingTest {
 		InetSocketAddress address2 = new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port2);
 		InetSocketAddress address3 = new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port3);
 
-		RpcClient client = RpcClient.create(Reactor.getCurrentReactor())
+		RpcClient_Reactive client = RpcClient_Reactive.create(Reactor.getCurrentReactor())
 				.withMessageTypes(HelloRequest.class, HelloResponse.class)
 				.withStrategy(
-						RpcStrategies.RoundRobin.create(
+						RpcStrategy_RoundRobin.create(
 								server(address1),
-								RpcStrategies.Sharding.create((HelloRequest item) -> {
+								RpcStrategy_Sharding.create((HelloRequest item) -> {
 											int shard = 0;
 											if (item.name.startsWith("S")) {
 												shard = 1;
@@ -142,7 +142,7 @@ public final class RpcBlockingTest {
 		serverThree.closeFuture().get();
 	}
 
-	private static String blockingRequest(RpcClient rpcClient, String name) throws Exception {
+	private static String blockingRequest(RpcClient_Reactive rpcClient, String name) throws Exception {
 		try {
 			return rpcClient.getReactor().submit(
 							() -> rpcClient

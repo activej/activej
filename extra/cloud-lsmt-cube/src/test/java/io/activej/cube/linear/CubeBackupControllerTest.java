@@ -1,25 +1,25 @@
 package io.activej.cube.linear;
 
 import io.activej.aggregation.AggregationChunk;
-import io.activej.aggregation.AggregationChunkStorage;
-import io.activej.aggregation.ChunkIdCodec;
+import io.activej.aggregation.AggregationChunkStorage_Reactive;
+import io.activej.aggregation.JsonCodec_ChunkId;
 import io.activej.aggregation.PrimaryKey;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
-import io.activej.csp.process.frames.LZ4FrameFormat;
-import io.activej.cube.Cube;
+import io.activej.csp.process.frames.FrameFormat_LZ4;
+import io.activej.cube.Cube_Reactive;
 import io.activej.cube.TestUtils;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.linear.CubeBackupController.ChunksBackupService;
-import io.activej.cube.linear.CubeMySqlOTUplink.UplinkProtoCommit;
+import io.activej.cube.linear.OTUplink_CubeMySql.UplinkProtoCommit;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogPositionDiff;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.AsyncFs;
-import io.activej.fs.LocalFs;
+import io.activej.fs.Fs_Local;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
 import io.activej.promise.Promises;
@@ -37,13 +37,13 @@ import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static io.activej.aggregation.AggregationChunkStorage.LOG;
+import static io.activej.aggregation.AggregationChunkStorage_Reactive.LOG;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
-import static io.activej.cube.Cube.AggregationConfig.id;
+import static io.activej.cube.Cube_Reactive.AggregationConfig.id;
 import static io.activej.test.TestUtils.dataSource;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
@@ -65,7 +65,7 @@ public class CubeBackupControllerTest {
 	private Thread eventloopThread;
 	private DataSource dataSource;
 	private AsyncFs activeFs;
-	private CubeMySqlOTUplink uplink;
+	private OTUplink_CubeMySql uplink;
 	private CubeBackupController backupController;
 
 	@Before
@@ -83,12 +83,12 @@ public class CubeBackupControllerTest {
 		eventloopThread.start();
 
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
-		LocalFs fs = LocalFs.create(eventloop, executor, aggregationsDir);
+		Fs_Local fs = Fs_Local.create(eventloop, executor, aggregationsDir);
 		eventloop.submit(fs::start).get();
 		activeFs = fs;
-		AggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(eventloop, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
-				LZ4FrameFormat.create(), fs);
-		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
+		AggregationChunkStorage_Reactive<Long> aggregationChunkStorage = AggregationChunkStorage_Reactive.create(eventloop, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
+				FrameFormat_LZ4.create(), fs);
+		Cube_Reactive cube = Cube_Reactive.create(eventloop, executor, classLoader, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
 				.withDimension("adv", ofInt())
 				.withMeasure("pubRequests", sum(ofLong()))
@@ -98,7 +98,7 @@ public class CubeBackupControllerTest {
 
 		ChunksBackupService chunksBackupService = ChunksBackupService.ofReactiveAggregationChunkStorage(aggregationChunkStorage);
 		backupController = CubeBackupController.create(dataSource, chunksBackupService);
-		uplink = CubeMySqlOTUplink.create(executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
+		uplink = OTUplink_CubeMySql.create(executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
 		backupController.initialize();
 		backupController.truncateTables();
 	}

@@ -5,11 +5,11 @@ import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frames.FrameFormat;
-import io.activej.csp.process.frames.LZ4FrameFormat;
+import io.activej.csp.process.frames.FrameFormat_LZ4;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
-import io.activej.etl.LogOTState;
-import io.activej.fs.LocalFs;
+import io.activej.etl.OTState_Log;
+import io.activej.fs.Fs_Local;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.uplink.AsyncOTUplink;
 import org.junit.Before;
@@ -28,7 +28,7 @@ import static io.activej.aggregation.AggregationPredicates.gt;
 import static io.activej.aggregation.PrimaryKey.ofArray;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
-import static io.activej.cube.Cube.AggregationConfig.id;
+import static io.activej.cube.Cube_Reactive.AggregationConfig.id;
 import static io.activej.promise.TestUtils.await;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
@@ -48,11 +48,11 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 
 	private OTStateManager<Long, LogDiff<CubeDiff>> stateManager;
 	private AsyncAggregationChunkStorage<Long> chunkStorage;
-	private Cube.AggregationConfig dateAggregation;
-	private Cube.AggregationConfig advertiserDateAggregation;
+	private Cube_Reactive.AggregationConfig dateAggregation;
+	private Cube_Reactive.AggregationConfig advertiserDateAggregation;
 	private AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink;
-	private Cube basicCube;
-	private Cube cube;
+	private Cube_Reactive basicCube;
+	private Cube_Reactive cube;
 
 	private long chunkId;
 
@@ -66,11 +66,11 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 		toBePreserved.clear();
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 
-		LocalFs fs = LocalFs.create(reactor, EXECUTOR, aggregationsDir)
+		Fs_Local fs = Fs_Local.create(reactor, EXECUTOR, aggregationsDir)
 				.withTempDir(Files.createTempDirectory(""));
 		await(fs.start());
-		FrameFormat frameFormat = LZ4FrameFormat.create();
-		chunkStorage = AggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		FrameFormat frameFormat = FrameFormat_LZ4.create();
+		chunkStorage = AggregationChunkStorage_Reactive.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 
 		dateAggregation = id("date")
 				.withDimensions("date")
@@ -84,7 +84,7 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 				.withAggregation(dateAggregation)
 				.withAggregation(advertiserDateAggregation);
 
-		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(basicCube);
+		OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(basicCube);
 		uplink = uplinkFactory.create(basicCube);
 		stateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 		await(stateManager.checkout());
@@ -160,7 +160,7 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 
 		assertEquals(expectedChunks, basicCube.getAllChunks());
 
-		stateManager = OTStateManager.create(reactor, LOG_OT, uplink, LogOTState.create(cube));
+		stateManager = OTStateManager.create(reactor, LOG_OT, uplink, OTState_Log.create(cube));
 		await(stateManager.checkout());
 
 		Set<Object> irrelevantChunks = cube.getIrrelevantChunks()
@@ -187,8 +187,8 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 		return chunkId;
 	}
 
-	private Cube createBasicCube() {
-		return Cube.create(reactor, EXECUTOR, CLASS_LOADER, chunkStorage)
+	private Cube_Reactive createBasicCube() {
+		return Cube_Reactive.create(reactor, EXECUTOR, CLASS_LOADER, chunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())
 				.withDimension("campaign", ofInt())

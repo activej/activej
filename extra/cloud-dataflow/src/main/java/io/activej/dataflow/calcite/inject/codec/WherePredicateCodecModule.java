@@ -11,141 +11,141 @@ import io.activej.serializer.stream.StreamCodecs;
 final class WherePredicateCodecModule extends AbstractModule {
 	@Provides
 	@Subtype(0)
-	StreamCodec<AndPredicate> andPredicate(
+	StreamCodec<WherePredicate_And> andPredicate(
 			StreamCodec<WherePredicate> wherePredicateStreamCodec
 	) {
-		return StreamCodec.create(AndPredicate::new,
-				AndPredicate::getPredicates, StreamCodecs.ofList(wherePredicateStreamCodec)
+		return StreamCodec.create(WherePredicate_And::new,
+				WherePredicate_And::getPredicates, StreamCodecs.ofList(wherePredicateStreamCodec)
 		);
 	}
 
 	@Provides
 	@Subtype(1)
-	StreamCodec<OrPredicate> orPredicate(
+	StreamCodec<WherePredicate_Or> orPredicate(
 			StreamCodec<WherePredicate> wherePredicateStreamCodec
 	) {
-		return StreamCodec.create(OrPredicate::new,
-				OrPredicate::getPredicates, StreamCodecs.ofList(wherePredicateStreamCodec)
+		return StreamCodec.create(WherePredicate_Or::new,
+				WherePredicate_Or::getPredicates, StreamCodecs.ofList(wherePredicateStreamCodec)
 		);
 	}
 
 	@Provides
 	@Subtype(2)
-	StreamCodec<EqPredicate> eqPredicate(
+	StreamCodec<WherePredicate_Eq> eqPredicate(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StreamCodec.create(EqPredicate::new,
-				EqPredicate::getLeft, operandStreamCodec,
-				EqPredicate::getRight, operandStreamCodec
+		return StreamCodec.create(WherePredicate_Eq::new,
+				WherePredicate_Eq::getLeft, operandStreamCodec,
+				WherePredicate_Eq::getRight, operandStreamCodec
 		);
 	}
 
 	@Provides
 	@Subtype(3)
-	StreamCodec<NotEqPredicate> notEqPredicate(
+	StreamCodec<WherePredicate_NotEq> notEqPredicate(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StreamCodec.create(NotEqPredicate::new,
-				NotEqPredicate::getLeft, operandStreamCodec,
-				NotEqPredicate::getRight, operandStreamCodec
+		return StreamCodec.create(WherePredicate_NotEq::new,
+				WherePredicate_NotEq::getLeft, operandStreamCodec,
+				WherePredicate_NotEq::getRight, operandStreamCodec
 		);
 	}
 
 	@Provides
 	@Subtype(4)
-	StreamCodec<GePredicate> gePredicate(
+	StreamCodec<WherePredicate_Ge> gePredicate(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StreamCodec.create(GePredicate::new,
-				GePredicate::getLeft, operandStreamCodec,
-				GePredicate::getRight, operandStreamCodec
+		return StreamCodec.create(WherePredicate_Ge::new,
+				WherePredicate_Ge::getLeft, operandStreamCodec,
+				WherePredicate_Ge::getRight, operandStreamCodec
 		);
 	}
 
 	@Provides
 	@Subtype(5)
-	StreamCodec<GtPredicate> gtPredicate(
+	StreamCodec<WherePredicate_Gt> gtPredicate(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StreamCodec.create(GtPredicate::new,
-				GtPredicate::getLeft, operandStreamCodec,
-				GtPredicate::getRight, operandStreamCodec
+		return StreamCodec.create(WherePredicate_Gt::new,
+				WherePredicate_Gt::getLeft, operandStreamCodec,
+				WherePredicate_Gt::getRight, operandStreamCodec
 		);
 	}
 
 	@Provides
 	@Subtype(6)
-	StreamCodec<LePredicate> lePredicate(
+	StreamCodec<WherePredicate_Le> lePredicate(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StreamCodec.create(LePredicate::new,
-				LePredicate::getLeft, operandStreamCodec,
-				LePredicate::getRight, operandStreamCodec
+		return StreamCodec.create(WherePredicate_Le::new,
+				WherePredicate_Le::getLeft, operandStreamCodec,
+				WherePredicate_Le::getRight, operandStreamCodec
 		);
 	}
 
 	@Provides
 	@Subtype(7)
-	StreamCodec<LtPredicate> ltPredicate(
+	StreamCodec<WherePredicate_Lt> ltPredicate(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StreamCodec.create(LtPredicate::new,
-				LtPredicate::getLeft, operandStreamCodec,
-				LtPredicate::getRight, operandStreamCodec
+		return StreamCodec.create(WherePredicate_Lt::new,
+				WherePredicate_Lt::getLeft, operandStreamCodec,
+				WherePredicate_Lt::getRight, operandStreamCodec
 		);
 	}
 
 	@Provides
 	@Subtype(8)
-	StreamCodec<BetweenPredicate> betweenPredicate(
+	StreamCodec<WherePredicate_Between> betweenPredicate(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StreamCodec.create(BetweenPredicate::new,
-				BetweenPredicate::getValue, operandStreamCodec,
-				BetweenPredicate::getFrom, operandStreamCodec,
-				BetweenPredicate::getTo, operandStreamCodec
+		return StreamCodec.create(WherePredicate_Between::new,
+				WherePredicate_Between::getValue, operandStreamCodec,
+				WherePredicate_Between::getFrom, operandStreamCodec,
+				WherePredicate_Between::getTo, operandStreamCodec
 		);
 	}
 
 	@Provides
 	@Subtype(9)
-	StreamCodec<LikePredicate> likePredicate(
+	StreamCodec<WherePredicate_Like> likePredicate(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StreamCodec.create(LikePredicate::new,
-				LikePredicate::getValue, operandStreamCodec,
-				LikePredicate::getPattern, operandStreamCodec
+		return StreamCodec.create(WherePredicate_Like::new,
+				WherePredicate_Like::getValue, operandStreamCodec,
+				WherePredicate_Like::getPattern, operandStreamCodec
 		);
 	}
 
 	@Provides
 	@Subtype(10)
-	StreamCodec<InPredicate> inPredicate(
+	StreamCodec<WherePredicate_In> inPredicate(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StreamCodec.create(InPredicate::new,
-				InPredicate::getValue, operandStreamCodec,
-				InPredicate::getOptions, StreamCodecs.ofList(operandStreamCodec)
+		return StreamCodec.create(WherePredicate_In::new,
+				WherePredicate_In::getValue, operandStreamCodec,
+				WherePredicate_In::getOptions, StreamCodecs.ofList(operandStreamCodec)
 		);
 	}
 
 	@Provides
 	@Subtype(11)
-	StreamCodec<IsNullPredicate> isNullPredicate(
+	StreamCodec<WherePredicate_IsNull> isNullPredicate(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StreamCodec.create(IsNullPredicate::new,
-				IsNullPredicate::getValue, operandStreamCodec
+		return StreamCodec.create(WherePredicate_IsNull::new,
+				WherePredicate_IsNull::getValue, operandStreamCodec
 		);
 	}
 
 	@Provides
 	@Subtype(12)
-	StreamCodec<IsNotNullPredicate> isNotNullPredicate(
+	StreamCodec<WherePredicate_IsNotNull> isNotNullPredicate(
 			StreamCodec<Operand<?>> operandStreamCodec
 	) {
-		return StreamCodec.create(IsNotNullPredicate::new,
-				IsNotNullPredicate::getValue, operandStreamCodec
+		return StreamCodec.create(WherePredicate_IsNotNull::new,
+				WherePredicate_IsNotNull::getValue, operandStreamCodec
 		);
 	}
 }

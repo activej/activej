@@ -2,13 +2,13 @@ package adder;
 
 import io.activej.async.service.TaskScheduler;
 import io.activej.config.Config;
-import io.activej.crdt.ClientCrdtStorage;
 import io.activej.crdt.CrdtException;
 import io.activej.crdt.CrdtServer;
+import io.activej.crdt.CrdtStorage_Client;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.crdt.storage.cluster.*;
-import io.activej.crdt.util.CrdtDataSerializer;
+import io.activej.crdt.util.BinarySerializer_CrdtData;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
@@ -32,35 +32,35 @@ public final class ClusterStorageModule extends AbstractModule {
 	public static final Path DEFAULT_PARTITIONS_FILE = Paths.get("adder-partitions.json");
 
 	@Provides
-	CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer() {
-		return new CrdtDataSerializer<>(LONG_SERIALIZER, DetailedSumsCrdtState.SERIALIZER);
+	BinarySerializer_CrdtData<Long, DetailedSumsCrdtState> serializer() {
+		return new BinarySerializer_CrdtData<>(LONG_SERIALIZER, DetailedSumsCrdtState.SERIALIZER);
 	}
 
 	@Provides
-	ClusterCrdtStorage<Long, DetailedSumsCrdtState, PartitionId> clusterStorage(Reactor reactor,
+	CrdtStorage_Cluster<Long, DetailedSumsCrdtState, PartitionId> clusterStorage(Reactor reactor,
 			AsyncDiscoveryService<PartitionId> discoveryService, CrdtFunction<DetailedSumsCrdtState> crdtFunction) {
-		return ClusterCrdtStorage.create(reactor, discoveryService, crdtFunction);
+		return CrdtStorage_Cluster.create(reactor, discoveryService, crdtFunction);
 	}
 
 	@Provides
 	@Eager
 	CrdtServer<Long, DetailedSumsCrdtState> crdtServer(NioReactor reactor,
-			@Local AsyncCrdtStorage<Long, DetailedSumsCrdtState> localStorage, CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer, Config config) {
+			@Local AsyncCrdtStorage<Long, DetailedSumsCrdtState> localStorage, BinarySerializer_CrdtData<Long, DetailedSumsCrdtState> serializer, Config config) {
 		return CrdtServer.create(reactor, localStorage, serializer)
 				.withInitializer(ofAbstractServer(config.getChild("crdt.server")));
 	}
 
 	@Provides
 	AsyncDiscoveryService<PartitionId> discoveryService(NioReactor reactor,
-			@Local AsyncCrdtStorage<Long, DetailedSumsCrdtState> localStorage, CrdtDataSerializer<Long, DetailedSumsCrdtState> serializer, Config config,
+			@Local AsyncCrdtStorage<Long, DetailedSumsCrdtState> localStorage, BinarySerializer_CrdtData<Long, DetailedSumsCrdtState> serializer, Config config,
 			PartitionId localPartitionId) throws CrdtException {
 		Path pathToFile = config.get(ofPath(), "crdt.cluster.partitionFile", DEFAULT_PARTITIONS_FILE);
-		return FileDiscoveryService.create(reactor, pathToFile)
+		return DiscoveryService_File.create(reactor, pathToFile)
 				.withCrdtProvider(partitionId -> {
 					if (partitionId.equals(localPartitionId)) return localStorage;
 
 					InetSocketAddress crdtAddress = checkNotNull(partitionId.getCrdtAddress());
-					return ClientCrdtStorage.create(reactor, crdtAddress, serializer);
+					return CrdtStorage_Client.create(reactor, crdtAddress, serializer);
 				});
 	}
 
@@ -71,7 +71,7 @@ public final class ClusterStorageModule extends AbstractModule {
 
 	@Provides
 	CrdtRepartitionController<Long, DetailedSumsCrdtState, PartitionId> repartitionController(Reactor reactor,
-			ClusterCrdtStorage<Long, DetailedSumsCrdtState, PartitionId> cluster,
+			CrdtStorage_Cluster<Long, DetailedSumsCrdtState, PartitionId> cluster,
 			PartitionId partitionId) {
 		return CrdtRepartitionController.create(reactor, cluster, partitionId);
 	}

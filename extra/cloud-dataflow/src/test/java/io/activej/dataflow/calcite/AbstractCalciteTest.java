@@ -6,12 +6,12 @@ import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.calcite.inject.CalciteClientModule;
 import io.activej.dataflow.calcite.inject.CalciteServerModule;
 import io.activej.dataflow.calcite.operand.Operand;
-import io.activej.dataflow.calcite.operand.OperandRecordField;
-import io.activej.dataflow.calcite.operand.OperandScalar;
+import io.activej.dataflow.calcite.operand.Operand_RecordField;
+import io.activej.dataflow.calcite.operand.Operand_Scalar;
 import io.activej.dataflow.calcite.where.*;
 import io.activej.dataflow.graph.Partition;
 import io.activej.dataflow.inject.DatasetIdModule;
-import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
+import io.activej.dataflow.node.Node_Sort.StreamSorterStorageFactory;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamReducers;
 import io.activej.inject.Injector;
@@ -49,7 +49,7 @@ import static io.activej.dataflow.calcite.AbstractCalciteTest.MatchType.TYPE_1;
 import static io.activej.dataflow.calcite.AbstractCalciteTest.MatchType.TYPE_2;
 import static io.activej.dataflow.calcite.AbstractCalciteTest.State.OFF;
 import static io.activej.dataflow.calcite.AbstractCalciteTest.State.ON;
-import static io.activej.dataflow.helper.MeergeStubStreamSorterStorage.FACTORY_STUB;
+import static io.activej.dataflow.helper.StreamSorterStorage_MergeStub.FACTORY_STUB;
 import static io.activej.dataflow.inject.DatasetIdImpl.datasetId;
 import static io.activej.dataflow.stream.DataflowTest.createCommon;
 import static io.activej.dataflow.stream.DataflowTest.getFreeListenAddress;
@@ -258,32 +258,32 @@ public abstract class AbstractCalciteTest {
 		Module common = createCommon(executor, sortingExecutor, partitions)
 				.bind(StreamSorterStorageFactory.class).toInstance(FACTORY_STUB)
 				.bind(new Key<List<Partition>>() {}).toInstance(partitions)
-				.bind(new Key<RecordFunction<Student>>() {}).to(StudentToRecord::create, DefiningClassLoader.class)
+				.bind(new Key<RecordFunction<Student>>() {}).to(RecordFunction_Student::create, DefiningClassLoader.class)
 				.bind(setTableKey).to(studentToRecord -> Set.of(
 								DataflowTable.create(STUDENT_TABLE_NAME, Student.class, studentToRecord)),
 						new Key<RecordFunction<Student>>() {})
 				.bind(setTableKey).to(classLoader -> {
-					DepartmentToRecord departmentToRecord = DepartmentToRecord.create(classLoader);
+					RecordFunction_Department departmentToRecord = RecordFunction_Department.create(classLoader);
 					return Set.of(DataflowTable.create(DEPARTMENT_TABLE_NAME, Department.class, departmentToRecord));
 				}, DefiningClassLoader.class)
 				.bind(setTableKey).to(classLoader -> {
-					RegistryToRecord registryToRecord = RegistryToRecord.create(classLoader);
+					RecordFunction_Registry registryToRecord = RecordFunction_Registry.create(classLoader);
 					return Set.of(DataflowTable.create(REGISTRY_TABLE_NAME, Registry.class, registryToRecord));
 				}, DefiningClassLoader.class)
 				.bind(setTableKey).to(classLoader -> {
-					UserProfileToRecord userProfileToRecord = UserProfileToRecord.create(classLoader);
+					RecordFunction_UserProfile userProfileToRecord = RecordFunction_UserProfile.create(classLoader);
 					return Set.of(DataflowTable.create(USER_PROFILES_TABLE_NAME, UserProfile.class, userProfileToRecord));
 				}, DefiningClassLoader.class)
 				.bind(setTableKey).to(classLoader -> {
-					LargeToRecord largeToRecord = LargeToRecord.create(classLoader);
+					RecordFunction_Large largeToRecord = RecordFunction_Large.create(classLoader);
 					return Set.of(DataflowTable.create(LARGE_TABLE_NAME, Large.class, largeToRecord));
 				}, DefiningClassLoader.class)
 				.bind(setTableKey).to(classLoader -> {
-					SubjectSelectionToRecord subjectSelectionToRecord = SubjectSelectionToRecord.create(classLoader);
+					RecordFunction_SubjectSelection subjectSelectionToRecord = RecordFunction_SubjectSelection.create(classLoader);
 					return Set.of(DataflowTable.create(SUBJECT_SELECTION_TABLE_NAME, SubjectSelection.class, subjectSelectionToRecord));
 				}, DefiningClassLoader.class)
 				.bind(setTableKey).to(classLoader -> {
-					FilterableToRecord filterableToRecord = FilterableToRecord.create(classLoader);
+					RecordFunction_Filterable filterableToRecord = RecordFunction_Filterable.create(classLoader);
 					return Set.of(DataflowTable.create(FILTERABLE_TABLE_NAME, Filterable.class, filterableToRecord));
 				}, DefiningClassLoader.class)
 				.bind(setTableKey).to(studentToRecord -> Set.of(
@@ -2849,15 +2849,15 @@ public abstract class AbstractCalciteTest {
 		}
 	}
 
-	public static final class StudentToRecord implements RecordFunction<Student> {
+	public static final class RecordFunction_Student implements RecordFunction<Student> {
 		private final RecordScheme scheme;
 
-		private StudentToRecord(RecordScheme scheme) {
+		private RecordFunction_Student(RecordScheme scheme) {
 			this.scheme = scheme;
 		}
 
-		public static StudentToRecord create(DefiningClassLoader classLoader) {
-			return new StudentToRecord(ofJavaRecord(classLoader, Student.class));
+		public static RecordFunction_Student create(DefiningClassLoader classLoader) {
+			return new RecordFunction_Student(ofJavaRecord(classLoader, Student.class));
 		}
 
 		@Override
@@ -2876,13 +2876,13 @@ public abstract class AbstractCalciteTest {
 		}
 	}
 
-	public static final class DepartmentToRecord implements RecordFunction<Department> {
+	public static final class RecordFunction_Department implements RecordFunction<Department> {
 		private final RecordScheme scheme;
 
-		private DepartmentToRecord(RecordScheme scheme) {this.scheme = scheme;}
+		private RecordFunction_Department(RecordScheme scheme) {this.scheme = scheme;}
 
-		public static DepartmentToRecord create(DefiningClassLoader classLoader) {
-			return new DepartmentToRecord(ofJavaRecord(classLoader, Department.class));
+		public static RecordFunction_Department create(DefiningClassLoader classLoader) {
+			return new RecordFunction_Department(ofJavaRecord(classLoader, Department.class));
 		}
 
 		@Override
@@ -2900,15 +2900,15 @@ public abstract class AbstractCalciteTest {
 		}
 	}
 
-	public static final class RegistryToRecord implements RecordFunction<Registry> {
+	public static final class RecordFunction_Registry implements RecordFunction<Registry> {
 		private final RecordScheme scheme;
 
-		private RegistryToRecord(RecordScheme scheme) {
+		private RecordFunction_Registry(RecordScheme scheme) {
 			this.scheme = scheme;
 		}
 
-		public static RegistryToRecord create(DefiningClassLoader classLoader) {
-			return new RegistryToRecord(ofJavaRecord(classLoader, Registry.class));
+		public static RecordFunction_Registry create(DefiningClassLoader classLoader) {
+			return new RecordFunction_Registry(ofJavaRecord(classLoader, Registry.class));
 		}
 
 		@Override
@@ -2926,15 +2926,15 @@ public abstract class AbstractCalciteTest {
 		}
 	}
 
-	public static final class UserProfileToRecord implements RecordFunction<UserProfile> {
+	public static final class RecordFunction_UserProfile implements RecordFunction<UserProfile> {
 		private final RecordScheme scheme;
 
-		private UserProfileToRecord(RecordScheme scheme) {
+		private RecordFunction_UserProfile(RecordScheme scheme) {
 			this.scheme = scheme;
 		}
 
-		public static UserProfileToRecord create(DefiningClassLoader classLoader) {
-			return new UserProfileToRecord(ofJavaRecord(classLoader, UserProfile.class));
+		public static RecordFunction_UserProfile create(DefiningClassLoader classLoader) {
+			return new RecordFunction_UserProfile(ofJavaRecord(classLoader, UserProfile.class));
 		}
 
 		@Override
@@ -2953,15 +2953,15 @@ public abstract class AbstractCalciteTest {
 		}
 	}
 
-	public static final class LargeToRecord implements RecordFunction<Large> {
+	public static final class RecordFunction_Large implements RecordFunction<Large> {
 		private final RecordScheme scheme;
 
-		private LargeToRecord(RecordScheme scheme) {
+		private RecordFunction_Large(RecordScheme scheme) {
 			this.scheme = scheme;
 		}
 
-		public static LargeToRecord create(DefiningClassLoader classLoader) {
-			return new LargeToRecord(ofJavaRecord(classLoader, Large.class));
+		public static RecordFunction_Large create(DefiningClassLoader classLoader) {
+			return new RecordFunction_Large(ofJavaRecord(classLoader, Large.class));
 		}
 
 		@Override
@@ -2977,15 +2977,15 @@ public abstract class AbstractCalciteTest {
 		}
 	}
 
-	public static final class SubjectSelectionToRecord implements RecordFunction<SubjectSelection> {
+	public static final class RecordFunction_SubjectSelection implements RecordFunction<SubjectSelection> {
 		private final RecordScheme scheme;
 
-		private SubjectSelectionToRecord(RecordScheme scheme) {
+		private RecordFunction_SubjectSelection(RecordScheme scheme) {
 			this.scheme = scheme;
 		}
 
-		public static SubjectSelectionToRecord create(DefiningClassLoader classLoader) {
-			return new SubjectSelectionToRecord(ofJavaRecord(classLoader, SubjectSelection.class));
+		public static RecordFunction_SubjectSelection create(DefiningClassLoader classLoader) {
+			return new RecordFunction_SubjectSelection(ofJavaRecord(classLoader, SubjectSelection.class));
 		}
 
 		@Override
@@ -3003,15 +3003,15 @@ public abstract class AbstractCalciteTest {
 		}
 	}
 
-	public static final class FilterableToRecord implements RecordFunction<Filterable> {
+	public static final class RecordFunction_Filterable implements RecordFunction<Filterable> {
 		private final RecordScheme scheme;
 
-		private FilterableToRecord(RecordScheme scheme) {
+		private RecordFunction_Filterable(RecordScheme scheme) {
 			this.scheme = scheme;
 		}
 
-		public static FilterableToRecord create(DefiningClassLoader classLoader) {
-			return new FilterableToRecord(ofJavaRecord(classLoader, Filterable.class));
+		public static RecordFunction_Filterable create(DefiningClassLoader classLoader) {
+			return new RecordFunction_Filterable(ofJavaRecord(classLoader, Filterable.class));
 		}
 
 		@Override
@@ -3122,7 +3122,7 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static @Nullable DateRange predicateToDateRange(WherePredicate predicate) {
-		if (predicate instanceof OrPredicate orPredicate) {
+		if (predicate instanceof WherePredicate_Or orPredicate) {
 			List<WherePredicate> predicates = orPredicate.getPredicates();
 			List<DateRange> ranges = new ArrayList<>(predicates.size());
 			for (WherePredicate wherePredicate : predicates) {
@@ -3132,7 +3132,7 @@ public abstract class AbstractCalciteTest {
 			}
 			return orRanges(ranges);
 		}
-		if (predicate instanceof AndPredicate andPredicate) {
+		if (predicate instanceof WherePredicate_And andPredicate) {
 			List<WherePredicate> predicates = andPredicate.getPredicates();
 			List<DateRange> ranges = new ArrayList<>(predicates.size());
 			for (WherePredicate wherePredicate : predicates) {
@@ -3142,7 +3142,7 @@ public abstract class AbstractCalciteTest {
 			}
 			return andRanges(ranges);
 		}
-		if (predicate instanceof EqPredicate eqPredicate) {
+		if (predicate instanceof WherePredicate_Eq eqPredicate) {
 			if (isDate(eqPredicate.getLeft())) {
 				Long date = extractDate(eqPredicate.getRight());
 				if (date != null) {
@@ -3155,12 +3155,12 @@ public abstract class AbstractCalciteTest {
 				}
 			}
 		}
-		if (predicate instanceof NotEqPredicate notEqPredicate) {
+		if (predicate instanceof WherePredicate_NotEq notEqPredicate) {
 			if (isDate(notEqPredicate.getLeft()) || isDate(notEqPredicate.getRight())) {
 				return new DateRange(Long.MIN_VALUE, true, Long.MAX_VALUE, true);
 			}
 		}
-		if (predicate instanceof GtPredicate gtPredicate) {
+		if (predicate instanceof WherePredicate_Gt gtPredicate) {
 			if (isDate(gtPredicate.getLeft())) {
 				Long date = extractDate(gtPredicate.getRight());
 				if (date != null) {
@@ -3173,7 +3173,7 @@ public abstract class AbstractCalciteTest {
 				}
 			}
 		}
-		if (predicate instanceof GePredicate gePredicate) {
+		if (predicate instanceof WherePredicate_Ge gePredicate) {
 			if (isDate(gePredicate.getLeft())) {
 				Long date = extractDate(gePredicate.getRight());
 				if (date != null) {
@@ -3186,7 +3186,7 @@ public abstract class AbstractCalciteTest {
 				}
 			}
 		}
-		if (predicate instanceof LtPredicate ltPredicate) {
+		if (predicate instanceof WherePredicate_Lt ltPredicate) {
 			if (isDate(ltPredicate.getLeft())) {
 				Long date = extractDate(ltPredicate.getRight());
 				if (date != null) {
@@ -3199,7 +3199,7 @@ public abstract class AbstractCalciteTest {
 				}
 			}
 		}
-		if (predicate instanceof LePredicate lePredicate) {
+		if (predicate instanceof WherePredicate_Le lePredicate) {
 			if (isDate(lePredicate.getLeft())) {
 				Long date = extractDate(lePredicate.getRight());
 				if (date != null) {
@@ -3212,7 +3212,7 @@ public abstract class AbstractCalciteTest {
 				}
 			}
 		}
-		if (predicate instanceof BetweenPredicate betweenPredicate) {
+		if (predicate instanceof WherePredicate_Between betweenPredicate) {
 			if (isDate(betweenPredicate.getValue())) {
 				Long from = extractDate(betweenPredicate.getFrom());
 				from = from == null ? Long.MIN_VALUE : from;
@@ -3221,7 +3221,7 @@ public abstract class AbstractCalciteTest {
 				return new DateRange(from, true, to, true);
 			}
 		}
-		if (predicate instanceof InPredicate inPredicate) {
+		if (predicate instanceof WherePredicate_In inPredicate) {
 			if (isDate(inPredicate.getValue())) {
 				List<Operand<?>> options = inPredicate.getOptions();
 				List<Long> dates = new ArrayList<>(options.size());
@@ -3235,12 +3235,12 @@ public abstract class AbstractCalciteTest {
 				return new DateRange(Collections.min(dates), true, Collections.max(dates), true);
 			}
 		}
-		if (predicate instanceof IsNullPredicate isNotNullPredicate) {
+		if (predicate instanceof WherePredicate_IsNull isNotNullPredicate) {
 			if (isDate(isNotNullPredicate.getValue())) {
 				return new DateRange(0, false, 0, false);
 			}
 		}
-		if (predicate instanceof IsNotNullPredicate isNotNullPredicate) {
+		if (predicate instanceof WherePredicate_IsNotNull isNotNullPredicate) {
 			if (isDate(isNotNullPredicate.getValue())) {
 				return new DateRange(Long.MIN_VALUE, true, Long.MAX_VALUE, true);
 			}
@@ -3249,13 +3249,13 @@ public abstract class AbstractCalciteTest {
 	}
 
 	private static boolean isDate(Operand<?> operand) {
-		if (!(operand instanceof OperandRecordField recordField)) return false;
+		if (!(operand instanceof Operand_RecordField recordField)) return false;
 
 		return recordField.getIndex() == 1;
 	}
 
 	private static @Nullable Long extractDate(Operand<?> operand) {
-		if (!(operand instanceof OperandScalar scalar)) return null;
+		if (!(operand instanceof Operand_Scalar scalar)) return null;
 
 		BigDecimal value = (BigDecimal) scalar.getValue().getValue();
 		return value == null ? null : value.longValue();

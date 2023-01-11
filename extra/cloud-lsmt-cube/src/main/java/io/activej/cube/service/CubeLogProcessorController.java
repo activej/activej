@@ -22,12 +22,12 @@ import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.async.function.AsyncPredicate;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.initializer.WithInitializer;
-import io.activej.cube.Cube;
+import io.activej.cube.Cube_Reactive;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
-import io.activej.etl.LogOTState;
+import io.activej.etl.OTState_Log;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ValueStats;
@@ -80,11 +80,11 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 	}
 
 	public static <K, C> CubeLogProcessorController<K, C> create(Reactor reactor,
-			LogOTState<CubeDiff> state,
+			OTState_Log<CubeDiff> state,
 			OTStateManager<K, LogDiff<CubeDiff>> stateManager,
 			AsyncAggregationChunkStorage<C> chunkStorage,
 			List<LogOTProcessor<?, CubeDiff>> logProcessors) {
-		Cube cube = (Cube) state.getDataState();
+		Cube_Reactive cube = (Cube_Reactive) state.getDataState();
 		AsyncPredicate<K> predicate = AsyncPredicate.of(commitId -> {
 			if (cube.containsExcessiveNumberOfOverlappingChunks()) {
 				logger.info("Cube contains excessive number of overlapping chunks");

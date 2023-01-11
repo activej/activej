@@ -1,22 +1,22 @@
 package io.activej.cube;
 
-import io.activej.aggregation.Aggregation;
-import io.activej.aggregation.AggregationChunkStorage;
-import io.activej.aggregation.ChunkIdCodec;
+import io.activej.aggregation.AggregationChunkStorage_Reactive;
+import io.activej.aggregation.Aggregation_Reactive;
+import io.activej.aggregation.JsonCodec_ChunkId;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frames.FrameFormat;
-import io.activej.csp.process.frames.LZ4FrameFormat;
+import io.activej.csp.process.frames.FrameFormat_LZ4;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
-import io.activej.etl.LogOTState;
-import io.activej.fs.LocalFs;
+import io.activej.etl.OTState_Log;
+import io.activej.fs.Fs_Local;
 import io.activej.multilog.AsyncMultilog;
-import io.activej.multilog.Multilog;
+import io.activej.multilog.Multilog_Reactive;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.serializer.SerializerBuilder;
@@ -33,7 +33,7 @@ import static io.activej.aggregation.AggregationPredicates.alwaysTrue;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.common.Checks.checkNotNull;
-import static io.activej.cube.Cube.AggregationConfig.id;
+import static io.activej.cube.Cube_Reactive.AggregationConfig.id;
 import static io.activej.cube.TestUtils.runProcessLogs;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
@@ -50,12 +50,12 @@ public class CubeIntegrationTest extends CubeTestBase {
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 		Path logsDir = temporaryFolder.newFolder().toPath();
 
-		LocalFs fs = LocalFs.create(reactor, EXECUTOR, aggregationsDir)
+		Fs_Local fs = Fs_Local.create(reactor, EXECUTOR, aggregationsDir)
 				.withTempDir(Files.createTempDirectory(""));
 		await(fs.start());
-		FrameFormat frameFormat = LZ4FrameFormat.create();
-		AggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
-		Cube cube = Cube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
+		FrameFormat frameFormat = FrameFormat_LZ4.create();
+		AggregationChunkStorage_Reactive<Long> aggregationChunkStorage = AggregationChunkStorage_Reactive.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		Cube_Reactive cube = Cube_Reactive.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())
 				.withDimension("campaign", ofInt())
@@ -78,12 +78,12 @@ public class CubeIntegrationTest extends CubeTestBase {
 
 		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
-		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cube);
+		OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(cube);
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
-		LocalFs localFs = LocalFs.create(reactor, EXECUTOR, logsDir);
+		Fs_Local localFs = Fs_Local.create(reactor, EXECUTOR, logsDir);
 		await(localFs.start());
-		AsyncMultilog<LogItem> multilog = Multilog.create(reactor,
+		AsyncMultilog<LogItem> multilog = Multilog_Reactive.create(reactor,
 				localFs,
 				frameFormat,
 				SerializerBuilder.create(CLASS_LOADER).build(LogItem.class),
@@ -145,7 +145,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 		assertEquals(map, logItems.stream().collect(toMap(r -> r.date, r -> r.clicks)));
 
 		// Consolidate revision 4 as revision 5:
-		CubeDiff consolidatingCubeDiff = await(cube.consolidate(Aggregation::consolidateHotSegment));
+		CubeDiff consolidatingCubeDiff = await(cube.consolidate(Aggregation_Reactive::consolidateHotSegment));
 		assertFalse(consolidatingCubeDiff.isEmpty());
 
 		logCubeStateManager.add(LogDiff.forCurrentPosition(consolidatingCubeDiff));

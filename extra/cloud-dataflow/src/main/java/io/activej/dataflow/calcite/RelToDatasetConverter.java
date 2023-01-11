@@ -7,8 +7,8 @@ import io.activej.dataflow.calcite.aggregation.*;
 import io.activej.dataflow.calcite.dataset.DatasetSupplierOfPredicate;
 import io.activej.dataflow.calcite.join.RecordJoiner;
 import io.activej.dataflow.calcite.operand.Operand;
-import io.activej.dataflow.calcite.operand.OperandRecordField;
-import io.activej.dataflow.calcite.operand.OperandScalar;
+import io.activej.dataflow.calcite.operand.Operand_RecordField;
+import io.activej.dataflow.calcite.operand.Operand_Scalar;
 import io.activej.dataflow.calcite.rel.DataflowTableScan;
 import io.activej.dataflow.calcite.utils.*;
 import io.activej.dataflow.calcite.utils.RecordSortComparator.FieldSort;
@@ -115,7 +115,7 @@ public class RelToDatasetConverter {
 
 			projections.add(fieldProjection);
 
-			if (!(projectOperand instanceof OperandRecordField operandRecordField) ||
+			if (!(projectOperand instanceof Operand_RecordField operandRecordField) ||
 					operandRecordField.getIndex() != i ||
 					!scheme.getField(i).equals(fieldName)) {
 				redundantProjection = false;
@@ -137,7 +137,7 @@ public class RelToDatasetConverter {
 
 					if (!(materialized instanceof LocallySortedDataset<?, Record> locallySortedDataset) ||
 							!(locallySortedDataset.keyComparator() instanceof RecordSortComparator)) {
-						return Datasets.map(materialized, materializedFn, RecordStreamSchema.create(toScheme));
+						return Datasets.map(materialized, materializedFn, StreamSchema_Record.create(toScheme));
 					}
 
 					boolean needsRepartition = doesNeedRepartition(projections, scheme.size(), locallySortedDataset);
@@ -166,17 +166,17 @@ public class RelToDatasetConverter {
 		if (needsFiltering) {
 			wherePredicate = paramsCollector.toWherePredicate((RexCall) predicate);
 		} else {
-			wherePredicate = new AndPredicate(emptyList());
+			wherePredicate = new WherePredicate_And(emptyList());
 		}
 
 		RexNode offsetNode = scan.getOffset();
 		RexNode limitNode = scan.getLimit();
-		OperandScalar offsetOperand = offsetNode == null ?
-				new OperandScalar(Value.materializedValue(int.class, StreamSkip.NO_SKIP)) :
+		Operand_Scalar offsetOperand = offsetNode == null ?
+				new Operand_Scalar(Value.materializedValue(int.class, StreamSkip.NO_SKIP)) :
 				paramsCollector.toScalarOperand(offsetNode);
 
-		OperandScalar limitOperand = limitNode == null ?
-				new OperandScalar(Value.materializedValue(int.class, StreamLimiter.NO_LIMIT)) :
+		Operand_Scalar limitOperand = limitNode == null ?
+				new Operand_Scalar(Value.materializedValue(int.class, StreamLimiter.NO_LIMIT)) :
 				paramsCollector.toScalarOperand(limitNode);
 
 		RecordScheme scheme = mapper.getScheme();
@@ -185,7 +185,7 @@ public class RelToDatasetConverter {
 			Class<Object> type = (Class<Object>) dataflowTable.getType();
 			Dataset<Object> dataset = DatasetSupplierOfPredicate.create(id, materializedPredicate, StreamSchemas.simple(type));
 
-			Dataset<Record> mapped = Datasets.map(dataset, new NamedRecordFunction<>(id, mapper), RecordStreamSchema.create(scheme));
+			Dataset<Record> mapped = Datasets.map(dataset, new RecordFunction_Named<>(id, mapper), StreamSchema_Record.create(scheme));
 			Dataset<Record> filtered = needsFiltering ?
 					Datasets.filter(mapped, materializedPredicate) :
 					mapped;
@@ -211,7 +211,7 @@ public class RelToDatasetConverter {
 			Reducer<Record, Record, Record, ?> providedReducer = dataflowPartitionedTable.getReducer();
 			Reducer<Record, Record, Record, ?> reducer = new NamedReducer(id, (Reducer<Record, Record, Record, Object>) providedReducer);
 
-			return Datasets.repartitionReduce(locallySortedDataset, reducer, RecordStreamSchema.create(scheme));
+			return Datasets.repartitionReduce(locallySortedDataset, reducer, StreamSchema_Record.create(scheme));
 		});
 	}
 
@@ -247,7 +247,7 @@ public class RelToDatasetConverter {
 							sortedLeft,
 							sortedRight,
 							joiner,
-							RecordStreamSchema.create(resultSchema),
+							StreamSchema_Record.create(resultSchema),
 							joinKeyProjections.leftKeyProjection
 					);
 				});
@@ -308,15 +308,15 @@ public class RelToDatasetConverter {
 				outputScheme,
 				params -> Datasets.sortReduceRepartitionReduce(current.materialize(params), recordReducer,
 						Record.class, keyFunction, RecordKeyComparator.getInstance(),
-						RecordStreamSchema.create(accumulatorScheme),
+						StreamSchema_Record.create(accumulatorScheme),
 						keyFunction,
-						RecordStreamSchema.create(outputScheme)));
+						StreamSchema_Record.create(outputScheme)));
 	}
 
 	private static Function<Record, Record> getKeyFunction(List<Integer> indices) {
 		List<FieldProjection> projections = new ArrayList<>(indices.size());
 		for (Integer index : indices) {
-			projections.add(new FieldProjection(new OperandRecordField(index), String.valueOf(index)));
+			projections.add(new FieldProjection(new Operand_RecordField(index), String.valueOf(index)));
 		}
 		return RecordProjectionFn.create(projections);
 	}
@@ -336,7 +336,7 @@ public class RelToDatasetConverter {
 			if (scheme == null) {
 				scheme = projectionFn.getToScheme(RecordScheme.create(classLoader), null);
 			}
-			singleDatasets.add(Datasets.map(singleDummyDataset, projectionFn, RecordStreamSchema.create(scheme)));
+			singleDatasets.add(Datasets.map(singleDummyDataset, projectionFn, StreamSchema_Record.create(scheme)));
 		}
 
 		assert scheme != null;
@@ -365,7 +365,7 @@ public class RelToDatasetConverter {
 			Dataset<Record> rightDataset = right.materialize(params);
 
 			// Make sure field names match
-			rightDataset = Datasets.map(rightDataset, RecordProjectionFn.rename(left.getScheme()), RecordStreamSchema.create(left.getScheme()));
+			rightDataset = Datasets.map(rightDataset, RecordProjectionFn.rename(left.getScheme()), StreamSchema_Record.create(left.getScheme()));
 
 			if (union.all) {
 				return Datasets.unionAll(leftDataset, rightDataset);
@@ -403,12 +403,12 @@ public class RelToDatasetConverter {
 			sorts.add(new FieldSort(fieldIndex, asc, fieldCollation.nullDirection));
 		}
 
-		OperandScalar offset = sort.offset == null ?
-				new OperandScalar(Value.materializedValue(int.class, StreamSkip.NO_SKIP)) :
+		Operand_Scalar offset = sort.offset == null ?
+				new Operand_Scalar(Value.materializedValue(int.class, StreamSkip.NO_SKIP)) :
 				paramsCollector.toScalarOperand(sort.offset);
 
-		OperandScalar limit = sort.fetch == null ?
-				new OperandScalar(Value.materializedValue(int.class, StreamLimiter.NO_LIMIT)) :
+		Operand_Scalar limit = sort.fetch == null ?
+				new Operand_Scalar(Value.materializedValue(int.class, StreamLimiter.NO_LIMIT)) :
 				paramsCollector.toScalarOperand(sort.fetch);
 
 		return UnmaterializedDataset.of(
@@ -474,8 +474,8 @@ public class RelToDatasetConverter {
 			checkArgument(leftClass == rightClass);
 			checkArgument(Utils.isSortable(leftClass), "Column not sortable");
 
-			leftProjections.add(new FieldProjection(new OperandRecordField(leftIndex), "join_" + leftProjections.size()));
-			rightProjections.add(new FieldProjection(new OperandRecordField(rightIndex), "join_" + rightProjections.size()));
+			leftProjections.add(new FieldProjection(new Operand_RecordField(leftIndex), "join_" + leftProjections.size()));
+			rightProjections.add(new FieldProjection(new Operand_RecordField(rightIndex), "join_" + rightProjections.size()));
 		}
 
 		return new JoinKeyProjections(
@@ -521,7 +521,7 @@ public class RelToDatasetConverter {
 		if (kind == SqlKind.LITERAL) {
 			RexLiteral literal = (RexLiteral) conditionNode;
 			if (literal.isAlwaysFalse()) {
-				return UnmaterializedDataset.of(dataset.getScheme(), $ -> Datasets.empty(RecordStreamSchema.create(dataset.getScheme())));
+				return UnmaterializedDataset.of(dataset.getScheme(), $ -> Datasets.empty(StreamSchema_Record.create(dataset.getScheme())));
 			} else //noinspection StatementWithEmptyBody
 				if (literal.isAlwaysTrue()) {
 					// Do nothing
@@ -574,7 +574,7 @@ public class RelToDatasetConverter {
 			if (index >= size) return true;
 
 			FieldProjection projection = projections.get(index);
-			if (!(projection.operand() instanceof OperandRecordField operandField) || operandField.getIndex() != index) {
+			if (!(projection.operand() instanceof Operand_RecordField operandField) || operandField.getIndex() != index) {
 				return true;
 			}
 		}
@@ -582,7 +582,7 @@ public class RelToDatasetConverter {
 	}
 
 	private static <K> SortedDataset<K, Record> mapAsSorted(RecordScheme toScheme, RecordProjectionFn projectionFn, LocallySortedDataset<K, Record> locallySortedDataset) {
-		Dataset<Record> mapped = Datasets.map(locallySortedDataset, projectionFn, RecordStreamSchema.create(toScheme));
+		Dataset<Record> mapped = Datasets.map(locallySortedDataset, projectionFn, StreamSchema_Record.create(toScheme));
 		Class<K> keyType = locallySortedDataset.keyType();
 		Function<Record, K> keyFunction = locallySortedDataset.keyFunction();
 		return Datasets.castToSorted(mapped, keyType, keyFunction, locallySortedDataset.keyComparator());
@@ -590,7 +590,7 @@ public class RelToDatasetConverter {
 
 	private static <K> Dataset<Record> repartitionMap(RecordScheme toScheme, RecordProjectionFn projectionFn, LocallySortedDataset<K, Record> locallySortedDataset) {
 		Dataset<Record> repartitioned = new RepartitionToSingleDataset<>(locallySortedDataset);
-		return Datasets.map(repartitioned, projectionFn, RecordStreamSchema.create(toScheme));
+		return Datasets.map(repartitioned, projectionFn, StreamSchema_Record.create(toScheme));
 	}
 
 	public interface UnmaterializedDataset {
@@ -663,30 +663,30 @@ public class RelToDatasetConverter {
 		private WherePredicate toWherePredicate(RexCall conditionNode) {
 			List<RexNode> operands = conditionNode.getOperands();
 			return switch (conditionNode.getKind()) {
-				case OR -> new OrPredicate(operands.stream()
+				case OR -> new WherePredicate_Or(operands.stream()
 						.map(rexNode -> toWherePredicate((RexCall) rexNode))
 						.collect(Collectors.toList()));
-				case AND -> new AndPredicate(operands.stream()
+				case AND -> new WherePredicate_And(operands.stream()
 						.map(rexNode -> toWherePredicate((RexCall) rexNode))
 						.collect(Collectors.toList()));
-				case EQUALS -> new EqPredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
-				case NOT_EQUALS -> new NotEqPredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
-				case GREATER_THAN -> new GtPredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
-				case GREATER_THAN_OR_EQUAL -> new GePredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
-				case LESS_THAN -> new LtPredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
-				case LESS_THAN_OR_EQUAL -> new LePredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
+				case EQUALS -> new WherePredicate_Eq(toOperand(operands.get(0)), toOperand(operands.get(1)));
+				case NOT_EQUALS -> new WherePredicate_NotEq(toOperand(operands.get(0)), toOperand(operands.get(1)));
+				case GREATER_THAN -> new WherePredicate_Gt(toOperand(operands.get(0)), toOperand(operands.get(1)));
+				case GREATER_THAN_OR_EQUAL -> new WherePredicate_Ge(toOperand(operands.get(0)), toOperand(operands.get(1)));
+				case LESS_THAN -> new WherePredicate_Lt(toOperand(operands.get(0)), toOperand(operands.get(1)));
+				case LESS_THAN_OR_EQUAL -> new WherePredicate_Le(toOperand(operands.get(0)), toOperand(operands.get(1)));
 				case BETWEEN ->
-						new BetweenPredicate(toOperand(operands.get(0)), toOperand(operands.get(1)), toOperand(operands.get(2)));
+						new WherePredicate_Between(toOperand(operands.get(0)), toOperand(operands.get(1)), toOperand(operands.get(2)));
 				case IN -> {
 					List<Operand<?>> options = operands.subList(1, operands.size())
 							.stream()
 							.map(this::toOperand)
 							.collect(Collectors.toList());
-					yield new InPredicate(toOperand(operands.get(0)), options);
+					yield new WherePredicate_In(toOperand(operands.get(0)), options);
 				}
-				case LIKE -> new LikePredicate(toOperand(operands.get(0)), toOperand(operands.get(1)));
-				case IS_NULL -> new IsNullPredicate(toOperand(operands.get(0)));
-				case IS_NOT_NULL -> new IsNotNullPredicate(toOperand(operands.get(0)));
+				case LIKE -> new WherePredicate_Like(toOperand(operands.get(0)), toOperand(operands.get(1)));
+				case IS_NULL -> new WherePredicate_IsNull(toOperand(operands.get(0)));
+				case IS_NOT_NULL -> new WherePredicate_IsNotNull(toOperand(operands.get(0)));
 
 				default -> throw new IllegalArgumentException("Not supported condition:" + conditionNode.getKind());
 			};
@@ -698,10 +698,10 @@ public class RelToDatasetConverter {
 			return operand;
 		}
 
-		private OperandScalar toScalarOperand(RexNode node) {
+		private Operand_Scalar toScalarOperand(RexNode node) {
 			Operand<?> operand = toOperand(node);
-			checkArgument(operand instanceof OperandScalar, "Not scalar operand");
-			return (OperandScalar) operand;
+			checkArgument(operand instanceof Operand_Scalar, "Not scalar operand");
+			return (Operand_Scalar) operand;
 		}
 	}
 }

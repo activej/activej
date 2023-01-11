@@ -102,20 +102,20 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	}
 
 	/**
-	 * Returns a {@link ChannelSuppliers.ChannelSupplierEmpty}.
+	 * Returns a {@link ChannelSuppliers.ChannelSupplier_Empty}.
 	 */
 	static <T> ChannelSupplier<T> of() {
-		return new ChannelSuppliers.ChannelSupplierEmpty<>();
+		return new ChannelSuppliers.ChannelSupplier_Empty<>();
 	}
 
 	/**
-	 * Wraps provided {@code value} to a {@link ChannelSuppliers.ChannelSupplierOfValue}.
+	 * Wraps provided {@code value} to a {@link ChannelSuppliers.ChannelSupplier_OfValue}.
 	 *
 	 * @param value a value to be wrapped in ChannelSupplier
 	 * @return a {@code ChannelSupplierOfValue} which wraps the {@code value}
 	 */
 	static <T> ChannelSupplier<T> of(T value) {
-		return new ChannelSuppliers.ChannelSupplierOfValue<>(value);
+		return new ChannelSuppliers.ChannelSupplier_OfValue<>(value);
 	}
 
 	/**
@@ -127,20 +127,20 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 	}
 
 	/**
-	 * Returns a {@link ChannelSuppliers.ChannelSupplierOfException}
+	 * Returns a {@link ChannelSuppliers.ChannelSupplier_OfException}
 	 * of provided exception.
 	 *
 	 * @param e a {@link Exception} to be wrapped in ChannelSupplier
 	 */
 	static <T> ChannelSupplier<T> ofException(Exception e) {
-		return new ChannelSuppliers.ChannelSupplierOfException<>(e);
+		return new ChannelSuppliers.ChannelSupplier_OfException<>(e);
 	}
 
 	/**
 	 * @see #ofIterator(Iterator)
 	 */
 	static <T> ChannelSupplier<T> ofList(List<? extends T> list) {
-		return new ChannelSuppliers.ChannelSupplierOfIterator<>(list.iterator(), true);
+		return new ChannelSuppliers.ChannelSupplier_OfIterator<>(list.iterator(), true);
 	}
 
 	/**
@@ -152,13 +152,13 @@ public interface ChannelSupplier<T> extends AsyncCloseable {
 
 	/**
 	 * Wraps provided {@code Iterator} into
-	 * {@link ChannelSuppliers.ChannelSupplierOfIterator}.
+	 * {@link ChannelSuppliers.ChannelSupplier_OfIterator}.
 	 *
 	 * @param iterator an iterator to be wrapped in ChannelSupplier
 	 * @return a ChannelSupplier which wraps elements of <T> type
 	 */
 	static <T> ChannelSupplier<T> ofIterator(Iterator<? extends T> iterator) {
-		return new ChannelSuppliers.ChannelSupplierOfIterator<>(iterator, false);
+		return new ChannelSuppliers.ChannelSupplier_OfIterator<>(iterator, false);
 	}
 
 	/**

@@ -29,8 +29,8 @@ import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowClient.Session;
 import io.activej.dataflow.exception.DataflowException;
 import io.activej.dataflow.node.Node;
-import io.activej.dataflow.node.NodeDownload;
-import io.activej.dataflow.node.NodeUpload;
+import io.activej.dataflow.node.Node_Download;
+import io.activej.dataflow.node.Node_Upload;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.AbstractReactive;
@@ -173,20 +173,20 @@ public final class DataflowGraph extends AbstractReactive {
 		Map<StreamId, Node> nodesByInput = new HashMap<>();
 		Map<StreamId, StreamId> network = new HashMap<>();
 
-		List<NodeUpload<?>> uploads = new ArrayList<>();
+		List<Node_Upload<?>> uploads = new ArrayList<>();
 
 		// collect network streams and populate the nodesByInput lookup map
 		for (Node node : nodePartitions.keySet()) {
-			if (node instanceof NodeDownload<?> download) {
+			if (node instanceof Node_Download<?> download) {
 				network.put(download.getStreamId(), download.getOutput());
-			} else if (node instanceof NodeUpload) {
-				uploads.add((NodeUpload<?>) node);
+			} else if (node instanceof Node_Upload) {
+				uploads.add((Node_Upload<?>) node);
 			} else {
 				node.getInputs().forEach(input -> nodesByInput.put(input, node));
 			}
 		}
 		// check for upload nodeStats not connected to download ones, add them
-		for (NodeUpload<?> upload : uploads) {
+		for (Node_Upload<?> upload : uploads) {
 			StreamId streamId = upload.getStreamId();
 			if (!network.containsKey(streamId)) {
 				nodesByInput.put(streamId, upload);
@@ -210,7 +210,7 @@ public final class DataflowGraph extends AbstractReactive {
 					for (Node node : e.getValue()) {
 						// upload and download nodeStats have no common connections
 						// download nodeStats are never drawn, and upload only has an input
-						if ((node instanceof NodeDownload || (node instanceof NodeUpload && network.containsKey(((NodeUpload<?>) node).getStreamId())))) {
+						if ((node instanceof Node_Download || (node instanceof Node_Upload && network.containsKey(((Node_Upload<?>) node).getStreamId())))) {
 							continue;
 						}
 						String nodeId = "n" + ++nodeCounter.value;

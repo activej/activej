@@ -37,7 +37,7 @@ public class DecoratedFsExample extends ServerSetupExample {
 			@Provides
 			@Named("decorated")
 			AsyncFs decoratedFs(AsyncFs fs) {
-				return new LoggingFs(fs);
+				return new Fs_Logging(fs);
 			}
 		};
 	}
@@ -49,10 +49,10 @@ public class DecoratedFsExample extends ServerSetupExample {
 	}
 
 	//[START WRAPPER]
-	private static final class LoggingFs extends ForwardingFs {
-		private static final Logger logger = LoggerFactory.getLogger(LoggingFs.class);
+	private static final class Fs_Logging extends ForwardingFs {
+		private static final Logger logger = LoggerFactory.getLogger(Fs_Logging.class);
 
-		public LoggingFs(AsyncFs peer) {
+		public Fs_Logging(AsyncFs peer) {
 			super(peer);
 		}
 

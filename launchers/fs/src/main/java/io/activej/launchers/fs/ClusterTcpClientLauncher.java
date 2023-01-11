@@ -23,8 +23,8 @@ import io.activej.config.ConfigModule;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.AsyncFs;
 import io.activej.fs.cluster.AsyncDiscoveryService;
-import io.activej.fs.cluster.ClusterFs;
 import io.activej.fs.cluster.FsPartitions;
+import io.activej.fs.cluster.Fs_Cluster;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpServer;
 import io.activej.inject.annotation.Eager;
@@ -78,7 +78,7 @@ public class ClusterTcpClientLauncher extends Launcher {
 
 	@Provides
 	AsyncFs asyncFs(Reactor reactor, FsPartitions partitions, Config config) {
-		return ClusterFs.create(reactor, partitions)
+		return Fs_Cluster.create(reactor, partitions)
 				.withInitializer(ofClusterFs(config.getChild("activefs.cluster")));
 	}
 

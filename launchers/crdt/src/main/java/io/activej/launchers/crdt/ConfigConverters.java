@@ -18,10 +18,10 @@ package io.activej.launchers.crdt;
 
 import io.activej.config.Config;
 import io.activej.config.converter.ConfigConverter;
-import io.activej.config.converter.SimpleConfigConverter;
+import io.activej.config.converter.ConfigConverter_Simple;
 import io.activej.crdt.storage.cluster.PartitionId;
+import io.activej.crdt.storage.cluster.PartitionScheme_Rendezvous;
 import io.activej.crdt.storage.cluster.RendezvousPartitionGroup;
-import io.activej.crdt.storage.cluster.RendezvousPartitionScheme;
 import io.activej.rpc.client.sender.RpcStrategy;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
@@ -37,17 +37,17 @@ import static io.activej.config.converter.ConfigConverters.*;
 public final class ConfigConverters {
 
 	/**
-	 * Config converter to create a {@link RendezvousPartitionScheme} out of a {@link Config}
+	 * Config converter to create a {@link PartitionScheme_Rendezvous} out of a {@link Config}
 	 * that is useful for creating {@link RpcStrategy} on a client side
 	 *
-	 * @return a config converter for {@link RendezvousPartitionScheme}
+	 * @return a config converter for {@link PartitionScheme_Rendezvous}
 	 */
-	public static <P> ConfigConverter<RendezvousPartitionScheme<P>> ofRendezvousPartitionScheme(
+	public static <P> ConfigConverter<PartitionScheme_Rendezvous<P>> ofRendezvousPartitionScheme(
 			ConfigConverter<P> partitionIdConverter
 	) {
 		return new ConfigConverter<>() {
 			@Override
-			public RendezvousPartitionScheme<P> get(Config config) {
+			public PartitionScheme_Rendezvous<P> get(Config config) {
 				Collection<Config> partitionGroupsConfig = config.getChild("partitionGroup").getChildren().values();
 
 				List<RendezvousPartitionGroup<P>> partitionGroups = new ArrayList<>();
@@ -55,12 +55,12 @@ public final class ConfigConverters {
 					partitionGroups.add(ofPartitionGroup(partitionIdConverter).get(partitionGroupConfig));
 				}
 
-				return RendezvousPartitionScheme.create(partitionGroups);
+				return PartitionScheme_Rendezvous.create(partitionGroups);
 			}
 
 			@Override
 			@Contract("_, !null -> !null")
-			public RendezvousPartitionScheme<P> get(Config config, @Nullable RendezvousPartitionScheme<P> defaultValue) {
+			public PartitionScheme_Rendezvous<P> get(Config config, @Nullable PartitionScheme_Rendezvous<P> defaultValue) {
 				if (config.isEmpty()) {
 					return defaultValue;
 				} else {
@@ -97,7 +97,7 @@ public final class ConfigConverters {
 	}
 
 	public static ConfigConverter<PartitionId> ofPartitionId() {
-		return SimpleConfigConverter.of(PartitionId::parseString, PartitionId::toString);
+		return ConfigConverter_Simple.of(PartitionId::parseString, PartitionId::toString);
 	}
 
 }

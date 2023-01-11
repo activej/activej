@@ -1,16 +1,16 @@
 package io.activej.launchers.crdt;
 
 import io.activej.config.Config;
-import io.activej.crdt.ClientCrdtStorage;
 import io.activej.crdt.CrdtData;
+import io.activej.crdt.CrdtStorage_Client;
 import io.activej.crdt.storage.AsyncCrdtStorage;
-import io.activej.crdt.util.CrdtDataSerializer;
+import io.activej.crdt.util.BinarySerializer_CrdtData;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.fs.AsyncFs;
-import io.activej.fs.LocalFs;
+import io.activej.fs.Fs_Local;
 import io.activej.http.AsyncHttpClient;
-import io.activej.http.HttpClient;
+import io.activej.http.HttpClient_Reactive;
 import io.activej.http.HttpRequest;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
@@ -83,7 +83,7 @@ public final class CrdtClusterTest {
 				CrdtDescriptor<String, Integer> descriptor() {
 					return new CrdtDescriptor<>(
 							ignoringTimestamp(Integer::max),
-							new CrdtDataSerializer<>(UTF8_SERIALIZER, INT_SERIALIZER),
+							new BinarySerializer_CrdtData<>(UTF8_SERIALIZER, INT_SERIALIZER),
 							String.class,
 							Integer.class);
 				}
@@ -95,7 +95,7 @@ public final class CrdtClusterTest {
 
 				@Provides
 				AsyncFs fs(Reactor reactor, Executor executor, Config config) {
-					return LocalFs.create(reactor, executor, config.get(ofPath(), "crdt.local.path"));
+					return Fs_Local.create(reactor, executor, config.get(ofPath(), "crdt.local.path"));
 				}
 			};
 		}
@@ -153,7 +153,7 @@ public final class CrdtClusterTest {
 			CrdtDescriptor<String, Integer> descriptor() {
 				return new CrdtDescriptor<>(
 						ignoringTimestamp(Integer::max),
-						new CrdtDataSerializer<>(UTF8_SERIALIZER, INT_SERIALIZER),
+						new BinarySerializer_CrdtData<>(UTF8_SERIALIZER, INT_SERIALIZER),
 						String.class,
 						Integer.class);
 			}
@@ -162,7 +162,7 @@ public final class CrdtClusterTest {
 
 	@Test
 	public void uploadWithHTTP() {
-		AsyncHttpClient client = HttpClient.create(Reactor.getCurrentReactor());
+		AsyncHttpClient client = HttpClient_Reactive.create(Reactor.getCurrentReactor());
 
 		PromiseStats uploadStat = PromiseStats.create(Duration.ofSeconds(5));
 
@@ -191,7 +191,7 @@ public final class CrdtClusterTest {
 
 	@Test
 	public void uploadWithStreams() {
-		AsyncCrdtStorage<String, Integer> client = ClientCrdtStorage.create(Reactor.getCurrentReactor(), new InetSocketAddress("localhost", 9000), UTF8_SERIALIZER, INT_SERIALIZER);
+		AsyncCrdtStorage<String, Integer> client = CrdtStorage_Client.create(Reactor.getCurrentReactor(), new InetSocketAddress("localhost", 9000), UTF8_SERIALIZER, INT_SERIALIZER);
 
 		PromiseStats uploadStat = PromiseStats.create(Duration.ofSeconds(5));
 
@@ -206,7 +206,7 @@ public final class CrdtClusterTest {
 
 	@Test
 	public void downloadStuff() {
-		AsyncCrdtStorage<String, Integer> client = ClientCrdtStorage.create(Reactor.getCurrentReactor(), new InetSocketAddress(9001), UTF8_SERIALIZER, INT_SERIALIZER);
+		AsyncCrdtStorage<String, Integer> client = CrdtStorage_Client.create(Reactor.getCurrentReactor(), new InetSocketAddress(9001), UTF8_SERIALIZER, INT_SERIALIZER);
 
 		await(client.download().then(supplier -> supplier.streamTo(StreamConsumer.ofConsumer(System.out::println))));
 	}

@@ -17,33 +17,33 @@
 package io.activej.aggregation;
 
 import io.activej.datastream.stats.StreamStats;
-import io.activej.datastream.stats.StreamStatsBasic;
+import io.activej.datastream.stats.StreamStats_Basic;
 import io.activej.jmx.api.attribute.JmxAttribute;
 
 @SuppressWarnings("rawtypes") // JMX doesn't work with generic types
 public class AggregationStats {
-	final StreamStatsBasic<?> mergeMapInput = StreamStats.basic();
-	final StreamStatsBasic<?> mergeMapOutput = StreamStats.basic();
-	final StreamStatsBasic<?> mergeReducerInput = StreamStats.basic();
-	final StreamStatsBasic<?> mergeReducerOutput = StreamStats.basic();
+	final StreamStats_Basic<?> mergeMapInput = StreamStats.basic();
+	final StreamStats_Basic<?> mergeMapOutput = StreamStats.basic();
+	final StreamStats_Basic<?> mergeReducerInput = StreamStats.basic();
+	final StreamStats_Basic<?> mergeReducerOutput = StreamStats.basic();
 
 	@JmxAttribute
-	public StreamStatsBasic getMergeReducerInput() {
+	public StreamStats_Basic getMergeReducerInput() {
 		return mergeReducerInput;
 	}
 
 	@JmxAttribute
-	public StreamStatsBasic getMergeReducerOutput() {
+	public StreamStats_Basic getMergeReducerOutput() {
 		return mergeReducerOutput;
 	}
 
 	@JmxAttribute
-	public StreamStatsBasic getMergeMapInput() {
+	public StreamStats_Basic getMergeMapInput() {
 		return mergeMapInput;
 	}
 
 	@JmxAttribute
-	public StreamStatsBasic getMergeMapOutput() {
+	public StreamStats_Basic getMergeMapOutput() {
 		return mergeMapOutput;
 	}
 }

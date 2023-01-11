@@ -16,9 +16,9 @@
 
 package io.activej.cube.linear;
 
-import io.activej.aggregation.Aggregation;
+import io.activej.aggregation.Aggregation_Reactive;
 import io.activej.common.exception.MalformedDataException;
-import io.activej.cube.Cube;
+import io.activej.cube.Cube_Reactive;
 
 import java.util.List;
 import java.util.Set;
@@ -29,9 +29,9 @@ public interface MeasuresValidator {
 
 	void validate(String aggregationId, List<String> measures) throws MalformedDataException;
 
-	static MeasuresValidator ofCube(Cube cube) {
+	static MeasuresValidator ofCube(Cube_Reactive cube) {
 		return (aggregationId, measures) -> {
-			Aggregation aggregation;
+			Aggregation_Reactive aggregation;
 			try {
 				aggregation = cube.getAggregation(aggregationId);
 			} catch (NullPointerException ignored) {

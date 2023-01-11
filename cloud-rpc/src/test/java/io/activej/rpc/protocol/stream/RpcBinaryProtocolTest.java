@@ -4,14 +4,14 @@ import io.activej.common.MemSize;
 import io.activej.csp.process.frames.ChannelFrameDecoder;
 import io.activej.csp.process.frames.ChannelFrameEncoder;
 import io.activej.csp.process.frames.FrameFormat;
-import io.activej.csp.process.frames.LZ4FrameFormat;
+import io.activej.csp.process.frames.FrameFormat_LZ4;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
-import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.client.RpcClient_Reactive;
 import io.activej.rpc.protocol.RpcMessage;
 import io.activej.rpc.server.RpcServer;
 import io.activej.serializer.BinarySerializer;
@@ -56,7 +56,7 @@ public final class RpcBinaryProtocolTest {
 	public void test() throws Exception {
 		String testMessage = "Test";
 
-		RpcClient client = RpcClient.create(Reactor.getCurrentReactor())
+		RpcClient_Reactive client = RpcClient_Reactive.create(Reactor.getCurrentReactor())
 				.withMessageTypes(String.class)
 				.withStrategy(server(new InetSocketAddress("localhost", listenPort)));
 
@@ -91,7 +91,7 @@ public final class RpcBinaryProtocolTest {
 		String testMessage = "Test";
 		List<RpcMessage> sourceList = IntStream.range(0, countRequests).mapToObj(i -> RpcMessage.of(i, testMessage)).collect(toList());
 
-		FrameFormat frameFormat = LZ4FrameFormat.create();
+		FrameFormat frameFormat = FrameFormat_LZ4.create();
 		StreamSupplier<RpcMessage> supplier = StreamSupplier.ofIterable(sourceList)
 				.transformWith(ChannelSerializer.create(binarySerializer)
 						.withInitialBufferSize(MemSize.of(1)))

@@ -4,8 +4,8 @@ import com.dslplatform.json.runtime.Settings;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpResponse;
-import io.activej.http.RoutingServlet;
-import io.activej.http.StaticServlet;
+import io.activej.http.Servlet_Routing;
+import io.activej.http.Servlet_Static;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
 
@@ -39,8 +39,8 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 	//[START REGION_2]
 	@Provides
 	AsyncServlet servlet(Executor executor, RecordDAO recordDAO, DslJson<?> dslJson) {
-		return RoutingServlet.create()
-				.map("/*", StaticServlet.ofClassPath(executor, "build/")
+		return Servlet_Routing.create()
+				.map("/*", Servlet_Static.ofClassPath(executor, "build/")
 						.withIndexHtml())
 				//[END REGION_2]
 				//[START REGION_3]

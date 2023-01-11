@@ -21,11 +21,11 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
 import io.activej.memcache.protocol.MemcacheRpcMessage;
 import io.activej.memcache.protocol.MemcacheRpcMessage.Slice;
-import io.activej.memcache.protocol.SerializerDefSlice;
+import io.activej.memcache.protocol.SerializerDef_Slice;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.AsyncRpcClient;
-import io.activej.rpc.client.RpcClient;
-import io.activej.rpc.client.sender.RpcStrategies;
+import io.activej.rpc.client.RpcClient_Reactive;
+import io.activej.rpc.client.sender.RpcStrategy_RendezvousHashing;
 import io.activej.serializer.SerializerBuilder;
 
 import java.time.Duration;
@@ -34,7 +34,7 @@ import static io.activej.common.MemSize.kilobytes;
 import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.launchers.initializers.ConfigConverters.ofFrameFormat;
 import static io.activej.memcache.protocol.MemcacheRpcMessage.HASH_FUNCTION;
-import static io.activej.rpc.client.RpcClient.DEFAULT_SOCKET_SETTINGS;
+import static io.activej.rpc.client.RpcClient_Reactive.DEFAULT_SOCKET_SETTINGS;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public class MemcacheClientModule extends AbstractModule {
@@ -44,14 +44,14 @@ public class MemcacheClientModule extends AbstractModule {
 
 	@Provides
 	AsyncRpcClient rpcClient(NioReactor reactor, Config config) {
-		return RpcClient.create(reactor)
+		return RpcClient_Reactive.create(reactor)
 				.withStrategy(
-						RpcStrategies.RendezvousHashing.create(HASH_FUNCTION)
+						RpcStrategy_RendezvousHashing.create(HASH_FUNCTION)
 								.withMinActiveShards(config.get(ofInteger(), "client.minAliveConnections", 1))
 								.withShards(config.get(ofList(ofInetSocketAddress()), "client.addresses")))
 				.withMessageTypes(MemcacheRpcMessage.MESSAGE_TYPES)
 				.withSerializerBuilder(SerializerBuilder.create()
-						.with(Slice.class, ctx -> new SerializerDefSlice()))
+						.with(Slice.class, ctx -> new SerializerDef_Slice()))
 				.withStreamProtocol(
 						config.get(ofMemSize(), "protocol.packetSize", kilobytes(64)),
 						config.get(ofFrameFormat(), "protocol.frameFormat", null))
@@ -62,8 +62,8 @@ public class MemcacheClientModule extends AbstractModule {
 	}
 
 	@Provides
-	RawMemcacheClient memcacheClient(AsyncRpcClient client) {
-		return RawMemcacheClient.create(client);
+	MemcacheClient_Raw memcacheClient(AsyncRpcClient client) {
+		return MemcacheClient_Raw.create(client);
 	}
 
 }

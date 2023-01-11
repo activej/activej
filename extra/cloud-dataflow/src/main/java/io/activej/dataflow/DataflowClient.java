@@ -24,7 +24,7 @@ import io.activej.common.function.FunctionEx;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.dsl.ChannelTransformer;
 import io.activej.csp.net.AsyncMessaging;
-import io.activej.csp.net.Messaging;
+import io.activej.csp.net.Messaging_Reactive;
 import io.activej.dataflow.exception.DataflowException;
 import io.activej.dataflow.exception.DataflowStacklessException;
 import io.activej.dataflow.graph.StreamId;
@@ -45,7 +45,7 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.processor.StreamSupplierTransformer;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
-import io.activej.net.socket.tcp.TcpSocket;
+import io.activej.net.socket.tcp.TcpSocket_Reactive;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.ImplicitlyReactive;
@@ -83,10 +83,10 @@ public final class DataflowClient extends AbstractNioReactive {
 
 	public <T> StreamSupplier<T> download(InetSocketAddress address, StreamId streamId, StreamSchema<T> streamSchema, ChannelTransformer<ByteBuf, ByteBuf> transformer) {
 		checkInReactorThread();
-		return StreamSupplier.ofPromise(TcpSocket.connect(reactor, address, 0, socketSettings)
+		return StreamSupplier.ofPromise(TcpSocket_Reactive.connect(reactor, address, 0, socketSettings)
 				.mapException(IOException.class, e -> new DataflowStacklessException("Failed to connect to " + address, e))
 				.then(socket -> {
-					AsyncMessaging<DataflowResponse, DataflowRequest> messaging = Messaging.create(socket, codec);
+					AsyncMessaging<DataflowResponse, DataflowRequest> messaging = Messaging_Reactive.create(socket, codec);
 					return performHandshake(messaging)
 							.then(() -> messaging.send(new Download(streamId))
 									.mapException(IOException.class, e -> new DataflowException("Failed to download from " + address, e)))
@@ -174,7 +174,7 @@ public final class DataflowClient extends AbstractNioReactive {
 
 		private Session(InetSocketAddress address, AsyncTcpSocket socket) {
 			this.address = address;
-			this.messaging = Messaging.create(socket, codec);
+			this.messaging = Messaging_Reactive.create(socket, codec);
 		}
 
 		public Promise<Void> execute(long taskId, List<Node> nodes) {
@@ -218,7 +218,7 @@ public final class DataflowClient extends AbstractNioReactive {
 
 	public Promise<Session> connect(InetSocketAddress address) {
 		checkInReactorThread();
-		return TcpSocket.connect(reactor, address, 0, socketSettings)
+		return TcpSocket_Reactive.connect(reactor, address, 0, socketSettings)
 				.map(socket -> new Session(address, socket))
 				.mapException(e -> new DataflowException("Could not connect to " + address, e));
 	}

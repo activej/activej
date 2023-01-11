@@ -48,7 +48,7 @@ import static java.util.stream.Collectors.toSet;
 public final class Utils {
 
 	public static <R> Class<R> createResultClass(Collection<String> attributes, Collection<String> measures,
-			Cube cube, DefiningClassLoader classLoader) {
+			Cube_Reactive cube, DefiningClassLoader classLoader) {
 		return classLoader.ensureClass(
 				ClassKey.of(Object.class, new HashSet<>(attributes), new HashSet<>(measures)),
 				() -> {

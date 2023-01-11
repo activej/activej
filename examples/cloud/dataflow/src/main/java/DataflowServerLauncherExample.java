@@ -1,6 +1,6 @@
 import io.activej.config.Config;
 import io.activej.dataflow.inject.DatasetId;
-import io.activej.dataflow.node.NodeSort.StreamSorterStorageFactory;
+import io.activej.dataflow.node.Node_Sort.StreamSorterStorageFactory;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
@@ -28,7 +28,7 @@ public final class DataflowServerLauncherExample extends DataflowServerLauncher 
 		return ModuleBuilder.create()
 				.install(new DataflowSerializersModule())
 
-				.bind(StreamSorterStorageFactory.class).toInstance(MergeStubStreamSorterStorage.FACTORY_STUB)
+				.bind(StreamSorterStorageFactory.class).toInstance(StreamSorterStorage_MergeStub.FACTORY_STUB)
 
 				.bind(Config.class).toInstance(
 						Config.create()

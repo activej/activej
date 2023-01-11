@@ -1,5 +1,5 @@
 import io.activej.http.AsyncServlet;
-import io.activej.http.StaticServlet;
+import io.activej.http.Servlet_Static;
 import io.activej.inject.annotation.Provides;
 import io.activej.launcher.Launcher;
 import io.activej.launchers.http.HttpServerLauncher;
@@ -17,7 +17,7 @@ public final class StaticServletExample extends HttpServerLauncher {
 	//[START EXAMPLE]
 	@Provides
 	AsyncServlet servlet(Executor executor) {
-		return StaticServlet.ofClassPath(executor, "static/site")
+		return Servlet_Static.ofClassPath(executor, "static/site")
 				.withIndexHtml();
 	}
 	//[END EXAMPLE]

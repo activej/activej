@@ -532,7 +532,7 @@ public final class TestLocalBlockingFs {
 			inputStream.transferTo(outputStream);
 		}
 
-		Path tempDir = storagePath.resolve(LocalFs.DEFAULT_TEMP_DIR);
+		Path tempDir = storagePath.resolve(Fs_Local.DEFAULT_TEMP_DIR);
 		Files.delete(tempDir);
 
 		try {
@@ -545,7 +545,7 @@ public final class TestLocalBlockingFs {
 
 	@Test
 	public void testUploadWithDeletedTempDir() throws IOException {
-		Path tempDir = storagePath.resolve(LocalFs.DEFAULT_TEMP_DIR);
+		Path tempDir = storagePath.resolve(Fs_Local.DEFAULT_TEMP_DIR);
 		Files.delete(tempDir);
 
 		try (InputStream inputStream = new ByteArrayInputStream("Test content".getBytes(UTF_8));

@@ -29,8 +29,8 @@ import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
-import static io.activej.codegen.expression.ExpressionCast.SELF_TYPE;
-import static io.activej.codegen.expression.ExpressionCompare.*;
+import static io.activej.codegen.expression.Expression_Cast.SELF_TYPE;
+import static io.activej.codegen.expression.Expression_Compare.*;
 import static io.activej.codegen.operation.CompareOperation.*;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
@@ -47,7 +47,7 @@ public class Expressions {
 	 * @return new instance of the ExpressionConstant
 	 */
 	public static Expression value(Object value) {
-		return new ExpressionConstant(value);
+		return new Expression_Constant(value);
 	}
 
 	/**
@@ -58,14 +58,14 @@ public class Expressions {
 	 * @return new instance of the ExpressionConstant
 	 */
 	public static Expression value(Object value, Class<?> type) {
-		return new ExpressionConstant(value, type);
+		return new Expression_Constant(value, type);
 	}
 
 	/**
 	 * @see #sequence(List)
 	 */
 	public static Expression sequence(Expression... parts) {
-		return new ExpressionSequence(List.of(parts));
+		return new Expression_Sequence(List.of(parts));
 	}
 
 	/**
@@ -77,13 +77,13 @@ public class Expressions {
 	public static Expression sequence(List<Expression> parts) {
 		List<Expression> list = new ArrayList<>(parts.size());
 		for (Expression part : parts) {
-			if (part instanceof ExpressionSequence) {
-				list.addAll(((ExpressionSequence) part).expressions);
+			if (part instanceof Expression_Sequence) {
+				list.addAll(((Expression_Sequence) part).expressions);
 			} else {
 				list.add(part);
 			}
 		}
-		return new ExpressionSequence(list);
+		return new Expression_Sequence(list);
 	}
 
 	/**
@@ -97,7 +97,7 @@ public class Expressions {
 	public static Expression sequence(Consumer<List<Expression>> consumer) {
 		List<Expression> seq = new ArrayList<>();
 		consumer.accept(seq);
-		return new ExpressionSequence(seq);
+		return new Expression_Sequence(seq);
 	}
 
 	/**
@@ -112,7 +112,7 @@ public class Expressions {
 		List<Expression> seq = new ArrayList<>();
 		Expression result = fn.apply(seq);
 		seq.add(result);
-		return new ExpressionSequence(seq);
+		return new Expression_Sequence(seq);
 	}
 
 	/**
@@ -123,7 +123,7 @@ public class Expressions {
 	 * @return an expression that represents a new local variable with some action applied to it
 	 */
 	public static Expression let(Expression expression, Function<Variable, Expression> fn) {
-		Variable variable = new ExpressionLet(expression);
+		Variable variable = new Expression_Let(expression);
 		return sequence(variable, fn.apply(variable));
 	}
 
@@ -135,7 +135,7 @@ public class Expressions {
 	 * @return an expression that represents new local variables with some action applied to them
 	 */
 	public static Expression let(List<Expression> expressions, Function<List<Variable>, Expression> fn) {
-		List<Variable> variables = expressions.stream().map(ExpressionLet::new).collect(toList());
+		List<Variable> variables = expressions.stream().map(Expression_Let::new).collect(toList());
 		List<Expression> sequence = new ArrayList<>(expressions.size() + 1);
 		sequence.addAll(variables);
 		sequence.add(fn.apply(variables));
@@ -157,7 +157,7 @@ public class Expressions {
 	 * @return new instance of the Expression
 	 */
 	public static Expression set(StoreDef to, Expression from) {
-		return new ExpressionSet(to, from);
+		return new Expression_Set(to, from);
 	}
 
 	/**
@@ -168,7 +168,7 @@ public class Expressions {
 	 * @return new instance of the Expression which is cast to the type
 	 */
 	public static Expression cast(Expression expression, Class<?> type) {
-		return new ExpressionCast(expression, getType(type));
+		return new Expression_Cast(expression, getType(type));
 	}
 
 	/**
@@ -178,7 +178,7 @@ public class Expressions {
 	 * @return expression cast to a self type
 	 */
 	public static Expression castIntoSelf(Expression expression) {
-		return new ExpressionCast(expression, SELF_TYPE);
+		return new Expression_Cast(expression, SELF_TYPE);
 	}
 
 	/**
@@ -200,7 +200,7 @@ public class Expressions {
 	 * @return new instance of the ExpressionStaticField
 	 */
 	public static Variable staticField(Class<?> owner, String field) {
-		return new ExpressionStaticField(owner, field);
+		return new Expression_StaticField(owner, field);
 	}
 
 	/**
@@ -210,7 +210,7 @@ public class Expressions {
 	 * @return new instance of the ExpressionStaticField
 	 */
 	public static Variable staticField(String field) {
-		return new ExpressionStaticField(null, field);
+		return new Expression_StaticField(null, field);
 	}
 
 	/**
@@ -219,7 +219,7 @@ public class Expressions {
 	 * @return current instance of the Expression
 	 */
 	public static Expression self() {
-		return new VarThis();
+		return new Expression_VarThis();
 	}
 
 	/**
@@ -326,7 +326,7 @@ public class Expressions {
 	 * @return an expression that represents a result of logical 'AND'
 	 */
 	public static Expression and(List<Expression> predicates) {
-		return new ExpressionBooleanAnd(predicates);
+		return new Expression_BooleanAnd(predicates);
 	}
 
 	/**
@@ -360,21 +360,21 @@ public class Expressions {
 	 * @param predicates list of predicates
 	 * @return an expression that represents a result of logical 'OR'
 	 */
-	public static ExpressionBooleanOr or(List<Expression> predicates) {
-		return new ExpressionBooleanOr(predicates);
+	public static Expression_BooleanOr or(List<Expression> predicates) {
+		return new Expression_BooleanOr(predicates);
 	}
 
 	/**
 	 * @see #or(List)
 	 */
-	public static ExpressionBooleanOr or(Stream<Expression> predicates) {
+	public static Expression_BooleanOr or(Stream<Expression> predicates) {
 		return or(predicates.collect(toList()));
 	}
 
 	/**
 	 * @see #or(List)
 	 */
-	public static ExpressionBooleanOr or(Expression... predicates) {
+	public static Expression_BooleanOr or(Expression... predicates) {
 		return or(List.of(predicates));
 	}
 
@@ -385,7 +385,7 @@ public class Expressions {
 	 * @param predicate2 the second predicate
 	 * @return an expression that represents a result of logical 'OR'
 	 */
-	public static ExpressionBooleanOr or(Expression predicate1, Expression predicate2) {
+	public static Expression_BooleanOr or(Expression predicate1, Expression predicate2) {
 		return or(List.of(predicate1, predicate2));
 	}
 
@@ -398,7 +398,7 @@ public class Expressions {
 			keys[i] = list.get(i).getKey();
 			expressionsArray[i] = list.get(i).getValue();
 		}
-		return new ExpressionTableSwitch(key, keys, expressionsArray, defaultExpression);
+		return new Expression_TableSwitch(key, keys, expressionsArray, defaultExpression);
 	}
 
 	/**
@@ -419,14 +419,14 @@ public class Expressions {
 	 * @throws IllegalArgumentException if a non-arithmetic type is passed to the method
 	 */
 	public static Class<?> unifyArithmeticTypes(Class<?>... types) {
-		return ExpressionArithmeticOp.unifyArithmeticTypes(types);
+		return Expression_ArithmeticOp.unifyArithmeticTypes(types);
 	}
 
 	/**
 	 * @see #unifyArithmeticTypes(Class[])
 	 */
 	public static Class<?> unifyArithmeticTypes(List<Class<?>> types) {
-		return ExpressionArithmeticOp.unifyArithmeticTypes(types.toArray(new Class<?>[0]));
+		return Expression_ArithmeticOp.unifyArithmeticTypes(types.toArray(new Class<?>[0]));
 	}
 
 	/**
@@ -438,14 +438,14 @@ public class Expressions {
 	 * @see ArithmeticOperation
 	 */
 	public static Expression arithmeticOp(ArithmeticOperation op, Expression left, Expression right) {
-		return new ExpressionArithmeticOp(op, left, right);
+		return new Expression_ArithmeticOp(op, left, right);
 	}
 
 	/**
 	 * @see #arithmeticOp(ArithmeticOperation, Expression, Expression)
 	 */
 	public static Expression arithmeticOp(String op, Expression left, Expression right) {
-		return new ExpressionArithmeticOp(ArithmeticOperation.operation(op), left, right);
+		return new Expression_ArithmeticOp(ArithmeticOperation.operation(op), left, right);
 	}
 
 	/**
@@ -457,7 +457,7 @@ public class Expressions {
 	 * @see #arithmeticOp(ArithmeticOperation, Expression, Expression)
 	 */
 	public static Expression add(Expression left, Expression right) {
-		return new ExpressionArithmeticOp(ArithmeticOperation.ADD, left, right);
+		return new Expression_ArithmeticOp(ArithmeticOperation.ADD, left, right);
 	}
 
 	/**
@@ -480,7 +480,7 @@ public class Expressions {
 	 * @see #arithmeticOp(ArithmeticOperation, Expression, Expression)
 	 */
 	public static Expression sub(Expression left, Expression right) {
-		return new ExpressionArithmeticOp(ArithmeticOperation.SUB, left, right);
+		return new Expression_ArithmeticOp(ArithmeticOperation.SUB, left, right);
 	}
 
 	/**
@@ -503,7 +503,7 @@ public class Expressions {
 	 * @see #arithmeticOp(ArithmeticOperation, Expression, Expression)
 	 */
 	public static Expression mul(Expression left, Expression right) {
-		return new ExpressionArithmeticOp(ArithmeticOperation.MUL, left, right);
+		return new Expression_ArithmeticOp(ArithmeticOperation.MUL, left, right);
 	}
 
 	/**
@@ -515,7 +515,7 @@ public class Expressions {
 	 * @see #arithmeticOp(ArithmeticOperation, Expression, Expression)
 	 */
 	public static Expression div(Expression left, Expression right) {
-		return new ExpressionArithmeticOp(ArithmeticOperation.DIV, left, right);
+		return new Expression_ArithmeticOp(ArithmeticOperation.DIV, left, right);
 	}
 
 	/**
@@ -528,11 +528,11 @@ public class Expressions {
 	 * @see #arithmeticOp(ArithmeticOperation, Expression, Expression)
 	 */
 	public static Expression rem(Expression left, Expression right) {
-		return new ExpressionArithmeticOp(ArithmeticOperation.REM, left, right);
+		return new Expression_ArithmeticOp(ArithmeticOperation.REM, left, right);
 	}
 
 	public static Expression neg(Expression arg) {
-		return new ExpressionNeg(arg);
+		return new Expression_Neg(arg);
 	}
 
 	/**
@@ -544,7 +544,7 @@ public class Expressions {
 	 * @see #arithmeticOp(ArithmeticOperation, Expression, Expression)
 	 */
 	public static Expression bitAnd(Expression left, Expression right) {
-		return new ExpressionArithmeticOp(ArithmeticOperation.AND, left, right);
+		return new Expression_ArithmeticOp(ArithmeticOperation.AND, left, right);
 	}
 
 	/**
@@ -556,7 +556,7 @@ public class Expressions {
 	 * @see #arithmeticOp(ArithmeticOperation, Expression, Expression)
 	 */
 	public static Expression bitOr(Expression left, Expression right) {
-		return new ExpressionArithmeticOp(ArithmeticOperation.OR, left, right);
+		return new Expression_ArithmeticOp(ArithmeticOperation.OR, left, right);
 	}
 
 	/**
@@ -568,7 +568,7 @@ public class Expressions {
 	 * @see #arithmeticOp(ArithmeticOperation, Expression, Expression)
 	 */
 	public static Expression bitXor(Expression left, Expression right) {
-		return new ExpressionArithmeticOp(ArithmeticOperation.XOR, left, right);
+		return new Expression_ArithmeticOp(ArithmeticOperation.XOR, left, right);
 	}
 
 	/**
@@ -580,7 +580,7 @@ public class Expressions {
 	 * @see #arithmeticOp(ArithmeticOperation, Expression, Expression)
 	 */
 	public static Expression shl(Expression left, Expression right) {
-		return new ExpressionArithmeticOp(ArithmeticOperation.SHL, left, right);
+		return new Expression_ArithmeticOp(ArithmeticOperation.SHL, left, right);
 	}
 
 	/**
@@ -592,7 +592,7 @@ public class Expressions {
 	 * @see #arithmeticOp(ArithmeticOperation, Expression, Expression)
 	 */
 	public static Expression shr(Expression left, Expression right) {
-		return new ExpressionArithmeticOp(ArithmeticOperation.SHR, left, right);
+		return new Expression_ArithmeticOp(ArithmeticOperation.SHR, left, right);
 	}
 
 	/**
@@ -604,7 +604,7 @@ public class Expressions {
 	 * @see #arithmeticOp(ArithmeticOperation, Expression, Expression)
 	 */
 	public static Expression ushr(Expression left, Expression right) {
-		return new ExpressionArithmeticOp(ArithmeticOperation.USHR, left, right);
+		return new Expression_ArithmeticOp(ArithmeticOperation.USHR, left, right);
 	}
 
 	/**
@@ -615,19 +615,19 @@ public class Expressions {
 	 * @return new instance of the ExpressionConstructor
 	 */
 	public static Expression constructor(Class<?> type, Expression... fields) {
-		return new ExpressionConstructor(type, List.of(fields));
+		return new Expression_Constructor(type, List.of(fields));
 	}
 
 	public static Expression superConstructor(Expression... fields) {
-		return new ExpressionSuperConstructor(List.of(fields));
+		return new Expression_SuperConstructor(List.of(fields));
 	}
 
 	public static Expression callSuper(String methodName, Expression... arguments) {
-		return new ExpressionCallSuper(methodName, arguments);
+		return new Expression_CallSuper(methodName, arguments);
 	}
 
 	/**
-	 * Returns a new {@link ExpressionCall expression call}
+	 * Returns a new {@link Expression_Call expression call}
 	 * which allows using static methods from other classes
 	 *
 	 * @param owner      owner of the method
@@ -636,11 +636,11 @@ public class Expressions {
 	 * @return new instance of the ExpressionCall
 	 */
 	public static Expression call(Expression owner, String methodName, Expression... arguments) {
-		return new ExpressionCall(owner, methodName, arguments);
+		return new Expression_Call(owner, methodName, arguments);
 	}
 
 	public static Expression ifNull(Expression value, Expression expressionTrue, Expression expressionFalse) {
-		return new ExpressionIfNull(value, expressionTrue, expressionFalse);
+		return new Expression_IfNull(value, expressionTrue, expressionFalse);
 	}
 
 	public static Expression isNull(Expression value) {
@@ -648,7 +648,7 @@ public class Expressions {
 	}
 
 	public static Expression ifNonNull(Expression value, Expression expressionTrue, Expression expressionFalse) {
-		return new ExpressionIfNonNull(value, expressionTrue, expressionFalse);
+		return new Expression_IfNonNull(value, expressionTrue, expressionFalse);
 	}
 
 	public static Expression isNotNull(Expression value) {
@@ -656,7 +656,7 @@ public class Expressions {
 	}
 
 	public static Expression ifElse(Expression value, Expression expressionTrue, Expression expressionFalse) {
-		return new ExpressionIfZCmp(value, NE, expressionTrue, expressionFalse);
+		return new Expression_IfZCmp(value, NE, expressionTrue, expressionFalse);
 	}
 
 	public static Expression ifEq(Expression value1, Expression value2, Expression expressionTrue, Expression expressionFalse) {
@@ -692,63 +692,63 @@ public class Expressions {
 	}
 
 	private static Expression ifObjCmp(CompareOperation op, Expression value1, Expression value2, Expression expressionTrue, Expression expressionFalse) {
-		return new ExpressionIfObjCmp(op, value1, value2, expressionTrue, expressionFalse);
+		return new Expression_IfObjCmp(op, value1, value2, expressionTrue, expressionFalse);
 	}
 
 	public static Expression length(Expression field) {
-		return new ExpressionLength(field);
+		return new Expression_Length(field);
 	}
 
 	public static Expression arrayNew(Class<?> type, Expression length) {
-		return new ExpressionArrayNew(type, length);
+		return new Expression_ArrayNew(type, length);
 	}
 
 	public static Expression staticCall(Class<?> owner, String method, Expression... arguments) {
-		return new ExpressionStaticCall(owner, method, List.of(arguments));
+		return new Expression_StaticCall(owner, method, List.of(arguments));
 	}
 
 	public static Expression staticCallSelf(String method, Expression... arguments) {
-		return new ExpressionStaticCallSelf(method, List.of(arguments));
+		return new Expression_StaticCallSelf(method, List.of(arguments));
 	}
 
 	public static Expression arrayGet(Expression array, Expression index) {
-		return new ExpressionArrayGet(array, index);
+		return new Expression_ArrayGet(array, index);
 	}
 
 	public static Expression nullRef(Class<?> type) {
-		return new ExpressionNull(type);
+		return new Expression_Null(type);
 	}
 
 	public static Expression nullRef(Type type) {
-		return new ExpressionNull(type);
+		return new Expression_Null(type);
 	}
 
 	public static Expression voidExp() {
-		return ExpressionVoid.INSTANCE;
+		return Expression_Void.INSTANCE;
 	}
 
 	public static Expression throwException(Expression exception) {
-		return new ExpressionThrow(exception);
+		return new Expression_Throw(exception);
 	}
 
 	public static Expression throwException(Class<? extends Throwable> exceptionClass) {
-		return new ExpressionThrow(constructor(exceptionClass));
+		return new Expression_Throw(constructor(exceptionClass));
 	}
 
 	public static Expression throwException(Class<? extends Throwable> exceptionClass, Expression message) {
-		return new ExpressionThrow(constructor(exceptionClass, message));
+		return new Expression_Throw(constructor(exceptionClass, message));
 	}
 
 	public static Expression throwException(Class<? extends Throwable> exceptionClass, String message) {
-		return new ExpressionThrow(constructor(exceptionClass, value(message)));
+		return new Expression_Throw(constructor(exceptionClass, value(message)));
 	}
 
 	public static Expression throwException(Throwable exception) {
-		return new ExpressionThrow(value(exception));
+		return new Expression_Throw(value(exception));
 	}
 
 	public static Expression arraySet(Expression array, Expression position, Expression newElement) {
-		return new ExpressionArraySet(array, position, newElement);
+		return new Expression_ArraySet(array, position, newElement);
 	}
 
 	public static Expression loop(Expression body) {
@@ -756,12 +756,12 @@ public class Expressions {
 	}
 
 	public static Expression loop(Expression condition, Expression body) {
-		return new ExpressionLoop(condition, body);
+		return new Expression_Loop(condition, body);
 //		return loop(ifThenElse(condition, sequence(body, value(true)), value(false)));
 	}
 
 	public static Expression iterate(Expression from, Expression to, UnaryOperator<Expression> action) {
-		return new ExpressionIterate(from, to, action);
+		return new Expression_Iterate(from, to, action);
 //		return let(new Expression[]{from, to},
 //				vars -> loop(cmpLt(vars[0], vars[1]),
 //						sequence(action.apply(vars[0]), set(vars[0], inc(vars[0])))));
@@ -813,7 +813,7 @@ public class Expressions {
 	 */
 	public static Expression concat(List<Expression> arguments) {
 		if (arguments.isEmpty()) return value("");
-		return ExpressionConcat.create(arguments);
+		return Expression_Concat.create(arguments);
 	}
 
 	/**
@@ -832,11 +832,11 @@ public class Expressions {
 	}
 
 	public static Expression hashCodeImpl(List<String> fields) {
-		return ExpressionHashCode.create().withFields(fields);
+		return Expression_HashCode.create().withFields(fields);
 	}
 
 	public static Expression hashCodeImpl(String... fields) {
-		return ExpressionHashCode.create().withFields(fields);
+		return Expression_HashCode.create().withFields(fields);
 	}
 
 	public static Expression equalsImpl(List<String> fields) {
@@ -859,7 +859,7 @@ public class Expressions {
 	}
 
 	public static Expression toStringImpl(List<String> fields) {
-		ExpressionToString toString = ExpressionToString.create();
+		Expression_ToString toString = Expression_ToString.create();
 		for (String field : fields) {
 			toString.with(field, property(self(), field));
 		}
@@ -871,7 +871,7 @@ public class Expressions {
 	}
 
 	public static Expression comparableImpl(List<String> fields) {
-		ExpressionCompare comparator = ExpressionCompare.create();
+		Expression_Compare comparator = Expression_Compare.create();
 		for (String field : fields) {
 			comparator.with(thisProperty(field), thatProperty(field), true);
 		}
@@ -883,7 +883,7 @@ public class Expressions {
 	}
 
 	public static Expression comparatorImpl(Class<?> type, List<String> fields) {
-		ExpressionCompare comparator = ExpressionCompare.create();
+		Expression_Compare comparator = Expression_Compare.create();
 		for (String field : fields) {
 			comparator.with(leftProperty(type, field), rightProperty(type, field), true);
 		}

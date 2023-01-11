@@ -1,7 +1,7 @@
 package io.activej.ot;
 
 import io.activej.ot.system.OTSystem;
-import io.activej.ot.utils.StubOTRepository;
+import io.activej.ot.utils.OTRepository_Stub;
 import io.activej.ot.utils.TestOp;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -24,11 +24,11 @@ public class OTLoadedGraphTest {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
-	private StubOTRepository<Integer, TestOp> repository;
+	private OTRepository_Stub<Integer, TestOp> repository;
 
 	@Before
 	public void setUp() {
-		repository = StubOTRepository.create();
+		repository = OTRepository_Stub.create();
 		await(repository.pushAndUpdateHead(ofRoot(0)), repository.saveSnapshot(0, List.of()));
 	}
 

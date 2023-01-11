@@ -1,9 +1,9 @@
-import io.activej.crdt.ClientCrdtStorage;
 import io.activej.crdt.CrdtServer;
+import io.activej.crdt.CrdtStorage_Client;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.AsyncCrdtStorage;
-import io.activej.crdt.storage.local.MapCrdtStorage;
-import io.activej.crdt.util.CrdtDataSerializer;
+import io.activej.crdt.storage.local.CrdtStorage_Map;
+import io.activej.crdt.util.BinarySerializer_CrdtData;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
@@ -16,7 +16,7 @@ import static io.activej.serializer.BinarySerializers.INT_SERIALIZER;
 import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
 
 public final class CrdtExample {
-	private static final CrdtDataSerializer<String, Integer> INTEGER_SERIALIZER = new CrdtDataSerializer<>(UTF8_SERIALIZER, INT_SERIALIZER);
+	private static final BinarySerializer_CrdtData<String, Integer> INTEGER_SERIALIZER = new BinarySerializer_CrdtData<>(UTF8_SERIALIZER, INT_SERIALIZER);
 
 	//[START REGION_2]
 	private static final CrdtFunction<Integer> CRDT_FUNCTION = ignoringTimestamp(Integer::max);
@@ -29,7 +29,7 @@ public final class CrdtExample {
 
 		//[START REGION_1]
 		// create the 'remote' storage
-		MapCrdtStorage<String, Integer> remoteStorage = MapCrdtStorage.create(eventloop, CRDT_FUNCTION);
+		CrdtStorage_Map<String, Integer> remoteStorage = CrdtStorage_Map.create(eventloop, CRDT_FUNCTION);
 
 		// put some default data into that storage
 		remoteStorage.put("mx", 2);
@@ -52,11 +52,11 @@ public final class CrdtExample {
 		//[START REGION_3]
 		// now crate the client for that 'remote' storage
 		AsyncCrdtStorage<String, Integer> client =
-				ClientCrdtStorage.create(eventloop, ADDRESS, INTEGER_SERIALIZER);
+				CrdtStorage_Client.create(eventloop, ADDRESS, INTEGER_SERIALIZER);
 
 		// and also create the local storage
-		MapCrdtStorage<String, Integer> localStorage =
-				MapCrdtStorage.create(eventloop, CRDT_FUNCTION);
+		CrdtStorage_Map<String, Integer> localStorage =
+				CrdtStorage_Map.create(eventloop, CRDT_FUNCTION);
 
 		// and fill it with some other values
 		localStorage.put("mx", 22);

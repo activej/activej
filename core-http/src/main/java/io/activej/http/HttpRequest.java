@@ -20,8 +20,8 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.Checks;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.ChannelSupplier;
+import io.activej.http.ByteBufsDecoder_Multipart.AsyncMultipartDataHandler;
 import io.activej.http.HttpHeaderValue.HttpHeaderValueOfSimpleCookies;
-import io.activej.http.MultipartDecoder.AsyncMultipartDataHandler;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
@@ -332,7 +332,7 @@ public final class HttpRequest extends HttpMessage implements WithInitializer<Ht
 		if (boundary.startsWith("\"") && boundary.endsWith("\"")) {
 			boundary = boundary.substring(1, boundary.length() - 1);
 		}
-		return MultipartDecoder.create(boundary)
+		return ByteBufsDecoder_Multipart.create(boundary)
 				.split(takeBodyStream(), multipartDataHandler);
 	}
 

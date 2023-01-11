@@ -22,7 +22,7 @@ import org.jetbrains.annotations.Nullable;
 import java.time.Duration;
 
 /**
- * Basic session storage for the {@link SessionServlet}.
+ * Basic session storage for the {@link Servlet_Session}.
  */
 public interface AsyncSessionStore<T> {
 	Promise<Void> save(String sessionId, T sessionObject);

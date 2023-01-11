@@ -17,6 +17,7 @@
 package io.activej.http.loader;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.http.Servlet_Static;
 import io.activej.promise.Promise;
 
 import java.nio.file.Path;
@@ -29,7 +30,7 @@ import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 /**
- * Represents the 'predefined storage' for the {@link io.activej.http.StaticServlet StaticServlet}.
+ * Represents the 'predefined storage' for the {@link Servlet_Static StaticServlet}.
  */
 public interface AsyncStaticLoader {
 
@@ -67,19 +68,19 @@ public interface AsyncStaticLoader {
 	}
 
 	static AsyncStaticLoader cacheOf(AsyncStaticLoader loader, Function<String, byte[]> get, BiConsumer<String, byte[]> put) {
-		return new CacheStaticLoader(loader, get, put);
+		return new StaticLoader_Cache(loader, get, put);
 	}
 
 	static AsyncStaticLoader ofClassPath(Executor executor, String root) {
-		return ClassPathStaticLoader.create(executor, root);
+		return StaticLoader_ClassPath.create(executor, root);
 	}
 
 	static AsyncStaticLoader ofClassPath(Executor executor, ClassLoader classLoader, String root) {
-		return ClassPathStaticLoader.create(executor, classLoader, root);
+		return StaticLoader_ClassPath.create(executor, classLoader, root);
 	}
 
 	static AsyncStaticLoader ofPath(Executor executor, Path dir) {
-		return FileReaderStaticLoader.create(executor, dir);
+		return StaticLoader_FileReader.create(executor, dir);
 	}
 
 }

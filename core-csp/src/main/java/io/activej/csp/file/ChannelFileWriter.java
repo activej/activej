@@ -17,7 +17,7 @@
 package io.activej.csp.file;
 
 import io.activej.async.file.AsyncFileService;
-import io.activej.async.file.ExecutorFileService;
+import io.activej.async.file.FileService_Executor;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.AbstractChannelConsumer;
@@ -59,7 +59,7 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> im
 	}
 
 	public static ChannelFileWriter create(Executor executor, FileChannel channel) {
-		return create(new ExecutorFileService(executor), channel);
+		return create(new FileService_Executor(executor), channel);
 	}
 
 	public static ChannelFileWriter create(AsyncFileService fileService, FileChannel channel) {

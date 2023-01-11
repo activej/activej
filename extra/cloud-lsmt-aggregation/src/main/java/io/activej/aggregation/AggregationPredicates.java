@@ -57,117 +57,117 @@ public class AggregationPredicates {
 	}
 
 	static {
-		PredicateSimplifier simplifierAlwaysFalse = (PredicateSimplifier<PredicateAlwaysFalse, AggregationPredicate>) (left, right) -> left;
-		register(PredicateAlwaysFalse.class, PredicateAlwaysFalse.class, simplifierAlwaysFalse);
-		register(PredicateAlwaysFalse.class, PredicateAlwaysTrue.class, simplifierAlwaysFalse);
-		register(PredicateAlwaysFalse.class, PredicateNot.class, simplifierAlwaysFalse);
-		register(PredicateAlwaysFalse.class, PredicateEq.class, simplifierAlwaysFalse);
-		register(PredicateAlwaysFalse.class, PredicateNotEq.class, simplifierAlwaysFalse);
-		register(PredicateAlwaysFalse.class, PredicateLe.class, simplifierAlwaysFalse);
-		register(PredicateAlwaysFalse.class, PredicateGe.class, simplifierAlwaysFalse);
-		register(PredicateAlwaysFalse.class, PredicateLt.class, simplifierAlwaysFalse);
-		register(PredicateAlwaysFalse.class, PredicateGt.class, simplifierAlwaysFalse);
-		register(PredicateAlwaysFalse.class, PredicateHas.class, simplifierAlwaysFalse);
-		register(PredicateAlwaysFalse.class, PredicateBetween.class, simplifierAlwaysFalse);
-		register(PredicateAlwaysFalse.class, PredicateRegexp.class, simplifierAlwaysFalse);
-		register(PredicateAlwaysFalse.class, PredicateAnd.class, simplifierAlwaysFalse);
-		register(PredicateAlwaysFalse.class, PredicateOr.class, simplifierAlwaysFalse);
-		register(PredicateAlwaysFalse.class, PredicateIn.class, simplifierAlwaysFalse);
+		PredicateSimplifier simplifierAlwaysFalse = (PredicateSimplifier<AggregationPredicate_AlwaysFalse, AggregationPredicate>) (left, right) -> left;
+		register(AggregationPredicate_AlwaysFalse.class, AggregationPredicate_AlwaysFalse.class, simplifierAlwaysFalse);
+		register(AggregationPredicate_AlwaysFalse.class, AggregationPredicate_AlwaysTrue.class, simplifierAlwaysFalse);
+		register(AggregationPredicate_AlwaysFalse.class, AggregationPredicate_Not.class, simplifierAlwaysFalse);
+		register(AggregationPredicate_AlwaysFalse.class, AggregationPredicate_Eq.class, simplifierAlwaysFalse);
+		register(AggregationPredicate_AlwaysFalse.class, AggregationPredicate_NotEq.class, simplifierAlwaysFalse);
+		register(AggregationPredicate_AlwaysFalse.class, AggregationPredicate_Le.class, simplifierAlwaysFalse);
+		register(AggregationPredicate_AlwaysFalse.class, AggregationPredicate_Ge.class, simplifierAlwaysFalse);
+		register(AggregationPredicate_AlwaysFalse.class, AggregationPredicate_Lt.class, simplifierAlwaysFalse);
+		register(AggregationPredicate_AlwaysFalse.class, AggregationPredicate_Gt.class, simplifierAlwaysFalse);
+		register(AggregationPredicate_AlwaysFalse.class, AggregationPredicate_Has.class, simplifierAlwaysFalse);
+		register(AggregationPredicate_AlwaysFalse.class, AggregationPredicate_Between.class, simplifierAlwaysFalse);
+		register(AggregationPredicate_AlwaysFalse.class, AggregationPredicate_RegExp.class, simplifierAlwaysFalse);
+		register(AggregationPredicate_AlwaysFalse.class, AggregationPredicate_And.class, simplifierAlwaysFalse);
+		register(AggregationPredicate_AlwaysFalse.class, AggregationPredicate_Or.class, simplifierAlwaysFalse);
+		register(AggregationPredicate_AlwaysFalse.class, AggregationPredicate_In.class, simplifierAlwaysFalse);
 
-		PredicateSimplifier simplifierAlwaysTrue = (PredicateSimplifier<PredicateAlwaysTrue, AggregationPredicate>) (left, right) -> right;
-		register(PredicateAlwaysTrue.class, PredicateAlwaysTrue.class, simplifierAlwaysTrue);
-		register(PredicateAlwaysTrue.class, PredicateNot.class, simplifierAlwaysTrue);
-		register(PredicateAlwaysTrue.class, PredicateEq.class, simplifierAlwaysTrue);
-		register(PredicateAlwaysTrue.class, PredicateNotEq.class, simplifierAlwaysTrue);
-		register(PredicateAlwaysTrue.class, PredicateLe.class, simplifierAlwaysTrue);
-		register(PredicateAlwaysTrue.class, PredicateGe.class, simplifierAlwaysTrue);
-		register(PredicateAlwaysTrue.class, PredicateLt.class, simplifierAlwaysTrue);
-		register(PredicateAlwaysTrue.class, PredicateGt.class, simplifierAlwaysTrue);
-		register(PredicateAlwaysTrue.class, PredicateHas.class, simplifierAlwaysTrue);
-		register(PredicateAlwaysTrue.class, PredicateBetween.class, simplifierAlwaysTrue);
-		register(PredicateAlwaysTrue.class, PredicateRegexp.class, simplifierAlwaysTrue);
-		register(PredicateAlwaysTrue.class, PredicateAnd.class, simplifierAlwaysTrue);
-		register(PredicateAlwaysTrue.class, PredicateOr.class, simplifierAlwaysTrue);
-		register(PredicateAlwaysTrue.class, PredicateIn.class, simplifierAlwaysTrue);
+		PredicateSimplifier simplifierAlwaysTrue = (PredicateSimplifier<AggregationPredicate_AlwaysTrue, AggregationPredicate>) (left, right) -> right;
+		register(AggregationPredicate_AlwaysTrue.class, AggregationPredicate_AlwaysTrue.class, simplifierAlwaysTrue);
+		register(AggregationPredicate_AlwaysTrue.class, AggregationPredicate_Not.class, simplifierAlwaysTrue);
+		register(AggregationPredicate_AlwaysTrue.class, AggregationPredicate_Eq.class, simplifierAlwaysTrue);
+		register(AggregationPredicate_AlwaysTrue.class, AggregationPredicate_NotEq.class, simplifierAlwaysTrue);
+		register(AggregationPredicate_AlwaysTrue.class, AggregationPredicate_Le.class, simplifierAlwaysTrue);
+		register(AggregationPredicate_AlwaysTrue.class, AggregationPredicate_Ge.class, simplifierAlwaysTrue);
+		register(AggregationPredicate_AlwaysTrue.class, AggregationPredicate_Lt.class, simplifierAlwaysTrue);
+		register(AggregationPredicate_AlwaysTrue.class, AggregationPredicate_Gt.class, simplifierAlwaysTrue);
+		register(AggregationPredicate_AlwaysTrue.class, AggregationPredicate_Has.class, simplifierAlwaysTrue);
+		register(AggregationPredicate_AlwaysTrue.class, AggregationPredicate_Between.class, simplifierAlwaysTrue);
+		register(AggregationPredicate_AlwaysTrue.class, AggregationPredicate_RegExp.class, simplifierAlwaysTrue);
+		register(AggregationPredicate_AlwaysTrue.class, AggregationPredicate_And.class, simplifierAlwaysTrue);
+		register(AggregationPredicate_AlwaysTrue.class, AggregationPredicate_Or.class, simplifierAlwaysTrue);
+		register(AggregationPredicate_AlwaysTrue.class, AggregationPredicate_In.class, simplifierAlwaysTrue);
 
-		PredicateSimplifier simplifierNot = (PredicateSimplifier<PredicateNot, AggregationPredicate>) (left, right) -> {
+		PredicateSimplifier simplifierNot = (PredicateSimplifier<AggregationPredicate_Not, AggregationPredicate>) (left, right) -> {
 			if (left.predicate.equals(right))
 				return alwaysFalse();
 			return null;
 		};
-		register(PredicateNot.class, PredicateNot.class, simplifierNot);
-		register(PredicateNot.class, PredicateHas.class, simplifierNot);
-		register(PredicateNot.class, PredicateBetween.class, simplifierNot);
-		register(PredicateNot.class, PredicateRegexp.class, simplifierNot);
-		register(PredicateNot.class, PredicateAnd.class, simplifierNot);
-		register(PredicateNot.class, PredicateOr.class, simplifierNot);
-		register(PredicateNot.class, PredicateGe.class, simplifierNot);
-		register(PredicateNot.class, PredicateLe.class, simplifierNot);
-		register(PredicateNot.class, PredicateGt.class, simplifierNot);
-		register(PredicateNot.class, PredicateLt.class, simplifierNot);
-		register(PredicateNot.class, PredicateIn.class, simplifierNot);
+		register(AggregationPredicate_Not.class, AggregationPredicate_Not.class, simplifierNot);
+		register(AggregationPredicate_Not.class, AggregationPredicate_Has.class, simplifierNot);
+		register(AggregationPredicate_Not.class, AggregationPredicate_Between.class, simplifierNot);
+		register(AggregationPredicate_Not.class, AggregationPredicate_RegExp.class, simplifierNot);
+		register(AggregationPredicate_Not.class, AggregationPredicate_And.class, simplifierNot);
+		register(AggregationPredicate_Not.class, AggregationPredicate_Or.class, simplifierNot);
+		register(AggregationPredicate_Not.class, AggregationPredicate_Ge.class, simplifierNot);
+		register(AggregationPredicate_Not.class, AggregationPredicate_Le.class, simplifierNot);
+		register(AggregationPredicate_Not.class, AggregationPredicate_Gt.class, simplifierNot);
+		register(AggregationPredicate_Not.class, AggregationPredicate_Lt.class, simplifierNot);
+		register(AggregationPredicate_Not.class, AggregationPredicate_In.class, simplifierNot);
 
-		register(PredicateHas.class, PredicateHas.class, (left, right) -> left.key.equals(right.key) ? left : null);
-		PredicateSimplifier simplifierHas = (PredicateSimplifier<PredicateHas, AggregationPredicate>) (left, right) -> right.getDimensions().contains(left.getKey()) ? right : null;
-		register(PredicateHas.class, PredicateEq.class, simplifierHas);
-		register(PredicateHas.class, PredicateNotEq.class, simplifierHas);
-		register(PredicateHas.class, PredicateLe.class, simplifierHas);
-		register(PredicateHas.class, PredicateGe.class, simplifierHas);
-		register(PredicateHas.class, PredicateLt.class, simplifierHas);
-		register(PredicateHas.class, PredicateGt.class, simplifierHas);
-		register(PredicateHas.class, PredicateBetween.class, simplifierHas);
-		register(PredicateHas.class, PredicateAnd.class, simplifierHas);
-		register(PredicateHas.class, PredicateOr.class, simplifierHas);
-		register(PredicateHas.class, PredicateIn.class, simplifierHas);
+		register(AggregationPredicate_Has.class, AggregationPredicate_Has.class, (left, right) -> left.key.equals(right.key) ? left : null);
+		PredicateSimplifier simplifierHas = (PredicateSimplifier<AggregationPredicate_Has, AggregationPredicate>) (left, right) -> right.getDimensions().contains(left.getKey()) ? right : null;
+		register(AggregationPredicate_Has.class, AggregationPredicate_Eq.class, simplifierHas);
+		register(AggregationPredicate_Has.class, AggregationPredicate_NotEq.class, simplifierHas);
+		register(AggregationPredicate_Has.class, AggregationPredicate_Le.class, simplifierHas);
+		register(AggregationPredicate_Has.class, AggregationPredicate_Ge.class, simplifierHas);
+		register(AggregationPredicate_Has.class, AggregationPredicate_Lt.class, simplifierHas);
+		register(AggregationPredicate_Has.class, AggregationPredicate_Gt.class, simplifierHas);
+		register(AggregationPredicate_Has.class, AggregationPredicate_Between.class, simplifierHas);
+		register(AggregationPredicate_Has.class, AggregationPredicate_And.class, simplifierHas);
+		register(AggregationPredicate_Has.class, AggregationPredicate_Or.class, simplifierHas);
+		register(AggregationPredicate_Has.class, AggregationPredicate_In.class, simplifierHas);
 
-		register(PredicateEq.class, PredicateEq.class, (left, right) -> {
+		register(AggregationPredicate_Eq.class, AggregationPredicate_Eq.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
 			return alwaysFalse();
 		});
-		register(PredicateEq.class, PredicateNotEq.class, (left, right) -> {
+		register(AggregationPredicate_Eq.class, AggregationPredicate_NotEq.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
 			if (!left.value.equals(right.value))
 				return left;
 			return alwaysFalse();
 		});
-		register(PredicateEq.class, PredicateLe.class, (left, right) -> {
+		register(AggregationPredicate_Eq.class, AggregationPredicate_Le.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
 			if (right.value.compareTo(left.value) >= 0)
 				return left;
 			return alwaysFalse();
 		});
-		register(PredicateEq.class, PredicateGe.class, (left, right) -> {
+		register(AggregationPredicate_Eq.class, AggregationPredicate_Ge.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
 			if (right.value.compareTo(left.value) <= 0)
 				return left;
 			return alwaysFalse();
 		});
-		register(PredicateEq.class, PredicateLt.class, (left, right) -> {
+		register(AggregationPredicate_Eq.class, AggregationPredicate_Lt.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
 			if (right.value.compareTo(left.value) > 0)
 				return left;
 			return alwaysFalse();
 		});
-		register(PredicateEq.class, PredicateGt.class, (left, right) -> {
+		register(AggregationPredicate_Eq.class, AggregationPredicate_Gt.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
 			if (right.value.compareTo(left.value) < 0)
 				return left;
 			return alwaysFalse();
 		});
-		register(PredicateEq.class, PredicateBetween.class, (left, right) -> {
+		register(AggregationPredicate_Eq.class, AggregationPredicate_Between.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
 			if (right.from.compareTo(left.value) <= 0 && right.to.compareTo(left.value) >= 0)
 				return left;
 			return alwaysFalse();
 		});
-		register(PredicateEq.class, PredicateRegexp.class, (left, right) -> {
+		register(AggregationPredicate_Eq.class, AggregationPredicate_RegExp.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
 			if (left.value instanceof CharSequence &&
@@ -175,7 +175,7 @@ public class AggregationPredicates {
 				return left;
 			return alwaysFalse();
 		});
-		register(PredicateEq.class, PredicateIn.class, (left, right) -> {
+		register(AggregationPredicate_Eq.class, AggregationPredicate_In.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
 			if (right.values.contains(left.value))
@@ -183,14 +183,14 @@ public class AggregationPredicates {
 			return alwaysFalse();
 		});
 
-		register(PredicateNotEq.class, PredicateNotEq.class, (left, right) -> {
+		register(AggregationPredicate_NotEq.class, AggregationPredicate_NotEq.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
 			if (left.value.equals(right.value))
 				return left;
 			return null;
 		});
-		register(PredicateNotEq.class, PredicateLe.class, (left, right) -> {
+		register(AggregationPredicate_NotEq.class, AggregationPredicate_Le.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
 			if (right.value.compareTo(left.value) < 0)
@@ -199,7 +199,7 @@ public class AggregationPredicates {
 				return lt(left.key, right.value);
 			return null;
 		});
-		register(PredicateNotEq.class, PredicateGe.class, (left, right) -> {
+		register(AggregationPredicate_NotEq.class, AggregationPredicate_Ge.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
 			if (right.value.compareTo(left.value) > 0)
@@ -208,21 +208,21 @@ public class AggregationPredicates {
 				return gt(left.key, right.value);
 			return null;
 		});
-		register(PredicateNotEq.class, PredicateLt.class, (left, right) -> {
+		register(AggregationPredicate_NotEq.class, AggregationPredicate_Lt.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
 			if (right.value.compareTo(left.value) <= 0)
 				return right;
 			return null;
 		});
-		register(PredicateNotEq.class, PredicateGt.class, (left, right) -> {
+		register(AggregationPredicate_NotEq.class, AggregationPredicate_Gt.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
 			if (right.value.compareTo(left.value) >= 0)
 				return right;
 			return null;
 		});
-		register(PredicateNotEq.class, PredicateBetween.class, (left, right) -> {
+		register(AggregationPredicate_NotEq.class, AggregationPredicate_Between.class, (left, right) -> {
 			if (!right.key.equals(left.key))
 				return null;
 			if (right.from.compareTo(left.value) > 0 && right.to.compareTo(left.value) > 0)
@@ -231,7 +231,7 @@ public class AggregationPredicates {
 				return right;
 			return null;
 		});
-		register(PredicateNotEq.class, PredicateRegexp.class, (left, right) -> {
+		register(AggregationPredicate_NotEq.class, AggregationPredicate_RegExp.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
 			if (left.value instanceof CharSequence &&
@@ -239,7 +239,7 @@ public class AggregationPredicates {
 				return null;
 			return right;
 		});
-		register(PredicateNotEq.class, PredicateIn.class, (left, right) -> {
+		register(AggregationPredicate_NotEq.class, AggregationPredicate_In.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
 			if (right.values.contains(left.value))
@@ -247,14 +247,14 @@ public class AggregationPredicates {
 			return right;
 		});
 
-		register(PredicateLe.class, PredicateLe.class, (left, right) -> {
+		register(AggregationPredicate_Le.class, AggregationPredicate_Le.class, (left, right) -> {
 			if (!right.key.equals(left.key))
 				return null;
 			if (right.value.compareTo(left.value) <= 0)
 				return right;
 			return left;
 		});
-		register(PredicateLe.class, PredicateGe.class, (left, right) -> {
+		register(AggregationPredicate_Le.class, AggregationPredicate_Ge.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
 			if (left.value.compareTo(right.value) < 0)
@@ -265,21 +265,21 @@ public class AggregationPredicates {
 				return eq(left.key, left.value);
 			return null;
 		});
-		register(PredicateLe.class, PredicateLt.class, (left, right) -> {
+		register(AggregationPredicate_Le.class, AggregationPredicate_Lt.class, (left, right) -> {
 			if (!right.key.equals(left.key))
 				return null;
 			if (right.value.compareTo(left.value) <= 0)
 				return right;
 			return left;
 		});
-		register(PredicateLe.class, PredicateGt.class, (left, right) -> {
+		register(AggregationPredicate_Le.class, AggregationPredicate_Gt.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
 			if (left.value.compareTo(right.value) <= 0)
 				return alwaysFalse();
 			return null;
 		});
-		register(PredicateLe.class, PredicateBetween.class, (left, right) -> {
+		register(AggregationPredicate_Le.class, AggregationPredicate_Between.class, (left, right) -> {
 			if (!right.key.equals(left.key))
 				return null;
 			if (right.from.compareTo(left.value) > 0)
@@ -290,7 +290,7 @@ public class AggregationPredicates {
 				return right;
 			return between(right.key, right.from, left.value).simplify();
 		});
-		register(PredicateLe.class, PredicateIn.class, (left, right) -> {
+		register(AggregationPredicate_Le.class, AggregationPredicate_In.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
 			if (left.value.compareTo(right.values.last()) >= 0)
@@ -302,28 +302,28 @@ public class AggregationPredicates {
 			return in(left.key, subset);
 		});
 
-		register(PredicateGe.class, PredicateGe.class, (left, right) -> {
+		register(AggregationPredicate_Ge.class, AggregationPredicate_Ge.class, (left, right) -> {
 			if (!right.key.equals(left.key))
 				return null;
 			if (right.value.compareTo(left.value) >= 0)
 				return right;
 			return left;
 		});
-		register(PredicateGe.class, PredicateLt.class, (left, right) -> {
+		register(AggregationPredicate_Ge.class, AggregationPredicate_Lt.class, (left, right) -> {
 			if (!right.key.equals(left.key))
 				return null;
 			if (right.value.compareTo(left.value) <= 0)
 				return alwaysFalse();
 			return null;
 		});
-		register(PredicateGe.class, PredicateGt.class, (left, right) -> {
+		register(AggregationPredicate_Ge.class, AggregationPredicate_Gt.class, (left, right) -> {
 			if (!right.key.equals(left.key))
 				return null;
 			if (right.value.compareTo(left.value) >= 0)
 				return gt(right.key, right.value);
 			return left;
 		});
-		register(PredicateGe.class, PredicateBetween.class, (left, right) -> {
+		register(AggregationPredicate_Ge.class, AggregationPredicate_Between.class, (left, right) -> {
 			if (!right.key.equals(left.key))
 				return null;
 			if (right.to.compareTo(left.value) < 0)
@@ -334,7 +334,7 @@ public class AggregationPredicates {
 				return right;
 			return between(right.key, left.value, right.to).simplify();
 		});
-		register(PredicateGe.class, PredicateIn.class, (left, right) -> {
+		register(AggregationPredicate_Ge.class, AggregationPredicate_In.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
 			if (left.value.compareTo(right.values.first()) <= 0)
@@ -344,21 +344,21 @@ public class AggregationPredicates {
 			return in(left.key, new TreeSet(right.values.tailSet(left.value)));
 		});
 
-		register(PredicateLt.class, PredicateLt.class, (left, right) -> {
+		register(AggregationPredicate_Lt.class, AggregationPredicate_Lt.class, (left, right) -> {
 			if (!right.key.equals(left.key))
 				return null;
 			if (right.value.compareTo(left.value) >= 0)
 				return left;
 			return right;
 		});
-		register(PredicateLt.class, PredicateGt.class, (left, right) -> {
+		register(AggregationPredicate_Lt.class, AggregationPredicate_Gt.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
 			if (left.value.compareTo(right.value) <= 0)
 				return alwaysFalse();
 			return null;
 		});
-		register(PredicateLt.class, PredicateBetween.class, (left, right) -> {
+		register(AggregationPredicate_Lt.class, AggregationPredicate_Between.class, (left, right) -> {
 			if (!right.key.equals(left.key))
 				return null;
 			if (right.from.compareTo(left.value) >= 0)
@@ -367,7 +367,7 @@ public class AggregationPredicates {
 				return right;
 			return null;
 		});
-		register(PredicateLt.class, PredicateIn.class, (left, right) -> {
+		register(AggregationPredicate_Lt.class, AggregationPredicate_In.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
 			if (left.value.compareTo(right.values.last()) > 0)
@@ -377,14 +377,14 @@ public class AggregationPredicates {
 			return in(left.key, new TreeSet(right.values.subSet(right.values.first(), left.value)));
 		});
 
-		register(PredicateGt.class, PredicateGt.class, (left, right) -> {
+		register(AggregationPredicate_Gt.class, AggregationPredicate_Gt.class, (left, right) -> {
 			if (!right.key.equals(left.key))
 				return null;
 			if (right.value.compareTo(left.value) >= 0)
 				return right;
 			return left;
 		});
-		register(PredicateGt.class, PredicateBetween.class, (left, right) -> {
+		register(AggregationPredicate_Gt.class, AggregationPredicate_Between.class, (left, right) -> {
 			if (!right.key.equals(left.key))
 				return null;
 			if (right.to.compareTo(left.value) <= 0)
@@ -393,7 +393,7 @@ public class AggregationPredicates {
 				return right;
 			return null;
 		});
-		register(PredicateGt.class, PredicateIn.class, (left, right) -> {
+		register(AggregationPredicate_Gt.class, AggregationPredicate_In.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
 			if (left.value.compareTo(right.values.first()) < 0)
@@ -405,14 +405,14 @@ public class AggregationPredicates {
 			return in(right.key, subset);
 		});
 
-		register(PredicateBetween.class, PredicateBetween.class, (left, right) -> {
+		register(AggregationPredicate_Between.class, AggregationPredicate_Between.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
 			Comparable from = left.from.compareTo(right.from) >= 0 ? left.from : right.from;
 			Comparable to = left.to.compareTo(right.to) <= 0 ? left.to : right.to;
 			return between(left.key, from, to).simplify();
 		});
-		register(PredicateBetween.class, PredicateIn.class, (left, right) -> {
+		register(AggregationPredicate_Between.class, AggregationPredicate_In.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
 			if (left.from.compareTo(right.values.first()) > 0 && left.to.compareTo(right.values.last()) > 0)
@@ -420,7 +420,7 @@ public class AggregationPredicates {
 			return null;
 		});
 
-		register(PredicateIn.class, PredicateIn.class, (left, right) -> {
+		register(AggregationPredicate_In.class, AggregationPredicate_In.class, (left, right) -> {
 			if (!left.key.equals(right.key))
 				return null;
 			if (left.values.equals(right.values))
@@ -435,10 +435,10 @@ public class AggregationPredicates {
 		});
 	}
 
-	public static final class PredicateAlwaysFalse implements AggregationPredicate {
-		private static final PredicateAlwaysFalse instance = new PredicateAlwaysFalse();
+	public static final class AggregationPredicate_AlwaysFalse implements AggregationPredicate {
+		private static final AggregationPredicate_AlwaysFalse instance = new AggregationPredicate_AlwaysFalse();
 
-		private PredicateAlwaysFalse() {
+		private AggregationPredicate_AlwaysFalse() {
 		}
 
 		@Override
@@ -467,10 +467,10 @@ public class AggregationPredicates {
 		}
 	}
 
-	public static final class PredicateAlwaysTrue implements AggregationPredicate {
-		private static final PredicateAlwaysTrue instance = new PredicateAlwaysTrue();
+	public static final class AggregationPredicate_AlwaysTrue implements AggregationPredicate {
+		private static final AggregationPredicate_AlwaysTrue instance = new AggregationPredicate_AlwaysTrue();
 
-		private PredicateAlwaysTrue() {
+		private AggregationPredicate_AlwaysTrue() {
 		}
 
 		@Override
@@ -499,10 +499,10 @@ public class AggregationPredicates {
 		}
 	}
 
-	public static final class PredicateNot implements AggregationPredicate {
+	public static final class AggregationPredicate_Not implements AggregationPredicate {
 		private final AggregationPredicate predicate;
 
-		private PredicateNot(AggregationPredicate predicate) {
+		private AggregationPredicate_Not(AggregationPredicate predicate) {
 			this.predicate = predicate;
 		}
 
@@ -512,26 +512,26 @@ public class AggregationPredicates {
 
 		@Override
 		public AggregationPredicate simplify() {
-			if (predicate instanceof PredicateNot)
-				return ((PredicateNot) predicate).predicate.simplify();
+			if (predicate instanceof AggregationPredicate_Not)
+				return ((AggregationPredicate_Not) predicate).predicate.simplify();
 
-			if (predicate instanceof PredicateEq)
-				return new PredicateNotEq(((PredicateEq) predicate).key, ((PredicateEq) predicate).value);
+			if (predicate instanceof AggregationPredicate_Eq)
+				return new AggregationPredicate_NotEq(((AggregationPredicate_Eq) predicate).key, ((AggregationPredicate_Eq) predicate).value);
 
-			if (predicate instanceof PredicateNotEq)
-				return new PredicateEq(((PredicateNotEq) predicate).key, ((PredicateNotEq) predicate).value);
+			if (predicate instanceof AggregationPredicate_NotEq)
+				return new AggregationPredicate_Eq(((AggregationPredicate_NotEq) predicate).key, ((AggregationPredicate_NotEq) predicate).value);
 
-			if (predicate instanceof PredicateGt)
-				return new PredicateLe(((PredicateGt) predicate).key, ((PredicateGt) predicate).value);
+			if (predicate instanceof AggregationPredicate_Gt)
+				return new AggregationPredicate_Le(((AggregationPredicate_Gt) predicate).key, ((AggregationPredicate_Gt) predicate).value);
 
-			if (predicate instanceof PredicateLt)
-				return new PredicateGe(((PredicateLt) predicate).key, ((PredicateLt) predicate).value);
+			if (predicate instanceof AggregationPredicate_Lt)
+				return new AggregationPredicate_Ge(((AggregationPredicate_Lt) predicate).key, ((AggregationPredicate_Lt) predicate).value);
 
-			if (predicate instanceof PredicateGe)
-				return new PredicateLt(((PredicateGe) predicate).key, ((PredicateGe) predicate).value);
+			if (predicate instanceof AggregationPredicate_Ge)
+				return new AggregationPredicate_Lt(((AggregationPredicate_Ge) predicate).key, ((AggregationPredicate_Ge) predicate).value);
 
-			if (predicate instanceof PredicateLe)
-				return new PredicateGt(((PredicateLe) predicate).key, ((PredicateLe) predicate).value);
+			if (predicate instanceof AggregationPredicate_Le)
+				return new AggregationPredicate_Gt(((AggregationPredicate_Le) predicate).key, ((AggregationPredicate_Le) predicate).value);
 
 			return not(predicate.simplify());
 		}
@@ -556,7 +556,7 @@ public class AggregationPredicates {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
 
-			PredicateNot that = (PredicateNot) o;
+			AggregationPredicate_Not that = (AggregationPredicate_Not) o;
 
 			return predicate.equals(that.predicate);
 
@@ -573,11 +573,11 @@ public class AggregationPredicates {
 		}
 	}
 
-	public static final class PredicateEq implements AggregationPredicate {
+	public static final class AggregationPredicate_Eq implements AggregationPredicate {
 		final String key;
 		final Object value;
 
-		private PredicateEq(String key, Object value) {
+		private AggregationPredicate_Eq(String key, Object value) {
 			this.key = key;
 			this.value = value;
 		}
@@ -621,7 +621,7 @@ public class AggregationPredicates {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
 
-			PredicateEq that = (PredicateEq) o;
+			AggregationPredicate_Eq that = (AggregationPredicate_Eq) o;
 
 			if (!key.equals(that.key)) return false;
 			return Objects.equals(value, that.value);
@@ -640,11 +640,11 @@ public class AggregationPredicates {
 		}
 	}
 
-	public static final class PredicateNotEq implements AggregationPredicate {
+	public static final class AggregationPredicate_NotEq implements AggregationPredicate {
 		final String key;
 		final Object value;
 
-		private PredicateNotEq(String key, Object value) {
+		private AggregationPredicate_NotEq(String key, Object value) {
 			this.key = key;
 			this.value = value;
 		}
@@ -689,7 +689,7 @@ public class AggregationPredicates {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
 
-			PredicateNotEq that = (PredicateNotEq) o;
+			AggregationPredicate_NotEq that = (AggregationPredicate_NotEq) o;
 
 			if (!key.equals(that.key)) return false;
 			return Objects.equals(value, that.value);
@@ -708,11 +708,11 @@ public class AggregationPredicates {
 		}
 	}
 
-	public static final class PredicateLe implements AggregationPredicate {
+	public static final class AggregationPredicate_Le implements AggregationPredicate {
 		final String key;
 		final Comparable value;
 
-		private PredicateLe(String key, Comparable value) {
+		private AggregationPredicate_Le(String key, Comparable value) {
 			this.key = key;
 			this.value = value;
 		}
@@ -753,7 +753,7 @@ public class AggregationPredicates {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
 
-			PredicateLe that = (PredicateLe) o;
+			AggregationPredicate_Le that = (AggregationPredicate_Le) o;
 
 			if (!key.equals(that.key)) return false;
 			return Objects.equals(value, that.value);
@@ -772,11 +772,11 @@ public class AggregationPredicates {
 		}
 	}
 
-	public static final class PredicateLt implements AggregationPredicate {
+	public static final class AggregationPredicate_Lt implements AggregationPredicate {
 		final String key;
 		final Comparable value;
 
-		private PredicateLt(String key, Comparable value) {
+		private AggregationPredicate_Lt(String key, Comparable value) {
 			this.key = key;
 			this.value = value;
 		}
@@ -816,7 +816,7 @@ public class AggregationPredicates {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
 
-			PredicateLt that = (PredicateLt) o;
+			AggregationPredicate_Lt that = (AggregationPredicate_Lt) o;
 
 			if (!key.equals(that.key)) return false;
 			return Objects.equals(value, that.value);
@@ -835,11 +835,11 @@ public class AggregationPredicates {
 		}
 	}
 
-	public static final class PredicateGe implements AggregationPredicate {
+	public static final class AggregationPredicate_Ge implements AggregationPredicate {
 		final String key;
 		final Comparable value;
 
-		private PredicateGe(String key, Comparable value) {
+		private AggregationPredicate_Ge(String key, Comparable value) {
 			this.key = key;
 			this.value = value;
 		}
@@ -879,7 +879,7 @@ public class AggregationPredicates {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
 
-			PredicateGe that = (PredicateGe) o;
+			AggregationPredicate_Ge that = (AggregationPredicate_Ge) o;
 
 			if (!key.equals(that.key)) return false;
 			return Objects.equals(value, that.value);
@@ -898,11 +898,11 @@ public class AggregationPredicates {
 		}
 	}
 
-	public static final class PredicateGt implements AggregationPredicate {
+	public static final class AggregationPredicate_Gt implements AggregationPredicate {
 		final String key;
 		final Comparable value;
 
-		private PredicateGt(String key, Comparable value) {
+		private AggregationPredicate_Gt(String key, Comparable value) {
 			this.key = key;
 			this.value = value;
 		}
@@ -942,7 +942,7 @@ public class AggregationPredicates {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
 
-			PredicateGt that = (PredicateGt) o;
+			AggregationPredicate_Gt that = (AggregationPredicate_Gt) o;
 
 			if (!key.equals(that.key)) return false;
 			return Objects.equals(value, that.value);
@@ -961,10 +961,10 @@ public class AggregationPredicates {
 		}
 	}
 
-	public static final class PredicateHas implements AggregationPredicate {
+	public static final class AggregationPredicate_Has implements AggregationPredicate {
 		final String key;
 
-		private PredicateHas(String key) {
+		private AggregationPredicate_Has(String key) {
 			this.key = key;
 		}
 
@@ -1000,7 +1000,7 @@ public class AggregationPredicates {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
 
-			PredicateHas that = (PredicateHas) o;
+			AggregationPredicate_Has that = (AggregationPredicate_Has) o;
 
 			return key.equals(that.key);
 		}
@@ -1018,11 +1018,11 @@ public class AggregationPredicates {
 		}
 	}
 
-	public static final class PredicateRegexp implements AggregationPredicate {
+	public static final class AggregationPredicate_RegExp implements AggregationPredicate {
 		final String key;
 		final Pattern regexp;
 
-		private PredicateRegexp(String key, Pattern regexp) {
+		private AggregationPredicate_RegExp(String key, Pattern regexp) {
 			this.key = key;
 			this.regexp = regexp;
 		}
@@ -1073,7 +1073,7 @@ public class AggregationPredicates {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
 
-			PredicateRegexp that = (PredicateRegexp) o;
+			AggregationPredicate_RegExp that = (AggregationPredicate_RegExp) o;
 
 			if (!key.equals(that.key)) return false;
 			return regexp.pattern().equals(that.regexp.pattern());
@@ -1093,11 +1093,11 @@ public class AggregationPredicates {
 		}
 	}
 
-	public static final class PredicateIn implements AggregationPredicate {
+	public static final class AggregationPredicate_In implements AggregationPredicate {
 		final String key;
 		final SortedSet values;
 
-		PredicateIn(String key, SortedSet values) {
+		AggregationPredicate_In(String key, SortedSet values) {
 			this.key = key;
 			this.values = values;
 		}
@@ -1138,7 +1138,7 @@ public class AggregationPredicates {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
 
-			PredicateIn that = (PredicateIn) o;
+			AggregationPredicate_In that = (AggregationPredicate_In) o;
 
 			if (!key.equals(that.key)) return false;
 			return Objects.equals(values, that.values);
@@ -1160,12 +1160,12 @@ public class AggregationPredicates {
 		}
 	}
 
-	public static final class PredicateBetween implements AggregationPredicate {
+	public static final class AggregationPredicate_Between implements AggregationPredicate {
 		final String key;
 		final Comparable from;
 		final Comparable to;
 
-		PredicateBetween(String key, Comparable from, Comparable to) {
+		AggregationPredicate_Between(String key, Comparable from, Comparable to) {
 			this.key = key;
 			this.from = from;
 			this.to = to;
@@ -1212,7 +1212,7 @@ public class AggregationPredicates {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
 
-			PredicateBetween that = (PredicateBetween) o;
+			AggregationPredicate_Between that = (AggregationPredicate_Between) o;
 
 			if (!key.equals(that.key)) return false;
 			if (!from.equals(that.from)) return false;
@@ -1234,10 +1234,10 @@ public class AggregationPredicates {
 		}
 	}
 
-	public static final class PredicateAnd implements AggregationPredicate {
+	public static final class AggregationPredicate_And implements AggregationPredicate {
 		final List<AggregationPredicate> predicates;
 
-		private PredicateAnd(List<AggregationPredicate> predicates) {
+		private AggregationPredicate_And(List<AggregationPredicate> predicates) {
 			this.predicates = predicates;
 		}
 
@@ -1250,8 +1250,8 @@ public class AggregationPredicates {
 			Set<AggregationPredicate> simplifiedPredicates = new LinkedHashSet<>();
 			for (AggregationPredicate predicate : predicates) {
 				AggregationPredicate simplified = predicate.simplify();
-				if (simplified instanceof PredicateAnd) {
-					simplifiedPredicates.addAll(((PredicateAnd) simplified).predicates);
+				if (simplified instanceof AggregationPredicate_And) {
+					simplifiedPredicates.addAll(((AggregationPredicate_And) simplified).predicates);
 				} else {
 					simplifiedPredicates.add(simplified);
 				}
@@ -1326,7 +1326,7 @@ public class AggregationPredicates {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
 
-			PredicateAnd that = (PredicateAnd) o;
+			AggregationPredicate_And that = (AggregationPredicate_And) o;
 
 			return new HashSet<>(predicates).equals(new HashSet<>(that.predicates));
 
@@ -1347,10 +1347,10 @@ public class AggregationPredicates {
 		}
 	}
 
-	public static final class PredicateOr implements AggregationPredicate {
+	public static final class AggregationPredicate_Or implements AggregationPredicate {
 		final List<AggregationPredicate> predicates;
 
-		PredicateOr(List<AggregationPredicate> predicates) {
+		AggregationPredicate_Or(List<AggregationPredicate> predicates) {
 			this.predicates = predicates;
 		}
 
@@ -1363,8 +1363,8 @@ public class AggregationPredicates {
 			Set<AggregationPredicate> simplifiedPredicates = new LinkedHashSet<>();
 			for (AggregationPredicate predicate : predicates) {
 				AggregationPredicate simplified = predicate.simplify();
-				if (simplified instanceof PredicateOr) {
-					simplifiedPredicates.addAll(((PredicateOr) simplified).predicates);
+				if (simplified instanceof AggregationPredicate_Or) {
+					simplifiedPredicates.addAll(((AggregationPredicate_Or) simplified).predicates);
 				} else {
 					simplifiedPredicates.add(simplified);
 				}
@@ -1404,7 +1404,7 @@ public class AggregationPredicates {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
 
-			PredicateOr that = (PredicateOr) o;
+			AggregationPredicate_Or that = (AggregationPredicate_Or) o;
 
 			return new HashSet<>(predicates).equals(new HashSet<>(that.predicates));
 
@@ -1425,19 +1425,19 @@ public class AggregationPredicates {
 	}
 
 	public static AggregationPredicate alwaysTrue() {
-		return PredicateAlwaysTrue.instance;
+		return AggregationPredicate_AlwaysTrue.instance;
 	}
 
 	public static AggregationPredicate alwaysFalse() {
-		return PredicateAlwaysFalse.instance;
+		return AggregationPredicate_AlwaysFalse.instance;
 	}
 
 	public static AggregationPredicate not(AggregationPredicate predicate) {
-		return new PredicateNot(predicate);
+		return new AggregationPredicate_Not(predicate);
 	}
 
 	public static AggregationPredicate and(List<AggregationPredicate> predicates) {
-		return new PredicateAnd(predicates);
+		return new AggregationPredicate_And(predicates);
 	}
 
 	public static AggregationPredicate and(AggregationPredicate... predicates) {
@@ -1445,7 +1445,7 @@ public class AggregationPredicates {
 	}
 
 	public static AggregationPredicate or(List<AggregationPredicate> predicates) {
-		return new PredicateOr(predicates);
+		return new AggregationPredicate_Or(predicates);
 	}
 
 	public static AggregationPredicate or(AggregationPredicate... predicates) {
@@ -1453,53 +1453,53 @@ public class AggregationPredicates {
 	}
 
 	public static AggregationPredicate eq(String key, @Nullable Object value) {
-		return new PredicateEq(key, value);
+		return new AggregationPredicate_Eq(key, value);
 	}
 
 	public static AggregationPredicate notEq(String key, Object value) {
-		return new PredicateNotEq(key, value);
+		return new AggregationPredicate_NotEq(key, value);
 	}
 
 	public static AggregationPredicate ge(String key, Comparable value) {
-		return new PredicateGe(key, value);
+		return new AggregationPredicate_Ge(key, value);
 	}
 
 	public static AggregationPredicate le(String key, Comparable value) {
-		return new PredicateLe(key, value);
+		return new AggregationPredicate_Le(key, value);
 	}
 
 	public static AggregationPredicate gt(String key, Comparable value) {
-		return new PredicateGt(key, value);
+		return new AggregationPredicate_Gt(key, value);
 	}
 
 	public static AggregationPredicate lt(String key, Comparable value) {
-		return new PredicateLt(key, value);
+		return new AggregationPredicate_Lt(key, value);
 	}
 
 	public static AggregationPredicate has(String key) {
-		return new PredicateHas(key);
+		return new AggregationPredicate_Has(key);
 	}
 
 	@SuppressWarnings("unchecked")
 	public static AggregationPredicate in(String key, Collection values) {
-		return values.size() == 1 ? new PredicateEq(key, values.toArray()[0]) : new PredicateIn(key, new TreeSet(values));
+		return values.size() == 1 ? new AggregationPredicate_Eq(key, values.toArray()[0]) : new AggregationPredicate_In(key, new TreeSet(values));
 	}
 
 	@SuppressWarnings("unchecked")
 	public static AggregationPredicate in(String key, Comparable... values) {
-		return values.length == 1 ? new PredicateEq(key, values[0]) : new PredicateIn(key, new TreeSet(List.of(values)));
+		return values.length == 1 ? new AggregationPredicate_Eq(key, values[0]) : new AggregationPredicate_In(key, new TreeSet(List.of(values)));
 	}
 
 	public static AggregationPredicate regexp(String key, @Language("RegExp") String pattern) {
-		return new PredicateRegexp(key, Pattern.compile(pattern));
+		return new AggregationPredicate_RegExp(key, Pattern.compile(pattern));
 	}
 
 	public static AggregationPredicate regexp(String key, Pattern pattern) {
-		return new PredicateRegexp(key, pattern);
+		return new AggregationPredicate_RegExp(key, pattern);
 	}
 
 	public static AggregationPredicate between(String key, Comparable from, Comparable to) {
-		return new PredicateBetween(key, from, to);
+		return new AggregationPredicate_Between(key, from, to);
 	}
 
 	public static final class RangeScan {
@@ -1565,8 +1565,8 @@ public class AggregationPredicates {
 		if (predicate == alwaysFalse())
 			return RangeScan.noScan();
 		List<AggregationPredicate> conjunctions = new ArrayList<>();
-		if (predicate instanceof PredicateAnd) {
-			conjunctions.addAll(((PredicateAnd) predicate).predicates);
+		if (predicate instanceof AggregationPredicate_And) {
+			conjunctions.addAll(((AggregationPredicate_And) predicate).predicates);
 		} else {
 			conjunctions.add(predicate);
 		}
@@ -1578,13 +1578,13 @@ public class AggregationPredicates {
 		for (String key : primaryKey) {
 			for (int j = 0; j < conjunctions.size(); j++) {
 				AggregationPredicate conjunction = conjunctions.get(j);
-				if (conjunction instanceof PredicateEq eq && ((PredicateEq) conjunction).key.equals(key)) {
+				if (conjunction instanceof AggregationPredicate_Eq eq && ((AggregationPredicate_Eq) conjunction).key.equals(key)) {
 					conjunctions.remove(j);
 					from.add(toInternalValue(fields, eq.key, eq.value));
 					to.add(toInternalValue(fields, eq.key, eq.value));
 					continue L;
 				}
-				if (conjunction instanceof PredicateBetween between && ((PredicateBetween) conjunction).key.equals(key)) {
+				if (conjunction instanceof AggregationPredicate_Between between && ((AggregationPredicate_Between) conjunction).key.equals(key)) {
 					conjunctions.remove(j);
 					from.add(toInternalValue(fields, between.key, between.from));
 					to.add(toInternalValue(fields, between.key, between.to));

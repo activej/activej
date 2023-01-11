@@ -3,9 +3,9 @@ package io.activej.ot;
 import io.activej.ot.exception.GraphExhaustedException;
 import io.activej.ot.reducers.DiffsReducer;
 import io.activej.ot.system.OTSystem;
-import io.activej.ot.utils.StubOTRepository;
+import io.activej.ot.utils.OTRepository_Stub;
+import io.activej.ot.utils.OTState_TestOp;
 import io.activej.ot.utils.TestOp;
-import io.activej.ot.utils.TestOpState;
 import io.activej.ot.utils.Utils;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -26,7 +26,7 @@ import static org.junit.Assert.assertEquals;
 public class OTAlgorithmsTest {
 	private static final Random RANDOM = new Random();
 	private static final OTSystem<TestOp> TEST_OP = Utils.createTestOp();
-	private static final StubOTRepository<Integer, TestOp> REPOSITORY = StubOTRepository.create();
+	private static final OTRepository_Stub<Integer, TestOp> REPOSITORY = OTRepository_Stub.create();
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -64,7 +64,7 @@ public class OTAlgorithmsTest {
 
 	@Test
 	public void testLoadAllChangesFromRootWithSnapshot() {
-		TestOpState opState = new TestOpState();
+		OTState_TestOp opState = new OTState_TestOp();
 		REPOSITORY.setGraph(g -> {
 			g.add(0, 1, add(1));
 			g.add(1, 2, add(1));
@@ -261,7 +261,7 @@ public class OTAlgorithmsTest {
 	}
 
 	private static int applyToState(List<TestOp> diffs) {
-		TestOpState opState = new TestOpState();
+		OTState_TestOp opState = new OTState_TestOp();
 		diffs.forEach(opState::apply);
 		return opState.getValue();
 	}

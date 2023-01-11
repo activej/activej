@@ -9,11 +9,11 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.fs.AsyncFs;
 import io.activej.fs.FileMetadata;
-import io.activej.fs.LocalFs;
+import io.activej.fs.Fs_Local;
 import io.activej.fs.exception.FileNotFoundException;
 import io.activej.fs.exception.ForbiddenPathException;
 import io.activej.http.AsyncServlet;
-import io.activej.http.StubHttpClient;
+import io.activej.http.HttpClient_Stub;
 import io.activej.test.ExpectedException;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -61,10 +61,10 @@ public final class FsServletAndClientTest {
 	public void setUp() throws Exception {
 		storage = tmpFolder.newFolder("storage").toPath();
 
-		LocalFs localFs = LocalFs.create(getCurrentReactor(), newSingleThreadExecutor(), storage);
+		Fs_Local localFs = Fs_Local.create(getCurrentReactor(), newSingleThreadExecutor(), storage);
 		await(localFs.start());
 		AsyncServlet servlet = FsServlet.create(localFs);
-		this.fs = HttpFs.create(getCurrentReactor(), "http://localhost", StubHttpClient.of(servlet));
+		this.fs = Fs_Http.create(getCurrentReactor(), "http://localhost", HttpClient_Stub.of(servlet));
 
 		initializeDirs();
 	}

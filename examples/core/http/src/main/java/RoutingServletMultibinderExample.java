@@ -1,5 +1,5 @@
 import io.activej.http.HttpResponse;
-import io.activej.http.RoutingServlet;
+import io.activej.http.Servlet_Routing;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.Multibinder;
@@ -14,11 +14,11 @@ import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpMethod.POST;
 
 /**
- * An example of combining {@link RoutingServlet}s provided in multiple DI modules.
+ * An example of combining {@link Servlet_Routing}s provided in multiple DI modules.
  * <p>
- * Servlets are provided via the same {@link Key} ({@link RoutingServlet}).
+ * Servlets are provided via the same {@link Key} ({@link Servlet_Routing}).
  * So, to resolve DI conflicts we may use {@link Multibinder} which combines all the
- * conflicting {@link RoutingServlet}s into a single {@link RoutingServlet} which contains all the routes
+ * conflicting {@link Servlet_Routing}s into a single {@link Servlet_Routing} which contains all the routes
  * mapped by other servlets.
  * If there are conflicting routes mapped in different modules, a runtime exception would be thrown
  * <p>
@@ -39,7 +39,7 @@ import static io.activej.http.HttpMethod.POST;
 public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 
 	//[START MULTIBINDER]
-	public static final Multibinder<RoutingServlet> SERVLET_MULTIBINDER = Multibinders.ofBinaryOperator((servlet1, servlet2) ->
+	public static final Multibinder<Servlet_Routing> SERVLET_MULTIBINDER = Multibinders.ofBinaryOperator((servlet1, servlet2) ->
 			servlet1.merge(servlet2));
 	//[END MULTIBINDER]
 
@@ -51,7 +51,7 @@ public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 				new ModuleB(),
 				new ModuleC(),
 				ModuleBuilder.create()
-						.multibind(Key.of(RoutingServlet.class), SERVLET_MULTIBINDER)
+						.multibind(Key.of(Servlet_Routing.class), SERVLET_MULTIBINDER)
 						.build()
 		);
 	}
@@ -64,8 +64,8 @@ public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 	//[START MODULE_A]
 	private static final class ModuleA extends AbstractModule {
 		@Provides
-		RoutingServlet servlet() {
-			return RoutingServlet.create()
+		Servlet_Routing servlet() {
+			return Servlet_Routing.create()
 					.map(GET, "/a", request -> HttpResponse.ok200().withPlainText("Hello from '/a' path\n"))
 					.map(GET, "/b", request -> HttpResponse.ok200().withPlainText("Hello from '/b' path\n"))
 					.map(GET, "/", request -> HttpResponse.ok200().withPlainText("Hello from '/' path\n"));
@@ -76,8 +76,8 @@ public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 	//[START MODULE_B]
 	private static final class ModuleB extends AbstractModule {
 		@Provides
-		RoutingServlet servlet() {
-			return RoutingServlet.create()
+		Servlet_Routing servlet() {
+			return Servlet_Routing.create()
 					.map(GET, "/a/b", request -> HttpResponse.ok200().withPlainText("Hello from '/a/b' path\n"))
 					.map(GET, "/b/a", request -> HttpResponse.ok200().withPlainText("Hello from '/b/a' path\n"))
 					.map(GET, "/d", request -> HttpResponse.ok200().withPlainText("Hello from '/d' path\n"));
@@ -88,8 +88,8 @@ public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 	//[START MODULE_C]
 	private static final class ModuleC extends AbstractModule {
 		@Provides
-		RoutingServlet servlet() {
-			return RoutingServlet.create()
+		Servlet_Routing servlet() {
+			return Servlet_Routing.create()
 					.map(GET, "/a/c", request -> HttpResponse.ok200().withPlainText("Hello from '/a/c' path\n"))
 					.map(GET, "/b/c", request -> HttpResponse.ok200().withPlainText("Hello from '/b/c' path\n"))
 					.map(POST, "/d", request -> HttpResponse.ok200().withPlainText("Hello from POST '/d' path\n"));

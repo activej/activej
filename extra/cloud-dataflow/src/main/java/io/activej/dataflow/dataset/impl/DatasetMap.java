@@ -21,7 +21,7 @@ import io.activej.dataflow.graph.DataflowContext;
 import io.activej.dataflow.graph.DataflowGraph;
 import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.graph.StreamSchema;
-import io.activej.dataflow.node.NodeMap;
+import io.activej.dataflow.node.Node_Map;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,7 +45,7 @@ public final class DatasetMap<I, O> extends Dataset<O> {
 		List<StreamId> streamIds = input.channels(context);
 		int index = context.generateNodeIndex();
 		for (StreamId streamId : streamIds) {
-			NodeMap<I, O> node = new NodeMap<>(index, mapper, streamId);
+			Node_Map<I, O> node = new Node_Map<>(index, mapper, streamId);
 			graph.addNode(graph.getPartition(streamId), node);
 			outputStreamIds.add(node.getOutput());
 		}

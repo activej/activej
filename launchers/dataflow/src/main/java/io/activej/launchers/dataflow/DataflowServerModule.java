@@ -2,7 +2,7 @@ package io.activej.launchers.dataflow;
 
 import io.activej.config.Config;
 import io.activej.csp.binary.ByteBufsCodec;
-import io.activej.csp.process.frames.LZ4FrameFormat;
+import io.activej.csp.process.frames.FrameFormat_LZ4;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.DataflowServer;
 import io.activej.dataflow.graph.StreamSchema;
@@ -13,9 +13,9 @@ import io.activej.dataflow.inject.DatasetIdModule;
 import io.activej.dataflow.inject.SortingExecutor;
 import io.activej.dataflow.messaging.DataflowRequest;
 import io.activej.dataflow.messaging.DataflowResponse;
-import io.activej.dataflow.node.NodeSort;
+import io.activej.dataflow.node.Node_Sort;
 import io.activej.datastream.processor.AsyncStreamSorterStorage;
-import io.activej.datastream.processor.StreamSorterStorage;
+import io.activej.datastream.processor.StreamSorterStorage_Reactive;
 import io.activej.inject.Injector;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
@@ -80,22 +80,22 @@ public final class DataflowServerModule extends AbstractModule {
 
 	@Provides
 	@Eager
-	NodeSort.StreamSorterStorageFactory storageFactory(Executor executor, BinarySerializerLocator serializerLocator, Config config) throws IOException {
+	Node_Sort.StreamSorterStorageFactory storageFactory(Executor executor, BinarySerializerLocator serializerLocator, Config config) throws IOException {
 		Path providedSortDir = config.get(ofPath(), "dataflow.sortDir", null);
 		Path sortDir = providedSortDir == null ? Files.createTempDirectory("dataflow-sort-dir") : providedSortDir;
-		return new NodeSort.StreamSorterStorageFactory() {
+		return new Node_Sort.StreamSorterStorageFactory() {
 			int index;
 
 			@Override
 			public <T> AsyncStreamSorterStorage<T> create(StreamSchema<T> streamSchema, Task context, Promise<Void> taskExecuted) {
 				Path taskSortDir = sortDir.resolve(context.getTaskId() + "_" + index++);
-				return StreamSorterStorage.create(executor, streamSchema.createSerializer(serializerLocator), LZ4FrameFormat.create(), taskSortDir);
+				return StreamSorterStorage_Reactive.create(executor, streamSchema.createSerializer(serializerLocator), FrameFormat_LZ4.create(), taskSortDir);
 			}
 
 			@Override
 			public <T> Promise<Void> cleanup(AsyncStreamSorterStorage<T> storage) {
-				assert storage instanceof StreamSorterStorage<T>;
-				StreamSorterStorage<T> storageImpl = (StreamSorterStorage<T>) storage;
+				assert storage instanceof StreamSorterStorage_Reactive<T>;
+				StreamSorterStorage_Reactive<T> storageImpl = (StreamSorterStorage_Reactive<T>) storage;
 
 				return Promise.ofBlocking(executor, () -> {
 					try {

@@ -1,9 +1,9 @@
 import io.activej.csp.file.ChannelFileWriter;
 import io.activej.http.AsyncServlet;
+import io.activej.http.ByteBufsDecoder_Multipart.AsyncMultipartDataHandler;
 import io.activej.http.HttpResponse;
-import io.activej.http.MultipartDecoder.AsyncMultipartDataHandler;
-import io.activej.http.RoutingServlet;
-import io.activej.http.StaticServlet;
+import io.activej.http.Servlet_Routing;
+import io.activej.http.Servlet_Static;
 import io.activej.inject.Injector;
 import io.activej.inject.annotation.Provides;
 import io.activej.launcher.Launcher;
@@ -33,8 +33,8 @@ public final class FileUploadExample extends HttpServerLauncher {
 	//[START EXAMPLE]
 	@Provides
 	AsyncServlet servlet(Executor executor) {
-		return RoutingServlet.create()
-				.map(GET, "/*", StaticServlet.ofClassPath(executor, "static/multipart/")
+		return Servlet_Routing.create()
+				.map(GET, "/*", Servlet_Static.ofClassPath(executor, "static/multipart/")
 						.withIndexHtml())
 				.map(POST, "/test", request ->
 						request.handleMultipart(AsyncMultipartDataHandler.file(fileName -> ChannelFileWriter.open(executor, path.resolve(fileName))))

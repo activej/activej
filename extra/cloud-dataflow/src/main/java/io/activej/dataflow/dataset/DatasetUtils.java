@@ -43,11 +43,11 @@ public class DatasetUtils {
 		DataflowGraph graph = context.getGraph();
 		int nonce = context.getNonce();
 		List<StreamId> outputStreamIds = new ArrayList<>();
-		List<NodeShard<K, I>> sharders = new ArrayList<>();
+		List<Node_Shard<K, I>> sharders = new ArrayList<>();
 		int sharderIndex = context.generateNodeIndex();
 		for (StreamId inputStreamId : inputs) {
 			Partition partition = graph.getPartition(inputStreamId);
-			NodeShard<K, I> sharder = new NodeShard<>(sharderIndex, keyFunction, inputStreamId, nonce);
+			Node_Shard<K, I> sharder = new Node_Shard<>(sharderIndex, keyFunction, inputStreamId, nonce);
 			graph.addNode(partition, sharder);
 			sharders.add(sharder);
 		}
@@ -57,11 +57,11 @@ public class DatasetUtils {
 		int[] uploadIndexes = generateIndexes(context, partitions.size());
 		for (int i = 0; i < partitions.size(); i++) {
 			Partition partition = partitions.get(i);
-			NodeReduce<K, O, A> nodeReduce = new NodeReduce<>(reducerIndex, keyComparator);
+			Node_Reduce<K, O, A> nodeReduce = new Node_Reduce<>(reducerIndex, keyComparator);
 			graph.addNode(partition, nodeReduce);
 
 			for (int j = 0; j < sharders.size(); j++) {
-				NodeShard<K, I> sharder = sharders.get(j);
+				Node_Shard<K, I> sharder = sharders.get(j);
 				StreamId sharderOutput = sharder.newPartition();
 				graph.addNodeStream(sharder, sharderOutput);
 				StreamId reducerInput = forwardChannel(context, inputStreamSchema, sharderOutput, partition, uploadIndexes[i], downloadIndexes[j]);
@@ -96,11 +96,11 @@ public class DatasetUtils {
 		int nonce = context.getNonce();
 		List<StreamId> outputStreamIds = new ArrayList<>();
 
-		List<NodeShard<K, T>> sharders = new ArrayList<>();
+		List<Node_Shard<K, T>> sharders = new ArrayList<>();
 		int shardIndex = context.generateNodeIndex();
 		for (StreamId inputStreamId : inputs) {
 			Partition partition = graph.getPartition(inputStreamId);
-			NodeShard<K, T> sharder = new NodeShard<>(shardIndex, keyFunction, inputStreamId, nonce);
+			Node_Shard<K, T> sharder = new Node_Shard<>(shardIndex, keyFunction, inputStreamId, nonce);
 			graph.addNode(partition, sharder);
 			sharders.add(sharder);
 		}
@@ -112,13 +112,13 @@ public class DatasetUtils {
 			Partition partition = partitions.get(i);
 			List<StreamId> unionInputs = new ArrayList<>();
 			for (int j = 0; j < sharders.size(); j++) {
-				NodeShard<K, T> sharder = sharders.get(j);
+				Node_Shard<K, T> sharder = sharders.get(j);
 				StreamId sharderOutput = sharder.newPartition();
 				graph.addNodeStream(sharder, sharderOutput);
 				StreamId unionInput = forwardChannel(context, inputStreamSchema, sharderOutput, partition, uploadIndexes[i], downloadIndexes[j]);
 				unionInputs.add(unionInput);
 			}
-			NodeUnion<T> nodeUnion = new NodeUnion<>(unionIndex, unionInputs);
+			Node_Union<T> nodeUnion = new Node_Union<>(unionIndex, unionInputs);
 			graph.addNode(partition, nodeUnion);
 
 			outputStreamIds.add(nodeUnion.getOutput());
@@ -140,8 +140,8 @@ public class DatasetUtils {
 			return sourceStreamId;
 		}
 		DataflowGraph graph = context.getGraph();
-		NodeUpload<T> nodeUpload = new NodeUpload<>(uploadIndex, streamSchema, sourceStreamId);
-		NodeDownload<T> nodeDownload = new NodeDownload<>(downloadIndex, streamSchema, sourcePartition.getAddress(), sourceStreamId);
+		Node_Upload<T> nodeUpload = new Node_Upload<>(uploadIndex, streamSchema, sourceStreamId);
+		Node_Download<T> nodeDownload = new Node_Download<>(downloadIndex, streamSchema, sourcePartition.getAddress(), sourceStreamId);
 		graph.addNode(sourcePartition, nodeUpload);
 		graph.addNode(targetPartition, nodeDownload);
 		return nodeDownload.getOutput();
@@ -152,7 +152,7 @@ public class DatasetUtils {
 	}
 
 	public static StreamId limitStream(DataflowGraph graph, int index, long limit, StreamId streamId) {
-		NodeOffsetLimit<?> node = new NodeOffsetLimit<>(index, 0, limit, streamId);
+		Node_OffsetLimit<?> node = new Node_OffsetLimit<>(index, 0, limit, streamId);
 		graph.addNode(graph.getPartition(streamId), node);
 		return node.getOutput();
 	}
@@ -192,7 +192,7 @@ public class DatasetUtils {
 	}
 
 	private static <T> List<StreamId> toOutput(DataflowGraph graph, int index, StreamId streamId, long offset, long limit) {
-		NodeOffsetLimit<T> node = new NodeOffsetLimit<>(index, offset, limit, streamId);
+		Node_OffsetLimit<T> node = new Node_OffsetLimit<>(index, offset, limit, streamId);
 		graph.addNode(graph.getPartition(streamId), node);
 		return List.of(node.getOutput());
 	}

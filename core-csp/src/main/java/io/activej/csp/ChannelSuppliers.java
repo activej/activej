@@ -73,7 +73,7 @@ public final class ChannelSuppliers {
 	 * @see #concat(Iterator)
 	 */
 	public static <T> ChannelSupplier<T> concat(List<ChannelSupplier<? extends T>> suppliers) {
-		return new ChannelSupplierConcat<>(suppliers.iterator(), true);
+		return new ChannelSupplier_Concat<>(suppliers.iterator(), true);
 	}
 
 	/**
@@ -92,7 +92,7 @@ public final class ChannelSuppliers {
 	 * @return a ChannelSupplier of {@code <T>}
 	 */
 	public static <T> ChannelSupplier<T> concat(Iterator<? extends ChannelSupplier<? extends T>> iterator) {
-		return new ChannelSupplierConcat<>(iterator, false);
+		return new ChannelSupplier_Concat<>(iterator, false);
 	}
 
 	/**
@@ -449,7 +449,7 @@ public final class ChannelSuppliers {
 	 * Represents a {@code ChannelSupplier} which always returns
 	 * a promise of {@code null}.
 	 */
-	public static class ChannelSupplierEmpty<T> extends AbstractChannelSupplier<T> {
+	public static class ChannelSupplier_Empty<T> extends AbstractChannelSupplier<T> {
 		@Override
 		protected Promise<T> doGet() {
 			return Promise.of(null);
@@ -460,7 +460,7 @@ public final class ChannelSuppliers {
 	 * Represents a {@code ChannelSupplier} of one value. Returns a promise of the value when
 	 * {@code get} is called for the first time, all subsequent calls will return {@code null}.
 	 */
-	public static final class ChannelSupplierOfValue<T> extends AbstractChannelSupplier<T> {
+	public static final class ChannelSupplier_OfValue<T> extends AbstractChannelSupplier<T> {
 		private T item;
 
 		public T getValue() {
@@ -473,7 +473,7 @@ public final class ChannelSuppliers {
 			return item;
 		}
 
-		public ChannelSupplierOfValue(T item) {
+		public ChannelSupplier_OfValue(T item) {
 			this.item = item;
 		}
 
@@ -494,11 +494,11 @@ public final class ChannelSuppliers {
 	 * returns promises of iterator's values until {@code hasNext()} is true, when
 	 * there are no more values left, a promise of {@code null} is returned.
 	 */
-	public static final class ChannelSupplierOfIterator<T> extends AbstractChannelSupplier<T> {
+	public static final class ChannelSupplier_OfIterator<T> extends AbstractChannelSupplier<T> {
 		private final Iterator<? extends T> iterator;
 		private final boolean ownership;
 
-		public ChannelSupplierOfIterator(Iterator<? extends T> iterator, boolean ownership) {
+		public ChannelSupplier_OfIterator(Iterator<? extends T> iterator, boolean ownership) {
 			this.iterator = iterator;
 			this.ownership = ownership;
 		}
@@ -521,10 +521,10 @@ public final class ChannelSuppliers {
 	/**
 	 * Represents a {@code ChannelSupplier} which always returns a promise of exception.
 	 */
-	public static final class ChannelSupplierOfException<T> extends AbstractChannelSupplier<T> {
+	public static final class ChannelSupplier_OfException<T> extends AbstractChannelSupplier<T> {
 		private final Exception e;
 
-		public ChannelSupplierOfException(Exception e) {
+		public ChannelSupplier_OfException(Exception e) {
 			this.e = e;
 		}
 
@@ -534,11 +534,11 @@ public final class ChannelSuppliers {
 		}
 	}
 
-	public static final class ChannelSupplierConcat<T> extends AbstractChannelSupplier<T> {
+	public static final class ChannelSupplier_Concat<T> extends AbstractChannelSupplier<T> {
 		private final Iterator<? extends ChannelSupplier<? extends T>> iterator;
 		private final boolean ownership;
 
-		public ChannelSupplierConcat(Iterator<? extends ChannelSupplier<? extends T>> iterator, boolean ownership) {
+		public ChannelSupplier_Concat(Iterator<? extends ChannelSupplier<? extends T>> iterator, boolean ownership) {
 			this.iterator = iterator;
 			this.ownership = ownership;
 		}

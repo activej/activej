@@ -3,12 +3,12 @@ package banner;
 import io.activej.common.initializer.Initializer;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.hash.AsyncCrdtMap;
-import io.activej.crdt.hash.JavaCrdtMap;
+import io.activej.crdt.hash.CrdtMap_Java;
 import io.activej.crdt.primitives.GSet;
 import io.activej.crdt.storage.AsyncCrdtStorage;
-import io.activej.crdt.storage.local.MapCrdtStorage;
+import io.activej.crdt.storage.local.CrdtStorage_Map;
 import io.activej.crdt.wal.AsyncWriteAheadLog;
-import io.activej.crdt.wal.InMemoryWriteAheadLog;
+import io.activej.crdt.wal.WriteAheadLog_InMemory;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.ProvidesIntoSet;
@@ -45,7 +45,7 @@ public class BannerServerModule extends AbstractModule {
 
 	@Provides
 	AsyncCrdtMap<Long, GSet<Integer>> map(Reactor reactor, AsyncCrdtStorage<Long, GSet<Integer>> storage) {
-		return new JavaCrdtMap<>(reactor, GSet::merge, storage);
+		return new CrdtMap_Java<>(reactor, GSet::merge, storage);
 	}
 
 	@Provides
@@ -65,12 +65,12 @@ public class BannerServerModule extends AbstractModule {
 
 	@Provides
 	AsyncWriteAheadLog<Long, GSet<Integer>> writeAheadLog(Reactor reactor, CrdtFunction<GSet<Integer>> function, AsyncCrdtStorage<Long, GSet<Integer>> storage) {
-		return InMemoryWriteAheadLog.create(reactor, function, storage);
+		return WriteAheadLog_InMemory.create(reactor, function, storage);
 	}
 
 	@Provides
 	AsyncCrdtStorage<Long, GSet<Integer>> storage(Reactor reactor, CrdtFunction<GSet<Integer>> function) {
-		return MapCrdtStorage.create(reactor, function);
+		return CrdtStorage_Map.create(reactor, function);
 	}
 
 	@ProvidesIntoSet

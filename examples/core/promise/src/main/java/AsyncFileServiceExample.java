@@ -1,5 +1,5 @@
 import io.activej.async.file.AsyncFileService;
-import io.activej.async.file.ExecutorFileService;
+import io.activej.async.file.FileService_Executor;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.UncheckedException;
 import io.activej.eventloop.Eventloop;
@@ -21,7 +21,7 @@ import static java.util.concurrent.Executors.newCachedThreadPool;
 @SuppressWarnings("Convert2MethodRef")
 public final class AsyncFileServiceExample {
 	private static final ExecutorService executorService = newCachedThreadPool();
-	private static final AsyncFileService fileService = new ExecutorFileService(executorService);
+	private static final AsyncFileService fileService = new FileService_Executor(executorService);
 	private static final Path PATH;
 
 	static {

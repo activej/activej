@@ -1833,7 +1833,7 @@ public class BinarySerializerTest {
 		public Inet6Address inet6Address;
 
 		@Serialize
-		@SerializeClass(SerializerDefInet4Address.class)
+		@SerializeClass(SerializerDef_Inet4Address.class)
 		public InetAddress inetAddress2;
 	}
 
@@ -1871,32 +1871,32 @@ public class BinarySerializerTest {
 		}
 
 		@Serialize
-		@SerializeClass(SerializerDefBoolean.class)
+		@SerializeClass(SerializerDef_Boolean.class)
 		public Object zBoxed;
 		@Serialize
-		@SerializeClass(SerializerDefChar.class)
+		@SerializeClass(SerializerDef_Char.class)
 		public Object cBoxed;
 		@Serialize
-		@SerializeClass(SerializerDefByte.class)
+		@SerializeClass(SerializerDef_Byte.class)
 		public Object bBoxed;
 		@Serialize
-		@SerializeClass(SerializerDefShort.class)
+		@SerializeClass(SerializerDef_Short.class)
 		public Object sBoxed;
 		@Serialize
-		@SerializeClass(SerializerDefInt.class)
+		@SerializeClass(SerializerDef_Int.class)
 		public Object iBoxed;
 		@Serialize
-		@SerializeClass(SerializerDefLong.class)
+		@SerializeClass(SerializerDef_Long.class)
 		public Object lBoxed;
 		@Serialize
-		@SerializeClass(SerializerDefFloat.class)
+		@SerializeClass(SerializerDef_Float.class)
 		public Object fBoxed;
 		@Serialize
-		@SerializeClass(SerializerDefDouble.class)
+		@SerializeClass(SerializerDef_Double.class)
 		public Object dBoxed;
 
 		@Serialize
-		@SerializeClass(SerializerDefString.class)
+		@SerializeClass(SerializerDef_String.class)
 		public Object string;
 		@Serialize
 		@SerializeClass(subclasses = {Inet4Address.class, Inet6Address.class})
@@ -1907,7 +1907,7 @@ public class BinarySerializerTest {
 		public Object address2;
 
 		@Serialize
-		public List<@SerializeClass(SerializerDefInt.class) Object> list;
+		public List<@SerializeClass(SerializerDef_Int.class) Object> list;
 	}
 
 	@Test
@@ -2537,9 +2537,9 @@ public class BinarySerializerTest {
 		BinarySerializer<BooleanHolder> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
 				.build(BooleanHolder.class);
 
-		doTestNullableBoolean(serializer, new BooleanHolder(null), SerializerDefBoolean.NULLABLE_NULL);
-		doTestNullableBoolean(serializer, new BooleanHolder(false), SerializerDefBoolean.NULLABLE_FALSE);
-		doTestNullableBoolean(serializer, new BooleanHolder(true), SerializerDefBoolean.NULLABLE_TRUE);
+		doTestNullableBoolean(serializer, new BooleanHolder(null), SerializerDef_Boolean.NULLABLE_NULL);
+		doTestNullableBoolean(serializer, new BooleanHolder(false), SerializerDef_Boolean.NULLABLE_FALSE);
+		doTestNullableBoolean(serializer, new BooleanHolder(true), SerializerDef_Boolean.NULLABLE_TRUE);
 	}
 
 	private void doTestBoolean(BinarySerializer<Boolean> serializer, boolean value, byte expectedByte) {
@@ -2771,7 +2771,7 @@ public class BinarySerializerTest {
 	@Test
 	public void testUTF8Charset() {
 		BinarySerializer<StringHolder> serializer = SerializerBuilder.create(DEFINING_CLASS_LOADER)
-				.with(StringHolder.class, ctx -> new StringHolderSerializerDef())
+				.with(StringHolder.class, ctx -> new SerializerDef_StringHolder())
 				.build(StringHolder.class);
 
 		StringHolder stringHolder = new StringHolder("test");
@@ -2822,7 +2822,7 @@ public class BinarySerializerTest {
 		}
 	}
 
-	public static final class StringHolderSerializerDef extends SimpleSerializerDef<StringHolder> {
+	public static final class SerializerDef_StringHolder extends SimpleSerializerDef<StringHolder> {
 		@Override
 		protected BinarySerializer<StringHolder> createSerializer(int version, CompatibilityLevel compatibilityLevel) {
 			return new BinarySerializer<>() {

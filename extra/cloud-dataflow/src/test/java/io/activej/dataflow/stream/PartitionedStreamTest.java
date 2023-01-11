@@ -34,10 +34,10 @@ import io.activej.datastream.processor.StreamSplitter;
 import io.activej.datastream.processor.StreamUnion;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.AsyncFs;
-import io.activej.fs.LocalFs;
+import io.activej.fs.Fs_Local;
 import io.activej.fs.http.FsServlet;
-import io.activej.fs.http.HttpFs;
-import io.activej.http.HttpClient;
+import io.activej.fs.http.Fs_Http;
+import io.activej.http.HttpClient_Reactive;
 import io.activej.http.HttpServer;
 import io.activej.inject.Injector;
 import io.activej.inject.annotation.Named;
@@ -412,7 +412,7 @@ public final class PartitionedStreamTest {
 
 	private static AsyncFs createClient(NioReactor reactor, HttpServer server) {
 		int port = server.getListenAddresses().get(0).getPort();
-		return HttpFs.create(reactor, "http://localhost:" + port, HttpClient.create(reactor));
+		return Fs_Http.create(reactor, "http://localhost:" + port, HttpClient_Reactive.create(reactor));
 	}
 
 	private void assertSorted(Collection<List<String>> result) {
@@ -483,7 +483,7 @@ public final class PartitionedStreamTest {
 		for (int i = 0; i < nServers; i++) {
 			Path tmp = tempDir.newFolder("source_server_" + i + "_").toPath();
 			writeDataFile(tmp, i, sorted);
-			LocalFs fsClient = LocalFs.create(serverEventloop, newSingleThreadExecutor(), tmp);
+			Fs_Local fsClient = Fs_Local.create(serverEventloop, newSingleThreadExecutor(), tmp);
 			startClient(fsClient);
 			HttpServer server = HttpServer.create(serverEventloop, FsServlet.create(fsClient));
 			servers.add(server);
@@ -498,7 +498,7 @@ public final class PartitionedStreamTest {
 		List<HttpServer> servers = new ArrayList<>();
 		for (int i = 0; i < nServers; i++) {
 			Path tmp = tempDir.newFolder("target_server_" + i + "_").toPath();
-			LocalFs fsClient = LocalFs.create(serverEventloop, newSingleThreadExecutor(), tmp);
+			Fs_Local fsClient = Fs_Local.create(serverEventloop, newSingleThreadExecutor(), tmp);
 			startClient(fsClient);
 			HttpServer server = HttpServer.create(serverEventloop, FsServlet.create(fsClient));
 			servers.add(server);
@@ -509,7 +509,7 @@ public final class PartitionedStreamTest {
 		return servers;
 	}
 
-	private void startClient(LocalFs fsClient) {
+	private void startClient(Fs_Local fsClient) {
 		try {
 			serverEventloop.submit(fsClient::start).get();
 		} catch (InterruptedException e) {

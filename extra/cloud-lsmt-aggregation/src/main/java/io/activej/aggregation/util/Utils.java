@@ -29,7 +29,7 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.datastream.processor.StreamReducers.Reducer;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.SerializerBuilder;
-import io.activej.serializer.impl.SerializerDefClass;
+import io.activej.serializer.impl.SerializerDef_Class;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -148,7 +148,7 @@ public class Utils {
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(BinarySerializer.class, recordClass, keysList, fieldsList),
 				() -> {
-					SerializerDefClass serializer = SerializerDefClass.create(recordClass);
+					SerializerDef_Class serializer = SerializerDef_Class.create(recordClass);
 					addFields(serializer, recordClass, new ArrayList<>(keys.entrySet()));
 					addFields(serializer, recordClass, new ArrayList<>(fields.entrySet()));
 
@@ -157,7 +157,7 @@ public class Utils {
 				});
 	}
 
-	private static <T> void addFields(SerializerDefClass serializer, Class<T> recordClass, List<Entry<String, FieldType>> fields) {
+	private static <T> void addFields(SerializerDef_Class serializer, Class<T> recordClass, List<Entry<String, FieldType>> fields) {
 		for (Entry<String, FieldType> entry : fields) {
 			try {
 				Field field = recordClass.getField(entry.getKey());

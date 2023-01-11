@@ -4,11 +4,11 @@ import io.activej.ot.OTCommit;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.TransformResult;
 import io.activej.ot.repository.AsyncOTRepository;
-import io.activej.ot.uplink.OTUplink;
-import io.activej.ot.utils.StubOTRepository;
+import io.activej.ot.uplink.OTUplink_Reactive;
+import io.activej.ot.utils.OTRepository_Stub;
+import io.activej.ot.utils.OTState_TestOp;
 import io.activej.ot.utils.TestAdd;
 import io.activej.ot.utils.TestOp;
-import io.activej.ot.utils.TestOpState;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -64,7 +64,7 @@ public final class OTSystemTest {
 
 	@Test
 	public void testOtSource2() {
-		StubOTRepository<String, TestOp> repository = StubOTRepository.create(List.of("m", "x", "y", "m2"));
+		OTRepository_Stub<String, TestOp> repository = OTRepository_Stub.create(List.of("m", "x", "y", "m2"));
 		repository.setGraph(g -> {
 			g.add("*", "a1", add(1));
 			g.add("a1", "a2", add(2));
@@ -73,8 +73,8 @@ public final class OTSystemTest {
 			g.add("b1", "b2", add(100));
 		});
 
-		TestOpState state = new TestOpState();
-		OTUplink<String, TestOp, OTCommit<String, TestOp>> node = OTUplink.create(repository, SYSTEM);
+		OTState_TestOp state = new OTState_TestOp();
+		OTUplink_Reactive<String, TestOp, OTCommit<String, TestOp>> node = OTUplink_Reactive.create(repository, SYSTEM);
 		OTStateManager<String, TestOp> stateManager = OTStateManager.create(getCurrentReactor(), SYSTEM, node, state);
 
 		await(stateManager.checkout());
@@ -121,7 +121,7 @@ public final class OTSystemTest {
 
 	@Test
 	public void testOtSource3() {
-		StubOTRepository<String, TestOp> otSource = StubOTRepository.create(List.of("m"));
+		OTRepository_Stub<String, TestOp> otSource = OTRepository_Stub.create(List.of("m"));
 		otSource.setGraph(g -> {
 			g.add("*", "a1", add(1));
 			g.add("a1", "a2", add(2));
@@ -129,13 +129,13 @@ public final class OTSystemTest {
 			g.add("a2", "b1", add(10));
 		});
 
-		OTUplink<String, TestOp, OTCommit<String, TestOp>> node = OTUplink.create(otSource, SYSTEM);
-		pullAndThenMergeAndPush(otSource, OTStateManager.create(getCurrentReactor(), SYSTEM, node, new TestOpState()));
+		OTUplink_Reactive<String, TestOp, OTCommit<String, TestOp>> node = OTUplink_Reactive.create(otSource, SYSTEM);
+		pullAndThenMergeAndPush(otSource, OTStateManager.create(getCurrentReactor(), SYSTEM, node, new OTState_TestOp()));
 	}
 
 	@Test
 	public void testOtSource4() {
-		StubOTRepository<String, TestOp> otSource = StubOTRepository.create(List.of("m"));
+		OTRepository_Stub<String, TestOp> otSource = OTRepository_Stub.create(List.of("m"));
 		otSource.setGraph(g -> {
 			g.add("*", "a1", add(1));
 			g.add("*", "b1", add(10));
@@ -145,8 +145,8 @@ public final class OTSystemTest {
 			g.add("b1", "b2", add(1));
 		});
 
-		OTUplink<String, TestOp, OTCommit<String, TestOp>> node = OTUplink.create(otSource, SYSTEM);
-		pullAndThenMergeAndPush(otSource, OTStateManager.create(getCurrentReactor(), SYSTEM, node, new TestOpState()));
+		OTUplink_Reactive<String, TestOp, OTCommit<String, TestOp>> node = OTUplink_Reactive.create(otSource, SYSTEM);
+		pullAndThenMergeAndPush(otSource, OTStateManager.create(getCurrentReactor(), SYSTEM, node, new OTState_TestOp()));
 	}
 
 	private void pullAndThenMergeAndPush(AsyncOTRepository<String, TestOp> repository, OTStateManager<String, TestOp> stateManager) {

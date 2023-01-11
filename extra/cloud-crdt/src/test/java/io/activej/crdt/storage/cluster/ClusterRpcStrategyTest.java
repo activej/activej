@@ -45,7 +45,7 @@ public class ClusterRpcStrategyTest {
 	public void testRpcStrategyNoActive() {
 		Set<String> crdtStorages = PARTITION_ADDRESS_MAP_1.keySet();
 
-		RendezvousPartitionScheme<String> partitionScheme = RendezvousPartitionScheme.<String>create()
+		PartitionScheme_Rendezvous<String> partitionScheme = PartitionScheme_Rendezvous.<String>create()
 				.withPartitionGroup(RendezvousPartitionGroup.create(crdtStorages, 2, true, false))
 				.withRpcProvider(p -> server(PARTITION_ADDRESS_MAP_1.get(p)));
 
@@ -66,7 +66,7 @@ public class ClusterRpcStrategyTest {
 	public void testRpcStrategyActive() throws Exception {
 		Set<String> partitionIds = PARTITION_ADDRESS_MAP_1.keySet();
 
-		RendezvousPartitionScheme<String> partitionScheme = RendezvousPartitionScheme.<String>create()
+		PartitionScheme_Rendezvous<String> partitionScheme = PartitionScheme_Rendezvous.<String>create()
 				.withPartitionGroup(RendezvousPartitionGroup.create(partitionIds, 2, true, true))
 				.withRpcProvider(p -> server(PARTITION_ADDRESS_MAP_1.get(p)));
 
@@ -118,7 +118,7 @@ public class ClusterRpcStrategyTest {
 	public void testRpcStrategyNoRepartition() throws Exception {
 		Set<String> partitionIds = PARTITION_ADDRESS_MAP_1.keySet();
 
-		RendezvousPartitionScheme<String> partitionScheme = RendezvousPartitionScheme.<String>create()
+		PartitionScheme_Rendezvous<String> partitionScheme = PartitionScheme_Rendezvous.<String>create()
 				.withPartitionGroup(RendezvousPartitionGroup.create(partitionIds, 1, false, true))
 				.withRpcProvider(p -> server(PARTITION_ADDRESS_MAP_1.get(p)));
 
@@ -180,7 +180,7 @@ public class ClusterRpcStrategyTest {
 		partition2Address.putAll(PARTITION_ADDRESS_MAP_1);
 		partition2Address.putAll(PARTITION_ADDRESS_MAP_2);
 
-		RendezvousPartitionScheme<String> partitionScheme = RendezvousPartitionScheme.<String>create()
+		PartitionScheme_Rendezvous<String> partitionScheme = PartitionScheme_Rendezvous.<String>create()
 				.withPartitionGroup(RendezvousPartitionGroup.create(PARTITION_ADDRESS_MAP_1.keySet(), 2, true, true))
 				.withPartitionGroup(RendezvousPartitionGroup.create(PARTITION_ADDRESS_MAP_2.keySet(), 2, true, true))
 				.withRpcProvider(p -> server(partition2Address.get(p)));

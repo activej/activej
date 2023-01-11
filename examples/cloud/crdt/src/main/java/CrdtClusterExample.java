@@ -3,15 +3,15 @@ import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.primitives.LWWSet;
 import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.crdt.storage.cluster.AsyncDiscoveryService;
-import io.activej.crdt.storage.cluster.ClusterCrdtStorage;
+import io.activej.crdt.storage.cluster.CrdtStorage_Cluster;
+import io.activej.crdt.storage.cluster.PartitionScheme_Rendezvous;
 import io.activej.crdt.storage.cluster.RendezvousPartitionGroup;
-import io.activej.crdt.storage.cluster.RendezvousPartitionScheme;
-import io.activej.crdt.storage.local.FsCrdtStorage;
-import io.activej.crdt.util.CrdtDataSerializer;
+import io.activej.crdt.storage.local.CrdtStorage_Fs;
+import io.activej.crdt.util.BinarySerializer_CrdtData;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.LocalFs;
+import io.activej.fs.Fs_Local;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 
@@ -28,8 +28,8 @@ import java.util.concurrent.Executors;
 import static io.activej.serializer.BinarySerializers.UTF8_SERIALIZER;
 
 public final class CrdtClusterExample {
-	private static final CrdtDataSerializer<String, LWWSet<String>> SERIALIZER =
-			new CrdtDataSerializer<>(UTF8_SERIALIZER, new LWWSet.Serializer<>(UTF8_SERIALIZER));
+	private static final BinarySerializer_CrdtData<String, LWWSet<String>> SERIALIZER =
+			new BinarySerializer_CrdtData<>(UTF8_SERIALIZER, new LWWSet.Serializer<>(UTF8_SERIALIZER));
 
 	public static void main(String[] args) throws IOException {
 		Eventloop eventloop = Eventloop.create().withCurrentThread();
@@ -43,9 +43,9 @@ public final class CrdtClusterExample {
 		for (int i = 0; i < 10; i++) {
 			String id = "partition" + i;
 			Path storage = Files.createTempDirectory("storage_" + id);
-			LocalFs fs = LocalFs.create(eventloop, executor, storage);
+			Fs_Local fs = Fs_Local.create(eventloop, executor, storage);
 			fsStartPromises.add(fs.start());
-			clients.put(id, FsCrdtStorage.create(eventloop, fs, SERIALIZER));
+			clients.put(id, CrdtStorage_Fs.create(eventloop, fs, SERIALIZER));
 		}
 
 		// grab a couple of them to work with
@@ -55,9 +55,9 @@ public final class CrdtClusterExample {
 		// create a cluster with string keys, string partition ids,
 		// and with replication count of 5 meaning that uploading items to the
 		// cluster will make 5 copies of them across known partitions
-		ClusterCrdtStorage<String, LWWSet<String>, String> cluster = ClusterCrdtStorage.<String, LWWSet<String>, String>create(
+		CrdtStorage_Cluster<String, LWWSet<String>, String> cluster = CrdtStorage_Cluster.<String, LWWSet<String>, String>create(
 				eventloop,
-				AsyncDiscoveryService.of(RendezvousPartitionScheme.<String>create()
+				AsyncDiscoveryService.of(PartitionScheme_Rendezvous.<String>create()
 						.withPartitionGroup(RendezvousPartitionGroup.create(clients.keySet())
 								.withReplicas(5))
 						.withCrdtProvider(clients::get)),

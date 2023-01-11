@@ -101,39 +101,39 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		SerializerBuilder builder = new SerializerBuilder(definingClassLoader);
 
 		builder
-				.with(boolean.class, ctx -> new SerializerDefBoolean(false))
-				.with(char.class, ctx -> new SerializerDefChar(false))
-				.with(byte.class, ctx -> new SerializerDefByte(false))
-				.with(short.class, ctx -> new SerializerDefShort(false))
-				.with(int.class, ctx -> new SerializerDefInt(false))
-				.with(long.class, ctx -> new SerializerDefLong(false))
-				.with(float.class, ctx -> new SerializerDefFloat(false))
-				.with(double.class, ctx -> new SerializerDefDouble(false))
+				.with(boolean.class, ctx -> new SerializerDef_Boolean(false))
+				.with(char.class, ctx -> new SerializerDef_Char(false))
+				.with(byte.class, ctx -> new SerializerDef_Byte(false))
+				.with(short.class, ctx -> new SerializerDef_Short(false))
+				.with(int.class, ctx -> new SerializerDef_Int(false))
+				.with(long.class, ctx -> new SerializerDef_Long(false))
+				.with(float.class, ctx -> new SerializerDef_Float(false))
+				.with(double.class, ctx -> new SerializerDef_Double(false))
 
-				.with(Boolean.class, ctx -> new SerializerDefBoolean(true))
-				.with(Character.class, ctx -> new SerializerDefChar(true))
-				.with(Byte.class, ctx -> new SerializerDefByte(true))
-				.with(Short.class, ctx -> new SerializerDefShort(true))
-				.with(Integer.class, ctx -> new SerializerDefInt(true))
-				.with(Long.class, ctx -> new SerializerDefLong(true))
-				.with(Float.class, ctx -> new SerializerDefFloat(true))
-				.with(Double.class, ctx -> new SerializerDefDouble(true));
+				.with(Boolean.class, ctx -> new SerializerDef_Boolean(true))
+				.with(Character.class, ctx -> new SerializerDef_Char(true))
+				.with(Byte.class, ctx -> new SerializerDef_Byte(true))
+				.with(Short.class, ctx -> new SerializerDef_Short(true))
+				.with(Integer.class, ctx -> new SerializerDef_Int(true))
+				.with(Long.class, ctx -> new SerializerDef_Long(true))
+				.with(Float.class, ctx -> new SerializerDef_Float(true))
+				.with(Double.class, ctx -> new SerializerDef_Double(true));
 
 		for (Type type : new Type[]{
 				boolean[].class, char[].class, byte[].class, short[].class, int[].class, long[].class, float[].class, double[].class,
 				Object[].class}) {
-			builder.with(type, ctx -> new SerializerDefArray(ctx.scanTypeArgument(0), ctx.getRawType()));
+			builder.with(type, ctx -> new SerializerDef_Array(ctx.scanTypeArgument(0), ctx.getRawType()));
 		}
 
 		LinkedHashMap<Class<?>, SerializerDef> addressMap = new LinkedHashMap<>();
-		SerializerDefInet4Address serializerDefInet4Address = new SerializerDefInet4Address();
-		SerializerDefInet6Address serializerDefInet6Address = new SerializerDefInet6Address();
+		SerializerDef_Inet4Address serializerDefInet4Address = new SerializerDef_Inet4Address();
+		SerializerDef_Inet6Address serializerDefInet6Address = new SerializerDef_Inet6Address();
 		addressMap.put(Inet4Address.class, serializerDefInet4Address);
 		addressMap.put(Inet6Address.class, serializerDefInet6Address);
 		builder
 				.with(Inet4Address.class, ctx -> serializerDefInet4Address)
 				.with(Inet6Address.class, ctx -> serializerDefInet6Address)
-				.with(InetAddress.class, ctx -> new SerializerDefSubclass(InetAddress.class, addressMap, 0));
+				.with(InetAddress.class, ctx -> new SerializerDef_Subclass(InetAddress.class, addressMap, 0));
 
 		builder
 				.with(Enum.class, ctx -> {
@@ -148,30 +148,30 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 						}
 					}
 					//noinspection unchecked
-					return new SerializerDefEnum((Class<? extends Enum<?>>) ctx.getRawType());
+					return new SerializerDef_Enum((Class<? extends Enum<?>>) ctx.getRawType());
 				})
 
 				.with(String.class, ctx -> {
 					SerializeStringFormat a = builder.getAnnotation(SerializeStringFormat.class, ctx.getAnnotations());
-					return new SerializerDefString(a == null ? StringFormat.UTF8 : a.value());
+					return new SerializerDef_String(a == null ? StringFormat.UTF8 : a.value());
 				})
 
-				.with(Collection.class, ctx -> new SerializerDefRegularCollection(ctx.scanTypeArgument(0), Collection.class, ArrayList.class))
-				.with(Queue.class, ctx -> new SerializerDefRegularCollection(ctx.scanTypeArgument(0), Queue.class, ArrayDeque.class))
+				.with(Collection.class, ctx -> new SerializerDef_RegularCollection(ctx.scanTypeArgument(0), Collection.class, ArrayList.class))
+				.with(Queue.class, ctx -> new SerializerDef_RegularCollection(ctx.scanTypeArgument(0), Queue.class, ArrayDeque.class))
 
-				.with(List.class, ctx -> new SerializerDefList(ctx.scanTypeArgument(0)))
-				.with(ArrayList.class, ctx -> new SerializerDefRegularCollection(ctx.scanTypeArgument(0), ArrayList.class, ArrayList.class))
-				.with(LinkedList.class, ctx -> new SerializerDefLinkedList(ctx.scanTypeArgument(0)))
+				.with(List.class, ctx -> new SerializerDef_List(ctx.scanTypeArgument(0)))
+				.with(ArrayList.class, ctx -> new SerializerDef_RegularCollection(ctx.scanTypeArgument(0), ArrayList.class, ArrayList.class))
+				.with(LinkedList.class, ctx -> new SerializerDef_LinkedList(ctx.scanTypeArgument(0)))
 
-				.with(Map.class, ctx -> new SerializerDefMap(ctx.scanTypeArgument(0), ctx.scanTypeArgument(1)))
-				.with(HashMap.class, ctx -> new SerializerDefHashMap(ctx.scanTypeArgument(0), ctx.scanTypeArgument(1), HashMap.class, HashMap.class))
-				.with(LinkedHashMap.class, ctx -> new SerializerDefHashMap(ctx.scanTypeArgument(0), ctx.scanTypeArgument(1), LinkedHashMap.class, LinkedHashMap.class))
-				.with(EnumMap.class, ctx -> new SerializerDefEnumMap(ctx.scanTypeArgument(0), ctx.scanTypeArgument(1)))
+				.with(Map.class, ctx -> new SerializerDef_Map(ctx.scanTypeArgument(0), ctx.scanTypeArgument(1)))
+				.with(HashMap.class, ctx -> new SerializerDef_HashMap(ctx.scanTypeArgument(0), ctx.scanTypeArgument(1), HashMap.class, HashMap.class))
+				.with(LinkedHashMap.class, ctx -> new SerializerDef_HashMap(ctx.scanTypeArgument(0), ctx.scanTypeArgument(1), LinkedHashMap.class, LinkedHashMap.class))
+				.with(EnumMap.class, ctx -> new SerializerDef_EnumMap(ctx.scanTypeArgument(0), ctx.scanTypeArgument(1)))
 
-				.with(Set.class, ctx -> new SerializerDefSet(ctx.scanTypeArgument(0)))
-				.with(HashSet.class, ctx -> new SerializerDefHashSet(ctx.scanTypeArgument(0), HashSet.class, HashSet.class))
-				.with(LinkedHashSet.class, ctx -> new SerializerDefHashSet(ctx.scanTypeArgument(0), LinkedHashSet.class, LinkedHashSet.class))
-				.with(EnumSet.class, ctx -> new SerializerDefEnumSet(ctx.scanTypeArgument(0)))
+				.with(Set.class, ctx -> new SerializerDef_Set(ctx.scanTypeArgument(0)))
+				.with(HashSet.class, ctx -> new SerializerDef_HashSet(ctx.scanTypeArgument(0), HashSet.class, HashSet.class))
+				.with(LinkedHashSet.class, ctx -> new SerializerDef_HashSet(ctx.scanTypeArgument(0), LinkedHashSet.class, LinkedHashSet.class))
+				.with(EnumSet.class, ctx -> new SerializerDef_EnumSet(ctx.scanTypeArgument(0)))
 
 				.with(Object.class, builder::scan);
 
@@ -217,30 +217,30 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 					for (Class<?> subclass : subclassesSet) {
 						map.put(subclass, ctx.scan(subclass));
 					}
-					serializerDef = new SerializerDefSubclass(rawClass, map, annotationClass.subclassesIdx());
+					serializerDef = new SerializerDef_Subclass(rawClass, map, annotationClass.subclassesIdx());
 				}
 			} else if (extraSubclassesMap.containsKey(rawClass)) {
 				LinkedHashMap<Class<?>, SerializerDef> map = new LinkedHashMap<>();
 				for (Class<?> subclass : extraSubclassesMap.get(rawClass)) {
 					map.put(subclass, ctx.scan(subclass));
 				}
-				serializerDef = new SerializerDefSubclass(rawClass, map, 0);
+				serializerDef = new SerializerDef_Subclass(rawClass, map, 0);
 			} else {
 				serializerDef = fn.apply(ctx);
 			}
 
 			if (hasAnnotation(SerializeVarLength.class, ctx.getAnnotations())) {
-				serializerDef = ((SerializerDefWithVarLength) serializerDef).ensureVarLength();
+				serializerDef = ((SerializerDef_WithVarLength) serializerDef).ensureVarLength();
 			}
 
 			SerializeFixedSize annotationFixedSize;
 			if ((annotationFixedSize = getAnnotation(SerializeFixedSize.class, ctx.getAnnotations())) != null) {
-				serializerDef = ((SerializerDefWithFixedSize) serializerDef).ensureFixedSize(annotationFixedSize.value());
+				serializerDef = ((SerializerDef_WithFixedSize) serializerDef).ensureFixedSize(annotationFixedSize.value());
 			}
 
 			if (hasAnnotation(SerializeNullable.class, ctx.getAnnotations())) {
-				serializerDef = serializerDef instanceof SerializerDefWithNullable ?
-						((SerializerDefWithNullable) serializerDef).ensureNullable(compatibilityLevel) : new SerializerDefNullable(serializerDef);
+				serializerDef = serializerDef instanceof SerializerDef_WithNullable ?
+						((SerializerDef_WithNullable) serializerDef).ensureNullable(compatibilityLevel) : new SerializerDef_Nullable(serializerDef);
 			}
 
 			return serializerDef;
@@ -741,7 +741,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		if (rawClass.getEnclosingClass() != null && !Modifier.isStatic(rawClass.getModifiers()))
 			throw new IllegalArgumentException("Class should not be an inner class");
 
-		SerializerDefClass serializer = SerializerDefClass.create(rawClass);
+		SerializerDef_Class serializer = SerializerDef_Class.create(rawClass);
 		if (rawClass.getAnnotation(SerializeRecord.class) != null) {
 			if (!rawClass.isRecord()) {
 				throw new IllegalArgumentException("Non-record type '" + rawClass.getName() +
@@ -756,7 +756,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		return serializer;
 	}
 
-	private void scanClass(Context<SerializerDef> ctx, SerializerDefClass serializer) {
+	private void scanClass(Context<SerializerDef> ctx, SerializerDef_Class serializer) {
 		AnnotatedType annotatedClassType = ctx.getAnnotatedType();
 
 		Class<?> rawClassType = getRawType(annotatedClassType);
@@ -778,7 +778,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		}
 	}
 
-	private void scanInterface(Context<SerializerDef> ctx, SerializerDefClass serializer) {
+	private void scanInterface(Context<SerializerDef> ctx, SerializerDef_Class serializer) {
 		Function<TypeVariable<?>, AnnotatedType> bindings = getTypeBindings(ctx.getAnnotatedType())::get;
 
 		List<FoundSerializer> foundSerializers = new ArrayList<>();
@@ -790,7 +790,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		}
 	}
 
-	private void scanRecord(Context<SerializerDef> ctx, SerializerDefClass serializer) {
+	private void scanRecord(Context<SerializerDef> ctx, SerializerDef_Class serializer) {
 		Function<TypeVariable<?>, AnnotatedType> bindings = getTypeBindings(ctx.getAnnotatedType())::get;
 		List<FoundSerializer> foundSerializers = new ArrayList<>();
 
@@ -817,7 +817,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		addMethodsAndGettersToClass(ctx, serializer, foundSerializers);
 	}
 
-	private void addMethodsAndGettersToClass(Context<SerializerDef> ctx, SerializerDefClass serializer, List<FoundSerializer> foundSerializers) {
+	private void addMethodsAndGettersToClass(Context<SerializerDef> ctx, SerializerDef_Class serializer, List<FoundSerializer> foundSerializers) {
 		if (foundSerializers.stream().anyMatch(f -> f.order == Integer.MIN_VALUE)) {
 			Map<String, List<FoundSerializer>> foundFields = foundSerializers.stream().collect(groupingBy(FoundSerializer::getName, toList()));
 			String pathToClass = ctx.getRawType().getName().replace('.', '/') + ".class";
@@ -900,7 +900,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		}
 	}
 
-	private void scanSetters(Context<SerializerDef> ctx, SerializerDefClass serializer) {
+	private void scanSetters(Context<SerializerDef> ctx, SerializerDef_Class serializer) {
 		for (Method method : ctx.getRawType().getDeclaredMethods()) {
 			if (isStatic(method.getModifiers())) {
 				continue;
@@ -917,7 +917,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		}
 	}
 
-	private void scanStaticFactoryMethods(Context<SerializerDef> ctx, SerializerDefClass serializer) {
+	private void scanStaticFactoryMethods(Context<SerializerDef> ctx, SerializerDef_Class serializer) {
 		Class<?> factoryClassType = ctx.getRawType();
 		for (Method factory : factoryClassType.getDeclaredMethods()) {
 			if (ctx.getRawType() != factory.getReturnType()) {
@@ -948,7 +948,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		return fields;
 	}
 
-	private void scanConstructors(Context<SerializerDef> ctx, SerializerDefClass serializer) {
+	private void scanConstructors(Context<SerializerDef> ctx, SerializerDef_Class serializer) {
 		boolean found = false;
 		for (Constructor<?> constructor : ctx.getRawType().getDeclaredConstructors()) {
 			List<String> fields = new ArrayList<>(constructor.getParameterTypes().length);
@@ -1145,7 +1145,7 @@ public final class SerializerBuilder implements WithInitializer<SerializerBuilde
 		}
 	}
 
-	static class ForwardingSerializerDefImpl extends ForwardingSerializerDef {
+	private static class ForwardingSerializerDefImpl extends ForwardingSerializerDef {
 		SerializerDef serializerDef;
 
 		@Override

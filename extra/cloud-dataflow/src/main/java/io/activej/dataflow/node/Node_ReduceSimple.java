@@ -1,0 +1,107 @@
+/*
+ * Copyright (C) 2020 ActiveJ LLC.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package io.activej.dataflow.node;
+
+import io.activej.dataflow.graph.StreamId;
+import io.activej.dataflow.graph.Task;
+import io.activej.datastream.processor.StreamReducer;
+import io.activej.datastream.processor.StreamReducers.Reducer;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.function.Function;
+
+/**
+ * Represents a simple reducer node, with a single key function and reducer for all internalConsumers.
+ *
+ * @param <K> keys type
+ * @param <I> input data type
+ * @param <O> output data type
+ * @param <A> accumulator type
+ */
+public final class Node_ReduceSimple<K, I, O, A> extends AbstractNode {
+	private final Function<I, K> keyFunction;
+	private final Comparator<K> keyComparator;
+	private final Reducer<K, I, O, A> reducer;
+	private final List<StreamId> inputs;
+	private final StreamId output;
+
+	public Node_ReduceSimple(int index, Function<I, K> keyFunction, Comparator<K> keyComparator, Reducer<K, I, O, A> reducer) {
+		this(index, keyFunction, keyComparator, reducer, new ArrayList<>(), new StreamId());
+	}
+
+	public Node_ReduceSimple(int index, Function<I, K> keyFunction, Comparator<K> keyComparator, Reducer<K, I, O, A> reducer,
+			List<StreamId> inputs, StreamId output) {
+		super(index);
+		this.keyFunction = keyFunction;
+		this.keyComparator = keyComparator;
+		this.reducer = reducer;
+		this.inputs = inputs;
+		this.output = output;
+	}
+
+	public void addInput(StreamId input) {
+		inputs.add(input);
+	}
+
+	@Override
+	public List<StreamId> getInputs() {
+		return inputs;
+	}
+
+	@Override
+	public Collection<StreamId> getOutputs() {
+		return List.of(output);
+	}
+
+	@Override
+	public void createAndBind(Task task) {
+		StreamReducer<K, O, A> streamReducerSimple = StreamReducer.create(keyComparator);
+		for (StreamId input : inputs) {
+			task.bindChannel(input, streamReducerSimple.newInput(keyFunction, reducer));
+		}
+		task.export(output, streamReducerSimple.getOutput());
+	}
+
+	public Function<I, K> getKeyFunction() {
+		return keyFunction;
+	}
+
+	public Comparator<K> getKeyComparator() {
+		return keyComparator;
+	}
+
+	public Reducer<K, I, O, A> getReducer() {
+		return reducer;
+	}
+
+	public StreamId getOutput() {
+		return output;
+	}
+
+	@Override
+	public String toString() {
+		return "NodeReduceSimple{keyFunction=" + keyFunction.getClass().getSimpleName() +
+				", keyComparator=" + keyComparator.getClass().getSimpleName() +
+				", reducer=" + reducer.getClass().getSimpleName() +
+				", inputs=" + inputs +
+				", output=" + output + '}';
+	}
+}
+

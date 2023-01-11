@@ -3,7 +3,7 @@ package io.activej.dataflow.calcite.jdbc;
 import io.activej.async.callback.AsyncComputation;
 import io.activej.dataflow.calcite.RelToDatasetConverter.ConversionResult;
 import io.activej.dataflow.calcite.RelToDatasetConverter.UnmaterializedDataset;
-import io.activej.dataflow.calcite.SqlDataflow;
+import io.activej.dataflow.calcite.SqlDataflow_Reactive;
 import io.activej.dataflow.calcite.utils.JavaRecordType;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.exception.DataflowException;
@@ -86,17 +86,17 @@ public final class DataflowMeta extends LimitedMeta {
 	private static final Calendar UTC_CALENDAR = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
 	private final Reactor reactor;
-	private final SqlDataflow sqlDataflow;
+	private final SqlDataflow_Reactive sqlDataflow;
 	private final Map<String, Integer> statementIds = new ConcurrentHashMap<>();
 	private final Map<String, Map<Integer, FrameFetcher>> fetchers = new ConcurrentHashMap<>();
 	private final Map<String, Map<Integer, DatasetWithLimit>> unmaterializedDatasets = new ConcurrentHashMap<>();
 
-	private DataflowMeta(Reactor reactor, SqlDataflow sqlDataflow) {
+	private DataflowMeta(Reactor reactor, SqlDataflow_Reactive sqlDataflow) {
 		this.reactor = reactor;
 		this.sqlDataflow = sqlDataflow;
 	}
 
-	public static DataflowMeta create(Reactor reactor, SqlDataflow sqlDataflow) {
+	public static DataflowMeta create(Reactor reactor, SqlDataflow_Reactive sqlDataflow) {
 		return new DataflowMeta(reactor, sqlDataflow);
 	}
 

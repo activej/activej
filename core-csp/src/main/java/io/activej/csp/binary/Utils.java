@@ -55,7 +55,7 @@ public class Utils {
 		};
 	}
 
-	static class VarIntScanner implements ByteBufs.ByteScanner {
+	static class ByteScanner_VarInt implements ByteBufs.ByteScanner {
 		int result;
 
 		@Override
@@ -71,7 +71,7 @@ public class Utils {
 		}
 	}
 
-	static class IntScanner implements ByteBufs.ByteScanner {
+	static class ByteScanner_Int implements ByteBufs.ByteScanner {
 		int result;
 
 		@Override

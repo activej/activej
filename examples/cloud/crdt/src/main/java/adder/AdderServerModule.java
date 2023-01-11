@@ -78,7 +78,7 @@ public final class AdderServerModule extends AbstractModule {
 
 	@Provides
 	AsyncCrdtMap<Long, SimpleSumsCrdtState> map(Reactor reactor, PartitionId partitionId, AsyncCrdtStorage<Long, DetailedSumsCrdtState> storage) {
-		return new AdderCrdtMap(reactor, partitionId.toString(), storage);
+		return new CrdtMap_Adder(reactor, partitionId.toString(), storage);
 	}
 
 	@Provides

@@ -26,7 +26,7 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.dsl.ChannelTransformer;
 import io.activej.csp.net.AsyncMessaging;
-import io.activej.csp.net.Messaging;
+import io.activej.csp.net.Messaging_Reactive;
 import io.activej.csp.queue.ChannelQueue;
 import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.dataflow.exception.DataflowException;
@@ -153,7 +153,7 @@ public final class DataflowServer extends AbstractReactiveServer<DataflowServer>
 
 	@Override
 	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
-		AsyncMessaging<DataflowRequest, DataflowResponse> messaging = Messaging.create(socket, codec);
+		AsyncMessaging<DataflowRequest, DataflowResponse> messaging = Messaging_Reactive.create(socket, codec);
 		messaging.receive()
 				.then(request -> {
 					if (!(request instanceof DataflowRequest.Handshake handshake)) {

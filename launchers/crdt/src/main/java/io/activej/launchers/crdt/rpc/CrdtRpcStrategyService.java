@@ -23,7 +23,7 @@ import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
-import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.client.RpcClient_Reactive;
 import io.activej.rpc.client.sender.RpcStrategy;
 
 import java.util.function.Function;
@@ -36,7 +36,7 @@ public final class CrdtRpcStrategyService<K extends Comparable<K>> extends Abstr
 	private final AsyncDiscoveryService<?> discoveryService;
 	private final Function<Object, K> keyGetter;
 
-	private RpcClient rpcClient;
+	private RpcClient_Reactive rpcClient;
 	private Function<RpcStrategy, RpcStrategy> strategyMapFn = Function.identity();
 
 	private boolean stopped;
@@ -56,7 +56,7 @@ public final class CrdtRpcStrategyService<K extends Comparable<K>> extends Abstr
 		return this;
 	}
 
-	public void setRpcClient(RpcClient rpcClient) {
+	public void setRpcClient(RpcClient_Reactive rpcClient) {
 		checkState(this.rpcClient == null && rpcClient.getReactor() == reactor);
 
 		this.rpcClient = rpcClient;

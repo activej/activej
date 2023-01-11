@@ -39,7 +39,7 @@ public class RpcStrategyShardingTest {
 		RpcSenderStub connection2 = new RpcSenderStub();
 		RpcSenderStub connection3 = new RpcSenderStub();
 		int shardsAmount = 3;
-		RpcStrategy shardingStrategy = RpcStrategies.Sharding.create((Integer item) -> item % shardsAmount,
+		RpcStrategy shardingStrategy = RpcStrategy_Sharding.create((Integer item) -> item % shardsAmount,
 				servers(address1, address2, address3));
 		RpcSender senderSharding;
 		int timeout = 50;
@@ -63,12 +63,12 @@ public class RpcStrategyShardingTest {
 	}
 
 	@Test
-	public void itShouldCallOnExceptionOfCallbackWhenChosenServerIsNotActive() throws InterruptedException {
+	public void itShouldCallOnExceptionOfCallbackWhenChosenServerIsNotActive() throws ExecutionException, InterruptedException {
 		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
 		RpcSenderStub connection2 = new RpcSenderStub();
 		RpcSenderStub connection3 = new RpcSenderStub();
 		int shardsAmount = 3;
-		RpcStrategy shardingStrategy = RpcStrategies.Sharding.create((Integer item) -> item % shardsAmount,
+		RpcStrategy shardingStrategy = RpcStrategy_Sharding.create((Integer item) -> item % shardsAmount,
 				servers(address1, address2, address3));
 
 		// we don't add connection for ADDRESS_1

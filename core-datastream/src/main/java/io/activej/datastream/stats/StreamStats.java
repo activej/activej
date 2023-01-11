@@ -61,15 +61,15 @@ public interface StreamStats<T> extends
 		return consumer; // TODO
 	}
 
-	static <T> StreamStatsBasic<T> basic() {
-		return new StreamStatsBasic<>();
+	static <T> StreamStats_Basic<T> basic() {
+		return new StreamStats_Basic<>();
 	}
 
-	static <T> StreamStatsDetailed<T> detailed() {
-		return new StreamStatsDetailed<>(null);
+	static <T> StreamStats_Detailed<T> detailed() {
+		return new StreamStats_Detailed<>(null);
 	}
 
-	static <T> StreamStatsDetailed<T> detailed(StreamStatsSizeCounter<T> sizeCounter) {
-		return new StreamStatsDetailed<>(sizeCounter);
+	static <T> StreamStats_Detailed<T> detailed(StreamStatsSizeCounter<T> sizeCounter) {
+		return new StreamStats_Detailed<>(sizeCounter);
 	}
 }

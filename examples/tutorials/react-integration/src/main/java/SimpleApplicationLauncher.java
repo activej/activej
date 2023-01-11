@@ -1,5 +1,5 @@
 import io.activej.http.AsyncServlet;
-import io.activej.http.StaticServlet;
+import io.activej.http.Servlet_Static;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
 
@@ -16,7 +16,7 @@ public final class SimpleApplicationLauncher extends HttpServerLauncher {
 
 	@Provides
 	AsyncServlet servlet(Executor executor) {
-		return StaticServlet.ofClassPath(executor, "build")
+		return Servlet_Static.ofClassPath(executor, "build")
 				.withIndexHtml();
 	}
 

@@ -4,7 +4,7 @@ import io.activej.config.Config;
 import io.activej.eventloop.Eventloop;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
-import io.activej.memcache.protocol.SerializerDefSlice;
+import io.activej.memcache.protocol.SerializerDef_Slice;
 import io.activej.memcache.server.RingBuffer;
 import io.activej.promise.Promise;
 import io.activej.reactor.nio.NioReactor;
@@ -60,7 +60,7 @@ public class MemcacheMultiServerModule extends AbstractModule {
 							return Promise.of(PutResponse.INSTANCE);
 						})
 				.withSerializerBuilder(SerializerBuilder.create()
-						.with(Slice.class, ctx -> new SerializerDefSlice()))
+						.with(Slice.class, ctx -> new SerializerDef_Slice()))
 				.withMessageTypes(MESSAGE_TYPES)
 				.withListenAddresses(address);
 	}

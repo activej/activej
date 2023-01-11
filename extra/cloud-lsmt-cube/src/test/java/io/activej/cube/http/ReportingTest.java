@@ -7,23 +7,23 @@ import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
-import io.activej.csp.process.frames.LZ4FrameFormat;
+import io.activej.csp.process.frames.FrameFormat_LZ4;
 import io.activej.cube.*;
 import io.activej.cube.attributes.AbstractAttributeResolver;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.StreamSupplier;
+import io.activej.etl.LogDataConsumer_Splitter;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
-import io.activej.etl.LogOTState;
-import io.activej.etl.SplitterLogDataConsumer;
-import io.activej.fs.LocalFs;
+import io.activej.etl.OTState_Log;
+import io.activej.fs.Fs_Local;
 import io.activej.http.AsyncHttpClient;
-import io.activej.http.HttpClient;
+import io.activej.http.HttpClient_Reactive;
 import io.activej.http.HttpServer;
 import io.activej.multilog.AsyncMultilog;
-import io.activej.multilog.Multilog;
+import io.activej.multilog.Multilog_Reactive;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.reactor.Reactor;
@@ -47,8 +47,8 @@ import static io.activej.aggregation.measure.Measures.*;
 import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.entriesToMap;
 import static io.activej.cube.ComputedMeasures.*;
-import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.CubeQuery.Ordering.asc;
+import static io.activej.cube.Cube_Reactive.AggregationConfig.id;
 import static io.activej.cube.ReportType.DATA;
 import static io.activej.cube.ReportType.DATA_WITH_TOTALS;
 import static io.activej.cube.http.ReportingTest.LogItem.*;
@@ -63,8 +63,8 @@ public final class ReportingTest extends CubeTestBase {
 	public static final double DELTA = 1E-3;
 
 	private HttpServer cubeHttpServer;
-	private HttpCube httpCube;
-	private Cube cube;
+	private Cube_Http cubeHttp;
+	private Cube_Reactive cube;
 	private int serverPort;
 
 	private static final Map<String, FieldType> DIMENSIONS_CUBE = entriesToMap(Stream.of(
@@ -100,8 +100,8 @@ public final class ReportingTest extends CubeTestBase {
 			Map.entry("uniqueUserIdsCount", hyperLogLog(1024)),
 			Map.entry("errors", sum(ofLong()))));
 
-	private static class AdvertiserResolver extends AbstractAttributeResolver<Integer, String> {
-		public AdvertiserResolver(Reactor reactor) {
+	private static class AttributeResolver_Advertiser extends AbstractAttributeResolver<Integer, String> {
+		public AttributeResolver_Advertiser(Reactor reactor) {
 			super(reactor);
 		}
 
@@ -213,10 +213,10 @@ public final class ReportingTest extends CubeTestBase {
 		}
 	}
 
-	public static class LogItemSplitter extends SplitterLogDataConsumer<LogItem, CubeDiff> {
-		private final Cube cube;
+	public static class LogItemSplitter extends LogDataConsumer_Splitter<LogItem, CubeDiff> {
+		private final Cube_Reactive cube;
 
-		public LogItemSplitter(Cube cube) {
+		public LogItemSplitter(Cube_Reactive cube) {
 			this.cube = cube;
 		}
 
@@ -252,18 +252,18 @@ public final class ReportingTest extends CubeTestBase {
 		serverPort = getFreePort();
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 
-		LocalFs fs = LocalFs.create(reactor, EXECUTOR, aggregationsDir);
+		Fs_Local fs = Fs_Local.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
-		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor,
-				ChunkIdCodec.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), LZ4FrameFormat.create(), fs);
-		cube = Cube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
+		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage_Reactive.create(reactor,
+				JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FrameFormat_LZ4.create(), fs);
+		cube = Cube_Reactive.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withClassLoaderCache(CubeClassLoaderCache.create(CLASS_LOADER, 5))
 				.withInitializer(cube -> DIMENSIONS_CUBE.forEach(cube::addDimension))
 				.withInitializer(cube -> MEASURES.forEach(cube::addMeasure))
 				.withRelation("campaign", "advertiser")
 				.withRelation("banner", "campaign")
 				.withRelation("site", "affiliate")
-				.withAttribute("advertiser.name", new AdvertiserResolver(reactor))
+				.withAttribute("advertiser.name", new AttributeResolver_Advertiser(reactor))
 				.withComputedMeasure("ctr", percent(measure("clicks"), measure("impressions")))
 				.withComputedMeasure("uniqueUserPercent", percent(div(measure("uniqueUserIdsCount"), measure("eventCount"))))
 				.withComputedMeasure("errorsPercent", percent(div(measure("errors"), measure("impressions"))))
@@ -284,14 +284,14 @@ public final class ReportingTest extends CubeTestBase {
 
 		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
-		LogOTState<CubeDiff> cubeDiffLogOTState = LogOTState.create(cube);
+		OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(cube);
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
-		LocalFs activeFs = LocalFs.create(reactor, EXECUTOR, temporaryFolder.newFolder().toPath());
+		Fs_Local activeFs = Fs_Local.create(reactor, EXECUTOR, temporaryFolder.newFolder().toPath());
 		await(activeFs.start());
-		AsyncMultilog<LogItem> multilog = Multilog.create(reactor,
+		AsyncMultilog<LogItem> multilog = Multilog_Reactive.create(reactor,
 				activeFs,
-				LZ4FrameFormat.create(),
+				FrameFormat_LZ4.create(),
 				SerializerBuilder.create(CLASS_LOADER).build(LogItem.class),
 				NAME_PARTITION_REMAINDER_SEQ);
 
@@ -333,9 +333,9 @@ public final class ReportingTest extends CubeTestBase {
 
 		cubeHttpServer = startHttpServer();
 
-		AsyncHttpClient httpClient = HttpClient.create(reactor)
+		AsyncHttpClient httpClient = HttpClient_Reactive.create(reactor)
 				.withNoKeepAlive();
-		httpCube = HttpCube.create(httpClient, "http://127.0.0.1:" + serverPort)
+		cubeHttp = Cube_Http.create(httpClient, "http://127.0.0.1:" + serverPort)
 				.withAttribute("date", LocalDate.class)
 				.withAttribute("advertiser", int.class)
 				.withAttribute("campaign", int.class)
@@ -358,7 +358,7 @@ public final class ReportingTest extends CubeTestBase {
 	}
 
 	private HttpServer startHttpServer() {
-		HttpServer server = HttpServer.create(reactor, ReportingServiceServlet.createRootServlet(reactor, cube))
+		HttpServer server = HttpServer.create(reactor, Servlet_ReportingService.createRootServlet(reactor, cube))
 				.withListenPort(serverPort)
 				.withAcceptOnce();
 		try {
@@ -384,7 +384,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withWhere(and(between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-03"))))
 				.withReportType(DATA_WITH_TOTALS);
 
-		QueryResult queryResult = await(httpCube.query(query));
+		QueryResult queryResult = await(cubeHttp.query(query));
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(2, records.size());
@@ -415,7 +415,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withWhere(and(between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-03"))))
 				.withReportType(DATA_WITH_TOTALS);
 
-		QueryResult queryResult1 = await(httpCube.query(query));
+		QueryResult queryResult1 = await(cubeHttp.query(query));
 
 		List<Record> records1 = queryResult1.getRecords();
 		assertEquals(2, records1.size());
@@ -437,7 +437,7 @@ public final class ReportingTest extends CubeTestBase {
 		assertEquals(Set.of("date"), new HashSet<>(queryResult1.getSortedBy()));
 
 		startHttpServer();
-		QueryResult queryResult2 = await(httpCube.query(query));
+		QueryResult queryResult2 = await(cubeHttp.query(query));
 		List<Record> records2 = queryResult2.getRecords();
 		assertEquals(records1.size(), records2.size());
 		assertEquals(queryResult1.getAttributes(), queryResult2.getAttributes());
@@ -467,7 +467,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withWhere(and(le("date", LocalDate.parse("2000-01-03"))))
 				.withReportType(DATA_WITH_TOTALS);
 
-		QueryResult queryResult = await(httpCube.query(query));
+		QueryResult queryResult = await(cubeHttp.query(query));
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(2, records.size());
@@ -501,7 +501,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withOrderings(asc("ctr"))
 				.withReportType(DATA_WITH_TOTALS);
 
-		QueryResult queryResult = await(httpCube.query(query));
+		QueryResult queryResult = await(cubeHttp.query(query));
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(2, records.size());
@@ -530,7 +530,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withMeasures("impressions")
 				.withReportType(DATA);
 
-		QueryResult queryResult = await(httpCube.query(query));
+		QueryResult queryResult = await(cubeHttp.query(query));
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(3, records.size());
@@ -562,7 +562,7 @@ public final class ReportingTest extends CubeTestBase {
 						between("date", LocalDate.parse("2000-01-01"), LocalDate.parse("2000-01-03"))))
 				.withReportType(DATA_WITH_TOTALS);
 
-		QueryResult queryResult = await(httpCube.query(query));
+		QueryResult queryResult = await(cubeHttp.query(query));
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(3, records.size());
@@ -599,7 +599,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withHaving(or(between("advertiser.name", "a", "z"), eq("advertiser.name", null)))
 				.withReportType(DATA);
 
-		QueryResult queryResult = await(httpCube.query(query));
+		QueryResult queryResult = await(cubeHttp.query(query));
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(3, records.size());
@@ -617,7 +617,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withOrderings(asc("advertiser.name"))
 				.withHaving(eq("advertiser.name", null));
 
-		QueryResult queryResult = await(httpCube.query(query));
+		QueryResult queryResult = await(cubeHttp.query(query));
 
 		Map<String, Object> filterAttributes = queryResult.getFilterAttributes();
 		assertEquals(1, filterAttributes.size());
@@ -632,7 +632,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withMeasures("impressions")
 				.withWhere(and(eq("advertiser", 1), notEq("campaign", EXCLUDE_CAMPAIGN), notEq("banner", EXCLUDE_BANNER)));
 
-		QueryResult queryResult = await(httpCube.query(query));
+		QueryResult queryResult = await(cubeHttp.query(query));
 
 		assertEquals(3, queryResult.getRecords().size());
 		assertEquals("first", queryResult.getRecords().get(0).get("advertiser.name"));
@@ -649,7 +649,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withHaving(or(regexp("advertiser.name", ".*s.*"), eq("advertiser.name", null)))
 				.withReportType(DATA);
 
-		QueryResult queryResult = await(httpCube.query(query));
+		QueryResult queryResult = await(cubeHttp.query(query));
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(2, records.size());
@@ -668,7 +668,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withOrderings(asc("date"), asc("uniqueUserIdsCount"))
 				.withReportType(DATA_WITH_TOTALS);
 
-		QueryResult queryResult = await(httpCube.query(query));
+		QueryResult queryResult = await(cubeHttp.query(query));
 
 		List<Record> records = queryResult.getRecords();
 		assertEquals(Set.of("eventCount", "minRevenue", "maxRevenue", "uniqueUserIdsCount", "uniqueUserPercent", "clicks"),
@@ -722,7 +722,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withOrderingAsc("advertiser.name")
 				.withReportType(ReportType.METADATA);
 
-		QueryResult metadata = await(httpCube.query(onlyMetaQuery));
+		QueryResult metadata = await(cubeHttp.query(onlyMetaQuery));
 
 		assertEquals(6, metadata.getRecordScheme().getFields().size());
 		assertEquals(0, metadata.getTotalCount());
@@ -743,7 +743,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withReportType(DATA_WITH_TOTALS)
 				.withHaving(in("advertiser", List.of(1, 2)));
 
-		QueryResult in = await(httpCube.query(queryWithPredicateIn));
+		QueryResult in = await(cubeHttp.query(queryWithPredicateIn));
 
 		List<String> expectedRecordFields = List.of("advertiser", "clicks", "ctr", "conversions");
 		assertEquals(expectedRecordFields.size(), in.getRecordScheme().getFields().size());
@@ -760,7 +760,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withMeasures("errors", "errorsPercent")
 				.withReportType(ReportType.METADATA);
 
-		QueryResult metadata = await(httpCube.query(queryAffectingNonCompatibleAggregations));
+		QueryResult metadata = await(cubeHttp.query(queryAffectingNonCompatibleAggregations));
 		assertEquals(0, metadata.getMeasures().size());
 	}
 
@@ -775,24 +775,24 @@ public final class ReportingTest extends CubeTestBase {
 						notEq("banner", EXCLUDE_BANNER)))
 				.withReportType(ReportType.METADATA);
 
-		QueryResult metadata = await(httpCube.query(queryAffectingNonCompatibleAggregations));
+		QueryResult metadata = await(cubeHttp.query(queryAffectingNonCompatibleAggregations));
 		List<String> expectedMeasures = List.of("impressions", "clicks");
 		assertEquals(expectedMeasures, metadata.getMeasures());
 	}
 
 	@Test
 	public void testDataCorrectlyLoadedIntoAggregations() {
-		Aggregation daily = cube.getAggregation("daily");
+		Aggregation_Reactive daily = cube.getAggregation("daily");
 		assert daily != null;
 		int dailyAggregationItemsCount = getAggregationItemsCount(daily);
 		assertEquals(6, dailyAggregationItemsCount);
 
-		Aggregation advertisers = cube.getAggregation("advertisers");
+		Aggregation_Reactive advertisers = cube.getAggregation("advertisers");
 		assert advertisers != null;
 		int advertisersAggregationItemsCount = getAggregationItemsCount(advertisers);
 		assertEquals(5, advertisersAggregationItemsCount);
 
-		Aggregation affiliates = cube.getAggregation("affiliates");
+		Aggregation_Reactive affiliates = cube.getAggregation("affiliates");
 		assert affiliates != null;
 		int affiliatesAggregationItemsCount = getAggregationItemsCount(affiliates);
 		assertEquals(6, affiliatesAggregationItemsCount);
@@ -807,7 +807,7 @@ public final class ReportingTest extends CubeTestBase {
 						between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02"))))
 				.withReportType(DATA_WITH_TOTALS);
 
-		QueryResult resultByAdvertisers = await(httpCube.query(queryAdvertisers));
+		QueryResult resultByAdvertisers = await(cubeHttp.query(queryAdvertisers));
 
 		Record advertisersTotals = resultByAdvertisers.getTotals();
 		long advertisersImpressions = advertisersTotals.get("impressions");
@@ -829,7 +829,7 @@ public final class ReportingTest extends CubeTestBase {
 						between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02"))))
 				.withReportType(DATA_WITH_TOTALS);
 
-		QueryResult resultByAffiliates = await(httpCube.query(queryAffiliates));
+		QueryResult resultByAffiliates = await(cubeHttp.query(queryAffiliates));
 
 		Record affiliatesTotals = resultByAffiliates.getTotals();
 		long affiliatesImpressions = affiliatesTotals.get("impressions");
@@ -850,7 +850,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withWhere(between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02")))
 				.withReportType(DATA_WITH_TOTALS);
 
-		QueryResult resultByDate = await(httpCube.query(queryDate));
+		QueryResult resultByDate = await(cubeHttp.query(queryDate));
 
 		Record dailyTotals = resultByDate.getTotals();
 		long dailyImpressions = dailyTotals.get("impressions");
@@ -875,7 +875,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withWhere(between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02")))
 				.withReportType(DATA_WITH_TOTALS);
 
-		QueryResult resultByDate = await(httpCube.query(queryDate));
+		QueryResult resultByDate = await(cubeHttp.query(queryDate));
 
 		assertEquals(dateDimension, resultByDate.getAttributes());
 		assertEquals(measures, resultByDate.getMeasures());
@@ -902,7 +902,7 @@ public final class ReportingTest extends CubeTestBase {
 				.withWhere(between("date", LocalDate.parse("2000-01-02"), LocalDate.parse("2000-01-02")))
 				.withReportType(DATA_WITH_TOTALS);
 
-		QueryResult resultByDate = await(httpCube.query(queryDate));
+		QueryResult resultByDate = await(cubeHttp.query(queryDate));
 
 		assertEquals(1, resultByDate.getAttributes().size());
 		assertEquals("date", resultByDate.getAttributes().get(0));
@@ -918,7 +918,7 @@ public final class ReportingTest extends CubeTestBase {
 		assertEquals(27, dailyErrors);
 	}
 
-	private static int getAggregationItemsCount(Aggregation aggregation) {
+	private static int getAggregationItemsCount(Aggregation_Reactive aggregation) {
 		int count = 0;
 		for (Map.Entry<Object, AggregationChunk> chunk : aggregation.getState().getChunks().entrySet()) {
 			count += chunk.getValue().getCount();
