@@ -12,7 +12,7 @@ import io.activej.crdt.storage.local.CrdtStorage_Map;
 import io.activej.crdt.util.BinarySerializer_CrdtData;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
-import io.activej.fs.Fs_Local;
+import io.activej.fs.Fs;
 import io.activej.reactor.Reactor;
 import io.activej.test.ExpectedException;
 import io.activej.test.rules.ByteBufRule;
@@ -83,7 +83,7 @@ public class AsyncCrdtStorageAPITest {
 						"FsCrdtClient",
 						(CrdtClientFactory) (executor, testFolder) -> {
 							Reactor reactor = getCurrentReactor();
-							Fs_Local fs = Fs_Local.create(reactor, executor, testFolder);
+							Fs fs = Fs.create(reactor, executor, testFolder);
 							await(fs.start());
 							return CrdtStorage_Fs.create(reactor, fs, SERIALIZER, CRDT_FUNCTION);
 						}

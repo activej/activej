@@ -12,7 +12,7 @@ import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.csp.process.frames.FrameFormat_LZ4;
 import io.activej.datastream.StreamSupplier;
-import io.activej.fs.Fs_Local;
+import io.activej.fs.Fs;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
@@ -85,7 +85,7 @@ public class CustomFieldsTest {
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 
 		Path path = temporaryFolder.newFolder().toPath();
-		Fs_Local fs = Fs_Local.create(reactor, executor, path);
+		Fs fs = Fs.create(reactor, executor, path);
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormat_LZ4.create();
 		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);

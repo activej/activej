@@ -12,7 +12,7 @@ import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.StreamSupplierWithResult;
 import io.activej.fs.FileMetadata;
-import io.activej.fs.Fs_Local;
+import io.activej.fs.Fs;
 import io.activej.reactor.Reactor;
 import io.activej.serializer.BinarySerializers;
 import io.activej.test.rules.ByteBufRule;
@@ -70,7 +70,7 @@ public class MultilogTest {
 	@Test
 	public void testConsumer() {
 		Reactor reactor = Reactor.getCurrentReactor();
-		Fs_Local fs = Fs_Local.create(reactor, newSingleThreadExecutor(), temporaryFolder.getRoot().toPath());
+		Fs fs = Fs.create(reactor, newSingleThreadExecutor(), temporaryFolder.getRoot().toPath());
 		await(fs.start());
 		AsyncMultilog<String> multilog = Multilog.create(reactor, fs, frameFormat, BinarySerializers.UTF8_SERIALIZER, NAME_PARTITION_REMAINDER_SEQ);
 		String testPartition = "testPartition";
@@ -87,7 +87,7 @@ public class MultilogTest {
 	public void testIgnoringTruncatedLogs() {
 		Reactor reactor = Reactor.getCurrentReactor();
 		Path storage = temporaryFolder.getRoot().toPath();
-		Fs_Local fs = Fs_Local.create(reactor, newSingleThreadExecutor(), storage);
+		Fs fs = Fs.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
 		AsyncMultilog<String> multilog = Multilog.create(reactor, fs,
 						frameFormat,
@@ -118,7 +118,7 @@ public class MultilogTest {
 	public void testIgnoringMalformedLogs() {
 		Reactor reactor = Reactor.getCurrentReactor();
 		Path storage = temporaryFolder.getRoot().toPath();
-		Fs_Local fs = Fs_Local.create(reactor, newSingleThreadExecutor(), storage);
+		Fs fs = Fs.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
 		AsyncMultilog<String> multilog = Multilog.create(reactor, fs,
 						frameFormat,
@@ -158,7 +158,7 @@ public class MultilogTest {
 	public void testIgnoringReadsPastFileSize() {
 		Reactor reactor = Reactor.getCurrentReactor();
 		Path storage = temporaryFolder.getRoot().toPath();
-		Fs_Local fs = Fs_Local.create(reactor, newSingleThreadExecutor(), storage);
+		Fs fs = Fs.create(reactor, newSingleThreadExecutor(), storage);
 		await(fs.start());
 		AsyncMultilog<String> multilog = Multilog.create(reactor, fs,
 						frameFormat,
@@ -190,7 +190,7 @@ public class MultilogTest {
 	public void logPositionIsCountedCorrectly() {
 		Reactor reactor = Reactor.getCurrentReactor();
 
-		Fs_Local fs = Fs_Local.create(reactor, newSingleThreadExecutor(), temporaryFolder.getRoot().toPath())
+		Fs fs = Fs.create(reactor, newSingleThreadExecutor(), temporaryFolder.getRoot().toPath())
 				.withReaderBufferSize(MemSize.bytes(1));
 
 		await(fs.start());

@@ -23,7 +23,7 @@ import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.OTState_Log;
 import io.activej.fs.FileMetadata;
-import io.activej.fs.Fs_Local;
+import io.activej.fs.Fs;
 import io.activej.multilog.AsyncMultilog;
 import io.activej.multilog.Multilog;
 import io.activej.ot.OTStateManager;
@@ -50,7 +50,7 @@ import static org.junit.Assert.assertEquals;
 
 public final class CubeLogProcessorControllerTest extends CubeTestBase {
 	private AsyncMultilog<LogItem> multilog;
-	private Fs_Local logsFs;
+	private Fs logsFs;
 	private CubeLogProcessorController<Long, Long> controller;
 
 	@Before
@@ -59,7 +59,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 		Path logsDir = temporaryFolder.newFolder().toPath();
 
-		Fs_Local aggregationFs = Fs_Local.create(reactor, EXECUTOR, aggregationsDir);
+		Fs aggregationFs = Fs.create(reactor, EXECUTOR, aggregationsDir);
 		await(aggregationFs.start());
 		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
 				FrameFormat_LZ4.create(), aggregationFs);
@@ -89,7 +89,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 		OTState_Log<CubeDiff> logState = OTState_Log.create(cube);
 		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, logState);
 
-		logsFs = Fs_Local.create(reactor, EXECUTOR, logsDir);
+		logsFs = Fs.create(reactor, EXECUTOR, logsDir);
 		await(logsFs.start());
 		BinarySerializer<LogItem> serializer = SerializerBuilder.create(CLASS_LOADER)
 				.build(LogItem.class);

@@ -20,7 +20,7 @@ import io.activej.common.exception.MalformedDataException;
 import io.activej.common.initializer.Initializer;
 import io.activej.config.Config;
 import io.activej.fs.AsyncFs;
-import io.activej.fs.Fs_Local;
+import io.activej.fs.Fs;
 import io.activej.fs.cluster.AsyncDiscoveryService;
 import io.activej.fs.cluster.ClusterRepartitionController;
 import io.activej.fs.cluster.Fs_Cluster;
@@ -98,21 +98,21 @@ public final class Initializers {
 
 	public static Initializer<TriggersModuleSettings> ofLocalFsClient() {
 		return triggersModule -> triggersModule
-				.with(Fs_Local.class, HIGH, "errorUploadBegin", fs -> ofPromiseStats(fs.getUploadBeginPromise()))
-				.with(Fs_Local.class, HIGH, "errorUploadFinish", fs -> ofPromiseStats(fs.getUploadFinishPromise()))
-				.with(Fs_Local.class, HIGH, "errorAppendBegin", fs -> ofPromiseStats(fs.getAppendBeginPromise()))
-				.with(Fs_Local.class, HIGH, "errorAppendFinish", fs -> ofPromiseStats(fs.getAppendFinishPromise()))
-				.with(Fs_Local.class, HIGH, "errorDownloadBegin", fs -> ofPromiseStats(fs.getDownloadBeginPromise()))
-				.with(Fs_Local.class, HIGH, "errorDownloadFinish", fs -> ofPromiseStats(fs.getDownloadFinishPromise()))
-				.with(Fs_Local.class, HIGH, "errorMove", fs -> ofPromiseStats(fs.getMovePromise()))
-				.with(Fs_Local.class, HIGH, "errorMoveAll", fs -> ofPromiseStats(fs.getMoveAllPromise()))
-				.with(Fs_Local.class, HIGH, "errorCopy", fs -> ofPromiseStats(fs.getCopyPromise()))
-				.with(Fs_Local.class, HIGH, "errorCopyAll", fs -> ofPromiseStats(fs.getCopyAllPromise()))
-				.with(Fs_Local.class, HIGH, "errorList", fs -> ofPromiseStats(fs.getListPromise()))
-				.with(Fs_Local.class, HIGH, "errorDelete", fs -> ofPromiseStats(fs.getDeletePromise()))
-				.with(Fs_Local.class, HIGH, "errorDeleteAll", fs -> ofPromiseStats(fs.getDeleteAllPromise()))
-				.with(Fs_Local.class, HIGH, "errorInfo", fs -> ofPromiseStats(fs.getInfoPromise()))
-				.with(Fs_Local.class, HIGH, "errorInfoAll", fs -> ofPromiseStats(fs.getInfoAllPromise()));
+				.with(Fs.class, HIGH, "errorUploadBegin", fs -> ofPromiseStats(fs.getUploadBeginPromise()))
+				.with(Fs.class, HIGH, "errorUploadFinish", fs -> ofPromiseStats(fs.getUploadFinishPromise()))
+				.with(Fs.class, HIGH, "errorAppendBegin", fs -> ofPromiseStats(fs.getAppendBeginPromise()))
+				.with(Fs.class, HIGH, "errorAppendFinish", fs -> ofPromiseStats(fs.getAppendFinishPromise()))
+				.with(Fs.class, HIGH, "errorDownloadBegin", fs -> ofPromiseStats(fs.getDownloadBeginPromise()))
+				.with(Fs.class, HIGH, "errorDownloadFinish", fs -> ofPromiseStats(fs.getDownloadFinishPromise()))
+				.with(Fs.class, HIGH, "errorMove", fs -> ofPromiseStats(fs.getMovePromise()))
+				.with(Fs.class, HIGH, "errorMoveAll", fs -> ofPromiseStats(fs.getMoveAllPromise()))
+				.with(Fs.class, HIGH, "errorCopy", fs -> ofPromiseStats(fs.getCopyPromise()))
+				.with(Fs.class, HIGH, "errorCopyAll", fs -> ofPromiseStats(fs.getCopyAllPromise()))
+				.with(Fs.class, HIGH, "errorList", fs -> ofPromiseStats(fs.getListPromise()))
+				.with(Fs.class, HIGH, "errorDelete", fs -> ofPromiseStats(fs.getDeletePromise()))
+				.with(Fs.class, HIGH, "errorDeleteAll", fs -> ofPromiseStats(fs.getDeleteAllPromise()))
+				.with(Fs.class, HIGH, "errorInfo", fs -> ofPromiseStats(fs.getInfoPromise()))
+				.with(Fs.class, HIGH, "errorInfoAll", fs -> ofPromiseStats(fs.getInfoAllPromise()));
 	}
 
 	public static Initializer<TriggersModuleSettings> ofRemoteFs() {

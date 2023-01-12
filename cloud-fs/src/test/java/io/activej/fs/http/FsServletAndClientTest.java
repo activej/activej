@@ -9,7 +9,7 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.fs.AsyncFs;
 import io.activej.fs.FileMetadata;
-import io.activej.fs.Fs_Local;
+import io.activej.fs.Fs;
 import io.activej.fs.exception.FileNotFoundException;
 import io.activej.fs.exception.ForbiddenPathException;
 import io.activej.http.AsyncServlet;
@@ -61,7 +61,7 @@ public final class FsServletAndClientTest {
 	public void setUp() throws Exception {
 		storage = tmpFolder.newFolder("storage").toPath();
 
-		Fs_Local localFs = Fs_Local.create(getCurrentReactor(), newSingleThreadExecutor(), storage);
+		Fs localFs = Fs.create(getCurrentReactor(), newSingleThreadExecutor(), storage);
 		await(localFs.start());
 		AsyncServlet servlet = FsServlet.create(localFs);
 		this.fs = Fs_Http.create(getCurrentReactor(), "http://localhost", HttpClient_Stub.of(servlet));

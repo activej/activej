@@ -16,7 +16,7 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.OTState_Log;
-import io.activej.fs.Fs_Local;
+import io.activej.fs.Fs;
 import io.activej.multilog.AsyncMultilog;
 import io.activej.multilog.Multilog;
 import io.activej.ot.OTStateManager;
@@ -43,7 +43,7 @@ public final class LogToCubeTest extends CubeTestBase {
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 		Path logsDir = temporaryFolder.newFolder().toPath();
 
-		Fs_Local fs = Fs_Local.create(reactor, EXECUTOR, aggregationsDir);
+		Fs fs = Fs.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormat_LZ4.create();
 		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
@@ -66,7 +66,7 @@ public final class LogToCubeTest extends CubeTestBase {
 		OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(cube);
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
-		Fs_Local localFs = Fs_Local.create(reactor, EXECUTOR, logsDir);
+		Fs localFs = Fs.create(reactor, EXECUTOR, logsDir);
 		await(localFs.start());
 		AsyncMultilog<TestPubRequest> multilog = Multilog.create(reactor, localFs,
 				frameFormat,

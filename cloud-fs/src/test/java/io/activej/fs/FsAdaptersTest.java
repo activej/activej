@@ -42,7 +42,7 @@ public final class FsAdaptersTest {
 	@Before
 	public void setup() throws IOException {
 		Path path = temporaryFolder.newFolder("test").toPath();
-		Fs_Local localFs = Fs_Local.create(getCurrentReactor(), newSingleThreadExecutor(), path);
+		Fs localFs = Fs.create(getCurrentReactor(), newSingleThreadExecutor(), path);
 		await(localFs.start());
 		this.local = localFs;
 	}

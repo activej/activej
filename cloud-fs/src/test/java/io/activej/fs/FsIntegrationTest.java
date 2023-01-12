@@ -72,7 +72,7 @@ public final class FsIntegrationTest {
 		Executor executor = newCachedThreadPool();
 
 		storage = temporaryFolder.newFolder("server_storage").toPath();
-		Fs_Local localFs = Fs_Local.create(Reactor.getCurrentReactor(), executor, storage);
+		Fs localFs = Fs.create(Reactor.getCurrentReactor(), executor, storage);
 		await(localFs.start());
 		server = FsServer.create(Reactor.getCurrentReactor(), localFs).withListenAddress(address);
 		server.listen();

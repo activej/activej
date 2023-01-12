@@ -19,7 +19,7 @@ import io.activej.etl.LogDiff;
 import io.activej.etl.LogPositionDiff;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.AsyncFs;
-import io.activej.fs.Fs_Local;
+import io.activej.fs.Fs;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
 import io.activej.promise.Promises;
@@ -83,7 +83,7 @@ public class CubeBackupControllerTest {
 		eventloopThread.start();
 
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
-		Fs_Local fs = Fs_Local.create(eventloop, executor, aggregationsDir);
+		Fs fs = Fs.create(eventloop, executor, aggregationsDir);
 		eventloop.submit(fs::start).get();
 		activeFs = fs;
 		AggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(eventloop, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),

@@ -35,7 +35,7 @@ import java.util.stream.Stream;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.Utils.last;
-import static io.activej.fs.Fs_Local.DEFAULT_TEMP_DIR;
+import static io.activej.fs.Fs.DEFAULT_TEMP_DIR;
 import static io.activej.fs.Utils.createEmptyDirectories;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -49,7 +49,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
-public final class Fs_Local_Test {
+public final class Fs__Test {
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -63,7 +63,7 @@ public final class Fs_Local_Test {
 	private Path storagePath;
 	private Path clientPath;
 
-	private Fs_Local client;
+	private Fs client;
 
 	@Before
 	public void setup() throws IOException {
@@ -105,7 +105,7 @@ public final class Fs_Local_Test {
 		} catch (IOException ignored) {
 		}
 
-		client = Fs_Local.create(Reactor.getCurrentReactor(), newCachedThreadPool(), storagePath);
+		client = Fs.create(Reactor.getCurrentReactor(), newCachedThreadPool(), storagePath);
 		await(client.start());
 	}
 
@@ -539,7 +539,7 @@ public final class Fs_Local_Test {
 
 		assertFalse(relativePath.isAbsolute());
 
-		client = Fs_Local.create(Reactor.getCurrentReactor(), newCachedThreadPool(), relativePath);
+		client = Fs.create(Reactor.getCurrentReactor(), newCachedThreadPool(), relativePath);
 		await(client.start());
 
 		Map<String, FileMetadata> actual = await(client.list("**"));

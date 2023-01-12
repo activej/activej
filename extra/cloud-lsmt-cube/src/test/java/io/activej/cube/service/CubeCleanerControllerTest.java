@@ -14,7 +14,7 @@ import io.activej.cube.ot.JsonCodec_CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogDiffCodec;
 import io.activej.etl.LogOT;
-import io.activej.fs.Fs_Local;
+import io.activej.fs.Fs;
 import io.activej.ot.OTCommit;
 import io.activej.ot.repository.OTRepository_MySql;
 import io.activej.ot.system.OTSystem;
@@ -69,7 +69,7 @@ public class CubeCleanerControllerTest {
 
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
-				FrameFormat_LZ4.create(), Fs_Local.create(reactor, executor, aggregationsDir));
+				FrameFormat_LZ4.create(), Fs.create(reactor, executor, aggregationsDir));
 		Cube cube = Cube.create(reactor, executor, classLoader, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
 				.withDimension("adv", ofInt())

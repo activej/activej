@@ -9,7 +9,7 @@ import io.activej.csp.process.frames.FrameFormat_LZ4;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.OTState_Log;
-import io.activej.fs.Fs_Local;
+import io.activej.fs.Fs;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.uplink.AsyncOTUplink;
 import org.junit.Before;
@@ -66,7 +66,7 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 		toBePreserved.clear();
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 
-		Fs_Local fs = Fs_Local.create(reactor, EXECUTOR, aggregationsDir)
+		Fs fs = Fs.create(reactor, EXECUTOR, aggregationsDir)
 				.withTempDir(Files.createTempDirectory(""));
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormat_LZ4.create();

@@ -9,7 +9,7 @@ import io.activej.csp.file.ChannelFileWriter;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.AsyncFs;
 import io.activej.fs.FileMetadata;
-import io.activej.fs.Fs_Local;
+import io.activej.fs.Fs;
 import io.activej.fs.exception.FsException;
 import io.activej.fs.http.FsServlet;
 import io.activej.fs.http.Fs_Http;
@@ -94,7 +94,7 @@ public final class Fs_Cluster_Test {
 
 			Eventloop serverEventloop = Eventloop.create().withFatalErrorHandler(rethrow());
 			serverEventloop.keepAlive(true);
-			Fs_Local localClient = Fs_Local.create(serverEventloop, executor, path);
+			Fs localClient = Fs.create(serverEventloop, executor, path);
 			CompletableFuture<Void> startFuture = serverEventloop.submit(localClient::start);
 			HttpServer server = HttpServer.create(serverEventloop, FsServlet.create(localClient))
 					.withListenPort(port);

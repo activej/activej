@@ -73,14 +73,14 @@ import static java.nio.file.StandardOpenOption.*;
  * <p>
  * This implementation does not define new limitations, other than those defined in {@link AsyncFs} interface.
  */
-public final class Fs_Local extends AbstractReactive
-		implements AsyncFs, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<Fs_Local> {
-	private static final Logger logger = LoggerFactory.getLogger(Fs_Local.class);
+public final class Fs extends AbstractReactive
+		implements AsyncFs, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<Fs> {
+	private static final Logger logger = LoggerFactory.getLogger(Fs.class);
 
 	public static final String DEFAULT_TEMP_DIR = ".upload";
-	public static final boolean DEFAULT_FSYNC_UPLOADS = ApplicationSettings.getBoolean(Fs_Local.class, "fsyncUploads", false);
-	public static final boolean DEFAULT_FSYNC_DIRECTORIES = ApplicationSettings.getBoolean(Fs_Local.class, "fsyncDirectories", false);
-	public static final boolean DEFAULT_FSYNC_APPENDS = ApplicationSettings.getBoolean(Fs_Local.class, "fsyncAppends", false);
+	public static final boolean DEFAULT_FSYNC_UPLOADS = ApplicationSettings.getBoolean(Fs.class, "fsyncUploads", false);
+	public static final boolean DEFAULT_FSYNC_DIRECTORIES = ApplicationSettings.getBoolean(Fs.class, "fsyncDirectories", false);
+	public static final boolean DEFAULT_FSYNC_APPENDS = ApplicationSettings.getBoolean(Fs.class, "fsyncAppends", false);
 
 	private static final Set<StandardOpenOption> DEFAULT_APPEND_OPTIONS = Set.of(WRITE);
 	private static final Set<StandardOpenOption> DEFAULT_APPEND_NEW_OPTIONS = Set.of(WRITE, CREATE);
@@ -120,7 +120,7 @@ public final class Fs_Local extends AbstractReactive
 	//endregion
 
 	// region creators
-	private Fs_Local(Reactor reactor, Path storage, Executor executor) {
+	private Fs(Reactor reactor, Path storage, Executor executor) {
 		super(reactor);
 		this.executor = executor;
 		this.storage = storage;
@@ -134,14 +134,14 @@ public final class Fs_Local extends AbstractReactive
 		}
 	}
 
-	public static Fs_Local create(Reactor reactor, Executor executor, Path storageDir) {
-		return new Fs_Local(reactor, storageDir.normalize(), executor);
+	public static Fs create(Reactor reactor, Executor executor, Path storageDir) {
+		return new Fs(reactor, storageDir.normalize(), executor);
 	}
 
 	/**
 	 * Sets the buffer size for reading files from the filesystem.
 	 */
-	public Fs_Local withReaderBufferSize(MemSize size) {
+	public Fs withReaderBufferSize(MemSize size) {
 		readerBufferSize = size;
 		return this;
 	}
@@ -150,7 +150,7 @@ public final class Fs_Local extends AbstractReactive
 	 * If set to {@code true}, an attempt to create a hard link will be made when copying files
 	 */
 	@SuppressWarnings("UnusedReturnValue")
-	public Fs_Local withHardLinkOnCopy(boolean hardLinkOnCopy) {
+	public Fs withHardLinkOnCopy(boolean hardLinkOnCopy) {
 		this.hardLinkOnCopy = hardLinkOnCopy;
 		return this;
 	}
@@ -158,7 +158,7 @@ public final class Fs_Local extends AbstractReactive
 	/**
 	 * Sets a temporary directory for files to be stored while uploading.
 	 */
-	public Fs_Local withTempDir(Path tempDir) {
+	public Fs withTempDir(Path tempDir) {
 		this.tempDir = tempDir;
 		return this;
 	}
@@ -168,7 +168,7 @@ public final class Fs_Local extends AbstractReactive
 	 * <p>
 	 * <b>Note: may be slow when there are a lot of new files uploaded</b>
 	 */
-	public Fs_Local withFSyncUploads(boolean fsync) {
+	public Fs withFSyncUploads(boolean fsync) {
 		this.fsyncUploads = fsync;
 		return this;
 	}
@@ -180,7 +180,7 @@ public final class Fs_Local extends AbstractReactive
 	 * <p>
 	 * <b>Note: may be slow when there are a lot of new directories created or or changed</b>
 	 */
-	public Fs_Local withFSyncDirectories(boolean fsync) {
+	public Fs withFSyncDirectories(boolean fsync) {
 		this.fsyncDirectories = fsync;
 		return this;
 	}
@@ -190,7 +190,7 @@ public final class Fs_Local extends AbstractReactive
 	 * <p>
 	 * <b>Note: significantly slows down appends</b>
 	 */
-	public Fs_Local withFSyncAppends(boolean fsync) {
+	public Fs withFSyncAppends(boolean fsync) {
 		if (fsync) {
 			appendOptions.add(SYNC);
 			appendNewOptions.add(SYNC);
@@ -208,7 +208,7 @@ public final class Fs_Local extends AbstractReactive
 	 * @see #withFSyncDirectories(boolean)
 	 * @see #withFSyncAppends(boolean)
 	 */
-	public Fs_Local withFSync(boolean fsyncUploads, boolean fsyncDirectories, boolean fsyncAppends) {
+	public Fs withFSync(boolean fsyncUploads, boolean fsyncDirectories, boolean fsyncAppends) {
 		this.fsyncUploads = fsyncUploads;
 		this.fsyncDirectories = fsyncDirectories;
 		return withFSyncAppends(fsyncAppends);

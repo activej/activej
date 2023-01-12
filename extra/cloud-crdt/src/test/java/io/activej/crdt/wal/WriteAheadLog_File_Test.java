@@ -11,7 +11,7 @@ import io.activej.csp.file.ChannelFileWriter;
 import io.activej.csp.process.frames.ChannelFrameEncoder;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelSerializer;
-import io.activej.fs.Fs_Local;
+import io.activej.fs.Fs;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
@@ -80,7 +80,7 @@ public class WriteAheadLog_File_Test {
 		executor = Executors.newSingleThreadExecutor();
 		Reactor reactor = getCurrentReactor();
 		path = temporaryFolder.newFolder().toPath();
-		Fs_Local storageFs = Fs_Local.create(reactor, executor, temporaryFolder.newFolder().toPath());
+		Fs storageFs = Fs.create(reactor, executor, temporaryFolder.newFolder().toPath());
 		await(storageFs.start());
 		storage = CrdtStorage_Fs.create(reactor, storageFs, serializer, function);
 		WalUploader<Long, GSet<Integer>> uploader = WalUploader.create(reactor, executor, path, function, serializer, storage);

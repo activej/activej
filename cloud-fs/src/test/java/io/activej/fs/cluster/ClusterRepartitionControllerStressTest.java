@@ -3,7 +3,7 @@ package io.activej.fs.cluster;
 import io.activej.async.service.TaskScheduler;
 import io.activej.fs.AsyncFs;
 import io.activej.fs.FileMetadata;
-import io.activej.fs.Fs_Local;
+import io.activej.fs.Fs;
 import io.activej.fs.tcp.FsServer;
 import io.activej.fs.tcp.Fs_Remote;
 import io.activej.net.AbstractReactiveServer;
@@ -71,7 +71,7 @@ public final class ClusterRepartitionControllerStressTest {
 		Path storage = tmpFolder.newFolder().toPath();
 		localStorage = storage.resolve("local");
 		Files.createDirectories(localStorage);
-		Fs_Local localFsClient = Fs_Local.create(reactor, executor, localStorage);
+		Fs localFsClient = Fs.create(reactor, executor, localStorage);
 
 		Object localPartitionId = "local";
 		partitions.put(localPartitionId, localFsClient);
@@ -85,7 +85,7 @@ public final class ClusterRepartitionControllerStressTest {
 
 			partitions.put("server_" + i, Fs_Remote.create(reactor, address));
 
-			Fs_Local localFs = Fs_Local.create(reactor, executor, serverStorages[i]);
+			Fs localFs = Fs.create(reactor, executor, serverStorages[i]);
 			await(localFs.start());
 			FsServer server = FsServer.create(reactor, localFs).withListenAddress(address);
 			server.listen();

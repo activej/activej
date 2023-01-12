@@ -7,7 +7,7 @@ import io.activej.dataflow.inject.DatasetId;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.StreamSupplierWithResult;
 import io.activej.fs.AsyncFs;
-import io.activej.fs.Fs_Local;
+import io.activej.fs.Fs;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.Transient;
@@ -68,7 +68,7 @@ public class MultilogDataflowServerModule extends AbstractModule {
 	@Provides
 	AsyncFs fs(@Named("Dataflow") Reactor reactor, Executor executor) throws IOException {
 		Path multilogPath = Files.createTempDirectory("multilog");
-		return Fs_Local.create(reactor, executor, multilogPath);
+		return Fs.create(reactor, executor, multilogPath);
 	}
 
 	@Provides

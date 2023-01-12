@@ -14,7 +14,7 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.OTState_Log;
-import io.activej.fs.Fs_Local;
+import io.activej.fs.Fs;
 import io.activej.multilog.AsyncMultilog;
 import io.activej.multilog.Multilog;
 import io.activej.ot.OTStateManager;
@@ -50,7 +50,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 		Path logsDir = temporaryFolder.newFolder().toPath();
 
-		Fs_Local fs = Fs_Local.create(reactor, EXECUTOR, aggregationsDir)
+		Fs fs = Fs.create(reactor, EXECUTOR, aggregationsDir)
 				.withTempDir(Files.createTempDirectory(""));
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormat_LZ4.create();
@@ -81,7 +81,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 		OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(cube);
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
-		Fs_Local localFs = Fs_Local.create(reactor, EXECUTOR, logsDir);
+		Fs localFs = Fs.create(reactor, EXECUTOR, logsDir);
 		await(localFs.start());
 		AsyncMultilog<LogItem> multilog = Multilog.create(reactor,
 				localFs,

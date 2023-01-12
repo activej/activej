@@ -34,7 +34,7 @@ import io.activej.datastream.processor.StreamSplitter;
 import io.activej.datastream.processor.StreamUnion;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.AsyncFs;
-import io.activej.fs.Fs_Local;
+import io.activej.fs.Fs;
 import io.activej.fs.http.FsServlet;
 import io.activej.fs.http.Fs_Http;
 import io.activej.http.HttpClient;
@@ -483,7 +483,7 @@ public final class PartitionedStreamTest {
 		for (int i = 0; i < nServers; i++) {
 			Path tmp = tempDir.newFolder("source_server_" + i + "_").toPath();
 			writeDataFile(tmp, i, sorted);
-			Fs_Local fsClient = Fs_Local.create(serverEventloop, newSingleThreadExecutor(), tmp);
+			Fs fsClient = Fs.create(serverEventloop, newSingleThreadExecutor(), tmp);
 			startClient(fsClient);
 			HttpServer server = HttpServer.create(serverEventloop, FsServlet.create(fsClient));
 			servers.add(server);
@@ -498,7 +498,7 @@ public final class PartitionedStreamTest {
 		List<HttpServer> servers = new ArrayList<>();
 		for (int i = 0; i < nServers; i++) {
 			Path tmp = tempDir.newFolder("target_server_" + i + "_").toPath();
-			Fs_Local fsClient = Fs_Local.create(serverEventloop, newSingleThreadExecutor(), tmp);
+			Fs fsClient = Fs.create(serverEventloop, newSingleThreadExecutor(), tmp);
 			startClient(fsClient);
 			HttpServer server = HttpServer.create(serverEventloop, FsServlet.create(fsClient));
 			servers.add(server);
@@ -509,7 +509,7 @@ public final class PartitionedStreamTest {
 		return servers;
 	}
 
-	private void startClient(Fs_Local fsClient) {
+	private void startClient(Fs fsClient) {
 		try {
 			serverEventloop.submit(fsClient::start).get();
 		} catch (InterruptedException e) {

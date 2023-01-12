@@ -11,7 +11,7 @@ import io.activej.crdt.util.BinarySerializer_CrdtData;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.Fs_Local;
+import io.activej.fs.Fs;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 
@@ -43,7 +43,7 @@ public final class CrdtClusterExample {
 		for (int i = 0; i < 10; i++) {
 			String id = "partition" + i;
 			Path storage = Files.createTempDirectory("storage_" + id);
-			Fs_Local fs = Fs_Local.create(eventloop, executor, storage);
+			Fs fs = Fs.create(eventloop, executor, storage);
 			fsStartPromises.add(fs.start());
 			clients.put(id, CrdtStorage_Fs.create(eventloop, fs, SERIALIZER));
 		}

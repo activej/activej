@@ -13,7 +13,7 @@ import io.activej.cube.bean.DataItemString2;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
-import io.activej.fs.Fs_Local;
+import io.activej.fs.Fs;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
@@ -57,7 +57,7 @@ public class StringDimensionTest {
 		Executor executor = Executors.newCachedThreadPool();
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 
-		Fs_Local fs = Fs_Local.create(reactor, executor, aggregationsDir);
+		Fs fs = Fs.create(reactor, executor, aggregationsDir);
 		await(fs.start());
 		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(),
 				AsyncSupplier.of(new RefLong(0)::inc), FrameFormat_LZ4.create(), fs);

@@ -62,7 +62,7 @@ public final class Fs_Remote_TestPartial {
 
 		serverStorage = tempFolder.newFolder().toPath();
 		clientStorage = tempFolder.newFolder().toPath();
-		Fs_Local localFs = Fs_Local.create(Reactor.getCurrentReactor(), executor, serverStorage);
+		Fs localFs = Fs.create(Reactor.getCurrentReactor(), executor, serverStorage);
 		await(localFs.start());
 		server = FsServer.create(Reactor.getCurrentReactor(), localFs).withListenAddress(address);
 		server.listen();

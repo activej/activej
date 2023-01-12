@@ -10,7 +10,7 @@ import io.activej.crdt.wal.AsyncWriteAheadLog;
 import io.activej.crdt.wal.WalUploader;
 import io.activej.crdt.wal.WriteAheadLog_File;
 import io.activej.fs.AsyncFs;
-import io.activej.fs.Fs_Local;
+import io.activej.fs.Fs;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
@@ -65,7 +65,7 @@ public final class PersistentStorageModule extends AbstractModule {
 
 	@Provides
 	AsyncFs activeFs(Reactor reactor, Executor executor, Config config) {
-		return Fs_Local.create(reactor, executor, config.get(ofPath(), "storage"));
+		return Fs.create(reactor, executor, config.get(ofPath(), "storage"));
 	}
 
 	@Provides

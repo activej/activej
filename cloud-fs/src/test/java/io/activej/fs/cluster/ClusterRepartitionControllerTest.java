@@ -4,7 +4,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.ChannelConsumer;
 import io.activej.fs.AsyncFs;
 import io.activej.fs.ForwardingFs;
-import io.activej.fs.Fs_Local;
+import io.activej.fs.Fs;
 import io.activej.fs.tcp.FsServer;
 import io.activej.fs.tcp.Fs_Remote;
 import io.activej.net.AbstractReactiveServer;
@@ -71,7 +71,7 @@ public final class ClusterRepartitionControllerTest {
 		file.setLength(fileSize);
 		file.close();
 
-		Fs_Local localFsClient = Fs_Local.create(reactor, executor, localStorage);
+		Fs localFsClient = Fs.create(reactor, executor, localStorage);
 		await(localFsClient.start());
 
 		Object localPartitionId = "local";
@@ -81,14 +81,14 @@ public final class ClusterRepartitionControllerTest {
 		Path regularPath = storage.resolve("regular");
 		Files.createDirectories(regularPath);
 		partitions.put("regular", Fs_Remote.create(reactor, regularPartitionAddress));
-		Fs_Local localFs = Fs_Local.create(reactor, executor, regularPath);
+		Fs localFs = Fs.create(reactor, executor, regularPath);
 		await(localFs.start());
 
 		InetSocketAddress failingPartitionAddress = new InetSocketAddress("localhost", getFreePort());
 		Path failingPath = storage.resolve("failing");
 		Files.createDirectories(failingPath);
 		partitions.put("failing", Fs_Remote.create(reactor, failingPartitionAddress));
-		Fs_Local peer = Fs_Local.create(reactor, executor, failingPath);
+		Fs peer = Fs.create(reactor, executor, failingPath);
 		await(peer.start());
 
 		FsServer regularServer = FsServer.create(reactor, localFs).withListenAddress(regularPartitionAddress);

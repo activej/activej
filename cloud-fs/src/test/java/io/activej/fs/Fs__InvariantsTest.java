@@ -47,7 +47,7 @@ import static org.junit.Assert.*;
 
 @SuppressWarnings("ConstantConditions")
 @RunWith(Parameterized.class)
-public final class Fs_Local_InvariantsTest {
+public final class Fs__InvariantsTest {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
@@ -61,7 +61,7 @@ public final class Fs_Local_InvariantsTest {
 	public String testName;
 
 	@Parameter(1)
-	public UnaryOperator<Fs_Local> initializer;
+	public UnaryOperator<Fs> initializer;
 
 	private Path firstPath;
 	private Path secondPath;
@@ -83,11 +83,11 @@ public final class Fs_Local_InvariantsTest {
 		firstPath = tmpFolder.newFolder("first").toPath();
 		secondPath = tmpFolder.newFolder("second").toPath();
 
-		Fs_Local firstLocalFs = initializer.apply(Fs_Local.create(getCurrentReactor(), newSingleThreadExecutor(), firstPath));
+		Fs firstLocalFs = initializer.apply(Fs.create(getCurrentReactor(), newSingleThreadExecutor(), firstPath));
 		await(firstLocalFs.start());
 		first = firstLocalFs;
 
-		Fs_Local secondLocalFs = initializer.apply(Fs_Local.create(getCurrentReactor(), newSingleThreadExecutor(), secondPath));
+		Fs secondLocalFs = initializer.apply(Fs.create(getCurrentReactor(), newSingleThreadExecutor(), secondPath));
 		await(secondLocalFs.start());
 		second = new Fs_Default(secondLocalFs);
 
@@ -105,10 +105,10 @@ public final class Fs_Local_InvariantsTest {
 		return List.of(
 				new Object[]{
 						"Regular",
-						(UnaryOperator<Fs_Local>) fs -> fs},
+						(UnaryOperator<Fs>) fs -> fs},
 				new Object[]{
 						"With Hard Link On Copy",
-						(UnaryOperator<Fs_Local>) fs -> fs.withHardLinkOnCopy(true)
+						(UnaryOperator<Fs>) fs -> fs.withHardLinkOnCopy(true)
 				}
 		);
 	}

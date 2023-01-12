@@ -22,7 +22,7 @@ import io.activej.config.converter.ConfigConverters;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;
 import io.activej.fs.AsyncFs;
-import io.activej.fs.Fs_Local;
+import io.activej.fs.Fs;
 import io.activej.fs.tcp.FsServer;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpServer;
@@ -81,7 +81,7 @@ public class SimpleTcpServerLauncher extends Launcher {
 
 	@Provides
 	AsyncFs localFs(Reactor reactor, Executor executor, Config config) {
-		return Fs_Local.create(reactor, executor, config.get(ofPath(), "activefs.path", DEFAULT_PATH));
+		return Fs.create(reactor, executor, config.get(ofPath(), "activefs.path", DEFAULT_PATH));
 	}
 
 	@Provides
