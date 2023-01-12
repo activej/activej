@@ -1,6 +1,6 @@
 package io.activej.cube.service;
 
-import io.activej.aggregation.AggregationChunkStorage_Reactive;
+import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.AsyncAggregationChunkStorage;
 import io.activej.aggregation.JsonCodec_ChunkId;
 import io.activej.async.function.AsyncSupplier;
@@ -12,8 +12,8 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.frames.ChannelFrameDecoder;
 import io.activej.csp.process.frames.ChannelFrameEncoder;
 import io.activej.csp.process.frames.FrameFormat_LZ4;
+import io.activej.cube.Cube;
 import io.activej.cube.CubeTestBase;
-import io.activej.cube.Cube_Reactive;
 import io.activej.cube.LogItem;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.ot.CubeDiff;
@@ -25,7 +25,7 @@ import io.activej.etl.OTState_Log;
 import io.activej.fs.FileMetadata;
 import io.activej.fs.Fs_Local;
 import io.activej.multilog.AsyncMultilog;
-import io.activej.multilog.Multilog_Reactive;
+import io.activej.multilog.Multilog;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.serializer.BinarySerializer;
@@ -40,7 +40,7 @@ import java.util.Map;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.common.Utils.first;
-import static io.activej.cube.Cube_Reactive.AggregationConfig.id;
+import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.multilog.LogNamingScheme.NAME_PARTITION_REMAINDER_SEQ;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -61,9 +61,9 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 
 		Fs_Local aggregationFs = Fs_Local.create(reactor, EXECUTOR, aggregationsDir);
 		await(aggregationFs.start());
-		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage_Reactive.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
+		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
 				FrameFormat_LZ4.create(), aggregationFs);
-		Cube_Reactive cube = Cube_Reactive.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
+		Cube cube = Cube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())
 				.withDimension("campaign", ofInt())
@@ -93,7 +93,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 		await(logsFs.start());
 		BinarySerializer<LogItem> serializer = SerializerBuilder.create(CLASS_LOADER)
 				.build(LogItem.class);
-		multilog = Multilog_Reactive.create(reactor, logsFs, FrameFormat_LZ4.create(), serializer, NAME_PARTITION_REMAINDER_SEQ);
+		multilog = Multilog.create(reactor, logsFs, FrameFormat_LZ4.create(), serializer, NAME_PARTITION_REMAINDER_SEQ);
 
 		LogOTProcessor<LogItem, CubeDiff> logProcessor = LogOTProcessor.create(
 				reactor,

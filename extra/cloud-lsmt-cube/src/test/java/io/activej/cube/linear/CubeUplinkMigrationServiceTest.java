@@ -5,7 +5,7 @@ import io.activej.aggregation.PrimaryKey;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
-import io.activej.cube.Cube_Reactive;
+import io.activej.cube.Cube;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeOT;
 import io.activej.cube.ot.JsonCodec_CubeDiff;
@@ -37,7 +37,7 @@ import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.first;
-import static io.activej.cube.Cube_Reactive.AggregationConfig.id;
+import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.TestUtils.initializeRepository;
 import static io.activej.cube.linear.CubeUplinkMigrationService.createEmptyCube;
 import static io.activej.promise.TestUtils.await;
@@ -53,7 +53,7 @@ public final class CubeUplinkMigrationServiceTest {
 	public static EventloopRule eventloopRule = new EventloopRule();
 
 	private DataSource dataSource;
-	private Cube_Reactive cube;
+	private Cube cube;
 
 	private OTRepository_MySql<LogDiff<CubeDiff>> repo;
 	private OTUplink_CubeMySql uplink;

@@ -28,7 +28,7 @@ import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;
 import io.activej.net.socket.udp.AsyncUdpSocket;
 import io.activej.net.socket.udp.UdpPacket;
-import io.activej.net.socket.udp.UdpSocket_Reactive;
+import io.activej.net.socket.udp.UdpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.AbstractNioReactive;
@@ -53,9 +53,9 @@ import static io.activej.promise.Promises.timeout;
  * Implementation of {@link AsyncDnsClient} that asynchronously
  * connects to some <i>real</i> DNS server and gets the response from it.
  */
-public final class DnsClient_Reactive extends AbstractNioReactive
-		implements AsyncDnsClient, ReactiveJmxBeanWithStats, WithInitializer<DnsClient_Reactive> {
-	private final Logger logger = LoggerFactory.getLogger(DnsClient_Reactive.class);
+public final class DnsClient extends AbstractNioReactive
+		implements AsyncDnsClient, ReactiveJmxBeanWithStats, WithInitializer<DnsClient> {
+	private final Logger logger = LoggerFactory.getLogger(DnsClient.class);
 
 	public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(3);
 	private static final int DNS_SERVER_PORT = 53;
@@ -70,44 +70,44 @@ public final class DnsClient_Reactive extends AbstractNioReactive
 
 	private @Nullable AsyncUdpSocket socket;
 
-	private @Nullable UdpSocket_Reactive.Inspector socketInspector;
+	private @Nullable UdpSocket.Inspector socketInspector;
 	private @Nullable Inspector inspector;
 
 	// region creators
-	private DnsClient_Reactive(NioReactor reactor) {
+	private DnsClient(NioReactor reactor) {
 		super(reactor);
 	}
 
-	public static DnsClient_Reactive create(NioReactor reactor) {
-		return new DnsClient_Reactive(reactor);
+	public static DnsClient create(NioReactor reactor) {
+		return new DnsClient(reactor);
 	}
 
-	public DnsClient_Reactive withDatagramSocketSetting(DatagramSocketSettings setting) {
+	public DnsClient withDatagramSocketSetting(DatagramSocketSettings setting) {
 		this.datagramSocketSettings = setting;
 		return this;
 	}
 
-	public DnsClient_Reactive withTimeout(Duration timeout) {
+	public DnsClient withTimeout(Duration timeout) {
 		this.timeout = timeout;
 		return this;
 	}
 
-	public DnsClient_Reactive withDnsServerAddress(InetSocketAddress address) {
+	public DnsClient withDnsServerAddress(InetSocketAddress address) {
 		this.dnsServerAddress = address;
 		return this;
 	}
 
-	public DnsClient_Reactive withDnsServerAddress(InetAddress address) {
+	public DnsClient withDnsServerAddress(InetAddress address) {
 		this.dnsServerAddress = new InetSocketAddress(address, DNS_SERVER_PORT);
 		return this;
 	}
 
-	public DnsClient_Reactive withInspector(Inspector inspector) {
+	public DnsClient withInspector(Inspector inspector) {
 		this.inspector = inspector;
 		return this;
 	}
 
-	public DnsClient_Reactive withSocketInspector(UdpSocket_Reactive.Inspector socketInspector) {
+	public DnsClient withSocketInspector(UdpSocket.Inspector socketInspector) {
 		this.socketInspector = socketInspector;
 		return this;
 	}
@@ -133,7 +133,7 @@ public final class DnsClient_Reactive extends AbstractNioReactive
 		try {
 			logger.trace("Incoming query, opening UDP socket");
 			DatagramChannel channel = NioReactor.createDatagramChannel(datagramSocketSettings, null, dnsServerAddress);
-			return UdpSocket_Reactive.connect(reactor, channel)
+			return UdpSocket.connect(reactor, channel)
 					.map(s -> {
 						if (socketInspector != null) {
 							socketInspector.onCreate(s);
@@ -302,8 +302,8 @@ public final class DnsClient_Reactive extends AbstractNioReactive
 	// endregion
 
 	@JmxAttribute
-	public @Nullable UdpSocket_Reactive.JmxInspector getSocketStats() {
-		return BaseInspector.lookup(socketInspector, UdpSocket_Reactive.JmxInspector.class);
+	public @Nullable UdpSocket.JmxInspector getSocketStats() {
+		return BaseInspector.lookup(socketInspector, UdpSocket.JmxInspector.class);
 	}
 
 	@JmxAttribute(name = "")

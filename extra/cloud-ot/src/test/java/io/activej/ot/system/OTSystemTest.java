@@ -4,7 +4,7 @@ import io.activej.ot.OTCommit;
 import io.activej.ot.OTStateManager;
 import io.activej.ot.TransformResult;
 import io.activej.ot.repository.AsyncOTRepository;
-import io.activej.ot.uplink.OTUplink_Reactive;
+import io.activej.ot.uplink.ReactiveOTUplink;
 import io.activej.ot.utils.OTRepository_Stub;
 import io.activej.ot.utils.OTState_TestOp;
 import io.activej.ot.utils.TestAdd;
@@ -74,7 +74,7 @@ public final class OTSystemTest {
 		});
 
 		OTState_TestOp state = new OTState_TestOp();
-		OTUplink_Reactive<String, TestOp, OTCommit<String, TestOp>> node = OTUplink_Reactive.create(repository, SYSTEM);
+		ReactiveOTUplink<String, TestOp, OTCommit<String, TestOp>> node = ReactiveOTUplink.create(repository, SYSTEM);
 		OTStateManager<String, TestOp> stateManager = OTStateManager.create(getCurrentReactor(), SYSTEM, node, state);
 
 		await(stateManager.checkout());
@@ -129,7 +129,7 @@ public final class OTSystemTest {
 			g.add("a2", "b1", add(10));
 		});
 
-		OTUplink_Reactive<String, TestOp, OTCommit<String, TestOp>> node = OTUplink_Reactive.create(otSource, SYSTEM);
+		ReactiveOTUplink<String, TestOp, OTCommit<String, TestOp>> node = ReactiveOTUplink.create(otSource, SYSTEM);
 		pullAndThenMergeAndPush(otSource, OTStateManager.create(getCurrentReactor(), SYSTEM, node, new OTState_TestOp()));
 	}
 
@@ -145,7 +145,7 @@ public final class OTSystemTest {
 			g.add("b1", "b2", add(1));
 		});
 
-		OTUplink_Reactive<String, TestOp, OTCommit<String, TestOp>> node = OTUplink_Reactive.create(otSource, SYSTEM);
+		ReactiveOTUplink<String, TestOp, OTCommit<String, TestOp>> node = ReactiveOTUplink.create(otSource, SYSTEM);
 		pullAndThenMergeAndPush(otSource, OTStateManager.create(getCurrentReactor(), SYSTEM, node, new OTState_TestOp()));
 	}
 

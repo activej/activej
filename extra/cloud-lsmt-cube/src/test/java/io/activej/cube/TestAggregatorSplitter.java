@@ -16,9 +16,9 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toSet;
 
 public class TestAggregatorSplitter extends LogDataConsumer_Splitter<TestPubRequest, CubeDiff> {
-	private final Cube_Reactive cube;
+	private final Cube cube;
 
-	public TestAggregatorSplitter(Cube_Reactive cube) {
+	public TestAggregatorSplitter(Cube cube) {
 		this.cube = cube;
 	}
 

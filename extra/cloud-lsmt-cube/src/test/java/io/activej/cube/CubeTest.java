@@ -13,7 +13,7 @@ import io.activej.fs.Fs_Local;
 import io.activej.fs.http.FsServlet;
 import io.activej.fs.http.Fs_Http;
 import io.activej.http.AsyncHttpClient;
-import io.activej.http.HttpClient_Reactive;
+import io.activej.http.HttpClient;
 import io.activej.http.HttpServer;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -39,7 +39,7 @@ import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.codegen.DefiningClassLoader.create;
 import static io.activej.common.Utils.keysToMap;
-import static io.activej.cube.Cube_Reactive.AggregationConfig.id;
+import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.test.TestUtils.getFreePort;
@@ -49,7 +49,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 
 @SuppressWarnings("rawtypes")
-public final class Cube_Reactive_Test {
+public final class CubeTest {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
@@ -68,7 +68,7 @@ public final class Cube_Reactive_Test {
 	private final Executor executor = newSingleThreadExecutor();
 
 	private AsyncAggregationChunkStorage<Long> chunkStorage;
-	private Cube_Reactive cube;
+	private Cube cube;
 	private int listenPort;
 
 	@Before
@@ -76,12 +76,12 @@ public final class Cube_Reactive_Test {
 		listenPort = getFreePort();
 		Fs_Local fs = Fs_Local.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
 		await(fs.start());
-		chunkStorage = AggregationChunkStorage_Reactive.create(getCurrentReactor(), JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, fs);
+		chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, fs);
 		cube = newCube(executor, classLoader, chunkStorage);
 	}
 
-	private static Cube_Reactive newCube(Executor executor, DefiningClassLoader classLoader, AsyncAggregationChunkStorage chunkStorage) {
-		return Cube_Reactive.create(getCurrentReactor(), executor, classLoader, chunkStorage)
+	private static Cube newCube(Executor executor, DefiningClassLoader classLoader, AsyncAggregationChunkStorage chunkStorage) {
+		return Cube.create(getCurrentReactor(), executor, classLoader, chunkStorage)
 				.withDimension("key1", ofInt())
 				.withDimension("key2", ofInt())
 				.withMeasure("metric1", sum(ofLong()))
@@ -90,8 +90,8 @@ public final class Cube_Reactive_Test {
 				.withAggregation(id("detailedAggregation").withDimensions("key1", "key2").withMeasures("metric1", "metric2", "metric3"));
 	}
 
-	private static Cube_Reactive newSophisticatedCube(Executor executor, DefiningClassLoader classLoader, AsyncAggregationChunkStorage chunkStorage) {
-		return Cube_Reactive.create(getCurrentReactor(), executor, classLoader, chunkStorage)
+	private static Cube newSophisticatedCube(Executor executor, DefiningClassLoader classLoader, AsyncAggregationChunkStorage chunkStorage) {
+		return Cube.create(getCurrentReactor(), executor, classLoader, chunkStorage)
 				.withDimension("key1", ofInt())
 				.withDimension("key2", ofInt())
 				.withDimension("key3", ofInt())
@@ -104,7 +104,7 @@ public final class Cube_Reactive_Test {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <T> Promise<Void> consume(Cube_Reactive cube, AsyncAggregationChunkStorage<Long> chunkStorage, T item, T... items) {
+	private static <T> Promise<Void> consume(Cube cube, AsyncAggregationChunkStorage<Long> chunkStorage, T item, T... items) {
 		return StreamSupplier.concat(StreamSupplier.of(item), StreamSupplier.of(items))
 				.streamTo(cube.consume(((Class<T>) item.getClass())))
 				.then(cubeDiff -> chunkStorage.finish(cubeDiff.<Long>addedChunks().collect(toSet()))
@@ -144,10 +144,10 @@ public final class Cube_Reactive_Test {
 
 		Path serverStorage = temporaryFolder.newFolder("storage").toPath();
 		HttpServer server1 = startServer(executor, serverStorage);
-		AsyncHttpClient httpClient = HttpClient_Reactive.create(getCurrentReactor());
+		AsyncHttpClient httpClient = HttpClient.create(getCurrentReactor());
 		Fs_Http storage = Fs_Http.create(getCurrentReactor(), "http://localhost:" + listenPort, httpClient);
-		AsyncAggregationChunkStorage<Long> chunkStorage = AggregationChunkStorage_Reactive.create(getCurrentReactor(), JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
-		Cube_Reactive cube = newCube(executor, classLoader, chunkStorage);
+		AsyncAggregationChunkStorage<Long> chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
+		Cube cube = newCube(executor, classLoader, chunkStorage);
 
 		List<DataItemResult> expected = List.of(new DataItemResult(1, 3, 10, 30, 20));
 
@@ -327,10 +327,10 @@ public final class Cube_Reactive_Test {
 				consume(cube, chunkStorage, new DataItem2(1, 4, 10, 20), new DataItem2(1, 5, 100, 200))
 		);
 
-		CubeDiff diff = await(cube.consolidate(Aggregation_Reactive::consolidateHotSegment));
+		CubeDiff diff = await(cube.consolidate(Aggregation::consolidateHotSegment));
 		assertFalse(diff.isEmpty());
 
-		diff = await(cube.consolidate(Aggregation_Reactive::consolidateHotSegment));
+		diff = await(cube.consolidate(Aggregation::consolidateHotSegment));
 		assertFalse(diff.isEmpty());
 
 		List<DataItemResult> list = await(cube.queryRawStream(
@@ -430,8 +430,8 @@ public final class Cube_Reactive_Test {
 
 		Fs_Local storage = Fs_Local.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
 		await(storage.start());
-		AsyncAggregationChunkStorage<Long> chunkStorage = AggregationChunkStorage_Reactive.create(getCurrentReactor(), JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
-		Cube_Reactive cube = newCube(executor, classLoader, chunkStorage);
+		AsyncAggregationChunkStorage<Long> chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
+		Cube cube = newCube(executor, classLoader, chunkStorage);
 
 		cube.consume(DataItem1.class,
 				keysToMap(Stream.of("unknownKey"), identity()),
@@ -446,8 +446,8 @@ public final class Cube_Reactive_Test {
 
 		Fs_Local storage = Fs_Local.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
 		await(storage.start());
-		AsyncAggregationChunkStorage<Long> chunkStorage = AggregationChunkStorage_Reactive.create(getCurrentReactor(), JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
-		Cube_Reactive cube = newCube(executor, classLoader, chunkStorage);
+		AsyncAggregationChunkStorage<Long> chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
+		Cube cube = newCube(executor, classLoader, chunkStorage);
 
 		cube.consume(DataItem1.class,
 				keysToMap(Stream.of("key1", "key2"), identity()),

@@ -25,7 +25,7 @@ import io.activej.common.initializer.WithInitializer;
 import io.activej.common.inspector.AbstractInspector;
 import io.activej.common.inspector.BaseInspector;
 import io.activej.dns.AsyncDnsClient;
-import io.activej.dns.DnsClient_Reactive;
+import io.activej.dns.DnsClient;
 import io.activej.dns.protocol.DnsQueryException;
 import io.activej.dns.protocol.DnsResponse;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -34,7 +34,7 @@ import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.jmx.stats.EventStats;
 import io.activej.jmx.stats.ExceptionStats;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
-import io.activej.net.socket.tcp.TcpSocket_Reactive;
+import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.AbstractNioReactive;
@@ -73,19 +73,19 @@ import static org.slf4j.LoggerFactory.getLogger;
  * to clean up the keep-alive connections etc.
  */
 @SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue"})
-public final class HttpClient_Reactive extends AbstractNioReactive
-		implements AsyncHttpClient, AsyncWebSocketClient, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<HttpClient_Reactive> {
-	private static final Logger logger = getLogger(HttpClient_Reactive.class);
-	private static final boolean CHECK = Checks.isEnabled(HttpClient_Reactive.class);
+public final class HttpClient extends AbstractNioReactive
+		implements AsyncHttpClient, AsyncWebSocketClient, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<HttpClient> {
+	private static final Logger logger = getLogger(HttpClient.class);
+	private static final boolean CHECK = Checks.isEnabled(HttpClient.class);
 
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
-	public static final Duration CONNECT_TIMEOUT = ApplicationSettings.getDuration(HttpClient_Reactive.class, "connectTimeout", Duration.ZERO);
-	public static final Duration READ_WRITE_TIMEOUT = ApplicationSettings.getDuration(HttpClient_Reactive.class, "readWriteTimeout", Duration.ZERO);
-	public static final Duration READ_WRITE_TIMEOUT_SHUTDOWN = ApplicationSettings.getDuration(HttpClient_Reactive.class, "readWriteTimeout_Shutdown", Duration.ofSeconds(3));
-	public static final Duration KEEP_ALIVE_TIMEOUT = ApplicationSettings.getDuration(HttpClient_Reactive.class, "keepAliveTimeout", Duration.ZERO);
-	public static final MemSize MAX_BODY_SIZE = ApplicationSettings.getMemSize(HttpClient_Reactive.class, "maxBodySize", MemSize.ZERO);
-	public static final MemSize MAX_WEB_SOCKET_MESSAGE_SIZE = ApplicationSettings.getMemSize(HttpClient_Reactive.class, "maxWebSocketMessageSize", MemSize.megabytes(1));
-	public static final int MAX_KEEP_ALIVE_REQUESTS = ApplicationSettings.getInt(HttpClient_Reactive.class, "maxKeepAliveRequests", 0);
+	public static final Duration CONNECT_TIMEOUT = ApplicationSettings.getDuration(HttpClient.class, "connectTimeout", Duration.ZERO);
+	public static final Duration READ_WRITE_TIMEOUT = ApplicationSettings.getDuration(HttpClient.class, "readWriteTimeout", Duration.ZERO);
+	public static final Duration READ_WRITE_TIMEOUT_SHUTDOWN = ApplicationSettings.getDuration(HttpClient.class, "readWriteTimeout_Shutdown", Duration.ofSeconds(3));
+	public static final Duration KEEP_ALIVE_TIMEOUT = ApplicationSettings.getDuration(HttpClient.class, "keepAliveTimeout", Duration.ZERO);
+	public static final MemSize MAX_BODY_SIZE = ApplicationSettings.getMemSize(HttpClient.class, "maxBodySize", MemSize.ZERO);
+	public static final MemSize MAX_WEB_SOCKET_MESSAGE_SIZE = ApplicationSettings.getMemSize(HttpClient.class, "maxWebSocketMessageSize", MemSize.megabytes(1));
+	public static final int MAX_KEEP_ALIVE_REQUESTS = ApplicationSettings.getInt(HttpClient.class, "maxKeepAliveRequests", 0);
 
 	private AsyncDnsClient asyncDnsClient;
 	private SocketSettings socketSettings = DEFAULT_SOCKET_SETTINGS;
@@ -111,8 +111,8 @@ public final class HttpClient_Reactive extends AbstractNioReactive
 	private SSLContext sslContext;
 	private Executor sslExecutor;
 
-	private @Nullable TcpSocket_Reactive.Inspector socketInspector;
-	private @Nullable TcpSocket_Reactive.Inspector socketSslInspector;
+	private @Nullable TcpSocket.Inspector socketInspector;
+	private @Nullable TcpSocket.Inspector socketSslInspector;
 	@Nullable Inspector inspector;
 
 	public interface Inspector extends BaseInspector<Inspector> {
@@ -286,88 +286,88 @@ public final class HttpClient_Reactive extends AbstractNioReactive
 	private int inetAddressIdx = 0;
 
 	// region builders
-	private HttpClient_Reactive(NioReactor reactor, AsyncDnsClient asyncDnsClient) {
+	private HttpClient(NioReactor reactor, AsyncDnsClient asyncDnsClient) {
 		super(reactor);
 		this.asyncDnsClient = asyncDnsClient;
 	}
 
-	public static HttpClient_Reactive create(NioReactor reactor) {
-		AsyncDnsClient defaultDnsClient = DnsClient_Reactive.create(reactor);
-		return new HttpClient_Reactive(reactor, defaultDnsClient);
+	public static HttpClient create(NioReactor reactor) {
+		AsyncDnsClient defaultDnsClient = DnsClient.create(reactor);
+		return new HttpClient(reactor, defaultDnsClient);
 	}
 
-	public HttpClient_Reactive withSocketSettings(SocketSettings socketSettings) {
+	public HttpClient withSocketSettings(SocketSettings socketSettings) {
 		this.socketSettings = socketSettings;
 		return this;
 	}
 
-	public HttpClient_Reactive withDnsClient(AsyncDnsClient asyncDnsClient) {
+	public HttpClient withDnsClient(AsyncDnsClient asyncDnsClient) {
 		this.asyncDnsClient = asyncDnsClient;
 		return this;
 	}
 
-	public HttpClient_Reactive withSslEnabled(SSLContext sslContext, Executor sslExecutor) {
+	public HttpClient withSslEnabled(SSLContext sslContext, Executor sslExecutor) {
 		this.sslContext = sslContext;
 		this.sslExecutor = sslExecutor;
 		return this;
 	}
 
-	public HttpClient_Reactive withKeepAliveTimeout(Duration keepAliveTime) {
+	public HttpClient withKeepAliveTimeout(Duration keepAliveTime) {
 		this.keepAliveTimeoutMillis = (int) keepAliveTime.toMillis();
 		return this;
 	}
 
-	public HttpClient_Reactive withNoKeepAlive() {
+	public HttpClient withNoKeepAlive() {
 		return withKeepAliveTimeout(Duration.ZERO);
 	}
 
-	public HttpClient_Reactive withMaxKeepAliveRequests(int maxKeepAliveRequests) {
+	public HttpClient withMaxKeepAliveRequests(int maxKeepAliveRequests) {
 		checkArgument(maxKeepAliveRequests >= 0, "Maximum number of requests per keep-alive connection should not be less than zero");
 		this.maxKeepAliveRequests = maxKeepAliveRequests;
 		return this;
 	}
 
-	public HttpClient_Reactive withReadWriteTimeout(Duration readWriteTimeout) {
+	public HttpClient withReadWriteTimeout(Duration readWriteTimeout) {
 		this.readWriteTimeoutMillis = (int) readWriteTimeout.toMillis();
 		return this;
 	}
 
-	public HttpClient_Reactive withReadWriteTimeout(Duration readWriteTimeout, Duration readWriteTimeoutShutdown) {
+	public HttpClient withReadWriteTimeout(Duration readWriteTimeout, Duration readWriteTimeoutShutdown) {
 		this.readWriteTimeoutMillis = (int) readWriteTimeout.toMillis();
 		this.readWriteTimeoutMillisShutdown = (int) readWriteTimeoutShutdown.toMillis();
 		return this;
 	}
 
-	public HttpClient_Reactive withConnectTimeout(Duration connectTimeout) {
+	public HttpClient withConnectTimeout(Duration connectTimeout) {
 		this.connectTimeoutMillis = (int) connectTimeout.toMillis();
 		return this;
 	}
 
-	public HttpClient_Reactive withMaxBodySize(MemSize maxBodySize) {
+	public HttpClient withMaxBodySize(MemSize maxBodySize) {
 		return withMaxBodySize(maxBodySize.toInt());
 	}
 
-	public HttpClient_Reactive withMaxBodySize(int maxBodySize) {
+	public HttpClient withMaxBodySize(int maxBodySize) {
 		this.maxBodySize = maxBodySize != 0 ? maxBodySize : Integer.MAX_VALUE;
 		return this;
 	}
 
-	public HttpClient_Reactive withMaxWebSocketMessageSize(MemSize maxWebSocketMessageSize) {
+	public HttpClient withMaxWebSocketMessageSize(MemSize maxWebSocketMessageSize) {
 		this.maxWebSocketMessageSize = maxWebSocketMessageSize.toInt();
 		return this;
 	}
 
-	public HttpClient_Reactive withInspector(Inspector inspector) {
+	public HttpClient withInspector(Inspector inspector) {
 		this.inspector = inspector;
 		return this;
 	}
 
-	public HttpClient_Reactive withSocketInspector(TcpSocket_Reactive.Inspector socketInspector) {
+	public HttpClient withSocketInspector(TcpSocket.Inspector socketInspector) {
 		this.socketInspector = socketInspector;
 		return this;
 	}
 
-	public HttpClient_Reactive withSocketSslInspector(TcpSocket_Reactive.Inspector socketSslInspector) {
+	public HttpClient withSocketSslInspector(TcpSocket.Inspector socketSslInspector) {
 		this.socketSslInspector = socketSslInspector;
 		return this;
 	}
@@ -500,10 +500,10 @@ public final class HttpClient_Reactive extends AbstractNioReactive
 
 		if (inspector != null) inspector.onConnecting(request, address);
 
-		return TcpSocket_Reactive.connect(reactor, address, connectTimeoutMillis, socketSettings)
+		return TcpSocket.connect(reactor, address, connectTimeoutMillis, socketSettings)
 				.then(
 						asyncTcpSocketImpl -> {
-							TcpSocket_Reactive.Inspector socketInspector = isSecure ? this.socketInspector : socketSslInspector;
+							TcpSocket.Inspector socketInspector = isSecure ? this.socketInspector : socketSslInspector;
 							if (socketInspector != null) {
 								socketInspector.onConnect(asyncTcpSocketImpl);
 								asyncTcpSocketImpl.setInspector(socketInspector);
@@ -612,13 +612,13 @@ public final class HttpClient_Reactive extends AbstractNioReactive
 	}
 
 	@JmxAttribute
-	public @Nullable TcpSocket_Reactive.JmxInspector getSocketStats() {
-		return BaseInspector.lookup(socketInspector, TcpSocket_Reactive.JmxInspector.class);
+	public @Nullable TcpSocket.JmxInspector getSocketStats() {
+		return BaseInspector.lookup(socketInspector, TcpSocket.JmxInspector.class);
 	}
 
 	@JmxAttribute
-	public @Nullable TcpSocket_Reactive.JmxInspector getSocketStatsSsl() {
-		return BaseInspector.lookup(socketSslInspector, TcpSocket_Reactive.JmxInspector.class);
+	public @Nullable TcpSocket.JmxInspector getSocketStatsSsl() {
+		return BaseInspector.lookup(socketSslInspector, TcpSocket.JmxInspector.class);
 	}
 
 	@JmxAttribute(name = "")

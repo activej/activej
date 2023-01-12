@@ -29,6 +29,7 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.promise.Promise;
+import io.activej.reactor.ImplicitlyReactive;
 import io.activej.serializer.BinarySerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,8 +52,9 @@ import static java.lang.String.format;
  *
  * @param <T> type of storing data
  */
-public final class StreamSorterStorage_Reactive<T> implements AsyncStreamSorterStorage<T>, WithInitializer<StreamSorterStorage_Reactive<T>> {
-	private static final Logger logger = LoggerFactory.getLogger(StreamSorterStorage_Reactive.class);
+public final class StreamSorterStorage<T> extends ImplicitlyReactive
+		implements AsyncStreamSorterStorage<T>, WithInitializer<StreamSorterStorage<T>> {
+	private static final Logger logger = LoggerFactory.getLogger(StreamSorterStorage.class);
 
 	public static final String DEFAULT_FILE_PATTERN = "%d";
 	public static final MemSize DEFAULT_SORTER_BLOCK_SIZE = MemSize.kilobytes(256);
@@ -69,7 +71,7 @@ public final class StreamSorterStorage_Reactive<T> implements AsyncStreamSorterS
 	private MemSize writeBlockSize = DEFAULT_SORTER_BLOCK_SIZE;
 
 	// region creators
-	private StreamSorterStorage_Reactive(Executor executor, BinarySerializer<T> serializer,
+	private StreamSorterStorage(Executor executor, BinarySerializer<T> serializer,
 			FrameFormat frameFormat, Path path) {
 		this.executor = executor;
 		this.serializer = serializer;
@@ -84,7 +86,7 @@ public final class StreamSorterStorage_Reactive<T> implements AsyncStreamSorterS
 	 * @param serializer for serialization to bytes
 	 * @param path       path in which will store received data
 	 */
-	public static <T> StreamSorterStorage_Reactive<T> create(Executor executor,
+	public static <T> StreamSorterStorage<T> create(Executor executor,
 			BinarySerializer<T> serializer, FrameFormat frameFormat, Path path) {
 		checkArgument(!path.getFileName().toString().contains("%d"), "Filename should not contain '%d'");
 		try {
@@ -92,21 +94,21 @@ public final class StreamSorterStorage_Reactive<T> implements AsyncStreamSorterS
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}
-		return new StreamSorterStorage_Reactive<>(executor, serializer, frameFormat, path);
+		return new StreamSorterStorage<>(executor, serializer, frameFormat, path);
 	}
 
-	public StreamSorterStorage_Reactive<T> withFilePattern(String filePattern) {
+	public StreamSorterStorage<T> withFilePattern(String filePattern) {
 		checkArgument(!filePattern.contains("%d"), "File pattern should not contain '%d'");
 		this.filePattern = filePattern;
 		return this;
 	}
 
-	public StreamSorterStorage_Reactive<T> withReadBlockSize(MemSize readBlockSize) {
+	public StreamSorterStorage<T> withReadBlockSize(MemSize readBlockSize) {
 		this.readBlockSize = readBlockSize;
 		return this;
 	}
 
-	public StreamSorterStorage_Reactive<T> withWriteBlockSize(MemSize writeBlockSize) {
+	public StreamSorterStorage<T> withWriteBlockSize(MemSize writeBlockSize) {
 		this.writeBlockSize = writeBlockSize;
 		return this;
 	}

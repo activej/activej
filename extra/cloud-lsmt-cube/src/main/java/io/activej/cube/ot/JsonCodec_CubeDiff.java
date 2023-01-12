@@ -19,12 +19,12 @@ package io.activej.cube.ot;
 import com.dslplatform.json.JsonReader;
 import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.ParsingException;
-import io.activej.aggregation.Aggregation_Reactive;
+import io.activej.aggregation.Aggregation;
 import io.activej.aggregation.ot.AggregationDiff;
 import io.activej.aggregation.ot.JsonCodec_AggregationDiff;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.common.initializer.WithInitializer;
-import io.activej.cube.Cube_Reactive;
+import io.activej.cube.Cube;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -40,11 +40,11 @@ public class JsonCodec_CubeDiff implements JsonCodec<CubeDiff>, WithInitializer<
 		this.aggregationDiffCodecs = aggregationDiffCodecs;
 	}
 
-	public static JsonCodec_CubeDiff create(Cube_Reactive cube) {
+	public static JsonCodec_CubeDiff create(Cube cube) {
 		Map<String, JsonCodec_AggregationDiff> aggregationDiffCodecs = new LinkedHashMap<>();
 
 		for (String aggregationId : cube.getAggregationIds()) {
-			Aggregation_Reactive aggregation = cube.getAggregation(aggregationId);
+			Aggregation aggregation = cube.getAggregation(aggregationId);
 			JsonCodec_AggregationDiff aggregationDiffCodec = JsonCodec_AggregationDiff.create(aggregation.getStructure());
 			aggregationDiffCodecs.put(aggregationId, aggregationDiffCodec);
 		}

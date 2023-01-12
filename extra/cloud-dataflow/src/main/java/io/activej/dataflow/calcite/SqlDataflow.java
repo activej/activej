@@ -45,7 +45,7 @@ import java.util.List;
 
 import static io.activej.common.Checks.checkNotNull;
 
-public final class SqlDataflow_Reactive extends AbstractNioReactive implements AsyncSqlDataflow {
+public final class SqlDataflow extends AbstractNioReactive implements AsyncSqlDataflow {
 	private final DataflowClient client;
 	private final List<Partition> partitions;
 
@@ -57,7 +57,7 @@ public final class SqlDataflow_Reactive extends AbstractNioReactive implements A
 
 	private RelTraitSet traits = RelTraitSet.createEmpty();
 
-	private SqlDataflow_Reactive(NioReactor reactor, DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
+	private SqlDataflow(NioReactor reactor, DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
 			SqlToRelConverter converter, RelOptPlanner planner, RelToDatasetConverter relToDatasetConverter) {
 		super(reactor);
 		this.client = client;
@@ -69,12 +69,12 @@ public final class SqlDataflow_Reactive extends AbstractNioReactive implements A
 		this.relToDatasetConverter = relToDatasetConverter;
 	}
 
-	public static SqlDataflow_Reactive create(NioReactor reactor, DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
+	public static SqlDataflow create(NioReactor reactor, DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
 			SqlToRelConverter converter, RelOptPlanner planner, RelToDatasetConverter relToDatasetConverter) {
-		return new SqlDataflow_Reactive(reactor, client, partitions, parserConfig, converter, planner, relToDatasetConverter);
+		return new SqlDataflow(reactor, client, partitions, parserConfig, converter, planner, relToDatasetConverter);
 	}
 
-	public SqlDataflow_Reactive withTraits(RelTraitSet traits) {
+	public SqlDataflow withTraits(RelTraitSet traits) {
 		this.traits = traits;
 		return this;
 	}

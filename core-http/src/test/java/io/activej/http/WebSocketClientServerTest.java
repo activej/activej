@@ -62,7 +62,7 @@ public final class WebSocketClientServerTest {
 
 		Stream<String> inputStream = IntStream.range(0, 100).mapToObj(String::valueOf);
 
-		String result = await(HttpClient_Reactive.create(Reactor.getCurrentReactor())
+		String result = await(HttpClient.create(Reactor.getCurrentReactor())
 				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port))
 				.then(ws -> {
 					ChannelSupplier.ofStream(inputStream)
@@ -95,7 +95,7 @@ public final class WebSocketClientServerTest {
 						})
 				.streamTo(webSocket.messageWriteChannel()));
 
-		Exception receivedEx = awaitException(HttpClient_Reactive.create(Reactor.getCurrentReactor())
+		Exception receivedEx = awaitException(HttpClient.create(Reactor.getCurrentReactor())
 				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port))
 				.then(webSocket -> webSocket.messageReadChannel().streamTo(ChannelConsumer.ofConsumer(messages::add))));
 
@@ -118,7 +118,7 @@ public final class WebSocketClientServerTest {
 		startSecureTestServer(webSocket -> webSocket.readFrame()
 				.whenException(settablePromise::setException));
 
-		await(HttpClient_Reactive.create(Reactor.getCurrentReactor())
+		await(HttpClient.create(Reactor.getCurrentReactor())
 				.withSslEnabled(createTestSslContext(), executor)
 				.webSocketRequest(HttpRequest.get("wss://127.0.0.1:" + port))
 				.whenResult(webSocket -> webSocket.closeEx(testError)));
@@ -137,7 +137,7 @@ public final class WebSocketClientServerTest {
 
 		startSecureTestServer(webSocket -> webSocket.closeEx(testError));
 
-		WebSocketException exception = awaitException(HttpClient_Reactive.create(Reactor.getCurrentReactor())
+		WebSocketException exception = awaitException(HttpClient.create(Reactor.getCurrentReactor())
 				.withSslEnabled(createTestSslContext(), executor)
 				.webSocketRequest(HttpRequest.get("wss://127.0.0.1:" + port))
 				.then(webSocket -> webSocket.messageReadChannel()
@@ -164,7 +164,7 @@ public final class WebSocketClientServerTest {
 				.withListenPort(port)
 				.withAcceptOnce()
 				.listen();
-		Exception exception = awaitException(HttpClient_Reactive.create(Reactor.getCurrentReactor())
+		Exception exception = awaitException(HttpClient.create(Reactor.getCurrentReactor())
 				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port)));
 
 		assertEquals(HANDSHAKE_FAILED, exception);
@@ -186,7 +186,7 @@ public final class WebSocketClientServerTest {
 				.withListenPort(port)
 				.withAcceptOnce()
 				.listen();
-		Exception exception = awaitException(HttpClient_Reactive.create(Reactor.getCurrentReactor())
+		Exception exception = awaitException(HttpClient.create(Reactor.getCurrentReactor())
 				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port)));
 
 		assertEquals(HANDSHAKE_FAILED, exception);
@@ -204,7 +204,7 @@ public final class WebSocketClientServerTest {
 				.whenComplete(() -> webSocket.closeEx(testError)));
 
 		List<String> result = new ArrayList<>();
-		WebSocketException exception = awaitException(HttpClient_Reactive.create(Reactor.getCurrentReactor())
+		WebSocketException exception = awaitException(HttpClient.create(Reactor.getCurrentReactor())
 				.withSslEnabled(createTestSslContext(), executor)
 				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port))
 				.then(webSocket -> webSocket.readMessage()
@@ -240,7 +240,7 @@ public final class WebSocketClientServerTest {
 		);
 
 		List<String> result = new ArrayList<>();
-		Message lastMessage = await(HttpClient_Reactive.create(Reactor.getCurrentReactor())
+		Message lastMessage = await(HttpClient.create(Reactor.getCurrentReactor())
 				.withSslEnabled(createTestSslContext(), executor)
 				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port))
 				.then(webSocket -> webSocket.readMessage()
@@ -285,7 +285,7 @@ public final class WebSocketClientServerTest {
 				})
 				.whenException(serverErrorRef::set));
 
-		await(HttpClient_Reactive.create(Reactor.getCurrentReactor())
+		await(HttpClient.create(Reactor.getCurrentReactor())
 				.withSslEnabled(createTestSslContext(), executor)
 				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port))
 				.then(webSocket -> webSocket.writeMessage(Message.text(messages.get(0)))
@@ -326,7 +326,7 @@ public final class WebSocketClientServerTest {
 					}
 				}));
 
-		await(HttpClient_Reactive.create(Reactor.getCurrentReactor())
+		await(HttpClient.create(Reactor.getCurrentReactor())
 				.withSslEnabled(createTestSslContext(), executor)
 				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port))
 				.then(webSocket -> webSocket.writeMessage(Message.text(messages.get(0)))
@@ -349,7 +349,7 @@ public final class WebSocketClientServerTest {
 				.withAcceptOnce()
 				.listen();
 
-		Exception exception = awaitException(HttpClient_Reactive.create(Reactor.getCurrentReactor())
+		Exception exception = awaitException(HttpClient.create(Reactor.getCurrentReactor())
 				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port)));
 
 		assertEquals(HANDSHAKE_FAILED, exception);
@@ -363,7 +363,7 @@ public final class WebSocketClientServerTest {
 				.withAcceptOnce()
 				.listen();
 
-		int responseCode = await(HttpClient_Reactive.create(Reactor.getCurrentReactor())
+		int responseCode = await(HttpClient.create(Reactor.getCurrentReactor())
 				.request(HttpRequest.get("http://127.0.0.1:" + port))
 				.map(HttpResponse::getCode));
 

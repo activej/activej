@@ -75,7 +75,7 @@ public final class BlockingStreamConsumer<T> extends AbstractStreamConsumer<T> {
 		queue.close();
 	}
 
-	private class Queue extends ReactiveBlockingTakeQueue<T> implements StreamDataAcceptor<T> {
+	private class Queue extends BlockingTakeQueue<T> implements StreamDataAcceptor<T> {
 		public Queue(int bufferSize) {
 			super(bufferSize);
 		}

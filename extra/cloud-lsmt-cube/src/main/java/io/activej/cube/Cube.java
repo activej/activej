@@ -101,9 +101,9 @@ import static java.util.stream.Collectors.toList;
  * Also provides functionality for managing aggregations.
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
-public final class Cube_Reactive extends AbstractReactive
-		implements AsyncCube, OTState<CubeDiff>, WithInitializer<Cube_Reactive>, ReactiveJmxBeanWithStats {
-	private static final Logger logger = LoggerFactory.getLogger(Cube_Reactive.class);
+public final class Cube extends AbstractReactive
+		implements AsyncCube, OTState<CubeDiff>, WithInitializer<Cube>, ReactiveJmxBeanWithStats {
+	private static final Logger logger = LoggerFactory.getLogger(Cube.class);
 
 	public static final int DEFAULT_OVERLAPPING_CHUNKS_THRESHOLD = 300;
 	public static final FrameFormat DEFAULT_SORT_FRAME_FORMAT = FrameFormat_LZ4.create();
@@ -138,21 +138,21 @@ public final class Cube_Reactive extends AbstractReactive
 	private final Map<String, String> childParentRelations = new LinkedHashMap<>();
 
 	// settings
-	private int aggregationsChunkSize = Aggregation_Reactive.DEFAULT_CHUNK_SIZE;
-	private int aggregationsReducerBufferSize = Aggregation_Reactive.DEFAULT_REDUCER_BUFFER_SIZE;
-	private int aggregationsSorterItemsInMemory = Aggregation_Reactive.DEFAULT_SORTER_ITEMS_IN_MEMORY;
-	private int aggregationsMaxChunksToConsolidate = Aggregation_Reactive.DEFAULT_MAX_CHUNKS_TO_CONSOLIDATE;
+	private int aggregationsChunkSize = Aggregation.DEFAULT_CHUNK_SIZE;
+	private int aggregationsReducerBufferSize = Aggregation.DEFAULT_REDUCER_BUFFER_SIZE;
+	private int aggregationsSorterItemsInMemory = Aggregation.DEFAULT_SORTER_ITEMS_IN_MEMORY;
+	private int aggregationsMaxChunksToConsolidate = Aggregation.DEFAULT_MAX_CHUNKS_TO_CONSOLIDATE;
 	private boolean aggregationsIgnoreChunkReadingExceptions = false;
 
-	private int maxOverlappingChunksToProcessLogs = Cube_Reactive.DEFAULT_OVERLAPPING_CHUNKS_THRESHOLD;
-	private Duration maxIncrementalReloadPeriod = Aggregation_Reactive.DEFAULT_MAX_INCREMENTAL_RELOAD_PERIOD;
+	private int maxOverlappingChunksToProcessLogs = Cube.DEFAULT_OVERLAPPING_CHUNKS_THRESHOLD;
+	private Duration maxIncrementalReloadPeriod = Aggregation.DEFAULT_MAX_INCREMENTAL_RELOAD_PERIOD;
 
 	static final class AggregationContainer {
-		private final Aggregation_Reactive aggregation;
+		private final Aggregation aggregation;
 		private final List<String> measures;
 		private final AggregationPredicate predicate;
 
-		private AggregationContainer(Aggregation_Reactive aggregation, List<String> measures, AggregationPredicate predicate) {
+		private AggregationContainer(Aggregation aggregation, List<String> measures, AggregationPredicate predicate) {
 			this.aggregation = aggregation;
 			this.measures = measures;
 			this.predicate = predicate;
@@ -175,7 +175,7 @@ public final class Cube_Reactive extends AbstractReactive
 	private long queryErrors;
 	private Exception queryLastError;
 
-	Cube_Reactive(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
+	Cube(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
 			AsyncAggregationChunkStorage aggregationChunkStorage) {
 		super(reactor);
 		this.executor = executor;
@@ -183,12 +183,12 @@ public final class Cube_Reactive extends AbstractReactive
 		this.aggregationChunkStorage = aggregationChunkStorage;
 	}
 
-	public static Cube_Reactive create(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
+	public static Cube create(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
 			AsyncAggregationChunkStorage aggregationChunkStorage) {
-		return new Cube_Reactive(reactor, executor, classLoader, aggregationChunkStorage);
+		return new Cube(reactor, executor, classLoader, aggregationChunkStorage);
 	}
 
-	public Cube_Reactive withAttribute(String attribute, AsyncAttributeResolver resolver) {
+	public Cube withAttribute(String attribute, AsyncAttributeResolver resolver) {
 		checkArgument(!attributes.containsKey(attribute), "Attribute %s has already been defined", attribute);
 		int pos = attribute.indexOf('.');
 		if (pos == -1)
@@ -219,37 +219,37 @@ public final class Cube_Reactive extends AbstractReactive
 		return this;
 	}
 
-	public Cube_Reactive withClassLoaderCache(CubeClassLoaderCache classLoaderCache) {
+	public Cube withClassLoaderCache(CubeClassLoaderCache classLoaderCache) {
 		this.classLoaderCache = classLoaderCache;
 		return this;
 	}
 
-	public Cube_Reactive withDimension(String dimensionId, FieldType type) {
+	public Cube withDimension(String dimensionId, FieldType type) {
 		addDimension(dimensionId, type);
 		return this;
 	}
 
-	public Cube_Reactive withMeasure(String measureId, Measure measure) {
+	public Cube withMeasure(String measureId, Measure measure) {
 		addMeasure(measureId, measure);
 		return this;
 	}
 
-	public Cube_Reactive withComputedMeasure(String measureId, ComputedMeasure computedMeasure) {
+	public Cube withComputedMeasure(String measureId, ComputedMeasure computedMeasure) {
 		addComputedMeasure(measureId, computedMeasure);
 		return this;
 	}
 
-	public Cube_Reactive withRelation(String child, String parent) {
+	public Cube withRelation(String child, String parent) {
 		addRelation(child, parent);
 		return this;
 	}
 
-	public Cube_Reactive withTemporarySortDir(Path temporarySortDir) {
+	public Cube withTemporarySortDir(Path temporarySortDir) {
 		this.temporarySortDir = temporarySortDir;
 		return this;
 	}
 
-	public Cube_Reactive withSortFrameFormat(FrameFormat sortFrameFormat) {
+	public Cube withSortFrameFormat(FrameFormat sortFrameFormat) {
 		this.sortFrameFormat = sortFrameFormat;
 		return this;
 	}
@@ -331,7 +331,7 @@ public final class Cube_Reactive extends AbstractReactive
 		}
 	}
 
-	public Cube_Reactive withAggregation(AggregationConfig aggregationConfig) {
+	public Cube withAggregation(AggregationConfig aggregationConfig) {
 		addAggregation(aggregationConfig);
 		return this;
 	}
@@ -377,7 +377,7 @@ public final class Cube_Reactive extends AbstractReactive
 				}))
 				.withPartitioningKey(config.partitioningKey);
 
-		Aggregation_Reactive aggregation = Aggregation_Reactive.create(reactor, executor, classLoader, aggregationChunkStorage, sortFrameFormat, structure)
+		Aggregation aggregation = Aggregation.create(reactor, executor, classLoader, aggregationChunkStorage, sortFrameFormat, structure)
 				.withTemporarySortDir(temporarySortDir)
 				.withChunkSize(config.chunkSize != 0 ? config.chunkSize : aggregationsChunkSize)
 				.withReducerBufferSize(config.reducerBufferSize != 0 ? config.reducerBufferSize : aggregationsReducerBufferSize)
@@ -444,7 +444,7 @@ public final class Cube_Reactive extends AbstractReactive
 		return result;
 	}
 
-	public Aggregation_Reactive getAggregation(String aggregationId) {
+	public Aggregation getAggregation(String aggregationId) {
 		return aggregations.get(aggregationId).aggregation;
 	}
 
@@ -452,7 +452,7 @@ public final class Cube_Reactive extends AbstractReactive
 		Map<String, Set<AggregationChunk>> irrelevantChunks = new HashMap<>();
 		for (Entry<String, AggregationContainer> entry : aggregations.entrySet()) {
 			AggregationContainer container = entry.getValue();
-			Aggregation_Reactive aggregation = container.aggregation;
+			Aggregation aggregation = container.aggregation;
 			AggregationPredicate containerPredicate = container.predicate;
 			AggregationStructure structure = aggregation.getStructure();
 			List<String> keys = aggregation.getKeys();
@@ -529,7 +529,7 @@ public final class Cube_Reactive extends AbstractReactive
 
 	/**
 	 * Provides a {@link StreamConsumer} for streaming data to this cube.
-	 * The returned {@link StreamConsumer} writes to chosen {@link Aggregation_Reactive}s using the specified dimensions, measures and input class.
+	 * The returned {@link StreamConsumer} writes to chosen {@link Aggregation}s using the specified dimensions, measures and input class.
 	 *
 	 * @param inputClass class of input records
 	 * @param <T>        data records type
@@ -556,7 +556,7 @@ public final class Cube_Reactive extends AbstractReactive
 		for (Entry<String, AggregationPredicate> aggregationToDataInputFilterPredicate : compatibleAggregations.entrySet()) {
 			String aggregationId = aggregationToDataInputFilterPredicate.getKey();
 			AggregationContainer aggregationContainer = aggregations.get(aggregationToDataInputFilterPredicate.getKey());
-			Aggregation_Reactive aggregation = aggregationContainer.aggregation;
+			Aggregation aggregation = aggregationContainer.aggregation;
 
 			List<String> keys = aggregation.getKeys();
 			Map<String, String> aggregationKeyFields = entriesToMap(filterEntryKeys(dimensionFields.entrySet().stream(), keys::contains));
@@ -582,7 +582,7 @@ public final class Cube_Reactive extends AbstractReactive
 		Map<String, AggregationPredicate> aggregationToDataInputFilterPredicate = new HashMap<>();
 		for (Entry<String, AggregationContainer> aggregationContainer : aggregations.entrySet()) {
 			AggregationContainer container = aggregationContainer.getValue();
-			Aggregation_Reactive aggregation = container.aggregation;
+			Aggregation aggregation = container.aggregation;
 
 			Set<String> dimensions = dimensionFields.keySet();
 			if (!dimensions.containsAll(aggregation.getKeys())) continue;
@@ -760,7 +760,7 @@ public final class Cube_Reactive extends AbstractReactive
 		return excessive;
 	}
 
-	public Promise<CubeDiff> consolidate(AsyncFunction<Aggregation_Reactive, AggregationDiff> strategy) {
+	public Promise<CubeDiff> consolidate(AsyncFunction<Aggregation, AggregationDiff> strategy) {
 		checkInReactorThread();
 		logger.info("Launching consolidation");
 
@@ -769,7 +769,7 @@ public final class Cube_Reactive extends AbstractReactive
 
 		for (Entry<String, AggregationContainer> entry : aggregations.entrySet()) {
 			String aggregationId = entry.getKey();
-			Aggregation_Reactive aggregation = entry.getValue().aggregation;
+			Aggregation aggregation = entry.getValue().aggregation;
 
 			runnables.add(() -> strategy.apply(aggregation)
 					.whenResult(diff -> !diff.isEmpty(), diff -> map.put(aggregationId, diff))
@@ -880,7 +880,7 @@ public final class Cube_Reactive extends AbstractReactive
 			prepareDimensions();
 			prepareMeasures();
 
-			resultClass = createResultClass(resultAttributes, resultMeasures, Cube_Reactive.this, queryClassLoader);
+			resultClass = createResultClass(resultAttributes, resultMeasures, Cube.this, queryClassLoader);
 			recordScheme = createRecordScheme();
 			if (query.getReportType() == ReportType.METADATA) {
 				return Promise.of(QueryResult.createForMetadata(recordScheme, recordAttributes, recordMeasures));
@@ -1270,12 +1270,12 @@ public final class Cube_Reactive extends AbstractReactive
 		}
 	}
 
-	public Cube_Reactive withAggregationsChunkSize(int aggregationsChunkSize) {
+	public Cube withAggregationsChunkSize(int aggregationsChunkSize) {
 		this.aggregationsChunkSize = aggregationsChunkSize;
 		return this;
 	}
 
-	public Cube_Reactive withAggregationsReducerBufferSize(int aggregationsReducerBufferSize) {
+	public Cube withAggregationsReducerBufferSize(int aggregationsReducerBufferSize) {
 		this.aggregationsReducerBufferSize = aggregationsReducerBufferSize;
 		return this;
 	}
@@ -1293,7 +1293,7 @@ public final class Cube_Reactive extends AbstractReactive
 		}
 	}
 
-	public Cube_Reactive withAggregationsSorterItemsInMemory(int aggregationsSorterItemsInMemory) {
+	public Cube withAggregationsSorterItemsInMemory(int aggregationsSorterItemsInMemory) {
 		this.aggregationsSorterItemsInMemory = aggregationsSorterItemsInMemory;
 		return this;
 	}
@@ -1311,7 +1311,7 @@ public final class Cube_Reactive extends AbstractReactive
 		}
 	}
 
-	public Cube_Reactive withAggregationsMaxChunksToConsolidate(int aggregationsMaxChunksToConsolidate) {
+	public Cube withAggregationsMaxChunksToConsolidate(int aggregationsMaxChunksToConsolidate) {
 		this.aggregationsMaxChunksToConsolidate = aggregationsMaxChunksToConsolidate;
 		return this;
 	}
@@ -1329,7 +1329,7 @@ public final class Cube_Reactive extends AbstractReactive
 		}
 	}
 
-	public Cube_Reactive withAggregationsIgnoreChunkReadingExceptions(boolean aggregationsIgnoreChunkReadingExceptions) {
+	public Cube withAggregationsIgnoreChunkReadingExceptions(boolean aggregationsIgnoreChunkReadingExceptions) {
 		this.aggregationsIgnoreChunkReadingExceptions = aggregationsIgnoreChunkReadingExceptions;
 		return this;
 	}
@@ -1344,7 +1344,7 @@ public final class Cube_Reactive extends AbstractReactive
 		this.maxOverlappingChunksToProcessLogs = maxOverlappingChunksToProcessLogs;
 	}
 
-	public Cube_Reactive withMaxOverlappingChunksToProcessLogs(int maxOverlappingChunksToProcessLogs) {
+	public Cube withMaxOverlappingChunksToProcessLogs(int maxOverlappingChunksToProcessLogs) {
 		this.maxOverlappingChunksToProcessLogs = maxOverlappingChunksToProcessLogs;
 		return this;
 	}
@@ -1359,7 +1359,7 @@ public final class Cube_Reactive extends AbstractReactive
 		this.maxIncrementalReloadPeriod = maxIncrementalReloadPeriod;
 	}
 
-	public Cube_Reactive withMaxIncrementalReloadPeriod(Duration maxIncrementalReloadPeriod) {
+	public Cube withMaxIncrementalReloadPeriod(Duration maxIncrementalReloadPeriod) {
 		this.maxIncrementalReloadPeriod = maxIncrementalReloadPeriod;
 		return this;
 	}

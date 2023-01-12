@@ -21,8 +21,8 @@ import io.activej.common.inspector.BaseInspector;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.stats.EventStats;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
-import io.activej.net.socket.tcp.TcpSocket_Reactive;
-import io.activej.net.socket.tcp.TcpSocket_Reactive.Inspector;
+import io.activej.net.socket.tcp.TcpSocket;
+import io.activej.net.socket.tcp.TcpSocket.Inspector;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.AbstractNioReactive;
@@ -47,7 +47,7 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 
-import static io.activej.net.socket.tcp.TcpSocket_Reactive.wrapChannel;
+import static io.activej.net.socket.tcp.TcpSocket.wrapChannel;
 import static io.activej.net.socket.tcp.TcpSocket_Ssl.wrapServerSocket;
 import static io.activej.reactor.net.ServerSocketSettings.DEFAULT_BACKLOG;
 import static java.util.stream.Collectors.toList;
@@ -342,7 +342,7 @@ public abstract class AbstractReactiveServer<Self extends AbstractReactiveServer
 		onAccept(socketChannel, localAddress, remoteAddress, ssl);
 		AsyncTcpSocket asyncTcpSocket;
 		try {
-			TcpSocket_Reactive socketNio = wrapChannel(reactor, socketChannel, remoteSocketAddress, socketSettings);
+			TcpSocket socketNio = wrapChannel(reactor, socketChannel, remoteSocketAddress, socketSettings);
 			Inspector inspector = ssl ? socketSslInspector : socketInspector;
 			if (inspector != null) {
 				inspector.onConnect(socketNio);
@@ -424,15 +424,15 @@ public abstract class AbstractReactiveServer<Self extends AbstractReactiveServer
 	}
 
 	@JmxAttribute
-	public final @Nullable TcpSocket_Reactive.JmxInspector getSocketStats() {
+	public final @Nullable TcpSocket.JmxInspector getSocketStats() {
 		return this instanceof PrimaryServer || acceptServer.listenAddresses.isEmpty() ? null :
-				BaseInspector.lookup(socketInspector, TcpSocket_Reactive.JmxInspector.class);
+				BaseInspector.lookup(socketInspector, TcpSocket.JmxInspector.class);
 	}
 
 	@JmxAttribute
-	public final @Nullable TcpSocket_Reactive.JmxInspector getSocketStatsSsl() {
+	public final @Nullable TcpSocket.JmxInspector getSocketStatsSsl() {
 		return this instanceof PrimaryServer || acceptServer.sslListenAddresses.isEmpty() ? null :
-				BaseInspector.lookup(socketSslInspector, TcpSocket_Reactive.JmxInspector.class);
+				BaseInspector.lookup(socketSslInspector, TcpSocket.JmxInspector.class);
 	}
 
 	@Override

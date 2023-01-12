@@ -7,7 +7,7 @@ import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.datastream.processor.StreamFilter;
 import io.activej.eventloop.Eventloop;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
-import io.activej.net.socket.tcp.TcpSocket_Reactive;
+import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.reactor.net.ServerSocketSettings;
 
 import java.io.IOException;
@@ -30,7 +30,7 @@ public final class TcpServerExample {
 			AsyncTcpSocket socket;
 
 			try {
-				socket = TcpSocket_Reactive.wrapChannel(eventloop, channel, null);
+				socket = TcpSocket.wrapChannel(eventloop, channel, null);
 				System.out.println("Client connected: " + channel.getRemoteAddress());
 			} catch (IOException e) {
 				throw new RuntimeException(e);

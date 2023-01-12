@@ -26,7 +26,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 
-public class OTUplink_Reactive_Test {
+public class ReactiveOTUplinkTest {
 	private static final OTState_TestOp state = new OTState_TestOp();
 
 	@ClassRule
@@ -39,7 +39,7 @@ public class OTUplink_Reactive_Test {
 	@Before
 	public void setUp() {
 		REPOSITORY.reset();
-		node = OTUplink_Reactive.create(REPOSITORY, createTestOp());
+		node = ReactiveOTUplink.create(REPOSITORY, createTestOp());
 		resetRepo(null);
 
 	}

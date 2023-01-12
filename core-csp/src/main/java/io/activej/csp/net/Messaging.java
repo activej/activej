@@ -32,7 +32,7 @@ import io.activej.promise.Promise;
 /**
  * Represents a simple binary protocol over for communication a TCP connection.
  */
-public final class Messaging_Reactive<I, O> extends AbstractAsyncCloseable implements AsyncMessaging<I, O>, WithInitializer<Messaging_Reactive<I, O>> {
+public final class Messaging<I, O> extends AbstractAsyncCloseable implements AsyncMessaging<I, O>, WithInitializer<Messaging<I, O>> {
 	private final AsyncTcpSocket socket;
 
 	private final ByteBufsCodec<I, O> codec;
@@ -44,7 +44,7 @@ public final class Messaging_Reactive<I, O> extends AbstractAsyncCloseable imple
 	private boolean writeDone;
 
 	// region creators
-	private Messaging_Reactive(AsyncTcpSocket socket, ByteBufsCodec<I, O> codec) {
+	private Messaging(AsyncTcpSocket socket, ByteBufsCodec<I, O> codec) {
 		this.socket = socket;
 		this.codec = codec;
 		this.bufsSupplier = BinaryChannelSupplier.ofProvidedBufs(bufs,
@@ -62,9 +62,9 @@ public final class Messaging_Reactive<I, O> extends AbstractAsyncCloseable imple
 				this);
 	}
 
-	public static <I, O> Messaging_Reactive<I, O> create(AsyncTcpSocket socket,
+	public static <I, O> Messaging<I, O> create(AsyncTcpSocket socket,
 			ByteBufsCodec<I, O> serializer) {
-		Messaging_Reactive<I, O> messaging = new Messaging_Reactive<>(socket, serializer);
+		Messaging<I, O> messaging = new Messaging<>(socket, serializer);
 		messaging.prefetch();
 		return messaging;
 	}

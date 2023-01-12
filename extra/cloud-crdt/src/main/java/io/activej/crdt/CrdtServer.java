@@ -23,7 +23,7 @@ import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.crdt.util.BinarySerializer_CrdtData;
 import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.csp.net.AsyncMessaging;
-import io.activej.csp.net.Messaging_Reactive;
+import io.activej.csp.net.Messaging;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.csp.ChannelDeserializer;
 import io.activej.datastream.csp.ChannelSerializer;
@@ -111,8 +111,8 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 
 	@Override
 	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
-		Messaging_Reactive<CrdtRequest, CrdtResponse> messaging =
-				Messaging_Reactive.create(socket, SERIALIZER);
+		Messaging<CrdtRequest, CrdtResponse> messaging =
+				Messaging.create(socket, SERIALIZER);
 		messaging.receive()
 				.then(request -> {
 					if (!(request instanceof CrdtRequest.Handshake handshake)) {
@@ -130,7 +130,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 				});
 	}
 
-	private Promise<Void> dispatch(Messaging_Reactive<CrdtRequest, CrdtResponse> messaging, CrdtRequest msg) {
+	private Promise<Void> dispatch(Messaging<CrdtRequest, CrdtResponse> messaging, CrdtRequest msg) {
 		if (msg instanceof CrdtRequest.Download download) {
 			return handleDownload(messaging, download);
 		}
@@ -158,7 +158,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 				.whenComplete(toLogger(logger, TRACE, thisMethod(), messaging, handshake, this));
 	}
 
-	private Promise<Void> handleTake(Messaging_Reactive<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Take take) {
+	private Promise<Void> handleTake(Messaging<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Take take) {
 		return storage.take()
 				.whenComplete(takeBeginPromise.recordStats())
 				.whenResult(() -> messaging.send(new CrdtResponse.TakeStarted()))
@@ -181,7 +181,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 				.whenComplete(toLogger(logger, TRACE, thisMethod(), messaging, take, this));
 	}
 
-	private Promise<Void> handlePing(Messaging_Reactive<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Ping ping) {
+	private Promise<Void> handlePing(Messaging<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Ping ping) {
 		return messaging.send(new CrdtResponse.Pong())
 				.then(messaging::sendEndOfStream)
 				.whenResult(messaging::close)
@@ -189,7 +189,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 				.whenComplete(toLogger(logger, TRACE, thisMethod(), messaging, ping, this));
 	}
 
-	private Promise<Void> handleRemove(Messaging_Reactive<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Remove remove) {
+	private Promise<Void> handleRemove(Messaging<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Remove remove) {
 		return messaging.receiveBinaryStream()
 				.transformWith(ChannelDeserializer.create(tombstoneSerializer))
 				.streamTo(StreamConsumer.ofPromise(storage.remove()
@@ -202,7 +202,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 				.whenComplete(toLogger(logger, TRACE, thisMethod(), messaging, remove, this));
 	}
 
-	private Promise<Void> handleUpload(Messaging_Reactive<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Upload upload) {
+	private Promise<Void> handleUpload(Messaging<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Upload upload) {
 		return messaging.receiveBinaryStream()
 				.transformWith(ChannelDeserializer.create(serializer))
 				.streamTo(StreamConsumer.ofPromise(storage.upload()
@@ -215,7 +215,7 @@ public final class CrdtServer<K extends Comparable<K>, S> extends AbstractReacti
 				.whenComplete(toLogger(logger, TRACE, thisMethod(), messaging, upload, this));
 	}
 
-	private Promise<Void> handleDownload(Messaging_Reactive<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Download download) {
+	private Promise<Void> handleDownload(Messaging<CrdtRequest, CrdtResponse> messaging, CrdtRequest.Download download) {
 		return storage.download(download.token())
 				.map(consumer -> consumer.transformWith(detailedStats ? downloadStatsDetailed : downloadStats))
 				.whenComplete(downloadBeginPromise.recordStats())

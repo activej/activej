@@ -1,12 +1,12 @@
 package io.activej.cube.service;
 
-import io.activej.aggregation.AggregationChunkStorage_Reactive;
+import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.JsonCodec_ChunkId;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frames.FrameFormat_LZ4;
-import io.activej.cube.Cube_Reactive;
+import io.activej.cube.Cube;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.cube.ot.CubeDiffScheme;
 import io.activej.cube.ot.CubeOT;
@@ -39,7 +39,7 @@ import java.util.concurrent.Executors;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.aggregation.measure.Measures.sum;
-import static io.activej.cube.Cube_Reactive.AggregationConfig.id;
+import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.dataSource;
 
@@ -57,7 +57,7 @@ public class CubeCleanerControllerTest {
 
 	private Reactor reactor;
 	private OTRepository_MySql<LogDiff<CubeDiff>> repository;
-	private AggregationChunkStorage_Reactive<Long> aggregationChunkStorage;
+	private AggregationChunkStorage<Long> aggregationChunkStorage;
 
 	@Before
 	public void setUp() throws Exception {
@@ -68,9 +68,9 @@ public class CubeCleanerControllerTest {
 		reactor = Reactor.getCurrentReactor();
 
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
-		aggregationChunkStorage = AggregationChunkStorage_Reactive.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
+		aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
 				FrameFormat_LZ4.create(), Fs_Local.create(reactor, executor, aggregationsDir));
-		Cube_Reactive cube = Cube_Reactive.create(reactor, executor, classLoader, aggregationChunkStorage)
+		Cube cube = Cube.create(reactor, executor, classLoader, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
 				.withDimension("adv", ofInt())
 				.withMeasure("pubRequests", sum(ofLong()))

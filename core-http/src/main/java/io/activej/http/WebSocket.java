@@ -47,8 +47,8 @@ import static io.activej.http.HttpUtils.getUTF8;
 import static io.activej.http.WebSocketConstants.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-final class WebSocket_Reactive extends AbstractAsyncCloseable implements AsyncWebSocket {
-	private static final boolean CHECK = Checks.isEnabled(WebSocket_Reactive.class);
+final class WebSocket extends AbstractAsyncCloseable implements AsyncWebSocket {
+	private static final boolean CHECK = Checks.isEnabled(WebSocket.class);
 
 	private final HttpRequest request;
 	private final HttpResponse response;
@@ -60,7 +60,7 @@ final class WebSocket_Reactive extends AbstractAsyncCloseable implements AsyncWe
 	private @Nullable SettablePromise<?> readPromise;
 	private @Nullable SettablePromise<Void> writePromise;
 
-	WebSocket_Reactive(
+	WebSocket(
 			HttpRequest request,
 			HttpResponse response,
 			ChannelSupplier<Frame> frameInput,
@@ -227,7 +227,7 @@ final class WebSocket_Reactive extends AbstractAsyncCloseable implements AsyncWe
 
 			@Override
 			protected void onClosed(Exception e) {
-				WebSocket_Reactive.this.closeEx(e);
+				WebSocket.this.closeEx(e);
 			}
 		};
 	}
@@ -241,7 +241,7 @@ final class WebSocket_Reactive extends AbstractAsyncCloseable implements AsyncWe
 
 			@Override
 			protected void onClosed(Exception e) {
-				WebSocket_Reactive.this.closeEx(e);
+				WebSocket.this.closeEx(e);
 			}
 		};
 	}

@@ -10,7 +10,7 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.fs.AsyncFs;
 import io.activej.fs.Fs_Local;
 import io.activej.http.AsyncHttpClient;
-import io.activej.http.HttpClient_Reactive;
+import io.activej.http.HttpClient;
 import io.activej.http.HttpRequest;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
@@ -162,7 +162,7 @@ public final class CrdtClusterTest {
 
 	@Test
 	public void uploadWithHTTP() {
-		AsyncHttpClient client = HttpClient_Reactive.create(Reactor.getCurrentReactor());
+		AsyncHttpClient client = HttpClient.create(Reactor.getCurrentReactor());
 
 		PromiseStats uploadStat = PromiseStats.create(Duration.ofSeconds(5));
 

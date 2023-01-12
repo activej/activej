@@ -1,8 +1,8 @@
 package io.activej.https;
 
 import io.activej.dns.AsyncDnsClient;
+import io.activej.dns.DnsClient;
 import io.activej.dns.DnsClient_Cached;
-import io.activej.dns.DnsClient_Reactive;
 import io.activej.http.*;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
@@ -36,11 +36,11 @@ public final class TestHttpsClient {
 	public void testClient() throws NoSuchAlgorithmException {
 		NioReactor reactor = Reactor.getCurrentReactor();
 
-		AsyncDnsClient dnsClient = DnsClient_Cached.create(reactor, DnsClient_Reactive.create(reactor)
+		AsyncDnsClient dnsClient = DnsClient_Cached.create(reactor, DnsClient.create(reactor)
 				.withTimeout(Duration.ofMillis(500))
 				.withDnsServerAddress(inetAddress("8.8.8.8")));
 
-		AsyncHttpClient client = HttpClient_Reactive.create(reactor)
+		AsyncHttpClient client = HttpClient.create(reactor)
 				.withDnsClient(dnsClient)
 				.withSslEnabled(SSLContext.getDefault(), Executors.newSingleThreadExecutor());
 		Integer code = await(client.request(HttpRequest.get("https://en.wikipedia.org/wiki/Wikipedia")

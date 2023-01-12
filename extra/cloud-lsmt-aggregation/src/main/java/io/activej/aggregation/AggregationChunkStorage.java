@@ -73,9 +73,9 @@ import static java.util.stream.Collectors.toSet;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @SuppressWarnings("rawtypes") // JMX doesn't work with generic types
-public final class AggregationChunkStorage_Reactive<C> extends AbstractReactive
-		implements AsyncAggregationChunkStorage<C>, ReactiveService, WithInitializer<AggregationChunkStorage_Reactive<C>>, ReactiveJmxBeanWithStats {
-	private static final Logger logger = getLogger(AggregationChunkStorage_Reactive.class);
+public final class AggregationChunkStorage<C> extends AbstractReactive
+		implements AsyncAggregationChunkStorage<C>, ReactiveService, WithInitializer<AggregationChunkStorage<C>>, ReactiveJmxBeanWithStats {
+	private static final Logger logger = getLogger(AggregationChunkStorage.class);
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(256);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(5);
@@ -127,7 +127,7 @@ public final class AggregationChunkStorage_Reactive<C> extends AbstractReactive
 
 	private int finishChunks;
 
-	private AggregationChunkStorage_Reactive(Reactor reactor, JsonCodec_ChunkId<C> chunkIdCodec, AsyncSupplier<C> idGenerator, FrameFormat frameFormat, AsyncFs fs) {
+	private AggregationChunkStorage(Reactor reactor, JsonCodec_ChunkId<C> chunkIdCodec, AsyncSupplier<C> idGenerator, FrameFormat frameFormat, AsyncFs fs) {
 		super(reactor);
 		this.chunkIdCodec = chunkIdCodec;
 		this.idGenerator = idGenerator;
@@ -135,28 +135,28 @@ public final class AggregationChunkStorage_Reactive<C> extends AbstractReactive
 		this.fs = fs;
 	}
 
-	public static <C> AggregationChunkStorage_Reactive<C> create(Reactor reactor,
+	public static <C> AggregationChunkStorage<C> create(Reactor reactor,
 			JsonCodec_ChunkId<C> chunkIdCodec,
 			AsyncSupplier<C> idGenerator, FrameFormat frameFormat, AsyncFs fs) {
-		return new AggregationChunkStorage_Reactive<>(reactor, chunkIdCodec, idGenerator, frameFormat, fs);
+		return new AggregationChunkStorage<>(reactor, chunkIdCodec, idGenerator, frameFormat, fs);
 	}
 
-	public AggregationChunkStorage_Reactive<C> withBufferSize(MemSize bufferSize) {
+	public AggregationChunkStorage<C> withBufferSize(MemSize bufferSize) {
 		this.bufferSize = bufferSize;
 		return this;
 	}
 
-	public AggregationChunkStorage_Reactive<C> withChunksPath(String path) {
+	public AggregationChunkStorage<C> withChunksPath(String path) {
 		this.chunksPath = path;
 		return this;
 	}
 
-	public AggregationChunkStorage_Reactive<C> withTempPath(String path) {
+	public AggregationChunkStorage<C> withTempPath(String path) {
 		this.tempPath = path;
 		return this;
 	}
 
-	public AggregationChunkStorage_Reactive<C> withBackupPath(String path) {
+	public AggregationChunkStorage<C> withBackupPath(String path) {
 		this.backupPath = path;
 		return this;
 	}

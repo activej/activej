@@ -58,9 +58,9 @@ import static io.activej.datastream.stats.StreamStatsSizeCounter.forByteBufs;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 
-public final class Multilog_Reactive<T> extends AbstractReactive
-		implements AsyncMultilog<T>, ReactiveJmxBeanWithStats, WithInitializer<Multilog_Reactive<T>> {
-	private static final Logger logger = LoggerFactory.getLogger(Multilog_Reactive.class);
+public final class Multilog<T> extends AbstractReactive
+		implements AsyncMultilog<T>, ReactiveJmxBeanWithStats, WithInitializer<Multilog<T>> {
+	private static final Logger logger = LoggerFactory.getLogger(Multilog.class);
 
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(256);
 
@@ -79,7 +79,7 @@ public final class Multilog_Reactive<T> extends AbstractReactive
 	private final StreamStats_Detailed<ByteBuf> streamReadStats = StreamStats.detailed(forByteBufs());
 	private final StreamStats_Detailed<ByteBuf> streamWriteStats = StreamStats.detailed(forByteBufs());
 
-	private Multilog_Reactive(Reactor reactor, AsyncFs fs, FrameFormat frameFormat, BinarySerializer<T> serializer,
+	private Multilog(Reactor reactor, AsyncFs fs, FrameFormat frameFormat, BinarySerializer<T> serializer,
 			LogNamingScheme namingScheme) {
 		super(reactor);
 		this.fs = fs;
@@ -88,27 +88,27 @@ public final class Multilog_Reactive<T> extends AbstractReactive
 		this.namingScheme = namingScheme;
 	}
 
-	public static <T> Multilog_Reactive<T> create(Reactor reactor, AsyncFs fs, FrameFormat frameFormat, BinarySerializer<T> serializer,
+	public static <T> Multilog<T> create(Reactor reactor, AsyncFs fs, FrameFormat frameFormat, BinarySerializer<T> serializer,
 			LogNamingScheme namingScheme) {
-		return new Multilog_Reactive<>(reactor, fs, frameFormat, serializer, namingScheme);
+		return new Multilog<>(reactor, fs, frameFormat, serializer, namingScheme);
 	}
 
-	public Multilog_Reactive<T> withBufferSize(int bufferSize) {
+	public Multilog<T> withBufferSize(int bufferSize) {
 		this.bufferSize = MemSize.of(bufferSize);
 		return this;
 	}
 
-	public Multilog_Reactive<T> withBufferSize(MemSize bufferSize) {
+	public Multilog<T> withBufferSize(MemSize bufferSize) {
 		this.bufferSize = bufferSize;
 		return this;
 	}
 
-	public Multilog_Reactive<T> withAutoFlushInterval(Duration autoFlushInterval) {
+	public Multilog<T> withAutoFlushInterval(Duration autoFlushInterval) {
 		this.autoFlushInterval = autoFlushInterval;
 		return this;
 	}
 
-	public Multilog_Reactive<T> withIgnoreMalformedLogs(boolean ignore) {
+	public Multilog<T> withIgnoreMalformedLogs(boolean ignore) {
 		this.ignoreMalformedLogs = ignore;
 		return this;
 	}

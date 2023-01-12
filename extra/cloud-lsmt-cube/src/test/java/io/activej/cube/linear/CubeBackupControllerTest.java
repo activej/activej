@@ -1,7 +1,7 @@
 package io.activej.cube.linear;
 
 import io.activej.aggregation.AggregationChunk;
-import io.activej.aggregation.AggregationChunkStorage_Reactive;
+import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.JsonCodec_ChunkId;
 import io.activej.aggregation.PrimaryKey;
 import io.activej.aggregation.ot.AggregationDiff;
@@ -9,7 +9,7 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frames.FrameFormat_LZ4;
-import io.activej.cube.Cube_Reactive;
+import io.activej.cube.Cube;
 import io.activej.cube.TestUtils;
 import io.activej.cube.exception.CubeException;
 import io.activej.cube.linear.CubeBackupController.ChunksBackupService;
@@ -37,13 +37,13 @@ import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static io.activej.aggregation.AggregationChunkStorage_Reactive.LOG;
+import static io.activej.aggregation.AggregationChunkStorage.LOG;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofInt;
 import static io.activej.aggregation.fieldtype.FieldTypes.ofLong;
 import static io.activej.aggregation.measure.Measures.sum;
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
-import static io.activej.cube.Cube_Reactive.AggregationConfig.id;
+import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.test.TestUtils.dataSource;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
@@ -86,9 +86,9 @@ public class CubeBackupControllerTest {
 		Fs_Local fs = Fs_Local.create(eventloop, executor, aggregationsDir);
 		eventloop.submit(fs::start).get();
 		activeFs = fs;
-		AggregationChunkStorage_Reactive<Long> aggregationChunkStorage = AggregationChunkStorage_Reactive.create(eventloop, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
+		AggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(eventloop, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
 				FrameFormat_LZ4.create(), fs);
-		Cube_Reactive cube = Cube_Reactive.create(eventloop, executor, classLoader, aggregationChunkStorage)
+		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
 				.withDimension("adv", ofInt())
 				.withMeasure("pubRequests", sum(ofLong()))

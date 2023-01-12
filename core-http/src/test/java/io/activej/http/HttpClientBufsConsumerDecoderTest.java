@@ -2,7 +2,7 @@ package io.activej.http;
 
 import io.activej.common.StringFormatUtils;
 import io.activej.dns.AsyncDnsClient;
-import io.activej.dns.DnsClient_Reactive;
+import io.activej.dns.DnsClient;
 import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -23,7 +23,7 @@ import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertNotNull;
 
 @Ignore
-public class HttpClient_Reactive_BufsConsumerDecoderTest {
+public class HttpClientBufsConsumerDecoderTest {
 	private static final String URL_WITH_BIG_CHUNK = "https://o7planning.org/ru/10399/jsoup-java-html-parser-tutorial";
 	private static final String URL_WITHOUT_REQUIRED_SSL = "http://paypal.com";
 	private static final String URL_WITH_REQUIRED_SSL = "https://paypal.com";
@@ -42,10 +42,10 @@ public class HttpClient_Reactive_BufsConsumerDecoderTest {
 
 	@BeforeClass
 	public static void init() throws NoSuchAlgorithmException, IOException {
-		AsyncDnsClient dnsClient = DnsClient_Reactive.create(Reactor.getCurrentReactor())
+		AsyncDnsClient dnsClient = DnsClient.create(Reactor.getCurrentReactor())
 				.withDnsServerAddress(InetAddress.getByName("8.8.8.8"))
 				.withTimeout(StringFormatUtils.parseDuration("5 seconds"));
-		client = HttpClient_Reactive.create(Reactor.getCurrentReactor())
+		client = HttpClient.create(Reactor.getCurrentReactor())
 				.withSslEnabled(SSLContext.getDefault(), newSingleThreadExecutor())
 				.withDnsClient(dnsClient);
 	}

@@ -16,7 +16,7 @@
 
 package io.activej.cube.service;
 
-import io.activej.aggregation.AggregationChunkStorage_Reactive;
+import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.common.Utils;
 import io.activej.common.initializer.WithInitializer;
@@ -56,7 +56,7 @@ public final class CubeBackupController<K, D, C> extends AbstractReactive
 
 	private final OTSystem<D> otSystem;
 	private final AsyncOTRepository<K, D> repository;
-	private final AggregationChunkStorage_Reactive<C> storage;
+	private final AggregationChunkStorage<C> storage;
 
 	private final CubeDiffScheme<D> cubeDiffScheme;
 
@@ -65,7 +65,7 @@ public final class CubeBackupController<K, D, C> extends AbstractReactive
 	private final PromiseStats promiseBackupChunks = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 
 	CubeBackupController(Reactor reactor,
-			CubeDiffScheme<D> cubeDiffScheme, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem, AggregationChunkStorage_Reactive<C> storage) {
+			CubeDiffScheme<D> cubeDiffScheme, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem, AggregationChunkStorage<C> storage) {
 		super(reactor);
 		this.cubeDiffScheme = cubeDiffScheme;
 		this.otSystem = otSystem;
@@ -77,7 +77,7 @@ public final class CubeBackupController<K, D, C> extends AbstractReactive
 			CubeDiffScheme<D> cubeDiffScheme,
 			AsyncOTRepository<K, D> otRepository,
 			OTSystem<D> otSystem,
-			AggregationChunkStorage_Reactive<C> storage) {
+			AggregationChunkStorage<C> storage) {
 		return new CubeBackupController<>(reactor, cubeDiffScheme, otRepository, otSystem, storage);
 	}
 

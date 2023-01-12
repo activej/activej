@@ -31,8 +31,8 @@ import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.api.attribute.JmxReducers.JmxReducerSum;
 import io.activej.jmx.stats.ExceptionStats;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
-import io.activej.net.socket.tcp.TcpSocket_Reactive;
-import io.activej.net.socket.tcp.TcpSocket_Reactive.JmxInspector;
+import io.activej.net.socket.tcp.TcpSocket;
+import io.activej.net.socket.tcp.TcpSocket.JmxInspector;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.AbstractNioReactive;
@@ -85,12 +85,12 @@ import static org.slf4j.LoggerFactory.getLogger;
  * @see RpcStrategies
  * @see RpcServer
  */
-public final class RpcClient_Reactive extends AbstractNioReactive
-		implements AsyncRpcClient, ReactiveService, WithInitializer<RpcClient_Reactive>, ReactiveJmxBeanWithStats {
+public final class RpcClient extends AbstractNioReactive
+		implements AsyncRpcClient, ReactiveService, WithInitializer<RpcClient>, ReactiveJmxBeanWithStats {
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
-	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(RpcClient_Reactive.class, "connectTimeout", Duration.ZERO);
-	public static final Duration DEFAULT_RECONNECT_INTERVAL = ApplicationSettings.getDuration(RpcClient_Reactive.class, "reconnectInterval", Duration.ZERO);
-	public static final MemSize DEFAULT_PACKET_SIZE = ApplicationSettings.getMemSize(RpcClient_Reactive.class, "packetSize", ChannelSerializer.DEFAULT_INITIAL_BUFFER_SIZE);
+	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(RpcClient.class, "connectTimeout", Duration.ZERO);
+	public static final Duration DEFAULT_RECONNECT_INTERVAL = ApplicationSettings.getDuration(RpcClient.class, "reconnectInterval", Duration.ZERO);
+	public static final MemSize DEFAULT_PACKET_SIZE = ApplicationSettings.getMemSize(RpcClient.class, "packetSize", ChannelSerializer.DEFAULT_INITIAL_BUFFER_SIZE);
 
 	private static final RpcException CONNECTION_EXCEPTION = new RpcException("Could not establish connection");
 	private static final RpcException SET_STRATEGY_EXCEPTION = new RpcException("Could not change strategy");
@@ -144,15 +144,15 @@ public final class RpcClient_Reactive extends AbstractNioReactive
 	private final JmxInspector statsSocket = new JmxInspector();
 
 	// region builders
-	private RpcClient_Reactive(NioReactor reactor) {
+	private RpcClient(NioReactor reactor) {
 		super(reactor);
 	}
 
-	public static RpcClient_Reactive create(NioReactor reactor) {
-		return new RpcClient_Reactive(reactor);
+	public static RpcClient create(NioReactor reactor) {
+		return new RpcClient(reactor);
 	}
 
-	public RpcClient_Reactive withClassLoader(ClassLoader classLoader) {
+	public RpcClient withClassLoader(ClassLoader classLoader) {
 		this.classLoader = classLoader;
 		this.serializerBuilder = SerializerBuilder.create(DefiningClassLoader.create(classLoader));
 		return this;
@@ -164,7 +164,7 @@ public final class RpcClient_Reactive extends AbstractNioReactive
 	 * @param socketSettings settings for socket
 	 * @return the RPC client with specified socket settings
 	 */
-	public RpcClient_Reactive withSocketSettings(SocketSettings socketSettings) {
+	public RpcClient withSocketSettings(SocketSettings socketSettings) {
 		this.socketSettings = socketSettings;
 		return this;
 	}
@@ -175,7 +175,7 @@ public final class RpcClient_Reactive extends AbstractNioReactive
 	 * @param messageTypes classes of messages processed by a server
 	 * @return client instance capable for handling provided message types
 	 */
-	public RpcClient_Reactive withMessageTypes(Class<?>... messageTypes) {
+	public RpcClient withMessageTypes(Class<?>... messageTypes) {
 		return withMessageTypes(List.of(messageTypes));
 	}
 
@@ -186,7 +186,7 @@ public final class RpcClient_Reactive extends AbstractNioReactive
 	 * @return client instance capable for handling provided
 	 * message types
 	 */
-	public RpcClient_Reactive withMessageTypes(List<Class<?>> messageTypes) {
+	public RpcClient withMessageTypes(List<Class<?>> messageTypes) {
 		Checks.checkArgument(new HashSet<>(messageTypes).size() == messageTypes.size(), "Message types must be unique");
 		this.messageTypes = messageTypes;
 		return this;
@@ -199,7 +199,7 @@ public final class RpcClient_Reactive extends AbstractNioReactive
 	 * @param serializerBuilder serializer builder, used at runtime
 	 * @return the RPC client with provided serializer builder
 	 */
-	public RpcClient_Reactive withSerializerBuilder(SerializerBuilder serializerBuilder) {
+	public RpcClient withSerializerBuilder(SerializerBuilder serializerBuilder) {
 		this.serializerBuilder = serializerBuilder;
 		return this;
 	}
@@ -211,28 +211,28 @@ public final class RpcClient_Reactive extends AbstractNioReactive
 	 * @param requestSendingStrategy strategy of sending requests
 	 * @return the RPC client, which sends requests according to given strategy
 	 */
-	public RpcClient_Reactive withStrategy(RpcStrategy requestSendingStrategy) {
+	public RpcClient withStrategy(RpcStrategy requestSendingStrategy) {
 		this.newStrategy = requestSendingStrategy;
 		return this;
 	}
 
-	public RpcClient_Reactive withStreamProtocol(MemSize defaultPacketSize) {
+	public RpcClient withStreamProtocol(MemSize defaultPacketSize) {
 		this.defaultPacketSize = defaultPacketSize;
 		return this;
 	}
 
-	public RpcClient_Reactive withStreamProtocol(MemSize defaultPacketSize, @Nullable FrameFormat frameFormat) {
+	public RpcClient withStreamProtocol(MemSize defaultPacketSize, @Nullable FrameFormat frameFormat) {
 		this.defaultPacketSize = defaultPacketSize;
 		this.frameFormat = frameFormat;
 		return this;
 	}
 
-	public RpcClient_Reactive withAutoFlush(Duration autoFlushInterval) {
+	public RpcClient withAutoFlush(Duration autoFlushInterval) {
 		this.autoFlushInterval = autoFlushInterval;
 		return this;
 	}
 
-	public RpcClient_Reactive withKeepAlive(Duration keepAliveInterval) {
+	public RpcClient withKeepAlive(Duration keepAliveInterval) {
 		this.keepAliveInterval = keepAliveInterval;
 		return this;
 	}
@@ -243,23 +243,23 @@ public final class RpcClient_Reactive extends AbstractNioReactive
 	 * @param connectTimeout time before connecting
 	 * @return the RPC client with connect timeout settings
 	 */
-	public RpcClient_Reactive withConnectTimeout(Duration connectTimeout) {
+	public RpcClient withConnectTimeout(Duration connectTimeout) {
 		this.connectTimeoutMillis = connectTimeout.toMillis();
 		return this;
 	}
 
-	public RpcClient_Reactive withReconnectInterval(Duration reconnectInterval) {
+	public RpcClient withReconnectInterval(Duration reconnectInterval) {
 		this.reconnectIntervalMillis = reconnectInterval.toMillis();
 		return this;
 	}
 
-	public RpcClient_Reactive withSslEnabled(SSLContext sslContext, Executor sslExecutor) {
+	public RpcClient withSslEnabled(SSLContext sslContext, Executor sslExecutor) {
 		this.sslContext = sslContext;
 		this.sslExecutor = sslExecutor;
 		return this;
 	}
 
-	public RpcClient_Reactive withLogger(Logger logger) {
+	public RpcClient withLogger(Logger logger) {
 		this.logger = logger;
 		return this;
 	}
@@ -334,7 +334,7 @@ public final class RpcClient_Reactive extends AbstractNioReactive
 	}
 
 	private void connect(InetSocketAddress address) {
-		TcpSocket_Reactive.connect(reactor, address, connectTimeoutMillis, socketSettings)
+		TcpSocket.connect(reactor, address, connectTimeoutMillis, socketSettings)
 				.whenResult(asyncTcpSocketImpl -> {
 					newConnections.remove(address);
 					if (!pendingConnections.contains(address) || stopPromise != null) {

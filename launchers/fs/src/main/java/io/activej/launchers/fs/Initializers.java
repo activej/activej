@@ -27,7 +27,7 @@ import io.activej.fs.cluster.Fs_Cluster;
 import io.activej.fs.http.Fs_Http;
 import io.activej.fs.tcp.FsServer;
 import io.activej.fs.tcp.Fs_Remote;
-import io.activej.http.HttpClient_Reactive;
+import io.activej.http.HttpClient;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.trigger.TriggersModuleSettings;
 import org.jetbrains.annotations.Nullable;
@@ -70,7 +70,7 @@ public final class Initializers {
 		for (String toAdd : partitionStrings) {
 			AsyncFs client;
 			if (toAdd.startsWith("http")) {
-				client = Fs_Http.create(reactor, toAdd, HttpClient_Reactive.create(reactor));
+				client = Fs_Http.create(reactor, toAdd, HttpClient.create(reactor));
 			} else {
 				client = Fs_Remote.create(reactor, parseInetSocketAddress(toAdd));
 			}

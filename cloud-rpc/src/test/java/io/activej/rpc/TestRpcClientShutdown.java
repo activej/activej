@@ -5,8 +5,8 @@ import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
+import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.RpcClientConnection;
-import io.activej.rpc.client.RpcClient_Reactive;
 import io.activej.rpc.server.RpcServer;
 import io.activej.test.ExpectedException;
 import io.activej.test.rules.ByteBufRule;
@@ -29,7 +29,7 @@ import static io.activej.test.TestUtils.getFreePort;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 
-public final class TestReactiveRpcClientShutdown {
+public final class TestRpcClientShutdown {
 	@ClassRule
 	public static final ByteBufRule byteBufRule = new ByteBufRule();
 
@@ -61,7 +61,7 @@ public final class TestReactiveRpcClientShutdown {
 						}))
 				.withListenPort(port);
 
-		RpcClient_Reactive rpcClient = RpcClient_Reactive.create(reactor)
+		RpcClient rpcClient = RpcClient.create(reactor)
 				.withMessageTypes(messageTypes)
 				.withStrategy(server(new InetSocketAddress(port)));
 

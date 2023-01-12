@@ -3,7 +3,7 @@ package io.activej.rpc.protocol.stream;
 import io.activej.csp.process.frames.FrameFormat_LZ4;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
-import io.activej.rpc.client.RpcClient_Reactive;
+import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.server.RpcServer;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.ClassBuilderConstantsRule;
@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 
 import static io.activej.promise.TestUtils.await;
-import static io.activej.rpc.client.RpcClient_Reactive.DEFAULT_PACKET_SIZE;
+import static io.activej.rpc.client.RpcClient.DEFAULT_PACKET_SIZE;
 import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static io.activej.rpc.server.RpcServer.DEFAULT_INITIAL_BUFFER_SIZE;
 import static io.activej.test.TestUtils.getFreePort;
@@ -54,7 +54,7 @@ public class JmxMessagesRpcServerTest {
 
 	@Test
 	public void testWithoutProtocolError() {
-		RpcClient_Reactive client = RpcClient_Reactive.create(Reactor.getCurrentReactor())
+		RpcClient client = RpcClient.create(Reactor.getCurrentReactor())
 				.withMessageTypes(String.class)
 				.withStreamProtocol(DEFAULT_PACKET_SIZE, FRAME_FORMAT)
 				.withStrategy(server(new InetSocketAddress("localhost", listenPort)));
@@ -66,7 +66,7 @@ public class JmxMessagesRpcServerTest {
 
 	@Test
 	public void testWithProtocolError() {
-		RpcClient_Reactive client = RpcClient_Reactive.create(Reactor.getCurrentReactor())
+		RpcClient client = RpcClient.create(Reactor.getCurrentReactor())
 				.withMessageTypes(String.class)
 				.withStrategy(server(new InetSocketAddress("localhost", listenPort)));
 		await(client.start()
@@ -77,7 +77,7 @@ public class JmxMessagesRpcServerTest {
 
 	@Test
 	public void testWithProtocolError2() {
-		RpcClient_Reactive client = RpcClient_Reactive.create(Reactor.getCurrentReactor())
+		RpcClient client = RpcClient.create(Reactor.getCurrentReactor())
 				.withMessageTypes(String.class)
 				.withStrategy(server(new InetSocketAddress("localhost", listenPort)));
 		await(client.start()

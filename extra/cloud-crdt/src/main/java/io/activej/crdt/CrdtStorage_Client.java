@@ -29,7 +29,7 @@ import io.activej.crdt.util.BinarySerializer_CrdtData;
 import io.activej.crdt.util.Utils;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.binary.ByteBufsCodec;
-import io.activej.csp.net.Messaging_Reactive;
+import io.activej.csp.net.Messaging;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.csp.ChannelDeserializer;
@@ -40,7 +40,7 @@ import io.activej.datastream.stats.StreamStats_Detailed;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.EventStats;
-import io.activej.net.socket.tcp.TcpSocket_Reactive;
+import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
@@ -257,13 +257,13 @@ public final class CrdtStorage_Client<K extends Comparable<K>, S> extends Abstra
 		return response -> castFn(expectedCls).apply(response);
 	}
 
-	private Promise<Messaging_Reactive<CrdtResponse, CrdtRequest>> connect() {
-		return TcpSocket_Reactive.connect(reactor, address, connectTimeoutMillis, socketSettings)
-				.map(socket -> Messaging_Reactive.create(socket, SERIALIZER))
+	private Promise<Messaging<CrdtResponse, CrdtRequest>> connect() {
+		return TcpSocket.connect(reactor, address, connectTimeoutMillis, socketSettings)
+				.map(socket -> Messaging.create(socket, SERIALIZER))
 				.mapException(e -> new CrdtException("Failed to connect to " + address, e));
 	}
 
-	private static Promise<Messaging_Reactive<CrdtResponse, CrdtRequest>> performHandshake(Messaging_Reactive<CrdtResponse, CrdtRequest> messaging) {
+	private static Promise<Messaging<CrdtResponse, CrdtRequest>> performHandshake(Messaging<CrdtResponse, CrdtRequest> messaging) {
 		return messaging.send(new CrdtRequest.Handshake(CrdtServer.VERSION))
 				.then(messaging::receive)
 				.map(castFn(CrdtResponse.Handshake.class))

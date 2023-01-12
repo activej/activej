@@ -16,7 +16,7 @@
 
 package io.activej.cube.linear;
 
-import io.activej.aggregation.AggregationChunkStorage_Reactive;
+import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.time.CurrentTimeProvider;
@@ -408,7 +408,7 @@ public final class CubeCleanerController implements ConcurrentJmxBean, WithIniti
 
 		void cleanup(Set<Long> chunkIds, Instant safePoint) throws IOException;
 
-		static ChunksCleanerService ofReactiveAggregationChunkStorage(AggregationChunkStorage_Reactive<Long> storage) {
+		static ChunksCleanerService ofReactiveAggregationChunkStorage(AggregationChunkStorage<Long> storage) {
 			return Utils.cleanerServiceOfStorage(storage);
 		}
 	}

@@ -7,7 +7,7 @@ import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.binary.ByteBufsDecoder;
 import io.activej.eventloop.Eventloop;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
-import io.activej.net.socket.tcp.TcpSocket_Reactive;
+import io.activej.net.socket.tcp.TcpSocket;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -49,7 +49,7 @@ public final class TcpClientExample {
 				System.out.println("Connected to server, enter some text and send it by pressing 'Enter'.");
 				AsyncTcpSocket socket;
 				try {
-					socket = TcpSocket_Reactive.wrapChannel(getCurrentReactor(), socketChannel, null);
+					socket = TcpSocket.wrapChannel(getCurrentReactor(), socketChannel, null);
 				} catch (IOException ioException) {
 					throw new RuntimeException(ioException);
 				}

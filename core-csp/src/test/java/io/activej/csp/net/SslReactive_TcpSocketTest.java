@@ -9,7 +9,7 @@ import io.activej.csp.binary.BinaryChannelSupplier;
 import io.activej.csp.binary.ByteBufsDecoder;
 import io.activej.net.SimpleServer;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
-import io.activej.net.socket.tcp.TcpSocket_Reactive;
+import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.net.socket.tcp.TcpSocket_Ssl;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
@@ -101,7 +101,7 @@ public final class SslReactive_TcpSocketTest {
 				.whenComplete(sslSocket::close)
 				.whenComplete(assertCompleteFn(result -> assertEquals(TEST_STRING, result))));
 
-		await(TcpSocket_Reactive.connect(reactor, address)
+		await(TcpSocket.connect(reactor, address)
 				.map(socket -> TcpSocket_Ssl.wrapClientSocket(reactor, socket, sslContext, executor))
 				.then(sslSocket ->
 						sslSocket.write(wrapAscii(TEST_STRING))
@@ -114,7 +114,7 @@ public final class SslReactive_TcpSocketTest {
 				sslSocket.write(wrapAscii(TEST_STRING))
 						.whenComplete(assertCompleteFn()));
 
-		String result = await(TcpSocket_Reactive.connect(reactor, address)
+		String result = await(TcpSocket.connect(reactor, address)
 				.map(socket -> TcpSocket_Ssl.wrapClientSocket(reactor, socket, sslContext, executor))
 				.then(sslSocket -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(sslSocket))
 						.decode(DECODER)
@@ -131,7 +131,7 @@ public final class SslReactive_TcpSocketTest {
 				.whenComplete(serverSsl::close)
 				.whenComplete(assertCompleteFn()));
 
-		String result = await(TcpSocket_Reactive.connect(reactor, address)
+		String result = await(TcpSocket.connect(reactor, address)
 				.map(socket -> TcpSocket_Ssl.wrapClientSocket(reactor, socket, sslContext, executor))
 				.then(sslSocket ->
 						sslSocket.write(wrapAscii(TEST_STRING))
@@ -153,7 +153,7 @@ public final class SslReactive_TcpSocketTest {
 				.whenComplete(serverSsl::close)
 				.whenComplete(assertCompleteFn()));
 
-		String result = await(TcpSocket_Reactive.connect(reactor, address)
+		String result = await(TcpSocket.connect(reactor, address)
 				.map(socket -> TcpSocket_Ssl.wrapClientSocket(reactor, socket, sslContext, executor))
 				.then(sslSocket ->
 						sslSocket.write(wrapAscii(TEST_STRING_PART_1))
@@ -173,7 +173,7 @@ public final class SslReactive_TcpSocketTest {
 				.whenComplete(serverSsl::close)
 				.whenComplete(assertCompleteFn(result -> assertEquals(result, sentData.toString()))));
 
-		await(TcpSocket_Reactive.connect(reactor, address)
+		await(TcpSocket.connect(reactor, address)
 				.map(socket -> TcpSocket_Ssl.wrapClientSocket(reactor, socket, sslContext, executor))
 				.whenResult(sslSocket ->
 						sendData(sslSocket)
@@ -187,7 +187,7 @@ public final class SslReactive_TcpSocketTest {
 						.whenComplete(serverSsl::close)
 						.whenComplete(assertCompleteFn()));
 
-		String result = await(TcpSocket_Reactive.connect(reactor, address)
+		String result = await(TcpSocket.connect(reactor, address)
 				.map(socket -> TcpSocket_Ssl.wrapClientSocket(reactor, socket, sslContext, executor))
 				.then(sslSocket -> BinaryChannelSupplier.of(ChannelSupplier.ofSocket(sslSocket))
 						.decode(DECODER_LARGE)
@@ -204,7 +204,7 @@ public final class SslReactive_TcpSocketTest {
 						.then(() -> socket.write(wrapAscii("ello")))
 						.whenComplete(($, e) -> assertThat(e, instanceOf(AsyncCloseException.class))));
 
-		Exception e = awaitException(TcpSocket_Reactive.connect(reactor, address)
+		Exception e = awaitException(TcpSocket.connect(reactor, address)
 				.map(socket -> TcpSocket_Ssl.wrapClientSocket(reactor, socket, sslContext, executor))
 				.then(sslSocket -> {
 					BinaryChannelSupplier supplier = BinaryChannelSupplier.of(ChannelSupplier.ofSocket(sslSocket));
@@ -228,7 +228,7 @@ public final class SslReactive_TcpSocketTest {
 
 		serverThread.start();
 
-		Exception exception = awaitException(TcpSocket_Reactive.connect(reactor, address)
+		Exception exception = awaitException(TcpSocket.connect(reactor, address)
 				.whenResult(asyncTcpSocket -> {
 					try {
 						// noinspection ConstantConditions - Imitating a suddenly closed channel

@@ -96,13 +96,13 @@ public class InvertedIndexTest {
 		Fs_Local fs = Fs_Local.create(reactor, executor, path);
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormat_LZ4.create();
-		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage_Reactive.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 
 		AggregationStructure structure = AggregationStructure.create(JsonCodec_ChunkId.ofLong())
 				.withKey("word", ofString())
 				.withMeasure("documents", union(ofInt()));
 
-		Aggregation_Reactive aggregation = Aggregation_Reactive.create(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure)
+		Aggregation aggregation = Aggregation.create(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure)
 				.withTemporarySortDir(temporaryFolder.newFolder().toPath());
 
 		StreamSupplier<InvertedIndexRecord> supplier = StreamSupplier.of(
@@ -143,7 +143,7 @@ public class InvertedIndexTest {
 		assertEquals(expectedResult, list);
 	}
 
-	public void doProcess(AsyncAggregationChunkStorage<Long> aggregationChunkStorage, Aggregation_Reactive aggregation, StreamSupplier<InvertedIndexRecord> supplier) {
+	public void doProcess(AsyncAggregationChunkStorage<Long> aggregationChunkStorage, Aggregation aggregation, StreamSupplier<InvertedIndexRecord> supplier) {
 		AggregationDiff diff = await(supplier.streamTo(aggregation.consume(InvertedIndexRecord.class)));
 		aggregation.getState().apply(diff);
 		await(aggregationChunkStorage.finish(getAddedChunks(diff)));

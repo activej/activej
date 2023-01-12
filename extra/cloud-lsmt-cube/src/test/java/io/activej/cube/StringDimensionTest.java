@@ -1,6 +1,6 @@
 package io.activej.cube;
 
-import io.activej.aggregation.AggregationChunkStorage_Reactive;
+import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.aggregation.AsyncAggregationChunkStorage;
 import io.activej.aggregation.JsonCodec_ChunkId;
 import io.activej.async.function.AsyncSupplier;
@@ -32,7 +32,7 @@ import static io.activej.aggregation.AggregationPredicates.and;
 import static io.activej.aggregation.AggregationPredicates.eq;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
-import static io.activej.cube.Cube_Reactive.AggregationConfig.id;
+import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.promise.TestUtils.await;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
@@ -59,9 +59,9 @@ public class StringDimensionTest {
 
 		Fs_Local fs = Fs_Local.create(reactor, executor, aggregationsDir);
 		await(fs.start());
-		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage_Reactive.create(reactor, JsonCodec_ChunkId.ofLong(),
+		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(),
 				AsyncSupplier.of(new RefLong(0)::inc), FrameFormat_LZ4.create(), fs);
-		Cube_Reactive cube = Cube_Reactive.create(reactor, executor, classLoader, aggregationChunkStorage)
+		Cube cube = Cube.create(reactor, executor, classLoader, aggregationChunkStorage)
 				.withDimension("key1", ofString())
 				.withDimension("key2", ofInt())
 				.withMeasure("metric1", sum(ofLong()))

@@ -33,7 +33,7 @@ import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.net.ServerSocketSettings;
 import io.activej.reactor.nio.NioReactor;
-import io.activej.rpc.client.RpcClient_Reactive;
+import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.protocol.RpcControlMessage;
 import io.activej.rpc.protocol.RpcMessage;
 import io.activej.rpc.protocol.RpcStream;
@@ -65,7 +65,7 @@ import static io.activej.common.Checks.checkState;
  * </ul>
  * <p>
  * Example. Here are the steps, intended to supplement the example, listed in
- * {@link RpcClient_Reactive}:
+ * {@link RpcClient}:
  * <ul>
  * <li>Create a {@code RequestHandler} for {@code RequestClass} and
  * {@code ResponseClass}</li>
@@ -74,7 +74,7 @@ import static io.activej.common.Checks.checkState;
  * </ul>
  *
  * @see RpcRequestHandler
- * @see RpcClient_Reactive
+ * @see RpcClient
  */
 public final class RpcServer extends AbstractReactiveServer<RpcServer> {
 	public static final ServerSocketSettings DEFAULT_SERVER_SOCKET_SETTINGS = ServerSocketSettings.create(16384);

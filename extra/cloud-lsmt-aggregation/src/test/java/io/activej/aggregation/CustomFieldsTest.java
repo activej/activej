@@ -88,7 +88,7 @@ public class CustomFieldsTest {
 		Fs_Local fs = Fs_Local.create(reactor, executor, path);
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormat_LZ4.create();
-		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage_Reactive.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 
 		AggregationStructure structure = AggregationStructure.create(JsonCodec_ChunkId.ofLong())
 				.withKey("siteId", FieldTypes.ofInt())
@@ -99,7 +99,7 @@ public class CustomFieldsTest {
 				.withMeasure("uniqueUserIds", union(ofLong()))
 				.withMeasure("estimatedUniqueUserIdCount", hyperLogLog(1024));
 
-		Aggregation_Reactive aggregation = Aggregation_Reactive.create(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure)
+		Aggregation aggregation = Aggregation.create(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure)
 				.withTemporarySortDir(temporaryFolder.newFolder().toPath());
 
 		StreamSupplier<EventRecord> supplier = StreamSupplier.of(

@@ -18,7 +18,7 @@ package io.activej.redis;
 
 import io.activej.common.ApplicationSettings;
 import io.activej.common.initializer.WithInitializer;
-import io.activej.net.socket.tcp.TcpSocket_Reactive;
+import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promise;
 import io.activej.reactor.AbstractNioReactive;
 import io.activej.reactor.net.SocketSettings;
@@ -115,7 +115,7 @@ public final class RedisClient extends AbstractNioReactive implements WithInitia
 	 */
 	public Promise<RedisConnection> connect() {
 		checkInReactorThread();
-		return TcpSocket_Reactive.connect(reactor, address, connectTimeoutMillis, socketSettings)
+		return TcpSocket.connect(reactor, address, connectTimeoutMillis, socketSettings)
 				.map(
 						socket -> {
 							RedisConnection connection = new RedisConnection(this,

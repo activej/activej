@@ -17,7 +17,7 @@
 package io.activej.cube.linear;
 
 import io.activej.aggregation.AggregationChunk;
-import io.activej.aggregation.AggregationChunkStorage_Reactive;
+import io.activej.aggregation.AggregationChunkStorage;
 import io.activej.async.function.AsyncRunnable;
 import io.activej.cube.linear.CubeBackupController.ChunksBackupService;
 import io.activej.cube.linear.CubeCleanerController.ChunksCleanerService;
@@ -60,13 +60,13 @@ final class Utils {
 		return String.join(" ", measures);
 	}
 
-	static ChunksBackupService backupServiceOfStorage(AggregationChunkStorage_Reactive<Long> storage) {
+	static ChunksBackupService backupServiceOfStorage(AggregationChunkStorage<Long> storage) {
 		return (revisionId, chunkIds) ->
 				execute(storage, () -> storage.backup(String.valueOf(revisionId), chunkIds),
 						"Failed to backup chunks on storage ");
 	}
 
-	static ChunksCleanerService cleanerServiceOfStorage(AggregationChunkStorage_Reactive<Long> storage) {
+	static ChunksCleanerService cleanerServiceOfStorage(AggregationChunkStorage<Long> storage) {
 		return new ChunksCleanerService() {
 			@Override
 			public void checkRequiredChunks(Set<Long> chunkIds) throws IOException {
@@ -82,7 +82,7 @@ final class Utils {
 		};
 	}
 
-	private static void execute(AggregationChunkStorage_Reactive<Long> storage, AsyncRunnable runnable, String errorMessage) throws IOException {
+	private static void execute(AggregationChunkStorage<Long> storage, AsyncRunnable runnable, String errorMessage) throws IOException {
 		try {
 			storage.getReactor().submit(runnable::run).get();
 		} catch (InterruptedException e) {

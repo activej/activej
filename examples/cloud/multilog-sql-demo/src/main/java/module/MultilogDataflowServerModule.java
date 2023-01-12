@@ -15,7 +15,7 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.multilog.AsyncMultilog;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogNamingScheme;
-import io.activej.multilog.Multilog_Reactive;
+import io.activej.multilog.Multilog;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
 import io.activej.serializer.BinarySerializer;
@@ -62,7 +62,7 @@ public class MultilogDataflowServerModule extends AbstractModule {
 
 	@Provides
 	AsyncMultilog<LogItem> multilog(@Named("Dataflow") Reactor reactor, AsyncFs fs, FrameFormat frameFormat, BinarySerializer<LogItem> logItemSerializer, LogNamingScheme namingScheme) {
-		return Multilog_Reactive.create(reactor, fs, frameFormat, logItemSerializer, namingScheme);
+		return Multilog.create(reactor, fs, frameFormat, logItemSerializer, namingScheme);
 	}
 
 	@Provides

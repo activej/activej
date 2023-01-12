@@ -11,8 +11,8 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 import static java.lang.Integer.numberOfLeadingZeros;
 
-public abstract class ReactiveBlockingPutQueue<T> extends ImplicitlyReactive {
-	private static final boolean CHECK = Checks.isEnabled(ReactiveBlockingPutQueue.class);
+public abstract class BlockingPutQueue<T> extends ImplicitlyReactive {
+	private static final boolean CHECK = Checks.isEnabled(BlockingPutQueue.class);
 
 	private final AtomicReferenceArray<T> queue;
 	private final int mask;
@@ -25,7 +25,7 @@ public abstract class ReactiveBlockingPutQueue<T> extends ImplicitlyReactive {
 	private volatile Thread putThread;
 	private final AtomicBoolean hasMoreData = new AtomicBoolean();
 
-	public ReactiveBlockingPutQueue(int capacity) {
+	public BlockingPutQueue(int capacity) {
 		checkArgument(capacity > 0, "Negative capacity");
 
 		int nextPowerOf2 = 1 << (32 - numberOfLeadingZeros(capacity - 1));

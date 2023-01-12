@@ -19,7 +19,7 @@ import java.util.concurrent.CountDownLatch;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(Parameterized.class)
-public class ReactiveBlockingTakeQueueTest {
+public class BlockingTakeQueueTest {
 	@ClassRule
 	public static final EventloopRule EVENTLOOP_RULE = new EventloopRule();
 
@@ -61,7 +61,7 @@ public class ReactiveBlockingTakeQueueTest {
 	@Test
 	public void testStream() throws InterruptedException {
 		Eventloop reactor = Reactor.getCurrentReactor();
-		TestTakeReactiveBlockingTakeQueue queue = new TestTakeReactiveBlockingTakeQueue();
+		TestTakeBlockingTakeQueue queue = new TestTakeBlockingTakeQueue();
 
 		TakeThread[] takeThreads = new TakeThread[numberOfTakeThreads];
 		for (int i = 0; i < takeThreads.length; i++) {
@@ -105,10 +105,10 @@ public class ReactiveBlockingTakeQueueTest {
 		}
 	}
 
-	private final class TestTakeReactiveBlockingTakeQueue extends ReactiveBlockingTakeQueue<Integer> {
+	private final class TestTakeBlockingTakeQueue extends BlockingTakeQueue<Integer> {
 		private int i;
 
-		public TestTakeReactiveBlockingTakeQueue() {
+		public TestTakeBlockingTakeQueue() {
 			super(8192);
 		}
 
@@ -132,7 +132,7 @@ public class ReactiveBlockingTakeQueueTest {
 	private final class TakeThread extends Thread {
 		private final List<Integer> numbers;
 
-		private TakeThread(TestTakeReactiveBlockingTakeQueue queue, List<Integer> numbers) {
+		private TakeThread(TestTakeBlockingTakeQueue queue, List<Integer> numbers) {
 			super(() -> {
 				try {
 					while (true) {
@@ -156,7 +156,7 @@ public class ReactiveBlockingTakeQueueTest {
 			this.numbers = numbers;
 		}
 
-		public TakeThread(TestTakeReactiveBlockingTakeQueue queue) {
+		public TakeThread(TestTakeBlockingTakeQueue queue) {
 			this(queue, new ArrayList<>());
 		}
 	}

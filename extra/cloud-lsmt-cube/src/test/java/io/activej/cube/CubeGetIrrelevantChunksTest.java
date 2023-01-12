@@ -28,7 +28,7 @@ import static io.activej.aggregation.AggregationPredicates.gt;
 import static io.activej.aggregation.PrimaryKey.ofArray;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
 import static io.activej.aggregation.measure.Measures.sum;
-import static io.activej.cube.Cube_Reactive.AggregationConfig.id;
+import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.promise.TestUtils.await;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
@@ -48,11 +48,11 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 
 	private OTStateManager<Long, LogDiff<CubeDiff>> stateManager;
 	private AsyncAggregationChunkStorage<Long> chunkStorage;
-	private Cube_Reactive.AggregationConfig dateAggregation;
-	private Cube_Reactive.AggregationConfig advertiserDateAggregation;
+	private Cube.AggregationConfig dateAggregation;
+	private Cube.AggregationConfig advertiserDateAggregation;
 	private AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink;
-	private Cube_Reactive basicCube;
-	private Cube_Reactive cube;
+	private Cube basicCube;
+	private Cube cube;
 
 	private long chunkId;
 
@@ -70,7 +70,7 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 				.withTempDir(Files.createTempDirectory(""));
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormat_LZ4.create();
-		chunkStorage = AggregationChunkStorage_Reactive.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
+		chunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 
 		dateAggregation = id("date")
 				.withDimensions("date")
@@ -187,8 +187,8 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 		return chunkId;
 	}
 
-	private Cube_Reactive createBasicCube() {
-		return Cube_Reactive.create(reactor, EXECUTOR, CLASS_LOADER, chunkStorage)
+	private Cube createBasicCube() {
+		return Cube.create(reactor, EXECUTOR, CLASS_LOADER, chunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())
 				.withDimension("campaign", ofInt())

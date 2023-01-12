@@ -20,7 +20,7 @@ import java.util.stream.IntStream;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(Parameterized.class)
-public class ReactiveBlockingPutQueueTest {
+public class BlockingPutQueueTest {
 	@ClassRule
 	public static final EventloopRule EVENTLOOP_RULE = new EventloopRule();
 
@@ -96,7 +96,7 @@ public class ReactiveBlockingPutQueueTest {
 		}
 	}
 
-	private final class TestSupplierBlockingPutQueueConsumer extends ReactiveBlockingPutQueue<Integer> {
+	private final class TestSupplierBlockingPutQueueConsumer extends BlockingPutQueue<Integer> {
 		private final List<Integer> taken = new ArrayList<>();
 
 		public TestSupplierBlockingPutQueueConsumer() {

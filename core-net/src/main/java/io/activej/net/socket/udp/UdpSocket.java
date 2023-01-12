@@ -43,7 +43,7 @@ import java.nio.channels.SelectionKey;
 import java.time.Duration;
 import java.util.ArrayDeque;
 
-public final class UdpSocket_Reactive extends AbstractNioReactive implements AsyncUdpSocket, NioChannelEventHandler {
+public final class UdpSocket extends AbstractNioReactive implements AsyncUdpSocket, NioChannelEventHandler {
 	private static final int OP_POSTPONED = 1 << 7;  // SelectionKey constant
 	private static final MemSize DEFAULT_UDP_BUFFER_SIZE = MemSize.kilobytes(16);
 
@@ -64,17 +64,17 @@ public final class UdpSocket_Reactive extends AbstractNioReactive implements Asy
 	private @Nullable Inspector inspector;
 
 	public interface Inspector extends BaseInspector<Inspector> {
-		void onCreate(UdpSocket_Reactive socket);
+		void onCreate(UdpSocket socket);
 
-		void onReceive(UdpSocket_Reactive socket, UdpPacket packet);
+		void onReceive(UdpSocket socket, UdpPacket packet);
 
-		void onReceiveError(UdpSocket_Reactive socket, IOException e);
+		void onReceiveError(UdpSocket socket, IOException e);
 
-		void onSend(UdpSocket_Reactive socket, UdpPacket packet);
+		void onSend(UdpSocket socket, UdpPacket packet);
 
-		void onSendError(UdpSocket_Reactive socket, IOException e);
+		void onSendError(UdpSocket socket, IOException e);
 
-		void onClose(UdpSocket_Reactive socket);
+		void onClose(UdpSocket socket);
 	}
 
 	public static class JmxInspector extends AbstractInspector<Inspector> implements Inspector {
@@ -95,32 +95,32 @@ public final class UdpSocket_Reactive extends AbstractNioReactive implements Asy
 		}
 
 		@Override
-		public void onCreate(UdpSocket_Reactive socket) {
+		public void onCreate(UdpSocket socket) {
 			creates.recordEvent();
 		}
 
 		@Override
-		public void onReceive(UdpSocket_Reactive socket, UdpPacket packet) {
+		public void onReceive(UdpSocket socket, UdpPacket packet) {
 			receives.recordValue(packet.getBuf().readRemaining());
 		}
 
 		@Override
-		public void onReceiveError(UdpSocket_Reactive socket, IOException e) {
+		public void onReceiveError(UdpSocket socket, IOException e) {
 			receiveErrors.recordEvent();
 		}
 
 		@Override
-		public void onSend(UdpSocket_Reactive socket, UdpPacket packet) {
+		public void onSend(UdpSocket socket, UdpPacket packet) {
 			sends.recordValue(packet.getBuf().readRemaining());
 		}
 
 		@Override
-		public void onSendError(UdpSocket_Reactive socket, IOException e) {
+		public void onSendError(UdpSocket socket, IOException e) {
 			sendErrors.recordEvent();
 		}
 
 		@Override
-		public void onClose(UdpSocket_Reactive socket) {
+		public void onClose(UdpSocket socket) {
 			closes.recordEvent();
 		}
 
@@ -156,15 +156,15 @@ public final class UdpSocket_Reactive extends AbstractNioReactive implements Asy
 	}
 	// endregion
 
-	private UdpSocket_Reactive(NioReactor reactor, DatagramChannel channel) throws IOException {
+	private UdpSocket(NioReactor reactor, DatagramChannel channel) throws IOException {
 		super(reactor);
 		this.channel = channel;
 		this.key = channel.register(reactor.ensureSelector(), 0, this);
 	}
 
-	public static Promise<UdpSocket_Reactive> connect(NioReactor reactor, DatagramChannel channel) {
+	public static Promise<UdpSocket> connect(NioReactor reactor, DatagramChannel channel) {
 		try {
-			return Promise.of(new UdpSocket_Reactive(reactor, channel));
+			return Promise.of(new UdpSocket(reactor, channel));
 		} catch (IOException e) {
 			return Promise.ofException(e);
 		}
