@@ -20,8 +20,8 @@ import com.dslplatform.json.JsonReader;
 import com.dslplatform.json.JsonReader.ReadObject;
 import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.ParsingException;
-import io.activej.aggregation.AggregationPredicate;
 import io.activej.aggregation.AggregationPredicates;
+import io.activej.aggregation.PredicateDef;
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.common.initializer.WithInitializer;
 
@@ -36,7 +36,7 @@ import static io.activej.aggregation.AggregationPredicates.*;
 import static io.activej.cube.Utils.getJsonCodec;
 
 @SuppressWarnings("rawtypes")
-final class JsonCodec_AggregationPredicate implements JsonCodec<AggregationPredicate>, WithInitializer<JsonCodec_AggregationPredicate> {
+final class JsonCodec_AggregationPredicate implements JsonCodec<PredicateDef>, WithInitializer<JsonCodec_AggregationPredicate> {
 	public static final String EMPTY_STRING = "";
 	public static final String SPACES = "\\s+";
 	public static final String EQ = "eq";
@@ -78,43 +78,43 @@ final class JsonCodec_AggregationPredicate implements JsonCodec<AggregationPredi
 		return new JsonCodec_AggregationPredicate(attributeCodecs);
 	}
 
-	private void writeEq(JsonWriter writer, AggregationPredicate_Eq predicate) {
+	private void writeEq(JsonWriter writer, PredicateDef_Eq predicate) {
 		writer.writeString(predicate.getKey());
 		writer.writeByte(SEMI);
 		attributeFormats.get(predicate.getKey()).write(writer, predicate.getValue());
 	}
 
-	private void writeNotEq(JsonWriter writer, AggregationPredicate_NotEq predicate) {
+	private void writeNotEq(JsonWriter writer, PredicateDef_NotEq predicate) {
 		writer.writeString(predicate.getKey());
 		writer.writeByte(COMMA);
 		attributeFormats.get(predicate.getKey()).write(writer, predicate.getValue());
 	}
 
-	private void writeGe(JsonWriter writer, AggregationPredicate_Ge predicate) {
+	private void writeGe(JsonWriter writer, PredicateDef_Ge predicate) {
 		writer.writeString(predicate.getKey());
 		writer.writeByte(COMMA);
 		attributeFormats.get(predicate.getKey()).write(writer, predicate.getValue());
 	}
 
-	private void writeGt(JsonWriter writer, AggregationPredicate_Gt predicate) {
+	private void writeGt(JsonWriter writer, PredicateDef_Gt predicate) {
 		writer.writeString(predicate.getKey());
 		writer.writeByte(COMMA);
 		attributeFormats.get(predicate.getKey()).write(writer, predicate.getValue());
 	}
 
-	private void writeLe(JsonWriter writer, AggregationPredicate_Le predicate) {
+	private void writeLe(JsonWriter writer, PredicateDef_Le predicate) {
 		writer.writeString(predicate.getKey());
 		writer.writeByte(COMMA);
 		attributeFormats.get(predicate.getKey()).write(writer, predicate.getValue());
 	}
 
-	private void writeLt(JsonWriter writer, AggregationPredicate_Lt predicate) {
+	private void writeLt(JsonWriter writer, PredicateDef_Lt predicate) {
 		writer.writeString(predicate.getKey());
 		writer.writeByte(COMMA);
 		attributeFormats.get(predicate.getKey()).write(writer, predicate.getValue());
 	}
 
-	private void writeIn(JsonWriter writer, AggregationPredicate_In predicate) {
+	private void writeIn(JsonWriter writer, PredicateDef_In predicate) {
 		writer.writeString(predicate.getKey());
 		JsonCodec<Object> codec = attributeFormats.get(predicate.getKey());
 		for (Object o : predicate.getValues()) {
@@ -123,7 +123,7 @@ final class JsonCodec_AggregationPredicate implements JsonCodec<AggregationPredi
 		}
 	}
 
-	private void writeBetween(JsonWriter writer, AggregationPredicate_Between predicate) {
+	private void writeBetween(JsonWriter writer, PredicateDef_Between predicate) {
 		writer.writeString(predicate.getKey());
 		writer.writeByte(COMMA);
 		JsonCodec<Object> codec = attributeFormats.get(predicate.getKey());
@@ -132,15 +132,15 @@ final class JsonCodec_AggregationPredicate implements JsonCodec<AggregationPredi
 		codec.write(writer, predicate.getTo());
 	}
 
-	private void writeRegexp(JsonWriter writer, AggregationPredicate_RegExp predicate) {
+	private void writeRegexp(JsonWriter writer, PredicateDef_RegExp predicate) {
 		writer.writeString(predicate.getKey());
 		writer.writeByte(COMMA);
 		writer.writeString(predicate.getRegexp());
 	}
 
-	private void write(JsonWriter writer, List<AggregationPredicate> predicates) {
+	private void write(JsonWriter writer, List<PredicateDef> predicates) {
 		for (int i = 0; i < predicates.size(); i++) {
-			AggregationPredicate p = predicates.get(i);
+			PredicateDef p = predicates.get(i);
 			write(writer, p);
 			if (i != predicates.size() - 1) {
 				writer.writeByte(COMMA);
@@ -148,70 +148,70 @@ final class JsonCodec_AggregationPredicate implements JsonCodec<AggregationPredi
 		}
 	}
 
-	private void writeNot(JsonWriter writer, AggregationPredicate_Not predicate) {
+	private void writeNot(JsonWriter writer, PredicateDef_Not predicate) {
 		write(writer, predicate.getPredicate());
 	}
 
 	@SuppressWarnings("NullableProblems")
 	@Override
-	public void write(JsonWriter writer, AggregationPredicate predicate) {
-		if (predicate instanceof AggregationPredicate_Eq predicateEq) {
+	public void write(JsonWriter writer, PredicateDef predicate) {
+		if (predicate instanceof PredicateDef_Eq predicateEq) {
 			writer.writeByte(OBJECT_START);
 			writeEq(writer, predicateEq);
 			writer.writeByte(OBJECT_END);
 		} else {
 			writer.writeByte(ARRAY_START);
-			if (predicate instanceof AggregationPredicate_NotEq predicateNotEq) {
+			if (predicate instanceof PredicateDef_NotEq predicateNotEq) {
 				writer.writeString(NOT_EQ);
 				writer.writeByte(COMMA);
 				writeNotEq(writer, predicateNotEq);
-			} else if (predicate instanceof AggregationPredicate_Ge predicateGe) {
+			} else if (predicate instanceof PredicateDef_Ge predicateGe) {
 				writer.writeString(GE);
 				writer.writeByte(COMMA);
 				writeGe(writer, predicateGe);
-			} else if (predicate instanceof AggregationPredicate_Has predicateHas) {
+			} else if (predicate instanceof PredicateDef_Has predicateHas) {
 				writer.writeString(HAS);
 				writer.writeByte(COMMA);
 				writer.writeString(predicateHas.getKey());
-			} else if (predicate instanceof AggregationPredicate_Gt predicateGt) {
+			} else if (predicate instanceof PredicateDef_Gt predicateGt) {
 				writer.writeString(GT);
 				writer.writeByte(COMMA);
 				writeGt(writer, predicateGt);
-			} else if (predicate instanceof AggregationPredicate_Le predicateLe) {
+			} else if (predicate instanceof PredicateDef_Le predicateLe) {
 				writer.writeString(LE);
 				writer.writeByte(COMMA);
 				writeLe(writer, predicateLe);
-			} else if (predicate instanceof AggregationPredicate_Lt predicateLt) {
+			} else if (predicate instanceof PredicateDef_Lt predicateLt) {
 				writer.writeString(LT);
 				writer.writeByte(COMMA);
 				writeLt(writer, predicateLt);
-			} else if (predicate instanceof AggregationPredicate_In predicateIn) {
+			} else if (predicate instanceof PredicateDef_In predicateIn) {
 				writer.writeString(IN);
 				writer.writeByte(COMMA);
 				writeIn(writer, predicateIn);
-			} else if (predicate instanceof AggregationPredicate_Between predicateBetween) {
+			} else if (predicate instanceof PredicateDef_Between predicateBetween) {
 				writer.writeString(BETWEEN);
 				writer.writeByte(COMMA);
 				writeBetween(writer, predicateBetween);
-			} else if (predicate instanceof AggregationPredicate_RegExp predicateRegexp) {
+			} else if (predicate instanceof PredicateDef_RegExp predicateRegexp) {
 				writer.writeString(REGEXP);
 				writer.writeByte(COMMA);
 				writeRegexp(writer, predicateRegexp);
-			} else if (predicate instanceof AggregationPredicate_And predicateAnd) {
+			} else if (predicate instanceof PredicateDef_And predicateAnd) {
 				writer.writeString(AND);
 				writer.writeByte(COMMA);
 				write(writer, predicateAnd.getPredicates());
-			} else if (predicate instanceof AggregationPredicate_Or predicateOr) {
+			} else if (predicate instanceof PredicateDef_Or predicateOr) {
 				writer.writeString(OR);
 				writer.writeByte(COMMA);
 				write(writer, predicateOr.getPredicates());
-			} else if (predicate instanceof AggregationPredicate_Not predicateNot) {
+			} else if (predicate instanceof PredicateDef_Not predicateNot) {
 				writer.writeString(NOT);
 				writer.writeByte(COMMA);
 				writeNot(writer, predicateNot);
-			} else if (predicate instanceof AggregationPredicate_AlwaysTrue) {
+			} else if (predicate instanceof PredicateDef_AlwaysTrue) {
 				writer.writeString(TRUE);
-			} else if (predicate instanceof AggregationPredicate_AlwaysFalse) {
+			} else if (predicate instanceof PredicateDef_AlwaysFalse) {
 				writer.writeString(FALSE);
 			} else {
 				throw new IllegalArgumentException("Unknown predicate type");
@@ -220,9 +220,9 @@ final class JsonCodec_AggregationPredicate implements JsonCodec<AggregationPredi
 		}
 	}
 
-	private AggregationPredicate readObjectWithAlgebraOfSetsOperator(JsonReader reader) throws IOException {
+	private PredicateDef readObjectWithAlgebraOfSetsOperator(JsonReader reader) throws IOException {
 		if (reader.last() == OBJECT_END) return AggregationPredicates.and();
-		List<AggregationPredicate> predicates = new ArrayList<>();
+		List<PredicateDef> predicates = new ArrayList<>();
 
 		while (true) {
 			String[] fieldWithOperator = reader.readKey().split(SPACES);
@@ -231,7 +231,7 @@ final class JsonCodec_AggregationPredicate implements JsonCodec<AggregationPredi
 			JsonCodec<Object> codec = attributeFormats.get(field);
 			if (codec == null) throw ParsingException.create("Could not decode: " + field, true);
 			Object value = codec.read(reader);
-			AggregationPredicate comparisonPredicate;
+			PredicateDef comparisonPredicate;
 			switch (operator) {
 				case EMPTY_STRING, EQ_SIGN -> comparisonPredicate = eq(field, value);
 				case NOT_EQ_SIGN -> comparisonPredicate = notEq(field, value);
@@ -258,14 +258,14 @@ final class JsonCodec_AggregationPredicate implements JsonCodec<AggregationPredi
 	}
 
 	@Override
-	public AggregationPredicate read(JsonReader reader) throws IOException {
+	public PredicateDef read(JsonReader reader) throws IOException {
 		if (reader.last() == OBJECT_START) {
 			reader.getNextToken();
 			return readObjectWithAlgebraOfSetsOperator(reader);
 		} else if (reader.last() == ARRAY_START) {
 			reader.getNextToken();
 			String type = reader.readString();
-			AggregationPredicate result;
+			PredicateDef result;
 			byte next = reader.getNextToken();
 			if (next != COMMA) {
 				result = switch (type) {
@@ -306,7 +306,7 @@ final class JsonCodec_AggregationPredicate implements JsonCodec<AggregationPredi
 		return codec;
 	}
 
-	private AggregationPredicate readEq(JsonReader reader) throws IOException {
+	private PredicateDef readEq(JsonReader reader) throws IOException {
 		String attribute = reader.readString();
 		ReadObject<Object> readObject = getAttributeReadObject(attribute);
 		reader.comma();
@@ -316,7 +316,7 @@ final class JsonCodec_AggregationPredicate implements JsonCodec<AggregationPredi
 		return eq(attribute, value);
 	}
 
-	private AggregationPredicate readNotEq(JsonReader reader) throws IOException {
+	private PredicateDef readNotEq(JsonReader reader) throws IOException {
 		String attribute = reader.readString();
 		ReadObject<Object> readObject = getAttributeReadObject(attribute);
 		reader.comma();
@@ -326,22 +326,22 @@ final class JsonCodec_AggregationPredicate implements JsonCodec<AggregationPredi
 		return notEq(attribute, value);
 	}
 
-	private AggregationPredicate readGe(JsonReader reader) throws IOException {
+	private PredicateDef readGe(JsonReader reader) throws IOException {
 		AttributeAndValue attributeAndValue = readAttributeAndValue(reader);
 		return ge(attributeAndValue.attribute, attributeAndValue.value);
 	}
 
-	private AggregationPredicate readGt(JsonReader reader) throws IOException {
+	private PredicateDef readGt(JsonReader reader) throws IOException {
 		AttributeAndValue attributeAndValue = readAttributeAndValue(reader);
 		return gt(attributeAndValue.attribute, attributeAndValue.value);
 	}
 
-	private AggregationPredicate readLe(JsonReader reader) throws IOException {
+	private PredicateDef readLe(JsonReader reader) throws IOException {
 		AttributeAndValue attributeAndValue = readAttributeAndValue(reader);
 		return le(attributeAndValue.attribute, attributeAndValue.value);
 	}
 
-	private AggregationPredicate readLt(JsonReader reader) throws IOException {
+	private PredicateDef readLt(JsonReader reader) throws IOException {
 		AttributeAndValue attributeAndValue = readAttributeAndValue(reader);
 		return lt(attributeAndValue.attribute, attributeAndValue.value);
 	}
@@ -356,7 +356,7 @@ final class JsonCodec_AggregationPredicate implements JsonCodec<AggregationPredi
 		return new AttributeAndValue(attribute, value);
 	}
 
-	private AggregationPredicate readIn(JsonReader reader) throws IOException {
+	private PredicateDef readIn(JsonReader reader) throws IOException {
 		String attribute = reader.readString();
 		ReadObject<Object> readObject = getAttributeReadObject(attribute);
 		Set<Object> result = new LinkedHashSet<>();
@@ -371,7 +371,7 @@ final class JsonCodec_AggregationPredicate implements JsonCodec<AggregationPredi
 		return in(attribute, result);
 	}
 
-	private AggregationPredicate readBetween(JsonReader reader) throws IOException {
+	private PredicateDef readBetween(JsonReader reader) throws IOException {
 		String attribute = reader.readString();
 		ReadObject<Object> readObject = getAttributeReadObject(attribute);
 		reader.comma();
@@ -384,7 +384,7 @@ final class JsonCodec_AggregationPredicate implements JsonCodec<AggregationPredi
 		return between(attribute, from, to);
 	}
 
-	private AggregationPredicate readRegexp(JsonReader reader) throws IOException {
+	private PredicateDef readRegexp(JsonReader reader) throws IOException {
 		String attribute = reader.readString();
 		reader.comma();
 		reader.getNextToken();
@@ -399,8 +399,8 @@ final class JsonCodec_AggregationPredicate implements JsonCodec<AggregationPredi
 		return regexp(attribute, pattern);
 	}
 
-	private AggregationPredicate readAnd(JsonReader<?> reader) throws IOException {
-		List<AggregationPredicate> result = new ArrayList<>();
+	private PredicateDef readAnd(JsonReader<?> reader) throws IOException {
+		List<PredicateDef> result = new ArrayList<>();
 		result.add(read(reader));
 		while (reader.getNextToken() == ',') {
 			reader.getNextToken();
@@ -409,8 +409,8 @@ final class JsonCodec_AggregationPredicate implements JsonCodec<AggregationPredi
 		return and(result);
 	}
 
-	private AggregationPredicate readOr(JsonReader reader) throws IOException {
-		List<AggregationPredicate> result = new ArrayList<>();
+	private PredicateDef readOr(JsonReader reader) throws IOException {
+		List<PredicateDef> result = new ArrayList<>();
 		result.add(read(reader));
 		while (reader.getNextToken() == ',') {
 			reader.getNextToken();
@@ -419,13 +419,13 @@ final class JsonCodec_AggregationPredicate implements JsonCodec<AggregationPredi
 		return or(result);
 	}
 
-	private AggregationPredicate readNot(JsonReader reader) throws IOException {
-		AggregationPredicate predicate = read(reader);
+	private PredicateDef readNot(JsonReader reader) throws IOException {
+		PredicateDef predicate = read(reader);
 		reader.getNextToken();
 		return not(predicate);
 	}
 
-	private AggregationPredicate readHas(JsonReader reader) throws IOException {
+	private PredicateDef readHas(JsonReader reader) throws IOException {
 		String attribute = reader.readString();
 		reader.getNextToken();
 		return has(attribute);

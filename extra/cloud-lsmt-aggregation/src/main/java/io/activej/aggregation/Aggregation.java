@@ -397,7 +397,7 @@ public class Aggregation extends AbstractReactive
 
 	private <R, S> StreamSupplier<R> consolidatedSupplier(List<String> queryKeys,
 			List<String> measures, Class<R> resultClass,
-			AggregationPredicate where,
+			PredicateDef where,
 			List<AggregationChunk> individualChunks,
 			DefiningClassLoader queryClassLoader) {
 		QueryPlan plan = createPlan(individualChunks, measures);
@@ -491,7 +491,7 @@ public class Aggregation extends AbstractReactive
 				.transformWith((StreamStats<R>) stats.mergeReducerOutput);
 	}
 
-	private <T> StreamSupplier<T> sequenceStream(AggregationPredicate where,
+	private <T> StreamSupplier<T> sequenceStream(PredicateDef where,
 			List<AggregationChunk> individualChunks, Class<T> sequenceClass,
 			DefiningClassLoader queryClassLoader) {
 		Iterator<AggregationChunk> chunkIterator = individualChunks.iterator();
@@ -509,7 +509,7 @@ public class Aggregation extends AbstractReactive
 		});
 	}
 
-	private <T> StreamSupplier<T> chunkReaderWithFilter(AggregationPredicate where, AggregationChunk chunk,
+	private <T> StreamSupplier<T> chunkReaderWithFilter(PredicateDef where, AggregationChunk chunk,
 			Class<T> chunkRecordClass, DefiningClassLoader queryClassLoader) {
 		return StreamSupplier.ofPromise(
 						aggregationChunkStorage.read(structure, chunk.getMeasures(), chunkRecordClass, chunk.getChunkId(), classLoader))
@@ -520,7 +520,7 @@ public class Aggregation extends AbstractReactive
 	}
 
 	private <T> Predicate<T> createPredicate(Class<T> chunkRecordClass,
-			AggregationPredicate where, DefiningClassLoader classLoader) {
+			PredicateDef where, DefiningClassLoader classLoader) {
 		return classLoader.ensureClassAndCreateInstance(
 				ClassKey.of(Predicate.class, chunkRecordClass, where),
 				() -> ClassBuilder.create(Predicate.class)

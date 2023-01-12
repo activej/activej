@@ -83,8 +83,8 @@ public class AggregationChunk implements WithInitializer<AggregationChunk> {
 		return Objects.hash(chunkId, measures, minPrimaryKey, maxPrimaryKey, count);
 	}
 
-	public AggregationPredicate toPredicate(List<String> primaryKey) {
-		List<AggregationPredicate> predicates = new ArrayList<>();
+	public PredicateDef toPredicate(List<String> primaryKey) {
+		List<PredicateDef> predicates = new ArrayList<>();
 		for (int i = 0; i < primaryKey.size(); i++) {
 			String key = primaryKey.get(i);
 			Object from = minPrimaryKey.get(i);

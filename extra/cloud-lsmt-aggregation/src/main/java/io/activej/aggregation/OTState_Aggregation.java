@@ -455,7 +455,7 @@ public final class OTState_Aggregation implements OTState<AggregationDiff> {
 		return true;
 	}
 
-	public List<AggregationChunk> findChunks(AggregationPredicate predicate, List<String> fields) {
+	public List<AggregationChunk> findChunks(PredicateDef predicate, List<String> fields) {
 		RangeScan rangeScan = toRangeScan(predicate, aggregation.getKeys(), aggregation.getKeyTypes());
 		if (rangeScan.isNoScan())
 			return List.of();

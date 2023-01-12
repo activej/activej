@@ -31,7 +31,7 @@ import static java.util.Collections.unmodifiableList;
 public final class AggregationQuery implements WithInitializer<AggregationQuery> {
 	private final List<String> keys = new ArrayList<>();
 	private final List<String> measures = new ArrayList<>();
-	private AggregationPredicate predicate = AggregationPredicates.alwaysTrue();
+	private PredicateDef predicate = AggregationPredicates.alwaysTrue();
 
 	public static AggregationQuery create() {
 		return new AggregationQuery();
@@ -41,7 +41,7 @@ public final class AggregationQuery implements WithInitializer<AggregationQuery>
 		return new AggregationQuery(keys, measures);
 	}
 
-	public static AggregationQuery create(List<String> keys, List<String> measures, AggregationPredicate predicate) {
+	public static AggregationQuery create(List<String> keys, List<String> measures, PredicateDef predicate) {
 		return new AggregationQuery(keys, measures, predicate);
 	}
 
@@ -53,7 +53,7 @@ public final class AggregationQuery implements WithInitializer<AggregationQuery>
 		this.measures.addAll(measures);
 	}
 
-	private AggregationQuery(List<String> keys, List<String> measures, AggregationPredicate predicate) {
+	private AggregationQuery(List<String> keys, List<String> measures, PredicateDef predicate) {
 		this.keys.addAll(keys);
 		this.measures.addAll(measures);
 		this.predicate = predicate;
@@ -74,7 +74,7 @@ public final class AggregationQuery implements WithInitializer<AggregationQuery>
 		return result;
 	}
 
-	public AggregationPredicate getPredicate() {
+	public PredicateDef getPredicate() {
 		return predicate;
 	}
 
@@ -108,12 +108,12 @@ public final class AggregationQuery implements WithInitializer<AggregationQuery>
 		return this;
 	}
 
-	public AggregationQuery withPredicate(AggregationPredicate predicate) {
+	public AggregationQuery withPredicate(PredicateDef predicate) {
 		this.predicate = predicate;
 		return this;
 	}
 
-	public AggregationQuery withPredicates(List<AggregationPredicate> predicates) {
+	public AggregationQuery withPredicates(List<PredicateDef> predicates) {
 		this.predicate = AggregationPredicates.and(predicates);
 		return this;
 	}

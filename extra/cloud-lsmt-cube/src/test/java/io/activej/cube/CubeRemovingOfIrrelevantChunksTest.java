@@ -1,9 +1,9 @@
 package io.activej.cube;
 
 import io.activej.aggregation.AggregationChunkStorage;
-import io.activej.aggregation.AggregationPredicate;
 import io.activej.aggregation.AsyncAggregationChunkStorage;
 import io.activej.aggregation.JsonCodec_ChunkId;
+import io.activej.aggregation.PredicateDef;
 import io.activej.async.function.AsyncSupplier;
 import io.activej.common.ref.RefLong;
 import io.activej.csp.process.frames.FrameFormat;
@@ -56,7 +56,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 	private static final int dateMax = (int) LocalDate.of(2021, Month.JANUARY, 1).toEpochDay();
 	private static final LocalDate LOWER_DATE_BOUNDARY = LocalDate.of(2020, Month.JULY, 31);
 	private static final int LOWER_DATE_BOUNDARY_DAYS = (int) LOWER_DATE_BOUNDARY.toEpochDay();
-	private static final AggregationPredicate DATE_PREDICATE = gt("date", LOWER_DATE_BOUNDARY);
+	private static final PredicateDef DATE_PREDICATE = gt("date", LOWER_DATE_BOUNDARY);
 
 	private AsyncAggregationChunkStorage<Long> chunkStorage;
 	private AggregationConfig dateAggregation;

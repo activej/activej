@@ -22,9 +22,9 @@ import io.activej.codegen.expression.Expression;
 import java.util.Map;
 import java.util.Set;
 
-public interface AggregationPredicate {
+public interface PredicateDef {
 
-	AggregationPredicate simplify();
+	PredicateDef simplify();
 
 	Set<String> getDimensions();
 
