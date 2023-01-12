@@ -1,11 +1,11 @@
 package io.activej.fs.cluster;
 
 import io.activej.async.service.TaskScheduler;
-import io.activej.fs.AsyncFs;
+import io.activej.fs.AsyncFileSystem;
 import io.activej.fs.FileMetadata;
-import io.activej.fs.Fs;
-import io.activej.fs.tcp.FsServer;
-import io.activej.fs.tcp.Fs_Remote;
+import io.activej.fs.FileSystem;
+import io.activej.fs.tcp.FileSystemServer;
+import io.activej.fs.tcp.FileSystem_Remote;
 import io.activej.net.AbstractReactiveServer;
 import io.activej.promise.Promises;
 import io.activej.reactor.Reactor;
@@ -38,7 +38,7 @@ public final class ClusterRepartitionControllerStressTest {
 	private static final int CLIENT_SERVER_PAIRS = 10;
 
 	private final Path[] serverStorages = new Path[CLIENT_SERVER_PAIRS];
-	private List<FsServer> servers;
+	private List<FileSystemServer> servers;
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
@@ -53,7 +53,7 @@ public final class ClusterRepartitionControllerStressTest {
 	public final ActivePromisesRule activePromisesRule = new ActivePromisesRule();
 
 	private Path localStorage;
-	private FsPartitions partitions;
+	private FileSystemPartitions partitions;
 	private ClusterRepartitionController controller;
 	private TaskScheduler scheduler;
 
@@ -66,15 +66,15 @@ public final class ClusterRepartitionControllerStressTest {
 		Executor executor = Executors.newSingleThreadExecutor();
 		servers = new ArrayList<>(CLIENT_SERVER_PAIRS);
 
-		Map<Object, AsyncFs> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
+		Map<Object, AsyncFileSystem> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
 
 		Path storage = tmpFolder.newFolder().toPath();
 		localStorage = storage.resolve("local");
 		Files.createDirectories(localStorage);
-		Fs localFsClient = Fs.create(reactor, executor, localStorage);
+		FileSystem localFileSystem = FileSystem.create(reactor, executor, localStorage);
 
 		Object localPartitionId = "local";
-		partitions.put(localPartitionId, localFsClient);
+		partitions.put(localPartitionId, localFileSystem);
 
 		for (int i = 0; i < CLIENT_SERVER_PAIRS; i++) {
 			InetSocketAddress address = new InetSocketAddress("localhost", getFreePort());
@@ -83,16 +83,16 @@ public final class ClusterRepartitionControllerStressTest {
 
 			Files.createDirectories(serverStorages[i]);
 
-			partitions.put("server_" + i, Fs_Remote.create(reactor, address));
+			partitions.put("server_" + i, FileSystem_Remote.create(reactor, address));
 
-			Fs localFs = Fs.create(reactor, executor, serverStorages[i]);
-			await(localFs.start());
-			FsServer server = FsServer.create(reactor, localFs).withListenAddress(address);
+			FileSystem fileSystem = FileSystem.create(reactor, executor, serverStorages[i]);
+			await(fileSystem.start());
+			FileSystemServer server = FileSystemServer.create(reactor, fileSystem).withListenAddress(address);
 			server.listen();
 			servers.add(server);
 		}
 
-		this.partitions = FsPartitions.create(reactor, AsyncDiscoveryService.constant(partitions))
+		this.partitions = FileSystemPartitions.create(reactor, AsyncDiscoveryService.constant(partitions))
 				.withServerSelector(RENDEZVOUS_HASH_SHARDER);
 
 		controller = ClusterRepartitionController.create(reactor, localPartitionId, this.partitions)

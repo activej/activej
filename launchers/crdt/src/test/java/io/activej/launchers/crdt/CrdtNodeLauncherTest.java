@@ -4,8 +4,8 @@ import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.crdt.util.BinarySerializer_CrdtData;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.AsyncFs;
-import io.activej.fs.Fs;
+import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.FileSystem;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.crdt.CrdtNodeLogicModule.Cluster;
@@ -55,8 +55,8 @@ public class CrdtNodeLauncherTest {
 					}
 
 					@Provides
-					AsyncFs fs() {
-						return Fs.create(Eventloop.create(), newSingleThreadExecutor(), Paths.get(""));
+					AsyncFileSystem fileSystem() {
+						return FileSystem.create(Eventloop.create(), newSingleThreadExecutor(), Paths.get(""));
 					}
 				};
 			}

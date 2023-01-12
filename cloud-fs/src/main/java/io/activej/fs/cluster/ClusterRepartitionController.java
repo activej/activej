@@ -24,9 +24,9 @@ import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.ChannelByteRanger;
-import io.activej.fs.AsyncFs;
+import io.activej.fs.AsyncFileSystem;
 import io.activej.fs.FileMetadata;
-import io.activej.fs.exception.FsIOException;
+import io.activej.fs.exception.FileSystemIOException;
 import io.activej.fs.exception.PathContainsFileException;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
@@ -55,7 +55,7 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.first;
-import static io.activej.fs.util.RemoteFsUtils.isWildcard;
+import static io.activej.fs.util.RemoteFileSystemUtils.isWildcard;
 import static java.util.stream.Collectors.toMap;
 
 public final class ClusterRepartitionController extends AbstractReactive
@@ -65,12 +65,12 @@ public final class ClusterRepartitionController extends AbstractReactive
 	private static final Duration DEFAULT_PLAN_RECALCULATION_INTERVAL = Duration.ofMinutes(1);
 
 	private final Object localPartitionId;
-	private final FsPartitions partitions;
+	private final FileSystemPartitions partitions;
 	private final AsyncRunnable repartition = reuse(this::doRepartition);
 
 	private final List<String> processedFiles = new ArrayList<>();
 
-	private AsyncFs localFs;
+	private AsyncFileSystem fileSystem;
 	private String glob = "**";
 	private Predicate<String> negativeGlobPredicate = $ -> true;
 	private int replicationCount = 1;
@@ -90,13 +90,13 @@ public final class ClusterRepartitionController extends AbstractReactive
 	private final PromiseStats repartitionPromiseStats = PromiseStats.create(Duration.ofMinutes(5));
 	private final PromiseStats singleFileRepartitionPromiseStats = PromiseStats.create(Duration.ofMinutes(5));
 
-	private ClusterRepartitionController(Reactor reactor, Object localPartitionId, FsPartitions partitions) {
+	private ClusterRepartitionController(Reactor reactor, Object localPartitionId, FileSystemPartitions partitions) {
 		super(reactor);
 		this.localPartitionId = localPartitionId;
 		this.partitions = partitions;
 	}
 
-	public static ClusterRepartitionController create(Reactor reactor, Object localPartitionId, FsPartitions partitions) {
+	public static ClusterRepartitionController create(Reactor reactor, Object localPartitionId, FileSystemPartitions partitions) {
 		return new ClusterRepartitionController(reactor, localPartitionId, partitions);
 	}
 
@@ -132,8 +132,8 @@ public final class ClusterRepartitionController extends AbstractReactive
 		return localPartitionId;
 	}
 
-	public AsyncFs getLocalFs() {
-		return localFs;
+	public AsyncFileSystem getLocalFileSystem() {
+		return fileSystem;
 	}
 
 	public Promise<Void> repartition() {
@@ -158,7 +158,7 @@ public final class ClusterRepartitionController extends AbstractReactive
 								.then(() -> {
 									if (!repartitionPlan.hasNext()) return Promise.of(false);
 									String name = repartitionPlan.next();
-									return localFs.info(name)
+									return fileSystem.info(name)
 											.thenIfElse(Objects::isNull,
 													$ -> {
 														logger.warn("File '{}' that should be repartitioned has been deleted", name);
@@ -203,7 +203,7 @@ public final class ClusterRepartitionController extends AbstractReactive
 	}
 
 	private Promise<Void> recalculatePlan() {
-		return localFs.list(glob)
+		return fileSystem.list(glob)
 				.then(map -> {
 					checkEnoughAlivePartitions();
 
@@ -255,7 +255,7 @@ public final class ClusterRepartitionController extends AbstractReactive
 				});
 	}
 
-	private Promise<Boolean> repartitionFile(String name, FileMetadata meta) throws FsIOException {
+	private Promise<Boolean> repartitionFile(String name, FileMetadata meta) throws FileSystemIOException {
 		partitions.markAlive(localPartitionId); // ensure local partition could also be selected
 		checkEnoughAlivePartitions();
 		List<Object> selected = partitions.select(name).subList(0, replicationCount);
@@ -267,7 +267,7 @@ public final class ClusterRepartitionController extends AbstractReactive
 						infoResults -> {
 							if (infoResults.shouldBeDeleted()) { // everybody had the file
 								logger.trace("deleting file {} locally", meta);
-								return localFs.delete(name) // so we delete the copy which does not belong to local partition
+								return fileSystem.delete(name) // so we delete the copy which does not belong to local partition
 										.map($ -> {
 											logger.info("handled file {} : {} (ensured on {})", name, meta, ids);
 											return true;
@@ -289,7 +289,7 @@ public final class ClusterRepartitionController extends AbstractReactive
 									.getAsLong();
 
 							ChannelByteSplitter splitter = ChannelByteSplitter.create(1)
-									.withInput(ChannelSupplier.ofPromise(localFs.download(name, offset, meta.getSize())));
+									.withInput(ChannelSupplier.ofPromise(fileSystem.download(name, offset, meta.getSize())));
 
 							RefInt idx = new RefInt(0);
 							return Promises.toList(infoResults.remoteMetadata.stream() // upload file to target partitions
@@ -299,9 +299,9 @@ public final class ClusterRepartitionController extends AbstractReactive
 													return Promise.of(Try.of(null));
 												}
 												// upload file to this partition
-												AsyncFs fs = partitions.get(partitionId);
+												AsyncFileSystem fs = partitions.get(partitionId);
 												if (fs == null) {
-													return Promise.ofException(new FsIOException("File system '" + partitionId + "' is not alive"));
+													return Promise.ofException(new FileSystemIOException("File system '" + partitionId + "' is not alive"));
 												}
 												return Promise.<Void>ofCallback(cb ->
 														splitter.addOutput()
@@ -332,7 +332,7 @@ public final class ClusterRepartitionController extends AbstractReactive
 												}
 
 												logger.trace("deleting file {} on {}", meta, localPartitionId);
-												return localFs.delete(name)
+												return fileSystem.delete(name)
 														.map($ -> {
 															logger.info("handled file {} : {} (ensured on {}, uploaded to {})", name, meta, selected, infoResults);
 															return true;
@@ -377,16 +377,16 @@ public final class ClusterRepartitionController extends AbstractReactive
 		return true;
 	}
 
-	private void checkEnoughAlivePartitions() throws FsIOException {
+	private void checkEnoughAlivePartitions() throws FileSystemIOException {
 		if (partitions.getAlivePartitions().size() < replicationCount) {
-			throw new FsIOException("Not enough alive partitions");
+			throw new FileSystemIOException("Not enough alive partitions");
 		}
 	}
 
 	@Override
 	public Promise<Void> start() {
 		checkInReactorThread();
-		this.localFs = checkNotNull(partitions.getPartitions().get(localPartitionId), "Partitions do not contain local partition ID");
+		this.fileSystem = checkNotNull(partitions.getPartitions().get(localPartitionId), "Partitions do not contain local partition ID");
 		return Promise.complete();
 	}
 
@@ -435,7 +435,7 @@ public final class ClusterRepartitionController extends AbstractReactive
 	}
 
 	@JmxAttribute(name = "")
-	public FsPartitions getPartitions() {
+	public FileSystemPartitions getPartitions() {
 		return partitions;
 	}
 

@@ -24,7 +24,7 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.WithChannelInput;
 import io.activej.csp.dsl.WithChannelOutputs;
 import io.activej.csp.process.AbstractCommunicatingProcess;
-import io.activej.fs.exception.FsException;
+import io.activej.fs.exception.FileSystemException;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 
@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.fs.cluster.FsPartitions.LOCAL_EXCEPTION;
+import static io.activej.fs.cluster.FileSystemPartitions.LOCAL_EXCEPTION;
 
 final class ChannelByteSplitter extends AbstractCommunicatingProcess
 		implements WithChannelInput<ChannelByteSplitter, ByteBuf>, WithChannelOutputs<ByteBuf> {
@@ -104,7 +104,7 @@ final class ChannelByteSplitter extends AbstractCommunicatingProcess
 															return Promise.complete();
 														})))
 								.whenComplete(() -> outputs.removeAll(failed))
-								.whenException(e -> closeEx(new FsException("Not enough successes")))
+								.whenException(e -> closeEx(new FileSystemException("Not enough successes")))
 								.whenResult(this::doProcess);
 						buf.recycle();
 					} else {

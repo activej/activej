@@ -21,9 +21,9 @@ import io.activej.config.ConfigModule;
 import io.activej.config.converter.ConfigConverters;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.inspector.ThrottlingController;
-import io.activej.fs.AsyncFs;
-import io.activej.fs.Fs;
-import io.activej.fs.tcp.FsServer;
+import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.FileSystem;
+import io.activej.fs.tcp.FileSystemServer;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpServer;
 import io.activej.inject.annotation.Eager;
@@ -32,7 +32,7 @@ import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.Module;
 import io.activej.jmx.JmxModule;
 import io.activej.launcher.Launcher;
-import io.activej.launchers.fs.gui.FsGuiServlet;
+import io.activej.launchers.fs.gui.FileSystemGuiServlet;
 import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
@@ -43,12 +43,12 @@ import java.util.concurrent.Executor;
 
 import static io.activej.config.converter.ConfigConverters.ofPath;
 import static io.activej.inject.module.Modules.combine;
-import static io.activej.launchers.fs.Initializers.ofFsServer;
+import static io.activej.launchers.fs.Initializers.ofFileSystemServer;
 import static io.activej.launchers.initializers.Initializers.ofEventloop;
 import static io.activej.launchers.initializers.Initializers.ofHttpServer;
 
 public class SimpleTcpServerLauncher extends Launcher {
-	public static final String PROPERTIES_FILE = "activefs-server.properties";
+	public static final String PROPERTIES_FILE = "fs-server.properties";
 	public static final Path DEFAULT_PATH = Paths.get(System.getProperty("java.io.tmpdir"), "fs-storage");
 	public static final String DEFAULT_SERVER_LISTEN_ADDRESS = "*:9000";
 	public static final String DEFAULT_GUI_SERVER_LISTEN_ADDRESS = "*:8080";
@@ -62,31 +62,31 @@ public class SimpleTcpServerLauncher extends Launcher {
 
 	@Eager
 	@Provides
-	FsServer activeFsServer(NioReactor reactor, AsyncFs activeFs, Config config) {
-		return FsServer.create(reactor, activeFs)
-				.withInitializer(ofFsServer(config.getChild("activefs")));
+	FileSystemServer fileSystemServer(NioReactor reactor, AsyncFileSystem fileSystem, Config config) {
+		return FileSystemServer.create(reactor, fileSystem)
+				.withInitializer(ofFileSystemServer(config.getChild("fs")));
 	}
 
 	@Provides
 	@Eager
 	HttpServer guiServer(NioReactor reactor, AsyncServlet servlet, Config config) {
 		return HttpServer.create(reactor, servlet)
-				.withInitializer(ofHttpServer(config.getChild("activefs.http.gui")));
+				.withInitializer(ofHttpServer(config.getChild("fs.http.gui")));
 	}
 
 	@Provides
-	AsyncServlet guiServlet(AsyncFs activeFs) {
-		return FsGuiServlet.create(activeFs);
+	AsyncServlet guiServlet(AsyncFileSystem fileSystem) {
+		return FileSystemGuiServlet.create(fileSystem);
 	}
 
 	@Provides
-	AsyncFs localFs(Reactor reactor, Executor executor, Config config) {
-		return Fs.create(reactor, executor, config.get(ofPath(), "activefs.path", DEFAULT_PATH));
+	AsyncFileSystem fileSystem(Reactor reactor, Executor executor, Config config) {
+		return FileSystem.create(reactor, executor, config.get(ofPath(), "fs.path", DEFAULT_PATH));
 	}
 
 	@Provides
 	Executor executor(Config config) {
-		return ConfigConverters.getExecutor(config.getChild("activefs.executor"));
+		return ConfigConverters.getExecutor(config.getChild("fs.executor"));
 	}
 
 	@Provides
@@ -98,8 +98,8 @@ public class SimpleTcpServerLauncher extends Launcher {
 
 	protected Config createConfig() {
 		return Config.create()
-				.with("activefs.listenAddresses", DEFAULT_SERVER_LISTEN_ADDRESS)
-				.with("activefs.http.gui.listenAddresses", DEFAULT_GUI_SERVER_LISTEN_ADDRESS);
+				.with("fs.listenAddresses", DEFAULT_SERVER_LISTEN_ADDRESS)
+				.with("fs.http.gui.listenAddresses", DEFAULT_GUI_SERVER_LISTEN_ADDRESS);
 	}
 
 	@Override

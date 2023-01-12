@@ -18,8 +18,8 @@ import io.activej.cube.ot.CubeDiff;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogPositionDiff;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.AsyncFs;
-import io.activej.fs.Fs;
+import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.FileSystem;
 import io.activej.multilog.LogFile;
 import io.activej.multilog.LogPosition;
 import io.activej.promise.Promises;
@@ -64,7 +64,7 @@ public class CubeBackupControllerTest {
 	private Eventloop eventloop;
 	private Thread eventloopThread;
 	private DataSource dataSource;
-	private AsyncFs activeFs;
+	private AsyncFileSystem fileSystem;
 	private OTUplink_CubeMySql uplink;
 	private CubeBackupController backupController;
 
@@ -83,9 +83,9 @@ public class CubeBackupControllerTest {
 		eventloopThread.start();
 
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
-		Fs fs = Fs.create(eventloop, executor, aggregationsDir);
+		FileSystem fs = FileSystem.create(eventloop, executor, aggregationsDir);
 		eventloop.submit(fs::start).get();
-		activeFs = fs;
+		fileSystem = fs;
 		AggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(eventloop, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
 				FrameFormat_LZ4.create(), fs);
 		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
@@ -185,7 +185,7 @@ public class CubeBackupControllerTest {
 				.flatMap(Collection::stream)
 				.flatMap(CubeDiff::addedChunks)
 				.map(String::valueOf)
-				.map(name -> activeFs.upload(name + LOG)
+				.map(name -> fileSystem.upload(name + LOG)
 						.then(consumer -> consumer.acceptAll(wrapUtf8("Stub chunk data"), null)))));
 	}
 
@@ -233,8 +233,8 @@ public class CubeBackupControllerTest {
 			throw new AssertionError(e);
 		}
 
-		String prefix = "backups" + AsyncFs.SEPARATOR + backupId + AsyncFs.SEPARATOR;
-		Set<Long> actualChunks = await(() -> activeFs.list(prefix + "*" + LOG))
+		String prefix = "backups" + AsyncFileSystem.SEPARATOR + backupId + AsyncFileSystem.SEPARATOR;
+		Set<Long> actualChunks = await(() -> fileSystem.list(prefix + "*" + LOG))
 				.keySet()
 				.stream()
 				.map(s -> s.substring(prefix.length(), s.length() - LOG.length()))

@@ -16,7 +16,7 @@
 
 package io.activej.fs.exception;
 
-public final class IsADirectoryException extends FsScalarException {
+public final class IsADirectoryException extends FileSystemScalarException {
 	public IsADirectoryException(String message) {
 		super(message);
 	}

@@ -28,7 +28,7 @@ EXPOSE 9000
 
 ENTRYPOINT [[ -z "$PARTITIONS" ]] && { echo "Pass '-e PARTITIONS=partition1;partition2...'"; exit 1; } \
         || java $SYS_PROPS \
-                -Dconfig.activefs.cluster.partitions=$PARTITIONS \
+                -Dconfig.fs.cluster.partitions=$PARTITIONS \
                 -Dcom.sun.management.jmxremote \
                 -Dcom.sun.management.jmxremote.authenticate=false \
                 -Dcom.sun.management.jmxremote.ssl=false \

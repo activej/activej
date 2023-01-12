@@ -28,7 +28,7 @@ EXPOSE 9000
 
 ENTRYPOINT [[ -z "$LOCAL_PARTITION_ID" ]] && { echo "Pass '-e LOCAL_PARTITION_ID=host:port'"; exit 1; } \
         || java $SYS_PROPS \
-                -Dconfig.activefs.repartition.localPartitionId=$LOCAL_PARTITION_ID \
+                -Dconfig.fs.repartition.localPartitionId=$LOCAL_PARTITION_ID \
                 -Dcom.sun.management.jmxremote \
                 -Dcom.sun.management.jmxremote.authenticate=false \
                 -Dcom.sun.management.jmxremote.ssl=false \

@@ -14,7 +14,7 @@ import io.activej.cube.Cube.AggregationConfig;
 import io.activej.cube.exception.QueryException;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamSupplier;
-import io.activej.fs.Fs;
+import io.activej.fs.FileSystem;
 import io.activej.reactor.Reactor;
 import io.activej.record.Record;
 import io.activej.test.rules.ByteBufRule;
@@ -71,7 +71,7 @@ public class AddedMeasuresTest {
 		reactor = Reactor.getCurrentReactor();
 		classLoader = DefiningClassLoader.create();
 		Path path = temporaryFolder.newFolder().toPath();
-		Fs fs = Fs.create(reactor, executor, path);
+		FileSystem fs = FileSystem.create(reactor, executor, path);
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormat_LZ4.create();
 		aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);

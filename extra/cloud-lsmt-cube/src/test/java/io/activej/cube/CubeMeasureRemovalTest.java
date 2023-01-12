@@ -16,7 +16,7 @@ import io.activej.etl.AsyncLogDataConsumer;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.OTState_Log;
-import io.activej.fs.Fs;
+import io.activej.fs.FileSystem;
 import io.activej.multilog.AsyncMultilog;
 import io.activej.multilog.Multilog;
 import io.activej.ot.OTStateManager;
@@ -59,14 +59,14 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 		aggregationsDir = temporaryFolder.newFolder().toPath();
 		logsDir = temporaryFolder.newFolder().toPath();
 
-		Fs fs = Fs.create(reactor, EXECUTOR, aggregationsDir);
+		FileSystem fs = FileSystem.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
 		aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, fs);
 		BinarySerializer<LogItem> serializer = SerializerBuilder.create(CLASS_LOADER).build(LogItem.class);
-		Fs localFs = Fs.create(reactor, EXECUTOR, logsDir);
-		await(localFs.start());
+		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
+		await(fileSystem.start());
 		multilog = Multilog.create(reactor,
-				localFs,
+				fileSystem,
 				FrameFormat_LZ4.create(),
 				serializer,
 				NAME_PARTITION_REMAINDER_SEQ);
@@ -74,7 +74,7 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 	@Test
 	public void test() {
-		Fs fs = Fs.create(reactor, EXECUTOR, aggregationsDir);
+		FileSystem fs = FileSystem.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
 		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, fs);
 		Cube cube = Cube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
@@ -100,10 +100,10 @@ public class CubeMeasureRemovalTest extends CubeTestBase {
 
 		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 
-		Fs localFs = Fs.create(reactor, EXECUTOR, logsDir);
-		await(localFs.start());
+		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
+		await(fileSystem.start());
 		AsyncMultilog<LogItem> multilog = Multilog.create(reactor,
-				localFs,
+				fileSystem,
 				FrameFormat_LZ4.create(),
 				SerializerBuilder.create(CLASS_LOADER).build(LogItem.class),
 				NAME_PARTITION_REMAINDER_SEQ);

@@ -21,8 +21,8 @@ public class ServerSetupExample extends SimpleTcpServerLauncher {
 	@Override
 	protected Config createConfig() {
 		return super.createConfig()
-				.with("activefs.path", storage.toString())
-				.with("activefs.listenAddresses", "6732");
+				.with("fs.path", storage.toString())
+				.with("fs.listenAddresses", "6732");
 	}
 
 	@Override

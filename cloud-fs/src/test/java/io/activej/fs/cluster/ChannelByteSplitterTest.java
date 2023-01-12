@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
-import static io.activej.fs.cluster.FsPartitions.LOCAL_EXCEPTION;
+import static io.activej.fs.cluster.FileSystemPartitions.LOCAL_EXCEPTION;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static java.nio.charset.StandardCharsets.UTF_8;

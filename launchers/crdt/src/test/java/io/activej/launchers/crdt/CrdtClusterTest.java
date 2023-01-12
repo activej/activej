@@ -7,8 +7,8 @@ import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.crdt.util.BinarySerializer_CrdtData;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
-import io.activej.fs.AsyncFs;
-import io.activej.fs.Fs;
+import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.FileSystem;
 import io.activej.http.AsyncHttpClient;
 import io.activej.http.HttpClient;
 import io.activej.http.HttpRequest;
@@ -94,8 +94,8 @@ public final class CrdtClusterTest {
 				}
 
 				@Provides
-				AsyncFs fs(Reactor reactor, Executor executor, Config config) {
-					return Fs.create(reactor, executor, config.get(ofPath(), "crdt.local.path"));
+				AsyncFileSystem fileSystem(Reactor reactor, Executor executor, Config config) {
+					return FileSystem.create(reactor, executor, config.get(ofPath(), "crdt.local.path"));
 				}
 			};
 		}

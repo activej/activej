@@ -17,14 +17,14 @@
 package io.activej.fs.http;
 
 import com.dslplatform.json.CompiledJson;
-import io.activej.fs.exception.FsException;
+import io.activej.fs.exception.FileSystemException;
 import org.jetbrains.annotations.Nullable;
 
 public final class UploadAcknowledgement {
-	private final @Nullable FsException error;
+	private final @Nullable FileSystemException error;
 
 	@CompiledJson
-	public UploadAcknowledgement(@Nullable FsException error) {
+	public UploadAcknowledgement(@Nullable FileSystemException error) {
 		this.error = error;
 	}
 
@@ -32,7 +32,7 @@ public final class UploadAcknowledgement {
 		return new UploadAcknowledgement(null);
 	}
 
-	static UploadAcknowledgement ofError(FsException error) {
+	static UploadAcknowledgement ofError(FileSystemException error) {
 		return new UploadAcknowledgement(error);
 	}
 
@@ -40,7 +40,7 @@ public final class UploadAcknowledgement {
 		return error == null;
 	}
 
-	public @Nullable FsException getError() {
+	public @Nullable FileSystemException getError() {
 		return error;
 	}
 

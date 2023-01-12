@@ -18,7 +18,7 @@ package io.activej.fs;
 
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.fs.exception.ForbiddenPathException;
-import io.activej.fs.exception.FsStructureException;
+import io.activej.fs.exception.FileSystemStructureException;
 import io.activej.fs.exception.GlobException;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -36,8 +36,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.regex.PatternSyntaxException;
 
-import static io.activej.fs.AsyncFs.SEPARATOR;
-import static io.activej.fs.util.RemoteFsUtils.isWildcard;
+import static io.activej.fs.AsyncFileSystem.SEPARATOR;
+import static io.activej.fs.util.RemoteFileSystemUtils.isWildcard;
 import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
 
@@ -131,7 +131,7 @@ public final class LocalFileUtils {
 				if (Files.exists(tempDir)) {
 					throw e;
 				}
-				throw new FsStructureException("Temporary directory " + tempDir + " not found");
+				throw new FileSystemStructureException("Temporary directory " + tempDir + " not found");
 			} catch (FileAlreadyExistsException ignored) {
 				continue;
 			}
@@ -225,7 +225,7 @@ public final class LocalFileUtils {
 			return;
 		}
 
-		FileSystem fs = dir.getFileSystem();
+		java.nio.file.FileSystem fs = dir.getFileSystem();
 
 		PathMatcher[] matchers = new PathMatcher[parts.length];
 		matchers[0] = getPathMatcher(fs, parts[0]);
@@ -271,7 +271,7 @@ public final class LocalFileUtils {
 		});
 	}
 
-	private static PathMatcher getPathMatcher(FileSystem fileSystem, String glob) throws GlobException {
+	private static PathMatcher getPathMatcher(java.nio.file.FileSystem fileSystem, String glob) throws GlobException {
 		try {
 			return fileSystem.getPathMatcher("glob:" + glob);
 		} catch (PatternSyntaxException | UnsupportedOperationException e) {
@@ -325,7 +325,7 @@ public final class LocalFileUtils {
 			if (Files.exists(tempDir)) {
 				throw e;
 			}
-			throw new FsStructureException("Temporary directory " + tempDir + " not found");
+			throw new FileSystemStructureException("Temporary directory " + tempDir + " not found");
 		}
 	}
 

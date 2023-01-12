@@ -18,7 +18,7 @@ import io.activej.etl.LogDataConsumer_Splitter;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.OTState_Log;
-import io.activej.fs.Fs;
+import io.activej.fs.FileSystem;
 import io.activej.http.AsyncHttpClient;
 import io.activej.http.HttpClient;
 import io.activej.http.HttpServer;
@@ -252,7 +252,7 @@ public final class ReportingTest extends CubeTestBase {
 		serverPort = getFreePort();
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 
-		Fs fs = Fs.create(reactor, EXECUTOR, aggregationsDir);
+		FileSystem fs = FileSystem.create(reactor, EXECUTOR, aggregationsDir);
 		await(fs.start());
 		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor,
 				JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FrameFormat_LZ4.create(), fs);
@@ -287,10 +287,10 @@ public final class ReportingTest extends CubeTestBase {
 		OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(cube);
 		OTStateManager<Long, LogDiff<CubeDiff>> logCubeStateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
-		Fs activeFs = Fs.create(reactor, EXECUTOR, temporaryFolder.newFolder().toPath());
-		await(activeFs.start());
+		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, temporaryFolder.newFolder().toPath());
+		await(fileSystem.start());
 		AsyncMultilog<LogItem> multilog = Multilog.create(reactor,
-				activeFs,
+				fileSystem,
 				FrameFormat_LZ4.create(),
 				SerializerBuilder.create(CLASS_LOADER).build(LogItem.class),
 				NAME_PARTITION_REMAINDER_SEQ);

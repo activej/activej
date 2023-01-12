@@ -6,8 +6,8 @@ import io.activej.dataflow.calcite.inject.CalciteServerModule;
 import io.activej.dataflow.inject.DatasetId;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.StreamSupplierWithResult;
-import io.activej.fs.AsyncFs;
-import io.activej.fs.Fs;
+import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.FileSystem;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.Transient;
@@ -61,14 +61,14 @@ public class MultilogDataflowServerModule extends AbstractModule {
 	}
 
 	@Provides
-	AsyncMultilog<LogItem> multilog(@Named("Dataflow") Reactor reactor, AsyncFs fs, FrameFormat frameFormat, BinarySerializer<LogItem> logItemSerializer, LogNamingScheme namingScheme) {
+	AsyncMultilog<LogItem> multilog(@Named("Dataflow") Reactor reactor, AsyncFileSystem fs, FrameFormat frameFormat, BinarySerializer<LogItem> logItemSerializer, LogNamingScheme namingScheme) {
 		return Multilog.create(reactor, fs, frameFormat, logItemSerializer, namingScheme);
 	}
 
 	@Provides
-	AsyncFs fs(@Named("Dataflow") Reactor reactor, Executor executor) throws IOException {
+	AsyncFileSystem fs(@Named("Dataflow") Reactor reactor, Executor executor) throws IOException {
 		Path multilogPath = Files.createTempDirectory("multilog");
-		return Fs.create(reactor, executor, multilogPath);
+		return FileSystem.create(reactor, executor, multilogPath);
 	}
 
 	@Provides

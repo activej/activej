@@ -4,13 +4,13 @@ import io.activej.async.service.TaskScheduler;
 import io.activej.config.Config;
 import io.activej.crdt.function.CrdtFunction;
 import io.activej.crdt.storage.AsyncCrdtStorage;
-import io.activej.crdt.storage.local.CrdtStorage_Fs;
+import io.activej.crdt.storage.local.CrdtStorage_FileSystem;
 import io.activej.crdt.util.BinarySerializer_CrdtData;
 import io.activej.crdt.wal.AsyncWriteAheadLog;
 import io.activej.crdt.wal.WalUploader;
 import io.activej.crdt.wal.WriteAheadLog_File;
-import io.activej.fs.AsyncFs;
-import io.activej.fs.Fs;
+import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.FileSystem;
 import io.activej.inject.annotation.Eager;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
@@ -54,18 +54,18 @@ public final class PersistentStorageModule extends AbstractModule {
 	}
 
 	@Provides
-	CrdtStorage_Fs<Long, DetailedSumsCrdtState> storage(
+	CrdtStorage_FileSystem<Long, DetailedSumsCrdtState> storage(
 			Reactor reactor,
-			AsyncFs fs,
+			AsyncFileSystem fs,
 			BinarySerializer_CrdtData<Long, DetailedSumsCrdtState> serializer,
 			CrdtFunction<DetailedSumsCrdtState> function
 	) {
-		return CrdtStorage_Fs.create(reactor, fs, serializer, function);
+		return CrdtStorage_FileSystem.create(reactor, fs, serializer, function);
 	}
 
 	@Provides
-	AsyncFs activeFs(Reactor reactor, Executor executor, Config config) {
-		return Fs.create(reactor, executor, config.get(ofPath(), "storage"));
+	AsyncFileSystem fileSystem(Reactor reactor, Executor executor, Config config) {
+		return FileSystem.create(reactor, executor, config.get(ofPath(), "storage"));
 	}
 
 	@Provides
@@ -76,8 +76,8 @@ public final class PersistentStorageModule extends AbstractModule {
 	@Provides
 	@Named("consolidate")
 	@Eager
-	TaskScheduler consolidateScheduler(Reactor reactor, CrdtStorage_Fs<Long, DetailedSumsCrdtState> storageFs, Config config) {
-		return TaskScheduler.create(reactor, storageFs::consolidate)
+	TaskScheduler consolidateScheduler(Reactor reactor, CrdtStorage_FileSystem<Long, DetailedSumsCrdtState> storageFileSystem, Config config) {
+		return TaskScheduler.create(reactor, storageFileSystem::consolidate)
 				.withSchedule(config.get(ofReactorTaskSchedule(), "consolidate.schedule", ofInterval(Duration.ofMinutes(3))))
 				.withInitialDelay(Duration.ofSeconds(10));
 	}

@@ -1,8 +1,8 @@
 package io.activej.fs;
 
 import io.activej.common.function.ConsumerEx;
-import io.activej.fs.exception.FsBatchException;
-import io.activej.fs.exception.FsScalarException;
+import io.activej.fs.exception.FileSystemBatchException;
+import io.activej.fs.exception.FileSystemScalarException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,30 +25,30 @@ import static org.junit.Assert.*;
 
 public final class Utils {
 
-	public static void assertBatchException(Exception e, String name, Class<? extends FsScalarException> exceptionClass) {
+	public static void assertBatchException(Exception e, String name, Class<? extends FileSystemScalarException> exceptionClass) {
 		assertBatchException(e, Map.of(name, exceptionClass));
 	}
 
-	public static void assertBatchException(Exception e, Map<String, Class<? extends FsScalarException>> exceptionClasses) {
-		assertThat(e, instanceOf(FsBatchException.class));
-		FsBatchException batchEx = (FsBatchException) e;
+	public static void assertBatchException(Exception e, Map<String, Class<? extends FileSystemScalarException>> exceptionClasses) {
+		assertThat(e, instanceOf(FileSystemBatchException.class));
+		FileSystemBatchException batchEx = (FileSystemBatchException) e;
 
-		Map<String, FsScalarException> exceptions = batchEx.getExceptions();
+		Map<String, FileSystemScalarException> exceptions = batchEx.getExceptions();
 
-		for (Map.Entry<String, Class<? extends FsScalarException>> entry : exceptionClasses.entrySet()) {
+		for (Map.Entry<String, Class<? extends FileSystemScalarException>> entry : exceptionClasses.entrySet()) {
 			assertThat(exceptions.get(entry.getKey()), instanceOf(entry.getValue()));
 		}
 	}
 
-	public static void assertBatchException(Exception e, int minExpected, int maxExpected, BiConsumer<String, FsScalarException> exceptionAssertFn) {
-		assertThat(e, instanceOf(FsBatchException.class));
-		FsBatchException batchEx = (FsBatchException) e;
+	public static void assertBatchException(Exception e, int minExpected, int maxExpected, BiConsumer<String, FileSystemScalarException> exceptionAssertFn) {
+		assertThat(e, instanceOf(FileSystemBatchException.class));
+		FileSystemBatchException batchEx = (FileSystemBatchException) e;
 
-		Map<String, FsScalarException> exceptions = batchEx.getExceptions();
+		Map<String, FileSystemScalarException> exceptions = batchEx.getExceptions();
 		assertTrue(exceptions.size() >= minExpected);
 		assertTrue(exceptions.size() <= maxExpected);
 
-		for (Map.Entry<String, FsScalarException> entry : exceptions.entrySet()) {
+		for (Map.Entry<String, FileSystemScalarException> entry : exceptions.entrySet()) {
 			exceptionAssertFn.accept(entry.getKey(), entry.getValue());
 		}
 	}

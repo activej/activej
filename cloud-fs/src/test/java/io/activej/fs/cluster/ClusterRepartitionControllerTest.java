@@ -2,11 +2,11 @@ package io.activej.fs.cluster;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.ChannelConsumer;
-import io.activej.fs.AsyncFs;
-import io.activej.fs.ForwardingFs;
-import io.activej.fs.Fs;
-import io.activej.fs.tcp.FsServer;
-import io.activej.fs.tcp.Fs_Remote;
+import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.ForwardingFileSystem;
+import io.activej.fs.FileSystem;
+import io.activej.fs.tcp.FileSystemServer;
+import io.activej.fs.tcp.FileSystem_Remote;
 import io.activej.net.AbstractReactiveServer;
 import io.activej.promise.Promise;
 import io.activej.reactor.Reactor;
@@ -33,7 +33,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
-import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
+import static io.activej.fs.util.RemoteFileSystemUtils.ofFixedSize;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.*;
@@ -56,8 +56,8 @@ public final class ClusterRepartitionControllerTest {
 		NioReactor reactor = Reactor.getCurrentReactor();
 
 		Executor executor = Executors.newSingleThreadExecutor();
-		List<FsServer> servers = new ArrayList<>();
-		Map<Object, AsyncFs> partitions = new HashMap<>();
+		List<FileSystemServer> servers = new ArrayList<>();
+		Map<Object, AsyncFileSystem> partitions = new HashMap<>();
 
 		Path storage = tmpFolder.newFolder().toPath();
 		Path localStorage = storage.resolve("local");
@@ -71,32 +71,32 @@ public final class ClusterRepartitionControllerTest {
 		file.setLength(fileSize);
 		file.close();
 
-		Fs localFsClient = Fs.create(reactor, executor, localStorage);
-		await(localFsClient.start());
+		FileSystem localFileSystem = FileSystem.create(reactor, executor, localStorage);
+		await(localFileSystem.start());
 
 		Object localPartitionId = "local";
-		partitions.put(localPartitionId, localFsClient);
+		partitions.put(localPartitionId, localFileSystem);
 
 		InetSocketAddress regularPartitionAddress = new InetSocketAddress("localhost", getFreePort());
 		Path regularPath = storage.resolve("regular");
 		Files.createDirectories(regularPath);
-		partitions.put("regular", Fs_Remote.create(reactor, regularPartitionAddress));
-		Fs localFs = Fs.create(reactor, executor, regularPath);
-		await(localFs.start());
+		partitions.put("regular", FileSystem_Remote.create(reactor, regularPartitionAddress));
+		FileSystem fileSystem = FileSystem.create(reactor, executor, regularPath);
+		await(fileSystem.start());
 
 		InetSocketAddress failingPartitionAddress = new InetSocketAddress("localhost", getFreePort());
 		Path failingPath = storage.resolve("failing");
 		Files.createDirectories(failingPath);
-		partitions.put("failing", Fs_Remote.create(reactor, failingPartitionAddress));
-		Fs peer = Fs.create(reactor, executor, failingPath);
+		partitions.put("failing", FileSystem_Remote.create(reactor, failingPartitionAddress));
+		FileSystem peer = FileSystem.create(reactor, executor, failingPath);
 		await(peer.start());
 
-		FsServer regularServer = FsServer.create(reactor, localFs).withListenAddress(regularPartitionAddress);
+		FileSystemServer regularServer = FileSystemServer.create(reactor, fileSystem).withListenAddress(regularPartitionAddress);
 		regularServer.listen();
 		servers.add(regularServer);
 
-		FsServer failingServer = FsServer.create(reactor,
-						new ForwardingFs(peer) {
+		FileSystemServer failingServer = FileSystemServer.create(reactor,
+						new ForwardingFileSystem(peer) {
 							@Override
 							public Promise<ChannelConsumer<ByteBuf>> upload(String name, long size) {
 								return super.upload(name)
@@ -108,25 +108,25 @@ public final class ClusterRepartitionControllerTest {
 		servers.add(failingServer);
 
 		AsyncDiscoveryService discoveryService = AsyncDiscoveryService.constant(partitions);
-		FsPartitions fsPartitions = FsPartitions.create(reactor, discoveryService)
+		FileSystemPartitions fileSystemPartitions = FileSystemPartitions.create(reactor, discoveryService)
 				.withServerSelector(RENDEZVOUS_HASH_SHARDER);
 
-		Promise<Map<Object, AsyncFs>> discoverPromise = discoveryService.discover().get();
-		Map<Object, AsyncFs> discovered = discoverPromise.getResult();
+		Promise<Map<Object, AsyncFileSystem>> discoverPromise = discoveryService.discover().get();
+		Map<Object, AsyncFileSystem> discovered = discoverPromise.getResult();
 
-		ClusterRepartitionController controller = ClusterRepartitionController.create(reactor, localPartitionId, fsPartitions)
+		ClusterRepartitionController controller = ClusterRepartitionController.create(reactor, localPartitionId, fileSystemPartitions)
 				.withReplicationCount(partitions.size());    // full replication
 
 		assertTrue(discovered.containsKey("regular"));
 		assertTrue(discovered.containsKey("failing")); // no one has marked it dead yet
 
-		await(fsPartitions.start()
+		await(fileSystemPartitions.start()
 				.then(controller::start)
 				.then(controller::repartition)
 				.whenComplete(TestUtils.assertCompleteFn($ -> servers.forEach(AbstractReactiveServer::close))));
 
-		assertTrue(fsPartitions.getAlivePartitions().containsKey("regular"));
-		assertFalse(fsPartitions.getAlivePartitions().containsKey("failing"));
+		assertTrue(fileSystemPartitions.getAlivePartitions().containsKey("regular"));
+		assertFalse(fileSystemPartitions.getAlivePartitions().containsKey("failing"));
 
 		assertEquals(fileSize, Files.size(localStorage.resolve("file")));
 		assertEquals(fileSize, Files.size(regularPath.resolve("file")));

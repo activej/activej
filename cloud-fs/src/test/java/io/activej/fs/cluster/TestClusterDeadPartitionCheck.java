@@ -4,13 +4,13 @@ import io.activej.async.executor.ReactorExecutor;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelSupplier;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.AsyncFs;
-import io.activej.fs.Fs;
-import io.activej.fs.exception.FsException;
-import io.activej.fs.http.FsServlet;
-import io.activej.fs.http.Fs_Http;
-import io.activej.fs.tcp.FsServer;
-import io.activej.fs.tcp.Fs_Remote;
+import io.activej.fs.AsyncFileSystem;
+import io.activej.fs.FileSystem;
+import io.activej.fs.exception.FileSystemException;
+import io.activej.fs.http.FileSystemServlet;
+import io.activej.fs.http.FileSystem_HttpClient;
+import io.activej.fs.tcp.FileSystemServer;
+import io.activej.fs.tcp.FileSystem_Remote;
 import io.activej.http.HttpClient;
 import io.activej.http.HttpServer;
 import io.activej.net.AbstractReactiveServer;
@@ -47,7 +47,7 @@ import java.util.concurrent.TimeUnit;
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.Utils.first;
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
-import static io.activej.fs.Fs.DEFAULT_TEMP_DIR;
+import static io.activej.fs.FileSystem.DEFAULT_TEMP_DIR;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
 import static io.activej.test.TestUtils.getFreePort;
@@ -88,13 +88,13 @@ public final class TestClusterDeadPartitionCheck {
 				new Object[]{
 						new ClientServerFactory() {
 							@Override
-							public AsyncFs createClient(NioReactor reactor, InetSocketAddress address) {
-								return Fs_Remote.create(reactor, address);
+							public AsyncFileSystem createClient(NioReactor reactor, InetSocketAddress address) {
+								return FileSystem_Remote.create(reactor, address);
 							}
 
 							@Override
-							public AbstractReactiveServer<?> createServer(Fs localFs, InetSocketAddress address) {
-								return FsServer.create((NioReactor) localFs.getReactor(), localFs)
+							public AbstractReactiveServer<?> createServer(FileSystem fileSystem, InetSocketAddress address) {
+								return FileSystemServer.create((NioReactor) fileSystem.getReactor(), fileSystem)
 										.withListenAddress(address);
 							}
 
@@ -122,13 +122,13 @@ public final class TestClusterDeadPartitionCheck {
 				new Object[]{
 						new ClientServerFactory() {
 							@Override
-							public AsyncFs createClient(NioReactor reactor, InetSocketAddress address) {
-								return Fs_Http.create(reactor, "http://localhost:" + address.getPort(), HttpClient.create(reactor));
+							public AsyncFileSystem createClient(NioReactor reactor, InetSocketAddress address) {
+								return FileSystem_HttpClient.create(reactor, "http://localhost:" + address.getPort(), HttpClient.create(reactor));
 							}
 
 							@Override
-							public AbstractReactiveServer<?> createServer(Fs localFs, InetSocketAddress address) {
-								return HttpServer.create((NioReactor) localFs.getReactor(), FsServlet.create(localFs))
+							public AbstractReactiveServer<?> createServer(FileSystem fileSystem, InetSocketAddress address) {
+								return HttpServer.create((NioReactor) fileSystem.getReactor(), FileSystemServlet.create(fileSystem))
 										.withReadWriteTimeout(Duration.ZERO, Duration.ZERO)
 										.withListenAddress(address);
 							}
@@ -147,8 +147,8 @@ public final class TestClusterDeadPartitionCheck {
 		);
 	}
 
-	private FsPartitions partitions;
-	private Fs_Cluster fs;
+	private FileSystemPartitions partitions;
+	private FileSystem_Cluster fileSystemCluster;
 
 	@Before
 	public void setup() throws IOException, ExecutionException, InterruptedException {
@@ -157,7 +157,7 @@ public final class TestClusterDeadPartitionCheck {
 		executor = newSingleThreadExecutor();
 		servers = new ArrayList<>(CLIENT_SERVER_PAIRS);
 
-		Map<Object, AsyncFs> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
+		Map<Object, AsyncFileSystem> partitions = new HashMap<>(CLIENT_SERVER_PAIRS);
 
 		Path storage = tmpFolder.newFolder().toPath();
 
@@ -172,12 +172,12 @@ public final class TestClusterDeadPartitionCheck {
 			Eventloop serverEventloop = Eventloop.create().withFatalErrorHandler(rethrow());
 			serverEventloop.keepAlive(true);
 
-			Fs localFs = Fs.create(serverEventloop, executor, serverStorages[i]);
-			AbstractReactiveServer<?> server = factory.createServer(localFs, address);
+			FileSystem fileSystem = FileSystem.create(serverEventloop, executor, serverStorages[i]);
+			AbstractReactiveServer<?> server = factory.createServer(fileSystem, address);
 			CompletableFuture<Void> startFuture = serverEventloop.submit(() -> {
 				try {
 					server.listen();
-					return localFs.start();
+					return fileSystem.start();
 				} catch (IOException e) {
 					throw new AssertionError(e);
 				}
@@ -187,10 +187,10 @@ public final class TestClusterDeadPartitionCheck {
 			startFuture.get();
 		}
 
-		this.partitions = FsPartitions.create(reactor, AsyncDiscoveryService.constant(partitions))
+		this.partitions = FileSystemPartitions.create(reactor, AsyncDiscoveryService.constant(partitions))
 				.withServerSelector((fileName, shards) -> shards.stream().sorted().collect(toList()));
 		await(this.partitions.start());
-		this.fs = Fs_Cluster.create(reactor, this.partitions)
+		this.fileSystemCluster = FileSystem_Cluster.create(reactor, this.partitions)
 				.withReplicationCount(CLIENT_SERVER_PAIRS / 2);
 	}
 
@@ -202,11 +202,11 @@ public final class TestClusterDeadPartitionCheck {
 
 	@Test
 	public void testPing() {
-		await(fs.ping());
+		await(fileSystemCluster.ping());
 		assertEquals(CLIENT_SERVER_PAIRS, partitions.getAlivePartitions().size());
 
 		setAliveNodes(0, 1, 2, 6, 8, 9);
-		await(fs.ping());
+		await(fileSystemCluster.ping());
 		assertEquals(Set.of(0, 1, 2, 6, 8, 9), partitions.getAlivePartitions().keySet());
 	}
 
@@ -214,7 +214,7 @@ public final class TestClusterDeadPartitionCheck {
 	public void testServersFailOnStreamingUpload() {
 		Set<Integer> toBeAlive = Set.of(1, 3);
 		String filename = "test";
-		Exception exception = awaitException(fs.upload(filename)
+		Exception exception = awaitException(fileSystemCluster.upload(filename)
 				.whenComplete(TestUtils.assertCompleteFn($ -> assertEquals(CLIENT_SERVER_PAIRS, partitions.getAlivePartitions().size())))
 				.then(consumer -> {
 					RefInt dataBeforeShutdown = new RefInt(100);
@@ -230,7 +230,7 @@ public final class TestClusterDeadPartitionCheck {
 											.toList();
 
 									// temporary files are created
-									assertEquals(fs.getUploadTargetsMax(), allFiles.size());
+									assertEquals(fileSystemCluster.getUploadTargetsMax(), allFiles.size());
 
 									// no real files are created yet
 									assertTrue(allFiles.stream().allMatch(path -> path.toString().contains(DEFAULT_TEMP_DIR)));
@@ -241,7 +241,7 @@ public final class TestClusterDeadPartitionCheck {
 							.streamTo(consumer);
 				}));
 
-		assertThat(exception, instanceOf(FsException.class));
+		assertThat(exception, instanceOf(FileSystemException.class));
 		assertThat(exception.getMessage(), containsString("Not enough successes"));
 		Set<Object> deadPartitions = partitions.getDeadPartitions().keySet();
 
@@ -327,9 +327,9 @@ public final class TestClusterDeadPartitionCheck {
 	}
 
 	private interface ClientServerFactory {
-		AsyncFs createClient(NioReactor reactor, InetSocketAddress address);
+		AsyncFileSystem createClient(NioReactor reactor, InetSocketAddress address);
 
-		AbstractReactiveServer<?> createServer(Fs localFs, InetSocketAddress address);
+		AbstractReactiveServer<?> createServer(FileSystem fileSystem, InetSocketAddress address);
 
 		void closeServer(AbstractReactiveServer<?> server) throws IOException;
 	}

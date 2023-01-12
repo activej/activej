@@ -22,7 +22,7 @@ import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelInput;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.process.AbstractCommunicatingProcess;
-import io.activej.fs.AsyncFs;
+import io.activej.fs.AsyncFileSystem;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,7 +30,7 @@ import java.util.function.UnaryOperator;
 
 final class LogStreamChunker extends AbstractCommunicatingProcess implements ChannelInput<ByteBuf> {
 	private final CurrentTimeProvider currentTimeProvider;
-	private final AsyncFs fs;
+	private final AsyncFileSystem fileSystem;
 	private final LogNamingScheme namingScheme;
 	private final String logPartition;
 	private final UnaryOperator<ChannelConsumer<ByteBuf>> consumerTransformer;
@@ -40,9 +40,9 @@ final class LogStreamChunker extends AbstractCommunicatingProcess implements Cha
 
 	private LogFile currentChunk;
 
-	public LogStreamChunker(CurrentTimeProvider currentTimeProvider, AsyncFs fs, LogNamingScheme namingScheme, String logPartition, UnaryOperator<ChannelConsumer<ByteBuf>> consumerTransformer) {
+	public LogStreamChunker(CurrentTimeProvider currentTimeProvider, AsyncFileSystem fileSystem, LogNamingScheme namingScheme, String logPartition, UnaryOperator<ChannelConsumer<ByteBuf>> consumerTransformer) {
 		this.currentTimeProvider = currentTimeProvider;
-		this.fs = fs;
+		this.fileSystem = fileSystem;
 		this.namingScheme = namingScheme;
 		this.logPartition = logPartition;
 		this.consumerTransformer = consumerTransformer;
@@ -82,7 +82,7 @@ final class LogStreamChunker extends AbstractCommunicatingProcess implements Cha
 		return flush()
 				.then(() -> {
 					this.currentChunk = (currentChunk == null) ? newChunkName : new LogFile(newChunkName.getName(), 0);
-					return fs.append(namingScheme.path(logPartition, currentChunk), 0)
+					return fileSystem.append(namingScheme.path(logPartition, currentChunk), 0)
 							.then(this::doSanitize)
 							.whenResult(newConsumer -> this.currentConsumer = consumerTransformer.apply(sanitize(newConsumer)))
 							.toVoid();

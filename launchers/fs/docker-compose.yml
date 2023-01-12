@@ -10,10 +10,10 @@ services:
     #  - <host-dir>:/tmp/fs-storage
     environment:
       LOCAL_PARTITION_ID: server1:9000
-      SYS_PROPS: "-Dconfig.activefs.repartition.replicationCount=2
-                  -Dconfig.activefs.repartition.initialDelay=PT5S
-                  -DRemoteActiveFs.connectionTimeout=PT1S
-                  -Dconfig.activefs.cluster.partitions=server1:9000;server2:9000;server3:9000"
+      SYS_PROPS: "-Dconfig.fs.repartition.replicationCount=2
+                  -Dconfig.fs.repartition.initialDelay=PT5S
+                  -DFileSystem_Remote.connectionTimeout=PT1S
+                  -Dconfig.fs.cluster.partitions=server1:9000;server2:9000;server3:9000"
     logging:
       driver: json-file
       options:
@@ -29,10 +29,10 @@ services:
     #  - <host-dir>:/tmp/fs-storage
     environment:
       LOCAL_PARTITION_ID: server2:9000
-      SYS_PROPS: "-Dconfig.activefs.repartition.replicationCount=2
-                  -Dconfig.activefs.repartition.initialDelay=PT5S
-                  -DRemoteActiveFs.connectionTimeout=PT1S
-                  -Dconfig.activefs.cluster.partitions=server1:9000;server2:9000;server3:9000"
+      SYS_PROPS: "-Dconfig.fs.repartition.replicationCount=2
+                  -Dconfig.fs.repartition.initialDelay=PT5S
+                  -DFileSystem_Remote.connectionTimeout=PT1S
+                  -Dconfig.fs.cluster.partitions=server1:9000;server2:9000;server3:9000"
     logging:
       driver: json-file
       options:
@@ -48,10 +48,10 @@ services:
     #  - <host-dir>:/tmp/fs-storage
     environment:
       LOCAL_PARTITION_ID: server3:9000
-      SYS_PROPS: "-Dconfig.activefs.repartition.replicationCount=2
-                  -Dconfig.activefs.repartition.initialDelay=PT5S
-                  -DRemoteActiveFs.connectionTimeout=PT1S
-                  -Dconfig.activefs.cluster.partitions=server1:9000;server2:9000;server3:9000"
+      SYS_PROPS: "-Dconfig.fs.repartition.replicationCount=2
+                  -Dconfig.fs.repartition.initialDelay=PT5S
+                  -DFileSystem_Remote.connectionTimeout=PT1S
+                  -Dconfig.fs.cluster.partitions=server1:9000;server2:9000;server3:9000"
     logging:
       driver: json-file
       options:
@@ -69,8 +69,8 @@ services:
       - "8080:8080"
     environment:
       PARTITIONS: server1:9000;server2:9000;server3:9000
-      SYS_PROPS: "-Dconfig.activefs.cluster.replicationCount=2
-                  -DRemoteActiveFs.connectionTimeout=PT1S"
+      SYS_PROPS: "-Dconfig.fs.cluster.replicationCount=2
+                  -DFileSystem_Remote.connectionTimeout=PT1S"
     logging:
       driver: json-file
       options:

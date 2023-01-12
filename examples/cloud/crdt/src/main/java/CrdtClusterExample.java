@@ -6,12 +6,12 @@ import io.activej.crdt.storage.cluster.AsyncDiscoveryService;
 import io.activej.crdt.storage.cluster.CrdtStorage_Cluster;
 import io.activej.crdt.storage.cluster.PartitionScheme_Rendezvous;
 import io.activej.crdt.storage.cluster.RendezvousPartitionGroup;
-import io.activej.crdt.storage.local.CrdtStorage_Fs;
+import io.activej.crdt.storage.local.CrdtStorage_FileSystem;
 import io.activej.crdt.util.BinarySerializer_CrdtData;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.Fs;
+import io.activej.fs.FileSystem;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 
@@ -43,9 +43,9 @@ public final class CrdtClusterExample {
 		for (int i = 0; i < 10; i++) {
 			String id = "partition" + i;
 			Path storage = Files.createTempDirectory("storage_" + id);
-			Fs fs = Fs.create(eventloop, executor, storage);
+			FileSystem fs = FileSystem.create(eventloop, executor, storage);
 			fsStartPromises.add(fs.start());
-			clients.put(id, CrdtStorage_Fs.create(eventloop, fs, SERIALIZER));
+			clients.put(id, CrdtStorage_FileSystem.create(eventloop, fs, SERIALIZER));
 		}
 
 		// grab a couple of them to work with

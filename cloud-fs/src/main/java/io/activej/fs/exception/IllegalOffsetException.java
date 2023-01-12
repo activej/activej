@@ -16,7 +16,7 @@
 
 package io.activej.fs.exception;
 
-public final class IllegalOffsetException extends FsScalarException {
+public final class IllegalOffsetException extends FileSystemScalarException {
 	public IllegalOffsetException(String message) {
 		super(message);
 	}

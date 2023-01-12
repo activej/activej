@@ -16,7 +16,7 @@
 
 package io.activej.fs.exception;
 
-public final class ForbiddenPathException extends FsScalarException {
+public final class ForbiddenPathException extends FileSystemScalarException {
 	public ForbiddenPathException() {
 		super("Forbidden path");
 	}

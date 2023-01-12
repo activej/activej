@@ -16,7 +16,7 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.etl.LogDiff;
 import io.activej.etl.LogOTProcessor;
 import io.activej.etl.OTState_Log;
-import io.activej.fs.Fs;
+import io.activej.fs.FileSystem;
 import io.activej.multilog.AsyncMultilog;
 import io.activej.multilog.Multilog;
 import io.activej.ot.OTStateManager;
@@ -69,7 +69,7 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 		Path aggregationsDir = temporaryFolder.newFolder().toPath();
 		Path logsDir = temporaryFolder.newFolder().toPath();
 
-		Fs fs = Fs.create(reactor, EXECUTOR, aggregationsDir)
+		FileSystem fs = FileSystem.create(reactor, EXECUTOR, aggregationsDir)
 				.withTempDir(Files.createTempDirectory(""));
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormat_LZ4.create();
@@ -97,10 +97,10 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 
 		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, cubeDiffLogOTState);
 
-		Fs localFs = Fs.create(reactor, EXECUTOR, logsDir);
-		await(localFs.start());
+		FileSystem fileSystem = FileSystem.create(reactor, EXECUTOR, logsDir);
+		await(fileSystem.start());
 		AsyncMultilog<LogItem> multilog = Multilog.create(reactor,
-				localFs,
+				fileSystem,
 				frameFormat,
 				SerializerBuilder.create(CLASS_LOADER).build(LogItem.class),
 				NAME_PARTITION_REMAINDER_SEQ);

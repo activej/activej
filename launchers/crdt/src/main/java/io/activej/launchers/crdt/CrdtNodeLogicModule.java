@@ -21,10 +21,10 @@ import io.activej.crdt.CrdtServer;
 import io.activej.crdt.CrdtStorage_Client;
 import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.crdt.storage.cluster.*;
-import io.activej.crdt.storage.local.CrdtStorage_Fs;
+import io.activej.crdt.storage.local.CrdtStorage_FileSystem;
 import io.activej.crdt.storage.local.CrdtStorage_Map;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.AsyncFs;
+import io.activej.fs.AsyncFileSystem;
 import io.activej.inject.Key;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.annotation.QualifierAnnotation;
@@ -59,7 +59,7 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 		bind(Key.ofType(supertype, InMemory.class))
 				.to(Key.ofType(Types.parameterizedType(CrdtStorage_Map.class, typeArguments)));
 		bind(Key.ofType(supertype, Persistent.class))
-				.to(Key.ofType(Types.parameterizedType(CrdtStorage_Fs.class, typeArguments)));
+				.to(Key.ofType(Types.parameterizedType(CrdtStorage_FileSystem.class, typeArguments)));
 		Type[] clusterStorageTypes = Arrays.copyOf(typeArguments, 3);
 		clusterStorageTypes[2] = PartitionId.class;
 
@@ -73,8 +73,8 @@ public abstract class CrdtNodeLogicModule<K extends Comparable<K>, S> extends Ab
 	}
 
 	@Provides
-	CrdtStorage_Fs<K, S> fsCrdtClient(Reactor reactor, AsyncFs activeFs, CrdtDescriptor<K, S> descriptor) {
-		return CrdtStorage_Fs.create(reactor, activeFs, descriptor.serializer(), descriptor.crdtFunction());
+	CrdtStorage_FileSystem<K, S> fileSystemCrdtClient(Reactor reactor, AsyncFileSystem fileSystem, CrdtDescriptor<K, S> descriptor) {
+		return CrdtStorage_FileSystem.create(reactor, fileSystem, descriptor.serializer(), descriptor.crdtFunction());
 	}
 
 	@Provides

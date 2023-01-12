@@ -1,7 +1,7 @@
 package io.activej.state.file;
 
 import io.activej.common.initializer.WithInitializer;
-import io.activej.fs.BlockingFs;
+import io.activej.fs.BlockingFileSystem;
 import io.activej.fs.FileMetadata;
 import io.activej.serializer.stream.*;
 import io.activej.state.StateManager;
@@ -21,7 +21,7 @@ import static io.activej.common.Checks.checkArgument;
 public final class StateManager_File<T> implements StateManager<T, Long>, WithInitializer<StateManager_File<T>> {
 	public static final String DEFAULT_TEMP_DIR = ".temp/";
 
-	private final BlockingFs fs;
+	private final BlockingFileSystem fileSystem;
 	private final FileNamingScheme fileNamingScheme;
 	private final StreamEncoder<T> encoder;
 	private final StreamDecoder<T> decoder;
@@ -29,32 +29,32 @@ public final class StateManager_File<T> implements StateManager<T, Long>, WithIn
 	private int maxSaveDiffs = 0;
 	private String tempDir = DEFAULT_TEMP_DIR;
 
-	private StateManager_File(BlockingFs fs, FileNamingScheme fileNamingScheme,
+	private StateManager_File(BlockingFileSystem fileSystem, FileNamingScheme fileNamingScheme,
 			StreamEncoder<T> encoder, StreamDecoder<T> decoder) {
-		this.fs = fs;
+		this.fileSystem = fileSystem;
 		this.fileNamingScheme = fileNamingScheme;
 		this.encoder = encoder;
 		this.decoder = decoder;
 	}
 
-	public static <T> StateManager_File<T> create(BlockingFs fs, FileNamingScheme fileNamingScheme,
+	public static <T> StateManager_File<T> create(BlockingFileSystem fileSystem, FileNamingScheme fileNamingScheme,
 			StreamCodec<T> codec) {
-		return new StateManager_File<>(fs, fileNamingScheme, codec, codec);
+		return new StateManager_File<>(fileSystem, fileNamingScheme, codec, codec);
 	}
 
-	public static <T> StateManager_File<T> create(BlockingFs fs, FileNamingScheme fileNamingScheme,
+	public static <T> StateManager_File<T> create(BlockingFileSystem fileSystem, FileNamingScheme fileNamingScheme,
 			StreamEncoder<T> encoder, StreamDecoder<T> decoder) {
-		return new StateManager_File<>(fs, fileNamingScheme, encoder, decoder);
+		return new StateManager_File<>(fileSystem, fileNamingScheme, encoder, decoder);
 	}
 
-	public static <T> StateManager_File<T> create(BlockingFs fs, FileNamingScheme fileNamingScheme,
+	public static <T> StateManager_File<T> create(BlockingFileSystem fileSystem, FileNamingScheme fileNamingScheme,
 			StreamEncoder<T> encoder) {
-		return new StateManager_File<>(fs, fileNamingScheme, encoder, null);
+		return new StateManager_File<>(fileSystem, fileNamingScheme, encoder, null);
 	}
 
-	public static <T> StateManager_File<T> create(BlockingFs fs, FileNamingScheme fileNamingScheme,
+	public static <T> StateManager_File<T> create(BlockingFileSystem fileSystem, FileNamingScheme fileNamingScheme,
 			StreamDecoder<T> decoder) {
-		return new StateManager_File<>(fs, fileNamingScheme, null, decoder);
+		return new StateManager_File<>(fileSystem, fileNamingScheme, null, decoder);
 	}
 
 	public StateManager_File<T> withMaxSaveDiffs(int maxSaveDiffs) {
@@ -76,14 +76,14 @@ public final class StateManager_File<T> implements StateManager<T, Long>, WithIn
 
 	@Override
 	public @Nullable Long getLastSnapshotRevision() throws IOException {
-		Map<String, FileMetadata> list = fs.list(fileNamingScheme.snapshotGlob());
+		Map<String, FileMetadata> list = fileSystem.list(fileNamingScheme.snapshotGlob());
 		OptionalLong max = list.keySet().stream().map(fileNamingScheme::decodeSnapshot).filter(Objects::nonNull).mapToLong(v -> v).max();
 		return max.isPresent() ? max.getAsLong() : null;
 	}
 
 	@Override
 	public @Nullable Long getLastDiffRevision(Long currentRevision) throws IOException {
-		Map<String, FileMetadata> list = fs.list(fileNamingScheme.diffGlob(currentRevision));
+		Map<String, FileMetadata> list = fileSystem.list(fileNamingScheme.diffGlob(currentRevision));
 		OptionalLong max = list.keySet().stream().map(fileNamingScheme::decodeDiff).filter(Objects::nonNull).mapToLong(FileNamingScheme.Diff::getTo).max();
 		return max.isPresent() ? max.getAsLong() : null;
 	}
@@ -100,9 +100,9 @@ public final class StateManager_File<T> implements StateManager<T, Long>, WithIn
 	@Override
 	public @Nullable T tryLoadSnapshot(Long revision) throws IOException {
 		String filename = fileNamingScheme.encodeSnapshot(revision);
-		if (fs.info(filename) == null) return null;
+		if (fileSystem.info(filename) == null) return null;
 
-		InputStream inputStream = fs.download(filename);
+		InputStream inputStream = fileSystem.download(filename);
 		try (StreamInput input = StreamInput.create(inputStream)) {
 			return decoder.decode(input);
 		}
@@ -124,9 +124,9 @@ public final class StateManager_File<T> implements StateManager<T, Long>, WithIn
 			throw new UnsupportedOperationException();
 		}
 		String filename = fileNamingScheme.encodeDiff(revisionFrom, revisionTo);
-		if (fs.info(filename) == null) return null;
+		if (fileSystem.info(filename) == null) return null;
 
-		InputStream inputStream = fs.download(filename);
+		InputStream inputStream = fileSystem.download(filename);
 		try (StreamInput input = StreamInput.create(inputStream)) {
 			return ((DiffStreamDecoder<T>) this.decoder).decodeDiff(input, state);
 		}
@@ -203,7 +203,7 @@ public final class StateManager_File<T> implements StateManager<T, Long>, WithIn
 
 	private void doSave(T state, long revision) throws IOException {
 		if (maxSaveDiffs != 0) {
-			Map<String, FileMetadata> list = fs.list(fileNamingScheme.snapshotGlob());
+			Map<String, FileMetadata> list = fileSystem.list(fileNamingScheme.snapshotGlob());
 			long[] revisionsFrom = list.keySet().stream()
 					.map(fileNamingScheme::decodeSnapshot)
 					.filter(Objects::nonNull)
@@ -216,7 +216,7 @@ public final class StateManager_File<T> implements StateManager<T, Long>, WithIn
 
 			for (long revisionFrom : revisionsFrom) {
 				String filenameFrom = fileNamingScheme.encodeSnapshot(revisionFrom);
-				InputStream inputStream = fs.download(filenameFrom);
+				InputStream inputStream = fileSystem.download(filenameFrom);
 				T stateFrom;
 				try (StreamInput input = StreamInput.create(inputStream)) {
 					stateFrom = decoder.decode(input);
@@ -233,19 +233,19 @@ public final class StateManager_File<T> implements StateManager<T, Long>, WithIn
 
 	private void safeUpload(String filename, StreamOutputConsumer consumer) throws IOException {
 		String tempFilename = tempDir + UUID.randomUUID();
-		OutputStream outputStream = fs.upload(tempFilename);
+		OutputStream outputStream = fileSystem.upload(tempFilename);
 		try (StreamOutput outputStreamEx = StreamOutput.create(outputStream)) {
 			consumer.accept(outputStreamEx);
 		} catch (IOException e) {
 			try {
-				fs.delete(tempFilename);
+				fileSystem.delete(tempFilename);
 			} catch (IOException e1) {
 				e.addSuppressed(e1);
 			}
 			throw e;
 		}
 
-		fs.move(tempFilename, filename);
+		fileSystem.move(tempFilename, filename);
 	}
 
 	private interface StreamOutputConsumer {

@@ -16,7 +16,7 @@
 
 package io.activej.fs.exception;
 
-public final class MalformedGlobException extends FsScalarException {
+public final class MalformedGlobException extends FileSystemScalarException {
 	public MalformedGlobException(String message) {
 		super(message);
 	}

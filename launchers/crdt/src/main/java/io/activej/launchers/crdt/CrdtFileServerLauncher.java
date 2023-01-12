@@ -19,9 +19,9 @@ package io.activej.launchers.crdt;
 import io.activej.config.Config;
 import io.activej.config.ConfigModule;
 import io.activej.crdt.CrdtServer;
-import io.activej.crdt.storage.local.CrdtStorage_Fs;
+import io.activej.crdt.storage.local.CrdtStorage_FileSystem;
 import io.activej.eventloop.Eventloop;
-import io.activej.fs.Fs;
+import io.activej.fs.FileSystem;
 import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
@@ -59,8 +59,8 @@ public abstract class CrdtFileServerLauncher<K extends Comparable<K>, S> extends
 	}
 
 	@Provides
-	Fs localFsClient(Reactor reactor, ExecutorService executor, Config config) {
-		return Fs.create(reactor, executor, config.get(ofPath(), "crdt.localPath"));
+	FileSystem fileSystem(Reactor reactor, ExecutorService executor, Config config) {
+		return FileSystem.create(reactor, executor, config.get(ofPath(), "crdt.localPath"));
 	}
 
 	@Provides
@@ -85,14 +85,14 @@ public abstract class CrdtFileServerLauncher<K extends Comparable<K>, S> extends
 
 	public abstract static class CrdtFileServerLogicModule<K extends Comparable<K>, S> extends AbstractModule {
 		@Provides
-		CrdtServer<K, S> crdtServer(NioReactor reactor, CrdtStorage_Fs<K, S> crdtClient, CrdtDescriptor<K, S> descriptor, Config config) {
+		CrdtServer<K, S> crdtServer(NioReactor reactor, CrdtStorage_FileSystem<K, S> crdtClient, CrdtDescriptor<K, S> descriptor, Config config) {
 			return CrdtServer.create(reactor, crdtClient, descriptor.serializer())
 					.withInitializer(ofAbstractServer(config.getChild("crdt.server")));
 		}
 
 		@Provides
-		CrdtStorage_Fs<K, S> fsCrdtClient(Reactor reactor, Fs localFsClient, CrdtDescriptor<K, S> descriptor) {
-			return CrdtStorage_Fs.create(reactor, localFsClient, descriptor.serializer(), descriptor.crdtFunction());
+		CrdtStorage_FileSystem<K, S> fileSystemCrdtStorage(Reactor reactor, FileSystem fileSystem, CrdtDescriptor<K, S> descriptor) {
+			return CrdtStorage_FileSystem.create(reactor, fileSystem, descriptor.serializer(), descriptor.crdtFunction());
 		}
 	}
 

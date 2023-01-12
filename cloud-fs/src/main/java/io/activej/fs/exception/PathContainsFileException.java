@@ -16,7 +16,7 @@
 
 package io.activej.fs.exception;
 
-public final class PathContainsFileException extends FsScalarException {
+public final class PathContainsFileException extends FileSystemScalarException {
 	public PathContainsFileException() {
 		super("Path contains existing file as its part");
 	}

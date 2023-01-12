@@ -16,7 +16,7 @@
 
 package io.activej.fs.exception;
 
-public final class FileNotFoundException extends FsScalarException {
+public final class FileNotFoundException extends FileSystemScalarException {
 	public FileNotFoundException() {
 		super("File not found");
 	}

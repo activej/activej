@@ -7,12 +7,12 @@ import io.activej.crdt.storage.cluster.AsyncDiscoveryService;
 import io.activej.crdt.storage.cluster.CrdtStorage_Cluster;
 import io.activej.crdt.storage.cluster.PartitionScheme_Rendezvous;
 import io.activej.crdt.storage.cluster.RendezvousPartitionGroup;
-import io.activej.crdt.storage.local.CrdtStorage_Fs;
+import io.activej.crdt.storage.local.CrdtStorage_FileSystem;
 import io.activej.crdt.storage.local.CrdtStorage_Map;
 import io.activej.crdt.util.BinarySerializer_CrdtData;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
-import io.activej.fs.Fs;
+import io.activej.fs.FileSystem;
 import io.activej.reactor.Reactor;
 import io.activej.test.ExpectedException;
 import io.activej.test.rules.ByteBufRule;
@@ -80,21 +80,21 @@ public class AsyncCrdtStorageAPITest {
 	public static Collection<Object[]> getParameters() {
 		return List.of(
 				new Object[]{
-						"FsCrdtClient",
+						"CrdtStorage_FileSystem",
 						(CrdtClientFactory) (executor, testFolder) -> {
 							Reactor reactor = getCurrentReactor();
-							Fs fs = Fs.create(reactor, executor, testFolder);
+							FileSystem fs = FileSystem.create(reactor, executor, testFolder);
 							await(fs.start());
-							return CrdtStorage_Fs.create(reactor, fs, SERIALIZER, CRDT_FUNCTION);
+							return CrdtStorage_FileSystem.create(reactor, fs, SERIALIZER, CRDT_FUNCTION);
 						}
 				},
 				new Object[]{
-						"CrdtStorageMap",
+						"CrdtStorage_Map",
 						(CrdtClientFactory) (executor, testFolder) ->
 								CrdtStorage_Map.create(getCurrentReactor(), CRDT_FUNCTION)
 				},
 				new Object[]{
-						"CrdtStorageCluster",
+						"CrdtStorage_Cluster",
 						(CrdtClientFactory) (executor, testFolder) -> {
 							Reactor reactor = getCurrentReactor();
 							Map<Integer, AsyncCrdtStorage<String, Integer>> map = new HashMap<>();

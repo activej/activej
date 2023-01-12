@@ -38,7 +38,7 @@ import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStats_Basic;
 import io.activej.datastream.stats.StreamStats_Detailed;
-import io.activej.fs.AsyncFs;
+import io.activej.fs.AsyncFileSystem;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.jmx.stats.ExceptionStats;
@@ -88,7 +88,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	private final AsyncSupplier<C> idGenerator;
 	private final FrameFormat frameFormat;
 
-	private final AsyncFs fs;
+	private final AsyncFileSystem fileSystem;
 	private String chunksPath = "";
 	private String tempPath = "";
 	private String backupPath = DEFAULT_BACKUP_PATH;
@@ -127,18 +127,18 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 
 	private int finishChunks;
 
-	private AggregationChunkStorage(Reactor reactor, JsonCodec_ChunkId<C> chunkIdCodec, AsyncSupplier<C> idGenerator, FrameFormat frameFormat, AsyncFs fs) {
+	private AggregationChunkStorage(Reactor reactor, JsonCodec_ChunkId<C> chunkIdCodec, AsyncSupplier<C> idGenerator, FrameFormat frameFormat, AsyncFileSystem fileSystem) {
 		super(reactor);
 		this.chunkIdCodec = chunkIdCodec;
 		this.idGenerator = idGenerator;
 		this.frameFormat = frameFormat;
-		this.fs = fs;
+		this.fileSystem = fileSystem;
 	}
 
 	public static <C> AggregationChunkStorage<C> create(Reactor reactor,
 			JsonCodec_ChunkId<C> chunkIdCodec,
-			AsyncSupplier<C> idGenerator, FrameFormat frameFormat, AsyncFs fs) {
-		return new AggregationChunkStorage<>(reactor, chunkIdCodec, idGenerator, frameFormat, fs);
+			AsyncSupplier<C> idGenerator, FrameFormat frameFormat, AsyncFileSystem fileSystem) {
+		return new AggregationChunkStorage<>(reactor, chunkIdCodec, idGenerator, frameFormat, fileSystem);
 	}
 
 	public AggregationChunkStorage<C> withBufferSize(MemSize bufferSize) {
@@ -167,7 +167,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 			Class<T> recordClass, C chunkId,
 			DefiningClassLoader classLoader) {
 		checkInReactorThread();
-		return fs.download(toPath(chunkId))
+		return fileSystem.download(toPath(chunkId))
 				.mapException(e -> new AggregationException("Failed to download chunk '" + chunkId + '\'', e))
 				.whenComplete(promiseOpenR.recordStats())
 				.map(supplier -> supplier
@@ -187,7 +187,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 			Class<T> recordClass, C chunkId,
 			DefiningClassLoader classLoader) {
 		checkInReactorThread();
-		return fs.upload(toTempPath(chunkId))
+		return fileSystem.upload(toTempPath(chunkId))
 				.mapException(e -> new AggregationException("Failed to upload chunk '" + chunkId + '\'', e))
 				.whenComplete(promiseOpenW.recordStats())
 				.map(consumer -> StreamConsumer.<T>ofSupplier(
@@ -210,7 +210,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	@Override
 	public Promise<Void> finish(Set<C> chunkIds) {
 		checkInReactorThread();
-		return fs.moveAll(chunkIds.stream().collect(toMap(this::toTempPath, this::toPath)))
+		return fileSystem.moveAll(chunkIds.stream().collect(toMap(this::toTempPath, this::toPath)))
 				.mapException(e -> new AggregationException("Failed to finalize chunks: " + Utils.toString(chunkIds), e))
 				.whenResult(() -> finishChunks = chunkIds.size())
 				.whenComplete(promiseFinishChunks.recordStats());
@@ -226,9 +226,9 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 
 	public Promise<Void> backup(String backupId, Set<C> chunkIds) {
 		checkInReactorThread();
-		return fs.copyAll(chunkIds.stream().collect(toMap(this::toPath, c -> toBackupPath(backupId, c))))
+		return fileSystem.copyAll(chunkIds.stream().collect(toMap(this::toPath, c -> toBackupPath(backupId, c))))
 				.then(() -> ChannelSupplier.<ByteBuf>of().streamTo(
-						fs.upload(toBackupPath(backupId, null), 0)))
+						fileSystem.upload(toBackupPath(backupId, null), 0)))
 				.mapException(e -> new AggregationException("Backup '" + backupId + "' of chunks " + Utils.toString(chunkIds) + " failed", e))
 				.whenComplete(promiseBackup.recordStats())
 				.toVoid();
@@ -245,7 +245,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 
 		RefInt skipped = new RefInt(0);
 		RefInt deleted = new RefInt(0);
-		return fs.list(toDir(chunksPath) + "*" + LOG)
+		return fileSystem.list(toDir(chunksPath) + "*" + LOG)
 				.mapException(e -> new AggregationException("Failed to list chunks for cleanup", e))
 				.then(list -> {
 					Set<String> toDelete = list.entrySet().stream()
@@ -274,7 +274,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 							})
 							.collect(toSet());
 					if (toDelete.isEmpty()) return Promise.complete();
-					return fs.deleteAll(toDelete)
+					return fileSystem.deleteAll(toDelete)
 							.mapException(e -> new AggregationException("Failed to clean up chunks", e));
 				})
 				.whenResult(() -> {
@@ -289,7 +289,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 
 	public Promise<Set<C>> list(Predicate<C> chunkIdPredicate, LongPredicate lastModifiedPredicate) {
 		checkInReactorThread();
-		return fs.list(toDir(chunksPath) + "*" + LOG)
+		return fileSystem.list(toDir(chunksPath) + "*" + LOG)
 				.mapException(e -> new AggregationException("Failed to list chunks", e))
 				.map(list ->
 						list.entrySet().stream()
@@ -323,12 +323,12 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	}
 
 	private String toBackupPath(String backupId, @Nullable C chunkId) {
-		return toDir(backupPath) + backupId + AsyncFs.SEPARATOR +
+		return toDir(backupPath) + backupId + AsyncFileSystem.SEPARATOR +
 				(chunkId != null ? chunkIdCodec.toFileName(chunkId) + LOG : SUCCESSFUL_BACKUP_FILE);
 	}
 
 	private String toDir(String path) {
-		return path.isEmpty() || path.endsWith(AsyncFs.SEPARATOR) ? path : path + AsyncFs.SEPARATOR;
+		return path.isEmpty() || path.endsWith(AsyncFileSystem.SEPARATOR) ? path : path + AsyncFileSystem.SEPARATOR;
 	}
 
 	private @Nullable C fromPath(String path) {
@@ -346,7 +346,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	@Override
 	public Promise<?> start() {
 		checkInReactorThread();
-		return fs.ping()
+		return fileSystem.ping()
 				.mapException(e -> new AggregationException("Failed to start storage", e));
 	}
 

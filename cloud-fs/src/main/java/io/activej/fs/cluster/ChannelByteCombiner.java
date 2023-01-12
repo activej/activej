@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.fs.cluster.FsPartitions.LOCAL_EXCEPTION;
+import static io.activej.fs.cluster.FileSystemPartitions.LOCAL_EXCEPTION;
 
 final class ChannelByteCombiner extends AbstractCommunicatingProcess
 		implements WithChannelInputs<ByteBuf>, WithChannelOutput<ChannelByteCombiner, ByteBuf> {

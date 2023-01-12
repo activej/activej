@@ -35,7 +35,7 @@ import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.datastream.stats.StreamRegistry;
 import io.activej.datastream.stats.StreamStats;
 import io.activej.datastream.stats.StreamStats_Detailed;
-import io.activej.fs.AsyncFs;
+import io.activej.fs.AsyncFileSystem;
 import io.activej.fs.exception.IllegalOffsetException;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -64,7 +64,7 @@ public final class Multilog<T> extends AbstractReactive
 
 	public static final MemSize DEFAULT_BUFFER_SIZE = MemSize.kilobytes(256);
 
-	private final AsyncFs fs;
+	private final AsyncFileSystem fileSystem;
 	private final LogNamingScheme namingScheme;
 	private final BinarySerializer<T> serializer;
 
@@ -79,18 +79,18 @@ public final class Multilog<T> extends AbstractReactive
 	private final StreamStats_Detailed<ByteBuf> streamReadStats = StreamStats.detailed(forByteBufs());
 	private final StreamStats_Detailed<ByteBuf> streamWriteStats = StreamStats.detailed(forByteBufs());
 
-	private Multilog(Reactor reactor, AsyncFs fs, FrameFormat frameFormat, BinarySerializer<T> serializer,
+	private Multilog(Reactor reactor, AsyncFileSystem fileSystem, FrameFormat frameFormat, BinarySerializer<T> serializer,
 			LogNamingScheme namingScheme) {
 		super(reactor);
-		this.fs = fs;
+		this.fileSystem = fileSystem;
 		this.frameFormat = frameFormat;
 		this.serializer = serializer;
 		this.namingScheme = namingScheme;
 	}
 
-	public static <T> Multilog<T> create(Reactor reactor, AsyncFs fs, FrameFormat frameFormat, BinarySerializer<T> serializer,
+	public static <T> Multilog<T> create(Reactor reactor, AsyncFileSystem fileSystem, FrameFormat frameFormat, BinarySerializer<T> serializer,
 			LogNamingScheme namingScheme) {
-		return new Multilog<>(reactor, fs, frameFormat, serializer, namingScheme);
+		return new Multilog<>(reactor, fileSystem, frameFormat, serializer, namingScheme);
 	}
 
 	public Multilog<T> withBufferSize(int bufferSize) {
@@ -126,7 +126,7 @@ public final class Multilog<T> extends AbstractReactive
 										.withSkipSerializationErrors())
 								.transformWith(streamWrites.register(logPartition))
 								.transformWith(streamWriteStats)
-								.bindTo(new LogStreamChunker(reactor, fs, namingScheme, logPartition,
+								.bindTo(new LogStreamChunker(reactor, fileSystem, namingScheme, logPartition,
 										consumer -> consumer.transformWith(
 												ChannelFrameEncoder.create(frameFormat)
 														.withEncoderResets()))))
@@ -141,7 +141,7 @@ public final class Multilog<T> extends AbstractReactive
 		checkInReactorThread();
 		validateLogPartition(logPartition);
 		LogPosition startPosition = LogPosition.create(startLogFile, startOffset);
-		return fs.list(namingScheme.getListGlob(logPartition))
+		return fileSystem.list(namingScheme.getListGlob(logPartition))
 				.map(files ->
 						files.keySet().stream()
 								.map(namingScheme::parse)
@@ -205,13 +205,13 @@ public final class Multilog<T> extends AbstractReactive
 					logger.trace("Read log file `{}` from: {}", currentLogFile, position);
 
 				return StreamSupplier.ofPromise(
-						fs.download(namingScheme.path(logPartition, currentLogFile), position, Long.MAX_VALUE)
+						fileSystem.download(namingScheme.path(logPartition, currentLogFile), position, Long.MAX_VALUE)
 								.then(Promise::of,
 										e -> {
 											if (ignoreMalformedLogs && e instanceof IllegalOffsetException) {
 												if (logger.isWarnEnabled()) {
 													logger.warn("Ignoring log file whose size is less than log position {} {}:`{}` in {}, previous position: {}",
-															position, fs, namingScheme.path(logPartition, currentPosition.getLogFile()),
+															position, fileSystem, namingScheme.path(logPartition, currentPosition.getLogFile()),
 															sw, countingFormat.getCount(), e);
 												}
 												return Promise.of(ChannelSupplier.<ByteBuf>of());
@@ -237,7 +237,7 @@ public final class Multilog<T> extends AbstractReactive
 																		if (ignoreMalformedLogs && e instanceof MalformedDataException) {
 																			if (logger.isWarnEnabled()) {
 																				logger.warn("Ignoring malformed log file {}:`{}` in {}, previous position: {}",
-																						fs, namingScheme.path(logPartition, currentPosition.getLogFile()),
+																						fileSystem, namingScheme.path(logPartition, currentPosition.getLogFile()),
 																						sw, countingFormat.getCount(), e);
 																			}
 																			return null;
@@ -254,11 +254,11 @@ public final class Multilog<T> extends AbstractReactive
 			private void log(Exception e) {
 				if (e == null && logger.isTraceEnabled()) {
 					logger.trace("Finish log file {}:`{}` in {}, compressed bytes: {} ({} bytes/s)",
-							fs, namingScheme.path(logPartition, currentPosition.getLogFile()),
+							fileSystem, namingScheme.path(logPartition, currentPosition.getLogFile()),
 							sw, countingFormat.getCount(), countingFormat.getCount() / Math.max(sw.elapsed(SECONDS), 1));
 				} else if (e != null && logger.isErrorEnabled()) {
 					logger.error("Error on log file {}:`{}` in {}, compressed bytes: {} ({} bytes/s)",
-							fs, namingScheme.path(logPartition, currentPosition.getLogFile()),
+							fileSystem, namingScheme.path(logPartition, currentPosition.getLogFile()),
 							sw, countingFormat.getCount(), countingFormat.getCount() / Math.max(sw.elapsed(SECONDS), 1), e);
 				}
 			}

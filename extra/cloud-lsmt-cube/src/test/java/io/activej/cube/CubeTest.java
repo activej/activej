@@ -9,9 +9,9 @@ import io.activej.csp.process.frames.FrameFormat_LZ4;
 import io.activej.cube.bean.*;
 import io.activej.cube.ot.CubeDiff;
 import io.activej.datastream.StreamSupplier;
-import io.activej.fs.Fs;
-import io.activej.fs.http.FsServlet;
-import io.activej.fs.http.Fs_Http;
+import io.activej.fs.FileSystem;
+import io.activej.fs.http.FileSystemServlet;
+import io.activej.fs.http.FileSystem_HttpClient;
 import io.activej.http.AsyncHttpClient;
 import io.activej.http.HttpClient;
 import io.activej.http.HttpServer;
@@ -74,7 +74,7 @@ public final class CubeTest {
 	@Before
 	public void setUp() throws Exception {
 		listenPort = getFreePort();
-		Fs fs = Fs.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
+		FileSystem fs = FileSystem.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
 		await(fs.start());
 		chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, fs);
 		cube = newCube(executor, classLoader, chunkStorage);
@@ -131,21 +131,21 @@ public final class CubeTest {
 
 	private HttpServer startServer(Executor executor, Path serverStorage) throws IOException {
 		NioReactor reactor = getCurrentReactor();
-		Fs fs = Fs.create(reactor, executor, serverStorage);
+		FileSystem fs = FileSystem.create(reactor, executor, serverStorage);
 		await(fs.start());
-		HttpServer server = HttpServer.create(reactor, FsServlet.create(fs))
+		HttpServer server = HttpServer.create(reactor, FileSystemServlet.create(fs))
 				.withListenPort(listenPort);
 		server.listen();
 		return server;
 	}
 
 	@Test
-	public void testRemoteFsAggregationStorage() throws Exception {
+	public void testRemoteFileSystemAggregationStorage() throws Exception {
 
 		Path serverStorage = temporaryFolder.newFolder("storage").toPath();
 		HttpServer server1 = startServer(executor, serverStorage);
 		AsyncHttpClient httpClient = HttpClient.create(getCurrentReactor());
-		Fs_Http storage = Fs_Http.create(getCurrentReactor(), "http://localhost:" + listenPort, httpClient);
+		FileSystem_HttpClient storage = FileSystem_HttpClient.create(getCurrentReactor(), "http://localhost:" + listenPort, httpClient);
 		AsyncAggregationChunkStorage<Long> chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
 		Cube cube = newCube(executor, classLoader, chunkStorage);
 
@@ -428,7 +428,7 @@ public final class CubeTest {
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		Executor executor = newSingleThreadExecutor();
 
-		Fs storage = Fs.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
+		FileSystem storage = FileSystem.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
 		await(storage.start());
 		AsyncAggregationChunkStorage<Long> chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
 		Cube cube = newCube(executor, classLoader, chunkStorage);
@@ -444,7 +444,7 @@ public final class CubeTest {
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		Executor executor = newSingleThreadExecutor();
 
-		Fs storage = Fs.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
+		FileSystem storage = FileSystem.create(getCurrentReactor(), executor, temporaryFolder.newFolder().toPath());
 		await(storage.start());
 		AsyncAggregationChunkStorage<Long> chunkStorage = AggregationChunkStorage.create(getCurrentReactor(), JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FRAME_FORMAT, storage);
 		Cube cube = newCube(executor, classLoader, chunkStorage);

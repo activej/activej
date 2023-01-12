@@ -1,6 +1,6 @@
 package io.activej.state;
 
-import io.activej.fs.LocalBlockingFs;
+import io.activej.fs.LocalBlockingFileSystem;
 import io.activej.serializer.stream.DiffStreamCodec;
 import io.activej.serializer.stream.StreamInput;
 import io.activej.serializer.stream.StreamOutput;
@@ -28,15 +28,15 @@ public class StateManager_File_Test {
 
 	private StateManager_File<Integer> manager;
 
-	private LocalBlockingFs fs;
+	private LocalBlockingFileSystem fileSystem;
 
 	@Before
 	public void setUp() throws Exception {
 		Path storage = tmpFolder.newFolder().toPath();
-		fs = LocalBlockingFs.create(storage);
-		fs.start();
+		fileSystem = LocalBlockingFileSystem.create(storage);
+		fileSystem.start();
 
-		manager = StateManager_File.create(fs, NAMING_SCHEME, new IntegerCodec());
+		manager = StateManager_File.create(fileSystem, NAMING_SCHEME, new IntegerCodec());
 	}
 
 	@Test
@@ -128,7 +128,7 @@ public class StateManager_File_Test {
 	@Test
 	public void uploadsAreAtomic() throws IOException {
 		IOException expectedException = new IOException("Failed");
-		manager = StateManager_File.create(fs, NAMING_SCHEME, (stream, item) -> {
+		manager = StateManager_File.create(fileSystem, NAMING_SCHEME, (stream, item) -> {
 			stream.writeInt(1); // some header
 			if (item <= 100) {
 				stream.writeInt(item);
@@ -138,17 +138,17 @@ public class StateManager_File_Test {
 		});
 
 		manager.save(50);
-		assertEquals(1, fs.list("**").size());
+		assertEquals(1, fileSystem.list("**").size());
 
 		manager.save(75);
-		assertEquals(2, fs.list("**").size());
+		assertEquals(2, fileSystem.list("**").size());
 
 		try {
 			manager.save(125);
 			fail();
 		} catch (IOException e) {
 			assertSame(expectedException, e);
-			assertEquals(2, fs.list("**").size()); // no new files are created
+			assertEquals(2, fileSystem.list("**").size()); // no new files are created
 		}
 	}
 
