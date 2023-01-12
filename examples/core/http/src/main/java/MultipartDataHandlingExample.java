@@ -80,8 +80,8 @@ public final class MultipartDataHandlingExample extends HttpServerLauncher {
 
 	//[START SERVLET]
 	@Provides
-	AsyncServlet servlet() {
-		return Servlet_Routing.create()
+	AsyncServlet servlet(Reactor reactor) {
+		return Servlet_Routing.create(reactor)
 				.map(POST, "/handleMultipart", request -> {
 					Map<String, String> fields = new HashMap<>();
 

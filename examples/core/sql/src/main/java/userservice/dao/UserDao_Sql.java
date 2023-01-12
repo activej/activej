@@ -1,6 +1,8 @@
 package userservice.dao;
 
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Nullable;
 
 import javax.sql.DataSource;
@@ -14,17 +16,20 @@ import java.util.concurrent.Executor;
 /**
  * Implementation of {@link AsyncUserDao} which uses generic SQL commands for operation
  */
-public final class UserDao_Sql implements AsyncUserDao {
+public final class UserDao_Sql extends AbstractReactive
+		implements AsyncUserDao {
 	private final DataSource dataSource;
 	private final Executor executor;
 
-	public UserDao_Sql(DataSource dataSource, Executor executor) {
+	public UserDao_Sql(Reactor reactor, DataSource dataSource, Executor executor) {
+		super(reactor);
 		this.dataSource = dataSource;
 		this.executor = executor;
 	}
 
 	@Override
 	public Promise<@Nullable User> get(long id) {
+		checkInReactorThread();
 		return Promise.ofBlocking(executor, () -> {
 			try (Connection connection = dataSource.getConnection()) {
 				try (PreparedStatement statement = connection.prepareStatement(
@@ -46,6 +51,7 @@ public final class UserDao_Sql implements AsyncUserDao {
 
 	@Override
 	public Promise<Map<Long, User>> getAll() {
+		checkInReactorThread();
 		return Promise.ofBlocking(executor, () -> {
 			try (Connection connection = dataSource.getConnection()) {
 				try (PreparedStatement statement = connection.prepareStatement(
@@ -69,6 +75,7 @@ public final class UserDao_Sql implements AsyncUserDao {
 
 	@Override
 	public Promise<Void> addUser(User user) {
+		checkInReactorThread();
 		return Promise.ofBlocking(executor, () -> {
 			try (Connection connection = dataSource.getConnection()) {
 				try (PreparedStatement statement = connection.prepareStatement(
@@ -85,6 +92,7 @@ public final class UserDao_Sql implements AsyncUserDao {
 
 	@Override
 	public Promise<Boolean> updateUser(long id, User newUser) {
+		checkInReactorThread();
 		return Promise.ofBlocking(executor, () -> {
 			try (Connection connection = dataSource.getConnection()) {
 				try (PreparedStatement statement = connection.prepareStatement(
@@ -102,6 +110,7 @@ public final class UserDao_Sql implements AsyncUserDao {
 
 	@Override
 	public Promise<Boolean> deleteUser(long id) {
+		checkInReactorThread();
 		return Promise.ofBlocking(executor, () -> {
 			try (Connection connection = dataSource.getConnection()) {
 				try (PreparedStatement statement = connection.prepareStatement(

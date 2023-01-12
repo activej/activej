@@ -25,6 +25,7 @@ import io.activej.csp.file.ChannelFileWriter;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.ImplicitlyReactive;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,8 +72,9 @@ public final class ChannelFileBuffer extends ImplicitlyReactive implements Chann
 							return new Tuple2<>(writerChannel, readerChannel);
 						})
 				.map(tuple2 -> {
-					ChannelFileWriter writer = ChannelFileWriter.create(executor, tuple2.value1());
-					ChannelFileReader reader = ChannelFileReader.create(executor, tuple2.value2());
+					Reactor reactor = Reactor.getCurrentReactor();
+					ChannelFileWriter writer = ChannelFileWriter.create(reactor, executor, tuple2.value1());
+					ChannelFileReader reader = ChannelFileReader.create(reactor, executor, tuple2.value2());
 					if (limit != null) {
 						reader.withLimit(limit.toLong());
 					}

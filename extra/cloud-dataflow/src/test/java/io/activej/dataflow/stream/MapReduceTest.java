@@ -17,6 +17,7 @@ import io.activej.inject.Injector;
 import io.activej.inject.Key;
 import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
+import io.activej.reactor.Reactor;
 import io.activej.serializer.annotations.Deserialize;
 import io.activej.serializer.annotations.Serialize;
 import io.activej.serializer.stream.StreamCodec;
@@ -142,7 +143,7 @@ public class MapReduceTest {
 		Dataset<StringCount> mappedItems = map(items, new StringMapFunction(), simple(StringCount.class));
 		Dataset<StringCount> reducedItems = sortReduceRepartitionReduce(mappedItems,
 				new StringReducer(), String.class, new StringKeyFunction(), Comparator.naturalOrder());
-		AsyncCollector<StringCount> collector = Collector_Merge.create(reducedItems, client, new StringKeyFunction(), naturalOrder(), false);
+		AsyncCollector<StringCount> collector = Collector_Merge.create(Reactor.getCurrentReactor(), reducedItems, client, new StringKeyFunction(), naturalOrder(), false);
 		StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
 		StreamConsumerToList<StringCount> resultConsumer = StreamConsumerToList.create();
 

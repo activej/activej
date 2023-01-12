@@ -9,6 +9,7 @@ import io.activej.inject.module.Module;
 import io.activej.inject.module.ModuleBuilder;
 import io.activej.inject.module.Modules;
 import io.activej.launchers.http.HttpServerLauncher;
+import io.activej.reactor.Reactor;
 
 import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpMethod.POST;
@@ -64,8 +65,8 @@ public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 	//[START MODULE_A]
 	private static final class ModuleA extends AbstractModule {
 		@Provides
-		Servlet_Routing servlet() {
-			return Servlet_Routing.create()
+		Servlet_Routing servlet(Reactor reactor) {
+			return Servlet_Routing.create(reactor)
 					.map(GET, "/a", request -> HttpResponse.ok200().withPlainText("Hello from '/a' path\n"))
 					.map(GET, "/b", request -> HttpResponse.ok200().withPlainText("Hello from '/b' path\n"))
 					.map(GET, "/", request -> HttpResponse.ok200().withPlainText("Hello from '/' path\n"));
@@ -76,8 +77,8 @@ public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 	//[START MODULE_B]
 	private static final class ModuleB extends AbstractModule {
 		@Provides
-		Servlet_Routing servlet() {
-			return Servlet_Routing.create()
+		Servlet_Routing servlet(Reactor reactor) {
+			return Servlet_Routing.create(reactor)
 					.map(GET, "/a/b", request -> HttpResponse.ok200().withPlainText("Hello from '/a/b' path\n"))
 					.map(GET, "/b/a", request -> HttpResponse.ok200().withPlainText("Hello from '/b/a' path\n"))
 					.map(GET, "/d", request -> HttpResponse.ok200().withPlainText("Hello from '/d' path\n"));
@@ -88,8 +89,8 @@ public final class RoutingServletMultibinderExample extends HttpServerLauncher {
 	//[START MODULE_C]
 	private static final class ModuleC extends AbstractModule {
 		@Provides
-		Servlet_Routing servlet() {
-			return Servlet_Routing.create()
+		Servlet_Routing servlet(Reactor reactor) {
+			return Servlet_Routing.create(reactor)
 					.map(GET, "/a/c", request -> HttpResponse.ok200().withPlainText("Hello from '/a/c' path\n"))
 					.map(GET, "/b/c", request -> HttpResponse.ok200().withPlainText("Hello from '/b/c' path\n"))
 					.map(POST, "/d", request -> HttpResponse.ok200().withPlainText("Hello from POST '/d' path\n"));

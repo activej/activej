@@ -26,6 +26,7 @@ import io.activej.inject.annotation.Provides;
 import io.activej.inject.binding.OptionalDependency;
 import io.activej.inject.module.AbstractModule;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.types.TypeT;
 
@@ -47,17 +48,18 @@ public abstract class CrdtHttpModule<K extends Comparable<K>, S> extends Abstrac
 	}
 
 	@Provides
-	AsyncStaticLoader loader(Executor executor) {
-		return AsyncStaticLoader.ofClassPath(executor, "/");
+	AsyncStaticLoader loader(Reactor reactor, Executor executor) {
+		return AsyncStaticLoader.ofClassPath(reactor, executor, "/");
 	}
 
 	@Provides
 	AsyncServlet servlet(
+			Reactor reactor,
 			CrdtDescriptor<K, S> descriptor,
 			CrdtStorage_Map<K, S> client,
 			OptionalDependency<BackupService<K, S>> backupServiceOpt
 	) {
-		Servlet_Routing servlet = Servlet_Routing.create()
+		Servlet_Routing servlet = Servlet_Routing.create(reactor)
 				.map(POST, "/", request -> request.loadBody()
 						.map(body -> {
 							try {

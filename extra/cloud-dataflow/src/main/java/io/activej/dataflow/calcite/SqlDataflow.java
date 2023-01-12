@@ -17,8 +17,8 @@ import io.activej.dataflow.graph.Partition;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamLimiter;
 import io.activej.promise.Promise;
-import io.activej.reactor.AbstractNioReactive;
-import io.activej.reactor.nio.NioReactor;
+import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.Reactor;
 import io.activej.record.Record;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.plan.RelOptPlanner;
@@ -45,7 +45,7 @@ import java.util.List;
 
 import static io.activej.common.Checks.checkNotNull;
 
-public final class SqlDataflow extends AbstractNioReactive implements AsyncSqlDataflow {
+public final class SqlDataflow extends AbstractReactive implements AsyncSqlDataflow {
 	private final DataflowClient client;
 	private final List<Partition> partitions;
 
@@ -57,7 +57,7 @@ public final class SqlDataflow extends AbstractNioReactive implements AsyncSqlDa
 
 	private RelTraitSet traits = RelTraitSet.createEmpty();
 
-	private SqlDataflow(NioReactor reactor, DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
+	private SqlDataflow(Reactor reactor, DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
 			SqlToRelConverter converter, RelOptPlanner planner, RelToDatasetConverter relToDatasetConverter) {
 		super(reactor);
 		this.client = client;
@@ -69,7 +69,7 @@ public final class SqlDataflow extends AbstractNioReactive implements AsyncSqlDa
 		this.relToDatasetConverter = relToDatasetConverter;
 	}
 
-	public static SqlDataflow create(NioReactor reactor, DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
+	public static SqlDataflow create(Reactor reactor, DataflowClient client, List<Partition> partitions, SqlParser.Config parserConfig,
 			SqlToRelConverter converter, RelOptPlanner planner, RelToDatasetConverter relToDatasetConverter) {
 		return new SqlDataflow(reactor, client, partitions, parserConfig, converter, planner, relToDatasetConverter);
 	}
@@ -181,8 +181,8 @@ public final class SqlDataflow extends AbstractNioReactive implements AsyncSqlDa
 
 	private AsyncCollector<Record> createCollector(Dataset<Record> dataset, long limit) {
 		AbstractCollector<Record, ?, ?> collector = dataset instanceof LocallySortedDataset<?, Record> sortedDataset ?
-				Collector_Merge.create(sortedDataset, client, false) :
-				Collector_Union.create(dataset, client);
+				Collector_Merge.create(reactor, sortedDataset, client, false) :
+				Collector_Union.create(reactor, dataset, client);
 
 		if (limit == StreamLimiter.NO_LIMIT) {
 			return collector;

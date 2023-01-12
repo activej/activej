@@ -22,6 +22,8 @@ import io.activej.aggregation.JsonCodec_ChunkId;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.Reactor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +43,8 @@ import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.util.Collections.nCopies;
 import static java.util.stream.Collectors.joining;
 
-public final class ChunkLocker_MySql<C> implements AsyncChunkLocker<C>, WithInitializer<ChunkLocker_MySql<C>> {
+public final class ChunkLocker_MySql<C> extends AbstractReactive
+		implements AsyncChunkLocker<C>, WithInitializer<ChunkLocker_MySql<C>> {
 	private static final Logger logger = LoggerFactory.getLogger(ChunkLocker_MySql.class);
 
 	public static final String CHUNK_TABLE = ApplicationSettings.getString(ChunkLocker_MySql.class, "chunkTable", "cube_chunk");
@@ -59,11 +62,13 @@ public final class ChunkLocker_MySql<C> implements AsyncChunkLocker<C>, WithInit
 	private long lockTtlSeconds = DEFAULT_LOCK_TTL.getSeconds();
 
 	private ChunkLocker_MySql(
+			Reactor reactor,
 			Executor executor,
 			DataSource dataSource,
 			JsonCodec_ChunkId<C> idCodec,
 			String aggregationId
 	) {
+		super(reactor);
 		this.executor = executor;
 		this.dataSource = dataSource;
 		this.idCodec = idCodec;
@@ -71,12 +76,13 @@ public final class ChunkLocker_MySql<C> implements AsyncChunkLocker<C>, WithInit
 	}
 
 	public static <C> ChunkLocker_MySql<C> create(
+			Reactor reactor,
 			Executor executor,
 			DataSource dataSource,
 			JsonCodec_ChunkId<C> idCodec,
 			String aggregationId
 	) {
-		return new ChunkLocker_MySql<>(executor, dataSource, idCodec, aggregationId);
+		return new ChunkLocker_MySql<>(reactor, executor, dataSource, idCodec, aggregationId);
 	}
 
 	public ChunkLocker_MySql<C> withLockTableName(String tableLock) {
@@ -130,6 +136,7 @@ public final class ChunkLocker_MySql<C> implements AsyncChunkLocker<C>, WithInit
 
 	@Override
 	public Promise<Void> lockChunks(Set<C> chunkIds) {
+		checkInReactorThread();
 		checkArgument(!chunkIds.isEmpty(), "Nothing to lock");
 
 		return Promise.ofBlocking(executor,
@@ -167,6 +174,7 @@ public final class ChunkLocker_MySql<C> implements AsyncChunkLocker<C>, WithInit
 
 	@Override
 	public Promise<Void> releaseChunks(Set<C> chunkIds) {
+		checkInReactorThread();
 		checkArgument(!chunkIds.isEmpty(), "Nothing to release");
 
 		return Promise.ofBlocking(executor,
@@ -201,6 +209,7 @@ public final class ChunkLocker_MySql<C> implements AsyncChunkLocker<C>, WithInit
 
 	@Override
 	public Promise<Set<C>> getLockedChunks() {
+		checkInReactorThread();
 		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {

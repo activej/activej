@@ -1,6 +1,7 @@
 package io.activej.crdt.wal;
 
 import io.activej.promise.Promise;
+import io.activej.reactor.ImplicitlyReactive;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -31,17 +32,20 @@ public class WriteAheadLogAdaptersTest {
 		}
 	}
 
-	private static final class WriteAheadLog_Stub implements AsyncWriteAheadLog<Integer, Integer> {
+	private static final class WriteAheadLog_Stub extends ImplicitlyReactive
+			implements AsyncWriteAheadLog<Integer, Integer> {
 		private int updatesCount;
 
 		@Override
 		public Promise<Void> put(Integer key, Integer value) {
+			checkInReactorThread();
 			updatesCount++;
 			return Promise.complete();
 		}
 
 		@Override
 		public Promise<Void> flush() {
+			checkInReactorThread();
 			updatesCount = 0;
 			return Promise.complete();
 		}

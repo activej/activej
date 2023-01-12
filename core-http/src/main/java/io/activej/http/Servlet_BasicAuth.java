@@ -18,6 +18,8 @@ package io.activej.http;
 
 import io.activej.async.function.AsyncBiPredicate;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.Reactor;
 
 import java.util.Base64;
 import java.util.Map;
@@ -38,7 +40,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * Also the credentials are {@link HttpRequest#attach attached} to the request so that the private servlet
  * could then receive and use it.
  */
-public final class Servlet_BasicAuth implements AsyncServlet {
+public final class Servlet_BasicAuth extends AbstractReactive
+		implements AsyncServlet {
 
 	public static final BiPredicate<String, String> SILLY = (login, pass) -> true;
 
@@ -54,7 +57,8 @@ public final class Servlet_BasicAuth implements AsyncServlet {
 					.withHeader(CONTENT_TYPE, HttpHeaderValue.ofContentType(PLAIN_TEXT_UTF_8))
 					.withBody("Authentication is required".getBytes(UTF_8));
 
-	public Servlet_BasicAuth(AsyncServlet next, String realm, AsyncBiPredicate<String, String> credentialsLookup) {
+	public Servlet_BasicAuth(Reactor reactor, AsyncServlet next, String realm, AsyncBiPredicate<String, String> credentialsLookup) {
+		super(reactor);
 		this.next = next;
 		this.credentialsLookup = credentialsLookup;
 
@@ -66,19 +70,20 @@ public final class Servlet_BasicAuth implements AsyncServlet {
 		return this;
 	}
 
-	public static Function<AsyncServlet, AsyncServlet> decorator(String realm, AsyncBiPredicate<String, String> credentialsLookup) {
-		return next -> new Servlet_BasicAuth(next, realm, credentialsLookup);
+	public static Function<AsyncServlet, AsyncServlet> decorator(Reactor reactor, String realm, AsyncBiPredicate<String, String> credentialsLookup) {
+		return next -> new Servlet_BasicAuth(reactor, next, realm, credentialsLookup);
 	}
 
-	public static Function<AsyncServlet, AsyncServlet> decorator(String realm,
+	public static Function<AsyncServlet, AsyncServlet> decorator(Reactor reactor, String realm,
 			AsyncBiPredicate<String, String> credentialsLookup,
 			UnaryOperator<HttpResponse> failureResponse) {
-		return next -> new Servlet_BasicAuth(next, realm, credentialsLookup)
+		return next -> new Servlet_BasicAuth(reactor, next, realm, credentialsLookup)
 				.withFailureResponse(failureResponse);
 	}
 
 	@Override
 	public Promise<HttpResponse> serve(HttpRequest request) throws HttpError {
+		checkInReactorThread();
 		String header = request.getHeader(AUTHORIZATION);
 		if (header == null || !header.startsWith(PREFIX)) {
 			return Promise.of(failureResponse.apply(HttpResponse.unauthorized401(challenge)));

@@ -19,6 +19,7 @@ package io.activej.http.loader;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.http.Servlet_Static;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -51,36 +52,36 @@ public interface AsyncStaticLoader {
 		return map(name -> folder + name);
 	}
 
-	default AsyncStaticLoader cached() {
-		return cacheOf(this);
+	default AsyncStaticLoader cached(Reactor reactor) {
+		return cacheOf(reactor, this);
 	}
 
-	default AsyncStaticLoader cached(Map<String, byte[]> map) {
-		return cacheOf(this, map);
+	default AsyncStaticLoader cached(Reactor reactor, Map<String, byte[]> map) {
+		return cacheOf(reactor, this, map);
 	}
 
-	static AsyncStaticLoader cacheOf(AsyncStaticLoader loader) {
-		return cacheOf(loader, new HashMap<>());
+	static AsyncStaticLoader cacheOf(Reactor reactor, AsyncStaticLoader loader) {
+		return cacheOf(reactor, loader, new HashMap<>());
 	}
 
-	static AsyncStaticLoader cacheOf(AsyncStaticLoader loader, Map<String, byte[]> map) {
-		return cacheOf(loader, map::get, map::put);
+	static AsyncStaticLoader cacheOf(Reactor reactor, AsyncStaticLoader loader, Map<String, byte[]> map) {
+		return cacheOf(reactor, loader, map::get, map::put);
 	}
 
-	static AsyncStaticLoader cacheOf(AsyncStaticLoader loader, Function<String, byte[]> get, BiConsumer<String, byte[]> put) {
-		return new StaticLoader_Cache(loader, get, put);
+	static AsyncStaticLoader cacheOf(Reactor reactor, AsyncStaticLoader loader, Function<String, byte[]> get, BiConsumer<String, byte[]> put) {
+		return new StaticLoader_Cache(reactor, loader, get, put);
 	}
 
-	static AsyncStaticLoader ofClassPath(Executor executor, String root) {
-		return StaticLoader_ClassPath.create(executor, root);
+	static AsyncStaticLoader ofClassPath(Reactor reactor, Executor executor, String root) {
+		return StaticLoader_ClassPath.create(reactor, executor, root);
 	}
 
-	static AsyncStaticLoader ofClassPath(Executor executor, ClassLoader classLoader, String root) {
-		return StaticLoader_ClassPath.create(executor, classLoader, root);
+	static AsyncStaticLoader ofClassPath(Reactor reactor, Executor executor, ClassLoader classLoader, String root) {
+		return StaticLoader_ClassPath.create(reactor, executor, classLoader, root);
 	}
 
-	static AsyncStaticLoader ofPath(Executor executor, Path dir) {
-		return StaticLoader_FileReader.create(executor, dir);
+	static AsyncStaticLoader ofPath(Reactor reactor, Executor executor, Path dir) {
+		return StaticLoader_FileReader.create(reactor, executor, dir);
 	}
 
 }

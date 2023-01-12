@@ -21,6 +21,7 @@ import io.activej.dataflow.dataset.Dataset;
 import io.activej.dataflow.dataset.LocallySortedDataset;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamReducer;
+import io.activej.reactor.Reactor;
 
 import java.util.Comparator;
 import java.util.function.Function;
@@ -33,21 +34,21 @@ public final class Collector_Merge<K, T> extends AbstractCollector<T, StreamRedu
 	private final Comparator<K> keyComparator;
 	private final boolean deduplicate;
 
-	private Collector_Merge(Dataset<T> input, DataflowClient client,
+	private Collector_Merge(Reactor reactor, Dataset<T> input, DataflowClient client,
 			Function<T, K> keyFunction, Comparator<K> keyComparator, boolean deduplicate) {
-		super(input, client);
+		super(reactor, input, client);
 		this.keyFunction = keyFunction;
 		this.keyComparator = keyComparator;
 		this.deduplicate = deduplicate;
 	}
 
-	public static <K, T> Collector_Merge<K, T> create(Dataset<T> input, DataflowClient client,
+	public static <K, T> Collector_Merge<K, T> create(Reactor reactor, Dataset<T> input, DataflowClient client,
 			Function<T, K> keyFunction, Comparator<K> keyComparator, boolean deduplicate) {
-		return new Collector_Merge<>(input, client, keyFunction, keyComparator, deduplicate);
+		return new Collector_Merge<>(reactor, input, client, keyFunction, keyComparator, deduplicate);
 	}
 
-	public static <K, T> Collector_Merge<K, T> create(LocallySortedDataset<K, T> input, DataflowClient client, boolean deduplicate) {
-		return new Collector_Merge<>(input, client, input.keyFunction(), input.keyComparator(), deduplicate);
+	public static <K, T> Collector_Merge<K, T> create(Reactor reactor, LocallySortedDataset<K, T> input, DataflowClient client, boolean deduplicate) {
+		return new Collector_Merge<>(reactor, input, client, input.keyFunction(), input.keyComparator(), deduplicate);
 	}
 
 	@Override

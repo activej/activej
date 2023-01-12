@@ -21,6 +21,8 @@ import io.activej.http.AsyncServlet;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpResponse;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.Reactor;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -34,33 +36,36 @@ import java.util.function.Function;
  * The session object is {@link HttpRequest#attach attached} to the request so that the first servlet
  * could then receive and use it.
  */
-public final class Servlet_Session<T> implements AsyncServlet, WithInitializer<Servlet_Session<T>> {
+public final class Servlet_Session<T> extends AbstractReactive
+		implements AsyncServlet, WithInitializer<Servlet_Session<T>> {
 	private final AsyncSessionStore<T> store;
 	private final Function<HttpRequest, String> sessionIdExtractor;
 	private final AsyncServlet publicServlet;
 	private final AsyncServlet privateServlet;
 
-	private Servlet_Session(AsyncSessionStore<T> store, Function<HttpRequest, String> sessionIdExtractor, AsyncServlet publicServlet, AsyncServlet privateServlet) {
+	private Servlet_Session(Reactor reactor, AsyncSessionStore<T> store, Function<HttpRequest, String> sessionIdExtractor, AsyncServlet publicServlet, AsyncServlet privateServlet) {
+		super(reactor);
 		this.store = store;
 		this.sessionIdExtractor = sessionIdExtractor;
 		this.publicServlet = publicServlet;
 		this.privateServlet = privateServlet;
 	}
 
-	public static <T> Servlet_Session<T> create(AsyncSessionStore<T> store, String sessionIdCookie,
+	public static <T> Servlet_Session<T> create(Reactor reactor, AsyncSessionStore<T> store, String sessionIdCookie,
 			AsyncServlet publicServlet,
 			AsyncServlet privateServlet) {
-		return new Servlet_Session<>(store, request -> request.getCookie(sessionIdCookie), publicServlet, privateServlet);
+		return new Servlet_Session<>(reactor, store, request -> request.getCookie(sessionIdCookie), publicServlet, privateServlet);
 	}
 
-	public static <T> Servlet_Session<T> create(AsyncSessionStore<T> store, Function<HttpRequest, String> sessionIdExtractor,
+	public static <T> Servlet_Session<T> create(Reactor reactor, AsyncSessionStore<T> store, Function<HttpRequest, String> sessionIdExtractor,
 			AsyncServlet publicServlet,
 			AsyncServlet privateServlet) {
-		return new Servlet_Session<>(store, sessionIdExtractor, publicServlet, privateServlet);
+		return new Servlet_Session<>(reactor, store, sessionIdExtractor, publicServlet, privateServlet);
 	}
 
 	@Override
 	public Promise<HttpResponse> serve(HttpRequest request) throws Exception {
+		checkInReactorThread();
 		String id = sessionIdExtractor.apply(request);
 
 		if (id == null) {

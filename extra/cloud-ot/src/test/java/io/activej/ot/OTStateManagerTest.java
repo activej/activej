@@ -4,12 +4,13 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.ot.repository.AsyncOTRepository;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.AsyncOTUplink;
-import io.activej.ot.uplink.ReactiveOTUplink;
+import io.activej.ot.uplink.OTUplink;
 import io.activej.ot.utils.OTRepository_Stub;
 import io.activej.ot.utils.OTState_TestOp;
 import io.activej.ot.utils.TestOp;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.reactor.ImplicitlyReactive;
 import io.activej.test.ExpectedException;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -36,7 +37,7 @@ public class OTStateManagerTest {
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
 	private OTRepository_Stub<Integer, TestOp> repository;
-	private ReactiveOTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> uplink;
+	private OTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> uplink;
 	private OTStateManager<Integer, TestOp> stateManager;
 	private OTState_TestOp testOpState;
 	private boolean alreadyFailed = false;
@@ -47,7 +48,7 @@ public class OTStateManagerTest {
 		repository = OTRepository_Stub.create();
 		repository.revisionIdSupplier = () -> random.nextInt(1000) + 1000;
 		testOpState = new OTState_TestOp();
-		uplink = ReactiveOTUplink.create(this.repository, SYSTEM);
+		uplink = OTUplink.create(getCurrentReactor(), this.repository, SYSTEM);
 		stateManager = OTStateManager.create(getCurrentReactor(), SYSTEM, uplink, testOpState);
 
 		initializeRepository(this.repository, stateManager);
@@ -434,7 +435,8 @@ public class OTStateManagerTest {
 		assertEquals(41, testOpState.getValue());
 	}
 
-	static class OTUplink_Decorator implements AsyncOTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> {
+	static class OTUplink_Decorator extends ImplicitlyReactive
+			implements AsyncOTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> {
 		private final AsyncOTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> node;
 
 		OTUplink_Decorator(AsyncOTUplink<Integer, TestOp, OTCommit<Integer, TestOp>> node) {
@@ -443,26 +445,31 @@ public class OTStateManagerTest {
 
 		@Override
 		public Promise<OTCommit<Integer, TestOp>> createProtoCommit(Integer parent, List<TestOp> diffs, long parentLevel) {
+			checkInReactorThread();
 			return node.createProtoCommit(parent, diffs, parentLevel);
 		}
 
 		@Override
 		public Promise<FetchData<Integer, TestOp>> push(OTCommit<Integer, TestOp> protoCommit) {
+			checkInReactorThread();
 			return node.push(protoCommit);
 		}
 
 		@Override
 		public Promise<FetchData<Integer, TestOp>> checkout() {
+			checkInReactorThread();
 			return node.checkout();
 		}
 
 		@Override
 		public Promise<FetchData<Integer, TestOp>> fetch(Integer currentCommitId) {
+			checkInReactorThread();
 			return node.fetch(currentCommitId);
 		}
 
 		@Override
 		public Promise<FetchData<Integer, TestOp>> poll(Integer currentCommitId) {
+			checkInReactorThread();
 			return node.poll(currentCommitId);
 		}
 	}

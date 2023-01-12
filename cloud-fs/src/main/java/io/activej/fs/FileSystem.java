@@ -33,8 +33,8 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.csp.file.ChannelFileWriter;
-import io.activej.fs.exception.*;
 import io.activej.fs.exception.FileSystemException;
+import io.activej.fs.exception.*;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
@@ -258,7 +258,7 @@ public final class FileSystem extends AbstractReactive
 				.then(translateScalarErrorsFn(name))
 				.whenComplete(appendBeginPromise.recordStats())
 				.map(channel -> {
-					ChannelFileWriter writer = ChannelFileWriter.create(executor, channel)
+					ChannelFileWriter writer = ChannelFileWriter.create(reactor, executor, channel)
 							.withOffset(offset);
 					if (fsyncUploads && !appendOptions.contains(SYNC)) {
 						writer.withForceOnClose(true);
@@ -288,7 +288,7 @@ public final class FileSystem extends AbstractReactive
 					}
 					return channel;
 				})
-				.map(channel -> ChannelFileReader.create(executor, channel)
+				.map(channel -> ChannelFileReader.create(reactor, executor, channel)
 						.withBufferSize(readerBufferSize)
 						.withOffset(offset)
 						.withLimit(limit)
@@ -466,7 +466,7 @@ public final class FileSystem extends AbstractReactive
 					return new Tuple2<>(tempPath, FileChannel.open(tempPath, CREATE, WRITE));
 				})
 				.map(pathAndChannel -> {
-					ChannelFileWriter writer = ChannelFileWriter.create(executor, pathAndChannel.value2());
+					ChannelFileWriter writer = ChannelFileWriter.create(reactor, executor, pathAndChannel.value2());
 					if (fsyncUploads) {
 						writer.withForceOnClose(true);
 					}

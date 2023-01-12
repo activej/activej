@@ -73,7 +73,7 @@ public class CubeCleanerControllerTest {
 				.withAggregation(id("pub").withDimensions("pub").withMeasures("pubRequests"))
 				.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests"));
 
-		uplink = OTUplink_CubeMySql.create(executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
+		uplink = OTUplink_CubeMySql.create(eventloop, executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
 		uplink.initialize();
 		uplink.truncateTables();
 	}

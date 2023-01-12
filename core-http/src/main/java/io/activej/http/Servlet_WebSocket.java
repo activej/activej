@@ -22,6 +22,8 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.queue.ChannelZeroBuffer;
 import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.Reactor;
 
 import java.util.Arrays;
 
@@ -43,8 +45,11 @@ import static io.activej.http.WebSocketConstants.REGULAR_CLOSE;
  * If a response has code different than {@code 101}, it will be sent as is and the resulted promise will be completed
  * exceptionally.
  */
-public abstract class Servlet_WebSocket implements AsyncServlet {
-	protected Servlet_WebSocket() {
+public abstract class Servlet_WebSocket extends AbstractReactive
+		implements AsyncServlet {
+
+	protected Servlet_WebSocket(Reactor reactor) {
+		super(reactor);
 		checkState(AsyncWebSocket.ENABLED, "Web sockets are disabled by application settings");
 	}
 
@@ -56,6 +61,7 @@ public abstract class Servlet_WebSocket implements AsyncServlet {
 
 	@Override
 	public final Promise<HttpResponse> serve(HttpRequest request) {
+		checkInReactorThread();
 		return validateHeaders(request)
 				.then(() -> processAnswer(request))
 				.then(answer -> {

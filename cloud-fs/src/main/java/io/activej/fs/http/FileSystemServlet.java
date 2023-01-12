@@ -27,6 +27,7 @@ import io.activej.fs.exception.FileSystemException;
 import io.activej.http.ByteBufsDecoder_Multipart.AsyncMultipartDataHandler;
 import io.activej.http.*;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 
 import java.util.Objects;
 
@@ -59,12 +60,12 @@ public final class FileSystemServlet implements WithInitializer<FileSystemServle
 	private FileSystemServlet() {
 	}
 
-	public static Servlet_Routing create(AsyncFileSystem fs) {
-		return create(fs, true);
+	public static Servlet_Routing create(Reactor reactor, AsyncFileSystem fs) {
+		return create(reactor, fs, true);
 	}
 
-	public static Servlet_Routing create(AsyncFileSystem fs, boolean inline) {
-		return Servlet_Routing.create()
+	public static Servlet_Routing create(Reactor reactor, AsyncFileSystem fs, boolean inline) {
+		return Servlet_Routing.create(reactor)
 				.map(POST, "/" + UPLOAD + "/*", request -> {
 					String contentLength = request.getHeader(CONTENT_LENGTH);
 					Long size = contentLength == null ? null : Long.valueOf(contentLength);

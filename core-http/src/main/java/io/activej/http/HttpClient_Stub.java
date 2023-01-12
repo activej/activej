@@ -19,13 +19,15 @@ package io.activej.http;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.csp.ChannelSupplier;
 import io.activej.promise.Promise;
+import io.activej.reactor.ImplicitlyReactive;
 import io.activej.reactor.Reactor;
 
 /**
  * A stub client which forwards requests straight to the underlying servlet without any real I/O operations.
  * Used for testing.
  */
-public final class HttpClient_Stub implements AsyncHttpClient {
+public final class HttpClient_Stub extends ImplicitlyReactive
+		implements AsyncHttpClient {
 	private final AsyncServlet servlet;
 
 	private HttpClient_Stub(AsyncServlet servlet) {
@@ -38,6 +40,7 @@ public final class HttpClient_Stub implements AsyncHttpClient {
 
 	@Override
 	public Promise<HttpResponse> request(HttpRequest request) {
+		checkInReactorThread();
 		Promise<HttpResponse> servletResult;
 		try {
 			servletResult = servlet.serveAsync(request);

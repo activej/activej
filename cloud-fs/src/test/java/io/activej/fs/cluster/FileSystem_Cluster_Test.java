@@ -96,7 +96,7 @@ public final class FileSystem_Cluster_Test {
 			serverEventloop.keepAlive(true);
 			FileSystem fileSystem = FileSystem.create(serverEventloop, executor, path);
 			CompletableFuture<Void> startFuture = serverEventloop.submit(fileSystem::start);
-			HttpServer server = HttpServer.create(serverEventloop, FileSystemServlet.create(fileSystem))
+			HttpServer server = HttpServer.create(serverEventloop, FileSystemServlet.create(serverEventloop, fileSystem))
 					.withListenPort(port);
 			CompletableFuture<Void> listenFuture = serverEventloop.submit(() -> {
 				try {

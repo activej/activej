@@ -4,6 +4,7 @@ import io.activej.http.Servlet_Routing;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
+import io.activej.reactor.Reactor;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -15,8 +16,8 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class DynamicRoutingExample extends HttpServerLauncher {
 
 	@Provides
-	AsyncServlet mainServlet(@Named("First") AsyncServlet firstServlet, @Named("Second") AsyncServlet secondServlet) {
-		return Servlet_Routing.create()
+	AsyncServlet mainServlet(Reactor reactor, @Named("First") AsyncServlet firstServlet, @Named("Second") AsyncServlet secondServlet) {
+		return Servlet_Routing.create(reactor)
 				.map("/*", request -> {
 					if (ThreadLocalRandom.current().nextBoolean()) {
 						return firstServlet.serve(request);

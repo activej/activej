@@ -19,6 +19,8 @@ package io.activej.http.session;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.time.CurrentTimeProvider;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
@@ -28,18 +30,20 @@ import java.util.Map;
 /**
  * A simple reference implementation of the session storage over a hash map.
  */
-public final class SessionStore_InMemory<T> implements AsyncSessionStore<T>, WithInitializer<SessionStore_InMemory<T>> {
+public final class SessionStore_InMemory<T> extends AbstractReactive
+		implements AsyncSessionStore<T>, WithInitializer<SessionStore_InMemory<T>> {
 	private final Map<String, TWithTimestamp> store = new HashMap<>();
 
 	private @Nullable Duration sessionLifetime;
 
 	CurrentTimeProvider now = CurrentTimeProvider.ofSystem();
 
-	private SessionStore_InMemory() {
+	private SessionStore_InMemory(Reactor reactor) {
+		super(reactor);
 	}
 
-	public static <T> SessionStore_InMemory<T> create() {
-		return new SessionStore_InMemory<>();
+	public static <T> SessionStore_InMemory<T> create(Reactor reactor) {
+		return new SessionStore_InMemory<>(reactor);
 	}
 
 	public SessionStore_InMemory<T> withLifetime(Duration sessionLifetime) {
@@ -49,12 +53,14 @@ public final class SessionStore_InMemory<T> implements AsyncSessionStore<T>, Wit
 
 	@Override
 	public Promise<Void> save(String sessionId, T sessionObject) {
+		checkInReactorThread();
 		store.put(sessionId, new TWithTimestamp(sessionObject, now.currentTimeMillis()));
 		return Promise.complete();
 	}
 
 	@Override
 	public Promise<@Nullable T> get(String sessionId) {
+		checkInReactorThread();
 		long timestamp = now.currentTimeMillis();
 		TWithTimestamp tWithTimestamp = store.get(sessionId);
 		if (tWithTimestamp == null) {
@@ -70,6 +76,7 @@ public final class SessionStore_InMemory<T> implements AsyncSessionStore<T>, Wit
 
 	@Override
 	public Promise<Void> remove(String sessionId) {
+		checkInReactorThread();
 		store.remove(sessionId);
 		return Promise.complete();
 	}

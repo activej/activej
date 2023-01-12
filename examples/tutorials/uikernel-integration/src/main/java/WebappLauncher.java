@@ -11,6 +11,7 @@ import io.activej.inject.annotation.Inject;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.Module;
 import io.activej.launcher.Launcher;
+import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.service.ServiceGraphModule;
 import io.activej.uikernel.UiKernelServlets;
@@ -50,17 +51,17 @@ public class WebappLauncher extends Launcher {
 	}
 
 	@Provides
-	AsyncStaticLoader staticLoader(Executor executor, Config config) {
-		return AsyncStaticLoader.ofClassPath(executor, config.get(ofString(), "resources", DEFAULT_PATH_TO_RESOURCES));
+	AsyncStaticLoader staticLoader(Reactor reactor, Executor executor, Config config) {
+		return AsyncStaticLoader.ofClassPath(reactor, executor, config.get(ofString(), "resources", DEFAULT_PATH_TO_RESOURCES));
 	}
 
 	@Provides
-	AsyncServlet servlet(AsyncStaticLoader staticLoader, Gson gson, GridModel_Person model, Config config) {
-		Servlet_Static staticServlet = Servlet_Static.create(staticLoader)
+	AsyncServlet servlet(Reactor reactor, AsyncStaticLoader staticLoader, Gson gson, GridModel_Person model, Config config) {
+		Servlet_Static staticServlet = Servlet_Static.create(reactor, staticLoader)
 				.withIndexHtml();
-		AsyncServlet usersApiServlet = UiKernelServlets.apiServlet(model, gson);
+		AsyncServlet usersApiServlet = UiKernelServlets.apiServlet(reactor, model, gson);
 
-		return Servlet_Routing.create()
+		return Servlet_Routing.create(reactor)
 				.map("/*", staticServlet)              // serves request if no other servlet matches
 				.map("/api/users/*", usersApiServlet); // our rest crud servlet that would serve the grid
 	}

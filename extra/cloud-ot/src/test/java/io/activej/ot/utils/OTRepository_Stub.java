@@ -4,6 +4,7 @@ import io.activej.ot.AsyncOTCommitFactory;
 import io.activej.ot.OTCommit;
 import io.activej.ot.repository.AsyncOTRepository;
 import io.activej.promise.Promise;
+import io.activej.reactor.ImplicitlyReactive;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -14,7 +15,8 @@ import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.not;
 import static java.util.stream.Collectors.toSet;
 
-public final class OTRepository_Stub<K, D> implements AsyncOTRepository<K, D> {
+public final class OTRepository_Stub<K, D> extends ImplicitlyReactive
+		implements AsyncOTRepository<K, D> {
 	public Supplier<K> revisionIdSupplier;
 	private AsyncOTCommitFactory<K, D> commitFactory;
 
@@ -72,6 +74,7 @@ public final class OTRepository_Stub<K, D> implements AsyncOTRepository<K, D> {
 
 	@Override
 	public Promise<OTCommit<K, D>> createCommit(Map<K, DiffsWithLevel<D>> parentDiffs) {
+		checkInReactorThread();
 		return commitFactory != null ?
 				commitFactory.createCommit(parentDiffs) :
 				createCommitId()
@@ -80,12 +83,14 @@ public final class OTRepository_Stub<K, D> implements AsyncOTRepository<K, D> {
 
 	@Override
 	public Promise<Void> push(Collection<OTCommit<K, D>> commits) {
+		checkInReactorThread();
 		doPush(commits);
 		return Promise.complete();
 	}
 
 	@Override
 	public Promise<Void> updateHeads(Set<K> newHeads, Set<K> excludedHeads) {
+		checkInReactorThread();
 		heads.addAll(newHeads);
 		heads.removeAll(excludedHeads);
 		return Promise.complete();
@@ -93,6 +98,7 @@ public final class OTRepository_Stub<K, D> implements AsyncOTRepository<K, D> {
 
 	@Override
 	public Promise<Set<K>> getAllHeads() {
+		checkInReactorThread();
 		return Promise.of(new HashSet<>(heads));
 	}
 
@@ -102,22 +108,26 @@ public final class OTRepository_Stub<K, D> implements AsyncOTRepository<K, D> {
 
 	@Override
 	public Promise<Boolean> hasCommit(K revisionId) {
+		checkInReactorThread();
 		return Promise.of(commits.containsKey(revisionId));
 	}
 
 	@Override
 	public Promise<OTCommit<K, D>> loadCommit(K revisionId) {
+		checkInReactorThread();
 		return Promise.of(doLoadCommit(revisionId));
 	}
 
 	@Override
 	public Promise<Void> saveSnapshot(K revisionId, List<D> diffs) {
+		checkInReactorThread();
 		doSaveSnapshot(revisionId, diffs);
 		return Promise.complete();
 	}
 
 	@Override
 	public Promise<Optional<List<D>>> loadSnapshot(K revisionId) {
+		checkInReactorThread();
 		return Promise.of(Optional.ofNullable(snapshots.get(revisionId)));
 	}
 

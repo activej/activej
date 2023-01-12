@@ -47,8 +47,8 @@ public class UserServiceExample extends Launcher {
 	}
 
 	@Provides
-	AsyncUserDao userDao(DataSource dataSource, Executor executor) {
-		return new UserDao_Sql(dataSource, executor);
+	AsyncUserDao userDao(Reactor reactor, DataSource dataSource, Executor executor) {
+		return new UserDao_Sql(reactor, dataSource, executor);
 	}
 
 	@Override

@@ -12,6 +12,7 @@ import io.activej.http.decoder.Mapper;
 import io.activej.inject.annotation.Provides;
 import io.activej.launcher.Launcher;
 import io.activej.launchers.http.HttpServerLauncher;
+import io.activej.reactor.Reactor;
 
 import java.util.Map;
 
@@ -55,9 +56,9 @@ public final class HttpDecoderExample extends HttpServerLauncher {
 
 	//[START REGION_2]
 	@Provides
-	AsyncServlet mainServlet(ContactDAO contactDAO) {
+	AsyncServlet mainServlet(Reactor reactor, ContactDAO contactDAO) {
 		Mustache contactListView = new DefaultMustacheFactory().compile("static/contactList.html");
-		return Servlet_Routing.create()
+		return Servlet_Routing.create(reactor)
 				.map("/", request -> HttpResponse.ok200()
 						.withBody(applyTemplate(contactListView, Map.of("contacts", contactDAO.list()))))
 				.map(POST, "/add", request -> request.loadBody()

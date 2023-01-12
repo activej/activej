@@ -5,6 +5,7 @@ import io.activej.http.Servlet_Static;
 import io.activej.inject.annotation.Provides;
 import io.activej.launcher.Launcher;
 import io.activej.launchers.http.HttpServerLauncher;
+import io.activej.reactor.Reactor;
 
 import java.util.concurrent.Executor;
 
@@ -22,8 +23,8 @@ public final class HttpRequestParametersExample extends HttpServerLauncher {
 
 	//[START REGION_1]
 	@Provides
-	AsyncServlet servlet(Executor executor) {
-		return Servlet_Routing.create()
+	AsyncServlet servlet(Reactor reactor, Executor executor) {
+		return Servlet_Routing.create(reactor)
 				.map(POST, "/hello", request -> request.loadBody()
 						.map($ -> {
 							String name = request.getPostParameters().get("name");
@@ -35,7 +36,7 @@ public final class HttpRequestParametersExample extends HttpServerLauncher {
 					return HttpResponse.ok200()
 							.withHtml("<h1><center>Hello from GET, " + name + "!</center></h1>");
 				})
-				.map("/*", Servlet_Static.ofClassPath(executor, RESOURCE_DIR)
+				.map("/*", Servlet_Static.ofClassPath(reactor, executor, RESOURCE_DIR)
 						.withIndexHtml());
 	}
 	//[END REGION_1]

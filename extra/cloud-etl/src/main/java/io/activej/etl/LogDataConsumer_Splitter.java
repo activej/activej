@@ -20,6 +20,7 @@ import io.activej.async.AsyncAccumulator;
 import io.activej.datastream.StreamConsumerWithResult;
 import io.activej.datastream.StreamDataAcceptor;
 import io.activej.datastream.processor.StreamSplitter;
+import io.activej.reactor.ImplicitlyReactive;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -28,7 +29,8 @@ import java.util.List;
 import static io.activej.common.Checks.checkState;
 
 @SuppressWarnings("unchecked")
-public abstract class LogDataConsumer_Splitter<T, D> implements AsyncLogDataConsumer<T, D> {
+public abstract class LogDataConsumer_Splitter<T, D> extends ImplicitlyReactive
+		implements AsyncLogDataConsumer<T, D> {
 
 	public final class Context {
 		private final List<AsyncLogDataConsumer<?, D>> logDataConsumers = new ArrayList<>();
@@ -47,6 +49,7 @@ public abstract class LogDataConsumer_Splitter<T, D> implements AsyncLogDataCons
 
 	@Override
 	public StreamConsumerWithResult<T, List<D>> consume() {
+		checkInReactorThread();
 		AsyncAccumulator<List<D>> diffsAccumulator = AsyncAccumulator.create(new ArrayList<>());
 
 		Context ctx = new Context();

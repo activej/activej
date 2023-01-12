@@ -11,7 +11,7 @@ import io.activej.dataflow.calcite.rel.DataflowSqlToRelConverter;
 import io.activej.dataflow.graph.Partition;
 import io.activej.inject.annotation.Provides;
 import io.activej.inject.module.AbstractModule;
-import io.activej.reactor.nio.NioReactor;
+import io.activej.reactor.Reactor;
 import org.apache.calcite.avatica.util.Quoting;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.config.Lex;
@@ -125,7 +125,7 @@ public final class CalciteClientModule extends AbstractModule {
 	}
 
 	@Provides
-	SqlDataflow calciteSqlDataflow(NioReactor reactor, DataflowClient client, SqlParser.Config parserConfig, SqlToRelConverter sqlToRelConverter, RelOptPlanner planner,
+	SqlDataflow calciteSqlDataflow(Reactor reactor, DataflowClient client, SqlParser.Config parserConfig, SqlToRelConverter sqlToRelConverter, RelOptPlanner planner,
 			List<Partition> partitions, RelToDatasetConverter relToDatasetConverter) {
 		return SqlDataflow.create(reactor, client, partitions, parserConfig, sqlToRelConverter, planner, relToDatasetConverter);
 	}

@@ -3,13 +3,15 @@ package io.activej.datastream.processor;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamSupplier;
 import io.activej.promise.Promise;
+import io.activej.reactor.ImplicitlyReactive;
 import io.activej.test.ExpectedException;
 
 import java.util.List;
 
 import static io.activej.common.Checks.checkNotNull;
 
-public final class StreamSorterStorage_FailingStub<T> implements AsyncStreamSorterStorage<T> {
+public final class StreamSorterStorage_FailingStub<T> extends ImplicitlyReactive
+		implements AsyncStreamSorterStorage<T> {
 	static final Exception STORAGE_EXCEPTION = new ExpectedException("failing storage");
 
 	private AsyncStreamSorterStorage<T> storage;
@@ -57,24 +59,28 @@ public final class StreamSorterStorage_FailingStub<T> implements AsyncStreamSort
 
 	@Override
 	public Promise<Integer> newPartitionId() {
+		checkInReactorThread();
 		checkNotNull(storage);
 		return failNewPartition ? Promise.ofException(STORAGE_EXCEPTION) : storage.newPartitionId();
 	}
 
 	@Override
 	public Promise<StreamConsumer<T>> write(int partition) {
+		checkInReactorThread();
 		checkNotNull(storage);
 		return failWrite ? Promise.ofException(STORAGE_EXCEPTION) : storage.write(partition);
 	}
 
 	@Override
 	public Promise<StreamSupplier<T>> read(int partition) {
+		checkInReactorThread();
 		checkNotNull(storage);
 		return failRead ? Promise.ofException(STORAGE_EXCEPTION) : storage.read(partition);
 	}
 
 	@Override
 	public Promise<Void> cleanup(List<Integer> partitionsToDelete) {
+		checkInReactorThread();
 		checkNotNull(storage);
 		return failCleanup ? Promise.ofException(STORAGE_EXCEPTION) : storage.cleanup(partitionsToDelete);
 	}

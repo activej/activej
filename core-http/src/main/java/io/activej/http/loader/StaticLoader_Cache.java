@@ -18,20 +18,24 @@ package io.activej.http.loader;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.Reactor;
 
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import static io.activej.bytebuf.ByteBuf.wrapForReading;
 
-class StaticLoader_Cache implements AsyncStaticLoader {
+class StaticLoader_Cache extends AbstractReactive
+		implements AsyncStaticLoader {
 	public static final byte[] NOT_FOUND = {};
 
 	private final AsyncStaticLoader resourceLoader;
 	private final Function<String, byte[]> get;
 	private final BiConsumer<String, byte[]> put;
 
-	public StaticLoader_Cache(AsyncStaticLoader resourceLoader, Function<String, byte[]> get, BiConsumer<String, byte[]> put) {
+	public StaticLoader_Cache(Reactor reactor, AsyncStaticLoader resourceLoader, Function<String, byte[]> get, BiConsumer<String, byte[]> put) {
+		super(reactor);
 		this.resourceLoader = resourceLoader;
 		this.get = get;
 		this.put = put;
@@ -39,6 +43,7 @@ class StaticLoader_Cache implements AsyncStaticLoader {
 
 	@Override
 	public Promise<ByteBuf> load(String path) {
+		checkInReactorThread();
 		byte[] bytes = get.apply(path);
 		if (bytes == NOT_FOUND) {
 			return Promise.ofException(new ResourceNotFoundException("Could not find '" + path + '\''));

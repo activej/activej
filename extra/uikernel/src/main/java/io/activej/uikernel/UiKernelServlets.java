@@ -20,6 +20,7 @@ import com.google.gson.Gson;
 import io.activej.bytebuf.ByteBufStrings;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.http.*;
+import io.activej.reactor.Reactor;
 
 import java.util.List;
 
@@ -38,8 +39,8 @@ public class UiKernelServlets {
 
 	private static final String ID_PARAMETER_NAME = "id";
 
-	public static <K, R extends AbstractRecord<K>> Servlet_Routing apiServlet(AsyncGridModel<K, R> model, Gson gson) {
-		return Servlet_Routing.create()
+	public static <K, R extends AbstractRecord<K>> Servlet_Routing apiServlet(Reactor reactor, AsyncGridModel<K, R> model, Gson gson) {
+		return Servlet_Routing.create(reactor)
 				.map(POST, "/", create(model, gson))
 				.map(GET, "/", read(model, gson))
 				.map(PUT, "/", update(model, gson))

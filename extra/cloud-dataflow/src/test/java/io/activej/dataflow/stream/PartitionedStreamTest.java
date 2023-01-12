@@ -485,7 +485,7 @@ public final class PartitionedStreamTest {
 			writeDataFile(tmp, i, sorted);
 			FileSystem fsClient = FileSystem.create(serverEventloop, newSingleThreadExecutor(), tmp);
 			startClient(fsClient);
-			HttpServer server = HttpServer.create(serverEventloop, FileSystemServlet.create(fsClient));
+			HttpServer server = HttpServer.create(serverEventloop, FileSystemServlet.create(serverEventloop, fsClient));
 			servers.add(server);
 		}
 		for (HttpServer server : servers) {
@@ -500,7 +500,7 @@ public final class PartitionedStreamTest {
 			Path tmp = tempDir.newFolder("target_server_" + i + "_").toPath();
 			FileSystem fsClient = FileSystem.create(serverEventloop, newSingleThreadExecutor(), tmp);
 			startClient(fsClient);
-			HttpServer server = HttpServer.create(serverEventloop, FileSystemServlet.create(fsClient));
+			HttpServer server = HttpServer.create(serverEventloop, FileSystemServlet.create(serverEventloop, fsClient));
 			servers.add(server);
 		}
 		for (HttpServer server : servers) {

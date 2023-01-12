@@ -8,13 +8,15 @@ import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.AsyncStreamSorterStorage;
 import io.activej.promise.Promise;
+import io.activej.reactor.ImplicitlyReactive;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class StreamSorterStorage_MergeStub<T> implements AsyncStreamSorterStorage<T> {
+public class StreamSorterStorage_MergeStub<T> extends ImplicitlyReactive
+		implements AsyncStreamSorterStorage<T> {
 
 	public static final StreamSorterStorageFactory FACTORY_STUB = new StreamSorterStorageFactory() {
 		@Override

@@ -24,12 +24,13 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 
 public class OTAlgorithmsTest {
-	private static final Random RANDOM = new Random();
-	private static final OTSystem<TestOp> TEST_OP = Utils.createTestOp();
-	private static final OTRepository_Stub<Integer, TestOp> REPOSITORY = OTRepository_Stub.create();
 
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
+
+	private static final Random RANDOM = new Random();
+	private static final OTSystem<TestOp> TEST_OP = Utils.createTestOp();
+	private static final OTRepository_Stub<Integer, TestOp> REPOSITORY = OTRepository_Stub.create();
 
 	@Before
 	public void reset() {

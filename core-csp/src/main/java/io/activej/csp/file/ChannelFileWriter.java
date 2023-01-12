@@ -22,6 +22,7 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.AbstractChannelConsumer;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,8 +59,8 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> im
 		this.channel = channel;
 	}
 
-	public static ChannelFileWriter create(Executor executor, FileChannel channel) {
-		return create(new FileService_Executor(executor), channel);
+	public static ChannelFileWriter create(Reactor reactor, Executor executor, FileChannel channel) {
+		return create(new FileService_Executor(reactor, executor), channel);
 	}
 
 	public static ChannelFileWriter create(AsyncFileService fileService, FileChannel channel) {
@@ -73,17 +74,17 @@ public final class ChannelFileWriter extends AbstractChannelConsumer<ByteBuf> im
 	public static Promise<ChannelFileWriter> open(Executor executor, Path path, OpenOption... openOptions) {
 		checkArgument(List.of(openOptions).contains(WRITE), "'WRITE' option is not present");
 		return Promise.ofBlocking(executor, () -> FileChannel.open(path, openOptions))
-				.map(channel -> create(executor, channel));
+				.map(channel -> create(Reactor.getCurrentReactor(), executor, channel));
 	}
 
-	public static ChannelFileWriter openBlocking(Executor executor, Path path) throws IOException {
-		return openBlocking(executor, path, DEFAULT_OPTIONS);
+	public static ChannelFileWriter openBlocking(Reactor reactor, Executor executor, Path path) throws IOException {
+		return openBlocking(reactor, executor, path, DEFAULT_OPTIONS);
 	}
 
-	public static ChannelFileWriter openBlocking(Executor executor, Path path, OpenOption... openOptions) throws IOException {
+	public static ChannelFileWriter openBlocking(Reactor reactor, Executor executor, Path path, OpenOption... openOptions) throws IOException {
 		checkArgument(List.of(openOptions).contains(WRITE), "'WRITE' option is not present");
 		FileChannel channel = FileChannel.open(path, openOptions);
-		return create(executor, channel);
+		return create(reactor, executor, channel);
 	}
 
 	public ChannelFileWriter withForceOnClose(boolean forceMetadata) {

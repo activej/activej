@@ -18,30 +18,37 @@ package io.activej.aggregation;
 
 import io.activej.common.initializer.WithInitializer;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.Reactor;
 
 import java.util.Set;
 
-public final class ChunkLocker_NoOp<C> implements AsyncChunkLocker<C>, WithInitializer<ChunkLocker_NoOp<C>> {
+public final class ChunkLocker_NoOp<C> extends AbstractReactive
+		implements AsyncChunkLocker<C>, WithInitializer<ChunkLocker_NoOp<C>> {
 
-	private ChunkLocker_NoOp() {
+	private ChunkLocker_NoOp(Reactor reactor) {
+		super(reactor);
 	}
 
-	public static <C> ChunkLocker_NoOp<C> create() {
-		return new ChunkLocker_NoOp<>();
+	public static <C> ChunkLocker_NoOp<C> create(Reactor reactor) {
+		return new ChunkLocker_NoOp<>(reactor);
 	}
 
 	@Override
 	public Promise<Void> lockChunks(Set<C> chunkIds) {
+		checkInReactorThread();
 		return Promise.complete();
 	}
 
 	@Override
 	public Promise<Void> releaseChunks(Set<C> chunkIds) {
+		checkInReactorThread();
 		return Promise.complete();
 	}
 
 	@Override
 	public Promise<Set<C>> getLockedChunks() {
+		checkInReactorThread();
 		return Promise.of(Set.of());
 	}
 }

@@ -75,8 +75,8 @@ public class SimpleTcpServerLauncher extends Launcher {
 	}
 
 	@Provides
-	AsyncServlet guiServlet(AsyncFileSystem fileSystem) {
-		return FileSystemGuiServlet.create(fileSystem);
+	AsyncServlet guiServlet(Reactor reactor, AsyncFileSystem fileSystem) {
+		return FileSystemGuiServlet.create(reactor, fileSystem);
 	}
 
 	@Provides

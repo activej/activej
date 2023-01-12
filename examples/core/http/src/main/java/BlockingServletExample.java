@@ -4,6 +4,7 @@ import io.activej.http.Servlet_Routing;
 import io.activej.inject.annotation.Provides;
 import io.activej.launcher.Launcher;
 import io.activej.launchers.http.HttpServerLauncher;
+import io.activej.reactor.Reactor;
 
 import java.util.concurrent.Executor;
 
@@ -17,8 +18,8 @@ public final class BlockingServletExample extends HttpServerLauncher {
 
 	//[START EXAMPLE]
 	@Provides
-	AsyncServlet servlet(Executor executor) {
-		return Servlet_Routing.create()
+	AsyncServlet servlet(Reactor reactor, Executor executor) {
+		return Servlet_Routing.create(reactor)
 				.map("/", request -> HttpResponse.ok200()
 						.withHtml("<a href='hardWork'>Do hard work</a>"))
 				.map("/hardWork", AsyncServlet.ofBlocking(executor, request -> {

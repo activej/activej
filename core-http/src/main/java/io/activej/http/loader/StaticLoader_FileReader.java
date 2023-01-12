@@ -20,26 +20,31 @@ import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
 import io.activej.csp.file.ChannelFileReader;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.Reactor;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.Executor;
 
-class StaticLoader_FileReader implements AsyncStaticLoader {
+class StaticLoader_FileReader extends AbstractReactive
+		implements AsyncStaticLoader {
 	private final Executor executor;
 	private final Path root;
 
-	private StaticLoader_FileReader(Executor executor, Path root) {
+	private StaticLoader_FileReader(Reactor reactor, Executor executor, Path root) {
+		super(reactor);
 		this.executor = executor;
 		this.root = root;
 	}
 
-	public static AsyncStaticLoader create(Executor executor, Path dir) {
-		return new StaticLoader_FileReader(executor, dir);
+	public static AsyncStaticLoader create(Reactor reactor, Executor executor, Path dir) {
+		return new StaticLoader_FileReader(reactor, executor, dir);
 	}
 
 	@Override
 	public Promise<ByteBuf> load(String path) {
+		checkInReactorThread();
 		Path file = root.resolve(path).normalize();
 
 		if (!file.startsWith(root)) {

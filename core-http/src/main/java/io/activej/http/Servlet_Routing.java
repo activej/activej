@@ -18,10 +18,11 @@ package io.activej.http;
 
 import io.activej.common.initializer.WithInitializer;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,7 +38,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 /**
  * This servlet allows building complex servlet trees, routing requests between them by the HTTP paths.
  */
-public final class Servlet_Routing implements AsyncServlet, WithInitializer<Servlet_Routing> {
+public final class Servlet_Routing extends AbstractReactive
+		implements AsyncServlet, WithInitializer<Servlet_Routing> {
 	private static final String ROOT = "/";
 	private static final String STAR = "*";
 	private static final String WILDCARD = "/" + STAR;
@@ -51,15 +53,16 @@ public final class Servlet_Routing implements AsyncServlet, WithInitializer<Serv
 	private final Map<String, Servlet_Routing> routes = new HashMap<>();
 	private final Map<String, Servlet_Routing> parameters = new HashMap<>();
 
-	private Servlet_Routing() {
+	private Servlet_Routing(Reactor reactor) {
+		super(reactor);
 	}
 
-	public static Servlet_Routing create() {
-		return new Servlet_Routing();
+	public static Servlet_Routing create(Reactor reactor) {
+		return new Servlet_Routing(reactor);
 	}
 
-	public static Servlet_Routing wrap(AsyncServlet servlet) {
-		Servlet_Routing wrapper = new Servlet_Routing();
+	public static Servlet_Routing wrap(Reactor reactor, AsyncServlet servlet) {
+		Servlet_Routing wrapper = new Servlet_Routing(reactor);
 		wrapper.fallbackServlets[ANY_HTTP_ORDINAL] = servlet;
 		return wrapper;
 	}
@@ -85,7 +88,7 @@ public final class Servlet_Routing implements AsyncServlet, WithInitializer<Serv
 	 */
 	@Contract("_, _ -> this")
 	public Servlet_Routing mapWebSocket(String path, Consumer<AsyncWebSocket> webSocketConsumer) {
-		return mapWebSocket(path, new Servlet_WebSocket() {
+		return mapWebSocket(path, new Servlet_WebSocket(reactor) {
 			@Override
 			protected void onWebSocket(AsyncWebSocket webSocket) {
 				webSocketConsumer.accept(webSocket);
@@ -144,7 +147,7 @@ public final class Servlet_Routing implements AsyncServlet, WithInitializer<Serv
 
 	@Contract("_, _ -> new")
 	public Servlet_Routing merge(String path, Servlet_Routing servlet) {
-		Servlet_Routing merged = new Servlet_Routing();
+		Servlet_Routing merged = new Servlet_Routing(servlet.reactor);
 		mergeInto(merged, this);
 		mergeInto(merged.makeSubtree(path), servlet);
 		return merged;
@@ -152,6 +155,7 @@ public final class Servlet_Routing implements AsyncServlet, WithInitializer<Serv
 
 	@Override
 	public Promise<HttpResponse> serve(HttpRequest request) throws Exception {
+		checkInReactorThread();
 		Promise<HttpResponse> processed = tryServe(request);
 		return processed != null ?
 				processed :
@@ -220,8 +224,8 @@ public final class Servlet_Routing implements AsyncServlet, WithInitializer<Serv
 	private Servlet_Routing makeSubtree(String path) {
 		return getOrCreateSubtree(path, (servlet, name) ->
 				name.startsWith(":") ?
-						servlet.parameters.computeIfAbsent(name.substring(1), $ -> new Servlet_Routing()) :
-						servlet.routes.computeIfAbsent(name, $ -> new Servlet_Routing()));
+						servlet.parameters.computeIfAbsent(name.substring(1), $ -> new Servlet_Routing(reactor)) :
+						servlet.routes.computeIfAbsent(name, $ -> new Servlet_Routing(reactor)));
 	}
 
 	private Servlet_Routing getOrCreateSubtree(String path, BiFunction<Servlet_Routing, String, @Nullable Servlet_Routing> childGetter) {
@@ -252,14 +256,21 @@ public final class Servlet_Routing implements AsyncServlet, WithInitializer<Serv
 	}
 
 	public static Servlet_Routing merge(Servlet_Routing first, Servlet_Routing second) {
-		Servlet_Routing merged = new Servlet_Routing();
+		checkArgument(first.reactor == second.reactor, "Different reactors");
+		Servlet_Routing merged = new Servlet_Routing(first.reactor);
 		mergeInto(merged, first);
 		mergeInto(merged, second);
 		return merged;
 	}
 
 	public static Servlet_Routing merge(Servlet_Routing... servlets) {
-		Servlet_Routing merged = new Servlet_Routing();
+		checkArgument(servlets.length > 1, "Nothing to merge");
+		Reactor firstReactor = servlets[0].reactor;
+		for (int i = 1; i < servlets.length; i++) {
+			checkArgument(firstReactor == servlets[i].reactor, "Different reactors");
+		}
+
+		Servlet_Routing merged = new Servlet_Routing(firstReactor);
 		for (Servlet_Routing servlet : servlets) {
 			mergeInto(merged, servlet);
 		}
@@ -301,9 +312,7 @@ public final class Servlet_Routing implements AsyncServlet, WithInitializer<Serv
 
 	private static String decodePattern(String pattern) {
 		try {
-			return URLDecoder.decode(pattern, UTF_8.name());
-		} catch (UnsupportedEncodingException e) {
-			throw new AssertionError();
+			return URLDecoder.decode(pattern, UTF_8);
 		} catch (IllegalArgumentException e) {
 			throw new IllegalArgumentException("Pattern contains bad percent encoding", e);
 		}

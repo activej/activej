@@ -14,6 +14,7 @@ import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.Reactor;
+import io.activej.reactor.nio.NioReactor;
 import io.activej.test.rules.ActivePromisesRule;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -150,8 +151,9 @@ public final class WebSocketClientServerTest {
 
 	@Test
 	public void testRejectedHandshake() throws IOException {
-		HttpServer.create(Reactor.getCurrentReactor(), Servlet_Routing.create()
-						.mapWebSocket("/", new Servlet_WebSocket() {
+		NioReactor reactor = Reactor.getCurrentReactor();
+		HttpServer.create(reactor, Servlet_Routing.create(reactor)
+						.mapWebSocket("/", new Servlet_WebSocket(reactor) {
 							@Override
 							protected Promisable<HttpResponse> onRequest(HttpRequest request) {
 								return HttpResponse.ofCode(400).withBody(ByteBufPool.allocate(1000));
@@ -164,7 +166,7 @@ public final class WebSocketClientServerTest {
 				.withListenPort(port)
 				.withAcceptOnce()
 				.listen();
-		Exception exception = awaitException(HttpClient.create(Reactor.getCurrentReactor())
+		Exception exception = awaitException(HttpClient.create(reactor)
 				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port)));
 
 		assertEquals(HANDSHAKE_FAILED, exception);
@@ -172,8 +174,9 @@ public final class WebSocketClientServerTest {
 
 	@Test
 	public void testRejectedWithException() throws IOException {
-		HttpServer.create(Reactor.getCurrentReactor(), Servlet_Routing.create()
-						.mapWebSocket("/", new Servlet_WebSocket() {
+		NioReactor reactor = Reactor.getCurrentReactor();
+		HttpServer.create(reactor, Servlet_Routing.create(reactor)
+						.mapWebSocket("/", new Servlet_WebSocket(reactor) {
 							@Override
 							protected Promisable<HttpResponse> onRequest(HttpRequest request) {
 								return Promise.ofException(new MalformedDataException());
@@ -186,7 +189,7 @@ public final class WebSocketClientServerTest {
 				.withListenPort(port)
 				.withAcceptOnce()
 				.listen();
-		Exception exception = awaitException(HttpClient.create(Reactor.getCurrentReactor())
+		Exception exception = awaitException(HttpClient.create(reactor)
 				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port)));
 
 		assertEquals(HANDSHAKE_FAILED, exception);
@@ -343,13 +346,14 @@ public final class WebSocketClientServerTest {
 
 	@Test
 	public void testNonWebSocketServlet() throws IOException {
-		HttpServer.create(Reactor.getCurrentReactor(), Servlet_Routing.create()
+		NioReactor reactor = Reactor.getCurrentReactor();
+		HttpServer.create(reactor, Servlet_Routing.create(reactor)
 						.map("/", $ -> HttpResponse.ok200()))
 				.withListenPort(port)
 				.withAcceptOnce()
 				.listen();
 
-		Exception exception = awaitException(HttpClient.create(Reactor.getCurrentReactor())
+		Exception exception = awaitException(HttpClient.create(reactor)
 				.webSocketRequest(HttpRequest.get("ws://127.0.0.1:" + port)));
 
 		assertEquals(HANDSHAKE_FAILED, exception);
@@ -357,13 +361,14 @@ public final class WebSocketClientServerTest {
 
 	@Test
 	public void testNonWebSocketClient() throws IOException {
-		HttpServer.create(Reactor.getCurrentReactor(), Servlet_Routing.create()
+		NioReactor reactor = Reactor.getCurrentReactor();
+		HttpServer.create(reactor, Servlet_Routing.create(reactor)
 						.mapWebSocket("/", ws -> fail()))
 				.withListenPort(port)
 				.withAcceptOnce()
 				.listen();
 
-		int responseCode = await(HttpClient.create(Reactor.getCurrentReactor())
+		int responseCode = await(HttpClient.create(reactor)
 				.request(HttpRequest.get("http://127.0.0.1:" + port))
 				.map(HttpResponse::getCode));
 
@@ -371,7 +376,8 @@ public final class WebSocketClientServerTest {
 	}
 
 	private void startTestServer(Consumer<AsyncWebSocket> webSocketConsumer) throws IOException {
-		HttpServer.create(Reactor.getCurrentReactor(), Servlet_Routing.create()
+		NioReactor reactor = Reactor.getCurrentReactor();
+		HttpServer.create(reactor, Servlet_Routing.create(reactor)
 						.mapWebSocket("/", webSocketConsumer))
 				.withListenPort(port)
 				.withAcceptOnce()
@@ -380,7 +386,8 @@ public final class WebSocketClientServerTest {
 
 	private void startSecureTestServer(Consumer<AsyncWebSocket> webSocketConsumer) throws IOException {
 		ExecutorService executor = Executors.newSingleThreadExecutor();
-		HttpServer server = HttpServer.create(Reactor.getCurrentReactor(), Servlet_Routing.create()
+		NioReactor reactor = Reactor.getCurrentReactor();
+		HttpServer server = HttpServer.create(reactor, Servlet_Routing.create(reactor)
 						.mapWebSocket("/", webSocketConsumer))
 				.withSslListenPort(createTestSslContext(), executor, port)
 				.withAcceptOnce();

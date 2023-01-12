@@ -27,6 +27,8 @@ import io.activej.ot.reducers.DiffsReducer;
 import io.activej.ot.repository.AsyncOTRepository;
 import io.activej.ot.system.OTSystem;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.Reactor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,29 +44,31 @@ import static io.activej.ot.reducers.DiffsReducer.toSquashedList;
 import static io.activej.promise.PromisePredicates.isResultOrException;
 import static io.activej.promise.Promises.retry;
 
-public final class ReactiveOTUplink<K, D, PC> implements AsyncOTUplink<K, D, PC>, WithInitializer<ReactiveOTUplink<K, D, PC>> {
-	private static final Logger logger = LoggerFactory.getLogger(ReactiveOTUplink.class);
+public final class OTUplink<K, D, PC> extends AbstractReactive
+		implements AsyncOTUplink<K, D, PC>, WithInitializer<OTUplink<K, D, PC>> {
+	private static final Logger logger = LoggerFactory.getLogger(OTUplink.class);
 
 	private final OTSystem<D> otSystem;
 	private final AsyncOTRepository<K, D> repository;
 	private final FunctionEx<OTCommit<K, D>, PC> protoCommitEncoder;
 	private final FunctionEx<PC, OTCommit<K, D>> protoCommitDecoder;
 
-	private ReactiveOTUplink(AsyncOTRepository<K, D> repository, OTSystem<D> otSystem, FunctionEx<OTCommit<K, D>, PC> protoCommitEncoder,
+	private OTUplink(Reactor reactor, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem, FunctionEx<OTCommit<K, D>, PC> protoCommitEncoder,
 			FunctionEx<PC, OTCommit<K, D>> protoCommitDecoder) {
+		super(reactor);
 		this.otSystem = otSystem;
 		this.repository = repository;
 		this.protoCommitEncoder = protoCommitEncoder;
 		this.protoCommitDecoder = protoCommitDecoder;
 	}
 
-	public static <K, D, C> ReactiveOTUplink<K, D, C> create(AsyncOTRepository<K, D> repository, OTSystem<D> otSystem,
+	public static <K, D, C> OTUplink<K, D, C> create(Reactor reactor, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem,
 			FunctionEx<OTCommit<K, D>, C> commitToObject, FunctionEx<C, OTCommit<K, D>> objectToCommit) {
-		return new ReactiveOTUplink<>(repository, otSystem, commitToObject, objectToCommit);
+		return new OTUplink<>(reactor, repository, otSystem, commitToObject, objectToCommit);
 	}
 
-	public static <K, D> ReactiveOTUplink<K, D, OTCommit<K, D>> create(AsyncOTRepository<K, D> repository, OTSystem<D> otSystem) {
-		return new ReactiveOTUplink<>(repository, otSystem, commit -> commit, object -> object);
+	public static <K, D> OTUplink<K, D, OTCommit<K, D>> create(Reactor reactor, AsyncOTRepository<K, D> repository, OTSystem<D> otSystem) {
+		return new OTUplink<>(reactor, repository, otSystem, commit -> commit, object -> object);
 	}
 
 	public AsyncOTRepository<K, D> getRepository() {
@@ -73,6 +77,7 @@ public final class ReactiveOTUplink<K, D, PC> implements AsyncOTUplink<K, D, PC>
 
 	@Override
 	public Promise<PC> createProtoCommit(K parent, List<D> diffs, long parentLevel) {
+		checkInReactorThread();
 		return repository.createCommit(parent, new DiffsWithLevel<>(parentLevel, diffs))
 				.map(protoCommitEncoder)
 				.whenComplete(toLogger(logger, thisMethod(), parent, diffs, parentLevel));
@@ -80,6 +85,7 @@ public final class ReactiveOTUplink<K, D, PC> implements AsyncOTUplink<K, D, PC>
 
 	@Override
 	public Promise<FetchData<K, D>> push(PC protoCommit) {
+		checkInReactorThread();
 		OTCommit<K, D> commit;
 		try {
 			commit = protoCommitDecoder.apply(protoCommit);
@@ -101,6 +107,7 @@ public final class ReactiveOTUplink<K, D, PC> implements AsyncOTUplink<K, D, PC>
 
 	@Override
 	public Promise<FetchData<K, D>> checkout() {
+		checkInReactorThread();
 		Ref<List<D>> cachedSnapshotRef = new Ref<>();
 		return repository.getHeads()
 				.then(heads -> findParent(
@@ -127,6 +134,7 @@ public final class ReactiveOTUplink<K, D, PC> implements AsyncOTUplink<K, D, PC>
 
 	@Override
 	public Promise<FetchData<K, D>> fetch(K currentCommitId) {
+		checkInReactorThread();
 		return repository.getHeads()
 				.then(heads -> doFetch(heads, currentCommitId))
 				.whenComplete(toLogger(logger, thisMethod(), currentCommitId));
@@ -134,6 +142,7 @@ public final class ReactiveOTUplink<K, D, PC> implements AsyncOTUplink<K, D, PC>
 
 	@Override
 	public Promise<FetchData<K, D>> poll(K currentCommitId) {
+		checkInReactorThread();
 		return retry(
 				isResultOrException((Set<K> polledHeads) -> !polledHeads.contains(currentCommitId)),
 				PollSanitizer.create(repository.pollHeads()))

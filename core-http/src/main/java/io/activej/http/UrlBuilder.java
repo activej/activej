@@ -18,7 +18,6 @@ package io.activej.http;
 
 import org.jetbrains.annotations.Nullable;
 
-import java.io.UnsupportedEncodingException;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -135,11 +134,7 @@ public class UrlBuilder {
 	}
 
 	public static String urlEncode(String str) {
-		try {
-			return URLEncoder.encode(str, UTF_8.name());
-		} catch (UnsupportedEncodingException e) {
-			throw new AssertionError("Apparently, UTF-8 no longer exists", e);
-		}
+		return URLEncoder.encode(str, UTF_8);
 	}
 
 	public String build() {

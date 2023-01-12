@@ -2,6 +2,7 @@ import io.activej.http.AsyncServlet;
 import io.activej.http.Servlet_Static;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
+import io.activej.reactor.Reactor;
 
 import java.util.concurrent.Executor;
 
@@ -15,8 +16,8 @@ public final class SimpleApplicationLauncher extends HttpServerLauncher {
 	}
 
 	@Provides
-	AsyncServlet servlet(Executor executor) {
-		return Servlet_Static.ofClassPath(executor, "build")
+	AsyncServlet servlet(Reactor reactor, Executor executor) {
+		return Servlet_Static.ofClassPath(reactor, executor, "build")
 				.withIndexHtml();
 	}
 

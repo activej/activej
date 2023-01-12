@@ -19,18 +19,19 @@ package io.activej.dataflow.collector;
 import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.datastream.StreamSupplier;
+import io.activej.reactor.Reactor;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public final class Collector_Concat<T> extends AbstractCollector<T, List<StreamSupplier<T>>, Collector_Concat<T>> {
 
-	private Collector_Concat(Dataset<T> input, DataflowClient client) {
-		super(input, client);
+	private Collector_Concat(Reactor reactor, Dataset<T> input, DataflowClient client) {
+		super(reactor, input, client);
 	}
 
-	public static <T> Collector_Concat<T> create(Dataset<T> input, DataflowClient client) {
-		return new Collector_Concat<>(input, client);
+	public static <T> Collector_Concat<T> create(Reactor reactor, Dataset<T> input, DataflowClient client) {
+		return new Collector_Concat<>(reactor, input, client);
 	}
 
 	@Override

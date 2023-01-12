@@ -69,7 +69,7 @@ public final class Servlet_ReportingService extends Servlet_WithStats implements
 	}
 
 	public static Servlet_Routing createRootServlet(Servlet_ReportingService reportingServiceServlet) {
-		return Servlet_Routing.create()
+		return Servlet_Routing.create(reportingServiceServlet.reactor)
 				.map(GET, "/", reportingServiceServlet);
 	}
 

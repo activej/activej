@@ -2,6 +2,7 @@ import io.activej.http.*;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
+import io.activej.reactor.Reactor;
 
 /**
  * An example of setting routes based on Content-Type MIME types.
@@ -18,8 +19,8 @@ public final class MimeTypeRoutingExample extends HttpServerLauncher {
 	private static final String TEXT_TYPE_PREFIX = "text/";
 
 	@Provides
-	AsyncServlet mainServlet(@Named("Image") AsyncServlet imageServlet, @Named("Text") AsyncServlet textServlet) {
-		return Servlet_Routing.create()
+	AsyncServlet mainServlet(Reactor reactor, @Named("Image") AsyncServlet imageServlet, @Named("Text") AsyncServlet textServlet) {
+		return Servlet_Routing.create(reactor)
 				.map(HttpMethod.POST, "/*", request -> {
 					String contentType = request.getHeader(HttpHeaders.CONTENT_TYPE);
 					if (contentType == null) {

@@ -113,7 +113,7 @@ final class CubeUplinkMigrationService {
 	}
 
 	private OTUplink_CubeMySql createUplink(DataSource dataSource) {
-		return OTUplink_CubeMySql.create(executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
+		return OTUplink_CubeMySql.create(eventloop, executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
 	}
 
 	static Cube createEmptyCube(Reactor reactor, Executor executor) {

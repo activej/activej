@@ -37,6 +37,7 @@ public abstract class Servlet_WithStats extends AbstractReactive
 
 	@Override
 	public final Promise<HttpResponse> serve(HttpRequest request) {
+		checkInReactorThread();
 		return doServe(request)
 				.whenComplete(stats.recordStats());
 	}

@@ -72,8 +72,8 @@ public class ClusterTcpClientLauncher extends Launcher {
 	}
 
 	@Provides
-	AsyncServlet guiServlet(AsyncFileSystem fileSystem) {
-		return FileSystemGuiServlet.create(fileSystem, "Cluster FS Client");
+	AsyncServlet guiServlet(Reactor reactor, AsyncFileSystem fileSystem) {
+		return FileSystemGuiServlet.create(reactor, fileSystem, "Cluster FS Client");
 	}
 
 	@Provides

@@ -25,6 +25,7 @@ import io.activej.common.MemSize;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.csp.AbstractChannelSupplier;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,8 +63,8 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> im
 		this.channel = channel;
 	}
 
-	public static ChannelFileReader create(Executor executor, FileChannel channel) {
-		return create(new FileService_Executor(executor), channel);
+	public static ChannelFileReader create(Reactor reactor, Executor executor, FileChannel channel) {
+		return create(new FileService_Executor(reactor, executor), channel);
 	}
 
 	public static ChannelFileReader create(AsyncFileService fileService, FileChannel channel) {
@@ -81,18 +82,18 @@ public final class ChannelFileReader extends AbstractChannelSupplier<ByteBuf> im
 							if (Files.isDirectory(path)) throw new FileSystemException(path.toString(), null, "Is a directory");
 							return FileChannel.open(path, openOptions);
 						})
-				.map(channel -> create(executor, channel));
+				.map(channel -> create(Reactor.getCurrentReactor(), executor, channel));
 	}
 
-	public static ChannelFileReader openBlocking(Executor executor, Path path) throws IOException {
-		return openBlocking(executor, path, DEFAULT_OPTIONS);
+	public static ChannelFileReader openBlocking(Reactor reactor, Executor executor, Path path) throws IOException {
+		return openBlocking(reactor, executor, path, DEFAULT_OPTIONS);
 	}
 
-	public static ChannelFileReader openBlocking(Executor executor, Path path, OpenOption... openOptions) throws IOException {
+	public static ChannelFileReader openBlocking(Reactor reactor, Executor executor, Path path, OpenOption... openOptions) throws IOException {
 		checkArgument(List.of(openOptions).contains(READ), "'READ' option is not present");
 		if (Files.isDirectory(path)) throw new FileSystemException(path.toString(), null, "Is a directory");
 		FileChannel channel = FileChannel.open(path, openOptions);
-		return create(executor, channel);
+		return create(reactor, executor, channel);
 	}
 
 	public ChannelFileReader withBufferSize(MemSize bufferSize) {

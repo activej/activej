@@ -4,14 +4,15 @@ import io.activej.http.Servlet_Routing;
 import io.activej.inject.annotation.Provides;
 import io.activej.launcher.Launcher;
 import io.activej.launchers.http.HttpServerLauncher;
+import io.activej.reactor.Reactor;
 
 import static io.activej.http.HttpMethod.GET;
 
 public final class RoutingServletExample extends HttpServerLauncher {
 	//[START REGION_1]
 	@Provides
-	AsyncServlet servlet() {
-		return Servlet_Routing.create()
+	AsyncServlet servlet(Reactor reactor) {
+		return Servlet_Routing.create(reactor)
 				//[START REGION_2]
 				.map(GET, "/", request ->
 						HttpResponse.ok200()

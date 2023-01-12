@@ -196,7 +196,7 @@ public class DataflowServerTest {
 		Dataset<String> items = datasetOfId("items", simple(String.class));
 		Dataset<StringCount> mappedItems = map(items, new TestMapFunction(), simple(StringCount.class));
 		Dataset<StringCount> reducedItems = splitSortReduceRepartitionReduce(mappedItems, new TestReducer(), new TestKeyFunction(), new TestComparator());
-		AsyncCollector<StringCount> collector = Collector_Concat.create(reducedItems, client);
+		AsyncCollector<StringCount> collector = Collector_Concat.create(Reactor.getCurrentReactor(), reducedItems, client);
 		StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
 		StreamConsumerToList<StringCount> resultConsumer = StreamConsumerToList.create(result);
 

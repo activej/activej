@@ -22,6 +22,7 @@ import io.activej.inject.module.AbstractModule;
 import io.activej.memcache.protocol.MemcacheRpcMessage;
 import io.activej.memcache.protocol.MemcacheRpcMessage.Slice;
 import io.activej.memcache.protocol.SerializerDef_Slice;
+import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.AsyncRpcClient;
 import io.activej.rpc.client.RpcClient;
@@ -62,8 +63,8 @@ public class MemcacheClientModule extends AbstractModule {
 	}
 
 	@Provides
-	MemcacheClient_Raw memcacheClient(AsyncRpcClient client) {
-		return MemcacheClient_Raw.create(client);
+	MemcacheClient_Raw memcacheClient(Reactor reactor, AsyncRpcClient client) {
+		return MemcacheClient_Raw.create(reactor, client);
 	}
 
 }

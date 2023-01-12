@@ -24,6 +24,8 @@ import io.activej.http.loader.ResourceIsADirectoryException;
 import io.activej.http.loader.ResourceNotFoundException;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.charset.Charset;
@@ -42,7 +44,8 @@ import static io.activej.http.HttpHeaders.CONTENT_TYPE;
 /**
  * This servlet allows return HTTP responses by HTTP paths from some predefined storage, mainly the filesystem.
  */
-public final class Servlet_Static implements AsyncServlet, WithInitializer<Servlet_Static> {
+public final class Servlet_Static extends AbstractReactive
+		implements AsyncServlet, WithInitializer<Servlet_Static> {
 	public static final Charset DEFAULT_TXT_ENCODING = StandardCharsets.UTF_8;
 
 	private final AsyncStaticLoader resourceLoader;
@@ -53,24 +56,25 @@ public final class Servlet_Static implements AsyncServlet, WithInitializer<Servl
 
 	private @Nullable String defaultResource;
 
-	private Servlet_Static(AsyncStaticLoader resourceLoader) {
+	private Servlet_Static(Reactor reactor, AsyncStaticLoader resourceLoader) {
+		super(reactor);
 		this.resourceLoader = resourceLoader;
 	}
 
-	public static Servlet_Static create(AsyncStaticLoader resourceLoader) {
-		return new Servlet_Static(resourceLoader);
+	public static Servlet_Static create(Reactor reactor, AsyncStaticLoader resourceLoader) {
+		return new Servlet_Static(reactor, resourceLoader);
 	}
 
-	public static Servlet_Static create(AsyncStaticLoader resourceLoader, String page) {
-		return create(resourceLoader).withMappingTo(page);
+	public static Servlet_Static create(Reactor reactor, AsyncStaticLoader resourceLoader, String page) {
+		return create(reactor, resourceLoader).withMappingTo(page);
 	}
 
-	public static Servlet_Static ofClassPath(Executor executor, String path) {
-		return new Servlet_Static(AsyncStaticLoader.ofClassPath(executor, path));
+	public static Servlet_Static ofClassPath(Reactor reactor, Executor executor, String path) {
+		return new Servlet_Static(reactor, AsyncStaticLoader.ofClassPath(reactor, executor, path));
 	}
 
-	public static Servlet_Static ofPath(Executor executor, Path path) {
-		return new Servlet_Static(AsyncStaticLoader.ofPath(executor, path));
+	public static Servlet_Static ofPath(Reactor reactor, Executor executor, Path path) {
+		return new Servlet_Static(reactor, AsyncStaticLoader.ofPath(reactor, executor, path));
 	}
 
 	@SuppressWarnings("UnusedReturnValue")
@@ -147,6 +151,7 @@ public final class Servlet_Static implements AsyncServlet, WithInitializer<Servl
 
 	@Override
 	public Promise<HttpResponse> serve(HttpRequest request) {
+		checkInReactorThread();
 		String mappedPath = pathMapper.apply(request);
 		if (mappedPath == null) return Promise.ofException(HttpError.notFound404());
 		ContentType contentType = contentTypeResolver.apply(mappedPath);

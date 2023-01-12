@@ -93,8 +93,8 @@ public final class TestClusterDeadPartitionCheck {
 							}
 
 							@Override
-							public AbstractReactiveServer<?> createServer(FileSystem fileSystem, InetSocketAddress address) {
-								return FileSystemServer.create((NioReactor) fileSystem.getReactor(), fileSystem)
+							public AbstractReactiveServer<?> createServer(NioReactor reactor, FileSystem fileSystem, InetSocketAddress address) {
+								return FileSystemServer.create(reactor, fileSystem)
 										.withListenAddress(address);
 							}
 
@@ -127,8 +127,8 @@ public final class TestClusterDeadPartitionCheck {
 							}
 
 							@Override
-							public AbstractReactiveServer<?> createServer(FileSystem fileSystem, InetSocketAddress address) {
-								return HttpServer.create((NioReactor) fileSystem.getReactor(), FileSystemServlet.create(fileSystem))
+							public AbstractReactiveServer<?> createServer(NioReactor reactor, FileSystem fileSystem, InetSocketAddress address) {
+								return HttpServer.create(reactor, FileSystemServlet.create(reactor, fileSystem))
 										.withReadWriteTimeout(Duration.ZERO, Duration.ZERO)
 										.withListenAddress(address);
 							}
@@ -173,7 +173,7 @@ public final class TestClusterDeadPartitionCheck {
 			serverEventloop.keepAlive(true);
 
 			FileSystem fileSystem = FileSystem.create(serverEventloop, executor, serverStorages[i]);
-			AbstractReactiveServer<?> server = factory.createServer(fileSystem, address);
+			AbstractReactiveServer<?> server = factory.createServer(serverEventloop, fileSystem, address);
 			CompletableFuture<Void> startFuture = serverEventloop.submit(() -> {
 				try {
 					server.listen();
@@ -329,7 +329,7 @@ public final class TestClusterDeadPartitionCheck {
 	private interface ClientServerFactory {
 		AsyncFileSystem createClient(NioReactor reactor, InetSocketAddress address);
 
-		AbstractReactiveServer<?> createServer(FileSystem fileSystem, InetSocketAddress address);
+		AbstractReactiveServer<?> createServer(NioReactor reactor, FileSystem fileSystem, InetSocketAddress address);
 
 		void closeServer(AbstractReactiveServer<?> server) throws IOException;
 	}

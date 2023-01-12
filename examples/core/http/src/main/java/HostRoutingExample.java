@@ -5,6 +5,7 @@ import io.activej.http.Servlet_Routing;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
+import io.activej.reactor.Reactor;
 
 /**
  * An example of setting routes based on Host
@@ -20,8 +21,8 @@ public final class HostRoutingExample extends HttpServerLauncher {
 	private static final String EXAMPLE_HOST = "example.com";
 
 	@Provides
-	AsyncServlet mainServlet(@Named("Test") AsyncServlet testServlet, @Named("Example") AsyncServlet exampleServlet) {
-		return Servlet_Routing.create()
+	AsyncServlet mainServlet(Reactor reactor, @Named("Test") AsyncServlet testServlet, @Named("Example") AsyncServlet exampleServlet) {
+		return Servlet_Routing.create(reactor)
 				.map("/*", request -> {
 					String hostHeader = request.getHeader(HttpHeaders.HOST);
 					if (hostHeader == null) {

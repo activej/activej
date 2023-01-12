@@ -18,6 +18,8 @@ package io.activej.http.loader;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.Reactor;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,24 +31,26 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.Executor;
 
-class StaticLoader_ClassPath implements AsyncStaticLoader {
+class StaticLoader_ClassPath extends AbstractReactive
+		implements AsyncStaticLoader {
 	private static final String ROOT = "/";
 	private static final int ROOT_OFFSET = 1;
 	private final Executor executor;
 	private final ClassLoader classLoader;
 	private final String root;
 
-	private StaticLoader_ClassPath(Executor executor, ClassLoader classLoader, String root) {
+	private StaticLoader_ClassPath(Reactor reactor, Executor executor, ClassLoader classLoader, String root) {
+		super(reactor);
 		this.root = root;
 		this.executor = executor;
 		this.classLoader = classLoader;
 	}
 
-	public static StaticLoader_ClassPath create(Executor executor, String root) {
-		return create(executor, Thread.currentThread().getContextClassLoader(), root);
+	public static StaticLoader_ClassPath create(Reactor reactor, Executor executor, String root) {
+		return create(reactor, executor, Thread.currentThread().getContextClassLoader(), root);
 	}
 
-	public static StaticLoader_ClassPath create(Executor executor, ClassLoader classLoader, String root) {
+	public static StaticLoader_ClassPath create(Reactor reactor, Executor executor, ClassLoader classLoader, String root) {
 		if (root.startsWith(ROOT)) {
 			root = root.substring(ROOT_OFFSET);
 		}
@@ -54,11 +58,12 @@ class StaticLoader_ClassPath implements AsyncStaticLoader {
 			root = root + ROOT;
 		}
 
-		return new StaticLoader_ClassPath(executor, classLoader, root);
+		return new StaticLoader_ClassPath(reactor, executor, classLoader, root);
 	}
 
 	@Override
 	public Promise<ByteBuf> load(String name) {
+		checkInReactorThread();
 		String path = root;
 		int begin = 0;
 		if (name.startsWith(ROOT)) {

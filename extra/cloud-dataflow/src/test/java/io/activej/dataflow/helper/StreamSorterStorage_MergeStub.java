@@ -8,13 +8,15 @@ import io.activej.datastream.StreamConsumerToList;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.AsyncStreamSorterStorage;
 import io.activej.promise.Promise;
+import io.activej.reactor.ImplicitlyReactive;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class StreamSorterStorage_MergeStub<T> implements AsyncStreamSorterStorage<T> {
+public class StreamSorterStorage_MergeStub<T> extends ImplicitlyReactive
+		implements AsyncStreamSorterStorage<T> {
 
 	public static final StreamSorterStorageFactory FACTORY_STUB = new StreamSorterStorageFactory() {
 		@Override
@@ -31,12 +33,14 @@ public class StreamSorterStorage_MergeStub<T> implements AsyncStreamSorterStorag
 
 	@Override
 	public Promise<Integer> newPartitionId() {
+		checkInReactorThread();
 		int newPartition = partition++;
 		return Promise.of(newPartition);
 	}
 
 	@Override
 	public Promise<StreamConsumer<T>> write(int partition) {
+		checkInReactorThread();
 		List<T> list = new ArrayList<>();
 		storage.put(partition, list);
 		StreamConsumerToList<T> consumer = StreamConsumerToList.create(list);
@@ -45,6 +49,7 @@ public class StreamSorterStorage_MergeStub<T> implements AsyncStreamSorterStorag
 
 	@Override
 	public Promise<StreamSupplier<T>> read(int partition) {
+		checkInReactorThread();
 		List<T> iterable = storage.get(partition);
 		StreamSupplier<T> supplier = StreamSupplier.ofIterable(iterable);
 		return Promise.of(supplier);
@@ -52,6 +57,7 @@ public class StreamSorterStorage_MergeStub<T> implements AsyncStreamSorterStorag
 
 	@Override
 	public Promise<Void> cleanup(List<Integer> partitionsToDelete) {
+		checkInReactorThread();
 		for (Integer partition : partitionsToDelete) {
 			storage.remove(partition);
 		}

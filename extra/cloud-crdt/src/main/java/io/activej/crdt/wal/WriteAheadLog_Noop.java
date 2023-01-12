@@ -17,15 +17,29 @@
 package io.activej.crdt.wal;
 
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.Reactor;
 
-public class WriteAheadLog_Noop<K extends Comparable<K>, S> implements AsyncWriteAheadLog<K, S> {
+public class WriteAheadLog_Noop<K extends Comparable<K>, S> extends AbstractReactive
+		implements AsyncWriteAheadLog<K, S> {
+
+	private WriteAheadLog_Noop(Reactor reactor) {
+		super(reactor);
+	}
+
+	public static <K extends Comparable<K>, S> WriteAheadLog_Noop<K, S> create(Reactor reactor) {
+		return new WriteAheadLog_Noop<K, S>(reactor);
+	}
+
 	@Override
 	public Promise<Void> put(K key, S value) {
+		checkInReactorThread();
 		return Promise.complete();
 	}
 
 	@Override
 	public Promise<Void> flush() {
+		checkInReactorThread();
 		return Promise.complete();
 	}
 }

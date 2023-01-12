@@ -2,6 +2,7 @@ package io.activej.http;
 
 import io.activej.bytebuf.ByteBuf;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.ByteBufRule;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -11,6 +12,7 @@ import java.util.TreeMap;
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.http.HttpMethod.*;
 import static io.activej.http.WebSocketConstants.NOT_A_WEB_SOCKET_REQUEST;
+import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.test.TestUtils.assertCompleteFn;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.*;
@@ -44,7 +46,8 @@ public final class Servlet_Routing_Test {
 
 	@Test
 	public void testBase() throws Exception {
-		Servlet_Routing servlet1 = Servlet_Routing.create();
+		Reactor reactor = getCurrentReactor();
+		Servlet_Routing servlet1 = Servlet_Routing.create(reactor);
 
 		AsyncServlet subservlet = request -> HttpResponse.ofCode(200).withBody("".getBytes(UTF_8));
 
@@ -55,7 +58,7 @@ public final class Servlet_Routing_Test {
 		check(servlet1.serve(HttpRequest.get("http://some-test.com/a/b/c/d")), "", 404);
 		check(servlet1.serve(HttpRequest.post("http://some-test.com/a/b/c")), "", 404);
 
-		Servlet_Routing servlet2 = Servlet_Routing.create();
+		Servlet_Routing servlet2 = Servlet_Routing.create(reactor);
 		servlet2.map(HEAD, "/a/b/c", subservlet);
 
 		check(servlet2.serve(HttpRequest.post("http://some-test.com/a/b/c")), "", 404);
@@ -65,7 +68,7 @@ public final class Servlet_Routing_Test {
 
 	@Test
 	public void testProcessWildCardRequest() throws Exception {
-		Servlet_Routing servlet = Servlet_Routing.create();
+		Servlet_Routing servlet = Servlet_Routing.create(getCurrentReactor());
 		servlet.map("/a/b/c/d", request -> HttpResponse.ofCode(200).withBody("".getBytes(UTF_8)));
 
 		check(servlet.serve(HttpRequest.get("http://some-test.com/a/b/c/d")), "", 200);
@@ -89,16 +92,17 @@ public final class Servlet_Routing_Test {
 			return HttpResponse.ofCode(200).withBody(msg);
 		};
 
-		Servlet_Routing a = Servlet_Routing.create()
+		Reactor reactor = getCurrentReactor();
+		Servlet_Routing a = Servlet_Routing.create(reactor)
 				.map(GET, "/c", action)
 				.map(GET, "/d", action)
 				.map(GET, "/", action);
 
-		Servlet_Routing b = Servlet_Routing.create()
+		Servlet_Routing b = Servlet_Routing.create(reactor)
 				.map(GET, "/f", action)
 				.map(GET, "/g", action);
 
-		Servlet_Routing main = Servlet_Routing.create()
+		Servlet_Routing main = Servlet_Routing.create(reactor)
 				.map(GET, "/", action)
 				.map(GET, "/a/*", a)
 				.map(GET, "/b/*", b);
@@ -134,7 +138,7 @@ public final class Servlet_Routing_Test {
 			return HttpResponse.ofCode(200).withBody(msg);
 		};
 
-		Servlet_Routing main = Servlet_Routing.create()
+		Servlet_Routing main = Servlet_Routing.create(getCurrentReactor())
 				.map(GET, "/", action)
 				.map(GET, "/a", action)
 				.map(GET, "/a/c", action)
@@ -172,12 +176,13 @@ public final class Servlet_Routing_Test {
 			return HttpResponse.ofCode(200).withBody(msg);
 		};
 
-		Servlet_Routing main = Servlet_Routing.create()
+		Reactor reactor = getCurrentReactor();
+		Servlet_Routing main = Servlet_Routing.create(reactor)
 				.map(GET, "/a", action)
 				.map(GET, "/a/c", action)
 				.map(GET, "/a/d", action)
 				.map(GET, "/b", action)
-				.merge(Servlet_Routing.create()
+				.merge(Servlet_Routing.create(reactor)
 						.map(GET, "/", action)
 						.map(GET, "/a/e", action)
 						.map(GET, "/a/c/f", action));
@@ -209,11 +214,12 @@ public final class Servlet_Routing_Test {
 
 		Servlet_Routing main;
 		try {
-			main = Servlet_Routing.create()
+			Reactor reactor = getCurrentReactor();
+			main = Servlet_Routing.create(reactor)
 					.map(GET, "/", action)
 					.map(GET, "/a/e", action)
 					.map(GET, "/a/c/f", action)
-					.map(GET, "/", Servlet_Routing.create()
+					.map(GET, "/", Servlet_Routing.create(reactor)
 							.map(GET, "/a/c/f", anotherAction));
 		} catch (IllegalArgumentException e) {
 			assertEquals("Already mapped", e.getMessage());
@@ -232,7 +238,7 @@ public final class Servlet_Routing_Test {
 			return HttpResponse.ofCode(200).withBody(bodyByteBuf);
 		};
 
-		Servlet_Routing main = Servlet_Routing.create()
+		Servlet_Routing main = Servlet_Routing.create(getCurrentReactor())
 				.map(GET, "/:id/a/:uid/b/:eid", printParameters)
 				.map(GET, "/:id/a/:uid", printParameters);
 
@@ -245,7 +251,7 @@ public final class Servlet_Routing_Test {
 
 	@Test
 	public void testMultiParameters() throws Exception {
-		Servlet_Routing ms = Servlet_Routing.create()
+		Servlet_Routing ms = Servlet_Routing.create(getCurrentReactor())
 				.map(GET, "/serve/:cid/wash", request -> {
 					ByteBuf body = wrapUtf8("served car: " + request.getPathParameter("cid"));
 					return HttpResponse.ofCode(200).withBody(body);
@@ -267,7 +273,7 @@ public final class Servlet_Routing_Test {
 		HttpRequest request2 = HttpRequest.post(TEMPLATE + "/a/b/c/action");
 		HttpRequest request3 = HttpRequest.of(CONNECT, TEMPLATE + "/a/b/c/action");
 
-		Servlet_Routing servlet = Servlet_Routing.create()
+		Servlet_Routing servlet = Servlet_Routing.create(getCurrentReactor())
 				.map("/a/b/c/action", request ->
 						HttpResponse.ofCode(200).withBody(wrapUtf8("WILDCARD")))
 				.map(POST, "/a/b/c/action", request ->
@@ -287,7 +293,7 @@ public final class Servlet_Routing_Test {
 		HttpRequest request1 = HttpRequest.get(TEMPLATE + "/html/admin/action");
 		HttpRequest request2 = HttpRequest.get(TEMPLATE + "/html/admin/action/ban");
 
-		Servlet_Routing main = Servlet_Routing.create()
+		Servlet_Routing main = Servlet_Routing.create(getCurrentReactor())
 				.map(GET, "/html/admin/action", request ->
 						HttpResponse.ofCode(200).withBody(wrapUtf8("Action executed")))
 				.map("/html/admin/*", request ->
@@ -301,7 +307,7 @@ public final class Servlet_Routing_Test {
 
 	@Test
 	public void test404() throws Exception {
-		Servlet_Routing main = Servlet_Routing.create()
+		Servlet_Routing main = Servlet_Routing.create(getCurrentReactor())
 				.map("/a/:id/b/d", request ->
 						HttpResponse.ofCode(200).withBody(wrapUtf8("All OK")));
 
@@ -313,7 +319,7 @@ public final class Servlet_Routing_Test {
 
 	@Test
 	public void test405() throws Exception {
-		Servlet_Routing main = Servlet_Routing.create()
+		Servlet_Routing main = Servlet_Routing.create(getCurrentReactor())
 				.map(GET, "/a/:id/b/d", request ->
 						HttpResponse.ofCode(200).withBody(wrapUtf8("Should not execute")));
 
@@ -323,7 +329,7 @@ public final class Servlet_Routing_Test {
 
 	@Test
 	public void test405WithFallback() throws Exception {
-		Servlet_Routing main = Servlet_Routing.create()
+		Servlet_Routing main = Servlet_Routing.create(getCurrentReactor())
 				.map(GET, "/a/:id/b/d", request ->
 						HttpResponse.ofCode(200).withBody(wrapUtf8("Should not execute")))
 				.map("/a/:id/b/d", request ->
@@ -333,7 +339,7 @@ public final class Servlet_Routing_Test {
 
 	@Test
 	public void testTail() throws Exception {
-		Servlet_Routing main = Servlet_Routing.create()
+		Servlet_Routing main = Servlet_Routing.create(getCurrentReactor())
 				.map(GET, "/method/:var/*", request -> {
 					ByteBuf body = wrapUtf8("Success: " + request.getRelativePath());
 					return HttpResponse.ofCode(200).withBody(body);
@@ -350,7 +356,7 @@ public final class Servlet_Routing_Test {
 	@Test
 	public void testWebSocket() throws Exception {
 		String wsPath = "/web/socket";
-		Servlet_Routing main = Servlet_Routing.create()
+		Servlet_Routing main = Servlet_Routing.create(getCurrentReactor())
 				.mapWebSocket(wsPath, request -> HttpResponse.ok200())
 				.map(POST, wsPath, request -> HttpResponse.ok200().withBody(wrapUtf8("post")))
 				.map(GET, wsPath, request -> HttpResponse.ok200().withBody(wrapUtf8("get")))
@@ -367,7 +373,7 @@ public final class Servlet_Routing_Test {
 	@Test
 	public void testWebSocketSingle() throws Exception {
 		String wsPath = "/web/socket";
-		Servlet_Routing main = Servlet_Routing.create()
+		Servlet_Routing main = Servlet_Routing.create(getCurrentReactor())
 				.mapWebSocket(wsPath, request -> HttpResponse.ok200());
 
 		checkWebSocket(main.serve(HttpRequest.get(TEMPLATE_WS + wsPath)));
@@ -377,7 +383,7 @@ public final class Servlet_Routing_Test {
 
 	@Test
 	public void testPercentEncoding() throws Exception {
-		Servlet_Routing router = Servlet_Routing.create();
+		Servlet_Routing router = Servlet_Routing.create(getCurrentReactor());
 
 		AsyncServlet servlet = request -> HttpResponse.ofCode(200).withBody("".getBytes(UTF_8));
 
@@ -397,7 +403,7 @@ public final class Servlet_Routing_Test {
 
 	@Test
 	public void testPercentEncodingCyrillic() throws Exception {
-		Servlet_Routing router = Servlet_Routing.create();
+		Servlet_Routing router = Servlet_Routing.create(getCurrentReactor());
 
 		AsyncServlet servlet = request -> HttpResponse.ofCode(200).withBody("".getBytes(UTF_8));
 
@@ -428,7 +434,7 @@ public final class Servlet_Routing_Test {
 			return HttpResponse.ofCode(200).withBody(bodyByteBuf);
 		};
 
-		Servlet_Routing main = Servlet_Routing.create()
+		Servlet_Routing main = Servlet_Routing.create(getCurrentReactor())
 				.map(GET, "/a/:val", printParameters);
 
 		check(main.serve(HttpRequest.get("http://example.com/a/1%2f")), "{val=1/}", 200);
@@ -445,7 +451,7 @@ public final class Servlet_Routing_Test {
 			return HttpResponse.ofCode(200).withBody(bodyByteBuf);
 		};
 
-		Servlet_Routing main = Servlet_Routing.create()
+		Servlet_Routing main = Servlet_Routing.create(getCurrentReactor())
 				.map(GET, "/a/:%2f", printParameters);
 
 		check(main.serve(HttpRequest.get("http://example.com/a/23")), "{%2f=23}", 200);
@@ -453,7 +459,7 @@ public final class Servlet_Routing_Test {
 
 	@Test
 	public void testBadPercentEncoding() throws Exception {
-		Servlet_Routing router = Servlet_Routing.create();
+		Servlet_Routing router = Servlet_Routing.create(getCurrentReactor());
 		AsyncServlet servlet = request -> HttpResponse.ofCode(200).withBody(new byte[0]);
 		Servlet_Routing main = router.map(GET, "/a", servlet);
 

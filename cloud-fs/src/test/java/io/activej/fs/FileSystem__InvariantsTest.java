@@ -10,6 +10,7 @@ import io.activej.fs.exception.IsADirectoryException;
 import io.activej.fs.exception.PathContainsFileException;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.reactor.ImplicitlyReactive;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
@@ -889,7 +890,8 @@ public final class FileSystem__InvariantsTest {
 	// endregion
 
 	// Default methods are not overridden
-	private static class FileSystem_Default implements AsyncFileSystem {
+	private static class FileSystem_Default extends ImplicitlyReactive
+			implements AsyncFileSystem {
 		private final AsyncFileSystem peer;
 
 		private FileSystem_Default(AsyncFileSystem peer) {
@@ -898,31 +900,37 @@ public final class FileSystem__InvariantsTest {
 
 		@Override
 		public Promise<ChannelConsumer<ByteBuf>> upload(String name) {
+			checkInReactorThread();
 			return peer.upload(name);
 		}
 
 		@Override
 		public Promise<ChannelConsumer<ByteBuf>> upload(String name, long size) {
+			checkInReactorThread();
 			return peer.upload(name, size);
 		}
 
 		@Override
 		public Promise<ChannelConsumer<ByteBuf>> append(String name, long offset) {
+			checkInReactorThread();
 			return peer.append(name, offset);
 		}
 
 		@Override
 		public Promise<ChannelSupplier<ByteBuf>> download(String name, long offset, long limit) {
+			checkInReactorThread();
 			return peer.download(name, offset, limit);
 		}
 
 		@Override
 		public Promise<Void> delete(String name) {
+			checkInReactorThread();
 			return peer.delete(name);
 		}
 
 		@Override
 		public Promise<Map<String, FileMetadata>> list(String glob) {
+			checkInReactorThread();
 			return peer.list(glob);
 		}
 	}

@@ -20,15 +20,16 @@ import io.activej.dataflow.DataflowClient;
 import io.activej.dataflow.dataset.Dataset;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamUnion;
+import io.activej.reactor.Reactor;
 
 public final class Collector_Union<T> extends AbstractCollector<T, StreamUnion<T>, Collector_Union<T>> {
 
-	private Collector_Union(Dataset<T> input, DataflowClient client) {
-		super(input, client);
+	private Collector_Union(Reactor reactor, Dataset<T> input, DataflowClient client) {
+		super(reactor, input, client);
 	}
 
-	public static <T> Collector_Union<T> create(Dataset<T> input, DataflowClient client) {
-		return new Collector_Union<>(input, client);
+	public static <T> Collector_Union<T> create(Reactor reactor, Dataset<T> input, DataflowClient client) {
+		return new Collector_Union<>(reactor, input, client);
 	}
 
 	@Override

@@ -20,8 +20,9 @@ import static java.util.concurrent.Executors.newCachedThreadPool;
 
 @SuppressWarnings("Convert2MethodRef")
 public final class AsyncFileServiceExample {
-	private static final ExecutorService executorService = newCachedThreadPool();
-	private static final AsyncFileService fileService = new FileService_Executor(executorService);
+	private static final Eventloop EVENTLOOP = Eventloop.create().withCurrentThread();
+	private static final ExecutorService EXECUTOR_SERVICE = newCachedThreadPool();
+	private static final AsyncFileService FILE_SERVICE = new FileService_Executor(EVENTLOOP, EXECUTOR_SERVICE);
 	private static final Path PATH;
 
 	static {
@@ -41,9 +42,9 @@ public final class AsyncFileServiceExample {
 			byte[] message2 = "This is test file\n".getBytes();
 			byte[] message3 = "This is the 3rd line in file".getBytes();
 
-			return fileService.write(channel, 0, message1, 0, message1.length)
-					.then(() -> fileService.write(channel, 0, message2, 0, message2.length))
-					.then(() -> fileService.write(channel, 0, message3, 0, message3.length))
+			return FILE_SERVICE.write(channel, 0, message1, 0, message1.length)
+					.then(() -> FILE_SERVICE.write(channel, 0, message2, 0, message2.length))
+					.then(() -> FILE_SERVICE.write(channel, 0, message3, 0, message3.length))
 					.toVoid();
 		} catch (IOException e) {
 			return Promise.ofException(e);
@@ -59,7 +60,7 @@ public final class AsyncFileServiceExample {
 			return Promise.ofException(e);
 		}
 
-		return fileService.read(channel, 0, array, 0, array.length)
+		return FILE_SERVICE.read(channel, 0, array, 0, array.length)
 				.map(bytesRead -> {
 					ByteBuf buf = ByteBuf.wrap(array, 0, bytesRead);
 					System.out.println(buf.getString(UTF_8));
@@ -69,7 +70,6 @@ public final class AsyncFileServiceExample {
 	//[END REGION_1]
 
 	public static void main(String[] args) {
-		Eventloop eventloop = Eventloop.create().withCurrentThread();
 		Promises.sequence(
 						() -> writeToFile(),
 						() -> readFromFile().toVoid())
@@ -82,9 +82,9 @@ public final class AsyncFileServiceExample {
 					} catch (IOException ex) {
 						ex.printStackTrace();
 					}
-					executorService.shutdown();
+					EXECUTOR_SERVICE.shutdown();
 				});
 
-		eventloop.run();
+		EVENTLOOP.run();
 	}
 }

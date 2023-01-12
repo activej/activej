@@ -4,6 +4,7 @@ import io.activej.http.Servlet_Routing;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
+import io.activej.reactor.Reactor;
 
 /**
  * An example of setting routes based on Cookies.
@@ -19,8 +20,8 @@ public final class CookieRoutingExample extends HttpServerLauncher {
 	private static final String COOKIE = "SERVLET_NUMBER";
 
 	@Provides
-	AsyncServlet mainServlet(@Named("First") AsyncServlet firstServlet, @Named("Second") AsyncServlet secondServlet) {
-		return Servlet_Routing.create()
+	AsyncServlet mainServlet(Reactor reactor, @Named("First") AsyncServlet firstServlet, @Named("Second") AsyncServlet secondServlet) {
+		return Servlet_Routing.create(reactor)
 				.map("/*", request -> {
 					String servletNumberCookie = request.getCookie(COOKIE);
 					if (servletNumberCookie == null) {

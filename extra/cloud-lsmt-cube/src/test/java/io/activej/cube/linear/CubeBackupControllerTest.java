@@ -98,7 +98,7 @@ public class CubeBackupControllerTest {
 
 		ChunksBackupService chunksBackupService = ChunksBackupService.ofReactiveAggregationChunkStorage(aggregationChunkStorage);
 		backupController = CubeBackupController.create(dataSource, chunksBackupService);
-		uplink = OTUplink_CubeMySql.create(executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
+		uplink = OTUplink_CubeMySql.create(eventloop, executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
 		backupController.initialize();
 		backupController.truncateTables();
 	}

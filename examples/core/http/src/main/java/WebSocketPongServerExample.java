@@ -3,13 +3,14 @@ import io.activej.http.AsyncWebSocket.Message;
 import io.activej.http.Servlet_Routing;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
+import io.activej.reactor.Reactor;
 
 public final class WebSocketPongServerExample extends HttpServerLauncher {
 
 	//[START EXAMPLE]
 	@Provides
-	AsyncServlet servlet() {
-		return Servlet_Routing.create()
+	AsyncServlet servlet(Reactor reactor) {
+		return Servlet_Routing.create(reactor)
 				.mapWebSocket("/", webSocket -> webSocket.readMessage()
 						.whenResult(message -> System.out.println("Received:" + message.getText()))
 						.then(() -> webSocket.writeMessage(Message.text("Pong")))

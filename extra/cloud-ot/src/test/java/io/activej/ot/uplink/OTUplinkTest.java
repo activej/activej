@@ -7,6 +7,7 @@ import io.activej.ot.utils.OTGraphBuilder;
 import io.activej.ot.utils.OTRepository_Stub;
 import io.activej.ot.utils.OTState_TestOp;
 import io.activej.ot.utils.TestOp;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.EventloopRule;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Before;
@@ -26,7 +27,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 
-public class ReactiveOTUplinkTest {
+public class OTUplinkTest {
 	private static final OTState_TestOp state = new OTState_TestOp();
 
 	@ClassRule
@@ -39,7 +40,7 @@ public class ReactiveOTUplinkTest {
 	@Before
 	public void setUp() {
 		REPOSITORY.reset();
-		node = ReactiveOTUplink.create(REPOSITORY, createTestOp());
+		node = OTUplink.create(Reactor.getCurrentReactor(), REPOSITORY, createTestOp());
 		resetRepo(null);
 
 	}

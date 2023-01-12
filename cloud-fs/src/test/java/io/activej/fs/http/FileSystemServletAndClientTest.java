@@ -14,6 +14,7 @@ import io.activej.fs.exception.FileNotFoundException;
 import io.activej.fs.exception.ForbiddenPathException;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpClient_Stub;
+import io.activej.reactor.Reactor;
 import io.activej.test.ExpectedException;
 import io.activej.test.rules.ByteBufRule;
 import io.activej.test.rules.EventloopRule;
@@ -61,10 +62,11 @@ public final class FileSystemServletAndClientTest {
 	public void setUp() throws Exception {
 		storage = tmpFolder.newFolder("storage").toPath();
 
-		FileSystem fileSystem = FileSystem.create(getCurrentReactor(), newSingleThreadExecutor(), storage);
+		Reactor reactor = getCurrentReactor();
+		FileSystem fileSystem = FileSystem.create(reactor, newSingleThreadExecutor(), storage);
 		await(fileSystem.start());
-		AsyncServlet servlet = FileSystemServlet.create(fileSystem);
-		this.fileSystem = FileSystem_HttpClient.create(getCurrentReactor(), "http://localhost", HttpClient_Stub.of(servlet));
+		AsyncServlet servlet = FileSystemServlet.create(reactor, fileSystem);
+		this.fileSystem = FileSystem_HttpClient.create(reactor, "http://localhost", HttpClient_Stub.of(servlet));
 
 		initializeDirs();
 	}

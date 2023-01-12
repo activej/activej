@@ -8,6 +8,7 @@ import io.activej.http.Servlet_Routing;
 import io.activej.http.Servlet_Static;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
+import io.activej.reactor.Reactor;
 
 import java.io.IOException;
 import java.util.Map;
@@ -38,9 +39,9 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 
 	//[START REGION_2]
 	@Provides
-	AsyncServlet servlet(Executor executor, RecordDAO recordDAO, DslJson<?> dslJson) {
-		return Servlet_Routing.create()
-				.map("/*", Servlet_Static.ofClassPath(executor, "build/")
+	AsyncServlet servlet(Reactor reactor, Executor executor, RecordDAO recordDAO, DslJson<?> dslJson) {
+		return Servlet_Routing.create(reactor)
+				.map("/*", Servlet_Static.ofClassPath(reactor, executor, "build/")
 						.withIndexHtml())
 				//[END REGION_2]
 				//[START REGION_3]

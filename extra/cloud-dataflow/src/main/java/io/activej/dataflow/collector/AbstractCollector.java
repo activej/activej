@@ -26,17 +26,21 @@ import io.activej.dataflow.graph.StreamId;
 import io.activej.dataflow.node.Node_Upload;
 import io.activej.datastream.StreamSupplier;
 import io.activej.datastream.processor.StreamLimiter;
+import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.Reactor;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class AbstractCollector<T, A, C extends AbstractCollector<T, A, C>> implements AsyncCollector<T> {
+public abstract class AbstractCollector<T, A, C extends AbstractCollector<T, A, C>> extends AbstractReactive
+		implements AsyncCollector<T> {
 	protected final Dataset<T> input;
 	protected final DataflowClient client;
 
 	protected long limit = StreamLimiter.NO_LIMIT;
 
-	protected AbstractCollector(Dataset<T> input, DataflowClient client) {
+	protected AbstractCollector(Reactor reactor, Dataset<T> input, DataflowClient client) {
+		super(reactor);
 		this.input = input;
 		this.client = client;
 	}
@@ -55,6 +59,7 @@ public abstract class AbstractCollector<T, A, C extends AbstractCollector<T, A, 
 
 	@Override
 	public final StreamSupplier<T> compile(DataflowGraph graph) {
+		checkInReactorThread();
 		DataflowContext context = DataflowContext.of(graph);
 		List<StreamId> inputStreamIds = input.channels(context);
 

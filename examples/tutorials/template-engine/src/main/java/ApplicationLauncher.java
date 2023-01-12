@@ -9,6 +9,7 @@ import io.activej.inject.annotation.Provides;
 import io.activej.launcher.Launcher;
 import io.activej.launchers.http.HttpServerLauncher;
 import io.activej.promise.Promise;
+import io.activej.reactor.Reactor;
 
 import java.util.List;
 import java.util.Map;
@@ -35,12 +36,12 @@ public final class ApplicationLauncher extends HttpServerLauncher {
 	//[END REGION_1]
 	//[START REGION_2]
 	@Provides
-	AsyncServlet servlet(PollDao pollDao) {
+	AsyncServlet servlet(Reactor reactor, PollDao pollDao) {
 		Mustache singlePollView = new DefaultMustacheFactory().compile("templates/singlePollView.html");
 		Mustache singlePollCreate = new DefaultMustacheFactory().compile("templates/singlePollCreate.html");
 		Mustache listPolls = new DefaultMustacheFactory().compile("templates/listPolls.html");
 
-		return Servlet_Routing.create()
+		return Servlet_Routing.create(reactor)
 				.map(GET, "/", request -> HttpResponse.ok200()
 						.withBody(applyTemplate(listPolls, Map.of("polls", pollDao.findAll().entrySet()))))
 				//[END REGION_2]

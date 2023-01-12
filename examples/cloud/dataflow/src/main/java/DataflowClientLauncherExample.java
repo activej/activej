@@ -68,7 +68,7 @@ public final class DataflowClientLauncherExample extends DataflowClientLauncher 
 
 			Dataset<StringCount> reducedItems = repartitionReduce(locallyReduced, reducer.accumulatorToOutput(), simple(StringCount.class));
 
-			AsyncCollector<StringCount> collector = Collector_Merge.create(reducedItems, client, keyFunction, naturalOrder(), false);
+			AsyncCollector<StringCount> collector = Collector_Merge.create(reactor, reducedItems, client, keyFunction, naturalOrder(), false);
 
 			StreamSupplier<StringCount> resultSupplier = collector.compile(graph);
 

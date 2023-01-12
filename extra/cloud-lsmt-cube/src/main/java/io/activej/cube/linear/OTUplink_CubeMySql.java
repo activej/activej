@@ -35,6 +35,8 @@ import io.activej.ot.exception.OTException;
 import io.activej.ot.uplink.AsyncOTUplink;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
+import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.slf4j.Logger;
@@ -60,7 +62,8 @@ import static java.util.Collections.nCopies;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
-public final class OTUplink_CubeMySql implements AsyncOTUplink<Long, LogDiff<CubeDiff>, OTUplink_CubeMySql.UplinkProtoCommit>,
+public final class OTUplink_CubeMySql extends AbstractReactive
+		implements AsyncOTUplink<Long, LogDiff<CubeDiff>, OTUplink_CubeMySql.UplinkProtoCommit>,
 		WithInitializer<OTUplink_CubeMySql> {
 	private static final Logger logger = LoggerFactory.getLogger(OTUplink_CubeMySql.class);
 
@@ -92,14 +95,15 @@ public final class OTUplink_CubeMySql implements AsyncOTUplink<Long, LogDiff<Cub
 	private final PromiseStats promisePush = PromiseStats.create(DEFAULT_SMOOTHING_WINDOW);
 	// endregion
 
-	private OTUplink_CubeMySql(Executor executor, DataSource dataSource, PrimaryKeyCodecs primaryKeyCodecs) {
+	private OTUplink_CubeMySql(Reactor reactor, Executor executor, DataSource dataSource, PrimaryKeyCodecs primaryKeyCodecs) {
+		super(reactor);
 		this.executor = executor;
 		this.dataSource = dataSource;
 		this.primaryKeyCodecs = primaryKeyCodecs;
 	}
 
-	public static OTUplink_CubeMySql create(Executor executor, DataSource dataSource, PrimaryKeyCodecs primaryKeyCodecs) {
-		return new OTUplink_CubeMySql(executor, dataSource, primaryKeyCodecs);
+	public static OTUplink_CubeMySql create(Reactor reactor, Executor executor, DataSource dataSource, PrimaryKeyCodecs primaryKeyCodecs) {
+		return new OTUplink_CubeMySql(reactor, executor, dataSource, primaryKeyCodecs);
 	}
 
 	public OTUplink_CubeMySql withMeasuresValidator(MeasuresValidator measuresValidator) {
@@ -121,6 +125,7 @@ public final class OTUplink_CubeMySql implements AsyncOTUplink<Long, LogDiff<Cub
 
 	@Override
 	public Promise<FetchData<Long, LogDiff<CubeDiff>>> checkout() {
+		checkInReactorThread();
 		return Promise.ofBlocking(executor,
 						() -> {
 							try (Connection connection = dataSource.getConnection()) {
@@ -155,6 +160,7 @@ public final class OTUplink_CubeMySql implements AsyncOTUplink<Long, LogDiff<Cub
 
 	@Override
 	public Promise<FetchData<Long, LogDiff<CubeDiff>>> fetch(Long currentCommitId) {
+		checkInReactorThread();
 		return Promise.ofBlocking(executor,
 						() -> {
 							try (Connection connection = dataSource.getConnection()) {
@@ -179,6 +185,7 @@ public final class OTUplink_CubeMySql implements AsyncOTUplink<Long, LogDiff<Cub
 
 	@Override
 	public Promise<UplinkProtoCommit> createProtoCommit(Long parent, List<LogDiff<CubeDiff>> diffs, long parentLevel) {
+		checkInReactorThread();
 		checkArgument(parent == parentLevel, "Level mismatch");
 
 		return Promise.of(new UplinkProtoCommit(parent, diffs));
@@ -186,6 +193,7 @@ public final class OTUplink_CubeMySql implements AsyncOTUplink<Long, LogDiff<Cub
 
 	@Override
 	public Promise<FetchData<Long, LogDiff<CubeDiff>>> push(UplinkProtoCommit protoCommit) {
+		checkInReactorThread();
 		return Promise.ofBlocking(executor,
 						() -> {
 							try (Connection connection = dataSource.getConnection()) {

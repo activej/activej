@@ -42,6 +42,8 @@ import io.activej.net.socket.tcp.TcpSocket;
 import io.activej.promise.Promisable;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
+import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
@@ -55,19 +57,20 @@ import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.types.Types.parameterizedType;
 import static java.util.stream.Collectors.toList;
 
-public final class Servlet_DataflowDebug implements AsyncServlet {
+public final class Servlet_DataflowDebug extends AbstractReactive implements AsyncServlet {
 	private final AsyncServlet servlet;
 	private final ByteBufsCodec<DataflowResponse, DataflowRequest> codec;
 
-	public Servlet_DataflowDebug(List<Partition> partitions, Executor executor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, ResourceLocator env) {
+	public Servlet_DataflowDebug(Reactor reactor, List<Partition> partitions, Executor executor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, ResourceLocator env) {
+		super(reactor);
 		this.codec = codec;
 
 		ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 		objectMapper.configure(SerializationFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS, false);
 
-		this.servlet = Servlet_Routing.create()
-				.map("/*", Servlet_Static.ofClassPath(executor, "debug").withIndexHtml())
-				.map("/api/*", Servlet_Routing.create()
+		this.servlet = Servlet_Routing.create(reactor)
+				.map("/*", Servlet_Static.ofClassPath(reactor, executor, "debug").withIndexHtml())
+				.map("/api/*", Servlet_Routing.create(reactor)
 						.map(GET, "/partitions", request -> ok200()
 								.withJson(objectMapper.writeValueAsString(partitions.stream()
 										.map(Partition::getAddress)
@@ -203,6 +206,7 @@ public final class Servlet_DataflowDebug implements AsyncServlet {
 
 	@Override
 	public Promisable<HttpResponse> serve(HttpRequest request) throws Exception {
+		checkInReactorThread();
 		return servlet.serve(request);
 	}
 }

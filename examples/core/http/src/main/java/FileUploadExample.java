@@ -8,6 +8,7 @@ import io.activej.inject.Injector;
 import io.activej.inject.annotation.Provides;
 import io.activej.launcher.Launcher;
 import io.activej.launchers.http.HttpServerLauncher;
+import io.activej.reactor.Reactor;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,9 +33,9 @@ public final class FileUploadExample extends HttpServerLauncher {
 
 	//[START EXAMPLE]
 	@Provides
-	AsyncServlet servlet(Executor executor) {
-		return Servlet_Routing.create()
-				.map(GET, "/*", Servlet_Static.ofClassPath(executor, "static/multipart/")
+	AsyncServlet servlet(Reactor reactor, Executor executor) {
+		return Servlet_Routing.create(reactor)
+				.map(GET, "/*", Servlet_Static.ofClassPath(reactor, executor, "static/multipart/")
 						.withIndexHtml())
 				.map(POST, "/test", request ->
 						request.handleMultipart(AsyncMultipartDataHandler.file(fileName -> ChannelFileWriter.open(executor, path.resolve(fileName))))

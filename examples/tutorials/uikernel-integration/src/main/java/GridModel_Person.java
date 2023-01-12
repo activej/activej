@@ -1,5 +1,7 @@
 import io.activej.inject.annotation.Inject;
 import io.activej.promise.Promise;
+import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.Reactor;
 import io.activej.uikernel.*;
 
 import java.util.*;
@@ -9,10 +11,15 @@ import static io.activej.common.Checks.checkNotNull;
 import static java.util.stream.Collectors.toList;
 
 @Inject
-public class GridModel_Person implements AsyncGridModel<Integer, Person> {
+public class GridModel_Person extends AbstractReactive
+		implements AsyncGridModel<Integer, Person> {
 	private final Map<String, Comparator<Person>> comparators = createComparators();
 	private final Map<Integer, Person> storage = initStorage();
 	private int cursor = storage.size() + 1;
+
+	public GridModel_Person(Reactor reactor) {
+		super(reactor);
+	}
 
 	private static Map<Integer, Person> initStorage() {
 		Map<Integer, Person> storage = new HashMap<>();
@@ -44,11 +51,13 @@ public class GridModel_Person implements AsyncGridModel<Integer, Person> {
 
 	@Override
 	public Promise<Person> read(final Integer id, final ReadSettings<Integer> readSettings) {
+		checkInReactorThread();
 		return Promise.of(storage.get(id));
 	}
 
 	@Override
 	public Promise<ReadResponse<Integer, Person>> read(final ReadSettings<Integer> readSettings) {
+		checkInReactorThread();
 		Predicate<Person> predicate = new PersonMatcher(readSettings.getFilters());
 		List<Person> people = storage.values().stream().filter(predicate).collect(toList());
 		for (Map.Entry<String, ReadSettings.SortOrder> entry : readSettings.getSort().entrySet()) {
@@ -71,6 +80,7 @@ public class GridModel_Person implements AsyncGridModel<Integer, Person> {
 
 	@Override
 	public Promise<CreateResponse<Integer>> create(final Person person) {
+		checkInReactorThread();
 		person.setId(cursor);
 		storage.put(cursor, person);
 		cursor++;
@@ -79,6 +89,7 @@ public class GridModel_Person implements AsyncGridModel<Integer, Person> {
 
 	@Override
 	public Promise<UpdateResponse<Integer, Person>> update(final List<Person> changes) {
+		checkInReactorThread();
 		List<Person> results = new ArrayList<>();
 		for (Person change : changes) {
 			Person person = storage.get(change.getId());
@@ -91,6 +102,7 @@ public class GridModel_Person implements AsyncGridModel<Integer, Person> {
 
 	@Override
 	public Promise<DeleteResponse> delete(final Integer id) {
+		checkInReactorThread();
 		storage.remove(id);
 		return Promise.of(DeleteResponse.ok());
 	}

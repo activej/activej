@@ -19,6 +19,7 @@ import io.activej.ot.OTState;
 import io.activej.ot.exception.OTException;
 import io.activej.ot.system.OTSystem;
 import io.activej.ot.uplink.AsyncOTUplink.FetchData;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -72,7 +73,7 @@ public class OTUplink_CubeMySql_Test {
 		);
 
 		PrimaryKeyCodecs codecs = PrimaryKeyCodecs.ofLookUp($ -> primaryKeyCodec);
-		uplink = OTUplink_CubeMySql.create(Executors.newCachedThreadPool(), dataSource, codecs);
+		uplink = OTUplink_CubeMySql.create(Reactor.getCurrentReactor(), Executors.newCachedThreadPool(), dataSource, codecs);
 
 		initializeUplink(uplink);
 	}

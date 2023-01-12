@@ -22,6 +22,8 @@ import io.activej.ot.uplink.OTUplink_Storage.AsyncStorage.SyncData;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.AbstractReactive;
+import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -33,7 +35,8 @@ import static io.activej.promise.PromisePredicates.isResultOrException;
 import static io.activej.promise.Promises.retry;
 
 @SuppressWarnings("WeakerAccess")
-public final class OTUplink_Storage<K, D> implements AsyncOTUplink<Long, D, OTUplink_Storage.ProtoCommit<D>> {
+public final class OTUplink_Storage<K, D> extends AbstractReactive
+		implements AsyncOTUplink<Long, D, OTUplink_Storage.ProtoCommit<D>> {
 
 	public static final long FIRST_COMMIT_ID = 1L;
 	public static final int NO_LEVEL = 0;
@@ -141,7 +144,8 @@ public final class OTUplink_Storage<K, D> implements AsyncOTUplink<Long, D, OTUp
 	private final OTSystem<D> otSystem;
 	private final AsyncOTUplink<K, D, Object> uplink;
 
-	private OTUplink_Storage(AsyncStorage<K, D> storage, OTSystem<D> otSystem, AsyncOTUplink<K, D, ?> uplink) {
+	private OTUplink_Storage(Reactor reactor, AsyncStorage<K, D> storage, OTSystem<D> otSystem, AsyncOTUplink<K, D, ?> uplink) {
+		super(reactor);
 		this.otSystem = otSystem;
 		this.storage = storage;
 		//noinspection unchecked
@@ -190,6 +194,7 @@ public final class OTUplink_Storage<K, D> implements AsyncOTUplink<Long, D, OTUp
 
 	@Override
 	public Promise<FetchData<Long, D>> checkout() {
+		checkInReactorThread();
 		//noinspection ConstantConditions
 		return retry(
 				isResultOrException(Objects::nonNull),
@@ -206,11 +211,13 @@ public final class OTUplink_Storage<K, D> implements AsyncOTUplink<Long, D, OTUp
 
 	@Override
 	public Promise<ProtoCommit<D>> createProtoCommit(Long parentCommitId, List<D> diffs, long parentLevel) {
+		checkInReactorThread();
 		return Promise.of(new ProtoCommit<>(parentCommitId, diffs));
 	}
 
 	@Override
 	public Promise<FetchData<Long, D>> push(ProtoCommit<D> protoCommit) {
+		checkInReactorThread();
 		return Promise.ofCallback(cb -> doPush(protoCommit.getId(), protoCommit.getDiffs(), List.of(), cb));
 	}
 
@@ -233,11 +240,13 @@ public final class OTUplink_Storage<K, D> implements AsyncOTUplink<Long, D, OTUp
 
 	@Override
 	public Promise<FetchData<Long, D>> fetch(Long currentCommitId) {
+		checkInReactorThread();
 		return storage.fetch(currentCommitId);
 	}
 
 	@Override
 	public Promise<FetchData<Long, D>> poll(Long currentCommitId) {
+		checkInReactorThread();
 		return storage.poll(currentCommitId);
 	}
 

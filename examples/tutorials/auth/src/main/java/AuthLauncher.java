@@ -6,6 +6,7 @@ import io.activej.http.session.SessionStore_InMemory;
 import io.activej.inject.annotation.Named;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
+import io.activej.reactor.Reactor;
 
 import java.time.Duration;
 import java.util.Map;
@@ -32,34 +33,34 @@ public final class AuthLauncher extends HttpServerLauncher {
 	}
 
 	@Provides
-	AsyncStaticLoader staticLoader(Executor executor) {
-		return AsyncStaticLoader.ofClassPath(executor, "site/");
+	AsyncStaticLoader staticLoader(Reactor reactor, Executor executor) {
+		return AsyncStaticLoader.ofClassPath(reactor, executor, "site/");
 	}
 
 	@Provides
-	AsyncSessionStore<String> sessionStore() {
-		return SessionStore_InMemory.<String>create()
+	AsyncSessionStore<String> sessionStore(Reactor reactor) {
+		return SessionStore_InMemory.<String>create(reactor)
 				.withLifetime(Duration.ofDays(30));
 	}
 
 	@Provides
-	AsyncServlet servlet(AsyncSessionStore<String> sessionStore,
+	AsyncServlet servlet(Reactor reactor, AsyncSessionStore<String> sessionStore,
 			@Named("public") AsyncServlet publicServlet, @Named("private") AsyncServlet privateServlet) {
-		return Servlet_Session.create(sessionStore, SESSION_ID, publicServlet, privateServlet);
+		return Servlet_Session.create(reactor, sessionStore, SESSION_ID, publicServlet, privateServlet);
 	}
 	//[END REGION_1]
 
 	//[START REGION_2]
 	@Provides
 	@Named("public")
-	AsyncServlet publicServlet(AuthService authService, AsyncSessionStore<String> store, AsyncStaticLoader staticLoader) {
-		Servlet_Static staticServlet = Servlet_Static.create(staticLoader, "errorPage.html");
-		return Servlet_Routing.create()
+	AsyncServlet publicServlet(Reactor reactor, AuthService authService, AsyncSessionStore<String> store, AsyncStaticLoader staticLoader) {
+		Servlet_Static staticServlet = Servlet_Static.create(reactor, staticLoader, "errorPage.html");
+		return Servlet_Routing.create(reactor)
 				//[START REGION_3]
 				.map("/", request -> HttpResponse.redirect302("/login"))
 				//[END REGION_3]
-				.map(GET, "/signup", Servlet_Static.create(staticLoader, "signup.html"))
-				.map(GET, "/login", Servlet_Static.create(staticLoader, "login.html"))
+				.map(GET, "/signup", Servlet_Static.create(reactor, staticLoader, "signup.html"))
+				.map(GET, "/login", Servlet_Static.create(reactor, staticLoader, "login.html"))
 				//[START REGION_4]
 				.map(POST, "/login", request -> request.loadBody()
 						.then(() -> {
@@ -93,14 +94,14 @@ public final class AuthLauncher extends HttpServerLauncher {
 	//[START REGION_5]
 	@Provides
 	@Named("private")
-	AsyncServlet privateServlet(AsyncStaticLoader staticLoader) {
-		return Servlet_Routing.create()
+	AsyncServlet privateServlet(Reactor reactor, AsyncStaticLoader staticLoader) {
+		return Servlet_Routing.create(reactor)
 				//[START REGION_6]
 				.map("/", request -> HttpResponse.redirect302("/members"))
 				//[END REGION_6]
 				//[START REGION_7]
-				.map("/members/*", Servlet_Routing.create()
-						.map(GET, "/", Servlet_Static.create(staticLoader, "index.html"))
+				.map("/members/*", Servlet_Routing.create(reactor)
+						.map(GET, "/", Servlet_Static.create(reactor, staticLoader, "index.html"))
 						//[START REGION_8]
 						.map(GET, "/cookie", request ->
 								HttpResponse.ok200().withBody(wrapUtf8(request.getAttachment(String.class))))

@@ -5,6 +5,7 @@ import io.activej.crdt.storage.cluster.AsyncDiscoveryService.PartitionScheme;
 import io.activej.crdt.storage.local.CrdtStorage_Map;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
+import io.activej.reactor.ImplicitlyReactive;
 import io.activej.test.rules.EventloopRule;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -302,11 +303,13 @@ public class DiscoveryService_File_Test {
 		), group1.getPartitionIds());
 	}
 
-	private class DiscoveryService_Notifying implements AsyncDiscoveryService<PartitionId> {
+	private class DiscoveryService_Notifying extends ImplicitlyReactive
+			implements AsyncDiscoveryService<PartitionId> {
 		private SettablePromise<Void> onChangePromise;
 
 		@Override
 		public AsyncSupplier<PartitionScheme<PartitionId>> discover() {
+			checkInReactorThread();
 			AsyncSupplier<PartitionScheme<PartitionId>> discover = discoveryService.discover();
 			return () -> discover.get()
 					.whenComplete((scheme, e) -> {

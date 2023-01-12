@@ -1,6 +1,7 @@
 package io.activej.async.file;
 
 import io.activej.promise.Promises;
+import io.activej.reactor.Reactor;
 import io.activej.test.rules.EventloopRule;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -25,7 +26,7 @@ public final class FileService_Executor_Test {
 	@ClassRule
 	public static final EventloopRule eventloopRule = new EventloopRule();
 
-	private final FileService_Executor service = new FileService_Executor(Executors.newCachedThreadPool());
+	private final FileService_Executor service = new FileService_Executor(Reactor.getCurrentReactor(), Executors.newCachedThreadPool());
 
 	static {
 		System.setProperty("AsyncFileService.aio", "false");

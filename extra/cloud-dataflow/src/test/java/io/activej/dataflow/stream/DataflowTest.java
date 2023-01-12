@@ -425,7 +425,7 @@ public final class DataflowTest {
 		Dataset<TestItem> filterDataset = filter(datasetOfId("items", simple(TestItem.class)), new TestPredicate());
 		LocallySortedDataset<Long, TestItem> sortedDataset = localSort(filterDataset, long.class, new TestKeyFunction(), new TestComparator());
 
-		AsyncCollector<TestItem> collector = Collector_Concat.create(sortedDataset, client);
+		AsyncCollector<TestItem> collector = Collector_Concat.create(Reactor.getCurrentReactor(), sortedDataset, client);
 		StreamSupplier<TestItem> resultSupplier = collector.compile(graph);
 
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
@@ -488,7 +488,7 @@ public final class DataflowTest {
 		LocallySortedDataset<Long, TestItem> sortedDataset = localSort(dataset, long.class, new TestKeyFunction(), new TestComparator());
 		SortedDataset<Long, TestItem> afterOffsetAndLimitApplied = offsetLimit(sortedDataset, 3, 4);
 
-		AsyncCollector<TestItem> collector = Collector_Merge.create(afterOffsetAndLimitApplied, client, false);
+		AsyncCollector<TestItem> collector = Collector_Merge.create(Reactor.getCurrentReactor(), afterOffsetAndLimitApplied, client, false);
 		StreamSupplier<TestItem> resultSupplier = collector.compile(graph);
 
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
@@ -605,7 +605,7 @@ public final class DataflowTest {
 
 		SortedDataset<Long, TestItem> union = union(sorted1, sorted2);
 
-		Collector_Merge<Long, TestItem> collector = Collector_Merge.create(union, client, false);
+		Collector_Merge<Long, TestItem> collector = Collector_Merge.create(Reactor.getCurrentReactor(), union, client, false);
 		StreamSupplier<TestItem> resultSupplier = collector.compile(graph);
 
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
@@ -684,7 +684,7 @@ public final class DataflowTest {
 
 		SortedDataset<Long, TestItem> sortedUnion = repartitionSort(localSort(union, Long.class, new TestKeyFunction(), Comparator.naturalOrder()));
 
-		Collector_Merge<Long, TestItem> collector = Collector_Merge.create(sortedUnion, client, false);
+		Collector_Merge<Long, TestItem> collector = Collector_Merge.create(Reactor.getCurrentReactor(), sortedUnion, client, false);
 		StreamSupplier<TestItem> resultSupplier = collector.compile(graph);
 
 		resultSupplier.streamTo(resultConsumer).whenComplete(assertCompleteFn());
@@ -766,7 +766,7 @@ public final class DataflowTest {
 
 					@Provides
 					HttpServer debugServer(NioReactor reactor, Executor executor, ByteBufsCodec<DataflowResponse, DataflowRequest> codec, Injector env) {
-						return HttpServer.create(reactor, new Servlet_DataflowDebug(graphPartitions, executor, codec, env));
+						return HttpServer.create(reactor, new Servlet_DataflowDebug(reactor, graphPartitions, executor, codec, env));
 					}
 				});
 	}

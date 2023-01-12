@@ -4,6 +4,7 @@ import io.activej.http.AsyncWebSocket.Message.MessageType;
 import io.activej.http.Servlet_Routing;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
+import io.activej.reactor.Reactor;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -19,8 +20,8 @@ public final class WebSocketEchoServerExample extends HttpServerLauncher {
 
 	//[START MAIN]
 	@Provides
-	AsyncServlet servlet() {
-		return Servlet_Routing.create()
+	AsyncServlet servlet(Reactor reactor) {
+		return Servlet_Routing.create(reactor)
 				.mapWebSocket("/", webSocket -> webSocket.messageReadChannel()
 						.peek(this::logMessage)
 						.streamTo(webSocket.messageWriteChannel()));
