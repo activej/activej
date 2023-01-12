@@ -41,8 +41,8 @@ import static io.activej.cube.Utils.toJson;
 import static io.activej.cube.http.Utils.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public final class Cube_Http implements AsyncCube, WithInitializer<Cube_Http> {
-	private static final Logger logger = LoggerFactory.getLogger(Cube_Http.class);
+public final class Cube_HttpClient implements AsyncCube, WithInitializer<Cube_HttpClient> {
+	private static final Logger logger = LoggerFactory.getLogger(Cube_HttpClient.class);
 
 	private final String url;
 	private final AsyncHttpClient httpClient;
@@ -53,30 +53,30 @@ public final class Cube_Http implements AsyncCube, WithInitializer<Cube_Http> {
 
 	private DefiningClassLoader classLoader = DefiningClassLoader.create();
 
-	private Cube_Http(AsyncHttpClient httpClient, String url) {
+	private Cube_HttpClient(AsyncHttpClient httpClient, String url) {
 		this.url = url.replaceAll("/$", "");
 		this.httpClient = httpClient;
 	}
 
-	public static Cube_Http create(AsyncHttpClient httpClient, String cubeServletUrl) {
-		return new Cube_Http(httpClient, cubeServletUrl);
+	public static Cube_HttpClient create(AsyncHttpClient httpClient, String cubeServletUrl) {
+		return new Cube_HttpClient(httpClient, cubeServletUrl);
 	}
 
-	public static Cube_Http create(AsyncHttpClient httpClient, URI cubeServletUrl) {
+	public static Cube_HttpClient create(AsyncHttpClient httpClient, URI cubeServletUrl) {
 		return create(httpClient, cubeServletUrl.toString());
 	}
 
-	public Cube_Http withClassLoader(DefiningClassLoader classLoader) {
+	public Cube_HttpClient withClassLoader(DefiningClassLoader classLoader) {
 		this.classLoader = classLoader;
 		return this;
 	}
 
-	public Cube_Http withAttribute(String attribute, Type type) {
+	public Cube_HttpClient withAttribute(String attribute, Type type) {
 		attributeTypes.put(attribute, type);
 		return this;
 	}
 
-	public Cube_Http withMeasure(String measureId, Type type) {
+	public Cube_HttpClient withMeasure(String measureId, Type type) {
 		measureTypes.put(measureId, type);
 		return this;
 	}

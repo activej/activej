@@ -63,7 +63,7 @@ public final class ReportingTest extends CubeTestBase {
 	public static final double DELTA = 1E-3;
 
 	private HttpServer cubeHttpServer;
-	private Cube_Http cubeHttp;
+	private Cube_HttpClient cubeHttp;
 	private Cube cube;
 	private int serverPort;
 
@@ -335,7 +335,7 @@ public final class ReportingTest extends CubeTestBase {
 
 		AsyncHttpClient httpClient = HttpClient.create(reactor)
 				.withNoKeepAlive();
-		cubeHttp = Cube_Http.create(httpClient, "http://127.0.0.1:" + serverPort)
+		cubeHttp = Cube_HttpClient.create(httpClient, "http://127.0.0.1:" + serverPort)
 				.withAttribute("date", LocalDate.class)
 				.withAttribute("advertiser", int.class)
 				.withAttribute("campaign", int.class)
