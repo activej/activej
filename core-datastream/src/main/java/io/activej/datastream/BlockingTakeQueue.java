@@ -55,8 +55,8 @@ public abstract class BlockingTakeQueue<T> extends ImplicitlyReactive {
 	}
 
 	public boolean put(T x) {
-		checkInReactorThread();
 		if (CHECK) {
+			checkInReactorThread();
 			checkState(!closed);
 			checkState(!isSaturated());
 		}

@@ -21,6 +21,7 @@ import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.async.process.AsyncCloseable;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.bytebuf.ByteBufs;
+import io.activej.common.Checks;
 import io.activej.common.exception.MalformedDataException;
 import io.activej.common.exception.TruncatedDataException;
 import io.activej.common.exception.UnexpectedDataException;
@@ -34,6 +35,8 @@ import java.util.Objects;
 import static io.activej.common.function.FunctionEx.identity;
 
 public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
+	private static final boolean CHECK = Checks.isEnabled(BinaryChannelSupplier.class);
+
 	protected final ByteBufs bufs;
 
 	protected BinaryChannelSupplier(ByteBufs bufs) {
@@ -122,7 +125,9 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 	}
 
 	public final <T> Promise<T> decode(ByteBufsDecoder<T> decoder) {
-		checkInReactorThread();
+		if (CHECK) {
+			checkInReactorThread();
+		}
 		return doDecode(decoder, this);
 	}
 
@@ -149,7 +154,9 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 	}
 
 	public final <T> Promise<T> decodeRemaining(ByteBufsDecoder<T> decoder) {
-		checkInReactorThread();
+		if (CHECK) {
+			checkInReactorThread();
+		}
 		return decode(decoder)
 				.then(result -> {
 					if (!bufs.isEmpty()) {

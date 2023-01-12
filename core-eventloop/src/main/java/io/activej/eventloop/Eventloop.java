@@ -19,6 +19,7 @@ package io.activej.eventloop;
 import io.activej.async.callback.AsyncComputation;
 import io.activej.async.callback.Callback;
 import io.activej.async.exception.AsyncTimeoutException;
+import io.activej.common.Checks;
 import io.activej.common.exception.FatalErrorHandler;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.function.RunnableEx;
@@ -81,6 +82,7 @@ import static java.util.Collections.emptyIterator;
 @SuppressWarnings("unused")
 public final class Eventloop implements NioReactor, NioReactive, Runnable, WithInitializer<Eventloop>, ReactiveJmxBeanWithStats {
 	public static final Logger logger = LoggerFactory.getLogger(Eventloop.class);
+	private static final boolean CHECK = Checks.isEnabled(Eventloop.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(1);
 	public static final Duration DEFAULT_IDLE_INTERVAL = Duration.ofSeconds(1);
@@ -946,7 +948,9 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 */
 	@Override
 	public void post(@Async.Schedule Runnable runnable) {
-		checkInReactorThread();
+		if (CHECK) {
+			checkInReactorThread();
+		}
 		localTasks.addFirst(runnable);
 	}
 
@@ -957,7 +961,9 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 */
 	@Override
 	public void postLast(@Async.Schedule Runnable runnable) {
-		checkInReactorThread();
+		if (CHECK) {
+			checkInReactorThread();
+		}
 		localTasks.addLast(runnable);
 	}
 
@@ -968,7 +974,9 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 */
 	@Override
 	public void postNext(@Async.Schedule Runnable runnable) {
-		checkInReactorThread();
+		if (CHECK) {
+			checkInReactorThread();
+		}
 		nextTasks.add(runnable);
 	}
 
@@ -997,7 +1005,9 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 */
 	@Override
 	public ScheduledRunnable schedule(long timestamp, @Async.Schedule Runnable runnable) {
-		checkInReactorThread();
+		if (CHECK) {
+			checkInReactorThread();
+		}
 		return addScheduledTask(timestamp, runnable, false);
 	}
 
@@ -1012,7 +1022,9 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 */
 	@Override
 	public ScheduledRunnable scheduleBackground(long timestamp, @Async.Schedule Runnable runnable) {
-		checkInReactorThread();
+		if (CHECK) {
+			checkInReactorThread();
+		}
 		return addScheduledTask(timestamp, runnable, true);
 	}
 

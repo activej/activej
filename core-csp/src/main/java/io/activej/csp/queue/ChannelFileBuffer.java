@@ -17,6 +17,7 @@
 package io.activej.csp.queue;
 
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.Checks;
 import io.activej.common.MemSize;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.tuple.Tuple2;
@@ -40,6 +41,7 @@ import static java.nio.file.StandardOpenOption.*;
 
 public final class ChannelFileBuffer extends ImplicitlyReactive implements ChannelQueue<ByteBuf>, WithInitializer<ChannelFileBuffer> {
 	private static final Logger logger = LoggerFactory.getLogger(ChannelFileBuffer.class);
+	private static final boolean CHECK = Checks.isEnabled(ChannelFileBuffer.class);
 
 	private final ChannelFileReader reader;
 	private final ChannelFileWriter writer;
@@ -84,7 +86,9 @@ public final class ChannelFileBuffer extends ImplicitlyReactive implements Chann
 
 	@Override
 	public Promise<Void> put(@Nullable ByteBuf item) {
-		checkInReactorThread();
+		if (CHECK) {
+			checkInReactorThread();
+		}
 		if (exception != null) {
 			return Promise.ofException(exception);
 		}
@@ -104,7 +108,9 @@ public final class ChannelFileBuffer extends ImplicitlyReactive implements Chann
 
 	@Override
 	public Promise<ByteBuf> take() {
-		checkInReactorThread();
+		if (CHECK) {
+			checkInReactorThread();
+		}
 		if (exception != null) {
 			return Promise.ofException(exception);
 		}

@@ -16,6 +16,7 @@
 
 package io.activej.datastream;
 
+import io.activej.common.Checks;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
 import io.activej.reactor.ImplicitlyReactive;
@@ -30,6 +31,8 @@ import static io.activej.common.Checks.checkState;
  * which helps to deal with state transitions and helps to implement basic behaviours.
  */
 public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive implements StreamSupplier<T> {
+	private static final boolean CHECK = Checks.isEnabled(AbstractStreamSupplier.class);
+
 	public static final StreamDataAcceptor<?> NO_ACCEPTOR = item -> {};
 
 	private @Nullable StreamDataAcceptor<T> dataAcceptor;
@@ -144,7 +147,9 @@ public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive imple
 	 * and must never be called when supplier reaches {@link #sendEndOfStream() end of stream}.
 	 */
 	public final void send(T item) {
-		checkInReactorThread();
+		if (CHECK) {
+			checkInReactorThread();
+		}
 		dataAcceptorBuffered.accept(item);
 	}
 

@@ -78,8 +78,8 @@ public abstract class BlockingPutQueue<T> extends ImplicitlyReactive {
 	}
 
 	public T take() {
-		checkInReactorThread();
 		if (CHECK) {
+			checkInReactorThread();
 			checkState(!isEmpty());
 			checkState(!isClosed());
 		}

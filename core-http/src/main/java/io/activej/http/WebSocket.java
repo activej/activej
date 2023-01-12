@@ -180,7 +180,6 @@ final class WebSocket extends AbstractAsyncCloseable implements AsyncWebSocket {
 
 	// region sanitizers
 	private <T> Promise<T> doRead(AsyncSupplier<T> supplier) {
-		checkInReactorThread();
 		if (CHECK) {
 			checkState(readPromise == null, "Concurrent reads");
 		}

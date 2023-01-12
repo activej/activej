@@ -75,8 +75,10 @@ public final class ChannelZeroBuffer<T> extends ImplicitlyReactive implements Ch
 	 */
 	@Override
 	public Promise<Void> put(@Nullable T item) {
-		checkInReactorThread();
-		if (CHECK) checkState(put == null, "Previous put() has not finished yet");
+		if (CHECK) {
+			checkInReactorThread();
+			checkState(put == null, "Previous put() has not finished yet");
+		}
 		if (exception == null) {
 			if (take != null) {
 				SettablePromise<T> take = this.take;
@@ -112,8 +114,10 @@ public final class ChannelZeroBuffer<T> extends ImplicitlyReactive implements Ch
 	 */
 	@Override
 	public Promise<T> take() {
-		checkInReactorThread();
-		if (CHECK) checkState(take == null, "Previous take() has not finished yet");
+		if (CHECK) {
+			checkInReactorThread();
+			checkState(take == null, "Previous take() has not finished yet");
+		}
 		if (exception == null) {
 			if (put != null) {
 				T value = this.value;

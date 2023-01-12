@@ -18,11 +18,14 @@ package io.activej.csp;
 
 import io.activej.async.process.AbstractAsyncCloseable;
 import io.activej.async.process.AsyncCloseable;
+import io.activej.common.Checks;
 import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class AbstractChannelConsumer<T> extends AbstractAsyncCloseable implements ChannelConsumer<T> {
+	private static final boolean CHECK = Checks.isEnabled(AbstractChannelConsumer.class);
+
 	// region creators
 	protected AbstractChannelConsumer() {
 		setCloseable(null);
@@ -37,7 +40,9 @@ public abstract class AbstractChannelConsumer<T> extends AbstractAsyncCloseable 
 
 	@Override
 	public final Promise<Void> accept(@Nullable T value) {
-		checkInReactorThread();
+		if (CHECK) {
+			checkInReactorThread();
+		}
 		if (isClosed()) {
 			Recyclers.recycle(value);
 			return Promise.ofException(getException());

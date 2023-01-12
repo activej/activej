@@ -17,6 +17,7 @@
 package io.activej.csp.queue;
 
 import io.activej.async.exception.AsyncCloseException;
+import io.activej.common.Checks;
 import io.activej.common.recycle.Recyclers;
 import io.activej.promise.Promise;
 import io.activej.promise.SettablePromise;
@@ -26,6 +27,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.function.Supplier;
 
 public final class ChannelBufferWithFallback<T> extends ImplicitlyReactive implements ChannelQueue<T> {
+	private static final boolean CHECK = Checks.isEnabled(ChannelBufferWithFallback.class);
+
 	private final ChannelQueue<T> queue;
 	private final Supplier<Promise<? extends ChannelQueue<T>>> bufferFactory;
 
@@ -43,7 +46,9 @@ public final class ChannelBufferWithFallback<T> extends ImplicitlyReactive imple
 
 	@Override
 	public Promise<Void> put(@Nullable T item) {
-		checkInReactorThread();
+		if (CHECK) {
+			checkInReactorThread();
+		}
 		if (exception != null) {
 			Recyclers.recycle(item);
 			return Promise.ofException(exception);
@@ -53,7 +58,9 @@ public final class ChannelBufferWithFallback<T> extends ImplicitlyReactive imple
 
 	@Override
 	public Promise<T> take() {
-		checkInReactorThread();
+		if (CHECK) {
+			checkInReactorThread();
+		}
 		if (exception != null) {
 			return Promise.ofException(exception);
 		}
@@ -88,7 +95,9 @@ public final class ChannelBufferWithFallback<T> extends ImplicitlyReactive imple
 	}
 
 	private Promise<T> doTake() {
-		checkInReactorThread();
+		if (CHECK) {
+			checkInReactorThread();
+		}
 		if (buffer != null) {
 			return secondaryTake();
 		}
