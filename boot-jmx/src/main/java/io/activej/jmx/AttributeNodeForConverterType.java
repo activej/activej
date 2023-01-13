@@ -105,6 +105,7 @@ public class AttributeNodeForConverterType<T> extends AbstractAttributeNodeForLe
 				setter.invoke(target, result);
 			} catch (Exception e) {
 				logger.error("Can't set attribute " + attrName, e);
+				throw new SetterException(e);
 			}
 		}
 	}
