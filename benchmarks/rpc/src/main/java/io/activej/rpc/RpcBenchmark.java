@@ -25,7 +25,7 @@ import java.net.InetSocketAddress;
 import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.inject.module.Modules.combine;
 import static io.activej.launchers.initializers.ConfigConverters.ofFrameFormat;
-import static io.activej.rpc.client.sender.RpcStrategies.server;
+import static io.activej.rpc.client.sender.RpcStrategy.server;
 import static java.lang.Math.min;
 
 @SuppressWarnings("WeakerAccess")

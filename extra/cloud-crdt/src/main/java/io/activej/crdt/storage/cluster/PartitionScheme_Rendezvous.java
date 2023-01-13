@@ -4,8 +4,6 @@ import io.activej.common.initializer.WithInitializer;
 import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.crdt.storage.cluster.AsyncDiscoveryService.PartitionScheme;
 import io.activej.rpc.client.sender.RpcStrategy;
-import io.activej.rpc.client.sender.RpcStrategy_RendezvousHashing;
-import io.activej.rpc.client.sender.RpcStrategy_Sharding;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
@@ -15,6 +13,8 @@ import java.util.function.ToIntFunction;
 
 import static io.activej.common.Utils.difference;
 import static io.activej.crdt.storage.cluster.Sharder_RendezvousHash.NUMBER_OF_BUCKETS;
+import static io.activej.rpc.client.sender.RpcStrategy.rendezvousHashing;
+import static io.activej.rpc.client.sender.RpcStrategy.sharding;
 import static java.util.stream.Collectors.toSet;
 
 public final class PartitionScheme_Rendezvous<P> implements PartitionScheme<P>, WithInitializer<PartitionScheme_Rendezvous<P>> {
@@ -108,8 +108,8 @@ public final class PartitionScheme_Rendezvous<P> implements PartitionScheme<P>, 
 			if (!partitionGroup.isActive()) continue;
 			//noinspection unchecked
 			rendezvousHashings.add(
-					RpcStrategy_RendezvousHashing.create(req ->
-									((ToIntFunction<K>) keyHashFn).applyAsInt(keyGetter.apply(req)))
+					rendezvousHashing(req ->
+							((ToIntFunction<K>) keyHashFn).applyAsInt(keyGetter.apply(req)))
 							.withBuckets(NUMBER_OF_BUCKETS)
 							.withHashBucketFn((p, bucket) -> Sharder_RendezvousHash.hashBucket(partitionIdGetter.apply((P) p).hashCode(), bucket))
 							.withInitializer(rendezvousHashing -> {
@@ -122,7 +122,7 @@ public final class PartitionScheme_Rendezvous<P> implements PartitionScheme<P>, 
 							}));
 		}
 
-		return RpcStrategy_Sharding.create(
+		return sharding(
 				new ToIntFunction<>() {
 					final int count = rendezvousHashings.size();
 

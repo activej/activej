@@ -9,6 +9,7 @@ import org.junit.Test;
 import java.net.InetSocketAddress;
 
 import static io.activej.rpc.client.sender.Callbacks.assertNoCalls;
+import static io.activej.rpc.client.sender.RpcStrategy.server;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.*;
 
@@ -28,7 +29,7 @@ public class RpcStrategySingleServerTest {
 		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
 		RpcSenderStub connection = new RpcSenderStub();
 		pool.put(address, connection);
-		RpcStrategy_SingleServer strategySingleServer = RpcStrategy_SingleServer.create(address);
+		RpcStrategy strategySingleServer = server(address);
 
 		RpcSender sender = strategySingleServer.createSender(pool);
 
@@ -39,7 +40,7 @@ public class RpcStrategySingleServerTest {
 	public void itShouldNotBeCreatedWhenThereIsNoConnectionInPool() {
 		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
 		// no connections were added to pool
-		RpcStrategy_SingleServer strategySingleServer = RpcStrategy_SingleServer.create(address);
+		RpcStrategy strategySingleServer = server(address);
 
 		RpcSender sender = strategySingleServer.createSender(pool);
 
@@ -51,7 +52,7 @@ public class RpcStrategySingleServerTest {
 		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
 		RpcSenderStub connection = new RpcSenderStub();
 		pool.put(address, connection);
-		RpcStrategy_SingleServer strategySingleServer = RpcStrategy_SingleServer.create(address);
+		RpcStrategy strategySingleServer = server(address);
 		RpcSender sender = strategySingleServer.createSender(pool);
 		int calls = 100;
 		int timeout = 50;

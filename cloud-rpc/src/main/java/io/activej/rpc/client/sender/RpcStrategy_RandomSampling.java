@@ -28,9 +28,7 @@ public class RpcStrategy_RandomSampling implements RpcStrategy {
 	private final Random random = new Random();
 	private final Map<RpcStrategy, Integer> strategyToWeight = new HashMap<>();
 
-	private RpcStrategy_RandomSampling() {}
-
-	public static RpcStrategy_RandomSampling create() {return new RpcStrategy_RandomSampling();}
+	RpcStrategy_RandomSampling() {}
 
 	public RpcStrategy_RandomSampling add(int weight, RpcStrategy strategy) {
 		checkArgument(weight >= 0, "weight cannot be negative");

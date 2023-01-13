@@ -19,7 +19,7 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-import static io.activej.rpc.client.sender.RpcStrategies.server;
+import static io.activej.rpc.client.sender.RpcStrategy.server;
 
 //[START EXAMPLE]
 public class RpcExample extends Launcher {

@@ -14,7 +14,7 @@ import java.util.function.Function;
 
 import static io.activej.common.Utils.difference;
 import static io.activej.common.Utils.union;
-import static io.activej.rpc.client.sender.RpcStrategies.server;
+import static io.activej.rpc.client.sender.RpcStrategy.server;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;

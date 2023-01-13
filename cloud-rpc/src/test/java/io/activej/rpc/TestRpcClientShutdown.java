@@ -24,7 +24,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import static io.activej.promise.TestUtils.awaitException;
-import static io.activej.rpc.client.sender.RpcStrategies.server;
+import static io.activej.rpc.client.sender.RpcStrategy.server;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;

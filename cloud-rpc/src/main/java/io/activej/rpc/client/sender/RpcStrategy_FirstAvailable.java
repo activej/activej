@@ -23,16 +23,12 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Set;
 
-public final class RpcStrategy_FirstAvailable implements RpcStrategy {
+final class RpcStrategy_FirstAvailable implements RpcStrategy {
 	private final List<RpcStrategy> list;
 
-	private RpcStrategy_FirstAvailable(List<RpcStrategy> list) {
+	RpcStrategy_FirstAvailable(List<RpcStrategy> list) {
 		this.list = list;
 	}
-
-	public static RpcStrategy_FirstAvailable create(RpcStrategy... list) {return create(List.of(list));}
-
-	public static RpcStrategy_FirstAvailable create(List<RpcStrategy> list) {return new RpcStrategy_FirstAvailable(list);}
 
 	@Override
 	public Set<InetSocketAddress> getAddresses() {

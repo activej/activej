@@ -18,6 +18,7 @@ package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
 import io.activej.rpc.client.RpcClientConnectionPool;
+import io.activej.rpc.protocol.RpcException;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
@@ -25,25 +26,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.ToIntFunction;
 
-import static io.activej.rpc.client.sender.RpcStrategies.NO_SENDER_AVAILABLE_EXCEPTION;
-
 public final class RpcStrategy_Sharding implements RpcStrategy {
 	private final List<RpcStrategy> list;
 	private final ToIntFunction<?> shardingFunction;
 	private final int minActiveSubStrategies;
 
-	private RpcStrategy_Sharding(ToIntFunction<?> shardingFunction, List<RpcStrategy> list, int minActiveSubStrategies) {
+	RpcStrategy_Sharding(ToIntFunction<?> shardingFunction, List<RpcStrategy> list, int minActiveSubStrategies) {
 		this.shardingFunction = shardingFunction;
 		this.list = list;
 		this.minActiveSubStrategies = minActiveSubStrategies;
-	}
-
-	public static <T> RpcStrategy_Sharding create(ToIntFunction<T> shardingFunction, List<RpcStrategy> list) {
-		return new RpcStrategy_Sharding(shardingFunction, list, 0);
-	}
-
-	public static <T> RpcStrategy_Sharding create(ToIntFunction<T> shardingFunction, RpcStrategy... list) {
-		return new RpcStrategy_Sharding(shardingFunction, List.of(list), 0);
 	}
 
 	public RpcStrategy_Sharding withMinActiveSubStrategies(int minActiveSubStrategies) {
@@ -74,6 +65,8 @@ public final class RpcStrategy_Sharding implements RpcStrategy {
 	}
 
 	private static final class Sender implements RpcSender {
+		static final RpcException NO_SENDER_AVAILABLE_EXCEPTION = new RpcException("No senders available");
+
 		private final ToIntFunction<Object> shardingFunction;
 		private final RpcSender[] subSenders;
 

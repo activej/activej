@@ -25,31 +25,18 @@ import java.util.List;
 import java.util.Set;
 
 public final class RpcStrategy_FirstValidResult implements RpcStrategy {
-	@FunctionalInterface
-	public interface ResultValidator<T> {
-		boolean isValidResult(T value);
-	}
-
-	private static final ResultValidator<?> DEFAULT_RESULT_VALIDATOR = new DefaultResultValidator<>();
+	static final ResultValidator<?> DEFAULT_RESULT_VALIDATOR = new DefaultResultValidator<>();
 
 	private final List<RpcStrategy> list;
 
 	private final ResultValidator<?> resultValidator;
 	private final @Nullable Exception noValidResultException;
 
-	private RpcStrategy_FirstValidResult(List<RpcStrategy> list, ResultValidator<?> resultValidator,
+	RpcStrategy_FirstValidResult(List<RpcStrategy> list, ResultValidator<?> resultValidator,
 			@Nullable Exception noValidResultException) {
 		this.list = list;
 		this.resultValidator = resultValidator;
 		this.noValidResultException = noValidResultException;
-	}
-
-	public static RpcStrategy_FirstValidResult create(RpcStrategy... list) {
-		return create(List.of(list));
-	}
-
-	public static RpcStrategy_FirstValidResult create(List<RpcStrategy> list) {
-		return new RpcStrategy_FirstValidResult(list, DEFAULT_RESULT_VALIDATOR, null);
 	}
 
 	public RpcStrategy_FirstValidResult withResultValidator(ResultValidator<?> resultValidator) {

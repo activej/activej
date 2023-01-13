@@ -10,8 +10,7 @@ import java.util.List;
 
 import static io.activej.rpc.client.sender.Callbacks.assertNoCalls;
 import static io.activej.rpc.client.sender.Callbacks.ignore;
-import static io.activej.rpc.client.sender.RpcStrategies.server;
-import static io.activej.rpc.client.sender.RpcStrategies.servers;
+import static io.activej.rpc.client.sender.RpcStrategy.*;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.assertEquals;
 
@@ -50,7 +49,7 @@ public class RpcStrategiesTest {
 		pool.put(address4, connection4);
 		pool.put(address5, connection5);
 		int iterations = 100;
-		RpcStrategy strategy = RpcStrategy_RoundRobin.create(servers(address1, address2, address3, address4, address5));
+		RpcStrategy strategy = roundRobin(servers(address1, address2, address3, address4, address5));
 
 		RpcSender sender = strategy.createSender(pool);
 		for (int i = 0; i < iterations; i++) {
@@ -78,9 +77,9 @@ public class RpcStrategiesTest {
 		// we don't put connection3
 		pool.put(address4, connection4);
 		int iterations = 20;
-		RpcStrategy strategy = RpcStrategy_RoundRobin.create(
-				RpcStrategy_FirstAvailable.create(servers(address1, address2)),
-				RpcStrategy_FirstAvailable.create(servers(address3, address4)));
+		RpcStrategy strategy = roundRobin(
+				firstAvailable(servers(address1, address2)),
+				firstAvailable(servers(address3, address4)));
 
 		RpcSender sender = strategy.createSender(pool);
 		for (int i = 0; i < iterations; i++) {
@@ -109,9 +108,9 @@ public class RpcStrategiesTest {
 		pool.put(address4, connection4);
 		pool.put(address5, connection5);
 		int shardsCount = 2;
-		RpcStrategy strategy = RpcStrategy_Sharding.create((Integer item) -> item % shardsCount,
-				RpcStrategy_FirstValidResult.create(servers(address1, address2)),
-				RpcStrategy_FirstValidResult.create(servers(address3, address4, address5)));
+		RpcStrategy strategy = sharding((Integer item) -> item % shardsCount,
+				firstValidResult(servers(address1, address2)),
+				firstValidResult(servers(address3, address4, address5)));
 
 		RpcSender sender = strategy.createSender(pool);
 		sender.sendRequest(0, 50, assertNoCalls());
@@ -139,9 +138,9 @@ public class RpcStrategiesTest {
 		RpcSenderStub connection3 = new RpcSenderStub();
 		RpcSenderStub connection4 = new RpcSenderStub();
 		RpcSenderStub connection5 = new RpcSenderStub();
-		RpcStrategy strategy = RpcStrategy_RendezvousHashing.create((Integer item) -> item)
-				.withShard(1, RpcStrategy_FirstAvailable.create(servers(address1, address2)))
-				.withShard(2, RpcStrategy_FirstAvailable.create(servers(address3, address4)))
+		RpcStrategy strategy = rendezvousHashing((Integer item) -> item)
+				.withShard(1, firstAvailable(servers(address1, address2)))
+				.withShard(2, firstAvailable(servers(address3, address4)))
 				.withShard(3, server(address5));
 		int iterationsPerLoop = 1000;
 		RpcSender sender;
@@ -191,11 +190,11 @@ public class RpcStrategiesTest {
 		int iterationsPerDataStub = 25;
 		int iterationsPerDataStubWithKey = 35;
 		RpcSender sender;
-		RpcStrategy strategy = RpcStrategy_TypeDispatching.create()
+		RpcStrategy strategy = typeDispatching()
 				.on(String.class,
-						RpcStrategy_FirstValidResult.create(servers(address1, address2)))
+						firstValidResult(servers(address1, address2)))
 				.onDefault(
-						RpcStrategy_FirstAvailable.create(servers(address3, address4, address5)));
+						firstAvailable(servers(address3, address4, address5)));
 
 		sender = strategy.createSender(pool);
 		for (int i = 0; i < iterationsPerDataStub; i++) {

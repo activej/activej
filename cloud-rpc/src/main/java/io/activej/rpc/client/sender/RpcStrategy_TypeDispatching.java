@@ -18,6 +18,7 @@ package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
 import io.activej.rpc.client.RpcClientConnectionPool;
+import io.activej.rpc.protocol.RpcException;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
@@ -27,15 +28,12 @@ import java.util.Map;
 import java.util.Set;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.rpc.client.sender.RpcStrategies.NO_SENDER_AVAILABLE_EXCEPTION;
 
 public final class RpcStrategy_TypeDispatching implements RpcStrategy {
 	private final Map<Class<?>, RpcStrategy> dataTypeToStrategy = new HashMap<>();
 	private RpcStrategy defaultStrategy;
 
-	private RpcStrategy_TypeDispatching() {}
-
-	public static RpcStrategy_TypeDispatching create() {return new RpcStrategy_TypeDispatching();}
+	RpcStrategy_TypeDispatching() {}
 
 	public RpcStrategy_TypeDispatching on(Class<?> dataType, RpcStrategy strategy) {
 		checkState(!dataTypeToStrategy.containsKey(dataType),
@@ -81,6 +79,8 @@ public final class RpcStrategy_TypeDispatching implements RpcStrategy {
 	}
 
 	static final class Sender implements RpcSender {
+		static final RpcException NO_SENDER_AVAILABLE_EXCEPTION = new RpcException("No senders available");
+
 		private final HashMap<Class<?>, RpcSender> typeToSender;
 		private final @Nullable RpcSender defaultSender;
 

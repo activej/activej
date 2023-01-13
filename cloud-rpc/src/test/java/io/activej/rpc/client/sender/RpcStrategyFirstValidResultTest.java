@@ -2,7 +2,7 @@ package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
 import io.activej.rpc.client.RpcClientConnectionPool;
-import io.activej.rpc.client.sender.RpcStrategy_FirstValidResult.ResultValidator;
+import io.activej.rpc.client.sender.RpcStrategy.ResultValidator;
 import io.activej.rpc.client.sender.helper.RpcClientConnectionPoolStub;
 import io.activej.rpc.client.sender.helper.RpcSenderStub;
 import io.activej.test.ExpectedException;
@@ -16,7 +16,8 @@ import java.util.concurrent.ExecutionException;
 
 import static io.activej.rpc.client.sender.Callbacks.forFuture;
 import static io.activej.rpc.client.sender.Callbacks.ignore;
-import static io.activej.rpc.client.sender.RpcStrategies.servers;
+import static io.activej.rpc.client.sender.RpcStrategy.firstValidResult;
+import static io.activej.rpc.client.sender.RpcStrategy.servers;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.*;
 
@@ -43,7 +44,7 @@ public class RpcStrategyFirstValidResultTest {
 		RpcSenderStub connection1 = new RpcSenderStub();
 		RpcSenderStub connection2 = new RpcSenderStub();
 		RpcSenderStub connection3 = new RpcSenderStub();
-		RpcStrategy firstValidResult = RpcStrategy_FirstValidResult.create(servers(address1, address2, address3));
+		RpcStrategy firstValidResult = firstValidResult(servers(address1, address2, address3));
 		int callsAmountIterationOne = 10;
 		int callsAmountIterationTwo = 25;
 		RpcSender senderToAll;
@@ -72,7 +73,7 @@ public class RpcStrategyFirstValidResultTest {
 		RpcStrategy strategy1 = new RpcStrategy_RequestSenderOnResultWithNull();
 		RpcStrategy strategy2 = new RpcStrategy_RequestSenderOnResultWithNull();
 		RpcStrategy strategy3 = new RpcStrategy_RequestSenderOnResultWithNull();
-		RpcStrategy firstValidResult = RpcStrategy_FirstValidResult.create(strategy1, strategy2, strategy3);
+		RpcStrategy firstValidResult = firstValidResult(strategy1, strategy2, strategy3);
 		RpcSender sender = firstValidResult.createSender(new RpcClientConnectionPoolStub());
 		CompletableFuture<Object> future = new CompletableFuture<>();
 
@@ -89,7 +90,7 @@ public class RpcStrategyFirstValidResultTest {
 		RpcStrategy strategy1 = new RpcStrategy_RequestSenderOnResultWithNull();
 		RpcStrategy strategy2 = new RpcStrategy_RequestSenderOnResultWithNull();
 		RpcStrategy strategy3 = new RpcStrategy_RequestSenderOnResultWithNull();
-		RpcStrategy firstValidResult = RpcStrategy_FirstValidResult.create(strategy1, strategy2, strategy3)
+		RpcStrategy firstValidResult = firstValidResult(strategy1, strategy2, strategy3)
 				.withNoValidResultException(NO_VALID_RESULT_EXCEPTION);
 		RpcSender sender = firstValidResult.createSender(new RpcClientConnectionPoolStub());
 
@@ -110,7 +111,7 @@ public class RpcStrategyFirstValidResultTest {
 		RpcStrategy strategy1 = new RpcStrategy_RequestSenderOnResultWithValue(invalidKey);
 		RpcStrategy strategy2 = new RpcStrategy_RequestSenderOnResultWithValue(validKey);
 		RpcStrategy strategy3 = new RpcStrategy_RequestSenderOnResultWithValue(invalidKey);
-		RpcStrategy firstValidResult = RpcStrategy_FirstValidResult.create(strategy1, strategy2, strategy3)
+		RpcStrategy firstValidResult = firstValidResult(strategy1, strategy2, strategy3)
 				.withResultValidator((ResultValidator<Integer>) input -> input == validKey)
 				.withNoValidResultException(NO_VALID_RESULT_EXCEPTION);
 		RpcSender sender = firstValidResult.createSender(new RpcClientConnectionPoolStub());
@@ -128,7 +129,7 @@ public class RpcStrategyFirstValidResultTest {
 		RpcStrategy strategy1 = new RpcStrategy_RequestSenderOnResultWithValue(invalidKey);
 		RpcStrategy strategy2 = new RpcStrategy_RequestSenderOnResultWithValue(invalidKey);
 		RpcStrategy strategy3 = new RpcStrategy_RequestSenderOnResultWithValue(invalidKey);
-		RpcStrategy firstValidResult = RpcStrategy_FirstValidResult.create(strategy1, strategy2, strategy3)
+		RpcStrategy firstValidResult = firstValidResult(strategy1, strategy2, strategy3)
 				.withResultValidator((ResultValidator<Integer>) input -> input == validKey)
 				.withNoValidResultException(NO_VALID_RESULT_EXCEPTION);
 		RpcSender sender = firstValidResult.createSender(new RpcClientConnectionPoolStub());
@@ -143,7 +144,7 @@ public class RpcStrategyFirstValidResultTest {
 		RpcSenderStub connection = new RpcSenderStub();
 		// one connection is added
 		pool.put(address2, connection);
-		RpcStrategy firstValidResult = RpcStrategy_FirstValidResult.create(servers(address1, address2));
+		RpcStrategy firstValidResult = firstValidResult(servers(address1, address2));
 		assertNotNull(firstValidResult.createSender(pool));
 	}
 
@@ -151,7 +152,7 @@ public class RpcStrategyFirstValidResultTest {
 	public void itShouldNotBeCreatedWhenThereAreNoActiveSubSenders() {
 		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
 		// no connections were added to pool
-		RpcStrategy firstValidResult = RpcStrategy_FirstValidResult.create(servers(address1, address2, address3));
+		RpcStrategy firstValidResult = firstValidResult(servers(address1, address2, address3));
 		assertNull(firstValidResult.createSender(pool));
 	}
 

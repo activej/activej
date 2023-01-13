@@ -9,8 +9,6 @@ import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.AsyncRpcClient;
 import io.activej.rpc.client.RpcClient;
 import io.activej.rpc.client.sender.RpcStrategy;
-import io.activej.rpc.client.sender.RpcStrategy_FirstAvailable;
-import io.activej.rpc.client.sender.RpcStrategy_RendezvousHashing;
 import io.activej.serializer.SerializerBuilder;
 
 import java.net.InetSocketAddress;
@@ -18,7 +16,7 @@ import java.time.Duration;
 import java.util.List;
 
 import static io.activej.common.Checks.checkState;
-import static io.activej.rpc.client.sender.RpcStrategies.server;
+import static io.activej.rpc.client.sender.RpcStrategy.*;
 
 public class AdvancedRpcClientModule extends AbstractModule {
 	private AdvancedRpcClientModule() {
@@ -43,11 +41,11 @@ public class AdvancedRpcClientModule extends AbstractModule {
 				ConfigConverters.ofInetSocketAddress(), ","), "client.addresses");
 		checkState(inetAddresses.size() == 4);
 
-		return RpcStrategy_FirstAvailable.create(
-				RpcStrategy_RendezvousHashing.create(Object::hashCode)
+		return firstAvailable(
+				rendezvousHashing(Object::hashCode)
 						.withShard(1, server(inetAddresses.get(0)))
 						.withShard(2, server(inetAddresses.get(1))),
-				RpcStrategy_RendezvousHashing.create(Object::hashCode)
+				rendezvousHashing(Object::hashCode)
 						.withShard(1, server(inetAddresses.get(2)))
 						.withShard(2, server(inetAddresses.get(3)))
 		);

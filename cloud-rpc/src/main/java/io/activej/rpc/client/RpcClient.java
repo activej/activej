@@ -43,7 +43,6 @@ import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.jmx.RpcConnectStats;
 import io.activej.rpc.client.jmx.RpcRequestStats;
 import io.activej.rpc.client.sender.RpcSender;
-import io.activej.rpc.client.sender.RpcStrategies;
 import io.activej.rpc.client.sender.RpcStrategy;
 import io.activej.rpc.protocol.RpcException;
 import io.activej.rpc.protocol.RpcMessage;
@@ -73,7 +72,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 /**
  * Sends requests to the specified servers according to defined
  * {@code RpcStrategy} strategy. Strategies, represented in
- * {@link RpcStrategies} satisfy most cases.
+ * {@link RpcStrategy} satisfy most cases.
  * <p>
  * Example. Consider a client which sends a {@code Request} and receives a
  * {@code Response} from some {@link RpcServer}. To implement such kind of
@@ -84,7 +83,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * <li>Create {@code RpcClient} and adjust it</li>
  * </ul>
  *
- * @see RpcStrategies
+ * @see RpcStrategy
  * @see RpcServer
  */
 public final class RpcClient extends AbstractNioReactive
