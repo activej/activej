@@ -4,7 +4,7 @@ import io.activej.codegen.expression.Expression;
 
 import java.util.function.Supplier;
 
-import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.expression.Expression.*;
 
 public class Utils {
 	public static <T> T get(Supplier<T> supplier) {

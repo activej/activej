@@ -20,7 +20,6 @@ import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Expressions;
 import io.activej.codegen.expression.Variable;
 import io.activej.common.initializer.WithInitializer;
 import org.jetbrains.annotations.Nullable;
@@ -29,7 +28,7 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.expression.Expression.*;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
@@ -169,7 +168,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 	}
 
 	public Variable property(Expression record, String field) {
-		return Expressions.property(record, getClassField(field));
+		return Expression.property(record, getClassField(field));
 	}
 
 	public List<String> getFields() {
@@ -266,7 +265,7 @@ public final class RecordScheme implements WithInitializer<RecordScheme> {
 			recordGetters[recordGettersMap.size()] = recordGetter;
 			recordGettersMap.put(field, recordGetter);
 
-			Expression set = Expressions.set(property, arg(1));
+			Expression set = Expression.set(property, arg(1));
 			RecordSetter<?> recordSetter = classLoader.ensureClassAndCreateInstance(
 					ClassKey.of(RecordSetter.class, this, field),
 					() -> ClassBuilder.create(RecordSetter.class)

@@ -15,7 +15,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Supplier;
 
-import static io.activej.codegen.expression.Expressions.value;
+import static io.activej.codegen.expression.Expression.value;
 import static org.junit.Assert.*;
 
 @SuppressWarnings("rawtypes")

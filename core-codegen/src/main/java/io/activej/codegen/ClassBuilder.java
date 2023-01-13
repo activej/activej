@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import static io.activej.codegen.DefiningClassLoader.createInstance;
-import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.expression.Expression.*;
 import static io.activej.codegen.util.Utils.getStringSetting;
 import static java.util.stream.Collectors.toList;
 import static org.objectweb.asm.Opcodes.*;

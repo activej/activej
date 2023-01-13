@@ -22,8 +22,8 @@ import io.activej.serializer.SerializerDef;
 
 import java.util.EnumMap;
 
-import static io.activej.codegen.expression.Expressions.constructor;
-import static io.activej.codegen.expression.Expressions.value;
+import static io.activej.codegen.expression.Expression.constructor;
+import static io.activej.codegen.expression.Expression.value;
 
 public final class SerializerDef_EnumMap extends SerializerDef_RegularMap {
 	public SerializerDef_EnumMap(SerializerDef keySerializer, SerializerDef valueSerializer) {

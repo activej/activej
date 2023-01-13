@@ -14,8 +14,8 @@ import java.util.function.Predicate;
 
 import static io.activej.aggregation.AggregationPredicates.*;
 import static io.activej.aggregation.fieldtype.FieldTypes.*;
-import static io.activej.codegen.expression.Expressions.arg;
-import static io.activej.codegen.expression.Expressions.cast;
+import static io.activej.codegen.expression.Expression.arg;
+import static io.activej.codegen.expression.Expression.cast;
 import static org.junit.Assert.*;
 
 public class PredicatesTest {

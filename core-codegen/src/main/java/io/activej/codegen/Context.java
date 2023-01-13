@@ -30,7 +30,7 @@ import java.util.*;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.expression.Expression.*;
 import static io.activej.codegen.util.TypeChecks.checkType;
 import static io.activej.codegen.util.TypeChecks.isNotThrow;
 import static io.activej.codegen.util.Utils.*;

@@ -38,7 +38,7 @@ import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.expression.Expression.*;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.keysToMap;

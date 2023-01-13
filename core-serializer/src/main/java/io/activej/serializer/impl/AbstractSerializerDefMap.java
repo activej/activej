@@ -24,7 +24,7 @@ import io.activej.serializer.SerializerDef;
 
 import java.util.function.BinaryOperator;
 
-import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.expression.Expression.*;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_3;
 import static io.activej.serializer.impl.SerializerExpressions.*;
 

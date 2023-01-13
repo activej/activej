@@ -25,7 +25,7 @@ import org.objectweb.asm.commons.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.expression.Expression.*;
 import static io.activej.codegen.util.TypeChecks.checkType;
 import static io.activej.codegen.util.TypeChecks.isAssignable;
 import static io.activej.codegen.util.Utils.*;
@@ -40,11 +40,7 @@ public final class Expression_Compare implements Expression {
 
 	private record Pair(Expression left, Expression right, boolean nullable) {}
 
-	private Expression_Compare() {
-	}
-
-	public static Expression_Compare create() {
-		return new Expression_Compare();
+	Expression_Compare() {
 	}
 
 	public Expression_Compare with(Expression left, Expression right) {

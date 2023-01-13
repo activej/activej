@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.function.UnaryOperator;
 
 import static io.activej.codegen.TestUtils.assertStaticConstantsCleared;
-import static io.activej.codegen.expression.Expressions.add;
+import static io.activej.codegen.expression.Expression.add;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 

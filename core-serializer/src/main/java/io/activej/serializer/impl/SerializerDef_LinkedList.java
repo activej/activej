@@ -22,7 +22,7 @@ import io.activej.serializer.SerializerDef;
 
 import java.util.LinkedList;
 
-import static io.activej.codegen.expression.Expressions.constructor;
+import static io.activej.codegen.expression.Expression.constructor;
 
 public final class SerializerDef_LinkedList extends SerializerDef_RegularCollection {
 	public SerializerDef_LinkedList(SerializerDef valueSerializer) {

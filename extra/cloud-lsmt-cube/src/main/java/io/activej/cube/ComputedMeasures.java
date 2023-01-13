@@ -18,15 +18,14 @@ package io.activej.cube;
 
 import io.activej.aggregation.measure.Measure;
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Expressions;
 import io.activej.types.Primitives;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-public class ComputedMeasures {
-	private static final class E extends Expressions {}
+import static io.activej.codegen.expression.Expression.*;
 
+public class ComputedMeasures {
 	public abstract static class AbstractComputedMeasure implements ComputedMeasure {
 		protected final Set<ComputedMeasure> dependencies;
 
@@ -73,7 +72,7 @@ public class ComputedMeasures {
 			for (ComputedMeasure dependency : dependencies) {
 				types.add(dependency.getType(storedMeasures));
 			}
-			return E.unifyArithmeticTypes(types);
+			return unifyArithmeticTypes(types);
 		}
 	}
 
@@ -89,7 +88,7 @@ public class ComputedMeasures {
 		return new AbstractArithmeticMeasure(measure1, measure2) {
 			@Override
 			public Expression getExpression(Expression record, Map<String, Measure> storedMeasures) {
-				return E.add(measure1.getExpression(record, storedMeasures), measure2.getExpression(record, storedMeasures));
+				return Expression.add(measure1.getExpression(record, storedMeasures), measure2.getExpression(record, storedMeasures));
 			}
 		};
 	}
@@ -98,7 +97,7 @@ public class ComputedMeasures {
 		return new AbstractArithmeticMeasure(measure1, measure2) {
 			@Override
 			public Expression getExpression(Expression record, Map<String, Measure> storedMeasures) {
-				return E.sub(measure1.getExpression(record, storedMeasures), measure2.getExpression(record, storedMeasures));
+				return Expression.sub(measure1.getExpression(record, storedMeasures), measure2.getExpression(record, storedMeasures));
 			}
 		};
 	}
@@ -112,10 +111,10 @@ public class ComputedMeasures {
 
 			@Override
 			public Expression getExpression(Expression record, Map<String, Measure> storedMeasures) {
-				Expression value2 = E.cast(measure2.getExpression(record, storedMeasures), double.class);
-				return E.ifNe(value2, E.value(0.0),
-						E.div(measure1.getExpression(record, storedMeasures), value2),
-						E.value(0.0));
+				Expression value2 = cast(measure2.getExpression(record, storedMeasures), double.class);
+				return ifNe(value2, Expression.value(0.0),
+						Expression.div(measure1.getExpression(record, storedMeasures), value2),
+						Expression.value(0.0));
 			}
 		};
 	}
@@ -124,7 +123,7 @@ public class ComputedMeasures {
 		return new AbstractArithmeticMeasure(measure1, measure2) {
 			@Override
 			public Expression getExpression(Expression record, Map<String, Measure> storedMeasures) {
-				return E.mul(measure1.getExpression(record, storedMeasures), measure2.getExpression(record, storedMeasures));
+				return Expression.mul(measure1.getExpression(record, storedMeasures), measure2.getExpression(record, storedMeasures));
 			}
 		};
 	}
@@ -138,12 +137,12 @@ public class ComputedMeasures {
 
 			@Override
 			public Expression getExpression(Expression record, Map<String, Measure> storedMeasures) {
-				return E.let(
-						E.cast(measure.getExpression(record, storedMeasures), double.class),
+				return let(
+						cast(measure.getExpression(record, storedMeasures), double.class),
 						value ->
-								E.ifLe(value, E.value(0.0d),
-										E.value(0.0d),
-										E.staticCall(Math.class, "sqrt", value)));
+								ifLe(value, Expression.value(0.0d),
+										Expression.value(0.0d),
+										staticCall(Math.class, "sqrt", value)));
 			}
 		};
 	}
@@ -157,8 +156,8 @@ public class ComputedMeasures {
 
 			@Override
 			public Expression getExpression(Expression record, Map<String, Measure> storedMeasures) {
-				return E.let(E.cast(measure.getExpression(record, storedMeasures), double.class), value ->
-						E.mul(value, value));
+				return let(cast(measure.getExpression(record, storedMeasures), double.class), value ->
+						Expression.mul(value, value));
 			}
 		};
 	}
@@ -191,7 +190,7 @@ public class ComputedMeasures {
 
 		@Override
 		public Expression getExpression(Expression record, Map<String, Measure> storedMeasures) {
-			return E.value(value);
+			return Expression.value(value);
 		}
 
 		@Override
@@ -225,7 +224,7 @@ public class ComputedMeasures {
 
 		@Override
 		public Expression getExpression(Expression record, Map<String, Measure> storedMeasures) {
-			return storedMeasures.get(measureId).valueOfAccumulator(E.property(record, measureId));
+			return storedMeasures.get(measureId).valueOfAccumulator(property(record, measureId));
 		}
 
 		@Override

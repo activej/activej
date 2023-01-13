@@ -18,7 +18,6 @@ package io.activej.aggregation.fieldtype;
 
 import io.activej.aggregation.util.JsonCodec;
 import io.activej.codegen.expression.Expression;
-import io.activej.codegen.expression.Expressions;
 import io.activej.serializer.SerializerDef;
 import org.jetbrains.annotations.Nullable;
 
@@ -80,7 +79,7 @@ public class FieldType<T> {
 	}
 
 	public Expression toStringValue(Expression value) {
-		return Expressions.staticCall(String.class, "valueOf", value);
+		return Expression.staticCall(String.class, "valueOf", value);
 	}
 
 	@Override

@@ -83,9 +83,9 @@ import java.util.stream.Stream;
 import static io.activej.aggregation.AggregationPredicates.between;
 import static io.activej.aggregation.AggregationPredicates.eq;
 import static io.activej.aggregation.util.Utils.*;
+import static io.activej.codegen.expression.Expression.*;
 import static io.activej.codegen.expression.Expression_Compare.leftProperty;
 import static io.activej.codegen.expression.Expression_Compare.rightProperty;
-import static io.activej.codegen.expression.Expressions.*;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.*;
@@ -1050,7 +1050,7 @@ public final class Cube extends AbstractReactive
 					ClassKey.of(Comparator.class, resultClass, query.getOrderings()),
 					() -> ClassBuilder.create(Comparator.class)
 							.withMethod("compare", get(() -> {
-								Expression_Compare comparator = Expression_Compare.create();
+								Expression_Compare comparator = Expression.compare();
 								for (Ordering ordering : query.getOrderings()) {
 									String field = ordering.getField();
 									if (resultMeasures.contains(field) || resultAttributes.contains(field)) {

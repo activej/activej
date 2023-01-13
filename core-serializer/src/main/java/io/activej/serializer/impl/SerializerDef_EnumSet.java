@@ -22,8 +22,8 @@ import io.activej.serializer.SerializerDef;
 
 import java.util.EnumSet;
 
-import static io.activej.codegen.expression.Expressions.staticCall;
-import static io.activej.codegen.expression.Expressions.value;
+import static io.activej.codegen.expression.Expression.staticCall;
+import static io.activej.codegen.expression.Expression.value;
 
 public final class SerializerDef_EnumSet extends SerializerDef_RegularCollection {
 	public SerializerDef_EnumSet(SerializerDef valueSerializer) {

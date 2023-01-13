@@ -20,7 +20,7 @@ import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Variable;
 import io.activej.serializer.util.BinaryOutputUtils;
 
-import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.expression.Expression.*;
 
 /**
  * Provides methods for writing primitives

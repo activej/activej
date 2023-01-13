@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.expression.Expression.*;
 
 public abstract class SimpleSerializerDef<T> extends AbstractSerializerDef {
 	private final Map<CacheKey, Expression> SERIALIZER_EXPRESSION_CACHE = new HashMap<>();

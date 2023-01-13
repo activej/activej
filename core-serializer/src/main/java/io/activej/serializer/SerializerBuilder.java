@@ -43,7 +43,7 @@ import java.net.InetAddress;
 import java.util.*;
 import java.util.function.Function;
 
-import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.expression.Expression.*;
 import static io.activej.serializer.SerializerDef.*;
 import static io.activej.serializer.impl.SerializerExpressions.readByte;
 import static io.activej.serializer.impl.SerializerExpressions.writeByte;

@@ -31,7 +31,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.UnaryOperator;
 
-import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.expression.Expression.*;
 import static io.activej.serializer.util.Utils.get;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.*;

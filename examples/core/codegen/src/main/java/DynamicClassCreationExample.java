@@ -1,9 +1,7 @@
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.codegen.expression.Expression_HashCode;
-import io.activej.codegen.expression.Expression_ToString;
 
-import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.expression.Expression.*;
 
 /**
  * In this example a Class that implements the specified interface is dynamically created.
@@ -33,10 +31,10 @@ public class DynamicClassCreationExample {
 				.withMethod("int compareTo(Person)", comparableImpl("id", "name"))
 				.withMethod("equals", equalsImpl("id", "name"))
 				.withMethod("hash", hashCodeImpl("id", "name"))
-				.withMethod("hashOfPojo", Expression_HashCode.create()
+				.withMethod("hashOfPojo", hashCodeImpl()
 						.with(property(arg(0), "id"))
 						.with(property(arg(0), "name")))
-				.withMethod("toString", Expression_ToString.create()
+				.withMethod("toString", toStringImpl()
 						.withField("id")
 						.with("name", property(self(), "name")))
 				.defineClass(CLASS_LOADER);

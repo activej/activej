@@ -14,7 +14,7 @@ import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
 import java.util.List;
 
-import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.expression.Expression.*;
 
 public final class Operand_FieldAccess implements Operand<Operand_FieldAccess> {
 	private final Operand<?> objectOperand;

@@ -23,7 +23,7 @@ import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.StringFormat;
 import io.activej.serializer.util.BinaryOutputUtils;
 
-import static io.activej.codegen.expression.Expressions.*;
+import static io.activej.codegen.expression.Expression.*;
 import static io.activej.serializer.CompatibilityLevel.LEVEL_1;
 import static io.activej.serializer.StringFormat.ISO_8859_1;
 import static io.activej.serializer.StringFormat.UTF8;

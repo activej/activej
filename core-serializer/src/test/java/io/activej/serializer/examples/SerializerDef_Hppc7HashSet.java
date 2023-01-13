@@ -4,7 +4,7 @@ import io.activej.codegen.expression.Expression;
 import io.activej.serializer.CompatibilityLevel;
 import io.activej.serializer.SerializerDef;
 
-import static io.activej.codegen.expression.Expressions.constructor;
+import static io.activej.codegen.expression.Expression.constructor;
 import static io.activej.serializer.util.Utils.hashInitialSize;
 
 public final class SerializerDef_Hppc7HashSet extends SerializerDef_Hppc7RegularCollection {
