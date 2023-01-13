@@ -208,7 +208,7 @@ public final class EventloopTaskScheduler implements EventloopService, WithIniti
 						e -> {
 							lastException = e;
 							errorCount++;
-							logger.error("Retry attempt " + errorCount, e);
+							logger.warn("Retry attempt " + errorCount, e);
 							if (abortOnError) {
 								scheduledTask = nullify(scheduledTask, ScheduledRunnable::cancel);
 								throw new RuntimeException(e);

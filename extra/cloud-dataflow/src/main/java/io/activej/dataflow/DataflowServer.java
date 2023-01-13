@@ -134,7 +134,7 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 							logger.info("Task executed successfully: {}", command);
 						} else if (exception instanceof AsyncCloseException) {
 							canceledTasks++;
-							logger.error("Canceled task: {}", command, exception);
+							logger.warn("Canceled task: {}", command, exception);
 						} else {
 							failedTasks++;
 							logger.error("Failed to execute task: {}", command, exception);
@@ -145,7 +145,7 @@ public final class DataflowServer extends AbstractServer<DataflowServer> {
 			messaging.receive()
 					.whenException(() -> {
 						if (!task.isExecuted()) {
-							logger.error("Client disconnected. Canceling task: {}", command);
+							logger.warn("Client disconnected. Canceling task: {}", command);
 							task.cancel();
 						}
 					});

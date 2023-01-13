@@ -108,10 +108,10 @@ public final class ReportingServiceServlet extends AsyncServletWithStats impleme
 						return httpResponse;
 					});
 		} catch (QueryException e) {
-			logger.error("Query exception: " + httpRequest, e);
+			logger.warn("Query exception: " + httpRequest, e);
 			return Promise.of(createErrorResponse(e.getMessage()));
 		} catch (MalformedDataException e) {
-			logger.error("Parse exception: " + httpRequest, e);
+			logger.warn("Parse exception: " + httpRequest, e);
 			return Promise.of(createErrorResponse(e.getMessage()));
 		}
 	}
