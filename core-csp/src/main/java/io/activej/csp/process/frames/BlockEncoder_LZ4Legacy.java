@@ -30,7 +30,7 @@ import static java.lang.Math.min;
 
 @Deprecated
 final class BlockEncoder_LZ4Legacy implements BlockEncoder {
-	private static final boolean CHECK = Checks.isEnabled(BlockEncoder_LZ4Legacy.class);
+	private static final boolean CHECKS = Checks.isEnabled(BlockEncoder_LZ4Legacy.class);
 
 	private static final int MIN_BLOCK_SIZE = 64;
 	private static final int MAX_BLOCK_SIZE = 1 << (COMPRESSION_LEVEL_BASE + 0x0F);
@@ -50,7 +50,7 @@ final class BlockEncoder_LZ4Legacy implements BlockEncoder {
 	@Override
 	public ByteBuf encode(ByteBuf inputBuf) {
 		int len = inputBuf.readRemaining();
-		if (CHECK) checkArgument(len != 0);
+		if (CHECKS) checkArgument(len != 0);
 
 		int off = inputBuf.head();
 		byte[] bytes = inputBuf.array();
@@ -95,12 +95,12 @@ final class BlockEncoder_LZ4Legacy implements BlockEncoder {
 
 	private static int compressionLevel(int blockSize) {
 		int compressionLevel = 32 - Integer.numberOfLeadingZeros(blockSize - 1); // ceil of log2
-		if (CHECK) {
+		if (CHECKS) {
 			checkArgument((1 << compressionLevel) >= blockSize);
 			checkArgument(blockSize * 2 > (1 << compressionLevel));
 		}
 		compressionLevel = max(0, compressionLevel - COMPRESSION_LEVEL_BASE);
-		if (CHECK) {
+		if (CHECKS) {
 			checkArgument(compressionLevel <= 0x0F);
 		}
 		return compressionLevel;

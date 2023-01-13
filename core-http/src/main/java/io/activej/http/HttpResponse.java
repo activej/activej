@@ -45,7 +45,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * usi it afterwards.
  */
 public final class HttpResponse extends HttpMessage implements Promisable<HttpResponse>, WithInitializer<HttpResponse> {
-	private static final boolean CHECK = Checks.isEnabled(HttpResponse.class);
+	private static final boolean CHECKS = Checks.isEnabled(HttpResponse.class);
 
 	private static final byte[] HTTP11_BYTES = encodeAscii("HTTP/1.1 ");
 	private static final byte[] CODE_ERROR_BYTES = encodeAscii(" Error");
@@ -130,7 +130,7 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 	}
 
 	public static HttpResponse ofCode(int code) {
-		if (CHECK) checkArgument(code >= 100 && code < 600, "Code should be in range [100, 600)");
+		if (CHECKS) checkArgument(code >= 100 && code < 600, "Code should be in range [100, 600)");
 		return new HttpResponse(HTTP_1_1, code);
 	}
 
@@ -327,7 +327,7 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 
 	@Override
 	public void addCookies(List<HttpCookie> cookies) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		for (HttpCookie cookie : cookies) {
 			addCookie(cookie);
 		}
@@ -335,7 +335,7 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 
 	@Override
 	public void addCookie(HttpCookie cookie) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		addHeader(SET_COOKIE, new HttpHeaderValueOfSetCookies(cookie));
 	}
 
@@ -353,7 +353,7 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 	}
 
 	public Map<String, HttpCookie> getCookies() {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		if (parsedCookies != null) {
 			return parsedCookies;
 		}
@@ -365,7 +365,7 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 	}
 
 	public @Nullable HttpCookie getCookie(String cookie) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		return getCookies().get(cookie);
 	}
 
@@ -458,7 +458,7 @@ public final class HttpResponse extends HttpMessage implements Promisable<HttpRe
 
 	@Override
 	protected void writeTo(ByteBuf buf) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		writeCodeMessage(buf, code);
 		writeHeaders(buf);
 	}

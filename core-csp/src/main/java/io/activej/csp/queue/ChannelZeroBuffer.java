@@ -36,7 +36,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * @param <T> type of data passed through the buffer
  */
 public final class ChannelZeroBuffer<T> extends ImplicitlyReactive implements ChannelQueue<T> {
-	private static final boolean CHECK = Checks.isEnabled(ChannelZeroBuffer.class);
+	private static final boolean CHECKS = Checks.isEnabled(ChannelZeroBuffer.class);
 
 	private Exception exception;
 
@@ -76,7 +76,7 @@ public final class ChannelZeroBuffer<T> extends ImplicitlyReactive implements Ch
 	 */
 	@Override
 	public Promise<Void> put(@Nullable T item) {
-		if (CHECK) {
+		if (CHECKS) {
 			checkInReactorThread(this);
 			checkState(put == null, "Previous put() has not finished yet");
 		}
@@ -115,7 +115,7 @@ public final class ChannelZeroBuffer<T> extends ImplicitlyReactive implements Ch
 	 */
 	@Override
 	public Promise<T> take() {
-		if (CHECK) {
+		if (CHECKS) {
 			checkInReactorThread(this);
 			checkState(take == null, "Previous take() has not finished yet");
 		}

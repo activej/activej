@@ -28,7 +28,7 @@ import static io.activej.common.Checks.checkState;
 import static java.lang.System.arraycopy;
 
 public class PrimaryKey implements Comparable<PrimaryKey> {
-	private static final boolean CHECK = Checks.isEnabled(PrimaryKey.class);
+	private static final boolean CHECKS = Checks.isEnabled(PrimaryKey.class);
 
 	private final Object[] values;
 
@@ -88,12 +88,12 @@ public class PrimaryKey implements Comparable<PrimaryKey> {
 	@Override
 	public boolean equals(Object o) {
 		PrimaryKey that = (PrimaryKey) o;
-		if (CHECK) checkArgument(values.length == that.values.length);
+		if (CHECKS) checkArgument(values.length == that.values.length);
 
 		for (int i = 0; i < values.length; i++) {
 			Object thisKey = values[i];
 			Object thatKey = that.values[i];
-			if (CHECK) checkState(thisKey != null && thatKey != null);
+			if (CHECKS) checkState(thisKey != null && thatKey != null);
 			if (!thisKey.equals(thatKey))
 				return false;
 		}
@@ -108,12 +108,12 @@ public class PrimaryKey implements Comparable<PrimaryKey> {
 	@SuppressWarnings({"unchecked", "NullableProblems"})
 	@Override
 	public int compareTo(PrimaryKey o) {
-		if (CHECK) checkArgument(values.length == o.values.length);
+		if (CHECKS) checkArgument(values.length == o.values.length);
 
 		for (int i = 0; i < values.length; i++) {
 			Object thisKey = values[i];
 			Object thatKey = o.values[i];
-			if (CHECK) checkState(thisKey != null && thatKey != null);
+			if (CHECKS) checkState(thisKey != null && thatKey != null);
 			int result = ((Comparable<Object>) thisKey).compareTo(thatKey);
 			if (result != 0)
 				return result;

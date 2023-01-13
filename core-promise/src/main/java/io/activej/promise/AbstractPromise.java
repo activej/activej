@@ -43,7 +43,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 		Recyclers.register(AbstractPromise.class, promise -> promise.whenResult(Recyclers::recycle));
 	}
 
-	private static final boolean CHECK = Checks.isEnabled(AbstractPromise.class);
+	private static final boolean CHECKS = Checks.isEnabled(AbstractPromise.class);
 
 	private static final Object PROMISE_NOT_SET = new Object();
 	private static final boolean RESET_CALLBACKS = ApplicationSettings.getBoolean(AbstractPromise.class, "resetCallbacks", false);
@@ -97,7 +97,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 	}
 
 	protected void complete(@Nullable T value, @Nullable Exception e) {
-		if (CHECK) checkState(!isComplete(), "Promise has already been completed");
+		if (CHECKS) checkState(!isComplete(), "Promise has already been completed");
 		if (e == null) {
 			complete(value);
 		} else {
@@ -107,7 +107,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 
 	@Async.Execute
 	protected void complete(@Nullable T value) {
-		if (CHECK) checkState(!isComplete(), "Promise has already been completed");
+		if (CHECKS) checkState(!isComplete(), "Promise has already been completed");
 		result = value;
 		if (next != null) {
 			next.accept(value, null);
@@ -119,7 +119,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 
 	@Async.Execute
 	protected void completeExceptionally(@Nullable Exception e) {
-		if (CHECK) checkState(!isComplete(), "Promise has already been completed");
+		if (CHECKS) checkState(!isComplete(), "Promise has already been completed");
 		result = null;
 		exception = e;
 		if (next != null) {
@@ -166,7 +166,7 @@ abstract class AbstractPromise<T> implements Promise<T> {
 
 	@Async.Schedule
 	protected void subscribe(Callback<? super T> callback) {
-		if (CHECK) checkState(!isComplete(), "Promise has already been completed");
+		if (CHECKS) checkState(!isComplete(), "Promise has already been completed");
 		if (next == null) {
 			next = callback;
 		} else if (next instanceof CallbackList) {

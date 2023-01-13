@@ -36,7 +36,7 @@ import static io.activej.common.function.FunctionEx.identity;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
-	private static final boolean CHECK = Checks.isEnabled(BinaryChannelSupplier.class);
+	private static final boolean CHECKS = Checks.isEnabled(BinaryChannelSupplier.class);
 
 	protected final ByteBufs bufs;
 
@@ -126,7 +126,7 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 	}
 
 	public final <T> Promise<T> decode(ByteBufsDecoder<T> decoder) {
-		if (CHECK) checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return doDecode(decoder, this);
 	}
 
@@ -153,7 +153,7 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 	}
 
 	public final <T> Promise<T> decodeRemaining(ByteBufsDecoder<T> decoder) {
-		if (CHECK) checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return decode(decoder)
 				.then(result -> {
 					if (!bufs.isEmpty()) {

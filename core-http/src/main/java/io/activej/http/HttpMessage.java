@@ -41,7 +41,7 @@ import static io.activej.csp.ChannelConsumers.recycling;
  */
 @SuppressWarnings({"unused", "WeakerAccess", "PointlessBitwiseExpression"})
 public abstract class HttpMessage {
-	private static final boolean CHECK = Checks.isEnabled(HttpMessage.class);
+	private static final boolean CHECKS = Checks.isEnabled(HttpMessage.class);
 
 	/**
 	 * This flag means that the body of this message should not be streamed
@@ -82,32 +82,32 @@ public abstract class HttpMessage {
 	}
 
 	public void addHeader(HttpHeader header, String string) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		addHeader(header, HttpHeaderValue.of(string));
 	}
 
 	public void addHeader(HttpHeader header, byte[] value) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		addHeader(header, HttpHeaderValue.ofBytes(value, 0, value.length));
 	}
 
 	public void addHeader(HttpHeader header, byte[] array, int off, int len) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		addHeader(header, HttpHeaderValue.ofBytes(array, off, len));
 	}
 
 	public void addHeader(HttpHeader header, HttpHeaderValue value) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		headers.add(header, value);
 	}
 
 	public final Collection<Map.Entry<HttpHeader, HttpHeaderValue>> getHeaders() {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		return headers.getEntries();
 	}
 
 	public final <T> List<T> getHeader(HttpHeader header, HttpHeaderValue.DecoderIntoList<T> decoder) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		List<T> list = new ArrayList<>();
 		for (int i = header.hashCode() & (headers.kvPairs.length - 2); ; i = (i + 2) & (headers.kvPairs.length - 2)) {
 			HttpHeader k = (HttpHeader) headers.kvPairs[i];
@@ -125,7 +125,7 @@ public abstract class HttpMessage {
 	}
 
 	public <T> @Nullable T getHeader(HttpHeader header, HttpDecoderFunction<T> decoder) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		try {
 			ByteBuf buf = getHeaderBuf(header);
 			if (buf != null) {
@@ -138,19 +138,19 @@ public abstract class HttpMessage {
 	}
 
 	public final @Nullable String getHeader(HttpHeader header) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		HttpHeaderValue headerValue = headers.get(header);
 		return headerValue != null ? headerValue.toString() : null;
 	}
 
 	public final @Nullable ByteBuf getHeaderBuf(HttpHeader header) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		HttpHeaderValue headerBuf = headers.get(header);
 		return headerBuf != null ? headerBuf.getBuf() : null;
 	}
 
 	public void addCookies(HttpCookie... cookies) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		addCookies(List.of(cookies));
 	}
 
@@ -159,7 +159,7 @@ public abstract class HttpMessage {
 	public abstract void addCookie(HttpCookie cookie);
 
 	public void setBodyStream(ChannelSupplier<ByteBuf> bodySupplier) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		this.bodyStream = bodySupplier;
 	}
 
@@ -185,7 +185,7 @@ public abstract class HttpMessage {
 	 * to recycle the byte buffers received.
 	 */
 	public ChannelSupplier<ByteBuf> takeBodyStream() {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		ChannelSupplier<ByteBuf> bodyStream = this.bodyStream;
 		this.bodyStream = null;
 		if (bodyStream != null) return bodyStream;
@@ -198,12 +198,12 @@ public abstract class HttpMessage {
 	}
 
 	public void setBody(ByteBuf body) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		this.body = body;
 	}
 
 	public void setBody(byte[] body) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		setBody(ByteBuf.wrapForReading(body));
 	}
 
@@ -211,7 +211,7 @@ public abstract class HttpMessage {
 	 * Allows you to peak at the body when it is available without taking the ownership.
 	 */
 	public final ByteBuf getBody() {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		if ((flags & MUST_LOAD_BODY) != 0) throw new IllegalStateException("Body is not loaded");
 		if (body != null) return body;
 		throw new IllegalStateException("Body is missing or already consumed");
@@ -222,7 +222,7 @@ public abstract class HttpMessage {
 	 * It returns successfully only when this message is in {@link #MUST_LOAD_BODY non-streaming mode}
 	 */
 	public final ByteBuf takeBody() {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		ByteBuf body = getBody();
 		this.body = null;
 		return body;
@@ -237,12 +237,12 @@ public abstract class HttpMessage {
 	}
 
 	public void setMaxBodySize(MemSize maxBodySize) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		this.maxBodySize = maxBodySize.toInt();
 	}
 
 	public void setMaxBodySize(int maxBodySize) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		this.maxBodySize = maxBodySize;
 	}
 
@@ -250,7 +250,7 @@ public abstract class HttpMessage {
 	 * @see #loadBody(int)
 	 */
 	public Promise<ByteBuf> loadBody() {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		return loadBody(maxBodySize);
 	}
 
@@ -258,7 +258,7 @@ public abstract class HttpMessage {
 	 * @see #loadBody(int)
 	 */
 	public Promise<ByteBuf> loadBody(MemSize maxBodySize) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		return loadBody(maxBodySize.toInt());
 	}
 
@@ -269,7 +269,7 @@ public abstract class HttpMessage {
 	 * @param maxBodySize max number of bytes to load from the stream, an exception is returned if exceeded.
 	 */
 	public Promise<ByteBuf> loadBody(int maxBodySize) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		if (body != null) {
 			this.flags &= ~MUST_LOAD_BODY;
 			return Promise.of(body);
@@ -304,7 +304,7 @@ public abstract class HttpMessage {
 	 * add some kind of session data here.
 	 */
 	public <T> void attach(Type type, T extra) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		if (attachments == null) {
 			attachments = new HashMap<>();
 		}
@@ -315,7 +315,7 @@ public abstract class HttpMessage {
 	 * @see #attach(Type, Object)
 	 */
 	public <T> void attach(Class<T> type, T extra) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		if (attachments == null) {
 			attachments = new HashMap<>();
 		}
@@ -326,7 +326,7 @@ public abstract class HttpMessage {
 	 * @see #attach(Type, Object)
 	 */
 	public <T> void attach(TypeT<T> typeT, T extra) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		if (attachments == null) {
 			attachments = new HashMap<>();
 		}
@@ -337,7 +337,7 @@ public abstract class HttpMessage {
 	 * @see #attach(Type, Object)
 	 */
 	public void attach(Object extra) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		if (attachments == null) {
 			attachments = new HashMap<>();
 		}
@@ -349,7 +349,7 @@ public abstract class HttpMessage {
 	 * This is used for context management.
 	 */
 	public <T> void attach(String key, T extra) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		if (attachments == null) {
 			attachments = new HashMap<>();
 		}
@@ -415,7 +415,7 @@ public abstract class HttpMessage {
 	 * Sets this message to use the DEFLATE compression algorithm.
 	 */
 	public void setBodyGzipCompression() {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		this.flags |= USE_GZIP;
 	}
 
@@ -445,7 +445,7 @@ public abstract class HttpMessage {
 	}
 
 	protected void writeHeaders(ByteBuf buf) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		byte[] array = buf.array();
 		int offset = buf.tail();
 		for (int i = 0; i < headers.kvPairs.length - 1; i += 2) {
@@ -468,7 +468,7 @@ public abstract class HttpMessage {
 	}
 
 	protected int estimateSize(int firstLineSize) {
-		if (CHECK) checkState(!isRecycled());
+		if (CHECKS) checkState(!isRecycled());
 		int size = firstLineSize;
 		// CR,LF,header,": ",value
 		for (int i = 0; i < headers.kvPairs.length - 1; i += 2) {

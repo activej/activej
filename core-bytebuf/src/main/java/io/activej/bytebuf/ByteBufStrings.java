@@ -28,7 +28,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * This class contains various fast string utilities for {@link ByteBuf ByteBufs} and byte arrays
  */
 public final class ByteBufStrings {
-	private static final boolean CHECK = Checks.isEnabled(ByteBufStrings.class);
+	private static final boolean CHECKS = Checks.isEnabled(ByteBufStrings.class);
 
 	public static final byte CR = (byte) '\r';
 	public static final byte LF = (byte) '\n';
@@ -74,7 +74,7 @@ public final class ByteBufStrings {
 	}
 
 	public static String decodeAscii(byte[] array, int pos, int len, char[] tmpBuffer) {
-		if (CHECK) checkArgument(tmpBuffer.length >= len, "given char buffer is not big enough");
+		if (CHECKS) checkArgument(tmpBuffer.length >= len, "given char buffer is not big enough");
 		int charIndex = 0, end = pos + len;
 		while (pos < end) {
 			int c = array[pos++] & 0xff;
@@ -136,7 +136,7 @@ public final class ByteBufStrings {
 			return false;
 		for (int i = 0; i < size; i++) {
 			byte p = lowerCasePattern[i];
-			if (CHECK) checkArgument(p < 'A' || p > 'Z');
+			if (CHECKS) checkArgument(p < 'A' || p > 'Z');
 			byte a = array[offset + i];
 
 			if (a != p) {
@@ -152,7 +152,7 @@ public final class ByteBufStrings {
 			return false;
 		for (int i = 0; i < size; i++) {
 			byte p = upperCasePattern[i];
-			if (CHECK) checkArgument(p < 'a' || p > 'z');
+			if (CHECKS) checkArgument(p < 'a' || p > 'z');
 			byte a = array[offset + i];
 			if (a >= 'a' && a <= 'z')
 				a += 'A' - 'z';

@@ -42,7 +42,7 @@ import static java.nio.file.StandardOpenOption.*;
 
 public final class ChannelFileBuffer extends ImplicitlyReactive implements ChannelQueue<ByteBuf>, WithInitializer<ChannelFileBuffer> {
 	private static final Logger logger = LoggerFactory.getLogger(ChannelFileBuffer.class);
-	private static final boolean CHECK = Checks.isEnabled(ChannelFileBuffer.class);
+	private static final boolean CHECKS = Checks.isEnabled(ChannelFileBuffer.class);
 
 	private final ChannelFileReader reader;
 	private final ChannelFileWriter writer;
@@ -87,7 +87,7 @@ public final class ChannelFileBuffer extends ImplicitlyReactive implements Chann
 
 	@Override
 	public Promise<Void> put(@Nullable ByteBuf item) {
-		if (CHECK) checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		if (exception != null) {
 			return Promise.ofException(exception);
 		}
@@ -107,7 +107,7 @@ public final class ChannelFileBuffer extends ImplicitlyReactive implements Chann
 
 	@Override
 	public Promise<ByteBuf> take() {
-		if (CHECK) checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		if (exception != null) {
 			return Promise.ofException(exception);
 		}

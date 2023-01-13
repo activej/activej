@@ -48,7 +48,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 public final class RpcClientConnection extends AbstractReactive implements RpcStream.Listener, RpcSender, JmxRefreshable {
 	private static final Logger logger = getLogger(RpcClientConnection.class);
-	private static final boolean CHECK = Checks.isEnabled(RpcClientConnection.class);
+	private static final boolean CHECKS = Checks.isEnabled(RpcClientConnection.class);
 
 	private static final RpcException CONNECTION_UNRESPONSIVE = new RpcException("Unresponsive connection");
 	private static final RpcOverloadException RPC_OVERLOAD_EXCEPTION = new RpcOverloadException("RPC client is overloaded");
@@ -94,7 +94,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 
 	@Override
 	public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
-		if (CHECK) checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		// jmx
 		totalRequests.recordEvent();
 		connectionRequests.recordEvent();
@@ -162,7 +162,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 
 	@Override
 	public <I, O> void sendRequest(I request, Callback<O> cb) {
-		if (CHECK) checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		// jmx
 		totalRequests.recordEvent();
 		connectionRequests.recordEvent();
@@ -200,7 +200,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 
 	@Override
 	public void accept(RpcMessage message) {
-		if (CHECK) checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		if (message.getData().getClass() == RpcRemoteException.class) {
 			processErrorMessage(message);
 		} else if (message.getData().getClass() == RpcControlMessage.class) {

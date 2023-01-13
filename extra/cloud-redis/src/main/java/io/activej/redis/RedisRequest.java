@@ -32,7 +32,7 @@ import static io.activej.redis.RESPv2.BYTES_MARKER;
  * efficient way of writing request data to the buffer array.
  */
 public abstract class RedisRequest {
-	public static final boolean CHECK = Checks.isEnabled(RedisRequest.class);
+	public static final boolean CHECKS = Checks.isEnabled(RedisRequest.class);
 
 	/**
 	 * Serializes this request and writes to the provided array.
@@ -86,7 +86,7 @@ public abstract class RedisRequest {
 	 * @return RedisRequest of a Redis command with an arbitrary number of parameters
 	 */
 	public static RedisRequest of(Object... args) {
-		if (CHECK) checkArgument(args.length != 0, "No Redis command is present");
+		if (CHECKS) checkArgument(args.length != 0, "No Redis command is present");
 
 		return new RedisRequest() {
 			@Override
@@ -114,7 +114,7 @@ public abstract class RedisRequest {
 	 * @return RedisRequest of a Redis command with an arbitrary number of parameters
 	 */
 	public static RedisRequest of(List<Object> args) {
-		if (CHECK) checkArgument(!args.isEmpty(), "No Redis command is present");
+		if (CHECKS) checkArgument(!args.isEmpty(), "No Redis command is present");
 
 		return new RedisRequest() {
 			@Override
@@ -158,7 +158,7 @@ public abstract class RedisRequest {
 		array[offset++] = LF;
 		for (int j = 0; j < str.length(); j++) {
 			char c = str.charAt(j);
-			if (CHECK && (c < 0x20 || c >= 0x80)) throw new IllegalArgumentException();
+			if (CHECKS && (c < 0x20 || c >= 0x80)) throw new IllegalArgumentException();
 			array[offset++] = (byte) c;
 		}
 		return offset;

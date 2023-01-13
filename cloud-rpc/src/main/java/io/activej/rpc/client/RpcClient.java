@@ -89,7 +89,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  */
 public final class RpcClient extends AbstractNioReactive
 		implements AsyncRpcClient, ReactiveService, WithInitializer<RpcClient>, ReactiveJmxBeanWithStats {
-	private static final boolean CHECK = Checks.isEnabled(RpcClient.class);
+	private static final boolean CHECKS = Checks.isEnabled(RpcClient.class);
 
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
 	public static final Duration DEFAULT_CONNECT_TIMEOUT = ApplicationSettings.getDuration(RpcClient.class, "connectTimeout", Duration.ZERO);
@@ -474,7 +474,7 @@ public final class RpcClient extends AbstractNioReactive
 	 */
 	@Override
 	public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
-		if (CHECK) checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		if (timeout > 0) {
 			requestSender.sendRequest(request, timeout, cb);
 		} else {
@@ -484,7 +484,7 @@ public final class RpcClient extends AbstractNioReactive
 
 	@Override
 	public <I, O> void sendRequest(I request, Callback<O> cb) {
-		if (CHECK) checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		requestSender.sendRequest(request, cb);
 	}
 
@@ -496,7 +496,7 @@ public final class RpcClient extends AbstractNioReactive
 		return new AsyncRpcClient() {
 			@Override
 			public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
-				if (CHECK) checkInReactorThread(anotherReactor);
+				if (CHECKS) checkInReactorThread(anotherReactor);
 				if (timeout > 0) {
 					reactor.execute(() -> requestSender.sendRequest(request, timeout, toAnotherReactor(anotherReactor, cb)));
 				} else {

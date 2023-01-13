@@ -53,7 +53,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("WeakerAccess")
 public final class TcpSocket extends AbstractNioReactive implements AsyncTcpSocket, NioChannelEventHandler {
-	private static final boolean CHECK = Checks.isEnabled(TcpSocket.class);
+	private static final boolean CHECKS = Checks.isEnabled(TcpSocket.class);
 
 	private static final int DEBUG_READ_OFFSET = ApplicationSettings.getInt(TcpSocket.class, "debugReadOffset", 0);
 
@@ -434,7 +434,7 @@ public final class TcpSocket extends AbstractNioReactive implements AsyncTcpSock
 	@Override
 	public Promise<Void> write(@Nullable ByteBuf buf) {
 		checkInReactorThread(this);
-		if (CHECK) {
+		if (CHECKS) {
 			checkState(!writeEndOfStream, "End of stream has already been sent");
 		}
 		if (isClosed()) {

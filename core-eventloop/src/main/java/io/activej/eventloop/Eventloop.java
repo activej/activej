@@ -82,7 +82,7 @@ import static java.util.Collections.emptyIterator;
 @SuppressWarnings("unused")
 public final class Eventloop implements NioReactor, NioReactive, Runnable, WithInitializer<Eventloop>, ReactiveJmxBeanWithStats {
 	public static final Logger logger = LoggerFactory.getLogger(Eventloop.class);
-	private static final boolean CHECK = Checks.isEnabled(Eventloop.class);
+	private static final boolean CHECKS = Checks.isEnabled(Eventloop.class);
 
 	public static final Duration DEFAULT_SMOOTHING_WINDOW = Duration.ofMinutes(1);
 	public static final Duration DEFAULT_IDLE_INTERVAL = Duration.ofSeconds(1);
@@ -948,7 +948,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 */
 	@Override
 	public void post(@Async.Schedule Runnable runnable) {
-		if (CHECK) Reactor.checkInReactorThread(this);
+		if (CHECKS) Reactor.checkInReactorThread(this);
 		localTasks.addFirst(runnable);
 	}
 
@@ -959,7 +959,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 */
 	@Override
 	public void postLast(@Async.Schedule Runnable runnable) {
-		if (CHECK) Reactor.checkInReactorThread(this);
+		if (CHECKS) Reactor.checkInReactorThread(this);
 		localTasks.addLast(runnable);
 	}
 
@@ -970,7 +970,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 */
 	@Override
 	public void postNext(@Async.Schedule Runnable runnable) {
-		if (CHECK) Reactor.checkInReactorThread(this);
+		if (CHECKS) Reactor.checkInReactorThread(this);
 		nextTasks.add(runnable);
 	}
 
@@ -999,7 +999,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 */
 	@Override
 	public ScheduledRunnable schedule(long timestamp, @Async.Schedule Runnable runnable) {
-		if (CHECK) Reactor.checkInReactorThread(this);
+		if (CHECKS) Reactor.checkInReactorThread(this);
 		return addScheduledTask(timestamp, runnable, false);
 	}
 
@@ -1014,7 +1014,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 */
 	@Override
 	public ScheduledRunnable scheduleBackground(long timestamp, @Async.Schedule Runnable runnable) {
-		if (CHECK) Reactor.checkInReactorThread(this);
+		if (CHECKS) Reactor.checkInReactorThread(this);
 		return addScheduledTask(timestamp, runnable, true);
 	}
 

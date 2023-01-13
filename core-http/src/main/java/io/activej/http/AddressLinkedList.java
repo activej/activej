@@ -21,7 +21,7 @@ import io.activej.common.Checks;
 import static io.activej.common.Checks.checkArgument;
 
 final class AddressLinkedList {
-	private static final boolean CHECK = Checks.isEnabled(AddressLinkedList.class);
+	private static final boolean CHECKS = Checks.isEnabled(AddressLinkedList.class);
 
 	private HttpClientConnection first;
 	private HttpClientConnection last;
@@ -46,7 +46,7 @@ final class AddressLinkedList {
 	}
 
 	public void addLastNode(HttpClientConnection node) {
-		if (CHECK) checkArgument(node.addressPrev == null && node.addressNext == null);
+		if (CHECKS) checkArgument(node.addressPrev == null && node.addressNext == null);
 		if (last != null) {
 			assert last.addressNext == null;
 			last.addressNext = node;

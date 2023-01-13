@@ -36,7 +36,7 @@ import static java.lang.Math.max;
  * @param <T> the type of values that are stored in the buffer
  */
 public final class ChannelBuffer<T> extends ImplicitlyReactive implements ChannelQueue<T> {
-	private static final boolean CHECK = Checks.isEnabled(ChannelBuffer.class);
+	private static final boolean CHECKS = Checks.isEnabled(ChannelBuffer.class);
 
 	private Exception exception;
 
@@ -145,7 +145,7 @@ public final class ChannelBuffer<T> extends ImplicitlyReactive implements Channe
 	 * Adds provided item to the buffer and resets current {@code take}.
 	 */
 	public void add(@Nullable T item) throws Exception {
-		if (CHECK) checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		if (exception == null) {
 			if (take != null) {
 				assert isEmpty();
@@ -184,7 +184,7 @@ public final class ChannelBuffer<T> extends ImplicitlyReactive implements Channe
 	 *                   is not {@code null}
 	 */
 	public @Nullable T poll() throws Exception {
-		if (CHECK) checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		if (exception != null) throw exception;
 
 		if (put != null && willBeExhausted()) {
@@ -225,7 +225,7 @@ public final class ChannelBuffer<T> extends ImplicitlyReactive implements Channe
 	 */
 	@Override
 	public Promise<Void> put(@Nullable T item) {
-		if (CHECK) {
+		if (CHECKS) {
 			checkInReactorThread(this);
 			checkState(put == null, "Previous put() has not finished yet");
 		}
@@ -268,7 +268,7 @@ public final class ChannelBuffer<T> extends ImplicitlyReactive implements Channe
 	 */
 	@Override
 	public Promise<T> take() {
-		if (CHECK) {
+		if (CHECKS) {
 			checkInReactorThread(this);
 			checkState(take == null, "Previous take() has not finished yet");
 		}

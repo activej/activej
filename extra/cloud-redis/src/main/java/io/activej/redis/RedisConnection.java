@@ -42,7 +42,7 @@ import static java.lang.Math.max;
 
 public final class RedisConnection extends AbstractAsyncCloseable {
 	private static final Logger logger = LoggerFactory.getLogger(RedisConnection.class);
-	public static final boolean CHECK = Checks.isEnabled(RedisConnection.class);
+	public static final boolean CHECKS = Checks.isEnabled(RedisConnection.class);
 
 	static final int INITIAL_BUFFER_SIZE = ApplicationSettings.getInt(RedisConnection.class, "initialWriteBufferSize", 16384);
 
@@ -125,7 +125,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 	 * @see <a href="https://redis.io/commands/multi">MULTI</a>
 	 */
 	public Promise<Void> multi() {
-		if (CHECK) checkState(!inTransaction(), "Nested MULTI call");
+		if (CHECKS) checkState(!inTransaction(), "Nested MULTI call");
 		logger.trace("Transaction has been started");
 		Promise<Void> multiPromise = cmd(RedisRequest.of("MULTI"), RedisResponse.OK);
 		this.transactionQueue = new ArrayList<>();
@@ -141,7 +141,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 	 * @see <a href="https://redis.io/commands/discard">DISCARD</a>
 	 */
 	public Promise<Void> discard() {
-		if (CHECK) checkState(inTransaction(), "DISCARD without MULTI");
+		if (CHECKS) checkState(inTransaction(), "DISCARD without MULTI");
 		logger.trace("Transaction is being discarded");
 		List<?> transactionQueue = this.transactionQueue;
 		this.transactionQueue = null;
@@ -171,7 +171,7 @@ public final class RedisConnection extends AbstractAsyncCloseable {
 	 * @see <a href="https://redis.io/commands/exec">EXEC</a>
 	 */
 	public Promise<Object[]> exec() {
-		if (CHECK) checkState(inTransaction(), "EXEC without MULTI");
+		if (CHECKS) checkState(inTransaction(), "EXEC without MULTI");
 		logger.trace("Executing transaction");
 		List<?> transactionQueue = this.transactionQueue;
 		this.transactionQueue = null;

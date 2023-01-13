@@ -27,7 +27,7 @@ import static io.activej.common.Checks.checkArgument;
 import static java.lang.Math.max;
 
 public final class GCounterLong implements CrdtMergable<GCounterLong> {
-	private static final boolean CHECK = Checks.isEnabled(GCounterLong.class);
+	private static final boolean CHECKS = Checks.isEnabled(GCounterLong.class);
 
 	public static final BinarySerializer<GCounterLong> SERIALIZER = new Serializer();
 
@@ -55,7 +55,7 @@ public final class GCounterLong implements CrdtMergable<GCounterLong> {
 
 	@Override
 	public GCounterLong merge(GCounterLong other) {
-		if (CHECK) checkArgument(state.length == other.state.length);
+		if (CHECKS) checkArgument(state.length == other.state.length);
 		long[] newState = new long[state.length];
 		for (int i = 0; i < newState.length; i++) {
 			newState[i] = max(state[i], other.state[i]);

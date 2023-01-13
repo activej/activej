@@ -77,7 +77,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 public final class HttpClient extends AbstractNioReactive
 		implements AsyncHttpClient, AsyncWebSocketClient, ReactiveService, ReactiveJmxBeanWithStats, WithInitializer<HttpClient> {
 	private static final Logger logger = getLogger(HttpClient.class);
-	private static final boolean CHECK = Checks.isEnabled(HttpClient.class);
+	private static final boolean CHECKS = Checks.isEnabled(HttpClient.class);
 
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
 	public static final Duration CONNECT_TIMEOUT = ApplicationSettings.getDuration(HttpClient.class, "connectTimeout", Duration.ZERO);
@@ -426,7 +426,7 @@ public final class HttpClient extends AbstractNioReactive
 	@Override
 	public Promise<HttpResponse> request(HttpRequest request) {
 		checkInReactorThread(this);
-		if (CHECK) checkArgument(request.getProtocol(), protocol -> protocol == HTTP || protocol == HTTPS);
+		if (CHECKS) checkArgument(request.getProtocol(), protocol -> protocol == HTTP || protocol == HTTPS);
 
 		//noinspection unchecked
 		return (Promise<HttpResponse>) doRequest(request, false);

@@ -48,7 +48,7 @@ import static java.lang.Math.max;
 public final class ChannelSerializer<T> extends AbstractStreamConsumer<T>
 		implements WithStreamToChannel<ChannelSerializer<T>, T, ByteBuf>, WithInitializer<ChannelSerializer<T>> {
 	private static final Logger logger = LoggerFactory.getLogger(ChannelSerializer.class);
-	private static final boolean CHECK = Checks.isEnabled(ChannelSerializer.class);
+	private static final boolean CHECKS = Checks.isEnabled(ChannelSerializer.class);
 
 	/**
 	 * Maximum allowed data size (256 MB).
@@ -307,7 +307,7 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T>
 		}
 
 		private void reestimate(int positionBegin, int positionData, int dataSize) {
-			if (CHECK) checkArgument(dataSize < MAX_SIZE_INT, "Serialized data size exceeds 256MB");
+			if (CHECKS) checkArgument(dataSize < MAX_SIZE_INT, "Serialized data size exceeds 256MB");
 			estimatedDataSize = dataSize;
 			estimatedHeaderSize = varIntSize(estimatedDataSize);
 			requiredRemainingSize = estimatedHeaderSize + estimatedDataSize + (estimatedDataSize >>> 2);

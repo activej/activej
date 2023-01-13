@@ -32,7 +32,7 @@ import static io.activej.common.Checks.checkArgument;
  * This class contains various utils for the DEFLATE algorithm.
  */
 public final class GzipProcessorUtils {
-	private static final boolean CHECK = Checks.isEnabled(GzipProcessorUtils.class);
+	private static final boolean CHECKS = Checks.isEnabled(GzipProcessorUtils.class);
 
 	// rfc 1952 section 2.3.1
 	private static final byte[] GZIP_HEADER = {(byte) 0x1f, (byte) 0x8b, Deflater.DEFLATED, 0, 0, 0, 0, 0, 0, (byte) 0xff};
@@ -50,7 +50,7 @@ public final class GzipProcessorUtils {
 	private static final double DEFLATE_MAX_BYTES_OVERHEAD_PER_16K_BLOCK = 5;
 
 	public static ByteBuf fromGzip(ByteBuf src, int maxMessageSize) throws MalformedHttpException {
-		if (CHECK) checkArgument(src.readRemaining() > 0);
+		if (CHECKS) checkArgument(src.readRemaining() > 0);
 
 		int expectedSize = readExpectedInputSize(src);
 		check(expectedSize >= 0, src, () -> new MalformedHttpException("Incorrect uncompressed input size"));
@@ -75,7 +75,7 @@ public final class GzipProcessorUtils {
 	}
 
 	public static ByteBuf toGzip(ByteBuf src) {
-		if (CHECK) checkArgument(src.readRemaining() >= 0);
+		if (CHECKS) checkArgument(src.readRemaining() >= 0);
 
 		Deflater compressor = ensureCompressor();
 		compressor.setInput(src.array(), src.head(), src.readRemaining());

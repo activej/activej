@@ -32,7 +32,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
  * which helps to deal with state transitions and helps to implement basic behaviours.
  */
 public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive implements StreamSupplier<T> {
-	private static final boolean CHECK = Checks.isEnabled(AbstractStreamSupplier.class);
+	private static final boolean CHECKS = Checks.isEnabled(AbstractStreamSupplier.class);
 
 	public static final StreamDataAcceptor<?> NO_ACCEPTOR = item -> {};
 
@@ -148,7 +148,7 @@ public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive imple
 	 * and must never be called when supplier reaches {@link #sendEndOfStream() end of stream}.
 	 */
 	public final void send(T item) {
-		if (CHECK) checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		dataAcceptorBuffered.accept(item);
 	}
 

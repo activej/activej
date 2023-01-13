@@ -30,7 +30,7 @@ import static java.lang.Integer.numberOfLeadingZeros;
  * A stream transformer that changes each item according to given function.
  */
 public final class StreamBuffer<T> extends ImplicitlyReactive implements StreamTransformer<T, T>, WithInitializer<StreamBuffer<T>> {
-	private static final boolean CHECK = Checks.isEnabled(StreamBuffer.class);
+	private static final boolean CHECKS = Checks.isEnabled(StreamBuffer.class);
 	private static final boolean NULLIFY_ON_TAKE_OUT = ApplicationSettings.getBoolean(StreamBuffer.class, "nullifyOnTakeOut", true);
 
 	private final Input input;
@@ -134,7 +134,7 @@ public final class StreamBuffer<T> extends ImplicitlyReactive implements StreamT
 				}
 				acceptor.accept(item);
 			}
-			if (CHECK) checkState(tail == StreamBuffer.this.tail, "New items have been added to buffer while flushing");
+			if (CHECKS) checkState(tail == StreamBuffer.this.tail, "New items have been added to buffer while flushing");
 			StreamBuffer.this.head = head;
 			if (isEmpty() && input.isEndOfStream()) {
 				sendEndOfStream();

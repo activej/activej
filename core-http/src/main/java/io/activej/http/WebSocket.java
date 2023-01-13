@@ -49,7 +49,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 final class WebSocket extends AbstractAsyncCloseable implements AsyncWebSocket {
-	private static final boolean CHECK = Checks.isEnabled(WebSocket.class);
+	private static final boolean CHECKS = Checks.isEnabled(WebSocket.class);
 
 	private final HttpRequest request;
 	private final HttpResponse response;
@@ -181,7 +181,7 @@ final class WebSocket extends AbstractAsyncCloseable implements AsyncWebSocket {
 
 	// region sanitizers
 	private <T> Promise<T> doRead(AsyncSupplier<T> supplier) {
-		if (CHECK) {
+		if (CHECKS) {
 			checkState(readPromise == null, "Concurrent reads");
 		}
 
@@ -199,7 +199,7 @@ final class WebSocket extends AbstractAsyncCloseable implements AsyncWebSocket {
 
 	private Promise<Void> doWrite(AsyncRunnable runnable, @Nullable Recyclable recyclable) {
 		checkInReactorThread(this);
-		if (CHECK) {
+		if (CHECKS) {
 			checkState(writePromise == null, "Concurrent writes");
 		}
 

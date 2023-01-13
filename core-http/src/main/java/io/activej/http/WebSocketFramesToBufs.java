@@ -45,7 +45,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 
 final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 		implements WithChannelTransformer<WebSocketFramesToBufs, Frame, ByteBuf> {
-	private static final boolean CHECK = Checks.isEnabled(WebSocketFramesToBufs.class);
+	private static final boolean CHECKS = Checks.isEnabled(WebSocketFramesToBufs.class);
 
 	private static final ThreadLocalRandom RANDOM = ThreadLocalRandom.current();
 
@@ -102,7 +102,7 @@ final class WebSocketFramesToBufs extends AbstractCommunicatingProcess
 	protected void doProcess() {
 		input.streamTo(ChannelConsumer.of(
 						frame -> {
-							if (CHECK) checkFrameOrder(frame);
+							if (CHECKS) checkFrameOrder(frame);
 
 							return doAccept(encodeData(frame));
 						}))

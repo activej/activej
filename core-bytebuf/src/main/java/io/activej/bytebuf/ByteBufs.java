@@ -46,7 +46,7 @@ import static java.lang.System.arraycopy;
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
 public final class ByteBufs implements Recyclable {
-	private static final boolean CHECK = Checks.isEnabled(ByteBufs.class);
+	private static final boolean CHECKS = Checks.isEnabled(ByteBufs.class);
 
 	private static final int DEFAULT_CAPACITY = 8;
 	/**
@@ -159,7 +159,7 @@ public final class ByteBufs implements Recyclable {
 	 * @return the first ByteBuf of this {@code ByteBufs}
 	 */
 	public ByteBuf take() {
-		if (CHECK) checkState(hasRemaining(), "No bufs to take");
+		if (CHECKS) checkState(hasRemaining(), "No bufs to take");
 		ByteBuf buf = bufs[first];
 		if (NULLIFY_ON_TAKE_OUT) bufs[first] = null;
 		first = next(first);
@@ -224,7 +224,7 @@ public final class ByteBufs implements Recyclable {
 	}
 
 	public ByteBuf takeAtLeast(int size, Consumer<ByteBuf> recycledBufs) {
-		if (CHECK) checkArgument(hasRemainingBytes(size), () -> "There are less than " + size + " bufs");
+		if (CHECKS) checkArgument(hasRemainingBytes(size), () -> "There are less than " + size + " bufs");
 		if (size == 0) return ByteBuf.empty();
 		ByteBuf buf = bufs[first];
 		if (buf.readRemaining() >= size) {
@@ -255,7 +255,7 @@ public final class ByteBufs implements Recyclable {
 	}
 
 	public ByteBuf takeExactSize(int exactSize, Consumer<ByteBuf> recycledBufs) {
-		if (CHECK) checkArgument(hasRemainingBytes(exactSize), () -> "There are less than " + exactSize + " bufs");
+		if (CHECKS) checkArgument(hasRemainingBytes(exactSize), () -> "There are less than " + exactSize + " bufs");
 		if (exactSize == 0) return ByteBuf.empty();
 		ByteBuf buf = bufs[first];
 		if (buf.readRemaining() == exactSize) {
@@ -289,7 +289,7 @@ public final class ByteBufs implements Recyclable {
 	 * @param consumer a consumer for the ByteBuf
 	 */
 	public void consume(int size, Consumer<ByteBuf> consumer) {
-		if (CHECK) checkArgument(hasRemainingBytes(size), () -> "There are less than " + size + " bufs");
+		if (CHECKS) checkArgument(hasRemainingBytes(size), () -> "There are less than " + size + " bufs");
 		ByteBuf buf = bufs[first];
 		if (buf.readRemaining() >= size) {
 			int newPos = buf.head() + size;
@@ -340,7 +340,7 @@ public final class ByteBufs implements Recyclable {
 	 */
 	@Contract(pure = true)
 	public ByteBuf peekBuf(int n) {
-		if (CHECK) checkArgument(n <= remainingBufs(), "Index exceeds bufs size");
+		if (CHECKS) checkArgument(n <= remainingBufs(), "Index exceeds bufs size");
 		return bufs[(first + n) % bufs.length];
 	}
 
@@ -434,7 +434,7 @@ public final class ByteBufs implements Recyclable {
 	 */
 	@Contract(pure = true)
 	public boolean hasRemainingBytes(int remaining) {
-		if (CHECK) checkArgument(remaining >= 0, "Cannot check for negative bytes");
+		if (CHECKS) checkArgument(remaining >= 0, "Cannot check for negative bytes");
 		if (remaining == 0) return true;
 		for (int i = first; i != last; i = next(i)) {
 			int bufRemaining = bufs[i].readRemaining();
@@ -451,9 +451,9 @@ public final class ByteBufs implements Recyclable {
 	 * readable bytes left after the operation, this ByteBuf will be recycled.
 	 */
 	public byte getByte() {
-		if (CHECK) checkState(hasRemaining(), "No bytes to get");
+		if (CHECKS) checkState(hasRemaining(), "No bytes to get");
 		ByteBuf buf = bufs[first];
-		if (CHECK) checkState(buf.canRead(), "Empty buf is found in bufs");
+		if (CHECKS) checkState(buf.canRead(), "Empty buf is found in bufs");
 		byte result = buf.get();
 		if (!buf.canRead()) {
 			bufs[first].recycle();
@@ -470,7 +470,7 @@ public final class ByteBufs implements Recyclable {
 	 */
 	@Contract(pure = true)
 	public byte peekByte() {
-		if (CHECK) checkState(hasRemaining(), "No bytes to peek");
+		if (CHECKS) checkState(hasRemaining(), "No bytes to peek");
 		ByteBuf buf = bufs[first];
 		return buf.peek();
 	}
@@ -483,7 +483,7 @@ public final class ByteBufs implements Recyclable {
 	 */
 	@Contract(pure = true)
 	public byte peekByte(int index) {
-		if (CHECK) checkState(hasRemainingBytes(index + 1), "Index exceeds the number of bytes in bufs");
+		if (CHECKS) checkState(hasRemainingBytes(index + 1), "Index exceeds the number of bytes in bufs");
 		for (int i = first; ; i = next(i)) {
 			ByteBuf buf = bufs[i];
 			if (index < buf.readRemaining())
@@ -493,7 +493,7 @@ public final class ByteBufs implements Recyclable {
 	}
 
 	public void setByte(int index, byte b) {
-		if (CHECK) checkArgument(hasRemainingBytes(index + 1), "Index exceeds bufs bytes length");
+		if (CHECKS) checkArgument(hasRemainingBytes(index + 1), "Index exceeds bufs bytes length");
 		for (int i = first; ; i = next(i)) {
 			ByteBuf buf = bufs[i];
 			if (index < buf.readRemaining()) {

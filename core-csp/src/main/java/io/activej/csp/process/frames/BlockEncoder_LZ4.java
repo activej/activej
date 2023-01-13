@@ -25,7 +25,7 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.csp.process.frames.FrameFormat_LZ4.*;
 
 final class BlockEncoder_LZ4 implements BlockEncoder {
-	private static final boolean CHECK = Checks.isEnabled(BlockEncoder_LZ4.class);
+	private static final boolean CHECKS = Checks.isEnabled(BlockEncoder_LZ4.class);
 
 	private final LZ4Compressor compressor;
 	private boolean writeHeader = true;
@@ -48,7 +48,7 @@ final class BlockEncoder_LZ4 implements BlockEncoder {
 		int len = inputBuf.readRemaining();
 		byte[] array = inputBuf.array();
 
-		if (CHECK) checkArgument(len != 0, "Encoding empty buf");
+		if (CHECKS) checkArgument(len != 0, "Encoding empty buf");
 
 		ByteBuf outputBuf = ByteBufPool.allocate(headerSize + 2 * 4 + compressor.maxCompressedLength(len) + 1);
 

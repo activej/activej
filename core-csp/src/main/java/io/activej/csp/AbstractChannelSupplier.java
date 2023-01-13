@@ -25,7 +25,7 @@ import org.jetbrains.annotations.Nullable;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public abstract class AbstractChannelSupplier<T> extends AbstractAsyncCloseable implements ChannelSupplier<T> {
-	private static final boolean CHECK = Checks.isEnabled(AbstractChannelSupplier.class);
+	private static final boolean CHECKS = Checks.isEnabled(AbstractChannelSupplier.class);
 
 	// region creators
 	protected AbstractChannelSupplier() {
@@ -41,7 +41,7 @@ public abstract class AbstractChannelSupplier<T> extends AbstractAsyncCloseable 
 
 	@Override
 	public final Promise<T> get() {
-		if (CHECK) checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		return isClosed() ? Promise.ofException(getException()) : doGet();
 	}
 }

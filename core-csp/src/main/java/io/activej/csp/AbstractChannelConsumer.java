@@ -26,7 +26,7 @@ import org.jetbrains.annotations.Nullable;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public abstract class AbstractChannelConsumer<T> extends AbstractAsyncCloseable implements ChannelConsumer<T> {
-	private static final boolean CHECK = Checks.isEnabled(AbstractChannelConsumer.class);
+	private static final boolean CHECKS = Checks.isEnabled(AbstractChannelConsumer.class);
 
 	// region creators
 	protected AbstractChannelConsumer() {
@@ -42,7 +42,7 @@ public abstract class AbstractChannelConsumer<T> extends AbstractAsyncCloseable 
 
 	@Override
 	public final Promise<Void> accept(@Nullable T value) {
-		if (CHECK) checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		if (isClosed()) {
 			Recyclers.recycle(value);
 			return Promise.ofException(getException());

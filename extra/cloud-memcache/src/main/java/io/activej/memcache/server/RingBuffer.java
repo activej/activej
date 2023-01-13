@@ -38,7 +38,7 @@ import static java.lang.System.currentTimeMillis;
  * because it can be rewritten by the new data when it overfills
  */
 public final class RingBuffer implements RingBufferMBean, WithInitializer<RingBuffer> {
-	private static final boolean CHECK = Checks.isEnabled(RingBuffer.class);
+	private static final boolean CHECKS = Checks.isEnabled(RingBuffer.class);
 
 	/**
 	 * The main class for the caching the byte-arrays
@@ -201,7 +201,7 @@ public final class RingBuffer implements RingBufferMBean, WithInitializer<RingBu
 	 * there are extra params to handle the {@code data}
 	 */
 	public void put(byte[] key, byte[] data, int offset, int length) {
-		if (CHECK) checkArgument(data.length <= ringBuffers[currentBuffer].array.length,
+		if (CHECKS) checkArgument(data.length <= ringBuffers[currentBuffer].array.length,
 				"Size of data is larger than the size of buffer");
 		statsPuts.recordEvent();
 		if (ringBuffers[currentBuffer].remaining() < length) {

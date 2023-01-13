@@ -13,7 +13,7 @@ import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.lang.Integer.numberOfLeadingZeros;
 
 public abstract class BlockingPutQueue<T> extends ImplicitlyReactive {
-	private static final boolean CHECK = Checks.isEnabled(BlockingPutQueue.class);
+	private static final boolean CHECKS = Checks.isEnabled(BlockingPutQueue.class);
 
 	private final AtomicReferenceArray<T> queue;
 	private final int mask;
@@ -79,7 +79,7 @@ public abstract class BlockingPutQueue<T> extends ImplicitlyReactive {
 	}
 
 	public T take() {
-		if (CHECK) {
+		if (CHECKS) {
 			checkInReactorThread(this);
 			checkState(!isEmpty());
 			checkState(!isClosed());

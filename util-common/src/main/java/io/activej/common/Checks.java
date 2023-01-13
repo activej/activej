@@ -29,11 +29,11 @@ import java.util.function.Supplier;
  * <p>
  * The common pattern is having a
  * <pre>
- * {@code private static final boolean CHECK = Check.isEnabled(MyClass.class);}
+ * {@code private static final boolean CHECKS = Check.isEnabled(MyClass.class);}
  * </pre>
  * constant in your class. When using {@link Checks} just wrap the call in if-statement like so:
  * <pre>
- * {@code if (CHECK) Preconditions.checkNotNull(value);}
+ * {@code if (CHECKS) Preconditions.checkNotNull(value);}
  * </pre>
  * <p>
  * By default, all checks are <b>disabled</b> (like java asserts).

@@ -29,7 +29,7 @@ import java.util.function.Supplier;
 import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class ChannelBufferWithFallback<T> extends ImplicitlyReactive implements ChannelQueue<T> {
-	private static final boolean CHECK = Checks.isEnabled(ChannelBufferWithFallback.class);
+	private static final boolean CHECKS = Checks.isEnabled(ChannelBufferWithFallback.class);
 
 	private final ChannelQueue<T> queue;
 	private final Supplier<Promise<? extends ChannelQueue<T>>> bufferFactory;
@@ -48,7 +48,7 @@ public final class ChannelBufferWithFallback<T> extends ImplicitlyReactive imple
 
 	@Override
 	public Promise<Void> put(@Nullable T item) {
-		if (CHECK) checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		if (exception != null) {
 			Recyclers.recycle(item);
 			return Promise.ofException(exception);
@@ -58,7 +58,7 @@ public final class ChannelBufferWithFallback<T> extends ImplicitlyReactive imple
 
 	@Override
 	public Promise<T> take() {
-		if (CHECK) checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		if (exception != null) {
 			return Promise.ofException(exception);
 		}
@@ -93,7 +93,7 @@ public final class ChannelBufferWithFallback<T> extends ImplicitlyReactive imple
 	}
 
 	private Promise<T> doTake() {
-		if (CHECK) checkInReactorThread(this);
+		if (CHECKS) checkInReactorThread(this);
 		if (buffer != null) {
 			return secondaryTake();
 		}

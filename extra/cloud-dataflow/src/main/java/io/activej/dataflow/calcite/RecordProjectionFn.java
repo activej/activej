@@ -21,7 +21,7 @@ import static io.activej.codegen.expression.Expressions.value;
 import static io.activej.common.Checks.checkArgument;
 
 public final class RecordProjectionFn implements UnaryOperator<Record> {
-	private static final boolean CHECK = Checks.isEnabled(RecordProjectionFn.class);
+	private static final boolean CHECKS = Checks.isEnabled(RecordProjectionFn.class);
 
 	private final List<FieldProjection> fieldProjections;
 
@@ -57,7 +57,7 @@ public final class RecordProjectionFn implements UnaryOperator<Record> {
 			projection = RecordProjection.projection(original, schemeTo, mapping);
 		}
 
-		if (CHECK) {
+		if (CHECKS) {
 			checkArgument(record.getScheme().equals(projection.getSchemeFrom()));
 		}
 
