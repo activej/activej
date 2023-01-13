@@ -37,6 +37,7 @@ import java.util.TreeMap;
 
 import static io.activej.async.util.LogUtils.Level.INFO;
 import static io.activej.async.util.LogUtils.toLogger;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public class WriteAheadLog_InMemory<K extends Comparable<K>, S> extends AbstractReactive
 		implements AsyncWriteAheadLog<K, S>, ReactiveService, WithInitializer<WriteAheadLog_InMemory<K, S>> {
@@ -72,7 +73,7 @@ public class WriteAheadLog_InMemory<K extends Comparable<K>, S> extends Abstract
 
 	@Override
 	public Promise<Void> put(K key, S value) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (logger.isTraceEnabled()) {
 			logger.trace("{} value for key {}", map.containsKey(key) ? "Merging" : "Putting new", key);
 		}
@@ -82,7 +83,7 @@ public class WriteAheadLog_InMemory<K extends Comparable<K>, S> extends Abstract
 
 	@Override
 	public Promise<Void> flush() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return flush.run();
 	}
 
@@ -104,13 +105,13 @@ public class WriteAheadLog_InMemory<K extends Comparable<K>, S> extends Abstract
 
 	@Override
 	public Promise<?> start() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.complete();
 	}
 
 	@Override
 	public Promise<?> stop() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return flush();
 	}
 

@@ -826,7 +826,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 */
 	@Override
 	public ServerSocketChannel listen(@Nullable InetSocketAddress address, ServerSocketSettings serverSocketSettings, Consumer<SocketChannel> acceptCallback) throws IOException {
-		checkInReactorThread();
+		Reactor.checkInReactorThread(this);
 		ServerSocketChannel serverSocketChannel = null;
 		try {
 			serverSocketChannel = ServerSocketChannel.open();
@@ -882,7 +882,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 */
 	@Override
 	public void connect(SocketAddress address, long timeout, Callback<SocketChannel> cb) {
-		checkInReactorThread();
+		Reactor.checkInReactorThread(this);
 		SocketChannel channel;
 		try {
 			channel = SocketChannel.open();
@@ -935,7 +935,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 * @return a current tick of an {@link Eventloop}.
 	 */
 	public long tick() {
-		checkInReactorThread();
+		Reactor.checkInReactorThread(this);
 		return (long) loop << 32 | tick;
 	}
 
@@ -948,9 +948,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 */
 	@Override
 	public void post(@Async.Schedule Runnable runnable) {
-		if (CHECK) {
-			checkInReactorThread();
-		}
+		if (CHECK) Reactor.checkInReactorThread(this);
 		localTasks.addFirst(runnable);
 	}
 
@@ -961,9 +959,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 */
 	@Override
 	public void postLast(@Async.Schedule Runnable runnable) {
-		if (CHECK) {
-			checkInReactorThread();
-		}
+		if (CHECK) Reactor.checkInReactorThread(this);
 		localTasks.addLast(runnable);
 	}
 
@@ -974,9 +970,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 */
 	@Override
 	public void postNext(@Async.Schedule Runnable runnable) {
-		if (CHECK) {
-			checkInReactorThread();
-		}
+		if (CHECK) Reactor.checkInReactorThread(this);
 		nextTasks.add(runnable);
 	}
 
@@ -1005,9 +999,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 */
 	@Override
 	public ScheduledRunnable schedule(long timestamp, @Async.Schedule Runnable runnable) {
-		if (CHECK) {
-			checkInReactorThread();
-		}
+		if (CHECK) Reactor.checkInReactorThread(this);
 		return addScheduledTask(timestamp, runnable, false);
 	}
 
@@ -1022,9 +1014,7 @@ public final class Eventloop implements NioReactor, NioReactive, Runnable, WithI
 	 */
 	@Override
 	public ScheduledRunnable scheduleBackground(long timestamp, @Async.Schedule Runnable runnable) {
-		if (CHECK) {
-			checkInReactorThread();
-		}
+		if (CHECK) Reactor.checkInReactorThread(this);
 		return addScheduledTask(timestamp, runnable, true);
 	}
 

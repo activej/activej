@@ -38,6 +38,7 @@ import java.util.UUID;
 import java.util.concurrent.Executor;
 
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.util.Collections.nCopies;
@@ -136,7 +137,7 @@ public final class ChunkLocker_MySql<C> extends AbstractReactive
 
 	@Override
 	public Promise<Void> lockChunks(Set<C> chunkIds) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkArgument(!chunkIds.isEmpty(), "Nothing to lock");
 
 		return Promise.ofBlocking(executor,
@@ -174,7 +175,7 @@ public final class ChunkLocker_MySql<C> extends AbstractReactive
 
 	@Override
 	public Promise<Void> releaseChunks(Set<C> chunkIds) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkArgument(!chunkIds.isEmpty(), "Nothing to release");
 
 		return Promise.ofBlocking(executor,
@@ -209,7 +210,7 @@ public final class ChunkLocker_MySql<C> extends AbstractReactive
 
 	@Override
 	public Promise<Set<C>> getLockedChunks() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.ofBlocking(executor,
 				() -> {
 					try (Connection connection = dataSource.getConnection()) {

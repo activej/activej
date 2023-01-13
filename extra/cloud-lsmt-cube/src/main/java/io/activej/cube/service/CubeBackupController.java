@@ -47,6 +47,7 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Utils.first;
 import static io.activej.cube.Utils.chunksInDiffs;
 import static io.activej.ot.OTAlgorithms.checkout;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class CubeBackupController<K, D, C> extends AbstractReactive
 		implements ReactiveJmxBeanWithStats, WithInitializer<CubeBackupController<K, D, C>> {
@@ -85,12 +86,12 @@ public final class CubeBackupController<K, D, C> extends AbstractReactive
 
 	@SuppressWarnings("UnusedReturnValue")
 	public Promise<Void> backup() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return backup.run();
 	}
 
 	public Promise<Void> backupHead() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return repository.getHeads()
 				.mapException(e -> new CubeException("Failed to get heads", e))
 				.whenResult(Set::isEmpty, $ -> {
@@ -102,7 +103,7 @@ public final class CubeBackupController<K, D, C> extends AbstractReactive
 	}
 
 	public Promise<Void> backup(K commitId) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promises.toTuple(repository.loadCommit(commitId), checkout(repository, otSystem, commitId))
 				.mapException(e -> new CubeException("Failed to check out commit '" + commitId + '\'', e))
 				.then(tuple -> Promises.sequence(

@@ -22,6 +22,7 @@ import io.activej.reactor.ImplicitlyReactive;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Checks.checkState;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 /**
  * This is a helper partial implementation of the {@link StreamConsumer}
@@ -44,7 +45,7 @@ public abstract class AbstractStreamConsumer<T> extends ImplicitlyReactive imple
 
 	@Override
 	public final void consume(StreamSupplier<T> streamSupplier) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkState(!isStarted());
 		ensureInitialized();
 		if (acknowledgement.isComplete()) return;
@@ -85,7 +86,7 @@ public abstract class AbstractStreamConsumer<T> extends ImplicitlyReactive imple
 	}
 
 	private void endOfStream() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (endOfStream) return;
 		endOfStream = true;
 		onEndOfStream();
@@ -101,7 +102,7 @@ public abstract class AbstractStreamConsumer<T> extends ImplicitlyReactive imple
 	 * Begins receiving data into given acceptor, resumes the associated supplier to receive data from it.
 	 */
 	public final void resume(@Nullable StreamDataAcceptor<T> dataAcceptor) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (endOfStream) return;
 		if (this.dataAcceptor == dataAcceptor) return;
 		this.dataAcceptor = dataAcceptor;
@@ -120,7 +121,7 @@ public abstract class AbstractStreamConsumer<T> extends ImplicitlyReactive imple
 	 * Triggers the {@link #getAcknowledgement() acknowledgement} of this consumer.
 	 */
 	public final void acknowledge() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		ensureInitialized();
 		endOfStream = true;
 		if (acknowledgement.trySet(null)) {
@@ -139,7 +140,7 @@ public abstract class AbstractStreamConsumer<T> extends ImplicitlyReactive imple
 
 	@Override
 	public final void closeEx(Exception e) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		ensureInitialized();
 		endOfStream = true;
 		if (acknowledgement.trySetException(e)) {

@@ -30,6 +30,7 @@ import io.activej.datastream.StreamSupplier;
 import io.activej.serializer.BinarySerializer;
 import io.activej.serializer.CorruptedDataException;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.lang.String.format;
 
 /**
@@ -68,7 +69,7 @@ public final class ChannelDeserializer<T> extends AbstractStreamSupplier<T>
 	@Override
 	public ChannelInput<ByteBuf> getInput() {
 		return input -> {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			this.input = input;
 			return getAcknowledgement();
 		};

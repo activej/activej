@@ -25,6 +25,8 @@ import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 
 import java.time.Duration;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
+
 public abstract class Servlet_WithStats extends AbstractReactive
 		implements AsyncServlet, ReactiveJmxBeanWithStats {
 	private final PromiseStats stats = PromiseStats.create(Duration.ofMinutes(5));
@@ -37,7 +39,7 @@ public abstract class Servlet_WithStats extends AbstractReactive
 
 	@Override
 	public final Promise<HttpResponse> serve(HttpRequest request) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return doServe(request)
 				.whenComplete(stats.recordStats());
 	}

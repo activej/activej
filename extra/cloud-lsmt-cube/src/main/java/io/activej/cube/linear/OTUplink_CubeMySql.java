@@ -56,6 +56,7 @@ import static io.activej.common.Utils.*;
 import static io.activej.cube.Utils.fromJson;
 import static io.activej.cube.Utils.toJson;
 import static io.activej.cube.linear.Utils.*;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.util.Collections.nCopies;
@@ -125,7 +126,7 @@ public final class OTUplink_CubeMySql extends AbstractReactive
 
 	@Override
 	public Promise<FetchData<Long, LogDiff<CubeDiff>>> checkout() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.ofBlocking(executor,
 						() -> {
 							try (Connection connection = dataSource.getConnection()) {
@@ -160,7 +161,7 @@ public final class OTUplink_CubeMySql extends AbstractReactive
 
 	@Override
 	public Promise<FetchData<Long, LogDiff<CubeDiff>>> fetch(Long currentCommitId) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.ofBlocking(executor,
 						() -> {
 							try (Connection connection = dataSource.getConnection()) {
@@ -185,7 +186,7 @@ public final class OTUplink_CubeMySql extends AbstractReactive
 
 	@Override
 	public Promise<UplinkProtoCommit> createProtoCommit(Long parent, List<LogDiff<CubeDiff>> diffs, long parentLevel) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkArgument(parent == parentLevel, "Level mismatch");
 
 		return Promise.of(new UplinkProtoCommit(parent, diffs));
@@ -193,7 +194,7 @@ public final class OTUplink_CubeMySql extends AbstractReactive
 
 	@Override
 	public Promise<FetchData<Long, LogDiff<CubeDiff>>> push(UplinkProtoCommit protoCommit) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.ofBlocking(executor,
 						() -> {
 							try (Connection connection = dataSource.getConnection()) {

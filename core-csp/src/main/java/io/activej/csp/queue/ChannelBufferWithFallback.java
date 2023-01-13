@@ -26,6 +26,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
+
 public final class ChannelBufferWithFallback<T> extends ImplicitlyReactive implements ChannelQueue<T> {
 	private static final boolean CHECK = Checks.isEnabled(ChannelBufferWithFallback.class);
 
@@ -46,9 +48,7 @@ public final class ChannelBufferWithFallback<T> extends ImplicitlyReactive imple
 
 	@Override
 	public Promise<Void> put(@Nullable T item) {
-		if (CHECK) {
-			checkInReactorThread();
-		}
+		if (CHECK) checkInReactorThread(this);
 		if (exception != null) {
 			Recyclers.recycle(item);
 			return Promise.ofException(exception);
@@ -58,9 +58,7 @@ public final class ChannelBufferWithFallback<T> extends ImplicitlyReactive imple
 
 	@Override
 	public Promise<T> take() {
-		if (CHECK) {
-			checkInReactorThread();
-		}
+		if (CHECK) checkInReactorThread(this);
 		if (exception != null) {
 			return Promise.ofException(exception);
 		}
@@ -95,9 +93,7 @@ public final class ChannelBufferWithFallback<T> extends ImplicitlyReactive imple
 	}
 
 	private Promise<T> doTake() {
-		if (CHECK) {
-			checkInReactorThread();
-		}
+		if (CHECK) checkInReactorThread(this);
 		if (buffer != null) {
 			return secondaryTake();
 		}
@@ -161,7 +157,7 @@ public final class ChannelBufferWithFallback<T> extends ImplicitlyReactive imple
 
 	@Override
 	public void closeEx(Exception e) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (exception != null) return;
 		exception = e;
 		queue.closeEx(e);

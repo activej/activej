@@ -22,6 +22,8 @@ import io.activej.promise.Promise;
 import io.activej.reactor.ImplicitlyReactive;
 import io.activej.reactor.Reactor;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
+
 /**
  * A stub client which forwards requests straight to the underlying servlet without any real I/O operations.
  * Used for testing.
@@ -40,7 +42,7 @@ public final class HttpClient_Stub extends ImplicitlyReactive
 
 	@Override
 	public Promise<HttpResponse> request(HttpRequest request) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		Promise<HttpResponse> servletResult;
 		try {
 			servletResult = servlet.serveAsync(request);

@@ -27,6 +27,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.Executor;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
+
 class StaticLoader_FileReader extends AbstractReactive
 		implements AsyncStaticLoader {
 	private final Executor executor;
@@ -44,7 +46,7 @@ class StaticLoader_FileReader extends AbstractReactive
 
 	@Override
 	public Promise<ByteBuf> load(String path) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		Path file = root.resolve(path).normalize();
 
 		if (!file.startsWith(root)) {

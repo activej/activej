@@ -38,6 +38,7 @@ import java.util.function.BiConsumer;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.nullify;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.lang.Math.max;
 
 /**
@@ -142,7 +143,7 @@ public final class ChannelSerializer<T> extends AbstractStreamConsumer<T>
 	@Override
 	public ChannelOutput<ByteBuf> getOutput() {
 		return output -> {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			this.output = output;
 			resume(input);
 		};

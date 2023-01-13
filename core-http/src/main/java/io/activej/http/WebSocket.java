@@ -45,6 +45,7 @@ import static io.activej.http.AsyncWebSocket.Message.MessageType.TEXT;
 import static io.activej.http.HttpUtils.frameToMessageType;
 import static io.activej.http.HttpUtils.getUTF8;
 import static io.activej.http.WebSocketConstants.*;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 final class WebSocket extends AbstractAsyncCloseable implements AsyncWebSocket {
@@ -77,7 +78,7 @@ final class WebSocket extends AbstractAsyncCloseable implements AsyncWebSocket {
 
 	@Override
 	public Promise<Message> readMessage() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return doRead(() -> {
 			ByteBufs messageBufs = new ByteBufs();
 			Ref<MessageType> typeRef = new Ref<>();
@@ -123,13 +124,13 @@ final class WebSocket extends AbstractAsyncCloseable implements AsyncWebSocket {
 
 	@Override
 	public Promise<Frame> readFrame() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return doRead(frameInput::get);
 	}
 
 	@Override
 	public Promise<Void> writeMessage(@Nullable Message msg) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return doWrite(() -> {
 			if (msg == null) {
 				return frameOutput.accept(null);
@@ -144,7 +145,7 @@ final class WebSocket extends AbstractAsyncCloseable implements AsyncWebSocket {
 
 	@Override
 	public Promise<Void> writeFrame(@Nullable Frame frame) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return doWrite(() -> frameOutput.accept(frame), frame);
 	}
 
@@ -197,7 +198,7 @@ final class WebSocket extends AbstractAsyncCloseable implements AsyncWebSocket {
 	}
 
 	private Promise<Void> doWrite(AsyncRunnable runnable, @Nullable Recyclable recyclable) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (CHECK) {
 			checkState(writePromise == null, "Concurrent writes");
 		}

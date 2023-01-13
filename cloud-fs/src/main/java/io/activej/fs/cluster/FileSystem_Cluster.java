@@ -54,6 +54,7 @@ import static io.activej.common.Utils.transformIterator;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.util.RemoteFileSystemUtils.ofFixedSize;
 import static io.activej.promise.Promises.first;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -152,25 +153,25 @@ public final class FileSystem_Cluster extends AbstractReactive
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(String name) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return doUpload(name, fs -> fs.upload(name), identity(), uploadStartPromise, uploadFinishPromise);
 	}
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(String name, long size) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return doUpload(name, fs -> fs.upload(name, size), ofFixedSize(size), uploadStartPromise, uploadFinishPromise);
 	}
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> append(String name, long offset) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return doUpload(name, fs -> fs.append(name, offset), identity(), appendStartPromise, appendFinishPromise);
 	}
 
 	@Override
 	public Promise<ChannelSupplier<ByteBuf>> download(String name, long offset, long limit) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return broadcast(
 				(id, fs) -> {
 					logger.trace("downloading file {} from {}", name, id);
@@ -196,35 +197,35 @@ public final class FileSystem_Cluster extends AbstractReactive
 
 	@Override
 	public Promise<Void> copy(String name, String target) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return AsyncFileSystem.super.copy(name, target)
 				.whenComplete(copyPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> copyAll(Map<String, String> sourceToTarget) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return AsyncFileSystem.super.copyAll(sourceToTarget)
 				.whenComplete(copyAllPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> move(String name, String target) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return AsyncFileSystem.super.move(name, target)
 				.whenComplete(movePromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> moveAll(Map<String, String> sourceToTarget) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return AsyncFileSystem.super.moveAll(sourceToTarget)
 				.whenComplete(moveAllPromise.recordStats());
 	}
 
 	@Override
 	public Promise<Void> delete(String name) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return broadcast(fs -> fs.delete(name))
 				.whenComplete(deletePromise.recordStats())
 				.toVoid();
@@ -232,7 +233,7 @@ public final class FileSystem_Cluster extends AbstractReactive
 
 	@Override
 	public Promise<Void> deleteAll(Set<String> toDelete) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return broadcast(fs -> fs.deleteAll(toDelete))
 				.whenComplete(deleteAllPromise.recordStats())
 				.toVoid();
@@ -240,7 +241,7 @@ public final class FileSystem_Cluster extends AbstractReactive
 
 	@Override
 	public Promise<Map<String, FileMetadata>> list(String glob) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return broadcast(fs -> fs.list(glob))
 				.map(filterErrorsFn())
 				.map(maps -> FileMetadata.flatten(maps.stream()))
@@ -249,7 +250,7 @@ public final class FileSystem_Cluster extends AbstractReactive
 
 	@Override
 	public Promise<@Nullable FileMetadata> info(String name) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return broadcast(fs -> fs.info(name))
 				.map(filterErrorsFn())
 				.map(meta -> meta.stream().max(FileMetadata.COMPARATOR).orElse(null))
@@ -258,7 +259,7 @@ public final class FileSystem_Cluster extends AbstractReactive
 
 	@Override
 	public Promise<Map<String, FileMetadata>> infoAll(Set<String> names) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (names.isEmpty()) return Promise.of(Map.of());
 
 		return broadcast(fs -> fs.infoAll(names))
@@ -269,14 +270,14 @@ public final class FileSystem_Cluster extends AbstractReactive
 
 	@Override
 	public Promise<Void> ping() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return partitions.checkAllPartitions()
 				.then(this::ensureIsAlive);
 	}
 
 	@Override
 	public Promise<?> start() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkArgument(deadPartitionsThreshold < partitions.getPartitions().size(),
 				"Dead partitions threshold should be less than number of partitions");
 		checkArgument(uploadTargetsMax <= partitions.getPartitions().size(),
@@ -287,7 +288,7 @@ public final class FileSystem_Cluster extends AbstractReactive
 
 	@Override
 	public Promise<?> stop() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.complete();
 	}
 

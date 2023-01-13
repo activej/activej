@@ -28,6 +28,8 @@ import io.activej.reactor.jmx.ReactiveJmxBeanWithStats;
 
 import java.time.Duration;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
+
 public final class CrdtRepartitionController<K extends Comparable<K>, S, P> extends AbstractReactive
 		implements ReactiveJmxBeanWithStats, WithInitializer<CrdtRepartitionController<K, S, P>> {
 	private final P localPartitionId;
@@ -52,7 +54,7 @@ public final class CrdtRepartitionController<K extends Comparable<K>, S, P> exte
 	// endregion
 
 	public Promise<Void> repartition() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return repartition.run();
 	}
 

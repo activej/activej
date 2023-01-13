@@ -42,6 +42,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
+
 /**
  * Represents a cache for storing resolved domains during it's time to live.
  */
@@ -116,7 +118,7 @@ public final class DnsCache extends AbstractReactive
 	 * @return DnsQueryCacheResult for this query
 	 */
 	public @Nullable DnsCache.DnsQueryCacheResult tryToResolve(DnsQuery query) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		CachedDnsQueryResult cachedResult = cache.get(query);
 
 		if (cachedResult == null) {
@@ -156,7 +158,7 @@ public final class DnsCache extends AbstractReactive
 	 * @param response response to add
 	 */
 	public void add(DnsQuery query, DnsResponse response) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		long expirationTime = now.currentTimeMillis();
 		if (response.isSuccessful()) {
 			assert response.getRecord() != null; // where are my advanced contracts so that the IDE would know it's true here without an assertion?
@@ -183,7 +185,7 @@ public final class DnsCache extends AbstractReactive
 	}
 
 	public void performCleanup() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (!cleaningUpNow.compareAndSet(false, true)) {
 			return;
 		}

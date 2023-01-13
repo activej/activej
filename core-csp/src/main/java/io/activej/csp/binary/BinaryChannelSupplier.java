@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static io.activej.common.function.FunctionEx.identity;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 	private static final boolean CHECK = Checks.isEnabled(BinaryChannelSupplier.class);
@@ -125,9 +126,7 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 	}
 
 	public final <T> Promise<T> decode(ByteBufsDecoder<T> decoder) {
-		if (CHECK) {
-			checkInReactorThread();
-		}
+		if (CHECK) checkInReactorThread(this);
 		return doDecode(decoder, this);
 	}
 
@@ -154,9 +153,7 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 	}
 
 	public final <T> Promise<T> decodeRemaining(ByteBufsDecoder<T> decoder) {
-		if (CHECK) {
-			checkInReactorThread();
-		}
+		if (CHECK) checkInReactorThread(this);
 		return decode(decoder)
 				.then(result -> {
 					if (!bufs.isEmpty()) {
@@ -169,7 +166,7 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 	}
 
 	public final <T> ChannelSupplier<T> decodeStream(ByteBufsDecoder<T> decoder) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return ChannelSupplier.of(
 				() -> doDecode(decoder,
 						AsyncCloseable.of(e -> {
@@ -186,7 +183,7 @@ public abstract class BinaryChannelSupplier extends AbstractAsyncCloseable {
 
 	@SuppressWarnings("UnusedReturnValue")
 	public Promise<Void> bindTo(BinaryChannelInput input) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return input.set(this);
 	}
 

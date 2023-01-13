@@ -32,6 +32,8 @@ import io.activej.reactor.Reactor;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
+
 public abstract class AbstractCollector<T, A, C extends AbstractCollector<T, A, C>> extends AbstractReactive
 		implements AsyncCollector<T> {
 	protected final Dataset<T> input;
@@ -59,7 +61,7 @@ public abstract class AbstractCollector<T, A, C extends AbstractCollector<T, A, 
 
 	@Override
 	public final StreamSupplier<T> compile(DataflowGraph graph) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		DataflowContext context = DataflowContext.of(graph);
 		List<StreamId> inputStreamIds = input.channels(context);
 

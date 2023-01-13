@@ -8,6 +8,7 @@ import java.util.*;
 import java.util.function.Predicate;
 
 import static io.activej.common.Checks.checkNotNull;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toList;
 
 @Inject
@@ -51,13 +52,13 @@ public class GridModel_Person extends AbstractReactive
 
 	@Override
 	public Promise<Person> read(final Integer id, final ReadSettings<Integer> readSettings) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.of(storage.get(id));
 	}
 
 	@Override
 	public Promise<ReadResponse<Integer, Person>> read(final ReadSettings<Integer> readSettings) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		Predicate<Person> predicate = new PersonMatcher(readSettings.getFilters());
 		List<Person> people = storage.values().stream().filter(predicate).collect(toList());
 		for (Map.Entry<String, ReadSettings.SortOrder> entry : readSettings.getSort().entrySet()) {
@@ -80,7 +81,7 @@ public class GridModel_Person extends AbstractReactive
 
 	@Override
 	public Promise<CreateResponse<Integer>> create(final Person person) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		person.setId(cursor);
 		storage.put(cursor, person);
 		cursor++;
@@ -89,7 +90,7 @@ public class GridModel_Person extends AbstractReactive
 
 	@Override
 	public Promise<UpdateResponse<Integer, Person>> update(final List<Person> changes) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		List<Person> results = new ArrayList<>();
 		for (Person change : changes) {
 			Person person = storage.get(change.getId());
@@ -102,7 +103,7 @@ public class GridModel_Person extends AbstractReactive
 
 	@Override
 	public Promise<DeleteResponse> delete(final Integer id) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		storage.remove(id);
 		return Promise.of(DeleteResponse.ok());
 	}

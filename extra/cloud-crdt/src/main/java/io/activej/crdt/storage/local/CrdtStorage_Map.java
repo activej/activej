@@ -51,6 +51,7 @@ import java.util.stream.Stream;
 
 import static io.activej.common.Utils.nullify;
 import static io.activej.crdt.util.Utils.onItem;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtStorage_Map<K extends Comparable<K>, S> extends AbstractReactive
@@ -116,7 +117,7 @@ public final class CrdtStorage_Map<K extends Comparable<K>, S> extends AbstractR
 
 	@Override
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		StreamConsumerToList<CrdtData<K, S>> consumer = StreamConsumerToList.create();
 		return Promise.of(consumer.withAcknowledgement(ack -> ack
 						.whenResult(() -> consumer.getList().forEach(this::doPut))
@@ -127,7 +128,7 @@ public final class CrdtStorage_Map<K extends Comparable<K>, S> extends AbstractR
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.of(StreamSupplier.ofStream(extract(timestamp))
 				.transformWith(detailedStats ? downloadStatsDetailed : downloadStats)
 				.transformWith(onItem(downloadedItems::recordEvent))
@@ -137,7 +138,7 @@ public final class CrdtStorage_Map<K extends Comparable<K>, S> extends AbstractR
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> take() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (takenMap != null) {
 			assert takenTombstones != null;
 			return Promise.ofException(new CrdtException("Data is already being taken"));
@@ -166,7 +167,7 @@ public final class CrdtStorage_Map<K extends Comparable<K>, S> extends AbstractR
 
 	@Override
 	public Promise<StreamConsumer<CrdtTombstone<K>>> remove() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		StreamConsumerToList<CrdtTombstone<K>> consumer = StreamConsumerToList.create();
 		return Promise.of(consumer.withAcknowledgement(ack -> ack
 						.whenResult(() -> consumer.getList().forEach(this::doRemove))
@@ -177,19 +178,19 @@ public final class CrdtStorage_Map<K extends Comparable<K>, S> extends AbstractR
 
 	@Override
 	public Promise<Void> ping() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.complete();
 	}
 
 	@Override
 	public Promise<?> start() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.complete();
 	}
 
 	@Override
 	public Promise<?> stop() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.complete();
 	}
 
@@ -262,30 +263,30 @@ public final class CrdtStorage_Map<K extends Comparable<K>, S> extends AbstractR
 	}
 
 	public void put(K key, S state) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		put(new CrdtData<>(key, now.currentTimeMillis(), state));
 	}
 
 	public void put(CrdtData<K, S> data) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		singlePuts.recordEvent();
 		doPut(data);
 	}
 
 	public @Nullable S get(K key) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		singleGets.recordEvent();
 		CrdtData<K, S> data = map.get(key);
 		return data != null ? data.getState() : null;
 	}
 
 	public boolean remove(K key) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return remove(new CrdtTombstone<>(key, now.currentTimeMillis()));
 	}
 
 	public boolean remove(CrdtTombstone<K> tombstone) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		singleRemoves.recordEvent();
 		return doRemove(tombstone);
 	}

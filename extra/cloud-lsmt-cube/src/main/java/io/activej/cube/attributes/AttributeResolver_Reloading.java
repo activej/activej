@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static io.activej.common.Utils.nullify;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public abstract class AttributeResolver_Reloading<K, A> extends AbstractAttributeResolver<K, A>
 		implements ReactiveService, ReactiveJmxBean {
@@ -62,7 +63,7 @@ public abstract class AttributeResolver_Reloading<K, A> extends AbstractAttribut
 	protected abstract Promise<Map<K, A>> reload(long lastTimestamp);
 
 	private void doReload() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		reloads++;
 		scheduledRunnable = nullify(scheduledRunnable, ScheduledRunnable::cancel);
 		long reloadTimestamp = reactor.currentTimeMillis();
@@ -82,7 +83,7 @@ public abstract class AttributeResolver_Reloading<K, A> extends AbstractAttribut
 
 	@Override
 	public Promise<?> start() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (reloadPeriod == 0) return Promise.complete();
 		long reloadTimestamp = reactor.currentTimeMillis();
 		return reload(timestamp)
@@ -97,7 +98,7 @@ public abstract class AttributeResolver_Reloading<K, A> extends AbstractAttribut
 
 	@Override
 	public Promise<?> stop() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		scheduledRunnable = nullify(scheduledRunnable, ScheduledRunnable::cancel);
 		return Promise.complete();
 	}

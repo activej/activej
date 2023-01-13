@@ -25,6 +25,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import static io.activej.bytebuf.ByteBuf.wrapForReading;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 class StaticLoader_Cache extends AbstractReactive
 		implements AsyncStaticLoader {
@@ -43,7 +44,7 @@ class StaticLoader_Cache extends AbstractReactive
 
 	@Override
 	public Promise<ByteBuf> load(String path) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		byte[] bytes = get.apply(path);
 		if (bytes == NOT_FOUND) {
 			return Promise.ofException(new ResourceNotFoundException("Could not find '" + path + '\''));

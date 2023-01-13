@@ -49,6 +49,7 @@ import static io.activej.async.function.AsyncSuppliers.coalesce;
 import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.promise.Promises.asPromises;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
@@ -103,19 +104,19 @@ public final class CubeLogProcessorController<K, C> extends AbstractReactive
 	private final AsyncSupplier<Boolean> processLogs = coalesce(this::doProcessLogs);
 
 	public Promise<Boolean> processLogs() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return processLogs.get();
 	}
 
 	Promise<Boolean> doProcessLogs() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return process()
 				.whenComplete(promiseProcessLogs.recordStats())
 				.whenComplete(toLogger(logger, thisMethod(), stateManager));
 	}
 
 	Promise<Boolean> process() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.complete()
 				.then(stateManager::sync)
 				.mapException(e -> new CubeException("Failed to synchronize state prior to log processing", e))

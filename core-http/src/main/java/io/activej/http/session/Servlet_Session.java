@@ -27,6 +27,8 @@ import io.activej.reactor.Reactor;
 import java.util.Objects;
 import java.util.function.Function;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
+
 /**
  * This is a simple abstract reference implementation of a concept known as HTTP sessions.
  * It operates over some session storage, session ids that are somehow (usually through cookies)
@@ -65,7 +67,7 @@ public final class Servlet_Session<T> extends AbstractReactive
 
 	@Override
 	public Promise<HttpResponse> serve(HttpRequest request) throws Exception {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		String id = sessionIdExtractor.apply(request);
 
 		if (id == null) {

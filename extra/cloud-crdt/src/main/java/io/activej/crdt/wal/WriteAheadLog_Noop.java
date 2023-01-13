@@ -20,6 +20,8 @@ import io.activej.promise.Promise;
 import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
+
 public class WriteAheadLog_Noop<K extends Comparable<K>, S> extends AbstractReactive
 		implements AsyncWriteAheadLog<K, S> {
 
@@ -33,13 +35,13 @@ public class WriteAheadLog_Noop<K extends Comparable<K>, S> extends AbstractReac
 
 	@Override
 	public Promise<Void> put(K key, S value) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.complete();
 	}
 
 	@Override
 	public Promise<Void> flush() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.complete();
 	}
 }

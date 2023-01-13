@@ -28,6 +28,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.UnaryOperator;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
+
 final class LogStreamChunker extends AbstractCommunicatingProcess implements ChannelInput<ByteBuf> {
 	private final CurrentTimeProvider currentTimeProvider;
 	private final AsyncFileSystem fileSystem;
@@ -50,7 +52,7 @@ final class LogStreamChunker extends AbstractCommunicatingProcess implements Cha
 
 	@Override
 	public Promise<Void> set(ChannelSupplier<ByteBuf> input) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		this.input = sanitize(input);
 		startProcess();
 		return getProcessCompletion();

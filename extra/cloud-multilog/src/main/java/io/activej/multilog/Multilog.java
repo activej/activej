@@ -55,6 +55,7 @@ import java.util.Objects;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.function.FunctionEx.identity;
 import static io.activej.datastream.stats.StreamStatsSizeCounter.forByteBufs;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 
@@ -115,7 +116,7 @@ public final class Multilog<T> extends AbstractReactive
 
 	@Override
 	public Promise<StreamConsumer<T>> write(String logPartition) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		validateLogPartition(logPartition);
 
 		return Promise.of(StreamConsumer.<T>ofSupplier(
@@ -138,7 +139,7 @@ public final class Multilog<T> extends AbstractReactive
 	public Promise<StreamSupplierWithResult<T, LogPosition>> read(String logPartition,
 			LogFile startLogFile, long startOffset,
 			@Nullable LogFile endLogFile) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		validateLogPartition(logPartition);
 		LogPosition startPosition = LogPosition.create(startLogFile, startOffset);
 		return fileSystem.list(namingScheme.getListGlob(logPartition))

@@ -38,6 +38,7 @@ import static io.activej.common.Utils.first;
 import static io.activej.fs.Utils.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
@@ -900,37 +901,37 @@ public final class FileSystem__InvariantsTest {
 
 		@Override
 		public Promise<ChannelConsumer<ByteBuf>> upload(String name) {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			return peer.upload(name);
 		}
 
 		@Override
 		public Promise<ChannelConsumer<ByteBuf>> upload(String name, long size) {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			return peer.upload(name, size);
 		}
 
 		@Override
 		public Promise<ChannelConsumer<ByteBuf>> append(String name, long offset) {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			return peer.append(name, offset);
 		}
 
 		@Override
 		public Promise<ChannelSupplier<ByteBuf>> download(String name, long offset, long limit) {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			return peer.download(name, offset, limit);
 		}
 
 		@Override
 		public Promise<Void> delete(String name) {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			return peer.delete(name);
 		}
 
 		@Override
 		public Promise<Map<String, FileMetadata>> list(String glob) {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			return peer.list(glob);
 		}
 	}

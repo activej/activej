@@ -70,6 +70,7 @@ import java.util.function.Supplier;
 import static io.activej.common.Utils.entriesToMap;
 import static io.activej.crdt.util.BinarySerializer_CrdtData.TIMESTAMP_SERIALIZER;
 import static io.activej.crdt.util.Utils.onItem;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtStorage_FileSystem<K extends Comparable<K>, S> extends AbstractReactive
@@ -148,7 +149,7 @@ public final class CrdtStorage_FileSystem<K extends Comparable<K>, S> extends Ab
 
 	@Override
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		String filename = namingStrategy.get() + FILE_EXTENSION;
 		return Promise.of(this.<CrdtData<K, S>>uploadNonEmpty(filename, CrdtReducingData::ofData)
 				.transformWith(detailedStats ? uploadStatsDetailed : uploadStats)
@@ -159,7 +160,7 @@ public final class CrdtStorage_FileSystem<K extends Comparable<K>, S> extends Ab
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promises.retry(($, e) -> !(e instanceof FileNotFoundException),
 						() -> fileSystem.list("*")
 								.then(fileMap -> doDownload(fileMap.keySet(), timestamp, false))
@@ -172,7 +173,7 @@ public final class CrdtStorage_FileSystem<K extends Comparable<K>, S> extends Ab
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> take() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (taken != null) {
 			return Promise.ofException(new CrdtException("Data is already being taken"));
 		}
@@ -212,7 +213,7 @@ public final class CrdtStorage_FileSystem<K extends Comparable<K>, S> extends Ab
 
 	@Override
 	public Promise<StreamConsumer<CrdtTombstone<K>>> remove() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		String filename = namingStrategy.get() + FILE_EXTENSION;
 		return Promise.of(this.<CrdtTombstone<K>>uploadNonEmpty(filename, CrdtReducingData::ofTombstone)
 				.transformWith(detailedStats ? removeStatsDetailed : removeStats)
@@ -223,25 +224,25 @@ public final class CrdtStorage_FileSystem<K extends Comparable<K>, S> extends Ab
 
 	@Override
 	public Promise<Void> ping() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return fileSystem.ping()
 				.mapException(e -> new CrdtException("Failed to PING file system", e));
 	}
 
 	@Override
 	public Promise<?> start() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.complete();
 	}
 
 	@Override
 	public Promise<?> stop() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.complete();
 	}
 
 	public Promise<Void> consolidate() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return consolidate.run()
 				.whenComplete(consolidationStats.recordStats());
 	}

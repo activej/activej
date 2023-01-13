@@ -90,6 +90,7 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.*;
 import static io.activej.cube.Utils.createResultClass;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static io.activej.types.Primitives.wrap;
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -514,7 +515,7 @@ public final class Cube extends AbstractReactive
 
 	public <T> AsyncLogDataConsumer<T, CubeDiff> logStreamConsumer(Class<T> inputClass, Map<String, String> dimensionFields, Map<String, String> measureFields,
 			PredicateDef predicate) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return () -> consume(inputClass, dimensionFields, measureFields, predicate)
 				.transformResult(result -> result.map(cubeDiff -> List.of(cubeDiff)));
 	}
@@ -537,7 +538,7 @@ public final class Cube extends AbstractReactive
 	 */
 	public <T> StreamConsumerWithResult<T, CubeDiff> consume(Class<T> inputClass, Map<String, String> dimensionFields, Map<String, String> measureFields,
 			PredicateDef dataPredicate) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		logger.info("Started consuming data. Dimensions: {}. Measures: {}", dimensionFields.keySet(), measureFields.keySet());
 
 		StreamSplitter<T, T> streamSplitter = StreamSplitter.create((item, acceptors) -> {
@@ -640,7 +641,7 @@ public final class Cube extends AbstractReactive
 	private <T, K extends Comparable, S, A> StreamSupplier<T> queryRawStream(List<String> dimensions, List<String> storedMeasures, PredicateDef where,
 			Class<T> resultClass, DefiningClassLoader queryClassLoader,
 			List<AggregationContainer> compatibleAggregations) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		List<AggregationContainerWithScore> containerWithScores = new ArrayList<>();
 		for (AggregationContainer compatibleAggregation : compatibleAggregations) {
 			AggregationQuery aggregationQuery = AggregationQuery.create(dimensions, storedMeasures, where);
@@ -761,7 +762,7 @@ public final class Cube extends AbstractReactive
 	}
 
 	public Promise<CubeDiff> consolidate(AsyncFunction<Aggregation, AggregationDiff> strategy) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		logger.info("Launching consolidation");
 
 		Map<String, AggregationDiff> map = new HashMap<>();
@@ -815,7 +816,7 @@ public final class Cube extends AbstractReactive
 	// region temp query() method
 	@Override
 	public Promise<QueryResult> query(CubeQuery cubeQuery) throws QueryException {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		DefiningClassLoader queryClassLoader = getQueryClassLoader(new CubeClassLoaderCache.Key(
 				new LinkedHashSet<>(cubeQuery.getAttributes()),
 				new LinkedHashSet<>(cubeQuery.getMeasures()),

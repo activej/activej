@@ -33,6 +33,7 @@ import java.util.zip.Deflater;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 /**
  * This is a binary channel transformer, that converts channels of {@link ByteBuf ByteBufs}
@@ -78,7 +79,7 @@ public final class BufsConsumerGzipDeflater extends AbstractCommunicatingProcess
 	@Override
 	public ChannelInput<ByteBuf> getInput() {
 		return input -> {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			checkState(this.input == null, "Input already set");
 			this.input = sanitize(input);
 			if (this.input != null && this.output != null) startProcess();
@@ -90,7 +91,7 @@ public final class BufsConsumerGzipDeflater extends AbstractCommunicatingProcess
 	@Override
 	public ChannelOutput<ByteBuf> getOutput() {
 		return output -> {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			checkState(this.output == null, "Output already set");
 			this.output = sanitize(output);
 			if (this.input != null && this.output != null) startProcess();

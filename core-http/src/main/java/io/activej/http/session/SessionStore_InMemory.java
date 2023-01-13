@@ -27,6 +27,8 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
+
 /**
  * A simple reference implementation of the session storage over a hash map.
  */
@@ -53,14 +55,14 @@ public final class SessionStore_InMemory<T> extends AbstractReactive
 
 	@Override
 	public Promise<Void> save(String sessionId, T sessionObject) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		store.put(sessionId, new TWithTimestamp(sessionObject, now.currentTimeMillis()));
 		return Promise.complete();
 	}
 
 	@Override
 	public Promise<@Nullable T> get(String sessionId) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		long timestamp = now.currentTimeMillis();
 		TWithTimestamp tWithTimestamp = store.get(sessionId);
 		if (tWithTimestamp == null) {
@@ -76,7 +78,7 @@ public final class SessionStore_InMemory<T> extends AbstractReactive
 
 	@Override
 	public Promise<Void> remove(String sessionId) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		store.remove(sessionId);
 		return Promise.complete();
 	}

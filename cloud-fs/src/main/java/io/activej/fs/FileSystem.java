@@ -65,6 +65,7 @@ import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.LocalFileUtils.*;
 import static io.activej.fs.util.RemoteFileSystemUtils.batchException;
 import static io.activej.fs.util.RemoteFileSystemUtils.ofFixedSize;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.nio.file.StandardOpenOption.*;
 
 /**
@@ -218,7 +219,7 @@ public final class FileSystem extends AbstractReactive
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(String name) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkStarted();
 		return uploadImpl(name, identity())
 				.whenComplete(toLogger(logger, TRACE, "upload", name, this));
@@ -226,7 +227,7 @@ public final class FileSystem extends AbstractReactive
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(String name, long size) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkStarted();
 		return uploadImpl(name, ofFixedSize(size))
 				.whenComplete(toLogger(logger, TRACE, "upload", name, size, this));
@@ -234,7 +235,7 @@ public final class FileSystem extends AbstractReactive
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> append(String name, long offset) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkStarted();
 		checkArgument(offset >= 0, "Offset cannot be less than 0");
 		return execute(
@@ -274,7 +275,7 @@ public final class FileSystem extends AbstractReactive
 
 	@Override
 	public Promise<ChannelSupplier<ByteBuf>> download(String name, long offset, long limit) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkStarted();
 		checkArgument(offset >= 0, "offset < 0");
 		checkArgument(limit >= 0, "limit < 0");
@@ -303,7 +304,7 @@ public final class FileSystem extends AbstractReactive
 
 	@Override
 	public Promise<Map<String, FileMetadata>> list(String glob) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkStarted();
 		if (glob.isEmpty()) return Promise.of(Map.of());
 
@@ -333,7 +334,7 @@ public final class FileSystem extends AbstractReactive
 
 	@Override
 	public Promise<Void> copy(String name, String target) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkStarted();
 		return execute(() -> forEachPair(Map.of(name, target), this::doCopy))
 				.then(translateScalarErrorsFn())
@@ -343,7 +344,7 @@ public final class FileSystem extends AbstractReactive
 
 	@Override
 	public Promise<Void> copyAll(Map<String, String> sourceToTarget) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkStarted();
 		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
@@ -355,7 +356,7 @@ public final class FileSystem extends AbstractReactive
 
 	@Override
 	public Promise<Void> move(String name, String target) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkStarted();
 		return execute(() -> forEachPair(Map.of(name, target), this::doMove))
 				.then(translateScalarErrorsFn())
@@ -365,7 +366,7 @@ public final class FileSystem extends AbstractReactive
 
 	@Override
 	public Promise<Void> moveAll(Map<String, String> sourceToTarget) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkStarted();
 		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
@@ -377,7 +378,7 @@ public final class FileSystem extends AbstractReactive
 
 	@Override
 	public Promise<Void> delete(String name) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkStarted();
 		return execute(() -> deleteImpl(Set.of(name)))
 				.then(translateScalarErrorsFn(name))
@@ -387,7 +388,7 @@ public final class FileSystem extends AbstractReactive
 
 	@Override
 	public Promise<Void> deleteAll(Set<String> toDelete) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkStarted();
 		if (toDelete.isEmpty()) return Promise.complete();
 
@@ -398,14 +399,14 @@ public final class FileSystem extends AbstractReactive
 
 	@Override
 	public Promise<Void> ping() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkStarted();
 		return Promise.complete(); // local fs is always available
 	}
 
 	@Override
 	public Promise<@Nullable FileMetadata> info(String name) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkStarted();
 		return execute(() -> toFileMetadata(resolve(name)))
 				.whenComplete(toLogger(logger, TRACE, "info", name, this))
@@ -414,7 +415,7 @@ public final class FileSystem extends AbstractReactive
 
 	@Override
 	public Promise<Map<String, FileMetadata>> infoAll(Set<String> names) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkStarted();
 		if (names.isEmpty()) return Promise.of(Map.of());
 
@@ -435,14 +436,14 @@ public final class FileSystem extends AbstractReactive
 
 	@Override
 	public Promise<Void> start() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return execute(() -> LocalFileUtils.init(storage, tempDir, fsyncDirectories))
 				.whenResult(() -> started = true);
 	}
 
 	@Override
 	public Promise<Void> stop() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.complete();
 	}
 

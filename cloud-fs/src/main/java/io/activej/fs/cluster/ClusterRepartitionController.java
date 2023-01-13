@@ -56,6 +56,7 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.first;
 import static io.activej.fs.util.RemoteFileSystemUtils.isWildcard;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toMap;
 
 public final class ClusterRepartitionController extends AbstractReactive
@@ -137,7 +138,7 @@ public final class ClusterRepartitionController extends AbstractReactive
 	}
 
 	public Promise<Void> repartition() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return repartition.run();
 	}
 
@@ -385,14 +386,14 @@ public final class ClusterRepartitionController extends AbstractReactive
 
 	@Override
 	public Promise<Void> start() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		this.fileSystem = checkNotNull(partitions.getPartitions().get(localPartitionId), "Partitions do not contain local partition ID");
 		return Promise.complete();
 	}
 
 	@Override
 	public Promise<Void> stop() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return isRepartitioning() ?
 				Promise.ofCallback(cb -> this.closeCallback = cb) :
 				Promise.complete();

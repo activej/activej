@@ -59,6 +59,7 @@ import static io.activej.common.function.FunctionEx.identity;
 import static io.activej.crdt.util.Utils.deleteWalFiles;
 import static io.activej.crdt.util.Utils.getWalFiles;
 import static io.activej.crdt.wal.WriteAheadLog_File.FRAME_FORMAT;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.Comparator.naturalOrder;
 import static java.util.stream.Collectors.toList;
 
@@ -113,7 +114,7 @@ public final class WalUploader<K extends Comparable<K>, S> extends AbstractReact
 	}
 
 	public Promise<Void> uploadToStorage() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return uploadToStorage.run()
 				.whenComplete(uploadPromise.recordStats());
 	}

@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import static io.activej.common.Checks.checkState;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("unchecked")
 public abstract class LogDataConsumer_Splitter<T, D> extends ImplicitlyReactive
@@ -49,7 +50,7 @@ public abstract class LogDataConsumer_Splitter<T, D> extends ImplicitlyReactive
 
 	@Override
 	public StreamConsumerWithResult<T, List<D>> consume() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		AsyncAccumulator<List<D>> diffsAccumulator = AsyncAccumulator.create(new ArrayList<>());
 
 		Context ctx = new Context();

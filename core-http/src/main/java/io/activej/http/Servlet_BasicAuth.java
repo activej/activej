@@ -30,6 +30,7 @@ import java.util.function.UnaryOperator;
 import static io.activej.http.ContentTypes.PLAIN_TEXT_UTF_8;
 import static io.activej.http.HttpHeaders.AUTHORIZATION;
 import static io.activej.http.HttpHeaders.CONTENT_TYPE;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
@@ -83,7 +84,7 @@ public final class Servlet_BasicAuth extends AbstractReactive
 
 	@Override
 	public Promise<HttpResponse> serve(HttpRequest request) throws HttpError {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		String header = request.getHeader(AUTHORIZATION);
 		if (header == null || !header.startsWith(PREFIX)) {
 			return Promise.of(failureResponse.apply(HttpResponse.unauthorized401(challenge)));

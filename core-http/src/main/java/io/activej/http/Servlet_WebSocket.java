@@ -33,6 +33,7 @@ import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpUtils.getWebSocketAnswer;
 import static io.activej.http.WebSocketConstants.NOT_A_WEB_SOCKET_REQUEST;
 import static io.activej.http.WebSocketConstants.REGULAR_CLOSE;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 /**
  * A servlet for handling web socket upgrade requests.
@@ -61,7 +62,7 @@ public abstract class Servlet_WebSocket extends AbstractReactive
 
 	@Override
 	public final Promise<HttpResponse> serve(HttpRequest request) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return validateHeaders(request)
 				.then(() -> processAnswer(request))
 				.then(answer -> {

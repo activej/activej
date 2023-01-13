@@ -46,6 +46,7 @@ import static io.activej.http.HttpVersion.HTTP_1_0;
 import static io.activej.http.HttpVersion.HTTP_1_1;
 import static io.activej.http.Protocol.*;
 import static io.activej.http.WebSocketConstants.UPGRADE_WITH_BODY;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.lang.Math.min;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
@@ -363,7 +364,7 @@ public final class HttpServerConnection extends AbstractHttpConnection {
 			servletResult = Promise.ofException(e);
 		}
 		servletResult.run((response, e) -> {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			if (isClosed()) {
 				request.recycle();
 				readBuf = nullify(readBuf, ByteBuf::recycle);

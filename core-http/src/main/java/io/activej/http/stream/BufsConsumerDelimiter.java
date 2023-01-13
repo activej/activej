@@ -28,6 +28,7 @@ import io.activej.csp.dsl.WithChannelTransformer;
 import io.activej.csp.process.AbstractCommunicatingProcess;
 
 import static io.activej.common.Checks.checkState;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 /**
  * This is a binary channel transformer, that converts channels of {@link ByteBuf ByteBufs}
@@ -56,7 +57,7 @@ public final class BufsConsumerDelimiter extends AbstractCommunicatingProcess
 	@Override
 	public BinaryChannelInput getInput() {
 		return input -> {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			checkState(this.input == null, "Input already set");
 			this.input = sanitize(input);
 			this.bufs = input.getBufs();
@@ -69,7 +70,7 @@ public final class BufsConsumerDelimiter extends AbstractCommunicatingProcess
 	@Override
 	public ChannelOutput<ByteBuf> getOutput() {
 		return output -> {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			checkState(this.output == null, "Output already set");
 			this.output = sanitize(output);
 			if (this.input != null && this.output != null) startProcess();

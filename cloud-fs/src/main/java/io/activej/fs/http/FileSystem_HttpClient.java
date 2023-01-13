@@ -45,6 +45,7 @@ import static io.activej.fs.util.JsonUtils.toJson;
 import static io.activej.fs.util.MessageTypes.STRING_META_MAP_TYPE;
 import static io.activej.fs.util.RemoteFileSystemUtils.ofFixedSize;
 import static io.activej.http.HttpHeaders.CONTENT_LENGTH;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 /**
  * A client to the remote server with {@link FileSystemServlet}.
@@ -69,19 +70,19 @@ public final class FileSystem_HttpClient extends AbstractReactive
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(String name) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return doUpload(name, null);
 	}
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(String name, long size) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return doUpload(name, size);
 	}
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> append(String name, long offset) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkArgument(offset >= 0, "Offset cannot be less than 0");
 		UrlBuilder urlBuilder = UrlBuilder.relative()
 				.appendPathPart(APPEND)
@@ -94,7 +95,7 @@ public final class FileSystem_HttpClient extends AbstractReactive
 
 	@Override
 	public Promise<ChannelSupplier<ByteBuf>> download(String name, long offset, long limit) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkArgument(offset >= 0 && limit >= 0);
 		UrlBuilder urlBuilder = UrlBuilder.relative()
 				.appendPathPart(DOWNLOAD)
@@ -115,7 +116,7 @@ public final class FileSystem_HttpClient extends AbstractReactive
 
 	@Override
 	public Promise<Map<String, FileMetadata>> list(String glob) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return client.request(
 						HttpRequest.get(
 								url + UrlBuilder.relative()
@@ -129,7 +130,7 @@ public final class FileSystem_HttpClient extends AbstractReactive
 
 	@Override
 	public Promise<@Nullable FileMetadata> info(String name) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return client.request(
 						HttpRequest.get(
 								url + UrlBuilder.relative()
@@ -143,7 +144,7 @@ public final class FileSystem_HttpClient extends AbstractReactive
 
 	@Override
 	public Promise<Map<String, FileMetadata>> infoAll(Set<String> names) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return client.request(
 						HttpRequest.get(
 										url + UrlBuilder.relative()
@@ -157,7 +158,7 @@ public final class FileSystem_HttpClient extends AbstractReactive
 
 	@Override
 	public Promise<Void> ping() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return client.request(
 						HttpRequest.get(
 								url + UrlBuilder.relative()
@@ -169,7 +170,7 @@ public final class FileSystem_HttpClient extends AbstractReactive
 
 	@Override
 	public Promise<Void> move(String name, String target) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return client.request(
 						HttpRequest.post(
 								url + UrlBuilder.relative()
@@ -183,7 +184,7 @@ public final class FileSystem_HttpClient extends AbstractReactive
 
 	@Override
 	public Promise<Void> moveAll(Map<String, String> sourceToTarget) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
@@ -199,7 +200,7 @@ public final class FileSystem_HttpClient extends AbstractReactive
 
 	@Override
 	public Promise<Void> copy(String name, String target) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return client.request(
 						HttpRequest.post(
 								url + UrlBuilder.relative()
@@ -213,7 +214,7 @@ public final class FileSystem_HttpClient extends AbstractReactive
 
 	@Override
 	public Promise<Void> copyAll(Map<String, String> sourceToTarget) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
@@ -229,7 +230,7 @@ public final class FileSystem_HttpClient extends AbstractReactive
 
 	@Override
 	public Promise<Void> delete(String name) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return client.request(
 						HttpRequest.of(HttpMethod.DELETE,
 								url + UrlBuilder.relative()
@@ -242,7 +243,7 @@ public final class FileSystem_HttpClient extends AbstractReactive
 
 	@Override
 	public Promise<Void> deleteAll(Set<String> toDelete) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return client.request(
 						HttpRequest.post(
 										url + UrlBuilder.relative()

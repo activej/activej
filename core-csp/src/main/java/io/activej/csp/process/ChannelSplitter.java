@@ -33,6 +33,7 @@ import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 import static io.activej.common.Checks.checkState;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class ChannelSplitter<T> extends AbstractCommunicatingProcess
 		implements WithChannelInput<ChannelSplitter<T>, T>, WithChannelOutputs<T>, WithInitializer<ChannelSplitter<T>> {
@@ -71,7 +72,7 @@ public final class ChannelSplitter<T> extends AbstractCommunicatingProcess
 	@Override
 	public ChannelInput<T> getInput() {
 		return input -> {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			checkState(!isProcessStarted(), "Can't configure splitter while it is running");
 			this.input = sanitize(input);
 			tryStart();
@@ -84,7 +85,7 @@ public final class ChannelSplitter<T> extends AbstractCommunicatingProcess
 		int index = outputs.size();
 		outputs.add(null);
 		return output -> {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			outputs.set(index, sanitize(output));
 			tryStart();
 		};

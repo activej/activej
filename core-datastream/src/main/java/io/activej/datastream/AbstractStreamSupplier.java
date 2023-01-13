@@ -25,6 +25,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayDeque;
 
 import static io.activej.common.Checks.checkState;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 /**
  * This is a helper partial implementation of the {@link StreamSupplier}
@@ -63,7 +64,7 @@ public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive imple
 
 	@Override
 	public final Promise<Void> streamTo(StreamConsumer<T> consumer) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkState(!isStarted());
 		ensureInitialized();
 		this.consumer = consumer;
@@ -100,7 +101,7 @@ public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive imple
 
 	@Override
 	public final void updateDataAcceptor() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (!isStarted()) return;
 		if (endOfStream.isComplete()) return;
 		StreamDataAcceptor<T> dataAcceptor = this.consumer.getDataAcceptor();
@@ -147,9 +148,7 @@ public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive imple
 	 * and must never be called when supplier reaches {@link #sendEndOfStream() end of stream}.
 	 */
 	public final void send(T item) {
-		if (CHECK) {
-			checkInReactorThread();
-		}
+		if (CHECK) checkInReactorThread(this);
 		dataAcceptorBuffered.accept(item);
 	}
 
@@ -159,7 +158,7 @@ public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive imple
 	 * Only the first call causes any effect.
 	 */
 	public final Promise<Void> sendEndOfStream() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (endOfStreamRequest) return flushPromise;
 		if (flushAsync > 0) {
 			asyncEnd();
@@ -300,7 +299,7 @@ public abstract class AbstractStreamSupplier<T> extends ImplicitlyReactive imple
 
 	@Override
 	public final void closeEx(Exception e) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		ensureInitialized();
 		endOfStreamRequest = true;
 		dataAcceptor = null;

@@ -40,6 +40,7 @@ import java.util.function.Supplier;
 
 import static io.activej.http.HttpHeaderValue.ofContentType;
 import static io.activej.http.HttpHeaders.CONTENT_TYPE;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 /**
  * This servlet allows return HTTP responses by HTTP paths from some predefined storage, mainly the filesystem.
@@ -151,7 +152,7 @@ public final class Servlet_Static extends AbstractReactive
 
 	@Override
 	public Promise<HttpResponse> serve(HttpRequest request) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		String mappedPath = pathMapper.apply(request);
 		if (mappedPath == null) return Promise.ofException(HttpError.notFound404());
 		ContentType contentType = contentTypeResolver.apply(mappedPath);

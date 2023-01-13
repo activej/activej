@@ -65,6 +65,7 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.crdt.util.Utils.deleteWalFiles;
 import static io.activej.crdt.util.Utils.getWalFiles;
 import static io.activej.crdt.wal.WriteAheadLog_File.FlushMode.*;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
 import static java.util.stream.Collectors.toList;
 
@@ -145,7 +146,7 @@ public class WriteAheadLog_File<K extends Comparable<K>, S> extends AbstractReac
 
 	@Override
 	public Promise<Void> put(K key, S value) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		logger.trace("Putting value {} at key {}", value, key);
 		totalPuts.recordEvent();
 
@@ -156,7 +157,7 @@ public class WriteAheadLog_File<K extends Comparable<K>, S> extends AbstractReac
 
 	@Override
 	public Promise<Void> flush() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		logger.trace("Flush called");
 		return flush.run()
 				.whenComplete(flushPromise.recordStats());
@@ -164,7 +165,7 @@ public class WriteAheadLog_File<K extends Comparable<K>, S> extends AbstractReac
 
 	@Override
 	public Promise<?> start() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return scanLostFiles()
 				.then(this::flushFiles)
 				.whenResult(() -> this.consumer = createConsumer());
@@ -172,7 +173,7 @@ public class WriteAheadLog_File<K extends Comparable<K>, S> extends AbstractReac
 
 	@Override
 	public Promise<?> stop() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		stopping = true;
 		if (flushRequired) return flush();
 

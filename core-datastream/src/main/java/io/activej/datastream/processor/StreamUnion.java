@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.activej.common.Checks.checkState;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 /**
  * It is Stream Transformer which unions all input streams and streams it
@@ -62,7 +63,7 @@ public final class StreamUnion<T> extends ImplicitlyReactive implements HasStrea
 	}
 
 	public StreamConsumer<T> newInput() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkState(!started, "Cannot add new inputs after StreamUnion has been started");
 		Input input = new Input();
 		inputs.add(input);

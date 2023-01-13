@@ -52,6 +52,7 @@ import java.net.InetSocketAddress;
 import java.time.Duration;
 
 import static io.activej.crdt.util.Utils.onItem;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("rawtypes")
 public final class CrdtStorage_Client<K extends Comparable<K>, S> extends AbstractNioReactive
@@ -124,7 +125,7 @@ public final class CrdtStorage_Client<K extends Comparable<K>, S> extends Abstra
 
 	@Override
 	public Promise<StreamConsumer<CrdtData<K, S>>> upload() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return connect()
 				.then(CrdtStorage_Client::performHandshake)
 				.then(messaging -> messaging.send(new CrdtRequest.Upload())
@@ -145,7 +146,7 @@ public final class CrdtStorage_Client<K extends Comparable<K>, S> extends Abstra
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> download(long timestamp) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return connect()
 				.then(CrdtStorage_Client::performHandshake)
 				.then(messaging -> messaging.send(new CrdtRequest.Download(timestamp))
@@ -167,7 +168,7 @@ public final class CrdtStorage_Client<K extends Comparable<K>, S> extends Abstra
 
 	@Override
 	public Promise<StreamSupplier<CrdtData<K, S>>> take() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return connect()
 				.then(CrdtStorage_Client::performHandshake)
 				.then(messaging -> messaging.send(new CrdtRequest.Take())
@@ -192,7 +193,7 @@ public final class CrdtStorage_Client<K extends Comparable<K>, S> extends Abstra
 
 	@Override
 	public Promise<StreamConsumer<CrdtTombstone<K>>> remove() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return connect()
 				.then(CrdtStorage_Client::performHandshake)
 				.then(messaging -> messaging.send(new CrdtRequest.Remove())
@@ -215,7 +216,7 @@ public final class CrdtStorage_Client<K extends Comparable<K>, S> extends Abstra
 
 	@Override
 	public Promise<Void> ping() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return connect()
 				.then(CrdtStorage_Client::performHandshake)
 				.then(messaging -> messaging.send(new CrdtRequest.Ping())
@@ -230,13 +231,13 @@ public final class CrdtStorage_Client<K extends Comparable<K>, S> extends Abstra
 
 	@Override
 	public Promise<?> start() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return ping();
 	}
 
 	@Override
 	public Promise<?> stop() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.complete();
 	}
 

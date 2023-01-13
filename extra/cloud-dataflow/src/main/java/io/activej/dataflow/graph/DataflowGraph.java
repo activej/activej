@@ -40,6 +40,7 @@ import io.activej.reactor.Reactor;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.*;
 
 /**
@@ -103,7 +104,7 @@ public final class DataflowGraph extends AbstractReactive {
 	 * Executes the defined operations on all partitions.
 	 */
 	public Promise<Void> execute() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		Map<Partition, List<Node>> nodesByPartition = getNodesByPartition();
 		long taskId = ThreadLocalRandom.current().nextInt() & (Integer.MAX_VALUE >>> 1);
 		return connect(nodesByPartition.keySet())

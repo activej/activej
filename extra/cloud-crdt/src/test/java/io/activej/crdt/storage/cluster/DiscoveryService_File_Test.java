@@ -23,6 +23,7 @@ import java.util.Set;
 
 import static io.activej.crdt.function.CrdtFunction.ignoringTimestamp;
 import static io.activej.promise.TestUtils.await;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toSet;
@@ -309,7 +310,7 @@ public class DiscoveryService_File_Test {
 
 		@Override
 		public AsyncSupplier<PartitionScheme<PartitionId>> discover() {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			AsyncSupplier<PartitionScheme<PartitionId>> discover = discoveryService.discover();
 			return () -> discover.get()
 					.whenComplete((scheme, e) -> {

@@ -21,6 +21,8 @@ import io.activej.promise.Promise;
 import io.activej.reactor.ImplicitlyReactive;
 import org.jetbrains.annotations.Nullable;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
+
 public abstract class AbstractAsyncCloseable extends ImplicitlyReactive implements AsyncCloseable {
 	private @Nullable AsyncCloseable closeable;
 
@@ -42,7 +44,7 @@ public abstract class AbstractAsyncCloseable extends ImplicitlyReactive implemen
 
 	@Override
 	public final void closeEx(Exception e) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (isClosed()) return;
 		exception = e;
 		reactor.post(this::onCleanup);

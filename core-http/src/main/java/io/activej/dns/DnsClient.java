@@ -48,6 +48,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static io.activej.promise.Promises.timeout;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 /**
  * Implementation of {@link AsyncDnsClient} that asynchronously
@@ -115,7 +116,7 @@ public final class DnsClient extends AbstractNioReactive
 
 	@Override
 	public void close() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (socket == null) {
 			return;
 		}
@@ -149,7 +150,7 @@ public final class DnsClient extends AbstractNioReactive
 
 	@Override
 	public Promise<DnsResponse> resolve(DnsQuery query) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		DnsResponse fromQuery = AsyncDnsClient.resolveFromQuery(query);
 		if (fromQuery != null) {
 			logger.trace("{} already contained an IP address within itself", query);

@@ -33,6 +33,7 @@ import java.util.Objects;
 import static io.activej.common.Utils.concat;
 import static io.activej.promise.PromisePredicates.isResultOrException;
 import static io.activej.promise.Promises.retry;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("WeakerAccess")
 public final class OTUplink_Storage<K, D> extends AbstractReactive
@@ -194,7 +195,7 @@ public final class OTUplink_Storage<K, D> extends AbstractReactive
 
 	@Override
 	public Promise<FetchData<Long, D>> checkout() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		//noinspection ConstantConditions
 		return retry(
 				isResultOrException(Objects::nonNull),
@@ -211,13 +212,13 @@ public final class OTUplink_Storage<K, D> extends AbstractReactive
 
 	@Override
 	public Promise<ProtoCommit<D>> createProtoCommit(Long parentCommitId, List<D> diffs, long parentLevel) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.of(new ProtoCommit<>(parentCommitId, diffs));
 	}
 
 	@Override
 	public Promise<FetchData<Long, D>> push(ProtoCommit<D> protoCommit) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.ofCallback(cb -> doPush(protoCommit.getId(), protoCommit.getDiffs(), List.of(), cb));
 	}
 
@@ -240,13 +241,13 @@ public final class OTUplink_Storage<K, D> extends AbstractReactive
 
 	@Override
 	public Promise<FetchData<Long, D>> fetch(Long currentCommitId) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return storage.fetch(currentCommitId);
 	}
 
 	@Override
 	public Promise<FetchData<Long, D>> poll(Long currentCommitId) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return storage.poll(currentCommitId);
 	}
 

@@ -25,6 +25,8 @@ import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import io.activej.rpc.client.AsyncRpcClient;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
+
 public abstract class AbstractMemcacheClient<K, V> extends AbstractReactive
 		implements AsyncMemcacheClient<K, V> {
 	private final AsyncRpcClient rpcClient;
@@ -42,14 +44,14 @@ public abstract class AbstractMemcacheClient<K, V> extends AbstractReactive
 
 	@Override
 	public Promise<Void> put(K key, V value, int timeout) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		PutRequest request = new PutRequest(encodeKey(key), encodeValue(value));
 		return rpcClient.sendRequest(request, timeout).toVoid();
 	}
 
 	@Override
 	public Promise<V> get(K key, int timeout) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		GetRequest request = new GetRequest(encodeKey(key));
 		return rpcClient.<GetRequest, GetResponse>sendRequest(request, timeout)
 				.map(response -> decodeValue(response.getData()));
@@ -57,14 +59,14 @@ public abstract class AbstractMemcacheClient<K, V> extends AbstractReactive
 
 	@Override
 	public Promise<Void> put(K key, V value) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		PutRequest request = new PutRequest(encodeKey(key), encodeValue(value));
 		return rpcClient.sendRequest(request).toVoid();
 	}
 
 	@Override
 	public Promise<V> get(K key) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		GetRequest request = new GetRequest(encodeKey(key));
 		return rpcClient.<GetRequest, GetResponse>sendRequest(request)
 				.map(response -> decodeValue(response.getData()));

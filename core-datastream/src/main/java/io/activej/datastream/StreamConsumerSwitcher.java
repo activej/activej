@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static io.activej.common.Checks.checkState;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 /**
  * A consumer that wraps around another consumer that can be hot swapped with some other consumer.
@@ -44,7 +45,7 @@ public final class StreamConsumerSwitcher<T> extends AbstractStreamConsumer<T> i
 	}
 
 	public Promise<Void> switchTo(StreamConsumer<T> consumer) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkState(!isComplete());
 		checkState(!isEndOfStream());
 		assert this.internalSupplier != null;

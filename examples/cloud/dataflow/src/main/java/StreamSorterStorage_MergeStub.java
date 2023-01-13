@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
+
 public class StreamSorterStorage_MergeStub<T> extends ImplicitlyReactive
 		implements AsyncStreamSorterStorage<T> {
 
@@ -31,14 +33,14 @@ public class StreamSorterStorage_MergeStub<T> extends ImplicitlyReactive
 
 	@Override
 	public Promise<Integer> newPartitionId() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		int newPartition = partition++;
 		return Promise.of(newPartition);
 	}
 
 	@Override
 	public Promise<StreamConsumer<T>> write(int partition) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		List<T> list = new ArrayList<>();
 		storage.put(partition, list);
 		StreamConsumerToList<T> consumer = StreamConsumerToList.create(list);
@@ -47,7 +49,7 @@ public class StreamSorterStorage_MergeStub<T> extends ImplicitlyReactive
 
 	@Override
 	public Promise<StreamSupplier<T>> read(int partition) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		List<T> iterable = storage.get(partition);
 		StreamSupplier<T> supplier = StreamSupplier.ofIterable(iterable);
 		return Promise.of(supplier);
@@ -55,7 +57,7 @@ public class StreamSorterStorage_MergeStub<T> extends ImplicitlyReactive
 
 	@Override
 	public Promise<Void> cleanup(List<Integer> partitionsToDelete) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		for (Integer partition : partitionsToDelete) {
 			storage.remove(partition);
 		}

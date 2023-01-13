@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.nio.file.StandardWatchEventKinds.*;
 
 public final class DiscoveryService_File extends AbstractDiscoveryService<DiscoveryService_File> {
@@ -67,7 +68,7 @@ public final class DiscoveryService_File extends AbstractDiscoveryService<Discov
 
 	@Override
 	public AsyncSupplier<PartitionScheme<PartitionId>> discover() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		try {
 			pathToFile.getParent().register(
 					watchService,

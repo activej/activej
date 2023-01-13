@@ -49,6 +49,7 @@ import java.util.concurrent.Future;
 
 import static io.activej.net.socket.tcp.TcpSocket.wrapChannel;
 import static io.activej.net.socket.tcp.TcpSocket_Ssl.wrapServerSocket;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static io.activej.reactor.net.ServerSocketSettings.DEFAULT_BACKLOG;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -215,7 +216,7 @@ public abstract class AbstractReactiveServer<Self extends AbstractReactiveServer
 	 */
 	@Override
 	public final void listen() throws IOException {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (running) {
 			return;
 		}
@@ -251,7 +252,7 @@ public abstract class AbstractReactiveServer<Self extends AbstractReactiveServer
 
 	@Override
 	public final Promise<?> close() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (!running) return Promise.complete();
 		running = false;
 		closeServerSockets();
@@ -335,7 +336,7 @@ public abstract class AbstractReactiveServer<Self extends AbstractReactiveServer
 	@Override
 	public final void doAccept(SocketChannel socketChannel, InetSocketAddress localAddress, InetSocketAddress remoteSocketAddress,
 			boolean ssl, SocketSettings socketSettings) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		accepts.recordEvent();
 		if (ssl) acceptsSsl.recordEvent();
 		InetAddress remoteAddress = remoteSocketAddress.getAddress();

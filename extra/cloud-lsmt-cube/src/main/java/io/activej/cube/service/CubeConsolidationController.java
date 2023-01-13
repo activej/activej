@@ -49,6 +49,7 @@ import static io.activej.async.util.LogUtils.thisMethod;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.Utils.transformMap;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toSet;
 
 public final class CubeConsolidationController<K, D, C> extends AbstractReactive
@@ -128,18 +129,18 @@ public final class CubeConsolidationController<K, D, C> extends AbstractReactive
 
 	@SuppressWarnings("UnusedReturnValue")
 	public Promise<Void> consolidate() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return consolidate.run();
 	}
 
 	@SuppressWarnings("UnusedReturnValue")
 	public Promise<Void> cleanupIrrelevantChunks() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return cleanupIrrelevantChunks.run();
 	}
 
 	Promise<Void> doConsolidate() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkState(!cleaning, "Cannot consolidate and clean up irrelevant chunks at the same time");
 		consolidating = true;
 		AsyncBiFunction<Aggregation, Set<Object>, List<AggregationChunk>> chunksFn = strategy.get();

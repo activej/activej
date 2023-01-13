@@ -24,6 +24,7 @@ import io.activej.csp.dsl.WithChannelTransformer;
 import io.activej.promise.Promise;
 
 import static io.activej.common.Checks.checkState;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public abstract class AbstractChannelTransformer<S extends AbstractChannelTransformer<S, I, O>, I, O>
 		extends AbstractCommunicatingProcess
@@ -69,7 +70,7 @@ public abstract class AbstractChannelTransformer<S extends AbstractChannelTransf
 	@Override
 	public ChannelInput<I> getInput() {
 		return input -> {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			this.input = sanitize(input);
 			if (this.input != null && this.output != null) startProcess();
 			return getProcessCompletion();
@@ -80,7 +81,7 @@ public abstract class AbstractChannelTransformer<S extends AbstractChannelTransf
 	@Override
 	public ChannelOutput<O> getOutput() {
 		return output -> {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			this.output = sanitize(output);
 			if (this.input != null && this.output != null) startProcess();
 		};

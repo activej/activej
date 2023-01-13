@@ -28,6 +28,7 @@ import java.util.*;
 import java.util.function.Function;
 
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 /**
  * Applies aggregative functions to the elements from input streams.
@@ -83,7 +84,7 @@ public final class StreamReducer<K, O, A> extends ImplicitlyReactive implements 
 	}
 
 	public <I> StreamConsumer<I> newInput(Function<I, K> keyFunction, Reducer<K, I, O, A> reducer) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return addInput(new SimpleInput(keyFunction, reducer));
 	}
 

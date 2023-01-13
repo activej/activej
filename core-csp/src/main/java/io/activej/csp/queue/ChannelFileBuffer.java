@@ -37,6 +37,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.Executor;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.nio.file.StandardOpenOption.*;
 
 public final class ChannelFileBuffer extends ImplicitlyReactive implements ChannelQueue<ByteBuf>, WithInitializer<ChannelFileBuffer> {
@@ -86,9 +87,7 @@ public final class ChannelFileBuffer extends ImplicitlyReactive implements Chann
 
 	@Override
 	public Promise<Void> put(@Nullable ByteBuf item) {
-		if (CHECK) {
-			checkInReactorThread();
-		}
+		if (CHECK) checkInReactorThread(this);
 		if (exception != null) {
 			return Promise.ofException(exception);
 		}
@@ -108,9 +107,7 @@ public final class ChannelFileBuffer extends ImplicitlyReactive implements Chann
 
 	@Override
 	public Promise<ByteBuf> take() {
-		if (CHECK) {
-			checkInReactorThread();
-		}
+		if (CHECK) checkInReactorThread(this);
 		if (exception != null) {
 			return Promise.ofException(exception);
 		}
@@ -137,7 +134,7 @@ public final class ChannelFileBuffer extends ImplicitlyReactive implements Chann
 
 	@Override
 	public void closeEx(Exception e) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (exception != null) {
 			return;
 		}

@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.activej.async.function.AsyncSuppliers.reuse;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 /**
  * Processes logs. Creates new aggregation logs and persists to {@link AsyncLogDataConsumer} .
@@ -87,20 +88,20 @@ public final class LogOTProcessor<T, D> extends AbstractReactive
 
 	@Override
 	public Promise<?> start() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.complete();
 	}
 
 	@Override
 	public Promise<?> stop() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.complete();
 	}
 
 	private final AsyncSupplier<LogDiff<D>> processLog = reuse(this::doProcessLog);
 
 	public Promise<LogDiff<D>> processLog() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return processLog.get();
 	}
 

@@ -52,6 +52,7 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Utils.union;
 import static io.activej.cube.Utils.chunksInDiffs;
 import static io.activej.ot.OTAlgorithms.*;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toSet;
 
 public final class CubeCleanerController<K, D, C> extends AbstractReactive
@@ -113,7 +114,7 @@ public final class CubeCleanerController<K, D, C> extends AbstractReactive
 	private final AsyncRunnable cleanup = reuse(this::doCleanup);
 
 	public Promise<Void> cleanup() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return cleanup.run();
 	}
 

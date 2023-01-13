@@ -29,6 +29,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import static io.activej.common.Checks.checkState;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 /**
  * It is Stream Transformer which divides input stream  into groups with some key
@@ -64,7 +65,7 @@ public final class StreamSplitter<I, O> extends ImplicitlyReactive implements Ha
 	}
 
 	public StreamSupplier<O> newOutput() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return addOutput(new Output());
 	}
 

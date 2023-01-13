@@ -62,6 +62,7 @@ import static io.activej.http.HttpUtils.translateToHttpException;
 import static io.activej.http.Protocol.*;
 import static io.activej.jmx.stats.MBeanFormat.formatListAsMultilineString;
 import static io.activej.net.socket.tcp.TcpSocket_Ssl.wrapClientSocket;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -424,7 +425,7 @@ public final class HttpClient extends AbstractNioReactive
 
 	@Override
 	public Promise<HttpResponse> request(HttpRequest request) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (CHECK) checkArgument(request.getProtocol(), protocol -> protocol == HTTP || protocol == HTTPS);
 
 		//noinspection unchecked
@@ -444,7 +445,7 @@ public final class HttpClient extends AbstractNioReactive
 	 */
 	@Override
 	public Promise<AsyncWebSocket> webSocketRequest(HttpRequest request) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkState(AsyncWebSocket.ENABLED, "Web sockets are disabled by application settings");
 		checkArgument(request.getProtocol() == WS || request.getProtocol() == WSS, "Wrong protocol");
 		checkArgument(request.body == null && request.bodyStream == null, "No body should be present");
@@ -454,7 +455,7 @@ public final class HttpClient extends AbstractNioReactive
 	}
 
 	private Promise<?> doRequest(HttpRequest request, boolean isWebSocket) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (inspector != null) inspector.onRequest(request);
 		String host = request.getUrl().getHost();
 
@@ -540,7 +541,7 @@ public final class HttpClient extends AbstractNioReactive
 
 	@Override
 	public Promise<?> start() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.complete();
 	}
 
@@ -555,7 +556,7 @@ public final class HttpClient extends AbstractNioReactive
 
 	@Override
 	public Promise<?> stop() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		SettablePromise<Void> promise = new SettablePromise<>();
 
 		poolKeepAlive.closeAllConnections();

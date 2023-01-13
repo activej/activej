@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.not;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toSet;
 
 public final class OTRepository_Stub<K, D> extends ImplicitlyReactive
@@ -74,7 +75,7 @@ public final class OTRepository_Stub<K, D> extends ImplicitlyReactive
 
 	@Override
 	public Promise<OTCommit<K, D>> createCommit(Map<K, DiffsWithLevel<D>> parentDiffs) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return commitFactory != null ?
 				commitFactory.createCommit(parentDiffs) :
 				createCommitId()
@@ -83,14 +84,14 @@ public final class OTRepository_Stub<K, D> extends ImplicitlyReactive
 
 	@Override
 	public Promise<Void> push(Collection<OTCommit<K, D>> commits) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		doPush(commits);
 		return Promise.complete();
 	}
 
 	@Override
 	public Promise<Void> updateHeads(Set<K> newHeads, Set<K> excludedHeads) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		heads.addAll(newHeads);
 		heads.removeAll(excludedHeads);
 		return Promise.complete();
@@ -98,7 +99,7 @@ public final class OTRepository_Stub<K, D> extends ImplicitlyReactive
 
 	@Override
 	public Promise<Set<K>> getAllHeads() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.of(new HashSet<>(heads));
 	}
 
@@ -108,26 +109,26 @@ public final class OTRepository_Stub<K, D> extends ImplicitlyReactive
 
 	@Override
 	public Promise<Boolean> hasCommit(K revisionId) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.of(commits.containsKey(revisionId));
 	}
 
 	@Override
 	public Promise<OTCommit<K, D>> loadCommit(K revisionId) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.of(doLoadCommit(revisionId));
 	}
 
 	@Override
 	public Promise<Void> saveSnapshot(K revisionId, List<D> diffs) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		doSaveSnapshot(revisionId, diffs);
 		return Promise.complete();
 	}
 
 	@Override
 	public Promise<Optional<List<D>>> loadSnapshot(K revisionId) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.of(Optional.ofNullable(snapshots.get(revisionId)));
 	}
 

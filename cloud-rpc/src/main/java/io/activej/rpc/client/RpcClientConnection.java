@@ -43,6 +43,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public final class RpcClientConnection extends AbstractReactive implements RpcStream.Listener, RpcSender, JmxRefreshable {
@@ -93,9 +94,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 
 	@Override
 	public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
-		if (CHECK) {
-			checkInReactorThread();
-		}
+		if (CHECK) checkInReactorThread(this);
 		// jmx
 		totalRequests.recordEvent();
 		connectionRequests.recordEvent();
@@ -163,9 +162,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 
 	@Override
 	public <I, O> void sendRequest(I request, Callback<O> cb) {
-		if (CHECK) {
-			checkInReactorThread();
-		}
+		if (CHECK) checkInReactorThread(this);
 		// jmx
 		totalRequests.recordEvent();
 		connectionRequests.recordEvent();
@@ -203,9 +200,7 @@ public final class RpcClientConnection extends AbstractReactive implements RpcSt
 
 	@Override
 	public void accept(RpcMessage message) {
-		if (CHECK) {
-			checkInReactorThread();
-		}
+		if (CHECK) checkInReactorThread(this);
 		if (message.getData().getClass() == RpcRemoteException.class) {
 			processErrorMessage(message);
 		} else if (message.getData().getClass() == RpcControlMessage.class) {

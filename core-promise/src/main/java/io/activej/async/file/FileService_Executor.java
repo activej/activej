@@ -25,6 +25,7 @@ import java.nio.channels.FileChannel;
 import java.util.concurrent.Executor;
 
 import static io.activej.promise.Promise.ofBlocking;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class FileService_Executor extends AbstractReactive
 		implements AsyncFileService {
@@ -37,7 +38,7 @@ public final class FileService_Executor extends AbstractReactive
 
 	@Override
 	public Promise<Integer> read(FileChannel channel, long position, byte[] array, int offset, int size) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return ofBlocking(executor, () -> {
 			ByteBuffer buffer = ByteBuffer.wrap(array, offset, size);
 			long pos = position;
@@ -55,7 +56,7 @@ public final class FileService_Executor extends AbstractReactive
 
 	@Override
 	public Promise<Integer> write(FileChannel channel, long position, byte[] array, int offset, int size) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return ofBlocking(executor, () -> {
 			ByteBuffer buffer = ByteBuffer.wrap(array, offset, size);
 			long pos = position;

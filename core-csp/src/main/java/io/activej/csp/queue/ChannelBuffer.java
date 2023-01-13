@@ -24,6 +24,7 @@ import io.activej.reactor.ImplicitlyReactive;
 import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Checks.checkState;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.lang.Integer.numberOfLeadingZeros;
 import static java.lang.Math.max;
 
@@ -144,9 +145,7 @@ public final class ChannelBuffer<T> extends ImplicitlyReactive implements Channe
 	 * Adds provided item to the buffer and resets current {@code take}.
 	 */
 	public void add(@Nullable T item) throws Exception {
-		if (CHECK) {
-			checkInReactorThread();
-		}
+		if (CHECK) checkInReactorThread(this);
 		if (exception == null) {
 			if (take != null) {
 				assert isEmpty();
@@ -185,9 +184,7 @@ public final class ChannelBuffer<T> extends ImplicitlyReactive implements Channe
 	 *                   is not {@code null}
 	 */
 	public @Nullable T poll() throws Exception {
-		if (CHECK) {
-			checkInReactorThread();
-		}
+		if (CHECK) checkInReactorThread(this);
 		if (exception != null) throw exception;
 
 		if (put != null && willBeExhausted()) {
@@ -229,7 +226,7 @@ public final class ChannelBuffer<T> extends ImplicitlyReactive implements Channe
 	@Override
 	public Promise<Void> put(@Nullable T item) {
 		if (CHECK) {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			checkState(put == null, "Previous put() has not finished yet");
 		}
 		if (exception == null) {
@@ -272,7 +269,7 @@ public final class ChannelBuffer<T> extends ImplicitlyReactive implements Channe
 	@Override
 	public Promise<T> take() {
 		if (CHECK) {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			checkState(take == null, "Previous take() has not finished yet");
 		}
 		if (exception == null) {
@@ -306,7 +303,7 @@ public final class ChannelBuffer<T> extends ImplicitlyReactive implements Channe
 	 */
 	@Override
 	public void closeEx(Exception e) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (exception != null) return;
 		exception = e;
 		if (put != null) {

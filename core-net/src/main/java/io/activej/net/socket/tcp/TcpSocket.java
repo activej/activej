@@ -49,6 +49,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.MemSize.kilobytes;
 import static io.activej.common.Utils.nullify;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("WeakerAccess")
 public final class TcpSocket extends AbstractNioReactive implements AsyncTcpSocket, NioChannelEventHandler {
@@ -335,7 +336,7 @@ public final class TcpSocket extends AbstractNioReactive implements AsyncTcpSock
 
 	@Override
 	public Promise<ByteBuf> read() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (isClosed()) return Promise.ofException(new AsyncCloseException());
 		read = null;
 		if (readBuf != null || readEndOfStream) {
@@ -356,7 +357,7 @@ public final class TcpSocket extends AbstractNioReactive implements AsyncTcpSock
 
 	@Override
 	public void onReadReady() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		ops = (byte) (ops | 0x80);
 		try {
 			doRead();
@@ -432,7 +433,7 @@ public final class TcpSocket extends AbstractNioReactive implements AsyncTcpSock
 	// write cycle
 	@Override
 	public Promise<Void> write(@Nullable ByteBuf buf) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (CHECK) {
 			checkState(!writeEndOfStream, "End of stream has already been sent");
 		}
@@ -486,7 +487,7 @@ public final class TcpSocket extends AbstractNioReactive implements AsyncTcpSock
 
 	@Override
 	public void onWriteReady() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		assert write != null;
 		ops = (byte) (ops | 0x80);
 		try {
@@ -543,7 +544,7 @@ public final class TcpSocket extends AbstractNioReactive implements AsyncTcpSock
 
 	@Override
 	public void closeEx(Exception e) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (isClosed()) return;
 		doClose();
 		readBuf = nullify(readBuf, ByteBuf::recycle);

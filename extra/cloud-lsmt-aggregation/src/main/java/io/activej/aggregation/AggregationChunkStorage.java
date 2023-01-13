@@ -68,6 +68,7 @@ import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.difference;
 import static io.activej.datastream.stats.StreamStatsSizeCounter.forByteBufs;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -166,7 +167,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	public <T> Promise<StreamSupplier<T>> read(AggregationStructure aggregation, List<String> fields,
 			Class<T> recordClass, C chunkId,
 			DefiningClassLoader classLoader) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return fileSystem.download(toPath(chunkId))
 				.mapException(e -> new AggregationException("Failed to download chunk '" + chunkId + '\'', e))
 				.whenComplete(promiseOpenR.recordStats())
@@ -186,7 +187,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields,
 			Class<T> recordClass, C chunkId,
 			DefiningClassLoader classLoader) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return fileSystem.upload(toTempPath(chunkId))
 				.mapException(e -> new AggregationException("Failed to upload chunk '" + chunkId + '\'', e))
 				.whenComplete(promiseOpenW.recordStats())
@@ -209,7 +210,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 
 	@Override
 	public Promise<Void> finish(Set<C> chunkIds) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return fileSystem.moveAll(chunkIds.stream().collect(toMap(this::toTempPath, this::toPath)))
 				.mapException(e -> new AggregationException("Failed to finalize chunks: " + Utils.toString(chunkIds), e))
 				.whenResult(() -> finishChunks = chunkIds.size())
@@ -218,14 +219,14 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 
 	@Override
 	public Promise<C> createId() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return idGenerator.get()
 				.mapException(e -> new AggregationException("Could not create ID", e))
 				.whenComplete(promiseAsyncSupplier.recordStats());
 	}
 
 	public Promise<Void> backup(String backupId, Set<C> chunkIds) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return fileSystem.copyAll(chunkIds.stream().collect(toMap(this::toPath, c -> toBackupPath(backupId, c))))
 				.then(() -> ChannelSupplier.<ByteBuf>of().streamTo(
 						fileSystem.upload(toBackupPath(backupId, null), 0)))
@@ -235,12 +236,12 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	}
 
 	public Promise<Void> cleanup(Set<C> saveChunks) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return cleanup(saveChunks, null);
 	}
 
 	public Promise<Void> cleanup(Set<C> preserveChunks, @Nullable Instant instant) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		long timestamp = instant != null ? instant.toEpochMilli() : -1;
 
 		RefInt skipped = new RefInt(0);
@@ -288,7 +289,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	}
 
 	public Promise<Set<C>> list(Predicate<C> chunkIdPredicate, LongPredicate lastModifiedPredicate) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return fileSystem.list(toDir(chunksPath) + "*" + LOG)
 				.mapException(e -> new AggregationException("Failed to list chunks", e))
 				.map(list ->
@@ -303,7 +304,7 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 	}
 
 	public Promise<Void> checkRequiredChunks(Set<C> requiredChunks) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return list(s -> true, timestamp -> true)
 				.whenResult(actualChunks -> chunksCount.recordValue(actualChunks.size()))
 				.then(actualChunks -> actualChunks.containsAll(requiredChunks) ?
@@ -345,14 +346,14 @@ public final class AggregationChunkStorage<C> extends AbstractReactive
 
 	@Override
 	public Promise<?> start() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return fileSystem.ping()
 				.mapException(e -> new AggregationException("Failed to start storage", e));
 	}
 
 	@Override
 	public Promise<?> stop() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.complete();
 	}
 

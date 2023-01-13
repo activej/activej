@@ -44,6 +44,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static io.activej.common.Checks.checkNotNull;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class SqlDataflow extends AbstractReactive implements AsyncSqlDataflow {
 	private final DataflowClient client;
@@ -81,7 +82,7 @@ public final class SqlDataflow extends AbstractReactive implements AsyncSqlDataf
 
 	@Override
 	public Promise<StreamSupplier<Record>> query(String sql) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		try {
 			return Promise.of(queryDataflow(convertToDataset(sql)));
 		} catch (DataflowException | SqlParseException e) {
@@ -116,12 +117,12 @@ public final class SqlDataflow extends AbstractReactive implements AsyncSqlDataf
 	}
 
 	public StreamSupplier<Record> queryDataflow(Dataset<Record> dataset) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return queryDataflow(dataset, StreamLimiter.NO_LIMIT);
 	}
 
 	public StreamSupplier<Record> queryDataflow(Dataset<Record> dataset, long limit) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (limit == 0) {
 			return StreamSupplier.of();
 		}

@@ -25,6 +25,8 @@ import io.activej.reactor.AbstractReactive;
 import io.activej.reactor.Reactor;
 import org.jetbrains.annotations.Nullable;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
+
 public final class BackupService<K extends Comparable<K>, S> extends AbstractReactive implements ReactiveService {
 	private final CrdtStorage_Map<K, S> inMemory;
 	private final CrdtStorage_FileSystem<K, S> localFiles;
@@ -40,14 +42,14 @@ public final class BackupService<K extends Comparable<K>, S> extends AbstractRea
 	}
 
 	public Promise<Void> restore() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return localFiles.download()
 				.then(supplierWithResult ->
 						supplierWithResult.streamTo(StreamConsumer.ofPromise(inMemory.upload())));
 	}
 
 	public Promise<Void> backup() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (backupPromise != null) {
 			return backupPromise;
 		}
@@ -65,13 +67,13 @@ public final class BackupService<K extends Comparable<K>, S> extends AbstractRea
 
 	@Override
 	public Promise<?> start() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return restore().then(localFiles::consolidate);
 	}
 
 	@Override
 	public Promise<?> stop() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return backup();
 	}
 }

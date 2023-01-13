@@ -31,6 +31,7 @@ import io.activej.csp.process.AbstractCommunicatingProcess;
 import io.activej.promise.Promise;
 
 import static io.activej.csp.process.frames.BlockDecoder.END_OF_STREAM;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 		implements WithChannelTransformer<ChannelFrameDecoder, ByteBuf, ByteBuf>, WithBinaryChannelInput<ChannelFrameDecoder>,
@@ -67,7 +68,7 @@ public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 	@Override
 	public BinaryChannelInput getInput() {
 		return input -> {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			this.input = input;
 			this.bufs = input.getBufs();
 			if (this.input != null && this.output != null) startProcess();
@@ -79,7 +80,7 @@ public final class ChannelFrameDecoder extends AbstractCommunicatingProcess
 	@Override
 	public ChannelOutput<ByteBuf> getOutput() {
 		return output -> {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			this.output = sanitize(output);
 			if (this.input != null && this.output != null) startProcess();
 		};

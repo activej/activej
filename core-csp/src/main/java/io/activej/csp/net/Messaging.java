@@ -29,6 +29,8 @@ import io.activej.csp.binary.ByteBufsCodec;
 import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
+
 /**
  * Represents a simple binary protocol over for communication a TCP connection.
  */
@@ -87,7 +89,7 @@ public final class Messaging<I, O> extends AbstractAsyncCloseable implements Asy
 
 	@Override
 	public Promise<I> receive() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return bufsSupplier.decode(codec::tryDecode)
 				.whenResult(this::prefetch)
 				.whenException(this::closeEx);
@@ -95,13 +97,13 @@ public final class Messaging<I, O> extends AbstractAsyncCloseable implements Asy
 
 	@Override
 	public Promise<Void> send(O msg) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return socket.write(codec.encode(msg));
 	}
 
 	@Override
 	public Promise<Void> sendEndOfStream() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return socket.write(null)
 				.whenResult(() -> {
 					writeDone = true;
@@ -112,7 +114,7 @@ public final class Messaging<I, O> extends AbstractAsyncCloseable implements Asy
 
 	@Override
 	public ChannelConsumer<ByteBuf> sendBinaryStream() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return ChannelConsumer.ofSocket(socket)
 				.withAcknowledgement(ack -> ack
 						.whenResult(() -> {
@@ -123,7 +125,7 @@ public final class Messaging<I, O> extends AbstractAsyncCloseable implements Asy
 
 	@Override
 	public ChannelSupplier<ByteBuf> receiveBinaryStream() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return ChannelSuppliers.concat(ChannelSupplier.ofIterator(bufs.asIterator()), ChannelSupplier.ofSocket(socket))
 				.withEndOfStream(eos -> eos
 						.whenResult(() -> {

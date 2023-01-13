@@ -43,6 +43,7 @@ import static io.activej.ot.OTAlgorithms.*;
 import static io.activej.ot.reducers.DiffsReducer.toSquashedList;
 import static io.activej.promise.PromisePredicates.isResultOrException;
 import static io.activej.promise.Promises.retry;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class OTUplink<K, D, PC> extends AbstractReactive
 		implements AsyncOTUplink<K, D, PC>, WithInitializer<OTUplink<K, D, PC>> {
@@ -77,7 +78,7 @@ public final class OTUplink<K, D, PC> extends AbstractReactive
 
 	@Override
 	public Promise<PC> createProtoCommit(K parent, List<D> diffs, long parentLevel) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return repository.createCommit(parent, new DiffsWithLevel<>(parentLevel, diffs))
 				.map(protoCommitEncoder)
 				.whenComplete(toLogger(logger, thisMethod(), parent, diffs, parentLevel));
@@ -85,7 +86,7 @@ public final class OTUplink<K, D, PC> extends AbstractReactive
 
 	@Override
 	public Promise<FetchData<K, D>> push(PC protoCommit) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		OTCommit<K, D> commit;
 		try {
 			commit = protoCommitDecoder.apply(protoCommit);
@@ -107,7 +108,7 @@ public final class OTUplink<K, D, PC> extends AbstractReactive
 
 	@Override
 	public Promise<FetchData<K, D>> checkout() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		Ref<List<D>> cachedSnapshotRef = new Ref<>();
 		return repository.getHeads()
 				.then(heads -> findParent(
@@ -134,7 +135,7 @@ public final class OTUplink<K, D, PC> extends AbstractReactive
 
 	@Override
 	public Promise<FetchData<K, D>> fetch(K currentCommitId) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return repository.getHeads()
 				.then(heads -> doFetch(heads, currentCommitId))
 				.whenComplete(toLogger(logger, thisMethod(), currentCommitId));
@@ -142,7 +143,7 @@ public final class OTUplink<K, D, PC> extends AbstractReactive
 
 	@Override
 	public Promise<FetchData<K, D>> poll(K currentCommitId) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return retry(
 				isResultOrException((Set<K> polledHeads) -> !polledHeads.contains(currentCommitId)),
 				PollSanitizer.create(repository.pollHeads()))

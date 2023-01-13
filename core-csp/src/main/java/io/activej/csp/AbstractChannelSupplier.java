@@ -22,6 +22,8 @@ import io.activej.common.Checks;
 import io.activej.promise.Promise;
 import org.jetbrains.annotations.Nullable;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
+
 public abstract class AbstractChannelSupplier<T> extends AbstractAsyncCloseable implements ChannelSupplier<T> {
 	private static final boolean CHECK = Checks.isEnabled(AbstractChannelSupplier.class);
 
@@ -39,9 +41,7 @@ public abstract class AbstractChannelSupplier<T> extends AbstractAsyncCloseable 
 
 	@Override
 	public final Promise<T> get() {
-		if (CHECK) {
-			checkInReactorThread();
-		}
+		if (CHECK) checkInReactorThread(this);
 		return isClosed() ? Promise.ofException(getException()) : doGet();
 	}
 }

@@ -53,6 +53,7 @@ import java.util.stream.Collectors;
 
 import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpResponse.ok200;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 import static io.activej.types.Types.parameterizedType;
 import static java.util.stream.Collectors.toList;
@@ -206,7 +207,7 @@ public final class Servlet_DataflowDebug extends AbstractReactive implements Asy
 
 	@Override
 	public Promisable<HttpResponse> serve(HttpRequest request) throws Exception {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return servlet.serve(request);
 	}
 }

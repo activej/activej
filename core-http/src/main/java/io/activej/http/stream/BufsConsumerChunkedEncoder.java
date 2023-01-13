@@ -29,6 +29,7 @@ import io.activej.csp.process.AbstractCommunicatingProcess;
 import static io.activej.bytebuf.ByteBufStrings.CR;
 import static io.activej.bytebuf.ByteBufStrings.LF;
 import static io.activej.common.Checks.checkState;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 /**
  * This is a binary channel transformer, that converts channels of {@link ByteBuf ByteBufs}
@@ -53,7 +54,7 @@ public final class BufsConsumerChunkedEncoder extends AbstractCommunicatingProce
 	@Override
 	public ChannelInput<ByteBuf> getInput() {
 		return input -> {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			checkState(this.input == null, "Input already set");
 			this.input = sanitize(input);
 			if (this.input != null && this.output != null) startProcess();
@@ -65,7 +66,7 @@ public final class BufsConsumerChunkedEncoder extends AbstractCommunicatingProce
 	@Override
 	public ChannelOutput<ByteBuf> getOutput() {
 		return output -> {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			checkState(this.output == null, "Output already set");
 			this.output = sanitize(output);
 			if (this.input != null && this.output != null) startProcess();

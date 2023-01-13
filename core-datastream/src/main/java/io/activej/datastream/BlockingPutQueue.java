@@ -9,6 +9,7 @@ import java.util.concurrent.locks.LockSupport;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Checks.checkState;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.lang.Integer.numberOfLeadingZeros;
 
 public abstract class BlockingPutQueue<T> extends ImplicitlyReactive {
@@ -79,7 +80,7 @@ public abstract class BlockingPutQueue<T> extends ImplicitlyReactive {
 
 	public T take() {
 		if (CHECK) {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			checkState(!isEmpty());
 			checkState(!isClosed());
 		}
@@ -114,7 +115,7 @@ public abstract class BlockingPutQueue<T> extends ImplicitlyReactive {
 	protected abstract void onMoreData();
 
 	public void close() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		closed = true;
 		for (int i = 0; i < queue.length(); i++) {
 			queue.set(i, null);

@@ -13,6 +13,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
+
 /**
  * Implementation of {@link AsyncUserDao} which uses generic SQL commands for operation
  */
@@ -29,7 +31,7 @@ public final class UserDao_Sql extends AbstractReactive
 
 	@Override
 	public Promise<@Nullable User> get(long id) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.ofBlocking(executor, () -> {
 			try (Connection connection = dataSource.getConnection()) {
 				try (PreparedStatement statement = connection.prepareStatement(
@@ -51,7 +53,7 @@ public final class UserDao_Sql extends AbstractReactive
 
 	@Override
 	public Promise<Map<Long, User>> getAll() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.ofBlocking(executor, () -> {
 			try (Connection connection = dataSource.getConnection()) {
 				try (PreparedStatement statement = connection.prepareStatement(
@@ -75,7 +77,7 @@ public final class UserDao_Sql extends AbstractReactive
 
 	@Override
 	public Promise<Void> addUser(User user) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.ofBlocking(executor, () -> {
 			try (Connection connection = dataSource.getConnection()) {
 				try (PreparedStatement statement = connection.prepareStatement(
@@ -92,7 +94,7 @@ public final class UserDao_Sql extends AbstractReactive
 
 	@Override
 	public Promise<Boolean> updateUser(long id, User newUser) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.ofBlocking(executor, () -> {
 			try (Connection connection = dataSource.getConnection()) {
 				try (PreparedStatement statement = connection.prepareStatement(
@@ -110,7 +112,7 @@ public final class UserDao_Sql extends AbstractReactive
 
 	@Override
 	public Promise<Boolean> deleteUser(long id) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.ofBlocking(executor, () -> {
 			try (Connection connection = dataSource.getConnection()) {
 				try (PreparedStatement statement = connection.prepareStatement(

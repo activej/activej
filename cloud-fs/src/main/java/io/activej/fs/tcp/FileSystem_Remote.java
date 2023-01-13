@@ -59,6 +59,7 @@ import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.isBijection;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.util.RemoteFileSystemUtils.ofFixedSize;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 /**
  * A client to the remote {@link FileSystemServer}.
@@ -128,7 +129,7 @@ public final class FileSystem_Remote extends AbstractNioReactive
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(String name) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return connectForStreaming(address)
 				.then(this::performHandshake)
 				.then(messaging -> doUpload(messaging, name, null))
@@ -138,7 +139,7 @@ public final class FileSystem_Remote extends AbstractNioReactive
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(String name, long size) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return connect(address)
 				.then(this::performHandshake)
 				.then(messaging -> doUpload(messaging, name, size))
@@ -171,7 +172,7 @@ public final class FileSystem_Remote extends AbstractNioReactive
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> append(String name, long offset) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return connect(address)
 				.then(this::performHandshake)
 				.then(messaging ->
@@ -194,7 +195,7 @@ public final class FileSystem_Remote extends AbstractNioReactive
 
 	@Override
 	public Promise<ChannelSupplier<ByteBuf>> download(String name, long offset, long limit) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkArgument(offset >= 0, "Data offset must be greater than or equal to zero");
 		checkArgument(limit >= 0, "Data limit must be greater than or equal to zero");
 
@@ -241,7 +242,7 @@ public final class FileSystem_Remote extends AbstractNioReactive
 
 	@Override
 	public Promise<Void> copy(String name, String target) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return simpleCommand(new FileSystemRequest.Copy(name, target), FileSystemResponse.CopyFinished.class)
 				.whenComplete(toLogger(logger, "copy", name, target, this))
 				.whenComplete(copyPromise.recordStats());
@@ -249,7 +250,7 @@ public final class FileSystem_Remote extends AbstractNioReactive
 
 	@Override
 	public Promise<Void> copyAll(Map<String, String> sourceToTarget) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
@@ -260,7 +261,7 @@ public final class FileSystem_Remote extends AbstractNioReactive
 
 	@Override
 	public Promise<Void> move(String name, String target) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return simpleCommand(new FileSystemRequest.Move(name, target), FileSystemResponse.MoveFinished.class)
 				.whenComplete(toLogger(logger, "move", name, target, this))
 				.whenComplete(movePromise.recordStats());
@@ -268,7 +269,7 @@ public final class FileSystem_Remote extends AbstractNioReactive
 
 	@Override
 	public Promise<Void> moveAll(Map<String, String> sourceToTarget) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkArgument(isBijection(sourceToTarget), "Targets must be unique");
 		if (sourceToTarget.isEmpty()) return Promise.complete();
 
@@ -279,7 +280,7 @@ public final class FileSystem_Remote extends AbstractNioReactive
 
 	@Override
 	public Promise<Void> delete(String name) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return simpleCommand(new FileSystemRequest.Delete(name), FileSystemResponse.DeleteFinished.class)
 				.whenComplete(toLogger(logger, "delete", name, this))
 				.whenComplete(deletePromise.recordStats());
@@ -287,7 +288,7 @@ public final class FileSystem_Remote extends AbstractNioReactive
 
 	@Override
 	public Promise<Void> deleteAll(Set<String> toDelete) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (toDelete.isEmpty()) return Promise.complete();
 
 		return simpleCommand(new FileSystemRequest.DeleteAll(toDelete), FileSystemResponse.DeleteAllFinished.class)
@@ -297,7 +298,7 @@ public final class FileSystem_Remote extends AbstractNioReactive
 
 	@Override
 	public Promise<Map<String, FileMetadata>> list(String glob) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return simpleCommand(new FileSystemRequest.List(glob), FileSystemResponse.ListFinished.class, FileSystemResponse.ListFinished::files)
 				.whenComplete(toLogger(logger, "list", glob, this))
 				.whenComplete(listPromise.recordStats());
@@ -305,7 +306,7 @@ public final class FileSystem_Remote extends AbstractNioReactive
 
 	@Override
 	public Promise<@Nullable FileMetadata> info(String name) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return simpleCommand(new FileSystemRequest.Info(name), FileSystemResponse.InfoFinished.class, FileSystemResponse.InfoFinished::fileMetadata)
 				.whenComplete(toLogger(logger, "info", name, this))
 				.whenComplete(infoPromise.recordStats());
@@ -313,7 +314,7 @@ public final class FileSystem_Remote extends AbstractNioReactive
 
 	@Override
 	public Promise<Map<String, FileMetadata>> infoAll(Set<String> names) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (names.isEmpty()) return Promise.of(Map.of());
 
 		return simpleCommand(new FileSystemRequest.InfoAll(names), FileSystemResponse.InfoAllFinished.class, FileSystemResponse.InfoAllFinished::files)
@@ -323,7 +324,7 @@ public final class FileSystem_Remote extends AbstractNioReactive
 
 	@Override
 	public Promise<Void> ping() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return simpleCommand(new FileSystemRequest.Ping(), FileSystemResponse.Pong.class)
 				.whenComplete(toLogger(logger, "ping", this))
 				.whenComplete(pingPromise.recordStats());
@@ -399,13 +400,13 @@ public final class FileSystem_Remote extends AbstractNioReactive
 
 	@Override
 	public Promise<?> start() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return ping();
 	}
 
 	@Override
 	public Promise<?> stop() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.complete();
 	}
 

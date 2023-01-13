@@ -26,6 +26,7 @@ import static io.activej.ot.OTCommit.ofRoot;
 import static io.activej.ot.utils.Utils.*;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static io.activej.reactor.Reactor.getCurrentReactor;
 import static org.junit.Assert.*;
 
@@ -445,31 +446,31 @@ public class OTStateManagerTest {
 
 		@Override
 		public Promise<OTCommit<Integer, TestOp>> createProtoCommit(Integer parent, List<TestOp> diffs, long parentLevel) {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			return node.createProtoCommit(parent, diffs, parentLevel);
 		}
 
 		@Override
 		public Promise<FetchData<Integer, TestOp>> push(OTCommit<Integer, TestOp> protoCommit) {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			return node.push(protoCommit);
 		}
 
 		@Override
 		public Promise<FetchData<Integer, TestOp>> checkout() {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			return node.checkout();
 		}
 
 		@Override
 		public Promise<FetchData<Integer, TestOp>> fetch(Integer currentCommitId) {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			return node.fetch(currentCommitId);
 		}
 
 		@Override
 		public Promise<FetchData<Integer, TestOp>> poll(Integer currentCommitId) {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			return node.poll(currentCommitId);
 		}
 	}

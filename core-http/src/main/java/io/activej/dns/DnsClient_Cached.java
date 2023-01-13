@@ -35,6 +35,8 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
+import static io.activej.reactor.Reactor.checkInReactorThread;
 import static io.activej.reactor.util.RunnableWithContext.wrapContext;
 
 /**
@@ -89,7 +91,7 @@ public final class DnsClient_Cached extends AbstractReactive
 		return new AsyncDnsClient() {
 			@Override
 			public Promise<DnsResponse> resolve(DnsQuery query) {
-				anotherReactor.checkInReactorThread();
+				checkInReactorThread(anotherReactor);
 				DnsResponse fromQuery = AsyncDnsClient.resolveFromQuery(query);
 				if (fromQuery != null) {
 					logger.trace("{} already contained an IP address within itself", query);
@@ -116,7 +118,7 @@ public final class DnsClient_Cached extends AbstractReactive
 
 			@Override
 			public void close() {
-				anotherReactor.checkInReactorThread();
+				checkInReactorThread(anotherReactor);
 				reactor.execute(DnsClient_Cached.this::close);
 			}
 		};
@@ -145,7 +147,7 @@ public final class DnsClient_Cached extends AbstractReactive
 
 	@Override
 	public Promise<DnsResponse> resolve(DnsQuery query) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		DnsResponse fromQuery = AsyncDnsClient.resolveFromQuery(query);
 		if (fromQuery != null) {
 			logger.trace("{} already contained an IP address within itself", query);

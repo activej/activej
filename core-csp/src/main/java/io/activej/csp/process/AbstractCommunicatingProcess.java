@@ -30,6 +30,8 @@ import io.activej.promise.SettablePromise;
 import io.activej.reactor.ImplicitlyReactive;
 import org.jetbrains.annotations.Nullable;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
+
 /**
  * An abstract AsyncProcess which describes interactions
  * between ChannelSupplier and ChannelConsumer. A universal
@@ -65,7 +67,7 @@ public abstract class AbstractCommunicatingProcess extends ImplicitlyReactive im
 	}
 
 	protected final void completeProcessEx(@Nullable Exception e) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (isProcessComplete()) return;
 		if (e == null) {
 			processComplete = true; // setting flag here only, as closeEx() method sets it on its own
@@ -91,7 +93,7 @@ public abstract class AbstractCommunicatingProcess extends ImplicitlyReactive im
 	 */
 	@Override
 	public final Promise<Void> startProcess() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (!processStarted) {
 			processStarted = true;
 			beforeProcess();
@@ -116,7 +118,7 @@ public abstract class AbstractCommunicatingProcess extends ImplicitlyReactive im
 	 */
 	@Override
 	public final void closeEx(Exception e) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (isProcessComplete()) return;
 		processComplete = true;
 		doClose(e);

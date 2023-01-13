@@ -30,6 +30,7 @@ import java.util.function.Function;
 
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Checks.checkState;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class CrdtRpcStrategyService<K extends Comparable<K>> extends AbstractReactive
 		implements ReactiveService {
@@ -64,7 +65,7 @@ public final class CrdtRpcStrategyService<K extends Comparable<K>> extends Abstr
 
 	@Override
 	public Promise<?> start() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkNotNull(rpcClient);
 
 		AsyncSupplier<? extends AsyncDiscoveryService.PartitionScheme<?>> discoverySupplier = discoveryService.discover();
@@ -89,7 +90,7 @@ public final class CrdtRpcStrategyService<K extends Comparable<K>> extends Abstr
 
 	@Override
 	public Promise<?> stop() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		this.stopped = true;
 		return Promise.complete();
 	}

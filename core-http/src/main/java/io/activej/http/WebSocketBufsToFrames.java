@@ -39,6 +39,7 @@ import static io.activej.csp.binary.ByteBufsDecoder.ofFixedSize;
 import static io.activej.http.HttpUtils.*;
 import static io.activej.http.WebSocketConstants.*;
 import static io.activej.http.WebSocketConstants.OpCode.*;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 		implements WithChannelTransformer<WebSocketBufsToFrames, ByteBuf, Frame>, WithBinaryChannelInput<WebSocketBufsToFrames> {
@@ -83,7 +84,7 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 	@Override
 	public BinaryChannelInput getInput() {
 		return input -> {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			checkState(this.input == null, "Input already set");
 			this.input = sanitize(input);
 			this.bufs = input.getBufs();
@@ -96,7 +97,7 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 	@Override
 	public ChannelOutput<Frame> getOutput() {
 		return output -> {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			checkState(this.output == null, "Output already set");
 			this.output = sanitize(output);
 			if (this.input != null && this.output != null) startProcess();
@@ -309,7 +310,7 @@ final class WebSocketBufsToFrames extends AbstractCommunicatingProcess
 	}
 
 	void onProtocolError(WebSocketException e) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		closeReceivedPromise.trySetException(e);
 		closeEx(e);
 	}

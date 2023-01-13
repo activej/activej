@@ -9,6 +9,7 @@ import io.activej.test.ExpectedException;
 import java.util.List;
 
 import static io.activej.common.Checks.checkNotNull;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class StreamSorterStorage_FailingStub<T> extends ImplicitlyReactive
 		implements AsyncStreamSorterStorage<T> {
@@ -59,28 +60,28 @@ public final class StreamSorterStorage_FailingStub<T> extends ImplicitlyReactive
 
 	@Override
 	public Promise<Integer> newPartitionId() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkNotNull(storage);
 		return failNewPartition ? Promise.ofException(STORAGE_EXCEPTION) : storage.newPartitionId();
 	}
 
 	@Override
 	public Promise<StreamConsumer<T>> write(int partition) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkNotNull(storage);
 		return failWrite ? Promise.ofException(STORAGE_EXCEPTION) : storage.write(partition);
 	}
 
 	@Override
 	public Promise<StreamSupplier<T>> read(int partition) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkNotNull(storage);
 		return failRead ? Promise.ofException(STORAGE_EXCEPTION) : storage.read(partition);
 	}
 
 	@Override
 	public Promise<Void> cleanup(List<Integer> partitionsToDelete) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkNotNull(storage);
 		return failCleanup ? Promise.ofException(STORAGE_EXCEPTION) : storage.cleanup(partitionsToDelete);
 	}

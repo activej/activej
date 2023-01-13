@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.BinaryOperator;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
+
 public class CrdtMap_Java<K extends Comparable<K>, S> extends AbstractReactive
 		implements AsyncCrdtMap<K, S>, ReactiveService {
 	private final Map<K, S> map = new TreeMap<>();
@@ -52,31 +54,31 @@ public class CrdtMap_Java<K extends Comparable<K>, S> extends AbstractReactive
 
 	@Override
 	public Promise<@Nullable S> get(K key) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.of(map.get(key));
 	}
 
 	@Override
 	public Promise<Void> refresh() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return refresh.run();
 	}
 
 	@Override
 	public Promise<@Nullable S> put(K key, S value) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.of(map.merge(key, value, mergeFn));
 	}
 
 	@Override
 	public Promise<?> start() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return refresh();
 	}
 
 	@Override
 	public Promise<?> stop() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.complete();
 	}
 

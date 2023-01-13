@@ -35,6 +35,7 @@ import java.util.concurrent.Executor;
 import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.net.socket.tcp.TcpSocket_Ssl.wrapClientSocket;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 /**
  * A client for Redis.
@@ -114,7 +115,7 @@ public final class RedisClient extends AbstractNioReactive implements WithInitia
 	 * @return promise of {@link RedisConnection}
 	 */
 	public Promise<RedisConnection> connect() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return TcpSocket.connect(reactor, address, connectTimeoutMillis, socketSettings)
 				.map(
 						socket -> {
@@ -144,7 +145,7 @@ public final class RedisClient extends AbstractNioReactive implements WithInitia
 	 * @see <a href="https://redis.io/topics/acl">ACL</a>
 	 */
 	public Promise<RedisConnection> connect(byte[] password) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return connectAndAuth("AUTH", password);
 	}
 
@@ -152,7 +153,7 @@ public final class RedisClient extends AbstractNioReactive implements WithInitia
 	 * @see #connect(byte[])
 	 */
 	public Promise<RedisConnection> connect(String password) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return connectAndAuth("AUTH", password);
 	}
 
@@ -164,7 +165,7 @@ public final class RedisClient extends AbstractNioReactive implements WithInitia
 	 * @see <a href="https://redis.io/topics/acl">ACL</a>
 	 */
 	public Promise<RedisConnection> connect(byte[] username, byte[] password) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return connectAndAuth("AUTH", username, password);
 	}
 
@@ -172,12 +173,12 @@ public final class RedisClient extends AbstractNioReactive implements WithInitia
 	 * @see #connect(byte[], byte[])
 	 */
 	public Promise<RedisConnection> connect(String username, String password) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return connectAndAuth("AUTH", username, password);
 	}
 
 	private Promise<RedisConnection> connectAndAuth(Object... args) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return connect()
 				.then(connection ->
 						connection.cmd(RedisRequest.of(args), RedisResponse.OK)

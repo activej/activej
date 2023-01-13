@@ -62,6 +62,7 @@ import static io.activej.codegen.expression.Expressions.cast;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.Utils.*;
 import static io.activej.datastream.processor.StreamSupplierTransformer.identity;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.lang.Math.min;
 import static java.util.Comparator.comparing;
 import static java.util.function.Predicate.isEqual;
@@ -236,7 +237,7 @@ public class Aggregation extends AbstractReactive
 	@SuppressWarnings("unchecked")
 	public <T, C, K extends Comparable> StreamConsumerWithResult<T, AggregationDiff> consume(
 			Class<T> inputClass, Map<String, String> keyFields, Map<String, String> measureFields) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkArgument(new HashSet<>(getKeys()).equals(keyFields.keySet()), "Expected keys: %s, actual keyFields: %s", getKeys(), keyFields);
 		checkArgument(getMeasureTypes().keySet().containsAll(measureFields.keySet()), "Unknown measures: %s", difference(measureFields.keySet(),
 				getMeasureTypes().keySet()));
@@ -270,7 +271,7 @@ public class Aggregation extends AbstractReactive
 	}
 
 	public <T> StreamConsumerWithResult<T, AggregationDiff> consume(Class<T> inputClass) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return consume(inputClass, scanKeyFields(inputClass), scanMeasureFields(inputClass));
 	}
 
@@ -281,7 +282,7 @@ public class Aggregation extends AbstractReactive
 	}
 
 	public <T> StreamSupplier<T> query(AggregationQuery query, Class<T> outputClass) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return query(query, outputClass, classLoader);
 	}
 
@@ -295,7 +296,7 @@ public class Aggregation extends AbstractReactive
 	 */
 	@Override
 	public <T> StreamSupplier<T> query(AggregationQuery query, Class<T> outputClass, DefiningClassLoader queryClassLoader) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkArgument(iterate(queryClassLoader, Objects::nonNull, ClassLoader::getParent).anyMatch(isEqual(classLoader)),
 				"Unrelated queryClassLoader");
 		List<String> fields = getMeasures().stream().filter(query.getMeasures()::contains).collect(toList());
@@ -535,27 +536,27 @@ public class Aggregation extends AbstractReactive
 	}
 
 	public Promise<AggregationDiff> consolidateMinKey() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return consolidateMinKey(Set.of());
 	}
 
 	public Promise<AggregationDiff> consolidateMinKey(Set<Object> lockedChunkIds) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return consolidate(getChunksForConsolidation(lockedChunkIds, false));
 	}
 
 	public Promise<AggregationDiff> consolidateHotSegment() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return consolidateHotSegment(Set.of());
 	}
 
 	public Promise<AggregationDiff> consolidateHotSegment(Set<Object> lockedChunkIds) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return consolidate(getChunksForConsolidation(lockedChunkIds, true));
 	}
 
 	public Promise<AggregationDiff> consolidate(List<AggregationChunk> chunks) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkArgument(state.getChunks().values().containsAll(chunks), "Consolidating unknown chunks");
 
 		consolidationStarted = reactor.currentTimeMillis();

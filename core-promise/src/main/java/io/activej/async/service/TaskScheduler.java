@@ -38,6 +38,7 @@ import java.time.Duration;
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.common.Utils.nullify;
 import static io.activej.promise.Promises.retry;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("UnusedReturnValue")
 public final class TaskScheduler extends AbstractReactive
@@ -224,7 +225,7 @@ public final class TaskScheduler extends AbstractReactive
 
 	@Override
 	public Promise<?> start() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkNotNull(schedule, "Schedule is not set");
 
 		scheduleTask();
@@ -233,7 +234,7 @@ public final class TaskScheduler extends AbstractReactive
 
 	@Override
 	public Promise<?> stop() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		enabled = false;
 		scheduledTask = nullify(scheduledTask, ScheduledRunnable::cancel);
 		if (currentPromise == null) {
@@ -243,7 +244,7 @@ public final class TaskScheduler extends AbstractReactive
 	}
 
 	public void setSchedule(Schedule schedule) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		this.schedule = checkNotNull(schedule);
 		if (stats.getActivePromises() != 0 && scheduledTask != null && !scheduledTask.isCancelled()) {
 			scheduledTask = nullify(scheduledTask, ScheduledRunnable::cancel);

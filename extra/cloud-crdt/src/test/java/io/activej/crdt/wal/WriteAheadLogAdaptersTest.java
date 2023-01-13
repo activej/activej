@@ -7,6 +7,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 import static io.activej.promise.TestUtils.await;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
@@ -38,14 +39,14 @@ public class WriteAheadLogAdaptersTest {
 
 		@Override
 		public Promise<Void> put(Integer key, Integer value) {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			updatesCount++;
 			return Promise.complete();
 		}
 
 		@Override
 		public Promise<Void> flush() {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			updatesCount = 0;
 			return Promise.complete();
 		}

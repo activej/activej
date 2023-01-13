@@ -34,6 +34,7 @@ import java.util.Objects;
 
 import static io.activej.common.Checks.checkState;
 import static io.activej.fs.cluster.FileSystemPartitions.LOCAL_EXCEPTION;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 final class ChannelByteSplitter extends AbstractCommunicatingProcess
 		implements WithChannelInput<ChannelByteSplitter, ByteBuf>, WithChannelOutputs<ByteBuf> {
@@ -53,7 +54,7 @@ final class ChannelByteSplitter extends AbstractCommunicatingProcess
 	@Override
 	public ChannelInput<ByteBuf> getInput() {
 		return input -> {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			checkState(!isProcessStarted(), "Can't configure splitter while it is running");
 			this.input = sanitize(input);
 			tryStart();
@@ -66,7 +67,7 @@ final class ChannelByteSplitter extends AbstractCommunicatingProcess
 		int index = outputs.size();
 		outputs.add(null);
 		return output -> {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			outputs.set(index, output);
 			tryStart();
 		};

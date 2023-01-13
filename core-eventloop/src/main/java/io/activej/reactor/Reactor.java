@@ -1,6 +1,7 @@
 package io.activej.reactor;
 
 import io.activej.async.executor.ReactorExecutor;
+import io.activej.common.Checks;
 import io.activej.reactor.schedule.ReactorScheduler;
 import org.jetbrains.annotations.Async;
 import org.jetbrains.annotations.Nullable;
@@ -63,6 +64,10 @@ public interface Reactor extends Reactive, ReactorExecutor, ReactorScheduler {
 	 */
 	static <T> T executeWithReactor(Reactor reactor, Supplier<T> callable) {
 		return ThreadLocalReactor.executeWithReactor(reactor, callable);
+	}
+
+	static void checkInReactorThread(Reactor reactor) {
+		Checks.checkState(reactor.inReactorThread(), "Not in reactor thread");
 	}
 
 	@Override

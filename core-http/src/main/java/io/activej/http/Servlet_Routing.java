@@ -33,6 +33,7 @@ import java.util.function.Consumer;
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.http.Protocol.WS;
 import static io.activej.http.Protocol.WSS;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
@@ -155,7 +156,7 @@ public final class Servlet_Routing extends AbstractReactive
 
 	@Override
 	public Promise<HttpResponse> serve(HttpRequest request) throws Exception {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		Promise<HttpResponse> processed = tryServe(request);
 		return processed != null ?
 				processed :

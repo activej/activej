@@ -42,6 +42,7 @@ import java.util.Map;
 
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.fs.cluster.ServerSelector.RENDEZVOUS_HASH_SHARDER;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static java.util.stream.Collectors.toList;
 
 public final class FileSystemPartitions extends AbstractReactive
@@ -120,7 +121,7 @@ public final class FileSystemPartitions extends AbstractReactive
 	 * @return promise of the check
 	 */
 	public Promise<Void> checkAllPartitions() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return checkAllPartitions.run()
 				.whenComplete(toLogger(logger, "checkAllPartitions"));
 	}
@@ -133,7 +134,7 @@ public final class FileSystemPartitions extends AbstractReactive
 	 * @return promise of the check
 	 */
 	public Promise<Void> checkDeadPartitions() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return checkDeadPartitions.run()
 				.whenComplete(toLogger(logger, "checkDeadPartitions"));
 	}
@@ -149,7 +150,7 @@ public final class FileSystemPartitions extends AbstractReactive
 	 */
 	@SuppressWarnings("UnusedReturnValue")
 	public boolean markDead(Object partitionId, @Nullable Exception e) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		AsyncFileSystem partition = alivePartitions.remove(partitionId);
 		if (partition != null) {
 			logger.warn("marking {} as dead ", partitionId, e);
@@ -160,7 +161,7 @@ public final class FileSystemPartitions extends AbstractReactive
 	}
 
 	public void markAlive(Object partitionId) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		AsyncFileSystem partition = deadPartitions.remove(partitionId);
 		if (partition != null) {
 			logger.info("Partition {} is alive again!", partitionId);
@@ -173,7 +174,7 @@ public final class FileSystemPartitions extends AbstractReactive
 	 * or that there were no response at all
 	 */
 	public void markIfDead(Object partitionId, Exception e) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (!(e instanceof FileSystemException) || e instanceof FileSystemIOException) {
 			markDead(partitionId, e);
 		}
@@ -181,7 +182,7 @@ public final class FileSystemPartitions extends AbstractReactive
 
 	public ConsumerEx<Exception> wrapDeathFn(Object partitionId) {
 		return e -> {
-			checkInReactorThread();
+			checkInReactorThread(this);
 			markIfDead(partitionId, e);
 			if (e instanceof FileSystemException) {
 				throw e;
@@ -192,7 +193,7 @@ public final class FileSystemPartitions extends AbstractReactive
 	}
 
 	public List<Object> select(String filename) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return serverSelector.selectFrom(filename, alivePartitions.keySet());
 	}
 
@@ -202,7 +203,7 @@ public final class FileSystemPartitions extends AbstractReactive
 
 	@Override
 	public Promise<?> start() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		AsyncSupplier<Map<Object, AsyncFileSystem>> discoverySupplier = discoveryService.discover();
 		return discoverySupplier.get()
 				.whenResult(result -> {
@@ -215,7 +216,7 @@ public final class FileSystemPartitions extends AbstractReactive
 
 	@Override
 	public Promise<?> stop() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		return Promise.complete();
 	}
 

@@ -37,6 +37,7 @@ import javax.net.ssl.SSLException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.Executor;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
 import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
 import static javax.net.ssl.SSLEngineResult.Status.BUFFER_UNDERFLOW;
 import static javax.net.ssl.SSLEngineResult.Status.CLOSED;
@@ -100,7 +101,7 @@ public final class TcpSocket_Ssl extends AbstractNioReactive implements AsyncTcp
 
 	@Override
 	public Promise<ByteBuf> read() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		read = null;
 		if (shouldReturnEndOfStream) {
 			shouldReturnEndOfStream = false;
@@ -120,7 +121,7 @@ public final class TcpSocket_Ssl extends AbstractNioReactive implements AsyncTcp
 
 	@Override
 	public Promise<Void> write(@Nullable ByteBuf buf) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (isClosed()) {
 			if (buf != null) {
 				buf.recycle();
@@ -396,7 +397,7 @@ public final class TcpSocket_Ssl extends AbstractNioReactive implements AsyncTcp
 
 	@Override
 	public void closeEx(Exception e) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (isClosed()) return;
 		Recyclers.recycle(net2engine);
 		Recyclers.recycle(engine2app);

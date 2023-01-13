@@ -65,6 +65,8 @@ import static io.activej.async.callback.Callback.toAnotherReactor;
 import static io.activej.common.Utils.nonNullElseGet;
 import static io.activej.common.Utils.not;
 import static io.activej.net.socket.tcp.TcpSocket_Ssl.wrapClientSocket;
+import static io.activej.reactor.Reactive.checkInReactorThread;
+import static io.activej.reactor.Reactor.checkInReactorThread;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -273,7 +275,7 @@ public final class RpcClient extends AbstractNioReactive
 
 	@Override
 	public Promise<Void> start() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		Checks.checkNotNull(messageTypes, "Message types must be specified");
 		Checks.checkState(stopPromise == null);
 
@@ -283,7 +285,7 @@ public final class RpcClient extends AbstractNioReactive
 	}
 
 	public Promise<Void> changeStrategy(RpcStrategy newStrategy, boolean retry) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (stopPromise != null) {
 			return Promise.ofException(CLIENT_IS_STOPPED);
 		}
@@ -318,7 +320,7 @@ public final class RpcClient extends AbstractNioReactive
 
 	@Override
 	public Promise<Void> stop() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (stopPromise != null) return stopPromise;
 
 		stopPromise = new SettablePromise<>();
@@ -472,9 +474,7 @@ public final class RpcClient extends AbstractNioReactive
 	 */
 	@Override
 	public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
-		if (CHECK) {
-			checkInReactorThread();
-		}
+		if (CHECK) checkInReactorThread(this);
 		if (timeout > 0) {
 			requestSender.sendRequest(request, timeout, cb);
 		} else {
@@ -484,9 +484,7 @@ public final class RpcClient extends AbstractNioReactive
 
 	@Override
 	public <I, O> void sendRequest(I request, Callback<O> cb) {
-		if (CHECK) {
-			checkInReactorThread();
-		}
+		if (CHECK) checkInReactorThread(this);
 		requestSender.sendRequest(request, cb);
 	}
 
@@ -498,9 +496,7 @@ public final class RpcClient extends AbstractNioReactive
 		return new AsyncRpcClient() {
 			@Override
 			public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
-				if (CHECK) {
-					anotherReactor.checkInReactorThread();
-				}
+				if (CHECK) checkInReactorThread(anotherReactor);
 				if (timeout > 0) {
 					reactor.execute(() -> requestSender.sendRequest(request, timeout, toAnotherReactor(anotherReactor, cb)));
 				} else {

@@ -27,6 +27,7 @@ import org.jetbrains.annotations.Nullable;
 
 import static io.activej.common.Checks.checkState;
 import static io.activej.common.exception.FatalErrorHandlers.handleError;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 @SuppressWarnings("UnusedReturnValue")
 public final class AsyncAccumulator<A> extends ImplicitlyReactive implements AsyncCloseable, WithInitializer<AsyncAccumulator<A>> {
@@ -51,7 +52,7 @@ public final class AsyncAccumulator<A> extends ImplicitlyReactive implements Asy
 	}
 
 	public Promise<A> run() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkState(!started);
 		this.started = true;
 		if (resultPromise.isComplete()) return resultPromise;
@@ -62,13 +63,13 @@ public final class AsyncAccumulator<A> extends ImplicitlyReactive implements Asy
 	}
 
 	public Promise<A> run(Promise<Void> runtimePromise) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		addPromise(runtimePromise, (result, v) -> {});
 		return run();
 	}
 
 	public <T> void addPromise(Promise<T> promise, BiConsumerEx<A, T> consumer) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (resultPromise.isComplete()) {
 			promise.whenResult(Recyclers::recycle);
 			return;
@@ -100,7 +101,7 @@ public final class AsyncAccumulator<A> extends ImplicitlyReactive implements Asy
 	}
 
 	public <V> SettablePromise<V> newPromise(BiConsumerEx<A, V> consumer) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		SettablePromise<V> resultPromise = new SettablePromise<>();
 		addPromise(resultPromise, consumer);
 		return resultPromise;
@@ -119,12 +120,12 @@ public final class AsyncAccumulator<A> extends ImplicitlyReactive implements Asy
 	}
 
 	public void complete() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		resultPromise.trySet(accumulator);
 	}
 
 	public void complete(A result) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (resultPromise.trySet(result) && result != accumulator) {
 			Recyclers.recycle(accumulator);
 		}
@@ -132,7 +133,7 @@ public final class AsyncAccumulator<A> extends ImplicitlyReactive implements Asy
 
 	@Override
 	public void closeEx(Exception e) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		if (resultPromise.trySetException(e)) {
 			Recyclers.recycle(accumulator);
 		}

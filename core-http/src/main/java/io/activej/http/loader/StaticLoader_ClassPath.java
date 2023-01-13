@@ -31,6 +31,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.Executor;
 
+import static io.activej.reactor.Reactive.checkInReactorThread;
+
 class StaticLoader_ClassPath extends AbstractReactive
 		implements AsyncStaticLoader {
 	private static final String ROOT = "/";
@@ -63,7 +65,7 @@ class StaticLoader_ClassPath extends AbstractReactive
 
 	@Override
 	public Promise<ByteBuf> load(String name) {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		String path = root;
 		int begin = 0;
 		if (name.startsWith(ROOT)) {

@@ -37,6 +37,7 @@ import static io.activej.async.function.AsyncRunnables.reuse;
 import static io.activej.common.Checks.checkState;
 import static io.activej.promise.PromisePredicates.isResultOrException;
 import static io.activej.promise.Promises.retry;
+import static io.activej.reactor.Reactive.checkInReactorThread;
 
 public final class IdGeneratorSql extends AbstractReactive
 		implements AsyncSupplier<Long>, ReactiveJmxBeanWithStats, WithInitializer<IdGeneratorSql> {
@@ -90,7 +91,7 @@ public final class IdGeneratorSql extends AbstractReactive
 
 	@Override
 	public Promise<Long> get() {
-		checkInReactorThread();
+		checkInReactorThread(this);
 		checkState(next <= limit, "Cannot create id larger than the limit of " + limit);
 		if (next < limit) {
 			return Promise.of(next++);
