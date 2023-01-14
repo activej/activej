@@ -17,17 +17,28 @@
 package io.activej.rpc.client.sender;
 
 import io.activej.rpc.client.RpcClientConnectionPool;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-final class RpcStrategy_FirstAvailable implements RpcStrategy {
-	private final List<RpcStrategy> list;
+public final class RpcStrategy_FirstAvailable implements RpcStrategy {
+	private final List<? extends RpcStrategy> list;
 
-	RpcStrategy_FirstAvailable(List<RpcStrategy> list) {
+	RpcStrategy_FirstAvailable(List<? extends RpcStrategy> list) {
 		this.list = list;
+	}
+
+	public static RpcStrategy_FirstAvailable of(RpcStrategy... strategies) {
+		return of(Arrays.asList(strategies));
+	}
+
+	@NotNull
+	public static RpcStrategy_FirstAvailable of(List<? extends RpcStrategy> strategies) {
+		return new RpcStrategy_FirstAvailable(strategies);
 	}
 
 	@Override

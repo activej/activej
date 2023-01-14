@@ -26,7 +26,7 @@ import java.time.Duration;
 
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
 import static io.activej.promise.TestUtils.await;
-import static io.activej.rpc.client.sender.RpcStrategy.server;
+import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
@@ -113,10 +113,11 @@ public final class RpcNoServerTest {
 
 		NioReactor reactor = Reactor.getCurrentReactor();
 
-		RpcClient rpcClient = RpcClient.create(reactor)
+		RpcClient rpcClient = RpcClient.builder(reactor)
 				.withMessageTypes(HelloRequest.class, HelloResponse.class)
 				.withStrategy(server(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port)))
-				.withConnectTimeout(Duration.ofMillis(TIMEOUT));
+				.withConnectTimeout(Duration.ofMillis(TIMEOUT))
+				.build();
 
 		try {
 			await(rpcClient.start()

@@ -58,8 +58,7 @@ public final class CrdtRpcStrategyService<K extends Comparable<K>> extends Abstr
 	}
 
 	public void setRpcClient(RpcClient rpcClient) {
-		checkState(this.rpcClient == null && rpcClient.getReactor() == reactor);
-
+		checkState(this.rpcClient == null);
 		this.rpcClient = rpcClient;
 	}
 
@@ -72,7 +71,7 @@ public final class CrdtRpcStrategyService<K extends Comparable<K>> extends Abstr
 		return discoverySupplier.get()
 				.whenResult(partitionScheme -> {
 					RpcStrategy rpcStrategy = partitionScheme.createRpcStrategy(keyGetter);
-					rpcClient.withStrategy(strategyMapFn.apply(rpcStrategy));
+					rpcClient.changeStrategy(strategyMapFn.apply(rpcStrategy), false);
 					Promises.repeat(() ->
 							discoverySupplier.get()
 									.map((newPartitionScheme, e) -> {

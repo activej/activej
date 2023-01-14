@@ -17,6 +17,7 @@
 package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import io.activej.rpc.protocol.RpcException;
 import org.jetbrains.annotations.Nullable;
@@ -33,19 +34,32 @@ public final class RpcStrategy_TypeDispatching implements RpcStrategy {
 	private final Map<Class<?>, RpcStrategy> dataTypeToStrategy = new HashMap<>();
 	private RpcStrategy defaultStrategy;
 
-	RpcStrategy_TypeDispatching() {}
+	private RpcStrategy_TypeDispatching() {}
 
-	public RpcStrategy_TypeDispatching with(Class<?> dataType, RpcStrategy strategy) {
-		checkState(!dataTypeToStrategy.containsKey(dataType),
-				() -> "Strategy for type " + dataType.toString() + " is already set");
-		dataTypeToStrategy.put(dataType, strategy);
-		return this;
+	public static Builder builder() {
+		return new RpcStrategy_TypeDispatching().new Builder();
 	}
 
-	public RpcStrategy_TypeDispatching withDefault(RpcStrategy strategy) {
-		checkState(defaultStrategy == null, "Default Strategy is already set");
-		defaultStrategy = strategy;
-		return this;
+	public final class Builder extends AbstractBuilder<Builder, RpcStrategy> {
+		public Builder with(Class<?> dataType, RpcStrategy strategy) {
+			checkNotBuilt(this);
+			checkState(!dataTypeToStrategy.containsKey(dataType),
+					() -> "Strategy for type " + dataType.toString() + " is already set");
+			dataTypeToStrategy.put(dataType, strategy);
+			return this;
+		}
+
+		public Builder withDefault(RpcStrategy strategy) {
+			checkNotBuilt(this);
+			checkState(defaultStrategy == null, "Default Strategy is already set");
+			defaultStrategy = strategy;
+			return this;
+		}
+
+		@Override
+		protected RpcStrategy doBuild() {
+			return RpcStrategy_TypeDispatching.this;
+		}
 	}
 
 	@Override

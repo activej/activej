@@ -32,6 +32,7 @@ import static io.activej.config.Config.ofClassPathProperties;
 import static io.activej.config.Config.ofSystemProperties;
 import static io.activej.config.converter.ConfigConverters.ofInetSocketAddress;
 import static io.activej.launchers.crdt.rpc.CrdtRpcServerModule.DEFAULT_PORT;
+import static io.activej.rpc.client.sender.RpcStrategies.server;
 
 public class CrdtRpcClientModule extends AbstractModule {
 	public static final String PROPERTIES_FILE = "crdt-rpc-client.properties";
@@ -51,13 +52,14 @@ public class CrdtRpcClientModule extends AbstractModule {
 
 	@Provides
 	AsyncRpcClient client(NioReactor reactor, RpcStrategy strategy, List<Class<?>> messageTypes) {
-		return RpcClient.create(reactor)
+		return RpcClient.builder(reactor)
 				.withMessageTypes(messageTypes)
-				.withStrategy(strategy);
+				.withStrategy(strategy)
+				.build();
 	}
 
 	@Provides
 	RpcStrategy strategy(Config config) {
-		return RpcStrategy.server(config.get(ofInetSocketAddress(), "address"));
+		return server(config.get(ofInetSocketAddress(), "address"));
 	}
 }

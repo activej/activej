@@ -11,8 +11,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import static io.activej.rpc.client.sender.Callbacks.*;
-import static io.activej.rpc.client.sender.RpcStrategy.server;
-import static io.activej.rpc.client.sender.RpcStrategy.typeDispatching;
+import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -47,10 +46,11 @@ public class RpcStrategyTypeDispatchingTest {
 		RpcStrategy server1 = server(address1);
 		RpcStrategy server2 = server(address2);
 		RpcStrategy server3 = server(address3);
-		RpcStrategy typeDispatchingStrategy = typeDispatching()
+		RpcStrategy typeDispatchingStrategy = RpcStrategy_TypeDispatching.builder()
 				.with(RpcMessageDataTypeOne.class, server1)
 				.with(RpcMessageDataTypeTwo.class, server2)
-				.with(RpcMessageDataTypeThree.class, server3);
+				.with(RpcMessageDataTypeThree.class, server3)
+				.build();
 		int dataTypeOneRequests = 1;
 		int dataTypeTwoRequests = 2;
 		int dataTypeThreeRequests = 5;
@@ -86,11 +86,12 @@ public class RpcStrategyTypeDispatchingTest {
 		RpcStrategy server2 = server(address2);
 		RpcStrategy server3 = server(address3);
 		RpcStrategy defaultServer = server(address4);
-		RpcStrategy typeDispatchingStrategy = typeDispatching()
+		RpcStrategy typeDispatchingStrategy = RpcStrategy_TypeDispatching.builder()
 				.with(RpcMessageDataTypeOne.class, server1)
 				.with(RpcMessageDataTypeTwo.class, server2)
 				.with(RpcMessageDataTypeThree.class, server3)
-				.withDefault(defaultServer);
+				.withDefault(defaultServer)
+				.build();
 
 		RpcSender sender = typeDispatchingStrategy.createSender(pool);
 		sender.sendRequest(new RpcMessageDataStub(), 50, assertNoCalls());
@@ -114,10 +115,11 @@ public class RpcStrategyTypeDispatchingTest {
 		RpcStrategy server1 = server(address1);
 		RpcStrategy server2 = server(address2);
 		RpcStrategy server3 = server(address3);
-		RpcStrategy typeDispatchingStrategy = typeDispatching()
+		RpcStrategy typeDispatchingStrategy = RpcStrategy_TypeDispatching.builder()
 				.with(RpcMessageDataTypeOne.class, server1)
 				.with(RpcMessageDataTypeTwo.class, server2)
-				.with(RpcMessageDataTypeThree.class, server3);
+				.with(RpcMessageDataTypeThree.class, server3)
+				.build();
 
 		RpcSender sender = typeDispatchingStrategy.createSender(pool);
 		// sender is not specified for RpcMessageDataStub, default sender is null
@@ -135,10 +137,11 @@ public class RpcStrategyTypeDispatchingTest {
 		RpcStrategy server1 = server(address1);
 		RpcStrategy server2 = server(address2);
 		RpcStrategy server3 = server(address3);
-		RpcStrategy typeDispatchingStrategy = typeDispatching()
+		RpcStrategy typeDispatchingStrategy = RpcStrategy_TypeDispatching.builder()
 				.with(RpcMessageDataTypeOne.class, server1)
 				.with(RpcMessageDataTypeTwo.class, server2)
-				.with(RpcMessageDataTypeThree.class, server3);
+				.with(RpcMessageDataTypeThree.class, server3)
+				.build();
 
 		pool.put(address1, connection1);
 		// we don't put connection 2
@@ -157,11 +160,12 @@ public class RpcStrategyTypeDispatchingTest {
 		RpcStrategy server2 = server(address2);
 		RpcStrategy server3 = server(address3);
 		RpcStrategy defaultServer = server(address4);
-		RpcStrategy typeDispatchingStrategy = typeDispatching()
+		RpcStrategy typeDispatchingStrategy = RpcStrategy_TypeDispatching.builder()
 				.with(RpcMessageDataTypeOne.class, server1)
 				.with(RpcMessageDataTypeTwo.class, server2)
 				.with(RpcMessageDataTypeThree.class, server3)
-				.withDefault(defaultServer);
+				.withDefault(defaultServer)
+				.build();
 
 		pool.put(address1, connection1);
 		pool.put(address2, connection2);

@@ -22,7 +22,7 @@ import java.util.concurrent.Executors;
 
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
-import static io.activej.rpc.client.sender.RpcStrategy.server;
+import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
@@ -63,9 +63,10 @@ public final class RpcTimeoutTest {
 						}))
 				.withListenPort(port);
 
-		client = RpcClient.create(reactor)
+		client = RpcClient.builder(reactor)
 				.withMessageTypes(messageTypes)
-				.withStrategy(server(new InetSocketAddress(port)));
+				.withStrategy(server(new InetSocketAddress(port)))
+				.build();
 
 		server.listen();
 	}

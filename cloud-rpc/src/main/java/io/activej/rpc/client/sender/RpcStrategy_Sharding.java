@@ -17,6 +17,7 @@
 package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import io.activej.rpc.protocol.RpcException;
 import org.jetbrains.annotations.Nullable;
@@ -26,19 +27,41 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.ToIntFunction;
 
+import static io.activej.rpc.client.sender.Utils.listOfNullableSenders;
+
 public final class RpcStrategy_Sharding implements RpcStrategy {
-	private final List<RpcStrategy> list;
+	private final List<? extends RpcStrategy> list;
 	private final ToIntFunction<?> shardingFunction;
 	private final int minActiveSubStrategies;
 
-	RpcStrategy_Sharding(ToIntFunction<?> shardingFunction, List<RpcStrategy> list, int minActiveSubStrategies) {
+	private RpcStrategy_Sharding(ToIntFunction<?> shardingFunction, List<? extends RpcStrategy> list, int minActiveSubStrategies) {
 		this.shardingFunction = shardingFunction;
 		this.list = list;
 		this.minActiveSubStrategies = minActiveSubStrategies;
 	}
 
-	public RpcStrategy_Sharding withMinActiveSubStrategies(int minActiveSubStrategies) {
-		return new RpcStrategy_Sharding(shardingFunction, list, minActiveSubStrategies);
+	public static <T> RpcStrategy_Sharding of(ToIntFunction<T> shardingFunction, List<RpcStrategy> strategies, int minActiveSubStrategies) {
+		return new RpcStrategy_Sharding(shardingFunction, strategies, minActiveSubStrategies);
+	}
+
+	public static <T> Builder builder(ToIntFunction<T> shardingFunction, RpcStrategy... strategies) {
+		return builder(shardingFunction, List.of(strategies));
+	}
+
+	public static <T> Builder builder(ToIntFunction<T> shardingFunction, List<? extends RpcStrategy> strategies) {
+		return new RpcStrategy_Sharding(shardingFunction, strategies, 0).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, RpcStrategy> {
+		public RpcStrategy_Sharding.Builder withMinActiveSubStrategies(int minActiveSubStrategies) {
+			checkNotBuilt(this);
+			return new RpcStrategy_Sharding(shardingFunction, list, minActiveSubStrategies).new Builder();
+		}
+
+		@Override
+		protected RpcStrategy doBuild() {
+			return RpcStrategy_Sharding.this;
+		}
 	}
 
 	@Override
@@ -48,7 +71,7 @@ public final class RpcStrategy_Sharding implements RpcStrategy {
 
 	@Override
 	public @Nullable RpcSender createSender(RpcClientConnectionPool pool) {
-		List<RpcSender> subSenders = Utils.listOfNullableSenders(list, pool);
+		List<RpcSender> subSenders = listOfNullableSenders(list, pool);
 		int activeSenders = 0;
 		for (RpcSender subSender : subSenders) {
 			if (subSender != null) {

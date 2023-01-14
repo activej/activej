@@ -16,7 +16,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutionException;
 
-import static io.activej.rpc.client.sender.RpcStrategy.*;
+import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.assertEquals;
 
@@ -86,19 +86,24 @@ public final class RpcBlockingTest {
 		InetSocketAddress address2 = new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port2);
 		InetSocketAddress address3 = new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port3);
 
-		RpcClient client = RpcClient.create(Reactor.getCurrentReactor())
+		RpcClient client = RpcClient.builder(Reactor.getCurrentReactor())
 				.withMessageTypes(HelloRequest.class, HelloResponse.class)
 				.withStrategy(
-						roundRobin(
-								server(address1),
-								sharding((HelloRequest item) -> {
-											int shard = 0;
-											if (item.name.startsWith("S")) {
-												shard = 1;
-											}
-											return shard;
-										}, server(address2), server(address3))
-										.withMinActiveSubStrategies(2)));
+						RpcStrategy_RoundRobin.builder(
+										server(address1),
+										RpcStrategy_Sharding.builder(
+														(HelloRequest item) -> {
+															int shard = 0;
+															if (item.name.startsWith("S")) {
+																shard = 1;
+															}
+															return shard;
+														},
+														server(address2), server(address3))
+												.withMinActiveSubStrategies(2)
+												.build())
+								.build())
+				.build();
 
 		client.startFuture().get();
 

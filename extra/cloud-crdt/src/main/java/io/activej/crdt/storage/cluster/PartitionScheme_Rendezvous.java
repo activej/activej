@@ -4,6 +4,8 @@ import io.activej.common.initializer.WithInitializer;
 import io.activej.crdt.storage.AsyncCrdtStorage;
 import io.activej.crdt.storage.cluster.AsyncDiscoveryService.PartitionScheme;
 import io.activej.rpc.client.sender.RpcStrategy;
+import io.activej.rpc.client.sender.RpcStrategy_RendezvousHashing;
+import io.activej.rpc.client.sender.RpcStrategy_Sharding;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
@@ -13,8 +15,6 @@ import java.util.function.ToIntFunction;
 
 import static io.activej.common.Utils.difference;
 import static io.activej.crdt.storage.cluster.Sharder_RendezvousHash.NUMBER_OF_BUCKETS;
-import static io.activej.rpc.client.sender.RpcStrategy.rendezvousHashing;
-import static io.activej.rpc.client.sender.RpcStrategy.sharding;
 import static java.util.stream.Collectors.toSet;
 
 public final class PartitionScheme_Rendezvous<P> implements PartitionScheme<P>, WithInitializer<PartitionScheme_Rendezvous<P>> {
@@ -102,14 +102,13 @@ public final class PartitionScheme_Rendezvous<P> implements PartitionScheme<P>, 
 
 	@Override
 	public <K extends Comparable<K>> RpcStrategy createRpcStrategy(Function<Object, K> keyGetter) {
-
 		List<RpcStrategy> rendezvousHashings = new ArrayList<>();
 		for (RendezvousPartitionGroup<P> partitionGroup : partitionGroups) {
 			if (!partitionGroup.isActive()) continue;
 			//noinspection unchecked
 			rendezvousHashings.add(
-					rendezvousHashing(req ->
-							((ToIntFunction<K>) keyHashFn).applyAsInt(keyGetter.apply(req)))
+					RpcStrategy_RendezvousHashing.builder(req ->
+									((ToIntFunction<K>) keyHashFn).applyAsInt(keyGetter.apply(req)))
 							.withBuckets(NUMBER_OF_BUCKETS)
 							.withHashBucketFn((p, bucket) -> Sharder_RendezvousHash.hashBucket(partitionIdGetter.apply((P) p).hashCode(), bucket))
 							.withInitializer(rendezvousHashing -> {
@@ -119,19 +118,11 @@ public final class PartitionScheme_Rendezvous<P> implements PartitionScheme<P>, 
 								if (!partitionGroup.isRepartition()) {
 									rendezvousHashing.withReshardings(partitionGroup.getReplicaCount());
 								}
-							}));
+							})
+							.build());
 		}
-
-		return sharding(
-				new ToIntFunction<>() {
-					final int count = rendezvousHashings.size();
-
-					@Override
-					public int applyAsInt(Object item) {
-						return keyGetter.apply(item).hashCode() % count;
-					}
-				},
-				rendezvousHashings);
+		final int count = rendezvousHashings.size();
+		return RpcStrategy_Sharding.builder(item -> keyGetter.apply(item).hashCode() % count, rendezvousHashings).build();
 	}
 
 	@Override

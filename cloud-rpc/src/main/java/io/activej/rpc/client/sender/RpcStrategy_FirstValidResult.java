@@ -17,34 +17,58 @@
 package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Predicate;
 
 public final class RpcStrategy_FirstValidResult implements RpcStrategy {
-	static final ResultValidator<?> DEFAULT_RESULT_VALIDATOR = new DefaultResultValidator<>();
+	static final Predicate<?> DEFAULT_RESULT_VALIDATOR = Objects::nonNull;
 
-	private final List<RpcStrategy> list;
+	private final List<? extends RpcStrategy> list;
 
-	private final ResultValidator<?> resultValidator;
+	private final Predicate<?> resultValidator;
 	private final @Nullable Exception noValidResultException;
 
-	RpcStrategy_FirstValidResult(List<RpcStrategy> list, ResultValidator<?> resultValidator,
+	private RpcStrategy_FirstValidResult(List<? extends RpcStrategy> list, Predicate<?> resultValidator,
 			@Nullable Exception noValidResultException) {
 		this.list = list;
 		this.resultValidator = resultValidator;
 		this.noValidResultException = noValidResultException;
 	}
 
-	public RpcStrategy_FirstValidResult withResultValidator(ResultValidator<?> resultValidator) {
+	public static RpcStrategy_FirstValidResult of(List<RpcStrategy> list, Predicate<?> resultValidator, @Nullable Exception noValidResultException) {
 		return new RpcStrategy_FirstValidResult(list, resultValidator, noValidResultException);
 	}
 
-	public RpcStrategy_FirstValidResult withNoValidResultException(Exception e) {
-		return new RpcStrategy_FirstValidResult(list, resultValidator, e);
+	public static Builder builder(RpcStrategy... list) {
+		return builder(List.of(list));
+	}
+
+	public static Builder builder(List<? extends RpcStrategy> list) {
+		return new RpcStrategy_FirstValidResult(list, DEFAULT_RESULT_VALIDATOR, null).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, RpcStrategy> {
+		public Builder withResultValidator(Predicate<?> resultValidator) {
+			checkNotBuilt(this);
+			return new RpcStrategy_FirstValidResult(list, resultValidator, noValidResultException).new Builder();
+		}
+
+		public Builder withNoValidResultException(Exception e) {
+			checkNotBuilt(this);
+			return new RpcStrategy_FirstValidResult(list, resultValidator, noValidResultException).new Builder();
+		}
+
+		@Override
+		protected RpcStrategy doBuild() {
+			return RpcStrategy_FirstValidResult.this;
+		}
 	}
 
 	@Override
@@ -62,10 +86,10 @@ public final class RpcStrategy_FirstValidResult implements RpcStrategy {
 
 	static final class Sender implements RpcSender {
 		private final RpcSender[] subSenders;
-		private final ResultValidator<?> resultValidator;
+		private final Predicate<?> resultValidator;
 		private final @Nullable Exception noValidResultException;
 
-		Sender(List<RpcSender> senders, ResultValidator<?> resultValidator,
+		Sender(List<RpcSender> senders, Predicate<?> resultValidator,
 				@Nullable Exception noValidResultException) {
 			assert !senders.isEmpty();
 			this.subSenders = senders.toArray(new RpcSender[0]);
@@ -76,7 +100,7 @@ public final class RpcStrategy_FirstValidResult implements RpcStrategy {
 		@SuppressWarnings("unchecked")
 		@Override
 		public <I, O> void sendRequest(I request, int timeout, Callback<O> cb) {
-			FirstResultCallback<O> firstResultCallback = new FirstResultCallback<>(subSenders.length, (ResultValidator<O>) resultValidator, cb, noValidResultException);
+			FirstResultCallback<O> firstResultCallback = new FirstResultCallback<>(subSenders.length, (Predicate<O>) resultValidator, cb, noValidResultException);
 			for (RpcSender sender : subSenders) {
 				sender.sendRequest(request, timeout, firstResultCallback);
 			}
@@ -85,12 +109,12 @@ public final class RpcStrategy_FirstValidResult implements RpcStrategy {
 
 	static final class FirstResultCallback<T> implements Callback<T> {
 		private int expectedCalls;
-		private final ResultValidator<T> resultValidator;
+		private final Predicate<T> resultValidator;
 		private final Callback<T> cb;
 		private Exception lastException;
 		private final @Nullable Exception noValidResultException;
 
-		FirstResultCallback(int expectedCalls, ResultValidator<T> resultValidator, Callback<T> cb,
+		FirstResultCallback(int expectedCalls, Predicate<T> resultValidator, Callback<T> cb,
 				@Nullable Exception noValidResultException) {
 			assert expectedCalls > 0;
 			this.expectedCalls = expectedCalls;
@@ -103,7 +127,7 @@ public final class RpcStrategy_FirstValidResult implements RpcStrategy {
 		public void accept(T result, @Nullable Exception e) {
 			if (e == null) {
 				if (--expectedCalls >= 0) {
-					if (resultValidator.isValidResult(result)) {
+					if (resultValidator.test(result)) {
 						expectedCalls = 0;
 						cb.accept(result, null);
 					} else {
@@ -118,13 +142,6 @@ public final class RpcStrategy_FirstValidResult implements RpcStrategy {
 					cb.accept(null, lastException);
 				}
 			}
-		}
-	}
-
-	private static final class DefaultResultValidator<T> implements ResultValidator<T> {
-		@Override
-		public boolean isValidResult(T input) {
-			return input != null;
 		}
 	}
 

@@ -26,6 +26,7 @@ import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.AsyncRpcClient;
 import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.client.sender.RpcStrategy_RendezvousHashing;
 import io.activej.serializer.SerializerBuilder;
 
 import java.time.Duration;
@@ -35,7 +36,6 @@ import static io.activej.config.converter.ConfigConverters.*;
 import static io.activej.launchers.initializers.ConfigConverters.ofFrameFormat;
 import static io.activej.memcache.protocol.MemcacheRpcMessage.HASH_FUNCTION;
 import static io.activej.rpc.client.RpcClient.DEFAULT_SOCKET_SETTINGS;
-import static io.activej.rpc.client.sender.RpcStrategy.rendezvousHashing;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public class MemcacheClientModule extends AbstractModule {
@@ -45,11 +45,12 @@ public class MemcacheClientModule extends AbstractModule {
 
 	@Provides
 	AsyncRpcClient rpcClient(NioReactor reactor, Config config) {
-		return RpcClient.create(reactor)
+		return RpcClient.builder(reactor)
 				.withStrategy(
-						rendezvousHashing(HASH_FUNCTION)
+						RpcStrategy_RendezvousHashing.builder(HASH_FUNCTION)
 								.withMinActiveShards(config.get(ofInteger(), "client.minAliveConnections", 1))
-								.withShards(config.get(ofList(ofInetSocketAddress()), "client.addresses")))
+								.withShards(config.get(ofList(ofInetSocketAddress()), "client.addresses"))
+								.build())
 				.withMessageTypes(MemcacheRpcMessage.MESSAGE_TYPES)
 				.withSerializerBuilder(SerializerBuilder.create()
 						.with(Slice.class, ctx -> new SerializerDef_Slice()))
@@ -59,7 +60,8 @@ public class MemcacheClientModule extends AbstractModule {
 				.withSocketSettings(config.get(ofSocketSettings(), "client.socketSettings", DEFAULT_SOCKET_SETTINGS))
 				.withConnectTimeout(config.get(ofDuration(), "client.connectSettings.connectTimeout", Duration.ofSeconds(10)))
 				.withReconnectInterval(config.get(ofDuration(), "client.connectSettings.reconnectInterval", Duration.ofSeconds(1)))
-				.withLogger(getLogger(AsyncMemcacheClient.class));
+				.withLogger(getLogger(AsyncMemcacheClient.class))
+				.build();
 	}
 
 	@Provides

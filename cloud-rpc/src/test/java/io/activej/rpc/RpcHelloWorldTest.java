@@ -23,7 +23,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static io.activej.rpc.client.sender.RpcStrategy.server;
+import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static io.activej.test.TestUtils.assertCompleteFn;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
@@ -83,9 +83,10 @@ public final class RpcHelloWorldTest {
 
 		public BlockingHelloClient(NioReactor reactor) throws Exception {
 			super(reactor);
-			this.rpcClient = RpcClient.create(reactor)
+			this.rpcClient = RpcClient.builder(reactor)
 					.withMessageTypes(HelloRequest.class, HelloResponse.class)
-					.withStrategy(server(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port)));
+					.withStrategy(server(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port)))
+					.build();
 
 			rpcClient.startFuture().get();
 		}

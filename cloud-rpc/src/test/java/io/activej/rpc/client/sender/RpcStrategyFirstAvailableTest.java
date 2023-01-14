@@ -8,8 +8,7 @@ import org.junit.Test;
 import java.net.InetSocketAddress;
 
 import static io.activej.rpc.client.sender.Callbacks.assertNoCalls;
-import static io.activej.rpc.client.sender.RpcStrategy.firstAvailable;
-import static io.activej.rpc.client.sender.RpcStrategy.servers;
+import static io.activej.rpc.client.sender.RpcStrategies.servers;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.*;
 
@@ -35,7 +34,7 @@ public class RpcStrategyFirstAvailableTest {
 		RpcSenderStub connection1 = new RpcSenderStub();
 		RpcSenderStub connection2 = new RpcSenderStub();
 		RpcSenderStub connection3 = new RpcSenderStub();
-		RpcStrategy firstAvailableStrategy = firstAvailable(servers(address1, address2, address3));
+		RpcStrategy firstAvailableStrategy = RpcStrategy_FirstAvailable.of(servers(address1, address2, address3));
 		RpcSender sender;
 		int callsToSender1 = 10;
 		int callsToSender2 = 25;
@@ -72,7 +71,7 @@ public class RpcStrategyFirstAvailableTest {
 		RpcSenderStub connection = new RpcSenderStub();
 		// one connection is added
 		pool.put(address2, connection);
-		RpcStrategy firstAvailableStrategy = firstAvailable(servers(address1, address2));
+		RpcStrategy firstAvailableStrategy = RpcStrategy_FirstAvailable.of(servers(address1, address2));
 
 		assertNotNull(firstAvailableStrategy.createSender(pool));
 	}
@@ -81,7 +80,7 @@ public class RpcStrategyFirstAvailableTest {
 	public void itShouldNotBeCreatedWhenThereAreNoActiveSubSenders() {
 		RpcClientConnectionPoolStub pool = new RpcClientConnectionPoolStub();
 		// no connections were added to pool
-		RpcStrategy firstAvailableStrategy = firstAvailable(servers(address1, address2, address3));
+		RpcStrategy firstAvailableStrategy = RpcStrategy_FirstAvailable.of(servers(address1, address2, address3));
 
 		assertNull(firstAvailableStrategy.createSender(pool));
 	}

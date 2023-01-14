@@ -17,6 +17,7 @@
 package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.rpc.client.RpcClientConnectionPool;
 
 import java.net.InetSocketAddress;
@@ -24,19 +25,35 @@ import java.util.*;
 
 import static io.activej.common.Checks.checkArgument;
 
-public class RpcStrategy_RandomSampling implements RpcStrategy {
-	private final Random random = new Random();
-	private final Map<RpcStrategy, Integer> strategyToWeight = new HashMap<>();
+public final class RpcStrategy_RandomSampling implements RpcStrategy {
+	private Random random = new Random();
+	private final Map<RpcStrategy, Double> strategyToWeight = new HashMap<>();
 
-	RpcStrategy_RandomSampling() {}
+	private RpcStrategy_RandomSampling() {}
 
-	public RpcStrategy_RandomSampling with(int weight, RpcStrategy strategy) {
-		checkArgument(weight >= 0, "weight cannot be negative");
-		checkArgument(!strategyToWeight.containsKey(strategy), "withStrategy is already added");
+	public static Builder builder() {
+		return new RpcStrategy_RandomSampling().new Builder();
+	}
 
-		strategyToWeight.put(strategy, weight);
+	public final class Builder extends AbstractBuilder<Builder, RpcStrategy> {
+		public Builder with(double weight, RpcStrategy strategy) {
+			checkNotBuilt(this);
+			checkArgument(weight >= 0, "weight cannot be negative");
+			checkArgument(!strategyToWeight.containsKey(strategy), "withStrategy is already added");
+			strategyToWeight.put(strategy, weight);
+			return this;
+		}
 
-		return this;
+		public Builder withRandom(Random random) {
+			checkNotBuilt(this);
+			RpcStrategy_RandomSampling.this.random = random;
+			return this;
+		}
+
+		@Override
+		protected RpcStrategy doBuild() {
+			return RpcStrategy_RandomSampling.this;
+		}
 	}
 
 	@Override
@@ -50,12 +67,12 @@ public class RpcStrategy_RandomSampling implements RpcStrategy {
 
 	@Override
 	public RpcSender createSender(RpcClientConnectionPool pool) {
-		Map<RpcSender, Integer> senderToWeight = new HashMap<>();
-		int totalWeight = 0;
-		for (Map.Entry<RpcStrategy, Integer> entry : strategyToWeight.entrySet()) {
+		Map<RpcSender, Double> senderToWeight = new HashMap<>();
+		double totalWeight = 0;
+		for (Map.Entry<RpcStrategy, Double> entry : strategyToWeight.entrySet()) {
 			RpcSender sender = entry.getKey().createSender(pool);
 			if (sender != null) {
-				int weight = entry.getValue();
+				double weight = entry.getValue();
 				senderToWeight.put(sender, weight);
 				totalWeight += weight;
 			}
@@ -68,29 +85,28 @@ public class RpcStrategy_RandomSampling implements RpcStrategy {
 		long randomLong = random.nextLong();
 		long seed = randomLong != 0L ? randomLong : 2347230858016798896L;
 
-		return new RandomSamplingSender(senderToWeight, seed);
+		return new RandomSamplingSender(senderToWeight, seed, totalWeight);
 	}
 
 	private static final class RandomSamplingSender implements RpcSender {
-		private final List<RpcSender> senders;
+		private final RpcSender[] senders;
 		private final int[] cumulativeWeights;
-		private final int totalWeight;
 
 		private long lastRandomLong;
 
-		RandomSamplingSender(Map<RpcSender, Integer> senderToWeight, long seed) {
+		RandomSamplingSender(Map<RpcSender, Double> senderToWeight, long seed, double totalWeight) {
 			assert !senderToWeight.containsKey(null);
 
-			senders = new ArrayList<>(senderToWeight.size());
+			senders = new RpcSender[senderToWeight.size()];
 			cumulativeWeights = new int[senderToWeight.size()];
-			int currentCumulativeWeight = 0;
-			int currentSender = 0;
-			for (Map.Entry<RpcSender, Integer> entry : senderToWeight.entrySet()) {
+			double currentCumulativeWeight = 0;
+			int i = 0;
+			for (Map.Entry<RpcSender, Double> entry : senderToWeight.entrySet()) {
 				currentCumulativeWeight += entry.getValue();
-				senders.add(entry.getKey());
-				cumulativeWeights[currentSender++] = currentCumulativeWeight;
+				senders[i] = entry.getKey();
+				cumulativeWeights[i] = (int) (currentCumulativeWeight / totalWeight * Integer.MAX_VALUE);
+				i++;
 			}
-			totalWeight = currentCumulativeWeight;
 
 			lastRandomLong = seed;
 		}
@@ -100,7 +116,7 @@ public class RpcStrategy_RandomSampling implements RpcStrategy {
 			lastRandomLong ^= (lastRandomLong << 21);
 			lastRandomLong ^= (lastRandomLong >>> 35);
 			lastRandomLong ^= (lastRandomLong << 4);
-			int currentRandomValue = (int) ((lastRandomLong & Long.MAX_VALUE) % totalWeight);
+			int currentRandomValue = (int) lastRandomLong & Integer.MAX_VALUE;
 			int lowerIndex = 0;
 			int upperIndex = cumulativeWeights.length;
 			while (lowerIndex != upperIndex) {
@@ -111,7 +127,7 @@ public class RpcStrategy_RandomSampling implements RpcStrategy {
 					upperIndex = middle;
 				}
 			}
-			senders.get(lowerIndex).sendRequest(request, timeout, cb);
+			senders[lowerIndex].sendRequest(request, timeout, cb);
 		}
 	}
 

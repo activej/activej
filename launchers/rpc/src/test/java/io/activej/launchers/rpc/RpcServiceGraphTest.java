@@ -10,6 +10,7 @@ import io.activej.reactor.Reactor;
 import io.activej.reactor.nio.NioReactor;
 import io.activej.rpc.client.AsyncRpcClient;
 import io.activej.rpc.client.RpcClient;
+import io.activej.rpc.client.sender.RpcStrategy_RoundRobin;
 import io.activej.rpc.protocol.RpcException;
 import io.activej.rpc.server.RpcServer;
 import io.activej.service.ServiceGraph;
@@ -26,8 +27,7 @@ import org.junit.Test;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutionException;
 
-import static io.activej.rpc.client.sender.RpcStrategy.roundRobin;
-import static io.activej.rpc.client.sender.RpcStrategy.servers;
+import static io.activej.rpc.client.sender.RpcStrategies.servers;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -73,14 +73,15 @@ public class RpcServiceGraphTest {
 					@Provides
 					@Eager
 					AsyncRpcClient client(NioReactor reactor) {
-						return RpcClient.create(reactor)
+						return RpcClient.builder(reactor)
 								.withMessageTypes(String.class)
-								.withStrategy(roundRobin(
+								.withStrategy(RpcStrategy_RoundRobin.builder(
 												servers(
 														new InetSocketAddress(port),
 														new InetSocketAddress(getFreePort())
 												))
-										.withMinActiveSubStrategies(2));
+										.withMinActiveSubStrategies(2))
+								.build();
 					}
 				}
 		);

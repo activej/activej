@@ -23,7 +23,7 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.common.ApplicationSettings;
 import io.activej.common.Checks;
 import io.activej.common.MemSize;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.datastream.csp.ChannelSerializer;
 import io.activej.jmx.api.attribute.JmxAttribute;
@@ -87,7 +87,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * @see RpcServer
  */
 public final class RpcClient extends AbstractNioReactive
-		implements AsyncRpcClient, ReactiveService, WithInitializer<RpcClient>, ReactiveJmxBeanWithStats {
+		implements AsyncRpcClient, ReactiveService, ReactiveJmxBeanWithStats {
 	private static final boolean CHECKS = Checks.isEnabled(RpcClient.class);
 
 	public static final SocketSettings DEFAULT_SOCKET_SETTINGS = SocketSettings.createDefault();
@@ -151,122 +151,141 @@ public final class RpcClient extends AbstractNioReactive
 		super(reactor);
 	}
 
-	public static RpcClient create(NioReactor reactor) {
-		return new RpcClient(reactor);
+	public static Builder builder(NioReactor reactor) {
+		return new RpcClient(reactor).new Builder();
 	}
 
-	public RpcClient withClassLoader(ClassLoader classLoader) {
-		this.classLoader = classLoader;
-		this.serializerBuilder = SerializerBuilder.create(DefiningClassLoader.create(classLoader));
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, RpcClient> {
+		public Builder withClassLoader(ClassLoader classLoader) {
+			checkNotBuilt(this);
+			RpcClient.this.classLoader = classLoader;
+			RpcClient.this.serializerBuilder = SerializerBuilder.create(DefiningClassLoader.create(classLoader));
+			return this;
+		}
 
-	/**
-	 * Creates a client that uses provided socket settings.
-	 *
-	 * @param socketSettings settings for socket
-	 * @return the RPC client with specified socket settings
-	 */
-	public RpcClient withSocketSettings(SocketSettings socketSettings) {
-		this.socketSettings = socketSettings;
-		return this;
-	}
+		/**
+		 * Creates a client that uses provided socket settings.
+		 *
+		 * @param socketSettings settings for socket
+		 * @return the RPC client with specified socket settings
+		 */
+		public Builder withSocketSettings(SocketSettings socketSettings) {
+			checkNotBuilt(this);
+			RpcClient.this.socketSettings = socketSettings;
+			return this;
+		}
 
-	/**
-	 * Creates a client with capability of specified message types processing.
-	 *
-	 * @param messageTypes classes of messages processed by a server
-	 * @return client instance capable for handling provided message types
-	 */
-	public RpcClient withMessageTypes(Class<?>... messageTypes) {
-		return withMessageTypes(List.of(messageTypes));
-	}
+		/**
+		 * Creates a client with capability of specified message types processing.
+		 *
+		 * @param messageTypes classes of messages processed by a server
+		 * @return client instance capable for handling provided message types
+		 */
+		public Builder withMessageTypes(Class<?>... messageTypes) {
+			return withMessageTypes(List.of(messageTypes));
+		}
 
-	/**
-	 * Creates a client with capability of specified message types processing.
-	 *
-	 * @param messageTypes classes of messages processed by a server
-	 * @return client instance capable for handling provided
-	 * message types
-	 */
-	public RpcClient withMessageTypes(List<Class<?>> messageTypes) {
-		Checks.checkArgument(new HashSet<>(messageTypes).size() == messageTypes.size(), "Message types must be unique");
-		this.messageTypes = messageTypes;
-		return this;
-	}
+		/**
+		 * Creates a client with capability of specified message types processing.
+		 *
+		 * @param messageTypes classes of messages processed by a server
+		 * @return client instance capable for handling provided
+		 * message types
+		 */
+		public Builder withMessageTypes(List<Class<?>> messageTypes) {
+			checkNotBuilt(this);
+			Checks.checkArgument(new HashSet<>(messageTypes).size() == messageTypes.size(), "Message types must be unique");
+			RpcClient.this.messageTypes = messageTypes;
+			return this;
+		}
 
-	/**
-	 * Creates a client with serializer builder. A serializer builder is used
-	 * for creating fast serializers at runtime.
-	 *
-	 * @param serializerBuilder serializer builder, used at runtime
-	 * @return the RPC client with provided serializer builder
-	 */
-	public RpcClient withSerializerBuilder(SerializerBuilder serializerBuilder) {
-		this.serializerBuilder = serializerBuilder;
-		return this;
-	}
+		/**
+		 * Creates a client with serializer builder. A serializer builder is used
+		 * for creating fast serializers at runtime.
+		 *
+		 * @param serializerBuilder serializer builder, used at runtime
+		 * @return the RPC client with provided serializer builder
+		 */
+		public Builder withSerializerBuilder(SerializerBuilder serializerBuilder) {
+			checkNotBuilt(this);
+			RpcClient.this.serializerBuilder = serializerBuilder;
+			return this;
+		}
 
-	/**
-	 * Creates a client with some strategy. Consider some ready-to-use
-	 * strategies from {@link RpcStrategies}.
-	 *
-	 * @param requestSendingStrategy strategy of sending requests
-	 * @return the RPC client, which sends requests according to given strategy
-	 */
-	public RpcClient withStrategy(RpcStrategy requestSendingStrategy) {
-		this.newStrategy = requestSendingStrategy;
-		return this;
-	}
+		/**
+		 * Creates a client with some strategy. Consider some ready-to-use
+		 * strategies from {@link RpcStrategy}.
+		 *
+		 * @param requestSendingStrategy strategy of sending requests
+		 * @return the RPC client, which sends requests according to given strategy
+		 */
+		public Builder withStrategy(RpcStrategy requestSendingStrategy) {
+			checkNotBuilt(this);
+			RpcClient.this.newStrategy = requestSendingStrategy;
+			return this;
+		}
 
-	public RpcClient withStreamProtocol(MemSize defaultPacketSize) {
-		this.defaultPacketSize = defaultPacketSize;
-		return this;
-	}
+		public Builder withStreamProtocol(MemSize defaultPacketSize) {
+			checkNotBuilt(this);
+			RpcClient.this.defaultPacketSize = defaultPacketSize;
+			return this;
+		}
 
-	public RpcClient withStreamProtocol(MemSize defaultPacketSize, @Nullable FrameFormat frameFormat) {
-		this.defaultPacketSize = defaultPacketSize;
-		this.frameFormat = frameFormat;
-		return this;
-	}
+		public Builder withStreamProtocol(MemSize defaultPacketSize, @Nullable FrameFormat frameFormat) {
+			checkNotBuilt(this);
+			RpcClient.this.defaultPacketSize = defaultPacketSize;
+			RpcClient.this.frameFormat = frameFormat;
+			return this;
+		}
 
-	public RpcClient withAutoFlush(Duration autoFlushInterval) {
-		this.autoFlushInterval = autoFlushInterval;
-		return this;
-	}
+		public Builder withAutoFlush(Duration autoFlushInterval) {
+			checkNotBuilt(this);
+			RpcClient.this.autoFlushInterval = autoFlushInterval;
+			return this;
+		}
 
-	public RpcClient withKeepAlive(Duration keepAliveInterval) {
-		this.keepAliveInterval = keepAliveInterval;
-		return this;
-	}
+		public Builder withKeepAlive(Duration keepAliveInterval) {
+			checkNotBuilt(this);
+			RpcClient.this.keepAliveInterval = keepAliveInterval;
+			return this;
+		}
 
-	/**
-	 * Waits for a specified time before connecting.
-	 *
-	 * @param connectTimeout time before connecting
-	 * @return the RPC client with connect timeout settings
-	 */
-	public RpcClient withConnectTimeout(Duration connectTimeout) {
-		this.connectTimeoutMillis = connectTimeout.toMillis();
-		return this;
-	}
+		/**
+		 * Waits for a specified time before connecting.
+		 *
+		 * @param connectTimeout time before connecting
+		 * @return the RPC client with connect timeout settings
+		 */
+		public Builder withConnectTimeout(Duration connectTimeout) {
+			checkNotBuilt(this);
+			RpcClient.this.connectTimeoutMillis = connectTimeout.toMillis();
+			return this;
+		}
 
-	public RpcClient withReconnectInterval(Duration reconnectInterval) {
-		this.reconnectIntervalMillis = reconnectInterval.toMillis();
-		return this;
-	}
+		public Builder withReconnectInterval(Duration reconnectInterval) {
+			checkNotBuilt(this);
+			RpcClient.this.reconnectIntervalMillis = reconnectInterval.toMillis();
+			return this;
+		}
 
-	public RpcClient withSslEnabled(SSLContext sslContext, Executor sslExecutor) {
-		this.sslContext = sslContext;
-		this.sslExecutor = sslExecutor;
-		return this;
-	}
+		public Builder withSslEnabled(SSLContext sslContext, Executor sslExecutor) {
+			checkNotBuilt(this);
+			RpcClient.this.sslContext = sslContext;
+			RpcClient.this.sslExecutor = sslExecutor;
+			return this;
+		}
 
-	public RpcClient withLogger(Logger logger) {
-		this.logger = logger;
-		return this;
+		public Builder withLogger(Logger logger) {
+			checkNotBuilt(this);
+			RpcClient.this.logger = logger;
+			return this;
+		}
+
+		@Override
+		protected RpcClient doBuild() {
+			return RpcClient.this;
+		}
 	}
-	// endregion
 
 	public SocketSettings getSocketSettings() {
 		return socketSettings;

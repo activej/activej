@@ -18,7 +18,7 @@ import org.jetbrains.annotations.Nullable;
 import java.net.InetSocketAddress;
 
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
-import static io.activej.rpc.client.sender.RpcStrategy.server;
+import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static java.lang.Math.min;
 import static specializer.ScopedRpcServerExample.PORT;
 
@@ -46,9 +46,10 @@ public final class ScopedRpcBenchmarkClient extends Launcher {
 
 	@Provides
 	AsyncRpcClient client(NioReactor reactor) {
-		return RpcClient.create(reactor)
+		return RpcClient.builder(reactor)
 				.withMessageTypes(RpcRequest.class, RpcResponse.class)
-				.withStrategy(server(new InetSocketAddress(PORT)));
+				.withStrategy(server(new InetSocketAddress(PORT)))
+				.build();
 	}
 
 	@Override

@@ -11,8 +11,7 @@ import java.util.concurrent.ExecutionException;
 
 import static io.activej.rpc.client.sender.Callbacks.assertNoCalls;
 import static io.activej.rpc.client.sender.Callbacks.forFuture;
-import static io.activej.rpc.client.sender.RpcStrategy.servers;
-import static io.activej.rpc.client.sender.RpcStrategy.sharding;
+import static io.activej.rpc.client.sender.RpcStrategies.servers;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -40,8 +39,10 @@ public class RpcStrategyShardingTest {
 		RpcSenderStub connection2 = new RpcSenderStub();
 		RpcSenderStub connection3 = new RpcSenderStub();
 		int shardsAmount = 3;
-		RpcStrategy shardingStrategy = RpcStrategy.sharding((Integer item) -> item % shardsAmount,
-				servers(address1, address2, address3));
+		RpcStrategy shardingStrategy = RpcStrategy_Sharding.builder(
+						(Integer item) -> item % shardsAmount,
+						servers(address1, address2, address3))
+				.build();
 		RpcSender senderSharding;
 		int timeout = 50;
 
@@ -69,8 +70,10 @@ public class RpcStrategyShardingTest {
 		RpcSenderStub connection2 = new RpcSenderStub();
 		RpcSenderStub connection3 = new RpcSenderStub();
 		int shardsAmount = 3;
-		RpcStrategy shardingStrategy = sharding((Integer item) -> item % shardsAmount,
-				servers(address1, address2, address3));
+		RpcStrategy shardingStrategy = RpcStrategy_Sharding.builder(
+						(Integer item) -> item % shardsAmount,
+						servers(address1, address2, address3))
+				.build();
 
 		// we don't add connection for ADDRESS_1
 		pool.put(address2, connection2);

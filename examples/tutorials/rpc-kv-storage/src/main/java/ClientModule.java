@@ -10,7 +10,7 @@ import java.net.InetSocketAddress;
 import java.time.Duration;
 
 import static io.activej.common.exception.FatalErrorHandler.rethrow;
-import static io.activej.rpc.client.sender.RpcStrategy.server;
+import static io.activej.rpc.client.sender.RpcStrategies.server;
 
 // [START EXAMPLE]
 public class ClientModule extends AbstractModule {
@@ -25,11 +25,12 @@ public class ClientModule extends AbstractModule {
 
 	@Provides
 	AsyncRpcClient rpcClient(NioReactor reactor) {
-		return RpcClient.create(reactor)
+		return RpcClient.builder(reactor)
 				.withConnectTimeout(Duration.ofSeconds(1))
 				.withSerializerBuilder(SerializerBuilder.create())
 				.withMessageTypes(PutRequest.class, PutResponse.class, GetRequest.class, GetResponse.class)
-				.withStrategy(server(new InetSocketAddress("localhost", RPC_SERVER_PORT)));
+				.withStrategy(server(new InetSocketAddress("localhost", RPC_SERVER_PORT)))
+				.build();
 	}
 }
 // [END EXAMPLE]

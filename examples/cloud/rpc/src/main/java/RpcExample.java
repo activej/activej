@@ -19,7 +19,7 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-import static io.activej.rpc.client.sender.RpcStrategy.server;
+import static io.activej.rpc.client.sender.RpcStrategies.server;
 
 //[START EXAMPLE]
 public class RpcExample extends Launcher {
@@ -50,9 +50,10 @@ public class RpcExample extends Launcher {
 
 	@Provides
 	AsyncRpcClient rpcClient(NioReactor reactor) {
-		return RpcClient.create(reactor)
+		return RpcClient.builder(reactor)
 				.withMessageTypes(String.class)
-				.withStrategy(server(new InetSocketAddress(SERVICE_PORT)));
+				.withStrategy(server(new InetSocketAddress(SERVICE_PORT)))
+				.build();
 	}
 
 	@ProvidesIntoSet

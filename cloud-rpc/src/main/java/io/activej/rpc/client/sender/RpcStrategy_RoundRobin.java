@@ -17,6 +17,7 @@
 package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,16 +26,32 @@ import java.util.List;
 import java.util.Set;
 
 public final class RpcStrategy_RoundRobin implements RpcStrategy {
-	private final List<RpcStrategy> list;
+	private final List<? extends RpcStrategy> list;
 	private final int minActiveSubStrategies;
 
-	RpcStrategy_RoundRobin(List<RpcStrategy> list, int minActiveSubStrategies) {
+	private RpcStrategy_RoundRobin(List<? extends RpcStrategy> list, int minActiveSubStrategies) {
 		this.list = list;
 		this.minActiveSubStrategies = minActiveSubStrategies;
 	}
 
-	public RpcStrategy_RoundRobin withMinActiveSubStrategies(int minActiveSubStrategies) {
-		return new RpcStrategy_RoundRobin(list, minActiveSubStrategies);
+	public static Builder builder(RpcStrategy... strategies) {
+		return builder(List.of(strategies));
+	}
+
+	public static Builder builder(List<? extends RpcStrategy> strategies) {
+		return new RpcStrategy_RoundRobin(strategies, 0).new Builder();
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, RpcStrategy> {
+		public RpcStrategy_RoundRobin withMinActiveSubStrategies(int minActiveSubStrategies) {
+			checkNotBuilt(this);
+			return new RpcStrategy_RoundRobin(list, minActiveSubStrategies);
+		}
+
+		@Override
+		protected RpcStrategy_RoundRobin doBuild() {
+			return RpcStrategy_RoundRobin.this;
+		}
 	}
 
 	@Override

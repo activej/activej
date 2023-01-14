@@ -29,20 +29,20 @@ import static java.util.stream.Collectors.toSet;
 
 public final class Utils {
 
-	public static List<RpcSender> listOfSenders(List<RpcStrategy> strategies, RpcClientConnectionPool pool) {
+	public static List<RpcSender> listOfSenders(List<? extends RpcStrategy> strategies, RpcClientConnectionPool pool) {
 		return strategies.stream()
 				.map(strategy -> strategy.createSender(pool))
 				.filter(Objects::nonNull)
 				.collect(toList());
 	}
 
-	public static List<RpcSender> listOfNullableSenders(List<RpcStrategy> strategies, RpcClientConnectionPool pool) {
+	public static List<RpcSender> listOfNullableSenders(List<? extends RpcStrategy> strategies, RpcClientConnectionPool pool) {
 		return strategies.stream()
 				.map(strategy -> strategy.createSender(pool))
-				.collect(toList());
+				.toList();
 	}
 
-	public static Set<InetSocketAddress> getAddresses(Collection<RpcStrategy> strategies) {
+	public static Set<InetSocketAddress> getAddresses(Collection<? extends RpcStrategy> strategies) {
 		return strategies.stream()
 				.map(RpcStrategy::getAddresses)
 				.flatMap(Collection::stream)

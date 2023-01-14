@@ -18,7 +18,7 @@ package io.activej.rpc.client.sender;
 
 import io.activej.async.callback.Callback;
 import io.activej.common.HashUtils;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.rpc.client.RpcClientConnectionPool;
 import io.activej.rpc.protocol.RpcException;
 import org.jetbrains.annotations.Nullable;
@@ -29,9 +29,10 @@ import java.util.function.ToIntFunction;
 import java.util.function.ToLongBiFunction;
 
 import static io.activej.common.Checks.checkArgument;
+import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static java.lang.Math.min;
 
-public final class RpcStrategy_RendezvousHashing implements RpcStrategy, WithInitializer<RpcStrategy_RendezvousHashing> {
+public final class RpcStrategy_RendezvousHashing implements RpcStrategy {
 	private static final int DEFAULT_BUCKET_CAPACITY = 2048;
 	private static final ToLongBiFunction<Object, Integer> DEFAULT_HASH_BUCKET_FN = (shardId, bucketN) ->
 			(int) HashUtils.murmur3hash(((long) shardId.hashCode() << 32) | (bucketN & 0xFFFFFFFFL));
@@ -45,45 +46,61 @@ public final class RpcStrategy_RendezvousHashing implements RpcStrategy, WithIni
 	private int minActiveShards = DEFAULT_MIN_ACTIVE_SHARDS;
 	private int reshardings = DEFAULT_MAX_RESHARDINGS;
 
-	RpcStrategy_RendezvousHashing(ToIntFunction<?> hashFn) {
+	private RpcStrategy_RendezvousHashing(ToIntFunction<?> hashFn) {
 		this.hashFn = hashFn;
 	}
 
-	public RpcStrategy_RendezvousHashing withHashBucketFn(ToLongBiFunction<Object, Integer> hashBucketFn) {
-		this.hashBucketFn = hashBucketFn;
-		return this;
+	public static <T> Builder builder(ToIntFunction<T> hashFn) {
+		return new RpcStrategy_RendezvousHashing(hashFn).new Builder();
 	}
 
-	public RpcStrategy_RendezvousHashing withBuckets(int buckets) {
-		checkArgument((buckets & (buckets - 1)) == 0);
-		this.buckets = buckets;
-		return this;
-	}
-
-	public RpcStrategy_RendezvousHashing withMinActiveShards(int minActiveShards) {
-		this.minActiveShards = minActiveShards;
-		return this;
-	}
-
-	public RpcStrategy_RendezvousHashing withReshardings(int reshardings) {
-		this.reshardings = reshardings;
-		return this;
-	}
-
-	public RpcStrategy_RendezvousHashing withShard(Object shardId, RpcStrategy strategy) {
-		shards.put(shardId, strategy);
-		return this;
-	}
-
-	public RpcStrategy_RendezvousHashing withShards(InetSocketAddress... addresses) {
-		return withShards(List.of(addresses));
-	}
-
-	public RpcStrategy_RendezvousHashing withShards(List<InetSocketAddress> addresses) {
-		for (InetSocketAddress address : addresses) {
-			shards.put(address, RpcStrategy.server(address));
+	public final class Builder extends AbstractBuilder<Builder, RpcStrategy> {
+		public Builder withHashBucketFn(ToLongBiFunction<Object, Integer> hashBucketFn) {
+			checkNotBuilt(this);
+			RpcStrategy_RendezvousHashing.this.hashBucketFn = hashBucketFn;
+			return this;
 		}
-		return this;
+
+		public Builder withBuckets(int buckets) {
+			checkNotBuilt(this);
+			checkArgument((buckets & (buckets - 1)) == 0);
+			RpcStrategy_RendezvousHashing.this.buckets = buckets;
+			return this;
+		}
+
+		public Builder withMinActiveShards(int minActiveShards) {
+			checkNotBuilt(this);
+			RpcStrategy_RendezvousHashing.this.minActiveShards = minActiveShards;
+			return this;
+		}
+
+		public Builder withReshardings(int reshardings) {
+			checkNotBuilt(this);
+			RpcStrategy_RendezvousHashing.this.reshardings = reshardings;
+			return this;
+		}
+
+		public Builder withShard(Object shardId, RpcStrategy strategy) {
+			checkNotBuilt(this);
+			shards.put(shardId, strategy);
+			return this;
+		}
+
+		public Builder withShards(InetSocketAddress... addresses) {
+			return withShards(List.of(addresses));
+		}
+
+		public Builder withShards(List<InetSocketAddress> addresses) {
+			for (InetSocketAddress address : addresses) {
+				shards.put(address, server(address));
+			}
+			return this;
+		}
+
+		@Override
+		protected RpcStrategy doBuild() {
+			return RpcStrategy_RendezvousHashing.this;
+		}
 	}
 
 	@Override

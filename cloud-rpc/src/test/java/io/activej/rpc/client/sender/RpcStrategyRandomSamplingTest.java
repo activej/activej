@@ -8,7 +8,6 @@ import java.net.InetSocketAddress;
 import java.util.HashSet;
 import java.util.Set;
 
-import static io.activej.rpc.client.sender.RpcStrategy.randomSampling;
 import static org.junit.Assert.assertEquals;
 
 @SuppressWarnings("ConstantConditions")
@@ -32,10 +31,11 @@ public class RpcStrategyRandomSamplingTest {
 		int strategy_3_weight = 7;
 
 		// init RandomSamplingStrategy
-		RpcStrategy randomSamplingStrategy = randomSampling()
+		RpcStrategy randomSamplingStrategy = RpcStrategy_RandomSampling.builder()
 				.with(strategy_1_weight, strategy_1)
 				.with(strategy_2_weight, strategy_2)
-				.with(strategy_3_weight, strategy_3);
+				.with(strategy_3_weight, strategy_3)
+				.build();
 
 		// make requests
 		RpcSender sender = randomSamplingStrategy.createSender(POOL);
@@ -77,10 +77,11 @@ public class RpcStrategyRandomSamplingTest {
 		int strategy_3_weight = 8;
 
 		// init RandomSamplingStrategy
-		RpcStrategy randomSamplingStrategy = randomSampling()
+		RpcStrategy randomSamplingStrategy = RpcStrategy_RandomSampling.builder()
 				.with(strategy_1_weight, strategy_1)
 				.with(zero_weight, strategy_2)
-				.with(strategy_3_weight, strategy_3);
+				.with(strategy_3_weight, strategy_3)
+				.build();
 
 		// make requests
 		RpcSender sender = randomSamplingStrategy.createSender(POOL);

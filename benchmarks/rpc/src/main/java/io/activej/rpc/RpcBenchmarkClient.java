@@ -24,7 +24,7 @@ import static io.activej.config.converter.ConfigConverters.ofInteger;
 import static io.activej.config.converter.ConfigConverters.ofMemSize;
 import static io.activej.inject.module.Modules.combine;
 import static io.activej.launchers.initializers.ConfigConverters.ofFrameFormat;
-import static io.activej.rpc.client.sender.RpcStrategy.server;
+import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static java.lang.Math.min;
 
 @SuppressWarnings("WeakerAccess")
@@ -54,12 +54,13 @@ public class RpcBenchmarkClient extends Launcher {
 
 	@Provides
 	AsyncRpcClient rpcClient(@Named("client") NioReactor reactor, Config config) {
-		return RpcClient.create(reactor)
+		return RpcClient.builder(reactor)
 				.withStreamProtocol(
 						config.get(ofMemSize(), "rpc.defaultPacketSize", MemSize.kilobytes(256)),
 						config.get(ofFrameFormat(), "rpc.frameFormat", null))
 				.withMessageTypes(Integer.class)
-				.withStrategy(server(new InetSocketAddress(config.get(ofInteger(), "rpc.server.port"))));
+				.withStrategy(server(new InetSocketAddress(config.get(ofInteger(), "rpc.server.port"))))
+				.build();
 	}
 
 	@Provides

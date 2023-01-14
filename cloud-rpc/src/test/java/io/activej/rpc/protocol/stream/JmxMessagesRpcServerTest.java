@@ -18,7 +18,7 @@ import java.net.InetSocketAddress;
 
 import static io.activej.promise.TestUtils.await;
 import static io.activej.rpc.client.RpcClient.DEFAULT_PACKET_SIZE;
-import static io.activej.rpc.client.sender.RpcStrategy.server;
+import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static io.activej.rpc.server.RpcServer.DEFAULT_INITIAL_BUFFER_SIZE;
 import static io.activej.test.TestUtils.getFreePort;
 import static org.junit.Assert.assertEquals;
@@ -54,10 +54,11 @@ public class JmxMessagesRpcServerTest {
 
 	@Test
 	public void testWithoutProtocolError() {
-		RpcClient client = RpcClient.create(Reactor.getCurrentReactor())
+		RpcClient client = RpcClient.builder(Reactor.getCurrentReactor())
 				.withMessageTypes(String.class)
 				.withStreamProtocol(DEFAULT_PACKET_SIZE, FRAME_FORMAT)
-				.withStrategy(server(new InetSocketAddress("localhost", listenPort)));
+				.withStrategy(server(new InetSocketAddress("localhost", listenPort)))
+				.build();
 		await(client.start().whenResult(() ->
 				client.sendRequest("msg", 1000)
 						.whenComplete(client::stop)));
@@ -66,9 +67,10 @@ public class JmxMessagesRpcServerTest {
 
 	@Test
 	public void testWithProtocolError() {
-		RpcClient client = RpcClient.create(Reactor.getCurrentReactor())
+		RpcClient client = RpcClient.builder(Reactor.getCurrentReactor())
 				.withMessageTypes(String.class)
-				.withStrategy(server(new InetSocketAddress("localhost", listenPort)));
+				.withStrategy(server(new InetSocketAddress("localhost", listenPort)))
+				.build();
 		await(client.start()
 				.whenResult(() -> client.sendRequest("msg", 10000)
 						.whenComplete(client::stop)));
@@ -77,9 +79,10 @@ public class JmxMessagesRpcServerTest {
 
 	@Test
 	public void testWithProtocolError2() {
-		RpcClient client = RpcClient.create(Reactor.getCurrentReactor())
+		RpcClient client = RpcClient.builder(Reactor.getCurrentReactor())
 				.withMessageTypes(String.class)
-				.withStrategy(server(new InetSocketAddress("localhost", listenPort)));
+				.withStrategy(server(new InetSocketAddress("localhost", listenPort)))
+				.build();
 		await(client.start()
 				.whenResult(() -> client.sendRequest("Message larger than LZ4 header", 1000)
 						.whenComplete(client::stop)));

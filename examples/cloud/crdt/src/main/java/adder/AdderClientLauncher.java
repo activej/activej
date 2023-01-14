@@ -29,7 +29,7 @@ import static adder.AdderServerLauncher.MESSAGE_TYPES;
 import static adder.ClusterStorageModule.DEFAULT_PARTITIONS_FILE;
 import static io.activej.common.Checks.checkNotNull;
 import static io.activej.config.converter.ConfigConverters.ofPath;
-import static io.activej.rpc.client.sender.RpcStrategy.server;
+import static io.activej.rpc.client.sender.RpcStrategies.server;
 
 public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 	@Inject
@@ -48,8 +48,9 @@ public final class AdderClientLauncher extends CrdtRpcClientLauncher {
 		return new AbstractModule() {
 			@Provides
 			AsyncRpcClient client(NioReactor reactor, CrdtRpcStrategyService<Long> strategyService, List<Class<?>> messageTypes) {
-				RpcClient rpcClient = RpcClient.create(reactor)
-						.withMessageTypes(messageTypes);
+				RpcClient rpcClient = RpcClient.builder(reactor)
+						.withMessageTypes(messageTypes)
+						.build();
 				strategyService.setRpcClient(rpcClient);
 				return rpcClient;
 			}

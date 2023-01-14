@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 import static io.activej.promise.TestUtils.await;
-import static io.activej.rpc.client.sender.RpcStrategy.server;
+import static io.activej.rpc.client.sender.RpcStrategies.server;
 import static io.activej.test.TestUtils.getFreePort;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
@@ -56,9 +56,10 @@ public final class RpcBinaryProtocolTest {
 	public void test() throws Exception {
 		String testMessage = "Test";
 
-		RpcClient client = RpcClient.create(Reactor.getCurrentReactor())
+		RpcClient client = RpcClient.builder(Reactor.getCurrentReactor())
 				.withMessageTypes(String.class)
-				.withStrategy(server(new InetSocketAddress("localhost", listenPort)));
+				.withStrategy(server(new InetSocketAddress("localhost", listenPort)))
+				.build();
 
 		RpcServer server = RpcServer.create(Reactor.getCurrentReactor())
 				.withMessageTypes(String.class)
