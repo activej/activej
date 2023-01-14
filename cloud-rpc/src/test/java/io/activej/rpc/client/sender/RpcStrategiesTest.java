@@ -191,9 +191,9 @@ public class RpcStrategiesTest {
 		int iterationsPerDataStubWithKey = 35;
 		RpcSender sender;
 		RpcStrategy strategy = typeDispatching()
-				.on(String.class,
+				.with(String.class,
 						firstValidResult(servers(address1, address2)))
-				.onDefault(
+				.withDefault(
 						firstAvailable(servers(address3, address4, address5)));
 
 		sender = strategy.createSender(pool);

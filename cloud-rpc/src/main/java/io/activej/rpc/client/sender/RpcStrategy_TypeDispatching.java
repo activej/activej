@@ -35,14 +35,14 @@ public final class RpcStrategy_TypeDispatching implements RpcStrategy {
 
 	RpcStrategy_TypeDispatching() {}
 
-	public RpcStrategy_TypeDispatching on(Class<?> dataType, RpcStrategy strategy) {
+	public RpcStrategy_TypeDispatching with(Class<?> dataType, RpcStrategy strategy) {
 		checkState(!dataTypeToStrategy.containsKey(dataType),
 				() -> "Strategy for type " + dataType.toString() + " is already set");
 		dataTypeToStrategy.put(dataType, strategy);
 		return this;
 	}
 
-	public RpcStrategy_TypeDispatching onDefault(RpcStrategy strategy) {
+	public RpcStrategy_TypeDispatching withDefault(RpcStrategy strategy) {
 		checkState(defaultStrategy == null, "Default Strategy is already set");
 		defaultStrategy = strategy;
 		return this;
