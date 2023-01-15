@@ -44,9 +44,10 @@ public class AggregationGroupReducerTest {
 	@Test
 	public void test() {
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
-		AggregationStructure structure = AggregationStructure.create(JsonCodec_ChunkId.ofLong())
+		AggregationStructure structure = AggregationStructure.builder(JsonCodec_ChunkId.ofLong())
 				.withKey("word", FieldTypes.ofString())
-				.withMeasure("documents", union(ofInt()));
+				.withMeasure("documents", union(ofInt()))
+				.build();
 
 		List<StreamConsumer> listConsumers = new ArrayList<>();
 		List items = new ArrayList();

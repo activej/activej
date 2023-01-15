@@ -87,10 +87,11 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 				.withDimensions("campaign", "banner", "date")
 				.withMeasures("impressions", "clicks", "conversions", "revenue");
 
-		Cube basicCube = createBasicCube()
+		Cube basicCube = builderOfBasicCube()
 				.withAggregation(dateAggregation)
 				.withAggregation(advertiserDateAggregation)
-				.withAggregation(campaignBannerDateAggregation);
+				.withAggregation(campaignBannerDateAggregation)
+				.build();
 
 		OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(basicCube);
 		uplink = uplinkFactory.create(basicCube);
@@ -145,10 +146,11 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 
 	@Test
 	public void test() {
-		Cube cube = createBasicCube()
+		Cube cube = builderOfBasicCube()
 				.withAggregation(dateAggregation.withPredicate(DATE_PREDICATE))
 				.withAggregation(advertiserDateAggregation.withPredicate(DATE_PREDICATE))
-				.withAggregation(campaignBannerDateAggregation.withPredicate(DATE_PREDICATE));
+				.withAggregation(campaignBannerDateAggregation.withPredicate(DATE_PREDICATE))
+				.build();
 		OTStateManager<Long, LogDiff<CubeDiff>> stateManager = OTStateManager.create(reactor, LOG_OT, uplink, OTState_Log.create(cube));
 		await(stateManager.checkout());
 
@@ -173,8 +175,8 @@ public class CubeRemovingOfIrrelevantChunksTest extends CubeTestBase {
 		return keysToMap(cube.getAggregationIds().stream(), id -> cube.getAggregation(id).getChunks());
 	}
 
-	private Cube createBasicCube() {
-		return Cube.create(reactor, EXECUTOR, CLASS_LOADER, chunkStorage)
+	private Cube.Builder builderOfBasicCube() {
+		return Cube.builder(reactor, EXECUTOR, CLASS_LOADER, chunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())
 				.withDimension("campaign", ofInt())

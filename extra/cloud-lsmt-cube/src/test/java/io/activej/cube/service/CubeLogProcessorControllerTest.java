@@ -63,7 +63,7 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 		await(aggregationFS.start());
 		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
 				FrameFormat_LZ4.create(), aggregationFS);
-		Cube cube = Cube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
+		Cube cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())
 				.withDimension("campaign", ofInt())
@@ -82,7 +82,8 @@ public final class CubeLogProcessorControllerTest extends CubeTestBase {
 						.withMeasures("impressions", "clicks", "conversions", "revenue"))
 				.withAggregation(id("advertiser")
 						.withDimensions("advertiser")
-						.withMeasures("impressions", "clicks", "conversions", "revenue"));
+						.withMeasures("impressions", "clicks", "conversions", "revenue"))
+				.build();
 
 		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 

@@ -70,13 +70,14 @@ public class CubeCleanerControllerTest {
 		DefiningClassLoader classLoader = DefiningClassLoader.create();
 		aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
 				FrameFormat_LZ4.create(), FileSystem.create(reactor, executor, aggregationsDir));
-		Cube cube = Cube.create(reactor, executor, classLoader, aggregationChunkStorage)
+		Cube cube = Cube.builder(reactor, executor, classLoader, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
 				.withDimension("adv", ofInt())
 				.withMeasure("pubRequests", sum(ofLong()))
 				.withMeasure("advRequests", sum(ofLong()))
 				.withAggregation(id("pub").withDimensions("pub").withMeasures("pubRequests"))
-				.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests"));
+				.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests"))
+				.build();
 
 		repository = OTRepository_MySql.create(reactor, executor, dataSource, AsyncSupplier.of(new RefLong(0)::inc),
 				OT_SYSTEM, LogDiffCodec.create(JsonCodec_CubeDiff.create(cube)));

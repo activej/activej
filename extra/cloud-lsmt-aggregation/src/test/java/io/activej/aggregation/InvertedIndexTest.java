@@ -98,12 +98,13 @@ public class InvertedIndexTest {
 		FrameFormat frameFormat = FrameFormat_LZ4.create();
 		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 
-		AggregationStructure structure = AggregationStructure.create(JsonCodec_ChunkId.ofLong())
-				.withKey("word", ofString())
-				.withMeasure("documents", union(ofInt()));
-
-		Aggregation aggregation = Aggregation.create(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure)
-				.withTemporarySortDir(temporaryFolder.newFolder().toPath());
+		Aggregation aggregation = Aggregation.builder(reactor, executor, classLoader, aggregationChunkStorage, frameFormat)
+				.withStructure(AggregationStructure.builder(JsonCodec_ChunkId.ofLong())
+						.withKey("word", ofString())
+						.withMeasure("documents", union(ofInt()))
+						.build())
+				.withTemporarySortDir(temporaryFolder.newFolder().toPath())
+				.build();
 
 		StreamSupplier<InvertedIndexRecord> supplier = StreamSupplier.of(
 				new InvertedIndexRecord("fox", 1),

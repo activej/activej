@@ -39,7 +39,7 @@ import static io.activej.common.Utils.concat;
 import static io.activej.common.Utils.first;
 import static io.activej.cube.Cube.AggregationConfig.id;
 import static io.activej.cube.TestUtils.initializeRepository;
-import static io.activej.cube.linear.CubeUplinkMigrationService.createEmptyCube;
+import static io.activej.cube.linear.CubeUplinkMigrationService.builderOfEmptyCube;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.test.TestUtils.dataSource;
 import static org.junit.Assert.assertEquals;
@@ -65,7 +65,7 @@ public final class CubeUplinkMigrationServiceTest {
 		Reactor reactor = Reactor.getCurrentReactor();
 		Executor executor = Executors.newCachedThreadPool();
 
-		cube = createEmptyCube(reactor, executor)
+		cube = builderOfEmptyCube(reactor, executor)
 				.withDimension("campaign", ofInt())
 				.withDimension("advertiser", ofInt())
 				.withMeasure("impressions", sum(ofLong()))
@@ -77,7 +77,8 @@ public final class CubeUplinkMigrationServiceTest {
 						.withMeasures("impressions", "clicks", "conversions", "revenue"))
 				.withAggregation(id("advertiser-campaign")
 						.withDimensions("advertiser", "campaign")
-						.withMeasures("impressions", "clicks", "conversions", "revenue"));
+						.withMeasures("impressions", "clicks", "conversions", "revenue"))
+				.build();
 
 		LogDiffCodec<CubeDiff> diffCodec = LogDiffCodec.create(JsonCodec_CubeDiff.create(cube));
 

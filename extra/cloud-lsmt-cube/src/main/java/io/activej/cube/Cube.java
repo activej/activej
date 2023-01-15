@@ -31,6 +31,7 @@ import io.activej.codegen.DefiningClassLoader;
 import io.activej.codegen.expression.Expression;
 import io.activej.codegen.expression.Expression_Compare;
 import io.activej.codegen.expression.Variable;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.common.initializer.WithInitializer;
 import io.activej.common.ref.Ref;
 import io.activej.csp.process.frames.FrameFormat;
@@ -103,7 +104,7 @@ import static java.util.stream.Collectors.toList;
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public final class Cube extends AbstractReactive
-		implements AsyncCube, OTState<CubeDiff>, WithInitializer<Cube>, ReactiveJmxBeanWithStats {
+		implements AsyncCube, OTState<CubeDiff>, ReactiveJmxBeanWithStats {
 	private static final Logger logger = LoggerFactory.getLogger(Cube.class);
 
 	public static final int DEFAULT_OVERLAPPING_CHUNKS_THRESHOLD = 300;
@@ -163,96 +164,6 @@ public final class Cube extends AbstractReactive
 		public String toString() {
 			return aggregation.toString();
 		}
-	}
-
-	// state
-	private final Map<String, AggregationContainer> aggregations = new LinkedHashMap<>();
-
-	private CubeClassLoaderCache classLoaderCache;
-
-	// JMX
-	private final AggregationStats aggregationStats = new AggregationStats();
-	private final ValueStats queryTimes = ValueStats.create(Duration.ofMinutes(10));
-	private long queryErrors;
-	private Exception queryLastError;
-
-	Cube(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
-			AsyncAggregationChunkStorage aggregationChunkStorage) {
-		super(reactor);
-		this.executor = executor;
-		this.classLoader = classLoader;
-		this.aggregationChunkStorage = aggregationChunkStorage;
-	}
-
-	public static Cube create(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
-			AsyncAggregationChunkStorage aggregationChunkStorage) {
-		return new Cube(reactor, executor, classLoader, aggregationChunkStorage);
-	}
-
-	public Cube withAttribute(String attribute, AsyncAttributeResolver resolver) {
-		checkArgument(!attributes.containsKey(attribute), "Attribute %s has already been defined", attribute);
-		int pos = attribute.indexOf('.');
-		if (pos == -1)
-			throw new IllegalArgumentException("Attribute identifier is not split into name and dimension");
-		String dimension = attribute.substring(0, pos);
-		String attributeName = attribute.substring(pos + 1);
-		checkArgument(resolver.getAttributeTypes().containsKey(attributeName), "Resolver does not support %s", attribute);
-		List<String> dimensions = getAllParents(dimension);
-		checkArgument(dimensions.size() == resolver.getKeyTypes().length, "Parent dimensions: %s, key types: %s", dimensions, List.of(resolver.getKeyTypes()));
-		for (int i = 0; i < dimensions.size(); i++) {
-			String d = dimensions.get(i);
-			checkArgument(((Class<?>) dimensionTypes.get(d).getInternalDataType()).equals(resolver.getKeyTypes()[i]), "Dimension type mismatch for %s", d);
-		}
-		AttributeResolverContainer resolverContainer = null;
-		for (AttributeResolverContainer r : attributeResolvers) {
-			if (r.resolver == resolver) {
-				resolverContainer = r;
-				break;
-			}
-		}
-		if (resolverContainer == null) {
-			resolverContainer = new AttributeResolverContainer(dimensions, resolver);
-			attributeResolvers.add(resolverContainer);
-		}
-		resolverContainer.attributes.add(attribute);
-		attributes.put(attribute, resolverContainer);
-		attributeTypes.put(attribute, resolver.getAttributeTypes().get(attributeName));
-		return this;
-	}
-
-	public Cube withClassLoaderCache(CubeClassLoaderCache classLoaderCache) {
-		this.classLoaderCache = classLoaderCache;
-		return this;
-	}
-
-	public Cube withDimension(String dimensionId, FieldType type) {
-		addDimension(dimensionId, type);
-		return this;
-	}
-
-	public Cube withMeasure(String measureId, Measure measure) {
-		addMeasure(measureId, measure);
-		return this;
-	}
-
-	public Cube withComputedMeasure(String measureId, ComputedMeasure computedMeasure) {
-		addComputedMeasure(measureId, computedMeasure);
-		return this;
-	}
-
-	public Cube withRelation(String child, String parent) {
-		addRelation(child, parent);
-		return this;
-	}
-
-	public Cube withTemporarySortDir(Path temporarySortDir) {
-		this.temporarySortDir = temporarySortDir;
-		return this;
-	}
-
-	public Cube withSortFrameFormat(FrameFormat sortFrameFormat) {
-		this.sortFrameFormat = sortFrameFormat;
-		return this;
 	}
 
 	public static final class AggregationConfig implements WithInitializer<AggregationConfig> {
@@ -332,63 +243,193 @@ public final class Cube extends AbstractReactive
 		}
 	}
 
-	public Cube withAggregation(AggregationConfig aggregationConfig) {
-		addAggregation(aggregationConfig);
-		return this;
+	// state
+	private final Map<String, AggregationContainer> aggregations = new LinkedHashMap<>();
+
+	private CubeClassLoaderCache classLoaderCache;
+
+	// JMX
+	private final AggregationStats aggregationStats = new AggregationStats();
+	private final ValueStats queryTimes = ValueStats.create(Duration.ofMinutes(10));
+	private long queryErrors;
+	private Exception queryLastError;
+
+	Cube(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
+			AsyncAggregationChunkStorage aggregationChunkStorage) {
+		super(reactor);
+		this.executor = executor;
+		this.classLoader = classLoader;
+		this.aggregationChunkStorage = aggregationChunkStorage;
+	}
+
+	public static Builder builder(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
+			AsyncAggregationChunkStorage aggregationChunkStorage) {
+		return new Cube(reactor, executor, classLoader, aggregationChunkStorage).new Builder(new LinkedHashMap<>());
+	}
+
+	public final class Builder extends AbstractBuilder<Builder, Cube> {
+		private final Map<String, AggregationConfig> aggregationConfigs;
+
+		public Builder(Map<String, AggregationConfig> aggregationConfigs) {this.aggregationConfigs = aggregationConfigs;}
+
+		public Builder withAttribute(String attribute, AsyncAttributeResolver resolver) {
+			checkArgument(!attributes.containsKey(attribute), "Attribute %s has already been defined", attribute);
+			int pos = attribute.indexOf('.');
+			if (pos == -1)
+				throw new IllegalArgumentException("Attribute identifier is not split into name and dimension");
+			String dimension = attribute.substring(0, pos);
+			String attributeName = attribute.substring(pos + 1);
+			checkArgument(resolver.getAttributeTypes().containsKey(attributeName), "Resolver does not support %s", attribute);
+			List<String> dimensions = getAllParents(dimension);
+			checkArgument(dimensions.size() == resolver.getKeyTypes().length, "Parent dimensions: %s, key types: %s", dimensions, List.of(resolver.getKeyTypes()));
+			for (int i = 0; i < dimensions.size(); i++) {
+				String d = dimensions.get(i);
+				checkArgument(((Class<?>) dimensionTypes.get(d).getInternalDataType()).equals(resolver.getKeyTypes()[i]), "Dimension type mismatch for %s", d);
+			}
+			AttributeResolverContainer resolverContainer = null;
+			for (AttributeResolverContainer r : attributeResolvers) {
+				if (r.resolver == resolver) {
+					resolverContainer = r;
+					break;
+				}
+			}
+			if (resolverContainer == null) {
+				resolverContainer = new AttributeResolverContainer(dimensions, resolver);
+				attributeResolvers.add(resolverContainer);
+			}
+			resolverContainer.attributes.add(attribute);
+			attributes.put(attribute, resolverContainer);
+			attributeTypes.put(attribute, resolver.getAttributeTypes().get(attributeName));
+			return this;
+		}
+
+		public Builder withClassLoaderCache(CubeClassLoaderCache classLoaderCache) {
+			Cube.this.classLoaderCache = classLoaderCache;
+			return this;
+		}
+
+		public Builder withDimension(String dimensionId, FieldType type) {
+			checkState(aggregations.isEmpty(), "Cannot add dimension while aggregations are present");
+			checkState(Comparable.class.isAssignableFrom(wrap((Class<?>) type.getDataType())), "Dimension type is not primitive or Comparable");
+			dimensionTypes.put(dimensionId, type);
+			fieldTypes.put(dimensionId, type);
+			return this;
+		}
+
+		public Builder withMeasure(String measureId, Measure measure) {
+			checkState(aggregations.isEmpty(), "Cannot add measure while aggregations are present");
+			measures.put(measureId, measure);
+			fieldTypes.put(measureId, measure.getFieldType());
+			return this;
+		}
+
+		public Builder withComputedMeasure(String measureId, ComputedMeasure computedMeasure) {
+			checkState(aggregations.isEmpty(), "Cannot add computed measure while aggregations are present");
+			computedMeasures.put(measureId, computedMeasure);
+			return this;
+		}
+
+		public Builder withRelation(String child, String parent) {
+			childParentRelations.put(child, parent);
+			return this;
+		}
+
+		public Builder withTemporarySortDir(Path temporarySortDir) {
+			Cube.this.temporarySortDir = temporarySortDir;
+			return this;
+		}
+
+		public Builder withSortFrameFormat(FrameFormat sortFrameFormat) {
+			Cube.this.sortFrameFormat = sortFrameFormat;
+			return this;
+		}
+
+		public Builder withAggregationsChunkSize(int aggregationsChunkSize) {
+			Cube.this.aggregationsChunkSize = aggregationsChunkSize;
+			return this;
+		}
+
+		public Builder withAggregationsReducerBufferSize(int aggregationsReducerBufferSize) {
+			Cube.this.aggregationsReducerBufferSize = aggregationsReducerBufferSize;
+			return this;
+		}
+
+		public Builder withAggregationsSorterItemsInMemory(int aggregationsSorterItemsInMemory) {
+			Cube.this.aggregationsSorterItemsInMemory = aggregationsSorterItemsInMemory;
+			return this;
+		}
+
+		public Builder withAggregationsMaxChunksToConsolidate(int aggregationsMaxChunksToConsolidate) {
+			Cube.this.aggregationsMaxChunksToConsolidate = aggregationsMaxChunksToConsolidate;
+			return this;
+		}
+
+		public Builder withAggregationsIgnoreChunkReadingExceptions(boolean aggregationsIgnoreChunkReadingExceptions) {
+			Cube.this.aggregationsIgnoreChunkReadingExceptions = aggregationsIgnoreChunkReadingExceptions;
+			return this;
+		}
+
+		public Builder withMaxOverlappingChunksToProcessLogs(int maxOverlappingChunksToProcessLogs) {
+			Cube.this.maxOverlappingChunksToProcessLogs = maxOverlappingChunksToProcessLogs;
+			return this;
+		}
+
+		public Builder withMaxIncrementalReloadPeriod(Duration maxIncrementalReloadPeriod) {
+			Cube.this.maxIncrementalReloadPeriod = maxIncrementalReloadPeriod;
+			return this;
+		}
+
+		public Builder withAggregation(AggregationConfig aggregationConfig) {
+			checkArgument(!aggregationConfigs.containsKey(aggregationConfig.id), "Aggregation '%s' is already defined", aggregationConfig.id);
+			aggregationConfigs.put(aggregationConfig.id, aggregationConfig);
+			return this;
+		}
+
+		@Override
+		protected Cube doBuild() {
+			for (AggregationConfig aggregationConfig : aggregationConfigs.values()) {
+				addAggregation(aggregationConfig);
+			}
+			return Cube.this;
+		}
+
+		private void addAggregation(AggregationConfig aggregationConfig) {
+			Aggregation aggregation = Aggregation.builder(reactor, executor, classLoader, aggregationChunkStorage, sortFrameFormat)
+					.withStructure(AggregationStructure.builder(JsonCodec_ChunkId.ofLong())
+							.withInitializer(s -> {
+								for (String dimensionId : aggregationConfig.dimensions) {
+									s.withKey(dimensionId, dimensionTypes.get(dimensionId));
+								}
+								for (String measureId1 : aggregationConfig.measures) {
+									s.withMeasure(measureId1, measures.get(measureId1));
+								}
+								for (Entry<String, Measure> entry : measures.entrySet()) {
+									String measureId = entry.getKey();
+									Measure measure = entry.getValue();
+									if (!aggregationConfig.measures.contains(measureId)) {
+										s.withIgnoredMeasure(measureId, measure.getFieldType());
+									}
+								}
+							})
+							.withPartitioningKey(aggregationConfig.partitioningKey)
+							.build())
+					.withTemporarySortDir(temporarySortDir)
+					.withChunkSize(aggregationConfig.chunkSize != 0 ? aggregationConfig.chunkSize : aggregationsChunkSize)
+					.withReducerBufferSize(aggregationConfig.reducerBufferSize != 0 ? aggregationConfig.reducerBufferSize : aggregationsReducerBufferSize)
+					.withSorterItemsInMemory(aggregationConfig.sorterItemsInMemory != 0 ? aggregationConfig.sorterItemsInMemory : aggregationsSorterItemsInMemory)
+					.withMaxChunksToConsolidate(aggregationConfig.maxChunksToConsolidate != 0 ? aggregationConfig.maxChunksToConsolidate : aggregationsMaxChunksToConsolidate)
+					.withIgnoreChunkReadingExceptions(aggregationsIgnoreChunkReadingExceptions)
+					.withStats(aggregationStats)
+					.build();
+
+			aggregations.put(aggregationConfig.id, new AggregationContainer(aggregation, aggregationConfig.measures, aggregationConfig.predicate));
+			logger.info("Added aggregation {} for id '{}'", aggregation, aggregationConfig.id);
+		}
+
 	}
 
 	private static <K, V> Stream<Entry<K, V>> filterEntryKeys(Stream<Entry<K, V>> stream, Predicate<K> predicate) {
 		return stream.filter(entry -> predicate.test(entry.getKey()));
-	}
-
-	public void addMeasure(String measureId, Measure measure) {
-		checkState(aggregations.isEmpty(), "Cannot add measure while aggregations are present");
-		measures.put(measureId, measure);
-		fieldTypes.put(measureId, measure.getFieldType());
-	}
-
-	public void addComputedMeasure(String measureId, ComputedMeasure computedMeasure) {
-		checkState(aggregations.isEmpty(), "Cannot add computed measure while aggregations are present");
-		computedMeasures.put(measureId, computedMeasure);
-	}
-
-	public void addRelation(String child, String parent) {
-		childParentRelations.put(child, parent);
-	}
-
-	public void addDimension(String dimensionId, FieldType type) {
-		checkState(aggregations.isEmpty(), "Cannot add dimension while aggregations are present");
-		checkState(Comparable.class.isAssignableFrom(wrap((Class<?>) type.getDataType())), "Dimension type is not primitive or Comparable");
-		dimensionTypes.put(dimensionId, type);
-		fieldTypes.put(dimensionId, type);
-	}
-
-	public void addAggregation(AggregationConfig config) {
-		checkArgument(!aggregations.containsKey(config.id), "Aggregation '%s' is already defined", config.id);
-
-		AggregationStructure structure = AggregationStructure.create(JsonCodec_ChunkId.ofLong())
-				.withInitializer(s -> config.dimensions.forEach(dimensionId ->
-						s.withKey(dimensionId, dimensionTypes.get(dimensionId))))
-				.withInitializer(s -> config.measures.forEach(measureId ->
-						s.withMeasure(measureId, measures.get(measureId))))
-				.withInitializer(s -> measures.forEach((measureId, measure) -> {
-					if (!config.measures.contains(measureId)) {
-						s.withIgnoredMeasure(measureId, measure.getFieldType());
-					}
-				}))
-				.withPartitioningKey(config.partitioningKey);
-
-		Aggregation aggregation = Aggregation.create(reactor, executor, classLoader, aggregationChunkStorage, sortFrameFormat, structure)
-				.withTemporarySortDir(temporarySortDir)
-				.withChunkSize(config.chunkSize != 0 ? config.chunkSize : aggregationsChunkSize)
-				.withReducerBufferSize(config.reducerBufferSize != 0 ? config.reducerBufferSize : aggregationsReducerBufferSize)
-				.withSorterItemsInMemory(config.sorterItemsInMemory != 0 ? config.sorterItemsInMemory : aggregationsSorterItemsInMemory)
-				.withMaxChunksToConsolidate(config.maxChunksToConsolidate != 0 ? config.maxChunksToConsolidate : aggregationsMaxChunksToConsolidate)
-				.withIgnoreChunkReadingExceptions(aggregationsIgnoreChunkReadingExceptions)
-				.withStats(aggregationStats);
-
-		aggregations.put(config.id, new AggregationContainer(aggregation, config.measures, config.predicate));
-		logger.info("Added aggregation {} for id '{}'", aggregation, config.id);
 	}
 
 	public Class<?> getAttributeInternalType(String attribute) {
@@ -1070,7 +1111,8 @@ public final class Cube extends AbstractReactive
 			R totals;
 			try {
 				totals = resultClass.getDeclaredConstructor().newInstance();
-			} catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+			} catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
+					 InvocationTargetException e) {
 				throw new RuntimeException(e);
 			}
 
@@ -1271,16 +1313,6 @@ public final class Cube extends AbstractReactive
 		}
 	}
 
-	public Cube withAggregationsChunkSize(int aggregationsChunkSize) {
-		this.aggregationsChunkSize = aggregationsChunkSize;
-		return this;
-	}
-
-	public Cube withAggregationsReducerBufferSize(int aggregationsReducerBufferSize) {
-		this.aggregationsReducerBufferSize = aggregationsReducerBufferSize;
-		return this;
-	}
-
 	@JmxAttribute
 	public int getAggregationsSorterItemsInMemory() {
 		return aggregationsSorterItemsInMemory;
@@ -1292,11 +1324,6 @@ public final class Cube extends AbstractReactive
 		for (AggregationContainer aggregationContainer : aggregations.values()) {
 			aggregationContainer.aggregation.setSorterItemsInMemory(aggregationsSorterItemsInMemory);
 		}
-	}
-
-	public Cube withAggregationsSorterItemsInMemory(int aggregationsSorterItemsInMemory) {
-		this.aggregationsSorterItemsInMemory = aggregationsSorterItemsInMemory;
-		return this;
 	}
 
 	@JmxAttribute
@@ -1312,11 +1339,6 @@ public final class Cube extends AbstractReactive
 		}
 	}
 
-	public Cube withAggregationsMaxChunksToConsolidate(int aggregationsMaxChunksToConsolidate) {
-		this.aggregationsMaxChunksToConsolidate = aggregationsMaxChunksToConsolidate;
-		return this;
-	}
-
 	@JmxAttribute
 	public boolean getAggregationsIgnoreChunkReadingExceptions() {
 		return aggregationsIgnoreChunkReadingExceptions;
@@ -1330,11 +1352,6 @@ public final class Cube extends AbstractReactive
 		}
 	}
 
-	public Cube withAggregationsIgnoreChunkReadingExceptions(boolean aggregationsIgnoreChunkReadingExceptions) {
-		this.aggregationsIgnoreChunkReadingExceptions = aggregationsIgnoreChunkReadingExceptions;
-		return this;
-	}
-
 	@JmxAttribute
 	public int getMaxOverlappingChunksToProcessLogs() {
 		return maxOverlappingChunksToProcessLogs;
@@ -1345,11 +1362,6 @@ public final class Cube extends AbstractReactive
 		this.maxOverlappingChunksToProcessLogs = maxOverlappingChunksToProcessLogs;
 	}
 
-	public Cube withMaxOverlappingChunksToProcessLogs(int maxOverlappingChunksToProcessLogs) {
-		this.maxOverlappingChunksToProcessLogs = maxOverlappingChunksToProcessLogs;
-		return this;
-	}
-
 	@JmxAttribute
 	public Duration getMaxIncrementalReloadPeriod() {
 		return maxIncrementalReloadPeriod;
@@ -1358,11 +1370,6 @@ public final class Cube extends AbstractReactive
 	@JmxAttribute
 	public void setMaxIncrementalReloadPeriod(Duration maxIncrementalReloadPeriod) {
 		this.maxIncrementalReloadPeriod = maxIncrementalReloadPeriod;
-	}
-
-	public Cube withMaxIncrementalReloadPeriod(Duration maxIncrementalReloadPeriod) {
-		this.maxIncrementalReloadPeriod = maxIncrementalReloadPeriod;
-		return this;
 	}
 
 	@JmxAttribute

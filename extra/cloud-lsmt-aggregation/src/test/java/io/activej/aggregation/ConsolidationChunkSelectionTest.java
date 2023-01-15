@@ -15,8 +15,10 @@ import static org.junit.Assert.assertNull;
 public class ConsolidationChunkSelectionTest {
 	@Test
 	public void testRangeExpansion() {
-		AggregationStructure structure = AggregationStructure.create(JsonCodec_ChunkId.ofLong()).withKey("key", ofInt());
-		OTState_Aggregation state = new OTState_Aggregation(structure);
+		OTState_Aggregation state = new OTState_Aggregation(
+				AggregationStructure.builder(JsonCodec_ChunkId.ofLong())
+						.withKey("key", ofInt())
+						.build());
 
 		Set<AggregationChunk> chunks = new HashSet<>();
 		chunks.add(createTestChunk(1, 1, 2));
@@ -48,8 +50,10 @@ public class ConsolidationChunkSelectionTest {
 
 	@Test
 	public void testMinKeyStrategy() {
-		AggregationStructure structure = AggregationStructure.create(JsonCodec_ChunkId.ofLong()).withKey("key", ofInt());
-		OTState_Aggregation state = new OTState_Aggregation(structure);
+		OTState_Aggregation state = new OTState_Aggregation(
+				AggregationStructure.builder(JsonCodec_ChunkId.ofLong())
+						.withKey("key", ofInt())
+						.build());
 
 		Set<AggregationChunk> chunks1 = new HashSet<>();
 		chunks1.add(createTestChunk(1, 1, 2));
@@ -72,8 +76,10 @@ public class ConsolidationChunkSelectionTest {
 
 	@Test
 	public void testSizeFixStrategy() {
-		AggregationStructure structure = AggregationStructure.create(JsonCodec_ChunkId.ofLong()).withKey("key", ofInt());
-		OTState_Aggregation state = new OTState_Aggregation(structure);
+		OTState_Aggregation state = new OTState_Aggregation(
+				AggregationStructure.builder(JsonCodec_ChunkId.ofLong())
+						.withKey("key", ofInt())
+						.build());
 
 		int optimalChunkSize = 5;
 		int maxChunks = 5;
@@ -101,8 +107,10 @@ public class ConsolidationChunkSelectionTest {
 
 	@Test
 	public void testGroupingByPartition() {
-		AggregationStructure structure = AggregationStructure.create(JsonCodec_ChunkId.ofLong()).withKey("key", ofInt());
-		OTState_Aggregation state = new OTState_Aggregation(structure);
+		OTState_Aggregation state = new OTState_Aggregation(
+				AggregationStructure.builder(JsonCodec_ChunkId.ofLong())
+						.withKey("key", ofInt())
+						.build());
 
 		Set<AggregationChunk> chunks1 = new HashSet<>();
 		chunks1.add(createTestChunk(2, 1, 1, 1, 1, 1, 5));

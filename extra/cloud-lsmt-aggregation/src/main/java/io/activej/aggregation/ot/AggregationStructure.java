@@ -19,7 +19,7 @@ package io.activej.aggregation.ot;
 import io.activej.aggregation.JsonCodec_ChunkId;
 import io.activej.aggregation.fieldtype.FieldType;
 import io.activej.aggregation.measure.Measure;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -29,7 +29,7 @@ import java.util.Map;
 import static io.activej.common.Checks.checkArgument;
 
 @SuppressWarnings("rawtypes")
-public final class AggregationStructure implements WithInitializer<AggregationStructure> {
+public final class AggregationStructure {
 	private final JsonCodec_ChunkId<?> chunkIdCodec;
 	private final Map<String, FieldType> keyTypes = new LinkedHashMap<>();
 	private final Map<String, FieldType> measureTypes = new LinkedHashMap<>();
@@ -40,33 +40,61 @@ public final class AggregationStructure implements WithInitializer<AggregationSt
 		this.chunkIdCodec = chunkIdCodec;
 	}
 
-	public static AggregationStructure create(JsonCodec_ChunkId<?> chunkIdCodec) {
-		return new AggregationStructure(chunkIdCodec);
+	public static Builder builder(JsonCodec_ChunkId<?> chunkIdCodec) {
+		return new AggregationStructure(chunkIdCodec).new Builder();
 	}
 
-	public AggregationStructure withKey(String keyId, FieldType type) {
-		checkArgument(!keyTypes.containsKey(keyId), "Key '%s' has already been added", keyId);
-		keyTypes.put(keyId, type);
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, AggregationStructure> {
+		public Builder withKey(String keyId, FieldType type) {
+			checkArgument(!keyTypes.containsKey(keyId), "Key '%s' has already been added", keyId);
+			keyTypes.put(keyId, type);
+			return this;
+		}
 
-	public AggregationStructure withMeasure(String measureId, Measure aggregateFunction) {
-		checkArgument(!measureTypes.containsKey(measureId), "Measure '%s' has already been added", measureId);
-		measureTypes.put(measureId, aggregateFunction.getFieldType());
-		measures.put(measureId, aggregateFunction);
-		return this;
-	}
+		public Builder withKeys(Map<String, FieldType> keys) {
+			for (String k : keys.keySet()) {
+				withKey(k, keys.get(k));
+			}
+			return this;
+		}
 
-	@SuppressWarnings("UnusedReturnValue")
-	public AggregationStructure withIgnoredMeasure(String measureId, FieldType measureType) {
-		checkArgument(!measureTypes.containsKey(measureId), "Measure '%s' has already been added", measureId);
-		measureTypes.put(measureId, measureType);
-		return this;
-	}
+		public Builder withMeasure(String measureId, Measure aggregateFunction) {
+			checkArgument(!measureTypes.containsKey(measureId), "Measure '%s' has already been added", measureId);
+			measureTypes.put(measureId, aggregateFunction.getFieldType());
+			measures.put(measureId, aggregateFunction);
+			return this;
+		}
 
-	public AggregationStructure withPartitioningKey(List<String> partitioningKey) {
-		this.partitioningKey.addAll(partitioningKey);
-		return this;
+		public Builder withMeasures(Map<String, Measure> measures) {
+			for (String k : measures.keySet()) {
+				withMeasure(k, measures.get(k));
+			}
+			return this;
+		}
+
+		@SuppressWarnings("UnusedReturnValue")
+		public Builder withIgnoredMeasure(String measureId, FieldType measureType) {
+			checkArgument(!measureTypes.containsKey(measureId), "Measure '%s' has already been added", measureId);
+			measureTypes.put(measureId, measureType);
+			return this;
+		}
+
+		public Builder withIgnoredMeasures(Map<String, FieldType> measures) {
+			for (String k : measures.keySet()) {
+				withIgnoredMeasure(k, measures.get(k));
+			}
+			return this;
+		}
+
+		public Builder withPartitioningKey(List<String> partitioningKey) {
+			AggregationStructure.this.partitioningKey.addAll(partitioningKey);
+			return this;
+		}
+
+		@Override
+		protected AggregationStructure doBuild() {
+			return AggregationStructure.this;
+		}
 	}
 
 	public JsonCodec_ChunkId<?> getChunkIdCodec() {

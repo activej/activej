@@ -55,7 +55,7 @@ public class CubeIntegrationTest extends CubeTestBase {
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormat_LZ4.create();
 		AggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
-		Cube cube = Cube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
+		Cube cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())
 				.withDimension("campaign", ofInt())
@@ -74,7 +74,8 @@ public class CubeIntegrationTest extends CubeTestBase {
 						.withMeasures("impressions", "clicks", "conversions", "revenue"))
 				.withAggregation(id("advertiser")
 						.withDimensions("advertiser")
-						.withMeasures("impressions", "clicks", "conversions", "revenue"));
+						.withMeasures("impressions", "clicks", "conversions", "revenue"))
+				.build();
 
 		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 

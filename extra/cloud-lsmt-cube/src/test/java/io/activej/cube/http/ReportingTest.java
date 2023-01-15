@@ -256,10 +256,10 @@ public final class ReportingTest extends CubeTestBase {
 		await(fs.start());
 		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor,
 				JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), FrameFormat_LZ4.create(), fs);
-		cube = Cube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
+		cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withClassLoaderCache(CubeClassLoaderCache.create(CLASS_LOADER, 5))
-				.withInitializer(cube -> DIMENSIONS_CUBE.forEach(cube::addDimension))
-				.withInitializer(cube -> MEASURES.forEach(cube::addMeasure))
+				.withInitializer(cube -> DIMENSIONS_CUBE.forEach(cube::withDimension))
+				.withInitializer(cube -> MEASURES.forEach(cube::withMeasure))
 				.withRelation("campaign", "advertiser")
 				.withRelation("banner", "campaign")
 				.withRelation("site", "affiliate")
@@ -280,7 +280,8 @@ public final class ReportingTest extends CubeTestBase {
 
 				.withAggregation(id("daily")
 						.withDimensions(DIMENSIONS_DATE_AGGREGATION.keySet())
-						.withMeasures(MEASURES.keySet()));
+						.withMeasures(MEASURES.keySet()))
+				.build();
 
 		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 

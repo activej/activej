@@ -88,13 +88,14 @@ public class CubeBackupControllerTest {
 		fileSystem = fs;
 		AggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(eventloop, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
 				FrameFormat_LZ4.create(), fs);
-		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
+		Cube cube = Cube.builder(eventloop, executor, classLoader, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
 				.withDimension("adv", ofInt())
 				.withMeasure("pubRequests", sum(ofLong()))
 				.withMeasure("advRequests", sum(ofLong()))
 				.withAggregation(id("pub").withDimensions("pub").withMeasures("pubRequests"))
-				.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests", "pubRequests"));
+				.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests", "pubRequests"))
+				.build();
 
 		ChunksBackupService chunksBackupService = ChunksBackupService.ofReactiveAggregationChunkStorage(aggregationChunkStorage);
 		backupController = CubeBackupController.create(dataSource, chunksBackupService);

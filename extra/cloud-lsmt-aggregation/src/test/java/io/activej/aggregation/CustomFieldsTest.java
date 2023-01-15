@@ -90,17 +90,18 @@ public class CustomFieldsTest {
 		FrameFormat frameFormat = FrameFormat_LZ4.create();
 		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
 
-		AggregationStructure structure = AggregationStructure.create(JsonCodec_ChunkId.ofLong())
-				.withKey("siteId", FieldTypes.ofInt())
-				.withMeasure("eventCount", count(ofLong()))
-				.withMeasure("sumRevenue", sum(ofDouble()))
-				.withMeasure("minRevenue", min(ofDouble()))
-				.withMeasure("maxRevenue", max(ofDouble()))
-				.withMeasure("uniqueUserIds", union(ofLong()))
-				.withMeasure("estimatedUniqueUserIdCount", hyperLogLog(1024));
-
-		Aggregation aggregation = Aggregation.create(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure)
-				.withTemporarySortDir(temporaryFolder.newFolder().toPath());
+		Aggregation aggregation = Aggregation.builder(reactor, executor, classLoader, aggregationChunkStorage, frameFormat)
+				.withStructure(AggregationStructure.builder(JsonCodec_ChunkId.ofLong())
+						.withKey("siteId", FieldTypes.ofInt())
+						.withMeasure("eventCount", count(ofLong()))
+						.withMeasure("sumRevenue", sum(ofDouble()))
+						.withMeasure("minRevenue", min(ofDouble()))
+						.withMeasure("maxRevenue", max(ofDouble()))
+						.withMeasure("uniqueUserIds", union(ofLong()))
+						.withMeasure("estimatedUniqueUserIdCount", hyperLogLog(1024))
+						.build())
+				.withTemporarySortDir(temporaryFolder.newFolder().toPath())
+				.build();
 
 		StreamSupplier<EventRecord> supplier = StreamSupplier.of(
 				new EventRecord(1, 0.34, 1),

@@ -80,9 +80,10 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 				.withDimensions("advertiser", "date")
 				.withMeasures("impressions", "clicks", "conversions", "revenue");
 
-		basicCube = createBasicCube()
+		basicCube = builderOfBasicCube()
 				.withAggregation(dateAggregation)
-				.withAggregation(advertiserDateAggregation);
+				.withAggregation(advertiserDateAggregation)
+				.build();
 
 		OTState_Log<CubeDiff> cubeDiffLogOTState = OTState_Log.create(basicCube);
 		uplink = uplinkFactory.create(basicCube);
@@ -92,7 +93,9 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 
 	@Test
 	public void date() {
-		cube = createBasicCube().withAggregation(dateAggregation.withPredicate(DATE_PREDICATE));
+		cube = builderOfBasicCube()
+				.withAggregation(dateAggregation.withPredicate(DATE_PREDICATE))
+				.build();
 
 		toBePreserved.add(addChunk("date", ofArray(DATE_MIN_DAYS), ofArray(DATE_MAX_DAYS)));
 		toBePreserved.add(addChunk("date", ofArray(DATE_MIN_DAYS + 50), ofArray(DATE_MAX_DAYS - 50)));
@@ -105,7 +108,9 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 
 	@Test
 	public void advertiserDate_DatePredicate() {
-		cube = createBasicCube().withAggregation(advertiserDateAggregation.withPredicate(DATE_PREDICATE));
+		cube = builderOfBasicCube()
+				.withAggregation(advertiserDateAggregation.withPredicate(DATE_PREDICATE))
+				.build();
 
 		toBePreserved.add(addChunk("advertiser-date", ofArray(5, DATE_MIN_DAYS), ofArray(6, DATE_MAX_DAYS)));
 		toBePreserved.add(addChunk("advertiser-date", ofArray(1, DATE_MIN_DAYS + 50), ofArray(20, DATE_MAX_DAYS - 50)));
@@ -120,7 +125,9 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 
 	@Test
 	public void advertiserDate_AdvertiserPredicate() {
-		cube = createBasicCube().withAggregation(advertiserDateAggregation.withPredicate(ADVERTISER_PREDICATE));
+		cube = builderOfBasicCube()
+				.withAggregation(advertiserDateAggregation.withPredicate(ADVERTISER_PREDICATE))
+				.build();
 
 		toBePreserved.add(addChunk("advertiser-date", ofArray(NUMBER_MIN, DATE_MIN_DAYS), ofArray(LOWER_NUMBER_BOUNDARY + 1, DATE_MAX_DAYS)));
 		toBePreserved.add(addChunk("advertiser-date", ofArray(NUMBER_MIN + 50, DATE_MIN_DAYS + 50), ofArray(NUMBER_MAX - 10, DATE_MAX_DAYS - 50)));
@@ -134,8 +141,10 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 
 	@Test
 	public void advertiserDate_AdvertiserPredicateAndDatePredicate() {
-		cube = createBasicCube().withAggregation(advertiserDateAggregation
-				.withPredicate(AggregationPredicates.and(ADVERTISER_PREDICATE, DATE_PREDICATE)));
+		cube = builderOfBasicCube()
+				.withAggregation(advertiserDateAggregation
+				.withPredicate(AggregationPredicates.and(ADVERTISER_PREDICATE, DATE_PREDICATE)))
+				.build();
 
 		toBePreserved.add(addChunk("advertiser-date", ofArray(NUMBER_MIN, DATE_MIN_DAYS), ofArray(LOWER_NUMBER_BOUNDARY + 1, DATE_MAX_DAYS)));
 		toBePreserved.add(addChunk("advertiser-date", ofArray(NUMBER_MIN + 50, DATE_MIN_DAYS + 50), ofArray(NUMBER_MAX - 10, DATE_MAX_DAYS - 50)));
@@ -187,8 +196,8 @@ public final class CubeGetIrrelevantChunksTest extends CubeTestBase {
 		return chunkId;
 	}
 
-	private Cube createBasicCube() {
-		return Cube.create(reactor, EXECUTOR, CLASS_LOADER, chunkStorage)
+	private Cube.Builder builderOfBasicCube() {
+		return Cube.builder(reactor, EXECUTOR, CLASS_LOADER, chunkStorage)
 				.withDimension("date", ofLocalDate())
 				.withDimension("advertiser", ofInt())
 				.withDimension("campaign", ofInt())

@@ -65,13 +65,14 @@ public class CubeCleanerControllerTest {
 		await(fs::start);
 		aggregationChunkStorage = AggregationChunkStorage.create(eventloop, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc),
 				FrameFormat_LZ4.create(), fs);
-		Cube cube = Cube.create(eventloop, executor, classLoader, aggregationChunkStorage)
+		Cube cube = Cube.builder(eventloop, executor, classLoader, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
 				.withDimension("adv", ofInt())
 				.withMeasure("pubRequests", sum(ofLong()))
 				.withMeasure("advRequests", sum(ofLong()))
 				.withAggregation(id("pub").withDimensions("pub").withMeasures("pubRequests"))
-				.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests"));
+				.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests"))
+				.build();
 
 		uplink = OTUplink_CubeMySql.create(eventloop, executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
 		uplink.initialize();

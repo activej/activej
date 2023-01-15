@@ -81,17 +81,18 @@ public final class CubeTest {
 	}
 
 	private static Cube newCube(Executor executor, DefiningClassLoader classLoader, AsyncAggregationChunkStorage chunkStorage) {
-		return Cube.create(getCurrentReactor(), executor, classLoader, chunkStorage)
+		return Cube.builder(getCurrentReactor(), executor, classLoader, chunkStorage)
 				.withDimension("key1", ofInt())
 				.withDimension("key2", ofInt())
 				.withMeasure("metric1", sum(ofLong()))
 				.withMeasure("metric2", sum(ofLong()))
 				.withMeasure("metric3", sum(ofLong()))
-				.withAggregation(id("detailedAggregation").withDimensions("key1", "key2").withMeasures("metric1", "metric2", "metric3"));
+				.withAggregation(id("detailedAggregation").withDimensions("key1", "key2").withMeasures("metric1", "metric2", "metric3"))
+				.build();
 	}
 
 	private static Cube newSophisticatedCube(Executor executor, DefiningClassLoader classLoader, AsyncAggregationChunkStorage chunkStorage) {
-		return Cube.create(getCurrentReactor(), executor, classLoader, chunkStorage)
+		return Cube.builder(getCurrentReactor(), executor, classLoader, chunkStorage)
 				.withDimension("key1", ofInt())
 				.withDimension("key2", ofInt())
 				.withDimension("key3", ofInt())
@@ -100,7 +101,8 @@ public final class CubeTest {
 				.withMeasure("metric1", sum(ofLong()))
 				.withMeasure("metric2", sum(ofLong()))
 				.withMeasure("metric3", sum(ofLong()))
-				.withAggregation(id("detailedAggregation").withDimensions("key1", "key2", "key3", "key4", "key5").withMeasures("metric1", "metric2", "metric3"));
+				.withAggregation(id("detailedAggregation").withDimensions("key1", "key2", "key3", "key4", "key5").withMeasures("metric1", "metric2", "metric3"))
+				.build();
 	}
 
 	@SuppressWarnings("unchecked")

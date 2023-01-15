@@ -48,8 +48,9 @@ final class CubeUplinkMigrationService {
 	private final Executor executor = newSingleThreadExecutor();
 
 	@VisibleForTesting
-	Cube cube = createEmptyCube(eventloop, executor)
+	Cube cube = builderOfEmptyCube(eventloop, executor)
 			// .withAggregation(...) - CONFIGURE CUBE STRUCTURE!
+			.build()
 			;
 
 	public void migrate(DataSource repoDataSource, DataSource uplinkDataSource) throws ExecutionException, InterruptedException {
@@ -116,27 +117,27 @@ final class CubeUplinkMigrationService {
 		return OTUplink_CubeMySql.create(eventloop, executor, dataSource, PrimaryKeyCodecs.ofCube(cube));
 	}
 
-	static Cube createEmptyCube(Reactor reactor, Executor executor) {
-		return Cube.create(reactor, executor, DefiningClassLoader.create(), new AsyncAggregationChunkStorage<Long>() {
-			@Override
-			public Promise<Long> createId() {
-				throw new AssertionError();
-			}
+	static Cube.Builder builderOfEmptyCube(Reactor reactor, Executor executor) {
+		return Cube.builder(reactor, executor, DefiningClassLoader.create(), new AsyncAggregationChunkStorage<Long>() {
+					@Override
+					public Promise<Long> createId() {
+						throw new AssertionError();
+					}
 
-			@Override
-			public <T> Promise<StreamSupplier<T>> read(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, Long chunkId, DefiningClassLoader classLoader) {
-				throw new AssertionError();
-			}
+					@Override
+					public <T> Promise<StreamSupplier<T>> read(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, Long chunkId, DefiningClassLoader classLoader) {
+						throw new AssertionError();
+					}
 
-			@Override
-			public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, Long chunkId, DefiningClassLoader classLoader) {
-				throw new AssertionError();
-			}
+					@Override
+					public <T> Promise<StreamConsumer<T>> write(AggregationStructure aggregation, List<String> fields, Class<T> recordClass, Long chunkId, DefiningClassLoader classLoader) {
+						throw new AssertionError();
+					}
 
-			@Override
-			public Promise<Void> finish(Set<Long> chunkIds) {
-				throw new AssertionError();
-			}
-		});
+					@Override
+					public Promise<Void> finish(Set<Long> chunkIds) {
+						throw new AssertionError();
+					}
+				});
 	}
 }

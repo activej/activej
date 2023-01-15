@@ -25,7 +25,7 @@ import io.activej.aggregation.util.Utils;
 import io.activej.codegen.ClassBuilder;
 import io.activej.codegen.ClassKey;
 import io.activej.codegen.DefiningClassLoader;
-import io.activej.common.initializer.WithInitializer;
+import io.activej.common.initializer.AbstractBuilder;
 import io.activej.csp.process.frames.FrameFormat;
 import io.activej.datastream.StreamConsumer;
 import io.activej.datastream.StreamConsumerWithResult;
@@ -75,7 +75,7 @@ import static java.util.stream.Collectors.toSet;
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class Aggregation extends AbstractReactive
-		implements AsyncAggregation, WithInitializer<Aggregation>, ReactiveJmxBeanWithStats {
+		implements AsyncAggregation, ReactiveJmxBeanWithStats {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	public static final int DEFAULT_CHUNK_SIZE = 1_000_000;
@@ -136,49 +136,60 @@ public class Aggregation extends AbstractReactive
 	 * @param aggregationChunkStorage storage for data chunks
 	 * @param frameFormat             frame format in which data is to be stored
 	 */
-	public static Aggregation create(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
-			AsyncAggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat, AggregationStructure structure) {
-		return new Aggregation(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure, new OTState_Aggregation(structure));
+	public static Builder builder(Reactor reactor, Executor executor, DefiningClassLoader classLoader,
+			AsyncAggregationChunkStorage aggregationChunkStorage, FrameFormat frameFormat) {
+		return new Aggregation(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, null, null).new Builder();
 	}
 
-	public Aggregation withChunkSize(int chunkSize) {
-		this.chunkSize = chunkSize;
-		return this;
-	}
+	public final class Builder extends AbstractBuilder<Builder, Aggregation> {
+		public Builder withStructure(AggregationStructure structure) {
+			return new Aggregation(reactor, executor, classLoader, aggregationChunkStorage, frameFormat, structure, new OTState_Aggregation(structure)).new Builder();
+		}
 
-	public Aggregation withReducerBufferSize(int reducerBufferSize) {
-		this.reducerBufferSize = reducerBufferSize;
-		return this;
-	}
+		public Builder withChunkSize(int chunkSize) {
+			Aggregation.this.chunkSize = chunkSize;
+			return this;
+		}
 
-	public Aggregation withSorterItemsInMemory(int sorterItemsInMemory) {
-		this.sorterItemsInMemory = sorterItemsInMemory;
-		return this;
-	}
+		public Builder withReducerBufferSize(int reducerBufferSize) {
+			Aggregation.this.reducerBufferSize = reducerBufferSize;
+			return this;
+		}
 
-	public Aggregation withMaxIncrementalReloadPeriod(Duration maxIncrementalReloadPeriod) {
-		this.maxIncrementalReloadPeriod = maxIncrementalReloadPeriod;
-		return this;
-	}
+		public Builder withSorterItemsInMemory(int sorterItemsInMemory) {
+			Aggregation.this.sorterItemsInMemory = sorterItemsInMemory;
+			return this;
+		}
 
-	public Aggregation withIgnoreChunkReadingExceptions(boolean ignoreChunkReadingExceptions) {
-		this.ignoreChunkReadingExceptions = ignoreChunkReadingExceptions;
-		return this;
-	}
+		public Builder withMaxIncrementalReloadPeriod(Duration maxIncrementalReloadPeriod) {
+			Aggregation.this.maxIncrementalReloadPeriod = maxIncrementalReloadPeriod;
+			return this;
+		}
 
-	public Aggregation withMaxChunksToConsolidate(int maxChunksToConsolidate) {
-		this.maxChunksToConsolidate = maxChunksToConsolidate;
-		return this;
-	}
+		public Builder withIgnoreChunkReadingExceptions(boolean ignoreChunkReadingExceptions) {
+			Aggregation.this.ignoreChunkReadingExceptions = ignoreChunkReadingExceptions;
+			return this;
+		}
 
-	public Aggregation withTemporarySortDir(Path temporarySortDir) {
-		this.temporarySortDir = temporarySortDir;
-		return this;
-	}
+		public Builder withMaxChunksToConsolidate(int maxChunksToConsolidate) {
+			Aggregation.this.maxChunksToConsolidate = maxChunksToConsolidate;
+			return this;
+		}
 
-	public Aggregation withStats(AggregationStats stats) {
-		this.stats = stats;
-		return this;
+		public Builder withTemporarySortDir(Path temporarySortDir) {
+			Aggregation.this.temporarySortDir = temporarySortDir;
+			return this;
+		}
+
+		public Builder withStats(AggregationStats stats) {
+			Aggregation.this.stats = stats;
+			return this;
+		}
+
+		@Override
+		protected Aggregation doBuild() {
+			return Aggregation.this;
+		}
 	}
 
 	public AggregationStructure getStructure() {

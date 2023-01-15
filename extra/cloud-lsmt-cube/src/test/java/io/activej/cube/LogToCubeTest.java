@@ -47,7 +47,7 @@ public final class LogToCubeTest extends CubeTestBase {
 		await(fs.start());
 		FrameFormat frameFormat = FrameFormat_LZ4.create();
 		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(), AsyncSupplier.of(new RefLong(0)::inc), frameFormat, fs);
-		Cube cube = Cube.create(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
+		Cube cube = Cube.builder(reactor, EXECUTOR, CLASS_LOADER, aggregationChunkStorage)
 				.withDimension("pub", ofInt())
 				.withDimension("adv", ofInt())
 				.withDimension("testEnum", ofEnum(TestPubRequest.TestEnum.class))
@@ -57,7 +57,8 @@ public final class LogToCubeTest extends CubeTestBase {
 //						.withPredicate(AggregationPredicates.notEq("testEnum", null)) // ok
 								.withPredicate(AggregationPredicates.has("testEnum")) // fail
 				)
-				.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests"));
+				.withAggregation(id("adv").withDimensions("adv").withMeasures("advRequests"))
+				.build();
 
 		AsyncOTUplink<Long, LogDiff<CubeDiff>, ?> uplink = uplinkFactory.create(cube);
 

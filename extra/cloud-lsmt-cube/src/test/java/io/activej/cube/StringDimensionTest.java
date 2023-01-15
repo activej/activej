@@ -61,13 +61,14 @@ public class StringDimensionTest {
 		await(fs.start());
 		AsyncAggregationChunkStorage<Long> aggregationChunkStorage = AggregationChunkStorage.create(reactor, JsonCodec_ChunkId.ofLong(),
 				AsyncSupplier.of(new RefLong(0)::inc), FrameFormat_LZ4.create(), fs);
-		Cube cube = Cube.create(reactor, executor, classLoader, aggregationChunkStorage)
+		Cube cube = Cube.builder(reactor, executor, classLoader, aggregationChunkStorage)
 				.withDimension("key1", ofString())
 				.withDimension("key2", ofInt())
 				.withMeasure("metric1", sum(ofLong()))
 				.withMeasure("metric2", sum(ofLong()))
 				.withMeasure("metric3", sum(ofLong()))
-				.withAggregation(id("detailedAggregation").withDimensions("key1", "key2").withMeasures("metric1", "metric2", "metric3"));
+				.withAggregation(id("detailedAggregation").withDimensions("key1", "key2").withMeasures("metric1", "metric2", "metric3"))
+				.build();
 
 		CubeDiff consumer1Result = await(StreamSupplier.of(
 						new DataItemString1("str1", 2, 10, 20),

@@ -123,29 +123,31 @@ public class TestCompatibleAggregations {
 
 	@Before
 	public void setUp() {
-		cube = new Cube(null, null, null, null)
+		cube = Cube.builder(null, null, null, null)
 				.withInitializer(cube -> {
-					MEASURES.forEach(cube::addMeasure);
+					MEASURES.forEach(cube::withMeasure);
 
-					DIMENSIONS_DAILY_AGGREGATION.forEach(cube::addDimension);
-					DIMENSIONS_ADVERTISERS_AGGREGATION.forEach(cube::addDimension);
-					DIMENSIONS_AFFILIATES_AGGREGATION.forEach(cube::addDimension);
+					DIMENSIONS_DAILY_AGGREGATION.forEach(cube::withDimension);
+					DIMENSIONS_ADVERTISERS_AGGREGATION.forEach(cube::withDimension);
+					DIMENSIONS_AFFILIATES_AGGREGATION.forEach(cube::withDimension);
 
-					List.of(DAILY_AGGREGATION, ADVERTISERS_AGGREGATION, AFFILIATES_AGGREGATION).forEach(cube::addAggregation);
-				});
+					List.of(DAILY_AGGREGATION, ADVERTISERS_AGGREGATION, AFFILIATES_AGGREGATION).forEach(cube::withAggregation);
+				})
+				.build();
 
-		cubeWithDetailedAggregation = new Cube(null, null, null, null)
+		cubeWithDetailedAggregation = Cube.builder(null, null, null, null)
 				.withInitializer(cube -> {
-					MEASURES.forEach(cube::addMeasure);
-					DIMENSIONS_DAILY_AGGREGATION.forEach(cube::addDimension);
-					DIMENSIONS_ADVERTISERS_AGGREGATION.forEach(cube::addDimension);
-					DIMENSIONS_AFFILIATES_AGGREGATION.forEach(cube::addDimension);
-					DIMENSIONS_DETAILED_AFFILIATES_AGGREGATION.forEach(cube::addDimension);
+					MEASURES.forEach(cube::withMeasure);
+					DIMENSIONS_DAILY_AGGREGATION.forEach(cube::withDimension);
+					DIMENSIONS_ADVERTISERS_AGGREGATION.forEach(cube::withDimension);
+					DIMENSIONS_AFFILIATES_AGGREGATION.forEach(cube::withDimension);
+					DIMENSIONS_DETAILED_AFFILIATES_AGGREGATION.forEach(cube::withDimension);
 
-					List.of(DAILY_AGGREGATION, ADVERTISERS_AGGREGATION, AFFILIATES_AGGREGATION).forEach(cube::addAggregation);
+					List.of(DAILY_AGGREGATION, ADVERTISERS_AGGREGATION, AFFILIATES_AGGREGATION).forEach(cube::withAggregation);
 				})
 				.withAggregation(DETAILED_AFFILIATES_AGGREGATION)
-				.withAggregation(LIMITED_DATES_AGGREGATION.withPredicate(LIMITED_DATES_AGGREGATION_PREDICATE));
+				.withAggregation(LIMITED_DATES_AGGREGATION.withPredicate(LIMITED_DATES_AGGREGATION_PREDICATE))
+				.build();
 	}
 
 	// region test getCompatibleAggregationsForQuery for data input

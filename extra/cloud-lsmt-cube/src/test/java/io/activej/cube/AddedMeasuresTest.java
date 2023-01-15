@@ -79,13 +79,14 @@ public class AddedMeasuresTest {
 				.withDimensions("siteId")
 				.withMeasures("eventCount", "sumRevenue", "minRevenue", "maxRevenue");
 
-		Cube basicCube = Cube.create(reactor, executor, classLoader, aggregationChunkStorage)
+		Cube basicCube = Cube.builder(reactor, executor, classLoader, aggregationChunkStorage)
 				.withDimension("siteId", FieldTypes.ofInt())
 				.withMeasure("eventCount", count(ofLong()))
 				.withMeasure("sumRevenue", sum(ofDouble()))
 				.withMeasure("minRevenue", min(ofDouble()))
 				.withMeasure("maxRevenue", max(ofDouble()))
-				.withAggregation(basicConfig);
+				.withAggregation(basicConfig)
+				.build();
 
 		StreamSupplier<EventRecord> supplier = StreamSupplier.of(
 				new EventRecord(1, 0.34),
@@ -121,7 +122,7 @@ public class AddedMeasuresTest {
 
 	@Test
 	public void consolidation() {
-		Cube cube = Cube.create(reactor, executor, classLoader, aggregationChunkStorage)
+		Cube cube = Cube.builder(reactor, executor, classLoader, aggregationChunkStorage)
 				.withDimension("siteId", FieldTypes.ofInt())
 				.withMeasure("eventCount", count(ofLong()))
 				.withMeasure("sumRevenue", sum(ofDouble()))
@@ -130,7 +131,9 @@ public class AddedMeasuresTest {
 				.withMeasure("uniqueUserIds", union(ofLong()))
 				.withMeasure("estimatedUniqueUserIdCount", hyperLogLog(1024))
 				.withAggregation(basicConfig.withMeasures("uniqueUserIds", "estimatedUniqueUserIdCount"))
-				.withInitializer(c -> initialDiffs.forEach(c::apply));
+				.build();
+
+		initialDiffs.forEach(cube::apply);
 
 		StreamSupplier<EventRecord2> supplier = StreamSupplier.of(
 				new EventRecord2(14, 0.35, 500),
@@ -161,7 +164,7 @@ public class AddedMeasuresTest {
 
 	@Test
 	public void query() throws QueryException {
-		Cube cube = Cube.create(reactor, executor, classLoader, aggregationChunkStorage)
+		Cube cube = Cube.builder(reactor, executor, classLoader, aggregationChunkStorage)
 				.withDimension("siteId", FieldTypes.ofInt())
 				.withMeasure("eventCount", count(ofLong()))
 				.withMeasure("sumRevenue", sum(ofDouble()))
@@ -170,7 +173,9 @@ public class AddedMeasuresTest {
 				.withMeasure("uniqueUserIds", union(ofLong()))
 				.withMeasure("estimatedUniqueUserIdCount", hyperLogLog(1024))
 				.withAggregation(basicConfig.withMeasures("uniqueUserIds", "estimatedUniqueUserIdCount"))
-				.withInitializer(c -> initialDiffs.forEach(c::apply));
+				.build();
+
+		initialDiffs.forEach(cube::apply);
 
 		List<String> measures = List.of("eventCount", "estimatedUniqueUserIdCount");
 		QueryResult queryResult = await(cube.query(CubeQuery.create()
@@ -184,7 +189,7 @@ public class AddedMeasuresTest {
 
 	@Test
 	public void secondAggregation() throws QueryException {
-		Cube cube = Cube.create(reactor, executor, classLoader, aggregationChunkStorage)
+		Cube cube = Cube.builder(reactor, executor, classLoader, aggregationChunkStorage)
 				.withDimension("siteId", FieldTypes.ofInt())
 				.withMeasure("eventCount", count(ofLong()))
 				.withMeasure("sumRevenue", sum(ofDouble()))
@@ -197,7 +202,9 @@ public class AddedMeasuresTest {
 				.withAggregation(AggregationConfig.id("second")
 						.withDimensions("siteId")
 						.withMeasures("eventCount", "sumRevenue", "minRevenue", "maxRevenue", "estimatedUniqueUserIdCount"))
-				.withInitializer(c -> initialDiffs.forEach(c::apply));
+				.build();
+
+		initialDiffs.forEach(cube::apply);
 
 		StreamSupplier<EventRecord2> supplier = StreamSupplier.of(
 				new EventRecord2(14, 0.35, 500),

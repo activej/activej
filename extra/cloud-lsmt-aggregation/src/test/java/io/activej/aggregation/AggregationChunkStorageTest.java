@@ -51,10 +51,11 @@ public class AggregationChunkStorageTest {
 	public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	private final DefiningClassLoader classLoader = DefiningClassLoader.create();
-	private final AggregationStructure structure = AggregationStructure.create(JsonCodec_ChunkId.ofLong())
+	private final AggregationStructure structure = AggregationStructure.builder(JsonCodec_ChunkId.ofLong())
 			.withKey("key", ofInt())
 			.withMeasure("value", sum(ofInt()))
-			.withMeasure("timestamp", sum(ofLong()));
+			.withMeasure("timestamp", sum(ofLong()))
+			.build();
 
 	@Test
 	public void testAcknowledge() throws IOException {
